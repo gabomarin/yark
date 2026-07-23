@@ -8,12 +8,12 @@ import type {
   SteamCmdConsoleSnapshot,
   SteamCmdStatus,
 } from "@shared/types";
-import { IniEditor } from "./components/IniEditor";
-import { Icon } from "./components/Icon";
-import { LogsViewer } from "./components/LogsViewer";
-import { ServerCard } from "./components/ServerCard";
-import { ServerForm } from "./components/ServerForm";
-import { Sidebar, type Route } from "./components/Sidebar";
+import { AppRouter } from "@app/AppRouter";
+import { OverviewPage } from "@features/overview/OverviewPage";
+import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
+import { SteamCmdPage } from "@features/steamcmd/SteamCmdPage";
+import type { Route } from "@layout/Sidebar/Sidebar";
+import { PlaceholderPage } from "@ui/PlaceholderPage/PlaceholderPage";
 
 const APP_VERSION = "0.1.0";
 
@@ -37,8 +37,6 @@ export function App(): JSX.Element {
   const [steamCmdConsole, setSteamCmdConsole] = useState<SteamCmdConsoleSnapshot | null>(null);
   const [route, setRoute] = useState<Route>("overview");
   const [overlay, setOverlay] = useState<Overlay>(null);
-  const [logsServerId, setLogsServerId] = useState<string | null>(null);
-  const [logsInitialSection, setLogsInitialSection] = useState<LogsSection>("events");
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -183,390 +181,103 @@ export function App(): JSX.Element {
     setRoute(next);
   }, []);
 
-  const openLogsForServer = useCallback((serverId: string, section: LogsSection = "events") => {
+  const openLogsForServer = useCallback((serverId: string, _section: LogsSection = "events") => {
     setOverlay(null);
-    setLogsServerId(serverId);
-    setLogsInitialSection(section);
     setRoute("logs");
   }, []);
-
-  const renderOverviewPage = (): JSX.Element => (
-    <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>Overview</h1>
-          <span className="muted">Monitorea y administra todos tus servidores ARK</span>
-        </div>
-        <div className="page-header-actions">
-          <div className="search-box">
-            <Icon name="search" className="search-box-icon" />
-            <input
-              type="text"
-              aria-label="Buscar servidores"
-              placeholder="Buscar servidores..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <button className="primary button-icon-left" onClick={() => setOverlay({ kind: "create" })}>
-            <Icon name="server" className="button-icon" />
-            + Nuevo servidor
-          </button>
-        </div>
-      </header>
-
-      <section className="overview-grid" aria-label="Resumen operativo">
-        <article className="overview-card">
-          <h2><Icon name="server" className="card-heading-icon" /> Servidores</h2>
-          <p>{servers.length}</p>
-          <span className="muted">{runningServers} online</span>
-        </article>
-        <article className="overview-card overview-card-disabled" title="Próximamente">
-          <h2><Icon name="players" className="card-heading-icon" /> Jugadores</h2>
-          <p>—</p>
-          <span className="muted">próximamente</span>
-        </article>
-        <article className="overview-card">
-          <h2><Icon name="cluster" className="card-heading-icon" /> Clusters</h2>
-          <p>{reports.length === 0 ? "—" : `${okClusters}/${reports.length}`}</p>
-          <span className="muted">{reports.length === 0 ? "sin clusters" : "transferibles"}</span>
-        </article>
-        <article className="overview-card overview-card-disabled" title="Próximamente">
-          <h2><Icon name="download" className="card-heading-icon" /> Backups</h2>
-          <p>—</p>
-          <span className="muted">próximamente</span>
-        </article>
-        <article className="overview-card">
-          <h2><Icon name="update" className="card-heading-icon" /> Updates</h2>
-          <p>{updatesAvailableCount}</p>
-          <span className="muted">{updatesAvailableCount > 0 ? "disponibles" : "al día"}</span>
-        </article>
-        <article className="overview-card">
-          <h2><Icon name="warning" className="card-heading-icon" /> Advertencias</h2>
-          <p>{warningsCount}</p>
-          <span className="muted">{warningsCount > 0 ? "requieren atención" : "sin novedades"}</span>
-        </article>
-      </section>
-
-      <section className="servers">
-        <h2>
-          Servidores ({filteredServers.length}
-          {filteredServers.length !== servers.length ? ` de ${servers.length}` : ""})
-        </h2>
-        {servers.length === 0 && (
-          <p className="empty">
-            No hay servidores configurados. Crea el primero con “Nuevo servidor”.
-          </p>
-        )}
-        {servers.length > 0 && filteredServers.length === 0 && (
-          <p className="empty">Ningún servidor coincide con la búsqueda actual.</p>
-        )}
-        <div className="cards">
-          {filteredServers.map((server) => (
-            <ServerCard
-              key={server.id}
-              server={server}
-              runtime={statuses.get(server.id) ?? null}
-              installation={installationInfo.get(server.id) ?? null}
-              steamCmdBusy={
-                steamCmdStatus?.running === true && steamCmdStatus.serverId === server.id
-              }
-              onStart={() => void runAction(() => window.api.startServer(server.id))}
-              onStop={() => void runAction(() => window.api.stopServer(server.id))}
-              onKill={() => void runAction(() => window.api.killServer(server.id))}
-              onRestart={() => void restartServer(server.id)}
-              onEdit={() => setOverlay({ kind: "edit", profile: server })}
-              onOpenIni={() => setOverlay({ kind: "ini", profile: server })}
-              onOpenLogs={() => openLogsForServer(server.id, "events")}
-              onOpenFolder={() =>
-                void runAction(() => window.api.openServerFolder(server.id))
-              }
-              onInstallFiles={() =>
-                void runAction(() => window.api.installServerFiles(server.id))
-              }
-              onUpdateServer={() =>
-                void runAction(() => window.api.updateServerNow(server.id))
-              }
-              onClone={() => void runAction(() => window.api.cloneServer(server.id))}
-              onDelete={() => {
-                if (window.confirm(`¿Eliminar el servidor "${server.name}"?`)) {
-                  void runAction(() => window.api.deleteServer(server.id));
-                }
-              }}
-              onRcon={(command) =>
-                void runAction(() => window.api.sendRconCommand(server.id, command))
-              }
-              onCancelSteamCmd={() => void runAction(() => window.api.cancelSteamCmd())}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section className="panel events-panel">
-        <h2>Actividad reciente</h2>
-        {events.length === 0 && <p className="empty">Sin eventos recientes.</p>}
-        <ul className="events events-scroll">
-          {events.map((event) => (
-            <li key={event.id} className={event.severity}>
-              <span className="muted">{new Date(event.createdAt).toLocaleTimeString()}</span>{" "}
-              {event.message}
-            </li>
-          ))}
-        </ul>
-      </section>
-    </div>
-  );
-
-  const renderClustersPage = (): JSX.Element => (
-    <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>Clusters</h1>
-          <span className="muted">Estado de compatibilidad y transferencias entre mapas</span>
-        </div>
-      </header>
-      {reports.length === 0 && <p className="empty">Sin clusters configurados.</p>}
-      <div className="cluster-grid">
-        {reports.map((report) => (
-          <section key={report.clusterId} className="panel cluster">
-            <div className="cluster-head">
-              <span className={report.ok ? "badge ok" : "badge bad"}>
-                {report.ok ? "TRANSFERIBLE" : "CON ERRORES"}
-              </span>
-              <strong>{report.clusterId}</strong>
-              <span className="muted">{report.members.length} mapas</span>
-            </div>
-            <ul className="issues">
-              {report.issues.map((issue, i) => (
-                <li key={i} className={issue.severity}>
-                  {issue.message}
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderBackupsPage = (): JSX.Element => (
-    <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>Backups</h1>
-          <span className="muted">Historial de backups por servidor</span>
-        </div>
-      </header>
-      {servers.length === 0 && <p className="empty">No hay servidores configurados todavía.</p>}
-      <div className="panel backups-list">
-        {servers.map((server) => (
-          <div key={server.id} className="backups-list-row">
-            <div>
-              <strong>{server.name}</strong>
-              <span className="muted">{server.map}</span>
-            </div>
-            <button
-              className="button-icon-left"
-              onClick={() => openLogsForServer(server.id, "backups")}
-            >
-              <Icon name="download" className="button-icon" />
-              Ver backups
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderSteamCmdPage = (): JSX.Element => (
-    <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>SteamCMD</h1>
-          <span className="muted">Instalación, ruta del ejecutable y consola de operaciones</span>
-        </div>
-        <div className="page-header-actions">
-          {steamCmdStatus?.detected === true ? (
-            <span className="chip chip-icon" title={steamCmdStatus.executablePath ?? undefined}>
-              <Icon name="download" className="chip-icon-svg" />
-              SteamCMD detectado
-            </span>
-          ) : (
-            <button
-              className="button-icon-left"
-              onClick={() => void runAction(() => window.api.installSteamCmd())}
-            >
-              <Icon name="download" className="button-icon" />
-              Instalar SteamCMD
-            </button>
-          )}
-          <button className="button-icon-left" onClick={() => void pickSteamCmdPath()}>
-            <Icon name="folder" className="button-icon" />
-            Elegir steamcmd.exe
-          </button>
-          {steamCmdStatus?.running === true && (
-            <button
-              className="danger button-icon-left"
-              onClick={() => void runAction(() => window.api.cancelSteamCmd())}
-            >
-              <Icon name="stop" className="button-icon" />
-              Cancelar operación
-            </button>
-          )}
-        </div>
-      </header>
-
-      <section className="overview-grid" aria-label="Resumen SteamCMD">
-        <article className="overview-card">
-          <h2><Icon name="update" className="card-heading-icon" /> Estado</h2>
-          <p>{steamCmdStatus?.running ? "En ejecución" : "En espera"}</p>
-          <span className="muted">
-            {steamCmdStatus?.operation != null
-              ? `Operación: ${steamCmdStatus.operation}`
-              : "sin operación activa"}
-          </span>
-        </article>
-        <article className="overview-card">
-          <h2><Icon name="server" className="card-heading-icon" /> Versión oficial</h2>
-          <p className="overview-card-text">{officialVersion ?? "No detectada"}</p>
-        </article>
-      </section>
-
-      <section className="panel steamcmd-console-panel">
-        <h2>Consola SteamCMD</h2>
-        {steamCmdConsole === null || steamCmdConsole.lines.length === 0 ? (
-          <p className="empty">Sin salida de SteamCMD todavía.</p>
-        ) : (
-          <pre className="steamcmd-console" aria-label="Salida de SteamCMD">
-            {steamCmdConsole.lines.join("\n")}
-          </pre>
-        )}
-      </section>
-    </div>
-  );
-
-  const renderLogsPage = (): JSX.Element => {
-    const selected = servers.find((server) => server.id === logsServerId) ?? servers[0] ?? null;
-
-    return (
-      <div className="content-single">
-        <header className="page-header logs-page-header">
-          <div>
-            <h1>Logs</h1>
-            <span className="muted">Eventos, runtime, updates y backups por servidor</span>
-          </div>
-          {servers.length > 0 && (
-            <div className="page-header-actions">
-              <select
-                aria-label="Seleccionar servidor"
-                value={selected?.id ?? ""}
-                onChange={(e) => {
-                  setLogsServerId(e.target.value);
-                  setLogsInitialSection("events");
-                }}
-              >
-                {servers.map((server) => (
-                  <option key={server.id} value={server.id}>
-                    {server.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-        </header>
-        {selected === null ? (
-          <p className="empty">No hay servidores configurados todavía.</p>
-        ) : (
-          <LogsViewer server={selected} initialSection={logsInitialSection} />
-        )}
-      </div>
-    );
-  };
-
-  const renderSettingsPage = (): JSX.Element => (
-    <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>Settings</h1>
-          <span className="muted">Información de la aplicación</span>
-        </div>
-      </header>
-      <section className="panel">
-        <h2>ARK Server GBO</h2>
-        <p className="muted">Versión v{APP_VERSION}</p>
-        <p className="muted">Más opciones de configuración estarán disponibles próximamente.</p>
-      </section>
-    </div>
-  );
 
   const renderMain = (): JSX.Element => {
     if (overlay?.kind === "ini") {
       return (
-        <div className="content-single">
-          <IniEditor
-            server={overlay.profile}
-            onBack={() => {
-              setOverlay(null);
-              void refresh();
-            }}
-          />
-        </div>
+        <PlaceholderPage
+          title="INI Editor"
+          subtitle={`La edición del INI de ${overlay.profile.name} se migrará cuando llegue su diseño dedicado.`}
+        />
       );
     }
 
     if (overlay?.kind === "create" || overlay?.kind === "edit") {
       return (
-        <div className="content-single">
-          <ServerForm
-            initial={overlay.kind === "edit" ? overlay.profile : null}
-            onCancel={() => setOverlay(null)}
-            onSaved={() => {
-              setOverlay(null);
-              void refresh();
-            }}
-          />
-        </div>
+        <ServerForm
+          initial={overlay.kind === "edit" ? overlay.profile : null}
+          onCancel={() => setOverlay(null)}
+          onSaved={() => {
+            setOverlay(null);
+            void refresh();
+          }}
+        />
       );
     }
 
-    switch (route) {
-      case "overview":
-        return renderOverviewPage();
-      case "clusters":
-        return renderClustersPage();
-      case "backups":
-        return renderBackupsPage();
-      case "steamcmd":
-        return renderSteamCmdPage();
-      case "logs":
-        return renderLogsPage();
-      case "settings":
-        return renderSettingsPage();
-      default:
-        return renderOverviewPage();
-    }
-  };
-
-  return (
-    <div className="app-shell">
-      <Sidebar
+    return (
+      <AppRouter
         route={route}
-        onNavigate={navigate}
+        appVersion={APP_VERSION}
+        officialVersion={officialVersion}
         steamCmdDetected={steamCmdStatus?.detected === true}
         steamCmdRunning={steamCmdStatus?.running === true}
-        officialVersion={officialVersion}
-        appVersion={APP_VERSION}
+        onNavigate={navigate}
+        error={error}
+        onDismissError={() => setError(null)}
+        overview={{
+          page: (
+            <OverviewPage
+              search={search}
+              onSearchChange={setSearch}
+              onCreateServer={() => setOverlay({ kind: "create" })}
+              servers={servers}
+              filteredServers={filteredServers}
+              runningServers={runningServers}
+              okClusters={okClusters}
+              warningsCount={warningsCount}
+              updatesAvailableCount={updatesAvailableCount}
+              reports={reports}
+              statuses={statuses}
+              installationInfo={installationInfo}
+              events={events}
+              steamCmdServerId={steamCmdStatus?.serverId ?? null}
+              steamCmdRunning={steamCmdStatus?.running === true}
+              onEditServer={(server) => setOverlay({ kind: "edit", profile: server })}
+              onOpenIni={(server) => setOverlay({ kind: "ini", profile: server })}
+              onOpenLogs={(serverId) => openLogsForServer(serverId, "events")}
+              onStartServer={(id) => void runAction(() => window.api.startServer(id))}
+              onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
+              onRestartServer={(id) => void restartServer(id)}
+              onKillServer={(id) => void runAction(() => window.api.killServer(id))}
+              onOpenFolder={(id) => void runAction(() => window.api.openServerFolder(id))}
+              onInstallFiles={(id) => void runAction(() => window.api.installServerFiles(id))}
+              onUpdateNow={(id) => void runAction(() => window.api.updateServerNow(id))}
+              onCloneServer={(id) => void runAction(() => window.api.cloneServer(id))}
+              onDeleteServer={(id) => {
+                const server = servers.find((item) => item.id === id);
+                const label = server?.name ?? id;
+                if (window.confirm(`¿Eliminar el servidor "${label}"?`)) {
+                  void runAction(() => window.api.deleteServer(id));
+                }
+              }}
+              onSendRcon={(id, command) =>
+                void runAction(() => window.api.sendRconCommand(id, command))
+              }
+              onCancelSteamCmd={() => void runAction(() => window.api.cancelSteamCmd())}
+            />
+          ),
+        }}
+        steamcmd={{
+          page: (
+            <SteamCmdPage
+              steamCmdStatus={steamCmdStatus}
+              steamCmdConsole={steamCmdConsole}
+              officialVersion={officialVersion}
+              onInstallSteamCmd={() => void runAction(() => window.api.installSteamCmd())}
+              onPickSteamCmdPath={() => void pickSteamCmdPath()}
+              onCancelSteamCmd={() => void runAction(() => window.api.cancelSteamCmd())}
+            />
+          ),
+        }}
       />
-      <div className="app-main">
-        {error !== null && (
-          <div className="banner error" role="alert">
-            {error}
-            <button onClick={() => setError(null)}>✕</button>
-          </div>
-        )}
-        <div className="app-main-content">{renderMain()}</div>
-      </div>
-    </div>
-  );
+    );
+  };
+
+  return renderMain();
 }
 

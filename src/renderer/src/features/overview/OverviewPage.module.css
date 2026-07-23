@@ -1,0 +1,63 @@
+.page {
+  min-height: 100vh;
+  padding: 20px 24px 24px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.title {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  color: #9fb0c3;
+}
+
+.content {
+  padding: 0;
+}
+
+.sectionCard,
+.recentPanel {
+  border-radius: 18px;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(23, 31, 43, 0.95), rgba(20, 27, 37, 0.95));
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+}
+
+.serverGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
+}
+
+.recentPanel {
+  min-height: 220px;
+}
+
+.recentList {
+  max-height: 280px;
+  overflow: auto;
+}
+
+.event-info {
+  color: #f2f6fb;
+}
+
+.event-warning {
+  color: #ffbe4d;
+}
+
+.event-error {
+  color: #ff6c6c;
+}

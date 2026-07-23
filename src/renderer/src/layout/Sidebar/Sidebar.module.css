@@ -1,0 +1,44 @@
+.sidebar {
+  height: 100%;
+  padding: 20px 14px;
+  background: rgba(20, 27, 37, 0.96);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.brand {
+  padding: 4px 6px 8px;
+}
+
+.brandIcon {
+  color: #55a6ff;
+}
+
+.nav {
+  flex: 1;
+}
+
+.navButton {
+  min-height: 42px;
+  border-radius: 12px;
+  color: #f2f6fb;
+}
+
+.navButton[data-active] {
+  background: rgba(85, 166, 255, 0.16);
+  color: #ffffff;
+}
+
+.okDot {
+  color: #40d39f;
+}
+
+.badDot {
+  color: #ff6c6c;
+}
+
+.versionChip {
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(36, 50, 69, 0.56);
+}

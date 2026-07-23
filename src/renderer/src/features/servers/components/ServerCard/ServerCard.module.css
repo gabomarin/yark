@@ -1,0 +1,61 @@
+.card {
+  border-radius: 18px;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(170deg, rgba(32, 43, 58, 0.95), rgba(23, 31, 43, 0.95));
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+}
+
+.thumb {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(85, 166, 255, 0.2), rgba(64, 211, 159, 0.12));
+  color: #55a6ff;
+}
+
+.metaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metaLabel {
+  color: #9fb0c3;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.metaValue-default,
+.metaValue-muted,
+.metaValue-ok,
+.metaValue-warn {
+  font-size: 14px;
+}
+
+.metaValue-default {
+  color: #f2f6fb;
+}
+
+.metaValue-muted {
+  color: #9fb0c3;
+}
+
+.metaValue-ok {
+  color: #40d39f;
+}
+
+.metaValue-warn {
+  color: #ffbe4d;
+}
+
+.rcon {
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rconInput {
+  flex: 1;
+}

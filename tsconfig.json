@@ -18,8 +18,14 @@
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
+      "@app/*": ["src/renderer/src/app/*"],
+      "@layout/*": ["src/renderer/src/layout/*"],
       "@shared/*": ["src/shared/*"],
-      "@backend/*": ["src/backend/*"]
+      "@backend/*": ["src/backend/*"],
+      "@features/*": ["src/renderer/src/features/*"],
+      "@renderer/*": ["src/renderer/src/*"],
+      "@theme/*": ["src/renderer/src/shared/theme/*"],
+      "@ui/*": ["src/renderer/src/shared/ui/*"]
     }
   },
   "include": ["src", "tests"]

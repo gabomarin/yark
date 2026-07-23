@@ -7,6 +7,16 @@ const sharedAlias = {
   "@backend": resolve(__dirname, "src/backend"),
 };
 
+const rendererAlias = {
+  ...sharedAlias,
+  "@app": resolve(__dirname, "src/renderer/src/app"),
+  "@layout": resolve(__dirname, "src/renderer/src/layout"),
+  "@features": resolve(__dirname, "src/renderer/src/features"),
+  "@renderer": resolve(__dirname, "src/renderer/src"),
+  "@theme": resolve(__dirname, "src/renderer/src/shared/theme"),
+  "@ui": resolve(__dirname, "src/renderer/src/shared/ui"),
+};
+
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
@@ -18,6 +28,6 @@ export default defineConfig({
   },
   renderer: {
     plugins: [react()],
-    resolve: { alias: sharedAlias },
+    resolve: { alias: rendererAlias },
   },
 });

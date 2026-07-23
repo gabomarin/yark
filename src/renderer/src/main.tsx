@@ -1,7 +1,10 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import "./styles.css";
+import { AppProviders } from "./app/AppProviders";
+import "@mantine/core/styles.css";
+import "@mantine/notifications/styles.css";
+import "./styles/globals.css";
 
 const container = document.getElementById("root");
 if (container === null) {
@@ -9,6 +12,8 @@ if (container === null) {
 }
 createRoot(container).render(
   <React.StrictMode>
-    <App />
+    <AppProviders>
+      <App />
+    </AppProviders>
   </React.StrictMode>,
 );

@@ -5,3 +5,7 @@ dist/
 *.db
 .vite/
 coverage/
+.skillbridge/SKILL_GROUP.md
+.skillbridge/skill-workspace.json
+.skillbridge/central-repo/.skillbridge/SKILL_GROUP.md
+.skillbridge/central-repo/.skillbridge/skill-workspace.json
