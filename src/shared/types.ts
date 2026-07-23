@@ -193,11 +193,16 @@ export interface ServerIniSnapshot {
   payload: ServerIniPayload;
 }
 
+export type ServerUpdateLogStatus = "success" | "failed" | "unknown";
+
 export interface ServerUpdateLogFile {
   fileName: string;
   fullPath: string;
   modifiedAt: string;
   sizeBytes: number;
+  status: ServerUpdateLogStatus;
+  exitCode: number | null;
+  durationMs: number | null;
 }
 
 export interface ServerOperationalLogs {

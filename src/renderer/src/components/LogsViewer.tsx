@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import type { ServerOperationalLogs, ServerProfile } from "@shared/types";
+import { useEffect, useMemo, useState } from "react";
+import type { ServerOperationalLogs, ServerProfile, ServerUpdateLogFile } from "@shared/types";
 import { Icon } from "./Icon";
 
 interface Props {
@@ -8,11 +8,70 @@ interface Props {
   initialSection?: "events" | "runtime" | "updates" | "backups";
 }
 
+const UPDATE_PAGE_SIZE = 8;
+
+const STATUS_PILL_LABEL: Record<ServerUpdateLogFile["status"], string> = {
+  success: "Success",
+  failed: "Failed",
+  unknown: "Desconocido",
+};
+
+function formatDuration(durationMs: number | null): string {
+  if (durationMs === null || durationMs < 0) {
+    return "—";
+  }
+  const totalSeconds = Math.round(durationMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  }
+  return `${seconds}s`;
+}
+
+function formatSize(sizeBytes: number): string {
+  if (sizeBytes >= 1024 * 1024) {
+    return `${(sizeBytes / (1024 * 1024)).toFixed(2)} MB`;
+  }
+  return `${(sizeBytes / 1024).toFixed(1)} KB`;
+}
+
+function formatRelativeDateTime(iso: string): string {
+  const date = new Date(iso);
+  const now = new Date();
+  const time = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  if (date.toDateString() === now.toDateString()) {
+    return `Hoy, ${time}`;
+  }
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) {
+    return `Ayer, ${time}`;
+  }
+  return `${date.toLocaleDateString()}, ${time}`;
+}
+
+function classifyLogLine(line: string): "success" | "error" | "neutral" {
+  if (/error|failed|exception|fatal/i.test(line)) {
+    return "error";
+  }
+  if (/success|completed successfully|started successfully|instalados|completado/i.test(line)) {
+    return "success";
+  }
+  return "neutral";
+}
+
 export function LogsViewer(props: Props): JSX.Element {
   const [logs, setLogs] = useState<ServerOperationalLogs | null>(null);
   const [activeSection, setActiveSection] = useState<"events" | "runtime" | "updates" | "backups">("events");
   const [selectedUpdateFile, setSelectedUpdateFile] = useState<string | null>(null);
   const [updateContent, setUpdateContent] = useState<string>("");
+  const [updateStatusFilter, setUpdateStatusFilter] = useState<"all" | "success" | "failed">("all");
+  const [updatePage, setUpdatePage] = useState(1);
   const [eventSeverityFilter, setEventSeverityFilter] = useState<"all" | "info" | "warning" | "error">("all");
   const [eventTypeFilter, setEventTypeFilter] = useState<string>("all");
   const [eventQuery, setEventQuery] = useState("");
@@ -43,6 +102,8 @@ export function LogsViewer(props: Props): JSX.Element {
   useEffect(() => {
     setSelectedUpdateFile(null);
     setUpdateContent("");
+    setUpdateStatusFilter("all");
+    setUpdatePage(1);
     setActiveSection(props.initialSection ?? "events");
     void load();
   }, [props.server.id]);
@@ -52,6 +113,10 @@ export function LogsViewer(props: Props): JSX.Element {
       setActiveSection(props.initialSection);
     }
   }, [props.initialSection]);
+
+  useEffect(() => {
+    setUpdatePage(1);
+  }, [updateStatusFilter]);
 
   const openUpdateLog = async (fileName: string) => {
     setBusy(true);
@@ -65,6 +130,18 @@ export function LogsViewer(props: Props): JSX.Element {
     }
     setSelectedUpdateFile(fileName);
     setUpdateContent(result.data);
+  };
+
+  const openUpdateLogExternally = async () => {
+    if (selectedUpdateFile === null) {
+      return;
+    }
+    setError(null);
+    setInfo(null);
+    const result = await window.api.openServerUpdateLogFile(props.server.id, selectedUpdateFile);
+    if (!result.ok) {
+      setError(result.error ?? "No se pudo abrir el log en un visor externo");
+    }
   };
 
   const copyRuntimeLog = async () => {
@@ -183,6 +260,31 @@ export function LogsViewer(props: Props): JSX.Element {
           return true;
         });
 
+  const filteredUpdateFiles = useMemo(() => {
+    if (logs === null) {
+      return [];
+    }
+    if (updateStatusFilter === "all") {
+      return logs.updateFiles;
+    }
+    return logs.updateFiles.filter((file) => file.status === updateStatusFilter);
+  }, [logs, updateStatusFilter]);
+
+  const updateTotalPages = Math.max(1, Math.ceil(filteredUpdateFiles.length / UPDATE_PAGE_SIZE));
+  const safeUpdatePage = Math.min(updatePage, updateTotalPages);
+  const updateRangeStart =
+    filteredUpdateFiles.length === 0 ? 0 : (safeUpdatePage - 1) * UPDATE_PAGE_SIZE + 1;
+  const updateRangeEnd = Math.min(safeUpdatePage * UPDATE_PAGE_SIZE, filteredUpdateFiles.length);
+  const pagedUpdateFiles = filteredUpdateFiles.slice(
+    (safeUpdatePage - 1) * UPDATE_PAGE_SIZE,
+    safeUpdatePage * UPDATE_PAGE_SIZE,
+  );
+
+  const selectedUpdateFileInfo =
+    logs === null
+      ? null
+      : logs.updateFiles.find((file) => file.fileName === selectedUpdateFile) ?? null;
+
   const errorsCount = logs?.events.filter((event) => event.severity === "error").length ?? 0;
   const warningsCount = logs?.events.filter((event) => event.severity === "warning").length ?? 0;
 
@@ -277,33 +379,144 @@ export function LogsViewer(props: Props): JSX.Element {
 
     if (activeSection === "updates") {
       return (
-        <section className="panel logs-content-panel">
-          <div className="logs-panel-head">
-            <h3>Update logs ({logs.updateFiles.length})</h3>
-            <span className="muted">Selecciona un archivo para ver detalle</span>
-          </div>
-          <div className="logs-update-layout">
-            <div className="logs-list logs-scroll logs-main-list">
-              {logs.updateFiles.length === 0 && <p className="empty">Sin logs de update.</p>}
-              {logs.updateFiles.map((file) => (
+        <section className="logs-updates-shell">
+          <div className="panel logs-update-history">
+            <div className="logs-panel-head">
+              <h3>Update History</h3>
+            </div>
+            <div className="logs-filters logs-filters-inline">
+              <select
+                aria-label="Filtrar updates por estado"
+                value={updateStatusFilter}
+                onChange={(e) => setUpdateStatusFilter(e.target.value as "all" | "success" | "failed")}
+              >
+                <option value="all">All Status</option>
+                <option value="success">Success</option>
+                <option value="failed">Failed</option>
+              </select>
+            </div>
+
+            {logs.updateFiles.length === 0 && <p className="empty">Sin logs de update.</p>}
+            {logs.updateFiles.length > 0 && filteredUpdateFiles.length === 0 && (
+              <p className="empty">Ningún update coincide con el filtro actual.</p>
+            )}
+
+            <div className="logs-update-list logs-scroll">
+              {pagedUpdateFiles.map((file) => (
                 <button
                   key={file.fileName}
-                  className={`logs-item-button ${selectedUpdateFile === file.fileName ? "active" : ""}`}
+                  className={`logs-update-row ${selectedUpdateFile === file.fileName ? "active" : ""}`}
                   onClick={() => void openUpdateLog(file.fileName)}
                   disabled={busy}
                 >
-                  <strong>{file.fileName}</strong>
-                  <span className="muted">
-                    {new Date(file.modifiedAt).toLocaleString()} | {(file.sizeBytes / 1024).toFixed(1)} KB
+                  <Icon name="update" className="logs-update-row-icon" />
+                  <div className="logs-update-row-main">
+                    <strong>{props.server.name}</strong>
+                    <span className="muted">{formatRelativeDateTime(file.modifiedAt)}</span>
+                  </div>
+                  <span className={`pill status-${file.status}`}>
+                    {STATUS_PILL_LABEL[file.status]}
                   </span>
                 </button>
               ))}
             </div>
-            <pre className="logs-content logs-scroll logs-main-content">
-              {selectedUpdateFile === null
-                ? "Selecciona un log de update para ver su contenido."
-                : updateContent}
-            </pre>
+
+            {filteredUpdateFiles.length > 0 && (
+              <div className="logs-update-pagination">
+                <span className="muted">
+                  Showing {updateRangeStart}-{updateRangeEnd} of {filteredUpdateFiles.length} updates
+                </span>
+                <div className="logs-update-pagination-controls">
+                  <button
+                    onClick={() => setUpdatePage((p) => Math.max(1, p - 1))}
+                    disabled={safeUpdatePage <= 1}
+                  >
+                    ‹
+                  </button>
+                  {Array.from({ length: updateTotalPages }, (_, i) => i + 1).map((pageNumber) => (
+                    <button
+                      key={pageNumber}
+                      className={pageNumber === safeUpdatePage ? "active" : ""}
+                      onClick={() => setUpdatePage(pageNumber)}
+                    >
+                      {pageNumber}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setUpdatePage((p) => Math.min(updateTotalPages, p + 1))}
+                    disabled={safeUpdatePage >= updateTotalPages}
+                  >
+                    ›
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="panel logs-update-details">
+            {selectedUpdateFileInfo === null ? (
+              <p className="empty">Selecciona un update para ver el detalle.</p>
+            ) : (
+              <>
+                <div className="logs-panel-head">
+                  <h3>Update Details</h3>
+                  <span className={`pill status-${selectedUpdateFileInfo.status}`}>
+                    {STATUS_PILL_LABEL[selectedUpdateFileInfo.status]}
+                  </span>
+                </div>
+
+                <div className="logs-update-details-title">
+                  <Icon name="update" className="logs-update-row-icon" />
+                  <div>
+                    <strong>{props.server.name}</strong>
+                    <span className="muted">{selectedUpdateFileInfo.fileName}</span>
+                  </div>
+                </div>
+
+                <dl className="logs-update-details-grid">
+                  <div>
+                    <dt>Date</dt>
+                    <dd>{new Date(selectedUpdateFileInfo.modifiedAt).toLocaleString()}</dd>
+                  </div>
+                  <div>
+                    <dt>Duration</dt>
+                    <dd>{formatDuration(selectedUpdateFileInfo.durationMs)}</dd>
+                  </div>
+                  <div>
+                    <dt>Size</dt>
+                    <dd>{formatSize(selectedUpdateFileInfo.sizeBytes)}</dd>
+                  </div>
+                  <div>
+                    <dt>Type</dt>
+                    <dd>Game Update</dd>
+                  </div>
+                </dl>
+
+                <div className="logs-update-details-tabs">
+                  <button className="active">Log Output</button>
+                  <button disabled title="Sin datos de archivos por update todavía">
+                    Files
+                  </button>
+                </div>
+
+                <pre className="logs-terminal logs-scroll">
+                  {updateContent.length === 0
+                    ? "Selecciona un log de update para ver su contenido."
+                    : updateContent.split("\n").map((line, index) => (
+                        <div key={index} className={`log-line-${classifyLogLine(line)}`}>
+                          {line.length === 0 ? "\u00a0" : line}
+                        </div>
+                      ))}
+                </pre>
+
+                <div className="logs-update-details-footer">
+                  <button onClick={() => void openUpdateLogExternally()}>
+                    <Icon name="folder" className="button-icon" />
+                    Open in external viewer
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </section>
       );
@@ -354,57 +567,36 @@ export function LogsViewer(props: Props): JSX.Element {
       {loading && <p className="muted">Cargando logs...</p>}
 
       {!loading && logs !== null && (
-        <div className="logs-summary-grid">
-          <article className="overview-card">
-            <h3><Icon name="status" className="card-heading-icon" /> Errores</h3>
-            <p>{errorsCount}</p>
-            <span className="muted">últimos eventos</span>
-          </article>
-          <article className="overview-card">
-            <h3><Icon name="status" className="card-heading-icon" /> Warnings</h3>
-            <p>{warningsCount}</p>
-            <span className="muted">a revisar</span>
-          </article>
-          <article className="overview-card">
-            <h3><Icon name="logs" className="card-heading-icon" /> Update Logs</h3>
-            <p>{logs.updateFiles.length}</p>
-            <span className="muted">archivos detectados</span>
-          </article>
-        </div>
-      )}
-
-      {!loading && logs !== null && (
         <div className="logs-shell">
-          <aside className="panel logs-nav" aria-label="Navegación de secciones de logs">
+          <nav className="logs-tabs" aria-label="Secciones de logs">
             <button
               className={activeSection === "events" ? "active" : ""}
               onClick={() => setActiveSection("events")}
             >
-              <Icon name="logs" className="nav-icon" /> Eventos ({logs.events.length})
+              Events
+              {(errorsCount > 0 || warningsCount > 0) && (
+                <span className="logs-tab-badge">{errorsCount + warningsCount}</span>
+              )}
             </button>
             <button
               className={activeSection === "runtime" ? "active" : ""}
               onClick={() => setActiveSection("runtime")}
             >
-              <Icon name="server" className="nav-icon" /> Runtime ({logs.runtimeLogLines.length})
+              Runtime
             </button>
             <button
               className={activeSection === "updates" ? "active" : ""}
               onClick={() => setActiveSection("updates")}
             >
-              <Icon name="update" className="nav-icon" /> Update logs ({logs.updateFiles.length})
+              Update Logs
             </button>
             <button
               className={activeSection === "backups" ? "active" : ""}
               onClick={() => setActiveSection("backups")}
             >
-              <Icon name="download" className="nav-icon" /> Backups ({logs.backups.length})
+              Backups
             </button>
-            <div className="logs-nav-diagnosis">
-              <h4><Icon name="status" className="card-heading-icon" /> Diagnóstico rápido</h4>
-              <pre className="logs-content logs-scroll">{buildQuickDiagnosis()}</pre>
-            </div>
-          </aside>
+          </nav>
 
           {renderSection()}
         </div>
@@ -412,3 +604,4 @@ export function LogsViewer(props: Props): JSX.Element {
     </div>
   );
 }
+

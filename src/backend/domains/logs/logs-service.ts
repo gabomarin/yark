@@ -4,6 +4,7 @@ import type {
   AppEvent,
   ServerOperationalLogs,
   ServerUpdateLogFile,
+  ServerUpdateLogStatus,
 } from "@shared/types";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { BackupRepository } from "../../infra/db/backup-repository";
@@ -11,6 +12,22 @@ import type { ProcessManager } from "../../infra/process/process-manager";
 
 function isSafeFileName(fileName: string): boolean {
   return !fileName.includes("/") && !fileName.includes("\\") && !fileName.includes("..");
+}
+
+function parseUpdateLogHeader(content: string): {
+  status: ServerUpdateLogStatus;
+  exitCode: number | null;
+  durationMs: number | null;
+} {
+  const headerEnd = content.indexOf("--- stdout ---");
+  const header = headerEnd === -1 ? content : content.slice(0, headerEnd);
+  const exitCodeMatch = header.match(/^exitCode=(-?\d+)$/m);
+  const durationMatch = header.match(/^durationMs=(\d+)$/m);
+  const exitCode = exitCodeMatch !== null ? Number(exitCodeMatch[1]) : null;
+  const durationMs = durationMatch !== null ? Number(durationMatch[1]) : null;
+  const status: ServerUpdateLogStatus =
+    exitCode === null ? "unknown" : exitCode === 0 ? "success" : "failed";
+  return { status, exitCode, durationMs };
 }
 
 export class LogsService {
@@ -43,7 +60,7 @@ export class LogsService {
     };
   }
 
-  async readUpdateLog(serverId: string, fileName: string, maxBytes = 250_000): Promise<string> {
+  resolveUpdateLogPath(serverId: string, fileName: string): string {
     const server = this.repo.get(serverId);
     if (server === null) {
       throw new Error("El servidor no existe");
@@ -53,7 +70,11 @@ export class LogsService {
       throw new Error("Nombre de archivo de log inválido");
     }
 
-    const path = join(this.updatesLogDir, fileName);
+    return join(this.updatesLogDir, fileName);
+  }
+
+  async readUpdateLog(serverId: string, fileName: string, maxBytes = 250_000): Promise<string> {
+    const path = this.resolveUpdateLogPath(serverId, fileName);
     const content = await readFile(path, "utf8");
     if (content.length <= maxBytes) {
       return content;
@@ -128,11 +149,26 @@ export class LogsService {
       try {
         const info = await stat(fullPath);
         if (!info.isFile()) continue;
+        let status: ServerUpdateLogStatus = "unknown";
+        let exitCode: number | null = null;
+        let durationMs: number | null = null;
+        try {
+          const content = await readFile(fullPath, "utf8");
+          const parsed = parseUpdateLogHeader(content);
+          status = parsed.status;
+          exitCode = parsed.exitCode;
+          durationMs = parsed.durationMs;
+        } catch {
+          // ignora errores de parseo de contenido, deja status "unknown"
+        }
         files.push({
           fileName,
           fullPath,
           modifiedAt: info.mtime.toISOString(),
           sizeBytes: info.size,
+          status,
+          exitCode,
+          durationMs,
         });
       } catch {
         // ignora archivos que desaparecen o fallan al leer metadata

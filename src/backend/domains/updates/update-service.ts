@@ -262,6 +262,7 @@ export class UpdateService {
       }
 
       const wasRunning = this.processes.isActive(serverId);
+      const startedAt = new Date();
       this.servers.addEvent(
         serverId,
         "update_started",
@@ -281,6 +282,7 @@ export class UpdateService {
 
       try {
         const cmd = await this.runSteamUpdate(server.installDir, "update", serverId);
+        const durationMs = Date.now() - startedAt.getTime();
         await writeFile(
           logPath,
           [
@@ -288,6 +290,8 @@ export class UpdateService {
             `server=${server.name}`,
             `installDir=${server.installDir}`,
             `exitCode=${cmd.code}`,
+            `startedAt=${startedAt.toISOString()}`,
+            `durationMs=${durationMs}`,
             "--- stdout ---",
             cmd.stdout,
             "--- stderr ---",

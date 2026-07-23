@@ -205,4 +205,16 @@ export function registerIpcHandlers(
       return logs.exportServerLogs(serverId, result.filePath);
     }),
   );
+
+  ipcMain.handle(
+    IPC.logsOpenUpdateFile,
+    (_e, serverId: string, fileName: string) =>
+      wrap(async () => {
+        const path = logs.resolveUpdateLogPath(serverId, fileName);
+        const error = await shell.openPath(path);
+        if (error.length > 0) {
+          throw new Error(`No se pudo abrir el log: ${error}`);
+        }
+      }),
+  );
 }

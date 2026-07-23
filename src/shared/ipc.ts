@@ -47,6 +47,7 @@ export const IPC = {
   logsList: "logs:list",
   logsReadUpdate: "logs:read-update",
   logsExport: "logs:export",
+  logsOpenUpdateFile: "logs:open-update-file",
 } as const;
 
 /** Canal de push (main -> renderer). */
@@ -113,6 +114,10 @@ export interface RendererApi {
     maxBytes?: number,
   ): Promise<IpcResult<string>>;
   exportServerLogs(serverId: string): Promise<IpcResult<string | null>>;
+  openServerUpdateLogFile(
+    serverId: string,
+    fileName: string,
+  ): Promise<IpcResult<void>>;
   onServerStatus(
     listener: (info: ServerRuntimeInfo) => void,
   ): () => void;
