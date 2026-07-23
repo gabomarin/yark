@@ -73,7 +73,7 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - [-] Ruta configurable de `steamcmd.exe`.
 - [-] Instalador asistido de SteamCMD.
 - [-] Bootstrap de archivos base del servidor por SteamCMD.
-- [-] Cola persistente de jobs criticos para updates y bootstrap (implementada cola persistente básica con reintentos para install-files/update; falta extender a backup/restore y visibilidad en UI).
+- [-] Cola persistente de jobs criticos para updates y bootstrap (cola persistente con reintentos en install-files/update y backup/restore; falta visibilidad completa en UI).
 
 ### Observabilidad y logs
 - [x] Eventos recientes persistidos y visibles en UI.
@@ -96,7 +96,7 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - [x] Boton global para instalar SteamCMD (ruta por defecto local).
 - [x] Selector nativo de archivo para `steamcmd.exe`.
 - [-] Panel de SteamCMD en UI (estado + salida de consola reciente + cancelación de proceso activa por servidor + ruta manual configurable).
-- [-] Mejoras visuales para gestionar backups, restores y logs (logs con acciones rápidas de diagnóstico y panel de resumen).
+- [-] Mejoras visuales para gestionar backups, restores y logs (aplicado rediseño base del UI, navegación por secciones en logs, scroll interno en paneles, mejor uso del ancho e iconografía; queda pulido final y diagnóstico guiado).
 - [ ] Asistentes guiados para bootstrap, update y restore.
 
 ## Pruebas y verificacion actual

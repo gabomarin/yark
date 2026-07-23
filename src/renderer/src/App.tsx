@@ -9,6 +9,7 @@ import type {
   SteamCmdStatus,
 } from "@shared/types";
 import { IniEditor } from "./components/IniEditor";
+import { Icon } from "./components/Icon";
 import { LogsViewer } from "./components/LogsViewer";
 import { ServerCard } from "./components/ServerCard";
 import { ServerForm } from "./components/ServerForm";
@@ -32,6 +33,13 @@ export function App(): JSX.Element {
   const [steamCmdConsole, setSteamCmdConsole] = useState<SteamCmdConsoleSnapshot | null>(null);
   const [view, setView] = useState<View>({ kind: "list" });
   const [error, setError] = useState<string | null>(null);
+
+  const runningServers = Array.from(statuses.values()).filter(
+    (status) => status.status === "running",
+  ).length;
+  const installedServers = Array.from(installationInfo.values()).filter(
+    (info) => info.installed,
+  ).length;
 
   const officialVersion = Array.from(installationInfo.values())
     .map((info) => info.officialVersion)
@@ -130,7 +138,7 @@ export function App(): JSX.Element {
         <header className="topbar">
           <h1>ARK Server GBO</h1>
         </header>
-        <main className="content">
+        <main className="content content-single">
           <IniEditor
             server={view.profile}
             onBack={() => {
@@ -149,7 +157,7 @@ export function App(): JSX.Element {
         <header className="topbar">
           <h1>ARK Server GBO</h1>
         </header>
-        <main className="content">
+        <main className="content content-single">
           <LogsViewer
             server={view.profile}
             onBack={() => {
@@ -168,7 +176,7 @@ export function App(): JSX.Element {
         <header className="topbar">
           <h1>ARK Server GBO</h1>
         </header>
-        <main className="content">
+        <main className="content content-single">
           <ServerForm
             initial={view.kind === "edit" ? view.profile : null}
             onCancel={() => setView({ kind: "list" })}
@@ -185,21 +193,35 @@ export function App(): JSX.Element {
   return (
     <div className="app">
       <header className="topbar">
-        <h1>ARK Server GBO</h1>
-        <span className="muted">Official Version: {officialVersion ?? "No detectada"}</span>
-        {steamCmdStatus?.detected === true ? (
-          <span className="muted" title={steamCmdStatus.executablePath ?? undefined}>
-            SteamCMD detectado
+        <div className="topbar-brand">
+          <h1>ARK Server GBO</h1>
+          <span className="muted">Panel multi-servidor local</span>
+        </div>
+        <div className="topbar-actions">
+          <span className="chip chip-icon">
+            <Icon name="server" className="chip-icon-svg" />
+            <span>Official Version: {officialVersion ?? "No detectada"}</span>
           </span>
-        ) : (
-          <button onClick={() => void runAction(() => window.api.installSteamCmd())}>
-            Instalar SteamCMD
+          {steamCmdStatus?.detected === true ? (
+            <span className="chip chip-icon" title={steamCmdStatus.executablePath ?? undefined}>
+              <Icon name="download" className="chip-icon-svg" />
+              SteamCMD detectado
+            </span>
+          ) : (
+            <button className="button-icon-left" onClick={() => void runAction(() => window.api.installSteamCmd())}>
+              <Icon name="download" className="button-icon" />
+              Instalar SteamCMD
+            </button>
+          )}
+          <button className="button-icon-left" onClick={() => void pickSteamCmdPath()}>
+            <Icon name="folder" className="button-icon" />
+            Elegir steamcmd.exe
           </button>
-        )}
-        <button onClick={() => void pickSteamCmdPath()}>Elegir steamcmd.exe</button>
-        <button className="primary" onClick={() => setView({ kind: "create" })}>
-          + Nuevo servidor
-        </button>
+          <button className="primary button-icon-left" onClick={() => setView({ kind: "create" })}>
+            <Icon name="server" className="button-icon" />
+            + Nuevo servidor
+          </button>
+        </div>
       </header>
 
       {error !== null && (
@@ -208,6 +230,28 @@ export function App(): JSX.Element {
           <button onClick={() => setError(null)}>✕</button>
         </div>
       )}
+
+      <section className="overview-grid" aria-label="Resumen operativo">
+        <article className="overview-card">
+          <h2><Icon name="status" className="card-heading-icon" /> Servidores activos</h2>
+          <p>{runningServers}</p>
+          <span className="muted">de {servers.length} configurados</span>
+        </article>
+        <article className="overview-card">
+          <h2><Icon name="download" className="card-heading-icon" /> Instalación lista</h2>
+          <p>{installedServers}</p>
+          <span className="muted">con binario detectado</span>
+        </article>
+        <article className="overview-card">
+          <h2><Icon name="download" className="card-heading-icon" /> SteamCMD</h2>
+          <p>{steamCmdStatus?.running ? "En ejecución" : "En espera"}</p>
+          <span className="muted">
+            {steamCmdStatus?.operation != null
+              ? `Operación: ${steamCmdStatus.operation}`
+              : "sin operación activa"}
+          </span>
+        </article>
+      </section>
 
       <main className="content">
         <section className="servers">

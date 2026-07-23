@@ -56,6 +56,7 @@ void app.whenReady().then(() => {
     repo,
     backupRepo,
     processManager,
+    settings,
     join(userData, "backups"),
   );
   const backupScheduler = new BackupScheduler(backupService);

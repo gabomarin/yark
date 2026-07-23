@@ -1,12 +1,35 @@
 import { cp, mkdir, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
+import { randomUUID } from "node:crypto";
 import type { BackupPolicy, BackupRecord, ServerProfile } from "@shared/types";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { BackupRepository } from "../../infra/db/backup-repository";
 import type { ProcessManager } from "../../infra/process/process-manager";
+import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
 import { rconExec } from "../../infra/rcon/rcon-client";
 
 const RCON_HOST = "127.0.0.1";
+const BACKUP_CRITICAL_JOBS_KEY = "backupCriticalJobsQueue.v1";
+const BACKUP_JOB_RETRY_DELAY_MS = 5000;
+
+type BackupCriticalJobType = "pre-update-backup" | "restore";
+
+interface BackupCriticalJob {
+  id: string;
+  type: BackupCriticalJobType;
+  serverId: string;
+  backupId: string | null;
+  attempts: number;
+  maxAttempts: number;
+  status: "pending" | "running";
+  createdAt: string;
+  updatedAt: string;
+  lastError: string | null;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function slug(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -31,12 +54,27 @@ async function directorySize(path: string): Promise<number> {
  * Copia carpeta SavedArks + configuración WindowsServer.
  */
 export class BackupService {
+  private queue: BackupCriticalJob[] = [];
+  private processingQueue = false;
+  private readonly waiters = new Map<string, Array<{
+    resolve: (value: unknown) => void;
+    reject: (error: Error) => void;
+  }>>();
+
   constructor(
     private readonly servers: ServerRepository,
     private readonly backups: BackupRepository,
     private readonly processes: ProcessManager,
+    private readonly settings: AppSettingsRepository,
     private readonly rootBackupDir: string,
-  ) {}
+  ) {
+    this.queue = this.loadQueue();
+    if (this.queue.length > 0) {
+      setTimeout(() => {
+        void this.processQueue();
+      }, 250);
+    }
+  }
 
   async createManualBackup(serverId: string): Promise<BackupRecord> {
     return this.createBackup(serverId, "manual", null);
@@ -51,11 +89,11 @@ export class BackupService {
   }
 
   async createPreUpdateBackupForJob(serverId: string): Promise<BackupRecord> {
-    return this.createBackup(serverId, "pre_update", "Backup previo a update");
+    return this.enqueueAndWait<BackupRecord>("pre-update-backup", serverId, null);
   }
 
   async restoreBackupForJob(serverId: string, backupId: string): Promise<void> {
-    await this.restoreBackup(serverId, backupId);
+    await this.enqueueAndWait<void>("restore", serverId, backupId);
   }
 
   list(serverId: string, limit: number): BackupRecord[] {
@@ -286,6 +324,198 @@ export class BackupService {
       );
       throw err;
     }
+  }
+
+  private async enqueueAndWait<T>(
+    type: BackupCriticalJobType,
+    serverId: string,
+    backupId: string | null,
+  ): Promise<T> {
+    const existingPending = this.queue.find(
+      (job) =>
+        job.serverId === serverId
+        && job.type === type
+        && job.backupId === backupId,
+    );
+    if (existingPending !== undefined) {
+      return await new Promise<T>((resolve, reject) => {
+        this.addWaiter(existingPending.id, {
+          resolve: (value) => resolve(value as T),
+          reject,
+        });
+      });
+    }
+
+    const now = new Date().toISOString();
+    const job: BackupCriticalJob = {
+      id: randomUUID(),
+      type,
+      serverId,
+      backupId,
+      attempts: 0,
+      maxAttempts: 3,
+      status: "pending",
+      createdAt: now,
+      updatedAt: now,
+      lastError: null,
+    };
+
+    this.queue.push(job);
+    this.persistQueue();
+    this.servers.addEvent(
+      serverId,
+      "backup_created",
+      "info",
+      `Job encolado: ${type} (${job.id.slice(0, 8)})`,
+    );
+
+    const completion = new Promise<T>((resolve, reject) => {
+      this.addWaiter(job.id, {
+        resolve: (value) => resolve(value as T),
+        reject,
+      });
+    });
+    void this.processQueue();
+    return await completion;
+  }
+
+  private async processQueue(): Promise<void> {
+    if (this.processingQueue) {
+      return;
+    }
+    this.processingQueue = true;
+
+    try {
+      for (;;) {
+        const job = this.queue.find((candidate) => candidate.status === "pending");
+        if (job === undefined) {
+          break;
+        }
+
+        job.status = "running";
+        job.updatedAt = new Date().toISOString();
+        this.persistQueue();
+
+        try {
+          let result: unknown;
+          if (job.type === "pre-update-backup") {
+            result = await this.createBackup(
+              job.serverId,
+              "pre_update",
+              "Backup previo a update",
+            );
+          } else {
+            if (job.backupId === null || job.backupId.trim().length === 0) {
+              throw new Error("backupId requerido para job restore");
+            }
+            await this.restoreBackup(job.serverId, job.backupId);
+            result = undefined;
+          }
+
+          this.resolveJob(job.id, result);
+          this.removeJob(job.id);
+          this.persistQueue();
+        } catch (error) {
+          job.attempts += 1;
+          job.lastError = error instanceof Error ? error.message : String(error);
+          job.updatedAt = new Date().toISOString();
+
+          if (job.attempts >= job.maxAttempts) {
+            this.rejectJob(job.id, new Error(job.lastError));
+            this.servers.addEvent(
+              job.serverId,
+              "error",
+              "error",
+              `Job ${job.type} agotó reintentos (${job.maxAttempts}): ${job.lastError}`,
+            );
+            this.removeJob(job.id);
+            this.persistQueue();
+            continue;
+          }
+
+          job.status = "pending";
+          this.persistQueue();
+          this.servers.addEvent(
+            job.serverId,
+            "error",
+            "warning",
+            `Job ${job.type} reintentará (${job.attempts}/${job.maxAttempts})`,
+          );
+          await delay(BACKUP_JOB_RETRY_DELAY_MS);
+        }
+      }
+    } finally {
+      this.processingQueue = false;
+    }
+  }
+
+  private loadQueue(): BackupCriticalJob[] {
+    const raw = this.settings.get(BACKUP_CRITICAL_JOBS_KEY);
+    if (raw === null || raw.trim().length === 0) {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as BackupCriticalJob[];
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+      return parsed
+        .filter((job) =>
+          typeof job.id === "string"
+          && (job.type === "pre-update-backup" || job.type === "restore")
+          && typeof job.serverId === "string",
+        )
+        .map((job) => ({
+          ...job,
+          backupId: typeof job.backupId === "string" ? job.backupId : null,
+          status: "pending",
+          attempts: Number.isFinite(job.attempts) ? Math.max(0, Math.floor(job.attempts)) : 0,
+          maxAttempts: Number.isFinite(job.maxAttempts)
+            ? Math.max(1, Math.floor(job.maxAttempts))
+            : 3,
+          updatedAt: new Date().toISOString(),
+        }));
+    } catch {
+      return [];
+    }
+  }
+
+  private persistQueue(): void {
+    this.settings.set(BACKUP_CRITICAL_JOBS_KEY, JSON.stringify(this.queue));
+  }
+
+  private removeJob(jobId: string): void {
+    this.queue = this.queue.filter((job) => job.id !== jobId);
+  }
+
+  private resolveJob(jobId: string, value: unknown): void {
+    const waiters = this.waiters.get(jobId);
+    if (waiters !== undefined) {
+      for (const waiter of waiters) {
+        waiter.resolve(value);
+      }
+      this.waiters.delete(jobId);
+    }
+  }
+
+  private rejectJob(jobId: string, error: Error): void {
+    const waiters = this.waiters.get(jobId);
+    if (waiters !== undefined) {
+      for (const waiter of waiters) {
+        waiter.reject(error);
+      }
+      this.waiters.delete(jobId);
+    }
+  }
+
+  private addWaiter(
+    jobId: string,
+    waiter: { resolve: (value: unknown) => void; reject: (error: Error) => void },
+  ): void {
+    const current = this.waiters.get(jobId) ?? [];
+    current.push(waiter);
+    this.waiters.set(jobId, current);
   }
 
   private async applyRetention(serverId: string, policy: BackupPolicy): Promise<void> {

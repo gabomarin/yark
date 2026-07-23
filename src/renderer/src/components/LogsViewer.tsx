@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ServerOperationalLogs, ServerProfile } from "@shared/types";
+import { Icon } from "./Icon";
 
 interface Props {
   server: ServerProfile;
@@ -8,6 +9,7 @@ interface Props {
 
 export function LogsViewer(props: Props): JSX.Element {
   const [logs, setLogs] = useState<ServerOperationalLogs | null>(null);
+  const [activeSection, setActiveSection] = useState<"events" | "runtime" | "updates" | "backups">("events");
   const [selectedUpdateFile, setSelectedUpdateFile] = useState<string | null>(null);
   const [updateContent, setUpdateContent] = useState<string>("");
   const [eventSeverityFilter, setEventSeverityFilter] = useState<"all" | "info" | "warning" | "error">("all");
@@ -29,9 +31,18 @@ export function LogsViewer(props: Props): JSX.Element {
       return;
     }
     setLogs(result.data);
+    if (result.data.updateFiles.length > 0 && selectedUpdateFile === null) {
+      const first = result.data.updateFiles[0]?.fileName ?? null;
+      if (first !== null) {
+        void openUpdateLog(first);
+      }
+    }
   };
 
   useEffect(() => {
+    setSelectedUpdateFile(null);
+    setUpdateContent("");
+    setActiveSection("events");
     void load();
   }, [props.server.id]);
 
@@ -165,6 +176,151 @@ export function LogsViewer(props: Props): JSX.Element {
           return true;
         });
 
+  const errorsCount = logs?.events.filter((event) => event.severity === "error").length ?? 0;
+  const warningsCount = logs?.events.filter((event) => event.severity === "warning").length ?? 0;
+
+  const renderSection = () => {
+    if (logs === null) {
+      return null;
+    }
+
+    if (activeSection === "events") {
+      return (
+        <section className="panel logs-content-panel">
+          <div className="logs-panel-head">
+            <h3>Eventos ({filteredEvents.length}/{logs.events.length})</h3>
+            <div className="logs-actions-row">
+              <button onClick={() => void copyFilteredEvents()} disabled={filteredEvents.length === 0}>
+                Copiar filtrados
+              </button>
+              <button onClick={() => void copyDiagnosis()}>Copiar diagnóstico</button>
+            </div>
+          </div>
+
+          <div className="logs-filters logs-filters-inline">
+            <select
+              aria-label="Filtrar eventos por severidad"
+              value={eventSeverityFilter}
+              onChange={(e) =>
+                setEventSeverityFilter(e.target.value as "all" | "info" | "warning" | "error")
+              }
+            >
+              <option value="all">Todas las severidades</option>
+              <option value="info">Info</option>
+              <option value="warning">Warning</option>
+              <option value="error">Error</option>
+            </select>
+            <select
+              aria-label="Filtrar eventos por tipo"
+              value={eventTypeFilter}
+              onChange={(e) => setEventTypeFilter(e.target.value)}
+            >
+              <option value="all">Todos los tipos</option>
+              {allEventTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+            <input
+              type="text"
+              aria-label="Buscar texto en eventos"
+              placeholder="Buscar en eventos..."
+              value={eventQuery}
+              onChange={(e) => setEventQuery(e.target.value)}
+            />
+          </div>
+
+          {logs.events.length === 0 && <p className="empty">Sin eventos recientes.</p>}
+          {logs.events.length > 0 && filteredEvents.length === 0 && (
+            <p className="empty">No hay eventos que coincidan con el filtro actual.</p>
+          )}
+          <ul className="events logs-scroll logs-main-list">
+            {filteredEvents.map((event) => (
+              <li key={event.id} className={event.severity}>
+                <span className="muted">{new Date(event.createdAt).toLocaleString()}</span>{" "}
+                {event.message}
+              </li>
+            ))}
+          </ul>
+        </section>
+      );
+    }
+
+    if (activeSection === "runtime") {
+      return (
+        <section className="panel logs-content-panel">
+          <div className="logs-panel-head">
+            <h3>Runtime ({logs.runtimeLogLines.length})</h3>
+            <button onClick={() => void copyRuntimeLog()} disabled={logs.runtimeLogLines.length === 0}>
+              Copiar
+            </button>
+          </div>
+          {logs.runtimeLogLines.length === 0 && (
+            <p className="empty">Sin salida runtime capturada todavía.</p>
+          )}
+          {logs.runtimeLogLines.length > 0 && (
+            <pre className="logs-content logs-scroll logs-main-content">
+              {logs.runtimeLogLines.join("\n")}
+            </pre>
+          )}
+        </section>
+      );
+    }
+
+    if (activeSection === "updates") {
+      return (
+        <section className="panel logs-content-panel">
+          <div className="logs-panel-head">
+            <h3>Update logs ({logs.updateFiles.length})</h3>
+            <span className="muted">Selecciona un archivo para ver detalle</span>
+          </div>
+          <div className="logs-update-layout">
+            <div className="logs-list logs-scroll logs-main-list">
+              {logs.updateFiles.length === 0 && <p className="empty">Sin logs de update.</p>}
+              {logs.updateFiles.map((file) => (
+                <button
+                  key={file.fileName}
+                  className={`logs-item-button ${selectedUpdateFile === file.fileName ? "active" : ""}`}
+                  onClick={() => void openUpdateLog(file.fileName)}
+                  disabled={busy}
+                >
+                  <strong>{file.fileName}</strong>
+                  <span className="muted">
+                    {new Date(file.modifiedAt).toLocaleString()} | {(file.sizeBytes / 1024).toFixed(1)} KB
+                  </span>
+                </button>
+              ))}
+            </div>
+            <pre className="logs-content logs-scroll logs-main-content">
+              {selectedUpdateFile === null
+                ? "Selecciona un log de update para ver su contenido."
+                : updateContent}
+            </pre>
+          </div>
+        </section>
+      );
+    }
+
+    return (
+      <section className="panel logs-content-panel">
+        <h3>Backups ({logs.backups.length})</h3>
+        {logs.backups.length === 0 && <p className="empty">Sin historial de backups.</p>}
+        <div className="logs-list logs-scroll logs-main-list">
+          {logs.backups.map((backup) => (
+            <div key={backup.id} className="logs-item">
+              <strong>{backup.type}</strong>
+              <span className="muted">
+                {new Date(backup.createdAt).toLocaleString()} | {backup.status}
+              </span>
+              <span className="muted">{backup.path}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  };
+
   return (
     <div className="logs-viewer">
       <div className="logs-header">
@@ -191,127 +347,60 @@ export function LogsViewer(props: Props): JSX.Element {
       {loading && <p className="muted">Cargando logs...</p>}
 
       {!loading && logs !== null && (
-        <div className="logs-grid">
-          <section className="panel logs-panel">
-            <h3>Update logs ({logs.updateFiles.length})</h3>
-            {logs.updateFiles.length === 0 && <p className="empty">Sin logs de update.</p>}
-            <div className="logs-list logs-scroll">
-              {logs.updateFiles.map((file) => (
-                <div key={file.fileName} className="logs-item">
-                  <strong>{file.fileName}</strong>
-                  <span className="muted">
-                    {new Date(file.modifiedAt).toLocaleString()} | {(file.sizeBytes / 1024).toFixed(1)} KB
-                  </span>
-                  <button onClick={() => void openUpdateLog(file.fileName)} disabled={busy}>
-                    Ver contenido
-                  </button>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="panel logs-panel">
-            <h3>Backups ({logs.backups.length})</h3>
-            {logs.backups.length === 0 && <p className="empty">Sin historial de backups.</p>}
-            <div className="logs-list logs-scroll">
-              {logs.backups.map((backup) => (
-                <div key={backup.id} className="logs-item">
-                  <strong>{backup.type}</strong>
-                  <span className="muted">
-                    {new Date(backup.createdAt).toLocaleString()} | {backup.status}
-                  </span>
-                  <span className="muted">{backup.path}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="panel logs-panel">
-            <div className="logs-panel-head">
-              <h3>Runtime ({logs.runtimeLogLines.length})</h3>
-              <button onClick={() => void copyRuntimeLog()} disabled={logs.runtimeLogLines.length === 0}>
-                Copiar
-              </button>
-            </div>
-            {logs.runtimeLogLines.length === 0 && (
-              <p className="empty">Sin salida runtime capturada todavía.</p>
-            )}
-            {logs.runtimeLogLines.length > 0 && (
-              <pre className="logs-content logs-scroll">
-                {logs.runtimeLogLines.join("\n")}
-              </pre>
-            )}
-          </section>
-
-          <section className="panel logs-panel">
-            <h3>Eventos ({filteredEvents.length}/{logs.events.length})</h3>
-            <div className="logs-filters">
-              <select
-                aria-label="Filtrar eventos por severidad"
-                value={eventSeverityFilter}
-                onChange={(e) =>
-                  setEventSeverityFilter(e.target.value as "all" | "info" | "warning" | "error")
-                }
-              >
-                <option value="all">Todas las severidades</option>
-                <option value="info">Info</option>
-                <option value="warning">Warning</option>
-                <option value="error">Error</option>
-              </select>
-              <select
-                aria-label="Filtrar eventos por tipo"
-                value={eventTypeFilter}
-                onChange={(e) => setEventTypeFilter(e.target.value)}
-              >
-                <option value="all">Todos los tipos</option>
-                {allEventTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="text"
-                aria-label="Buscar texto en eventos"
-                placeholder="Buscar en eventos..."
-                value={eventQuery}
-                onChange={(e) => setEventQuery(e.target.value)}
-              />
-            </div>
-            {logs.events.length === 0 && <p className="empty">Sin eventos recientes.</p>}
-            {logs.events.length > 0 && filteredEvents.length === 0 && (
-              <p className="empty">No hay eventos que coincidan con el filtro actual.</p>
-            )}
-            <div className="logs-actions-row">
-              <button onClick={() => void copyFilteredEvents()} disabled={filteredEvents.length === 0}>
-                Copiar filtrados
-              </button>
-              <button onClick={() => void copyDiagnosis()}>Copiar diagnóstico</button>
-            </div>
-            <ul className="events logs-scroll">
-              {filteredEvents.map((event) => (
-                <li key={event.id} className={event.severity}>
-                  <span className="muted">{new Date(event.createdAt).toLocaleString()}</span>{" "}
-                  {event.message}
-                </li>
-              ))}
-            </ul>
-          </section>
+        <div className="logs-summary-grid">
+          <article className="overview-card">
+            <h3><Icon name="status" className="card-heading-icon" /> Errores</h3>
+            <p>{errorsCount}</p>
+            <span className="muted">últimos eventos</span>
+          </article>
+          <article className="overview-card">
+            <h3><Icon name="status" className="card-heading-icon" /> Warnings</h3>
+            <p>{warningsCount}</p>
+            <span className="muted">a revisar</span>
+          </article>
+          <article className="overview-card">
+            <h3><Icon name="logs" className="card-heading-icon" /> Update Logs</h3>
+            <p>{logs.updateFiles.length}</p>
+            <span className="muted">archivos detectados</span>
+          </article>
         </div>
       )}
 
       {!loading && logs !== null && (
-        <section className="panel logs-content-panel">
-          <h3>Diagnóstico rápido</h3>
-          <pre className="logs-content logs-scroll">{buildQuickDiagnosis()}</pre>
-        </section>
-      )}
+        <div className="logs-shell">
+          <aside className="panel logs-nav" aria-label="Navegación de secciones de logs">
+            <button
+              className={activeSection === "events" ? "active" : ""}
+              onClick={() => setActiveSection("events")}
+            >
+              <Icon name="logs" className="nav-icon" /> Eventos ({logs.events.length})
+            </button>
+            <button
+              className={activeSection === "runtime" ? "active" : ""}
+              onClick={() => setActiveSection("runtime")}
+            >
+              <Icon name="server" className="nav-icon" /> Runtime ({logs.runtimeLogLines.length})
+            </button>
+            <button
+              className={activeSection === "updates" ? "active" : ""}
+              onClick={() => setActiveSection("updates")}
+            >
+              <Icon name="update" className="nav-icon" /> Update logs ({logs.updateFiles.length})
+            </button>
+            <button
+              className={activeSection === "backups" ? "active" : ""}
+              onClick={() => setActiveSection("backups")}
+            >
+              <Icon name="download" className="nav-icon" /> Backups ({logs.backups.length})
+            </button>
+            <div className="logs-nav-diagnosis">
+              <h4><Icon name="status" className="card-heading-icon" /> Diagnóstico rápido</h4>
+              <pre className="logs-content logs-scroll">{buildQuickDiagnosis()}</pre>
+            </div>
+          </aside>
 
-      {selectedUpdateFile !== null && (
-        <section className="panel logs-content-panel">
-          <h3>Contenido: {selectedUpdateFile}</h3>
-          <pre className="logs-content logs-scroll">{updateContent}</pre>
-        </section>
+          {renderSection()}
+        </div>
       )}
     </div>
   );
