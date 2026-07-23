@@ -16,6 +16,8 @@ interface Props {
   search: string;
   onSearchChange: (value: string) => void;
   onCreateServer: () => void;
+  openNativeTerminalOnStart: boolean;
+  onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
   servers: ServerProfile[];
   filteredServers: ServerProfile[];
   runningServers: number;
@@ -51,6 +53,8 @@ export function OverviewPage(props: Props): JSX.Element {
         search={props.search}
         onSearchChange={props.onSearchChange}
         onCreateServer={props.onCreateServer}
+        openNativeTerminalOnStart={props.openNativeTerminalOnStart}
+        onOpenNativeTerminalOnStartChange={props.onOpenNativeTerminalOnStartChange}
       />
 
       <Stack gap="lg" className={classes.content}>

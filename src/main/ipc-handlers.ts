@@ -1,4 +1,5 @@
 import { BrowserWindow, dialog, ipcMain, shell, type OpenDialogOptions, type SaveDialogOptions } from "electron";
+import { spawn } from "node:child_process";
 import { IPC, type IpcResult, type PickPathKind } from "../shared/ipc";
 import type { ServerIniPayload, ServerProfileInput, StartServerOptions } from "../shared/types";
 import type { InstanceService } from "../backend/domains/instances/instance-service";
@@ -81,6 +82,27 @@ export function registerIpcHandlers(
       if (error.length > 0) {
         throw new Error(`No se pudo abrir la carpeta: ${error}`);
       }
+    }),
+  );
+
+  ipcMain.handle(IPC.serversOpenNativeTerminal, (_e, id: string) =>
+    wrap(() => {
+      const folderPath = instances.installDirFor(id);
+      const title = `ARK Server ${id}`;
+      const command =
+        `title ${title} && cd /d "${folderPath}"` +
+        " && echo Servidor iniciado desde ARK Manager." +
+        " && echo Salida en vivo disponible en Logs > Runtime.";
+      const child = spawn(
+        "cmd.exe",
+        ["/c", "start", `"${title}"`, "cmd.exe", "/k", command],
+        {
+          detached: true,
+          windowsHide: false,
+          stdio: "ignore",
+        },
+      );
+      child.unref();
     }),
   );
 

@@ -9,6 +9,7 @@ import type {
   SteamCmdStatus,
 } from "@shared/types";
 import { AppRouter } from "@app/AppRouter";
+import { LogsPage } from "@features/logs/LogsPage";
 import { OverviewPage } from "@features/overview/OverviewPage";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { SteamCmdPage } from "@features/steamcmd/SteamCmdPage";
@@ -16,6 +17,7 @@ import type { Route } from "@layout/Sidebar/Sidebar";
 import { PlaceholderPage } from "@ui/PlaceholderPage/PlaceholderPage";
 
 const APP_VERSION = "0.1.0";
+const OPEN_NATIVE_TERMINAL_PREF_KEY = "overview.openNativeTerminalOnStart";
 
 type LogsSection = "events" | "runtime" | "updates" | "backups";
 
@@ -37,8 +39,21 @@ export function App(): JSX.Element {
   const [steamCmdConsole, setSteamCmdConsole] = useState<SteamCmdConsoleSnapshot | null>(null);
   const [route, setRoute] = useState<Route>("overview");
   const [overlay, setOverlay] = useState<Overlay>(null);
+  const [logsServerId, setLogsServerId] = useState<string | null>(null);
+  const [logsInitialSection, setLogsInitialSection] = useState<LogsSection>("events");
+  const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState<boolean>(() => {
+    const stored = window.localStorage.getItem(OPEN_NATIVE_TERMINAL_PREF_KEY);
+    return stored === "1";
+  });
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      OPEN_NATIVE_TERMINAL_PREF_KEY,
+      openNativeTerminalOnStart ? "1" : "0",
+    );
+  }, [openNativeTerminalOnStart]);
 
   const runningServers = Array.from(statuses.values()).filter(
     (status) => status.status === "running",
@@ -176,14 +191,37 @@ export function App(): JSX.Element {
     [refresh],
   );
 
+  const openLogsForServer = useCallback((serverId: string, section: LogsSection = "events") => {
+    setOverlay(null);
+    setLogsServerId(serverId);
+    setLogsInitialSection(section);
+    setRoute("logs");
+  }, []);
+
+  const startServerAndOpenRuntimeLogs = useCallback(
+    async (id: string) => {
+      setError(null);
+      const startRes = await window.api.startServer(id);
+      if (!startRes.ok) {
+        setError(startRes.error ?? "No se pudo iniciar el servidor");
+        await refresh();
+        return;
+      }
+      if (openNativeTerminalOnStart) {
+        const terminalRes = await window.api.openServerNativeTerminal(id);
+        if (!terminalRes.ok) {
+          setError(terminalRes.error ?? "Servidor iniciado, pero no se pudo abrir CMD nativo");
+        }
+      }
+      openLogsForServer(id, "runtime");
+      await refresh();
+    },
+    [openLogsForServer, openNativeTerminalOnStart, refresh],
+  );
+
   const navigate = useCallback((next: Route) => {
     setOverlay(null);
     setRoute(next);
-  }, []);
-
-  const openLogsForServer = useCallback((serverId: string, _section: LogsSection = "events") => {
-    setOverlay(null);
-    setRoute("logs");
   }, []);
 
   const renderMain = (): JSX.Element => {
@@ -225,6 +263,8 @@ export function App(): JSX.Element {
               search={search}
               onSearchChange={setSearch}
               onCreateServer={() => setOverlay({ kind: "create" })}
+              openNativeTerminalOnStart={openNativeTerminalOnStart}
+              onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
               servers={servers}
               filteredServers={filteredServers}
               runningServers={runningServers}
@@ -240,7 +280,7 @@ export function App(): JSX.Element {
               onEditServer={(server) => setOverlay({ kind: "edit", profile: server })}
               onOpenIni={(server) => setOverlay({ kind: "ini", profile: server })}
               onOpenLogs={(serverId) => openLogsForServer(serverId, "events")}
-              onStartServer={(id) => void runAction(() => window.api.startServer(id))}
+              onStartServer={(id) => void startServerAndOpenRuntimeLogs(id)}
               onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
               onRestartServer={(id) => void restartServer(id)}
               onKillServer={(id) => void runAction(() => window.api.killServer(id))}
@@ -271,6 +311,16 @@ export function App(): JSX.Element {
               onInstallSteamCmd={() => void runAction(() => window.api.installSteamCmd())}
               onPickSteamCmdPath={() => void pickSteamCmdPath()}
               onCancelSteamCmd={() => void runAction(() => window.api.cancelSteamCmd())}
+            />
+          ),
+        }}
+        logs={{
+          page: (
+            <LogsPage
+              servers={servers}
+              selectedServerId={logsServerId}
+              onSelectedServerChange={setLogsServerId}
+              initialSection={logsInitialSection}
             />
           ),
         }}

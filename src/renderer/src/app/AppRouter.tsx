@@ -12,6 +12,10 @@ interface SteamCmdSlot {
   page: ReactNode;
 }
 
+interface LogsSlot {
+  page: ReactNode;
+}
+
 interface Props {
   route: Route;
   appVersion: string;
@@ -21,6 +25,7 @@ interface Props {
   onNavigate: (route: Route) => void;
   overview: OverviewSlot | null;
   steamcmd: SteamCmdSlot | null;
+  logs: LogsSlot | null;
   error?: string | null;
   onDismissError?: () => void;
 }
@@ -57,7 +62,7 @@ export function AppRouter(props: Props): JSX.Element {
           />
         );
       case "logs":
-        return (
+        return props.logs?.page ?? (
           <PlaceholderPage
             title="Logs"
             subtitle="Eventos, runtime, updates y backups por servidor"

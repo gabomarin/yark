@@ -29,6 +29,7 @@ export const IPC = {
   serversInstallFiles: "servers:install-files",
   serversUpdateNow: "servers:update-now",
   serversOpenFolder: "servers:open-folder",
+  serversOpenNativeTerminal: "servers:open-native-terminal",
   serversStatuses: "servers:statuses",
   serversInstallation: "servers:installation",
   steamcmdStatus: "steamcmd:status",
@@ -76,6 +77,7 @@ export interface RendererApi {
   installServerFiles(id: string): Promise<IpcResult<void>>;
   updateServerNow(id: string): Promise<IpcResult<void>>;
   openServerFolder(id: string): Promise<IpcResult<void>>;
+  openServerNativeTerminal(id: string): Promise<IpcResult<void>>;
   installSteamCmd(): Promise<IpcResult<string>>;
   cancelSteamCmd(): Promise<IpcResult<boolean>>;
   setSteamCmdPath(path: string): Promise<IpcResult<string>>;
