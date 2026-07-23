@@ -1,10 +1,23 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { get } from "node:https";
 import { dirname, join } from "node:path";
 import { serverBinaryPath } from "./launch-args";
 import type { ServerInstallationInfo } from "@shared/types";
 
 const ASA_APP_ID = "2430930";
+const OFFICIAL_VERSION_TTL_MS = 15 * 60 * 1000;
+const ARKSTATUS_REFERENCE_SERVER_ID = "76247803";
+
+let officialVersionCache: {
+  value: string | null;
+  checkedAt: number;
+  inFlight: Promise<string | null> | null;
+} = {
+  value: null,
+  checkedAt: 0,
+  inFlight: null,
+};
 
 function firstMeaningfulLine(content: string): string | null {
   const lines = content
@@ -75,7 +88,7 @@ function readVersionFromExecutable(binaryPath: string): string | null {
       [
         "-NoProfile",
         "-Command",
-        `$v=(Get-Item -LiteralPath '${escapedPath}').VersionInfo.ProductVersion; if($v){$v}`,
+        `$i=(Get-Item -LiteralPath '${escapedPath}').VersionInfo; $v=$i.ProductVersion; if(-not $v){$v=$i.FileVersion}; if($v){$v}`,
       ],
       {
         encoding: "utf8",
@@ -147,6 +160,7 @@ function readBuildIdFromManifest(installDir: string): string | null {
     .at(-1);
 
   const roots = collectManifestRoots(installDir);
+  const fallbackBuildIds = new Set<string>();
 
   for (const root of roots) {
     const manifestPath = join(root, "steamapps", `appmanifest_${ASA_APP_ID}.acf`);
@@ -177,12 +191,244 @@ function readBuildIdFromManifest(installDir: string): string | null {
       if (matchesInstallDir) {
         return `build ${buildId}`;
       }
+
+      fallbackBuildIds.add(buildId);
     } catch {
       // Best effort: omite manifest ilegible.
     }
   }
 
+  if (fallbackBuildIds.size === 1) {
+    const onlyBuildId = [...fallbackBuildIds][0];
+    if (onlyBuildId !== undefined && onlyBuildId.length > 0) {
+      return `build ${onlyBuildId}`;
+    }
+  }
+
   return null;
+}
+
+function readArkVersionFromLogs(installDir: string): string | null {
+  const logsDir = join(installDir, "ShooterGame", "Saved", "Logs");
+  if (!existsSync(logsDir)) {
+    return null;
+  }
+
+  let logNames: string[];
+  try {
+    logNames = readdirSync(logsDir)
+      .filter((name) => /\.(log|txt)$/i.test(name));
+  } catch {
+    return null;
+  }
+
+  const sorted = logNames
+    .map((name) => {
+      const fullPath = join(logsDir, name);
+      let mtimeMs = 0;
+      try {
+        mtimeMs = statSync(fullPath).mtimeMs;
+      } catch {
+        mtimeMs = 0;
+      }
+      return { name, fullPath, mtimeMs };
+    })
+    .sort((a, b) => b.mtimeMs - a.mtimeMs);
+
+  for (const item of sorted) {
+    try {
+      const raw = readFileSync(item.fullPath, "utf8");
+      const match = raw.match(/ARK\s+Version\s*:\s*([^\r\n]+)/i);
+      if (match?.[1] !== undefined) {
+        const version = match[1].trim();
+        if (version.length > 0) {
+          return version;
+        }
+      }
+    } catch {
+      // Best effort: omite logs no legibles.
+    }
+  }
+
+  return null;
+}
+
+function readPathValue(source: unknown, path: string[]): unknown {
+  let current: unknown = source;
+  for (const segment of path) {
+    if (typeof current !== "object" || current === null) {
+      return undefined;
+    }
+    current = (current as Record<string, unknown>)[segment];
+  }
+  return current;
+}
+
+function normalizeBuildId(value: unknown): string | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return `${Math.trunc(value)}`;
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+  return null;
+}
+
+function extractOfficialBuildFromPayload(payload: unknown): string | null {
+  const appNode =
+    readPathValue(payload, ["data", ASA_APP_ID]) ??
+    readPathValue(payload, [ASA_APP_ID]) ??
+    readPathValue(payload, ["response", ASA_APP_ID]);
+
+  const candidates = [
+    readPathValue(appNode, ["depots", "branches", "public", "buildid"]),
+    readPathValue(appNode, ["depots", "branches", "public", "BuildID"]),
+    readPathValue(appNode, ["common", "buildid"]),
+    readPathValue(appNode, ["buildid"]),
+  ];
+
+  for (const candidate of candidates) {
+    const buildId = normalizeBuildId(candidate);
+    if (buildId !== null) {
+      return `build ${buildId}`;
+    }
+  }
+
+  return null;
+}
+
+function extractOfficialVersionFromArkStatusPayload(payload: unknown): string | null {
+  const servers = readPathValue(payload, ["s"]);
+  if (!Array.isArray(servers)) {
+    return null;
+  }
+
+  for (const item of servers) {
+    if (typeof item !== "object" || item === null) {
+      continue;
+    }
+    const row = item as Record<string, unknown>;
+    const isOfficial = row["is_official"] === true;
+    const version = row["v"];
+    if (!isOfficial || typeof version !== "string") {
+      continue;
+    }
+    const trimmed = version.trim();
+    if (trimmed.length > 0) {
+      return trimmed;
+    }
+  }
+
+  return null;
+}
+
+function fetchOfficialArkBuild(): Promise<string | null> {
+  return new Promise((resolve) => {
+    const req = get("https://api.steamcmd.net/v1/info/2430930", (res) => {
+      if ((res.statusCode ?? 500) >= 400) {
+        resolve(null);
+        res.resume();
+        return;
+      }
+
+      let body = "";
+      res.setEncoding("utf8");
+      res.on("data", (chunk) => {
+        body += chunk;
+      });
+      res.on("end", () => {
+        try {
+          const parsed = JSON.parse(body) as unknown;
+          resolve(extractOfficialBuildFromPayload(parsed));
+        } catch {
+          resolve(null);
+        }
+      });
+    });
+
+    req.setTimeout(3_500, () => {
+      req.destroy();
+      resolve(null);
+    });
+
+    req.on("error", () => {
+      resolve(null);
+    });
+  });
+}
+
+function fetchOfficialArkVersion(): Promise<string | null> {
+  return new Promise((resolve) => {
+    const req = get(
+      `https://arkstatus.com/api/internal/server?id=${ARKSTATUS_REFERENCE_SERVER_ID}`,
+      {
+        headers: {
+          accept: "application/json, text/plain, */*",
+          "user-agent": "ark-server-gbo/1.0",
+        },
+      },
+      (res) => {
+        if ((res.statusCode ?? 500) >= 400) {
+          resolve(null);
+          res.resume();
+          return;
+        }
+
+        let body = "";
+        res.setEncoding("utf8");
+        res.on("data", (chunk) => {
+          body += chunk;
+        });
+        res.on("end", () => {
+          try {
+            const parsed = JSON.parse(body) as unknown;
+            resolve(extractOfficialVersionFromArkStatusPayload(parsed));
+          } catch {
+            resolve(null);
+          }
+        });
+      },
+    );
+
+    req.setTimeout(3_500, () => {
+      req.destroy();
+      resolve(null);
+    });
+
+    req.on("error", () => {
+      resolve(null);
+    });
+  });
+}
+
+export async function readOfficialArkVersionCached(force = false): Promise<string | null> {
+  const now = Date.now();
+  if (!force && now - officialVersionCache.checkedAt < OFFICIAL_VERSION_TTL_MS) {
+    return officialVersionCache.value;
+  }
+
+  if (officialVersionCache.inFlight !== null) {
+    return officialVersionCache.inFlight;
+  }
+
+  officialVersionCache.inFlight = fetchOfficialArkVersion()
+    .then((value) => {
+      if (value !== null) {
+        return value;
+      }
+      return fetchOfficialArkBuild();
+    })
+    .then((value) => {
+      officialVersionCache.value = value;
+      officialVersionCache.checkedAt = Date.now();
+      return value;
+    })
+    .finally(() => {
+      officialVersionCache.inFlight = null;
+    });
+
+  return officialVersionCache.inFlight;
 }
 
 export function inspectServerInstallation(
@@ -191,18 +437,22 @@ export function inspectServerInstallation(
 ): ServerInstallationInfo {
   const binaryPath = serverBinaryPath(installDir);
   const installed = existsSync(binaryPath);
-  const version = installed
+  const build = installed
     ? (
         readVersionFromKnownFiles(installDir) ??
         readVersionFromExecutable(binaryPath) ??
         readBuildIdFromManifest(installDir)
       )
     : null;
+  const arkVersion = installed ? readArkVersionFromLogs(installDir) : null;
 
   return {
     serverId,
     installed,
-    version,
+    build,
+    arkVersion,
+    officialVersion: null,
+    version: build,
     binaryPath,
     checkedAt: new Date().toISOString(),
   };

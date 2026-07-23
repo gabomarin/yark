@@ -9,6 +9,7 @@ interface Props {
   server: ServerProfile;
   runtime: ServerRuntimeInfo | null;
   installation: ServerInstallationInfo | null;
+  steamCmdBusy: boolean;
   onStart: () => void;
   onStop: () => void;
   onKill: () => void;
@@ -21,6 +22,7 @@ interface Props {
   onClone: () => void;
   onDelete: () => void;
   onRcon: (command: string) => void;
+  onCancelSteamCmd: () => void;
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -42,6 +44,7 @@ export function ServerCard(props: Props): JSX.Element {
   const status = runtime?.status ?? "stopped";
   const isActive = status === "starting" || status === "running" || status === "stopping";
   const isInstallationReady = installation?.installed === true;
+  const { steamCmdBusy } = props;
   const [customCommand, setCustomCommand] = useState("");
 
   return (
@@ -80,8 +83,22 @@ export function ServerCard(props: Props): JSX.Element {
           </dd>
         </div>
         <div>
-          <dt>Versión ARK</dt>
-          <dd>{installation?.version ?? "No detectada"}</dd>
+          <dt>Server Build</dt>
+          <dd>{installation?.build ?? "No detectado"}</dd>
+        </div>
+        <div>
+          <dt>Server Version</dt>
+          <dd>
+            {installation?.arkVersion ?? "No detectada"}
+            {installation?.arkVersion == null && installation?.installed === true && (
+              <span
+                className="muted server-version-hint"
+                title="Se detecta desde ShooterGame/Saved/Logs. Debes iniciar el servidor al menos una vez para que exista la línea ARK Version."
+              >
+                (i)
+              </span>
+            )}
+          </dd>
         </div>
         {runtime?.lastError != null && (
           <div className="card-error">
@@ -92,6 +109,13 @@ export function ServerCard(props: Props): JSX.Element {
       </dl>
 
       <div className="card-actions">
+        {steamCmdBusy && (
+          <button className="danger" onClick={props.onCancelSteamCmd}>
+            Cancelar SteamCMD
+          </button>
+        )}
+        {!steamCmdBusy && (
+          <>
         {!isActive && (
           <button
             className="primary"
@@ -141,9 +165,11 @@ export function ServerCard(props: Props): JSX.Element {
             </button>
           </>
         )}
+          </>
+        )}
       </div>
 
-      {status === "running" && (
+      {status === "running" && !steamCmdBusy && (
         <div className="rcon">
           <div className="rcon-quick">
             {QUICK_COMMANDS.map((qc) => (

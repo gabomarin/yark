@@ -1,7 +1,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { execFileSync, spawn } from "node:child_process";
+import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { dirname, join } from "node:path";
 import { existsSync } from "node:fs";
+import { randomUUID } from "node:crypto";
 import type { SteamCmdConsoleSnapshot, SteamCmdStatus } from "../../../shared/types";
 import type { BackupService } from "../backups/backup-service";
 import type { ServerRepository } from "../../infra/db/server-repository";
@@ -12,11 +13,32 @@ import type { AppSettingsRepository } from "../../infra/db/app-settings-reposito
 
 const ASA_APP_ID = "2430930";
 const MAX_STEAMCMD_LINES = 500;
+const CRITICAL_JOBS_KEY = "criticalJobsQueue.v1";
+const JOB_RETRY_DELAY_MS = 5000;
 
 interface CommandResult {
   code: number;
   stdout: string;
   stderr: string;
+}
+
+interface ActiveSteamCmdOperation {
+  child: ChildProcess;
+  operation: "install-steamcmd" | "install-files" | "update";
+  serverId: string | null;
+  startedAt: string;
+}
+
+interface CriticalJob {
+  id: string;
+  type: "install-files" | "update";
+  serverId: string;
+  attempts: number;
+  maxAttempts: number;
+  status: "pending" | "running";
+  createdAt: string;
+  updatedAt: string;
+  lastError: string | null;
 }
 
 function delay(ms: number): Promise<void> {
@@ -30,6 +52,10 @@ function delay(ms: number): Promise<void> {
 export class UpdateService {
   private readonly steamCmdConsoleLines: string[] = [];
   private steamCmdConsoleUpdatedAt = new Date(0).toISOString();
+  private activeSteamCmd: ActiveSteamCmdOperation | null = null;
+  private queue: CriticalJob[] = [];
+  private processingQueue = false;
+  private readonly waiters = new Map<string, { resolve: () => void; reject: (error: Error) => void }>();
 
   constructor(
     private readonly servers: ServerRepository,
@@ -40,7 +66,15 @@ export class UpdateService {
     private readonly settings: AppSettingsRepository,
     private readonly updatesLogDir: string,
     private readonly steamcmdDir: string,
-  ) {}
+  ) {
+    this.queue = this.loadQueue();
+    if (this.queue.length > 0) {
+      this.appendSteamCmdConsole(`Reanudando ${this.queue.length} job(s) críticos pendientes`);
+      setTimeout(() => {
+        void this.processQueue();
+      }, 250);
+    }
+  }
 
   async installSteamCmd(): Promise<string> {
     this.appendSteamCmdConsole("Iniciando verificación/instalación de SteamCMD...");
@@ -90,6 +124,7 @@ export class UpdateService {
           shell: false,
         },
       );
+      this.beginSteamCmdProcess(child, "install-steamcmd", null);
 
       let stderr = "";
       child.stderr.on("data", (chunk) => {
@@ -102,10 +137,12 @@ export class UpdateService {
       });
 
       child.once("error", (error) => {
+        this.endSteamCmdProcess(child);
         reject(new Error(`No se pudo ejecutar PowerShell: ${error.message}`));
       });
 
       child.once("exit", (code) => {
+        this.endSteamCmdProcess(child);
         if ((code ?? 1) !== 0) {
           reject(new Error(`Falló instalación de SteamCMD (exit ${code ?? 1}): ${stderr}`));
           return;
@@ -126,11 +163,44 @@ export class UpdateService {
 
   getSteamCmdStatus(): SteamCmdStatus {
     const executablePath = this.findSteamCmdExecutable();
+    const active = this.activeSteamCmd;
     return {
       detected: executablePath !== null,
       executablePath,
+      running: active !== null,
+      operation: active?.operation ?? null,
+      serverId: active?.serverId ?? null,
+      startedAt: active?.startedAt ?? null,
+      pid: active?.child.pid ?? null,
       checkedAt: new Date().toISOString(),
     };
+  }
+
+  cancelSteamCmd(): boolean {
+    const active = this.activeSteamCmd;
+    if (active === null) {
+      return false;
+    }
+
+    this.appendSteamCmdConsole(
+      `Cancelando SteamCMD (op=${active.operation}, server=${active.serverId ?? "global"}, pid=${active.child.pid ?? "n/a"})`,
+    );
+    this.killSteamCmdProcessTree(active.child);
+    return true;
+  }
+
+  async setSteamCmdExecutablePath(exePath: string): Promise<string> {
+    const normalized = exePath.trim();
+    if (normalized.length === 0) {
+      throw new Error("Ruta de SteamCMD vacía");
+    }
+    if (!existsSync(normalized)) {
+      throw new Error(`No existe steamcmd.exe en: ${normalized}`);
+    }
+    await this.verifySteamCmdExecutable(normalized);
+    this.persistSteamCmdPath(normalized);
+    this.appendSteamCmdConsole(`Ruta manual de SteamCMD configurada: ${normalized}`);
+    return normalized;
   }
 
   getSteamCmdConsole(limit = 200): SteamCmdConsoleSnapshot {
@@ -142,6 +212,14 @@ export class UpdateService {
   }
 
   async installServerFiles(serverId: string): Promise<void> {
+    await this.enqueueAndWait("install-files", serverId);
+  }
+
+  async updateServer(serverId: string): Promise<void> {
+    await this.enqueueAndWait("update", serverId);
+  }
+
+  private async performInstallServerFiles(serverId: string): Promise<void> {
     await this.locks.withLock(serverId, "install-files", async () => {
       const server = this.servers.get(serverId);
       if (server === null) {
@@ -156,7 +234,7 @@ export class UpdateService {
         `Instalando archivos base por SteamCMD en "${server.name}"`,
       );
 
-      const cmd = await this.runSteamUpdate(server.installDir);
+      const cmd = await this.runSteamUpdate(server.installDir, "install-files", serverId);
       if (cmd.code !== 0) {
         this.servers.addEvent(
           serverId,
@@ -176,7 +254,7 @@ export class UpdateService {
     });
   }
 
-  async updateServer(serverId: string): Promise<void> {
+  private async performUpdateServer(serverId: string): Promise<void> {
     await this.locks.withLock(serverId, "update", async () => {
       const server = this.servers.get(serverId);
       if (server === null) {
@@ -202,7 +280,7 @@ export class UpdateService {
       const logPath = join(this.updatesLogDir, `${serverId}-${timestamp}.log`);
 
       try {
-        const cmd = await this.runSteamUpdate(server.installDir);
+        const cmd = await this.runSteamUpdate(server.installDir, "update", serverId);
         await writeFile(
           logPath,
           [
@@ -269,7 +347,111 @@ export class UpdateService {
     });
   }
 
-  private async runSteamUpdate(installDir: string): Promise<CommandResult> {
+  private async enqueueAndWait(type: "install-files" | "update", serverId: string): Promise<void> {
+    const existingPending = this.queue.find(
+      (job) => job.serverId === serverId && job.type === type,
+    );
+    if (existingPending !== undefined) {
+      await new Promise<void>((resolve, reject) => {
+        this.waiters.set(existingPending.id, { resolve, reject });
+      });
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const job: CriticalJob = {
+      id: randomUUID(),
+      type,
+      serverId,
+      attempts: 0,
+      maxAttempts: 3,
+      status: "pending",
+      createdAt: now,
+      updatedAt: now,
+      lastError: null,
+    };
+
+    this.queue.push(job);
+    this.persistQueue();
+    this.servers.addEvent(
+      serverId,
+      "update_started",
+      "info",
+      `Job encolado: ${type} (${job.id.slice(0, 8)})`,
+    );
+
+    const completion = new Promise<void>((resolve, reject) => {
+      this.waiters.set(job.id, { resolve, reject });
+    });
+    void this.processQueue();
+    await completion;
+  }
+
+  private async processQueue(): Promise<void> {
+    if (this.processingQueue) {
+      return;
+    }
+    this.processingQueue = true;
+
+    try {
+      for (;;) {
+        const job = this.queue.find((candidate) => candidate.status === "pending");
+        if (job === undefined) {
+          break;
+        }
+
+        job.status = "running";
+        job.updatedAt = new Date().toISOString();
+        this.persistQueue();
+
+        try {
+          if (job.type === "install-files") {
+            await this.performInstallServerFiles(job.serverId);
+          } else {
+            await this.performUpdateServer(job.serverId);
+          }
+          this.resolveJob(job.id);
+          this.removeJob(job.id);
+          this.persistQueue();
+        } catch (error) {
+          job.attempts += 1;
+          job.lastError = error instanceof Error ? error.message : String(error);
+          job.updatedAt = new Date().toISOString();
+
+          if (job.attempts >= job.maxAttempts) {
+            this.rejectJob(job.id, new Error(job.lastError));
+            this.servers.addEvent(
+              job.serverId,
+              "update_failed",
+              "error",
+              `Job ${job.type} agotó reintentos (${job.maxAttempts}): ${job.lastError}`,
+            );
+            this.removeJob(job.id);
+            this.persistQueue();
+            continue;
+          }
+
+          job.status = "pending";
+          this.persistQueue();
+          this.servers.addEvent(
+            job.serverId,
+            "update_failed",
+            "warning",
+            `Job ${job.type} reintentará (${job.attempts}/${job.maxAttempts})`,
+          );
+          await delay(JOB_RETRY_DELAY_MS);
+        }
+      }
+    } finally {
+      this.processingQueue = false;
+    }
+  }
+
+  private async runSteamUpdate(
+    installDir: string,
+    operation: "install-files" | "update",
+    serverId: string,
+  ): Promise<CommandResult> {
     const steamcmdExe = this.resolveSteamCmdExecutable();
     const args = [
       "+login",
@@ -282,11 +464,16 @@ export class UpdateService {
       "+quit",
     ];
 
+    this.appendSteamCmdConsole(
+      `[invoke] op=${operation} server=${serverId} cmd=${steamcmdExe} args=${args.join(" ")}`,
+    );
+
     return await new Promise<CommandResult>((resolve, reject) => {
       const child = spawn(steamcmdExe, args, {
         windowsHide: true,
         shell: false,
       });
+      this.beginSteamCmdProcess(child, operation, serverId);
 
       let stdout = "";
       let stderr = "";
@@ -303,6 +490,7 @@ export class UpdateService {
       });
 
       child.once("error", (error) => {
+        this.endSteamCmdProcess(child);
         reject(
           new Error(
             `No se pudo ejecutar SteamCMD (${steamcmdExe}). Instálalo o configúralo. Detalle: ${error.message}`,
@@ -311,6 +499,7 @@ export class UpdateService {
       });
 
       child.once("exit", (code) => {
+        this.endSteamCmdProcess(child);
         resolve({
           code: code ?? 1,
           stdout,
@@ -476,6 +665,100 @@ export class UpdateService {
       .filter((line) => line.length > 0);
     for (const line of lines) {
       this.appendSteamCmdConsole(`[${source}] ${line}`);
+    }
+  }
+
+  private beginSteamCmdProcess(
+    child: ChildProcess,
+    operation: "install-steamcmd" | "install-files" | "update",
+    serverId: string | null,
+  ): void {
+    if (this.activeSteamCmd !== null) {
+      throw new Error("Ya hay una operación de SteamCMD en curso");
+    }
+    this.activeSteamCmd = {
+      child,
+      operation,
+      serverId,
+      startedAt: new Date().toISOString(),
+    };
+  }
+
+  private endSteamCmdProcess(child: ChildProcess): void {
+    if (this.activeSteamCmd?.child === child) {
+      this.activeSteamCmd = null;
+    }
+  }
+
+  private killSteamCmdProcessTree(child: ChildProcess): void {
+    const pid = child.pid;
+    if (pid !== undefined && process.platform === "win32") {
+      try {
+        execFileSync("taskkill.exe", ["/PID", String(pid), "/T", "/F"], {
+          windowsHide: true,
+          stdio: ["ignore", "ignore", "ignore"],
+          timeout: 5_000,
+        });
+        return;
+      } catch {
+        // Fallback a kill directo si taskkill falla.
+      }
+    }
+    child.kill();
+  }
+
+  private loadQueue(): CriticalJob[] {
+    const raw = this.settings.get(CRITICAL_JOBS_KEY);
+    if (raw === null || raw.trim().length === 0) {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as CriticalJob[];
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+      return parsed
+        .filter((job) =>
+          typeof job.id === "string"
+          && (job.type === "install-files" || job.type === "update")
+          && typeof job.serverId === "string",
+        )
+        .map((job) => ({
+          ...job,
+          status: "pending",
+          attempts: Number.isFinite(job.attempts) ? Math.max(0, Math.floor(job.attempts)) : 0,
+          maxAttempts: Number.isFinite(job.maxAttempts)
+            ? Math.max(1, Math.floor(job.maxAttempts))
+            : 3,
+          updatedAt: new Date().toISOString(),
+        }));
+    } catch {
+      return [];
+    }
+  }
+
+  private persistQueue(): void {
+    this.settings.set(CRITICAL_JOBS_KEY, JSON.stringify(this.queue));
+  }
+
+  private removeJob(jobId: string): void {
+    this.queue = this.queue.filter((job) => job.id !== jobId);
+  }
+
+  private resolveJob(jobId: string): void {
+    const waiter = this.waiters.get(jobId);
+    if (waiter !== undefined) {
+      waiter.resolve();
+      this.waiters.delete(jobId);
+    }
+  }
+
+  private rejectJob(jobId: string, error: Error): void {
+    const waiter = this.waiters.get(jobId);
+    if (waiter !== undefined) {
+      waiter.reject(error);
+      this.waiters.delete(jobId);
     }
   }
 }

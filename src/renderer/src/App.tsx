@@ -33,6 +33,10 @@ export function App(): JSX.Element {
   const [view, setView] = useState<View>({ kind: "list" });
   const [error, setError] = useState<string | null>(null);
 
+  const officialVersion = Array.from(installationInfo.values())
+    .map((info) => info.officialVersion)
+    .find((value): value is string => value != null && value.trim().length > 0) ?? null;
+
   const refresh = useCallback(async () => {
     const [
       serversRes,
@@ -97,6 +101,29 @@ export function App(): JSX.Element {
     [refresh],
   );
 
+  const pickSteamCmdPath = useCallback(async () => {
+    setError(null);
+    const pick = await window.api.pickPath(
+      "file",
+      steamCmdStatus?.executablePath ?? undefined,
+      "Seleccionar steamcmd.exe",
+    );
+    if (!pick.ok) {
+      setError(pick.error ?? "No se pudo abrir selector de archivo");
+      return;
+    }
+    if (pick.data === null) {
+      return;
+    }
+
+    const setRes = await window.api.setSteamCmdPath(pick.data);
+    if (!setRes.ok) {
+      setError(setRes.error ?? "No se pudo configurar steamcmd.exe");
+      return;
+    }
+    await refresh();
+  }, [refresh, steamCmdStatus?.executablePath]);
+
   if (view.kind === "ini") {
     return (
       <div className="app">
@@ -159,6 +186,7 @@ export function App(): JSX.Element {
     <div className="app">
       <header className="topbar">
         <h1>ARK Server GBO</h1>
+        <span className="muted">Official Version: {officialVersion ?? "No detectada"}</span>
         {steamCmdStatus?.detected === true ? (
           <span className="muted" title={steamCmdStatus.executablePath ?? undefined}>
             SteamCMD detectado
@@ -168,6 +196,7 @@ export function App(): JSX.Element {
             Instalar SteamCMD
           </button>
         )}
+        <button onClick={() => void pickSteamCmdPath()}>Elegir steamcmd.exe</button>
         <button className="primary" onClick={() => setView({ kind: "create" })}>
           + Nuevo servidor
         </button>
@@ -195,6 +224,9 @@ export function App(): JSX.Element {
                 server={server}
                 runtime={statuses.get(server.id) ?? null}
                 installation={installationInfo.get(server.id) ?? null}
+                steamCmdBusy={
+                  steamCmdStatus?.running === true && steamCmdStatus.serverId === server.id
+                }
                 onStart={() => void runAction(() => window.api.startServer(server.id))}
                 onStop={() => void runAction(() => window.api.stopServer(server.id))}
                 onKill={() => void runAction(() => window.api.killServer(server.id))}
@@ -218,6 +250,9 @@ export function App(): JSX.Element {
                 }}
                 onRcon={(command) =>
                   void runAction(() => window.api.sendRconCommand(server.id, command))
+                }
+                onCancelSteamCmd={() =>
+                  void runAction(() => window.api.cancelSteamCmd())
                 }
               />
             ))}

@@ -94,6 +94,7 @@ void app.whenReady().then(() => {
   });
 
   app.on("before-quit", (event) => {
+    updateService.cancelSteamCmd();
     const profiles = repo.list();
     const anyActive = profiles.some((p) => processManager.isActive(p.id));
     if (anyActive) {

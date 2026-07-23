@@ -7,12 +7,15 @@ import type {
   StartServerOptions,
 } from "@shared/types";
 import { existsSync } from "node:fs";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { ProcessManager } from "../../infra/process/process-manager";
 import { findPortConflicts, validateProfileInput } from "./validation";
 import { checkClusterCompliance } from "../cluster/compliance";
 import { rconExec } from "../../infra/rcon/rcon-client";
-import { inspectServerInstallation } from "./server-installation";
+import { inspectServerInstallation, readOfficialArkVersionCached } from "./server-installation";
 
 const RCON_HOST = "127.0.0.1";
 
@@ -33,6 +36,7 @@ export class InstanceService {
     this.assertValidInput(input);
     this.assertNoPortConflicts(input);
     const profile = this.repo.create(input);
+    void this.ensureDefaultIniFiles(profile.installDir);
     this.repo.addEvent(
       profile.id,
       "server_created",
@@ -40,6 +44,25 @@ export class InstanceService {
       `Servidor "${profile.name}" creado (mapa ${profile.map})`,
     );
     return profile;
+  }
+
+  private async ensureDefaultIniFiles(installDir: string): Promise<void> {
+    const configDir = join(
+      installDir,
+      "ShooterGame",
+      "Saved",
+      "Config",
+      "WindowsServer",
+    );
+    await mkdir(configDir, { recursive: true });
+    const gameUserSettingsPath = join(configDir, "GameUserSettings.ini");
+    const gameIniPath = join(configDir, "Game.ini");
+    if (!existsSync(gameUserSettingsPath)) {
+      await writeFile(gameUserSettingsPath, defaultGameUserSettingsIni, "utf8");
+    }
+    if (!existsSync(gameIniPath)) {
+      await writeFile(gameIniPath, defaultGameIni, "utf8");
+    }
   }
 
   update(id: string, input: ServerProfileInput): ServerProfile {
@@ -175,10 +198,14 @@ export class InstanceService {
     return profile.installDir;
   }
 
-  installationInfo(): ServerInstallationInfo[] {
+  async installationInfo(): Promise<ServerInstallationInfo[]> {
+    const officialVersion = await readOfficialArkVersionCached();
     return this.repo
       .list()
-      .map((profile) => inspectServerInstallation(profile.id, profile.installDir));
+      .map((profile) => ({
+        ...inspectServerInstallation(profile.id, profile.installDir),
+        officialVersion,
+      }));
   }
 
   checkClusters(): ClusterComplianceReport[] {

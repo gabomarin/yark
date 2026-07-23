@@ -88,6 +88,14 @@ export function registerIpcHandlers(
     wrap(() => updates.installSteamCmd()),
   );
 
+  ipcMain.handle(IPC.steamcmdCancel, () =>
+    wrap(() => updates.cancelSteamCmd()),
+  );
+
+  ipcMain.handle(IPC.steamcmdSetPath, (_e, path: string) =>
+    wrap(() => updates.setSteamCmdExecutablePath(path)),
+  );
+
   ipcMain.handle(IPC.steamcmdStatus, () =>
     wrap(() => updates.getSteamCmdStatus()),
   );
@@ -139,6 +147,22 @@ export function registerIpcHandlers(
 
   ipcMain.handle(IPC.iniRead, (_e, serverId: string) =>
     wrap(() => ini.readServerIni(serverId)),
+  );
+
+  ipcMain.handle(
+    IPC.iniOpenInEditor,
+    (_e, serverId: string, fileKey: "gameUserSettings" | "game") =>
+      wrap(async () => {
+        const snapshot = await ini.readServerIni(serverId);
+        const targetPath =
+          fileKey === "gameUserSettings"
+            ? snapshot.gameUserSettingsPath
+            : snapshot.gameIniPath;
+        const error = await shell.openPath(targetPath);
+        if (error.length > 0) {
+          throw new Error(`No se pudo abrir archivo INI: ${error}`);
+        }
+      }),
   );
 
   ipcMain.handle(

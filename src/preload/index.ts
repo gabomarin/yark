@@ -23,6 +23,8 @@ const api: RendererApi = {
   updateServerNow: (id: string) => ipcRenderer.invoke(IPC.serversUpdateNow, id),
   openServerFolder: (id: string) => ipcRenderer.invoke(IPC.serversOpenFolder, id),
   installSteamCmd: () => ipcRenderer.invoke(IPC.steamcmdInstall),
+  cancelSteamCmd: () => ipcRenderer.invoke(IPC.steamcmdCancel),
+  setSteamCmdPath: (path: string) => ipcRenderer.invoke(IPC.steamcmdSetPath, path),
   getSteamCmdStatus: () => ipcRenderer.invoke(IPC.steamcmdStatus),
   getSteamCmdConsole: (limit?: number) => ipcRenderer.invoke(IPC.steamcmdConsole, limit),
   getStatuses: () => ipcRenderer.invoke(IPC.serversStatuses),
@@ -36,6 +38,8 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.pickPath, kind, defaultPath, title),
   readServerIni: (serverId: string) =>
     ipcRenderer.invoke(IPC.iniRead, serverId),
+  openServerIniInEditor: (serverId: string, fileKey: "gameUserSettings" | "game") =>
+    ipcRenderer.invoke(IPC.iniOpenInEditor, serverId, fileKey),
   previewServerIni: (serverId: string, payload: ServerIniPayload) =>
     ipcRenderer.invoke(IPC.iniPreview, serverId, payload),
   saveServerIni: (serverId: string, payload: ServerIniPayload) =>

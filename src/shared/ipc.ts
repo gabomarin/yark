@@ -34,6 +34,8 @@ export const IPC = {
   steamcmdStatus: "steamcmd:status",
   steamcmdConsole: "steamcmd:console",
   steamcmdInstall: "steamcmd:install",
+  steamcmdCancel: "steamcmd:cancel",
+  steamcmdSetPath: "steamcmd:set-path",
   clusterCheck: "cluster:check",
   rconCommand: "rcon:command",
   eventsRecent: "events:recent",
@@ -41,6 +43,7 @@ export const IPC = {
   iniRead: "ini:read",
   iniPreview: "ini:preview",
   iniSave: "ini:save",
+  iniOpenInEditor: "ini:open-in-editor",
   logsList: "logs:list",
   logsReadUpdate: "logs:read-update",
   logsExport: "logs:export",
@@ -73,6 +76,8 @@ export interface RendererApi {
   updateServerNow(id: string): Promise<IpcResult<void>>;
   openServerFolder(id: string): Promise<IpcResult<void>>;
   installSteamCmd(): Promise<IpcResult<string>>;
+  cancelSteamCmd(): Promise<IpcResult<boolean>>;
+  setSteamCmdPath(path: string): Promise<IpcResult<string>>;
   getSteamCmdStatus(): Promise<IpcResult<SteamCmdStatus>>;
   getSteamCmdConsole(limit?: number): Promise<IpcResult<SteamCmdConsoleSnapshot>>;
   getStatuses(): Promise<IpcResult<ServerRuntimeInfo[]>>;
@@ -89,6 +94,10 @@ export interface RendererApi {
     title?: string,
   ): Promise<IpcResult<string | null>>;
   readServerIni(serverId: string): Promise<IpcResult<ServerIniSnapshot>>;
+  openServerIniInEditor(
+    serverId: string,
+    fileKey: "gameUserSettings" | "game",
+  ): Promise<IpcResult<void>>;
   previewServerIni(
     serverId: string,
     payload: ServerIniPayload,

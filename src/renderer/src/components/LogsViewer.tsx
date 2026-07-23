@@ -76,6 +76,72 @@ export function LogsViewer(props: Props): JSX.Element {
     }
   };
 
+  const copyFilteredEvents = async () => {
+    if (filteredEvents.length === 0) {
+      return;
+    }
+    const text = filteredEvents
+      .map((event) => `${event.createdAt} [${event.severity}] ${event.type} ${event.message}`)
+      .join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      setInfo("Eventos filtrados copiados al portapapeles.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo copiar eventos");
+    }
+  };
+
+  const buildQuickDiagnosis = (): string => {
+    if (logs === null) {
+      return "Sin datos de logs.";
+    }
+
+    const lines: string[] = [];
+    const recentErrors = logs.events.filter((event) => event.severity === "error").slice(0, 3);
+    const runtimeHints = logs.runtimeLogLines
+      .filter((line) => /error|failed|timeout|timed out|exception/i.test(line))
+      .slice(-3);
+
+    lines.push(`Servidor: ${props.server.name}`);
+    lines.push(`Eventos totales: ${logs.events.length}`);
+    lines.push(`Eventos filtrados: ${filteredEvents.length}`);
+
+    if (recentErrors.length === 0) {
+      lines.push("No se detectaron errores recientes en eventos.");
+    } else {
+      lines.push("Errores recientes:");
+      for (const err of recentErrors) {
+        lines.push(`- ${err.createdAt}: ${err.message}`);
+      }
+    }
+
+    if (runtimeHints.length === 0) {
+      lines.push("Sin patrones de error en runtime (última ventana). ");
+    } else {
+      lines.push("Pistas runtime:");
+      for (const hint of runtimeHints) {
+        lines.push(`- ${hint}`);
+      }
+    }
+
+    if (logs.updateFiles.length === 0) {
+      lines.push("No hay archivos de update para inspección.");
+    } else {
+      lines.push(`Último update log: ${logs.updateFiles[0]?.fileName ?? "n/a"}`);
+    }
+
+    return lines.join("\n");
+  };
+
+  const copyDiagnosis = async () => {
+    try {
+      await navigator.clipboard.writeText(buildQuickDiagnosis());
+      setInfo("Diagnóstico rápido copiado al portapapeles.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo copiar diagnóstico");
+    }
+  };
+
   const allEventTypes = logs === null
     ? []
     : [...new Set(logs.events.map((event) => event.type))].sort((a, b) => a.localeCompare(b));
@@ -216,6 +282,12 @@ export function LogsViewer(props: Props): JSX.Element {
             {logs.events.length > 0 && filteredEvents.length === 0 && (
               <p className="empty">No hay eventos que coincidan con el filtro actual.</p>
             )}
+            <div className="logs-actions-row">
+              <button onClick={() => void copyFilteredEvents()} disabled={filteredEvents.length === 0}>
+                Copiar filtrados
+              </button>
+              <button onClick={() => void copyDiagnosis()}>Copiar diagnóstico</button>
+            </div>
             <ul className="events logs-scroll">
               {filteredEvents.map((event) => (
                 <li key={event.id} className={event.severity}>
@@ -226,6 +298,13 @@ export function LogsViewer(props: Props): JSX.Element {
             </ul>
           </section>
         </div>
+      )}
+
+      {!loading && logs !== null && (
+        <section className="panel logs-content-panel">
+          <h3>Diagnóstico rápido</h3>
+          <pre className="logs-content logs-scroll">{buildQuickDiagnosis()}</pre>
+        </section>
       )}
 
       {selectedUpdateFile !== null && (

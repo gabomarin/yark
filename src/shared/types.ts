@@ -46,6 +46,13 @@ export interface ServerRuntimeInfo {
 export interface ServerInstallationInfo {
   serverId: string;
   installed: boolean;
+  /** Build detectado localmente (Build.version / exe / appmanifest). */
+  build: string | null;
+  /** Versión detectada desde runtime logs (ARK Version: x.y). */
+  arkVersion: string | null;
+  /** Versión oficial de red (best effort, puede no estar disponible). */
+  officialVersion: string | null;
+  /** Compatibilidad retroactiva con la UI previa. */
   version: string | null;
   binaryPath: string;
   checkedAt: string;
@@ -54,6 +61,11 @@ export interface ServerInstallationInfo {
 export interface SteamCmdStatus {
   detected: boolean;
   executablePath: string | null;
+  running: boolean;
+  operation: "install-steamcmd" | "install-files" | "update" | null;
+  serverId: string | null;
+  startedAt: string | null;
+  pid: number | null;
   checkedAt: string;
 }
 

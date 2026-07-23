@@ -37,7 +37,7 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - [ ] Flujo validado con servidores reales compartiendo cluster y transferencias reales.
 
 ### Configuracion INI
-- [-] Editor avanzado de `GameUserSettings.ini` y `Game.ini`.
+- [x] Editor avanzado de `GameUserSettings.ini` y `Game.ini`.
 - [x] Plantillas / presets de configuracion comunes.
 - [x] Validacion y diff antes de guardar cambios en INI.
 
@@ -73,7 +73,7 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - [-] Ruta configurable de `steamcmd.exe`.
 - [-] Instalador asistido de SteamCMD.
 - [-] Bootstrap de archivos base del servidor por SteamCMD.
-- [ ] Cola persistente de jobs criticos para updates y bootstrap.
+- [-] Cola persistente de jobs criticos para updates y bootstrap (implementada cola persistente básica con reintentos para install-files/update; falta extender a backup/restore y visibilidad en UI).
 
 ### Observabilidad y logs
 - [x] Eventos recientes persistidos y visibles en UI.
@@ -85,7 +85,7 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 ### Automatizacion / robustez / idempotencia
 - [x] Lock en memoria por instancia para evitar operaciones conflictivas.
 - [-] Scheduler de backups en memoria.
-- [-] Idempotencia parcial en jobs criticos.
+- [-] Idempotencia parcial en jobs criticos (sumada cola persistente y reintentos para jobs críticos de SteamCMD).
 - [ ] Persistencia de cola / locks / jobs para recuperacion tras reinicio de la app.
 - [ ] Reintentos controlados para operaciones remotas o de sistema.
 
@@ -94,9 +94,9 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - [x] Boton para abrir la carpeta del servidor en Explorer.
 - [x] Botones contextuales para instalar archivos y ejecutar update server.
 - [x] Boton global para instalar SteamCMD (ruta por defecto local).
-- [ ] Selector nativo de archivo para `steamcmd.exe`.
-- [-] Panel de SteamCMD en UI (estado + salida de consola reciente).
-- [ ] Mejoras visuales para gestionar backups, restores y logs.
+- [x] Selector nativo de archivo para `steamcmd.exe`.
+- [-] Panel de SteamCMD en UI (estado + salida de consola reciente + cancelación de proceso activa por servidor + ruta manual configurable).
+- [-] Mejoras visuales para gestionar backups, restores y logs (logs con acciones rápidas de diagnóstico y panel de resumen).
 - [ ] Asistentes guiados para bootstrap, update y restore.
 
 ## Pruebas y verificacion actual
@@ -118,10 +118,9 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - Criterio aplicado: cada check se marcó como `[x]` solo cuando existe evidencia funcional vigente; si hay implementación parcial o desalineada, se marcó `[-]`; si no hay evidencia o está roto, `[ ]`.
 
 ## Siguiente prioridad recomendada
-1. Completar vista de logs operativos en UI (acciones rápidas de diagnóstico y pulido visual).
-2. Cola persistente de jobs criticos (update / backup / bootstrap / restore).
-3. E2E real contra binario ASA y SteamCMD del host.
-4. Gestion avanzada de mods.
+1. Completar cola persistente de jobs críticos para cubrir backup/restore y exponer estado en UI.
+2. E2E real contra binario ASA y SteamCMD del host.
+3. Gestion avanzada de mods.
 
 ## Regla de mantenimiento
 - Cada vez que se complete una tarea, actualizar este archivo en el mismo cambio.

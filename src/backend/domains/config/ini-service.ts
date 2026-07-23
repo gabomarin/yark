@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import parseIni from "ini";
+import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
 import type {
   IniDiffEntry,
   IniPreview,
@@ -86,8 +87,8 @@ export class IniService {
     const gameIniPath = this.gameIniPath(server.installDir);
 
     const [gameUserSettings, game] = await Promise.all([
-      this.readTextOrEmpty(gameUserSettingsPath),
-      this.readTextOrEmpty(gameIniPath),
+      this.readTextOrDefault(gameUserSettingsPath, defaultGameUserSettingsIni),
+      this.readTextOrDefault(gameIniPath, defaultGameIni),
     ]);
 
     return {
@@ -282,11 +283,13 @@ export class IniService {
     }
   }
 
-  private async readTextOrEmpty(path: string): Promise<string> {
+  private async readTextOrDefault(path: string, defaultText: string): Promise<string> {
     try {
       return await readFile(path, "utf8");
     } catch {
-      return "";
+      const normalized = defaultText.endsWith("\n") ? defaultText : `${defaultText}\n`;
+      await this.writeText(path, normalized);
+      return normalized;
     }
   }
 
