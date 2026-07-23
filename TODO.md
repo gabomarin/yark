@@ -13,6 +13,7 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - [x] Aplicacion de escritorio Windows con Electron + React + TypeScript.
 - [x] Persistencia local con SQLite (`node:sqlite`).
 - [x] Arquitectura separada en main / preload / renderer / backend.
+- [x] Documentacion inicial de proyecto y contexto para humanos/agentes (README + docs/agent-context.md).
 - [-] Base de pruebas unitarias, integracion y E2E inicial.
 
 ### Multi-servidor
