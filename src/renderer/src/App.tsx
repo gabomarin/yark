@@ -2,8 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import type {
   AppEvent,
   ClusterComplianceReport,
+  ServerInstallationInfo,
   ServerProfile,
   ServerRuntimeInfo,
+  SteamCmdConsoleSnapshot,
+  SteamCmdStatus,
 } from "@shared/types";
 import { IniEditor } from "./components/IniEditor";
 import { LogsViewer } from "./components/LogsViewer";
@@ -20,21 +23,46 @@ type View =
 export function App(): JSX.Element {
   const [servers, setServers] = useState<ServerProfile[]>([]);
   const [statuses, setStatuses] = useState<Map<string, ServerRuntimeInfo>>(new Map());
+  const [installationInfo, setInstallationInfo] = useState<
+    Map<string, ServerInstallationInfo>
+  >(new Map());
   const [reports, setReports] = useState<ClusterComplianceReport[]>([]);
   const [events, setEvents] = useState<AppEvent[]>([]);
+  const [steamCmdStatus, setSteamCmdStatus] = useState<SteamCmdStatus | null>(null);
+  const [steamCmdConsole, setSteamCmdConsole] = useState<SteamCmdConsoleSnapshot | null>(null);
   const [view, setView] = useState<View>({ kind: "list" });
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    const [serversRes, statusesRes, clusterRes, eventsRes] = await Promise.all([
+    const [
+      serversRes,
+      statusesRes,
+      installRes,
+      steamCmdRes,
+      steamCmdConsoleRes,
+      clusterRes,
+      eventsRes,
+    ] = await Promise.all([
       window.api.listServers(),
       window.api.getStatuses(),
+      window.api.getInstallationInfo(),
+      window.api.getSteamCmdStatus(),
+      window.api.getSteamCmdConsole(140),
       window.api.checkCluster(),
       window.api.recentEvents(30),
     ]);
     if (serversRes.ok) setServers(serversRes.data);
     if (statusesRes.ok) {
       setStatuses(new Map(statusesRes.data.map((s) => [s.serverId, s])));
+    }
+    if (installRes.ok) {
+      setInstallationInfo(new Map(installRes.data.map((s) => [s.serverId, s])));
+    }
+    if (steamCmdRes.ok) {
+      setSteamCmdStatus(steamCmdRes.data);
+    }
+    if (steamCmdConsoleRes.ok) {
+      setSteamCmdConsole(steamCmdConsoleRes.data);
     }
 
     if (clusterRes.ok) setReports(clusterRes.data);
@@ -131,6 +159,15 @@ export function App(): JSX.Element {
     <div className="app">
       <header className="topbar">
         <h1>ARK Server GBO</h1>
+        {steamCmdStatus?.detected === true ? (
+          <span className="muted" title={steamCmdStatus.executablePath ?? undefined}>
+            SteamCMD detectado
+          </span>
+        ) : (
+          <button onClick={() => void runAction(() => window.api.installSteamCmd())}>
+            Instalar SteamCMD
+          </button>
+        )}
         <button className="primary" onClick={() => setView({ kind: "create" })}>
           + Nuevo servidor
         </button>
@@ -157,12 +194,22 @@ export function App(): JSX.Element {
                 key={server.id}
                 server={server}
                 runtime={statuses.get(server.id) ?? null}
+                installation={installationInfo.get(server.id) ?? null}
                 onStart={() => void runAction(() => window.api.startServer(server.id))}
                 onStop={() => void runAction(() => window.api.stopServer(server.id))}
                 onKill={() => void runAction(() => window.api.killServer(server.id))}
                 onEdit={() => setView({ kind: "edit", profile: server })}
                 onOpenIni={() => setView({ kind: "ini", profile: server })}
                 onOpenLogs={() => setView({ kind: "logs", profile: server })}
+                onOpenFolder={() =>
+                  void runAction(() => window.api.openServerFolder(server.id))
+                }
+                onInstallFiles={() =>
+                  void runAction(() => window.api.installServerFiles(server.id))
+                }
+                onUpdateServer={() =>
+                  void runAction(() => window.api.updateServerNow(server.id))
+                }
                 onClone={() => void runAction(() => window.api.cloneServer(server.id))}
                 onDelete={() => {
                   if (window.confirm(`¿Eliminar el servidor "${server.name}"?`)) {
@@ -201,9 +248,9 @@ export function App(): JSX.Element {
             ))}
           </section>
 
-          <section className="panel">
+          <section className="panel events-panel">
             <h2>Eventos recientes</h2>
-            <ul className="events">
+            <ul className="events events-scroll">
               {events.map((event) => (
                 <li key={event.id} className={event.severity}>
                   <span className="muted">
@@ -213,6 +260,17 @@ export function App(): JSX.Element {
                 </li>
               ))}
             </ul>
+          </section>
+
+          <section className="panel steamcmd-console-panel">
+            <h2>Consola SteamCMD</h2>
+            {steamCmdConsole === null || steamCmdConsole.lines.length === 0 ? (
+              <p className="empty">Sin salida de SteamCMD todavía.</p>
+            ) : (
+              <pre className="steamcmd-console" aria-label="Salida de SteamCMD">
+                {steamCmdConsole.lines.join("\n")}
+              </pre>
+            )}
           </section>
         </aside>
       </main>

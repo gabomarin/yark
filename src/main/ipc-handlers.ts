@@ -1,9 +1,10 @@
-import { BrowserWindow, dialog, ipcMain, type OpenDialogOptions } from "electron";
+import { BrowserWindow, dialog, ipcMain, shell, type OpenDialogOptions } from "electron";
 import { IPC, type IpcResult, type PickPathKind } from "../shared/ipc";
 import type { ServerIniPayload, ServerProfileInput, StartServerOptions } from "../shared/types";
 import type { InstanceService } from "../backend/domains/instances/instance-service";
 import type { IniService } from "../backend/domains/config/ini-service";
 import type { LogsService } from "../backend/domains/logs/logs-service";
+import type { UpdateService } from "../backend/domains/updates/update-service";
 import type { ServerRepository } from "../backend/infra/db/server-repository";
 
 function wrap<T>(fn: () => T | Promise<T>): Promise<IpcResult<T>> {
@@ -21,6 +22,7 @@ export function registerIpcHandlers(
   repo: ServerRepository,
   ini: IniService,
   logs: LogsService,
+  updates: UpdateService,
 ): void {
   ipcMain.handle(IPC.serversList, () => wrap(() => instances.list()));
 
@@ -54,8 +56,42 @@ export function registerIpcHandlers(
     wrap(() => instances.kill(id)),
   );
 
+  ipcMain.handle(IPC.serversInstallFiles, (_e, id: string) =>
+    wrap(() => updates.installServerFiles(id)),
+  );
+
+  ipcMain.handle(IPC.serversUpdateNow, (_e, id: string) =>
+    wrap(() => updates.updateServer(id)),
+  );
+
+  ipcMain.handle(IPC.serversOpenFolder, (_e, id: string) =>
+    wrap(async () => {
+      const folderPath = instances.installDirFor(id);
+      const error = await shell.openPath(folderPath);
+      if (error.length > 0) {
+        throw new Error(`No se pudo abrir la carpeta: ${error}`);
+      }
+    }),
+  );
+
+  ipcMain.handle(IPC.steamcmdInstall, () =>
+    wrap(() => updates.installSteamCmd()),
+  );
+
+  ipcMain.handle(IPC.steamcmdStatus, () =>
+    wrap(() => updates.getSteamCmdStatus()),
+  );
+
+  ipcMain.handle(IPC.steamcmdConsole, (_e, limit?: number) =>
+    wrap(() => updates.getSteamCmdConsole(limit)),
+  );
+
   ipcMain.handle(IPC.serversStatuses, () =>
     wrap(() => instances.statuses()),
+  );
+
+  ipcMain.handle(IPC.serversInstallation, () =>
+    wrap(() => instances.installationInfo()),
   );
 
   ipcMain.handle(IPC.clusterCheck, () =>

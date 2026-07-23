@@ -1,15 +1,18 @@
 import type {
   ClusterComplianceReport,
+  ServerInstallationInfo,
   ServerProfile,
   ServerProfileInput,
   ServerRuntimeInfo,
   StartServerOptions,
 } from "@shared/types";
+import { existsSync } from "node:fs";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { ProcessManager } from "../../infra/process/process-manager";
 import { findPortConflicts, validateProfileInput } from "./validation";
 import { checkClusterCompliance } from "../cluster/compliance";
 import { rconExec } from "../../infra/rcon/rcon-client";
+import { inspectServerInstallation } from "./server-installation";
 
 const RCON_HOST = "127.0.0.1";
 
@@ -162,6 +165,20 @@ export class InstanceService {
 
   statuses(): ServerRuntimeInfo[] {
     return this.processes.listStatuses(this.repo.list().map((p) => p.id));
+  }
+
+  installDirFor(id: string): string {
+    const profile = this.mustGet(id);
+    if (!existsSync(profile.installDir)) {
+      throw new Error(`La carpeta del servidor no existe: ${profile.installDir}`);
+    }
+    return profile.installDir;
+  }
+
+  installationInfo(): ServerInstallationInfo[] {
+    return this.repo
+      .list()
+      .map((profile) => inspectServerInstallation(profile.id, profile.installDir));
   }
 
   checkClusters(): ClusterComplianceReport[] {

@@ -43,6 +43,25 @@ export interface ServerRuntimeInfo {
   lastError: string | null;
 }
 
+export interface ServerInstallationInfo {
+  serverId: string;
+  installed: boolean;
+  version: string | null;
+  binaryPath: string;
+  checkedAt: string;
+}
+
+export interface SteamCmdStatus {
+  detected: boolean;
+  executablePath: string | null;
+  checkedAt: string;
+}
+
+export interface SteamCmdConsoleSnapshot {
+  lines: string[];
+  updatedAt: string;
+}
+
 export interface StartServerOptions {
   skipPortValidation?: boolean;
   launchArgsOverride?: string[];

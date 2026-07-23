@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from "electron";
 import { join } from "node:path";
 import { openDatabase } from "../backend/infra/db/database";
+import { AppSettingsRepository } from "../backend/infra/db/app-settings-repository";
 import { BackupRepository } from "../backend/infra/db/backup-repository";
 import { ServerRepository } from "../backend/infra/db/server-repository";
 import { ProcessManager } from "../backend/infra/process/process-manager";
@@ -9,6 +10,7 @@ import { BackupScheduler } from "../backend/domains/backups/backup-scheduler";
 import { IniService } from "../backend/domains/config/ini-service";
 import { InstanceService } from "../backend/domains/instances/instance-service";
 import { LogsService } from "../backend/domains/logs/logs-service";
+import { UpdateService } from "../backend/domains/updates/update-service";
 import { InstanceLockManager } from "../backend/orchestration/instance-lock-manager";
 import { registerIpcHandlers } from "./ipc-handlers";
 import { IPC_PUSH } from "../shared/ipc";
@@ -44,6 +46,7 @@ void app.whenReady().then(() => {
   const userData = app.getPath("userData");
   const dbPath = join(userData, "ark-server-gbo.db");
   const db = openDatabase(dbPath);
+  const settings = new AppSettingsRepository(db);
   const repo = new ServerRepository(db);
   const backupRepo = new BackupRepository(db);
   const processManager = new ProcessManager();
@@ -58,10 +61,20 @@ void app.whenReady().then(() => {
   const backupScheduler = new BackupScheduler(backupService);
   const iniService = new IniService(repo, locks);
   const logsService = new LogsService(repo, backupRepo, join(userData, "update-logs"));
+  const updateService = new UpdateService(
+    repo,
+    backupService,
+    instances,
+    processManager,
+    locks,
+    settings,
+    join(userData, "update-logs"),
+    join(userData, "steamcmd"),
+  );
 
   backupScheduler.start();
 
-  registerIpcHandlers(instances, repo, iniService, logsService);
+  registerIpcHandlers(instances, repo, iniService, logsService, updateService);
 
   processManager.on("status", (info: ServerRuntimeInfo) => {
     mainWindow?.webContents.send(IPC_PUSH.serverStatus, info);

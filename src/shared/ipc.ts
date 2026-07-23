@@ -4,10 +4,13 @@ import type {
   IniPreview,
   ServerIniPayload,
   ServerIniSnapshot,
+  ServerInstallationInfo,
   ServerOperationalLogs,
   ServerProfile,
   ServerProfileInput,
   ServerRuntimeInfo,
+  SteamCmdConsoleSnapshot,
+  SteamCmdStatus,
   StartServerOptions,
 } from "./types";
 
@@ -23,7 +26,14 @@ export const IPC = {
   serversStart: "servers:start",
   serversStop: "servers:stop",
   serversKill: "servers:kill",
+  serversInstallFiles: "servers:install-files",
+  serversUpdateNow: "servers:update-now",
+  serversOpenFolder: "servers:open-folder",
   serversStatuses: "servers:statuses",
+  serversInstallation: "servers:installation",
+  steamcmdStatus: "steamcmd:status",
+  steamcmdConsole: "steamcmd:console",
+  steamcmdInstall: "steamcmd:install",
   clusterCheck: "cluster:check",
   rconCommand: "rcon:command",
   eventsRecent: "events:recent",
@@ -58,7 +68,14 @@ export interface RendererApi {
   startServer(id: string, options?: StartServerOptions): Promise<IpcResult<void>>;
   stopServer(id: string): Promise<IpcResult<void>>;
   killServer(id: string): Promise<IpcResult<void>>;
+  installServerFiles(id: string): Promise<IpcResult<void>>;
+  updateServerNow(id: string): Promise<IpcResult<void>>;
+  openServerFolder(id: string): Promise<IpcResult<void>>;
+  installSteamCmd(): Promise<IpcResult<string>>;
+  getSteamCmdStatus(): Promise<IpcResult<SteamCmdStatus>>;
+  getSteamCmdConsole(limit?: number): Promise<IpcResult<SteamCmdConsoleSnapshot>>;
   getStatuses(): Promise<IpcResult<ServerRuntimeInfo[]>>;
+  getInstallationInfo(): Promise<IpcResult<ServerInstallationInfo[]>>;
   checkCluster(): Promise<IpcResult<ClusterComplianceReport[]>>;
   sendRconCommand(
     id: string,

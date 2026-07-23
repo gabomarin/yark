@@ -180,6 +180,16 @@ button:hover {
   border-color: var(--accent);
 }
 
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: var(--border);
+}
+
+button:disabled:hover {
+  border-color: var(--border);
+}
+
 button.primary {
   background: var(--accent);
   border-color: var(--accent);
@@ -282,6 +292,40 @@ select {
   color: var(--bad);
 }
 
+.events-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 260px;
+}
+
+.events-scroll {
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.steamcmd-console-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+}
+
+.steamcmd-console {
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #11131a;
+  color: #9ee7b4;
+  font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .server-form {
   max-width: 640px;
   margin: 0 auto;
@@ -316,4 +360,14 @@ select {
 .form-actions {
   display: flex;
   gap: 8px;
+}
+
+.ini-presets-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.ini-presets-actions select {
+  min-width: 240px;
 }

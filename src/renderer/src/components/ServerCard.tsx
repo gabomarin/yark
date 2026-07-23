@@ -1,15 +1,23 @@
 import { useState } from "react";
-import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import type {
+  ServerInstallationInfo,
+  ServerProfile,
+  ServerRuntimeInfo,
+} from "@shared/types";
 
 interface Props {
   server: ServerProfile;
   runtime: ServerRuntimeInfo | null;
+  installation: ServerInstallationInfo | null;
   onStart: () => void;
   onStop: () => void;
   onKill: () => void;
   onEdit: () => void;
   onOpenIni: () => void;
   onOpenLogs: () => void;
+  onOpenFolder: () => void;
+  onInstallFiles: () => void;
+  onUpdateServer: () => void;
   onClone: () => void;
   onDelete: () => void;
   onRcon: (command: string) => void;
@@ -30,9 +38,10 @@ const QUICK_COMMANDS = [
 ];
 
 export function ServerCard(props: Props): JSX.Element {
-  const { server, runtime } = props;
+  const { server, runtime, installation } = props;
   const status = runtime?.status ?? "stopped";
   const isActive = status === "starting" || status === "running" || status === "stopping";
+  const isInstallationReady = installation?.installed === true;
   const [customCommand, setCustomCommand] = useState("");
 
   return (
@@ -60,6 +69,20 @@ export function ServerCard(props: Props): JSX.Element {
           <dt>Mods</dt>
           <dd>{server.mods.length > 0 ? server.mods.join(", ") : "—"}</dd>
         </div>
+        <div>
+          <dt>Instalación</dt>
+          <dd>
+            {installation?.installed === true
+              ? "Instalado"
+              : installation?.installed === false
+                ? "No instalado"
+                : "Comprobando..."}
+          </dd>
+        </div>
+        <div>
+          <dt>Versión ARK</dt>
+          <dd>{installation?.version ?? "No detectada"}</dd>
+        </div>
         {runtime?.lastError != null && (
           <div className="card-error">
             <dt>Último error</dt>
@@ -70,7 +93,12 @@ export function ServerCard(props: Props): JSX.Element {
 
       <div className="card-actions">
         {!isActive && (
-          <button className="primary" onClick={props.onStart}>
+          <button
+            className="primary"
+            onClick={props.onStart}
+            disabled={!isInstallationReady}
+            title={!isInstallationReady ? "Instala los archivos del servidor primero" : undefined}
+          >
             Iniciar
           </button>
         )}
@@ -85,8 +113,28 @@ export function ServerCard(props: Props): JSX.Element {
         {!isActive && (
           <>
             <button onClick={props.onEdit}>Editar</button>
-            <button onClick={props.onOpenIni}>INI</button>
-            <button onClick={props.onOpenLogs}>Logs</button>
+            <button
+              onClick={props.onOpenIni}
+              disabled={!isInstallationReady}
+              title={!isInstallationReady ? "Requiere instalación lista" : undefined}
+            >
+              INI
+            </button>
+            <button
+              onClick={props.onOpenLogs}
+              disabled={!isInstallationReady}
+              title={!isInstallationReady ? "Requiere instalación lista" : undefined}
+            >
+              Logs
+            </button>
+            <button onClick={props.onOpenFolder}>Abrir carpeta</button>
+            {isInstallationReady ? (
+              <button onClick={props.onUpdateServer}>Update server</button>
+            ) : (
+              <button className="primary" onClick={props.onInstallFiles}>
+                Instalar archivos
+              </button>
+            )}
             <button onClick={props.onClone}>Clonar</button>
             <button className="danger" onClick={props.onDelete}>
               Eliminar

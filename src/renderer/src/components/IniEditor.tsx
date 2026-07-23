@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { applyIniPreset, listIniPresets } from "@shared/ini-presets";
 import type { IniPreview, ServerIniPayload, ServerProfile, ServerIniSnapshot } from "@shared/types";
 
 interface Props {
@@ -11,9 +12,11 @@ function emptyPayload(): ServerIniPayload {
 }
 
 export function IniEditor(props: Props): JSX.Element {
+  const presets = listIniPresets();
   const [snapshot, setSnapshot] = useState<ServerIniSnapshot | null>(null);
   const [payload, setPayload] = useState<ServerIniPayload>(emptyPayload());
   const [preview, setPreview] = useState<IniPreview | null>(null);
+  const [selectedPresetId, setSelectedPresetId] = useState<string>(presets[0]?.id ?? "");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,6 +80,16 @@ export function IniEditor(props: Props): JSX.Element {
     setPayload(reloaded.data.payload);
   };
 
+  const applyPreset = () => {
+    if (selectedPresetId.length === 0) {
+      return;
+    }
+    setPayload((prev) => applyIniPreset(prev, selectedPresetId));
+    setPreview(null);
+  };
+
+  const selectedPreset = presets.find((item) => item.id === selectedPresetId) ?? null;
+
   return (
     <div className="ini-editor">
       <div className="ini-header">
@@ -98,6 +111,30 @@ export function IniEditor(props: Props): JSX.Element {
             <h3>Archivos objetivo</h3>
             <p className="muted">GameUserSettings.ini: {snapshot.gameUserSettingsPath}</p>
             <p className="muted">Game.ini: {snapshot.gameIniPath}</p>
+          </div>
+
+          <div className="ini-presets panel">
+            <h3>Plantillas</h3>
+            <div className="ini-presets-actions">
+              <select
+                aria-label="Seleccionar plantilla INI"
+                value={selectedPresetId}
+                onChange={(e) => setSelectedPresetId(e.target.value)}
+                disabled={busy || presets.length === 0}
+              >
+                {presets.map((preset) => (
+                  <option key={preset.id} value={preset.id}>
+                    {preset.name}
+                  </option>
+                ))}
+              </select>
+              <button onClick={applyPreset} disabled={busy || selectedPresetId.length === 0}>
+                Aplicar plantilla
+              </button>
+            </div>
+            {selectedPreset !== null && (
+              <p className="muted">{selectedPreset.description}</p>
+            )}
           </div>
 
           <div className="ini-grid">

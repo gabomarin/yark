@@ -14,6 +14,13 @@ import type { InstanceLockManager } from "../../orchestration/instance-lock-mana
 function normalizeValue(value: unknown): string {
   if (value === null || value === undefined) return "";
   if (Array.isArray(value)) return value.map((v) => String(v)).join(",");
+  if (typeof value === "object") {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return "[object]";
+    }
+  }
   return String(value);
 }
 
@@ -162,6 +169,8 @@ export class IniService {
       };
     }
 
+    this.validateGameUserSettingsSemantics(nextGameUserSettingsParsed, validationIssues);
+
     const diff: IniDiffEntry[] = [
       ...toDiffEntries(
         "gameUserSettings",
@@ -172,11 +181,89 @@ export class IniService {
     ];
 
     return {
-      valid: true,
-      issues: [],
+      valid: validationIssues.length === 0,
+      issues: validationIssues,
       diff,
       changedCount: diff.length,
     };
+  }
+
+  private validateGameUserSettingsSemantics(
+    parsed: Record<string, unknown>,
+    issues: IniValidationIssue[],
+  ): void {
+    const section = parsed["ServerSettings"];
+    if (section === null || section === undefined || typeof section !== "object") {
+      return;
+    }
+
+    const values = section as Record<string, unknown>;
+    this.validateIntegerRange("RCONPort", values["RCONPort"], 1024, 65535, issues);
+    this.validateIntegerRange("MaxPlayers", values["MaxPlayers"], 1, 255, issues);
+    this.validateNumberRange("DifficultyOffset", values["DifficultyOffset"], 0, 1, issues);
+  }
+
+  private validateIntegerRange(
+    key: string,
+    value: unknown,
+    min: number,
+    max: number,
+    issues: IniValidationIssue[],
+  ): void {
+    if (value === null || value === undefined) {
+      return;
+    }
+    const text = String(value).trim();
+    if (text.length === 0) {
+      return;
+    }
+    const parsed = Number.parseInt(text, 10);
+    if (!Number.isFinite(parsed) || !/^[-+]?\d+$/.test(text)) {
+      issues.push({
+        fileKey: "gameUserSettings",
+        message: `${key} debe ser un entero válido`,
+      });
+      return;
+    }
+
+    if (parsed < min || parsed > max) {
+      issues.push({
+        fileKey: "gameUserSettings",
+        message: `${key} debe estar entre ${min} y ${max}`,
+      });
+    }
+  }
+
+  private validateNumberRange(
+    key: string,
+    value: unknown,
+    min: number,
+    max: number,
+    issues: IniValidationIssue[],
+  ): void {
+    if (value === null || value === undefined) {
+      return;
+    }
+    const text = String(value).trim();
+    if (text.length === 0) {
+      return;
+    }
+
+    const parsed = Number.parseFloat(text);
+    if (!Number.isFinite(parsed)) {
+      issues.push({
+        fileKey: "gameUserSettings",
+        message: `${key} debe ser un número válido`,
+      });
+      return;
+    }
+
+    if (parsed < min || parsed > max) {
+      issues.push({
+        fileKey: "gameUserSettings",
+        message: `${key} debe estar entre ${min} y ${max}`,
+      });
+    }
   }
 
   private safeParse(

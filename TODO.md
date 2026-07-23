@@ -19,6 +19,7 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - [-] Crear, editar, clonar y eliminar multiples perfiles de servidor.
 - [x] Validacion de puertos y conflictos entre instancias.
 - [x] Visualizacion de estado por servidor en la UI.
+- [x] Visualizacion de estado de instalacion (instalado/no instalado) y version detectada por servidor.
 - [ ] E2E UI para crear, clonar y eliminar servidores.
 
 ### Lifecycle / operacion del servidor
@@ -37,8 +38,8 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 
 ### Configuracion INI
 - [-] Editor avanzado de `GameUserSettings.ini` y `Game.ini`.
-- [ ] Plantillas / presets de configuracion comunes.
-- [-] Validacion y diff antes de guardar cambios en INI.
+- [x] Plantillas / presets de configuracion comunes.
+- [x] Validacion y diff antes de guardar cambios en INI.
 
 ### Backups y restore
 - [x] Backup manual.
@@ -69,9 +70,9 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - [-] Stop -> update -> start -> health check -> rollback si falla.
 - [-] Registro de eventos de update.
 - [-] Log de update en disco.
-- [ ] Ruta configurable de `steamcmd.exe`.
-- [ ] Instalador asistido de SteamCMD.
-- [ ] Bootstrap de archivos base del servidor por SteamCMD.
+- [-] Ruta configurable de `steamcmd.exe`.
+- [-] Instalador asistido de SteamCMD.
+- [-] Bootstrap de archivos base del servidor por SteamCMD.
 - [ ] Cola persistente de jobs criticos para updates y bootstrap.
 
 ### Observabilidad y logs
@@ -90,8 +91,11 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 
 ### UX operativa
 - [x] Selector nativo de carpeta para rutas de servidor y cluster.
+- [x] Boton para abrir la carpeta del servidor en Explorer.
+- [x] Botones contextuales para instalar archivos y ejecutar update server.
+- [x] Boton global para instalar SteamCMD (ruta por defecto local).
 - [ ] Selector nativo de archivo para `steamcmd.exe`.
-- [ ] Panel de SteamCMD en UI.
+- [-] Panel de SteamCMD en UI (estado + salida de consola reciente).
 - [ ] Mejoras visuales para gestionar backups, restores y logs.
 - [ ] Asistentes guiados para bootstrap, update y restore.
 
