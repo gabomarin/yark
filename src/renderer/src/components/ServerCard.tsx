@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   ServerInstallationInfo,
   ServerProfile,
   ServerRuntimeInfo,
 } from "@shared/types";
 import { Icon } from "./Icon";
+import serverThumbPlaceholder from "../ark-survival-evolved-video-game-logo-ark-logo-png-1a9de8d49dda69c703f6124c5bf770bf.png";
 
 interface Props {
   server: ServerProfile;
@@ -14,6 +15,7 @@ interface Props {
   onStart: () => void;
   onStop: () => void;
   onKill: () => void;
+  onRestart: () => void;
   onEdit: () => void;
   onOpenIni: () => void;
   onOpenLogs: () => void;
@@ -41,195 +43,242 @@ const QUICK_COMMANDS = [
 ];
 
 export function ServerCard(props: Props): JSX.Element {
-  const { server, runtime, installation } = props;
+  const { server, runtime, installation, steamCmdBusy } = props;
   const status = runtime?.status ?? "stopped";
   const isActive = status === "starting" || status === "running" || status === "stopping";
   const isInstallationReady = installation?.installed === true;
-  const { steamCmdBusy } = props;
   const [customCommand, setCustomCommand] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!menuOpen) {
+      return;
+    }
+    const onDocClick = (event: MouseEvent) => {
+      if (menuRef.current !== null && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [menuOpen]);
+
+  const closeMenuAnd = (action: () => void) => () => {
+    setMenuOpen(false);
+    action();
+  };
+
+  const officialVersion = installation?.officialVersion ?? null;
+  const localVersion = installation?.arkVersion ?? installation?.build ?? null;
+  const updateAvailable =
+    isInstallationReady && officialVersion !== null && localVersion !== null && officialVersion !== localVersion;
 
   return (
-    <article className={`card status-${status}`}>
-      <div className="card-head">
-        <h3>{server.name}</h3>
+    <article className={`server-card status-${status}`}>
+      <div className="server-card-header">
+        <img src={serverThumbPlaceholder} alt="" className="server-card-thumb" />
+        <div className="server-card-title-block">
+          <h3>{server.name}</h3>
+          <span className="muted">{server.sessionName}</span>
+        </div>
         <span className={`badge status-${status}`}>
-          <Icon name="status" className="badge-icon" />
+          <Icon name="status" weight="fill" className="badge-icon" />
           {STATUS_LABEL[status]}
         </span>
       </div>
-      <dl className="card-meta">
-        <div>
-          <dt>[MAP] Mapa</dt>
-          <dd>{server.map}</dd>
-        </div>
-        <div>
-          <dt>[NET] Puertos</dt>
-          <dd>
-            {server.gamePort} / {server.queryPort} / RCON {server.rconPort}
-          </dd>
-        </div>
-        <div>
-          <dt>[CL] Cluster</dt>
-          <dd>{server.clusterId ?? "—"}</dd>
-        </div>
-        <div>
-          <dt>[MOD] Mods</dt>
-          <dd>{server.mods.length > 0 ? server.mods.join(", ") : "—"}</dd>
-        </div>
-        <div>
-          <dt>[PKG] Instalación</dt>
-          <dd>
-            {installation?.installed === true
-              ? "Instalado"
-              : installation?.installed === false
-                ? "No instalado"
-                : "Comprobando..."}
-          </dd>
-        </div>
-        <div>
-          <dt>[BLD] Server Build</dt>
-          <dd>{installation?.build ?? "No detectado"}</dd>
-        </div>
-        <div>
-          <dt>[VER] Server Version</dt>
-          <dd>
-            {installation?.arkVersion ?? "No detectada"}
-            {installation?.arkVersion == null && installation?.installed === true && (
-              <span
-                className="muted server-version-hint"
-                title="Se detecta desde ShooterGame/Saved/Logs. Debes iniciar el servidor al menos una vez para que exista la línea ARK Version."
-              >
-                (i)
+
+      <div className="server-card-body">
+        <div className="server-card-meta-grid">
+          <div className="meta-item">
+            <span className="meta-label">Jugadores</span>
+            <span className="meta-value muted">—</span>
+          </div>
+          <div className="meta-item">
+            <span className="meta-label">Mapa</span>
+            <span className="meta-value">{server.map}</span>
+          </div>
+          <div className="meta-item">
+            <span className="meta-label">Cluster</span>
+            <span className="meta-value">{server.clusterId ?? "—"}</span>
+          </div>
+          <div className="meta-item">
+            <span className="meta-label">Mods</span>
+            <span className="meta-value">{server.mods.length}</span>
+          </div>
+          <div className="meta-item">
+            <span className="meta-label">Versión</span>
+            <span className="meta-value">{localVersion ?? "—"}</span>
+          </div>
+          <div className="meta-item">
+            <span className="meta-label">Estado</span>
+            {!isInstallationReady ? (
+              <span className="meta-value muted">Sin instalar</span>
+            ) : updateAvailable ? (
+              <span className="meta-status warn">
+                <Icon name="warning" className="meta-status-icon" />
+                Update available
+              </span>
+            ) : (
+              <span className="meta-status ok">
+                <Icon name="status" weight="fill" className="meta-status-icon" />
+                Up to date
               </span>
             )}
-          </dd>
-        </div>
-        {runtime?.lastError != null && (
-          <div className="card-error">
-            <dt>Último error</dt>
-            <dd>{runtime.lastError}</dd>
           </div>
-        )}
-      </dl>
+        </div>
 
-      <div className="card-actions">
-        {steamCmdBusy && (
-          <button className="danger button-icon-left" onClick={props.onCancelSteamCmd}>
-            <Icon name="stop" className="button-icon" />
-            Cancelar SteamCMD
-          </button>
-        )}
-        {!steamCmdBusy && (
-          <>
-        {!isActive && (
-          <button
-            className="primary button-icon-left"
-            onClick={props.onStart}
-            disabled={!isInstallationReady}
-            title={!isInstallationReady ? "Instala los archivos del servidor primero" : undefined}
-          >
-            <Icon name="play" className="button-icon" />
-            Iniciar
-          </button>
-        )}
-        {isActive && (
-          <>
-            <button className="button-icon-left" onClick={props.onStop}>
-              <Icon name="stop" className="button-icon" />
-              Detener (con guardado)
-            </button>
-            <button className="danger button-icon-left" onClick={props.onKill}>
-              <Icon name="stop" className="button-icon" />
-              Forzar cierre
-            </button>
-          </>
-        )}
-        {!isActive && (
-          <>
-            <button className="button-icon-left" onClick={props.onEdit}>
-              <Icon name="server" className="button-icon" />
-              Editar
-            </button>
+        {runtime?.lastError != null && <p className="card-error-text">{runtime.lastError}</p>}
+
+        <div className="server-card-actions">
+          {steamCmdBusy ? (
             <button
-              className="button-icon-left"
-              onClick={props.onOpenIni}
-              disabled={!isInstallationReady}
-              title={!isInstallationReady ? "Requiere instalación lista" : undefined}
+              className="icon-button danger"
+              title="Cancelar operación de SteamCMD"
+              onClick={props.onCancelSteamCmd}
             >
-              <Icon name="logs" className="button-icon" />
-              INI
+              <Icon name="stop" title="Cancelar operación de SteamCMD" />
             </button>
-            <button
-              className="button-icon-left"
-              onClick={props.onOpenLogs}
-              disabled={!isInstallationReady}
-              title={!isInstallationReady ? "Requiere instalación lista" : undefined}
+          ) : (
+            <>
+              <button
+                className="icon-button"
+                title="Iniciar"
+                onClick={props.onStart}
+                disabled={isActive || !isInstallationReady}
+              >
+                <Icon name="play" title="Iniciar" />
+              </button>
+              <button
+                className="icon-button"
+                title="Detener (con guardado)"
+                onClick={props.onStop}
+                disabled={!isActive}
+              >
+                <Icon name="pause" title="Detener (con guardado)" />
+              </button>
+              <button
+                className="icon-button"
+                title="Reiniciar"
+                onClick={props.onRestart}
+                disabled={!isInstallationReady}
+              >
+                <Icon name="restart" title="Reiniciar" />
+              </button>
+              <button className="icon-button" title="Abrir carpeta" onClick={props.onOpenFolder}>
+                <Icon name="folder" title="Abrir carpeta" />
+              </button>
+              <div className="server-card-kebab" ref={menuRef}>
+                {menuOpen ? (
+                  <button
+                    className="icon-button"
+                    title="Más opciones"
+                    aria-haspopup="true"
+                    aria-expanded="true"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <Icon name="kebab" title="Más opciones" />
+                  </button>
+                ) : (
+                  <button
+                    className="icon-button"
+                    title="Más opciones"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                    onClick={() => setMenuOpen(true)}
+                  >
+                    <Icon name="kebab" title="Más opciones" />
+                  </button>
+                )}
+                {menuOpen && (
+                  <div className="dropdown-menu" role="menu">
+                    <button role="menuitem" onClick={closeMenuAnd(props.onEdit)}>
+                      <Icon name="edit" className="button-icon" />
+                      Editar servidor
+                    </button>
+                    <button
+                      role="menuitem"
+                      onClick={closeMenuAnd(props.onOpenIni)}
+                      disabled={!isInstallationReady}
+                    >
+                      <Icon name="settings" className="button-icon" />
+                      Editar INI
+                    </button>
+                    <button
+                      role="menuitem"
+                      onClick={closeMenuAnd(props.onOpenLogs)}
+                      disabled={!isInstallationReady}
+                    >
+                      <Icon name="logs" className="button-icon" />
+                      Ver logs
+                    </button>
+                    {isInstallationReady ? (
+                      <button role="menuitem" onClick={closeMenuAnd(props.onUpdateServer)}>
+                        <Icon name="update" className="button-icon" />
+                        Actualizar servidor
+                      </button>
+                    ) : (
+                      <button role="menuitem" onClick={closeMenuAnd(props.onInstallFiles)}>
+                        <Icon name="download" className="button-icon" />
+                        Instalar archivos
+                      </button>
+                    )}
+                    <button role="menuitem" onClick={closeMenuAnd(props.onClone)}>
+                      <Icon name="clone" className="button-icon" />
+                      Clonar
+                    </button>
+                    {isActive && (
+                      <button role="menuitem" className="danger" onClick={closeMenuAnd(props.onKill)}>
+                        <Icon name="stop" className="button-icon" />
+                        Forzar cierre
+                      </button>
+                    )}
+                    <button role="menuitem" className="danger" onClick={closeMenuAnd(props.onDelete)}>
+                      <Icon name="delete" className="button-icon" />
+                      Eliminar
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        {status === "running" && !steamCmdBusy && (
+          <div className="rcon">
+            <div className="rcon-quick">
+              {QUICK_COMMANDS.map((qc) => (
+                <button key={qc.label} className="button-icon-left" onClick={() => props.onRcon(qc.command)}>
+                  <Icon name="rcon" className="button-icon" />
+                  {qc.label}
+                </button>
+              ))}
+            </div>
+            <form
+              className="rcon-custom"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (customCommand.trim().length > 0) {
+                  props.onRcon(customCommand.trim());
+                  setCustomCommand("");
+                }
+              }}
             >
-              <Icon name="logs" className="button-icon" />
-              Logs
-            </button>
-            <button className="button-icon-left" onClick={props.onOpenFolder}>
-              <Icon name="folder" className="button-icon" />
-              Abrir carpeta
-            </button>
-            {isInstallationReady ? (
-              <button className="button-icon-left" onClick={props.onUpdateServer}>
-                <Icon name="update" className="button-icon" />
-                Update server
+              <input
+                type="text"
+                placeholder="Comando RCON personalizado…"
+                value={customCommand}
+                onChange={(e) => setCustomCommand(e.target.value)}
+              />
+              <button className="button-icon-left" type="submit">
+                <Icon name="rcon" className="button-icon" />
+                Enviar
               </button>
-            ) : (
-              <button className="primary button-icon-left" onClick={props.onInstallFiles}>
-                <Icon name="download" className="button-icon" />
-                Instalar archivos
-              </button>
-            )}
-            <button className="button-icon-left" onClick={props.onClone}>
-              <Icon name="server" className="button-icon" />
-              Clonar
-            </button>
-            <button className="danger button-icon-left" onClick={props.onDelete}>
-              <Icon name="stop" className="button-icon" />
-              Eliminar
-            </button>
-          </>
-        )}
-          </>
+            </form>
+          </div>
         )}
       </div>
-
-      {status === "running" && !steamCmdBusy && (
-        <div className="rcon">
-          <div className="rcon-quick">
-            {QUICK_COMMANDS.map((qc) => (
-              <button key={qc.label} className="button-icon-left" onClick={() => props.onRcon(qc.command)}>
-                <Icon name="logs" className="button-icon" />
-                {qc.label}
-              </button>
-            ))}
-          </div>
-          <form
-            className="rcon-custom"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (customCommand.trim().length > 0) {
-                props.onRcon(customCommand.trim());
-                setCustomCommand("");
-              }
-            }}
-          >
-            <input
-              type="text"
-              placeholder="Comando RCON personalizado…"
-              value={customCommand}
-              onChange={(e) => setCustomCommand(e.target.value)}
-            />
-            <button className="button-icon-left" type="submit">
-              <Icon name="server" className="button-icon" />
-              Enviar
-            </button>
-          </form>
-        </div>
-      )}
     </article>
   );
 }
+

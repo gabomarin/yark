@@ -88,6 +88,7 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - [-] Idempotencia parcial en jobs criticos (sumada cola persistente y reintentos para jobs críticos de SteamCMD).
 - [ ] Persistencia de cola / locks / jobs para recuperacion tras reinicio de la app.
 - [ ] Reintentos controlados para operaciones remotas o de sistema.
+- [ ] Endpoint IPC dedicado de "reiniciar servidor" (hoy el botón Reiniciar de ServerCard hace `stop` + `start` secuencial desde el renderer, sin atomicidad ni manejo de fallo intermedio a nivel backend).
 
 ### UX operativa
 - [x] Selector nativo de carpeta para rutas de servidor y cluster.
@@ -95,8 +96,9 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - [x] Botones contextuales para instalar archivos y ejecutar update server.
 - [x] Boton global para instalar SteamCMD (ruta por defecto local).
 - [x] Selector nativo de archivo para `steamcmd.exe`.
-- [-] Panel de SteamCMD en UI (estado + salida de consola reciente + cancelación de proceso activa por servidor + ruta manual configurable).
+- [-] Panel de SteamCMD en UI (estado + salida de consola reciente + cancelación de proceso activa por servidor + ruta manual configurable; movido a página dedicada `SteamCMD` en el nuevo shell).
 - [-] Mejoras visuales para gestionar backups, restores y logs (aplicado rediseño base del UI, navegación por secciones en logs, scroll interno en paneles, mejor uso del ancho e iconografía; queda pulido final y diagnóstico guiado).
+- [-] Rediseño de navegación tipo sidebar (Fase 1 completa: shell con sidebar persistente + páginas Overview fusionado con Servers, Clusters, Backups, SteamCMD, Logs, Settings; iconografía y responsive con colapso de sidebar a solo-iconos en <900px). Fase "corrección de fidelidad" completa: iconografía migrada a librería real `@phosphor-icons/react` (reemplaza SVGs a mano, mismo `IconName` API), ServerCard rediseñado con thumbnail placeholder, meta-grid de 2 filas (Jugadores/Mapa/Cluster, Mods/Versión/Estado) y fila de acciones icon-only (Iniciar, Detener, Reiniciar, Abrir carpeta, menu kebab con Editar/INI/Logs/Instalar-Actualizar/Clonar/Forzar cierre/Eliminar), tarjeta de estadística de SteamCMD eliminada de Overview y reemplazada por Backups (placeholder) y Updates (real, comparando `officialVersion` vs versión local detectada), "Official Version" reubicado al Sidebar. Pendiente Fase 2 (rediseño completo de Logs: tabs superiores + consola en vivo cuando hay operación activa) y Fase 3 (rediseño final de Clusters/Backups/SteamCMD/Settings, estados de carga/vacío/error en cards, selector real de servidor con filtros en Logs y Backups). El editor de servidor (ServerForm) queda explícitamente pendiente de mockup del usuario antes de tocarlo.
 - [ ] Asistentes guiados para bootstrap, update y restore.
 
 ## Pruebas y verificacion actual
@@ -118,9 +120,11 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - Criterio aplicado: cada check se marcó como `[x]` solo cuando existe evidencia funcional vigente; si hay implementación parcial o desalineada, se marcó `[-]`; si no hay evidencia o está roto, `[ ]`.
 
 ## Siguiente prioridad recomendada
-1. Completar cola persistente de jobs críticos para cubrir backup/restore y exponer estado en UI.
-2. E2E real contra binario ASA y SteamCMD del host.
-3. Gestion avanzada de mods.
+1. Fase 2 del rediseño de navegación: página Logs con tabs superiores (Events/Runtime/Update Logs/Backups), lista+detalle por servidor, y salida en vivo cuando hay una operación SteamCMD activa (histórico se mantiene como texto estático).
+2. Fase 3 del rediseño: páginas dedicadas Clusters/Backups/SteamCMD/Settings con el mismo nivel de pulido que Overview, más estados de carga/vacío/error en las server cards (siguiendo el mockup de referencia, con placeholders para imagen de mapa hasta definir el asset real).
+3. Completar cola persistente de jobs críticos para cubrir backup/restore y exponer estado en UI.
+4. E2E real contra binario ASA y SteamCMD del host.
+5. Gestion avanzada de mods.
 
 ## Regla de mantenimiento
 - Cada vez que se complete una tarea, actualizar este archivo en el mismo cambio.

@@ -4,7 +4,8 @@ import { Icon } from "./Icon";
 
 interface Props {
   server: ServerProfile;
-  onBack: () => void;
+  onBack?: () => void;
+  initialSection?: "events" | "runtime" | "updates" | "backups";
 }
 
 export function LogsViewer(props: Props): JSX.Element {
@@ -42,9 +43,15 @@ export function LogsViewer(props: Props): JSX.Element {
   useEffect(() => {
     setSelectedUpdateFile(null);
     setUpdateContent("");
-    setActiveSection("events");
+    setActiveSection(props.initialSection ?? "events");
     void load();
   }, [props.server.id]);
+
+  useEffect(() => {
+    if (props.initialSection !== undefined) {
+      setActiveSection(props.initialSection);
+    }
+  }, [props.initialSection]);
 
   const openUpdateLog = async (fileName: string) => {
     setBusy(true);
@@ -332,7 +339,7 @@ export function LogsViewer(props: Props): JSX.Element {
           <button onClick={() => void load()} disabled={loading || busy}>
             Recargar
           </button>
-          <button onClick={props.onBack}>Volver</button>
+          {props.onBack !== undefined && <button onClick={props.onBack}>Volver</button>}
         </div>
       </div>
 
