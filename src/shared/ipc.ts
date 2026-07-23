@@ -43,6 +43,7 @@ export const IPC = {
   iniSave: "ini:save",
   logsList: "logs:list",
   logsReadUpdate: "logs:read-update",
+  logsExport: "logs:export",
 } as const;
 
 /** Canal de push (main -> renderer). */
@@ -102,6 +103,7 @@ export interface RendererApi {
     fileName: string,
     maxBytes?: number,
   ): Promise<IpcResult<string>>;
+  exportServerLogs(serverId: string): Promise<IpcResult<string | null>>;
   onServerStatus(
     listener: (info: ServerRuntimeInfo) => void,
   ): () => void;

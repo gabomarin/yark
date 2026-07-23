@@ -371,3 +371,101 @@ select {
 .ini-presets-actions select {
   min-width: 240px;
 }
+
+.logs-viewer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.logs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.logs-header h2 {
+  margin: 0;
+}
+
+.logs-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.logs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.logs-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 280px;
+}
+
+.logs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.logs-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.logs-item strong {
+  word-break: break-word;
+}
+
+.logs-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 6px 0 8px;
+}
+
+.logs-content-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.logs-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.logs-panel-head h3 {
+  margin: 0;
+}
+
+.logs-content {
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #11131a;
+  color: #d5e6ff;
+  font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.35;
+  max-height: 320px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.logs-scroll {
+  overflow: auto;
+  padding-right: 4px;
+}

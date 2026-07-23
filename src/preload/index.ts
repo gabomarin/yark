@@ -44,6 +44,8 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.logsList, serverId),
   readServerUpdateLog: (serverId: string, fileName: string, maxBytes?: number) =>
     ipcRenderer.invoke(IPC.logsReadUpdate, serverId, fileName, maxBytes),
+  exportServerLogs: (serverId: string) =>
+    ipcRenderer.invoke(IPC.logsExport, serverId),
   onServerStatus: (listener) => {
     const handler = (_e: unknown, info: ServerRuntimeInfo) => listener(info);
     ipcRenderer.on(IPC_PUSH.serverStatus, handler);

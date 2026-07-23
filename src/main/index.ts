@@ -60,7 +60,12 @@ void app.whenReady().then(() => {
   );
   const backupScheduler = new BackupScheduler(backupService);
   const iniService = new IniService(repo, locks);
-  const logsService = new LogsService(repo, backupRepo, join(userData, "update-logs"));
+  const logsService = new LogsService(
+    repo,
+    backupRepo,
+    join(userData, "update-logs"),
+    processManager,
+  );
   const updateService = new UpdateService(
     repo,
     backupService,

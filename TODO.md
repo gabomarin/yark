@@ -78,7 +78,7 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 ### Observabilidad y logs
 - [x] Eventos recientes persistidos y visibles en UI.
 - [x] Estado runtime por servidor.
-- [-] Vista de logs de proceso / update / backup desde la UI.
+- [-] Vista de logs de proceso / update / backup desde la UI (filtros de eventos, búsqueda, scroll interno, copia y exportación listos; queda pulido visual/diagnóstico guiado).
 - [ ] Rotacion avanzada de logs.
 - [ ] Diagnostico guiado para fallos de arranque reales.
 
@@ -118,11 +118,10 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - Criterio aplicado: cada check se marcó como `[x]` solo cuando existe evidencia funcional vigente; si hay implementación parcial o desalineada, se marcó `[-]`; si no hay evidencia o está roto, `[ ]`.
 
 ## Siguiente prioridad recomendada
-1. Editor INI avanzado con persistencia y validacion.
-2. Vista de logs operativos en UI.
-3. Cola persistente de jobs criticos (update / backup / bootstrap / restore).
-4. E2E real contra binario ASA y SteamCMD del host.
-5. Gestion avanzada de mods.
+1. Completar vista de logs operativos en UI (acciones rápidas de diagnóstico y pulido visual).
+2. Cola persistente de jobs criticos (update / backup / bootstrap / restore).
+3. E2E real contra binario ASA y SteamCMD del host.
+4. Gestion avanzada de mods.
 
 ## Regla de mantenimiento
 - Cada vez que se complete una tarea, actualizar este archivo en el mismo cambio.

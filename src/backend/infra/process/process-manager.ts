@@ -20,6 +20,7 @@ interface ManagedProcess {
 const RCON_HOST = "127.0.0.1";
 const SAVE_WAIT_MS = 8000;
 const EXIT_WAIT_MS = 30000;
+const MAX_RUNTIME_LOG_LINES = 1200;
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -31,6 +32,7 @@ function delay(ms: number): Promise<void> {
  */
 export class ProcessManager extends EventEmitter {
   private readonly processes = new Map<string, ManagedProcess>();
+  private readonly runtimeLogs = new Map<string, string[]>();
 
   getStatus(serverId: string): ServerRuntimeInfo {
     const managed = this.processes.get(serverId);
@@ -61,6 +63,12 @@ export class ProcessManager extends EventEmitter {
     return status === "starting" || status === "running" || status === "stopping";
   }
 
+  getRuntimeLogSnapshot(serverId: string, limit = 300): string[] {
+    const lines = this.runtimeLogs.get(serverId) ?? [];
+    const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.floor(limit)) : 300;
+    return lines.slice(-safeLimit);
+  }
+
   start(profile: ServerProfile, options?: StartServerOptions): void {
     if (this.isActive(profile.id)) {
       throw new Error(`El servidor "${profile.name}" ya está en ejecución`);
@@ -76,9 +84,21 @@ export class ProcessManager extends EventEmitter {
     const child = spawn(binary, args, {
       cwd: profile.installDir,
       windowsHide: true,
-      stdio: "ignore",
+      stdio: ["ignore", "pipe", "pipe"],
       detached: false,
     });
+
+    this.appendRuntimeLog(profile.id, "system", `Iniciando proceso ${binary}`);
+    if (child.stdout !== null) {
+      child.stdout.on("data", (chunk) => {
+        this.captureRuntimeChunk(profile.id, "stdout", String(chunk));
+      });
+    }
+    if (child.stderr !== null) {
+      child.stderr.on("data", (chunk) => {
+        this.captureRuntimeChunk(profile.id, "stderr", String(chunk));
+      });
+    }
 
     const managed: ManagedProcess = {
       child,
@@ -92,6 +112,7 @@ export class ProcessManager extends EventEmitter {
     child.once("spawn", () => {
       if (managed.status === "starting") {
         managed.status = "running";
+        this.appendRuntimeLog(profile.id, "system", "Proceso en estado running");
         this.emitStatus(profile.id);
       }
     });
@@ -99,11 +120,17 @@ export class ProcessManager extends EventEmitter {
     child.once("error", (err) => {
       managed.status = "error";
       managed.lastError = err.message;
+      this.appendRuntimeLog(profile.id, "error", `Error de proceso: ${err.message}`);
       this.emitStatus(profile.id);
     });
 
     child.once("exit", (code) => {
       const wasStopping = managed.status === "stopping";
+      this.appendRuntimeLog(
+        profile.id,
+        "system",
+        `Proceso finalizado con código ${code ?? "desconocido"}`,
+      );
       if (wasStopping || code === 0) {
         this.processes.delete(profile.id);
         this.emitStatus(profile.id);
@@ -123,6 +150,7 @@ export class ProcessManager extends EventEmitter {
     const managed = this.processes.get(profile.id);
     if (managed === undefined) return;
     managed.status = "stopping";
+    this.appendRuntimeLog(profile.id, "system", "Intentando parada segura por RCON");
     this.emitStatus(profile.id);
 
     try {
@@ -141,6 +169,7 @@ export class ProcessManager extends EventEmitter {
       );
     } catch {
       // RCON no disponible: se recurre a terminación del proceso.
+      this.appendRuntimeLog(profile.id, "warning", "RCON no disponible; aplicando kill");
       managed.child.kill();
     }
 
@@ -158,6 +187,7 @@ export class ProcessManager extends EventEmitter {
     const managed = this.processes.get(serverId);
     if (managed === undefined) return;
     managed.status = "stopping";
+    this.appendRuntimeLog(serverId, "warning", "Forzando cierre del proceso");
     this.emitStatus(serverId);
     managed.child.kill();
     this.processes.delete(serverId);
@@ -190,5 +220,29 @@ export class ProcessManager extends EventEmitter {
 
   private emitStatus(serverId: string): void {
     this.emit("status", this.getStatus(serverId));
+  }
+
+  private captureRuntimeChunk(serverId: string, source: "stdout" | "stderr", chunk: string): void {
+    const lines = chunk
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    for (const line of lines) {
+      this.appendRuntimeLog(serverId, source, line);
+    }
+  }
+
+  private appendRuntimeLog(serverId: string, source: string, message: string): void {
+    const line = message.trim();
+    if (line.length === 0) {
+      return;
+    }
+
+    const list = this.runtimeLogs.get(serverId) ?? [];
+    list.push(`[${new Date().toISOString()}] [${source}] ${line}`);
+    if (list.length > MAX_RUNTIME_LOG_LINES) {
+      list.splice(0, list.length - MAX_RUNTIME_LOG_LINES);
+    }
+    this.runtimeLogs.set(serverId, list);
   }
 }

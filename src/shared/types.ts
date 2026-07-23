@@ -193,6 +193,7 @@ export interface ServerOperationalLogs {
   updateFiles: ServerUpdateLogFile[];
   backups: BackupRecord[];
   events: AppEvent[];
+  runtimeLogLines: string[];
 }
 
 /** Mapas oficiales conocidos de ASA (extensible con mapas de mods). */

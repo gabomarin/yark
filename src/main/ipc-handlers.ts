@@ -1,4 +1,4 @@
-import { BrowserWindow, dialog, ipcMain, shell, type OpenDialogOptions } from "electron";
+import { BrowserWindow, dialog, ipcMain, shell, type OpenDialogOptions, type SaveDialogOptions } from "electron";
 import { IPC, type IpcResult, type PickPathKind } from "../shared/ipc";
 import type { ServerIniPayload, ServerProfileInput, StartServerOptions } from "../shared/types";
 import type { InstanceService } from "../backend/domains/instances/instance-service";
@@ -15,6 +15,16 @@ function wrap<T>(fn: () => T | Promise<T>): Promise<IpcResult<T>> {
       ok: false,
       error: err instanceof Error ? err.message : String(err),
     }));
+}
+
+function fileStamp(date = new Date()): string {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  const hh = String(date.getHours()).padStart(2, "0");
+  const min = String(date.getMinutes()).padStart(2, "0");
+  const ss = String(date.getSeconds()).padStart(2, "0");
+  return `${yyyy}${mm}${dd}-${hh}${min}${ss}`;
 }
 
 export function registerIpcHandlers(
@@ -151,5 +161,24 @@ export function registerIpcHandlers(
     IPC.logsReadUpdate,
     (_e, serverId: string, fileName: string, maxBytes?: number) =>
       wrap(() => logs.readUpdateLog(serverId, fileName, maxBytes)),
+  );
+
+  ipcMain.handle(IPC.logsExport, (_e, serverId: string) =>
+    wrap(async () => {
+      const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
+      const options: SaveDialogOptions = {
+        title: "Exportar logs operativos",
+        defaultPath: `${serverId}-logs-${fileStamp()}.txt`,
+        filters: [{ name: "Texto", extensions: ["txt", "log"] }],
+      };
+      const result =
+        win !== undefined
+          ? await dialog.showSaveDialog(win, options)
+          : await dialog.showSaveDialog(options);
+      if (result.canceled || result.filePath === undefined) {
+        return null;
+      }
+      return logs.exportServerLogs(serverId, result.filePath);
+    }),
   );
 }
