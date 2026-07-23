@@ -143,9 +143,13 @@ export class RconClient {
   private dispatch(packet: Packet): void {
     if (packet.type === AUTH_RESPONSE) {
       if (packet.id === -1) {
-        // Auth fallida: el servidor responde con id -1.
-        for (const waiter of this.pending.values()) {
+        // Auth fallida: rechazar todas las esperas de auth.
+        for (const [id, waiter] of this.pending) {
           waiter.resolve(null as unknown as string);
+          this.pending.delete(id);
+        }
+        for (const waiter of this.pending.values()) {
+          waiter.reject(new Error("Autenticación RCON fallida"));
         }
         this.pending.clear();
         return;

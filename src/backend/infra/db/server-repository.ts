@@ -59,7 +59,7 @@ export class ServerRepository {
   get(id: string): ServerProfile | null {
     const row = this.db
       .prepare("SELECT * FROM servers WHERE id = ?")
-      .get(id) as unknown as ServerRow | undefined;
+      .get(id) as ServerRow | undefined;
     return row ? rowToProfile(row) : null;
   }
 
@@ -159,7 +159,7 @@ export class ServerRepository {
       .prepare(
         "SELECT id, server_id, type, severity, message, created_at FROM events ORDER BY id DESC LIMIT ?",
       )
-      .all(limit) as unknown as Array<{
+      .all(limit) as Array<{
       id: number;
       server_id: string | null;
       type: AppEvent["type"];

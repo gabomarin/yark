@@ -1,6 +1,11 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { IPC, IPC_PUSH, type RendererApi } from "../shared/ipc";
-import type { ServerProfileInput, ServerRuntimeInfo } from "../shared/types";
+import type {
+  ServerIniPayload,
+  ServerProfileInput,
+  ServerRuntimeInfo,
+  StartServerOptions,
+} from "../shared/types";
 
 const api: RendererApi = {
   listServers: () => ipcRenderer.invoke(IPC.serversList),
@@ -10,7 +15,8 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.serversUpdate, id, input),
   deleteServer: (id: string) => ipcRenderer.invoke(IPC.serversDelete, id),
   cloneServer: (id: string) => ipcRenderer.invoke(IPC.serversClone, id),
-  startServer: (id: string) => ipcRenderer.invoke(IPC.serversStart, id),
+  startServer: (id: string, options?: StartServerOptions) =>
+    ipcRenderer.invoke(IPC.serversStart, id, options),
   stopServer: (id: string) => ipcRenderer.invoke(IPC.serversStop, id),
   killServer: (id: string) => ipcRenderer.invoke(IPC.serversKill, id),
   getStatuses: () => ipcRenderer.invoke(IPC.serversStatuses),
@@ -19,6 +25,18 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.rconCommand, id, command),
   recentEvents: (limit: number) =>
     ipcRenderer.invoke(IPC.eventsRecent, limit),
+  pickPath: (kind, defaultPath, title) =>
+    ipcRenderer.invoke(IPC.pickPath, kind, defaultPath, title),
+  readServerIni: (serverId: string) =>
+    ipcRenderer.invoke(IPC.iniRead, serverId),
+  previewServerIni: (serverId: string, payload: ServerIniPayload) =>
+    ipcRenderer.invoke(IPC.iniPreview, serverId, payload),
+  saveServerIni: (serverId: string, payload: ServerIniPayload) =>
+    ipcRenderer.invoke(IPC.iniSave, serverId, payload),
+  listServerLogs: (serverId: string) =>
+    ipcRenderer.invoke(IPC.logsList, serverId),
+  readServerUpdateLog: (serverId: string, fileName: string, maxBytes?: number) =>
+    ipcRenderer.invoke(IPC.logsReadUpdate, serverId, fileName, maxBytes),
   onServerStatus: (listener) => {
     const handler = (_e: unknown, info: ServerRuntimeInfo) => listener(info);
     ipcRenderer.on(IPC_PUSH.serverStatus, handler);

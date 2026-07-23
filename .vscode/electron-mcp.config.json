@@ -1,0 +1,21 @@
+{
+  "browser": {
+    "browserName": "electron",
+    "isolated": true,
+    "launchOptions": {
+      "executablePath": "./node_modules/electron/dist/electron.exe",
+      "cwd": "./",
+      "args": [
+        "."
+      ]
+    }
+  },
+  "capabilities": [
+    "core",
+    "tabs",
+    "wait",
+    "files",
+    "testing"
+  ],
+  "outputDir": ".mcp-output"
+}

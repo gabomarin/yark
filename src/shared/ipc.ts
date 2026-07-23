@@ -1,10 +1,17 @@
 import type {
   AppEvent,
   ClusterComplianceReport,
+  IniPreview,
+  ServerIniPayload,
+  ServerIniSnapshot,
+  ServerOperationalLogs,
   ServerProfile,
   ServerProfileInput,
   ServerRuntimeInfo,
+  StartServerOptions,
 } from "./types";
+
+export type PickPathKind = "directory" | "file";
 
 /** Canales IPC invocables (renderer -> main). */
 export const IPC = {
@@ -20,6 +27,12 @@ export const IPC = {
   clusterCheck: "cluster:check",
   rconCommand: "rcon:command",
   eventsRecent: "events:recent",
+  pickPath: "fs:pick-path",
+  iniRead: "ini:read",
+  iniPreview: "ini:preview",
+  iniSave: "ini:save",
+  logsList: "logs:list",
+  logsReadUpdate: "logs:read-update",
 } as const;
 
 /** Canal de push (main -> renderer). */
@@ -42,7 +55,7 @@ export interface RendererApi {
   ): Promise<IpcResult<ServerProfile>>;
   deleteServer(id: string): Promise<IpcResult<void>>;
   cloneServer(id: string): Promise<IpcResult<ServerProfile>>;
-  startServer(id: string): Promise<IpcResult<void>>;
+  startServer(id: string, options?: StartServerOptions): Promise<IpcResult<void>>;
   stopServer(id: string): Promise<IpcResult<void>>;
   killServer(id: string): Promise<IpcResult<void>>;
   getStatuses(): Promise<IpcResult<ServerRuntimeInfo[]>>;
@@ -52,6 +65,26 @@ export interface RendererApi {
     command: string,
   ): Promise<IpcResult<string>>;
   recentEvents(limit: number): Promise<IpcResult<AppEvent[]>>;
+  pickPath(
+    kind: PickPathKind,
+    defaultPath?: string,
+    title?: string,
+  ): Promise<IpcResult<string | null>>;
+  readServerIni(serverId: string): Promise<IpcResult<ServerIniSnapshot>>;
+  previewServerIni(
+    serverId: string,
+    payload: ServerIniPayload,
+  ): Promise<IpcResult<IniPreview>>;
+  saveServerIni(
+    serverId: string,
+    payload: ServerIniPayload,
+  ): Promise<IpcResult<IniPreview>>;
+  listServerLogs(serverId: string): Promise<IpcResult<ServerOperationalLogs>>;
+  readServerUpdateLog(
+    serverId: string,
+    fileName: string,
+    maxBytes?: number,
+  ): Promise<IpcResult<string>>;
   onServerStatus(
     listener: (info: ServerRuntimeInfo) => void,
   ): () => void;

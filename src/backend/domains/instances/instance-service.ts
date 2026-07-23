@@ -3,6 +3,7 @@ import type {
   ServerProfile,
   ServerProfileInput,
   ServerRuntimeInfo,
+  StartServerOptions,
 } from "@shared/types";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { ProcessManager } from "../../infra/process/process-manager";
@@ -116,7 +117,7 @@ export class InstanceService {
     return this.create(input);
   }
 
-  start(id: string): void {
+  start(id: string, options?: StartServerOptions): void {
     const profile = this.mustGet(id);
     const running = this.repo
       .list()
@@ -128,7 +129,7 @@ export class InstanceService {
         `Conflicto de puerto ${c.kind} ${c.port} con el servidor activo "${c.serverA === profile.name ? c.serverB : c.serverA}"`,
       );
     }
-    this.processes.start(profile);
+    this.processes.start(profile, options);
     this.repo.addEvent(
       id,
       "server_started",

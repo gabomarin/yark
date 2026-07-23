@@ -43,6 +43,11 @@ export interface ServerRuntimeInfo {
   lastError: string | null;
 }
 
+export interface StartServerOptions {
+  skipPortValidation?: boolean;
+  launchArgsOverride?: string[];
+}
+
 export interface PortConflict {
   serverA: string;
   serverB: string;
@@ -80,10 +85,95 @@ export interface AppEvent {
     | "server_stopped"
     | "server_crashed"
     | "rcon_command"
+    | "backup_created"
+    | "backup_restored"
+    | "update_started"
+    | "update_completed"
+    | "update_failed"
+    | "update_rolled_back"
     | "error";
   severity: "info" | "warning" | "error";
   message: string;
   createdAt: string;
+}
+
+export type BackupType =
+  | "manual"
+  | "scheduled"
+  | "pre_restart"
+  | "pre_update"
+  | "pre_restore";
+
+export type BackupStatus = "running" | "completed" | "failed";
+
+export interface BackupRecord {
+  id: string;
+  serverId: string;
+  type: BackupType;
+  path: string;
+  sizeBytes: number;
+  status: BackupStatus;
+  createdAt: string;
+  completedAt: string | null;
+  notes: string | null;
+}
+
+export interface BackupPolicy {
+  serverId: string;
+  enabled: boolean;
+  intervalMinutes: number;
+  retainCount: number;
+  retainDays: number;
+  updatedAt: string;
+}
+
+export type IniFileKey = "gameUserSettings" | "game";
+
+export interface IniValidationIssue {
+  fileKey: IniFileKey;
+  message: string;
+}
+
+export interface IniDiffEntry {
+  fileKey: IniFileKey;
+  section: string;
+  key: string;
+  before: string | null;
+  after: string | null;
+  change: "added" | "removed" | "changed";
+}
+
+export interface IniPreview {
+  valid: boolean;
+  issues: IniValidationIssue[];
+  diff: IniDiffEntry[];
+  changedCount: number;
+}
+
+export interface ServerIniPayload {
+  gameUserSettings: string;
+  game: string;
+}
+
+export interface ServerIniSnapshot {
+  serverId: string;
+  gameUserSettingsPath: string;
+  gameIniPath: string;
+  payload: ServerIniPayload;
+}
+
+export interface ServerUpdateLogFile {
+  fileName: string;
+  fullPath: string;
+  modifiedAt: string;
+  sizeBytes: number;
+}
+
+export interface ServerOperationalLogs {
+  serverId: string;
+  updateFiles: ServerUpdateLogFile[];
+  backups: BackupRecord[];
+  events: AppEvent[];
 }
 
 /** Mapas oficiales conocidos de ASA (extensible con mapas de mods). */

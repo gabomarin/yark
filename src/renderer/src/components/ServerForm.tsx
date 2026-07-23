@@ -42,6 +42,7 @@ function toFormState(profile: ServerProfile | null): FormState {
       mods: "",
     };
   }
+
   return {
     name: profile.name,
     map: profile.map,
@@ -88,6 +89,9 @@ export function ServerForm(props: Props): JSX.Element {
   const [state, setState] = useState<FormState>(() => toFormState(props.initial));
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [browsingField, setBrowsingField] = useState<"installDir" | "clusterDir" | null>(
+    null,
+  );
 
   const set =
     (field: keyof FormState) =>
@@ -109,6 +113,27 @@ export function ServerForm(props: Props): JSX.Element {
       props.onSaved();
     } else {
       setError(result.error);
+    }
+  };
+
+  const browseDirectory = async (field: "installDir" | "clusterDir") => {
+    setError(null);
+    setBrowsingField(field);
+    const current = state[field].trim();
+    const result = await window.api.pickPath(
+      "directory",
+      current.length > 0 ? current : undefined,
+      field === "installDir"
+        ? "Seleccionar carpeta de instalación del servidor"
+        : "Seleccionar carpeta de cluster compartido",
+    );
+    setBrowsingField(null);
+    if (!result.ok) {
+      setError(result.error ?? "No se pudo abrir el selector de carpeta");
+      return;
+    }
+    if (result.data !== null) {
+      setState((prev) => ({ ...prev, [field]: result.data }));
     }
   };
 
@@ -147,12 +172,21 @@ export function ServerForm(props: Props): JSX.Element {
         </label>
         <label>
           Directorio de instalación del servidor
-          <input
-            value={state.installDir}
-            onChange={set("installDir")}
-            placeholder="C:\asa-servers\island"
-            required
-          />
+          <div className="path-field">
+            <input
+              value={state.installDir}
+              onChange={set("installDir")}
+              placeholder="C:\\asa-servers\\island"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => void browseDirectory("installDir")}
+              disabled={browsingField !== null}
+            >
+              {browsingField === "installDir" ? "Abriendo..." : "Buscar"}
+            </button>
+          </div>
         </label>
       </fieldset>
 
@@ -192,11 +226,20 @@ export function ServerForm(props: Props): JSX.Element {
         </label>
         <label>
           Directorio compartido de cluster
-          <input
-            value={state.clusterDir}
-            onChange={set("clusterDir")}
-            placeholder="C:\asa-servers\cluster"
-          />
+          <div className="path-field">
+            <input
+              value={state.clusterDir}
+              onChange={set("clusterDir")}
+              placeholder="C:\\asa-servers\\cluster"
+            />
+            <button
+              type="button"
+              onClick={() => void browseDirectory("clusterDir")}
+              disabled={browsingField !== null}
+            >
+              {browsingField === "clusterDir" ? "Abriendo..." : "Buscar"}
+            </button>
+          </div>
         </label>
       </fieldset>
 

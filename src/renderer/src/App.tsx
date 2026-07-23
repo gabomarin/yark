@@ -5,10 +5,17 @@ import type {
   ServerProfile,
   ServerRuntimeInfo,
 } from "@shared/types";
+import { IniEditor } from "./components/IniEditor";
+import { LogsViewer } from "./components/LogsViewer";
 import { ServerCard } from "./components/ServerCard";
 import { ServerForm } from "./components/ServerForm";
 
-type View = { kind: "list" } | { kind: "create" } | { kind: "edit"; profile: ServerProfile };
+type View =
+  | { kind: "list" }
+  | { kind: "create" }
+  | { kind: "edit"; profile: ServerProfile }
+  | { kind: "ini"; profile: ServerProfile }
+  | { kind: "logs"; profile: ServerProfile };
 
 export function App(): JSX.Element {
   const [servers, setServers] = useState<ServerProfile[]>([]);
@@ -29,6 +36,7 @@ export function App(): JSX.Element {
     if (statusesRes.ok) {
       setStatuses(new Map(statusesRes.data.map((s) => [s.serverId, s])));
     }
+
     if (clusterRes.ok) setReports(clusterRes.data);
     if (eventsRes.ok) setEvents(eventsRes.data);
   }, []);
@@ -60,6 +68,44 @@ export function App(): JSX.Element {
     },
     [refresh],
   );
+
+  if (view.kind === "ini") {
+    return (
+      <div className="app">
+        <header className="topbar">
+          <h1>ARK Server GBO</h1>
+        </header>
+        <main className="content">
+          <IniEditor
+            server={view.profile}
+            onBack={() => {
+              setView({ kind: "list" });
+              void refresh();
+            }}
+          />
+        </main>
+      </div>
+    );
+  }
+
+  if (view.kind === "logs") {
+    return (
+      <div className="app">
+        <header className="topbar">
+          <h1>ARK Server GBO</h1>
+        </header>
+        <main className="content">
+          <LogsViewer
+            server={view.profile}
+            onBack={() => {
+              setView({ kind: "list" });
+              void refresh();
+            }}
+          />
+        </main>
+      </div>
+    );
+  }
 
   if (view.kind === "create" || view.kind === "edit") {
     return (
@@ -115,6 +161,8 @@ export function App(): JSX.Element {
                 onStop={() => void runAction(() => window.api.stopServer(server.id))}
                 onKill={() => void runAction(() => window.api.killServer(server.id))}
                 onEdit={() => setView({ kind: "edit", profile: server })}
+                onOpenIni={() => setView({ kind: "ini", profile: server })}
+                onOpenLogs={() => setView({ kind: "logs", profile: server })}
                 onClone={() => void runAction(() => window.api.cloneServer(server.id))}
                 onDelete={() => {
                   if (window.confirm(`¿Eliminar el servidor "${server.name}"?`)) {

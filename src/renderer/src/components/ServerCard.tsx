@@ -8,6 +8,8 @@ interface Props {
   onStop: () => void;
   onKill: () => void;
   onEdit: () => void;
+  onOpenIni: () => void;
+  onOpenLogs: () => void;
   onClone: () => void;
   onDelete: () => void;
   onRcon: (command: string) => void;
@@ -83,6 +85,8 @@ export function ServerCard(props: Props): JSX.Element {
         {!isActive && (
           <>
             <button onClick={props.onEdit}>Editar</button>
+            <button onClick={props.onOpenIni}>INI</button>
+            <button onClick={props.onOpenLogs}>Logs</button>
             <button onClick={props.onClone}>Clonar</button>
             <button className="danger" onClick={props.onDelete}>
               Eliminar

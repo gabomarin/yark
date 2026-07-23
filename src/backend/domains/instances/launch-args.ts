@@ -1,9 +1,9 @@
-import { win32 } from "node:path";
+import { join } from "node:path";
 import type { ServerProfile } from "@shared/types";
 
 /** Ruta al ejecutable del servidor dedicado dentro de la instalación. */
 export function serverBinaryPath(installDir: string): string {
-  return win32.join(
+  return join(
     installDir,
     "ShooterGame",
     "Binaries",

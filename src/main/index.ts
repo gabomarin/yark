@@ -1,9 +1,15 @@
 import { app, BrowserWindow } from "electron";
 import { join } from "node:path";
 import { openDatabase } from "../backend/infra/db/database";
+import { BackupRepository } from "../backend/infra/db/backup-repository";
 import { ServerRepository } from "../backend/infra/db/server-repository";
 import { ProcessManager } from "../backend/infra/process/process-manager";
+import { BackupService } from "../backend/domains/backups/backup-service";
+import { BackupScheduler } from "../backend/domains/backups/backup-scheduler";
+import { IniService } from "../backend/domains/config/ini-service";
 import { InstanceService } from "../backend/domains/instances/instance-service";
+import { LogsService } from "../backend/domains/logs/logs-service";
+import { InstanceLockManager } from "../backend/orchestration/instance-lock-manager";
 import { registerIpcHandlers } from "./ipc-handlers";
 import { IPC_PUSH } from "../shared/ipc";
 import type { ServerRuntimeInfo } from "../shared/types";
@@ -35,13 +41,27 @@ function createWindow(): BrowserWindow {
 }
 
 void app.whenReady().then(() => {
-  const dbPath = join(app.getPath("userData"), "ark-server-gbo.db");
+  const userData = app.getPath("userData");
+  const dbPath = join(userData, "ark-server-gbo.db");
   const db = openDatabase(dbPath);
   const repo = new ServerRepository(db);
+  const backupRepo = new BackupRepository(db);
   const processManager = new ProcessManager();
   const instances = new InstanceService(repo, processManager);
+  const locks = new InstanceLockManager();
+  const backupService = new BackupService(
+    repo,
+    backupRepo,
+    processManager,
+    join(userData, "backups"),
+  );
+  const backupScheduler = new BackupScheduler(backupService);
+  const iniService = new IniService(repo, locks);
+  const logsService = new LogsService(repo, backupRepo, join(userData, "update-logs"));
 
-  registerIpcHandlers(instances, repo);
+  backupScheduler.start();
+
+  registerIpcHandlers(instances, repo, iniService, logsService);
 
   processManager.on("status", (info: ServerRuntimeInfo) => {
     mainWindow?.webContents.send(IPC_PUSH.serverStatus, info);
@@ -64,6 +84,10 @@ void app.whenReady().then(() => {
         app.exit(0);
       });
     }
+  });
+
+  app.on("will-quit", () => {
+    backupScheduler.stop();
   });
 });
 

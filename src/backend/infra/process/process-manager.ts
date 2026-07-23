@@ -1,7 +1,12 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
 import { EventEmitter } from "node:events";
-import type { ServerProfile, ServerRuntimeInfo, ServerStatus } from "@shared/types";
+import type {
+  ServerProfile,
+  ServerRuntimeInfo,
+  ServerStatus,
+  StartServerOptions,
+} from "@shared/types";
 import { buildLaunchArgs, serverBinaryPath } from "../../domains/instances/launch-args";
 import { rconExec } from "../rcon/rcon-client";
 
@@ -15,8 +20,6 @@ interface ManagedProcess {
 const RCON_HOST = "127.0.0.1";
 const SAVE_WAIT_MS = 8000;
 const EXIT_WAIT_MS = 30000;
-/** Tiempo tras el spawn para considerar el proceso "running" si sigue vivo. */
-const STARTUP_GRACE_MS = 15000;
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -58,7 +61,7 @@ export class ProcessManager extends EventEmitter {
     return status === "starting" || status === "running" || status === "stopping";
   }
 
-  start(profile: ServerProfile): void {
+  start(profile: ServerProfile, options?: StartServerOptions): void {
     if (this.isActive(profile.id)) {
       throw new Error(`El servidor "${profile.name}" ya está en ejecución`);
     }
@@ -69,7 +72,7 @@ export class ProcessManager extends EventEmitter {
       );
     }
 
-    const args = buildLaunchArgs(profile);
+    const args = options?.launchArgsOverride ?? buildLaunchArgs(profile);
     const child = spawn(binary, args, {
       cwd: profile.installDir,
       windowsHide: true,
@@ -85,6 +88,13 @@ export class ProcessManager extends EventEmitter {
     };
     this.processes.set(profile.id, managed);
     this.emitStatus(profile.id);
+
+    child.once("spawn", () => {
+      if (managed.status === "starting") {
+        managed.status = "running";
+        this.emitStatus(profile.id);
+      }
+    });
 
     child.once("error", (err) => {
       managed.status = "error";
@@ -104,13 +114,6 @@ export class ProcessManager extends EventEmitter {
       }
     });
 
-    // Tras un periodo de gracia, si el proceso sigue vivo se considera activo.
-    setTimeout(() => {
-      if (managed.status === "starting" && child.exitCode === null) {
-        managed.status = "running";
-        this.emitStatus(profile.id);
-      }
-    }, STARTUP_GRACE_MS);
   }
 
   /**
