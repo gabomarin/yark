@@ -208,3 +208,22 @@ es el objetivo principal y debe recibir la mayor parte del alto disponible:
 La compactación no debe ocultar ni truncar información prioritaria. En ventanas
 estrechas, la franja puede desplazarse horizontalmente antes que crecer y
 reducir de forma significativa el área de trabajo.
+
+## Superficies operativas azul‑obsidiana
+
+Servidores, SteamCMD y Registros pertenecen al mismo entorno operativo, pero no
+deben usar idéntica intensidad:
+
+- las filas de servidor reciben el mayor énfasis porque representan las
+  entidades principales y sus estados;
+- el estado activo de SteamCMD puede usar el mismo gradiente e indicador
+  lateral con intensidad media;
+- historiales, detalles y consolas usan una mezcla azul‑grisácea más tenue;
+- las consolas conservan un interior prácticamente negro para legibilidad del
+  texto monoespaciado;
+- los paneles técnicos secundarios no vuelven al gris neutral puro ni reciben
+  gradientes decorativos independientes.
+
+La identidad se consigue mediante temperatura coherente y niveles semánticos,
+no pintando cada contenedor de azul. El usuario debe distinguir primero estado,
+acción y contenido antes de percibir el tratamiento visual.

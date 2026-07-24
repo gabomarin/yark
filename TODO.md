@@ -106,7 +106,7 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - [x] Botones contextuales para instalar archivos y ejecutar update server.
 - [x] Boton global para instalar SteamCMD (ruta por defecto local).
 - [x] Selector nativo de archivo para `steamcmd.exe`.
-- [-] Panel de SteamCMD en UI (estado + salida de consola reciente + cancelación de proceso activa por servidor + ruta manual configurable; ya migrado al frontend nuevo con `SteamCmdPage` en Mantine + CSS Modules. Pendiente: pulido visual, métricas extra y, si hace falta, acciones más avanzadas por servidor durante operaciones activas).
+- [-] Panel de SteamCMD en UI (estado + salida de consola reciente + cancelación de proceso activa por servidor + ruta manual configurable; jerarquía operativa, consola de altura completa y contexto técnico compacto completados. Pendientes únicamente acciones más avanzadas por servidor si una necesidad real las justifica).
 - [-] Mejoras visuales para gestionar backups, restores y logs (aplicado rediseño base del UI, navegación por secciones en logs, scroll interno en paneles, mejor uso del ancho e iconografía; queda pulido final y diagnóstico guiado).
 - [-] Rediseño de navegación tipo sidebar (Fase 1 completa: shell con sidebar persistente + páginas Overview fusionado con Servers, Clusters, Backups, SteamCMD, Logs, Settings; iconografía y responsive con colapso de sidebar a solo-iconos en <900px). Fase "corrección de fidelidad" completa: iconografía migrada a librería real `@phosphor-icons/react` (reemplaza SVGs a mano, mismo `IconName` API), ServerCard rediseñado con thumbnail placeholder, meta-grid de 2 filas (Jugadores/Mapa/Cluster, Mods/Versión/Estado) y fila de acciones icon-only (Iniciar, Detener, Reiniciar, Abrir carpeta, menu kebab con Editar/INI/Logs/Instalar-Actualizar/Clonar/Forzar cierre/Eliminar), tarjeta de estadística de SteamCMD eliminada de Overview y reemplazada por Backups (placeholder) y Updates (real, comparando `officialVersion` vs versión local detectada), "Official Version" reubicado al Sidebar. Fase 2 (rediseño de Logs) completa en su parte estática: tabs superiores Events/Runtime/Update Logs/Backups, Update History con detalle y visor del log, botón "Open in external viewer" (IPC `logs:open-update-file` vía `shell.openPath`); el histórico persistido ya fue migrado al frontend nuevo como `LogsPage`. Rewrite UI v2: shell nuevo activo; `Overview`, `SteamCMD` y `Logs` migrados; `Clusters`, `Backups` y `Settings` siguen como placeholders. **Server Workspace (editor de servidor) Fase 1**: desde Overview → INI se abre layout de 3 columnas (lista de servidores para cambio rápido / Configuration INI+mods / panel de status+quick actions), reutilizando IPC de INI existente. Pendiente inmediato: pulir workspace, Startup Parameters editable, tabs restantes del mockup, streaming en Logs, y después página Backups.
 - [ ] Asistentes guiados para bootstrap, update y restore.
@@ -228,7 +228,7 @@ Auditoría UX/UI posterior al bloque 2.6 (2026-07-24):
 - [x] Dar más ancho útil al editor INI en `1280×720`: modo compacto responsive con editor a ancho completo y paneles secundarios bajo demanda.
 - [x] Simplificar filtros de categorías del editor INI: selector único con cantidades y opciones disponibles por archivo.
 - [x] Registros usa el alto del viewport, scroll interno y una jerarquía master-detail compacta que prioriza la consola sobre metadatos y superficies decorativas.
-- [ ] Diferenciar jerarquía en SteamCMD: estado, ruta, caché y consola usan superficies con prácticamente el mismo peso.
+- [x] Diferenciar jerarquía en SteamCMD: estado operativo, contexto técnico y consola tienen pesos y alturas acordes a su importancia.
 - [ ] Revisar el exceso de vacío del Overview en `2560×1440` sin convertirlo nuevamente en un dashboard de métricas.
 
 Validación del bloque 2.7 — microtextura Tek (2026-07-24):
@@ -316,6 +316,19 @@ Validación del bloque 2.14 — densidad y jerarquía de Actualizaciones (2026-0
 - [x] Eventos, Ejecución, Actualizaciones y Respaldos revisados con Playwright/Electron en `1280×720`, `1920×1080` y `2560×1440`.
 - [x] Sin overflow global, recortes en metadatos prioritarios, errores de consola ni excepciones del renderer.
 
+Validación del bloque 2.15 — SteamCMD operativo y superficies azul‑obsidiana (2026-07-24):
+
+- [x] Métricas genéricas y tarjetas técnicas independientes sustituidas por estado operativo, franja de contexto y consola principal.
+- [x] Estados no configurado, disponible y en curso definen automáticamente título, explicación, badge, indicador y acción relevante.
+- [x] Progreso activo integra porcentaje, bytes procesados, cola y cancelación sin competir con la consola.
+- [x] Ruta, versión oficial, depotcache y contenido ASA agrupados en una franja compacta con truncado y valor completo accesible mediante tooltip nativo.
+- [x] `SteamCmdPage` usa el alto completo del viewport; la consola pasó de un máximo fijo de `360 px` a `351 px` en 720p, `711 px` en Full HD y `1071 px` en 2K.
+- [x] El dock flotante de progreso se oculta automáticamente cuando SteamCMD ya es la vista activa.
+- [x] SteamCMD y Registros adoptan la misma familia azul‑grisácea de Servidores con menor intensidad para conservar la jerarquía.
+- [x] Typecheck, build y tests focalizados de SteamCMD y Registros: 4/4.
+- [x] SteamCMD y Actualizaciones revisados con Playwright/Electron en `1280×720`, `1920×1080` y `2560×1440`.
+- [x] Sin overflow global, errores de consola ni excepciones del renderer.
+
 ### Iteración 3 — Smart Configuration
 
 Objetivo: convertir la configuración visual en la experiencia principal y
@@ -374,10 +387,9 @@ Antes de marcar una iteración como completada:
 - Criterio aplicado: cada check se marcó como `[x]` solo cuando existe evidencia funcional vigente; si hay implementación parcial o desalineada, se marcó `[-]`; si no hay evidencia o está roto, `[ ]`.
 
 ## Siguiente prioridad recomendada
-1. Diferenciar la jerarquía interna de SteamCMD.
-2. Revisar el uso del espacio del Overview en QHD/2K.
-3. Retomar Startup Parameters y las páginas funcionales de Backups, Clusters y Settings.
-4. Gestion avanzada de mods para ASA mediante CurseForge.
+1. Revisar el uso del espacio del Overview en QHD/2K.
+2. Retomar Startup Parameters y las páginas funcionales de Backups, Clusters y Settings.
+3. Gestion avanzada de mods para ASA mediante CurseForge.
 
 ## Regla de mantenimiento
 - Cada vez que se complete una tarea, actualizar este archivo en el mismo cambio.

@@ -1,28 +1,174 @@
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
+.steamContent {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.pathCard,
-.consoleCard {
+.operationCard,
+.consoleCard,
+.contextStrip {
   border-radius: var(--app-radius-lg);
-  border-color: var(--app-color-border);
-  background: var(--app-color-panel);
-  box-shadow: var(--app-shadow-panel);
+  border: 1px solid color-mix(in srgb, var(--app-color-border) 72%, var(--ark-blue-7));
+  background-color: var(--app-color-panel-cool);
+}
+
+.operationCard {
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+  background-image:
+    linear-gradient(
+      108deg,
+      var(--app-color-panel-cool-emphasis) 0%,
+      var(--app-color-panel-cool) 52%,
+      color-mix(in srgb, var(--app-color-panel-cool) 76%, var(--app-color-panel)) 100%
+    );
+}
+
+.operationCard::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--app-color-border);
+  content: "";
+}
+
+.operationCard[data-tone="ready"]::before {
+  background: var(--app-color-ok);
+}
+
+.operationCard[data-tone="busy"]::before {
+  background: var(--app-color-accent);
+}
+
+.operationCard[data-tone="attention"]::before {
+  background: var(--app-color-warn);
+}
+
+.operationIdentity,
+.operationCopy {
+  min-width: 0;
+}
+
+.operationCopy {
+  flex: 1;
+}
+
+.operationIcon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: 1px solid var(--app-color-border);
+  border-radius: 12px 7px 12px 7px;
+  background: color-mix(in srgb, var(--app-color-accent) 9%, var(--app-color-panel));
+  color: var(--app-color-accent);
+}
+
+.operationCard[data-tone="ready"] .operationIcon {
+  color: var(--app-color-ok);
+}
+
+.operationCard[data-tone="attention"] .operationIcon {
+  color: var(--app-color-warn);
+}
+
+.progressValue {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.progressBlock {
+  padding-left: 52px;
+}
+
+.contextStrip {
+  display: grid;
+  grid-template-columns:
+    minmax(120px, 0.65fr)
+    minmax(180px, 1.35fr)
+    minmax(180px, 1fr)
+    minmax(180px, 1fr);
+  flex-shrink: 0;
+  padding: 6px 8px;
+}
+
+.contextItem {
+  min-width: 0;
+  padding: 4px 12px;
+}
+
+.contextItem + .contextItem {
+  border-left: 1px solid var(--app-color-border-subtle);
+}
+
+.contextLabel {
+  --text-fz: 11px;
+  --text-lh: 1.35;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--app-color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.contextValue {
+  display: block;
+  overflow: hidden;
+  color: var(--app-color-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.consoleCard {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      112deg,
+      color-mix(in srgb, var(--app-color-panel-cool-emphasis) 52%, var(--app-color-panel-cool)) 0%,
+      var(--app-color-panel-cool) 42%,
+      color-mix(in srgb, var(--app-color-panel-cool) 82%, var(--app-color-panel)) 100%
+    );
+}
+
+.consoleStack {
+  flex: 1;
+  min-height: 0;
 }
 
 .console {
+  flex: 1;
+  min-height: 0;
   margin: 0;
   padding: 12px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: #10141d;
-  color: #d8e7ff;
+  border: 1px solid var(--app-color-border-subtle);
+  background: var(--ark-gray-1);
+  color: var(--ark-blue-12);
   font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
   font-size: 12px;
   line-height: 1.45;
-  max-height: 360px;
   overflow: auto;
   white-space: pre-wrap;
+}
+
+@media (max-width: 1100px) {
+  .contextStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .contextItem:nth-child(3) {
+    border-left: 0;
+    border-top: 1px solid var(--app-color-border-subtle);
+  }
+
+  .contextItem:nth-child(4) {
+    border-top: 1px solid var(--app-color-border-subtle);
+  }
 }

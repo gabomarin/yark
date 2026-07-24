@@ -551,7 +551,7 @@ export function App(): JSX.Element {
   return (
     <>
       {renderMain()}
-      {steamCmdBusy && steamCmdStatus !== null && (
+      {steamCmdBusy && steamCmdStatus !== null && route !== "steamcmd" && (
         <SteamCmdProgressDock
           status={steamCmdStatus}
           console={steamCmdConsole}

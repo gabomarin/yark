@@ -39,16 +39,33 @@
 
 .panel {
   border-radius: var(--app-radius-lg);
-  border-color: var(--app-color-border);
-  background: var(--app-color-panel);
+  border-color: color-mix(in srgb, var(--app-color-border) 72%, var(--ark-blue-7));
+  background:
+    linear-gradient(
+      112deg,
+      color-mix(in srgb, var(--app-color-panel-cool-emphasis) 48%, var(--app-color-panel-cool)) 0%,
+      var(--app-color-panel-cool) 44%,
+      color-mix(in srgb, var(--app-color-panel-cool) 82%, var(--app-color-panel)) 100%
+    );
 }
 
 .historyPanel {
-  background: var(--app-color-surface-chrome);
+  background:
+    linear-gradient(
+      112deg,
+      color-mix(in srgb, var(--app-color-panel-cool-emphasis) 38%, var(--app-color-panel-cool)) 0%,
+      color-mix(in srgb, var(--app-color-panel-cool) 88%, var(--app-color-surface-chrome)) 100%
+    );
 }
 
 .detailPanel {
-  background: var(--app-color-surface-panel);
+  background:
+    linear-gradient(
+      112deg,
+      color-mix(in srgb, var(--app-color-panel-cool-emphasis) 52%, var(--app-color-panel-cool)) 0%,
+      var(--app-color-panel-cool) 46%,
+      color-mix(in srgb, var(--app-color-panel-cool) 82%, var(--app-color-panel)) 100%
+    );
 }
 
 .fillPanel {
