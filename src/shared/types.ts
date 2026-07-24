@@ -1,4 +1,4 @@
-/** Estado de ciclo de vida de una instancia de servidor. */
+/** Lifecycle status of a server instance. */
 export type ServerStatus =
   | "stopped"
   | "starting"
@@ -6,12 +6,12 @@ export type ServerStatus =
   | "stopping"
   | "error";
 
-/** Perfil persistido de un servidor dedicado ASA. */
+/** Persisted profile for an ASA dedicated server. */
 export interface ServerProfile {
   id: string;
   name: string;
   map: string;
-  /** Raíz de la instalación del servidor (contiene ShooterGame\...). */
+  /** Server install root (contains ShooterGame\...). */
   installDir: string;
   sessionName: string;
   gamePort: number;
@@ -21,15 +21,15 @@ export interface ServerProfile {
   adminPassword: string;
   clusterId: string | null;
   clusterDir: string | null;
-  /** Argumentos extra de línea de comandos (con guion incluido). */
+  /** Extra command-line arguments (including the leading dash). */
   extraArgs: string[];
-  /** IDs de mods en orden de carga. */
+  /** Mod IDs in load order. */
   mods: string[];
   createdAt: string;
   updatedAt: string;
 }
 
-/** Datos de entrada para crear/editar un perfil (sin campos generados). */
+/** Input data to create/edit a profile (without generated fields). */
 export type ServerProfileInput = Omit<
   ServerProfile,
   "id" | "createdAt" | "updatedAt"
@@ -46,17 +46,17 @@ export interface ServerRuntimeInfo {
 export interface ServerInstallationInfo {
   serverId: string;
   installed: boolean;
-  /** Build detectado localmente (Build.version / exe / appmanifest). */
+  /** Locally detected build (Build.version / exe / appmanifest). */
   build: string | null;
-  /** Build de Steam detectado específicamente desde appmanifest_2430930.acf. */
+  /** Steam build detected specifically from appmanifest_2430930.acf. */
   steamBuild: string | null;
-  /** Versión detectada desde runtime logs (ARK Version: x.y). */
+  /** Version detected from runtime logs (ARK Version: x.y). */
   arkVersion: string | null;
-  /** Versión oficial de red (best effort, puede no estar disponible). */
+  /** Official network version (best effort; may be unavailable). */
   officialVersion: string | null;
-  /** Build público de Steam; única fuente autoritativa para decidir si hay update instalable. */
+  /** Public Steam build; sole authoritative source for whether an installable update exists. */
   officialSteamBuild: string | null;
-  /** Compatibilidad retroactiva con la UI previa. */
+  /** Backward compatibility with the previous UI. */
   version: string | null;
   binaryPath: string;
   checkedAt: string;
@@ -65,28 +65,28 @@ export interface ServerInstallationInfo {
 export interface SteamCmdStatus {
   detected: boolean;
   executablePath: string | null;
-  /** Carpeta steamapps/depotcache junto a SteamCMD (reuso de descargas). */
+  /** steamapps/depotcache folder next to SteamCMD (download reuse). */
   depotCacheDir: string | null;
-  /** Instalación compartida ASA copiada a cada servidor. */
+  /** Shared ASA install copied to each server. */
   contentCacheDir: string | null;
-  /** Proceso SteamCMD vivo o job crítico pendiente/en curso / sync local. */
+  /** Live SteamCMD process or critical job pending/in progress / local sync. */
   busy: boolean;
   running: boolean;
   operation: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null;
   serverId: string | null;
   startedAt: string | null;
   pid: number | null;
-  /** 0–100 si SteamCMD reportó progress; null si aún no hay porcentaje. */
+  /** 0–100 if SteamCMD reported progress; null if no percentage yet. */
   progressPercent: number | null;
-  /** Etiqueta legible: Descargando, Verificando, Sincronizando… */
+  /** Human-readable label: Downloading, Verifying, Syncing… */
   progressLabel: string | null;
-  /** Bytes descargados/procesados reportados por SteamCMD. */
+  /** Downloaded/processed bytes reported by SteamCMD. */
   progressBytesDownloaded: number | null;
-  /** Bytes totales reportados por SteamCMD. */
+  /** Total bytes reported by SteamCMD. */
   progressBytesTotal: number | null;
-  /** Última línea útil de consola. */
+  /** Last useful console line. */
   lastLine: string | null;
-  /** Jobs críticos pendientes (además del que está en curso). */
+  /** Pending critical jobs (besides the one in progress). */
   queuedCount: number;
   checkedAt: string;
 }
@@ -100,15 +100,15 @@ export interface StartServerOptions {
   skipPortValidation?: boolean;
   launchArgsOverride?: string[];
   /**
-   * Omite la espera de readiness (RCON). Solo para pruebas o binarios
-   * que no exponen RCON.
+   * Skip the readiness wait (RCON). Only for tests or binaries
+   * that do not expose RCON.
    */
   skipReadinessCheck?: boolean;
   /**
-   * Abre la consola nativa de Windows del proceso ArkAscendedServer
-   * (salida en vivo del dedicated). En Electron no se puede redirigir
-   * esa consola y a la vez capturar pipes; los logs Runtime de la app
-   * quedan limitados a mensajes de sistema.
+   * Opens the native Windows console of the ArkAscendedServer process
+   * (live dedicated output). Electron cannot redirect that console
+   * and capture pipes at the same time; the app Runtime logs
+   * are limited to system messages.
    */
   openNativeConsole?: boolean;
 }
@@ -224,9 +224,9 @@ export interface ServerIniSnapshot {
   serverId: string;
   gameUserSettingsPath: string;
   gameIniPath: string;
-  /** True si el archivo ya existía en disco antes de esta lectura. */
+  /** True if the file already existed on disk before this read. */
   gameUserSettingsExisted: boolean;
-  /** True si el archivo ya existía en disco antes de esta lectura. */
+  /** True if the file already existed on disk before this read. */
   gameIniExisted: boolean;
   payload: ServerIniPayload;
 }
@@ -251,7 +251,7 @@ export interface ServerOperationalLogs {
   runtimeLogLines: string[];
 }
 
-/** Mapas oficiales conocidos de ASA (extensible con mapas de mods). */
+/** Known official ASA maps (extensible with mod maps). */
 export const KNOWN_MAPS = [
   "TheIsland_WP",
   "ScorchedEarth_WP",
@@ -265,10 +265,10 @@ export const KNOWN_MAPS = [
 export const PORT_MIN = 1024;
 export const PORT_MAX = 65535;
 
-/** Game ID de Ark: Survival Ascended en CurseForge (no está en CurseForgeGameEnum aún). */
+/** Game ID for Ark: Survival Ascended on CurseForge (not in CurseForgeGameEnum yet). */
 export const ASA_CURSEFORGE_GAME_ID = 83374;
 
-/** Metadata de un mod CurseForge cacheada/expuesta al renderer. */
+/** CurseForge mod metadata cached/exposed to the renderer. */
 export interface ModMetadata {
   id: string;
   name: string;

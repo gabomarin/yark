@@ -328,25 +328,25 @@ export const PROGRESSION_PRESETS: readonly (WizardPreset<ProgressionPresetId> & 
   {
     id: "base",
     name: "Base",
-    description: "Progreso pausado, cercano a los multiplicadores base.",
+    description: "Relaxed progression close to base multipliers.",
     values: { xpRate: 1, harvestRate: 1, tamingRate: 1 },
   },
   {
     id: "balanced",
-    name: "Equilibrado",
-    description: "Menos espera sin eliminar la sensación de progresión.",
+    name: "Balanced",
+    description: "Less waiting without losing the sense of progression.",
     values: { xpRate: 2, harvestRate: 2, tamingRate: 3 },
   },
   {
     id: "fast",
-    name: "Rápido",
-    description: "Pensado para comunidades que juegan varias veces por semana.",
+    name: "Fast",
+    description: "Built for communities that play several times a week.",
     values: { xpRate: 2, harvestRate: 3, tamingRate: 5 },
   },
   {
     id: "veryFast",
-    name: "Muy rápido",
-    description: "Progreso acelerado para sesiones cortas o recuperación competitiva.",
+    name: "Very fast",
+    description: "Accelerated progress for short sessions or competitive recovery.",
     values: { xpRate: 5, harvestRate: 5, tamingRate: 10 },
   },
 ];
@@ -362,8 +362,8 @@ export const BREEDING_PRESETS: readonly (WizardPreset<BreedingPresetId> & {
 })[] = [
   {
     id: "base",
-    name: "Lenta",
-    description: "Crianza pausada con los multiplicadores base.",
+    name: "Slow",
+    description: "Slow breeding with base multipliers.",
     values: {
       eggHatchRate: 1,
       maturationRate: 1,
@@ -373,8 +373,8 @@ export const BREEDING_PRESETS: readonly (WizardPreset<BreedingPresetId> & {
   },
   {
     id: "balanced",
-    name: "Media",
-    description: "Reduce las esperas manteniendo valor en cada cría.",
+    name: "Medium",
+    description: "Shorter waits while keeping each breed meaningful.",
     values: {
       eggHatchRate: 5,
       maturationRate: 5,
@@ -384,8 +384,8 @@ export const BREEDING_PRESETS: readonly (WizardPreset<BreedingPresetId> & {
   },
   {
     id: "fast",
-    name: "Rápida",
-    description: "Adecuada para comunidades activas y sesiones frecuentes.",
+    name: "Fast",
+    description: "Suitable for active communities and frequent sessions.",
     values: {
       eggHatchRate: 10,
       maturationRate: 10,
@@ -395,8 +395,8 @@ export const BREEDING_PRESETS: readonly (WizardPreset<BreedingPresetId> & {
   },
   {
     id: "veryFast",
-    name: "Muy rápida",
-    description: "Ciclos cortos para probar líneas o recuperar criaturas.",
+    name: "Very fast",
+    description: "Short cycles for testing lines or recovering creatures.",
     values: {
       eggHatchRate: 20,
       maturationRate: 20,
@@ -424,7 +424,7 @@ export const WORLD_PRESETS: readonly (WizardPreset<WorldPresetId> & {
   {
     id: "base",
     name: "Base",
-    description: "Capacidad y supervivencia cercanas a la experiencia oficial.",
+    description: "Capacity and survival close to the official experience.",
     values: {
       maxPlayers: 70,
       dinoCountMultiplier: 1,
@@ -438,8 +438,8 @@ export const WORLD_PRESETS: readonly (WizardPreset<WorldPresetId> & {
   },
   {
     id: "gentle",
-    name: "Amable",
-    description: "Menos presión, noches más cortas y estructuras más resistentes.",
+    name: "Gentle",
+    description: "Less pressure, shorter nights, and tougher structures.",
     values: {
       maxPlayers: 40,
       dinoCountMultiplier: 1.25,
@@ -453,8 +453,8 @@ export const WORLD_PRESETS: readonly (WizardPreset<WorldPresetId> & {
   },
   {
     id: "balanced",
-    name: "Equilibrado",
-    description: "Densidad y supervivencia moderadas para comunidades persistentes.",
+    name: "Balanced",
+    description: "Moderate density and survival for persistent communities.",
     values: {
       maxPlayers: 70,
       dinoCountMultiplier: 1.1,
@@ -468,8 +468,8 @@ export const WORLD_PRESETS: readonly (WizardPreset<WorldPresetId> & {
   },
   {
     id: "harsh",
-    name: "Exigente",
-    description: "Más cupo, hambre/sed normales y estructuras más vulnerables.",
+    name: "Harsh",
+    description: "Higher capacity, normal hunger/thirst, and more vulnerable structures.",
     values: {
       maxPlayers: 100,
       dinoCountMultiplier: 1,
@@ -499,8 +499,8 @@ function worldValues(presetId: WorldPresetId): WorldPresetValues {
 export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
   {
     id: "friends",
-    name: "Jugar con amigos",
-    description: "PvE accesible, progreso ágil y crianza práctica para grupos pequeños.",
+    name: "Play with friends",
+    description: "Accessible PvE, brisk progress, and practical breeding for small groups.",
     progressionPreset: "balanced",
     breedingPreset: "balanced",
     worldPreset: "gentle",
@@ -523,8 +523,8 @@ export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
   },
   {
     id: "communityPve",
-    name: "Comunidad PvE",
-    description: "Progresión equilibrada y menor fricción para comunidades persistentes.",
+    name: "PvE community",
+    description: "Balanced progression with less friction for persistent communities.",
     progressionPreset: "fast",
     breedingPreset: "fast",
     worldPreset: "balanced",
@@ -547,8 +547,8 @@ export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
   },
   {
     id: "communityPvp",
-    name: "Comunidad PvP",
-    description: "Competencia activa con recuperación más rápida después de una derrota.",
+    name: "PvP community",
+    description: "Active competition with faster recovery after a wipe.",
     progressionPreset: "veryFast",
     breedingPreset: "fast",
     worldPreset: "harsh",
@@ -576,7 +576,7 @@ export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
   {
     id: "hardcore",
     name: "Hardcore",
-    description: "Muerte con reinicio de personaje y un ritmo cercano a la experiencia base.",
+    description: "Death resets the character, with a pace close to the base experience.",
     progressionPreset: "base",
     breedingPreset: "base",
     worldPreset: "base",
@@ -611,33 +611,33 @@ export interface WizardChange {
 }
 
 const FIELD_LABELS: Record<keyof ConfigurationWizardDraft, string> = {
-  profile: "Perfil",
-  singlePlayerSettings: "Ajustes para una persona",
-  pve: "Modo de juego",
+  profile: "Profile",
+  singlePlayerSettings: "Single-player style settings",
+  pve: "Game mode",
   hardcore: "Hardcore",
-  xpRate: "Experiencia",
-  harvestRate: "Recolección",
-  tamingRate: "Domesticación",
-  maxWildDinoLevel: "Nivel máximo salvaje",
+  xpRate: "Experience",
+  harvestRate: "Harvesting",
+  tamingRate: "Taming",
+  maxWildDinoLevel: "Max wild level",
   difficultyOffset: "DifficultyOffset",
   overrideOfficialDifficulty: "OverrideOfficialDifficulty",
-  eggHatchRate: "Incubación",
-  maturationRate: "Maduración",
-  matingIntervalMultiplier: "Intervalo de apareamiento",
-  cuddleIntervalMultiplier: "Intervalo de cuidados",
-  maxPlayers: "Jugadores máximos",
-  dinoCountMultiplier: "Densidad de dinosaurios",
-  harvestHealthMultiplier: "Salud de nodos de recolección",
-  dayCycleSpeedScale: "Velocidad del ciclo diurno",
-  nightTimeSpeedScale: "Velocidad de la noche",
-  playerCharacterFoodDrainMultiplier: "Consumo de comida",
-  playerCharacterWaterDrainMultiplier: "Consumo de agua",
-  structureResistanceMultiplier: "Resistencia de estructuras",
-  showMapLocation: "Posición en el mapa",
-  crosshair: "Mira",
-  thirdPerson: "Tercera persona",
-  flyerCarryPve: "Transporte con voladores en PvE",
-  structurePickupSeconds: "Ventana para recoger estructuras",
+  eggHatchRate: "Hatching",
+  maturationRate: "Maturation",
+  matingIntervalMultiplier: "Mating interval",
+  cuddleIntervalMultiplier: "Cuddle interval",
+  maxPlayers: "Max players",
+  dinoCountMultiplier: "Dinosaur density",
+  harvestHealthMultiplier: "Harvest node health",
+  dayCycleSpeedScale: "Day cycle speed",
+  nightTimeSpeedScale: "Night speed",
+  playerCharacterFoodDrainMultiplier: "Food drain",
+  playerCharacterWaterDrainMultiplier: "Water drain",
+  structureResistanceMultiplier: "Structure resistance",
+  showMapLocation: "Map location",
+  crosshair: "Crosshair",
+  thirdPerson: "Third person",
+  flyerCarryPve: "Flyer carry in PvE",
+  structurePickupSeconds: "Structure pickup window",
 };
 
 export function draftFromIniPayload(payload: ServerIniPayload): ConfigurationWizardDraft {
@@ -789,7 +789,7 @@ export function wizardChanges(
   ) {
     changes.push({
       field: "maxWildDinoLevel",
-      label: "Dificultad del mundo",
+      label: "World difficulty",
       before: formatDifficulty(initial),
       after: formatDifficulty(current),
     });
@@ -897,9 +897,9 @@ function normalizeForIniPrecision(value: number): number {
 
 function formatDifficulty(draft: ConfigurationWizardDraft): string {
   if (draft.overrideOfficialDifficulty > 0) {
-    return `Nivel ${draft.maxWildDinoLevel} · dificultad ${formatNumber(draft.overrideOfficialDifficulty)}`;
+    return `Level ${draft.maxWildDinoLevel} · difficulty ${formatNumber(draft.overrideOfficialDifficulty)}`;
   }
-  return `Offset ${formatNumber(draft.difficultyOffset)} · según el mapa`;
+  return `Offset ${formatNumber(draft.difficultyOffset)} · map-dependent`;
 }
 
 function formatFieldValue(
@@ -907,12 +907,12 @@ function formatFieldValue(
   value: ConfigurationWizardDraft[keyof ConfigurationWizardDraft],
 ): string {
   if (field === "pve") return value ? "PvE" : "PvP";
-  if (typeof value === "boolean") return value ? "Activado" : "Desactivado";
-  if (field === "maxWildDinoLevel") return `Nivel ${value}`;
+  if (typeof value === "boolean") return value ? "Enabled" : "Disabled";
+  if (field === "maxWildDinoLevel") return `Level ${value}`;
   if (field === "maxPlayers") return String(value);
   if (field === "structurePickupSeconds") return `${value} s`;
   if (field === "matingIntervalMultiplier" || field === "cuddleIntervalMultiplier") {
-    return `${value}× del intervalo base`;
+    return `${value}× of base interval`;
   }
   return `${value}×`;
 }

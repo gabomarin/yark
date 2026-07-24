@@ -43,7 +43,7 @@ export function asaUiCategoryLabel(id: AsaUiCategoryId): string {
   return labelById.get(id) ?? id;
 }
 
-/** Lookup en el mapa JSON pregenerado; null si no está en el catálogo. */
+/** Lookup in the pre-generated JSON map; null if not in the catalog. */
 export function lookupAsaUiCategory(
   file: string,
   section: string,
@@ -54,7 +54,7 @@ export function lookupAsaUiCategory(
 }
 
 /**
- * Categoría UI para un setting. Usa el JSON; si falta, heurística ligera.
+ * UI category for a setting. Uses the JSON; if missing, light heuristic.
  */
 export function resolveAsaUiCategory(
   file: string,

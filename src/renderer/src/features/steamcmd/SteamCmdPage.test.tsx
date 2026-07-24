@@ -45,9 +45,9 @@ describe("SteamCmdPage", () => {
     );
 
     expect(screen.getByText("SteamCMD")).toBeInTheDocument();
-    expect(screen.getByText(/steamcmd ready/i)).toBeInTheDocument();
-    expect(screen.getByText("SteamCMD listo")).toBeInTheDocument();
-    expect(screen.getByText("Disponible")).toBeInTheDocument();
+    expect(screen.getAllByText(/steamcmd ready/i).length).toBeGreaterThan(0);
+    expect(screen.getByText("SteamCMD ready")).toBeInTheDocument();
+    expect(screen.getByText("Available")).toBeInTheDocument();
     expect(screen.getByText("Depotcache")).toBeInTheDocument();
     expect(screen.getByText(/asa_content_cache/i)).toBeInTheDocument();
     expect(document.querySelector('[data-fill-viewport="true"]')).toBeInTheDocument();
@@ -63,7 +63,7 @@ describe("SteamCmdPage", () => {
             running: true,
             operation: "update",
             progressPercent: 42,
-            progressLabel: "Descargando",
+            progressLabel: "Downloading",
             progressBytesDownloaded: 536870912,
             progressBytesTotal: 1073741824,
             queuedCount: 1,
@@ -77,10 +77,10 @@ describe("SteamCmdPage", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("Actualizando servidor")).toBeInTheDocument();
-    expect(screen.getByText("En curso")).toBeInTheDocument();
+    expect(screen.getByText("Updating server")).toBeInTheDocument();
+    expect(screen.getByText("In progress")).toBeInTheDocument();
     expect(screen.getByText("42%")).toBeInTheDocument();
     expect(screen.getByText(/512.0 \/ 1024.0 MB/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Cancelar operación/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Cancel operation/i })).toBeInTheDocument();
   });
 });

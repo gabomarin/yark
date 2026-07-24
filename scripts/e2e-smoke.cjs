@@ -18,10 +18,10 @@ async function run() {
     await window.waitForSelector("h1", { timeout: 15000 });
     const h1 = await window.textContent("h1");
 
-    assert.ok(h1 !== null, "No se encontró el título principal en la UI");
+    assert.ok(h1 !== null, "Main UI title was not found");
     assert.ok(
-      h1.includes("ARK Server GBO"),
-      `Título inesperado. Esperado incluir 'ARK Server GBO', recibido: ${h1}`,
+      h1.includes("Servers") || h1.includes("YARK"),
+      `Unexpected title. Expected to include 'Servers' or 'YARK', got: ${h1}`,
     );
 
     const serverCountText = await window.textContent("section.servers h2");

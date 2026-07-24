@@ -21,11 +21,11 @@ function installation(
 }
 
 describe("getServerUpdateState", () => {
-  it("ignora diferencias entre versiones ARK cuando los builds Steam coinciden", () => {
+  it("ignores ARK version differences when Steam builds match", () => {
     expect(getServerUpdateState(installation())).toBe("current");
   });
 
-  it("marca update solo cuando difieren builds Steam comparables", () => {
+  it("marks update only when comparable Steam builds differ", () => {
     expect(
       getServerUpdateState(
         installation({ steamBuild: "build 24300000" }),
@@ -33,7 +33,7 @@ describe("getServerUpdateState", () => {
     ).toBe("available");
   });
 
-  it("no inventa un estado cuando falta un build comparable", () => {
+  it("does not invent a state when a comparable build is missing", () => {
     expect(
       getServerUpdateState(installation({ officialSteamBuild: null })),
     ).toBe("unknown");

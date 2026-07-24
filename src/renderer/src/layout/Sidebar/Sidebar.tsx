@@ -26,9 +26,9 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: "overview", label: "Servidores", icon: SquaresFour },
+  { id: "overview", label: "Servers", icon: SquaresFour },
   { id: "steamcmd", label: "SteamCMD", icon: ArrowsClockwise },
-  { id: "logs", label: "Registros", icon: FileText },
+  { id: "logs", label: "Logs", icon: FileText },
 ];
 
 interface Props {
@@ -44,10 +44,10 @@ interface Props {
 
 export function Sidebar(props: Props): JSX.Element {
   const steamCmdLabel = !props.steamCmdDetected
-    ? "SteamCMD: no detectado"
+    ? "SteamCMD: not detected"
     : props.steamCmdRunning
-      ? "SteamCMD: en ejecución"
-      : "SteamCMD: conectado";
+      ? "SteamCMD: running"
+      : "SteamCMD: connected";
 
   return (
     <MantineStack gap="md" className={classes.sidebar}>
@@ -56,8 +56,8 @@ export function Sidebar(props: Props): JSX.Element {
           <Dna size={20} weight="duotone" className={classes.brandIcon} />
         </div>
         <div className={classes.brandCopy}>
-          <Text fw={700}>ARK Server GBO</Text>
-          <Text size="xs" c="dimmed">Operaciones de mundos ASA</Text>
+          <Text fw={700}>YARK</Text>
+          <Text size="xs" c="dimmed">server manager</Text>
         </div>
       </Group>
 
@@ -94,28 +94,28 @@ export function Sidebar(props: Props): JSX.Element {
       </Button>
 
       <div className={classes.preference}>
-        <Text size="xs" fw={600}>Preferencias</Text>
+        <Text size="xs" fw={600}>Preferences</Text>
         <Switch
           size="xs"
           checked={props.openNativeTerminalOnStart}
           onChange={(event) =>
             props.onOpenNativeTerminalOnStartChange(event.currentTarget.checked)
           }
-          label="Mostrar consola al iniciar"
+          label="Show console on start"
         />
       </div>
 
       <div className={classes.versionChip}>
         <Tooltip
-          label="Versión publicada por el estado oficial de red de Wildcard. Las actualizaciones se determinan con el build público de SteamCMD."
+          label="Version published by Wildcard's official network status. Updates are determined from the public SteamCMD build."
           multiline
           w={260}
           position="right"
         >
-          <Text size="xs" fw={600}>Versión oficial ARK</Text>
+          <Text size="xs" fw={600}>Official version ARK</Text>
         </Tooltip>
         <Text size="sm" className={classes.versionValue}>
-          {props.officialVersion ?? "No detectada"}
+          {props.officialVersion ?? "Not detected"}
         </Text>
       </div>
 

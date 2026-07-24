@@ -16,8 +16,8 @@ export function OverviewHeader({
   return (
     <header className={classes.header}>
       <div>
-        <h1 className={classes.title}>Servidores</h1>
-        <p className={classes.subtitle}>Monitorea y administra todos tus servidores ARK</p>
+        <h1 className={classes.title}>Servers</h1>
+        <p className={classes.subtitle}>Monitor and manage all your ARK servers</p>
       </div>
       <Group gap="sm" wrap="wrap" justify="flex-end" className={classes.headerActions}>
         <Button
@@ -27,10 +27,10 @@ export function OverviewHeader({
           onClick={onCheckUpdates}
           loading={checkingUpdates}
         >
-          Verificar actualizaciones
+          Check for updates
         </Button>
         <Button leftSection={<Plus size={16} />} onClick={onCreateServer}>
-          Nuevo servidor
+          New server
         </Button>
       </Group>
     </header>

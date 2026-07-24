@@ -16,7 +16,7 @@ describe("BackupRepository", () => {
     db.close();
   });
 
-  it("crea, completa y lista backups", () => {
+  it("creates, completes, and lists backups", () => {
     const started = repo.createBackupStart({
       serverId: "s1",
       type: "manual",
@@ -34,19 +34,19 @@ describe("BackupRepository", () => {
     expect(list[0]?.id).toBe(started.id);
   });
 
-  it("marca backups fallidos", () => {
+  it("marks failed backups", () => {
     const started = repo.createBackupStart({
       serverId: "s1",
       type: "scheduled",
       path: "C:\\backups\\x",
       notes: null,
     });
-    const failed = repo.failBackup(started.id, "error copia");
+    const failed = repo.failBackup(started.id, "copy error");
     expect(failed?.status).toBe("failed");
-    expect(failed?.notes).toContain("error copia");
+    expect(failed?.notes).toContain("copy error");
   });
 
-  it("devuelve política por defecto y permite actualizarla", () => {
+  it("returns the default policy and allows updating it", () => {
     const initial = repo.getPolicy("s1");
     expect(initial.enabled).toBe(false);
     expect(initial.intervalMinutes).toBe(360);
@@ -64,7 +64,7 @@ describe("BackupRepository", () => {
     expect(updated.retainDays).toBe(7);
   });
 
-  it("recupera el último backup completado", () => {
+  it("retrieves the latest completed backup", () => {
     const a = repo.createBackupStart({
       serverId: "s1",
       type: "manual",
@@ -85,7 +85,7 @@ describe("BackupRepository", () => {
     expect(latest?.id).toBe(b.id);
   });
 
-  it("registra historial de restore", () => {
+  it("records restore history", () => {
     const restoreId = repo.insertRestoreHistory({
       serverId: "s1",
       backupId: "b1",

@@ -188,7 +188,7 @@ Recommended to include in the first cut.
 
 Reasoning:
 
-- Overview is not truly operational if `Nuevo servidor` still depends on the old frontend tree.
+- Overview is not truly operational if `New server` still depends on the old frontend tree.
 - This is part of the main happy-path workflow.
 
 ### Placeholder-only in first cut
@@ -288,7 +288,7 @@ Responsibilities:
 
 - Show page identity.
 - Contain the server search input.
-- Contain the `Nuevo servidor` action.
+- Contain the `New server` action.
 
 It should be implemented as a dedicated component rather than inline JSX inside `App.tsx`.
 
@@ -298,7 +298,7 @@ The current top summary cards should remain conceptually similar but be rebuilt 
 
 Metrics to preserve:
 
-- Servidores.
+- Servers.
 - Jugadores placeholder if still not implemented.
 - Clusters.
 - Backups placeholder if still not implemented.

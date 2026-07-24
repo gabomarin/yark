@@ -1,11 +1,11 @@
 /**
- * Parser/serializer de INI orientado a ARK ASA.
+ * INI parser/serializer oriented to ARK ASA.
  *
- * Importante: NO usa el paquete `ini` para leer/escribir, porque trata los
- * puntos dentro de cabeceras como anidación. En ASA es normal tener:
+ * Important: does NOT use the `ini` package for read/write, because it treats
+ * dots inside headers as nesting. In ASA it is normal to have:
  *   [/Script/Engine.GameSession]
  *   MaxPlayers=70
- * y eso debe permanecer como sección literal + clave MaxPlayers.
+ * and that must remain a literal section + MaxPlayers key.
  */
 
 export interface IniTextRow {
@@ -16,12 +16,12 @@ export interface IniTextRow {
 
 export const INI_ROOT_SECTION = "(root)";
 
-/** Separador interno para mapas planos section+key (no aparece en INIs de ASA). */
+/** Internal separator for flat section+key maps (does not appear in ASA INIs). */
 export const INI_FLAT_SEP = "\u001f";
 
 /**
- * Secciones típicas de cliente / gráficos Unreal.
- * En dedicated server no aplican y ensucian el editor.
+ * Typical Unreal client / graphics sections.
+ * They do not apply on a dedicated server and clutter the editor.
  */
 export function isClientIniSection(section: string): boolean {
   const s = section.trim().toLowerCase();
@@ -37,7 +37,7 @@ export function isClientIniSection(section: string): boolean {
   if (s === "scalabilitygroups") {
     return true;
   }
-  // [GameUserSettings] plano (resolución/ventana), no ServerSettings.
+  // Flat [GameUserSettings] (resolution/window), not ServerSettings.
   if (s === "gameusersettings") {
     return true;
   }
@@ -45,8 +45,8 @@ export function isClientIniSection(section: string): boolean {
 }
 
 /**
- * Keys de cliente/gráficos/UI/historial Unreal.
- * En un dedicated server no aportan.
+ * Unreal client/graphics/UI/history keys.
+ * They add nothing on a dedicated server.
  */
 const CLIENT_INI_KEY_RE =
   /^(LastJoinedSessionPerCategory|LastServerSearch|LastServerSort|LastPlatform|LastRecommended|LastCPU|LastGPU|LastAuto|LastBrowsed|LastDLC|PlayedMaps|LocalSuperPeeker|DesiredScreen|FullscreenMode|LastConfirmed|bUseVSync|AudioQualityLevel|bUseMouse|bUseGamepad|MouseSensitivity|MasterVolume|MusicVolume|SFXVolume|UIVolume|VoiceVolume|ResolutionSize[XY]|WindowPos[XY]|ScreenPercentage|FrameRateLimit|GraphicsQuality|AdvancedGraphicsQuality|TrueSkyQuality|GroundClutter|LODScalar|Gamma|TheGamma|HDRDisplay|EnableDLSS|SuperResolution|FrameGeneration|ReflexEnabled|sg\.|bDisableBloom|bDisableShadows|bFilmGrain|bUseSSAO|bUseDFAO|bEnableHDR|bUseHDR|bEnableReflex|bEnableDLFG|bLowQualityVFX|bHighQuality|bDistanceField|bExtraLevelStreaming|bUseDynamicResolution|bUseLowQuality|bDontReduceGameResolution|bHasInitializedScreen|bHasSetupVisual|bHasRunAutoSettings|bUseDesiredScreenHeight|MasterAudioVolume|MusicAudioVolume|SFXAudioVolume|VoiceAudioVolume|AmbientSoundVolume|CharacterAudioVolume|SoundUIAudioVolume|LookLeftRightSensitivity|LookUpDownSensitivity|CameraShakeScale|EmoteKeyBind|UIScaling|UIQuickbarScaling)/i;
@@ -56,14 +56,14 @@ export function isClientIniKey(key: string): boolean {
   if (CLIENT_INI_KEY_RE.test(k)) {
     return true;
   }
-  // Prefijo Unreal scalability
+  // Unreal scalability prefix
   if (/^sg\./i.test(k)) {
     return true;
   }
   return false;
 }
 
-/** True si la fila no debería mostrarse/persistirse en el manager dedicado. */
+/** True if the row should not be shown/persisted in the dedicated manager. */
 export function isClientIniNoise(section: string, key: string): boolean {
   if (isClientIniSection(section)) {
     return true;
@@ -71,7 +71,7 @@ export function isClientIniNoise(section: string, key: string): boolean {
   if (isClientIniKey(key)) {
     return true;
   }
-  // [Startup] suele mezclar flags de upscaling/frame-gen del cliente.
+  // [Startup] often mixes client upscaling/frame-gen flags.
   const s = section.trim().toLowerCase();
   if (s === "startup") {
     const k = key.toLowerCase();
@@ -87,8 +87,8 @@ export function isClientIniNoise(section: string, key: string): boolean {
 }
 
 /**
- * Elimina líneas/secciones de cliente, preservando el resto del archivo.
- * También descarta secciones que queden vacías tras la limpieza.
+ * Removes client lines/sections, preserving the rest of the file.
+ * Also drops sections that become empty after cleanup.
  */
 export function stripClientIniKeys(text: string): string {
   const lines = text.split(/\r?\n/);
@@ -228,11 +228,11 @@ export function splitFlatIniKey(flatKey: string): { section: string; key: string
 }
 
 /**
- * Actualiza o inserta una clave preservando el resto del archivo
- * (orden, comentarios y líneas en blanco) lo mejor posible.
+ * Updates or inserts a key while preserving the rest of the file
+ * (order, comments, and blank lines) as best as possible.
  *
- * `occurrence` selecciona cuál de las claves duplicadas (0-based) actualizar.
- * En Unreal/ARK es normal repetir la misma key (p. ej. LastJoinedSessionPerCategory).
+ * `occurrence` selects which of the duplicate keys (0-based) to update.
+ * In Unreal/ARK it is normal to repeat the same key (e.g. LastJoinedSessionPerCategory).
  */
 export function setIniTextValue(
   text: string,
@@ -331,7 +331,7 @@ export function setIniTextValue(
   return out;
 }
 
-/** Nombre corto de categoría: última parte tras el punto (GameSession). */
+/** Short category name: last part after the dot (GameSession). */
 export function sectionShortName(section: string): string {
   if (section === INI_ROOT_SECTION) {
     return INI_ROOT_SECTION;

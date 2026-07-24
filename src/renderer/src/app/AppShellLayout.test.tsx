@@ -22,7 +22,7 @@ describe("AppShellLayout", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("ARK Server GBO")).toBeInTheDocument();
+    expect(screen.getByText("YARK")).toBeInTheDocument();
     expect(screen.getByText("page-body")).toBeInTheDocument();
   });
 
@@ -49,7 +49,7 @@ describe("AppShellLayout", () => {
     );
 
     expect(screen.getByRole("alert")).toHaveTextContent("Boom");
-    screen.getByRole("button", { name: /cerrar error/i }).click();
+    screen.getByRole("button", { name: /dismiss error/i }).click();
     expect(onDismissError).toHaveBeenCalledTimes(1);
   });
 });

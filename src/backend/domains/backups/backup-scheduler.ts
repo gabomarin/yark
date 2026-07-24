@@ -1,8 +1,8 @@
 import type { BackupService } from "./backup-service";
 
 /**
- * Scheduler simple en memoria para disparar ciclo de backups periódicos.
- * Recorre políticas en intervalos cortos y decide por "último backup + interval".
+ * Simple in-memory scheduler to trigger periodic backup cycles.
+ * Walks policies on short intervals and decides by "last backup + interval".
  */
 export class BackupScheduler {
   private timer: NodeJS.Timeout | null = null;

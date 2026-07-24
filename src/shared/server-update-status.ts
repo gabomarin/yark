@@ -3,9 +3,9 @@ import type { ServerInstallationInfo } from "./types";
 export type ServerUpdateState = "available" | "current" | "unknown";
 
 /**
- * Compara únicamente builds equivalentes de Steam.
- * `ARK Version` puede diferir entre el dedicated descargable y servidores
- * oficiales durante despliegues escalonados, por lo que no decide updates.
+ * Compares only equivalent Steam builds.
+ * `ARK Version` can differ between the downloadable dedicated and official
+ * servers during staggered rollouts, so it does not decide updates.
  */
 export function getServerUpdateState(
   installation: ServerInstallationInfo | null | undefined,

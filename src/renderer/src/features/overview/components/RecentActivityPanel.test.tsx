@@ -23,7 +23,7 @@ describe("RecentActivityPanel", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("Cargando actividad reciente")).toBeInTheDocument();
+    expect(screen.getByText("Loading recent activity")).toBeInTheDocument();
     expect(container.querySelectorAll("[data-recent-activity] [aria-hidden='true']")).toHaveLength(
       3,
     );
@@ -32,13 +32,13 @@ describe("RecentActivityPanel", () => {
   it("shows five operational events, removes RCON noise and opens the full logs", () => {
     const onViewAll = vi.fn();
     const events = [
-      event(1, "rcon_command", "RCON en The Island: ListPlayers"),
-      event(2, "server_started", "Servidor iniciado"),
-      event(3, "backup_created", "Backup creado"),
-      event(4, "update_started", "Actualización iniciada"),
-      event(5, "update_completed", "Actualización completada"),
-      event(6, "server_stopped", "Servidor detenido"),
-      event(7, "server_updated", "Este sexto evento queda en Registros"),
+      event(1, "rcon_command", "RCON on The Island: ListPlayers"),
+      event(2, "server_started", "Server started"),
+      event(3, "backup_created", "Backup created"),
+      event(4, "update_started", "Update started"),
+      event(5, "update_completed", "Update completed"),
+      event(6, "server_stopped", "Server stopped"),
+      event(7, "server_updated", "This sixth event stays in Logs"),
     ];
 
     const { container } = render(
@@ -50,9 +50,9 @@ describe("RecentActivityPanel", () => {
 
     expect(panel.queryByText(/RCON en/)).not.toBeInTheDocument();
     expect(container.querySelectorAll("[data-recent-activity] [title]")).toHaveLength(5);
-    expect(panel.queryByText("Este sexto evento queda en Registros")).not.toBeInTheDocument();
+    expect(panel.queryByText("This sixth event stays in Logs")).not.toBeInTheDocument();
 
-    fireEvent.click(panel.getByRole("button", { name: "Ver registros" }));
+    fireEvent.click(panel.getByRole("button", { name: "View logs" }));
     expect(onViewAll).toHaveBeenCalledOnce();
   });
 });

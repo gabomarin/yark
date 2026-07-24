@@ -7,7 +7,7 @@ interface SettingRow {
 }
 
 /**
- * KV store simple para configuraciones globales de la app.
+ * Simple KV store for global app settings.
  */
 export class AppSettingsRepository {
   constructor(private readonly db: DatabaseSync) {}

@@ -13,10 +13,10 @@ interface Props {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  stopped: "Detenido",
-  starting: "Iniciando",
-  running: "Activo",
-  stopping: "Deteniendo",
+  stopped: "Stopped",
+  starting: "Starting",
+  running: "Running",
+  stopping: "Stopping",
   error: "Error",
 };
 
@@ -43,11 +43,11 @@ export function ServerListPanel(props: Props): JSX.Element {
   return (
     <aside className={classes.panel}>
       <div className={classes.header}>
-        <Text className={classes.title}>Todos los servidores</Text>
+        <Text className={classes.title}>All servers</Text>
         <TextInput
           value={search}
           onChange={(event) => setSearch(event.currentTarget.value)}
-          placeholder="Buscar servidores"
+          placeholder="Search servers"
           leftSection={<MagnifyingGlass size={14} />}
           size="xs"
         />
@@ -98,7 +98,7 @@ export function ServerListPanel(props: Props): JSX.Element {
         })}
         {filtered.length === 0 && (
           <Text c="dimmed" size="sm" ta="center" py="md">
-            Sin servidores
+            No servers
           </Text>
         )}
       </Stack>
@@ -112,7 +112,7 @@ export function ServerListPanel(props: Props): JSX.Element {
             leftSection={<Plus size={16} />}
             onClick={props.onAddServer}
           >
-            Añadir servidor
+            Add server
           </Button>
         </div>
       )}

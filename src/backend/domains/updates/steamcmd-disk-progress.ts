@@ -1,10 +1,10 @@
 /**
- * Progreso fiable sin depender del stdout bufferizado de SteamCMD:
- * 1) Tail de logs/console_log.txt (sin delay de pipe)
- * 2) BytesDownloaded/BytesToDownload en appmanifest de ESTA instalación
- * 3) Tamaño de steamapps/downloading bajo force_install_dir
+ * Reliable progress without depending on SteamCMD's buffered stdout:
+ * 1) Tail of logs/console_log.txt (no pipe delay)
+ * 2) BytesDownloaded/BytesToDownload in appmanifest for THIS install
+ * 3) Size of steamapps/downloading under force_install_dir
  *
- * Nunca mide depotcache del home de SteamCMD (evita falsos positivos).
+ * Never measures SteamCMD home depotcache (avoids false positives).
  */
 
 import { open, readFile, readdir, stat } from "node:fs/promises";
@@ -12,7 +12,7 @@ import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { ASA_APP_ID } from "./steamcmd-content-cache";
 
-/** Tamaño típico del dedicated server ASA (~12.0 GiB). Se reemplaza si hay total real. */
+/** Typical ASA dedicated server size (~12.0 GiB). Replaced when a real total is known. */
 export const ASA_DEDICATED_APPROX_BYTES = 12_838_814_817;
 
 export interface DiskProgressSample {
@@ -41,12 +41,12 @@ export function appManifestPath(forceInstallDir: string, appId = ASA_APP_ID): st
 }
 
 /**
- * Lee BytesDownloaded / BytesToDownload del appmanifest de esta instalación.
+ * Reads BytesDownloaded / BytesToDownload from this install's appmanifest.
  */
 export function parseAppManifestProgress(manifestText: string): AppManifestProgress {
   const downloadedMatch = /"BytesDownloaded"\s+"(\d+)"/i.exec(manifestText);
   const toDownloadMatch = /"BytesToDownload"\s+"(\d+)"/i.exec(manifestText);
-  // Algunos builds usan Staged / SizeOnDisk durante la descarga.
+  // Some builds use Staged / SizeOnDisk during download.
   const stagedMatch = /"BytesStaged"\s+"(\d+)"/i.exec(manifestText);
   const sizeOnDiskMatch = /"SizeOnDisk"\s+"(\d+)"/i.exec(manifestText);
 
@@ -93,8 +93,8 @@ export async function readInstallAppManifestProgress(
 }
 
 /**
- * Lee bytes nuevos de console_log.txt desde un offset (tail).
- * SteamCMD escribe aquí sin el buffering agresivo del pipe stdout.
+ * Reads new bytes from console_log.txt from an offset (tail).
+ * SteamCMD writes here without the aggressive buffering of the stdout pipe.
  */
 export async function readConsoleLogSince(
   steamCmdHome: string,
@@ -110,7 +110,7 @@ export async function readConsoleLogSince(
     handle = await open(path, "r");
     const info = await handle.stat();
     const size = info.size;
-    // Log rotado/truncado
+    // Log rotated/truncated
     const start = offset > size ? 0 : offset;
     if (size <= start) {
       await handle.close();
@@ -190,7 +190,7 @@ export async function sumDirectoryBytes(
   return { bytes, timedOut, pathsChecked };
 }
 
-/** Solo downloading/temp bajo force_install_dir (esta instalación). */
+/** Only downloading/temp under force_install_dir (this install). */
 export function installScopedDownloadWatchPaths(forceInstallDir: string): string[] {
   const root = resolve(forceInstallDir);
   const paths = [
@@ -210,7 +210,7 @@ export async function measureInstallDownloadingBytes(forceInstallDir: string): P
   return total;
 }
 
-/** @deprecated usar measureInstallDownloadingBytes */
+/** @deprecated use measureInstallDownloadingBytes */
 export async function measureInstallDirDownloadBytes(forceInstallDir: string): Promise<number> {
   return measureInstallDownloadingBytes(forceInstallDir);
 }

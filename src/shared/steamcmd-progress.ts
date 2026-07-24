@@ -1,13 +1,13 @@
 /**
- * Parseo de progreso a partir de líneas de salida de SteamCMD.
+ * Parse progress from SteamCMD output lines.
  */
 
 export interface SteamCmdProgressParse {
   percent: number | null;
   label: string | null;
-  /** Bytes ya procesados/descargados (si SteamCMD los reporta). */
+  /** Bytes already processed/downloaded (if SteamCMD reports them). */
   bytesDownloaded: number | null;
-  /** Bytes totales del paquete (si SteamCMD los reporta). */
+  /** Total package bytes (if SteamCMD reports them). */
   bytesTotal: number | null;
 }
 
@@ -37,13 +37,13 @@ export function parseSteamCmdBytePair(detail: string): {
   };
 }
 
-/** Convierte bytes a texto en MB (1 decimal). */
+/** Formats bytes as MB text (1 decimal). */
 export function formatBytesAsMb(bytes: number): string {
   const mb = bytes / (1024 * 1024);
   return `${mb.toFixed(1)} MB`;
 }
 
-/** Ej.: "512.3 / 2800.0 MB" */
+/** E.g. "512.3 / 2800.0 MB" */
 export function formatSteamCmdByteProgress(downloaded: number, total: number): string {
   const downMb = (downloaded / (1024 * 1024)).toFixed(1);
   const totalMb = (total / (1024 * 1024)).toFixed(1);
@@ -51,19 +51,19 @@ export function formatSteamCmdByteProgress(downloaded: number, total: number): s
 }
 
 /**
- * Prefijo UI para el progreso en bytes según la operación.
- * SteamCMD reporta BytesDownloaded también al verificar.
+ * UI noun prefix for byte progress by operation.
+ * SteamCMD also reports BytesDownloaded when verifying.
  */
 export function steamCmdByteProgressNoun(
   operation: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null | undefined,
 ): string {
   if (operation === "verify-files") {
-    return "Comprobado";
+    return "Checked";
   }
   if (operation === "sync-files") {
-    return "Copiado";
+    return "Copied";
   }
-  return "Descargado";
+  return "Downloaded";
 }
 
 function emptyParse(): SteamCmdProgressParse {
@@ -79,7 +79,7 @@ export function parseSteamCmdProgressLine(line: string): SteamCmdProgressParse {
   if (SUCCESS_RE.test(trimmed) || /fully installed/i.test(trimmed)) {
     return {
       percent: 100,
-      label: "Instalación completada",
+      label: "Installation complete",
       bytesDownloaded: null,
       bytesTotal: null,
     };
@@ -93,12 +93,12 @@ export function parseSteamCmdProgressLine(line: string): SteamCmdProgressParse {
     const bytes = detail !== undefined ? parseSteamCmdBytePair(detail) : { downloaded: null, total: null };
     const stateMatch = UPDATE_STATE_RE.exec(trimmed);
     const state = stateMatch?.[1]?.trim().toLowerCase() ?? null;
-    let label = "Descargando";
+    let label = "Downloading";
     if (state !== null) {
-      if (state.includes("verif")) label = "Verificando";
-      else if (state.includes("prealloc")) label = "Preparando disco";
-      else if (state.includes("commit") || state.includes("staging")) label = "Aplicando";
-      else if (state.includes("download")) label = "Descargando";
+      if (state.includes("verif")) label = "Verifying";
+      else if (state.includes("prealloc")) label = "Preparing disk";
+      else if (state.includes("commit") || state.includes("staging")) label = "Applying";
+      else if (state.includes("download")) label = "Downloading";
     }
     if (bytes.downloaded !== null && bytes.total !== null) {
       label = `${label} · ${formatSteamCmdByteProgress(bytes.downloaded, bytes.total)}`;
@@ -114,7 +114,7 @@ export function parseSteamCmdProgressLine(line: string): SteamCmdProgressParse {
   if (DOWNLOAD_COMPLETE_RE.test(trimmed)) {
     return {
       percent: null,
-      label: "Descarga completada",
+      label: "Download complete",
       bytesDownloaded: null,
       bytesTotal: null,
     };

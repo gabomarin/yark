@@ -37,43 +37,43 @@ export function AppRouter(props: Props): JSX.Element {
       case "overview":
         return props.overview?.page ?? (
           <PlaceholderPage
-            title="Servidores"
-            subtitle="Monitorea y administra todos tus servidores ARK"
+            title="Servers"
+            subtitle="Monitor and manage all your ARK servers"
           />
         );
       case "clusters":
         return (
           <PlaceholderPage
-            title="Clústeres"
-            subtitle="Compatibilidad y transferencias entre mapas"
+            title="Clusters"
+            subtitle="Compatibility and cross-map transfers"
           />
         );
       case "backups":
         return (
           <PlaceholderPage
-            title="Respaldos"
-            subtitle="Historial y restauración de respaldos"
+            title="Backups"
+            subtitle="Backup history and restore"
           />
         );
       case "steamcmd":
         return props.steamcmd?.page ?? (
           <PlaceholderPage
             title="SteamCMD"
-            subtitle="Estado de instalación, consola y operaciones"
+            subtitle="Install status, console, and operations"
           />
         );
       case "logs":
         return props.logs?.page ?? (
           <PlaceholderPage
-            title="Registros"
-            subtitle="Eventos, runtime, updates y backups por servidor"
+            title="Logs"
+            subtitle="Events, runtime, updates, and backups per server"
           />
         );
       case "settings":
         return (
           <PlaceholderPage
-            title="Configuración"
-            subtitle="Configuración general de la aplicación"
+            title="Settings"
+            subtitle="General application settings"
           />
         );
       default:

@@ -96,10 +96,10 @@ describe("configuration wizard model", () => {
     expect(next.difficultyOffset).toBe(1);
     expect(next.overrideOfficialDifficulty).toBe(6);
     expect(
-      changes.filter((change) => change.label === "Dificultad del mundo"),
+      changes.filter((change) => change.label === "World difficulty"),
     ).toHaveLength(1);
-    expect(changes.find((change) => change.label === "Dificultad del mundo")?.after)
-      .toBe("Nivel 180 · dificultad 6");
+    expect(changes.find((change) => change.label === "World difficulty")?.after)
+      .toBe("Level 180 · difficulty 6");
   });
 
   it("keeps custom difficulty stable across read-write-read cycles", () => {
@@ -221,8 +221,8 @@ describe("configuration wizard model", () => {
     const changes = wizardChanges(initial, next);
 
     expect(changes.some((change) => change.field === "profile")).toBe(false);
-    expect(changes.some((change) => change.label === "Domesticación")).toBe(true);
-    expect(changes.some((change) => change.label === "Modo de juego")).toBe(true);
+    expect(changes.some((change) => change.label === "Taming")).toBe(true);
+    expect(changes.some((change) => change.label === "Game mode")).toBe(true);
   });
 
   it("applies world settings from experience profiles and writes MaxPlayers", () => {

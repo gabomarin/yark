@@ -10,7 +10,7 @@ describe("ModsService (mock catalog)", () => {
 
   it("normalizes numeric CurseForge project IDs", () => {
     expect(normalizeModId(" 928793 ")).toBe("928793");
-    expect(() => normalizeModId("abc")).toThrow(/ID de mod inválido/);
+    expect(() => normalizeModId("abc")).toThrow(/Invalid mod ID/);
   });
 
   it("returns hardcoded metadata for known mods", async () => {

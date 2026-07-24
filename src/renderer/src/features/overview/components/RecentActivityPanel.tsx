@@ -23,10 +23,10 @@ export function RecentActivityPanel({ events, loading, onViewAll }: Props): JSX.
       <Group justify="space-between" align="center" gap="sm">
         <div>
           <Title order={3} id="recent-activity-title" className={classes.recentTitle}>
-            Actividad reciente
+            Recent activity
           </Title>
           <Text c="dimmed" size="sm">
-            Cambios y operaciones relevantes del administrador.
+            Relevant manager changes and operations.
           </Text>
         </div>
         <Button
@@ -35,13 +35,13 @@ export function RecentActivityPanel({ events, loading, onViewAll }: Props): JSX.
           rightSection={<ArrowRight size={14} />}
           onClick={onViewAll}
         >
-          Ver registros
+          View logs
         </Button>
       </Group>
 
       {loading ? (
         <div className={classes.recentList} role="status" aria-live="polite">
-          <VisuallyHidden>Cargando actividad reciente</VisuallyHidden>
+          <VisuallyHidden>Loading recent activity</VisuallyHidden>
           {[0, 1, 2].map((item) => (
             <div className={classes.recentRow} key={item} aria-hidden="true">
               <Skeleton circle width={6} height={6} />
@@ -52,7 +52,7 @@ export function RecentActivityPanel({ events, loading, onViewAll }: Props): JSX.
         </div>
       ) : relevantEvents.length === 0 ? (
         <Text c="dimmed" size="sm" className={classes.recentEmpty}>
-          Todavía no hay actividad operativa relevante.
+          No relevant operational activity yet.
         </Text>
       ) : (
         <div className={classes.recentList}>

@@ -41,7 +41,7 @@ export function AppShellLayout({ children, ...sidebarProps }: Props): JSX.Elemen
               <Group justify="space-between" align="center" wrap="nowrap" gap="sm">
                 <span>{error}</span>
                 {onDismissError !== undefined && (
-                  <CloseButton aria-label="Cerrar error" onClick={onDismissError} />
+                  <CloseButton aria-label="Dismiss error" onClick={onDismissError} />
                 )}
               </Group>
             </Alert>

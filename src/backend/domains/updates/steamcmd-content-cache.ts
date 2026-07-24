@@ -1,7 +1,7 @@
 /**
- * Rutas y sync de caché SteamCMD para instalaciones ASA multi-servidor.
- * - depotcache: descargas comprimidas junto a steamcmd.exe (reuso de red)
- * - asa_content_cache: instalación compartida que se copia a cada server (reuso de disco)
+ * SteamCMD cache paths and sync for multi-server ASA installs.
+ * - depotcache: compressed downloads next to steamcmd.exe (network reuse)
+ * - asa_content_cache: shared install copied to each server (disk reuse)
  */
 
 import { spawn, type ChildProcess } from "node:child_process";
@@ -10,14 +10,14 @@ import { dirname, join, resolve } from "node:path";
 
 export const ASA_APP_ID = "2430930";
 
-/** Carpetas del servidor que no deben sobrescribirse al sincronizar desde la caché. */
+/** Server folders that must not be overwritten when syncing from the cache. */
 export const ASA_CONTENT_SYNC_EXCLUDE_DIRS = ["ShooterGame\\Saved"] as const;
 
-/** Tiempo durante el cual se reutiliza una caché de contenido ya actualizada en esta sesión. */
+/** How long a content cache already updated in this session is reused. */
 export const CONTENT_CACHE_FRESH_MS = 15 * 60 * 1000;
 
 export class OperationCancelledError extends Error {
-  constructor(message = "Operación cancelada por el usuario") {
+  constructor(message = "Operation cancelled by the user") {
     super(message);
     this.name = "OperationCancelledError";
   }
@@ -51,7 +51,7 @@ export function asaAppManifestPath(installOrCacheDir: string): string {
 }
 
 /**
- * Orden requerido por SteamCMD moderno: force_install_dir antes de login.
+ * Order required by modern SteamCMD: force_install_dir before login.
  */
 export function buildSteamCmdAppUpdateArgs(installDir: string): string[] {
   return [
@@ -86,13 +86,13 @@ export function shouldReuseAsaContentCache(
   cacheDir: string,
   updatedAtMs: number,
 ): boolean {
-  // Una acción explícita de update/verify siempre debe consultar Steam.
-  // La ventana de frescura solo evita descargas repetidas al instalar otros servidores.
+  // An explicit update/verify action must always query Steam.
+  // The freshness window only avoids repeated downloads when installing other servers.
   return operation === "install-files" && isContentCacheFresh(cacheDir, updatedAtMs);
 }
 
 export function isRobocopySuccess(exitCode: number | null): boolean {
-  // Robocopy: 0–7 = éxito con distintos grados de copia; >= 8 = error.
+  // Robocopy: 0–7 = success with varying copy degrees; >= 8 = error.
   const code = exitCode ?? 16;
   return code >= 0 && code < 8;
 }
@@ -103,8 +103,8 @@ export interface SyncAsaContentOptions {
 }
 
 /**
- * Copia la instalación compartida al directorio del servidor,
- * preservando ShooterGame\Saved (mundos, INI, jugadores).
+ * Copies the shared install to the server directory,
+ * preserving ShooterGame\Saved (worlds, INI, players).
  */
 export async function syncAsaContentCacheToInstallDir(
   cacheDir: string,
@@ -154,7 +154,7 @@ export async function syncAsaContentCacheToInstallDir(
     child.once("error", (error) => {
       reject(
         new Error(
-          `No se pudo ejecutar robocopy para sincronizar caché ASA: ${error.message}`,
+          `Could not run robocopy to sync ASA cache: ${error.message}`,
         ),
       );
     });
@@ -168,7 +168,7 @@ export async function syncAsaContentCacheToInstallDir(
       if (!isRobocopySuccess(exitCode)) {
         reject(
           new Error(
-            `Falló la sincronización de caché ASA (robocopy exit ${exitCode})${
+            `ASA cache sync failed (robocopy exit ${exitCode})${
               stderr.trim().length > 0 ? `: ${stderr.trim()}` : ""
             }`,
           ),

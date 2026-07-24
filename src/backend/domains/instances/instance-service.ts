@@ -29,21 +29,21 @@ function assertSafeInstallDirForWipe(installDir: string): string {
   const root = parsePath(resolved).root;
   if (resolved.length === 0 || resolved === root || /^[a-zA-Z]:\\?$/.test(resolved)) {
     throw new Error(
-      `Ruta de instalación no segura para borrar del disco: "${installDir}"`,
+      `Install path is not safe to delete from disk: "${installDir}"`,
     );
   }
-  // Evitar borrar raíces tipo C:\Users o C:\Windows por accidente.
+  // Avoid deleting roots like C:\Users or C:\Windows by accident.
   const normalized = resolved.replace(/[/\\]+$/, "").toLowerCase();
   const forbidden = ["c:\\windows", "c:\\users", "c:\\program files", "c:\\program files (x86)"];
   if (forbidden.some((item) => normalized === item)) {
     throw new Error(
-      `Ruta de instalación demasiado genérica para borrar del disco: "${resolved}"`,
+      `Install path is too generic to delete from disk: "${resolved}"`,
     );
   }
   return resolved;
 }
 /**
- * Servicio de orquestación de instancias: CRUD validado + ciclo de vida.
+ * Instance orchestration service: validated CRUD + lifecycle.
  */
 export class InstanceService {
   constructor(
@@ -64,14 +64,14 @@ export class InstanceService {
     this.assertValidInput(normalized);
     this.assertUniqueInstallDir(installDir);
 
-    // create() sync; ensureDefaultIniFiles async — mkdir raíz aquí de forma síncrona vía ensure
+    // create() sync; ensureDefaultIniFiles async — mkdir root here synchronously via ensure
     const profile = this.repo.create(normalized);
     void this.ensureDefaultIniFiles(profile.installDir);
     this.repo.addEvent(
       profile.id,
       "server_created",
       "info",
-      `Servidor "${profile.name}" creado en ${profile.installDir} (mapa ${profile.map})`,
+      `Server "${profile.name}" created at ${profile.installDir} (map ${profile.map})`,
     );
     return profile;
   }
@@ -96,25 +96,25 @@ export class InstanceService {
   }
 
   update(id: string, input: ServerProfileInput): ServerProfile {
-    // Permitido en caliente: puertos/mapa/etc. se aplican al reiniciar el proceso.
+    // Allowed while hot: ports/map/etc. apply when the process restarts.
     this.assertValidInput(input);
     this.assertNoPortConflicts(input, id);
     const updated = this.repo.update(id, input);
     if (updated === null) {
-      throw new Error("El servidor no existe");
+      throw new Error("Server does not exist");
     }
     this.repo.addEvent(
       id,
       "server_updated",
       "info",
-      `Servidor "${updated.name}" actualizado`,
+      `Server "${updated.name}" updated`,
     );
     return updated;
   }
 
   async delete(id: string): Promise<void> {
     if (this.processes.isActive(id)) {
-      throw new Error("No se puede eliminar un servidor mientras está en ejecución");
+      throw new Error("Cannot delete a server while it is running");
     }
     const profile = this.repo.get(id);
     if (profile === null) return;
@@ -126,7 +126,7 @@ export class InstanceService {
     if (shared.length > 0) {
       const names = shared.map((item) => item.name).join(", ");
       throw new Error(
-        `No se puede borrar "${installDir}" del disco: también lo usan: ${names}. Elimina o cambia esos perfiles primero.`,
+        `Cannot delete "${installDir}" from disk: also used by: ${names}. Remove or change those profiles first.`,
       );
     }
 
@@ -139,22 +139,22 @@ export class InstanceService {
       null,
       "server_deleted",
       "info",
-      `Servidor "${profile.name}" eliminado (perfil + archivos en ${installDir})`,
+      `Server "${profile.name}" deleted (profile + files at ${installDir})`,
     );
   }
 
-  /** Clona un perfil con nombre derivado y puertos desplazados +10. */
+  /** Clones a profile with a derived name and ports shifted +10. */
   clone(id: string): ServerProfile {
     const source = this.repo.get(id);
     if (source === null) {
-      throw new Error("El servidor a clonar no existe");
+      throw new Error("Server to clone does not exist");
     }
     const existing = this.repo.list();
     const names = new Set(existing.map((p) => p.name));
-    let name = `${source.name} (copia)`;
+    let name = `${source.name} (copy)`;
     let suffix = 2;
     while (names.has(name)) {
-      name = `${source.name} (copia ${suffix})`;
+      name = `${source.name} (copy ${suffix})`;
       suffix++;
     }
 
@@ -165,7 +165,7 @@ export class InstanceService {
         name,
         map: source.map,
         installDir: source.installDir,
-        sessionName: `${source.sessionName} (copia)`,
+        sessionName: `${source.sessionName} (copy)`,
         gamePort: source.gamePort + offset,
         queryPort: source.queryPort + offset,
         rconPort: source.rconPort + offset,
@@ -181,7 +181,7 @@ export class InstanceService {
       }
       offset += 10;
       if (offset > 1000) {
-        throw new Error("No se encontraron puertos libres para el clon");
+        throw new Error("No free ports found for the clone");
       }
     }
     return this.create(input);
@@ -196,7 +196,7 @@ export class InstanceService {
     if (conflicts.length > 0) {
       const c = conflicts[0]!;
       throw new Error(
-        `Conflicto de puerto ${c.kind} ${c.port} con el servidor activo "${c.serverA === profile.name ? c.serverB : c.serverA}"`,
+        `Port conflict ${c.kind} ${c.port} with active server "${c.serverA === profile.name ? c.serverB : c.serverA}"`,
       );
     }
     this.processes.start(profile, options);
@@ -204,7 +204,7 @@ export class InstanceService {
       id,
       "server_started",
       "info",
-      `Servidor "${profile.name}" arrancando (esperando readiness)`,
+      `Server "${profile.name}" starting (waiting for readiness)`,
     );
   }
 
@@ -215,7 +215,7 @@ export class InstanceService {
       id,
       "server_stopped",
       "info",
-      `Servidor "${profile.name}" detenido (con guardado previo)`,
+      `Server "${profile.name}" stopped (with prior save)`,
     );
   }
 
@@ -226,7 +226,7 @@ export class InstanceService {
       id,
       "server_stopped",
       "warning",
-      `Servidor "${profile.name}" terminado forzosamente (sin guardado)`,
+      `Server "${profile.name}" force-killed (without save)`,
     );
   }
 
@@ -237,7 +237,7 @@ export class InstanceService {
   installDirFor(id: string): string {
     const profile = this.mustGet(id);
     if (!existsSync(profile.installDir)) {
-      throw new Error(`La carpeta del servidor no existe: ${profile.installDir}`);
+      throw new Error(`Server folder does not exist: ${profile.installDir}`);
     }
     return profile.installDir;
   }
@@ -263,7 +263,7 @@ export class InstanceService {
   async sendRcon(id: string, command: string): Promise<string> {
     const profile = this.mustGet(id);
     if (!this.processes.isActive(id)) {
-      throw new Error("El servidor no está en ejecución");
+      throw new Error("Server is not running");
     }
     const response = await rconExec(
       RCON_HOST,
@@ -275,7 +275,7 @@ export class InstanceService {
       id,
       "rcon_command",
       "info",
-      `RCON en "${profile.name}": ${command}`,
+      `RCON on "${profile.name}": ${command}`,
     );
     return response;
   }
@@ -283,7 +283,7 @@ export class InstanceService {
   private mustGet(id: string): ServerProfile {
     const profile = this.repo.get(id);
     if (profile === null) {
-      throw new Error("El servidor no existe");
+      throw new Error("Server does not exist");
     }
     return profile;
   }
@@ -311,7 +311,7 @@ export class InstanceService {
     if (conflicts.length > 0) {
       const c = conflicts[0]!;
       throw new Error(
-        `Conflicto de puerto ${c.kind} ${c.port} entre "${c.serverA}" y "${c.serverB}"`,
+        `${c.kind} port conflict ${c.port} between "${c.serverA}" and "${c.serverB}"`,
       );
     }
   }
@@ -323,7 +323,7 @@ export class InstanceService {
       .find((profile) => profile.id !== excludeId && resolve(profile.installDir) === target);
     if (clash !== undefined) {
       throw new Error(
-        `Ya existe un servidor usando la carpeta "${installDir}" ("${clash.name}")`,
+        `A server already uses folder "${installDir}" ("${clash.name}")`,
       );
     }
   }

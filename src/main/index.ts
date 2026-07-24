@@ -36,7 +36,7 @@ function createWindow(): BrowserWindow {
     height: 800,
     minWidth: 960,
     minHeight: 600,
-    title: "ARK Server GBO",
+    title: "YARK server manager",
     backgroundColor: "#12141a",
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
@@ -62,7 +62,7 @@ function createWindow(): BrowserWindow {
 
 void app.whenReady().then(() => {
   const userData = app.getPath("userData");
-  const dbPath = join(userData, "ark-server-gbo.db");
+  const dbPath = join(userData, "yark-server-manager.db");
   const db = openDatabase(dbPath);
   const settings = new AppSettingsRepository(db);
   const repo = new ServerRepository(db);
@@ -118,11 +118,11 @@ void app.whenReady().then(() => {
   });
 
   app.on("before-quit", (event) => {
-    // Cancelar SteamCMD/sync pendientes al salir (sin exigir UI viva).
+    // Cancel pending SteamCMD/sync on quit (without requiring a live UI).
     try {
       updateService.cancelSteamCmd();
     } catch {
-      // Ignorar: la app se está cerrando.
+      // Ignore: the app is shutting down.
     }
     const profiles = repo.list();
     const anyActive = profiles.some((p) => processManager.isActive(p.id));

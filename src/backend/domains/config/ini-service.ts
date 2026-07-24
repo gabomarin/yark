@@ -68,7 +68,7 @@ export class IniService {
   async readServerIni(serverId: string): Promise<ServerIniSnapshot> {
     const server = this.repo.get(serverId);
     if (server === null) {
-      throw new Error("El servidor no existe");
+      throw new Error("Server does not exist");
     }
 
     const gameUserSettingsPath = this.gameUserSettingsPath(server.installDir);
@@ -112,7 +112,7 @@ export class IniService {
       const preview = this.previewWithCurrent(current.payload, sanitized);
       if (!preview.valid) {
         throw new Error(
-          `INI inválido: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`,
+          `Invalid INI: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`,
         );
       }
 
@@ -125,7 +125,7 @@ export class IniService {
         serverId,
         "server_updated",
         "info",
-        `Configuración INI actualizada (${preview.changedCount} cambios)`,
+        `INI configuration updated (${preview.changedCount} changes)`,
       );
 
       return preview;
@@ -205,7 +205,7 @@ export class IniService {
     if (!Number.isFinite(parsed) || !/^[-+]?\d+$/.test(text)) {
       issues.push({
         fileKey: "gameUserSettings",
-        message: `${key} debe ser un entero válido`,
+        message: `${key} must be a valid integer`,
       });
       return;
     }
@@ -213,7 +213,7 @@ export class IniService {
     if (parsed < min || parsed > max) {
       issues.push({
         fileKey: "gameUserSettings",
-        message: `${key} debe estar entre ${min} y ${max}`,
+        message: `${key} must be between ${min} and ${max}`,
       });
     }
   }
@@ -237,7 +237,7 @@ export class IniService {
     if (!Number.isFinite(parsed)) {
       issues.push({
         fileKey: "gameUserSettings",
-        message: `${key} debe ser un número válido`,
+        message: `${key} must be a valid number`,
       });
       return;
     }
@@ -245,7 +245,7 @@ export class IniService {
     if (parsed < min || parsed > max) {
       issues.push({
         fileKey: "gameUserSettings",
-        message: `${key} debe estar entre ${min} y ${max}`,
+        message: `${key} must be between ${min} and ${max}`,
       });
     }
   }

@@ -1,6 +1,6 @@
 /**
- * Lock en memoria por recurso para evitar operaciones conflictivas
- * simultáneas sobre una misma instancia.
+ * In-memory lock per resource to avoid conflicting
+ * simultaneous operations on the same instance.
  */
 export class InstanceLockManager {
   private readonly locks = new Map<string, string>();
@@ -15,9 +15,9 @@ export class InstanceLockManager {
     work: () => Promise<T>,
   ): Promise<T> {
     if (this.locks.has(resourceId)) {
-      const owner = this.locks.get(resourceId) ?? "otro job";
+      const owner = this.locks.get(resourceId) ?? "another job";
       throw new Error(
-        `La instancia ya tiene un job en ejecución (${owner}); no se puede iniciar ${purpose}`,
+        `Instance already has a running job (${owner}); cannot start ${purpose}`,
       );
     }
 

@@ -13,7 +13,7 @@ export function AppProviders({ children }: PropsWithChildren): JSX.Element {
     >
       <ModalsProvider
         modalProps={{ centered: true, radius: "md" }}
-        labels={{ confirm: "Confirmar", cancel: "Cancelar" }}
+        labels={{ confirm: "Confirm", cancel: "Cancel" }}
       >
         <Notifications position="top-right" autoClose={5000} />
         {children}

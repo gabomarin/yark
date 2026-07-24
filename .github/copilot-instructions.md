@@ -1,29 +1,29 @@
 # Copilot Instructions
 
 ## Source of truth
-- Antes de continuar cualquier trabajo en este repositorio, revisa `TODO.md`.
-- Usa `TODO.md` como referencia principal para saber que ya esta hecho, que esta parcial y que falta.
-- Si completas una tarea o cambias el estado real del proyecto, actualiza `TODO.md` en el mismo cambio.
+- Before continuing any work in this repository, review `TODO.md`.
+- Use `TODO.md` as the primary reference for what is done, partial, and remaining.
+- If you complete a task or change the real project status, update `TODO.md` in the same change.
 
-## Prioridad de trabajo
-- A menos que el usuario indique otra prioridad, continua desde la seccion `Siguiente prioridad recomendada` de `TODO.md`.
-- No reabras trabajo ya marcado como hecho salvo que el usuario pida correccion, refactor o ampliacion.
-- Cuando propongas el siguiente paso, alinealo con los pendientes del `TODO.md`.
+## Work priority
+- Unless the user sets another priority, continue from the `Recommended next priority` section in `TODO.md`.
+- Do not reopen work already marked done unless the user asks for a fix, refactor, or expansion.
+- When proposing the next step, align it with open items in `TODO.md`.
 
-## Reglas del proyecto
-- Mantener la arquitectura actual: Electron + React + TypeScript + SQLite local (`node:sqlite`).
-- Preferir cambios pequenos, verificables y centrados en la causa raiz.
-- No introducir dependencias nativas innecesarias si existe una alternativa pura de Node/TypeScript.
-- Para rutas de Windows, preservar compatibilidad con entorno Windows real.
+## Project rules
+- Keep the current architecture: Electron + React + TypeScript + local SQLite (`node:sqlite`).
+- Prefer small, verifiable changes focused on the root cause.
+- Do not introduce unnecessary native dependencies if a pure Node/TypeScript alternative exists.
+- For Windows paths, preserve compatibility with a real Windows environment.
 
-## Verificacion
-- Si se tocan backend, shared o flujos criticos: ejecutar `npm test` y `npm run typecheck`.
-- Si se tocan renderer, preload, main o integracion app: ejecutar `npm run build`.
-- Si se tocan flujos de UI principales: ejecutar `npm run e2e` cuando sea viable.
-- Si hay cambios visuales en el renderer: seguir `docs/visual-testing.md` y revisar con Playwright/Electron en `1280x720`, `1920x1080` y `2560x1440`.
-- En este repo, para verificacion fiable, preferir comandos por `cmd.exe /c` cuando el entorno WSL falle por dependencias opcionales de Rollup.
+## Verification
+- If backend, shared, or critical flows change: run `npm test` and `npm run typecheck`.
+- If renderer, preload, main, or app integration change: run `npm run build`.
+- If main UI flows change: run `npm run e2e` when feasible.
+- If there are visual renderer changes: follow `docs/visual-testing.md` and review with Playwright/Electron at `1280x720`, `1920x1080`, and `2560x1440`.
+- In this repo, for reliable verification, prefer commands via `cmd.exe /c` when the WSL environment fails due to optional Rollup dependencies.
 
-## Continuidad
-- Si hay varias opciones razonables, elige la que cierre mas pendientes reales del `TODO.md` con el menor riesgo.
-- Si agregas nuevas pruebas, intenta que queden repetibles y automatizadas.
-- Si detectas una nueva deuda tecnica relevante, registrala en `TODO.md`.
+## Continuity
+- If several options are reasonable, choose the one that closes the most real `TODO.md` items with the least risk.
+- If you add new tests, try to keep them repeatable and automated.
+- If you find relevant technical debt, record it in `TODO.md`.

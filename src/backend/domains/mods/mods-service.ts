@@ -5,9 +5,9 @@ import {
 } from "./mock-mod-catalog";
 
 /**
- * Resuelve metadata de mods.
- * Hoy: catálogo hardcodeado + placeholder.
- * Luego: sustituir el cuerpo de getMod/getMods por CurseForge oficial (API key).
+ * Resolves mod metadata.
+ * Today: hardcoded catalog + placeholder.
+ * Later: replace getMod/getMods body with official CurseForge (API key).
  */
 export class ModsService {
   async getMod(modId: string, _options?: { forceRefresh?: boolean }): Promise<ModMetadata> {
@@ -32,7 +32,7 @@ export function normalizeModId(raw: string): string {
   const id = raw.trim();
   if (!/^\d+$/.test(id)) {
     throw new Error(
-      `ID de mod inválido: "${raw}". Usa el Project ID numérico de CurseForge.`,
+      `Invalid mod ID: "${raw}". Use the numeric CurseForge Project ID.`,
     );
   }
   return id;

@@ -10,11 +10,11 @@ describe("server-install-path", () => {
   it("rejects folder names with Windows-incompatible characters", () => {
     expect(getServerFolderNameError("my_server")).toBeNull();
     expect(getServerFolderNameError("My Server")).toBeNull();
-    expect(getServerFolderNameError('bad<>:"name')).toMatch(/No puede contener/);
-    expect(getServerFolderNameError("a/b")).toMatch(/No puede contener/);
-    expect(getServerFolderNameError("con")).toMatch(/reservado/i);
-    expect(getServerFolderNameError("aux.txt")).toMatch(/reservado/i);
-    expect(getServerFolderNameError("ends.")).toMatch(/terminar/);
+    expect(getServerFolderNameError('bad<>:"name')).toMatch(/Cannot contain/);
+    expect(getServerFolderNameError("a/b")).toMatch(/Cannot contain/);
+    expect(getServerFolderNameError("con")).toMatch(/reserved/i);
+    expect(getServerFolderNameError("aux.txt")).toMatch(/reserved/i);
+    expect(getServerFolderNameError("ends.")).toMatch(/period or space/i);
     expect(getServerFolderNameError("..")).toMatch(/\.\./);
   });
 

@@ -1,4 +1,4 @@
-// Smoke test: valida que node:sqlite funciona dentro del runtime de Electron.
+// Smoke test: verify node:sqlite works inside the Electron runtime.
 const { app } = require("electron");
 const fs = require("node:fs");
 

@@ -9,7 +9,7 @@ function input(overrides: Partial<ServerProfileInput> = {}): ServerProfileInput 
     name: "Island",
     map: "TheIsland_WP",
     installDir: "C:\\asa\\island",
-    sessionName: "Mi Isla",
+    sessionName: "My Island",
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,
@@ -36,7 +36,7 @@ describe("ServerRepository", () => {
     db.close();
   });
 
-  it("crea y recupera un perfil con todos los campos", () => {
+  it("creates and retrieves a profile with all fields", () => {
     const created = repo.create(input());
     const fetched = repo.get(created.id);
     expect(fetched).toEqual(created);
@@ -44,43 +44,43 @@ describe("ServerRepository", () => {
     expect(fetched!.extraArgs).toEqual(["-NoBattlEye"]);
   });
 
-  it("lista perfiles ordenados por nombre", () => {
+  it("lists profiles sorted by name", () => {
     repo.create(input({ name: "Zeta", gamePort: 7787, queryPort: 27025, rconPort: 27030 }));
-    repo.create(input({ name: "Alfa" }));
+    repo.create(input({ name: "Alpha" }));
     const names = repo.list().map((p) => p.name);
-    expect(names).toEqual(["Alfa", "Zeta"]);
+    expect(names).toEqual(["Alpha", "Zeta"]);
   });
 
-  it("actualiza un perfil existente", () => {
+  it("updates an existing profile", () => {
     const created = repo.create(input());
-    const updated = repo.update(created.id, input({ name: "Renombrado" }));
-    expect(updated!.name).toBe("Renombrado");
+    const updated = repo.update(created.id, input({ name: "Renamed" }));
+    expect(updated!.name).toBe("Renamed");
     expect(updated!.id).toBe(created.id);
   });
 
-  it("devuelve null al actualizar un id inexistente", () => {
-    expect(repo.update("no-existe", input())).toBeNull();
+  it("returns null when updating a nonexistent id", () => {
+    expect(repo.update("does-not-exist", input())).toBeNull();
   });
 
-  it("elimina un perfil", () => {
+  it("deletes a profile", () => {
     const created = repo.create(input());
     expect(repo.delete(created.id)).toBe(true);
     expect(repo.get(created.id)).toBeNull();
     expect(repo.delete(created.id)).toBe(false);
   });
 
-  it("rechaza nombres duplicados por restricción UNIQUE", () => {
+  it("rejects duplicate names via UNIQUE constraint", () => {
     repo.create(input());
     expect(() =>
       repo.create(input({ gamePort: 7787, queryPort: 27025, rconPort: 27030 })),
     ).toThrow();
   });
 
-  it("registra y recupera eventos recientes en orden descendente", () => {
-    repo.addEvent(null, "server_created", "info", "Primero");
-    repo.addEvent(null, "server_updated", "info", "Segundo");
+  it("records and retrieves recent events in descending order", () => {
+    repo.addEvent(null, "server_created", "info", "First");
+    repo.addEvent(null, "server_updated", "info", "Second");
     const events = repo.recentEvents(10);
     expect(events).toHaveLength(2);
-    expect(events[0]!.message).toBe("Segundo");
+    expect(events[0]!.message).toBe("Second");
   });
 });

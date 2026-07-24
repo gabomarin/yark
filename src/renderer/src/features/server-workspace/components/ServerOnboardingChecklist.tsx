@@ -90,7 +90,7 @@ export function ServerOnboardingChecklist(props: Props): JSX.Element {
       byId.set(candidate.clusterId, {
         clusterId: candidate.clusterId,
         clusterDir: candidate.clusterDir,
-        label: `${candidate.clusterId} · vía ${candidate.name}`,
+        label: `${candidate.clusterId} · via ${candidate.name}`,
       });
     }
     return Array.from(byId.values());
@@ -130,7 +130,7 @@ export function ServerOnboardingChecklist(props: Props): JSX.Element {
     const result = await window.api.updateServer(props.server.id, input);
     setSavingCluster(false);
     if (!result.ok) {
-      setError(result.error ?? "No se pudo actualizar el cluster");
+      setError(result.error ?? "Could not update the cluster");
       return;
     }
     setClusterChoice(selected?.clusterId ?? null);
@@ -148,7 +148,7 @@ export function ServerOnboardingChecklist(props: Props): JSX.Element {
     });
     setSavingPorts(false);
     if (!result.ok) {
-      setError(result.error ?? "No se pudieron guardar los puertos");
+      setError(result.error ?? "Could not save ports");
       return;
     }
     props.onServerUpdated();
@@ -159,11 +159,11 @@ export function ServerOnboardingChecklist(props: Props): JSX.Element {
       <header className={classes.header}>
         <div>
           <Text c="dimmed" size="xs" fw={600}>
-            {props.server.name} / Primeros pasos
+            {props.server.name} / First steps
           </Text>
-          <Title order={2}>Configura el arranque</Title>
+          <Title order={2}>Set up launch</Title>
           <Text c="dimmed" size="sm">
-            Todo es opcional. Puedes saltar y volver al workspace cuando quieras.
+            Everything is optional. You can skip and return to the workspace anytime.
           </Text>
         </div>
         <Button
@@ -172,7 +172,7 @@ export function ServerOnboardingChecklist(props: Props): JSX.Element {
           leftSection={<SkipForward size={16} />}
           onClick={props.onDismiss}
         >
-          Más tarde
+          Later
         </Button>
       </header>
 
@@ -187,11 +187,11 @@ export function ServerOnboardingChecklist(props: Props): JSX.Element {
           <section className={classes.card}>
             <Group gap="sm" mb="xs">
               <MagicWand size={18} />
-              <Title order={4}>Experiencia de juego</Title>
+              <Title order={4}>Play experience</Title>
               {experienceDone && <CheckCircle size={18} color="var(--mantine-color-green-6)" />}
             </Group>
             <Text c="dimmed" size="sm" mb="sm">
-              Ajusta tasas y comodidad con el asistente, o deja los defaults del INI.
+              Tune rates and comfort with the wizard, or leave the INI defaults.
             </Text>
             <Group gap="xs">
               <Button
@@ -202,14 +202,14 @@ export function ServerOnboardingChecklist(props: Props): JSX.Element {
                   props.onOpenAssistant();
                 }}
               >
-                Configurar con asistente
+                Configure with wizard
               </Button>
               <Button
                 size="sm"
                 variant="light"
                 onClick={() => setExperienceDone(true)}
               >
-                Usar defaults
+                Use defaults
               </Button>
             </Group>
           </section>
@@ -220,11 +220,11 @@ export function ServerOnboardingChecklist(props: Props): JSX.Element {
               <Title order={4}>Cluster</Title>
             </Group>
             <Text c="dimmed" size="sm" mb="sm">
-              Únete a un cluster existente para transferencias entre mapas, o continúa sin cluster.
+              Join an existing cluster for cross-map transfers, or continue without a cluster.
             </Text>
             <Select
               label="Cluster"
-              placeholder="Sin cluster"
+              placeholder="No cluster"
               clearable
               data={clusterOptions.map((option) => ({
                 value: option.clusterId,
@@ -238,11 +238,11 @@ export function ServerOnboardingChecklist(props: Props): JSX.Element {
             />
             {clusterOptions.length === 0 && (
               <Text c="dimmed" size="xs" mt="xs">
-                No hay otros servidores con cluster configurado todavía.
+                No other servers have a cluster configured yet.
               </Text>
             )}
             {clusterReport !== null && !clusterReport.ok && (
-              <Alert color="yellow" title="Avisos del cluster" mt="sm">
+              <Alert color="yellow" title="Cluster warnings" mt="sm">
                 <Stack gap={4}>
                   {clusterReport.issues.map((issue) => (
                     <Text key={`${issue.severity}-${issue.message}`} size="sm">
@@ -256,11 +256,11 @@ export function ServerOnboardingChecklist(props: Props): JSX.Element {
 
           <section className={classes.card}>
             <Group gap="sm" mb="xs">
-              <Title order={4}>Puertos</Title>
+              <Title order={4}>Ports</Title>
             </Group>
             <Text c="dimmed" size="sm" mb="sm">
               Game {props.server.gamePort} · Query {props.server.queryPort} · RCON{" "}
-              {props.server.rconPort}. Corrige conflictos antes de instalar o arrancar.
+              {props.server.rconPort}. Fix conflicts before installing or starting.
             </Text>
             <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
               <NumberInput
@@ -289,19 +289,19 @@ export function ServerOnboardingChecklist(props: Props): JSX.Element {
               />
             </SimpleGrid>
             {portConflicts.length > 0 ? (
-              <Alert color="red" title="Conflictos de puerto" mt="sm">
+              <Alert color="red" title="Port conflicts" mt="sm">
                 <Stack gap={4}>
                   {portConflicts.map((conflict) => (
                     <Text key={`${conflict.port}-${conflict.serverA}-${conflict.serverB}`} size="sm">
-                      Puerto {conflict.port} ({conflict.kind}) entre {conflict.serverA} y{" "}
+                      Port {conflict.port} ({conflict.kind}) between {conflict.serverA} y{" "}
                       {conflict.serverB}
                     </Text>
                   ))}
                 </Stack>
               </Alert>
             ) : (
-              <Alert color="green" title="Sin conflictos detectados" mt="sm">
-                Estos puertos no chocan con otros perfiles locales.
+              <Alert color="green" title="No conflicts detected" mt="sm">
+                These ports do not conflict with other local profiles.
               </Alert>
             )}
             <Button
@@ -311,29 +311,29 @@ export function ServerOnboardingChecklist(props: Props): JSX.Element {
               loading={savingPorts}
               onClick={() => void savePorts()}
             >
-              Guardar puertos
+              Save ports
             </Button>
           </section>
 
           <section className={classes.card}>
             <Group gap="sm" mb="xs">
               <HardDrives size={18} />
-              <Title order={4}>Archivos del servidor</Title>
+              <Title order={4}>Server files</Title>
               {filesInstalled && <CheckCircle size={18} color="var(--mantine-color-green-6)" />}
             </Group>
             <Text c="dimmed" size="sm" mb="sm">
               {filesInstalled
-                ? "Los archivos ya están instalados. Puedes verificar o actualizar desde el panel lateral."
-                : "Descarga los binarios con SteamCMD cuando quieras. No bloquea el resto del workspace."}
+                ? "Files are already installed. You can verify or update from the side panel."
+                : "Download the binaries with SteamCMD whenever you want. It does not block the rest of the workspace."}
             </Text>
             <Group gap="xs">
               {!filesInstalled && (
                 <Button size="sm" onClick={props.onInstallFiles}>
-                  Instalar archivos
+                  Install files
                 </Button>
               )}
               <Button size="sm" variant="subtle" onClick={props.onDismiss}>
-                Listo, ir al workspace
+                Done, go to workspace
               </Button>
             </Group>
           </section>

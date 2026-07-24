@@ -56,11 +56,11 @@ describe("OverviewPage", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByRole("heading", { name: "Servidores", level: 1 })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Tus servidores" })).toBeInTheDocument();
-    expect(screen.getByText("1 servidor configurado · ninguno activo")).toBeInTheDocument();
-    expect(screen.getByRole("textbox", { name: "Buscar servidores" })).toBeInTheDocument();
-    expect(screen.getByText("Actividad reciente")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Servers", level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your servers" })).toBeInTheDocument();
+    expect(screen.getByText("1 server configured · none running")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Search servers" })).toBeInTheDocument();
+    expect(screen.getByText("Recent activity")).toBeInTheDocument();
     expect(screen.getByText("The Island")).toBeInTheDocument();
     expect(screen.queryByText("Advertencias")).not.toBeInTheDocument();
 
@@ -69,7 +69,7 @@ describe("OverviewPage", () => {
     const nextSection = header?.nextElementSibling as HTMLElement | null;
     expect(nextSection).not.toBeNull();
     expect(
-      within(nextSection as HTMLElement).getByRole("heading", { name: "Tus servidores" }),
+      within(nextSection as HTMLElement).getByRole("heading", { name: "Your servers" }),
     ).toBeInTheDocument();
   });
 
@@ -124,8 +124,8 @@ describe("OverviewPage", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("1 necesita atención")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Instalar" })).toBeInTheDocument();
+    expect(screen.getAllByText("1 needs attention").length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: "Install" }).length).toBeGreaterThan(0);
   });
 
   it("distinguishes loading from the actionable empty state", () => {
@@ -164,11 +164,11 @@ describe("OverviewPage", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("Cargando servidores")).toBeInTheDocument();
+    expect(screen.getByText("Loading servers")).toBeInTheDocument();
     expect(container.querySelectorAll("[data-server-skeletons] > [aria-hidden='true']")).toHaveLength(
       2,
     );
-    expect(screen.queryByText("Crea tu primer servidor")).not.toBeInTheDocument();
+    expect(screen.queryByText("Create your first server")).not.toBeInTheDocument();
 
     rerender(
       <AppProviders>
@@ -176,10 +176,10 @@ describe("OverviewPage", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("Crea tu primer servidor")).toBeInTheDocument();
+    expect(screen.getByText("Create your first server")).toBeInTheDocument();
     const serverList = container.querySelector("[data-server-list]");
     expect(serverList).not.toBeNull();
-    within(serverList as HTMLElement).getByRole("button", { name: "Nuevo servidor" }).click();
+    within(serverList as HTMLElement).getByRole("button", { name: "New server" }).click();
     expect(onCreateServer).toHaveBeenCalledOnce();
   });
 });

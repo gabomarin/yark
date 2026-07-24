@@ -7,8 +7,8 @@ type Entry = {
 };
 
 /**
- * Detecta conflictos de puertos entre perfiles (todos contra todos).
- * `candidate` permite evaluar un borrador sin persistirlo.
+ * Detects port conflicts between profiles (all vs all).
+ * `candidate` allows evaluating a draft without persisting it.
  */
 export function findPortConflicts(
   profiles: ServerProfile[],
@@ -62,7 +62,7 @@ export function findPortConflicts(
       for (let j = i + 1; j < bucket.length; j++) {
         const a = bucket[i]!;
         const b = bucket[j]!;
-        // Nunca comparar un perfil contra sí mismo.
+        // Never compare a profile against itself.
         if (a.id === b.id) {
           continue;
         }

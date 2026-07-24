@@ -39,7 +39,7 @@ afterEach(() => {
 });
 
 describe("LogsService runtime logs", () => {
-  it("incluye runtimeLogLines en listServerLogs", async () => {
+  it("includes runtimeLogLines in listServerLogs", async () => {
     const root = mkdtempSync(join(tmpdir(), "ark-logs-"));
     tmpDirs.push(root);
     const updatesDir = join(root, "updates");
@@ -70,7 +70,7 @@ describe("LogsService runtime logs", () => {
     expect(logs.runtimeLogLines[0]).toContain("server started");
   });
 
-  it("exporta logs operativos a un archivo", async () => {
+  it("exports operational logs to a file", async () => {
     const root = mkdtempSync(join(tmpdir(), "ark-logs-export-"));
     tmpDirs.push(root);
     const updatesDir = join(root, "updates");
@@ -99,7 +99,7 @@ describe("LogsService runtime logs", () => {
 
     expect(resultPath).toBe(outFile);
     const content = readFileSync(outFile, "utf8");
-    expect(content).toContain("Logs operativos de srv-logs-1");
+    expect(content).toContain("Operational logs for srv-logs-1");
     expect(content).toContain("server started");
     expect(content).toContain("srv-logs-1-1.log");
     expect(content).toContain("update output");

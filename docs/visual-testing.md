@@ -1,64 +1,64 @@
-# Protocolo de pruebas visuales
+# Visual testing protocol
 
-Esta guía es obligatoria cuando un cambio modifica layout, estilos, navegación,
-componentes visibles o comportamiento responsive del renderer.
+This guide is mandatory when a change modifies layout, styles, navigation,
+visible components, or responsive behavior of the renderer.
 
-## Tamaños de ventana requeridos
+## Required window sizes
 
-La revisión debe ejecutarse, como mínimo, en estos tres viewports del renderer:
+Review must run, at minimum, at these three renderer viewports:
 
-| Perfil | Viewport (píxeles CSS) | Objetivo |
+| Profile | Viewport (CSS pixels) | Goal |
 | --- | ---: | --- |
-| HD / compacto | `1280 × 720` | Detectar recortes, acciones fuera de vista, scrolls ausentes y layouts demasiado densos. |
-| Full HD | `1920 × 1080` | Validar la experiencia principal de escritorio. |
-| QHD / 2K | `2560 × 1440` | Detectar anchos excesivos, contenido que no crece y espacios vacíos no intencionales. |
+| HD / compact | `1280 × 720` | Catch clipping, actions out of view, missing scrolls, and overly dense layouts. |
+| Full HD | `1920 × 1080` | Validate the primary desktop experience. |
+| QHD / 2K | `2560 × 1440` | Catch excessive widths, content that does not grow, and unintentional empty space. |
 
-En este proyecto, **2K significa QHD `2560 × 1440`**. Las medidas corresponden
-al viewport de contenido de Electron, no a la resolución física del monitor.
-Playwright debe establecerlas explícitamente con `page.setViewportSize`.
+In this project, **2K means QHD `2560 × 1440`**. Measurements correspond to the
+Electron content viewport, not the monitor’s physical resolution. Playwright
+must set them explicitly with `page.setViewportSize`.
 
-Si el cambio afecta un breakpoint concreto, se añade una resolución cercana a
-ese breakpoint; no sustituye ninguno de los tres tamaños obligatorios.
+If the change affects a specific breakpoint, add a resolution near that
+breakpoint; it does not replace any of the three required sizes.
 
-## Requisitos
+## Requirements
 
-- Windows nativo o un entorno capaz de abrir aplicaciones GUI de Windows.
-- Node.js 20 o superior y npm.
-- Dependencias instaladas mediante `npm install`.
-- Electron y Playwright disponibles desde las dependencias del proyecto.
-- Un build actualizado generado con `npm run build`.
-- Permiso para abrir temporalmente la ventana de Electron y guardar capturas.
-- Datos locales suficientes para representar el flujo revisado. Para el
-  workspace se necesita al menos un servidor y contenido que produzca scroll;
-  para los INI deben existir suficientes ajustes para validar la tabla extensa.
+- Native Windows or an environment capable of opening Windows GUI applications.
+- Node.js 20 or newer and npm.
+- Dependencies installed via `npm install`.
+- Electron and Playwright available from the project dependencies.
+- An up-to-date build generated with `npm run build`.
+- Permission to temporarily open the Electron window and save screenshots.
+- Enough local data to represent the reviewed flow. For the workspace, at least
+  one server and content that produces scroll are required; for INI files there
+  must be enough settings to validate the long table.
 
-Algunos entornos tienen `ELECTRON_RUN_AS_NODE=1`. Electron no abrirá su ventana
-correctamente mientras esa variable esté activa. Debe eliminarse únicamente
-para el proceso de la prueba:
+Some environments have `ELECTRON_RUN_AS_NODE=1`. Electron will not open its
+window correctly while that variable is active. Remove it only for the test
+process:
 
 ```powershell
 Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
 ```
 
-En un script Node aislado puede hacerse antes de lanzar Electron:
+In an isolated Node script this can be done before launching Electron:
 
 ```js
 delete process.env.ELECTRON_RUN_AS_NODE;
 ```
 
-## Procedimiento con Playwright
+## Playwright procedure
 
-1. Ejecutar `npm run build`.
-2. Lanzar el proyecto compilado con `_electron.launch`.
-3. Esperar `domcontentloaded` y un elemento estable de la pantalla.
-4. Registrar errores de `console` y `pageerror`.
-5. Recorrer `1280×720`, `1920×1080` y `2560×1440` mediante
-   `page.setViewportSize`.
-6. Capturar la pantalla inicial y los estados relevantes después de interactuar.
-7. Probar scroll con rueda, no solo modificando `scrollTop` mediante JavaScript.
-8. Cerrar Electron aunque la prueba falle.
+1. Run `npm run build`.
+2. Launch the compiled project with `_electron.launch`.
+3. Wait for `domcontentloaded` and a stable element on the screen.
+4. Record `console` and `pageerror` errors.
+5. Walk `1280×720`, `1920×1080`, and `2560×1440` via `page.setViewportSize`.
+6. Capture the initial screen and relevant states after interacting.
+7. Test scroll with the mouse wheel, not only by setting `scrollTop` via
+   JavaScript.
+8. Close Electron even if the test fails.
 
-Plantilla mínima:
+Minimal template:
 
 ```js
 const os = require("node:os");
@@ -109,39 +109,39 @@ run().catch((error) => {
 });
 ```
 
-La plantilla es un punto de partida. Cada revisión debe navegar e interactuar
-con la pantalla modificada, no limitarse a capturar la pantalla inicial.
+The template is a starting point. Each review must navigate and interact with
+the modified screen, not only capture the initial screen.
 
-## Qué debe revisarse
+## What to review
 
-En cada resolución:
+At each resolution:
 
-- La acción principal es visible y no compite con acciones secundarias.
-- No hay contenido recortado ni controles inaccesibles.
-- Todo contenido extenso tiene un scroll evidente y funcional.
-- No aparece overflow horizontal inesperado.
-- Las superficies que deben crecer usan la altura y el ancho disponibles.
-- Headers, toolbars y acciones sticky no cubren contenido.
-- Los textos no se truncan salvo que exista una alternativa para consultarlos.
-- Estados hover, focus, disabled, loading, error y vacío siguen siendo legibles
-  cuando formen parte del cambio.
-- No hay errores en consola ni excepciones del renderer.
+- The primary action is visible and does not compete with secondary actions.
+- There is no clipped content or inaccessible controls.
+- All long content has an obvious, working scroll.
+- No unexpected horizontal overflow appears.
+- Surfaces that should grow use the available height and width.
+- Sticky headers, toolbars, and actions do not cover content.
+- Text is not truncated unless there is an alternative way to read it.
+- Hover, focus, disabled, loading, error, and empty states remain readable when
+  they are part of the change.
+- There are no console errors or renderer exceptions.
 
-La revisión debe incluir la pantalla completa —shell, sidebar y paneles
-adyacentes— además del componente modificado. Si el cambio afecta el workspace
-del servidor, deben revisarse al menos las pestañas Servidor, `Game.ini`,
-`GameUserSettings.ini`, Mods y Avanzado.
+The review must include the full screen — shell, sidebar, and adjacent panels —
+in addition to the modified component. If the change affects the server
+workspace, review at least the Server, `Game.ini`, `GameUserSettings.ini`, Mods,
+and Advanced tabs.
 
-## Evidencia y cierre
+## Evidence and closure
 
-Antes de cerrar el cambio se debe registrar:
+Before closing the change, record:
 
-- Resoluciones revisadas.
-- Pantallas y estados recorridos.
-- Resultado de consola y `pageerror`.
-- Problemas encontrados y correcciones aplicadas.
-- Cualquier limitación que impidiera completar una resolución.
+- Resolutions reviewed.
+- Screens and states walked.
+- Console and `pageerror` results.
+- Problems found and fixes applied.
+- Any limitation that prevented completing a resolution.
 
-Las capturas temporales no necesitan versionarse. Si una decisión visual debe
-conservarse como referencia de producto, su documentación sí debe añadirse a
-`docs/` o al plan correspondiente.
+Temporary screenshots do not need to be versioned. If a visual decision must be
+kept as a product reference, its documentation should be added to `docs/` or the
+corresponding plan.

@@ -1,7 +1,7 @@
 /**
- * Design review de cierre Iteración 2 — docs/visual-testing.md
- * Uso: node scripts/visual-iter2-review.cjs
- * Requiere: npm run build previo.
+ * Iteration 2 closing design review — docs/visual-testing.md
+ * Usage: node scripts/visual-iter2-review.cjs
+ * Requires: prior npm run build.
  */
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -99,13 +99,13 @@ async function run() {
     page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
 
     await page.waitForLoadState("domcontentloaded");
-    await page.getByRole("heading", { name: "Servidores", level: 1 }).waitFor({
+    await page.getByRole("heading", { name: "Servers", level: 1 }).waitFor({
       timeout: 20000,
     });
-    // Esperar a que el resumen operativo se estabilice (evita medir el vacío inicial).
+    // Wait for the operational summary to settle (avoids measuring the initial empty state).
     await page.waitForFunction(() => {
       const summary = document.querySelector("[data-server-summary]")?.textContent ?? "";
-      return /servidor/.test(summary);
+      return /server/.test(summary);
     }, null, { timeout: 15000 });
 
     for (const size of sizes) {
@@ -113,7 +113,7 @@ async function run() {
       await page.waitForTimeout(200);
 
       // --- Overview ---
-      await goNav(page, "Servidores");
+      await goNav(page, "Servers");
       await page.locator("[data-overview-page]").waitFor({ timeout: 10000 });
       const overviewClarity = await measureOverviewClarity(page);
       const overviewLayout = await measureLayout(page);
@@ -128,12 +128,12 @@ async function run() {
         `Overflow Overview ${size.name}`,
       );
       assert.ok(
-        overviewClarity.headerButtons.some((t) => t?.includes("Nuevo servidor")),
-        "Falta CTA Nuevo servidor",
+        overviewClarity.headerButtons.some((t) => t?.includes("New server")),
+        "Missing New server CTA",
       );
       assert.ok(
         overviewClarity.cards.every((c) => c.primary),
-        "Alguna card sin acción primaria",
+        "Some card is missing a primary action",
       );
 
       // --- SteamCMD ---
@@ -143,33 +143,33 @@ async function run() {
       const steamShot = await shot(page, outDir, `${size.name}-steamcmd`);
       assert.equal(steamLayout.hasHorizontalOverflow, false, `Overflow SteamCMD ${size.name}`);
 
-      // --- Registros ---
-      await goNav(page, "Registros");
+      // --- Logs ---
+      await goNav(page, "Logs");
       await page.waitForTimeout(250);
-      const eventsTab = page.getByRole("tab", { name: /Eventos/i });
+      const eventsTab = page.getByRole("tab", { name: /Events/i });
       if ((await eventsTab.count()) > 0) await eventsTab.click();
       const logsEventsShot = await shot(page, outDir, `${size.name}-logs-events`);
-      const updatesTab = page.getByRole("tab", { name: /Actualizaciones/i });
+      const updatesTab = page.getByRole("tab", { name: /Updates/i });
       if ((await updatesTab.count()) > 0) {
         await updatesTab.click();
         await page.waitForTimeout(150);
       }
       const logsUpdatesShot = await shot(page, outDir, `${size.name}-logs-updates`);
       const logsLayout = await measureLayout(page);
-      assert.equal(logsLayout.hasHorizontalOverflow, false, `Overflow Registros ${size.name}`);
+      assert.equal(logsLayout.hasHorizontalOverflow, false, `Overflow Logs ${size.name}`);
 
-      // --- Workspace (si hay servidores) ---
+      // --- Workspace (if servers exist) ---
       let workspaceShots = [];
-      await goNav(page, "Servidores");
+      await goNav(page, "Servers");
       await page.locator("[data-overview-page]").waitFor({ timeout: 10000 });
       const firstCard = page.locator("[data-server-card]").first();
       if ((await firstCard.count()) > 0) {
-        await firstCard.getByRole("button", { name: /Abrir configuración/i }).click();
+        await firstCard.getByRole("button", { name: /Open settings/i }).click();
         await page.waitForTimeout(400);
 
         const workspaceTabs = [
-          { name: "Servidor", file: "workspace-server" },
-          { name: "Archivos INI", file: "workspace-ini" },
+          { name: "Server", file: "workspace-server" },
+          { name: "INI Files", file: "workspace-ini" },
           { name: "Mods", file: "workspace-mods" },
         ];
 
@@ -189,11 +189,11 @@ async function run() {
           );
         }
 
-        const back = page.getByLabel(/Volver a Overview/i);
+        const back = page.getByLabel(/Back to servers/i);
         if ((await back.count()) > 0) {
           await back.click();
         } else {
-          await goNav(page, "Servidores");
+          await goNav(page, "Servers");
         }
         await page.waitForTimeout(200);
       }

@@ -40,7 +40,7 @@ function makeProfile(installDir: string, id = "srv-1"): ServerProfile {
 }
 
 describe("InstanceService.delete", () => {
-  it("borra el perfil y la carpeta de instalación del disco", async () => {
+  it("deletes the profile and the install folder from disk", async () => {
     const installDir = await mkdtemp(join(tmpdir(), "ark-delete-"));
     tmpDirs.push(installDir);
     await mkdir(join(installDir, "ShooterGame"), { recursive: true });
@@ -65,7 +65,7 @@ describe("InstanceService.delete", () => {
     await expect(access(installDir, fsConstants.F_OK)).rejects.toThrow();
   });
 
-  it("no borra el disco si otro perfil comparte el mismo installDir", async () => {
+  it("does not delete disk when another profile shares the same installDir", async () => {
     const installDir = await mkdtemp(join(tmpdir(), "ark-delete-shared-"));
     tmpDirs.push(installDir);
     await writeFile(join(installDir, "marker.txt"), "x", "utf8");
@@ -86,7 +86,7 @@ describe("InstanceService.delete", () => {
     } as unknown as ProcessManager;
 
     const service = new InstanceService(repo, processes);
-    await expect(service.delete(profile.id)).rejects.toThrow(/también lo usan/i);
+    await expect(service.delete(profile.id)).rejects.toThrow(/also used by/i);
     expect(repo.delete).not.toHaveBeenCalled();
     await expect(access(join(installDir, "marker.txt"), fsConstants.F_OK)).resolves.toBeUndefined();
   });

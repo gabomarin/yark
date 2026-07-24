@@ -21,9 +21,9 @@ MaxPlayers=70
 [/Script/ShooterGame.ShooterGameUserSettings]
 bUseVSync=False
 ResolutionSizeX=1280
-LastJoinedSessionPerCategory=Uno
-LastJoinedSessionPerCategory=Dos
-LastJoinedSessionPerCategory=Tres
+LastJoinedSessionPerCategory=One
+LastJoinedSessionPerCategory=Two
+LastJoinedSessionPerCategory=Three
 `;
 
   it("treats dotted bracket headers as literal sections", () => {
@@ -40,7 +40,7 @@ LastJoinedSessionPerCategory=Tres
       (row) => row.key === "LastJoinedSessionPerCategory",
     );
     expect(rows).toHaveLength(3);
-    expect(rows.map((row) => row.value)).toEqual(["Uno", "Dos", "Tres"]);
+    expect(rows.map((row) => row.value)).toEqual(["One", "Two", "Three"]);
     expect(rows.map((row) => row.occurrence)).toEqual([0, 1, 2]);
     expect(rows[0]?.duplicateCount).toBe(3);
   });
@@ -74,13 +74,13 @@ LastJoinedSessionPerCategory=Tres
       sample,
       "/Script/ShooterGame.ShooterGameUserSettings",
       "LastJoinedSessionPerCategory",
-      "Nuevo",
+      "New",
       1,
     );
     const rows = parseIniRows(next).filter(
       (row) => row.key === "LastJoinedSessionPerCategory",
     );
-    expect(rows.map((row) => row.value)).toEqual(["Uno", "Nuevo", "Tres"]);
+    expect(rows.map((row) => row.value)).toEqual(["One", "New", "Three"]);
   });
 
   it("exposes a short category name from the last segment", () => {

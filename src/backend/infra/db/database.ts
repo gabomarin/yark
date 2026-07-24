@@ -115,8 +115,8 @@ const MIGRATIONS: Migration[] = [
 ];
 
 /**
- * Abre (o crea) la base de datos y aplica migraciones pendientes
- * de forma transaccional usando PRAGMA user_version.
+ * Opens (or creates) the database and applies pending migrations
+ * transactionally using PRAGMA user_version.
  */
 export function openDatabase(path: string): DatabaseSync {
   const db = new DatabaseSync(path);

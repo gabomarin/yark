@@ -1,7 +1,7 @@
 /**
- * Revisión visual Overview según docs/visual-testing.md
- * Uso: node scripts/visual-overview.cjs
- * Requiere: npm run build previo.
+ * Overview visual review per docs/visual-testing.md
+ * Usage: node scripts/visual-overview.cjs
+ * Requires: prior npm run build.
  */
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -127,12 +127,12 @@ async function run() {
     page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
 
     await page.waitForLoadState("domcontentloaded");
-    await page.getByRole("heading", { name: "Servidores", level: 1 }).waitFor({
+    await page.getByRole("heading", { name: "Servers", level: 1 }).waitFor({
       timeout: 20000,
     });
 
-    // Asegurar ruta Overview / Servidores.
-    const serversNav = page.getByRole("button", { name: "Servidores" });
+    // Ensure Overview / Servers route.
+    const serversNav = page.getByRole("button", { name: "Servers" });
     if ((await serversNav.count()) > 0) {
       await serversNav.first().click();
     }
@@ -154,7 +154,7 @@ async function run() {
           path: path.join(outDir, `overview-${size.name}-scrolled.png`),
           fullPage: false,
         });
-        // Volver arriba para la siguiente resolución.
+        // Scroll back to top for the next resolution.
         await page.locator(".mantine-AppShell-main").first().evaluate((el) => {
           el.scrollTop = 0;
         });
@@ -209,7 +209,7 @@ async function run() {
       );
     }
 
-    // En QHD el contenido debe crecer claramente por encima del antiguo tope 1680.
+    // On QHD, content should clearly grow past the old 1680 cap.
     const qhd = reports.find((r) => r.size === "qhd-2k");
     assert.ok(qhd, "Falta reporte qhd-2k");
     assert.ok(

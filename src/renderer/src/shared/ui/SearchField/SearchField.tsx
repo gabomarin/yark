@@ -12,7 +12,7 @@ interface Props {
 export function SearchField({ value, onChange, placeholder, label }: Props): JSX.Element {
   return (
     <TextInput
-      aria-label={label ?? "Buscar"}
+      aria-label={label ?? "Search"}
       value={value}
       onChange={(event) => onChange(event.currentTarget.value)}
       placeholder={placeholder}

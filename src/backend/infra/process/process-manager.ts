@@ -16,7 +16,7 @@ interface ManagedProcess {
   startedAt: string;
   lastError: string | null;
   readinessGeneration: number;
-  /** Proceso envuelto en `start /WAIT` (consola nativa visible). */
+  /** Process wrapped in `start /WAIT` (visible native console). */
   nativeConsole: boolean;
 }
 
@@ -25,9 +25,9 @@ function quoteCmdArg(value: string): string {
 }
 
 /**
- * Lanza el dedicated en una consola Windows nueva y visible.
- * El ChildProcess es un `cmd /c start /WAIT` oculto que sigue vivo
- * mientras corre el servidor (permite stop/kill por árbol de procesos).
+ * Launches the dedicated in a new visible Windows console.
+ * The ChildProcess is a hidden `cmd /c start /WAIT` that stays alive
+ * while the server runs (allows stop/kill via process tree).
  */
 function spawnWithNativeConsole(
   binary: string,
@@ -42,7 +42,7 @@ function spawnWithNativeConsole(
     quoteCmdArg(cwd),
     "/WAIT",
     quoteCmdArg(binary),
-    // Siempre entrecomillar: el mapa ASA lleva `?` y cmd lo trata como comodín.
+    // Always quote: the ASA map has `?` and cmd treats it as a wildcard.
     ...args.map((arg) => quoteCmdArg(arg)),
   ];
   return spawn("cmd.exe", ["/c", parts.join(" ")], {
@@ -63,9 +63,9 @@ function killWinProcessTree(pid: number): boolean {
 }
 
 export interface ProcessManagerOptions {
-  /** Timeout esperando readiness (RCON / log). Default 10 minutos. */
+  /** Timeout waiting for readiness (RCON / log). Default 10 minutes. */
   readyTimeoutMs?: number;
-  /** Intervalo entre intentos RCON. Default 3s. */
+  /** Interval between RCON attempts. Default 3s. */
   readyPollMs?: number;
 }
 
@@ -77,7 +77,7 @@ const DEFAULT_READY_TIMEOUT_MS = 10 * 60 * 1000;
 const DEFAULT_READY_POLL_MS = 3000;
 const RCON_PROBE_TIMEOUT_MS = 2500;
 
-/** Señales típicas de log cuando el dedicated ya acepta jugadores. */
+/** Typical log signals when the dedicated already accepts players. */
 const READY_LOG_PATTERNS: RegExp[] = [
   /server has completed startup/i,
   /now advertising/i,
@@ -92,11 +92,11 @@ function delay(ms: number): Promise<void> {
 }
 
 /**
- * Gestiona el ciclo de vida de procesos de servidor ASA en Windows.
- * Emite "status" con ServerRuntimeInfo en cada transición.
+ * Manages ASA server process lifecycle on Windows.
+ * Emits "status" with ServerRuntimeInfo on each transition.
  *
- * `running` solo se asigna cuando el servidor responde por RCON (o hay
- * señal clara de log de startup completo), no al crear el proceso OS.
+ * `running` is only set when the server responds via RCON (or there is
+ * a clear full-startup log signal), not when the OS process is created.
  */
 export class ProcessManager extends EventEmitter {
   private readonly processes = new Map<string, ManagedProcess>();
@@ -147,12 +147,12 @@ export class ProcessManager extends EventEmitter {
 
   start(profile: ServerProfile, options?: StartServerOptions): void {
     if (this.isActive(profile.id)) {
-      throw new Error(`El servidor "${profile.name}" ya está en ejecución`);
+      throw new Error(`Server "${profile.name}" is already running`);
     }
     const binary = serverBinaryPath(profile.installDir);
     if (!existsSync(binary)) {
       throw new Error(
-        `No se encontró el ejecutable del servidor en: ${binary}`,
+        `Server executable not found at: ${binary}`,
       );
     }
 
@@ -172,12 +172,12 @@ export class ProcessManager extends EventEmitter {
           detached: false,
         });
 
-    this.appendRuntimeLog(profile.id, "system", `Iniciando proceso ${binary}`);
+    this.appendRuntimeLog(profile.id, "system", `Starting process ${binary}`);
     if (nativeConsole) {
       this.appendRuntimeLog(
         profile.id,
         "system",
-        "Consola nativa del servidor abierta (salida en vivo en esa ventana)",
+        "Native server console opened (live output in that window)",
       );
     }
     if (child.stdout !== null) {
@@ -209,7 +209,7 @@ export class ProcessManager extends EventEmitter {
       this.appendRuntimeLog(
         profile.id,
         "system",
-        "Proceso creado; esperando que el servidor quede listo (RCON / startup)",
+        "Process created; waiting for server readiness (RCON / startup)",
       );
       this.emitStatus(profile.id);
 
@@ -218,7 +218,7 @@ export class ProcessManager extends EventEmitter {
         this.appendRuntimeLog(
           profile.id,
           "system",
-          "Readiness omitido (skipReadinessCheck); estado running",
+          "Readiness skipped (skipReadinessCheck); status running",
         );
         this.emitStatus(profile.id);
         return;
@@ -232,7 +232,7 @@ export class ProcessManager extends EventEmitter {
       managed.readinessGeneration += 1;
       managed.status = "error";
       managed.lastError = err.message;
-      this.appendRuntimeLog(profile.id, "error", `Error de proceso: ${err.message}`);
+      this.appendRuntimeLog(profile.id, "error", `Process error: ${err.message}`);
       this.emitStatus(profile.id);
     });
 
@@ -243,7 +243,7 @@ export class ProcessManager extends EventEmitter {
       this.appendRuntimeLog(
         profile.id,
         "system",
-        `Proceso finalizado con código ${code ?? "desconocido"}`,
+        `Process exited with code ${code ?? "unknown"}`,
       );
       if (wasStopping || code === 0) {
         this.processes.delete(profile.id);
@@ -252,21 +252,21 @@ export class ProcessManager extends EventEmitter {
       }
       managed.status = "error";
       managed.lastError = wasStarting
-        ? `El proceso terminó durante el arranque (código ${code ?? "desconocido"})`
-        : `El proceso terminó inesperadamente (código ${code ?? "desconocido"})`;
+        ? `Process exited during startup (code ${code ?? "unknown"})`
+        : `Process exited unexpectedly (code ${code ?? "unknown"})`;
       this.emitStatus(profile.id);
     });
   }
 
   /**
-   * Parada segura: saveworld por RCON, espera, DoExit y fallback a kill.
+   * Safe stop: saveworld via RCON, wait, DoExit, then kill fallback.
    */
   async stop(profile: ServerProfile): Promise<void> {
     const managed = this.processes.get(profile.id);
     if (managed === undefined) return;
     managed.readinessGeneration += 1;
     managed.status = "stopping";
-    this.appendRuntimeLog(profile.id, "system", "Intentando parada segura por RCON");
+    this.appendRuntimeLog(profile.id, "system", "Attempting safe stop via RCON");
     this.emitStatus(profile.id);
 
     try {
@@ -284,8 +284,8 @@ export class ProcessManager extends EventEmitter {
         "DoExit",
       );
     } catch {
-      // RCON no disponible: se recurre a terminación del proceso.
-      this.appendRuntimeLog(profile.id, "warning", "RCON no disponible; aplicando kill");
+      // RCON unavailable: fall back to process termination.
+      this.appendRuntimeLog(profile.id, "warning", "RCON unavailable; applying kill");
       this.terminateManaged(managed);
     }
 
@@ -298,20 +298,20 @@ export class ProcessManager extends EventEmitter {
     this.emitStatus(profile.id);
   }
 
-  /** Terminación inmediata sin guardado (último recurso). */
+  /** Immediate termination without save (last resort). */
   kill(serverId: string): void {
     const managed = this.processes.get(serverId);
     if (managed === undefined) return;
     managed.readinessGeneration += 1;
     managed.status = "stopping";
-    this.appendRuntimeLog(serverId, "warning", "Forzando cierre del proceso");
+    this.appendRuntimeLog(serverId, "warning", "Forcing process shutdown");
     this.emitStatus(serverId);
     this.terminateManaged(managed);
     this.processes.delete(serverId);
     this.emitStatus(serverId);
   }
 
-  /** Detiene todos los procesos activos (cierre de la app). */
+  /** Stops all active processes (app shutdown). */
   async stopAll(profiles: ServerProfile[]): Promise<void> {
     await Promise.allSettled(
       profiles
@@ -338,7 +338,7 @@ export class ProcessManager extends EventEmitter {
         this.appendRuntimeLog(
           profile.id,
           "system",
-          "Señal de startup detectada en logs; verificando RCON…",
+          "Startup signal detected in logs; checking RCON…",
         );
       }
 
@@ -358,12 +358,12 @@ export class ProcessManager extends EventEmitter {
         this.appendRuntimeLog(
           profile.id,
           "system",
-          "Servidor listo: RCON respondió (en espera de conexiones)",
+          "Server ready: RCON responded (waiting for connections)",
         );
         this.emitStatus(profile.id);
         return;
       } catch {
-        // seguir intentando hasta timeout o salida del proceso
+        // keep trying until timeout or process exit
       }
 
       await delay(pollMs);
@@ -375,7 +375,7 @@ export class ProcessManager extends EventEmitter {
 
     managed.status = "error";
     managed.lastError =
-      "Timeout esperando que el servidor quede listo (RCON no respondió a tiempo)";
+      "Timeout waiting for server readiness (RCON did not respond in time)";
     this.appendRuntimeLog(profile.id, "error", managed.lastError);
     this.emitStatus(profile.id);
     try {

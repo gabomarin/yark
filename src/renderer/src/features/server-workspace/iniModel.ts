@@ -28,9 +28,9 @@ export interface IniSettingRow {
   section: string;
   key: string;
   value: string;
-  /** Índice 0-based entre claves iguales en la misma sección. */
+  /** 0-based index among duplicate keys in the same section. */
   occurrence: number;
-  /** Cuántas veces aparece section+key en el archivo. */
+  /** How many times section+key appears in the file. */
   duplicateCount: number;
 }
 
@@ -42,22 +42,22 @@ export type IniFilterId = "all" | AsaUiCategoryId;
 
 export type IniControlKind = "boolean" | "number" | "text";
 
-const UI_CATEGORY_LABELS_ES: Record<AsaUiCategoryId, string> = {
+const UI_CATEGORY_LABELS: Record<AsaUiCategoryId, string> = {
   general: "General",
-  rates: "Multiplicadores",
-  breeding: "Crianza",
-  dinos: "Dinosaurios",
-  structures: "Estructuras",
-  pvp: "JcJ",
-  pve: "JcE",
-  world: "Mundo",
-  players: "Jugadores",
-  tribes: "Tribus",
-  chat: "Chat y mensaje del día",
+  rates: "Rates",
+  breeding: "Breeding",
+  dinos: "Dinosaurs",
+  structures: "Structures",
+  pvp: "PvP",
+  pve: "PvE",
+  world: "World",
+  players: "Players",
+  tribes: "Tribes",
+  chat: "Chat and MOTD",
   mods: "Mods",
-  networking: "Red",
-  events: "Eventos",
-  other: "Otros",
+  networking: "Networking",
+  events: "Events",
+  other: "Other",
 };
 
 export interface IniUiCategoryGroup {
@@ -117,7 +117,7 @@ export function lookupSettingDescription(
   return lookupAsaDescription(fileKey, section, key) ?? humanizeKey(key);
 }
 
-/** Conserva el orden del archivo; no aplana secciones con puntos. */
+/** Preserves file order; does not flatten dotted sections. */
 export function parseIniRows(text: string): IniSettingRow[] {
   const raw = parseIniTextRows(text);
   const counts = new Map<string, number>();
@@ -164,8 +164,8 @@ export function inferControlKind(value: string): IniControlKind {
 }
 
 /**
- * Elige el control del editor. Prioriza valueType del catálogo ASA para no
- * tratar SessionName / ActiveMods / URLs / passwords como NumberInput.
+ * Choose the editor control. Prefer ASA catalog valueType so
+ * SessionName / ActiveMods / URLs / passwords are not treated as NumberInput.
  */
 export function resolveControlKind(
   value: string,
@@ -288,7 +288,7 @@ export function filterIniRows(
       description,
       humanizeKey(row.key),
       asaUiCategoryLabel(category),
-      UI_CATEGORY_LABELS_ES[category],
+      UI_CATEGORY_LABELS[category],
       category,
     ]
       .join(" ")
@@ -322,7 +322,7 @@ export function groupRowsBySection(
   return groups;
 }
 
-/** Agrupa por categoría UI (JSON heurístico), en orden de taxonomía. */
+/** Group by UI category (heuristic JSON), in taxonomy order. */
 export function groupRowsByUiCategory(
   rows: IniSettingRow[],
   fileKey: IniFileKey,
@@ -347,7 +347,7 @@ export function groupRowsByUiCategory(
     list.sort((a, b) => a.key.localeCompare(b.key) || a.section.localeCompare(b.section));
     groups.push({
       category: def.id,
-      label: UI_CATEGORY_LABELS_ES[def.id],
+      label: UI_CATEGORY_LABELS[def.id],
       rows: list,
     });
   }
@@ -385,7 +385,7 @@ export function groupSettingReferencesByUiCategory(
     );
     return [{
       category: definition.id,
-      label: UI_CATEGORY_LABELS_ES[definition.id],
+      label: UI_CATEGORY_LABELS[definition.id],
       rows: list,
     }];
   });

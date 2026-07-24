@@ -35,9 +35,9 @@ import { ASA_APP_ID } from "./steamcmd-content-cache";
 const MAX_STEAMCMD_LINES = 500;
 const CRITICAL_JOBS_KEY = "criticalJobsQueue.v1";
 const JOB_RETRY_DELAY_MS = 5000;
-/** Push a la UI: lo bastante frecuente para ver % en vivo sin saturar Electron. */
+/** UI push: frequent enough for live % without saturating Electron. */
 const PROGRESS_PUSH_MIN_MS = 100;
-/** No spamear la consola con cada tick \r de SteamCMD; sí actualizar la barra. */
+/** Do not spam the console on every SteamCMD \r tick; do update the bar. */
 const PROGRESS_CONSOLE_LOG_MIN_MS = 1500;
 const PROGRESS_CONSOLE_LOG_MIN_DELTA = 2;
 
@@ -71,7 +71,7 @@ function delay(ms: number): Promise<void> {
 }
 
 /**
- * Flujo seguro de actualización por instancia:
+ * Safe per-instance update flow:
  * pre-backup -> stop -> steamcmd update -> start -> health-check -> rollback.
  */
 export class UpdateService extends EventEmitter {
@@ -81,7 +81,7 @@ export class UpdateService extends EventEmitter {
   private queue: CriticalJob[] = [];
   private processingQueue = false;
   private readonly waiters = new Map<string, { resolve: () => void; reject: (error: Error) => void }>();
-  /** Timestamp de la última actualización exitosa de asa_content_cache en esta sesión. */
+  /** Timestamp of the last successful asa_content_cache update in this session. */
   private contentCacheUpdatedAtMs = 0;
   private progressPercent: number | null = null;
   private progressLabel: string | null = null;
@@ -96,7 +96,7 @@ export class UpdateService extends EventEmitter {
   private lastProgressConsoleLogAtMs = 0;
   private lastProgressConsoleLoggedPercent: number | null = null;
   private steamCmdOutputBuffers = new Map<string, string>();
-  /** Última vez que stdout de SteamCMD aportó un % real (no estimado). */
+  /** Last time SteamCMD stdout provided a real % (not estimated). */
   private lastOfficialProgressAtMs = 0;
   private diskProgressTimer: ReturnType<typeof setInterval> | null = null;
   private diskProgressInFlight = false;
@@ -119,7 +119,7 @@ export class UpdateService extends EventEmitter {
     super();
     this.queue = this.loadQueue();
     if (this.queue.length > 0) {
-      this.appendSteamCmdConsole(`Reanudando ${this.queue.length} job(s) críticos pendientes`);
+      this.appendSteamCmdConsole(`Resuming ${this.queue.length} pending critical job(s)`);
       setTimeout(() => {
         void this.processQueue();
       }, 250);
@@ -127,13 +127,13 @@ export class UpdateService extends EventEmitter {
   }
 
   async installSteamCmd(): Promise<string> {
-    this.appendSteamCmdConsole("Iniciando verificación/instalación de SteamCMD...");
+    this.appendSteamCmdConsole("Starting SteamCMD verification/installation...");
     const existing = this.findSteamCmdExecutable();
     if (existing !== null) {
-      this.appendSteamCmdConsole(`SteamCMD detectado en: ${existing}`);
+      this.appendSteamCmdConsole(`SteamCMD detected at: ${existing}`);
       await this.verifySteamCmdExecutable(existing);
       this.persistSteamCmdPath(existing);
-      this.appendSteamCmdConsole("SteamCMD validado correctamente.");
+      this.appendSteamCmdConsole("SteamCMD validated successfully.");
       return existing;
     }
 
@@ -188,13 +188,13 @@ export class UpdateService extends EventEmitter {
 
       child.once("error", (error) => {
         this.endSteamCmdProcess(child);
-        reject(new Error(`No se pudo ejecutar PowerShell: ${error.message}`));
+        reject(new Error(`Could not run PowerShell: ${error.message}`));
       });
 
       child.once("exit", (code) => {
         this.endSteamCmdProcess(child);
         if ((code ?? 1) !== 0) {
-          reject(new Error(`Falló instalación de SteamCMD (exit ${code ?? 1}): ${stderr}`));
+          reject(new Error(`SteamCMD installation failed (exit ${code ?? 1}): ${stderr}`));
           return;
         }
         resolve();
@@ -202,12 +202,12 @@ export class UpdateService extends EventEmitter {
     });
 
     if (!existsSync(exePath)) {
-      throw new Error(`SteamCMD no quedó instalado en ${exePath}`);
+      throw new Error(`SteamCMD was not installed at ${exePath}`);
     }
 
     await this.verifySteamCmdExecutable(exePath);
     this.persistSteamCmdPath(exePath);
-    this.appendSteamCmdConsole(`SteamCMD instalado y validado en: ${exePath}`);
+    this.appendSteamCmdConsole(`SteamCMD installed and validated at: ${exePath}`);
     return exePath;
   }
 
@@ -263,7 +263,7 @@ export class UpdateService extends EventEmitter {
       || this.queue.length > 0;
 
     if (!hadWork) {
-      this.appendSteamCmdConsole("Cancelar: no hay operación activa");
+      this.appendSteamCmdConsole("Cancel: no active operation");
       this.emitProgress(true);
       return false;
     }
@@ -271,9 +271,9 @@ export class UpdateService extends EventEmitter {
     this.cancelRequested = true;
     this.stopDiskProgressMonitor();
     this.appendSteamCmdConsole(
-      `Cancelando operación (steamcmd=${this.activeSteamCmd?.child.pid ?? "n/a"}, sync=${this.activeSyncChild?.pid ?? "n/a"}, jobs=${this.queue.length})`,
+      `Cancelling operation (steamcmd=${this.activeSteamCmd?.child.pid ?? "n/a"}, sync=${this.activeSyncChild?.pid ?? "n/a"}, jobs=${this.queue.length})`,
     );
-    this.setProgress(null, "Cancelando…", "Cancelación solicitada por el usuario");
+    this.setProgress(null, "Cancelling…", "Cancellation requested by the user");
 
     if (this.activeSteamCmd !== null) {
       const child = this.activeSteamCmd.child;
@@ -294,14 +294,14 @@ export class UpdateService extends EventEmitter {
         job.serverId,
         "update_failed",
         "warning",
-        `Operación ${job.type} cancelada por el usuario`,
+        `Operation ${job.type} cancelled by the user`,
       );
       this.rejectJob(job.id, new OperationCancelledError());
     }
 
     this.syncingServerId = null;
     this.syncingStartedAt = null;
-    this.setProgress(null, "Cancelado", "Operación cancelada por el usuario");
+    this.setProgress(null, "Cancelled", "Operation cancelled by the user");
     this.emitProgress(true);
     return true;
   }
@@ -309,15 +309,15 @@ export class UpdateService extends EventEmitter {
   async setSteamCmdExecutablePath(exePath: string): Promise<string> {
     const normalized = exePath.trim();
     if (normalized.length === 0) {
-      throw new Error("Ruta de SteamCMD vacía");
+      throw new Error("SteamCMD path is empty");
     }
     if (!existsSync(normalized)) {
-      throw new Error(`No existe steamcmd.exe en: ${normalized}`);
+      throw new Error(`steamcmd.exe not found at: ${normalized}`);
     }
     await this.verifySteamCmdExecutable(normalized);
     this.persistSteamCmdPath(normalized);
     this.contentCacheUpdatedAtMs = 0;
-    this.appendSteamCmdConsole(`Ruta manual de SteamCMD configurada: ${normalized}`);
+    this.appendSteamCmdConsole(`Manual SteamCMD path configured: ${normalized}`);
     return normalized;
   }
 
@@ -334,19 +334,19 @@ export class UpdateService extends EventEmitter {
   }
 
   async updateServer(serverId: string): Promise<void> {
-    this.assertServerStoppedForFilesJob(serverId, "actualizar");
+    this.assertServerStoppedForFilesJob(serverId, "update");
     await this.enqueueAndWait("update", serverId);
   }
 
-  /** Fuerza app_update validate (ignora caché “fresca”) y sincroniza al servidor. */
+  /** Forces app_update validate (ignores “fresh” cache) and syncs to the server. */
   async verifyServerFiles(serverId: string): Promise<void> {
-    this.assertServerStoppedForFilesJob(serverId, "verificar");
+    this.assertServerStoppedForFilesJob(serverId, "verify");
     await this.enqueueAndWait("verify-files", serverId);
   }
 
   private assertServerStoppedForFilesJob(serverId: string, action: string): void {
     if (this.processes.isActive(serverId)) {
-      throw new Error(`Detén el servidor antes de ${action}`);
+      throw new Error(`Stop the server before ${action}`);
     }
   }
 
@@ -354,7 +354,7 @@ export class UpdateService extends EventEmitter {
     await this.locks.withLock(serverId, "install-files", async () => {
       const server = this.servers.get(serverId);
       if (server === null) {
-        throw new Error("El servidor no existe");
+        throw new Error("Server does not exist");
       }
 
       await mkdir(server.installDir, { recursive: true });
@@ -362,7 +362,7 @@ export class UpdateService extends EventEmitter {
         serverId,
         "update_started",
         "info",
-        `Instalando archivos base por SteamCMD en "${server.name}"`,
+        `Installing base files via SteamCMD on "${server.name}"`,
       );
 
       const cmd = await this.runSteamUpdate(server.installDir, "install-files", serverId);
@@ -371,16 +371,16 @@ export class UpdateService extends EventEmitter {
           serverId,
           "update_failed",
           "error",
-          `Falló instalación base (exit ${cmd.code})`,
+          `Base install failed (exit ${cmd.code})`,
         );
-        throw new Error(`SteamCMD finalizó con código ${cmd.code}`);
+        throw new Error(`SteamCMD exited with code ${cmd.code}`);
       }
 
       this.servers.addEvent(
         serverId,
         "update_completed",
         "info",
-        `Archivos base instalados para "${server.name}"`,
+        `Base files installed for "${server.name}"`,
       );
     });
   }
@@ -389,7 +389,7 @@ export class UpdateService extends EventEmitter {
     await this.locks.withLock(serverId, "update", async () => {
       const server = this.servers.get(serverId);
       if (server === null) {
-        throw new Error("El servidor no existe");
+        throw new Error("Server does not exist");
       }
 
       const wasRunning = this.processes.isActive(serverId);
@@ -398,7 +398,7 @@ export class UpdateService extends EventEmitter {
         serverId,
         "update_started",
         "info",
-        `Inicio de update seguro para \"${server.name}\"`,
+        `Starting safe update for \"${server.name}\"`,
       );
 
       const preUpdateBackup = await this.backups.createPreUpdateBackupForJob(serverId);
@@ -433,28 +433,28 @@ export class UpdateService extends EventEmitter {
 
         if (cmd.code !== 0) {
           throw new Error(
-            `SteamCMD finalizó con código ${cmd.code}. Revisa log: ${logPath}`,
+            `SteamCMD exited with code ${cmd.code}. Check log: ${logPath}`,
           );
         }
 
         await this.instances.start(serverId);
         const healthy = await this.waitForHealthy(serverId, 90_000);
         if (!healthy) {
-          throw new Error("El servidor no alcanzó estado running tras update");
+          throw new Error("Server did not reach running state after update");
         }
 
         this.servers.addEvent(
           serverId,
           "update_completed",
           "info",
-          `Update completado en \"${server.name}\"`,
+          `Update completed on \"${server.name}\"`,
         );
       } catch (err) {
         this.servers.addEvent(
           serverId,
           "update_failed",
           "error",
-          `Fallo update en \"${server.name}\": ${
+          `Update failed on \"${server.name}\": ${
             err instanceof Error ? err.message : String(err)
           }`,
         );
@@ -468,7 +468,7 @@ export class UpdateService extends EventEmitter {
         const rollbackHealthy = await this.waitForHealthy(serverId, 90_000);
         if (!rollbackHealthy) {
           throw new Error(
-            "Rollback ejecutado pero el servidor no logró quedar en running",
+            "Rollback ran but the server did not return to running",
           );
         }
 
@@ -476,7 +476,7 @@ export class UpdateService extends EventEmitter {
           serverId,
           "update_rolled_back",
           "warning",
-          `Update revertido automáticamente usando backup ${preUpdateBackup.id}`,
+          `Update automatically rolled back using backup ${preUpdateBackup.id}`,
         );
       }
     });
@@ -486,7 +486,7 @@ export class UpdateService extends EventEmitter {
     await this.locks.withLock(serverId, "verify-files", async () => {
       const server = this.servers.get(serverId);
       if (server === null) {
-        throw new Error("El servidor no existe");
+        throw new Error("Server does not exist");
       }
 
       const wasRunning = this.processes.isActive(serverId);
@@ -494,12 +494,12 @@ export class UpdateService extends EventEmitter {
         serverId,
         "update_started",
         "info",
-        `Verificando integridad de archivos (SteamCMD validate) en "${server.name}"`,
+        `Verifying file integrity (SteamCMD validate) on "${server.name}"`,
       );
 
       if (wasRunning) {
         this.appendSteamCmdConsole(
-          `Deteniendo "${server.name}" antes de verificar integridad…`,
+          `Stopping "${server.name}" before integrity check…`,
         );
         await this.instances.stop(serverId);
       }
@@ -512,16 +512,16 @@ export class UpdateService extends EventEmitter {
             serverId,
             "update_failed",
             "error",
-            `Falló verificación de integridad (exit ${cmd.code})`,
+            `Integrity verification failed (exit ${cmd.code})`,
           );
-          throw new Error(`SteamCMD validate finalizó con código ${cmd.code}`);
+          throw new Error(`SteamCMD validate exited with code ${cmd.code}`);
         }
 
         this.servers.addEvent(
           serverId,
           "update_completed",
           "info",
-          `Integridad verificada para "${server.name}"`,
+          `Integrity verified for "${server.name}"`,
         );
 
         if (wasRunning) {
@@ -529,7 +529,7 @@ export class UpdateService extends EventEmitter {
           const healthy = await this.waitForHealthy(serverId, 90_000);
           if (!healthy) {
             throw new Error(
-              "Verificación OK pero el servidor no volvió a running",
+              "Verification OK but the server did not return to running",
             );
           }
         }
@@ -538,7 +538,7 @@ export class UpdateService extends EventEmitter {
           try {
             await this.instances.start(serverId);
           } catch {
-            // El error original es más relevante.
+            // The original error is more relevant.
           }
         }
         throw error;
@@ -577,17 +577,17 @@ export class UpdateService extends EventEmitter {
     this.persistQueue();
     this.progressLabel =
       type === "install-files"
-        ? "En cola: instalar archivos…"
+        ? "Queued: install files…"
         : type === "verify-files"
-          ? "En cola: verificar integridad…"
-          : "En cola: actualizar…";
-    this.lastProgressLine = `Job encolado: ${type}`;
+          ? "Queued: verify integrity…"
+          : "Queued: update…";
+    this.lastProgressLine = `Job queued: ${type}`;
     this.emitProgress(true);
     this.servers.addEvent(
       serverId,
       "update_started",
       "info",
-      `Job encolado: ${type} (${job.id.slice(0, 8)})`,
+      `Job queued: ${type} (${job.id.slice(0, 8)})`,
     );
 
     const completion = new Promise<void>((resolve, reject) => {
@@ -628,13 +628,13 @@ export class UpdateService extends EventEmitter {
           this.removeJob(job.id);
           this.persistQueue();
           if (this.queue.length === 0 && this.activeSteamCmd === null && this.syncingServerId === null) {
-            this.setProgress(100, "Completado", "Operación finalizada");
+            this.setProgress(100, "Completed", "Operation finished");
             this.emitProgress(true);
           }
         } catch (error) {
           if (this.cancelRequested || isOperationCancelledError(error)) {
             this.appendSteamCmdConsole(
-              `Job ${job.type} detenido tras cancelación`,
+              `Job ${job.type} stopped after cancellation`,
             );
             this.rejectJob(
               job.id,
@@ -646,7 +646,7 @@ export class UpdateService extends EventEmitter {
             this.persistQueue();
             this.cancelRequested = false;
             this.endFileSync();
-            this.setProgress(null, "Cancelado", "Operación cancelada por el usuario");
+            this.setProgress(null, "Cancelled", "Operation cancelled by the user");
             this.emitProgress(true);
             break;
           }
@@ -661,7 +661,7 @@ export class UpdateService extends EventEmitter {
               job.serverId,
               "update_failed",
               "error",
-              `Job ${job.type} agotó reintentos (${job.maxAttempts}): ${job.lastError}`,
+              `Job ${job.type} exhausted retries (${job.maxAttempts}): ${job.lastError}`,
             );
             this.removeJob(job.id);
             this.persistQueue();
@@ -674,7 +674,7 @@ export class UpdateService extends EventEmitter {
             job.serverId,
             "update_failed",
             "warning",
-            `Job ${job.type} reintentará (${job.attempts}/${job.maxAttempts})`,
+            `Job ${job.type} will retry (${job.attempts}/${job.maxAttempts})`,
           );
           await delay(JOB_RETRY_DELAY_MS);
         }
@@ -699,7 +699,7 @@ export class UpdateService extends EventEmitter {
     await mkdir(depotCacheDir, { recursive: true });
 
     this.appendSteamCmdConsole(
-      `Caché SteamCMD: depot=${depotCacheDir} | contenido ASA=${contentCacheDir}`,
+      `SteamCMD cache: depot=${depotCacheDir} | ASA content=${contentCacheDir}`,
     );
 
     const cacheResult = await this.ensureAsaContentCache(
@@ -715,14 +715,14 @@ export class UpdateService extends EventEmitter {
     }
 
     this.appendSteamCmdConsole(
-      `Sincronizando caché ASA → ${installDir} (preserva ShooterGame\\Saved)`,
+      `Syncing ASA cache → ${installDir} (preserves ShooterGame\\Saved)`,
     );
     const syncLabel =
       operation === "verify-files"
-        ? "Aplicando archivos verificados…"
+        ? "Applying verified files…"
         : operation === "install-files"
-          ? "Instalando archivos…"
-          : "Actualizando archivos…";
+          ? "Installing files…"
+          : "Updating files…";
     this.beginFileSync(serverId, syncLabel);
     try {
       const robocopyCode = await syncAsaContentCacheToInstallDir(contentCacheDir, installDir, {
@@ -733,12 +733,12 @@ export class UpdateService extends EventEmitter {
       });
       this.activeSyncChild = null;
       this.appendSteamCmdConsole(
-        `Sincronización de caché ASA completada (robocopy=${robocopyCode})`,
+        `ASA cache sync completed (robocopy=${robocopyCode})`,
       );
       this.setProgress(
         100,
-        operation === "verify-files" ? "Integridad OK" : "Archivos sincronizados",
-        operation === "verify-files" ? "Verificación completada" : "Sincronización completada",
+        operation === "verify-files" ? "Integrity OK" : "Files synced",
+        operation === "verify-files" ? "Verification complete" : "Sync complete",
       );
     } catch (error) {
       this.activeSyncChild = null;
@@ -747,7 +747,7 @@ export class UpdateService extends EventEmitter {
         throw isOperationCancelledError(error) ? error : new OperationCancelledError();
       }
       const message = error instanceof Error ? error.message : String(error);
-      this.appendSteamCmdConsole(`Falló sync de caché; instalando directo en el servidor: ${message}`);
+      this.appendSteamCmdConsole(`Cache sync failed; installing directly on the server: ${message}`);
       return await this.invokeSteamCmdAppUpdate(
         steamcmdExe,
         steamCmdHome,
@@ -771,15 +771,15 @@ export class UpdateService extends EventEmitter {
     if (shouldReuseAsaContentCache(operation, contentCacheDir, this.contentCacheUpdatedAtMs)) {
       const ageSec = Math.round((Date.now() - this.contentCacheUpdatedAtMs) / 1000);
       this.appendSteamCmdConsole(
-        `Reutilizando caché de contenido ASA (actualizada hace ${ageSec}s; sin re-descarga)`,
+        `Reusing ASA content cache (updated ${ageSec}s ago; no re-download)`,
       );
       return { code: 0, stdout: "", stderr: "" };
     }
 
     this.appendSteamCmdConsole(
       operation === "verify-files"
-        ? `Verificando integridad de caché ASA vía SteamCMD validate (depotcache en ${steamCmdHome})`
-        : `Actualizando caché compartida ASA vía SteamCMD (reutiliza depotcache en ${steamCmdHome})`,
+        ? `Verifying ASA cache integrity via SteamCMD validate (depotcache at ${steamCmdHome})`
+        : `Updating shared ASA cache via SteamCMD (reuses depotcache at ${steamCmdHome})`,
     );
     const result = await this.invokeSteamCmdAppUpdate(
       steamcmdExe,
@@ -809,7 +809,7 @@ export class UpdateService extends EventEmitter {
       `[invoke] op=${operation} server=${serverId} cwd=${steamCmdHome} cmd=${steamcmdExe} args=${args.join(" ")}`,
     );
     this.appendSteamCmdConsole(
-      "Progreso en vivo: se lee logs/console_log.txt + appmanifest/downloading de esta instalación (stdout de SteamCMD suele ir bufferizado).",
+      "Live progress: reading logs/console_log.txt + appmanifest/downloading for this install (SteamCMD stdout is often buffered).",
     );
 
     return await new Promise<CommandResult>((resolve, reject) => {
@@ -819,7 +819,7 @@ export class UpdateService extends EventEmitter {
         shell: false,
         env: {
           ...process.env,
-          // Intento best-effort; builds recientes pueden ignorarlo.
+          // Best-effort attempt; recent builds may ignore it.
           STEAMCMD_OUTPUT_BUFFERS: "0",
         },
       });
@@ -845,7 +845,7 @@ export class UpdateService extends EventEmitter {
         this.endSteamCmdProcess(child);
         reject(
           new Error(
-            `No se pudo ejecutar SteamCMD (${steamcmdExe}). Instálalo o configúralo. Detalle: ${error.message}`,
+            `Could not run SteamCMD (${steamcmdExe}). Install or configure it. Detail: ${error.message}`,
           ),
         );
       });
@@ -867,10 +867,10 @@ export class UpdateService extends EventEmitter {
   }
 
   /**
-   * Progreso sin depender del pipe stdout:
-   * - tail de logs/console_log.txt (tiempo casi real)
-   * - appmanifest BytesDownloaded de ESTA instalación
-   * - tamaño de steamapps/downloading bajo force_install_dir
+   * Progress without depending on the stdout pipe:
+   * - tail of logs/console_log.txt (near real-time)
+   * - appmanifest BytesDownloaded for THIS install
+   * - size of steamapps/downloading under force_install_dir
    */
   private startDiskProgressMonitor(steamCmdHome: string, forceInstallDir: string): void {
     this.stopDiskProgressMonitor();
@@ -897,7 +897,7 @@ export class UpdateService extends EventEmitter {
       this.diskProgressBaselineBytes = baseline;
     });
 
-    this.appendSteamCmdConsole(`Siguiendo log en vivo: ${logPath}`);
+    this.appendSteamCmdConsole(`Following live log: ${logPath}`);
 
     this.diskProgressTimer = setInterval(() => {
       void this.tickDiskProgressEstimate();
@@ -923,14 +923,14 @@ export class UpdateService extends EventEmitter {
 
     this.diskProgressInFlight = true;
     try {
-      // 1) Consola en vivo desde console_log.txt (prioridad para %/MB)
+      // 1) Live console from console_log.txt (priority for %/MB)
       const logChunk = await readConsoleLogSince(steamCmdHome, this.consoleLogOffset);
       this.consoleLogOffset = logChunk.nextOffset;
       if (logChunk.text.length > 0) {
         this.captureSteamCmdOutput(logChunk.text, "console_log");
       }
 
-      // Si console_log/stdout ya aportó progreso reciente, NO pisar con appmanifest (suele ir atrasado).
+      // If console_log/stdout already provided recent progress, do NOT overwrite with appmanifest (often behind).
       if (
         this.lastOfficialProgressAtMs > 0
         && Date.now() - this.lastOfficialProgressAtMs < 5_000
@@ -938,7 +938,7 @@ export class UpdateService extends EventEmitter {
         return;
       }
 
-      // 2) Fallback: appmanifest de ESTA instalación
+      // 2) Fallback: appmanifest for THIS install
       const manifest = await readInstallAppManifestProgress(installDir, ASA_APP_ID);
       if (
         manifest !== null
@@ -951,7 +951,7 @@ export class UpdateService extends EventEmitter {
         if (manifest.percent !== null) {
           this.progressPercent = manifest.percent;
         }
-        this.progressLabel = `Descargando · ${formatSteamCmdByteProgress(
+        this.progressLabel = `Downloading · ${formatSteamCmdByteProgress(
           manifest.bytesDownloaded,
           manifest.bytesToDownload,
         )}`;
@@ -960,7 +960,7 @@ export class UpdateService extends EventEmitter {
         return;
       }
 
-      // 3) Fallback: tamaño de downloading/temp solo bajo force_install_dir
+      // 3) Fallback: downloading/temp size only under force_install_dir
       const bytesOnDisk = await measureInstallDownloadingBytes(installDir);
       if (this.diskProgressForceInstallDir !== installDir || this.cancelRequested) {
         return;
@@ -977,7 +977,7 @@ export class UpdateService extends EventEmitter {
       this.progressPercent = estimate.percent;
       this.progressBytesDownloaded = estimate.downloaded;
       this.progressBytesTotal = estimate.total;
-      this.progressLabel = `Descargando (estimado) · ${formatSteamCmdByteProgress(
+      this.progressLabel = `Downloading (estimated) · ${formatSteamCmdByteProgress(
         estimate.downloaded,
         estimate.total,
       )}`;
@@ -988,7 +988,7 @@ export class UpdateService extends EventEmitter {
       if (now - this.lastDiskEstimateConsoleAtMs >= 5000) {
         this.lastDiskEstimateConsoleAtMs = now;
         this.steamCmdConsoleLines.push(
-          `[${new Date().toISOString()}] [estimado/downloading] ${estimate.percent.toFixed(1)}% — ${formatSteamCmdByteProgress(estimate.downloaded, estimate.total)}`,
+          `[${new Date().toISOString()}] [estimated/downloading] ${estimate.percent.toFixed(1)}% — ${formatSteamCmdByteProgress(estimate.downloaded, estimate.total)}`,
         );
         if (this.steamCmdConsoleLines.length > MAX_STEAMCMD_LINES) {
           this.steamCmdConsoleLines.splice(
@@ -1062,7 +1062,7 @@ export class UpdateService extends EventEmitter {
         return fromPath;
       }
     } catch {
-      // Best effort: si where.exe no encuentra steamcmd, continúa sin ruta detectada.
+      // Best effort: if where.exe does not find steamcmd, continue without a detected path.
     }
 
     return null;
@@ -1076,7 +1076,7 @@ export class UpdateService extends EventEmitter {
 
   private async verifySteamCmdExecutable(exePath: string): Promise<void> {
     await new Promise<void>((resolve, reject) => {
-      this.appendSteamCmdConsole(`Validando SteamCMD: ${exePath}`);
+      this.appendSteamCmdConsole(`Validating SteamCMD: ${exePath}`);
       const child = spawn(exePath, ["+quit"], {
         cwd: resolveSteamCmdHome(exePath),
         windowsHide: true,
@@ -1112,7 +1112,7 @@ export class UpdateService extends EventEmitter {
         }
         finished = true;
         clearTimeout(timer);
-        reject(new Error(`SteamCMD existe pero no se puede ejecutar: ${error.message}`));
+        reject(new Error(`SteamCMD exists but cannot be executed: ${error.message}`));
       });
 
       child.once("exit", (code) => {
@@ -1128,7 +1128,7 @@ export class UpdateService extends EventEmitter {
 
         reject(
           new Error(
-            `SteamCMD no respondió correctamente (exit ${code ?? 1})${
+            `SteamCMD did not respond correctly (exit ${code ?? 1})${
               stderr.length > 0 ? `: ${stderr}` : ""
             }`,
           ),
@@ -1164,8 +1164,8 @@ export class UpdateService extends EventEmitter {
   }
 
   /**
-   * SteamCMD escribe el progreso con \\r (misma línea) casi sin \\n.
-   * Hay que fragmentar por CR/LF o la UI no ve avance hasta mucho después.
+   * SteamCMD writes progress with \\r (same line) almost without \\n.
+   * Must split on CR/LF or the UI sees no progress until much later.
    */
   private captureSteamCmdOutput(chunk: string, source: string): void {
     const previous = this.steamCmdOutputBuffers.get(source) ?? "";
@@ -1184,7 +1184,7 @@ export class UpdateService extends EventEmitter {
   }
 
   private handleSteamCmdOutputLine(line: string, source: string): void {
-    // Quitar prefijos de fuente y timestamps propios de console_log.txt
+    // Strip source prefixes and console_log.txt timestamps
     const bare = line
       .replace(/^\[(?:(?:update|verify)\/(?:stdout|stderr)|console_log)\]\s*/i, "")
       .replace(/^\[\d{4}-\d{2}-\d{2}[^\]]*\]\s*/, "")
@@ -1311,19 +1311,19 @@ export class UpdateService extends EventEmitter {
     serverId: string | null,
   ): void {
     if (this.activeSteamCmd !== null) {
-      throw new Error("Ya hay una operación de SteamCMD en curso");
+      throw new Error("A SteamCMD operation is already in progress");
     }
     this.steamCmdOutputBuffers.clear();
     this.lastProgressConsoleLogAtMs = 0;
     this.lastProgressConsoleLoggedPercent = null;
     if (operation === "install-files") {
-      this.setProgress(0, "Descargando archivos del servidor…", "Iniciando SteamCMD");
+      this.setProgress(0, "Downloading server files…", "Starting SteamCMD");
     } else if (operation === "update") {
-      this.setProgress(0, "Actualizando archivos del servidor…", "Iniciando SteamCMD");
+      this.setProgress(0, "Updating server files…", "Starting SteamCMD");
     } else if (operation === "verify-files") {
-      this.setProgress(0, "Verificando integridad…", "Iniciando SteamCMD validate");
+      this.setProgress(0, "Verifying integrity…", "Starting SteamCMD validate");
     } else {
-      this.setProgress(null, "Instalando SteamCMD…", "Iniciando instalación de SteamCMD");
+      this.setProgress(null, "Installing SteamCMD…", "Starting SteamCMD installation");
     }
     this.activeSteamCmd = {
       child,
@@ -1336,7 +1336,7 @@ export class UpdateService extends EventEmitter {
 
   private endSteamCmdProcess(child: ChildProcess): void {
     if (this.activeSteamCmd?.child === child) {
-      // Vaciar restos del buffer (\r sin cerrar).
+      // Flush remaining buffer (\r without newline).
       for (const [source, remainder] of this.steamCmdOutputBuffers) {
         const trimmed = remainder.trim();
         if (trimmed.length > 0) {
@@ -1360,7 +1360,7 @@ export class UpdateService extends EventEmitter {
         });
         return;
       } catch {
-        // Fallback a kill directo si taskkill falla.
+        // Fall back to direct kill if taskkill fails.
       }
     }
     child.kill();

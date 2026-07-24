@@ -51,8 +51,8 @@ async function directorySize(path: string): Promise<number> {
 }
 
 /**
- * Gestión de backups y restore local para instancias ASA.
- * Copia carpeta SavedArks + configuración WindowsServer.
+ * Local backup and restore management for ASA instances.
+ * Copies SavedArks folder + WindowsServer config.
  */
 export class BackupService {
   private queue: BackupCriticalJob[] = [];
@@ -86,7 +86,7 @@ export class BackupService {
   }
 
   async createScheduledBackup(serverId: string): Promise<BackupRecord> {
-    return this.createBackup(serverId, "scheduled", "Backup programado");
+    return this.createBackup(serverId, "scheduled", "Scheduled backup");
   }
 
   async createPreUpdateBackupForJob(serverId: string): Promise<BackupRecord> {
@@ -112,13 +112,13 @@ export class BackupService {
   ): BackupPolicy {
     this.mustServer(serverId);
     if (policy.intervalMinutes < 15) {
-      throw new Error("El intervalo mínimo de backup es 15 minutos");
+      throw new Error("Minimum backup interval is 15 minutes");
     }
     if (policy.retainCount < 1 || policy.retainCount > 500) {
-      throw new Error("retainCount debe estar entre 1 y 500");
+      throw new Error("retainCount must be between 1 and 500");
     }
     if (policy.retainDays < 1 || policy.retainDays > 365) {
-      throw new Error("retainDays debe estar entre 1 y 365");
+      throw new Error("retainDays must be between 1 and 365");
     }
     return this.backups.setPolicy({
       serverId,
@@ -132,11 +132,11 @@ export class BackupService {
   async restoreBackup(serverId: string, backupId: string): Promise<void> {
     const server = this.mustServer(serverId);
     if (this.processes.isActive(serverId)) {
-      throw new Error("Detén el servidor antes de restaurar un backup");
+      throw new Error("Stop the server before restoring a backup");
     }
     const backup = this.backups.getBackup(backupId);
     if (backup === null || backup.serverId !== serverId || backup.status !== "completed") {
-      throw new Error("Backup no válido para restauración");
+      throw new Error("Invalid backup for restore");
     }
 
     const restoreHistoryId = this.backups.insertRestoreHistory({
@@ -147,8 +147,8 @@ export class BackupService {
     });
 
     try {
-      // Salvaguarda antes de reemplazar datos del servidor.
-      await this.createBackup(serverId, "pre_restore", "Salvaguarda antes de restore");
+      // Safeguard before replacing server data.
+      await this.createBackup(serverId, "pre_restore", "Safeguard before restore");
       const savedArksDir = this.savedArksDir(server);
       const configDir = this.configDir(server);
       const backupSaved = join(backup.path, "SavedArks");
@@ -169,7 +169,7 @@ export class BackupService {
         serverId,
         "backup_restored",
         "info",
-        `Restore aplicado en \"${server.name}\" desde backup ${backup.id}`,
+        `Restore applied on \"${server.name}\" from backup ${backup.id}`,
       );
       this.backups.completeRestoreHistory(restoreHistoryId, "completed", null);
     } catch (err) {
@@ -190,18 +190,18 @@ export class BackupService {
       serverId,
       "server_stopped",
       "info",
-      `Servidor \"${server.name}\" detenido para restart seguro`,
+      `Server \"${server.name}\" stopped for safe restart`,
     );
     this.processes.start(server);
     this.servers.addEvent(
       serverId,
       "server_started",
       "info",
-      `Servidor \"${server.name}\" reiniciado con backup previo`,
+      `Server \"${server.name}\" restarted with prior backup`,
     );
   }
 
-  /** Ejecuta backups por política y limpia retención por servidor. */
+  /** Runs policy backups and cleans retention per server. */
   async runScheduledCycle(): Promise<void> {
     const allServers = this.servers.list();
     for (const server of allServers) {
@@ -224,7 +224,7 @@ export class BackupService {
           server.id,
           "error",
           "error",
-          `Fallo backup programado de \"${server.name}\": ${
+          `Scheduled backup failed for \"${server.name}\": ${
             err instanceof Error ? err.message : String(err)
           }`,
         );
@@ -235,7 +235,7 @@ export class BackupService {
   private mustServer(serverId: string): ServerProfile {
     const server = this.servers.get(serverId);
     if (server === null) {
-      throw new Error("El servidor no existe");
+      throw new Error("Server does not exist");
     }
     return server;
   }
@@ -265,7 +265,7 @@ export class BackupService {
         try {
           await rconExec(RCON_HOST, server.rconPort, server.adminPassword, "SaveWorld");
         } catch {
-          // Un backup en caliente puede continuar aunque falle SaveWorld.
+          // A hot backup can continue even if SaveWorld fails.
         }
       }
 
@@ -276,7 +276,7 @@ export class BackupService {
       let savedArksPresent = false;
       let configPresent = false;
 
-      // Servidor nuevo: aún no hay mundo (SavedArks). No bloquear update/backup.
+      // New server: no world yet (SavedArks). Do not block update/backup.
       if (existsSync(savedArks)) {
         await cp(savedArks, savedArksDest, {
           recursive: true,
@@ -325,18 +325,18 @@ export class BackupService {
       const sizeBytes = await directorySize(targetDir);
       const completed = this.backups.completeBackup(record.id, sizeBytes);
       if (completed === null) {
-        throw new Error("No se pudo marcar el backup como completado");
+        throw new Error("Could not mark backup as completed");
       }
 
       const missingHint =
         !savedArksPresent
-          ? " (sin SavedArks aún — servidor sin mundo guardado)"
+          ? " (no SavedArks yet — server has no saved world)"
           : "";
       this.servers.addEvent(
         serverId,
         "backup_created",
         "info",
-        `Backup ${type} completado para \"${server.name}\" (${this.humanSize(sizeBytes)})${missingHint}`,
+        `Backup ${type} completed for \"${server.name}\" (${this.humanSize(sizeBytes)})${missingHint}`,
       );
 
       await this.applyRetention(serverId, policy);
@@ -348,7 +348,7 @@ export class BackupService {
         serverId,
         "error",
         "error",
-        `Fallo backup ${type} de \"${server.name}\": ${message}`,
+        `Backup ${type} failed for \"${server.name}\": ${message}`,
       );
       throw err;
     }
@@ -394,7 +394,7 @@ export class BackupService {
       serverId,
       "backup_created",
       "info",
-      `Job encolado: ${type} (${job.id.slice(0, 8)})`,
+      `Job queued: ${type} (${job.id.slice(0, 8)})`,
     );
 
     const completion = new Promise<T>((resolve, reject) => {
@@ -430,11 +430,11 @@ export class BackupService {
             result = await this.createBackup(
               job.serverId,
               "pre_update",
-              "Backup previo a update",
+              "Pre-update backup",
             );
           } else {
             if (job.backupId === null || job.backupId.trim().length === 0) {
-              throw new Error("backupId requerido para job restore");
+              throw new Error("backupId required for restore job");
             }
             await this.restoreBackup(job.serverId, job.backupId);
             result = undefined;
@@ -454,7 +454,7 @@ export class BackupService {
               job.serverId,
               "error",
               "error",
-              `Job ${job.type} agotó reintentos (${job.maxAttempts}): ${job.lastError}`,
+              `Job ${job.type} exhausted retries (${job.maxAttempts}): ${job.lastError}`,
             );
             this.removeJob(job.id);
             this.persistQueue();
@@ -467,7 +467,7 @@ export class BackupService {
             job.serverId,
             "error",
             "warning",
-            `Job ${job.type} reintentará (${job.attempts}/${job.maxAttempts})`,
+            `Job ${job.type} will retry (${job.attempts}/${job.maxAttempts})`,
           );
           await delay(BACKUP_JOB_RETRY_DELAY_MS);
         }
@@ -574,7 +574,7 @@ export class BackupService {
         serverId,
         "backup_created",
         "info",
-        `Backup antiguo eliminado por retención: ${basename(backup.path)}`,
+        `Old backup removed by retention: ${basename(backup.path)}`,
       );
     }
   }

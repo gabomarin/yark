@@ -197,7 +197,7 @@
   color: var(--app-color-bad);
 }
 
-/* Escritorio amplio: servidores + actividad en paralelo (llena 2K sin métricas). */
+/* Wide desktop: servers + activity in parallel (fills 2K without metrics). */
 @media (min-width: 1600px) {
   .page {
     padding: 24px 32px 32px;

@@ -10,7 +10,7 @@ function validInput(overrides: Partial<ServerProfileInput> = {}): ServerProfileI
     name: "Island",
     map: "TheIsland_WP",
     installDir: "C:\\asa\\island",
-    sessionName: "Mi Isla",
+    sessionName: "My Island",
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,
@@ -35,59 +35,59 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
 }
 
 describe("validateProfileInput", () => {
-  it("acepta un perfil válido", () => {
+  it("accepts a valid profile", () => {
     expect(validateProfileInput(validInput())).toEqual([]);
   });
 
-  it("rechaza puertos fuera de rango", () => {
+  it("rejects ports out of range", () => {
     const issues = validateProfileInput(validInput({ gamePort: 80 }));
     expect(issues.some((i) => i.field === "gamePort")).toBe(true);
   });
 
-  it("rechaza puertos internos duplicados", () => {
+  it("rejects duplicated internal ports", () => {
     const issues = validateProfileInput(
       validInput({ gamePort: 7777, queryPort: 7777 }),
     );
     expect(issues.some((i) => i.field === "ports")).toBe(true);
   });
 
-  it("rechaza rutas no absolutas de Windows", () => {
+  it("rejects non-absolute Windows paths", () => {
     const issues = validateProfileInput(validInput({ installDir: "asa/island" }));
     expect(issues.some((i) => i.field === "installDir")).toBe(true);
   });
 
-  it("acepta rutas UNC", () => {
+  it("accepts UNC paths", () => {
     const issues = validateProfileInput(
       validInput({ installDir: "\\\\nas\\asa\\island" }),
     );
     expect(issues).toEqual([]);
   });
 
-  it("exige clusterDir cuando hay clusterId", () => {
+  it("requires clusterDir when clusterId is set", () => {
     const issues = validateProfileInput(
-      validInput({ clusterId: "mi-cluster", clusterDir: null }),
+      validInput({ clusterId: "my-cluster", clusterDir: null }),
     );
     expect(issues.some((i) => i.field === "clusterDir")).toBe(true);
   });
 
-  it("rechaza mods duplicados", () => {
+  it("rejects duplicate mods", () => {
     const issues = validateProfileInput(validInput({ mods: ["1", "2", "1"] }));
     expect(issues.some((i) => i.field === "mods")).toBe(true);
   });
 
-  it("rechaza nombres con caracteres incompatibles con carpetas Windows", () => {
-    const issues = validateProfileInput(validInput({ name: "servidor:prod" }));
+  it("rejects names with characters incompatible with Windows folders", () => {
+    const issues = validateProfileInput(validInput({ name: "server:prod" }));
     expect(issues.some((i) => i.field === "name")).toBe(true);
   });
 
-  it("rechaza nombres reservados de Windows", () => {
+  it("rejects reserved Windows names", () => {
     const issues = validateProfileInput(validInput({ name: "CON" }));
-    expect(issues.some((i) => i.field === "name" && /reservado/i.test(i.message))).toBe(
+    expect(issues.some((i) => i.field === "name" && /reserved/i.test(i.message))).toBe(
       true,
     );
   });
 
-  it("rechaza segmentos de installDir incompatibles", () => {
+  it("rejects incompatible installDir segments", () => {
     const issues = validateProfileInput(
       validInput({ installDir: "C:\\asa\\bad*folder" }),
     );
@@ -96,7 +96,7 @@ describe("validateProfileInput", () => {
 });
 
 describe("findPortConflicts", () => {
-  it("no reporta conflicto intra-perfil si un servidor reutiliza puerto entre kinds", () => {
+  it("does not report an intra-profile conflict when a server reuses a port across kinds", () => {
     const a = profile({
       id: "a",
       name: "A",
@@ -108,7 +108,7 @@ describe("findPortConflicts", () => {
     expect(findPortConflicts([a])).toEqual([]);
   });
 
-  it("no reporta conflictos entre perfiles con puertos distintos", () => {
+  it("does not report conflicts between profiles with different ports", () => {
     const a = profile({ id: "a", name: "A" });
     const b = profile({
       id: "b",
@@ -120,7 +120,7 @@ describe("findPortConflicts", () => {
     expect(findPortConflicts([a, b])).toEqual([]);
   });
 
-  it("detecta conflicto de puerto game entre dos perfiles", () => {
+  it("detects a game port conflict between two profiles", () => {
     const a = profile({ id: "a", name: "A" });
     const b = profile({
       id: "b",
@@ -133,10 +133,10 @@ describe("findPortConflicts", () => {
     expect(conflicts[0]).toMatchObject({ port: 7777, kind: "game" });
   });
 
-  it("detecta conflicto de un candidato nuevo contra existentes", () => {
+  it("detects a conflict of a new candidate against existing profiles", () => {
     const a = profile({ id: "a", name: "A" });
     const conflicts = findPortConflicts([a], {
-      name: "Nuevo",
+      name: "New",
       gamePort: 8888,
       queryPort: 27015,
       rconPort: 28020,
@@ -145,7 +145,7 @@ describe("findPortConflicts", () => {
     expect(conflicts[0]).toMatchObject({ port: 27015, kind: "query" });
   });
 
-  it("no compara un perfil en edición contra sí mismo", () => {
+  it("does not compare an in-edit profile against itself", () => {
     const a = profile({ id: "a", name: "A" });
     const conflicts = findPortConflicts(
       [a].filter((p) => p.id !== "a"),
@@ -154,7 +154,7 @@ describe("findPortConflicts", () => {
     expect(conflicts).toEqual([]);
   });
 
-  it("deduplica conflictos cuando el candidato reemplaza un perfil existente", () => {
+  it("deduplicates conflicts when the candidate replaces an existing profile", () => {
     const a = profile({ id: "a", name: "A", gamePort: 7777, queryPort: 27015, rconPort: 27020 });
     const b = profile({
       id: "b",

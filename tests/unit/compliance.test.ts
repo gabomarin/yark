@@ -8,7 +8,7 @@ function profile(overrides: Partial<ServerProfile>): ServerProfile {
     name: "Server",
     map: "TheIsland_WP",
     installDir: "C:\\asa\\island",
-    sessionName: "Sesión",
+    sessionName: "Session",
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,
@@ -25,7 +25,7 @@ function profile(overrides: Partial<ServerProfile>): ServerProfile {
 }
 
 describe("checkClusterCompliance", () => {
-  it("marca ok un cluster de dos mapas bien configurado", () => {
+  it("marks a well-configured two-map cluster as ok", () => {
     const reports = checkClusterCompliance([
       profile({ id: "a", name: "Island", map: "TheIsland_WP" }),
       profile({
@@ -42,24 +42,24 @@ describe("checkClusterCompliance", () => {
     expect(reports[0]!.members).toEqual(["a", "b"]);
   });
 
-  it("ignora servidores sin cluster", () => {
+  it("ignores servers without a cluster", () => {
     const reports = checkClusterCompliance([
       profile({ id: "a", clusterId: null, clusterDir: null }),
     ]);
     expect(reports).toEqual([]);
   });
 
-  it("advierte cuando el cluster tiene un solo miembro", () => {
+  it("warns when the cluster has a single member", () => {
     const reports = checkClusterCompliance([profile({ id: "a" })]);
     expect(reports[0]!.ok).toBe(true);
     expect(
       reports[0]!.issues.some(
-        (i) => i.severity === "warning" && i.message.includes("un solo miembro"),
+        (i) => i.severity === "warning" && i.message.includes("only one member"),
       ),
     ).toBe(true);
   });
 
-  it("marca error cuando los directorios de cluster difieren", () => {
+  it("errors when cluster directories differ", () => {
     const reports = checkClusterCompliance([
       profile({ id: "a", name: "A" }),
       profile({
@@ -73,22 +73,22 @@ describe("checkClusterCompliance", () => {
     ]);
     expect(reports[0]!.ok).toBe(false);
     expect(
-      reports[0]!.issues.some((i) => i.message.includes("directorios de cluster distintos")),
+      reports[0]!.issues.some((i) => i.message.includes("different cluster directories")),
     ).toBe(true);
   });
 
-  it("marca error por conflicto de puertos dentro del cluster", () => {
+  it("errors on port conflicts within the cluster", () => {
     const reports = checkClusterCompliance([
       profile({ id: "a", name: "A" }),
       profile({ id: "b", name: "B", map: "ScorchedEarth_WP" }),
     ]);
     expect(reports[0]!.ok).toBe(false);
     expect(
-      reports[0]!.issues.some((i) => i.message.includes("Conflicto de puerto")),
+      reports[0]!.issues.some((i) => i.message.includes("port conflict")),
     ).toBe(true);
   });
 
-  it("advierte cuando las listas de mods difieren entre miembros", () => {
+  it("warns when member mod lists differ", () => {
     const reports = checkClusterCompliance([
       profile({ id: "a", name: "A", mods: ["1", "2"] }),
       profile({
@@ -103,7 +103,7 @@ describe("checkClusterCompliance", () => {
     ]);
     expect(
       reports[0]!.issues.some(
-        (i) => i.severity === "warning" && i.message.includes("mods distintas"),
+        (i) => i.severity === "warning" && i.message.includes("different mod lists"),
       ),
     ).toBe(true);
   });

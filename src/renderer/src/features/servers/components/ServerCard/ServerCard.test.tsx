@@ -68,10 +68,10 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    await user.click(screen.getByRole("button", { name: /^Iniciar$/i }));
+    await user.click(screen.getByRole("button", { name: /^Start$/i }));
     expect(onStart).toHaveBeenCalledTimes(1);
 
-    await user.click(screen.getByRole("button", { name: /Abrir configuración de The Island/i }));
+    await user.click(screen.getByRole("button", { name: /Open settings for The Island/i }));
     expect(onOpenWorkspace).toHaveBeenCalledTimes(1);
   });
 
@@ -110,18 +110,18 @@ describe("ServerCard", () => {
     );
 
     const card = within(container);
-    await user.click(card.getByRole("button", { name: "Administrar" }));
+    await user.click(card.getByRole("button", { name: "Manage" }));
     expect(onOpenWorkspace).toHaveBeenCalledTimes(1);
-    expect(card.queryByRole("button", { name: /^Iniciar$/i })).not.toBeInTheDocument();
+    expect(card.queryByRole("button", { name: /^Start$/i })).not.toBeInTheDocument();
 
-    await user.click(card.getByRole("button", { name: "Más opciones" }));
+    await user.click(card.getByRole("button", { name: "More options" }));
     expect(
-      await screen.findByRole("menuitem", { name: "Detener de forma segura" }),
+      await screen.findByRole("menuitem", { name: "Stop safely" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "Reiniciar" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "Abrir carpeta" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /^Eliminar servidor$/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /^Forzar cierre \(matar\)$/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Restart" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Open folder" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Delete server$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Force close \(matar\)$/i })).not.toBeInTheDocument();
   });
 
   it("uses Install as the primary action when server files are missing", async () => {
@@ -152,7 +152,7 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    await user.click(screen.getByRole("button", { name: "Instalar" }));
+    await user.click(screen.getByRole("button", { name: "Install" }));
     expect(onInstallFiles).toHaveBeenCalledTimes(1);
   });
 
@@ -168,7 +168,7 @@ describe("ServerCard", () => {
           }}
           steamCmdBusy
           steamCmdProgressPercent={42}
-          steamCmdProgressLabel="Descargando · 512.0 / 1024.0 MB"
+          steamCmdProgressLabel="Downloading · 512.0 / 1024.0 MB"
           steamCmdProgressBytesDownloaded={536870912}
           steamCmdProgressBytesTotal={1073741824}
           steamCmdOperation="install-files"
@@ -190,12 +190,12 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    expect(screen.getAllByText(/Instalando/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/^Descargando$/i)).toBeInTheDocument();
-    expect(screen.getByText(/Descargado:/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Installing/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/^Downloading$/i)).toBeInTheDocument();
+    expect(screen.getByText(/Downloaded:/i)).toBeInTheDocument();
     expect(screen.getByText(/512\.0 \/ 1024\.0 MB/i)).toBeInTheDocument();
     expect(screen.getByText(/42%/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Cancelar" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
   });
 
   it("does not offer an update when ARK versions differ but Steam builds match", () => {
@@ -229,9 +229,9 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("Actualizado")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Iniciar" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Actualizar" })).not.toBeInTheDocument();
+    expect(screen.getByText("Up to date")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Update" })).not.toBeInTheDocument();
   });
 
   it("offers an update only when the Steam build is behind", () => {
@@ -265,7 +265,7 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("Actualización disponible")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Actualizar" })).toBeInTheDocument();
+    expect(screen.getByText("Update available")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Update" })).toBeInTheDocument();
   });
 });

@@ -60,10 +60,10 @@ interface Props {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  stopped: "Detenido",
-  starting: "Iniciando",
-  running: "Activo",
-  stopping: "Deteniendo",
+  stopped: "Stopped",
+  starting: "Starting",
+  running: "Running",
+  stopping: "Stopping",
   error: "Error",
 };
 
@@ -88,17 +88,17 @@ export function ServerCard(props: Props): JSX.Element {
   const updateAvailable = updateState === "available";
   const installStateLabel = steamCmdBusy
     ? steamCmdOperation === "verify-files"
-      ? "Verificando…"
+      ? "Verifying…"
       : steamCmdOperation === "update" || steamCmdOperation === "sync-files"
-        ? "Actualizando…"
-        : "Instalando…"
+        ? "Updating…"
+        : "Installing…"
     : !isInstallationReady
-      ? "Sin instalar"
+      ? "Not installed"
       : updateAvailable
-        ? "Actualización disponible"
+        ? "Update available"
         : updateState === "current"
-          ? "Actualizado"
-          : "Sin verificar";
+          ? "Up to date"
+          : "Not verified";
 
   const byteProgressLabel =
     steamCmdProgressBytesDownloaded !== null && steamCmdProgressBytesTotal !== null
@@ -111,9 +111,9 @@ export function ServerCard(props: Props): JSX.Element {
   const shortProgressLabel =
     byteProgressLabel !== null
       ? (steamCmdProgressLabel?.split(" · ")[0]?.trim()
-        || (steamCmdOperation === "verify-files" ? "Verificando" : "SteamCMD en curso…"))
+        || (steamCmdOperation === "verify-files" ? "Verifying" : "SteamCMD in progress…"))
       : (steamCmdProgressLabel
-        ?? (steamCmdOperation === "verify-files" ? "Verificando" : "SteamCMD en curso…"));
+        ?? (steamCmdOperation === "verify-files" ? "Verifying" : "SteamCMD in progress…"));
 
   const openWorkspace = () => {
     if (!steamCmdBusy) {
@@ -124,7 +124,7 @@ export function ServerCard(props: Props): JSX.Element {
   const primaryAction =
     steamCmdBusy
       ? {
-          label: "Cancelar",
+          label: "Cancel",
           icon: <XCircle size={16} />,
           color: "red",
           variant: "light" as const,
@@ -133,7 +133,7 @@ export function ServerCard(props: Props): JSX.Element {
         }
       : !isInstallationReady
         ? {
-            label: "Instalar",
+            label: "Install",
             icon: <CloudArrowDown size={16} />,
             color: "blue",
             variant: "filled" as const,
@@ -142,7 +142,7 @@ export function ServerCard(props: Props): JSX.Element {
           }
         : status === "running"
           ? {
-              label: "Administrar",
+              label: "Manage",
               icon: <GearSix size={16} />,
               color: "blue",
               variant: "filled" as const,
@@ -151,7 +151,7 @@ export function ServerCard(props: Props): JSX.Element {
             }
           : status === "starting"
             ? {
-                label: "Iniciando…",
+                label: "Starting…",
                 icon: <ArrowsClockwise size={16} />,
                 color: "blue",
                 variant: "light" as const,
@@ -160,7 +160,7 @@ export function ServerCard(props: Props): JSX.Element {
               }
             : status === "stopping"
               ? {
-                  label: "Deteniendo…",
+                  label: "Stopping…",
                   icon: <ArrowsClockwise size={16} />,
                   color: "gray",
                   variant: "light" as const,
@@ -169,7 +169,7 @@ export function ServerCard(props: Props): JSX.Element {
                 }
               : status === "error"
                 ? {
-                    label: "Revisar error",
+                    label: "Review error",
                     icon: <XCircle size={16} />,
                     color: "red",
                     variant: "light" as const,
@@ -178,7 +178,7 @@ export function ServerCard(props: Props): JSX.Element {
                   }
                 : updateAvailable
                   ? {
-                      label: "Actualizar",
+                      label: "Update",
                       icon: <CloudArrowDown size={16} />,
                       color: "orange",
                       variant: "light" as const,
@@ -186,7 +186,7 @@ export function ServerCard(props: Props): JSX.Element {
                       onClick: props.onUpdateNow,
                     }
                   : {
-                      label: "Iniciar",
+                      label: "Start",
                       icon: <Play size={16} weight="fill" />,
                       color: "teal",
                       variant: "light" as const,
@@ -221,7 +221,7 @@ export function ServerCard(props: Props): JSX.Element {
             className={classes.cardHit}
             onClick={openWorkspace}
             disabled={steamCmdBusy}
-            aria-label={`Abrir configuración de ${server.name}`}
+            aria-label={`Open settings for ${server.name}`}
           >
             <Group gap="sm" align="center" wrap="nowrap" className={classes.identity}>
               <div className={classes.thumb}>
@@ -255,12 +255,12 @@ export function ServerCard(props: Props): JSX.Element {
             </Group>
 
             <div className={classes.metaGrid}>
-              <MetaItem label="Mapa" value={server.map} />
+              <MetaItem label="Map" value={server.map} />
               <MetaItem label="Cluster" value={server.clusterId ?? "—"} />
               <MetaItem label="Mods" value={String(server.mods.length)} />
-              <MetaItem label="Versión" value={localVersion ?? "—"} />
+              <MetaItem label="Version" value={localVersion ?? "—"} />
               <MetaItem
-                label="Archivos"
+                label="Files"
                 value={installStateLabel}
                 tone={
                   steamCmdBusy
@@ -291,11 +291,11 @@ export function ServerCard(props: Props): JSX.Element {
 
             <Menu shadow="md" withinPortal position="bottom-end">
               <Menu.Target>
-                <Tooltip label="Más opciones" withArrow>
+                <Tooltip label="More options" withArrow>
                   <ActionIcon
                     variant="default"
                     size="lg"
-                    aria-label="Más opciones"
+                    aria-label="More options"
                     disabled={steamCmdBusy}
                   >
                     <DotsThreeVertical size={18} />
@@ -303,38 +303,38 @@ export function ServerCard(props: Props): JSX.Element {
                 </Tooltip>
               </Menu.Target>
               <Menu.Dropdown>
-                <Menu.Label>Servidor</Menu.Label>
+                <Menu.Label>Server</Menu.Label>
                 <Menu.Item leftSection={<GearSix size={16} />} onClick={props.onOpenWorkspace}>
-                  Abrir configuración
+                  Open settings
                 </Menu.Item>
                 {status === "running" && (
                   <>
                     <Menu.Item leftSection={<Pause size={16} />} onClick={props.onStop}>
-                      Detener de forma segura
+                      Stop safely
                     </Menu.Item>
                     <Menu.Item leftSection={<ArrowsClockwise size={16} />} onClick={props.onRestart}>
-                      Reiniciar
+                      Restart
                     </Menu.Item>
                   </>
                 )}
                 {status === "starting" && (
                   <Menu.Item leftSection={<Pause size={16} />} onClick={props.onStop}>
-                    Detener
+                    Stop
                   </Menu.Item>
                 )}
                 <Menu.Item leftSection={<FolderOpen size={16} />} onClick={props.onOpenFolder}>
-                  Abrir carpeta
+                  Open folder
                 </Menu.Item>
                 <Menu.Item
                   leftSection={<FileText size={16} />}
                   onClick={props.onOpenLogs}
                   disabled={!isInstallationReady}
                 >
-                  Ver logs
+                  View logs
                 </Menu.Item>
 
                 <Menu.Divider />
-                <Menu.Label>Mantenimiento</Menu.Label>
+                <Menu.Label>Maintenance</Menu.Label>
                 {isInstallationReady ? (
                   <>
                     <Menu.Item
@@ -342,7 +342,7 @@ export function ServerCard(props: Props): JSX.Element {
                       onClick={props.onCheckUpdates}
                       disabled={checkingUpdates}
                     >
-                      Verificar actualizaciones
+                      Check for updates
                     </Menu.Item>
                     <Menu.Item
                       leftSection={<CloudArrowDown size={16} />}
@@ -351,8 +351,8 @@ export function ServerCard(props: Props): JSX.Element {
                       disabled={isActive}
                     >
                       {isActive
-                        ? "Actualizar (detén el servidor)"
-                        : "Actualizar servidor"}
+                        ? "Update (stop the server first)"
+                        : "Update server"}
                     </Menu.Item>
                     <Menu.Item
                       leftSection={<ShieldCheck size={16} />}
@@ -360,8 +360,8 @@ export function ServerCard(props: Props): JSX.Element {
                       disabled={isActive}
                     >
                       {isActive
-                        ? "Verificar integridad (detén el servidor)"
-                        : "Verificar integridad"}
+                        ? "Verify integrity (stop the server first)"
+                        : "Verify integrity"}
                     </Menu.Item>
                   </>
                 ) : (
@@ -369,22 +369,22 @@ export function ServerCard(props: Props): JSX.Element {
                     leftSection={<CloudArrowDown size={16} />}
                     onClick={props.onInstallFiles}
                   >
-                    Instalar archivos
+                    Install files
                   </Menu.Item>
                 )}
                 <Menu.Item leftSection={<Copy size={16} />} onClick={props.onClone}>
-                  Clonar
+                  Clone
                 </Menu.Item>
 
                 <Menu.Divider />
-                <Menu.Label>Peligro</Menu.Label>
+                <Menu.Label>Danger</Menu.Label>
                 <Menu.Item
                   color="red"
                   leftSection={<XCircle size={16} />}
                   onClick={props.onKill}
                   disabled={!isActive}
                 >
-                  Forzar cierre (matar)
+                  Force close (kill)
                 </Menu.Item>
                 <Menu.Item
                   color="red"
@@ -392,7 +392,7 @@ export function ServerCard(props: Props): JSX.Element {
                   onClick={props.onDelete}
                   disabled={isActive}
                 >
-                  {isActive ? "Eliminar (detén el servidor)" : "Eliminar servidor"}
+                  {isActive ? "Delete (stop the server first)" : "Delete server"}
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>

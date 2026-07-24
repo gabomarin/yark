@@ -11,7 +11,7 @@ import {
 } from "@backend/domains/updates/steamcmd-content-cache";
 
 describe("steamcmd-content-cache", () => {
-  it("resuelve home y rutas de caché junto a steamcmd.exe", () => {
+  it("resolves home and cache paths next to steamcmd.exe", () => {
     expect(resolveSteamCmdHome("C:\\tools\\steamcmd\\steamcmd.exe")).toBe(
       "C:\\tools\\steamcmd",
     );
@@ -23,14 +23,14 @@ describe("steamcmd-content-cache", () => {
     );
   });
 
-  it("pone force_install_dir antes de login", () => {
+  it("puts force_install_dir before login", () => {
     const args = buildSteamCmdAppUpdateArgs("C:\\ark_servers\\cache");
     expect(args.indexOf("+force_install_dir")).toBeLessThan(args.indexOf("+login"));
     expect(args).toContain(ASA_APP_ID);
     expect(args).toContain("validate");
   });
 
-  it("trata robocopy 0-7 como éxito", () => {
+  it("treats robocopy 0-7 as success", () => {
     expect(isRobocopySuccess(0)).toBe(true);
     expect(isRobocopySuccess(1)).toBe(true);
     expect(isRobocopySuccess(7)).toBe(true);
@@ -38,12 +38,12 @@ describe("steamcmd-content-cache", () => {
     expect(isRobocopySuccess(null)).toBe(false);
   });
 
-  it("solo considera fresca una caché con manifest reciente", () => {
+  it("only considers a cache fresh when the manifest is recent", () => {
     expect(isContentCacheFresh("C:\\missing-cache", Date.now())).toBe(false);
     expect(isContentCacheFresh("C:\\missing-cache", 0)).toBe(false);
   });
 
-  it("nunca omite la consulta a Steam en un update o verify explícito", () => {
+  it("never skips the Steam query on an explicit update or verify", () => {
     const cacheDir = "C:\\missing-cache";
     expect(shouldReuseAsaContentCache("update", cacheDir, Date.now())).toBe(false);
     expect(shouldReuseAsaContentCache("verify-files", cacheDir, Date.now())).toBe(false);

@@ -1,6 +1,6 @@
-# ARK Server GBO
+# YARK server manager
 
-ARK Server GBO is a Windows desktop application for managing local dedicated ARK Survival Ascended servers.
+YARK server manager is a Windows desktop application for managing local dedicated ARK Survival Ascended servers.
 
 ## What it supports
 

@@ -83,13 +83,13 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
       return;
     }
     modals.openConfirmModal({
-      title: "Cambios sin guardar",
+      title: "Unsaved changes",
       children: (
-        <Alert color="yellow" title="INI modificados" variant="light">
-          Hay cambios en la configuración INI sin guardar. Si continúas, se descartarán.
+        <Alert color="yellow" title="INI modified" variant="light">
+          There are unsaved INI configuration changes. If you continue, they will be discarded.
         </Alert>
       ),
-      labels: { confirm: "Descartar y continuar", cancel: "Seguir editando" },
+      labels: { confirm: "Discard and continue", cancel: "Keep editing" },
       confirmProps: { color: "yellow" },
       onConfirm: () => {
         dirtyRef.current = false;
@@ -135,7 +135,7 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
     };
     const result = await window.api.updateServer(selectedServer.id, input);
     if (!result.ok) {
-      throw new Error(result.error ?? "No se pudo actualizar mods");
+      throw new Error(result.error ?? "Could not update mods");
     }
     props.onServerUpdated();
   };
@@ -143,7 +143,7 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
   if (selectedServer === null) {
     return (
       <div className={classes.empty}>
-        No hay servidores para editar. Crea uno desde Servidores.
+        No servers to edit. Create one from Servers.
       </div>
     );
   }
@@ -245,8 +245,8 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
             className={classes.tabs}
           >
             <Tabs.List className={classes.tabList}>
-              <Tabs.Tab value="server">Servidor</Tabs.Tab>
-              <Tabs.Tab value="iniFiles">Archivos INI</Tabs.Tab>
+              <Tabs.Tab value="server">Server</Tabs.Tab>
+              <Tabs.Tab value="iniFiles">INI Files</Tabs.Tab>
               <Tabs.Tab value="mods">Mods</Tabs.Tab>
             </Tabs.List>
 
@@ -305,7 +305,7 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
           <Drawer
             opened={serverSwitcherOpen}
             onClose={() => setServerSwitcherOpen(false)}
-            title="Cambiar servidor"
+            title="Switch server"
             position="left"
             size={320}
             overlayProps={{ backgroundOpacity: 0.68 }}
@@ -321,7 +321,7 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
           <Drawer
             opened={serverActionsOpen}
             onClose={() => setServerActionsOpen(false)}
-            title="Estado y acciones"
+            title="Status and actions"
             position="right"
             size={340}
             overlayProps={{ backgroundOpacity: 0.68 }}

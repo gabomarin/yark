@@ -17,9 +17,9 @@ export interface IniPreset {
 
 const PRESETS: IniPreset[] = [
   {
-    id: "pve-basico",
-    name: "PVE Basico",
-    description: "Ajustes comunes para servidores cooperativos PVE.",
+    id: "pve-basic",
+    name: "Basic PVE",
+    description: "Common settings for cooperative PVE servers.",
     updates: [
       {
         fileKey: "gameUserSettings",
@@ -42,9 +42,9 @@ const PRESETS: IniPreset[] = [
     ],
   },
   {
-    id: "pvp-basico",
-    name: "PVP Basico",
-    description: "Base para PVP con mayor exigencia y riesgo.",
+    id: "pvp-basic",
+    name: "Basic PVP",
+    description: "Baseline for higher-stakes PVP servers.",
     updates: [
       {
         fileKey: "gameUserSettings",
@@ -67,9 +67,9 @@ const PRESETS: IniPreset[] = [
     ],
   },
   {
-    id: "rendimiento",
-    name: "Rendimiento",
-    description: "Valores conservadores para estabilidad en hosts limitados.",
+    id: "performance",
+    name: "Performance",
+    description: "Conservative values for stability on limited hosts.",
     updates: [
       {
         fileKey: "gameUserSettings",

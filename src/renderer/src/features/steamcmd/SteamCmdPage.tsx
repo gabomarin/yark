@@ -24,11 +24,11 @@ interface Props {
 }
 
 const OPERATION_LABEL: Record<NonNullable<SteamCmdStatus["operation"]>, string> = {
-  "install-steamcmd": "Instalando SteamCMD",
-  "install-files": "Instalando archivos",
-  update: "Actualizando servidor",
-  "sync-files": "Copiando archivos",
-  "verify-files": "Verificando integridad",
+  "install-steamcmd": "Installing SteamCMD",
+  "install-files": "Installing files",
+  update: "Updating server",
+  "sync-files": "Copying files",
+  "verify-files": "Verifying integrity",
 };
 
 export function SteamCmdPage(props: Props): JSX.Element {
@@ -47,36 +47,36 @@ export function SteamCmdPage(props: Props): JSX.Element {
   const operationTitle = running
     ? operation !== null
       ? OPERATION_LABEL[operation]
-      : "Operación en curso"
+      : "Operation in progress"
     : detected
-      ? "SteamCMD listo"
-      : "SteamCMD no configurado";
+      ? "SteamCMD ready"
+      : "SteamCMD not configured";
   const operationDescription = running
     ? props.steamCmdStatus?.progressLabel
       ?? props.steamCmdStatus?.lastLine
-      ?? "Preparando la operación…"
+      ?? "Preparing operation…"
     : detected
-      ? "Disponible para instalar, actualizar y verificar servidores."
-      : "Instálalo automáticamente o selecciona un ejecutable existente.";
+      ? "Available to install, update, and verify servers."
+      : "Install it automatically or select an existing executable.";
 
   return (
     <PageScaffold
       title="SteamCMD"
-      subtitle="Instalación, ruta del ejecutable y consola de operaciones"
+      subtitle="Installation, executable path, and operations console"
       fillViewport
       actions={
         <Group gap="sm" wrap="wrap">
           {!detected && (
             <Button leftSection={<CloudArrowDown size={16} />} onClick={props.onInstallSteamCmd}>
-              Instalar SteamCMD
+              Install SteamCMD
             </Button>
           )}
           <Button variant="default" leftSection={<FolderOpen size={16} />} onClick={props.onPickSteamCmdPath}>
-            Elegir steamcmd.exe
+            Choose steamcmd.exe
           </Button>
           {running && (
             <Button color="red" variant="light" leftSection={<ProhibitInset size={16} />} onClick={props.onCancelSteamCmd}>
-              Cancelar operación
+              Cancel operation
             </Button>
           )}
         </Group>
@@ -102,7 +102,7 @@ export function SteamCmdPage(props: Props): JSX.Element {
                       variant="light"
                       color={running ? "blue" : detected ? "green" : "yellow"}
                     >
-                      {running ? "En curso" : detected ? "Disponible" : "Requiere configuración"}
+                      {running ? "In progress" : detected ? "Available" : "Needs setup"}
                     </Badge>
                   </Group>
                   <Text size="sm" c="dimmed" truncate>{operationDescription}</Text>
@@ -112,7 +112,7 @@ export function SteamCmdPage(props: Props): JSX.Element {
                 <div className={classes.progressValue}>
                   <Text fw={700}>{percent !== null ? `${percent.toFixed(0)}%` : "…"}</Text>
                   {props.steamCmdStatus?.queuedCount != null && props.steamCmdStatus.queuedCount > 0 && (
-                    <Text size="xs" c="dimmed">{props.steamCmdStatus.queuedCount} en cola</Text>
+                    <Text size="xs" c="dimmed">{props.steamCmdStatus.queuedCount} queued</Text>
                   )}
                 </div>
               )}
@@ -143,23 +143,23 @@ export function SteamCmdPage(props: Props): JSX.Element {
         <div className={classes.contextStrip} aria-label="Entorno SteamCMD">
           <ContextItem
             icon={<CloudArrowDown size={16} />}
-            label="Versión oficial"
+            label="Official version"
             value={props.officialVersion ?? "No disponible"}
           />
           <ContextItem
             icon={<FolderOpen size={16} />}
             label="Ejecutable"
-            value={props.steamCmdStatus?.executablePath ?? "Sin configurar"}
+            value={props.steamCmdStatus?.executablePath ?? "Not configured"}
           />
           <ContextItem
             icon={<Database size={16} />}
             label="Depotcache"
-            value={props.steamCmdStatus?.depotCacheDir ?? "Sin configurar"}
+            value={props.steamCmdStatus?.depotCacheDir ?? "Not configured"}
           />
           <ContextItem
             icon={<HardDrive size={16} />}
             label="Contenido ASA"
-            value={props.steamCmdStatus?.contentCacheDir ?? "Sin configurar"}
+            value={props.steamCmdStatus?.contentCacheDir ?? "Not configured"}
           />
         </div>
 
@@ -170,13 +170,13 @@ export function SteamCmdPage(props: Props): JSX.Element {
                 <TerminalWindow size={18} />
                 <Title order={3} size="h4">Consola SteamCMD</Title>
               </Group>
-              <Text size="xs" c="dimmed">Últimas 200 líneas</Text>
+              <Text size="xs" c="dimmed">Last 200 lines</Text>
             </Group>
             <AutoScrollConsole
               className={classes.console}
               lines={props.steamCmdConsole?.lines ?? []}
               maxLines={200}
-              emptyText="Sin salida de SteamCMD todavía."
+              emptyText="No SteamCMD output yet."
             />
           </Stack>
         </Card>

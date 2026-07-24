@@ -15,11 +15,11 @@ interface Props {
 }
 
 const OPERATION_LABEL: Record<NonNullable<SteamCmdStatus["operation"]>, string> = {
-  "install-steamcmd": "Instalando SteamCMD",
-  "install-files": "Instalando archivos",
-  update: "Actualizando servidor",
-  "sync-files": "Copiando archivos al servidor",
-  "verify-files": "Verificando integridad",
+  "install-steamcmd": "Installing SteamCMD",
+  "install-files": "Installing files",
+  update: "Updating server",
+  "sync-files": "Copying files to the server",
+  "verify-files": "Verifying integrity",
 };
 
 export function SteamCmdProgressDock(props: Props): JSX.Element {
@@ -28,7 +28,7 @@ export function SteamCmdProgressDock(props: Props): JSX.Element {
   const title =
     status.operation !== null
       ? OPERATION_LABEL[status.operation]
-      : "Operación SteamCMD";
+      : "SteamCMD operation";
   const percent = status.progressPercent;
   const lines = props.console?.lines ?? [];
   const byteProgress =
@@ -40,8 +40,8 @@ export function SteamCmdProgressDock(props: Props): JSX.Element {
       : null;
   const byteNoun = steamCmdByteProgressNoun(status.operation);
   const stateLabel = (() => {
-    const raw = status.progressLabel ?? status.lastLine ?? "En curso…";
-    // Evitar duplicar "Verificando · X MB" + "Comprobado: X MB"
+    const raw = status.progressLabel ?? status.lastLine ?? "In progress…";
+    // Avoid duplicating "Verifying · X MB" + "Verified: X MB"
     if (byteProgress !== null && raw.includes(" · ")) {
       return raw.split(" · ")[0]!.trim();
     }
@@ -49,7 +49,7 @@ export function SteamCmdProgressDock(props: Props): JSX.Element {
   })();
   const queueHint =
     status.queuedCount > 0
-      ? ` · ${status.queuedCount} en cola`
+      ? ` · ${status.queuedCount} queued`
       : "";
 
   if (minimized) {
@@ -81,22 +81,22 @@ export function SteamCmdProgressDock(props: Props): JSX.Element {
               radius="xl"
               className={classes.miniProgress}
             />
-            <Tooltip label="Expandir">
+            <Tooltip label="Expand">
               <ActionIcon
                 size="sm"
                 variant="default"
-                aria-label="Expandir panel de descarga"
+                aria-label="Expand download panel"
                 onClick={() => setMinimized(false)}
               >
                 <CaretUp size={14} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Cancelar">
+            <Tooltip label="Cancel">
               <ActionIcon
                 size="sm"
                 color="red"
                 variant="light"
-                aria-label="Cancelar operación"
+                aria-label="Cancel operation"
                 onClick={props.onCancel}
               >
                 <ProhibitInset size={14} />
@@ -119,13 +119,13 @@ export function SteamCmdProgressDock(props: Props): JSX.Element {
             </Group>
             {props.serverName != null && props.serverName.length > 0 && (
               <Text size="sm" c="dimmed">
-                Servidor: {props.serverName}
+                Server: {props.serverName}
               </Text>
             )}
             {status.queuedCount > 0 && (
               <Text size="xs" c="dimmed" mt={2}>
-                {status.queuedCount} operación{status.queuedCount === 1 ? "" : "es"} en cola
-                (se ejecutan una a una)
+                {status.queuedCount} operation{status.queuedCount === 1 ? "" : "s"} queued
+                (run one at a time)
               </Text>
             )}
             <Text size="sm" mt={4}>
@@ -138,18 +138,18 @@ export function SteamCmdProgressDock(props: Props): JSX.Element {
             )}
           </div>
           <Group gap="xs">
-            <Tooltip label="Minimizar">
+            <Tooltip label="Minimize">
               <ActionIcon
                 size="sm"
                 variant="default"
-                aria-label="Minimizar panel de descarga"
+                aria-label="Minimize download panel"
                 onClick={() => setMinimized(true)}
               >
                 <CaretDown size={14} />
               </ActionIcon>
             </Tooltip>
             <Button size="xs" variant="default" onClick={props.onOpenSteamCmdPage}>
-              Ver SteamCMD
+              View SteamCMD
             </Button>
             <Button
               size="xs"
@@ -158,7 +158,7 @@ export function SteamCmdProgressDock(props: Props): JSX.Element {
               leftSection={<ProhibitInset size={14} />}
               onClick={props.onCancel}
             >
-              Cancelar
+              Cancel
             </Button>
           </Group>
         </Group>

@@ -79,7 +79,7 @@ function readVersionFromKnownFiles(installDir: string): string | null {
         return line;
       }
     } catch {
-      // Best effort: si un archivo de versión está corrupto, se intenta la siguiente fuente.
+      // Best effort: if a version file is corrupt, try the next source.
     }
   }
 
@@ -111,7 +111,7 @@ function readVersionFromExecutable(binaryPath: string): string | null {
     const version = raw.trim();
     return version.length > 0 ? version : null;
   } catch {
-    // Best effort: algunos binarios no exponen ProductVersion o PowerShell no está disponible.
+    // Best effort: some binaries do not expose ProductVersion or PowerShell is unavailable.
     return null;
   }
 }
@@ -370,7 +370,7 @@ function fetchOfficialArkVersion(): Promise<string | null> {
       {
         headers: {
           accept: "text/plain, */*",
-          "user-agent": "ark-server-gbo/1.0",
+          "user-agent": "yark-server-manager/1.0",
         },
       },
       (res) => {

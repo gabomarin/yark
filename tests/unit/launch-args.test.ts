@@ -11,7 +11,7 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
     name: "Island",
     map: "TheIsland_WP",
     installDir: "C:\\asa\\island",
-    sessionName: "Mi Isla",
+    sessionName: "My Island",
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,
@@ -28,7 +28,7 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
 }
 
 describe("serverBinaryPath", () => {
-  it("apunta al ejecutable dentro de la instalación", () => {
+  it("points to the executable inside the install", () => {
     expect(serverBinaryPath("C:\\asa\\island")).toBe(
       "C:\\asa\\island\\ShooterGame\\Binaries\\Win64\\ArkAscendedServer.exe",
     );
@@ -36,40 +36,40 @@ describe("serverBinaryPath", () => {
 });
 
 describe("buildLaunchArgs", () => {
-  it("construye la URL de mapa con parámetros básicos", () => {
+  it("builds the map URL with basic parameters", () => {
     const args = buildLaunchArgs(profile());
     expect(args[0]).toBe(
-      "TheIsland_WP?listen?SessionName=Mi Isla?Port=7777?QueryPort=27015?RCONEnabled=True?RCONPort=27020?ServerAdminPassword=admin1234",
+      "TheIsland_WP?listen?SessionName=My Island?Port=7777?QueryPort=27015?RCONEnabled=True?RCONPort=27020?ServerAdminPassword=admin1234",
     );
   });
 
-  it("incluye ServerPassword solo si está definido", () => {
-    const withPass = buildLaunchArgs(profile({ serverPassword: "secreto" }));
-    expect(withPass[0]).toContain("?ServerPassword=secreto");
+  it("includes ServerPassword only when defined", () => {
+    const withPass = buildLaunchArgs(profile({ serverPassword: "secret" }));
+    expect(withPass[0]).toContain("?ServerPassword=secret");
     const withoutPass = buildLaunchArgs(profile());
     expect(withoutPass[0]).not.toContain("ServerPassword");
   });
 
-  it("agrega mods en orden de carga", () => {
+  it("adds mods in load order", () => {
     const args = buildLaunchArgs(profile({ mods: ["111", "222"] }));
     expect(args).toContain("-mods=111,222");
   });
 
-  it("agrega flags de cluster cuando hay clusterId y clusterDir", () => {
+  it("adds cluster flags when clusterId and clusterDir are set", () => {
     const args = buildLaunchArgs(
-      profile({ clusterId: "mi-cluster", clusterDir: "C:\\asa\\cluster" }),
+      profile({ clusterId: "my-cluster", clusterDir: "C:\\asa\\cluster" }),
     );
-    expect(args).toContain("-clusterid=mi-cluster");
+    expect(args).toContain("-clusterid=my-cluster");
     expect(args).toContain("-ClusterDirOverride=C:\\asa\\cluster");
     expect(args).toContain("-NoTransferFromFiltering");
   });
 
-  it("no agrega flags de cluster sin clusterDir", () => {
+  it("does not add cluster flags without clusterDir", () => {
     const args = buildLaunchArgs(profile({ clusterId: "x", clusterDir: null }));
     expect(args.join(" ")).not.toContain("-clusterid");
   });
 
-  it("agrega argumentos extra al final", () => {
+  it("appends extra arguments at the end", () => {
     const args = buildLaunchArgs(profile({ extraArgs: ["-NoBattlEye"] }));
     expect(args[args.length - 1]).toBe("-NoBattlEye");
   });

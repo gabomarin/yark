@@ -12,10 +12,10 @@ export function PlaceholderPage({ title, subtitle }: Props): JSX.Element {
     <PageScaffold title={title} subtitle={subtitle}>
       <Card withBorder className={classes.card}>
         <Stack gap="xs">
-          <Title order={3}>Migración en progreso</Title>
+          <Title order={3}>Migration in progress</Title>
           <Text c="dimmed">
-            Esta pantalla todavía no fue reimplementada en el nuevo frontend. Su layout ya usa
-            el shell compartido y se completará cuando llegue su diseño dedicado.
+            This screen has not been reimplemented in the new frontend yet. Its layout already uses
+            the shared shell and will be completed when its dedicated design arrives.
           </Text>
         </Stack>
       </Card>

@@ -31,11 +31,11 @@ import classes from "./ServerForm.module.css";
 interface Props {
   initial: ServerProfile | null;
   onCancel: () => void;
-  /** Tras crear, recibe el perfil; tras editar, sin argumento. */
+  /** After create, receives the profile; after edit, no argument. */
   onSaved: (created?: ServerProfile) => void;
-  /** `embedded` = pestaña del workspace (sin cabecera de página completa). */
+  /** `embedded` = workspace tab (no full-page header). */
   variant?: "page" | "embedded";
-  /** Servidor en starting/running/stopping → aviso de reinicio. */
+  /** Server in starting/running/stopping → restart warning. */
   serverActive?: boolean;
   onOpenConfigurationAssistant?: () => void;
   configurationAssistantDisabled?: boolean;
@@ -172,13 +172,13 @@ export function ServerForm(props: Props): JSX.Element {
       current.length > 0 ? current : undefined,
       field === "installDir"
         ? isCreate
-          ? "Seleccionar carpeta base (se creará una subcarpeta con el nombre del servidor)"
-          : "Seleccionar carpeta de instalación del servidor"
-        : "Seleccionar carpeta de cluster compartido",
+          ? "Select base folder (a subfolder named after the server will be created)"
+          : "Select server install folder"
+        : "Select shared cluster folder",
     );
     setBrowsingField(null);
     if (!result.ok) {
-      setError(result.error ?? "No se pudo abrir el selector de carpeta");
+      setError(result.error ?? "Could not open folder picker");
       return;
     }
     if (result.data !== null) {
@@ -207,7 +207,7 @@ export function ServerForm(props: Props): JSX.Element {
       props.onSaved(props.initial === null ? result.data : undefined);
       return;
     }
-    setError(result.error ?? "No se pudo guardar el servidor");
+    setError(result.error ?? "Could not save the server");
   };
 
   const formBody = (
@@ -215,12 +215,12 @@ export function ServerForm(props: Props): JSX.Element {
       {!embedded && (
         <Group justify="space-between" align="flex-start" className={classes.pageHeader}>
           <div>
-            <Title order={2}>{isCreate ? "Nuevo servidor" : `Editar: ${props.initial!.name}`}</Title>
-            <Text c="dimmed">Configura identidad, red, acceso, cluster y argumentos del servidor.</Text>
+            <Title order={2}>{isCreate ? "New server" : `Edit: ${props.initial!.name}`}</Title>
+            <Text c="dimmed">Configure identity, network, access, cluster, and server arguments.</Text>
           </div>
           <Group gap="xs">
             <Button variant="subtle" leftSection={<ArrowLeft size={16} />} onClick={props.onCancel}>
-              Volver
+              Back
             </Button>
             <Button
               size="md"
@@ -228,7 +228,7 @@ export function ServerForm(props: Props): JSX.Element {
               onClick={() => void submit()}
               loading={saving}
             >
-              Guardar
+              Save
             </Button>
           </Group>
         </Group>
@@ -237,9 +237,9 @@ export function ServerForm(props: Props): JSX.Element {
       {embedded && (
         <Group justify="space-between" align="flex-start" className={classes.embeddedHeader}>
           <div>
-            <Title order={4}>Información del servidor</Title>
+            <Title order={4}>Server information</Title>
             <Text c="dimmed" fz="xs">
-              Nombre, puertos, acceso, cluster y argumentos de arranque.
+              Name, ports, access, cluster, and launch arguments.
             </Text>
           </div>
           <Group gap="xs">
@@ -252,11 +252,11 @@ export function ServerForm(props: Props): JSX.Element {
                 disabled={props.configurationAssistantDisabled}
                 title={
                   props.configurationAssistantDisabled
-                    ? "Guarda o descarta los cambios pendientes de Archivos INI"
-                    : "Configurar los ajustes más utilizados mediante un asistente"
+                    ? "Save or discard pending INI Files changes"
+                    : "Configure the most common settings with a wizard"
                 }
               >
-                Asistente de configuración
+                Configuration wizard
               </Button>
             )}
             <Button
@@ -265,24 +265,24 @@ export function ServerForm(props: Props): JSX.Element {
               onClick={() => void submit()}
               loading={saving}
             >
-              Guardar
+              Save
             </Button>
           </Group>
         </Group>
       )}
 
       {serverActive && (
-        <Alert color="yellow" title="Servidor en ejecución">
-          Puedes guardar cambios ahora; se aplicarán al reiniciar el servidor.
+        <Alert color="yellow" title="Server is running">
+          You can save changes now; they will apply after the server restarts.
         </Alert>
       )}
 
       {error !== null && <Alert color="red">{error}</Alert>}
 
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing={embedded ? "md" : "lg"}>
-        <Section title="Identidad" flat={embedded}>
+        <Section title="Identity" flat={embedded}>
           <TextInput
-            label="Nombre"
+            label="Name"
             size={inputSize}
             value={state.name}
             onChange={(e) => setField("name")(e.currentTarget.value)}
@@ -290,19 +290,19 @@ export function ServerForm(props: Props): JSX.Element {
             error={nameFolderError ?? undefined}
             description={
               isCreate
-                ? 'También se usa como subcarpeta. No uses < > : " / \\ | ? *'
+                ? 'Also used as the subfolder name. Do not use < > : " / \\ | ? *'
                 : undefined
             }
           />
           <TextInput
-            label="Nombre de sesión"
+            label="Session name"
             size={inputSize}
             value={state.sessionName}
             onChange={(e) => setField("sessionName")(e.currentTarget.value)}
             required
           />
           <Select
-            label="Mapa"
+            label="Map"
             size={inputSize}
             value={state.map}
             onChange={(value) => {
@@ -316,7 +316,7 @@ export function ServerForm(props: Props): JSX.Element {
             required
           />
           <PathField
-            label={isCreate ? "Carpeta base" : "Directorio de instalación"}
+            label={isCreate ? "Base folder" : "Install directory"}
             value={state.installDir}
             placeholder={isCreate ? "C:\\ark_servers" : "C:\\ark_servers\\my_server"}
             busy={browsingField === "installDir"}
@@ -327,19 +327,19 @@ export function ServerForm(props: Props): JSX.Element {
           />
           {isCreate && (
             <Text size="sm" c="dimmed">
-              Instalación final:{" "}
+              Final install path:{" "}
               <Text span fw={600} c={resolvedInstallPreview.length > 0 ? undefined : "dimmed"}>
                 {resolvedInstallPreview.length > 0
                   ? resolvedInstallPreview
-                  : "elige carpeta base y nombre"}
+                  : "pick a base folder and name"}
               </Text>
             </Text>
           )}
         </Section>
 
-        <Section title="Red" flat={embedded}>
+        <Section title="Networking" flat={embedded}>
           <NumberInput
-            label="Puerto de juego"
+            label="Game port"
             size={inputSize}
             value={state.gamePort}
             onChange={(value) => setField("gamePort")(String(value))}
@@ -349,7 +349,7 @@ export function ServerForm(props: Props): JSX.Element {
             required
           />
           <NumberInput
-            label="Puerto de query"
+            label="Query port"
             size={inputSize}
             value={state.queryPort}
             onChange={(value) => setField("queryPort")(String(value))}
@@ -359,7 +359,7 @@ export function ServerForm(props: Props): JSX.Element {
             required
           />
           <NumberInput
-            label="Puerto RCON"
+            label="RCON port"
             size={inputSize}
             value={state.rconPort}
             onChange={(value) => setField("rconPort")(String(value))}
@@ -370,16 +370,16 @@ export function ServerForm(props: Props): JSX.Element {
           />
         </Section>
 
-        <Section title="Acceso" flat={embedded}>
+        <Section title="Access" flat={embedded}>
           <PasswordInput
-            label="Contraseña del servidor"
+            label="Server password"
             size={inputSize}
             value={state.serverPassword}
             onChange={(e) => setField("serverPassword")(e.currentTarget.value)}
             autoComplete="new-password"
           />
           <PasswordInput
-            label="Contraseña de administrador"
+            label="Admin password"
             size={inputSize}
             value={state.adminPassword}
             onChange={(e) => setField("adminPassword")(e.currentTarget.value)}
@@ -396,7 +396,7 @@ export function ServerForm(props: Props): JSX.Element {
             onChange={(e) => setField("clusterId")(e.currentTarget.value)}
           />
           <PathField
-            label="Directorio compartido de cluster"
+            label="Shared cluster directory"
             value={state.clusterDir}
             placeholder="C:\\ark_servers\\cluster"
             busy={browsingField === "clusterDir"}
@@ -407,7 +407,7 @@ export function ServerForm(props: Props): JSX.Element {
         </Section>
 
         <Section
-          title={embedded ? "Argumentos de arranque" : "Mods y argumentos"}
+          title={embedded ? "Launch arguments" : "Mods and arguments"}
           flat={embedded}
           span2={embedded}
         >
@@ -422,19 +422,19 @@ export function ServerForm(props: Props): JSX.Element {
           )}
           {embedded && (
             <Text c="dimmed" fz="xs">
-              Los mods se gestionan en el tab Mods. Aquí solo los argumentos extra del
-              proceso (equivalente a Startup Parameters).
+              Mods are managed in the Mods tab. Here only the extra dedicated
+              process arguments (equivalent to Startup Parameters).
             </Text>
           )}
           <Textarea
-            label={embedded ? "Argumentos extra" : "Argumentos extra"}
+            label="Extra arguments"
             size={inputSize}
             value={state.extraArgs}
             onChange={(e) => setField("extraArgs")(e.currentTarget.value)}
             placeholder="-NoBattlEye -ForceAllowCaveFlyers -servergamelog"
             description={
               embedded
-                ? "Separados por espacios. Se añaden al comando de arranque del dedicated."
+                ? "Space-separated. Appended to the dedicated server launch command."
                 : undefined
             }
             minRows={embedded ? 3 : 2}
@@ -530,7 +530,7 @@ function PathField({
           onClick={onBrowse}
           disabled={busy || disabled}
         >
-          {busy ? "Abriendo..." : "Buscar"}
+          {busy ? "Opening..." : "Browse"}
         </Button>
     </Group>
   );

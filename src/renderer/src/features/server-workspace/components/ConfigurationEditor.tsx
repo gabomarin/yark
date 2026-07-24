@@ -57,7 +57,7 @@ export type ConfigSection = "iniFiles";
 
 interface Props {
   server: ServerProfile;
-  /** Sección activa (controlada por los tabs del workspace). */
+  /** Active section (controlled by workspace tabs). */
   section: ConfigSection;
   serverActive?: boolean;
   onDirtyChange?: (dirty: boolean) => void;
@@ -100,15 +100,15 @@ export function ConfigurationEditor(props: Props): JSX.Element {
       setSnapshot(null);
       setPayload(null);
       setBaseline(null);
-      setError(result.error ?? "No se pudo leer el INI");
+      setError(result.error ?? "Could not read the INI");
       return;
     }
     const rawPayload = result.data.payload;
     const sanitized = sanitizeServerIniPayload(rawPayload);
     setSnapshot({ ...result.data, payload: sanitized });
     setPayload(sanitized);
-    // ASA puede regenerar secciones de cliente al iniciar. Son ruido del runtime:
-    // no deben aparecer en el editor ni convertir una lectura en un cambio pendiente.
+    // ASA may regenerate client sections on start. They are runtime noise:
+    // must not appear in the editor or turn a read into a pending change.
     setBaseline(sanitized);
   };
 
@@ -134,7 +134,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
     () => [
       {
         value: "all",
-        label: `Todos los ajustes (${availableRows.length})`,
+        label: `All settings (${availableRows.length})`,
       },
       ...groupSettingReferencesByUiCategory(availableRows).map((group) => ({
         value: group.category,
@@ -175,10 +175,10 @@ export function ConfigurationEditor(props: Props): JSX.Element {
 
   const resetChanges = () => {
     if (baseline === null) return;
-    // Nunca reintroducir keys de cliente en el editor.
+    // Never reintroduce client keys into the editor.
     setPayload(sanitizeServerIniPayload(baseline));
     setPreview(null);
-    setInfo("Cambios descartados");
+    setInfo("Changes discarded");
   };
 
   const resetActiveFileToDefaults = () => {
@@ -186,19 +186,19 @@ export function ConfigurationEditor(props: Props): JSX.Element {
     const label =
       activeFileKey === "game" ? "Game.ini" : "GameUserSettings.ini";
     modals.openConfirmModal({
-      title: `Restablecer ${label}`,
+      title: `Reset ${label}`,
       children: (
-        <Alert color="yellow" title="Se perderán valores actuales" variant="light">
-          Se restaurarán los defaults del proyecto para este archivo. Los cambios no se
-          escriben en disco hasta que pulses Guardar.
+        <Alert color="yellow" title="Current values will be lost" variant="light">
+          Project defaults for this file will be restored. Changes are not
+          written to disk until you click Save.
         </Alert>
       ),
-      labels: { confirm: "Restablecer", cancel: "Cancelar" },
+      labels: { confirm: "Reset", cancel: "Cancel" },
       confirmProps: { color: "yellow" },
       onConfirm: () => {
         setPayload(withFileText(payload, activeFileKey, defaultTextForFile(activeFileKey)));
         setPreview(null);
-        setInfo(`${label} restaurado a valores predeterminados (pendiente de guardar)`);
+        setInfo(`${label} restored to defaults (pending save)`);
       },
     });
   };
@@ -207,7 +207,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
     const defaultValue = lookupDefaultValue(row.fileKey, row.section, row.key);
     if (defaultValue === null) return;
     updateValue(row.fileKey, row.section, row.key, defaultValue, row.occurrence);
-    setInfo(`${row.key} restaurado al default`);
+    setInfo(`${row.key} restored to default`);
   };
 
   const toggleSection = (sectionName: string) => {
@@ -234,7 +234,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
     const result = await window.api.saveServerIni(props.server.id, sanitized);
     setBusy(false);
     if (!result.ok) {
-      setError(result.error ?? "No se pudo guardar el INI");
+      setError(result.error ?? "Could not save the INI");
       return;
     }
     setPayload(sanitized);
@@ -242,8 +242,8 @@ export function ConfigurationEditor(props: Props): JSX.Element {
     setBaseline(sanitized);
     setInfo(
       result.data.changedCount > 0
-        ? `Guardado (${result.data.changedCount} cambios)`
-        : "Guardado (sin cambios)",
+        ? `Saved (${result.data.changedCount} changes)`
+        : "Saved (sin changes)",
     );
   };
 
@@ -252,7 +252,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
     const result = await window.api.openServerIniInEditor(props.server.id, activeFileKey);
     setBusy(false);
     if (!result.ok) {
-      setError(result.error ?? "No se pudo abrir el archivo");
+      setError(result.error ?? "Could not open the file");
     }
   };
 
@@ -271,7 +271,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
         label={
           <div>
             <Text size="xs" fw={600}>
-              Abrir {fileLabel} en el editor predeterminado
+              Open {fileLabel} in the default editor
             </Text>
             <Text size="xs" ff="monospace">
               {filePath}
@@ -286,7 +286,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
           <ActionIcon
             size="md"
             variant="default"
-            aria-label={`Abrir ${fileLabel}`}
+            aria-label={`Open ${fileLabel}`}
             onClick={() => void openExternal()}
             disabled={busy || snapshot === null}
           >
@@ -300,7 +300,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
     <>
       <Select
         size="xs"
-        aria-label="Archivo INI"
+        aria-label="INI file"
         value={iniFile}
         onChange={(value) => {
           if (value === "game" || value === "gameUserSettings") {
@@ -316,12 +316,12 @@ export function ConfigurationEditor(props: Props): JSX.Element {
       />
       <SegmentedControl
         size="xs"
-        aria-label="Modo de edición INI"
+        aria-label="INI edit mode"
         value={iniMode}
         onChange={(value) => setIniMode(value === "text" ? "text" : "visual")}
         data={[
           { value: "visual", label: "Visual" },
-          { value: "text", label: "Texto" },
+          { value: "text", label: "Text" },
         ]}
       />
     </>
@@ -341,8 +341,8 @@ export function ConfigurationEditor(props: Props): JSX.Element {
           </Alert>
         )}
         {props.serverActive === true && (
-          <Alert color="yellow" mb="sm" title="Servidor en ejecución">
-            Los cambios en INI se aplicarán al reiniciar el servidor.
+          <Alert color="yellow" mb="sm" title="Server is running">
+            INI changes will apply after the server restarts.
           </Alert>
         )}
 
@@ -352,12 +352,12 @@ export function ConfigurationEditor(props: Props): JSX.Element {
               <div>
                 <Group gap="xs" wrap="nowrap">
                   <Title order={3}>
-                    Archivos INI
+                    INI Files
                   </Title>
                   {openFileAction}
                 </Group>
                 <Text c="dimmed" size="sm">
-                  Edita {fileLabel} con controles visuales y acceso directo al archivo.
+                  Edit {fileLabel} with visual controls and direct file access.
                 </Text>
               </div>
               <Group gap="xs" className={classes.headerActions}>
@@ -369,7 +369,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                   onClick={resetActiveFileToDefaults}
                   disabled={payload === null || busy || loading}
                 >
-                  Restaurar archivo
+                  Restore file
                 </Button>
                 <Button
                   size="xs"
@@ -378,7 +378,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                   onClick={resetChanges}
                   disabled={!dirty || busy}
                 >
-                  Descartar cambios
+                  Discard changes
                 </Button>
                 <Button
                   size="xs"
@@ -386,7 +386,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                   onClick={() => void saveIni()}
                   disabled={!dirty || busy || loading}
                 >
-                  Guardar
+                  Save
                 </Button>
               </Group>
             </Group>
@@ -394,31 +394,31 @@ export function ConfigurationEditor(props: Props): JSX.Element {
             <Group gap="sm" align="center" className={classes.filterBar}>
               <TextInput
                 className={classes.search}
-                placeholder="Buscar ajustes"
+                placeholder="Search settings"
                 leftSection={<MagnifyingGlass size={14} />}
                 value={search}
                 onChange={(event) => setSearch(event.currentTarget.value)}
               />
               <Select
                 className={classes.categorySelect}
-                aria-label="Filtrar por categoría"
+                aria-label="Filter by category"
                 leftSection={<FunnelSimple size={15} />}
                 value={filter}
                 data={categoryOptions}
                 searchable
                 allowDeselect={false}
-                nothingFoundMessage="Sin categorías"
+                nothingFoundMessage="No categories"
                 onChange={(value) => setFilter((value ?? "all") as IniFilterId)}
               />
               <Button size="xs" variant="light" onClick={() => setAllSectionsCollapsed(true)}>
-                Colapsar
+                Collapse
               </Button>
               <Button size="xs" variant="light" onClick={() => setAllSectionsCollapsed(false)}>
-                Expandir
+                Expand
               </Button>
               {dirty && (
                 <Badge color="yellow" variant="light">
-                  Sin guardar
+                  Unsaved
                 </Badge>
               )}
             </Group>
@@ -427,18 +427,18 @@ export function ConfigurationEditor(props: Props): JSX.Element {
               <div className={classes.tableHead}>
                 <span>Ajuste</span>
                 <span>Valor</span>
-                <span>Descripción</span>
+                <span>Description</span>
                 <span />
               </div>
               <div className={classes.tableBody} data-ini-settings-scroll>
                 {loading && (
                   <Text c="dimmed" p="md">
-                    Cargando INI…
+                    Loading INI…
                   </Text>
                 )}
                 {!loading && groupedRows.length === 0 && (
                   <Text c="dimmed" p="md">
-                    No hay settings para este filtro.
+                    No settings match this filter.
                   </Text>
                 )}
                 {!loading &&
@@ -552,7 +552,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                                     label={
                                       canResetDefault
                                         ? `Default: ${defaultValue}`
-                                        : "Sin default conocido para esta key/sección"
+                                        : "No known default for this key/section"
                                     }
                                   >
                                     <ActionIcon
@@ -577,12 +577,12 @@ export function ConfigurationEditor(props: Props): JSX.Element {
 
             <Group justify="space-between" className={classes.footer}>
               <Text c="dimmed" size="xs">
-                El manager solo administra ajustes aplicables al servidor dedicado.
+                The manager only handles settings that apply to the dedicated server.
               </Text>
             </Group>
 
             {preview !== null && preview.diff.length > 0 && (
-              <Alert color="green" title="Último diff guardado">
+              <Alert color="green" title="Last saved diff">
                 {preview.diff.slice(0, 8).map((entry) => (
                   <Text key={`${entry.fileKey}.${entry.section}.${entry.key}`} size="sm">
                     [{entry.fileKey}] {entry.section}.{entry.key}: {entry.before ?? "∅"} →{" "}
@@ -591,7 +591,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                 ))}
                 {preview.diff.length > 8 && (
                   <Text size="sm" c="dimmed">
-                    …y {preview.diff.length - 8} más
+                    …and {preview.diff.length - 8} more
                   </Text>
                 )}
               </Alert>
@@ -604,11 +604,11 @@ export function ConfigurationEditor(props: Props): JSX.Element {
             <Group justify="space-between" align="flex-start">
               <div>
                 <Group gap="xs" wrap="nowrap">
-                  <Title order={3}>Archivos INI</Title>
+                  <Title order={3}>INI Files</Title>
                   {openFileAction}
                 </Group>
                 <Text c="dimmed" size="sm">
-                  Edición directa de {fileLabel}. Útil para comparar o pegar bloques entre servidores.
+                  Direct editing of {fileLabel}. Useful for comparing or pasting blocks between servers.
                 </Text>
               </div>
               <Group gap="xs" className={classes.headerActions}>
@@ -620,7 +620,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                   onClick={resetChanges}
                   disabled={!dirty || busy}
                 >
-                  Descartar cambios
+                  Discard changes
                 </Button>
                 <Button
                   size="xs"
@@ -628,7 +628,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                   onClick={() => void saveIni()}
                   disabled={!dirty || busy}
                 >
-                  Guardar
+                  Save
                 </Button>
               </Group>
             </Group>

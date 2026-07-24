@@ -1,161 +1,160 @@
-# Smart Configuration — arquitectura propuesta
+# Smart Configuration — proposed architecture
 
-Estado: asistente bajo demanda para servidores existentes implementado el 2026-07-24.
+Status: on-demand assistant for existing servers implemented on 2026-07-24.
 
-## 1. Observaciones
+## 1. Observations
 
-- El workspace presenta `Game.ini` y `GameUserSettings.ini` como destinos
-  principales, aunque ambos usan el mismo editor visual.
-- Las categorías ya están desacopladas de las secciones técnicas, pero solo se
-  pueden recorrer dentro del archivo activo.
-- Los defaults canónicos contienen 297 ajustes: 191 de
-  `GameUserSettings.ini` y 106 de `Game.ini`.
-- El catálogo reconoce 296 de esos 297 ajustes y ya aporta descripción,
-  default y tipo para la mayoría.
-- La edición raw, el estado de cambios, presets, búsqueda, filtros y
-  restauración ya existen y deben conservarse.
+- The workspace presents `Game.ini` and `GameUserSettings.ini` as primary
+  destinations, even though both use the same visual editor.
+- Categories are already decoupled from technical sections, but can only be
+  browsed within the active file.
+- Canonical defaults contain 297 settings: 191 from `GameUserSettings.ini` and
+  106 from `Game.ini`.
+- The catalog recognizes 296 of those 297 settings and already provides
+  description, default, and type for most of them.
+- Raw editing, change state, presets, search, filters, and restore already
+  exist and must be preserved.
 
-## 2. Problemas detectados
+## 2. Detected problems
 
-- Un usuario debe saber en qué INI buscar antes de expresar qué quiere cambiar.
-- Las mismas categorías pueden aparecer en dos pestañas y obligan a alternar
-  entre archivos.
-- Las keys técnicas son el título principal y muchas descripciones están en
-  inglés o son demasiado extensas.
-- Todos los ajustes tienen prácticamente la misma jerarquía, aunque algunos
-  son frecuentes y otros son operativos, peligrosos o muy especializados.
-- Los presets actuales aplican varios cambios desde un selector sin explicar
-  suficientemente el resultado antes de aplicarlo.
+- A user must know which INI to search before expressing what they want to
+  change.
+- The same categories can appear in two tabs and force switching between files.
+- Technical keys are the primary title, and many descriptions are in English or
+  overly long.
+- Nearly all settings share the same hierarchy, even though some are frequent
+  and others are operational, dangerous, or highly specialized.
+- Current presets apply several changes from a selector without explaining the
+  outcome clearly enough before applying.
 
-## 3. Arquitectura de información propuesta
+## 3. Proposed information architecture
 
-Navegación principal del servidor:
+Primary server navigation:
 
-1. `Servidor`
-2. `Archivos INI`
+1. `Server`
+2. `INI Files`
 3. `Mods`
 
-La experiencia existente no desaparece. `Archivos INI` conserva una navegación
-explícita entre `GameUserSettings.ini` y `Game.ini`, con dos modos:
+The existing experience does not disappear. `INI Files` keeps explicit
+navigation between `GameUserSettings.ini` and `Game.ini`, with two modes:
 
-- `Visual por archivo`: el editor categorizado actual.
-- `Texto`: la edición raw que hoy se encuentra en `Avanzado`.
+- `Visual by file`: the current categorized editor.
+- `Text`: the raw editing mode previously found under `Advanced`.
 
-Esto preserva los conceptos y la memoria muscular de administradores
-experimentados. La acción de abrir el archivo externo permanece en esta vista.
+This preserves concepts and muscle memory for experienced administrators. The
+action to open the external file remains in this view.
 
-La configuración para principiantes no es una pestaña permanente. Se abre bajo
-demanda desde `Servidor → Asistente de configuración`, porque entrar a una
-pestaña no debe insinuar que explorar y aplicar recomendaciones son la misma
-acción.
+Beginner configuration is not a permanent tab. It opens on demand from
+`Server → Configuration assistant`, because entering a tab must not imply that
+browsing and applying recommendations are the same action.
 
-El asistente es una vista dedicada de seis pasos:
+The assistant is a dedicated six-step view:
 
-1. Perfil de experiencia.
-2. Ritmo de progresión mediante niveles semánticos.
-3. Crianza mediante niveles semánticos.
-4. Mundo mediante niveles semánticos (capacidad, densidad, ciclo y supervivencia).
-5. Reglas de comodidad.
-6. Revisión y aplicación.
+1. Experience profile.
+2. Progression pace via semantic levels.
+3. Breeding via semantic levels.
+4. World via semantic levels (capacity, density, cycle, and survival).
+5. Comfort rules.
+6. Review and apply.
 
-Lee los valores actuales y crea un borrador aislado. Elegir perfiles, avanzar o
-cancelar no escribe archivos. Solo `Aplicar cambios` valida, previsualiza y
-guarda ambos INI. Las keys no administradas por el asistente se preservan.
+It reads current values and creates an isolated draft. Choosing profiles,
+advancing, or canceling does not write files. Only `Apply changes` validates,
+previews, and saves both INI files. Keys not managed by the assistant are
+preserved.
 
-## 4. Componentes y flujo
+## 4. Components and flow
 
-### Borrador
+### Draft
 
-- Se inicializa desde los INI reales.
-- Usa conceptos comprensibles, no keys técnicas.
-- Modifica únicamente un catálogo curado (~24 conceptos frecuentes).
-- Coordina ajustes relacionados mediante presets comprensibles, pero siempre
-  muestra los multiplicadores exactos que producirá cada selección.
-- `Actual` restaura únicamente los valores originales del grupo activo y
-  conserva el resto del borrador.
-- `Ajustes para una persona o grupo pequeño` es una decisión explícita de alto
-  impacto. Los perfiles la conservan y nunca la activan o desactivan
-  implícitamente.
-- Cuando el modo individual está activo, Ritmo y Crianza muestran tanto el
-  multiplicador configurado como el efectivo conocido. También se advierten
-  los efectos que no pueden reducirse a una sola tasa.
-- La dificultad es un concepto compuesto: el usuario elige el nivel máximo
-  común y el asistente coordina `DifficultyOffset=1` con
-  `OverrideOfficialDifficulty=nivel/30`. Los valores originales se preservan
-  mientras el usuario mantenga `Actual`.
-- Se descarta íntegramente al cancelar.
-- No puede abrirse si `Archivos INI` tiene cambios pendientes.
+- Initialized from the real INI files.
+- Uses understandable concepts, not technical keys.
+- Modifies only a curated catalog (~24 frequent concepts).
+- Coordinates related settings through understandable presets, but always shows
+  the exact multipliers each selection will produce.
+- `Current` restores only the original values of the active group and keeps the
+  rest of the draft.
+- `Settings for one person or a small group` is an explicit high-impact
+  decision. Profiles preserve it and never enable or disable it implicitly.
+- When single-player mode is active, Pace and Breeding show both the configured
+  multiplier and the known effective rate. Effects that cannot be reduced to a
+  single rate are also warned about.
+- Difficulty is a composite concept: the user chooses the common max level and
+  the assistant coordinates `DifficultyOffset=1` with
+  `OverrideOfficialDifficulty=level/30`. Original values are preserved while the
+  user keeps `Current`.
+- Discarded entirely on cancel.
+- Cannot open if `INI Files` has pending changes.
 
-### Revisión y guardado
+### Review and save
 
-- Presenta valor anterior y nuevo con lenguaje humano.
-- El contador de cambios abre este mismo resumen desde cualquier paso; no es
-  únicamente un indicador pasivo.
-- Valida el modelo con Zod.
-- Relee los INI antes de aplicar y superpone solo los ajustes curados.
-- Solicita un preview al backend antes de guardar.
-- Informa si el servidor requiere reinicio.
-- Después de aplicar, recarga el editor manual desde disco.
+- Presents previous and new values in human language.
+- The change counter opens this same summary from any step; it is not only a
+  passive indicator.
+- Validates the model with Zod.
+- Re-reads the INI files before applying and overlays only curated settings.
+- Requests a backend preview before saving.
+- Reports whether the server requires a restart.
+- After applying, reloads the manual editor from disk.
 
-### Archivos INI
+### INI Files
 
-- Conserva el editor visual por archivo actual.
-- Conserva el editor raw actual como modo `Texto`.
-- Selector entre ambos archivos y entre modo visual/texto.
-- Ruta y acción de abrir el archivo.
-- Sigue siendo la experiencia habitual para administradores experimentados.
+- Keeps the current visual editor per file.
+- Keeps the current raw editor as `Text` mode.
+- Selector between both files and between visual/text mode.
+- Path and action to open the file.
+- Remains the habitual experience for experienced administrators.
 
-## 5. Implementación incremental
+## 5. Incremental implementation
 
-### Bloque 3.1 — Archivos INI
+### Block 3.1 — INI Files
 
-- Agrupar editor visual y raw bajo una sola vista.
-- Preservar selector de archivo, apertura externa y restauración.
+- Group visual and raw editors under a single view.
+- Preserve file selector, external open, and restore.
 
-Estado: completado.
+Status: completed.
 
-### Bloque 3.2 — Asistente bajo demanda
+### Block 3.2 — On-demand assistant
 
-- Lanzador contextual desde `Servidor`.
-- Cinco pasos con perfiles y valores actuales.
-- Borrador aislado, resumen legible y aplicación explícita.
-- Protección frente a cambios manuales pendientes.
+- Contextual launcher from `Server`.
+- Five steps with profiles and current values.
+- Isolated draft, readable summary, and explicit apply.
+- Protection against pending manual changes.
 
-Estado: completado para servidores existentes.
+Status: completed for existing servers.
 
-### Bloque 3.3 — Ampliación curada
+### Block 3.3 — Curated expansion
 
-Estado: completado (2026-07-23).
+Status: completed (2026-07-23).
 
-- Catálogo ampliado con jugadores máximos, densidad, salud de nodos, ciclo
-  día/noche, drain de comida/agua y resistencia de estructuras.
-- Nuevo paso `Mundo` en el asistente; perfiles de experiencia declaran valores
-  para estos campos.
-- Tests de modelo cubren lectura/escritura de los nuevos ajustes.
+- Catalog expanded with max players, density, harvest node health, day/night
+  cycle, food/water drain, and structure resistance.
+- New `World` step in the assistant; experience profiles declare values for
+  these fields.
+- Model tests cover read/write of the new settings.
 
-### Bloque 3.4 — Creación de servidores
+### Block 3.4 — Server creation
 
-Estado: completado (2026-07-23).
+Status: completed (2026-07-23).
 
-- Tras crear un servidor (no al clonar), se abre el workspace con checklist de
-  onboarding opcional.
-- Checklist: experiencia (asistente / defaults), cluster, puertos e instalación.
-- `Más tarde` cierra el checklist sin bloquear arranque ni instalación.
-- El asistente INI se reutiliza; no se duplica la lógica de configuración.
+- After creating a server (not when cloning), the workspace opens with an
+  optional onboarding checklist.
+- Checklist: experience (assistant / defaults), cluster, ports, and install.
+- `Later` closes the checklist without blocking start or install.
+- The INI assistant is reused; configuration logic is not duplicated.
 
-## 6. Decisiones vigentes
+## 6. Current decisions
 
-- No existe una pestaña permanente llamada `Configuración guiada`.
-- Abrir el asistente nunca cambia los INI.
-- Los perfiles son puntos de partida del borrador, no estados persistidos.
-- Ritmo y crianza usan niveles discretos en vez de un slider continuo: varios
-  multiplicadores cambian en direcciones distintas y una escala numérica única
-  ocultaría esa relación.
-- Los presets no se describen como tasas oficiales, porque eventos y cambios de
-  Wildcard pueden alterar temporalmente esa referencia.
-- Los factores adicionales del modo individual se mantienen centralizados y
-  documentados con la referencia de
+- There is no permanent tab named `Guided Configuration`.
+- Opening the assistant never changes the INI files.
+- Profiles are draft starting points, not persisted states.
+- Pace and breeding use discrete levels instead of a continuous slider: several
+  multipliers change in different directions and a single numeric scale would
+  hide that relationship.
+- Presets are not described as official rates, because Wildcard events and
+  changes can temporarily alter that reference.
+- Additional single-player mode factors stay centralized and documented with the
+  reference from the
   [ARK Official Community Wiki](https://ark.wiki.gg/wiki/Single_Player).
-- El resumen se deriva de cambios reales; no existe una segunda fuente de verdad.
-- La integración posterior a la creación reutiliza este mismo asistente INI
-  detrás de un checklist de onboarding separado (cluster, puertos, install).
+- The summary is derived from real changes; there is no second source of truth.
+- Post-creation integration reuses this same INI assistant behind a separate
+  onboarding checklist (cluster, ports, install).

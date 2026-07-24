@@ -23,10 +23,10 @@ interface Props {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  stopped: "Detenido",
-  starting: "Iniciando",
-  running: "Activo",
-  stopping: "Deteniendo",
+  stopped: "Stopped",
+  starting: "Starting",
+  running: "Running",
+  stopping: "Stopping",
   error: "Error",
 };
 
@@ -44,12 +44,12 @@ export function WorkspaceHeader(props: Props): JSX.Element {
   return (
     <header className={classes.header}>
       <Group gap="sm" align="flex-start" wrap="nowrap" className={classes.identity}>
-        <Tooltip label="Volver a servidores">
+        <Tooltip label="Back to servers">
           <ActionIcon
             variant="subtle"
             color="gray"
             size="md"
-            aria-label="Volver a servidores"
+            aria-label="Back to servers"
             onClick={props.onBack}
           >
             <ArrowLeft size={18} />
@@ -57,7 +57,7 @@ export function WorkspaceHeader(props: Props): JSX.Element {
         </Tooltip>
         <Stack gap={2} style={{ minWidth: 0 }}>
           <Text className={classes.crumb} fz="xs" c="dimmed">
-            Servidores / {props.server.name}
+            Servers / {props.server.name}
           </Text>
           <Group gap="xs" wrap="nowrap">
             <Title order={3} fz="lg" lineClamp={1}>
@@ -80,7 +80,7 @@ export function WorkspaceHeader(props: Props): JSX.Element {
             </Badge>
           </Group>
           <Text size="xs" c="dimmed" lineClamp={1}>
-            {props.server.map} · puerto {props.server.gamePort} · versión {version}
+            {props.server.map} · port {props.server.gamePort} · version {version}
           </Text>
         </Stack>
       </Group>
@@ -93,7 +93,7 @@ export function WorkspaceHeader(props: Props): JSX.Element {
             onClick={props.onStart}
             disabled={!canStart}
           >
-            Iniciar
+            Start
           </Button>
           <Button
             size="sm"
@@ -102,7 +102,7 @@ export function WorkspaceHeader(props: Props): JSX.Element {
             onClick={props.onRestart}
             disabled={!canRestart}
           >
-            Reiniciar
+            Restart
           </Button>
           <Button
             size="sm"
@@ -112,7 +112,7 @@ export function WorkspaceHeader(props: Props): JSX.Element {
             onClick={props.onStop}
             disabled={!canStop}
           >
-            Detener
+            Stop
           </Button>
         </Group>
 
@@ -125,7 +125,7 @@ export function WorkspaceHeader(props: Props): JSX.Element {
                 leftSection={<HardDrives size={14} />}
                 onClick={props.onOpenServerSwitcher}
               >
-                Cambiar servidor
+                Switch server
               </Button>
               <Button
                 size="compact-sm"
@@ -133,7 +133,7 @@ export function WorkspaceHeader(props: Props): JSX.Element {
                 leftSection={<Wrench size={14} />}
                 onClick={props.onOpenServerActions}
               >
-                Estado y acciones
+                Status and actions
               </Button>
             </Group>
           )}

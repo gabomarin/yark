@@ -88,7 +88,7 @@ afterEach(() => {
 });
 
 describe("IniService semantic validation", () => {
-  it("marca inválido cuando RCONPort no es numérico", async () => {
+  it("marks invalid when RCONPort is not numeric", async () => {
     const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
     tmpDirs.push(installDir);
     prepareIniFiles(installDir);
@@ -103,7 +103,7 @@ describe("IniService semantic validation", () => {
     expect(preview.issues.some((i) => i.message.includes("RCONPort"))).toBe(true);
   });
 
-  it("marca inválido cuando RCONPort está fuera de rango", async () => {
+  it("marks invalid when RCONPort is out of range", async () => {
     const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
     tmpDirs.push(installDir);
     prepareIniFiles(installDir);
@@ -115,10 +115,10 @@ describe("IniService semantic validation", () => {
     });
 
     expect(preview.valid).toBe(false);
-    expect(preview.issues.some((i) => i.message.includes("1024 y 65535"))).toBe(true);
+    expect(preview.issues.some((i) => i.message.includes("1024 and 65535"))).toBe(true);
   });
 
-  it("marca inválido cuando MaxPlayers no es un entero positivo", async () => {
+  it("marks invalid when MaxPlayers is not a positive integer", async () => {
     const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
     tmpDirs.push(installDir);
     prepareIniFiles(installDir);
@@ -133,7 +133,7 @@ describe("IniService semantic validation", () => {
     expect(preview.issues.some((i) => i.message.includes("MaxPlayers"))).toBe(true);
   });
 
-  it("rechaza guardar INI con validación semántica inválida", async () => {
+  it("rejects saving INI with invalid semantic validation", async () => {
     const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
     tmpDirs.push(installDir);
     prepareIniFiles(installDir);
@@ -145,14 +145,14 @@ describe("IniService semantic validation", () => {
         gameUserSettings: "[ServerSettings]\nRCONPort=99999\n",
         game: "",
       }),
-    ).rejects.toThrow("INI inválido");
+    ).rejects.toThrow("Invalid INI");
 
     expect(addEvent).not.toHaveBeenCalled();
     const saved = readFileSync(gameUserSettingsPath(installDir), "utf8");
     expect(saved).toBe("");
   });
 
-  it("permite guardar INI válido y registra evento", async () => {
+  it("allows saving a valid INI and records an event", async () => {
     const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
     tmpDirs.push(installDir);
     prepareIniFiles(installDir);
@@ -171,7 +171,7 @@ describe("IniService semantic validation", () => {
     expect(saved).toContain("RCONPort=27020");
   });
 
-  it("elimina keys de cliente al guardar INI de dedicated", async () => {
+  it("strips client keys when saving dedicated INI", async () => {
     const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
     tmpDirs.push(installDir);
     prepareIniFiles(installDir);
@@ -196,7 +196,7 @@ describe("IniService semantic validation", () => {
     expect(saved).not.toContain("LastJoinedSessionPerCategory");
   });
 
-  it("ignora ruido de cliente generado por ASA al leer sin modificar el disco", async () => {
+  it("ignores ASA-generated client noise when reading without modifying disk", async () => {
     const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
     tmpDirs.push(installDir);
     prepareIniFiles(installDir);

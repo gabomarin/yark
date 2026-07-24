@@ -12,25 +12,25 @@ import {
 
 export { findPortConflicts } from "@shared/port-conflicts";
 
-/** Ruta absoluta de Windows (unidad o UNC). */
+/** Absolute Windows path (drive letter or UNC). */
 const WINDOWS_ABS_PATH = /^(?:[a-zA-Z]:[\\/]|\\\\)/;
 
 const portSchema = z
   .number()
   .int()
-  .min(PORT_MIN, `El puerto debe ser >= ${PORT_MIN}`)
-  .max(PORT_MAX, `El puerto debe ser <= ${PORT_MAX}`);
+  .min(PORT_MIN, `Port must be >= ${PORT_MIN}`)
+  .max(PORT_MAX, `Port must be <= ${PORT_MAX}`);
 
 const windowsPathSchema = z
   .string()
-  .min(3, "Ruta requerida")
-  .regex(WINDOWS_ABS_PATH, "Debe ser una ruta absoluta de Windows");
+  .min(3, "Path required")
+  .regex(WINDOWS_ABS_PATH, "Must be an absolute Windows path");
 
 export const serverProfileInputSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(1, "Nombre requerido")
+    .min(1, "Name required")
     .max(64)
     .superRefine((value, ctx) => {
       const error = getServerFolderNameError(value);
@@ -38,14 +38,14 @@ export const serverProfileInputSchema = z.object({
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: error });
       }
     }),
-  map: z.string().trim().min(1, "Mapa requerido"),
+  map: z.string().trim().min(1, "Map required"),
   installDir: windowsPathSchema,
-  sessionName: z.string().trim().min(1, "Nombre de sesión requerido").max(96),
+  sessionName: z.string().trim().min(1, "Session name required").max(96),
   gamePort: portSchema,
   queryPort: portSchema,
   rconPort: portSchema,
   serverPassword: z.string().nullable(),
-  adminPassword: z.string().min(4, "Password admin de al menos 4 caracteres"),
+  adminPassword: z.string().min(4, "Admin password must be at least 4 characters"),
   clusterId: z.string().trim().min(1).nullable(),
   clusterDir: windowsPathSchema.nullable(),
   extraArgs: z.array(z.string()),
@@ -53,7 +53,7 @@ export const serverProfileInputSchema = z.object({
 });
 
 /**
- * Valida un perfil de entrada. Devuelve lista de problemas (vacía si es válido).
+ * Validates a profile input. Returns a list of issues (empty if valid).
  */
 export function validateProfileInput(
   input: ServerProfileInput,
@@ -70,12 +70,12 @@ export function validateProfileInput(
   const { gamePort, queryPort, rconPort, clusterId, clusterDir, installDir } =
     parsed.data;
 
-  const installDirError = getWindowsPathError(installDir, "Directorio de instalación");
+  const installDirError = getWindowsPathError(installDir, "Install directory");
   if (installDirError !== null) {
     issues.push({ field: "installDir", message: installDirError });
   }
   if (clusterDir !== null) {
-    const clusterDirError = getWindowsPathError(clusterDir, "Directorio de cluster");
+    const clusterDirError = getWindowsPathError(clusterDir, "Cluster directory");
     if (clusterDirError !== null) {
       issues.push({ field: "clusterDir", message: clusterDirError });
     }
@@ -85,18 +85,18 @@ export function validateProfileInput(
   if (new Set(ports).size !== ports.length) {
     issues.push({
       field: "ports",
-      message: "Los puertos game, query y RCON deben ser distintos entre sí",
+      message: "Game, query, and RCON ports must be distinct",
     });
   }
   if (clusterId !== null && clusterDir === null) {
     issues.push({
       field: "clusterDir",
-      message: "Un servidor con cluster id requiere directorio de cluster",
+      message: "A server with a cluster id requires a cluster directory",
     });
   }
   const uniqueMods = new Set(parsed.data.mods);
   if (uniqueMods.size !== parsed.data.mods.length) {
-    issues.push({ field: "mods", message: "Hay mods duplicados en la lista" });
+    issues.push({ field: "mods", message: "Duplicate mods in the list" });
   }
   return issues;
 }

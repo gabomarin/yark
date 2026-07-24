@@ -4,13 +4,13 @@ import { applyIniPreset, listIniPresets } from "@shared/ini-presets";
 import { parseIniTextRows, setIniTextValue } from "@shared/ini-text";
 
 describe("ini-presets", () => {
-  it("expone presets comunes disponibles", () => {
+  it("exposes available common presets", () => {
     const presets = listIniPresets();
     expect(presets.length).toBeGreaterThanOrEqual(3);
-    expect(presets.some((p) => p.id === "pve-basico")).toBe(true);
+    expect(presets.some((p) => p.id === "pve-basic")).toBe(true);
   });
 
-  it("no modifica payload cuando preset no existe", () => {
+  it("does not modify payload when preset does not exist", () => {
     const payload: ServerIniPayload = {
       gameUserSettings: "[ServerSettings]\nRCONPort=27020\n",
       game: "",
@@ -20,30 +20,30 @@ describe("ini-presets", () => {
     expect(next).toEqual(payload);
   });
 
-  it("aplica preset pve básico sin perder llaves existentes", () => {
+  it("applies basic PvE preset without losing existing keys", () => {
     const payload: ServerIniPayload = {
       gameUserSettings: [
         "[ServerSettings]",
         "RCONPort=27020",
-        "SessionName=Servidor Test",
+        "SessionName=Server Test",
         "",
       ].join("\n"),
       game: "",
     };
 
-    const next = applyIniPreset(payload, "pve-basico");
+    const next = applyIniPreset(payload, "pve-basic");
     const rows = parseIniTextRows(next.gameUserSettings);
     const byKey = Object.fromEntries(
       rows.filter((row) => row.section === "ServerSettings").map((row) => [row.key, row.value]),
     );
 
     expect(byKey["RCONPort"]).toBe("27020");
-    expect(byKey["SessionName"]).toBe("Servidor Test");
+    expect(byKey["SessionName"]).toBe("Server Test");
     expect(byKey["AllowFlyerCarryPVE"]).toBe("True");
     expect(byKey["ShowMapPlayerLocation"]).toBe("True");
   });
 
-  it("aplica preset rendimiento sobreescribiendo valores objetivo", () => {
+  it("applies performance preset overwriting target values", () => {
     const payload: ServerIniPayload = {
       gameUserSettings: [
         "[ServerSettings]",
@@ -54,7 +54,7 @@ describe("ini-presets", () => {
       game: "",
     };
 
-    const next = applyIniPreset(payload, "rendimiento");
+    const next = applyIniPreset(payload, "performance");
     const rows = parseIniTextRows(next.gameUserSettings);
     const byKey = Object.fromEntries(
       rows.filter((row) => row.section === "ServerSettings").map((row) => [row.key, row.value]),
@@ -64,7 +64,7 @@ describe("ini-presets", () => {
     expect(byKey["NetServerMaxTickRate"]).toBe("30");
   });
 
-  it("actualiza secciones con puntos sin anidarlas", () => {
+  it("updates dotted sections without nesting them", () => {
     const text = setIniTextValue(
       "[/Script/Engine.GameSession]\nMaxPlayers=10\n",
       "/Script/Engine.GameSession",

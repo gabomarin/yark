@@ -1,237 +1,228 @@
-# Dirección visual — Paleo-Tech Operations
+# Visual direction — Paleo-Tech Operations
 
-## Idea central
+## Core idea
 
-La interfaz representa tecnología avanzada operando mundos primitivos. La
-identidad debe comunicar precisión, control y vida antigua sin convertirse en
-una interfaz gamer ni copiar la identidad visual de ARK.
+The interface represents advanced technology operating primitive worlds. The
+identity should communicate precision, control, and ancient life without
+becoming a gamer UI or copying ARK’s visual identity.
 
-La mezcla se denomina **Paleo-Tech Operations**.
+The blend is called **Paleo-Tech Operations**.
 
-## Lenguaje visual
+## Visual language
 
-- **Obsidiana:** lienzo y superficies principales. Debe sentirse profundo,
-  estable y sobrio.
-- **Azul criogénico:** acciones, selección, navegación y procesos técnicos.
-- **Ámbar fósil:** atención, instalaciones pendientes, updates y elementos que
-  requieren una decisión.
-- **Verde biomasa:** salud, disponibilidad y operaciones correctas.
-- **Rojo:** errores y acciones destructivas; no se usa como decoración.
+- **Obsidian:** canvas and primary surfaces. It should feel deep, stable, and
+  restrained.
+- **Cryogenic blue:** actions, selection, navigation, and technical processes.
+- **Fossil amber:** attention, pending installs, updates, and elements that
+  require a decision.
+- **Biomass green:** health, availability, and successful operations.
+- **Red:** errors and destructive actions; never used as decoration.
 
-Los nombres semánticos están disponibles como variables CSS:
+Semantic names are available as CSS variables:
 
 - `--app-color-cryo`
 - `--app-color-fossil`
 - `--app-color-biomass`
 
-## Paleta Radix vigente
+## Current Radix palette
 
-La paleta base sigue escalas Radix personalizadas. Los componentes deben usar
-primero los tokens semánticos `--app-color-*`; las escalas `--ark-*` se
-reservan para estados y variantes que necesiten un nivel concreto.
+The base palette follows custom Radix scales. Components should prefer the
+semantic `--app-color-*` tokens first; the `--ark-*` scales are reserved for
+states and variants that need a specific step.
 
-- `--ark-background`: lienzo azul noche (`#0c1427`).
-- `--ark-gray-2`: navegación y superficies de máxima profundidad.
-- `--ark-gray-3`: paneles y tarjetas principales.
-- `--ark-gray-4`: campos, hover y superficies internas.
-- `--ark-gray-6` y `--ark-gray-7`: bordes y separadores.
-- `--ark-gray-11`: texto secundario.
-- `--ark-gray-12`: texto principal.
-- `--ark-blue-9`: acciones sólidas, selección e indicadores.
-- `--ark-blue-10`: hover de acciones sólidas.
-- `--ark-blue-11`: texto interactivo y foco.
-- `--ark-blue-12`: contenido de alto contraste sobre fondos azules.
+- `--ark-background`: night-blue canvas (`#0c1427`).
+- `--ark-gray-2`: navigation and deepest surfaces.
+- `--ark-gray-3`: panels and primary cards.
+- `--ark-gray-4`: fields, hover, and inner surfaces.
+- `--ark-gray-6` and `--ark-gray-7`: borders and separators.
+- `--ark-gray-11`: secondary text.
+- `--ark-gray-12`: primary text.
+- `--ark-blue-9`: solid actions, selection, and indicators.
+- `--ark-blue-10`: hover for solid actions.
+- `--ark-blue-11`: interactive text and focus.
+- `--ark-blue-12`: high-contrast content on blue backgrounds.
 
-Los contenedores operativos que representan entidades —como una fila de
-servidor— pueden usar `--app-color-panel-cool` y
-`--app-color-panel-cool-emphasis`. Estas superficies mezclan obsidiana y azul
-noche para separarse del lienzo sin convertirse en tarjetas grises ni competir
-con las acciones.
+Operational containers that represent entities — such as a server row — may use
+`--app-color-panel-cool` and `--app-color-panel-cool-emphasis`. These surfaces
+mix obsidian and night blue to separate from the canvas without becoming gray
+cards or competing with actions.
 
-### Escala semántica de superficies
+### Semantic surface scale
 
-Las superficies del workspace siguen niveles funcionales en lugar de grises
-elegidos por componente:
+Workspace surfaces follow functional levels rather than per-component gray
+choices:
 
-- `--app-color-surface-chrome`: navegación, barras y paneles estructurales.
-- `--app-color-surface-panel`: formularios, editores y tarjetas de contenido.
-- `--app-color-surface-control`: campos y cabeceras interactivas.
-- `--app-color-surface-control-hover`: hover de controles.
-- `--app-color-border-subtle`: separación entre regiones.
-- `--app-color-border-control`: límite identificable de campos.
-- `--app-color-text-soft` y `--app-color-muted-soft`: texto principal y
-  secundario sin blanco puro.
+- `--app-color-surface-chrome`: navigation, bars, and structural panels.
+- `--app-color-surface-panel`: forms, editors, and content cards.
+- `--app-color-surface-control`: fields and interactive headers.
+- `--app-color-surface-control-hover`: control hover.
+- `--app-color-border-subtle`: separation between regions.
+- `--app-color-border-control`: identifiable field boundary.
+- `--app-color-text-soft` and `--app-color-muted-soft`: primary and secondary
+  text without pure white.
 
-Un campo debe distinguirse del panel por relleno y borde. En reposo el borde de
-control mantiene aproximadamente `3.10:1` respecto al panel; al recibir foco
-usa azul interactivo y halo, sin cambiar el layout.
+A field must be distinguishable from its panel by fill and border. At rest, the
+control border holds roughly `3.10:1` against the panel; on focus it uses
+interactive blue and a halo, without changing layout.
 
-Las selecciones persistentes en listas usan una superficie oscura apenas
-contaminada de azul, un borde tenue y un indicador lateral. El azul sólido se
-reserva para acciones primarias y no debe utilizarse como relleno completo de
-una fila seleccionada.
+Persistent list selections use a dark surface with minimal blue tint, a soft
+border, and a side indicator. Solid blue is reserved for primary actions and
+must not be used as a full fill for a selected row.
 
-También están disponibles las escalas completas `--ark-blue-1` a
-`--ark-blue-12`, `--ark-blue-a1` a `--ark-blue-a12`, `--ark-gray-1` a
-`--ark-gray-12` y `--ark-gray-a1` a `--ark-gray-a12`. Las variantes alpha
-deben preferirse para selección, hover y foco porque conservan la relación con
-la superficie subyacente. El renderer incluye equivalentes Display P3/OKLCH
-cuando el monitor y Chromium los soportan.
+Full scales `--ark-blue-1` through `--ark-blue-12`, `--ark-blue-a1` through
+`--ark-blue-a12`, `--ark-gray-1` through `--ark-gray-12`, and `--ark-gray-a1`
+through `--ark-gray-a12` are also available. Prefer alpha variants for
+selection, hover, and focus because they preserve relationship to the
+underlying surface. The renderer includes Display P3/OKLCH equivalents when the
+monitor and Chromium support them.
 
-## Motivos y formas
+## Motifs and shapes
 
-- Las curvas topográficas representan territorio, estratos y exploración. Se
-  usan a baja opacidad y como textura ambiental, nunca como contenido.
-- La microtextura Tek combina geometría fragmentada, conexiones, nodos y curvas
-  de estrato en un mosaico continuo de `640×640`. Se presenta visualmente a
-  `720×720` para reducir la repetición y usa una máscara vertical: casi
-  desaparece detrás del contenido superior y gana presencia únicamente en
-  espacios vacíos.
-- La microtextura pertenece al lienzo. No se repite dentro de tarjetas,
-  formularios, modales, tablas o paneles laterales.
-- Las formas técnicas pueden incorporar cortes, segmentos o geometría
-  ligeramente irregular. No deben comprometer legibilidad ni áreas clicables.
-- La espina lateral de las filas de servidor comunica estado y recuerda una
-  estructura orgánica sin dibujar huesos o dinosaurios literalmente.
-- El símbolo inicial combina biología y tecnología mediante ADN dentro de una
-  celda técnica. Es una dirección de marca, no el icono final de distribución.
+- Topographic curves represent territory, strata, and exploration. Use them at
+  low opacity as ambient texture, never as content.
+- The Tek microtexture combines fragmented geometry, connections, nodes, and
+  strata curves in a continuous `640×640` tile. It is presented visually at
+  `720×720` to reduce repetition and uses a vertical mask: it nearly disappears
+  behind upper content and gains presence only in empty space.
+- The microtexture belongs to the canvas. Do not repeat it inside cards, forms,
+  modals, tables, or side panels.
+- Technical shapes may include cuts, segments, or slightly irregular geometry.
+  They must not compromise readability or clickable areas.
+- The side spine on server rows communicates status and recalls an organic
+  structure without literally drawing bones or dinosaurs.
+- The initial symbol combines biology and technology through DNA inside a
+  technical cell. It is a brand direction, not the final distribution icon.
 
-## Profundidad
+## Depth
 
-La jerarquía se construye principalmente con contraste, bordes y separación.
-Los degradados se reservan para planos ambientales grandes, navegación
-seleccionada y transiciones entre azul noche y obsidiana. No se aplican a cada
-tarjeta ni se usan para simular brillo. Se evitan glassmorphism y sombras
-grandes; las sombras se reservan para elementos que realmente flotan, como
-modales o docks.
+Hierarchy is built primarily with contrast, borders, and separation. Gradients
+are reserved for large ambient planes, selected navigation, and transitions
+between night blue and obsidian. Do not apply them to every card or use them to
+fake glow. Avoid glassmorphism and large shadows; shadows are reserved for
+elements that truly float, such as modals or docks.
 
 ### Obsidian Atmosphere
 
-- El lienzo combina azul noche en la zona superior con obsidiana neutral en el
-  área de trabajo.
-- El sidebar forma parte del mismo ambiente y no debe verse como una columna
-  gris independiente.
-- Las superficies de contenido conservan contraste neutral con una mezcla azul
-  mínima.
-- Las acciones sólidas permanecen planas; el degradado no debe sustituir la
-  jerarquía funcional.
-- El ámbar fósil puede aparecer como iluminación ambiental casi imperceptible,
-  además de conservar su significado de atención.
+- The canvas combines night blue in the upper zone with neutral obsidian in the
+  work area.
+- The sidebar is part of the same atmosphere and must not read as an
+  independent gray column.
+- Content surfaces keep neutral contrast with a minimal blue mix.
+- Solid actions stay flat; gradient must not replace functional hierarchy.
+- Fossil amber may appear as nearly imperceptible ambient lighting, while
+  retaining its attention meaning.
 
-## Restricciones
+## Constraints
 
-- No usar ilustraciones de dinosaurios como decoración de dashboard.
-- No usar neón, metal cepillado, fuego, texturas agresivas o tipografías gamer.
-- No llenar cada superficie con patrones topográficos.
-- No asignar colores sin significado operativo.
-- No sacrificar densidad, contraste o accesibilidad por identidad visual.
+- Do not use dinosaur illustrations as dashboard decoration.
+- Do not use neon, brushed metal, fire, aggressive textures, or gamer
+  typography.
+- Do not fill every surface with topographic patterns.
+- Do not assign colors without operational meaning.
+- Do not sacrifice density, contrast, or accessibility for visual identity.
 
-## Criterio para componentes nuevos
+## Criteria for new components
 
-Un componente pertenece a esta identidad cuando:
+A component belongs to this identity when:
 
-1. Sigue siendo comprensible sin el motivo decorativo.
-2. Usa color para comunicar estado o acción.
-3. Mantiene superficies planas y una jerarquía clara.
-4. Introduce, como máximo, un detalle paleo-tecnológico sutil.
-5. Se sentiría profesional junto a Docker Desktop, GitHub Desktop o Linear.
+1. It remains understandable without the decorative motif.
+2. It uses color to communicate state or action.
+3. It keeps flat surfaces and a clear hierarchy.
+4. It introduces at most one subtle paleo-tech detail.
+5. It would feel professional alongside Docker Desktop, GitHub Desktop, or
+   Linear.
 
-## Workspace adaptable
+## Adaptive workspace
 
-El workspace protege primero la superficie de trabajo. El breakpoint no se
-elige por una categoría genérica de dispositivo, sino por el ancho mínimo que
-necesitan el formulario y los editores INI.
+The workspace protects the work surface first. The breakpoint is chosen by the
+minimum width the form and INI editors need, not by a generic device category.
 
-- A partir de `1600 px` se muestran lista de servidores, editor y panel de
-  estado/acciones en tres columnas.
-- Por debajo de `1600 px` el editor ocupa todo el ancho disponible.
-- La lista de servidores se reutiliza en un drawer izquierdo y las acciones
-  secundarias en uno derecho.
-- Las acciones de ciclo de vida —iniciar, reiniciar y detener— permanecen en el
-  header porque afectan al estado inmediato del servidor.
-- Los drawers son temporales y se cierran al completar la selección; no se
-  añade una preferencia manual cuando el comportamiento puede resolverse de
-  forma automática y predecible.
+- From `1600 px` up, the server list, editor, and status/actions panel appear in
+  three columns.
+- Below `1600 px`, the editor occupies the full available width.
+- The server list is reused in a left drawer and secondary actions in a right
+  drawer.
+- Lifecycle actions — start, restart, and stop — remain in the header because
+  they affect the server’s immediate state.
+- Drawers are temporary and close when selection completes; do not add a manual
+  preference when behavior can be resolved automatically and predictably.
 
-Este patrón puede reutilizarse en otras pantallas con un área de trabajo
-central, siempre que los paneles desplazados sean contexto o acciones
-secundarias y no información imprescindible para completar la tarea principal.
+This pattern can be reused on other screens with a central work area, as long as
+displaced panels are context or secondary actions and not information required
+to complete the primary task.
 
-### Overview en pantallas amplias
+### Overview on wide screens
 
-En Overview, a partir de `1600 px` la lista de servidores y la actividad
-reciente se presentan en paralelo. La actividad ocupa una columna estrecha y
-sticky; no se rellenan huecos con métricas decorativas. El contenido útil
-crece hasta aproximadamente `2200–2400 px` para evitar márgenes muertos en
-QHD/2K.
+On Overview, from `1600 px` up the server list and recent activity appear in
+parallel. Activity occupies a narrow sticky column; do not fill gaps with
+decorative metrics. Useful content grows to roughly `2200–2400 px` to avoid dead
+margins on QHD/2K.
 
-## Filtros de catálogos densos
+## Dense catalog filters
 
-Las colecciones extensas de filtros no se representan como filas de badges o
-botones. Cuando existen más categorías de las que caben en una sola línea:
+Large filter collections are not represented as rows of badges or buttons. When
+there are more categories than fit on one line:
 
-- se usa un selector buscable junto al campo de búsqueda principal;
-- solo se ofrecen categorías con resultados en el contexto actual;
-- cada opción comunica su cantidad de resultados;
-- una selección se conserva entre contextos únicamente si sigue siendo válida;
-- el espacio vertical se reserva para el contenido que el usuario intenta
-  consultar o editar.
+- use a searchable selector next to the primary search field;
+- offer only categories with results in the current context;
+- each option communicates its result count;
+- a selection is preserved across contexts only if it remains valid;
+- vertical space is reserved for the content the user is trying to browse or
+  edit.
 
-Los chips se reservan para conjuntos pequeños —aproximadamente cinco opciones
-o menos— cuando la comparación simultánea entre alternativas aporta valor.
+Chips are reserved for small sets — roughly five options or fewer — when
+simultaneous comparison between alternatives adds value.
 
-## Vistas operativas de altura completa
+## Full-height operational views
 
-Las pantallas destinadas a consultar flujos extensos —registros, consolas,
-jobs o historiales— mantienen el contexto operativo dentro del viewport:
+Screens meant for long-running streams — logs, consoles, jobs, or histories —
+keep operational context inside the viewport:
 
-- el encabezado, las acciones globales y la navegación de sección no se
-  desplazan con el contenido;
-- listas y consolas reciben el scroll, no la página completa;
-- toda la cadena flex debe declarar `min-height: 0`; no se simula el resultado
-  con alturas máximas arbitrarias;
-- una vista master-detail permite scroll independiente en ambas regiones;
-- los metadatos y acciones del elemento seleccionado permanecen visibles;
-- un panel sin datos muestra un estado vacío deliberado y explicativo.
+- the header, global actions, and section navigation do not scroll with
+  content;
+- lists and consoles receive scroll, not the full page;
+- the entire flex chain must declare `min-height: 0`; do not fake the result
+  with arbitrary max heights;
+- a master-detail view allows independent scroll in both regions;
+- metadata and actions for the selected item remain visible;
+- a panel with no data shows a deliberate, explanatory empty state.
 
-`PageScaffold` ofrece `fillViewport` como comportamiento opt-in. No debe
-activarse en páginas de contenido documental o formularios que naturalmente
-necesiten crecer.
+`PageScaffold` offers `fillViewport` as opt-in behavior. Do not enable it on
+documentary content pages or forms that naturally need to grow.
 
-### Densidad en vistas master-detail
+### Density in master-detail views
 
-Cuando el detalle contiene una consola, editor o visor extenso, ese contenido
-es el objetivo principal y debe recibir la mayor parte del alto disponible:
+When the detail contains a console, editor, or long viewer, that content is the
+primary goal and should receive most of the available height:
 
-- la acción del elemento seleccionado comparte encabezado con el título cuando
-  no necesita explicación adicional;
-- los datos ya visibles en el contexto global no se repiten en el detalle;
-- entre dos y cuatro metadatos breves se agrupan en una sola franja compacta,
-  con separadores, en lugar de tarjetas independientes;
-- el historial identifica el artefacto real —por ejemplo, el nombre del
-  archivo— y no repite el nombre del servidor;
-- una selección se comunica con indicador lateral, borde y contaminación de
-  color mínima; no mediante un bloque saturado.
+- the selected item’s action shares the header with the title when it needs no
+  extra explanation;
+- data already visible in global context is not repeated in the detail;
+- two to four short metadata items are grouped in one compact strip with
+  separators, instead of independent cards;
+- history identifies the real artifact — for example, the file name — and does
+  not repeat the server name;
+- selection is communicated with a side indicator, border, and minimal color
+  tint; not with a saturated block.
 
-La compactación no debe ocultar ni truncar información prioritaria. En ventanas
-estrechas, la franja puede desplazarse horizontalmente antes que crecer y
-reducir de forma significativa el área de trabajo.
+Compaction must not hide or truncate priority information. In narrow windows,
+the strip may scroll horizontally before growing and significantly reducing the
+work area.
 
-## Superficies operativas azul‑obsidiana
+## Blue-obsidian operational surfaces
 
-Servidores, SteamCMD y Registros pertenecen al mismo entorno operativo, pero no
-deben usar idéntica intensidad:
+Servers, SteamCMD, and Logs belong to the same operational environment, but must
+not use identical intensity:
 
-- las filas de servidor reciben el mayor énfasis porque representan las
-  entidades principales y sus estados;
-- el estado activo de SteamCMD puede usar el mismo gradiente e indicador
-  lateral con intensidad media;
-- historiales, detalles y consolas usan una mezcla azul‑grisácea más tenue;
-- las consolas conservan un interior prácticamente negro para legibilidad del
-  texto monoespaciado;
-- los paneles técnicos secundarios no vuelven al gris neutral puro ni reciben
-  gradientes decorativos independientes.
+- server rows receive the strongest emphasis because they represent primary
+  entities and their states;
+- SteamCMD’s active state may use the same gradient and side indicator at
+  medium intensity;
+- histories, details, and consoles use a softer blue-gray mix;
+- consoles keep a near-black interior for monospace readability;
+- secondary technical panels do not return to pure neutral gray or receive
+  independent decorative gradients.
 
-La identidad se consigue mediante temperatura coherente y niveles semánticos,
-no pintando cada contenedor de azul. El usuario debe distinguir primero estado,
-acción y contenido antes de percibir el tratamiento visual.
+Identity comes from coherent temperature and semantic levels, not by painting
+every container blue. The user should distinguish state, action, and content
+before perceiving the visual treatment.

@@ -41,7 +41,7 @@ export class LogsService {
   async listServerLogs(serverId: string): Promise<ServerOperationalLogs> {
     const server = this.repo.get(serverId);
     if (server === null) {
-      throw new Error("El servidor no existe");
+      throw new Error("Server does not exist");
     }
 
     const updateFiles = await this.listUpdateLogsForServer(serverId);
@@ -63,11 +63,11 @@ export class LogsService {
   resolveUpdateLogPath(serverId: string, fileName: string): string {
     const server = this.repo.get(serverId);
     if (server === null) {
-      throw new Error("El servidor no existe");
+      throw new Error("Server does not exist");
     }
 
     if (!isSafeFileName(fileName) || !fileName.startsWith(`${serverId}-`)) {
-      throw new Error("Nombre de archivo de log inválido");
+      throw new Error("Invalid log file name");
     }
 
     return join(this.updatesLogDir, fileName);
@@ -86,19 +86,19 @@ export class LogsService {
     const logs = await this.listServerLogs(serverId);
     const sections: string[] = [];
 
-    sections.push(`# Logs operativos de ${serverId}`);
-    sections.push(`Generado: ${new Date().toISOString()}`);
+    sections.push(`# Operational logs for ${serverId}`);
+    sections.push(`Generated: ${new Date().toISOString()}`);
 
     sections.push("\n## Runtime");
     if (logs.runtimeLogLines.length === 0) {
-      sections.push("(sin líneas runtime)");
+      sections.push("(no runtime lines)");
     } else {
       sections.push(...logs.runtimeLogLines);
     }
 
-    sections.push("\n## Eventos");
+    sections.push("\n## Events");
     if (logs.events.length === 0) {
-      sections.push("(sin eventos)");
+      sections.push("(no events)");
     } else {
       for (const event of logs.events) {
         sections.push(`${event.createdAt} [${event.severity}] ${event.type} - ${event.message}`);
@@ -107,7 +107,7 @@ export class LogsService {
 
     sections.push("\n## Backups");
     if (logs.backups.length === 0) {
-      sections.push("(sin backups)");
+      sections.push("(no backups)");
     } else {
       for (const backup of logs.backups) {
         sections.push(`${backup.createdAt} [${backup.status}] ${backup.type} - ${backup.path}`);
@@ -116,15 +116,15 @@ export class LogsService {
 
     sections.push("\n## Update Logs");
     if (logs.updateFiles.length === 0) {
-      sections.push("(sin logs de update)");
+      sections.push("(no update logs)");
     } else {
       for (const file of logs.updateFiles.slice(0, 3)) {
         sections.push(`\n### ${file.fileName}`);
-        sections.push(`Modificado: ${file.modifiedAt} | Tamaño: ${file.sizeBytes} bytes`);
+        sections.push(`Modified: ${file.modifiedAt} | Size: ${file.sizeBytes} bytes`);
         sections.push(await this.readUpdateLog(serverId, file.fileName, 120_000));
       }
       if (logs.updateFiles.length > 3) {
-        sections.push(`\n(${logs.updateFiles.length - 3} archivos adicionales omitidos)`);
+        sections.push(`\n(${logs.updateFiles.length - 3} additional files omitted)`);
       }
     }
 
@@ -159,7 +159,7 @@ export class LogsService {
           exitCode = parsed.exitCode;
           durationMs = parsed.durationMs;
         } catch {
-          // ignora errores de parseo de contenido, deja status "unknown"
+          // ignore content parse errors; leave status "unknown"
         }
         files.push({
           fileName,
@@ -171,7 +171,7 @@ export class LogsService {
           durationMs,
         });
       } catch {
-        // ignora archivos que desaparecen o fallan al leer metadata
+        // ignore files that disappear or fail metadata reads
       }
     }
 

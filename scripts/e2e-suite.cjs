@@ -7,53 +7,52 @@ function uniqueSuffix() {
 }
 
 async function waitForCardByName(page, name, timeout = 15000) {
-  const card = page.locator("article.card", {
-    has: page.locator("h3", { hasText: name }),
+  const card = page.locator("[data-server-card]", {
+    has: page.getByText(name, { exact: true }),
   });
   await card.first().waitFor({ state: "visible", timeout });
   return card.first();
 }
 
 async function removeServerIfPresent(page, name) {
-  const card = page.locator("article.card", {
-    has: page.locator("h3", { hasText: name }),
+  const card = page.locator("[data-server-card]", {
+    has: page.getByText(name, { exact: true }),
   }).first();
   if ((await card.count()) === 0) {
     return;
   }
 
-  const deleteButton = card.getByRole("button", { name: "Eliminar" });
-  if ((await deleteButton.count()) === 0) {
+  await card.getByRole("button", { name: "More options" }).click();
+  const deleteAction = page.getByRole("menuitem", { name: "Delete server" });
+  if ((await deleteAction.count()) === 0) {
+    await page.keyboard.press("Escape");
     return;
   }
 
-  await deleteButton.click();
+  await deleteAction.click();
+  await page.getByRole("button", { name: "Delete everything" }).click();
   await card.waitFor({ state: "detached", timeout: 15000 });
 }
 
 async function createServer(page, serverName, installDir, ports) {
-  await page.getByRole("button", { name: "+ Nuevo servidor" }).click();
-  await page.getByRole("heading", { name: "Nuevo servidor" }).waitFor({
+  await page.getByRole("button", { name: "New server" }).click();
+  await page.getByRole("heading", { name: "New server" }).waitFor({
     state: "visible",
     timeout: 10000,
   });
 
-  await page.getByLabel("Nombre del perfil").fill(serverName);
-  await page
-    .getByLabel("Nombre de sesión (visible en el juego)")
-    .fill(`Session ${serverName}`);
-  await page
-    .getByLabel("Directorio de instalación del servidor")
-    .fill(installDir);
+  await page.getByLabel("Name").fill(serverName);
+  await page.getByLabel("Session name").fill(`Session ${serverName}`);
+  await page.getByLabel("Base folder").fill(installDir);
 
-  await page.getByLabel("Puerto de juego").fill(String(ports.game));
-  await page.getByLabel("Puerto de query").fill(String(ports.query));
-  await page.getByLabel("Puerto RCON").fill(String(ports.rcon));
-  await page.getByLabel("Password de administrador (RCON)").fill("admin1234");
+  await page.getByLabel("Game port").fill(String(ports.game));
+  await page.getByLabel("Query port").fill(String(ports.query));
+  await page.getByLabel("RCON port").fill(String(ports.rcon));
+  await page.getByLabel("Admin password").fill("admin1234");
 
-  await page.getByRole("button", { name: "Guardar" }).click();
+  await page.getByRole("button", { name: "Save" }).click();
 
-  await page.getByRole("heading", { name: /Servidores \(\d+\)/ }).waitFor({
+  await page.getByRole("heading", { name: "Your servers" }).waitFor({
     state: "visible",
     timeout: 10000,
   });
@@ -63,16 +62,17 @@ async function createServer(page, serverName, installDir, ports) {
 
 async function cloneServer(page, serverName) {
   const card = await waitForCardByName(page, serverName);
-  await card.getByRole("button", { name: "Clonar" }).click();
+  await card.getByRole("button", { name: "More options" }).click();
+  await page.getByRole("menuitem", { name: "Clone" }).click();
 
-  const cloneNamePrefix = `${serverName} (copia`;
-  const cloneCard = page.locator("article.card", {
-    has: page.locator("h3", { hasText: cloneNamePrefix }),
+  const cloneNamePrefix = `${serverName} (copy`;
+  const cloneCard = page.locator("[data-server-card]", {
+    has: page.getByText(new RegExp(`^${cloneNamePrefix}`)),
   }).first();
   await cloneCard.waitFor({ state: "visible", timeout: 10000 });
 
-  const cloneName = await cloneCard.locator("h3").first().textContent();
-  assert.ok(cloneName !== null && cloneName.includes("(copia"));
+  const cloneName = await cloneCard.getAttribute("data-server-name");
+  assert.ok(cloneName !== null && cloneName.includes("(copy"));
 
   return cloneName;
 }

@@ -26,10 +26,10 @@ interface Props {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  stopped: "Detenido",
-  starting: "Iniciando",
-  running: "Activo",
-  stopping: "Deteniendo",
+  stopped: "Stopped",
+  starting: "Starting",
+  running: "Running",
+  stopping: "Stopping",
   error: "Error",
 };
 
@@ -60,17 +60,17 @@ export function SidePanel(props: Props): JSX.Element {
     <aside className={classes.panel}>
       <Card withBorder padding="sm" radius="md" className={classes.card}>
         <Stack gap={6}>
-          <Text className={classes.widgetTitle}>Estado</Text>
-          <MetaRow label="Estado" value={STATUS_LABEL[status] ?? status} />
+          <Text className={classes.widgetTitle}>Status</Text>
+          <MetaRow label="Status" value={STATUS_LABEL[status] ?? status} />
           <MetaRow label="Inicio" value={uptime} />
-          <MetaRow label="Versión" value={version} />
-          <MetaRow label="Cluster" value={props.server.clusterId ?? "Sin cluster"} />
+          <MetaRow label="Version" value={version} />
+          <MetaRow label="Cluster" value={props.server.clusterId ?? "No cluster"} />
         </Stack>
       </Card>
 
       <Card withBorder padding="sm" radius="md" className={classes.card}>
         <Stack gap={6}>
-          <Text className={classes.widgetTitle}>Acciones rápidas</Text>
+          <Text className={classes.widgetTitle}>Quick actions</Text>
           <Button
             size="sm"
             variant="default"
@@ -79,7 +79,7 @@ export function SidePanel(props: Props): JSX.Element {
             leftSection={<FolderOpen size={14} />}
             onClick={props.onOpenFolder}
           >
-            Abrir carpeta
+            Open folder
           </Button>
           <Button
             size="sm"
@@ -90,7 +90,7 @@ export function SidePanel(props: Props): JSX.Element {
             onClick={props.onInstallFiles}
             disabled={isActive}
           >
-            Instalar archivos
+            Install files
           </Button>
           <Button
             size="sm"
@@ -100,9 +100,9 @@ export function SidePanel(props: Props): JSX.Element {
             leftSection={<ShieldCheck size={14} />}
             onClick={props.onVerifyFiles}
             disabled={isActive}
-            title={isActive ? "Detén el servidor antes de verificar" : undefined}
+            title={isActive ? "Stop the server before verifying" : undefined}
           >
-            Verificar integridad
+            Verify integrity
           </Button>
           <Button
             size="sm"
@@ -112,9 +112,9 @@ export function SidePanel(props: Props): JSX.Element {
             leftSection={<CloudArrowDown size={14} />}
             onClick={props.onUpdateNow}
             disabled={isActive}
-            title={isActive ? "Detén el servidor antes de actualizar" : undefined}
+            title={isActive ? "Stop the server before updating" : undefined}
           >
-            Forzar actualización
+            Force update
           </Button>
           <Button
             size="sm"
@@ -125,11 +125,11 @@ export function SidePanel(props: Props): JSX.Element {
             onClick={props.onSaveWorld}
             disabled={status !== "running"}
           >
-            Guardar mundo
+            Save world
           </Button>
           <div className={classes.broadcast}>
             <Textarea
-              placeholder="Mensaje para los jugadores"
+              placeholder="Message for players"
               minRows={2}
               size="xs"
               value={broadcast}
@@ -160,7 +160,7 @@ export function SidePanel(props: Props): JSX.Element {
             onClick={props.onKill}
             disabled={status === "stopped"}
           >
-            Forzar cierre
+            Force close
           </Button>
         </Stack>
       </Card>

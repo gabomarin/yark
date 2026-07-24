@@ -106,7 +106,7 @@ describe("LogsPage", () => {
             serverId: server.id,
             type: "update_completed",
             severity: "info",
-            message: "Update completado",
+            message: "Update completed",
             createdAt: "2026-07-23T10:01:00.000Z",
           },
         ],
@@ -138,12 +138,12 @@ describe("LogsPage", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("Registros")).toBeInTheDocument();
-    expect(await screen.findByText("Historial de actualizaciones")).toBeInTheDocument();
+    expect(screen.getByText("Logs")).toBeInTheDocument();
+    expect(await screen.findByText("Update history")).toBeInTheDocument();
     expect(await screen.findByText(/Update successful/i)).toBeInTheDocument();
     expect(screen.getByText("srv-1-2026-07-23.log")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Abrir en visor externo/i })).toBeInTheDocument();
-    expect(screen.queryByText("Servidor")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Open in external viewer/i })).toBeInTheDocument();
+    expect(screen.queryByText("Server")).not.toBeInTheDocument();
   });
 
   it("keeps each log collection in its own viewport scroll region", async () => {
@@ -159,20 +159,20 @@ describe("LogsPage", () => {
       </AppProviders>,
     );
 
-    expect(await screen.findByText("Update completado")).toBeInTheDocument();
+    expect(await screen.findByText("Update completed")).toBeInTheDocument();
     expect(document.querySelector('[data-fill-viewport="true"]')).toBeInTheDocument();
     expect(document.querySelector('[data-logs-scroll-region="events"]')).toBeInTheDocument();
 
-    await user.click(screen.getByRole("tab", { name: "Ejecución" }));
+    await user.click(screen.getByRole("tab", { name: "Runtime" }));
     expect(await screen.findByText("Server booted")).toBeInTheDocument();
     expect(document.querySelector('[data-logs-scroll-region="runtime"]')).toBeInTheDocument();
 
-    await user.click(screen.getByRole("tab", { name: "Actualizaciones" }));
+    await user.click(screen.getByRole("tab", { name: "Updates" }));
     expect(await screen.findByText(/Update successful/i)).toBeInTheDocument();
     expect(document.querySelector('[data-logs-scroll-region="updates-list"]')).toBeInTheDocument();
     expect(document.querySelector('[data-logs-scroll-region="update-content"]')).toBeInTheDocument();
 
-    await user.click(screen.getByRole("tab", { name: "Respaldos" }));
+    await user.click(screen.getByRole("tab", { name: "Backups" }));
     expect(await screen.findByText("C:/ARK/Backups/backup-1.zip")).toBeInTheDocument();
     expect(document.querySelector('[data-logs-scroll-region="backups"]')).toBeInTheDocument();
   });

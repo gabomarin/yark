@@ -1,7 +1,7 @@
 {
-  "name": "ark-server-gbo",
+  "name": "yark-server-manager",
   "version": "0.1.0",
-  "description": "Administrador local de servidores dedicados de ARK Survival Ascended para Windows",
+  "description": "YARK server manager — local ARK Survival Ascended dedicated server manager for Windows",
   "main": "out/main/index.js",
   "author": "Gabriel",
   "license": "MIT",
@@ -50,8 +50,8 @@
     "vitest": "^3.0.5"
   },
   "build": {
-    "appId": "com.gbo.arkservermanager",
-    "productName": "ARK Server GBO",
+    "appId": "com.yark.servermanager",
+    "productName": "YARK server manager",
     "directories": {
       "output": "dist"
     },

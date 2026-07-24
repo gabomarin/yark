@@ -11,9 +11,9 @@ describe("ServerForm", () => {
       </AppProviders>,
     );
 
-    expect(screen.getAllByLabelText(/nombre/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByLabelText(/^mapa/i)[0]).toBeInTheDocument();
-    expect(screen.getByText(/nuevo servidor/i)).toBeInTheDocument();
-    expect(screen.getByText(/^carpeta base$/i)).toBeInTheDocument();
+    expect(screen.getAllByLabelText(/name/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/^map$/i)).toBeInTheDocument();
+    expect(screen.getByText(/new server/i)).toBeInTheDocument();
+    expect(screen.getByText(/^base folder$/i)).toBeInTheDocument();
   });
 });

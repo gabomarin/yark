@@ -82,7 +82,7 @@ export function LogsPage(props: Props): JSX.Element {
     const result = await window.api.readServerUpdateLog(serverId, fileName, 300_000);
     setBusy(false);
     if (!result.ok) {
-      setError(result.error ?? "No se pudo abrir log de update");
+      setError(result.error ?? "Could not open update log");
       return;
     }
     setSelectedUpdateFile(fileName);
@@ -99,7 +99,7 @@ export function LogsPage(props: Props): JSX.Element {
     setLoading(false);
     if (!result.ok) {
       setLogs(null);
-      setError(result.error ?? "No se pudieron cargar logs");
+      setError(result.error ?? "Could not load logs");
       return;
     }
     setLogs(result.data);
@@ -125,11 +125,11 @@ export function LogsPage(props: Props): JSX.Element {
     const result = await window.api.exportServerLogs(selectedServer.id);
     setBusy(false);
     if (!result.ok) {
-      setError(result.error ?? "No se pudieron exportar logs");
+      setError(result.error ?? "Could not export logs");
       return;
     }
     if (result.data !== null) {
-      setInfo(`Registros exportados en: ${result.data}`);
+      setInfo(`Logs exported to: ${result.data}`);
     }
   };
 
@@ -140,7 +140,7 @@ export function LogsPage(props: Props): JSX.Element {
     const result = await window.api.openServerUpdateLogFile(selectedServer.id, selectedUpdateFile);
     setBusy(false);
     if (!result.ok) {
-      setError(result.error ?? "No se pudo abrir el log externamente");
+      setError(result.error ?? "Could not open the log externally");
     }
   };
 
@@ -148,16 +148,16 @@ export function LogsPage(props: Props): JSX.Element {
 
   return (
     <PageScaffold
-      title="Registros"
-      subtitle="Eventos, ejecución, actualizaciones y respaldos por servidor"
+      title="Logs"
+      subtitle="Events, runtime, updates, and backups per server"
       fillViewport
       actions={
         <Group gap="sm" wrap="wrap">
           <Select
-            aria-label="Seleccionar servidor"
+            aria-label="Select server"
             value={selectedServer?.id ?? null}
             data={props.servers.map((server) => ({ value: server.id, label: server.name }))}
-            placeholder="Selecciona un servidor"
+            placeholder="Select a server"
             onChange={(value) => {
               if (value !== null) {
                 props.onSelectedServerChange(value);
@@ -169,7 +169,7 @@ export function LogsPage(props: Props): JSX.Element {
             Recargar
           </Button>
           <Button leftSection={<DownloadSimple size={16} />} onClick={() => void exportLogs()} disabled={selectedServer === null || loading || busy}>
-            Exportar
+            Export
           </Button>
         </Group>
       }
@@ -180,7 +180,7 @@ export function LogsPage(props: Props): JSX.Element {
 
         {selectedServer === null ? (
           <Card withBorder className={classes.panel}>
-            <Text c="dimmed">No hay servidores configurados todavía.</Text>
+            <Text c="dimmed">No servers configured yet.</Text>
           </Card>
         ) : (
           <Tabs
@@ -189,23 +189,23 @@ export function LogsPage(props: Props): JSX.Element {
             className={classes.tabs}
           >
             <Tabs.List className={classes.tabList}>
-              <Tabs.Tab value="events">Eventos</Tabs.Tab>
-              <Tabs.Tab value="runtime">Ejecución</Tabs.Tab>
-              <Tabs.Tab value="updates">Actualizaciones</Tabs.Tab>
-              <Tabs.Tab value="backups">Respaldos</Tabs.Tab>
+              <Tabs.Tab value="events">Events</Tabs.Tab>
+              <Tabs.Tab value="runtime">Runtime</Tabs.Tab>
+              <Tabs.Tab value="updates">Updates</Tabs.Tab>
+              <Tabs.Tab value="backups">Backups</Tabs.Tab>
             </Tabs.List>
 
             <Tabs.Panel value="events" className={classes.tabPanel}>
               <Card withBorder className={`${classes.panel} ${classes.fillPanel}`}>
                 <Stack gap="sm" className={classes.panelStack}>
-                  <Title order={3}>Eventos</Title>
+                  <Title order={3}>Events</Title>
                   {loading ? (
-                    <Text c="dimmed">Cargando eventos...</Text>
+                    <Text c="dimmed">Loading events...</Text>
                   ) : logs === null || logs.events.length === 0 ? (
                     <LogEmptyState
                       icon={<ClockCounterClockwise size={24} />}
-                      title="Sin eventos recientes"
-                      description="Las operaciones del servidor aparecerán aquí cuando se registren."
+                      title="No recent events"
+                      description="Server operations will appear here when they are logged."
                     />
                   ) : (
                     <div
@@ -227,14 +227,14 @@ export function LogsPage(props: Props): JSX.Element {
             <Tabs.Panel value="runtime" className={classes.tabPanel}>
               <Card withBorder className={`${classes.panel} ${classes.fillPanel}`}>
                 <Stack gap="sm" className={classes.panelStack}>
-                  <Title order={3}>Ejecución</Title>
+                  <Title order={3}>Runtime</Title>
                   {loading ? (
-                    <Text c="dimmed">Cargando registro de ejecución...</Text>
+                    <Text c="dimmed">Loading runtime log...</Text>
                   ) : logs === null || logs.runtimeLogLines.length === 0 ? (
                     <LogEmptyState
                       icon={<FileText size={24} />}
-                      title="Sin salida de ejecución"
-                      description="La consola capturada aparecerá aquí cuando el servidor genere actividad."
+                      title="No runtime output"
+                      description="Captured console output will appear here when the server produces activity."
                     />
                   ) : (
                     <pre
@@ -252,11 +252,11 @@ export function LogsPage(props: Props): JSX.Element {
               <div className={classes.updatesLayout}>
                 <Card withBorder className={`${classes.panel} ${classes.historyPanel} ${classes.fillPanel}`}>
                   <Stack gap="sm" className={classes.panelStack}>
-                    <Title order={3} size="h4" className={classes.panelTitle}>Historial de actualizaciones</Title>
+                    <Title order={3} size="h4" className={classes.panelTitle}>Update history</Title>
                     {loading ? (
-                      <Text c="dimmed">Cargando historial...</Text>
+                      <Text c="dimmed">Loading history...</Text>
                     ) : logs === null || logs.updateFiles.length === 0 ? (
-                      <Text c="dimmed">Sin registros de actualización.</Text>
+                      <Text c="dimmed">No update logs.</Text>
                     ) : (
                       <div
                         className={classes.updateList}
@@ -285,7 +285,7 @@ export function LogsPage(props: Props): JSX.Element {
                   <Stack gap="sm" className={classes.panelStack}>
                     <Group justify="space-between" align="center" wrap="wrap" gap="sm" className={classes.detailHeader}>
                       <Group gap="sm" wrap="nowrap">
-                        <Title order={3} size="h4" className={classes.panelTitle}>Detalle de la actualización</Title>
+                        <Title order={3} size="h4" className={classes.panelTitle}>Update details</Title>
                         {selectedUpdateInfo !== null && (
                           <Badge color={statusColor(selectedUpdateInfo.status)} variant="light">{selectedUpdateInfo.status}</Badge>
                         )}
@@ -298,25 +298,25 @@ export function LogsPage(props: Props): JSX.Element {
                           onClick={() => void openInExternalViewer()}
                           disabled={busy}
                         >
-                          Abrir en visor externo
+                          Open in external viewer
                         </Button>
                       )}
                     </Group>
 
                     {selectedUpdateInfo === null ? (
-                      <Text c="dimmed">Selecciona un update para ver el detalle.</Text>
+                      <Text c="dimmed">Select an update to see details.</Text>
                     ) : (
                       <>
                         <div className={classes.detailsMeta}>
-                          <DetailItem label="Fecha" value={new Date(selectedUpdateInfo.modifiedAt).toLocaleString()} icon={<ClockCounterClockwise size={16} />} />
-                          <DetailItem label="Duración" value={formatDuration(selectedUpdateInfo.durationMs)} icon={<ClockCounterClockwise size={16} />} />
-                          <DetailItem label="Tamaño" value={formatSize(selectedUpdateInfo.sizeBytes)} icon={<FileText size={16} />} />
+                          <DetailItem label="Date" value={new Date(selectedUpdateInfo.modifiedAt).toLocaleString()} icon={<ClockCounterClockwise size={16} />} />
+                          <DetailItem label="Duration" value={formatDuration(selectedUpdateInfo.durationMs)} icon={<ClockCounterClockwise size={16} />} />
+                          <DetailItem label="Size" value={formatSize(selectedUpdateInfo.sizeBytes)} icon={<FileText size={16} />} />
                         </div>
                         <pre
                           className={classes.console}
                           data-logs-scroll-region="update-content"
                         >
-                          {updateContent.length > 0 ? updateContent : "Cargando contenido del log..."}
+                          {updateContent.length > 0 ? updateContent : "Loading log content..."}
                         </pre>
                       </>
                     )}
@@ -328,14 +328,14 @@ export function LogsPage(props: Props): JSX.Element {
             <Tabs.Panel value="backups" className={classes.tabPanel}>
               <Card withBorder className={`${classes.panel} ${classes.fillPanel}`}>
                 <Stack gap="sm" className={classes.panelStack}>
-                  <Title order={3}>Respaldos</Title>
+                  <Title order={3}>Backups</Title>
                   {loading ? (
-                    <Text c="dimmed">Cargando backups...</Text>
+                    <Text c="dimmed">Loading backups...</Text>
                   ) : logs === null || logs.backups.length === 0 ? (
                     <LogEmptyState
                       icon={<HardDrives size={24} />}
-                      title="Sin respaldos registrados"
-                      description="Los respaldos completados y sus rutas aparecerán en este historial."
+                      title="No backups recorded"
+                      description="Completed backups and their paths will appear in this history."
                     />
                   ) : (
                     <div

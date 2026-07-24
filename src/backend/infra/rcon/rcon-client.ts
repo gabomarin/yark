@@ -12,7 +12,7 @@ function encodePacket(id: number, type: number, body: string): Buffer {
   buf.writeInt32LE(id, 4);
   buf.writeInt32LE(type, 8);
   bodyBuf.copy(buf, 12);
-  // dos bytes nulos finales ya están en cero por alloc
+  // trailing two null bytes already zero from alloc
   return buf;
 }
 
@@ -23,8 +23,8 @@ interface Packet {
 }
 
 /**
- * Cliente mínimo del protocolo Source RCON, suficiente para
- * saveworld, broadcast, kick/ban y comandos administrativos de ASA.
+ * Minimal Source RCON protocol client, enough for
+ * saveworld, broadcast, kick/ban, and ASA admin commands.
  */
 export class RconClient {
   private socket: Socket | null = null;
@@ -50,7 +50,7 @@ export class RconClient {
         reject(err);
       };
       socket.setTimeout(this.timeoutMs, () =>
-        onError(new Error("Timeout de conexión RCON")),
+        onError(new Error("RCON connection timeout")),
       );
       socket.once("error", onError);
       socket.connect(this.port, this.host, () => {
@@ -60,7 +60,7 @@ export class RconClient {
         socket.on("data", (chunk) => this.onData(chunk));
         socket.on("error", (err) => this.failAll(err));
         socket.on("close", () =>
-          this.failAll(new Error("Conexión RCON cerrada")),
+          this.failAll(new Error("RCON connection closed")),
         );
         resolve();
       });
@@ -69,14 +69,14 @@ export class RconClient {
     const authId = this.nextId++;
     const response = await this.sendPacket(authId, AUTH, this.password);
     if (response === null) {
-      throw new Error("Autenticación RCON rechazada (password incorrecto)");
+      throw new Error("RCON authentication rejected (incorrect password)");
     }
   }
 
-  /** Envía un comando y devuelve la respuesta del servidor. */
+  /** Sends a command and returns the server response. */
   async send(command: string): Promise<string> {
     if (this.socket === null) {
-      throw new Error("RCON no conectado");
+      throw new Error("RCON not connected");
     }
     const id = this.nextId++;
     const body = await this.sendPacket(id, EXEC_COMMAND, command);
@@ -86,7 +86,7 @@ export class RconClient {
   close(): void {
     this.socket?.destroy();
     this.socket = null;
-    this.failAll(new Error("Cliente RCON cerrado"));
+    this.failAll(new Error("RCON client closed"));
   }
 
   private sendPacket(
@@ -96,12 +96,12 @@ export class RconClient {
   ): Promise<string | null> {
     return new Promise((resolve, reject) => {
       if (this.socket === null) {
-        reject(new Error("RCON no conectado"));
+        reject(new Error("RCON not connected"));
         return;
       }
       const timer = setTimeout(() => {
         this.pending.delete(id);
-        reject(new Error("Timeout esperando respuesta RCON"));
+        reject(new Error("Timeout waiting for RCON response"));
       }, this.timeoutMs);
 
       this.pending.set(id, {
@@ -143,13 +143,13 @@ export class RconClient {
   private dispatch(packet: Packet): void {
     if (packet.type === AUTH_RESPONSE) {
       if (packet.id === -1) {
-        // Auth fallida: rechazar todas las esperas de auth.
+        // Auth failed: reject all pending auth waiters.
         for (const [id, waiter] of this.pending) {
           waiter.resolve(null as unknown as string);
           this.pending.delete(id);
         }
         for (const waiter of this.pending.values()) {
-          waiter.reject(new Error("Autenticación RCON fallida"));
+          waiter.reject(new Error("RCON authentication failed"));
         }
         this.pending.clear();
         return;
@@ -180,8 +180,8 @@ export class RconClient {
 }
 
 /**
- * Ejecuta un único comando RCON abriendo y cerrando conexión.
- * Útil para operaciones puntuales (saveworld, broadcast, etc.).
+ * Runs a single RCON command opening and closing the connection.
+ * Useful for one-shot operations (saveworld, broadcast, etc.).
  */
 export async function rconExec(
   host: string,

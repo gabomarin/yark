@@ -1,496 +1,496 @@
 # TODO
 
-Estado del proyecto para continuar el trabajo sin perder contexto.
+Project status for continuing work without losing context.
 
-## Criterio de estado
-- `[x]` Hecho
-- `[-]` Parcial / en progreso
-- `[ ]` Pendiente
+## Status criteria
+- `[x]` Done
+- `[-]` Partial / in progress
+- `[ ]` Pending
 
-## MVP y requisitos principales
+## MVP and primary requirements
 
-### Plataforma base
-- [x] Aplicacion de escritorio Windows con Electron + React + TypeScript.
-- [x] Persistencia local con SQLite (`node:sqlite`).
-- [x] Arquitectura separada en main / preload / renderer / backend.
-- [x] Documentacion inicial de proyecto y contexto para humanos/agentes (README + docs/agent-context.md).
-- [-] Base de pruebas unitarias, integracion y E2E inicial.
+### Base platform
+- [x] Windows desktop application with Electron + React + TypeScript.
+- [x] Local persistence with SQLite (`node:sqlite`).
+- [x] Architecture separated into main / preload / renderer / backend.
+- [x] Initial project documentation and human/agent context (README + docs/agent-context.md).
+- [-] Initial unit, integration, and E2E test baseline.
 
-### Multi-servidor
-- [-] Crear, editar, clonar y eliminar multiples perfiles de servidor.
-- [x] Al crear, la carpeta elegida es base y el servidor se instala en `base\<nombre>` (p. ej. `C:\ark_servers` + `my_server` → `C:\ark_servers\my_server`); la UI muestra la ruta final.
-- [x] Validacion de puertos y conflictos entre instancias.
-- [x] Visualizacion de estado por servidor en la UI.
-- [x] Visualizacion de estado de instalacion (instalado/no instalado) y version detectada por servidor.
-- [ ] E2E UI para crear, clonar y eliminar servidores.
+### Multi-server
+- [-] Create, edit, clone, and delete multiple server profiles.
+- [x] On create, the chosen folder is the base and the server installs under `base\<name>` (e.g. `C:\ark_servers` + `my_server` → `C:\ark_servers\my_server`); the UI shows the final path.
+- [x] Port validation and conflict checks across instances.
+- [x] Per-server status display in the UI.
+- [x] Install status display (installed / not installed) and detected version per server.
+- [ ] E2E UI for creating, cloning, and deleting servers.
 
-### Lifecycle / operacion del servidor
-- [x] Iniciar servidor.
-- [x] Detener servidor con intento de guardado previo por RCON.
-- [x] Forzar cierre del servidor.
-- [-] Restart seguro con backup previo.
-- [x] Prueba automatizada de arranque real del `ProcessManager` hasta estado `running`.
-- [x] Estado `starting` hasta readiness real (RCON ListPlayers / señales de log); si falla o hace timeout → `error` (no se queda en `running` falso).
-- [x] Eliminar servidor borra perfil y carpeta `installDir` del disco (con guardas de ruta y de installDir compartido).
-- [ ] Prueba E2E completa contra binario real de ASA en el host.
+### Lifecycle / server operations
+- [x] Start server.
+- [x] Stop server with a prior save attempt via RCON.
+- [x] Force-stop the server.
+- [-] Safe restart with prior backup.
+- [x] Automated real-boot test of `ProcessManager` through `running` state.
+- [x] `starting` state until real readiness (RCON ListPlayers / log signals); on failure or timeout → `error` (does not stay falsely `running`).
+- [x] Deleting a server removes the profile and the `installDir` folder from disk (with path guards and shared-installDir guards).
+- [ ] Full E2E test against a real ASA binary on the host.
 
-### Cluster / transferencias
-- [x] Configuracion de `clusterId` y `clusterDir` por servidor.
-- [x] Validacion de consistencia de cluster entre mapas.
-- [x] Verificacion visual de cumplimiento de cluster en la UI.
-- [ ] Flujo validado con servidores reales compartiendo cluster y transferencias reales.
+### Cluster / transfers
+- [x] `clusterId` and `clusterDir` configuration per server.
+- [x] Cluster consistency validation across maps.
+- [x] Visual cluster compliance check in the UI.
+- [ ] Validated flow with real servers sharing a cluster and real transfers.
 
-### Configuracion INI
-- [x] Catalogo ASA de settings (descripciones/defaults desde INI comentados del usuario + wiki.gg) integrado en shared; defaults/known keys derivados del catalogo.
-- [x] Editor avanzado de `GameUserSettings.ini` y `Game.ini`.
-- [x] Plantillas / presets de configuracion comunes.
-- [x] Validacion y diff antes de guardar cambios en INI.
-- [x] Defaults canónicos en `src/shared/defaults/GameUserSettings.ini` y `Game.ini` (source of truth con comentarios); el catálogo ASA solo agrega keys faltantes.
-- [-] Workspace de servidor en el frontend nuevo (lista lateral para cambiar de servidor, Configuration con tabla Setting/Value/Description, presets, raw Advanced, mods basicos y panel de acciones). Falta pulido visual final, Startup Parameters editable y tabs Files/Backups/Logs/Players/Console del mockup.
+### INI configuration
+- [x] ASA settings catalog (descriptions/defaults from the user’s commented INIs + wiki.gg) integrated in shared; defaults/known keys derived from the catalog.
+- [x] Advanced editor for `GameUserSettings.ini` and `Game.ini`.
+- [x] Common configuration templates / presets.
+- [x] Validation and diff before saving INI changes.
+- [x] Canonical defaults in `src/shared/defaults/GameUserSettings.ini` and `Game.ini` (source of truth with comments); the ASA catalog only adds missing keys.
+- [-] Server workspace in the new frontend (side list to switch servers, Configuration with Setting/Value/Description table, presets, raw Advanced, basic mods, and actions panel). Still needs final visual polish, editable Startup Parameters, and the Files/Backups/Logs/Players/Console tabs from the mockup.
 
-### Backups y restore
-- [x] Backup manual.
-- [x] Backups programados.
-- [x] Backups pre-restart.
-- [-] Backups pre-update.
-- [x] Backups de salvaguarda pre-restore.
-- [x] Politicas de retencion por cantidad y dias.
-- [x] Restore desde backup.
-- [ ] Historial de restore en DB.
-- [ ] Seleccion manual de backup especifico desde UI mas completa.
-- [ ] Exportacion / importacion de backups o restore externo guiado.
+### Backups and restore
+- [x] Manual backup.
+- [x] Scheduled backups.
+- [x] Pre-restart backups.
+- [-] Pre-update backups.
+- [x] Pre-restore safety backups.
+- [x] Retention policies by count and days.
+- [x] Restore from backup.
+- [ ] Restore history in the DB.
+- [ ] Manual selection of a specific backup from a fuller UI.
+- [ ] Backup export / import or guided external restore.
 
 ### Mods
-- [x] Campo basico de mods por IDs en orden de carga.
-- [x] UI amigable de Mods (lista, detalle, alta por ID, reorden) con metadata mock local.
-- [ ] Sustituir mock por CurseForge API oficial cuando exista `CURSEFORGE_API_KEY` (Overwolf).
-- [ ] Validacion de compatibilidad de mods entre nodos de cluster.
-- [ ] Instalacion / actualizacion automatica de mods.
+- [x] Basic mods field by IDs in load order.
+- [x] Friendly Mods UI (list, detail, add by ID, reorder) with local mock metadata.
+- [ ] Replace mock with the official CurseForge API when `CURSEFORGE_API_KEY` exists (Overwolf).
+- [ ] Mod compatibility validation across cluster nodes.
+- [ ] Automatic mod install / update.
 
-### Tareas administrativas / RCON
-- [x] Cliente RCON propio.
-- [x] Comandos rapidos (`SaveWorld`, `ListPlayers`, `Broadcast`).
-- [x] Campo para comando RCON personalizado.
-- [ ] Historial visible de respuestas RCON en UI.
+### Administrative tasks / RCON
+- [x] Custom RCON client.
+- [x] Quick commands (`SaveWorld`, `ListPlayers`, `Broadcast`).
+- [x] Field for a custom RCON command.
+- [ ] Visible RCON response history in the UI.
 
-### Updates seguras
-- [-] Update seguro por servidor con backup previo.
-- [-] Stop -> update -> start -> health check -> rollback si falla.
-- [-] Registro de eventos de update.
-- [-] Log de update en disco.
-- [-] Ruta configurable de `steamcmd.exe`.
-- [-] Instalador asistido de SteamCMD.
-- [-] Bootstrap de archivos base del servidor por SteamCMD.
-- [x] Caché SteamCMD reutilizable entre servidores: `cwd` en home de SteamCMD (depotcache), `force_install_dir` antes de login, instalación compartida `asa_content_cache` + sync local (robocopy) preservando `ShooterGame\Saved`.
-- [-] Cola persistente de jobs criticos para updates y bootstrap (cola persistente con reintentos en install-files/update y backup/restore; falta visibilidad completa en UI).
+### Safe updates
+- [-] Safe per-server update with prior backup.
+- [-] Stop → update → start → health check → rollback on failure.
+- [-] Update event logging.
+- [-] On-disk update log.
+- [-] Configurable `steamcmd.exe` path.
+- [-] Assisted SteamCMD installer.
+- [-] Bootstrap of base server files via SteamCMD.
+- [x] Reusable SteamCMD cache across servers: `cwd` in SteamCMD home (depotcache), `force_install_dir` before login, shared `asa_content_cache` install + local sync (robocopy) preserving `ShooterGame\Saved`.
+- [-] Persistent critical job queue for updates and bootstrap (persistent queue with retries for install-files/update and backup/restore; full UI visibility still missing).
 
-### Observabilidad y logs
-- [x] Eventos recientes persistidos y visibles en UI.
-- [x] Estado runtime por servidor.
-- [x] Progreso de install/update visible: panel flotante con consola en vivo, barra de progreso en ServerCard, push IPC + poll 1s mientras hay operación.
-- [-] Vista de logs de proceso / update / backup desde la UI (filtros de eventos, búsqueda, scroll interno, copia y exportación listos; rediseño Fase 2 aplicado: tabs superiores Events/Runtime/Update Logs/Backups, panel "Update History" con detalle y botón "Open in external viewer" vía `shell.openPath`; ya migrado al frontend nuevo como `LogsPage` sobre Mantine + CSS Modules para el histórico persistido. Pendiente refinamiento visual final del tab de updates).
-- [ ] Rotacion avanzada de logs.
-- [ ] Diagnostico guiado para fallos de arranque reales.
+### Observability and logs
+- [x] Recent events persisted and visible in the UI.
+- [x] Runtime status per server.
+- [x] Visible install/update progress: floating panel with live console, progress bar on ServerCard, push IPC + 1s poll while an operation is active.
+- [-] Process / update / backup log view from the UI (event filters, search, internal scroll, copy and export ready; Phase 2 redesign applied: top tabs Events/Runtime/Update Logs/Backups, “Update History” panel with detail and “Open in external viewer” via `shell.openPath`; already migrated to the new frontend as `LogsPage` on Mantine + CSS Modules for persisted history. Final visual polish of the updates tab still pending).
+- [ ] Advanced log rotation.
+- [ ] Guided diagnostics for real boot failures.
 
-### Automatizacion / robustez / idempotencia
-- [x] Lock en memoria por instancia para evitar operaciones conflictivas.
-- [-] Scheduler de backups en memoria.
-- [-] Idempotencia parcial en jobs criticos (sumada cola persistente y reintentos para jobs críticos de SteamCMD).
-- [ ] Persistencia de cola / locks / jobs para recuperacion tras reinicio de la app.
-- [ ] Reintentos controlados para operaciones remotas o de sistema.
-- [ ] Endpoint IPC dedicado de "reiniciar servidor" (hoy el botón Reiniciar de ServerCard hace `stop` + `start` secuencial desde el renderer, sin atomicidad ni manejo de fallo intermedio a nivel backend).
+### Automation / robustness / idempotency
+- [x] In-memory lock per instance to avoid conflicting operations.
+- [-] In-memory backup scheduler.
+- [-] Partial idempotency in critical jobs (plus persistent queue and retries for critical SteamCMD jobs).
+- [ ] Persistence of queue / locks / jobs for recovery after app restart.
+- [ ] Controlled retries for remote or system operations.
+- [ ] Dedicated IPC endpoint to “restart server” (today the ServerCard Restart button does sequential `stop` + `start` from the renderer, without atomicity or intermediate-failure handling at the backend).
 
-### UX operativa
-- [x] Selector nativo de carpeta para rutas de servidor y cluster.
-- [x] Boton para abrir la carpeta del servidor en Explorer.
-- [x] Opcion en Overview para abrir CMD nativo de Windows al iniciar un servidor (toggle persistente en UI).
-- [x] Botones contextuales para instalar archivos y ejecutar update server.
-- [x] Boton global para instalar SteamCMD (ruta por defecto local).
-- [x] Selector nativo de archivo para `steamcmd.exe`.
-- [-] Panel de SteamCMD en UI (estado + salida de consola reciente + cancelación de proceso activa por servidor + ruta manual configurable; jerarquía operativa, consola de altura completa y contexto técnico compacto completados. Pendientes únicamente acciones más avanzadas por servidor si una necesidad real las justifica).
-- [-] Mejoras visuales para gestionar backups, restores y logs (aplicado rediseño base del UI, navegación por secciones en logs, scroll interno en paneles, mejor uso del ancho e iconografía; queda pulido final y diagnóstico guiado).
-- [-] Rediseño de navegación tipo sidebar (Fase 1 completa: shell con sidebar persistente + páginas Overview fusionado con Servers, Clusters, Backups, SteamCMD, Logs, Settings; iconografía y responsive con colapso de sidebar a solo-iconos en <900px). Fase "corrección de fidelidad" completa: iconografía migrada a librería real `@phosphor-icons/react` (reemplaza SVGs a mano, mismo `IconName` API), ServerCard rediseñado con thumbnail placeholder, meta-grid de 2 filas (Jugadores/Mapa/Cluster, Mods/Versión/Estado) y fila de acciones icon-only (Iniciar, Detener, Reiniciar, Abrir carpeta, menu kebab con Editar/INI/Logs/Instalar-Actualizar/Clonar/Forzar cierre/Eliminar), tarjeta de estadística de SteamCMD eliminada de Overview y reemplazada por Backups (placeholder) y Updates (real, comparando `officialVersion` vs versión local detectada), "Official Version" reubicado al Sidebar. Fase 2 (rediseño de Logs) completa en su parte estática: tabs superiores Events/Runtime/Update Logs/Backups, Update History con detalle y visor del log, botón "Open in external viewer" (IPC `logs:open-update-file` vía `shell.openPath`); el histórico persistido ya fue migrado al frontend nuevo como `LogsPage`. Rewrite UI v2: shell nuevo activo; `Overview`, `SteamCMD` y `Logs` migrados; `Clusters`, `Backups` y `Settings` siguen como placeholders. **Server Workspace (editor de servidor) Fase 1**: desde Overview → INI se abre layout de 3 columnas (lista de servidores para cambio rápido / Configuration INI+mods / panel de status+quick actions), reutilizando IPC de INI existente. Pendiente inmediato: pulir workspace, Startup Parameters editable, tabs restantes del mockup, streaming en Logs, y después página Backups.
-- [ ] Asistentes guiados para bootstrap, update y restore.
+### Operational UX
+- [x] Native folder picker for server and cluster paths.
+- [x] Button to open the server folder in Explorer.
+- [x] Overview option to open a native Windows CMD when starting a server (persistent UI toggle).
+- [x] Contextual buttons to install files and run server update.
+- [x] Global button to install SteamCMD (default local path).
+- [x] Native file picker for `steamcmd.exe`.
+- [-] SteamCMD panel in the UI (status + recent console output + active per-server process cancellation + configurable manual path; operational hierarchy, full-height console, and compact technical context completed. Only more advanced per-server actions remain pending if a real need justifies them).
+- [-] Visual improvements for managing backups, restores, and logs (base UI redesign applied, section navigation in logs, internal scroll in panels, better width use and iconography; final polish and guided diagnostics remain).
+- [-] Sidebar-style navigation redesign (Phase 1 complete: shell with persistent sidebar + Overview merged with Servers, Clusters, Backups, SteamCMD, Logs, Settings pages; iconography and responsive collapse of sidebar to icons-only below 900px). “Fidelity correction” phase complete: iconography migrated to real `@phosphor-icons/react` library (replaces hand-drawn SVGs, same `IconName` API), ServerCard redesigned with thumbnail placeholder, 2-row meta-grid (Players/Map/Cluster, Mods/Version/Status) and icon-only action row (Start, Stop, Restart, Open folder, kebab menu with Edit/INI/Logs/Install-Update/Clone/Force stop/Delete), SteamCMD stats card removed from Overview and replaced by Backups (placeholder) and Updates (real, comparing `officialVersion` vs detected local version), “Official Version” relocated to the Sidebar. Phase 2 (Logs redesign) complete in its static part: top tabs Events/Runtime/Update Logs/Backups, Update History with detail and log viewer, “Open in external viewer” button (IPC `logs:open-update-file` via `shell.openPath`); persisted history already migrated to the new frontend as `LogsPage`. UI rewrite v2: new shell active; `Overview`, `SteamCMD`, and `Logs` migrated; `Clusters`, `Backups`, and `Settings` remain placeholders. **Server Workspace (server editor) Phase 1**: from Overview → INI opens a 3-column layout (server list for quick switching / Configuration INI+mods / status+quick actions panel), reusing existing INI IPC. Immediate next: polish workspace, editable Startup Parameters, remaining mockup tabs, Logs streaming, then the Backups page.
+- [ ] Guided assistants for bootstrap, update, and restore.
 
-## Roadmap de producto y UX
+## Product and UX roadmap
 
-Esta sección sigue el pulido comercial del renderer por separado del backlog
-funcional. Las mejoras deben reutilizar la arquitectura y los componentes
-existentes siempre que sea razonable. Antes de cambios significativos de layout
-se presenta una propuesta para aprobación.
+This section tracks commercial polish of the renderer separately from the
+functional backlog. Improvements should reuse existing architecture and
+components whenever reasonable. Before significant layout changes, a proposal
+is presented for approval.
 
-### Iteración 1 — Limpieza y coherencia
+### Iteration 1 — Cleanup and coherence
 
-Objetivo: eliminar señales de producto incompleto o genérico sin rediseñar las
-pantallas principales.
+Goal: remove signals of incomplete or generic product without redesigning the
+main screens.
 
-- [x] Unificar el idioma visible del renderer y eliminar mezclas innecesarias de español e inglés.
-- [x] Retirar del Overview métricas vacías o marcadas como "próximamente".
-- [x] Ocultar tabs, rutas y acciones que todavía no ofrecen una experiencia funcional.
-- [x] Eliminar las notas temporales del workspace mientras no tengan persistencia.
-- [x] Mover "Mostrar consola del servidor al iniciar" fuera del encabezado de Overview.
-- [x] Corregir referencias de mods de Workshop a CurseForge para ASA.
-- [x] Usar controles Mantine apropiados en el formulario (`Select`, `NumberInput`, `PasswordInput`) donde aporten claridad y validación.
-- [x] Consolidar colores, radios, sombras, superficies y estados en el theme compartido mediante variables semánticas consumidas por los estilos del renderer.
-- [x] Definir un patrón único de feedback para notificaciones, alertas contextuales y errores.
-- [x] Revisar textos menores de 12 px y corregir los que comprometan legibilidad.
+- [x] Unify the renderer’s visible language and remove unnecessary Spanish/English mixes.
+- [x] Remove empty or “coming soon” metrics from Overview.
+- [x] Hide tabs, routes, and actions that do not yet offer a functional experience.
+- [x] Remove temporary workspace notes while they lack persistence.
+- [x] Move “Show server console on start” out of the Overview header.
+- [x] Correct mod references from Workshop to CurseForge for ASA.
+- [x] Use appropriate Mantine controls in the form (`Select`, `NumberInput`, `PasswordInput`) where they improve clarity and validation.
+- [x] Consolidate colors, radii, shadows, surfaces, and states in the shared theme via semantic variables consumed by renderer styles.
+- [x] Define a single feedback pattern for notifications, contextual alerts, and errors.
+- [x] Review text smaller than 12 px and fix anything that harms readability.
 
-Patrón de feedback vigente:
+Current feedback pattern:
 
-- Notificación: confirmación o resultado breve que no bloquea el flujo.
-- Alerta contextual: error o advertencia que pertenece a una pantalla, formulario o editor.
-- Alerta del shell: fallo de una acción operativa global; no se duplica como notificación.
-- Modal: confirmación destructiva, pérdida de cambios o decisión con riesgo.
-- Dock de progreso: operaciones prolongadas de SteamCMD y su cancelación.
+- Notification: brief confirmation or result that does not block the flow.
+- Contextual alert: error or warning belonging to a screen, form, or editor.
+- Shell alert: failure of a global operational action; not duplicated as a notification.
+- Modal: destructive confirmation, loss of changes, or a risky decision.
+- Progress dock: long SteamCMD operations and their cancellation.
 
-Criterio de cierre:
+Exit criteria:
 
-- [x] No hay contenido simulado, controles muertos ni inconsistencias evidentes de idioma en los flujos activos.
-- [x] Overview, creación de servidor y workspace pasan una revisión de claridad, jerarquía, acciones, consistencia y accesibilidad mediante Playwright y Chrome DevTools.
+- [x] No simulated content, dead controls, or obvious language inconsistencies in active flows.
+- [x] Overview, server creation, and workspace pass a clarity, hierarchy, actions, consistency, and accessibility review via Playwright and Chrome DevTools.
 
-Validación del primer pase (2026-07-24):
+First-pass validation (2026-07-24):
 
-- [x] Tests del renderer: 11/11.
+- [x] Renderer tests: 11/11.
 - [x] Typecheck.
 - [x] Build.
-- [-] Suite completa: 116/117 en ejecución conjunta; la prueba de proceso real falla al limpiar una carpeta temporal bloqueada por Windows (`EBUSY`) y pasa al ejecutarse de forma aislada.
-- [x] Revisión visual del build real en Electron a 1440x900 y 1100x720: sin errores de consola ni overflow horizontal.
-- [x] Fuente real verificada mediante Chrome DevTools (`Segoe UI`); se eliminó el fallback efectivo a `Trebuchet MS`.
-- [x] Acción Guardar visible desde el primer viewport en creación y edición de servidor.
-- [x] Scroll vertical común en todas las tabs del workspace; los editores INI conservan un scroll interno para listas extensas.
-- [x] Acceso al archivo INI simplificado como acción contextual junto al título, con la ruta disponible mediante tooltip.
-- [x] Tabs del workspace ajustadas a la altura disponible: las tablas INI crecen con la ventana y Servidor comparte la misma superficie y patrón de scroll.
-- [x] Protocolo visual completo en `1280×720`, `1920×1080` y `2560×1440`: creación y workspace sin overflow global ni errores de consola; scrolls internos operativos.
-- [x] Hallazgos no bloqueantes trasladados a Iteración 2: Overview desperdicia espacio en pantallas amplias y conserva patrones de dashboard genérico.
+- [-] Full suite: 116/117 in joint runs; the real-process test fails when cleaning a temporary folder locked by Windows (`EBUSY`) and passes when run in isolation.
+- [x] Visual review of the real Electron build at 1440x900 and 1100x720: no console errors or horizontal overflow.
+- [x] Real font verified via Chrome DevTools (`Segoe UI`); effective fallback to `Trebuchet MS` removed.
+- [x] Save action visible from the first viewport in server create and edit.
+- [x] Shared vertical scroll across all workspace tabs; INI editors keep internal scroll for long lists.
+- [x] INI file access simplified as a contextual action next to the title, with the path available via tooltip.
+- [x] Workspace tabs fitted to available height: INI tables grow with the window and Server shares the same surface and scroll pattern.
+- [x] Full visual protocol at `1280×720`, `1920×1080`, and `2560×1440`: create and workspace without global overflow or console errors; internal scrolls working.
+- [x] Non-blocking findings moved to Iteration 2: Overview wastes space on wide screens and still keeps generic dashboard patterns.
 
-### Iteración 2 — Overview operativo e identidad visual
+### Iteration 2 — Operational Overview and visual identity
 
-Objetivo: hacer que la pantalla principal priorice servidores y problemas que
-requieren atención, con una identidad propia de centro de operaciones de mundos
-ARK sin convertirse en una interfaz gamer.
+Goal: make the main screen prioritize servers and issues that need attention,
+with an identity suited to an ARK world operations center without becoming a
+gamer interface.
 
-- [x] Presentar y aprobar una propuesta incremental de layout antes de implementarla.
-- [x] Sustituir el dashboard de métricas por un resumen operativo compacto y accionable (bloque 2.1: métricas retiradas, búsqueda contextual y ancho útil limitado).
-- [x] Simplificar `ServerCard` y mostrar solo información real y prioritaria (bloque 2.2: fila operativa horizontal, metadatos escaneables y menú secundario).
-- [x] Definir una única acción primaria contextual por estado del servidor (`Instalar`, `Iniciar`, `Actualizar`, `Administrar`, `Revisar error` o `Cancelar`).
-- [-] Mover RCON fuera de la tarjeta hacia el workspace o la futura consola (retirado del Overview; acciones rápidas en workspace, comando personalizado pendiente de la consola avanzada).
-- [x] Mejorar estados vacíos, carga, error, instalación y actualización (skeletons de carga, primer servidor y búsqueda sin resultados completan los estados del Overview).
-- [x] Compactar Actividad reciente a cinco eventos operativos, retirar el ruido RCON del resumen y conservar acceso directo a Registros.
-- [x] Reducir gradientes, sombras y tarjetas anidadas (superficies planas, profundidad mediante contraste y sombras reservadas para elementos flotantes).
-- [-] Introducir una dirección visual propia: primer pase Paleo-Tech aplicado y documentado en `docs/design-direction.md`; falta extenderlo gradualmente a pantallas secundarias.
-- [-] Diseñar una marca propia para la aplicación sin depender del logo antiguo de ARK Survival Evolved (símbolo biotecnológico inicial en el sidebar; pendiente icono final de distribución).
-- [x] Validar el layout en ventanas de escritorio amplias y compactas.
+- [x] Present and approve an incremental layout proposal before implementing it.
+- [x] Replace the metrics dashboard with a compact, actionable operational summary (block 2.1: metrics removed, contextual search, and limited useful width).
+- [x] Simplify `ServerCard` and show only real, priority information (block 2.2: horizontal operational row, scannable metadata, and secondary menu).
+- [x] Define a single contextual primary action per server state (`Install`, `Start`, `Update`, `Manage`, `Review error`, or `Cancel`).
+- [-] Move RCON off the card into the workspace or future console (removed from Overview; quick actions in workspace, custom command pending advanced console).
+- [x] Improve empty, loading, error, install, and update states (loading skeletons, first server, and search-with-no-results complete the Overview states).
+- [x] Compact Recent activity to five operational events, remove RCON noise from the summary, and keep a direct link to Logs.
+- [x] Reduce gradients, shadows, and nested cards (flat surfaces, depth via contrast, shadows reserved for floating elements).
+- [-] Introduce a distinct visual direction: first Paleo-Tech pass applied and documented in `docs/design-direction.md`; still needs gradual extension to secondary screens.
+- [-] Design an application brand that does not depend on the old ARK Survival Evolved logo (initial biotech symbol in the sidebar; final distribution icon pending).
+- [x] Validate the layout in wide and compact desktop windows.
 
-Criterio de cierre:
+Exit criteria:
 
-- [x] En menos de cinco segundos se entiende cuántos servidores existen, cuáles están activos y cuáles necesitan atención (resumen + badge ámbar + espina/acción primaria por fila).
-- [x] La pantalla se siente específica para administrar mundos de ARK y no como un dashboard genérico (Paleo-Tech en Overview/SteamCMD/Registros; sin métricas decorativas).
-- [x] Las acciones frecuentes requieren menos decisiones sin ocultar capacidades avanzadas (una primaria contextual; secundarias en kebab; “Nuevo servidor” como CTA del header).
+- [x] In under five seconds it is clear how many servers exist, which are active, and which need attention (summary + amber badge + spine/primary action per row).
+- [x] The screen feels specific to administering ARK worlds and not like a generic dashboard (Paleo-Tech on Overview/SteamCMD/Logs; no decorative metrics).
+- [x] Frequent actions require fewer decisions without hiding advanced capabilities (one contextual primary; secondaries in kebab; “New server” as the header CTA).
 
-Validación del bloque 2.3 (2026-07-24):
+Block 2.3 validation (2026-07-24):
 
-- [x] Typecheck y build.
-- [x] Tests focalizados del Overview, Actividad reciente y ServerCard: 8/8.
-- [x] Build real revisado con Playwright en `1280×720`, `1920×1080` y `2560×1440`.
-- [x] Estado de búsqueda sin resultados y navegación a Registros verificados.
-- [x] Sin overflow horizontal, errores de consola ni excepciones del renderer.
-- [x] Actividad reciente limitada a cinco eventos relevantes y sin comandos RCON.
+- [x] Typecheck and build.
+- [x] Focused Overview, Recent activity, and ServerCard tests: 8/8.
+- [x] Real build reviewed with Playwright at `1280×720`, `1920×1080`, and `2560×1440`.
+- [x] Search-with-no-results state and navigation to Logs verified.
+- [x] No horizontal overflow, console errors, or renderer exceptions.
+- [x] Recent activity limited to five relevant events and without RCON commands.
 
-Validación del bloque 2.4 — identidad Paleo-Tech (2026-07-24):
+Block 2.4 validation — Paleo-Tech identity (2026-07-24):
 
-- [x] Typecheck y build.
-- [x] Tests conjuntos de AppShell, Overview, Actividad reciente, ServerCard y workspace: 11/11.
-- [x] Overview y workspace revisados con Playwright en `1280×720`, `1920×1080` y `2560×1440`.
-- [x] Sin overflow horizontal, errores CSP, errores de consola ni excepciones del renderer.
-- [x] Gradientes decorativos retirados del renderer activo y patrón topográfico empaquetado como asset local.
+- [x] Typecheck and build.
+- [x] Joint AppShell, Overview, Recent activity, ServerCard, and workspace tests: 11/11.
+- [x] Overview and workspace reviewed with Playwright at `1280×720`, `1920×1080`, and `2560×1440`.
+- [x] No horizontal overflow, CSP errors, console errors, or renderer exceptions.
+- [x] Decorative gradients removed from the active renderer and topographic pattern packaged as a local asset.
 
-Validación del bloque 2.5 — paleta Radix personalizada (2026-07-24):
+Block 2.5 validation — custom Radix palette (2026-07-24):
 
-- [x] Escalas completas de azul, gris neutral y alpha integradas como tokens del renderer, con variantes Display P3/OKLCH.
-- [x] Tokens semánticos y variables internas de Mantine alineados con la misma fuente de color.
-- [x] Estados de foco, hover y selección migrados desde colores heredados a niveles alpha de Radix.
-- [x] Typecheck, build y tests focalizados de AppShell, Overview, Actividad reciente, ServerCard y workspace: 11/11.
-- [x] Overview, workspace, Registros y SteamCMD revisados con Playwright en `1280×720`, `1920×1080` y `2560×1440`.
-- [x] Sin overflow horizontal, errores de consola ni excepciones del renderer en las doce capturas.
+- [x] Full blue, neutral gray, and alpha scales integrated as renderer tokens, with Display P3/OKLCH variants.
+- [x] Semantic tokens and Mantine internal variables aligned to the same color source.
+- [x] Focus, hover, and selection states migrated from inherited colors to Radix alpha levels.
+- [x] Typecheck, build, and focused AppShell, Overview, Recent activity, ServerCard, and workspace tests: 11/11.
+- [x] Overview, workspace, Logs, and SteamCMD reviewed with Playwright at `1280×720`, `1920×1080`, and `2560×1440`.
+- [x] No horizontal overflow, console errors, or renderer exceptions across the twelve screenshots.
 
-Validación del bloque 2.6 — Obsidian Atmosphere (2026-07-24):
+Block 2.6 validation — Obsidian Atmosphere (2026-07-24):
 
-- [x] Sidebar y lienzo unificados mediante una transición azul noche–obsidiana.
-- [x] Degradados limitados al ambiente, navegación activa y filas operativas; acciones y superficies de trabajo conservan claridad.
-- [x] Tokens semánticos de panel y borde enfriados sin modificar las escalas Radix originales.
-- [x] Typecheck, build y tests focalizados de AppShell, Overview, ServerCard y workspace: 9/9.
-- [x] Overview y workspace revisados con Playwright en `1280×720`, `1920×1080` y `2560×1440`.
-- [x] Sin overflow horizontal, errores de consola ni excepciones del renderer.
+- [x] Sidebar and canvas unified via a night-blue–obsidian transition.
+- [x] Gradients limited to atmosphere, active navigation, and operational rows; actions and work surfaces keep clarity.
+- [x] Semantic panel and border tokens cooled without changing the original Radix scales.
+- [x] Typecheck, build, and focused AppShell, Overview, ServerCard, and workspace tests: 9/9.
+- [x] Overview and workspace reviewed with Playwright at `1280×720`, `1920×1080`, and `2560×1440`.
+- [x] No horizontal overflow, console errors, or renderer exceptions.
 
-Auditoría UX/UI posterior al bloque 2.6 (2026-07-24):
+Post–block 2.6 UX/UI audit (2026-07-24):
 
-- [x] Reequilibrar la escala de superficies: borde de control/panel elevado de aproximadamente `1.51:1` a `3.10:1`; foco/control alcanza `6.85:1`.
-- [x] Reducir la mezcla de temperaturas en workspace y editores mediante niveles semánticos de chrome, panel, control, hover y bordes.
-- [x] Dar más ancho útil al editor INI en `1280×720`: modo compacto responsive con editor a ancho completo y paneles secundarios bajo demanda.
-- [x] Simplificar filtros de categorías del editor INI: selector único con cantidades y opciones disponibles por archivo.
-- [x] Registros usa el alto del viewport, scroll interno y una jerarquía master-detail compacta que prioriza la consola sobre metadatos y superficies decorativas.
-- [x] Diferenciar jerarquía en SteamCMD: estado operativo, contexto técnico y consola tienen pesos y alturas acordes a su importancia.
-- [x] Revisar el exceso de vacío del Overview en `2560×1440` sin convertirlo nuevamente en un dashboard de métricas.
+- [x] Rebalance the surface scale: elevated control/panel border from roughly `1.51:1` to `3.10:1`; focus/control reaches `6.85:1`.
+- [x] Reduce temperature mixing in workspace and editors via semantic chrome, panel, control, hover, and border levels.
+- [x] Give the INI editor more useful width at `1280×720`: responsive compact mode with full-width editor and secondary panels on demand.
+- [x] Simplify INI editor category filters: single selector with counts and options available per file.
+- [x] Logs uses viewport height, internal scroll, and a compact master-detail hierarchy that prioritizes the console over metadata and decorative surfaces.
+- [x] Differentiate hierarchy in SteamCMD: operational status, technical context, and console have weights and heights matching their importance.
+- [x] Review Overview empty space at `2560×1440` without turning it back into a metrics dashboard.
 
-Validación del bloque 2.7 — microtextura Tek (2026-07-24):
+Block 2.7 validation — Tek microtexture (2026-07-24):
 
-- [x] SVG continuo propio con geometría fragmentada, conexiones, nodos y estratos; sin dependencias ni recursos externos.
-- [x] Textura empaquetada como asset local de menos de `2 KB`, sin `currentColor`, rutas absolutas ni `background-attachment: fixed`.
-- [x] Curvas topográficas macro conservadas como capa independiente.
-- [x] Repetición presentada a `720×720` y atenuada mediante máscara vertical para proteger las áreas de contenido.
-- [x] Typecheck, build y tests focalizados de AppShell, Overview y workspace: 5/5.
-- [x] Overview, workspace y Registros revisados con Playwright en `1280×720`, `1920×1080` y `2560×1440`.
-- [x] Sin costuras visibles, overflow horizontal, errores de consola ni excepciones del renderer.
+- [x] Custom continuous SVG with fragmented geometry, connections, nodes, and strata; no external dependencies or assets.
+- [x] Texture packaged as a local asset under `2 KB`, without `currentColor`, absolute paths, or `background-attachment: fixed`.
+- [x] Macro topographic curves kept as an independent layer.
+- [x] Repetition presented at `720×720` and attenuated with a vertical mask to protect content areas.
+- [x] Typecheck, build, and focused AppShell, Overview, and workspace tests: 5/5.
+- [x] Overview, workspace, and Logs reviewed with Playwright at `1280×720`, `1920×1080`, and `2560×1440`.
+- [x] No visible seams, horizontal overflow, console errors, or renderer exceptions.
 
-Validación del bloque 2.8 — selección de servidor (2026-07-24):
+Block 2.8 validation — server selection (2026-07-24):
 
-- [x] Relleno azul intenso sustituido por una superficie oscura con contaminación azul mínima.
-- [x] Selección comunicada mediante indicador lateral, borde tenue y énfasis del icono.
-- [x] Build y test focalizado del workspace: 1/1.
-- [x] Workspace revisado con Playwright en `1280×720`, `1920×1080` y `2560×1440`.
-- [x] Sin overflow horizontal, errores de consola ni excepciones del renderer.
+- [x] Intense blue fill replaced by a dark surface with minimal blue tint.
+- [x] Selection communicated via side indicator, soft border, and icon emphasis.
+- [x] Build and focused workspace test: 1/1.
+- [x] Workspace reviewed with Playwright at `1280×720`, `1920×1080`, and `2560×1440`.
+- [x] No horizontal overflow, console errors, or renderer exceptions.
 
-Validación del bloque 2.9 — contenedores de servidor (2026-07-24):
+Block 2.9 validation — server containers (2026-07-24):
 
-- [x] Superficie gris sustituida por una mezcla semántica azul noche–obsidiana.
-- [x] Nuevos tokens `--app-color-panel-cool` y `--app-color-panel-cool-emphasis` disponibles para contenedores operativos.
-- [x] Skeletons y estados vacíos del listado alineados con la misma temperatura visual.
-- [x] Typecheck, build y tests focalizados de Overview y ServerCard: 6/6.
-- [x] Overview revisado con Playwright en `1280×720`, `1920×1080` y `2560×1440`.
-- [x] Sin overflow horizontal, errores de consola ni excepciones del renderer.
+- [x] Gray surface replaced by a semantic night-blue–obsidian mix.
+- [x] New tokens `--app-color-panel-cool` and `--app-color-panel-cool-emphasis` available for operational containers.
+- [x] List skeletons and empty states aligned to the same visual temperature.
+- [x] Typecheck, build, and focused Overview and ServerCard tests: 6/6.
+- [x] Overview reviewed with Playwright at `1280×720`, `1920×1080`, and `2560×1440`.
+- [x] No horizontal overflow, console errors, or renderer exceptions.
 
-Validación del bloque 2.10 — jerarquía de superficies (2026-07-24):
+Block 2.10 validation — surface hierarchy (2026-07-24):
 
-- [x] Escala semántica aplicada a workspace, formulario de servidor, editores INI, panel de servidores y acciones laterales.
-- [x] Controles Mantine alineados globalmente con superficie, borde, hover, disabled y foco coherentes.
-- [x] Tabs activas, cabeceras de tabla y separadores retirados de grises/rgba locales.
-- [x] Texto principal suavizado sin perder legibilidad; texto secundario conserva jerarquía suficiente.
-- [x] Typecheck, build y tests focalizados de AppShell, Overview, ServerCard y workspace: 9/9.
-- [x] Servidor, Game.ini, GameUserSettings.ini, Overview, Registros y SteamCMD revisados con Playwright en `1280×720`, `1920×1080` y `2560×1440`.
-- [x] Sin overflow horizontal, errores de consola ni excepciones del renderer en las dieciocho capturas.
-- [x] Registros y SteamCMD no presentan regresiones; su jerarquía interna permanece como trabajo explícito de bloques posteriores.
+- [x] Semantic scale applied to workspace, server form, INI editors, server panel, and side actions.
+- [x] Mantine controls aligned globally with coherent surface, border, hover, disabled, and focus.
+- [x] Active tabs, table headers, and separators moved off local grays/rgba.
+- [x] Primary text softened without losing readability; secondary text keeps enough hierarchy.
+- [x] Typecheck, build, and focused AppShell, Overview, ServerCard, and workspace tests: 9/9.
+- [x] Server, Game.ini, GameUserSettings.ini, Overview, Logs, and SteamCMD reviewed with Playwright at `1280×720`, `1920×1080`, and `2560×1440`.
+- [x] No horizontal overflow, console errors, or renderer exceptions across the eighteen screenshots.
+- [x] Logs and SteamCMD show no regressions; their internal hierarchy remains explicit later-block work.
 
-Validación del bloque 2.11 — workspace adaptable (2026-07-24):
+Block 2.11 validation — adaptive workspace (2026-07-24):
 
-- [x] A menos de `1600 px`, la lista de servidores y el panel de estado/acciones dejan de competir permanentemente con el editor.
-- [x] Selector de servidor y acciones secundarias reutilizados en drawers izquierdo y derecho; iniciar, reiniciar y detener permanecen visibles en el header.
-- [x] Cambio de servidor desde el drawer cierra la capa y conserva la protección ante cambios INI sin guardar.
-- [x] El editor alcanza `1032 px` de ancho útil en `1280×720`; a partir de `1600 px` vuelve al layout de tres columnas con un mínimo medido de `832 px`.
-- [x] Typecheck, build y tests focalizados de AppShell, Overview, ServerCard y workspace: 10/10.
-- [x] Playwright/Electron revisado en `1280×720`, `1598×900`, `1600×900`, `1920×1080` y `2560×1440`.
-- [x] Servidor, Game.ini, GameUserSettings.ini, Mods y Avanzado recorridos; drawers y scroll real con rueda verificados.
-- [x] Sin overflow horizontal o vertical global, errores de consola ni excepciones del renderer.
+- [x] Below `1600 px`, the server list and status/actions panel no longer permanently compete with the editor.
+- [x] Server selector and secondary actions reused in left and right drawers; start, restart, and stop stay visible in the header.
+- [x] Switching servers from the drawer closes the layer and keeps protection against unsaved INI changes.
+- [x] Editor reaches `1032 px` useful width at `1280×720`; from `1600 px` it returns to the three-column layout with a measured minimum of `832 px`.
+- [x] Typecheck, build, and focused AppShell, Overview, ServerCard, and workspace tests: 10/10.
+- [x] Playwright/Electron reviewed at `1280×720`, `1598×900`, `1600×900`, `1920×1080`, and `2560×1440`.
+- [x] Server, Game.ini, GameUserSettings.ini, Mods, and Advanced walked; drawers and real wheel scroll verified.
+- [x] No global horizontal or vertical overflow, console errors, or renderer exceptions.
 
-Validación del bloque 2.12 — filtros de categorías INI (2026-07-24):
+Block 2.12 validation — INI category filters (2026-07-24):
 
-- [x] Quince botones de categoría sustituidos por un único selector buscable junto a la búsqueda de ajustes.
-- [x] El selector muestra solo categorías presentes en el archivo activo e incluye la cantidad de ajustes de cada una.
-- [x] Una categoría se conserva al cambiar de archivo si sigue disponible; si deja de existir, vuelve automáticamente a “Todos los ajustes”.
-- [x] En `1280×720` se eliminaron dos filas de chips y la tabla comienza aproximadamente `80 px` antes.
-- [x] Selector, menú, selección de categoría y scroll con rueda verificados con datos reales.
-- [x] Typecheck, build y pruebas focalizadas del workspace y taxonomía de categorías: 6/6.
-- [x] Game.ini y GameUserSettings.ini revisados con Playwright/Electron en `1280×720`, `1920×1080` y `2560×1440`.
-- [x] Sin overflow global, errores de consola ni excepciones del renderer.
+- [x] Fifteen category buttons replaced by a single searchable selector next to settings search.
+- [x] The selector shows only categories present in the active file and includes each category’s setting count.
+- [x] A category is kept when switching files if still available; otherwise it automatically returns to “All settings”.
+- [x] At `1280×720`, two chip rows were removed and the table starts about `80 px` earlier.
+- [x] Selector, menu, category selection, and wheel scroll verified with real data.
+- [x] Typecheck, build, and focused workspace and category taxonomy tests: 6/6.
+- [x] Game.ini and GameUserSettings.ini reviewed with Playwright/Electron at `1280×720`, `1920×1080`, and `2560×1440`.
+- [x] No global overflow, console errors, or renderer exceptions.
 
-Validación del bloque 2.13 — altura operativa de Registros (2026-07-24):
+Block 2.13 validation — Logs operational height (2026-07-24):
 
-- [x] `PageScaffold` extendido con modo `fillViewport` opcional, sin modificar el comportamiento de las demás páginas.
-- [x] Header y tabs permanecen visibles; Eventos, Ejecución, Actualizaciones y Respaldos ocupan únicamente el alto restante.
-- [x] Eventos, backups, historial de updates y contenido de consola tienen regiones de scroll independientes.
-- [x] En `1280×720`, la página pasó de aproximadamente `4321 px` de alto a exactamente `720 px`; Eventos conserva `4092 px` de contenido dentro de una región de `470 px`.
-- [x] Actualizaciones mantiene lista y detalle en paralelo; los metadatos y la acción externa permanecen visibles mientras la consola se desplaza.
-- [x] Estados vacíos de Eventos, Ejecución y Respaldos centrados y explicativos para evitar tarjetas vacías sin intención.
-- [x] Typecheck, build y tests focalizados de Registros: 2/2.
-- [x] Los cuatro tabs revisados con Playwright/Electron en `1280×720`, `1920×1080` y `2560×1440`.
-- [x] Scroll con rueda verificado; sin overflow global, errores de consola ni excepciones del renderer.
+- [x] `PageScaffold` extended with optional `fillViewport` mode, without changing other pages’ behavior.
+- [x] Header and tabs stay visible; Events, Runtime, Updates, and Backups occupy only the remaining height.
+- [x] Events, backups, update history, and console content have independent scroll regions.
+- [x] At `1280×720`, the page went from about `4321 px` tall to exactly `720 px`; Events keeps `4092 px` of content inside a `470 px` region.
+- [x] Updates keeps list and detail side by side; metadata and the external action stay visible while the console scrolls.
+- [x] Empty states for Events, Runtime, and Backups centered and explanatory to avoid empty cards without intent.
+- [x] Typecheck, build, and focused Logs tests: 2/2.
+- [x] All four tabs reviewed with Playwright/Electron at `1280×720`, `1920×1080`, and `2560×1440`.
+- [x] Wheel scroll verified; no global overflow, console errors, or renderer exceptions.
 
-Validación del bloque 2.14 — densidad y jerarquía de Actualizaciones (2026-07-24):
+Block 2.14 validation — Updates density and hierarchy (2026-07-24):
 
-- [x] Cuatro tarjetas de metadatos sustituidas por una franja compacta de `58 px` con fecha, duración y tamaño.
-- [x] El servidor redundante se retiró del detalle; permanece visible en el selector global.
-- [x] La acción “Abrir en visor externo” se integró en el encabezado del detalle sin ocupar una fila propia.
-- [x] El historial identifica el archivo real y conserva la fecha como contexto secundario.
-- [x] La selección azul intensa se sustituyó por una superficie oscura, borde tenue e indicador lateral coherentes con el workspace.
-- [x] Encabezados del master-detail reducidos a `18 px`, UUID a `14 px` y metadatos a `11–12 px` para evitar que el chrome compita con la consola.
-- [x] En `1280×720`, la consola de actualización creció de aproximadamente `213 px` a `400 px`; alcanza `760 px` en Full HD y `1120 px` en 2K.
-- [x] Typecheck, build y tests focalizados de Registros: 2/2.
-- [x] Eventos, Ejecución, Actualizaciones y Respaldos revisados con Playwright/Electron en `1280×720`, `1920×1080` y `2560×1440`.
-- [x] Sin overflow global, recortes en metadatos prioritarios, errores de consola ni excepciones del renderer.
+- [x] Four metadata cards replaced by a compact `58 px` strip with date, duration, and size.
+- [x] Redundant server removed from the detail; it remains visible in the global selector.
+- [x] “Open in external viewer” integrated into the detail header without occupying its own row.
+- [x] History identifies the real file and keeps the date as secondary context.
+- [x] Intense blue selection replaced by a dark surface, soft border, and side indicator consistent with the workspace.
+- [x] Master-detail headers reduced to `18 px`, UUID to `14 px`, and metadata to `11–12 px` so chrome does not compete with the console.
+- [x] At `1280×720`, the update console grew from about `213 px` to `400 px`; it reaches `760 px` on Full HD and `1120 px` on 2K.
+- [x] Typecheck, build, and focused Logs tests: 2/2.
+- [x] Events, Runtime, Updates, and Backups reviewed with Playwright/Electron at `1280×720`, `1920×1080`, and `2560×1440`.
+- [x] No global overflow, clipping of priority metadata, console errors, or renderer exceptions.
 
-Validación del bloque 2.17 — design review de cierre Iteración 2 (2026-07-24):
+Block 2.17 validation — Iteration 2 closing design review (2026-07-24):
 
-- [x] Badge operativo “N necesitan atención” (sin instalar / update / error) junto al resumen de servidores.
-- [x] “Verificar actualizaciones” del header pasó a `subtle` para no competir con “Nuevo servidor”.
-- [x] Meta “Archivos” en tono warn cuando falta instalación o hay update.
-- [x] Protocolo visual: `npm run build` + `node scripts/visual-iter2-review.cjs` en `1280×720`, `1920×1080` y `2560×1440`.
-- [x] Pantallas: Overview, SteamCMD, Registros (Eventos/Actualizaciones), Workspace (Servidor / Archivos INI / Mods).
-- [x] Evidencia QHD: resumen `2 servidores · ninguno activo`, badge `2 necesitan atención`, primarias `Actualizar`/`Instalar`, sin overflow ni errores de consola.
-- [x] Tests focalizados Overview + ServerCard: 9/9; typecheck y build correctos.
-- [x] Diferidos explícitos: icono final de distribución; Paleo-Tech en placeholders Clusters/Backups/Settings; RCON avanzado en consola.
+- [x] Operational “N need attention” badge (not installed / update / error) next to the server summary.
+- [x] Header “Check for updates” changed to `subtle` so it does not compete with “New server”.
+- [x] “Files” meta in warn tone when install is missing or an update is available.
+- [x] Visual protocol: `npm run build` + `node scripts/visual-iter2-review.cjs` at `1280×720`, `1920×1080`, and `2560×1440`.
+- [x] Screens: Overview, SteamCMD, Logs (Events/Updates), Workspace (Server / INI Files / Mods).
+- [x] QHD evidence: summary `2 servers · none active`, badge `2 need attention`, primaries `Update`/`Install`, no overflow or console errors.
+- [x] Focused Overview + ServerCard tests: 9/9; typecheck and build OK.
+- [x] Explicitly deferred: final distribution icon; Paleo-Tech on Clusters/Backups/Settings placeholders; advanced RCON in console.
 
-Validación del bloque 2.16 — Overview en QHD/2K (2026-07-24):
+Block 2.16 validation — Overview on QHD/2K (2026-07-24):
 
-- [x] Retirado el tope estrecho de `1680 px`; el contenido útil crece hasta `2200–2400 px`.
-- [x] A partir de `1600 px`, servidores y actividad reciente pasan a layout paralelo con panel sticky (sin métricas decorativas).
-- [x] Documentado en `docs/design-direction.md` bajo “Overview en pantallas amplias”.
-- [x] Typecheck y tests focalizados de Overview / ServerCard.
-- [x] Protocolo visual (`docs/visual-testing.md`) con `npm run build` + `node scripts/visual-overview.cjs`.
-- [x] Resoluciones: `1280×720` (apilado), `1600×900` (paralelo), `1920×1080` (paralelo), `2560×1440` (paralelo; overview ≈ `2312 px`, servidores ≈ `1796 px`, actividad `400 px`).
-- [x] Sin overflow horizontal, errores de consola ni `pageerror` en las cuatro capturas.
-- [x] CTA primaria “Nuevo servidor” visible; actividad no compite con la lista en 720p (queda debajo).
-- [x] Script reutilizable: `scripts/visual-overview.cjs` (capturas en `%TEMP%\ark-gbo-visual-overview`).
+- [x] Narrow `1680 px` cap removed; useful content grows to `2200–2400 px`.
+- [x] From `1600 px`, servers and recent activity move to a parallel layout with a sticky panel (no decorative metrics).
+- [x] Documented in `docs/design-direction.md` under “Overview on wide screens”.
+- [x] Typecheck and focused Overview / ServerCard tests.
+- [x] Visual protocol (`docs/visual-testing.md`) with `npm run build` + `node scripts/visual-overview.cjs`.
+- [x] Resolutions: `1280×720` (stacked), `1600×900` (parallel), `1920×1080` (parallel), `2560×1440` (parallel; overview ≈ `2312 px`, servers ≈ `1796 px`, activity `400 px`).
+- [x] No horizontal overflow, console errors, or `pageerror` across the four screenshots.
+- [x] Primary CTA “New server” visible; activity does not compete with the list at 720p (stays below).
+- [x] Reusable script: `scripts/visual-overview.cjs` (screenshots in `%TEMP%\ark-gbo-visual-overview`).
 
-Validación del bloque 2.15 — SteamCMD operativo y superficies azul‑obsidiana (2026-07-24):
+Block 2.15 validation — operational SteamCMD and blue-obsidian surfaces (2026-07-24):
 
-- [x] Métricas genéricas y tarjetas técnicas independientes sustituidas por estado operativo, franja de contexto y consola principal.
-- [x] Estados no configurado, disponible y en curso definen automáticamente título, explicación, badge, indicador y acción relevante.
-- [x] Progreso activo integra porcentaje, bytes procesados, cola y cancelación sin competir con la consola.
-- [x] Ruta, versión oficial, depotcache y contenido ASA agrupados en una franja compacta con truncado y valor completo accesible mediante tooltip nativo.
-- [x] `SteamCmdPage` usa el alto completo del viewport; la consola pasó de un máximo fijo de `360 px` a `351 px` en 720p, `711 px` en Full HD y `1071 px` en 2K.
-- [x] El dock flotante de progreso se oculta automáticamente cuando SteamCMD ya es la vista activa.
-- [x] SteamCMD y Registros adoptan la misma familia azul‑grisácea de Servidores con menor intensidad para conservar la jerarquía.
-- [x] Typecheck, build y tests focalizados de SteamCMD y Registros: 4/4.
-- [x] SteamCMD y Actualizaciones revisados con Playwright/Electron en `1280×720`, `1920×1080` y `2560×1440`.
-- [x] Sin overflow global, errores de consola ni excepciones del renderer.
+- [x] Generic metrics and independent technical cards replaced by operational status, context strip, and primary console.
+- [x] Not configured, available, and in-progress states automatically define title, explanation, badge, indicator, and relevant action.
+- [x] Active progress integrates percentage, bytes processed, queue, and cancel without competing with the console.
+- [x] Path, official version, depotcache, and ASA content grouped in a compact strip with truncation and full value available via native tooltip.
+- [x] `SteamCmdPage` uses full viewport height; console went from a fixed `360 px` max to `351 px` at 720p, `711 px` on Full HD, and `1071 px` on 2K.
+- [x] Floating progress dock hides automatically when SteamCMD is already the active view.
+- [x] SteamCMD and Logs adopt the same blue-gray family as Servers at lower intensity to keep hierarchy.
+- [x] Typecheck, build, and focused SteamCMD and Logs tests: 4/4.
+- [x] SteamCMD and Updates reviewed with Playwright/Electron at `1280×720`, `1920×1080`, and `2560×1440`.
+- [x] No global overflow, console errors, or renderer exceptions.
 
-Corrección operativa — falso positivo de actualización ASA (2026-07-24):
+Operational fix — ASA update false positive (2026-07-24):
 
-- [x] La disponibilidad de updates deja de comparar `ARK Version` del log local con la versión observada en un servidor oficial externo.
-- [x] El estado se determina únicamente comparando el `buildid` del `appmanifest_2430930.acf` local con el build público de Steam.
-- [x] Si falta alguno de los builds comparables, la UI muestra “Sin verificar” en lugar de afirmar “Actualizado” o “Actualización disponible”.
-- [x] Una acción explícita de actualizar o verificar siempre consulta SteamCMD; la caché fresca solo se reutiliza al instalar archivos en otros servidores.
-- [x] El sidebar aclara que la versión ARK oficial es informativa y que SteamCMD determina los updates.
-- [x] Caso real validado con local `92.21`, valor tercero previamente observado `92.23` y build Steam coincidente `24346423`: Archivos muestra “Actualizado” y la acción es “Iniciar”.
-- [x] La aplicación se relanzó dos veces mediante Playwright/Electron; el estado permaneció consistente después del reinicio y no hubo errores del renderer.
-- [x] Pruebas de regresión para builds coincidentes, builds atrasados, fuentes incomparables y caché explícita; typecheck y build correctos.
-- [-] Suite completa: 130/131 en ejecución conjunta por el `EBUSY` conocido al limpiar una carpeta temporal de Windows; la prueba de proceso real pasa aislada 1/1.
+- [x] Update availability no longer compares local-log `ARK Version` with the version observed on an external official server.
+- [x] Status is determined only by comparing the local `buildid` from `appmanifest_2430930.acf` with the public Steam build.
+- [x] If either comparable build is missing, the UI shows “Unverified” instead of claiming “Up to date” or “Update available”.
+- [x] An explicit update or verify action always queries SteamCMD; fresh cache is only reused when installing files on other servers.
+- [x] Sidebar clarifies that the official ARK version is informational and SteamCMD determines updates.
+- [x] Real case validated with local `92.21`, previously observed third-party value `92.23`, and matching Steam build `24346423`: Files shows “Up to date” and the action is “Start”.
+- [x] App relaunched twice via Playwright/Electron; state stayed consistent after restart and there were no renderer errors.
+- [x] Regression tests for matching builds, outdated builds, incomparable sources, and explicit cache; typecheck and build OK.
+- [-] Full suite: 130/131 in joint runs due to the known `EBUSY` when cleaning a temporary Windows folder; the real-process test passes in isolation 1/1.
 
-Corrección de fuente — versión oficial ARK (2026-07-24):
+Official ARK version source fix (2026-07-24):
 
-- [x] Eliminada la dependencia del servidor Arkpocalypse fijo de ArkStatus.
-- [x] Versión informativa obtenida desde `https://cdn2.arkdedicated.com/asa/officialserverstatus.ini`, publicado por el CDN oficial de ARK/Wildcard.
-- [x] Parser tolera estados como `Online` o `Deploying` y extrae únicamente el valor `(vX.Y)`.
-- [x] Si el estado oficial no incluye versión, la UI muestra “No detectada”; no sustituye el dato con un build Steam incompatible.
-- [x] Fuente real verificada con respuesta `Online (v92.21)`.
-- [x] Sidebar validado en `1280×720`, `1920×1080` y `2560×1440`, además de dos lanzamientos consecutivos de Electron: `92.21` consistente y sin errores del renderer.
-- [x] Tests focalizados: 28/28; typecheck y build correctos.
+- [x] Removed dependency on the fixed Arkpocalypse server from ArkStatus.
+- [x] Informational version obtained from `https://cdn2.arkdedicated.com/asa/officialserverstatus.ini`, published by the official ARK/Wildcard CDN.
+- [x] Parser tolerates states such as `Online` or `Deploying` and extracts only the `(vX.Y)` value.
+- [x] If the official status has no version, the UI shows “Not detected”; it does not substitute a incompatible Steam build.
+- [x] Real source verified with response `Online (v92.21)`.
+- [x] Sidebar validated at `1280×720`, `1920×1080`, and `2560×1440`, plus two consecutive Electron launches: `92.21` consistent and no renderer errors.
+- [x] Focused tests: 28/28; typecheck and build OK.
 
-Corrección INI — ajustes de cliente regenerados por ASA (2026-07-24):
+INI fix — client settings regenerated by ASA (2026-07-24):
 
-- [x] Confirmado que los defaults canónicos de `src/shared/defaults` no contienen claves de cliente.
-- [x] Identificado que el servidor dedicado de ASA regenera la sección `ShooterGameUserSettings` en el archivo runtime.
-- [x] La lectura del backend filtra secciones y claves de cliente antes de exponer la configuración.
-- [x] El editor usa el contenido filtrado como baseline y ya no muestra cambios pendientes ni pide guardar para limpiar ruido generado.
-- [x] La lectura permanece no destructiva; el archivo en disco solo cambia durante una acción real de guardado.
-- [x] Tests focalizados 19/19, typecheck y build correctos.
-- [x] Editor real validado en `1280×720`, `1920×1080` y `2560×1440`: sin aviso, claves de cliente, falso estado pendiente, overflow global ni errores del renderer; scroll interno funcional.
+- [x] Confirmed that canonical defaults in `src/shared/defaults` contain no client keys.
+- [x] Identified that the ASA dedicated server regenerates the `ShooterGameUserSettings` section in the runtime file.
+- [x] Backend read filters client sections and keys before exposing configuration.
+- [x] Editor uses the filtered content as baseline and no longer shows pending changes or asks to save to clear generated noise.
+- [x] Read remains non-destructive; the on-disk file only changes during a real save action.
+- [x] Focused tests 19/19, typecheck and build OK.
+- [x] Real editor validated at `1280×720`, `1920×1080`, and `2560×1440`: no warning, client keys, false pending state, global overflow, or renderer errors; internal scroll working.
 
-### Iteración 3 — Smart Configuration
+### Iteration 3 — Smart Configuration
 
-Objetivo: convertir la configuración visual en la experiencia principal y
-relegar los archivos INI a Advanced Mode.
+Goal: make visual configuration the primary experience and relegate INI files to
+Advanced Mode.
 
-- [x] Arquitectura de información aprobada y documentada en `docs/smart-configuration-architecture.md`.
-- [-] Organizar los ajustes más utilizados por objetivos del usuario; primera selección curada de 16 conceptos completada, ampliación pendiente de validar.
-- [x] Integrar Smart Configuration como asistente bajo demanda sin retirar la experiencia reconocible de `Game.ini` y `GameUserSettings.ini`.
-- [-] Añadir nombres legibles y descripciones orientadas a resultados para los ajustes curados; catálogo completo pendiente.
-- [-] Enriquecer controles según tipo y rango; perfiles, presets semánticos, switches e inputs numéricos cubren ya el asistente inicial.
-- [x] Mostrar perfiles recomendados y consecuencias sin aplicar cambios al seleccionarlos.
-- [x] Añadir un resumen legible de cambios antes de guardar.
-- [x] Permitir consultar los valores anterior/nuevo desde el contador de cambios en cualquier paso.
-- [x] Mantener visible el estado de cambios pendientes y si requieren reiniciar el servidor.
-- [x] Conservar el editor visual actual y la edición raw de ambos archivos dentro de una vista explícita `Archivos INI`.
-- [ ] Dividir `ConfigurationEditor` gradualmente por responsabilidades sin reescribir su lógica funcional.
-- [ ] Preparar la gestión de mods para CurseForge, dependencias, conflictos, orden de carga y actualizaciones.
+- [x] Information architecture approved and documented in `docs/smart-configuration-architecture.md`.
+- [-] Organize the most-used settings by user goals; first curated selection of 16 concepts completed, further expansion pending validation.
+- [x] Integrate Smart Configuration as an on-demand assistant without removing the recognizable `Game.ini` and `GameUserSettings.ini` experience.
+- [-] Add readable names and outcome-oriented descriptions for curated settings; full catalog pending.
+- [-] Enrich controls by type and range; profiles, semantic presets, switches, and numeric inputs already cover the initial assistant.
+- [x] Show recommended profiles and consequences without applying changes on selection.
+- [x] Add a readable change summary before saving.
+- [x] Allow viewing previous/new values from the change counter at any step.
+- [x] Keep pending-change state visible and whether a server restart is required.
+- [x] Keep the current visual editor and raw editing of both files inside an explicit `INI Files` view.
+- [ ] Gradually split `ConfigurationEditor` by responsibility without rewriting its functional logic.
+- [ ] Prepare mods management for CurseForge, dependencies, conflicts, load order, and updates.
 
-Bloques propuestos:
+Proposed blocks:
 
-- [x] 3.1 Agrupar la experiencia visual/raw existente bajo `Archivos INI`.
-- [x] 3.2 Crear asistente bajo demanda de cinco pasos para servidores existentes.
-- [x] 3.3 Ampliar y validar la selección curada de ajustes frecuentes.
-- [x] 3.4 Reutilizar el asistente opcionalmente después de crear un servidor.
+- [x] 3.1 Group the existing visual/raw experience under `INI Files`.
+- [x] 3.2 Create a five-step on-demand assistant for existing servers.
+- [x] 3.3 Expand and validate the curated frequent-settings selection.
+- [x] 3.4 Optionally reuse the assistant after creating a server.
 
-Validación del bloque 3.2 — asistente bajo demanda:
+Block 3.2 validation — on-demand assistant:
 
-- [x] Eliminada la pestaña provisional que solo fusionaba ambos INI.
-- [x] Lanzador integrado en `Servidor`; navegación habitual reducida a Servidor, Archivos INI y Mods.
-- [x] Cinco pasos iniciales: perfil, ritmo, crianza, comodidad y revisión (ampliados en 3.3).
-- [x] Ritmo y crianza usan presets semánticos coordinados; muestran sus multiplicadores exactos y permiten volver a los valores actuales.
-- [x] El modo individual se presenta como ajuste de alto impacto, nunca cambia implícitamente con un perfil y muestra tasas efectivas conocidas.
-- [x] Dificultad se presenta como un solo concepto; nivel máximo, `DifficultyOffset` y `OverrideOfficialDifficulty` se coordinan únicamente tras una elección explícita.
-- [x] `Muy rápido` diferencia claramente el ritmo con XP `5×`, recolección `5×` y domesticación `10×`.
-- [x] Abrir, recorrer y cancelar trabajan sobre un borrador y no escriben en disco.
-- [x] Solo se modifican conceptos curados; contenido desconocido y casing de secciones se conservan.
-- [x] Antes de aplicar se relee el disco y el borrador se superpone sobre la versión más reciente para preservar cambios externos.
-- [x] El asistente se bloquea si el editor manual tiene cambios pendientes.
-- [x] Aplicación final usa Zod, preview del backend y guardado explícito; el editor manual se recarga después.
-- [x] Tests focalizados 26/26, typecheck y build correctos.
-- [-] Suite completa 147/148 por el `EBUSY` conocido al limpiar una carpeta temporal de Windows; la prueba de proceso real pasa aislada 1/1.
-- [x] Launcher, inicio y revisión recorridos con Playwright/Electron en `1280×720`, `1920×1080` y `2560×1440`.
-- [x] Scroll interno funcional en 720p, footer/progreso accesibles, sin overflow global, errores de consola ni excepciones.
+- [x] Removed the provisional tab that only merged both INI files.
+- [x] Launcher integrated in `Server`; habitual navigation reduced to Server, INI Files, and Mods.
+- [x] Five initial steps: profile, pace, breeding, comfort, and review (expanded in 3.3).
+- [x] Pace and breeding use coordinated semantic presets; show their exact multipliers and allow returning to current values.
+- [x] Single-player mode is presented as a high-impact setting, never changes implicitly with a profile, and shows known effective rates.
+- [x] Difficulty is presented as one concept; max level, `DifficultyOffset`, and `OverrideOfficialDifficulty` are coordinated only after an explicit choice.
+- [x] `Very fast` clearly differentiates pace with XP `5×`, gathering `5×`, and taming `10×`.
+- [x] Opening, walking, and canceling work on a draft and do not write to disk.
+- [x] Only curated concepts are modified; unknown content and section casing are preserved.
+- [x] Before applying, disk is re-read and the draft is overlaid on the latest version to preserve external changes.
+- [x] Assistant is blocked if the manual editor has pending changes.
+- [x] Final apply uses Zod, backend preview, and explicit save; manual editor reloads afterward.
+- [x] Focused tests 26/26, typecheck and build OK.
+- [-] Full suite 147/148 due to the known `EBUSY` when cleaning a temporary Windows folder; the real-process test passes in isolation 1/1.
+- [x] Launcher, start, and review walked with Playwright/Electron at `1280×720`, `1920×1080`, and `2560×1440`.
+- [x] Internal scroll working at 720p, footer/progress accessible, no global overflow, console errors, or exceptions.
 
-Validación del bloque 3.3 — ampliación curada:
+Block 3.3 validation — curated expansion:
 
-- [x] Nuevos conceptos: MaxPlayers, densidad, salud de nodos, ciclo día/noche, drain comida/agua, resistencia de estructuras.
-- [x] Paso `Mundo` con presets semánticos (Base / Amable / Equilibrado / Exigente); perfiles de experiencia los declaran.
-- [x] Tests de modelo cubren escritura INI y presets de mundo.
+- [x] New concepts: MaxPlayers, density, harvest node health, day/night cycle, food/water drain, structure resistance.
+- [x] `World` step with semantic presets (Base / Friendly / Balanced / Demanding); experience profiles declare them.
+- [x] Model tests cover INI write and world presets.
 
-Validación del bloque 3.4 — onboarding post-creación:
+Block 3.4 validation — post-creation onboarding:
 
-- [x] Tras crear (no clonar) se abre workspace con checklist opcional.
-- [x] Checklist: experiencia, cluster, puertos e instalar archivos; `Más tarde` no bloquea.
-- [x] `Configurar con asistente` reutiliza `ConfigurationWizard`.
-- [x] Conflictos de puerto vía `findPortConflicts` compartido; compliance de cluster vía `checkCluster`.
-- [x] Ajuste de presets, dificultad, modo individual y resumen interactivo: pruebas focalizadas 16/16, typecheck y build correctos.
-- [x] Ritmo, crianza y modal de cambios revisados en Electron a `1280×720`, `1920×1080` y `2560×1440`; sin overflow ni errores del renderer.
-- [x] Modo individual, tasas efectivas y dificultad compuesta revisados con scroll real en las tres resoluciones; footer siempre accesible.
+- [x] After create (not clone), workspace opens with an optional checklist.
+- [x] Checklist: experience, cluster, ports, and install files; `Later` does not block.
+- [x] `Configure with assistant` reuses `ConfigurationWizard`.
+- [x] Port conflicts via shared `findPortConflicts`; cluster compliance via `checkCluster`.
+- [x] Preset, difficulty, single-player mode, and interactive summary adjustments: focused tests 16/16, typecheck and build OK.
+- [x] Pace, breeding, and changes modal reviewed in Electron at `1280×720`, `1920×1080`, and `2560×1440`; no overflow or renderer errors.
+- [x] Single-player mode, effective rates, and composite difficulty reviewed with real scroll at all three resolutions; footer always accessible.
 
-Criterio de cierre:
+Exit criteria:
 
-- [x] Un usuario nuevo puede configurar los ajustes comunes sin saber qué archivo INI contiene cada setting.
-- [x] Un administrador experimentado conserva acceso directo y confiable a los archivos raw.
-- [ ] La navegación puede crecer sin convertirse en una lista plana o una tabla inmanejable.
+- [x] A new user can configure common settings without knowing which INI file contains each setting.
+- [x] An experienced administrator keeps direct, reliable access to the raw files.
+- [ ] Navigation can grow without becoming a flat list or an unmanageable table.
 
-### Design review obligatorio por iteración
+### Mandatory design review per iteration
 
-Antes de marcar una iteración como completada:
+Before marking an iteration complete:
 
-- [x] Prueba visual del build real según `docs/visual-testing.md` en `1280×720`, `1920×1080` y `2560×1440` (Iteración 2: `scripts/visual-iter2-review.cjs`).
-- [x] Claridad: la pantalla se entiende en menos de cinco segundos.
-- [x] Jerarquía: lo más importante es lo más visible.
-- [x] Acciones: la acción principal destaca y las secundarias no compiten.
-- [x] Consistencia: se reutilizan patrones y componentes existentes.
-- [x] Espaciado: las secciones respiran sin desperdiciar espacio.
-- [x] Escalabilidad: el diseño admite más servidores y settings.
-- [x] Profesionalismo: no hay placeholders, contenido simulado ni acabados provisionales visibles en los flujos activos (placeholders de rutas no migradas quedan fuera del cierre).
+- [x] Visual test of the real build per `docs/visual-testing.md` at `1280×720`, `1920×1080`, and `2560×1440` (Iteration 2: `scripts/visual-iter2-review.cjs`).
+- [x] Clarity: the screen is understood in under five seconds.
+- [x] Hierarchy: the most important thing is the most visible.
+- [x] Actions: the primary action stands out and secondaries do not compete.
+- [x] Consistency: existing patterns and components are reused.
+- [x] Spacing: sections breathe without wasting space.
+- [x] Scalability: the design supports more servers and settings.
+- [x] Professionalism: no placeholders, simulated content, or provisional finishes visible in active flows (placeholders for unmigrated routes stay outside the exit criteria).
 
-## Pruebas y verificacion actual
-- [x] Unit tests verdes.
-- [x] Typecheck verde.
-- [x] Build verde.
-- [ ] Smoke E2E de lanzamiento de app Electron.
-- [ ] Suite E2E formal de crear / clonar / eliminar servidor.
-- [ ] E2E de bootstrap + start + stop con binario real de ASA.
-- [ ] E2E de update seguro con rollback real.
+## Current tests and verification
+- [x] Unit tests green.
+- [x] Typecheck green.
+- [x] Build green.
+- [ ] Electron app launch smoke E2E.
+- [ ] Formal E2E suite for create / clone / delete server.
+- [ ] E2E of bootstrap + start + stop with a real ASA binary.
+- [ ] E2E of safe update with real rollback.
 
-## Validacion realizada (estado actual)
-- Fecha de validacion: 2026-07-23.
-- Comandos ejecutados:
+## Validation performed (current status)
+- Validation date: 2026-07-23.
+- Commands run:
 	- `npx vitest run src/renderer/src/app/AppProviders.test.tsx src/renderer/src/app/AppShellLayout.test.tsx src/renderer/src/features/servers/components/ServerForm/ServerForm.test.tsx src/renderer/src/features/servers/components/ServerCard/ServerCard.test.tsx src/renderer/src/features/overview/OverviewPage.test.tsx`: OK.
 	- `npx vitest run src/renderer/src/features/steamcmd/SteamCmdPage.test.tsx`: OK.
 	- `npx vitest run src/renderer/src/features/logs/LogsPage.test.tsx`: OK.
 	- `npx vitest run tests/unit/ini-model.test.ts src/renderer/src/features/server-workspace/ServerWorkspacePage.test.tsx`: OK.
 	- `npm run typecheck`: OK.
 	- `npm run build`: OK.
-	- `npm run e2e:smoke` y `npm run e2e`: fallan por instalación de Electron en el entorno.
-- Criterio aplicado: cada check se marcó como `[x]` solo cuando existe evidencia funcional vigente; si hay implementación parcial o desalineada, se marcó `[-]`; si no hay evidencia o está roto, `[ ]`.
+	- `npm run e2e:smoke` and `npm run e2e`: fail due to Electron install in the environment.
+- Criterion applied: each check was marked `[x]` only when current functional evidence exists; partial or misaligned implementation is `[-]`; no evidence or broken is `[ ]`.
 
-## Siguiente prioridad recomendada
-1. Página funcional de **Backups** (backend ya existe); después Clusters y Settings.
-2. Cuando haya `CURSEFORGE_API_KEY`: sustituir mock de mods por cliente oficial; discovery/updates/cluster después.
-3. Diferido: partir `ConfigurationEditor`, icono final de distribución, RCON en consola avanzada.
+## Recommended next priority
+1. Functional **Backups** page (backend already exists); then Clusters and Settings.
+2. When `CURSEFORGE_API_KEY` is available: replace mods mock with the official client; discovery/updates/cluster afterward.
+3. Deferred: split `ConfigurationEditor`, final distribution icon, RCON in advanced console.
 
-## Regla de mantenimiento
-- Cada vez que se complete una tarea, actualizar este archivo en el mismo cambio.
-- Si cambia la prioridad por decision del usuario, reflejarlo aqui.
-- Si una tarea se divide, agregar subtareas en lugar de perder detalle.
+## Maintenance rule
+- Whenever a task is completed, update this file in the same change.
+- If priority changes by user decision, reflect it here.
+- If a task is split, add subtasks instead of losing detail.

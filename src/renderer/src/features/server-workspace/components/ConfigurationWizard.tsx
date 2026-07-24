@@ -93,7 +93,7 @@ const EMPTY_DRAFT: ConfigurationWizardDraft = {
   structurePickupSeconds: 30,
 };
 
-const STEP_LABELS = ["Perfil", "Ritmo", "Crianza", "Mundo", "Comodidad", "Revisión"];
+const STEP_LABELS = ["Profile", "Pace", "Breeding", "World", "QoL", "Review"];
 const STEP_COUNT = STEP_LABELS.length;
 type DifficultyChoice = "current" | "120" | "150" | "180" | "300" | "custom";
 
@@ -132,7 +132,7 @@ export function ConfigurationWizard(props: Props): JSX.Element {
       if (!alive) return;
       setLoading(false);
       if (!result.ok) {
-        setError(result.error ?? "No se pudo leer la configuración actual");
+        setError(result.error ?? "Could not read the current configuration");
         return;
       }
       const draft = draftFromIniPayload(result.data.payload);
@@ -255,14 +255,14 @@ export function ConfigurationWizard(props: Props): JSX.Element {
       return;
     }
     modals.openConfirmModal({
-      title: "Salir del asistente",
+      title: "Leave the wizard",
       children: (
         <Text size="sm">
-          El borrador tiene cambios que todavía no se han aplicado. Los INI del
-          servidor permanecerán intactos.
+          The draft has changes that have not been applied yet. The server INI files
+          will remain untouched.
         </Text>
       ),
-      labels: { confirm: "Descartar borrador", cancel: "Continuar configurando" },
+      labels: { confirm: "Discard draft", cancel: "Keep editing" },
       confirmProps: { color: "red" },
       onConfirm: props.onCancel,
     });
@@ -276,7 +276,7 @@ export function ConfigurationWizard(props: Props): JSX.Element {
     setError(null);
     const parsed = configurationWizardSchema.safeParse(form.values);
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? "Revisa los valores del asistente");
+      setError(parsed.error.issues[0]?.message ?? "Review the wizard values");
       return;
     }
 
@@ -286,27 +286,27 @@ export function ConfigurationWizard(props: Props): JSX.Element {
       setSaving(false);
       setError(
         latestResult.error ??
-          "No se pudo volver a leer la configuración antes de aplicar",
+          "Could not re-read the configuration before applying",
       );
       return;
     }
-    // Superponer únicamente los ajustes curados sobre la versión más reciente
-    // evita borrar cambios externos realizados mientras el asistente estaba abierto.
+    // Overlay only curated settings onto the latest version so
+    // external changes made while the wizard was open are not wiped.
     const payload = applyWizardDraftToIni(latestResult.data.payload, parsed.data);
     const previewResult = await window.api.previewServerIni(props.server.id, payload);
     if (!previewResult.ok || !previewResult.data.valid) {
       setSaving(false);
       setError(
         previewResult.ok
-          ? previewResult.data.issues[0]?.message ?? "La configuración no es válida"
-          : previewResult.error ?? "No se pudo validar la configuración",
+          ? previewResult.data.issues[0]?.message ?? "Configuration is not valid"
+          : previewResult.error ?? "Could not validate the configuration",
       );
       return;
     }
     const result = await window.api.saveServerIni(props.server.id, payload);
     setSaving(false);
     if (!result.ok) {
-      setError(result.error ?? "No se pudo aplicar la configuración");
+      setError(result.error ?? "Could not apply the configuration");
       return;
     }
     setSaved(true);
@@ -332,17 +332,17 @@ export function ConfigurationWizard(props: Props): JSX.Element {
           <ThemeIcon size={56} radius="xl" color="green" variant="light">
             <Check size={28} weight="bold" />
           </ThemeIcon>
-          <Title order={2}>Configuración aplicada</Title>
+          <Title order={2}>Configuration applied</Title>
           <Text c="dimmed" ta="center" maw={520}>
-            Se actualizaron {changes.length} ajustes del servidor. Las opciones no
-            incluidas en el asistente se conservaron sin cambios.
+            {changes.length} server settings were updated. Options not included in the
+            wizard were left unchanged.
           </Text>
           {props.serverActive && (
-            <Alert color="yellow" title="Reinicio pendiente" maw={520}>
-              Los nuevos valores comenzarán a utilizarse cuando reinicies el servidor.
+            <Alert color="yellow" title="Restart pending" maw={520}>
+              The new values will take effect when you restart the server.
             </Alert>
           )}
-          <Button onClick={props.onCancel}>Volver al servidor</Button>
+          <Button onClick={props.onCancel}>Back to server</Button>
         </div>
       </div>
     );
@@ -353,16 +353,16 @@ export function ConfigurationWizard(props: Props): JSX.Element {
       <Modal
         opened={changesOpen}
         onClose={() => setChangesOpen(false)}
-        title="Cambios del borrador"
+        title="Draft changes"
         size="lg"
         centered
       >
         <Text c="dimmed" size="sm" mb="md">
-          Estos valores todavía no se han aplicado. Podrás confirmarlos en el último
-          paso.
+          These values have not been applied yet. You can confirm them on the last
+          step.
         </Text>
         {changes.length === 0 ? (
-          <Alert color="blue">El borrador coincide con la configuración actual.</Alert>
+          <Alert color="blue">The draft matches the current configuration.</Alert>
         ) : (
           <Stack gap="xs">
             {changes.map((change) => (
@@ -375,15 +375,15 @@ export function ConfigurationWizard(props: Props): JSX.Element {
       <header className={classes.header}>
         <div>
           <Text c="dimmed" size="xs" fw={600}>
-            {props.server.name} / Asistente de configuración
+            {props.server.name} / Configuration wizard
           </Text>
-          <Title order={2}>Prepara la experiencia de juego</Title>
+          <Title order={2}>Set up the play experience</Title>
           <Text c="dimmed" size="sm">
-            Partimos de tus valores actuales. Nada se escribe hasta la revisión final.
+            We start from your current values. Nothing is written until the final review.
           </Text>
         </div>
         <Button variant="subtle" color="gray" onClick={cancel}>
-          Cancelar
+          Cancel
         </Button>
       </header>
 
@@ -392,7 +392,7 @@ export function ConfigurationWizard(props: Props): JSX.Element {
           <Stack gap={6}>
             <Group justify="space-between">
               <Text size="sm" fw={600}>
-                Paso {activeStep + 1} de {STEP_COUNT}
+                Step {activeStep + 1} of {STEP_COUNT}
               </Text>
               <Text size="sm" c="dimmed">
                 {STEP_LABELS[activeStep]}
@@ -418,14 +418,14 @@ export function ConfigurationWizard(props: Props): JSX.Element {
 
         {activeStep === 0 && (
           <WizardStep
-            title="¿Qué tipo de servidor quieres?"
-            description="Elige un punto de partida. Podrás ajustar cada valor antes de aplicar."
+            title="What kind of server do you want?"
+            description="Pick a starting point. You can fine-tune each value before applying."
           >
             <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
               <ProfileCard
                 id="current"
-                name="Conservar configuración actual"
-                description="No aplica recomendaciones; permite revisar y ajustar tus valores actuales."
+                name="Keep current configuration"
+                description="Does not apply recommendations; lets you review and adjust your current values."
                 selected={form.values.profile === "current"}
                 onSelect={chooseProfile}
               />
@@ -443,12 +443,12 @@ export function ConfigurationWizard(props: Props): JSX.Element {
             <div className={classes.impactSetting}>
               <div>
                 <Group gap="xs">
-                  <Text fw={700}>Ajustes para una persona o grupo pequeño</Text>
-                  <Text className={classes.highImpactLabel}>ALTO IMPACTO</Text>
+                  <Text fw={700}>Settings for one person or a small group</Text>
+                  <Text className={classes.highImpactLabel}>HIGH IMPACT</Text>
                 </Group>
                 <Text c="dimmed" size="sm">
-                  ARK añade bonificaciones sobre domesticación, crianza, progresión
-                  y estadísticas de criaturas domesticadas.
+                  ARK adds bonuses to taming, breeding, progression,
+                  and tamed creature stats.
                 </Text>
               </div>
               <Switch
@@ -456,15 +456,14 @@ export function ConfigurationWizard(props: Props): JSX.Element {
                 onChange={(event) =>
                   form.setFieldValue("singlePlayerSettings", event.currentTarget.checked)
                 }
-                aria-label="Ajustes para una persona o grupo pequeño"
+                aria-label="Settings for one person or a small group"
               />
             </div>
             {form.values.singlePlayerSettings && (
-              <Alert color="yellow" title="Los multiplicadores se acumulan">
-                Este modo se aplica además de los presets del asistente. Verás el
-                resultado efectivo conocido en Ritmo y Crianza; ARK también modifica
-                requisitos de experiencia, engramas, salud y daño de criaturas
-                domesticadas.
+              <Alert color="yellow" title="Multipliers stack">
+                This mode applies on top of the wizard presets. You will see the known
+                effective result under Pace and Breeding; ARK also changes XP
+                requirements, engrams, and tamed creature health and damage.
               </Alert>
             )}
           </WizardStep>
@@ -472,20 +471,20 @@ export function ConfigurationWizard(props: Props): JSX.Element {
 
         {activeStep === 1 && (
           <WizardStep
-            title="Define el ritmo de progresión"
-            description="Elige cómo quieres que se sienta el avance. Puedes verificar los valores exactos antes de aplicar."
+            title="Set the progression pace"
+            description="Choose how progression should feel. You can verify the exact values before applying."
           >
             <PresetSelector
               value={progressionPreset}
               onChange={chooseProgressionPreset}
               presets={PROGRESSION_PRESETS}
-              currentDescription="Conserva los valores que ya tiene este servidor."
+              currentDescription="Keep the values this server already uses."
             >
               <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="xs">
-                <PresetValue label="Experiencia" value={`${form.values.xpRate}×`} />
-                <PresetValue label="Recolección" value={`${form.values.harvestRate}×`} />
+                <PresetValue label="Experience" value={`${form.values.xpRate}×`} />
+                <PresetValue label="Harvesting" value={`${form.values.harvestRate}×`} />
                 <PresetValue
-                  label="Domesticación"
+                  label="Taming"
                   value={effectiveRateLabel(
                     form.values.tamingRate,
                     SINGLE_PLAYER_RATE_FACTORS.tamingRate,
@@ -496,8 +495,8 @@ export function ConfigurationWizard(props: Props): JSX.Element {
             </PresetSelector>
             {form.values.singlePlayerSettings && (
               <Text c="yellow.3" size="xs">
-                El modo individual también reduce requisitos de experiencia; por eso
-                el efecto final de XP no puede expresarse como un único multiplicador.
+                Single-player mode also reduces XP requirements, so the final XP effect
+                cannot be expressed as a single multiplier.
               </Text>
             )}
             <DifficultyControl
@@ -514,18 +513,18 @@ export function ConfigurationWizard(props: Props): JSX.Element {
 
         {activeStep === 2 && (
           <WizardStep
-            title="Ajusta la crianza"
-            description="Elige una intensidad; el asistente coordina incubación, crecimiento, apareamiento y cuidados."
+            title="Tune breeding"
+            description="Pick an intensity; the wizard coordinates hatching, growth, mating, and care."
           >
             <PresetSelector
               value={breedingPreset}
               onChange={chooseBreedingPreset}
               presets={BREEDING_PRESETS}
-              currentDescription="Conserva la combinación que ya usa este servidor."
+              currentDescription="Keep the combination this server already uses."
             >
               <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="xs">
                 <PresetValue
-                  label="Incubación"
+                  label="Hatching"
                   value={effectiveRateLabel(
                     form.values.eggHatchRate,
                     SINGLE_PLAYER_RATE_FACTORS.eggHatchRate,
@@ -533,7 +532,7 @@ export function ConfigurationWizard(props: Props): JSX.Element {
                   )}
                 />
                 <PresetValue
-                  label="Maduración"
+                  label="Maturation"
                   value={effectiveRateLabel(
                     form.values.maturationRate,
                     SINGLE_PLAYER_RATE_FACTORS.maturationRate,
@@ -541,7 +540,7 @@ export function ConfigurationWizard(props: Props): JSX.Element {
                   )}
                 />
                 <PresetValue
-                  label="Espera para aparear"
+                  label="Mating wait"
                   value={effectiveRateLabel(
                     form.values.matingIntervalMultiplier,
                     SINGLE_PLAYER_RATE_FACTORS.matingIntervalMultiplier,
@@ -549,7 +548,7 @@ export function ConfigurationWizard(props: Props): JSX.Element {
                   )}
                 />
                 <PresetValue
-                  label="Intervalo de cuidados"
+                  label="Cuddle interval"
                   value={effectiveRateLabel(
                     form.values.cuddleIntervalMultiplier,
                     SINGLE_PLAYER_RATE_FACTORS.cuddleIntervalMultiplier,
@@ -559,80 +558,79 @@ export function ConfigurationWizard(props: Props): JSX.Element {
               </SimpleGrid>
             </PresetSelector>
             <Text c="dimmed" size="xs">
-              En los intervalos, un valor menor significa menos tiempo de espera. Los
-              tiempos reales varían según la especie.
+              For intervals, a lower value means less waiting. Actual times vary by species.
             </Text>
           </WizardStep>
         )}
 
         {activeStep === 3 && (
           <WizardStep
-            title="Define cómo se siente el mundo"
-            description="Elige una intensidad; el asistente coordina cupo, densidad, ciclo del día y supervivencia."
+            title="Define how the world feels"
+            description="Pick an intensity; the wizard coordinates capacity, density, day cycle, and survival."
           >
             <PresetSelector
               value={worldPreset}
               onChange={chooseWorldPreset}
               presets={WORLD_PRESETS}
-              currentDescription="Conserva la combinación que ya usa este servidor."
+              currentDescription="Keep the combination this server already uses."
             >
               <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="xs">
                 <PresetValue
-                  label="Jugadores máximos"
+                  label="Max players"
                   value={String(form.values.maxPlayers)}
                 />
                 <PresetValue
-                  label="Densidad de dinosaurios"
+                  label="Dinosaur density"
                   value={`${form.values.dinoCountMultiplier}×`}
                 />
                 <PresetValue
-                  label="Salud de nodos"
+                  label="Node health"
                   value={`${form.values.harvestHealthMultiplier}×`}
                 />
                 <PresetValue
-                  label="Resistencia de estructuras"
+                  label="Structure resistance"
                   value={`${form.values.structureResistanceMultiplier}×`}
                 />
                 <PresetValue
-                  label="Velocidad del día"
+                  label="Day speed"
                   value={`${form.values.dayCycleSpeedScale}×`}
                 />
                 <PresetValue
-                  label="Velocidad de la noche"
+                  label="Night speed"
                   value={`${form.values.nightTimeSpeedScale}×`}
                 />
                 <PresetValue
-                  label="Consumo de comida"
+                  label="Food drain"
                   value={`${form.values.playerCharacterFoodDrainMultiplier}×`}
                 />
                 <PresetValue
-                  label="Consumo de agua"
+                  label="Water drain"
                   value={`${form.values.playerCharacterWaterDrainMultiplier}×`}
                 />
               </SimpleGrid>
             </PresetSelector>
             <Text c="dimmed" size="xs">
-              En comida y agua, un valor menor significa menos hambre y sed. En la
-              noche, un valor mayor acorta la oscuridad.
+              For food and water, a lower value means less hunger and thirst. For night,
+              a higher value shortens darkness.
             </Text>
           </WizardStep>
         )}
 
         {activeStep === 4 && (
           <WizardStep
-            title="Elige reglas de comodidad"
-            description="Son ajustes habituales que cambian cómo se siente el servidor, no su rendimiento."
+            title="Choose comfort rules"
+            description="These common settings change how the server feels, not its performance."
           >
             <Stack gap="xs">
-              <SettingSwitch label="Servidor PvE" description="Evita el combate directo entre jugadores." {...form.getInputProps("pve", { type: "checkbox" })} />
-              <SettingSwitch label="Modo hardcore" description="Al morir, el personaje vuelve al nivel inicial." {...form.getInputProps("hardcore", { type: "checkbox" })} />
-              <SettingSwitch label="Mostrar posición en el mapa" description="Cada jugador puede consultar su ubicación exacta." {...form.getInputProps("showMapLocation", { type: "checkbox" })} />
-              <SettingSwitch label="Mostrar mira" description="Muestra una referencia de apuntado en pantalla." {...form.getInputProps("crosshair", { type: "checkbox" })} />
-              <SettingSwitch label="Permitir tercera persona" description="Los jugadores pueden cambiar la cámara a tercera persona." {...form.getInputProps("thirdPerson", { type: "checkbox" })} />
-              <SettingSwitch label="Transportar criaturas con voladores en PvE" description="Permite recoger criaturas usando voladores." {...form.getInputProps("flyerCarryPve", { type: "checkbox" })} />
+              <SettingSwitch label="PvE server" description="Prevents direct combat between players." {...form.getInputProps("pve", { type: "checkbox" })} />
+              <SettingSwitch label="Hardcore mode" description="On death, the character resets to level 1." {...form.getInputProps("hardcore", { type: "checkbox" })} />
+              <SettingSwitch label="Show map location" description="Each player can see their exact location." {...form.getInputProps("showMapLocation", { type: "checkbox" })} />
+              <SettingSwitch label="Show crosshair" description="Shows an on-screen aiming reference." {...form.getInputProps("crosshair", { type: "checkbox" })} />
+              <SettingSwitch label="Allow third person" description="Players can switch the camera to third person." {...form.getInputProps("thirdPerson", { type: "checkbox" })} />
+              <SettingSwitch label="Carry creatures with flyers in PvE" description="Allows picking up creatures with flyers." {...form.getInputProps("flyerCarryPve", { type: "checkbox" })} />
               <NumberInput
-                label="Tiempo para recoger estructuras"
-                description="Segundos disponibles después de colocarlas. Usa 0 para recogida inmediata."
+                label="Structure pickup time"
+                description="Seconds available after placing them. Use 0 for immediate pickup."
                 min={0}
                 max={3600}
                 suffix=" s"
@@ -645,12 +643,12 @@ export function ConfigurationWizard(props: Props): JSX.Element {
 
         {activeStep === 5 && (
           <WizardStep
-            title="Revisa antes de aplicar"
-            description="Solo se modificarán los ajustes que aparecen en este resumen."
+            title="Review before applying"
+            description="Only the settings listed in this summary will be changed."
           >
             {changes.length === 0 ? (
-              <Alert color="blue" title="Sin cambios">
-                El borrador coincide con la configuración actual del servidor.
+              <Alert color="blue" title="No changes">
+                The draft matches the server's current configuration.
               </Alert>
             ) : (
               <Stack gap="xs">
@@ -660,8 +658,8 @@ export function ConfigurationWizard(props: Props): JSX.Element {
               </Stack>
             )}
             {props.serverActive && (
-              <Alert color="yellow" title="Requiere reiniciar el servidor" mt="md">
-                Puedes guardar ahora; los cambios comenzarán a utilizarse después del reinicio.
+              <Alert color="yellow" title="Requires a server restart" mt="md">
+                You can save now; changes will take effect after the restart.
               </Alert>
             )}
           </WizardStep>
@@ -670,7 +668,7 @@ export function ConfigurationWizard(props: Props): JSX.Element {
 
       <footer className={classes.footer}>
         <Button variant="default" leftSection={<ArrowLeft size={16} />} onClick={previous} disabled={activeStep === 0 || saving}>
-          Atrás
+          Back
         </Button>
         <Button
           variant="subtle"
@@ -678,13 +676,13 @@ export function ConfigurationWizard(props: Props): JSX.Element {
           size="compact-sm"
           leftSection={<Eye size={15} />}
           onClick={() => setChangesOpen(true)}
-          aria-label={`Ver ${changes.length} ${changes.length === 1 ? "cambio" : "cambios"}`}
+          aria-label={`View ${changes.length} ${changes.length === 1 ? "change" : "changes"}`}
         >
-          {changes.length} {changes.length === 1 ? "cambio" : "cambios"}
+          {changes.length} {changes.length === 1 ? "change" : "changes"}
         </Button>
         {activeStep < STEP_COUNT - 1 ? (
           <Button rightSection={<ArrowRight size={16} />} onClick={next}>
-            Continuar
+            Continue
           </Button>
         ) : (
           <Button
@@ -693,7 +691,7 @@ export function ConfigurationWizard(props: Props): JSX.Element {
             loading={saving}
             disabled={changes.length === 0}
           >
-            Aplicar cambios
+            Apply changes
           </Button>
         )}
       </footer>
@@ -782,15 +780,15 @@ function PresetSelector({
         onChange={onChange}
         fullWidth
         data={[
-          { value: "current", label: "Actual" },
+          { value: "current", label: "Current" },
           ...presets.map((preset) => ({ value: preset.id, label: preset.name })),
         ]}
-        aria-label="Nivel recomendado"
+        aria-label="Recommended level"
       />
       <div className={classes.presetSummary}>
         <div>
           <Text fw={700} size="sm">
-            {selected?.name ?? "Configuración actual"}
+            {selected?.name ?? "Current configuration"}
           </Text>
           <Text c="dimmed" size="xs">
             {selected?.description ?? currentDescription}
@@ -832,9 +830,9 @@ function DifficultyControl({
   return (
     <Stack gap="sm">
       <div>
-        <Text fw={700}>Dificultad del mundo</Text>
+        <Text fw={700}>World difficulty</Text>
         <Text c="dimmed" size="xs">
-          Determina los niveles salvajes y la calidad potencial del loot.
+          Controls wild levels and potential loot quality.
         </Text>
       </div>
       <SegmentedControl
@@ -842,32 +840,32 @@ function DifficultyControl({
         onChange={onChoiceChange}
         fullWidth
         data={[
-          { value: "current", label: "Actual" },
-          { value: "120", label: "Nivel 120" },
-          { value: "150", label: "Nivel 150" },
-          { value: "180", label: "Nivel 180" },
-          { value: "300", label: "Nivel 300" },
-          { value: "custom", label: "Personalizado" },
+          { value: "current", label: "Current" },
+          { value: "120", label: "Level 120" },
+          { value: "150", label: "Level 150" },
+          { value: "180", label: "Level 180" },
+          { value: "300", label: "Level 300" },
+          { value: "custom", label: "Custom" },
         ]}
-        aria-label="Dificultad del mundo"
+        aria-label="World difficulty"
       />
       <div className={classes.difficultySummary}>
         <div>
           <Text fw={700} size="sm">
             {choice === "current"
-              ? "Conservar configuración actual"
-              : `Nivel máximo común ${draft.maxWildDinoLevel}`}
+              ? "Keep current configuration"
+              : `Common max level ${draft.maxWildDinoLevel}`}
           </Text>
           <Text c="dimmed" size="xs">
             {explicitDifficulty
               ? `DifficultyOffset ${formatRate(draft.difficultyOffset)} · Override ${formatRate(draft.overrideOfficialDifficulty)}`
-              : `DifficultyOffset ${formatRate(draft.difficultyOffset)} · sin override; el resultado depende del mapa`}
+              : `DifficultyOffset ${formatRate(draft.difficultyOffset)} · no override; result depends on the map`}
           </Text>
         </div>
         {choice === "custom" && (
           <NumberInput
-            label="Nivel máximo personalizado"
-            description="El asistente calculará el override técnico necesario."
+            label="Custom max level"
+            description="The wizard will compute the required technical override."
             min={30}
             max={600}
             step={5}
@@ -880,9 +878,8 @@ function DifficultyControl({
         )}
       </div>
       <Text c="dimmed" size="xs">
-        Al elegir un nivel, el asistente usa offset 1 y un override explícito para
-        obtener un resultado consistente entre mapas. Algunas criaturas especiales
-        pueden aparecer por encima del nivel indicado.
+        When you pick a level, the wizard uses offset 1 and an explicit override for
+        consistent results across maps. Some special creatures may spawn above the stated level.
       </Text>
     </Stack>
   );

@@ -1,37 +1,37 @@
 /**
- * Resolución y validación de carpetas de instalación de servidor (Windows).
- * El usuario elige una carpeta base; el servidor vive en base\<nombre>.
+ * Resolve and validate server install folders (Windows).
+ * The user picks a base folder; the server lives in base\<name>.
  */
 
-/** Caracteres prohibidos en un nombre de carpeta Windows. */
+/** Characters forbidden in a Windows folder name. */
 const INVALID_FOLDER_CHARS = /[<>:"/\\|?*\u0000-\u001f]/;
 
-/** Nombres reservados de dispositivo en Windows (con o sin extensión). */
+/** Reserved Windows device names (with or without extension). */
 const RESERVED_FOLDER_NAMES =
   /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(?:\..*)?$/i;
 
 const INVALID_CHARS_MESSAGE =
-  'No puede contener < > : " / \\ | ? * ni caracteres de control';
+  'Cannot contain < > : " / \\ | ? * or control characters';
 
 /**
- * Devuelve el motivo de error si el nombre no es válido como carpeta Windows, o null si es válido.
+ * Returns an error reason if the name is not a valid Windows folder name, or null if valid.
  */
 export function getServerFolderNameError(name: string): string | null {
   const trimmed = name.trim();
   if (trimmed.length === 0) {
-    return "Nombre requerido";
+    return "Name required";
   }
   if (trimmed === "." || trimmed === "..") {
-    return 'El nombre no puede ser "." ni ".."';
+    return 'Name cannot be "." or ".."';
   }
   if (INVALID_FOLDER_CHARS.test(trimmed)) {
     return INVALID_CHARS_MESSAGE;
   }
   if (/[. ]$/.test(trimmed)) {
-    return "El nombre no puede terminar en punto ni espacio";
+    return "Name cannot end with a period or space";
   }
   if (RESERVED_FOLDER_NAMES.test(trimmed)) {
-    return `"${trimmed}" es un nombre reservado de Windows`;
+    return `"${trimmed}" is a reserved Windows name`;
   }
   return null;
 }
@@ -40,14 +40,14 @@ export function isValidServerFolderName(name: string): boolean {
   return getServerFolderNameError(name) === null;
 }
 
-/** Nombre de carpeta a usar (trim). Solo llamar tras validar. */
+/** Folder name to use (trimmed). Call only after validation. */
 export function serverFolderName(name: string): string {
   return name.trim();
 }
 
 /**
- * @deprecated Preferir validación estricta con getServerFolderNameError.
- * Conservado por si se necesita una sugerencia limpia.
+ * @deprecated Prefer strict validation with getServerFolderNameError.
+ * Kept when a cleaned suggestion is needed.
  */
 export function sanitizeServerFolderName(name: string): string {
   const cleaned = name
@@ -68,7 +68,7 @@ function pathLeaf(path: string): string {
   return parts[parts.length - 1] ?? "";
 }
 
-/** Segmentos de carpeta de una ruta Windows (sin la unidad). */
+/** Folder segments of a Windows path (without the drive letter). */
 export function windowsPathFolderSegments(path: string): string[] {
   const normalized = normalizeWindowsPath(path);
   if (normalized.startsWith("\\\\")) {
@@ -81,25 +81,25 @@ export function windowsPathFolderSegments(path: string): string[] {
 }
 
 /**
- * Valida que ningún segmento de la ruta tenga caracteres incompatibles con Windows.
+ * Validates that no path segment has characters incompatible with Windows.
  */
-export function getWindowsPathError(path: string, fieldLabel = "Ruta"): string | null {
+export function getWindowsPathError(path: string, fieldLabel = "Path"): string | null {
   const trimmed = path.trim();
   if (trimmed.length === 0) {
-    return `${fieldLabel} requerida`;
+    return `${fieldLabel} required`;
   }
   for (const segment of windowsPathFolderSegments(trimmed)) {
     const error = getServerFolderNameError(segment);
     if (error !== null) {
-      return `${fieldLabel}: segmento "${segment}" — ${error}`;
+      return `${fieldLabel}: segment "${segment}" — ${error}`;
     }
   }
   return null;
 }
 
 /**
- * Une carpeta base + nombre del servidor.
- * Si la base ya termina en una carpeta con el mismo nombre, no anida de nuevo.
+ * Joins base folder + server name.
+ * If the base already ends with a folder of the same name, does not nest again.
  */
 export function resolveServerInstallDir(parentDir: string, serverName: string): string {
   const parent = normalizeWindowsPath(parentDir);

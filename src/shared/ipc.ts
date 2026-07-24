@@ -17,7 +17,7 @@ import type {
 
 export type PickPathKind = "directory" | "file";
 
-/** Canales IPC invocables (renderer -> main). */
+/** Invokable IPC channels (renderer -> main). */
 export const IPC = {
   serversList: "servers:list",
   serversCreate: "servers:create",
@@ -55,7 +55,7 @@ export const IPC = {
   modsGetMany: "mods:get-many",
 } as const;
 
-/** Canal de push (main -> renderer). */
+/** Push channel (main -> renderer). */
 export const IPC_PUSH = {
   serverStatus: "push:server-status",
   steamCmdProgress: "push:steamcmd-progress",
@@ -66,12 +66,12 @@ export interface SteamCmdProgressPush {
   console: SteamCmdConsoleSnapshot;
 }
 
-/** Resultado normalizado de operaciones IPC. */
+/** Normalized result of IPC operations. */
 export type IpcResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: string };
 
-/** API expuesta al renderer vía contextBridge. */
+/** API exposed to the renderer via contextBridge. */
 export interface RendererApi {
   listServers(): Promise<IpcResult<ServerProfile[]>>;
   createServer(input: ServerProfileInput): Promise<IpcResult<ServerProfile>>;

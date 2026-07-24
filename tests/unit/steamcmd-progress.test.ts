@@ -11,7 +11,7 @@ describe("parseSteamCmdProgressLine", () => {
       "Update state (0x61) downloading, progress: 45.67 (123456789 / 270000000)",
     );
     expect(parsed.percent).toBeCloseTo(45.67);
-    expect(parsed.label).toMatch(/Descargando/);
+    expect(parsed.label).toMatch(/Downloading/);
     expect(parsed.label).toMatch(/MB/);
     expect(parsed.bytesDownloaded).toBe(123456789);
     expect(parsed.bytesTotal).toBe(270000000);
@@ -22,7 +22,7 @@ describe("parseSteamCmdProgressLine", () => {
       "Update state (0x81) verifying update, progress: 12.3 (10 / 100)",
     );
     expect(parsed.percent).toBeCloseTo(12.3);
-    expect(parsed.label).toMatch(/Verificando/);
+    expect(parsed.label).toMatch(/Verifying/);
   });
 
   it("marks success as 100%", () => {
@@ -34,9 +34,9 @@ describe("parseSteamCmdProgressLine", () => {
     expect(formatSteamCmdByteProgress(1048576, 20971520)).toBe("1.0 / 20.0 MB");
   });
 
-  it("uses Comprobado noun while verifying", () => {
-    expect(steamCmdByteProgressNoun("verify-files")).toBe("Comprobado");
-    expect(steamCmdByteProgressNoun("install-files")).toBe("Descargado");
-    expect(steamCmdByteProgressNoun("sync-files")).toBe("Copiado");
+  it("uses Checked noun while verifying", () => {
+    expect(steamCmdByteProgressNoun("verify-files")).toBe("Checked");
+    expect(steamCmdByteProgressNoun("install-files")).toBe("Downloaded");
+    expect(steamCmdByteProgressNoun("sync-files")).toBe("Copied");
   });
 });

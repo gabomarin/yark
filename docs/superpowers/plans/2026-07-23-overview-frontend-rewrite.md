@@ -325,7 +325,7 @@ import "./styles/globals.css";
 
 const container = document.getElementById("root");
 if (container === null) {
-  throw new Error("No se encontró el elemento root");
+  throw new Error("Root element not found");
 }
 
 createRoot(container).render(
@@ -389,7 +389,7 @@ describe("AppShellLayout", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("ARK Server GBO")).toBeInTheDocument();
+    expect(screen.getByText("YARK")).toBeInTheDocument();
     expect(screen.getByText("page-body")).toBeInTheDocument();
   });
 });
@@ -448,10 +448,10 @@ export function PlaceholderPage({ title, subtitle }: Props): JSX.Element {
     <PageScaffold title={title} subtitle={subtitle}>
       <Card className={classes.card} withBorder>
         <Stack gap="xs">
-          <Title order={3}>Migración en progreso</Title>
+          <Title order={3}>Migration in progress</Title>
           <Text c="dimmed">
-            Esta pantalla todavía no fue reimplementada en el nuevo frontend. Su layout ya usa
-            el nuevo shell compartido y se completará cuando llegue su diseño dedicado.
+            This screen has not been reimplemented in the new frontend yet. Its layout already
+            uses the shared shell and will be completed when its dedicated design lands.
           </Text>
         </Stack>
       </Card>
@@ -565,7 +565,7 @@ describe("AppRouter", () => {
     );
 
     expect(screen.getByText("Logs")).toBeInTheDocument();
-    expect(screen.getByText(/Migración en progreso/i)).toBeInTheDocument();
+    expect(screen.getByText(/Migration in progress/i)).toBeInTheDocument();
   });
 });
 ```
@@ -608,15 +608,15 @@ const content = (() => {
     case "overview":
       return overview?.page ?? null;
     case "clusters":
-      return <PlaceholderPage title="Clusters" subtitle="Compatibilidad y transferencias entre mapas" />;
+      return <PlaceholderPage title="Clusters" subtitle="Compatibility and transfers between maps" />;
     case "backups":
-      return <PlaceholderPage title="Backups" subtitle="Historial y restauración de respaldos" />;
+      return <PlaceholderPage title="Backups" subtitle="Backup history and restore" />;
     case "steamcmd":
-      return <PlaceholderPage title="SteamCMD" subtitle="Estado de instalación, consola y operaciones" />;
+      return <PlaceholderPage title="SteamCMD" subtitle="Install status, console, and operations" />;
     case "logs":
-      return <PlaceholderPage title="Logs" subtitle="Eventos, runtime, updates y backups por servidor" />;
+      return <PlaceholderPage title="Logs" subtitle="Events, runtime, updates, and backups per server" />;
     case "settings":
-      return <PlaceholderPage title="Settings" subtitle="Configuración general de la aplicación" />;
+      return <PlaceholderPage title="Settings" subtitle="General application settings" />;
   }
 })();
 ```
@@ -724,8 +724,8 @@ describe("OverviewPage", () => {
     );
 
     expect(screen.getByText("Overview")).toBeInTheDocument();
-    expect(screen.getByText("Servidores")).toBeInTheDocument();
-    expect(screen.getByText("Actividad reciente")).toBeInTheDocument();
+    expect(screen.getByText("Servers")).toBeInTheDocument();
+    expect(screen.getByText("Recent activity")).toBeInTheDocument();
     expect(screen.getByText("The Island")).toBeInTheDocument();
   });
 });
@@ -859,7 +859,7 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    await user.click(screen.getByRole("button", { name: /iniciar/i }));
+    await user.click(screen.getByRole("button", { name: /start/i }));
     expect(onStart).toHaveBeenCalledTimes(1);
   });
 });
@@ -888,18 +888,18 @@ Required visible structure:
 
 Required labels/actions to preserve:
 
-- `Iniciar`
-- `Detener`
-- `Reiniciar`
-- `Abrir carpeta`
+- `Start`
+- `Stop`
+- `Restart`
+- `Open folder`
 - `Logs`
 - `INI`
-- `Instalar archivos`
-- `Actualizar`
-- `Clonar`
-- `Forzar cierre`
-- `Eliminar`
-- `Editar`
+- `Install files`
+- `Update`
+- `Clone`
+- `Force stop`
+- `Delete`
+- `Edit`
 
 Support optional derived text using `runtime` and `installation` data, but keep the first implementation minimal and reliable.
 
@@ -1009,7 +1009,7 @@ Update `App.tsx` so the overview slot becomes:
   onUpdateNow={(id) => void runAction(() => window.api.updateServerNow(id))}
   onCloneServer={(id) => void runAction(() => window.api.cloneServer(id))}
   onDeleteServer={(id) => {
-    if (window.confirm(`¿Eliminar el servidor?`)) {
+    if (window.confirm(`Delete this server?`)) {
       void runAction(() => window.api.deleteServer(id));
     }
   }}

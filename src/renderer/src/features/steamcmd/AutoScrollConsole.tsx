@@ -4,13 +4,13 @@ interface Props {
   lines: string[];
   className?: string;
   emptyText?: string;
-  /** Cuántas líneas mostrar (las más recientes). */
+  /** How many lines to show (most recent). */
   maxLines?: number;
 }
 
 /**
- * Consola con autoscroll al final cuando llegan líneas nuevas.
- * Si el usuario sube el scroll manualmente, no lo fuerza hasta que vuelva cerca del fondo.
+ * Console that auto-scrolls to the end when new lines arrive.
+ * If the user scrolls up manually, do not force scroll until they return near the bottom.
  */
 export function AutoScrollConsole(props: Props): JSX.Element {
   const { lines, className = "", emptyText = "Esperando salida…", maxLines = 120 } = props;

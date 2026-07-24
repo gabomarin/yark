@@ -61,7 +61,7 @@ export function ModsManager(props: Props): JSX.Element {
       if (!alive) return;
       setLoadingMeta(false);
       if (!result.ok) {
-        setError(result.error ?? "No se pudo cargar metadata de mods");
+        setError(result.error ?? "Could not load mod metadata");
         return;
       }
       setMetadataById(new Map(result.data.map((item) => [item.id, item])));
@@ -96,9 +96,9 @@ export function ModsManager(props: Props): JSX.Element {
     try {
       await props.onModsChanged(next);
       setMods(next);
-      setInfo("Mods actualizados en el perfil (−mods= al arrancar).");
+      setInfo("Mods updated in the profile (−mods= on launch).");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudieron guardar los mods");
+      setError(err instanceof Error ? err.message : "Could not save mods");
     } finally {
       setBusy(false);
     }
@@ -108,7 +108,7 @@ export function ModsManager(props: Props): JSX.Element {
     const id = modDraft.trim();
     if (id.length === 0) return;
     if (mods.includes(id)) {
-      setError(`El mod ${id} ya está en la lista.`);
+      setError(`Mod ${id} is already in the list.`);
       return;
     }
     setBusy(true);
@@ -116,7 +116,7 @@ export function ModsManager(props: Props): JSX.Element {
     const metaResult = await window.api.getModMetadata(id);
     setBusy(false);
     if (!metaResult.ok) {
-      setError(metaResult.error ?? "ID de mod inválido");
+      setError(metaResult.error ?? "Invalid mod ID");
       return;
     }
     setMetadataById((previous) => {
@@ -160,11 +160,11 @@ export function ModsManager(props: Props): JSX.Element {
         <div>
           <Title order={3}>Mods</Title>
           <Text c="dimmed" size="sm">
-            Gestiona Project IDs de CurseForge. Se inyectan en{" "}
+            Manage CurseForge Project IDs. They are injected into{" "}
             <Text span fw={600}>
               -mods=
             </Text>{" "}
-            al arrancar. Metadata de prueba local hasta tener API key.
+            on launch. Local stub metadata until an API key is available.
           </Text>
         </div>
       </header>
@@ -184,7 +184,7 @@ export function ModsManager(props: Props): JSX.Element {
         <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm" mb="md">
           <div className={classes.statCard}>
             <Text c="dimmed" size="xs">
-              Mods en perfil
+              Mods in profile
             </Text>
             <Text fw={700} size="xl" c="teal.4">
               {mods.length}
@@ -192,7 +192,7 @@ export function ModsManager(props: Props): JSX.Element {
           </div>
           <div className={classes.statCard}>
             <Text c="dimmed" size="xs">
-              Con nombre conocido
+              With known name
             </Text>
             <Text fw={700} size="xl">
               {
@@ -205,17 +205,17 @@ export function ModsManager(props: Props): JSX.Element {
           </div>
           <div className={classes.statCard}>
             <Text c="dimmed" size="xs">
-              Orden de carga
+              Load order
             </Text>
             <Text fw={700} size="sm">
-              Primero = carga antes
+              First = loads earlier
             </Text>
           </div>
         </SimpleGrid>
 
         <Group align="flex-end" mb="md" wrap="wrap">
           <TextInput
-            label="Project ID de CurseForge"
+            label="CurseForge Project ID"
             placeholder="928793"
             value={modDraft}
             onChange={(event) => setModDraft(event.currentTarget.value)}
@@ -233,11 +233,11 @@ export function ModsManager(props: Props): JSX.Element {
             disabled={modDraft.trim().length === 0}
             onClick={() => void addMod()}
           >
-            Añadir mod
+            Add mod
           </Button>
           <TextInput
-            label="Buscar en la lista"
-            placeholder="Nombre, autor o ID"
+            label="Search the list"
+            placeholder="Name, author, or ID"
             leftSection={<MagnifyingGlass size={14} />}
             value={search}
             onChange={(event) => setSearch(event.currentTarget.value)}
@@ -251,20 +251,20 @@ export function ModsManager(props: Props): JSX.Element {
             <span>#</span>
             <span>Mod</span>
             <span>ID</span>
-            <span>Estado</span>
+            <span>Status</span>
             <span />
           </div>
           {filteredMods.length === 0 ? (
             <Text c="dimmed" size="sm" p="md">
               {mods.length === 0
-                ? "No hay mods. Añade un Project ID de CurseForge (p. ej. 928793)."
-                : "Ningún mod coincide con la búsqueda."}
+                ? "No mods yet. Add a CurseForge Project ID (e.g. 928793)."
+                : "No mods match the search."}
             </Text>
           ) : (
             filteredMods.map((modId) => {
               const index = mods.indexOf(modId);
               const meta = metadataById.get(modId);
-              const name = meta?.name ?? (loadingMeta ? "Cargando…" : `Mod ${modId}`);
+              const name = meta?.name ?? (loadingMeta ? "Loading…" : `Mod ${modId}`);
               const authors =
                 meta !== undefined && meta.authors.length > 0
                   ? meta.authors.join(", ")
@@ -297,7 +297,7 @@ export function ModsManager(props: Props): JSX.Element {
                     {modId}
                   </Text>
                   <Badge color="teal" variant="light" size="sm">
-                    En perfil
+                    In profile
                   </Badge>
                   <Group
                     gap={4}
@@ -308,7 +308,7 @@ export function ModsManager(props: Props): JSX.Element {
                       variant="subtle"
                       size="sm"
                       disabled={index <= 0 || busy}
-                      aria-label="Subir"
+                      aria-label="Move up"
                       onClick={() => void moveMod(index, -1)}
                     >
                       <ArrowUp size={14} />
@@ -317,7 +317,7 @@ export function ModsManager(props: Props): JSX.Element {
                       variant="subtle"
                       size="sm"
                       disabled={index >= mods.length - 1 || busy}
-                      aria-label="Bajar"
+                      aria-label="Move down"
                       onClick={() => void moveMod(index, 1)}
                     >
                       <ArrowDown size={14} />
@@ -327,7 +327,7 @@ export function ModsManager(props: Props): JSX.Element {
                       color="red"
                       size="sm"
                       disabled={busy}
-                      aria-label="Eliminar"
+                      aria-label="Delete"
                       onClick={() => void removeMod(modId)}
                     >
                       <Trash size={14} />
@@ -343,7 +343,7 @@ export function ModsManager(props: Props): JSX.Element {
       <Drawer
         opened={detailOpen && selectedId !== null}
         onClose={closeDetail}
-        title="Detalle del mod"
+        title="Mod details"
         position="right"
         size={360}
       >
@@ -358,13 +358,13 @@ export function ModsManager(props: Props): JSX.Element {
               </Text>
             </div>
             <Badge color="teal" variant="light" w="fit-content">
-              En perfil
+              In profile
             </Badge>
             <Text size="sm">
-              {selectedMeta?.summary ?? "Sin descripción disponible."}
+              {selectedMeta?.summary ?? "No description available."}
             </Text>
             <Text size="xs" c="dimmed">
-              Autores:{" "}
+              Authors:{" "}
               {selectedMeta !== null && selectedMeta.authors.length > 0
                 ? selectedMeta.authors.join(", ")
                 : "—"}
@@ -378,7 +378,7 @@ export function ModsManager(props: Props): JSX.Element {
                 target="_blank"
                 rel="noreferrer"
               >
-                Abrir en CurseForge
+                Open on CurseForge
               </Button>
             )}
             <Button
@@ -388,7 +388,7 @@ export function ModsManager(props: Props): JSX.Element {
               loading={busy}
               onClick={() => void removeMod(selectedId)}
             >
-              Quitar del perfil
+              Remove from profile
             </Button>
           </Stack>
         )}

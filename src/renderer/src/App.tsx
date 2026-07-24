@@ -135,7 +135,7 @@ export function App(): JSX.Element {
       try {
         const installRes = await window.api.getInstallationInfo(true);
         if (!installRes.ok) {
-          setError(installRes.error ?? "No se pudo verificar actualizaciones");
+          setError(installRes.error ?? "Could not check for updates");
           return;
         }
         const next = new Map(installRes.data.map((info) => [info.serverId, info]));
@@ -146,39 +146,39 @@ export function App(): JSX.Element {
           const name = servers.find((s) => s.id === serverId)?.name ?? serverId;
           if (info === undefined || !info.installed) {
             notifications.show({
-              title: "Sin instalación",
-              message: `"${name}" aún no tiene archivos instalados.`,
+              title: "Not installed",
+              message: `"${name}" does not have installed files yet.`,
               color: "yellow",
             });
             return;
           }
           if (info.officialSteamBuild == null) {
             notifications.show({
-              title: "No se pudo consultar",
-              message: "No se obtuvo el build público de Steam. Revisa la conexión.",
+              title: "Could not query",
+              message: "Could not fetch the public Steam build. Check your connection.",
               color: "red",
             });
             return;
           }
           if (info.steamBuild == null) {
             notifications.show({
-              title: "No se pudo verificar",
-              message: `No se encontró el appmanifest local de "${name}".`,
+              title: "Could not verify",
+              message: `Local appmanifest not found for "${name}".`,
               color: "yellow",
             });
             return;
           }
           if (isServerUpdateAvailable(info)) {
             notifications.show({
-              title: "Actualización disponible",
+              title: "Update available",
               message: `"${name}": ${info.steamBuild} → ${info.officialSteamBuild}`,
               color: "orange",
               autoClose: 8000,
             });
           } else {
             notifications.show({
-              title: "Al día",
-              message: `"${name}" está actualizado (${info.steamBuild}).`,
+              title: "Up to date",
+              message: `"${name}" is up to date (${info.steamBuild}).`,
               color: "teal",
             });
           }
@@ -191,18 +191,18 @@ export function App(): JSX.Element {
         );
         const official =
           installRes.data.find((info) => info.officialSteamBuild != null)?.officialSteamBuild ??
-          "desconocida";
+          "unknown";
         if (outdated.length === 0) {
           if (unverified.length > 0) {
             notifications.show({
-              title: "Verificación incompleta",
-              message: `${unverified.length} servidor(es) no tienen un build local comparable. Build público: ${official}.`,
+              title: "Incomplete check",
+              message: `${unverified.length} server(s) do not have a comparable local build. Public build: ${official}.`,
               color: "yellow",
             });
           } else {
             notifications.show({
-              title: "Sin actualizaciones",
-              message: `Todos los servidores instalados están al día. Build público: ${official}`,
+              title: "No updates",
+              message: `All installed servers are up to date. Public build: ${official}`,
               color: "teal",
             });
           }
@@ -214,8 +214,8 @@ export function App(): JSX.Element {
             })
             .join("\n");
           notifications.show({
-            title: `${outdated.length} actualización(es) disponible(s)`,
-            message: `Build público: ${official}\n${lines}`,
+            title: `${outdated.length} update(s) available`,
+            message: `Public build: ${official}\n${lines}`,
             color: "orange",
             autoClose: 10000,
           });
@@ -260,7 +260,7 @@ export function App(): JSX.Element {
       setError(null);
       const result = await action();
       if (!result.ok) {
-        setError(result.error ?? "Error desconocido");
+        setError(result.error ?? "Unknown error");
       }
       await refresh();
     },
@@ -278,8 +278,8 @@ export function App(): JSX.Element {
               ? await window.api.verifyServerFiles(serverId)
               : await window.api.updateServerNow(serverId);
         if (!result.ok) {
-          const message = result.error ?? "Error desconocido";
-          // Cancelación deliberada: no mostrar como error rojo.
+          const message = result.error ?? "Unknown error";
+          // Deliberate cancellation: do not show as a red error.
           if (!/cancelad/i.test(message)) {
             setError(message);
           }
@@ -295,10 +295,10 @@ export function App(): JSX.Element {
     const pick = await window.api.pickPath(
       "file",
       steamCmdStatus?.executablePath ?? undefined,
-      "Seleccionar steamcmd.exe",
+      "Select steamcmd.exe",
     );
     if (!pick.ok) {
-      setError(pick.error ?? "No se pudo abrir selector de archivo");
+      setError(pick.error ?? "Could not open file picker");
       return;
     }
     if (pick.data === null) {
@@ -307,7 +307,7 @@ export function App(): JSX.Element {
 
     const setRes = await window.api.setSteamCmdPath(pick.data);
     if (!setRes.ok) {
-      setError(setRes.error ?? "No se pudo configurar steamcmd.exe");
+      setError(setRes.error ?? "Could not configure steamcmd.exe");
       return;
     }
     await refresh();
@@ -318,7 +318,7 @@ export function App(): JSX.Element {
       setError(null);
       const stopRes = await window.api.stopServer(id);
       if (!stopRes.ok) {
-        setError(stopRes.error ?? "No se pudo detener el servidor para reiniciarlo");
+        setError(stopRes.error ?? "Could not stop the server for restart");
         await refresh();
         return;
       }
@@ -326,7 +326,7 @@ export function App(): JSX.Element {
         openNativeConsole: openNativeTerminalOnStart,
       });
       if (!startRes.ok) {
-        setError(startRes.error ?? "No se pudo reiniciar el servidor");
+        setError(startRes.error ?? "Could not restart the server");
       }
       await refresh();
     },
@@ -338,14 +338,14 @@ export function App(): JSX.Element {
       const server = servers.find((item) => item.id === id);
       const label = server?.name ?? id;
       modals.openConfirmModal({
-        title: `Forzar cierre de "${label}"`,
+        title: `Force close "${label}"`,
         children: (
-          <Alert color="red" title="Sin guardado" variant="light">
-            Se mata el proceso de inmediato. Puede corromper el mundo si no se guardó antes.
-            Prefiere Detener cuando sea posible.
+          <Alert color="red" title="No save" variant="light">
+            Kills the process immediately. This can corrupt the world if it was not saved first.
+            Prefer Stop when possible.
           </Alert>
         ),
-        labels: { confirm: "Matar proceso", cancel: "Cancelar" },
+        labels: { confirm: "Kill process", cancel: "Cancel" },
         confirmProps: { color: "red" },
         onConfirm: () => {
           void runAction(() => window.api.killServer(id));
@@ -359,30 +359,30 @@ export function App(): JSX.Element {
     (id: string) => {
       const server = servers.find((item) => item.id === id);
       const label = server?.name ?? id;
-      const installDir = server?.installDir ?? "(ruta desconocida)";
+      const installDir = server?.installDir ?? "(unknown path)";
       modals.openConfirmModal({
-        title: `Eliminar servidor "${label}"`,
+        title: `Delete server "${label}"`,
         centered: true,
         children: (
           <Stack gap="sm">
-            <Alert color="red" title="Se borrará todo" variant="light">
-              Esta acción no se puede deshacer. Se eliminará el perfil del manager y todo el
-              contenido en disco (mundo, configs, mods y demás archivos).
+            <Alert color="red" title="Everything will be deleted" variant="light">
+              This action cannot be undone. The manager profile and all on-disk content
+              (world, configs, mods, and other files) will be deleted.
             </Alert>
             <div>
               <Text size="xs" c="dimmed" mb={4}>
-                Carpeta que se borrará:
+                Folder that will be deleted:
               </Text>
               <Code block>{installDir}</Code>
             </div>
             <List size="sm" spacing={4}>
-              <List.Item>Perfil del administrador</List.Item>
-              <List.Item>SavedArks / mundo</List.Item>
-              <List.Item>Configs INI y datos del servidor</List.Item>
+              <List.Item>Manager profile</List.Item>
+              <List.Item>SavedArks / world</List.Item>
+              <List.Item>INI configs and server data</List.Item>
             </List>
           </Stack>
         ),
-        labels: { confirm: "Eliminar todo", cancel: "Cancelar" },
+        labels: { confirm: "Delete everything", cancel: "Cancel" },
         confirmProps: { color: "red" },
         onConfirm: () => {
           void runAction(() => window.api.deleteServer(id));
@@ -406,7 +406,7 @@ export function App(): JSX.Element {
         openNativeConsole: openNativeTerminalOnStart,
       });
       if (!startRes.ok) {
-        setError(startRes.error ?? "No se pudo iniciar el servidor");
+        setError(startRes.error ?? "Could not start the server");
         await refresh();
         return;
       }

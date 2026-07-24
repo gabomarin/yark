@@ -6,9 +6,9 @@ import type {
 } from "@shared/types";
 
 /**
- * Evalúa la consistencia de todos los clusters definidos entre perfiles.
- * Un cluster es transferible cuando: >= 2 miembros, mismo clusterDir,
- * sin conflictos de puertos entre miembros y mods consistentes.
+ * Evaluates consistency of all clusters defined across profiles.
+ * A cluster is transferable when: >= 2 members, same clusterDir,
+ * no port conflicts between members, and consistent mods.
  */
 export function checkClusterCompliance(
   profiles: ServerProfile[],
@@ -29,7 +29,7 @@ export function checkClusterCompliance(
       issues.push({
         serverId: members[0]?.id ?? null,
         severity: "warning",
-        message: `El cluster "${clusterId}" tiene un solo miembro; las transferencias requieren al menos 2 mapas`,
+        message: `Cluster "${clusterId}" has only one member; transfers require at least 2 maps`,
       });
     }
 
@@ -38,7 +38,7 @@ export function checkClusterCompliance(
       issues.push({
         serverId: null,
         severity: "error",
-        message: `Los miembros del cluster "${clusterId}" usan directorios de cluster distintos: ${[...dirs].join(" | ")}`,
+        message: `Members of cluster "${clusterId}" use different cluster directories: ${[...dirs].join(" | ")}`,
       });
     }
     for (const m of members) {
@@ -46,7 +46,7 @@ export function checkClusterCompliance(
         issues.push({
           serverId: m.id,
           severity: "error",
-          message: `"${m.name}" no tiene directorio de cluster configurado`,
+          message: `"${m.name}" has no cluster directory configured`,
         });
       }
     }
@@ -62,7 +62,7 @@ export function checkClusterCompliance(
         issues.push({
           serverId: null,
           severity: "warning",
-          message: `Hay ${names.length} servidores con el mapa ${map} en el mismo cluster (${names.join(", ")})`,
+          message: `There are ${names.length} servers with map ${map} in the same cluster (${names.join(", ")})`,
         });
       }
     }
@@ -72,11 +72,11 @@ export function checkClusterCompliance(
       issues.push({
         serverId: null,
         severity: "error",
-        message: `Conflicto de puerto ${c.kind} ${c.port} entre "${c.serverA}" y "${c.serverB}"`,
+        message: `${c.kind} port conflict ${c.port} between "${c.serverA}" and "${c.serverB}"`,
       });
     }
 
-    // Consistencia de mods: advertir si un miembro difiere del conjunto común.
+    // Mod consistency: warn if a member differs from the common set.
     const modSignatures = new Set(
       members.map((m) => [...m.mods].sort().join(",")),
     );
@@ -84,7 +84,7 @@ export function checkClusterCompliance(
       issues.push({
         serverId: null,
         severity: "warning",
-        message: `Los miembros del cluster "${clusterId}" tienen listas de mods distintas; los ítems de mods pueden perderse al transferir`,
+        message: `Members of cluster "${clusterId}" have different mod lists; mod items may be lost on transfer`,
       });
     }
 

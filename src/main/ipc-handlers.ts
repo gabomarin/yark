@@ -86,7 +86,7 @@ export function registerIpcHandlers(
       const folderPath = instances.installDirFor(id);
       const error = await shell.openPath(folderPath);
       if (error.length > 0) {
-        throw new Error(`No se pudo abrir la carpeta: ${error}`);
+        throw new Error(`Could not open folder: ${error}`);
       }
     }),
   );
@@ -101,8 +101,8 @@ export function registerIpcHandlers(
       const quotedDir = `"${folderPath.replace(/"/g, "")}"`;
       const keepAlive =
         `title ${windowTitle}` +
-        " && echo Servidor iniciado desde ARK Manager." +
-        " && echo Salida en vivo disponible en Logs / Runtime.";
+        " && echo Server started from ARK Manager." +
+        " && echo Live output is available under Logs / Runtime.";
       const payload = `start "" /D ${quotedDir} cmd.exe /k "${keepAlive}"`;
       const child = spawn("cmd.exe", ["/c", payload], {
         detached: true,
@@ -190,7 +190,7 @@ export function registerIpcHandlers(
             : snapshot.gameIniPath;
         const error = await shell.openPath(targetPath);
         if (error.length > 0) {
-          throw new Error(`No se pudo abrir archivo INI: ${error}`);
+          throw new Error(`Could not open INI file: ${error}`);
         }
       }),
   );
@@ -243,7 +243,7 @@ export function registerIpcHandlers(
         const path = logs.resolveUpdateLogPath(serverId, fileName);
         const error = await shell.openPath(path);
         if (error.length > 0) {
-          throw new Error(`No se pudo abrir el log: ${error}`);
+          throw new Error(`Could not open log: ${error}`);
         }
       }),
   );

@@ -1,10 +1,10 @@
 /**
- * E2E por perfiles de usuario (principiante y experimentado)
- * + chequeos visuales base en 1280x720, 1920x1080 y 2560x1440.
+ * E2E by user personas (beginner and experienced)
+ * + baseline visual checks at 1280x720, 1920x1080, and 2560x1440.
  *
- * Uso:
+ * Usage:
  *   node scripts/e2e-personas.cjs
- * Requiere:
+ * Requires:
  *   npm run build
  */
 const assert = require("node:assert/strict");
@@ -32,7 +32,7 @@ async function waitOverviewReady(page) {
 }
 
 async function goToOverview(page) {
-  const nav = page.getByRole("button", { name: "Servidores" });
+  const nav = page.getByRole("button", { name: "Servers" });
   if ((await nav.count()) > 0) {
     await nav.first().click();
   }
@@ -48,12 +48,12 @@ async function setViewportAndCapture(page, outDir, label, size) {
 }
 
 async function createServerAsBeginner(page, name, baseDir) {
-  await page.getByRole("button", { name: "Nuevo servidor" }).first().click();
-  await page.getByRole("heading", { name: "Nuevo servidor" }).waitFor({ timeout: 10000 });
+  await page.getByRole("button", { name: "New server" }).first().click();
+  await page.getByRole("heading", { name: "New server" }).waitFor({ timeout: 10000 });
 
-  await page.getByRole("textbox", { name: /^Nombre$/ }).fill(name);
-  await page.getByRole("textbox", { name: /^Nombre de sesión$/ }).fill(`Sesion ${name}`);
-  const baseDirByLabel = page.getByRole("textbox", { name: /^Carpeta base$/ });
+  await page.getByRole("textbox", { name: /^Name$/ }).fill(name);
+  await page.getByRole("textbox", { name: /^Session name$/ }).fill(`Session ${name}`);
+  const baseDirByLabel = page.getByRole("textbox", { name: /^Base folder$/ });
   if ((await baseDirByLabel.count()) > 0) {
     await baseDirByLabel.first().fill(baseDir);
   } else {
@@ -61,35 +61,35 @@ async function createServerAsBeginner(page, name, baseDir) {
   }
   await page.locator("input[type='password']").nth(1).fill("admin1234");
 
-  await page.getByRole("button", { name: "Guardar" }).first().click();
+  await page.getByRole("button", { name: "Save" }).first().click();
 
   await goToOverview(page);
   await page.getByText(name).first().waitFor({ timeout: 15000 });
-  await page.getByText(/necesita(n)? atención/i).first().waitFor({ timeout: 10000 });
+  await page.getByText(/need(s)? attention/i).first().waitFor({ timeout: 10000 });
 }
 
 async function openWorkspaceAndAssistant(page, serverName) {
   await page
-    .getByRole("button", { name: `Abrir configuración de ${serverName}` })
+    .getByRole("button", { name: `Open settings for ${serverName}` })
     .first()
     .click();
 
-  await page.getByRole("tab", { name: "Servidor" }).waitFor({ timeout: 10000 });
-  await page.getByRole("tab", { name: "Archivos INI" }).waitFor({ timeout: 10000 });
+  await page.getByRole("tab", { name: "Server" }).waitFor({ timeout: 10000 });
+  await page.getByRole("tab", { name: "INI Files" }).waitFor({ timeout: 10000 });
   await page.getByRole("tab", { name: "Mods" }).waitFor({ timeout: 10000 });
 
-  await page.getByRole("button", { name: "Asistente de configuración" }).click();
-  await page.getByText("Asistente de configuración").first().waitFor({ timeout: 10000 });
-  await page.getByRole("button", { name: "Cancelar" }).first().click();
+  await page.getByRole("button", { name: "Configuration wizard" }).click();
+  await page.getByText("Configuration wizard").first().waitFor({ timeout: 10000 });
+  await page.getByRole("button", { name: "Cancel" }).first().click();
 
-  await page.getByRole("button", { name: "Asistente de configuración" }).waitFor({ timeout: 10000 });
+  await page.getByRole("button", { name: "Configuration wizard" }).waitFor({ timeout: 10000 });
 }
 
 async function runExperiencedFlow(page, serverName) {
-  await page.getByLabel("Volver a servidores").click();
+  await page.getByLabel("Back to servers").click();
   await goToOverview(page);
 
-  const search = page.getByRole("textbox", { name: "Buscar servidores" });
+  const search = page.getByRole("textbox", { name: "Search servers" });
   await search.fill(serverName);
   await page.getByText(serverName).first().waitFor({ timeout: 10000 });
 
@@ -98,22 +98,22 @@ async function runExperiencedFlow(page, serverName) {
   }).first();
   await card.waitFor({ state: "visible", timeout: 10000 });
 
-  await card.getByRole("button", { name: "Más opciones" }).click();
-  await page.getByRole("menuitem", { name: "Clonar" }).click();
+  await card.getByRole("button", { name: "More options" }).click();
+  await page.getByRole("menuitem", { name: "Clone" }).click();
 
-  const cloneTitle = page.locator("[data-server-card] .mantine-Text-root", {
-    hasText: `${serverName} (copia`,
+  const cloneTitle = page.locator("[data-server-card]", {
+    hasText: `${serverName} (copy`,
   }).first();
   await cloneTitle.waitFor({ state: "visible", timeout: 15000 });
-  const cloneName = (await cloneTitle.textContent())?.trim() ?? "";
-  assert.ok(cloneName.includes("(copia"), "No se detectó servidor clonado");
+  const cloneName = (await cloneTitle.getAttribute("data-server-name"))?.trim() ?? "";
+  assert.ok(cloneName.includes("(copy"), "Cloned server was not detected");
 
-  // Navegación de usuario experimentado por secciones operativas.
-  await page.getByRole("button", { name: "Registros" }).first().click();
-  await page.getByRole("heading", { name: "Registros" }).waitFor({ timeout: 10000 });
+  // Experienced-user navigation through operational sections.
+  await page.getByRole("button", { name: "Logs" }).first().click();
+  await page.getByRole("heading", { name: "Logs" }).waitFor({ timeout: 10000 });
   await page.getByRole("button", { name: "SteamCMD" }).first().click();
   await page.getByText(/SteamCMD/i).first().waitFor({ timeout: 10000 });
-  await page.getByRole("button", { name: "Servidores" }).first().click();
+  await page.getByRole("button", { name: "Servers" }).first().click();
   await waitOverviewReady(page);
 
   await search.fill(cloneName);
@@ -122,9 +122,9 @@ async function runExperiencedFlow(page, serverName) {
   }).first();
   await cloneCard.waitFor({ state: "visible", timeout: 10000 });
 
-  await cloneCard.getByRole("button", { name: "Más opciones" }).click();
-  await page.getByRole("menuitem", { name: "Eliminar servidor" }).click();
-  await page.getByRole("button", { name: "Eliminar todo" }).click();
+  await cloneCard.getByRole("button", { name: "More options" }).click();
+  await page.getByRole("menuitem", { name: "Delete server" }).click();
+  await page.getByRole("button", { name: "Delete everything" }).click();
 
   await cloneCard.waitFor({ state: "detached", timeout: 15000 });
 
@@ -134,7 +134,7 @@ async function runExperiencedFlow(page, serverName) {
 async function deleteServerIfPresent(page, serverName) {
   await goToOverview(page);
 
-  const search = page.getByRole("textbox", { name: "Buscar servidores" });
+  const search = page.getByRole("textbox", { name: "Search servers" });
   await search.fill(serverName);
 
   const card = page.locator("[data-server-card]", {
@@ -147,11 +147,11 @@ async function deleteServerIfPresent(page, serverName) {
   }
 
   await card.waitFor({ state: "visible", timeout: 5000 });
-  await card.getByRole("button", { name: "Más opciones" }).click();
-  const deleteAction = page.getByRole("menuitem", { name: "Eliminar servidor" });
+  await card.getByRole("button", { name: "More options" }).click();
+  const deleteAction = page.getByRole("menuitem", { name: "Delete server" });
   if ((await deleteAction.count()) > 0) {
     await deleteAction.click();
-    await page.getByRole("button", { name: "Eliminar todo" }).click();
+    await page.getByRole("button", { name: "Delete everything" }).click();
     await card.waitFor({ state: "detached", timeout: 15000 });
   }
 
@@ -192,43 +192,42 @@ async function run() {
     await page.waitForLoadState("domcontentloaded");
     await goToOverview(page);
 
-    // Limpieza previa por si quedó de una ejecución anterior.
+    // Prior cleanup in case a previous run left leftovers.
     await deleteServerIfPresent(page, beginnerServerName);
 
-    // Recorrido visual base por protocolo (Overview) antes de acciones.
+    // Baseline visual pass per protocol (Overview) before actions.
     for (const vp of viewports) {
       const shot = await setViewportAndCapture(page, outDir, "overview-initial", vp);
       artifacts.push(shot);
     }
 
-    // Persona principiante.
+    // Beginner persona.
     await createServerAsBeginner(page, beginnerServerName, beginnerBaseDir);
     await openWorkspaceAndAssistant(page, beginnerServerName);
 
-    // Persona experimentado.
+    // Experienced persona.
     cloneName = await runExperiencedFlow(page, beginnerServerName);
 
-    // Capturas finales en los viewports requeridos.
+    // Final captures at required viewports.
     for (const vp of viewports) {
       const shot = await setViewportAndCapture(page, outDir, "overview-final", vp);
       artifacts.push(shot);
     }
 
-    // Limpieza final: eliminar servidor creado por el recorrido principiante.
+    // Final cleanup: remove the beginner-created server.
     await deleteServerIfPresent(page, beginnerServerName);
 
     if (errors.length > 0) {
-      throw new Error(errors.join("\n"));
+      throw new Error(`UI errors detected:\n${errors.join("\n")}`);
     }
 
     console.log("E2E_PERSONAS_OK");
-    console.log(`E2E_PERSONAS_SERVER=${beginnerServerName}`);
-    if (cloneName !== null) {
-      console.log(`E2E_PERSONAS_CLONE=${cloneName}`);
+    console.log(`ARTIFACTS_DIR=${outDir}`);
+    for (const artifact of artifacts) {
+      console.log(`ARTIFACT=${artifact}`);
     }
-    console.log(`E2E_PERSONAS_ARTIFACTS_DIR=${outDir}`);
-    for (const filePath of artifacts) {
-      console.log(`E2E_PERSONAS_ARTIFACT=${filePath}`);
+    if (cloneName !== null) {
+      console.log(`E2E_CLONED_SERVER=${cloneName}`);
     }
   } finally {
     await app.close();

@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import type { ServerProfile } from "@shared/types";
 
-/** Ruta al ejecutable del servidor dedicado dentro de la instalación. */
+/** Path to the dedicated server executable inside the install. */
 export function serverBinaryPath(installDir: string): string {
   return join(
     installDir,
@@ -13,8 +13,8 @@ export function serverBinaryPath(installDir: string): string {
 }
 
 /**
- * Construye los argumentos de arranque para ArkAscendedServer.exe.
- * El primer argumento es la URL de mapa con parámetros `?`, el resto son flags `-`.
+ * Builds launch arguments for ArkAscendedServer.exe.
+ * The first argument is the map URL with `?` parameters; the rest are `-` flags.
  */
 export function buildLaunchArgs(profile: ServerProfile): string[] {
   const queryParts = [

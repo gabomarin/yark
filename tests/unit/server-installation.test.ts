@@ -13,7 +13,7 @@ describe("inspectServerInstallation", () => {
     return mkdtempSync(join(tmpdir(), "ark-install-"));
   }
 
-  it("marca no instalado cuando no existe ArkAscendedServer.exe", () => {
+  it("marks not installed when ArkAscendedServer.exe is missing", () => {
     const installDir = makeTmpDir();
     try {
       const info = inspectServerInstallation("srv-1", installDir);
@@ -27,7 +27,7 @@ describe("inspectServerInstallation", () => {
     }
   });
 
-  it("marca instalado cuando existe ArkAscendedServer.exe", () => {
+  it("marks installed when ArkAscendedServer.exe exists", () => {
     const installDir = makeTmpDir();
     try {
       const binDir = join(installDir, "ShooterGame", "Binaries", "Win64");
@@ -41,7 +41,7 @@ describe("inspectServerInstallation", () => {
     }
   });
 
-  it("lee version desde version.txt cuando existe", () => {
+  it("reads version from version.txt when present", () => {
     const installDir = makeTmpDir();
     try {
       const binDir = join(installDir, "ShooterGame", "Binaries", "Win64");
@@ -58,7 +58,7 @@ describe("inspectServerInstallation", () => {
     }
   });
 
-  it("lee version desde Engine/Build/Build.version cuando existe", () => {
+  it("reads version from Engine/Build/Build.version when present", () => {
     const installDir = makeTmpDir();
     try {
       const binDir = join(installDir, "ShooterGame", "Binaries", "Win64");
@@ -81,7 +81,7 @@ describe("inspectServerInstallation", () => {
     }
   });
 
-  it("usa buildid de appmanifest de SteamCMD si coincide con installdir", () => {
+  it("uses SteamCMD appmanifest buildid when installdir matches", () => {
     const steamRoot = makeTmpDir();
     const installDir = join(steamRoot, "asa", "island");
     try {
@@ -106,7 +106,7 @@ describe("inspectServerInstallation", () => {
     }
   });
 
-  it("ignora buildid ambiguo cuando hay múltiples manifests no coincidentes", () => {
+  it("ignores ambiguous buildid when multiple manifests do not match", () => {
     const steamRoot = makeTmpDir();
     const extraSteamRoot = makeTmpDir();
     const previousEnv = process.env["ARK_STEAMCMD_DIR"];
@@ -120,14 +120,14 @@ describe("inspectServerInstallation", () => {
       mkdirSync(steamAppsDir, { recursive: true });
       writeFileSync(
         join(steamAppsDir, "appmanifest_2430930.acf"),
-        '"AppState"\n{\n  "appid" "2430930"\n  "buildid" "9999999"\n  "installdir" "otro-servidor-a"\n}',
+        '"AppState"\n{\n  "appid" "2430930"\n  "buildid" "9999999"\n  "installdir" "otro-server-a"\n}',
       );
 
       const extraSteamAppsDir = join(extraSteamRoot, "steamapps");
       mkdirSync(extraSteamAppsDir, { recursive: true });
       writeFileSync(
         join(extraSteamAppsDir, "appmanifest_2430930.acf"),
-        '"AppState"\n{\n  "appid" "2430930"\n  "buildid" "8888888"\n  "installdir" "otro-servidor-b"\n}',
+        '"AppState"\n{\n  "appid" "2430930"\n  "buildid" "8888888"\n  "installdir" "otro-server-b"\n}',
       );
       process.env["ARK_STEAMCMD_DIR"] = extraSteamRoot;
 
@@ -147,7 +147,7 @@ describe("inspectServerInstallation", () => {
     }
   });
 
-  it("usa buildid como fallback cuando no hay otras fuentes de versión", () => {
+  it("uses buildid as fallback when there are no other version sources", () => {
     const steamRoot = makeTmpDir();
     const installDir = join(steamRoot, "asa", "xsd");
     try {
@@ -172,7 +172,7 @@ describe("inspectServerInstallation", () => {
     }
   });
 
-  it("detecta buildid aunque steamapps esté varios niveles arriba", () => {
+  it("detects buildid even when steamapps is several levels above", () => {
     const steamRoot = makeTmpDir();
     const installDir = join(steamRoot, "servers", "grupo-a", "island");
     try {
@@ -197,7 +197,7 @@ describe("inspectServerInstallation", () => {
     }
   });
 
-  it("detecta buildid cuando SteamCMD está en una carpeta externa al servidor", () => {
+  it("detects buildid when SteamCMD is in a folder outside the server", () => {
     const serverRoot = makeTmpDir();
     const steamRoot = makeTmpDir();
     const previousEnv = process.env["ARK_STEAMCMD_DIR"];
@@ -231,7 +231,7 @@ describe("inspectServerInstallation", () => {
     }
   });
 
-  it("lee arkVersion desde el log más reciente cuando existe ARK Version", () => {
+  it("reads arkVersion from the newest log when ARK Version is present", () => {
     const installDir = makeTmpDir();
     try {
       const binDir = join(installDir, "ShooterGame", "Binaries", "Win64");
@@ -253,7 +253,7 @@ describe("inspectServerInstallation", () => {
     }
   });
 
-  it("usa como build comparable solo el appmanifest sincronizado dentro del servidor", () => {
+  it("uses only the synced in-server appmanifest as the comparable build", () => {
     const installDir = makeTmpDir();
     try {
       const binDir = join(installDir, "ShooterGame", "Binaries", "Win64");
@@ -275,7 +275,7 @@ describe("inspectServerInstallation", () => {
 });
 
 describe("extractOfficialVersionFromStatusText", () => {
-  it("lee la versión publicada en el estado oficial de Wildcard", () => {
+  it("reads the published version from the official Wildcard status", () => {
     expect(
       extractOfficialVersionFromStatusText(
         'ARK Official Server Network Status: <RichColor Color="0, 1, 0, 1">Online (v92.21)</>',
@@ -283,7 +283,7 @@ describe("extractOfficialVersionFromStatusText", () => {
     ).toBe("92.21");
   });
 
-  it("tolera otros estados de red y rechaza contenido sin versión", () => {
+  it("tolerates other network statuses and rejects content without a version", () => {
     expect(
       extractOfficialVersionFromStatusText("Deploying (v93.4)"),
     ).toBe("93.4");

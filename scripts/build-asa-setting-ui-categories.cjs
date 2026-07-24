@@ -1,8 +1,8 @@
 /**
- * Genera src/shared/asa-setting-ui-categories-data.json
- * Heurística + overrides manuales sobre el catálogo ASA.
+ * Generates src/shared/asa-setting-ui-categories-data.json
+ * Heuristics + manual overrides on top of the ASA catalog.
  *
- * Uso: node scripts/build-asa-setting-ui-categories.cjs
+ * Usage: node scripts/build-asa-setting-ui-categories.cjs
  */
 const fs = require("node:fs");
 const path = require("node:path");
@@ -192,7 +192,7 @@ function classify(setting) {
     }
   }
 
-  // Sección INI como pista débil
+  // INI section as a weak hint
   const section = String(setting.section ?? "").toLowerCase();
   if (section.includes("messageoftheday")) return "chat";
   if (section.includes("sessionsettings")) return "general";

@@ -44,18 +44,18 @@ interface Props {
 export function ServerGrid(props: Props): JSX.Element {
   const totalLabel =
     props.servers.length === 1
-      ? "1 servidor configurado"
-      : `${props.servers.length} servidores configurados`;
+      ? "1 server configured"
+      : `${props.servers.length} servers configured`;
   const runningLabel =
     props.runningServers === 0
-      ? "ninguno activo"
+      ? "none running"
       : props.runningServers === 1
-        ? "1 activo"
-        : `${props.runningServers} activos`;
+        ? "1 running"
+        : `${props.runningServers} running`;
   const filteredLabel =
     props.filteredServers.length !== props.servers.length
       ? ` · ${props.filteredServers.length} ${
-          props.filteredServers.length === 1 ? "resultado" : "resultados"
+          props.filteredServers.length === 1 ? "result" : "results"
         }`
       : "";
 
@@ -72,8 +72,8 @@ export function ServerGrid(props: Props): JSX.Element {
     attentionCount === 0
       ? null
       : attentionCount === 1
-        ? "1 necesita atención"
-        : `${attentionCount} necesitan atención`;
+        ? "1 needs attention"
+        : `${attentionCount} need attention`;
 
   return (
     <section
@@ -84,7 +84,7 @@ export function ServerGrid(props: Props): JSX.Element {
       <div className={classes.serverSectionHeader}>
         <div>
           <Title order={2} id="server-list-title" className={classes.serverSectionTitle}>
-            Tus servidores
+            Your servers
           </Title>
           <Group gap="sm" align="center" wrap="wrap" className={classes.serverSummaryRow}>
             <Text
@@ -113,8 +113,8 @@ export function ServerGrid(props: Props): JSX.Element {
             <SearchField
               value={props.search}
               onChange={props.onSearchChange}
-              label="Buscar servidores"
-              placeholder="Buscar por nombre, mapa o cluster"
+              label="Search servers"
+              placeholder="Search by name, map, or cluster"
             />
           </div>
         )}
@@ -128,7 +128,7 @@ export function ServerGrid(props: Props): JSX.Element {
             aria-live="polite"
             data-server-skeletons
           >
-            <VisuallyHidden>Cargando servidores</VisuallyHidden>
+            <VisuallyHidden>Loading servers</VisuallyHidden>
             {[0, 1].map((item) => (
               <div className={classes.serverSkeleton} key={item} aria-hidden="true">
                 <Skeleton circle width={44} height={44} />
@@ -154,10 +154,10 @@ export function ServerGrid(props: Props): JSX.Element {
             </div>
             <div>
               <Title order={3} className={classes.emptyStateTitle}>
-                Crea tu primer servidor
+                Create your first server
               </Title>
               <Text c="dimmed" size="sm">
-                Configura un mundo para jugar con amigos o administrar tu comunidad.
+                Set up a world to play with friends or manage your community.
               </Text>
             </div>
             <Button
@@ -165,7 +165,7 @@ export function ServerGrid(props: Props): JSX.Element {
               onClick={props.onCreateServer}
               className={classes.emptyStateAction}
             >
-              Nuevo servidor
+              New server
             </Button>
           </div>
         )}
@@ -178,13 +178,13 @@ export function ServerGrid(props: Props): JSX.Element {
               <MagnifyingGlass size={20} />
             </div>
             <div>
-              <Text fw={600}>Sin coincidencias</Text>
+              <Text fw={600}>No matches</Text>
               <Text c="dimmed" size="sm">
-                Prueba otro nombre, mapa o cluster.
+                Try another name, map, or cluster.
               </Text>
             </div>
             <Button variant="default" size="xs" onClick={() => props.onSearchChange("")}>
-              Limpiar búsqueda
+              Clear search
             </Button>
           </div>
         )}

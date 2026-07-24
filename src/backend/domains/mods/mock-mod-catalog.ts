@@ -1,14 +1,14 @@
 import type { ModMetadata } from "@shared/types";
 
 /**
- * Catálogo de prueba hasta tener CURSEFORGE_API_KEY.
- * IDs reales de ASA; al conectar la API oficial se sustituye este mapa.
+ * Test catalog until CURSEFORGE_API_KEY is available.
+ * Real ASA IDs; replaced by this map when the official API is connected.
  */
 export const MOCK_MOD_CATALOG: Readonly<Record<string, ModMetadata>> = {
   "928793": {
     id: "928793",
     name: "Pelayori's Cryo Storage",
-    summary: "Cryopods y almacenamiento de criaturas para servidores ASA.",
+    summary: "Cryopods and creature storage for ASA servers.",
     thumbnailUrl: null,
     authors: ["Pelayori"],
     downloadCount: 1_250_000,
@@ -20,7 +20,7 @@ export const MOCK_MOD_CATALOG: Readonly<Record<string, ModMetadata>> = {
   "929420": {
     id: "929420",
     name: "Super Spyglass Plus",
-    summary: "Spyglass con información avanzada de lo que apuntas.",
+    summary: "Spyglass with advanced info for whatever you aim at.",
     thumbnailUrl: null,
     authors: ["kavan87"],
     downloadCount: 890_000,
@@ -32,7 +32,7 @@ export const MOCK_MOD_CATALOG: Readonly<Record<string, ModMetadata>> = {
   "940975": {
     id: "940975",
     name: "Cyber's Structures",
-    summary: "Quality of life para estructuras y objetos esenciales.",
+    summary: "Quality of life for essential structures and items.",
     thumbnailUrl: null,
     authors: ["CyberAngel"],
     downloadCount: 420_000,
@@ -44,7 +44,7 @@ export const MOCK_MOD_CATALOG: Readonly<Record<string, ModMetadata>> = {
   "947033": {
     id: "947033",
     name: "Awesome Spyglass",
-    summary: "Spyglass mejorado con datos de criaturas y jugadores.",
+    summary: "Improved spyglass with creature and player data.",
     thumbnailUrl: null,
     authors: ["ChrisMods"],
     downloadCount: 610_000,
@@ -56,7 +56,7 @@ export const MOCK_MOD_CATALOG: Readonly<Record<string, ModMetadata>> = {
   "961285": {
     id: "961285",
     name: "Ultra Stacks",
-    summary: "Aumenta los stacks de recursos (datos de prueba).",
+    summary: "Increases resource stack sizes (test data).",
     thumbnailUrl: null,
     authors: ["DemoAuthor"],
     downloadCount: 150_000,
@@ -71,7 +71,7 @@ export function buildPlaceholderMetadata(modId: string): ModMetadata {
   return {
     id: modId,
     name: `Mod ${modId}`,
-    summary: "Sin metadata local. Cuando haya API key de CurseForge se completará automáticamente.",
+    summary: "No local metadata. Will fill automatically once a CurseForge API key is available.",
     thumbnailUrl: null,
     authors: [],
     downloadCount: 0,
