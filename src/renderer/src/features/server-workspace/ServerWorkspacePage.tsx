@@ -19,14 +19,23 @@ import { WorkspaceHeader } from "./components/WorkspaceHeader";
 import classes from "./ServerWorkspacePage.module.css";
 
 type WorkspaceTab = "server" | ConfigSection;
+type ConfigurationView = Extract<ConfigSection, "guided" | "iniFiles">;
+
+const CONFIGURATION_VIEW_STORAGE_KEY =
+  "ark-server-manager.workspace.configuration-view";
+
+function initialConfigurationView(): ConfigurationView {
+  try {
+    return window.localStorage.getItem(CONFIGURATION_VIEW_STORAGE_KEY) === "iniFiles"
+      ? "iniFiles"
+      : "guided";
+  } catch {
+    return "guided";
+  }
+}
 
 function isConfigSection(tab: string | null): tab is ConfigSection {
-  return (
-    tab === "game" ||
-    tab === "gameUserSettings" ||
-    tab === "mods" ||
-    tab === "advanced"
-  );
+  return tab === "guided" || tab === "iniFiles" || tab === "mods";
 }
 
 interface Props {
@@ -55,16 +64,28 @@ function isServerActive(runtime: ServerRuntimeInfo | null): boolean {
 }
 
 export function ServerWorkspacePage(props: Props): JSX.Element {
-  const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>("server");
+  const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>(
+    initialConfigurationView,
+  );
   const [serverSwitcherOpen, setServerSwitcherOpen] = useState(false);
   const [serverActionsOpen, setServerActionsOpen] = useState(false);
   const compactWorkspace = useMediaQuery("(max-width: 1599px)", false);
   const dirtyRef = useRef(false);
-  const lastConfigSectionRef = useRef<ConfigSection>("gameUserSettings");
+  const lastConfigSectionRef = useRef<ConfigSection>(initialConfigurationView());
 
   useEffect(() => {
     if (isConfigSection(workspaceTab)) {
       lastConfigSectionRef.current = workspaceTab;
+    }
+    if (workspaceTab === "guided" || workspaceTab === "iniFiles") {
+      try {
+        window.localStorage.setItem(
+          CONFIGURATION_VIEW_STORAGE_KEY,
+          workspaceTab,
+        );
+      } catch {
+        // La preferencia es opcional; la navegación debe seguir funcionando.
+      }
     }
   }, [workspaceTab]);
 
@@ -202,10 +223,9 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
           >
             <Tabs.List className={classes.tabList}>
               <Tabs.Tab value="server">Servidor</Tabs.Tab>
-              <Tabs.Tab value="game">Game.ini</Tabs.Tab>
-              <Tabs.Tab value="gameUserSettings">GameUserSettings.ini</Tabs.Tab>
+              <Tabs.Tab value="guided">Configuración guiada</Tabs.Tab>
+              <Tabs.Tab value="iniFiles">Archivos INI</Tabs.Tab>
               <Tabs.Tab value="mods">Mods</Tabs.Tab>
-              <Tabs.Tab value="advanced">Avanzado</Tabs.Tab>
             </Tabs.List>
 
             <div className={classes.tabPanel}>

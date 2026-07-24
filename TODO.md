@@ -366,17 +366,36 @@ Corrección INI — ajustes de cliente regenerados por ASA (2026-07-24):
 Objetivo: convertir la configuración visual en la experiencia principal y
 relegar los archivos INI a Advanced Mode.
 
-- [ ] Presentar y aprobar la arquitectura de información antes de cambiar la navegación.
+- [x] Arquitectura de información aprobada y documentada en `docs/smart-configuration-architecture.md`.
 - [ ] Organizar settings por objetivos del usuario: jugabilidad, mundo, dinosaurios, domesticación y crianza, construcción, experiencia/rates y otras categorías necesarias.
-- [ ] Evitar que `Game.ini` y `GameUserSettings.ini` sean conceptos principales fuera de Advanced Mode.
+- [ ] Añadir Smart Configuration como vista guiada sin retirar la experiencia reconocible de `Game.ini` y `GameUserSettings.ini`.
 - [ ] Añadir nombres legibles y descripciones orientadas a resultados para los settings.
 - [ ] Enriquecer controles según tipo y rango usando switches, selects, sliders, inputs numéricos y presets cuando correspondan.
 - [ ] Mostrar valores recomendados, defaults y consecuencias relevantes sin saturar la pantalla.
 - [ ] Añadir un resumen legible de cambios antes de guardar.
 - [ ] Mantener visible el estado de cambios pendientes y si requieren reiniciar el servidor.
-- [ ] Conservar edición raw de ambos INI dentro de Advanced Mode.
+- [x] Conservar el editor visual actual y la edición raw de ambos archivos dentro de una vista explícita `Archivos INI`.
 - [ ] Dividir `ConfigurationEditor` gradualmente por responsabilidades sin reescribir su lógica funcional.
 - [ ] Preparar la gestión de mods para CurseForge, dependencias, conflictos, orden de carga y actualizaciones.
+
+Bloques propuestos:
+
+- [x] 3.1 Crear `Configuración guiada` como vista separada y agrupar la experiencia actual bajo `Archivos INI`, compartiendo payload, dirty state y guardado.
+- [ ] 3.2 Incorporar vista `Esenciales`, nombres legibles y descripciones breves orientadas al resultado.
+- [ ] 3.3 Enriquecer controles mediante metadatos confiables de rango, unidad, paso y opciones.
+- [ ] 3.4 Añadir revisión legible de cambios, requisito de reinicio y vista previa de presets.
+
+Validación del bloque 3.1 — separación de experiencias:
+
+- [x] `Configuración guiada` combina ajustes de `Game.ini` y `GameUserSettings.ini` sin duplicar estado ni persistencia.
+- [x] `Archivos INI` conserva el editor visual por archivo, edición raw, apertura externa y restauración del archivo activo.
+- [x] Presets movidos a la experiencia guiada para evitar cambios cruzados ocultos al trabajar por archivo.
+- [x] La última experiencia de configuración elegida se recuerda localmente; instalaciones nuevas comienzan en la vista guiada.
+- [x] Cambios pendientes permanecen sincronizados al alternar entre vistas y solo se realiza una lectura del backend.
+- [x] Tests focalizados 22/22, typecheck y build correctos.
+- [-] Suite completa 138/139 por el `EBUSY` conocido al limpiar una carpeta temporal de Windows; la prueba de proceso real pasa aislada 1/1.
+- [x] Servidor, Configuración guiada, Archivos INI visual/raw y Mods recorridos con Playwright/Electron en `1280×720`, `1920×1080` y `2560×1440`.
+- [x] Scroll con rueda funcional, editor raw usa la altura restante, sin overflow global, errores de consola ni excepciones del renderer.
 
 Criterio de cierre:
 

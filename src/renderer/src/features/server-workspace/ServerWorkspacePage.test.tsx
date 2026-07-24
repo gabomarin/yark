@@ -1,4 +1,11 @@
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
@@ -63,6 +70,9 @@ describe("ServerWorkspacePage", () => {
   });
 
   beforeEach(() => {
+    window.localStorage.removeItem(
+      "ark-server-manager.workspace.configuration-view",
+    );
     vi.stubGlobal("api", {
       readServerIni: vi.fn(async (serverId: string) => ({
         ok: true,
@@ -96,14 +106,16 @@ describe("ServerWorkspacePage", () => {
     expect(screen.getByText("Todos los servidores")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "The Island" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Servidor" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "GameUserSettings.ini" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Configuración guiada" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByRole("tab", { name: "Archivos INI" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Mods" })).toBeInTheDocument();
-    expect(screen.getByText("Información del servidor")).toBeInTheDocument();
-
-    await user.click(screen.getByRole("tab", { name: "GameUserSettings.ini" }));
 
     await waitFor(() => {
       expect(screen.getByText("MaxPlayers")).toBeInTheDocument();
+      expect(screen.getAllByText("XPMultiplier").length).toBeGreaterThan(0);
     });
 
     await user.click(screen.getByText("Scorched Earth"));
@@ -169,7 +181,10 @@ describe("ServerWorkspacePage", () => {
     });
     renderWorkspace();
 
-    await user.click(screen.getByRole("tab", { name: "Game.ini" }));
+    await user.click(screen.getByRole("tab", { name: "Archivos INI" }));
+    const fileSelect = screen.getByRole("textbox", { name: "Archivo INI" });
+    await user.click(fileSelect);
+    await user.click(screen.getByRole("option", { name: "Game.ini" }));
     await waitFor(() => {
       expect(screen.getAllByText("TotallyUnknownSettingXYZ").length).toBeGreaterThan(0);
     });
@@ -186,7 +201,8 @@ describe("ServerWorkspacePage", () => {
     await user.click(screen.getByRole("option", { name: "Otros (1)" }));
     expect(categorySelect).toHaveValue("Otros (1)");
 
-    await user.click(screen.getByRole("tab", { name: "GameUserSettings.ini" }));
+    await user.click(fileSelect);
+    await user.click(screen.getByRole("option", { name: "GameUserSettings.ini" }));
     await waitFor(() => {
       expect(screen.getAllByText("SessionName").length).toBeGreaterThan(0);
       expect(categorySelect).toHaveValue("Todos los ajustes (1)");
@@ -219,7 +235,6 @@ describe("ServerWorkspacePage", () => {
     });
     renderWorkspace();
 
-    await user.click(screen.getByRole("tab", { name: "GameUserSettings.ini" }));
     await waitFor(() => {
       expect(screen.getByText("MaxPlayers")).toBeInTheDocument();
     });
@@ -231,5 +246,38 @@ describe("ServerWorkspacePage", () => {
     expect(screen.queryByText("ResolutionSizeX")).not.toBeInTheDocument();
     expect(screen.queryByText("Sin guardar")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Guardar" })).toBeDisabled();
+  });
+
+  it("shares pending changes between guided configuration and INI files", async () => {
+    const user = userEvent.setup();
+    renderWorkspace();
+
+    const maxPlayers = await screen.findByDisplayValue("70");
+    fireEvent.change(maxPlayers, { target: { value: "80" } });
+    expect(screen.getByDisplayValue("80")).toBeInTheDocument();
+    expect(screen.getByText("Sin guardar")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Archivos INI" }));
+
+    expect(await screen.findByDisplayValue("80")).toBeInTheDocument();
+    expect(screen.getByText("Sin guardar")).toBeInTheDocument();
+    expect(window.api.readServerIni).toHaveBeenCalledTimes(1);
+  });
+
+  it("remembers INI files as the preferred configuration experience", async () => {
+    const user = userEvent.setup();
+    renderWorkspace();
+
+    await user.click(screen.getByRole("tab", { name: "Archivos INI" }));
+    expect(
+      screen.getByRole("tab", { name: "Archivos INI" }),
+    ).toHaveAttribute("aria-selected", "true");
+
+    cleanup();
+    renderWorkspace();
+
+    expect(
+      screen.getByRole("tab", { name: "Archivos INI" }),
+    ).toHaveAttribute("aria-selected", "true");
   });
 });

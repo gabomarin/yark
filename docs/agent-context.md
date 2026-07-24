@@ -26,7 +26,7 @@ This repository contains a desktop application for managing dedicated ARK Surviv
 
 - The new renderer shell is already active.
 - Overview, SteamCMD, and Logs have already been migrated to the new architecture.
-- Server Workspace (INI/mods editor) is available from Overview → INI, with a left server list for quick switching.
+- Server Workspace separates `Configuración guiada` from the familiar `Archivos INI` visual/raw experience. Both views share one payload, dirty state, and save flow; the last configuration experience is remembered locally.
 - Clusters, Backups, and Settings remain placeholders within the new shell.
 - Live log streaming during active SteamCMD operations is still pending.
 - Real E2E validation against host-side binaries and SteamCMD is still not covered.
@@ -61,4 +61,5 @@ cmd.exe /c npm run build
 - The informational official ARK server version comes from Wildcard's `https://cdn2.arkdedicated.com/asa/officialserverstatus.ini`; do not replace it with a single server from a third-party listing.
 - Explicit update and verify actions must always query SteamCMD. The in-session content-cache freshness window is only valid when reusing files to install another server.
 - The INI files under `src/shared/defaults` are the canonical source for creating and resetting configuration. ASA may regenerate client-only sections such as `ShooterGameUserSettings` in the runtime `GameUserSettings.ini`; treat them as generated noise, sanitize them on read and save, and never surface them as pending user changes.
+- Do not collapse guided configuration and file-oriented configuration into one ambiguous mode. New users enter `Configuración guiada`; experienced administrators retain the explicit `Archivos INI` visual/raw workflow.
 - If a visible UX change is introduced, also review the documented state in [TODO.md](../TODO.md).

@@ -89,13 +89,6 @@
   background: var(--app-color-surface-control-hover);
 }
 
-.sectionPath {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 55%;
-}
-
 .tableBody {
   flex: 1;
   min-height: 0;

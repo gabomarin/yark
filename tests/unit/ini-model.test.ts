@@ -6,12 +6,15 @@ import {
   stripClientIniKeys,
 } from "../../src/shared/ini-text";
 import {
+  filterIniSettingReferences,
   filterIniRows,
+  groupSettingReferencesByUiCategory,
   inferControlKind,
   isClientNoiseKey,
   parseIniRows,
   resolveControlKind,
   setIniValue,
+  settingReferencesForPayload,
 } from "../../src/renderer/src/features/server-workspace/iniModel";
 
 describe("ini-text / iniModel section parsing", () => {
@@ -117,5 +120,17 @@ LastJoinedSessionPerCategory=Tres
       }),
     ).toBe("number");
     expect(resolveControlKind("True", { valueType: "boolean" })).toBe("boolean");
+  });
+
+  it("combines both INI files into one filterable visual setting collection", () => {
+    const rows = settingReferencesForPayload({
+      gameUserSettings: "[ServerSettings]\nMaxPlayers=70\n",
+      game: "[/Script/ShooterGame.ShooterGameMode]\nXPMultiplier=2\n",
+    });
+
+    expect(rows.map((row) => row.fileKey)).toEqual(["gameUserSettings", "game"]);
+    expect(filterIniSettingReferences(rows, "MaxPlayers", "all")).toHaveLength(1);
+    const grouped = groupSettingReferencesByUiCategory(rows);
+    expect(grouped.flatMap((group) => group.rows)).toHaveLength(2);
   });
 });

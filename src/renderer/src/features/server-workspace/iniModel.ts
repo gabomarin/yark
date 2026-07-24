@@ -34,6 +34,10 @@ export interface IniSettingRow {
   duplicateCount: number;
 }
 
+export interface IniSettingReference extends IniSettingRow {
+  fileKey: IniFileKey;
+}
+
 export type IniFilterId = "all" | AsaUiCategoryId;
 
 export type IniControlKind = "boolean" | "number" | "text";
@@ -293,6 +297,27 @@ export function filterIniRows(
   });
 }
 
+export function settingReferencesForPayload(
+  payload: ServerIniPayload,
+): IniSettingReference[] {
+  return (["gameUserSettings", "game"] as const).flatMap((fileKey) =>
+    parseIniRows(textForFile(payload, fileKey)).map((row) => ({
+      ...row,
+      fileKey,
+    })),
+  );
+}
+
+export function filterIniSettingReferences(
+  rows: IniSettingReference[],
+  search: string,
+  filter: IniFilterId,
+): IniSettingReference[] {
+  return rows.filter(
+    (row) => filterIniRows([row], search, filter, row.fileKey).length === 1,
+  );
+}
+
 export function groupRowsBySection(
   rows: IniSettingRow[],
 ): Array<{ section: string; rows: IniSettingRow[] }> {
@@ -338,6 +363,43 @@ export function groupRowsByUiCategory(
     });
   }
   return groups;
+}
+
+export function groupSettingReferencesByUiCategory(
+  rows: IniSettingReference[],
+): Array<{
+  category: AsaUiCategoryId;
+  label: string;
+  rows: IniSettingReference[];
+}> {
+  const buckets = new Map<AsaUiCategoryId, IniSettingReference[]>();
+  for (const row of rows) {
+    const category = resolveAsaUiCategory(row.fileKey, row.section, row.key);
+    const list = buckets.get(category);
+    if (list !== undefined) {
+      list.push(row);
+    } else {
+      buckets.set(category, [row]);
+    }
+  }
+
+  return ASA_UI_CATEGORIES.flatMap((definition) => {
+    const list = buckets.get(definition.id);
+    if (list === undefined || list.length === 0) {
+      return [];
+    }
+    list.sort(
+      (a, b) =>
+        a.key.localeCompare(b.key) ||
+        a.fileKey.localeCompare(b.fileKey) ||
+        a.section.localeCompare(b.section),
+    );
+    return [{
+      category: definition.id,
+      label: UI_CATEGORY_LABELS_ES[definition.id],
+      rows: list,
+    }];
+  });
 }
 
 function rowIdentity(row: Pick<IniTextRow, "section" | "key">): string {

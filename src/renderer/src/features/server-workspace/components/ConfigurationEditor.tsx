@@ -15,6 +15,7 @@ import {
   Button,
   Group,
   NumberInput,
+  SegmentedControl,
   Select,
   Stack,
   Switch,
@@ -37,8 +38,8 @@ import type {
 import { useEffect, useMemo, useState } from "react";
 import {
   defaultTextForFile,
-  filterIniRows,
-  groupRowsByUiCategory,
+  filterIniSettingReferences,
+  groupSettingReferencesByUiCategory,
   lookupDefaultValue,
   lookupSettingDescription,
   parseIniRows,
@@ -46,18 +47,18 @@ import {
   sanitizeServerIniPayload,
   sectionShortName,
   setIniValue,
+  settingReferencesForPayload,
   textForFile,
   withFileText,
   type IniFilterId,
-  type IniSettingRow,
+  type IniSettingReference,
 } from "../iniModel";
 import classes from "./ConfigurationEditor.module.css";
 
 export type ConfigSection =
-  | "game"
-  | "gameUserSettings"
-  | "mods"
-  | "advanced";
+  | "guided"
+  | "iniFiles"
+  | "mods";
 
 interface Props {
   server: ServerProfile;
@@ -81,7 +82,8 @@ export function ConfigurationEditor(props: Props): JSX.Element {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<IniFilterId>("all");
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
-  const [advancedFile, setAdvancedFile] = useState<IniFileKey>("gameUserSettings");
+  const [iniFile, setIniFile] = useState<IniFileKey>("gameUserSettings");
+  const [iniMode, setIniMode] = useState<"visual" | "text">("visual");
   const [modDraft, setModDraft] = useState("");
   const [mods, setMods] = useState<string[]>(props.server.mods);
 
@@ -126,18 +128,21 @@ export function ConfigurationEditor(props: Props): JSX.Element {
     void load(props.server.id);
   }, [props.server.id]);
 
-  const activeFileKey: IniFileKey =
-    section === "advanced"
-      ? advancedFile
-      : section === "game"
-        ? "game"
-        : "gameUserSettings";
-
+  const activeFileKey = iniFile;
   const activeText = payload !== null ? textForFile(payload, activeFileKey) : "";
-  const rows = useMemo(() => parseIniRows(activeText), [activeText]);
+  const rows = useMemo<IniSettingReference[]>(() => {
+    if (payload === null) return [];
+    if (section === "guided") {
+      return settingReferencesForPayload(payload);
+    }
+    return parseIniRows(activeText).map((row) => ({
+      ...row,
+      fileKey: activeFileKey,
+    }));
+  }, [activeFileKey, activeText, payload, section]);
   const availableRows = useMemo(
-    () => filterIniRows(rows, "", "all", activeFileKey),
-    [rows, activeFileKey],
+    () => filterIniSettingReferences(rows, "", "all"),
+    [rows],
   );
   const categoryOptions = useMemo(
     () => [
@@ -145,20 +150,20 @@ export function ConfigurationEditor(props: Props): JSX.Element {
         value: "all",
         label: `Todos los ajustes (${availableRows.length})`,
       },
-      ...groupRowsByUiCategory(availableRows, activeFileKey).map((group) => ({
+      ...groupSettingReferencesByUiCategory(availableRows).map((group) => ({
         value: group.category,
         label: `${group.label} (${group.rows.length})`,
       })),
     ],
-    [availableRows, activeFileKey],
+    [availableRows],
   );
   const visibleRows = useMemo(
-    () => filterIniRows(rows, search, filter, activeFileKey),
-    [rows, search, filter, activeFileKey],
+    () => filterIniSettingReferences(rows, search, filter),
+    [rows, search, filter],
   );
   const groupedRows = useMemo(
-    () => groupRowsByUiCategory(visibleRows, activeFileKey),
-    [visibleRows, activeFileKey],
+    () => groupSettingReferencesByUiCategory(visibleRows),
+    [visibleRows],
   );
 
   useEffect(() => {
@@ -168,14 +173,16 @@ export function ConfigurationEditor(props: Props): JSX.Element {
   }, [categoryOptions, filter]);
 
   const updateValue = (
+    fileKey: IniFileKey,
     rowSection: string,
     key: string,
     value: string,
     occurrence = 0,
   ) => {
     if (payload === null) return;
-    const nextText = setIniValue(activeText, rowSection, key, value, occurrence);
-    setPayload(withFileText(payload, activeFileKey, nextText));
+    const currentText = textForFile(payload, fileKey);
+    const nextText = setIniValue(currentText, rowSection, key, value, occurrence);
+    setPayload(withFileText(payload, fileKey, nextText));
     setInfo(null);
     setPreview(null);
   };
@@ -210,10 +217,10 @@ export function ConfigurationEditor(props: Props): JSX.Element {
     });
   };
 
-  const resetRowToDefault = (row: IniSettingRow) => {
-    const defaultValue = lookupDefaultValue(activeFileKey, row.section, row.key);
+  const resetRowToDefault = (row: IniSettingReference) => {
+    const defaultValue = lookupDefaultValue(row.fileKey, row.section, row.key);
     if (defaultValue === null) return;
-    updateValue(row.section, row.key, defaultValue, row.occurrence);
+    updateValue(row.fileKey, row.section, row.key, defaultValue, row.occurrence);
     setInfo(`${row.key} restaurado al default`);
   };
 
@@ -325,6 +332,37 @@ export function ConfigurationEditor(props: Props): JSX.Element {
       </Tooltip>
     );
 
+  const iniNavigation = (
+    <>
+      <Select
+        size="xs"
+        aria-label="Archivo INI"
+        value={iniFile}
+        onChange={(value) => {
+          if (value === "game" || value === "gameUserSettings") {
+            setIniFile(value);
+          }
+        }}
+        data={[
+          { value: "gameUserSettings", label: "GameUserSettings.ini" },
+          { value: "game", label: "Game.ini" },
+        ]}
+        w={190}
+        allowDeselect={false}
+      />
+      <SegmentedControl
+        size="xs"
+        aria-label="Modo de edición INI"
+        value={iniMode}
+        onChange={(value) => setIniMode(value === "text" ? "text" : "visual")}
+        data={[
+          { value: "visual", label: "Visual" },
+          { value: "text", label: "Texto" },
+        ]}
+      />
+    </>
+  );
+
   return (
     <div className={classes.root} data-configuration-editor>
       <div className={classes.content}>
@@ -344,43 +382,51 @@ export function ConfigurationEditor(props: Props): JSX.Element {
           </Alert>
         )}
 
-        {(section === "game" || section === "gameUserSettings") && (
+        {(section === "guided" ||
+          (section === "iniFiles" && iniMode === "visual")) && (
           <Stack gap="md" className={classes.editor}>
             <Group justify="space-between" align="flex-start">
               <div>
                 <Group gap="xs" wrap="nowrap">
                   <Title order={3}>
-                    Editar {section === "game" ? "Game.ini" : "GameUserSettings.ini"}
+                    {section === "guided" ? "Configuración guiada" : "Archivos INI"}
                   </Title>
-                  {openFileAction}
+                  {section === "iniFiles" && openFileAction}
                 </Group>
                 <Text c="dimmed" size="sm">
-                  Ajustes agrupados por categoría. Busca o utiliza los filtros para acotar resultados.
+                  {section === "guided"
+                    ? "Configura el servidor por objetivo sin buscar en qué archivo vive cada ajuste."
+                    : `Edita ${fileLabel} con controles visuales y acceso directo al archivo.`}
                 </Text>
               </div>
-              <Group gap="xs">
-                <Select
-                  size="xs"
-                  placeholder="Aplicar preset"
-                  data={listIniPresets().map((preset) => ({
-                    value: preset.id,
-                    label: preset.name,
-                  }))}
-                  clearable
-                  searchable
-                  w={160}
-                  onChange={applyPreset}
-                  disabled={payload === null || loading}
-                />
-                <Button
-                  size="xs"
-                  variant="default"
-                  leftSection={<ArrowUUpLeft size={16} />}
-                  onClick={resetActiveFileToDefaults}
-                  disabled={payload === null || busy || loading}
-                >
-                  Restaurar valores
-                </Button>
+              <Group gap="xs" className={classes.headerActions}>
+                {section === "iniFiles" && iniNavigation}
+                {section === "guided" && (
+                  <Select
+                    size="xs"
+                    placeholder="Aplicar preset"
+                    data={listIniPresets().map((preset) => ({
+                      value: preset.id,
+                      label: preset.name,
+                    }))}
+                    clearable
+                    searchable
+                    w={160}
+                    onChange={applyPreset}
+                    disabled={payload === null || loading}
+                  />
+                )}
+                {section === "iniFiles" && (
+                  <Button
+                    size="xs"
+                    variant="default"
+                    leftSection={<ArrowUUpLeft size={16} />}
+                    onClick={resetActiveFileToDefaults}
+                    disabled={payload === null || busy || loading}
+                  >
+                    Restaurar archivo
+                  </Button>
+                )}
                 <Button
                   size="xs"
                   variant="default"
@@ -469,21 +515,18 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                               {group.rows.length}
                             </Badge>
                           </Group>
-                          <Text c="dimmed" size="xs" className={classes.sectionPath}>
-                            Categoría UI
-                          </Text>
                         </UnstyledButton>
 
                         {!collapsed &&
                           group.rows.map((row) => {
                             const kind = resolveControlKind(row.value, {
-                              fileKey: activeFileKey,
+                              fileKey: row.fileKey,
                               section: row.section,
                               key: row.key,
                             });
-                            const controlId = `${row.section}\u001f${row.key}\u001f${row.occurrence}`;
+                            const controlId = `${row.fileKey}\u001f${row.section}\u001f${row.key}\u001f${row.occurrence}`;
                             const defaultValue = lookupDefaultValue(
-                              activeFileKey,
+                              row.fileKey,
                               row.section,
                               row.key,
                             );
@@ -502,6 +545,13 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                                   </Text>
                                   <Text c="dimmed" size="xs">
                                     {sectionShortName(row.section)}
+                                    {section === "guided"
+                                      ? ` · ${
+                                          row.fileKey === "game"
+                                            ? "Game.ini"
+                                            : "GameUserSettings.ini"
+                                        }`
+                                      : ""}
                                     {row.duplicateCount > 1
                                       ? ` · ${row.occurrence + 1}/${row.duplicateCount}`
                                       : ""}
@@ -513,6 +563,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                                       checked={row.value.toLowerCase() === "true"}
                                       onChange={(event) =>
                                         updateValue(
+                                          row.fileKey,
                                           row.section,
                                           row.key,
                                           event.currentTarget.checked ? "True" : "False",
@@ -525,6 +576,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                                       value={Number(row.value)}
                                       onChange={(value) =>
                                         updateValue(
+                                          row.fileKey,
                                           row.section,
                                           row.key,
                                           value === "" || value === undefined
@@ -541,6 +593,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                                       value={row.value}
                                       onChange={(event) =>
                                         updateValue(
+                                          row.fileKey,
                                           row.section,
                                           row.key,
                                           event.currentTarget.value,
@@ -551,7 +604,11 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                                   )}
                                 </div>
                                 <Text c="dimmed" size="sm">
-                                  {lookupSettingDescription(activeFileKey, row.section, row.key)}
+                                  {lookupSettingDescription(
+                                    row.fileKey,
+                                    row.section,
+                                    row.key,
+                                  )}
                                 </Text>
                                 <div className={classes.rowActions}>
                                   <Tooltip
@@ -583,7 +640,9 @@ export function ConfigurationEditor(props: Props): JSX.Element {
 
             <Group justify="space-between" className={classes.footer}>
               <Text c="dimmed" size="xs">
-                El manager solo administra ajustes aplicables al servidor dedicado.
+                {section === "guided"
+                  ? "Una sola sesión de cambios para Game.ini y GameUserSettings.ini."
+                  : "El manager solo administra ajustes aplicables al servidor dedicado."}
               </Text>
             </Group>
 
@@ -701,33 +760,22 @@ export function ConfigurationEditor(props: Props): JSX.Element {
           </Stack>
         )}
 
-        {section === "advanced" && payload !== null && (
+        {section === "iniFiles" && iniMode === "text" && payload !== null && (
           <Stack gap="md" className={classes.editor}>
-            <Group justify="space-between">
+            <Group justify="space-between" align="flex-start">
               <div>
                 <Group gap="xs" wrap="nowrap">
-                  <Title order={3}>Avanzado (INI sin procesar)</Title>
+                  <Title order={3}>Archivos INI</Title>
                   {openFileAction}
                 </Group>
                 <Text c="dimmed" size="sm">
-                  Edición directa del texto. Útil para comparar o pegar bloques entre servidores.
+                  Edición directa de {fileLabel}. Útil para comparar o pegar bloques entre servidores.
                 </Text>
               </div>
-              <Group gap="xs">
-                <Select
-                  value={advancedFile}
-                  onChange={(value) => {
-                    if (value === "game" || value === "gameUserSettings") {
-                      setAdvancedFile(value);
-                    }
-                  }}
-                  data={[
-                    { value: "gameUserSettings", label: "GameUserSettings.ini" },
-                    { value: "game", label: "Game.ini" },
-                  ]}
-                  w={220}
-                />
+              <Group gap="xs" className={classes.headerActions}>
+                {iniNavigation}
                 <Button
+                  size="xs"
                   variant="default"
                   leftSection={<ArrowCounterClockwise size={16} />}
                   onClick={resetChanges}
@@ -736,6 +784,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                   Descartar cambios
                 </Button>
                 <Button
+                  size="xs"
                   leftSection={<FloppyDisk size={16} />}
                   onClick={() => void saveIni()}
                   disabled={!dirty || busy}
@@ -747,9 +796,9 @@ export function ConfigurationEditor(props: Props): JSX.Element {
             <Textarea
               className={classes.rawEditor}
               minRows={22}
-              value={textForFile(payload, advancedFile)}
+              value={textForFile(payload, iniFile)}
               onChange={(event) =>
-                setPayload(withFileText(payload, advancedFile, event.currentTarget.value))
+                setPayload(withFileText(payload, iniFile, event.currentTarget.value))
               }
               styles={{
                 input: {
