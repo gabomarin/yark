@@ -87,6 +87,7 @@ Before continuing work in this repository, review:
 - [TODO.md](TODO.md)
 - [.github/copilot-instructions.md](.github/copilot-instructions.md)
 - [docs/agent-context.md](docs/agent-context.md)
+- [docs/visual-testing.md](docs/visual-testing.md) before changing visible renderer UI.
 
 ## Notes for humans and agents
 

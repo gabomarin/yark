@@ -310,7 +310,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
     );
 
   return (
-    <div className={classes.root}>
+    <div className={classes.root} data-configuration-editor>
       <div className={classes.content}>
         {error !== null && (
           <Alert color="red" mb="sm" onClose={() => setError(null)} withCloseButton>

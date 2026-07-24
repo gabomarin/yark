@@ -20,6 +20,7 @@
 - Si se tocan backend, shared o flujos criticos: ejecutar `npm test` y `npm run typecheck`.
 - Si se tocan renderer, preload, main o integracion app: ejecutar `npm run build`.
 - Si se tocan flujos de UI principales: ejecutar `npm run e2e` cuando sea viable.
+- Si hay cambios visuales en el renderer: seguir `docs/visual-testing.md` y revisar con Playwright/Electron en `1280x720`, `1920x1080` y `2560x1440`.
 - En este repo, para verificacion fiable, preferir comandos por `cmd.exe /c` cuando el entorno WSL falle por dependencias opcionales de Rollup.
 
 ## Continuidad

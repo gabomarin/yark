@@ -6,12 +6,19 @@
 .embedded {
   padding: 0;
   min-height: 0;
-  flex: none;
-  overflow: visible;
+  flex: 1;
+  overflow: hidden;
+  border: 1px solid var(--app-color-border);
+  border-radius: 14px;
+  background: var(--app-color-panel);
 }
 
 .embeddedSurface {
-  padding: 4px 2px 16px;
+  height: 100%;
+  min-height: 0;
+  padding: 16px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .card,
@@ -44,6 +51,9 @@
 }
 
 .embeddedHeader {
-  top: 34px;
-  background: var(--app-color-bg);
+  top: 0;
+  margin-top: -16px;
+  padding-top: 16px;
+  background: var(--app-color-panel);
+  box-shadow: 0 -16px 0 var(--app-color-panel);
 }

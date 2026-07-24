@@ -424,7 +424,9 @@ export function ServerForm(props: Props): JSX.Element {
   return (
     <div className={embedded ? classes.embedded : classes.page}>
       {embedded ? (
-        <div className={classes.embeddedSurface}>{formBody}</div>
+        <div className={classes.embeddedSurface} data-server-form-scroll>
+          {formBody}
+        </div>
       ) : (
         <Card withBorder className={classes.card}>
           {formBody}

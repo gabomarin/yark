@@ -11,6 +11,7 @@ This repository contains a desktop application for managing dedicated ARK Surviv
 - Prefer small, verifiable changes.
 - Avoid introducing unnecessary native dependencies when a Node/TypeScript alternative exists.
 - For IPC, backend, or critical flow changes, run tests, typecheck, and build.
+- For visible renderer changes, follow the mandatory [visual testing protocol](visual-testing.md), including HD, Full HD, and QHD/2K review.
 
 ## Key folder map
 
@@ -39,6 +40,11 @@ npm test
 npm run typecheck
 npm run build
 ```
+
+Visible renderer changes also require a Playwright review of the real Electron
+build at `1280×720`, `1920×1080`, and `2560×1440`. Environment requirements,
+launch instructions, evidence, and review criteria are documented in
+[docs/visual-testing.md](visual-testing.md).
 
 If the environment has issues with Electron or Rollup, the more reliable path is:
 

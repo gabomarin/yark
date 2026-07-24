@@ -24,25 +24,30 @@
   padding: 12px 20px 16px;
   min-width: 0;
   min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  scrollbar-gutter: stable;
+  overflow: hidden;
 }
 
 .tabs {
-  display: flex;
   flex-direction: column;
+  height: 100%;
   min-height: 0;
   flex: 1;
+  overflow: hidden;
+}
+
+.tabs:global(.mantine-Tabs-root) {
+  display: flex;
+  flex-direction: column;
 }
 
 .tabPanel {
   display: flex;
   flex-direction: column;
+  height: 0;
   min-height: 0;
   flex: 1;
   padding-top: 14px;
-  overflow: visible;
+  overflow: hidden;
   background: transparent;
 }
 
@@ -91,6 +96,16 @@
   }
 
   .main {
+    overflow: visible;
+  }
+
+  .tabPanel {
+    height: auto;
+    overflow: visible;
+  }
+
+  .tabs {
+    height: auto;
     overflow: visible;
   }
 

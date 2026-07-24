@@ -158,6 +158,9 @@ Validación del primer pase (2026-07-24):
 - [x] Acción Guardar visible desde el primer viewport en creación y edición de servidor.
 - [x] Scroll vertical común en todas las tabs del workspace; los editores INI conservan un scroll interno para listas extensas.
 - [x] Acceso al archivo INI simplificado como acción contextual junto al título, con la ruta disponible mediante tooltip.
+- [x] Tabs del workspace ajustadas a la altura disponible: las tablas INI crecen con la ventana y Servidor comparte la misma superficie y patrón de scroll.
+- [x] Protocolo visual completo en `1280×720`, `1920×1080` y `2560×1440`: creación y workspace sin overflow global ni errores de consola; scrolls internos operativos.
+- [x] Hallazgos no bloqueantes trasladados a Iteración 2: Overview desperdicia espacio en pantallas amplias y conserva patrones de dashboard genérico.
 
 ### Iteración 2 — Overview operativo e identidad visual
 
@@ -165,7 +168,7 @@ Objetivo: hacer que la pantalla principal priorice servidores y problemas que
 requieren atención, con una identidad propia de centro de operaciones de mundos
 ARK sin convertirse en una interfaz gamer.
 
-- [ ] Presentar y aprobar una propuesta incremental de layout antes de implementarla.
+- [-] Presentar y aprobar una propuesta incremental de layout antes de implementarla (revisión visual realizada; propuesta presentada, pendiente de aprobación).
 - [ ] Sustituir el dashboard de métricas por un resumen operativo compacto y accionable.
 - [ ] Simplificar `ServerCard` y mostrar solo información real y prioritaria.
 - [ ] Definir una única acción primaria contextual por estado del servidor.
@@ -209,6 +212,7 @@ Criterio de cierre:
 
 Antes de marcar una iteración como completada:
 
+- [ ] Prueba visual del build real según `docs/visual-testing.md` en `1280×720`, `1920×1080` y `2560×1440`.
 - [ ] Claridad: la pantalla se entiende en menos de cinco segundos.
 - [ ] Jerarquía: lo más importante es lo más visible.
 - [ ] Acciones: la acción principal destaca y las secundarias no compiten.
