@@ -10,6 +10,12 @@ interface Props {
   installationInfo: Map<string, ServerInstallationInfo>;
   steamCmdServerId: string | null;
   steamCmdRunning: boolean;
+  steamCmdBusy?: boolean;
+  steamCmdProgressPercent?: number | null;
+  steamCmdProgressLabel?: string | null;
+  steamCmdProgressBytesDownloaded?: number | null;
+  steamCmdProgressBytesTotal?: number | null;
+  steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | null;
   onEditServer: (server: ServerProfile) => void;
   onOpenIni: (server: ServerProfile) => void;
   onOpenLogs: (serverId: string) => void;
@@ -49,7 +55,29 @@ export function ServerGrid(props: Props): JSX.Element {
               server={server}
               runtime={props.statuses.get(server.id) ?? null}
               installation={props.installationInfo.get(server.id) ?? null}
-              steamCmdBusy={props.steamCmdRunning && props.steamCmdServerId === server.id}
+              steamCmdBusy={
+                (props.steamCmdBusy ?? props.steamCmdRunning)
+                && props.steamCmdServerId === server.id
+              }
+              steamCmdProgressPercent={
+                props.steamCmdServerId === server.id ? (props.steamCmdProgressPercent ?? null) : null
+              }
+              steamCmdProgressLabel={
+                props.steamCmdServerId === server.id ? (props.steamCmdProgressLabel ?? null) : null
+              }
+              steamCmdProgressBytesDownloaded={
+                props.steamCmdServerId === server.id
+                  ? (props.steamCmdProgressBytesDownloaded ?? null)
+                  : null
+              }
+              steamCmdProgressBytesTotal={
+                props.steamCmdServerId === server.id
+                  ? (props.steamCmdProgressBytesTotal ?? null)
+                  : null
+              }
+              steamCmdOperation={
+                props.steamCmdServerId === server.id ? (props.steamCmdOperation ?? null) : null
+              }
               onStart={() => props.onStartServer(server.id)}
               onStop={() => props.onStopServer(server.id)}
               onKill={() => props.onKillServer(server.id)}

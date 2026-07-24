@@ -3,6 +3,7 @@ import { Button, Card, Group, Stack, Text, Title } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { AppMetricCard } from "@ui/AppMetricCard/AppMetricCard";
 import type { SteamCmdConsoleSnapshot, SteamCmdStatus } from "@shared/types";
+import { AutoScrollConsole } from "./AutoScrollConsole";
 import classes from "./SteamCmdPage.module.css";
 
 interface Props {
@@ -16,7 +17,7 @@ interface Props {
 
 export function SteamCmdPage(props: Props): JSX.Element {
   const detected = props.steamCmdStatus?.detected === true;
-  const running = props.steamCmdStatus?.running === true;
+  const running = props.steamCmdStatus?.busy === true || props.steamCmdStatus?.running === true;
 
   return (
     <PageScaffold
@@ -50,13 +51,30 @@ export function SteamCmdPage(props: Props): JSX.Element {
             icon={<Circle size={14} weight="fill" />}
             label="Estado"
             value={running ? "En ejecución" : "En espera"}
-            hint={props.steamCmdStatus?.operation != null ? `Operación: ${props.steamCmdStatus.operation}` : "sin operación activa"}
+            hint={
+              props.steamCmdStatus?.progressLabel
+              ?? (props.steamCmdStatus?.operation != null
+                ? `Operación: ${props.steamCmdStatus.operation}`
+                : "sin operación activa")
+            }
           />
           <AppMetricCard
             icon={<CloudArrowDown size={14} />}
-            label="Versión oficial"
-            value={props.officialVersion ?? "No detectada"}
-            hint={detected ? "SteamCMD disponible" : "SteamCMD no detectado"}
+            label="Progreso"
+            value={
+              props.steamCmdStatus?.progressPercent != null
+                ? `${props.steamCmdStatus.progressPercent.toFixed(1)}%`
+                : running
+                  ? "…"
+                  : "—"
+            }
+            hint={
+              props.officialVersion != null
+                ? `Versión oficial: ${props.officialVersion}`
+                : detected
+                  ? "SteamCMD disponible"
+                  : "SteamCMD no detectado"
+            }
           />
         </div>
 
@@ -67,17 +85,34 @@ export function SteamCmdPage(props: Props): JSX.Element {
           </Stack>
         </Card>
 
+        <Card withBorder className={classes.pathCard}>
+          <Stack gap="xs">
+            <Title order={4}>Caché de descargas</Title>
+            <Text size="sm">
+              SteamCMD reutiliza la depotcache y una instalación compartida ASA para no volver a
+              descargar el servidor completo en cada install/update.
+            </Text>
+            <Text size="sm" c="dimmed">
+              Depotcache: {props.steamCmdStatus?.depotCacheDir ?? "—"}
+            </Text>
+            <Text size="sm" c="dimmed">
+              Contenido ASA: {props.steamCmdStatus?.contentCacheDir ?? "—"}
+            </Text>
+          </Stack>
+        </Card>
+
         <Card withBorder className={classes.consoleCard}>
           <Stack gap="sm">
             <Group gap="xs">
               <TerminalWindow size={18} />
               <Title order={4}>Consola SteamCMD</Title>
             </Group>
-            {props.steamCmdConsole === null || props.steamCmdConsole.lines.length === 0 ? (
-              <Text c="dimmed">Sin salida de SteamCMD todavía.</Text>
-            ) : (
-              <pre className={classes.console}>{props.steamCmdConsole.lines.join("\n")}</pre>
-            )}
+            <AutoScrollConsole
+              className={classes.console}
+              lines={props.steamCmdConsole?.lines ?? []}
+              maxLines={200}
+              emptyText="Sin salida de SteamCMD todavía."
+            />
           </Stack>
         </Card>
       </Stack>

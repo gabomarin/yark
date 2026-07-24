@@ -54,7 +54,13 @@ export const IPC = {
 /** Canal de push (main -> renderer). */
 export const IPC_PUSH = {
   serverStatus: "push:server-status",
+  steamCmdProgress: "push:steamcmd-progress",
 } as const;
+
+export interface SteamCmdProgressPush {
+  status: SteamCmdStatus;
+  console: SteamCmdConsoleSnapshot;
+}
 
 /** Resultado normalizado de operaciones IPC. */
 export type IpcResult<T> =
@@ -122,5 +128,8 @@ export interface RendererApi {
   ): Promise<IpcResult<void>>;
   onServerStatus(
     listener: (info: ServerRuntimeInfo) => void,
+  ): () => void;
+  onSteamCmdProgress(
+    listener: (payload: SteamCmdProgressPush) => void,
   ): () => void;
 }

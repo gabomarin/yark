@@ -11,11 +11,19 @@ describe("SteamCmdPage", () => {
           steamCmdStatus={{
             detected: true,
             executablePath: "C:/steamcmd/steamcmd.exe",
+            depotCacheDir: "C:/steamcmd/steamapps/depotcache",
+            contentCacheDir: "C:/steamcmd/asa_content_cache",
+            busy: false,
             running: false,
             operation: null,
             serverId: null,
             startedAt: null,
             pid: null,
+            progressPercent: null,
+            progressLabel: null,
+            progressBytesDownloaded: null,
+            progressBytesTotal: null,
+            lastLine: null,
             checkedAt: "2026-07-23T00:00:00.000Z",
           }}
           steamCmdConsole={{
@@ -32,7 +40,8 @@ describe("SteamCmdPage", () => {
 
     expect(screen.getByText("SteamCMD")).toBeInTheDocument();
     expect(screen.getByText(/steamcmd ready/i)).toBeInTheDocument();
-    expect(screen.getByText(/Versión oficial/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Elegir steamcmd.exe/i })).toBeInTheDocument();
+    expect(screen.getByText(/Progreso/i)).toBeInTheDocument();
+    expect(screen.getByText(/Caché de descargas/i)).toBeInTheDocument();
+    expect(screen.getByText(/asa_content_cache/i)).toBeInTheDocument();
   });
 });

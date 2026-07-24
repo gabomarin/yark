@@ -22,6 +22,7 @@ import {
   Card,
   Group,
   Menu,
+  Progress,
   SimpleGrid,
   Stack,
   Text,
@@ -29,6 +30,7 @@ import {
   Title,
 } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import { formatSteamCmdByteProgress } from "@shared/steamcmd-progress";
 import { useState } from "react";
 import classes from "./ServerCard.module.css";
 
@@ -37,6 +39,11 @@ interface Props {
   runtime: ServerRuntimeInfo | null;
   installation: ServerInstallationInfo | null;
   steamCmdBusy?: boolean;
+  steamCmdProgressPercent?: number | null;
+  steamCmdProgressLabel?: string | null;
+  steamCmdProgressBytesDownloaded?: number | null;
+  steamCmdProgressBytesTotal?: number | null;
+  steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | null;
   onStart: () => void;
   onStop: () => void;
   onKill: () => void;
@@ -68,7 +75,17 @@ const QUICK_COMMANDS = [
 ];
 
 export function ServerCard(props: Props): JSX.Element {
-  const { server, runtime, installation, steamCmdBusy = false } = props;
+  const {
+    server,
+    runtime,
+    installation,
+    steamCmdBusy = false,
+    steamCmdProgressPercent = null,
+    steamCmdProgressLabel = null,
+    steamCmdProgressBytesDownloaded = null,
+    steamCmdProgressBytesTotal = null,
+    steamCmdOperation = null,
+  } = props;
   const status = runtime?.status ?? "stopped";
   const isActive = status === "starting" || status === "running" || status === "stopping";
   const isInstallationReady = installation?.installed === true;
@@ -77,6 +94,28 @@ export function ServerCard(props: Props): JSX.Element {
   const updateAvailable =
     isInstallationReady && officialVersion !== null && localVersion !== null && officialVersion !== localVersion;
   const [customCommand, setCustomCommand] = useState("");
+
+  const installStateLabel = steamCmdBusy
+    ? steamCmdOperation === "update" || steamCmdOperation === "sync-files"
+      ? "Actualizando…"
+      : "Instalando…"
+    : !isInstallationReady
+      ? "Sin instalar"
+      : updateAvailable
+        ? "Update available"
+        : "Up to date";
+
+  const byteProgressLabel =
+    steamCmdProgressBytesDownloaded !== null && steamCmdProgressBytesTotal !== null
+      ? formatSteamCmdByteProgress(
+          steamCmdProgressBytesDownloaded,
+          steamCmdProgressBytesTotal,
+        )
+      : null;
+  const shortProgressLabel =
+    byteProgressLabel !== null
+      ? (steamCmdProgressLabel?.split(" · ")[0]?.trim() || "SteamCMD en curso…")
+      : (steamCmdProgressLabel ?? "SteamCMD en curso…");
 
   return (
     <Card withBorder className={classes.card}>
@@ -93,17 +132,19 @@ export function ServerCard(props: Props): JSX.Element {
           </Group>
           <Badge
             color={
-              status === "running"
-                ? "green"
-                : status === "error"
-                  ? "red"
-                  : status === "starting" || status === "stopping"
-                    ? "blue"
-                    : "gray"
+              steamCmdBusy
+                ? "blue"
+                : status === "running"
+                  ? "green"
+                  : status === "error"
+                    ? "red"
+                    : status === "starting" || status === "stopping"
+                      ? "blue"
+                      : "gray"
             }
             variant="light"
           >
-            {STATUS_LABEL[status] ?? status}
+            {steamCmdBusy ? installStateLabel : (STATUS_LABEL[status] ?? status)}
           </Badge>
         </Group>
 
@@ -115,10 +156,45 @@ export function ServerCard(props: Props): JSX.Element {
           <MetaItem label="Versión" value={localVersion ?? "—"} />
           <MetaItem
             label="Estado"
-            value={!isInstallationReady ? "Sin instalar" : updateAvailable ? "Update available" : "Up to date"}
-            tone={!isInstallationReady ? "muted" : updateAvailable ? "warn" : "ok"}
+            value={installStateLabel}
+            tone={
+              steamCmdBusy
+                ? "warn"
+                : !isInstallationReady
+                  ? "muted"
+                  : updateAvailable
+                    ? "warn"
+                    : "ok"
+            }
           />
         </SimpleGrid>
+
+        {steamCmdBusy && (
+          <Stack gap={6} className={classes.progressBlock}>
+            <Group justify="space-between" gap="xs" align="flex-start">
+              <div>
+                <Text size="sm">{shortProgressLabel}</Text>
+                {byteProgressLabel !== null && (
+                  <Text size="xs" c="dimmed" mt={2}>
+                    Descargado: {byteProgressLabel}
+                  </Text>
+                )}
+              </div>
+              {steamCmdProgressPercent !== null && (
+                <Text size="sm" c="dimmed">
+                  {steamCmdProgressPercent.toFixed(0)}%
+                </Text>
+              )}
+            </Group>
+            <Progress
+              value={steamCmdProgressPercent ?? 12}
+              animated
+              striped
+              size="sm"
+              radius="xl"
+            />
+          </Stack>
+        )}
 
         {runtime?.lastError !== null && runtime?.lastError !== undefined && (
           <Text c="red" size="sm">{runtime.lastError}</Text>

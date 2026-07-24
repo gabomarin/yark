@@ -64,4 +64,52 @@ describe("ServerCard", () => {
     await user.click(screen.getByRole("button", { name: /^Iniciar$/i }));
     expect(onStart).toHaveBeenCalledTimes(1);
   });
+
+  it("shows progress bar while SteamCMD is busy", () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={{
+            serverId: profile.id,
+            installed: false,
+            build: null,
+            arkVersion: null,
+            officialVersion: null,
+            version: null,
+            binaryPath: "C:/ARK/TheIsland/ShooterGame/Binaries/Win64/ArkAscendedServer.exe",
+            checkedAt: "2026-07-23T00:00:00.000Z",
+          }}
+          steamCmdBusy
+          steamCmdProgressPercent={42}
+          steamCmdProgressLabel="Descargando · 512.0 / 1024.0 MB"
+          steamCmdProgressBytesDownloaded={536870912}
+          steamCmdProgressBytesTotal={1073741824}
+          steamCmdOperation="install-files"
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onEdit={vi.fn()}
+          onOpenIni={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onClone={vi.fn()}
+          onDelete={vi.fn()}
+          onRcon={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getAllByText(/Instalando/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/^Descargando$/i)).toBeInTheDocument();
+    expect(screen.getByText(/Descargado:/i)).toBeInTheDocument();
+    expect(screen.getByText(/512\.0 \/ 1024\.0 MB/i)).toBeInTheDocument();
+    expect(screen.getByText(/42%/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Cancelar operación/i })).toBeInTheDocument();
+  });
 });

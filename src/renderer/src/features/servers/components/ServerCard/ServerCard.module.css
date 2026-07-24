@@ -56,6 +56,13 @@
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.progressBlock {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(85, 166, 255, 0.22);
+  background: rgba(85, 166, 255, 0.08);
+}
+
 .rconInput {
   flex: 1;
 }

@@ -1,20 +1,36 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
+import { EventEmitter } from "node:events";
 import { dirname, join } from "node:path";
 import { existsSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import type { SteamCmdConsoleSnapshot, SteamCmdStatus } from "../../../shared/types";
+import { parseSteamCmdProgressLine } from "../../../shared/steamcmd-progress";
 import type { BackupService } from "../backups/backup-service";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { InstanceService } from "../instances/instance-service";
 import type { ProcessManager } from "../../infra/process/process-manager";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
+import {
+  buildSteamCmdAppUpdateArgs,
+  isContentCacheFresh,
+  isOperationCancelledError,
+  OperationCancelledError,
+  resolveAsaContentCacheDir,
+  resolveDepotCacheDir,
+  resolveSteamCmdHome,
+  syncAsaContentCacheToInstallDir,
+} from "./steamcmd-content-cache";
 
-const ASA_APP_ID = "2430930";
 const MAX_STEAMCMD_LINES = 500;
 const CRITICAL_JOBS_KEY = "criticalJobsQueue.v1";
 const JOB_RETRY_DELAY_MS = 5000;
+/** Push a la UI: lo bastante frecuente para ver % en vivo sin saturar Electron. */
+const PROGRESS_PUSH_MIN_MS = 100;
+/** No spamear la consola con cada tick \r de SteamCMD; sí actualizar la barra. */
+const PROGRESS_CONSOLE_LOG_MIN_MS = 1500;
+const PROGRESS_CONSOLE_LOG_MIN_DELTA = 2;
 
 interface CommandResult {
   code: number;
@@ -49,13 +65,28 @@ function delay(ms: number): Promise<void> {
  * Flujo seguro de actualización por instancia:
  * pre-backup -> stop -> steamcmd update -> start -> health-check -> rollback.
  */
-export class UpdateService {
+export class UpdateService extends EventEmitter {
   private readonly steamCmdConsoleLines: string[] = [];
   private steamCmdConsoleUpdatedAt = new Date(0).toISOString();
   private activeSteamCmd: ActiveSteamCmdOperation | null = null;
   private queue: CriticalJob[] = [];
   private processingQueue = false;
   private readonly waiters = new Map<string, { resolve: () => void; reject: (error: Error) => void }>();
+  /** Timestamp de la última actualización exitosa de asa_content_cache en esta sesión. */
+  private contentCacheUpdatedAtMs = 0;
+  private progressPercent: number | null = null;
+  private progressLabel: string | null = null;
+  private progressBytesDownloaded: number | null = null;
+  private progressBytesTotal: number | null = null;
+  private lastProgressLine: string | null = null;
+  private syncingServerId: string | null = null;
+  private syncingStartedAt: string | null = null;
+  private activeSyncChild: ChildProcess | null = null;
+  private cancelRequested = false;
+  private lastProgressPushAtMs = 0;
+  private lastProgressConsoleLogAtMs = 0;
+  private lastProgressConsoleLoggedPercent: number | null = null;
+  private steamCmdOutputBuffers = new Map<string, string>();
 
   constructor(
     private readonly servers: ServerRepository,
@@ -67,6 +98,7 @@ export class UpdateService {
     private readonly updatesLogDir: string,
     private readonly steamcmdDir: string,
   ) {
+    super();
     this.queue = this.loadQueue();
     if (this.queue.length > 0) {
       this.appendSteamCmdConsole(`Reanudando ${this.queue.length} job(s) críticos pendientes`);
@@ -164,28 +196,92 @@ export class UpdateService {
   getSteamCmdStatus(): SteamCmdStatus {
     const executablePath = this.findSteamCmdExecutable();
     const active = this.activeSteamCmd;
+    const queued = this.queue.find(
+      (job) => job.status === "pending" || job.status === "running",
+    );
+    const steamCmdHome =
+      executablePath !== null
+        ? resolveSteamCmdHome(executablePath)
+        : resolveSteamCmdHome(join(this.steamcmdDir, "steamcmd.exe"));
+    const busy =
+      active !== null || this.syncingServerId !== null || queued !== undefined;
+    const operation: SteamCmdStatus["operation"] =
+      this.syncingServerId !== null
+        ? "sync-files"
+        : (active?.operation ?? queued?.type ?? null);
+    const serverId =
+      this.syncingServerId
+      ?? active?.serverId
+      ?? queued?.serverId
+      ?? null;
+
     return {
       detected: executablePath !== null,
       executablePath,
-      running: active !== null,
-      operation: active?.operation ?? null,
-      serverId: active?.serverId ?? null,
-      startedAt: active?.startedAt ?? null,
+      depotCacheDir: resolveDepotCacheDir(steamCmdHome),
+      contentCacheDir: resolveAsaContentCacheDir(steamCmdHome),
+      busy,
+      running: active !== null || this.syncingServerId !== null,
+      operation,
+      serverId,
+      startedAt: this.syncingStartedAt ?? active?.startedAt ?? queued?.updatedAt ?? null,
       pid: active?.child.pid ?? null,
+      progressPercent: this.progressPercent,
+      progressLabel: this.progressLabel,
+      progressBytesDownloaded: this.progressBytesDownloaded,
+      progressBytesTotal: this.progressBytesTotal,
+      lastLine: this.lastProgressLine,
       checkedAt: new Date().toISOString(),
     };
   }
 
   cancelSteamCmd(): boolean {
-    const active = this.activeSteamCmd;
-    if (active === null) {
+    const hadWork =
+      this.activeSteamCmd !== null
+      || this.activeSyncChild !== null
+      || this.syncingServerId !== null
+      || this.queue.length > 0;
+
+    if (!hadWork) {
+      this.appendSteamCmdConsole("Cancelar: no hay operación activa");
+      this.emitProgress(true);
       return false;
     }
 
+    this.cancelRequested = true;
     this.appendSteamCmdConsole(
-      `Cancelando SteamCMD (op=${active.operation}, server=${active.serverId ?? "global"}, pid=${active.child.pid ?? "n/a"})`,
+      `Cancelando operación (steamcmd=${this.activeSteamCmd?.child.pid ?? "n/a"}, sync=${this.activeSyncChild?.pid ?? "n/a"}, jobs=${this.queue.length})`,
     );
-    this.killSteamCmdProcessTree(active.child);
+    this.setProgress(null, "Cancelando…", "Cancelación solicitada por el usuario");
+
+    if (this.activeSteamCmd !== null) {
+      const child = this.activeSteamCmd.child;
+      this.activeSteamCmd = null;
+      this.killProcessTree(child);
+    }
+    if (this.activeSyncChild !== null) {
+      const child = this.activeSyncChild;
+      this.activeSyncChild = null;
+      this.killProcessTree(child);
+    }
+
+    const jobs = [...this.queue];
+    this.queue = [];
+    this.persistQueue();
+    for (const job of jobs) {
+      this.servers.addEvent(
+        job.serverId,
+        "update_failed",
+        "warning",
+        `Operación ${job.type} cancelada por el usuario`,
+      );
+      this.rejectJob(job.id, new OperationCancelledError());
+    }
+
+    this.syncingServerId = null;
+    this.syncingStartedAt = null;
+    this.setProgress(null, "Cancelado", "Operación cancelada por el usuario");
+    this.emitProgress(true);
     return true;
   }
 
@@ -199,6 +295,7 @@ export class UpdateService {
     }
     await this.verifySteamCmdExecutable(normalized);
     this.persistSteamCmdPath(normalized);
+    this.contentCacheUpdatedAtMs = 0;
     this.appendSteamCmdConsole(`Ruta manual de SteamCMD configurada: ${normalized}`);
     return normalized;
   }
@@ -377,6 +474,10 @@ export class UpdateService {
 
     this.queue.push(job);
     this.persistQueue();
+    this.progressLabel =
+      type === "install-files" ? "En cola: instalar archivos…" : "En cola: actualizar…";
+    this.lastProgressLine = `Job encolado: ${type}`;
+    this.emitProgress(true);
     this.servers.addEvent(
       serverId,
       "update_started",
@@ -406,7 +507,9 @@ export class UpdateService {
 
         job.status = "running";
         job.updatedAt = new Date().toISOString();
+        this.cancelRequested = false;
         this.persistQueue();
+        this.emitProgress(true);
 
         try {
           if (job.type === "install-files") {
@@ -417,7 +520,30 @@ export class UpdateService {
           this.resolveJob(job.id);
           this.removeJob(job.id);
           this.persistQueue();
+          if (this.queue.length === 0 && this.activeSteamCmd === null && this.syncingServerId === null) {
+            this.setProgress(100, "Completado", "Operación finalizada");
+            this.emitProgress(true);
+          }
         } catch (error) {
+          if (this.cancelRequested || isOperationCancelledError(error)) {
+            this.appendSteamCmdConsole(
+              `Job ${job.type} detenido tras cancelación`,
+            );
+            this.rejectJob(
+              job.id,
+              isOperationCancelledError(error)
+                ? (error as Error)
+                : new OperationCancelledError(),
+            );
+            this.removeJob(job.id);
+            this.persistQueue();
+            this.cancelRequested = false;
+            this.endFileSync();
+            this.setProgress(null, "Cancelado", "Operación cancelada por el usuario");
+            this.emitProgress(true);
+            break;
+          }
+
           job.attempts += 1;
           job.lastError = error instanceof Error ? error.message : String(error);
           job.updatedAt = new Date().toISOString();
@@ -456,24 +582,111 @@ export class UpdateService {
     operation: "install-files" | "update",
     serverId: string,
   ): Promise<CommandResult> {
+    this.assertNotCancelled();
     const steamcmdExe = this.resolveSteamCmdExecutable();
-    const args = [
-      "+login",
-      "anonymous",
-      "+force_install_dir",
-      installDir,
-      "+app_update",
-      ASA_APP_ID,
-      "validate",
-      "+quit",
-    ];
+    const steamCmdHome = resolveSteamCmdHome(steamcmdExe);
+    const depotCacheDir = resolveDepotCacheDir(steamCmdHome);
+    const contentCacheDir = resolveAsaContentCacheDir(steamCmdHome);
+
+    await mkdir(contentCacheDir, { recursive: true });
+    await mkdir(depotCacheDir, { recursive: true });
 
     this.appendSteamCmdConsole(
-      `[invoke] op=${operation} server=${serverId} cmd=${steamcmdExe} args=${args.join(" ")}`,
+      `Caché SteamCMD: depot=${depotCacheDir} | contenido ASA=${contentCacheDir}`,
+    );
+
+    const cacheResult = await this.ensureAsaContentCache(steamcmdExe, steamCmdHome, contentCacheDir, operation, serverId);
+    this.assertNotCancelled();
+    if (cacheResult.code !== 0) {
+      return cacheResult;
+    }
+
+    this.appendSteamCmdConsole(
+      `Sincronizando caché ASA → ${installDir} (preserva ShooterGame\\Saved)`,
+    );
+    this.beginFileSync(serverId, operation === "install-files" ? "Instalando archivos…" : "Actualizando archivos…");
+    try {
+      const robocopyCode = await syncAsaContentCacheToInstallDir(contentCacheDir, installDir, {
+        onSpawn: (child) => {
+          this.activeSyncChild = child;
+        },
+        isCancelled: () => this.cancelRequested,
+      });
+      this.activeSyncChild = null;
+      this.appendSteamCmdConsole(
+        `Sincronización de caché ASA completada (robocopy=${robocopyCode})`,
+      );
+      this.setProgress(100, "Archivos sincronizados", "Sincronización completada");
+    } catch (error) {
+      this.activeSyncChild = null;
+      this.endFileSync();
+      if (isOperationCancelledError(error) || this.cancelRequested) {
+        throw isOperationCancelledError(error) ? error : new OperationCancelledError();
+      }
+      const message = error instanceof Error ? error.message : String(error);
+      this.appendSteamCmdConsole(`Falló sync de caché; instalando directo en el servidor: ${message}`);
+      return await this.invokeSteamCmdAppUpdate(
+        steamcmdExe,
+        steamCmdHome,
+        installDir,
+        operation,
+        serverId,
+      );
+    }
+    this.endFileSync();
+
+    return { code: 0, stdout: cacheResult.stdout, stderr: cacheResult.stderr };
+  }
+
+  private async ensureAsaContentCache(
+    steamcmdExe: string,
+    steamCmdHome: string,
+    contentCacheDir: string,
+    operation: "install-files" | "update",
+    serverId: string,
+  ): Promise<CommandResult> {
+    if (isContentCacheFresh(contentCacheDir, this.contentCacheUpdatedAtMs)) {
+      const ageSec = Math.round((Date.now() - this.contentCacheUpdatedAtMs) / 1000);
+      this.appendSteamCmdConsole(
+        `Reutilizando caché de contenido ASA (actualizada hace ${ageSec}s; sin re-descarga)`,
+      );
+      return { code: 0, stdout: "", stderr: "" };
+    }
+
+    this.appendSteamCmdConsole(
+      `Actualizando caché compartida ASA vía SteamCMD (reutiliza depotcache en ${steamCmdHome})`,
+    );
+    const result = await this.invokeSteamCmdAppUpdate(
+      steamcmdExe,
+      steamCmdHome,
+      contentCacheDir,
+      operation,
+      serverId,
+    );
+    if (result.code === 0) {
+      this.contentCacheUpdatedAtMs = Date.now();
+    } else {
+      this.contentCacheUpdatedAtMs = 0;
+    }
+    return result;
+  }
+
+  private async invokeSteamCmdAppUpdate(
+    steamcmdExe: string,
+    steamCmdHome: string,
+    forceInstallDir: string,
+    operation: "install-files" | "update",
+    serverId: string,
+  ): Promise<CommandResult> {
+    const args = buildSteamCmdAppUpdateArgs(forceInstallDir);
+
+    this.appendSteamCmdConsole(
+      `[invoke] op=${operation} server=${serverId} cwd=${steamCmdHome} cmd=${steamcmdExe} args=${args.join(" ")}`,
     );
 
     return await new Promise<CommandResult>((resolve, reject) => {
       const child = spawn(steamcmdExe, args, {
+        cwd: steamCmdHome,
         windowsHide: true,
         shell: false,
       });
@@ -504,6 +717,10 @@ export class UpdateService {
 
       child.once("exit", (code) => {
         this.endSteamCmdProcess(child);
+        if (this.cancelRequested) {
+          reject(new OperationCancelledError());
+          return;
+        }
         resolve({
           code: code ?? 1,
           stdout,
@@ -511,6 +728,12 @@ export class UpdateService {
         });
       });
     });
+  }
+
+  private assertNotCancelled(): void {
+    if (this.cancelRequested) {
+      throw new OperationCancelledError();
+    }
   }
 
   private resolveSteamCmdExecutable(): string {
@@ -581,6 +804,7 @@ export class UpdateService {
     await new Promise<void>((resolve, reject) => {
       this.appendSteamCmdConsole(`Validando SteamCMD: ${exePath}`);
       const child = spawn(exePath, ["+quit"], {
+        cwd: resolveSteamCmdHome(exePath),
         windowsHide: true,
         shell: false,
       });
@@ -650,7 +874,7 @@ export class UpdateService {
     return false;
   }
 
-  private appendSteamCmdConsole(line: string): void {
+  private appendSteamCmdConsole(line: string, options?: { forceProgressPush?: boolean }): void {
     const trimmed = line.trim();
     if (trimmed.length === 0) {
       return;
@@ -660,16 +884,143 @@ export class UpdateService {
       this.steamCmdConsoleLines.splice(0, this.steamCmdConsoleLines.length - MAX_STEAMCMD_LINES);
     }
     this.steamCmdConsoleUpdatedAt = new Date().toISOString();
+    this.lastProgressLine = trimmed;
+    const percentChanged = this.ingestProgressFromLine(trimmed);
+    this.emitProgress(options?.forceProgressPush === true || percentChanged);
   }
 
+  /**
+   * SteamCMD escribe el progreso con \\r (misma línea) casi sin \\n.
+   * Hay que fragmentar por CR/LF o la UI no ve avance hasta mucho después.
+   */
   private captureSteamCmdOutput(chunk: string, source: string): void {
-    const lines = chunk
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
-    for (const line of lines) {
-      this.appendSteamCmdConsole(`[${source}] ${line}`);
+    const previous = this.steamCmdOutputBuffers.get(source) ?? "";
+    const combined = previous + String(chunk);
+    const parts = combined.split(/\r\n|\n|\r/);
+    const remainder = parts.pop() ?? "";
+    this.steamCmdOutputBuffers.set(source, remainder);
+
+    for (const part of parts) {
+      const trimmed = part.trim();
+      if (trimmed.length === 0) {
+        continue;
+      }
+      this.handleSteamCmdOutputLine(trimmed, source);
     }
+  }
+
+  private handleSteamCmdOutputLine(line: string, source: string): void {
+    const bare = line.replace(/^\[(?:update|verify)\/(?:stdout|stderr)\]\s*/i, "");
+    const parsed = parseSteamCmdProgressLine(bare);
+    const isProgressTick = parsed.percent !== null;
+
+    if (isProgressTick) {
+      const now = Date.now();
+      const previousPercent = this.progressPercent;
+      if (parsed.percent !== null) {
+        this.progressPercent = parsed.percent;
+      }
+      if (parsed.label !== null) {
+        this.progressLabel = parsed.label;
+      }
+      if (parsed.bytesDownloaded !== null) {
+        this.progressBytesDownloaded = parsed.bytesDownloaded;
+      }
+      if (parsed.bytesTotal !== null) {
+        this.progressBytesTotal = parsed.bytesTotal;
+      }
+      this.lastProgressLine = bare;
+
+      const percentChanged =
+        previousPercent === null
+        || parsed.percent === null
+        || Math.abs(parsed.percent - previousPercent) >= 0.05;
+      this.emitProgress(percentChanged);
+
+      const shouldLogToConsole =
+        this.lastProgressConsoleLoggedPercent === null
+        || parsed.percent === null
+        || Math.abs(parsed.percent - this.lastProgressConsoleLoggedPercent) >= PROGRESS_CONSOLE_LOG_MIN_DELTA
+        || now - this.lastProgressConsoleLogAtMs >= PROGRESS_CONSOLE_LOG_MIN_MS;
+
+      if (shouldLogToConsole) {
+        this.lastProgressConsoleLogAtMs = now;
+        this.lastProgressConsoleLoggedPercent = parsed.percent;
+        this.steamCmdConsoleLines.push(`[${new Date().toISOString()}] [${source}] ${bare}`);
+        if (this.steamCmdConsoleLines.length > MAX_STEAMCMD_LINES) {
+          this.steamCmdConsoleLines.splice(0, this.steamCmdConsoleLines.length - MAX_STEAMCMD_LINES);
+        }
+        this.steamCmdConsoleUpdatedAt = new Date().toISOString();
+        this.emitProgress(true);
+      }
+      return;
+    }
+
+    this.appendSteamCmdConsole(`[${source}] ${line}`, { forceProgressPush: true });
+  }
+
+  private ingestProgressFromLine(line: string): boolean {
+    const bare = line.replace(/^\[(?:update|verify)\/(?:stdout|stderr)\]\s*/i, "");
+    const parsed = parseSteamCmdProgressLine(bare);
+    let percentChanged = false;
+    if (parsed.percent !== null) {
+      percentChanged =
+        this.progressPercent === null
+        || Math.abs(parsed.percent - this.progressPercent) >= 0.05;
+      this.progressPercent = parsed.percent;
+    }
+    if (parsed.label !== null) {
+      this.progressLabel = parsed.label;
+    }
+    if (parsed.bytesDownloaded !== null) {
+      this.progressBytesDownloaded = parsed.bytesDownloaded;
+    }
+    if (parsed.bytesTotal !== null) {
+      this.progressBytesTotal = parsed.bytesTotal;
+    }
+    return percentChanged;
+  }
+
+  private setProgress(percent: number | null, label: string | null, line?: string): void {
+    if (percent !== null) {
+      this.progressPercent = percent;
+    }
+    if (label !== null) {
+      this.progressLabel = label;
+    }
+    if (percent === 0 || percent === null) {
+      this.progressBytesDownloaded = null;
+      this.progressBytesTotal = null;
+    }
+    if (line !== undefined) {
+      this.lastProgressLine = line;
+    }
+    this.emitProgress(true);
+  }
+
+  private beginFileSync(serverId: string, label: string): void {
+    this.syncingServerId = serverId;
+    this.syncingStartedAt = new Date().toISOString();
+    this.setProgress(null, label, label);
+  }
+
+  private endFileSync(): void {
+    this.syncingServerId = null;
+    this.syncingStartedAt = null;
+    this.activeSyncChild = null;
+    this.emitProgress(true);
+  }
+
+  private emitProgress(force: boolean): void {
+    const now = Date.now();
+    if (!force && now - this.lastProgressPushAtMs < PROGRESS_PUSH_MIN_MS) {
+      return;
+    }
+    this.lastProgressPushAtMs = now;
+    this.emit("progress", {
+      status: this.getSteamCmdStatus(),
+      console: this.getSteamCmdConsole(160),
+    });
   }
 
   private beginSteamCmdProcess(
@@ -680,21 +1031,41 @@ export class UpdateService {
     if (this.activeSteamCmd !== null) {
       throw new Error("Ya hay una operación de SteamCMD en curso");
     }
+    this.steamCmdOutputBuffers.clear();
+    this.lastProgressConsoleLogAtMs = 0;
+    this.lastProgressConsoleLoggedPercent = null;
+    if (operation === "install-files") {
+      this.setProgress(0, "Descargando archivos del servidor…", "Iniciando SteamCMD");
+    } else if (operation === "update") {
+      this.setProgress(0, "Actualizando archivos del servidor…", "Iniciando SteamCMD");
+    } else {
+      this.setProgress(null, "Instalando SteamCMD…", "Iniciando instalación de SteamCMD");
+    }
     this.activeSteamCmd = {
       child,
       operation,
       serverId,
       startedAt: new Date().toISOString(),
     };
+    this.emitProgress(true);
   }
 
   private endSteamCmdProcess(child: ChildProcess): void {
     if (this.activeSteamCmd?.child === child) {
+      // Vaciar restos del buffer (\r sin cerrar).
+      for (const [source, remainder] of this.steamCmdOutputBuffers) {
+        const trimmed = remainder.trim();
+        if (trimmed.length > 0) {
+          this.handleSteamCmdOutputLine(trimmed, source);
+        }
+      }
+      this.steamCmdOutputBuffers.clear();
       this.activeSteamCmd = null;
+      this.emitProgress(true);
     }
   }
 
-  private killSteamCmdProcessTree(child: ChildProcess): void {
+  private killProcessTree(child: ChildProcess): void {
     const pid = child.pid;
     if (pid !== undefined && process.platform === "win32") {
       try {

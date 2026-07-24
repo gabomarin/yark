@@ -15,6 +15,7 @@ import { OverviewPage } from "@features/overview/OverviewPage";
 import { ServerWorkspacePage } from "@features/server-workspace/ServerWorkspacePage";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { SteamCmdPage } from "@features/steamcmd/SteamCmdPage";
+import { SteamCmdProgressDock } from "@features/steamcmd/SteamCmdProgressDock";
 import type { Route } from "@layout/Sidebar/Sidebar";
 
 const APP_VERSION = "0.1.0";
@@ -87,6 +88,12 @@ export function App(): JSX.Element {
     );
   }, [servers, search]);
 
+  const steamCmdBusy = steamCmdStatus?.busy === true;
+  const steamCmdServerName =
+    steamCmdStatus?.serverId != null
+      ? (servers.find((server) => server.id === steamCmdStatus.serverId)?.name ?? null)
+      : null;
+
   const refresh = useCallback(async () => {
     const [
       serversRes,
@@ -125,19 +132,25 @@ export function App(): JSX.Element {
 
   useEffect(() => {
     void refresh();
-    const unsubscribe = window.api.onServerStatus((info) => {
+    const unsubscribeStatus = window.api.onServerStatus((info) => {
       setStatuses((prev) => {
         const next = new Map(prev);
         next.set(info.serverId, info);
         return next;
       });
     });
-    const interval = setInterval(() => void refresh(), 5000);
+    const unsubscribeProgress = window.api.onSteamCmdProgress((payload) => {
+      setSteamCmdStatus(payload.status);
+      setSteamCmdConsole(payload.console);
+    });
+    const intervalMs = steamCmdBusy ? 500 : 5000;
+    const interval = setInterval(() => void refresh(), intervalMs);
     return () => {
-      unsubscribe();
+      unsubscribeStatus();
+      unsubscribeProgress();
       clearInterval(interval);
     };
-  }, [refresh]);
+  }, [refresh, steamCmdBusy]);
 
   const runAction = useCallback(
     async (action: () => Promise<{ ok: boolean; error?: string }>) => {
@@ -147,6 +160,27 @@ export function App(): JSX.Element {
         setError(result.error ?? "Error desconocido");
       }
       await refresh();
+    },
+    [refresh],
+  );
+
+  const startSteamFilesJob = useCallback(
+    (serverId: string, kind: "install" | "update") => {
+      setError(null);
+      void (async () => {
+        const result =
+          kind === "install"
+            ? await window.api.installServerFiles(serverId)
+            : await window.api.updateServerNow(serverId);
+        if (!result.ok) {
+          const message = result.error ?? "Error desconocido";
+          // Cancelación deliberada: no mostrar como error rojo.
+          if (!/cancelad/i.test(message)) {
+            setError(message);
+          }
+        }
+        await refresh();
+      })();
     },
     [refresh],
   );
@@ -232,7 +266,7 @@ export function App(): JSX.Element {
           route="overview"
           onNavigate={navigate}
           steamCmdDetected={steamCmdStatus?.detected === true}
-          steamCmdRunning={steamCmdStatus?.running === true}
+          steamCmdRunning={steamCmdBusy}
           officialVersion={officialVersion}
           appVersion={APP_VERSION}
           error={error}
@@ -251,8 +285,8 @@ export function App(): JSX.Element {
             onRestartServer={(id) => void restartServer(id)}
             onKillServer={(id) => void runAction(() => window.api.killServer(id))}
             onOpenFolder={(id) => void runAction(() => window.api.openServerFolder(id))}
-            onInstallFiles={(id) => void runAction(() => window.api.installServerFiles(id))}
-            onUpdateNow={(id) => void runAction(() => window.api.updateServerNow(id))}
+            onInstallFiles={(id) => startSteamFilesJob(id, "install")}
+            onUpdateNow={(id) => startSteamFilesJob(id, "update")}
             onSendRcon={(id, command) =>
               void runAction(() => window.api.sendRconCommand(id, command))
             }
@@ -281,7 +315,7 @@ export function App(): JSX.Element {
         appVersion={APP_VERSION}
         officialVersion={officialVersion}
         steamCmdDetected={steamCmdStatus?.detected === true}
-        steamCmdRunning={steamCmdStatus?.running === true}
+        steamCmdRunning={steamCmdBusy}
         onNavigate={navigate}
         error={error}
         onDismissError={() => setError(null)}
@@ -305,6 +339,12 @@ export function App(): JSX.Element {
               events={events}
               steamCmdServerId={steamCmdStatus?.serverId ?? null}
               steamCmdRunning={steamCmdStatus?.running === true}
+              steamCmdBusy={steamCmdBusy}
+              steamCmdProgressPercent={steamCmdStatus?.progressPercent ?? null}
+              steamCmdProgressLabel={steamCmdStatus?.progressLabel ?? null}
+              steamCmdProgressBytesDownloaded={steamCmdStatus?.progressBytesDownloaded ?? null}
+              steamCmdProgressBytesTotal={steamCmdStatus?.progressBytesTotal ?? null}
+              steamCmdOperation={steamCmdStatus?.operation ?? null}
               onEditServer={(server) => setOverlay({ kind: "edit", profile: server })}
               onOpenIni={(server) => setOverlay({ kind: "workspace", serverId: server.id })}
               onOpenLogs={(serverId) => openLogsForServer(serverId, "events")}
@@ -313,8 +353,8 @@ export function App(): JSX.Element {
               onRestartServer={(id) => void restartServer(id)}
               onKillServer={(id) => void runAction(() => window.api.killServer(id))}
               onOpenFolder={(id) => void runAction(() => window.api.openServerFolder(id))}
-              onInstallFiles={(id) => void runAction(() => window.api.installServerFiles(id))}
-              onUpdateNow={(id) => void runAction(() => window.api.updateServerNow(id))}
+              onInstallFiles={(id) => startSteamFilesJob(id, "install")}
+              onUpdateNow={(id) => startSteamFilesJob(id, "update")}
               onCloneServer={(id) => void runAction(() => window.api.cloneServer(id))}
               onDeleteServer={(id) => {
                 const server = servers.find((item) => item.id === id);
@@ -361,6 +401,19 @@ export function App(): JSX.Element {
     );
   };
 
-  return renderMain();
+  return (
+    <>
+      {renderMain()}
+      {steamCmdBusy && steamCmdStatus !== null && (
+        <SteamCmdProgressDock
+          status={steamCmdStatus}
+          console={steamCmdConsole}
+          serverName={steamCmdServerName}
+          onCancel={() => void runAction(() => window.api.cancelSteamCmd())}
+          onOpenSteamCmdPage={() => navigate("steamcmd")}
+        />
+      )}
+    </>
+  );
 }
 

@@ -80,12 +80,14 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - [-] Ruta configurable de `steamcmd.exe`.
 - [-] Instalador asistido de SteamCMD.
 - [-] Bootstrap de archivos base del servidor por SteamCMD.
+- [x] Caché SteamCMD reutilizable entre servidores: `cwd` en home de SteamCMD (depotcache), `force_install_dir` antes de login, instalación compartida `asa_content_cache` + sync local (robocopy) preservando `ShooterGame\Saved`.
 - [-] Cola persistente de jobs criticos para updates y bootstrap (cola persistente con reintentos en install-files/update y backup/restore; falta visibilidad completa en UI).
 
 ### Observabilidad y logs
 - [x] Eventos recientes persistidos y visibles en UI.
 - [x] Estado runtime por servidor.
-- [-] Vista de logs de proceso / update / backup desde la UI (filtros de eventos, búsqueda, scroll interno, copia y exportación listos; rediseño Fase 2 aplicado: tabs superiores Events/Runtime/Update Logs/Backups, panel "Update History" con detalle y botón "Open in external viewer" vía `shell.openPath`; ya migrado al frontend nuevo como `LogsPage` sobre Mantine + CSS Modules para el histórico persistido. Sigue pendiente salida en vivo durante una operación SteamCMD activa y el refinamiento visual final del tab de updates).
+- [x] Progreso de install/update visible: panel flotante con consola en vivo, barra de progreso en ServerCard, push IPC + poll 1s mientras hay operación.
+- [-] Vista de logs de proceso / update / backup desde la UI (filtros de eventos, búsqueda, scroll interno, copia y exportación listos; rediseño Fase 2 aplicado: tabs superiores Events/Runtime/Update Logs/Backups, panel "Update History" con detalle y botón "Open in external viewer" vía `shell.openPath`; ya migrado al frontend nuevo como `LogsPage` sobre Mantine + CSS Modules para el histórico persistido. Pendiente refinamiento visual final del tab de updates).
 - [ ] Rotacion avanzada de logs.
 - [ ] Diagnostico guiado para fallos de arranque reales.
 

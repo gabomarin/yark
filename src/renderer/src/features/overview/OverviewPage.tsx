@@ -30,6 +30,12 @@ interface Props {
   events: AppEvent[];
   steamCmdServerId?: string | null;
   steamCmdRunning?: boolean;
+  steamCmdBusy?: boolean;
+  steamCmdProgressPercent?: number | null;
+  steamCmdProgressLabel?: string | null;
+  steamCmdProgressBytesDownloaded?: number | null;
+  steamCmdProgressBytesTotal?: number | null;
+  steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | null;
   onEditServer: (server: ServerProfile) => void;
   onOpenIni: (server: ServerProfile) => void;
   onOpenLogs: (serverId: string) => void;
@@ -74,6 +80,12 @@ export function OverviewPage(props: Props): JSX.Element {
           installationInfo={props.installationInfo}
           steamCmdServerId={props.steamCmdServerId ?? null}
           steamCmdRunning={props.steamCmdRunning ?? false}
+          steamCmdBusy={props.steamCmdBusy ?? props.steamCmdRunning ?? false}
+          steamCmdProgressPercent={props.steamCmdProgressPercent ?? null}
+          steamCmdProgressLabel={props.steamCmdProgressLabel ?? null}
+          steamCmdProgressBytesDownloaded={props.steamCmdProgressBytesDownloaded ?? null}
+          steamCmdProgressBytesTotal={props.steamCmdProgressBytesTotal ?? null}
+          steamCmdOperation={props.steamCmdOperation ?? null}
           onEditServer={props.onEditServer}
           onOpenIni={props.onOpenIni}
           onOpenLogs={props.onOpenLogs}

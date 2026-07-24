@@ -57,6 +57,7 @@ function createApiMock(): RendererApi {
     exportServerLogs: vi.fn(),
     openServerUpdateLogFile: vi.fn(),
     onServerStatus: vi.fn(() => () => undefined),
+    onSteamCmdProgress: vi.fn(() => () => undefined),
   };
 }
 

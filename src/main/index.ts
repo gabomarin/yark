@@ -13,7 +13,7 @@ import { LogsService } from "../backend/domains/logs/logs-service";
 import { UpdateService } from "../backend/domains/updates/update-service";
 import { InstanceLockManager } from "../backend/orchestration/instance-lock-manager";
 import { registerIpcHandlers } from "./ipc-handlers";
-import { IPC_PUSH } from "../shared/ipc";
+import { IPC_PUSH, type SteamCmdProgressPush } from "../shared/ipc";
 import type { ServerRuntimeInfo } from "../shared/types";
 
 let mainWindow: BrowserWindow | null = null;
@@ -84,6 +84,10 @@ void app.whenReady().then(() => {
 
   processManager.on("status", (info: ServerRuntimeInfo) => {
     mainWindow?.webContents.send(IPC_PUSH.serverStatus, info);
+  });
+
+  updateService.on("progress", (payload: SteamCmdProgressPush) => {
+    mainWindow?.webContents.send(IPC_PUSH.steamCmdProgress, payload);
   });
 
   mainWindow = createWindow();

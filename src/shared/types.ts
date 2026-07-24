@@ -61,11 +61,27 @@ export interface ServerInstallationInfo {
 export interface SteamCmdStatus {
   detected: boolean;
   executablePath: string | null;
+  /** Carpeta steamapps/depotcache junto a SteamCMD (reuso de descargas). */
+  depotCacheDir: string | null;
+  /** Instalación compartida ASA copiada a cada servidor. */
+  contentCacheDir: string | null;
+  /** Proceso SteamCMD vivo o job crítico pendiente/en curso / sync local. */
+  busy: boolean;
   running: boolean;
-  operation: "install-steamcmd" | "install-files" | "update" | null;
+  operation: "install-steamcmd" | "install-files" | "update" | "sync-files" | null;
   serverId: string | null;
   startedAt: string | null;
   pid: number | null;
+  /** 0–100 si SteamCMD reportó progress; null si aún no hay porcentaje. */
+  progressPercent: number | null;
+  /** Etiqueta legible: Descargando, Verificando, Sincronizando… */
+  progressLabel: string | null;
+  /** Bytes descargados/procesados reportados por SteamCMD. */
+  progressBytesDownloaded: number | null;
+  /** Bytes totales reportados por SteamCMD. */
+  progressBytesTotal: number | null;
+  /** Última línea útil de consola. */
+  lastLine: string | null;
   checkedAt: string;
 }
 
