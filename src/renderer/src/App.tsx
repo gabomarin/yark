@@ -11,6 +11,10 @@ import type {
   SteamCmdConsoleSnapshot,
   SteamCmdStatus,
 } from "@shared/types";
+import {
+  getServerUpdateState,
+  isServerUpdateAvailable,
+} from "@shared/server-update-status";
 import { AppRouter } from "@app/AppRouter";
 import { AppShellLayout } from "@app/AppShellLayout";
 import { LogsPage } from "@features/logs/LogsPage";
@@ -137,16 +141,6 @@ export function App(): JSX.Element {
         const next = new Map(installRes.data.map((info) => [info.serverId, info]));
         setInstallationInfo(next);
 
-        const needsUpdate = (info: ServerInstallationInfo): boolean => {
-          const local = info.arkVersion ?? info.build;
-          return (
-            info.installed &&
-            info.officialVersion != null &&
-            local != null &&
-            info.officialVersion !== local
-          );
-        };
-
         if (serverId !== undefined) {
           const info = next.get(serverId);
           const name = servers.find((s) => s.id === serverId)?.name ?? serverId;
@@ -158,53 +152,70 @@ export function App(): JSX.Element {
             });
             return;
           }
-          if (info.officialVersion == null) {
+          if (info.officialSteamBuild == null) {
             notifications.show({
               title: "No se pudo consultar",
-              message: "No se obtuvo la versión oficial de ASA. Revisa la conexión.",
+              message: "No se obtuvo el build público de Steam. Revisa la conexión.",
               color: "red",
             });
             return;
           }
-          const local = info.arkVersion ?? info.build ?? "—";
-          if (needsUpdate(info)) {
+          if (info.steamBuild == null) {
+            notifications.show({
+              title: "No se pudo verificar",
+              message: `No se encontró el appmanifest local de "${name}".`,
+              color: "yellow",
+            });
+            return;
+          }
+          if (isServerUpdateAvailable(info)) {
             notifications.show({
               title: "Actualización disponible",
-              message: `"${name}": local ${local} → oficial ${info.officialVersion}`,
+              message: `"${name}": ${info.steamBuild} → ${info.officialSteamBuild}`,
               color: "orange",
               autoClose: 8000,
             });
           } else {
             notifications.show({
               title: "Al día",
-              message: `"${name}" está actualizado (versión ${local}).`,
+              message: `"${name}" está actualizado (${info.steamBuild}).`,
               color: "teal",
             });
           }
           return;
         }
 
-        const outdated = installRes.data.filter(needsUpdate);
+        const outdated = installRes.data.filter(isServerUpdateAvailable);
+        const unverified = installRes.data.filter(
+          (info) => info.installed && getServerUpdateState(info) === "unknown",
+        );
         const official =
-          installRes.data.find((info) => info.officialVersion != null)?.officialVersion ??
+          installRes.data.find((info) => info.officialSteamBuild != null)?.officialSteamBuild ??
           "desconocida";
         if (outdated.length === 0) {
-          notifications.show({
-            title: "Sin actualizaciones",
-            message: `Todos los servidores instalados están al día. Oficial: ${official}`,
-            color: "teal",
-          });
+          if (unverified.length > 0) {
+            notifications.show({
+              title: "Verificación incompleta",
+              message: `${unverified.length} servidor(es) no tienen un build local comparable. Build público: ${official}.`,
+              color: "yellow",
+            });
+          } else {
+            notifications.show({
+              title: "Sin actualizaciones",
+              message: `Todos los servidores instalados están al día. Build público: ${official}`,
+              color: "teal",
+            });
+          }
         } else {
           const lines = outdated
             .map((info) => {
               const name = servers.find((s) => s.id === info.serverId)?.name ?? info.serverId;
-              const local = info.arkVersion ?? info.build ?? "—";
-              return `${name}: ${local} → ${info.officialVersion}`;
+              return `${name}: ${info.steamBuild ?? "—"} → ${info.officialSteamBuild}`;
             })
             .join("\n");
           notifications.show({
             title: `${outdated.length} actualización(es) disponible(s)`,
-            message: `Oficial: ${official}\n${lines}`,
+            message: `Build público: ${official}\n${lines}`,
             color: "orange",
             autoClose: 10000,
           });

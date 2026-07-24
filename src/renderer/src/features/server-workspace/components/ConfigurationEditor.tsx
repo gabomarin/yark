@@ -117,16 +117,9 @@ export function ConfigurationEditor(props: Props): JSX.Element {
     const sanitized = sanitizeServerIniPayload(rawPayload);
     setSnapshot({ ...result.data, payload: sanitized });
     setPayload(sanitized);
-    // Si el disco tenía keys de cliente, dejamos dirty para que Save las limpie.
-    setBaseline(rawPayload);
-    if (
-      sanitized.gameUserSettings !== rawPayload.gameUserSettings ||
-      sanitized.game !== rawPayload.game
-    ) {
-      setInfo(
-        "Se detectaron claves de cliente o historial (p. ej. LastJoinedSessionPerCategory). No se aplican al servidor dedicado: pulsa Guardar para limpiarlas del disco.",
-      );
-    }
+    // ASA puede regenerar secciones de cliente al iniciar. Son ruido del runtime:
+    // no deben aparecer en el editor ni convertir una lectura en un cambio pendiente.
+    setBaseline(sanitized);
   };
 
   useEffect(() => {
@@ -590,7 +583,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
 
             <Group justify="space-between" className={classes.footer}>
               <Text c="dimmed" size="xs">
-                Guardar escribe el archivo indicado y elimina claves de cliente incompatibles.
+                El manager solo administra ajustes aplicables al servidor dedicado.
               </Text>
             </Group>
 

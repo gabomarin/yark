@@ -87,10 +87,10 @@ export class IniService {
       gameIniPath,
       gameUserSettingsExisted,
       gameIniExisted,
-      payload: {
+      payload: sanitizeServerIniPayload({
         gameUserSettings,
         game,
-      },
+      }),
     };
   }
 

@@ -16,7 +16,11 @@ import type { ProcessManager } from "../../infra/process/process-manager";
 import { findPortConflicts, validateProfileInput } from "./validation";
 import { checkClusterCompliance } from "../cluster/compliance";
 import { rconExec } from "../../infra/rcon/rcon-client";
-import { inspectServerInstallation, readOfficialArkVersionCached } from "./server-installation";
+import {
+  inspectServerInstallation,
+  readOfficialArkBuildCached,
+  readOfficialArkVersionCached,
+} from "./server-installation";
 
 const RCON_HOST = "127.0.0.1";
 
@@ -239,12 +243,16 @@ export class InstanceService {
   }
 
   async installationInfo(forceOfficialCheck = false): Promise<ServerInstallationInfo[]> {
-    const officialVersion = await readOfficialArkVersionCached(forceOfficialCheck);
+    const [officialVersion, officialSteamBuild] = await Promise.all([
+      readOfficialArkVersionCached(forceOfficialCheck),
+      readOfficialArkBuildCached(forceOfficialCheck),
+    ]);
     return this.repo
       .list()
       .map((profile) => ({
         ...inspectServerInstallation(profile.id, profile.installDir),
         officialVersion,
+        officialSteamBuild,
       }));
   }
 

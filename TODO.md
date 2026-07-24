@@ -329,6 +329,38 @@ Validación del bloque 2.15 — SteamCMD operativo y superficies azul‑obsidian
 - [x] SteamCMD y Actualizaciones revisados con Playwright/Electron en `1280×720`, `1920×1080` y `2560×1440`.
 - [x] Sin overflow global, errores de consola ni excepciones del renderer.
 
+Corrección operativa — falso positivo de actualización ASA (2026-07-24):
+
+- [x] La disponibilidad de updates deja de comparar `ARK Version` del log local con la versión observada en un servidor oficial externo.
+- [x] El estado se determina únicamente comparando el `buildid` del `appmanifest_2430930.acf` local con el build público de Steam.
+- [x] Si falta alguno de los builds comparables, la UI muestra “Sin verificar” en lugar de afirmar “Actualizado” o “Actualización disponible”.
+- [x] Una acción explícita de actualizar o verificar siempre consulta SteamCMD; la caché fresca solo se reutiliza al instalar archivos en otros servidores.
+- [x] El sidebar aclara que la versión ARK oficial es informativa y que SteamCMD determina los updates.
+- [x] Caso real validado con local `92.21`, valor tercero previamente observado `92.23` y build Steam coincidente `24346423`: Archivos muestra “Actualizado” y la acción es “Iniciar”.
+- [x] La aplicación se relanzó dos veces mediante Playwright/Electron; el estado permaneció consistente después del reinicio y no hubo errores del renderer.
+- [x] Pruebas de regresión para builds coincidentes, builds atrasados, fuentes incomparables y caché explícita; typecheck y build correctos.
+- [-] Suite completa: 130/131 en ejecución conjunta por el `EBUSY` conocido al limpiar una carpeta temporal de Windows; la prueba de proceso real pasa aislada 1/1.
+
+Corrección de fuente — versión oficial ARK (2026-07-24):
+
+- [x] Eliminada la dependencia del servidor Arkpocalypse fijo de ArkStatus.
+- [x] Versión informativa obtenida desde `https://cdn2.arkdedicated.com/asa/officialserverstatus.ini`, publicado por el CDN oficial de ARK/Wildcard.
+- [x] Parser tolera estados como `Online` o `Deploying` y extrae únicamente el valor `(vX.Y)`.
+- [x] Si el estado oficial no incluye versión, la UI muestra “No detectada”; no sustituye el dato con un build Steam incompatible.
+- [x] Fuente real verificada con respuesta `Online (v92.21)`.
+- [x] Sidebar validado en `1280×720`, `1920×1080` y `2560×1440`, además de dos lanzamientos consecutivos de Electron: `92.21` consistente y sin errores del renderer.
+- [x] Tests focalizados: 28/28; typecheck y build correctos.
+
+Corrección INI — ajustes de cliente regenerados por ASA (2026-07-24):
+
+- [x] Confirmado que los defaults canónicos de `src/shared/defaults` no contienen claves de cliente.
+- [x] Identificado que el servidor dedicado de ASA regenera la sección `ShooterGameUserSettings` en el archivo runtime.
+- [x] La lectura del backend filtra secciones y claves de cliente antes de exponer la configuración.
+- [x] El editor usa el contenido filtrado como baseline y ya no muestra cambios pendientes ni pide guardar para limpiar ruido generado.
+- [x] La lectura permanece no destructiva; el archivo en disco solo cambia durante una acción real de guardado.
+- [x] Tests focalizados 19/19, typecheck y build correctos.
+- [x] Editor real validado en `1280×720`, `1920×1080` y `2560×1440`: sin aviso, claves de cliente, falso estado pendiente, overflow global ni errores del renderer; scroll interno funcional.
+
 ### Iteración 3 — Smart Configuration
 
 Objetivo: convertir la configuración visual en la experiencia principal y

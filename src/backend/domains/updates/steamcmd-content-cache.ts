@@ -81,6 +81,16 @@ export function isContentCacheFresh(
   return nowMs - updatedAtMs < freshMs;
 }
 
+export function shouldReuseAsaContentCache(
+  operation: "install-files" | "update" | "verify-files",
+  cacheDir: string,
+  updatedAtMs: number,
+): boolean {
+  // Una acción explícita de update/verify siempre debe consultar Steam.
+  // La ventana de frescura solo evita descargas repetidas al instalar otros servidores.
+  return operation === "install-files" && isContentCacheFresh(cacheDir, updatedAtMs);
+}
+
 export function isRobocopySuccess(exitCode: number | null): boolean {
   // Robocopy: 0–7 = éxito con distintos grados de copia; >= 8 = error.
   const code = exitCode ?? 16;

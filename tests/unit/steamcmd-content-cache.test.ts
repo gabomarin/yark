@@ -7,6 +7,7 @@ import {
   resolveAsaContentCacheDir,
   resolveDepotCacheDir,
   resolveSteamCmdHome,
+  shouldReuseAsaContentCache,
 } from "@backend/domains/updates/steamcmd-content-cache";
 
 describe("steamcmd-content-cache", () => {
@@ -40,6 +41,12 @@ describe("steamcmd-content-cache", () => {
   it("solo considera fresca una caché con manifest reciente", () => {
     expect(isContentCacheFresh("C:\\missing-cache", Date.now())).toBe(false);
     expect(isContentCacheFresh("C:\\missing-cache", 0)).toBe(false);
+  });
+
+  it("nunca omite la consulta a Steam en un update o verify explícito", () => {
+    const cacheDir = "C:\\missing-cache";
+    expect(shouldReuseAsaContentCache("update", cacheDir, Date.now())).toBe(false);
+    expect(shouldReuseAsaContentCache("verify-files", cacheDir, Date.now())).toBe(false);
   });
 });
 

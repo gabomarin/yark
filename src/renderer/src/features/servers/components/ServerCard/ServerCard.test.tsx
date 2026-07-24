@@ -29,8 +29,10 @@ const installed = {
   serverId: profile.id,
   installed: true,
   build: null,
+  steamBuild: null,
   arkVersion: null,
   officialVersion: null,
+  officialSteamBuild: null,
   version: null,
   binaryPath: "C:/ARK/TheIsland/ShooterGame/Binaries/Win64/ArkAscendedServer.exe",
   checkedAt: "2026-07-23T00:00:00.000Z",
@@ -194,5 +196,76 @@ describe("ServerCard", () => {
     expect(screen.getByText(/512\.0 \/ 1024\.0 MB/i)).toBeInTheDocument();
     expect(screen.getByText(/42%/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Cancelar" })).toBeInTheDocument();
+  });
+
+  it("does not offer an update when ARK versions differ but Steam builds match", () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={{
+            ...installed,
+            arkVersion: "92.21",
+            officialVersion: "92.23",
+            steamBuild: "build 24346423",
+            officialSteamBuild: "build 24346423",
+          }}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("Actualizado")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Iniciar" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Actualizar" })).not.toBeInTheDocument();
+  });
+
+  it("offers an update only when the Steam build is behind", () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={{
+            ...installed,
+            arkVersion: "92.23",
+            officialVersion: "92.23",
+            steamBuild: "build 24300000",
+            officialSteamBuild: "build 24346423",
+          }}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("Actualización disponible")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Actualizar" })).toBeInTheDocument();
   });
 });

@@ -14,12 +14,12 @@ import type { InstanceLockManager } from "../../orchestration/instance-lock-mana
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
 import {
   buildSteamCmdAppUpdateArgs,
-  isContentCacheFresh,
   isOperationCancelledError,
   OperationCancelledError,
   resolveAsaContentCacheDir,
   resolveDepotCacheDir,
   resolveSteamCmdHome,
+  shouldReuseAsaContentCache,
   syncAsaContentCacheToInstallDir,
 } from "./steamcmd-content-cache";
 import {
@@ -768,11 +768,7 @@ export class UpdateService extends EventEmitter {
     operation: "install-files" | "update" | "verify-files",
     serverId: string,
   ): Promise<CommandResult> {
-    // verify-files siempre fuerza validate; no reutilizar “caché fresca”.
-    if (
-      operation !== "verify-files"
-      && isContentCacheFresh(contentCacheDir, this.contentCacheUpdatedAtMs)
-    ) {
+    if (shouldReuseAsaContentCache(operation, contentCacheDir, this.contentCacheUpdatedAtMs)) {
       const ageSec = Math.round((Date.now() - this.contentCacheUpdatedAtMs) / 1000);
       this.appendSteamCmdConsole(
         `Reutilizando caché de contenido ASA (actualizada hace ${ageSec}s; sin re-descarga)`,

@@ -6,7 +6,15 @@ import {
   HardDrives,
   SquaresFour,
 } from "@phosphor-icons/react";
-import { Button, Divider, Group, Stack as MantineStack, Switch, Text } from "@mantine/core";
+import {
+  Button,
+  Divider,
+  Group,
+  Stack as MantineStack,
+  Switch,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import classes from "./Sidebar.module.css";
 
 export type Route = "overview" | "clusters" | "backups" | "steamcmd" | "logs" | "settings";
@@ -98,7 +106,14 @@ export function Sidebar(props: Props): JSX.Element {
       </div>
 
       <div className={classes.versionChip}>
-        <Text size="xs" fw={600}>Versión oficial</Text>
+        <Tooltip
+          label="Versión publicada por el estado oficial de red de Wildcard. Las actualizaciones se determinan con el build público de SteamCMD."
+          multiline
+          w={260}
+          position="right"
+        >
+          <Text size="xs" fw={600}>Versión oficial ARK</Text>
+        </Tooltip>
         <Text size="sm" className={classes.versionValue}>
           {props.officialVersion ?? "No detectada"}
         </Text>

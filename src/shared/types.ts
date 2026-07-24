@@ -48,10 +48,14 @@ export interface ServerInstallationInfo {
   installed: boolean;
   /** Build detectado localmente (Build.version / exe / appmanifest). */
   build: string | null;
+  /** Build de Steam detectado específicamente desde appmanifest_2430930.acf. */
+  steamBuild: string | null;
   /** Versión detectada desde runtime logs (ARK Version: x.y). */
   arkVersion: string | null;
   /** Versión oficial de red (best effort, puede no estar disponible). */
   officialVersion: string | null;
+  /** Build público de Steam; única fuente autoritativa para decidir si hay update instalable. */
+  officialSteamBuild: string | null;
   /** Compatibilidad retroactiva con la UI previa. */
   version: string | null;
   binaryPath: string;

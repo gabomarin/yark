@@ -7,9 +7,20 @@ import type { ServerInstallationInfo } from "@shared/types";
 
 const ASA_APP_ID = "2430930";
 const OFFICIAL_VERSION_TTL_MS = 15 * 60 * 1000;
-const ARKSTATUS_REFERENCE_SERVER_ID = "76247803";
+const OFFICIAL_SERVER_STATUS_URL =
+  "https://cdn2.arkdedicated.com/asa/officialserverstatus.ini";
 
 let officialVersionCache: {
+  value: string | null;
+  checkedAt: number;
+  inFlight: Promise<string | null> | null;
+} = {
+  value: null,
+  checkedAt: 0,
+  inFlight: null,
+};
+
+let officialBuildCache: {
   value: string | null;
   checkedAt: number;
   inFlight: Promise<string | null> | null;
@@ -150,6 +161,20 @@ function collectManifestRoots(installDir: string): string[] {
   }
 
   return roots;
+}
+
+function readSteamBuildFromLocalManifest(installDir: string): string | null {
+  const manifestPath = join(installDir, "steamapps", `appmanifest_${ASA_APP_ID}.acf`);
+  if (!existsSync(manifestPath)) {
+    return null;
+  }
+  try {
+    const content = readFileSync(manifestPath, "utf8");
+    const buildId = content.match(/"buildid"\s+"([^"]+)"/i)?.[1]?.trim() ?? "";
+    return buildId.length > 0 ? `build ${buildId}` : null;
+  } catch {
+    return null;
+  }
 }
 
 function readBuildIdFromManifest(installDir: string): string | null {
@@ -298,31 +323,6 @@ function extractOfficialBuildFromPayload(payload: unknown): string | null {
   return null;
 }
 
-function extractOfficialVersionFromArkStatusPayload(payload: unknown): string | null {
-  const servers = readPathValue(payload, ["s"]);
-  if (!Array.isArray(servers)) {
-    return null;
-  }
-
-  for (const item of servers) {
-    if (typeof item !== "object" || item === null) {
-      continue;
-    }
-    const row = item as Record<string, unknown>;
-    const isOfficial = row["is_official"] === true;
-    const version = row["v"];
-    if (!isOfficial || typeof version !== "string") {
-      continue;
-    }
-    const trimmed = version.trim();
-    if (trimmed.length > 0) {
-      return trimmed;
-    }
-  }
-
-  return null;
-}
-
 function fetchOfficialArkBuild(): Promise<string | null> {
   return new Promise((resolve) => {
     const req = get("https://api.steamcmd.net/v1/info/2430930", (res) => {
@@ -358,13 +358,18 @@ function fetchOfficialArkBuild(): Promise<string | null> {
   });
 }
 
+export function extractOfficialVersionFromStatusText(content: string): string | null {
+  const match = content.match(/\(\s*v(\d+(?:\.\d+)+)\s*\)/i);
+  return match?.[1] ?? null;
+}
+
 function fetchOfficialArkVersion(): Promise<string | null> {
   return new Promise((resolve) => {
     const req = get(
-      `https://arkstatus.com/api/internal/server?id=${ARKSTATUS_REFERENCE_SERVER_ID}`,
+      OFFICIAL_SERVER_STATUS_URL,
       {
         headers: {
-          accept: "application/json, text/plain, */*",
+          accept: "text/plain, */*",
           "user-agent": "ark-server-gbo/1.0",
         },
       },
@@ -381,12 +386,7 @@ function fetchOfficialArkVersion(): Promise<string | null> {
           body += chunk;
         });
         res.on("end", () => {
-          try {
-            const parsed = JSON.parse(body) as unknown;
-            resolve(extractOfficialVersionFromArkStatusPayload(parsed));
-          } catch {
-            resolve(null);
-          }
+          resolve(extractOfficialVersionFromStatusText(body));
         });
       },
     );
@@ -414,12 +414,6 @@ export async function readOfficialArkVersionCached(force = false): Promise<strin
 
   officialVersionCache.inFlight = fetchOfficialArkVersion()
     .then((value) => {
-      if (value !== null) {
-        return value;
-      }
-      return fetchOfficialArkBuild();
-    })
-    .then((value) => {
       officialVersionCache.value = value;
       officialVersionCache.checkedAt = Date.now();
       return value;
@@ -431,16 +425,41 @@ export async function readOfficialArkVersionCached(force = false): Promise<strin
   return officialVersionCache.inFlight;
 }
 
+export async function readOfficialArkBuildCached(force = false): Promise<string | null> {
+  const now = Date.now();
+  if (!force && now - officialBuildCache.checkedAt < OFFICIAL_VERSION_TTL_MS) {
+    return officialBuildCache.value;
+  }
+
+  if (officialBuildCache.inFlight !== null) {
+    return officialBuildCache.inFlight;
+  }
+
+  officialBuildCache.inFlight = fetchOfficialArkBuild()
+    .then((value) => {
+      officialBuildCache.value = value;
+      officialBuildCache.checkedAt = Date.now();
+      return value;
+    })
+    .finally(() => {
+      officialBuildCache.inFlight = null;
+    });
+
+  return officialBuildCache.inFlight;
+}
+
 export function inspectServerInstallation(
   serverId: string,
   installDir: string,
 ): ServerInstallationInfo {
   const binaryPath = serverBinaryPath(installDir);
   const installed = existsSync(binaryPath);
+  const steamBuild = installed ? readSteamBuildFromLocalManifest(installDir) : null;
   const build = installed
     ? (
         readVersionFromKnownFiles(installDir) ??
         readVersionFromExecutable(binaryPath) ??
+        steamBuild ??
         readBuildIdFromManifest(installDir)
       )
     : null;
@@ -450,8 +469,10 @@ export function inspectServerInstallation(
     serverId,
     installed,
     build,
+    steamBuild,
     arkVersion,
     officialVersion: null,
+    officialSteamBuild: null,
     version: build,
     binaryPath,
     checkedAt: new Date().toISOString(),

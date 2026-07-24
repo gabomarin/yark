@@ -195,4 +195,36 @@ describe("IniService semantic validation", () => {
     expect(saved).toContain("MaxPlayers=70");
     expect(saved).not.toContain("LastJoinedSessionPerCategory");
   });
+
+  it("ignora ruido de cliente generado por ASA al leer sin modificar el disco", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+
+    const settingsPath = gameUserSettingsPath(installDir);
+    const rawSettings = [
+      "[ServerSettings]",
+      "RCONPort=27020",
+      "MaxPlayers=70",
+      "",
+      "[/Script/ShooterGame.ShooterGameUserSettings]",
+      "LastJoinedSessionPerCategory=Foo",
+      "ResolutionSizeX=1920",
+      "",
+    ].join("\n");
+    writeFileSync(settingsPath, rawSettings, "utf8");
+
+    const { service, profile } = makeService(installDir);
+    const snapshot = await service.readServerIni(profile.id);
+
+    expect(snapshot.payload.gameUserSettings).toContain("MaxPlayers=70");
+    expect(snapshot.payload.gameUserSettings).not.toContain(
+      "ShooterGameUserSettings",
+    );
+    expect(snapshot.payload.gameUserSettings).not.toContain(
+      "LastJoinedSessionPerCategory",
+    );
+    expect(snapshot.payload.gameUserSettings).not.toContain("ResolutionSizeX");
+    expect(readFileSync(settingsPath, "utf8")).toBe(rawSettings);
+  });
 });

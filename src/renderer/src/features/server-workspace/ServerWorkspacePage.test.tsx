@@ -192,4 +192,44 @@ describe("ServerWorkspacePage", () => {
       expect(categorySelect).toHaveValue("Todos los ajustes (1)");
     });
   });
+
+  it("ignores client settings without showing a warning or pending changes", async () => {
+    const user = userEvent.setup();
+    vi.mocked(window.api.readServerIni).mockResolvedValue({
+      ok: true,
+      data: {
+        serverId: serverA.id,
+        gameUserSettingsPath: "C:/ARK/srv-a/GameUserSettings.ini",
+        gameIniPath: "C:/ARK/srv-a/Game.ini",
+        gameUserSettingsExisted: true,
+        gameIniExisted: true,
+        payload: {
+          gameUserSettings: [
+            "[ServerSettings]",
+            "MaxPlayers=70",
+            "",
+            "[/Script/ShooterGame.ShooterGameUserSettings]",
+            "LastJoinedSessionPerCategory=Foo",
+            "ResolutionSizeX=1920",
+            "",
+          ].join("\n"),
+          game: "",
+        },
+      },
+    });
+    renderWorkspace();
+
+    await user.click(screen.getByRole("tab", { name: "GameUserSettings.ini" }));
+    await waitFor(() => {
+      expect(screen.getByText("MaxPlayers")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByText(/Se detectaron claves de cliente o historial/),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("LastJoinedSessionPerCategory")).not.toBeInTheDocument();
+    expect(screen.queryByText("ResolutionSizeX")).not.toBeInTheDocument();
+    expect(screen.queryByText("Sin guardar")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Guardar" })).toBeDisabled();
+  });
 });

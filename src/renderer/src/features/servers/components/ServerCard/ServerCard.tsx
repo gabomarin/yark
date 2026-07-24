@@ -28,6 +28,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import { getServerUpdateState } from "@shared/server-update-status";
 import { formatSteamCmdByteProgress, steamCmdByteProgressNoun } from "@shared/steamcmd-progress";
 import classes from "./ServerCard.module.css";
 
@@ -82,10 +83,9 @@ export function ServerCard(props: Props): JSX.Element {
   const status = runtime?.status ?? "stopped";
   const isActive = status === "starting" || status === "running" || status === "stopping";
   const isInstallationReady = installation?.installed === true;
-  const officialVersion = installation?.officialVersion ?? null;
   const localVersion = installation?.arkVersion ?? installation?.build ?? null;
-  const updateAvailable =
-    isInstallationReady && officialVersion !== null && localVersion !== null && officialVersion !== localVersion;
+  const updateState = getServerUpdateState(installation);
+  const updateAvailable = updateState === "available";
   const installStateLabel = steamCmdBusy
     ? steamCmdOperation === "verify-files"
       ? "Verificando…"
@@ -96,7 +96,9 @@ export function ServerCard(props: Props): JSX.Element {
       ? "Sin instalar"
       : updateAvailable
         ? "Actualización disponible"
-        : "Actualizado";
+        : updateState === "current"
+          ? "Actualizado"
+          : "Sin verificar";
 
   const byteProgressLabel =
     steamCmdProgressBytesDownloaded !== null && steamCmdProgressBytesTotal !== null
@@ -267,7 +269,9 @@ export function ServerCard(props: Props): JSX.Element {
                       ? "muted"
                       : updateAvailable
                         ? "warn"
-                        : "ok"
+                        : updateState === "current"
+                          ? "ok"
+                          : "muted"
                 }
               />
             </div>

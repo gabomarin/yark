@@ -3,7 +3,10 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { mkdtempSync, rmSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { inspectServerInstallation } from "@backend/domains/instances/server-installation";
+import {
+  extractOfficialVersionFromStatusText,
+  inspectServerInstallation,
+} from "@backend/domains/instances/server-installation";
 
 describe("inspectServerInstallation", () => {
   function makeTmpDir(): string {
@@ -16,6 +19,7 @@ describe("inspectServerInstallation", () => {
       const info = inspectServerInstallation("srv-1", installDir);
       expect(info.installed).toBe(false);
       expect(info.build).toBeNull();
+      expect(info.steamBuild).toBeNull();
       expect(info.arkVersion).toBeNull();
       expect(info.version).toBeNull();
     } finally {
@@ -95,6 +99,7 @@ describe("inspectServerInstallation", () => {
       const info = inspectServerInstallation("srv-4", installDir);
       expect(info.installed).toBe(true);
       expect(info.build).toBe("build 16123456");
+      expect(info.steamBuild).toBeNull();
       expect(info.version).toBe("build 16123456");
     } finally {
       rmSync(steamRoot, { recursive: true, force: true });
@@ -129,6 +134,7 @@ describe("inspectServerInstallation", () => {
       const info = inspectServerInstallation("srv-5", installDir);
       expect(info.installed).toBe(true);
       expect(info.build).toBeNull();
+      expect(info.steamBuild).toBeNull();
       expect(info.version).toBeNull();
     } finally {
       if (previousEnv === undefined) {
@@ -159,6 +165,7 @@ describe("inspectServerInstallation", () => {
       const info = inspectServerInstallation("srv-5b", installDir);
       expect(info.installed).toBe(true);
       expect(info.build).toBe("build 19999999");
+      expect(info.steamBuild).toBeNull();
       expect(info.version).toBe("build 19999999");
     } finally {
       rmSync(steamRoot, { recursive: true, force: true });
@@ -183,6 +190,7 @@ describe("inspectServerInstallation", () => {
       const info = inspectServerInstallation("srv-6", installDir);
       expect(info.installed).toBe(true);
       expect(info.build).toBe("build 17123456");
+      expect(info.steamBuild).toBeNull();
       expect(info.version).toBe("build 17123456");
     } finally {
       rmSync(steamRoot, { recursive: true, force: true });
@@ -210,6 +218,7 @@ describe("inspectServerInstallation", () => {
       const info = inspectServerInstallation("srv-7", installDir);
       expect(info.installed).toBe(true);
       expect(info.build).toBe("build 18123456");
+      expect(info.steamBuild).toBeNull();
       expect(info.version).toBe("build 18123456");
     } finally {
       if (previousEnv === undefined) {
@@ -242,5 +251,44 @@ describe("inspectServerInstallation", () => {
     } finally {
       rmSync(installDir, { recursive: true, force: true });
     }
+  });
+
+  it("usa como build comparable solo el appmanifest sincronizado dentro del servidor", () => {
+    const installDir = makeTmpDir();
+    try {
+      const binDir = join(installDir, "ShooterGame", "Binaries", "Win64");
+      mkdirSync(binDir, { recursive: true });
+      writeFileSync(join(binDir, "ArkAscendedServer.exe"), "fake-binary");
+      const steamAppsDir = join(installDir, "steamapps");
+      mkdirSync(steamAppsDir, { recursive: true });
+      writeFileSync(
+        join(steamAppsDir, "appmanifest_2430930.acf"),
+        '"AppState"\n{\n  "appid" "2430930"\n  "buildid" "24346423"\n  "installdir" "ARK Survival Ascended Dedicated Server"\n}',
+      );
+
+      const info = inspectServerInstallation("srv-9", installDir);
+      expect(info.steamBuild).toBe("build 24346423");
+    } finally {
+      rmSync(installDir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("extractOfficialVersionFromStatusText", () => {
+  it("lee la versión publicada en el estado oficial de Wildcard", () => {
+    expect(
+      extractOfficialVersionFromStatusText(
+        'ARK Official Server Network Status: <RichColor Color="0, 1, 0, 1">Online (v92.21)</>',
+      ),
+    ).toBe("92.21");
+  });
+
+  it("tolera otros estados de red y rechaza contenido sin versión", () => {
+    expect(
+      extractOfficialVersionFromStatusText("Deploying (v93.4)"),
+    ).toBe("93.4");
+    expect(
+      extractOfficialVersionFromStatusText("ARK Official Server Network Status: Offline"),
+    ).toBeNull();
   });
 });
