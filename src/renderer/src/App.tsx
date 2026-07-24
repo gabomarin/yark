@@ -165,13 +165,15 @@ export function App(): JSX.Element {
   );
 
   const startSteamFilesJob = useCallback(
-    (serverId: string, kind: "install" | "update") => {
+    (serverId: string, kind: "install" | "update" | "verify") => {
       setError(null);
       void (async () => {
         const result =
           kind === "install"
             ? await window.api.installServerFiles(serverId)
-            : await window.api.updateServerNow(serverId);
+            : kind === "verify"
+              ? await window.api.verifyServerFiles(serverId)
+              : await window.api.updateServerNow(serverId);
         if (!result.ok) {
           const message = result.error ?? "Error desconocido";
           // Cancelación deliberada: no mostrar como error rojo.
@@ -287,6 +289,7 @@ export function App(): JSX.Element {
             onOpenFolder={(id) => void runAction(() => window.api.openServerFolder(id))}
             onInstallFiles={(id) => startSteamFilesJob(id, "install")}
             onUpdateNow={(id) => startSteamFilesJob(id, "update")}
+            onVerifyFiles={(id) => startSteamFilesJob(id, "verify")}
             onSendRcon={(id, command) =>
               void runAction(() => window.api.sendRconCommand(id, command))
             }
@@ -353,9 +356,10 @@ export function App(): JSX.Element {
               onRestartServer={(id) => void restartServer(id)}
               onKillServer={(id) => void runAction(() => window.api.killServer(id))}
               onOpenFolder={(id) => void runAction(() => window.api.openServerFolder(id))}
-              onInstallFiles={(id) => startSteamFilesJob(id, "install")}
-              onUpdateNow={(id) => startSteamFilesJob(id, "update")}
-              onCloneServer={(id) => void runAction(() => window.api.cloneServer(id))}
+            onInstallFiles={(id) => startSteamFilesJob(id, "install")}
+            onUpdateNow={(id) => startSteamFilesJob(id, "update")}
+            onVerifyFiles={(id) => startSteamFilesJob(id, "verify")}
+            onCloneServer={(id) => void runAction(() => window.api.cloneServer(id))}
               onDeleteServer={(id) => {
                 const server = servers.find((item) => item.id === id);
                 const label = server?.name ?? id;

@@ -4,6 +4,7 @@ import {
   FloppyDisk,
   FolderOpen,
   Power,
+  ShieldCheck,
   Wrench,
 } from "@phosphor-icons/react";
 import { Button, Card, Stack, Text, Textarea, Title } from "@mantine/core";
@@ -18,6 +19,7 @@ interface Props {
   onOpenFolder: () => void;
   onInstallFiles: () => void;
   onUpdateNow: () => void;
+  onVerifyFiles: () => void;
   onSaveWorld: () => void;
   onBroadcast: (message: string) => void;
   onKill: () => void;
@@ -77,7 +79,14 @@ export function SidePanel(props: Props): JSX.Element {
             leftSection={<Wrench size={16} />}
             onClick={props.onInstallFiles}
           >
-            Validate / Install files
+            Install files
+          </Button>
+          <Button
+            variant="light"
+            leftSection={<ShieldCheck size={16} />}
+            onClick={props.onVerifyFiles}
+          >
+            Verify integrity
           </Button>
           <Button
             variant="light"

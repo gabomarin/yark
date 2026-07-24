@@ -22,6 +22,7 @@ const api: RendererApi = {
   killServer: (id: string) => ipcRenderer.invoke(IPC.serversKill, id),
   installServerFiles: (id: string) => ipcRenderer.invoke(IPC.serversInstallFiles, id),
   updateServerNow: (id: string) => ipcRenderer.invoke(IPC.serversUpdateNow, id),
+  verifyServerFiles: (id: string) => ipcRenderer.invoke(IPC.serversVerifyFiles, id),
   openServerFolder: (id: string) => ipcRenderer.invoke(IPC.serversOpenFolder, id),
   openServerNativeTerminal: (id: string) => ipcRenderer.invoke(IPC.serversOpenNativeTerminal, id),
   installSteamCmd: () => ipcRenderer.invoke(IPC.steamcmdInstall),

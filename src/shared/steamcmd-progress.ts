@@ -50,6 +50,22 @@ export function formatSteamCmdByteProgress(downloaded: number, total: number): s
   return `${downMb} / ${totalMb} MB`;
 }
 
+/**
+ * Prefijo UI para el progreso en bytes según la operación.
+ * SteamCMD reporta BytesDownloaded también al verificar.
+ */
+export function steamCmdByteProgressNoun(
+  operation: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null | undefined,
+): string {
+  if (operation === "verify-files") {
+    return "Comprobado";
+  }
+  if (operation === "sync-files") {
+    return "Copiado";
+  }
+  return "Descargado";
+}
+
 function emptyParse(): SteamCmdProgressParse {
   return { percent: null, label: null, bytesDownloaded: null, bytesTotal: null };
 }

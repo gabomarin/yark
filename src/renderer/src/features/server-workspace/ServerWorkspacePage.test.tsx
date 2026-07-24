@@ -75,6 +75,7 @@ describe("ServerWorkspacePage", () => {
           onOpenFolder={vi.fn()}
           onInstallFiles={vi.fn()}
           onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
           onSendRcon={vi.fn()}
           onServerUpdated={vi.fn()}
         />

@@ -75,6 +75,10 @@ export function registerIpcHandlers(
     wrap(() => updates.updateServer(id)),
   );
 
+  ipcMain.handle(IPC.serversVerifyFiles, (_e, id: string) =>
+    wrap(() => updates.verifyServerFiles(id)),
+  );
+
   ipcMain.handle(IPC.serversOpenFolder, (_e, id: string) =>
     wrap(async () => {
       const folderPath = instances.installDirFor(id);

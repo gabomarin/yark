@@ -10,6 +10,7 @@ import {
   Pause,
   PencilSimple,
   Play,
+  ShieldCheck,
   Terminal,
   Trash,
   Warning,
@@ -30,7 +31,7 @@ import {
   Title,
 } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
-import { formatSteamCmdByteProgress } from "@shared/steamcmd-progress";
+import { formatSteamCmdByteProgress, steamCmdByteProgressNoun } from "@shared/steamcmd-progress";
 import { useState } from "react";
 import classes from "./ServerCard.module.css";
 
@@ -43,7 +44,7 @@ interface Props {
   steamCmdProgressLabel?: string | null;
   steamCmdProgressBytesDownloaded?: number | null;
   steamCmdProgressBytesTotal?: number | null;
-  steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | null;
+  steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null;
   onStart: () => void;
   onStop: () => void;
   onKill: () => void;
@@ -54,6 +55,7 @@ interface Props {
   onOpenFolder: () => void;
   onInstallFiles: () => void;
   onUpdateNow: () => void;
+  onVerifyFiles: () => void;
   onClone: () => void;
   onDelete: () => void;
   onRcon: (command: string) => void;
@@ -96,9 +98,11 @@ export function ServerCard(props: Props): JSX.Element {
   const [customCommand, setCustomCommand] = useState("");
 
   const installStateLabel = steamCmdBusy
-    ? steamCmdOperation === "update" || steamCmdOperation === "sync-files"
-      ? "Actualizando…"
-      : "Instalando…"
+    ? steamCmdOperation === "verify-files"
+      ? "Verificando…"
+      : steamCmdOperation === "update" || steamCmdOperation === "sync-files"
+        ? "Actualizando…"
+        : "Instalando…"
     : !isInstallationReady
       ? "Sin instalar"
       : updateAvailable
@@ -112,10 +116,13 @@ export function ServerCard(props: Props): JSX.Element {
           steamCmdProgressBytesTotal,
         )
       : null;
+  const byteProgressNoun = steamCmdByteProgressNoun(steamCmdOperation);
   const shortProgressLabel =
     byteProgressLabel !== null
-      ? (steamCmdProgressLabel?.split(" · ")[0]?.trim() || "SteamCMD en curso…")
-      : (steamCmdProgressLabel ?? "SteamCMD en curso…");
+      ? (steamCmdProgressLabel?.split(" · ")[0]?.trim()
+        || (steamCmdOperation === "verify-files" ? "Verificando" : "SteamCMD en curso…"))
+      : (steamCmdProgressLabel
+        ?? (steamCmdOperation === "verify-files" ? "Verificando" : "SteamCMD en curso…"));
 
   return (
     <Card withBorder className={classes.card}>
@@ -176,7 +183,7 @@ export function ServerCard(props: Props): JSX.Element {
                 <Text size="sm">{shortProgressLabel}</Text>
                 {byteProgressLabel !== null && (
                   <Text size="xs" c="dimmed" mt={2}>
-                    Descargado: {byteProgressLabel}
+                    {byteProgressNoun}: {byteProgressLabel}
                   </Text>
                 )}
               </div>
@@ -230,9 +237,18 @@ export function ServerCard(props: Props): JSX.Element {
                   <Menu.Item leftSection={<Gear size={16} />} onClick={props.onOpenIni} disabled={!isInstallationReady}>Editar INI</Menu.Item>
                   <Menu.Item leftSection={<FileText size={16} />} onClick={props.onOpenLogs} disabled={!isInstallationReady}>Ver logs</Menu.Item>
                   {isInstallationReady ? (
-                    <Menu.Item leftSection={<Warning size={16} />} onClick={props.onUpdateNow}>Actualizar servidor</Menu.Item>
+                    <>
+                      <Menu.Item leftSection={<Warning size={16} />} onClick={props.onUpdateNow}>
+                        Actualizar servidor
+                      </Menu.Item>
+                      <Menu.Item leftSection={<ShieldCheck size={16} />} onClick={props.onVerifyFiles}>
+                        Verificar integridad
+                      </Menu.Item>
+                    </>
                   ) : (
-                    <Menu.Item leftSection={<CloudArrowDown size={16} />} onClick={props.onInstallFiles}>Instalar archivos</Menu.Item>
+                    <Menu.Item leftSection={<CloudArrowDown size={16} />} onClick={props.onInstallFiles}>
+                      Instalar archivos
+                    </Menu.Item>
                   )}
                   <Menu.Item leftSection={<Copy size={16} />} onClick={props.onClone}>Clonar</Menu.Item>
                   {isActive && <Menu.Item color="red" leftSection={<XCircle size={16} />} onClick={props.onKill}>Forzar cierre</Menu.Item>}

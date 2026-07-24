@@ -49,14 +49,14 @@ interface CommandResult {
 
 interface ActiveSteamCmdOperation {
   child: ChildProcess;
-  operation: "install-steamcmd" | "install-files" | "update";
+  operation: "install-steamcmd" | "install-files" | "update" | "verify-files";
   serverId: string | null;
   startedAt: string;
 }
 
 interface CriticalJob {
   id: string;
-  type: "install-files" | "update";
+  type: "install-files" | "update" | "verify-files";
   serverId: string;
   attempts: number;
   maxAttempts: number;
@@ -214,6 +214,7 @@ export class UpdateService extends EventEmitter {
   getSteamCmdStatus(): SteamCmdStatus {
     const executablePath = this.findSteamCmdExecutable();
     const active = this.activeSteamCmd;
+    const queuedPending = this.queue.filter((job) => job.status === "pending");
     const queued = this.queue.find(
       (job) => job.status === "pending" || job.status === "running",
     );
@@ -249,6 +250,7 @@ export class UpdateService extends EventEmitter {
       progressBytesDownloaded: this.progressBytesDownloaded,
       progressBytesTotal: this.progressBytesTotal,
       lastLine: this.lastProgressLine,
+      queuedCount: queuedPending.length,
       checkedAt: new Date().toISOString(),
     };
   }
@@ -333,6 +335,11 @@ export class UpdateService extends EventEmitter {
 
   async updateServer(serverId: string): Promise<void> {
     await this.enqueueAndWait("update", serverId);
+  }
+
+  /** Fuerza app_update validate (ignora caché “fresca”) y sincroniza al servidor. */
+  async verifyServerFiles(serverId: string): Promise<void> {
+    await this.enqueueAndWait("verify-files", serverId);
   }
 
   private async performInstallServerFiles(serverId: string): Promise<void> {
@@ -467,7 +474,74 @@ export class UpdateService extends EventEmitter {
     });
   }
 
-  private async enqueueAndWait(type: "install-files" | "update", serverId: string): Promise<void> {
+  private async performVerifyServerFiles(serverId: string): Promise<void> {
+    await this.locks.withLock(serverId, "verify-files", async () => {
+      const server = this.servers.get(serverId);
+      if (server === null) {
+        throw new Error("El servidor no existe");
+      }
+
+      const wasRunning = this.processes.isActive(serverId);
+      this.servers.addEvent(
+        serverId,
+        "update_started",
+        "info",
+        `Verificando integridad de archivos (SteamCMD validate) en "${server.name}"`,
+      );
+
+      if (wasRunning) {
+        this.appendSteamCmdConsole(
+          `Deteniendo "${server.name}" antes de verificar integridad…`,
+        );
+        await this.instances.stop(serverId);
+      }
+
+      try {
+        await mkdir(server.installDir, { recursive: true });
+        const cmd = await this.runSteamUpdate(server.installDir, "verify-files", serverId);
+        if (cmd.code !== 0) {
+          this.servers.addEvent(
+            serverId,
+            "update_failed",
+            "error",
+            `Falló verificación de integridad (exit ${cmd.code})`,
+          );
+          throw new Error(`SteamCMD validate finalizó con código ${cmd.code}`);
+        }
+
+        this.servers.addEvent(
+          serverId,
+          "update_completed",
+          "info",
+          `Integridad verificada para "${server.name}"`,
+        );
+
+        if (wasRunning) {
+          await this.instances.start(serverId);
+          const healthy = await this.waitForHealthy(serverId, 90_000);
+          if (!healthy) {
+            throw new Error(
+              "Verificación OK pero el servidor no volvió a running",
+            );
+          }
+        }
+      } catch (error) {
+        if (wasRunning && !this.processes.isActive(serverId)) {
+          try {
+            await this.instances.start(serverId);
+          } catch {
+            // El error original es más relevante.
+          }
+        }
+        throw error;
+      }
+    });
+  }
+
+  private async enqueueAndWait(
+    type: "install-files" | "update" | "verify-files",
+    serverId: string,
+  ): Promise<void> {
     const existingPending = this.queue.find(
       (job) => job.serverId === serverId && job.type === type,
     );
@@ -494,7 +568,11 @@ export class UpdateService extends EventEmitter {
     this.queue.push(job);
     this.persistQueue();
     this.progressLabel =
-      type === "install-files" ? "En cola: instalar archivos…" : "En cola: actualizar…";
+      type === "install-files"
+        ? "En cola: instalar archivos…"
+        : type === "verify-files"
+          ? "En cola: verificar integridad…"
+          : "En cola: actualizar…";
     this.lastProgressLine = `Job encolado: ${type}`;
     this.emitProgress(true);
     this.servers.addEvent(
@@ -533,6 +611,8 @@ export class UpdateService extends EventEmitter {
         try {
           if (job.type === "install-files") {
             await this.performInstallServerFiles(job.serverId);
+          } else if (job.type === "verify-files") {
+            await this.performVerifyServerFiles(job.serverId);
           } else {
             await this.performUpdateServer(job.serverId);
           }
@@ -598,7 +678,7 @@ export class UpdateService extends EventEmitter {
 
   private async runSteamUpdate(
     installDir: string,
-    operation: "install-files" | "update",
+    operation: "install-files" | "update" | "verify-files",
     serverId: string,
   ): Promise<CommandResult> {
     this.assertNotCancelled();
@@ -614,7 +694,13 @@ export class UpdateService extends EventEmitter {
       `Caché SteamCMD: depot=${depotCacheDir} | contenido ASA=${contentCacheDir}`,
     );
 
-    const cacheResult = await this.ensureAsaContentCache(steamcmdExe, steamCmdHome, contentCacheDir, operation, serverId);
+    const cacheResult = await this.ensureAsaContentCache(
+      steamcmdExe,
+      steamCmdHome,
+      contentCacheDir,
+      operation,
+      serverId,
+    );
     this.assertNotCancelled();
     if (cacheResult.code !== 0) {
       return cacheResult;
@@ -623,7 +709,13 @@ export class UpdateService extends EventEmitter {
     this.appendSteamCmdConsole(
       `Sincronizando caché ASA → ${installDir} (preserva ShooterGame\\Saved)`,
     );
-    this.beginFileSync(serverId, operation === "install-files" ? "Instalando archivos…" : "Actualizando archivos…");
+    const syncLabel =
+      operation === "verify-files"
+        ? "Aplicando archivos verificados…"
+        : operation === "install-files"
+          ? "Instalando archivos…"
+          : "Actualizando archivos…";
+    this.beginFileSync(serverId, syncLabel);
     try {
       const robocopyCode = await syncAsaContentCacheToInstallDir(contentCacheDir, installDir, {
         onSpawn: (child) => {
@@ -635,7 +727,11 @@ export class UpdateService extends EventEmitter {
       this.appendSteamCmdConsole(
         `Sincronización de caché ASA completada (robocopy=${robocopyCode})`,
       );
-      this.setProgress(100, "Archivos sincronizados", "Sincronización completada");
+      this.setProgress(
+        100,
+        operation === "verify-files" ? "Integridad OK" : "Archivos sincronizados",
+        operation === "verify-files" ? "Verificación completada" : "Sincronización completada",
+      );
     } catch (error) {
       this.activeSyncChild = null;
       this.endFileSync();
@@ -661,10 +757,14 @@ export class UpdateService extends EventEmitter {
     steamcmdExe: string,
     steamCmdHome: string,
     contentCacheDir: string,
-    operation: "install-files" | "update",
+    operation: "install-files" | "update" | "verify-files",
     serverId: string,
   ): Promise<CommandResult> {
-    if (isContentCacheFresh(contentCacheDir, this.contentCacheUpdatedAtMs)) {
+    // verify-files siempre fuerza validate; no reutilizar “caché fresca”.
+    if (
+      operation !== "verify-files"
+      && isContentCacheFresh(contentCacheDir, this.contentCacheUpdatedAtMs)
+    ) {
       const ageSec = Math.round((Date.now() - this.contentCacheUpdatedAtMs) / 1000);
       this.appendSteamCmdConsole(
         `Reutilizando caché de contenido ASA (actualizada hace ${ageSec}s; sin re-descarga)`,
@@ -673,7 +773,9 @@ export class UpdateService extends EventEmitter {
     }
 
     this.appendSteamCmdConsole(
-      `Actualizando caché compartida ASA vía SteamCMD (reutiliza depotcache en ${steamCmdHome})`,
+      operation === "verify-files"
+        ? `Verificando integridad de caché ASA vía SteamCMD validate (depotcache en ${steamCmdHome})`
+        : `Actualizando caché compartida ASA vía SteamCMD (reutiliza depotcache en ${steamCmdHome})`,
     );
     const result = await this.invokeSteamCmdAppUpdate(
       steamcmdExe,
@@ -694,7 +796,7 @@ export class UpdateService extends EventEmitter {
     steamcmdExe: string,
     steamCmdHome: string,
     forceInstallDir: string,
-    operation: "install-files" | "update",
+    operation: "install-files" | "update" | "verify-files",
     serverId: string,
   ): Promise<CommandResult> {
     const args = buildSteamCmdAppUpdateArgs(forceInstallDir);
@@ -1201,7 +1303,7 @@ export class UpdateService extends EventEmitter {
 
   private beginSteamCmdProcess(
     child: ChildProcess,
-    operation: "install-steamcmd" | "install-files" | "update",
+    operation: "install-steamcmd" | "install-files" | "update" | "verify-files",
     serverId: string | null,
   ): void {
     if (this.activeSteamCmd !== null) {
@@ -1214,6 +1316,8 @@ export class UpdateService extends EventEmitter {
       this.setProgress(0, "Descargando archivos del servidor…", "Iniciando SteamCMD");
     } else if (operation === "update") {
       this.setProgress(0, "Actualizando archivos del servidor…", "Iniciando SteamCMD");
+    } else if (operation === "verify-files") {
+      this.setProgress(0, "Verificando integridad…", "Iniciando SteamCMD validate");
     } else {
       this.setProgress(null, "Instalando SteamCMD…", "Iniciando instalación de SteamCMD");
     }
@@ -1272,7 +1376,7 @@ export class UpdateService extends EventEmitter {
       return parsed
         .filter((job) =>
           typeof job.id === "string"
-          && (job.type === "install-files" || job.type === "update")
+          && (job.type === "install-files" || job.type === "update" || job.type === "verify-files")
           && typeof job.serverId === "string",
         )
         .map((job) => ({

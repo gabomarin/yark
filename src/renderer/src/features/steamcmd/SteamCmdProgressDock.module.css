@@ -11,6 +11,16 @@
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
 }
 
+.dockMinimized {
+  width: min(420px, calc(100vw - 40px));
+  padding: 10px 12px;
+}
+
+.miniProgress {
+  width: 72px;
+  flex-shrink: 0;
+}
+
 .console {
   margin: 0;
   padding: 10px;

@@ -52,6 +52,7 @@ describe("OverviewPage", () => {
           onOpenFolder={vi.fn()}
           onInstallFiles={vi.fn()}
           onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
           onCloneServer={vi.fn()}
           onDeleteServer={vi.fn()}
           onSendRcon={vi.fn()}

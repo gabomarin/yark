@@ -68,7 +68,7 @@ export interface SteamCmdStatus {
   /** Proceso SteamCMD vivo o job crítico pendiente/en curso / sync local. */
   busy: boolean;
   running: boolean;
-  operation: "install-steamcmd" | "install-files" | "update" | "sync-files" | null;
+  operation: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null;
   serverId: string | null;
   startedAt: string | null;
   pid: number | null;
@@ -82,6 +82,8 @@ export interface SteamCmdStatus {
   progressBytesTotal: number | null;
   /** Última línea útil de consola. */
   lastLine: string | null;
+  /** Jobs críticos pendientes (además del que está en curso). */
+  queuedCount: number;
   checkedAt: string;
 }
 

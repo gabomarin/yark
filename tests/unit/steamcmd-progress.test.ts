@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatSteamCmdByteProgress,
   parseSteamCmdProgressLine,
+  steamCmdByteProgressNoun,
 } from "@shared/steamcmd-progress";
 
 describe("parseSteamCmdProgressLine", () => {
@@ -31,5 +32,11 @@ describe("parseSteamCmdProgressLine", () => {
 
   it("formats byte progress as MB", () => {
     expect(formatSteamCmdByteProgress(1048576, 20971520)).toBe("1.0 / 20.0 MB");
+  });
+
+  it("uses Comprobado noun while verifying", () => {
+    expect(steamCmdByteProgressNoun("verify-files")).toBe("Comprobado");
+    expect(steamCmdByteProgressNoun("install-files")).toBe("Descargado");
+    expect(steamCmdByteProgressNoun("sync-files")).toBe("Copiado");
   });
 });

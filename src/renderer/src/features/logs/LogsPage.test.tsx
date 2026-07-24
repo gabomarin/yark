@@ -35,6 +35,7 @@ function createApiMock(): RendererApi {
     killServer: vi.fn(),
     installServerFiles: vi.fn(),
     updateServerNow: vi.fn(),
+    verifyServerFiles: vi.fn(),
     openServerFolder: vi.fn(),
     openServerNativeTerminal: vi.fn(),
     installSteamCmd: vi.fn(),

@@ -15,7 +15,7 @@ interface Props {
   steamCmdProgressLabel?: string | null;
   steamCmdProgressBytesDownloaded?: number | null;
   steamCmdProgressBytesTotal?: number | null;
-  steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | null;
+  steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null;
   onEditServer: (server: ServerProfile) => void;
   onOpenIni: (server: ServerProfile) => void;
   onOpenLogs: (serverId: string) => void;
@@ -26,6 +26,7 @@ interface Props {
   onOpenFolder: (serverId: string) => void;
   onInstallFiles: (serverId: string) => void;
   onUpdateNow: (serverId: string) => void;
+  onVerifyFiles: (serverId: string) => void;
   onCloneServer: (serverId: string) => void;
   onDeleteServer: (serverId: string) => void;
   onSendRcon: (serverId: string, command: string) => void;
@@ -88,6 +89,7 @@ export function ServerGrid(props: Props): JSX.Element {
               onOpenFolder={() => props.onOpenFolder(server.id)}
               onInstallFiles={() => props.onInstallFiles(server.id)}
               onUpdateNow={() => props.onUpdateNow(server.id)}
+              onVerifyFiles={() => props.onVerifyFiles(server.id)}
               onClone={() => props.onCloneServer(server.id)}
               onDelete={() => props.onDeleteServer(server.id)}
               onRcon={(command) => props.onSendRcon(server.id, command)}

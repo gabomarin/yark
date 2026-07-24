@@ -27,6 +27,7 @@ interface Props {
   onOpenFolder: (serverId: string) => void;
   onInstallFiles: (serverId: string) => void;
   onUpdateNow: (serverId: string) => void;
+  onVerifyFiles: (serverId: string) => void;
   onSendRcon: (serverId: string, command: string) => void;
   onServerUpdated: () => void;
 }
@@ -169,6 +170,7 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
         onOpenFolder={() => props.onOpenFolder(selectedServer.id)}
         onInstallFiles={() => props.onInstallFiles(selectedServer.id)}
         onUpdateNow={() => props.onUpdateNow(selectedServer.id)}
+        onVerifyFiles={() => props.onVerifyFiles(selectedServer.id)}
         onSaveWorld={() => props.onSendRcon(selectedServer.id, "SaveWorld")}
         onBroadcast={(message) =>
           props.onSendRcon(selectedServer.id, `Broadcast ${message}`)
