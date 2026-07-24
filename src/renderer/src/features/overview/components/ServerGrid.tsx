@@ -16,8 +16,7 @@ interface Props {
   steamCmdProgressBytesDownloaded?: number | null;
   steamCmdProgressBytesTotal?: number | null;
   steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null;
-  onEditServer: (server: ServerProfile) => void;
-  onOpenIni: (server: ServerProfile) => void;
+  onOpenWorkspace: (server: ServerProfile) => void;
   onOpenLogs: (serverId: string) => void;
   onStartServer: (serverId: string) => void;
   onStopServer: (serverId: string) => void;
@@ -27,6 +26,8 @@ interface Props {
   onInstallFiles: (serverId: string) => void;
   onUpdateNow: (serverId: string) => void;
   onVerifyFiles: (serverId: string) => void;
+  onCheckUpdatesForServer: (serverId: string) => void;
+  checkingUpdates?: boolean;
   onCloneServer: (serverId: string) => void;
   onDeleteServer: (serverId: string) => void;
   onSendRcon: (serverId: string, command: string) => void;
@@ -79,17 +80,18 @@ export function ServerGrid(props: Props): JSX.Element {
               steamCmdOperation={
                 props.steamCmdServerId === server.id ? (props.steamCmdOperation ?? null) : null
               }
+              checkingUpdates={props.checkingUpdates}
               onStart={() => props.onStartServer(server.id)}
               onStop={() => props.onStopServer(server.id)}
               onKill={() => props.onKillServer(server.id)}
               onRestart={() => props.onRestartServer(server.id)}
-              onEdit={() => props.onEditServer(server)}
-              onOpenIni={() => props.onOpenIni(server)}
+              onOpenWorkspace={() => props.onOpenWorkspace(server)}
               onOpenLogs={() => props.onOpenLogs(server.id)}
               onOpenFolder={() => props.onOpenFolder(server.id)}
               onInstallFiles={() => props.onInstallFiles(server.id)}
               onUpdateNow={() => props.onUpdateNow(server.id)}
               onVerifyFiles={() => props.onVerifyFiles(server.id)}
+              onCheckUpdates={() => props.onCheckUpdatesForServer(server.id)}
               onClone={() => props.onCloneServer(server.id)}
               onDelete={() => props.onDeleteServer(server.id)}
               onRcon={(command) => props.onSendRcon(server.id, command)}

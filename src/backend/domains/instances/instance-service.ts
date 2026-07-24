@@ -92,9 +92,7 @@ export class InstanceService {
   }
 
   update(id: string, input: ServerProfileInput): ServerProfile {
-    if (this.processes.isActive(id)) {
-      throw new Error("No se puede editar un servidor mientras está en ejecución");
-    }
+    // Permitido en caliente: puertos/mapa/etc. se aplican al reiniciar el proceso.
     this.assertValidInput(input);
     this.assertNoPortConflicts(input, id);
     const updated = this.repo.update(id, input);
@@ -240,8 +238,8 @@ export class InstanceService {
     return profile.installDir;
   }
 
-  async installationInfo(): Promise<ServerInstallationInfo[]> {
-    const officialVersion = await readOfficialArkVersionCached();
+  async installationInfo(forceOfficialCheck = false): Promise<ServerInstallationInfo[]> {
+    const officialVersion = await readOfficialArkVersionCached(forceOfficialCheck);
     return this.repo
       .list()
       .map((profile) => ({

@@ -5,6 +5,7 @@ import type {
   ServerProfileInput,
   ServerRuntimeInfo,
 } from "@shared/types";
+import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { ConfigurationEditor } from "./components/ConfigurationEditor";
 import { ServerListPanel } from "./components/ServerListPanel";
@@ -32,8 +33,13 @@ interface Props {
   onServerUpdated: () => void;
 }
 
+function isServerActive(runtime: ServerRuntimeInfo | null): boolean {
+  const status = runtime?.status ?? "stopped";
+  return status === "starting" || status === "running" || status === "stopping";
+}
+
 export function ServerWorkspacePage(props: Props): JSX.Element {
-  const [workspaceTab, setWorkspaceTab] = useState<string | null>("configuration");
+  const [workspaceTab, setWorkspaceTab] = useState<string | null>("server");
   const dirtyRef = useRef(false);
 
   const selectedServer = useMemo(() => {
@@ -101,6 +107,7 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
 
   const runtime = props.statuses.get(selectedServer.id) ?? null;
   const installation = props.installationInfo.get(selectedServer.id) ?? null;
+  const serverActive = isServerActive(runtime);
 
   return (
     <div className={classes.root}>
@@ -129,7 +136,8 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
           className={classes.tabs}
         >
           <Tabs.List>
-            <Tabs.Tab value="configuration">Configuration</Tabs.Tab>
+            <Tabs.Tab value="server">Servidor</Tabs.Tab>
+            <Tabs.Tab value="configuration">Configuración INI</Tabs.Tab>
             <Tabs.Tab value="mods" disabled>
               Mods
             </Tabs.Tab>
@@ -150,10 +158,22 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
             </Tabs.Tab>
           </Tabs.List>
 
+          <Tabs.Panel value="server" className={classes.tabPanel}>
+            <ServerForm
+              key={`${selectedServer.id}:${selectedServer.updatedAt}`}
+              initial={selectedServer}
+              variant="embedded"
+              serverActive={serverActive}
+              onCancel={handleBack}
+              onSaved={props.onServerUpdated}
+            />
+          </Tabs.Panel>
+
           <Tabs.Panel value="configuration" className={classes.tabPanel}>
             <ConfigurationEditor
               key={selectedServer.id}
               server={selectedServer}
+              serverActive={serverActive}
               onModsChanged={saveMods}
               onDirtyChange={(dirty) => {
                 dirtyRef.current = dirty;

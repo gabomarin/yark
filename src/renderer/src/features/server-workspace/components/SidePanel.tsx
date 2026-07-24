@@ -38,6 +38,7 @@ export function SidePanel(props: Props): JSX.Element {
   const [broadcast, setBroadcast] = useState("");
   const [notes, setNotes] = useState("");
   const status = props.runtime?.status ?? "stopped";
+  const isActive = status === "starting" || status === "running" || status === "stopping";
   const version =
     props.installation?.arkVersion ??
     props.installation?.build ??
@@ -78,6 +79,7 @@ export function SidePanel(props: Props): JSX.Element {
             variant="light"
             leftSection={<Wrench size={16} />}
             onClick={props.onInstallFiles}
+            disabled={isActive}
           >
             Install files
           </Button>
@@ -85,6 +87,8 @@ export function SidePanel(props: Props): JSX.Element {
             variant="light"
             leftSection={<ShieldCheck size={16} />}
             onClick={props.onVerifyFiles}
+            disabled={isActive}
+            title={isActive ? "Detén el servidor antes de verificar" : undefined}
           >
             Verify integrity
           </Button>
@@ -92,6 +96,8 @@ export function SidePanel(props: Props): JSX.Element {
             variant="light"
             leftSection={<CloudArrowDown size={16} />}
             onClick={props.onUpdateNow}
+            disabled={isActive}
+            title={isActive ? "Detén el servidor antes de actualizar" : undefined}
           >
             Force Update
           </Button>

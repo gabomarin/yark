@@ -2,18 +2,15 @@ import {
   ArrowsClockwise,
   CloudArrowDown,
   Copy,
-  DotsThreeVertical,
   FileText,
   FolderOpen,
-  Gear,
   HardDrives,
+  MagnifyingGlass,
   Pause,
-  PencilSimple,
   Play,
   ShieldCheck,
   Terminal,
   Trash,
-  Warning,
   XCircle,
 } from "@phosphor-icons/react";
 import {
@@ -22,17 +19,18 @@ import {
   Button,
   Card,
   Group,
-  Menu,
   Progress,
   SimpleGrid,
   Stack,
   Text,
   TextInput,
   Title,
+  Tooltip,
+  UnstyledButton,
 } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { formatSteamCmdByteProgress, steamCmdByteProgressNoun } from "@shared/steamcmd-progress";
-import { useState } from "react";
+import { useState, type KeyboardEvent, type MouseEvent } from "react";
 import classes from "./ServerCard.module.css";
 
 interface Props {
@@ -45,17 +43,18 @@ interface Props {
   steamCmdProgressBytesDownloaded?: number | null;
   steamCmdProgressBytesTotal?: number | null;
   steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null;
+  checkingUpdates?: boolean;
   onStart: () => void;
   onStop: () => void;
   onKill: () => void;
   onRestart: () => void;
-  onEdit: () => void;
-  onOpenIni: () => void;
+  onOpenWorkspace: () => void;
   onOpenLogs: () => void;
   onOpenFolder: () => void;
   onInstallFiles: () => void;
   onUpdateNow: () => void;
   onVerifyFiles: () => void;
+  onCheckUpdates: () => void;
   onClone: () => void;
   onDelete: () => void;
   onRcon: (command: string) => void;
@@ -76,6 +75,31 @@ const QUICK_COMMANDS = [
   { label: "Broadcast aviso", command: "Broadcast Aviso del administrador" },
 ];
 
+function IconAction(props: {
+  label: string;
+  disabled?: boolean;
+  color?: string;
+  loading?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}): JSX.Element {
+  return (
+    <Tooltip label={props.label} withArrow>
+      <ActionIcon
+        variant={props.color ? "light" : "subtle"}
+        size="lg"
+        color={props.color}
+        disabled={props.disabled}
+        loading={props.loading}
+        onClick={props.onClick}
+        aria-label={props.label}
+      >
+        {props.children}
+      </ActionIcon>
+    </Tooltip>
+  );
+}
+
 export function ServerCard(props: Props): JSX.Element {
   const {
     server,
@@ -87,6 +111,7 @@ export function ServerCard(props: Props): JSX.Element {
     steamCmdProgressBytesDownloaded = null,
     steamCmdProgressBytesTotal = null,
     steamCmdOperation = null,
+    checkingUpdates = false,
   } = props;
   const status = runtime?.status ?? "stopped";
   const isActive = status === "starting" || status === "running" || status === "stopping";
@@ -124,57 +149,81 @@ export function ServerCard(props: Props): JSX.Element {
       : (steamCmdProgressLabel
         ?? (steamCmdOperation === "verify-files" ? "Verificando" : "SteamCMD en curso…"));
 
+  const openWorkspace = () => {
+    if (!steamCmdBusy) {
+      props.onOpenWorkspace();
+    }
+  };
+
+  const onCardKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openWorkspace();
+    }
+  };
+
+  const stopCardNavigation = (event: MouseEvent) => {
+    event.stopPropagation();
+  };
+
   return (
     <Card withBorder className={classes.card}>
       <Stack gap="md">
-        <Group justify="space-between" align="flex-start">
-          <Group gap="sm" align="flex-start">
-            <div className={classes.thumb}>
-              <HardDrives size={28} weight="duotone" />
-            </div>
-            <div>
-              <Title order={3}>{server.name}</Title>
-              <Text c="dimmed" size="sm">{server.sessionName}</Text>
-            </div>
+        <UnstyledButton
+          className={classes.cardHit}
+          onClick={openWorkspace}
+          onKeyDown={onCardKeyDown}
+          aria-label={`Abrir configuración de ${server.name}`}
+        >
+          <Group justify="space-between" align="flex-start" wrap="nowrap">
+            <Group gap="sm" align="flex-start" wrap="nowrap">
+              <div className={classes.thumb}>
+                <HardDrives size={28} weight="duotone" />
+              </div>
+              <div>
+                <Title order={3}>{server.name}</Title>
+                <Text c="dimmed" size="sm">{server.sessionName}</Text>
+              </div>
+            </Group>
+            <Badge
+              color={
+                steamCmdBusy
+                  ? "blue"
+                  : status === "running"
+                    ? "green"
+                    : status === "error"
+                      ? "red"
+                      : status === "starting" || status === "stopping"
+                        ? "blue"
+                        : "gray"
+              }
+              variant="light"
+            >
+              {steamCmdBusy ? installStateLabel : (STATUS_LABEL[status] ?? status)}
+            </Badge>
           </Group>
-          <Badge
-            color={
-              steamCmdBusy
-                ? "blue"
-                : status === "running"
-                  ? "green"
-                  : status === "error"
-                    ? "red"
-                    : status === "starting" || status === "stopping"
-                      ? "blue"
-                      : "gray"
-            }
-            variant="light"
-          >
-            {steamCmdBusy ? installStateLabel : (STATUS_LABEL[status] ?? status)}
-          </Badge>
-        </Group>
 
-        <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="sm">
-          <MetaItem label="Jugadores" value="—" />
-          <MetaItem label="Mapa" value={server.map} />
-          <MetaItem label="Cluster" value={server.clusterId ?? "—"} />
-          <MetaItem label="Mods" value={String(server.mods.length)} />
-          <MetaItem label="Versión" value={localVersion ?? "—"} />
-          <MetaItem
-            label="Estado"
-            value={installStateLabel}
-            tone={
-              steamCmdBusy
-                ? "warn"
-                : !isInstallationReady
-                  ? "muted"
-                  : updateAvailable
-                    ? "warn"
-                    : "ok"
-            }
-          />
-        </SimpleGrid>
+          <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="sm" mt="md">
+            <MetaItem label="Jugadores" value="—" />
+            <MetaItem label="Mapa" value={server.map} />
+            <MetaItem label="Cluster" value={server.clusterId ?? "—"} />
+            <MetaItem label="Mods" value={String(server.mods.length)} />
+            <MetaItem label="Versión" value={localVersion ?? "—"} />
+            <MetaItem
+              label="Estado"
+              value={installStateLabel}
+              tone={
+                steamCmdBusy
+                  ? "warn"
+                  : !isInstallationReady
+                    ? "muted"
+                    : updateAvailable
+                      ? "warn"
+                      : "ok"
+              }
+            />
+          </SimpleGrid>
+        </UnstyledButton>
 
         {steamCmdBusy && (
           <Stack gap={6} className={classes.progressBlock}>
@@ -207,71 +256,129 @@ export function ServerCard(props: Props): JSX.Element {
           <Text c="red" size="sm">{runtime.lastError}</Text>
         )}
 
-        <Group gap="xs" wrap="wrap">
+        <Group gap={4} wrap="wrap" onClick={stopCardNavigation} onKeyDown={stopCardNavigation}>
           {steamCmdBusy ? (
-            <Button color="red" variant="light" leftSection={<XCircle size={16} />} onClick={props.onCancelSteamCmd}>
-              Cancelar operación
-            </Button>
+            <IconAction label="Cancelar operación" color="red" onClick={props.onCancelSteamCmd}>
+              <XCircle size={18} />
+            </IconAction>
           ) : (
             <>
-              <Button leftSection={<Play size={16} />} onClick={props.onStart} disabled={isActive || !isInstallationReady}>
-                Iniciar
-              </Button>
-              <Button variant="light" leftSection={<Pause size={16} />} onClick={props.onStop} disabled={!isActive}>
-                Detener
-              </Button>
-              <ActionIcon variant="subtle" size="lg" onClick={props.onRestart} disabled={!isInstallationReady} aria-label="Reiniciar">
+              <IconAction
+                label="Iniciar"
+                color="teal"
+                onClick={props.onStart}
+                disabled={isActive || !isInstallationReady}
+              >
+                <Play size={18} />
+              </IconAction>
+              <IconAction
+                label="Detener"
+                color="yellow"
+                onClick={props.onStop}
+                disabled={!isActive}
+              >
+                <Pause size={18} />
+              </IconAction>
+              <IconAction
+                label="Reiniciar"
+                color="cyan"
+                onClick={props.onRestart}
+                disabled={!isInstallationReady || !isActive}
+              >
                 <ArrowsClockwise size={18} />
-              </ActionIcon>
-              <ActionIcon variant="subtle" size="lg" onClick={props.onOpenFolder} aria-label="Abrir carpeta">
+              </IconAction>
+              <IconAction label="Abrir carpeta" color="gray" onClick={props.onOpenFolder}>
                 <FolderOpen size={18} />
-              </ActionIcon>
-              <Menu shadow="md" withinPortal>
-                <Menu.Target>
-                  <ActionIcon variant="subtle" size="lg" aria-label="Más opciones">
-                    <DotsThreeVertical size={18} />
-                  </ActionIcon>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Item leftSection={<PencilSimple size={16} />} onClick={props.onEdit}>Editar servidor</Menu.Item>
-                  <Menu.Item leftSection={<Gear size={16} />} onClick={props.onOpenIni} disabled={!isInstallationReady}>Editar INI</Menu.Item>
-                  <Menu.Item leftSection={<FileText size={16} />} onClick={props.onOpenLogs} disabled={!isInstallationReady}>Ver logs</Menu.Item>
-                  {isInstallationReady ? (
-                    <>
-                      <Menu.Item leftSection={<Warning size={16} />} onClick={props.onUpdateNow}>
-                        Actualizar servidor
-                      </Menu.Item>
-                      <Menu.Item leftSection={<ShieldCheck size={16} />} onClick={props.onVerifyFiles}>
-                        Verificar integridad
-                      </Menu.Item>
-                    </>
-                  ) : (
-                    <Menu.Item leftSection={<CloudArrowDown size={16} />} onClick={props.onInstallFiles}>
-                      Instalar archivos
-                    </Menu.Item>
-                  )}
-                  <Menu.Item leftSection={<Copy size={16} />} onClick={props.onClone}>Clonar</Menu.Item>
-                  {isActive && <Menu.Item color="red" leftSection={<XCircle size={16} />} onClick={props.onKill}>Forzar cierre</Menu.Item>}
-                  <Menu.Item color="red" leftSection={<Trash size={16} />} onClick={props.onDelete}>Eliminar</Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
+              </IconAction>
+              <IconAction
+                label="Ver logs"
+                color="blue"
+                onClick={props.onOpenLogs}
+                disabled={!isInstallationReady}
+              >
+                <FileText size={18} />
+              </IconAction>
+              {isInstallationReady ? (
+                <>
+                  <IconAction
+                    label="Verificar actualizaciones"
+                    color="indigo"
+                    loading={checkingUpdates}
+                    onClick={props.onCheckUpdates}
+                    disabled={checkingUpdates}
+                  >
+                    <MagnifyingGlass size={18} />
+                  </IconAction>
+                  <IconAction
+                    label={
+                      isActive
+                        ? "Detén el servidor antes de actualizar"
+                        : updateAvailable
+                          ? "Actualizar servidor (hay versión nueva)"
+                          : "Actualizar servidor"
+                    }
+                    color={updateAvailable ? "orange" : "grape"}
+                    onClick={props.onUpdateNow}
+                    disabled={isActive}
+                  >
+                    <CloudArrowDown size={18} />
+                  </IconAction>
+                  <IconAction
+                    label={
+                      isActive
+                        ? "Detén el servidor antes de verificar"
+                        : "Verificar integridad"
+                    }
+                    color="violet"
+                    onClick={props.onVerifyFiles}
+                    disabled={isActive}
+                  >
+                    <ShieldCheck size={18} />
+                  </IconAction>
+                </>
+              ) : (
+                <IconAction label="Instalar archivos" color="blue" onClick={props.onInstallFiles}>
+                  <CloudArrowDown size={18} />
+                </IconAction>
+              )}
+              <IconAction label="Clonar" color="gray" onClick={props.onClone}>
+                <Copy size={18} />
+              </IconAction>
+              {isActive && (
+                <IconAction label="Forzar cierre" color="red" onClick={props.onKill}>
+                  <XCircle size={18} />
+                </IconAction>
+              )}
+              <IconAction
+                label={
+                  isActive
+                    ? "Detén el servidor antes de eliminarlo"
+                    : "Eliminar servidor"
+                }
+                color="red"
+                onClick={props.onDelete}
+                disabled={isActive}
+              >
+                <Trash size={18} />
+              </IconAction>
             </>
           )}
         </Group>
 
         {status === "running" && !steamCmdBusy && (
-          <Stack gap="sm" className={classes.rcon}>
+          <Stack gap="sm" className={classes.rcon} onClick={stopCardNavigation}>
             <Group gap="xs" wrap="wrap">
               {QUICK_COMMANDS.map((command) => (
-                <Button
-                  key={command.command}
-                  variant="light"
-                  size="xs"
-                  leftSection={<Terminal size={14} />}
-                  onClick={() => props.onRcon(command.command)}
-                >
-                  {command.label}
-                </Button>
+                <Tooltip key={command.command} label={`RCON: ${command.command}`} withArrow>
+                  <Button
+                    variant="light"
+                    size="compact-sm"
+                    leftSection={<Terminal size={14} />}
+                    onClick={() => props.onRcon(command.command)}
+                  >
+                    {command.label}
+                  </Button>
+                </Tooltip>
               ))}
             </Group>
             <Group align="flex-end" wrap="nowrap">
@@ -281,17 +388,21 @@ export function ServerCard(props: Props): JSX.Element {
                 placeholder="Comando RCON personalizado..."
                 onChange={(event) => setCustomCommand(event.currentTarget.value)}
               />
-              <Button
-                leftSection={<Terminal size={16} />}
-                onClick={() => {
-                  if (customCommand.trim().length > 0) {
-                    props.onRcon(customCommand.trim());
-                    setCustomCommand("");
-                  }
-                }}
-              >
-                Enviar
-              </Button>
+              <Tooltip label="Enviar RCON" withArrow>
+                <ActionIcon
+                  variant="filled"
+                  size="lg"
+                  aria-label="Enviar RCON"
+                  onClick={() => {
+                    if (customCommand.trim().length > 0) {
+                      props.onRcon(customCommand.trim());
+                      setCustomCommand("");
+                    }
+                  }}
+                >
+                  <Terminal size={16} />
+                </ActionIcon>
+              </Tooltip>
             </Group>
           </Stack>
         )}

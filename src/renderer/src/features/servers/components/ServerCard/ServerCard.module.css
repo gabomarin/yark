@@ -5,6 +5,25 @@
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
 }
 
+.cardHit {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border-radius: 12px;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cardHit:hover .thumb {
+  background: linear-gradient(180deg, rgba(85, 166, 255, 0.28), rgba(64, 211, 159, 0.18));
+}
+
+.cardHit:focus-visible {
+  outline: 2px solid rgba(85, 166, 255, 0.65);
+  outline-offset: 2px;
+}
+
 .thumb {
   display: grid;
   place-items: center;

@@ -92,7 +92,7 @@ export interface RendererApi {
   getSteamCmdStatus(): Promise<IpcResult<SteamCmdStatus>>;
   getSteamCmdConsole(limit?: number): Promise<IpcResult<SteamCmdConsoleSnapshot>>;
   getStatuses(): Promise<IpcResult<ServerRuntimeInfo[]>>;
-  getInstallationInfo(): Promise<IpcResult<ServerInstallationInfo[]>>;
+  getInstallationInfo(forceOfficialCheck?: boolean): Promise<IpcResult<ServerInstallationInfo[]>>;
   checkCluster(): Promise<IpcResult<ClusterComplianceReport[]>>;
   sendRconCommand(
     id: string,

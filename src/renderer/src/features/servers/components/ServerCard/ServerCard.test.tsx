@@ -23,32 +23,34 @@ const profile = {
   updatedAt: "2026-07-23T00:00:00.000Z",
 };
 
+const installed = {
+  serverId: profile.id,
+  installed: true,
+  build: null,
+  arkVersion: null,
+  officialVersion: null,
+  version: null,
+  binaryPath: "C:/ARK/TheIsland/ShooterGame/Binaries/Win64/ArkAscendedServer.exe",
+  checkedAt: "2026-07-23T00:00:00.000Z",
+};
+
 describe("ServerCard", () => {
-  it("exposes main actions", async () => {
+  it("exposes main actions as icon buttons with tooltips", async () => {
     const user = userEvent.setup();
     const onStart = vi.fn();
+    const onOpenWorkspace = vi.fn();
 
     render(
       <AppProviders>
         <ServerCard
           server={profile}
           runtime={null}
-          installation={{
-            serverId: profile.id,
-            installed: true,
-            build: null,
-            arkVersion: null,
-            officialVersion: null,
-            version: null,
-            binaryPath: "C:/ARK/TheIsland/ShooterGame/Binaries/Win64/ArkAscendedServer.exe",
-            checkedAt: "2026-07-23T00:00:00.000Z",
-          }}
+          installation={installed}
           onStart={onStart}
           onStop={vi.fn()}
           onKill={vi.fn()}
           onRestart={vi.fn()}
-          onEdit={vi.fn()}
-          onOpenIni={vi.fn()}
+          onOpenWorkspace={onOpenWorkspace}
           onOpenLogs={vi.fn()}
           onOpenFolder={vi.fn()}
           onInstallFiles={vi.fn()}
@@ -64,6 +66,44 @@ describe("ServerCard", () => {
 
     await user.click(screen.getByRole("button", { name: /^Iniciar$/i }));
     expect(onStart).toHaveBeenCalledTimes(1);
+
+    await user.click(screen.getByRole("button", { name: /Abrir configuración de The Island/i }));
+    expect(onOpenWorkspace).toHaveBeenCalledTimes(1);
+  });
+
+  it("disables update and delete while the server is active", () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={{
+            serverId: profile.id,
+            status: "running",
+            pid: 1234,
+            startedAt: "2026-07-23T00:00:00.000Z",
+            lastError: null,
+          }}
+          installation={installed}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onClone={vi.fn()}
+          onDelete={vi.fn()}
+          onRcon={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("button", { name: /Detén el servidor antes de actualizar/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Detén el servidor antes de eliminarlo/i })).toBeDisabled();
   });
 
   it("shows progress bar while SteamCMD is busy", () => {
@@ -73,14 +113,8 @@ describe("ServerCard", () => {
           server={profile}
           runtime={null}
           installation={{
-            serverId: profile.id,
+            ...installed,
             installed: false,
-            build: null,
-            arkVersion: null,
-            officialVersion: null,
-            version: null,
-            binaryPath: "C:/ARK/TheIsland/ShooterGame/Binaries/Win64/ArkAscendedServer.exe",
-            checkedAt: "2026-07-23T00:00:00.000Z",
           }}
           steamCmdBusy
           steamCmdProgressPercent={42}
@@ -92,8 +126,7 @@ describe("ServerCard", () => {
           onStop={vi.fn()}
           onKill={vi.fn()}
           onRestart={vi.fn()}
-          onEdit={vi.fn()}
-          onOpenIni={vi.fn()}
+          onOpenWorkspace={vi.fn()}
           onOpenLogs={vi.fn()}
           onOpenFolder={vi.fn()}
           onInstallFiles={vi.fn()}

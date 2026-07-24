@@ -31,7 +31,8 @@ const api: RendererApi = {
   getSteamCmdStatus: () => ipcRenderer.invoke(IPC.steamcmdStatus),
   getSteamCmdConsole: (limit?: number) => ipcRenderer.invoke(IPC.steamcmdConsole, limit),
   getStatuses: () => ipcRenderer.invoke(IPC.serversStatuses),
-  getInstallationInfo: () => ipcRenderer.invoke(IPC.serversInstallation),
+  getInstallationInfo: (forceOfficialCheck?: boolean) =>
+    ipcRenderer.invoke(IPC.serversInstallation, forceOfficialCheck),
   checkCluster: () => ipcRenderer.invoke(IPC.clusterCheck),
   sendRconCommand: (id: string, command: string) =>
     ipcRenderer.invoke(IPC.rconCommand, id, command),

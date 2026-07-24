@@ -16,6 +16,8 @@ interface Props {
   search: string;
   onSearchChange: (value: string) => void;
   onCreateServer: () => void;
+  onCheckUpdates: () => void;
+  checkingUpdates?: boolean;
   openNativeTerminalOnStart: boolean;
   onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
   servers: ServerProfile[];
@@ -36,8 +38,7 @@ interface Props {
   steamCmdProgressBytesDownloaded?: number | null;
   steamCmdProgressBytesTotal?: number | null;
   steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null;
-  onEditServer: (server: ServerProfile) => void;
-  onOpenIni: (server: ServerProfile) => void;
+  onOpenWorkspace: (server: ServerProfile) => void;
   onOpenLogs: (serverId: string) => void;
   onStartServer: (serverId: string) => void;
   onStopServer: (serverId: string) => void;
@@ -47,6 +48,7 @@ interface Props {
   onInstallFiles: (serverId: string) => void;
   onUpdateNow: (serverId: string) => void;
   onVerifyFiles: (serverId: string) => void;
+  onCheckUpdatesForServer: (serverId: string) => void;
   onCloneServer: (serverId: string) => void;
   onDeleteServer: (serverId: string) => void;
   onSendRcon: (serverId: string, command: string) => void;
@@ -60,6 +62,8 @@ export function OverviewPage(props: Props): JSX.Element {
         search={props.search}
         onSearchChange={props.onSearchChange}
         onCreateServer={props.onCreateServer}
+        onCheckUpdates={props.onCheckUpdates}
+        checkingUpdates={props.checkingUpdates}
         openNativeTerminalOnStart={props.openNativeTerminalOnStart}
         onOpenNativeTerminalOnStartChange={props.onOpenNativeTerminalOnStartChange}
       />
@@ -87,8 +91,7 @@ export function OverviewPage(props: Props): JSX.Element {
           steamCmdProgressBytesDownloaded={props.steamCmdProgressBytesDownloaded ?? null}
           steamCmdProgressBytesTotal={props.steamCmdProgressBytesTotal ?? null}
           steamCmdOperation={props.steamCmdOperation ?? null}
-          onEditServer={props.onEditServer}
-          onOpenIni={props.onOpenIni}
+          onOpenWorkspace={props.onOpenWorkspace}
           onOpenLogs={props.onOpenLogs}
           onStartServer={props.onStartServer}
           onStopServer={props.onStopServer}
@@ -98,6 +101,8 @@ export function OverviewPage(props: Props): JSX.Element {
           onInstallFiles={props.onInstallFiles}
           onUpdateNow={props.onUpdateNow}
           onVerifyFiles={props.onVerifyFiles}
+          onCheckUpdatesForServer={props.onCheckUpdatesForServer}
+          checkingUpdates={props.checkingUpdates}
           onCloneServer={props.onCloneServer}
           onDeleteServer={props.onDeleteServer}
           onSendRcon={props.onSendRcon}

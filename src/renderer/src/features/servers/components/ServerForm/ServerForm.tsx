@@ -23,6 +23,10 @@ interface Props {
   initial: ServerProfile | null;
   onCancel: () => void;
   onSaved: () => void;
+  /** `embedded` = pestaña del workspace (sin cabecera de página completa). */
+  variant?: "page" | "embedded";
+  /** Servidor en starting/running/stopping → aviso de reinicio. */
+  serverActive?: boolean;
 }
 
 interface FormState {
@@ -108,6 +112,8 @@ function toInput(state: FormState, isCreate: boolean): ServerProfileInput {
 
 export function ServerForm(props: Props): JSX.Element {
   const isCreate = props.initial === null;
+  const embedded = props.variant === "embedded";
+  const serverActive = props.serverActive === true;
   const [state, setState] = useState<FormState>(() => toFormState(props.initial));
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -183,18 +189,35 @@ export function ServerForm(props: Props): JSX.Element {
   };
 
   return (
-    <div className={classes.page}>
+    <div className={embedded ? classes.embedded : classes.page}>
       <Card withBorder className={classes.card}>
         <Stack gap="lg">
-          <Group justify="space-between" align="flex-start">
+          {!embedded && (
+            <Group justify="space-between" align="flex-start">
+              <div>
+                <Title order={2}>{isCreate ? "Nuevo servidor" : `Editar: ${props.initial!.name}`}</Title>
+                <Text c="dimmed">Configura identidad, red, acceso, cluster y argumentos del servidor.</Text>
+              </div>
+              <Button variant="subtle" leftSection={<ArrowLeft size={16} />} onClick={props.onCancel}>
+                Volver
+              </Button>
+            </Group>
+          )}
+
+          {embedded && (
             <div>
-              <Title order={2}>{isCreate ? "Nuevo servidor" : `Editar: ${props.initial!.name}`}</Title>
-              <Text c="dimmed">Configura identidad, red, acceso, cluster y argumentos del servidor.</Text>
+              <Title order={3}>Información del servidor</Title>
+              <Text c="dimmed" size="sm">
+                Nombre, puertos, acceso, cluster y argumentos de arranque.
+              </Text>
             </div>
-            <Button variant="subtle" leftSection={<ArrowLeft size={16} />} onClick={props.onCancel}>
-              Volver
-            </Button>
-          </Group>
+          )}
+
+          {serverActive && (
+            <Alert color="yellow" title="Servidor en ejecución">
+              Puedes guardar cambios ahora; se aplicarán al reiniciar el servidor.
+            </Alert>
+          )}
 
           {error !== null && <Alert color="red">{error}</Alert>}
 
@@ -224,6 +247,7 @@ export function ServerForm(props: Props): JSX.Element {
                 value={state.installDir}
                 placeholder={isCreate ? "C:\\ark_servers" : "C:\\ark_servers\\my_server"}
                 busy={browsingField === "installDir"}
+                disabled={serverActive && !isCreate}
                 onChange={setField("installDir")}
                 onBrowse={() => void browseDirectory("installDir")}
               />
@@ -269,7 +293,9 @@ export function ServerForm(props: Props): JSX.Element {
           </SimpleGrid>
 
           <Group justify="flex-end">
-            <Button variant="default" onClick={props.onCancel}>Cancelar</Button>
+            {!embedded && (
+              <Button variant="default" onClick={props.onCancel}>Cancelar</Button>
+            )}
             <Button leftSection={<FloppyDisk size={16} />} onClick={() => void submit()} loading={saving}>
               Guardar
             </Button>
@@ -301,17 +327,37 @@ interface PathFieldProps {
   value: string;
   placeholder?: string;
   busy: boolean;
+  disabled?: boolean;
   onChange: (value: string) => void;
   onBrowse: () => void;
 }
 
-function PathField({ label, value, placeholder, busy, onChange, onBrowse }: PathFieldProps): JSX.Element {
+function PathField({
+  label,
+  value,
+  placeholder,
+  busy,
+  disabled = false,
+  onChange,
+  onBrowse,
+}: PathFieldProps): JSX.Element {
   return (
     <div>
       <Text size="sm" fw={500} mb={6}>{label}</Text>
       <Group align="flex-end" wrap="nowrap">
-        <TextInput className={classes.pathInput} value={value} placeholder={placeholder} onChange={(e) => onChange(e.currentTarget.value)} />
-        <Button variant="light" leftSection={<FolderOpen size={16} />} onClick={onBrowse} disabled={busy}>
+        <TextInput
+          className={classes.pathInput}
+          value={value}
+          placeholder={placeholder}
+          disabled={disabled}
+          onChange={(e) => onChange(e.currentTarget.value)}
+        />
+        <Button
+          variant="light"
+          leftSection={<FolderOpen size={16} />}
+          onClick={onBrowse}
+          disabled={busy || disabled}
+        >
           {busy ? "Abriendo..." : "Buscar"}
         </Button>
       </Group>

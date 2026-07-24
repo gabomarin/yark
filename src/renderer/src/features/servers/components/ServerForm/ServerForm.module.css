@@ -3,6 +3,11 @@
   padding: 20px 24px;
 }
 
+.embedded {
+  padding: 0;
+  min-height: 0;
+}
+
 .card,
 .section {
   border-radius: 18px;

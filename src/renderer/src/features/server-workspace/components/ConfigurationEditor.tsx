@@ -62,6 +62,7 @@ type ConfigSection =
 
 interface Props {
   server: ServerProfile;
+  serverActive?: boolean;
   onModsChanged: (mods: string[]) => Promise<void>;
   onDirtyChange?: (dirty: boolean) => void;
 }
@@ -350,6 +351,11 @@ export function ConfigurationEditor(props: Props): JSX.Element {
         {info !== null && (
           <Alert color="blue" mb="sm" onClose={() => setInfo(null)} withCloseButton>
             {info}
+          </Alert>
+        )}
+        {props.serverActive === true && (
+          <Alert color="yellow" mb="sm" title="Servidor en ejecución">
+            Los cambios en INI se aplicarán al reiniciar el servidor.
           </Alert>
         )}
 

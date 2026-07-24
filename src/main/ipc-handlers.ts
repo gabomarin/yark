@@ -136,8 +136,8 @@ export function registerIpcHandlers(
     wrap(() => instances.statuses()),
   );
 
-  ipcMain.handle(IPC.serversInstallation, () =>
-    wrap(() => instances.installationInfo()),
+  ipcMain.handle(IPC.serversInstallation, (_e, forceOfficialCheck?: boolean) =>
+    wrap(() => instances.installationInfo(forceOfficialCheck === true)),
   );
 
   ipcMain.handle(IPC.clusterCheck, () =>

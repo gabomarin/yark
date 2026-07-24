@@ -352,8 +352,7 @@ export function App(): JSX.Element {
               steamCmdProgressBytesDownloaded={steamCmdStatus?.progressBytesDownloaded ?? null}
               steamCmdProgressBytesTotal={steamCmdStatus?.progressBytesTotal ?? null}
               steamCmdOperation={steamCmdStatus?.operation ?? null}
-              onEditServer={(server) => setOverlay({ kind: "edit", profile: server })}
-              onOpenIni={(server) => setOverlay({ kind: "workspace", serverId: server.id })}
+              onOpenWorkspace={(server) => setOverlay({ kind: "workspace", serverId: server.id })}
               onOpenLogs={(serverId) => openLogsForServer(serverId, "events")}
               onStartServer={(id) => void startServerAndOpenRuntimeLogs(id)}
               onStopServer={(id) => void runAction(() => window.api.stopServer(id))}

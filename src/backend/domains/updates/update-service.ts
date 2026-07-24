@@ -334,12 +334,20 @@ export class UpdateService extends EventEmitter {
   }
 
   async updateServer(serverId: string): Promise<void> {
+    this.assertServerStoppedForFilesJob(serverId, "actualizar");
     await this.enqueueAndWait("update", serverId);
   }
 
   /** Fuerza app_update validate (ignora caché “fresca”) y sincroniza al servidor. */
   async verifyServerFiles(serverId: string): Promise<void> {
+    this.assertServerStoppedForFilesJob(serverId, "verificar");
     await this.enqueueAndWait("verify-files", serverId);
+  }
+
+  private assertServerStoppedForFilesJob(serverId: string, action: string): void {
+    if (this.processes.isActive(serverId)) {
+      throw new Error(`Detén el servidor antes de ${action}`);
+    }
   }
 
   private async performInstallServerFiles(serverId: string): Promise<void> {
