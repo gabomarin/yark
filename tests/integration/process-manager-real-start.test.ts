@@ -70,7 +70,10 @@ describe("ProcessManager real start (Windows)", () => {
     const manager = new ProcessManager();
     const profile = makeProfile(installDir);
 
-    manager.start(profile, { launchArgsOverride: ["-t", "127.0.0.1"] });
+    manager.start(profile, {
+      launchArgsOverride: ["-t", "127.0.0.1"],
+      skipReadinessCheck: true,
+    });
 
     const reachedRunning = await waitFor(
       () => manager.getStatus(profile.id).status === "running",

@@ -1,7 +1,12 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import parseIni from "ini";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
+import {
+  flattenIniText,
+  parseIniTextRows,
+  sanitizeServerIniPayload,
+  splitFlatIniKey,
+} from "@shared/ini-text";
 import type {
   IniDiffEntry,
   IniPreview,
@@ -12,32 +17,16 @@ import type {
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 
-function normalizeValue(value: unknown): string {
-  if (value === null || value === undefined) return "";
-  if (Array.isArray(value)) return value.map((v) => String(v)).join(",");
-  if (typeof value === "object") {
-    try {
-      return JSON.stringify(value);
-    } catch {
-      return "[object]";
-    }
-  }
-  return String(value);
-}
+type IniSectionMap = Record<string, Record<string, string>>;
 
-function flattenIni(parsed: Record<string, unknown>): Record<string, string> {
-  const flat: Record<string, string> = {};
-  for (const [key, value] of Object.entries(parsed)) {
-    if (value !== null && typeof value === "object" && !Array.isArray(value)) {
-      const section = value as Record<string, unknown>;
-      for (const [subKey, subValue] of Object.entries(section)) {
-        flat[`${key}.${subKey}`] = normalizeValue(subValue);
-      }
-      continue;
-    }
-    flat[`__root__.${key}`] = normalizeValue(value);
+function toSectionMap(text: string): IniSectionMap {
+  const map: IniSectionMap = {};
+  for (const row of parseIniTextRows(text)) {
+    const section = map[row.section] ?? {};
+    section[row.key] = row.value;
+    map[row.section] = section;
   }
-  return flat;
+  return map;
 }
 
 function toDiffEntries(
@@ -53,13 +42,11 @@ function toDiffEntries(
     const after = afterMap[fullKey];
     if (before === after) continue;
 
-    const dot = fullKey.indexOf(".");
-    const sectionRaw = dot >= 0 ? fullKey.slice(0, dot) : "__root__";
-    const key = dot >= 0 ? fullKey.slice(dot + 1) : fullKey;
+    const { section, key } = splitFlatIniKey(fullKey);
 
     entries.push({
       fileKey,
-      section: sectionRaw === "__root__" ? "(root)" : sectionRaw,
+      section,
       key,
       before: before ?? null,
       after: after ?? null,
@@ -107,13 +94,17 @@ export class IniService {
     payload: ServerIniPayload,
   ): Promise<IniPreview> {
     const current = await this.readServerIni(serverId);
-    return this.previewWithCurrent(current.payload, payload);
+    return this.previewWithCurrent(
+      current.payload,
+      sanitizeServerIniPayload(payload),
+    );
   }
 
   async saveServerIni(serverId: string, payload: ServerIniPayload): Promise<IniPreview> {
     return this.locks.withLock(serverId, "ini-save", async () => {
       const current = await this.readServerIni(serverId);
-      const preview = this.previewWithCurrent(current.payload, payload);
+      const sanitized = sanitizeServerIniPayload(payload);
+      const preview = this.previewWithCurrent(current.payload, sanitized);
       if (!preview.valid) {
         throw new Error(
           `INI inválido: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`,
@@ -121,8 +112,8 @@ export class IniService {
       }
 
       await Promise.all([
-        this.writeText(current.gameUserSettingsPath, payload.gameUserSettings),
-        this.writeText(current.gameIniPath, payload.game),
+        this.writeText(current.gameUserSettingsPath, sanitized.gameUserSettings),
+        this.writeText(current.gameIniPath, sanitized.game),
       ]);
 
       this.repo.addEvent(
@@ -142,26 +133,14 @@ export class IniService {
   ): IniPreview {
     const validationIssues: IniValidationIssue[] = [];
 
-    const currentGameUserSettingsParsed = this.safeParse(
-      "gameUserSettings",
-      current.gameUserSettings,
-      validationIssues,
-    );
-    const nextGameUserSettingsParsed = this.safeParse(
+    const nextGameUserSettings = this.safeParse(
       "gameUserSettings",
       next.gameUserSettings,
       validationIssues,
     );
+    const nextGame = this.safeParse("game", next.game, validationIssues);
 
-    const currentGameParsed = this.safeParse("game", current.game, validationIssues);
-    const nextGameParsed = this.safeParse("game", next.game, validationIssues);
-
-    if (
-      currentGameUserSettingsParsed === null ||
-      nextGameUserSettingsParsed === null ||
-      currentGameParsed === null ||
-      nextGameParsed === null
-    ) {
+    if (nextGameUserSettings === null || nextGame === null) {
       return {
         valid: false,
         issues: validationIssues,
@@ -170,15 +149,15 @@ export class IniService {
       };
     }
 
-    this.validateGameUserSettingsSemantics(nextGameUserSettingsParsed, validationIssues);
+    this.validateGameUserSettingsSemantics(nextGameUserSettings, validationIssues);
 
     const diff: IniDiffEntry[] = [
       ...toDiffEntries(
         "gameUserSettings",
-        flattenIni(currentGameUserSettingsParsed),
-        flattenIni(nextGameUserSettingsParsed),
+        flattenIniText(current.gameUserSettings),
+        flattenIniText(next.gameUserSettings),
       ),
-      ...toDiffEntries("game", flattenIni(currentGameParsed), flattenIni(nextGameParsed)),
+      ...toDiffEntries("game", flattenIniText(current.game), flattenIniText(next.game)),
     ];
 
     return {
@@ -190,18 +169,17 @@ export class IniService {
   }
 
   private validateGameUserSettingsSemantics(
-    parsed: Record<string, unknown>,
+    parsed: IniSectionMap,
     issues: IniValidationIssue[],
   ): void {
     const section = parsed["ServerSettings"];
-    if (section === null || section === undefined || typeof section !== "object") {
+    if (section === undefined) {
       return;
     }
 
-    const values = section as Record<string, unknown>;
-    this.validateIntegerRange("RCONPort", values["RCONPort"], 1024, 65535, issues);
-    this.validateIntegerRange("MaxPlayers", values["MaxPlayers"], 1, 255, issues);
-    this.validateNumberRange("DifficultyOffset", values["DifficultyOffset"], 0, 1, issues);
+    this.validateIntegerRange("RCONPort", section["RCONPort"], 1024, 65535, issues);
+    this.validateIntegerRange("MaxPlayers", section["MaxPlayers"], 1, 255, issues);
+    this.validateNumberRange("DifficultyOffset", section["DifficultyOffset"], 0, 1, issues);
   }
 
   private validateIntegerRange(
@@ -271,9 +249,9 @@ export class IniService {
     fileKey: IniValidationIssue["fileKey"],
     content: string,
     issues: IniValidationIssue[],
-  ): Record<string, unknown> | null {
+  ): IniSectionMap | null {
     try {
-      return parseIni.parse(content) as Record<string, unknown>;
+      return toSectionMap(content);
     } catch (err) {
       issues.push({
         fileKey,

@@ -1,5 +1,4 @@
 import { PlaceholderPage } from "@ui/PlaceholderPage/PlaceholderPage";
-import { SteamCmdPage } from "@features/steamcmd/SteamCmdPage";
 import { AppShellLayout } from "./AppShellLayout";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import type { ReactNode } from "react";

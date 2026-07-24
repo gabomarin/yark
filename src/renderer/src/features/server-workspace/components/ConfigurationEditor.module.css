@@ -1,0 +1,156 @@
+.root {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 0;
+  min-height: 0;
+  flex: 1;
+  border: 1px solid #32465e;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(27, 36, 49, 0.72);
+}
+
+.subnav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-right: 1px solid #32465e;
+  background: rgba(15, 20, 28, 0.45);
+}
+
+.subnavItem {
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #9fb0c3;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.subnavItem:hover {
+  background: rgba(36, 50, 69, 0.6);
+  color: #f2f6fb;
+}
+
+.subnavItem[data-active] {
+  background: rgba(85, 166, 255, 0.16);
+  color: #f2f6fb;
+}
+
+.content {
+  padding: 16px;
+  min-width: 0;
+  overflow: auto;
+}
+
+.editor {
+  min-height: 0;
+}
+
+.search {
+  flex: 1;
+  min-width: 180px;
+}
+
+.filters {
+  flex-wrap: wrap;
+}
+
+.tableWrap {
+  border: 1px solid #32465e;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(15, 20, 28, 0.35);
+}
+
+.tableHead,
+.row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.1fr) minmax(160px, 1fr) minmax(120px, 1fr) 40px;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+}
+
+.tableHead {
+  background: rgba(36, 50, 69, 0.7);
+  color: #9fb0c3;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.sectionBlock + .sectionBlock {
+  border-top: 1px solid rgba(50, 70, 94, 0.7);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(85, 166, 255, 0.08);
+  color: inherit;
+  text-align: left;
+}
+
+.sectionHeader:hover {
+  background: rgba(85, 166, 255, 0.14);
+}
+
+.sectionPath {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 55%;
+}
+
+.tableBody {
+  max-height: 420px;
+  overflow: auto;
+}
+
+.row + .row {
+  border-top: 1px solid rgba(50, 70, 94, 0.45);
+}
+
+.rowActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.footer {
+  padding-top: 4px;
+}
+
+.path {
+  word-break: break-all;
+}
+
+.modRow {
+  padding: 10px 12px;
+  border: 1px solid #32465e;
+  border-radius: 12px;
+  background: rgba(15, 20, 28, 0.35);
+}
+
+.rawEditor {
+  font-family: Consolas, "Courier New", monospace;
+}
+
+@media (max-width: 1100px) {
+  .root {
+    grid-template-columns: 1fr;
+  }
+
+  .subnav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-right: none;
+    border-bottom: 1px solid #32465e;
+  }
+}

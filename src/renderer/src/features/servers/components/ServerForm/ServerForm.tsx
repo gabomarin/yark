@@ -10,8 +10,13 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
+import {
+  getServerFolderNameError,
+  isValidServerFolderName,
+  resolveServerInstallDir,
+} from "@shared/server-install-path";
 import { KNOWN_MAPS, type ServerProfile, type ServerProfileInput } from "@shared/types";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import classes from "./ServerForm.module.css";
 
 interface Props {
@@ -72,11 +77,15 @@ function toFormState(profile: ServerProfile | null): FormState {
   };
 }
 
-function toInput(state: FormState): ServerProfileInput {
+function toInput(state: FormState, isCreate: boolean): ServerProfileInput {
+  const name = state.name.trim();
+  const baseOrInstall = state.installDir.trim();
   return {
-    name: state.name.trim(),
+    name,
     map: state.map.trim(),
-    installDir: state.installDir.trim(),
+    installDir: isCreate
+      ? resolveServerInstallDir(baseOrInstall, name)
+      : baseOrInstall,
     sessionName: state.sessionName.trim(),
     gamePort: Number(state.gamePort),
     queryPort: Number(state.queryPort),
@@ -98,10 +107,32 @@ function toInput(state: FormState): ServerProfileInput {
 }
 
 export function ServerForm(props: Props): JSX.Element {
+  const isCreate = props.initial === null;
   const [state, setState] = useState<FormState>(() => toFormState(props.initial));
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [browsingField, setBrowsingField] = useState<"installDir" | "clusterDir" | null>(null);
+
+  const nameFolderError = useMemo(() => {
+    if (state.name.trim().length === 0) {
+      return null;
+    }
+    return getServerFolderNameError(state.name);
+  }, [state.name]);
+
+  const resolvedInstallPreview = useMemo(() => {
+    if (!isCreate) {
+      return state.installDir.trim();
+    }
+    if (
+      state.installDir.trim().length === 0 ||
+      state.name.trim().length === 0 ||
+      !isValidServerFolderName(state.name)
+    ) {
+      return "";
+    }
+    return resolveServerInstallDir(state.installDir, state.name);
+  }, [isCreate, state.installDir, state.name]);
 
   const setField = (field: keyof FormState) => (value: string) => {
     setState((previous) => ({ ...previous, [field]: value }));
@@ -115,7 +146,9 @@ export function ServerForm(props: Props): JSX.Element {
       "directory",
       current.length > 0 ? current : undefined,
       field === "installDir"
-        ? "Seleccionar carpeta de instalación del servidor"
+        ? isCreate
+          ? "Seleccionar carpeta base (se creará una subcarpeta con el nombre del servidor)"
+          : "Seleccionar carpeta de instalación del servidor"
         : "Seleccionar carpeta de cluster compartido",
     );
     setBrowsingField(null);
@@ -129,9 +162,14 @@ export function ServerForm(props: Props): JSX.Element {
   };
 
   const submit = async () => {
-    setSaving(true);
     setError(null);
-    const input = toInput(state);
+    const folderError = getServerFolderNameError(state.name);
+    if (folderError !== null) {
+      setError(folderError);
+      return;
+    }
+    setSaving(true);
+    const input = toInput(state, isCreate);
     const result =
       props.initial === null
         ? await window.api.createServer(input)
@@ -150,7 +188,7 @@ export function ServerForm(props: Props): JSX.Element {
         <Stack gap="lg">
           <Group justify="space-between" align="flex-start">
             <div>
-              <Title order={2}>{props.initial === null ? "Nuevo servidor" : `Editar: ${props.initial.name}`}</Title>
+              <Title order={2}>{isCreate ? "Nuevo servidor" : `Editar: ${props.initial!.name}`}</Title>
               <Text c="dimmed">Configura identidad, red, acceso, cluster y argumentos del servidor.</Text>
             </div>
             <Button variant="subtle" leftSection={<ArrowLeft size={16} />} onClick={props.onCancel}>
@@ -162,7 +200,18 @@ export function ServerForm(props: Props): JSX.Element {
 
           <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
             <Section title="Identidad">
-              <TextInput label="Nombre" value={state.name} onChange={(e) => setField("name")(e.currentTarget.value)} required />
+              <TextInput
+                label="Nombre"
+                value={state.name}
+                onChange={(e) => setField("name")(e.currentTarget.value)}
+                required
+                error={nameFolderError ?? undefined}
+                description={
+                  isCreate
+                    ? 'También se usa como subcarpeta. No uses < > : " / \\ | ? *'
+                    : undefined
+                }
+              />
               <TextInput label="Nombre de sesión" value={state.sessionName} onChange={(e) => setField("sessionName")(e.currentTarget.value)} required />
               <TextInput label="Mapa" value={state.map} onChange={(e) => setField("map")(e.currentTarget.value)} list="known-maps" required />
               <datalist id="known-maps">
@@ -171,13 +220,23 @@ export function ServerForm(props: Props): JSX.Element {
                 ))}
               </datalist>
               <PathField
-                label="Directorio de instalación"
+                label={isCreate ? "Carpeta base" : "Directorio de instalación"}
                 value={state.installDir}
-                placeholder="C:\\asa-servers\\island"
+                placeholder={isCreate ? "C:\\ark_servers" : "C:\\ark_servers\\my_server"}
                 busy={browsingField === "installDir"}
                 onChange={setField("installDir")}
                 onBrowse={() => void browseDirectory("installDir")}
               />
+              {isCreate && (
+                <Text size="sm" c="dimmed">
+                  Instalación final:{" "}
+                  <Text span fw={600} c={resolvedInstallPreview.length > 0 ? undefined : "dimmed"}>
+                    {resolvedInstallPreview.length > 0
+                      ? resolvedInstallPreview
+                      : "elige carpeta base y nombre"}
+                  </Text>
+                </Text>
+              )}
             </Section>
 
             <Section title="Red">
@@ -196,7 +255,7 @@ export function ServerForm(props: Props): JSX.Element {
               <PathField
                 label="Directorio compartido de cluster"
                 value={state.clusterDir}
-                placeholder="C:\\asa-servers\\cluster"
+                placeholder="C:\\ark_servers\\cluster"
                 busy={browsingField === "clusterDir"}
                 onChange={setField("clusterDir")}
                 onBrowse={() => void browseDirectory("clusterDir")}

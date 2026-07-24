@@ -1,11 +1,7 @@
 import { describe, expect, it } from "vitest";
-import parseIni from "ini";
 import type { ServerIniPayload } from "@shared/types";
 import { applyIniPreset, listIniPresets } from "@shared/ini-presets";
-
-function parseSettings(text: string): Record<string, unknown> {
-  return parseIni.parse(text) as Record<string, unknown>;
-}
+import { parseIniTextRows, setIniTextValue } from "@shared/ini-text";
 
 describe("ini-presets", () => {
   it("expone presets comunes disponibles", () => {
@@ -36,13 +32,15 @@ describe("ini-presets", () => {
     };
 
     const next = applyIniPreset(payload, "pve-basico");
-    const parsed = parseSettings(next.gameUserSettings);
-    const section = parsed["ServerSettings"] as Record<string, unknown>;
+    const rows = parseIniTextRows(next.gameUserSettings);
+    const byKey = Object.fromEntries(
+      rows.filter((row) => row.section === "ServerSettings").map((row) => [row.key, row.value]),
+    );
 
-    expect(section["RCONPort"]).toBe("27020");
-    expect(section["SessionName"]).toBe("Servidor Test");
-    expect(section["AllowFlyerCarryPVE"]).toBe("True");
-    expect(section["ShowMapPlayerLocation"]).toBe("True");
+    expect(byKey["RCONPort"]).toBe("27020");
+    expect(byKey["SessionName"]).toBe("Servidor Test");
+    expect(byKey["AllowFlyerCarryPVE"]).toBe("True");
+    expect(byKey["ShowMapPlayerLocation"]).toBe("True");
   });
 
   it("aplica preset rendimiento sobreescribiendo valores objetivo", () => {
@@ -57,10 +55,27 @@ describe("ini-presets", () => {
     };
 
     const next = applyIniPreset(payload, "rendimiento");
-    const parsed = parseSettings(next.gameUserSettings);
-    const section = parsed["ServerSettings"] as Record<string, unknown>;
+    const rows = parseIniTextRows(next.gameUserSettings);
+    const byKey = Object.fromEntries(
+      rows.filter((row) => row.section === "ServerSettings").map((row) => [row.key, row.value]),
+    );
 
-    expect(section["MaxPlayers"]).toBe("70");
-    expect(section["NetServerMaxTickRate"]).toBe("30");
+    expect(byKey["MaxPlayers"]).toBe("70");
+    expect(byKey["NetServerMaxTickRate"]).toBe("30");
+  });
+
+  it("actualiza secciones con puntos sin anidarlas", () => {
+    const text = setIniTextValue(
+      "[/Script/Engine.GameSession]\nMaxPlayers=10\n",
+      "/Script/Engine.GameSession",
+      "MaxPlayers",
+      "70",
+    );
+    const rows = parseIniTextRows(text);
+    expect(rows[0]).toEqual({
+      section: "/Script/Engine.GameSession",
+      key: "MaxPlayers",
+      value: "70",
+    });
   });
 });

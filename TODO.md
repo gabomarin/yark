@@ -18,6 +18,7 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 
 ### Multi-servidor
 - [-] Crear, editar, clonar y eliminar multiples perfiles de servidor.
+- [x] Al crear, la carpeta elegida es base y el servidor se instala en `base\<nombre>` (p. ej. `C:\ark_servers` + `my_server` → `C:\ark_servers\my_server`); la UI muestra la ruta final.
 - [x] Validacion de puertos y conflictos entre instancias.
 - [x] Visualizacion de estado por servidor en la UI.
 - [x] Visualizacion de estado de instalacion (instalado/no instalado) y version detectada por servidor.
@@ -29,6 +30,8 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - [x] Forzar cierre del servidor.
 - [-] Restart seguro con backup previo.
 - [x] Prueba automatizada de arranque real del `ProcessManager` hasta estado `running`.
+- [x] Estado `starting` hasta readiness real (RCON ListPlayers / señales de log); si falla o hace timeout → `error` (no se queda en `running` falso).
+- [x] Eliminar servidor borra perfil y carpeta `installDir` del disco (con guardas de ruta y de installDir compartido).
 - [ ] Prueba E2E completa contra binario real de ASA en el host.
 
 ### Cluster / transferencias
@@ -38,9 +41,12 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - [ ] Flujo validado con servidores reales compartiendo cluster y transferencias reales.
 
 ### Configuracion INI
+- [x] Catalogo ASA de settings (descripciones/defaults desde INI comentados del usuario + wiki.gg) integrado en shared; defaults/known keys derivados del catalogo.
 - [x] Editor avanzado de `GameUserSettings.ini` y `Game.ini`.
 - [x] Plantillas / presets de configuracion comunes.
 - [x] Validacion y diff antes de guardar cambios en INI.
+- [x] Defaults canónicos en `src/shared/defaults/GameUserSettings.ini` y `Game.ini` (source of truth con comentarios); el catálogo ASA solo agrega keys faltantes.
+- [-] Workspace de servidor en el frontend nuevo (lista lateral para cambiar de servidor, Configuration con tabla Setting/Value/Description, presets, raw Advanced, mods basicos y panel de acciones). Falta pulido visual final, Startup Parameters editable y tabs Files/Backups/Logs/Players/Console del mockup.
 
 ### Backups y restore
 - [x] Backup manual.
@@ -100,7 +106,7 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - [x] Selector nativo de archivo para `steamcmd.exe`.
 - [-] Panel de SteamCMD en UI (estado + salida de consola reciente + cancelación de proceso activa por servidor + ruta manual configurable; ya migrado al frontend nuevo con `SteamCmdPage` en Mantine + CSS Modules. Pendiente: pulido visual, métricas extra y, si hace falta, acciones más avanzadas por servidor durante operaciones activas).
 - [-] Mejoras visuales para gestionar backups, restores y logs (aplicado rediseño base del UI, navegación por secciones en logs, scroll interno en paneles, mejor uso del ancho e iconografía; queda pulido final y diagnóstico guiado).
-- [-] Rediseño de navegación tipo sidebar (Fase 1 completa: shell con sidebar persistente + páginas Overview fusionado con Servers, Clusters, Backups, SteamCMD, Logs, Settings; iconografía y responsive con colapso de sidebar a solo-iconos en <900px). Fase "corrección de fidelidad" completa: iconografía migrada a librería real `@phosphor-icons/react` (reemplaza SVGs a mano, mismo `IconName` API), ServerCard rediseñado con thumbnail placeholder, meta-grid de 2 filas (Jugadores/Mapa/Cluster, Mods/Versión/Estado) y fila de acciones icon-only (Iniciar, Detener, Reiniciar, Abrir carpeta, menu kebab con Editar/INI/Logs/Instalar-Actualizar/Clonar/Forzar cierre/Eliminar), tarjeta de estadística de SteamCMD eliminada de Overview y reemplazada por Backups (placeholder) y Updates (real, comparando `officialVersion` vs versión local detectada), "Official Version" reubicado al Sidebar. Fase 2 (rediseño de Logs) completa en su parte estática: tabs superiores Events/Runtime/Update Logs/Backups, Update History con detalle y visor del log, botón "Open in external viewer" (IPC `logs:open-update-file` vía `shell.openPath`); el histórico persistido ya fue migrado al frontend nuevo como `LogsPage`. Inicio de rewrite UI v2 en `ux_refactor`: base del renderer migrada a Mantine + CSS Modules + aliases nuevos en `electron.vite.config.ts`/`tsconfig.json`; shell nuevo (`AppShellLayout`, `Sidebar`, `PageScaffold`) ya activo y recuperó banner global de errores; `Overview`, `SteamCMD` y `Logs` ya están reimplementados con componentes nuevos; `Clusters`, `Backups` y `Settings` siguen como placeholders homogéneos dentro del shell nuevo; el árbol visual legacy del frontend ya fue removido. Pendiente inmediato: migrar la siguiente página real, recuperar el editor INI con diseño dedicado y, en Logs, sumar salida en vivo cuando haya operación SteamCMD activa.
+- [-] Rediseño de navegación tipo sidebar (Fase 1 completa: shell con sidebar persistente + páginas Overview fusionado con Servers, Clusters, Backups, SteamCMD, Logs, Settings; iconografía y responsive con colapso de sidebar a solo-iconos en <900px). Fase "corrección de fidelidad" completa: iconografía migrada a librería real `@phosphor-icons/react` (reemplaza SVGs a mano, mismo `IconName` API), ServerCard rediseñado con thumbnail placeholder, meta-grid de 2 filas (Jugadores/Mapa/Cluster, Mods/Versión/Estado) y fila de acciones icon-only (Iniciar, Detener, Reiniciar, Abrir carpeta, menu kebab con Editar/INI/Logs/Instalar-Actualizar/Clonar/Forzar cierre/Eliminar), tarjeta de estadística de SteamCMD eliminada de Overview y reemplazada por Backups (placeholder) y Updates (real, comparando `officialVersion` vs versión local detectada), "Official Version" reubicado al Sidebar. Fase 2 (rediseño de Logs) completa en su parte estática: tabs superiores Events/Runtime/Update Logs/Backups, Update History con detalle y visor del log, botón "Open in external viewer" (IPC `logs:open-update-file` vía `shell.openPath`); el histórico persistido ya fue migrado al frontend nuevo como `LogsPage`. Rewrite UI v2: shell nuevo activo; `Overview`, `SteamCMD` y `Logs` migrados; `Clusters`, `Backups` y `Settings` siguen como placeholders. **Server Workspace (editor de servidor) Fase 1**: desde Overview → INI se abre layout de 3 columnas (lista de servidores para cambio rápido / Configuration INI+mods / panel de status+quick actions), reutilizando IPC de INI existente. Pendiente inmediato: pulir workspace, Startup Parameters editable, tabs restantes del mockup, streaming en Logs, y después página Backups.
 - [ ] Asistentes guiados para bootstrap, update y restore.
 
 ## Pruebas y verificacion actual
@@ -118,17 +124,19 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 	- `npx vitest run src/renderer/src/app/AppProviders.test.tsx src/renderer/src/app/AppShellLayout.test.tsx src/renderer/src/features/servers/components/ServerForm/ServerForm.test.tsx src/renderer/src/features/servers/components/ServerCard/ServerCard.test.tsx src/renderer/src/features/overview/OverviewPage.test.tsx`: OK.
 	- `npx vitest run src/renderer/src/features/steamcmd/SteamCmdPage.test.tsx`: OK.
 	- `npx vitest run src/renderer/src/features/logs/LogsPage.test.tsx`: OK.
+	- `npx vitest run tests/unit/ini-model.test.ts src/renderer/src/features/server-workspace/ServerWorkspacePage.test.tsx`: OK.
 	- `npm run typecheck`: OK.
 	- `npm run build`: OK.
 	- `npm run e2e:smoke` y `npm run e2e`: fallan por instalación de Electron en el entorno.
 - Criterio aplicado: cada check se marcó como `[x]` solo cuando existe evidencia funcional vigente; si hay implementación parcial o desalineada, se marcó `[-]`; si no hay evidencia o está roto, `[ ]`.
 
 ## Siguiente prioridad recomendada
-1. Cerrar Fase 2 del rediseño de Logs: salida en vivo (streaming) cuando hay una operación SteamCMD activa para el servidor seleccionado (hoy el tab "Update Logs" solo muestra histórico estático leído de disco).
-2. Fase 3 del rediseño: páginas dedicadas Clusters/Backups/SteamCMD/Settings con el mismo nivel de pulido que Overview, más estados de carga/vacío/error en las server cards (siguiendo el mockup de referencia, con placeholders para imagen de mapa hasta definir el asset real).
-3. Completar cola persistente de jobs críticos para cubrir backup/restore y exponer estado en UI.
-4. E2E real contra binario ASA y SteamCMD del host.
-5. Gestion avanzada de mods.
+1. Pulir editor de servidor (workspace): Startup Parameters editable y tabs restantes del mockup.
+2. Página dedicada de Backups.
+3. Streaming en vivo de Logs durante SteamCMD.
+4. Clusters / Settings como páginas reales.
+5. E2E real contra binario ASA y SteamCMD del host.
+6. Gestion avanzada de mods (Workshop / thumbnails / instalación automática).
 
 ## Regla de mantenimiento
 - Cada vez que se complete una tarea, actualizar este archivo en el mismo cambio.

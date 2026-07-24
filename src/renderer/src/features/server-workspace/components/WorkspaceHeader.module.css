@@ -1,0 +1,14 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #32465e;
+}
+
+.identity {
+  min-width: 0;
+  flex: 1;
+}

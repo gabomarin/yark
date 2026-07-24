@@ -1,0 +1,740 @@
+import {
+  ArrowSquareOut,
+  CaretDown,
+  CaretRight,
+  FloppyDisk,
+  MagnifyingGlass,
+  ArrowCounterClockwise,
+  ArrowUUpLeft,
+} from "@phosphor-icons/react";
+import {
+  ActionIcon,
+  Alert,
+  Badge,
+  Button,
+  Group,
+  NumberInput,
+  Select,
+  Stack,
+  Switch,
+  Text,
+  TextInput,
+  Textarea,
+  Title,
+  Tooltip,
+  UnstyledButton,
+} from "@mantine/core";
+import { applyIniPreset, listIniPresets } from "@shared/ini-presets";
+import type {
+  IniFileKey,
+  IniPreview,
+  ServerIniPayload,
+  ServerIniSnapshot,
+  ServerProfile,
+} from "@shared/types";
+import { useEffect, useMemo, useState } from "react";
+import {
+  INI_FILTERS,
+  defaultTextForFile,
+  filterIniRows,
+  groupRowsBySection,
+  inferControlKind,
+  lookupDefaultValue,
+  lookupSettingDescription,
+  parseIniRows,
+  sanitizeServerIniPayload,
+  sectionBracketLabel,
+  sectionShortName,
+  setIniValue,
+  textForFile,
+  withFileText,
+  type IniFilterId,
+  type IniSettingRow,
+} from "../iniModel";
+import classes from "./ConfigurationEditor.module.css";
+
+type ConfigSection =
+  | "game"
+  | "gameUserSettings"
+  | "mods"
+  | "startup"
+  | "advanced";
+
+interface Props {
+  server: ServerProfile;
+  onModsChanged: (mods: string[]) => Promise<void>;
+  onDirtyChange?: (dirty: boolean) => void;
+}
+
+const SECTION_ITEMS: Array<{ id: ConfigSection; label: string }> = [
+  { id: "game", label: "Game.ini" },
+  { id: "gameUserSettings", label: "GameUserSettings.ini" },
+  { id: "mods", label: "Active Mods" },
+  { id: "startup", label: "Startup Parameters" },
+  { id: "advanced", label: "Advanced" },
+];
+
+function fileKeyForSection(section: ConfigSection): IniFileKey | null {
+  if (section === "game") return "game";
+  if (section === "gameUserSettings") return "gameUserSettings";
+  if (section === "advanced") return "gameUserSettings";
+  return null;
+}
+
+export function ConfigurationEditor(props: Props): JSX.Element {
+  const [section, setSection] = useState<ConfigSection>("gameUserSettings");
+  const [snapshot, setSnapshot] = useState<ServerIniSnapshot | null>(null);
+  const [payload, setPayload] = useState<ServerIniPayload | null>(null);
+  const [baseline, setBaseline] = useState<ServerIniPayload | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [preview, setPreview] = useState<IniPreview | null>(null);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<IniFilterId>("all");
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const [advancedFile, setAdvancedFile] = useState<IniFileKey>("gameUserSettings");
+  const [modDraft, setModDraft] = useState("");
+  const [mods, setMods] = useState<string[]>(props.server.mods);
+
+  const dirty =
+    payload !== null &&
+    baseline !== null &&
+    (payload.game !== baseline.game ||
+      payload.gameUserSettings !== baseline.gameUserSettings);
+
+  useEffect(() => {
+    props.onDirtyChange?.(dirty);
+  }, [dirty, props.onDirtyChange]);
+
+  useEffect(() => {
+    setMods(props.server.mods);
+  }, [props.server.id, props.server.mods]);
+
+  const load = async (serverId: string) => {
+    setLoading(true);
+    setError(null);
+    setInfo(null);
+    setPreview(null);
+    const result = await window.api.readServerIni(serverId);
+    setLoading(false);
+    if (!result.ok) {
+      setSnapshot(null);
+      setPayload(null);
+      setBaseline(null);
+      setError(result.error ?? "No se pudo leer el INI");
+      return;
+    }
+    const rawPayload = result.data.payload;
+    const sanitized = sanitizeServerIniPayload(rawPayload);
+    setSnapshot({ ...result.data, payload: sanitized });
+    setPayload(sanitized);
+    // Si el disco tenía keys de cliente, dejamos dirty para que Save las limpie.
+    setBaseline(rawPayload);
+    if (
+      sanitized.gameUserSettings !== rawPayload.gameUserSettings ||
+      sanitized.game !== rawPayload.game
+    ) {
+      setInfo(
+        "Se detectaron keys de cliente/historial (p. ej. LastJoinedSessionPerCategory). No aplican a dedicated: pulsa Save para limpiarlas del disco.",
+      );
+    }
+  };
+
+  useEffect(() => {
+    void load(props.server.id);
+  }, [props.server.id]);
+
+  const activeFileKey: IniFileKey =
+    section === "advanced"
+      ? advancedFile
+      : section === "game"
+        ? "game"
+        : "gameUserSettings";
+
+  const activeText = payload !== null ? textForFile(payload, activeFileKey) : "";
+  const rows = useMemo(() => parseIniRows(activeText), [activeText]);
+  const visibleRows = useMemo(
+    () => filterIniRows(rows, search, filter, activeFileKey),
+    [rows, search, filter, activeFileKey],
+  );
+  const groupedRows = useMemo(() => groupRowsBySection(visibleRows), [visibleRows]);
+
+  const updateValue = (
+    rowSection: string,
+    key: string,
+    value: string,
+    occurrence = 0,
+  ) => {
+    if (payload === null) return;
+    const nextText = setIniValue(activeText, rowSection, key, value, occurrence);
+    setPayload(withFileText(payload, activeFileKey, nextText));
+    setInfo(null);
+    setPreview(null);
+  };
+
+  const resetChanges = () => {
+    if (baseline === null) return;
+    // Nunca reintroducir keys de cliente en el editor.
+    setPayload(sanitizeServerIniPayload(baseline));
+    setPreview(null);
+    setInfo("Cambios descartados");
+  };
+
+  const resetActiveFileToDefaults = () => {
+    if (payload === null) return;
+    const label =
+      activeFileKey === "game" ? "Game.ini" : "GameUserSettings.ini";
+    const ok = window.confirm(
+      `¿Restablecer ${label} a los valores default del proyecto? Se perderán los valores actuales de este archivo (aún no guardados en disco hasta que pulses Save).`,
+    );
+    if (!ok) return;
+    setPayload(withFileText(payload, activeFileKey, defaultTextForFile(activeFileKey)));
+    setPreview(null);
+    setInfo(`${label} restaurado a defaults (pendiente de Save)`);
+  };
+
+  const resetRowToDefault = (row: IniSettingRow) => {
+    const defaultValue = lookupDefaultValue(activeFileKey, row.section, row.key);
+    if (defaultValue === null) return;
+    updateValue(row.section, row.key, defaultValue, row.occurrence);
+    setInfo(`${row.key} restaurado al default`);
+  };
+
+  const toggleSection = (sectionName: string) => {
+    setCollapsedSections((prev) => ({
+      ...prev,
+      [sectionName]: !prev[sectionName],
+    }));
+  };
+
+  const setAllSectionsCollapsed = (collapsed: boolean) => {
+    const next: Record<string, boolean> = {};
+    for (const group of groupedRows) {
+      next[group.section] = collapsed;
+    }
+    setCollapsedSections(next);
+  };
+
+  const saveIni = async () => {
+    if (payload === null) return;
+    setBusy(true);
+    setError(null);
+    setInfo(null);
+    const sanitized = sanitizeServerIniPayload(payload);
+    const result = await window.api.saveServerIni(props.server.id, sanitized);
+    setBusy(false);
+    if (!result.ok) {
+      setError(result.error ?? "No se pudo guardar el INI");
+      return;
+    }
+    setPayload(sanitized);
+    setPreview(result.data);
+    setBaseline(sanitized);
+    setInfo(
+      result.data.changedCount > 0
+        ? `Guardado (${result.data.changedCount} cambios)`
+        : "Guardado (sin cambios)",
+    );
+  };
+
+  const openExternal = async () => {
+    const key = fileKeyForSection(section === "advanced" ? "advanced" : section);
+    if (key === null) return;
+    setBusy(true);
+    const result = await window.api.openServerIniInEditor(props.server.id, key);
+    setBusy(false);
+    if (!result.ok) {
+      setError(result.error ?? "No se pudo abrir el archivo");
+    }
+  };
+
+  const applyPreset = (presetId: string | null) => {
+    if (payload === null || presetId === null) return;
+    const next = applyIniPreset(payload, presetId);
+    setPayload(next);
+    setInfo(`Preset aplicado: ${presetId}`);
+    setPreview(null);
+  };
+
+  const saveMods = async (nextMods: string[]) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await props.onModsChanged(nextMods);
+      setMods(nextMods);
+      setInfo("Mods actualizados en el perfil");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudieron guardar los mods");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const filePath =
+    snapshot === null
+      ? null
+      : activeFileKey === "game"
+        ? snapshot.gameIniPath
+        : snapshot.gameUserSettingsPath;
+
+  return (
+    <div className={classes.root}>
+      <nav className={classes.subnav}>
+        {SECTION_ITEMS.map((item) => (
+          <UnstyledButton
+            key={item.id}
+            className={classes.subnavItem}
+            data-active={section === item.id || undefined}
+            onClick={() => setSection(item.id)}
+          >
+            {item.label}
+          </UnstyledButton>
+        ))}
+      </nav>
+
+      <div className={classes.content}>
+        {error !== null && (
+          <Alert color="red" mb="sm" onClose={() => setError(null)} withCloseButton>
+            {error}
+          </Alert>
+        )}
+        {info !== null && (
+          <Alert color="blue" mb="sm" onClose={() => setInfo(null)} withCloseButton>
+            {info}
+          </Alert>
+        )}
+
+        {(section === "game" || section === "gameUserSettings") && (
+          <Stack gap="md" className={classes.editor}>
+            <Group justify="space-between" align="flex-start">
+              <div>
+                <Title order={3}>
+                  Edit {section === "game" ? "Game.ini" : "GameUserSettings.ini"}
+                </Title>
+                <Text c="dimmed" size="sm">
+                  Campos estructurados con búsqueda y filtros. El modo Advanced permite editar el texto crudo.
+                </Text>
+              </div>
+              <Group gap="xs">
+                <Select
+                  placeholder="Aplicar preset"
+                  data={listIniPresets().map((preset) => ({
+                    value: preset.id,
+                    label: preset.name,
+                  }))}
+                  clearable
+                  searchable
+                  w={180}
+                  onChange={applyPreset}
+                  disabled={payload === null || loading}
+                />
+                <Button
+                  variant="default"
+                  leftSection={<ArrowUUpLeft size={16} />}
+                  onClick={resetActiveFileToDefaults}
+                  disabled={payload === null || busy || loading}
+                >
+                  Reset to defaults
+                </Button>
+                <Button
+                  variant="default"
+                  leftSection={<ArrowCounterClockwise size={16} />}
+                  onClick={resetChanges}
+                  disabled={!dirty || busy}
+                >
+                  Discard changes
+                </Button>
+                <Button
+                  leftSection={<FloppyDisk size={16} />}
+                  onClick={() => void saveIni()}
+                  disabled={!dirty || busy || loading}
+                >
+                  Save
+                </Button>
+              </Group>
+            </Group>
+
+            <Group gap="sm" align="center">
+              <TextInput
+                className={classes.search}
+                placeholder="Search settings"
+                leftSection={<MagnifyingGlass size={14} />}
+                value={search}
+                onChange={(event) => setSearch(event.currentTarget.value)}
+              />
+              <Button size="xs" variant="light" onClick={() => setAllSectionsCollapsed(true)}>
+                Colapsar
+              </Button>
+              <Button size="xs" variant="light" onClick={() => setAllSectionsCollapsed(false)}>
+                Expandir
+              </Button>
+              {dirty && (
+                <Badge color="yellow" variant="light">
+                  Unsaved
+                </Badge>
+              )}
+            </Group>
+
+            <Group gap={6} className={classes.filters}>
+              {INI_FILTERS.map((item) => (
+                <Button
+                  key={item.id}
+                  size="xs"
+                  variant={filter === item.id ? "filled" : "light"}
+                  onClick={() => setFilter(item.id)}
+                >
+                  {item.label}
+                </Button>
+              ))}
+            </Group>
+
+            <div className={classes.tableWrap}>
+              <div className={classes.tableHead}>
+                <span>Setting</span>
+                <span>Value</span>
+                <span>Description</span>
+                <span />
+              </div>
+              <div className={classes.tableBody}>
+                {loading && (
+                  <Text c="dimmed" p="md">
+                    Cargando INI…
+                  </Text>
+                )}
+                {!loading && groupedRows.length === 0 && (
+                  <Text c="dimmed" p="md">
+                    No hay settings para este filtro.
+                  </Text>
+                )}
+                {!loading &&
+                  groupedRows.map((group) => {
+                    const collapsed = collapsedSections[group.section] === true;
+                    return (
+                      <div key={group.section} className={classes.sectionBlock}>
+                        <UnstyledButton
+                          className={classes.sectionHeader}
+                          onClick={() => toggleSection(group.section)}
+                        >
+                          <Group gap="xs" wrap="nowrap">
+                            {collapsed ? <CaretRight size={14} /> : <CaretDown size={14} />}
+                            <Text fw={700} size="sm">
+                              {sectionShortName(group.section)}
+                            </Text>
+                            <Badge size="xs" variant="light" color="gray">
+                              {group.rows.length}
+                            </Badge>
+                          </Group>
+                          <Text c="dimmed" size="xs" className={classes.sectionPath}>
+                            {sectionBracketLabel(group.section)}
+                          </Text>
+                        </UnstyledButton>
+
+                        {!collapsed &&
+                          group.rows.map((row) => {
+                            const kind = inferControlKind(row.value);
+                            const controlId = `${row.section}\u001f${row.key}\u001f${row.occurrence}`;
+                            const defaultValue = lookupDefaultValue(
+                              activeFileKey,
+                              row.section,
+                              row.key,
+                            );
+                            const canResetDefault =
+                              defaultValue !== null && defaultValue !== row.value;
+                            const label =
+                              row.duplicateCount > 1
+                                ? `${row.key} #${row.occurrence + 1}`
+                                : row.key;
+
+                            return (
+                              <div key={controlId} className={classes.row}>
+                                <div>
+                                  <Text fw={600} size="sm">
+                                    {label}
+                                  </Text>
+                                  {row.duplicateCount > 1 && (
+                                    <Text c="dimmed" size="xs">
+                                      Entrada {row.occurrence + 1} de {row.duplicateCount}
+                                    </Text>
+                                  )}
+                                </div>
+                                <div>
+                                  {kind === "boolean" ? (
+                                    <Switch
+                                      checked={row.value.toLowerCase() === "true"}
+                                      onChange={(event) =>
+                                        updateValue(
+                                          row.section,
+                                          row.key,
+                                          event.currentTarget.checked ? "True" : "False",
+                                          row.occurrence,
+                                        )
+                                      }
+                                    />
+                                  ) : kind === "number" ? (
+                                    <NumberInput
+                                      value={Number(row.value)}
+                                      onChange={(value) =>
+                                        updateValue(
+                                          row.section,
+                                          row.key,
+                                          value === "" || value === undefined
+                                            ? ""
+                                            : String(value),
+                                          row.occurrence,
+                                        )
+                                      }
+                                      decimalScale={4}
+                                      hideControls={false}
+                                    />
+                                  ) : (
+                                    <TextInput
+                                      value={row.value}
+                                      onChange={(event) =>
+                                        updateValue(
+                                          row.section,
+                                          row.key,
+                                          event.currentTarget.value,
+                                          row.occurrence,
+                                        )
+                                      }
+                                    />
+                                  )}
+                                </div>
+                                <Text c="dimmed" size="sm">
+                                  {lookupSettingDescription(activeFileKey, row.section, row.key)}
+                                </Text>
+                                <div className={classes.rowActions}>
+                                  <Tooltip
+                                    label={
+                                      canResetDefault
+                                        ? `Default: ${defaultValue}`
+                                        : "Sin default conocido para esta key/sección"
+                                    }
+                                  >
+                                    <ActionIcon
+                                      variant="subtle"
+                                      color="gray"
+                                      disabled={!canResetDefault || busy}
+                                      aria-label={`Reset ${row.key} to default`}
+                                      onClick={() => resetRowToDefault(row)}
+                                    >
+                                      <ArrowUUpLeft size={14} />
+                                    </ActionIcon>
+                                  </Tooltip>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+
+            <Group justify="space-between" className={classes.footer}>
+              <Text c="dimmed" size="xs" className={classes.path}>
+                {filePath ?? "Ruta no disponible"}
+              </Text>
+              <Button
+                variant="light"
+                leftSection={<ArrowSquareOut size={16} />}
+                onClick={() => void openExternal()}
+                disabled={busy || snapshot === null}
+              >
+                Open in Explorer
+              </Button>
+            </Group>
+
+            {preview !== null && preview.diff.length > 0 && (
+              <Alert color="green" title="Último diff guardado">
+                {preview.diff.slice(0, 8).map((entry) => (
+                  <Text key={`${entry.fileKey}.${entry.section}.${entry.key}`} size="sm">
+                    [{entry.fileKey}] {entry.section}.{entry.key}: {entry.before ?? "∅"} →{" "}
+                    {entry.after ?? "∅"}
+                  </Text>
+                ))}
+                {preview.diff.length > 8 && (
+                  <Text size="sm" c="dimmed">
+                    …y {preview.diff.length - 8} más
+                  </Text>
+                )}
+              </Alert>
+            )}
+          </Stack>
+        )}
+
+        {section === "mods" && (
+          <Stack gap="md">
+            <div>
+              <Title order={3}>Active Mods ({mods.length})</Title>
+              <Text c="dimmed" size="sm">
+                Orden de carga del perfil. La instalación automática desde Workshop llega después.
+              </Text>
+            </div>
+            <Group align="flex-end">
+              <TextInput
+                label="Mod ID"
+                placeholder="1234567890"
+                value={modDraft}
+                onChange={(event) => setModDraft(event.currentTarget.value)}
+                style={{ flex: 1 }}
+              />
+              <Button
+                disabled={modDraft.trim().length === 0 || busy}
+                onClick={() => {
+                  const id = modDraft.trim();
+                  if (id.length === 0) return;
+                  const next = mods.includes(id) ? mods : [...mods, id];
+                  setModDraft("");
+                  void saveMods(next);
+                }}
+              >
+                Add Mod
+              </Button>
+            </Group>
+            <Stack gap="xs">
+              {mods.length === 0 && (
+                <Text c="dimmed" size="sm">
+                  No hay mods configurados.
+                </Text>
+              )}
+              {mods.map((modId, index) => (
+                <Group key={`${modId}-${index}`} className={classes.modRow} justify="space-between">
+                  <div>
+                    <Text fw={600}>{modId}</Text>
+                    <Text c="dimmed" size="xs">
+                      Load order #{index + 1}
+                    </Text>
+                  </div>
+                  <Group gap="xs">
+                    <Button
+                      size="xs"
+                      variant="light"
+                      disabled={index === 0 || busy}
+                      onClick={() => {
+                        if (index === 0) return;
+                        const next = [...mods];
+                        const current = next[index];
+                        const prev = next[index - 1];
+                        if (current === undefined || prev === undefined) return;
+                        next[index - 1] = current;
+                        next[index] = prev;
+                        void saveMods(next);
+                      }}
+                    >
+                      Up
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="light"
+                      disabled={index === mods.length - 1 || busy}
+                      onClick={() => {
+                        if (index >= mods.length - 1) return;
+                        const next = [...mods];
+                        const current = next[index];
+                        const following = next[index + 1];
+                        if (current === undefined || following === undefined) return;
+                        next[index] = following;
+                        next[index + 1] = current;
+                        void saveMods(next);
+                      }}
+                    >
+                      Down
+                    </Button>
+                    <Button
+                      size="xs"
+                      color="red"
+                      variant="light"
+                      disabled={busy}
+                      onClick={() => {
+                        void saveMods(mods.filter((_, i) => i !== index));
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  </Group>
+                </Group>
+              ))}
+            </Stack>
+          </Stack>
+        )}
+
+        {section === "startup" && (
+          <Stack gap="sm">
+            <Title order={3}>Startup Parameters</Title>
+            <Text c="dimmed">
+              Los argumentos extra actuales del perfil:
+            </Text>
+            <Textarea
+              readOnly
+              minRows={6}
+              value={props.server.extraArgs.join("\n") || "(sin argumentos extra)"}
+            />
+            <Text size="sm" c="dimmed">
+              La edición dedicada de startup llega en una fase siguiente. Por ahora usa Editar servidor.
+            </Text>
+          </Stack>
+        )}
+
+        {section === "advanced" && payload !== null && (
+          <Stack gap="md" className={classes.editor}>
+            <Group justify="space-between">
+              <div>
+                <Title order={3}>Advanced (raw INI)</Title>
+                <Text c="dimmed" size="sm">
+                  Edición directa del texto. Útil para comparar o pegar bloques entre servidores.
+                </Text>
+              </div>
+              <Group gap="xs">
+                <Select
+                  value={advancedFile}
+                  onChange={(value) => {
+                    if (value === "game" || value === "gameUserSettings") {
+                      setAdvancedFile(value);
+                    }
+                  }}
+                  data={[
+                    { value: "gameUserSettings", label: "GameUserSettings.ini" },
+                    { value: "game", label: "Game.ini" },
+                  ]}
+                  w={220}
+                />
+                <Button
+                  variant="default"
+                  leftSection={<ArrowCounterClockwise size={16} />}
+                  onClick={resetChanges}
+                  disabled={!dirty || busy}
+                >
+                  Reset changes
+                </Button>
+                <Button
+                  leftSection={<FloppyDisk size={16} />}
+                  onClick={() => void saveIni()}
+                  disabled={!dirty || busy}
+                >
+                  Save
+                </Button>
+              </Group>
+            </Group>
+            <Textarea
+              className={classes.rawEditor}
+              minRows={22}
+              value={textForFile(payload, advancedFile)}
+              onChange={(event) =>
+                setPayload(withFileText(payload, advancedFile, event.currentTarget.value))
+              }
+              styles={{
+                input: {
+                  fontFamily: "Consolas, 'Courier New', monospace",
+                  fontSize: 12,
+                },
+              }}
+            />
+          </Stack>
+        )}
+      </div>
+    </div>
+  );
+}

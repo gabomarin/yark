@@ -91,7 +91,18 @@ export function ServerCard(props: Props): JSX.Element {
               <Text c="dimmed" size="sm">{server.sessionName}</Text>
             </div>
           </Group>
-          <Badge color={status === "running" ? "green" : status === "error" ? "red" : "gray"} variant="light">
+          <Badge
+            color={
+              status === "running"
+                ? "green"
+                : status === "error"
+                  ? "red"
+                  : status === "starting" || status === "stopping"
+                    ? "blue"
+                    : "gray"
+            }
+            variant="light"
+          >
             {STATUS_LABEL[status] ?? status}
           </Badge>
         </Group>

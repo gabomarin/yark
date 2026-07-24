@@ -9,12 +9,13 @@ import type {
   SteamCmdStatus,
 } from "@shared/types";
 import { AppRouter } from "@app/AppRouter";
+import { AppShellLayout } from "@app/AppShellLayout";
 import { LogsPage } from "@features/logs/LogsPage";
 import { OverviewPage } from "@features/overview/OverviewPage";
+import { ServerWorkspacePage } from "@features/server-workspace/ServerWorkspacePage";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { SteamCmdPage } from "@features/steamcmd/SteamCmdPage";
 import type { Route } from "@layout/Sidebar/Sidebar";
-import { PlaceholderPage } from "@ui/PlaceholderPage/PlaceholderPage";
 
 const APP_VERSION = "0.1.0";
 const OPEN_NATIVE_TERMINAL_PREF_KEY = "overview.openNativeTerminalOnStart";
@@ -24,7 +25,7 @@ type LogsSection = "events" | "runtime" | "updates" | "backups";
 type Overlay =
   | { kind: "create" }
   | { kind: "edit"; profile: ServerProfile }
-  | { kind: "ini"; profile: ServerProfile }
+  | { kind: "workspace"; serverId: string }
   | null;
 
 export function App(): JSX.Element {
@@ -225,12 +226,39 @@ export function App(): JSX.Element {
   }, []);
 
   const renderMain = (): JSX.Element => {
-    if (overlay?.kind === "ini") {
+    if (overlay?.kind === "workspace") {
       return (
-        <PlaceholderPage
-          title="INI Editor"
-          subtitle={`La edición del INI de ${overlay.profile.name} se migrará cuando llegue su diseño dedicado.`}
-        />
+        <AppShellLayout
+          route="overview"
+          onNavigate={navigate}
+          steamCmdDetected={steamCmdStatus?.detected === true}
+          steamCmdRunning={steamCmdStatus?.running === true}
+          officialVersion={officialVersion}
+          appVersion={APP_VERSION}
+          error={error}
+          onDismissError={() => setError(null)}
+        >
+          <ServerWorkspacePage
+            servers={servers}
+            selectedServerId={overlay.serverId}
+            statuses={statuses}
+            installationInfo={installationInfo}
+            onSelectServer={(serverId) => setOverlay({ kind: "workspace", serverId })}
+            onBack={() => setOverlay(null)}
+            onCreateServer={() => setOverlay({ kind: "create" })}
+            onStartServer={(id) => void runAction(() => window.api.startServer(id))}
+            onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
+            onRestartServer={(id) => void restartServer(id)}
+            onKillServer={(id) => void runAction(() => window.api.killServer(id))}
+            onOpenFolder={(id) => void runAction(() => window.api.openServerFolder(id))}
+            onInstallFiles={(id) => void runAction(() => window.api.installServerFiles(id))}
+            onUpdateNow={(id) => void runAction(() => window.api.updateServerNow(id))}
+            onSendRcon={(id, command) =>
+              void runAction(() => window.api.sendRconCommand(id, command))
+            }
+            onServerUpdated={() => void refresh()}
+          />
+        </AppShellLayout>
       );
     }
 
@@ -278,7 +306,7 @@ export function App(): JSX.Element {
               steamCmdServerId={steamCmdStatus?.serverId ?? null}
               steamCmdRunning={steamCmdStatus?.running === true}
               onEditServer={(server) => setOverlay({ kind: "edit", profile: server })}
-              onOpenIni={(server) => setOverlay({ kind: "ini", profile: server })}
+              onOpenIni={(server) => setOverlay({ kind: "workspace", serverId: server.id })}
               onOpenLogs={(serverId) => openLogsForServer(serverId, "events")}
               onStartServer={(id) => void startServerAndOpenRuntimeLogs(id)}
               onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
@@ -291,7 +319,12 @@ export function App(): JSX.Element {
               onDeleteServer={(id) => {
                 const server = servers.find((item) => item.id === id);
                 const label = server?.name ?? id;
-                if (window.confirm(`¿Eliminar el servidor "${label}"?`)) {
+                const installDir = server?.installDir ?? "(ruta desconocida)";
+                if (
+                  window.confirm(
+                    `¿Eliminar el servidor "${label}"?\n\nSe borrará el perfil y TODOS los archivos en:\n${installDir}\n\nEsta acción no se puede deshacer.`,
+                  )
+                ) {
                   void runAction(() => window.api.deleteServer(id));
                 }
               }}

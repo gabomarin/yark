@@ -1,5 +1,5 @@
-import parseIni from "ini";
 import type { IniFileKey, ServerIniPayload } from "./types";
+import { setIniTextValue } from "./ini-text";
 
 interface IniPresetUpdate {
   fileKey: IniFileKey;
@@ -104,21 +104,11 @@ function updateText(payload: ServerIniPayload, fileKey: IniFileKey, next: string
 }
 
 function applyUpdatesToText(text: string, updates: IniPresetUpdate[]): string {
-  const parsed = parseIni.parse(text) as Record<string, unknown>;
-
+  let next = text;
   for (const update of updates) {
-    const sectionRaw = parsed[update.section];
-    const section =
-      sectionRaw !== null && typeof sectionRaw === "object" && !Array.isArray(sectionRaw)
-        ? (sectionRaw as Record<string, unknown>)
-        : {};
-
-    section[update.key] = update.value;
-    parsed[update.section] = section;
+    next = setIniTextValue(next, update.section, update.key, update.value);
   }
-
-  const result = parseIni.stringify(parsed);
-  return result.endsWith("\n") ? result : `${result}\n`;
+  return next;
 }
 
 export function listIniPresets(): IniPreset[] {

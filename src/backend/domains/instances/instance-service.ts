@@ -7,9 +7,10 @@ import type {
   StartServerOptions,
 } from "@shared/types";
 import { existsSync } from "node:fs";
-import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { join, parse as parsePath, resolve } from "node:path";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
+import { resolveServerInstallDir } from "@shared/server-install-path";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { ProcessManager } from "../../infra/process/process-manager";
 import { findPortConflicts, validateProfileInput } from "./validation";
@@ -19,6 +20,24 @@ import { inspectServerInstallation, readOfficialArkVersionCached } from "./serve
 
 const RCON_HOST = "127.0.0.1";
 
+function assertSafeInstallDirForWipe(installDir: string): string {
+  const resolved = resolve(installDir);
+  const root = parsePath(resolved).root;
+  if (resolved.length === 0 || resolved === root || /^[a-zA-Z]:\\?$/.test(resolved)) {
+    throw new Error(
+      `Ruta de instalación no segura para borrar del disco: "${installDir}"`,
+    );
+  }
+  // Evitar borrar raíces tipo C:\Users o C:\Windows por accidente.
+  const normalized = resolved.replace(/[/\\]+$/, "").toLowerCase();
+  const forbidden = ["c:\\windows", "c:\\users", "c:\\program files", "c:\\program files (x86)"];
+  if (forbidden.some((item) => normalized === item)) {
+    throw new Error(
+      `Ruta de instalación demasiado genérica para borrar del disco: "${resolved}"`,
+    );
+  }
+  return resolved;
+}
 /**
  * Servicio de orquestación de instancias: CRUD validado + ciclo de vida.
  */
@@ -35,13 +54,20 @@ export class InstanceService {
   create(input: ServerProfileInput): ServerProfile {
     this.assertValidInput(input);
     this.assertNoPortConflicts(input);
-    const profile = this.repo.create(input);
+
+    const installDir = resolveServerInstallDir(input.installDir, input.name);
+    const normalized: ServerProfileInput = { ...input, installDir };
+    this.assertValidInput(normalized);
+    this.assertUniqueInstallDir(installDir);
+
+    // create() sync; ensureDefaultIniFiles async — mkdir raíz aquí de forma síncrona vía ensure
+    const profile = this.repo.create(normalized);
     void this.ensureDefaultIniFiles(profile.installDir);
     this.repo.addEvent(
       profile.id,
       "server_created",
       "info",
-      `Servidor "${profile.name}" creado (mapa ${profile.map})`,
+      `Servidor "${profile.name}" creado en ${profile.installDir} (mapa ${profile.map})`,
     );
     return profile;
   }
@@ -84,18 +110,34 @@ export class InstanceService {
     return updated;
   }
 
-  delete(id: string): void {
+  async delete(id: string): Promise<void> {
     if (this.processes.isActive(id)) {
       throw new Error("No se puede eliminar un servidor mientras está en ejecución");
     }
     const profile = this.repo.get(id);
     if (profile === null) return;
+
+    const installDir = assertSafeInstallDirForWipe(profile.installDir);
+    const shared = this.repo
+      .list()
+      .filter((item) => item.id !== id && resolve(item.installDir) === installDir);
+    if (shared.length > 0) {
+      const names = shared.map((item) => item.name).join(", ");
+      throw new Error(
+        `No se puede borrar "${installDir}" del disco: también lo usan: ${names}. Elimina o cambia esos perfiles primero.`,
+      );
+    }
+
+    if (existsSync(installDir)) {
+      await rm(installDir, { recursive: true, force: true });
+    }
+
     this.repo.delete(id);
     this.repo.addEvent(
       null,
       "server_deleted",
       "info",
-      `Servidor "${profile.name}" eliminado`,
+      `Servidor "${profile.name}" eliminado (perfil + archivos en ${installDir})`,
     );
   }
 
@@ -160,7 +202,7 @@ export class InstanceService {
       id,
       "server_started",
       "info",
-      `Servidor "${profile.name}" iniciado`,
+      `Servidor "${profile.name}" arrancando (esperando readiness)`,
     );
   }
 
@@ -264,6 +306,18 @@ export class InstanceService {
       const c = conflicts[0]!;
       throw new Error(
         `Conflicto de puerto ${c.kind} ${c.port} entre "${c.serverA}" y "${c.serverB}"`,
+      );
+    }
+  }
+
+  private assertUniqueInstallDir(installDir: string, excludeId?: string): void {
+    const target = resolve(installDir);
+    const clash = this.repo
+      .list()
+      .find((profile) => profile.id !== excludeId && resolve(profile.installDir) === target);
+    if (clash !== undefined) {
+      throw new Error(
+        `Ya existe un servidor usando la carpeta "${installDir}" ("${clash.name}")`,
       );
     }
   }

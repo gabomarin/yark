@@ -1,5 +1,9 @@
 import { z } from "zod";
 import {
+  getServerFolderNameError,
+  getWindowsPathError,
+} from "@shared/server-install-path";
+import {
   PORT_MAX,
   PORT_MIN,
   type PortConflict,
@@ -23,7 +27,17 @@ const windowsPathSchema = z
   .regex(WINDOWS_ABS_PATH, "Debe ser una ruta absoluta de Windows");
 
 export const serverProfileInputSchema = z.object({
-  name: z.string().trim().min(1, "Nombre requerido").max(64),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Nombre requerido")
+    .max(64)
+    .superRefine((value, ctx) => {
+      const error = getServerFolderNameError(value);
+      if (error !== null) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: error });
+      }
+    }),
   map: z.string().trim().min(1, "Mapa requerido"),
   installDir: windowsPathSchema,
   sessionName: z.string().trim().min(1, "Nombre de sesión requerido").max(96),
@@ -48,12 +62,25 @@ export function validateProfileInput(
   const parsed = serverProfileInputSchema.safeParse(input);
   if (!parsed.success) {
     for (const err of parsed.error.errors) {
-      issues.push({ field: err.path.join("."), message: err.message });
+      issues.push({ field: err.path.join(".") || "root", message: err.message });
     }
     return issues;
   }
 
-  const { gamePort, queryPort, rconPort, clusterId, clusterDir } = parsed.data;
+  const { gamePort, queryPort, rconPort, clusterId, clusterDir, installDir } =
+    parsed.data;
+
+  const installDirError = getWindowsPathError(installDir, "Directorio de instalación");
+  if (installDirError !== null) {
+    issues.push({ field: "installDir", message: installDirError });
+  }
+  if (clusterDir !== null) {
+    const clusterDirError = getWindowsPathError(clusterDir, "Directorio de cluster");
+    if (clusterDirError !== null) {
+      issues.push({ field: "clusterDir", message: clusterDirError });
+    }
+  }
+
   const ports = [gamePort, queryPort, rconPort];
   if (new Set(ports).size !== ports.length) {
     issues.push({

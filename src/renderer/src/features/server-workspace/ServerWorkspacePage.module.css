@@ -1,0 +1,57 @@
+.root {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) 280px;
+  height: 100vh;
+  max-height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+  margin: -0; /* fill AppShell main */
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.tabPanel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  padding-top: 12px;
+}
+
+.empty {
+  padding: 32px;
+  color: #9fb0c3;
+}
+
+@media (max-width: 1200px) {
+  .root {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .root > :last-child {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .root {
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow: auto;
+  }
+}

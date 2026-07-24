@@ -1,0 +1,40 @@
+.panel {
+  width: 280px;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 14px;
+  border-left: 1px solid #32465e;
+  background: rgba(15, 20, 28, 0.45);
+  overflow: auto;
+  min-height: 0;
+}
+
+.card {
+  background: #1b2431;
+}
+
+.metaRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.metaLabel {
+  color: #9fb0c3;
+  font-size: 12px;
+}
+
+.metaValue {
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+  word-break: break-all;
+}
+
+.broadcast {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

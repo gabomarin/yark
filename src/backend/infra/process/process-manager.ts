@@ -15,12 +15,33 @@ interface ManagedProcess {
   status: ServerStatus;
   startedAt: string;
   lastError: string | null;
+  readinessGeneration: number;
+}
+
+export interface ProcessManagerOptions {
+  /** Timeout esperando readiness (RCON / log). Default 10 minutos. */
+  readyTimeoutMs?: number;
+  /** Intervalo entre intentos RCON. Default 3s. */
+  readyPollMs?: number;
 }
 
 const RCON_HOST = "127.0.0.1";
 const SAVE_WAIT_MS = 8000;
 const EXIT_WAIT_MS = 30000;
 const MAX_RUNTIME_LOG_LINES = 1200;
+const DEFAULT_READY_TIMEOUT_MS = 10 * 60 * 1000;
+const DEFAULT_READY_POLL_MS = 3000;
+const RCON_PROBE_TIMEOUT_MS = 2500;
+
+/** Señales típicas de log cuando el dedicated ya acepta jugadores. */
+const READY_LOG_PATTERNS: RegExp[] = [
+  /server has completed startup/i,
+  /now advertising/i,
+  /full startup/i,
+  /started listening/i,
+  /rcon.*listening/i,
+  /lognet:.*listen/i,
+];
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -29,10 +50,21 @@ function delay(ms: number): Promise<void> {
 /**
  * Gestiona el ciclo de vida de procesos de servidor ASA en Windows.
  * Emite "status" con ServerRuntimeInfo en cada transición.
+ *
+ * `running` solo se asigna cuando el servidor responde por RCON (o hay
+ * señal clara de log de startup completo), no al crear el proceso OS.
  */
 export class ProcessManager extends EventEmitter {
   private readonly processes = new Map<string, ManagedProcess>();
   private readonly runtimeLogs = new Map<string, string[]>();
+  private readonly readyTimeoutMs: number;
+  private readonly readyPollMs: number;
+
+  constructor(options?: ProcessManagerOptions) {
+    super();
+    this.readyTimeoutMs = options?.readyTimeoutMs ?? DEFAULT_READY_TIMEOUT_MS;
+    this.readyPollMs = options?.readyPollMs ?? DEFAULT_READY_POLL_MS;
+  }
 
   getStatus(serverId: string): ServerRuntimeInfo {
     const managed = this.processes.get(serverId);
@@ -105,19 +137,39 @@ export class ProcessManager extends EventEmitter {
       status: "starting",
       startedAt: new Date().toISOString(),
       lastError: null,
+      readinessGeneration: 0,
     };
     this.processes.set(profile.id, managed);
     this.emitStatus(profile.id);
 
     child.once("spawn", () => {
-      if (managed.status === "starting") {
-        managed.status = "running";
-        this.appendRuntimeLog(profile.id, "system", "Proceso en estado running");
-        this.emitStatus(profile.id);
+      if (managed.status !== "starting") {
+        return;
       }
+      this.appendRuntimeLog(
+        profile.id,
+        "system",
+        "Proceso creado; esperando que el servidor quede listo (RCON / startup)",
+      );
+      this.emitStatus(profile.id);
+
+      if (options?.skipReadinessCheck === true) {
+        managed.status = "running";
+        this.appendRuntimeLog(
+          profile.id,
+          "system",
+          "Readiness omitido (skipReadinessCheck); estado running",
+        );
+        this.emitStatus(profile.id);
+        return;
+      }
+
+      managed.readinessGeneration += 1;
+      void this.waitUntilReady(profile, managed, managed.readinessGeneration);
     });
 
     child.once("error", (err) => {
+      managed.readinessGeneration += 1;
       managed.status = "error";
       managed.lastError = err.message;
       this.appendRuntimeLog(profile.id, "error", `Error de proceso: ${err.message}`);
@@ -126,6 +178,8 @@ export class ProcessManager extends EventEmitter {
 
     child.once("exit", (code) => {
       const wasStopping = managed.status === "stopping";
+      const wasStarting = managed.status === "starting";
+      managed.readinessGeneration += 1;
       this.appendRuntimeLog(
         profile.id,
         "system",
@@ -134,13 +188,14 @@ export class ProcessManager extends EventEmitter {
       if (wasStopping || code === 0) {
         this.processes.delete(profile.id);
         this.emitStatus(profile.id);
-      } else {
-        managed.status = "error";
-        managed.lastError = `El proceso terminó inesperadamente (código ${code ?? "desconocido"})`;
-        this.emitStatus(profile.id);
+        return;
       }
+      managed.status = "error";
+      managed.lastError = wasStarting
+        ? `El proceso terminó durante el arranque (código ${code ?? "desconocido"})`
+        : `El proceso terminó inesperadamente (código ${code ?? "desconocido"})`;
+      this.emitStatus(profile.id);
     });
-
   }
 
   /**
@@ -149,6 +204,7 @@ export class ProcessManager extends EventEmitter {
   async stop(profile: ServerProfile): Promise<void> {
     const managed = this.processes.get(profile.id);
     if (managed === undefined) return;
+    managed.readinessGeneration += 1;
     managed.status = "stopping";
     this.appendRuntimeLog(profile.id, "system", "Intentando parada segura por RCON");
     this.emitStatus(profile.id);
@@ -186,6 +242,7 @@ export class ProcessManager extends EventEmitter {
   kill(serverId: string): void {
     const managed = this.processes.get(serverId);
     if (managed === undefined) return;
+    managed.readinessGeneration += 1;
     managed.status = "stopping";
     this.appendRuntimeLog(serverId, "warning", "Forzando cierre del proceso");
     this.emitStatus(serverId);
@@ -201,6 +258,89 @@ export class ProcessManager extends EventEmitter {
         .filter((p) => this.isActive(p.id))
         .map((p) => this.stop(p)),
     );
+  }
+
+  private async waitUntilReady(
+    profile: ServerProfile,
+    managed: ManagedProcess,
+    generation: number,
+  ): Promise<void> {
+    const timeoutMs = this.readyTimeoutMs;
+    const pollMs = this.readyPollMs;
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+      if (!this.isSameStartingGeneration(profile.id, managed, generation)) {
+        return;
+      }
+
+      if (this.hasReadyLogSignal(profile.id)) {
+        this.appendRuntimeLog(
+          profile.id,
+          "system",
+          "Señal de startup detectada en logs; verificando RCON…",
+        );
+      }
+
+      try {
+        await rconExec(
+          RCON_HOST,
+          profile.rconPort,
+          profile.adminPassword,
+          "ListPlayers",
+          RCON_PROBE_TIMEOUT_MS,
+        );
+        if (!this.isSameStartingGeneration(profile.id, managed, generation)) {
+          return;
+        }
+        managed.status = "running";
+        managed.lastError = null;
+        this.appendRuntimeLog(
+          profile.id,
+          "system",
+          "Servidor listo: RCON respondió (en espera de conexiones)",
+        );
+        this.emitStatus(profile.id);
+        return;
+      } catch {
+        // seguir intentando hasta timeout o salida del proceso
+      }
+
+      await delay(pollMs);
+    }
+
+    if (!this.isSameStartingGeneration(profile.id, managed, generation)) {
+      return;
+    }
+
+    managed.status = "error";
+    managed.lastError =
+      "Timeout esperando que el servidor quede listo (RCON no respondió a tiempo)";
+    this.appendRuntimeLog(profile.id, "error", managed.lastError);
+    this.emitStatus(profile.id);
+    try {
+      managed.child.kill();
+    } catch {
+      // ignore
+    }
+  }
+
+  private isSameStartingGeneration(
+    serverId: string,
+    managed: ManagedProcess,
+    generation: number,
+  ): boolean {
+    const current = this.processes.get(serverId);
+    return (
+      current === managed &&
+      managed.status === "starting" &&
+      managed.readinessGeneration === generation
+    );
+  }
+
+  private hasReadyLogSignal(serverId: string): boolean {
+    const lines = this.runtimeLogs.get(serverId) ?? [];
+    return lines.some((line) => READY_LOG_PATTERNS.some((pattern) => pattern.test(line)));
   }
 
   private waitForExit(child: ChildProcess, timeoutMs: number): Promise<boolean> {

@@ -77,6 +77,11 @@ export interface SteamCmdConsoleSnapshot {
 export interface StartServerOptions {
   skipPortValidation?: boolean;
   launchArgsOverride?: string[];
+  /**
+   * Omite la espera de readiness (RCON). Solo para pruebas o binarios
+   * que no exponen RCON.
+   */
+  skipReadinessCheck?: boolean;
 }
 
 export interface PortConflict {

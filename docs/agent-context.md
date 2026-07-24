@@ -25,6 +25,7 @@ This repository contains a desktop application for managing dedicated ARK Surviv
 
 - The new renderer shell is already active.
 - Overview, SteamCMD, and Logs have already been migrated to the new architecture.
+- Server Workspace (INI/mods editor) is available from Overview → INI, with a left server list for quick switching.
 - Clusters, Backups, and Settings remain placeholders within the new shell.
 - Live log streaming during active SteamCMD operations is still pending.
 - Real E2E validation against host-side binaries and SteamCMD is still not covered.

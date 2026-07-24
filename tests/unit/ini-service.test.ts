@@ -170,4 +170,29 @@ describe("IniService semantic validation", () => {
     const saved = readFileSync(gameUserSettingsPath(installDir), "utf8");
     expect(saved).toContain("RCONPort=27020");
   });
+
+  it("elimina keys de cliente al guardar INI de dedicated", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+
+    const { service, profile } = makeService(installDir);
+
+    await service.saveServerIni(profile.id, {
+      gameUserSettings: [
+        "[ServerSettings]",
+        "RCONPort=27020",
+        "MaxPlayers=70",
+        "LastJoinedSessionPerCategory=Foo",
+        "LastJoinedSessionPerCategory=Bar",
+        "",
+      ].join("\n"),
+      game: "",
+    });
+
+    const saved = readFileSync(gameUserSettingsPath(installDir), "utf8");
+    expect(saved).toContain("RCONPort=27020");
+    expect(saved).toContain("MaxPlayers=70");
+    expect(saved).not.toContain("LastJoinedSessionPerCategory");
+  });
 });

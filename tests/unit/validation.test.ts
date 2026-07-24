@@ -74,6 +74,25 @@ describe("validateProfileInput", () => {
     const issues = validateProfileInput(validInput({ mods: ["1", "2", "1"] }));
     expect(issues.some((i) => i.field === "mods")).toBe(true);
   });
+
+  it("rechaza nombres con caracteres incompatibles con carpetas Windows", () => {
+    const issues = validateProfileInput(validInput({ name: "servidor:prod" }));
+    expect(issues.some((i) => i.field === "name")).toBe(true);
+  });
+
+  it("rechaza nombres reservados de Windows", () => {
+    const issues = validateProfileInput(validInput({ name: "CON" }));
+    expect(issues.some((i) => i.field === "name" && /reservado/i.test(i.message))).toBe(
+      true,
+    );
+  });
+
+  it("rechaza segmentos de installDir incompatibles", () => {
+    const issues = validateProfileInput(
+      validInput({ installDir: "C:\\asa\\bad*folder" }),
+    );
+    expect(issues.some((i) => i.field === "installDir")).toBe(true);
+  });
 });
 
 describe("findPortConflicts", () => {
