@@ -1,10 +1,10 @@
 .panel {
-  width: 280px;
-  min-width: 260px;
+  width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px 14px;
+  gap: 10px;
+  padding: 12px;
   border-left: 1px solid #32465e;
   background: rgba(15, 20, 28, 0.45);
   overflow: auto;
@@ -12,22 +12,34 @@
 }
 
 .card {
-  background: #1b2431;
+  background: rgba(20, 27, 37, 0.9);
+}
+
+.widgetTitle {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9fb0c3;
+  margin-bottom: 2px;
 }
 
 .metaRow {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  align-items: baseline;
+  gap: 10px;
+  min-height: 20px;
 }
 
 .metaLabel {
   color: #9fb0c3;
-  font-size: 12px;
+  font-size: var(--mantine-font-size-xxs);
+  flex-shrink: 0;
 }
 
 .metaValue {
-  font-size: 12px;
+  font-size: var(--mantine-font-size-xs);
   font-weight: 600;
   text-align: right;
   word-break: break-all;
@@ -36,5 +48,5 @@
 .broadcast {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }

@@ -56,6 +56,7 @@ describe("ServerCard", () => {
           onInstallFiles={vi.fn()}
           onUpdateNow={vi.fn()}
           onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
           onDelete={vi.fn()}
           onRcon={vi.fn()}
@@ -71,7 +72,7 @@ describe("ServerCard", () => {
     expect(onOpenWorkspace).toHaveBeenCalledTimes(1);
   });
 
-  it("disables update and delete while the server is active", () => {
+  it("keeps only primary actions visible and puts the rest in the kebab", () => {
     render(
       <AppProviders>
         <ServerCard
@@ -94,6 +95,7 @@ describe("ServerCard", () => {
           onInstallFiles={vi.fn()}
           onUpdateNow={vi.fn()}
           onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
           onDelete={vi.fn()}
           onRcon={vi.fn()}
@@ -102,8 +104,13 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByRole("button", { name: /Detén el servidor antes de actualizar/i })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /Detén el servidor antes de eliminarlo/i })).toBeDisabled();
+    expect(screen.getAllByRole("button", { name: /^Iniciar$/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: /Detener \(guarda el mundo y cierra\)/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: /^Reiniciar$/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: /^Abrir carpeta$/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: /^Más opciones$/i }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: /^Eliminar servidor$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Forzar cierre \(matar\)$/i })).not.toBeInTheDocument();
   });
 
   it("shows progress bar while SteamCMD is busy", () => {
@@ -132,6 +139,7 @@ describe("ServerCard", () => {
           onInstallFiles={vi.fn()}
           onUpdateNow={vi.fn()}
           onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
           onDelete={vi.fn()}
           onRcon={vi.fn()}

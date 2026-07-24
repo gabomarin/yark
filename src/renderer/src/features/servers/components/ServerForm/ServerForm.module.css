@@ -6,6 +6,12 @@
 .embedded {
   padding: 0;
   min-height: 0;
+  flex: 1;
+  overflow: auto;
+}
+
+.embeddedSurface {
+  padding: 4px 2px 16px;
 }
 
 .card,
@@ -14,6 +20,10 @@
   border-color: rgba(255, 255, 255, 0.08);
   background: linear-gradient(180deg, rgba(23, 31, 43, 0.95), rgba(20, 27, 37, 0.95));
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+}
+
+.span2 {
+  grid-column: 1 / -1;
 }
 
 .pathInput {

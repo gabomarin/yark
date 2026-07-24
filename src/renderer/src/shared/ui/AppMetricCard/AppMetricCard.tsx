@@ -1,4 +1,4 @@
-import { Card, Stack, Text, Title } from "@mantine/core";
+import { Card, Stack, Text } from "@mantine/core";
 import type { ReactNode } from "react";
 import classes from "./AppMetricCard.module.css";
 
@@ -12,14 +12,27 @@ interface Props {
 
 export function AppMetricCard({ icon, label, value, hint, disabled = false }: Props): JSX.Element {
   return (
-    <Card withBorder className={classes.card} data-disabled={disabled || undefined}>
-      <Stack gap={4}>
-        <Text className={classes.label}>
+    <Card withBorder className={classes.card} padding="sm" data-disabled={disabled || undefined}>
+      <Stack gap={2}>
+        <Text
+          className={classes.label}
+          fz="micro"
+          c="dimmed"
+          fw={700}
+          tt="uppercase"
+          lts={0.04}
+        >
           {icon}
           <span>{label}</span>
         </Text>
-        <Title order={3} className={classes.value}>{value}</Title>
-        {hint !== undefined && <Text className={classes.hint}>{hint}</Text>}
+        <Text className={classes.value} fz="lg" fw={650} lh={1.15}>
+          {value}
+        </Text>
+        {hint !== undefined && (
+          <Text fz="xxs" c="dimmed">
+            {hint}
+          </Text>
+        )}
       </Stack>
     </Card>
   );

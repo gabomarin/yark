@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Alert, Code, List, Stack, Text } from "@mantine/core";
+import { modals } from "@mantine/modals";
+import { notifications } from "@mantine/notifications";
 import type {
   AppEvent,
   ClusterComplianceReport,
@@ -49,6 +52,7 @@ export function App(): JSX.Element {
   });
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [checkingUpdates, setCheckingUpdates] = useState(false);
 
   useEffect(() => {
     window.localStorage.setItem(
@@ -130,6 +134,98 @@ export function App(): JSX.Element {
     if (eventsRes.ok) setEvents(eventsRes.data);
   }, []);
 
+  const checkForUpdates = useCallback(
+    async (serverId?: string) => {
+      setError(null);
+      setCheckingUpdates(true);
+      try {
+        const installRes = await window.api.getInstallationInfo(true);
+        if (!installRes.ok) {
+          setError(installRes.error ?? "No se pudo verificar actualizaciones");
+          return;
+        }
+        const next = new Map(installRes.data.map((info) => [info.serverId, info]));
+        setInstallationInfo(next);
+
+        const needsUpdate = (info: ServerInstallationInfo): boolean => {
+          const local = info.arkVersion ?? info.build;
+          return (
+            info.installed &&
+            info.officialVersion != null &&
+            local != null &&
+            info.officialVersion !== local
+          );
+        };
+
+        if (serverId !== undefined) {
+          const info = next.get(serverId);
+          const name = servers.find((s) => s.id === serverId)?.name ?? serverId;
+          if (info === undefined || !info.installed) {
+            notifications.show({
+              title: "Sin instalación",
+              message: `"${name}" aún no tiene archivos instalados.`,
+              color: "yellow",
+            });
+            return;
+          }
+          if (info.officialVersion == null) {
+            notifications.show({
+              title: "No se pudo consultar",
+              message: "No se obtuvo la versión oficial de ASA. Revisa la conexión.",
+              color: "red",
+            });
+            return;
+          }
+          const local = info.arkVersion ?? info.build ?? "—";
+          if (needsUpdate(info)) {
+            notifications.show({
+              title: "Actualización disponible",
+              message: `"${name}": local ${local} → oficial ${info.officialVersion}`,
+              color: "orange",
+              autoClose: 8000,
+            });
+          } else {
+            notifications.show({
+              title: "Al día",
+              message: `"${name}" está actualizado (versión ${local}).`,
+              color: "teal",
+            });
+          }
+          return;
+        }
+
+        const outdated = installRes.data.filter(needsUpdate);
+        const official =
+          installRes.data.find((info) => info.officialVersion != null)?.officialVersion ??
+          "desconocida";
+        if (outdated.length === 0) {
+          notifications.show({
+            title: "Sin actualizaciones",
+            message: `Todos los servidores instalados están al día. Oficial: ${official}`,
+            color: "teal",
+          });
+        } else {
+          const lines = outdated
+            .map((info) => {
+              const name = servers.find((s) => s.id === info.serverId)?.name ?? info.serverId;
+              const local = info.arkVersion ?? info.build ?? "—";
+              return `${name}: ${local} → ${info.officialVersion}`;
+            })
+            .join("\n");
+          notifications.show({
+            title: `${outdated.length} actualización(es) disponible(s)`,
+            message: `Oficial: ${official}\n${lines}`,
+            color: "orange",
+            autoClose: 10000,
+          });
+        }
+      } finally {
+        setCheckingUpdates(false);
+      }
+    },
+    [servers],
+  );
+
   useEffect(() => {
     void refresh();
     const unsubscribeStatus = window.api.onServerStatus((info) => {
@@ -158,6 +254,11 @@ export function App(): JSX.Element {
       const result = await action();
       if (!result.ok) {
         setError(result.error ?? "Error desconocido");
+        notifications.show({
+          title: "Error",
+          message: result.error ?? "Error desconocido",
+          color: "red",
+        });
       }
       await refresh();
     },
@@ -230,6 +331,65 @@ export function App(): JSX.Element {
     [openNativeTerminalOnStart, refresh],
   );
 
+  const confirmKillServer = useCallback(
+    (id: string) => {
+      const server = servers.find((item) => item.id === id);
+      const label = server?.name ?? id;
+      modals.openConfirmModal({
+        title: `Forzar cierre de "${label}"`,
+        children: (
+          <Alert color="red" title="Sin guardado" variant="light">
+            Se mata el proceso de inmediato. Puede corromper el mundo si no se guardó antes.
+            Prefiere Detener cuando sea posible.
+          </Alert>
+        ),
+        labels: { confirm: "Matar proceso", cancel: "Cancelar" },
+        confirmProps: { color: "red" },
+        onConfirm: () => {
+          void runAction(() => window.api.killServer(id));
+        },
+      });
+    },
+    [runAction, servers],
+  );
+
+  const confirmDeleteServer = useCallback(
+    (id: string) => {
+      const server = servers.find((item) => item.id === id);
+      const label = server?.name ?? id;
+      const installDir = server?.installDir ?? "(ruta desconocida)";
+      modals.openConfirmModal({
+        title: `Eliminar servidor "${label}"`,
+        centered: true,
+        children: (
+          <Stack gap="sm">
+            <Alert color="red" title="Se borrará todo" variant="light">
+              Esta acción no se puede deshacer. Se eliminará el perfil del manager y todo el
+              contenido en disco (mundo, configs, mods y demás archivos).
+            </Alert>
+            <div>
+              <Text size="xs" c="dimmed" mb={4}>
+                Carpeta que se borrará:
+              </Text>
+              <Code block>{installDir}</Code>
+            </div>
+            <List size="sm" spacing={4}>
+              <List.Item>Perfil del administrador</List.Item>
+              <List.Item>SavedArks / mundo</List.Item>
+              <List.Item>Configs INI y datos del servidor</List.Item>
+            </List>
+          </Stack>
+        ),
+        labels: { confirm: "Eliminar todo", cancel: "Cancelar" },
+        confirmProps: { color: "red" },
+        onConfirm: () => {
+          void runAction(() => window.api.deleteServer(id));
+        },
+      });
+    },
+    [runAction, servers],
+  );
+
   const openLogsForServer = useCallback((serverId: string, section: LogsSection = "events") => {
     setOverlay(null);
     setLogsServerId(serverId);
@@ -289,7 +449,7 @@ export function App(): JSX.Element {
             }
             onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
             onRestartServer={(id) => void restartServer(id)}
-            onKillServer={(id) => void runAction(() => window.api.killServer(id))}
+            onKillServer={(id) => confirmKillServer(id)}
             onOpenFolder={(id) => void runAction(() => window.api.openServerFolder(id))}
             onInstallFiles={(id) => startSteamFilesJob(id, "install")}
             onUpdateNow={(id) => startSteamFilesJob(id, "update")}
@@ -334,6 +494,8 @@ export function App(): JSX.Element {
               onCreateServer={() => setOverlay({ kind: "create" })}
               openNativeTerminalOnStart={openNativeTerminalOnStart}
               onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
+              checkingUpdates={checkingUpdates}
+              onCheckUpdates={() => void checkForUpdates()}
               servers={servers}
               filteredServers={filteredServers}
               runningServers={runningServers}
@@ -357,24 +519,14 @@ export function App(): JSX.Element {
               onStartServer={(id) => void startServerAndOpenRuntimeLogs(id)}
               onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
               onRestartServer={(id) => void restartServer(id)}
-              onKillServer={(id) => void runAction(() => window.api.killServer(id))}
+              onKillServer={(id) => confirmKillServer(id)}
               onOpenFolder={(id) => void runAction(() => window.api.openServerFolder(id))}
             onInstallFiles={(id) => startSteamFilesJob(id, "install")}
             onUpdateNow={(id) => startSteamFilesJob(id, "update")}
             onVerifyFiles={(id) => startSteamFilesJob(id, "verify")}
+            onCheckUpdatesForServer={(id) => void checkForUpdates(id)}
             onCloneServer={(id) => void runAction(() => window.api.cloneServer(id))}
-              onDeleteServer={(id) => {
-                const server = servers.find((item) => item.id === id);
-                const label = server?.name ?? id;
-                const installDir = server?.installDir ?? "(ruta desconocida)";
-                if (
-                  window.confirm(
-                    `¿Eliminar el servidor "${label}"?\n\nSe borrará el perfil y TODOS los archivos en:\n${installDir}\n\nEsta acción no se puede deshacer.`,
-                  )
-                ) {
-                  void runAction(() => window.api.deleteServer(id));
-                }
-              }}
+              onDeleteServer={(id) => confirmDeleteServer(id)}
               onSendRcon={(id, command) =>
                 void runAction(() => window.api.sendRconCommand(id, command))
               }

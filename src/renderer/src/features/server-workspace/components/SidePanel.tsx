@@ -7,7 +7,7 @@ import {
   ShieldCheck,
   Wrench,
 } from "@phosphor-icons/react";
-import { Button, Card, Stack, Text, Textarea, Title } from "@mantine/core";
+import { Button, Card, Stack, Text, Textarea } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { useState } from "react";
 import classes from "./SidePanel.module.css";
@@ -51,41 +51,47 @@ export function SidePanel(props: Props): JSX.Element {
 
   return (
     <aside className={classes.panel}>
-      <Card withBorder className={classes.card}>
-        <Stack gap="sm">
-          <Title order={4}>Server Status</Title>
+      <Card withBorder padding="sm" radius="md" className={classes.card}>
+        <Stack gap={6}>
+          <Text className={classes.widgetTitle}>Status</Text>
           <MetaRow label="Estado" value={status} />
           <MetaRow label="Inicio" value={uptime} />
           <MetaRow label="Versión" value={version} />
-          <MetaRow label="Server ID" value={props.server.id.slice(0, 8)} />
-          <MetaRow
-            label="Cluster"
-            value={props.server.clusterId ?? "Sin cluster"}
-          />
+          <MetaRow label="Players" value="— / 70" />
+          <MetaRow label="Cluster" value={props.server.clusterId ?? "Sin cluster"} />
         </Stack>
       </Card>
 
-      <Card withBorder className={classes.card}>
-        <Stack gap="xs">
-          <Title order={4}>Quick Actions</Title>
+      <Card withBorder padding="sm" radius="md" className={classes.card}>
+        <Stack gap={6}>
+          <Text className={classes.widgetTitle}>Quick Actions</Text>
           <Button
-            variant="light"
-            leftSection={<FolderOpen size={16} />}
+            size="sm"
+            variant="default"
+            fullWidth
+            justify="flex-start"
+            leftSection={<FolderOpen size={14} />}
             onClick={props.onOpenFolder}
           >
             Open folder
           </Button>
           <Button
-            variant="light"
-            leftSection={<Wrench size={16} />}
+            size="sm"
+            variant="default"
+            fullWidth
+            justify="flex-start"
+            leftSection={<Wrench size={14} />}
             onClick={props.onInstallFiles}
             disabled={isActive}
           >
             Install files
           </Button>
           <Button
-            variant="light"
-            leftSection={<ShieldCheck size={16} />}
+            size="sm"
+            variant="default"
+            fullWidth
+            justify="flex-start"
+            leftSection={<ShieldCheck size={14} />}
             onClick={props.onVerifyFiles}
             disabled={isActive}
             title={isActive ? "Detén el servidor antes de verificar" : undefined}
@@ -93,8 +99,11 @@ export function SidePanel(props: Props): JSX.Element {
             Verify integrity
           </Button>
           <Button
-            variant="light"
-            leftSection={<CloudArrowDown size={16} />}
+            size="sm"
+            variant="default"
+            fullWidth
+            justify="flex-start"
+            leftSection={<CloudArrowDown size={14} />}
             onClick={props.onUpdateNow}
             disabled={isActive}
             title={isActive ? "Detén el servidor antes de actualizar" : undefined}
@@ -102,8 +111,11 @@ export function SidePanel(props: Props): JSX.Element {
             Force Update
           </Button>
           <Button
-            variant="light"
-            leftSection={<FloppyDisk size={16} />}
+            size="sm"
+            variant="default"
+            fullWidth
+            justify="flex-start"
+            leftSection={<FloppyDisk size={14} />}
             onClick={props.onSaveWorld}
             disabled={status !== "running"}
           >
@@ -113,12 +125,16 @@ export function SidePanel(props: Props): JSX.Element {
             <Textarea
               placeholder="Broadcast message"
               minRows={2}
+              size="xs"
               value={broadcast}
               onChange={(event) => setBroadcast(event.currentTarget.value)}
             />
             <Button
-              variant="light"
-              leftSection={<Broadcast size={16} />}
+              size="sm"
+              variant="default"
+              fullWidth
+              justify="flex-start"
+              leftSection={<Broadcast size={14} />}
               disabled={status !== "running" || broadcast.trim().length === 0}
               onClick={() => {
                 props.onBroadcast(broadcast.trim());
@@ -129,9 +145,12 @@ export function SidePanel(props: Props): JSX.Element {
             </Button>
           </div>
           <Button
+            size="sm"
             color="red"
             variant="outline"
-            leftSection={<Power size={16} />}
+            fullWidth
+            justify="flex-start"
+            leftSection={<Power size={14} />}
             onClick={props.onKill}
             disabled={status === "stopped"}
           >
@@ -140,16 +159,17 @@ export function SidePanel(props: Props): JSX.Element {
         </Stack>
       </Card>
 
-      <Card withBorder className={classes.card}>
-        <Stack gap="xs">
-          <Title order={4}>Notes</Title>
+      <Card withBorder padding="sm" radius="md" className={classes.card}>
+        <Stack gap={6}>
+          <Text className={classes.widgetTitle}>Notes</Text>
           <Textarea
             placeholder="Notas locales del servidor (solo en esta sesión)"
             minRows={4}
+            size="xs"
             value={notes}
             onChange={(event) => setNotes(event.currentTarget.value)}
           />
-          <Text c="dimmed" size="xs">
+          <Text c="dimmed" fz="xxs">
             Las notas aún no se persisten entre reinicios de la app.
           </Text>
         </Stack>

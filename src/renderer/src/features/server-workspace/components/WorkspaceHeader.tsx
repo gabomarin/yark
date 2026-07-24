@@ -1,5 +1,10 @@
-import { ArrowLeft, Play, Power, ArrowsClockwise } from "@phosphor-icons/react";
-import { Badge, Button, Group, Stack, Text, Title } from "@mantine/core";
+import {
+  ArrowLeft,
+  ArrowsClockwise,
+  Play,
+  Power,
+} from "@phosphor-icons/react";
+import { ActionIcon, Badge, Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import classes from "./WorkspaceHeader.module.css";
 
@@ -14,11 +19,11 @@ interface Props {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  stopped: "Offline",
-  starting: "Starting",
-  running: "Online",
-  stopping: "Stopping",
-  error: "Error",
+  stopped: "OFFLINE",
+  starting: "STARTING",
+  running: "ONLINE",
+  stopping: "STOPPING",
+  error: "ERROR",
 };
 
 export function WorkspaceHeader(props: Props): JSX.Element {
@@ -34,19 +39,29 @@ export function WorkspaceHeader(props: Props): JSX.Element {
 
   return (
     <header className={classes.header}>
-      <Group gap="md" align="flex-start" wrap="nowrap" className={classes.identity}>
-        <Button
-          variant="subtle"
-          color="gray"
-          leftSection={<ArrowLeft size={16} />}
-          onClick={props.onBack}
-        >
-          Overview
-        </Button>
-        <Stack gap={2}>
-          <Group gap="sm">
-            <Title order={2}>{props.server.name}</Title>
+      <Group gap="sm" align="flex-start" wrap="nowrap" className={classes.identity}>
+        <Tooltip label="Volver a Overview">
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size="md"
+            aria-label="Volver a Overview"
+            onClick={props.onBack}
+          >
+            <ArrowLeft size={18} />
+          </ActionIcon>
+        </Tooltip>
+        <Stack gap={2} style={{ minWidth: 0 }}>
+          <Text className={classes.crumb} fz="xxs" c="dimmed">
+            Servers / {props.server.name}
+          </Text>
+          <Group gap="xs" wrap="nowrap">
+            <Title order={3} fz="lg" lineClamp={1}>
+              {props.server.name}
+            </Title>
             <Badge
+              size="sm"
+              variant="light"
               color={
                 status === "running"
                   ? "green"
@@ -56,37 +71,39 @@ export function WorkspaceHeader(props: Props): JSX.Element {
                       ? "blue"
                       : "gray"
               }
-              variant="light"
             >
               {STATUS_LABEL[status] ?? status}
             </Badge>
           </Group>
-          <Text c="dimmed" size="sm">
+          <Text size="xs" c="dimmed" lineClamp={1}>
             {props.server.map} · puerto {props.server.gamePort} · versión {version}
           </Text>
         </Stack>
       </Group>
 
-      <Group gap="xs">
+      <Group gap="xs" wrap="wrap">
         <Button
-          leftSection={<Play size={16} weight="fill" />}
+          size="sm"
+          leftSection={<Play size={14} weight="fill" />}
           onClick={props.onStart}
           disabled={!canStart}
         >
           Start
         </Button>
         <Button
+          size="sm"
           variant="light"
-          leftSection={<ArrowsClockwise size={16} />}
+          leftSection={<ArrowsClockwise size={14} />}
           onClick={props.onRestart}
           disabled={!canRestart}
         >
           Restart
         </Button>
         <Button
+          size="sm"
           color="red"
           variant="light"
-          leftSection={<Power size={16} />}
+          leftSection={<Power size={14} />}
           onClick={props.onStop}
           disabled={!canStop}
         >

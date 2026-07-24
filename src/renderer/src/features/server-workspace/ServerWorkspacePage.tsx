@@ -1,4 +1,5 @@
-import { Tabs } from "@mantine/core";
+import { Tabs, Alert } from "@mantine/core";
+import { modals } from "@mantine/modals";
 import type {
   ServerInstallationInfo,
   ServerProfile,
@@ -6,12 +7,33 @@ import type {
   ServerRuntimeInfo,
 } from "@shared/types";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
-import { useCallback, useMemo, useRef, useState } from "react";
-import { ConfigurationEditor } from "./components/ConfigurationEditor";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ConfigurationEditor,
+  type ConfigSection,
+} from "./components/ConfigurationEditor";
 import { ServerListPanel } from "./components/ServerListPanel";
 import { SidePanel } from "./components/SidePanel";
 import { WorkspaceHeader } from "./components/WorkspaceHeader";
 import classes from "./ServerWorkspacePage.module.css";
+
+type WorkspaceTab =
+  | "server"
+  | ConfigSection
+  | "files"
+  | "backups"
+  | "logs"
+  | "players"
+  | "console";
+
+function isConfigSection(tab: string | null): tab is ConfigSection {
+  return (
+    tab === "game" ||
+    tab === "gameUserSettings" ||
+    tab === "mods" ||
+    tab === "advanced"
+  );
+}
 
 interface Props {
   servers: ServerProfile[];
@@ -39,8 +61,15 @@ function isServerActive(runtime: ServerRuntimeInfo | null): boolean {
 }
 
 export function ServerWorkspacePage(props: Props): JSX.Element {
-  const [workspaceTab, setWorkspaceTab] = useState<string | null>("server");
+  const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>("server");
   const dirtyRef = useRef(false);
+  const lastConfigSectionRef = useRef<ConfigSection>("gameUserSettings");
+
+  useEffect(() => {
+    if (isConfigSection(workspaceTab)) {
+      lastConfigSectionRef.current = workspaceTab;
+    }
+  }, [workspaceTab]);
 
   const selectedServer = useMemo(() => {
     return (
@@ -55,13 +84,20 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
       action();
       return;
     }
-    const ok = window.confirm(
-      "Hay cambios INI sin guardar. ¿Descartarlos y continuar?",
-    );
-    if (ok) {
-      dirtyRef.current = false;
-      action();
-    }
+    modals.openConfirmModal({
+      title: "Cambios sin guardar",
+      children: (
+        <Alert color="yellow" title="INI modificados" variant="light">
+          Hay cambios en la configuración INI sin guardar. Si continúas, se descartarán.
+        </Alert>
+      ),
+      labels: { confirm: "Descartar y continuar", cancel: "Seguir editando" },
+      confirmProps: { color: "yellow" },
+      onConfirm: () => {
+        dirtyRef.current = false;
+        action();
+      },
+    });
   }, []);
 
   const handleSelectServer = (serverId: string) => {
@@ -111,92 +147,107 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
 
   return (
     <div className={classes.root}>
-      <ServerListPanel
-        servers={props.servers}
-        selectedServerId={selectedServer.id}
-        statuses={props.statuses}
-        onSelectServer={handleSelectServer}
-        onAddServer={props.onCreateServer}
-      />
-
-      <section className={classes.main}>
-        <WorkspaceHeader
-          server={selectedServer}
-          runtime={runtime}
-          installation={installation}
-          onBack={handleBack}
-          onStart={() => props.onStartServer(selectedServer.id)}
-          onStop={() => props.onStopServer(selectedServer.id)}
-          onRestart={() => props.onRestartServer(selectedServer.id)}
-        />
-
-        <Tabs
-          value={workspaceTab}
-          onChange={setWorkspaceTab}
-          className={classes.tabs}
-        >
-          <Tabs.List>
-            <Tabs.Tab value="server">Servidor</Tabs.Tab>
-            <Tabs.Tab value="configuration">Configuración INI</Tabs.Tab>
-            <Tabs.Tab value="mods" disabled>
-              Mods
-            </Tabs.Tab>
-            <Tabs.Tab value="files" disabled>
-              Files
-            </Tabs.Tab>
-            <Tabs.Tab value="backups" disabled>
-              Backups
-            </Tabs.Tab>
-            <Tabs.Tab value="logs" disabled>
-              Logs
-            </Tabs.Tab>
-            <Tabs.Tab value="players" disabled>
-              Players
-            </Tabs.Tab>
-            <Tabs.Tab value="console" disabled>
-              Console
-            </Tabs.Tab>
-          </Tabs.List>
-
-          <Tabs.Panel value="server" className={classes.tabPanel}>
-            <ServerForm
-              key={`${selectedServer.id}:${selectedServer.updatedAt}`}
-              initial={selectedServer}
-              variant="embedded"
-              serverActive={serverActive}
-              onCancel={handleBack}
-              onSaved={props.onServerUpdated}
-            />
-          </Tabs.Panel>
-
-          <Tabs.Panel value="configuration" className={classes.tabPanel}>
-            <ConfigurationEditor
-              key={selectedServer.id}
-              server={selectedServer}
-              serverActive={serverActive}
-              onModsChanged={saveMods}
-              onDirtyChange={(dirty) => {
-                dirtyRef.current = dirty;
-              }}
-            />
-          </Tabs.Panel>
-        </Tabs>
-      </section>
-
-      <SidePanel
+      <WorkspaceHeader
         server={selectedServer}
         runtime={runtime}
         installation={installation}
-        onOpenFolder={() => props.onOpenFolder(selectedServer.id)}
-        onInstallFiles={() => props.onInstallFiles(selectedServer.id)}
-        onUpdateNow={() => props.onUpdateNow(selectedServer.id)}
-        onVerifyFiles={() => props.onVerifyFiles(selectedServer.id)}
-        onSaveWorld={() => props.onSendRcon(selectedServer.id, "SaveWorld")}
-        onBroadcast={(message) =>
-          props.onSendRcon(selectedServer.id, `Broadcast ${message}`)
-        }
-        onKill={() => props.onKillServer(selectedServer.id)}
+        onBack={handleBack}
+        onStart={() => props.onStartServer(selectedServer.id)}
+        onStop={() => props.onStopServer(selectedServer.id)}
+        onRestart={() => props.onRestartServer(selectedServer.id)}
       />
+
+      <div className={classes.body}>
+        <ServerListPanel
+          servers={props.servers}
+          selectedServerId={selectedServer.id}
+          statuses={props.statuses}
+          onSelectServer={handleSelectServer}
+          onAddServer={props.onCreateServer}
+        />
+
+        <section className={classes.main}>
+          <Tabs
+            value={workspaceTab}
+            onChange={(value) => {
+              if (value === null) return;
+              setWorkspaceTab(value as WorkspaceTab);
+            }}
+            className={classes.tabs}
+          >
+            <Tabs.List>
+              <Tabs.Tab value="server">Servidor</Tabs.Tab>
+              <Tabs.Tab value="game">Game.ini</Tabs.Tab>
+              <Tabs.Tab value="gameUserSettings">GameUserSettings.ini</Tabs.Tab>
+              <Tabs.Tab value="mods">Mods</Tabs.Tab>
+              <Tabs.Tab value="advanced">Advanced</Tabs.Tab>
+              <Tabs.Tab value="files" disabled>
+                Files
+              </Tabs.Tab>
+              <Tabs.Tab value="backups" disabled>
+                Backups
+              </Tabs.Tab>
+              <Tabs.Tab value="logs" disabled>
+                Logs
+              </Tabs.Tab>
+              <Tabs.Tab value="players" disabled>
+                Players
+              </Tabs.Tab>
+              <Tabs.Tab value="console" disabled>
+                Console
+              </Tabs.Tab>
+            </Tabs.List>
+
+            <div className={classes.tabPanel}>
+              {workspaceTab === "server" && (
+                <ServerForm
+                  key={`${selectedServer.id}:${selectedServer.updatedAt}`}
+                  initial={selectedServer}
+                  variant="embedded"
+                  serverActive={serverActive}
+                  onCancel={handleBack}
+                  onSaved={props.onServerUpdated}
+                />
+              )}
+
+              <div
+                className={classes.configHost}
+                data-visible={isConfigSection(workspaceTab) || undefined}
+              >
+                <ConfigurationEditor
+                  key={selectedServer.id}
+                  server={selectedServer}
+                  section={
+                    isConfigSection(workspaceTab)
+                      ? workspaceTab
+                      : lastConfigSectionRef.current
+                  }
+                  serverActive={serverActive}
+                  onModsChanged={saveMods}
+                  onDirtyChange={(dirty) => {
+                    dirtyRef.current = dirty;
+                  }}
+                />
+              </div>
+            </div>
+          </Tabs>
+        </section>
+
+        <SidePanel
+          server={selectedServer}
+          runtime={runtime}
+          installation={installation}
+          onOpenFolder={() => props.onOpenFolder(selectedServer.id)}
+          onInstallFiles={() => props.onInstallFiles(selectedServer.id)}
+          onUpdateNow={() => props.onUpdateNow(selectedServer.id)}
+          onVerifyFiles={() => props.onVerifyFiles(selectedServer.id)}
+          onSaveWorld={() => props.onSendRcon(selectedServer.id, "SaveWorld")}
+          onBroadcast={(message) =>
+            props.onSendRcon(selectedServer.id, `Broadcast ${message}`)
+          }
+          onKill={() => props.onKillServer(selectedServer.id)}
+        />
+      </div>
     </div>
   );
 }

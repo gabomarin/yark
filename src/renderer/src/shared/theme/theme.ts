@@ -6,6 +6,11 @@ export const appTheme = createTheme({
   primaryShade: 5,
   fontFamily: '"Segoe UI Variable", "Aptos", "Trebuchet MS", sans-serif',
   defaultRadius: "md",
+  /** Más allá de `xs` (~12px): usar en cards densas / meta labels. */
+  fontSizes: {
+    xxs: "11px",
+    micro: "9px",
+  },
   colors: {
     blue: [
       "#eef6ff",

@@ -1,4 +1,4 @@
-import { MagnifyingGlass, Plus } from "@phosphor-icons/react";
+import { CaretRight, HardDrives, MagnifyingGlass, Plus } from "@phosphor-icons/react";
 import { Badge, Button, Stack, Text, TextInput, UnstyledButton } from "@mantine/core";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { useMemo, useState } from "react";
@@ -65,14 +65,24 @@ export function ServerListPanel(props: Props): JSX.Element {
               data-selected={selected || undefined}
               onClick={() => props.onSelectServer(server.id)}
             >
-              <span className={classes.dot} data-tone={tone} />
+              <span className={classes.thumb} data-tone={tone}>
+                <HardDrives size={18} weight="duotone" />
+              </span>
               <span className={classes.itemBody}>
-                <Text className={classes.itemName}>{server.name}</Text>
-                <Text className={classes.itemMeta}>{server.map}</Text>
+                <Text className={classes.itemName} fz="sm" fw={600} lineClamp={1}>
+                  {server.name}
+                </Text>
+                <Text className={classes.itemMeta} fz="xxs" c="dimmed" lineClamp={1}>
+                  {server.map}
+                </Text>
+                <Text className={classes.itemPlayers} fz="micro" c="dimmed">
+                  — / 70
+                </Text>
               </span>
               <Badge
                 size="xs"
                 variant="light"
+                className={classes.badge}
                 color={
                   tone === "ok"
                     ? "green"
@@ -85,6 +95,7 @@ export function ServerListPanel(props: Props): JSX.Element {
               >
                 {STATUS_LABEL[status] ?? status}
               </Badge>
+              <CaretRight size={14} className={classes.chevron} />
             </UnstyledButton>
           );
         })}
@@ -99,6 +110,7 @@ export function ServerListPanel(props: Props): JSX.Element {
         <div className={classes.footer}>
           <Button
             fullWidth
+            size="sm"
             variant="light"
             leftSection={<Plus size={16} />}
             onClick={props.onAddServer}

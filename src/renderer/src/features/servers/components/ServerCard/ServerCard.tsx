@@ -2,6 +2,7 @@ import {
   ArrowsClockwise,
   CloudArrowDown,
   Copy,
+  DotsThreeVertical,
   FileText,
   FolderOpen,
   HardDrives,
@@ -19,18 +20,18 @@ import {
   Button,
   Card,
   Group,
+  Menu,
   Progress,
   SimpleGrid,
   Stack,
   Text,
   TextInput,
-  Title,
   Tooltip,
   UnstyledButton,
 } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { formatSteamCmdByteProgress, steamCmdByteProgressNoun } from "@shared/steamcmd-progress";
-import { useState, type KeyboardEvent, type MouseEvent } from "react";
+import { useState, type KeyboardEvent, type MouseEvent, type SyntheticEvent } from "react";
 import classes from "./ServerCard.module.css";
 
 interface Props {
@@ -84,19 +85,22 @@ function IconAction(props: {
   children: React.ReactNode;
 }): JSX.Element {
   return (
-    <Tooltip label={props.label} withArrow>
-      <ActionIcon
-        variant={props.color ? "light" : "subtle"}
-        size="lg"
-        color={props.color}
-        disabled={props.disabled}
-        loading={props.loading}
-        onClick={props.onClick}
-        aria-label={props.label}
-      >
-        {props.children}
-      </ActionIcon>
-    </Tooltip>
+    <div className={classes.actionSlot}>
+      <Tooltip label={props.label} withArrow>
+        <ActionIcon
+          variant={props.color ? "light" : "subtle"}
+          size="lg"
+          color={props.color}
+          disabled={props.disabled}
+          loading={props.loading}
+          onClick={props.onClick}
+          aria-label={props.label}
+          w="100%"
+        >
+          {props.children}
+        </ActionIcon>
+      </Tooltip>
+    </div>
   );
 }
 
@@ -155,20 +159,20 @@ export function ServerCard(props: Props): JSX.Element {
     }
   };
 
-  const onCardKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onCardKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       openWorkspace();
     }
   };
 
-  const stopCardNavigation = (event: MouseEvent) => {
+  const stopCardNavigation = (event: SyntheticEvent) => {
     event.stopPropagation();
   };
 
   return (
-    <Card withBorder className={classes.card}>
-      <Stack gap="md">
+    <Card withBorder className={classes.card} padding="sm" radius="md">
+      <Stack gap="sm">
         <UnstyledButton
           className={classes.cardHit}
           onClick={openWorkspace}
@@ -178,14 +182,19 @@ export function ServerCard(props: Props): JSX.Element {
           <Group justify="space-between" align="flex-start" wrap="nowrap">
             <Group gap="sm" align="flex-start" wrap="nowrap">
               <div className={classes.thumb}>
-                <HardDrives size={28} weight="duotone" />
+                <HardDrives size={18} weight="duotone" />
               </div>
               <div>
-                <Title order={3}>{server.name}</Title>
-                <Text c="dimmed" size="sm">{server.sessionName}</Text>
+                <Text className={classes.title} lineClamp={1}>
+                  {server.name}
+                </Text>
+                <Text className={classes.subtitle} c="dimmed" lineClamp={1}>
+                  {server.sessionName}
+                </Text>
               </div>
             </Group>
             <Badge
+              size="xs"
               color={
                 steamCmdBusy
                   ? "blue"
@@ -203,7 +212,7 @@ export function ServerCard(props: Props): JSX.Element {
             </Badge>
           </Group>
 
-          <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="sm" mt="md">
+          <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="xs" mt="sm">
             <MetaItem label="Jugadores" value="—" />
             <MetaItem label="Mapa" value={server.map} />
             <MetaItem label="Cluster" value={server.clusterId ?? "—"} />
@@ -256,7 +265,13 @@ export function ServerCard(props: Props): JSX.Element {
           <Text c="red" size="sm">{runtime.lastError}</Text>
         )}
 
-        <Group gap={4} wrap="wrap" onClick={stopCardNavigation} onKeyDown={stopCardNavigation}>
+        <Group
+          gap={8}
+          wrap="nowrap"
+          className={classes.actions}
+          onClick={stopCardNavigation}
+          onKeyDown={stopCardNavigation}
+        >
           {steamCmdBusy ? (
             <IconAction label="Cancelar operación" color="red" onClick={props.onCancelSteamCmd}>
               <XCircle size={18} />
@@ -272,7 +287,7 @@ export function ServerCard(props: Props): JSX.Element {
                 <Play size={18} />
               </IconAction>
               <IconAction
-                label="Detener"
+                label="Detener (guarda el mundo y cierra)"
                 color="yellow"
                 onClick={props.onStop}
                 disabled={!isActive}
@@ -290,77 +305,93 @@ export function ServerCard(props: Props): JSX.Element {
               <IconAction label="Abrir carpeta" color="gray" onClick={props.onOpenFolder}>
                 <FolderOpen size={18} />
               </IconAction>
-              <IconAction
-                label="Ver logs"
-                color="blue"
-                onClick={props.onOpenLogs}
-                disabled={!isInstallationReady}
-              >
-                <FileText size={18} />
-              </IconAction>
-              {isInstallationReady ? (
-                <>
-                  <IconAction
-                    label="Verificar actualizaciones"
-                    color="indigo"
-                    loading={checkingUpdates}
-                    onClick={props.onCheckUpdates}
-                    disabled={checkingUpdates}
+
+              <div className={classes.actionSlot}>
+                <Menu shadow="md" withinPortal position="bottom-end">
+                  <Menu.Target>
+                    <Tooltip label="Más opciones" withArrow>
+                      <ActionIcon
+                        variant="light"
+                        color="gray"
+                        size="lg"
+                        w="100%"
+                        aria-label="Más opciones"
+                      >
+                        <DotsThreeVertical size={18} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Label>Administración</Menu.Label>
+                  <Menu.Item
+                    leftSection={<FileText size={16} />}
+                    onClick={props.onOpenLogs}
+                    disabled={!isInstallationReady}
                   >
-                    <MagnifyingGlass size={18} />
-                  </IconAction>
-                  <IconAction
-                    label={
-                      isActive
-                        ? "Detén el servidor antes de actualizar"
-                        : updateAvailable
-                          ? "Actualizar servidor (hay versión nueva)"
-                          : "Actualizar servidor"
-                    }
-                    color={updateAvailable ? "orange" : "grape"}
-                    onClick={props.onUpdateNow}
+                    Ver logs
+                  </Menu.Item>
+                  {isInstallationReady ? (
+                    <>
+                      <Menu.Item
+                        leftSection={<MagnifyingGlass size={16} />}
+                        onClick={props.onCheckUpdates}
+                        disabled={checkingUpdates}
+                      >
+                        Verificar actualizaciones
+                      </Menu.Item>
+                      <Menu.Item
+                        leftSection={<CloudArrowDown size={16} />}
+                        color={updateAvailable ? "orange" : undefined}
+                        onClick={props.onUpdateNow}
+                        disabled={isActive}
+                      >
+                        {isActive
+                          ? "Actualizar (detén el servidor)"
+                          : "Actualizar servidor"}
+                      </Menu.Item>
+                      <Menu.Item
+                        leftSection={<ShieldCheck size={16} />}
+                        onClick={props.onVerifyFiles}
+                        disabled={isActive}
+                      >
+                        {isActive
+                          ? "Verificar integridad (detén el servidor)"
+                          : "Verificar integridad"}
+                      </Menu.Item>
+                    </>
+                  ) : (
+                    <Menu.Item
+                      leftSection={<CloudArrowDown size={16} />}
+                      onClick={props.onInstallFiles}
+                    >
+                      Instalar archivos
+                    </Menu.Item>
+                  )}
+                  <Menu.Item leftSection={<Copy size={16} />} onClick={props.onClone}>
+                    Clonar
+                  </Menu.Item>
+
+                  <Menu.Divider />
+                  <Menu.Label>Peligro</Menu.Label>
+                  <Menu.Item
+                    color="red"
+                    leftSection={<XCircle size={16} />}
+                    onClick={props.onKill}
+                    disabled={!isActive}
+                  >
+                    Forzar cierre (matar)
+                  </Menu.Item>
+                  <Menu.Item
+                    color="red"
+                    leftSection={<Trash size={16} />}
+                    onClick={props.onDelete}
                     disabled={isActive}
                   >
-                    <CloudArrowDown size={18} />
-                  </IconAction>
-                  <IconAction
-                    label={
-                      isActive
-                        ? "Detén el servidor antes de verificar"
-                        : "Verificar integridad"
-                    }
-                    color="violet"
-                    onClick={props.onVerifyFiles}
-                    disabled={isActive}
-                  >
-                    <ShieldCheck size={18} />
-                  </IconAction>
-                </>
-              ) : (
-                <IconAction label="Instalar archivos" color="blue" onClick={props.onInstallFiles}>
-                  <CloudArrowDown size={18} />
-                </IconAction>
-              )}
-              <IconAction label="Clonar" color="gray" onClick={props.onClone}>
-                <Copy size={18} />
-              </IconAction>
-              {isActive && (
-                <IconAction label="Forzar cierre" color="red" onClick={props.onKill}>
-                  <XCircle size={18} />
-                </IconAction>
-              )}
-              <IconAction
-                label={
-                  isActive
-                    ? "Detén el servidor antes de eliminarlo"
-                    : "Eliminar servidor"
-                }
-                color="red"
-                onClick={props.onDelete}
-                disabled={isActive}
-              >
-                <Trash size={18} />
-              </IconAction>
+                    {isActive ? "Eliminar (detén el servidor)" : "Eliminar servidor"}
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+              </div>
             </>
           )}
         </Group>
@@ -420,8 +451,12 @@ interface MetaItemProps {
 function MetaItem({ label, value, tone = "default" }: MetaItemProps): JSX.Element {
   return (
     <div className={classes.metaItem}>
-      <Text className={classes.metaLabel}>{label}</Text>
-      <Text className={classes[`metaValue-${tone}`]}>{value}</Text>
+      <Text c="dimmed" tt="uppercase" lts={0.04} display="block" fz="micro">
+        {label}
+      </Text>
+      <Text className={classes[`metaValue-${tone}`]} display="block" lineClamp={1} fz="xxs">
+        {value}
+      </Text>
     </div>
   );
 }

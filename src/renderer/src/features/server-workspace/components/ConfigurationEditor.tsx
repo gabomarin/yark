@@ -25,6 +25,7 @@ import {
   Tooltip,
   UnstyledButton,
 } from "@mantine/core";
+import { modals } from "@mantine/modals";
 import { applyIniPreset, listIniPresets } from "@shared/ini-presets";
 import type {
   IniFileKey,
@@ -53,27 +54,20 @@ import {
 } from "../iniModel";
 import classes from "./ConfigurationEditor.module.css";
 
-type ConfigSection =
+export type ConfigSection =
   | "game"
   | "gameUserSettings"
   | "mods"
-  | "startup"
   | "advanced";
 
 interface Props {
   server: ServerProfile;
+  /** Sección activa (controlada por los tabs del workspace). */
+  section: ConfigSection;
   serverActive?: boolean;
   onModsChanged: (mods: string[]) => Promise<void>;
   onDirtyChange?: (dirty: boolean) => void;
 }
-
-const SECTION_ITEMS: Array<{ id: ConfigSection; label: string }> = [
-  { id: "game", label: "Game.ini" },
-  { id: "gameUserSettings", label: "GameUserSettings.ini" },
-  { id: "mods", label: "Active Mods" },
-  { id: "startup", label: "Startup Parameters" },
-  { id: "advanced", label: "Advanced" },
-];
 
 function fileKeyForSection(section: ConfigSection): IniFileKey | null {
   if (section === "game") return "game";
@@ -83,7 +77,7 @@ function fileKeyForSection(section: ConfigSection): IniFileKey | null {
 }
 
 export function ConfigurationEditor(props: Props): JSX.Element {
-  const [section, setSection] = useState<ConfigSection>("gameUserSettings");
+  const { section } = props;
   const [snapshot, setSnapshot] = useState<ServerIniSnapshot | null>(null);
   const [payload, setPayload] = useState<ServerIniPayload | null>(null);
   const [baseline, setBaseline] = useState<ServerIniPayload | null>(null);
@@ -190,13 +184,22 @@ export function ConfigurationEditor(props: Props): JSX.Element {
     if (payload === null) return;
     const label =
       activeFileKey === "game" ? "Game.ini" : "GameUserSettings.ini";
-    const ok = window.confirm(
-      `¿Restablecer ${label} a los valores default del proyecto? Se perderán los valores actuales de este archivo (aún no guardados en disco hasta que pulses Save).`,
-    );
-    if (!ok) return;
-    setPayload(withFileText(payload, activeFileKey, defaultTextForFile(activeFileKey)));
-    setPreview(null);
-    setInfo(`${label} restaurado a defaults (pendiente de Save)`);
+    modals.openConfirmModal({
+      title: `Restablecer ${label}`,
+      children: (
+        <Alert color="yellow" title="Se perderán valores actuales" variant="light">
+          Se restaurarán los defaults del proyecto para este archivo. Los cambios no se
+          escriben en disco hasta que pulses Guardar.
+        </Alert>
+      ),
+      labels: { confirm: "Restablecer", cancel: "Cancelar" },
+      confirmProps: { color: "yellow" },
+      onConfirm: () => {
+        setPayload(withFileText(payload, activeFileKey, defaultTextForFile(activeFileKey)));
+        setPreview(null);
+        setInfo(`${label} restaurado a defaults (pendiente de Save)`);
+      },
+    });
   };
 
   const resetRowToDefault = (row: IniSettingRow) => {
@@ -329,19 +332,6 @@ export function ConfigurationEditor(props: Props): JSX.Element {
 
   return (
     <div className={classes.root}>
-      <nav className={classes.subnav}>
-        {SECTION_ITEMS.map((item) => (
-          <UnstyledButton
-            key={item.id}
-            className={classes.subnavItem}
-            data-active={section === item.id || undefined}
-            onClick={() => setSection(item.id)}
-          >
-            {item.label}
-          </UnstyledButton>
-        ))}
-      </nav>
-
       <div className={classes.content}>
         {error !== null && (
           <Alert color="red" mb="sm" onClose={() => setError(null)} withCloseButton>
@@ -353,7 +343,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
             {info}
           </Alert>
         )}
-        {props.serverActive === true && (
+        {props.serverActive === true && section !== "mods" && (
           <Alert color="yellow" mb="sm" title="Servidor en ejecución">
             Los cambios en INI se aplicarán al reiniciar el servidor.
           </Alert>
@@ -710,23 +700,6 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                 </Group>
               ))}
             </Stack>
-          </Stack>
-        )}
-
-        {section === "startup" && (
-          <Stack gap="sm">
-            <Title order={3}>Startup Parameters</Title>
-            <Text c="dimmed">
-              Los argumentos extra actuales del perfil:
-            </Text>
-            <Textarea
-              readOnly
-              minRows={6}
-              value={props.server.extraArgs.join("\n") || "(sin argumentos extra)"}
-            />
-            <Text size="sm" c="dimmed">
-              La edición dedicada de startup llega en una fase siguiente. Por ahora usa Editar servidor.
-            </Text>
           </Stack>
         )}
 

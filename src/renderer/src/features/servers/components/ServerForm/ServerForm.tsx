@@ -8,6 +8,7 @@ import {
   Stack,
   Text,
   TextInput,
+  Textarea,
   Title,
 } from "@mantine/core";
 import {
@@ -81,7 +82,11 @@ function toFormState(profile: ServerProfile | null): FormState {
   };
 }
 
-function toInput(state: FormState, isCreate: boolean): ServerProfileInput {
+function toInput(
+  state: FormState,
+  isCreate: boolean,
+  options?: { preserveMods?: string[] },
+): ServerProfileInput {
   const name = state.name.trim();
   const baseOrInstall = state.installDir.trim();
   return {
@@ -103,10 +108,12 @@ function toInput(state: FormState, isCreate: boolean): ServerProfileInput {
       .split(/\s+/)
       .map((value) => value.trim())
       .filter((value) => value.length > 0),
-    mods: state.mods
-      .split(",")
-      .map((value) => value.trim())
-      .filter((value) => value.length > 0),
+    mods:
+      options?.preserveMods ??
+      state.mods
+        .split(",")
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0),
   };
 }
 
@@ -114,6 +121,7 @@ export function ServerForm(props: Props): JSX.Element {
   const isCreate = props.initial === null;
   const embedded = props.variant === "embedded";
   const serverActive = props.serverActive === true;
+  const inputSize = embedded ? "sm" : "md";
   const [state, setState] = useState<FormState>(() => toFormState(props.initial));
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -175,7 +183,10 @@ export function ServerForm(props: Props): JSX.Element {
       return;
     }
     setSaving(true);
-    const input = toInput(state, isCreate);
+    const input = toInput(state, isCreate, {
+      preserveMods:
+        embedded && props.initial !== null ? props.initial.mods : undefined,
+    });
     const result =
       props.initial === null
         ? await window.api.createServer(input)
@@ -188,120 +199,218 @@ export function ServerForm(props: Props): JSX.Element {
     setError(result.error ?? "No se pudo guardar el servidor");
   };
 
+  const formBody = (
+    <Stack gap={embedded ? "md" : "lg"}>
+      {!embedded && (
+        <Group justify="space-between" align="flex-start">
+          <div>
+            <Title order={2}>{isCreate ? "Nuevo servidor" : `Editar: ${props.initial!.name}`}</Title>
+            <Text c="dimmed">Configura identidad, red, acceso, cluster y argumentos del servidor.</Text>
+          </div>
+          <Button variant="subtle" leftSection={<ArrowLeft size={16} />} onClick={props.onCancel}>
+            Volver
+          </Button>
+        </Group>
+      )}
+
+      {embedded && (
+        <div>
+          <Title order={4}>Información del servidor</Title>
+          <Text c="dimmed" fz="xs">
+            Nombre, puertos, acceso, cluster y argumentos de arranque.
+          </Text>
+        </div>
+      )}
+
+      {serverActive && (
+        <Alert color="yellow" title="Servidor en ejecución">
+          Puedes guardar cambios ahora; se aplicarán al reiniciar el servidor.
+        </Alert>
+      )}
+
+      {error !== null && <Alert color="red">{error}</Alert>}
+
+      <SimpleGrid cols={{ base: 1, md: 2 }} spacing={embedded ? "md" : "lg"}>
+        <Section title="Identidad" flat={embedded}>
+          <TextInput
+            label="Nombre"
+            size={inputSize}
+            value={state.name}
+            onChange={(e) => setField("name")(e.currentTarget.value)}
+            required
+            error={nameFolderError ?? undefined}
+            description={
+              isCreate
+                ? 'También se usa como subcarpeta. No uses < > : " / \\ | ? *'
+                : undefined
+            }
+          />
+          <TextInput
+            label="Nombre de sesión"
+            size={inputSize}
+            value={state.sessionName}
+            onChange={(e) => setField("sessionName")(e.currentTarget.value)}
+            required
+          />
+          <TextInput
+            label="Mapa"
+            size={inputSize}
+            value={state.map}
+            onChange={(e) => setField("map")(e.currentTarget.value)}
+            list="known-maps"
+            required
+          />
+          <datalist id="known-maps">
+            {KNOWN_MAPS.map((map) => (
+              <option key={map} value={map} />
+            ))}
+          </datalist>
+          <PathField
+            label={isCreate ? "Carpeta base" : "Directorio de instalación"}
+            value={state.installDir}
+            placeholder={isCreate ? "C:\\ark_servers" : "C:\\ark_servers\\my_server"}
+            busy={browsingField === "installDir"}
+            disabled={serverActive && !isCreate}
+            size={inputSize}
+            onChange={setField("installDir")}
+            onBrowse={() => void browseDirectory("installDir")}
+          />
+          {isCreate && (
+            <Text size="sm" c="dimmed">
+              Instalación final:{" "}
+              <Text span fw={600} c={resolvedInstallPreview.length > 0 ? undefined : "dimmed"}>
+                {resolvedInstallPreview.length > 0
+                  ? resolvedInstallPreview
+                  : "elige carpeta base y nombre"}
+              </Text>
+            </Text>
+          )}
+        </Section>
+
+        <Section title="Red" flat={embedded}>
+          <TextInput
+            label="Puerto de juego"
+            type="number"
+            size={inputSize}
+            value={state.gamePort}
+            onChange={(e) => setField("gamePort")(e.currentTarget.value)}
+            required
+          />
+          <TextInput
+            label="Puerto de query"
+            type="number"
+            size={inputSize}
+            value={state.queryPort}
+            onChange={(e) => setField("queryPort")(e.currentTarget.value)}
+            required
+          />
+          <TextInput
+            label="Puerto RCON"
+            type="number"
+            size={inputSize}
+            value={state.rconPort}
+            onChange={(e) => setField("rconPort")(e.currentTarget.value)}
+            required
+          />
+        </Section>
+
+        <Section title="Acceso" flat={embedded}>
+          <TextInput
+            label="Password del servidor"
+            size={inputSize}
+            value={state.serverPassword}
+            onChange={(e) => setField("serverPassword")(e.currentTarget.value)}
+          />
+          <TextInput
+            label="Password de administrador"
+            size={inputSize}
+            value={state.adminPassword}
+            onChange={(e) => setField("adminPassword")(e.currentTarget.value)}
+            required
+          />
+        </Section>
+
+        <Section title="Cluster" flat={embedded}>
+          <TextInput
+            label="Cluster ID"
+            size={inputSize}
+            value={state.clusterId}
+            onChange={(e) => setField("clusterId")(e.currentTarget.value)}
+          />
+          <PathField
+            label="Directorio compartido de cluster"
+            value={state.clusterDir}
+            placeholder="C:\\ark_servers\\cluster"
+            busy={browsingField === "clusterDir"}
+            size={inputSize}
+            onChange={setField("clusterDir")}
+            onBrowse={() => void browseDirectory("clusterDir")}
+          />
+        </Section>
+
+        <Section
+          title={embedded ? "Argumentos de arranque" : "Mods y argumentos"}
+          flat={embedded}
+          span2={embedded}
+        >
+          {!embedded && (
+            <TextInput
+              label="Mods"
+              size={inputSize}
+              value={state.mods}
+              onChange={(e) => setField("mods")(e.currentTarget.value)}
+              placeholder="928988, 929420"
+            />
+          )}
+          {embedded && (
+            <Text c="dimmed" fz="xs">
+              Los mods se gestionan en el tab Mods. Aquí solo los argumentos extra del
+              proceso (equivalente a Startup Parameters).
+            </Text>
+          )}
+          <Textarea
+            label={embedded ? "Argumentos extra" : "Argumentos extra"}
+            size={inputSize}
+            value={state.extraArgs}
+            onChange={(e) => setField("extraArgs")(e.currentTarget.value)}
+            placeholder="-NoBattlEye -ForceAllowCaveFlyers -servergamelog"
+            description={
+              embedded
+                ? "Separados por espacios. Se añaden al comando de arranque del dedicated."
+                : undefined
+            }
+            minRows={embedded ? 3 : 2}
+            autosize
+            maxRows={8}
+          />
+        </Section>
+      </SimpleGrid>
+
+      <Group justify="flex-end">
+        {!embedded && (
+          <Button variant="default" onClick={props.onCancel}>Cancelar</Button>
+        )}
+        <Button
+          size={embedded ? "sm" : "md"}
+          leftSection={<FloppyDisk size={16} />}
+          onClick={() => void submit()}
+          loading={saving}
+        >
+          Guardar
+        </Button>
+      </Group>
+    </Stack>
+  );
+
   return (
     <div className={embedded ? classes.embedded : classes.page}>
-      <Card withBorder className={classes.card}>
-        <Stack gap="lg">
-          {!embedded && (
-            <Group justify="space-between" align="flex-start">
-              <div>
-                <Title order={2}>{isCreate ? "Nuevo servidor" : `Editar: ${props.initial!.name}`}</Title>
-                <Text c="dimmed">Configura identidad, red, acceso, cluster y argumentos del servidor.</Text>
-              </div>
-              <Button variant="subtle" leftSection={<ArrowLeft size={16} />} onClick={props.onCancel}>
-                Volver
-              </Button>
-            </Group>
-          )}
-
-          {embedded && (
-            <div>
-              <Title order={3}>Información del servidor</Title>
-              <Text c="dimmed" size="sm">
-                Nombre, puertos, acceso, cluster y argumentos de arranque.
-              </Text>
-            </div>
-          )}
-
-          {serverActive && (
-            <Alert color="yellow" title="Servidor en ejecución">
-              Puedes guardar cambios ahora; se aplicarán al reiniciar el servidor.
-            </Alert>
-          )}
-
-          {error !== null && <Alert color="red">{error}</Alert>}
-
-          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
-            <Section title="Identidad">
-              <TextInput
-                label="Nombre"
-                value={state.name}
-                onChange={(e) => setField("name")(e.currentTarget.value)}
-                required
-                error={nameFolderError ?? undefined}
-                description={
-                  isCreate
-                    ? 'También se usa como subcarpeta. No uses < > : " / \\ | ? *'
-                    : undefined
-                }
-              />
-              <TextInput label="Nombre de sesión" value={state.sessionName} onChange={(e) => setField("sessionName")(e.currentTarget.value)} required />
-              <TextInput label="Mapa" value={state.map} onChange={(e) => setField("map")(e.currentTarget.value)} list="known-maps" required />
-              <datalist id="known-maps">
-                {KNOWN_MAPS.map((map) => (
-                  <option key={map} value={map} />
-                ))}
-              </datalist>
-              <PathField
-                label={isCreate ? "Carpeta base" : "Directorio de instalación"}
-                value={state.installDir}
-                placeholder={isCreate ? "C:\\ark_servers" : "C:\\ark_servers\\my_server"}
-                busy={browsingField === "installDir"}
-                disabled={serverActive && !isCreate}
-                onChange={setField("installDir")}
-                onBrowse={() => void browseDirectory("installDir")}
-              />
-              {isCreate && (
-                <Text size="sm" c="dimmed">
-                  Instalación final:{" "}
-                  <Text span fw={600} c={resolvedInstallPreview.length > 0 ? undefined : "dimmed"}>
-                    {resolvedInstallPreview.length > 0
-                      ? resolvedInstallPreview
-                      : "elige carpeta base y nombre"}
-                  </Text>
-                </Text>
-              )}
-            </Section>
-
-            <Section title="Red">
-              <TextInput label="Puerto de juego" type="number" value={state.gamePort} onChange={(e) => setField("gamePort")(e.currentTarget.value)} required />
-              <TextInput label="Puerto de query" type="number" value={state.queryPort} onChange={(e) => setField("queryPort")(e.currentTarget.value)} required />
-              <TextInput label="Puerto RCON" type="number" value={state.rconPort} onChange={(e) => setField("rconPort")(e.currentTarget.value)} required />
-            </Section>
-
-            <Section title="Acceso">
-              <TextInput label="Password del servidor" value={state.serverPassword} onChange={(e) => setField("serverPassword")(e.currentTarget.value)} />
-              <TextInput label="Password de administrador" value={state.adminPassword} onChange={(e) => setField("adminPassword")(e.currentTarget.value)} required />
-            </Section>
-
-            <Section title="Cluster">
-              <TextInput label="Cluster ID" value={state.clusterId} onChange={(e) => setField("clusterId")(e.currentTarget.value)} />
-              <PathField
-                label="Directorio compartido de cluster"
-                value={state.clusterDir}
-                placeholder="C:\\ark_servers\\cluster"
-                busy={browsingField === "clusterDir"}
-                onChange={setField("clusterDir")}
-                onBrowse={() => void browseDirectory("clusterDir")}
-              />
-            </Section>
-
-            <Section title="Mods y argumentos">
-              <TextInput label="Mods" value={state.mods} onChange={(e) => setField("mods")(e.currentTarget.value)} placeholder="928988, 929420" />
-              <TextInput label="Argumentos extra" value={state.extraArgs} onChange={(e) => setField("extraArgs")(e.currentTarget.value)} placeholder="-NoBattlEye -ForceAllowCaveFlyers" />
-            </Section>
-          </SimpleGrid>
-
-          <Group justify="flex-end">
-            {!embedded && (
-              <Button variant="default" onClick={props.onCancel}>Cancelar</Button>
-            )}
-            <Button leftSection={<FloppyDisk size={16} />} onClick={() => void submit()} loading={saving}>
-              Guardar
-            </Button>
-          </Group>
-        </Stack>
-      </Card>
+      {embedded ? (
+        <div className={classes.embeddedSurface}>{formBody}</div>
+      ) : (
+        <Card withBorder className={classes.card}>
+          {formBody}
+        </Card>
+      )}
     </div>
   );
 }
@@ -309,9 +418,22 @@ export function ServerForm(props: Props): JSX.Element {
 interface SectionProps {
   title: string;
   children: React.ReactNode;
+  flat?: boolean;
+  span2?: boolean;
 }
 
-function Section({ title, children }: SectionProps): JSX.Element {
+function Section({ title, children, flat = false, span2 = false }: SectionProps): JSX.Element {
+  if (flat) {
+    return (
+      <Stack gap="xs" className={span2 ? classes.span2 : undefined}>
+        <Text fw={600} fz="sm">
+          {title}
+        </Text>
+        {children}
+      </Stack>
+    );
+  }
+
   return (
     <Card withBorder className={classes.section}>
       <Stack gap="sm">
@@ -328,6 +450,7 @@ interface PathFieldProps {
   placeholder?: string;
   busy: boolean;
   disabled?: boolean;
+  size?: "sm" | "md";
   onChange: (value: string) => void;
   onBrowse: () => void;
 }
@@ -338,23 +461,26 @@ function PathField({
   placeholder,
   busy,
   disabled = false,
+  size = "md",
   onChange,
   onBrowse,
 }: PathFieldProps): JSX.Element {
   return (
     <div>
       <Text size="sm" fw={500} mb={6}>{label}</Text>
-      <Group align="flex-end" wrap="nowrap">
+      <Group align="flex-end" wrap="nowrap" gap="xs">
         <TextInput
           className={classes.pathInput}
+          size={size}
           value={value}
           placeholder={placeholder}
           disabled={disabled}
           onChange={(e) => onChange(e.currentTarget.value)}
         />
         <Button
-          variant="light"
-          leftSection={<FolderOpen size={16} />}
+          variant="default"
+          size={size}
+          leftSection={<FolderOpen size={14} />}
           onClick={onBrowse}
           disabled={busy || disabled}
         >

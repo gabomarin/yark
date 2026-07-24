@@ -1,8 +1,8 @@
 .card {
-  border-radius: 16px;
+  border-radius: 14px;
   border-color: rgba(255, 255, 255, 0.08);
   background: linear-gradient(155deg, rgba(38, 52, 71, 0.95), rgba(23, 31, 43, 0.95));
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
 }
 
 .card[data-disabled] {
@@ -12,20 +12,9 @@
 .label {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  color: #9fb0c3;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  gap: 6px;
 }
 
 .value {
   color: #f2f6fb;
-  font-size: 24px;
-}
-
-.hint {
-  color: #9fb0c3;
-  font-size: 13px;
 }

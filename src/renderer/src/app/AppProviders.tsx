@@ -1,13 +1,19 @@
-import { MantineProvider } from "@mantine/core";
+import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
+import { MantineProvider } from "@mantine/core";
 import type { PropsWithChildren } from "react";
 import { appTheme } from "@theme/theme";
 
 export function AppProviders({ children }: PropsWithChildren): JSX.Element {
   return (
     <MantineProvider theme={appTheme} defaultColorScheme="dark">
-      <Notifications position="top-right" />
-      {children}
+      <ModalsProvider
+        modalProps={{ centered: true, radius: "md" }}
+        labels={{ confirm: "Confirmar", cancel: "Cancelar" }}
+      >
+        <Notifications position="top-right" autoClose={5000} />
+        {children}
+      </ModalsProvider>
     </MantineProvider>
   );
 }

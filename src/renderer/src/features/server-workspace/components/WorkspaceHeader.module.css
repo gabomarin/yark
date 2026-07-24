@@ -4,11 +4,15 @@
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  padding-bottom: 14px;
-  border-bottom: 1px solid #32465e;
+  flex-shrink: 0;
+  padding: 16px 20px 14px;
 }
 
 .identity {
   min-width: 0;
   flex: 1;
+}
+
+.crumb {
+  letter-spacing: 0.02em;
 }

@@ -87,10 +87,11 @@ describe("ServerWorkspacePage", () => {
     expect(screen.getByText("All Servers")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "The Island" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Servidor" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Configuración INI" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "GameUserSettings.ini" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Mods" })).toBeInTheDocument();
     expect(screen.getByText("Información del servidor")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("tab", { name: "Configuración INI" }));
+    await user.click(screen.getByRole("tab", { name: "GameUserSettings.ini" }));
 
     await waitFor(() => {
       expect(screen.getByText("MaxPlayers")).toBeInTheDocument();

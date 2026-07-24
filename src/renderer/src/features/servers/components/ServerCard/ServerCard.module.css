@@ -1,15 +1,16 @@
 .card {
-  border-radius: 18px;
+  border-radius: 14px;
   border-color: rgba(255, 255, 255, 0.08);
   background: linear-gradient(170deg, rgba(32, 43, 58, 0.95), rgba(23, 31, 43, 0.95));
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+  max-width: 100%;
 }
 
 .cardHit {
   display: block;
   width: 100%;
   padding: 0;
-  border-radius: 12px;
+  border-radius: 10px;
   color: inherit;
   text-align: left;
   cursor: pointer;
@@ -27,31 +28,41 @@
 .thumb {
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 8px;
   background: linear-gradient(180deg, rgba(85, 166, 255, 0.2), rgba(64, 211, 159, 0.12));
   color: #55a6ff;
+}
+
+.title {
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 650;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 11px;
+  line-height: 1.2;
+  margin-top: 2px;
 }
 
 .metaItem {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-}
-
-.metaLabel {
-  color: #9fb0c3;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  gap: 0;
+  min-width: 0;
 }
 
 .metaValue-default,
 .metaValue-muted,
 .metaValue-ok,
 .metaValue-warn {
-  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .metaValue-default {
@@ -70,14 +81,30 @@
   color: #ffbe4d;
 }
 
+.actions {
+  padding-top: 4px;
+  width: 100%;
+}
+
+.actionSlot {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+}
+
+.actionSlot :global(button) {
+  flex: 1;
+  width: 100%;
+}
+
 .rcon {
-  padding-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .progressBlock {
-  padding: 10px 12px;
-  border-radius: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
   border: 1px solid rgba(85, 166, 255, 0.22);
   background: rgba(85, 166, 255, 0.08);
 }
