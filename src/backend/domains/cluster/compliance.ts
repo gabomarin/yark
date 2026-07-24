@@ -1,9 +1,9 @@
+import { findPortConflicts } from "@shared/port-conflicts";
 import type {
   ClusterComplianceIssue,
   ClusterComplianceReport,
   ServerProfile,
 } from "@shared/types";
-import { findPortConflicts } from "../instances/validation";
 
 /**
  * Evalúa la consistencia de todos los clusters definidos entre perfiles.

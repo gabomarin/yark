@@ -2,6 +2,7 @@ import { Alert, Drawer, Tabs } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import type {
+  ClusterComplianceReport,
   ServerInstallationInfo,
   ServerProfile,
   ServerProfileInput,
@@ -15,6 +16,7 @@ import {
 } from "./components/ConfigurationEditor";
 import { ConfigurationWizard } from "./components/ConfigurationWizard";
 import { ServerListPanel } from "./components/ServerListPanel";
+import { ServerOnboardingChecklist } from "./components/ServerOnboardingChecklist";
 import { SidePanel } from "./components/SidePanel";
 import { WorkspaceHeader } from "./components/WorkspaceHeader";
 import classes from "./ServerWorkspacePage.module.css";
@@ -30,6 +32,9 @@ interface Props {
   selectedServerId: string;
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
+  clusterReports: ClusterComplianceReport[];
+  onboarding?: boolean;
+  onDismissOnboarding?: () => void;
   onSelectServer: (serverId: string) => void;
   onBack: () => void;
   onCreateServer?: () => void;
@@ -53,6 +58,7 @@ function isServerActive(runtime: ServerRuntimeInfo | null): boolean {
 export function ServerWorkspacePage(props: Props): JSX.Element {
   const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>("server");
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(props.onboarding === true);
   const [iniEditorVersion, setIniEditorVersion] = useState(0);
   const [iniDirty, setIniDirty] = useState(false);
   const [serverSwitcherOpen, setServerSwitcherOpen] = useState(false);
@@ -61,6 +67,12 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
   const dirtyRef = useRef(false);
   const assistantDirtyRef = useRef(false);
   const lastConfigSectionRef = useRef<ConfigSection>("iniFiles");
+
+  useEffect(() => {
+    if (props.onboarding === true) {
+      setShowOnboarding(true);
+    }
+  }, [props.onboarding, props.selectedServerId]);
 
   useEffect(() => {
     if (isConfigSection(workspaceTab)) {
@@ -214,6 +226,25 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
               onDraftChange={(dirty) => {
                 assistantDirtyRef.current = dirty;
               }}
+            />
+          ) : showOnboarding ? (
+            <ServerOnboardingChecklist
+              server={selectedServer}
+              servers={props.servers}
+              installation={installation}
+              clusterReports={props.clusterReports}
+              onDismiss={() => {
+                setShowOnboarding(false);
+                props.onDismissOnboarding?.();
+              }}
+              onOpenAssistant={() => {
+                if (!iniDirty) {
+                  assistantDirtyRef.current = false;
+                  setAssistantOpen(true);
+                }
+              }}
+              onInstallFiles={() => props.onInstallFiles(selectedServer.id)}
+              onServerUpdated={props.onServerUpdated}
             />
           ) : (
           <Tabs

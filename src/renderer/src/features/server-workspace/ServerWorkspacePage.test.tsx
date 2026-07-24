@@ -46,6 +46,7 @@ function renderWorkspace(onSelectServer = vi.fn()): void {
         selectedServerId={serverA.id}
         statuses={new Map()}
         installationInfo={new Map()}
+        clusterReports={[]}
         onSelectServer={onSelectServer}
         onBack={vi.fn()}
         onStartServer={vi.fn()}
@@ -312,6 +313,11 @@ describe("ServerWorkspacePage", () => {
     await user.click(screen.getByRole("button", { name: "Continuar" }));
     expect(screen.getByText("5× → 45×")).toBeVisible();
     expect(screen.getByText("0.5× → 0.075×")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(
+      screen.getByRole("heading", { name: "Define cómo se siente el mundo" }),
+    ).toBeVisible();
+    expect(screen.getByRole("radio", { name: "Amable" })).toBeChecked();
     await user.click(screen.getByRole("button", { name: "Continuar" }));
     await user.click(screen.getByRole("button", { name: "Continuar" }));
     expect(

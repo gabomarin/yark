@@ -49,13 +49,14 @@ demanda desde `Servidor → Asistente de configuración`, porque entrar a una
 pestaña no debe insinuar que explorar y aplicar recomendaciones son la misma
 acción.
 
-El asistente es una vista dedicada de cinco pasos:
+El asistente es una vista dedicada de seis pasos:
 
 1. Perfil de experiencia.
 2. Ritmo de progresión mediante niveles semánticos.
 3. Crianza mediante niveles semánticos.
-4. Reglas de comodidad.
-5. Revisión y aplicación.
+4. Mundo mediante niveles semánticos (capacidad, densidad, ciclo y supervivencia).
+5. Reglas de comodidad.
+6. Revisión y aplicación.
 
 Lee los valores actuales y crea un borrador aislado. Elegir perfiles, avanzar o
 cancelar no escribe archivos. Solo `Aplicar cambios` valida, previsualiza y
@@ -67,7 +68,7 @@ guarda ambos INI. Las keys no administradas por el asistente se preservan.
 
 - Se inicializa desde los INI reales.
 - Usa conceptos comprensibles, no keys técnicas.
-- Modifica únicamente 16 conceptos frecuentes.
+- Modifica únicamente un catálogo curado (~24 conceptos frecuentes).
 - Coordina ajustes relacionados mediante presets comprensibles, pero siempre
   muestra los multiplicadores exactos que producirá cada selección.
 - `Actual` restaura únicamente los valores originales del grupo activo y
@@ -124,15 +125,23 @@ Estado: completado para servidores existentes.
 
 ### Bloque 3.3 — Ampliación curada
 
-- Validar con usuarios los ajustes más utilizados.
-- Añadir nuevos campos solo con rango, unidad y consecuencias confiables.
-- Mejorar las recomendaciones sin convertir el asistente en otro editor total.
+Estado: completado (2026-07-23).
+
+- Catálogo ampliado con jugadores máximos, densidad, salud de nodos, ciclo
+  día/noche, drain de comida/agua y resistencia de estructuras.
+- Nuevo paso `Mundo` en el asistente; perfiles de experiencia declaran valores
+  para estos campos.
+- Tests de modelo cubren lectura/escritura de los nuevos ajustes.
 
 ### Bloque 3.4 — Creación de servidores
 
-- Reutilizar el mismo asistente después de crear un servidor.
-- Ofrecer `Configurar experiencia`, `Usar defaults` y `Hacerlo más tarde`.
-- Mantener el onboarding opcional y no bloquear instalación o arranque.
+Estado: completado (2026-07-23).
+
+- Tras crear un servidor (no al clonar), se abre el workspace con checklist de
+  onboarding opcional.
+- Checklist: experiencia (asistente / defaults), cluster, puertos e instalación.
+- `Más tarde` cierra el checklist sin bloquear arranque ni instalación.
+- El asistente INI se reutiliza; no se duplica la lógica de configuración.
 
 ## 6. Decisiones vigentes
 
@@ -148,4 +157,5 @@ Estado: completado para servidores existentes.
   documentados con la referencia de
   [ARK Official Community Wiki](https://ark.wiki.gg/wiki/Single_Player).
 - El resumen se deriva de cambios reales; no existe una segunda fuente de verdad.
-- La integración posterior a la creación reutilizará este mismo flujo.
+- La integración posterior a la creación reutiliza este mismo asistente INI
+  detrás de un checklist de onboarding separado (cluster, puertos, install).

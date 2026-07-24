@@ -5,10 +5,15 @@ import {
   applyExperienceProfile,
   applyProgressionPreset,
   applyWizardDraftToIni,
+  applyWorldPreset,
   configurationWizardSchema,
   draftFromIniPayload,
   wizardChanges,
 } from "../../src/renderer/src/features/server-workspace/configurationWizardModel";
+
+function settingOccurrences(iniText: string, key: string): string[] {
+  return iniText.match(new RegExp(`^${key}=[^\\n]*$`, "gm")) ?? [];
+}
 
 const payload = {
   gameUserSettings: [
@@ -219,4 +224,77 @@ describe("configuration wizard model", () => {
     expect(changes.some((change) => change.label === "Domesticación")).toBe(true);
     expect(changes.some((change) => change.label === "Modo de juego")).toBe(true);
   });
+
+  it("applies world settings from experience profiles and writes MaxPlayers", () => {
+    const initial = draftFromIniPayload(payload);
+    const next = applyExperienceProfile(initial, "friends");
+    const written = applyWizardDraftToIni(payload, next);
+
+    expect(next.maxPlayers).toBe(40);
+    expect(next.dinoCountMultiplier).toBe(1.25);
+    expect(next.harvestHealthMultiplier).toBe(1.5);
+    expect(next.dayCycleSpeedScale).toBe(1);
+    expect(next.nightTimeSpeedScale).toBe(1.25);
+    expect(next.playerCharacterFoodDrainMultiplier).toBe(0.7);
+    expect(next.playerCharacterWaterDrainMultiplier).toBe(0.7);
+    expect(next.structureResistanceMultiplier).toBe(1.5);
+
+    expect(written.gameUserSettings).toContain("MaxPlayers=40");
+    expect(written.gameUserSettings).toContain("DinoCountMultiplier=1.25");
+    expect(written.gameUserSettings).toContain("HarvestHealthMultiplier=1.5");
+    expect(written.gameUserSettings).toContain("NightTimeSpeedScale=1.25");
+    expect(written.gameUserSettings).toContain("PlayerCharacterFoodDrainMultiplier=0.7");
+    expect(written.gameUserSettings).toContain("PlayerCharacterWaterDrainMultiplier=0.7");
+    expect(written.gameUserSettings).toContain("StructureResistanceMultiplier=1.5");
+    expect(settingOccurrences(written.gameUserSettings, "DayCycleSpeedScale")).toEqual(
+      settingOccurrences(payload.gameUserSettings, "DayCycleSpeedScale"),
+    );
+  });
+
+  it("applies semantic world presets as a coordinated group", () => {
+    const initial = draftFromIniPayload(payload);
+    const next = applyWorldPreset(initial, "harsh");
+
+    expect(next.maxPlayers).toBe(100);
+    expect(next.structureResistanceMultiplier).toBe(0.85);
+    expect(next.dinoCountMultiplier).toBe(1);
+    expect(next.xpRate).toBe(initial.xpRate);
+  });
+
+  const worldRoundTripCases: Array<{
+    field:
+      | "maxPlayers"
+      | "dinoCountMultiplier"
+      | "harvestHealthMultiplier"
+      | "dayCycleSpeedScale"
+      | "nightTimeSpeedScale"
+      | "playerCharacterFoodDrainMultiplier"
+      | "playerCharacterWaterDrainMultiplier"
+      | "structureResistanceMultiplier";
+    value: number;
+  }> = [
+    { field: "maxPlayers", value: 82 },
+    { field: "dinoCountMultiplier", value: 1.4 },
+    { field: "harvestHealthMultiplier", value: 1.65 },
+    { field: "dayCycleSpeedScale", value: 0.9 },
+    { field: "nightTimeSpeedScale", value: 1.35 },
+    { field: "playerCharacterFoodDrainMultiplier", value: 0.75 },
+    { field: "playerCharacterWaterDrainMultiplier", value: 0.8 },
+    { field: "structureResistanceMultiplier", value: 1.3 },
+  ];
+
+  for (const roundTripCase of worldRoundTripCases) {
+    it(`round-trips world setting ${roundTripCase.field}`, () => {
+      const initial = draftFromIniPayload(payload);
+      const nextDraft = {
+        ...initial,
+        [roundTripCase.field]: roundTripCase.value,
+      };
+
+      const written = applyWizardDraftToIni(payload, nextDraft);
+      const reloaded = draftFromIniPayload(written);
+
+      expect(reloaded[roundTripCase.field]).toBe(roundTripCase.value);
+    });
+  }
 });

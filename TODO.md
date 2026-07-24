@@ -406,20 +406,20 @@ Bloques propuestos:
 
 - [x] 3.1 Agrupar la experiencia visual/raw existente bajo `Archivos INI`.
 - [x] 3.2 Crear asistente bajo demanda de cinco pasos para servidores existentes.
-- [ ] 3.3 Ampliar y validar la selección curada de ajustes frecuentes.
-- [ ] 3.4 Reutilizar el asistente opcionalmente después de crear un servidor.
+- [x] 3.3 Ampliar y validar la selección curada de ajustes frecuentes.
+- [x] 3.4 Reutilizar el asistente opcionalmente después de crear un servidor.
 
 Validación del bloque 3.2 — asistente bajo demanda:
 
 - [x] Eliminada la pestaña provisional que solo fusionaba ambos INI.
 - [x] Lanzador integrado en `Servidor`; navegación habitual reducida a Servidor, Archivos INI y Mods.
-- [x] Cinco pasos: perfil, ritmo, crianza, comodidad y revisión.
+- [x] Cinco pasos iniciales: perfil, ritmo, crianza, comodidad y revisión (ampliados en 3.3).
 - [x] Ritmo y crianza usan presets semánticos coordinados; muestran sus multiplicadores exactos y permiten volver a los valores actuales.
 - [x] El modo individual se presenta como ajuste de alto impacto, nunca cambia implícitamente con un perfil y muestra tasas efectivas conocidas.
 - [x] Dificultad se presenta como un solo concepto; nivel máximo, `DifficultyOffset` y `OverrideOfficialDifficulty` se coordinan únicamente tras una elección explícita.
 - [x] `Muy rápido` diferencia claramente el ritmo con XP `5×`, recolección `5×` y domesticación `10×`.
 - [x] Abrir, recorrer y cancelar trabajan sobre un borrador y no escriben en disco.
-- [x] Solo se modifican 16 conceptos curados; contenido desconocido y casing de secciones se conservan.
+- [x] Solo se modifican conceptos curados; contenido desconocido y casing de secciones se conservan.
 - [x] Antes de aplicar se relee el disco y el borrador se superpone sobre la versión más reciente para preservar cambios externos.
 - [x] El asistente se bloquea si el editor manual tiene cambios pendientes.
 - [x] Aplicación final usa Zod, preview del backend y guardado explícito; el editor manual se recarga después.
@@ -427,6 +427,19 @@ Validación del bloque 3.2 — asistente bajo demanda:
 - [-] Suite completa 147/148 por el `EBUSY` conocido al limpiar una carpeta temporal de Windows; la prueba de proceso real pasa aislada 1/1.
 - [x] Launcher, inicio y revisión recorridos con Playwright/Electron en `1280×720`, `1920×1080` y `2560×1440`.
 - [x] Scroll interno funcional en 720p, footer/progreso accesibles, sin overflow global, errores de consola ni excepciones.
+
+Validación del bloque 3.3 — ampliación curada:
+
+- [x] Nuevos conceptos: MaxPlayers, densidad, salud de nodos, ciclo día/noche, drain comida/agua, resistencia de estructuras.
+- [x] Paso `Mundo` con presets semánticos (Base / Amable / Equilibrado / Exigente); perfiles de experiencia los declaran.
+- [x] Tests de modelo cubren escritura INI y presets de mundo.
+
+Validación del bloque 3.4 — onboarding post-creación:
+
+- [x] Tras crear (no clonar) se abre workspace con checklist opcional.
+- [x] Checklist: experiencia, cluster, puertos e instalar archivos; `Más tarde` no bloquea.
+- [x] `Configurar con asistente` reutiliza `ConfigurationWizard`.
+- [x] Conflictos de puerto vía `findPortConflicts` compartido; compliance de cluster vía `checkCluster`.
 - [x] Ajuste de presets, dificultad, modo individual y resumen interactivo: pruebas focalizadas 16/16, typecheck y build correctos.
 - [x] Ritmo, crianza y modal de cambios revisados en Electron a `1280×720`, `1920×1080` y `2560×1440`; sin overflow ni errores del renderer.
 - [x] Modo individual, tasas efectivas y dificultad compuesta revisados con scroll real en las tres resoluciones; footer siempre accesible.
@@ -472,9 +485,9 @@ Antes de marcar una iteración como completada:
 - Criterio aplicado: cada check se marcó como `[x]` solo cuando existe evidencia funcional vigente; si hay implementación parcial o desalineada, se marcó `[-]`; si no hay evidencia o está roto, `[ ]`.
 
 ## Siguiente prioridad recomendada
-1. Completar Iteración 3 (Smart Config): bloques **3.3** (ampliar/validar selección curada) y **3.4** (asistente tras crear servidor).
-2. Página funcional de **Backups** (backend ya existe); después Clusters y Settings.
-3. Diferido: CurseForge avanzado, partir `ConfigurationEditor`, icono final de distribución, RCON en consola avanzada.
+1. Página funcional de **Backups** (backend ya existe); después Clusters y Settings.
+2. Diferido: CurseForge avanzado, partir `ConfigurationEditor`, icono final de distribución, RCON en consola avanzada.
+3. Opcional: ampliar más el catálogo curado del asistente según uso real.
 
 ## Regla de mantenimiento
 - Cada vez que se complete una tarea, actualizar este archivo en el mismo cambio.

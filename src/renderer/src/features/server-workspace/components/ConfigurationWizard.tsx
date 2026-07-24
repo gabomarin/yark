@@ -38,17 +38,20 @@ import {
   applyDifficultyLevel,
   applyProgressionPreset,
   applyWizardDraftToIni,
+  applyWorldPreset,
   BREEDING_PRESETS,
   configurationWizardSchema,
   draftFromIniPayload,
   EXPERIENCE_PROFILES,
   PROGRESSION_PRESETS,
   SINGLE_PLAYER_RATE_FACTORS,
+  WORLD_PRESETS,
   wizardChanges,
   type ConfigurationWizardDraft,
   type BreedingPresetId,
   type ExperienceProfileId,
   type ProgressionPresetId,
+  type WorldPresetId,
 } from "../configurationWizardModel";
 import classes from "./ConfigurationWizard.module.css";
 
@@ -75,6 +78,14 @@ const EMPTY_DRAFT: ConfigurationWizardDraft = {
   maturationRate: 1,
   matingIntervalMultiplier: 1,
   cuddleIntervalMultiplier: 1,
+  maxPlayers: 70,
+  dinoCountMultiplier: 1,
+  harvestHealthMultiplier: 1,
+  dayCycleSpeedScale: 1,
+  nightTimeSpeedScale: 1,
+  playerCharacterFoodDrainMultiplier: 1,
+  playerCharacterWaterDrainMultiplier: 1,
+  structureResistanceMultiplier: 1,
   showMapLocation: true,
   crosshair: true,
   thirdPerson: true,
@@ -82,7 +93,8 @@ const EMPTY_DRAFT: ConfigurationWizardDraft = {
   structurePickupSeconds: 30,
 };
 
-const STEP_LABELS = ["Perfil", "Ritmo", "Crianza", "Comodidad", "Revisión"];
+const STEP_LABELS = ["Perfil", "Ritmo", "Crianza", "Mundo", "Comodidad", "Revisión"];
+const STEP_COUNT = STEP_LABELS.length;
 type DifficultyChoice = "current" | "120" | "150" | "180" | "300" | "custom";
 
 export function ConfigurationWizard(props: Props): JSX.Element {
@@ -101,6 +113,9 @@ export function ConfigurationWizard(props: Props): JSX.Element {
   const [breedingPreset, setBreedingPreset] = useState<
     BreedingPresetId | "current"
   >("current");
+  const [worldPreset, setWorldPreset] = useState<WorldPresetId | "current">(
+    "current",
+  );
   const [difficultyChoice, setDifficultyChoice] =
     useState<DifficultyChoice>("current");
   const [error, setError] = useState<string | null>(null);
@@ -145,6 +160,7 @@ export function ConfigurationWizard(props: Props): JSX.Element {
       form.setValues({ ...initialDraft, profile: "current" });
       setProgressionPreset("current");
       setBreedingPreset("current");
+      setWorldPreset("current");
       setDifficultyChoice("current");
       return;
     }
@@ -155,6 +171,7 @@ export function ConfigurationWizard(props: Props): JSX.Element {
     if (selectedProfile !== undefined) {
       setProgressionPreset(selectedProfile.progressionPreset);
       setBreedingPreset(selectedProfile.breedingPreset);
+      setWorldPreset(selectedProfile.worldPreset);
       setDifficultyChoice("150");
     }
   };
@@ -190,6 +207,29 @@ export function ConfigurationWizard(props: Props): JSX.Element {
     const presetId = preset as BreedingPresetId;
     form.setValues(applyBreedingPreset(form.values, presetId));
     setBreedingPreset(presetId);
+  };
+
+  const chooseWorldPreset = (preset: string) => {
+    if (preset === "current") {
+      form.setValues({
+        ...form.values,
+        maxPlayers: initialDraft.maxPlayers,
+        dinoCountMultiplier: initialDraft.dinoCountMultiplier,
+        harvestHealthMultiplier: initialDraft.harvestHealthMultiplier,
+        dayCycleSpeedScale: initialDraft.dayCycleSpeedScale,
+        nightTimeSpeedScale: initialDraft.nightTimeSpeedScale,
+        playerCharacterFoodDrainMultiplier:
+          initialDraft.playerCharacterFoodDrainMultiplier,
+        playerCharacterWaterDrainMultiplier:
+          initialDraft.playerCharacterWaterDrainMultiplier,
+        structureResistanceMultiplier: initialDraft.structureResistanceMultiplier,
+      });
+      setWorldPreset("current");
+      return;
+    }
+    const presetId = preset as WorldPresetId;
+    form.setValues(applyWorldPreset(form.values, presetId));
+    setWorldPreset(presetId);
   };
 
   const chooseDifficulty = (choice: string) => {
@@ -228,7 +268,7 @@ export function ConfigurationWizard(props: Props): JSX.Element {
     });
   };
 
-  const next = () => setActiveStep((current) => Math.min(current + 1, 4));
+  const next = () => setActiveStep((current) => Math.min(current + 1, STEP_COUNT - 1));
   const previous = () => setActiveStep((current) => Math.max(current - 1, 0));
 
   const apply = async () => {
@@ -352,13 +392,13 @@ export function ConfigurationWizard(props: Props): JSX.Element {
           <Stack gap={6}>
             <Group justify="space-between">
               <Text size="sm" fw={600}>
-                Paso {activeStep + 1} de 5
+                Paso {activeStep + 1} de {STEP_COUNT}
               </Text>
               <Text size="sm" c="dimmed">
                 {STEP_LABELS[activeStep]}
               </Text>
             </Group>
-            <Progress value={((activeStep + 1) / 5) * 100} size="sm" />
+            <Progress value={((activeStep + 1) / STEP_COUNT) * 100} size="sm" />
           </Stack>
         ) : (
           <Stepper active={activeStep} allowNextStepsSelect={false} size="sm">
@@ -527,6 +567,59 @@ export function ConfigurationWizard(props: Props): JSX.Element {
 
         {activeStep === 3 && (
           <WizardStep
+            title="Define cómo se siente el mundo"
+            description="Elige una intensidad; el asistente coordina cupo, densidad, ciclo del día y supervivencia."
+          >
+            <PresetSelector
+              value={worldPreset}
+              onChange={chooseWorldPreset}
+              presets={WORLD_PRESETS}
+              currentDescription="Conserva la combinación que ya usa este servidor."
+            >
+              <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="xs">
+                <PresetValue
+                  label="Jugadores máximos"
+                  value={String(form.values.maxPlayers)}
+                />
+                <PresetValue
+                  label="Densidad de dinosaurios"
+                  value={`${form.values.dinoCountMultiplier}×`}
+                />
+                <PresetValue
+                  label="Salud de nodos"
+                  value={`${form.values.harvestHealthMultiplier}×`}
+                />
+                <PresetValue
+                  label="Resistencia de estructuras"
+                  value={`${form.values.structureResistanceMultiplier}×`}
+                />
+                <PresetValue
+                  label="Velocidad del día"
+                  value={`${form.values.dayCycleSpeedScale}×`}
+                />
+                <PresetValue
+                  label="Velocidad de la noche"
+                  value={`${form.values.nightTimeSpeedScale}×`}
+                />
+                <PresetValue
+                  label="Consumo de comida"
+                  value={`${form.values.playerCharacterFoodDrainMultiplier}×`}
+                />
+                <PresetValue
+                  label="Consumo de agua"
+                  value={`${form.values.playerCharacterWaterDrainMultiplier}×`}
+                />
+              </SimpleGrid>
+            </PresetSelector>
+            <Text c="dimmed" size="xs">
+              En comida y agua, un valor menor significa menos hambre y sed. En la
+              noche, un valor mayor acorta la oscuridad.
+            </Text>
+          </WizardStep>
+        )}
+
+        {activeStep === 4 && (
+          <WizardStep
             title="Elige reglas de comodidad"
             description="Son ajustes habituales que cambian cómo se siente el servidor, no su rendimiento."
           >
@@ -550,7 +643,7 @@ export function ConfigurationWizard(props: Props): JSX.Element {
           </WizardStep>
         )}
 
-        {activeStep === 4 && (
+        {activeStep === 5 && (
           <WizardStep
             title="Revisa antes de aplicar"
             description="Solo se modificarán los ajustes que aparecen en este resumen."
@@ -589,7 +682,7 @@ export function ConfigurationWizard(props: Props): JSX.Element {
         >
           {changes.length} {changes.length === 1 ? "cambio" : "cambios"}
         </Button>
-        {activeStep < 4 ? (
+        {activeStep < STEP_COUNT - 1 ? (
           <Button rightSection={<ArrowRight size={16} />} onClick={next}>
             Continuar
           </Button>

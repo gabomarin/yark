@@ -33,7 +33,7 @@ type LogsSection = "events" | "runtime" | "updates" | "backups";
 type Overlay =
   | { kind: "create" }
   | { kind: "edit"; profile: ServerProfile }
-  | { kind: "workspace"; serverId: string }
+  | { kind: "workspace"; serverId: string; onboarding?: boolean }
   | null;
 
 export function App(): JSX.Element {
@@ -42,7 +42,7 @@ export function App(): JSX.Element {
   const [installationInfo, setInstallationInfo] = useState<
     Map<string, ServerInstallationInfo>
   >(new Map());
-  const [, setReports] = useState<ClusterComplianceReport[]>([]);
+  const [reports, setReports] = useState<ClusterComplianceReport[]>([]);
   const [events, setEvents] = useState<AppEvent[]>([]);
   const [steamCmdStatus, setSteamCmdStatus] = useState<SteamCmdStatus | null>(null);
   const [steamCmdConsole, setSteamCmdConsole] = useState<SteamCmdConsoleSnapshot | null>(null);
@@ -441,6 +441,11 @@ export function App(): JSX.Element {
             selectedServerId={overlay.serverId}
             statuses={statuses}
             installationInfo={installationInfo}
+            clusterReports={reports}
+            onboarding={overlay.onboarding === true}
+            onDismissOnboarding={() =>
+              setOverlay({ kind: "workspace", serverId: overlay.serverId })
+            }
             onSelectServer={(serverId) => setOverlay({ kind: "workspace", serverId })}
             onBack={() => setOverlay(null)}
             onCreateServer={() => setOverlay({ kind: "create" })}
@@ -472,7 +477,12 @@ export function App(): JSX.Element {
         <ServerForm
           initial={overlay.kind === "edit" ? overlay.profile : null}
           onCancel={() => setOverlay(null)}
-          onSaved={() => {
+          onSaved={(created) => {
+            if (overlay.kind === "create" && created !== undefined) {
+              setOverlay({ kind: "workspace", serverId: created.id, onboarding: true });
+              void refresh();
+              return;
+            }
             setOverlay(null);
             void refresh();
           }}

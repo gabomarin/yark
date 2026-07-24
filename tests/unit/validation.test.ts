@@ -96,6 +96,18 @@ describe("validateProfileInput", () => {
 });
 
 describe("findPortConflicts", () => {
+  it("no reporta conflicto intra-perfil si un servidor reutiliza puerto entre kinds", () => {
+    const a = profile({
+      id: "a",
+      name: "A",
+      gamePort: 7777,
+      queryPort: 7777,
+      rconPort: 27020,
+    });
+
+    expect(findPortConflicts([a])).toEqual([]);
+  });
+
   it("no reporta conflictos entre perfiles con puertos distintos", () => {
     const a = profile({ id: "a", name: "A" });
     const b = profile({
@@ -140,5 +152,31 @@ describe("findPortConflicts", () => {
       { id: "a", name: "A", gamePort: 7777, queryPort: 27015, rconPort: 27020 },
     );
     expect(conflicts).toEqual([]);
+  });
+
+  it("deduplica conflictos cuando el candidato reemplaza un perfil existente", () => {
+    const a = profile({ id: "a", name: "A", gamePort: 7777, queryPort: 27015, rconPort: 27020 });
+    const b = profile({
+      id: "b",
+      name: "B",
+      gamePort: 8888,
+      queryPort: 27015,
+      rconPort: 28020,
+    });
+
+    const conflicts = findPortConflicts([a, b], {
+      id: "a",
+      name: "A",
+      gamePort: 7777,
+      queryPort: 27015,
+      rconPort: 27020,
+    });
+
+    expect(conflicts).toHaveLength(1);
+    expect(conflicts[0]).toMatchObject({
+      port: 27015,
+      serverA: "A",
+      serverB: "B",
+    });
   });
 });

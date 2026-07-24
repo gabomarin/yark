@@ -11,6 +11,7 @@ export type ExperienceProfileId =
 
 export type ProgressionPresetId = "base" | "balanced" | "fast" | "veryFast";
 export type BreedingPresetId = "base" | "balanced" | "fast" | "veryFast";
+export type WorldPresetId = "base" | "gentle" | "balanced" | "harsh";
 
 // Additional factors applied by ARK on top of the configured INI values.
 // Source: https://ark.wiki.gg/wiki/Single_Player
@@ -37,6 +38,14 @@ export interface ConfigurationWizardDraft {
   maturationRate: number;
   matingIntervalMultiplier: number;
   cuddleIntervalMultiplier: number;
+  maxPlayers: number;
+  dinoCountMultiplier: number;
+  harvestHealthMultiplier: number;
+  dayCycleSpeedScale: number;
+  nightTimeSpeedScale: number;
+  playerCharacterFoodDrainMultiplier: number;
+  playerCharacterWaterDrainMultiplier: number;
+  structureResistanceMultiplier: number;
   showMapLocation: boolean;
   crosshair: boolean;
   thirdPerson: boolean;
@@ -63,6 +72,14 @@ export const configurationWizardSchema = z.object({
   maturationRate: z.number().positive().max(100),
   matingIntervalMultiplier: z.number().positive().max(10),
   cuddleIntervalMultiplier: z.number().positive().max(10),
+  maxPlayers: z.number().int().min(1).max(200),
+  dinoCountMultiplier: z.number().positive().max(10),
+  harvestHealthMultiplier: z.number().positive().max(100),
+  dayCycleSpeedScale: z.number().positive().max(100),
+  nightTimeSpeedScale: z.number().positive().max(100),
+  playerCharacterFoodDrainMultiplier: z.number().positive().max(100),
+  playerCharacterWaterDrainMultiplier: z.number().positive().max(100),
+  structureResistanceMultiplier: z.number().positive().max(100),
   showMapLocation: z.boolean(),
   crosshair: z.boolean(),
   thirdPerson: z.boolean(),
@@ -96,6 +113,14 @@ const DEFAULT_WIZARD_VALUES: Omit<
   maturationRate: 1,
   matingIntervalMultiplier: 1,
   cuddleIntervalMultiplier: 1,
+  maxPlayers: 70,
+  dinoCountMultiplier: 1,
+  harvestHealthMultiplier: 1,
+  dayCycleSpeedScale: 1,
+  nightTimeSpeedScale: 1,
+  playerCharacterFoodDrainMultiplier: 1,
+  playerCharacterWaterDrainMultiplier: 1,
+  structureResistanceMultiplier: 1,
   showMapLocation: true,
   crosshair: true,
   thirdPerson: true,
@@ -189,6 +214,62 @@ const SETTINGS: readonly WizardSetting[] = [
     fallback: 1,
   },
   {
+    field: "maxPlayers",
+    fileKey: "gameUserSettings",
+    section: "/Script/Engine.GameSession",
+    key: "MaxPlayers",
+    fallback: 70,
+  },
+  {
+    field: "dinoCountMultiplier",
+    fileKey: "gameUserSettings",
+    section: "ServerSettings",
+    key: "DinoCountMultiplier",
+    fallback: 1,
+  },
+  {
+    field: "harvestHealthMultiplier",
+    fileKey: "gameUserSettings",
+    section: "ServerSettings",
+    key: "HarvestHealthMultiplier",
+    fallback: 1,
+  },
+  {
+    field: "dayCycleSpeedScale",
+    fileKey: "gameUserSettings",
+    section: "ServerSettings",
+    key: "DayCycleSpeedScale",
+    fallback: 1,
+  },
+  {
+    field: "nightTimeSpeedScale",
+    fileKey: "gameUserSettings",
+    section: "ServerSettings",
+    key: "NightTimeSpeedScale",
+    fallback: 1,
+  },
+  {
+    field: "playerCharacterFoodDrainMultiplier",
+    fileKey: "gameUserSettings",
+    section: "ServerSettings",
+    key: "PlayerCharacterFoodDrainMultiplier",
+    fallback: 1,
+  },
+  {
+    field: "playerCharacterWaterDrainMultiplier",
+    fileKey: "gameUserSettings",
+    section: "ServerSettings",
+    key: "PlayerCharacterWaterDrainMultiplier",
+    fallback: 1,
+  },
+  {
+    field: "structureResistanceMultiplier",
+    fileKey: "gameUserSettings",
+    section: "ServerSettings",
+    key: "StructureResistanceMultiplier",
+    fallback: 1,
+  },
+  {
     field: "showMapLocation",
     fileKey: "gameUserSettings",
     section: "ServerSettings",
@@ -231,6 +312,7 @@ export interface ExperienceProfile {
   description: string;
   progressionPreset: ProgressionPresetId;
   breedingPreset: BreedingPresetId;
+  worldPreset: WorldPresetId;
   values: Omit<ConfigurationWizardDraft, "profile" | "singlePlayerSettings">;
 }
 
@@ -324,6 +406,83 @@ export const BREEDING_PRESETS: readonly (WizardPreset<BreedingPresetId> & {
   },
 ];
 
+type WorldPresetValues = Pick<
+  ConfigurationWizardDraft,
+  | "maxPlayers"
+  | "dinoCountMultiplier"
+  | "harvestHealthMultiplier"
+  | "dayCycleSpeedScale"
+  | "nightTimeSpeedScale"
+  | "playerCharacterFoodDrainMultiplier"
+  | "playerCharacterWaterDrainMultiplier"
+  | "structureResistanceMultiplier"
+>;
+
+export const WORLD_PRESETS: readonly (WizardPreset<WorldPresetId> & {
+  values: WorldPresetValues;
+})[] = [
+  {
+    id: "base",
+    name: "Base",
+    description: "Capacidad y supervivencia cercanas a la experiencia oficial.",
+    values: {
+      maxPlayers: 70,
+      dinoCountMultiplier: 1,
+      harvestHealthMultiplier: 1,
+      dayCycleSpeedScale: 1,
+      nightTimeSpeedScale: 1,
+      playerCharacterFoodDrainMultiplier: 1,
+      playerCharacterWaterDrainMultiplier: 1,
+      structureResistanceMultiplier: 1,
+    },
+  },
+  {
+    id: "gentle",
+    name: "Amable",
+    description: "Menos presión, noches más cortas y estructuras más resistentes.",
+    values: {
+      maxPlayers: 40,
+      dinoCountMultiplier: 1.25,
+      harvestHealthMultiplier: 1.5,
+      dayCycleSpeedScale: 1,
+      nightTimeSpeedScale: 1.25,
+      playerCharacterFoodDrainMultiplier: 0.7,
+      playerCharacterWaterDrainMultiplier: 0.7,
+      structureResistanceMultiplier: 1.5,
+    },
+  },
+  {
+    id: "balanced",
+    name: "Equilibrado",
+    description: "Densidad y supervivencia moderadas para comunidades persistentes.",
+    values: {
+      maxPlayers: 70,
+      dinoCountMultiplier: 1.1,
+      harvestHealthMultiplier: 1.25,
+      dayCycleSpeedScale: 1,
+      nightTimeSpeedScale: 1.15,
+      playerCharacterFoodDrainMultiplier: 0.85,
+      playerCharacterWaterDrainMultiplier: 0.85,
+      structureResistanceMultiplier: 1.25,
+    },
+  },
+  {
+    id: "harsh",
+    name: "Exigente",
+    description: "Más cupo, hambre/sed normales y estructuras más vulnerables.",
+    values: {
+      maxPlayers: 100,
+      dinoCountMultiplier: 1,
+      harvestHealthMultiplier: 1,
+      dayCycleSpeedScale: 1,
+      nightTimeSpeedScale: 1,
+      playerCharacterFoodDrainMultiplier: 1,
+      playerCharacterWaterDrainMultiplier: 1,
+      structureResistanceMultiplier: 0.85,
+    },
+  },
+];
+
 const BASE_QOL = {
   showMapLocation: true,
   crosshair: true,
@@ -332,6 +491,11 @@ const BASE_QOL = {
   structurePickupSeconds: 120,
 };
 
+function worldValues(presetId: WorldPresetId): WorldPresetValues {
+  const preset = WORLD_PRESETS.find((candidate) => candidate.id === presetId);
+  return preset === undefined ? WORLD_PRESETS[0]!.values : preset.values;
+}
+
 export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
   {
     id: "friends",
@@ -339,6 +503,7 @@ export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
     description: "PvE accesible, progreso ágil y crianza práctica para grupos pequeños.",
     progressionPreset: "balanced",
     breedingPreset: "balanced",
+    worldPreset: "gentle",
     values: {
       pve: true,
       hardcore: false,
@@ -352,6 +517,7 @@ export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
       maturationRate: 5,
       matingIntervalMultiplier: 0.5,
       cuddleIntervalMultiplier: 0.5,
+      ...worldValues("gentle"),
       ...BASE_QOL,
     },
   },
@@ -361,6 +527,7 @@ export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
     description: "Progresión equilibrada y menor fricción para comunidades persistentes.",
     progressionPreset: "fast",
     breedingPreset: "fast",
+    worldPreset: "balanced",
     values: {
       pve: true,
       hardcore: false,
@@ -374,6 +541,7 @@ export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
       maturationRate: 10,
       matingIntervalMultiplier: 0.25,
       cuddleIntervalMultiplier: 0.25,
+      ...worldValues("balanced"),
       ...BASE_QOL,
     },
   },
@@ -383,6 +551,7 @@ export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
     description: "Competencia activa con recuperación más rápida después de una derrota.",
     progressionPreset: "veryFast",
     breedingPreset: "fast",
+    worldPreset: "harsh",
     values: {
       pve: false,
       hardcore: false,
@@ -396,6 +565,7 @@ export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
       maturationRate: 10,
       matingIntervalMultiplier: 0.25,
       cuddleIntervalMultiplier: 0.25,
+      ...worldValues("harsh"),
       showMapLocation: false,
       crosshair: true,
       thirdPerson: true,
@@ -409,6 +579,7 @@ export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
     description: "Muerte con reinicio de personaje y un ritmo cercano a la experiencia base.",
     progressionPreset: "base",
     breedingPreset: "base",
+    worldPreset: "base",
     values: {
       pve: false,
       hardcore: true,
@@ -422,6 +593,7 @@ export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
       maturationRate: 1,
       matingIntervalMultiplier: 1,
       cuddleIntervalMultiplier: 1,
+      ...worldValues("base"),
       showMapLocation: false,
       crosshair: false,
       thirdPerson: false,
@@ -453,6 +625,14 @@ const FIELD_LABELS: Record<keyof ConfigurationWizardDraft, string> = {
   maturationRate: "Maduración",
   matingIntervalMultiplier: "Intervalo de apareamiento",
   cuddleIntervalMultiplier: "Intervalo de cuidados",
+  maxPlayers: "Jugadores máximos",
+  dinoCountMultiplier: "Densidad de dinosaurios",
+  harvestHealthMultiplier: "Salud de nodos de recolección",
+  dayCycleSpeedScale: "Velocidad del ciclo diurno",
+  nightTimeSpeedScale: "Velocidad de la noche",
+  playerCharacterFoodDrainMultiplier: "Consumo de comida",
+  playerCharacterWaterDrainMultiplier: "Consumo de agua",
+  structureResistanceMultiplier: "Resistencia de estructuras",
   showMapLocation: "Posición en el mapa",
   crosshair: "Mira",
   thirdPerson: "Tercera persona",
@@ -514,6 +694,14 @@ export function applyBreedingPreset(
   presetId: BreedingPresetId,
 ): ConfigurationWizardDraft {
   const preset = BREEDING_PRESETS.find((candidate) => candidate.id === presetId);
+  return preset === undefined ? current : { ...current, ...preset.values };
+}
+
+export function applyWorldPreset(
+  current: ConfigurationWizardDraft,
+  presetId: WorldPresetId,
+): ConfigurationWizardDraft {
+  const preset = WORLD_PRESETS.find((candidate) => candidate.id === presetId);
   return preset === undefined ? current : { ...current, ...preset.values };
 }
 
@@ -721,6 +909,7 @@ function formatFieldValue(
   if (field === "pve") return value ? "PvE" : "PvP";
   if (typeof value === "boolean") return value ? "Activado" : "Desactivado";
   if (field === "maxWildDinoLevel") return `Nivel ${value}`;
+  if (field === "maxPlayers") return String(value);
   if (field === "structurePickupSeconds") return `${value} s`;
   if (field === "matingIntervalMultiplier" || field === "cuddleIntervalMultiplier") {
     return `${value}× del intervalo base`;

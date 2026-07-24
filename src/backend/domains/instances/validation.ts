@@ -6,11 +6,11 @@ import {
 import {
   PORT_MAX,
   PORT_MIN,
-  type PortConflict,
-  type ServerProfile,
   type ServerProfileInput,
   type ValidationIssue,
 } from "@shared/types";
+
+export { findPortConflicts } from "@shared/port-conflicts";
 
 /** Ruta absoluta de Windows (unidad o UNC). */
 const WINDOWS_ABS_PATH = /^(?:[a-zA-Z]:[\\/]|\\\\)/;
@@ -99,60 +99,4 @@ export function validateProfileInput(
     issues.push({ field: "mods", message: "Hay mods duplicados en la lista" });
   }
   return issues;
-}
-
-/**
- * Detecta conflictos de puertos entre perfiles (todos contra todos).
- * `exclude` permite omitir un id (p. ej. el perfil en edición).
- */
-export function findPortConflicts(
-  profiles: ServerProfile[],
-  candidate?: { id?: string; gamePort: number; queryPort: number; rconPort: number; name: string },
-): PortConflict[] {
-  const conflicts: PortConflict[] = [];
-  const entries = profiles.map((p) => ({
-    id: p.id,
-    name: p.name,
-    ports: [
-      { port: p.gamePort, kind: "game" as const },
-      { port: p.queryPort, kind: "query" as const },
-      { port: p.rconPort, kind: "rcon" as const },
-    ],
-  }));
-
-  if (candidate) {
-    entries.push({
-      id: candidate.id ?? "__candidate__",
-      name: candidate.name,
-      ports: [
-        { port: candidate.gamePort, kind: "game" },
-        { port: candidate.queryPort, kind: "query" },
-        { port: candidate.rconPort, kind: "rcon" },
-      ],
-    });
-  }
-
-  for (let i = 0; i < entries.length; i++) {
-    for (let j = i + 1; j < entries.length; j++) {
-      const a = entries[i]!;
-      const b = entries[j]!;
-      if (candidate?.id !== undefined && (a.id === candidate.id || b.id === candidate.id)) {
-        // Si el candidato reemplaza a un perfil existente, no compararlo consigo mismo.
-        if (a.id === b.id) continue;
-      }
-      for (const pa of a.ports) {
-        for (const pb of b.ports) {
-          if (pa.port === pb.port) {
-            conflicts.push({
-              serverA: a.name,
-              serverB: b.name,
-              port: pa.port,
-              kind: pa.kind,
-            });
-          }
-        }
-      }
-    }
-  }
-  return conflicts;
 }

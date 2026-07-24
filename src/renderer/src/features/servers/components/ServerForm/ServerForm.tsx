@@ -31,7 +31,8 @@ import classes from "./ServerForm.module.css";
 interface Props {
   initial: ServerProfile | null;
   onCancel: () => void;
-  onSaved: () => void;
+  /** Tras crear, recibe el perfil; tras editar, sin argumento. */
+  onSaved: (created?: ServerProfile) => void;
   /** `embedded` = pestaña del workspace (sin cabecera de página completa). */
   variant?: "page" | "embedded";
   /** Servidor en starting/running/stopping → aviso de reinicio. */
@@ -203,7 +204,7 @@ export function ServerForm(props: Props): JSX.Element {
         : await window.api.updateServer(props.initial.id, input);
     setSaving(false);
     if (result.ok) {
-      props.onSaved();
+      props.onSaved(props.initial === null ? result.data : undefined);
       return;
     }
     setError(result.error ?? "No se pudo guardar el servidor");
@@ -512,11 +513,10 @@ function PathField({
   onBrowse,
 }: PathFieldProps): JSX.Element {
   return (
-    <div>
-      <Text size="sm" fw={500} mb={6}>{label}</Text>
-      <Group align="flex-end" wrap="nowrap" gap="xs">
+    <Group align="flex-end" wrap="nowrap" gap="xs">
         <TextInput
           className={classes.pathInput}
+          label={label}
           size={size}
           value={value}
           placeholder={placeholder}
@@ -532,7 +532,6 @@ function PathField({
         >
           {busy ? "Abriendo..." : "Buscar"}
         </Button>
-      </Group>
-    </div>
+    </Group>
   );
 }
