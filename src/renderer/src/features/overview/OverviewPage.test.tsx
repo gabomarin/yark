@@ -50,7 +50,6 @@ describe("OverviewPage", () => {
           onCheckUpdatesForServer={vi.fn()}
           onCloneServer={vi.fn()}
           onDeleteServer={vi.fn()}
-          onSendRcon={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,

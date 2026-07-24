@@ -170,10 +170,10 @@ ARK sin convertirse en una interfaz gamer.
 
 - [x] Presentar y aprobar una propuesta incremental de layout antes de implementarla.
 - [x] Sustituir el dashboard de métricas por un resumen operativo compacto y accionable (bloque 2.1: métricas retiradas, búsqueda contextual y ancho útil limitado).
-- [ ] Simplificar `ServerCard` y mostrar solo información real y prioritaria.
-- [ ] Definir una única acción primaria contextual por estado del servidor.
-- [ ] Mover RCON fuera de la tarjeta hacia el workspace o la futura consola.
-- [ ] Mejorar estados vacíos, carga, error, instalación y actualización.
+- [x] Simplificar `ServerCard` y mostrar solo información real y prioritaria (bloque 2.2: fila operativa horizontal, metadatos escaneables y menú secundario).
+- [x] Definir una única acción primaria contextual por estado del servidor (`Instalar`, `Iniciar`, `Actualizar`, `Administrar`, `Revisar error` o `Cancelar`).
+- [-] Mover RCON fuera de la tarjeta hacia el workspace o la futura consola (retirado del Overview; acciones rápidas en workspace, comando personalizado pendiente de la consola avanzada).
+- [-] Mejorar estados vacíos, carga, error, instalación y actualización (instalación, actualización, error y progreso cubiertos en la fila; faltan vacío y carga del Overview).
 - [ ] Reducir gradientes, sombras y tarjetas anidadas.
 - [ ] Introducir una dirección visual propia: base obsidiana, azul criogénico, ámbar fósil, verde biomasa y motivos topográficos sutiles.
 - [ ] Diseñar una marca propia para la aplicación sin depender del logo antiguo de ARK Survival Evolved.

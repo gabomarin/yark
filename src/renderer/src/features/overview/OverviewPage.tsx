@@ -43,7 +43,6 @@ interface Props {
   onCheckUpdatesForServer: (serverId: string) => void;
   onCloneServer: (serverId: string) => void;
   onDeleteServer: (serverId: string) => void;
-  onSendRcon: (serverId: string, command: string) => void;
   onCancelSteamCmd: () => void;
 }
 
@@ -87,7 +86,6 @@ export function OverviewPage(props: Props): JSX.Element {
           checkingUpdates={props.checkingUpdates}
           onCloneServer={props.onCloneServer}
           onDeleteServer={props.onDeleteServer}
-          onSendRcon={props.onSendRcon}
           onCancelSteamCmd={props.onCancelSteamCmd}
         />
 

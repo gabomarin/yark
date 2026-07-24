@@ -506,12 +506,9 @@ export function App(): JSX.Element {
             onInstallFiles={(id) => startSteamFilesJob(id, "install")}
             onUpdateNow={(id) => startSteamFilesJob(id, "update")}
             onVerifyFiles={(id) => startSteamFilesJob(id, "verify")}
-            onCheckUpdatesForServer={(id) => void checkForUpdates(id)}
-            onCloneServer={(id) => void runAction(() => window.api.cloneServer(id))}
+              onCheckUpdatesForServer={(id) => void checkForUpdates(id)}
+              onCloneServer={(id) => void runAction(() => window.api.cloneServer(id))}
               onDeleteServer={(id) => confirmDeleteServer(id)}
-              onSendRcon={(id, command) =>
-                void runAction(() => window.api.sendRconCommand(id, command))
-              }
               onCancelSteamCmd={() => void runAction(() => window.api.cancelSteamCmd())}
             />
           ),

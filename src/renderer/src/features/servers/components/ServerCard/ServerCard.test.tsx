@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
@@ -35,7 +35,7 @@ const installed = {
 };
 
 describe("ServerCard", () => {
-  it("exposes main actions as icon buttons with tooltips", async () => {
+  it("uses Start as the primary action for an installed stopped server", async () => {
     const user = userEvent.setup();
     const onStart = vi.fn();
     const onOpenWorkspace = vi.fn();
@@ -59,7 +59,6 @@ describe("ServerCard", () => {
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
           onDelete={vi.fn()}
-          onRcon={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
@@ -72,8 +71,11 @@ describe("ServerCard", () => {
     expect(onOpenWorkspace).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps only primary actions visible and puts the rest in the kebab", () => {
-    render(
+  it("uses Manage for a running server and keeps secondary actions in the menu", async () => {
+    const user = userEvent.setup();
+    const onOpenWorkspace = vi.fn();
+
+    const { container } = render(
       <AppProviders>
         <ServerCard
           server={profile}
@@ -89,7 +91,7 @@ describe("ServerCard", () => {
           onStop={vi.fn()}
           onKill={vi.fn()}
           onRestart={vi.fn()}
-          onOpenWorkspace={vi.fn()}
+          onOpenWorkspace={onOpenWorkspace}
           onOpenLogs={vi.fn()}
           onOpenFolder={vi.fn()}
           onInstallFiles={vi.fn()}
@@ -98,19 +100,54 @@ describe("ServerCard", () => {
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
           onDelete={vi.fn()}
-          onRcon={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
 
-    expect(screen.getAllByRole("button", { name: /^Iniciar$/i }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("button", { name: /Detener \(guarda el mundo y cierra\)/i }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("button", { name: /^Reiniciar$/i }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("button", { name: /^Abrir carpeta$/i }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("button", { name: /^Más opciones$/i }).length).toBeGreaterThan(0);
+    const card = within(container);
+    await user.click(card.getByRole("button", { name: "Administrar" }));
+    expect(onOpenWorkspace).toHaveBeenCalledTimes(1);
+    expect(card.queryByRole("button", { name: /^Iniciar$/i })).not.toBeInTheDocument();
+
+    await user.click(card.getByRole("button", { name: "Más opciones" }));
+    expect(screen.getByRole("menuitem", { name: "Detener de forma segura" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Reiniciar" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Abrir carpeta" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Eliminar servidor$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Forzar cierre \(matar\)$/i })).not.toBeInTheDocument();
+  });
+
+  it("uses Install as the primary action when server files are missing", async () => {
+    const user = userEvent.setup();
+    const onInstallFiles = vi.fn();
+
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={{ ...installed, installed: false }}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={onInstallFiles}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Instalar" }));
+    expect(onInstallFiles).toHaveBeenCalledTimes(1);
   });
 
   it("shows progress bar while SteamCMD is busy", () => {
@@ -142,7 +179,6 @@ describe("ServerCard", () => {
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
           onDelete={vi.fn()}
-          onRcon={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
@@ -153,6 +189,6 @@ describe("ServerCard", () => {
     expect(screen.getByText(/Descargado:/i)).toBeInTheDocument();
     expect(screen.getByText(/512\.0 \/ 1024\.0 MB/i)).toBeInTheDocument();
     expect(screen.getByText(/42%/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Cancelar operación/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cancelar" })).toBeInTheDocument();
   });
 });

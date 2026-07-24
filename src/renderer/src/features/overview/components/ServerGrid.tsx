@@ -34,7 +34,6 @@ interface Props {
   checkingUpdates?: boolean;
   onCloneServer: (serverId: string) => void;
   onDeleteServer: (serverId: string) => void;
-  onSendRcon: (serverId: string, command: string) => void;
   onCancelSteamCmd: () => void;
 }
 
@@ -137,7 +136,6 @@ export function ServerGrid(props: Props): JSX.Element {
               onCheckUpdates={() => props.onCheckUpdatesForServer(server.id)}
               onClone={() => props.onCloneServer(server.id)}
               onDelete={() => props.onDeleteServer(server.id)}
-              onRcon={(command) => props.onSendRcon(server.id, command)}
               onCancelSteamCmd={props.onCancelSteamCmd}
             />
           ))}

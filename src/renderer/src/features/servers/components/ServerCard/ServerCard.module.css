@@ -1,13 +1,56 @@
 .card {
+  position: relative;
+  overflow: hidden;
   border-radius: var(--app-radius-md);
   border-color: var(--app-color-border);
   background: var(--app-color-panel);
   box-shadow: var(--app-shadow-panel);
   max-width: 100%;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease;
+}
+
+.card::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--app-color-border);
+  content: "";
+}
+
+.card[data-tone="running"]::before {
+  background: var(--app-color-ok);
+}
+
+.card[data-tone="attention"]::before {
+  background: var(--app-color-warn);
+}
+
+.card[data-tone="error"]::before {
+  background: var(--app-color-bad);
+}
+
+.card[data-tone="busy"]::before {
+  background: var(--app-color-accent);
+}
+
+.card:hover {
+  border-color: color-mix(in srgb, var(--app-color-border) 55%, var(--app-color-accent));
+}
+
+.mainRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
 }
 
 .cardHit {
-  display: block;
+  display: grid;
+  grid-template-columns: minmax(210px, 0.8fr) minmax(460px, 2fr);
+  align-items: center;
+  gap: 24px;
   width: 100%;
   padding: 0;
   border-radius: 10px;
@@ -16,8 +59,13 @@
   cursor: pointer;
 }
 
+.cardHit:disabled {
+  cursor: default;
+}
+
 .cardHit:hover .thumb {
-  background: linear-gradient(180deg, rgba(85, 166, 255, 0.28), rgba(64, 211, 159, 0.18));
+  border-color: color-mix(in srgb, var(--app-color-accent) 55%, var(--app-color-border));
+  background: color-mix(in srgb, var(--app-color-accent) 14%, var(--app-color-panel));
 }
 
 .cardHit:focus-visible {
@@ -25,21 +73,34 @@
   outline-offset: 2px;
 }
 
+.identity {
+  min-width: 0;
+}
+
+.identityText {
+  min-width: 0;
+  flex: 1;
+}
+
 .thumb {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
-  border-radius: 8px;
-  background: linear-gradient(180deg, rgba(85, 166, 255, 0.2), rgba(64, 211, 159, 0.12));
+  border: 1px solid var(--app-color-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--app-color-accent) 9%, var(--app-color-panel));
   color: var(--app-color-accent);
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease;
 }
 
 .title {
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.2;
-  font-weight: 650;
+  font-weight: 700;
   margin: 0;
 }
 
@@ -49,10 +110,22 @@
   margin-top: 2px;
 }
 
+.metaGrid {
+  display: grid;
+  grid-template-columns:
+    minmax(100px, 1.2fr)
+    minmax(90px, 1fr)
+    minmax(64px, 0.6fr)
+    minmax(80px, 0.8fr)
+    minmax(120px, 1.2fr);
+  gap: 16px;
+  min-width: 0;
+}
+
 .metaItem {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 2px;
   min-width: 0;
 }
 
@@ -81,25 +154,12 @@
   color: var(--app-color-warn);
 }
 
-.actions {
-  padding-top: 4px;
-  width: 100%;
+.rowActions {
+  flex-shrink: 0;
 }
 
-.actionSlot {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-}
-
-.actionSlot :global(button) {
-  flex: 1;
-  width: 100%;
-}
-
-.rcon {
-  padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+.primaryAction {
+  min-width: 132px;
 }
 
 .progressBlock {
@@ -109,6 +169,55 @@
   background: rgba(85, 166, 255, 0.08);
 }
 
-.rconInput {
-  flex: 1;
+.runtimeError {
+  padding-left: 52px;
+}
+
+@media (max-width: 1400px) {
+  .cardHit {
+    grid-template-columns: minmax(250px, 0.9fr) minmax(360px, 1.6fr);
+    gap: 18px;
+  }
+
+  .metaGrid {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .mainRow {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .cardHit {
+    grid-template-columns: minmax(180px, 0.7fr) minmax(0, 1.7fr);
+  }
+
+  .rowActions {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 760px) {
+  .cardHit {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .metaGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rowActions {
+    justify-content: stretch;
+  }
+
+  .primaryAction {
+    flex: 1;
+  }
+
+  .runtimeError {
+    padding-left: 0;
+  }
 }
