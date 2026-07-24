@@ -2,6 +2,7 @@ import type {
   AppEvent,
   ClusterComplianceReport,
   IniPreview,
+  ModMetadata,
   ServerIniPayload,
   ServerIniSnapshot,
   ServerInstallationInfo,
@@ -50,6 +51,8 @@ export const IPC = {
   logsReadUpdate: "logs:read-update",
   logsExport: "logs:export",
   logsOpenUpdateFile: "logs:open-update-file",
+  modsGet: "mods:get",
+  modsGetMany: "mods:get-many",
 } as const;
 
 /** Canal de push (main -> renderer). */
@@ -128,6 +131,11 @@ export interface RendererApi {
     serverId: string,
     fileName: string,
   ): Promise<IpcResult<void>>;
+  getModMetadata(modId: string, forceRefresh?: boolean): Promise<IpcResult<ModMetadata>>;
+  getModsMetadata(
+    modIds: string[],
+    forceRefresh?: boolean,
+  ): Promise<IpcResult<ModMetadata[]>>;
   onServerStatus(
     listener: (info: ServerRuntimeInfo) => void,
   ): () => void;

@@ -5,6 +5,7 @@ import type { ServerIniPayload, ServerProfileInput, StartServerOptions } from ".
 import type { InstanceService } from "../backend/domains/instances/instance-service";
 import type { IniService } from "../backend/domains/config/ini-service";
 import type { LogsService } from "../backend/domains/logs/logs-service";
+import type { ModsService } from "../backend/domains/mods/mods-service";
 import type { UpdateService } from "../backend/domains/updates/update-service";
 import type { ServerRepository } from "../backend/infra/db/server-repository";
 
@@ -34,6 +35,7 @@ export function registerIpcHandlers(
   ini: IniService,
   logs: LogsService,
   updates: UpdateService,
+  mods: ModsService,
 ): void {
   ipcMain.handle(IPC.serversList, () => wrap(() => instances.list()));
 
@@ -244,5 +246,13 @@ export function registerIpcHandlers(
           throw new Error(`No se pudo abrir el log: ${error}`);
         }
       }),
+  );
+
+  ipcMain.handle(IPC.modsGet, (_e, modId: string, forceRefresh?: boolean) =>
+    wrap(() => mods.getMod(modId, { forceRefresh: forceRefresh === true })),
+  );
+
+  ipcMain.handle(IPC.modsGetMany, (_e, modIds: string[], forceRefresh?: boolean) =>
+    wrap(() => mods.getMods(modIds, { forceRefresh: forceRefresh === true })),
   );
 }

@@ -10,6 +10,7 @@ ARK Server GBO is a Windows desktop application for managing local dedicated ARK
 - Create backups, restore them, and review operation history.
 - Inspect runtime, update, and backup logs.
 - Review cluster state and RCON status from the interface.
+- Manage CurseForge mod Project IDs per server (`-mods=`). The Mods tab UI is ready; metadata is currently a local mock until a CurseForge API key is available.
 
 ## Current project status
 

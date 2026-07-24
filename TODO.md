@@ -62,7 +62,8 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 
 ### Mods
 - [x] Campo basico de mods por IDs en orden de carga.
-- [ ] Gestion avanzada de mods desde CurseForge para ASA.
+- [x] UI amigable de Mods (lista, detalle, alta por ID, reorden) con metadata mock local.
+- [ ] Sustituir mock por CurseForge API oficial cuando exista `CURSEFORGE_API_KEY` (Overwolf).
 - [ ] Validacion de compatibilidad de mods entre nodos de cluster.
 - [ ] Instalacion / actualizacion automatica de mods.
 
@@ -486,8 +487,8 @@ Antes de marcar una iteración como completada:
 
 ## Siguiente prioridad recomendada
 1. Página funcional de **Backups** (backend ya existe); después Clusters y Settings.
-2. Diferido: CurseForge avanzado, partir `ConfigurationEditor`, icono final de distribución, RCON en consola avanzada.
-3. Opcional: ampliar más el catálogo curado del asistente según uso real.
+2. Cuando haya `CURSEFORGE_API_KEY`: sustituir mock de mods por cliente oficial; discovery/updates/cluster después.
+3. Diferido: partir `ConfigurationEditor`, icono final de distribución, RCON en consola avanzada.
 
 ## Regla de mantenimiento
 - Cada vez que se complete una tarea, actualizar este archivo en el mismo cambio.

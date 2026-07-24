@@ -11,6 +11,7 @@ import { IniService } from "../backend/domains/config/ini-service";
 import { InstanceService } from "../backend/domains/instances/instance-service";
 import { LogsService } from "../backend/domains/logs/logs-service";
 import { UpdateService } from "../backend/domains/updates/update-service";
+import { ModsService } from "../backend/domains/mods/mods-service";
 import { InstanceLockManager } from "../backend/orchestration/instance-lock-manager";
 import { registerIpcHandlers } from "./ipc-handlers";
 import { IPC_PUSH, type SteamCmdProgressPush } from "../shared/ipc";
@@ -94,10 +95,11 @@ void app.whenReady().then(() => {
     join(userData, "update-logs"),
     join(userData, "steamcmd"),
   );
+  const modsService = new ModsService();
 
   backupScheduler.start();
 
-  registerIpcHandlers(instances, repo, iniService, logsService, updateService);
+  registerIpcHandlers(instances, repo, iniService, logsService, updateService, modsService);
 
   processManager.on("status", (info: ServerRuntimeInfo) => {
     sendToRenderer(IPC_PUSH.serverStatus, info);

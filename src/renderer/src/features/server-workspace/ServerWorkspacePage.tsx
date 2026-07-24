@@ -12,20 +12,16 @@ import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ConfigurationEditor,
-  type ConfigSection,
 } from "./components/ConfigurationEditor";
 import { ConfigurationWizard } from "./components/ConfigurationWizard";
+import { ModsManager } from "./components/ModsManager";
 import { ServerListPanel } from "./components/ServerListPanel";
 import { ServerOnboardingChecklist } from "./components/ServerOnboardingChecklist";
 import { SidePanel } from "./components/SidePanel";
 import { WorkspaceHeader } from "./components/WorkspaceHeader";
 import classes from "./ServerWorkspacePage.module.css";
 
-type WorkspaceTab = "server" | ConfigSection;
-
-function isConfigSection(tab: string | null): tab is ConfigSection {
-  return tab === "iniFiles" || tab === "mods";
-}
+type WorkspaceTab = "server" | "mods" | "iniFiles";
 
 interface Props {
   servers: ServerProfile[];
@@ -66,19 +62,12 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
   const compactWorkspace = useMediaQuery("(max-width: 1599px)", false);
   const dirtyRef = useRef(false);
   const assistantDirtyRef = useRef(false);
-  const lastConfigSectionRef = useRef<ConfigSection>("iniFiles");
 
   useEffect(() => {
     if (props.onboarding === true) {
       setShowOnboarding(true);
     }
   }, [props.onboarding, props.selectedServerId]);
-
-  useEffect(() => {
-    if (isConfigSection(workspaceTab)) {
-      lastConfigSectionRef.current = workspaceTab;
-    }
-  }, [workspaceTab]);
 
   const selectedServer = useMemo(() => {
     return (
@@ -282,24 +271,27 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
 
               <div
                 className={classes.configHost}
-                data-visible={isConfigSection(workspaceTab) || undefined}
+                data-visible={workspaceTab === "iniFiles" || undefined}
               >
                 <ConfigurationEditor
                   key={`${selectedServer.id}:${iniEditorVersion}`}
                   server={selectedServer}
-                  section={
-                    isConfigSection(workspaceTab)
-                      ? workspaceTab
-                      : lastConfigSectionRef.current
-                  }
+                  section="iniFiles"
                   serverActive={serverActive}
-                  onModsChanged={saveMods}
                   onDirtyChange={(dirty) => {
                     dirtyRef.current = dirty;
                     setIniDirty(dirty);
                   }}
                 />
               </div>
+
+              {workspaceTab === "mods" && (
+                <ModsManager
+                  key={`mods:${selectedServer.id}:${selectedServer.updatedAt}`}
+                  server={selectedServer}
+                  onModsChanged={saveMods}
+                />
+              )}
             </div>
           </Tabs>
           )}

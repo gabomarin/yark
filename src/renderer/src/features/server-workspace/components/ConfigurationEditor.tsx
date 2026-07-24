@@ -53,16 +53,13 @@ import {
 } from "../iniModel";
 import classes from "./ConfigurationEditor.module.css";
 
-export type ConfigSection =
-  | "iniFiles"
-  | "mods";
+export type ConfigSection = "iniFiles";
 
 interface Props {
   server: ServerProfile;
   /** Sección activa (controlada por los tabs del workspace). */
   section: ConfigSection;
   serverActive?: boolean;
-  onModsChanged: (mods: string[]) => Promise<void>;
   onDirtyChange?: (dirty: boolean) => void;
 }
 
@@ -81,8 +78,6 @@ export function ConfigurationEditor(props: Props): JSX.Element {
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [iniFile, setIniFile] = useState<IniFileKey>("gameUserSettings");
   const [iniMode, setIniMode] = useState<"visual" | "text">("visual");
-  const [modDraft, setModDraft] = useState("");
-  const [mods, setMods] = useState<string[]>(props.server.mods);
 
   const dirty =
     payload !== null &&
@@ -93,10 +88,6 @@ export function ConfigurationEditor(props: Props): JSX.Element {
   useEffect(() => {
     props.onDirtyChange?.(dirty);
   }, [dirty, props.onDirtyChange]);
-
-  useEffect(() => {
-    setMods(props.server.mods);
-  }, [props.server.id, props.server.mods]);
 
   const load = async (serverId: string) => {
     setLoading(true);
@@ -265,20 +256,6 @@ export function ConfigurationEditor(props: Props): JSX.Element {
     }
   };
 
-  const saveMods = async (nextMods: string[]) => {
-    setBusy(true);
-    setError(null);
-    try {
-      await props.onModsChanged(nextMods);
-      setMods(nextMods);
-      setInfo("Mods actualizados en el perfil");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudieron guardar los mods");
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const filePath =
     snapshot === null
       ? null
@@ -363,7 +340,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
             {info}
           </Alert>
         )}
-        {props.serverActive === true && section !== "mods" && (
+        {props.serverActive === true && (
           <Alert color="yellow" mb="sm" title="Servidor en ejecución">
             Los cambios en INI se aplicarán al reiniciar el servidor.
           </Alert>
@@ -619,102 +596,6 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                 )}
               </Alert>
             )}
-          </Stack>
-        )}
-
-        {section === "mods" && (
-          <Stack gap="md">
-            <div>
-              <Title order={3}>Mods activos ({mods.length})</Title>
-              <Text c="dimmed" size="sm">
-                Orden de carga del perfil. La integración automática utilizará CurseForge para ASA.
-              </Text>
-            </div>
-            <Group align="flex-end">
-              <TextInput
-                label="Mod ID"
-                placeholder="1234567890"
-                value={modDraft}
-                onChange={(event) => setModDraft(event.currentTarget.value)}
-                style={{ flex: 1 }}
-              />
-              <Button
-                disabled={modDraft.trim().length === 0 || busy}
-                onClick={() => {
-                  const id = modDraft.trim();
-                  if (id.length === 0) return;
-                  const next = mods.includes(id) ? mods : [...mods, id];
-                  setModDraft("");
-                  void saveMods(next);
-                }}
-              >
-                Añadir mod
-              </Button>
-            </Group>
-            <Stack gap="xs">
-              {mods.length === 0 && (
-                <Text c="dimmed" size="sm">
-                  No hay mods configurados.
-                </Text>
-              )}
-              {mods.map((modId, index) => (
-                <Group key={`${modId}-${index}`} className={classes.modRow} justify="space-between">
-                  <div>
-                    <Text fw={600}>{modId}</Text>
-                    <Text c="dimmed" size="xs">
-                      Orden de carga #{index + 1}
-                    </Text>
-                  </div>
-                  <Group gap="xs">
-                    <Button
-                      size="xs"
-                      variant="light"
-                      disabled={index === 0 || busy}
-                      onClick={() => {
-                        if (index === 0) return;
-                        const next = [...mods];
-                        const current = next[index];
-                        const prev = next[index - 1];
-                        if (current === undefined || prev === undefined) return;
-                        next[index - 1] = current;
-                        next[index] = prev;
-                        void saveMods(next);
-                      }}
-                    >
-                      Subir
-                    </Button>
-                    <Button
-                      size="xs"
-                      variant="light"
-                      disabled={index === mods.length - 1 || busy}
-                      onClick={() => {
-                        if (index >= mods.length - 1) return;
-                        const next = [...mods];
-                        const current = next[index];
-                        const following = next[index + 1];
-                        if (current === undefined || following === undefined) return;
-                        next[index] = following;
-                        next[index + 1] = current;
-                        void saveMods(next);
-                      }}
-                    >
-                      Bajar
-                    </Button>
-                    <Button
-                      size="xs"
-                      color="red"
-                      variant="light"
-                      disabled={busy}
-                      onClick={() => {
-                        void saveMods(mods.filter((_, i) => i !== index));
-                      }}
-                    >
-                      Eliminar
-                    </Button>
-                  </Group>
-                </Group>
-              ))}
-            </Stack>
           </Stack>
         )}
 

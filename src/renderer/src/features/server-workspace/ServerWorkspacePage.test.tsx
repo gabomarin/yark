@@ -96,6 +96,34 @@ describe("ServerWorkspacePage", () => {
       })),
       openServerIniInEditor: vi.fn(async () => ({ ok: true, data: undefined })),
       updateServer: vi.fn(async () => ({ ok: true, data: serverA })),
+      getModMetadata: vi.fn(async (modId: string) => ({
+        ok: true,
+        data: {
+          id: modId,
+          name: `Mod ${modId}`,
+          summary: "Test",
+          thumbnailUrl: null,
+          authors: [],
+          downloadCount: 0,
+          dateModified: new Date(0).toISOString(),
+          curseforgeUrl: `https://www.curseforge.com/ark-survival-ascended/search?search=${modId}`,
+          slug: modId,
+        },
+      })),
+      getModsMetadata: vi.fn(async (modIds: string[]) => ({
+        ok: true,
+        data: modIds.map((modId) => ({
+          id: modId,
+          name: `Mod ${modId}`,
+          summary: "Test",
+          thumbnailUrl: null,
+          authors: [],
+          downloadCount: 0,
+          dateModified: new Date(0).toISOString(),
+          curseforgeUrl: `https://www.curseforge.com/ark-survival-ascended/search?search=${modId}`,
+          slug: modId,
+        })),
+      })),
     });
   });
 

@@ -56,6 +56,10 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.logsExport, serverId),
   openServerUpdateLogFile: (serverId: string, fileName: string) =>
     ipcRenderer.invoke(IPC.logsOpenUpdateFile, serverId, fileName),
+  getModMetadata: (modId: string, forceRefresh?: boolean) =>
+    ipcRenderer.invoke(IPC.modsGet, modId, forceRefresh),
+  getModsMetadata: (modIds: string[], forceRefresh?: boolean) =>
+    ipcRenderer.invoke(IPC.modsGetMany, modIds, forceRefresh),
   onServerStatus: (listener) => {
     const handler = (_e: unknown, info: ServerRuntimeInfo) => listener(info);
     ipcRenderer.on(IPC_PUSH.serverStatus, handler);
