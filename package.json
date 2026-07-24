@@ -20,10 +20,11 @@
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
-    "@mantine/core": "^7.17.0",
-    "@mantine/hooks": "^7.17.0",
+    "@mantine/core": "^7.17.8",
+    "@mantine/form": "^7.17.8",
+    "@mantine/hooks": "^7.17.8",
     "@mantine/modals": "^7.17.8",
-    "@mantine/notifications": "^7.17.0",
+    "@mantine/notifications": "^7.17.8",
     "@phosphor-icons/react": "^2.1.10",
     "ini": "^5.0.0",
     "zod": "^3.24.0"

@@ -70,9 +70,6 @@ describe("ServerWorkspacePage", () => {
   });
 
   beforeEach(() => {
-    window.localStorage.removeItem(
-      "ark-server-manager.workspace.configuration-view",
-    );
     vi.stubGlobal("api", {
       readServerIni: vi.fn(async (serverId: string) => ({
         ok: true,
@@ -92,6 +89,10 @@ describe("ServerWorkspacePage", () => {
         ok: true,
         data: { valid: true, issues: [], diff: [], changedCount: 1 },
       })),
+      previewServerIni: vi.fn(async () => ({
+        ok: true,
+        data: { valid: true, issues: [], diff: [], changedCount: 1 },
+      })),
       openServerIniInEditor: vi.fn(async () => ({ ok: true, data: undefined })),
       updateServer: vi.fn(async () => ({ ok: true, data: serverA })),
     });
@@ -105,18 +106,15 @@ describe("ServerWorkspacePage", () => {
 
     expect(screen.getByText("Todos los servidores")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "The Island" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Servidor" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Configuración guiada" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: "Servidor" })).toHaveAttribute(
       "aria-selected",
       "true",
     );
     expect(screen.getByRole("tab", { name: "Archivos INI" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Mods" })).toBeInTheDocument();
-
-    await waitFor(() => {
-      expect(screen.getByText("MaxPlayers")).toBeInTheDocument();
-      expect(screen.getAllByText("XPMultiplier").length).toBeGreaterThan(0);
-    });
+    expect(
+      screen.getByRole("button", { name: "Asistente de configuración" }),
+    ).toBeVisible();
 
     await user.click(screen.getByText("Scorched Earth"));
     expect(onSelectServer).toHaveBeenCalledWith("srv-b");
@@ -235,6 +233,7 @@ describe("ServerWorkspacePage", () => {
     });
     renderWorkspace();
 
+    await user.click(screen.getByRole("tab", { name: "Archivos INI" }));
     await waitFor(() => {
       expect(screen.getByText("MaxPlayers")).toBeInTheDocument();
     });
@@ -248,36 +247,88 @@ describe("ServerWorkspacePage", () => {
     expect(screen.getByRole("button", { name: "Guardar" })).toBeDisabled();
   });
 
-  it("shares pending changes between guided configuration and INI files", async () => {
+  it("discards an assistant draft without writing INI files", async () => {
     const user = userEvent.setup();
     renderWorkspace();
 
-    const maxPlayers = await screen.findByDisplayValue("70");
-    fireEvent.change(maxPlayers, { target: { value: "80" } });
-    expect(screen.getByDisplayValue("80")).toBeInTheDocument();
-    expect(screen.getByText("Sin guardar")).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "Asistente de configuración" }),
+    );
+    expect(
+      await screen.findByRole("heading", { name: "Prepara la experiencia de juego" }),
+    ).toBeVisible();
+    await user.click(screen.getByRole("button", { name: /Jugar con amigos/ }));
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+    const dialog = await screen.findByRole("dialog", { name: "Salir del asistente" });
+    await user.click(
+      within(dialog).getByRole("button", { name: "Descartar borrador" }),
+    );
 
-    await user.click(screen.getByRole("tab", { name: "Archivos INI" }));
-
-    expect(await screen.findByDisplayValue("80")).toBeInTheDocument();
-    expect(screen.getByText("Sin guardar")).toBeInTheDocument();
-    expect(window.api.readServerIni).toHaveBeenCalledTimes(1);
+    expect(
+      await screen.findByRole("heading", { name: "Información del servidor" }),
+    ).toBeVisible();
+    expect(window.api.saveServerIni).not.toHaveBeenCalled();
   });
 
-  it("remembers INI files as the preferred configuration experience", async () => {
+  it("blocks the assistant while the manual INI editor has pending changes", async () => {
     const user = userEvent.setup();
     renderWorkspace();
 
     await user.click(screen.getByRole("tab", { name: "Archivos INI" }));
-    expect(
-      screen.getByRole("tab", { name: "Archivos INI" }),
-    ).toHaveAttribute("aria-selected", "true");
+    const maxPlayers = await screen.findByDisplayValue("70");
+    fireEvent.change(maxPlayers, { target: { value: "80" } });
+    await user.click(screen.getByRole("tab", { name: "Servidor" }));
 
-    cleanup();
+    expect(
+      screen.getByRole("button", { name: "Asistente de configuración" }),
+    ).toBeDisabled();
+  });
+
+  it("reviews and explicitly applies the assistant draft", async () => {
+    const user = userEvent.setup();
     renderWorkspace();
 
+    await user.click(
+      screen.getByRole("button", { name: "Asistente de configuración" }),
+    );
+    await user.click(await screen.findByRole("button", { name: /Jugar con amigos/ }));
+    await user.click(
+      screen.getByRole("switch", {
+        name: "Ajustes para una persona o grupo pequeño",
+      }),
+    );
+    await user.click(screen.getByRole("button", { name: /Ver \d+ cambios/ }));
+    const changesDialog = await screen.findByRole("dialog", {
+      name: "Cambios del borrador",
+    });
+    expect(within(changesDialog).getByText("Domesticación")).toBeInTheDocument();
+    expect(within(changesDialog).getByText("3×")).toBeInTheDocument();
     expect(
-      screen.getByRole("tab", { name: "Archivos INI" }),
-    ).toHaveAttribute("aria-selected", "true");
+      within(changesDialog).getByText("Ajustes para una persona"),
+    ).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByText("3× → 7.5×")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByText("5× → 45×")).toBeVisible();
+    expect(screen.getByText("0.5× → 0.075×")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(
+      screen.getByRole("heading", { name: "Revisa antes de aplicar" }),
+    ).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Aplicar cambios" }));
+
+    expect(
+      await screen.findByRole("heading", { name: "Configuración aplicada" }),
+    ).toBeVisible();
+    expect(window.api.previewServerIni).toHaveBeenCalledTimes(1);
+    expect(window.api.saveServerIni).toHaveBeenCalledTimes(1);
+    // Editor oculto + carga inicial del asistente + relectura previa al guardado.
+    expect(window.api.readServerIni).toHaveBeenCalledTimes(3);
+    const savedPayload = vi.mocked(window.api.saveServerIni).mock.calls[0]?.[1];
+    expect(savedPayload?.gameUserSettings).toContain("TamingSpeedMultiplier=3");
+    expect(savedPayload?.game).toContain("BabyMatureSpeedMultiplier=5");
+    expect(savedPayload?.game).toContain("bUseSingleplayerSettings=True");
   });
 });

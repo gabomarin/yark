@@ -367,40 +367,51 @@ Objetivo: convertir la configuración visual en la experiencia principal y
 relegar los archivos INI a Advanced Mode.
 
 - [x] Arquitectura de información aprobada y documentada en `docs/smart-configuration-architecture.md`.
-- [ ] Organizar settings por objetivos del usuario: jugabilidad, mundo, dinosaurios, domesticación y crianza, construcción, experiencia/rates y otras categorías necesarias.
-- [ ] Añadir Smart Configuration como vista guiada sin retirar la experiencia reconocible de `Game.ini` y `GameUserSettings.ini`.
-- [ ] Añadir nombres legibles y descripciones orientadas a resultados para los settings.
-- [ ] Enriquecer controles según tipo y rango usando switches, selects, sliders, inputs numéricos y presets cuando correspondan.
-- [ ] Mostrar valores recomendados, defaults y consecuencias relevantes sin saturar la pantalla.
-- [ ] Añadir un resumen legible de cambios antes de guardar.
-- [ ] Mantener visible el estado de cambios pendientes y si requieren reiniciar el servidor.
+- [-] Organizar los ajustes más utilizados por objetivos del usuario; primera selección curada de 16 conceptos completada, ampliación pendiente de validar.
+- [x] Integrar Smart Configuration como asistente bajo demanda sin retirar la experiencia reconocible de `Game.ini` y `GameUserSettings.ini`.
+- [-] Añadir nombres legibles y descripciones orientadas a resultados para los ajustes curados; catálogo completo pendiente.
+- [-] Enriquecer controles según tipo y rango; perfiles, presets semánticos, switches e inputs numéricos cubren ya el asistente inicial.
+- [x] Mostrar perfiles recomendados y consecuencias sin aplicar cambios al seleccionarlos.
+- [x] Añadir un resumen legible de cambios antes de guardar.
+- [x] Permitir consultar los valores anterior/nuevo desde el contador de cambios en cualquier paso.
+- [x] Mantener visible el estado de cambios pendientes y si requieren reiniciar el servidor.
 - [x] Conservar el editor visual actual y la edición raw de ambos archivos dentro de una vista explícita `Archivos INI`.
 - [ ] Dividir `ConfigurationEditor` gradualmente por responsabilidades sin reescribir su lógica funcional.
 - [ ] Preparar la gestión de mods para CurseForge, dependencias, conflictos, orden de carga y actualizaciones.
 
 Bloques propuestos:
 
-- [x] 3.1 Crear `Configuración guiada` como vista separada y agrupar la experiencia actual bajo `Archivos INI`, compartiendo payload, dirty state y guardado.
-- [ ] 3.2 Incorporar vista `Esenciales`, nombres legibles y descripciones breves orientadas al resultado.
-- [ ] 3.3 Enriquecer controles mediante metadatos confiables de rango, unidad, paso y opciones.
-- [ ] 3.4 Añadir revisión legible de cambios, requisito de reinicio y vista previa de presets.
+- [x] 3.1 Agrupar la experiencia visual/raw existente bajo `Archivos INI`.
+- [x] 3.2 Crear asistente bajo demanda de cinco pasos para servidores existentes.
+- [ ] 3.3 Ampliar y validar la selección curada de ajustes frecuentes.
+- [ ] 3.4 Reutilizar el asistente opcionalmente después de crear un servidor.
 
-Validación del bloque 3.1 — separación de experiencias:
+Validación del bloque 3.2 — asistente bajo demanda:
 
-- [x] `Configuración guiada` combina ajustes de `Game.ini` y `GameUserSettings.ini` sin duplicar estado ni persistencia.
-- [x] `Archivos INI` conserva el editor visual por archivo, edición raw, apertura externa y restauración del archivo activo.
-- [x] Presets movidos a la experiencia guiada para evitar cambios cruzados ocultos al trabajar por archivo.
-- [x] La última experiencia de configuración elegida se recuerda localmente; instalaciones nuevas comienzan en la vista guiada.
-- [x] Cambios pendientes permanecen sincronizados al alternar entre vistas y solo se realiza una lectura del backend.
-- [x] Tests focalizados 22/22, typecheck y build correctos.
-- [-] Suite completa 138/139 por el `EBUSY` conocido al limpiar una carpeta temporal de Windows; la prueba de proceso real pasa aislada 1/1.
-- [x] Servidor, Configuración guiada, Archivos INI visual/raw y Mods recorridos con Playwright/Electron en `1280×720`, `1920×1080` y `2560×1440`.
-- [x] Scroll con rueda funcional, editor raw usa la altura restante, sin overflow global, errores de consola ni excepciones del renderer.
+- [x] Eliminada la pestaña provisional que solo fusionaba ambos INI.
+- [x] Lanzador integrado en `Servidor`; navegación habitual reducida a Servidor, Archivos INI y Mods.
+- [x] Cinco pasos: perfil, ritmo, crianza, comodidad y revisión.
+- [x] Ritmo y crianza usan presets semánticos coordinados; muestran sus multiplicadores exactos y permiten volver a los valores actuales.
+- [x] El modo individual se presenta como ajuste de alto impacto, nunca cambia implícitamente con un perfil y muestra tasas efectivas conocidas.
+- [x] Dificultad se presenta como un solo concepto; nivel máximo, `DifficultyOffset` y `OverrideOfficialDifficulty` se coordinan únicamente tras una elección explícita.
+- [x] `Muy rápido` diferencia claramente el ritmo con XP `5×`, recolección `5×` y domesticación `10×`.
+- [x] Abrir, recorrer y cancelar trabajan sobre un borrador y no escriben en disco.
+- [x] Solo se modifican 16 conceptos curados; contenido desconocido y casing de secciones se conservan.
+- [x] Antes de aplicar se relee el disco y el borrador se superpone sobre la versión más reciente para preservar cambios externos.
+- [x] El asistente se bloquea si el editor manual tiene cambios pendientes.
+- [x] Aplicación final usa Zod, preview del backend y guardado explícito; el editor manual se recarga después.
+- [x] Tests focalizados 26/26, typecheck y build correctos.
+- [-] Suite completa 147/148 por el `EBUSY` conocido al limpiar una carpeta temporal de Windows; la prueba de proceso real pasa aislada 1/1.
+- [x] Launcher, inicio y revisión recorridos con Playwright/Electron en `1280×720`, `1920×1080` y `2560×1440`.
+- [x] Scroll interno funcional en 720p, footer/progreso accesibles, sin overflow global, errores de consola ni excepciones.
+- [x] Ajuste de presets, dificultad, modo individual y resumen interactivo: pruebas focalizadas 16/16, typecheck y build correctos.
+- [x] Ritmo, crianza y modal de cambios revisados en Electron a `1280×720`, `1920×1080` y `2560×1440`; sin overflow ni errores del renderer.
+- [x] Modo individual, tasas efectivas y dificultad compuesta revisados con scroll real en las tres resoluciones; footer siempre accesible.
 
 Criterio de cierre:
 
-- [ ] Un usuario nuevo puede configurar un servidor común sin saber qué archivo INI contiene cada setting.
-- [ ] Un administrador experimentado conserva acceso directo y confiable a los archivos raw.
+- [x] Un usuario nuevo puede configurar los ajustes comunes sin saber qué archivo INI contiene cada setting.
+- [x] Un administrador experimentado conserva acceso directo y confiable a los archivos raw.
 - [ ] La navegación puede crecer sin convertirse en una lista plana o una tabla inmanejable.
 
 ### Design review obligatorio por iteración

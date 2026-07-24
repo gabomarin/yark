@@ -1,6 +1,6 @@
 # Smart Configuration — arquitectura propuesta
 
-Estado: arquitectura aprobada; Bloque 3.1 implementado el 2026-07-24.
+Estado: asistente bajo demanda para servidores existentes implementado el 2026-07-24.
 
 ## 1. Observaciones
 
@@ -32,9 +32,8 @@ Estado: arquitectura aprobada; Bloque 3.1 implementado el 2026-07-24.
 Navegación principal del servidor:
 
 1. `Servidor`
-2. `Configuración guiada`
-3. `Archivos INI`
-4. `Mods`
+2. `Archivos INI`
+3. `Mods`
 
 La experiencia existente no desaparece. `Archivos INI` conserva una navegación
 explícita entre `GameUserSettings.ini` y `Game.ini`, con dos modos:
@@ -45,64 +44,57 @@ explícita entre `GameUserSettings.ini` y `Game.ini`, con dos modos:
 Esto preserva los conceptos y la memoria muscular de administradores
 experimentados. La acción de abrir el archivo externo permanece en esta vista.
 
-La pestaña `Configuración guiada` combina ajustes de ambos archivos y los
-presenta por objetivo:
+La configuración para principiantes no es una pestaña permanente. Se abre bajo
+demanda desde `Servidor → Asistente de configuración`, porque entrar a una
+pestaña no debe insinuar que explorar y aplicar recomendaciones son la misma
+acción.
 
-- Esenciales
-- Mundo y dificultad
-- Experiencia y recolección
-- Dinosaurios
-- Domesticación y crianza
-- Construcción
-- Reglas PvE/PvP
-- Jugadores, tribus y comunicación
-- Eventos
-- Red y administración
-- Otros
+El asistente es una vista dedicada de cinco pasos:
 
-`Esenciales` es una vista curada de los ajustes más frecuentes; no crea copias
-ni una fuente de datos adicional. Red, administración, valores desconocidos y
-ajustes poco frecuentes quedan disponibles, pero no dominan la experiencia
-inicial.
+1. Perfil de experiencia.
+2. Ritmo de progresión mediante niveles semánticos.
+3. Crianza mediante niveles semánticos.
+4. Reglas de comodidad.
+5. Revisión y aplicación.
 
-Ambas vistas operan sobre el mismo `ServerIniPayload`, baseline y estado dirty.
-Un cambio realizado en `Configuración guiada` debe verse inmediatamente en
-`Archivos INI`, y viceversa. Solo existe una acción de persistencia y una única
-fuente de verdad.
-
-Para evitar desorientar a usuarios recurrentes, el workspace recuerda la última
-vista de configuración utilizada. Una instalación nueva puede abrir
-`Configuración guiada` por defecto sin imponerla en cada visita.
-
-En escritorio se utilizará navegación vertical compacta por categorías. En
-ventanas pequeñas se reutilizará el selector desplegable actual; no se usarán
-badges horizontales que consuman ancho.
+Lee los valores actuales y crea un borrador aislado. Elegir perfiles, avanzar o
+cancelar no escribe archivos. Solo `Aplicar cambios` valida, previsualiza y
+guarda ambos INI. Las keys no administradas por el asistente se preservan.
 
 ## 4. Componentes y flujo
 
-### Encabezado
+### Borrador
 
-- Título orientado a la tarea: `Configuración del juego`.
-- Búsqueda global sobre ambos archivos.
-- Acceso secundario a perfiles/presets.
-- Estado de cambios y requisito de reinicio, sin alertas permanentes.
+- Se inicializa desde los INI reales.
+- Usa conceptos comprensibles, no keys técnicas.
+- Modifica únicamente 16 conceptos frecuentes.
+- Coordina ajustes relacionados mediante presets comprensibles, pero siempre
+  muestra los multiplicadores exactos que producirá cada selección.
+- `Actual` restaura únicamente los valores originales del grupo activo y
+  conserva el resto del borrador.
+- `Ajustes para una persona o grupo pequeño` es una decisión explícita de alto
+  impacto. Los perfiles la conservan y nunca la activan o desactivan
+  implícitamente.
+- Cuando el modo individual está activo, Ritmo y Crianza muestran tanto el
+  multiplicador configurado como el efectivo conocido. También se advierten
+  los efectos que no pueden reducirse a una sola tasa.
+- La dificultad es un concepto compuesto: el usuario elige el nivel máximo
+  común y el asistente coordina `DifficultyOffset=1` con
+  `OverrideOfficialDifficulty=nivel/30`. Los valores originales se preservan
+  mientras el usuario mantenga `Actual`.
+- Se descarta íntegramente al cancelar.
+- No puede abrirse si `Archivos INI` tiene cambios pendientes.
 
-### Lista de ajustes
+### Revisión y guardado
 
-- Nombre legible en español como información principal.
-- Key técnica y archivo como metadatos secundarios o detalle expandible.
-- Descripción corta orientada al efecto.
-- Control visual adecuado: switch, número, selector, duración o slider solo
-  cuando existan límites confiables.
-- Default y restauración disponibles sin ocupar una columna permanente.
-
-### Guardado
-
-- Los cambios de ambos archivos forman una sola sesión.
-- Una barra de acciones aparece únicamente cuando hay cambios.
-- `Revisar y guardar` abre un resumen legible agrupado por categoría.
-- Si el servidor está activo, el resumen indica que los cambios requieren
-  reinicio; no debe confundirse guardar con aplicar inmediatamente.
+- Presenta valor anterior y nuevo con lenguaje humano.
+- El contador de cambios abre este mismo resumen desde cualquier paso; no es
+  únicamente un indicador pasivo.
+- Valida el modelo con Zod.
+- Relee los INI antes de aplicar y superpone solo los ajustes curados.
+- Solicita un preview al backend antes de guardar.
+- Informa si el servidor requiere reinicio.
+- Después de aplicar, recarga el editor manual desde disco.
 
 ### Archivos INI
 
@@ -110,51 +102,50 @@ badges horizontales que consuman ancho.
 - Conserva el editor raw actual como modo `Texto`.
 - Selector entre ambos archivos y entre modo visual/texto.
 - Ruta y acción de abrir el archivo.
-- Comparte payload, baseline, cambios pendientes y guardado con la vista guiada.
+- Sigue siendo la experiencia habitual para administradores experimentados.
 
 ## 5. Implementación incremental
 
-### Bloque 3.1 — Separación de experiencias
+### Bloque 3.1 — Archivos INI
 
-- Añadir una referencia visual que incluya `fileKey`, sección, key y ocurrencia.
-- Crear `Configuración guiada` como vista nueva sin cambiar parser,
-  persistencia ni IPC.
-- Agrupar el editor actual y la edición raw bajo `Archivos INI`.
-- Mantener inicialmente los controles, categorías y búsqueda actuales.
-- Compartir una sola sesión de edición entre ambas experiencias.
+- Agrupar editor visual y raw bajo una sola vista.
+- Preservar selector de archivo, apertura externa y restauración.
 
-Este bloque ofrece una entrada más simple sin retirar ni esconder la
-experiencia reconocible para administradores.
+Estado: completado.
 
-Estado: completado. La preferencia de experiencia se conserva localmente y
-ambas vistas comparten una única instancia de `ConfigurationEditor`.
+### Bloque 3.2 — Asistente bajo demanda
 
-### Bloque 3.2 — Jerarquía y lenguaje
+- Lanzador contextual desde `Servidor`.
+- Cinco pasos con perfiles y valores actuales.
+- Borrador aislado, resumen legible y aplicación explícita.
+- Protección frente a cambios manuales pendientes.
 
-- Introducir `Esenciales`.
-- Añadir nombres legibles en español y descripciones breves.
-- Mostrar la key técnica como información secundaria.
-- Separar ajustes comunes de opciones técnicas o poco frecuentes.
+Estado: completado para servidores existentes.
 
-### Bloque 3.3 — Controles inteligentes
+### Bloque 3.3 — Ampliación curada
 
-- Definir metadatos confiables de unidad, rango, paso y opciones.
-- Añadir selects, duraciones y sliders únicamente donde aporten claridad.
-- Mostrar defaults y advertencias contextuales.
+- Validar con usuarios los ajustes más utilizados.
+- Añadir nuevos campos solo con rango, unidad y consecuencias confiables.
+- Mejorar las recomendaciones sin convertir el asistente en otro editor total.
 
-### Bloque 3.4 — Revisión y guardado
+### Bloque 3.4 — Creación de servidores
 
-- Crear resumen de cambios por categoría.
-- Unificar el guardado de ambos archivos.
-- Mostrar claramente el requisito de reinicio.
-- Convertir presets en una experiencia con vista previa.
+- Reutilizar el mismo asistente después de crear un servidor.
+- Ofrecer `Configurar experiencia`, `Usar defaults` y `Hacerlo más tarde`.
+- Mantener el onboarding opcional y no bloquear instalación o arranque.
 
-## 6. Decisiones que requieren aprobación
+## 6. Decisiones vigentes
 
-- Añadir `Configuración guiada` como vista separada.
-- Agrupar las pestañas actuales y el editor raw dentro de `Archivos INI`.
-- Usar `Esenciales` como entrada predeterminada en lugar de mostrar los 297
-  ajustes.
-- Recordar la última experiencia utilizada por el usuario.
-- Implementar primero el Bloque 3.1 sin rediseñar todavía cada fila ni retirar
-  capacidades existentes.
+- No existe una pestaña permanente llamada `Configuración guiada`.
+- Abrir el asistente nunca cambia los INI.
+- Los perfiles son puntos de partida del borrador, no estados persistidos.
+- Ritmo y crianza usan niveles discretos en vez de un slider continuo: varios
+  multiplicadores cambian en direcciones distintas y una escala numérica única
+  ocultaría esa relación.
+- Los presets no se describen como tasas oficiales, porque eventos y cambios de
+  Wildcard pueden alterar temporalmente esa referencia.
+- Los factores adicionales del modo individual se mantienen centralizados y
+  documentados con la referencia de
+  [ARK Official Community Wiki](https://ark.wiki.gg/wiki/Single_Player).
+- El resumen se deriva de cambios reales; no existe una segunda fuente de verdad.
+- La integración posterior a la creación reutilizará este mismo flujo.

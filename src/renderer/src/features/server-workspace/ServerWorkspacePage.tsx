@@ -13,29 +13,16 @@ import {
   ConfigurationEditor,
   type ConfigSection,
 } from "./components/ConfigurationEditor";
+import { ConfigurationWizard } from "./components/ConfigurationWizard";
 import { ServerListPanel } from "./components/ServerListPanel";
 import { SidePanel } from "./components/SidePanel";
 import { WorkspaceHeader } from "./components/WorkspaceHeader";
 import classes from "./ServerWorkspacePage.module.css";
 
 type WorkspaceTab = "server" | ConfigSection;
-type ConfigurationView = Extract<ConfigSection, "guided" | "iniFiles">;
-
-const CONFIGURATION_VIEW_STORAGE_KEY =
-  "ark-server-manager.workspace.configuration-view";
-
-function initialConfigurationView(): ConfigurationView {
-  try {
-    return window.localStorage.getItem(CONFIGURATION_VIEW_STORAGE_KEY) === "iniFiles"
-      ? "iniFiles"
-      : "guided";
-  } catch {
-    return "guided";
-  }
-}
 
 function isConfigSection(tab: string | null): tab is ConfigSection {
-  return tab === "guided" || tab === "iniFiles" || tab === "mods";
+  return tab === "iniFiles" || tab === "mods";
 }
 
 interface Props {
@@ -64,28 +51,20 @@ function isServerActive(runtime: ServerRuntimeInfo | null): boolean {
 }
 
 export function ServerWorkspacePage(props: Props): JSX.Element {
-  const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>(
-    initialConfigurationView,
-  );
+  const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>("server");
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [iniEditorVersion, setIniEditorVersion] = useState(0);
+  const [iniDirty, setIniDirty] = useState(false);
   const [serverSwitcherOpen, setServerSwitcherOpen] = useState(false);
   const [serverActionsOpen, setServerActionsOpen] = useState(false);
   const compactWorkspace = useMediaQuery("(max-width: 1599px)", false);
   const dirtyRef = useRef(false);
-  const lastConfigSectionRef = useRef<ConfigSection>(initialConfigurationView());
+  const assistantDirtyRef = useRef(false);
+  const lastConfigSectionRef = useRef<ConfigSection>("iniFiles");
 
   useEffect(() => {
     if (isConfigSection(workspaceTab)) {
       lastConfigSectionRef.current = workspaceTab;
-    }
-    if (workspaceTab === "guided" || workspaceTab === "iniFiles") {
-      try {
-        window.localStorage.setItem(
-          CONFIGURATION_VIEW_STORAGE_KEY,
-          workspaceTab,
-        );
-      } catch {
-        // La preferencia es opcional; la navegación debe seguir funcionando.
-      }
     }
   }, [workspaceTab]);
 
@@ -98,7 +77,7 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
   }, [props.selectedServerId, props.servers]);
 
   const confirmLeaveIfDirty = useCallback((action: () => void) => {
-    if (!dirtyRef.current) {
+    if (!dirtyRef.current && !assistantDirtyRef.current) {
       action();
       return;
     }
@@ -113,6 +92,8 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
       confirmProps: { color: "yellow" },
       onConfirm: () => {
         dirtyRef.current = false;
+        assistantDirtyRef.current = false;
+        setIniDirty(false);
         action();
       },
     });
@@ -121,13 +102,17 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
   const handleSelectServer = (serverId: string) => {
     if (serverId === props.selectedServerId) return;
     confirmLeaveIfDirty(() => {
+      setAssistantOpen(false);
       props.onSelectServer(serverId);
       setServerSwitcherOpen(false);
     });
   };
 
   const handleBack = () => {
-    confirmLeaveIfDirty(() => props.onBack());
+    confirmLeaveIfDirty(() => {
+      setAssistantOpen(false);
+      props.onBack();
+    });
   };
 
   const saveMods = async (mods: string[]) => {
@@ -213,6 +198,24 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
         {!compactWorkspace && serverListPanel}
 
         <section className={classes.main} data-workspace-scroll>
+          {assistantOpen ? (
+            <ConfigurationWizard
+              server={selectedServer}
+              serverActive={serverActive}
+              onCancel={() => {
+                assistantDirtyRef.current = false;
+                setAssistantOpen(false);
+              }}
+              onApplied={() => {
+                assistantDirtyRef.current = false;
+                setIniDirty(false);
+                setIniEditorVersion((current) => current + 1);
+              }}
+              onDraftChange={(dirty) => {
+                assistantDirtyRef.current = dirty;
+              }}
+            />
+          ) : (
           <Tabs
             value={workspaceTab}
             onChange={(value) => {
@@ -223,7 +226,6 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
           >
             <Tabs.List className={classes.tabList}>
               <Tabs.Tab value="server">Servidor</Tabs.Tab>
-              <Tabs.Tab value="guided">Configuración guiada</Tabs.Tab>
               <Tabs.Tab value="iniFiles">Archivos INI</Tabs.Tab>
               <Tabs.Tab value="mods">Mods</Tabs.Tab>
             </Tabs.List>
@@ -237,6 +239,13 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
                   serverActive={serverActive}
                   onCancel={handleBack}
                   onSaved={props.onServerUpdated}
+                  onOpenConfigurationAssistant={() => {
+                    if (!iniDirty) {
+                      assistantDirtyRef.current = false;
+                      setAssistantOpen(true);
+                    }
+                  }}
+                  configurationAssistantDisabled={iniDirty}
                 />
               )}
 
@@ -245,7 +254,7 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
                 data-visible={isConfigSection(workspaceTab) || undefined}
               >
                 <ConfigurationEditor
-                  key={selectedServer.id}
+                  key={`${selectedServer.id}:${iniEditorVersion}`}
                   server={selectedServer}
                   section={
                     isConfigSection(workspaceTab)
@@ -256,11 +265,13 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
                   onModsChanged={saveMods}
                   onDirtyChange={(dirty) => {
                     dirtyRef.current = dirty;
+                    setIniDirty(dirty);
                   }}
                 />
               </div>
             </div>
           </Tabs>
+          )}
         </section>
 
         {!compactWorkspace && sidePanel}

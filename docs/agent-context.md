@@ -26,7 +26,7 @@ This repository contains a desktop application for managing dedicated ARK Surviv
 
 - The new renderer shell is already active.
 - Overview, SteamCMD, and Logs have already been migrated to the new architecture.
-- Server Workspace separates `Configuración guiada` from the familiar `Archivos INI` visual/raw experience. Both views share one payload, dirty state, and save flow; the last configuration experience is remembered locally.
+- Server Workspace keeps `Servidor`, `Archivos INI`, and `Mods` as its regular navigation. A five-step configuration assistant launches on demand from `Servidor`; it uses an isolated draft and writes only after explicit review.
 - Clusters, Backups, and Settings remain placeholders within the new shell.
 - Live log streaming during active SteamCMD operations is still pending.
 - Real E2E validation against host-side binaries and SteamCMD is still not covered.
@@ -61,5 +61,8 @@ cmd.exe /c npm run build
 - The informational official ARK server version comes from Wildcard's `https://cdn2.arkdedicated.com/asa/officialserverstatus.ini`; do not replace it with a single server from a third-party listing.
 - Explicit update and verify actions must always query SteamCMD. The in-session content-cache freshness window is only valid when reusing files to install another server.
 - The INI files under `src/shared/defaults` are the canonical source for creating and resetting configuration. ASA may regenerate client-only sections such as `ShooterGameUserSettings` in the runtime `GameUserSettings.ini`; treat them as generated noise, sanitize them on read and save, and never surface them as pending user changes.
-- Do not collapse guided configuration and file-oriented configuration into one ambiguous mode. New users enter `Configuración guiada`; experienced administrators retain the explicit `Archivos INI` visual/raw workflow.
+- Do not add a permanent `Configuración guiada` tab. The beginner experience is an on-demand assistant launched from `Servidor`; experienced administrators retain the explicit `Archivos INI` visual/raw workflow.
+- The configuration assistant must initialize from current INI values, preserve unknown settings, remain read-only until `Aplicar cambios`, and refuse to open while the manual INI editor has pending changes. Before applying, read the latest INI payload again and overlay only the curated fields so external changes are not overwritten.
+- Progression and breeding in the beginner assistant use semantic discrete presets, with their exact multipliers visible. `Actual` restores only that group's original values. The change counter must remain actionable and expose the derived before/after summary from any step.
+- `bUseSingleplayerSettings` is a high-impact explicit choice: profiles preserve it, known effective rates are shown, and the UI warns about additional XP/engram and tamed-creature stat effects. Difficulty is treated as one user concept backed by `DifficultyOffset` and `OverrideOfficialDifficulty`; preserve both raw values until the user explicitly chooses a level.
 - If a visible UX change is introduced, also review the documented state in [TODO.md](../TODO.md).

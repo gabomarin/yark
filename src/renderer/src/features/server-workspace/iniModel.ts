@@ -297,17 +297,6 @@ export function filterIniRows(
   });
 }
 
-export function settingReferencesForPayload(
-  payload: ServerIniPayload,
-): IniSettingReference[] {
-  return (["gameUserSettings", "game"] as const).flatMap((fileKey) =>
-    parseIniRows(textForFile(payload, fileKey)).map((row) => ({
-      ...row,
-      fileKey,
-    })),
-  );
-}
-
 export function filterIniSettingReferences(
   rows: IniSettingReference[],
   search: string,

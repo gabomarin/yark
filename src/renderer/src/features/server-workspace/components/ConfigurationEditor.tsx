@@ -27,7 +27,6 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { applyIniPreset, listIniPresets } from "@shared/ini-presets";
 import type {
   IniFileKey,
   IniPreview,
@@ -47,7 +46,6 @@ import {
   sanitizeServerIniPayload,
   sectionShortName,
   setIniValue,
-  settingReferencesForPayload,
   textForFile,
   withFileText,
   type IniFilterId,
@@ -56,7 +54,6 @@ import {
 import classes from "./ConfigurationEditor.module.css";
 
 export type ConfigSection =
-  | "guided"
   | "iniFiles"
   | "mods";
 
@@ -130,16 +127,14 @@ export function ConfigurationEditor(props: Props): JSX.Element {
 
   const activeFileKey = iniFile;
   const activeText = payload !== null ? textForFile(payload, activeFileKey) : "";
-  const rows = useMemo<IniSettingReference[]>(() => {
-    if (payload === null) return [];
-    if (section === "guided") {
-      return settingReferencesForPayload(payload);
-    }
-    return parseIniRows(activeText).map((row) => ({
+  const rows = useMemo<IniSettingReference[]>(
+    () =>
+      parseIniRows(activeText).map((row) => ({
       ...row,
       fileKey: activeFileKey,
-    }));
-  }, [activeFileKey, activeText, payload, section]);
+      })),
+    [activeFileKey, activeText],
+  );
   const availableRows = useMemo(
     () => filterIniSettingReferences(rows, "", "all"),
     [rows],
@@ -270,14 +265,6 @@ export function ConfigurationEditor(props: Props): JSX.Element {
     }
   };
 
-  const applyPreset = (presetId: string | null) => {
-    if (payload === null || presetId === null) return;
-    const next = applyIniPreset(payload, presetId);
-    setPayload(next);
-    setInfo(`Preset aplicado: ${presetId}`);
-    setPreview(null);
-  };
-
   const saveMods = async (nextMods: string[]) => {
     setBusy(true);
     setError(null);
@@ -382,51 +369,31 @@ export function ConfigurationEditor(props: Props): JSX.Element {
           </Alert>
         )}
 
-        {(section === "guided" ||
-          (section === "iniFiles" && iniMode === "visual")) && (
+        {section === "iniFiles" && iniMode === "visual" && (
           <Stack gap="md" className={classes.editor}>
             <Group justify="space-between" align="flex-start">
               <div>
                 <Group gap="xs" wrap="nowrap">
                   <Title order={3}>
-                    {section === "guided" ? "Configuración guiada" : "Archivos INI"}
+                    Archivos INI
                   </Title>
-                  {section === "iniFiles" && openFileAction}
+                  {openFileAction}
                 </Group>
                 <Text c="dimmed" size="sm">
-                  {section === "guided"
-                    ? "Configura el servidor por objetivo sin buscar en qué archivo vive cada ajuste."
-                    : `Edita ${fileLabel} con controles visuales y acceso directo al archivo.`}
+                  Edita {fileLabel} con controles visuales y acceso directo al archivo.
                 </Text>
               </div>
               <Group gap="xs" className={classes.headerActions}>
-                {section === "iniFiles" && iniNavigation}
-                {section === "guided" && (
-                  <Select
-                    size="xs"
-                    placeholder="Aplicar preset"
-                    data={listIniPresets().map((preset) => ({
-                      value: preset.id,
-                      label: preset.name,
-                    }))}
-                    clearable
-                    searchable
-                    w={160}
-                    onChange={applyPreset}
-                    disabled={payload === null || loading}
-                  />
-                )}
-                {section === "iniFiles" && (
-                  <Button
-                    size="xs"
-                    variant="default"
-                    leftSection={<ArrowUUpLeft size={16} />}
-                    onClick={resetActiveFileToDefaults}
-                    disabled={payload === null || busy || loading}
-                  >
-                    Restaurar archivo
-                  </Button>
-                )}
+                {iniNavigation}
+                <Button
+                  size="xs"
+                  variant="default"
+                  leftSection={<ArrowUUpLeft size={16} />}
+                  onClick={resetActiveFileToDefaults}
+                  disabled={payload === null || busy || loading}
+                >
+                  Restaurar archivo
+                </Button>
                 <Button
                   size="xs"
                   variant="default"
@@ -545,13 +512,6 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                                   </Text>
                                   <Text c="dimmed" size="xs">
                                     {sectionShortName(row.section)}
-                                    {section === "guided"
-                                      ? ` · ${
-                                          row.fileKey === "game"
-                                            ? "Game.ini"
-                                            : "GameUserSettings.ini"
-                                        }`
-                                      : ""}
                                     {row.duplicateCount > 1
                                       ? ` · ${row.occurrence + 1}/${row.duplicateCount}`
                                       : ""}
@@ -640,9 +600,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
 
             <Group justify="space-between" className={classes.footer}>
               <Text c="dimmed" size="xs">
-                {section === "guided"
-                  ? "Una sola sesión de cambios para Game.ini y GameUserSettings.ini."
-                  : "El manager solo administra ajustes aplicables al servidor dedicado."}
+                El manager solo administra ajustes aplicables al servidor dedicado.
               </Text>
             </Group>
 

@@ -244,13 +244,19 @@ export function setIniTextValue(
   const lines = text.split(/\r?\n/);
   const result: string[] = [];
   let currentSection = INI_ROOT_SECTION;
+  let currentSectionLower = currentSection.toLowerCase();
   let found = false;
   let matchIndex = 0;
+  const sectionLower = section.toLowerCase();
   const keyLower = key.toLowerCase();
   const targetOccurrence = Math.max(0, Math.floor(occurrence));
 
   const flushMissingKeyBeforeLeavingSection = (nextSectionLine: string | null) => {
-    if (found || currentSection !== section || targetOccurrence > 0) {
+    if (
+      found ||
+      currentSectionLower !== sectionLower ||
+      targetOccurrence > 0
+    ) {
       if (nextSectionLine !== null) {
         result.push(nextSectionLine);
       }
@@ -270,10 +276,16 @@ export function setIniTextValue(
     if (sectionMatch !== null) {
       flushMissingKeyBeforeLeavingSection(line);
       currentSection = sectionMatch[1] ?? INI_ROOT_SECTION;
+      currentSectionLower = currentSection.toLowerCase();
       continue;
     }
 
-    if (currentSection === section && trimmed.length > 0 && !trimmed.startsWith(";") && !trimmed.startsWith("#")) {
+    if (
+      currentSectionLower === sectionLower &&
+      trimmed.length > 0 &&
+      !trimmed.startsWith(";") &&
+      !trimmed.startsWith("#")
+    ) {
       const eq = trimmed.indexOf("=");
       if (eq > 0) {
         const lineKey = trimmed.slice(0, eq).trim();
@@ -294,7 +306,7 @@ export function setIniTextValue(
   }
 
   if (!found && targetOccurrence === 0) {
-    if (currentSection === section) {
+    if (currentSectionLower === sectionLower) {
       result.push(`${key}=${value}`);
       found = true;
     }

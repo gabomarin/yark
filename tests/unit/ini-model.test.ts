@@ -6,15 +6,12 @@ import {
   stripClientIniKeys,
 } from "../../src/shared/ini-text";
 import {
-  filterIniSettingReferences,
   filterIniRows,
-  groupSettingReferencesByUiCategory,
   inferControlKind,
   isClientNoiseKey,
   parseIniRows,
   resolveControlKind,
   setIniValue,
-  settingReferencesForPayload,
 } from "../../src/renderer/src/features/server-workspace/iniModel";
 
 describe("ini-text / iniModel section parsing", () => {
@@ -97,6 +94,21 @@ LastJoinedSessionPerCategory=Tres
     expect(next).toContain("MaxPlayers=40");
   });
 
+  it("updates keys in existing sections even when section casing differs", () => {
+    const text = [
+      "[serversettings]",
+      "MaxPlayers=70",
+      "",
+    ].join("\n");
+
+    const next = setIniTextValue(text, "ServerSettings", "MaxPlayers", "80");
+
+    expect(next).toContain("[serversettings]");
+    expect(next).toContain("MaxPlayers=80");
+    expect(next.match(/\[serversettings\]/g)).toHaveLength(1);
+    expect(next.match(/\[ServerSettings\]/g)).toBeNull();
+  });
+
   it("keeps string settings as text even when the value looks numeric", () => {
     expect(
       resolveControlKind("928988", {
@@ -120,17 +132,5 @@ LastJoinedSessionPerCategory=Tres
       }),
     ).toBe("number");
     expect(resolveControlKind("True", { valueType: "boolean" })).toBe("boolean");
-  });
-
-  it("combines both INI files into one filterable visual setting collection", () => {
-    const rows = settingReferencesForPayload({
-      gameUserSettings: "[ServerSettings]\nMaxPlayers=70\n",
-      game: "[/Script/ShooterGame.ShooterGameMode]\nXPMultiplier=2\n",
-    });
-
-    expect(rows.map((row) => row.fileKey)).toEqual(["gameUserSettings", "game"]);
-    expect(filterIniSettingReferences(rows, "MaxPlayers", "all")).toHaveLength(1);
-    const grouped = groupSettingReferencesByUiCategory(rows);
-    expect(grouped.flatMap((group) => group.rows)).toHaveLength(2);
   });
 });

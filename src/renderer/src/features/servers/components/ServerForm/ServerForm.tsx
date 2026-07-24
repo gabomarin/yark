@@ -1,4 +1,9 @@
-import { ArrowLeft, FloppyDisk, FolderOpen } from "@phosphor-icons/react";
+import {
+  ArrowLeft,
+  FloppyDisk,
+  FolderOpen,
+  MagicWand,
+} from "@phosphor-icons/react";
 import {
   Alert,
   Button,
@@ -31,6 +36,8 @@ interface Props {
   variant?: "page" | "embedded";
   /** Servidor en starting/running/stopping → aviso de reinicio. */
   serverActive?: boolean;
+  onOpenConfigurationAssistant?: () => void;
+  configurationAssistantDisabled?: boolean;
 }
 
 interface FormState {
@@ -234,14 +241,32 @@ export function ServerForm(props: Props): JSX.Element {
               Nombre, puertos, acceso, cluster y argumentos de arranque.
             </Text>
           </div>
-          <Button
-            size="sm"
-            leftSection={<FloppyDisk size={16} />}
-            onClick={() => void submit()}
-            loading={saving}
-          >
-            Guardar
-          </Button>
+          <Group gap="xs">
+            {props.onOpenConfigurationAssistant !== undefined && (
+              <Button
+                size="sm"
+                variant="light"
+                leftSection={<MagicWand size={16} />}
+                onClick={props.onOpenConfigurationAssistant}
+                disabled={props.configurationAssistantDisabled}
+                title={
+                  props.configurationAssistantDisabled
+                    ? "Guarda o descarta los cambios pendientes de Archivos INI"
+                    : "Configurar los ajustes más utilizados mediante un asistente"
+                }
+              >
+                Asistente de configuración
+              </Button>
+            )}
+            <Button
+              size="sm"
+              leftSection={<FloppyDisk size={16} />}
+              onClick={() => void submit()}
+              loading={saving}
+            >
+              Guardar
+            </Button>
+          </Group>
         </Group>
       )}
 
