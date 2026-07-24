@@ -21,7 +21,8 @@ export function OverviewHeader({
       </div>
       <Group gap="sm" wrap="wrap" justify="flex-end" className={classes.headerActions}>
         <Button
-          variant="default"
+          variant="subtle"
+          color="gray"
           leftSection={<ArrowsClockwise size={16} />}
           onClick={onCheckUpdates}
           loading={checkingUpdates}

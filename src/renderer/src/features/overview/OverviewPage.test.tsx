@@ -73,6 +73,61 @@ describe("OverviewPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("surfaces how many servers need attention", () => {
+    render(
+      <AppProviders>
+        <OverviewPage
+          search=""
+          onSearchChange={vi.fn()}
+          onCreateServer={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          servers={[server]}
+          filteredServers={[server]}
+          runningServers={0}
+          statuses={new Map()}
+          installationInfo={
+            new Map([
+              [
+                server.id,
+                {
+                  serverId: server.id,
+                  installed: false,
+                  build: null,
+                  steamBuild: null,
+                  arkVersion: null,
+                  officialVersion: null,
+                  officialSteamBuild: null,
+                  version: null,
+                  binaryPath: "C:/ARK/TheIsland/ShooterGameServer.exe",
+                  checkedAt: "2026-07-24T00:00:00.000Z",
+                },
+              ],
+            ])
+          }
+          events={[]}
+          onViewAllActivity={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onStartServer={vi.fn()}
+          onStopServer={vi.fn()}
+          onRestartServer={vi.fn()}
+          onKillServer={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdatesForServer={vi.fn()}
+          onCloneServer={vi.fn()}
+          onDeleteServer={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("1 necesita atención")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Instalar" })).toBeInTheDocument();
+  });
+
   it("distinguishes loading from the actionable empty state", () => {
     const onCreateServer = vi.fn();
     const sharedProps = {

@@ -195,6 +195,17 @@
   padding-left: 52px;
 }
 
+@media (min-width: 1600px) {
+  .cardHit {
+    grid-template-columns: minmax(240px, 0.7fr) minmax(520px, 2.2fr);
+    gap: 28px;
+  }
+
+  .metaGrid {
+    gap: 20px 28px;
+  }
+}
+
 @media (max-width: 1400px) {
   .cardHit {
     grid-template-columns: minmax(250px, 0.9fr) minmax(360px, 1.6fr);

@@ -265,13 +265,11 @@ export function ServerCard(props: Props): JSX.Element {
                 tone={
                   steamCmdBusy
                     ? "warn"
-                    : !isInstallationReady
-                      ? "muted"
-                      : updateAvailable
-                        ? "warn"
-                        : updateState === "current"
-                          ? "ok"
-                          : "muted"
+                    : !isInstallationReady || updateAvailable
+                      ? "warn"
+                      : updateState === "current"
+                        ? "ok"
+                        : "muted"
                 }
               />
             </div>

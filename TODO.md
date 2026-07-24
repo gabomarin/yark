@@ -182,9 +182,9 @@ ARK sin convertirse en una interfaz gamer.
 
 Criterio de cierre:
 
-- [ ] En menos de cinco segundos se entiende cuántos servidores existen, cuáles están activos y cuáles necesitan atención.
-- [ ] La pantalla se siente específica para administrar mundos de ARK y no como un dashboard genérico.
-- [ ] Las acciones frecuentes requieren menos decisiones sin ocultar capacidades avanzadas.
+- [x] En menos de cinco segundos se entiende cuántos servidores existen, cuáles están activos y cuáles necesitan atención (resumen + badge ámbar + espina/acción primaria por fila).
+- [x] La pantalla se siente específica para administrar mundos de ARK y no como un dashboard genérico (Paleo-Tech en Overview/SteamCMD/Registros; sin métricas decorativas).
+- [x] Las acciones frecuentes requieren menos decisiones sin ocultar capacidades avanzadas (una primaria contextual; secundarias en kebab; “Nuevo servidor” como CTA del header).
 
 Validación del bloque 2.3 (2026-07-24):
 
@@ -229,7 +229,7 @@ Auditoría UX/UI posterior al bloque 2.6 (2026-07-24):
 - [x] Simplificar filtros de categorías del editor INI: selector único con cantidades y opciones disponibles por archivo.
 - [x] Registros usa el alto del viewport, scroll interno y una jerarquía master-detail compacta que prioriza la consola sobre metadatos y superficies decorativas.
 - [x] Diferenciar jerarquía en SteamCMD: estado operativo, contexto técnico y consola tienen pesos y alturas acordes a su importancia.
-- [ ] Revisar el exceso de vacío del Overview en `2560×1440` sin convertirlo nuevamente en un dashboard de métricas.
+- [x] Revisar el exceso de vacío del Overview en `2560×1440` sin convertirlo nuevamente en un dashboard de métricas.
 
 Validación del bloque 2.7 — microtextura Tek (2026-07-24):
 
@@ -315,6 +315,29 @@ Validación del bloque 2.14 — densidad y jerarquía de Actualizaciones (2026-0
 - [x] Typecheck, build y tests focalizados de Registros: 2/2.
 - [x] Eventos, Ejecución, Actualizaciones y Respaldos revisados con Playwright/Electron en `1280×720`, `1920×1080` y `2560×1440`.
 - [x] Sin overflow global, recortes en metadatos prioritarios, errores de consola ni excepciones del renderer.
+
+Validación del bloque 2.17 — design review de cierre Iteración 2 (2026-07-24):
+
+- [x] Badge operativo “N necesitan atención” (sin instalar / update / error) junto al resumen de servidores.
+- [x] “Verificar actualizaciones” del header pasó a `subtle` para no competir con “Nuevo servidor”.
+- [x] Meta “Archivos” en tono warn cuando falta instalación o hay update.
+- [x] Protocolo visual: `npm run build` + `node scripts/visual-iter2-review.cjs` en `1280×720`, `1920×1080` y `2560×1440`.
+- [x] Pantallas: Overview, SteamCMD, Registros (Eventos/Actualizaciones), Workspace (Servidor / Archivos INI / Mods).
+- [x] Evidencia QHD: resumen `2 servidores · ninguno activo`, badge `2 necesitan atención`, primarias `Actualizar`/`Instalar`, sin overflow ni errores de consola.
+- [x] Tests focalizados Overview + ServerCard: 9/9; typecheck y build correctos.
+- [x] Diferidos explícitos: icono final de distribución; Paleo-Tech en placeholders Clusters/Backups/Settings; RCON avanzado en consola.
+
+Validación del bloque 2.16 — Overview en QHD/2K (2026-07-24):
+
+- [x] Retirado el tope estrecho de `1680 px`; el contenido útil crece hasta `2200–2400 px`.
+- [x] A partir de `1600 px`, servidores y actividad reciente pasan a layout paralelo con panel sticky (sin métricas decorativas).
+- [x] Documentado en `docs/design-direction.md` bajo “Overview en pantallas amplias”.
+- [x] Typecheck y tests focalizados de Overview / ServerCard.
+- [x] Protocolo visual (`docs/visual-testing.md`) con `npm run build` + `node scripts/visual-overview.cjs`.
+- [x] Resoluciones: `1280×720` (apilado), `1600×900` (paralelo), `1920×1080` (paralelo), `2560×1440` (paralelo; overview ≈ `2312 px`, servidores ≈ `1796 px`, actividad `400 px`).
+- [x] Sin overflow horizontal, errores de consola ni `pageerror` en las cuatro capturas.
+- [x] CTA primaria “Nuevo servidor” visible; actividad no compite con la lista en 720p (queda debajo).
+- [x] Script reutilizable: `scripts/visual-overview.cjs` (capturas en `%TEMP%\ark-gbo-visual-overview`).
 
 Validación del bloque 2.15 — SteamCMD operativo y superficies azul‑obsidiana (2026-07-24):
 
@@ -418,14 +441,14 @@ Criterio de cierre:
 
 Antes de marcar una iteración como completada:
 
-- [ ] Prueba visual del build real según `docs/visual-testing.md` en `1280×720`, `1920×1080` y `2560×1440`.
-- [ ] Claridad: la pantalla se entiende en menos de cinco segundos.
-- [ ] Jerarquía: lo más importante es lo más visible.
-- [ ] Acciones: la acción principal destaca y las secundarias no compiten.
-- [ ] Consistencia: se reutilizan patrones y componentes existentes.
-- [ ] Espaciado: las secciones respiran sin desperdiciar espacio.
-- [ ] Escalabilidad: el diseño admite más servidores y settings.
-- [ ] Profesionalismo: no hay placeholders, contenido simulado ni acabados provisionales visibles.
+- [x] Prueba visual del build real según `docs/visual-testing.md` en `1280×720`, `1920×1080` y `2560×1440` (Iteración 2: `scripts/visual-iter2-review.cjs`).
+- [x] Claridad: la pantalla se entiende en menos de cinco segundos.
+- [x] Jerarquía: lo más importante es lo más visible.
+- [x] Acciones: la acción principal destaca y las secundarias no compiten.
+- [x] Consistencia: se reutilizan patrones y componentes existentes.
+- [x] Espaciado: las secciones respiran sin desperdiciar espacio.
+- [x] Escalabilidad: el diseño admite más servidores y settings.
+- [x] Profesionalismo: no hay placeholders, contenido simulado ni acabados provisionales visibles en los flujos activos (placeholders de rutas no migradas quedan fuera del cierre).
 
 ## Pruebas y verificacion actual
 - [x] Unit tests verdes.
@@ -449,9 +472,9 @@ Antes de marcar una iteración como completada:
 - Criterio aplicado: cada check se marcó como `[x]` solo cuando existe evidencia funcional vigente; si hay implementación parcial o desalineada, se marcó `[-]`; si no hay evidencia o está roto, `[ ]`.
 
 ## Siguiente prioridad recomendada
-1. Revisar el uso del espacio del Overview en QHD/2K.
-2. Retomar Startup Parameters y las páginas funcionales de Backups, Clusters y Settings.
-3. Gestion avanzada de mods para ASA mediante CurseForge.
+1. Completar Iteración 3 (Smart Config): bloques **3.3** (ampliar/validar selección curada) y **3.4** (asistente tras crear servidor).
+2. Página funcional de **Backups** (backend ya existe); después Clusters y Settings.
+3. Diferido: CurseForge avanzado, partir `ConfigurationEditor`, icono final de distribución, RCON en consola avanzada.
 
 ## Regla de mantenimiento
 - Cada vez que se complete una tarea, actualizar este archivo en el mismo cambio.

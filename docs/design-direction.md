@@ -157,6 +157,14 @@ Este patrón puede reutilizarse en otras pantallas con un área de trabajo
 central, siempre que los paneles desplazados sean contexto o acciones
 secundarias y no información imprescindible para completar la tarea principal.
 
+### Overview en pantallas amplias
+
+En Overview, a partir de `1600 px` la lista de servidores y la actividad
+reciente se presentan en paralelo. La actividad ocupa una columna estrecha y
+sticky; no se rellenan huecos con métricas decorativas. El contenido útil
+crece hasta aproximadamente `2200–2400 px` para evitar márgenes muertos en
+QHD/2K.
+
 ## Filtros de catálogos densos
 
 Las colecciones extensas de filtros no se representan como filas de badges o

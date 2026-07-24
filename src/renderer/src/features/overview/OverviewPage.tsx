@@ -4,7 +4,6 @@ import type {
   ServerProfile,
   ServerRuntimeInfo,
 } from "@shared/types";
-import { Stack } from "@mantine/core";
 import { OverviewHeader } from "./components/OverviewHeader";
 import { RecentActivityPanel } from "./components/RecentActivityPanel";
 import { ServerGrid } from "./components/ServerGrid";
@@ -57,7 +56,7 @@ export function OverviewPage(props: Props): JSX.Element {
         checkingUpdates={props.checkingUpdates}
       />
 
-      <Stack gap="lg" className={classes.content}>
+      <div className={classes.content} data-overview-content>
         <ServerGrid
           search={props.search}
           onSearchChange={props.onSearchChange}
@@ -98,7 +97,7 @@ export function OverviewPage(props: Props): JSX.Element {
           loading={props.loading ?? false}
           onViewAll={props.onViewAllActivity}
         />
-      </Stack>
+      </div>
     </div>
   );
 }

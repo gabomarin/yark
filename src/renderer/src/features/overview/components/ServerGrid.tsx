@@ -1,6 +1,7 @@
 import { HardDrives, MagnifyingGlass, Plus } from "@phosphor-icons/react";
-import { Button, Skeleton, Stack, Text, Title, VisuallyHidden } from "@mantine/core";
+import { Badge, Button, Group, Skeleton, Stack, Text, Title, VisuallyHidden } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import { getServerUpdateState } from "@shared/server-update-status";
 import { ServerCard } from "@features/servers/components/ServerCard/ServerCard";
 import { SearchField } from "@ui/SearchField/SearchField";
 import classes from "../OverviewPage.module.css";
@@ -58,6 +59,22 @@ export function ServerGrid(props: Props): JSX.Element {
         }`
       : "";
 
+  const attentionCount = props.filteredServers.reduce((count, server) => {
+    const status = props.statuses.get(server.id)?.status ?? "stopped";
+    const installation = props.installationInfo.get(server.id) ?? null;
+    if (status === "error") return count + 1;
+    if (installation?.installed !== true) return count + 1;
+    if (getServerUpdateState(installation) === "available") return count + 1;
+    return count;
+  }, 0);
+
+  const attentionLabel =
+    attentionCount === 0
+      ? null
+      : attentionCount === 1
+        ? "1 necesita atención"
+        : `${attentionCount} necesitan atención`;
+
   return (
     <section
       className={classes.serverSection}
@@ -69,10 +86,26 @@ export function ServerGrid(props: Props): JSX.Element {
           <Title order={2} id="server-list-title" className={classes.serverSectionTitle}>
             Tus servidores
           </Title>
-          <Text c="dimmed" size="sm">
-            {totalLabel} · {runningLabel}
-            {filteredLabel}
-          </Text>
+          <Group gap="sm" align="center" wrap="wrap" className={classes.serverSummaryRow}>
+            <Text
+              c="dimmed"
+              size="sm"
+              data-server-summary
+            >
+              {totalLabel} · {runningLabel}
+              {filteredLabel}
+            </Text>
+            {attentionLabel !== null && (
+              <Badge
+                size="sm"
+                color="orange"
+                variant="light"
+                data-attention-count={attentionCount}
+              >
+                {attentionLabel}
+              </Badge>
+            )}
+          </Group>
         </div>
 
         {!props.loading && props.servers.length > 0 && (

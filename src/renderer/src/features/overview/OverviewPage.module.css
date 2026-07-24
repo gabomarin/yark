@@ -1,9 +1,9 @@
 .page {
   width: 100%;
-  max-width: 1680px;
+  max-width: 2200px;
   min-height: 100vh;
   margin: 0 auto;
-  padding: 20px 24px 24px;
+  padding: 20px 28px 28px;
 }
 
 .header {
@@ -31,13 +31,17 @@
 }
 
 .content {
-  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
 }
 
 .serverSection {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-width: 0;
 }
 
 .serverSectionHeader {
@@ -51,8 +55,12 @@
   font-size: 20px;
 }
 
+.serverSummaryRow {
+  margin-top: 4px;
+}
+
 .serverSearch {
-  width: min(100%, 340px);
+  width: min(100%, 360px);
 }
 
 .serverGrid {
@@ -132,6 +140,7 @@
   gap: 12px;
   padding-top: 18px;
   border-top: 1px solid var(--app-color-border);
+  min-width: 0;
 }
 
 .recentList {
@@ -186,6 +195,46 @@
 
 .event-error {
   color: var(--app-color-bad);
+}
+
+/* Escritorio amplio: servidores + actividad en paralelo (llena 2K sin métricas). */
+@media (min-width: 1600px) {
+  .page {
+    padding: 24px 32px 32px;
+  }
+
+  .content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+    align-items: start;
+    gap: 28px;
+  }
+
+  .recentSection {
+    position: sticky;
+    top: 20px;
+    padding: 16px 16px 14px;
+    border-top: 0;
+    border: 1px solid var(--app-color-border-subtle);
+    border-radius: var(--app-radius-md);
+    background: color-mix(in srgb, var(--app-color-surface-panel) 88%, transparent);
+  }
+
+  .serverSearch {
+    width: min(100%, 400px);
+  }
+}
+
+@media (min-width: 2200px) {
+  .page {
+    max-width: 2400px;
+    padding-inline: 40px;
+  }
+
+  .content {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+    gap: 36px;
+  }
 }
 
 @media (max-width: 700px) {
