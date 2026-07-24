@@ -23,7 +23,7 @@ const server = {
 };
 
 describe("OverviewPage", () => {
-  it("renders page header, stats, server list and recent activity", () => {
+  it("renders the operational server list and recent activity", () => {
     const { container } = render(
       <AppProviders>
         <OverviewPage
@@ -34,10 +34,6 @@ describe("OverviewPage", () => {
           servers={[server]}
           filteredServers={[server]}
           runningServers={0}
-          okClusters={0}
-          warningsCount={0}
-          updatesAvailableCount={0}
-          reports={[]}
           statuses={new Map()}
           installationInfo={new Map()}
           events={[]}
@@ -61,14 +57,19 @@ describe("OverviewPage", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Servidores", level: 1 })).toBeInTheDocument();
-    expect(screen.getByText(/Servidores \(1\)/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Tus servidores" })).toBeInTheDocument();
+    expect(screen.getByText("1 servidor configurado · ninguno activo")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Buscar servidores" })).toBeInTheDocument();
     expect(screen.getByText("Actividad reciente")).toBeInTheDocument();
     expect(screen.getByText("The Island")).toBeInTheDocument();
+    expect(screen.queryByText("Advertencias")).not.toBeInTheDocument();
 
     const header = container.querySelector("header");
     expect(header).not.toBeNull();
     const nextSection = header?.nextElementSibling as HTMLElement | null;
     expect(nextSection).not.toBeNull();
-    expect(within(nextSection as HTMLElement).getByText(/Servidores \(1\)/)).toBeInTheDocument();
+    expect(
+      within(nextSection as HTMLElement).getByRole("heading", { name: "Tus servidores" }),
+    ).toBeInTheDocument();
   });
 });

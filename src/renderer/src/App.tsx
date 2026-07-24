@@ -38,7 +38,7 @@ export function App(): JSX.Element {
   const [installationInfo, setInstallationInfo] = useState<
     Map<string, ServerInstallationInfo>
   >(new Map());
-  const [reports, setReports] = useState<ClusterComplianceReport[]>([]);
+  const [, setReports] = useState<ClusterComplianceReport[]>([]);
   const [events, setEvents] = useState<AppEvent[]>([]);
   const [steamCmdStatus, setSteamCmdStatus] = useState<SteamCmdStatus | null>(null);
   const [steamCmdConsole, setSteamCmdConsole] = useState<SteamCmdConsoleSnapshot | null>(null);
@@ -68,17 +68,6 @@ export function App(): JSX.Element {
   const officialVersion = Array.from(installationInfo.values())
     .map((info) => info.officialVersion)
     .find((value): value is string => value != null && value.trim().length > 0) ?? null;
-
-  const warningsCount = events.filter(
-    (event) => event.severity === "warning" || event.severity === "error",
-  ).length;
-
-  const okClusters = reports.filter((report) => report.ok).length;
-
-  const updatesAvailableCount = Array.from(installationInfo.values()).filter((info) => {
-    const local = info.arkVersion ?? info.build;
-    return info.installed && info.officialVersion != null && local != null && info.officialVersion !== local;
-  }).length;
 
   const filteredServers = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -496,10 +485,6 @@ export function App(): JSX.Element {
               servers={servers}
               filteredServers={filteredServers}
               runningServers={runningServers}
-              okClusters={okClusters}
-              warningsCount={warningsCount}
-              updatesAvailableCount={updatesAvailableCount}
-              reports={reports}
               statuses={statuses}
               installationInfo={installationInfo}
               events={events}

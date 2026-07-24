@@ -1,13 +1,11 @@
 import type {
   AppEvent,
-  ClusterComplianceReport,
   ServerInstallationInfo,
   ServerProfile,
   ServerRuntimeInfo,
 } from "@shared/types";
 import { Stack } from "@mantine/core";
 import { OverviewHeader } from "./components/OverviewHeader";
-import { OverviewStats } from "./components/OverviewStats";
 import { RecentActivityPanel } from "./components/RecentActivityPanel";
 import { ServerGrid } from "./components/ServerGrid";
 import classes from "./OverviewPage.module.css";
@@ -21,10 +19,6 @@ interface Props {
   servers: ServerProfile[];
   filteredServers: ServerProfile[];
   runningServers: number;
-  okClusters: number;
-  warningsCount: number;
-  updatesAvailableCount: number;
-  reports: ClusterComplianceReport[];
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
   events: AppEvent[];
@@ -55,28 +49,20 @@ interface Props {
 
 export function OverviewPage(props: Props): JSX.Element {
   return (
-    <div className={classes.page}>
+    <div className={classes.page} data-overview-page>
       <OverviewHeader
-        search={props.search}
-        onSearchChange={props.onSearchChange}
         onCreateServer={props.onCreateServer}
         onCheckUpdates={props.onCheckUpdates}
         checkingUpdates={props.checkingUpdates}
       />
 
       <Stack gap="lg" className={classes.content}>
-        <OverviewStats
-          totalServers={props.servers.length}
-          runningServers={props.runningServers}
-          okClusters={props.okClusters}
-          totalClusters={props.reports.length}
-          updatesAvailableCount={props.updatesAvailableCount}
-          warningsCount={props.warningsCount}
-        />
-
         <ServerGrid
+          search={props.search}
+          onSearchChange={props.onSearchChange}
           servers={props.servers}
           filteredServers={props.filteredServers}
+          runningServers={props.runningServers}
           statuses={props.statuses}
           installationInfo={props.installationInfo}
           steamCmdServerId={props.steamCmdServerId ?? null}

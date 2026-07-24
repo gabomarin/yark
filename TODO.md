@@ -168,8 +168,8 @@ Objetivo: hacer que la pantalla principal priorice servidores y problemas que
 requieren atención, con una identidad propia de centro de operaciones de mundos
 ARK sin convertirse en una interfaz gamer.
 
-- [-] Presentar y aprobar una propuesta incremental de layout antes de implementarla (revisión visual realizada; propuesta presentada, pendiente de aprobación).
-- [ ] Sustituir el dashboard de métricas por un resumen operativo compacto y accionable.
+- [x] Presentar y aprobar una propuesta incremental de layout antes de implementarla.
+- [x] Sustituir el dashboard de métricas por un resumen operativo compacto y accionable (bloque 2.1: métricas retiradas, búsqueda contextual y ancho útil limitado).
 - [ ] Simplificar `ServerCard` y mostrar solo información real y prioritaria.
 - [ ] Definir una única acción primaria contextual por estado del servidor.
 - [ ] Mover RCON fuera de la tarjeta hacia el workspace o la futura consola.

@@ -1,11 +1,15 @@
-import { Card, Stack, Text, Title } from "@mantine/core";
+import { Stack, Text, Title } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { ServerCard } from "@features/servers/components/ServerCard/ServerCard";
+import { SearchField } from "@ui/SearchField/SearchField";
 import classes from "../OverviewPage.module.css";
 
 interface Props {
+  search: string;
+  onSearchChange: (value: string) => void;
   servers: ServerProfile[];
   filteredServers: ServerProfile[];
+  runningServers: number;
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
   steamCmdServerId: string | null;
@@ -35,14 +39,53 @@ interface Props {
 }
 
 export function ServerGrid(props: Props): JSX.Element {
-  return (
-    <Card withBorder className={classes.sectionCard}>
-      <Stack gap="md">
-        <Title order={3}>
-          Servidores ({props.filteredServers.length}
-          {props.filteredServers.length !== props.servers.length ? ` de ${props.servers.length}` : ""})
-        </Title>
+  const totalLabel =
+    props.servers.length === 1
+      ? "1 servidor configurado"
+      : `${props.servers.length} servidores configurados`;
+  const runningLabel =
+    props.runningServers === 0
+      ? "ninguno activo"
+      : props.runningServers === 1
+        ? "1 activo"
+        : `${props.runningServers} activos`;
+  const filteredLabel =
+    props.filteredServers.length !== props.servers.length
+      ? ` · ${props.filteredServers.length} ${
+          props.filteredServers.length === 1 ? "resultado" : "resultados"
+        }`
+      : "";
 
+  return (
+    <section
+      className={classes.serverSection}
+      aria-labelledby="server-list-title"
+      data-server-list
+    >
+      <div className={classes.serverSectionHeader}>
+        <div>
+          <Title order={2} id="server-list-title" className={classes.serverSectionTitle}>
+            Tus servidores
+          </Title>
+          <Text c="dimmed" size="sm">
+            {totalLabel} · {runningLabel}
+            {filteredLabel}
+          </Text>
+        </div>
+
+        {props.servers.length > 0 && (
+          <div className={classes.serverSearch}>
+            <SearchField
+              value={props.search}
+              onChange={props.onSearchChange}
+              label="Buscar servidores"
+              placeholder="Buscar por nombre, mapa o cluster"
+            />
+          </div>
+        )}
+      </div>
+
+      <Stack gap="md">
         {props.servers.length === 0 && (
           <Text c="dimmed">No hay servidores configurados. Crea el primero con “Nuevo servidor”.</Text>
         )}
@@ -100,6 +143,6 @@ export function ServerGrid(props: Props): JSX.Element {
           ))}
         </div>
       </Stack>
-    </Card>
+    </section>
   );
 }
