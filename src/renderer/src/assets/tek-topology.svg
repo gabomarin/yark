@@ -1,0 +1,52 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="640"
+  height="640"
+  viewBox="0 0 640 640"
+  fill="none"
+>
+  <g stroke="#90b5ff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" opacity=".025">
+    <!-- Fragmentos que continúan de forma exacta en los bordes horizontales -->
+    <path d="M-40 118 58 184 142 148 206 216" />
+    <path d="M600 118 698 184 782 148 846 216" />
+    <path d="M-54 468 42 426 112 488" />
+    <path d="M586 468 682 426 752 488" />
+
+    <!-- Fragmentos que continúan de forma exacta en los bordes verticales -->
+    <path d="M214-42 276 42 246 126 326 168" />
+    <path d="M214 598 276 682 246 766 326 808" />
+    <path d="M494-36 542 34 518 96" />
+    <path d="M494 604 542 674 518 736" />
+
+    <!-- Geometría paleo-tecnológica interior -->
+    <path d="M142 148 206 216 172 278 92 278" />
+    <path d="M206 216 306 198 374 258" />
+    <path d="M374 258 430 166 514 210" />
+    <path d="M306 198 344 118 414 88" />
+    <path d="M112 488 198 438 286 500 368 456" />
+    <path d="M286 500 326 566 420 548" />
+    <path d="M430 166 486 118 554 152" />
+
+    <!-- Estructuras parciales, deliberadamente asimétricas -->
+    <path d="M62 336 88 320 116 336 116 368 88 384" />
+    <path d="M470 390 504 370 538 390 538 430 504 450 476 434" />
+    <path d="M392 316 432 294 472 316" />
+    <path d="M392 316 392 360 430 382" />
+
+    <!-- Curvas de estrato que rompen la rigidez geométrica -->
+    <path d="M150 354c52-34 112-36 166-6 42 23 80 25 120 8" />
+    <path d="M174 378c44-24 92-22 136 2 34 18 70 20 104 8" />
+  </g>
+
+  <g fill="#90b5ff" opacity=".030">
+    <circle cx="142" cy="148" r="2.4" />
+    <circle cx="206" cy="216" r="2.4" />
+    <circle cx="374" cy="258" r="2.4" />
+    <circle cx="286" cy="500" r="2.4" />
+  </g>
+
+  <g stroke="#d9a85f" stroke-width="1" stroke-linecap="round" opacity=".018">
+    <path d="M430 548 474 518 526 542" />
+    <circle cx="474" cy="518" r="2.5" fill="#d9a85f" stroke="none" />
+  </g>
+</svg>

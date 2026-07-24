@@ -4,7 +4,7 @@
   width: 100%;
   min-width: 0;
   border-right: 1px solid var(--app-color-border);
-  background: rgba(15, 20, 28, 0.55);
+  background: color-mix(in srgb, var(--ark-gray-1) 55%, transparent);
   min-height: 0;
   overflow: hidden;
 }
@@ -42,15 +42,30 @@
   border: 1px solid transparent;
   text-align: left;
   color: inherit;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
 }
 
 .item:hover {
-  background: rgba(36, 50, 69, 0.55);
+  background: var(--ark-gray-a2);
 }
 
 .item[data-selected] {
-  background: rgba(85, 166, 255, 0.12);
-  border-color: rgba(85, 166, 255, 0.35);
+  background:
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--ark-gray-2) 88%, var(--ark-blue-4)) 0%,
+      color-mix(in srgb, var(--ark-gray-2) 97%, var(--ark-blue-2)) 100%
+    );
+  border-color: var(--ark-blue-a3);
+  box-shadow: inset 3px 0 0 var(--ark-blue-9);
+}
+
+.item[data-selected] .thumb {
+  border-color: var(--ark-blue-a5);
+  background: var(--ark-blue-a2);
 }
 
 .thumb {
@@ -60,7 +75,8 @@
   height: 40px;
   flex-shrink: 0;
   border-radius: 10px;
-  background: linear-gradient(180deg, rgba(85, 166, 255, 0.18), rgba(64, 211, 159, 0.1));
+  border: 1px solid color-mix(in srgb, var(--app-color-cryo) 24%, var(--app-color-border));
+  background: color-mix(in srgb, var(--app-color-cryo) 8%, var(--app-color-panel));
   color: var(--app-color-accent);
 }
 

@@ -21,7 +21,7 @@
   flex-direction: column;
   gap: 4px;
   padding: 10px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--ark-gray-a3);
 }
 
 .eventRow:first-child {
@@ -44,14 +44,14 @@
   text-align: left;
   padding: 12px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(36, 50, 69, 0.3);
+  border: 1px solid var(--ark-gray-a3);
+  background: var(--ark-gray-a2);
   color: var(--app-color-text);
 }
 
 .updateRowActive {
-  border-color: rgba(85, 166, 255, 0.48);
-  background: rgba(85, 166, 255, 0.14);
+  border-color: var(--ark-blue-a6);
+  background: var(--ark-blue-a3);
 }
 
 .detailsGrid {
@@ -66,7 +66,7 @@
   gap: 4px;
   padding: 10px 12px;
   border-radius: 14px;
-  background: rgba(36, 50, 69, 0.3);
+  background: var(--ark-gray-a2);
 }
 
 .detailLabel {
@@ -83,9 +83,9 @@
   margin: 0;
   padding: 12px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: #10141d;
-  color: #d8e7ff;
+  border: 1px solid var(--ark-gray-a3);
+  background: var(--ark-gray-1);
+  color: var(--ark-blue-12);
   font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
   font-size: 12px;
   line-height: 1.45;

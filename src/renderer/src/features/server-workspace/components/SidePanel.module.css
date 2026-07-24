@@ -6,7 +6,7 @@
   gap: 10px;
   padding: 12px;
   border-left: 1px solid var(--app-color-border);
-  background: rgba(15, 20, 28, 0.45);
+  background: color-mix(in srgb, var(--ark-gray-1) 45%, transparent);
   overflow: auto;
   min-height: 0;
 }

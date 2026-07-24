@@ -2,8 +2,15 @@
   position: relative;
   overflow: hidden;
   border-radius: var(--app-radius-md);
-  border-color: var(--app-color-border);
-  background: var(--app-color-panel);
+  border-color: color-mix(in srgb, var(--app-color-border) 72%, var(--ark-blue-7));
+  background-color: var(--app-color-panel-cool);
+  background-image:
+    linear-gradient(
+      108deg,
+      var(--app-color-panel-cool-emphasis) 0%,
+      var(--app-color-panel-cool) 52%,
+      color-mix(in srgb, var(--app-color-panel-cool) 72%, var(--app-color-panel)) 100%
+    );
   box-shadow: var(--app-shadow-panel);
   max-width: 100%;
   transition:
@@ -14,8 +21,10 @@
 .card::before {
   position: absolute;
   inset: 0 auto 0 0;
-  width: 3px;
+  z-index: 2;
+  width: 4px;
   background: var(--app-color-border);
+  clip-path: polygon(0 0, 100% 0, 100% 38%, 55% 42%, 100% 46%, 100% 100%, 0 100%);
   content: "";
 }
 
@@ -37,9 +46,18 @@
 
 .card:hover {
   border-color: color-mix(in srgb, var(--app-color-border) 55%, var(--app-color-accent));
+  background-image:
+    linear-gradient(
+      108deg,
+      color-mix(in srgb, var(--app-color-panel-cool-emphasis) 88%, var(--ark-blue-4)) 0%,
+      color-mix(in srgb, var(--app-color-panel-cool) 92%, var(--ark-blue-3)) 56%,
+      color-mix(in srgb, var(--app-color-panel-cool) 76%, var(--app-color-panel)) 100%
+    );
 }
 
 .mainRow {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 18px;
@@ -69,7 +87,7 @@
 }
 
 .cardHit:focus-visible {
-  outline: 2px solid rgba(85, 166, 255, 0.65);
+  outline: 2px solid var(--ark-blue-a8);
   outline-offset: 2px;
 }
 
@@ -89,7 +107,7 @@
   height: 40px;
   flex-shrink: 0;
   border: 1px solid var(--app-color-border);
-  border-radius: 10px;
+  border-radius: 12px 7px 12px 7px;
   background: color-mix(in srgb, var(--app-color-accent) 9%, var(--app-color-panel));
   color: var(--app-color-accent);
   transition:
@@ -163,13 +181,17 @@
 }
 
 .progressBlock {
+  position: relative;
+  z-index: 1;
   padding: 8px 10px;
   border-radius: 10px;
-  border: 1px solid rgba(85, 166, 255, 0.22);
-  background: rgba(85, 166, 255, 0.08);
+  border: 1px solid var(--ark-blue-a4);
+  background: var(--ark-blue-a2);
 }
 
 .runtimeError {
+  position: relative;
+  z-index: 1;
   padding-left: 52px;
 }
 

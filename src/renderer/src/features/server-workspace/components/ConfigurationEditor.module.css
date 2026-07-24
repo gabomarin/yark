@@ -42,7 +42,7 @@
   border: 1px solid var(--app-color-border);
   border-radius: 12px;
   overflow: hidden;
-  background: rgba(15, 20, 28, 0.35);
+  background: color-mix(in srgb, var(--ark-gray-1) 35%, transparent);
 }
 
 .tableHead,
@@ -56,7 +56,7 @@
 
 .tableHead {
   flex-shrink: 0;
-  background: rgba(36, 50, 69, 0.7);
+  background: var(--ark-gray-4);
   color: var(--app-color-muted);
   font-size: 12px;
   font-weight: 700;
@@ -75,13 +75,13 @@
   gap: 12px;
   width: 100%;
   padding: 10px 14px;
-  background: rgba(85, 166, 255, 0.08);
+  background: var(--ark-blue-a2);
   color: inherit;
   text-align: left;
 }
 
 .sectionHeader:hover {
-  background: rgba(85, 166, 255, 0.14);
+  background: var(--ark-blue-a3);
 }
 
 .sectionPath {
@@ -114,7 +114,7 @@
   padding: 10px 12px;
   border: 1px solid var(--app-color-border);
   border-radius: 12px;
-  background: rgba(15, 20, 28, 0.35);
+  background: color-mix(in srgb, var(--ark-gray-1) 35%, transparent);
 }
 
 .rawEditor {

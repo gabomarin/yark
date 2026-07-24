@@ -175,10 +175,10 @@ ARK sin convertirse en una interfaz gamer.
 - [-] Mover RCON fuera de la tarjeta hacia el workspace o la futura consola (retirado del Overview; acciones rápidas en workspace, comando personalizado pendiente de la consola avanzada).
 - [x] Mejorar estados vacíos, carga, error, instalación y actualización (skeletons de carga, primer servidor y búsqueda sin resultados completan los estados del Overview).
 - [x] Compactar Actividad reciente a cinco eventos operativos, retirar el ruido RCON del resumen y conservar acceso directo a Registros.
-- [ ] Reducir gradientes, sombras y tarjetas anidadas.
-- [ ] Introducir una dirección visual propia: base obsidiana, azul criogénico, ámbar fósil, verde biomasa y motivos topográficos sutiles.
-- [ ] Diseñar una marca propia para la aplicación sin depender del logo antiguo de ARK Survival Evolved.
-- [ ] Validar el layout en ventanas de escritorio amplias y compactas.
+- [x] Reducir gradientes, sombras y tarjetas anidadas (superficies planas, profundidad mediante contraste y sombras reservadas para elementos flotantes).
+- [-] Introducir una dirección visual propia: primer pase Paleo-Tech aplicado y documentado en `docs/design-direction.md`; falta extenderlo gradualmente a pantallas secundarias.
+- [-] Diseñar una marca propia para la aplicación sin depender del logo antiguo de ARK Survival Evolved (símbolo biotecnológico inicial en el sidebar; pendiente icono final de distribución).
+- [x] Validar el layout en ventanas de escritorio amplias y compactas.
 
 Criterio de cierre:
 
@@ -194,6 +194,69 @@ Validación del bloque 2.3 (2026-07-24):
 - [x] Estado de búsqueda sin resultados y navegación a Registros verificados.
 - [x] Sin overflow horizontal, errores de consola ni excepciones del renderer.
 - [x] Actividad reciente limitada a cinco eventos relevantes y sin comandos RCON.
+
+Validación del bloque 2.4 — identidad Paleo-Tech (2026-07-24):
+
+- [x] Typecheck y build.
+- [x] Tests conjuntos de AppShell, Overview, Actividad reciente, ServerCard y workspace: 11/11.
+- [x] Overview y workspace revisados con Playwright en `1280×720`, `1920×1080` y `2560×1440`.
+- [x] Sin overflow horizontal, errores CSP, errores de consola ni excepciones del renderer.
+- [x] Gradientes decorativos retirados del renderer activo y patrón topográfico empaquetado como asset local.
+
+Validación del bloque 2.5 — paleta Radix personalizada (2026-07-24):
+
+- [x] Escalas completas de azul, gris neutral y alpha integradas como tokens del renderer, con variantes Display P3/OKLCH.
+- [x] Tokens semánticos y variables internas de Mantine alineados con la misma fuente de color.
+- [x] Estados de foco, hover y selección migrados desde colores heredados a niveles alpha de Radix.
+- [x] Typecheck, build y tests focalizados de AppShell, Overview, Actividad reciente, ServerCard y workspace: 11/11.
+- [x] Overview, workspace, Registros y SteamCMD revisados con Playwright en `1280×720`, `1920×1080` y `2560×1440`.
+- [x] Sin overflow horizontal, errores de consola ni excepciones del renderer en las doce capturas.
+
+Validación del bloque 2.6 — Obsidian Atmosphere (2026-07-24):
+
+- [x] Sidebar y lienzo unificados mediante una transición azul noche–obsidiana.
+- [x] Degradados limitados al ambiente, navegación activa y filas operativas; acciones y superficies de trabajo conservan claridad.
+- [x] Tokens semánticos de panel y borde enfriados sin modificar las escalas Radix originales.
+- [x] Typecheck, build y tests focalizados de AppShell, Overview, ServerCard y workspace: 9/9.
+- [x] Overview y workspace revisados con Playwright en `1280×720`, `1920×1080` y `2560×1440`.
+- [x] Sin overflow horizontal, errores de consola ni excepciones del renderer.
+
+Auditoría UX/UI posterior al bloque 2.6 (2026-07-24):
+
+- [ ] Reequilibrar la escala de superficies: panel/input mide aproximadamente `1.13:1` y panel/borde `1.51:1`, mientras el texto principal alcanza `14.35:1`.
+- [ ] Reducir la mezcla de temperaturas entre lienzo azul, paneles grises, laterales negros y campos neutrales; definir niveles de elevación semánticos.
+- [ ] Dar más ancho útil al editor INI en `1280×720`: sidebar global, lista de servidores, editor y acciones laterales compiten simultáneamente.
+- [ ] Simplificar filtros de categorías del editor INI en ventanas compactas; los chips azules ocupan el foco visual antes que los ajustes.
+- [ ] Sustituir el gran contenedor gris de Registros por una composición de lista; la vista actual genera una página de aproximadamente `4342 px` de alto.
+- [ ] Diferenciar jerarquía en SteamCMD: estado, ruta, caché y consola usan superficies con prácticamente el mismo peso.
+- [ ] Revisar el exceso de vacío del Overview en `2560×1440` sin convertirlo nuevamente en un dashboard de métricas.
+
+Validación del bloque 2.7 — microtextura Tek (2026-07-24):
+
+- [x] SVG continuo propio con geometría fragmentada, conexiones, nodos y estratos; sin dependencias ni recursos externos.
+- [x] Textura empaquetada como asset local de menos de `2 KB`, sin `currentColor`, rutas absolutas ni `background-attachment: fixed`.
+- [x] Curvas topográficas macro conservadas como capa independiente.
+- [x] Repetición presentada a `720×720` y atenuada mediante máscara vertical para proteger las áreas de contenido.
+- [x] Typecheck, build y tests focalizados de AppShell, Overview y workspace: 5/5.
+- [x] Overview, workspace y Registros revisados con Playwright en `1280×720`, `1920×1080` y `2560×1440`.
+- [x] Sin costuras visibles, overflow horizontal, errores de consola ni excepciones del renderer.
+
+Validación del bloque 2.8 — selección de servidor (2026-07-24):
+
+- [x] Relleno azul intenso sustituido por una superficie oscura con contaminación azul mínima.
+- [x] Selección comunicada mediante indicador lateral, borde tenue y énfasis del icono.
+- [x] Build y test focalizado del workspace: 1/1.
+- [x] Workspace revisado con Playwright en `1280×720`, `1920×1080` y `2560×1440`.
+- [x] Sin overflow horizontal, errores de consola ni excepciones del renderer.
+
+Validación del bloque 2.9 — contenedores de servidor (2026-07-24):
+
+- [x] Superficie gris sustituida por una mezcla semántica azul noche–obsidiana.
+- [x] Nuevos tokens `--app-color-panel-cool` y `--app-color-panel-cool-emphasis` disponibles para contenedores operativos.
+- [x] Skeletons y estados vacíos del listado alineados con la misma temperatura visual.
+- [x] Typecheck, build y tests focalizados de Overview y ServerCard: 6/6.
+- [x] Overview revisado con Playwright en `1280×720`, `1920×1080` y `2560×1440`.
+- [x] Sin overflow horizontal, errores de consola ni excepciones del renderer.
 
 ### Iteración 3 — Smart Configuration
 

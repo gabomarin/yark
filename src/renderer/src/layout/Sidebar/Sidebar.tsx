@@ -1,6 +1,7 @@
 import {
   ArrowsClockwise,
   Circle,
+  Dna,
   FileText,
   HardDrives,
   SquaresFour,
@@ -43,10 +44,12 @@ export function Sidebar(props: Props): JSX.Element {
   return (
     <MantineStack gap="md" className={classes.sidebar}>
       <Group gap="sm" className={classes.brand}>
-        <HardDrives size={24} weight="duotone" className={classes.brandIcon} />
-        <div>
+        <div className={classes.brandMark} aria-hidden="true">
+          <Dna size={20} weight="duotone" className={classes.brandIcon} />
+        </div>
+        <div className={classes.brandCopy}>
           <Text fw={700}>ARK Server GBO</Text>
-          <Text size="sm" c="dimmed">Panel multi-servidor local</Text>
+          <Text size="xs" c="dimmed">Operaciones de mundos ASA</Text>
         </div>
       </Group>
 
@@ -96,7 +99,9 @@ export function Sidebar(props: Props): JSX.Element {
 
       <div className={classes.versionChip}>
         <Text size="xs" fw={600}>Versión oficial</Text>
-        <Text size="sm">{props.officialVersion ?? "No detectada"}</Text>
+        <Text size="sm" className={classes.versionValue}>
+          {props.officialVersion ?? "No detectada"}
+        </Text>
       </div>
 
       <Text size="xs" c="dimmed">v{props.appVersion}</Text>

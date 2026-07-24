@@ -34,7 +34,12 @@ body,
 }
 
 body {
-  background: var(--app-color-bg);
+  background: var(--ark-gray-1);
   color: var(--app-color-text);
   font-family: "Segoe UI", Arial, sans-serif;
+}
+
+::selection {
+  color: var(--app-color-text);
+  background: color-mix(in srgb, var(--app-color-cryo) 32%, transparent);
 }

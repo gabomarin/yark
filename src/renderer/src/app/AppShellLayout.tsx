@@ -2,6 +2,7 @@ import { AppShell } from "@mantine/core";
 import { Alert, CloseButton, Group, Stack } from "@mantine/core";
 import { Sidebar, type Route } from "@layout/Sidebar/Sidebar";
 import type { PropsWithChildren } from "react";
+import classes from "./AppShellLayout.module.css";
 
 interface Props extends PropsWithChildren {
   route: Route;
@@ -22,18 +23,12 @@ export function AppShellLayout({ children, ...sidebarProps }: Props): JSX.Elemen
     <AppShell
       navbar={{ width: 248, breakpoint: "sm" }}
       padding={0}
-      styles={{
-        main: {
-          minHeight: "100vh",
-          background: "transparent",
-        },
-      }}
     >
       <AppShell.Navbar>
         <Sidebar {...shellProps} />
       </AppShell.Navbar>
-      <AppShell.Main>
-        <Stack gap={0}>
+      <AppShell.Main className={classes.main}>
+        <Stack gap={0} className={classes.content}>
           {error !== null && (
             <Alert
               color="red"

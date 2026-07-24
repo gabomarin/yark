@@ -1,0 +1,56 @@
+.main {
+  position: relative;
+  min-height: 100vh;
+  isolation: isolate;
+  background-color: var(--ark-gray-1);
+  background-image:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 16%),
+    linear-gradient(180deg, transparent 76%, rgba(0, 0, 0, 0.12)),
+    radial-gradient(ellipse 62% 52% at 88% -8%, var(--ark-blue-a4), transparent 68%),
+    radial-gradient(
+      ellipse 42% 34% at 58% 108%,
+      color-mix(in srgb, var(--app-color-fossil) 7%, transparent),
+      transparent 72%
+    ),
+    linear-gradient(135deg, var(--ark-background) 0%, #0d111b 46%, #111214 100%);
+}
+
+.main::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("../assets/topography.svg?no-inline");
+  background-repeat: no-repeat;
+  background-position: right top;
+  background-size: min(760px, 62vw) auto;
+  content: "";
+}
+
+.main::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("../assets/tek-topology.svg?no-inline");
+  background-repeat: repeat;
+  background-position: 24px 18px;
+  background-size: 720px 720px;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.2),
+    rgba(0, 0, 0, 0.5) 38%,
+    #000 78%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.2),
+    rgba(0, 0, 0, 0.5) 38%,
+    #000 78%
+  );
+  content: "";
+}
+
+.content {
+  min-height: 100vh;
+}

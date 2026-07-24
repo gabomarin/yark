@@ -1,8 +1,10 @@
-import { render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import { ServerCard } from "./ServerCard";
+
+afterEach(cleanup);
 
 const profile = {
   id: "srv-1",
@@ -111,7 +113,9 @@ describe("ServerCard", () => {
     expect(card.queryByRole("button", { name: /^Iniciar$/i })).not.toBeInTheDocument();
 
     await user.click(card.getByRole("button", { name: "Más opciones" }));
-    expect(screen.getByRole("menuitem", { name: "Detener de forma segura" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("menuitem", { name: "Detener de forma segura" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Reiniciar" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Abrir carpeta" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Eliminar servidor$/i })).not.toBeInTheDocument();
