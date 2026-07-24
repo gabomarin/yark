@@ -35,6 +35,14 @@ export function SteamCmdProgressDock(props: Props): JSX.Element {
           status.progressBytesTotal,
         )
       : null;
+  const stateLabel = (() => {
+    const raw = status.progressLabel ?? status.lastLine ?? "En curso…";
+    // Evitar duplicar "Descargando · X MB" + "Descargado: X MB"
+    if (byteProgress !== null && raw.includes(" · ")) {
+      return raw.split(" · ")[0]!.trim();
+    }
+    return raw;
+  })();
 
   return (
     <aside className={classes.dock} aria-live="polite">
@@ -51,11 +59,11 @@ export function SteamCmdProgressDock(props: Props): JSX.Element {
               </Text>
             )}
             <Text size="sm" mt={4}>
-              {status.progressLabel ?? status.lastLine ?? "En curso…"}
+              {stateLabel}
             </Text>
             {byteProgress !== null && (
-              <Text size="xs" c="dimmed">
-                Descargado: {byteProgress}
+              <Text size="sm" fw={600} mt={2}>
+                {byteProgress}
               </Text>
             )}
           </div>

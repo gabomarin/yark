@@ -2,7 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { EventEmitter } from "node:events";
 import { dirname, join } from "node:path";
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import type { SteamCmdConsoleSnapshot, SteamCmdStatus } from "../../../shared/types";
 import { parseSteamCmdProgressLine } from "../../../shared/steamcmd-progress";
@@ -22,6 +22,15 @@ import {
   resolveSteamCmdHome,
   syncAsaContentCacheToInstallDir,
 } from "./steamcmd-content-cache";
+import {
+  estimateProgressFromDisk,
+  measureInstallDownloadingBytes,
+  readConsoleLogSince,
+  readInstallAppManifestProgress,
+  steamCmdConsoleLogPath,
+} from "./steamcmd-disk-progress";
+import { formatSteamCmdByteProgress } from "../../../shared/steamcmd-progress";
+import { ASA_APP_ID } from "./steamcmd-content-cache";
 
 const MAX_STEAMCMD_LINES = 500;
 const CRITICAL_JOBS_KEY = "criticalJobsQueue.v1";
@@ -87,6 +96,15 @@ export class UpdateService extends EventEmitter {
   private lastProgressConsoleLogAtMs = 0;
   private lastProgressConsoleLoggedPercent: number | null = null;
   private steamCmdOutputBuffers = new Map<string, string>();
+  /** Última vez que stdout de SteamCMD aportó un % real (no estimado). */
+  private lastOfficialProgressAtMs = 0;
+  private diskProgressTimer: ReturnType<typeof setInterval> | null = null;
+  private diskProgressInFlight = false;
+  private diskProgressForceInstallDir: string | null = null;
+  private diskProgressSteamCmdHome: string | null = null;
+  private diskProgressBaselineBytes = 0;
+  private consoleLogOffset = 0;
+  private lastDiskEstimateConsoleAtMs = 0;
 
   constructor(
     private readonly servers: ServerRepository,
@@ -249,6 +267,7 @@ export class UpdateService extends EventEmitter {
     }
 
     this.cancelRequested = true;
+    this.stopDiskProgressMonitor();
     this.appendSteamCmdConsole(
       `Cancelando operación (steamcmd=${this.activeSteamCmd?.child.pid ?? "n/a"}, sync=${this.activeSyncChild?.pid ?? "n/a"}, jobs=${this.queue.length})`,
     );
@@ -683,14 +702,23 @@ export class UpdateService extends EventEmitter {
     this.appendSteamCmdConsole(
       `[invoke] op=${operation} server=${serverId} cwd=${steamCmdHome} cmd=${steamcmdExe} args=${args.join(" ")}`,
     );
+    this.appendSteamCmdConsole(
+      "Progreso en vivo: se lee logs/console_log.txt + appmanifest/downloading de esta instalación (stdout de SteamCMD suele ir bufferizado).",
+    );
 
     return await new Promise<CommandResult>((resolve, reject) => {
       const child = spawn(steamcmdExe, args, {
         cwd: steamCmdHome,
         windowsHide: true,
         shell: false,
+        env: {
+          ...process.env,
+          // Intento best-effort; builds recientes pueden ignorarlo.
+          STEAMCMD_OUTPUT_BUFFERS: "0",
+        },
       });
       this.beginSteamCmdProcess(child, operation, serverId);
+      this.startDiskProgressMonitor(steamCmdHome, forceInstallDir);
 
       let stdout = "";
       let stderr = "";
@@ -707,6 +735,7 @@ export class UpdateService extends EventEmitter {
       });
 
       child.once("error", (error) => {
+        this.stopDiskProgressMonitor();
         this.endSteamCmdProcess(child);
         reject(
           new Error(
@@ -716,6 +745,7 @@ export class UpdateService extends EventEmitter {
       });
 
       child.once("exit", (code) => {
+        this.stopDiskProgressMonitor();
         this.endSteamCmdProcess(child);
         if (this.cancelRequested) {
           reject(new OperationCancelledError());
@@ -728,6 +758,144 @@ export class UpdateService extends EventEmitter {
         });
       });
     });
+  }
+
+  /**
+   * Progreso sin depender del pipe stdout:
+   * - tail de logs/console_log.txt (tiempo casi real)
+   * - appmanifest BytesDownloaded de ESTA instalación
+   * - tamaño de steamapps/downloading bajo force_install_dir
+   */
+  private startDiskProgressMonitor(steamCmdHome: string, forceInstallDir: string): void {
+    this.stopDiskProgressMonitor();
+    this.diskProgressForceInstallDir = forceInstallDir;
+    this.diskProgressSteamCmdHome = steamCmdHome;
+    this.lastOfficialProgressAtMs = 0;
+    this.lastDiskEstimateConsoleAtMs = 0;
+
+    const logPath = steamCmdConsoleLogPath(steamCmdHome);
+    if (existsSync(logPath)) {
+      try {
+        this.consoleLogOffset = statSync(logPath).size;
+      } catch {
+        this.consoleLogOffset = 0;
+      }
+    } else {
+      this.consoleLogOffset = 0;
+    }
+
+    void measureInstallDownloadingBytes(forceInstallDir).then((baseline) => {
+      if (this.diskProgressForceInstallDir !== forceInstallDir) {
+        return;
+      }
+      this.diskProgressBaselineBytes = baseline;
+    });
+
+    this.appendSteamCmdConsole(`Siguiendo log en vivo: ${logPath}`);
+
+    this.diskProgressTimer = setInterval(() => {
+      void this.tickDiskProgressEstimate();
+    }, 400);
+  }
+
+  private stopDiskProgressMonitor(): void {
+    if (this.diskProgressTimer !== null) {
+      clearInterval(this.diskProgressTimer);
+      this.diskProgressTimer = null;
+    }
+    this.diskProgressForceInstallDir = null;
+    this.diskProgressSteamCmdHome = null;
+    this.diskProgressInFlight = false;
+  }
+
+  private async tickDiskProgressEstimate(): Promise<void> {
+    const installDir = this.diskProgressForceInstallDir;
+    const steamCmdHome = this.diskProgressSteamCmdHome;
+    if (installDir === null || steamCmdHome === null || this.diskProgressInFlight || this.cancelRequested) {
+      return;
+    }
+
+    this.diskProgressInFlight = true;
+    try {
+      // 1) Consola en vivo desde console_log.txt (prioridad para %/MB)
+      const logChunk = await readConsoleLogSince(steamCmdHome, this.consoleLogOffset);
+      this.consoleLogOffset = logChunk.nextOffset;
+      if (logChunk.text.length > 0) {
+        this.captureSteamCmdOutput(logChunk.text, "console_log");
+      }
+
+      // Si console_log/stdout ya aportó progreso reciente, NO pisar con appmanifest (suele ir atrasado).
+      if (
+        this.lastOfficialProgressAtMs > 0
+        && Date.now() - this.lastOfficialProgressAtMs < 5_000
+      ) {
+        return;
+      }
+
+      // 2) Fallback: appmanifest de ESTA instalación
+      const manifest = await readInstallAppManifestProgress(installDir, ASA_APP_ID);
+      if (
+        manifest !== null
+        && manifest.bytesDownloaded !== null
+        && manifest.bytesToDownload !== null
+        && manifest.bytesToDownload > 0
+      ) {
+        this.progressBytesDownloaded = manifest.bytesDownloaded;
+        this.progressBytesTotal = manifest.bytesToDownload;
+        if (manifest.percent !== null) {
+          this.progressPercent = manifest.percent;
+        }
+        this.progressLabel = `Descargando · ${formatSteamCmdByteProgress(
+          manifest.bytesDownloaded,
+          manifest.bytesToDownload,
+        )}`;
+        this.lastProgressLine = this.progressLabel;
+        this.emitProgress(true);
+        return;
+      }
+
+      // 3) Fallback: tamaño de downloading/temp solo bajo force_install_dir
+      const bytesOnDisk = await measureInstallDownloadingBytes(installDir);
+      if (this.diskProgressForceInstallDir !== installDir || this.cancelRequested) {
+        return;
+      }
+      const estimate = estimateProgressFromDisk(
+        bytesOnDisk,
+        this.progressBytesTotal,
+        this.diskProgressBaselineBytes,
+      );
+      if (estimate.downloaded < 1_000_000 && estimate.deltaBytes < 1_000_000) {
+        return;
+      }
+
+      this.progressPercent = estimate.percent;
+      this.progressBytesDownloaded = estimate.downloaded;
+      this.progressBytesTotal = estimate.total;
+      this.progressLabel = `Descargando (estimado) · ${formatSteamCmdByteProgress(
+        estimate.downloaded,
+        estimate.total,
+      )}`;
+      this.lastProgressLine = this.progressLabel;
+      this.emitProgress(true);
+
+      const now = Date.now();
+      if (now - this.lastDiskEstimateConsoleAtMs >= 5000) {
+        this.lastDiskEstimateConsoleAtMs = now;
+        this.steamCmdConsoleLines.push(
+          `[${new Date().toISOString()}] [estimado/downloading] ${estimate.percent.toFixed(1)}% — ${formatSteamCmdByteProgress(estimate.downloaded, estimate.total)}`,
+        );
+        if (this.steamCmdConsoleLines.length > MAX_STEAMCMD_LINES) {
+          this.steamCmdConsoleLines.splice(
+            0,
+            this.steamCmdConsoleLines.length - MAX_STEAMCMD_LINES,
+          );
+        }
+        this.steamCmdConsoleUpdatedAt = new Date().toISOString();
+        this.emitProgress(true);
+      }
+    } finally {
+      this.diskProgressInFlight = false;
+    }
   }
 
   private assertNotCancelled(): void {
@@ -910,7 +1078,11 @@ export class UpdateService extends EventEmitter {
   }
 
   private handleSteamCmdOutputLine(line: string, source: string): void {
-    const bare = line.replace(/^\[(?:update|verify)\/(?:stdout|stderr)\]\s*/i, "");
+    // Quitar prefijos de fuente y timestamps propios de console_log.txt
+    const bare = line
+      .replace(/^\[(?:(?:update|verify)\/(?:stdout|stderr)|console_log)\]\s*/i, "")
+      .replace(/^\[\d{4}-\d{2}-\d{2}[^\]]*\]\s*/, "")
+      .trim();
     const parsed = parseSteamCmdProgressLine(bare);
     const isProgressTick = parsed.percent !== null;
 
@@ -930,6 +1102,7 @@ export class UpdateService extends EventEmitter {
         this.progressBytesTotal = parsed.bytesTotal;
       }
       this.lastProgressLine = bare;
+      this.lastOfficialProgressAtMs = Date.now();
 
       const percentChanged =
         previousPercent === null
@@ -977,6 +1150,9 @@ export class UpdateService extends EventEmitter {
     }
     if (parsed.bytesTotal !== null) {
       this.progressBytesTotal = parsed.bytesTotal;
+    }
+    if (parsed.percent !== null || parsed.bytesDownloaded !== null) {
+      this.lastOfficialProgressAtMs = Date.now();
     }
     return percentChanged;
   }

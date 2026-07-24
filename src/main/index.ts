@@ -18,6 +18,17 @@ import type { ServerRuntimeInfo } from "../shared/types";
 
 let mainWindow: BrowserWindow | null = null;
 
+function sendToRenderer(channel: string, payload: unknown): void {
+  if (mainWindow === null || mainWindow.isDestroyed()) {
+    return;
+  }
+  const { webContents } = mainWindow;
+  if (webContents.isDestroyed()) {
+    return;
+  }
+  webContents.send(channel, payload);
+}
+
 function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
     width: 1280,
@@ -32,6 +43,12 @@ function createWindow(): BrowserWindow {
       nodeIntegration: false,
       sandbox: false,
     },
+  });
+
+  win.on("closed", () => {
+    if (mainWindow === win) {
+      mainWindow = null;
+    }
   });
 
   if (process.env["ELECTRON_RENDERER_URL"] !== undefined) {
@@ -83,11 +100,11 @@ void app.whenReady().then(() => {
   registerIpcHandlers(instances, repo, iniService, logsService, updateService);
 
   processManager.on("status", (info: ServerRuntimeInfo) => {
-    mainWindow?.webContents.send(IPC_PUSH.serverStatus, info);
+    sendToRenderer(IPC_PUSH.serverStatus, info);
   });
 
   updateService.on("progress", (payload: SteamCmdProgressPush) => {
-    mainWindow?.webContents.send(IPC_PUSH.steamCmdProgress, payload);
+    sendToRenderer(IPC_PUSH.steamCmdProgress, payload);
   });
 
   mainWindow = createWindow();
@@ -99,7 +116,12 @@ void app.whenReady().then(() => {
   });
 
   app.on("before-quit", (event) => {
-    updateService.cancelSteamCmd();
+    // Cancelar SteamCMD/sync pendientes al salir (sin exigir UI viva).
+    try {
+      updateService.cancelSteamCmd();
+    } catch {
+      // Ignorar: la app se está cerrando.
+    }
     const profiles = repo.list();
     const anyActive = profiles.some((p) => processManager.isActive(p.id));
     if (anyActive) {
