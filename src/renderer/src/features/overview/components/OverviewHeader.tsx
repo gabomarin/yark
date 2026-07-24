@@ -39,7 +39,7 @@ export function OverviewHeader({
         <Checkbox
           checked={openNativeTerminalOnStart}
           onChange={(event) => onOpenNativeTerminalOnStartChange(event.currentTarget.checked)}
-          label="Abrir CMD nativo al iniciar servidor"
+          label="Mostrar consola del servidor al iniciar"
         />
       </Stack>
     </header>

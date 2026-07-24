@@ -10,6 +10,7 @@ import {
   inferControlKind,
   isClientNoiseKey,
   parseIniRows,
+  resolveControlKind,
   setIniValue,
 } from "../../src/renderer/src/features/server-workspace/iniModel";
 
@@ -44,12 +45,28 @@ LastJoinedSessionPerCategory=Tres
     expect(rows[0]?.duplicateCount).toBe(3);
   });
 
-  it("strips client keys so they are never persisted for dedicated servers", () => {
+  it("strips client sections/keys so they are never persisted for dedicated servers", () => {
     const cleaned = stripClientIniKeys(sample);
     expect(cleaned).toContain("MaxPlayers=70");
-    expect(cleaned).toContain("ResolutionSizeX=1280");
+    expect(cleaned).not.toContain("ShooterGameUserSettings");
+    expect(cleaned).not.toContain("ResolutionSizeX");
     expect(cleaned).not.toContain("LastJoinedSessionPerCategory");
     expect(cleaned).not.toContain("bUseVSync");
+  });
+
+  it("hides client graphics sections from dedicated editor filters", () => {
+    expect(isClientNoiseKey("LastJoinedSessionPerCategory")).toBe(true);
+    expect(isClientNoiseKey("GraphicsQuality", "/Script/ShooterGame.ShooterGameUserSettings")).toBe(
+      true,
+    );
+    expect(isClientNoiseKey("sg.ShadowQuality", "ScalabilityGroups")).toBe(true);
+    expect(isClientNoiseKey("MaxPlayers", "/Script/Engine.GameSession")).toBe(false);
+    expect(inferControlKind("True")).toBe("boolean");
+    const rows = parseIniRows(sample);
+    const filtered = filterIniRows(rows, "", "all");
+    expect(filtered.some((row) => row.key === "LastJoinedSessionPerCategory")).toBe(false);
+    expect(filtered.some((row) => row.key === "ResolutionSizeX")).toBe(false);
+    expect(filtered.some((row) => row.key === "MaxPlayers")).toBe(true);
   });
 
   it("updates a specific duplicate occurrence", () => {
@@ -77,12 +94,28 @@ LastJoinedSessionPerCategory=Tres
     expect(next).toContain("MaxPlayers=40");
   });
 
-  it("hides client noise keys from dedicated editor filters", () => {
-    expect(isClientNoiseKey("LastJoinedSessionPerCategory")).toBe(true);
-    expect(inferControlKind("True")).toBe("boolean");
-    const rows = parseIniRows(sample);
-    const filtered = filterIniRows(rows, "", "all");
-    expect(filtered.some((row) => row.key === "LastJoinedSessionPerCategory")).toBe(false);
-    expect(filtered.some((row) => row.key === "MaxPlayers")).toBe(true);
+  it("keeps string settings as text even when the value looks numeric", () => {
+    expect(
+      resolveControlKind("928988", {
+        valueType: "list of mod IDs, comma-separated with no spaces",
+        key: "ActiveMods",
+      }),
+    ).toBe("text");
+    expect(
+      resolveControlKind("1", {
+        valueType: "string",
+        key: "SessionName",
+      }),
+    ).toBe("text");
+    expect(
+      resolveControlKind("1234", { key: "ServerPassword" }),
+    ).toBe("text");
+    expect(
+      resolveControlKind("70", {
+        valueType: "integer",
+        key: "MaxPlayers",
+      }),
+    ).toBe("number");
+    expect(resolveControlKind("True", { valueType: "boolean" })).toBe("boolean");
   });
 });

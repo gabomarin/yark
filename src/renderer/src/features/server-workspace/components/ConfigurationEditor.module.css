@@ -131,6 +131,13 @@
   word-break: break-all;
 }
 
+.sourceBanner {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(85, 166, 255, 0.28);
+  background: rgba(36, 70, 110, 0.28);
+}
+
 .modRow {
   padding: 10px 12px;
   border: 1px solid #32465e;

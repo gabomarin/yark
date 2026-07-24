@@ -2,7 +2,6 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
-import { parseIniTextRows } from "@shared/ini-text";
 
 const defaultsDir = join(__dirname, "../../src/shared/defaults");
 
@@ -23,9 +22,11 @@ describe("ini defaults from shared/defaults", () => {
     expect(defaultGameIni).toContain("bAllowFlyerSpeedLeveling=False");
   });
 
-  it("does not reintroduce client-only session history keys", () => {
-    expect(defaultGameUserSettingsIni).not.toContain("LastJoinedSessionPerCategory");
-    const keys = parseIniTextRows(defaultGameUserSettingsIni).map((row) => row.key);
-    expect(keys.some((key) => /LastJoinedSessionPerCategory/i.test(key))).toBe(false);
+  it("matches shared/defaults files exactly (no wiki merge)", () => {
+    const source = readFileSync(join(defaultsDir, "GameUserSettings.ini"), "utf8")
+      .replace(/^\uFEFF/, "")
+      .replace(/\r\n/g, "\n");
+    const normalized = source.endsWith("\n") ? source : `${source}\n`;
+    expect(defaultGameUserSettingsIni).toBe(normalized);
   });
 });

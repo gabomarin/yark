@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
@@ -72,6 +73,8 @@ export class IniService {
 
     const gameUserSettingsPath = this.gameUserSettingsPath(server.installDir);
     const gameIniPath = this.gameIniPath(server.installDir);
+    const gameUserSettingsExisted = existsSync(gameUserSettingsPath);
+    const gameIniExisted = existsSync(gameIniPath);
 
     const [gameUserSettings, game] = await Promise.all([
       this.readTextOrDefault(gameUserSettingsPath, defaultGameUserSettingsIni),
@@ -82,6 +85,8 @@ export class IniService {
       serverId,
       gameUserSettingsPath,
       gameIniPath,
+      gameUserSettingsExisted,
+      gameIniExisted,
       payload: {
         gameUserSettings,
         game,

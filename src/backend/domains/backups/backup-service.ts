@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { cp, mkdir, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { randomUUID } from "node:crypto";
@@ -157,8 +158,12 @@ export class BackupService {
       await rm(configDir, { recursive: true, force: true });
       await mkdir(savedArksDir, { recursive: true });
       await mkdir(configDir, { recursive: true });
-      await cp(backupSaved, savedArksDir, { recursive: true, force: true });
-      await cp(backupConfig, configDir, { recursive: true, force: true });
+      if (existsSync(backupSaved)) {
+        await cp(backupSaved, savedArksDir, { recursive: true, force: true });
+      }
+      if (existsSync(backupConfig)) {
+        await cp(backupConfig, configDir, { recursive: true, force: true });
+      }
 
       this.servers.addEvent(
         serverId,
@@ -266,14 +271,31 @@ export class BackupService {
 
       const savedArks = this.savedArksDir(server);
       const config = this.configDir(server);
-      await cp(savedArks, join(targetDir, "SavedArks"), {
-        recursive: true,
-        force: true,
-      });
-      await cp(config, join(targetDir, "ConfigWindowsServer"), {
-        recursive: true,
-        force: true,
-      });
+      const savedArksDest = join(targetDir, "SavedArks");
+      const configDest = join(targetDir, "ConfigWindowsServer");
+      let savedArksPresent = false;
+      let configPresent = false;
+
+      // Servidor nuevo: aún no hay mundo (SavedArks). No bloquear update/backup.
+      if (existsSync(savedArks)) {
+        await cp(savedArks, savedArksDest, {
+          recursive: true,
+          force: true,
+        });
+        savedArksPresent = true;
+      } else {
+        await mkdir(savedArksDest, { recursive: true });
+      }
+
+      if (existsSync(config)) {
+        await cp(config, configDest, {
+          recursive: true,
+          force: true,
+        });
+        configPresent = true;
+      } else {
+        await mkdir(configDest, { recursive: true });
+      }
 
       await writeFile(
         join(targetDir, "manifest.json"),
@@ -290,6 +312,8 @@ export class BackupService {
               id: record.id,
               type,
               createdAt: record.createdAt,
+              savedArksPresent,
+              configPresent,
             },
           },
           null,
@@ -304,11 +328,15 @@ export class BackupService {
         throw new Error("No se pudo marcar el backup como completado");
       }
 
+      const missingHint =
+        !savedArksPresent
+          ? " (sin SavedArks aún — servidor sin mundo guardado)"
+          : "";
       this.servers.addEvent(
         serverId,
         "backup_created",
         "info",
-        `Backup ${type} completado para \"${server.name}\" (${this.humanSize(sizeBytes)})`,
+        `Backup ${type} completado para \"${server.name}\" (${this.humanSize(sizeBytes)})${missingHint}`,
       );
 
       await this.applyRetention(serverId, policy);

@@ -40,6 +40,8 @@ describe("ServerWorkspacePage", () => {
           serverId,
           gameUserSettingsPath: `C:/ARK/${serverId}/GameUserSettings.ini`,
           gameIniPath: `C:/ARK/${serverId}/Game.ini`,
+          gameUserSettingsExisted: true,
+          gameIniExisted: true,
           payload: {
             gameUserSettings: `[ServerSettings]\nMaxPlayers=70\nAllowFlyerCarryPVE=True\n`,
             game: `[/Script/ShooterGame.ShooterGameMode]\nXPMultiplier=1.0\n`,

@@ -20,7 +20,7 @@ The current state is:
 - The shared shell and new navigation are already active.
 - The Overview, SteamCMD, and Logs pages have already been migrated to the new renderer.
 - Opening INI from Overview launches the new Server Workspace (3-column editor with quick server switching).
-- Canonical INI defaults live in `src/shared/defaults/` (commented community templates); ASA catalog may append missing server keys.
+- Canonical INI defaults live in `src/shared/defaults/` (commented community templates). The ASA wiki catalog is editor metadata only and is not merged into those defaults.
 - The Clusters, Backups, and Settings pages still function as visual placeholders within the new shell.
 - Real integration with host-side ASA binaries and SteamCMD remains pending for E2E validation.
 

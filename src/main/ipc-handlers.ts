@@ -92,20 +92,22 @@ export function registerIpcHandlers(
   ipcMain.handle(IPC.serversOpenNativeTerminal, (_e, id: string) =>
     wrap(() => {
       const folderPath = instances.installDirFor(id);
-      const title = `ARK Server ${id}`;
-      const command =
-        `title ${title} && cd /d "${folderPath}"` +
+      // Windows `start`: first quoted token is ALWAYS the window title — use "".
+      // Pass one /c string + windowsVerbatimArguments so Node does not re-quote
+      // paths with spaces (that produced "sintaxis de la etiqueta del volumen...").
+      const windowTitle = `ARK-${id.slice(0, 8)}`;
+      const quotedDir = `"${folderPath.replace(/"/g, "")}"`;
+      const keepAlive =
+        `title ${windowTitle}` +
         " && echo Servidor iniciado desde ARK Manager." +
-        " && echo Salida en vivo disponible en Logs > Runtime.";
-      const child = spawn(
-        "cmd.exe",
-        ["/c", "start", `"${title}"`, "cmd.exe", "/k", command],
-        {
-          detached: true,
-          windowsHide: false,
-          stdio: "ignore",
-        },
-      );
+        " && echo Salida en vivo disponible en Logs / Runtime.";
+      const payload = `start "" /D ${quotedDir} cmd.exe /k "${keepAlive}"`;
+      const child = spawn("cmd.exe", ["/c", payload], {
+        detached: true,
+        windowsHide: false,
+        stdio: "ignore",
+        windowsVerbatimArguments: true,
+      });
       child.unref();
     }),
   );

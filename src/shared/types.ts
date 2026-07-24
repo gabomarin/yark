@@ -100,6 +100,13 @@ export interface StartServerOptions {
    * que no exponen RCON.
    */
   skipReadinessCheck?: boolean;
+  /**
+   * Abre la consola nativa de Windows del proceso ArkAscendedServer
+   * (salida en vivo del dedicated). En Electron no se puede redirigir
+   * esa consola y a la vez capturar pipes; los logs Runtime de la app
+   * quedan limitados a mensajes de sistema.
+   */
+  openNativeConsole?: boolean;
 }
 
 export interface PortConflict {
@@ -213,6 +220,10 @@ export interface ServerIniSnapshot {
   serverId: string;
   gameUserSettingsPath: string;
   gameIniPath: string;
+  /** True si el archivo ya existía en disco antes de esta lectura. */
+  gameUserSettingsExisted: boolean;
+  /** True si el archivo ya existía en disco antes de esta lectura. */
+  gameIniExisted: boolean;
   payload: ServerIniPayload;
 }
 

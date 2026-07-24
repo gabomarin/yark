@@ -219,13 +219,15 @@ export function App(): JSX.Element {
         await refresh();
         return;
       }
-      const startRes = await window.api.startServer(id);
+      const startRes = await window.api.startServer(id, {
+        openNativeConsole: openNativeTerminalOnStart,
+      });
       if (!startRes.ok) {
         setError(startRes.error ?? "No se pudo reiniciar el servidor");
       }
       await refresh();
     },
-    [refresh],
+    [openNativeTerminalOnStart, refresh],
   );
 
   const openLogsForServer = useCallback((serverId: string, section: LogsSection = "events") => {
@@ -238,17 +240,13 @@ export function App(): JSX.Element {
   const startServerAndOpenRuntimeLogs = useCallback(
     async (id: string) => {
       setError(null);
-      const startRes = await window.api.startServer(id);
+      const startRes = await window.api.startServer(id, {
+        openNativeConsole: openNativeTerminalOnStart,
+      });
       if (!startRes.ok) {
         setError(startRes.error ?? "No se pudo iniciar el servidor");
         await refresh();
         return;
-      }
-      if (openNativeTerminalOnStart) {
-        const terminalRes = await window.api.openServerNativeTerminal(id);
-        if (!terminalRes.ok) {
-          setError(terminalRes.error ?? "Servidor iniciado, pero no se pudo abrir CMD nativo");
-        }
       }
       openLogsForServer(id, "runtime");
       await refresh();
@@ -282,7 +280,13 @@ export function App(): JSX.Element {
             onSelectServer={(serverId) => setOverlay({ kind: "workspace", serverId })}
             onBack={() => setOverlay(null)}
             onCreateServer={() => setOverlay({ kind: "create" })}
-            onStartServer={(id) => void runAction(() => window.api.startServer(id))}
+            onStartServer={(id) =>
+              void runAction(() =>
+                window.api.startServer(id, {
+                  openNativeConsole: openNativeTerminalOnStart,
+                }),
+              )
+            }
             onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
             onRestartServer={(id) => void restartServer(id)}
             onKillServer={(id) => void runAction(() => window.api.killServer(id))}

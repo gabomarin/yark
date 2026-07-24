@@ -50,9 +50,15 @@ describe("asa-server-settings catalog", () => {
   it("builds GameUserSettings defaults with ServerSettings and AutoSavePeriodMinutes", () => {
     expect(defaultGameUserSettingsIni).toContain("[ServerSettings]");
     expect(defaultGameUserSettingsIni).toMatch(/AutoSavePeriodMinutes=/i);
+    // Catalog-only builder still works for tooling; runtime defaults come from shared/defaults.
     const fromCatalogOnly = buildDefaultIniText("gameUserSettings");
     expect(fromCatalogOnly).toContain("[ServerSettings]");
     expect(fromCatalogOnly).toMatch(/AutoSavePeriodMinutes=/i);
+  });
+
+  it("does not merge wiki catalog additions into runtime defaults", () => {
+    expect(defaultGameUserSettingsIni).not.toContain("ASA catalog additions");
+    expect(defaultGameIni).not.toContain("ASA catalog additions");
   });
 
   it("builds Game.ini defaults with BabyMatureSpeedMultiplier", () => {

@@ -1,16 +1,19 @@
 # Default INI templates (source of truth)
 
-These files are the **canonical defaults** for new ASA dedicated servers and for
-"Reset to defaults" in the INI editor.
+These files are the **only source of truth** for:
 
-- `GameUserSettings.ini` - `[ServerSettings]` plus kept trailing sections
+- new ASA dedicated server configs
+- "Reset to defaults" / rewriting a whole INI file in the editor
+
+- `GameUserSettings.ini` — `[ServerSettings]` plus
   `[SessionSettings]`, `[/Script/Engine.GameSession]`, and `[MessageOfTheDay]`
-  (no `[ModInstaller]`, `[Ragnarok]`, or `[MultiHome]` — ASE/noise for ASA dedicated)
-- `Game.ini` - `[/script/shootergame.shootergamemode]` gameplay multipliers
-  (no trailing `[ModInstaller]`)
+- `Game.ini` — `[/script/shootergame.shootergamemode]` gameplay multipliers
 
-They come from a community ARK settings collection (commented defaults). The app
-may append a small set of ASA server keys that are missing from these files but
-present in `asa-server-settings-data.json` (wiki-sourced).
+They come from a community ARK settings collection (commented defaults).
 
-Do not put client-only keys here (e.g. `LastJoinedSessionPerCategory`).
+The ASA wiki catalog (`asa-server-settings-data.json`) is **not** merged into
+these files. It only powers editor metadata (descriptions, value types, UI
+categories).
+
+Do not put client-only keys here (e.g. `LastJoinedSessionPerCategory`,
+graphics / `ShooterGameUserSettings` / `ScalabilityGroups`).

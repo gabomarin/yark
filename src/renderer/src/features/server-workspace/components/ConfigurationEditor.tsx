@@ -3,6 +3,7 @@ import {
   CaretDown,
   CaretRight,
   FloppyDisk,
+  FolderOpen,
   MagnifyingGlass,
   ArrowCounterClockwise,
   ArrowUUpLeft,
@@ -37,13 +38,12 @@ import {
   INI_FILTERS,
   defaultTextForFile,
   filterIniRows,
-  groupRowsBySection,
-  inferControlKind,
+  groupRowsByUiCategory,
   lookupDefaultValue,
   lookupSettingDescription,
   parseIniRows,
+  resolveControlKind,
   sanitizeServerIniPayload,
-  sectionBracketLabel,
   sectionShortName,
   setIniValue,
   textForFile,
@@ -159,7 +159,10 @@ export function ConfigurationEditor(props: Props): JSX.Element {
     () => filterIniRows(rows, search, filter, activeFileKey),
     [rows, search, filter, activeFileKey],
   );
-  const groupedRows = useMemo(() => groupRowsBySection(visibleRows), [visibleRows]);
+  const groupedRows = useMemo(
+    () => groupRowsByUiCategory(visibleRows, activeFileKey),
+    [visibleRows, activeFileKey],
+  );
 
   const updateValue = (
     rowSection: string,
@@ -212,7 +215,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
   const setAllSectionsCollapsed = (collapsed: boolean) => {
     const next: Record<string, boolean> = {};
     for (const group of groupedRows) {
-      next[group.section] = collapsed;
+      next[group.category] = collapsed;
     }
     setCollapsedSections(next);
   };
@@ -278,6 +281,50 @@ export function ConfigurationEditor(props: Props): JSX.Element {
       : activeFileKey === "game"
         ? snapshot.gameIniPath
         : snapshot.gameUserSettingsPath;
+  const fileExistedOnDisk =
+    snapshot === null
+      ? true
+      : activeFileKey === "game"
+        ? snapshot.gameIniExisted
+        : snapshot.gameUserSettingsExisted;
+  const fileLabel =
+    activeFileKey === "game" ? "Game.ini" : "GameUserSettings.ini";
+
+  const sourceBanner =
+    filePath === null ? null : (
+      <div className={classes.sourceBanner}>
+        <Group justify="space-between" align="flex-start" wrap="nowrap" gap="sm">
+          <Group gap="sm" align="flex-start" wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
+            <FolderOpen size={18} style={{ flexShrink: 0, marginTop: 2 }} />
+            <div style={{ minWidth: 0 }}>
+              <Text size="sm" fw={600}>
+                Archivo en disco · {fileLabel}
+              </Text>
+              <Text size="xs" c="dimmed" className={classes.path}>
+                Se lee y se guarda aquí:
+              </Text>
+              <Text size="xs" className={classes.path} ff="monospace">
+                {filePath}
+              </Text>
+              {!fileExistedOnDisk && (
+                <Text size="xs" c="yellow.5" mt={4}>
+                  No existía: se creó desde los defaults embebidos de la app al abrir el editor.
+                </Text>
+              )}
+            </div>
+          </Group>
+          <Button
+            size="xs"
+            variant="light"
+            leftSection={<ArrowSquareOut size={14} />}
+            onClick={() => void openExternal()}
+            disabled={busy || snapshot === null}
+          >
+            Abrir carpeta
+          </Button>
+        </Group>
+      </div>
+    );
 
   return (
     <div className={classes.root}>
@@ -314,7 +361,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                   Edit {section === "game" ? "Game.ini" : "GameUserSettings.ini"}
                 </Title>
                 <Text c="dimmed" size="sm">
-                  Campos estructurados con búsqueda y filtros. El modo Advanced permite editar el texto crudo.
+                  Agrupados por categoría UI (Rates, Dinos, Structures…). Busca o filtra por chip.
                 </Text>
               </div>
               <Group gap="xs">
@@ -355,6 +402,8 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                 </Button>
               </Group>
             </Group>
+
+            {sourceBanner}
 
             <Group gap="sm" align="center">
               <TextInput
@@ -410,30 +459,34 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                 )}
                 {!loading &&
                   groupedRows.map((group) => {
-                    const collapsed = collapsedSections[group.section] === true;
+                    const collapsed = collapsedSections[group.category] === true;
                     return (
-                      <div key={group.section} className={classes.sectionBlock}>
+                      <div key={group.category} className={classes.sectionBlock}>
                         <UnstyledButton
                           className={classes.sectionHeader}
-                          onClick={() => toggleSection(group.section)}
+                          onClick={() => toggleSection(group.category)}
                         >
                           <Group gap="xs" wrap="nowrap">
                             {collapsed ? <CaretRight size={14} /> : <CaretDown size={14} />}
                             <Text fw={700} size="sm">
-                              {sectionShortName(group.section)}
+                              {group.label}
                             </Text>
                             <Badge size="xs" variant="light" color="gray">
                               {group.rows.length}
                             </Badge>
                           </Group>
                           <Text c="dimmed" size="xs" className={classes.sectionPath}>
-                            {sectionBracketLabel(group.section)}
+                            Categoría UI
                           </Text>
                         </UnstyledButton>
 
                         {!collapsed &&
                           group.rows.map((row) => {
-                            const kind = inferControlKind(row.value);
+                            const kind = resolveControlKind(row.value, {
+                              fileKey: activeFileKey,
+                              section: row.section,
+                              key: row.key,
+                            });
                             const controlId = `${row.section}\u001f${row.key}\u001f${row.occurrence}`;
                             const defaultValue = lookupDefaultValue(
                               activeFileKey,
@@ -453,11 +506,12 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                                   <Text fw={600} size="sm">
                                     {label}
                                   </Text>
-                                  {row.duplicateCount > 1 && (
-                                    <Text c="dimmed" size="xs">
-                                      Entrada {row.occurrence + 1} de {row.duplicateCount}
-                                    </Text>
-                                  )}
+                                  <Text c="dimmed" size="xs">
+                                    {sectionShortName(row.section)}
+                                    {row.duplicateCount > 1
+                                      ? ` · ${row.occurrence + 1}/${row.duplicateCount}`
+                                      : ""}
+                                  </Text>
                                 </div>
                                 <div>
                                   {kind === "boolean" ? (
@@ -534,17 +588,9 @@ export function ConfigurationEditor(props: Props): JSX.Element {
             </div>
 
             <Group justify="space-between" className={classes.footer}>
-              <Text c="dimmed" size="xs" className={classes.path}>
-                {filePath ?? "Ruta no disponible"}
+              <Text c="dimmed" size="xs">
+                Save escribe el archivo de arriba (limpia keys de cliente al guardar).
               </Text>
-              <Button
-                variant="light"
-                leftSection={<ArrowSquareOut size={16} />}
-                onClick={() => void openExternal()}
-                disabled={busy || snapshot === null}
-              >
-                Open in Explorer
-              </Button>
             </Group>
 
             {preview !== null && preview.diff.length > 0 && (
@@ -718,6 +764,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                 </Button>
               </Group>
             </Group>
+            {sourceBanner}
             <Textarea
               className={classes.rawEditor}
               minRows={22}

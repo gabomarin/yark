@@ -2,11 +2,19 @@ import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults
 import {
   lookupAsaDefaultValue,
   lookupAsaDescription,
+  lookupAsaSetting,
 } from "@shared/asa-server-settings";
+import {
+  ASA_UI_CATEGORIES,
+  asaUiCategoryLabel,
+  resolveAsaUiCategory,
+  type AsaUiCategoryId,
+} from "@shared/asa-setting-ui-categories";
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
 import {
   INI_ROOT_SECTION,
   isClientIniKey,
+  isClientIniNoise,
   parseIniTextRows,
   sanitizeServerIniPayload,
   sectionBracketLabel,
@@ -26,28 +34,20 @@ export interface IniSettingRow {
   duplicateCount: number;
 }
 
-export type IniFilterId =
-  | "all"
-  | "general"
-  | "world"
-  | "pve"
-  | "pvp"
-  | "dinos"
-  | "structure"
-  | "other";
+export type IniFilterId = "all" | AsaUiCategoryId;
 
 export type IniControlKind = "boolean" | "number" | "text";
 
 export const INI_FILTERS: Array<{ id: IniFilterId; label: string }> = [
   { id: "all", label: "All" },
-  { id: "general", label: "General" },
-  { id: "world", label: "World" },
-  { id: "pve", label: "PvE" },
-  { id: "pvp", label: "PvP" },
-  { id: "dinos", label: "Dinos" },
-  { id: "structure", label: "Structure" },
-  { id: "other", label: "Other" },
+  ...ASA_UI_CATEGORIES.map((item) => ({ id: item.id, label: item.label })),
 ];
+
+export interface IniUiCategoryGroup {
+  category: AsaUiCategoryId;
+  label: string;
+  rows: IniSettingRow[];
+}
 
 export function textForFile(payload: ServerIniPayload, fileKey: IniFileKey): string {
   return fileKey === "gameUserSettings" ? payload.gameUserSettings : payload.game;
@@ -67,7 +67,10 @@ export function defaultTextForFile(fileKey: IniFileKey): string {
   return fileKey === "gameUserSettings" ? defaultGameUserSettingsIni : defaultGameIni;
 }
 
-export function isClientNoiseKey(key: string): boolean {
+export function isClientNoiseKey(key: string, section?: string): boolean {
+  if (section !== undefined) {
+    return isClientIniNoise(section, key);
+  }
   return isClientIniKey(key);
 }
 
@@ -76,17 +79,17 @@ export function lookupDefaultValue(
   section: string,
   key: string,
 ): string | null {
-  const fromCatalog = lookupAsaDefaultValue(fileKey, section, key);
-  if (fromCatalog !== null) {
-    return fromCatalog;
-  }
+  // Prefer shared/defaults/*.ini as source of truth; catalog is metadata only.
   const sectionLower = section.toLowerCase();
   const keyLower = key.toLowerCase();
   const match = parseIniTextRows(defaultTextForFile(fileKey)).find(
     (row) =>
       row.section.toLowerCase() === sectionLower && row.key.toLowerCase() === keyLower,
   );
-  return match?.value ?? null;
+  if (match !== undefined) {
+    return match.value;
+  }
+  return lookupAsaDefaultValue(fileKey, section, key);
 }
 
 export function lookupSettingDescription(
@@ -143,29 +146,90 @@ export function inferControlKind(value: string): IniControlKind {
   return "text";
 }
 
-export function categorizeSetting(key: string): Exclude<IniFilterId, "all"> {
-  const k = key.toLowerCase();
-  if (k.includes("pve")) return "pve";
-  if (k.includes("pvp")) return "pvp";
+/**
+ * Elige el control del editor. Prioriza valueType del catálogo ASA para no
+ * tratar SessionName / ActiveMods / URLs / passwords como NumberInput.
+ */
+export function resolveControlKind(
+  value: string,
+  options?: { valueType?: string | null; key?: string; fileKey?: IniFileKey; section?: string },
+): IniControlKind {
+  const valueType =
+    options?.valueType
+    ?? (options?.fileKey !== undefined && options.section !== undefined && options.key !== undefined
+      ? lookupAsaSetting(options.fileKey, options.section, options.key)?.valueType
+      : undefined);
+  const fromCatalog = controlKindFromValueType(valueType);
+  if (fromCatalog !== null) {
+    return fromCatalog;
+  }
+
+  const key = (options?.key ?? "").toLowerCase();
+  if (isLikelyStringSettingKey(key)) {
+    const lower = value.trim().toLowerCase();
+    if (lower === "true" || lower === "false") {
+      return "boolean";
+    }
+    return "text";
+  }
+
+  return inferControlKind(value);
+}
+
+function controlKindFromValueType(valueType: string | null | undefined): IniControlKind | null {
+  if (valueType === null || valueType === undefined) {
+    return null;
+  }
+  const vt = valueType.trim().toLowerCase();
+  if (vt.length === 0 || vt === "(...)") {
+    return null;
+  }
+  if (vt.startsWith("boolean")) {
+    return "boolean";
+  }
   if (
-    /dino|tame|egg|mate|imprint|baby|torpor|harvestxp|killxp|flyer/.test(k)
+    vt.startsWith("string")
+    || vt.includes("url")
+    || vt.includes("list of")
+    || vt.includes("mod id")
+    || vt.includes("ip_address")
+    || vt.includes("<string>")
   ) {
-    return "dinos";
-  }
-  if (/structure|building|turret|crop|platform|raft/.test(k)) {
-    return "structure";
-  }
-  if (/day|night|weather|fog|harvest|resource|world|difficulty/.test(k)) {
-    return "world";
+    return "text";
   }
   if (
-    /player|server|session|password|admin|map|crosshair|hud|chat|kick|ban|maxplayers/.test(
-      k,
+    vt.startsWith("float")
+    || vt.startsWith("integer")
+    || vt === "seconds"
+    || vt === "multiplier"
+    || vt === "value"
+  ) {
+    return "number";
+  }
+  return null;
+}
+
+function isLikelyStringSettingKey(keyLower: string): boolean {
+  if (keyLower.length === 0) {
+    return false;
+  }
+  return (
+    /password|sessionname|message|url|whitelist|banlist|token|hostname|ipaddress/.test(
+      keyLower,
     )
-  ) {
-    return "general";
-  }
-  return "other";
+    || keyLower === "activemods"
+    || keyLower === "activemapmod"
+    || keyLower === "totalconversionmod"
+    || keyLower.endsWith("name")
+  );
+}
+
+export function categorizeSetting(
+  key: string,
+  fileKey: IniFileKey = "gameUserSettings",
+  section = "ServerSettings",
+): AsaUiCategoryId {
+  return resolveAsaUiCategory(fileKey, section, key);
 }
 
 export function humanizeKey(key: string): string {
@@ -183,20 +247,22 @@ export function filterIniRows(
   fileKey?: IniFileKey,
 ): IniSettingRow[] {
   const query = search.trim().toLowerCase();
+  const resolvedFile = fileKey ?? "gameUserSettings";
   return rows.filter((row) => {
-    if (isClientIniKey(row.key)) {
+    if (isClientIniNoise(row.section, row.key)) {
       return false;
     }
-    if (filter !== "all" && categorizeSetting(row.key) !== filter) {
-      return false;
+    if (filter !== "all") {
+      const category = resolveAsaUiCategory(resolvedFile, row.section, row.key);
+      if (category !== filter) {
+        return false;
+      }
     }
     if (query.length === 0) {
       return true;
     }
-    const description =
-      fileKey !== undefined
-        ? lookupSettingDescription(fileKey, row.section, row.key)
-        : humanizeKey(row.key);
+    const description = lookupSettingDescription(resolvedFile, row.section, row.key);
+    const category = resolveAsaUiCategory(resolvedFile, row.section, row.key);
     return [
       row.section,
       sectionShortName(row.section),
@@ -204,6 +270,8 @@ export function filterIniRows(
       row.value,
       description,
       humanizeKey(row.key),
+      asaUiCategoryLabel(category),
+      category,
     ]
       .join(" ")
       .toLowerCase()
@@ -222,6 +290,38 @@ export function groupRowsBySection(
       continue;
     }
     groups.push({ section: row.section, rows: [row] });
+  }
+  return groups;
+}
+
+/** Agrupa por categoría UI (JSON heurístico), en orden de taxonomía. */
+export function groupRowsByUiCategory(
+  rows: IniSettingRow[],
+  fileKey: IniFileKey,
+): IniUiCategoryGroup[] {
+  const buckets = new Map<AsaUiCategoryId, IniSettingRow[]>();
+  for (const row of rows) {
+    const category = resolveAsaUiCategory(fileKey, row.section, row.key);
+    const list = buckets.get(category);
+    if (list !== undefined) {
+      list.push(row);
+    } else {
+      buckets.set(category, [row]);
+    }
+  }
+
+  const groups: IniUiCategoryGroup[] = [];
+  for (const def of ASA_UI_CATEGORIES) {
+    const list = buckets.get(def.id);
+    if (list === undefined || list.length === 0) {
+      continue;
+    }
+    list.sort((a, b) => a.key.localeCompare(b.key) || a.section.localeCompare(b.section));
+    groups.push({
+      category: def.id,
+      label: def.label,
+      rows: list,
+    });
   }
   return groups;
 }

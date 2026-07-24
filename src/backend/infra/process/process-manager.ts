@@ -1,4 +1,4 @@
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
 import { EventEmitter } from "node:events";
 import type {
@@ -16,6 +16,50 @@ interface ManagedProcess {
   startedAt: string;
   lastError: string | null;
   readinessGeneration: number;
+  /** Proceso envuelto en `start /WAIT` (consola nativa visible). */
+  nativeConsole: boolean;
+}
+
+function quoteCmdArg(value: string): string {
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
+/**
+ * Lanza el dedicated en una consola Windows nueva y visible.
+ * El ChildProcess es un `cmd /c start /WAIT` oculto que sigue vivo
+ * mientras corre el servidor (permite stop/kill por árbol de procesos).
+ */
+function spawnWithNativeConsole(
+  binary: string,
+  args: string[],
+  cwd: string,
+  windowTitle: string,
+): ChildProcess {
+  const parts = [
+    "start",
+    quoteCmdArg(windowTitle),
+    "/D",
+    quoteCmdArg(cwd),
+    "/WAIT",
+    quoteCmdArg(binary),
+    // Siempre entrecomillar: el mapa ASA lleva `?` y cmd lo trata como comodín.
+    ...args.map((arg) => quoteCmdArg(arg)),
+  ];
+  return spawn("cmd.exe", ["/c", parts.join(" ")], {
+    windowsHide: true,
+    windowsVerbatimArguments: true,
+    stdio: "ignore",
+    detached: false,
+  });
+}
+
+function killWinProcessTree(pid: number): boolean {
+  const result = spawnSync(
+    "taskkill",
+    ["/pid", String(pid), "/T", "/F"],
+    { windowsHide: true, stdio: "ignore" },
+  );
+  return result.status === 0;
 }
 
 export interface ProcessManagerOptions {
@@ -113,14 +157,29 @@ export class ProcessManager extends EventEmitter {
     }
 
     const args = options?.launchArgsOverride ?? buildLaunchArgs(profile);
-    const child = spawn(binary, args, {
-      cwd: profile.installDir,
-      windowsHide: true,
-      stdio: ["ignore", "pipe", "pipe"],
-      detached: false,
-    });
+    const nativeConsole = options?.openNativeConsole === true;
+    const child = nativeConsole
+      ? spawnWithNativeConsole(
+          binary,
+          args,
+          profile.installDir,
+          `ARK-${profile.id.slice(0, 8)}`,
+        )
+      : spawn(binary, args, {
+          cwd: profile.installDir,
+          windowsHide: true,
+          stdio: ["ignore", "pipe", "pipe"],
+          detached: false,
+        });
 
     this.appendRuntimeLog(profile.id, "system", `Iniciando proceso ${binary}`);
+    if (nativeConsole) {
+      this.appendRuntimeLog(
+        profile.id,
+        "system",
+        "Consola nativa del servidor abierta (salida en vivo en esa ventana)",
+      );
+    }
     if (child.stdout !== null) {
       child.stdout.on("data", (chunk) => {
         this.captureRuntimeChunk(profile.id, "stdout", String(chunk));
@@ -138,6 +197,7 @@ export class ProcessManager extends EventEmitter {
       startedAt: new Date().toISOString(),
       lastError: null,
       readinessGeneration: 0,
+      nativeConsole,
     };
     this.processes.set(profile.id, managed);
     this.emitStatus(profile.id);
@@ -226,12 +286,12 @@ export class ProcessManager extends EventEmitter {
     } catch {
       // RCON no disponible: se recurre a terminación del proceso.
       this.appendRuntimeLog(profile.id, "warning", "RCON no disponible; aplicando kill");
-      managed.child.kill();
+      this.terminateManaged(managed);
     }
 
     const exited = await this.waitForExit(managed.child, EXIT_WAIT_MS);
     if (!exited) {
-      managed.child.kill();
+      this.terminateManaged(managed);
       await this.waitForExit(managed.child, 5000);
     }
     this.processes.delete(profile.id);
@@ -246,7 +306,7 @@ export class ProcessManager extends EventEmitter {
     managed.status = "stopping";
     this.appendRuntimeLog(serverId, "warning", "Forzando cierre del proceso");
     this.emitStatus(serverId);
-    managed.child.kill();
+    this.terminateManaged(managed);
     this.processes.delete(serverId);
     this.emitStatus(serverId);
   }
@@ -319,9 +379,26 @@ export class ProcessManager extends EventEmitter {
     this.appendRuntimeLog(profile.id, "error", managed.lastError);
     this.emitStatus(profile.id);
     try {
-      managed.child.kill();
+      this.terminateManaged(managed);
     } catch {
       // ignore
+    }
+  }
+
+  private terminateManaged(managed: ManagedProcess): void {
+    const pid = managed.child.pid;
+    if (
+      managed.nativeConsole &&
+      process.platform === "win32" &&
+      pid !== undefined &&
+      killWinProcessTree(pid)
+    ) {
+      return;
+    }
+    try {
+      managed.child.kill();
+    } catch {
+      // already exited
     }
   }
 

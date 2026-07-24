@@ -20,37 +20,97 @@ export const INI_ROOT_SECTION = "(root)";
 export const INI_FLAT_SEP = "\u001f";
 
 /**
- * Keys de cliente/historial de Unreal. En un dedicated server no aportan y
- * suelen repetirse (LastJoinedSessionPerCategory, etc.).
+ * Secciones típicas de cliente / gráficos Unreal.
+ * En dedicated server no aplican y ensucian el editor.
  */
-const CLIENT_INI_KEY_RE =
-  /^(LastJoinedSessionPerCategory|LastServerSearch|PlayedMaps|LocalSuperPeeker|DesiredScreen|FullscreenMode|LastConfirmed|bUseVSync|AudioQualityLevel|bUseMouse|bUseGamepad|MouseSensitivity|MasterVolume|MusicVolume|SFXVolume|UIVolume|VoiceVolume)/i;
-
-export function isClientIniKey(key: string): boolean {
-  return CLIENT_INI_KEY_RE.test(key.trim());
+export function isClientIniSection(section: string): boolean {
+  const s = section.trim().toLowerCase();
+  if (s.length === 0 || s === INI_ROOT_SECTION) {
+    return false;
+  }
+  if (s.includes("shootergameusersettings")) {
+    return true;
+  }
+  if (s.includes("engine.gameusersettings")) {
+    return true;
+  }
+  if (s === "scalabilitygroups") {
+    return true;
+  }
+  // [GameUserSettings] plano (resolución/ventana), no ServerSettings.
+  if (s === "gameusersettings") {
+    return true;
+  }
+  return false;
 }
 
 /**
- * Elimina líneas de keys de cliente, preservando el resto del archivo.
+ * Keys de cliente/gráficos/UI/historial Unreal.
+ * En un dedicated server no aportan.
+ */
+const CLIENT_INI_KEY_RE =
+  /^(LastJoinedSessionPerCategory|LastServerSearch|LastServerSort|LastPlatform|LastRecommended|LastCPU|LastGPU|LastAuto|LastBrowsed|LastDLC|PlayedMaps|LocalSuperPeeker|DesiredScreen|FullscreenMode|LastConfirmed|bUseVSync|AudioQualityLevel|bUseMouse|bUseGamepad|MouseSensitivity|MasterVolume|MusicVolume|SFXVolume|UIVolume|VoiceVolume|ResolutionSize[XY]|WindowPos[XY]|ScreenPercentage|FrameRateLimit|GraphicsQuality|AdvancedGraphicsQuality|TrueSkyQuality|GroundClutter|LODScalar|Gamma|TheGamma|HDRDisplay|EnableDLSS|SuperResolution|FrameGeneration|ReflexEnabled|sg\.|bDisableBloom|bDisableShadows|bFilmGrain|bUseSSAO|bUseDFAO|bEnableHDR|bUseHDR|bEnableReflex|bEnableDLFG|bLowQualityVFX|bHighQuality|bDistanceField|bExtraLevelStreaming|bUseDynamicResolution|bUseLowQuality|bDontReduceGameResolution|bHasInitializedScreen|bHasSetupVisual|bHasRunAutoSettings|bUseDesiredScreenHeight|MasterAudioVolume|MusicAudioVolume|SFXAudioVolume|VoiceAudioVolume|AmbientSoundVolume|CharacterAudioVolume|SoundUIAudioVolume|LookLeftRightSensitivity|LookUpDownSensitivity|CameraShakeScale|EmoteKeyBind|UIScaling|UIQuickbarScaling)/i;
+
+export function isClientIniKey(key: string): boolean {
+  const k = key.trim();
+  if (CLIENT_INI_KEY_RE.test(k)) {
+    return true;
+  }
+  // Prefijo Unreal scalability
+  if (/^sg\./i.test(k)) {
+    return true;
+  }
+  return false;
+}
+
+/** True si la fila no debería mostrarse/persistirse en el manager dedicado. */
+export function isClientIniNoise(section: string, key: string): boolean {
+  if (isClientIniSection(section)) {
+    return true;
+  }
+  if (isClientIniKey(key)) {
+    return true;
+  }
+  // [Startup] suele mezclar flags de upscaling/frame-gen del cliente.
+  const s = section.trim().toLowerCase();
+  if (s === "startup") {
+    const k = key.toLowerCase();
+    if (
+      /dlss|fsr|xess|reflex|framegeneration|superresolution|graphics|resolution|vsync|hdr/.test(
+        k,
+      )
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Elimina líneas/secciones de cliente, preservando el resto del archivo.
  * También descarta secciones que queden vacías tras la limpieza.
  */
 export function stripClientIniKeys(text: string): string {
   const lines = text.split(/\r?\n/);
   const kept: string[] = [];
   let sectionHeader: string | null = null;
+  let sectionName = INI_ROOT_SECTION;
   let sectionBody: string[] = [];
   let sectionKeyCount = 0;
+  let skipSection = false;
 
   const commitSection = () => {
     if (sectionHeader === null) {
       return;
     }
-    if (sectionKeyCount > 0) {
+    if (!skipSection && sectionKeyCount > 0) {
       kept.push(sectionHeader, ...sectionBody);
     }
     sectionHeader = null;
+    sectionName = INI_ROOT_SECTION;
     sectionBody = [];
     sectionKeyCount = 0;
+    skipSection = false;
   };
 
   for (const line of lines) {
@@ -60,6 +120,12 @@ export function stripClientIniKeys(text: string): string {
     if (sectionMatch !== null) {
       commitSection();
       sectionHeader = line;
+      sectionName = (sectionMatch[1] ?? "").trim();
+      skipSection = isClientIniSection(sectionName);
+      continue;
+    }
+
+    if (skipSection) {
       continue;
     }
 
@@ -69,7 +135,7 @@ export function stripClientIniKeys(text: string): string {
 
     if (isAssignment) {
       const key = trimmed.slice(0, eq).trim();
-      if (isClientIniKey(key)) {
+      if (isClientIniNoise(sectionName, key)) {
         continue;
       }
       if (sectionHeader !== null) {
