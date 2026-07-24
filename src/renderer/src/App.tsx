@@ -53,6 +53,7 @@ export function App(): JSX.Element {
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [checkingUpdates, setCheckingUpdates] = useState(false);
+  const [overviewLoading, setOverviewLoading] = useState(true);
 
   useEffect(() => {
     window.localStorage.setItem(
@@ -103,7 +104,7 @@ export function App(): JSX.Element {
       window.api.getSteamCmdStatus(),
       window.api.getSteamCmdConsole(140),
       window.api.checkCluster(),
-      window.api.recentEvents(30),
+      window.api.recentEvents(100),
     ]);
     if (serversRes.ok) setServers(serversRes.data);
     if (statusesRes.ok) {
@@ -216,7 +217,12 @@ export function App(): JSX.Element {
   );
 
   useEffect(() => {
-    void refresh();
+    let active = true;
+    void refresh().finally(() => {
+      if (active) {
+        setOverviewLoading(false);
+      }
+    });
     const unsubscribeStatus = window.api.onServerStatus((info) => {
       setStatuses((prev) => {
         const next = new Map(prev);
@@ -231,6 +237,7 @@ export function App(): JSX.Element {
     const intervalMs = steamCmdBusy ? 500 : 5000;
     const interval = setInterval(() => void refresh(), intervalMs);
     return () => {
+      active = false;
       unsubscribeStatus();
       unsubscribeProgress();
       clearInterval(interval);
@@ -479,6 +486,7 @@ export function App(): JSX.Element {
             <OverviewPage
               search={search}
               onSearchChange={setSearch}
+              loading={overviewLoading}
               onCreateServer={() => setOverlay({ kind: "create" })}
               checkingUpdates={checkingUpdates}
               onCheckUpdates={() => void checkForUpdates()}
@@ -488,6 +496,7 @@ export function App(): JSX.Element {
               statuses={statuses}
               installationInfo={installationInfo}
               events={events}
+              onViewAllActivity={() => navigate("logs")}
               steamCmdServerId={steamCmdStatus?.serverId ?? null}
               steamCmdRunning={steamCmdStatus?.running === true}
               steamCmdBusy={steamCmdBusy}

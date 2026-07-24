@@ -173,7 +173,8 @@ ARK sin convertirse en una interfaz gamer.
 - [x] Simplificar `ServerCard` y mostrar solo información real y prioritaria (bloque 2.2: fila operativa horizontal, metadatos escaneables y menú secundario).
 - [x] Definir una única acción primaria contextual por estado del servidor (`Instalar`, `Iniciar`, `Actualizar`, `Administrar`, `Revisar error` o `Cancelar`).
 - [-] Mover RCON fuera de la tarjeta hacia el workspace o la futura consola (retirado del Overview; acciones rápidas en workspace, comando personalizado pendiente de la consola avanzada).
-- [-] Mejorar estados vacíos, carga, error, instalación y actualización (instalación, actualización, error y progreso cubiertos en la fila; faltan vacío y carga del Overview).
+- [x] Mejorar estados vacíos, carga, error, instalación y actualización (skeletons de carga, primer servidor y búsqueda sin resultados completan los estados del Overview).
+- [x] Compactar Actividad reciente a cinco eventos operativos, retirar el ruido RCON del resumen y conservar acceso directo a Registros.
 - [ ] Reducir gradientes, sombras y tarjetas anidadas.
 - [ ] Introducir una dirección visual propia: base obsidiana, azul criogénico, ámbar fósil, verde biomasa y motivos topográficos sutiles.
 - [ ] Diseñar una marca propia para la aplicación sin depender del logo antiguo de ARK Survival Evolved.
@@ -184,6 +185,15 @@ Criterio de cierre:
 - [ ] En menos de cinco segundos se entiende cuántos servidores existen, cuáles están activos y cuáles necesitan atención.
 - [ ] La pantalla se siente específica para administrar mundos de ARK y no como un dashboard genérico.
 - [ ] Las acciones frecuentes requieren menos decisiones sin ocultar capacidades avanzadas.
+
+Validación del bloque 2.3 (2026-07-24):
+
+- [x] Typecheck y build.
+- [x] Tests focalizados del Overview, Actividad reciente y ServerCard: 8/8.
+- [x] Build real revisado con Playwright en `1280×720`, `1920×1080` y `2560×1440`.
+- [x] Estado de búsqueda sin resultados y navegación a Registros verificados.
+- [x] Sin overflow horizontal, errores de consola ni excepciones del renderer.
+- [x] Actividad reciente limitada a cinco eventos relevantes y sin comandos RCON.
 
 ### Iteración 3 — Smart Configuration
 

@@ -37,6 +37,7 @@ describe("OverviewPage", () => {
           statuses={new Map()}
           installationInfo={new Map()}
           events={[]}
+          onViewAllActivity={vi.fn()}
           onOpenWorkspace={vi.fn()}
           onOpenLogs={vi.fn()}
           onStartServer={vi.fn()}
@@ -70,5 +71,60 @@ describe("OverviewPage", () => {
     expect(
       within(nextSection as HTMLElement).getByRole("heading", { name: "Tus servidores" }),
     ).toBeInTheDocument();
+  });
+
+  it("distinguishes loading from the actionable empty state", () => {
+    const onCreateServer = vi.fn();
+    const sharedProps = {
+      search: "",
+      onSearchChange: vi.fn(),
+      onCreateServer,
+      onCheckUpdates: vi.fn(),
+      servers: [],
+      filteredServers: [],
+      runningServers: 0,
+      statuses: new Map(),
+      installationInfo: new Map(),
+      events: [],
+      onViewAllActivity: vi.fn(),
+      onOpenWorkspace: vi.fn(),
+      onOpenLogs: vi.fn(),
+      onStartServer: vi.fn(),
+      onStopServer: vi.fn(),
+      onRestartServer: vi.fn(),
+      onKillServer: vi.fn(),
+      onOpenFolder: vi.fn(),
+      onInstallFiles: vi.fn(),
+      onUpdateNow: vi.fn(),
+      onVerifyFiles: vi.fn(),
+      onCheckUpdatesForServer: vi.fn(),
+      onCloneServer: vi.fn(),
+      onDeleteServer: vi.fn(),
+      onCancelSteamCmd: vi.fn(),
+    };
+
+    const { container, rerender } = render(
+      <AppProviders>
+        <OverviewPage {...sharedProps} loading />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("Cargando servidores")).toBeInTheDocument();
+    expect(container.querySelectorAll("[data-server-skeletons] > [aria-hidden='true']")).toHaveLength(
+      2,
+    );
+    expect(screen.queryByText("Crea tu primer servidor")).not.toBeInTheDocument();
+
+    rerender(
+      <AppProviders>
+        <OverviewPage {...sharedProps} loading={false} />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("Crea tu primer servidor")).toBeInTheDocument();
+    const serverList = container.querySelector("[data-server-list]");
+    expect(serverList).not.toBeNull();
+    within(serverList as HTMLElement).getByRole("button", { name: "Nuevo servidor" }).click();
+    expect(onCreateServer).toHaveBeenCalledOnce();
   });
 });

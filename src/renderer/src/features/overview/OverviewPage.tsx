@@ -13,6 +13,7 @@ import classes from "./OverviewPage.module.css";
 interface Props {
   search: string;
   onSearchChange: (value: string) => void;
+  loading?: boolean;
   onCreateServer: () => void;
   onCheckUpdates: () => void;
   checkingUpdates?: boolean;
@@ -22,6 +23,7 @@ interface Props {
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
   events: AppEvent[];
+  onViewAllActivity: () => void;
   steamCmdServerId?: string | null;
   steamCmdRunning?: boolean;
   steamCmdBusy?: boolean;
@@ -59,6 +61,8 @@ export function OverviewPage(props: Props): JSX.Element {
         <ServerGrid
           search={props.search}
           onSearchChange={props.onSearchChange}
+          loading={props.loading ?? false}
+          onCreateServer={props.onCreateServer}
           servers={props.servers}
           filteredServers={props.filteredServers}
           runningServers={props.runningServers}
@@ -89,7 +93,11 @@ export function OverviewPage(props: Props): JSX.Element {
           onCancelSteamCmd={props.onCancelSteamCmd}
         />
 
-        <RecentActivityPanel events={props.events} />
+        <RecentActivityPanel
+          events={props.events}
+          loading={props.loading ?? false}
+          onViewAll={props.onViewAllActivity}
+        />
       </Stack>
     </div>
   );
