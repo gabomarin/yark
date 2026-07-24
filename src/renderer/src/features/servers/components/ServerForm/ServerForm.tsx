@@ -4,6 +4,9 @@ import {
   Button,
   Card,
   Group,
+  NumberInput,
+  PasswordInput,
+  Select,
   SimpleGrid,
   Stack,
   Text,
@@ -202,24 +205,44 @@ export function ServerForm(props: Props): JSX.Element {
   const formBody = (
     <Stack gap={embedded ? "md" : "lg"}>
       {!embedded && (
-        <Group justify="space-between" align="flex-start">
+        <Group justify="space-between" align="flex-start" className={classes.pageHeader}>
           <div>
             <Title order={2}>{isCreate ? "Nuevo servidor" : `Editar: ${props.initial!.name}`}</Title>
             <Text c="dimmed">Configura identidad, red, acceso, cluster y argumentos del servidor.</Text>
           </div>
-          <Button variant="subtle" leftSection={<ArrowLeft size={16} />} onClick={props.onCancel}>
-            Volver
-          </Button>
+          <Group gap="xs">
+            <Button variant="subtle" leftSection={<ArrowLeft size={16} />} onClick={props.onCancel}>
+              Volver
+            </Button>
+            <Button
+              size="md"
+              leftSection={<FloppyDisk size={16} />}
+              onClick={() => void submit()}
+              loading={saving}
+            >
+              Guardar
+            </Button>
+          </Group>
         </Group>
       )}
 
       {embedded && (
-        <div>
-          <Title order={4}>Información del servidor</Title>
-          <Text c="dimmed" fz="xs">
-            Nombre, puertos, acceso, cluster y argumentos de arranque.
-          </Text>
-        </div>
+        <Group justify="space-between" align="flex-start" className={classes.embeddedHeader}>
+          <div>
+            <Title order={4}>Información del servidor</Title>
+            <Text c="dimmed" fz="xs">
+              Nombre, puertos, acceso, cluster y argumentos de arranque.
+            </Text>
+          </div>
+          <Button
+            size="sm"
+            leftSection={<FloppyDisk size={16} />}
+            onClick={() => void submit()}
+            loading={saving}
+          >
+            Guardar
+          </Button>
+        </Group>
       )}
 
       {serverActive && (
@@ -252,19 +275,20 @@ export function ServerForm(props: Props): JSX.Element {
             onChange={(e) => setField("sessionName")(e.currentTarget.value)}
             required
           />
-          <TextInput
+          <Select
             label="Mapa"
             size={inputSize}
             value={state.map}
-            onChange={(e) => setField("map")(e.currentTarget.value)}
-            list="known-maps"
+            onChange={(value) => {
+              if (value !== null) {
+                setField("map")(value);
+              }
+            }}
+            data={[...KNOWN_MAPS]}
+            searchable
+            allowDeselect={false}
             required
           />
-          <datalist id="known-maps">
-            {KNOWN_MAPS.map((map) => (
-              <option key={map} value={map} />
-            ))}
-          </datalist>
           <PathField
             label={isCreate ? "Carpeta base" : "Directorio de instalación"}
             value={state.installDir}
@@ -288,44 +312,52 @@ export function ServerForm(props: Props): JSX.Element {
         </Section>
 
         <Section title="Red" flat={embedded}>
-          <TextInput
+          <NumberInput
             label="Puerto de juego"
-            type="number"
             size={inputSize}
             value={state.gamePort}
-            onChange={(e) => setField("gamePort")(e.currentTarget.value)}
+            onChange={(value) => setField("gamePort")(String(value))}
+            min={1}
+            max={65535}
+            allowDecimal={false}
             required
           />
-          <TextInput
+          <NumberInput
             label="Puerto de query"
-            type="number"
             size={inputSize}
             value={state.queryPort}
-            onChange={(e) => setField("queryPort")(e.currentTarget.value)}
+            onChange={(value) => setField("queryPort")(String(value))}
+            min={1}
+            max={65535}
+            allowDecimal={false}
             required
           />
-          <TextInput
+          <NumberInput
             label="Puerto RCON"
-            type="number"
             size={inputSize}
             value={state.rconPort}
-            onChange={(e) => setField("rconPort")(e.currentTarget.value)}
+            onChange={(value) => setField("rconPort")(String(value))}
+            min={1}
+            max={65535}
+            allowDecimal={false}
             required
           />
         </Section>
 
         <Section title="Acceso" flat={embedded}>
-          <TextInput
-            label="Password del servidor"
+          <PasswordInput
+            label="Contraseña del servidor"
             size={inputSize}
             value={state.serverPassword}
             onChange={(e) => setField("serverPassword")(e.currentTarget.value)}
+            autoComplete="new-password"
           />
-          <TextInput
-            label="Password de administrador"
+          <PasswordInput
+            label="Contraseña de administrador"
             size={inputSize}
             value={state.adminPassword}
             onChange={(e) => setField("adminPassword")(e.currentTarget.value)}
+            autoComplete="new-password"
             required
           />
         </Section>
@@ -386,19 +418,6 @@ export function ServerForm(props: Props): JSX.Element {
         </Section>
       </SimpleGrid>
 
-      <Group justify="flex-end">
-        {!embedded && (
-          <Button variant="default" onClick={props.onCancel}>Cancelar</Button>
-        )}
-        <Button
-          size={embedded ? "sm" : "md"}
-          leftSection={<FloppyDisk size={16} />}
-          onClick={() => void submit()}
-          loading={saving}
-        >
-          Guardar
-        </Button>
-      </Group>
     </Stack>
   );
 

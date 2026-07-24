@@ -18,8 +18,6 @@ interface Props {
   onCreateServer: () => void;
   onCheckUpdates: () => void;
   checkingUpdates?: boolean;
-  openNativeTerminalOnStart: boolean;
-  onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
   servers: ServerProfile[];
   filteredServers: ServerProfile[];
   runningServers: number;
@@ -64,8 +62,6 @@ export function OverviewPage(props: Props): JSX.Element {
         onCreateServer={props.onCreateServer}
         onCheckUpdates={props.onCheckUpdates}
         checkingUpdates={props.checkingUpdates}
-        openNativeTerminalOnStart={props.openNativeTerminalOnStart}
-        onOpenNativeTerminalOnStartChange={props.onOpenNativeTerminalOnStartChange}
       />
 
       <Stack gap="lg" className={classes.content}>

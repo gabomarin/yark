@@ -30,8 +30,6 @@ describe("OverviewPage", () => {
           search=""
           onSearchChange={vi.fn()}
           onCreateServer={vi.fn()}
-          openNativeTerminalOnStart={false}
-          onOpenNativeTerminalOnStartChange={vi.fn()}
           onCheckUpdates={vi.fn()}
           servers={[server]}
           filteredServers={[server]}
@@ -62,7 +60,7 @@ describe("OverviewPage", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("Overview")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Servidores", level: 1 })).toBeInTheDocument();
     expect(screen.getByText(/Servidores \(1\)/)).toBeInTheDocument();
     expect(screen.getByText("Actividad reciente")).toBeInTheDocument();
     expect(screen.getByText("The Island")).toBeInTheDocument();

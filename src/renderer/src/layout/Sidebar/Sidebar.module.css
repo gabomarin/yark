@@ -1,8 +1,8 @@
 .sidebar {
   height: 100%;
   padding: 20px 14px;
-  background: rgba(20, 27, 37, 0.96);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--app-color-bg-accent);
+  border-right: 1px solid var(--app-color-border);
 }
 
 .brand {
@@ -10,7 +10,7 @@
 }
 
 .brandIcon {
-  color: #55a6ff;
+  color: var(--app-color-accent);
 }
 
 .nav {
@@ -20,20 +20,20 @@
 .navButton {
   min-height: 42px;
   border-radius: 12px;
-  color: #f2f6fb;
+  color: var(--app-color-text);
 }
 
 .navButton[data-active] {
   background: rgba(85, 166, 255, 0.16);
-  color: #ffffff;
+  color: var(--app-color-text);
 }
 
 .okDot {
-  color: #40d39f;
+  color: var(--app-color-ok);
 }
 
 .badDot {
-  color: #ff6c6c;
+  color: var(--app-color-bad);
 }
 
 .versionChip {
@@ -41,4 +41,11 @@
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(36, 50, 69, 0.56);
+}
+
+.preference {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 6px;
 }

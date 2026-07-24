@@ -62,7 +62,7 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 
 ### Mods
 - [x] Campo basico de mods por IDs en orden de carga.
-- [ ] Gestion avanzada de mods desde Steam Workshop / CurseForge si aplica.
+- [ ] Gestion avanzada de mods desde CurseForge para ASA.
 - [ ] Validacion de compatibilidad de mods entre nodos de cluster.
 - [ ] Instalacion / actualizacion automatica de mods.
 
@@ -110,6 +110,112 @@ Estado del proyecto para continuar el trabajo sin perder contexto.
 - [-] Mejoras visuales para gestionar backups, restores y logs (aplicado rediseño base del UI, navegación por secciones en logs, scroll interno en paneles, mejor uso del ancho e iconografía; queda pulido final y diagnóstico guiado).
 - [-] Rediseño de navegación tipo sidebar (Fase 1 completa: shell con sidebar persistente + páginas Overview fusionado con Servers, Clusters, Backups, SteamCMD, Logs, Settings; iconografía y responsive con colapso de sidebar a solo-iconos en <900px). Fase "corrección de fidelidad" completa: iconografía migrada a librería real `@phosphor-icons/react` (reemplaza SVGs a mano, mismo `IconName` API), ServerCard rediseñado con thumbnail placeholder, meta-grid de 2 filas (Jugadores/Mapa/Cluster, Mods/Versión/Estado) y fila de acciones icon-only (Iniciar, Detener, Reiniciar, Abrir carpeta, menu kebab con Editar/INI/Logs/Instalar-Actualizar/Clonar/Forzar cierre/Eliminar), tarjeta de estadística de SteamCMD eliminada de Overview y reemplazada por Backups (placeholder) y Updates (real, comparando `officialVersion` vs versión local detectada), "Official Version" reubicado al Sidebar. Fase 2 (rediseño de Logs) completa en su parte estática: tabs superiores Events/Runtime/Update Logs/Backups, Update History con detalle y visor del log, botón "Open in external viewer" (IPC `logs:open-update-file` vía `shell.openPath`); el histórico persistido ya fue migrado al frontend nuevo como `LogsPage`. Rewrite UI v2: shell nuevo activo; `Overview`, `SteamCMD` y `Logs` migrados; `Clusters`, `Backups` y `Settings` siguen como placeholders. **Server Workspace (editor de servidor) Fase 1**: desde Overview → INI se abre layout de 3 columnas (lista de servidores para cambio rápido / Configuration INI+mods / panel de status+quick actions), reutilizando IPC de INI existente. Pendiente inmediato: pulir workspace, Startup Parameters editable, tabs restantes del mockup, streaming en Logs, y después página Backups.
 - [ ] Asistentes guiados para bootstrap, update y restore.
+
+## Roadmap de producto y UX
+
+Esta sección sigue el pulido comercial del renderer por separado del backlog
+funcional. Las mejoras deben reutilizar la arquitectura y los componentes
+existentes siempre que sea razonable. Antes de cambios significativos de layout
+se presenta una propuesta para aprobación.
+
+### Iteración 1 — Limpieza y coherencia
+
+Objetivo: eliminar señales de producto incompleto o genérico sin rediseñar las
+pantallas principales.
+
+- [x] Unificar el idioma visible del renderer y eliminar mezclas innecesarias de español e inglés.
+- [x] Retirar del Overview métricas vacías o marcadas como "próximamente".
+- [x] Ocultar tabs, rutas y acciones que todavía no ofrecen una experiencia funcional.
+- [x] Eliminar las notas temporales del workspace mientras no tengan persistencia.
+- [x] Mover "Mostrar consola del servidor al iniciar" fuera del encabezado de Overview.
+- [x] Corregir referencias de mods de Workshop a CurseForge para ASA.
+- [x] Usar controles Mantine apropiados en el formulario (`Select`, `NumberInput`, `PasswordInput`) donde aporten claridad y validación.
+- [x] Consolidar colores, radios, sombras, superficies y estados en el theme compartido mediante variables semánticas consumidas por los estilos del renderer.
+- [x] Definir un patrón único de feedback para notificaciones, alertas contextuales y errores.
+- [x] Revisar textos menores de 12 px y corregir los que comprometan legibilidad.
+
+Patrón de feedback vigente:
+
+- Notificación: confirmación o resultado breve que no bloquea el flujo.
+- Alerta contextual: error o advertencia que pertenece a una pantalla, formulario o editor.
+- Alerta del shell: fallo de una acción operativa global; no se duplica como notificación.
+- Modal: confirmación destructiva, pérdida de cambios o decisión con riesgo.
+- Dock de progreso: operaciones prolongadas de SteamCMD y su cancelación.
+
+Criterio de cierre:
+
+- [x] No hay contenido simulado, controles muertos ni inconsistencias evidentes de idioma en los flujos activos.
+- [x] Overview, creación de servidor y workspace pasan una revisión de claridad, jerarquía, acciones, consistencia y accesibilidad mediante Playwright y Chrome DevTools.
+
+Validación del primer pase (2026-07-24):
+
+- [x] Tests del renderer: 11/11.
+- [x] Typecheck.
+- [x] Build.
+- [-] Suite completa: 116/117 en ejecución conjunta; la prueba de proceso real falla al limpiar una carpeta temporal bloqueada por Windows (`EBUSY`) y pasa al ejecutarse de forma aislada.
+- [x] Revisión visual del build real en Electron a 1440x900 y 1100x720: sin errores de consola ni overflow horizontal.
+- [x] Fuente real verificada mediante Chrome DevTools (`Segoe UI`); se eliminó el fallback efectivo a `Trebuchet MS`.
+- [x] Acción Guardar visible desde el primer viewport en creación y edición de servidor.
+- [x] Scroll vertical común en todas las tabs del workspace; los editores INI conservan un scroll interno para listas extensas.
+- [x] Acceso al archivo INI simplificado como acción contextual junto al título, con la ruta disponible mediante tooltip.
+
+### Iteración 2 — Overview operativo e identidad visual
+
+Objetivo: hacer que la pantalla principal priorice servidores y problemas que
+requieren atención, con una identidad propia de centro de operaciones de mundos
+ARK sin convertirse en una interfaz gamer.
+
+- [ ] Presentar y aprobar una propuesta incremental de layout antes de implementarla.
+- [ ] Sustituir el dashboard de métricas por un resumen operativo compacto y accionable.
+- [ ] Simplificar `ServerCard` y mostrar solo información real y prioritaria.
+- [ ] Definir una única acción primaria contextual por estado del servidor.
+- [ ] Mover RCON fuera de la tarjeta hacia el workspace o la futura consola.
+- [ ] Mejorar estados vacíos, carga, error, instalación y actualización.
+- [ ] Reducir gradientes, sombras y tarjetas anidadas.
+- [ ] Introducir una dirección visual propia: base obsidiana, azul criogénico, ámbar fósil, verde biomasa y motivos topográficos sutiles.
+- [ ] Diseñar una marca propia para la aplicación sin depender del logo antiguo de ARK Survival Evolved.
+- [ ] Validar el layout en ventanas de escritorio amplias y compactas.
+
+Criterio de cierre:
+
+- [ ] En menos de cinco segundos se entiende cuántos servidores existen, cuáles están activos y cuáles necesitan atención.
+- [ ] La pantalla se siente específica para administrar mundos de ARK y no como un dashboard genérico.
+- [ ] Las acciones frecuentes requieren menos decisiones sin ocultar capacidades avanzadas.
+
+### Iteración 3 — Smart Configuration
+
+Objetivo: convertir la configuración visual en la experiencia principal y
+relegar los archivos INI a Advanced Mode.
+
+- [ ] Presentar y aprobar la arquitectura de información antes de cambiar la navegación.
+- [ ] Organizar settings por objetivos del usuario: jugabilidad, mundo, dinosaurios, domesticación y crianza, construcción, experiencia/rates y otras categorías necesarias.
+- [ ] Evitar que `Game.ini` y `GameUserSettings.ini` sean conceptos principales fuera de Advanced Mode.
+- [ ] Añadir nombres legibles y descripciones orientadas a resultados para los settings.
+- [ ] Enriquecer controles según tipo y rango usando switches, selects, sliders, inputs numéricos y presets cuando correspondan.
+- [ ] Mostrar valores recomendados, defaults y consecuencias relevantes sin saturar la pantalla.
+- [ ] Añadir un resumen legible de cambios antes de guardar.
+- [ ] Mantener visible el estado de cambios pendientes y si requieren reiniciar el servidor.
+- [ ] Conservar edición raw de ambos INI dentro de Advanced Mode.
+- [ ] Dividir `ConfigurationEditor` gradualmente por responsabilidades sin reescribir su lógica funcional.
+- [ ] Preparar la gestión de mods para CurseForge, dependencias, conflictos, orden de carga y actualizaciones.
+
+Criterio de cierre:
+
+- [ ] Un usuario nuevo puede configurar un servidor común sin saber qué archivo INI contiene cada setting.
+- [ ] Un administrador experimentado conserva acceso directo y confiable a los archivos raw.
+- [ ] La navegación puede crecer sin convertirse en una lista plana o una tabla inmanejable.
+
+### Design review obligatorio por iteración
+
+Antes de marcar una iteración como completada:
+
+- [ ] Claridad: la pantalla se entiende en menos de cinco segundos.
+- [ ] Jerarquía: lo más importante es lo más visible.
+- [ ] Acciones: la acción principal destaca y las secundarias no compiten.
+- [ ] Consistencia: se reutilizan patrones y componentes existentes.
+- [ ] Espaciado: las secciones respiran sin desperdiciar espacio.
+- [ ] Escalabilidad: el diseño admite más servidores y settings.
+- [ ] Profesionalismo: no hay placeholders, contenido simulado ni acabados provisionales visibles.
 
 ## Pruebas y verificacion actual
 - [x] Unit tests verdes.

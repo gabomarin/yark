@@ -25,6 +25,14 @@ interface Props {
   onKill: () => void;
 }
 
+const STATUS_LABEL: Record<string, string> = {
+  stopped: "Detenido",
+  starting: "Iniciando",
+  running: "Activo",
+  stopping: "Deteniendo",
+  error: "Error",
+};
+
 function MetaRow({ label, value }: { label: string; value: string }): JSX.Element {
   return (
     <div className={classes.metaRow}>
@@ -36,7 +44,6 @@ function MetaRow({ label, value }: { label: string; value: string }): JSX.Elemen
 
 export function SidePanel(props: Props): JSX.Element {
   const [broadcast, setBroadcast] = useState("");
-  const [notes, setNotes] = useState("");
   const status = props.runtime?.status ?? "stopped";
   const isActive = status === "starting" || status === "running" || status === "stopping";
   const version =
@@ -53,18 +60,17 @@ export function SidePanel(props: Props): JSX.Element {
     <aside className={classes.panel}>
       <Card withBorder padding="sm" radius="md" className={classes.card}>
         <Stack gap={6}>
-          <Text className={classes.widgetTitle}>Status</Text>
-          <MetaRow label="Estado" value={status} />
+          <Text className={classes.widgetTitle}>Estado</Text>
+          <MetaRow label="Estado" value={STATUS_LABEL[status] ?? status} />
           <MetaRow label="Inicio" value={uptime} />
           <MetaRow label="Versión" value={version} />
-          <MetaRow label="Players" value="— / 70" />
           <MetaRow label="Cluster" value={props.server.clusterId ?? "Sin cluster"} />
         </Stack>
       </Card>
 
       <Card withBorder padding="sm" radius="md" className={classes.card}>
         <Stack gap={6}>
-          <Text className={classes.widgetTitle}>Quick Actions</Text>
+          <Text className={classes.widgetTitle}>Acciones rápidas</Text>
           <Button
             size="sm"
             variant="default"
@@ -73,7 +79,7 @@ export function SidePanel(props: Props): JSX.Element {
             leftSection={<FolderOpen size={14} />}
             onClick={props.onOpenFolder}
           >
-            Open folder
+            Abrir carpeta
           </Button>
           <Button
             size="sm"
@@ -84,7 +90,7 @@ export function SidePanel(props: Props): JSX.Element {
             onClick={props.onInstallFiles}
             disabled={isActive}
           >
-            Install files
+            Instalar archivos
           </Button>
           <Button
             size="sm"
@@ -96,7 +102,7 @@ export function SidePanel(props: Props): JSX.Element {
             disabled={isActive}
             title={isActive ? "Detén el servidor antes de verificar" : undefined}
           >
-            Verify integrity
+            Verificar integridad
           </Button>
           <Button
             size="sm"
@@ -108,7 +114,7 @@ export function SidePanel(props: Props): JSX.Element {
             disabled={isActive}
             title={isActive ? "Detén el servidor antes de actualizar" : undefined}
           >
-            Force Update
+            Forzar actualización
           </Button>
           <Button
             size="sm"
@@ -119,11 +125,11 @@ export function SidePanel(props: Props): JSX.Element {
             onClick={props.onSaveWorld}
             disabled={status !== "running"}
           >
-            Save World
+            Guardar mundo
           </Button>
           <div className={classes.broadcast}>
             <Textarea
-              placeholder="Broadcast message"
+              placeholder="Mensaje para los jugadores"
               minRows={2}
               size="xs"
               value={broadcast}
@@ -141,7 +147,7 @@ export function SidePanel(props: Props): JSX.Element {
                 setBroadcast("");
               }}
             >
-              Broadcast
+              Enviar anuncio
             </Button>
           </div>
           <Button
@@ -154,24 +160,8 @@ export function SidePanel(props: Props): JSX.Element {
             onClick={props.onKill}
             disabled={status === "stopped"}
           >
-            Force Shutdown
+            Forzar cierre
           </Button>
-        </Stack>
-      </Card>
-
-      <Card withBorder padding="sm" radius="md" className={classes.card}>
-        <Stack gap={6}>
-          <Text className={classes.widgetTitle}>Notes</Text>
-          <Textarea
-            placeholder="Notas locales del servidor (solo en esta sesión)"
-            minRows={4}
-            size="xs"
-            value={notes}
-            onChange={(event) => setNotes(event.currentTarget.value)}
-          />
-          <Text c="dimmed" fz="xxs">
-            Las notas aún no se persisten entre reinicios de la app.
-          </Text>
         </Stack>
       </Card>
     </aside>

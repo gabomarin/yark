@@ -3,10 +3,10 @@
 }
 
 .panel {
-  border-radius: 18px;
-  border-color: rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, rgba(23, 31, 43, 0.95), rgba(20, 27, 37, 0.95));
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+  border-radius: var(--app-radius-lg);
+  border-color: var(--app-color-border);
+  background: var(--app-color-panel);
+  box-shadow: var(--app-shadow-panel);
 }
 
 .eventList,
@@ -46,7 +46,7 @@
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(36, 50, 69, 0.3);
-  color: #f2f6fb;
+  color: var(--app-color-text);
 }
 
 .updateRowActive {
@@ -73,7 +73,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #9fb0c3;
+  color: var(--app-color-muted);
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.04em;

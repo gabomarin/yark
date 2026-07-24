@@ -10,6 +10,8 @@ interface Props extends PropsWithChildren {
   steamCmdRunning: boolean;
   officialVersion: string | null;
   appVersion: string;
+  openNativeTerminalOnStart: boolean;
+  onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
   error?: string | null;
   onDismissError?: () => void;
 }

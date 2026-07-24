@@ -38,9 +38,30 @@ export type IniFilterId = "all" | AsaUiCategoryId;
 
 export type IniControlKind = "boolean" | "number" | "text";
 
+const UI_CATEGORY_LABELS_ES: Record<AsaUiCategoryId, string> = {
+  general: "General",
+  rates: "Multiplicadores",
+  breeding: "Crianza",
+  dinos: "Dinosaurios",
+  structures: "Estructuras",
+  pvp: "JcJ",
+  pve: "JcE",
+  world: "Mundo",
+  players: "Jugadores",
+  tribes: "Tribus",
+  chat: "Chat y mensaje del día",
+  mods: "Mods",
+  networking: "Red",
+  events: "Eventos",
+  other: "Otros",
+};
+
 export const INI_FILTERS: Array<{ id: IniFilterId; label: string }> = [
-  { id: "all", label: "All" },
-  ...ASA_UI_CATEGORIES.map((item) => ({ id: item.id, label: item.label })),
+  { id: "all", label: "Todos" },
+  ...ASA_UI_CATEGORIES.map((item) => ({
+    id: item.id,
+    label: UI_CATEGORY_LABELS_ES[item.id],
+  })),
 ];
 
 export interface IniUiCategoryGroup {
@@ -271,6 +292,7 @@ export function filterIniRows(
       description,
       humanizeKey(row.key),
       asaUiCategoryLabel(category),
+      UI_CATEGORY_LABELS_ES[category],
       category,
     ]
       .join(" ")
@@ -319,7 +341,7 @@ export function groupRowsByUiCategory(
     list.sort((a, b) => a.key.localeCompare(b.key) || a.section.localeCompare(b.section));
     groups.push({
       category: def.id,
-      label: def.label,
+      label: UI_CATEGORY_LABELS_ES[def.id],
       rows: list,
     });
   }
@@ -337,4 +359,3 @@ export {
   sectionShortName,
   stripClientIniKeys,
 };
-

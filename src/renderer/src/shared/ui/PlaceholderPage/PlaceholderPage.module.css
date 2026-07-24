@@ -1,7 +1,7 @@
 .card {
-  border-radius: 18px;
-  border-color: rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, rgba(27, 36, 49, 0.96), rgba(19, 26, 35, 0.96));
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+  border-radius: var(--app-radius-lg);
+  border-color: var(--app-color-border);
+  background: var(--app-color-panel);
+  box-shadow: var(--app-shadow-panel);
   max-width: 720px;
 }

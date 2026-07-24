@@ -6,10 +6,10 @@
 
 .pathCard,
 .consoleCard {
-  border-radius: 18px;
-  border-color: rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, rgba(23, 31, 43, 0.95), rgba(20, 27, 37, 0.95));
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+  border-radius: var(--app-radius-lg);
+  border-color: var(--app-color-border);
+  background: var(--app-color-panel);
+  box-shadow: var(--app-shadow-panel);
 }
 
 .console {

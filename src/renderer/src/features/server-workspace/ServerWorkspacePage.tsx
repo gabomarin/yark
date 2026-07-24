@@ -17,14 +17,7 @@ import { SidePanel } from "./components/SidePanel";
 import { WorkspaceHeader } from "./components/WorkspaceHeader";
 import classes from "./ServerWorkspacePage.module.css";
 
-type WorkspaceTab =
-  | "server"
-  | ConfigSection
-  | "files"
-  | "backups"
-  | "logs"
-  | "players"
-  | "console";
+type WorkspaceTab = "server" | ConfigSection;
 
 function isConfigSection(tab: string | null): tab is ConfigSection {
   return (
@@ -136,7 +129,7 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
   if (selectedServer === null) {
     return (
       <div className={classes.empty}>
-        No hay servidores para editar. Crea uno desde Overview.
+        No hay servidores para editar. Crea uno desde Servidores.
       </div>
     );
   }
@@ -166,7 +159,7 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
           onAddServer={props.onCreateServer}
         />
 
-        <section className={classes.main}>
+        <section className={classes.main} data-workspace-scroll>
           <Tabs
             value={workspaceTab}
             onChange={(value) => {
@@ -175,27 +168,12 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
             }}
             className={classes.tabs}
           >
-            <Tabs.List>
+            <Tabs.List className={classes.tabList}>
               <Tabs.Tab value="server">Servidor</Tabs.Tab>
               <Tabs.Tab value="game">Game.ini</Tabs.Tab>
               <Tabs.Tab value="gameUserSettings">GameUserSettings.ini</Tabs.Tab>
               <Tabs.Tab value="mods">Mods</Tabs.Tab>
-              <Tabs.Tab value="advanced">Advanced</Tabs.Tab>
-              <Tabs.Tab value="files" disabled>
-                Files
-              </Tabs.Tab>
-              <Tabs.Tab value="backups" disabled>
-                Backups
-              </Tabs.Tab>
-              <Tabs.Tab value="logs" disabled>
-                Logs
-              </Tabs.Tab>
-              <Tabs.Tab value="players" disabled>
-                Players
-              </Tabs.Tab>
-              <Tabs.Tab value="console" disabled>
-                Console
-              </Tabs.Tab>
+              <Tabs.Tab value="advanced">Avanzado</Tabs.Tab>
             </Tabs.List>
 
             <div className={classes.tabPanel}>

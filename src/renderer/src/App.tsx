@@ -254,11 +254,6 @@ export function App(): JSX.Element {
       const result = await action();
       if (!result.ok) {
         setError(result.error ?? "Error desconocido");
-        notifications.show({
-          title: "Error",
-          message: result.error ?? "Error desconocido",
-          color: "red",
-        });
       }
       await refresh();
     },
@@ -429,6 +424,8 @@ export function App(): JSX.Element {
           steamCmdRunning={steamCmdBusy}
           officialVersion={officialVersion}
           appVersion={APP_VERSION}
+          openNativeTerminalOnStart={openNativeTerminalOnStart}
+          onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
           error={error}
           onDismissError={() => setError(null)}
         >
@@ -483,6 +480,8 @@ export function App(): JSX.Element {
         officialVersion={officialVersion}
         steamCmdDetected={steamCmdStatus?.detected === true}
         steamCmdRunning={steamCmdBusy}
+        openNativeTerminalOnStart={openNativeTerminalOnStart}
+        onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
         onNavigate={navigate}
         error={error}
         onDismissError={() => setError(null)}
@@ -492,8 +491,6 @@ export function App(): JSX.Element {
               search={search}
               onSearchChange={setSearch}
               onCreateServer={() => setOverlay({ kind: "create" })}
-              openNativeTerminalOnStart={openNativeTerminalOnStart}
-              onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
               checkingUpdates={checkingUpdates}
               onCheckUpdates={() => void checkForUpdates()}
               servers={servers}
@@ -575,4 +572,3 @@ export function App(): JSX.Element {
     </>
   );
 }
-

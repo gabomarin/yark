@@ -16,7 +16,7 @@ export function AppMetricCard({ icon, label, value, hint, disabled = false }: Pr
       <Stack gap={2}>
         <Text
           className={classes.label}
-          fz="micro"
+          fz="xs"
           c="dimmed"
           fw={700}
           tt="uppercase"
@@ -29,7 +29,7 @@ export function AppMetricCard({ icon, label, value, hint, disabled = false }: Pr
           {value}
         </Text>
         {hint !== undefined && (
-          <Text fz="xxs" c="dimmed">
+          <Text fz="xs" c="dimmed">
             {hint}
           </Text>
         )}

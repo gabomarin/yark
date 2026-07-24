@@ -21,6 +21,8 @@ interface Props {
   officialVersion: string | null;
   steamCmdDetected: boolean;
   steamCmdRunning: boolean;
+  openNativeTerminalOnStart: boolean;
+  onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
   onNavigate: (route: Route) => void;
   overview: OverviewSlot | null;
   steamcmd: SteamCmdSlot | null;
@@ -35,21 +37,21 @@ export function AppRouter(props: Props): JSX.Element {
       case "overview":
         return props.overview?.page ?? (
           <PlaceholderPage
-            title="Overview"
+            title="Servidores"
             subtitle="Monitorea y administra todos tus servidores ARK"
           />
         );
       case "clusters":
         return (
           <PlaceholderPage
-            title="Clusters"
+            title="Clústeres"
             subtitle="Compatibilidad y transferencias entre mapas"
           />
         );
       case "backups":
         return (
           <PlaceholderPage
-            title="Backups"
+            title="Respaldos"
             subtitle="Historial y restauración de respaldos"
           />
         );
@@ -63,14 +65,14 @@ export function AppRouter(props: Props): JSX.Element {
       case "logs":
         return props.logs?.page ?? (
           <PlaceholderPage
-            title="Logs"
+            title="Registros"
             subtitle="Eventos, runtime, updates y backups por servidor"
           />
         );
       case "settings":
         return (
           <PlaceholderPage
-            title="Settings"
+            title="Configuración"
             subtitle="Configuración general de la aplicación"
           />
         );
@@ -87,6 +89,8 @@ export function AppRouter(props: Props): JSX.Element {
       steamCmdRunning={props.steamCmdRunning}
       officialVersion={props.officialVersion}
       appVersion={props.appVersion}
+      openNativeTerminalOnStart={props.openNativeTerminalOnStart}
+      onOpenNativeTerminalOnStartChange={props.onOpenNativeTerminalOnStartChange}
       error={props.error}
       onDismissError={props.onDismissError}
     >

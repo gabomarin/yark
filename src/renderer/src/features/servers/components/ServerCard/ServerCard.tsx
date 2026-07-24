@@ -71,9 +71,9 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const QUICK_COMMANDS = [
-  { label: "SaveWorld", command: "SaveWorld" },
-  { label: "ListPlayers", command: "ListPlayers" },
-  { label: "Broadcast aviso", command: "Broadcast Aviso del administrador" },
+  { label: "Guardar mundo", command: "SaveWorld" },
+  { label: "Listar jugadores", command: "ListPlayers" },
+  { label: "Enviar aviso", command: "Broadcast Aviso del administrador" },
 ];
 
 function IconAction(props: {
@@ -135,8 +135,8 @@ export function ServerCard(props: Props): JSX.Element {
     : !isInstallationReady
       ? "Sin instalar"
       : updateAvailable
-        ? "Update available"
-        : "Up to date";
+        ? "Actualización disponible"
+        : "Actualizado";
 
   const byteProgressLabel =
     steamCmdProgressBytesDownloaded !== null && steamCmdProgressBytesTotal !== null
@@ -213,7 +213,6 @@ export function ServerCard(props: Props): JSX.Element {
           </Group>
 
           <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="xs" mt="sm">
-            <MetaItem label="Jugadores" value="—" />
             <MetaItem label="Mapa" value={server.map} />
             <MetaItem label="Cluster" value={server.clusterId ?? "—"} />
             <MetaItem label="Mods" value={String(server.mods.length)} />
@@ -451,10 +450,10 @@ interface MetaItemProps {
 function MetaItem({ label, value, tone = "default" }: MetaItemProps): JSX.Element {
   return (
     <div className={classes.metaItem}>
-      <Text c="dimmed" tt="uppercase" lts={0.04} display="block" fz="micro">
+      <Text c="dimmed" tt="uppercase" lts={0.04} display="block" fz="xs">
         {label}
       </Text>
-      <Text className={classes[`metaValue-${tone}`]} display="block" lineClamp={1} fz="xxs">
+      <Text className={classes[`metaValue-${tone}`]} display="block" lineClamp={1} fz="xs">
         {value}
       </Text>
     </div>

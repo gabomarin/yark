@@ -19,7 +19,7 @@
 
 .heading p {
   margin: 6px 0 0;
-  color: #9fb0c3;
+  color: var(--app-color-muted);
 }
 
 .actions {

@@ -12,8 +12,8 @@ describe("ServerForm", () => {
     );
 
     expect(screen.getAllByLabelText(/nombre/i).length).toBeGreaterThan(0);
-    expect(screen.getByLabelText(/mapa/i)).toBeInTheDocument();
+    expect(screen.getAllByLabelText(/^mapa/i)[0]).toBeInTheDocument();
     expect(screen.getByText(/nuevo servidor/i)).toBeInTheDocument();
-    expect(screen.getByText(/carpeta base/i)).toBeInTheDocument();
+    expect(screen.getByText(/^carpeta base$/i)).toBeInTheDocument();
   });
 });

@@ -84,7 +84,7 @@ describe("ServerWorkspacePage", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("All Servers")).toBeInTheDocument();
+    expect(screen.getByText("Todos los servidores")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "The Island" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Servidor" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "GameUserSettings.ini" })).toBeInTheDocument();

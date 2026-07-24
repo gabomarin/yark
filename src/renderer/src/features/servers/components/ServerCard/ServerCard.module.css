@@ -1,8 +1,8 @@
 .card {
-  border-radius: 14px;
-  border-color: rgba(255, 255, 255, 0.08);
-  background: linear-gradient(170deg, rgba(32, 43, 58, 0.95), rgba(23, 31, 43, 0.95));
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+  border-radius: var(--app-radius-md);
+  border-color: var(--app-color-border);
+  background: var(--app-color-panel);
+  box-shadow: var(--app-shadow-panel);
   max-width: 100%;
 }
 
@@ -33,7 +33,7 @@
   flex-shrink: 0;
   border-radius: 8px;
   background: linear-gradient(180deg, rgba(85, 166, 255, 0.2), rgba(64, 211, 159, 0.12));
-  color: #55a6ff;
+  color: var(--app-color-accent);
 }
 
 .title {
@@ -44,7 +44,7 @@
 }
 
 .subtitle {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.2;
   margin-top: 2px;
 }
@@ -66,19 +66,19 @@
 }
 
 .metaValue-default {
-  color: #f2f6fb;
+  color: var(--app-color-text);
 }
 
 .metaValue-muted {
-  color: #9fb0c3;
+  color: var(--app-color-muted);
 }
 
 .metaValue-ok {
-  color: #40d39f;
+  color: var(--app-color-ok);
 }
 
 .metaValue-warn {
-  color: #ffbe4d;
+  color: var(--app-color-warn);
 }
 
 .actions {

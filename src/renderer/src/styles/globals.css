@@ -8,13 +8,33 @@ body,
 
 * {
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--app-color-border) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--app-color-border);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--app-color-muted);
+  background-clip: padding-box;
 }
 
 body {
-  background:
-    radial-gradient(circle at 8% 0%, rgba(85, 166, 255, 0.22), transparent 35%),
-    radial-gradient(circle at 90% 0%, rgba(64, 211, 159, 0.12), transparent 38%),
-    linear-gradient(180deg, #17202b, #0f141c);
-  color: #f2f6fb;
-  font-family: "Segoe UI Variable", "Aptos", "Trebuchet MS", sans-serif;
+  background: var(--app-color-bg);
+  color: var(--app-color-text);
+  font-family: "Segoe UI", Arial, sans-serif;
 }

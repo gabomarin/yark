@@ -1,9 +1,7 @@
 import {
   Circle,
-  CloudArrowDown,
   HardDrives,
   Stack,
-  UsersThree,
   Warning,
 } from "@phosphor-icons/react";
 import { SimpleGrid } from "@mantine/core";
@@ -20,19 +18,12 @@ interface Props {
 
 export function OverviewStats(props: Props): JSX.Element {
   return (
-    <SimpleGrid cols={{ base: 1, sm: 2, lg: 3, xl: 6 }} spacing="sm">
+    <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="sm">
       <AppMetricCard
         icon={<HardDrives size={12} />}
         label="Servidores"
         value={props.totalServers}
-        hint={`${props.runningServers} online`}
-      />
-      <AppMetricCard
-        icon={<UsersThree size={12} />}
-        label="Jugadores"
-        value="—"
-        hint="próximamente"
-        disabled
+        hint={`${props.runningServers} en línea`}
       />
       <AppMetricCard
         icon={<Stack size={12} />}
@@ -41,15 +32,8 @@ export function OverviewStats(props: Props): JSX.Element {
         hint={props.totalClusters === 0 ? "sin clusters" : "transferibles"}
       />
       <AppMetricCard
-        icon={<CloudArrowDown size={12} />}
-        label="Backups"
-        value="—"
-        hint="próximamente"
-        disabled
-      />
-      <AppMetricCard
         icon={<Circle size={12} weight="fill" />}
-        label="Updates"
+        label="Actualizaciones"
         value={props.updatesAvailableCount}
         hint={props.updatesAvailableCount > 0 ? "disponibles" : "al día"}
       />

@@ -3,7 +3,6 @@ import {
   CaretDown,
   CaretRight,
   FloppyDisk,
-  FolderOpen,
   MagnifyingGlass,
   ArrowCounterClockwise,
   ArrowUUpLeft,
@@ -69,13 +68,6 @@ interface Props {
   onDirtyChange?: (dirty: boolean) => void;
 }
 
-function fileKeyForSection(section: ConfigSection): IniFileKey | null {
-  if (section === "game") return "game";
-  if (section === "gameUserSettings") return "gameUserSettings";
-  if (section === "advanced") return "gameUserSettings";
-  return null;
-}
-
 export function ConfigurationEditor(props: Props): JSX.Element {
   const { section } = props;
   const [snapshot, setSnapshot] = useState<ServerIniSnapshot | null>(null);
@@ -132,7 +124,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
       sanitized.game !== rawPayload.game
     ) {
       setInfo(
-        "Se detectaron keys de cliente/historial (p. ej. LastJoinedSessionPerCategory). No aplican a dedicated: pulsa Save para limpiarlas del disco.",
+        "Se detectaron claves de cliente o historial (p. ej. LastJoinedSessionPerCategory). No se aplican al servidor dedicado: pulsa Guardar para limpiarlas del disco.",
       );
     }
   };
@@ -197,7 +189,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
       onConfirm: () => {
         setPayload(withFileText(payload, activeFileKey, defaultTextForFile(activeFileKey)));
         setPreview(null);
-        setInfo(`${label} restaurado a defaults (pendiente de Save)`);
+        setInfo(`${label} restaurado a valores predeterminados (pendiente de guardar)`);
       },
     });
   };
@@ -247,10 +239,8 @@ export function ConfigurationEditor(props: Props): JSX.Element {
   };
 
   const openExternal = async () => {
-    const key = fileKeyForSection(section === "advanced" ? "advanced" : section);
-    if (key === null) return;
     setBusy(true);
-    const result = await window.api.openServerIniInEditor(props.server.id, key);
+    const result = await window.api.openServerIniInEditor(props.server.id, activeFileKey);
     setBusy(false);
     if (!result.ok) {
       setError(result.error ?? "No se pudo abrir el archivo");
@@ -285,49 +275,38 @@ export function ConfigurationEditor(props: Props): JSX.Element {
       : activeFileKey === "game"
         ? snapshot.gameIniPath
         : snapshot.gameUserSettingsPath;
-  const fileExistedOnDisk =
-    snapshot === null
-      ? true
-      : activeFileKey === "game"
-        ? snapshot.gameIniExisted
-        : snapshot.gameUserSettingsExisted;
   const fileLabel =
     activeFileKey === "game" ? "Game.ini" : "GameUserSettings.ini";
 
-  const sourceBanner =
+  const openFileAction =
     filePath === null ? null : (
-      <div className={classes.sourceBanner}>
-        <Group justify="space-between" align="flex-start" wrap="nowrap" gap="sm">
-          <Group gap="sm" align="flex-start" wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
-            <FolderOpen size={18} style={{ flexShrink: 0, marginTop: 2 }} />
-            <div style={{ minWidth: 0 }}>
-              <Text size="sm" fw={600}>
-                Archivo en disco · {fileLabel}
-              </Text>
-              <Text size="xs" c="dimmed" className={classes.path}>
-                Se lee y se guarda aquí:
-              </Text>
-              <Text size="xs" className={classes.path} ff="monospace">
-                {filePath}
-              </Text>
-              {!fileExistedOnDisk && (
-                <Text size="xs" c="yellow.5" mt={4}>
-                  No existía: se creó desde los defaults embebidos de la app al abrir el editor.
-                </Text>
-              )}
-            </div>
-          </Group>
-          <Button
-            size="xs"
-            variant="light"
-            leftSection={<ArrowSquareOut size={14} />}
+      <Tooltip
+        label={
+          <div>
+            <Text size="xs" fw={600}>
+              Abrir {fileLabel} en el editor predeterminado
+            </Text>
+            <Text size="xs" ff="monospace">
+              {filePath}
+            </Text>
+          </div>
+        }
+        multiline
+        maw={420}
+        withArrow
+      >
+        <span>
+          <ActionIcon
+            size="md"
+            variant="default"
+            aria-label={`Abrir ${fileLabel}`}
             onClick={() => void openExternal()}
             disabled={busy || snapshot === null}
           >
-            Abrir carpeta
-          </Button>
-        </Group>
-      </div>
+            <ArrowSquareOut size={16} />
+          </ActionIcon>
+        </span>
+      </Tooltip>
     );
 
   return (
@@ -353,15 +332,19 @@ export function ConfigurationEditor(props: Props): JSX.Element {
           <Stack gap="md" className={classes.editor}>
             <Group justify="space-between" align="flex-start">
               <div>
-                <Title order={3}>
-                  Edit {section === "game" ? "Game.ini" : "GameUserSettings.ini"}
-                </Title>
+                <Group gap="xs" wrap="nowrap">
+                  <Title order={3}>
+                    Editar {section === "game" ? "Game.ini" : "GameUserSettings.ini"}
+                  </Title>
+                  {openFileAction}
+                </Group>
                 <Text c="dimmed" size="sm">
-                  Agrupados por categoría UI (Rates, Dinos, Structures…). Busca o filtra por chip.
+                  Ajustes agrupados por categoría. Busca o utiliza los filtros para acotar resultados.
                 </Text>
               </div>
               <Group gap="xs">
                 <Select
+                  size="xs"
                   placeholder="Aplicar preset"
                   data={listIniPresets().map((preset) => ({
                     value: preset.id,
@@ -369,42 +352,43 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                   }))}
                   clearable
                   searchable
-                  w={180}
+                  w={160}
                   onChange={applyPreset}
                   disabled={payload === null || loading}
                 />
                 <Button
+                  size="xs"
                   variant="default"
                   leftSection={<ArrowUUpLeft size={16} />}
                   onClick={resetActiveFileToDefaults}
                   disabled={payload === null || busy || loading}
                 >
-                  Reset to defaults
+                  Restaurar valores
                 </Button>
                 <Button
+                  size="xs"
                   variant="default"
                   leftSection={<ArrowCounterClockwise size={16} />}
                   onClick={resetChanges}
                   disabled={!dirty || busy}
                 >
-                  Discard changes
+                  Descartar cambios
                 </Button>
                 <Button
+                  size="xs"
                   leftSection={<FloppyDisk size={16} />}
                   onClick={() => void saveIni()}
                   disabled={!dirty || busy || loading}
                 >
-                  Save
+                  Guardar
                 </Button>
               </Group>
             </Group>
 
-            {sourceBanner}
-
             <Group gap="sm" align="center">
               <TextInput
                 className={classes.search}
-                placeholder="Search settings"
+                placeholder="Buscar ajustes"
                 leftSection={<MagnifyingGlass size={14} />}
                 value={search}
                 onChange={(event) => setSearch(event.currentTarget.value)}
@@ -417,7 +401,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
               </Button>
               {dirty && (
                 <Badge color="yellow" variant="light">
-                  Unsaved
+                  Sin guardar
                 </Badge>
               )}
             </Group>
@@ -437,12 +421,12 @@ export function ConfigurationEditor(props: Props): JSX.Element {
 
             <div className={classes.tableWrap}>
               <div className={classes.tableHead}>
-                <span>Setting</span>
-                <span>Value</span>
-                <span>Description</span>
+                <span>Ajuste</span>
+                <span>Valor</span>
+                <span>Descripción</span>
                 <span />
               </div>
-              <div className={classes.tableBody}>
+              <div className={classes.tableBody} data-ini-settings-scroll>
                 {loading && (
                   <Text c="dimmed" p="md">
                     Cargando INI…
@@ -585,7 +569,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
 
             <Group justify="space-between" className={classes.footer}>
               <Text c="dimmed" size="xs">
-                Save escribe el archivo de arriba (limpia keys de cliente al guardar).
+                Guardar escribe el archivo indicado y elimina claves de cliente incompatibles.
               </Text>
             </Group>
 
@@ -610,9 +594,9 @@ export function ConfigurationEditor(props: Props): JSX.Element {
         {section === "mods" && (
           <Stack gap="md">
             <div>
-              <Title order={3}>Active Mods ({mods.length})</Title>
+              <Title order={3}>Mods activos ({mods.length})</Title>
               <Text c="dimmed" size="sm">
-                Orden de carga del perfil. La instalación automática desde Workshop llega después.
+                Orden de carga del perfil. La integración automática utilizará CurseForge para ASA.
               </Text>
             </div>
             <Group align="flex-end">
@@ -633,7 +617,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                   void saveMods(next);
                 }}
               >
-                Add Mod
+                Añadir mod
               </Button>
             </Group>
             <Stack gap="xs">
@@ -647,7 +631,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                   <div>
                     <Text fw={600}>{modId}</Text>
                     <Text c="dimmed" size="xs">
-                      Load order #{index + 1}
+                      Orden de carga #{index + 1}
                     </Text>
                   </div>
                   <Group gap="xs">
@@ -666,7 +650,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                         void saveMods(next);
                       }}
                     >
-                      Up
+                      Subir
                     </Button>
                     <Button
                       size="xs"
@@ -683,7 +667,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                         void saveMods(next);
                       }}
                     >
-                      Down
+                      Bajar
                     </Button>
                     <Button
                       size="xs"
@@ -694,7 +678,7 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                         void saveMods(mods.filter((_, i) => i !== index));
                       }}
                     >
-                      Remove
+                      Eliminar
                     </Button>
                   </Group>
                 </Group>
@@ -707,7 +691,10 @@ export function ConfigurationEditor(props: Props): JSX.Element {
           <Stack gap="md" className={classes.editor}>
             <Group justify="space-between">
               <div>
-                <Title order={3}>Advanced (raw INI)</Title>
+                <Group gap="xs" wrap="nowrap">
+                  <Title order={3}>Avanzado (INI sin procesar)</Title>
+                  {openFileAction}
+                </Group>
                 <Text c="dimmed" size="sm">
                   Edición directa del texto. Útil para comparar o pegar bloques entre servidores.
                 </Text>
@@ -732,18 +719,17 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                   onClick={resetChanges}
                   disabled={!dirty || busy}
                 >
-                  Reset changes
+                  Descartar cambios
                 </Button>
                 <Button
                   leftSection={<FloppyDisk size={16} />}
                   onClick={() => void saveIni()}
                   disabled={!dirty || busy}
                 >
-                  Save
+                  Guardar
                 </Button>
               </Group>
             </Group>
-            {sourceBanner}
             <Textarea
               className={classes.rawEditor}
               minRows={22}

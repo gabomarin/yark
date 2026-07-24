@@ -1,8 +1,8 @@
 .card {
-  border-radius: 14px;
-  border-color: rgba(255, 255, 255, 0.08);
-  background: linear-gradient(155deg, rgba(38, 52, 71, 0.95), rgba(23, 31, 43, 0.95));
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+  border-radius: var(--app-radius-md);
+  border-color: var(--app-color-border);
+  background: var(--app-color-panel);
+  box-shadow: var(--app-shadow-panel);
 }
 
 .card[data-disabled] {
@@ -16,5 +16,5 @@
 }
 
 .value {
-  color: #f2f6fb;
+  color: var(--app-color-text);
 }

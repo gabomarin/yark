@@ -19,11 +19,11 @@ interface Props {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  stopped: "OFFLINE",
-  starting: "STARTING",
-  running: "ONLINE",
-  stopping: "STOPPING",
-  error: "ERROR",
+  stopped: "Detenido",
+  starting: "Iniciando",
+  running: "Activo",
+  stopping: "Deteniendo",
+  error: "Error",
 };
 
 export function WorkspaceHeader(props: Props): JSX.Element {
@@ -40,20 +40,20 @@ export function WorkspaceHeader(props: Props): JSX.Element {
   return (
     <header className={classes.header}>
       <Group gap="sm" align="flex-start" wrap="nowrap" className={classes.identity}>
-        <Tooltip label="Volver a Overview">
+        <Tooltip label="Volver a servidores">
           <ActionIcon
             variant="subtle"
             color="gray"
             size="md"
-            aria-label="Volver a Overview"
+            aria-label="Volver a servidores"
             onClick={props.onBack}
           >
             <ArrowLeft size={18} />
           </ActionIcon>
         </Tooltip>
         <Stack gap={2} style={{ minWidth: 0 }}>
-          <Text className={classes.crumb} fz="xxs" c="dimmed">
-            Servers / {props.server.name}
+          <Text className={classes.crumb} fz="xs" c="dimmed">
+            Servidores / {props.server.name}
           </Text>
           <Group gap="xs" wrap="nowrap">
             <Title order={3} fz="lg" lineClamp={1}>
@@ -88,7 +88,7 @@ export function WorkspaceHeader(props: Props): JSX.Element {
           onClick={props.onStart}
           disabled={!canStart}
         >
-          Start
+          Iniciar
         </Button>
         <Button
           size="sm"
@@ -97,7 +97,7 @@ export function WorkspaceHeader(props: Props): JSX.Element {
           onClick={props.onRestart}
           disabled={!canRestart}
         >
-          Restart
+          Reiniciar
         </Button>
         <Button
           size="sm"
@@ -107,7 +107,7 @@ export function WorkspaceHeader(props: Props): JSX.Element {
           onClick={props.onStop}
           disabled={!canStop}
         >
-          Stop
+          Detener
         </Button>
       </Group>
     </header>

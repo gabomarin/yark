@@ -1,16 +1,33 @@
-import { createTheme } from "@mantine/core";
+import { createTheme, type CSSVariablesResolver } from "@mantine/core";
 import { appTokens } from "./tokens";
+
+export const appCssVariablesResolver: CSSVariablesResolver = () => ({
+  variables: {
+    "--app-color-bg": appTokens.colors.bg,
+    "--app-color-bg-accent": appTokens.colors.bgAccent,
+    "--app-color-panel": appTokens.colors.panel,
+    "--app-color-panel-alt": appTokens.colors.panelAlt,
+    "--app-color-border": appTokens.colors.border,
+    "--app-color-text": appTokens.colors.text,
+    "--app-color-muted": appTokens.colors.muted,
+    "--app-color-accent": appTokens.colors.accent,
+    "--app-color-ok": appTokens.colors.ok,
+    "--app-color-warn": appTokens.colors.warn,
+    "--app-color-bad": appTokens.colors.bad,
+    "--app-radius-sm": `${appTokens.radius.sm}px`,
+    "--app-radius-md": `${appTokens.radius.md}px`,
+    "--app-radius-lg": `${appTokens.radius.lg}px`,
+    "--app-shadow-panel": appTokens.shadows.panel,
+  },
+  light: {},
+  dark: {},
+});
 
 export const appTheme = createTheme({
   primaryColor: "blue",
   primaryShade: 5,
-  fontFamily: '"Segoe UI Variable", "Aptos", "Trebuchet MS", sans-serif',
+  fontFamily: '"Segoe UI", Arial, sans-serif',
   defaultRadius: "md",
-  /** Más allá de `xs` (~12px): usar en cards densas / meta labels. */
-  fontSizes: {
-    xxs: "11px",
-    micro: "9px",
-  },
   colors: {
     blue: [
       "#eef6ff",

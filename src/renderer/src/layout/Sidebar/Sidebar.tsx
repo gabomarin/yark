@@ -1,14 +1,11 @@
 import {
   ArrowsClockwise,
   Circle,
-  CloudArrowDown,
   FileText,
-  Gear,
   HardDrives,
   SquaresFour,
-  Stack,
 } from "@phosphor-icons/react";
-import { Button, Divider, Group, Stack as MantineStack, Text } from "@mantine/core";
+import { Button, Divider, Group, Stack as MantineStack, Switch, Text } from "@mantine/core";
 import classes from "./Sidebar.module.css";
 
 export type Route = "overview" | "clusters" | "backups" | "steamcmd" | "logs" | "settings";
@@ -20,12 +17,9 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: "overview", label: "Overview", icon: SquaresFour },
-  { id: "clusters", label: "Clusters", icon: Stack },
-  { id: "backups", label: "Backups", icon: CloudArrowDown },
+  { id: "overview", label: "Servidores", icon: SquaresFour },
   { id: "steamcmd", label: "SteamCMD", icon: ArrowsClockwise },
-  { id: "logs", label: "Logs", icon: FileText },
-  { id: "settings", label: "Settings", icon: Gear },
+  { id: "logs", label: "Registros", icon: FileText },
 ];
 
 interface Props {
@@ -35,6 +29,8 @@ interface Props {
   steamCmdRunning: boolean;
   officialVersion: string | null;
   appVersion: string;
+  openNativeTerminalOnStart: boolean;
+  onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
 }
 
 export function Sidebar(props: Props): JSX.Element {
@@ -86,8 +82,20 @@ export function Sidebar(props: Props): JSX.Element {
         {steamCmdLabel}
       </Button>
 
+      <div className={classes.preference}>
+        <Text size="xs" fw={600}>Preferencias</Text>
+        <Switch
+          size="xs"
+          checked={props.openNativeTerminalOnStart}
+          onChange={(event) =>
+            props.onOpenNativeTerminalOnStartChange(event.currentTarget.checked)
+          }
+          label="Mostrar consola al iniciar"
+        />
+      </div>
+
       <div className={classes.versionChip}>
-        <Text size="xs" fw={600}>Official Version</Text>
+        <Text size="xs" fw={600}>Versión oficial</Text>
         <Text size="sm">{props.officialVersion ?? "No detectada"}</Text>
       </div>
 

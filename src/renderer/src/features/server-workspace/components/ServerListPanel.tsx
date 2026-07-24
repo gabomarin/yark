@@ -13,11 +13,11 @@ interface Props {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  stopped: "OFFLINE",
-  starting: "STARTING",
-  running: "ONLINE",
-  stopping: "STOPPING",
-  error: "ERROR",
+  stopped: "Detenido",
+  starting: "Iniciando",
+  running: "Activo",
+  stopping: "Deteniendo",
+  error: "Error",
 };
 
 function statusTone(status: string): "ok" | "warn" | "bad" | "info" | "muted" {
@@ -43,11 +43,11 @@ export function ServerListPanel(props: Props): JSX.Element {
   return (
     <aside className={classes.panel}>
       <div className={classes.header}>
-        <Text className={classes.title}>All Servers</Text>
+        <Text className={classes.title}>Todos los servidores</Text>
         <TextInput
           value={search}
           onChange={(event) => setSearch(event.currentTarget.value)}
-          placeholder="Search servers"
+          placeholder="Buscar servidores"
           leftSection={<MagnifyingGlass size={14} />}
           size="xs"
         />
@@ -72,11 +72,8 @@ export function ServerListPanel(props: Props): JSX.Element {
                 <Text className={classes.itemName} fz="sm" fw={600} lineClamp={1}>
                   {server.name}
                 </Text>
-                <Text className={classes.itemMeta} fz="xxs" c="dimmed" lineClamp={1}>
+                <Text className={classes.itemMeta} fz="xs" c="dimmed" lineClamp={1}>
                   {server.map}
-                </Text>
-                <Text className={classes.itemPlayers} fz="micro" c="dimmed">
-                  — / 70
                 </Text>
               </span>
               <Badge
@@ -115,7 +112,7 @@ export function ServerListPanel(props: Props): JSX.Element {
             leftSection={<Plus size={16} />}
             onClick={props.onAddServer}
           >
-            Add Server
+            Añadir servidor
           </Button>
         </div>
       )}

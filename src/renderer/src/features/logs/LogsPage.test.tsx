@@ -119,8 +119,8 @@ describe("LogsPage", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("Logs")).toBeInTheDocument();
-    expect(await screen.findByText("Update History")).toBeInTheDocument();
+    expect(screen.getByText("Registros")).toBeInTheDocument();
+    expect(await screen.findByText("Historial de actualizaciones")).toBeInTheDocument();
     expect(await screen.findByText(/Update successful/i)).toBeInTheDocument();
     expect(screen.getAllByText("The Island").length).toBeGreaterThan(0);
   });

@@ -129,7 +129,7 @@ export function LogsPage(props: Props): JSX.Element {
       return;
     }
     if (result.data !== null) {
-      setInfo(`Logs exportados en: ${result.data}`);
+      setInfo(`Registros exportados en: ${result.data}`);
     }
   };
 
@@ -148,8 +148,8 @@ export function LogsPage(props: Props): JSX.Element {
 
   return (
     <PageScaffold
-      title="Logs"
-      subtitle="Eventos, runtime, updates y backups por servidor"
+      title="Registros"
+      subtitle="Eventos, ejecución, actualizaciones y respaldos por servidor"
       actions={
         <Group gap="sm" wrap="wrap">
           <Select
@@ -184,10 +184,10 @@ export function LogsPage(props: Props): JSX.Element {
         ) : (
           <Tabs value={activeSection} onChange={(value) => setActiveSection((value as LogsSection) ?? "events")}>
             <Tabs.List>
-              <Tabs.Tab value="events">Events</Tabs.Tab>
-              <Tabs.Tab value="runtime">Runtime</Tabs.Tab>
-              <Tabs.Tab value="updates">Update Logs</Tabs.Tab>
-              <Tabs.Tab value="backups">Backups</Tabs.Tab>
+              <Tabs.Tab value="events">Eventos</Tabs.Tab>
+              <Tabs.Tab value="runtime">Ejecución</Tabs.Tab>
+              <Tabs.Tab value="updates">Actualizaciones</Tabs.Tab>
+              <Tabs.Tab value="backups">Respaldos</Tabs.Tab>
             </Tabs.List>
 
             <Tabs.Panel value="events" pt="md">
@@ -215,11 +215,11 @@ export function LogsPage(props: Props): JSX.Element {
             <Tabs.Panel value="runtime" pt="md">
               <Card withBorder className={classes.panel}>
                 <Stack gap="sm">
-                  <Title order={3}>Runtime</Title>
+                  <Title order={3}>Ejecución</Title>
                   {loading ? (
-                    <Text c="dimmed">Cargando runtime...</Text>
+                    <Text c="dimmed">Cargando registro de ejecución...</Text>
                   ) : logs === null || logs.runtimeLogLines.length === 0 ? (
-                    <Text c="dimmed">Sin salida runtime capturada todavía.</Text>
+                    <Text c="dimmed">Todavía no hay salida de ejecución capturada.</Text>
                   ) : (
                     <pre className={classes.console}>{logs.runtimeLogLines.join("\n")}</pre>
                   )}
@@ -231,11 +231,11 @@ export function LogsPage(props: Props): JSX.Element {
               <div className={classes.updatesLayout}>
                 <Card withBorder className={classes.panel}>
                   <Stack gap="sm">
-                    <Title order={3}>Update History</Title>
+                    <Title order={3}>Historial de actualizaciones</Title>
                     {loading ? (
                       <Text c="dimmed">Cargando historial...</Text>
                     ) : logs === null || logs.updateFiles.length === 0 ? (
-                      <Text c="dimmed">Sin logs de update.</Text>
+                      <Text c="dimmed">Sin registros de actualización.</Text>
                     ) : (
                       <div className={classes.updateList}>
                         {logs.updateFiles.map((file) => (
@@ -260,7 +260,7 @@ export function LogsPage(props: Props): JSX.Element {
                 <Card withBorder className={classes.panel}>
                   <Stack gap="md">
                     <Group justify="space-between" align="center">
-                      <Title order={3}>Update Details</Title>
+                      <Title order={3}>Detalle de la actualización</Title>
                       {selectedUpdateInfo !== null && (
                         <Badge color={statusColor(selectedUpdateInfo.status)} variant="light">{selectedUpdateInfo.status}</Badge>
                       )}
@@ -278,7 +278,7 @@ export function LogsPage(props: Props): JSX.Element {
                         </div>
                         <Group justify="flex-end">
                           <Button variant="light" leftSection={<ArrowSquareOut size={16} />} onClick={() => void openInExternalViewer()} disabled={busy}>
-                            Open in external viewer
+                            Abrir en visor externo
                           </Button>
                         </Group>
                         <pre className={classes.console}>{updateContent.length > 0 ? updateContent : "Cargando contenido del log..."}</pre>
@@ -292,7 +292,7 @@ export function LogsPage(props: Props): JSX.Element {
             <Tabs.Panel value="backups" pt="md">
               <Card withBorder className={classes.panel}>
                 <Stack gap="sm">
-                  <Title order={3}>Backups</Title>
+                  <Title order={3}>Respaldos</Title>
                   {loading ? (
                     <Text c="dimmed">Cargando backups...</Text>
                   ) : logs === null || logs.backups.length === 0 ? (
