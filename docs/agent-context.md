@@ -6,12 +6,21 @@ This repository contains a desktop application for managing dedicated ARK Surviv
 
 ## Working rules
 
-- Review [TODO.md](../TODO.md) before starting or continuing work.
+- Review `.cursor/project-context/TODO.md` before starting or continuing work (local Cursor workspace context; gitignored; not part of the public repo).
 - Keep the current architecture: Electron + React + TypeScript + local SQLite.
 - Prefer small, verifiable changes.
 - Avoid introducing unnecessary native dependencies when a Node/TypeScript alternative exists.
 - For IPC, backend, or critical flow changes, run tests, typecheck, and build.
 - For visible renderer changes, follow the mandatory [visual testing protocol](visual-testing.md), including HD, Full HD, and QHD/2K review.
+
+## Local project context (Cursor workspace, not in git)
+
+Until a project-management tool is adopted, planning / status / historical design notes live here:
+
+- `.cursor/project-context/TODO.md` — backlog / status
+- `.cursor/project-context/docs/` — design notes and historical plans/specs
+
+Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not hardcode machine-absolute paths to this context.
 
 ## Key folder map
 
@@ -20,7 +29,7 @@ This repository contains a desktop application for managing dedicated ARK Surviv
 - [src/renderer](../src/renderer): React UI, layouts, features, and components.
 - [src/backend](../src/backend): services, domains, process management, and persistence.
 - [src/shared](../src/shared): shared types and IPC contracts.
-- [docs](../docs): additional documentation and design notes.
+- [docs](../docs): in-repo agent docs (this file, visual testing). Backlog/plans live under `.cursor/project-context/`.
 
 ## Current functional status
 
@@ -65,4 +74,4 @@ cmd.exe /c npm run build
 - The configuration assistant must initialize from current INI values, preserve unknown settings, remain read-only until `Apply changes`, and refuse to open while the manual INI editor has pending changes. Before applying, read the latest INI payload again and overlay only the curated fields so external changes are not overwritten.
 - Progression and breeding in the beginner assistant use semantic discrete presets, with their exact multipliers visible. `Current` restores only that group's original values. The change counter must remain actionable and expose the derived before/after summary from any step.
 - `bUseSingleplayerSettings` is a high-impact explicit choice: profiles preserve it, known effective rates are shown, and the UI warns about additional XP/engram and tamed-creature stat effects. Difficulty is treated as one user concept backed by `DifficultyOffset` and `OverrideOfficialDifficulty`; preserve both raw values until the user explicitly chooses a level.
-- If a visible UX change is introduced, also review the documented state in [TODO.md](../TODO.md).
+- If a visible UX change is introduced, also review the documented state in `.cursor/project-context/TODO.md`.

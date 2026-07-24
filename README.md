@@ -1,8 +1,8 @@
 # YARK server manager
 
-YARK server manager is a Windows desktop application for managing local dedicated ARK Survival Ascended servers.
+**Work in progress.** YARK server manager is a Windows desktop application for managing local dedicated ARK: Survival Ascended servers. Features will be added, changed, or refined as development continues — treat the current build as an evolving preview, not a finished product.
 
-## What it supports
+## What it supports today
 
 - Manage multiple server profiles from a single app.
 - Start, stop, restart, and force-stop server instances.
@@ -12,87 +12,53 @@ YARK server manager is a Windows desktop application for managing local dedicate
 - Review cluster state and RCON status from the interface.
 - Manage CurseForge mod Project IDs per server (`-mods=`). The Mods tab UI is ready; metadata is currently a local mock until a CurseForge API key is available.
 
-## Current project status
+## Current status
 
-The core functionality is already working, and the frontend is being migrated to a cleaner architecture based on Electron + React + TypeScript.
+Core flows already work (profiles, process control, SteamCMD install/update, backups, logs, INI editing). The UI is being migrated to a cleaner Electron + React + TypeScript shell:
 
-The current state is:
+- Shared shell and navigation are active.
+- Overview, SteamCMD, Logs, and Server Workspace (INI editor) use the new renderer.
+- Clusters, Backups, and Settings pages are still placeholders inside the new shell.
+- End-to-end validation against real ASA binaries and SteamCMD on a production host is still ongoing.
 
-- The shared shell and new navigation are already active.
-- The Overview, SteamCMD, and Logs pages have already been migrated to the new renderer.
-- Opening INI from Overview launches the new Server Workspace (3-column editor with quick server switching).
-- Canonical INI defaults live in `src/shared/defaults/` (commented community templates). The ASA wiki catalog is editor metadata only and is not merged into those defaults.
-- The Clusters, Backups, and Settings pages still function as visual placeholders within the new shell.
-- Real integration with host-side ASA binaries and SteamCMD remains pending for E2E validation.
+Expect gaps, rough edges, and behavior changes between builds.
 
-## Main repository structure
+## Repository layout
 
-- src/main: Electron main process.
-- src/preload: secure IPC bridge for the renderer.
-- src/renderer: React/TypeScript UI.
-- src/backend: domain logic, services, process management, and persistence.
-- src/shared: shared contracts and types across layers.
-- docs: documentation and contributor context.
-- .github: instructions and profiles for agents and assistants.
+- `src/main` — Electron main process
+- `src/preload` — secure IPC bridge for the renderer
+- `src/renderer` — React/TypeScript UI
+- `src/backend` — domain logic, services, process management, persistence
+- `src/shared` — shared contracts and types
 
 ## Requirements
 
-- Windows to run the desktop app.
-- Node.js 20+ (preferably a recent version compatible with Electron/Vite).
-- npm.
+- Windows (to run the desktop app)
+- Node.js 20+ (a recent version compatible with Electron/Vite)
+- npm
 
 ## Local development
 
-Install dependencies:
-
 ```bash
 npm install
-```
-
-Start the app in development mode:
-
-```bash
 npm run dev
 ```
 
-Run tests:
-
 ```bash
 npm test
-```
-
-Verify types:
-
-```bash
 npm run typecheck
-```
-
-Build production artifacts:
-
-```bash
 npm run build
-```
-
-Package the app for Windows:
-
-```bash
 npm run package
 ```
 
-> In WSL or non-native shells, the most reliable verification path is often through cmd.exe /c when Rollup or Electron optional dependencies cause issues.
+> On WSL or non-native shells, verification is often more reliable via `cmd.exe /c` when Rollup or Electron optional dependencies misbehave.
 
-## Contribution and context
+## Agent / assistant context
 
-Before continuing work in this repository, review:
+For AI-assisted work in this repo, see:
 
-- [TODO.md](TODO.md)
-- [.github/copilot-instructions.md](.github/copilot-instructions.md)
 - [docs/agent-context.md](docs/agent-context.md)
-- [docs/visual-testing.md](docs/visual-testing.md) before changing visible renderer UI.
+- [.github/copilot-instructions.md](.github/copilot-instructions.md)
+- [docs/visual-testing.md](docs/visual-testing.md) before changing visible renderer UI
 
-## Notes for humans and agents
-
-- The source of truth for the current project state is [TODO.md](TODO.md).
-- Keep the current architecture: Electron + React + TypeScript + local SQLite.
-- Prefer small, verifiable changes focused on the root cause.
-- If IPC, backend, or critical flows are touched, validate them with tests, typecheck, and build.
+Local backlog / historical plans (not published in git) live under `.cursor/project-context/`.

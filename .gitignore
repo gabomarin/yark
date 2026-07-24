@@ -9,3 +9,12 @@ coverage/
 .skillbridge/skill-workspace.json
 .skillbridge/central-repo/.skillbridge/SKILL_GROUP.md
 .skillbridge/central-repo/.skillbridge/skill-workspace.json
+
+# Local Cursor project context (backlog / historical plans — not public)
+.cursor/project-context/
+
+# Do not reintroduce these as tracked repo docs
+TODO.md
+docs/design-direction.md
+docs/smart-configuration-architecture.md
+docs/superpowers/
