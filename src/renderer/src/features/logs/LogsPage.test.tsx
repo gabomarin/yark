@@ -1,5 +1,6 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import { LogsPage } from "./LogsPage";
 import type { RendererApi } from "@shared/ipc";
@@ -63,6 +64,10 @@ function createApiMock(): RendererApi {
 }
 
 describe("LogsPage", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   beforeEach(() => {
     const api = createApiMock();
     api.listServerLogs = vi.fn().mockResolvedValue({
@@ -80,7 +85,19 @@ describe("LogsPage", () => {
             durationMs: 42000,
           },
         ],
-        backups: [],
+        backups: [
+          {
+            id: "backup-1",
+            serverId: server.id,
+            type: "manual",
+            path: "C:/ARK/Backups/backup-1.zip",
+            sizeBytes: 2048,
+            status: "completed",
+            createdAt: "2026-07-23T09:00:00.000Z",
+            completedAt: "2026-07-23T09:01:00.000Z",
+            notes: null,
+          },
+        ],
         events: [
           {
             id: 1,
@@ -122,6 +139,39 @@ describe("LogsPage", () => {
     expect(screen.getByText("Registros")).toBeInTheDocument();
     expect(await screen.findByText("Historial de actualizaciones")).toBeInTheDocument();
     expect(await screen.findByText(/Update successful/i)).toBeInTheDocument();
-    expect(screen.getAllByText("The Island").length).toBeGreaterThan(0);
+    expect(screen.getByText("srv-1-2026-07-23.log")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Abrir en visor externo/i })).toBeInTheDocument();
+    expect(screen.queryByText("Servidor")).not.toBeInTheDocument();
+  });
+
+  it("keeps each log collection in its own viewport scroll region", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AppProviders>
+        <LogsPage
+          servers={[server]}
+          selectedServerId={server.id}
+          onSelectedServerChange={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByText("Update completado")).toBeInTheDocument();
+    expect(document.querySelector('[data-fill-viewport="true"]')).toBeInTheDocument();
+    expect(document.querySelector('[data-logs-scroll-region="events"]')).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Ejecución" }));
+    expect(await screen.findByText("Server booted")).toBeInTheDocument();
+    expect(document.querySelector('[data-logs-scroll-region="runtime"]')).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Actualizaciones" }));
+    expect(await screen.findByText(/Update successful/i)).toBeInTheDocument();
+    expect(document.querySelector('[data-logs-scroll-region="updates-list"]')).toBeInTheDocument();
+    expect(document.querySelector('[data-logs-scroll-region="update-content"]')).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Respaldos" }));
+    expect(await screen.findByText("C:/ARK/Backups/backup-1.zip")).toBeInTheDocument();
+    expect(document.querySelector('[data-logs-scroll-region="backups"]')).toBeInTheDocument();
   });
 });

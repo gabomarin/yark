@@ -4,7 +4,7 @@
   height: 100%;
   min-height: 0;
   flex: 1;
-  border: 1px solid var(--app-color-border);
+  border: 1px solid var(--app-color-border-subtle);
   border-radius: 14px;
   overflow: hidden;
   background: var(--app-color-panel);
@@ -30,8 +30,13 @@
   min-width: 180px;
 }
 
-.filters {
-  flex-wrap: wrap;
+.filterBar {
+  flex-wrap: nowrap;
+}
+
+.categorySelect {
+  width: 240px;
+  flex-shrink: 0;
 }
 
 .tableWrap {
@@ -39,10 +44,10 @@
   flex-direction: column;
   flex: 1;
   min-height: 260px;
-  border: 1px solid var(--app-color-border);
+  border: 1px solid var(--app-color-border-subtle);
   border-radius: 12px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--ark-gray-1) 35%, transparent);
+  background: var(--app-color-surface-chrome);
 }
 
 .tableHead,
@@ -56,7 +61,7 @@
 
 .tableHead {
   flex-shrink: 0;
-  background: var(--ark-gray-4);
+  background: var(--app-color-surface-control);
   color: var(--app-color-muted);
   font-size: 12px;
   font-weight: 700;
@@ -65,7 +70,7 @@
 }
 
 .sectionBlock + .sectionBlock {
-  border-top: 1px solid rgba(50, 70, 94, 0.7);
+  border-top: 1px solid var(--app-color-border-subtle);
 }
 
 .sectionHeader {
@@ -75,13 +80,13 @@
   gap: 12px;
   width: 100%;
   padding: 10px 14px;
-  background: var(--ark-blue-a2);
+  background: color-mix(in srgb, var(--app-color-surface-control) 72%, transparent);
   color: inherit;
   text-align: left;
 }
 
 .sectionHeader:hover {
-  background: var(--ark-blue-a3);
+  background: var(--app-color-surface-control-hover);
 }
 
 .sectionPath {
@@ -98,7 +103,7 @@
 }
 
 .row + .row {
-  border-top: 1px solid rgba(50, 70, 94, 0.45);
+  border-top: 1px solid color-mix(in srgb, var(--app-color-border-subtle) 68%, transparent);
 }
 
 .rowActions {
@@ -112,9 +117,9 @@
 
 .modRow {
   padding: 10px 12px;
-  border: 1px solid var(--app-color-border);
+  border: 1px solid var(--app-color-border-subtle);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--ark-gray-1) 35%, transparent);
+  background: var(--app-color-surface-chrome);
 }
 
 .rawEditor {
@@ -144,5 +149,17 @@
 @media (max-height: 720px) {
   .content {
     overflow-y: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .filterBar {
+    flex-wrap: wrap;
+  }
+
+  .search,
+  .categorySelect {
+    width: 100%;
+    flex-basis: 100%;
   }
 }

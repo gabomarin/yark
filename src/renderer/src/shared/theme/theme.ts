@@ -21,20 +21,32 @@ export const appCssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {
     ...radixCssVariables,
     "--app-color-bg": "var(--ark-background)",
-    "--app-color-bg-accent":
-      "color-mix(in srgb, var(--ark-gray-2) 90%, var(--ark-blue-2))",
-    "--app-color-panel":
-      "color-mix(in srgb, var(--ark-gray-3) 94%, var(--ark-blue-2))",
-    "--app-color-panel-alt":
-      "color-mix(in srgb, var(--ark-gray-4) 92%, var(--ark-blue-3))",
+    "--app-color-surface-chrome":
+      "color-mix(in srgb, var(--ark-gray-2) 88%, var(--ark-blue-2))",
+    "--app-color-surface-panel":
+      "color-mix(in srgb, var(--ark-gray-3) 86%, var(--ark-blue-2))",
+    "--app-color-surface-control":
+      "color-mix(in srgb, var(--ark-gray-5) 72%, var(--ark-blue-3))",
+    "--app-color-surface-control-hover":
+      "color-mix(in srgb, var(--ark-gray-5) 64%, var(--ark-blue-4))",
+    "--app-color-border-subtle":
+      "color-mix(in srgb, var(--ark-gray-6) 82%, var(--ark-blue-7))",
+    "--app-color-border-control":
+      "color-mix(in srgb, var(--ark-gray-9) 72%, var(--ark-blue-8))",
+    "--app-color-text-soft":
+      "color-mix(in srgb, var(--ark-gray-12) 88%, var(--ark-gray-11))",
+    "--app-color-muted-soft":
+      "color-mix(in srgb, var(--ark-gray-11) 88%, var(--ark-gray-10))",
+    "--app-color-bg-accent": "var(--app-color-surface-chrome)",
+    "--app-color-panel": "var(--app-color-surface-panel)",
+    "--app-color-panel-alt": "var(--app-color-surface-control)",
     "--app-color-panel-cool":
       "color-mix(in srgb, var(--ark-gray-3) 84%, var(--ark-blue-2))",
     "--app-color-panel-cool-emphasis":
       "color-mix(in srgb, var(--ark-gray-3) 72%, var(--ark-blue-3))",
-    "--app-color-border":
-      "color-mix(in srgb, var(--ark-gray-6) 88%, var(--ark-blue-7))",
-    "--app-color-text": "var(--ark-gray-12)",
-    "--app-color-muted": "var(--ark-gray-11)",
+    "--app-color-border": "var(--app-color-border-subtle)",
+    "--app-color-text": "var(--app-color-text-soft)",
+    "--app-color-muted": "var(--app-color-muted-soft)",
     "--app-color-accent": "var(--ark-blue-9)",
     "--app-color-ok": appTokens.colors.ok,
     "--app-color-warn": appTokens.colors.warn,
@@ -50,10 +62,10 @@ export const appCssVariablesResolver: CSSVariablesResolver = () => ({
   light: {},
   dark: {
     "--mantine-color-body": "var(--ark-background)",
-    "--mantine-color-text": "var(--ark-gray-12)",
-    "--mantine-color-dimmed": "var(--ark-gray-11)",
-    "--mantine-color-dark-0": "var(--ark-gray-12)",
-    "--mantine-color-dark-1": "var(--ark-gray-11)",
+    "--mantine-color-text": "var(--app-color-text)",
+    "--mantine-color-dimmed": "var(--app-color-muted)",
+    "--mantine-color-dark-0": "var(--app-color-text)",
+    "--mantine-color-dark-1": "var(--app-color-muted)",
     "--mantine-color-dark-2": "var(--ark-gray-10)",
     "--mantine-color-dark-3": "var(--ark-gray-8)",
     "--mantine-color-dark-4": "var(--ark-gray-7)",

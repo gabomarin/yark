@@ -48,6 +48,24 @@ servidor— pueden usar `--app-color-panel-cool` y
 noche para separarse del lienzo sin convertirse en tarjetas grises ni competir
 con las acciones.
 
+### Escala semántica de superficies
+
+Las superficies del workspace siguen niveles funcionales en lugar de grises
+elegidos por componente:
+
+- `--app-color-surface-chrome`: navegación, barras y paneles estructurales.
+- `--app-color-surface-panel`: formularios, editores y tarjetas de contenido.
+- `--app-color-surface-control`: campos y cabeceras interactivas.
+- `--app-color-surface-control-hover`: hover de controles.
+- `--app-color-border-subtle`: separación entre regiones.
+- `--app-color-border-control`: límite identificable de campos.
+- `--app-color-text-soft` y `--app-color-muted-soft`: texto principal y
+  secundario sin blanco puro.
+
+Un campo debe distinguirse del panel por relleno y borde. En reposo el borde de
+control mantiene aproximadamente `3.10:1` respecto al panel; al recibir foco
+usa azul interactivo y halo, sin cambiar el layout.
+
 Las selecciones persistentes en listas usan una superficie oscura apenas
 contaminada de azul, un borde tenue y un indicador lateral. El azul sólido se
 reserva para acciones primarias y no debe utilizarse como relleno completo de
@@ -117,3 +135,76 @@ Un componente pertenece a esta identidad cuando:
 3. Mantiene superficies planas y una jerarquía clara.
 4. Introduce, como máximo, un detalle paleo-tecnológico sutil.
 5. Se sentiría profesional junto a Docker Desktop, GitHub Desktop o Linear.
+
+## Workspace adaptable
+
+El workspace protege primero la superficie de trabajo. El breakpoint no se
+elige por una categoría genérica de dispositivo, sino por el ancho mínimo que
+necesitan el formulario y los editores INI.
+
+- A partir de `1600 px` se muestran lista de servidores, editor y panel de
+  estado/acciones en tres columnas.
+- Por debajo de `1600 px` el editor ocupa todo el ancho disponible.
+- La lista de servidores se reutiliza en un drawer izquierdo y las acciones
+  secundarias en uno derecho.
+- Las acciones de ciclo de vida —iniciar, reiniciar y detener— permanecen en el
+  header porque afectan al estado inmediato del servidor.
+- Los drawers son temporales y se cierran al completar la selección; no se
+  añade una preferencia manual cuando el comportamiento puede resolverse de
+  forma automática y predecible.
+
+Este patrón puede reutilizarse en otras pantallas con un área de trabajo
+central, siempre que los paneles desplazados sean contexto o acciones
+secundarias y no información imprescindible para completar la tarea principal.
+
+## Filtros de catálogos densos
+
+Las colecciones extensas de filtros no se representan como filas de badges o
+botones. Cuando existen más categorías de las que caben en una sola línea:
+
+- se usa un selector buscable junto al campo de búsqueda principal;
+- solo se ofrecen categorías con resultados en el contexto actual;
+- cada opción comunica su cantidad de resultados;
+- una selección se conserva entre contextos únicamente si sigue siendo válida;
+- el espacio vertical se reserva para el contenido que el usuario intenta
+  consultar o editar.
+
+Los chips se reservan para conjuntos pequeños —aproximadamente cinco opciones
+o menos— cuando la comparación simultánea entre alternativas aporta valor.
+
+## Vistas operativas de altura completa
+
+Las pantallas destinadas a consultar flujos extensos —registros, consolas,
+jobs o historiales— mantienen el contexto operativo dentro del viewport:
+
+- el encabezado, las acciones globales y la navegación de sección no se
+  desplazan con el contenido;
+- listas y consolas reciben el scroll, no la página completa;
+- toda la cadena flex debe declarar `min-height: 0`; no se simula el resultado
+  con alturas máximas arbitrarias;
+- una vista master-detail permite scroll independiente en ambas regiones;
+- los metadatos y acciones del elemento seleccionado permanecen visibles;
+- un panel sin datos muestra un estado vacío deliberado y explicativo.
+
+`PageScaffold` ofrece `fillViewport` como comportamiento opt-in. No debe
+activarse en páginas de contenido documental o formularios que naturalmente
+necesiten crecer.
+
+### Densidad en vistas master-detail
+
+Cuando el detalle contiene una consola, editor o visor extenso, ese contenido
+es el objetivo principal y debe recibir la mayor parte del alto disponible:
+
+- la acción del elemento seleccionado comparte encabezado con el título cuando
+  no necesita explicación adicional;
+- los datos ya visibles en el contexto global no se repiten en el detalle;
+- entre dos y cuatro metadatos breves se agrupan en una sola franja compacta,
+  con separadores, en lugar de tarjetas independientes;
+- el historial identifica el artefacto real —por ejemplo, el nombre del
+  archivo— y no repite el nombre del servidor;
+- una selección se comunica con indicador lateral, borde y contaminación de
+  color mínima; no mediante un bloque saturado.
+
+La compactación no debe ocultar ni truncar información prioritaria. En ventanas
+estrechas, la franja puede desplazarse horizontalmente antes que crecer y
+reducir de forma significativa el área de trabajo.

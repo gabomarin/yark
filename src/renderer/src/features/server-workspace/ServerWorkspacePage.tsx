@@ -1,4 +1,5 @@
-import { Tabs, Alert } from "@mantine/core";
+import { Alert, Drawer, Tabs } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import type {
   ServerInstallationInfo,
@@ -55,6 +56,9 @@ function isServerActive(runtime: ServerRuntimeInfo | null): boolean {
 
 export function ServerWorkspacePage(props: Props): JSX.Element {
   const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>("server");
+  const [serverSwitcherOpen, setServerSwitcherOpen] = useState(false);
+  const [serverActionsOpen, setServerActionsOpen] = useState(false);
+  const compactWorkspace = useMediaQuery("(max-width: 1599px)", false);
   const dirtyRef = useRef(false);
   const lastConfigSectionRef = useRef<ConfigSection>("gameUserSettings");
 
@@ -95,7 +99,10 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
 
   const handleSelectServer = (serverId: string) => {
     if (serverId === props.selectedServerId) return;
-    confirmLeaveIfDirty(() => props.onSelectServer(serverId));
+    confirmLeaveIfDirty(() => {
+      props.onSelectServer(serverId);
+      setServerSwitcherOpen(false);
+    });
   };
 
   const handleBack = () => {
@@ -137,6 +144,31 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
   const runtime = props.statuses.get(selectedServer.id) ?? null;
   const installation = props.installationInfo.get(selectedServer.id) ?? null;
   const serverActive = isServerActive(runtime);
+  const serverListPanel = (
+    <ServerListPanel
+      servers={props.servers}
+      selectedServerId={selectedServer.id}
+      statuses={props.statuses}
+      onSelectServer={handleSelectServer}
+      onAddServer={props.onCreateServer}
+    />
+  );
+  const sidePanel = (
+    <SidePanel
+      server={selectedServer}
+      runtime={runtime}
+      installation={installation}
+      onOpenFolder={() => props.onOpenFolder(selectedServer.id)}
+      onInstallFiles={() => props.onInstallFiles(selectedServer.id)}
+      onUpdateNow={() => props.onUpdateNow(selectedServer.id)}
+      onVerifyFiles={() => props.onVerifyFiles(selectedServer.id)}
+      onSaveWorld={() => props.onSendRcon(selectedServer.id, "SaveWorld")}
+      onBroadcast={(message) =>
+        props.onSendRcon(selectedServer.id, `Broadcast ${message}`)
+      }
+      onKill={() => props.onKillServer(selectedServer.id)}
+    />
+  );
 
   return (
     <div className={classes.root}>
@@ -148,16 +180,16 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
         onStart={() => props.onStartServer(selectedServer.id)}
         onStop={() => props.onStopServer(selectedServer.id)}
         onRestart={() => props.onRestartServer(selectedServer.id)}
+        onOpenServerSwitcher={
+          compactWorkspace ? () => setServerSwitcherOpen(true) : undefined
+        }
+        onOpenServerActions={
+          compactWorkspace ? () => setServerActionsOpen(true) : undefined
+        }
       />
 
-      <div className={classes.body}>
-        <ServerListPanel
-          servers={props.servers}
-          selectedServerId={selectedServer.id}
-          statuses={props.statuses}
-          onSelectServer={handleSelectServer}
-          onAddServer={props.onCreateServer}
-        />
+      <div className={classes.body} data-compact={compactWorkspace || undefined}>
+        {!compactWorkspace && serverListPanel}
 
         <section className={classes.main} data-workspace-scroll>
           <Tabs
@@ -211,21 +243,44 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
           </Tabs>
         </section>
 
-        <SidePanel
-          server={selectedServer}
-          runtime={runtime}
-          installation={installation}
-          onOpenFolder={() => props.onOpenFolder(selectedServer.id)}
-          onInstallFiles={() => props.onInstallFiles(selectedServer.id)}
-          onUpdateNow={() => props.onUpdateNow(selectedServer.id)}
-          onVerifyFiles={() => props.onVerifyFiles(selectedServer.id)}
-          onSaveWorld={() => props.onSendRcon(selectedServer.id, "SaveWorld")}
-          onBroadcast={(message) =>
-            props.onSendRcon(selectedServer.id, `Broadcast ${message}`)
-          }
-          onKill={() => props.onKillServer(selectedServer.id)}
-        />
+        {!compactWorkspace && sidePanel}
       </div>
+
+      {compactWorkspace && (
+        <>
+          <Drawer
+            opened={serverSwitcherOpen}
+            onClose={() => setServerSwitcherOpen(false)}
+            title="Cambiar servidor"
+            position="left"
+            size={320}
+            overlayProps={{ backgroundOpacity: 0.68 }}
+            classNames={{
+              content: classes.drawerContent,
+              header: classes.drawerHeader,
+              body: classes.drawerBody,
+            }}
+          >
+            <div className={classes.drawerPanel}>{serverListPanel}</div>
+          </Drawer>
+
+          <Drawer
+            opened={serverActionsOpen}
+            onClose={() => setServerActionsOpen(false)}
+            title="Estado y acciones"
+            position="right"
+            size={340}
+            overlayProps={{ backgroundOpacity: 0.68 }}
+            classNames={{
+              content: classes.drawerContent,
+              header: classes.drawerHeader,
+              body: classes.drawerBody,
+            }}
+          >
+            <div className={classes.drawerPanel}>{sidePanel}</div>
+          </Drawer>
+        </>
+      )}
     </div>
   );
 }

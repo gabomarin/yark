@@ -3,12 +3,19 @@
   padding: 20px 24px;
 }
 
+.page[data-fill-viewport] {
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .heading h1 {
@@ -30,4 +37,11 @@
 
 .body {
   min-height: 0;
+}
+
+.page[data-fill-viewport] .body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
 }

@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import { ServerWorkspacePage } from "./ServerWorkspacePage";
 
@@ -31,7 +31,37 @@ const serverB = {
   mods: [],
 };
 
+function renderWorkspace(onSelectServer = vi.fn()): void {
+  render(
+    <AppProviders>
+      <ServerWorkspacePage
+        servers={[serverA, serverB]}
+        selectedServerId={serverA.id}
+        statuses={new Map()}
+        installationInfo={new Map()}
+        onSelectServer={onSelectServer}
+        onBack={vi.fn()}
+        onStartServer={vi.fn()}
+        onStopServer={vi.fn()}
+        onRestartServer={vi.fn()}
+        onKillServer={vi.fn()}
+        onOpenFolder={vi.fn()}
+        onInstallFiles={vi.fn()}
+        onUpdateNow={vi.fn()}
+        onVerifyFiles={vi.fn()}
+        onSendRcon={vi.fn()}
+        onServerUpdated={vi.fn()}
+      />
+    </AppProviders>,
+  );
+}
+
 describe("ServerWorkspacePage", () => {
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
   beforeEach(() => {
     vi.stubGlobal("api", {
       readServerIni: vi.fn(async (serverId: string) => ({
@@ -61,28 +91,7 @@ describe("ServerWorkspacePage", () => {
     const user = userEvent.setup();
     const onSelectServer = vi.fn();
 
-    render(
-      <AppProviders>
-        <ServerWorkspacePage
-          servers={[serverA, serverB]}
-          selectedServerId={serverA.id}
-          statuses={new Map()}
-          installationInfo={new Map()}
-          onSelectServer={onSelectServer}
-          onBack={vi.fn()}
-          onStartServer={vi.fn()}
-          onStopServer={vi.fn()}
-          onRestartServer={vi.fn()}
-          onKillServer={vi.fn()}
-          onOpenFolder={vi.fn()}
-          onInstallFiles={vi.fn()}
-          onUpdateNow={vi.fn()}
-          onVerifyFiles={vi.fn()}
-          onSendRcon={vi.fn()}
-          onServerUpdated={vi.fn()}
-        />
-      </AppProviders>,
-    );
+    renderWorkspace(onSelectServer);
 
     expect(screen.getByText("Todos los servidores")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "The Island" })).toBeInTheDocument();
@@ -99,5 +108,88 @@ describe("ServerWorkspacePage", () => {
 
     await user.click(screen.getByText("Scorched Earth"));
     expect(onSelectServer).toHaveBeenCalledWith("srv-b");
+  });
+
+  it("moves secondary panels into drawers in compact workspaces", async () => {
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: query === "(max-width: 1599px)",
+      media: query,
+      onchange: null,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      dispatchEvent: () => false,
+    }));
+    const user = userEvent.setup();
+    const onSelectServer = vi.fn();
+
+    renderWorkspace(onSelectServer);
+
+    expect(
+      await screen.findByRole("button", { name: "Cambiar servidor" }),
+    ).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "Cambiar servidor" }));
+    const serverDialog = await screen.findByRole("dialog", { name: "Cambiar servidor" });
+    await waitFor(() => expect(serverDialog).toBeVisible());
+    expect(within(serverDialog).getByText("Todos los servidores")).toBeVisible();
+
+    await user.click(within(serverDialog).getByText("Scorched Earth"));
+    expect(onSelectServer).toHaveBeenCalledWith("srv-b");
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Cambiar servidor" })).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Estado y acciones" }));
+    const actionsDialog = await screen.findByRole("dialog", { name: "Estado y acciones" });
+    await waitFor(() => expect(actionsDialog).toBeVisible());
+    expect(within(actionsDialog).getByText("Acciones rápidas")).toBeVisible();
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Estado y acciones" })).not.toBeInTheDocument();
+    });
+  });
+
+  it("shows only available category filters and resets an invalid filter between INI files", async () => {
+    const user = userEvent.setup();
+    vi.mocked(window.api.readServerIni).mockResolvedValue({
+      ok: true,
+      data: {
+        serverId: serverA.id,
+        gameUserSettingsPath: "C:/ARK/srv-a/GameUserSettings.ini",
+        gameIniPath: "C:/ARK/srv-a/Game.ini",
+        gameUserSettingsExisted: true,
+        gameIniExisted: true,
+        payload: {
+          gameUserSettings: "[SessionSettings]\nSessionName=Test\n",
+          game: "[Custom]\nTotallyUnknownSettingXYZ=1\n",
+        },
+      },
+    });
+    renderWorkspace();
+
+    await user.click(screen.getByRole("tab", { name: "Game.ini" }));
+    await waitFor(() => {
+      expect(screen.getAllByText("TotallyUnknownSettingXYZ").length).toBeGreaterThan(0);
+    });
+
+    const categorySelect = screen.getByRole("textbox", {
+      name: "Filtrar por categoría",
+    });
+    expect(categorySelect).toHaveValue("Todos los ajustes (1)");
+
+    await user.click(categorySelect);
+    expect(screen.getByRole("option", { name: "Otros (1)" })).toBeVisible();
+    expect(screen.queryByRole("option", { name: /Mods/ })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("option", { name: "Otros (1)" }));
+    expect(categorySelect).toHaveValue("Otros (1)");
+
+    await user.click(screen.getByRole("tab", { name: "GameUserSettings.ini" }));
+    await waitFor(() => {
+      expect(screen.getAllByText("SessionName").length).toBeGreaterThan(0);
+      expect(categorySelect).toHaveValue("Todos los ajustes (1)");
+    });
   });
 });

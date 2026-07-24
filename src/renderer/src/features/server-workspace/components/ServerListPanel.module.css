@@ -3,8 +3,8 @@
   flex-direction: column;
   width: 100%;
   min-width: 0;
-  border-right: 1px solid var(--app-color-border);
-  background: color-mix(in srgb, var(--ark-gray-1) 55%, transparent);
+  border-right: 1px solid var(--app-color-border-subtle);
+  background: var(--app-color-surface-chrome);
   min-height: 0;
   overflow: hidden;
 }
@@ -49,7 +49,7 @@
 }
 
 .item:hover {
-  background: var(--ark-gray-a2);
+  background: color-mix(in srgb, var(--app-color-surface-control) 52%, transparent);
 }
 
 .item[data-selected] {

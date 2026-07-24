@@ -6,6 +6,7 @@ import {
   MagnifyingGlass,
   ArrowCounterClockwise,
   ArrowUUpLeft,
+  FunnelSimple,
 } from "@phosphor-icons/react";
 import {
   ActionIcon,
@@ -35,7 +36,6 @@ import type {
 } from "@shared/types";
 import { useEffect, useMemo, useState } from "react";
 import {
-  INI_FILTERS,
   defaultTextForFile,
   filterIniRows,
   groupRowsByUiCategory,
@@ -142,6 +142,23 @@ export function ConfigurationEditor(props: Props): JSX.Element {
 
   const activeText = payload !== null ? textForFile(payload, activeFileKey) : "";
   const rows = useMemo(() => parseIniRows(activeText), [activeText]);
+  const availableRows = useMemo(
+    () => filterIniRows(rows, "", "all", activeFileKey),
+    [rows, activeFileKey],
+  );
+  const categoryOptions = useMemo(
+    () => [
+      {
+        value: "all",
+        label: `Todos los ajustes (${availableRows.length})`,
+      },
+      ...groupRowsByUiCategory(availableRows, activeFileKey).map((group) => ({
+        value: group.category,
+        label: `${group.label} (${group.rows.length})`,
+      })),
+    ],
+    [availableRows, activeFileKey],
+  );
   const visibleRows = useMemo(
     () => filterIniRows(rows, search, filter, activeFileKey),
     [rows, search, filter, activeFileKey],
@@ -150,6 +167,12 @@ export function ConfigurationEditor(props: Props): JSX.Element {
     () => groupRowsByUiCategory(visibleRows, activeFileKey),
     [visibleRows, activeFileKey],
   );
+
+  useEffect(() => {
+    if (!categoryOptions.some((option) => option.value === filter)) {
+      setFilter("all");
+    }
+  }, [categoryOptions, filter]);
 
   const updateValue = (
     rowSection: string,
@@ -385,13 +408,24 @@ export function ConfigurationEditor(props: Props): JSX.Element {
               </Group>
             </Group>
 
-            <Group gap="sm" align="center">
+            <Group gap="sm" align="center" className={classes.filterBar}>
               <TextInput
                 className={classes.search}
                 placeholder="Buscar ajustes"
                 leftSection={<MagnifyingGlass size={14} />}
                 value={search}
                 onChange={(event) => setSearch(event.currentTarget.value)}
+              />
+              <Select
+                className={classes.categorySelect}
+                aria-label="Filtrar por categoría"
+                leftSection={<FunnelSimple size={15} />}
+                value={filter}
+                data={categoryOptions}
+                searchable
+                allowDeselect={false}
+                nothingFoundMessage="Sin categorías"
+                onChange={(value) => setFilter((value ?? "all") as IniFilterId)}
               />
               <Button size="xs" variant="light" onClick={() => setAllSectionsCollapsed(true)}>
                 Colapsar
@@ -404,19 +438,6 @@ export function ConfigurationEditor(props: Props): JSX.Element {
                   Sin guardar
                 </Badge>
               )}
-            </Group>
-
-            <Group gap={6} className={classes.filters}>
-              {INI_FILTERS.map((item) => (
-                <Button
-                  key={item.id}
-                  size="xs"
-                  variant={filter === item.id ? "filled" : "light"}
-                  onClick={() => setFilter(item.id)}
-                >
-                  {item.label}
-                </Button>
-              ))}
             </Group>
 
             <div className={classes.tableWrap}>

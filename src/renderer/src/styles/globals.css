@@ -39,6 +39,30 @@ body {
   font-family: "Segoe UI", Arial, sans-serif;
 }
 
+.mantine-Input-input[data-variant="default"] {
+  --input-bg: var(--app-color-surface-control);
+  --input-bd: var(--app-color-border-control);
+}
+
+.mantine-Input-input[data-variant="default"]:where(:not(:disabled)):hover {
+  --input-bg: var(--app-color-surface-control-hover);
+}
+
+.mantine-Input-input[data-variant="default"]:disabled {
+  --input-bg: color-mix(
+    in srgb,
+    var(--app-color-surface-control) 42%,
+    var(--app-color-surface-panel)
+  );
+  --input-bd: var(--app-color-border-subtle);
+}
+
+.mantine-Input-input[data-variant="default"]:focus,
+.mantine-Input-input[data-variant="default"]:focus-within {
+  --input-bd: var(--ark-blue-11);
+  box-shadow: 0 0 0 2px var(--ark-blue-a3);
+}
+
 ::selection {
   color: var(--app-color-text);
   background: color-mix(in srgb, var(--app-color-cryo) 32%, transparent);

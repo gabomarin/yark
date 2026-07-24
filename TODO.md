@@ -223,11 +223,11 @@ Validación del bloque 2.6 — Obsidian Atmosphere (2026-07-24):
 
 Auditoría UX/UI posterior al bloque 2.6 (2026-07-24):
 
-- [ ] Reequilibrar la escala de superficies: panel/input mide aproximadamente `1.13:1` y panel/borde `1.51:1`, mientras el texto principal alcanza `14.35:1`.
-- [ ] Reducir la mezcla de temperaturas entre lienzo azul, paneles grises, laterales negros y campos neutrales; definir niveles de elevación semánticos.
-- [ ] Dar más ancho útil al editor INI en `1280×720`: sidebar global, lista de servidores, editor y acciones laterales compiten simultáneamente.
-- [ ] Simplificar filtros de categorías del editor INI en ventanas compactas; los chips azules ocupan el foco visual antes que los ajustes.
-- [ ] Sustituir el gran contenedor gris de Registros por una composición de lista; la vista actual genera una página de aproximadamente `4342 px` de alto.
+- [x] Reequilibrar la escala de superficies: borde de control/panel elevado de aproximadamente `1.51:1` a `3.10:1`; foco/control alcanza `6.85:1`.
+- [x] Reducir la mezcla de temperaturas en workspace y editores mediante niveles semánticos de chrome, panel, control, hover y bordes.
+- [x] Dar más ancho útil al editor INI en `1280×720`: modo compacto responsive con editor a ancho completo y paneles secundarios bajo demanda.
+- [x] Simplificar filtros de categorías del editor INI: selector único con cantidades y opciones disponibles por archivo.
+- [x] Registros usa el alto del viewport, scroll interno y una jerarquía master-detail compacta que prioriza la consola sobre metadatos y superficies decorativas.
 - [ ] Diferenciar jerarquía en SteamCMD: estado, ruta, caché y consola usan superficies con prácticamente el mismo peso.
 - [ ] Revisar el exceso de vacío del Overview en `2560×1440` sin convertirlo nuevamente en un dashboard de métricas.
 
@@ -257,6 +257,64 @@ Validación del bloque 2.9 — contenedores de servidor (2026-07-24):
 - [x] Typecheck, build y tests focalizados de Overview y ServerCard: 6/6.
 - [x] Overview revisado con Playwright en `1280×720`, `1920×1080` y `2560×1440`.
 - [x] Sin overflow horizontal, errores de consola ni excepciones del renderer.
+
+Validación del bloque 2.10 — jerarquía de superficies (2026-07-24):
+
+- [x] Escala semántica aplicada a workspace, formulario de servidor, editores INI, panel de servidores y acciones laterales.
+- [x] Controles Mantine alineados globalmente con superficie, borde, hover, disabled y foco coherentes.
+- [x] Tabs activas, cabeceras de tabla y separadores retirados de grises/rgba locales.
+- [x] Texto principal suavizado sin perder legibilidad; texto secundario conserva jerarquía suficiente.
+- [x] Typecheck, build y tests focalizados de AppShell, Overview, ServerCard y workspace: 9/9.
+- [x] Servidor, Game.ini, GameUserSettings.ini, Overview, Registros y SteamCMD revisados con Playwright en `1280×720`, `1920×1080` y `2560×1440`.
+- [x] Sin overflow horizontal, errores de consola ni excepciones del renderer en las dieciocho capturas.
+- [x] Registros y SteamCMD no presentan regresiones; su jerarquía interna permanece como trabajo explícito de bloques posteriores.
+
+Validación del bloque 2.11 — workspace adaptable (2026-07-24):
+
+- [x] A menos de `1600 px`, la lista de servidores y el panel de estado/acciones dejan de competir permanentemente con el editor.
+- [x] Selector de servidor y acciones secundarias reutilizados en drawers izquierdo y derecho; iniciar, reiniciar y detener permanecen visibles en el header.
+- [x] Cambio de servidor desde el drawer cierra la capa y conserva la protección ante cambios INI sin guardar.
+- [x] El editor alcanza `1032 px` de ancho útil en `1280×720`; a partir de `1600 px` vuelve al layout de tres columnas con un mínimo medido de `832 px`.
+- [x] Typecheck, build y tests focalizados de AppShell, Overview, ServerCard y workspace: 10/10.
+- [x] Playwright/Electron revisado en `1280×720`, `1598×900`, `1600×900`, `1920×1080` y `2560×1440`.
+- [x] Servidor, Game.ini, GameUserSettings.ini, Mods y Avanzado recorridos; drawers y scroll real con rueda verificados.
+- [x] Sin overflow horizontal o vertical global, errores de consola ni excepciones del renderer.
+
+Validación del bloque 2.12 — filtros de categorías INI (2026-07-24):
+
+- [x] Quince botones de categoría sustituidos por un único selector buscable junto a la búsqueda de ajustes.
+- [x] El selector muestra solo categorías presentes en el archivo activo e incluye la cantidad de ajustes de cada una.
+- [x] Una categoría se conserva al cambiar de archivo si sigue disponible; si deja de existir, vuelve automáticamente a “Todos los ajustes”.
+- [x] En `1280×720` se eliminaron dos filas de chips y la tabla comienza aproximadamente `80 px` antes.
+- [x] Selector, menú, selección de categoría y scroll con rueda verificados con datos reales.
+- [x] Typecheck, build y pruebas focalizadas del workspace y taxonomía de categorías: 6/6.
+- [x] Game.ini y GameUserSettings.ini revisados con Playwright/Electron en `1280×720`, `1920×1080` y `2560×1440`.
+- [x] Sin overflow global, errores de consola ni excepciones del renderer.
+
+Validación del bloque 2.13 — altura operativa de Registros (2026-07-24):
+
+- [x] `PageScaffold` extendido con modo `fillViewport` opcional, sin modificar el comportamiento de las demás páginas.
+- [x] Header y tabs permanecen visibles; Eventos, Ejecución, Actualizaciones y Respaldos ocupan únicamente el alto restante.
+- [x] Eventos, backups, historial de updates y contenido de consola tienen regiones de scroll independientes.
+- [x] En `1280×720`, la página pasó de aproximadamente `4321 px` de alto a exactamente `720 px`; Eventos conserva `4092 px` de contenido dentro de una región de `470 px`.
+- [x] Actualizaciones mantiene lista y detalle en paralelo; los metadatos y la acción externa permanecen visibles mientras la consola se desplaza.
+- [x] Estados vacíos de Eventos, Ejecución y Respaldos centrados y explicativos para evitar tarjetas vacías sin intención.
+- [x] Typecheck, build y tests focalizados de Registros: 2/2.
+- [x] Los cuatro tabs revisados con Playwright/Electron en `1280×720`, `1920×1080` y `2560×1440`.
+- [x] Scroll con rueda verificado; sin overflow global, errores de consola ni excepciones del renderer.
+
+Validación del bloque 2.14 — densidad y jerarquía de Actualizaciones (2026-07-24):
+
+- [x] Cuatro tarjetas de metadatos sustituidas por una franja compacta de `58 px` con fecha, duración y tamaño.
+- [x] El servidor redundante se retiró del detalle; permanece visible en el selector global.
+- [x] La acción “Abrir en visor externo” se integró en el encabezado del detalle sin ocupar una fila propia.
+- [x] El historial identifica el archivo real y conserva la fecha como contexto secundario.
+- [x] La selección azul intensa se sustituyó por una superficie oscura, borde tenue e indicador lateral coherentes con el workspace.
+- [x] Encabezados del master-detail reducidos a `18 px`, UUID a `14 px` y metadatos a `11–12 px` para evitar que el chrome compita con la consola.
+- [x] En `1280×720`, la consola de actualización creció de aproximadamente `213 px` a `400 px`; alcanza `760 px` en Full HD y `1120 px` en 2K.
+- [x] Typecheck, build y tests focalizados de Registros: 2/2.
+- [x] Eventos, Ejecución, Actualizaciones y Respaldos revisados con Playwright/Electron en `1280×720`, `1920×1080` y `2560×1440`.
+- [x] Sin overflow global, recortes en metadatos prioritarios, errores de consola ni excepciones del renderer.
 
 ### Iteración 3 — Smart Configuration
 
@@ -316,12 +374,10 @@ Antes de marcar una iteración como completada:
 - Criterio aplicado: cada check se marcó como `[x]` solo cuando existe evidencia funcional vigente; si hay implementación parcial o desalineada, se marcó `[-]`; si no hay evidencia o está roto, `[ ]`.
 
 ## Siguiente prioridad recomendada
-1. Pulir editor de servidor (workspace): Startup Parameters editable y tabs restantes del mockup.
-2. Página dedicada de Backups.
-3. Streaming en vivo de Logs durante SteamCMD.
-4. Clusters / Settings como páginas reales.
-5. E2E real contra binario ASA y SteamCMD del host.
-6. Gestion avanzada de mods (Workshop / thumbnails / instalación automática).
+1. Diferenciar la jerarquía interna de SteamCMD.
+2. Revisar el uso del espacio del Overview en QHD/2K.
+3. Retomar Startup Parameters y las páginas funcionales de Backups, Clusters y Settings.
+4. Gestion avanzada de mods para ASA mediante CurseForge.
 
 ## Regla de mantenimiento
 - Cada vez que se complete una tarea, actualizar este archivo en el mismo cambio.

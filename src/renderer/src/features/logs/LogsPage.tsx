@@ -150,6 +150,7 @@ export function LogsPage(props: Props): JSX.Element {
     <PageScaffold
       title="Registros"
       subtitle="Eventos, ejecución, actualizaciones y respaldos por servidor"
+      fillViewport
       actions={
         <Group gap="sm" wrap="wrap">
           <Select
@@ -173,7 +174,7 @@ export function LogsPage(props: Props): JSX.Element {
         </Group>
       }
     >
-      <Stack gap="lg">
+      <Stack gap="lg" className={classes.logsContent} data-logs-page>
         {info !== null && <Alert color="blue">{info}</Alert>}
         {error !== null && <Alert color="red">{error}</Alert>}
 
@@ -182,24 +183,35 @@ export function LogsPage(props: Props): JSX.Element {
             <Text c="dimmed">No hay servidores configurados todavía.</Text>
           </Card>
         ) : (
-          <Tabs value={activeSection} onChange={(value) => setActiveSection((value as LogsSection) ?? "events")}>
-            <Tabs.List>
+          <Tabs
+            value={activeSection}
+            onChange={(value) => setActiveSection((value as LogsSection) ?? "events")}
+            className={classes.tabs}
+          >
+            <Tabs.List className={classes.tabList}>
               <Tabs.Tab value="events">Eventos</Tabs.Tab>
               <Tabs.Tab value="runtime">Ejecución</Tabs.Tab>
               <Tabs.Tab value="updates">Actualizaciones</Tabs.Tab>
               <Tabs.Tab value="backups">Respaldos</Tabs.Tab>
             </Tabs.List>
 
-            <Tabs.Panel value="events" pt="md">
-              <Card withBorder className={classes.panel}>
-                <Stack gap="sm">
+            <Tabs.Panel value="events" className={classes.tabPanel}>
+              <Card withBorder className={`${classes.panel} ${classes.fillPanel}`}>
+                <Stack gap="sm" className={classes.panelStack}>
                   <Title order={3}>Eventos</Title>
                   {loading ? (
                     <Text c="dimmed">Cargando eventos...</Text>
                   ) : logs === null || logs.events.length === 0 ? (
-                    <Text c="dimmed">Sin eventos recientes.</Text>
+                    <LogEmptyState
+                      icon={<ClockCounterClockwise size={24} />}
+                      title="Sin eventos recientes"
+                      description="Las operaciones del servidor aparecerán aquí cuando se registren."
+                    />
                   ) : (
-                    <div className={classes.eventList}>
+                    <div
+                      className={classes.eventList}
+                      data-logs-scroll-region="events"
+                    >
                       {logs.events.map((event) => (
                         <div key={event.id} className={classes.eventRow}>
                           <Text size="sm" c="dimmed">{new Date(event.createdAt).toLocaleString()}</Text>
@@ -212,32 +224,44 @@ export function LogsPage(props: Props): JSX.Element {
               </Card>
             </Tabs.Panel>
 
-            <Tabs.Panel value="runtime" pt="md">
-              <Card withBorder className={classes.panel}>
-                <Stack gap="sm">
+            <Tabs.Panel value="runtime" className={classes.tabPanel}>
+              <Card withBorder className={`${classes.panel} ${classes.fillPanel}`}>
+                <Stack gap="sm" className={classes.panelStack}>
                   <Title order={3}>Ejecución</Title>
                   {loading ? (
                     <Text c="dimmed">Cargando registro de ejecución...</Text>
                   ) : logs === null || logs.runtimeLogLines.length === 0 ? (
-                    <Text c="dimmed">Todavía no hay salida de ejecución capturada.</Text>
+                    <LogEmptyState
+                      icon={<FileText size={24} />}
+                      title="Sin salida de ejecución"
+                      description="La consola capturada aparecerá aquí cuando el servidor genere actividad."
+                    />
                   ) : (
-                    <pre className={classes.console}>{logs.runtimeLogLines.join("\n")}</pre>
+                    <pre
+                      className={classes.console}
+                      data-logs-scroll-region="runtime"
+                    >
+                      {logs.runtimeLogLines.join("\n")}
+                    </pre>
                   )}
                 </Stack>
               </Card>
             </Tabs.Panel>
 
-            <Tabs.Panel value="updates" pt="md">
+            <Tabs.Panel value="updates" className={classes.tabPanel}>
               <div className={classes.updatesLayout}>
-                <Card withBorder className={classes.panel}>
-                  <Stack gap="sm">
-                    <Title order={3}>Historial de actualizaciones</Title>
+                <Card withBorder className={`${classes.panel} ${classes.historyPanel} ${classes.fillPanel}`}>
+                  <Stack gap="sm" className={classes.panelStack}>
+                    <Title order={3} size="h4" className={classes.panelTitle}>Historial de actualizaciones</Title>
                     {loading ? (
                       <Text c="dimmed">Cargando historial...</Text>
                     ) : logs === null || logs.updateFiles.length === 0 ? (
                       <Text c="dimmed">Sin registros de actualización.</Text>
                     ) : (
-                      <div className={classes.updateList}>
+                      <div
+                        className={classes.updateList}
+                        data-logs-scroll-region="updates-list"
+                      >
                         {logs.updateFiles.map((file) => (
                           <button
                             key={file.fileName}
@@ -245,8 +269,8 @@ export function LogsPage(props: Props): JSX.Element {
                             className={`${classes.updateRow} ${selectedUpdateFile === file.fileName ? classes.updateRowActive : ""}`}
                             onClick={() => void openUpdateLog(selectedServer.id, file.fileName)}
                           >
-                            <div>
-                              <Text fw={600}>{selectedServer.name}</Text>
+                            <div className={classes.updateSummary}>
+                              <Text size="sm" fw={600} truncate="end" title={file.fileName}>{file.fileName}</Text>
                               <Text size="sm" c="dimmed">{new Date(file.modifiedAt).toLocaleString()}</Text>
                             </div>
                             <Badge color={statusColor(file.status)} variant="light">{file.status}</Badge>
@@ -257,12 +281,25 @@ export function LogsPage(props: Props): JSX.Element {
                   </Stack>
                 </Card>
 
-                <Card withBorder className={classes.panel}>
-                  <Stack gap="md">
-                    <Group justify="space-between" align="center">
-                      <Title order={3}>Detalle de la actualización</Title>
+                <Card withBorder className={`${classes.panel} ${classes.detailPanel} ${classes.fillPanel}`}>
+                  <Stack gap="sm" className={classes.panelStack}>
+                    <Group justify="space-between" align="center" wrap="wrap" gap="sm" className={classes.detailHeader}>
+                      <Group gap="sm" wrap="nowrap">
+                        <Title order={3} size="h4" className={classes.panelTitle}>Detalle de la actualización</Title>
+                        {selectedUpdateInfo !== null && (
+                          <Badge color={statusColor(selectedUpdateInfo.status)} variant="light">{selectedUpdateInfo.status}</Badge>
+                        )}
+                      </Group>
                       {selectedUpdateInfo !== null && (
-                        <Badge color={statusColor(selectedUpdateInfo.status)} variant="light">{selectedUpdateInfo.status}</Badge>
+                        <Button
+                          variant="default"
+                          size="compact-sm"
+                          leftSection={<ArrowSquareOut size={15} />}
+                          onClick={() => void openInExternalViewer()}
+                          disabled={busy}
+                        >
+                          Abrir en visor externo
+                        </Button>
                       )}
                     </Group>
 
@@ -270,18 +307,17 @@ export function LogsPage(props: Props): JSX.Element {
                       <Text c="dimmed">Selecciona un update para ver el detalle.</Text>
                     ) : (
                       <>
-                        <div className={classes.detailsGrid}>
-                          <DetailItem label="Servidor" value={selectedServer.name} icon={<HardDrives size={16} />} />
+                        <div className={classes.detailsMeta}>
                           <DetailItem label="Fecha" value={new Date(selectedUpdateInfo.modifiedAt).toLocaleString()} icon={<ClockCounterClockwise size={16} />} />
                           <DetailItem label="Duración" value={formatDuration(selectedUpdateInfo.durationMs)} icon={<ClockCounterClockwise size={16} />} />
                           <DetailItem label="Tamaño" value={formatSize(selectedUpdateInfo.sizeBytes)} icon={<FileText size={16} />} />
                         </div>
-                        <Group justify="flex-end">
-                          <Button variant="light" leftSection={<ArrowSquareOut size={16} />} onClick={() => void openInExternalViewer()} disabled={busy}>
-                            Abrir en visor externo
-                          </Button>
-                        </Group>
-                        <pre className={classes.console}>{updateContent.length > 0 ? updateContent : "Cargando contenido del log..."}</pre>
+                        <pre
+                          className={classes.console}
+                          data-logs-scroll-region="update-content"
+                        >
+                          {updateContent.length > 0 ? updateContent : "Cargando contenido del log..."}
+                        </pre>
                       </>
                     )}
                   </Stack>
@@ -289,16 +325,23 @@ export function LogsPage(props: Props): JSX.Element {
               </div>
             </Tabs.Panel>
 
-            <Tabs.Panel value="backups" pt="md">
-              <Card withBorder className={classes.panel}>
-                <Stack gap="sm">
+            <Tabs.Panel value="backups" className={classes.tabPanel}>
+              <Card withBorder className={`${classes.panel} ${classes.fillPanel}`}>
+                <Stack gap="sm" className={classes.panelStack}>
                   <Title order={3}>Respaldos</Title>
                   {loading ? (
                     <Text c="dimmed">Cargando backups...</Text>
                   ) : logs === null || logs.backups.length === 0 ? (
-                    <Text c="dimmed">Sin historial de backups.</Text>
+                    <LogEmptyState
+                      icon={<HardDrives size={24} />}
+                      title="Sin respaldos registrados"
+                      description="Los respaldos completados y sus rutas aparecerán en este historial."
+                    />
                   ) : (
-                    <div className={classes.eventList}>
+                    <div
+                      className={classes.eventList}
+                      data-logs-scroll-region="backups"
+                    >
                       {logs.backups.map((backup) => (
                         <div key={backup.id} className={classes.eventRow}>
                           <Text fw={600}>{backup.type}</Text>
@@ -328,7 +371,29 @@ function DetailItem({ label, value, icon }: DetailItemProps): JSX.Element {
   return (
     <div className={classes.detailItem}>
       <Text className={classes.detailLabel}>{icon}{label}</Text>
-      <Text>{value}</Text>
+      <Text size="xs" className={classes.detailValue}>{value}</Text>
+    </div>
+  );
+}
+
+interface LogEmptyStateProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+
+function LogEmptyState({
+  icon,
+  title,
+  description,
+}: LogEmptyStateProps): JSX.Element {
+  return (
+    <div className={classes.emptyState}>
+      <div className={classes.emptyIcon}>{icon}</div>
+      <Text fw={600}>{title}</Text>
+      <Text c="dimmed" size="sm" maw={420}>
+        {description}
+      </Text>
     </div>
   );
 }

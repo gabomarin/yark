@@ -1,8 +1,10 @@
 import {
   ArrowLeft,
   ArrowsClockwise,
+  HardDrives,
   Play,
   Power,
+  Wrench,
 } from "@phosphor-icons/react";
 import { ActionIcon, Badge, Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
@@ -16,6 +18,8 @@ interface Props {
   onStart: () => void;
   onStop: () => void;
   onRestart: () => void;
+  onOpenServerSwitcher?: () => void;
+  onOpenServerActions?: () => void;
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -81,35 +85,59 @@ export function WorkspaceHeader(props: Props): JSX.Element {
         </Stack>
       </Group>
 
-      <Group gap="xs" wrap="wrap">
-        <Button
-          size="sm"
-          leftSection={<Play size={14} weight="fill" />}
-          onClick={props.onStart}
-          disabled={!canStart}
-        >
-          Iniciar
-        </Button>
-        <Button
-          size="sm"
-          variant="light"
-          leftSection={<ArrowsClockwise size={14} />}
-          onClick={props.onRestart}
-          disabled={!canRestart}
-        >
-          Reiniciar
-        </Button>
-        <Button
-          size="sm"
-          color="red"
-          variant="light"
-          leftSection={<Power size={14} />}
-          onClick={props.onStop}
-          disabled={!canStop}
-        >
-          Detener
-        </Button>
-      </Group>
+      <Stack gap={7} align="flex-end" className={classes.controls}>
+        <Group gap="xs" wrap="nowrap">
+          <Button
+            size="sm"
+            leftSection={<Play size={14} weight="fill" />}
+            onClick={props.onStart}
+            disabled={!canStart}
+          >
+            Iniciar
+          </Button>
+          <Button
+            size="sm"
+            variant="light"
+            leftSection={<ArrowsClockwise size={14} />}
+            onClick={props.onRestart}
+            disabled={!canRestart}
+          >
+            Reiniciar
+          </Button>
+          <Button
+            size="sm"
+            color="red"
+            variant="light"
+            leftSection={<Power size={14} />}
+            onClick={props.onStop}
+            disabled={!canStop}
+          >
+            Detener
+          </Button>
+        </Group>
+
+        {props.onOpenServerSwitcher !== undefined &&
+          props.onOpenServerActions !== undefined && (
+            <Group gap={6} wrap="nowrap" className={classes.compactTools}>
+              <Button
+                size="compact-sm"
+                variant="default"
+                leftSection={<HardDrives size={14} />}
+                onClick={props.onOpenServerSwitcher}
+              >
+                Cambiar servidor
+              </Button>
+              <Button
+                size="compact-sm"
+                variant="default"
+                leftSection={<Wrench size={14} />}
+                onClick={props.onOpenServerActions}
+              >
+                Estado y acciones
+              </Button>
+            </Group>
+          )}
+      </Stack>
     </header>
   );
 }

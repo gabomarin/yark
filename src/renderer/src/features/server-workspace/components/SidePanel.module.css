@@ -5,14 +5,15 @@
   flex-direction: column;
   gap: 10px;
   padding: 12px;
-  border-left: 1px solid var(--app-color-border);
-  background: color-mix(in srgb, var(--ark-gray-1) 45%, transparent);
+  border-left: 1px solid var(--app-color-border-subtle);
+  background: var(--app-color-surface-chrome);
   overflow: auto;
   min-height: 0;
 }
 
-.card {
-  background: var(--app-color-bg-accent);
+.card:global(.mantine-Card-root) {
+  background: var(--app-color-surface-panel);
+  border-color: var(--app-color-border-subtle);
 }
 
 .widgetTitle {

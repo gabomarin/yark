@@ -6,11 +6,22 @@ interface Props extends PropsWithChildren {
   title: string;
   subtitle?: string;
   actions?: ReactNode;
+  fillViewport?: boolean;
 }
 
-export function PageScaffold({ title, subtitle, actions, children }: Props): JSX.Element {
+export function PageScaffold({
+  title,
+  subtitle,
+  actions,
+  fillViewport = false,
+  children,
+}: Props): JSX.Element {
   return (
-    <Stack gap="lg" className={classes.page}>
+    <Stack
+      gap="lg"
+      className={classes.page}
+      data-fill-viewport={fillViewport || undefined}
+    >
       <header className={classes.header}>
         <div className={classes.heading}>
           <h1>{title}</h1>

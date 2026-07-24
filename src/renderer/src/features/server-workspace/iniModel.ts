@@ -56,14 +56,6 @@ const UI_CATEGORY_LABELS_ES: Record<AsaUiCategoryId, string> = {
   other: "Otros",
 };
 
-export const INI_FILTERS: Array<{ id: IniFilterId; label: string }> = [
-  { id: "all", label: "Todos" },
-  ...ASA_UI_CATEGORIES.map((item) => ({
-    id: item.id,
-    label: UI_CATEGORY_LABELS_ES[item.id],
-  })),
-];
-
 export interface IniUiCategoryGroup {
   category: AsaUiCategoryId;
   label: string;
