@@ -122,8 +122,11 @@ export function BackupsPage(props: Props): JSX.Element {
   const [keepLastEnabled, setKeepLastEnabled] = useState(false);
   const [keepLastPerKind, setKeepLastPerKind] = useState(5);
 
-  const load = async () => {
-    setLoading(true);
+  const load = async (opts?: { quiet?: boolean }) => {
+    const quiet = opts?.quiet === true;
+    if (!quiet) {
+      setLoading(true);
+    }
     setError(null);
     if (props.servers.length === 0) {
       setSummary(null);
@@ -140,13 +143,16 @@ export function BackupsPage(props: Props): JSX.Element {
       return;
     }
 
-    const nextDrafts: Record<string, DraftPolicy> = {};
-    for (const row of result.data.servers) {
-      nextDrafts[row.serverId] = toDraft(row.policy);
-    }
     setSummary(result.data);
-    setDrafts(nextDrafts);
-    setDiskDraft(result.data.diskSettings);
+    // Quiet refresh must not clobber in-progress policy edits.
+    if (!quiet) {
+      const nextDrafts: Record<string, DraftPolicy> = {};
+      for (const row of result.data.servers) {
+        nextDrafts[row.serverId] = toDraft(row.policy);
+      }
+      setDrafts(nextDrafts);
+      setDiskDraft(result.data.diskSettings);
+    }
   };
 
   useEffect(() => {
@@ -156,7 +162,7 @@ export function BackupsPage(props: Props): JSX.Element {
   useEffect(() => {
     if (typeof window.api.onBackupsChanged !== "function") return undefined;
     return window.api.onBackupsChanged(() => {
-      void load();
+      void load({ quiet: true });
     });
   }, [props.servers]);
 
@@ -194,7 +200,7 @@ export function BackupsPage(props: Props): JSX.Element {
       setError(result.error ?? "Could not save backup policy");
       return;
     }
-    await load();
+    await load({ quiet: true });
     setInfo("Saved backup settings for the selected server.");
   };
 
