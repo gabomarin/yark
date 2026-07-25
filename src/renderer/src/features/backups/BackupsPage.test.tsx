@@ -2,7 +2,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
-import type { BackupRecord, ServerProfile } from "@shared/types";
+import type { BackupFleetSummary, ServerProfile } from "@shared/types";
 import { BackupsPage } from "./BackupsPage";
 
 const server: ServerProfile = {
@@ -24,17 +24,75 @@ const server: ServerProfile = {
   updatedAt: "2026-07-24T00:00:00.000Z",
 };
 
-const completedBackup: BackupRecord = {
-  id: "bk-1",
-  serverId: "srv-1",
-  type: "manual",
-  kind: "world",
-  path: "C:/backups/bk-1",
-  sizeBytes: 2048,
-  status: "completed",
-  createdAt: "2026-07-24T12:00:00.000Z",
-  completedAt: "2026-07-24T12:01:00.000Z",
-  notes: null,
+const fleetSummary: BackupFleetSummary = {
+  servers: [
+    {
+      serverId: "srv-1",
+      serverName: "The Island",
+      policy: {
+        serverId: "srv-1",
+        enabled: false,
+        intervalMinutes: 60,
+        retainCountWorld: 20,
+        retainCountPlayers: 20,
+        retainCountIni: 10,
+        backupDir: null,
+        updatedAt: "2026-07-24T00:00:00.000Z",
+      },
+      resolvedRoot: "C:/ARK/srv-1/Backups",
+      health: "unknown",
+      latest: {
+        id: "bk-1",
+        serverId: "srv-1",
+        type: "manual",
+        kind: "world",
+        path: "C:/backups/bk-1.zip",
+        sizeBytes: 2048,
+        status: "completed",
+        createdAt: "2026-07-24T12:00:00.000Z",
+        completedAt: "2026-07-24T12:01:00.000Z",
+        notes: null,
+      },
+      latestWorld: {
+        id: "bk-1",
+        serverId: "srv-1",
+        type: "manual",
+        kind: "world",
+        path: "C:/backups/bk-1.zip",
+        sizeBytes: 2048,
+        status: "completed",
+        createdAt: "2026-07-24T12:00:00.000Z",
+        completedAt: "2026-07-24T12:01:00.000Z",
+        notes: null,
+      },
+      counts: { world: 1, players: 0, ini: 0, failed24h: 0 },
+      usedBytes: 2048,
+      stale: false,
+      destinationOk: true,
+    },
+  ],
+  stats: {
+    protectedCount: 0,
+    atRiskCount: 0,
+    failed24h: 0,
+    totalBackupBytes: 2048,
+  },
+  disks: [
+    {
+      volumePath: "C:\\",
+      roots: ["C:/ARK/srv-1/Backups"],
+      backupBytes: 2048,
+      freeBytes: 100 * 1024 ** 3,
+      totalBytes: 500 * 1024 ** 3,
+      usedPercent: 80,
+    },
+  ],
+  alerts: [],
+  diskSettings: {
+    warnUsedPercent: 85,
+    criticalUsedPercent: 95,
+    warnFreeBytes: 20 * 1024 ** 3,
+  },
 };
 
 describe("BackupsPage", () => {
@@ -47,41 +105,39 @@ describe("BackupsPage", () => {
     Object.defineProperty(window, "api", {
       configurable: true,
       value: {
-        listBackups: vi.fn().mockResolvedValue({ ok: true, data: [completedBackup] }),
-        getBackupPolicy: vi.fn().mockResolvedValue({
+        getBackupFleetSummary: vi.fn().mockResolvedValue({ ok: true, data: fleetSummary }),
+        getBackupDiskAlertSettings: vi.fn().mockResolvedValue({
           ok: true,
-          data: {
-            serverId: "srv-1",
-            enabled: false,
-            intervalMinutes: 60,
-            retainCountWorld: 20,
-            retainCountPlayers: 20,
-            retainCountIni: 10,
-            backupDir: null,
-            updatedAt: "2026-07-24T00:00:00.000Z",
-          },
+          data: fleetSummary.diskSettings,
         }),
-        createManualBackup: vi.fn().mockResolvedValue({ ok: true, data: [completedBackup] }),
-        deleteBackups: vi.fn().mockResolvedValue({ ok: true, data: 1 }),
-        restoreBackup: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+        setBackupDiskAlertSettings: vi.fn().mockResolvedValue({
+          ok: true,
+          data: fleetSummary.diskSettings,
+        }),
+        previewBackupCleanup: vi.fn().mockResolvedValue({
+          ok: true,
+          data: { items: [], totalBytes: 0, byServer: [] },
+        }),
+        runBackupCleanup: vi.fn().mockResolvedValue({
+          ok: true,
+          data: { deleted: 0, freedBytes: 0 },
+        }),
+        listBackups: vi.fn(),
+        getBackupPolicy: vi.fn(),
+        createManualBackup: vi.fn(),
+        deleteBackups: vi.fn(),
+        restoreBackup: vi.fn(),
         setBackupPolicy: vi.fn().mockResolvedValue({
           ok: true,
           data: {
-            serverId: "srv-1",
+            ...fleetSummary.servers[0]!.policy,
             enabled: true,
             intervalMinutes: 120,
-            retainCountWorld: 10,
-            retainCountPlayers: 20,
-            retainCountIni: 10,
-            backupDir: "C:/ARK/srv-1/Backups",
             updatedAt: "2026-07-24T13:00:00.000Z",
           },
         }),
-        resolveBackupRoot: vi.fn().mockResolvedValue({
-          ok: true,
-          data: "C:/ARK/srv-1/Backups",
-        }),
-        openBackupFolder: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+        resolveBackupRoot: vi.fn(),
+        openBackupFolder: vi.fn(),
         openBackupRoot: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
         pickPath: vi.fn(),
         onBackupsChanged: vi.fn(() => () => undefined),
@@ -89,7 +145,7 @@ describe("BackupsPage", () => {
     });
   });
 
-  it("lists per-server backup settings and opens server workspace backups", async () => {
+  it("shows fleet health stats and opens server workspace backups", async () => {
     const user = userEvent.setup();
     const onOpenServerBackups = vi.fn();
     render(
@@ -101,12 +157,12 @@ describe("BackupsPage", () => {
       </AppProviders>,
     );
 
-    expect(await screen.findByRole("heading", { name: "Backup settings" })).toBeInTheDocument();
-    expect(screen.getByText(/World schedule and shared destination/i)).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Backups" })).toBeInTheDocument();
+    expect(screen.getByText(/Fleet backup health/i)).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "The Island" })).toBeInTheDocument();
-    expect(screen.getByText(/World schedule off/i)).toBeInTheDocument();
+    expect(screen.getByText("0/1")).toBeInTheDocument();
+    expect(screen.getByText(/Schedule off/i)).toBeInTheDocument();
     expect(screen.getByText(/Destination: C:\/ARK\/srv-1\/Backups/i)).toBeInTheDocument();
-    expect(screen.getByText(/Latest backup:/i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /create backup/i })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /open in server/i }));

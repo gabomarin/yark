@@ -8,6 +8,10 @@ import type {
   ServerRuntimeInfo,
 } from "@shared/types";
 import { ServerBackupPanel } from "@features/backups/ServerBackupPanel";
+import {
+  ServerLogsPanel,
+  type ServerLogsFocus,
+} from "@features/logs/ServerLogsPanel";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -20,7 +24,7 @@ import { SidePanel } from "./components/SidePanel";
 import { WorkspaceHeader } from "./components/WorkspaceHeader";
 import classes from "./ServerWorkspacePage.module.css";
 
-export type WorkspaceTab = "server" | "iniFiles" | "backups";
+export type WorkspaceTab = "server" | "iniFiles" | "backups" | "logs";
 
 interface Props {
   servers: ServerProfile[];
@@ -31,6 +35,9 @@ interface Props {
   onboarding?: boolean;
   /** Opens a specific workspace tab (e.g. from sidebar Backup settings). */
   initialTab?: WorkspaceTab;
+  /** One-shot focus for the Logs tab (section / event / update file). */
+  logsFocus?: ServerLogsFocus | null;
+  onLogsFocusConsumed?: () => void;
   onDismissOnboarding?: () => void;
   onSelectServer: (serverId: string) => void;
   onBack: () => void;
@@ -233,6 +240,7 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
               <Tabs.Tab value="server">Server</Tabs.Tab>
               <Tabs.Tab value="iniFiles">INI Files</Tabs.Tab>
               <Tabs.Tab value="backups">Backups</Tabs.Tab>
+              <Tabs.Tab value="logs">Logs</Tabs.Tab>
             </Tabs.List>
 
             <div className={classes.tabPanel}>
@@ -275,6 +283,15 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
                   server={selectedServer}
                   runtime={runtime}
                   embedded
+                />
+              )}
+
+              {workspaceTab === "logs" && (
+                <ServerLogsPanel
+                  server={selectedServer}
+                  embedded
+                  focus={props.logsFocus}
+                  onFocusConsumed={props.onLogsFocusConsumed}
                 />
               )}
             </div>

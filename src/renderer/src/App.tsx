@@ -19,6 +19,7 @@ import {
 import { AppRouter } from "@app/AppRouter";
 import { AppShellLayout } from "@app/AppShellLayout";
 import { LogsPage } from "@features/logs/LogsPage";
+import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import { BackupsPage } from "@features/backups/BackupsPage";
 import { OverviewPage } from "@features/overview/OverviewPage";
 import {
@@ -32,8 +33,6 @@ import type { Route } from "@layout/Sidebar/Sidebar";
 
 const OPEN_NATIVE_TERMINAL_PREF_KEY = "overview.openNativeTerminalOnStart";
 
-type LogsSection = "events" | "runtime" | "updates" | "backups";
-
 type Overlay =
   | { kind: "create" }
   | { kind: "edit"; profile: ServerProfile }
@@ -42,6 +41,7 @@ type Overlay =
       serverId: string;
       onboarding?: boolean;
       initialTab?: WorkspaceTab;
+      logsFocus?: ServerLogsFocus | null;
     }
   | null;
 
@@ -59,8 +59,6 @@ export function App(): JSX.Element {
   const [steamCmdConsole, setSteamCmdConsole] = useState<SteamCmdConsoleSnapshot | null>(null);
   const [route, setRoute] = useState<Route>("overview");
   const [overlay, setOverlay] = useState<Overlay>(null);
-  const [logsServerId, setLogsServerId] = useState<string | null>(null);
-  const [logsInitialSection, setLogsInitialSection] = useState<LogsSection>("events");
   const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState<boolean>(() => {
     const stored = window.localStorage.getItem(OPEN_NATIVE_TERMINAL_PREF_KEY);
     return stored === "1";
@@ -412,12 +410,18 @@ export function App(): JSX.Element {
     [runAction, servers],
   );
 
-  const openLogsForServer = useCallback((serverId: string, section: LogsSection = "events") => {
-    setOverlay(null);
-    setLogsServerId(serverId);
-    setLogsInitialSection(section);
-    setRoute("logs");
-  }, []);
+  const openServerLogs = useCallback(
+    (serverId: string, focus?: ServerLogsFocus) => {
+      setRoute("overview");
+      setOverlay({
+        kind: "workspace",
+        serverId,
+        initialTab: "logs",
+        logsFocus: focus ?? { section: "events" },
+      });
+    },
+    [],
+  );
 
   const openServerBackups = useCallback((serverId: string) => {
     setRoute("overview");
@@ -462,10 +466,20 @@ export function App(): JSX.Element {
             clusterReports={reports}
             onboarding={overlay.onboarding === true}
             initialTab={overlay.initialTab}
+            logsFocus={overlay.logsFocus}
+            onLogsFocusConsumed={() =>
+              setOverlay((current) =>
+                current?.kind === "workspace"
+                  ? { ...current, logsFocus: null }
+                  : current,
+              )
+            }
             onDismissOnboarding={() =>
               setOverlay({ kind: "workspace", serverId: overlay.serverId })
             }
-            onSelectServer={(serverId) => setOverlay({ kind: "workspace", serverId })}
+            onSelectServer={(serverId) =>
+              setOverlay({ kind: "workspace", serverId, initialTab: overlay.initialTab })
+            }
             onBack={() => setOverlay(null)}
             onCreateServer={() => setOverlay({ kind: "create" })}
             onStartServer={(id) => void startServer(id)}
@@ -541,7 +555,7 @@ export function App(): JSX.Element {
               steamCmdProgressBytesTotal={steamCmdStatus?.progressBytesTotal ?? null}
               steamCmdOperation={steamCmdStatus?.operation ?? null}
               onOpenWorkspace={(server) => setOverlay({ kind: "workspace", serverId: server.id })}
-              onOpenLogs={(serverId) => openLogsForServer(serverId, "events")}
+              onOpenLogs={(serverId) => openServerLogs(serverId, { section: "events" })}
               onStartServer={(id) => void startServer(id)}
               onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
               onRestartServer={(id) => void restartServer(id)}
@@ -573,9 +587,7 @@ export function App(): JSX.Element {
           page: (
             <LogsPage
               servers={servers}
-              selectedServerId={logsServerId}
-              onSelectedServerChange={setLogsServerId}
-              initialSection={logsInitialSection}
+              onOpenServerLogs={openServerLogs}
             />
           ),
         }}
@@ -584,6 +596,9 @@ export function App(): JSX.Element {
             <BackupsPage
               servers={servers}
               onOpenServerBackups={openServerBackups}
+              onOpenServerLogs={(serverId) =>
+                openServerLogs(serverId, { section: "backups" })
+              }
             />
           ),
         }}

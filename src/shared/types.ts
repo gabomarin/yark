@@ -142,6 +142,19 @@ export interface ClusterComplianceReport {
   checkedAt: string;
 }
 
+export interface AppEventDetails {
+  /** Short explanation of what happened. */
+  what?: string;
+  /** Likely cause or trigger. */
+  cause?: string;
+  /** Path, volume, job id, exit code context, etc. */
+  location?: string;
+  /** Practical next step for the operator. */
+  suggestion?: string;
+  /** Extra structured fields shown in the expanded view. */
+  context?: Record<string, string | number | boolean | null>;
+}
+
 export interface AppEvent {
   id: number;
   serverId: string | null;
@@ -164,6 +177,8 @@ export interface AppEvent {
   severity: "info" | "warning" | "error";
   message: string;
   createdAt: string;
+  /** Optional structured detail payload (null on older rows). */
+  details: AppEventDetails | null;
 }
 
 export type BackupType =
@@ -217,6 +232,114 @@ export interface BackupPolicy {
    */
   backupDir: string | null;
   updatedAt: string;
+}
+
+export type BackupHealthStatus = "ok" | "warning" | "critical" | "unknown";
+
+export type BackupFleetAlertKind =
+  | "stale"
+  | "failed"
+  | "missing_destination"
+  | "disk_warning"
+  | "disk_critical"
+  | "never_backed_up";
+
+export interface BackupDiskAlertSettings {
+  /** Warn when volume used percent is at or above this value. Default 85. */
+  warnUsedPercent: number;
+  /** Critical when volume used percent is at or above this value. Default 95. */
+  criticalUsedPercent: number;
+  /** Also warn when free space is below this many bytes. Default 20 GiB. */
+  warnFreeBytes: number;
+}
+
+export interface BackupDiskUsage {
+  volumePath: string;
+  /** Backup roots that land on this volume. */
+  roots: string[];
+  /** Sum of completed backup `sizeBytes` for servers on this volume. */
+  backupBytes: number;
+  freeBytes: number | null;
+  totalBytes: number | null;
+  /** Volume used percent (0–100), or null if unknown. */
+  usedPercent: number | null;
+}
+
+export interface BackupServerHealth {
+  serverId: string;
+  serverName: string;
+  policy: BackupPolicy;
+  resolvedRoot: string;
+  health: BackupHealthStatus;
+  latest: BackupRecord | null;
+  latestWorld: BackupRecord | null;
+  counts: {
+    world: number;
+    players: number;
+    ini: number;
+    failed24h: number;
+  };
+  usedBytes: number;
+  stale: boolean;
+  destinationOk: boolean;
+}
+
+export interface BackupFleetAlert {
+  id: string;
+  kind: BackupFleetAlertKind;
+  severity: "warning" | "error";
+  serverId: string | null;
+  volumePath: string | null;
+  message: string;
+}
+
+export interface BackupFleetSummary {
+  servers: BackupServerHealth[];
+  stats: {
+    protectedCount: number;
+    atRiskCount: number;
+    failed24h: number;
+    totalBackupBytes: number;
+  };
+  disks: BackupDiskUsage[];
+  alerts: BackupFleetAlert[];
+  diskSettings: BackupDiskAlertSettings;
+}
+
+export interface BackupCleanupOptions {
+  /** `null` or empty = all servers. */
+  serverIds: string[] | null;
+  includeFailed: boolean;
+  /** Delete completed backups that exceed each server's retain policy. */
+  enforceRetention: boolean;
+  /** Delete completed backups older than this many days (`null` = off). */
+  olderThanDays: number | null;
+  /** Keep only the newest N completed per kind (`null` = off). */
+  keepLastPerKind: number | null;
+  /** Never delete the newest successful world backup per server. Default true. */
+  protectNewestWorld: boolean;
+}
+
+export interface BackupCleanupItem {
+  backup: BackupRecord;
+  serverName: string;
+  reason: string;
+}
+
+export interface BackupCleanupPreview {
+  items: BackupCleanupItem[];
+  totalBytes: number;
+  byServer: Array<{
+    serverId: string;
+    serverName: string;
+    count: number;
+    bytes: number;
+  }>;
+}
+
+export interface BackupCleanupResult {
+  deleted: number;
+  freedBytes: number;
 }
 
 export type IniFileKey = "gameUserSettings" | "game";

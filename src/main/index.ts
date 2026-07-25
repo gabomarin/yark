@@ -88,7 +88,7 @@ void app.whenReady().then(() => {
   const iniService = new IniService(repo, locks);
   const logsService = new LogsService(
     repo,
-    backupRepo,
+    backupService,
     join(userData, "update-logs"),
     processManager,
   );

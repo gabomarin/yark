@@ -634,4 +634,105 @@ describe("BackupService kinds and retention", () => {
       /running/i,
     );
   });
+
+  it("builds a fleet summary with health and disk settings", async () => {
+    await service.createManualBackup(profile.id, ["world"]);
+    const summary = await service.getFleetSummary();
+    expect(summary.servers).toHaveLength(1);
+    expect(summary.servers[0]?.serverId).toBe(profile.id);
+    expect(summary.stats.totalBackupBytes).toBeGreaterThan(0);
+    expect(summary.diskSettings.warnUsedPercent).toBe(85);
+    expect(summary.disks.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("previews and runs cleanup for failed backups while protecting newest world", async () => {
+    const created = await service.createManualBackup(profile.id, ["world"]);
+    const world = created[0]!;
+    const failed = repo.createBackupStart({
+      serverId: profile.id,
+      type: "manual",
+      kind: "world",
+      path: join(installDir, "Backups", "World", "failed-world.zip"),
+      notes: "boom",
+    });
+    repo.failBackup(failed.id, "boom");
+
+    const preview = await service.previewCleanup({
+      serverIds: null,
+      includeFailed: true,
+      enforceRetention: false,
+      olderThanDays: null,
+      keepLastPerKind: null,
+      protectNewestWorld: true,
+    });
+    expect(preview.items.some((item) => item.backup.id === failed.id)).toBe(true);
+    expect(preview.items.some((item) => item.backup.id === world.id)).toBe(false);
+
+    const result = await service.runCleanup({
+      serverIds: null,
+      includeFailed: true,
+      enforceRetention: false,
+      olderThanDays: null,
+      keepLastPerKind: null,
+      protectNewestWorld: true,
+    });
+    expect(result.deleted).toBe(1);
+    expect(repo.getBackup(failed.id)).toBeNull();
+    expect(repo.getBackup(world.id)).not.toBeNull();
+  });
+
+  it("keepLastPerKind cleanup retains N archives per player, not globally", async () => {
+    const playerA = "76561198000000000";
+    const playerB = "76561198000000001";
+    const mkPlayer = (eos: string, stamp: string) => {
+      const record = repo.createBackupStart({
+        serverId: profile.id,
+        type: "player_disconnect",
+        kind: "players",
+        path: join(
+          installDir,
+          "Backups",
+          "Player profiles",
+          `${eos}-${stamp}.zip`,
+        ),
+        notes: formatPlayerSessionNotes("disconnect", eos, eos),
+      });
+      return repo.completeBackup(record.id, 100)!;
+    };
+
+    const a1 = mkPlayer(playerA, "a1");
+    const a2 = mkPlayer(playerA, "a2");
+    const a3 = mkPlayer(playerA, "a3");
+    const b1 = mkPlayer(playerB, "b1");
+    const b2 = mkPlayer(playerB, "b2");
+
+    // Newest-first: a3, a2, a1 and b2, b1.
+    const ordered = [a3, a2, a1, b2, b1];
+    for (let i = 0; i < ordered.length; i += 1) {
+      const backup = ordered[i]!;
+      db.prepare(`UPDATE backups SET created_at = ? WHERE id = ?`).run(
+        new Date(Date.now() - i * 60_000).toISOString(),
+        backup.id,
+      );
+    }
+
+    const preview = await service.previewCleanup({
+      serverIds: [profile.id],
+      includeFailed: false,
+      enforceRetention: false,
+      olderThanDays: null,
+      keepLastPerKind: 2,
+      protectNewestWorld: false,
+    });
+    const markedIds = new Set(preview.items.map((item) => item.backup.id));
+    // Keep 2 newest for A (a3, a2) and 2 for B (b2, b1) → only a1 is excess.
+    expect(markedIds.has(a1.id)).toBe(true);
+    expect(markedIds.has(a2.id)).toBe(false);
+    expect(markedIds.has(a3.id)).toBe(false);
+    expect(markedIds.has(b1.id)).toBe(false);
+    expect(markedIds.has(b2.id)).toBe(false);
+    expect(
+      preview.items.every((item) => item.reason.includes("keep last 2/players")),
+    ).toBe(true);
+  });
 });

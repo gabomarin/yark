@@ -9,9 +9,17 @@ import {
   playersRetentionKey,
 } from "@shared/backup-player-meta";
 import type {
+  BackupCleanupOptions,
+  BackupCleanupPreview,
+  BackupCleanupResult,
+  BackupDiskAlertSettings,
+  BackupFleetAlert,
+  BackupFleetSummary,
+  BackupHealthStatus,
   BackupKind,
   BackupPolicy,
   BackupRecord,
+  BackupServerHealth,
   BackupType,
   ServerProfile,
 } from "@shared/types";
@@ -30,6 +38,11 @@ import {
   readZipTextEntry,
   zipDirectory,
 } from "./backup-archive";
+import {
+  isBackupDestinationReachable,
+  readVolumeSpace,
+  volumeRootForPath,
+} from "./backup-disk";
 
 export { formatPlayerSessionNotes, playersRetentionKey } from "@shared/backup-player-meta";
 export { backupKindSubdir } from "./backup-archive";
@@ -52,6 +65,15 @@ export const CRITICAL_BACKUP_KINDS: readonly BackupKind[] = ["world", "players",
 const ALL_BACKUP_KINDS: readonly BackupKind[] = ["world", "players", "ini"];
 
 const PLAYER_PROFILE_RE = /\.(arkprofile)(\.bak)?$/i;
+
+const DISK_ALERT_SETTINGS_KEY = "backupDiskAlerts.v1";
+const DEFAULT_DISK_ALERT_SETTINGS: BackupDiskAlertSettings = {
+  warnUsedPercent: 85,
+  criticalUsedPercent: 95,
+  warnFreeBytes: 20 * 1024 * 1024 * 1024,
+};
+/** World backup is stale when older than interval × this factor. */
+const STALE_INTERVAL_FACTOR = 1.5;
 
 type BackupCriticalJobType = "pre-update-backup" | "restore";
 
@@ -356,6 +378,235 @@ export class BackupService extends EventEmitter {
     return backup.path;
   }
 
+  getDiskAlertSettings(): BackupDiskAlertSettings {
+    return this.readDiskAlertSettings();
+  }
+
+  setDiskAlertSettings(settings: BackupDiskAlertSettings): BackupDiskAlertSettings {
+    const next = this.normalizeDiskAlertSettings(settings);
+    this.settings.set(DISK_ALERT_SETTINGS_KEY, JSON.stringify(next));
+    return next;
+  }
+
+  /** Fleet health overview: per-server status, disk usage, and actionable alerts. */
+  async getFleetSummary(): Promise<BackupFleetSummary> {
+    const servers = this.servers.list();
+    const diskSettings = this.readDiskAlertSettings();
+    const now = Date.now();
+    const dayAgoIso = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+
+    const healthRows: BackupServerHealth[] = [];
+    const alerts: BackupFleetAlert[] = [];
+
+    for (const server of servers) {
+      await this.reconcileDiskBackups(server.id);
+      const policy = this.backups.getPolicy(server.id);
+      const resolvedRoot = resolveServerBackupRoot(server.installDir, policy.backupDir);
+      const records = this.backups.listBackups(server.id, 10_000);
+      const completed = records.filter((row) => row.status === "completed");
+      const failed24h = records.filter(
+        (row) => row.status === "failed" && row.createdAt >= dayAgoIso,
+      );
+      const latestWorld = this.backups.latestCompleted(server.id, "world");
+      const latest =
+        completed[0] ??
+        records.find((row) => row.status !== "running") ??
+        null;
+      const usedBytes = completed.reduce((sum, row) => sum + Math.max(0, row.sizeBytes), 0);
+      const destinationOk = isBackupDestinationReachable(resolvedRoot);
+
+      let stale = false;
+      if (policy.enabled) {
+        if (latestWorld === null) {
+          stale = true;
+        } else {
+          const stamp = latestWorld.completedAt ?? latestWorld.createdAt;
+          const ageMs = now - new Date(stamp).getTime();
+          stale =
+            Number.isFinite(ageMs) &&
+            ageMs > policy.intervalMinutes * 60_000 * STALE_INTERVAL_FACTOR;
+        }
+      }
+
+      const counts = {
+        world: completed.filter((row) => row.kind === "world").length,
+        players: completed.filter((row) => row.kind === "players").length,
+        ini: completed.filter((row) => row.kind === "ini").length,
+        failed24h: failed24h.length,
+      };
+
+      const health = this.computeServerHealth({
+        destinationOk,
+        stale,
+        failed24h: counts.failed24h,
+        scheduleEnabled: policy.enabled,
+        hasWorldBackup: latestWorld !== null,
+      });
+
+      healthRows.push({
+        serverId: server.id,
+        serverName: server.name,
+        policy,
+        resolvedRoot,
+        health,
+        latest,
+        latestWorld,
+        counts,
+        usedBytes,
+        stale,
+        destinationOk,
+      });
+
+      if (!destinationOk) {
+        alerts.push({
+          id: `missing_destination:${server.id}`,
+          kind: "missing_destination",
+          severity: "error",
+          serverId: server.id,
+          volumePath: null,
+          message: `${server.name}: backup destination is missing or unreachable (${resolvedRoot})`,
+        });
+      }
+      if (policy.enabled && latestWorld === null) {
+        alerts.push({
+          id: `never_backed_up:${server.id}`,
+          kind: "never_backed_up",
+          severity: "warning",
+          serverId: server.id,
+          volumePath: null,
+          message: `${server.name}: world schedule is on but no completed world backup exists yet`,
+        });
+      } else if (stale && latestWorld !== null) {
+        alerts.push({
+          id: `stale:${server.id}`,
+          kind: "stale",
+          severity: "warning",
+          serverId: server.id,
+          volumePath: null,
+          message: `${server.name}: last world backup is older than the scheduled interval`,
+        });
+      }
+      if (counts.failed24h > 0) {
+        alerts.push({
+          id: `failed:${server.id}`,
+          kind: "failed",
+          severity: "error",
+          serverId: server.id,
+          volumePath: null,
+          message: `${server.name}: ${counts.failed24h} failed backup${counts.failed24h === 1 ? "" : "s"} in the last 24h`,
+        });
+      }
+    }
+
+    const disks = await this.buildDiskUsage(healthRows);
+    for (const disk of disks) {
+      if (disk.usedPercent === null || disk.freeBytes === null) continue;
+      const overCritical = disk.usedPercent >= diskSettings.criticalUsedPercent;
+      const overWarn = disk.usedPercent >= diskSettings.warnUsedPercent;
+      const lowFree = disk.freeBytes < diskSettings.warnFreeBytes;
+      if (overCritical) {
+        alerts.push({
+          id: `disk_critical:${disk.volumePath}`,
+          kind: "disk_critical",
+          severity: "error",
+          serverId: null,
+          volumePath: disk.volumePath,
+          message: `${disk.volumePath} is ${disk.usedPercent.toFixed(0)}% full (critical ≥ ${diskSettings.criticalUsedPercent}%)`,
+        });
+      } else if (overWarn || lowFree) {
+        const parts: string[] = [];
+        if (overWarn) {
+          parts.push(`${disk.usedPercent.toFixed(0)}% used`);
+        }
+        if (lowFree) {
+          parts.push(`${this.humanSize(disk.freeBytes)} free`);
+        }
+        alerts.push({
+          id: `disk_warning:${disk.volumePath}`,
+          kind: "disk_warning",
+          severity: "warning",
+          serverId: null,
+          volumePath: disk.volumePath,
+          message: `${disk.volumePath}: ${parts.join(" · ")} (warning threshold)`,
+        });
+      }
+    }
+
+    const protectedCount = healthRows.filter((row) => row.health === "ok").length;
+    const atRiskCount = healthRows.filter(
+      (row) => row.health === "warning" || row.health === "critical",
+    ).length;
+    const failed24h = healthRows.reduce((sum, row) => sum + row.counts.failed24h, 0);
+    const totalBackupBytes = healthRows.reduce((sum, row) => sum + row.usedBytes, 0);
+
+    return {
+      servers: healthRows,
+      stats: {
+        protectedCount,
+        atRiskCount,
+        failed24h,
+        totalBackupBytes,
+      },
+      disks,
+      alerts,
+      diskSettings,
+    };
+  }
+
+  async previewCleanup(options: BackupCleanupOptions): Promise<BackupCleanupPreview> {
+    const plan = this.planCleanup(options);
+    const byServerMap = new Map<
+      string,
+      { serverId: string; serverName: string; count: number; bytes: number }
+    >();
+    let totalBytes = 0;
+    for (const item of plan) {
+      totalBytes += Math.max(0, item.backup.sizeBytes);
+      const current = byServerMap.get(item.backup.serverId) ?? {
+        serverId: item.backup.serverId,
+        serverName: item.serverName,
+        count: 0,
+        bytes: 0,
+      };
+      current.count += 1;
+      current.bytes += Math.max(0, item.backup.sizeBytes);
+      byServerMap.set(item.backup.serverId, current);
+    }
+    return {
+      items: plan,
+      totalBytes,
+      byServer: [...byServerMap.values()],
+    };
+  }
+
+  async runCleanup(options: BackupCleanupOptions): Promise<BackupCleanupResult> {
+    const plan = this.planCleanup(options);
+    let deleted = 0;
+    let freedBytes = 0;
+    const touched = new Set<string>();
+
+    for (const item of plan) {
+      if (item.backup.status === "running") continue;
+      await rm(item.backup.path, { recursive: true, force: true });
+      this.backups.deleteBackupRecord(item.backup.id);
+      deleted += 1;
+      freedBytes += Math.max(0, item.backup.sizeBytes);
+      touched.add(item.backup.serverId);
+      this.servers.addEvent(
+        item.backup.serverId,
+        "backup_deleted",
+        "info",
+        `Cleanup removed ${item.backup.kind} backup (${item.reason}): ${basename(item.backup.path)}`,
+      );
+    }
+
+    for (const serverId of touched) {
+      this.emitChanged(serverId);
+    }
+
+    return { deleted, freedBytes };
+  }
+
   async deleteBackups(serverId: string, backupIds: string[]): Promise<number> {
     this.mustServer(serverId);
     const uniqueIds = [...new Set(backupIds.filter((id) => id.trim().length > 0))];
@@ -479,6 +730,16 @@ export class BackupService extends EventEmitter {
           `Scheduled backup failed for \"${server.name}\": ${
             err instanceof Error ? err.message : String(err)
           }`,
+          {
+            what: "A scheduled world backup did not complete.",
+            cause: err instanceof Error ? err.message : String(err),
+            suggestion:
+              "Confirm the server is reachable for save flush, destination disk has space, and retry from the Backups tab.",
+            context: {
+              trigger: "scheduled",
+              kind: "world",
+            },
+          },
         );
       }
     }
@@ -490,6 +751,254 @@ export class BackupService extends EventEmitter {
       throw new Error("Server does not exist");
     }
     return server;
+  }
+
+  private readDiskAlertSettings(): BackupDiskAlertSettings {
+    const raw = this.settings.get(DISK_ALERT_SETTINGS_KEY);
+    if (raw === null || raw.trim().length === 0) {
+      return { ...DEFAULT_DISK_ALERT_SETTINGS };
+    }
+    try {
+      const parsed = JSON.parse(raw) as Partial<BackupDiskAlertSettings>;
+      return this.normalizeDiskAlertSettings({
+        warnUsedPercent:
+          typeof parsed.warnUsedPercent === "number"
+            ? parsed.warnUsedPercent
+            : DEFAULT_DISK_ALERT_SETTINGS.warnUsedPercent,
+        criticalUsedPercent:
+          typeof parsed.criticalUsedPercent === "number"
+            ? parsed.criticalUsedPercent
+            : DEFAULT_DISK_ALERT_SETTINGS.criticalUsedPercent,
+        warnFreeBytes:
+          typeof parsed.warnFreeBytes === "number"
+            ? parsed.warnFreeBytes
+            : DEFAULT_DISK_ALERT_SETTINGS.warnFreeBytes,
+      });
+    } catch {
+      return { ...DEFAULT_DISK_ALERT_SETTINGS };
+    }
+  }
+
+  private normalizeDiskAlertSettings(
+    settings: BackupDiskAlertSettings,
+  ): BackupDiskAlertSettings {
+    const warnUsedPercent = Math.max(
+      50,
+      Math.min(99, Math.floor(settings.warnUsedPercent)),
+    );
+    const criticalUsedPercent = Math.max(
+      warnUsedPercent + 1,
+      Math.min(100, Math.floor(settings.criticalUsedPercent)),
+    );
+    const warnFreeBytes = Math.max(
+      1024 * 1024 * 1024,
+      Math.floor(settings.warnFreeBytes),
+    );
+    return { warnUsedPercent, criticalUsedPercent, warnFreeBytes };
+  }
+
+  private computeServerHealth(input: {
+    destinationOk: boolean;
+    stale: boolean;
+    failed24h: number;
+    scheduleEnabled: boolean;
+    hasWorldBackup: boolean;
+  }): BackupHealthStatus {
+    if (!input.destinationOk || input.failed24h > 0) return "critical";
+    if (input.stale || (input.scheduleEnabled && !input.hasWorldBackup)) {
+      return "warning";
+    }
+    if (!input.scheduleEnabled && !input.hasWorldBackup) return "unknown";
+    return "ok";
+  }
+
+  private async buildDiskUsage(
+    rows: BackupServerHealth[],
+  ): Promise<BackupFleetSummary["disks"]> {
+    const byVolume = new Map<
+      string,
+      { roots: Set<string>; backupBytes: number; probePath: string }
+    >();
+
+    for (const row of rows) {
+      const volumePath = volumeRootForPath(row.resolvedRoot);
+      const current = byVolume.get(volumePath) ?? {
+        roots: new Set<string>(),
+        backupBytes: 0,
+        probePath: row.resolvedRoot,
+      };
+      current.roots.add(row.resolvedRoot);
+      current.backupBytes += row.usedBytes;
+      byVolume.set(volumePath, current);
+    }
+
+    const disks: BackupFleetSummary["disks"] = [];
+    for (const [volumePath, info] of byVolume) {
+      const space = await readVolumeSpace(info.probePath);
+      const freeBytes = space?.freeBytes ?? null;
+      const totalBytes = space?.totalBytes ?? null;
+      let usedPercent: number | null = null;
+      if (freeBytes !== null && totalBytes !== null && totalBytes > 0) {
+        usedPercent = ((totalBytes - freeBytes) / totalBytes) * 100;
+      }
+      disks.push({
+        volumePath,
+        roots: [...info.roots],
+        backupBytes: info.backupBytes,
+        freeBytes,
+        totalBytes,
+        usedPercent,
+      });
+    }
+
+    disks.sort((a, b) => a.volumePath.localeCompare(b.volumePath));
+    return disks;
+  }
+
+  private planCleanup(
+    options: BackupCleanupOptions,
+  ): Array<{ backup: BackupRecord; serverName: string; reason: string }> {
+    const includeFailed = options.includeFailed === true;
+    const enforceRetention = options.enforceRetention === true;
+    const protectNewestWorld = options.protectNewestWorld !== false;
+    const olderThanDays =
+      typeof options.olderThanDays === "number" && options.olderThanDays > 0
+        ? Math.floor(options.olderThanDays)
+        : null;
+    const keepLastPerKind =
+      typeof options.keepLastPerKind === "number" && options.keepLastPerKind > 0
+        ? Math.floor(options.keepLastPerKind)
+        : null;
+
+    if (
+      !includeFailed &&
+      !enforceRetention &&
+      olderThanDays === null &&
+      keepLastPerKind === null
+    ) {
+      throw new Error("Select at least one cleanup rule");
+    }
+
+    const allServers = this.servers.list();
+    const selectedIds =
+      options.serverIds !== null && options.serverIds.length > 0
+        ? new Set(options.serverIds)
+        : null;
+    const servers =
+      selectedIds === null
+        ? allServers
+        : allServers.filter((server) => selectedIds.has(server.id));
+
+    const cutoffIso =
+      olderThanDays !== null
+        ? new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000).toISOString()
+        : null;
+
+    const selected = new Map<
+      string,
+      { backup: BackupRecord; serverName: string; reason: string }
+    >();
+
+    const mark = (
+      backup: BackupRecord,
+      serverName: string,
+      reason: string,
+    ): void => {
+      if (backup.status === "running") return;
+      const existing = selected.get(backup.id);
+      if (existing === undefined) {
+        selected.set(backup.id, { backup, serverName, reason });
+        return;
+      }
+      if (!existing.reason.includes(reason)) {
+        existing.reason = `${existing.reason}; ${reason}`;
+      }
+    };
+
+    for (const server of servers) {
+      const policy = this.backups.getPolicy(server.id);
+      const records = this.backups.listBackups(server.id, 10_000);
+      const newestWorld = this.backups.latestCompleted(server.id, "world");
+
+      if (includeFailed) {
+        for (const backup of records) {
+          if (backup.status === "failed") {
+            mark(backup, server.name, "failed");
+          }
+        }
+      }
+
+      if (enforceRetention) {
+        for (const kind of ALL_BACKUP_KINDS) {
+          const retain = retainCountForKind(policy, kind);
+          const completed = this.backups.listCompleted(server.id, kind);
+          if (kind === "players") {
+            const byPlayer = new Map<string, BackupRecord[]>();
+            for (const backup of completed) {
+              const key = playersRetentionKey(backup);
+              const list = byPlayer.get(key) ?? [];
+              list.push(backup);
+              byPlayer.set(key, list);
+            }
+            for (const [, list] of byPlayer) {
+              for (const backup of list.slice(retain)) {
+                mark(backup, server.name, "over retain policy");
+              }
+            }
+            continue;
+          }
+          for (const backup of completed.slice(retain)) {
+            mark(backup, server.name, "over retain policy");
+          }
+        }
+      }
+
+      if (cutoffIso !== null) {
+        for (const backup of records) {
+          if (backup.status !== "completed") continue;
+          if (backup.createdAt < cutoffIso) {
+            mark(backup, server.name, `older than ${olderThanDays}d`);
+          }
+        }
+      }
+
+      if (keepLastPerKind !== null) {
+        for (const kind of ALL_BACKUP_KINDS) {
+          const completed = this.backups.listCompleted(server.id, kind);
+          // Players: keep N per player pool (same as retention / enforceRetention).
+          if (kind === "players") {
+            const byPlayer = new Map<string, BackupRecord[]>();
+            for (const backup of completed) {
+              const key = playersRetentionKey(backup);
+              const list = byPlayer.get(key) ?? [];
+              list.push(backup);
+              byPlayer.set(key, list);
+            }
+            for (const [, list] of byPlayer) {
+              for (const backup of list.slice(keepLastPerKind)) {
+                mark(
+                  backup,
+                  server.name,
+                  `keep last ${keepLastPerKind}/players`,
+                );
+              }
+            }
+            continue;
+          }
+          for (const backup of completed.slice(keepLastPerKind)) {
+            mark(backup, server.name, `keep last ${keepLastPerKind}/${kind}`);
+          }
+        }
+      }
+
+      if (protectNewestWorld && newestWorld !== null) {
+        selected.delete(newestWorld.id);
+      }
+    }
+
+    return [...selected.values()].sort((a, b) =>
+      b.backup.createdAt.localeCompare(a.backup.createdAt),
+    );
   }
 
   private async flushWorldIfActive(serverId: string): Promise<void> {
@@ -626,6 +1135,18 @@ export class BackupService extends EventEmitter {
         "error",
         "error",
         `Backup ${type}/${kind} failed for \"${server.name}\": ${message}`,
+        {
+          what: `A ${kind} backup (${type}) failed before the archive was completed.`,
+          cause: message,
+          location: zipPath,
+          suggestion:
+            "Check destination permissions and free disk space, then create the backup again from the server Backups tab.",
+          context: {
+            type,
+            kind,
+            backupId: record.id,
+          },
+        },
       );
       this.emitChanged(serverId);
       throw err;
@@ -1100,8 +1621,11 @@ export class BackupService extends EventEmitter {
    * Keep SQLite aligned with disk:
    * - drop DB rows whose archive path no longer exists (Explorer deletes)
    * - import ZIP/folder archives present on disk but missing from SQLite
+   *
+   * Not `async`: returning an in-flight Promise must hand back the same
+   * Promise instance (an async function would wrap it in a new outer Promise).
    */
-  private async reconcileDiskBackups(serverId: string): Promise<number> {
+  private reconcileDiskBackups(serverId: string): Promise<number> {
     const existing = this.reconcileInFlight.get(serverId);
     if (existing !== undefined) {
       return existing;

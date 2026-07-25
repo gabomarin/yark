@@ -56,6 +56,14 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.logsExport, serverId),
   openServerUpdateLogFile: (serverId: string, fileName: string) =>
     ipcRenderer.invoke(IPC.logsOpenUpdateFile, serverId, fileName),
+  clearServerEvents: (serverId: string) =>
+    ipcRenderer.invoke(IPC.logsClearEvents, serverId),
+  clearServerRuntimeLog: (serverId: string) =>
+    ipcRenderer.invoke(IPC.logsClearRuntime, serverId),
+  deleteServerUpdateLog: (serverId: string, fileName: string) =>
+    ipcRenderer.invoke(IPC.logsDeleteUpdate, serverId, fileName),
+  clearServerUpdateLogs: (serverId: string) =>
+    ipcRenderer.invoke(IPC.logsClearUpdates, serverId),
   listBackups: (serverId: string, limit?: number) =>
     ipcRenderer.invoke(IPC.backupsList, serverId, limit),
   createManualBackup: (serverId, kinds) =>
@@ -74,6 +82,15 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.backupsOpenFolder, serverId, backupId),
   openBackupRoot: (serverId: string) =>
     ipcRenderer.invoke(IPC.backupsOpenRoot, serverId),
+  getBackupFleetSummary: () => ipcRenderer.invoke(IPC.backupsFleetSummary),
+  getBackupDiskAlertSettings: () =>
+    ipcRenderer.invoke(IPC.backupsGetDiskAlertSettings),
+  setBackupDiskAlertSettings: (settings) =>
+    ipcRenderer.invoke(IPC.backupsSetDiskAlertSettings, settings),
+  previewBackupCleanup: (options) =>
+    ipcRenderer.invoke(IPC.backupsPreviewCleanup, options),
+  runBackupCleanup: (options) =>
+    ipcRenderer.invoke(IPC.backupsRunCleanup, options),
   getModMetadata: (modId: string, forceRefresh?: boolean) =>
     ipcRenderer.invoke(IPC.modsGet, modId, forceRefresh),
   getModsMetadata: (modIds: string[], forceRefresh?: boolean) =>

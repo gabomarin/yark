@@ -1,5 +1,10 @@
 import type {
   AppEvent,
+  BackupCleanupOptions,
+  BackupCleanupPreview,
+  BackupCleanupResult,
+  BackupDiskAlertSettings,
+  BackupFleetSummary,
   BackupKind,
   BackupPolicy,
   BackupRecord,
@@ -54,6 +59,10 @@ export const IPC = {
   logsReadUpdate: "logs:read-update",
   logsExport: "logs:export",
   logsOpenUpdateFile: "logs:open-update-file",
+  logsClearEvents: "logs:clear-events",
+  logsClearRuntime: "logs:clear-runtime",
+  logsDeleteUpdate: "logs:delete-update",
+  logsClearUpdates: "logs:clear-updates",
   backupsList: "backups:list",
   backupsCreate: "backups:create",
   backupsDelete: "backups:delete",
@@ -63,6 +72,11 @@ export const IPC = {
   backupsResolveRoot: "backups:resolve-root",
   backupsOpenFolder: "backups:open-folder",
   backupsOpenRoot: "backups:open-root",
+  backupsFleetSummary: "backups:fleet-summary",
+  backupsGetDiskAlertSettings: "backups:get-disk-alert-settings",
+  backupsSetDiskAlertSettings: "backups:set-disk-alert-settings",
+  backupsPreviewCleanup: "backups:preview-cleanup",
+  backupsRunCleanup: "backups:run-cleanup",
   modsGet: "mods:get",
   modsGetMany: "mods:get-many",
 } as const;
@@ -148,6 +162,13 @@ export interface RendererApi {
     serverId: string,
     fileName: string,
   ): Promise<IpcResult<void>>;
+  clearServerEvents(serverId: string): Promise<IpcResult<number>>;
+  clearServerRuntimeLog(serverId: string): Promise<IpcResult<void>>;
+  deleteServerUpdateLog(
+    serverId: string,
+    fileName: string,
+  ): Promise<IpcResult<void>>;
+  clearServerUpdateLogs(serverId: string): Promise<IpcResult<number>>;
   listBackups(serverId: string, limit?: number): Promise<IpcResult<BackupRecord[]>>;
   createManualBackup(
     serverId: string,
@@ -166,6 +187,17 @@ export interface RendererApi {
   resolveBackupRoot(serverId: string): Promise<IpcResult<string>>;
   openBackupFolder(serverId: string, backupId: string): Promise<IpcResult<void>>;
   openBackupRoot(serverId: string): Promise<IpcResult<void>>;
+  getBackupFleetSummary(): Promise<IpcResult<BackupFleetSummary>>;
+  getBackupDiskAlertSettings(): Promise<IpcResult<BackupDiskAlertSettings>>;
+  setBackupDiskAlertSettings(
+    settings: BackupDiskAlertSettings,
+  ): Promise<IpcResult<BackupDiskAlertSettings>>;
+  previewBackupCleanup(
+    options: BackupCleanupOptions,
+  ): Promise<IpcResult<BackupCleanupPreview>>;
+  runBackupCleanup(
+    options: BackupCleanupOptions,
+  ): Promise<IpcResult<BackupCleanupResult>>;
   getModMetadata(modId: string, forceRefresh?: boolean): Promise<IpcResult<ModMetadata>>;
   getModsMetadata(
     modIds: string[],

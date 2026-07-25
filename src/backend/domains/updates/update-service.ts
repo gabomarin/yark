@@ -457,6 +457,17 @@ export class UpdateService extends EventEmitter {
           `Update failed on \"${server.name}\": ${
             err instanceof Error ? err.message : String(err)
           }`,
+          {
+            what: "Safe update failed after the pre-update backup step.",
+            cause: err instanceof Error ? err.message : String(err),
+            location: server.installDir,
+            suggestion:
+              "Open the Updates tab for the SteamCMD log. A rollback may follow automatically if backups were taken.",
+            context: {
+              operation: "update",
+              installDir: server.installDir,
+            },
+          },
         );
 
         if (this.processes.isActive(serverId)) {
@@ -480,6 +491,15 @@ export class UpdateService extends EventEmitter {
           "update_rolled_back",
           "warning",
           `Update automatically rolled back using backups ${backupIds}`,
+          {
+            what: "The failed update was rolled back using pre-update backups.",
+            cause: "Update failed; manager restored the pre-update archives and restarted the server.",
+            suggestion:
+              "Confirm world/players look correct, inspect the update log, then retry the update when ready.",
+            context: {
+              backupIds,
+            },
+          },
         );
       }
     });

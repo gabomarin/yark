@@ -12,6 +12,7 @@ function event(id: number, type: AppEvent["type"], message: string): AppEvent {
     severity: "info",
     message,
     createdAt: `2026-07-24T10:0${id}:00.000Z`,
+    details: null,
   };
 }
 

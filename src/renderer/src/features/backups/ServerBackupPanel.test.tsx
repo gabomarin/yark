@@ -111,6 +111,15 @@ function renderPanel(list: BackupRecord[] = [worldBackup, playersBackup, aliceBa
   );
 }
 
+async function collapseSettings(user: ReturnType<typeof userEvent.setup>): Promise<void> {
+  const toggle = await screen.findByRole("button", {
+    name: /World destination & schedule|Player retention|INI retention/i,
+  });
+  if (toggle.getAttribute("aria-expanded") === "true") {
+    await user.click(toggle);
+  }
+}
+
 describe("ServerBackupPanel", () => {
   afterEach(() => {
     cleanup();
@@ -141,7 +150,21 @@ describe("ServerBackupPanel", () => {
         createManualBackup: vi.fn().mockResolvedValue({ ok: true, data: [worldBackup] }),
         deleteBackups: vi.fn().mockResolvedValue({ ok: true, data: 1 }),
         restoreBackup: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
-        setBackupPolicy: vi.fn(),
+        setBackupPolicy: vi.fn().mockImplementation(async (_id: string, draft: {
+          enabled: boolean;
+          intervalMinutes: number;
+          retainCountWorld: number;
+          retainCountPlayers: number;
+          retainCountIni: number;
+          backupDir: string | null;
+        }) => ({
+          ok: true,
+          data: {
+            serverId: "srv-1",
+            ...draft,
+            updatedAt: "2026-07-24T12:00:00.000Z",
+          },
+        })),
         resolveBackupRoot: vi.fn().mockResolvedValue({
           ok: true,
           data: "C:/ARK/srv-1/Backups",
@@ -154,25 +177,54 @@ describe("ServerBackupPanel", () => {
     });
   });
 
-  it("shows kind settings cards on each subtab", async () => {
+  it("opens kind settings by default and can collapse to a summary", async () => {
     const user = userEvent.setup();
     renderPanel();
 
     expect(await screen.findByText(/World destination & schedule/i)).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: /Schedule world backups/i })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: /Schedule/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/Destination/i)).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Backups for /i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Save policy/i })).not.toBeInTheDocument();
+
+    await collapseSettings(user);
+    expect(screen.queryByRole("switch", { name: /Schedule/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/Schedule off · keep 20/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "Player profiles" }));
     expect(screen.queryByText(/World destination & schedule/i)).not.toBeInTheDocument();
     expect(screen.getByText(/Player retention/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Keep last \(per player\)/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Save$/i })).not.toBeInTheDocument();
+
+    await collapseSettings(user);
+    expect(screen.queryByLabelText(/Keep last \(per player\)/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Keep last 20 per player/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "INI" }));
-    expect(screen.queryByText(/World destination & schedule/i)).not.toBeInTheDocument();
     expect(screen.getByText(/INI retention/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Keep last INI/i)).toBeInTheDocument();
-    expect(screen.getByText(/Automatic backup after each successful INI save/i)).toBeInTheDocument();
+
+    await collapseSettings(user);
+    expect(screen.queryByLabelText(/Keep last INI/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/^Keep last 10$/i)).toBeInTheDocument();
   });
 
+  it("autosaves policy changes after edits", async () => {
+    const user = userEvent.setup();
+    renderPanel();
+
+    const retain = await screen.findByLabelText(/^Keep last$/i);
+    await user.clear(retain);
+    await user.type(retain, "15");
+
+    await waitFor(() => {
+      expect(window.api.setBackupPolicy).toHaveBeenCalledWith(
+        "srv-1",
+        expect.objectContaining({ retainCountWorld: 15 }),
+      );
+    });
+  });
   it("shows kind subtabs and filters history to the active kind", async () => {
     const user = userEvent.setup();
     renderPanel();
@@ -183,20 +235,20 @@ describe("ServerBackupPanel", () => {
     );
     expect(screen.getByRole("tab", { name: "Player profiles" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "INI" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "World save history" })).toBeInTheDocument();
-    expect(screen.getByText("C:/backups/world")).toBeInTheDocument();
-    expect(screen.queryByText("C:/backups/players")).not.toBeInTheDocument();
-    expect(screen.queryByText("C:/backups/ini")).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("tab", { name: "Player profiles" }));
-    expect(screen.getByRole("heading", { name: "Player profiles history" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Backup all players/i })).toBeInTheDocument();
-    expect(screen.getByText("C:/backups/players")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Backup$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Open folder C:\/backups\/world/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Open folder C:\/backups\/players/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Open folder C:\/backups\/ini/i })).not.toBeInTheDocument();
     expect(screen.queryByText("C:/backups/world")).not.toBeInTheDocument();
 
+    await user.click(screen.getByRole("tab", { name: "Player profiles" }));
+    expect(screen.getByRole("button", { name: /Backup all players/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Open folder C:\/backups\/players/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Open folder C:\/backups\/world/i })).not.toBeInTheDocument();
+
     await user.click(screen.getByRole("tab", { name: "INI" }));
-    expect(screen.getByRole("heading", { name: "INI history" })).toBeInTheDocument();
-    expect(screen.getByText("C:/backups/ini")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Backup$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Open folder C:\/backups\/ini/i })).toBeInTheDocument();
   });
 
   it("creates a backup for the active kind only and toasts completion", async () => {
@@ -204,8 +256,8 @@ describe("ServerBackupPanel", () => {
     const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
     renderPanel();
 
-    expect(await screen.findByRole("button", { name: /Create World save backup/i })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /Create World save backup/i }));
+    expect(await screen.findByRole("button", { name: /^Backup$/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^Backup$/i }));
 
     await waitFor(() => {
       expect(window.api.createManualBackup).toHaveBeenCalledWith("srv-1", ["world"]);
@@ -222,7 +274,7 @@ describe("ServerBackupPanel", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "INI" }));
-    await user.click(screen.getByRole("button", { name: /Create INI backup/i }));
+    await user.click(screen.getByRole("button", { name: /^Backup$/i }));
 
     await waitFor(() => {
       expect(window.api.createManualBackup).toHaveBeenCalledWith("srv-1", ["ini"]);
@@ -240,12 +292,12 @@ describe("ServerBackupPanel", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    expect(await screen.findByText("C:/backups/world")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Open folder C:\/backups\/world/i })).toBeInTheDocument();
     await user.click(screen.getByRole("checkbox", { name: /Select backup bk-world/i }));
-    expect(screen.getByRole("button", { name: /Delete selected \(1\)/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Delete \(1\)/i })).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "Player profiles" }));
-    expect(screen.getByRole("button", { name: /^Delete selected$/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Delete$/i })).toBeDisabled();
     expect(screen.queryByRole("checkbox", { name: /Select backup bk-world/i })).not.toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: /Select backup bk-players/i })).not.toBeChecked();
   });
@@ -271,7 +323,7 @@ describe("ServerBackupPanel", () => {
     expect(titles()).toEqual(["Bob"]);
 
     await user.clear(screen.getByLabelText(/Search players/i));
-    await user.click(screen.getByLabelText(/Sort player backups/i));
+    await user.click(screen.getByRole("textbox", { name: /Sort player backups/i }));
     await user.click(await screen.findByRole("option", { name: /Player A–Z/i }));
 
     expect(titles()).toEqual(["Alice", "All players", "Bob"]);
@@ -317,5 +369,16 @@ describe("ServerBackupPanel", () => {
       expect(window.api.listBackups).toHaveBeenCalledTimes(2);
     });
     expect(screen.getByLabelText(/Destination/i)).toHaveValue("D:\\Custom\\Backups");
+  });
+
+  it("uses relative time as the world row title with type chip", async () => {
+    renderPanel([worldBackup]);
+    await screen.findByRole("button", { name: /Open folder C:\/backups\/world/i });
+    const title = document.querySelector("[data-backup-title]");
+    expect(title).not.toBeNull();
+    expect(title?.textContent).not.toBe("manual");
+    expect(title?.textContent?.length).toBeGreaterThan(0);
+    expect(screen.getByText("manual")).toBeInTheDocument();
+    expect(screen.queryByText("C:/backups/world")).not.toBeInTheDocument();
   });
 });
