@@ -437,11 +437,13 @@ export class BackupService extends EventEmitter {
         failed24h: failed24h.length,
       };
 
+      const processActive = this.processes.isActive(server.id);
       const health = this.computeServerHealth({
         destinationOk,
         stale,
         failed24h: counts.failed24h,
         scheduleEnabled: policy.enabled,
+        processActive,
         hasWorldBackup: latestWorld !== null,
       });
 
@@ -469,7 +471,8 @@ export class BackupService extends EventEmitter {
           message: `${server.name}: backup destination is missing or unreachable (${resolvedRoot})`,
         });
       }
-      if (policy.enabled && latestWorld === null) {
+      // Scheduled world backups only run while the process is active.
+      if (policy.enabled && processActive && latestWorld === null) {
         alerts.push({
           id: `never_backed_up:${server.id}`,
           kind: "never_backed_up",
@@ -804,10 +807,15 @@ export class BackupService extends EventEmitter {
     stale: boolean;
     failed24h: number;
     scheduleEnabled: boolean;
+    processActive: boolean;
     hasWorldBackup: boolean;
   }): BackupHealthStatus {
     if (!input.destinationOk || input.failed24h > 0) return "critical";
-    if (input.stale || (input.scheduleEnabled && !input.hasWorldBackup)) {
+    // Never-backed-up warning only applies while the scheduler can run.
+    if (
+      input.stale ||
+      (input.scheduleEnabled && input.processActive && !input.hasWorldBackup)
+    ) {
       return "warning";
     }
     if (!input.scheduleEnabled && !input.hasWorldBackup) return "unknown";
@@ -1795,12 +1803,17 @@ export class BackupService extends EventEmitter {
       const type = parsed?.type ?? this.guessTypeFromName(basename(folderPath));
       const notes = parsed?.notes ?? `Imported from disk: ${basename(folderPath)}`;
       const sizeBytes = await directorySize(folderPath);
+      // Copies keep the original manifest id; mint a new one when that id is taken.
+      const id =
+        parsed?.id !== undefined && this.backups.getBackup(parsed.id) !== null
+          ? undefined
+          : parsed?.id;
       if (this.backups.getBackupByPath(serverId, folderPath) !== null) {
         known.add(resolve(folderPath).toLowerCase());
         return false;
       }
       this.backups.insertCompletedBackup({
-        id: parsed?.id,
+        id,
         serverId,
         type,
         kind: parsed?.kind ?? kind,
