@@ -10,11 +10,16 @@ import {
   formatPlayerSessionNotes,
   playersRetentionKey,
 } from "@backend/domains/backups/backup-service";
+import { rconExec } from "@backend/infra/rcon/rcon-client";
 import type { ProcessManager } from "@backend/infra/process/process-manager";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
 import type { AppSettingsRepository } from "@backend/infra/db/app-settings-repository";
 import type { ServerProfile } from "@shared/types";
 import type { DatabaseSync } from "node:sqlite";
+
+vi.mock("@backend/infra/rcon/rcon-client", () => ({
+  rconExec: vi.fn(async () => "ok"),
+}));
 
 const tmpDirs: string[] = [];
 
@@ -79,6 +84,7 @@ describe("BackupService kinds and retention", () => {
   let installDir: string;
   let profile: ServerProfile;
   let addEvent: ReturnType<typeof vi.fn>;
+  let isActive: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     db = openDatabase(":memory:");
@@ -89,6 +95,9 @@ describe("BackupService kinds and retention", () => {
     profile = makeProfile(installDir);
 
     addEvent = vi.fn();
+    isActive = vi.fn(() => false);
+    vi.mocked(rconExec).mockClear();
+    vi.mocked(rconExec).mockResolvedValue("ok");
     const servers = {
       get: vi.fn((id: string) => (id === profile.id ? profile : null)),
       list: vi.fn(() => [profile]),
@@ -96,7 +105,7 @@ describe("BackupService kinds and retention", () => {
     } as unknown as ServerRepository;
 
     const processes = {
-      isActive: vi.fn(() => false),
+      isActive,
       start: vi.fn(),
       stop: vi.fn(),
     } as unknown as ProcessManager;
@@ -174,6 +183,7 @@ describe("BackupService kinds and retention", () => {
     expect(record.kind).toBe("players");
     expect(playersRetentionKey(record)).toBe("76561198000000000");
     expect(record.notes).toContain(formatPlayerSessionNotes("connect", "76561198000000000", "Alice"));
+    expect(rconExec).not.toHaveBeenCalled();
     await expect(
       access(
         join(record.path, "PlayerProfiles", "SavedArks", "76561198000000000.arkprofile"),
@@ -186,6 +196,85 @@ describe("BackupService kinds and retention", () => {
         fsConstants.F_OK,
       ),
     ).rejects.toThrow();
+  });
+
+  it("flushes SaveWorld before player session backup when server is running", async () => {
+    isActive.mockReturnValue(true);
+    const record = await service.createPlayerSessionBackup(
+      profile.id,
+      "disconnect",
+      "76561198000000000",
+      "Alice",
+    );
+    expect(record).not.toBeNull();
+    expect(rconExec).toHaveBeenCalledWith(
+      "127.0.0.1",
+      profile.rconPort,
+      profile.adminPassword,
+      "SaveWorld",
+    );
+  });
+
+  it("does not match other player profiles that share an id prefix", async () => {
+    const savedArks = join(installDir, "ShooterGame", "Saved", "SavedArks");
+    await writeFile(join(savedArks, "765611980000000001.arkprofile"), "PREFIXED", "utf8");
+
+    const record = await service.createPlayerSessionBackup(
+      profile.id,
+      "connect",
+      "76561198000000000",
+      "Alice",
+    );
+    expect(record).not.toBeNull();
+    if (record === null) return;
+    await expect(
+      access(
+        join(record.path, "PlayerProfiles", "SavedArks", "76561198000000000.arkprofile"),
+        fsConstants.F_OK,
+      ),
+    ).resolves.toBeUndefined();
+    await expect(
+      access(
+        join(record.path, "PlayerProfiles", "SavedArks", "765611980000000001.arkprofile"),
+        fsConstants.F_OK,
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("discards empty player session backups without retaining them", async () => {
+    repo.setPolicy({
+      serverId: profile.id,
+      enabled: false,
+      intervalMinutes: 60,
+      retainCountWorld: 20,
+      retainCountPlayers: 1,
+      retainCountIni: 10,
+      backupDir: null,
+    });
+
+    const empty = await service.createPlayerSessionBackup(
+      profile.id,
+      "connect",
+      "76561198001111111",
+      "Ghost",
+    );
+    expect(empty).toBeNull();
+    expect(repo.listCompleted(profile.id, "players")).toHaveLength(0);
+    expect(addEvent).not.toHaveBeenCalledWith(
+      profile.id,
+      "backup_created",
+      expect.anything(),
+      expect.anything(),
+    );
+
+    const kept = await service.createPlayerSessionBackup(
+      profile.id,
+      "connect",
+      "76561198000000000",
+      "Alice",
+    );
+    expect(kept).not.toBeNull();
+    expect(repo.listCompleted(profile.id, "players")).toHaveLength(1);
   });
 
   it("retries finding a profile file on disconnect flush", async () => {

@@ -224,12 +224,16 @@ export class PlayerSessionWatcher {
     this.recentSessionBackupAt.set(dedupeKey, Date.now());
 
     try {
-      await this.backups.createPlayerSessionBackup(
+      const record = await this.backups.createPlayerSessionBackup(
         serverId,
         event,
         player.key,
         player.name,
       );
+      // Empty (no profile on disk) — allow a later retry once the file appears.
+      if (record === null) {
+        this.recentSessionBackupAt.delete(dedupeKey);
+      }
     } catch (error) {
       // Allow a later retry if packaging failed.
       this.recentSessionBackupAt.delete(dedupeKey);

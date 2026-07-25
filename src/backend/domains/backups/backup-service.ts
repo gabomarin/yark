@@ -239,6 +239,8 @@ export class BackupService {
     }
     const notes = formatPlayerSessionNotes(event, key, playerName);
     const type = event === "connect" ? "player_connect" : "player_disconnect";
+    // Same hot-path flush as createBackups — profiles may only exist in memory until SaveWorld.
+    await this.flushWorldIfActive(serverId);
     return this.createBackup(serverId, type, "players", notes, {
       playerKey: key,
       waitForProfile: event === "disconnect",
@@ -453,24 +455,30 @@ export class BackupService {
     return server;
   }
 
+  private async flushWorldIfActive(serverId: string): Promise<void> {
+    if (!this.processes.isActive(serverId)) return;
+    const server = this.mustServer(serverId);
+    try {
+      await rconExec(RCON_HOST, server.rconPort, server.adminPassword, "SaveWorld");
+    } catch {
+      // Hot backup can continue even if SaveWorld fails.
+    }
+  }
+
   private async createBackups(
     serverId: string,
     type: BackupType,
     notes: string | null,
     kinds: BackupKind[],
   ): Promise<BackupRecord[]> {
-    const server = this.mustServer(serverId);
-    if (this.processes.isActive(serverId)) {
-      try {
-        await rconExec(RCON_HOST, server.rconPort, server.adminPassword, "SaveWorld");
-      } catch {
-        // Hot backup can continue even if SaveWorld fails.
-      }
-    }
+    await this.flushWorldIfActive(serverId);
 
     const created: BackupRecord[] = [];
     for (const kind of kinds) {
-      created.push(await this.createBackup(serverId, type, kind, notes));
+      const record = await this.createBackup(serverId, type, kind, notes);
+      if (record !== null) {
+        created.push(record);
+      }
     }
     return created;
   }
@@ -481,7 +489,7 @@ export class BackupService {
     kind: BackupKind,
     notes: string | null,
     options?: { playerKey?: string; waitForProfile?: boolean },
-  ): Promise<BackupRecord> {
+  ): Promise<BackupRecord | null> {
     const server = this.mustServer(serverId);
     const policy = this.backups.getPolicy(serverId);
     const rootDir = resolveServerBackupRoot(server.installDir, policy.backupDir);
@@ -510,6 +518,18 @@ export class BackupService {
               waitForProfile: options.waitForProfile === true,
             })
           : await this.packageKind(server, kind, targetDir);
+
+      // Per-player session archives with no matching profile are not recoverable —
+      // drop them so they do not consume retention slots.
+      if (
+        options?.playerKey !== undefined
+        && kind === "players"
+        && packaged.meta.empty === true
+      ) {
+        await rm(targetDir, { recursive: true, force: true });
+        this.backups.deleteBackupRecord(record.id);
+        return null;
+      }
 
       await writeFile(
         join(targetDir, "manifest.json"),
@@ -646,11 +666,8 @@ export class BackupService {
             .replace(/\.(arkprofile)(\.bak)?$/i, "")
             .replace(/\.profilebak$/i, "");
           const normalizedStem = normalizePlayerKey(stem);
-          if (
-            normalizedStem !== needle
-            && !normalizedStem.includes(needle)
-            && !needle.includes(normalizedStem)
-          ) {
+          // Exact match only — substring/prefix matching can pull in other players' profiles.
+          if (normalizedStem !== needle) {
             continue;
           }
           const rel = join(root.label, relative(root.path, file));
