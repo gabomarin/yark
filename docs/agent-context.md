@@ -36,8 +36,14 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 
 - The new renderer shell is already active.
 - Overview, SteamCMD, and Logs have already been migrated to the new architecture.
-- Server Workspace keeps `Server` and `INI Files` as its regular navigation. Mods are edited on the Server tab (comma-separated CurseForge Project IDs) until a CurseForge API key enables a dedicated Mods UI. A five-step configuration assistant launches on demand from `Server`; it uses an isolated draft and writes only after explicit review.
-- Clusters, Backups, and Settings remain placeholders within the new shell.
+- Server Workspace keeps `Server`, `INI Files`, and `Backups` as its regular navigation. Workspace **Backups** is operational (create / restore / history / destination for that server) with kind subtabs (**World save** | **Player profiles** | **INI**). Sidebar **Backups** is generalized configuration across servers (schedule / destination / retention) with “Open in server” to jump into the workspace tab. Mods are edited on the Server tab (comma-separated CurseForge Project IDs) until a CurseForge API key enables a dedicated Mods UI. A five-step configuration assistant launches on demand from `Server`; it uses an isolated draft and writes only after explicit review.
+- Clusters and Settings remain placeholders within the new shell.
+- Sidebar Backups settings page and per-server workspace Backups tab are live.
+- Backups are kind-scoped: `world` (full SavedArks including `.arkprofile*`), `players` (profiles from SavedArks/SaveGames), `ini` (`Game.ini` + `GameUserSettings.ini`).
+  - **World**: destination + schedule (`enabled` / `intervalMinutes`, min **5**, default **60**) + `retainCountWorld`. Schedule creates **world only**. World is a full SavedArks folder snapshot (profiles included).
+  - **Players**: `retainCountPlayers` (per-player pools for join/leave archives); RCON `ListPlayers` poll (~10s) while `running`, plus immediate ticks on process status changes; connect/disconnect archives per player; disconnect waits briefly for ASA to flush the `.arkprofile*`; leaving `running` flushes remaining online players as disconnects; SavedArks profile mtime scan backs up new/changed profiles when the player is not online (covers short sessions RCON missed). Manual “Backup all players” still snapshots every profile.
+  - **INI**: `retainCountIni`; manual create; automatic `ini_save` backup after each successful INI save (debounced ~2s) via the `ini:save` IPC path (editor + wizard). Not on the world schedule.
+  - Shared `backupDir` root for all kinds. UI: destination/schedule card only on the World subtab; Players/INI tabs keep a compact retain control near the history list.
 - Live log streaming during active SteamCMD operations is still pending.
 - Real E2E validation against host-side binaries and SteamCMD is still not covered.
 
@@ -65,6 +71,7 @@ cmd.exe /c npm run build
 
 ## Implementation notes
 
+- Dedicated server launch args are built only by `buildLaunchArgs` / `formatLaunchCommandLine` in `src/backend/domains/instances/launch-args.ts` (logical shape `"Map"?SessionName="..."` with separate quotes — never `"Map?SessionName=..."`), dash `-port`, default `-ServerPlatform=ALL`, no `?listen`, no RCON/passwords/`-QueryPort` on CLI). Profile RCON/passwords/query port are synced into `GameUserSettings.ini` via `syncProfileSettingsToIni` before start. On Windows, ProcessManager spawns `ArkAscendedServer.exe` **directly** with those logical args and `windowsVerbatimArguments: false` / `shell: false` (Node quotes spaced exe paths and escapes embedded quotes so argv keeps `"Map"?SessionName="..."`). Do not use a `.cmd` / `cmd /c` / `start` wrapper — that flashes a visible CMD and makes lifecycle track `cmd.exe` instead of the game. Avoid `windowsVerbatimArguments: true` when the exe path has spaces (Node leaves the path unquoted and argv breaks). Native console mode uses the same direct spawn with `windowsHide: false`; piped mode uses `windowsHide: true` plus stdout/stderr pipes. UI/runtime logs use the logical quoted shape via `formatLaunchCommandLine`.
 - The new renderer follows a feature-based pattern with a shared shell and CSS Modules.
 - IPC-layer changes should keep the contracts aligned in [src/shared/ipc.ts](../src/shared/ipc.ts), [src/preload/index.ts](../src/preload/index.ts), and [src/main/ipc-handlers.ts](../src/main/ipc-handlers.ts).
 - Update availability must compare the local Steam `buildid` from `appmanifest_2430930.acf` with the public Steam build. Never compare the local runtime `ARK Version` with a version observed on an external official server; staggered deployments make those values non-equivalent.

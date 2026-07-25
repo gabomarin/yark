@@ -27,6 +27,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: "overview", label: "Servers", icon: SquaresFour },
+  { id: "backups", label: "Backups", icon: HardDrives },
   { id: "steamcmd", label: "SteamCMD", icon: ArrowsClockwise },
   { id: "logs", label: "Logs", icon: FileText },
 ];

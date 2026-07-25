@@ -344,7 +344,9 @@ export function LogsPage(props: Props): JSX.Element {
                     >
                       {logs.backups.map((backup) => (
                         <div key={backup.id} className={classes.eventRow}>
-                          <Text fw={600}>{backup.type}</Text>
+                          <Text fw={600}>
+                            {backup.kind} · {backup.type}
+                          </Text>
                           <Text size="sm" c="dimmed">{new Date(backup.createdAt).toLocaleString()} | {backup.status}</Text>
                           <Text size="sm">{backup.path}</Text>
                         </div>

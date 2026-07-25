@@ -19,8 +19,12 @@ import {
 import { AppRouter } from "@app/AppRouter";
 import { AppShellLayout } from "@app/AppShellLayout";
 import { LogsPage } from "@features/logs/LogsPage";
+import { BackupsPage } from "@features/backups/BackupsPage";
 import { OverviewPage } from "@features/overview/OverviewPage";
-import { ServerWorkspacePage } from "@features/server-workspace/ServerWorkspacePage";
+import {
+  ServerWorkspacePage,
+  type WorkspaceTab,
+} from "@features/server-workspace/ServerWorkspacePage";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { SteamCmdPage } from "@features/steamcmd/SteamCmdPage";
 import { SteamCmdProgressDock } from "@features/steamcmd/SteamCmdProgressDock";
@@ -33,7 +37,12 @@ type LogsSection = "events" | "runtime" | "updates" | "backups";
 type Overlay =
   | { kind: "create" }
   | { kind: "edit"; profile: ServerProfile }
-  | { kind: "workspace"; serverId: string; onboarding?: boolean }
+  | {
+      kind: "workspace";
+      serverId: string;
+      onboarding?: boolean;
+      initialTab?: WorkspaceTab;
+    }
   | null;
 
 export function App(): JSX.Element {
@@ -410,21 +419,19 @@ export function App(): JSX.Element {
     setRoute("logs");
   }, []);
 
-  const startServerAndOpenRuntimeLogs = useCallback(
-    async (id: string) => {
-      setError(null);
-      const startRes = await window.api.startServer(id, {
-        openNativeConsole: openNativeTerminalOnStart,
-      });
-      if (!startRes.ok) {
-        setError(startRes.error ?? "Could not start the server");
-        await refresh();
-        return;
-      }
-      openLogsForServer(id, "runtime");
-      await refresh();
-    },
-    [openLogsForServer, openNativeTerminalOnStart, refresh],
+  const openServerBackups = useCallback((serverId: string) => {
+    setRoute("overview");
+    setOverlay({ kind: "workspace", serverId, initialTab: "backups" });
+  }, []);
+
+  const startServer = useCallback(
+    (id: string) =>
+      runAction(() =>
+        window.api.startServer(id, {
+          openNativeConsole: openNativeTerminalOnStart,
+        }),
+      ),
+    [openNativeTerminalOnStart, runAction],
   );
 
   const navigate = useCallback((next: Route) => {
@@ -454,19 +461,14 @@ export function App(): JSX.Element {
             installationInfo={installationInfo}
             clusterReports={reports}
             onboarding={overlay.onboarding === true}
+            initialTab={overlay.initialTab}
             onDismissOnboarding={() =>
               setOverlay({ kind: "workspace", serverId: overlay.serverId })
             }
             onSelectServer={(serverId) => setOverlay({ kind: "workspace", serverId })}
             onBack={() => setOverlay(null)}
             onCreateServer={() => setOverlay({ kind: "create" })}
-            onStartServer={(id) =>
-              void runAction(() =>
-                window.api.startServer(id, {
-                  openNativeConsole: openNativeTerminalOnStart,
-                }),
-              )
-            }
+            onStartServer={(id) => void startServer(id)}
             onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
             onRestartServer={(id) => void restartServer(id)}
             onKillServer={(id) => confirmKillServer(id)}
@@ -540,7 +542,7 @@ export function App(): JSX.Element {
               steamCmdOperation={steamCmdStatus?.operation ?? null}
               onOpenWorkspace={(server) => setOverlay({ kind: "workspace", serverId: server.id })}
               onOpenLogs={(serverId) => openLogsForServer(serverId, "events")}
-              onStartServer={(id) => void startServerAndOpenRuntimeLogs(id)}
+              onStartServer={(id) => void startServer(id)}
               onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
               onRestartServer={(id) => void restartServer(id)}
               onKillServer={(id) => confirmKillServer(id)}
@@ -574,6 +576,14 @@ export function App(): JSX.Element {
               selectedServerId={logsServerId}
               onSelectedServerChange={setLogsServerId}
               initialSection={logsInitialSection}
+            />
+          ),
+        }}
+        backups={{
+          page: (
+            <BackupsPage
+              servers={servers}
+              onOpenServerBackups={openServerBackups}
             />
           ),
         }}

@@ -1,16 +1,24 @@
 import { randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 import type {
+  BackupKind,
   BackupPolicy,
   BackupRecord,
   BackupStatus,
   BackupType,
 } from "@shared/types";
 
+export const DEFAULT_INTERVAL_MINUTES = 60;
+export const DEFAULT_RETAIN_COUNT_WORLD = 20;
+export const DEFAULT_RETAIN_COUNT_PLAYERS = 20;
+export const DEFAULT_RETAIN_COUNT_INI = 10;
+export const MIN_INTERVAL_MINUTES = 5;
+
 interface BackupRow {
   id: string;
   server_id: string;
   type: BackupType;
+  kind: BackupKind;
   path: string;
   size_bytes: number;
   status: BackupStatus;
@@ -24,8 +32,18 @@ interface PolicyRow {
   enabled: number;
   interval_minutes: number;
   retain_count: number;
+  retain_count_players: number | null;
+  retain_count_ini: number | null;
   retain_days: number;
+  backup_dir: string | null;
   updated_at: string;
+}
+
+function normalizeKind(value: string | null | undefined): BackupKind {
+  if (value === "players" || value === "ini" || value === "world") {
+    return value;
+  }
+  return "world";
 }
 
 function rowToBackup(row: BackupRow): BackupRecord {
@@ -33,6 +51,7 @@ function rowToBackup(row: BackupRow): BackupRecord {
     id: row.id,
     serverId: row.server_id,
     type: row.type,
+    kind: normalizeKind(row.kind),
     path: row.path,
     sizeBytes: row.size_bytes,
     status: row.status,
@@ -42,13 +61,27 @@ function rowToBackup(row: BackupRow): BackupRecord {
   };
 }
 
+function clampRetain(value: number | null | undefined, fallback: number): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
+  return Math.max(1, Math.min(500, Math.floor(value)));
+}
+
 function rowToPolicy(row: PolicyRow): BackupPolicy {
+  const backupDir =
+    typeof row.backup_dir === "string" && row.backup_dir.trim().length > 0
+      ? row.backup_dir.trim()
+      : null;
   return {
     serverId: row.server_id,
     enabled: row.enabled === 1,
     intervalMinutes: row.interval_minutes,
-    retainCount: row.retain_count,
-    retainDays: row.retain_days,
+    retainCountWorld: clampRetain(row.retain_count, DEFAULT_RETAIN_COUNT_WORLD),
+    retainCountPlayers: clampRetain(
+      row.retain_count_players,
+      DEFAULT_RETAIN_COUNT_PLAYERS,
+    ),
+    retainCountIni: clampRetain(row.retain_count_ini, DEFAULT_RETAIN_COUNT_INI),
+    backupDir,
     updatedAt: row.updated_at,
   };
 }
@@ -59,6 +92,7 @@ export class BackupRepository {
   createBackupStart(input: {
     serverId: string;
     type: BackupType;
+    kind: BackupKind;
     path: string;
     notes: string | null;
   }): BackupRecord {
@@ -67,15 +101,24 @@ export class BackupRepository {
     this.db
       .prepare(
         `INSERT INTO backups (
-          id, server_id, type, path, size_bytes, status, created_at, completed_at, notes
-        ) VALUES (?, ?, ?, ?, 0, 'running', ?, NULL, ?)`,
+          id, server_id, type, kind, path, size_bytes, status, created_at, completed_at, notes
+        ) VALUES (?, ?, ?, ?, ?, 0, 'running', ?, NULL, ?)`,
       )
-      .run(id, input.serverId, input.type, input.path, createdAt, input.notes);
+      .run(
+        id,
+        input.serverId,
+        input.type,
+        input.kind,
+        input.path,
+        createdAt,
+        input.notes,
+      );
 
     return {
       id,
       serverId: input.serverId,
       type: input.type,
+      kind: input.kind,
       path: input.path,
       sizeBytes: 0,
       status: "running",
@@ -121,7 +164,15 @@ export class BackupRepository {
     return rows.map(rowToBackup);
   }
 
-  latestCompleted(serverId: string): BackupRecord | null {
+  latestCompleted(serverId: string, kind?: BackupKind): BackupRecord | null {
+    if (kind !== undefined) {
+      const row = this.db
+        .prepare(
+          "SELECT * FROM backups WHERE server_id = ? AND kind = ? AND status = 'completed' ORDER BY completed_at DESC, created_at DESC, rowid DESC LIMIT 1",
+        )
+        .get(serverId, kind) as unknown as BackupRow | undefined;
+      return row ? rowToBackup(row) : null;
+    }
     const row = this.db
       .prepare(
         "SELECT * FROM backups WHERE server_id = ? AND status = 'completed' ORDER BY completed_at DESC, created_at DESC, rowid DESC LIMIT 1",
@@ -140,17 +191,27 @@ export class BackupRepository {
     this.db
       .prepare(
         `INSERT INTO backup_policies (
-          server_id, enabled, interval_minutes, retain_count, retain_days, updated_at
-        ) VALUES (?, 0, 360, 20, 14, ?)`,
+          server_id, enabled, interval_minutes, retain_count,
+          retain_count_players, retain_count_ini, retain_days, backup_dir, updated_at
+        ) VALUES (?, 0, ?, ?, ?, ?, 14, NULL, ?)`,
       )
-      .run(serverId, now);
+      .run(
+        serverId,
+        DEFAULT_INTERVAL_MINUTES,
+        DEFAULT_RETAIN_COUNT_WORLD,
+        DEFAULT_RETAIN_COUNT_PLAYERS,
+        DEFAULT_RETAIN_COUNT_INI,
+        now,
+      );
 
     return {
       serverId,
       enabled: false,
-      intervalMinutes: 360,
-      retainCount: 20,
-      retainDays: 14,
+      intervalMinutes: DEFAULT_INTERVAL_MINUTES,
+      retainCountWorld: DEFAULT_RETAIN_COUNT_WORLD,
+      retainCountPlayers: DEFAULT_RETAIN_COUNT_PLAYERS,
+      retainCountIni: DEFAULT_RETAIN_COUNT_INI,
+      backupDir: null,
       updatedAt: now,
     };
   }
@@ -159,28 +220,41 @@ export class BackupRepository {
     serverId: string;
     enabled: boolean;
     intervalMinutes: number;
-    retainCount: number;
-    retainDays: number;
+    retainCountWorld: number;
+    retainCountPlayers: number;
+    retainCountIni: number;
+    backupDir: string | null;
   }): BackupPolicy {
     const now = new Date().toISOString();
+    const backupDir =
+      input.backupDir !== null && input.backupDir.trim().length > 0
+        ? input.backupDir.trim()
+        : null;
+    // retain_days kept in schema as unused legacy; write a fixed placeholder.
+    // retain_count stores world retention (legacy column name).
     this.db
       .prepare(
         `INSERT INTO backup_policies (
-          server_id, enabled, interval_minutes, retain_count, retain_days, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?)
+          server_id, enabled, interval_minutes, retain_count,
+          retain_count_players, retain_count_ini, retain_days, backup_dir, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, 14, ?, ?)
         ON CONFLICT(server_id) DO UPDATE SET
           enabled = excluded.enabled,
           interval_minutes = excluded.interval_minutes,
           retain_count = excluded.retain_count,
-          retain_days = excluded.retain_days,
+          retain_count_players = excluded.retain_count_players,
+          retain_count_ini = excluded.retain_count_ini,
+          backup_dir = excluded.backup_dir,
           updated_at = excluded.updated_at`,
       )
       .run(
         input.serverId,
         input.enabled ? 1 : 0,
         input.intervalMinutes,
-        input.retainCount,
-        input.retainDays,
+        input.retainCountWorld,
+        input.retainCountPlayers,
+        input.retainCountIni,
+        backupDir,
         now,
       );
     return this.getPolicy(input.serverId);
@@ -190,7 +264,15 @@ export class BackupRepository {
     this.db.prepare("DELETE FROM backups WHERE id = ?").run(id);
   }
 
-  listCompleted(serverId: string): BackupRecord[] {
+  listCompleted(serverId: string, kind?: BackupKind): BackupRecord[] {
+    if (kind !== undefined) {
+      const rows = this.db
+        .prepare(
+          "SELECT * FROM backups WHERE server_id = ? AND kind = ? AND status = 'completed' ORDER BY created_at DESC",
+        )
+        .all(serverId, kind) as unknown as BackupRow[];
+      return rows.map(rowToBackup);
+    }
     const rows = this.db
       .prepare(
         "SELECT * FROM backups WHERE server_id = ? AND status = 'completed' ORDER BY created_at DESC",

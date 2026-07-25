@@ -1,13 +1,16 @@
 import { BrowserWindow, dialog, ipcMain, shell, type OpenDialogOptions, type SaveDialogOptions } from "electron";
 import { spawn } from "node:child_process";
+import { mkdir } from "node:fs/promises";
 import { IPC, type IpcResult, type PickPathKind } from "../shared/ipc";
 import type { ServerIniPayload, ServerProfileInput, StartServerOptions } from "../shared/types";
+import type { BackupService } from "../backend/domains/backups/backup-service";
 import type { InstanceService } from "../backend/domains/instances/instance-service";
 import type { IniService } from "../backend/domains/config/ini-service";
 import type { LogsService } from "../backend/domains/logs/logs-service";
 import type { ModsService } from "../backend/domains/mods/mods-service";
 import type { UpdateService } from "../backend/domains/updates/update-service";
 import type { ServerRepository } from "../backend/infra/db/server-repository";
+import type { BackupKind, BackupPolicy } from "../shared/types";
 
 function wrap<T>(fn: () => T | Promise<T>): Promise<IpcResult<T>> {
   return Promise.resolve()
@@ -36,6 +39,7 @@ export function registerIpcHandlers(
   logs: LogsService,
   updates: UpdateService,
   mods: ModsService,
+  backups: BackupService,
 ): void {
   ipcMain.handle(IPC.serversList, () => wrap(() => instances.list()));
 
@@ -204,7 +208,12 @@ export function registerIpcHandlers(
   ipcMain.handle(
     IPC.iniSave,
     (_e, serverId: string, payload: ServerIniPayload) =>
-      wrap(() => ini.saveServerIni(serverId, payload)),
+      wrap(async () => {
+        const preview = await ini.saveServerIni(serverId, payload);
+        // Best-effort automatic INI snapshot after a successful user save.
+        void backups.createIniSaveBackup(serverId).catch(() => undefined);
+        return preview;
+      }),
   );
 
   ipcMain.handle(IPC.logsList, (_e, serverId: string) =>
@@ -254,5 +263,63 @@ export function registerIpcHandlers(
 
   ipcMain.handle(IPC.modsGetMany, (_e, modIds: string[], forceRefresh?: boolean) =>
     wrap(() => mods.getMods(modIds, { forceRefresh: forceRefresh === true })),
+  );
+
+  ipcMain.handle(IPC.backupsList, (_e, serverId: string, limit?: number) =>
+    wrap(() => backups.list(serverId, typeof limit === "number" ? limit : 50)),
+  );
+
+  ipcMain.handle(
+    IPC.backupsCreate,
+    (_e, serverId: string, kinds?: BackupKind[]) =>
+      wrap(() => backups.createManualBackup(serverId, kinds)),
+  );
+
+  ipcMain.handle(
+    IPC.backupsDelete,
+    (_e, serverId: string, backupIds: string[]) =>
+      wrap(() => backups.deleteBackups(serverId, backupIds)),
+  );
+
+  ipcMain.handle(IPC.backupsRestore, (_e, serverId: string, backupId: string) =>
+    wrap(() => backups.restoreBackup(serverId, backupId)),
+  );
+
+  ipcMain.handle(IPC.backupsGetPolicy, (_e, serverId: string) =>
+    wrap(() => backups.getPolicy(serverId)),
+  );
+
+  ipcMain.handle(
+    IPC.backupsSetPolicy,
+    (
+      _e,
+      serverId: string,
+      policy: Omit<BackupPolicy, "serverId" | "updatedAt">,
+    ) => wrap(() => backups.setPolicy(serverId, policy)),
+  );
+
+  ipcMain.handle(IPC.backupsResolveRoot, (_e, serverId: string) =>
+    wrap(() => backups.resolveBackupRootDir(serverId)),
+  );
+
+  ipcMain.handle(IPC.backupsOpenFolder, (_e, serverId: string, backupId: string) =>
+    wrap(async () => {
+      const targetPath = backups.resolveBackupPath(serverId, backupId);
+      const error = await shell.openPath(targetPath);
+      if (error.length > 0) {
+        throw new Error(`Could not open backup folder: ${error}`);
+      }
+    }),
+  );
+
+  ipcMain.handle(IPC.backupsOpenRoot, (_e, serverId: string) =>
+    wrap(async () => {
+      const root = backups.resolveBackupRootDir(serverId);
+      await mkdir(root, { recursive: true });
+      const error = await shell.openPath(root);
+      if (error.length > 0) {
+        throw new Error(`Could not open backup destination: ${error}`);
+      }
+    }),
   );
 }

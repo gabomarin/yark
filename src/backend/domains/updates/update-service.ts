@@ -401,7 +401,7 @@ export class UpdateService extends EventEmitter {
         `Starting safe update for \"${server.name}\"`,
       );
 
-      const preUpdateBackup = await this.backups.createPreUpdateBackupForJob(serverId);
+      const preUpdateBackups = await this.backups.createPreUpdateBackupForJob(serverId);
 
       if (wasRunning) {
         await this.instances.stop(serverId);
@@ -463,7 +463,9 @@ export class UpdateService extends EventEmitter {
           await this.instances.stop(serverId);
         }
 
-        await this.backups.restoreBackupForJob(serverId, preUpdateBackup.id);
+        for (const backup of preUpdateBackups) {
+          await this.backups.restoreBackupForJob(serverId, backup.id);
+        }
         await this.instances.start(serverId);
         const rollbackHealthy = await this.waitForHealthy(serverId, 90_000);
         if (!rollbackHealthy) {
@@ -472,11 +474,12 @@ export class UpdateService extends EventEmitter {
           );
         }
 
+        const backupIds = preUpdateBackups.map((b) => b.id).join(", ");
         this.servers.addEvent(
           serverId,
           "update_rolled_back",
           "warning",
-          `Update automatically rolled back using backup ${preUpdateBackup.id}`,
+          `Update automatically rolled back using backups ${backupIds}`,
         );
       }
     });

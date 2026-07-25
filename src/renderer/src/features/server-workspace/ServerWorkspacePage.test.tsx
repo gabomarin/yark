@@ -96,6 +96,31 @@ describe("ServerWorkspacePage", () => {
       })),
       openServerIniInEditor: vi.fn(async () => ({ ok: true, data: undefined })),
       updateServer: vi.fn(async () => ({ ok: true, data: serverA })),
+      listBackups: vi.fn(async () => ({ ok: true, data: [] })),
+      getBackupPolicy: vi.fn(async (serverId: string) => ({
+        ok: true,
+        data: {
+          serverId,
+          enabled: false,
+          intervalMinutes: 60,
+          retainCountWorld: 20,
+          retainCountPlayers: 20,
+          retainCountIni: 10,
+          backupDir: null,
+          updatedAt: "2026-07-24T00:00:00.000Z",
+        },
+      })),
+      resolveBackupRoot: vi.fn(async () => ({
+        ok: true,
+        data: "C:/ARK/TheIsland/Backups",
+      })),
+      createManualBackup: vi.fn(),
+      deleteBackups: vi.fn(),
+      restoreBackup: vi.fn(),
+      setBackupPolicy: vi.fn(),
+      openBackupFolder: vi.fn(),
+      openBackupRoot: vi.fn(),
+      pickPath: vi.fn(),
       getModMetadata: vi.fn(async (modId: string) => ({
         ok: true,
         data: {
@@ -140,6 +165,7 @@ describe("ServerWorkspacePage", () => {
       "true",
     );
     expect(screen.getByRole("tab", { name: "INI Files" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Backups" })).toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: "Mods" })).not.toBeInTheDocument();
     expect(screen.getByLabelText(/^Mods$/i)).toBeInTheDocument();
     expect(
@@ -148,6 +174,21 @@ describe("ServerWorkspacePage", () => {
 
     await user.click(screen.getByText("Scorched Earth"));
     expect(onSelectServer).toHaveBeenCalledWith("srv-b");
+  });
+
+  it("opens the Backups tab with create and history UI", async () => {
+    const user = userEvent.setup();
+    renderWorkspace();
+
+    await user.click(screen.getByRole("tab", { name: "Backups" }));
+
+    expect(
+      await screen.findByRole("heading", { name: /Backups for The Island/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Create World save backup/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "World save" })).toBeInTheDocument();
+    expect(screen.getByText(/World save history/i)).toBeInTheDocument();
+    expect(screen.getByText(/World destination & schedule/i)).toBeInTheDocument();
   });
 
   it("moves secondary panels into drawers in compact workspaces", async () => {

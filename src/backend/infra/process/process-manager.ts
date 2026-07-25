@@ -7,7 +7,11 @@ import type {
   ServerStatus,
   StartServerOptions,
 } from "@shared/types";
-import { buildLaunchArgs, serverBinaryPath } from "../../domains/instances/launch-args";
+import {
+  buildLaunchArgs,
+  formatLaunchCommandLine,
+  serverBinaryPath,
+} from "../../domains/instances/launch-args";
 import { rconExec } from "../rcon/rcon-client";
 
 interface ManagedProcess {
@@ -16,41 +20,6 @@ interface ManagedProcess {
   startedAt: string;
   lastError: string | null;
   readinessGeneration: number;
-  /** Process wrapped in `start /WAIT` (visible native console). */
-  nativeConsole: boolean;
-}
-
-function quoteCmdArg(value: string): string {
-  return `"${value.replace(/"/g, '""')}"`;
-}
-
-/**
- * Launches the dedicated in a new visible Windows console.
- * The ChildProcess is a hidden `cmd /c start /WAIT` that stays alive
- * while the server runs (allows stop/kill via process tree).
- */
-function spawnWithNativeConsole(
-  binary: string,
-  args: string[],
-  cwd: string,
-  windowTitle: string,
-): ChildProcess {
-  const parts = [
-    "start",
-    quoteCmdArg(windowTitle),
-    "/D",
-    quoteCmdArg(cwd),
-    "/WAIT",
-    quoteCmdArg(binary),
-    // Always quote: the ASA map has `?` and cmd treats it as a wildcard.
-    ...args.map((arg) => quoteCmdArg(arg)),
-  ];
-  return spawn("cmd.exe", ["/c", parts.join(" ")], {
-    windowsHide: true,
-    windowsVerbatimArguments: true,
-    stdio: "ignore",
-    detached: false,
-  });
 }
 
 function killWinProcessTree(pid: number): boolean {
@@ -60,6 +29,50 @@ function killWinProcessTree(pid: number): boolean {
     { windowsHide: true, stdio: "ignore" },
   );
   return result.status === 0;
+}
+
+/**
+ * Spawns ASA so the **child argv** keeps literal quotes on map and SessionName,
+ * and so `child` is always `ArkAscendedServer.exe` (never `cmd.exe`).
+ *
+ * Pass **logical** args (`"Map"?SessionName="name"`) with
+ * `windowsVerbatimArguments: false`. Node then quotes spaced exe paths and
+ * escapes embedded quotes so CommandLineToArgvW yields the real quote chars
+ * in argv (ASA Commandline log shows `"Map"?SessionName="name"`).
+ *
+ * Do **not** use `windowsVerbatimArguments: true` when the exe path has
+ * spaces: Node leaves the path unquoted on lpCommandLine and argv breaks.
+ * Do **not** wrap with `.cmd` / `cmd /c` / `start`: that flashes a visible
+ * console and makes ProcessManager track cmd instead of the game.
+ *
+ * Native console: `windowsHide: false` so Windows gives the dedicated its own
+ * console. Piped mode: `windowsHide: true` + stdout/stderr pipes.
+ */
+function spawnAsaProcess(
+  binary: string,
+  args: string[],
+  cwd: string,
+  options: { nativeConsole: boolean },
+): ChildProcess {
+  if (options.nativeConsole) {
+    return spawn(binary, args, {
+      cwd,
+      shell: false,
+      windowsVerbatimArguments: false,
+      windowsHide: false,
+      stdio: "ignore",
+      detached: false,
+    });
+  }
+
+  return spawn(binary, args, {
+    cwd,
+    shell: false,
+    windowsVerbatimArguments: false,
+    windowsHide: true,
+    stdio: ["ignore", "pipe", "pipe"],
+    detached: false,
+  });
 }
 
 export interface ProcessManagerOptions {
@@ -157,22 +170,22 @@ export class ProcessManager extends EventEmitter {
     }
 
     const args = options?.launchArgsOverride ?? buildLaunchArgs(profile);
+    // Log the logical Unreal shape (real quotes). Spawn uses Node escaping of the same args.
+    const displayCommandLine =
+      options?.launchArgsOverride !== undefined
+        ? [binary, ...args].join(" ")
+        : formatLaunchCommandLine(profile, binary);
     const nativeConsole = options?.openNativeConsole === true;
-    const child = nativeConsole
-      ? spawnWithNativeConsole(
-          binary,
-          args,
-          profile.installDir,
-          `ARK-${profile.id.slice(0, 8)}`,
-        )
-      : spawn(binary, args, {
-          cwd: profile.installDir,
-          windowsHide: true,
-          stdio: ["ignore", "pipe", "pipe"],
-          detached: false,
-        });
+    const child = spawnAsaProcess(binary, args, profile.installDir, {
+      nativeConsole,
+    });
 
     this.appendRuntimeLog(profile.id, "system", `Starting process ${binary}`);
+    this.appendRuntimeLog(
+      profile.id,
+      "system",
+      `Commandline: ${displayCommandLine}`,
+    );
     if (nativeConsole) {
       this.appendRuntimeLog(
         profile.id,
@@ -197,7 +210,6 @@ export class ProcessManager extends EventEmitter {
       startedAt: new Date().toISOString(),
       lastError: null,
       readinessGeneration: 0,
-      nativeConsole,
     };
     this.processes.set(profile.id, managed);
     this.emitStatus(profile.id);
@@ -387,12 +399,7 @@ export class ProcessManager extends EventEmitter {
 
   private terminateManaged(managed: ManagedProcess): void {
     const pid = managed.child.pid;
-    if (
-      managed.nativeConsole &&
-      process.platform === "win32" &&
-      pid !== undefined &&
-      killWinProcessTree(pid)
-    ) {
+    if (process.platform === "win32" && pid !== undefined && killWinProcessTree(pid)) {
       return;
     }
     try {

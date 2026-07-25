@@ -7,6 +7,7 @@ import type {
   ServerProfile,
   ServerRuntimeInfo,
 } from "@shared/types";
+import { ServerBackupPanel } from "@features/backups/ServerBackupPanel";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -19,7 +20,7 @@ import { SidePanel } from "./components/SidePanel";
 import { WorkspaceHeader } from "./components/WorkspaceHeader";
 import classes from "./ServerWorkspacePage.module.css";
 
-type WorkspaceTab = "server" | "iniFiles";
+export type WorkspaceTab = "server" | "iniFiles" | "backups";
 
 interface Props {
   servers: ServerProfile[];
@@ -28,6 +29,8 @@ interface Props {
   installationInfo: Map<string, ServerInstallationInfo>;
   clusterReports: ClusterComplianceReport[];
   onboarding?: boolean;
+  /** Opens a specific workspace tab (e.g. from sidebar Backup settings). */
+  initialTab?: WorkspaceTab;
   onDismissOnboarding?: () => void;
   onSelectServer: (serverId: string) => void;
   onBack: () => void;
@@ -50,7 +53,9 @@ function isServerActive(runtime: ServerRuntimeInfo | null): boolean {
 }
 
 export function ServerWorkspacePage(props: Props): JSX.Element {
-  const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>("server");
+  const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>(
+    props.initialTab ?? "server",
+  );
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(props.onboarding === true);
   const [iniEditorVersion, setIniEditorVersion] = useState(0);
@@ -66,6 +71,12 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
       setShowOnboarding(true);
     }
   }, [props.onboarding, props.selectedServerId]);
+
+  useEffect(() => {
+    if (props.initialTab !== undefined) {
+      setWorkspaceTab(props.initialTab);
+    }
+  }, [props.initialTab]);
 
   const selectedServer = useMemo(() => {
     return (
@@ -221,6 +232,7 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
             <Tabs.List className={classes.tabList}>
               <Tabs.Tab value="server">Server</Tabs.Tab>
               <Tabs.Tab value="iniFiles">INI Files</Tabs.Tab>
+              <Tabs.Tab value="backups">Backups</Tabs.Tab>
             </Tabs.List>
 
             <div className={classes.tabPanel}>
@@ -257,6 +269,14 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
                   }}
                 />
               </div>
+
+              {workspaceTab === "backups" && (
+                <ServerBackupPanel
+                  server={selectedServer}
+                  runtime={runtime}
+                  embedded
+                />
+              )}
             </div>
           </Tabs>
           )}

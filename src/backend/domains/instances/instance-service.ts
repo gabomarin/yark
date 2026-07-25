@@ -21,6 +21,7 @@ import {
   readOfficialArkBuildCached,
   readOfficialArkVersionCached,
 } from "./server-installation";
+import { syncProfileSettingsToIni } from "./sync-profile-ini";
 
 const RCON_HOST = "127.0.0.1";
 
@@ -103,6 +104,9 @@ export class InstanceService {
     if (updated === null) {
       throw new Error("Server does not exist");
     }
+    void syncProfileSettingsToIni(updated).catch(() => {
+      // INI may be missing until install; start() syncs again before launch.
+    });
     this.repo.addEvent(
       id,
       "server_updated",
@@ -187,7 +191,7 @@ export class InstanceService {
     return this.create(input);
   }
 
-  start(id: string, options?: StartServerOptions): void {
+  async start(id: string, options?: StartServerOptions): Promise<void> {
     const profile = this.mustGet(id);
     const running = this.repo
       .list()
@@ -199,6 +203,7 @@ export class InstanceService {
         `Port conflict ${c.kind} ${c.port} with active server "${c.serverA === profile.name ? c.serverB : c.serverA}"`,
       );
     }
+    await syncProfileSettingsToIni(profile);
     this.processes.start(profile, options);
     this.repo.addEvent(
       id,

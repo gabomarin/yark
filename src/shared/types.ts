@@ -154,6 +154,7 @@ export interface AppEvent {
     | "server_crashed"
     | "rcon_command"
     | "backup_created"
+    | "backup_deleted"
     | "backup_restored"
     | "update_started"
     | "update_completed"
@@ -170,7 +171,13 @@ export type BackupType =
   | "scheduled"
   | "pre_restart"
   | "pre_update"
-  | "pre_restore";
+  | "pre_restore"
+  | "player_connect"
+  | "player_disconnect"
+  | "ini_save";
+
+/** What a backup archive contains (ASA path-scoped). */
+export type BackupKind = "world" | "players" | "ini";
 
 export type BackupStatus = "running" | "completed" | "failed";
 
@@ -178,6 +185,7 @@ export interface BackupRecord {
   id: string;
   serverId: string;
   type: BackupType;
+  kind: BackupKind;
   path: string;
   sizeBytes: number;
   status: BackupStatus;
@@ -188,10 +196,24 @@ export interface BackupRecord {
 
 export interface BackupPolicy {
   serverId: string;
+  /** When true, creates world backups on `intervalMinutes` while the server is running. */
   enabled: boolean;
+  /** Minutes between scheduled world backups. Minimum 5; default 60. */
   intervalMinutes: number;
-  retainCount: number;
-  retainDays: number;
+  /** Keep the last N completed world backups. Default 20. */
+  retainCountWorld: number;
+  /**
+   * Keep the last N completed player-profile backups per player
+   * (full players snapshots share one pool). Default 20.
+   */
+  retainCountPlayers: number;
+  /** Keep the last N completed INI backups. Default 10. */
+  retainCountIni: number;
+  /**
+   * Shared root where new backup snapshots are written (all kinds).
+   * `null` = default under the server install dir (`{installDir}\\Backups`).
+   */
+  backupDir: string | null;
   updatedAt: string;
 }
 

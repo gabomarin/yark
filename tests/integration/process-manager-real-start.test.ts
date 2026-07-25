@@ -54,21 +54,24 @@ describe("ProcessManager real start (Windows)", () => {
     }
   });
 
-  it.skipIf(!IS_WINDOWS)("starts a real process using ASA binary path and reaches running status", async () => {
+  async function runStartProof(
+    serverInstallDir: string,
+    cleanupRoot: string,
+  ): Promise<void> {
     const systemRoot = process.env["SystemRoot"] ?? "C:\\Windows";
     const pingExe = join(systemRoot, "System32", "PING.EXE");
 
     await access(pingExe, fsConstants.F_OK);
 
-    installDir = await mkdtemp(join(tmpdir(), "ark-start-proof-"));
-    const binaryDir = join(installDir, "ShooterGame", "Binaries", "Win64");
+    installDir = cleanupRoot;
+    const binaryDir = join(serverInstallDir, "ShooterGame", "Binaries", "Win64");
     await mkdir(binaryDir, { recursive: true });
 
     const fakeAsaBinary = join(binaryDir, "ArkAscendedServer.exe");
     await cp(pingExe, fakeAsaBinary);
 
     const manager = new ProcessManager();
-    const profile = makeProfile(installDir);
+    const profile = makeProfile(serverInstallDir);
 
     manager.start(profile, {
       launchArgsOverride: ["-t", "127.0.0.1"],
@@ -82,6 +85,17 @@ describe("ProcessManager real start (Windows)", () => {
     );
     expect(reachedRunning).toBe(true);
 
+    const pid = manager.getStatus(profile.id).pid;
+    expect(pid).not.toBeNull();
+    // Direct spawn: tracked pid must be the fake ASA binary, not cmd.exe.
+    const tasklist = spawnSync(
+      "tasklist",
+      ["/FI", `PID eq ${pid}`, "/FO", "CSV", "/NH"],
+      { encoding: "utf8", windowsHide: true },
+    );
+    expect(String(tasklist.stdout)).toMatch(/ArkAscendedServer\.exe/i);
+    expect(String(tasklist.stdout)).not.toMatch(/cmd\.exe/i);
+
     manager.kill(profile.id);
 
     const reachedStopped = await waitFor(
@@ -90,5 +104,17 @@ describe("ProcessManager real start (Windows)", () => {
       200,
     );
     expect(reachedStopped).toBe(true);
+  }
+
+  it.skipIf(!IS_WINDOWS)("starts a real process using ASA binary path and reaches running status", async () => {
+    const root = await mkdtemp(join(tmpdir(), "ark-start-proof-"));
+    await runStartProof(root, root);
+  }, 40_000);
+
+  it.skipIf(!IS_WINDOWS)("starts when install path contains spaces (no cmd wrapper)", async () => {
+    const parent = await mkdtemp(join(tmpdir(), "ark-start-spaced-"));
+    const spaced = join(parent, "path with spaces");
+    await mkdir(spaced, { recursive: true });
+    await runStartProof(spaced, parent);
   }, 40_000);
 });

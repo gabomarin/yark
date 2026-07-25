@@ -1,0 +1,161 @@
+.serverSelect {
+  min-width: 240px;
+}
+
+.policyField {
+  width: 160px;
+}
+
+.compactRetain {
+  width: 140px;
+}
+
+.dirField {
+  flex: 1;
+  min-width: 240px;
+}
+
+.kindSettings {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--app-color-border) 55%, transparent);
+  background: color-mix(in srgb, var(--app-color-panel) 42%, transparent);
+}
+
+.kindSettings :global(.mantine-InputWrapper-root) {
+  gap: 2px;
+}
+
+.kindSettings :global(.mantine-InputWrapper-label) {
+  margin-bottom: 0;
+}
+
+.kindSettings :global(.mantine-InputWrapper-description) {
+  margin-top: 0;
+  line-height: 1.25;
+}
+
+.kindSettingsFields {
+  gap: 6px;
+}
+
+.kindSettingsMeta {
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+.embedded {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.panel {
+  border-radius: var(--app-radius-lg);
+  border-color: color-mix(in srgb, var(--app-color-border) 72%, var(--ark-blue-7));
+  background:
+    linear-gradient(
+      112deg,
+      color-mix(in srgb, var(--app-color-panel-cool-emphasis) 48%, var(--app-color-panel-cool)) 0%,
+      var(--app-color-panel-cool) 44%,
+      color-mix(in srgb, var(--app-color-panel-cool) 82%, var(--app-color-panel)) 100%
+    );
+}
+
+.listPanel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.kindTabs:global(.mantine-Tabs-root) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kindTabList {
+  flex-wrap: wrap;
+}
+
+.kindTabList :global(.mantine-Tabs-tab[data-active]) {
+  font-weight: 600;
+}
+
+.listStack {
+  flex: 1;
+  min-height: 0;
+}
+
+.listHeader {
+  padding-bottom: 2px;
+}
+
+.listToolbar {
+  padding-bottom: 2px;
+}
+
+.playerSearch {
+  flex: 1;
+  min-width: 180px;
+  max-width: 280px;
+}
+
+.playerSort {
+  width: 160px;
+}
+
+.listScroll {
+  flex: 1;
+  min-height: 240px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.listEmpty {
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  border-radius: 10px;
+  border: 1px dashed color-mix(in srgb, var(--app-color-border) 70%, transparent);
+  background: color-mix(in srgb, var(--app-color-panel) 35%, transparent);
+}
+
+.backupRow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--app-color-border) 55%, transparent);
+  background: color-mix(in srgb, var(--app-color-panel) 55%, transparent);
+}
+
+.backupCheck {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.backupMeta {
+  min-width: 0;
+  flex: 1;
+}
+
+.path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

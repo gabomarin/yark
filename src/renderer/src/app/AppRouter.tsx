@@ -15,6 +15,10 @@ interface LogsSlot {
   page: ReactNode;
 }
 
+interface BackupsSlot {
+  page: ReactNode;
+}
+
 interface Props {
   route: Route;
   appVersion: string;
@@ -27,6 +31,7 @@ interface Props {
   overview: OverviewSlot | null;
   steamcmd: SteamCmdSlot | null;
   logs: LogsSlot | null;
+  backups: BackupsSlot | null;
   error?: string | null;
   onDismissError?: () => void;
 }
@@ -49,7 +54,7 @@ export function AppRouter(props: Props): JSX.Element {
           />
         );
       case "backups":
-        return (
+        return props.backups?.page ?? (
           <PlaceholderPage
             title="Backups"
             subtitle="Backup history and restore"

@@ -14,12 +14,15 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Shared shell atmosphere (soft gradient + topography SVG) across sidebar and main content.
 - Official ARK network version from Wildcard CDN for sidebar and SteamCMD chrome.
 - Local Cursor project context for backlog (`.cursor/project-context/`, gitignored).
+- Functional **Backups** page (list / create / restore / schedule + retention) with IPC over existing backup services.
+- Per-server backup destination (default `{installDir}\\Backups`) plus open destination / open backup folder actions.
 
 ### Changed
 
 - Product branding renamed to **YARK server manager**.
 - Repository user-facing strings and docs moved to English.
 - Mods managed from the Server tab (comma-separated CurseForge Project IDs); dedicated Mods tab deferred pending API key.
+- Server start spawns `ArkAscendedServer.exe` directly (no `.cmd` / `cmd` wrapper), so lifecycle tracks the game process and spaced install paths no longer flash a visible CMD.
 
 ### Removed
 

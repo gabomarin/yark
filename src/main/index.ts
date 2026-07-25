@@ -7,6 +7,7 @@ import { ServerRepository } from "../backend/infra/db/server-repository";
 import { ProcessManager } from "../backend/infra/process/process-manager";
 import { BackupService } from "../backend/domains/backups/backup-service";
 import { BackupScheduler } from "../backend/domains/backups/backup-scheduler";
+import { PlayerSessionWatcher } from "../backend/domains/backups/player-session-watcher";
 import { IniService } from "../backend/domains/config/ini-service";
 import { InstanceService } from "../backend/domains/instances/instance-service";
 import { LogsService } from "../backend/domains/logs/logs-service";
@@ -78,6 +79,11 @@ void app.whenReady().then(() => {
     join(userData, "backups"),
   );
   const backupScheduler = new BackupScheduler(backupService);
+  const playerSessionWatcher = new PlayerSessionWatcher(
+    backupService,
+    repo,
+    processManager,
+  );
   const iniService = new IniService(repo, locks);
   const logsService = new LogsService(
     repo,
@@ -98,8 +104,17 @@ void app.whenReady().then(() => {
   const modsService = new ModsService();
 
   backupScheduler.start();
+  playerSessionWatcher.start();
 
-  registerIpcHandlers(instances, repo, iniService, logsService, updateService, modsService);
+  registerIpcHandlers(
+    instances,
+    repo,
+    iniService,
+    logsService,
+    updateService,
+    modsService,
+    backupService,
+  );
 
   processManager.on("status", (info: ServerRuntimeInfo) => {
     sendToRenderer(IPC_PUSH.serverStatus, info);
@@ -136,6 +151,7 @@ void app.whenReady().then(() => {
 
   app.on("will-quit", () => {
     backupScheduler.stop();
+    playerSessionWatcher.stop();
   });
 });
 

@@ -1,5 +1,8 @@
 import type {
   AppEvent,
+  BackupKind,
+  BackupPolicy,
+  BackupRecord,
   ClusterComplianceReport,
   IniPreview,
   ModMetadata,
@@ -51,6 +54,15 @@ export const IPC = {
   logsReadUpdate: "logs:read-update",
   logsExport: "logs:export",
   logsOpenUpdateFile: "logs:open-update-file",
+  backupsList: "backups:list",
+  backupsCreate: "backups:create",
+  backupsDelete: "backups:delete",
+  backupsRestore: "backups:restore",
+  backupsGetPolicy: "backups:get-policy",
+  backupsSetPolicy: "backups:set-policy",
+  backupsResolveRoot: "backups:resolve-root",
+  backupsOpenFolder: "backups:open-folder",
+  backupsOpenRoot: "backups:open-root",
   modsGet: "mods:get",
   modsGetMany: "mods:get-many",
 } as const;
@@ -131,6 +143,24 @@ export interface RendererApi {
     serverId: string,
     fileName: string,
   ): Promise<IpcResult<void>>;
+  listBackups(serverId: string, limit?: number): Promise<IpcResult<BackupRecord[]>>;
+  createManualBackup(
+    serverId: string,
+    kinds?: BackupKind[],
+  ): Promise<IpcResult<BackupRecord[]>>;
+  deleteBackups(
+    serverId: string,
+    backupIds: string[],
+  ): Promise<IpcResult<number>>;
+  restoreBackup(serverId: string, backupId: string): Promise<IpcResult<void>>;
+  getBackupPolicy(serverId: string): Promise<IpcResult<BackupPolicy>>;
+  setBackupPolicy(
+    serverId: string,
+    policy: Omit<BackupPolicy, "serverId" | "updatedAt">,
+  ): Promise<IpcResult<BackupPolicy>>;
+  resolveBackupRoot(serverId: string): Promise<IpcResult<string>>;
+  openBackupFolder(serverId: string, backupId: string): Promise<IpcResult<void>>;
+  openBackupRoot(serverId: string): Promise<IpcResult<void>>;
   getModMetadata(modId: string, forceRefresh?: boolean): Promise<IpcResult<ModMetadata>>;
   getModsMetadata(
     modIds: string[],

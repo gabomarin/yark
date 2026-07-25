@@ -9,7 +9,7 @@
 - Manage multiple server profiles from a single app.
 - Start, stop, restart, and force-stop server instances.
 - Install and update server files with SteamCMD.
-- Create backups, restore them, and review operation history.
+- Create backups, restore them, configure schedule/retention, and review operation history.
 - Inspect runtime, update, and backup logs.
 - Review cluster state and RCON status from the interface.
 - Manage CurseForge mod Project IDs per server (`-mods=`) from the Server form. A dedicated Mods tab is deferred until a CurseForge API key is available.
@@ -19,8 +19,8 @@
 Core flows already work (profiles, process control, SteamCMD install/update, backups, logs, INI editing). The UI is being migrated to a cleaner Electron + React + TypeScript shell:
 
 - Shared shell and navigation are active.
-- Overview, SteamCMD, Logs, and Server Workspace (INI editor) use the new renderer.
-- Clusters, Backups, and Settings pages are still placeholders inside the new shell.
+- Overview, SteamCMD, Logs, Backups, and Server Workspace (INI editor) use the new renderer.
+- Clusters and Settings pages are still placeholders inside the new shell.
 - End-to-end validation against real ASA binaries and SteamCMD on a production host is still ongoing.
 
 Expect gaps, rough edges, and behavior changes between builds.
@@ -63,10 +63,12 @@ Expected URL: [https://gabomarin.github.io/yark/](https://gabomarin.github.io/ya
 
 **One-time GitHub setup**
 
-1. Push `website/` and the workflow to `main`.
-2. Repo **Settings → Pages → Build and deployment → Source**: **GitHub Actions**.
-3. Open **Actions**, run **Deploy GitHub Pages** if it did not start automatically.
+1. Open **Settings → Pages**.
+2. Under **Build and deployment → Source**, choose **GitHub Actions** (required once; the workflow 404s until this exists).
+3. Push `website/` + the workflow to `main`, or re-run **Deploy GitHub Pages** under the Actions tab.
 4. Confirm the site loads at the URL above.
+
+If the workflow still fails on `configure-pages` with “Get Pages site failed / Not Found”, the Source is still not set to GitHub Actions. The workflow also passes `enablement: true` so it can create the Pages site when the token is allowed to do so.
 
 Edit `website/index.html` (and `styles.css`) for copy updates; pushes that touch `website/**` redeploy the page.
 
@@ -79,4 +81,4 @@ For AI-assisted work in this repo, see:
 - [docs/visual-testing.md](docs/visual-testing.md) before changing visible renderer UI
 - [docs/versioning.md](docs/versioning.md) and [CHANGELOG.md](CHANGELOG.md) for SemVer and release notes
 
-Project status and history live in [CHANGELOG.md](CHANGELOG.md) (and the WIP notes in this README).
+Project status and history live in [CHANGELOG.md](CHANGELOG.md) (and the WIP notes in this README). There is no tracked `TODO.md`.

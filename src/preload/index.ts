@@ -56,6 +56,24 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.logsExport, serverId),
   openServerUpdateLogFile: (serverId: string, fileName: string) =>
     ipcRenderer.invoke(IPC.logsOpenUpdateFile, serverId, fileName),
+  listBackups: (serverId: string, limit?: number) =>
+    ipcRenderer.invoke(IPC.backupsList, serverId, limit),
+  createManualBackup: (serverId, kinds) =>
+    ipcRenderer.invoke(IPC.backupsCreate, serverId, kinds),
+  deleteBackups: (serverId, backupIds) =>
+    ipcRenderer.invoke(IPC.backupsDelete, serverId, backupIds),
+  restoreBackup: (serverId: string, backupId: string) =>
+    ipcRenderer.invoke(IPC.backupsRestore, serverId, backupId),
+  getBackupPolicy: (serverId: string) =>
+    ipcRenderer.invoke(IPC.backupsGetPolicy, serverId),
+  setBackupPolicy: (serverId, policy) =>
+    ipcRenderer.invoke(IPC.backupsSetPolicy, serverId, policy),
+  resolveBackupRoot: (serverId: string) =>
+    ipcRenderer.invoke(IPC.backupsResolveRoot, serverId),
+  openBackupFolder: (serverId: string, backupId: string) =>
+    ipcRenderer.invoke(IPC.backupsOpenFolder, serverId, backupId),
+  openBackupRoot: (serverId: string) =>
+    ipcRenderer.invoke(IPC.backupsOpenRoot, serverId),
   getModMetadata: (modId: string, forceRefresh?: boolean) =>
     ipcRenderer.invoke(IPC.modsGet, modId, forceRefresh),
   getModsMetadata: (modIds: string[], forceRefresh?: boolean) =>

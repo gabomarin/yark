@@ -112,6 +112,28 @@ const MIGRATIONS: Migration[] = [
       ALTER TABLE restore_history_new RENAME TO restore_history;
     `,
   },
+  {
+    version: 3,
+    sql: `
+      ALTER TABLE backup_policies ADD COLUMN backup_dir TEXT;
+    `,
+  },
+  {
+    version: 4,
+    sql: `
+      ALTER TABLE backups ADD COLUMN kind TEXT NOT NULL DEFAULT 'world';
+      UPDATE backup_policies SET interval_minutes = 60 WHERE interval_minutes = 360;
+    `,
+  },
+  {
+    version: 5,
+    sql: `
+      ALTER TABLE backup_policies ADD COLUMN retain_count_players INTEGER NOT NULL DEFAULT 20;
+      ALTER TABLE backup_policies ADD COLUMN retain_count_ini INTEGER NOT NULL DEFAULT 10;
+      UPDATE backup_policies SET retain_count_players = 20 WHERE retain_count_players IS NULL OR retain_count_players < 1;
+      UPDATE backup_policies SET retain_count_ini = 10 WHERE retain_count_ini IS NULL OR retain_count_ini < 1;
+    `,
+  },
 ];
 
 /**
