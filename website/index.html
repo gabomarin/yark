@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>YARK server manager</title>
+    <meta
+      name="description"
+      content="YARK server manager — Windows desktop app for local ARK: Survival Ascended dedicated servers. Private work-in-progress; not a public release."
+    />
+    <meta name="theme-color" content="#0d1118" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="atmosphere" aria-hidden="true"></div>
+
+    <header class="hero">
+      <p class="brand">YARK</p>
+      <h1>server manager</h1>
+      <p class="lede">
+        Built for people who host <strong>local</strong> ARK: Survival Ascended
+        dedicated servers on Windows — profiles, SteamCMD, backups, logs, and INI
+        configuration in one desktop app. Still under active development and
+        <strong>not released to the public</strong>.
+      </p>
+      <div class="cta-row">
+        <a class="cta primary" href="https://github.com/gabomarin/yark">GitHub repository</a>
+        <a class="cta ghost" href="https://github.com/gabomarin/yark/blob/main/CHANGELOG.md">Changelog</a>
+      </div>
+      <p class="status-pill">Private preview · v0.1.0 · not a public release</p>
+    </header>
+
+    <main>
+      <section class="section" id="scope">
+        <h2>Current development scope</h2>
+        <p class="section-lede">
+          Areas already being built and exercised in private development builds
+          (Electron + React + TypeScript on Windows). This is not a shipping product checklist.
+        </p>
+        <ul class="feature-list">
+          <li>Multiple server profiles from a single desktop shell</li>
+          <li>Start, stop, restart, and force-stop dedicated instances</li>
+          <li>Install, update, and verify server files with SteamCMD</li>
+          <li>Create and restore backups; review operation history</li>
+          <li>Runtime, update, and backup logs</li>
+          <li>Cluster compliance checks and RCON command surface</li>
+          <li>Server Workspace with visual/raw INI editing and an on-demand configuration assistant</li>
+          <li>CurseForge mod Project IDs per server via the Server form (<code>-mods=</code>)</li>
+          <li>Official ARK network version from Wildcard’s public status CDN</li>
+        </ul>
+      </section>
+
+      <section class="section" id="roadmap">
+        <h2>In progress / planned</h2>
+        <p class="section-lede">
+          Direction may change as development continues. Nothing here is a promise of a public ship date.
+        </p>
+        <ul class="roadmap-list">
+          <li>
+            <span class="tag building">Building</span>
+            Finish migrating Clusters, Backups, and Settings pages out of placeholder shells
+          </li>
+          <li>
+            <span class="tag building">Building</span>
+            Stronger end-to-end validation against real ASA binaries and SteamCMD on production hosts
+          </li>
+          <li>
+            <span class="tag planned">Planned</span>
+            Richer Mods experience (discovery and metadata beyond manual Project IDs)
+          </li>
+          <li>
+            <span class="tag planned">Planned</span>
+            Live SteamCMD console streaming polish during long install/update jobs
+          </li>
+          <li>
+            <span class="tag planned">Planned</span>
+            A fuller product website and packaging when the app is ready to share more widely
+          </li>
+        </ul>
+      </section>
+
+      <section class="section" id="not">
+        <h2>What it is not</h2>
+        <p class="section-lede">
+          YARK is not a cloud host, not an ARK game client launcher, and not an
+          official Wildcard product. It is an independent local manager for
+          dedicated-server tooling you run on your own machine.
+        </p>
+      </section>
+
+      <section class="section" id="privacy">
+        <h2>Privacy and data</h2>
+        <p class="section-lede">
+          Server profiles and app settings stay on your PC (local SQLite). There is
+          no YARK cloud account. Network use is limited to what the workflows need
+          (for example SteamCMD content, and Wildcard’s public official-status CDN
+          for the displayed network version). Future mod metadata lookups would only
+          happen if you opt into that integration.
+        </p>
+      </section>
+
+      <section class="section" id="mods">
+        <h2>Mods</h2>
+        <p class="section-lede">
+          Today you attach CurseForge Project IDs on the Server form; they are passed
+          through as dedicated-server <code>-mods=</code> launch arguments. A richer
+          Mods browser (search, metadata, ordering UX) is planned — not required for
+          basic ID-based launch.
+        </p>
+      </section>
+
+      <section class="section" id="security">
+        <h2>Security note</h2>
+        <p class="section-lede">
+          Admin and RCON passwords live in local profiles. Treat screenshots, shared
+          logs, and exported configs carefully so secrets are not leaked.
+        </p>
+      </section>
+
+      <section class="section" id="about">
+        <h2>About this site</h2>
+        <p class="section-lede">
+          This is a temporary project page while YARK is in early development.
+          Source and license: MIT on
+          <a href="https://github.com/gabomarin/yark">GitHub</a>.
+        </p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>YARK server manager · MIT · <a href="https://github.com/gabomarin/yark">gabomarin/yark</a></p>
+    </footer>
+  </body>
+</html>

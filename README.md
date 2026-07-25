@@ -2,6 +2,8 @@
 
 **Work in progress.** YARK server manager is a Windows desktop application for managing local dedicated ARK: Survival Ascended servers. Features will be added, changed, or refined as development continues — treat the current build as an evolving preview, not a finished product.
 
+**Project site (temporary GitHub Pages):** [https://gabomarin.github.io/yark/](https://gabomarin.github.io/yark/)
+
 ## What it supports today
 
 - Manage multiple server profiles from a single app.
@@ -52,6 +54,21 @@ npm run package
 ```
 
 > On WSL or non-native shells, verification is often more reliable via `cmd.exe /c` when Rollup or Electron optional dependencies misbehave.
+
+## Project website (GitHub Pages)
+
+The temporary public site lives in [`website/`](website/) and deploys via [`.github/workflows/pages.yml`](.github/workflows/pages.yml).
+
+Expected URL: [https://gabomarin.github.io/yark/](https://gabomarin.github.io/yark/)
+
+**One-time GitHub setup**
+
+1. Push `website/` and the workflow to `main`.
+2. Repo **Settings → Pages → Build and deployment → Source**: **GitHub Actions**.
+3. Open **Actions**, run **Deploy GitHub Pages** if it did not start automatically.
+4. Confirm the site loads at the URL above.
+
+Edit `website/index.html` (and `styles.css`) for copy updates; pushes that touch `website/**` redeploy the page.
 
 ## Agent / assistant context
 

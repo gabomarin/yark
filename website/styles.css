@@ -1,0 +1,240 @@
+:root {
+  --bg-0: #0c1017;
+  --bg-1: #121821;
+  --ink: #e8eef7;
+  --muted: #9aa8bc;
+  --line: rgba(180, 205, 230, 0.14);
+  --cryo: #7ec8e3;
+  --fossil: #d4b483;
+  --ok: #7dcea0;
+  --warn: #e0b35c;
+  --font: "Instrument Sans", "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", Consolas, monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--bg-0);
+  line-height: 1.55;
+}
+
+a {
+  color: var(--cryo);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  color: #b7e4f4;
+}
+
+.atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 50% at 12% -10%, rgba(126, 200, 227, 0.16), transparent 58%),
+    radial-gradient(ellipse 50% 40% at 88% 0%, rgba(212, 180, 131, 0.08), transparent 55%),
+    linear-gradient(160deg, #0c1017 0%, #10151e 48%, #0f131a 100%);
+}
+
+.hero {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: clamp(4.5rem, 14vh, 7.5rem) 1.5rem 3.25rem;
+}
+
+.brand {
+  margin: 0 0 0.35rem;
+  font-size: clamp(3.4rem, 10vw, 5.4rem);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+  color: var(--ink);
+}
+
+.hero h1 {
+  margin: 0 0 1.1rem;
+  font-size: clamp(1.35rem, 3.4vw, 1.85rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: color-mix(in srgb, var(--ink) 78%, var(--cryo));
+}
+
+.lede {
+  margin: 0 0 1.6rem;
+  max-width: 36rem;
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.6rem;
+  padding: 0.55rem 1rem;
+  border-radius: 0.55rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.cta.primary {
+  color: #071018;
+  background: var(--cryo);
+}
+
+.cta.primary:hover {
+  color: #071018;
+  background: #b7e4f4;
+}
+
+.cta.ghost {
+  color: var(--ink);
+  border: 1px solid var(--line);
+  background: transparent;
+}
+
+.cta.ghost:hover {
+  border-color: color-mix(in srgb, var(--cryo) 45%, var(--line));
+  color: var(--cryo);
+}
+
+.status-pill {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+}
+
+main {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 0 1.5rem 4rem;
+}
+
+.section {
+  padding: 2.4rem 0 0.4rem;
+  border-top: 1px solid var(--line);
+}
+
+.section h2 {
+  margin: 0 0 0.55rem;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+}
+
+.section-lede {
+  margin: 0 0 1.15rem;
+  color: var(--muted);
+}
+
+.feature-list,
+.roadmap-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feature-list li,
+.roadmap-list li {
+  position: relative;
+  padding: 0.7rem 0 0.7rem 1.1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  color: color-mix(in srgb, var(--ink) 92%, var(--muted));
+}
+
+.feature-list li::before {
+  position: absolute;
+  left: 0;
+  top: 1.15rem;
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 1px;
+  background: var(--cryo);
+  content: "";
+}
+
+.roadmap-list li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: start;
+  padding-left: 0;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.45rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 0.3rem;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tag.building {
+  color: #102016;
+  background: color-mix(in srgb, var(--ok) 82%, white);
+}
+
+.tag.planned {
+  color: #1a1408;
+  background: color-mix(in srgb, var(--warn) 78%, white);
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--fossil);
+}
+
+.footer {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 2.5rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.footer p {
+  margin: 0;
+}
+
+.section-lede strong {
+  color: color-mix(in srgb, var(--ink) 88%, var(--cryo));
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .roadmap-list li {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+}
