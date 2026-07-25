@@ -104,7 +104,8 @@ export async function extractZip(zipPath: string, destDir: string): Promise<void
         resolvePromise();
       };
 
-      zipfile.readEntry();
+      // Register listeners before readEntry — empty archives can emit "end"
+      // synchronously on the first readEntry under lazyEntries.
       zipfile.on("entry", (entry: yauzl.Entry) => {
         let target: string;
         try {
@@ -137,6 +138,7 @@ export async function extractZip(zipPath: string, destDir: string): Promise<void
 
       zipfile.on("end", () => succeed());
       zipfile.on("error", fail);
+      zipfile.readEntry();
     });
   });
 }
