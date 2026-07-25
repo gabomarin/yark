@@ -320,7 +320,8 @@ export interface BackupCleanupOptions {
   protectNewestWorld: boolean;
   /**
    * Ids from a prior `previewCleanup` snapshot. When set, `runCleanup` deletes
-   * only these records (that still exist) instead of recomputing the plan.
+   * only ids that still match the current cleanup rules (including
+   * `protectNewestWorld`), so confirm cannot remove a newly protected world.
    */
   confirmedBackupIds?: string[] | null;
 }

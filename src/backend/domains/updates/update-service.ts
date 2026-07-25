@@ -17,7 +17,6 @@ import {
   canSkipAsaContentSync,
   isOperationCancelledError,
   OperationCancelledError,
-  readAsaManifestBuildId,
   resolveAsaContentCacheDir,
   resolveDepotCacheDir,
   resolveSteamCmdHome,
@@ -760,9 +759,8 @@ export class UpdateService extends EventEmitter {
     this.beginFileSync(serverId, syncLabel);
     try {
       if (canSkipAsaContentSync(contentCacheDir, installDir)) {
-        const buildId = readAsaManifestBuildId(contentCacheDir);
         this.appendSteamCmdConsole(
-          `ASA cache sync skipped (install already on build ${buildId ?? "unknown"})`,
+          "ASA cache sync skipped (install dir is the content cache)",
         );
         this.setProgress(
           100,

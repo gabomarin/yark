@@ -66,22 +66,14 @@ export function readAsaManifestBuildId(installOrCacheDir: string): string | null
 }
 
 /**
- * True when the server install already has the same Steam build as the shared
- * ASA content cache — robocopy would only re-walk the tree for ~no copies.
+ * True only when cache and install are the same directory (nothing to copy).
+ * Matching Steam buildids alone are not enough: the install tree can still be
+ * missing or corrupted, so robocopy must still run for distinct paths.
  */
 export function canSkipAsaContentSync(cacheDir: string, installDir: string): boolean {
   const source = resolve(cacheDir);
   const dest = resolve(installDir);
-  if (source.toLowerCase() === dest.toLowerCase()) {
-    return true;
-  }
-  const cacheBuild = readAsaManifestBuildId(source);
-  const installBuild = readAsaManifestBuildId(dest);
-  return (
-    cacheBuild !== null &&
-    installBuild !== null &&
-    cacheBuild === installBuild
-  );
+  return source.toLowerCase() === dest.toLowerCase();
 }
 
 /**

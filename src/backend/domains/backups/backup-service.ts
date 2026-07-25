@@ -610,10 +610,15 @@ export class BackupService extends EventEmitter {
 
   async runCleanup(options: BackupCleanupOptions): Promise<BackupCleanupResult> {
     const confirmedIds = options.confirmedBackupIds;
-    const plan =
-      confirmedIds !== undefined && confirmedIds !== null
-        ? this.planCleanupFromConfirmedIds(confirmedIds)
-        : this.planCleanup(options);
+    // Always recompute rules (incl. protectNewestWorld). Confirmed ids only
+    // narrow the fresh plan so preview cannot delete a newly protected world.
+    let plan = this.planCleanup(options);
+    if (confirmedIds !== undefined && confirmedIds !== null) {
+      const allowed = new Set(
+        confirmedIds.filter((id) => id.trim().length > 0),
+      );
+      plan = plan.filter((item) => allowed.has(item.backup.id));
+    }
     let deleted = 0;
     let freedBytes = 0;
     const touched = new Set<string>();
@@ -885,27 +890,6 @@ export class BackupService extends EventEmitter {
     return disks;
   }
 
-  private planCleanupFromConfirmedIds(
-    confirmedBackupIds: string[],
-  ): Array<{ backup: BackupRecord; serverName: string; reason: string }> {
-    const uniqueIds = [...new Set(confirmedBackupIds.filter((id) => id.trim().length > 0))];
-    const serversById = new Map(this.servers.list().map((server) => [server.id, server]));
-    const plan: Array<{ backup: BackupRecord; serverName: string; reason: string }> = [];
-
-    for (const id of uniqueIds) {
-      const backup = this.backups.getBackup(id);
-      if (backup === null || backup.status === "running") continue;
-      const server = serversById.get(backup.serverId);
-      plan.push({
-        backup,
-        serverName: server?.name ?? backup.serverId,
-        reason: "confirmed preview",
-      });
-    }
-
-    return plan;
-  }
-
   private planCleanup(
     options: BackupCleanupOptions,
   ): Array<{ backup: BackupRecord; serverName: string; reason: string }> {
@@ -1173,7 +1157,32 @@ export class BackupService extends EventEmitter {
         `Backup ${type}/${kind} completed for \"${server.name}\" (${this.humanSize(sizeBytes)})${missingHint}`,
       );
 
-      await this.applyRetention(serverId, policy);
+      // Retention runs after success. Failures here must not delete the new zip
+      // or mark this backup failed — the archive is already durable.
+      try {
+        await this.applyRetention(serverId, policy);
+      } catch (retentionErr) {
+        const retentionMessage =
+          retentionErr instanceof Error ? retentionErr.message : String(retentionErr);
+        this.servers.addEvent(
+          serverId,
+          "error",
+          "warning",
+          `Backup retention failed after successful ${type}/${kind} backup for \"${server.name}\": ${retentionMessage}`,
+          {
+            what: "The new backup was saved, but pruning older archives failed.",
+            cause: retentionMessage,
+            location: zipPath,
+            suggestion:
+              "Check destination permissions and free disk space, then run cleanup or create another backup to retry retention.",
+            context: {
+              type,
+              kind,
+              backupId: record.id,
+            },
+          },
+        );
+      }
       this.emitChanged(serverId);
       return completed;
     } catch (err) {
@@ -1695,7 +1704,10 @@ export class BackupService extends EventEmitter {
     const policy = this.backups.getPolicy(serverId);
     const rootDir = resolveServerBackupRoot(server.installDir, policy.backupDir);
 
-    let changed = this.pruneMissingDiskBackups(serverId);
+    // Promote interrupted creates (zip on disk, row still "running") before
+    // path-known checks would block re-import of those archives.
+    let changed = await this.recoverInterruptedRunningBackups(serverId);
+    changed += this.pruneMissingDiskBackups(serverId);
 
     if (existsSync(rootDir)) {
       const known = new Set(
@@ -1715,6 +1727,37 @@ export class BackupService extends EventEmitter {
       this.emitChanged(serverId);
     }
     return changed;
+  }
+
+  /**
+   * If the app stopped after writing a .zip but before completeBackup, the row
+   * stays "running" and blocks orphan import. Promote those archives to completed.
+   */
+  private async recoverInterruptedRunningBackups(serverId: string): Promise<number> {
+    const records = this.backups.listBackups(serverId, 10_000);
+    let recovered = 0;
+    for (const backup of records) {
+      if (backup.status !== "running") continue;
+      if (!existsSync(backup.path)) continue;
+      // Live creates may still be writing; only recover finished zip archives.
+      if (!isZipBackupPath(backup.path)) continue;
+      try {
+        const info = await stat(backup.path);
+        if (info.size <= 0) continue;
+        const completed = this.backups.completeBackup(backup.id, info.size);
+        if (completed === null) continue;
+        recovered += 1;
+        this.servers.addEvent(
+          serverId,
+          "backup_created",
+          "info",
+          `Recovered interrupted ${backup.kind} backup: ${basename(backup.path)}`,
+        );
+      } catch {
+        // Leave the running row; a later reconcile can retry.
+      }
+    }
+    return recovered;
   }
 
   /** Remove DB rows for archives deleted outside the app (e.g. Explorer). */

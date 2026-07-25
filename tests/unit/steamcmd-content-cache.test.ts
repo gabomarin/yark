@@ -49,7 +49,7 @@ describe("steamcmd-content-cache", () => {
     expect(shouldReuseAsaContentCache("verify-files", cacheDir, Date.now())).toBe(false);
   });
 
-  it("skips content sync when cache and install share the same buildid", async () => {
+  it("skips content sync only when cache and install are the same path", async () => {
     const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
@@ -69,13 +69,9 @@ describe("steamcmd-content-cache", () => {
       writeFileSync(join(install, "steamapps", `appmanifest_${ASA_APP_ID}.acf`), manifest);
 
       expect(readAsaManifestBuildId(cache)).toBe("999001");
-      expect(canSkipAsaContentSync(cache, install)).toBe(true);
-
-      writeFileSync(
-        join(install, "steamapps", `appmanifest_${ASA_APP_ID}.acf`),
-        `"AppState"\n{\n\t"buildid"\t\t"111"\n}\n`,
-      );
+      // Matching buildids alone must not skip — install tree may still be incomplete.
       expect(canSkipAsaContentSync(cache, install)).toBe(false);
+      expect(canSkipAsaContentSync(cache, cache)).toBe(true);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

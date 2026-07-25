@@ -564,6 +564,51 @@ describe("BackupService kinds and retention", () => {
     );
   });
 
+  it("recovers interrupted running backups that already have a zip on disk", async () => {
+    const created = await service.createManualBackup(profile.id, ["world"]);
+    const record = created[0];
+    expect(record).toBeDefined();
+    if (record === undefined) return;
+    expect(existsSync(record.path)).toBe(true);
+
+    // Crash after zip write, before completeBackup — row stays running.
+    db.prepare(
+      `UPDATE backups SET status = 'running', completed_at = NULL, size_bytes = 0 WHERE id = ?`,
+    ).run(record.id);
+    expect(repo.getBackup(record.id)?.status).toBe("running");
+
+    const listed = await service.list(profile.id, 50);
+    const recovered = listed.find((row) => row.id === record.id);
+    expect(recovered?.status).toBe("completed");
+    expect(recovered?.sizeBytes).toBeGreaterThan(0);
+    expect(repo.getBackup(record.id)?.status).toBe("completed");
+  });
+
+  it("keeps a completed backup when retention pruning fails", async () => {
+    vi.spyOn(
+      service as unknown as { applyRetention: (serverId: string, policy: unknown) => Promise<void> },
+      "applyRetention",
+    ).mockRejectedValue(new Error("disk full while pruning"));
+
+    const created = await service.createManualBackup(profile.id, ["world"]);
+    const record = created[0];
+    expect(record).toBeDefined();
+    if (record === undefined) return;
+
+    expect(record.status).toBe("completed");
+    expect(existsSync(record.path)).toBe(true);
+    expect(repo.getBackup(record.id)?.status).toBe("completed");
+    expect(addEvent).toHaveBeenCalledWith(
+      profile.id,
+      "error",
+      "warning",
+      expect.stringMatching(/retention failed/i),
+      expect.objectContaining({
+        what: expect.stringContaining("new backup was saved"),
+      }),
+    );
+  });
+
   it("deletes a single backup from disk and db", async () => {
     const created = await service.createManualBackup(profile.id, ["ini"]);
     const record = created[0];
@@ -724,6 +769,51 @@ describe("BackupService kinds and retention", () => {
     expect(result.deleted).toBe(1);
     expect(repo.getBackup(failed.id)).toBeNull();
     expect(repo.getBackup(newerFailed.id)).not.toBeNull();
+  });
+
+  it("runCleanup re-applies protectNewestWorld when confirming preview ids", async () => {
+    const older = (await service.createManualBackup(profile.id, ["world"]))[0]!;
+    const middle = (await service.createManualBackup(profile.id, ["world"]))[0]!;
+    const newest = (await service.createManualBackup(profile.id, ["world"]))[0]!;
+
+    const ageDays = (id: string, days: number) => {
+      db.prepare(`UPDATE backups SET created_at = ? WHERE id = ?`).run(
+        new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString(),
+        id,
+      );
+    };
+    ageDays(older.id, 5);
+    ageDays(middle.id, 3);
+    ageDays(newest.id, 0);
+
+    const preview = await service.previewCleanup({
+      serverIds: [profile.id],
+      includeFailed: false,
+      enforceRetention: false,
+      olderThanDays: 1,
+      keepLastPerKind: null,
+      protectNewestWorld: true,
+    });
+    const previewIds = preview.items.map((item) => item.backup.id);
+    expect(previewIds).toEqual(expect.arrayContaining([older.id, middle.id]));
+    expect(previewIds).not.toContain(newest.id);
+
+    // Newest world disappears after preview — middle becomes the protected world.
+    await rm(newest.path, { force: true });
+    repo.deleteBackupRecord(newest.id);
+
+    const result = await service.runCleanup({
+      serverIds: [profile.id],
+      includeFailed: false,
+      enforceRetention: false,
+      olderThanDays: 1,
+      keepLastPerKind: null,
+      protectNewestWorld: true,
+      confirmedBackupIds: previewIds,
+    });
+    expect(result.deleted).toBe(1);
+    expect(repo.getBackup(older.id)).toBeNull();
+    expect(repo.getBackup(middle.id)).not.toBeNull();
   });
 
   it("keepLastPerKind cleanup retains N archives per player, not globally", async () => {
