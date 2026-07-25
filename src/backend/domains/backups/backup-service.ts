@@ -415,8 +415,10 @@ export class BackupService extends EventEmitter {
       const usedBytes = completed.reduce((sum, row) => sum + Math.max(0, row.sizeBytes), 0);
       const destinationOk = isBackupDestinationReachable(resolvedRoot);
 
+      // Scheduled world backups only run while the process is active — do not
+      // treat stopped servers as stale just because the interval elapsed.
       let stale = false;
-      if (policy.enabled) {
+      if (policy.enabled && this.processes.isActive(server.id)) {
         if (latestWorld === null) {
           stale = true;
         } else {
@@ -1748,11 +1750,11 @@ export class BackupService extends EventEmitter {
         ?? info.mtime.toISOString();
       const type = parsed?.type ?? this.guessTypeFromName(basename(zipPath));
       const notes = parsed?.notes ?? `Imported from disk: ${basename(zipPath)}`;
-      const id = parsed?.id;
-      if (id !== undefined && this.backups.getBackup(id) !== null) {
-        known.add(resolve(zipPath).toLowerCase());
-        return false;
-      }
+      // Copies keep the original manifest id; mint a new one when that id is taken.
+      const id =
+        parsed?.id !== undefined && this.backups.getBackup(parsed.id) !== null
+          ? undefined
+          : parsed?.id;
       if (this.backups.getBackupByPath(serverId, zipPath) !== null) {
         known.add(resolve(zipPath).toLowerCase());
         return false;

@@ -83,12 +83,26 @@ export async function zipDirectory(sourceDir: string, zipPath: string): Promise<
 export async function extractZip(zipPath: string, destDir: string): Promise<void> {
   await mkdir(destDir, { recursive: true });
 
-  await new Promise<void>((resolve, reject) => {
+  await new Promise<void>((resolvePromise, reject) => {
     yauzl.open(zipPath, { lazyEntries: true }, (openErr, zipfile) => {
       if (openErr !== null || zipfile === undefined) {
         reject(openErr ?? new Error("Could not open zip archive"));
         return;
       }
+
+      let settled = false;
+      const fail = (err: unknown): void => {
+        if (settled) return;
+        settled = true;
+        zipfile.close();
+        reject(err instanceof Error ? err : new Error(String(err)));
+      };
+      const succeed = (): void => {
+        if (settled) return;
+        settled = true;
+        zipfile.close();
+        resolvePromise();
+      };
 
       zipfile.readEntry();
       zipfile.on("entry", (entry: yauzl.Entry) => {
@@ -96,20 +110,20 @@ export async function extractZip(zipPath: string, destDir: string): Promise<void
         try {
           target = safeExtractTarget(destDir, entry.fileName);
         } catch (err) {
-          reject(err instanceof Error ? err : new Error(String(err)));
+          fail(err);
           return;
         }
 
         if (/\/$/.test(entry.fileName)) {
           void mkdir(target, { recursive: true })
             .then(() => zipfile.readEntry())
-            .catch(reject);
+            .catch(fail);
           return;
         }
 
         zipfile.openReadStream(entry, (streamErr, readStream) => {
           if (streamErr !== null || readStream === undefined) {
-            reject(streamErr ?? new Error(`Could not read zip entry ${entry.fileName}`));
+            fail(streamErr ?? new Error(`Could not read zip entry ${entry.fileName}`));
             return;
           }
           void mkdir(dirname(target), { recursive: true })
@@ -117,12 +131,12 @@ export async function extractZip(zipPath: string, destDir: string): Promise<void
               await pipeline(readStream, createWriteStream(target));
               zipfile.readEntry();
             })
-            .catch(reject);
+            .catch(fail);
         });
       });
 
-      zipfile.on("end", () => resolve());
-      zipfile.on("error", reject);
+      zipfile.on("end", () => succeed());
+      zipfile.on("error", fail);
     });
   });
 }
@@ -134,12 +148,26 @@ export async function readZipTextEntry(
 ): Promise<string | null> {
   const normalizedWanted = entryName.split(sep).join("/");
 
-  return await new Promise<string | null>((resolve, reject) => {
+  return await new Promise<string | null>((resolvePromise, reject) => {
     yauzl.open(zipPath, { lazyEntries: true }, (openErr, zipfile) => {
       if (openErr !== null || zipfile === undefined) {
         reject(openErr ?? new Error("Could not open zip archive"));
         return;
       }
+
+      let settled = false;
+      const fail = (err: unknown): void => {
+        if (settled) return;
+        settled = true;
+        zipfile.close();
+        reject(err instanceof Error ? err : new Error(String(err)));
+      };
+      const succeed = (value: string | null): void => {
+        if (settled) return;
+        settled = true;
+        zipfile.close();
+        resolvePromise(value);
+      };
 
       let found = false;
       zipfile.readEntry();
@@ -152,22 +180,21 @@ export async function readZipTextEntry(
         found = true;
         zipfile.openReadStream(entry, (streamErr, readStream) => {
           if (streamErr !== null || readStream === undefined) {
-            reject(streamErr ?? new Error(`Could not read ${entryName}`));
+            fail(streamErr ?? new Error(`Could not read ${entryName}`));
             return;
           }
           const chunks: Buffer[] = [];
           readStream.on("data", (chunk: Buffer) => chunks.push(chunk));
           readStream.on("end", () => {
-            zipfile.close();
-            resolve(Buffer.concat(chunks).toString("utf8"));
+            succeed(Buffer.concat(chunks).toString("utf8"));
           });
-          readStream.on("error", reject);
+          readStream.on("error", fail);
         });
       });
       zipfile.on("end", () => {
-        if (!found) resolve(null);
+        if (!found) succeed(null);
       });
-      zipfile.on("error", reject);
+      zipfile.on("error", fail);
     });
   });
 }
