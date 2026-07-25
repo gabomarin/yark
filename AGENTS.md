@@ -1,0 +1,31 @@
+# AGENTS.md
+
+## Cursor Cloud specific instructions
+
+YARK server manager is a single Electron + React + TypeScript desktop app (no separate
+backend service; persistence is embedded SQLite via Node's built-in `node:sqlite`).
+Standard commands live in `package.json`, `README.md`, and `docs/agent-context.md`.
+
+Notes specific to running this in the Linux cloud VM:
+
+- Dependencies are refreshed automatically by the startup update script (`npm install`).
+  Node 20+ is required and available.
+- Lint/test/build/run all work on Linux. There is no ESLint config; `npm run typecheck`
+  (`tsc --noEmit`) is the static-analysis gate. `npm run build` is clean.
+- Running the app: `npm run dev` (dev, HMR) or `npm start` (preview a build). It opens a
+  real Electron window on the VM desktop display, so it must run through the GUI/desktop
+  environment (e.g. computer use), not as a plain headless process.
+- If `ELECTRON_RUN_AS_NODE=1` is set in the environment, Electron will not open its window.
+  `unset ELECTRON_RUN_AS_NODE` before `npm run dev` / `npm start` / the e2e scripts.
+- On the headless Linux desktop, Electron prints benign `dbus/bus.cc ... Failed to connect
+  to the bus` and `viz_main_impl.cc ... Exiting GPU process` errors on launch. These are
+  harmless; the window still renders and the app is fully usable.
+- `npm test` (vitest): ~235 pass. 8 tests fail on Linux because they assert Windows path
+  semantics (e.g. `C:\tools\steamcmd`, "resolves Windows drive roots") that Node's POSIX
+  `path` module cannot reproduce off Windows. This is a platform limitation, not a
+  regression; these pass on Windows / via `cmd.exe /c` per the README.
+- `npm run e2e:smoke` / `npm run e2e` launch the compiled app via Playwright's
+  `_electron` and need a display + `ELECTRON_RUN_AS_NODE` unset. The app launches fine;
+  note the smoke script may still fail on a stale `section.servers h2` selector.
+- Creating a server requires a Windows-style absolute install path (e.g. `C:\ARK`) and an
+  admin password of at least 4 chars, and each server needs unique game/query/RCON ports.
