@@ -99,6 +99,7 @@ function createApiMock(): RendererApi {
     getModsMetadata: vi.fn(),
     onServerStatus: vi.fn(() => () => undefined),
     onSteamCmdProgress: vi.fn(() => () => undefined),
+    onBackupsChanged: vi.fn(() => () => undefined),
   };
 }
 

@@ -16,6 +16,7 @@ import { ModsService } from "../backend/domains/mods/mods-service";
 import { InstanceLockManager } from "../backend/orchestration/instance-lock-manager";
 import { registerIpcHandlers } from "./ipc-handlers";
 import { IPC_PUSH, type SteamCmdProgressPush } from "../shared/ipc";
+import type { BackupChangedPush } from "../backend/domains/backups/backup-service";
 import type { ServerRuntimeInfo } from "../shared/types";
 
 let mainWindow: BrowserWindow | null = null;
@@ -122,6 +123,10 @@ void app.whenReady().then(() => {
 
   updateService.on("progress", (payload: SteamCmdProgressPush) => {
     sendToRenderer(IPC_PUSH.steamCmdProgress, payload);
+  });
+
+  backupService.on("changed", (payload: BackupChangedPush) => {
+    sendToRenderer(IPC_PUSH.backupsChanged, payload);
   });
 
   mainWindow = createWindow();

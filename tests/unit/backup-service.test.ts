@@ -1,5 +1,5 @@
 import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { constants as fsConstants } from "node:fs";
+import { constants as fsConstants, existsSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -10,6 +10,7 @@ import {
   formatPlayerSessionNotes,
   playersRetentionKey,
 } from "@backend/domains/backups/backup-service";
+import { extractZip } from "@backend/domains/backups/backup-archive";
 import { rconExec } from "@backend/infra/rcon/rcon-client";
 import type { ProcessManager } from "@backend/infra/process/process-manager";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
@@ -22,6 +23,16 @@ vi.mock("@backend/infra/rcon/rcon-client", () => ({
 }));
 
 const tmpDirs: string[] = [];
+
+async function withExtractedZip(
+  zipPath: string,
+  fn: (root: string) => Promise<void>,
+): Promise<void> {
+  const root = await mkdtemp(join(tmpdir(), "ark-bak-extract-"));
+  tmpDirs.push(root);
+  await extractZip(zipPath, root);
+  await fn(root);
+}
 
 afterEach(async () => {
   for (const dir of tmpDirs.splice(0, tmpDirs.length)) {
@@ -135,22 +146,26 @@ describe("BackupService kinds and retention", () => {
     ).toThrow(/5 minutes/i);
   });
 
-  it("packages world including player profiles", async () => {
+  it("packages world including player profiles as a zip under World/", async () => {
     const created = await service.createManualBackup(profile.id, ["world"]);
     const record = created[0];
     expect(record).toBeDefined();
     if (record === undefined) return;
     expect(record.kind).toBe("world");
-    await expect(
-      access(join(record.path, "SavedArks", "TheIsland_WP.ark"), fsConstants.F_OK),
-    ).resolves.toBeUndefined();
-    await expect(
-      access(join(record.path, "SavedArks", "76561198000000000.arkprofile"), fsConstants.F_OK),
-    ).resolves.toBeUndefined();
-    const manifest = JSON.parse(
-      await readFile(join(record.path, "manifest.json"), "utf8"),
-    ) as { backup: { kind: string } };
-    expect(manifest.backup.kind).toBe("world");
+    expect(record.path.toLowerCase().endsWith(".zip")).toBe(true);
+    expect(record.path).toMatch(/[\\/]World[\\/]/i);
+    await withExtractedZip(record.path, async (root) => {
+      await expect(
+        access(join(root, "SavedArks", "TheIsland_WP.ark"), fsConstants.F_OK),
+      ).resolves.toBeUndefined();
+      await expect(
+        access(join(root, "SavedArks", "76561198000000000.arkprofile"), fsConstants.F_OK),
+      ).resolves.toBeUndefined();
+      const manifest = JSON.parse(
+        await readFile(join(root, "manifest.json"), "utf8"),
+      ) as { backup: { kind: string } };
+      expect(manifest.backup.kind).toBe("world");
+    });
   });
 
   it("packages players profiles only", async () => {
@@ -159,15 +174,19 @@ describe("BackupService kinds and retention", () => {
     expect(record).toBeDefined();
     if (record === undefined) return;
     expect(record.kind).toBe("players");
-    await expect(
-      access(
-        join(record.path, "PlayerProfiles", "SavedArks", "76561198000000000.arkprofile"),
-        fsConstants.F_OK,
-      ),
-    ).resolves.toBeUndefined();
-    await expect(
-      access(join(record.path, "PlayerProfiles", "SavedArks", "TheIsland_WP.ark"), fsConstants.F_OK),
-    ).rejects.toThrow();
+    expect(record.path).toMatch(/[\\/]Player profiles[\\/]/i);
+    expect(record.path.toLowerCase().endsWith(".zip")).toBe(true);
+    await withExtractedZip(record.path, async (root) => {
+      await expect(
+        access(
+          join(root, "PlayerProfiles", "SavedArks", "76561198000000000.arkprofile"),
+          fsConstants.F_OK,
+        ),
+      ).resolves.toBeUndefined();
+      await expect(
+        access(join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP.ark"), fsConstants.F_OK),
+      ).rejects.toThrow();
+    });
   });
 
   it("packages a single player session backup", async () => {
@@ -184,18 +203,20 @@ describe("BackupService kinds and retention", () => {
     expect(playersRetentionKey(record)).toBe("76561198000000000");
     expect(record.notes).toContain(formatPlayerSessionNotes("connect", "76561198000000000", "Alice"));
     expect(rconExec).not.toHaveBeenCalled();
-    await expect(
-      access(
-        join(record.path, "PlayerProfiles", "SavedArks", "76561198000000000.arkprofile"),
-        fsConstants.F_OK,
-      ),
-    ).resolves.toBeUndefined();
-    await expect(
-      access(
-        join(record.path, "PlayerProfiles", "SavedArks", "76561198000000001.arkprofile"),
-        fsConstants.F_OK,
-      ),
-    ).rejects.toThrow();
+    await withExtractedZip(record.path, async (root) => {
+      await expect(
+        access(
+          join(root, "PlayerProfiles", "SavedArks", "76561198000000000.arkprofile"),
+          fsConstants.F_OK,
+        ),
+      ).resolves.toBeUndefined();
+      await expect(
+        access(
+          join(root, "PlayerProfiles", "SavedArks", "76561198000000001.arkprofile"),
+          fsConstants.F_OK,
+        ),
+      ).rejects.toThrow();
+    });
   });
 
   it("flushes SaveWorld before player session backup when server is running", async () => {
@@ -227,18 +248,20 @@ describe("BackupService kinds and retention", () => {
     );
     expect(record).not.toBeNull();
     if (record === null) return;
-    await expect(
-      access(
-        join(record.path, "PlayerProfiles", "SavedArks", "76561198000000000.arkprofile"),
-        fsConstants.F_OK,
-      ),
-    ).resolves.toBeUndefined();
-    await expect(
-      access(
-        join(record.path, "PlayerProfiles", "SavedArks", "765611980000000001.arkprofile"),
-        fsConstants.F_OK,
-      ),
-    ).rejects.toThrow();
+    await withExtractedZip(record.path, async (root) => {
+      await expect(
+        access(
+          join(root, "PlayerProfiles", "SavedArks", "76561198000000000.arkprofile"),
+          fsConstants.F_OK,
+        ),
+      ).resolves.toBeUndefined();
+      await expect(
+        access(
+          join(root, "PlayerProfiles", "SavedArks", "765611980000000001.arkprofile"),
+          fsConstants.F_OK,
+        ),
+      ).rejects.toThrow();
+    });
   });
 
   it("discards empty player session backups without retaining them", async () => {
@@ -299,16 +322,20 @@ describe("BackupService kinds and retention", () => {
     if (record === null) return;
     expect(record.type).toBe("player_disconnect");
     expect(record.kind).toBe("players");
-    await expect(
-      access(
-        join(record.path, "PlayerProfiles", "SavedArks", "76561198009999999.arkprofile"),
-        fsConstants.F_OK,
-      ),
-    ).resolves.toBeUndefined();
-    expect(await readFile(
-      join(record.path, "PlayerProfiles", "SavedArks", "76561198009999999.arkprofile"),
-      "utf8",
-    )).toBe("LATE_FLUSH");
+    await withExtractedZip(record.path, async (root) => {
+      await expect(
+        access(
+          join(root, "PlayerProfiles", "SavedArks", "76561198009999999.arkprofile"),
+          fsConstants.F_OK,
+        ),
+      ).resolves.toBeUndefined();
+      expect(
+        await readFile(
+          join(root, "PlayerProfiles", "SavedArks", "76561198009999999.arkprofile"),
+          "utf8",
+        ),
+      ).toBe("LATE_FLUSH");
+    });
   });
 
   it("packages only Game.ini and GameUserSettings.ini", async () => {
@@ -317,18 +344,22 @@ describe("BackupService kinds and retention", () => {
     expect(record).toBeDefined();
     if (record === undefined) return;
     expect(record.kind).toBe("ini");
-    await expect(
-      access(join(record.path, "ConfigWindowsServer", "Game.ini"), fsConstants.F_OK),
-    ).resolves.toBeUndefined();
-    await expect(
-      access(
-        join(record.path, "ConfigWindowsServer", "GameUserSettings.ini"),
-        fsConstants.F_OK,
-      ),
-    ).resolves.toBeUndefined();
-    await expect(
-      access(join(record.path, "ConfigWindowsServer", "Engine.ini"), fsConstants.F_OK),
-    ).rejects.toThrow();
+    expect(record.path).toMatch(/[\\/]INI[\\/]/);
+    expect(record.path.toLowerCase().endsWith(".zip")).toBe(true);
+    await withExtractedZip(record.path, async (root) => {
+      await expect(
+        access(join(root, "ConfigWindowsServer", "Game.ini"), fsConstants.F_OK),
+      ).resolves.toBeUndefined();
+      await expect(
+        access(
+          join(root, "ConfigWindowsServer", "GameUserSettings.ini"),
+          fsConstants.F_OK,
+        ),
+      ).resolves.toBeUndefined();
+      await expect(
+        access(join(root, "ConfigWindowsServer", "Engine.ini"), fsConstants.F_OK),
+      ).rejects.toThrow();
+    });
   });
 
   it("creates debounced ini_save backups", async () => {
@@ -460,6 +491,76 @@ describe("BackupService kinds and retention", () => {
     const list = repo.listBackups(profile.id, 20);
     expect(list.every((b) => b.kind === "world")).toBe(true);
     expect(list.some((b) => b.type === "scheduled")).toBe(true);
+  });
+
+  it("imports orphan zip archives from disk on list/refresh", async () => {
+    const created = await service.createManualBackup(profile.id, ["players"]);
+    const record = created[0];
+    expect(record).toBeDefined();
+    if (record === undefined) return;
+
+    // Simulate DB loss while the zip remains on disk.
+    repo.deleteBackupRecord(record.id);
+    expect(repo.listBackups(profile.id, 50)).toHaveLength(0);
+
+    const listed = await service.list(profile.id, 50);
+    expect(listed.some((b) => b.path === record.path)).toBe(true);
+    expect(listed.find((b) => b.path === record.path)?.kind).toBe("players");
+  });
+
+  it("drops DB rows when the archive was deleted from disk", async () => {
+    const created = await service.createManualBackup(profile.id, ["ini"]);
+    const record = created[0];
+    expect(record).toBeDefined();
+    if (record === undefined) return;
+    expect(existsSync(record.path)).toBe(true);
+
+    await rm(record.path, { force: true });
+    expect(existsSync(record.path)).toBe(false);
+    expect(repo.getBackup(record.id)).not.toBeNull();
+
+    const listed = await service.list(profile.id, 50);
+    expect(listed.some((b) => b.id === record.id)).toBe(false);
+    expect(repo.getBackup(record.id)).toBeNull();
+  });
+
+  it("keeps failed backup rows even when the zip was cleaned up", async () => {
+    const started = repo.createBackupStart({
+      serverId: profile.id,
+      type: "manual",
+      kind: "world",
+      path: join(installDir, "Backups", "World", "missing-failed.zip"),
+      notes: null,
+    });
+    const failed = repo.failBackup(started.id, "zip write failed");
+    expect(failed?.status).toBe("failed");
+    expect(existsSync(started.path)).toBe(false);
+
+    const listed = await service.list(profile.id, 50);
+    expect(listed.some((b) => b.id === started.id && b.status === "failed")).toBe(true);
+    expect(repo.getBackup(started.id)?.notes).toContain("zip write failed");
+  });
+
+  it("does not double-import the same orphan zip under concurrent list calls", async () => {
+    const created = await service.createManualBackup(profile.id, ["players"]);
+    const record = created[0];
+    expect(record).toBeDefined();
+    if (record === undefined) return;
+
+    repo.deleteBackupRecord(record.id);
+    expect(repo.listBackups(profile.id, 50)).toHaveLength(0);
+
+    const [a, b] = await Promise.all([
+      service.list(profile.id, 50),
+      service.list(profile.id, 50),
+    ]);
+    const matchesA = a.filter((row) => row.path === record.path);
+    const matchesB = b.filter((row) => row.path === record.path);
+    expect(matchesA).toHaveLength(1);
+    expect(matchesB).toHaveLength(1);
+    expect(repo.listBackups(profile.id, 50).filter((row) => row.path === record.path)).toHaveLength(
+      1,
+    );
   });
 
   it("deletes a single backup from disk and db", async () => {

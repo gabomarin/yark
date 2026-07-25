@@ -84,6 +84,7 @@ describe("BackupsPage", () => {
         openBackupFolder: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
         openBackupRoot: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
         pickPath: vi.fn(),
+        onBackupsChanged: vi.fn(() => () => undefined),
       },
     });
   });

@@ -210,7 +210,9 @@ export interface BackupPolicy {
   /** Keep the last N completed INI backups. Default 10. */
   retainCountIni: number;
   /**
-   * Shared root where new backup snapshots are written (all kinds).
+   * Shared root where new backup archives are written.
+   * Under this root the app uses `World`, `Player profiles`, and `INI` subfolders
+   * and stores each snapshot as a `.zip` file.
    * `null` = default under the server install dir (`{installDir}\\Backups`).
    */
   backupDir: string | null;

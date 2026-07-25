@@ -71,11 +71,16 @@ export const IPC = {
 export const IPC_PUSH = {
   serverStatus: "push:server-status",
   steamCmdProgress: "push:steamcmd-progress",
+  backupsChanged: "push:backups-changed",
 } as const;
 
 export interface SteamCmdProgressPush {
   status: SteamCmdStatus;
   console: SteamCmdConsoleSnapshot;
+}
+
+export interface BackupsChangedPush {
+  serverId: string;
 }
 
 /** Normalized result of IPC operations. */
@@ -171,5 +176,8 @@ export interface RendererApi {
   ): () => void;
   onSteamCmdProgress(
     listener: (payload: SteamCmdProgressPush) => void,
+  ): () => void;
+  onBackupsChanged(
+    listener: (payload: BackupsChangedPush) => void,
   ): () => void;
 }

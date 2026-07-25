@@ -149,6 +149,7 @@ describe("ServerBackupPanel", () => {
         openBackupFolder: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
         openBackupRoot: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
         pickPath: vi.fn(),
+        onBackupsChanged: vi.fn(() => () => undefined),
       },
     });
   });
@@ -274,5 +275,47 @@ describe("ServerBackupPanel", () => {
     await user.click(await screen.findByRole("option", { name: /Player A–Z/i }));
 
     expect(titles()).toEqual(["Alice", "All players", "Bob"]);
+  });
+
+  it("preserves unsaved policy edits across quiet backups-changed refresh", async () => {
+    const user = userEvent.setup();
+    let pushHandler: ((payload: { serverId: string }) => void) | undefined;
+    (window.api.onBackupsChanged as ReturnType<typeof vi.fn>).mockImplementation(
+      (handler: (payload: { serverId: string }) => void) => {
+        pushHandler = handler;
+        return () => undefined;
+      },
+    );
+
+    renderPanel();
+    const destination = await screen.findByLabelText(/Destination/i);
+    await user.clear(destination);
+    await user.type(destination, "D:\\Custom\\Backups");
+    expect(destination).toHaveValue("D:\\Custom\\Backups");
+
+    (window.api.listBackups as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      data: [worldBackup],
+    });
+    (window.api.getBackupPolicy as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      data: {
+        serverId: "srv-1",
+        enabled: false,
+        intervalMinutes: 60,
+        retainCountWorld: 20,
+        retainCountPlayers: 20,
+        retainCountIni: 10,
+        backupDir: null,
+        updatedAt: "2026-07-24T00:00:00.000Z",
+      },
+    });
+
+    pushHandler?.({ serverId: "srv-1" });
+
+    await waitFor(() => {
+      expect(window.api.listBackups).toHaveBeenCalledTimes(2);
+    });
+    expect(screen.getByLabelText(/Destination/i)).toHaveValue("D:\\Custom\\Backups");
   });
 });

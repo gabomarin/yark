@@ -1,7 +1,9 @@
+import { EventEmitter } from "node:events";
 import { existsSync } from "node:fs";
-import { cp, mkdir, readdir, rm, stat, writeFile } from "node:fs/promises";
-import { basename, dirname, join, relative } from "node:path";
+import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
+import { tmpdir } from "node:os";
 import {
   formatPlayerSessionNotes,
   playersRetentionKey,
@@ -20,8 +22,21 @@ import type { ProcessManager } from "../../infra/process/process-manager";
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
 import { rconExec } from "../../infra/rcon/rcon-client";
 import { syncProfileSettingsToIni } from "../instances/sync-profile-ini";
+import {
+  backupKindSubdir,
+  extractZip,
+  isZipBackupPath,
+  kindFromSubdirName,
+  readZipTextEntry,
+  zipDirectory,
+} from "./backup-archive";
 
 export { formatPlayerSessionNotes, playersRetentionKey } from "@shared/backup-player-meta";
+export { backupKindSubdir } from "./backup-archive";
+
+export interface BackupChangedPush {
+  serverId: string;
+}
 
 const RCON_HOST = "127.0.0.1";
 const BACKUP_CRITICAL_JOBS_KEY = "backupCriticalJobsQueue.v1";
@@ -147,9 +162,9 @@ async function copyFileTo(src: string, dest: string): Promise<void> {
 
 /**
  * Local backup and restore management for ASA instances.
- * Kind-scoped: world (full SavedArks including profiles), players (.arkprofile*), INI configs.
+ * Kind-scoped ZIP archives under World / Player profiles / INI subfolders.
  */
-export class BackupService {
+export class BackupService extends EventEmitter {
   private queue: BackupCriticalJob[] = [];
   private processingQueue = false;
   private readonly waiters = new Map<string, Array<{
@@ -161,20 +176,27 @@ export class BackupService {
     string,
     Array<{ resolve: (value: BackupRecord | null) => void; reject: (error: Error) => void }>
   >();
+  /** Serialize disk↔DB reconcile per server so overlapping list/refresh cannot double-import. */
+  private readonly reconcileInFlight = new Map<string, Promise<number>>();
 
   constructor(
     private readonly servers: ServerRepository,
     private readonly backups: BackupRepository,
     private readonly processes: ProcessManager,
     private readonly settings: AppSettingsRepository,
-    private readonly rootBackupDir: string,
+    _legacyRootBackupDir?: string,
   ) {
+    super();
     this.queue = this.loadQueue();
     if (this.queue.length > 0) {
       setTimeout(() => {
         void this.processQueue();
       }, 250);
     }
+  }
+
+  private emitChanged(serverId: string): void {
+    this.emit("changed", { serverId } satisfies BackupChangedPush);
   }
 
   async createManualBackup(
@@ -273,8 +295,15 @@ export class BackupService {
     await this.enqueueAndWait<void>("restore", serverId, backupId);
   }
 
-  list(serverId: string, limit: number): BackupRecord[] {
-    return this.backups.listBackups(serverId, Math.max(1, Math.min(limit, 100)));
+  async list(serverId: string, limit: number): Promise<BackupRecord[]> {
+    this.mustServer(serverId);
+    await this.reconcileDiskBackups(serverId);
+    return this.backups.listBackups(serverId, Math.max(1, Math.min(limit, 200)));
+  }
+
+  /** Force re-scan of disk archives into the DB, then return the list. */
+  async refreshList(serverId: string, limit = 100): Promise<BackupRecord[]> {
+    return this.list(serverId, limit);
   }
 
   getPolicy(serverId: string): BackupPolicy {
@@ -320,6 +349,10 @@ export class BackupService {
     if (backup === null || backup.serverId !== serverId) {
       throw new Error("Backup not found");
     }
+    // For ZIP archives, open the parent kind folder so Explorer stays usable.
+    if (isZipBackupPath(backup.path)) {
+      return dirname(backup.path);
+    }
     return backup.path;
   }
 
@@ -348,6 +381,9 @@ export class BackupService {
         "info",
         `Backup deleted: ${basename(backup.path)} (${backup.kind})`,
       );
+    }
+    if (deleted > 0) {
+      this.emitChanged(serverId);
     }
     return deleted;
   }
@@ -386,6 +422,7 @@ export class BackupService {
         `Restore applied on \"${server.name}\" from ${backup.kind} backup ${backup.id}`,
       );
       this.backups.completeRestoreHistory(restoreHistoryId, "completed", null);
+      this.emitChanged(serverId);
     } catch (err) {
       this.backups.completeRestoreHistory(
         restoreHistoryId,
@@ -493,31 +530,35 @@ export class BackupService {
     const server = this.mustServer(serverId);
     const policy = this.backups.getPolicy(serverId);
     const rootDir = resolveServerBackupRoot(server.installDir, policy.backupDir);
+    const kindDir = join(rootDir, backupKindSubdir(kind));
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const playerSlug =
       options?.playerKey !== undefined && options.playerKey.length > 0
         ? `-${slug(options.playerKey).slice(0, 24)}`
         : "";
-    const folderName = `${timestamp}-${type}-${kind}${playerSlug}-${slug(server.name)}`;
-    const targetDir = join(rootDir, folderName);
-    await mkdir(targetDir, { recursive: true });
+    const baseName = `${timestamp}-${type}-${kind}${playerSlug}-${slug(server.name)}`;
+    const zipPath = join(kindDir, `${baseName}.zip`);
+    const stagingDir = join(tmpdir(), `yark-backup-${randomUUID()}`);
+
+    await mkdir(kindDir, { recursive: true });
+    await mkdir(stagingDir, { recursive: true });
 
     const record = this.backups.createBackupStart({
       serverId,
       type,
       kind,
-      path: targetDir,
+      path: zipPath,
       notes,
     });
 
     try {
       const packaged =
         options?.playerKey !== undefined && kind === "players"
-          ? await this.packageSinglePlayer(server, targetDir, options.playerKey, {
+          ? await this.packageSinglePlayer(server, stagingDir, options.playerKey, {
               waitForProfile: options.waitForProfile === true,
             })
-          : await this.packageKind(server, kind, targetDir);
+          : await this.packageKind(server, kind, stagingDir);
 
       // Per-player session archives with no matching profile are not recoverable —
       // drop them so they do not consume retention slots.
@@ -526,13 +567,13 @@ export class BackupService {
         && kind === "players"
         && packaged.meta.empty === true
       ) {
-        await rm(targetDir, { recursive: true, force: true });
+        await rm(stagingDir, { recursive: true, force: true });
         this.backups.deleteBackupRecord(record.id);
         return null;
       }
 
       await writeFile(
-        join(targetDir, "manifest.json"),
+        join(stagingDir, "manifest.json"),
         JSON.stringify(
           {
             server: {
@@ -556,7 +597,9 @@ export class BackupService {
         "utf8",
       );
 
-      const sizeBytes = await directorySize(targetDir);
+      const sizeBytes = await zipDirectory(stagingDir, zipPath);
+      await rm(stagingDir, { recursive: true, force: true });
+
       const completed = this.backups.completeBackup(record.id, sizeBytes);
       if (completed === null) {
         throw new Error("Could not mark backup as completed");
@@ -571,8 +614,11 @@ export class BackupService {
       );
 
       await this.applyRetention(serverId, policy);
+      this.emitChanged(serverId);
       return completed;
     } catch (err) {
+      await rm(stagingDir, { recursive: true, force: true }).catch(() => undefined);
+      await rm(zipPath, { force: true }).catch(() => undefined);
       const message = err instanceof Error ? err.message : String(err);
       this.backups.failBackup(record.id, message);
       this.servers.addEvent(
@@ -581,6 +627,7 @@ export class BackupService {
         "error",
         `Backup ${type}/${kind} failed for \"${server.name}\": ${message}`,
       );
+      this.emitChanged(serverId);
       throw err;
     }
   }
@@ -728,15 +775,35 @@ export class BackupService {
   }
 
   private async applyRestore(server: ServerProfile, backup: BackupRecord): Promise<void> {
-    if (backup.kind === "world") {
-      await this.restoreWorld(server, backup.path);
+    await this.withBackupContents(backup.path, async (root) => {
+      if (backup.kind === "world") {
+        await this.restoreWorld(server, root);
+        return;
+      }
+      if (backup.kind === "players") {
+        await this.restorePlayers(server, root);
+        return;
+      }
+      await this.restoreIni(server, root);
+    });
+  }
+
+  /** Run `fn` against a folder snapshot (legacy) or an extracted ZIP staging dir. */
+  private async withBackupContents(
+    backupPath: string,
+    fn: (contentRoot: string) => Promise<void>,
+  ): Promise<void> {
+    if (!isZipBackupPath(backupPath)) {
+      await fn(backupPath);
       return;
     }
-    if (backup.kind === "players") {
-      await this.restorePlayers(server, backup.path);
-      return;
+    const stagingDir = join(tmpdir(), `yark-restore-${randomUUID()}`);
+    try {
+      await extractZip(backupPath, stagingDir);
+      await fn(stagingDir);
+    } finally {
+      await rm(stagingDir, { recursive: true, force: true }).catch(() => undefined);
     }
-    await this.restoreIni(server, backup.path);
   }
 
   private async restoreWorld(server: ServerProfile, backupPath: string): Promise<void> {
@@ -1026,6 +1093,270 @@ export class BackupService {
       "info",
       `Old ${backup.kind} backup removed by retention: ${basename(backup.path)}`,
     );
+    this.emitChanged(serverId);
+  }
+
+  /**
+   * Keep SQLite aligned with disk:
+   * - drop DB rows whose archive path no longer exists (Explorer deletes)
+   * - import ZIP/folder archives present on disk but missing from SQLite
+   */
+  private async reconcileDiskBackups(serverId: string): Promise<number> {
+    const existing = this.reconcileInFlight.get(serverId);
+    if (existing !== undefined) {
+      return existing;
+    }
+    const run = this.reconcileDiskBackupsUnlocked(serverId).finally(() => {
+      if (this.reconcileInFlight.get(serverId) === run) {
+        this.reconcileInFlight.delete(serverId);
+      }
+    });
+    this.reconcileInFlight.set(serverId, run);
+    return run;
+  }
+
+  private async reconcileDiskBackupsUnlocked(serverId: string): Promise<number> {
+    const server = this.mustServer(serverId);
+    const policy = this.backups.getPolicy(serverId);
+    const rootDir = resolveServerBackupRoot(server.installDir, policy.backupDir);
+
+    let changed = this.pruneMissingDiskBackups(serverId);
+
+    if (existsSync(rootDir)) {
+      const known = new Set(
+        this.backups.listBackupPaths(serverId).map((p) => resolve(p).toLowerCase()),
+      );
+
+      for (const kind of ALL_BACKUP_KINDS) {
+        const kindDir = join(rootDir, backupKindSubdir(kind));
+        changed += await this.importArchivesFromDir(serverId, kindDir, kind, known);
+      }
+
+      // Legacy flat layout: archives directly under the root.
+      changed += await this.importArchivesFromDir(serverId, rootDir, null, known);
+    }
+
+    if (changed > 0) {
+      this.emitChanged(serverId);
+    }
+    return changed;
+  }
+
+  /** Remove DB rows for archives deleted outside the app (e.g. Explorer). */
+  private pruneMissingDiskBackups(serverId: string): number {
+    const records = this.backups.listBackups(serverId, 10_000);
+    let removed = 0;
+    for (const backup of records) {
+      // In-progress creates may not have written the zip yet.
+      if (backup.status === "running") continue;
+      // Failed creates delete the partial zip on purpose — keep the row for history.
+      if (backup.status === "failed") continue;
+      if (existsSync(backup.path)) continue;
+      this.backups.deleteBackupRecord(backup.id);
+      removed += 1;
+    }
+    return removed;
+  }
+
+  private async importArchivesFromDir(
+    serverId: string,
+    dir: string,
+    defaultKind: BackupKind | null,
+    known: Set<string>,
+  ): Promise<number> {
+    if (!existsSync(dir)) return 0;
+    const entries = await readdir(dir, { withFileTypes: true });
+    let imported = 0;
+
+    for (const entry of entries) {
+      const full = join(dir, entry.name);
+      const key = resolve(full).toLowerCase();
+      if (known.has(key)) continue;
+
+      // Skip kind subdirs when scanning the root (handled separately).
+      if (entry.isDirectory() && defaultKind === null && kindFromSubdirName(entry.name) !== null) {
+        continue;
+      }
+
+      if (entry.isFile() && isZipBackupPath(entry.name)) {
+        const kind = defaultKind ?? this.guessKindFromName(entry.name) ?? "world";
+        const ok = await this.importZipArchive(serverId, full, kind, known);
+        if (ok) imported += 1;
+        continue;
+      }
+
+      if (entry.isDirectory()) {
+        const kind = defaultKind ?? this.guessKindFromName(entry.name) ?? "world";
+        const manifestPath = join(full, "manifest.json");
+        if (!existsSync(manifestPath) && !existsSync(join(full, "SavedArks"))
+          && !existsSync(join(full, "PlayerProfiles"))
+          && !existsSync(join(full, "ConfigWindowsServer"))) {
+          continue;
+        }
+        const ok = await this.importFolderArchive(serverId, full, kind, known);
+        if (ok) imported += 1;
+      }
+    }
+
+    return imported;
+  }
+
+  private guessKindFromName(name: string): BackupKind | null {
+    const lower = name.toLowerCase();
+    if (lower.includes("-players-") || lower.includes("player_")) return "players";
+    if (lower.includes("-ini-") || lower.includes("ini_save")) return "ini";
+    if (lower.includes("-world-")) return "world";
+    return null;
+  }
+
+  private async importZipArchive(
+    serverId: string,
+    zipPath: string,
+    kind: BackupKind,
+    known: Set<string>,
+  ): Promise<boolean> {
+    try {
+      const info = await stat(zipPath);
+      const manifestRaw = await readZipTextEntry(zipPath, "manifest.json");
+      const parsed = this.parseManifest(manifestRaw);
+      const createdAt =
+        parsed?.createdAt
+        ?? info.mtime.toISOString();
+      const type = parsed?.type ?? this.guessTypeFromName(basename(zipPath));
+      const notes = parsed?.notes ?? `Imported from disk: ${basename(zipPath)}`;
+      const id = parsed?.id;
+      if (id !== undefined && this.backups.getBackup(id) !== null) {
+        known.add(resolve(zipPath).toLowerCase());
+        return false;
+      }
+      if (this.backups.getBackupByPath(serverId, zipPath) !== null) {
+        known.add(resolve(zipPath).toLowerCase());
+        return false;
+      }
+      this.backups.insertCompletedBackup({
+        id,
+        serverId,
+        type,
+        kind: parsed?.kind ?? kind,
+        path: zipPath,
+        sizeBytes: info.size,
+        createdAt,
+        completedAt: createdAt,
+        notes,
+      });
+      known.add(resolve(zipPath).toLowerCase());
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async importFolderArchive(
+    serverId: string,
+    folderPath: string,
+    kind: BackupKind,
+    known: Set<string>,
+  ): Promise<boolean> {
+    try {
+      const info = await stat(folderPath);
+      let manifestRaw: string | null = null;
+      const manifestPath = join(folderPath, "manifest.json");
+      if (existsSync(manifestPath)) {
+        manifestRaw = await readFile(manifestPath, "utf8");
+      }
+      const parsed = this.parseManifest(manifestRaw);
+      const createdAt = parsed?.createdAt ?? info.mtime.toISOString();
+      const type = parsed?.type ?? this.guessTypeFromName(basename(folderPath));
+      const notes = parsed?.notes ?? `Imported from disk: ${basename(folderPath)}`;
+      const sizeBytes = await directorySize(folderPath);
+      if (this.backups.getBackupByPath(serverId, folderPath) !== null) {
+        known.add(resolve(folderPath).toLowerCase());
+        return false;
+      }
+      this.backups.insertCompletedBackup({
+        id: parsed?.id,
+        serverId,
+        type,
+        kind: parsed?.kind ?? kind,
+        path: folderPath,
+        sizeBytes,
+        createdAt,
+        completedAt: createdAt,
+        notes,
+      });
+      known.add(resolve(folderPath).toLowerCase());
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private parseManifest(raw: string | null): {
+    id?: string;
+    type?: BackupType;
+    kind?: BackupKind;
+    createdAt?: string;
+    notes?: string;
+  } | null {
+    if (raw === null || raw.trim().length === 0) return null;
+    try {
+      const data = JSON.parse(raw) as {
+        backup?: {
+          id?: string;
+          type?: string;
+          kind?: string;
+          createdAt?: string;
+          notes?: string;
+        };
+      };
+      const backup = data.backup;
+      if (backup === undefined) return null;
+      const type = this.asBackupType(backup.type);
+      const kind = this.asBackupKind(backup.kind);
+      return {
+        id: typeof backup.id === "string" ? backup.id : undefined,
+        type,
+        kind,
+        createdAt: typeof backup.createdAt === "string" ? backup.createdAt : undefined,
+        notes: typeof backup.notes === "string" ? backup.notes : undefined,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private asBackupType(value: string | undefined): BackupType | undefined {
+    const allowed: BackupType[] = [
+      "manual",
+      "scheduled",
+      "pre_restart",
+      "pre_update",
+      "pre_restore",
+      "player_connect",
+      "player_disconnect",
+      "ini_save",
+    ];
+    if (value !== undefined && (allowed as string[]).includes(value)) {
+      return value as BackupType;
+    }
+    return undefined;
+  }
+
+  private asBackupKind(value: string | undefined): BackupKind | undefined {
+    if (value === "world" || value === "players" || value === "ini") return value;
+    return undefined;
+  }
+
+  private guessTypeFromName(name: string): BackupType {
+    const lower = name.toLowerCase();
+    if (lower.includes("player_disconnect")) return "player_disconnect";
+    if (lower.includes("player_connect")) return "player_connect";
+    if (lower.includes("ini_save")) return "ini_save";
+    if (lower.includes("scheduled")) return "scheduled";
+    if (lower.includes("pre_update")) return "pre_update";
+    if (lower.includes("pre_restart")) return "pre_restart";
+    if (lower.includes("pre_restore")) return "pre_restore";
+    return "manual";
   }
 
   private savedRootDir(server: ServerProfile): string {

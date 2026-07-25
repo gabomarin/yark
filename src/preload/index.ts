@@ -6,7 +6,7 @@ import type {
   ServerRuntimeInfo,
   StartServerOptions,
 } from "../shared/types";
-import type { SteamCmdProgressPush } from "../shared/ipc";
+import type { SteamCmdProgressPush, BackupsChangedPush } from "../shared/ipc";
 
 const api: RendererApi = {
   listServers: () => ipcRenderer.invoke(IPC.serversList),
@@ -90,6 +90,13 @@ const api: RendererApi = {
     ipcRenderer.on(IPC_PUSH.steamCmdProgress, handler);
     return () => {
       ipcRenderer.removeListener(IPC_PUSH.steamCmdProgress, handler);
+    };
+  },
+  onBackupsChanged: (listener) => {
+    const handler = (_e: unknown, payload: BackupsChangedPush) => listener(payload);
+    ipcRenderer.on(IPC_PUSH.backupsChanged, handler);
+    return () => {
+      ipcRenderer.removeListener(IPC_PUSH.backupsChanged, handler);
     };
   },
 };

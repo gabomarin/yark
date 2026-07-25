@@ -1,4 +1,5 @@
 import {
+  ArrowClockwise,
   ArrowCounterClockwise,
   FloppyDisk,
   FolderOpen,
@@ -31,7 +32,7 @@ import type {
   ServerProfile,
   ServerRuntimeInfo,
 } from "@shared/types";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import classes from "./BackupsPage.module.css";
 
 interface Props {
@@ -144,10 +145,12 @@ export function ServerBackupPanel(props: Props): JSX.Element {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [resolvedRoot, setResolvedRoot] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [browsingDir, setBrowsingDir] = useState(false);
   const [playerSearch, setPlayerSearch] = useState("");
   const [playerSort, setPlayerSort] = useState<PlayerSort>("newest");
+  const loadGenRef = useRef(0);
 
   const serverActive = isServerActive(props.runtime);
   const defaultBackupHint = `${props.server.installDir}\\Backups`;
@@ -174,46 +177,88 @@ export function ServerBackupPanel(props: Props): JSX.Element {
     selectableBackups.length > 0
     && selectableBackups.every((b) => selectedIds.includes(b.id));
 
-  const load = async (serverId: string) => {
-    setLoading(true);
-    const [listRes, policyRes, rootRes] = await Promise.all([
-      window.api.listBackups(serverId, 50),
-      window.api.getBackupPolicy(serverId),
-      window.api.resolveBackupRoot(serverId),
-    ]);
-    setLoading(false);
-    if (!listRes.ok) {
-      setBackups([]);
-      setPolicy(null);
-      setDraftPolicy(null);
-      setResolvedRoot(null);
-      setSelectedIds([]);
-      showBackupError(listRes.error ?? "Could not load backups");
-      return;
+  const load = async (serverId: string, opts?: { quiet?: boolean }) => {
+    const quiet = opts?.quiet === true;
+    const gen = ++loadGenRef.current;
+    if (!quiet) {
+      setLoading(true);
+    } else {
+      setRefreshing(true);
     }
-    if (!policyRes.ok) {
+    try {
+      const [listRes, policyRes, rootRes] = await Promise.all([
+        window.api.listBackups(serverId, 100),
+        window.api.getBackupPolicy(serverId),
+        window.api.resolveBackupRoot(serverId),
+      ]);
+      // Drop stale responses so overlapping interval/push/user loads cannot regress UI.
+      if (gen !== loadGenRef.current) return;
+      if (!listRes.ok) {
+        if (!quiet) {
+          setBackups([]);
+          setPolicy(null);
+          setDraftPolicy(null);
+          setResolvedRoot(null);
+          setSelectedIds([]);
+        }
+        showBackupError(listRes.error ?? "Could not load backups");
+        return;
+      }
+      if (!policyRes.ok) {
+        setBackups(listRes.data);
+        if (!quiet) {
+          setPolicy(null);
+          setDraftPolicy(null);
+          setResolvedRoot(null);
+          setSelectedIds([]);
+        }
+        showBackupError(policyRes.error ?? "Could not load backup policy");
+        return;
+      }
       setBackups(listRes.data);
-      setPolicy(null);
-      setDraftPolicy(null);
-      setResolvedRoot(null);
-      setSelectedIds([]);
-      showBackupError(policyRes.error ?? "Could not load backup policy");
-      return;
+      setSelectedIds((prev) =>
+        prev.filter((id) =>
+          listRes.data.some((b) => b.id === id && b.status !== "running"),
+        ),
+      );
+      setPolicy(policyRes.data);
+      // Quiet refresh must not clobber unsaved destination/schedule/retention edits.
+      if (!quiet) {
+        setDraftPolicy(toDraft(policyRes.data));
+      }
+      setResolvedRoot(rootRes.ok ? rootRes.data : null);
+    } finally {
+      if (gen === loadGenRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
-    setBackups(listRes.data);
-    setSelectedIds((prev) =>
-      prev.filter((id) =>
-        listRes.data.some((b) => b.id === id && b.status !== "running"),
-      ),
-    );
-    setPolicy(policyRes.data);
-    setDraftPolicy(toDraft(policyRes.data));
-    setResolvedRoot(rootRes.ok ? rootRes.data : null);
   };
 
   useEffect(() => {
     void load(props.server.id);
   }, [props.server.id, props.server.updatedAt]);
+
+  // Auto-refresh while the panel is open (picks up join/leave archives).
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      void load(props.server.id, { quiet: true });
+    }, 12_000);
+    return () => window.clearInterval(timer);
+  }, [props.server.id]);
+
+  useEffect(() => {
+    if (typeof window.api.onBackupsChanged !== "function") return undefined;
+    return window.api.onBackupsChanged((payload) => {
+      if (payload.serverId !== props.server.id) return;
+      void load(props.server.id, { quiet: true });
+    });
+  }, [props.server.id]);
+
+  const forceRefresh = async () => {
+    await load(props.server.id, { quiet: true });
+    showBackupToast("Backup list refreshed.");
+  };
 
   const selectKind = (kind: BackupKind) => {
     setActiveKind(kind);
@@ -453,6 +498,7 @@ export function ServerBackupPanel(props: Props): JSX.Element {
                       className={classes.dirField}
                       size="xs"
                       label="Destination"
+                      description="Uses World / Player profiles / INI subfolders; each backup is a .zip"
                       value={draftPolicy.backupDir ?? ""}
                       placeholder={
                         draftPolicy.backupDir === null || draftPolicy.backupDir.length === 0
@@ -639,6 +685,15 @@ export function ServerBackupPanel(props: Props): JSX.Element {
                     Server active — stop before restore
                   </Badge>
                 )}
+                <Button
+                  variant="default"
+                  leftSection={<ArrowClockwise size={16} />}
+                  onClick={() => void forceRefresh()}
+                  loading={refreshing}
+                  disabled={loading || busy}
+                >
+                  Refresh
+                </Button>
                 <Button
                   leftSection={<Plus size={16} />}
                   onClick={() => void createBackup()}

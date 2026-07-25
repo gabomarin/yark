@@ -264,6 +264,57 @@ export class BackupRepository {
     this.db.prepare("DELETE FROM backups WHERE id = ?").run(id);
   }
 
+  getBackupByPath(serverId: string, path: string): BackupRecord | null {
+    const row = this.db
+      .prepare("SELECT * FROM backups WHERE server_id = ? AND path = ?")
+      .get(serverId, path) as unknown as BackupRow | undefined;
+    return row ? rowToBackup(row) : null;
+  }
+
+  listBackupPaths(serverId: string): string[] {
+    const rows = this.db
+      .prepare("SELECT path FROM backups WHERE server_id = ?")
+      .all(serverId) as Array<{ path: string }>;
+    return rows.map((row) => row.path);
+  }
+
+  /** Insert an already-completed backup (e.g. imported from disk). */
+  insertCompletedBackup(input: {
+    id?: string;
+    serverId: string;
+    type: BackupType;
+    kind: BackupKind;
+    path: string;
+    sizeBytes: number;
+    createdAt: string;
+    completedAt: string;
+    notes: string | null;
+  }): BackupRecord {
+    const id = input.id ?? randomUUID();
+    this.db
+      .prepare(
+        `INSERT INTO backups (
+          id, server_id, type, kind, path, size_bytes, status, created_at, completed_at, notes
+        ) VALUES (?, ?, ?, ?, ?, ?, 'completed', ?, ?, ?)`,
+      )
+      .run(
+        id,
+        input.serverId,
+        input.type,
+        input.kind,
+        input.path,
+        input.sizeBytes,
+        input.createdAt,
+        input.completedAt,
+        input.notes,
+      );
+    const record = this.getBackup(id);
+    if (record === null) {
+      throw new Error("Could not insert completed backup");
+    }
+    return record;
+  }
+
   listCompleted(serverId: string, kind?: BackupKind): BackupRecord[] {
     if (kind !== undefined) {
       const rows = this.db
