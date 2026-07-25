@@ -9,7 +9,7 @@
 - Manage multiple server profiles from a single app.
 - Start, stop, restart, and force-stop server instances.
 - Install and update server files with SteamCMD.
-- Create backups, restore them, configure schedule/retention, and review operation history.
+- Create backups, restore them, configure schedule/retention, and review backup history (plus related events in Logs).
 - Inspect runtime, update, and backup logs.
 - Review cluster state and RCON status from the interface.
 - Manage CurseForge mod Project IDs per server (`-mods=`) from the Server form. A dedicated Mods tab is deferred until a CurseForge API key is available.
@@ -72,13 +72,11 @@ If the workflow still fails on `configure-pages` with “Get Pages site failed /
 
 Edit `website/index.html` (and `styles.css`) for copy updates; pushes that touch `website/**` redeploy the page.
 
-## Agent / assistant context
+## Engineering docs
 
-For AI-assisted work in this repo, see:
-
-- [docs/agent-context.md](docs/agent-context.md)
-- [.github/copilot-instructions.md](.github/copilot-instructions.md)
-- [docs/visual-testing.md](docs/visual-testing.md) before changing visible renderer UI
-- [docs/versioning.md](docs/versioning.md) and [CHANGELOG.md](CHANGELOG.md) for SemVer and release notes
+- [docs/backups.md](docs/backups.md) — backup kinds, IPC, schedules, player sessions, restore, troubleshooting
+- [docs/visual-testing.md](docs/visual-testing.md) — required Playwright review for visible UI changes
+- [docs/versioning.md](docs/versioning.md) and [CHANGELOG.md](CHANGELOG.md) — SemVer and release notes
+- [docs/agent-context.md](docs/agent-context.md) and [.github/copilot-instructions.md](.github/copilot-instructions.md) — AI-assisted work rules
 
 Project status and history live in [CHANGELOG.md](CHANGELOG.md) (and the WIP notes in this README). There is no tracked `TODO.md`.

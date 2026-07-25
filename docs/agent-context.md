@@ -30,20 +30,15 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 - [src/renderer](../src/renderer): React UI, layouts, features, and components.
 - [src/backend](../src/backend): services, domains, process management, and persistence.
 - [src/shared](../src/shared): shared types and IPC contracts.
-- [docs](../docs): in-repo agent docs (this file, visual testing). Backlog/plans live under `.cursor/project-context/`.
+- [docs](../docs): in-repo agent docs (this file, visual testing, backups runbook, versioning). Backlog/plans live under `.cursor/project-context/`.
 
 ## Current functional status
 
 - The new renderer shell is already active.
-- Overview, SteamCMD, and Logs have already been migrated to the new architecture.
+- Overview, SteamCMD, Logs, and Backups have already been migrated to the new architecture.
 - Server Workspace keeps `Server`, `INI Files`, and `Backups` as its regular navigation. Workspace **Backups** is operational (create / restore / history / destination for that server) with kind subtabs (**World save** | **Player profiles** | **INI**). Sidebar **Backups** is generalized configuration across servers (schedule / destination / retention) with “Open in server” to jump into the workspace tab. Mods are edited on the Server tab (comma-separated CurseForge Project IDs) until a CurseForge API key enables a dedicated Mods UI. A five-step configuration assistant launches on demand from `Server`; it uses an isolated draft and writes only after explicit review.
 - Clusters and Settings remain placeholders within the new shell.
-- Sidebar Backups settings page and per-server workspace Backups tab are live.
-- Backups are kind-scoped: `world` (full SavedArks including `.arkprofile*`), `players` (profiles from SavedArks/SaveGames), `ini` (`Game.ini` + `GameUserSettings.ini`).
-  - **World**: destination + schedule (`enabled` / `intervalMinutes`, min **5**, default **60**) + `retainCountWorld`. Schedule creates **world only**. World is a full SavedArks folder snapshot (profiles included).
-  - **Players**: `retainCountPlayers` (per-player pools for join/leave archives); RCON `ListPlayers` poll (~10s) while `running`, plus immediate ticks on process status changes; connect/disconnect archives per player; disconnect waits briefly for ASA to flush the `.arkprofile*`; leaving `running` flushes remaining online players as disconnects; SavedArks profile mtime scan backs up new/changed profiles when the player is not online (covers short sessions RCON missed). Manual “Backup all players” still snapshots every profile.
-  - **INI**: `retainCountIni`; manual create; automatic `ini_save` backup after each successful INI save (debounced ~2s) via the `ini:save` IPC path (editor + wizard). Not on the world schedule.
-  - Shared `backupDir` root for all kinds. UI: destination/schedule card only on the World subtab; Players/INI tabs keep a compact retain control near the history list.
+- Backups are kind-scoped (`world` / `players` / `ini`) with separate triggers for schedule, player sessions, INI-on-save, and pre-update. Full workflows, IPC surface, constraints, and troubleshooting: [backups.md](backups.md).
 - Live log streaming during active SteamCMD operations is still pending.
 - Real E2E validation against host-side binaries and SteamCMD is still not covered.
 
