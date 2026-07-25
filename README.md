@@ -60,6 +60,6 @@ For AI-assisted work in this repo, see:
 - [docs/agent-context.md](docs/agent-context.md)
 - [.github/copilot-instructions.md](.github/copilot-instructions.md)
 - [docs/visual-testing.md](docs/visual-testing.md) before changing visible renderer UI
-- [docs/versioning.md](docs/versioning.md) and [CHANGELOG.md](CHANGELOG.md) when cutting a release
+- [docs/versioning.md](docs/versioning.md) and [CHANGELOG.md](CHANGELOG.md) for SemVer and release notes
 
-Local backlog / historical plans (not published in git) live under `.cursor/project-context/`.
+Project status and history live in [CHANGELOG.md](CHANGELOG.md) (and the WIP notes in this README).
