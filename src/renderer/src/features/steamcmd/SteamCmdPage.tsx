@@ -140,15 +140,15 @@ export function SteamCmdPage(props: Props): JSX.Element {
           </Stack>
         </Card>
 
-        <div className={classes.contextStrip} aria-label="Entorno SteamCMD">
+        <div className={classes.contextStrip} aria-label="SteamCMD environment">
           <ContextItem
             icon={<CloudArrowDown size={16} />}
             label="Official version"
-            value={props.officialVersion ?? "No disponible"}
+            value={props.officialVersion ?? "Not available"}
           />
           <ContextItem
             icon={<FolderOpen size={16} />}
-            label="Ejecutable"
+            label="Executable"
             value={props.steamCmdStatus?.executablePath ?? "Not configured"}
           />
           <ContextItem
@@ -158,7 +158,7 @@ export function SteamCmdPage(props: Props): JSX.Element {
           />
           <ContextItem
             icon={<HardDrive size={16} />}
-            label="Contenido ASA"
+            label="ASA content cache"
             value={props.steamCmdStatus?.contentCacheDir ?? "Not configured"}
           />
         </div>
@@ -168,7 +168,7 @@ export function SteamCmdPage(props: Props): JSX.Element {
             <Group justify="space-between" gap="sm">
               <Group gap="xs">
                 <TerminalWindow size={18} />
-                <Title order={3} size="h4">Consola SteamCMD</Title>
+                <Title order={3} size="h4">SteamCMD console</Title>
               </Group>
               <Text size="xs" c="dimmed">Last 200 lines</Text>
             </Group>

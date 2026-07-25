@@ -12,6 +12,7 @@ This repository contains a desktop application for managing dedicated ARK Surviv
 - Avoid introducing unnecessary native dependencies when a Node/TypeScript alternative exists.
 - For IPC, backend, or critical flow changes, run tests, typecheck, and build.
 - For visible renderer changes, follow the mandatory [visual testing protocol](visual-testing.md), including HD, Full HD, and QHD/2K review.
+- When cutting a release or bumping the app version, follow [versioning.md](versioning.md) and update [CHANGELOG.md](../CHANGELOG.md). `package.json` is the SemVer source of truth; the UI reads it via `@shared/app-version`.
 
 ## Local project context (Cursor workspace, not in git)
 
@@ -35,7 +36,7 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 
 - The new renderer shell is already active.
 - Overview, SteamCMD, and Logs have already been migrated to the new architecture.
-- Server Workspace keeps `Server`, `INI Files`, and `Mods` as its regular navigation. A five-step configuration assistant launches on demand from `Server`; it uses an isolated draft and writes only after explicit review.
+- Server Workspace keeps `Server` and `INI Files` as its regular navigation. Mods are edited on the Server tab (comma-separated CurseForge Project IDs) until a CurseForge API key enables a dedicated Mods UI. A five-step configuration assistant launches on demand from `Server`; it uses an isolated draft and writes only after explicit review.
 - Clusters, Backups, and Settings remain placeholders within the new shell.
 - Live log streaming during active SteamCMD operations is still pending.
 - Real E2E validation against host-side binaries and SteamCMD is still not covered.

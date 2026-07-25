@@ -81,7 +81,7 @@ export function Sidebar(props: Props): JSX.Element {
         })}
       </MantineStack>
 
-      <Divider color="rgba(255,255,255,0.08)" />
+      <Divider className={classes.rule} />
 
       <Button
         variant="subtle"

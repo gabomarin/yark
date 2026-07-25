@@ -62,7 +62,7 @@ export function SidePanel(props: Props): JSX.Element {
         <Stack gap={6}>
           <Text className={classes.widgetTitle}>Status</Text>
           <MetaRow label="Status" value={STATUS_LABEL[status] ?? status} />
-          <MetaRow label="Inicio" value={uptime} />
+          <MetaRow label="Started" value={uptime} />
           <MetaRow label="Version" value={version} />
           <MetaRow label="Cluster" value={props.server.clusterId ?? "No cluster"} />
         </Stack>

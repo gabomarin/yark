@@ -31,8 +31,6 @@ const installed = {
   build: null,
   steamBuild: null,
   arkVersion: null,
-  officialVersion: null,
-  officialSteamBuild: null,
   version: null,
   binaryPath: "C:/ARK/TheIsland/ShooterGame/Binaries/Win64/ArkAscendedServer.exe",
   checkedAt: "2026-07-23T00:00:00.000Z",
@@ -50,6 +48,7 @@ describe("ServerCard", () => {
           server={profile}
           runtime={null}
           installation={installed}
+          officialSteamBuild={null}
           onStart={onStart}
           onStop={vi.fn()}
           onKill={vi.fn()}
@@ -91,6 +90,7 @@ describe("ServerCard", () => {
             lastError: null,
           }}
           installation={installed}
+          officialSteamBuild={null}
           onStart={vi.fn()}
           onStop={vi.fn()}
           onKill={vi.fn()}
@@ -134,6 +134,7 @@ describe("ServerCard", () => {
           server={profile}
           runtime={null}
           installation={{ ...installed, installed: false }}
+          officialSteamBuild={null}
           onStart={vi.fn()}
           onStop={vi.fn()}
           onKill={vi.fn()}
@@ -166,6 +167,7 @@ describe("ServerCard", () => {
             ...installed,
             installed: false,
           }}
+          officialSteamBuild={null}
           steamCmdBusy
           steamCmdProgressPercent={42}
           steamCmdProgressLabel="Downloading · 512.0 / 1024.0 MB"
@@ -207,10 +209,9 @@ describe("ServerCard", () => {
           installation={{
             ...installed,
             arkVersion: "92.21",
-            officialVersion: "92.23",
             steamBuild: "build 24346423",
-            officialSteamBuild: "build 24346423",
           }}
+          officialSteamBuild="build 24346423"
           onStart={vi.fn()}
           onStop={vi.fn()}
           onKill={vi.fn()}
@@ -243,10 +244,9 @@ describe("ServerCard", () => {
           installation={{
             ...installed,
             arkVersion: "92.23",
-            officialVersion: "92.23",
             steamBuild: "build 24300000",
-            officialSteamBuild: "build 24346423",
           }}
+          officialSteamBuild="build 24346423"
           onStart={vi.fn()}
           onStop={vi.fn()}
           onKill={vi.fn()}

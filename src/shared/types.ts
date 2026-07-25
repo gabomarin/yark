@@ -52,14 +52,17 @@ export interface ServerInstallationInfo {
   steamBuild: string | null;
   /** Version detected from runtime logs (ARK Version: x.y). */
   arkVersion: string | null;
-  /** Official network version (best effort; may be unavailable). */
-  officialVersion: string | null;
-  /** Public Steam build; sole authoritative source for whether an installable update exists. */
-  officialSteamBuild: string | null;
   /** Backward compatibility with the previous UI. */
   version: string | null;
   binaryPath: string;
   checkedAt: string;
+}
+
+/** Installation probe plus global official metadata (CDN), even when no servers exist. */
+export interface ServerInstallationSnapshot {
+  officialVersion: string | null;
+  officialSteamBuild: string | null;
+  servers: ServerInstallationInfo[];
 }
 
 export interface SteamCmdStatus {

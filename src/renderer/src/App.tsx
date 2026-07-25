@@ -1,3 +1,4 @@
+import { APP_VERSION } from "@shared/app-version";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, Code, List, Stack, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
@@ -25,7 +26,6 @@ import { SteamCmdPage } from "@features/steamcmd/SteamCmdPage";
 import { SteamCmdProgressDock } from "@features/steamcmd/SteamCmdProgressDock";
 import type { Route } from "@layout/Sidebar/Sidebar";
 
-const APP_VERSION = "0.1.0";
 const OPEN_NATIVE_TERMINAL_PREF_KEY = "overview.openNativeTerminalOnStart";
 
 type LogsSection = "events" | "runtime" | "updates" | "backups";
@@ -42,6 +42,8 @@ export function App(): JSX.Element {
   const [installationInfo, setInstallationInfo] = useState<
     Map<string, ServerInstallationInfo>
   >(new Map());
+  const [officialVersion, setOfficialVersion] = useState<string | null>(null);
+  const [officialSteamBuild, setOfficialSteamBuild] = useState<string | null>(null);
   const [reports, setReports] = useState<ClusterComplianceReport[]>([]);
   const [events, setEvents] = useState<AppEvent[]>([]);
   const [steamCmdStatus, setSteamCmdStatus] = useState<SteamCmdStatus | null>(null);
@@ -69,10 +71,6 @@ export function App(): JSX.Element {
   const runningServers = Array.from(statuses.values()).filter(
     (status) => status.status === "running",
   ).length;
-
-  const officialVersion = Array.from(installationInfo.values())
-    .map((info) => info.officialVersion)
-    .find((value): value is string => value != null && value.trim().length > 0) ?? null;
 
   const filteredServers = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -104,7 +102,7 @@ export function App(): JSX.Element {
     ] = await Promise.all([
       window.api.listServers(),
       window.api.getStatuses(),
-      window.api.getInstallationInfo(),
+      window.api.getInstallationInfo(false),
       window.api.getSteamCmdStatus(),
       window.api.getSteamCmdConsole(140),
       window.api.checkCluster(),
@@ -115,7 +113,11 @@ export function App(): JSX.Element {
       setStatuses(new Map(statusesRes.data.map((s) => [s.serverId, s])));
     }
     if (installRes.ok) {
-      setInstallationInfo(new Map(installRes.data.map((s) => [s.serverId, s])));
+      setOfficialVersion(installRes.data.officialVersion);
+      setOfficialSteamBuild(installRes.data.officialSteamBuild);
+      setInstallationInfo(
+        new Map(installRes.data.servers.map((s) => [s.serverId, s])),
+      );
     }
     if (steamCmdRes.ok) {
       setSteamCmdStatus(steamCmdRes.data);
@@ -138,8 +140,14 @@ export function App(): JSX.Element {
           setError(installRes.error ?? "Could not check for updates");
           return;
         }
-        const next = new Map(installRes.data.map((info) => [info.serverId, info]));
+        const next = new Map(
+          installRes.data.servers.map((info) => [info.serverId, info]),
+        );
+        setOfficialVersion(installRes.data.officialVersion);
         setInstallationInfo(next);
+        setOfficialSteamBuild(installRes.data.officialSteamBuild);
+
+        const officialBuild = installRes.data.officialSteamBuild;
 
         if (serverId !== undefined) {
           const info = next.get(serverId);
@@ -152,7 +160,7 @@ export function App(): JSX.Element {
             });
             return;
           }
-          if (info.officialSteamBuild == null) {
+          if (officialBuild == null) {
             notifications.show({
               title: "Could not query",
               message: "Could not fetch the public Steam build. Check your connection.",
@@ -168,10 +176,10 @@ export function App(): JSX.Element {
             });
             return;
           }
-          if (isServerUpdateAvailable(info)) {
+          if (isServerUpdateAvailable(info, officialBuild)) {
             notifications.show({
               title: "Update available",
-              message: `"${name}": ${info.steamBuild} → ${info.officialSteamBuild}`,
+              message: `"${name}": ${info.steamBuild} → ${officialBuild}`,
               color: "orange",
               autoClose: 8000,
             });
@@ -185,13 +193,16 @@ export function App(): JSX.Element {
           return;
         }
 
-        const outdated = installRes.data.filter(isServerUpdateAvailable);
-        const unverified = installRes.data.filter(
-          (info) => info.installed && getServerUpdateState(info) === "unknown",
+        const serversInfo = installRes.data.servers;
+        const outdated = serversInfo.filter((info) =>
+          isServerUpdateAvailable(info, officialBuild),
         );
-        const official =
-          installRes.data.find((info) => info.officialSteamBuild != null)?.officialSteamBuild ??
-          "unknown";
+        const unverified = serversInfo.filter(
+          (info) =>
+            info.installed
+            && getServerUpdateState(info, officialBuild) === "unknown",
+        );
+        const official = officialBuild ?? "unknown";
         if (outdated.length === 0) {
           if (unverified.length > 0) {
             notifications.show({
@@ -210,7 +221,7 @@ export function App(): JSX.Element {
           const lines = outdated
             .map((info) => {
               const name = servers.find((s) => s.id === info.serverId)?.name ?? info.serverId;
-              return `${name}: ${info.steamBuild ?? "—"} → ${info.officialSteamBuild}`;
+              return `${name}: ${info.steamBuild ?? "—"} → ${official}`;
             })
             .join("\n");
           notifications.show({
@@ -516,6 +527,7 @@ export function App(): JSX.Element {
               runningServers={runningServers}
               statuses={statuses}
               installationInfo={installationInfo}
+              officialSteamBuild={officialSteamBuild}
               events={events}
               onViewAllActivity={() => navigate("logs")}
               steamCmdServerId={steamCmdStatus?.serverId ?? null}

@@ -166,7 +166,7 @@ export function LogsPage(props: Props): JSX.Element {
             className={classes.serverSelect}
           />
           <Button variant="default" leftSection={<ClockCounterClockwise size={16} />} onClick={() => selectedServer && void load(selectedServer.id)} disabled={selectedServer === null || loading || busy}>
-            Recargar
+            Reload
           </Button>
           <Button leftSection={<DownloadSimple size={16} />} onClick={() => void exportLogs()} disabled={selectedServer === null || loading || busy}>
             Export

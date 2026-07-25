@@ -5,7 +5,6 @@ import type {
   ClusterComplianceReport,
   ServerInstallationInfo,
   ServerProfile,
-  ServerProfileInput,
   ServerRuntimeInfo,
 } from "@shared/types";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
@@ -14,14 +13,13 @@ import {
   ConfigurationEditor,
 } from "./components/ConfigurationEditor";
 import { ConfigurationWizard } from "./components/ConfigurationWizard";
-import { ModsManager } from "./components/ModsManager";
 import { ServerListPanel } from "./components/ServerListPanel";
 import { ServerOnboardingChecklist } from "./components/ServerOnboardingChecklist";
 import { SidePanel } from "./components/SidePanel";
 import { WorkspaceHeader } from "./components/WorkspaceHeader";
 import classes from "./ServerWorkspacePage.module.css";
 
-type WorkspaceTab = "server" | "mods" | "iniFiles";
+type WorkspaceTab = "server" | "iniFiles";
 
 interface Props {
   servers: ServerProfile[];
@@ -114,30 +112,6 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
       setAssistantOpen(false);
       props.onBack();
     });
-  };
-
-  const saveMods = async (mods: string[]) => {
-    if (selectedServer === null) return;
-    const input: ServerProfileInput = {
-      name: selectedServer.name,
-      map: selectedServer.map,
-      installDir: selectedServer.installDir,
-      sessionName: selectedServer.sessionName,
-      gamePort: selectedServer.gamePort,
-      queryPort: selectedServer.queryPort,
-      rconPort: selectedServer.rconPort,
-      serverPassword: selectedServer.serverPassword,
-      adminPassword: selectedServer.adminPassword,
-      clusterId: selectedServer.clusterId,
-      clusterDir: selectedServer.clusterDir,
-      extraArgs: selectedServer.extraArgs,
-      mods,
-    };
-    const result = await window.api.updateServer(selectedServer.id, input);
-    if (!result.ok) {
-      throw new Error(result.error ?? "Could not update mods");
-    }
-    props.onServerUpdated();
   };
 
   if (selectedServer === null) {
@@ -247,7 +221,6 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
             <Tabs.List className={classes.tabList}>
               <Tabs.Tab value="server">Server</Tabs.Tab>
               <Tabs.Tab value="iniFiles">INI Files</Tabs.Tab>
-              <Tabs.Tab value="mods">Mods</Tabs.Tab>
             </Tabs.List>
 
             <div className={classes.tabPanel}>
@@ -284,14 +257,6 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
                   }}
                 />
               </div>
-
-              {workspaceTab === "mods" && (
-                <ModsManager
-                  key={`mods:${selectedServer.id}:${selectedServer.updatedAt}`}
-                  server={selectedServer}
-                  onModsChanged={saveMods}
-                />
-              )}
             </div>
           </Tabs>
           )}

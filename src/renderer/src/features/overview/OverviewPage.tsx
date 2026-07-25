@@ -21,6 +21,7 @@ interface Props {
   runningServers: number;
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
+  officialSteamBuild: string | null;
   events: AppEvent[];
   onViewAllActivity: () => void;
   steamCmdServerId?: string | null;
@@ -67,6 +68,7 @@ export function OverviewPage(props: Props): JSX.Element {
           runningServers={props.runningServers}
           statuses={props.statuses}
           installationInfo={props.installationInfo}
+          officialSteamBuild={props.officialSteamBuild}
           steamCmdServerId={props.steamCmdServerId ?? null}
           steamCmdRunning={props.steamCmdRunning ?? false}
           steamCmdBusy={props.steamCmdBusy ?? props.steamCmdRunning ?? false}

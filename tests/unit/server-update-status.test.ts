@@ -11,8 +11,6 @@ function installation(
     build: "build 24346423",
     steamBuild: "build 24346423",
     arkVersion: "92.21",
-    officialVersion: "92.23",
-    officialSteamBuild: "build 24346423",
     version: "build 24346423",
     binaryPath: "C:/ARK/ArkAscendedServer.exe",
     checkedAt: "2026-07-24T00:00:00.000Z",
@@ -22,23 +20,24 @@ function installation(
 
 describe("getServerUpdateState", () => {
   it("ignores ARK version differences when Steam builds match", () => {
-    expect(getServerUpdateState(installation())).toBe("current");
+    expect(getServerUpdateState(installation(), "build 24346423")).toBe("current");
   });
 
   it("marks update only when comparable Steam builds differ", () => {
     expect(
       getServerUpdateState(
         installation({ steamBuild: "build 24300000" }),
+        "build 24346423",
       ),
     ).toBe("available");
   });
 
   it("does not invent a state when a comparable build is missing", () => {
     expect(
-      getServerUpdateState(installation({ officialSteamBuild: null })),
+      getServerUpdateState(installation(), null),
     ).toBe("unknown");
     expect(
-      getServerUpdateState(installation({ installed: false })),
+      getServerUpdateState(installation({ installed: false }), "build 24346423"),
     ).toBe("unknown");
   });
 });

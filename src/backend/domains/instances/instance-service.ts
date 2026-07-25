@@ -242,18 +242,22 @@ export class InstanceService {
     return profile.installDir;
   }
 
-  async installationInfo(forceOfficialCheck = false): Promise<ServerInstallationInfo[]> {
+  async installationInfo(forceOfficialCheck = false): Promise<{
+    officialVersion: string | null;
+    officialSteamBuild: string | null;
+    servers: ServerInstallationInfo[];
+  }> {
     const [officialVersion, officialSteamBuild] = await Promise.all([
       readOfficialArkVersionCached(forceOfficialCheck),
       readOfficialArkBuildCached(forceOfficialCheck),
     ]);
-    return this.repo
-      .list()
-      .map((profile) => ({
-        ...inspectServerInstallation(profile.id, profile.installDir),
-        officialVersion,
-        officialSteamBuild,
-      }));
+    return {
+      officialVersion,
+      officialSteamBuild,
+      servers: this.repo
+        .list()
+        .map((profile) => inspectServerInstallation(profile.id, profile.installDir)),
+    };
   }
 
   checkClusters(): ClusterComplianceReport[] {

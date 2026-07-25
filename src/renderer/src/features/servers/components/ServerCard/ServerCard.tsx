@@ -36,6 +36,7 @@ interface Props {
   server: ServerProfile;
   runtime: ServerRuntimeInfo | null;
   installation: ServerInstallationInfo | null;
+  officialSteamBuild: string | null;
   steamCmdBusy?: boolean;
   steamCmdProgressPercent?: number | null;
   steamCmdProgressLabel?: string | null;
@@ -84,7 +85,7 @@ export function ServerCard(props: Props): JSX.Element {
   const isActive = status === "starting" || status === "running" || status === "stopping";
   const isInstallationReady = installation?.installed === true;
   const localVersion = installation?.arkVersion ?? installation?.build ?? null;
-  const updateState = getServerUpdateState(installation);
+  const updateState = getServerUpdateState(installation, props.officialSteamBuild);
   const updateAvailable = updateState === "available";
   const installStateLabel = steamCmdBusy
     ? steamCmdOperation === "verify-files"

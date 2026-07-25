@@ -414,9 +414,17 @@ export async function readOfficialArkVersionCached(force = false): Promise<strin
 
   officialVersionCache.inFlight = fetchOfficialArkVersion()
     .then((value) => {
-      officialVersionCache.value = value;
-      officialVersionCache.checkedAt = Date.now();
-      return value;
+      if (value !== null) {
+        officialVersionCache.value = value;
+        officialVersionCache.checkedAt = Date.now();
+        return value;
+      }
+      // Do not lock a failed probe for the full TTL — retry soon, keep last success.
+      if (officialVersionCache.value === null) {
+        officialVersionCache.checkedAt =
+          Date.now() - OFFICIAL_VERSION_TTL_MS + 30_000;
+      }
+      return officialVersionCache.value;
     })
     .finally(() => {
       officialVersionCache.inFlight = null;
@@ -471,8 +479,6 @@ export function inspectServerInstallation(
     build,
     steamBuild,
     arkVersion,
-    officialVersion: null,
-    officialSteamBuild: null,
     version: build,
     binaryPath,
     checkedAt: new Date().toISOString(),

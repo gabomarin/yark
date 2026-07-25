@@ -9,23 +9,25 @@ export type ServerUpdateState = "available" | "current" | "unknown";
  */
 export function getServerUpdateState(
   installation: ServerInstallationInfo | null | undefined,
+  officialSteamBuild: string | null | undefined,
 ): ServerUpdateState {
   if (installation?.installed !== true) {
     return "unknown";
   }
   if (
     installation.steamBuild == null
-    || installation.officialSteamBuild == null
+    || officialSteamBuild == null
   ) {
     return "unknown";
   }
-  return installation.steamBuild === installation.officialSteamBuild
+  return installation.steamBuild === officialSteamBuild
     ? "current"
     : "available";
 }
 
 export function isServerUpdateAvailable(
   installation: ServerInstallationInfo | null | undefined,
+  officialSteamBuild: string | null | undefined,
 ): boolean {
-  return getServerUpdateState(installation) === "available";
+  return getServerUpdateState(installation, officialSteamBuild) === "available";
 }

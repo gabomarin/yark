@@ -1,16 +1,9 @@
 .sidebar {
   position: relative;
+  z-index: 1;
   height: 100%;
   padding: 20px 14px;
-  background:
-    radial-gradient(circle at 22% 0%, var(--ark-blue-a3), transparent 27%),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--ark-gray-2) 84%, var(--ark-blue-2)) 0%,
-      #0d0f15 54%,
-      #0b0c10 100%
-    );
-  border-right: 1px solid var(--ark-blue-a3);
+  background: transparent;
 }
 
 .sidebar::after {
@@ -18,9 +11,13 @@
   top: 0;
   right: -1px;
   width: 1px;
-  height: 112px;
-  background: var(--app-color-cryo);
-  opacity: 0.52;
+  height: 96px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--app-color-cryo) 45%, transparent),
+    transparent 100%
+  );
+  opacity: 0.55;
   content: "";
 }
 
@@ -111,7 +108,12 @@
 
 .versionChip {
   padding: 10px 6px 0;
-  border-top: 1px solid var(--app-color-border);
+  border-top: 1px solid color-mix(in srgb, var(--app-color-border) 32%, transparent);
+}
+
+.rule {
+  border-color: color-mix(in srgb, var(--app-color-border) 28%, transparent);
+  opacity: 0.7;
 }
 
 .versionValue {

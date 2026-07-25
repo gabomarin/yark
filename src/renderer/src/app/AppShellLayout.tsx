@@ -23,11 +23,16 @@ export function AppShellLayout({ children, ...sidebarProps }: Props): JSX.Elemen
     <AppShell
       navbar={{ width: 248, breakpoint: "sm" }}
       padding={0}
+      className={classes.shell}
+      classNames={{
+        navbar: classes.navbar,
+        main: classes.main,
+      }}
     >
       <AppShell.Navbar>
         <Sidebar {...shellProps} />
       </AppShell.Navbar>
-      <AppShell.Main className={classes.main}>
+      <AppShell.Main>
         <Stack gap={0} className={classes.content}>
           {error !== null && (
             <Alert

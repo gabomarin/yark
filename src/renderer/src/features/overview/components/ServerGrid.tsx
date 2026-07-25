@@ -16,6 +16,7 @@ interface Props {
   runningServers: number;
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
+  officialSteamBuild: string | null;
   steamCmdServerId: string | null;
   steamCmdRunning: boolean;
   steamCmdBusy?: boolean;
@@ -64,7 +65,9 @@ export function ServerGrid(props: Props): JSX.Element {
     const installation = props.installationInfo.get(server.id) ?? null;
     if (status === "error") return count + 1;
     if (installation?.installed !== true) return count + 1;
-    if (getServerUpdateState(installation) === "available") return count + 1;
+    if (getServerUpdateState(installation, props.officialSteamBuild) === "available") {
+      return count + 1;
+    }
     return count;
   }, 0);
 
@@ -197,6 +200,7 @@ export function ServerGrid(props: Props): JSX.Element {
                 server={server}
                 runtime={props.statuses.get(server.id) ?? null}
                 installation={props.installationInfo.get(server.id) ?? null}
+                officialSteamBuild={props.officialSteamBuild}
                 steamCmdBusy={
                   (props.steamCmdBusy ?? props.steamCmdRunning) &&
                   props.steamCmdServerId === server.id

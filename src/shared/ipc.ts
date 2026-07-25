@@ -5,7 +5,7 @@ import type {
   ModMetadata,
   ServerIniPayload,
   ServerIniSnapshot,
-  ServerInstallationInfo,
+  ServerInstallationSnapshot,
   ServerOperationalLogs,
   ServerProfile,
   ServerProfileInput,
@@ -95,7 +95,7 @@ export interface RendererApi {
   getSteamCmdStatus(): Promise<IpcResult<SteamCmdStatus>>;
   getSteamCmdConsole(limit?: number): Promise<IpcResult<SteamCmdConsoleSnapshot>>;
   getStatuses(): Promise<IpcResult<ServerRuntimeInfo[]>>;
-  getInstallationInfo(forceOfficialCheck?: boolean): Promise<IpcResult<ServerInstallationInfo[]>>;
+  getInstallationInfo(forceOfficialCheck?: boolean): Promise<IpcResult<ServerInstallationSnapshot>>;
   checkCluster(): Promise<IpcResult<ClusterComplianceReport[]>>;
   sendRconCommand(
     id: string,

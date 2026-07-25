@@ -93,11 +93,7 @@ function toFormState(profile: ServerProfile | null): FormState {
   };
 }
 
-function toInput(
-  state: FormState,
-  isCreate: boolean,
-  options?: { preserveMods?: string[] },
-): ServerProfileInput {
+function toInput(state: FormState, isCreate: boolean): ServerProfileInput {
   const name = state.name.trim();
   const baseOrInstall = state.installDir.trim();
   return {
@@ -119,12 +115,10 @@ function toInput(
       .split(/\s+/)
       .map((value) => value.trim())
       .filter((value) => value.length > 0),
-    mods:
-      options?.preserveMods ??
-      state.mods
-        .split(",")
-        .map((value) => value.trim())
-        .filter((value) => value.length > 0),
+    mods: state.mods
+      .split(",")
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0),
   };
 }
 
@@ -194,10 +188,7 @@ export function ServerForm(props: Props): JSX.Element {
       return;
     }
     setSaving(true);
-    const input = toInput(state, isCreate, {
-      preserveMods:
-        embedded && props.initial !== null ? props.initial.mods : undefined,
-    });
+    const input = toInput(state, isCreate);
     const result =
       props.initial === null
         ? await window.api.createServer(input)
@@ -407,25 +398,18 @@ export function ServerForm(props: Props): JSX.Element {
         </Section>
 
         <Section
-          title={embedded ? "Launch arguments" : "Mods and arguments"}
+          title="Mods and arguments"
           flat={embedded}
           span2={embedded}
         >
-          {!embedded && (
-            <TextInput
-              label="Mods"
-              size={inputSize}
-              value={state.mods}
-              onChange={(e) => setField("mods")(e.currentTarget.value)}
-              placeholder="928988, 929420"
-            />
-          )}
-          {embedded && (
-            <Text c="dimmed" fz="xs">
-              Mods are managed in the Mods tab. Here only the extra dedicated
-              process arguments (equivalent to Startup Parameters).
-            </Text>
-          )}
+          <TextInput
+            label="Mods"
+            size={inputSize}
+            value={state.mods}
+            onChange={(e) => setField("mods")(e.currentTarget.value)}
+            placeholder="928988, 929420"
+            description="Comma-separated CurseForge Project IDs (−mods= on launch)."
+          />
           <Textarea
             label="Extra arguments"
             size={inputSize}

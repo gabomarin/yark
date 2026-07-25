@@ -10,7 +10,7 @@
 - Create backups, restore them, and review operation history.
 - Inspect runtime, update, and backup logs.
 - Review cluster state and RCON status from the interface.
-- Manage CurseForge mod Project IDs per server (`-mods=`). The Mods tab UI is ready; metadata is currently a local mock until a CurseForge API key is available.
+- Manage CurseForge mod Project IDs per server (`-mods=`) from the Server form. A dedicated Mods tab is deferred until a CurseForge API key is available.
 
 ## Current status
 
@@ -60,5 +60,6 @@ For AI-assisted work in this repo, see:
 - [docs/agent-context.md](docs/agent-context.md)
 - [.github/copilot-instructions.md](.github/copilot-instructions.md)
 - [docs/visual-testing.md](docs/visual-testing.md) before changing visible renderer UI
+- [docs/versioning.md](docs/versioning.md) and [CHANGELOG.md](CHANGELOG.md) when cutting a release
 
 Local backlog / historical plans (not published in git) live under `.cursor/project-context/`.

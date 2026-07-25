@@ -140,7 +140,8 @@ describe("ServerWorkspacePage", () => {
       "true",
     );
     expect(screen.getByRole("tab", { name: "INI Files" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Mods" })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Mods" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^Mods$/i)).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Configuration wizard" }),
     ).toBeVisible();

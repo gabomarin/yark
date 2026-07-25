@@ -36,6 +36,7 @@ describe("OverviewPage", () => {
           runningServers={0}
           statuses={new Map()}
           installationInfo={new Map()}
+          officialSteamBuild={null}
           events={[]}
           onViewAllActivity={vi.fn()}
           onOpenWorkspace={vi.fn()}
@@ -95,8 +96,6 @@ describe("OverviewPage", () => {
                   build: null,
                   steamBuild: null,
                   arkVersion: null,
-                  officialVersion: null,
-                  officialSteamBuild: null,
                   version: null,
                   binaryPath: "C:/ARK/TheIsland/ShooterGameServer.exe",
                   checkedAt: "2026-07-24T00:00:00.000Z",
@@ -104,6 +103,7 @@ describe("OverviewPage", () => {
               ],
             ])
           }
+          officialSteamBuild={null}
           events={[]}
           onViewAllActivity={vi.fn()}
           onOpenWorkspace={vi.fn()}
@@ -140,6 +140,7 @@ describe("OverviewPage", () => {
       runningServers: 0,
       statuses: new Map(),
       installationInfo: new Map(),
+      officialSteamBuild: null,
       events: [],
       onViewAllActivity: vi.fn(),
       onOpenWorkspace: vi.fn(),
