@@ -16,6 +16,9 @@ interface Props {
   server: ServerProfile;
   runtime: ServerRuntimeInfo | null;
   installation: ServerInstallationInfo | null;
+  /** Running server or SteamCMD files job — blocks install/update/verify. */
+  opsLocked?: boolean;
+  opsLockReason?: string;
   onOpenFolder: () => void;
   onInstallFiles: () => void;
   onUpdateNow: () => void;
@@ -46,6 +49,10 @@ export function SidePanel(props: Props): JSX.Element {
   const [broadcast, setBroadcast] = useState("");
   const status = props.runtime?.status ?? "stopped";
   const isActive = status === "starting" || status === "running" || status === "stopping";
+  const opsLocked = props.opsLocked === true || isActive;
+  const lockTitle =
+    props.opsLockReason ??
+    (isActive ? "Stop the server before changing files" : undefined);
   const version =
     props.installation?.arkVersion ??
     props.installation?.build ??
@@ -88,7 +95,8 @@ export function SidePanel(props: Props): JSX.Element {
             justify="flex-start"
             leftSection={<Wrench size={14} />}
             onClick={props.onInstallFiles}
-            disabled={isActive}
+            disabled={opsLocked}
+            title={lockTitle}
           >
             Install files
           </Button>
@@ -99,8 +107,8 @@ export function SidePanel(props: Props): JSX.Element {
             justify="flex-start"
             leftSection={<ShieldCheck size={14} />}
             onClick={props.onVerifyFiles}
-            disabled={isActive}
-            title={isActive ? "Stop the server before verifying" : undefined}
+            disabled={opsLocked}
+            title={lockTitle}
           >
             Verify integrity
           </Button>
@@ -111,8 +119,8 @@ export function SidePanel(props: Props): JSX.Element {
             justify="flex-start"
             leftSection={<CloudArrowDown size={14} />}
             onClick={props.onUpdateNow}
-            disabled={isActive}
-            title={isActive ? "Stop the server before updating" : undefined}
+            disabled={opsLocked}
+            title={lockTitle}
           >
             Force update
           </Button>

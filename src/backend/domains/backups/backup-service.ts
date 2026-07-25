@@ -51,6 +51,29 @@ export interface BackupChangedPush {
   serverId: string;
 }
 
+/** Pure fleet health badge for one server (used by getFleetSummary). */
+export function computeBackupServerHealth(input: {
+  destinationOk: boolean;
+  stale: boolean;
+  failed24h: number;
+  scheduleEnabled: boolean;
+  hasWorldBackup: boolean;
+  /** Scheduled world backups only run while the process is active. */
+  serverRunning: boolean;
+}): BackupHealthStatus {
+  if (!input.destinationOk || input.failed24h > 0) return "critical";
+  // World schedule skips stopped servers — without a completed world archive this
+  // is never "Protected", whether the process is running or not.
+  if (input.scheduleEnabled && !input.hasWorldBackup) {
+    return "warning";
+  }
+  if (input.stale) return "warning";
+  if (!input.scheduleEnabled && !input.hasWorldBackup) return "unknown";
+  // Keep serverRunning in the contract so callers must pass process state.
+  void input.serverRunning;
+  return "ok";
+}
+
 const RCON_HOST = "127.0.0.1";
 const BACKUP_CRITICAL_JOBS_KEY = "backupCriticalJobsQueue.v1";
 const BACKUP_JOB_RETRY_DELAY_MS = 5000;
@@ -441,6 +464,7 @@ export class BackupService extends EventEmitter {
         failed24h: counts.failed24h,
         scheduleEnabled: policy.enabled,
         hasWorldBackup: latestWorld !== null,
+        serverRunning: this.processes.isActive(server.id),
       });
 
       healthRows.push({
@@ -468,13 +492,16 @@ export class BackupService extends EventEmitter {
         });
       }
       if (policy.enabled && latestWorld === null) {
+        const runningHint = this.processes.isActive(server.id)
+          ? "waiting for the next scheduled cycle"
+          : "start the server so the world schedule can run";
         alerts.push({
           id: `never_backed_up:${server.id}`,
           kind: "never_backed_up",
           severity: "warning",
           serverId: server.id,
           volumePath: null,
-          message: `${server.name}: world schedule is on but no completed world backup exists yet`,
+          message: `${server.name}: world schedule is on but no completed world backup exists yet (${runningHint})`,
         });
       } else if (stale && latestWorld !== null) {
         alerts.push({
@@ -580,7 +607,11 @@ export class BackupService extends EventEmitter {
   }
 
   async runCleanup(options: BackupCleanupOptions): Promise<BackupCleanupResult> {
-    const plan = this.planCleanup(options);
+    const confirmedIds = options.confirmedBackupIds;
+    const plan =
+      confirmedIds !== undefined && confirmedIds !== null
+        ? this.planCleanupFromConfirmedIds(confirmedIds)
+        : this.planCleanup(options);
     let deleted = 0;
     let freedBytes = 0;
     const touched = new Set<string>();
@@ -803,13 +834,10 @@ export class BackupService extends EventEmitter {
     failed24h: number;
     scheduleEnabled: boolean;
     hasWorldBackup: boolean;
+    /** Scheduled world backups only run while the process is active. */
+    serverRunning: boolean;
   }): BackupHealthStatus {
-    if (!input.destinationOk || input.failed24h > 0) return "critical";
-    if (input.stale || (input.scheduleEnabled && !input.hasWorldBackup)) {
-      return "warning";
-    }
-    if (!input.scheduleEnabled && !input.hasWorldBackup) return "unknown";
-    return "ok";
+    return computeBackupServerHealth(input);
   }
 
   private async buildDiskUsage(
@@ -853,6 +881,27 @@ export class BackupService extends EventEmitter {
 
     disks.sort((a, b) => a.volumePath.localeCompare(b.volumePath));
     return disks;
+  }
+
+  private planCleanupFromConfirmedIds(
+    confirmedBackupIds: string[],
+  ): Array<{ backup: BackupRecord; serverName: string; reason: string }> {
+    const uniqueIds = [...new Set(confirmedBackupIds.filter((id) => id.trim().length > 0))];
+    const serversById = new Map(this.servers.list().map((server) => [server.id, server]));
+    const plan: Array<{ backup: BackupRecord; serverName: string; reason: string }> = [];
+
+    for (const id of uniqueIds) {
+      const backup = this.backups.getBackup(id);
+      if (backup === null || backup.status === "running") continue;
+      const server = serversById.get(backup.serverId);
+      plan.push({
+        backup,
+        serverName: server?.name ?? backup.serverId,
+        reason: "confirmed preview",
+      });
+    }
+
+    return plan;
   }
 
   private planCleanup(

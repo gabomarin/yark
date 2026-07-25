@@ -90,7 +90,6 @@ export async function extractZip(zipPath: string, destDir: string): Promise<void
         return;
       }
 
-      zipfile.readEntry();
       zipfile.on("entry", (entry: yauzl.Entry) => {
         let target: string;
         try {
@@ -123,6 +122,8 @@ export async function extractZip(zipPath: string, destDir: string): Promise<void
 
       zipfile.on("end", () => resolve());
       zipfile.on("error", reject);
+      // Attach listeners before the first read — lazyEntries may emit synchronously.
+      zipfile.readEntry();
     });
   });
 }
@@ -142,7 +143,6 @@ export async function readZipTextEntry(
       }
 
       let found = false;
-      zipfile.readEntry();
       zipfile.on("entry", (entry: yauzl.Entry) => {
         const name = entry.fileName.split(sep).join("/");
         if (name !== normalizedWanted) {
@@ -168,6 +168,8 @@ export async function readZipTextEntry(
         if (!found) resolve(null);
       });
       zipfile.on("error", reject);
+      // Attach listeners before the first read — lazyEntries may emit synchronously.
+      zipfile.readEntry();
     });
   });
 }

@@ -5,7 +5,7 @@
  */
 
 import { spawn, type ChildProcess } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
 export const ASA_APP_ID = "2430930";
@@ -48,6 +48,40 @@ export function resolveAsaContentCacheDir(steamCmdHome: string): string {
 
 export function asaAppManifestPath(installOrCacheDir: string): string {
   return join(installOrCacheDir, "steamapps", `appmanifest_${ASA_APP_ID}.acf`);
+}
+
+/** Reads `"buildid"` from an ASA appmanifest, if present. */
+export function readAsaManifestBuildId(installOrCacheDir: string): string | null {
+  const manifestPath = asaAppManifestPath(installOrCacheDir);
+  if (!existsSync(manifestPath)) {
+    return null;
+  }
+  try {
+    const content = readFileSync(manifestPath, "utf8");
+    const buildId = content.match(/"buildid"\s+"([^"]+)"/i)?.[1]?.trim() ?? "";
+    return buildId.length > 0 ? buildId : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * True when the server install already has the same Steam build as the shared
+ * ASA content cache — robocopy would only re-walk the tree for ~no copies.
+ */
+export function canSkipAsaContentSync(cacheDir: string, installDir: string): boolean {
+  const source = resolve(cacheDir);
+  const dest = resolve(installDir);
+  if (source.toLowerCase() === dest.toLowerCase()) {
+    return true;
+  }
+  const cacheBuild = readAsaManifestBuildId(source);
+  const installBuild = readAsaManifestBuildId(dest);
+  return (
+    cacheBuild !== null &&
+    installBuild !== null &&
+    cacheBuild === installBuild
+  );
 }
 
 /**

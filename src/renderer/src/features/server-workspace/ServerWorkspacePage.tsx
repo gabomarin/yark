@@ -38,6 +38,9 @@ interface Props {
   /** One-shot focus for the Logs tab (section / event / update file). */
   logsFocus?: ServerLogsFocus | null;
   onLogsFocusConsumed?: () => void;
+  /** SteamCMD is rewriting this server's install (install/update/verify/sync). */
+  filesJobActive?: boolean;
+  filesJobLabel?: string | null;
   onDismissOnboarding?: () => void;
   onSelectServer: (serverId: string) => void;
   onBack: () => void;
@@ -143,6 +146,12 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
   const runtime = props.statuses.get(selectedServer.id) ?? null;
   const installation = props.installationInfo.get(selectedServer.id) ?? null;
   const serverActive = isServerActive(runtime);
+  const filesJobActive = props.filesJobActive === true;
+  /** Same operational lock as a running server, plus SteamCMD file jobs. */
+  const opsLocked = serverActive || filesJobActive;
+  const filesLockReason =
+    props.filesJobLabel?.trim() ||
+    "SteamCMD is modifying this server's files";
   const serverListPanel = (
     <ServerListPanel
       servers={props.servers}
@@ -157,6 +166,8 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
       server={selectedServer}
       runtime={runtime}
       installation={installation}
+      opsLocked={opsLocked}
+      opsLockReason={filesJobActive ? filesLockReason : undefined}
       onOpenFolder={() => props.onOpenFolder(selectedServer.id)}
       onInstallFiles={() => props.onInstallFiles(selectedServer.id)}
       onUpdateNow={() => props.onUpdateNow(selectedServer.id)}
@@ -175,6 +186,8 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
         server={selectedServer}
         runtime={runtime}
         installation={installation}
+        filesJobActive={filesJobActive}
+        filesJobReason={filesLockReason}
         onBack={handleBack}
         onStart={() => props.onStartServer(selectedServer.id)}
         onStop={() => props.onStopServer(selectedServer.id)}
@@ -191,10 +204,16 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
         {!compactWorkspace && serverListPanel}
 
         <section className={classes.main} data-workspace-scroll>
+          {filesJobActive && (
+            <Alert color="yellow" title="Files job in progress" mb="sm">
+              {filesLockReason}. Install/update/verify, start/restart, install path,
+              and restore are locked (same idea as when the server is running).
+            </Alert>
+          )}
           {assistantOpen ? (
             <ConfigurationWizard
               server={selectedServer}
-              serverActive={serverActive}
+              serverActive={opsLocked}
               onCancel={() => {
                 assistantDirtyRef.current = false;
                 setAssistantOpen(false);
@@ -249,7 +268,8 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
                   key={`${selectedServer.id}:${selectedServer.updatedAt}`}
                   initial={selectedServer}
                   variant="embedded"
-                  serverActive={serverActive}
+                  serverActive={opsLocked}
+                  filesJobActive={filesJobActive}
                   onCancel={handleBack}
                   onSaved={props.onServerUpdated}
                   onOpenConfigurationAssistant={() => {
@@ -270,7 +290,8 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
                   key={`${selectedServer.id}:${iniEditorVersion}`}
                   server={selectedServer}
                   section="iniFiles"
-                  serverActive={serverActive}
+                  serverActive={opsLocked}
+                  filesJobActive={filesJobActive}
                   onDirtyChange={(dirty) => {
                     dirtyRef.current = dirty;
                     setIniDirty(dirty);
@@ -283,6 +304,8 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
                   server={selectedServer}
                   runtime={runtime}
                   embedded
+                  opsLocked={opsLocked}
+                  opsLockReason={filesJobActive ? filesLockReason : undefined}
                 />
               )}
 

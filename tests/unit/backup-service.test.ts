@@ -7,6 +7,7 @@ import { openDatabase } from "@backend/infra/db/database";
 import { BackupRepository } from "@backend/infra/db/backup-repository";
 import {
   BackupService,
+  computeBackupServerHealth,
   formatPlayerSessionNotes,
   playersRetentionKey,
 } from "@backend/domains/backups/backup-service";
@@ -675,10 +676,54 @@ describe("BackupService kinds and retention", () => {
       olderThanDays: null,
       keepLastPerKind: null,
       protectNewestWorld: true,
+      confirmedBackupIds: preview.items.map((item) => item.backup.id),
     });
     expect(result.deleted).toBe(1);
     expect(repo.getBackup(failed.id)).toBeNull();
     expect(repo.getBackup(world.id)).not.toBeNull();
+  });
+
+  it("runCleanup with confirmed ids does not delete newly created backups outside the preview", async () => {
+    const failed = repo.createBackupStart({
+      serverId: profile.id,
+      type: "manual",
+      kind: "world",
+      path: join(installDir, "Backups", "World", "failed-old.zip"),
+      notes: "boom",
+    });
+    repo.failBackup(failed.id, "boom");
+
+    const preview = await service.previewCleanup({
+      serverIds: null,
+      includeFailed: true,
+      enforceRetention: false,
+      olderThanDays: null,
+      keepLastPerKind: null,
+      protectNewestWorld: true,
+    });
+    expect(preview.items.map((item) => item.backup.id)).toEqual([failed.id]);
+
+    const newerFailed = repo.createBackupStart({
+      serverId: profile.id,
+      type: "manual",
+      kind: "world",
+      path: join(installDir, "Backups", "World", "failed-new.zip"),
+      notes: "later",
+    });
+    repo.failBackup(newerFailed.id, "later");
+
+    const result = await service.runCleanup({
+      serverIds: null,
+      includeFailed: true,
+      enforceRetention: false,
+      olderThanDays: null,
+      keepLastPerKind: null,
+      protectNewestWorld: true,
+      confirmedBackupIds: preview.items.map((item) => item.backup.id),
+    });
+    expect(result.deleted).toBe(1);
+    expect(repo.getBackup(failed.id)).toBeNull();
+    expect(repo.getBackup(newerFailed.id)).not.toBeNull();
   });
 
   it("keepLastPerKind cleanup retains N archives per player, not globally", async () => {
@@ -734,5 +779,44 @@ describe("BackupService kinds and retention", () => {
     expect(
       preview.items.every((item) => item.reason.includes("keep last 2/players")),
     ).toBe(true);
+  });
+});
+
+describe("computeBackupServerHealth", () => {
+  it("does not mark schedule-on servers without a world backup as protected", () => {
+    expect(
+      computeBackupServerHealth({
+        destinationOk: true,
+        stale: true,
+        failed24h: 0,
+        scheduleEnabled: true,
+        hasWorldBackup: false,
+        serverRunning: false,
+      }),
+    ).toBe("warning");
+
+    expect(
+      computeBackupServerHealth({
+        destinationOk: true,
+        stale: false,
+        failed24h: 0,
+        scheduleEnabled: true,
+        hasWorldBackup: false,
+        serverRunning: true,
+      }),
+    ).toBe("warning");
+  });
+
+  it("returns ok only when destination is fine and world coverage exists", () => {
+    expect(
+      computeBackupServerHealth({
+        destinationOk: true,
+        stale: false,
+        failed24h: 0,
+        scheduleEnabled: true,
+        hasWorldBackup: true,
+        serverRunning: false,
+      }),
+    ).toBe("ok");
   });
 });

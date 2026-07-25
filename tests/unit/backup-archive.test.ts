@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   extractZip,
+  readZipTextEntry,
   safeExtractTarget,
   zipDirectory,
 } from "@backend/domains/backups/backup-archive";
@@ -106,6 +107,30 @@ describe("backup-archive zip safety", () => {
     await zipDirectory(source, zipPath);
     await extractZip(zipPath, dest);
     expect(await readFile(join(dest, "manifest.json"), "utf8")).toBe('{"ok":true}');
+  });
+
+  it("reads a text entry without extracting the whole archive", async () => {
+    const root = await makeTempDir("ark-zip-read-");
+    const source = join(root, "src");
+    const zipPath = join(root, "meta.zip");
+    await mkdir(source, { recursive: true });
+    await writeFile(join(source, "manifest.json"), '{"kind":"world"}', "utf8");
+    await writeFile(join(source, "other.txt"), "noise", "utf8");
+    await zipDirectory(source, zipPath);
+
+    await expect(readZipTextEntry(zipPath, "manifest.json")).resolves.toBe(
+      '{"kind":"world"}',
+    );
+    await expect(readZipTextEntry(zipPath, "missing.json")).resolves.toBeNull();
+  });
+
+  it("resolves null for an empty zip without hanging", async () => {
+    const root = await makeTempDir("ark-zip-empty-");
+    const source = join(root, "src");
+    const zipPath = join(root, "empty.zip");
+    await mkdir(source, { recursive: true });
+    await zipDirectory(source, zipPath);
+    await expect(readZipTextEntry(zipPath, "manifest.json")).resolves.toBeNull();
   });
 
   it("refuses to extract path-traversal zip entries", async () => {

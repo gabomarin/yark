@@ -48,6 +48,38 @@ describe("steamcmd-content-cache", () => {
     expect(shouldReuseAsaContentCache("update", cacheDir, Date.now())).toBe(false);
     expect(shouldReuseAsaContentCache("verify-files", cacheDir, Date.now())).toBe(false);
   });
+
+  it("skips content sync when cache and install share the same buildid", async () => {
+    const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const {
+      canSkipAsaContentSync,
+      readAsaManifestBuildId,
+    } = await import("@backend/domains/updates/steamcmd-content-cache");
+
+    const root = mkdtempSync(join(tmpdir(), "asa-sync-skip-"));
+    try {
+      const cache = join(root, "cache");
+      const install = join(root, "install");
+      mkdirSync(join(cache, "steamapps"), { recursive: true });
+      mkdirSync(join(install, "steamapps"), { recursive: true });
+      const manifest = `"AppState"\n{\n\t"buildid"\t\t"999001"\n}\n`;
+      writeFileSync(join(cache, "steamapps", `appmanifest_${ASA_APP_ID}.acf`), manifest);
+      writeFileSync(join(install, "steamapps", `appmanifest_${ASA_APP_ID}.acf`), manifest);
+
+      expect(readAsaManifestBuildId(cache)).toBe("999001");
+      expect(canSkipAsaContentSync(cache, install)).toBe(true);
+
+      writeFileSync(
+        join(install, "steamapps", `appmanifest_${ASA_APP_ID}.acf`),
+        `"AppState"\n{\n\t"buildid"\t\t"111"\n}\n`,
+      );
+      expect(canSkipAsaContentSync(cache, install)).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("OperationCancelledError", () => {

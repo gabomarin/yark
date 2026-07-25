@@ -318,6 +318,11 @@ export interface BackupCleanupOptions {
   keepLastPerKind: number | null;
   /** Never delete the newest successful world backup per server. Default true. */
   protectNewestWorld: boolean;
+  /**
+   * Ids from a prior `previewCleanup` snapshot. When set, `runCleanup` deletes
+   * only these records (that still exist) instead of recomputing the plan.
+   */
+  confirmedBackupIds?: string[] | null;
 }
 
 export interface BackupCleanupItem {

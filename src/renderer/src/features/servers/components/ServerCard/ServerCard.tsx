@@ -90,9 +90,11 @@ export function ServerCard(props: Props): JSX.Element {
   const installStateLabel = steamCmdBusy
     ? steamCmdOperation === "verify-files"
       ? "Verifying…"
-      : steamCmdOperation === "update" || steamCmdOperation === "sync-files"
-        ? "Updating…"
-        : "Installing…"
+      : steamCmdOperation === "sync-files"
+        ? "Copying…"
+        : steamCmdOperation === "update"
+          ? "Updating…"
+          : "Installing…"
     : !isInstallationReady
       ? "Not installed"
       : updateAvailable
@@ -117,9 +119,7 @@ export function ServerCard(props: Props): JSX.Element {
         ?? (steamCmdOperation === "verify-files" ? "Verifying" : "SteamCMD in progress…"));
 
   const openWorkspace = () => {
-    if (!steamCmdBusy) {
-      props.onOpenWorkspace();
-    }
+    props.onOpenWorkspace();
   };
 
   const primaryAction =
@@ -221,8 +221,11 @@ export function ServerCard(props: Props): JSX.Element {
           <UnstyledButton
             className={classes.cardHit}
             onClick={openWorkspace}
-            disabled={steamCmdBusy}
-            aria-label={`Open settings for ${server.name}`}
+            aria-label={
+              steamCmdBusy
+                ? `Open ${server.name} (files job in progress)`
+                : `Open settings for ${server.name}`
+            }
           >
             <Group gap="sm" align="center" wrap="nowrap" className={classes.identity}>
               <div className={classes.thumb}>

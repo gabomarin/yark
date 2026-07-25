@@ -265,9 +265,13 @@ export function BackupsPage(props: Props): JSX.Element {
   };
 
   const confirmCleanup = async () => {
+    if (cleanupPreview === null || cleanupPreview.items.length === 0) return;
     setCleanupBusy(true);
     setError(null);
-    const result = await window.api.runBackupCleanup(buildCleanupPayload());
+    const result = await window.api.runBackupCleanup({
+      ...buildCleanupPayload(),
+      confirmedBackupIds: cleanupPreview.items.map((item) => item.backup.id),
+    });
     setCleanupBusy(false);
     if (!result.ok) {
       setError(result.error ?? "Could not run cleanup");

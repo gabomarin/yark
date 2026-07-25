@@ -14,8 +14,10 @@ import type { InstanceLockManager } from "../../orchestration/instance-lock-mana
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
 import {
   buildSteamCmdAppUpdateArgs,
+  canSkipAsaContentSync,
   isOperationCancelledError,
   OperationCancelledError,
+  readAsaManifestBuildId,
   resolveAsaContentCacheDir,
   resolveDepotCacheDir,
   resolveSteamCmdHome,
@@ -437,17 +439,21 @@ export class UpdateService extends EventEmitter {
           );
         }
 
-        await this.instances.start(serverId);
-        const healthy = await this.waitForHealthy(serverId, 90_000);
-        if (!healthy) {
-          throw new Error("Server did not reach running state after update");
+        if (wasRunning) {
+          await this.instances.start(serverId);
+          const healthy = await this.waitForHealthy(serverId, 90_000);
+          if (!healthy) {
+            throw new Error("Server did not reach running state after update");
+          }
         }
 
         this.servers.addEvent(
           serverId,
           "update_completed",
           "info",
-          `Update completed on \"${server.name}\"`,
+          wasRunning
+            ? `Update completed on \"${server.name}\" and the server was restarted`
+            : `Update completed on \"${server.name}\" (left stopped)`,
         );
       } catch (err) {
         this.servers.addEvent(
@@ -477,12 +483,15 @@ export class UpdateService extends EventEmitter {
         for (const backup of preUpdateBackups) {
           await this.backups.restoreBackupForJob(serverId, backup.id);
         }
-        await this.instances.start(serverId);
-        const rollbackHealthy = await this.waitForHealthy(serverId, 90_000);
-        if (!rollbackHealthy) {
-          throw new Error(
-            "Rollback ran but the server did not return to running",
-          );
+
+        if (wasRunning) {
+          await this.instances.start(serverId);
+          const rollbackHealthy = await this.waitForHealthy(serverId, 90_000);
+          if (!rollbackHealthy) {
+            throw new Error(
+              "Rollback ran but the server did not return to running",
+            );
+          }
         }
 
         const backupIds = preUpdateBackups.map((b) => b.id).join(", ");
@@ -493,7 +502,9 @@ export class UpdateService extends EventEmitter {
           `Update automatically rolled back using backups ${backupIds}`,
           {
             what: "The failed update was rolled back using pre-update backups.",
-            cause: "Update failed; manager restored the pre-update archives and restarted the server.",
+            cause: wasRunning
+              ? "Update failed; manager restored the pre-update archives and restarted the server."
+              : "Update failed; manager restored the pre-update archives and left the server stopped.",
             suggestion:
               "Confirm world/players look correct, inspect the update log, then retry the update when ready.",
             context: {
@@ -742,27 +753,39 @@ export class UpdateService extends EventEmitter {
     );
     const syncLabel =
       operation === "verify-files"
-        ? "Applying verified files…"
+        ? "Applying verified files to server…"
         : operation === "install-files"
-          ? "Installing files…"
-          : "Updating files…";
+          ? "Copying files to server…"
+          : "Copying update to server…";
     this.beginFileSync(serverId, syncLabel);
     try {
-      const robocopyCode = await syncAsaContentCacheToInstallDir(contentCacheDir, installDir, {
-        onSpawn: (child) => {
-          this.activeSyncChild = child;
-        },
-        isCancelled: () => this.cancelRequested,
-      });
-      this.activeSyncChild = null;
-      this.appendSteamCmdConsole(
-        `ASA cache sync completed (robocopy=${robocopyCode})`,
-      );
-      this.setProgress(
-        100,
-        operation === "verify-files" ? "Integrity OK" : "Files synced",
-        operation === "verify-files" ? "Verification complete" : "Sync complete",
-      );
+      if (canSkipAsaContentSync(contentCacheDir, installDir)) {
+        const buildId = readAsaManifestBuildId(contentCacheDir);
+        this.appendSteamCmdConsole(
+          `ASA cache sync skipped (install already on build ${buildId ?? "unknown"})`,
+        );
+        this.setProgress(
+          100,
+          operation === "verify-files" ? "Integrity OK" : "Files already in sync",
+          "No copy needed",
+        );
+      } else {
+        const robocopyCode = await syncAsaContentCacheToInstallDir(contentCacheDir, installDir, {
+          onSpawn: (child) => {
+            this.activeSyncChild = child;
+          },
+          isCancelled: () => this.cancelRequested,
+        });
+        this.activeSyncChild = null;
+        this.appendSteamCmdConsole(
+          `ASA cache sync completed (robocopy=${robocopyCode})`,
+        );
+        this.setProgress(
+          100,
+          operation === "verify-files" ? "Integrity OK" : "Files synced",
+          operation === "verify-files" ? "Verification complete" : "Sync complete",
+        );
+      }
     } catch (error) {
       this.activeSyncChild = null;
       this.endFileSync();
@@ -1306,7 +1329,8 @@ export class UpdateService extends EventEmitter {
   private beginFileSync(serverId: string, label: string): void {
     this.syncingServerId = serverId;
     this.syncingStartedAt = new Date().toISOString();
-    this.setProgress(null, label, label);
+    // Keep a mid-high percent so Success! (90%) does not look like a stall at 100%.
+    this.setProgress(93, label, label);
   }
 
   private endFileSync(): void {

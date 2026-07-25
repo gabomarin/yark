@@ -35,8 +35,10 @@ interface Props {
   onSaved: (created?: ServerProfile) => void;
   /** `embedded` = workspace tab (no full-page header). */
   variant?: "page" | "embedded";
-  /** Server in starting/running/stopping → restart warning. */
+  /** Server in starting/running/stopping, or SteamCMD files job → path / ops lock. */
   serverActive?: boolean;
+  /** SteamCMD job specifically — warning copy (ops already covered by serverActive). */
+  filesJobActive?: boolean;
   onOpenConfigurationAssistant?: () => void;
   configurationAssistantDisabled?: boolean;
 }
@@ -126,6 +128,7 @@ export function ServerForm(props: Props): JSX.Element {
   const isCreate = props.initial === null;
   const embedded = props.variant === "embedded";
   const serverActive = props.serverActive === true;
+  const filesJobActive = props.filesJobActive === true;
   const inputSize = embedded ? "sm" : "md";
   const [state, setState] = useState<FormState>(() => toFormState(props.initial));
   const [error, setError] = useState<string | null>(null);
@@ -262,7 +265,14 @@ export function ServerForm(props: Props): JSX.Element {
         </Group>
       )}
 
-      {serverActive && (
+      {filesJobActive && (
+        <Alert color="yellow" title="Files job in progress">
+          You can save profile changes now; avoid touching the install until SteamCMD
+          finishes.
+        </Alert>
+      )}
+
+      {serverActive && !filesJobActive && (
         <Alert color="yellow" title="Server is running">
           You can save changes now; they will apply after the server restarts.
         </Alert>

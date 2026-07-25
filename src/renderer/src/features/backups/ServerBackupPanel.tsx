@@ -44,6 +44,9 @@ interface Props {
   runtime: ServerRuntimeInfo | null;
   /** Compact layout for workspace tab (no outer page chrome). */
   embedded?: boolean;
+  /** Running server or SteamCMD files job — blocks restore (like server active). */
+  opsLocked?: boolean;
+  opsLockReason?: string;
 }
 
 type DraftPolicy = Omit<BackupPolicy, "serverId" | "updatedAt">;
@@ -230,6 +233,10 @@ export function ServerBackupPanel(props: Props): JSX.Element {
   const saveGenRef = useRef(0);
 
   const serverActive = isServerActive(props.runtime);
+  const opsLocked = props.opsLocked === true || serverActive;
+  const opsLockReason =
+    props.opsLockReason ??
+    (serverActive ? "Stop the server before restoring a backup." : undefined);
   const defaultBackupHint = `${props.server.installDir}\\Backups`;
   const activeKindLabel = kindLabel(activeKind);
   const kindBackups = useMemo(
@@ -472,8 +479,10 @@ export function ServerBackupPanel(props: Props): JSX.Element {
   };
 
   const confirmRestore = (backup: BackupRecord) => {
-    if (serverActive) {
-      showBackupError("Stop the server before restoring a backup.");
+    if (opsLocked) {
+      showBackupError(
+        opsLockReason ?? "Stop the server before restoring a backup.",
+      );
       return;
     }
     const label = kindLabel(backup.kind);
@@ -819,9 +828,11 @@ export function ServerBackupPanel(props: Props): JSX.Element {
                 )}
               </Group>
               <Group gap={6} wrap="wrap" align="center">
-                {serverActive && (
+                {opsLocked && (
                   <Badge color="yellow" variant="light" size="sm">
-                    Server active — stop before restore
+                    {props.opsLockReason != null
+                      ? "Files job — restore locked"
+                      : "Server active — stop before restore"}
                   </Badge>
                 )}
                 <Tooltip label="Reload the backup list">
@@ -953,7 +964,11 @@ export function ServerBackupPanel(props: Props): JSX.Element {
                               color="orange"
                               size="sm"
                               aria-label={`Restore backup ${backup.id}`}
-                              disabled={busy || backup.status !== "completed" || serverActive}
+                              disabled={
+                                busy ||
+                                backup.status !== "completed" ||
+                                opsLocked
+                              }
                               onClick={() => confirmRestore(backup)}
                             >
                               <ArrowCounterClockwise size={16} />
