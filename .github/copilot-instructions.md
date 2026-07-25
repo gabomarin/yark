@@ -17,12 +17,19 @@
 - Do not introduce unnecessary native dependencies if a pure Node/TypeScript alternative exists.
 - For Windows paths, preserve compatibility with a real Windows environment.
 
+## Engineering docs
+- Backup subsystem: `docs/backups.md` (ZIP layout, IPC, schedules, fleet health, restore).
+- Cursor Cloud / Linux VM: `AGENTS.md`.
+- Visual UI review: `docs/visual-testing.md`.
+- Broader agent rules: `docs/agent-context.md`.
+
 ## Verification
 - If backend, shared, or critical flows change: run `npm test` and `npm run typecheck`.
 - If renderer, preload, main, or app integration change: run `npm run build`.
 - If main UI flows change: run `npm run e2e` when feasible.
 - If there are visual renderer changes: follow `docs/visual-testing.md` and review with Playwright/Electron at `1280x720`, `1920x1080`, and `2560x1440`.
 - In this repo, for reliable verification, prefer commands via `cmd.exe /c` when the WSL environment fails due to optional Rollup dependencies.
+- On Cursor Cloud Linux agents, see `AGENTS.md` (`ELECTRON_RUN_AS_NODE`, display, expected Windows-path vitest failures).
 
 ## Continuity
 - If several options are reasonable, choose the one that closes the most real items in `.cursor/project-context/TODO.md` with the least risk.
