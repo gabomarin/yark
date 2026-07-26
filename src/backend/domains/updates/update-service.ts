@@ -14,6 +14,7 @@ import type { InstanceLockManager } from "../../orchestration/instance-lock-mana
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
 import {
   buildSteamCmdAppUpdateArgs,
+  canSkipAsaContentSync,
   isOperationCancelledError,
   OperationCancelledError,
   resolveAsaContentCacheDir,
@@ -334,20 +335,15 @@ export class UpdateService extends EventEmitter {
   }
 
   async updateServer(serverId: string): Promise<void> {
-    this.assertServerStoppedForFilesJob(serverId, "update");
+    // May run while the server is active: performUpdateServer captures wasRunning,
+    // stops for SteamCMD, then restarts on success (or after rollback).
     await this.enqueueAndWait("update", serverId);
   }
 
   /** Forces app_update validate (ignores “fresh” cache) and syncs to the server. */
   async verifyServerFiles(serverId: string): Promise<void> {
-    this.assertServerStoppedForFilesJob(serverId, "verify");
+    // Same stop/restart contract as update — do not require a prior manual stop.
     await this.enqueueAndWait("verify-files", serverId);
-  }
-
-  private assertServerStoppedForFilesJob(serverId: string, action: string): void {
-    if (this.processes.isActive(serverId)) {
-      throw new Error(`Stop the server before ${action}`);
-    }
   }
 
   private async performInstallServerFiles(serverId: string): Promise<void> {
@@ -399,19 +395,35 @@ export class UpdateService extends EventEmitter {
         "update_started",
         "info",
         `Starting safe update for \"${server.name}\"`,
+        {
+          what: "Safe update job started (stop if needed → pre-update backup → SteamCMD → restart if it was running).",
+          location: server.installDir,
+          suggestion: wasRunning
+            ? "The manager will stop the server for a consistent pre-update backup and SteamCMD, then restart it if the update succeeds."
+            : "Watch SteamCMD progress. The server will stay stopped after a successful update.",
+          context: {
+            operation: "update",
+            wasRunning,
+            installDir: server.installDir,
+          },
+        },
       );
 
-      const preUpdateBackups = await this.backups.createPreUpdateBackupForJob(serverId);
-
-      if (wasRunning) {
-        await this.instances.stop(serverId);
-      }
-
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      await mkdir(this.updatesLogDir, { recursive: true });
-      const logPath = join(this.updatesLogDir, `${serverId}-${timestamp}.log`);
-
+      let preUpdateBackups: Awaited<
+        ReturnType<BackupService["createPreUpdateBackupForJob"]>
+      > = [];
       try {
+        // Stop before snapshotting — live SavedArks writes would tear rollback archives.
+        if (wasRunning) {
+          await this.instances.stop(serverId);
+        }
+
+        preUpdateBackups = await this.backups.createPreUpdateBackupForJob(serverId);
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        await mkdir(this.updatesLogDir, { recursive: true });
+        const logPath = join(this.updatesLogDir, `${serverId}-${timestamp}.log`);
+
         const cmd = await this.runSteamUpdate(server.installDir, "update", serverId);
         const durationMs = Date.now() - startedAt.getTime();
         await writeFile(
@@ -437,17 +449,21 @@ export class UpdateService extends EventEmitter {
           );
         }
 
-        await this.instances.start(serverId);
-        const healthy = await this.waitForHealthy(serverId, 90_000);
-        if (!healthy) {
-          throw new Error("Server did not reach running state after update");
+        if (wasRunning) {
+          await this.instances.start(serverId);
+          const healthy = await this.waitForHealthy(serverId, 90_000);
+          if (!healthy) {
+            throw new Error("Server did not reach running state after update");
+          }
         }
 
         this.servers.addEvent(
           serverId,
           "update_completed",
           "info",
-          `Update completed on \"${server.name}\"`,
+          wasRunning
+            ? `Update completed on \"${server.name}\" and the server was restarted`
+            : `Update completed on \"${server.name}\" (left stopped)`,
         );
       } catch (err) {
         this.servers.addEvent(
@@ -457,6 +473,18 @@ export class UpdateService extends EventEmitter {
           `Update failed on \"${server.name}\": ${
             err instanceof Error ? err.message : String(err)
           }`,
+          {
+            what: "Safe update failed (backup and/or SteamCMD step).",
+            cause: err instanceof Error ? err.message : String(err),
+            location: server.installDir,
+            suggestion:
+              "Open the Updates tab for the SteamCMD log. A rollback may follow automatically if pre-update backups were taken.",
+            context: {
+              operation: "update",
+              installDir: server.installDir,
+              wasRunning,
+            },
+          },
         );
 
         if (this.processes.isActive(serverId)) {
@@ -466,12 +494,15 @@ export class UpdateService extends EventEmitter {
         for (const backup of preUpdateBackups) {
           await this.backups.restoreBackupForJob(serverId, backup.id);
         }
-        await this.instances.start(serverId);
-        const rollbackHealthy = await this.waitForHealthy(serverId, 90_000);
-        if (!rollbackHealthy) {
-          throw new Error(
-            "Rollback ran but the server did not return to running",
-          );
+
+        if (wasRunning) {
+          await this.instances.start(serverId);
+          const rollbackHealthy = await this.waitForHealthy(serverId, 90_000);
+          if (!rollbackHealthy) {
+            throw new Error(
+              "Rollback ran but the server did not return to running",
+            );
+          }
         }
 
         const backupIds = preUpdateBackups.map((b) => b.id).join(", ");
@@ -480,7 +511,21 @@ export class UpdateService extends EventEmitter {
           "update_rolled_back",
           "warning",
           `Update automatically rolled back using backups ${backupIds}`,
+          {
+            what: "The failed update was rolled back using pre-update backups.",
+            cause: wasRunning
+              ? "Update failed; manager restored the pre-update archives and restarted the server."
+              : "Update failed; manager restored the pre-update archives and left the server stopped.",
+            suggestion:
+              "Confirm world/players look correct, inspect the update log, then retry the update when ready.",
+            context: {
+              backupIds,
+            },
+          },
         );
+
+        // Rollback is recovery, not success — surface failure to the job queue / UI.
+        throw err instanceof Error ? err : new Error(String(err));
       }
     });
   }
@@ -498,6 +543,17 @@ export class UpdateService extends EventEmitter {
         "update_started",
         "info",
         `Verifying file integrity (SteamCMD validate) on "${server.name}"`,
+        {
+          what: "SteamCMD validate job started.",
+          location: server.installDir,
+          suggestion: wasRunning
+            ? "The manager will stop the server for SteamCMD validate, then restart it if verification succeeds."
+            : "Watch SteamCMD progress. The server will stay stopped after a successful verify.",
+          context: {
+            operation: "verify-files",
+            wasRunning,
+          },
+        },
       );
 
       if (wasRunning) {
@@ -722,27 +778,38 @@ export class UpdateService extends EventEmitter {
     );
     const syncLabel =
       operation === "verify-files"
-        ? "Applying verified files…"
+        ? "Applying verified files to server…"
         : operation === "install-files"
-          ? "Installing files…"
-          : "Updating files…";
+          ? "Copying files to server…"
+          : "Copying update to server…";
     this.beginFileSync(serverId, syncLabel);
     try {
-      const robocopyCode = await syncAsaContentCacheToInstallDir(contentCacheDir, installDir, {
-        onSpawn: (child) => {
-          this.activeSyncChild = child;
-        },
-        isCancelled: () => this.cancelRequested,
-      });
-      this.activeSyncChild = null;
-      this.appendSteamCmdConsole(
-        `ASA cache sync completed (robocopy=${robocopyCode})`,
-      );
-      this.setProgress(
-        100,
-        operation === "verify-files" ? "Integrity OK" : "Files synced",
-        operation === "verify-files" ? "Verification complete" : "Sync complete",
-      );
+      if (canSkipAsaContentSync(contentCacheDir, installDir)) {
+        this.appendSteamCmdConsole(
+          "ASA cache sync skipped (install dir is the content cache)",
+        );
+        this.setProgress(
+          100,
+          operation === "verify-files" ? "Integrity OK" : "Files already in sync",
+          "No copy needed",
+        );
+      } else {
+        const robocopyCode = await syncAsaContentCacheToInstallDir(contentCacheDir, installDir, {
+          onSpawn: (child) => {
+            this.activeSyncChild = child;
+          },
+          isCancelled: () => this.cancelRequested,
+        });
+        this.activeSyncChild = null;
+        this.appendSteamCmdConsole(
+          `ASA cache sync completed (robocopy=${robocopyCode})`,
+        );
+        this.setProgress(
+          100,
+          operation === "verify-files" ? "Integrity OK" : "Files synced",
+          operation === "verify-files" ? "Verification complete" : "Sync complete",
+        );
+      }
     } catch (error) {
       this.activeSyncChild = null;
       this.endFileSync();
@@ -1286,7 +1353,8 @@ export class UpdateService extends EventEmitter {
   private beginFileSync(serverId: string, label: string): void {
     this.syncingServerId = serverId;
     this.syncingStartedAt = new Date().toISOString();
-    this.setProgress(null, label, label);
+    // Keep a mid-high percent so Success! (90%) does not look like a stall at 100%.
+    this.setProgress(93, label, label);
   }
 
   private endFileSync(): void {

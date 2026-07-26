@@ -182,12 +182,8 @@ describe("ServerWorkspacePage", () => {
 
     await user.click(screen.getByRole("tab", { name: "Backups" }));
 
-    expect(
-      await screen.findByRole("heading", { name: /Backups for The Island/i }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Create World save backup/i })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /^Backup$/i })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "World save" })).toBeInTheDocument();
-    expect(screen.getByText(/World save history/i)).toBeInTheDocument();
     expect(screen.getByText(/World destination & schedule/i)).toBeInTheDocument();
   });
 

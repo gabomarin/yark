@@ -82,5 +82,24 @@ describe("ServerRepository", () => {
     const events = repo.recentEvents(10);
     expect(events).toHaveLength(2);
     expect(events[0]!.message).toBe("Second");
+    expect(events[0]!.details).toBeNull();
+  });
+
+  it("persists structured event details", () => {
+    repo.addEvent("srv-1", "update_failed", "error", "Update failed", {
+      what: "SteamCMD job failed",
+      cause: "exit 8",
+      location: "C:/steamcmd",
+      suggestion: "Retry after checking the log",
+      context: { exitCode: 8 },
+    });
+    const events = repo.recentEvents(1);
+    expect(events[0]!.details).toEqual({
+      what: "SteamCMD job failed",
+      cause: "exit 8",
+      location: "C:/steamcmd",
+      suggestion: "Retry after checking the log",
+      context: { exitCode: 8 },
+    });
   });
 });

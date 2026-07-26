@@ -23,6 +23,9 @@ const KIND_TABS = [
   { name: "INI", file: "ini" },
 ];
 
+/** Baseline HD world listHeight before compaction (visual-backups pre-change). */
+const BASELINE_HD_WORLD_LIST = 240;
+
 async function measureLayout(page) {
   return page.evaluate(() => {
     const root = document.documentElement;
@@ -31,6 +34,7 @@ async function measureLayout(page) {
     const settingsBox = document.querySelector("[data-world-settings]");
     const listRect = list?.getBoundingClientRect();
     const settingsRect = settingsBox?.getBoundingClientRect();
+    const settingsOpen = settingsBox?.getAttribute("data-settings-open") === "true";
     return {
       viewport: { width: window.innerWidth, height: window.innerHeight },
       hasHorizontalOverflow:
@@ -38,6 +42,7 @@ async function measureLayout(page) {
       listHeight: listRect?.height ?? null,
       listMinHeight: list ? getComputedStyle(list).minHeight : null,
       settingsHeight: settingsRect?.height ?? null,
+      settingsOpen,
       hasWorldSettings: settingsBox !== null,
       emptyVisible: document.querySelector("[data-backup-list-empty]") !== null,
     };
@@ -105,8 +110,24 @@ async function openFirstWorkspace(page, outDir) {
   await firstCard.getByRole("button", { name: /Open settings/i }).click();
   await page.getByRole("tab", { name: "Backups" }).waitFor({ timeout: 10000 });
   await page.getByRole("tab", { name: "Backups" }).click();
-  await page.getByRole("heading", { name: /Backups for /i }).waitFor({ timeout: 10000 });
   await page.getByRole("tab", { name: "World save" }).waitFor({ timeout: 10000 });
+  await page.locator("[data-backup-list]").waitFor({ state: "visible", timeout: 10000 });
+}
+
+async function expandWorldSettings(page) {
+  const box = page.locator("[data-world-settings]");
+  await box.waitFor({ state: "visible", timeout: 5000 });
+  if ((await box.getAttribute("data-settings-open")) === "true") return;
+  await box.getByRole("button").first().click();
+  await page.waitForTimeout(200);
+}
+
+async function collapseWorldSettings(page) {
+  const box = page.locator("[data-world-settings]");
+  if ((await box.count()) === 0) return;
+  if ((await box.getAttribute("data-settings-open")) !== "true") return;
+  await box.getByRole("button").first().click();
+  await page.waitForTimeout(200);
 }
 
 async function run() {
@@ -145,6 +166,7 @@ async function run() {
         await page.waitForTimeout(200);
         await page.locator("[data-backup-list]").waitFor({ state: "visible", timeout: 5000 });
 
+        // Default open metrics (compact settings)
         const metrics = await measureLayout(page);
         assert.equal(
           metrics.hasHorizontalOverflow,
@@ -158,10 +180,34 @@ async function run() {
 
         if (tab.file === "world") {
           assert.ok(metrics.hasWorldSettings, `World settings missing @ ${size.name}`);
-          assert.ok(
-            metrics.settingsHeight !== null && metrics.settingsHeight < 200,
-            `World settings still tall @ ${size.name}: ${metrics.settingsHeight}px`,
+          assert.equal(
+            metrics.settingsOpen,
+            true,
+            `World settings should start open @ ${size.name}`,
           );
+          assert.ok(
+            metrics.settingsHeight !== null && metrics.settingsHeight < 140,
+            `Open world settings still tall @ ${size.name}: ${metrics.settingsHeight}px`,
+          );
+
+          // Collapsed summary still available
+          await collapseWorldSettings(page);
+          const collapsed = await measureLayout(page);
+          assert.equal(collapsed.settingsOpen, false, `World settings collapse failed @ ${size.name}`);
+          assert.ok(
+            collapsed.settingsHeight !== null && collapsed.settingsHeight < 80,
+            `Collapsed world settings still tall @ ${size.name}: ${collapsed.settingsHeight}px`,
+          );
+          await expandWorldSettings(page);
+
+          if (size.name === "hd") {
+            const openAgain = await measureLayout(page);
+            assert.ok(
+              openAgain.listHeight !== null
+                && openAgain.listHeight > BASELINE_HD_WORLD_LIST,
+              `HD world listHeight should improve vs baseline ${BASELINE_HD_WORLD_LIST}: got ${openAgain.listHeight}`,
+            );
+          }
         } else {
           assert.equal(
             metrics.hasWorldSettings,
@@ -169,6 +215,12 @@ async function run() {
             `World settings should hide on ${tab.file} @ ${size.name}`,
           );
         }
+
+        // Create / primary action visible
+        const createBtn = page.getByRole("button", {
+          name: tab.file === "players" ? /Backup all players/i : /^Backup$/i,
+        });
+        await createBtn.waitFor({ state: "visible", timeout: 5000 });
 
         const file = await shot(page, outDir, `${size.name}-${tab.file}`);
         sizeReport.tabs[tab.file] = metrics;

@@ -158,6 +158,10 @@ export class ProcessManager extends EventEmitter {
     return lines.slice(-safeLimit);
   }
 
+  clearRuntimeLog(serverId: string): void {
+    this.runtimeLogs.delete(serverId);
+  }
+
   start(profile: ServerProfile, options?: StartServerOptions): void {
     if (this.isActive(profile.id)) {
       throw new Error(`Server "${profile.name}" is already running`);
