@@ -160,3 +160,12 @@ Before closing the change, record:
 Temporary screenshots do not need to be versioned. If a visual decision must be
 kept as a product reference, its documentation should be added to `docs/` or the
 corresponding plan.
+
+## Project website gallery (separate from this protocol)
+
+The GitHub Pages site ships versioned PNGs under `website/screenshots/`. Those
+are marketing/product references, not Playwright evidence. Refreshing them is
+optional when shipping UI changes; follow [website.md](website.md) (capture size,
+secret redaction, deploy path filters). Completing this visual-testing protocol
+does **not** require updating the public gallery — only update it when the site
+would otherwise misrepresent the app.
