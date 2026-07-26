@@ -40,6 +40,13 @@ jobs:
           esac
           echo "name=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+          # true when SemVer has a prerelease label (e.g. 0.1.0-alpha) or is still 0.x
+          VER="${TAG#v}"
+          if [[ "$VER" == *-* ]] || [[ "$VER" == 0.* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -59,11 +66,15 @@ jobs:
         shell: bash
         run: |
           PKG="$(node -p "require('./package.json').version")"
-          EXPECTED="${{ steps.tag.outputs.version }}"
-          if [ "$PKG" != "$EXPECTED" ]; then
-            echo "::error::package.json version ($PKG) does not match tag ${{ steps.tag.outputs.name }} (expected $EXPECTED)"
-            exit 1
+          TAG_VER="${{ steps.tag.outputs.version }}"
+          # Exact match: v0.1.0-alpha ↔ 0.1.0-alpha
+          # Or channel label on the same base: v0.1.0-alpha ↔ package 0.1.0
+          if [ "$PKG" = "$TAG_VER" ] || [[ "$TAG_VER" == "$PKG"-* ]]; then
+            echo "OK: package.json $PKG matches tag v$TAG_VER"
+            exit 0
           fi
+          echo "::error::package.json version ($PKG) does not match tag ${{ steps.tag.outputs.name }} (expected $PKG or $PKG-<label>)"
+          exit 1
 
       - name: Typecheck
         run: npm run typecheck
@@ -93,7 +104,7 @@ jobs:
           tag_name: ${{ steps.tag.outputs.name }}
           name: YARK server manager ${{ steps.tag.outputs.name }}
           draft: false
-          prerelease: ${{ startsWith(steps.tag.outputs.version, '0.') }}
+          prerelease: ${{ steps.tag.outputs.prerelease == 'true' }}
           generate_release_notes: true
           files: |
             dist/*.exe

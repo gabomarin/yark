@@ -47,10 +47,12 @@ Workflow: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
 
 - **Trigger:** push of tag `v*` (or manual **workflow_dispatch** with an existing tag).
 - **Runner:** `windows-latest` → `npm run package` (electron-builder NSIS).
-- **Gate:** `package.json` `"version"` must equal the tag without the `v` prefix
-  (`v0.2.0` ↔ `0.2.0`).
-- **Output:** GitHub Release with `dist/*.exe` (and `*.yml` metadata). `0.x` tags
-  are marked **prerelease**.
+- **Gate:** `package.json` `"version"` must match the tag without `v`, or the tag may
+  add a channel label on that same base (`v0.1.0` ↔ `0.1.0`, or `v0.1.0-alpha` ↔ `0.1.0`).
+  The NSIS installer still embeds the `package.json` version (not the tag suffix).
+- **Output:** GitHub Release with `dist/*.exe` (and `*.yml` metadata). Tags that are
+  `0.x` or include a SemVer prerelease label (`-alpha`, `-beta.1`, …) are marked
+  **prerelease**.
 - **Signing:** builds are currently **unsigned** (`CSC_IDENTITY_AUTO_DISCOVERY=false`).
   Windows SmartScreen may warn until an Authenticode certificate is configured.
 
