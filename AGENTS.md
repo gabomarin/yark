@@ -12,7 +12,7 @@ Domain runbooks: [docs/backups.md](docs/backups.md), [docs/updates-steamcmd.md](
 Notes specific to running this in the Linux cloud VM:
 
 - Dependencies are refreshed automatically by the startup update script (`npm install`).
-  Node 20+ is required and available.
+  Node 22.5+ is required (`node:sqlite`) and available.
 - Lint/test/build/run all work on Linux. There is no ESLint config; `npm run typecheck`
   (`tsc --noEmit`) is the static-analysis gate. `npm run build` is clean.
 - Running the app: `npm run dev` (dev, HMR) or `npm start` (preview a build). It opens a
