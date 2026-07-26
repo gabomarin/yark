@@ -129,8 +129,23 @@ At each resolution:
 
 The review must include the full screen — shell, sidebar, and adjacent panels —
 in addition to the modified component. If the change affects the server
-workspace, review at least the Server, `Game.ini`, `GameUserSettings.ini`, Mods,
-and Advanced tabs.
+workspace, review at least the Server, `INI Files` (`Game.ini` /
+`GameUserSettings.ini`), Backups, and Logs tabs (mods live on the Server form;
+there is no dedicated Mods tab yet).
+
+## Helper scripts
+
+These are not npm scripts; invoke with Node after a build when a display is
+available. Unset `ELECTRON_RUN_AS_NODE` first (see [AGENTS.md](../AGENTS.md)).
+
+| Script | Purpose |
+| --- | --- |
+| `node scripts/visual-backups.cjs` | Playwright review of fleet / workspace Backups |
+| `node scripts/visual-logs.cjs` | Playwright review of fleet / workspace Logs (expanded event details) |
+| `node scripts/seed-server-logs.cjs [serverName]` | Clear + seed events/update logs into Electron userData (override with `YARK_USER_DATA`) |
+
+Also: `npm run e2e:smoke` / `npm run e2e` launch the compiled app via Playwright
+`_electron` and need a display + `ELECTRON_RUN_AS_NODE` unset.
 
 ## Evidence and closure
 
