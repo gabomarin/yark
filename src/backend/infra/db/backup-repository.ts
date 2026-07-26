@@ -319,14 +319,14 @@ export class BackupRepository {
     if (kind !== undefined) {
       const rows = this.db
         .prepare(
-          "SELECT * FROM backups WHERE server_id = ? AND kind = ? AND status = 'completed' ORDER BY created_at DESC",
+          "SELECT * FROM backups WHERE server_id = ? AND kind = ? AND status = 'completed' ORDER BY completed_at DESC, created_at DESC, rowid DESC",
         )
         .all(serverId, kind) as unknown as BackupRow[];
       return rows.map(rowToBackup);
     }
     const rows = this.db
       .prepare(
-        "SELECT * FROM backups WHERE server_id = ? AND status = 'completed' ORDER BY created_at DESC",
+        "SELECT * FROM backups WHERE server_id = ? AND status = 'completed' ORDER BY completed_at DESC, created_at DESC, rowid DESC",
       )
       .all(serverId) as unknown as BackupRow[];
     return rows.map(rowToBackup);

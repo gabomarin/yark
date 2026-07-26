@@ -494,6 +494,51 @@ describe("BackupService kinds and retention", () => {
     expect(list.some((b) => b.type === "scheduled")).toBe(true);
   });
 
+  it("scheduled cycle measures interval from completedAt, not createdAt", async () => {
+    repo.setPolicy({
+      serverId: profile.id,
+      enabled: true,
+      intervalMinutes: 60,
+      retainCountWorld: 20,
+      retainCountPlayers: 20,
+      retainCountIni: 10,
+      backupDir: null,
+    });
+    const first = (await service.createManualBackup(profile.id, ["world"]))[0]!;
+    // Started long ago, but finished recently — must not schedule again yet.
+    db.prepare(`UPDATE backups SET created_at = ?, completed_at = ? WHERE id = ?`).run(
+      new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+      new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+      first.id,
+    );
+
+    const processes = {
+      isActive: vi.fn(() => true),
+      start: vi.fn(),
+      stop: vi.fn(),
+    } as unknown as ProcessManager;
+    const servers = {
+      get: vi.fn((id: string) => (id === profile.id ? profile : null)),
+      list: vi.fn(() => [profile]),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const settings = {
+      get: vi.fn(() => null),
+      set: vi.fn(),
+    } as unknown as AppSettingsRepository;
+    const scheduled = new BackupService(
+      servers,
+      repo,
+      processes,
+      settings,
+      join(installDir, "_root"),
+    );
+
+    await scheduled.runScheduledCycle();
+    expect(repo.listCompleted(profile.id, "world")).toHaveLength(1);
+    expect(repo.listCompleted(profile.id, "world")[0]?.id).toBe(first.id);
+  });
+
   it("imports orphan zip archives from disk on list/refresh", async () => {
     const created = await service.createManualBackup(profile.id, ["players"]);
     const record = created[0];
@@ -637,6 +682,30 @@ describe("BackupService kinds and retention", () => {
     expect(existsSync(zipPath)).toBe(false);
   });
 
+  it("does not promote a readable non-backup zip left on a running path", async () => {
+    const worldDir = join(installDir, "Backups", "World");
+    await mkdir(worldDir, { recursive: true });
+    const noiseSrc = join(installDir, "_noise-running");
+    await mkdir(noiseSrc, { recursive: true });
+    await writeFile(join(noiseSrc, "notes.txt"), "not a backup layout", "utf8");
+    const { zipDirectory } = await import("@backend/domains/backups/backup-archive");
+    const zipPath = join(worldDir, "running-noise.zip");
+    await zipDirectory(noiseSrc, zipPath);
+
+    const stuck = repo.createBackupStart({
+      serverId: profile.id,
+      type: "manual",
+      kind: "world",
+      path: zipPath,
+      notes: "path reused by unrelated zip",
+    });
+
+    const listed = await service.list(profile.id, 50);
+    expect(listed.find((item) => item.id === stuck.id)?.status).toBe("failed");
+    expect(repo.getBackup(stuck.id)?.status).toBe("failed");
+    expect(existsSync(zipPath)).toBe(false);
+  });
+
   it("keeps a completed backup when retention pruning fails", async () => {
     vi.spyOn(
       service as unknown as { applyRetention: (serverId: string, policy: unknown) => Promise<void> },
@@ -754,12 +823,14 @@ describe("BackupService kinds and retention", () => {
       notes: null,
     });
     repo.failBackup(failed.id, "disk full");
-    // Ensure failure is the newest by created_at.
-    db.prepare(`UPDATE backups SET created_at = ? WHERE id = ?`).run(
+    // Order by finish time (completed_at), not job start.
+    db.prepare(`UPDATE backups SET created_at = ?, completed_at = ? WHERE id = ?`).run(
+      new Date(Date.now() - 120_000).toISOString(),
       new Date(Date.now() - 60_000).toISOString(),
       success.id,
     );
-    db.prepare(`UPDATE backups SET created_at = ? WHERE id = ?`).run(
+    db.prepare(`UPDATE backups SET created_at = ?, completed_at = ? WHERE id = ?`).run(
+      new Date(Date.now() - 30_000).toISOString(),
       new Date().toISOString(),
       failed.id,
     );
@@ -890,14 +961,41 @@ describe("BackupService kinds and retention", () => {
     expect(repo.getBackup(newerFailed.id)).not.toBeNull();
   });
 
+  it("cleanup preview imports orphan backup zips before planning deletes", async () => {
+    const first = (await service.createManualBackup(profile.id, ["world"]))[0]!;
+    const second = (await service.createManualBackup(profile.id, ["world"]))[0]!;
+    // DB lost both rows; zips remain — cleanup must reconcile then apply keep-last.
+    repo.deleteBackupRecord(first.id);
+    repo.deleteBackupRecord(second.id);
+    expect(repo.listBackups(profile.id, 50)).toHaveLength(0);
+
+    const preview = await service.previewCleanup({
+      serverIds: [profile.id],
+      includeFailed: false,
+      enforceRetention: false,
+      olderThanDays: null,
+      keepLastPerKind: 1,
+      protectNewestWorld: false,
+    });
+    expect(repo.listCompleted(profile.id, "world").length).toBeGreaterThanOrEqual(2);
+    expect(preview.items).toHaveLength(1);
+    expect(
+      preview.items.every(
+        (item) => item.backup.path === first.path || item.backup.path === second.path,
+      ),
+    ).toBe(true);
+  });
+
   it("runCleanup re-applies protectNewestWorld when confirming preview ids", async () => {
     const older = (await service.createManualBackup(profile.id, ["world"]))[0]!;
     const middle = (await service.createManualBackup(profile.id, ["world"]))[0]!;
     const newest = (await service.createManualBackup(profile.id, ["world"]))[0]!;
 
     const ageDays = (id: string, days: number) => {
-      db.prepare(`UPDATE backups SET created_at = ? WHERE id = ?`).run(
-        new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString(),
+      const iso = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+      db.prepare(`UPDATE backups SET created_at = ?, completed_at = ? WHERE id = ?`).run(
+        iso,
+        iso,
         id,
       );
     };
@@ -938,34 +1036,36 @@ describe("BackupService kinds and retention", () => {
   it("keepLastPerKind cleanup retains N archives per player, not globally", async () => {
     const playerA = "76561198000000000";
     const playerB = "76561198000000001";
-    const mkPlayer = (eos: string, stamp: string) => {
+    const playersDir = join(installDir, "Backups", "Player profiles");
+    await mkdir(playersDir, { recursive: true });
+    const mkPlayer = async (eos: string, stamp: string) => {
+      const path = join(playersDir, `${eos}-${stamp}.zip`);
+      // Reconcile during cleanup prunes completed rows whose archive is missing.
+      await writeFile(path, "placeholder-zip", "utf8");
       const record = repo.createBackupStart({
         serverId: profile.id,
         type: "player_disconnect",
         kind: "players",
-        path: join(
-          installDir,
-          "Backups",
-          "Player profiles",
-          `${eos}-${stamp}.zip`,
-        ),
+        path,
         notes: formatPlayerSessionNotes("disconnect", eos, eos),
       });
       return repo.completeBackup(record.id, 100)!;
     };
 
-    const a1 = mkPlayer(playerA, "a1");
-    const a2 = mkPlayer(playerA, "a2");
-    const a3 = mkPlayer(playerA, "a3");
-    const b1 = mkPlayer(playerB, "b1");
-    const b2 = mkPlayer(playerB, "b2");
+    const a1 = await mkPlayer(playerA, "a1");
+    const a2 = await mkPlayer(playerA, "a2");
+    const a3 = await mkPlayer(playerA, "a3");
+    const b1 = await mkPlayer(playerB, "b1");
+    const b2 = await mkPlayer(playerB, "b2");
 
-    // Newest-first: a3, a2, a1 and b2, b1.
+    // Newest-first by finish time: a3, a2, a1 and b2, b1.
     const ordered = [a3, a2, a1, b2, b1];
     for (let i = 0; i < ordered.length; i += 1) {
       const backup = ordered[i]!;
-      db.prepare(`UPDATE backups SET created_at = ? WHERE id = ?`).run(
-        new Date(Date.now() - i * 60_000).toISOString(),
+      const iso = new Date(Date.now() - i * 60_000).toISOString();
+      db.prepare(`UPDATE backups SET created_at = ?, completed_at = ? WHERE id = ?`).run(
+        iso,
+        iso,
         backup.id,
       );
     }

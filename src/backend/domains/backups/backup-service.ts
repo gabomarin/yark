@@ -76,6 +76,28 @@ export function computeBackupServerHealth(input: {
   return "ok";
 }
 
+/** Prefer finish time for age/ordering; fall back to start if incomplete. */
+export function backupFinishedAt(backup: BackupRecord): string {
+  return backup.completedAt ?? backup.createdAt;
+}
+
+/** Newest finished (completed/failed) backup by finish time. */
+export function pickLatestFinishedBackup(
+  records: BackupRecord[],
+): BackupRecord | null {
+  let latest: BackupRecord | null = null;
+  let latestStamp = "";
+  for (const row of records) {
+    if (row.status === "running") continue;
+    const stamp = backupFinishedAt(row);
+    if (latest === null || stamp > latestStamp) {
+      latest = row;
+      latestStamp = stamp;
+    }
+  }
+  return latest;
+}
+
 const RCON_HOST = "127.0.0.1";
 const BACKUP_CRITICAL_JOBS_KEY = "backupCriticalJobsQueue.v1";
 const BACKUP_JOB_RETRY_DELAY_MS = 5000;
@@ -433,14 +455,11 @@ export class BackupService extends EventEmitter {
       const completed = records.filter((row) => row.status === "completed");
       const failed24h = records.filter((row) => {
         if (row.status !== "failed") return false;
-        // Prefer when the failure was recorded (completed_at), not when the job started.
-        const failedAt = row.completedAt ?? row.createdAt;
-        return failedAt >= dayAgoIso;
+        return backupFinishedAt(row) >= dayAgoIso;
       });
       const latestWorld = this.backups.latestCompleted(server.id, "world");
-      // Newest non-running attempt (completed or failed) — not the newest success.
-      const latest =
-        records.find((row) => row.status !== "running") ?? null;
+      // Newest finished attempt by completedAt (not job start).
+      const latest = pickLatestFinishedBackup(records);
       const usedBytes = completed.reduce((sum, row) => sum + Math.max(0, row.sizeBytes), 0);
       const destinationOk = isBackupDestinationReachable(resolvedRoot);
 
@@ -451,7 +470,7 @@ export class BackupService extends EventEmitter {
         if (latestWorld === null) {
           stale = true;
         } else {
-          const stamp = latestWorld.completedAt ?? latestWorld.createdAt;
+          const stamp = backupFinishedAt(latestWorld);
           const ageMs = now - new Date(stamp).getTime();
           stale =
             Number.isFinite(ageMs) &&
@@ -589,6 +608,7 @@ export class BackupService extends EventEmitter {
   }
 
   async previewCleanup(options: BackupCleanupOptions): Promise<BackupCleanupPreview> {
+    await this.reconcileServersForCleanup(options);
     const plan = this.planCleanup(options);
     const byServerMap = new Map<
       string,
@@ -615,6 +635,7 @@ export class BackupService extends EventEmitter {
   }
 
   async runCleanup(options: BackupCleanupOptions): Promise<BackupCleanupResult> {
+    await this.reconcileServersForCleanup(options);
     const confirmedIds = options.confirmedBackupIds;
     // Always recompute rules (incl. protectNewestWorld). Confirmed ids only
     // narrow the fresh plan so preview cannot delete a newly protected world.
@@ -758,9 +779,10 @@ export class BackupService extends EventEmitter {
 
       const latestWorld = this.backups.latestCompleted(server.id, "world");
       if (latestWorld !== null) {
-        const elapsedMs = Date.now() - Date.parse(latestWorld.createdAt);
+        const finishedAt = backupFinishedAt(latestWorld);
+        const elapsedMs = Date.now() - Date.parse(finishedAt);
         const requiredMs = policy.intervalMinutes * 60 * 1000;
-        if (elapsedMs < requiredMs) continue;
+        if (Number.isFinite(elapsedMs) && elapsedMs < requiredMs) continue;
       }
 
       if (!this.processes.isActive(server.id)) continue;
@@ -997,7 +1019,7 @@ export class BackupService extends EventEmitter {
       if (cutoffIso !== null) {
         for (const backup of records) {
           if (backup.status !== "completed") continue;
-          if (backup.createdAt < cutoffIso) {
+          if (backupFinishedAt(backup) < cutoffIso) {
             mark(backup, server.name, `older than ${olderThanDays}d`);
           }
         }
@@ -1038,8 +1060,26 @@ export class BackupService extends EventEmitter {
     }
 
     return [...selected.values()].sort((a, b) =>
-      b.backup.createdAt.localeCompare(a.backup.createdAt),
+      backupFinishedAt(b.backup).localeCompare(backupFinishedAt(a.backup)),
     );
+  }
+
+  /** Import orphan archives before cleanup so disk-only zips are eligible. */
+  private async reconcileServersForCleanup(
+    options: BackupCleanupOptions,
+  ): Promise<void> {
+    const allServers = this.servers.list();
+    const selectedIds =
+      options.serverIds !== null && options.serverIds.length > 0
+        ? new Set(options.serverIds)
+        : null;
+    const servers =
+      selectedIds === null
+        ? allServers
+        : allServers.filter((server) => selectedIds.has(server.id));
+    for (const server of servers) {
+      await this.reconcileDiskBackups(server.id);
+    }
   }
 
   private async flushWorldIfActive(serverId: string): Promise<void> {
@@ -1740,8 +1780,8 @@ export class BackupService extends EventEmitter {
 
   /**
    * After a crash/kill, running rows may be stuck:
-   * - finished readable zip → promote to completed (restorable)
-   * - missing / empty / unreadable zip → fail so the UI can clear them
+   * - finished readable backup-layout zip → promote to completed (restorable)
+   * - missing / empty / unreadable / non-backup zip → fail so the UI can clear them
    * Live creates (creatingBackupIds) are left alone.
    */
   private async reconcileInterruptedRunningBackups(serverId: string): Promise<number> {
@@ -1753,7 +1793,8 @@ export class BackupService extends EventEmitter {
 
       if (isZipBackupPath(backup.path) && existsSync(backup.path)) {
         const readable = await isReadableZipArchive(backup.path);
-        if (readable) {
+        const hasLayout = readable ? await zipHasBackupLayout(backup.path) : false;
+        if (readable && hasLayout) {
           try {
             const info = await stat(backup.path);
             const completed = this.backups.completeBackup(backup.id, info.size);
@@ -1771,21 +1812,23 @@ export class BackupService extends EventEmitter {
           continue;
         }
 
-        // Partial/corrupt zip from an interrupted write — not restorable.
+        // Partial/corrupt/non-backup zip — not restorable.
         await rm(backup.path, { force: true }).catch(() => undefined);
-        this.backups.failBackup(
-          backup.id,
-          "Interrupted while writing archive (incomplete or unreadable zip)",
-        );
+        const reason = readable
+          ? "Interrupted backup path held a non-backup zip"
+          : "Interrupted while writing archive (incomplete or unreadable zip)";
+        this.backups.failBackup(backup.id, reason);
         changed += 1;
         this.servers.addEvent(
           serverId,
           "error",
           "warning",
-          `Interrupted ${backup.kind} backup marked failed (incomplete zip): ${basename(backup.path)}`,
+          `Interrupted ${backup.kind} backup marked failed (${
+            readable ? "non-backup zip" : "incomplete zip"
+          }): ${basename(backup.path)}`,
           {
-            what: "A backup was interrupted while the archive was still being written.",
-            cause: "Incomplete or unreadable zip on disk after a crash or kill.",
+            what: "A backup was interrupted and the archive on disk is not a restorable backup.",
+            cause: reason,
             location: backup.path,
             suggestion: "Create the backup again from the server Backups tab.",
             context: { kind: backup.kind, backupId: backup.id },
