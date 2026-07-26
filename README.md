@@ -53,7 +53,9 @@ npm run build
 npm run package
 ```
 
-> On WSL or non-native shells, verification is often more reliable via `cmd.exe /c` when Rollup or Electron optional dependencies misbehave.
+> The product target is **Windows** (ASA binaries, SteamCMD, PowerShell/robocopy). On WSL or non-native shells, verification is often more reliable via `cmd.exe /c` when Rollup or Electron optional dependencies misbehave.
+>
+> Cursor Cloud / Linux agent VMs can still install, typecheck, build, and run the Electron UI for development — see [AGENTS.md](AGENTS.md) for display, `ELECTRON_RUN_AS_NODE`, and expected Linux vitest path failures.
 
 ## Project website (GitHub Pages)
 
@@ -72,16 +74,14 @@ Includes a feature screenshot gallery under `website/screenshots/` (overview, se
 
 If the workflow still fails on `configure-pages` with “Get Pages site failed / Not Found”, the Source is still not set to GitHub Actions. The workflow also passes `enablement: true` so it can create the Pages site when the token is allowed to do so.
 
-Edit `website/index.html` / `styles.css` for copy, and `website/screenshots/` when UI shots go stale; pushes that touch `website/**` redeploy the page.
+Edit `website/index.html` (and `styles.css`) for copy updates; pushes that touch `website/**` redeploy the page.
 
 ## Engineering docs
 
-- [docs/backups.md](docs/backups.md) — ZIP backup kinds, reconcile, fleet health, IPC, restore
-- [docs/updates-steamcmd.md](docs/updates-steamcmd.md) — SteamCMD caches, safe update/verify, progress
-- [docs/logs.md](docs/logs.md) — operational logs, event details, clear/seed helpers
-- [docs/website.md](docs/website.md) — GitHub Pages site, screenshot gallery, deploy/capture checklist
+- [docs/backups.md](docs/backups.md) — backup kinds, ZIP layout, IPC, schedules, player sessions, fleet health, restore, troubleshooting
 - [AGENTS.md](AGENTS.md) — Cursor Cloud / Linux VM run notes (display, Electron, tests, e2e pitfalls)
-- [docs/visual-testing.md](docs/visual-testing.md) — required Playwright review for visible UI changes
+- [docs/updates-steamcmd.md](docs/updates-steamcmd.md) — SteamCMD caches, install/update/verify, safe update, availability checks
+- [docs/visual-testing.md](docs/visual-testing.md) — required Playwright review for visible UI changes (+ helper scripts)
 - [docs/versioning.md](docs/versioning.md) and [CHANGELOG.md](CHANGELOG.md) — SemVer and release notes
 - [docs/agent-context.md](docs/agent-context.md) and [.github/copilot-instructions.md](.github/copilot-instructions.md) — AI-assisted work rules
 

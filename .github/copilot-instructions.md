@@ -17,12 +17,11 @@
 - Do not introduce unnecessary native dependencies if a pure Node/TypeScript alternative exists.
 - For Windows paths, preserve compatibility with a real Windows environment.
 
-## Engineering runbooks
-- Backups (ZIP kinds, reconcile, fleet health): `docs/backups.md`
-- SteamCMD / safe update: `docs/updates-steamcmd.md`
-- Operational logs / event details: `docs/logs.md`
-- GitHub Pages site / screenshot gallery: `docs/website.md`
-- Cursor Cloud VM notes: `AGENTS.md`
+## Engineering docs
+- Backup subsystem: `docs/backups.md` (ZIP layout, IPC, schedules, fleet health, restore).
+- Cursor Cloud / Linux VM: `AGENTS.md`.
+- Visual UI review: `docs/visual-testing.md`.
+- Broader agent rules: `docs/agent-context.md`.
 
 ## Verification
 - If backend, shared, or critical flows change: run `npm test` and `npm run typecheck`.
@@ -31,6 +30,7 @@
 - If there are visual renderer changes: follow `docs/visual-testing.md` and review with Playwright/Electron at `1280x720`, `1920x1080`, and `2560x1440`.
 - If the GitHub Pages site or `website/screenshots/` change: follow `docs/website.md` (path-filtered deploy, secret redaction, version pill sync).
 - In this repo, for reliable verification, prefer commands via `cmd.exe /c` when the WSL environment fails due to optional Rollup dependencies.
+- On Cursor Cloud / Linux agents, follow root `AGENTS.md` (display, `ELECTRON_RUN_AS_NODE`, expected Windows-path vitest failures). SteamCMD/update workflows: `docs/updates-steamcmd.md`.
 
 ## Continuity
 - If several options are reasonable, choose the one that closes the most real items in `.cursor/project-context/TODO.md` with the least risk.

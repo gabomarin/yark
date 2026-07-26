@@ -68,5 +68,4 @@ Skip:
 
 Public reviewers should treat `0.x` builds as evolving. Call out WIP limitations
 in the release notes (e.g. Mods tab deferred, placeholder Clusters/Settings pages)
-so expectations stay aligned with the README. Sidebar and workspace Backups are
-already live.
+so expectations stay aligned with the README.

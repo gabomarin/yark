@@ -91,19 +91,12 @@ Zip extract rejects zip-slip paths. Listeners are registered **before**
 
 ## Disk ↔ DB reconcile
 
-`list` / fleet summary / cleanup prep call `reconcileDiskBackups` (serialized
-per server). Order matters:
+`list` / fleet summary call `reconcileDiskBackups` (serialized per server):
 
-1. **Interrupted `running` rows** — if a readable backup-layout ZIP exists,
-   promote to `completed` using the zip’s **mtime** (not wall clock). Incomplete
-   / non-backup / missing zips become `failed`. Live creates in
-   `creatingBackupIds` are left alone.
-2. **Prune missing paths** — drop completed rows whose archive path is gone;
-   keep `failed` history; skip `running`.
-3. **Orphan import** — import `.zip` and legacy folder archives from kind dirs
-   and the legacy flat root. Reuse `manifest.json` backup `id` when free;
-   **mint a new id** when that id is already in the DB (copied archives must
-   not collide).
+1. Drop DB rows whose archive path is gone (skip `running` / keep `failed` history).
+2. Import `.zip` and legacy folder archives present on disk but missing from SQLite.
+3. Reuse `manifest.json` backup `id` when free; **mint a new id** when that id is
+   already in the DB (copied archives must not collide).
 
 ## Public IPC
 
@@ -126,7 +119,7 @@ Related (not under `backups:*`):
 
 - `ini:save` → best-effort `createIniSaveBackup` (errors swallowed in the handler).
 - `logs:list` includes backup rows in operational logs.
-- Push: `push:backups-changed` (`BackupsChangedPush` with `serverId`).
+- Push: `push:backups-changed` (`BackupChangedPush` with `serverId`).
 - Events: `backup_created`, `backup_deleted`, `backup_restored` (plus `error` on failures).
 
 Internal only (no IPC): scheduled create, player-session create, pre-update queue,
@@ -165,20 +158,15 @@ UI restore is direct. Update rollback uses the queued `restoreBackupForJob` path
 
 ### Fleet health and alerts
 
-`getFleetSummary` / sidebar **Backups** page (`computeBackupServerHealth`):
+`getFleetSummary` / sidebar **Backups** page:
 
-| Signal | Gating |
-| --- | --- |
-| **Stale** | Schedule on **and** process active, and last completed world older than `intervalMinutes × 1.5` (or none yet while active) |
-| **`never_backed_up` alert** | Schedule on and no completed world — **including stopped** servers (message hints to start the server so the schedule can run) |
-| Health `warning` for no world | Schedule on + no completed world — **not** gated on process active |
-| Health `critical` | Bad destination **or** any failed **world** backup in 24h |
-| Health `warning` (other) | Any failures in 24h, or stale |
-| Health `unknown` | Schedule off and no world backup |
-
-Disk alerts use settings key `backupDiskAlerts.v1` (defaults: warn 85% / critical 95% / free under 20 GiB).
-
-Cleanup: `previewCleanup` / `runCleanup`. Newest world can be protected (`protectNewestWorld` default true). `confirmedBackupIds` are re-checked on run; cannot delete `running`.
+- **Stale** / **never backed up** only apply when the schedule is on **and** the
+  process is active. Stopped servers are not warned for an elapsed interval —
+  scheduled world backups do not run while inactive.
+- Stale threshold: last completed world backup older than `intervalMinutes × 1.5`.
+- Health: `critical` (missing destination or failures in 24h) → `warning` (stale /
+  never-backed-up while active) → `unknown` (schedule off and no world backup) → `ok`.
+- Disk alerts use settings key `backupDiskAlerts.v1` (defaults: warn 85% / critical 95% / free under 20 GiB).
 
 ### Fleet UI quiet refresh
 
@@ -187,8 +175,6 @@ Cleanup: `previewCleanup` / `runCleanup`. Newest world can be protected (`protec
 - Refreshes the fleet summary without flipping the page loading spinner.
 - Does **not** overwrite in-progress policy or disk-alert draft edits.
 - Initial load and explicit Refresh remain non-quiet (reset drafts from server).
-
-Workspace **Backups** auto-refreshes about every **12s** (quiet) plus the push channel.
 
 ### Player sessions
 
@@ -218,7 +204,6 @@ After a successful `ini:save`, `createIniSaveBackup` debounces **2s** per server
 - Key: `backupCriticalJobsQueue.v1` in app settings.
 - Types: `pre-update-backup` | `restore`; max **3** attempts, **5s** delay; survives restart.
 - Pre-update creates **world + players + ini** (`CRITICAL_BACKUP_KINDS`).
-- Safe update stops the server **before** this snapshot — see [updates-steamcmd.md](updates-steamcmd.md).
 
 ## UI surfaces
 
@@ -232,12 +217,11 @@ After a successful `ini:save`, `createIniSaveBackup` debounces **2s** per server
 | --- | --- | --- |
 | Hot backup looks stale | `SaveWorld` failed or RCON unreachable | Profile `rconPort` / `adminPassword`; process must be active for flush |
 | No scheduled backups | Policy off, interval not elapsed, or server not running | `enabled`, `intervalMinutes`, runtime status |
-| Stopped server shows “never backed up” | Expected while schedule is on and no world exists yet | Start the server so the world schedule can run; stale age warnings stay gated on active |
+| Stopped server shows “never backed up” / stale | Bug if still present — health should ignore inactive processes | Confirm build includes process-active gating in fleet summary |
 | Missing player session archive | Short session + RCON miss, or profile not flushed | Watcher mtime safety net; disconnect wait; exact player-key stem |
 | Restore rejected | Server still active or backup not `completed` | Stop the server; only completed backups restore |
 | Empty ZIP restore hangs | Listeners must be registered before `readEntry` | `extractZip` in `backup-archive.ts` |
 | Copied archive missing / wrong id | Manifest id already in DB | Reconcile mints a new id when the manifest id is taken |
-| Stuck `running` after crash | Interrupted reconcile | Readable layout zip → completed (mtime); else failed |
 | Retention not shrinking | Failed / running rows | Only **completed** backups count toward retain N |
 | Empty player session backup missing from history | By design | Empty per-player archives are deleted so they do not consume retention |
 | Fleet draft fields reset while editing | Non-quiet reload | Policy/disk drafts refresh only on non-quiet `load()` |
@@ -261,8 +245,8 @@ npm run typecheck
 
 Key unit coverage: `tests/unit/backup-service.test.ts`, `player-session-watcher.test.ts`,
 `list-players.test.ts`, `backup-repository.test.ts`, `backup-player-meta.test.ts`,
-`backup-archive.test.ts`, `backup-disk.test.ts`.
+and archive helpers under `tests/unit/` matching `backup-archive`.
 
 Renderer smoke: `src/renderer/src/features/backups/*.test.tsx`. For visible UI
 changes, follow [visual-testing.md](visual-testing.md)
-(`node scripts/visual-backups.cjs` after `npm run build`).
+(`scripts/visual-backups.cjs` exists for Playwright review).
