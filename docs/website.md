@@ -8,7 +8,8 @@ Temporary public project page for YARK server manager. Static HTML/CSS under
 
 - Give contributors and reviewers a short product overview without cloning the app.
 - Show current UI via a small screenshot gallery (`#screenshots`).
-- Stay honest that the app is a private preview, not a public release.
+- Stay honest that early builds are a **public prerelease** (GitHub Releases), not a
+  finished / production-ready product.
 
 This is **not** the desktop app’s renderer. Do not put Electron/React runtime
 docs here; keep engineering runbooks under [`docs/`](./).
