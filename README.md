@@ -36,7 +36,7 @@ Expect gaps, rough edges, and behavior changes between builds.
 ## Requirements
 
 - Windows (to run the desktop app)
-- Node.js 20+ (a recent version compatible with Electron/Vite)
+- Node.js 22.5+ (built-in `node:sqlite`; a recent version compatible with Electron/Vite)
 - npm
 
 ## Local development
