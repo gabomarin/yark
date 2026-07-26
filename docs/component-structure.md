@@ -97,7 +97,20 @@ Reference implementation: `src/renderer/src/features/clusters/`.
 - God hooks that return 20 fields and the entire UI config.
 - Splitting CSS into one file per 10-line component unless styles collide.
 
+## Automated gate
+
+`npm run lint` (Husky pre-commit/pre-push + CI) enforces a soft size
+cap on `src/renderer/src/features/**/*.{ts,tsx}` (excluding `*.test.*`):
+
+- New/ungrandfathered files must stay ≤ **350** lines.
+- Existing mega-files are listed in
+  [`scripts/component-structure-baseline.json`](../scripts/component-structure-baseline.json)
+  and must not grow by more than **25** lines without an intentional baseline update
+  (prefer splitting instead; see
+  [issue #44](https://github.com/gabomarin/yark/issues/44)).
+
 ## Related docs
 
 - Shell / feature status: [agent-context.md](agent-context.md)
 - Visual review after layout splits: [visual-testing.md](visual-testing.md)
+- Hooks + CI: [README.md](../README.md) (Local development), [AGENTS.md](../AGENTS.md)

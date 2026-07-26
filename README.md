@@ -46,12 +46,28 @@ npm install
 npm run dev
 ```
 
+`npm install` also installs [Husky](https://typicode.github.io/husky/) git hooks (no extra setup).
+
 ```bash
 npm test
 npm run typecheck
+npm run lint
 npm run build
 npm run package
 ```
+
+### Git hooks
+
+| Hook | Runs |
+| --- | --- |
+| **pre-commit** | `typecheck` + `lint` |
+| **pre-push** | `typecheck` + `test` + `lint` (~30–60s; hooks print progress — after typecheck, vitest can look idle for a bit) |
+
+`npm run lint` currently enforces feature-file size limits (see [docs/component-structure.md](docs/component-structure.md)); it is the placeholder for a fuller linter later.
+
+Skip only in a real emergency: `git commit --no-verify` / `git push --no-verify`, or set `HUSKY=0`. Do **not** skip to land broken typecheck/tests — CI will still fail on PRs and `main`.
+
+GitHub Actions CI (`.github/workflows/ci.yml`) on every PR and push to `main`: **typecheck**, **lint**, **test**, and **build** on `windows-latest`. Playwright e2e / visual review stay local (see [docs/visual-testing.md](docs/visual-testing.md)).
 
 > The product target is **Windows** (ASA binaries, SteamCMD, PowerShell/robocopy). On WSL or non-native shells, verification is often more reliable via `cmd.exe /c` when Rollup or Electron optional dependencies misbehave.
 >

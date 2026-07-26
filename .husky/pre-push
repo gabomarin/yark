@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+set -e
+echo "husky (pre-push): typecheck..."
+npm run typecheck
+echo "husky (pre-push): typecheck ok — running tests (often ~30–60s, silent at first)..."
+npm test
+echo "husky (pre-push): lint..."
+npm run lint
+echo "husky (pre-push): ok"

@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+set -e
+echo "husky (pre-commit): typecheck..."
+npm run typecheck
+echo "husky (pre-commit): lint..."
+npm run lint
+echo "husky (pre-commit): ok"
