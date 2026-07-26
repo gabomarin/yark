@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="YARK">
+  <title>YARK mark (signal)</title>
+  <rect width="128" height="128" rx="24" fill="#1a1d24"/>
+  <g fill="#9aa3b2">
+    <rect x="30" y="70" width="16" height="30" rx="3"/>
+    <rect x="56" y="48" width="16" height="52" rx="3"/>
+    <rect x="82" y="26" width="16" height="74" rx="3"/>
+  </g>
+  <path fill="#9aa3b2" d="M90 26h16l-8 18z"/>
+</svg>
