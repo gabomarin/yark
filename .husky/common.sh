@@ -15,8 +15,10 @@ npm_host() {
       echo "Run git commit/push from Windows PowerShell (Node 22.5+), not WSL."
       exit 1
     fi
-    win_cwd=$(wslpath -w "$PWD")
-    echo "husky: WSL detected — using Windows Node in ${win_cwd}"
+    # wslpath -w yields backslashes; sh treats \a \n etc. as escapes inside "...".
+    # cmd.exe accepts forward slashes, so normalize before quoting.
+    win_cwd=$(wslpath -w "$PWD" | tr '\\' '/')
+    printf 'husky: WSL detected — using Windows Node in %s\n' "$win_cwd"
     cmd.exe /c "cd /d \"${win_cwd}\" && npm $*"
     return $?
   fi
