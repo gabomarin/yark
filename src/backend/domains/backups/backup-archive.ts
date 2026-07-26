@@ -229,3 +229,54 @@ export async function isReadableZipArchive(zipPath: string): Promise<boolean> {
     });
   });
 }
+
+function isBackupLayoutZipEntry(entryName: string): boolean {
+  const name = entryName.replace(/\\/g, "/");
+  if (name === "manifest.json") return true;
+  if (name === "SavedArks" || name.startsWith("SavedArks/")) return true;
+  if (name === "PlayerProfiles" || name.startsWith("PlayerProfiles/")) return true;
+  if (name === "ConfigWindowsServer" || name.startsWith("ConfigWindowsServer/")) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * True when the zip looks like a YARK/legacy backup (manifest or known layout
+ * roots). Unrelated archives under the backup tree must not be imported.
+ */
+export async function zipHasBackupLayout(zipPath: string): Promise<boolean> {
+  return await new Promise<boolean>((resolvePromise, reject) => {
+    yauzl.open(zipPath, { lazyEntries: true }, (openErr, zipfile) => {
+      if (openErr !== null || zipfile === undefined) {
+        reject(openErr ?? new Error("Could not open zip archive"));
+        return;
+      }
+
+      let settled = false;
+      const finish = (value: boolean): void => {
+        if (settled) return;
+        settled = true;
+        zipfile.close();
+        resolvePromise(value);
+      };
+      const fail = (err: unknown): void => {
+        if (settled) return;
+        settled = true;
+        zipfile.close();
+        reject(err instanceof Error ? err : new Error(String(err)));
+      };
+
+      zipfile.on("entry", (entry: yauzl.Entry) => {
+        if (isBackupLayoutZipEntry(entry.fileName)) {
+          finish(true);
+          return;
+        }
+        zipfile.readEntry();
+      });
+      zipfile.on("end", () => finish(false));
+      zipfile.on("error", fail);
+      zipfile.readEntry();
+    });
+  });
+}

@@ -509,6 +509,21 @@ describe("BackupService kinds and retention", () => {
     expect(listed.find((b) => b.path === record.path)?.kind).toBe("players");
   });
 
+  it("does not import unrelated zips that lack backup layout", async () => {
+    const worldDir = join(installDir, "Backups", "World");
+    await mkdir(worldDir, { recursive: true });
+    const noiseSrc = join(installDir, "_noise-src");
+    await mkdir(noiseSrc, { recursive: true });
+    await writeFile(join(noiseSrc, "notes.txt"), "random archive", "utf8");
+    const { zipDirectory } = await import("@backend/domains/backups/backup-archive");
+    const noiseZip = join(worldDir, "random-notes.zip");
+    await zipDirectory(noiseSrc, noiseZip);
+
+    const listed = await service.list(profile.id, 50);
+    expect(listed.some((row) => row.path === noiseZip)).toBe(false);
+    expect(repo.getBackupByPath(profile.id, noiseZip)).toBeNull();
+  });
+
   it("drops DB rows when the archive was deleted from disk", async () => {
     const created = await service.createManualBackup(profile.id, ["ini"]);
     const record = created[0];
@@ -727,6 +742,32 @@ describe("BackupService kinds and retention", () => {
     expect(summary.stats.totalBackupBytes).toBeGreaterThan(0);
     expect(summary.diskSettings.warnUsedPercent).toBe(85);
     expect(summary.disks.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("shows the newest failed attempt as fleet latest, not an older success", async () => {
+    const success = (await service.createManualBackup(profile.id, ["world"]))[0]!;
+    const failed = repo.createBackupStart({
+      serverId: profile.id,
+      type: "scheduled",
+      kind: "world",
+      path: join(installDir, "Backups", "World", "newer-failed.zip"),
+      notes: null,
+    });
+    repo.failBackup(failed.id, "disk full");
+    // Ensure failure is the newest by created_at.
+    db.prepare(`UPDATE backups SET created_at = ? WHERE id = ?`).run(
+      new Date(Date.now() - 60_000).toISOString(),
+      success.id,
+    );
+    db.prepare(`UPDATE backups SET created_at = ? WHERE id = ?`).run(
+      new Date().toISOString(),
+      failed.id,
+    );
+
+    const summary = await service.getFleetSummary();
+    expect(summary.servers[0]?.latest?.id).toBe(failed.id);
+    expect(summary.servers[0]?.latest?.status).toBe("failed");
+    expect(summary.servers[0]?.latestWorld?.id).toBe(success.id);
   });
 
   it("counts failed24h by failure time (completedAt), not job start", async () => {

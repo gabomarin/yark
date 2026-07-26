@@ -9,6 +9,7 @@ import {
   readZipTextEntry,
   safeExtractTarget,
   zipDirectory,
+  zipHasBackupLayout,
 } from "@backend/domains/backups/backup-archive";
 
 const tmpDirs: string[] = [];
@@ -161,5 +162,29 @@ describe("backup-archive zip safety", () => {
     await expect(isReadableZipArchive(goodZip)).resolves.toBe(true);
     await expect(isReadableZipArchive(badZip)).resolves.toBe(false);
     await expect(isReadableZipArchive(join(root, "missing.zip"))).resolves.toBe(false);
+  });
+
+  it("requires manifest or known layout roots for backup zips", async () => {
+    const root = await makeTempDir("ark-zip-layout-");
+    const withManifest = join(root, "manifest-src");
+    const withSavedArks = join(root, "saved-src");
+    const unrelated = join(root, "noise-src");
+    await mkdir(withManifest, { recursive: true });
+    await mkdir(join(withSavedArks, "SavedArks"), { recursive: true });
+    await mkdir(unrelated, { recursive: true });
+    await writeFile(join(withManifest, "manifest.json"), '{"backup":{}}', "utf8");
+    await writeFile(join(withSavedArks, "SavedArks", "map.ark"), "WORLD", "utf8");
+    await writeFile(join(unrelated, "readme.txt"), "not a backup", "utf8");
+
+    const manifestZip = join(root, "manifest.zip");
+    const savedZip = join(root, "saved.zip");
+    const noiseZip = join(root, "noise.zip");
+    await zipDirectory(withManifest, manifestZip);
+    await zipDirectory(withSavedArks, savedZip);
+    await zipDirectory(unrelated, noiseZip);
+
+    await expect(zipHasBackupLayout(manifestZip)).resolves.toBe(true);
+    await expect(zipHasBackupLayout(savedZip)).resolves.toBe(true);
+    await expect(zipHasBackupLayout(noiseZip)).resolves.toBe(false);
   });
 });

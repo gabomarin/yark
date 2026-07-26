@@ -38,6 +38,7 @@ import {
   kindFromSubdirName,
   readZipTextEntry,
   zipDirectory,
+  zipHasBackupLayout,
 } from "./backup-archive";
 import {
   isBackupDestinationReachable,
@@ -437,10 +438,9 @@ export class BackupService extends EventEmitter {
         return failedAt >= dayAgoIso;
       });
       const latestWorld = this.backups.latestCompleted(server.id, "world");
+      // Newest non-running attempt (completed or failed) — not the newest success.
       const latest =
-        completed[0] ??
-        records.find((row) => row.status !== "running") ??
-        null;
+        records.find((row) => row.status !== "running") ?? null;
       const usedBytes = completed.reduce((sum, row) => sum + Math.max(0, row.sizeBytes), 0);
       const destinationOk = isBackupDestinationReachable(resolvedRoot);
 
@@ -1889,6 +1889,10 @@ export class BackupService extends EventEmitter {
   ): Promise<boolean> {
     try {
       const info = await stat(zipPath);
+      // Match folder import gating: require manifest or known layout roots.
+      if (!(await zipHasBackupLayout(zipPath))) {
+        return false;
+      }
       const manifestRaw = await readZipTextEntry(zipPath, "manifest.json");
       const parsed = this.parseManifest(manifestRaw);
       const createdAt =
