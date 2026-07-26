@@ -89,3 +89,7 @@ Edit `website/index.html` (and `styles.css`) for copy updates; pushes that touch
 - [docs/agent-context.md](docs/agent-context.md) and [.github/copilot-instructions.md](.github/copilot-instructions.md) — AI-assisted work rules
 
 Project status and history live in [CHANGELOG.md](CHANGELOG.md) (and the WIP notes in this README). There is no tracked `TODO.md`.
+
+## License
+
+YARK server manager is licensed under the [GNU General Public License v3.0](LICENSE) (GPL-3.0-only).

@@ -20,9 +20,11 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Structured operational event `details` (What / Cause / Where / Try next) with clear/export support and workspace Logs deep-links (`logsFocus`).
 - Engineering runbooks: [docs/backups.md](docs/backups.md), [docs/updates-steamcmd.md](docs/updates-steamcmd.md), [docs/logs.md](docs/logs.md), [docs/server-lifecycle.md](docs/server-lifecycle.md), [docs/website.md](docs/website.md).
 - Project site feature screenshot gallery under `website/screenshots/` with an engineering runbook in `docs/website.md`.
+- GitHub Actions Windows release workflow (tag `v*` → NSIS installer on the GitHub Release).
 
 ### Changed
 
+- Project license set to **GPL-3.0-only** (was undeclared MIT in `package.json` only).
 - Product branding renamed to **YARK server manager**.
 - Repository user-facing strings and docs moved to English.
 - Mods managed from the Server tab (comma-separated CurseForge Project IDs); dedicated Mods tab deferred pending API key.

@@ -1,0 +1,101 @@
+name: Release Windows
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing git tag to rebuild and (re)publish (e.g. v0.1.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-windows-${{ github.event.inputs.tag || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Resolve release tag
+        id: tag
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.tag }}" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          case "$TAG" in
+            v*) ;;
+            *)
+              echo "::error::Tag must look like vX.Y.Z (got: $TAG)"
+              exit 1
+              ;;
+          esac
+          echo "name=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.tag.outputs.name }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify package.json version matches tag
+        shell: bash
+        run: |
+          PKG="$(node -p "require('./package.json').version")"
+          EXPECTED="${{ steps.tag.outputs.version }}"
+          if [ "$PKG" != "$EXPECTED" ]; then
+            echo "::error::package.json version ($PKG) does not match tag ${{ steps.tag.outputs.name }} (expected $EXPECTED)"
+            exit 1
+          fi
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Package Windows installer
+        run: npm run package
+        env:
+          # No Authenticode cert in CI yet — skip auto-discovery so the build
+          # does not fail looking for a signing identity.
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yark-windows-nsis-${{ steps.tag.outputs.version }}
+          path: |
+            dist/*.exe
+            dist/*.yml
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          name: YARK server manager ${{ steps.tag.outputs.name }}
+          draft: false
+          prerelease: ${{ startsWith(steps.tag.outputs.version, '0.') }}
+          generate_release_notes: true
+          files: |
+            dist/*.exe
+            dist/*.yml
+          fail_on_unmatched_files: true
