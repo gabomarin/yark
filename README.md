@@ -76,6 +76,7 @@ Edit `website/index.html` (and `styles.css`) for copy updates; pushes that touch
 
 ## Engineering docs
 
+- [docs/backups.md](docs/backups.md) — backup kinds, ZIP layout, IPC, schedules, player sessions, fleet health, restore, troubleshooting
 - [AGENTS.md](AGENTS.md) — Cursor Cloud / Linux VM run notes (display, Electron, tests, e2e pitfalls)
 - [docs/updates-steamcmd.md](docs/updates-steamcmd.md) — SteamCMD caches, install/update/verify, safe update auto-stop/rollback, availability checks
 - [docs/logs.md](docs/logs.md) — operational events (`details`), clear/export IPC, `logsFocus`, seed/visual helpers
