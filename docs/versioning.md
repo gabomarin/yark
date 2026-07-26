@@ -11,9 +11,12 @@ YARK server manager uses **Semantic Versioning** (`MAJOR.MINOR.PATCH`) and a
 | UI sidebar (`vX.Y.Z`) | `src/shared/app-version.ts` (imports `package.json`) |
 | electron-builder artifacts | reads `package.json` automatically |
 | Human-readable history | `CHANGELOG.md` |
+| Project site hero pill | `website/index.html` (hardcoded `status-pill`; not wired to `package.json`) |
 
 Do **not** hardcode a second app version string in React components. Import
-`APP_VERSION` from `@shared/app-version` when the UI needs it.
+`APP_VERSION` from `@shared/app-version` when the UI needs it. When cutting a
+release that should show on the public project page, update the site pill in
+the same change set (see [website.md](website.md)).
 
 ## SemVer rules for this project
 
@@ -40,9 +43,11 @@ for user-visible feature batches and PATCH for hotfix builds. Promote to
    - `npm run typecheck`
    - `npm test`
    - `npm run build` (and `npm run package` for a Windows installer cut)
-5. Commit with a message that names the version (e.g. `release: v0.2.0`).
-6. Tag `vX.Y.Z` when publishing a build others will install.
-7. Leave a fresh empty `## [Unreleased]` section at the top of `CHANGELOG.md`
+5. If the public site should show the new version, bump the `status-pill` text in
+   `website/index.html` (it does not read `package.json`).
+6. Commit with a message that names the version (e.g. `release: v0.2.0`).
+7. Tag `vX.Y.Z` when publishing a build others will install.
+8. Leave a fresh empty `## [Unreleased]` section at the top of `CHANGELOG.md`
    for the next cycle.
 
 ## What belongs in the changelog
@@ -63,4 +68,5 @@ Skip:
 
 Public reviewers should treat `0.x` builds as evolving. Call out WIP limitations
 in the release notes (e.g. Mods tab deferred, placeholder Clusters/Settings pages)
-so expectations stay aligned with the README.
+so expectations stay aligned with the README. Sidebar and workspace Backups are
+already live.

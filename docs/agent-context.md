@@ -30,7 +30,8 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 - [src/renderer](../src/renderer): React UI, layouts, features, and components.
 - [src/backend](../src/backend): services, domains, process management, and persistence.
 - [src/shared](../src/shared): shared types and IPC contracts.
-- [docs](../docs): in-repo agent docs (this file, runbooks, visual testing). Backlog/plans live under `.cursor/project-context/`.
+- [docs](../docs): in-repo agent docs (this file, runbooks, visual testing, [website](website.md)). Backlog/plans live under `.cursor/project-context/`.
+- [website](../website): static GitHub Pages project site + versioned feature screenshots.
 - [AGENTS.md](../AGENTS.md): Cursor Cloud / Linux VM run notes.
 
 ## Engineering runbooks
@@ -38,6 +39,7 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 - [backups.md](backups.md) — ZIP kinds, reconcile, fleet health/cleanup, IPC, schedules, player sessions.
 - [updates-steamcmd.md](updates-steamcmd.md) — caches, safe update auto-stop/rollback, availability compare, progress push.
 - [logs.md](logs.md) — event `details`, clear/export IPC, `logsFocus`, seed/visual helpers.
+- [website.md](website.md) — GitHub Pages deploy, screenshot gallery capture/redaction, version pill sync.
 
 ## Current functional status
 
@@ -45,6 +47,7 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 - Overview, SteamCMD, Logs, and Backups have already been migrated to the new architecture.
 - Server Workspace keeps `Server`, `INI Files`, `Backups`, and **Logs** as its regular navigation. Workspace **Backups** is operational (create / restore / history / destination for that server) with kind subtabs (**World save** | **Player profiles** | **INI**). Sidebar **Backups** is fleet health plus schedule / destination / retention / disk alerts / cleanup, with “Open in server” to jump into the workspace tab. Mods are edited on the Server tab (comma-separated CurseForge Project IDs) until a CurseForge API key enables a dedicated Mods UI. A five-step configuration assistant launches on demand from `Server`; it uses an isolated draft and writes only after explicit review.
 - Clusters and Settings remain placeholders within the new shell.
+- The public project site (`website/`) includes a screenshot gallery; refresh shots and keep site copy aligned when featured UI changes — see [website.md](website.md).
 - Backups are kind-scoped ZIP archives (`world` / `players` / `ini`) with separate triggers for schedule, player sessions, INI-on-save, and pre-update. Disk reconcile recovers interrupted `running` rows, imports orphan ZIPs/legacy folders (minting a new id on manifest collisions), and drops missing completed paths. Fleet **stale** age warnings require an active process; **never backed up** still warns while schedule is on even if stopped. Full workflows: [backups.md](backups.md).
 - Safe **Update** / **Verify** may run while the server is active: the manager stops before pre-update backup (update) and SteamCMD, then restarts if it was running (rollback on failure). Live SteamCMD console/progress uses `push:steamcmd-progress`. Details: [updates-steamcmd.md](updates-steamcmd.md).
 - Operational events can carry structured `details` (What / Cause / Where / Try next). Fleet Logs deep-links into workspace Logs via `logsFocus`. Clear APIs exist per section. See [logs.md](logs.md).

@@ -18,7 +18,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Per-server backup destination (default `{installDir}\\Backups`) plus open destination / open backup folder actions.
 - Kind-scoped ZIP backups (`World/` / `Player profiles/` / `INI/`), disk↔SQLite reconcile, fleet health, disk alerts, and cleanup preview/run.
 - Structured operational event `details` (What / Cause / Where / Try next) with clear/export support and workspace Logs deep-links (`logsFocus`).
-- Engineering runbooks: [docs/backups.md](docs/backups.md), [docs/updates-steamcmd.md](docs/updates-steamcmd.md), [docs/logs.md](docs/logs.md).
+- Engineering runbooks: [docs/backups.md](docs/backups.md), [docs/updates-steamcmd.md](docs/updates-steamcmd.md), [docs/logs.md](docs/logs.md), [docs/website.md](docs/website.md).
+- Project site feature screenshot gallery under `website/screenshots/` with an engineering runbook in `docs/website.md`.
 
 ### Changed
 

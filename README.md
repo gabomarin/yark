@@ -61,6 +61,8 @@ The temporary public site lives in [`website/`](website/) and deploys via [`.git
 
 Expected URL: [https://gabomarin.github.io/yark/](https://gabomarin.github.io/yark/)
 
+Includes a feature screenshot gallery under `website/screenshots/` (overview, server form, INI editor, backups). Full deploy, capture, and update runbook: [docs/website.md](docs/website.md).
+
 **One-time GitHub setup**
 
 1. Open **Settings → Pages**.
@@ -70,13 +72,14 @@ Expected URL: [https://gabomarin.github.io/yark/](https://gabomarin.github.io/ya
 
 If the workflow still fails on `configure-pages` with “Get Pages site failed / Not Found”, the Source is still not set to GitHub Actions. The workflow also passes `enablement: true` so it can create the Pages site when the token is allowed to do so.
 
-Edit `website/index.html` (and `styles.css`) for copy updates; pushes that touch `website/**` redeploy the page.
+Edit `website/index.html` / `styles.css` for copy, and `website/screenshots/` when UI shots go stale; pushes that touch `website/**` redeploy the page.
 
 ## Engineering docs
 
 - [docs/backups.md](docs/backups.md) — ZIP backup kinds, reconcile, fleet health, IPC, restore
 - [docs/updates-steamcmd.md](docs/updates-steamcmd.md) — SteamCMD caches, safe update/verify, progress
 - [docs/logs.md](docs/logs.md) — operational logs, event details, clear/seed helpers
+- [docs/website.md](docs/website.md) — GitHub Pages site, screenshot gallery, deploy/capture checklist
 - [AGENTS.md](AGENTS.md) — Cursor Cloud / Linux VM run notes (display, Electron, tests, e2e pitfalls)
 - [docs/visual-testing.md](docs/visual-testing.md) — required Playwright review for visible UI changes
 - [docs/versioning.md](docs/versioning.md) and [CHANGELOG.md](CHANGELOG.md) — SemVer and release notes
