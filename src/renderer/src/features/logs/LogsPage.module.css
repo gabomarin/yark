@@ -84,15 +84,20 @@
 }
 
 .tabPanel {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
   min-height: 0;
   padding-top: 16px;
   overflow: hidden;
 }
 
 .tabPanel:global(.mantine-Tabs-panel) {
+  display: flex;
+  flex-direction: column;
   flex: 1 1 0;
   min-height: 0;
+  overflow: hidden;
 }
 
 .panel {
@@ -134,10 +139,19 @@
   overflow: hidden;
 }
 
-.panelStack {
-  flex: 1;
+.fillPanel > * {
+  flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
+}
+
+.panelStack {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+  height: 100%;
 }
 
 .panelTitle {
@@ -152,15 +166,16 @@
 }
 
 .updatesStack {
-  flex: 1;
+  flex: 1 1 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  overflow: hidden;
 }
 
 .updatesStack .updatesLayout {
-  flex: 1;
+  flex: 1 1 0;
   min-height: 0;
 }
 
@@ -280,8 +295,14 @@
   display: grid;
   grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
   gap: 12px;
-  height: 100%;
+  flex: 1 1 0;
   min-height: 0;
+  overflow: hidden;
+}
+
+.updatesLayout > * {
+  min-height: 0;
+  overflow: hidden;
 }
 
 .updateRow {

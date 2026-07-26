@@ -5,8 +5,11 @@ import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   extractZip,
+  isReadableZipArchive,
+  readZipTextEntry,
   safeExtractTarget,
   zipDirectory,
+  zipHasBackupLayout,
 } from "@backend/domains/backups/backup-archive";
 
 const tmpDirs: string[] = [];
@@ -108,6 +111,30 @@ describe("backup-archive zip safety", () => {
     expect(await readFile(join(dest, "manifest.json"), "utf8")).toBe('{"ok":true}');
   });
 
+  it("reads a text entry without extracting the whole archive", async () => {
+    const root = await makeTempDir("ark-zip-read-");
+    const source = join(root, "src");
+    const zipPath = join(root, "meta.zip");
+    await mkdir(source, { recursive: true });
+    await writeFile(join(source, "manifest.json"), '{"kind":"world"}', "utf8");
+    await writeFile(join(source, "other.txt"), "noise", "utf8");
+    await zipDirectory(source, zipPath);
+
+    await expect(readZipTextEntry(zipPath, "manifest.json")).resolves.toBe(
+      '{"kind":"world"}',
+    );
+    await expect(readZipTextEntry(zipPath, "missing.json")).resolves.toBeNull();
+  });
+
+  it("resolves null for an empty zip without hanging", async () => {
+    const root = await makeTempDir("ark-zip-empty-");
+    const source = join(root, "src");
+    const zipPath = join(root, "empty.zip");
+    await mkdir(source, { recursive: true });
+    await zipDirectory(source, zipPath);
+    await expect(readZipTextEntry(zipPath, "manifest.json")).resolves.toBeNull();
+  });
+
   it("refuses to extract path-traversal zip entries", async () => {
     const root = await makeTempDir("ark-zip-slip-");
     const zipPath = join(root, "evil.zip");
@@ -120,5 +147,45 @@ describe("backup-archive zip safety", () => {
       /Unsafe zip entry|invalid relative path/i,
     );
     expect(existsSync(outside)).toBe(false);
+  });
+
+  it("detects readable vs incomplete zip archives", async () => {
+    const root = await makeTempDir("ark-zip-readable-");
+    const source = join(root, "src");
+    const goodZip = join(root, "good.zip");
+    const badZip = join(root, "bad.zip");
+    await mkdir(source, { recursive: true });
+    await writeFile(join(source, "a.txt"), "ok", "utf8");
+    await zipDirectory(source, goodZip);
+    await writeFile(badZip, "partial-bytes-not-a-zip", "utf8");
+
+    await expect(isReadableZipArchive(goodZip)).resolves.toBe(true);
+    await expect(isReadableZipArchive(badZip)).resolves.toBe(false);
+    await expect(isReadableZipArchive(join(root, "missing.zip"))).resolves.toBe(false);
+  });
+
+  it("requires manifest or known layout roots for backup zips", async () => {
+    const root = await makeTempDir("ark-zip-layout-");
+    const withManifest = join(root, "manifest-src");
+    const withSavedArks = join(root, "saved-src");
+    const unrelated = join(root, "noise-src");
+    await mkdir(withManifest, { recursive: true });
+    await mkdir(join(withSavedArks, "SavedArks"), { recursive: true });
+    await mkdir(unrelated, { recursive: true });
+    await writeFile(join(withManifest, "manifest.json"), '{"backup":{}}', "utf8");
+    await writeFile(join(withSavedArks, "SavedArks", "map.ark"), "WORLD", "utf8");
+    await writeFile(join(unrelated, "readme.txt"), "not a backup", "utf8");
+
+    const manifestZip = join(root, "manifest.zip");
+    const savedZip = join(root, "saved.zip");
+    const noiseZip = join(root, "noise.zip");
+    await zipDirectory(withManifest, manifestZip);
+    await zipDirectory(withSavedArks, savedZip);
+    await zipDirectory(unrelated, noiseZip);
+
+    await expect(zipHasBackupLayout(manifestZip)).resolves.toBe(true);
+    await expect(zipHasBackupLayout(savedZip)).resolves.toBe(true);
+    await expect(zipHasBackupLayout(noiseZip)).resolves.toBe(false);
+    await expect(zipHasBackupLayout(join(root, "missing.zip"))).resolves.toBe(false);
   });
 });

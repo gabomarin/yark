@@ -172,7 +172,7 @@ export async function readZipTextEntry(
       };
 
       let found = false;
-      zipfile.readEntry();
+      // Attach listeners before the first read — lazyEntries may emit synchronously.
       zipfile.on("entry", (entry: yauzl.Entry) => {
         const name = entry.fileName.split(sep).join("/");
         if (name !== normalizedWanted) {
@@ -197,10 +197,80 @@ export async function readZipTextEntry(
         if (!found) succeed(null);
       });
       zipfile.on("error", fail);
+      zipfile.readEntry();
     });
   });
 }
 
 export function archiveDisplayName(path: string): string {
   return basename(path);
+}
+
+/**
+ * True when `zipPath` is a readable zip (central directory present).
+ * Rejects empty files and in-progress yazl writes that lack a valid EOCD.
+ */
+export async function isReadableZipArchive(zipPath: string): Promise<boolean> {
+  try {
+    const info = await stat(zipPath);
+    if (!info.isFile() || info.size <= 0) return false;
+  } catch {
+    return false;
+  }
+
+  return await new Promise<boolean>((resolvePromise) => {
+    yauzl.open(zipPath, { lazyEntries: true }, (openErr, zipfile) => {
+      if (openErr !== null || zipfile === undefined) {
+        resolvePromise(false);
+        return;
+      }
+      zipfile.close();
+      resolvePromise(true);
+    });
+  });
+}
+
+function isBackupLayoutZipEntry(entryName: string): boolean {
+  const name = entryName.replace(/\\/g, "/");
+  if (name === "manifest.json") return true;
+  if (name === "SavedArks" || name.startsWith("SavedArks/")) return true;
+  if (name === "PlayerProfiles" || name.startsWith("PlayerProfiles/")) return true;
+  if (name === "ConfigWindowsServer" || name.startsWith("ConfigWindowsServer/")) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * True when the zip looks like a YARK/legacy backup (manifest or known layout
+ * roots). Unrelated archives under the backup tree must not be imported.
+ */
+export async function zipHasBackupLayout(zipPath: string): Promise<boolean> {
+  return await new Promise<boolean>((resolvePromise) => {
+    yauzl.open(zipPath, { lazyEntries: true }, (openErr, zipfile) => {
+      if (openErr !== null || zipfile === undefined) {
+        resolvePromise(false);
+        return;
+      }
+
+      let settled = false;
+      const finish = (value: boolean): void => {
+        if (settled) return;
+        settled = true;
+        zipfile.close();
+        resolvePromise(value);
+      };
+
+      zipfile.on("entry", (entry: yauzl.Entry) => {
+        if (isBackupLayoutZipEntry(entry.fileName)) {
+          finish(true);
+          return;
+        }
+        zipfile.readEntry();
+      });
+      zipfile.on("end", () => finish(false));
+      zipfile.on("error", () => finish(false));
+      zipfile.readEntry();
+    });
+  });
 }

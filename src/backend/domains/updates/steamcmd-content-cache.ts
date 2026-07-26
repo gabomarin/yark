@@ -5,7 +5,7 @@
  */
 
 import { spawn, type ChildProcess } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
 export const ASA_APP_ID = "2430930";
@@ -48,6 +48,32 @@ export function resolveAsaContentCacheDir(steamCmdHome: string): string {
 
 export function asaAppManifestPath(installOrCacheDir: string): string {
   return join(installOrCacheDir, "steamapps", `appmanifest_${ASA_APP_ID}.acf`);
+}
+
+/** Reads `"buildid"` from an ASA appmanifest, if present. */
+export function readAsaManifestBuildId(installOrCacheDir: string): string | null {
+  const manifestPath = asaAppManifestPath(installOrCacheDir);
+  if (!existsSync(manifestPath)) {
+    return null;
+  }
+  try {
+    const content = readFileSync(manifestPath, "utf8");
+    const buildId = content.match(/"buildid"\s+"([^"]+)"/i)?.[1]?.trim() ?? "";
+    return buildId.length > 0 ? buildId : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * True only when cache and install are the same directory (nothing to copy).
+ * Matching Steam buildids alone are not enough: the install tree can still be
+ * missing or corrupted, so robocopy must still run for distinct paths.
+ */
+export function canSkipAsaContentSync(cacheDir: string, installDir: string): boolean {
+  const source = resolve(cacheDir);
+  const dest = resolve(installDir);
+  return source.toLowerCase() === dest.toLowerCase();
 }
 
 /**

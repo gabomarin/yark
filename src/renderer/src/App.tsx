@@ -467,6 +467,23 @@ export function App(): JSX.Element {
             onboarding={overlay.onboarding === true}
             initialTab={overlay.initialTab}
             logsFocus={overlay.logsFocus}
+            filesJobActive={
+              steamCmdBusy && steamCmdStatus?.serverId === overlay.serverId
+            }
+            filesJobLabel={
+              steamCmdBusy && steamCmdStatus?.serverId === overlay.serverId
+                ? (steamCmdStatus.progressLabel ??
+                  (steamCmdStatus.operation === "update"
+                    ? "Updating server files"
+                    : steamCmdStatus.operation === "verify-files"
+                      ? "Verifying server files"
+                      : steamCmdStatus.operation === "install-files"
+                        ? "Installing server files"
+                        : steamCmdStatus.operation === "sync-files"
+                          ? "Syncing server files"
+                          : "SteamCMD is modifying this server's files"))
+                : null
+            }
             onLogsFocusConsumed={() =>
               setOverlay((current) =>
                 current?.kind === "workspace"
@@ -478,7 +495,13 @@ export function App(): JSX.Element {
               setOverlay({ kind: "workspace", serverId: overlay.serverId })
             }
             onSelectServer={(serverId) =>
-              setOverlay({ kind: "workspace", serverId, initialTab: overlay.initialTab })
+              setOverlay({
+                kind: "workspace",
+                serverId,
+                initialTab: overlay.initialTab,
+                // Drop one-shot deep links so they cannot apply to another server.
+                logsFocus: null,
+              })
             }
             onBack={() => setOverlay(null)}
             onCreateServer={() => setOverlay({ kind: "create" })}
@@ -554,7 +577,20 @@ export function App(): JSX.Element {
               steamCmdProgressBytesDownloaded={steamCmdStatus?.progressBytesDownloaded ?? null}
               steamCmdProgressBytesTotal={steamCmdStatus?.progressBytesTotal ?? null}
               steamCmdOperation={steamCmdStatus?.operation ?? null}
-              onOpenWorkspace={(server) => setOverlay({ kind: "workspace", serverId: server.id })}
+              onOpenWorkspace={(server) => {
+                const updatingThisServer =
+                  steamCmdBusy && steamCmdStatus?.serverId === server.id;
+                setOverlay({
+                  kind: "workspace",
+                  serverId: server.id,
+                  ...(updatingThisServer
+                    ? {
+                        initialTab: "logs" as const,
+                        logsFocus: { section: "updates" as const },
+                      }
+                    : {}),
+                });
+              }}
               onOpenLogs={(serverId) => openServerLogs(serverId, { section: "events" })}
               onStartServer={(id) => void startServer(id)}
               onStopServer={(id) => void runAction(() => window.api.stopServer(id))}

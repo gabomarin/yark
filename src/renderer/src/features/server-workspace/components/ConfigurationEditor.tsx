@@ -59,12 +59,16 @@ interface Props {
   server: ServerProfile;
   /** Active section (controlled by workspace tabs). */
   section: ConfigSection;
+  /** Running server or SteamCMD files job. */
   serverActive?: boolean;
+  /** SteamCMD job specifically — warning copy. */
+  filesJobActive?: boolean;
   onDirtyChange?: (dirty: boolean) => void;
 }
 
 export function ConfigurationEditor(props: Props): JSX.Element {
   const { section } = props;
+  const filesJobActive = props.filesJobActive === true;
   const [snapshot, setSnapshot] = useState<ServerIniSnapshot | null>(null);
   const [payload, setPayload] = useState<ServerIniPayload | null>(null);
   const [baseline, setBaseline] = useState<ServerIniPayload | null>(null);
@@ -340,9 +344,15 @@ export function ConfigurationEditor(props: Props): JSX.Element {
             {info}
           </Alert>
         )}
-        {props.serverActive === true && (
+        {props.serverActive === true && !filesJobActive && (
           <Alert color="yellow" mb="sm" title="Server is running">
             INI changes will apply after the server restarts.
+          </Alert>
+        )}
+        {filesJobActive && (
+          <Alert color="yellow" mb="sm" title="Files job in progress">
+            You can edit INI now; prefer saving after SteamCMD finishes to avoid
+            clobbering files mid-write.
           </Alert>
         )}
 

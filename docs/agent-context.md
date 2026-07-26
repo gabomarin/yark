@@ -30,18 +30,24 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 - [src/renderer](../src/renderer): React UI, layouts, features, and components.
 - [src/backend](../src/backend): services, domains, process management, and persistence.
 - [src/shared](../src/shared): shared types and IPC contracts.
-- [docs](../docs): in-repo agent docs (this file, visual testing, backups runbook, versioning). Backlog/plans live under `.cursor/project-context/`.
+- [docs](../docs): in-repo agent docs (this file, visual testing, SteamCMD/updates runbook, versioning). Backlog/plans live under `.cursor/project-context/`.
 - [AGENTS.md](../AGENTS.md): Cursor Cloud / Linux VM specifics (display, `ELECTRON_RUN_AS_NODE`, expected vitest path failures, e2e notes).
 
 ## Current functional status
 
 - The new renderer shell is already active.
 - Overview, SteamCMD, Logs, and Backups have already been migrated to the new architecture.
-- Server Workspace keeps `Server`, `INI Files`, and `Backups` as its regular navigation. Workspace **Backups** is operational (create / restore / history / destination for that server) with kind subtabs (**World save** | **Player profiles** | **INI**). Sidebar **Backups** is generalized configuration across servers (schedule / destination / retention / fleet health) with “Open in server” to jump into the workspace tab. Mods are edited on the Server tab (comma-separated CurseForge Project IDs) until a CurseForge API key enables a dedicated Mods UI. A five-step configuration assistant launches on demand from `Server`; it uses an isolated draft and writes only after explicit review.
+- Server Workspace keeps `Server`, `INI Files`, and `Backups` as its regular navigation. Workspace **Backups** is operational (create / restore / history / destination for that server) with kind subtabs (**World save** | **Player profiles** | **INI**). Sidebar **Backups** is generalized configuration across servers (schedule / destination / retention) with “Open in server” to jump into the workspace tab. Mods are edited on the Server tab (comma-separated CurseForge Project IDs) until a CurseForge API key enables a dedicated Mods UI. A five-step configuration assistant launches on demand from `Server`; it uses an isolated draft and writes only after explicit review.
 - Clusters and Settings remain placeholders within the new shell.
-- Backups are kind-scoped ZIP archives (`world` / `players` / `ini`) with separate triggers for schedule, player sessions, INI-on-save, and pre-update. Disk reconcile imports orphan ZIPs/legacy folders (minting a new id when a copied manifest id collides). Fleet health ignores schedule stale/never-backed-up warnings while the process is inactive. Full workflows, IPC, and troubleshooting: [backups.md](backups.md).
-- Live log streaming during active SteamCMD operations is still pending.
-- Real E2E validation against host-side binaries and SteamCMD is still not covered.
+- Sidebar Backups settings page and per-server workspace Backups tab are live.
+- Backups are kind-scoped ZIP archives: `world` (full SavedArks including `.arkprofile*`), `players` (profiles from SavedArks/SaveGames), `ini` (`Game.ini` + `GameUserSettings.ini`).
+  - On disk under the shared root: `World/`, `Player profiles/`, `INI/` subfolders; each snapshot is a `.zip` (legacy loose folders still restore). Listing reconciles orphan archives from disk into SQLite.
+  - **World**: destination + schedule (`enabled` / `intervalMinutes`, min **5**, default **60**) + `retainCountWorld`. Schedule creates **world only**.
+  - **Players**: `retainCountPlayers` (per-player pools); RCON `ListPlayers` poll (~10s) + status ticks + mtime safety net; connect/disconnect archives.
+  - **INI**: `retainCountIni`; manual + automatic `ini_save` after successful INI save (debounced ~2s).
+  - Workspace UI: destination/schedule only on World subtab; auto-refresh (~12s) + Refresh button + `push:backups-changed` for live list updates.
+- SteamCMD progress/console streaming is live via `push:steamcmd-progress` (dock + SteamCMD page). Richer per-file update-log streaming in Logs may still feel incomplete. Full workflows: [updates-steamcmd.md](updates-steamcmd.md).
+- Real E2E validation against host-side ASA binaries and SteamCMD on a production Windows host is still not covered.
 
 ## Recommended verification
 
@@ -55,7 +61,7 @@ npm run build
 
 Visible renderer changes also require a Playwright review of the real Electron
 build at `1280×720`, `1920×1080`, and `2560×1440`. Environment requirements,
-launch instructions, evidence, and review criteria are documented in
+launch instructions, helper scripts, evidence, and review criteria are documented in
 [docs/visual-testing.md](visual-testing.md).
 
 **Platform notes**
@@ -76,7 +82,7 @@ cmd.exe /c npm run build
 - IPC-layer changes should keep the contracts aligned in [src/shared/ipc.ts](../src/shared/ipc.ts), [src/preload/index.ts](../src/preload/index.ts), and [src/main/ipc-handlers.ts](../src/main/ipc-handlers.ts).
 - Update availability must compare the local Steam `buildid` from `appmanifest_2430930.acf` with the public Steam build. Never compare the local runtime `ARK Version` with a version observed on an external official server; staggered deployments make those values non-equivalent.
 - The informational official ARK server version comes from Wildcard's `https://cdn2.arkdedicated.com/asa/officialserverstatus.ini`; do not replace it with a single server from a third-party listing.
-- Explicit update and verify actions must always query SteamCMD. The in-session content-cache freshness window is only valid when reusing files to install another server.
+- Explicit update and verify actions must always query SteamCMD. The in-session content-cache freshness window (**15 minutes**) is only valid when reusing files to **install** another server — never for update/verify. Always pass `validate` on `app_update`. Robocopy sync excludes `ShooterGame\Saved`. Details, IPC, safe-update/rollback: [updates-steamcmd.md](updates-steamcmd.md).
 - The INI files under `src/shared/defaults` are the canonical source for creating and resetting configuration. ASA may regenerate client-only sections such as `ShooterGameUserSettings` in the runtime `GameUserSettings.ini`; treat them as generated noise, sanitize them on read and save, and never surface them as pending user changes.
 - Do not add a permanent `Guided Configuration` tab. The beginner experience is an on-demand assistant launched from `Server`; experienced administrators retain the explicit `INI Files` visual/raw workflow.
 - The configuration assistant must initialize from current INI values, preserve unknown settings, remain read-only until `Apply changes`, and refuse to open while the manual INI editor has pending changes. Before applying, read the latest INI payload again and overlay only the curated fields so external changes are not overwritten.

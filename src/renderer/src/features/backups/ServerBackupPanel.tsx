@@ -28,7 +28,7 @@ import {
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
-import { playerBackupDisplayName } from "@shared/backup-player-meta";
+import { backupFinishedAt, playerBackupDisplayName } from "@shared/backup-player-meta";
 import type {
   BackupKind,
   BackupPolicy,
@@ -44,6 +44,9 @@ interface Props {
   runtime: ServerRuntimeInfo | null;
   /** Compact layout for workspace tab (no outer page chrome). */
   embedded?: boolean;
+  /** Running server or SteamCMD files job — blocks restore (like server active). */
+  opsLocked?: boolean;
+  opsLockReason?: string;
 }
 
 type DraftPolicy = Omit<BackupPolicy, "serverId" | "updatedAt">;
@@ -146,21 +149,22 @@ function showBackupError(message: string): void {
   showBackupToast(message, { color: "red", autoClose: 8000 });
 }
 
-function compareByCreatedAt(a: BackupRecord, b: BackupRecord, newestFirst: boolean): number {
-  const diff = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+function compareByFinishedAt(a: BackupRecord, b: BackupRecord, newestFirst: boolean): number {
+  const diff =
+    new Date(backupFinishedAt(a)).getTime() - new Date(backupFinishedAt(b)).getTime();
   return newestFirst ? -diff : diff;
 }
 
 function sortPlayerBackups(backups: BackupRecord[], sort: PlayerSort): BackupRecord[] {
   const next = [...backups];
   next.sort((a, b) => {
-    if (sort === "newest") return compareByCreatedAt(a, b, true);
-    if (sort === "oldest") return compareByCreatedAt(a, b, false);
+    if (sort === "newest") return compareByFinishedAt(a, b, true);
+    if (sort === "oldest") return compareByFinishedAt(a, b, false);
     const nameA = playerBackupDisplayName(a).toLocaleLowerCase();
     const nameB = playerBackupDisplayName(b).toLocaleLowerCase();
     const byName = nameA.localeCompare(nameB);
     if (byName !== 0) return sort === "name-asc" ? byName : -byName;
-    return compareByCreatedAt(a, b, true);
+    return compareByFinishedAt(a, b, true);
   });
   return next;
 }
@@ -230,6 +234,10 @@ export function ServerBackupPanel(props: Props): JSX.Element {
   const saveGenRef = useRef(0);
 
   const serverActive = isServerActive(props.runtime);
+  const opsLocked = props.opsLocked === true || serverActive;
+  const opsLockReason =
+    props.opsLockReason ??
+    (serverActive ? "Stop the server before restoring a backup." : undefined);
   const defaultBackupHint = `${props.server.installDir}\\Backups`;
   const activeKindLabel = kindLabel(activeKind);
   const kindBackups = useMemo(
@@ -472,8 +480,10 @@ export function ServerBackupPanel(props: Props): JSX.Element {
   };
 
   const confirmRestore = (backup: BackupRecord) => {
-    if (serverActive) {
-      showBackupError("Stop the server before restoring a backup.");
+    if (opsLocked) {
+      showBackupError(
+        opsLockReason ?? "Stop the server before restoring a backup.",
+      );
       return;
     }
     const label = kindLabel(backup.kind);
@@ -482,7 +492,7 @@ export function ServerBackupPanel(props: Props): JSX.Element {
       children: (
         <Text size="sm">
           Restore <strong>{label}</strong> ({backup.type}) from{" "}
-          {formatWhen(backup.createdAt)} onto{" "}
+          {formatWhen(backupFinishedAt(backup))} onto{" "}
           <strong>{props.server.name}</strong>? Only that kind of data is replaced.
           A safety backup of the same kind is created first. The server must stay stopped.
         </Text>
@@ -819,9 +829,11 @@ export function ServerBackupPanel(props: Props): JSX.Element {
                 )}
               </Group>
               <Group gap={6} wrap="wrap" align="center">
-                {serverActive && (
+                {opsLocked && (
                   <Badge color="yellow" variant="light" size="sm">
-                    Server active — stop before restore
+                    {props.opsLockReason != null
+                      ? "Files job — restore locked"
+                      : "Server active — stop before restore"}
                   </Badge>
                 )}
                 <Tooltip label="Reload the backup list">
@@ -883,8 +895,9 @@ export function ServerBackupPanel(props: Props): JSX.Element {
                   {displayedBackups.map((backup) => {
                     const canSelect = backup.status !== "running";
                     const isPlayers = backup.kind === "players";
-                    const relative = formatRelativeTime(backup.createdAt);
-                    const absolute = formatWhen(backup.createdAt);
+                    const finishedAt = backupFinishedAt(backup);
+                    const relative = formatRelativeTime(finishedAt);
+                    const absolute = formatWhen(finishedAt);
                     const displayTitle = isPlayers
                       ? playerBackupDisplayName(backup)
                       : relative;
@@ -953,7 +966,11 @@ export function ServerBackupPanel(props: Props): JSX.Element {
                               color="orange"
                               size="sm"
                               aria-label={`Restore backup ${backup.id}`}
-                              disabled={busy || backup.status !== "completed" || serverActive}
+                              disabled={
+                                busy ||
+                                backup.status !== "completed" ||
+                                opsLocked
+                              }
                               onClick={() => confirmRestore(backup)}
                             >
                               <ArrowCounterClockwise size={16} />

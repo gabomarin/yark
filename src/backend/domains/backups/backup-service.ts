@@ -5,6 +5,7 @@ import { basename, dirname, join, relative, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
 import {
+  backupFinishedAt,
   formatPlayerSessionNotes,
   playersRetentionKey,
 } from "@shared/backup-player-meta";
@@ -33,10 +34,12 @@ import { syncProfileSettingsToIni } from "../instances/sync-profile-ini";
 import {
   backupKindSubdir,
   extractZip,
+  isReadableZipArchive,
   isZipBackupPath,
   kindFromSubdirName,
   readZipTextEntry,
   zipDirectory,
+  zipHasBackupLayout,
 } from "./backup-archive";
 import {
   isBackupDestinationReachable,
@@ -44,11 +47,60 @@ import {
   volumeRootForPath,
 } from "./backup-disk";
 
-export { formatPlayerSessionNotes, playersRetentionKey } from "@shared/backup-player-meta";
+export {
+  backupFinishedAt,
+  formatPlayerSessionNotes,
+  playersRetentionKey,
+} from "@shared/backup-player-meta";
 export { backupKindSubdir } from "./backup-archive";
 
 export interface BackupChangedPush {
   serverId: string;
+}
+
+/** Pure fleet health badge for one server (used by getFleetSummary). */
+export function computeBackupServerHealth(input: {
+  destinationOk: boolean;
+  stale: boolean;
+  /** All failed backups in the last 24h (any kind) — warning floor when not critical. */
+  failed24h: number;
+  /** Failed *world* backups in the last 24h — drives critical (world = protection). */
+  failedWorld24h: number;
+  scheduleEnabled: boolean;
+  hasWorldBackup: boolean;
+  /** Scheduled world backups only run while the process is active. */
+  serverRunning: boolean;
+}): BackupHealthStatus {
+  if (!input.destinationOk || input.failedWorld24h > 0) return "critical";
+  // INI / player failures are noisy vs world protection — warn, do not mark critical.
+  if (input.failed24h > 0) return "warning";
+  // World schedule skips stopped servers — without a completed world archive this
+  // is never "Protected", whether the process is running or not.
+  if (input.scheduleEnabled && !input.hasWorldBackup) {
+    return "warning";
+  }
+  if (input.stale) return "warning";
+  if (!input.scheduleEnabled && !input.hasWorldBackup) return "unknown";
+  // Keep serverRunning in the contract so callers must pass process state.
+  void input.serverRunning;
+  return "ok";
+}
+
+/** Newest finished (completed/failed) backup by finish time. */
+export function pickLatestFinishedBackup(
+  records: BackupRecord[],
+): BackupRecord | null {
+  let latest: BackupRecord | null = null;
+  let latestStamp = "";
+  for (const row of records) {
+    if (row.status === "running") continue;
+    const stamp = backupFinishedAt(row);
+    if (latest === null || stamp > latestStamp) {
+      latest = row;
+      latestStamp = stamp;
+    }
+  }
+  return latest;
 }
 
 const RCON_HOST = "127.0.0.1";
@@ -200,6 +252,8 @@ export class BackupService extends EventEmitter {
   >();
   /** Serialize disk↔DB reconcile per server so overlapping list/refresh cannot double-import. */
   private readonly reconcileInFlight = new Map<string, Promise<number>>();
+  /** Backup ids currently inside createBackup — reconcile must not promote/fail these. */
+  private readonly creatingBackupIds = new Set<string>();
 
   constructor(
     private readonly servers: ServerRepository,
@@ -404,14 +458,14 @@ export class BackupService extends EventEmitter {
       const resolvedRoot = resolveServerBackupRoot(server.installDir, policy.backupDir);
       const records = this.backups.listBackups(server.id, 10_000);
       const completed = records.filter((row) => row.status === "completed");
-      const failed24h = records.filter(
-        (row) => row.status === "failed" && row.createdAt >= dayAgoIso,
-      );
+      const failed24h = records.filter((row) => {
+        if (row.status !== "failed") return false;
+        return backupFinishedAt(row) >= dayAgoIso;
+      });
+      const failedWorld24h = failed24h.filter((row) => row.kind === "world");
       const latestWorld = this.backups.latestCompleted(server.id, "world");
-      const latest =
-        completed[0] ??
-        records.find((row) => row.status !== "running") ??
-        null;
+      // Newest finished attempt by completedAt (not job start).
+      const latest = pickLatestFinishedBackup(records);
       const usedBytes = completed.reduce((sum, row) => sum + Math.max(0, row.sizeBytes), 0);
       const destinationOk = isBackupDestinationReachable(resolvedRoot);
 
@@ -422,7 +476,7 @@ export class BackupService extends EventEmitter {
         if (latestWorld === null) {
           stale = true;
         } else {
-          const stamp = latestWorld.completedAt ?? latestWorld.createdAt;
+          const stamp = backupFinishedAt(latestWorld);
           const ageMs = now - new Date(stamp).getTime();
           stale =
             Number.isFinite(ageMs) &&
@@ -437,14 +491,14 @@ export class BackupService extends EventEmitter {
         failed24h: failed24h.length,
       };
 
-      const processActive = this.processes.isActive(server.id);
       const health = this.computeServerHealth({
         destinationOk,
         stale,
         failed24h: counts.failed24h,
+        failedWorld24h: failedWorld24h.length,
         scheduleEnabled: policy.enabled,
-        processActive,
         hasWorldBackup: latestWorld !== null,
+        serverRunning: this.processes.isActive(server.id),
       });
 
       healthRows.push({
@@ -471,15 +525,17 @@ export class BackupService extends EventEmitter {
           message: `${server.name}: backup destination is missing or unreachable (${resolvedRoot})`,
         });
       }
-      // Scheduled world backups only run while the process is active.
-      if (policy.enabled && processActive && latestWorld === null) {
+      if (policy.enabled && latestWorld === null) {
+        const runningHint = this.processes.isActive(server.id)
+          ? "waiting for the next scheduled cycle"
+          : "start the server so the world schedule can run";
         alerts.push({
           id: `never_backed_up:${server.id}`,
           kind: "never_backed_up",
           severity: "warning",
           serverId: server.id,
           volumePath: null,
-          message: `${server.name}: world schedule is on but no completed world backup exists yet`,
+          message: `${server.name}: world schedule is on but no completed world backup exists yet (${runningHint})`,
         });
       } else if (stale && latestWorld !== null) {
         alerts.push({
@@ -492,13 +548,18 @@ export class BackupService extends EventEmitter {
         });
       }
       if (counts.failed24h > 0) {
+        const worldOnly = failedWorld24h.length === counts.failed24h;
         alerts.push({
           id: `failed:${server.id}`,
           kind: "failed",
-          severity: "error",
+          severity: failedWorld24h.length > 0 ? "error" : "warning",
           serverId: server.id,
           volumePath: null,
-          message: `${server.name}: ${counts.failed24h} failed backup${counts.failed24h === 1 ? "" : "s"} in the last 24h`,
+          message: worldOnly
+            ? `${server.name}: ${counts.failed24h} failed world backup${counts.failed24h === 1 ? "" : "s"} in the last 24h`
+            : failedWorld24h.length > 0
+              ? `${server.name}: ${counts.failed24h} failed backup${counts.failed24h === 1 ? "" : "s"} in the last 24h (${failedWorld24h.length} world)`
+              : `${server.name}: ${counts.failed24h} failed non-world backup${counts.failed24h === 1 ? "" : "s"} in the last 24h`,
         });
       }
     }
@@ -559,6 +620,7 @@ export class BackupService extends EventEmitter {
   }
 
   async previewCleanup(options: BackupCleanupOptions): Promise<BackupCleanupPreview> {
+    await this.reconcileServersForCleanup(options);
     const plan = this.planCleanup(options);
     const byServerMap = new Map<
       string,
@@ -585,7 +647,17 @@ export class BackupService extends EventEmitter {
   }
 
   async runCleanup(options: BackupCleanupOptions): Promise<BackupCleanupResult> {
-    const plan = this.planCleanup(options);
+    await this.reconcileServersForCleanup(options);
+    const confirmedIds = options.confirmedBackupIds;
+    // Always recompute rules (incl. protectNewestWorld). Confirmed ids only
+    // narrow the fresh plan so preview cannot delete a newly protected world.
+    let plan = this.planCleanup(options);
+    if (confirmedIds !== undefined && confirmedIds !== null) {
+      const allowed = new Set(
+        confirmedIds.filter((id) => id.trim().length > 0),
+      );
+      plan = plan.filter((item) => allowed.has(item.backup.id));
+    }
     let deleted = 0;
     let freedBytes = 0;
     const touched = new Set<string>();
@@ -719,9 +791,10 @@ export class BackupService extends EventEmitter {
 
       const latestWorld = this.backups.latestCompleted(server.id, "world");
       if (latestWorld !== null) {
-        const elapsedMs = Date.now() - Date.parse(latestWorld.createdAt);
+        const finishedAt = backupFinishedAt(latestWorld);
+        const elapsedMs = Date.now() - Date.parse(finishedAt);
         const requiredMs = policy.intervalMinutes * 60 * 1000;
-        if (elapsedMs < requiredMs) continue;
+        if (Number.isFinite(elapsedMs) && elapsedMs < requiredMs) continue;
       }
 
       if (!this.processes.isActive(server.id)) continue;
@@ -806,20 +879,13 @@ export class BackupService extends EventEmitter {
     destinationOk: boolean;
     stale: boolean;
     failed24h: number;
+    failedWorld24h: number;
     scheduleEnabled: boolean;
-    processActive: boolean;
     hasWorldBackup: boolean;
+    /** Scheduled world backups only run while the process is active. */
+    serverRunning: boolean;
   }): BackupHealthStatus {
-    if (!input.destinationOk || input.failed24h > 0) return "critical";
-    // Never-backed-up warning only applies while the scheduler can run.
-    if (
-      input.stale ||
-      (input.scheduleEnabled && input.processActive && !input.hasWorldBackup)
-    ) {
-      return "warning";
-    }
-    if (!input.scheduleEnabled && !input.hasWorldBackup) return "unknown";
-    return "ok";
+    return computeBackupServerHealth(input);
   }
 
   private async buildDiskUsage(
@@ -966,7 +1032,7 @@ export class BackupService extends EventEmitter {
       if (cutoffIso !== null) {
         for (const backup of records) {
           if (backup.status !== "completed") continue;
-          if (backup.createdAt < cutoffIso) {
+          if (backupFinishedAt(backup) < cutoffIso) {
             mark(backup, server.name, `older than ${olderThanDays}d`);
           }
         }
@@ -1007,8 +1073,26 @@ export class BackupService extends EventEmitter {
     }
 
     return [...selected.values()].sort((a, b) =>
-      b.backup.createdAt.localeCompare(a.backup.createdAt),
+      backupFinishedAt(b.backup).localeCompare(backupFinishedAt(a.backup)),
     );
+  }
+
+  /** Import orphan archives before cleanup so disk-only zips are eligible. */
+  private async reconcileServersForCleanup(
+    options: BackupCleanupOptions,
+  ): Promise<void> {
+    const allServers = this.servers.list();
+    const selectedIds =
+      options.serverIds !== null && options.serverIds.length > 0
+        ? new Set(options.serverIds)
+        : null;
+    const servers =
+      selectedIds === null
+        ? allServers
+        : allServers.filter((server) => selectedIds.has(server.id));
+    for (const server of servers) {
+      await this.reconcileDiskBackups(server.id);
+    }
   }
 
   private async flushWorldIfActive(serverId: string): Promise<void> {
@@ -1070,6 +1154,7 @@ export class BackupService extends EventEmitter {
       path: zipPath,
       notes,
     });
+    this.creatingBackupIds.add(record.id);
 
     try {
       const packaged =
@@ -1132,7 +1217,32 @@ export class BackupService extends EventEmitter {
         `Backup ${type}/${kind} completed for \"${server.name}\" (${this.humanSize(sizeBytes)})${missingHint}`,
       );
 
-      await this.applyRetention(serverId, policy);
+      // Retention runs after success. Failures here must not delete the new zip
+      // or mark this backup failed — the archive is already durable.
+      try {
+        await this.applyRetention(serverId, policy);
+      } catch (retentionErr) {
+        const retentionMessage =
+          retentionErr instanceof Error ? retentionErr.message : String(retentionErr);
+        this.servers.addEvent(
+          serverId,
+          "error",
+          "warning",
+          `Backup retention failed after successful ${type}/${kind} backup for \"${server.name}\": ${retentionMessage}`,
+          {
+            what: "The new backup was saved, but pruning older archives failed.",
+            cause: retentionMessage,
+            location: zipPath,
+            suggestion:
+              "Check destination permissions and free disk space, then run cleanup or create another backup to retry retention.",
+            context: {
+              type,
+              kind,
+              backupId: record.id,
+            },
+          },
+        );
+      }
       this.emitChanged(serverId);
       return completed;
     } catch (err) {
@@ -1160,6 +1270,8 @@ export class BackupService extends EventEmitter {
       );
       this.emitChanged(serverId);
       throw err;
+    } finally {
+      this.creatingBackupIds.delete(record.id);
     }
   }
 
@@ -1654,7 +1766,10 @@ export class BackupService extends EventEmitter {
     const policy = this.backups.getPolicy(serverId);
     const rootDir = resolveServerBackupRoot(server.installDir, policy.backupDir);
 
-    let changed = this.pruneMissingDiskBackups(serverId);
+    // Resolve interrupted creates (zip on disk, row still "running") before
+    // path-known checks would block re-import of those archives.
+    let changed = await this.reconcileInterruptedRunningBackups(serverId);
+    changed += this.pruneMissingDiskBackups(serverId);
 
     if (existsSync(rootDir)) {
       const known = new Set(
@@ -1672,6 +1787,106 @@ export class BackupService extends EventEmitter {
 
     if (changed > 0) {
       this.emitChanged(serverId);
+    }
+    return changed;
+  }
+
+  /**
+   * After a crash/kill, running rows may be stuck:
+   * - finished readable backup-layout zip → promote to completed (restorable)
+   * - missing / empty / unreadable / non-backup zip → fail so the UI can clear them
+   * Live creates (creatingBackupIds) are left alone.
+   */
+  private async reconcileInterruptedRunningBackups(serverId: string): Promise<number> {
+    const records = this.backups.listBackups(serverId, 10_000);
+    let changed = 0;
+    for (const backup of records) {
+      if (backup.status !== "running") continue;
+      if (this.creatingBackupIds.has(backup.id)) continue;
+
+      if (isZipBackupPath(backup.path) && existsSync(backup.path)) {
+        let readable = false;
+        let hasLayout = false;
+        try {
+          readable = await isReadableZipArchive(backup.path);
+          if (readable) {
+            try {
+              hasLayout = await zipHasBackupLayout(backup.path);
+            } catch {
+              // Corrupt central directory / I/O mid-scan — treat as unreadable.
+              readable = false;
+              hasLayout = false;
+            }
+          }
+        } catch {
+          readable = false;
+          hasLayout = false;
+        }
+        if (readable && hasLayout) {
+          try {
+            const info = await stat(backup.path);
+            // Use zip mtime — not wall clock — so recovery does not reorder
+            // ahead of newer completed archives and break keep-last retention.
+            const completed = this.backups.completeBackup(
+              backup.id,
+              info.size,
+              info.mtime.toISOString(),
+            );
+            if (completed === null) continue;
+            changed += 1;
+            this.servers.addEvent(
+              serverId,
+              "backup_created",
+              "info",
+              `Recovered interrupted ${backup.kind} backup: ${basename(backup.path)}`,
+            );
+          } catch {
+            // Leave running; a later reconcile can retry.
+          }
+          continue;
+        }
+
+        // Partial/corrupt/non-backup zip — not restorable.
+        await rm(backup.path, { force: true }).catch(() => undefined);
+        const reason = readable
+          ? "Interrupted backup path held a non-backup zip"
+          : "Interrupted while writing archive (incomplete or unreadable zip)";
+        this.backups.failBackup(backup.id, reason);
+        changed += 1;
+        this.servers.addEvent(
+          serverId,
+          "error",
+          "warning",
+          `Interrupted ${backup.kind} backup marked failed (${
+            readable ? "non-backup zip" : "incomplete zip"
+          }): ${basename(backup.path)}`,
+          {
+            what: "A backup was interrupted and the archive on disk is not a restorable backup.",
+            cause: reason,
+            location: backup.path,
+            suggestion: "Create the backup again from the server Backups tab.",
+            context: { kind: backup.kind, backupId: backup.id },
+          },
+        );
+        continue;
+      }
+
+      // Crash during staging — no zip yet. Fail so the row is not stuck forever.
+      this.backups.failBackup(backup.id, "Interrupted before archive was written");
+      changed += 1;
+      this.servers.addEvent(
+        serverId,
+        "error",
+        "warning",
+        `Interrupted ${backup.kind} backup marked failed (no archive on disk)`,
+        {
+          what: "A backup was interrupted before the zip archive was created.",
+          cause: "App stopped or crashed during staging.",
+          location: backup.path,
+          suggestion: "Create the backup again from the server Backups tab.",
+          context: { kind: backup.kind, backupId: backup.id },
+        },
+      );
     }
     return changed;
   }
@@ -1751,6 +1966,10 @@ export class BackupService extends EventEmitter {
   ): Promise<boolean> {
     try {
       const info = await stat(zipPath);
+      // Match folder import gating: require manifest or known layout roots.
+      if (!(await zipHasBackupLayout(zipPath))) {
+        return false;
+      }
       const manifestRaw = await readZipTextEntry(zipPath, "manifest.json");
       const parsed = this.parseManifest(manifestRaw);
       const createdAt =

@@ -6,6 +6,7 @@ import type {
   ServerUpdateLogFile,
   ServerUpdateLogStatus,
 } from "@shared/types";
+import { resolveEventDetails } from "@shared/event-details";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { ProcessManager } from "../../infra/process/process-manager";
 
@@ -142,6 +143,14 @@ export class LogsService {
     } else {
       for (const event of logs.events) {
         sections.push(`${event.createdAt} [${event.severity}] ${event.type} - ${event.message}`);
+        const details = resolveEventDetails(event);
+        sections.push(`  What: ${details.what}`);
+        if (details.cause !== null) sections.push(`  Cause: ${details.cause}`);
+        if (details.location !== null) sections.push(`  Where: ${details.location}`);
+        if (details.suggestion !== null) sections.push(`  Try next: ${details.suggestion}`);
+        for (const item of details.context) {
+          sections.push(`  ${item.label}: ${item.value}`);
+        }
       }
     }
 

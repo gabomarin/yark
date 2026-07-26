@@ -141,6 +141,12 @@ export function ServerLogsPanel(props: Props): JSX.Element {
 
   useEffect(() => {
     void load(props.server.id);
+    setHighlightedEventId(null);
+    setExpandedEventId(null);
+    setSelectedUpdateFile(null);
+    setUpdateContent("");
+    focusKeyRef.current = null;
+    autoScrollDoneRef.current = false;
   }, [props.server.id]);
 
   useEffect(() => {

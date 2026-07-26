@@ -1,18 +1,46 @@
 /**
  * Clear + seed diagnostic logs for the first (or named) server profile.
  * Usage: node scripts/seed-server-logs.cjs [serverName]
+ *
+ * Resolves the same Electron userData directory the app uses:
+ * - Windows: %APPDATA%/yark-server-manager
+ * - macOS: ~/Library/Application Support/yark-server-manager
+ * - Linux: ~/.config/yark-server-manager
+ * Override with YARK_USER_DATA if needed.
  */
 const fs = require("node:fs");
 const path = require("node:path");
+const os = require("node:os");
 const { DatabaseSync } = require("node:sqlite");
 
-const userData = path.join(process.env.APPDATA, "yark-server-manager");
+const APP_DIR_NAME = "yark-server-manager";
+
+function resolveUserDataDir() {
+  const override = process.env.YARK_USER_DATA?.trim();
+  if (override) return path.resolve(override);
+
+  if (process.env.APPDATA) {
+    return path.join(process.env.APPDATA, APP_DIR_NAME);
+  }
+
+  const home = process.env.HOME || process.env.USERPROFILE || os.homedir();
+  if (process.platform === "darwin") {
+    return path.join(home, "Library", "Application Support", APP_DIR_NAME);
+  }
+  // Electron default on Linux and other non-Windows platforms.
+  return path.join(home, ".config", APP_DIR_NAME);
+}
+
+const userData = resolveUserDataDir();
 const dbPath = path.join(userData, "yark-server-manager.db");
 const updateLogsDir = path.join(userData, "update-logs");
 const wantedName = process.argv[2] ?? null;
 
 if (!fs.existsSync(dbPath)) {
   console.error("DB not found:", dbPath);
+  console.error(
+    "Tip: set YARK_USER_DATA to the Electron userData folder if the app uses a custom path.",
+  );
   process.exit(1);
 }
 
@@ -172,8 +200,10 @@ insertEvent(
   "info",
   `Starting safe update for \"${server.name}\"`,
   {
-    what: "Safe update job queued (pre-update backup + SteamCMD + sync).",
+    what: "Safe update job queued (stop if needed → pre-update backup → SteamCMD → restart if it was running).",
     location: installDir,
+    suggestion:
+      "The manager stops a running server before the pre-update backup and SteamCMD, then restarts it after a successful update.",
     context: { operation: "update" },
   },
   90,
@@ -188,7 +218,7 @@ insertEvent(
     cause: "SteamCMD exited with code 8",
     location: installDir,
     suggestion:
-      "Open the Updates tab for the SteamCMD log. Confirm the server is stopped, disk space is OK, then retry.",
+      "Open the Updates tab for the SteamCMD log. Confirm disk space is OK, then retry.",
     context: { operation: "update", exitCode: 8 },
   },
   85,

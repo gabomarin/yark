@@ -128,13 +128,18 @@ export class BackupRepository {
     };
   }
 
-  completeBackup(id: string, sizeBytes: number): BackupRecord | null {
-    const now = new Date().toISOString();
+  completeBackup(
+    id: string,
+    sizeBytes: number,
+    /** When omitted, uses now (live create). Pass archive mtime for crash recovery. */
+    completedAt?: string,
+  ): BackupRecord | null {
+    const finishedAt = completedAt ?? new Date().toISOString();
     this.db
       .prepare(
         "UPDATE backups SET status = 'completed', size_bytes = ?, completed_at = ? WHERE id = ?",
       )
-      .run(sizeBytes, now, id);
+      .run(sizeBytes, finishedAt, id);
     return this.getBackup(id);
   }
 
@@ -158,7 +163,10 @@ export class BackupRepository {
   listBackups(serverId: string, limit: number): BackupRecord[] {
     const rows = this.db
       .prepare(
-        "SELECT * FROM backups WHERE server_id = ? ORDER BY created_at DESC LIMIT ?",
+        // Match retention/schedule: prefer finish time; running rows use created_at.
+        `SELECT * FROM backups WHERE server_id = ?
+         ORDER BY COALESCE(completed_at, created_at) DESC, created_at DESC, rowid DESC
+         LIMIT ?`,
       )
       .all(serverId, limit) as unknown as BackupRow[];
     return rows.map(rowToBackup);
@@ -319,14 +327,14 @@ export class BackupRepository {
     if (kind !== undefined) {
       const rows = this.db
         .prepare(
-          "SELECT * FROM backups WHERE server_id = ? AND kind = ? AND status = 'completed' ORDER BY created_at DESC",
+          "SELECT * FROM backups WHERE server_id = ? AND kind = ? AND status = 'completed' ORDER BY completed_at DESC, created_at DESC, rowid DESC",
         )
         .all(serverId, kind) as unknown as BackupRow[];
       return rows.map(rowToBackup);
     }
     const rows = this.db
       .prepare(
-        "SELECT * FROM backups WHERE server_id = ? AND status = 'completed' ORDER BY created_at DESC",
+        "SELECT * FROM backups WHERE server_id = ? AND status = 'completed' ORDER BY completed_at DESC, created_at DESC, rowid DESC",
       )
       .all(serverId) as unknown as BackupRow[];
     return rows.map(rowToBackup);

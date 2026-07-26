@@ -329,6 +329,43 @@ describe("ServerBackupPanel", () => {
     expect(titles()).toEqual(["Alice", "All players", "Bob"]);
   });
 
+  it("sorts player backups by finish time, not job start", async () => {
+    const user = userEvent.setup();
+    const startedFirstFinishedLast: BackupRecord = {
+      id: "bk-long",
+      serverId: "srv-1",
+      type: "player_disconnect",
+      kind: "players",
+      path: "C:/backups/carol",
+      sizeBytes: 100,
+      status: "completed",
+      // Started before Alice…
+      createdAt: "2026-07-24T12:00:00.000Z",
+      // …but finished after Alice.
+      completedAt: "2026-07-24T14:00:00.000Z",
+      notes: formatPlayerSessionNotes("disconnect", "76561198000000003", "Carol"),
+    };
+
+    renderPanel([
+      worldBackup,
+      playersBackup,
+      aliceBackup,
+      bobBackup,
+      startedFirstFinishedLast,
+      iniBackup,
+    ]);
+    await user.click(await screen.findByRole("tab", { name: "Player profiles" }));
+
+    const list = document.querySelector("[data-backup-list]") as HTMLElement;
+    const titles = () =>
+      Array.from(list.querySelectorAll("[data-backup-title]")).map(
+        (node) => node.textContent,
+      );
+    // Newest-by-finish: Carol (14:00), Alice (13:00:01), Bob, All players
+    expect(titles()[0]).toBe("Carol");
+    expect(titles()[1]).toBe("Alice");
+  });
+
   it("preserves unsaved policy edits across quiet backups-changed refresh", async () => {
     const user = userEvent.setup();
     let pushHandler: ((payload: { serverId: string }) => void) | undefined;
