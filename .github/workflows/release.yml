@@ -83,7 +83,9 @@ jobs:
         run: npm test
 
       - name: Package Windows installer
-        run: npm run package
+        # softprops/action-gh-release uploads artifacts; do not let electron-builder
+        # auto-publish (it requires GH_TOKEN and races the Release step).
+        run: npm run build && npx electron-builder --win --publish never
         env:
           # No Authenticode cert in CI yet — skip auto-discovery so the build
           # does not fail looking for a signing identity.
