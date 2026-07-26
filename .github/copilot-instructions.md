@@ -17,6 +17,12 @@
 - Do not introduce unnecessary native dependencies if a pure Node/TypeScript alternative exists.
 - For Windows paths, preserve compatibility with a real Windows environment.
 
+## Engineering docs
+- Backup subsystem: `docs/backups.md` (ZIP layout, IPC, schedules, fleet health, restore).
+- Cursor Cloud / Linux VM: `AGENTS.md`.
+- Visual UI review: `docs/visual-testing.md`.
+- Broader agent rules: `docs/agent-context.md`.
+
 ## Verification
 - If backend, shared, or critical flows change: run `npm test` and `npm run typecheck`.
 - If renderer, preload, main, or app integration change: run `npm run build`.
