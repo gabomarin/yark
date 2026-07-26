@@ -79,6 +79,7 @@ Edit `website/index.html` / `styles.css` for copy, and `website/screenshots/` wh
 - [docs/backups.md](docs/backups.md) — ZIP backup kinds, reconcile, fleet health, IPC, restore
 - [docs/updates-steamcmd.md](docs/updates-steamcmd.md) — SteamCMD caches, safe update/verify, progress
 - [docs/logs.md](docs/logs.md) — operational logs, event details, clear/seed helpers
+- [docs/server-lifecycle.md](docs/server-lifecycle.md) — launch args, profile→INI sync, spawn, start/stop/kill
 - [docs/website.md](docs/website.md) — GitHub Pages site, screenshot gallery, deploy/capture checklist
 - [AGENTS.md](AGENTS.md) — Cursor Cloud / Linux VM run notes (display, Electron, tests, e2e pitfalls)
 - [docs/visual-testing.md](docs/visual-testing.md) — required Playwright review for visible UI changes

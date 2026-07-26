@@ -21,6 +21,7 @@
 - Backups (ZIP kinds, reconcile, fleet health): `docs/backups.md`
 - SteamCMD / safe update: `docs/updates-steamcmd.md`
 - Operational logs / event details: `docs/logs.md`
+- Server lifecycle (launch args, spawn, profile→INI): `docs/server-lifecycle.md`
 - GitHub Pages site / screenshot gallery: `docs/website.md`
 - Cursor Cloud VM notes: `AGENTS.md`
 

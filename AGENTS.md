@@ -5,7 +5,8 @@
 YARK server manager is a single Electron + React + TypeScript desktop app (no separate
 backend service; persistence is embedded SQLite via Node's built-in `node:sqlite`).
 Standard commands live in `package.json`, `README.md`, and `docs/agent-context.md`.
-Subsystem runbooks: `docs/backups.md`, `docs/updates-steamcmd.md`, `docs/logs.md`.
+Subsystem runbooks: `docs/backups.md`, `docs/updates-steamcmd.md`, `docs/logs.md`,
+`docs/server-lifecycle.md`.
 GitHub Pages site / screenshot gallery: `docs/website.md`.
 
 Notes specific to running this in the Linux cloud VM:
@@ -31,3 +32,4 @@ Notes specific to running this in the Linux cloud VM:
   note the smoke script may still fail on a stale `section.servers h2` selector.
 - Creating a server requires a Windows-style absolute install path (e.g. `C:\ARK`) and an
   admin password of at least 4 chars, and each server needs unique game/query/RCON ports.
+  Launch / spawn / profile→INI details: `docs/server-lifecycle.md`.
