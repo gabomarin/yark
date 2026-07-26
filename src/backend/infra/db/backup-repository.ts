@@ -128,13 +128,18 @@ export class BackupRepository {
     };
   }
 
-  completeBackup(id: string, sizeBytes: number): BackupRecord | null {
-    const now = new Date().toISOString();
+  completeBackup(
+    id: string,
+    sizeBytes: number,
+    /** When omitted, uses now (live create). Pass archive mtime for crash recovery. */
+    completedAt?: string,
+  ): BackupRecord | null {
+    const finishedAt = completedAt ?? new Date().toISOString();
     this.db
       .prepare(
         "UPDATE backups SET status = 'completed', size_bytes = ?, completed_at = ? WHERE id = ?",
       )
-      .run(sizeBytes, now, id);
+      .run(sizeBytes, finishedAt, id);
     return this.getBackup(id);
   }
 

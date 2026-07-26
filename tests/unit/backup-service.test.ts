@@ -644,6 +644,44 @@ describe("BackupService kinds and retention", () => {
     expect(repo.getBackup(record.id)?.status).toBe("completed");
   });
 
+  it("promotes interrupted running zips with archive mtime, not wall-clock now", async () => {
+    const { utimes, stat } = await import("node:fs/promises");
+    const created = await service.createManualBackup(profile.id, ["world"]);
+    const older = created[0];
+    expect(older).toBeDefined();
+    if (older === undefined) return;
+
+    // Crash after zip write — leave row running.
+    db.prepare(
+      `UPDATE backups SET status = 'running', completed_at = NULL, size_bytes = 0 WHERE id = ?`,
+    ).run(older.id);
+
+    // Archive finished in the past (before a newer completed backup).
+    const finishedAt = new Date("2026-07-20T12:00:00.000Z");
+    await utimes(older.path, finishedAt, finishedAt);
+
+    const newer = await service.createManualBackup(profile.id, ["world"]);
+    const newerRecord = newer[0];
+    expect(newerRecord).toBeDefined();
+    if (newerRecord === undefined) return;
+    // Force a finish time after the recovered archive but before "now".
+    db.prepare(`UPDATE backups SET completed_at = ? WHERE id = ?`).run(
+      "2026-07-24T12:00:00.000Z",
+      newerRecord.id,
+    );
+
+    const listed = await service.list(profile.id, 50);
+    const recovered = listed.find((row) => row.id === older.id);
+    expect(recovered?.status).toBe("completed");
+    const info = await stat(older.path);
+    expect(recovered?.completedAt).toBe(info.mtime.toISOString());
+    // Recovered older archive must sort after the newer completed one.
+    expect(listed.map((row) => row.id).slice(0, 2)).toEqual([
+      newerRecord.id,
+      older.id,
+    ]);
+  });
+
   it("fails stuck running backups with no zip on reconcile", async () => {
     const stuck = repo.createBackupStart({
       serverId: profile.id,

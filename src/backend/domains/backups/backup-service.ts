@@ -1797,7 +1797,13 @@ export class BackupService extends EventEmitter {
         if (readable && hasLayout) {
           try {
             const info = await stat(backup.path);
-            const completed = this.backups.completeBackup(backup.id, info.size);
+            // Use zip mtime — not wall clock — so recovery does not reorder
+            // ahead of newer completed archives and break keep-last retention.
+            const completed = this.backups.completeBackup(
+              backup.id,
+              info.size,
+              info.mtime.toISOString(),
+            );
             if (completed === null) continue;
             changed += 1;
             this.servers.addEvent(

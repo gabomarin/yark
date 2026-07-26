@@ -31,10 +31,26 @@ describe("BackupRepository", () => {
     expect(completed?.status).toBe("completed");
     expect(completed?.sizeBytes).toBe(1024);
     expect(completed?.kind).toBe("world");
+    expect(completed?.completedAt).toBeTruthy();
 
     const list = repo.listBackups("s1", 10);
     expect(list).toHaveLength(1);
     expect(list[0]?.id).toBe(started.id);
+  });
+
+  it("completeBackup accepts an explicit completedAt for recovery", () => {
+    const started = repo.createBackupStart({
+      serverId: "s1",
+      type: "manual",
+      kind: "world",
+      path: "C:\\backups\\recovered.zip",
+      notes: null,
+    });
+    const finishedAt = "2026-07-20T12:00:00.000Z";
+    const completed = repo.completeBackup(started.id, 2048, finishedAt);
+    expect(completed?.status).toBe("completed");
+    expect(completed?.completedAt).toBe(finishedAt);
+    expect(completed?.sizeBytes).toBe(2048);
   });
 
   it("lists backups by finish time, not job start", () => {
