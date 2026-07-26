@@ -17,6 +17,12 @@
 - Do not introduce unnecessary native dependencies if a pure Node/TypeScript alternative exists.
 - For Windows paths, preserve compatibility with a real Windows environment.
 
+## Engineering runbooks
+- Backups (ZIP kinds, reconcile, fleet health): `docs/backups.md`
+- SteamCMD / safe update: `docs/updates-steamcmd.md`
+- Operational logs / event details: `docs/logs.md`
+- Cursor Cloud VM notes: `AGENTS.md`
+
 ## Verification
 - If backend, shared, or critical flows change: run `npm test` and `npm run typecheck`.
 - If renderer, preload, main, or app integration change: run `npm run build`.
