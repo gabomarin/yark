@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   extractZip,
+  isReadableZipArchive,
   readZipTextEntry,
   safeExtractTarget,
   zipDirectory,
@@ -145,5 +146,20 @@ describe("backup-archive zip safety", () => {
       /Unsafe zip entry|invalid relative path/i,
     );
     expect(existsSync(outside)).toBe(false);
+  });
+
+  it("detects readable vs incomplete zip archives", async () => {
+    const root = await makeTempDir("ark-zip-readable-");
+    const source = join(root, "src");
+    const goodZip = join(root, "good.zip");
+    const badZip = join(root, "bad.zip");
+    await mkdir(source, { recursive: true });
+    await writeFile(join(source, "a.txt"), "ok", "utf8");
+    await zipDirectory(source, goodZip);
+    await writeFile(badZip, "partial-bytes-not-a-zip", "utf8");
+
+    await expect(isReadableZipArchive(goodZip)).resolves.toBe(true);
+    await expect(isReadableZipArchive(badZip)).resolves.toBe(false);
+    await expect(isReadableZipArchive(join(root, "missing.zip"))).resolves.toBe(false);
   });
 });

@@ -33,6 +33,7 @@ import { syncProfileSettingsToIni } from "../instances/sync-profile-ini";
 import {
   backupKindSubdir,
   extractZip,
+  isReadableZipArchive,
   isZipBackupPath,
   kindFromSubdirName,
   readZipTextEntry,
@@ -223,6 +224,8 @@ export class BackupService extends EventEmitter {
   >();
   /** Serialize disk↔DB reconcile per server so overlapping list/refresh cannot double-import. */
   private readonly reconcileInFlight = new Map<string, Promise<number>>();
+  /** Backup ids currently inside createBackup — reconcile must not promote/fail these. */
+  private readonly creatingBackupIds = new Set<string>();
 
   constructor(
     private readonly servers: ServerRepository,
@@ -427,9 +430,12 @@ export class BackupService extends EventEmitter {
       const resolvedRoot = resolveServerBackupRoot(server.installDir, policy.backupDir);
       const records = this.backups.listBackups(server.id, 10_000);
       const completed = records.filter((row) => row.status === "completed");
-      const failed24h = records.filter(
-        (row) => row.status === "failed" && row.createdAt >= dayAgoIso,
-      );
+      const failed24h = records.filter((row) => {
+        if (row.status !== "failed") return false;
+        // Prefer when the failure was recorded (completed_at), not when the job started.
+        const failedAt = row.completedAt ?? row.createdAt;
+        return failedAt >= dayAgoIso;
+      });
       const latestWorld = this.backups.latestCompleted(server.id, "world");
       const latest =
         completed[0] ??
@@ -1095,6 +1101,7 @@ export class BackupService extends EventEmitter {
       path: zipPath,
       notes,
     });
+    this.creatingBackupIds.add(record.id);
 
     try {
       const packaged =
@@ -1210,6 +1217,8 @@ export class BackupService extends EventEmitter {
       );
       this.emitChanged(serverId);
       throw err;
+    } finally {
+      this.creatingBackupIds.delete(record.id);
     }
   }
 
@@ -1704,9 +1713,9 @@ export class BackupService extends EventEmitter {
     const policy = this.backups.getPolicy(serverId);
     const rootDir = resolveServerBackupRoot(server.installDir, policy.backupDir);
 
-    // Promote interrupted creates (zip on disk, row still "running") before
+    // Resolve interrupted creates (zip on disk, row still "running") before
     // path-known checks would block re-import of those archives.
-    let changed = await this.recoverInterruptedRunningBackups(serverId);
+    let changed = await this.reconcileInterruptedRunningBackups(serverId);
     changed += this.pruneMissingDiskBackups(serverId);
 
     if (existsSync(rootDir)) {
@@ -1730,34 +1739,79 @@ export class BackupService extends EventEmitter {
   }
 
   /**
-   * If the app stopped after writing a .zip but before completeBackup, the row
-   * stays "running" and blocks orphan import. Promote those archives to completed.
+   * After a crash/kill, running rows may be stuck:
+   * - finished readable zip → promote to completed (restorable)
+   * - missing / empty / unreadable zip → fail so the UI can clear them
+   * Live creates (creatingBackupIds) are left alone.
    */
-  private async recoverInterruptedRunningBackups(serverId: string): Promise<number> {
+  private async reconcileInterruptedRunningBackups(serverId: string): Promise<number> {
     const records = this.backups.listBackups(serverId, 10_000);
-    let recovered = 0;
+    let changed = 0;
     for (const backup of records) {
       if (backup.status !== "running") continue;
-      if (!existsSync(backup.path)) continue;
-      // Live creates may still be writing; only recover finished zip archives.
-      if (!isZipBackupPath(backup.path)) continue;
-      try {
-        const info = await stat(backup.path);
-        if (info.size <= 0) continue;
-        const completed = this.backups.completeBackup(backup.id, info.size);
-        if (completed === null) continue;
-        recovered += 1;
+      if (this.creatingBackupIds.has(backup.id)) continue;
+
+      if (isZipBackupPath(backup.path) && existsSync(backup.path)) {
+        const readable = await isReadableZipArchive(backup.path);
+        if (readable) {
+          try {
+            const info = await stat(backup.path);
+            const completed = this.backups.completeBackup(backup.id, info.size);
+            if (completed === null) continue;
+            changed += 1;
+            this.servers.addEvent(
+              serverId,
+              "backup_created",
+              "info",
+              `Recovered interrupted ${backup.kind} backup: ${basename(backup.path)}`,
+            );
+          } catch {
+            // Leave running; a later reconcile can retry.
+          }
+          continue;
+        }
+
+        // Partial/corrupt zip from an interrupted write — not restorable.
+        await rm(backup.path, { force: true }).catch(() => undefined);
+        this.backups.failBackup(
+          backup.id,
+          "Interrupted while writing archive (incomplete or unreadable zip)",
+        );
+        changed += 1;
         this.servers.addEvent(
           serverId,
-          "backup_created",
-          "info",
-          `Recovered interrupted ${backup.kind} backup: ${basename(backup.path)}`,
+          "error",
+          "warning",
+          `Interrupted ${backup.kind} backup marked failed (incomplete zip): ${basename(backup.path)}`,
+          {
+            what: "A backup was interrupted while the archive was still being written.",
+            cause: "Incomplete or unreadable zip on disk after a crash or kill.",
+            location: backup.path,
+            suggestion: "Create the backup again from the server Backups tab.",
+            context: { kind: backup.kind, backupId: backup.id },
+          },
         );
-      } catch {
-        // Leave the running row; a later reconcile can retry.
+        continue;
       }
+
+      // Crash during staging — no zip yet. Fail so the row is not stuck forever.
+      this.backups.failBackup(backup.id, "Interrupted before archive was written");
+      changed += 1;
+      this.servers.addEvent(
+        serverId,
+        "error",
+        "warning",
+        `Interrupted ${backup.kind} backup marked failed (no archive on disk)`,
+        {
+          what: "A backup was interrupted before the zip archive was created.",
+          cause: "App stopped or crashed during staging.",
+          location: backup.path,
+          suggestion: "Create the backup again from the server Backups tab.",
+          context: { kind: backup.kind, backupId: backup.id },
+        },
+      );
     }
-    return recovered;
+    return changed;
   }
 
   /** Remove DB rows for archives deleted outside the app (e.g. Explorer). */

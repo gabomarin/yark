@@ -584,6 +584,44 @@ describe("BackupService kinds and retention", () => {
     expect(repo.getBackup(record.id)?.status).toBe("completed");
   });
 
+  it("fails stuck running backups with no zip on reconcile", async () => {
+    const stuck = repo.createBackupStart({
+      serverId: profile.id,
+      type: "manual",
+      kind: "world",
+      path: join(installDir, "Backups", "World", "never-written.zip"),
+      notes: "staging crash",
+    });
+    expect(existsSync(stuck.path)).toBe(false);
+    expect(stuck.status).toBe("running");
+
+    const listed = await service.list(profile.id, 50);
+    const row = listed.find((item) => item.id === stuck.id);
+    expect(row?.status).toBe("failed");
+    expect(repo.getBackup(stuck.id)?.status).toBe("failed");
+    expect(repo.getBackup(stuck.id)?.notes).toMatch(/before archive was written/i);
+  });
+
+  it("does not promote an unreadable partial zip to completed", async () => {
+    const zipPath = join(installDir, "Backups", "World", "partial-write.zip");
+    await mkdir(join(installDir, "Backups", "World"), { recursive: true });
+    await writeFile(zipPath, "not-a-real-zip-but-nonempty", "utf8");
+
+    const stuck = repo.createBackupStart({
+      serverId: profile.id,
+      type: "manual",
+      kind: "world",
+      path: zipPath,
+      notes: "killed mid-write",
+    });
+
+    const listed = await service.list(profile.id, 50);
+    const row = listed.find((item) => item.id === stuck.id);
+    expect(row?.status).toBe("failed");
+    expect(repo.getBackup(stuck.id)?.status).toBe("failed");
+    expect(existsSync(zipPath)).toBe(false);
+  });
+
   it("keeps a completed backup when retention pruning fails", async () => {
     vi.spyOn(
       service as unknown as { applyRetention: (serverId: string, policy: unknown) => Promise<void> },
@@ -689,6 +727,46 @@ describe("BackupService kinds and retention", () => {
     expect(summary.stats.totalBackupBytes).toBeGreaterThan(0);
     expect(summary.diskSettings.warnUsedPercent).toBe(85);
     expect(summary.disks.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("counts failed24h by failure time (completedAt), not job start", async () => {
+    const oldStart = repo.createBackupStart({
+      serverId: profile.id,
+      type: "scheduled",
+      kind: "world",
+      path: join(installDir, "Backups", "World", "old-start-recent-fail.zip"),
+      notes: null,
+    });
+    // Job started 2 days ago…
+    db.prepare(`UPDATE backups SET created_at = ? WHERE id = ?`).run(
+      new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      oldStart.id,
+    );
+    // …but failed just now.
+    repo.failBackup(oldStart.id, "late failure");
+
+    const ancient = repo.createBackupStart({
+      serverId: profile.id,
+      type: "scheduled",
+      kind: "world",
+      path: join(installDir, "Backups", "World", "ancient-fail.zip"),
+      notes: null,
+    });
+    repo.failBackup(ancient.id, "old failure");
+    db.prepare(
+      `UPDATE backups SET created_at = ?, completed_at = ? WHERE id = ?`,
+    ).run(
+      new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      ancient.id,
+    );
+
+    const summary = await service.getFleetSummary();
+    expect(summary.servers[0]?.counts.failed24h).toBe(1);
+    expect(summary.stats.failed24h).toBe(1);
+    expect(summary.alerts.some((alert) => alert.message.includes("failed backup"))).toBe(
+      true,
+    );
   });
 
   it("previews and runs cleanup for failed backups while protecting newest world", async () => {

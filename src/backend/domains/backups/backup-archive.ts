@@ -205,3 +205,27 @@ export async function readZipTextEntry(
 export function archiveDisplayName(path: string): string {
   return basename(path);
 }
+
+/**
+ * True when `zipPath` is a readable zip (central directory present).
+ * Rejects empty files and in-progress yazl writes that lack a valid EOCD.
+ */
+export async function isReadableZipArchive(zipPath: string): Promise<boolean> {
+  try {
+    const info = await stat(zipPath);
+    if (!info.isFile() || info.size <= 0) return false;
+  } catch {
+    return false;
+  }
+
+  return await new Promise<boolean>((resolvePromise) => {
+    yauzl.open(zipPath, { lazyEntries: true }, (openErr, zipfile) => {
+      if (openErr !== null || zipfile === undefined) {
+        resolvePromise(false);
+        return;
+      }
+      zipfile.close();
+      resolvePromise(true);
+    });
+  });
+}

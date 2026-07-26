@@ -81,7 +81,23 @@ describe("LogsService runtime logs", () => {
     const profile = makeProfile(root);
     const repo = {
       get: (id: string) => (id === profile.id ? profile : null),
-      recentEvents: () => [],
+      recentEvents: () => [
+        {
+          id: 1,
+          serverId: profile.id,
+          type: "error" as const,
+          severity: "error" as const,
+          message: "Backup scheduled/world failed",
+          createdAt: "2026-07-25T12:00:00.000Z",
+          details: {
+            what: "A scheduled world backup failed before the archive was completed.",
+            cause: "ENOSPC: no space left on device",
+            location: "C:\\ARK\\Backups\\World",
+            suggestion: "Free disk space, then retry.",
+            context: { kind: "world", code: "ENOSPC" },
+          },
+        },
+      ],
     } as unknown as ServerRepository;
 
     const processes = {
@@ -100,6 +116,11 @@ describe("LogsService runtime logs", () => {
     expect(content).toContain("server started");
     expect(content).toContain("srv-logs-1-1.log");
     expect(content).toContain("update output");
+    expect(content).toContain("Backup scheduled/world failed");
+    expect(content).toContain("What: A scheduled world backup failed");
+    expect(content).toContain("Cause: ENOSPC: no space left on device");
+    expect(content).toContain("Try next: Free disk space, then retry.");
+    expect(content).toContain("kind: world");
   });
 
   it("clears events, runtime buffer, and update log files", async () => {
