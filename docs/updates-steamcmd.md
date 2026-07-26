@@ -85,7 +85,8 @@ wasRunning = isActive
 ```
 
 Pre-update archives use backup type `pre_update` and kinds `world` / `players` / `ini`
-(`CRITICAL_BACKUP_KINDS`). Verify has the same stop/restart contract but **no**
+(`CRITICAL_BACKUP_KINDS`; queued under `backupCriticalJobsQueue.v1` — see
+[backups.md](backups.md)). Verify has the same stop/restart contract but **no**
 pre-verify backup. Per-server update logs land under userData `update-logs/` as
 `{serverId}-{timestamp}.log`. Events carry structured `details` (What / Cause /
 Try next) — see [logs.md](logs.md).

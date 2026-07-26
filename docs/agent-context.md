@@ -35,6 +35,7 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 
 ## Engineering runbooks
 
+- [backups.md](backups.md) — ZIP layout, reconcile, fleet health / disk alerts / cleanup, IPC, schedules, player sessions, restore.
 - [updates-steamcmd.md](updates-steamcmd.md) — caches, safe update auto-stop/rollback, robocopy skip, availability compare, progress push.
 - [logs.md](logs.md) — event `details`, clear/export IPC, `logsFocus`, seed/visual helpers.
 
@@ -44,12 +45,13 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 - Overview, SteamCMD, Logs, and Backups have already been migrated to the new architecture.
 - Server Workspace keeps `Server`, `INI Files`, `Backups`, and **Logs** as its regular navigation. Workspace **Backups** is operational (create / restore / history / destination for that server) with kind subtabs (**World save** | **Player profiles** | **INI**). Sidebar **Backups** is generalized configuration across servers (schedule / destination / retention) with “Open in server” to jump into the workspace tab. Mods are edited on the Server tab (comma-separated CurseForge Project IDs) until a CurseForge API key enables a dedicated Mods UI. A five-step configuration assistant launches on demand from `Server`; it uses an isolated draft and writes only after explicit review.
 - Clusters and Settings remain placeholders within the new shell.
-- Sidebar Backups settings page and per-server workspace Backups tab are live.
-- Backups are kind-scoped ZIP archives: `world` (full SavedArks including `.arkprofile*`), `players` (profiles from SavedArks/SaveGames), `ini` (`Game.ini` + `GameUserSettings.ini`).
-  - On disk under the shared root: `World/`, `Player profiles/`, `INI/` subfolders; each snapshot is a `.zip` (legacy loose folders still restore). Listing reconciles orphan archives from disk into SQLite.
+- Sidebar Backups settings page and per-server workspace Backups tab are live (fleet health, disk alerts, cleanup on the sidebar page).
+- Backups are kind-scoped ZIP archives: `world` (full SavedArks including `.arkprofile*`), `players` (profiles from SavedArks/SaveGames), `ini` (`Game.ini` + `GameUserSettings.ini`). Details: [backups.md](backups.md).
+  - On disk under the shared root: `World/`, `Player profiles/`, `INI/` subfolders; each snapshot is a `.zip` (legacy loose folders still restore). Listing reconciles interrupted `running` rows, prunes missing paths, then imports layout-valid orphans.
   - **World**: destination + schedule (`enabled` / `intervalMinutes`, min **5**, default **60**) + `retainCountWorld`. Schedule creates **world only**.
   - **Players**: `retainCountPlayers` (per-player pools); RCON `ListPlayers` poll (~10s) + status ticks + mtime safety net; connect/disconnect archives.
   - **INI**: `retainCountIni`; manual + automatic `ini_save` after successful INI save (debounced ~2s).
+  - Fleet: `stale` gated on schedule-on **and** process active; `never_backed_up` still warns when schedule is on with no world (including stopped). Critical = bad destination or failed **world** in 24h.
   - Workspace UI: destination/schedule only on World subtab; auto-refresh (~12s) + Refresh button + `push:backups-changed` for live list updates.
 - Safe **Update** / **Verify** may run while the server is active: the manager stops before pre-update backup (update) and SteamCMD, then restarts if it was running (rollback on failure). Live SteamCMD console/progress uses `push:steamcmd-progress`. Details: [updates-steamcmd.md](updates-steamcmd.md).
 - Operational events can carry structured `details` (What / Cause / Where / Try next). Fleet Logs deep-links into workspace Logs via `logsFocus`. Clear APIs exist per section. See [logs.md](logs.md).

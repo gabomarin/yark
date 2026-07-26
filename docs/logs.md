@@ -69,7 +69,7 @@ remaining files are noted as omitted.
 | Events | SQLite `events` for that server (from `recentEvents(500)` filtered by id) |
 | Runtime | In-memory process stdout/stderr buffer (`getRuntimeLogSnapshot`, up to 400 lines) |
 | Updates | Files under userData `update-logs/` (`{serverId}-….log`) |
-| Backups | Backup records from `BackupService` / repository |
+| Backups | Backup records from `BackupService` / repository (see [backups.md](backups.md)) |
 
 Fleet **Logs** deep-links into the workspace via `logsFocus`
 (`ServerLogsFocus`: optional `section`, `eventId`, `updateFileName`).
