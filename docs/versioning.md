@@ -31,6 +31,39 @@ While the product is a **work-in-progress preview** (`0.x`), prefer MINOR bumps
 for user-visible feature batches and PATCH for hotfix builds. Promote to
 `1.0.0` only when CurseForge / public packaging is intentionally “stable”.
 
+## Day-to-day vs publish
+
+| Moment | What happens |
+| --- | --- |
+| Feature / fix work | One GitHub issue → one PR into `main`; note user-visible changes under `## [Unreleased]` |
+| Publish an installer | Bump SemVer, move Unreleased → `[X.Y.Z]`, tag `vX.Y.Z`, CI builds the Windows NSIS `.exe` |
+
+Do **not** cut a new version/tag on every merge. Group merged tickets into a MINOR
+(or PATCH hotfix) when the build is worth installing.
+
+## GitHub Actions release
+
+Workflow: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
+
+- **Trigger:** push of tag `v*` (or manual **workflow_dispatch** with an existing tag).
+- **Runner:** `windows-latest` → `npm run package` (electron-builder NSIS).
+- **Gate:** `package.json` `"version"` must equal the tag without the `v` prefix
+  (`v0.2.0` ↔ `0.2.0`).
+- **Output:** GitHub Release with `dist/*.exe` (and `*.yml` metadata). `0.x` tags
+  are marked **prerelease**.
+- **Signing:** builds are currently **unsigned** (`CSC_IDENTITY_AUTO_DISCOVERY=false`).
+  Windows SmartScreen may warn until an Authenticode certificate is configured.
+
+After the release commit is on `main`:
+
+```bash
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+
+Then watch **Actions → Release Windows**. Rebuild an existing tag via
+**Actions → Release Windows → Run workflow**.
+
 ## Release checklist
 
 1. Move items from `## [Unreleased]` in `CHANGELOG.md` into a new section
@@ -42,11 +75,13 @@ for user-visible feature batches and PATCH for hotfix builds. Promote to
 4. Run verification appropriate to the change:
    - `npm run typecheck`
    - `npm test`
-   - `npm run build` (and `npm run package` for a Windows installer cut)
+   - `npm run build` (optional local `npm run package` smoke)
 5. If the public site should show the new version, bump the `status-pill` text in
    `website/index.html` (it does not read `package.json`).
-6. Commit with a message that names the version (e.g. `release: v0.2.0`).
-7. Tag `vX.Y.Z` when publishing a build others will install.
+6. Commit with a message that names the version (e.g. `release: v0.2.0`) and merge
+   to `main`.
+7. Tag `vX.Y.Z` on that commit and `git push origin vX.Y.Z` — CI publishes the
+   installer to the GitHub Release.
 8. Leave a fresh empty `## [Unreleased]` section at the top of `CHANGELOG.md`
    for the next cycle.
 
