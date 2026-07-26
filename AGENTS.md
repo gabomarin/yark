@@ -5,7 +5,9 @@
 YARK server manager is a single Electron + React + TypeScript desktop app (no separate
 backend service; persistence is embedded SQLite via Node's built-in `node:sqlite`).
 Standard commands live in `package.json`, `README.md`, and `docs/agent-context.md`.
-Domain runbooks: [docs/updates-steamcmd.md](docs/updates-steamcmd.md). Visual/e2e helpers:
+Domain runbooks: [docs/backups.md](docs/backups.md),
+[docs/updates-steamcmd.md](docs/updates-steamcmd.md),
+[docs/logs.md](docs/logs.md). Visual/e2e helpers:
 [docs/visual-testing.md](docs/visual-testing.md).
 
 Notes specific to running this in the Linux cloud VM:

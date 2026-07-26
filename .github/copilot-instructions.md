@@ -18,7 +18,9 @@
 - For Windows paths, preserve compatibility with a real Windows environment.
 
 ## Engineering docs
-- Backup subsystem: `docs/backups.md` (ZIP layout, IPC, schedules, fleet health, restore).
+- Backups: `docs/backups.md` (ZIP layout, reconcile, fleet health/cleanup, IPC, restore).
+- SteamCMD / updates: `docs/updates-steamcmd.md` (caches, safe-update auto-stop/rollback).
+- Operational logs: `docs/logs.md` (event details, clear/export, `logsFocus`).
 - Cursor Cloud / Linux VM: `AGENTS.md`.
 - Visual UI review: `docs/visual-testing.md`.
 - Broader agent rules: `docs/agent-context.md`.

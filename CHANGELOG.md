@@ -16,6 +16,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Local Cursor project context for backlog (`.cursor/project-context/`, gitignored).
 - Functional **Backups** page (list / create / restore / schedule + retention) with IPC over existing backup services.
 - Per-server backup destination (default `{installDir}\\Backups`) plus open destination / open backup folder actions.
+- Engineering runbooks for ZIP backups, SteamCMD safe-update auto-stop/rollback, and operational event details (`docs/backups.md`, `docs/updates-steamcmd.md`, `docs/logs.md`).
 
 ### Changed
 
