@@ -24,6 +24,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Project license set to **GPL-3.0-only** (was undeclared MIT in `package.json` only).
 - Product branding renamed to **YARK server manager**.
 - Repository user-facing strings and docs moved to English.
 - Mods managed from the Server tab (comma-separated CurseForge Project IDs); dedicated Mods tab deferred pending API key.

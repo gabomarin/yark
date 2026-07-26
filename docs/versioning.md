@@ -54,6 +54,20 @@ Workflow: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
 - **Signing:** builds are currently **unsigned** (`CSC_IDENTITY_AUTO_DISCOVERY=false`).
   Windows SmartScreen may warn until an Authenticode certificate is configured.
 
+### Local `npm run package` on Windows
+
+If packaging fails extracting `winCodeSign` with:
+
+`Cannot create symbolic link … privilegio requerido … libcrypto.dylib`
+
+electron-builder is unpacking a cache archive that contains **macOS symlinks**. Windows
+blocks that unless the process can create symlinks. Fixes (pick one):
+
+1. **Recommended:** Settings → System → For developers → **Developer Mode** = On, then
+   delete `%LOCALAPPDATA%\electron-builder\Cache\winCodeSign` and retry `npm run package`.
+2. Run the terminal **as Administrator** once (same cache clear helps).
+3. CI (`windows-latest`) normally has symlink rights; this is mostly a local-dev issue.
+
 After the release commit is on `main`:
 
 ```bash
