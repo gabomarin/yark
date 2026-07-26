@@ -158,7 +158,10 @@ export class BackupRepository {
   listBackups(serverId: string, limit: number): BackupRecord[] {
     const rows = this.db
       .prepare(
-        "SELECT * FROM backups WHERE server_id = ? ORDER BY created_at DESC LIMIT ?",
+        // Match retention/schedule: prefer finish time; running rows use created_at.
+        `SELECT * FROM backups WHERE server_id = ?
+         ORDER BY COALESCE(completed_at, created_at) DESC, created_at DESC, rowid DESC
+         LIMIT ?`,
       )
       .all(serverId, limit) as unknown as BackupRow[];
     return rows.map(rowToBackup);
