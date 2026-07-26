@@ -1,7 +1,9 @@
 #!/usr/bin/env sh
 set -e
+. "$(dirname "$0")/common.sh"
+
 echo "husky (pre-commit): typecheck..."
-npm run typecheck
+npm_host run typecheck
 echo "husky (pre-commit): lint..."
-npm run lint
+npm_host run lint
 echo "husky (pre-commit): ok"

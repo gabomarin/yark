@@ -22,8 +22,9 @@ Notes specific to running this in the Linux cloud VM:
   GitHub Actions **CI** (`.github/workflows/ci.yml`) runs typecheck + lint + tests + build
   on `windows-latest` for every PR and push to `main` (avoids known Linux path-test gaps).
   Local Husky hooks (after `npm install`): pre-commit runs typecheck + lint; pre-push runs
-  typecheck + test + lint. Skip only with `--no-verify` / `HUSKY=0` in emergencies — CI
-  still gates merges.
+  typecheck + test + lint. On WSL with a Windows checkout (`/mnt/...`), hooks delegate to
+  `cmd.exe` so win32 `node_modules` (Rollup) work. Skip only with `--no-verify` / `HUSKY=0`
+  in emergencies — CI still gates merges.
 - Running the app: `npm run dev` (dev, HMR) or `npm start` (preview a build). It opens a
   real Electron window on the VM desktop display, so it must run through the GUI/desktop
   environment (e.g. computer use), not as a plain headless process.
