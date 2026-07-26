@@ -395,19 +395,35 @@ export class UpdateService extends EventEmitter {
         "update_started",
         "info",
         `Starting safe update for \"${server.name}\"`,
+        {
+          what: "Safe update job started (stop if needed → pre-update backup → SteamCMD → restart if it was running).",
+          location: server.installDir,
+          suggestion: wasRunning
+            ? "The manager will stop the server for a consistent pre-update backup and SteamCMD, then restart it if the update succeeds."
+            : "Watch SteamCMD progress. The server will stay stopped after a successful update.",
+          context: {
+            operation: "update",
+            wasRunning,
+            installDir: server.installDir,
+          },
+        },
       );
 
-      const preUpdateBackups = await this.backups.createPreUpdateBackupForJob(serverId);
-
-      if (wasRunning) {
-        await this.instances.stop(serverId);
-      }
-
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      await mkdir(this.updatesLogDir, { recursive: true });
-      const logPath = join(this.updatesLogDir, `${serverId}-${timestamp}.log`);
-
+      let preUpdateBackups: Awaited<
+        ReturnType<BackupService["createPreUpdateBackupForJob"]>
+      > = [];
       try {
+        // Stop before snapshotting — live SavedArks writes would tear rollback archives.
+        if (wasRunning) {
+          await this.instances.stop(serverId);
+        }
+
+        preUpdateBackups = await this.backups.createPreUpdateBackupForJob(serverId);
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        await mkdir(this.updatesLogDir, { recursive: true });
+        const logPath = join(this.updatesLogDir, `${serverId}-${timestamp}.log`);
+
         const cmd = await this.runSteamUpdate(server.installDir, "update", serverId);
         const durationMs = Date.now() - startedAt.getTime();
         await writeFile(
@@ -458,14 +474,15 @@ export class UpdateService extends EventEmitter {
             err instanceof Error ? err.message : String(err)
           }`,
           {
-            what: "Safe update failed after the pre-update backup step.",
+            what: "Safe update failed (backup and/or SteamCMD step).",
             cause: err instanceof Error ? err.message : String(err),
             location: server.installDir,
             suggestion:
-              "Open the Updates tab for the SteamCMD log. A rollback may follow automatically if backups were taken.",
+              "Open the Updates tab for the SteamCMD log. A rollback may follow automatically if pre-update backups were taken.",
             context: {
               operation: "update",
               installDir: server.installDir,
+              wasRunning,
             },
           },
         );
@@ -526,6 +543,17 @@ export class UpdateService extends EventEmitter {
         "update_started",
         "info",
         `Verifying file integrity (SteamCMD validate) on "${server.name}"`,
+        {
+          what: "SteamCMD validate job started.",
+          location: server.installDir,
+          suggestion: wasRunning
+            ? "The manager will stop the server for SteamCMD validate, then restart it if verification succeeds."
+            : "Watch SteamCMD progress. The server will stay stopped after a successful verify.",
+          context: {
+            operation: "verify-files",
+            wasRunning,
+          },
+        },
       );
 
       if (wasRunning) {

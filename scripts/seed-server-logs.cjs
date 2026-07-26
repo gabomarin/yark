@@ -200,8 +200,10 @@ insertEvent(
   "info",
   `Starting safe update for \"${server.name}\"`,
   {
-    what: "Safe update job queued (pre-update backup + SteamCMD + sync).",
+    what: "Safe update job queued (stop if needed → pre-update backup → SteamCMD → restart if it was running).",
     location: installDir,
+    suggestion:
+      "The manager stops a running server before the pre-update backup and SteamCMD, then restarts it after a successful update.",
     context: { operation: "update" },
   },
   90,
@@ -216,7 +218,7 @@ insertEvent(
     cause: "SteamCMD exited with code 8",
     location: installDir,
     suggestion:
-      "Open the Updates tab for the SteamCMD log. Confirm the server is stopped, disk space is OK, then retry.",
+      "Open the Updates tab for the SteamCMD log. Confirm disk space is OK, then retry.",
     context: { operation: "update", exitCode: 8 },
   },
   85,

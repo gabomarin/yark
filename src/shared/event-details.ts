@@ -14,14 +14,15 @@ function catalogFor(event: AppEvent): AppEventDetails {
       return {
         what: "A SteamCMD install, update, or verify job failed.",
         cause:
-          "SteamCMD exited with an error, was cancelled, exhausted retries, or the server was not stopped first.",
+          "SteamCMD exited with an error, was cancelled, exhausted retries, or a related step (stop/backup/restart) failed.",
         suggestion:
-          "Open the Updates tab for the full SteamCMD log, confirm the server is stopped, check disk space and SteamCMD path, then retry.",
+          "Open the Updates tab for the full SteamCMD log, check disk space and SteamCMD path, then retry. Safe update/verify stop and restart the server when needed.",
       };
     case "update_started":
       return {
         what: "A SteamCMD files job started or was queued.",
-        suggestion: "Watch SteamCMD progress; keep the server stopped until the job finishes.",
+        suggestion:
+          "Watch SteamCMD progress. Safe update/verify stop the server if it was running (for a consistent backup) and restart it after success; install still needs the server stopped first.",
       };
     case "update_completed":
       return {
@@ -30,7 +31,8 @@ function catalogFor(event: AppEvent): AppEventDetails {
     case "update_rolled_back":
       return {
         what: "The update failed and a previous backup was restored automatically.",
-        suggestion: "Inspect the update log and the restored backup before starting the server again.",
+        suggestion:
+          "Inspect the update log and restored files. If the server was running before the update, the manager may have restarted it already.",
       };
     case "backup_created":
       return {

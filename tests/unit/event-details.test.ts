@@ -22,6 +22,12 @@ describe("resolveEventDetails", () => {
     expect(resolved.suggestion).toMatch(/Updates tab/i);
   });
 
+  it("describes safe update/verify auto-stop for update_started catalog rows", () => {
+    const resolved = resolveEventDetails(base({ type: "update_started", severity: "info" }));
+    expect(resolved.suggestion).toMatch(/stop the server if it was running/i);
+    expect(resolved.suggestion).not.toMatch(/keep the server stopped until/i);
+  });
+
   it("prefers stored details over the catalog", () => {
     const resolved = resolveEventDetails(
       base({
