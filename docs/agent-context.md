@@ -38,7 +38,13 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 - Overview, SteamCMD, Logs, and Backups have already been migrated to the new architecture.
 - Server Workspace keeps `Server`, `INI Files`, and `Backups` as its regular navigation. Workspace **Backups** is operational (create / restore / history / destination for that server) with kind subtabs (**World save** | **Player profiles** | **INI**). Sidebar **Backups** is generalized configuration across servers (schedule / destination / retention) with “Open in server” to jump into the workspace tab. Mods are edited on the Server tab (comma-separated CurseForge Project IDs) until a CurseForge API key enables a dedicated Mods UI. A five-step configuration assistant launches on demand from `Server`; it uses an isolated draft and writes only after explicit review.
 - Clusters and Settings remain placeholders within the new shell.
-- Backups are kind-scoped (`world` / `players` / `ini`) with separate triggers for schedule, player sessions, INI-on-save, and pre-update. Full workflows, IPC surface, constraints, and troubleshooting: [backups.md](backups.md).
+- Sidebar Backups settings page and per-server workspace Backups tab are live.
+- Backups are kind-scoped ZIP archives: `world` (full SavedArks including `.arkprofile*`), `players` (profiles from SavedArks/SaveGames), `ini` (`Game.ini` + `GameUserSettings.ini`).
+  - On disk under the shared root: `World/`, `Player profiles/`, `INI/` subfolders; each snapshot is a `.zip` (legacy loose folders still restore). Listing reconciles orphan archives from disk into SQLite.
+  - **World**: destination + schedule (`enabled` / `intervalMinutes`, min **5**, default **60**) + `retainCountWorld`. Schedule creates **world only**.
+  - **Players**: `retainCountPlayers` (per-player pools); RCON `ListPlayers` poll (~10s) + status ticks + mtime safety net; connect/disconnect archives.
+  - **INI**: `retainCountIni`; manual + automatic `ini_save` after successful INI save (debounced ~2s).
+  - Workspace UI: destination/schedule only on World subtab; auto-refresh (~12s) + Refresh button + `push:backups-changed` for live list updates.
 - Live log streaming during active SteamCMD operations is still pending.
 - Real E2E validation against host-side binaries and SteamCMD is still not covered.
 

@@ -14,6 +14,9 @@ interface Props {
   server: ServerProfile;
   runtime: ServerRuntimeInfo | null;
   installation: ServerInstallationInfo | null;
+  /** SteamCMD is rewriting this install — block start/restart like a live process. */
+  filesJobActive?: boolean;
+  filesJobReason?: string;
   onBack: () => void;
   onStart: () => void;
   onStop: () => void;
@@ -37,9 +40,11 @@ export function WorkspaceHeader(props: Props): JSX.Element {
     props.installation?.build ??
     props.installation?.version ??
     "—";
-  const canStart = status === "stopped" || status === "error";
+  const canStart =
+    (status === "stopped" || status === "error") && props.filesJobActive !== true;
   const canStop = status === "running" || status === "starting";
-  const canRestart = status === "running";
+  const canRestart = status === "running" && props.filesJobActive !== true;
+  const lockTitle = props.filesJobReason ?? "Wait for the files job to finish";
 
   return (
     <header className={classes.header}>
@@ -92,6 +97,7 @@ export function WorkspaceHeader(props: Props): JSX.Element {
             leftSection={<Play size={14} weight="fill" />}
             onClick={props.onStart}
             disabled={!canStart}
+            title={props.filesJobActive === true ? lockTitle : undefined}
           >
             Start
           </Button>
@@ -101,6 +107,7 @@ export function WorkspaceHeader(props: Props): JSX.Element {
             leftSection={<ArrowsClockwise size={14} />}
             onClick={props.onRestart}
             disabled={!canRestart}
+            title={props.filesJobActive === true ? lockTitle : undefined}
           >
             Restart
           </Button>

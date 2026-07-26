@@ -1,15 +1,26 @@
+import { EventEmitter } from "node:events";
 import { existsSync } from "node:fs";
-import { cp, mkdir, readdir, rm, stat, writeFile } from "node:fs/promises";
-import { basename, dirname, join, relative } from "node:path";
+import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
+import { tmpdir } from "node:os";
 import {
+  backupFinishedAt,
   formatPlayerSessionNotes,
   playersRetentionKey,
 } from "@shared/backup-player-meta";
 import type {
+  BackupCleanupOptions,
+  BackupCleanupPreview,
+  BackupCleanupResult,
+  BackupDiskAlertSettings,
+  BackupFleetAlert,
+  BackupFleetSummary,
+  BackupHealthStatus,
   BackupKind,
   BackupPolicy,
   BackupRecord,
+  BackupServerHealth,
   BackupType,
   ServerProfile,
 } from "@shared/types";
@@ -20,8 +31,77 @@ import type { ProcessManager } from "../../infra/process/process-manager";
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
 import { rconExec } from "../../infra/rcon/rcon-client";
 import { syncProfileSettingsToIni } from "../instances/sync-profile-ini";
+import {
+  backupKindSubdir,
+  extractZip,
+  isReadableZipArchive,
+  isZipBackupPath,
+  kindFromSubdirName,
+  readZipTextEntry,
+  zipDirectory,
+  zipHasBackupLayout,
+} from "./backup-archive";
+import {
+  isBackupDestinationReachable,
+  readVolumeSpace,
+  volumeRootForPath,
+} from "./backup-disk";
 
-export { formatPlayerSessionNotes, playersRetentionKey } from "@shared/backup-player-meta";
+export {
+  backupFinishedAt,
+  formatPlayerSessionNotes,
+  playersRetentionKey,
+} from "@shared/backup-player-meta";
+export { backupKindSubdir } from "./backup-archive";
+
+export interface BackupChangedPush {
+  serverId: string;
+}
+
+/** Pure fleet health badge for one server (used by getFleetSummary). */
+export function computeBackupServerHealth(input: {
+  destinationOk: boolean;
+  stale: boolean;
+  /** All failed backups in the last 24h (any kind) — warning floor when not critical. */
+  failed24h: number;
+  /** Failed *world* backups in the last 24h — drives critical (world = protection). */
+  failedWorld24h: number;
+  scheduleEnabled: boolean;
+  hasWorldBackup: boolean;
+  /** Scheduled world backups only run while the process is active. */
+  serverRunning: boolean;
+}): BackupHealthStatus {
+  if (!input.destinationOk || input.failedWorld24h > 0) return "critical";
+  // INI / player failures are noisy vs world protection — warn, do not mark critical.
+  if (input.failed24h > 0) return "warning";
+  // World schedule skips stopped servers — without a completed world archive this
+  // is never "Protected", whether the process is running or not.
+  if (input.scheduleEnabled && !input.hasWorldBackup) {
+    return "warning";
+  }
+  if (input.stale) return "warning";
+  if (!input.scheduleEnabled && !input.hasWorldBackup) return "unknown";
+  // Keep serverRunning in the contract so callers must pass process state.
+  void input.serverRunning;
+  return "ok";
+}
+
+/** Newest finished (completed/failed) backup by finish time. */
+export function pickLatestFinishedBackup(
+  records: BackupRecord[],
+): BackupRecord | null {
+  let latest: BackupRecord | null = null;
+  let latestStamp = "";
+  for (const row of records) {
+    if (row.status === "running") continue;
+    const stamp = backupFinishedAt(row);
+    if (latest === null || stamp > latestStamp) {
+      latest = row;
+      latestStamp = stamp;
+    }
+  }
+  return latest;
+}
 
 const RCON_HOST = "127.0.0.1";
 const BACKUP_CRITICAL_JOBS_KEY = "backupCriticalJobsQueue.v1";
@@ -37,6 +117,15 @@ export const CRITICAL_BACKUP_KINDS: readonly BackupKind[] = ["world", "players",
 const ALL_BACKUP_KINDS: readonly BackupKind[] = ["world", "players", "ini"];
 
 const PLAYER_PROFILE_RE = /\.(arkprofile)(\.bak)?$/i;
+
+const DISK_ALERT_SETTINGS_KEY = "backupDiskAlerts.v1";
+const DEFAULT_DISK_ALERT_SETTINGS: BackupDiskAlertSettings = {
+  warnUsedPercent: 85,
+  criticalUsedPercent: 95,
+  warnFreeBytes: 20 * 1024 * 1024 * 1024,
+};
+/** World backup is stale when older than interval × this factor. */
+const STALE_INTERVAL_FACTOR = 1.5;
 
 type BackupCriticalJobType = "pre-update-backup" | "restore";
 
@@ -147,9 +236,9 @@ async function copyFileTo(src: string, dest: string): Promise<void> {
 
 /**
  * Local backup and restore management for ASA instances.
- * Kind-scoped: world (full SavedArks including profiles), players (.arkprofile*), INI configs.
+ * Kind-scoped ZIP archives under World / Player profiles / INI subfolders.
  */
-export class BackupService {
+export class BackupService extends EventEmitter {
   private queue: BackupCriticalJob[] = [];
   private processingQueue = false;
   private readonly waiters = new Map<string, Array<{
@@ -161,20 +250,29 @@ export class BackupService {
     string,
     Array<{ resolve: (value: BackupRecord | null) => void; reject: (error: Error) => void }>
   >();
+  /** Serialize disk↔DB reconcile per server so overlapping list/refresh cannot double-import. */
+  private readonly reconcileInFlight = new Map<string, Promise<number>>();
+  /** Backup ids currently inside createBackup — reconcile must not promote/fail these. */
+  private readonly creatingBackupIds = new Set<string>();
 
   constructor(
     private readonly servers: ServerRepository,
     private readonly backups: BackupRepository,
     private readonly processes: ProcessManager,
     private readonly settings: AppSettingsRepository,
-    private readonly rootBackupDir: string,
+    _legacyRootBackupDir?: string,
   ) {
+    super();
     this.queue = this.loadQueue();
     if (this.queue.length > 0) {
       setTimeout(() => {
         void this.processQueue();
       }, 250);
     }
+  }
+
+  private emitChanged(serverId: string): void {
+    this.emit("changed", { serverId } satisfies BackupChangedPush);
   }
 
   async createManualBackup(
@@ -273,8 +371,15 @@ export class BackupService {
     await this.enqueueAndWait<void>("restore", serverId, backupId);
   }
 
-  list(serverId: string, limit: number): BackupRecord[] {
-    return this.backups.listBackups(serverId, Math.max(1, Math.min(limit, 100)));
+  async list(serverId: string, limit: number): Promise<BackupRecord[]> {
+    this.mustServer(serverId);
+    await this.reconcileDiskBackups(serverId);
+    return this.backups.listBackups(serverId, Math.max(1, Math.min(limit, 200)));
+  }
+
+  /** Force re-scan of disk archives into the DB, then return the list. */
+  async refreshList(serverId: string, limit = 100): Promise<BackupRecord[]> {
+    return this.list(serverId, limit);
   }
 
   getPolicy(serverId: string): BackupPolicy {
@@ -320,7 +425,263 @@ export class BackupService {
     if (backup === null || backup.serverId !== serverId) {
       throw new Error("Backup not found");
     }
+    // For ZIP archives, open the parent kind folder so Explorer stays usable.
+    if (isZipBackupPath(backup.path)) {
+      return dirname(backup.path);
+    }
     return backup.path;
+  }
+
+  getDiskAlertSettings(): BackupDiskAlertSettings {
+    return this.readDiskAlertSettings();
+  }
+
+  setDiskAlertSettings(settings: BackupDiskAlertSettings): BackupDiskAlertSettings {
+    const next = this.normalizeDiskAlertSettings(settings);
+    this.settings.set(DISK_ALERT_SETTINGS_KEY, JSON.stringify(next));
+    return next;
+  }
+
+  /** Fleet health overview: per-server status, disk usage, and actionable alerts. */
+  async getFleetSummary(): Promise<BackupFleetSummary> {
+    const servers = this.servers.list();
+    const diskSettings = this.readDiskAlertSettings();
+    const now = Date.now();
+    const dayAgoIso = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+
+    const healthRows: BackupServerHealth[] = [];
+    const alerts: BackupFleetAlert[] = [];
+
+    for (const server of servers) {
+      await this.reconcileDiskBackups(server.id);
+      const policy = this.backups.getPolicy(server.id);
+      const resolvedRoot = resolveServerBackupRoot(server.installDir, policy.backupDir);
+      const records = this.backups.listBackups(server.id, 10_000);
+      const completed = records.filter((row) => row.status === "completed");
+      const failed24h = records.filter((row) => {
+        if (row.status !== "failed") return false;
+        return backupFinishedAt(row) >= dayAgoIso;
+      });
+      const failedWorld24h = failed24h.filter((row) => row.kind === "world");
+      const latestWorld = this.backups.latestCompleted(server.id, "world");
+      // Newest finished attempt by completedAt (not job start).
+      const latest = pickLatestFinishedBackup(records);
+      const usedBytes = completed.reduce((sum, row) => sum + Math.max(0, row.sizeBytes), 0);
+      const destinationOk = isBackupDestinationReachable(resolvedRoot);
+
+      // Scheduled world backups only run while the process is active — do not
+      // treat stopped servers as stale just because the interval elapsed.
+      let stale = false;
+      if (policy.enabled && this.processes.isActive(server.id)) {
+        if (latestWorld === null) {
+          stale = true;
+        } else {
+          const stamp = backupFinishedAt(latestWorld);
+          const ageMs = now - new Date(stamp).getTime();
+          stale =
+            Number.isFinite(ageMs) &&
+            ageMs > policy.intervalMinutes * 60_000 * STALE_INTERVAL_FACTOR;
+        }
+      }
+
+      const counts = {
+        world: completed.filter((row) => row.kind === "world").length,
+        players: completed.filter((row) => row.kind === "players").length,
+        ini: completed.filter((row) => row.kind === "ini").length,
+        failed24h: failed24h.length,
+      };
+
+      const health = this.computeServerHealth({
+        destinationOk,
+        stale,
+        failed24h: counts.failed24h,
+        failedWorld24h: failedWorld24h.length,
+        scheduleEnabled: policy.enabled,
+        hasWorldBackup: latestWorld !== null,
+        serverRunning: this.processes.isActive(server.id),
+      });
+
+      healthRows.push({
+        serverId: server.id,
+        serverName: server.name,
+        policy,
+        resolvedRoot,
+        health,
+        latest,
+        latestWorld,
+        counts,
+        usedBytes,
+        stale,
+        destinationOk,
+      });
+
+      if (!destinationOk) {
+        alerts.push({
+          id: `missing_destination:${server.id}`,
+          kind: "missing_destination",
+          severity: "error",
+          serverId: server.id,
+          volumePath: null,
+          message: `${server.name}: backup destination is missing or unreachable (${resolvedRoot})`,
+        });
+      }
+      if (policy.enabled && latestWorld === null) {
+        const runningHint = this.processes.isActive(server.id)
+          ? "waiting for the next scheduled cycle"
+          : "start the server so the world schedule can run";
+        alerts.push({
+          id: `never_backed_up:${server.id}`,
+          kind: "never_backed_up",
+          severity: "warning",
+          serverId: server.id,
+          volumePath: null,
+          message: `${server.name}: world schedule is on but no completed world backup exists yet (${runningHint})`,
+        });
+      } else if (stale && latestWorld !== null) {
+        alerts.push({
+          id: `stale:${server.id}`,
+          kind: "stale",
+          severity: "warning",
+          serverId: server.id,
+          volumePath: null,
+          message: `${server.name}: last world backup is older than the scheduled interval`,
+        });
+      }
+      if (counts.failed24h > 0) {
+        const worldOnly = failedWorld24h.length === counts.failed24h;
+        alerts.push({
+          id: `failed:${server.id}`,
+          kind: "failed",
+          severity: failedWorld24h.length > 0 ? "error" : "warning",
+          serverId: server.id,
+          volumePath: null,
+          message: worldOnly
+            ? `${server.name}: ${counts.failed24h} failed world backup${counts.failed24h === 1 ? "" : "s"} in the last 24h`
+            : failedWorld24h.length > 0
+              ? `${server.name}: ${counts.failed24h} failed backup${counts.failed24h === 1 ? "" : "s"} in the last 24h (${failedWorld24h.length} world)`
+              : `${server.name}: ${counts.failed24h} failed non-world backup${counts.failed24h === 1 ? "" : "s"} in the last 24h`,
+        });
+      }
+    }
+
+    const disks = await this.buildDiskUsage(healthRows);
+    for (const disk of disks) {
+      if (disk.usedPercent === null || disk.freeBytes === null) continue;
+      const overCritical = disk.usedPercent >= diskSettings.criticalUsedPercent;
+      const overWarn = disk.usedPercent >= diskSettings.warnUsedPercent;
+      const lowFree = disk.freeBytes < diskSettings.warnFreeBytes;
+      if (overCritical) {
+        alerts.push({
+          id: `disk_critical:${disk.volumePath}`,
+          kind: "disk_critical",
+          severity: "error",
+          serverId: null,
+          volumePath: disk.volumePath,
+          message: `${disk.volumePath} is ${disk.usedPercent.toFixed(0)}% full (critical ≥ ${diskSettings.criticalUsedPercent}%)`,
+        });
+      } else if (overWarn || lowFree) {
+        const parts: string[] = [];
+        if (overWarn) {
+          parts.push(`${disk.usedPercent.toFixed(0)}% used`);
+        }
+        if (lowFree) {
+          parts.push(`${this.humanSize(disk.freeBytes)} free`);
+        }
+        alerts.push({
+          id: `disk_warning:${disk.volumePath}`,
+          kind: "disk_warning",
+          severity: "warning",
+          serverId: null,
+          volumePath: disk.volumePath,
+          message: `${disk.volumePath}: ${parts.join(" · ")} (warning threshold)`,
+        });
+      }
+    }
+
+    const protectedCount = healthRows.filter((row) => row.health === "ok").length;
+    const atRiskCount = healthRows.filter(
+      (row) => row.health === "warning" || row.health === "critical",
+    ).length;
+    const failed24h = healthRows.reduce((sum, row) => sum + row.counts.failed24h, 0);
+    const totalBackupBytes = healthRows.reduce((sum, row) => sum + row.usedBytes, 0);
+
+    return {
+      servers: healthRows,
+      stats: {
+        protectedCount,
+        atRiskCount,
+        failed24h,
+        totalBackupBytes,
+      },
+      disks,
+      alerts,
+      diskSettings,
+    };
+  }
+
+  async previewCleanup(options: BackupCleanupOptions): Promise<BackupCleanupPreview> {
+    await this.reconcileServersForCleanup(options);
+    const plan = this.planCleanup(options);
+    const byServerMap = new Map<
+      string,
+      { serverId: string; serverName: string; count: number; bytes: number }
+    >();
+    let totalBytes = 0;
+    for (const item of plan) {
+      totalBytes += Math.max(0, item.backup.sizeBytes);
+      const current = byServerMap.get(item.backup.serverId) ?? {
+        serverId: item.backup.serverId,
+        serverName: item.serverName,
+        count: 0,
+        bytes: 0,
+      };
+      current.count += 1;
+      current.bytes += Math.max(0, item.backup.sizeBytes);
+      byServerMap.set(item.backup.serverId, current);
+    }
+    return {
+      items: plan,
+      totalBytes,
+      byServer: [...byServerMap.values()],
+    };
+  }
+
+  async runCleanup(options: BackupCleanupOptions): Promise<BackupCleanupResult> {
+    await this.reconcileServersForCleanup(options);
+    const confirmedIds = options.confirmedBackupIds;
+    // Always recompute rules (incl. protectNewestWorld). Confirmed ids only
+    // narrow the fresh plan so preview cannot delete a newly protected world.
+    let plan = this.planCleanup(options);
+    if (confirmedIds !== undefined && confirmedIds !== null) {
+      const allowed = new Set(
+        confirmedIds.filter((id) => id.trim().length > 0),
+      );
+      plan = plan.filter((item) => allowed.has(item.backup.id));
+    }
+    let deleted = 0;
+    let freedBytes = 0;
+    const touched = new Set<string>();
+
+    for (const item of plan) {
+      if (item.backup.status === "running") continue;
+      await rm(item.backup.path, { recursive: true, force: true });
+      this.backups.deleteBackupRecord(item.backup.id);
+      deleted += 1;
+      freedBytes += Math.max(0, item.backup.sizeBytes);
+      touched.add(item.backup.serverId);
+      this.servers.addEvent(
+        item.backup.serverId,
+        "backup_deleted",
+        "info",
+        `Cleanup removed ${item.backup.kind} backup (${item.reason}): ${basename(item.backup.path)}`,
+      );
+    }
+
+    for (const serverId of touched) {
+      this.emitChanged(serverId);
+    }
+
+    return { deleted, freedBytes };
   }
 
   async deleteBackups(serverId: string, backupIds: string[]): Promise<number> {
@@ -348,6 +709,9 @@ export class BackupService {
         "info",
         `Backup deleted: ${basename(backup.path)} (${backup.kind})`,
       );
+    }
+    if (deleted > 0) {
+      this.emitChanged(serverId);
     }
     return deleted;
   }
@@ -386,6 +750,7 @@ export class BackupService {
         `Restore applied on \"${server.name}\" from ${backup.kind} backup ${backup.id}`,
       );
       this.backups.completeRestoreHistory(restoreHistoryId, "completed", null);
+      this.emitChanged(serverId);
     } catch (err) {
       this.backups.completeRestoreHistory(
         restoreHistoryId,
@@ -426,9 +791,10 @@ export class BackupService {
 
       const latestWorld = this.backups.latestCompleted(server.id, "world");
       if (latestWorld !== null) {
-        const elapsedMs = Date.now() - Date.parse(latestWorld.createdAt);
+        const finishedAt = backupFinishedAt(latestWorld);
+        const elapsedMs = Date.now() - Date.parse(finishedAt);
         const requiredMs = policy.intervalMinutes * 60 * 1000;
-        if (elapsedMs < requiredMs) continue;
+        if (Number.isFinite(elapsedMs) && elapsedMs < requiredMs) continue;
       }
 
       if (!this.processes.isActive(server.id)) continue;
@@ -442,6 +808,16 @@ export class BackupService {
           `Scheduled backup failed for \"${server.name}\": ${
             err instanceof Error ? err.message : String(err)
           }`,
+          {
+            what: "A scheduled world backup did not complete.",
+            cause: err instanceof Error ? err.message : String(err),
+            suggestion:
+              "Confirm the server is reachable for save flush, destination disk has space, and retry from the Backups tab.",
+            context: {
+              trigger: "scheduled",
+              kind: "world",
+            },
+          },
         );
       }
     }
@@ -453,6 +829,270 @@ export class BackupService {
       throw new Error("Server does not exist");
     }
     return server;
+  }
+
+  private readDiskAlertSettings(): BackupDiskAlertSettings {
+    const raw = this.settings.get(DISK_ALERT_SETTINGS_KEY);
+    if (raw === null || raw.trim().length === 0) {
+      return { ...DEFAULT_DISK_ALERT_SETTINGS };
+    }
+    try {
+      const parsed = JSON.parse(raw) as Partial<BackupDiskAlertSettings>;
+      return this.normalizeDiskAlertSettings({
+        warnUsedPercent:
+          typeof parsed.warnUsedPercent === "number"
+            ? parsed.warnUsedPercent
+            : DEFAULT_DISK_ALERT_SETTINGS.warnUsedPercent,
+        criticalUsedPercent:
+          typeof parsed.criticalUsedPercent === "number"
+            ? parsed.criticalUsedPercent
+            : DEFAULT_DISK_ALERT_SETTINGS.criticalUsedPercent,
+        warnFreeBytes:
+          typeof parsed.warnFreeBytes === "number"
+            ? parsed.warnFreeBytes
+            : DEFAULT_DISK_ALERT_SETTINGS.warnFreeBytes,
+      });
+    } catch {
+      return { ...DEFAULT_DISK_ALERT_SETTINGS };
+    }
+  }
+
+  private normalizeDiskAlertSettings(
+    settings: BackupDiskAlertSettings,
+  ): BackupDiskAlertSettings {
+    const warnUsedPercent = Math.max(
+      50,
+      Math.min(99, Math.floor(settings.warnUsedPercent)),
+    );
+    const criticalUsedPercent = Math.max(
+      warnUsedPercent + 1,
+      Math.min(100, Math.floor(settings.criticalUsedPercent)),
+    );
+    const warnFreeBytes = Math.max(
+      1024 * 1024 * 1024,
+      Math.floor(settings.warnFreeBytes),
+    );
+    return { warnUsedPercent, criticalUsedPercent, warnFreeBytes };
+  }
+
+  private computeServerHealth(input: {
+    destinationOk: boolean;
+    stale: boolean;
+    failed24h: number;
+    failedWorld24h: number;
+    scheduleEnabled: boolean;
+    hasWorldBackup: boolean;
+    /** Scheduled world backups only run while the process is active. */
+    serverRunning: boolean;
+  }): BackupHealthStatus {
+    return computeBackupServerHealth(input);
+  }
+
+  private async buildDiskUsage(
+    rows: BackupServerHealth[],
+  ): Promise<BackupFleetSummary["disks"]> {
+    const byVolume = new Map<
+      string,
+      { roots: Set<string>; backupBytes: number; probePath: string }
+    >();
+
+    for (const row of rows) {
+      const volumePath = volumeRootForPath(row.resolvedRoot);
+      const current = byVolume.get(volumePath) ?? {
+        roots: new Set<string>(),
+        backupBytes: 0,
+        probePath: row.resolvedRoot,
+      };
+      current.roots.add(row.resolvedRoot);
+      current.backupBytes += row.usedBytes;
+      byVolume.set(volumePath, current);
+    }
+
+    const disks: BackupFleetSummary["disks"] = [];
+    for (const [volumePath, info] of byVolume) {
+      const space = await readVolumeSpace(info.probePath);
+      const freeBytes = space?.freeBytes ?? null;
+      const totalBytes = space?.totalBytes ?? null;
+      let usedPercent: number | null = null;
+      if (freeBytes !== null && totalBytes !== null && totalBytes > 0) {
+        usedPercent = ((totalBytes - freeBytes) / totalBytes) * 100;
+      }
+      disks.push({
+        volumePath,
+        roots: [...info.roots],
+        backupBytes: info.backupBytes,
+        freeBytes,
+        totalBytes,
+        usedPercent,
+      });
+    }
+
+    disks.sort((a, b) => a.volumePath.localeCompare(b.volumePath));
+    return disks;
+  }
+
+  private planCleanup(
+    options: BackupCleanupOptions,
+  ): Array<{ backup: BackupRecord; serverName: string; reason: string }> {
+    const includeFailed = options.includeFailed === true;
+    const enforceRetention = options.enforceRetention === true;
+    const protectNewestWorld = options.protectNewestWorld !== false;
+    const olderThanDays =
+      typeof options.olderThanDays === "number" && options.olderThanDays > 0
+        ? Math.floor(options.olderThanDays)
+        : null;
+    const keepLastPerKind =
+      typeof options.keepLastPerKind === "number" && options.keepLastPerKind > 0
+        ? Math.floor(options.keepLastPerKind)
+        : null;
+
+    if (
+      !includeFailed &&
+      !enforceRetention &&
+      olderThanDays === null &&
+      keepLastPerKind === null
+    ) {
+      throw new Error("Select at least one cleanup rule");
+    }
+
+    const allServers = this.servers.list();
+    const selectedIds =
+      options.serverIds !== null && options.serverIds.length > 0
+        ? new Set(options.serverIds)
+        : null;
+    const servers =
+      selectedIds === null
+        ? allServers
+        : allServers.filter((server) => selectedIds.has(server.id));
+
+    const cutoffIso =
+      olderThanDays !== null
+        ? new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000).toISOString()
+        : null;
+
+    const selected = new Map<
+      string,
+      { backup: BackupRecord; serverName: string; reason: string }
+    >();
+
+    const mark = (
+      backup: BackupRecord,
+      serverName: string,
+      reason: string,
+    ): void => {
+      if (backup.status === "running") return;
+      const existing = selected.get(backup.id);
+      if (existing === undefined) {
+        selected.set(backup.id, { backup, serverName, reason });
+        return;
+      }
+      if (!existing.reason.includes(reason)) {
+        existing.reason = `${existing.reason}; ${reason}`;
+      }
+    };
+
+    for (const server of servers) {
+      const policy = this.backups.getPolicy(server.id);
+      const records = this.backups.listBackups(server.id, 10_000);
+      const newestWorld = this.backups.latestCompleted(server.id, "world");
+
+      if (includeFailed) {
+        for (const backup of records) {
+          if (backup.status === "failed") {
+            mark(backup, server.name, "failed");
+          }
+        }
+      }
+
+      if (enforceRetention) {
+        for (const kind of ALL_BACKUP_KINDS) {
+          const retain = retainCountForKind(policy, kind);
+          const completed = this.backups.listCompleted(server.id, kind);
+          if (kind === "players") {
+            const byPlayer = new Map<string, BackupRecord[]>();
+            for (const backup of completed) {
+              const key = playersRetentionKey(backup);
+              const list = byPlayer.get(key) ?? [];
+              list.push(backup);
+              byPlayer.set(key, list);
+            }
+            for (const [, list] of byPlayer) {
+              for (const backup of list.slice(retain)) {
+                mark(backup, server.name, "over retain policy");
+              }
+            }
+            continue;
+          }
+          for (const backup of completed.slice(retain)) {
+            mark(backup, server.name, "over retain policy");
+          }
+        }
+      }
+
+      if (cutoffIso !== null) {
+        for (const backup of records) {
+          if (backup.status !== "completed") continue;
+          if (backupFinishedAt(backup) < cutoffIso) {
+            mark(backup, server.name, `older than ${olderThanDays}d`);
+          }
+        }
+      }
+
+      if (keepLastPerKind !== null) {
+        for (const kind of ALL_BACKUP_KINDS) {
+          const completed = this.backups.listCompleted(server.id, kind);
+          // Players: keep N per player pool (same as retention / enforceRetention).
+          if (kind === "players") {
+            const byPlayer = new Map<string, BackupRecord[]>();
+            for (const backup of completed) {
+              const key = playersRetentionKey(backup);
+              const list = byPlayer.get(key) ?? [];
+              list.push(backup);
+              byPlayer.set(key, list);
+            }
+            for (const [, list] of byPlayer) {
+              for (const backup of list.slice(keepLastPerKind)) {
+                mark(
+                  backup,
+                  server.name,
+                  `keep last ${keepLastPerKind}/players`,
+                );
+              }
+            }
+            continue;
+          }
+          for (const backup of completed.slice(keepLastPerKind)) {
+            mark(backup, server.name, `keep last ${keepLastPerKind}/${kind}`);
+          }
+        }
+      }
+
+      if (protectNewestWorld && newestWorld !== null) {
+        selected.delete(newestWorld.id);
+      }
+    }
+
+    return [...selected.values()].sort((a, b) =>
+      backupFinishedAt(b.backup).localeCompare(backupFinishedAt(a.backup)),
+    );
+  }
+
+  /** Import orphan archives before cleanup so disk-only zips are eligible. */
+  private async reconcileServersForCleanup(
+    options: BackupCleanupOptions,
+  ): Promise<void> {
+    const allServers = this.servers.list();
+    const selectedIds =
+      options.serverIds !== null && options.serverIds.length > 0
+        ? new Set(options.serverIds)
+        : null;
+    const servers =
+      selectedIds === null
+        ? allServers
+        : allServers.filter((server) => selectedIds.has(server.id));
+    for (const server of servers) {
+      await this.reconcileDiskBackups(server.id);
+    }
   }
 
   private async flushWorldIfActive(serverId: string): Promise<void> {
@@ -493,31 +1133,36 @@ export class BackupService {
     const server = this.mustServer(serverId);
     const policy = this.backups.getPolicy(serverId);
     const rootDir = resolveServerBackupRoot(server.installDir, policy.backupDir);
+    const kindDir = join(rootDir, backupKindSubdir(kind));
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const playerSlug =
       options?.playerKey !== undefined && options.playerKey.length > 0
         ? `-${slug(options.playerKey).slice(0, 24)}`
         : "";
-    const folderName = `${timestamp}-${type}-${kind}${playerSlug}-${slug(server.name)}`;
-    const targetDir = join(rootDir, folderName);
-    await mkdir(targetDir, { recursive: true });
+    const baseName = `${timestamp}-${type}-${kind}${playerSlug}-${slug(server.name)}`;
+    const zipPath = join(kindDir, `${baseName}.zip`);
+    const stagingDir = join(tmpdir(), `yark-backup-${randomUUID()}`);
+
+    await mkdir(kindDir, { recursive: true });
+    await mkdir(stagingDir, { recursive: true });
 
     const record = this.backups.createBackupStart({
       serverId,
       type,
       kind,
-      path: targetDir,
+      path: zipPath,
       notes,
     });
+    this.creatingBackupIds.add(record.id);
 
     try {
       const packaged =
         options?.playerKey !== undefined && kind === "players"
-          ? await this.packageSinglePlayer(server, targetDir, options.playerKey, {
+          ? await this.packageSinglePlayer(server, stagingDir, options.playerKey, {
               waitForProfile: options.waitForProfile === true,
             })
-          : await this.packageKind(server, kind, targetDir);
+          : await this.packageKind(server, kind, stagingDir);
 
       // Per-player session archives with no matching profile are not recoverable —
       // drop them so they do not consume retention slots.
@@ -526,13 +1171,13 @@ export class BackupService {
         && kind === "players"
         && packaged.meta.empty === true
       ) {
-        await rm(targetDir, { recursive: true, force: true });
+        await rm(stagingDir, { recursive: true, force: true });
         this.backups.deleteBackupRecord(record.id);
         return null;
       }
 
       await writeFile(
-        join(targetDir, "manifest.json"),
+        join(stagingDir, "manifest.json"),
         JSON.stringify(
           {
             server: {
@@ -556,7 +1201,9 @@ export class BackupService {
         "utf8",
       );
 
-      const sizeBytes = await directorySize(targetDir);
+      const sizeBytes = await zipDirectory(stagingDir, zipPath);
+      await rm(stagingDir, { recursive: true, force: true });
+
       const completed = this.backups.completeBackup(record.id, sizeBytes);
       if (completed === null) {
         throw new Error("Could not mark backup as completed");
@@ -570,9 +1217,37 @@ export class BackupService {
         `Backup ${type}/${kind} completed for \"${server.name}\" (${this.humanSize(sizeBytes)})${missingHint}`,
       );
 
-      await this.applyRetention(serverId, policy);
+      // Retention runs after success. Failures here must not delete the new zip
+      // or mark this backup failed — the archive is already durable.
+      try {
+        await this.applyRetention(serverId, policy);
+      } catch (retentionErr) {
+        const retentionMessage =
+          retentionErr instanceof Error ? retentionErr.message : String(retentionErr);
+        this.servers.addEvent(
+          serverId,
+          "error",
+          "warning",
+          `Backup retention failed after successful ${type}/${kind} backup for \"${server.name}\": ${retentionMessage}`,
+          {
+            what: "The new backup was saved, but pruning older archives failed.",
+            cause: retentionMessage,
+            location: zipPath,
+            suggestion:
+              "Check destination permissions and free disk space, then run cleanup or create another backup to retry retention.",
+            context: {
+              type,
+              kind,
+              backupId: record.id,
+            },
+          },
+        );
+      }
+      this.emitChanged(serverId);
       return completed;
     } catch (err) {
+      await rm(stagingDir, { recursive: true, force: true }).catch(() => undefined);
+      await rm(zipPath, { force: true }).catch(() => undefined);
       const message = err instanceof Error ? err.message : String(err);
       this.backups.failBackup(record.id, message);
       this.servers.addEvent(
@@ -580,8 +1255,23 @@ export class BackupService {
         "error",
         "error",
         `Backup ${type}/${kind} failed for \"${server.name}\": ${message}`,
+        {
+          what: `A ${kind} backup (${type}) failed before the archive was completed.`,
+          cause: message,
+          location: zipPath,
+          suggestion:
+            "Check destination permissions and free disk space, then create the backup again from the server Backups tab.",
+          context: {
+            type,
+            kind,
+            backupId: record.id,
+          },
+        },
       );
+      this.emitChanged(serverId);
       throw err;
+    } finally {
+      this.creatingBackupIds.delete(record.id);
     }
   }
 
@@ -728,15 +1418,35 @@ export class BackupService {
   }
 
   private async applyRestore(server: ServerProfile, backup: BackupRecord): Promise<void> {
-    if (backup.kind === "world") {
-      await this.restoreWorld(server, backup.path);
+    await this.withBackupContents(backup.path, async (root) => {
+      if (backup.kind === "world") {
+        await this.restoreWorld(server, root);
+        return;
+      }
+      if (backup.kind === "players") {
+        await this.restorePlayers(server, root);
+        return;
+      }
+      await this.restoreIni(server, root);
+    });
+  }
+
+  /** Run `fn` against a folder snapshot (legacy) or an extracted ZIP staging dir. */
+  private async withBackupContents(
+    backupPath: string,
+    fn: (contentRoot: string) => Promise<void>,
+  ): Promise<void> {
+    if (!isZipBackupPath(backupPath)) {
+      await fn(backupPath);
       return;
     }
-    if (backup.kind === "players") {
-      await this.restorePlayers(server, backup.path);
-      return;
+    const stagingDir = join(tmpdir(), `yark-restore-${randomUUID()}`);
+    try {
+      await extractZip(backupPath, stagingDir);
+      await fn(stagingDir);
+    } finally {
+      await rm(stagingDir, { recursive: true, force: true }).catch(() => undefined);
     }
-    await this.restoreIni(server, backup.path);
   }
 
   private async restoreWorld(server: ServerProfile, backupPath: string): Promise<void> {
@@ -1026,6 +1736,385 @@ export class BackupService {
       "info",
       `Old ${backup.kind} backup removed by retention: ${basename(backup.path)}`,
     );
+    this.emitChanged(serverId);
+  }
+
+  /**
+   * Keep SQLite aligned with disk:
+   * - drop DB rows whose archive path no longer exists (Explorer deletes)
+   * - import ZIP/folder archives present on disk but missing from SQLite
+   *
+   * Not `async`: returning an in-flight Promise must hand back the same
+   * Promise instance (an async function would wrap it in a new outer Promise).
+   */
+  private reconcileDiskBackups(serverId: string): Promise<number> {
+    const existing = this.reconcileInFlight.get(serverId);
+    if (existing !== undefined) {
+      return existing;
+    }
+    const run = this.reconcileDiskBackupsUnlocked(serverId).finally(() => {
+      if (this.reconcileInFlight.get(serverId) === run) {
+        this.reconcileInFlight.delete(serverId);
+      }
+    });
+    this.reconcileInFlight.set(serverId, run);
+    return run;
+  }
+
+  private async reconcileDiskBackupsUnlocked(serverId: string): Promise<number> {
+    const server = this.mustServer(serverId);
+    const policy = this.backups.getPolicy(serverId);
+    const rootDir = resolveServerBackupRoot(server.installDir, policy.backupDir);
+
+    // Resolve interrupted creates (zip on disk, row still "running") before
+    // path-known checks would block re-import of those archives.
+    let changed = await this.reconcileInterruptedRunningBackups(serverId);
+    changed += this.pruneMissingDiskBackups(serverId);
+
+    if (existsSync(rootDir)) {
+      const known = new Set(
+        this.backups.listBackupPaths(serverId).map((p) => resolve(p).toLowerCase()),
+      );
+
+      for (const kind of ALL_BACKUP_KINDS) {
+        const kindDir = join(rootDir, backupKindSubdir(kind));
+        changed += await this.importArchivesFromDir(serverId, kindDir, kind, known);
+      }
+
+      // Legacy flat layout: archives directly under the root.
+      changed += await this.importArchivesFromDir(serverId, rootDir, null, known);
+    }
+
+    if (changed > 0) {
+      this.emitChanged(serverId);
+    }
+    return changed;
+  }
+
+  /**
+   * After a crash/kill, running rows may be stuck:
+   * - finished readable backup-layout zip → promote to completed (restorable)
+   * - missing / empty / unreadable / non-backup zip → fail so the UI can clear them
+   * Live creates (creatingBackupIds) are left alone.
+   */
+  private async reconcileInterruptedRunningBackups(serverId: string): Promise<number> {
+    const records = this.backups.listBackups(serverId, 10_000);
+    let changed = 0;
+    for (const backup of records) {
+      if (backup.status !== "running") continue;
+      if (this.creatingBackupIds.has(backup.id)) continue;
+
+      if (isZipBackupPath(backup.path) && existsSync(backup.path)) {
+        let readable = false;
+        let hasLayout = false;
+        try {
+          readable = await isReadableZipArchive(backup.path);
+          if (readable) {
+            try {
+              hasLayout = await zipHasBackupLayout(backup.path);
+            } catch {
+              // Corrupt central directory / I/O mid-scan — treat as unreadable.
+              readable = false;
+              hasLayout = false;
+            }
+          }
+        } catch {
+          readable = false;
+          hasLayout = false;
+        }
+        if (readable && hasLayout) {
+          try {
+            const info = await stat(backup.path);
+            // Use zip mtime — not wall clock — so recovery does not reorder
+            // ahead of newer completed archives and break keep-last retention.
+            const completed = this.backups.completeBackup(
+              backup.id,
+              info.size,
+              info.mtime.toISOString(),
+            );
+            if (completed === null) continue;
+            changed += 1;
+            this.servers.addEvent(
+              serverId,
+              "backup_created",
+              "info",
+              `Recovered interrupted ${backup.kind} backup: ${basename(backup.path)}`,
+            );
+          } catch {
+            // Leave running; a later reconcile can retry.
+          }
+          continue;
+        }
+
+        // Partial/corrupt/non-backup zip — not restorable.
+        await rm(backup.path, { force: true }).catch(() => undefined);
+        const reason = readable
+          ? "Interrupted backup path held a non-backup zip"
+          : "Interrupted while writing archive (incomplete or unreadable zip)";
+        this.backups.failBackup(backup.id, reason);
+        changed += 1;
+        this.servers.addEvent(
+          serverId,
+          "error",
+          "warning",
+          `Interrupted ${backup.kind} backup marked failed (${
+            readable ? "non-backup zip" : "incomplete zip"
+          }): ${basename(backup.path)}`,
+          {
+            what: "A backup was interrupted and the archive on disk is not a restorable backup.",
+            cause: reason,
+            location: backup.path,
+            suggestion: "Create the backup again from the server Backups tab.",
+            context: { kind: backup.kind, backupId: backup.id },
+          },
+        );
+        continue;
+      }
+
+      // Crash during staging — no zip yet. Fail so the row is not stuck forever.
+      this.backups.failBackup(backup.id, "Interrupted before archive was written");
+      changed += 1;
+      this.servers.addEvent(
+        serverId,
+        "error",
+        "warning",
+        `Interrupted ${backup.kind} backup marked failed (no archive on disk)`,
+        {
+          what: "A backup was interrupted before the zip archive was created.",
+          cause: "App stopped or crashed during staging.",
+          location: backup.path,
+          suggestion: "Create the backup again from the server Backups tab.",
+          context: { kind: backup.kind, backupId: backup.id },
+        },
+      );
+    }
+    return changed;
+  }
+
+  /** Remove DB rows for archives deleted outside the app (e.g. Explorer). */
+  private pruneMissingDiskBackups(serverId: string): number {
+    const records = this.backups.listBackups(serverId, 10_000);
+    let removed = 0;
+    for (const backup of records) {
+      // In-progress creates may not have written the zip yet.
+      if (backup.status === "running") continue;
+      // Failed creates delete the partial zip on purpose — keep the row for history.
+      if (backup.status === "failed") continue;
+      if (existsSync(backup.path)) continue;
+      this.backups.deleteBackupRecord(backup.id);
+      removed += 1;
+    }
+    return removed;
+  }
+
+  private async importArchivesFromDir(
+    serverId: string,
+    dir: string,
+    defaultKind: BackupKind | null,
+    known: Set<string>,
+  ): Promise<number> {
+    if (!existsSync(dir)) return 0;
+    const entries = await readdir(dir, { withFileTypes: true });
+    let imported = 0;
+
+    for (const entry of entries) {
+      const full = join(dir, entry.name);
+      const key = resolve(full).toLowerCase();
+      if (known.has(key)) continue;
+
+      // Skip kind subdirs when scanning the root (handled separately).
+      if (entry.isDirectory() && defaultKind === null && kindFromSubdirName(entry.name) !== null) {
+        continue;
+      }
+
+      if (entry.isFile() && isZipBackupPath(entry.name)) {
+        const kind = defaultKind ?? this.guessKindFromName(entry.name) ?? "world";
+        const ok = await this.importZipArchive(serverId, full, kind, known);
+        if (ok) imported += 1;
+        continue;
+      }
+
+      if (entry.isDirectory()) {
+        const kind = defaultKind ?? this.guessKindFromName(entry.name) ?? "world";
+        const manifestPath = join(full, "manifest.json");
+        if (!existsSync(manifestPath) && !existsSync(join(full, "SavedArks"))
+          && !existsSync(join(full, "PlayerProfiles"))
+          && !existsSync(join(full, "ConfigWindowsServer"))) {
+          continue;
+        }
+        const ok = await this.importFolderArchive(serverId, full, kind, known);
+        if (ok) imported += 1;
+      }
+    }
+
+    return imported;
+  }
+
+  private guessKindFromName(name: string): BackupKind | null {
+    const lower = name.toLowerCase();
+    if (lower.includes("-players-") || lower.includes("player_")) return "players";
+    if (lower.includes("-ini-") || lower.includes("ini_save")) return "ini";
+    if (lower.includes("-world-")) return "world";
+    return null;
+  }
+
+  private async importZipArchive(
+    serverId: string,
+    zipPath: string,
+    kind: BackupKind,
+    known: Set<string>,
+  ): Promise<boolean> {
+    try {
+      const info = await stat(zipPath);
+      // Match folder import gating: require manifest or known layout roots.
+      if (!(await zipHasBackupLayout(zipPath))) {
+        return false;
+      }
+      const manifestRaw = await readZipTextEntry(zipPath, "manifest.json");
+      const parsed = this.parseManifest(manifestRaw);
+      const createdAt =
+        parsed?.createdAt
+        ?? info.mtime.toISOString();
+      const type = parsed?.type ?? this.guessTypeFromName(basename(zipPath));
+      const notes = parsed?.notes ?? `Imported from disk: ${basename(zipPath)}`;
+      // Copies keep the original manifest id; mint a new one when that id is taken.
+      const id =
+        parsed?.id !== undefined && this.backups.getBackup(parsed.id) !== null
+          ? undefined
+          : parsed?.id;
+      if (this.backups.getBackupByPath(serverId, zipPath) !== null) {
+        known.add(resolve(zipPath).toLowerCase());
+        return false;
+      }
+      this.backups.insertCompletedBackup({
+        id,
+        serverId,
+        type,
+        kind: parsed?.kind ?? kind,
+        path: zipPath,
+        sizeBytes: info.size,
+        createdAt,
+        completedAt: createdAt,
+        notes,
+      });
+      known.add(resolve(zipPath).toLowerCase());
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async importFolderArchive(
+    serverId: string,
+    folderPath: string,
+    kind: BackupKind,
+    known: Set<string>,
+  ): Promise<boolean> {
+    try {
+      const info = await stat(folderPath);
+      let manifestRaw: string | null = null;
+      const manifestPath = join(folderPath, "manifest.json");
+      if (existsSync(manifestPath)) {
+        manifestRaw = await readFile(manifestPath, "utf8");
+      }
+      const parsed = this.parseManifest(manifestRaw);
+      const createdAt = parsed?.createdAt ?? info.mtime.toISOString();
+      const type = parsed?.type ?? this.guessTypeFromName(basename(folderPath));
+      const notes = parsed?.notes ?? `Imported from disk: ${basename(folderPath)}`;
+      const sizeBytes = await directorySize(folderPath);
+      // Copies keep the original manifest id; mint a new one when that id is taken.
+      const id =
+        parsed?.id !== undefined && this.backups.getBackup(parsed.id) !== null
+          ? undefined
+          : parsed?.id;
+      if (this.backups.getBackupByPath(serverId, folderPath) !== null) {
+        known.add(resolve(folderPath).toLowerCase());
+        return false;
+      }
+      this.backups.insertCompletedBackup({
+        id,
+        serverId,
+        type,
+        kind: parsed?.kind ?? kind,
+        path: folderPath,
+        sizeBytes,
+        createdAt,
+        completedAt: createdAt,
+        notes,
+      });
+      known.add(resolve(folderPath).toLowerCase());
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private parseManifest(raw: string | null): {
+    id?: string;
+    type?: BackupType;
+    kind?: BackupKind;
+    createdAt?: string;
+    notes?: string;
+  } | null {
+    if (raw === null || raw.trim().length === 0) return null;
+    try {
+      const data = JSON.parse(raw) as {
+        backup?: {
+          id?: string;
+          type?: string;
+          kind?: string;
+          createdAt?: string;
+          notes?: string;
+        };
+      };
+      const backup = data.backup;
+      if (backup === undefined) return null;
+      const type = this.asBackupType(backup.type);
+      const kind = this.asBackupKind(backup.kind);
+      return {
+        id: typeof backup.id === "string" ? backup.id : undefined,
+        type,
+        kind,
+        createdAt: typeof backup.createdAt === "string" ? backup.createdAt : undefined,
+        notes: typeof backup.notes === "string" ? backup.notes : undefined,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private asBackupType(value: string | undefined): BackupType | undefined {
+    const allowed: BackupType[] = [
+      "manual",
+      "scheduled",
+      "pre_restart",
+      "pre_update",
+      "pre_restore",
+      "player_connect",
+      "player_disconnect",
+      "ini_save",
+    ];
+    if (value !== undefined && (allowed as string[]).includes(value)) {
+      return value as BackupType;
+    }
+    return undefined;
+  }
+
+  private asBackupKind(value: string | undefined): BackupKind | undefined {
+    if (value === "world" || value === "players" || value === "ini") return value;
+    return undefined;
+  }
+
+  private guessTypeFromName(name: string): BackupType {
+    const lower = name.toLowerCase();
+    if (lower.includes("player_disconnect")) return "player_disconnect";
+    if (lower.includes("player_connect")) return "player_connect";
+    if (lower.includes("ini_save")) return "ini_save";
+    if (lower.includes("scheduled")) return "scheduled";
+    if (lower.includes("pre_update")) return "pre_update";
+    if (lower.includes("pre_restart")) return "pre_restart";
+    if (lower.includes("pre_restore")) return "pre_restore";
+    return "manual";
   }
 
   private savedRootDir(server: ServerProfile): string {

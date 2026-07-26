@@ -10,7 +10,12 @@ import type { LogsService } from "../backend/domains/logs/logs-service";
 import type { ModsService } from "../backend/domains/mods/mods-service";
 import type { UpdateService } from "../backend/domains/updates/update-service";
 import type { ServerRepository } from "../backend/infra/db/server-repository";
-import type { BackupKind, BackupPolicy } from "../shared/types";
+import type {
+  BackupCleanupOptions,
+  BackupDiskAlertSettings,
+  BackupKind,
+  BackupPolicy,
+} from "../shared/types";
 
 function wrap<T>(fn: () => T | Promise<T>): Promise<IpcResult<T>> {
   return Promise.resolve()
@@ -257,6 +262,24 @@ export function registerIpcHandlers(
       }),
   );
 
+  ipcMain.handle(IPC.logsClearEvents, (_e, serverId: string) =>
+    wrap(() => logs.clearEvents(serverId)),
+  );
+
+  ipcMain.handle(IPC.logsClearRuntime, (_e, serverId: string) =>
+    wrap(() => logs.clearRuntimeLog(serverId)),
+  );
+
+  ipcMain.handle(
+    IPC.logsDeleteUpdate,
+    (_e, serverId: string, fileName: string) =>
+      wrap(() => logs.deleteUpdateLog(serverId, fileName)),
+  );
+
+  ipcMain.handle(IPC.logsClearUpdates, (_e, serverId: string) =>
+    wrap(() => logs.clearUpdateLogs(serverId)),
+  );
+
   ipcMain.handle(IPC.modsGet, (_e, modId: string, forceRefresh?: boolean) =>
     wrap(() => mods.getMod(modId, { forceRefresh: forceRefresh === true })),
   );
@@ -321,5 +344,31 @@ export function registerIpcHandlers(
         throw new Error(`Could not open backup destination: ${error}`);
       }
     }),
+  );
+
+  ipcMain.handle(IPC.backupsFleetSummary, () =>
+    wrap(() => backups.getFleetSummary()),
+  );
+
+  ipcMain.handle(IPC.backupsGetDiskAlertSettings, () =>
+    wrap(() => backups.getDiskAlertSettings()),
+  );
+
+  ipcMain.handle(
+    IPC.backupsSetDiskAlertSettings,
+    (_e, settings: BackupDiskAlertSettings) =>
+      wrap(() => backups.setDiskAlertSettings(settings)),
+  );
+
+  ipcMain.handle(
+    IPC.backupsPreviewCleanup,
+    (_e, options: BackupCleanupOptions) =>
+      wrap(() => backups.previewCleanup(options)),
+  );
+
+  ipcMain.handle(
+    IPC.backupsRunCleanup,
+    (_e, options: BackupCleanupOptions) =>
+      wrap(() => backups.runCleanup(options)),
   );
 }

@@ -2,6 +2,64 @@
   min-width: 240px;
 }
 
+.fleetSearch {
+  min-width: 180px;
+  width: 220px;
+}
+
+.fleetRow {
+  display: grid;
+  grid-template-columns: 160px 88px 140px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--app-color-border) 50%, transparent);
+  background: color-mix(in srgb, var(--app-color-panel) 45%, transparent);
+  text-align: left;
+  color: inherit;
+  width: 100%;
+}
+
+.fleetRowClickable {
+  cursor: pointer;
+}
+
+.fleetRowClickable:hover {
+  border-color: color-mix(in srgb, var(--ark-blue-7) 50%, var(--app-color-border));
+}
+
+.fleetCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--app-color-border) 45%, transparent);
+  background: color-mix(in srgb, var(--app-color-panel) 35%, transparent);
+}
+
+.fleetCard .fleetRow {
+  border: none;
+  background: transparent;
+}
+
+.fleetWhen,
+.fleetServer,
+.fleetMessage {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .fleetRow {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
 .logsContent {
   flex: 1;
   min-height: 0;
@@ -26,15 +84,20 @@
 }
 
 .tabPanel {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
   min-height: 0;
   padding-top: 16px;
   overflow: hidden;
 }
 
 .tabPanel:global(.mantine-Tabs-panel) {
+  display: flex;
+  flex-direction: column;
   flex: 1 1 0;
   min-height: 0;
+  overflow: hidden;
 }
 
 .panel {
@@ -76,14 +139,44 @@
   overflow: hidden;
 }
 
-.panelStack {
-  flex: 1;
+.fillPanel > * {
+  flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
 }
 
+.panelStack {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
 .panelTitle {
   --title-lh: 1.3;
+}
+
+.tabIntro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.updatesStack {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.updatesStack .updatesLayout {
+  flex: 1 1 0;
+  min-height: 0;
 }
 
 .emptyState {
@@ -125,36 +218,108 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 10px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
   border-top: 1px solid var(--ark-gray-a3);
 }
 
+.eventRowButton {
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  background: color-mix(in srgb, var(--app-color-panel) 35%, transparent);
+  cursor: pointer;
+}
+
+.eventRowButton:hover {
+  border-color: color-mix(in srgb, var(--ark-blue-7) 40%, transparent);
+}
+
+.eventRowMain {
+  min-width: 0;
+  flex: 1;
+}
+
 .eventRow:first-child {
-  border-top: none;
-  padding-top: 0;
+  border-top-color: transparent;
+  padding-top: 10px;
+}
+
+.eventRowFocused {
+  border-color: color-mix(in srgb, var(--ark-blue-7) 65%, transparent);
+  border-top-color: color-mix(in srgb, var(--ark-blue-7) 65%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ark-blue-7) 35%, transparent);
+  background: color-mix(in srgb, var(--ark-blue-7) 12%, var(--app-color-panel));
+}
+
+.eventRowExpanded {
+  gap: 10px;
+}
+
+.eventDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px dashed color-mix(in srgb, var(--app-color-border) 55%, transparent);
+}
+
+.eventDetailLine {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.eventDetailLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.68rem;
+}
+
+.eventContext {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.embedded {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .updatesLayout {
   display: grid;
-  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
   gap: 12px;
-  height: 100%;
+  flex: 1 1 0;
   min-height: 0;
+  overflow: hidden;
+}
+
+.updatesLayout > * {
+  min-height: 0;
+  overflow: hidden;
 }
 
 .updateRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
+  min-width: 0;
   text-align: left;
-  padding: 12px;
+  padding: 10px 12px;
   border-radius: 14px;
   border: 1px solid var(--ark-gray-a3);
   background: var(--app-color-surface-control);
   color: var(--app-color-text);
   cursor: pointer;
+  overflow: hidden;
   transition:
     border-color 140ms ease,
     background-color 140ms ease;
@@ -167,7 +332,20 @@
 
 .updateSummary {
   min-width: 0;
+  flex: 1 1 auto;
   overflow: hidden;
+}
+
+.updateTitle,
+.updateSubtitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.updateStatus {
+  flex: 0 0 auto;
+  max-width: none;
 }
 
 .updateRowActive {

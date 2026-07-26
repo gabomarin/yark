@@ -129,6 +129,80 @@ a:hover {
   letter-spacing: 0.02em;
 }
 
+.showcase {
+  padding: 1.5rem 1.5rem 2.75rem;
+}
+
+.showcase-inner {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.showcase-eyebrow {
+  margin: 0 0 0.35rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cryo);
+}
+
+.showcase-title {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  letter-spacing: -0.02em;
+}
+
+.showcase-lede {
+  margin: 0 0 1.75rem;
+  max-width: 40rem;
+  color: var(--muted);
+}
+
+.shots {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.15rem;
+}
+
+.shot {
+  margin: 0;
+}
+
+.shot a {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  overflow: hidden;
+  background: var(--bg-1);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  transition: border-color 140ms ease, transform 140ms ease;
+}
+
+.shot a:hover {
+  border-color: color-mix(in srgb, var(--cryo) 45%, var(--line));
+  transform: translateY(-2px);
+}
+
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.shot figcaption {
+  margin-top: 0.6rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 720px) {
+  .shots {
+    grid-template-columns: 1fr;
+  }
+}
+
 main {
   max-width: 44rem;
   margin: 0 auto;

@@ -3,6 +3,11 @@ import type { BackupRecord } from "./types";
 const PLAYER_KEY_NOTE_RE = /\[playerKey=([^\]]+)\]/i;
 const PLAYER_NAME_NOTE_RE = /\[playerName=([^\]]+)\]/i;
 
+/** Prefer finish time for age/ordering; fall back to start if incomplete. */
+export function backupFinishedAt(backup: BackupRecord): string {
+  return backup.completedAt ?? backup.createdAt;
+}
+
 /** Retention pool key for full (all-profiles) player snapshots. */
 export const FULL_PLAYERS_RETENTION_KEY = "__all__";
 

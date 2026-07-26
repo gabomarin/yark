@@ -1,14 +1,19 @@
-import { readdir, readFile, stat, writeFile } from "node:fs/promises";
+import { readdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type {
-  AppEvent,
+  BackupRecord,
   ServerOperationalLogs,
   ServerUpdateLogFile,
   ServerUpdateLogStatus,
 } from "@shared/types";
+import { resolveEventDetails } from "@shared/event-details";
 import type { ServerRepository } from "../../infra/db/server-repository";
-import type { BackupRepository } from "../../infra/db/backup-repository";
 import type { ProcessManager } from "../../infra/process/process-manager";
+
+/** Minimal backup listing surface (reconciles disk before returning). */
+export interface BackupLogSource {
+  list(serverId: string, limit: number): Promise<BackupRecord[]>;
+}
 
 function isSafeFileName(fileName: string): boolean {
   return !fileName.includes("/") && !fileName.includes("\\") && !fileName.includes("..");
@@ -33,7 +38,7 @@ function parseUpdateLogHeader(content: string): {
 export class LogsService {
   constructor(
     private readonly repo: ServerRepository,
-    private readonly backups: BackupRepository,
+    private readonly backups: BackupLogSource,
     private readonly updatesLogDir: string,
     private readonly processes: ProcessManager,
   ) {}
@@ -45,7 +50,7 @@ export class LogsService {
     }
 
     const updateFiles = await this.listUpdateLogsForServer(serverId);
-    const backups = this.backups.listBackups(serverId, 100);
+    const backups = await this.backups.list(serverId, 100);
     const events = this.repo
       .recentEvents(500)
       .filter((event) => event.serverId === serverId);
@@ -82,6 +87,42 @@ export class LogsService {
     return content.slice(content.length - maxBytes);
   }
 
+  clearEvents(serverId: string): number {
+    if (this.repo.get(serverId) === null) {
+      throw new Error("Server does not exist");
+    }
+    return this.repo.deleteEventsForServer(serverId);
+  }
+
+  clearRuntimeLog(serverId: string): void {
+    if (this.repo.get(serverId) === null) {
+      throw new Error("Server does not exist");
+    }
+    this.processes.clearRuntimeLog(serverId);
+  }
+
+  async deleteUpdateLog(serverId: string, fileName: string): Promise<void> {
+    const path = this.resolveUpdateLogPath(serverId, fileName);
+    await unlink(path);
+  }
+
+  async clearUpdateLogs(serverId: string): Promise<number> {
+    if (this.repo.get(serverId) === null) {
+      throw new Error("Server does not exist");
+    }
+    const files = await this.listUpdateLogsForServer(serverId);
+    let deleted = 0;
+    for (const file of files) {
+      try {
+        await unlink(file.fullPath);
+        deleted += 1;
+      } catch {
+        // skip files that disappear mid-clear
+      }
+    }
+    return deleted;
+  }
+
   async exportServerLogs(serverId: string, destinationPath: string): Promise<string> {
     const logs = await this.listServerLogs(serverId);
     const sections: string[] = [];
@@ -102,6 +143,14 @@ export class LogsService {
     } else {
       for (const event of logs.events) {
         sections.push(`${event.createdAt} [${event.severity}] ${event.type} - ${event.message}`);
+        const details = resolveEventDetails(event);
+        sections.push(`  What: ${details.what}`);
+        if (details.cause !== null) sections.push(`  Cause: ${details.cause}`);
+        if (details.location !== null) sections.push(`  Where: ${details.location}`);
+        if (details.suggestion !== null) sections.push(`  Try next: ${details.suggestion}`);
+        for (const item of details.context) {
+          sections.push(`  ${item.label}: ${item.value}`);
+        }
       }
     }
 

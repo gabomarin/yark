@@ -134,6 +134,12 @@ const MIGRATIONS: Migration[] = [
       UPDATE backup_policies SET retain_count_ini = 10 WHERE retain_count_ini IS NULL OR retain_count_ini < 1;
     `,
   },
+  {
+    version: 6,
+    sql: `
+      ALTER TABLE events ADD COLUMN details TEXT;
+    `,
+  },
 ];
 
 /**

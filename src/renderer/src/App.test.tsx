@@ -74,6 +74,10 @@ function createApiMock(): RendererApi {
     readServerUpdateLog: vi.fn(),
     exportServerLogs: vi.fn(),
     openServerUpdateLogFile: vi.fn(),
+    clearServerEvents: vi.fn(),
+    clearServerRuntimeLog: vi.fn(),
+    deleteServerUpdateLog: vi.fn(),
+    clearServerUpdateLogs: vi.fn(),
     listBackups: vi.fn().mockResolvedValue({ ok: true, data: [] }),
     createManualBackup: vi.fn(),
     deleteBackups: vi.fn(),
@@ -95,10 +99,34 @@ function createApiMock(): RendererApi {
     resolveBackupRoot: vi.fn().mockResolvedValue({ ok: true, data: "C:/ARK/Backups" }),
     openBackupFolder: vi.fn(),
     openBackupRoot: vi.fn(),
+    getBackupFleetSummary: vi.fn().mockResolvedValue({
+      ok: true,
+      data: {
+        servers: [],
+        stats: {
+          protectedCount: 0,
+          atRiskCount: 0,
+          failed24h: 0,
+          totalBackupBytes: 0,
+        },
+        disks: [],
+        alerts: [],
+        diskSettings: {
+          warnUsedPercent: 85,
+          criticalUsedPercent: 95,
+          warnFreeBytes: 20 * 1024 ** 3,
+        },
+      },
+    }),
+    getBackupDiskAlertSettings: vi.fn(),
+    setBackupDiskAlertSettings: vi.fn(),
+    previewBackupCleanup: vi.fn(),
+    runBackupCleanup: vi.fn(),
     getModMetadata: vi.fn(),
     getModsMetadata: vi.fn(),
     onServerStatus: vi.fn(() => () => undefined),
     onSteamCmdProgress: vi.fn(() => () => undefined),
+    onBackupsChanged: vi.fn(() => () => undefined),
   };
 }
 

@@ -2,6 +2,7 @@ import type { DatabaseSync } from "node:sqlite";
 import { randomUUID } from "node:crypto";
 import type {
   AppEvent,
+  AppEventDetails,
   ServerProfile,
   ServerProfileInput,
 } from "@shared/types";
@@ -146,18 +147,28 @@ export class ServerRepository {
     type: AppEvent["type"],
     severity: AppEvent["severity"],
     message: string,
+    details?: AppEventDetails | null,
   ): void {
+    const detailsJson =
+      details !== undefined && details !== null ? JSON.stringify(details) : null;
     this.db
       .prepare(
-        "INSERT INTO events (server_id, type, severity, message, created_at) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO events (server_id, type, severity, message, created_at, details) VALUES (?, ?, ?, ?, ?, ?)",
       )
-      .run(serverId, type, severity, message, new Date().toISOString());
+      .run(
+        serverId,
+        type,
+        severity,
+        message,
+        new Date().toISOString(),
+        detailsJson,
+      );
   }
 
   recentEvents(limit: number): AppEvent[] {
     const rows = this.db
       .prepare(
-        "SELECT id, server_id, type, severity, message, created_at FROM events ORDER BY id DESC LIMIT ?",
+        "SELECT id, server_id, type, severity, message, created_at, details FROM events ORDER BY id DESC LIMIT ?",
       )
       .all(limit) as Array<{
       id: number;
@@ -166,6 +177,7 @@ export class ServerRepository {
       severity: AppEvent["severity"];
       message: string;
       created_at: string;
+      details: string | null;
     }>;
     return rows.map((r) => ({
       id: r.id,
@@ -174,6 +186,25 @@ export class ServerRepository {
       severity: r.severity,
       message: r.message,
       createdAt: r.created_at,
+      details: parseEventDetails(r.details),
     }));
+  }
+
+  deleteEventsForServer(serverId: string): number {
+    const result = this.db
+      .prepare("DELETE FROM events WHERE server_id = ?")
+      .run(serverId);
+    return Number(result.changes);
+  }
+}
+
+function parseEventDetails(raw: string | null | undefined): AppEventDetails | null {
+  if (raw == null || raw.trim().length === 0) return null;
+  try {
+    const parsed = JSON.parse(raw) as AppEventDetails;
+    if (parsed === null || typeof parsed !== "object") return null;
+    return parsed;
+  } catch {
+    return null;
   }
 }

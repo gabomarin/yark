@@ -1,10 +1,4 @@
-import {
-  ArrowSquareOut,
-  ClockCounterClockwise,
-  DownloadSimple,
-  FileText,
-  HardDrives,
-} from "@phosphor-icons/react";
+import { ClockCounterClockwise } from "@phosphor-icons/react";
 import {
   Alert,
   Badge,
@@ -13,389 +7,248 @@ import {
   Group,
   Select,
   Stack,
-  Tabs,
   Text,
+  TextInput,
   Title,
 } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
-import type { ServerOperationalLogs, ServerProfile, ServerUpdateLogFile } from "@shared/types";
+import type { AppEvent, ServerProfile } from "@shared/types";
 import { useEffect, useMemo, useState } from "react";
+import { EventDetailsBody } from "./EventDetailsBody";
+import type { ServerLogsFocus } from "./ServerLogsPanel";
 import classes from "./LogsPage.module.css";
 
-type LogsSection = "events" | "runtime" | "updates" | "backups";
+type SeverityFilter = "problems" | "all" | "error" | "warning" | "info";
+type TimeFilter = "24h" | "7d" | "all";
 
 interface Props {
   servers: ServerProfile[];
-  selectedServerId: string | null;
-  onSelectedServerChange: (serverId: string) => void;
-  initialSection?: LogsSection;
+  onOpenServerLogs: (serverId: string, focus?: ServerLogsFocus) => void;
 }
 
-function formatSize(sizeBytes: number): string {
-  if (sizeBytes >= 1024 * 1024) {
-    return `${(sizeBytes / (1024 * 1024)).toFixed(2)} MB`;
-  }
-  return `${(sizeBytes / 1024).toFixed(1)} KB`;
-}
-
-function formatDuration(durationMs: number | null): string {
-  if (durationMs === null) return "—";
-  const seconds = Math.round(durationMs / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const rest = seconds % 60;
-  if (minutes > 0) {
-    return `${minutes}m ${rest}s`;
-  }
-  return `${rest}s`;
-}
-
-function statusColor(status: ServerUpdateLogFile["status"]): string {
-  if (status === "success") return "green";
-  if (status === "failed") return "red";
+function severityColor(severity: AppEvent["severity"]): string {
+  if (severity === "error") return "red";
+  if (severity === "warning") return "yellow";
   return "gray";
 }
 
-export function LogsPage(props: Props): JSX.Element {
-  const [activeSection, setActiveSection] = useState<LogsSection>(props.initialSection ?? "events");
-  const [logs, setLogs] = useState<ServerOperationalLogs | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
-  const [selectedUpdateFile, setSelectedUpdateFile] = useState<string | null>(null);
-  const [updateContent, setUpdateContent] = useState("");
-
-  const selectedServer = useMemo(
-    () => props.servers.find((server) => server.id === props.selectedServerId) ?? props.servers[0] ?? null,
-    [props.selectedServerId, props.servers],
-  );
-
-  useEffect(() => {
-    if (props.initialSection !== undefined) {
-      setActiveSection(props.initialSection);
-    }
-  }, [props.initialSection]);
-
-  const openUpdateLog = async (serverId: string, fileName: string) => {
-    setBusy(true);
-    setError(null);
-    const result = await window.api.readServerUpdateLog(serverId, fileName, 300_000);
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.error ?? "Could not open update log");
-      return;
-    }
-    setSelectedUpdateFile(fileName);
-    setUpdateContent(result.data);
+function focusForEvent(event: AppEvent): ServerLogsFocus {
+  return {
+    section: "events",
+    eventId: event.id,
   };
+}
 
-  const load = async (serverId: string) => {
+export function LogsPage(props: Props): JSX.Element {
+  const [fleetEvents, setFleetEvents] = useState<AppEvent[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("problems");
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("24h");
+  const [search, setSearch] = useState("");
+  const [expandedEventId, setExpandedEventId] = useState<number | null>(null);
+
+  const serverNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const server of props.servers) {
+      map.set(server.id, server.name);
+    }
+    return map;
+  }, [props.servers]);
+
+  const loadFleet = async () => {
     setLoading(true);
     setError(null);
-    setInfo(null);
-    setSelectedUpdateFile(null);
-    setUpdateContent("");
-    const result = await window.api.listServerLogs(serverId);
+    const result = await window.api.recentEvents(300);
     setLoading(false);
     if (!result.ok) {
-      setLogs(null);
-      setError(result.error ?? "Could not load logs");
+      setFleetEvents([]);
+      setError(result.error ?? "Could not load fleet events");
       return;
     }
-    setLogs(result.data);
-    const first = result.data.updateFiles[0]?.fileName ?? null;
-    if (first !== null) {
-      void openUpdateLog(serverId, first);
-    }
+    setFleetEvents(result.data);
   };
 
   useEffect(() => {
-    if (selectedServer !== null) {
-      void load(selectedServer.id);
-    } else {
-      setLogs(null);
-    }
-  }, [selectedServer?.id]);
+    void loadFleet();
+  }, [props.servers]);
 
-  const exportLogs = async () => {
-    if (selectedServer === null) return;
-    setBusy(true);
-    setError(null);
-    setInfo(null);
-    const result = await window.api.exportServerLogs(selectedServer.id);
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.error ?? "Could not export logs");
-      return;
-    }
-    if (result.data !== null) {
-      setInfo(`Logs exported to: ${result.data}`);
-    }
-  };
+  const filteredFleetEvents = useMemo(() => {
+    const now = Date.now();
+    const cutoffMs =
+      timeFilter === "24h"
+        ? now - 24 * 60 * 60 * 1000
+        : timeFilter === "7d"
+          ? now - 7 * 24 * 60 * 60 * 1000
+          : null;
+    const query = search.trim().toLowerCase();
 
-  const openInExternalViewer = async () => {
-    if (selectedServer === null || selectedUpdateFile === null) return;
-    setBusy(true);
-    setError(null);
-    const result = await window.api.openServerUpdateLogFile(selectedServer.id, selectedUpdateFile);
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.error ?? "Could not open the log externally");
-    }
-  };
-
-  const selectedUpdateInfo = logs?.updateFiles.find((file) => file.fileName === selectedUpdateFile) ?? null;
+    return fleetEvents.filter((event) => {
+      if (cutoffMs !== null) {
+        const ts = new Date(event.createdAt).getTime();
+        if (!Number.isFinite(ts) || ts < cutoffMs) return false;
+      }
+      if (severityFilter === "problems") {
+        if (event.severity !== "error" && event.severity !== "warning") return false;
+      } else if (severityFilter !== "all" && event.severity !== severityFilter) {
+        return false;
+      }
+      if (query.length > 0) {
+        const serverName =
+          event.serverId !== null ? (serverNameById.get(event.serverId) ?? "") : "";
+        const haystack = `${serverName} ${event.type} ${event.message}`.toLowerCase();
+        if (!haystack.includes(query)) return false;
+      }
+      return true;
+    });
+  }, [fleetEvents, timeFilter, severityFilter, search, serverNameById]);
 
   return (
     <PageScaffold
       title="Logs"
-      subtitle="Events, runtime, updates, and backups per server"
+      subtitle="Recent problems and activity across servers. Expand a row for details, or open it in the server Logs tab."
       fillViewport
       actions={
-        <Group gap="sm" wrap="wrap">
-          <Select
-            aria-label="Select server"
-            value={selectedServer?.id ?? null}
-            data={props.servers.map((server) => ({ value: server.id, label: server.name }))}
-            placeholder="Select a server"
-            onChange={(value) => {
-              if (value !== null) {
-                props.onSelectedServerChange(value);
-              }
-            }}
-            className={classes.serverSelect}
-          />
-          <Button variant="default" leftSection={<ClockCounterClockwise size={16} />} onClick={() => selectedServer && void load(selectedServer.id)} disabled={selectedServer === null || loading || busy}>
-            Reload
-          </Button>
-          <Button leftSection={<DownloadSimple size={16} />} onClick={() => void exportLogs()} disabled={selectedServer === null || loading || busy}>
-            Export
-          </Button>
-        </Group>
+        <Button
+          variant="default"
+          leftSection={<ClockCounterClockwise size={16} />}
+          onClick={() => void loadFleet()}
+          disabled={loading}
+        >
+          Reload
+        </Button>
       }
     >
       <Stack gap="lg" className={classes.logsContent} data-logs-page>
-        {info !== null && <Alert color="blue">{info}</Alert>}
         {error !== null && <Alert color="red">{error}</Alert>}
 
-        {selectedServer === null ? (
-          <Card withBorder className={classes.panel}>
-            <Text c="dimmed">No servers configured yet.</Text>
-          </Card>
-        ) : (
-          <Tabs
-            value={activeSection}
-            onChange={(value) => setActiveSection((value as LogsSection) ?? "events")}
-            className={classes.tabs}
-          >
-            <Tabs.List className={classes.tabList}>
-              <Tabs.Tab value="events">Events</Tabs.Tab>
-              <Tabs.Tab value="runtime">Runtime</Tabs.Tab>
-              <Tabs.Tab value="updates">Updates</Tabs.Tab>
-              <Tabs.Tab value="backups">Backups</Tabs.Tab>
-            </Tabs.List>
+        <Card withBorder className={`${classes.panel} ${classes.fillPanel}`}>
+          <Stack gap="sm" className={classes.panelStack}>
+            <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm">
+              <Title order={3}>Fleet activity</Title>
+              <Group gap="sm" wrap="wrap">
+                <Select
+                  aria-label="Severity filter"
+                  value={severityFilter}
+                  onChange={(value) =>
+                    setSeverityFilter((value as SeverityFilter) ?? "problems")
+                  }
+                  data={[
+                    { value: "problems", label: "Problems" },
+                    { value: "all", label: "All severity" },
+                    { value: "error", label: "Errors" },
+                    { value: "warning", label: "Warnings" },
+                    { value: "info", label: "Info" },
+                  ]}
+                  w={150}
+                />
+                <Select
+                  aria-label="Time filter"
+                  value={timeFilter}
+                  onChange={(value) => setTimeFilter((value as TimeFilter) ?? "24h")}
+                  data={[
+                    { value: "24h", label: "Last 24h" },
+                    { value: "7d", label: "Last 7 days" },
+                    { value: "all", label: "All time" },
+                  ]}
+                  w={140}
+                />
+                <TextInput
+                  aria-label="Search fleet events"
+                  placeholder="Search…"
+                  value={search}
+                  onChange={(event) => setSearch(event.currentTarget.value)}
+                  className={classes.fleetSearch}
+                />
+              </Group>
+            </Group>
 
-            <Tabs.Panel value="events" className={classes.tabPanel}>
-              <Card withBorder className={`${classes.panel} ${classes.fillPanel}`}>
-                <Stack gap="sm" className={classes.panelStack}>
-                  <Title order={3}>Events</Title>
-                  {loading ? (
-                    <Text c="dimmed">Loading events...</Text>
-                  ) : logs === null || logs.events.length === 0 ? (
-                    <LogEmptyState
-                      icon={<ClockCounterClockwise size={24} />}
-                      title="No recent events"
-                      description="Server operations will appear here when they are logged."
-                    />
-                  ) : (
-                    <div
-                      className={classes.eventList}
-                      data-logs-scroll-region="events"
-                    >
-                      {logs.events.map((event) => (
-                        <div key={event.id} className={classes.eventRow}>
-                          <Text size="sm" c="dimmed">{new Date(event.createdAt).toLocaleString()}</Text>
-                          <Text size="sm">{event.message}</Text>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Stack>
-              </Card>
-            </Tabs.Panel>
-
-            <Tabs.Panel value="runtime" className={classes.tabPanel}>
-              <Card withBorder className={`${classes.panel} ${classes.fillPanel}`}>
-                <Stack gap="sm" className={classes.panelStack}>
-                  <Title order={3}>Runtime</Title>
-                  {loading ? (
-                    <Text c="dimmed">Loading runtime log...</Text>
-                  ) : logs === null || logs.runtimeLogLines.length === 0 ? (
-                    <LogEmptyState
-                      icon={<FileText size={24} />}
-                      title="No runtime output"
-                      description="Captured console output will appear here when the server produces activity."
-                    />
-                  ) : (
-                    <pre
-                      className={classes.console}
-                      data-logs-scroll-region="runtime"
-                    >
-                      {logs.runtimeLogLines.join("\n")}
-                    </pre>
-                  )}
-                </Stack>
-              </Card>
-            </Tabs.Panel>
-
-            <Tabs.Panel value="updates" className={classes.tabPanel}>
-              <div className={classes.updatesLayout}>
-                <Card withBorder className={`${classes.panel} ${classes.historyPanel} ${classes.fillPanel}`}>
-                  <Stack gap="sm" className={classes.panelStack}>
-                    <Title order={3} size="h4" className={classes.panelTitle}>Update history</Title>
-                    {loading ? (
-                      <Text c="dimmed">Loading history...</Text>
-                    ) : logs === null || logs.updateFiles.length === 0 ? (
-                      <Text c="dimmed">No update logs.</Text>
-                    ) : (
-                      <div
-                        className={classes.updateList}
-                        data-logs-scroll-region="updates-list"
-                      >
-                        {logs.updateFiles.map((file) => (
-                          <button
-                            key={file.fileName}
-                            type="button"
-                            className={`${classes.updateRow} ${selectedUpdateFile === file.fileName ? classes.updateRowActive : ""}`}
-                            onClick={() => void openUpdateLog(selectedServer.id, file.fileName)}
-                          >
-                            <div className={classes.updateSummary}>
-                              <Text size="sm" fw={600} truncate="end" title={file.fileName}>{file.fileName}</Text>
-                              <Text size="sm" c="dimmed">{new Date(file.modifiedAt).toLocaleString()}</Text>
-                            </div>
-                            <Badge color={statusColor(file.status)} variant="light">{file.status}</Badge>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </Stack>
-                </Card>
-
-                <Card withBorder className={`${classes.panel} ${classes.detailPanel} ${classes.fillPanel}`}>
-                  <Stack gap="sm" className={classes.panelStack}>
-                    <Group justify="space-between" align="center" wrap="wrap" gap="sm" className={classes.detailHeader}>
-                      <Group gap="sm" wrap="nowrap">
-                        <Title order={3} size="h4" className={classes.panelTitle}>Update details</Title>
-                        {selectedUpdateInfo !== null && (
-                          <Badge color={statusColor(selectedUpdateInfo.status)} variant="light">{selectedUpdateInfo.status}</Badge>
-                        )}
-                      </Group>
-                      {selectedUpdateInfo !== null && (
-                        <Button
-                          variant="default"
-                          size="compact-sm"
-                          leftSection={<ArrowSquareOut size={15} />}
-                          onClick={() => void openInExternalViewer()}
-                          disabled={busy}
-                        >
-                          Open in external viewer
-                        </Button>
-                      )}
-                    </Group>
-
-                    {selectedUpdateInfo === null ? (
-                      <Text c="dimmed">Select an update to see details.</Text>
-                    ) : (
-                      <>
-                        <div className={classes.detailsMeta}>
-                          <DetailItem label="Date" value={new Date(selectedUpdateInfo.modifiedAt).toLocaleString()} icon={<ClockCounterClockwise size={16} />} />
-                          <DetailItem label="Duration" value={formatDuration(selectedUpdateInfo.durationMs)} icon={<ClockCounterClockwise size={16} />} />
-                          <DetailItem label="Size" value={formatSize(selectedUpdateInfo.sizeBytes)} icon={<FileText size={16} />} />
-                        </div>
-                        <pre
-                          className={classes.console}
-                          data-logs-scroll-region="update-content"
-                        >
-                          {updateContent.length > 0 ? updateContent : "Loading log content..."}
-                        </pre>
-                      </>
-                    )}
-                  </Stack>
-                </Card>
+            {props.servers.length === 0 ? (
+              <Text c="dimmed">No servers configured yet.</Text>
+            ) : loading ? (
+              <Text c="dimmed">Loading fleet events…</Text>
+            ) : filteredFleetEvents.length === 0 ? (
+              <div className={classes.emptyState}>
+                <div className={classes.emptyIcon}>
+                  <ClockCounterClockwise size={24} />
+                </div>
+                <Text fw={600}>
+                  {severityFilter === "problems"
+                    ? "No problems in this window"
+                    : "No matching activity"}
+                </Text>
+                <Text c="dimmed" size="sm" maw={420}>
+                  {severityFilter === "problems"
+                    ? "No errors or warnings matched the current filters. Switch to “All severity” to see routine activity."
+                    : "Try widening the time range or clearing the search."}
+                </Text>
               </div>
-            </Tabs.Panel>
-
-            <Tabs.Panel value="backups" className={classes.tabPanel}>
-              <Card withBorder className={`${classes.panel} ${classes.fillPanel}`}>
-                <Stack gap="sm" className={classes.panelStack}>
-                  <Title order={3}>Backups</Title>
-                  {loading ? (
-                    <Text c="dimmed">Loading backups...</Text>
-                  ) : logs === null || logs.backups.length === 0 ? (
-                    <LogEmptyState
-                      icon={<HardDrives size={24} />}
-                      title="No backups recorded"
-                      description="Completed backups and their paths will appear in this history."
-                    />
-                  ) : (
+            ) : (
+              <div className={classes.eventList} data-logs-scroll-region="fleet">
+                {filteredFleetEvents.map((event) => {
+                  const serverName =
+                    event.serverId !== null
+                      ? (serverNameById.get(event.serverId) ?? "Unknown server")
+                      : "System";
+                  const expanded = expandedEventId === event.id;
+                  return (
                     <div
-                      className={classes.eventList}
-                      data-logs-scroll-region="backups"
+                      key={event.id}
+                      className={[
+                        classes.fleetCard,
+                        expanded ? classes.eventRowExpanded : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
                     >
-                      {logs.backups.map((backup) => (
-                        <div key={backup.id} className={classes.eventRow}>
-                          <Text fw={600}>
-                            {backup.kind} · {backup.type}
-                          </Text>
-                          <Text size="sm" c="dimmed">{new Date(backup.createdAt).toLocaleString()} | {backup.status}</Text>
-                          <Text size="sm">{backup.path}</Text>
-                        </div>
-                      ))}
+                      <button
+                        type="button"
+                        className={`${classes.fleetRow} ${classes.fleetRowClickable}`}
+                        aria-expanded={expanded}
+                        onClick={() =>
+                          setExpandedEventId((current) =>
+                            current === event.id ? null : event.id,
+                          )
+                        }
+                      >
+                        <Text size="sm" c="dimmed" className={classes.fleetWhen}>
+                          {new Date(event.createdAt).toLocaleString()}
+                        </Text>
+                        <Badge color={severityColor(event.severity)} variant="light">
+                          {event.severity}
+                        </Badge>
+                        <Text size="sm" fw={600} className={classes.fleetServer}>
+                          {serverName}
+                        </Text>
+                        <Text size="sm" className={classes.fleetMessage}>
+                          {event.message}
+                        </Text>
+                      </button>
+                      <EventDetailsBody event={event} expanded={expanded} />
+                      {expanded && event.serverId !== null && (
+                        <Group justify="flex-end" px="sm" pb="sm">
+                          <Button
+                            size="compact-sm"
+                            variant="light"
+                            onClick={() =>
+                              props.onOpenServerLogs(
+                                event.serverId!,
+                                focusForEvent(event),
+                              )
+                            }
+                          >
+                            Open in server
+                          </Button>
+                        </Group>
+                      )}
                     </div>
-                  )}
-                </Stack>
-              </Card>
-            </Tabs.Panel>
-          </Tabs>
-        )}
+                  );
+                })}
+              </div>
+            )}
+          </Stack>
+        </Card>
       </Stack>
     </PageScaffold>
-  );
-}
-
-interface DetailItemProps {
-  label: string;
-  value: string;
-  icon: React.ReactNode;
-}
-
-function DetailItem({ label, value, icon }: DetailItemProps): JSX.Element {
-  return (
-    <div className={classes.detailItem}>
-      <Text className={classes.detailLabel}>{icon}{label}</Text>
-      <Text size="xs" className={classes.detailValue}>{value}</Text>
-    </div>
-  );
-}
-
-interface LogEmptyStateProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}
-
-function LogEmptyState({
-  icon,
-  title,
-  description,
-}: LogEmptyStateProps): JSX.Element {
-  return (
-    <div className={classes.emptyState}>
-      <div className={classes.emptyIcon}>{icon}</div>
-      <Text fw={600}>{title}</Text>
-      <Text c="dimmed" size="sm" maw={420}>
-        {description}
-      </Text>
-    </div>
   );
 }

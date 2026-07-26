@@ -1,12 +1,15 @@
 import {
+  ArrowClockwise,
   ArrowCounterClockwise,
-  FloppyDisk,
+  CaretDown,
+  CaretRight,
   FolderOpen,
+  HardDrives,
   MagnifyingGlass,
-  Plus,
   Trash,
 } from "@phosphor-icons/react";
 import {
+  ActionIcon,
   Badge,
   Button,
   Card,
@@ -20,10 +23,12 @@ import {
   Text,
   TextInput,
   Title,
+  Tooltip,
+  UnstyledButton,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
-import { playerBackupDisplayName } from "@shared/backup-player-meta";
+import { backupFinishedAt, playerBackupDisplayName } from "@shared/backup-player-meta";
 import type {
   BackupKind,
   BackupPolicy,
@@ -31,7 +36,7 @@ import type {
   ServerProfile,
   ServerRuntimeInfo,
 } from "@shared/types";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import classes from "./BackupsPage.module.css";
 
 interface Props {
@@ -39,6 +44,9 @@ interface Props {
   runtime: ServerRuntimeInfo | null;
   /** Compact layout for workspace tab (no outer page chrome). */
   embedded?: boolean;
+  /** Running server or SteamCMD files job — blocks restore (like server active). */
+  opsLocked?: boolean;
+  opsLockReason?: string;
 }
 
 type DraftPolicy = Omit<BackupPolicy, "serverId" | "updatedAt">;
@@ -71,6 +79,30 @@ function formatWhen(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
   return date.toLocaleString();
+}
+
+function formatRelativeTime(iso: string, nowMs = Date.now()): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const diffSec = Math.round((date.getTime() - nowMs) / 1000);
+  const abs = Math.abs(diffSec);
+  const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+  if (abs < 60) return rtf.format(diffSec, "second");
+  const diffMin = Math.round(diffSec / 60);
+  if (Math.abs(diffMin) < 60) return rtf.format(diffMin, "minute");
+  const diffHour = Math.round(diffMin / 60);
+  if (Math.abs(diffHour) < 24) return rtf.format(diffHour, "hour");
+  const diffDay = Math.round(diffHour / 24);
+  if (Math.abs(diffDay) < 30) return rtf.format(diffDay, "day");
+  const diffMonth = Math.round(diffDay / 30);
+  if (Math.abs(diffMonth) < 12) return rtf.format(diffMonth, "month");
+  return rtf.format(Math.round(diffMonth / 12), "year");
+}
+
+function truncateMiddle(value: string, max = 42): string {
+  if (value.length <= max) return value;
+  const keep = Math.floor((max - 1) / 2);
+  return `${value.slice(0, keep)}…${value.slice(-keep)}`;
 }
 
 function statusColor(status: BackupRecord["status"]): string {
@@ -117,24 +149,72 @@ function showBackupError(message: string): void {
   showBackupToast(message, { color: "red", autoClose: 8000 });
 }
 
-function compareByCreatedAt(a: BackupRecord, b: BackupRecord, newestFirst: boolean): number {
-  const diff = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+function compareByFinishedAt(a: BackupRecord, b: BackupRecord, newestFirst: boolean): number {
+  const diff =
+    new Date(backupFinishedAt(a)).getTime() - new Date(backupFinishedAt(b)).getTime();
   return newestFirst ? -diff : diff;
 }
 
 function sortPlayerBackups(backups: BackupRecord[], sort: PlayerSort): BackupRecord[] {
   const next = [...backups];
   next.sort((a, b) => {
-    if (sort === "newest") return compareByCreatedAt(a, b, true);
-    if (sort === "oldest") return compareByCreatedAt(a, b, false);
+    if (sort === "newest") return compareByFinishedAt(a, b, true);
+    if (sort === "oldest") return compareByFinishedAt(a, b, false);
     const nameA = playerBackupDisplayName(a).toLocaleLowerCase();
     const nameB = playerBackupDisplayName(b).toLocaleLowerCase();
     const byName = nameA.localeCompare(nameB);
     if (byName !== 0) return sort === "name-asc" ? byName : -byName;
-    return compareByCreatedAt(a, b, true);
+    return compareByFinishedAt(a, b, true);
   });
   return next;
 }
+
+function worldPolicySummary(
+  draft: DraftPolicy,
+  resolvedRoot: string | null,
+  defaultHint: string,
+): string {
+  const schedule = draft.enabled
+    ? `Schedule on · ${draft.intervalMinutes}m`
+    : "Schedule off";
+  const dest =
+    draft.backupDir !== null && draft.backupDir.length > 0
+      ? draft.backupDir
+      : (resolvedRoot ?? defaultHint);
+  return `${schedule} · keep ${draft.retainCountWorld} · ${truncateMiddle(dest)}`;
+}
+
+function playersPolicySummary(draft: DraftPolicy): string {
+  return `Keep last ${draft.retainCountPlayers} per player`;
+}
+
+function iniPolicySummary(draft: DraftPolicy): string {
+  return `Keep last ${draft.retainCountIni}`;
+}
+
+function draftEqualsPolicy(draft: DraftPolicy, policy: BackupPolicy): boolean {
+  return (
+    draft.enabled === policy.enabled
+    && draft.intervalMinutes === policy.intervalMinutes
+    && draft.retainCountWorld === policy.retainCountWorld
+    && draft.retainCountPlayers === policy.retainCountPlayers
+    && draft.retainCountIni === policy.retainCountIni
+    && draft.backupDir === policy.backupDir
+  );
+}
+
+function draftEqualsDraft(a: DraftPolicy, b: DraftPolicy): boolean {
+  return (
+    a.enabled === b.enabled
+    && a.intervalMinutes === b.intervalMinutes
+    && a.retainCountWorld === b.retainCountWorld
+    && a.retainCountPlayers === b.retainCountPlayers
+    && a.retainCountIni === b.retainCountIni
+    && a.backupDir === b.backupDir
+  );
+}
+
+const POLICY_AUTOSAVE_MS = 450;
 
 export function ServerBackupPanel(props: Props): JSX.Element {
   const [backups, setBackups] = useState<BackupRecord[]>([]);
@@ -144,12 +224,20 @@ export function ServerBackupPanel(props: Props): JSX.Element {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [resolvedRoot, setResolvedRoot] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [browsingDir, setBrowsingDir] = useState(false);
   const [playerSearch, setPlayerSearch] = useState("");
   const [playerSort, setPlayerSort] = useState<PlayerSort>("newest");
+  const [settingsOpen, setSettingsOpen] = useState(true);
+  const loadGenRef = useRef(0);
+  const saveGenRef = useRef(0);
 
   const serverActive = isServerActive(props.runtime);
+  const opsLocked = props.opsLocked === true || serverActive;
+  const opsLockReason =
+    props.opsLockReason ??
+    (serverActive ? "Stop the server before restoring a backup." : undefined);
   const defaultBackupHint = `${props.server.installDir}\\Backups`;
   const activeKindLabel = kindLabel(activeKind);
   const kindBackups = useMemo(
@@ -174,50 +262,121 @@ export function ServerBackupPanel(props: Props): JSX.Element {
     selectableBackups.length > 0
     && selectableBackups.every((b) => selectedIds.includes(b.id));
 
-  const load = async (serverId: string) => {
-    setLoading(true);
-    const [listRes, policyRes, rootRes] = await Promise.all([
-      window.api.listBackups(serverId, 50),
-      window.api.getBackupPolicy(serverId),
-      window.api.resolveBackupRoot(serverId),
-    ]);
-    setLoading(false);
-    if (!listRes.ok) {
-      setBackups([]);
-      setPolicy(null);
-      setDraftPolicy(null);
-      setResolvedRoot(null);
-      setSelectedIds([]);
-      showBackupError(listRes.error ?? "Could not load backups");
-      return;
+  const load = async (serverId: string, opts?: { quiet?: boolean }) => {
+    const quiet = opts?.quiet === true;
+    const gen = ++loadGenRef.current;
+    if (!quiet) {
+      setLoading(true);
+    } else {
+      setRefreshing(true);
     }
-    if (!policyRes.ok) {
+    try {
+      const [listRes, policyRes, rootRes] = await Promise.all([
+        window.api.listBackups(serverId, 100),
+        window.api.getBackupPolicy(serverId),
+        window.api.resolveBackupRoot(serverId),
+      ]);
+      // Drop stale responses so overlapping interval/push/user loads cannot regress UI.
+      if (gen !== loadGenRef.current) return;
+      if (!listRes.ok) {
+        if (!quiet) {
+          setBackups([]);
+          setPolicy(null);
+          setDraftPolicy(null);
+          setResolvedRoot(null);
+          setSelectedIds([]);
+        }
+        showBackupError(listRes.error ?? "Could not load backups");
+        return;
+      }
+      if (!policyRes.ok) {
+        setBackups(listRes.data);
+        if (!quiet) {
+          setPolicy(null);
+          setDraftPolicy(null);
+          setResolvedRoot(null);
+          setSelectedIds([]);
+        }
+        showBackupError(policyRes.error ?? "Could not load backup policy");
+        return;
+      }
       setBackups(listRes.data);
-      setPolicy(null);
-      setDraftPolicy(null);
-      setResolvedRoot(null);
-      setSelectedIds([]);
-      showBackupError(policyRes.error ?? "Could not load backup policy");
-      return;
+      setSelectedIds((prev) =>
+        prev.filter((id) =>
+          listRes.data.some((b) => b.id === id && b.status !== "running"),
+        ),
+      );
+      setPolicy(policyRes.data);
+      // Quiet refresh must not clobber unsaved destination/schedule/retention edits.
+      if (!quiet) {
+        setDraftPolicy(toDraft(policyRes.data));
+      }
+      setResolvedRoot(rootRes.ok ? rootRes.data : null);
+    } finally {
+      if (gen === loadGenRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
-    setBackups(listRes.data);
-    setSelectedIds((prev) =>
-      prev.filter((id) =>
-        listRes.data.some((b) => b.id === id && b.status !== "running"),
-      ),
-    );
-    setPolicy(policyRes.data);
-    setDraftPolicy(toDraft(policyRes.data));
-    setResolvedRoot(rootRes.ok ? rootRes.data : null);
   };
 
   useEffect(() => {
     void load(props.server.id);
   }, [props.server.id, props.server.updatedAt]);
 
+  // Auto-refresh while the panel is open (picks up join/leave archives).
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      void load(props.server.id, { quiet: true });
+    }, 12_000);
+    return () => window.clearInterval(timer);
+  }, [props.server.id]);
+
+  useEffect(() => {
+    if (typeof window.api.onBackupsChanged !== "function") return undefined;
+    return window.api.onBackupsChanged((payload) => {
+      if (payload.serverId !== props.server.id) return;
+      void load(props.server.id, { quiet: true });
+    });
+  }, [props.server.id]);
+
+  // Autosave policy edits (debounced). Errors toast; success is silent.
+  useEffect(() => {
+    if (draftPolicy === null || policy === null) return;
+    if (draftEqualsPolicy(draftPolicy, policy)) return;
+    const snapshot = draftPolicy;
+    const serverId = props.server.id;
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        const gen = ++saveGenRef.current;
+        const result = await window.api.setBackupPolicy(serverId, snapshot);
+        if (gen !== saveGenRef.current) return;
+        if (!result.ok) {
+          showBackupError(result.error ?? "Could not save backup policy");
+          return;
+        }
+        setPolicy(result.data);
+        setDraftPolicy((current) => {
+          if (current === null) return toDraft(result.data);
+          return draftEqualsDraft(current, snapshot) ? toDraft(result.data) : current;
+        });
+        const rootRes = await window.api.resolveBackupRoot(serverId);
+        if (gen !== saveGenRef.current) return;
+        if (rootRes.ok) setResolvedRoot(rootRes.data);
+      })();
+    }, POLICY_AUTOSAVE_MS);
+    return () => window.clearTimeout(timer);
+  }, [draftPolicy, policy, props.server.id]);
+
+  const forceRefresh = async () => {
+    await load(props.server.id, { quiet: true });
+    showBackupToast("Backup list refreshed.");
+  };
+
   const selectKind = (kind: BackupKind) => {
     setActiveKind(kind);
     setSelectedIds([]);
+    setSettingsOpen(true);
   };
 
   const createBackup = async () => {
@@ -234,22 +393,6 @@ export function ServerBackupPanel(props: Props): JSX.Element {
         ? "Full player-profiles snapshot completed."
         : `${activeKindLabel} backup completed.`,
     );
-  };
-
-  const savePolicy = async (message = "Backup settings saved.") => {
-    if (draftPolicy === null) return;
-    setBusy(true);
-    const result = await window.api.setBackupPolicy(props.server.id, draftPolicy);
-    setBusy(false);
-    if (!result.ok) {
-      showBackupError(result.error ?? "Could not save backup policy");
-      return;
-    }
-    setPolicy(result.data);
-    setDraftPolicy(toDraft(result.data));
-    const rootRes = await window.api.resolveBackupRoot(props.server.id);
-    if (rootRes.ok) setResolvedRoot(rootRes.data);
-    showBackupToast(message);
   };
 
   const browseBackupDir = async () => {
@@ -337,8 +480,10 @@ export function ServerBackupPanel(props: Props): JSX.Element {
   };
 
   const confirmRestore = (backup: BackupRecord) => {
-    if (serverActive) {
-      showBackupError("Stop the server before restoring a backup.");
+    if (opsLocked) {
+      showBackupError(
+        opsLockReason ?? "Stop the server before restoring a backup.",
+      );
       return;
     }
     const label = kindLabel(backup.kind);
@@ -347,7 +492,7 @@ export function ServerBackupPanel(props: Props): JSX.Element {
       children: (
         <Text size="sm">
           Restore <strong>{label}</strong> ({backup.type}) from{" "}
-          {formatWhen(backup.createdAt)} onto{" "}
+          {formatWhen(backupFinishedAt(backup))} onto{" "}
           <strong>{props.server.name}</strong>? Only that kind of data is replaced.
           A safety backup of the same kind is created first. The server must stay stopped.
         </Text>
@@ -381,23 +526,46 @@ export function ServerBackupPanel(props: Props): JSX.Element {
           : "No player-profile backups yet. Manual backup snapshots all profiles; join/leave also creates per-player archives while the server is running."
         : "No INI backups yet. Create one manually — an automatic copy is also taken after each successful INI save.";
 
-  const kindSubtitle =
+  const settingsTitle =
     activeKind === "world"
-      ? "Manual create or scheduled world saves"
+      ? "World destination & schedule"
       : activeKind === "players"
-        ? "Per-player on connect/disconnect · keep last N per player"
-        : "Automatic backup after each successful INI save";
+        ? "Player retention"
+        : "INI retention";
+
+  const settingsSummary =
+    draftPolicy === null
+      ? null
+      : activeKind === "world"
+        ? worldPolicySummary(draftPolicy, resolvedRoot, defaultBackupHint)
+        : activeKind === "players"
+          ? playersPolicySummary(draftPolicy)
+          : iniPolicySummary(draftPolicy);
+
+  const createLabel = activeKind === "players" ? "Backup all players" : "Backup";
+  const createTooltip =
+    activeKind === "world"
+      ? "Create a manual world save backup now"
+      : activeKind === "players"
+        ? "Create a full snapshot of all player profiles"
+        : "Create a manual backup of Game.ini and GameUserSettings.ini";
+  const deleteTooltip =
+    selectedIds.length === 0
+      ? "Select backups to delete"
+      : `Permanently delete ${selectedIds.length} selected backup${selectedIds.length === 1 ? "" : "s"}`;
 
   return (
     <Stack gap="md" className={props.embedded ? classes.embedded : undefined}>
-      <Group justify="space-between" wrap="wrap" gap="sm" align="flex-end">
-        <div>
-          <Title order={props.embedded ? 4 : 3}>Backups for {props.server.name}</Title>
-          <Text size="sm" c="dimmed">
-            World schedule is separate from player join/leave and INI-on-save backups.
-          </Text>
-        </div>
-      </Group>
+      {!props.embedded && (
+        <Group justify="space-between" wrap="wrap" gap="sm" align="flex-end">
+          <div>
+            <Title order={3}>Backups for {props.server.name}</Title>
+            <Text size="sm" c="dimmed">
+              World schedule is separate from player join/leave and INI-on-save backups.
+            </Text>
+          </div>
+        </Group>
+      )}
 
       <Card withBorder className={`${classes.panel} ${classes.listPanel}`}>
         <Tabs
@@ -418,133 +586,152 @@ export function ServerBackupPanel(props: Props): JSX.Element {
           </Tabs.List>
 
           <Stack gap="sm" className={classes.listStack}>
-            {activeKind === "world" && draftPolicy !== null && (
-              <div className={classes.kindSettings} data-world-settings>
-                <Group justify="space-between" align="center" wrap="wrap" gap={6}>
-                  <Text fw={600} size="xs">
-                    World destination & schedule
-                  </Text>
-                  <Group gap={6}>
-                    <Button
-                      variant="subtle"
-                      size="compact-xs"
-                      leftSection={<FolderOpen size={12} />}
-                      onClick={() => void openDestination()}
-                      disabled={busy}
-                    >
-                      Open
-                    </Button>
-                    <Button
-                      variant="light"
-                      size="compact-xs"
-                      leftSection={<FloppyDisk size={12} />}
-                      onClick={() => void savePolicy("World schedule and destination saved.")}
-                      loading={busy}
-                      disabled={loading}
-                    >
-                      Save policy
-                    </Button>
+            {draftPolicy !== null && (
+              <div
+                className={classes.kindSettings}
+                data-world-settings={activeKind === "world" ? true : undefined}
+                data-players-settings={activeKind === "players" ? true : undefined}
+                data-ini-settings={activeKind === "ini" ? true : undefined}
+                data-settings-open={settingsOpen ? "true" : "false"}
+              >
+                <UnstyledButton
+                  className={classes.settingsToggle}
+                  onClick={() => setSettingsOpen((open) => !open)}
+                  aria-expanded={settingsOpen}
+                >
+                  <Group gap={6} wrap="nowrap" className={classes.settingsToggleInner}>
+                    {settingsOpen ? <CaretDown size={14} /> : <CaretRight size={14} />}
+                    <Text fw={600} size="xs" className={classes.settingsToggleTitle}>
+                      {settingsTitle}
+                    </Text>
+                    {!settingsOpen && settingsSummary !== null && (
+                      <Text size="xs" c="dimmed" className={classes.settingsSummary}>
+                        {settingsSummary}
+                      </Text>
+                    )}
                   </Group>
-                </Group>
+                </UnstyledButton>
 
-                <Stack gap={6} mt={4} className={classes.kindSettingsFields}>
-                  <Group align="flex-end" gap={6} wrap="nowrap">
-                    <TextInput
-                      className={classes.dirField}
-                      size="xs"
-                      label="Destination"
-                      value={draftPolicy.backupDir ?? ""}
-                      placeholder={
-                        draftPolicy.backupDir === null || draftPolicy.backupDir.length === 0
-                          ? defaultBackupHint
-                          : (resolvedRoot ?? draftPolicy.backupDir)
-                      }
-                      onChange={(event) =>
-                        setDraftPolicy({
-                          ...draftPolicy,
-                          backupDir:
-                            event.currentTarget.value.trim().length > 0
-                              ? event.currentTarget.value
-                              : null,
-                        })
-                      }
-                    />
-                    <Button
-                      variant="default"
-                      size="xs"
-                      onClick={() => void browseBackupDir()}
-                      loading={browsingDir}
-                      disabled={busy}
-                    >
-                      Browse
-                    </Button>
-                  </Group>
-                  <Group align="center" gap="sm" wrap="wrap">
-                    <Switch
-                      size="sm"
-                      label="Schedule world backups"
-                      checked={draftPolicy.enabled}
-                      onChange={(event) =>
-                        setDraftPolicy({
-                          ...draftPolicy,
-                          enabled: event.currentTarget.checked,
-                        })
-                      }
-                    />
-                    <NumberInput
-                      size="xs"
-                      label="Interval (min)"
-                      min={5}
-                      max={10_080}
-                      value={draftPolicy.intervalMinutes}
-                      onChange={(value) =>
-                        setDraftPolicy({
-                          ...draftPolicy,
-                          intervalMinutes:
-                            typeof value === "number"
-                              ? value
-                              : draftPolicy.intervalMinutes,
-                        })
-                      }
-                      className={classes.policyField}
-                    />
-                    <NumberInput
-                      size="xs"
-                      label="Keep last"
-                      min={1}
-                      max={500}
-                      value={draftPolicy.retainCountWorld}
-                      onChange={(value) =>
-                        setDraftPolicy({
-                          ...draftPolicy,
-                          retainCountWorld:
-                            typeof value === "number"
-                              ? value
-                              : draftPolicy.retainCountWorld,
-                        })
-                      }
-                      className={classes.policyField}
-                    />
-                  </Group>
-                </Stack>
-                {policy !== null && (
-                  <Text size="xs" c="dimmed" className={classes.kindSettingsMeta}>
-                    Updated {formatWhen(policy.updatedAt)}
-                    {resolvedRoot !== null ? ` · ${resolvedRoot}` : ""}
-                  </Text>
+                {settingsOpen && activeKind === "world" && (
+                  <Stack gap={6} mt={4} className={classes.kindSettingsFields}>
+                    <Group align="center" gap={6} wrap="nowrap">
+                      <Text size="xs" component="label" htmlFor="backup-destination" className={classes.inlineLabel}>
+                        Destination
+                      </Text>
+                      <TextInput
+                        id="backup-destination"
+                        className={classes.dirField}
+                        size="xs"
+                        aria-label="Destination"
+                        value={draftPolicy.backupDir ?? ""}
+                        placeholder={
+                          draftPolicy.backupDir === null || draftPolicy.backupDir.length === 0
+                            ? defaultBackupHint
+                            : (resolvedRoot ?? draftPolicy.backupDir)
+                        }
+                        onChange={(event) =>
+                          setDraftPolicy({
+                            ...draftPolicy,
+                            backupDir:
+                              event.currentTarget.value.trim().length > 0
+                                ? event.currentTarget.value
+                                : null,
+                          })
+                        }
+                      />
+                      <Tooltip label="Choose a folder for backup archives">
+                        <Button
+                          variant="default"
+                          size="xs"
+                          onClick={() => void browseBackupDir()}
+                          loading={browsingDir}
+                          disabled={busy}
+                        >
+                          Browse
+                        </Button>
+                      </Tooltip>
+                      <Tooltip label="Open the backup destination folder">
+                        <Button
+                          variant="subtle"
+                          size="xs"
+                          leftSection={<FolderOpen size={12} />}
+                          onClick={() => void openDestination()}
+                          disabled={busy}
+                        >
+                          Open
+                        </Button>
+                      </Tooltip>
+                    </Group>
+                    <Group align="center" gap="sm" wrap="wrap">
+                      <Switch
+                        size="sm"
+                        label="Schedule"
+                        checked={draftPolicy.enabled}
+                        onChange={(event) =>
+                          setDraftPolicy({
+                            ...draftPolicy,
+                            enabled: event.currentTarget.checked,
+                          })
+                        }
+                      />
+                      <Group gap={6} align="center" wrap="nowrap">
+                        <Text size="xs" component="label" htmlFor="backup-interval">
+                          Interval (min)
+                        </Text>
+                        <NumberInput
+                          id="backup-interval"
+                          aria-label="Interval (min)"
+                          size="xs"
+                          min={5}
+                          max={10_080}
+                          value={draftPolicy.intervalMinutes}
+                          onChange={(value) =>
+                            setDraftPolicy({
+                              ...draftPolicy,
+                              intervalMinutes:
+                                typeof value === "number"
+                                  ? value
+                                  : draftPolicy.intervalMinutes,
+                            })
+                          }
+                          className={classes.policyField}
+                        />
+                      </Group>
+                      <Group gap={6} align="center" wrap="nowrap">
+                        <Text size="xs" component="label" htmlFor="backup-retain-world">
+                          Keep last
+                        </Text>
+                        <NumberInput
+                          id="backup-retain-world"
+                          aria-label="Keep last"
+                          size="xs"
+                          min={1}
+                          max={500}
+                          value={draftPolicy.retainCountWorld}
+                          onChange={(value) =>
+                            setDraftPolicy({
+                              ...draftPolicy,
+                              retainCountWorld:
+                                typeof value === "number"
+                                  ? value
+                                  : draftPolicy.retainCountWorld,
+                            })
+                          }
+                          className={classes.policyField}
+                        />
+                      </Group>
+                    </Group>
+                  </Stack>
                 )}
-              </div>
-            )}
 
-            {activeKind === "players" && draftPolicy !== null && (
-              <div className={classes.kindSettings} data-players-settings>
-                <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm">
-                  <Text fw={600} size="xs">
-                    Player retention
-                  </Text>
-                  <Group gap="xs" align="flex-end">
+                {settingsOpen && activeKind === "players" && (
+                  <Group gap="xs" align="center" wrap="nowrap" mt={4} className={classes.inlineRetain}>
+                    <Text size="xs" component="label" htmlFor="backup-retain-players">
+                      Keep last (per player)
+                    </Text>
                     <NumberInput
-                      label="Keep last (per player)"
+                      id="backup-retain-players"
+                      aria-label="Keep last (per player)"
                       size="xs"
                       min={1}
                       max={500}
@@ -560,28 +747,17 @@ export function ServerBackupPanel(props: Props): JSX.Element {
                       }
                       className={classes.compactRetain}
                     />
-                    <Button
-                      size="compact-xs"
-                      variant="light"
-                      onClick={() => void savePolicy("Player retention saved.")}
-                      loading={busy}
-                    >
-                      Save
-                    </Button>
                   </Group>
-                </Group>
-              </div>
-            )}
+                )}
 
-            {activeKind === "ini" && draftPolicy !== null && (
-              <div className={classes.kindSettings} data-ini-settings>
-                <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm">
-                  <Text fw={600} size="xs">
-                    INI retention
-                  </Text>
-                  <Group gap="xs" align="flex-end">
+                {settingsOpen && activeKind === "ini" && (
+                  <Group gap="xs" align="center" wrap="nowrap" mt={4} className={classes.inlineRetain}>
+                    <Text size="xs" component="label" htmlFor="backup-retain-ini">
+                      Keep last INI
+                    </Text>
                     <NumberInput
-                      label="Keep last INI"
+                      id="backup-retain-ini"
+                      aria-label="Keep last INI"
                       size="xs"
                       min={1}
                       max={500}
@@ -597,103 +773,109 @@ export function ServerBackupPanel(props: Props): JSX.Element {
                       }
                       className={classes.compactRetain}
                     />
-                    <Button
-                      size="compact-xs"
-                      variant="light"
-                      onClick={() => void savePolicy("INI retention saved.")}
-                      loading={busy}
-                    >
-                      Save
-                    </Button>
                   </Group>
-                </Group>
+                )}
               </div>
             )}
 
             <Group
               justify="space-between"
               wrap="wrap"
-              align="flex-end"
-              className={classes.listHeader}
+              align="center"
+              gap="xs"
+              className={classes.listToolbar}
             >
-              <Group gap="sm" align="flex-end" wrap="wrap">
-                <div>
-                  <Title order={5}>{activeKindLabel} history</Title>
-                  <Text size="xs" c="dimmed">
-                    {kindSubtitle}
-                  </Text>
-                </div>
+              <Group gap="xs" wrap="wrap" align="center">
                 {selectableBackups.length > 0 && (
                   <Checkbox
                     label="Select all"
+                    size="xs"
                     checked={allSelected}
                     indeterminate={selectedIds.length > 0 && !allSelected}
                     onChange={toggleSelectAll}
                     disabled={busy}
                   />
                 )}
+                {activeKind === "players" && kindBackups.length > 0 && (
+                  <>
+                    <TextInput
+                      size="xs"
+                      placeholder="Search players"
+                      aria-label="Search players"
+                      leftSection={<MagnifyingGlass size={14} />}
+                      value={playerSearch}
+                      onChange={(event) => setPlayerSearch(event.currentTarget.value)}
+                      className={classes.playerSearch}
+                    />
+                    <Select
+                      size="xs"
+                      aria-label="Sort player backups"
+                      data={PLAYER_SORT_OPTIONS}
+                      value={playerSort}
+                      onChange={(value) => {
+                        if (
+                          value === "newest"
+                          || value === "oldest"
+                          || value === "name-asc"
+                          || value === "name-desc"
+                        ) {
+                          setPlayerSort(value);
+                        }
+                      }}
+                      allowDeselect={false}
+                      className={classes.playerSort}
+                    />
+                  </>
+                )}
               </Group>
-              <Group gap="xs">
-                {serverActive && (
-                  <Badge color="yellow" variant="light">
-                    Server active — stop before restore
+              <Group gap={6} wrap="wrap" align="center">
+                {opsLocked && (
+                  <Badge color="yellow" variant="light" size="sm">
+                    {props.opsLockReason != null
+                      ? "Files job — restore locked"
+                      : "Server active — stop before restore"}
                   </Badge>
                 )}
-                <Button
-                  leftSection={<Plus size={16} />}
-                  onClick={() => void createBackup()}
-                  loading={busy}
-                  disabled={loading}
-                >
-                  {activeKind === "players"
-                    ? "Backup all players"
-                    : `Create ${activeKindLabel} backup`}
-                </Button>
-                <Button
-                  color="red"
-                  variant="light"
-                  leftSection={<Trash size={16} />}
-                  disabled={busy || selectedIds.length === 0}
-                  onClick={confirmDeleteSelected}
-                >
-                  Delete selected
-                  {selectedIds.length > 0 ? ` (${selectedIds.length})` : ""}
-                </Button>
+                <Tooltip label="Reload the backup list">
+                  <ActionIcon
+                    variant="default"
+                    size="sm"
+                    aria-label="Refresh"
+                    onClick={() => void forceRefresh()}
+                    loading={refreshing}
+                    disabled={loading || busy}
+                  >
+                    <ArrowClockwise size={16} />
+                  </ActionIcon>
+                </Tooltip>
+                <Tooltip label={createTooltip}>
+                  <Button
+                    size="compact-sm"
+                    leftSection={<HardDrives size={14} />}
+                    onClick={() => void createBackup()}
+                    loading={busy}
+                    disabled={loading}
+                  >
+                    {createLabel}
+                  </Button>
+                </Tooltip>
+                <Tooltip label={deleteTooltip}>
+                  <span>
+                    <Button
+                      color="red"
+                      variant="light"
+                      size="compact-sm"
+                      leftSection={<Trash size={14} />}
+                      disabled={busy || selectedIds.length === 0}
+                      onClick={confirmDeleteSelected}
+                    >
+                      Delete
+                      {selectedIds.length > 0 ? ` (${selectedIds.length})` : ""}
+                    </Button>
+                  </span>
+                </Tooltip>
               </Group>
             </Group>
-
-            {activeKind === "players" && kindBackups.length > 0 && (
-              <Group gap="sm" wrap="wrap" align="flex-end" className={classes.listToolbar}>
-                <TextInput
-                  size="xs"
-                  label="Search players"
-                  placeholder="Filter by player name"
-                  leftSection={<MagnifyingGlass size={14} />}
-                  value={playerSearch}
-                  onChange={(event) => setPlayerSearch(event.currentTarget.value)}
-                  className={classes.playerSearch}
-                />
-                <Select
-                  size="xs"
-                  label="Sort"
-                  aria-label="Sort player backups"
-                  data={PLAYER_SORT_OPTIONS}
-                  value={playerSort}
-                  onChange={(value) => {
-                    if (
-                      value === "newest"
-                      || value === "oldest"
-                      || value === "name-asc"
-                      || value === "name-desc"
-                    ) {
-                      setPlayerSort(value);
-                    }
-                  }}
-                  allowDeselect={false}
-                  className={classes.playerSort}
-                />
-              </Group>
-            )}
 
             <div className={classes.listScroll} data-backup-list>
               {loading && kindBackups.length === 0 ? (
@@ -709,13 +891,17 @@ export function ServerBackupPanel(props: Props): JSX.Element {
                   </Text>
                 </div>
               ) : (
-                <Stack gap={8}>
+                <Stack gap={4}>
                   {displayedBackups.map((backup) => {
                     const canSelect = backup.status !== "running";
                     const isPlayers = backup.kind === "players";
+                    const finishedAt = backupFinishedAt(backup);
+                    const relative = formatRelativeTime(finishedAt);
+                    const absolute = formatWhen(finishedAt);
                     const displayTitle = isPlayers
                       ? playerBackupDisplayName(backup)
-                      : backup.type;
+                      : relative;
+                    const hasNotes = backup.notes !== null && backup.notes.length > 0;
                     return (
                       <div key={backup.id} className={classes.backupRow}>
                         <Checkbox
@@ -724,54 +910,72 @@ export function ServerBackupPanel(props: Props): JSX.Element {
                           onChange={() => toggleSelected(backup.id)}
                           aria-label={`Select backup ${backup.id}`}
                           className={classes.backupCheck}
+                          size="xs"
                         />
                         <div className={classes.backupMeta}>
-                          <Group gap="xs" wrap="wrap">
-                            <Text fw={600} size="sm" data-backup-title>
-                              {displayTitle}
+                          <Group gap={6} wrap="nowrap" className={classes.backupPrimary}>
+                            <Tooltip label={absolute} withArrow>
+                              <Text
+                                fw={600}
+                                size="sm"
+                                data-backup-title
+                                className={classes.backupTitle}
+                                title={isPlayers ? absolute : undefined}
+                              >
+                                {displayTitle}
+                              </Text>
+                            </Tooltip>
+                            <Text size="xs" c="dimmed" className={classes.backupMetaInline}>
+                              {isPlayers ? relative : null}
+                              {isPlayers ? " · " : null}
+                              {formatSize(backup.sizeBytes)}
                             </Text>
-                            <Badge size="sm" color={statusColor(backup.status)} variant="light">
+                            <Badge size="xs" color={statusColor(backup.status)} variant="light">
                               {backup.status}
                             </Badge>
-                            {isPlayers && (
-                              <Badge size="sm" variant="outline" color="gray">
-                                {backup.type}
-                              </Badge>
-                            )}
+                            <Badge size="xs" variant="outline" color="gray">
+                              {backup.type}
+                            </Badge>
                           </Group>
-                          <Text size="xs" c="dimmed">
-                            {formatWhen(backup.createdAt)} · {formatSize(backup.sizeBytes)}
-                            {!isPlayers ? ` · ${backup.type}` : ""}
-                          </Text>
-                          <Text size="xs" c="dimmed" className={classes.path}>
-                            {backup.path}
-                          </Text>
-                          {backup.notes !== null && backup.notes.length > 0 && (
-                            <Text size="xs" c="dimmed">
+                          {hasNotes && (
+                            <Text
+                              size="xs"
+                              c="dimmed"
+                              className={classes.backupNotes}
+                              title={backup.notes ?? undefined}
+                            >
                               {backup.notes}
                             </Text>
                           )}
                         </div>
-                        <Group gap="xs">
-                          <Button
-                            variant="subtle"
-                            size="xs"
-                            leftSection={<FolderOpen size={14} />}
-                            disabled={busy}
-                            onClick={() => void openBackupFolder(backup.id)}
-                          >
-                            Open folder
-                          </Button>
-                          <Button
-                            variant="light"
-                            color="orange"
-                            size="xs"
-                            leftSection={<ArrowCounterClockwise size={14} />}
-                            disabled={busy || backup.status !== "completed" || serverActive}
-                            onClick={() => confirmRestore(backup)}
-                          >
-                            Restore
-                          </Button>
+                        <Group gap={4} className={classes.backupActions}>
+                          <Tooltip label={backup.path} multiline maw={360} withArrow>
+                            <ActionIcon
+                              variant="subtle"
+                              size="sm"
+                              aria-label={`Open folder ${backup.path}`}
+                              disabled={busy}
+                              onClick={() => void openBackupFolder(backup.id)}
+                            >
+                              <FolderOpen size={16} />
+                            </ActionIcon>
+                          </Tooltip>
+                          <Tooltip label="Restore" withArrow>
+                            <ActionIcon
+                              variant="light"
+                              color="orange"
+                              size="sm"
+                              aria-label={`Restore backup ${backup.id}`}
+                              disabled={
+                                busy ||
+                                backup.status !== "completed" ||
+                                opsLocked
+                              }
+                              onClick={() => confirmRestore(backup)}
+                            >
+                              <ArrowCounterClockwise size={16} />
+                            </ActionIcon>
+                          </Tooltip>
                         </Group>
                       </div>
                     );
