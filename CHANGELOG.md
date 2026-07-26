@@ -16,6 +16,9 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Local Cursor project context for backlog (`.cursor/project-context/`, gitignored).
 - Functional **Backups** page (list / create / restore / schedule + retention) with IPC over existing backup services.
 - Per-server backup destination (default `{installDir}\\Backups`) plus open destination / open backup folder actions.
+- Kind-scoped ZIP backups (`World/` / `Player profiles/` / `INI/`), disk↔SQLite reconcile, fleet health, disk alerts, and cleanup preview/run.
+- Structured operational event `details` (What / Cause / Where / Try next) with clear/export support and workspace Logs deep-links (`logsFocus`).
+- Engineering runbooks: [docs/backups.md](docs/backups.md), [docs/updates-steamcmd.md](docs/updates-steamcmd.md), [docs/logs.md](docs/logs.md).
 
 ### Changed
 
@@ -23,6 +26,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Repository user-facing strings and docs moved to English.
 - Mods managed from the Server tab (comma-separated CurseForge Project IDs); dedicated Mods tab deferred pending API key.
 - Server start spawns `ArkAscendedServer.exe` directly (no `.cmd` / `cmd` wrapper), so lifecycle tracks the game process and spaced install paths no longer flash a visible CMD.
+- Safe **Update** / **Verify** auto-stop the server when needed (stop → pre-update backup → SteamCMD → conditional restart/rollback) instead of requiring a manual stop first.
 
 ### Removed
 
