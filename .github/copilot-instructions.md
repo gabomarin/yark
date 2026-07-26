@@ -19,6 +19,10 @@
 
 ## Engineering docs
 - Backup subsystem: `docs/backups.md` (ZIP layout, IPC, schedules, fleet health, restore).
+- SteamCMD / safe update: `docs/updates-steamcmd.md`.
+- Operational logs / event details: `docs/logs.md`.
+- Server lifecycle (launch args, spawn, profile→INI): `docs/server-lifecycle.md`.
+- GitHub Pages site / screenshot gallery: `docs/website.md`.
 - Cursor Cloud / Linux VM: `AGENTS.md`.
 - Visual UI review: `docs/visual-testing.md`.
 - Broader agent rules: `docs/agent-context.md`.

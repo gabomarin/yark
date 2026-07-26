@@ -5,8 +5,9 @@
 YARK server manager is a single Electron + React + TypeScript desktop app (no separate
 backend service; persistence is embedded SQLite via Node's built-in `node:sqlite`).
 Standard commands live in `package.json`, `README.md`, and `docs/agent-context.md`.
-Domain runbooks: [docs/updates-steamcmd.md](docs/updates-steamcmd.md). Visual/e2e helpers:
-[docs/visual-testing.md](docs/visual-testing.md).
+Domain runbooks: [docs/backups.md](docs/backups.md), [docs/updates-steamcmd.md](docs/updates-steamcmd.md),
+[docs/logs.md](docs/logs.md), [docs/server-lifecycle.md](docs/server-lifecycle.md),
+[docs/website.md](docs/website.md). Visual/e2e helpers: [docs/visual-testing.md](docs/visual-testing.md).
 
 Notes specific to running this in the Linux cloud VM:
 
@@ -34,6 +35,7 @@ Notes specific to running this in the Linux cloud VM:
   uses `[data-server-card]` instead).
 - Creating a server requires a Windows-style absolute install path (e.g. `C:\ARK`) and an
   admin password of at least 4 chars, and each server needs unique game/query/RCON ports.
+  Launch / spawn / profile→INI details: `docs/server-lifecycle.md`.
 - Real SteamCMD install/sync (`steamcmd:install`, robocopy) is Windows-oriented; do not
   expect end-to-end ASA file installs to succeed on the Linux agent. UI and unit tests are
   still useful here — see [docs/updates-steamcmd.md](docs/updates-steamcmd.md).
