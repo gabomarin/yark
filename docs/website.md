@@ -61,6 +61,7 @@ Styles: `.showcase`, `.shots` (2-column grid; 1-column under `720px`), `.shot`.
 | `workspace-server.png` | Server form (identity, ports, access, cluster, mods) |
 | `workspace-ini.png` | Visual INI editor (`GameUserSettings.ini`) |
 | `backups.png` | Fleet Backups page (health, disk, destinations) |
+| `configuration-wizard.png` | Configuration assistant (six-step wizard) |
 
 Images are linked for full-size open (`target="_blank"`). Declared dimensions in
 HTML are `1440 × 900` (capture viewport used for the initial set).

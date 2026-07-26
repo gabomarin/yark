@@ -63,7 +63,7 @@ The temporary public site lives in [`website/`](website/) and deploys via [`.git
 
 Expected URL: [https://gabomarin.github.io/yark/](https://gabomarin.github.io/yark/)
 
-Includes a feature screenshot gallery under `website/screenshots/` (overview, server form, INI editor, backups). Full deploy, capture, and update runbook: [docs/website.md](docs/website.md).
+Includes a feature screenshot gallery under `website/screenshots/` (overview, server form, INI editor, backups, configuration assistant). Full deploy, capture, and update runbook: [docs/website.md](docs/website.md).
 
 **One-time GitHub setup**
 
