@@ -8,7 +8,7 @@ and how “update available” is decided.
 - Share one SteamCMD + content cache across many server installs.
 - Keep per-server worlds/INI/players intact when syncing game files.
 - Make explicit **Update** / **Verify** always talk to Steam (no stale cache reuse).
-- Run **safe update** with pre-update backups and automatic rollback on failure.
+- Run **safe update** with stop → pre-update backups → SteamCMD → restart/rollback.
 
 ASA Steam app id: **`2430930`**.
 
@@ -40,7 +40,7 @@ SteamCMD args always use this order (required by modern SteamCMD):
 +force_install_dir <dir> +login anonymous +app_update 2430930 validate +quit
 ```
 
-`validate` is always passed.
+`validate` is always passed (`buildSteamCmdAppUpdateArgs`).
 
 ## Content-cache freshness
 
@@ -59,28 +59,36 @@ Changing the SteamCMD path via `steamcmd:set-path` resets the freshness timestam
 Pipeline for each files job:
 
 1. Ensure `asa_content_cache` (SteamCMD `app_update` … `validate`, unless install reuses fresh cache).
-2. **Robocopy** cache → server `installDir`, excluding `ShooterGame\Saved` (worlds, INI, players).
+2. **Robocopy** cache → server `installDir`, excluding `ShooterGame\Saved` (worlds, INI, players) — **skipped** only when resolved cache path equals install path (`canSkipAsaContentSync`). Matching buildids alone do **not** skip sync.
 3. If robocopy fails → fallback: SteamCMD `app_update` **directly** on the server install dir.
 
-| Action | Public constraint | After success |
+| Action | Stop contract | After success |
 | --- | --- | --- |
-| Install files | No “must be stopped” gate | Leaves process state alone |
-| Update | Throws if process is active (`Stop the server before update`) | **Always starts** the server and waits up to **90s** for healthy `running` |
-| Verify | Throws if process is active (`Stop the server before verify`) | Restarts only if it had been running when the job ran |
+| Install files | Workspace SidePanel disables Install while active (“Stop the server before installing base files”); Overview menu does not hard-lock; backend has no auto-stop | Leaves process state alone |
+| Update | **May run while active** — manager stops if needed, then restarts only if it was running | Restart + wait up to **90s** for healthy `running` when `wasRunning` |
+| Verify | Same auto-stop / conditional restart as update | Restarts only if it had been running |
 
 Jobs are queued (`criticalJobsQueue.v1` in app settings): up to **3** attempts, **5s** between retries; pending jobs resume after app restart.
 
 ### Safe update + rollback
 
+Order is intentional — stop **before** snapshotting so live SavedArks writes cannot tear rollback archives:
+
 ```text
-pre-update backups (world + players + ini)
-  → stop if somehow still active
+wasRunning = isActive
+  → stop if wasRunning
+  → pre-update backups (world + players + ini)
   → SteamCMD update + sync
-  → start + health (90s)
-  → on failure: restore pre-update backups → start + health
+  → if wasRunning: start + health (90s)
+  → on failure: stop if still active → restore pre-update backups
+       → if wasRunning: start + health → emit update_rolled_back → rethrow
 ```
 
-Pre-update archives use backup type `pre_update` and kinds `world` / `players` / `ini` (`CRITICAL_BACKUP_KINDS`). Per-server update logs land under userData `update-logs/` as `{serverId}-{timestamp}.log`.
+Pre-update archives use backup type `pre_update` and kinds `world` / `players` / `ini`
+(`CRITICAL_BACKUP_KINDS`). Verify has the same stop/restart contract but **no**
+pre-verify backup. Per-server update logs land under userData `update-logs/` as
+`{serverId}-{timestamp}.log`. Events carry structured `details` (What / Cause /
+Try next) — see [logs.md](logs.md).
 
 ## Update availability (not SteamCMD)
 
@@ -99,8 +107,8 @@ Official version and official build each cache for **15 minutes** in-process (`O
 | Channel | Purpose |
 | --- | --- |
 | `servers:install-files` | Queue base-file install for a server |
-| `servers:update-now` | Queue safe update (server must be stopped) |
-| `servers:verify-files` | Queue integrity verify (server must be stopped) |
+| `servers:update-now` | Queue safe update (auto-stops if running) |
+| `servers:verify-files` | Queue integrity verify (auto-stops if running) |
 | `servers:installation` | Installation snapshot + official build/version |
 | `steamcmd:status` | Path, caches, busy/progress/queue |
 | `steamcmd:console` | In-memory console lines (`limit`, default 200) |
@@ -110,13 +118,17 @@ Official version and official build each cache for **15 minutes** in-process (`O
 | `logs:read-update` / `logs:open-update-file` / `logs:delete-update` / `logs:clear-updates` | Per-server update log files |
 | **Push** `push:steamcmd-progress` | Live `{ status, console }` while ops run |
 
-UI entry points: sidebar **SteamCMD** page + floating progress dock; Overview install/update/verify; workspace SidePanel; onboarding “Install files”.
+UI entry points: sidebar **SteamCMD** page + floating progress dock; Overview install/update/verify; workspace SidePanel; onboarding “Install files”. Update/verify stay enabled while the server is running (SidePanel tooltips warn about stop/restart). Install remains locked in the SidePanel while active.
 
 ## Progress
 
-Live progress combines SteamCMD stdout `%` lines with disk estimates (`steamcmd-disk-progress.ts`: depot/downloading sizes under `force_install_dir`). The dock and SteamCMD page subscribe to `push:steamcmd-progress`.
+Live progress combines:
 
-> Note: agent-context historically said “live log streaming during SteamCMD is pending.” The **console/progress push channel and dock are live**. What may still feel incomplete is richer per-file update-log streaming in the Logs UI—not the SteamCMD progress path.
+1. SteamCMD stdout / `logs/console_log.txt` `%` lines (`parseSteamCmdProgressLine`)
+2. Appmanifest `BytesDownloaded` / `BytesToDownload` for the active `force_install_dir`
+3. Size of `steamapps/downloading` under that install (never SteamCMD home depotcache)
+
+The dock and SteamCMD page subscribe to `push:steamcmd-progress` (throttle `PROGRESS_PUSH_MIN_MS = 100`). Opening a server from Overview **while that server’s SteamCMD job is busy** deep-links into workspace Logs → Updates (`logsFocus: { section: "updates" }`).
 
 ## SteamCMD bootstrap
 
@@ -126,9 +138,10 @@ Live progress combines SteamCMD stdout `%` lines with disk estimates (`steamcmd-
 
 | Symptom | Likely cause / next step |
 | --- | --- |
-| `Stop the server before update/verify` | Process still active — stop from Overview/workspace first |
+| Server stops when Update/Verify is clicked | Expected — manager stops for a consistent backup (update) and SteamCMD, then restarts if it was running |
 | Update “available” looks wrong vs ARK Version string | Compare Steam `buildid` only; ARK Version is informational |
 | Repeated downloads when installing another server | Cache older than 15 minutes, missing manifest, or SteamCMD path changed |
+| Robocopy skipped unexpectedly | Only when cache path === install path; matching buildids alone never skip |
 | World/INI wiped after update | Should not happen via robocopy path (`ShooterGame\Saved` excluded); check whether fallback direct `app_update` on install dir was used (console mentions cache sync failure) |
 | Update failed then server restarted on old files | Expected rollback using `pre_update` backups — inspect Updates log + Backups history |
 | Job stuck after crash | Queue persisted in settings `criticalJobsQueue.v1`; resumes on next launch |

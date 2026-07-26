@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Engineering runbooks for SteamCMD/safe-update auto-stop and operational logs (`docs/updates-steamcmd.md`, `docs/logs.md`).
 - Shared shell atmosphere (soft gradient + topography SVG) across sidebar and main content.
 - Official ARK network version from Wildcard CDN for sidebar and SteamCMD chrome.
 - Local Cursor project context for backlog (`.cursor/project-context/`, gitignored).

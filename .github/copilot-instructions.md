@@ -23,7 +23,7 @@
 - If main UI flows change: run `npm run e2e` when feasible.
 - If there are visual renderer changes: follow `docs/visual-testing.md` and review with Playwright/Electron at `1280x720`, `1920x1080`, and `2560x1440`.
 - In this repo, for reliable verification, prefer commands via `cmd.exe /c` when the WSL environment fails due to optional Rollup dependencies.
-- On Cursor Cloud / Linux agents, follow root `AGENTS.md` (display, `ELECTRON_RUN_AS_NODE`, expected Windows-path vitest failures). SteamCMD/update workflows: `docs/updates-steamcmd.md`.
+- On Cursor Cloud / Linux agents, follow root `AGENTS.md` (display, `ELECTRON_RUN_AS_NODE`, expected Windows-path vitest failures). SteamCMD/update workflows: `docs/updates-steamcmd.md`. Operational logs / event details: `docs/logs.md`.
 
 ## Continuity
 - If several options are reasonable, choose the one that closes the most real items in `.cursor/project-context/TODO.md` with the least risk.
