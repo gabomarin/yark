@@ -126,8 +126,8 @@ Live progress prefers, in order:
 
 1. Tail of SteamCMD `logs/console_log.txt` (near real-time; stdout is often buffered)
 2. `BytesDownloaded` / `BytesToDownload` from this install’s `appmanifest`
-3. Disk size estimates under `force_install_dir` (`steamcmd-disk-progress.ts`)
-4. SteamCMD stdout `%` lines when present
+3. Size of `steamapps/downloading` under the active `force_install_dir` (never SteamCMD home `depotcache`)
+4. SteamCMD stdout `%` lines when present (`parseSteamCmdProgressLine`)
 
 The dock and SteamCMD page subscribe to `push:steamcmd-progress` (throttle
 `PROGRESS_PUSH_MIN_MS = 100`). Opening a server’s workspace from Overview while

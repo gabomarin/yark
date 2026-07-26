@@ -64,6 +64,8 @@ Safe-update paths in `UpdateService` pass rich stored details (operation,
 `wasRunning`, install dir, rollback hints) that override/extend the catalog.
 
 Export (`logs:export`) resolves the same fields so text dumps stay useful.
+Export includes at most the **three newest** update log files (bodies truncated
+to 120_000 bytes each); remaining files are noted as omitted.
 
 ## Sections (server workspace)
 
@@ -71,15 +73,16 @@ Export (`logs:export`) resolves the same fields so text dumps stay useful.
 
 | Section | Source | Clear path |
 | --- | --- | --- |
-| Events | SQLite `events` for that server | `logs:clear-events` |
-| Runtime | In-memory process stdout/stderr buffer | `logs:clear-runtime` |
+| Events | SQLite `events` for that server (`recentEvents(500)` filtered by id) | `logs:clear-events` |
+| Runtime | In-memory process stdout/stderr buffer (`getRuntimeLogSnapshot`, up to 400 lines) | `logs:clear-runtime` |
 | Updates | Files under userData `update-logs/` (`{serverId}-….log`) | `logs:delete-update` / `logs:clear-updates` |
 | Backups | Backup records from `BackupService` / repository | `backups:delete` (not a `logs:*` channel) |
 
 Fleet **Logs** deep-links into the workspace via `logsFocus`
 (`ServerLogsFocus`: optional `section`, `eventId`, `updateFileName`).
 `App.openServerLogs` defaults to `{ section: "events" }` and clears focus after
-consume so it cannot stick to another server.
+consume so it cannot stick to another server. When `eventId` is set, the panel
+forces the Events section (event wins over a file section).
 
 Deep-link entry points:
 
@@ -93,9 +96,9 @@ Deep-link entry points:
 | Channel | Purpose |
 | --- | --- |
 | `logs:list` | `ServerOperationalLogs` for one server |
-| `logs:read-update` | Read one update log file |
-| `logs:export` | Export resolved events + related sections |
-| `logs:open-update-file` | Open the update log via `shell.openPath` (not reveal-in-folder) |
+| `logs:read-update` | Read one update log file (default max **250_000** bytes from the end) |
+| `logs:export` | Save-dialog export of resolved events + related sections |
+| `logs:open-update-file` | `shell.openPath` on the update log (opens the file; not reveal-in-folder) |
 | `logs:clear-events` | Delete SQLite events for the server |
 | `logs:clear-runtime` | Clear the process runtime buffer |
 | `logs:delete-update` | Delete one update log file |
