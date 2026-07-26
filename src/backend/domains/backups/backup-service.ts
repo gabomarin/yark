@@ -57,13 +57,18 @@ export interface BackupChangedPush {
 export function computeBackupServerHealth(input: {
   destinationOk: boolean;
   stale: boolean;
+  /** All failed backups in the last 24h (any kind) — warning floor when not critical. */
   failed24h: number;
+  /** Failed *world* backups in the last 24h — drives critical (world = protection). */
+  failedWorld24h: number;
   scheduleEnabled: boolean;
   hasWorldBackup: boolean;
   /** Scheduled world backups only run while the process is active. */
   serverRunning: boolean;
 }): BackupHealthStatus {
-  if (!input.destinationOk || input.failed24h > 0) return "critical";
+  if (!input.destinationOk || input.failedWorld24h > 0) return "critical";
+  // INI / player failures are noisy vs world protection — warn, do not mark critical.
+  if (input.failed24h > 0) return "warning";
   // World schedule skips stopped servers — without a completed world archive this
   // is never "Protected", whether the process is running or not.
   if (input.scheduleEnabled && !input.hasWorldBackup) {
@@ -457,6 +462,7 @@ export class BackupService extends EventEmitter {
         if (row.status !== "failed") return false;
         return backupFinishedAt(row) >= dayAgoIso;
       });
+      const failedWorld24h = failed24h.filter((row) => row.kind === "world");
       const latestWorld = this.backups.latestCompleted(server.id, "world");
       // Newest finished attempt by completedAt (not job start).
       const latest = pickLatestFinishedBackup(records);
@@ -489,6 +495,7 @@ export class BackupService extends EventEmitter {
         destinationOk,
         stale,
         failed24h: counts.failed24h,
+        failedWorld24h: failedWorld24h.length,
         scheduleEnabled: policy.enabled,
         hasWorldBackup: latestWorld !== null,
         serverRunning: this.processes.isActive(server.id),
@@ -541,13 +548,18 @@ export class BackupService extends EventEmitter {
         });
       }
       if (counts.failed24h > 0) {
+        const worldOnly = failedWorld24h.length === counts.failed24h;
         alerts.push({
           id: `failed:${server.id}`,
           kind: "failed",
-          severity: "error",
+          severity: failedWorld24h.length > 0 ? "error" : "warning",
           serverId: server.id,
           volumePath: null,
-          message: `${server.name}: ${counts.failed24h} failed backup${counts.failed24h === 1 ? "" : "s"} in the last 24h`,
+          message: worldOnly
+            ? `${server.name}: ${counts.failed24h} failed world backup${counts.failed24h === 1 ? "" : "s"} in the last 24h`
+            : failedWorld24h.length > 0
+              ? `${server.name}: ${counts.failed24h} failed backup${counts.failed24h === 1 ? "" : "s"} in the last 24h (${failedWorld24h.length} world)`
+              : `${server.name}: ${counts.failed24h} failed non-world backup${counts.failed24h === 1 ? "" : "s"} in the last 24h`,
         });
       }
     }
@@ -867,6 +879,7 @@ export class BackupService extends EventEmitter {
     destinationOk: boolean;
     stale: boolean;
     failed24h: number;
+    failedWorld24h: number;
     scheduleEnabled: boolean;
     hasWorldBackup: boolean;
     /** Scheduled world backups only run while the process is active. */

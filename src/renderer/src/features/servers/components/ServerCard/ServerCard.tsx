@@ -352,20 +352,14 @@ export function ServerCard(props: Props): JSX.Element {
                       leftSection={<CloudArrowDown size={16} />}
                       color={updateAvailable ? "orange" : undefined}
                       onClick={props.onUpdateNow}
-                      disabled={isActive}
                     >
-                      {isActive
-                        ? "Update (stop the server first)"
-                        : "Update server"}
+                      Update server
                     </Menu.Item>
                     <Menu.Item
                       leftSection={<ShieldCheck size={16} />}
                       onClick={props.onVerifyFiles}
-                      disabled={isActive}
                     >
-                      {isActive
-                        ? "Verify integrity (stop the server first)"
-                        : "Verify integrity"}
+                      Verify integrity
                     </Menu.Item>
                   </>
                 ) : (

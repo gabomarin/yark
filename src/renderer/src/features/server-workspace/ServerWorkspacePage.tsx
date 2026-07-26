@@ -166,7 +166,7 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
       server={selectedServer}
       runtime={runtime}
       installation={installation}
-      opsLocked={opsLocked}
+      opsLocked={filesJobActive}
       opsLockReason={filesJobActive ? filesLockReason : undefined}
       onOpenFolder={() => props.onOpenFolder(selectedServer.id)}
       onInstallFiles={() => props.onInstallFiles(selectedServer.id)}

@@ -914,9 +914,37 @@ describe("BackupService kinds and retention", () => {
     const summary = await service.getFleetSummary();
     expect(summary.servers[0]?.counts.failed24h).toBe(1);
     expect(summary.stats.failed24h).toBe(1);
-    expect(summary.alerts.some((alert) => alert.message.includes("failed backup"))).toBe(
+    expect(summary.alerts.some((alert) => /failed (world )?backup/i.test(alert.message))).toBe(
       true,
     );
+  });
+
+  it("does not mark fleet health critical for failed INI/player when world is healthy", async () => {
+    await service.createManualBackup(profile.id, ["world"]);
+    const failedIni = repo.createBackupStart({
+      serverId: profile.id,
+      type: "ini_save",
+      kind: "ini",
+      path: join(installDir, "Backups", "INI", "failed-ini.zip"),
+      notes: null,
+    });
+    repo.failBackup(failedIni.id, "ini boom");
+    const failedPlayers = repo.createBackupStart({
+      serverId: profile.id,
+      type: "manual",
+      kind: "players",
+      path: join(installDir, "Backups", "Player profiles", "failed-players.zip"),
+      notes: null,
+    });
+    repo.failBackup(failedPlayers.id, "players boom");
+
+    const summary = await service.getFleetSummary();
+    expect(summary.servers[0]?.counts.failed24h).toBe(2);
+    expect(summary.servers[0]?.health).toBe("warning");
+    expect(summary.servers[0]?.latestWorld?.status).toBe("completed");
+    const failedAlert = summary.alerts.find((alert) => alert.id === `failed:${profile.id}`);
+    expect(failedAlert?.severity).toBe("warning");
+    expect(failedAlert?.message).toMatch(/non-world/i);
   });
 
   it("previews and runs cleanup for failed backups while protecting newest world", async () => {
@@ -1136,6 +1164,7 @@ describe("computeBackupServerHealth", () => {
         destinationOk: true,
         stale: true,
         failed24h: 0,
+        failedWorld24h: 0,
         scheduleEnabled: true,
         hasWorldBackup: false,
         serverRunning: false,
@@ -1147,6 +1176,7 @@ describe("computeBackupServerHealth", () => {
         destinationOk: true,
         stale: false,
         failed24h: 0,
+        failedWorld24h: 0,
         scheduleEnabled: true,
         hasWorldBackup: false,
         serverRunning: true,
@@ -1160,10 +1190,37 @@ describe("computeBackupServerHealth", () => {
         destinationOk: true,
         stale: false,
         failed24h: 0,
+        failedWorld24h: 0,
         scheduleEnabled: true,
         hasWorldBackup: true,
         serverRunning: false,
       }),
     ).toBe("ok");
+  });
+
+  it("treats failed world backups as critical, but INI/player failures as warning", () => {
+    expect(
+      computeBackupServerHealth({
+        destinationOk: true,
+        stale: false,
+        failed24h: 1,
+        failedWorld24h: 1,
+        scheduleEnabled: true,
+        hasWorldBackup: true,
+        serverRunning: true,
+      }),
+    ).toBe("critical");
+
+    expect(
+      computeBackupServerHealth({
+        destinationOk: true,
+        stale: false,
+        failed24h: 2,
+        failedWorld24h: 0,
+        scheduleEnabled: true,
+        hasWorldBackup: true,
+        serverRunning: true,
+      }),
+    ).toBe("warning");
   });
 });

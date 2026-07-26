@@ -335,20 +335,15 @@ export class UpdateService extends EventEmitter {
   }
 
   async updateServer(serverId: string): Promise<void> {
-    this.assertServerStoppedForFilesJob(serverId, "update");
+    // May run while the server is active: performUpdateServer captures wasRunning,
+    // stops for SteamCMD, then restarts on success (or after rollback).
     await this.enqueueAndWait("update", serverId);
   }
 
   /** Forces app_update validate (ignores “fresh” cache) and syncs to the server. */
   async verifyServerFiles(serverId: string): Promise<void> {
-    this.assertServerStoppedForFilesJob(serverId, "verify");
+    // Same stop/restart contract as update — do not require a prior manual stop.
     await this.enqueueAndWait("verify-files", serverId);
-  }
-
-  private assertServerStoppedForFilesJob(serverId: string, action: string): void {
-    if (this.processes.isActive(serverId)) {
-      throw new Error(`Stop the server before ${action}`);
-    }
   }
 
   private async performInstallServerFiles(serverId: string): Promise<void> {

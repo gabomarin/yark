@@ -16,7 +16,7 @@ interface Props {
   server: ServerProfile;
   runtime: ServerRuntimeInfo | null;
   installation: ServerInstallationInfo | null;
-  /** Running server or SteamCMD files job — blocks install/update/verify. */
+  /** SteamCMD files job in progress — blocks install/update/verify. */
   opsLocked?: boolean;
   opsLockReason?: string;
   onOpenFolder: () => void;
@@ -49,10 +49,18 @@ export function SidePanel(props: Props): JSX.Element {
   const [broadcast, setBroadcast] = useState("");
   const status = props.runtime?.status ?? "stopped";
   const isActive = status === "starting" || status === "running" || status === "stopping";
-  const opsLocked = props.opsLocked === true || isActive;
-  const lockTitle =
-    props.opsLockReason ??
-    (isActive ? "Stop the server before changing files" : undefined);
+  const steamCmdBusy = props.opsLocked === true;
+  const installLocked = steamCmdBusy || isActive;
+  const updateVerifyLocked = steamCmdBusy;
+  const steamCmdLockTitle = props.opsLockReason;
+  const installLockTitle =
+    steamCmdLockTitle ??
+    (isActive ? "Stop the server before installing base files" : undefined);
+  const updateVerifyTitle =
+    steamCmdLockTitle ??
+    (isActive
+      ? "Server will be stopped for SteamCMD, then restarted if the job succeeds"
+      : undefined);
   const version =
     props.installation?.arkVersion ??
     props.installation?.build ??
@@ -95,8 +103,8 @@ export function SidePanel(props: Props): JSX.Element {
             justify="flex-start"
             leftSection={<Wrench size={14} />}
             onClick={props.onInstallFiles}
-            disabled={opsLocked}
-            title={lockTitle}
+            disabled={installLocked}
+            title={installLockTitle}
           >
             Install files
           </Button>
@@ -107,8 +115,8 @@ export function SidePanel(props: Props): JSX.Element {
             justify="flex-start"
             leftSection={<ShieldCheck size={14} />}
             onClick={props.onVerifyFiles}
-            disabled={opsLocked}
-            title={lockTitle}
+            disabled={updateVerifyLocked}
+            title={updateVerifyTitle}
           >
             Verify integrity
           </Button>
@@ -119,8 +127,8 @@ export function SidePanel(props: Props): JSX.Element {
             justify="flex-start"
             leftSection={<CloudArrowDown size={14} />}
             onClick={props.onUpdateNow}
-            disabled={opsLocked}
-            title={lockTitle}
+            disabled={updateVerifyLocked}
+            title={updateVerifyTitle}
           >
             Force update
           </Button>
