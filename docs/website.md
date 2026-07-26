@@ -51,7 +51,8 @@ statically (for example `npx --yes serve website`). No `npm` script is required.
 ## Screenshot gallery
 
 Markup lives in `website/index.html` inside `<section class="showcase" id="screenshots">`.
-Styles: `.showcase`, `.shots` (2-column grid; 1-column under `720px`), `.shot`.
+Styles: `.showcase`, `.shots` (2-column grid; 1-column under `720px`), `.shot`,
+`.shot--wide` (full-width spanning both columns).
 
 ### Current assets
 
@@ -61,6 +62,7 @@ Styles: `.showcase`, `.shots` (2-column grid; 1-column under `720px`), `.shot`.
 | `workspace-server.png` | Server form (identity, ports, access, cluster, mods) |
 | `workspace-ini.png` | Visual INI editor (`GameUserSettings.ini`) |
 | `backups.png` | Fleet Backups page (health, disk, destinations) |
+| `configuration-wizard.png` | Configuration assistant (six-step wizard; full-width) |
 
 Images are linked for full-size open (`target="_blank"`). Declared dimensions in
 HTML are `1440 × 900` (capture viewport used for the initial set).
