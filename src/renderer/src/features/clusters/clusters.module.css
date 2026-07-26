@@ -191,6 +191,14 @@
   box-shadow: inset 3px 0 0 var(--ark-blue-9);
 }
 
+.clusterRowInner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
 .clusterSummary,
 .clusterTitle,
 .clusterMeta,
