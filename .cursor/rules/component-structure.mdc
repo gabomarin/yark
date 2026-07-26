@@ -1,0 +1,17 @@
+---
+description: Split large React UI using pragmatic Atomic Design (YARK)
+globs: src/renderer/**/*.{tsx,ts,css}
+alwaysApply: false
+---
+
+# Component structure
+
+When editing or adding renderer UI, follow [docs/component-structure.md](../../docs/component-structure.md).
+
+## Quick rules
+
+- Prefer feature-local `components/` + `<area>Model.ts`; do not create global `atoms/` trees.
+- Split pages/sections at ~250–300 lines, 3+ visual blocks, or duplicated JSX.
+- Pages compose; organisms/molecules render; model files hold pure helpers.
+- Keep `data-*` selectors stable for visual/e2e scripts.
+- Reference layout: `src/renderer/src/features/clusters/`.

@@ -7,7 +7,9 @@ backend service; persistence is embedded SQLite via Node's built-in `node:sqlite
 Standard commands live in `package.json`, `README.md`, and `docs/agent-context.md`.
 Domain runbooks: [docs/backups.md](docs/backups.md), [docs/updates-steamcmd.md](docs/updates-steamcmd.md),
 [docs/logs.md](docs/logs.md), [docs/server-lifecycle.md](docs/server-lifecycle.md),
-[docs/website.md](docs/website.md). Visual/e2e helpers: [docs/visual-testing.md](docs/visual-testing.md).
+[docs/website.md](docs/website.md). UI composition for agents:
+[docs/component-structure.md](docs/component-structure.md). Visual/e2e helpers:
+[docs/visual-testing.md](docs/visual-testing.md).
 
 Notes specific to running this in the Linux cloud VM:
 

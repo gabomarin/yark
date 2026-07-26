@@ -2,6 +2,8 @@ const assert = require("node:assert/strict");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
 
+delete process.env.ELECTRON_RUN_AS_NODE;
+
 function uniqueSuffix() {
   return `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 }
@@ -41,20 +43,38 @@ async function createServer(page, serverName, installDir, ports) {
     timeout: 10000,
   });
 
-  await page.getByLabel("Name").fill(serverName);
-  await page.getByLabel("Session name").fill(`Session ${serverName}`);
-  await page.getByLabel("Base folder").fill(installDir);
+  await page.getByRole("textbox", { name: /^Name$/ }).fill(serverName);
+  await page.getByRole("textbox", { name: /^Session name$/ }).fill(`Session ${serverName}`);
+  const baseFolder = page.getByRole("textbox", { name: /^Base folder$/ });
+  if ((await baseFolder.count()) > 0) {
+    await baseFolder.fill(installDir);
+  } else {
+    await page.getByPlaceholder("C:\\ark_servers").fill(installDir);
+  }
 
   await page.getByLabel("Game port").fill(String(ports.game));
   await page.getByLabel("Query port").fill(String(ports.query));
   await page.getByLabel("RCON port").fill(String(ports.rcon));
-  await page.getByLabel("Admin password").fill("admin1234");
+  await page.locator("input[type='password']").last().fill("admin1234");
 
   await page.getByRole("button", { name: "Save" }).click();
 
-  await page.getByRole("heading", { name: "Your servers" }).waitFor({
+  // Create flow opens workspace onboarding; dismiss, then return to overview.
+  const later = page.getByRole("button", { name: /^Later$/i });
+  try {
+    await later.waitFor({ state: "visible", timeout: 8000 });
+    await later.click();
+  } catch {
+    // onboarding not shown
+  }
+
+  const backToServers = page.getByRole("button", { name: /Back to servers/i });
+  await backToServers.first().waitFor({ state: "visible", timeout: 10000 });
+  await backToServers.first().click();
+
+  await page.locator("[data-overview-page]").waitFor({
     state: "visible",
-    timeout: 10000,
+    timeout: 15000,
   });
 
   return await waitForCardByName(page, serverName);
@@ -66,8 +86,9 @@ async function cloneServer(page, serverName) {
   await page.getByRole("menuitem", { name: "Clone" }).click();
 
   const cloneNamePrefix = `${serverName} (copy`;
+  const escapedPrefix = cloneNamePrefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const cloneCard = page.locator("[data-server-card]", {
-    has: page.getByText(new RegExp(`^${cloneNamePrefix}`)),
+    has: page.getByText(new RegExp(`^${escapedPrefix}`)),
   }).first();
   await cloneCard.waitFor({ state: "visible", timeout: 10000 });
 
@@ -110,6 +131,13 @@ async function run() {
 
     await createServer(page, serverName, installDir, ports);
     cloneName = await cloneServer(page, serverName);
+
+    // Shell navigation smoke across main routes
+    for (const label of ["Clusters", "Backups", "SteamCMD", "Logs", "Servers"]) {
+      await page.getByRole("button", { name: label, exact: true }).first().click();
+      await page.waitForTimeout(250);
+    }
+    await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 10000 });
 
     await removeServerIfPresent(page, serverName);
     if (cloneName !== null) {

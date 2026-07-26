@@ -19,6 +19,10 @@ interface BackupsSlot {
   page: ReactNode;
 }
 
+interface ClustersSlot {
+  page: ReactNode;
+}
+
 interface Props {
   route: Route;
   appVersion: string;
@@ -29,6 +33,7 @@ interface Props {
   onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
   onNavigate: (route: Route) => void;
   overview: OverviewSlot | null;
+  clusters: ClustersSlot | null;
   steamcmd: SteamCmdSlot | null;
   logs: LogsSlot | null;
   backups: BackupsSlot | null;
@@ -47,7 +52,7 @@ export function AppRouter(props: Props): JSX.Element {
           />
         );
       case "clusters":
-        return (
+        return props.clusters?.page ?? (
           <PlaceholderPage
             title="Clusters"
             subtitle="Compatibility and cross-map transfers"

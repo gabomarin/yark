@@ -20,7 +20,7 @@ Core flows already work (profiles, process control, SteamCMD install/update, bac
 
 - Shared shell and navigation are active.
 - Overview, SteamCMD, Logs, Backups, and Server Workspace (INI editor) use the new renderer.
-- Clusters and Settings pages are still placeholders inside the new shell.
+- Clusters page surfaces existing compliance for `clusterId` / `clusterDir`; Settings is still a placeholder inside the new shell.
 - End-to-end validation against real ASA binaries and SteamCMD on a production host is still ongoing.
 
 Expect gaps, rough edges, and behavior changes between builds.
