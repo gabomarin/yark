@@ -5,6 +5,7 @@ import { basename, dirname, join, relative, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
 import {
+  backupFinishedAt,
   formatPlayerSessionNotes,
   playersRetentionKey,
 } from "@shared/backup-player-meta";
@@ -46,7 +47,11 @@ import {
   volumeRootForPath,
 } from "./backup-disk";
 
-export { formatPlayerSessionNotes, playersRetentionKey } from "@shared/backup-player-meta";
+export {
+  backupFinishedAt,
+  formatPlayerSessionNotes,
+  playersRetentionKey,
+} from "@shared/backup-player-meta";
 export { backupKindSubdir } from "./backup-archive";
 
 export interface BackupChangedPush {
@@ -79,11 +84,6 @@ export function computeBackupServerHealth(input: {
   // Keep serverRunning in the contract so callers must pass process state.
   void input.serverRunning;
   return "ok";
-}
-
-/** Prefer finish time for age/ordering; fall back to start if incomplete. */
-export function backupFinishedAt(backup: BackupRecord): string {
-  return backup.completedAt ?? backup.createdAt;
 }
 
 /** Newest finished (completed/failed) backup by finish time. */
@@ -1805,8 +1805,23 @@ export class BackupService extends EventEmitter {
       if (this.creatingBackupIds.has(backup.id)) continue;
 
       if (isZipBackupPath(backup.path) && existsSync(backup.path)) {
-        const readable = await isReadableZipArchive(backup.path);
-        const hasLayout = readable ? await zipHasBackupLayout(backup.path) : false;
+        let readable = false;
+        let hasLayout = false;
+        try {
+          readable = await isReadableZipArchive(backup.path);
+          if (readable) {
+            try {
+              hasLayout = await zipHasBackupLayout(backup.path);
+            } catch {
+              // Corrupt central directory / I/O mid-scan — treat as unreadable.
+              readable = false;
+              hasLayout = false;
+            }
+          }
+        } catch {
+          readable = false;
+          hasLayout = false;
+        }
         if (readable && hasLayout) {
           try {
             const info = await stat(backup.path);

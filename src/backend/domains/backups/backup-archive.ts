@@ -246,10 +246,10 @@ function isBackupLayoutZipEntry(entryName: string): boolean {
  * roots). Unrelated archives under the backup tree must not be imported.
  */
 export async function zipHasBackupLayout(zipPath: string): Promise<boolean> {
-  return await new Promise<boolean>((resolvePromise, reject) => {
+  return await new Promise<boolean>((resolvePromise) => {
     yauzl.open(zipPath, { lazyEntries: true }, (openErr, zipfile) => {
       if (openErr !== null || zipfile === undefined) {
-        reject(openErr ?? new Error("Could not open zip archive"));
+        resolvePromise(false);
         return;
       }
 
@@ -260,12 +260,6 @@ export async function zipHasBackupLayout(zipPath: string): Promise<boolean> {
         zipfile.close();
         resolvePromise(value);
       };
-      const fail = (err: unknown): void => {
-        if (settled) return;
-        settled = true;
-        zipfile.close();
-        reject(err instanceof Error ? err : new Error(String(err)));
-      };
 
       zipfile.on("entry", (entry: yauzl.Entry) => {
         if (isBackupLayoutZipEntry(entry.fileName)) {
@@ -275,7 +269,7 @@ export async function zipHasBackupLayout(zipPath: string): Promise<boolean> {
         zipfile.readEntry();
       });
       zipfile.on("end", () => finish(false));
-      zipfile.on("error", fail);
+      zipfile.on("error", () => finish(false));
       zipfile.readEntry();
     });
   });

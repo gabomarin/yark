@@ -744,6 +744,34 @@ describe("BackupService kinds and retention", () => {
     expect(existsSync(zipPath)).toBe(false);
   });
 
+  it("fails stuck running rows when layout scan rejects without aborting list", async () => {
+    const worldDir = join(installDir, "Backups", "World");
+    await mkdir(worldDir, { recursive: true });
+    const src = join(installDir, "_layout-reject-src");
+    await mkdir(join(src, "SavedArks"), { recursive: true });
+    await writeFile(join(src, "SavedArks", "map.ark"), "WORLD", "utf8");
+    const archive = await import("@backend/domains/backups/backup-archive");
+    const zipPath = join(worldDir, "layout-reject.zip");
+    await archive.zipDirectory(src, zipPath);
+
+    const stuck = repo.createBackupStart({
+      serverId: profile.id,
+      type: "manual",
+      kind: "world",
+      path: zipPath,
+      notes: "layout scan boom",
+    });
+
+    const layoutSpy = vi
+      .spyOn(archive, "zipHasBackupLayout")
+      .mockRejectedValue(new Error("corrupt central directory"));
+
+    const listed = await service.list(profile.id, 50);
+    expect(listed.find((item) => item.id === stuck.id)?.status).toBe("failed");
+    expect(repo.getBackup(stuck.id)?.status).toBe("failed");
+    layoutSpy.mockRestore();
+  });
+
   it("keeps a completed backup when retention pruning fails", async () => {
     vi.spyOn(
       service as unknown as { applyRetention: (serverId: string, policy: unknown) => Promise<void> },

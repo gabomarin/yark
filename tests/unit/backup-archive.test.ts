@@ -186,5 +186,6 @@ describe("backup-archive zip safety", () => {
     await expect(zipHasBackupLayout(manifestZip)).resolves.toBe(true);
     await expect(zipHasBackupLayout(savedZip)).resolves.toBe(true);
     await expect(zipHasBackupLayout(noiseZip)).resolves.toBe(false);
+    await expect(zipHasBackupLayout(join(root, "missing.zip"))).resolves.toBe(false);
   });
 });

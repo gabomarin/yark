@@ -506,6 +506,9 @@ export class UpdateService extends EventEmitter {
             },
           },
         );
+
+        // Rollback is recovery, not success — surface failure to the job queue / UI.
+        throw err instanceof Error ? err : new Error(String(err));
       }
     });
   }
