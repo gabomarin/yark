@@ -123,13 +123,17 @@ UI entry points: sidebar **SteamCMD** page + floating progress dock; Overview in
 
 ## Progress
 
-Live progress combines:
+Live progress prefers, in order:
 
-1. SteamCMD stdout / `logs/console_log.txt` `%` lines (`parseSteamCmdProgressLine`)
-2. Appmanifest `BytesDownloaded` / `BytesToDownload` for the active `force_install_dir`
-3. Size of `steamapps/downloading` under that install (never SteamCMD home depotcache)
+1. Tail of SteamCMD `logs/console_log.txt` (near real-time; stdout is often buffered)
+2. `BytesDownloaded` / `BytesToDownload` from this install’s `appmanifest`
+3. Size of `steamapps/downloading` under the active `force_install_dir` (never SteamCMD home `depotcache`)
+4. SteamCMD stdout `%` lines when present (`parseSteamCmdProgressLine`)
 
-The dock and SteamCMD page subscribe to `push:steamcmd-progress` (throttle `PROGRESS_PUSH_MIN_MS = 100`). Opening a server from Overview **while that server’s SteamCMD job is busy** deep-links into workspace Logs → Updates (`logsFocus: { section: "updates" }`).
+The dock and SteamCMD page subscribe to `push:steamcmd-progress` (throttle
+`PROGRESS_PUSH_MIN_MS = 100`). Opening a server’s workspace from Overview while
+SteamCMD is busy **for that server** deep-links into Logs → Updates
+(`logsFocus: { section: "updates" }`).
 
 ## SteamCMD bootstrap
 

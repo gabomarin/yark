@@ -95,13 +95,13 @@ Zip extract rejects zip-slip paths. Listeners are registered **before**
 `list` / fleet summary / cleanup prep call `reconcileDiskBackups` (serialized
 per server). Order matters:
 
-1. **Interrupted `running` rows** — if a readable **backup-layout** ZIP exists
-   (`zipHasBackupLayout`: `manifest.json` or known roots), promote to
-   `completed` using the zip’s **mtime** as `completedAt` (not wall clock — so
-   recovery does not jump ahead of newer archives and break keep-last
-   retention). Incomplete / non-backup / missing zips become `failed`; partial
-   zips are **deleted from disk** before the row is marked failed. Live creates
-   in `creatingBackupIds` are left alone.
+1. **Interrupted `running` rows** — if a readable backup-layout ZIP exists
+   (`isReadableZipArchive` + `zipHasBackupLayout`: `manifest.json` or known
+   roots), promote to `completed` using the zip’s **mtime** as `completedAt`
+   (not wall clock — so recovery does not jump ahead of newer archives and
+   break keep-last retention). Incomplete / non-backup / missing zips become
+   `failed`; partial zips are **deleted from disk** before the row is marked
+   failed. Live creates in `creatingBackupIds` are left alone.
 2. **Prune missing paths** — drop completed rows whose archive path is gone;
    keep `failed` history; skip `running`.
 3. **Orphan import** — import `.zip` and legacy folder archives from kind dirs
@@ -124,9 +124,10 @@ Channels in `src/shared/ipc.ts` (preload wrappers return `IpcResult<T>`):
 | `backups:create` | `serverId`, `kinds?: BackupKind[]` | `BackupRecord[]` |
 | `backups:delete` | `serverId`, `backupIds` | `number` deleted |
 | `backups:restore` | `serverId`, `backupId` | `void` |
-| `backups:get-policy` / `backups:set-policy` | policy fields | `BackupPolicy` |
+| `backups:get-policy` | `serverId` | `BackupPolicy` |
+| `backups:set-policy` | `serverId`, policy fields | `BackupPolicy` |
 | `backups:resolve-root` | `serverId` | `string` |
-| `backups:open-folder` / `backups:open-root` | ids | `void` |
+| `backups:open-folder` / `backups:open-root` | ids | `void` (`open-folder` opens the parent kind dir for ZIP paths) |
 | `backups:fleet-summary` | — | `BackupFleetSummary` |
 | `backups:get-disk-alert-settings` / `backups:set-disk-alert-settings` | thresholds | settings |
 | `backups:preview-cleanup` / `backups:run-cleanup` | cleanup options | preview / result |

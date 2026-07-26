@@ -57,8 +57,8 @@ fall through to the default). Safe-update / verify paths in `UpdateService` pass
 rich details (operation, `wasRunning`, install dir, rollback hints).
 
 Export (`logs:export`) resolves the same fields so text dumps stay useful.
-Export includes at most the **three newest** update log files (bodies truncated);
-remaining files are noted as omitted.
+Export includes at most the **three newest** update log files (bodies truncated
+to **120_000** bytes each); remaining files are noted as omitted.
 
 ## Sections (server workspace)
 
