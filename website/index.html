@@ -36,6 +36,67 @@
       <p class="status-pill">Private preview · v0.1.0 · not a public release</p>
     </header>
 
+    <section class="showcase" id="screenshots" aria-label="Application screenshots">
+      <div class="showcase-inner">
+        <p class="showcase-eyebrow">A look at the app</p>
+        <h2 class="showcase-title">Screenshots from a development build</h2>
+        <p class="showcase-lede">
+          Captured from the Electron + React desktop shell. Interface is under
+          active development and may change between builds.
+        </p>
+        <div class="shots">
+          <figure class="shot">
+            <a href="./screenshots/overview.png" target="_blank" rel="noopener">
+              <img
+                src="./screenshots/overview.png"
+                alt="Servers overview listing multiple ARK server profiles with status, map, and recent activity"
+                loading="lazy"
+                width="1440"
+                height="900"
+              />
+            </a>
+            <figcaption>Servers overview — profiles, status, and recent activity in one place.</figcaption>
+          </figure>
+          <figure class="shot">
+            <a href="./screenshots/workspace-server.png" target="_blank" rel="noopener">
+              <img
+                src="./screenshots/workspace-server.png"
+                alt="Server configuration form with identity, networking ports, access passwords, cluster, and mods fields"
+                loading="lazy"
+                width="1440"
+                height="900"
+              />
+            </a>
+            <figcaption>Server configuration — identity, ports, access, cluster, and CurseForge mod IDs.</figcaption>
+          </figure>
+          <figure class="shot">
+            <a href="./screenshots/workspace-ini.png" target="_blank" rel="noopener">
+              <img
+                src="./screenshots/workspace-ini.png"
+                alt="Visual INI editor showing GameUserSettings.ini options with toggles, values, and descriptions"
+                loading="lazy"
+                width="1440"
+                height="900"
+              />
+            </a>
+            <figcaption>Visual INI editor — edit <code>GameUserSettings.ini</code> with searchable, described controls.</figcaption>
+          </figure>
+          <figure class="shot">
+            <a href="./screenshots/backups.png" target="_blank" rel="noopener">
+              <img
+                src="./screenshots/backups.png"
+                alt="Backups dashboard showing fleet backup health, disk usage, volumes, and per-server destinations"
+                loading="lazy"
+                width="1440"
+                height="900"
+              />
+            </a>
+            <figcaption>Backups — fleet health, disk usage, and per-server destination and schedule.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
     <main>
       <section class="section" id="scope">
         <h2>Current development scope</h2>
@@ -64,7 +125,7 @@
         <ul class="roadmap-list">
           <li>
             <span class="tag building">Building</span>
-            Finish migrating Clusters, Backups, and Settings pages out of placeholder shells
+            Finish migrating Clusters and Settings pages out of placeholder shells
           </li>
           <li>
             <span class="tag building">Building</span>

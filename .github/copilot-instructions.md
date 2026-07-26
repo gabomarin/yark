@@ -28,6 +28,7 @@
 - If renderer, preload, main, or app integration change: run `npm run build`.
 - If main UI flows change: run `npm run e2e` when feasible.
 - If there are visual renderer changes: follow `docs/visual-testing.md` and review with Playwright/Electron at `1280x720`, `1920x1080`, and `2560x1440`.
+- If the GitHub Pages site or `website/screenshots/` change: follow `docs/website.md` (path-filtered deploy, secret redaction, version pill sync).
 - In this repo, for reliable verification, prefer commands via `cmd.exe /c` when the WSL environment fails due to optional Rollup dependencies.
 - On Cursor Cloud / Linux agents, follow root `AGENTS.md` (display, `ELECTRON_RUN_AS_NODE`, expected Windows-path vitest failures). SteamCMD/update workflows: `docs/updates-steamcmd.md`.
 

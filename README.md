@@ -9,7 +9,7 @@
 - Manage multiple server profiles from a single app.
 - Start, stop, restart, and force-stop server instances.
 - Install and update server files with SteamCMD.
-- Create backups, restore them, configure schedule/retention, and review operation history.
+- Create backups, restore them, configure schedule/retention, and review backup history (plus related events in Logs).
 - Inspect runtime, update, and backup logs.
 - Review cluster state and RCON status from the interface.
 - Manage CurseForge mod Project IDs per server (`-mods=`) from the Server form. A dedicated Mods tab is deferred until a CurseForge API key is available.
@@ -62,6 +62,8 @@ npm run package
 The temporary public site lives in [`website/`](website/) and deploys via [`.github/workflows/pages.yml`](.github/workflows/pages.yml).
 
 Expected URL: [https://gabomarin.github.io/yark/](https://gabomarin.github.io/yark/)
+
+Includes a feature screenshot gallery under `website/screenshots/` (overview, server form, INI editor, backups). Full deploy, capture, and update runbook: [docs/website.md](docs/website.md).
 
 **One-time GitHub setup**
 
