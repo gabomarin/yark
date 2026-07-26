@@ -15,6 +15,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Official ARK network version from Wildcard CDN for sidebar and SteamCMD chrome.
 - Local Cursor project context for backlog (`.cursor/project-context/`, gitignored).
 - Functional **Backups** page (list / create / restore / schedule + retention) with IPC over existing backup services.
+- Functional **Clusters** page surfacing existing `clusterId` / `clusterDir` compliance reports and transfer guidance (live transfer validation still deferred).
 - Per-server backup destination (default `{installDir}\\Backups`) plus open destination / open backup folder actions.
 - Kind-scoped ZIP backups (`World/` / `Player profiles/` / `INI/`), disk↔SQLite reconcile, fleet health, disk alerts, and cleanup preview/run.
 - Structured operational event `details` (What / Cause / Where / Try next) with clear/export support and workspace Logs deep-links (`logsFocus`).

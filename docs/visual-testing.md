@@ -150,6 +150,7 @@ available. Unset `ELECTRON_RUN_AS_NODE` first (see [AGENTS.md](../AGENTS.md)).
 | --- | --- |
 | `node scripts/visual-backups.cjs` | Playwright review of fleet / workspace Backups |
 | `node scripts/visual-logs.cjs` | Playwright review of fleet / workspace Logs (expanded event details) |
+| `node scripts/visual-clusters.cjs` | Playwright review of Clusters page (sidebar nav + compliance UI) |
 | `node scripts/seed-server-logs.cjs [serverName]` | Clear + seed events/update logs into Electron userData (override with `YARK_USER_DATA`) |
 
 Also: `npm run e2e:smoke` / `npm run e2e` launch the compiled app via Playwright

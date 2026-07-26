@@ -4,6 +4,7 @@ import {
   Dna,
   FileText,
   HardDrives,
+  ShareNetwork,
   SquaresFour,
 } from "@phosphor-icons/react";
 import {
@@ -27,6 +28,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: "overview", label: "Servers", icon: SquaresFour },
+  { id: "clusters", label: "Clusters", icon: ShareNetwork },
   { id: "backups", label: "Backups", icon: HardDrives },
   { id: "steamcmd", label: "SteamCMD", icon: ArrowsClockwise },
   { id: "logs", label: "Logs", icon: FileText },

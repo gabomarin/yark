@@ -112,8 +112,8 @@ Ephemeral review shots stay in temp dirs per [visual-testing.md](visual-testing.
   version for a release people will see on the site, update the pill in the same
   change set (see [versioning.md](versioning.md)).
 - Scope and roadmap lists are editorial; keep them aligned with
-  [README.md](../README.md) and [agent-context.md](agent-context.md) (Clusters and
-  Settings remain placeholders; Sidebar/Workspace Backups are live).
+  [README.md](../README.md) and [agent-context.md](agent-context.md) (Settings remains a
+  placeholder; Clusters compliance page and Sidebar/Workspace Backups are live).
 
 ## Constraints and pitfalls
 

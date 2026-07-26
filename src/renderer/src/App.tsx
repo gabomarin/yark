@@ -18,6 +18,7 @@ import {
 } from "@shared/server-update-status";
 import { AppRouter } from "@app/AppRouter";
 import { AppShellLayout } from "@app/AppShellLayout";
+import { ClustersPage } from "@features/clusters/ClustersPage";
 import { LogsPage } from "@features/logs/LogsPage";
 import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import { BackupsPage } from "@features/backups/BackupsPage";
@@ -604,6 +605,18 @@ export function App(): JSX.Element {
               onCloneServer={(id) => void runAction(() => window.api.cloneServer(id))}
               onDeleteServer={(id) => confirmDeleteServer(id)}
               onCancelSteamCmd={() => void runAction(() => window.api.cancelSteamCmd())}
+            />
+          ),
+        }}
+        clusters={{
+          page: (
+            <ClustersPage
+              servers={servers}
+              reports={reports}
+              onRefresh={() => void refresh()}
+              onOpenServer={(serverId) =>
+                setOverlay({ kind: "workspace", serverId })
+              }
             />
           ),
         }}

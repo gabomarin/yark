@@ -45,9 +45,9 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 ## Current functional status
 
 - The new renderer shell is already active.
-- Overview, SteamCMD, Logs, and Backups have already been migrated to the new architecture.
+- Overview, SteamCMD, Logs, Backups, and **Clusters** have already been migrated to the new architecture.
 - Server Workspace keeps `Server`, `INI Files`, `Backups`, and **Logs** as its regular navigation. Workspace **Backups** is operational (create / restore / history / destination for that server) with kind subtabs (**World save** | **Player profiles** | **INI**). Sidebar **Backups** is generalized configuration across servers (schedule / destination / retention) with “Open in server” to jump into the workspace tab. Mods are edited on the Server tab (comma-separated CurseForge Project IDs) until a CurseForge API key enables a dedicated Mods UI. A six-step configuration assistant launches on demand from `Server`; it uses an isolated draft and writes only after explicit review.
-- Clusters and Settings remain placeholders within the new shell.
+- Settings remains a placeholder within the new shell. Clusters surfaces existing `clusterId` / `clusterDir` compliance reports (live transfer validation still deferred).
 - Sidebar Backups settings page and per-server workspace Backups tab are live.
 - Backups are kind-scoped ZIP archives: `world` (full SavedArks including `.arkprofile*`), `players` (profiles from SavedArks/SaveGames), `ini` (`Game.ini` + `GameUserSettings.ini`).
   - On disk under the shared root: `World/`, `Player profiles/`, `INI/` subfolders; each snapshot is a `.zip` (legacy loose folders still restore). Listing reconciles orphan archives from disk into SQLite.
