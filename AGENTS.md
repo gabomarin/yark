@@ -15,6 +15,8 @@ Notes specific to running this in the Linux cloud VM:
   Node 22.5+ is required (`node:sqlite`) and available.
 - Lint/test/build/run all work on Linux. There is no ESLint config; `npm run typecheck`
   (`tsc --noEmit`) is the static-analysis gate. `npm run build` is clean.
+  GitHub Actions **CI** (`.github/workflows/ci.yml`) runs typecheck + tests on
+  `windows-latest` for every PR and push to `main` (avoids known Linux path-test gaps).
 - Running the app: `npm run dev` (dev, HMR) or `npm start` (preview a build). It opens a
   real Electron window on the VM desktop display, so it must run through the GUI/desktop
   environment (e.g. computer use), not as a plain headless process.
