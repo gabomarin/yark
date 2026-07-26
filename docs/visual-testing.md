@@ -40,11 +40,19 @@ process:
 Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
 ```
 
+```bash
+unset ELECTRON_RUN_AS_NODE
+```
+
 In an isolated Node script this can be done before launching Electron:
 
 ```js
 delete process.env.ELECTRON_RUN_AS_NODE;
 ```
+
+On Cursor Cloud / Linux agents, also use a real desktop display (not a headless
+process). See [AGENTS.md](../AGENTS.md) for benign dbus/GPU warnings and other
+VM pitfalls.
 
 ## Playwright procedure
 
@@ -145,3 +153,18 @@ Before closing the change, record:
 Temporary screenshots do not need to be versioned. If a visual decision must be
 kept as a product reference, its documentation should be added to `docs/` or the
 corresponding plan.
+
+## Packaged helper scripts
+
+These are convenience launchers under `scripts/`. They are **not** substitutes
+for the mandatory three-viewport protocol above unless noted.
+
+| Script | How to run | Notes |
+| --- | --- | --- |
+| `visual-backups.cjs` | `npm run build && node scripts/visual-backups.cjs` | HD / Full HD / QHD matrix for workspace Backups; clears `ELECTRON_RUN_AS_NODE`; needs ≥1 server (may create a temp profile) |
+| `visual-logs.cjs` | Prefer `node scripts/seed-server-logs.cjs` first, then `npm run build && node scripts/visual-logs.cjs` | Single **1440×900** evidence pass (supplement only); clears `ELECTRON_RUN_AS_NODE` |
+| `visual-overview.cjs` | `npm run build && node scripts/visual-overview.cjs` | Overview layout evidence |
+| `seed-server-logs.cjs` | `node scripts/seed-server-logs.cjs [serverName]` | Seeds events + update log files for Logs UI review. Resolves DB via `%APPDATA%/yark-server-manager` — **Windows `APPDATA`**; on Linux set `APPDATA` to the Electron `userData` parent (often `~/.config`) or the script exits with “DB not found” |
+| `e2e:smoke` / `e2e` | `npm run e2e:smoke` / `npm run e2e` | Need display + `ELECTRON_RUN_AS_NODE` unset in the shell (these two scripts do **not** clear it). Smoke may still fail on stale `section.servers h2`; the suite uses `[data-server-card]`. Server create needs a Windows-style install path, admin password ≥4 chars, unique ports |
+
+Related domain context: [updates-steamcmd.md](updates-steamcmd.md), [AGENTS.md](../AGENTS.md).
