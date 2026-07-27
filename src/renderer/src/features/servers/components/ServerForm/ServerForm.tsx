@@ -33,6 +33,8 @@ interface Props {
   onCancel: () => void;
   /** After create, receives the profile; after edit, no argument. */
   onSaved: (created?: ServerProfile) => void;
+  /** Prefills base folder on create when set in Settings. */
+  defaultBaseFolder?: string | null;
   /** `embedded` = workspace tab (no full-page header). */
   variant?: "page" | "embedded";
   /** Server in starting/running/stopping, or SteamCMD files job → path / ops lock. */
@@ -59,12 +61,16 @@ interface FormState {
   mods: string;
 }
 
-function toFormState(profile: ServerProfile | null): FormState {
+function toFormState(
+  profile: ServerProfile | null,
+  defaultBaseFolder?: string | null,
+): FormState {
   if (profile === null) {
+    const base = defaultBaseFolder?.trim() ?? "";
     return {
       name: "",
       map: KNOWN_MAPS[0],
-      installDir: "",
+      installDir: base,
       sessionName: "",
       gamePort: "7777",
       queryPort: "27015",
@@ -130,7 +136,9 @@ export function ServerForm(props: Props): JSX.Element {
   const serverActive = props.serverActive === true;
   const filesJobActive = props.filesJobActive === true;
   const inputSize = embedded ? "sm" : "md";
-  const [state, setState] = useState<FormState>(() => toFormState(props.initial));
+  const [state, setState] = useState<FormState>(() =>
+    toFormState(props.initial, props.defaultBaseFolder),
+  );
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [browsingField, setBrowsingField] = useState<"installDir" | "clusterDir" | null>(null);

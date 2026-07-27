@@ -26,6 +26,15 @@ import type {
 
 export type PickPathKind = "directory" | "file";
 
+/** App-managed folders under Electron userData (Settings diagnostics). */
+export type AppDataFolderKind = "app" | "backups" | "updateLogs" | "steamcmd";
+
+export interface AppDataFolderInfo {
+  kind: AppDataFolderKind;
+  label: string;
+  path: string;
+}
+
 /** Invokable IPC channels (renderer -> main). */
 export const IPC = {
   serversList: "servers:list",
@@ -54,6 +63,8 @@ export const IPC = {
   rconCommand: "rcon:command",
   eventsRecent: "events:recent",
   pickPath: "fs:pick-path",
+  appListDataFolders: "app:list-data-folders",
+  appOpenDataFolder: "app:open-data-folder",
   iniRead: "ini:read",
   iniPreview: "ini:preview",
   iniSave: "ini:save",
@@ -143,6 +154,8 @@ export interface RendererApi {
     defaultPath?: string,
     title?: string,
   ): Promise<IpcResult<string | null>>;
+  listAppDataFolders(): Promise<IpcResult<AppDataFolderInfo[]>>;
+  openAppDataFolder(kind: AppDataFolderKind): Promise<IpcResult<void>>;
   readServerIni(serverId: string): Promise<IpcResult<ServerIniSnapshot>>;
   openServerIniInEditor(
     serverId: string,

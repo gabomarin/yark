@@ -32,7 +32,9 @@ import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { SteamCmdProgressDock } from "@features/steamcmd/SteamCmdProgressDock";
 import { SettingsPage } from "@features/settings/SettingsPage";
 import {
+  readDefaultBaseFolderPref,
   readOpenNativeTerminalPref,
+  writeDefaultBaseFolderPref,
   writeOpenNativeTerminalPref,
 } from "@features/settings/settingsModel";
 import type { Route } from "@layout/Sidebar/Sidebar";
@@ -66,6 +68,9 @@ export function App(): JSX.Element {
   const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState(
     readOpenNativeTerminalPref,
   );
+  const [defaultBaseFolder, setDefaultBaseFolder] = useState<string | null>(
+    readDefaultBaseFolderPref,
+  );
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [checkingUpdates, setCheckingUpdates] = useState(false);
@@ -74,6 +79,10 @@ export function App(): JSX.Element {
   useEffect(() => {
     writeOpenNativeTerminalPref(openNativeTerminalOnStart);
   }, [openNativeTerminalOnStart]);
+
+  useEffect(() => {
+    writeDefaultBaseFolderPref(defaultBaseFolder);
+  }, [defaultBaseFolder]);
 
   const runningServers = Array.from(statuses.values()).filter(
     (status) => status.status === "running",
@@ -340,11 +349,11 @@ export function App(): JSX.Element {
 
   const clearSteamCmdCache = useCallback(
     (kind: SteamCmdCacheKind) => {
-      const label = kind === "depot" ? "Depotcache" : "ASA content cache";
+      const label = kind === "depot" ? "download cache" : "shared server files";
       const detail =
         kind === "depot"
-          ? "Deletes compressed Steam downloads. The next install or update will re-download what it needs."
-          : "Deletes the shared expanded ASA install. The next install will rebuild it via SteamCMD before copying to servers.";
+          ? "Removes temporary files Steam already downloaded. The next install or update will download them again."
+          : "Removes the ready-made ARK server copy used to set up new servers faster. The next install will rebuild it first.";
       modals.openConfirmModal({
         title: `Clear ${label}?`,
         children: (
@@ -363,7 +372,7 @@ export function App(): JSX.Element {
               return;
             }
             notifications.show({
-              title: `${label} cleared`,
+              title: `${label.charAt(0).toUpperCase()}${label.slice(1)} cleared`,
               message: result.data,
               color: "teal",
             });
@@ -568,6 +577,7 @@ export function App(): JSX.Element {
       return (
         <ServerForm
           initial={overlay.kind === "edit" ? overlay.profile : null}
+          defaultBaseFolder={defaultBaseFolder}
           onCancel={() => setOverlay(null)}
           onSaved={(created) => {
             if (overlay.kind === "create" && created !== undefined) {
@@ -686,6 +696,8 @@ export function App(): JSX.Element {
               steamCmdBusy={steamCmdBusy}
               openNativeTerminalOnStart={openNativeTerminalOnStart}
               onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
+              defaultBaseFolder={defaultBaseFolder}
+              onDefaultBaseFolderChange={setDefaultBaseFolder}
               onPickSteamCmdPath={() => void pickSteamCmdPath()}
               onInstallSteamCmd={() => void runAction(() => window.api.installSteamCmd())}
               onOpenSteamCmdCache={openSteamCmdCache}

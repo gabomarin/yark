@@ -1,5 +1,12 @@
-.content {
-  max-width: 920px;
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+}
+
+.sectionRule {
+  height: 1px;
+  background: var(--app-color-border-subtle);
 }
 
 .settingRow {
@@ -19,15 +26,30 @@
   padding-top: 2px;
 }
 
-.pathValue {
-  margin-top: var(--app-space-xs);
-  padding: var(--app-space-xs) var(--app-space-sm);
+.settingBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+}
+
+.steamCmdRow {
+  display: flex;
+  gap: var(--app-space-sm);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: var(--app-space-sm) var(--app-space-md);
   border: 1px solid var(--app-color-border-subtle);
   border-radius: var(--app-radius-control);
   background: color-mix(in srgb, var(--ark-gray-2) 72%, transparent);
+}
+
+.pathValue {
+  flex: 1 1 280px;
+  min-width: 0;
   color: var(--app-color-text);
   font-family: Consolas, "Cascadia Mono", monospace;
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.45;
   overflow-wrap: anywhere;
 }
@@ -37,20 +59,42 @@
   font-style: italic;
 }
 
-.actions {
-  margin-top: var(--app-space-sm);
+.steamCmdActions {
+  flex: 0 0 auto;
+}
+
+.statusReady {
+  color: var(--app-color-ok);
+}
+
+.statusNeedsSetup {
+  color: var(--app-color-warn);
 }
 
 .cacheSection {
   display: flex;
   flex-direction: column;
-  gap: var(--app-space-sm);
-  padding-top: var(--app-space-sm);
-  border-top: 1px solid var(--app-color-border-subtle);
+  gap: var(--app-space-xs);
 }
 
-.cacheHeading {
-  letter-spacing: 0.04em;
+.cacheToggle {
+  display: block;
+  width: 100%;
+  padding: var(--app-space-xxs) 0;
+  border-radius: var(--app-radius-sm);
+  color: var(--app-color-text);
+  text-align: left;
+}
+
+.cacheToggle:hover {
+  color: var(--app-color-cryo);
+}
+
+.cacheList {
+  padding: var(--app-space-sm);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-control);
+  background: color-mix(in srgb, var(--ark-gray-2) 40%, transparent);
 }
 
 .cacheRow {
@@ -76,6 +120,10 @@
 .cacheActions {
   flex: 0 0 auto;
   padding-top: 2px;
+}
+
+.about {
+  padding: 0 2px;
 }
 
 @media (max-width: 720px) {

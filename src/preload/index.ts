@@ -43,6 +43,8 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.eventsRecent, limit),
   pickPath: (kind, defaultPath, title) =>
     ipcRenderer.invoke(IPC.pickPath, kind, defaultPath, title),
+  listAppDataFolders: () => ipcRenderer.invoke(IPC.appListDataFolders),
+  openAppDataFolder: (kind) => ipcRenderer.invoke(IPC.appOpenDataFolder, kind),
   readServerIni: (serverId: string) =>
     ipcRenderer.invoke(IPC.iniRead, serverId),
   openServerIniInEditor: (serverId: string, fileKey: "gameUserSettings" | "game") =>
