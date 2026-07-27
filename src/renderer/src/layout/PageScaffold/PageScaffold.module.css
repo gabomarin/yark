@@ -1,6 +1,6 @@
 .page {
   min-height: 100vh;
-  padding: 20px 24px;
+  padding: var(--app-space-lg) 24px;
 }
 
 .page[data-fill-viewport] {
@@ -13,7 +13,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--app-space-md);
   flex-wrap: wrap;
   flex-shrink: 0;
 }
@@ -25,13 +25,13 @@
 }
 
 .heading p {
-  margin: 6px 0 0;
+  margin: var(--app-space-xs) 0 0;
   color: var(--app-color-muted);
 }
 
 .actions {
   display: flex;
-  gap: 8px;
+  gap: var(--app-space-xs);
   flex-wrap: wrap;
 }
 

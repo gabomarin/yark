@@ -96,44 +96,6 @@
   gap: 18px;
 }
 
-.serverState,
-.emptyState {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 76px;
-  padding: 14px 16px;
-  border: 1px solid var(--app-color-border);
-  border-radius: var(--app-radius-md);
-  background: color-mix(in srgb, var(--app-color-panel-cool) 74%, transparent);
-}
-
-.emptyState {
-  min-height: 104px;
-  border-style: dashed;
-}
-
-.emptyStateIcon {
-  display: grid;
-  flex: 0 0 40px;
-  width: 40px;
-  height: 40px;
-  place-items: center;
-  color: var(--app-color-accent);
-  border: 1px solid color-mix(in srgb, var(--app-color-accent) 30%, transparent);
-  border-radius: var(--app-radius-md);
-  background: color-mix(in srgb, var(--app-color-accent) 9%, transparent);
-}
-
-.emptyStateTitle,
-.recentTitle {
-  font-size: 18px;
-}
-
-.emptyStateAction {
-  margin-left: auto;
-}
-
 .recentSection {
   display: flex;
   flex-direction: column;
@@ -141,6 +103,10 @@
   padding-top: 18px;
   border-top: 1px solid var(--app-color-border);
   min-width: 0;
+}
+
+.recentTitle {
+  font-size: 18px;
 }
 
 .recentList {
@@ -252,22 +218,11 @@
     width: 100%;
   }
 
-  .serverState,
-  .emptyState {
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-
   .serverSkeleton {
     grid-template-columns: 44px minmax(0, 1fr) auto;
   }
 
   .serverSkeletonMeta {
     display: none;
-  }
-
-  .emptyStateAction {
-    width: 100%;
-    margin-left: 52px;
   }
 }

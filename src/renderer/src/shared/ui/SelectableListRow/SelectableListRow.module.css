@@ -1,0 +1,60 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-sm);
+  width: 100%;
+  margin: 0;
+  padding: var(--app-space-xs) var(--app-space-sm);
+  border: 1px solid transparent;
+  border-radius: var(--app-radius-control);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+/* Default: always-visible control surface (Clusters members / list cards). */
+.row[data-variant="surface"] {
+  border-color: var(--ark-gray-a3);
+  background: var(--app-color-surface-control);
+}
+
+.row:hover {
+  border-color: color-mix(in srgb, var(--app-color-border) 70%, transparent);
+  background: color-mix(in srgb, var(--app-color-panel) 55%, transparent);
+}
+
+.row[data-variant="surface"]:hover {
+  border-color: var(--app-color-border);
+  background: var(--ark-gray-a3);
+}
+
+.row[data-selected] {
+  border-color: color-mix(in srgb, var(--ark-blue-8) 45%, transparent);
+  background: var(--app-list-selected-bg);
+  box-shadow: var(--app-list-selected-inset);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--ark-blue-a8);
+  outline-offset: 2px;
+}
+
+.leading,
+.trailing {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}

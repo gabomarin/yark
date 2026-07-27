@@ -1,0 +1,35 @@
+.tile {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--app-color-accent);
+  border: 1px solid var(--app-color-border);
+}
+
+.tile[data-size="sm"] {
+  width: 36px;
+  height: 36px;
+}
+
+.tile[data-size="md"] {
+  width: 40px;
+  height: 40px;
+}
+
+.tile[data-shape="tek"] {
+  border-radius: 12px 7px 12px 7px;
+}
+
+.tile[data-shape="rounded"] {
+  border-radius: var(--app-radius-md);
+}
+
+.tile[data-tone="accent"] {
+  background: color-mix(in srgb, var(--app-color-accent) 9%, var(--app-color-panel));
+  border-color: color-mix(in srgb, var(--app-color-accent) 30%, transparent);
+}
+
+.tile[data-tone="control"] {
+  background: var(--app-color-surface-control);
+  border-color: var(--app-color-border-subtle);
+}

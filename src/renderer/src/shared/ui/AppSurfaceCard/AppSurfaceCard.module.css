@@ -1,0 +1,59 @@
+.root {
+  border-color: var(--app-surface-border);
+  background-color: var(--app-color-panel-cool);
+  background-image: var(--app-surface-cool);
+  box-shadow: var(--app-shadow-panel);
+}
+
+.root[data-tone="coolEmphasis"] {
+  background-image: var(--app-surface-cool-emphasis);
+}
+
+.root[data-tone="flat"] {
+  background-color: var(--app-surface-flat);
+  background-image: none;
+  border-color: var(--app-color-border-subtle);
+}
+
+.root[data-tone="chrome"] {
+  background-color: var(--app-surface-chrome);
+  background-image: none;
+  border-color: var(--app-color-border-subtle);
+}
+
+.root[data-fill] {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.root[data-status="ok"] {
+  box-shadow:
+    var(--app-shadow-panel),
+    inset 3px 0 0 color-mix(in srgb, var(--app-color-ok) 70%, transparent);
+}
+
+.root[data-status="error"] {
+  box-shadow:
+    var(--app-shadow-panel),
+    inset 3px 0 0 color-mix(in srgb, var(--app-color-danger) 80%, transparent);
+}
+
+.root[data-status="busy"] {
+  box-shadow:
+    var(--app-shadow-panel),
+    inset 3px 0 0 color-mix(in srgb, var(--app-color-accent) 75%, transparent);
+}
+
+.root[data-status="attention"] {
+  box-shadow:
+    var(--app-shadow-panel),
+    inset 3px 0 0 color-mix(in srgb, var(--app-color-warn) 75%, transparent);
+}
+
+.root[data-status="ready"] {
+  box-shadow:
+    var(--app-shadow-panel),
+    inset 3px 0 0 color-mix(in srgb, var(--app-color-ok) 70%, transparent);
+}

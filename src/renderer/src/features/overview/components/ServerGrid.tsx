@@ -3,6 +3,7 @@ import { Badge, Button, Group, Skeleton, Stack, Text, Title, VisuallyHidden } fr
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { getServerUpdateState } from "@shared/server-update-status";
 import { ServerCard } from "@features/servers/components/ServerCard/ServerCard";
+import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { SearchField } from "@ui/SearchField/SearchField";
 import classes from "../OverviewPage.module.css";
 
@@ -90,11 +91,7 @@ export function ServerGrid(props: Props): JSX.Element {
             Your servers
           </Title>
           <Group gap="sm" align="center" wrap="wrap" className={classes.serverSummaryRow}>
-            <Text
-              c="dimmed"
-              size="sm"
-              data-server-summary
-            >
+            <Text c="dimmed" size="sm" data-server-summary>
               {totalLabel} · {runningLabel}
               {filteredLabel}
             </Text>
@@ -151,46 +148,33 @@ export function ServerGrid(props: Props): JSX.Element {
         )}
 
         {!props.loading && props.servers.length === 0 && (
-          <div className={classes.emptyState}>
-            <div className={classes.emptyStateIcon}>
-              <HardDrives size={24} weight="duotone" />
-            </div>
-            <div>
-              <Title order={3} className={classes.emptyStateTitle}>
-                Create your first server
-              </Title>
-              <Text c="dimmed" size="sm">
-                Set up a world to play with friends or manage your community.
-              </Text>
-            </div>
-            <Button
-              leftSection={<Plus size={16} />}
-              onClick={props.onCreateServer}
-              className={classes.emptyStateAction}
-            >
-              New server
-            </Button>
-          </div>
+          <EmptyState
+            icon={<HardDrives size={24} weight="duotone" />}
+            title="Create your first server"
+            description="Set up a world to play with friends or manage your community."
+            titleOrder="h3"
+            action={
+              <Button leftSection={<Plus size={16} />} onClick={props.onCreateServer}>
+                New server
+              </Button>
+            }
+          />
         )}
 
         {!props.loading &&
           props.servers.length > 0 &&
           props.filteredServers.length === 0 && (
-          <div className={classes.serverState}>
-            <div className={classes.emptyStateIcon}>
-              <MagnifyingGlass size={20} />
-            </div>
-            <div>
-              <Text fw={600}>No matches</Text>
-              <Text c="dimmed" size="sm">
-                Try another name, map, or cluster.
-              </Text>
-            </div>
-            <Button variant="default" size="xs" onClick={() => props.onSearchChange("")}>
-              Clear search
-            </Button>
-          </div>
-        )}
+            <EmptyState
+              icon={<MagnifyingGlass size={20} />}
+              title="No matches"
+              description="Try another name, map, or cluster."
+              action={
+                <Button variant="default" size="xs" onClick={() => props.onSearchChange("")}>
+                  Clear search
+                </Button>
+              }
+            />
+          )}
 
         {!props.loading && props.filteredServers.length > 0 && (
           <div className={classes.serverGrid}>

@@ -1,7 +1,10 @@
-import { CaretRight, HardDrives, MagnifyingGlass, Plus } from "@phosphor-icons/react";
-import { Badge, Button, Stack, Text, TextInput, UnstyledButton } from "@mantine/core";
+import { CaretRight, HardDrives, Plus } from "@phosphor-icons/react";
+import { Button, Stack, Text, UnstyledButton } from "@mantine/core";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { useMemo, useState } from "react";
+import { SearchField } from "@ui/SearchField/SearchField";
+import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
+import { serverRuntimeStatusTone } from "@ui/ServerRuntimeStatusBadge/serverRuntimeStatus";
 import classes from "./ServerListPanel.module.css";
 
 interface Props {
@@ -10,21 +13,6 @@ interface Props {
   statuses: Map<string, ServerRuntimeInfo>;
   onSelectServer: (serverId: string) => void;
   onAddServer?: () => void;
-}
-
-const STATUS_LABEL: Record<string, string> = {
-  stopped: "Stopped",
-  starting: "Starting",
-  running: "Running",
-  stopping: "Stopping",
-  error: "Error",
-};
-
-function statusTone(status: string): "ok" | "warn" | "bad" | "info" | "muted" {
-  if (status === "running") return "ok";
-  if (status === "starting" || status === "stopping") return "info";
-  if (status === "error") return "bad";
-  return "muted";
 }
 
 export function ServerListPanel(props: Props): JSX.Element {
@@ -44,11 +32,11 @@ export function ServerListPanel(props: Props): JSX.Element {
     <aside className={classes.panel}>
       <div className={classes.header}>
         <Text className={classes.title}>All servers</Text>
-        <TextInput
+        <SearchField
           value={search}
-          onChange={(event) => setSearch(event.currentTarget.value)}
+          onChange={setSearch}
           placeholder="Search servers"
-          leftSection={<MagnifyingGlass size={14} />}
+          label="Search servers"
           size="xs"
         />
       </div>
@@ -57,7 +45,7 @@ export function ServerListPanel(props: Props): JSX.Element {
         {filtered.map((server) => {
           const status = props.statuses.get(server.id)?.status ?? "stopped";
           const selected = server.id === props.selectedServerId;
-          const tone = statusTone(status);
+          const tone = serverRuntimeStatusTone(status);
           return (
             <UnstyledButton
               key={server.id}
@@ -66,33 +54,18 @@ export function ServerListPanel(props: Props): JSX.Element {
               onClick={() => props.onSelectServer(server.id)}
             >
               <span className={classes.thumb} data-tone={tone}>
-                <HardDrives size={18} weight="duotone" />
+                <HardDrives size={16} weight="duotone" />
               </span>
               <span className={classes.itemBody}>
-                <Text className={classes.itemName} fz="sm" fw={600} lineClamp={1}>
+                <Text className={classes.itemName} fw={600} title={server.name} lineClamp={1}>
                   {server.name}
                 </Text>
-                <Text className={classes.itemMeta} fz="xs" c="dimmed" lineClamp={1}>
+                <Text className={classes.itemMeta} c="dimmed" title={server.map} lineClamp={1}>
                   {server.map}
                 </Text>
               </span>
-              <Badge
-                size="xs"
-                variant="light"
-                className={classes.badge}
-                color={
-                  tone === "ok"
-                    ? "green"
-                    : tone === "bad"
-                      ? "red"
-                      : tone === "info"
-                        ? "blue"
-                        : "gray"
-                }
-              >
-                {STATUS_LABEL[status] ?? status}
-              </Badge>
-              <CaretRight size={14} className={classes.chevron} />
+              <ServerRuntimeStatusBadge status={status} size="xs" className={classes.badge} />
+              <CaretRight size={12} className={classes.chevron} />
             </UnstyledButton>
           );
         })}

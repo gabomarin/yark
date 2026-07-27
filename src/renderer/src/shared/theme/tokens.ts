@@ -79,8 +79,16 @@ export const appTokens = {
     sm: 10,
     md: 14,
     lg: 18,
+    /** Inputs, list rows, search — tighter than card `md`. */
+    control: 12,
   },
+  /**
+   * Spacing scale (px). Prefer these over raw px in CSS modules.
+   * Mantine `gap` / `padding` keys (`xs`…`xl`) map to the same values via theme.
+   * Off-grid leftovers (6, 10, 14) → snap to nearest step when touching a file.
+   */
   spacing: {
+    xxs: 4,
     xs: 8,
     sm: 12,
     md: 16,

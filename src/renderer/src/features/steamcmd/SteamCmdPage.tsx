@@ -7,10 +7,12 @@ import {
   ProhibitInset,
   TerminalWindow,
 } from "@phosphor-icons/react";
-import { Badge, Button, Card, Group, Progress, Stack, Text, Title } from "@mantine/core";
+import { Badge, Button, Group, Progress, Stack, Text, Title } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { formatSteamCmdByteProgress, steamCmdByteProgressNoun } from "@shared/steamcmd-progress";
 import type { SteamCmdConsoleSnapshot, SteamCmdStatus } from "@shared/types";
+import { AccentIconTile } from "@ui/AccentIconTile/AccentIconTile";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { AutoScrollConsole } from "./AutoScrollConsole";
 import classes from "./SteamCmdPage.module.css";
 
@@ -83,17 +85,17 @@ export function SteamCmdPage(props: Props): JSX.Element {
       }
     >
       <Stack gap="md" className={classes.steamContent} data-steamcmd-page>
-        <Card
-          withBorder
+        <AppSurfaceCard
+          tone="coolEmphasis"
           className={classes.operationCard}
-          data-tone={running ? "busy" : detected ? "ready" : "attention"}
+          statusTone={running ? "busy" : detected ? "ready" : "attention"}
         >
           <Stack gap="sm">
             <Group justify="space-between" align="center" wrap="nowrap">
               <Group gap="sm" wrap="nowrap" className={classes.operationIdentity}>
-                <div className={classes.operationIcon}>
+                <AccentIconTile className={classes.operationIcon}>
                   {detected ? <CheckCircle size={20} weight="fill" /> : <CloudArrowDown size={20} />}
-                </div>
+                </AccentIconTile>
                 <div className={classes.operationCopy}>
                   <Group gap="xs" wrap="wrap">
                     <Title order={3} size="h4">{operationTitle}</Title>
@@ -138,7 +140,7 @@ export function SteamCmdPage(props: Props): JSX.Element {
               </div>
             )}
           </Stack>
-        </Card>
+        </AppSurfaceCard>
 
         <div className={classes.contextStrip} aria-label="SteamCMD environment">
           <ContextItem
@@ -163,7 +165,7 @@ export function SteamCmdPage(props: Props): JSX.Element {
           />
         </div>
 
-        <Card withBorder className={classes.consoleCard}>
+        <AppSurfaceCard className={classes.consoleCard}>
           <Stack gap="sm" className={classes.consoleStack}>
             <Group justify="space-between" gap="sm">
               <Group gap="xs">
@@ -179,7 +181,7 @@ export function SteamCmdPage(props: Props): JSX.Element {
               emptyText="No SteamCMD output yet."
             />
           </Stack>
-        </Card>
+        </AppSurfaceCard>
       </Stack>
     </PageScaffold>
   );

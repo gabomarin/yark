@@ -4,45 +4,10 @@
   overflow: hidden;
 }
 
-.operationCard,
-.consoleCard,
-.contextStrip {
-  border-radius: var(--app-radius-lg);
-  border: 1px solid color-mix(in srgb, var(--app-color-border) 72%, var(--ark-blue-7));
-  background-color: var(--app-color-panel-cool);
-}
-
 .operationCard {
   position: relative;
   flex-shrink: 0;
   overflow: hidden;
-  background-image:
-    linear-gradient(
-      108deg,
-      var(--app-color-panel-cool-emphasis) 0%,
-      var(--app-color-panel-cool) 52%,
-      color-mix(in srgb, var(--app-color-panel-cool) 76%, var(--app-color-panel)) 100%
-    );
-}
-
-.operationCard::before {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 4px;
-  background: var(--app-color-border);
-  content: "";
-}
-
-.operationCard[data-tone="ready"]::before {
-  background: var(--app-color-ok);
-}
-
-.operationCard[data-tone="busy"]::before {
-  background: var(--app-color-accent);
-}
-
-.operationCard[data-tone="attention"]::before {
-  background: var(--app-color-warn);
 }
 
 .operationIdentity,
@@ -54,23 +19,11 @@
   flex: 1;
 }
 
-.operationIcon {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  border: 1px solid var(--app-color-border);
-  border-radius: 12px 7px 12px 7px;
-  background: color-mix(in srgb, var(--app-color-accent) 9%, var(--app-color-panel));
-  color: var(--app-color-accent);
-}
-
-.operationCard[data-tone="ready"] .operationIcon {
+.operationCard[data-status="ready"] .operationIcon {
   color: var(--app-color-ok);
 }
 
-.operationCard[data-tone="attention"] .operationIcon {
+.operationCard[data-status="attention"] .operationIcon {
   color: var(--app-color-warn);
 }
 
@@ -92,6 +45,9 @@
     minmax(180px, 1fr);
   flex-shrink: 0;
   padding: 6px 8px;
+  border-radius: var(--app-radius-lg);
+  border: 1px solid var(--app-surface-border);
+  background-image: var(--app-surface-cool);
 }
 
 .contextItem {
@@ -128,13 +84,6 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  background:
-    linear-gradient(
-      112deg,
-      color-mix(in srgb, var(--app-color-panel-cool-emphasis) 52%, var(--app-color-panel-cool)) 0%,
-      var(--app-color-panel-cool) 42%,
-      color-mix(in srgb, var(--app-color-panel-cool) 82%, var(--app-color-panel)) 100%
-    );
 }
 
 .consoleStack {
@@ -147,7 +96,7 @@
   min-height: 0;
   margin: 0;
   padding: 12px;
-  border-radius: 14px;
+  border-radius: var(--app-radius-md);
   border: 1px solid var(--app-color-border-subtle);
   background: var(--ark-gray-1);
   color: var(--ark-blue-12);

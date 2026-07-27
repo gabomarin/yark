@@ -16,12 +16,12 @@ import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ConfigurationEditor,
-} from "./components/ConfigurationEditor";
-import { ConfigurationWizard } from "./components/ConfigurationWizard";
-import { ServerListPanel } from "./components/ServerListPanel";
-import { ServerOnboardingChecklist } from "./components/ServerOnboardingChecklist";
-import { SidePanel } from "./components/SidePanel";
-import { WorkspaceHeader } from "./components/WorkspaceHeader";
+} from "./components/ConfigurationEditor/ConfigurationEditor";
+import { ConfigurationWizard } from "./components/ConfigurationWizard/ConfigurationWizard";
+import { ServerListPanel } from "./components/ServerListPanel/ServerListPanel";
+import { ServerOnboardingChecklist } from "./components/ServerOnboardingChecklist/ServerOnboardingChecklist";
+import { SidePanel } from "./components/SidePanel/SidePanel";
+import { WorkspaceHeader } from "./components/WorkspaceHeader/WorkspaceHeader";
 import classes from "./ServerWorkspacePage.module.css";
 
 export type WorkspaceTab = "server" | "iniFiles" | "backups" | "logs";

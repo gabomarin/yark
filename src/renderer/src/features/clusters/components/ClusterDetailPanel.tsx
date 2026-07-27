@@ -1,5 +1,7 @@
-import { Badge, Card, Group, Stack, Text, Title } from "@mantine/core";
+import { Badge, Group, Stack, Text, Title } from "@mantine/core";
 import type { ClusterComplianceReport, ServerProfile } from "@shared/types";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { MetaStrip } from "./MetaStrip/MetaStrip";
 import { formatCheckedAt, sharedClusterDir } from "../clusterModel";
 import classes from "../clusters.module.css";
 import { ClusterIssueRow } from "./ClusterIssueRow";
@@ -16,11 +18,11 @@ export function ClusterDetailPanel(props: Props): JSX.Element {
   const sharedDir = sharedClusterDir(props.members);
 
   return (
-    <Card
-      withBorder
-      className={`${classes.panel} ${classes.detailPanel}`}
+    <AppSurfaceCard
+      fill
+      className={classes.detailPanel}
+      statusTone={props.report.ok ? "ok" : "error"}
       data-cluster-detail={props.report.clusterId}
-      data-tone={props.report.ok ? "ok" : "error"}
     >
       <Stack gap="md" className={classes.panelStack}>
         <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
@@ -37,32 +39,16 @@ export function ClusterDetailPanel(props: Props): JSX.Element {
           </Badge>
         </Group>
 
-        <div className={classes.metaStrip}>
-          <div className={classes.metaItem}>
-            <Text size="xs" c="dimmed" className={classes.metaLabel}>
-              Shared cluster directory
-            </Text>
-            <Text size="sm" fw={600} className={classes.metaValue}>
-              {sharedDir ?? "Not consistent across members"}
-            </Text>
-          </div>
-          <div className={classes.metaItem}>
-            <Text size="xs" c="dimmed" className={classes.metaLabel}>
-              Members
-            </Text>
-            <Text size="sm" fw={600}>
-              {props.members.length}
-            </Text>
-          </div>
-          <div className={classes.metaItem}>
-            <Text size="xs" c="dimmed" className={classes.metaLabel}>
-              Issues
-            </Text>
-            <Text size="sm" fw={600}>
-              {props.report.issues.length}
-            </Text>
-          </div>
-        </div>
+        <MetaStrip
+          items={[
+            {
+              label: "Shared cluster directory",
+              value: sharedDir ?? "Not consistent across members",
+            },
+            { label: "Members", value: String(props.members.length) },
+            { label: "Issues", value: String(props.report.issues.length) },
+          ]}
+        />
 
         <Stack gap="xs">
           <Text fw={600} size="sm">
@@ -116,6 +102,6 @@ export function ClusterDetailPanel(props: Props): JSX.Element {
           )}
         </Stack>
       </Stack>
-    </Card>
+    </AppSurfaceCard>
   );
 }

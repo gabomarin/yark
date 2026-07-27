@@ -24,9 +24,13 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Project site feature screenshot gallery under `website/screenshots/` with an engineering runbook in `docs/website.md`.
 - GitHub Actions Windows release workflow (tag `v*` → NSIS installer on the GitHub Release).
 - Local Husky git hooks (pre-commit typecheck + lint; pre-push typecheck + test + lint) and CI build + lint gates (`npm run lint` = feature file-size policy for now).
+- Shared renderer atoms for reuse: `AppSurfaceCard`, `ServerRuntimeStatusBadge`, `EmptyState`, `SearchField`, `SelectableListRow`, `AccentIconTile`; `ServerCard` split into local molecules + model.
+- Design-system guide for Mantine surface + spacing tokens: [docs/design-system.md](docs/design-system.md).
+- App spacing scale (`xxs`…`xl`) exposed as `--app-space-*` and Mantine `theme.spacing` (including `gap="xxs"`).
 
 ### Changed
 
+- Page panels (Clusters, Logs, Backups, SteamCMD) and workspace side widgets share `AppSurfaceCard` + CSS surface vars instead of copy-pasted cool-panel gradients.
 - Project license set to **GPL-3.0-only** (was undeclared MIT in `package.json` only).
 - Product branding renamed to **YARK server manager**.
 - Repository user-facing strings and docs moved to English.

@@ -51,13 +51,34 @@ export const appCssVariablesResolver: CSSVariablesResolver = () => ({
     "--app-color-ok": appTokens.colors.ok,
     "--app-color-warn": appTokens.colors.warn,
     "--app-color-bad": appTokens.colors.bad,
+    "--app-color-danger": "var(--app-color-bad)",
     "--app-color-cryo": "var(--ark-blue-11)",
     "--app-color-biomass": appTokens.colors.biomass,
     "--app-color-fossil": appTokens.colors.fossil,
     "--app-radius-sm": `${appTokens.radius.sm}px`,
     "--app-radius-md": `${appTokens.radius.md}px`,
     "--app-radius-lg": `${appTokens.radius.lg}px`,
+    "--app-radius-control": `${appTokens.radius.control}px`,
+    "--app-space-xxs": `${appTokens.spacing.xxs}px`,
+    "--app-space-xs": `${appTokens.spacing.xs}px`,
+    "--app-space-sm": `${appTokens.spacing.sm}px`,
+    "--app-space-md": `${appTokens.spacing.md}px`,
+    "--app-space-lg": `${appTokens.spacing.lg}px`,
+    "--app-space-xl": `${appTokens.spacing.xl}px`,
     "--app-shadow-panel": appTokens.shadows.panel,
+    "--app-shadow-elevated": "0 18px 36px rgba(0, 0, 0, 0.32)",
+    /* Shared surface recipes — prefer AppSurfaceCard / these vars over copy-pasted gradients */
+    "--app-surface-border":
+      "color-mix(in srgb, var(--app-color-border) 72%, var(--ark-blue-7))",
+    "--app-surface-cool":
+      "linear-gradient(112deg, color-mix(in srgb, var(--app-color-panel-cool-emphasis) 48%, var(--app-color-panel-cool)) 0%, var(--app-color-panel-cool) 44%, color-mix(in srgb, var(--app-color-panel-cool) 82%, var(--app-color-panel)) 100%)",
+    "--app-surface-cool-emphasis":
+      "linear-gradient(108deg, var(--app-color-panel-cool-emphasis) 0%, var(--app-color-panel-cool) 52%, color-mix(in srgb, var(--app-color-panel-cool) 76%, var(--app-color-panel)) 100%)",
+    "--app-surface-flat": "var(--app-color-panel)",
+    "--app-surface-chrome": "var(--app-color-surface-chrome)",
+    "--app-list-selected-bg":
+      "linear-gradient(90deg, color-mix(in srgb, var(--ark-gray-4) 70%, var(--ark-blue-4)) 0%, color-mix(in srgb, var(--ark-gray-3) 82%, var(--ark-blue-3)) 100%)",
+    "--app-list-selected-inset": "inset 3px 0 0 var(--ark-blue-9)",
   },
   light: {},
   dark: {
@@ -102,6 +123,20 @@ export const appTheme = createTheme({
   primaryShade: 5,
   fontFamily: '"Segoe UI", Arial, sans-serif',
   defaultRadius: "md",
+  /** Aligns `gap="xs"|…` / `p="md"` with `--app-space-*` (overrides Mantine defaults). */
+  spacing: {
+    xxs: `${appTokens.spacing.xxs}px`,
+    xs: `${appTokens.spacing.xs}px`,
+    sm: `${appTokens.spacing.sm}px`,
+    md: `${appTokens.spacing.md}px`,
+    lg: `${appTokens.spacing.lg}px`,
+    xl: `${appTokens.spacing.xl}px`,
+  },
+  radius: {
+    sm: `${appTokens.radius.sm}px`,
+    md: `${appTokens.radius.md}px`,
+    lg: `${appTokens.radius.lg}px`,
+  },
   colors: {
     blue: [
       radixPalette.blue[11],
@@ -136,7 +171,14 @@ export const appTheme = createTheme({
     },
     Card: {
       defaultProps: {
+        withBorder: true,
         radius: "lg",
+        padding: "md",
+      },
+    },
+    Paper: {
+      defaultProps: {
+        radius: "md",
       },
     },
   },
