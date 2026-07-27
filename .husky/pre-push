@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+set -e
+. "$(dirname "$0")/common.sh"
+
+echo "husky (pre-push): typecheck..."
+npm_host run typecheck
+echo "husky (pre-push): typecheck ok — running tests..."
+npm_host test
+echo "husky (pre-push): lint..."
+npm_host run lint
+echo "husky (pre-push): ok"

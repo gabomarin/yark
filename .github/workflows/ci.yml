@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   check:
-    name: Typecheck and test
+    name: Typecheck, test, build, lint
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -33,5 +33,11 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Lint
+        run: npm run lint
+
       - name: Test
         run: npm test
+
+      - name: Build
+        run: npm run build

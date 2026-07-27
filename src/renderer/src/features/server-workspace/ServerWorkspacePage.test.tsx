@@ -189,7 +189,8 @@ describe("ServerWorkspacePage", () => {
 
   it("moves secondary panels into drawers in compact workspaces", async () => {
     vi.stubGlobal("matchMedia", (query: string) => ({
-      matches: query === "(max-width: 1599px)",
+      matches:
+        query === "(max-width: 1599px)" || /prefers-reduced-motion:\s*reduce/i.test(query),
       media: query,
       onchange: null,
       addListener: () => undefined,

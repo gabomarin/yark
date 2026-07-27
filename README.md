@@ -46,12 +46,30 @@ npm install
 npm run dev
 ```
 
+`npm install` also installs [Husky](https://typicode.github.io/husky/) git hooks (no extra setup).
+
 ```bash
 npm test
 npm run typecheck
+npm run lint
 npm run build
 npm run package
 ```
+
+### Git hooks
+
+| Hook | Runs |
+| --- | --- |
+| **pre-commit** | `typecheck` + `lint` |
+| **pre-push** | `typecheck` + `test` + `lint` |
+
+`npm run lint` currently enforces feature-file size limits (see [docs/component-structure.md](docs/component-structure.md)); it is the placeholder for a fuller linter later.
+
+Skip only in a real emergency: `git commit --no-verify` / `git push --no-verify`, or set `HUSKY=0`. Do **not** skip to land broken typecheck/tests — CI will still fail on PRs and `main`.
+
+If you use **WSL** on a Windows checkout (`/mnt/f/...`), hooks auto-run npm via `cmd.exe` (Windows Node). Native WSL `npm test` fails when `node_modules` were installed for win32 (missing `@rollup/rollup-linux-*`). Prefer Node **22.5+** on Windows; WSL Node 20 is below `engines`.
+
+GitHub Actions CI (`.github/workflows/ci.yml`) on every PR and push to `main`: **typecheck**, **lint**, **test**, and **build** on `windows-latest`. Playwright e2e / visual review stay local (see [docs/visual-testing.md](docs/visual-testing.md)).
 
 > The product target is **Windows** (ASA binaries, SteamCMD, PowerShell/robocopy). On WSL or non-native shells, verification is often more reliable via `cmd.exe /c` when Rollup or Electron optional dependencies misbehave.
 >
