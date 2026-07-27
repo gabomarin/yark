@@ -17,9 +17,20 @@
     box-shadow 120ms ease;
 }
 
+/* Default: always-visible control surface (Clusters members / list cards). */
+.row[data-variant="surface"] {
+  border-color: var(--ark-gray-a3);
+  background: var(--app-color-surface-control);
+}
+
 .row:hover {
   border-color: color-mix(in srgb, var(--app-color-border) 70%, transparent);
   background: color-mix(in srgb, var(--app-color-panel) 55%, transparent);
+}
+
+.row[data-variant="surface"]:hover {
+  border-color: var(--app-color-border);
+  background: var(--ark-gray-a3);
 }
 
 .row[data-selected] {
@@ -41,6 +52,9 @@
 }
 
 .body {
+  display: flex;
   flex: 1;
+  flex-direction: column;
   min-width: 0;
+  gap: 2px;
 }

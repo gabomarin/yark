@@ -35,10 +35,10 @@
 .item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--app-space-xs);
   width: 100%;
-  padding: 8px 10px;
-  border-radius: 12px;
+  padding: 6px 8px;
+  border-radius: var(--app-radius-control);
   border: 1px solid transparent;
   text-align: left;
   color: inherit;
@@ -71,10 +71,10 @@
 .thumb {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--app-color-cryo) 24%, var(--app-color-border));
   background: color-mix(in srgb, var(--app-color-cryo) 8%, var(--app-color-panel));
   color: var(--app-color-accent);
@@ -101,12 +101,16 @@
 }
 
 .itemName {
+  font-size: 12px;
+  line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .itemMeta {
+  font-size: 11px;
+  line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

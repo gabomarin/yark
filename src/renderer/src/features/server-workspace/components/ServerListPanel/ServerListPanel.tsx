@@ -54,18 +54,18 @@ export function ServerListPanel(props: Props): JSX.Element {
               onClick={() => props.onSelectServer(server.id)}
             >
               <span className={classes.thumb} data-tone={tone}>
-                <HardDrives size={18} weight="duotone" />
+                <HardDrives size={16} weight="duotone" />
               </span>
               <span className={classes.itemBody}>
-                <Text className={classes.itemName} fz="sm" fw={600} lineClamp={1}>
+                <Text className={classes.itemName} fw={600} title={server.name} lineClamp={1}>
                   {server.name}
                 </Text>
-                <Text className={classes.itemMeta} fz="xs" c="dimmed" lineClamp={1}>
+                <Text className={classes.itemMeta} c="dimmed" title={server.map} lineClamp={1}>
                   {server.map}
                 </Text>
               </span>
-              <ServerRuntimeStatusBadge status={status} className={classes.badge} />
-              <CaretRight size={14} className={classes.chevron} />
+              <ServerRuntimeStatusBadge status={status} size="xs" className={classes.badge} />
+              <CaretRight size={12} className={classes.chevron} />
             </UnstyledButton>
           );
         })}

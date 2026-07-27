@@ -10,7 +10,7 @@
 
 .body {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr) 260px;
+  grid-template-columns: 280px minmax(0, 1fr) 260px;
   flex: 1;
   min-height: 0;
   overflow: hidden;
