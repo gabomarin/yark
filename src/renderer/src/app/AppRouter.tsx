@@ -7,10 +7,6 @@ interface OverviewSlot {
   page: ReactNode;
 }
 
-interface SteamCmdSlot {
-  page: ReactNode;
-}
-
 interface LogsSlot {
   page: ReactNode;
 }
@@ -36,7 +32,6 @@ interface Props {
   onNavigate: (route: Route) => void;
   overview: OverviewSlot | null;
   clusters: ClustersSlot | null;
-  steamcmd: SteamCmdSlot | null;
   logs: LogsSlot | null;
   backups: BackupsSlot | null;
   settings: SettingsSlot | null;
@@ -66,13 +61,6 @@ export function AppRouter(props: Props): JSX.Element {
           <PlaceholderPage
             title="Backups"
             subtitle="Backup history and restore"
-          />
-        );
-      case "steamcmd":
-        return props.steamcmd?.page ?? (
-          <PlaceholderPage
-            title="SteamCMD"
-            subtitle="Install status, console, and operations"
           />
         );
       case "logs":

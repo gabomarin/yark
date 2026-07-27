@@ -40,3 +40,35 @@
 .actions {
   margin-top: var(--app-space-sm);
 }
+
+.cacheStrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--app-space-sm);
+  margin-top: var(--app-space-xs);
+}
+
+.cacheItem {
+  min-width: 0;
+  padding: var(--app-space-sm);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-control);
+  background: color-mix(in srgb, var(--ark-gray-2) 55%, transparent);
+}
+
+.cacheLabel {
+  display: inline-flex;
+  gap: var(--app-space-xxs);
+  align-items: center;
+  color: var(--app-color-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.cacheValue {
+  margin-top: var(--app-space-xxs);
+  color: var(--app-color-text);
+  font-family: Consolas, "Cascadia Mono", monospace;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}

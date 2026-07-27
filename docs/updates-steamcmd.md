@@ -23,7 +23,7 @@ ASA Steam app id: **`2430930`**.
 | Availability compare (`buildid` only) | `src/shared/server-update-status.ts` |
 | Contracts | `src/shared/ipc.ts`, `src/shared/types.ts`, `src/shared/steamcmd-progress.ts` |
 | IPC | `src/main/ipc-handlers.ts`, `src/preload/index.ts` |
-| UI | `src/renderer/src/features/steamcmd/*`, Overview cards, workspace SidePanel |
+| UI | `src/renderer/src/features/settings/*` (path/install), `steamcmd` progress dock, Overview cards, workspace SidePanel |
 
 ## Two caches (next to SteamCMD)
 
@@ -114,7 +114,7 @@ UI entry points: sidebar **SteamCMD** page + floating progress dock; Overview in
 
 ## Progress
 
-Live progress combines SteamCMD stdout `%` lines with disk estimates (`steamcmd-disk-progress.ts`: depot/downloading sizes under `force_install_dir`). The dock and SteamCMD page subscribe to `push:steamcmd-progress`.
+Live progress combines SteamCMD stdout `%` lines with disk estimates (`steamcmd-disk-progress.ts`: depot/downloading sizes under `force_install_dir`). The floating progress dock (and per-server Logs → Updates history) subscribe to `push:steamcmd-progress`. SteamCMD path/install/caches live under **Settings**.
 
 > Note: agent-context historically said “live log streaming during SteamCMD is pending.” The **console/progress push channel and dock are live**. What may still feel incomplete is richer per-file update-log streaming in the Logs UI—not the SteamCMD progress path.
 

@@ -28,7 +28,6 @@ import {
   type WorkspaceTab,
 } from "@features/server-workspace/ServerWorkspacePage";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
-import { SteamCmdPage } from "@features/steamcmd/SteamCmdPage";
 import { SteamCmdProgressDock } from "@features/steamcmd/SteamCmdProgressDock";
 import { SettingsPage } from "@features/settings/SettingsPage";
 import {
@@ -615,18 +614,6 @@ export function App(): JSX.Element {
             />
           ),
         }}
-        steamcmd={{
-          page: (
-            <SteamCmdPage
-              steamCmdStatus={steamCmdStatus}
-              steamCmdConsole={steamCmdConsole}
-              officialVersion={officialVersion}
-              onInstallSteamCmd={() => void runAction(() => window.api.installSteamCmd())}
-              onPickSteamCmdPath={() => void pickSteamCmdPath()}
-              onCancelSteamCmd={() => void runAction(() => window.api.cancelSteamCmd())}
-            />
-          ),
-        }}
         logs={{
           page: (
             <LogsPage
@@ -655,7 +642,6 @@ export function App(): JSX.Element {
               onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
               onPickSteamCmdPath={() => void pickSteamCmdPath()}
               onInstallSteamCmd={() => void runAction(() => window.api.installSteamCmd())}
-              onOpenSteamCmdPage={() => navigate("steamcmd")}
             />
           ),
         }}
@@ -666,13 +652,12 @@ export function App(): JSX.Element {
   return (
     <>
       {renderMain()}
-      {steamCmdBusy && steamCmdStatus !== null && route !== "steamcmd" && (
+      {steamCmdBusy && steamCmdStatus !== null && (
         <SteamCmdProgressDock
           status={steamCmdStatus}
           console={steamCmdConsole}
           serverName={steamCmdServerName}
           onCancel={() => void runAction(() => window.api.cancelSteamCmd())}
-          onOpenSteamCmdPage={() => navigate("steamcmd")}
         />
       )}
     </>

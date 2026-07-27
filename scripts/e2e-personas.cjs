@@ -111,8 +111,8 @@ async function runExperiencedFlow(page, serverName) {
   // Experienced-user navigation through operational sections.
   await page.getByRole("button", { name: "Logs" }).first().click();
   await page.getByRole("heading", { name: "Logs" }).waitFor({ timeout: 10000 });
-  await page.getByRole("button", { name: "SteamCMD" }).first().click();
-  await page.getByText(/SteamCMD/i).first().waitFor({ timeout: 10000 });
+  await page.getByRole("button", { name: "Settings" }).first().click();
+  await page.getByRole("heading", { name: "Settings" }).waitFor({ timeout: 10000 });
   await page.getByRole("button", { name: "Servers" }).first().click();
   await waitOverviewReady(page);
 

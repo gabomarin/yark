@@ -11,7 +11,6 @@ interface Props {
   console: SteamCmdConsoleSnapshot | null;
   serverName?: string | null;
   onCancel: () => void;
-  onOpenSteamCmdPage: () => void;
 }
 
 const OPERATION_LABEL: Record<NonNullable<SteamCmdStatus["operation"]>, string> = {
@@ -148,9 +147,6 @@ export function SteamCmdProgressDock(props: Props): JSX.Element {
                 <CaretDown size={14} />
               </ActionIcon>
             </Tooltip>
-            <Button size="xs" variant="default" onClick={props.onOpenSteamCmdPage}>
-              View SteamCMD
-            </Button>
             <Button
               size="xs"
               color="red"
@@ -180,7 +176,7 @@ export function SteamCmdProgressDock(props: Props): JSX.Element {
           className={classes.console}
           lines={lines}
           maxLines={60}
-          emptyText="Esperando salida de SteamCMD…"
+          emptyText="Waiting for SteamCMD output…"
         />
       </Stack>
     </aside>

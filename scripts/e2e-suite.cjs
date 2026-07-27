@@ -133,7 +133,7 @@ async function run() {
     cloneName = await cloneServer(page, serverName);
 
     // Shell navigation smoke across main routes
-    for (const label of ["Clusters", "Backups", "SteamCMD", "Logs", "Servers"]) {
+    for (const label of ["Clusters", "Backups", "Logs", "Settings", "Servers"]) {
       await page.getByRole("button", { name: label, exact: true }).first().click();
       await page.waitForTimeout(250);
     }

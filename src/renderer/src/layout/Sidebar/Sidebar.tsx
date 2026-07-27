@@ -1,5 +1,4 @@
 import {
-  ArrowsClockwise,
   Circle,
   Dna,
   FileText,
@@ -18,7 +17,7 @@ import {
 } from "@mantine/core";
 import classes from "./Sidebar.module.css";
 
-export type Route = "overview" | "clusters" | "backups" | "steamcmd" | "logs" | "settings";
+export type Route = "overview" | "clusters" | "backups" | "logs" | "settings";
 
 interface NavItem {
   id: Route;
@@ -30,7 +29,6 @@ const NAV_ITEMS: NavItem[] = [
   { id: "overview", label: "Servers", icon: SquaresFour },
   { id: "clusters", label: "Clusters", icon: ShareNetwork },
   { id: "backups", label: "Backups", icon: HardDrives },
-  { id: "steamcmd", label: "SteamCMD", icon: ArrowsClockwise },
   { id: "logs", label: "Logs", icon: FileText },
   { id: "settings", label: "Settings", icon: GearSix },
 ];
@@ -90,7 +88,7 @@ export function Sidebar(props: Props): JSX.Element {
         justify="flex-start"
         leftSection={<Circle size={12} weight="fill" className={props.steamCmdDetected ? classes.okDot : classes.badDot} />}
         className={classes.navButton}
-        onClick={() => props.onNavigate("steamcmd")}
+        onClick={() => props.onNavigate("settings")}
       >
         {steamCmdLabel}
       </Button>
