@@ -26,7 +26,7 @@ async function run() {
       `Unexpected title. Expected to include 'Servers' or 'YARK', got: ${h1}`,
     );
 
-    const navLabels = ["Servers", "Clusters", "Backups", "SteamCMD", "Logs"];
+    const navLabels = ["Servers", "Clusters", "Backups", "Logs", "Settings"];
     for (const label of navLabels) {
       const btn = window.getByRole("button", { name: label, exact: true }).first();
       assert.ok((await btn.count()) > 0, `Missing sidebar nav: ${label}`);

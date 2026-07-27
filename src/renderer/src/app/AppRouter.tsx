@@ -7,10 +7,6 @@ interface OverviewSlot {
   page: ReactNode;
 }
 
-interface SteamCmdSlot {
-  page: ReactNode;
-}
-
 interface LogsSlot {
   page: ReactNode;
 }
@@ -23,20 +19,22 @@ interface ClustersSlot {
   page: ReactNode;
 }
 
+interface SettingsSlot {
+  page: ReactNode;
+}
+
 interface Props {
   route: Route;
   appVersion: string;
   officialVersion: string | null;
   steamCmdDetected: boolean;
   steamCmdRunning: boolean;
-  openNativeTerminalOnStart: boolean;
-  onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
   onNavigate: (route: Route) => void;
   overview: OverviewSlot | null;
   clusters: ClustersSlot | null;
-  steamcmd: SteamCmdSlot | null;
   logs: LogsSlot | null;
   backups: BackupsSlot | null;
+  settings: SettingsSlot | null;
   error?: string | null;
   onDismissError?: () => void;
 }
@@ -65,13 +63,6 @@ export function AppRouter(props: Props): JSX.Element {
             subtitle="Backup history and restore"
           />
         );
-      case "steamcmd":
-        return props.steamcmd?.page ?? (
-          <PlaceholderPage
-            title="SteamCMD"
-            subtitle="Install status, console, and operations"
-          />
-        );
       case "logs":
         return props.logs?.page ?? (
           <PlaceholderPage
@@ -80,7 +71,7 @@ export function AppRouter(props: Props): JSX.Element {
           />
         );
       case "settings":
-        return (
+        return props.settings?.page ?? (
           <PlaceholderPage
             title="Settings"
             subtitle="General application settings"
@@ -99,8 +90,6 @@ export function AppRouter(props: Props): JSX.Element {
       steamCmdRunning={props.steamCmdRunning}
       officialVersion={props.officialVersion}
       appVersion={props.appVersion}
-      openNativeTerminalOnStart={props.openNativeTerminalOnStart}
-      onOpenNativeTerminalOnStartChange={props.onOpenNativeTerminalOnStartChange}
       error={props.error}
       onDismissError={props.onDismissError}
     >

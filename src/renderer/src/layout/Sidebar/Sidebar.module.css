@@ -120,10 +120,3 @@
   color: var(--app-color-cryo);
   font-family: Consolas, "Cascadia Mono", monospace;
 }
-
-.preference {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 0 6px;
-}

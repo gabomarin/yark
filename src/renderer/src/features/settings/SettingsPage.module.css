@@ -1,0 +1,133 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+}
+
+.sectionRule {
+  height: 1px;
+  background: var(--app-color-border-subtle);
+}
+
+.settingRow {
+  display: flex;
+  gap: var(--app-space-md);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.settingCopy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.settingControl {
+  flex: 0 0 auto;
+  padding-top: 2px;
+}
+
+.settingBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+}
+
+.steamCmdRow {
+  display: flex;
+  gap: var(--app-space-sm);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: var(--app-space-sm) var(--app-space-md);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-control);
+  background: color-mix(in srgb, var(--ark-gray-2) 72%, transparent);
+}
+
+.pathValue {
+  flex: 1 1 280px;
+  min-width: 0;
+  color: var(--app-color-text);
+  font-family: Consolas, "Cascadia Mono", monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.pathValueMuted {
+  color: var(--app-color-muted);
+  font-style: italic;
+}
+
+.steamCmdActions {
+  flex: 0 0 auto;
+}
+
+.statusReady {
+  color: var(--app-color-ok);
+}
+
+.statusNeedsSetup {
+  color: var(--app-color-warn);
+}
+
+.cacheSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.cacheToggle {
+  display: block;
+  width: 100%;
+  padding: var(--app-space-xxs) 0;
+  border-radius: var(--app-radius-sm);
+  color: var(--app-color-text);
+  text-align: left;
+}
+
+.cacheToggle:hover {
+  color: var(--app-color-cryo);
+}
+
+.cacheList {
+  padding: var(--app-space-sm);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-control);
+  background: color-mix(in srgb, var(--ark-gray-2) 40%, transparent);
+}
+
+.cacheRow {
+  display: flex;
+  gap: var(--app-space-sm);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.cacheCopy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cachePath {
+  margin-top: 2px;
+  color: var(--app-color-muted);
+  font-family: Consolas, "Cascadia Mono", monospace;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.cacheActions {
+  flex: 0 0 auto;
+  padding-top: 2px;
+}
+
+.about {
+  padding: 0 2px;
+}
+
+@media (max-width: 720px) {
+  .cacheRow {
+    flex-direction: column;
+  }
+}

@@ -57,7 +57,7 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
   - **Players**: `retainCountPlayers` (per-player pools); RCON `ListPlayers` poll (~10s) + status ticks + mtime safety net; connect/disconnect archives.
   - **INI**: `retainCountIni`; manual + automatic `ini_save` after successful INI save (debounced ~2s).
   - Workspace UI: destination/schedule only on World subtab; auto-refresh (~12s) + Refresh button + `push:backups-changed` for live list updates.
-- SteamCMD progress/console streaming is live via `push:steamcmd-progress` (dock + SteamCMD page). Richer per-file update-log streaming in Logs may still feel incomplete. Full workflows: [updates-steamcmd.md](updates-steamcmd.md).
+- SteamCMD progress/console streaming is live via `push:steamcmd-progress` (floating dock during jobs). Path/install are on **Settings**. Richer per-file update-log streaming in Logs may still feel incomplete. Full workflows: [updates-steamcmd.md](updates-steamcmd.md).
 - Real E2E validation against host-side ASA binaries and SteamCMD on a production Windows host is still not covered.
 
 ## Recommended verification

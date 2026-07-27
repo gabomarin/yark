@@ -1,8 +1,8 @@
 import { BrowserWindow, dialog, ipcMain, shell, type OpenDialogOptions, type SaveDialogOptions } from "electron";
 import { spawn } from "node:child_process";
 import { mkdir } from "node:fs/promises";
-import { IPC, type IpcResult, type PickPathKind } from "../shared/ipc";
-import type { ServerIniPayload, ServerProfileInput, StartServerOptions } from "../shared/types";
+import { IPC, type IpcResult, type PickPathKind, type AppDataFolderKind } from "../shared/ipc";
+import type { ServerIniPayload, ServerProfileInput, StartServerOptions, SteamCmdCacheKind } from "../shared/types";
 import type { BackupService } from "../backend/domains/backups/backup-service";
 import type { InstanceService } from "../backend/domains/instances/instance-service";
 import type { IniService } from "../backend/domains/config/ini-service";
@@ -16,6 +16,13 @@ import type {
   BackupKind,
   BackupPolicy,
 } from "../shared/types";
+
+export interface AppDataFolderRoots {
+  app: string;
+  backups: string;
+  updateLogs: string;
+  steamcmd: string;
+}
 
 function wrap<T>(fn: () => T | Promise<T>): Promise<IpcResult<T>> {
   return Promise.resolve()
@@ -45,6 +52,7 @@ export function registerIpcHandlers(
   updates: UpdateService,
   mods: ModsService,
   backups: BackupService,
+  appDataFolders: AppDataFolderRoots,
 ): void {
   ipcMain.handle(IPC.serversList, () => wrap(() => instances.list()));
 
@@ -143,6 +151,21 @@ export function registerIpcHandlers(
     wrap(() => updates.getSteamCmdConsole(limit)),
   );
 
+  ipcMain.handle(IPC.steamcmdOpenCache, (_e, kind: SteamCmdCacheKind) =>
+    wrap(async () => {
+      const targetPath = updates.resolveSteamCmdCachePath(kind);
+      await mkdir(targetPath, { recursive: true });
+      const error = await shell.openPath(targetPath);
+      if (error) {
+        throw new Error(`Could not open cache folder: ${error}`);
+      }
+    }),
+  );
+
+  ipcMain.handle(IPC.steamcmdClearCache, (_e, kind: SteamCmdCacheKind) =>
+    wrap(() => updates.clearSteamCmdCache(kind)),
+  );
+
   ipcMain.handle(IPC.serversStatuses, () =>
     wrap(() => instances.statuses()),
   );
@@ -182,6 +205,37 @@ export function registerIpcHandlers(
         }
         return result.filePaths[0] ?? null;
       }),
+  );
+
+  ipcMain.handle(IPC.appListDataFolders, () =>
+    wrap(() => [
+      { kind: "app" as const, label: "App data", path: appDataFolders.app },
+      { kind: "backups" as const, label: "Backups", path: appDataFolders.backups },
+      {
+        kind: "updateLogs" as const,
+        label: "Update logs",
+        path: appDataFolders.updateLogs,
+      },
+      {
+        kind: "steamcmd" as const,
+        label: "Bundled SteamCMD",
+        path: appDataFolders.steamcmd,
+      },
+    ]),
+  );
+
+  ipcMain.handle(IPC.appOpenDataFolder, (_e, kind: AppDataFolderKind) =>
+    wrap(async () => {
+      const targetPath = appDataFolders[kind];
+      if (targetPath === undefined) {
+        throw new Error(`Unknown app data folder: ${String(kind)}`);
+      }
+      await mkdir(targetPath, { recursive: true });
+      const error = await shell.openPath(targetPath);
+      if (error.length > 0) {
+        throw new Error(`Could not open folder: ${error}`);
+      }
+    }),
   );
 
   ipcMain.handle(IPC.iniRead, (_e, serverId: string) =>

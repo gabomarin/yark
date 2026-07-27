@@ -115,6 +115,12 @@ void app.whenReady().then(() => {
     updateService,
     modsService,
     backupService,
+    {
+      app: userData,
+      backups: join(userData, "backups"),
+      updateLogs: join(userData, "update-logs"),
+      steamcmd: join(userData, "steamcmd"),
+    },
   );
 
   processManager.on("status", (info: ServerRuntimeInfo) => {

@@ -14,8 +14,6 @@ describe("AppShellLayout", () => {
           steamCmdRunning={false}
           officialVersion={null}
           appVersion="0.1.0"
-          openNativeTerminalOnStart={false}
-          onOpenNativeTerminalOnStartChange={vi.fn()}
         >
           <div>page-body</div>
         </AppShellLayout>
@@ -38,8 +36,6 @@ describe("AppShellLayout", () => {
           steamCmdRunning={false}
           officialVersion={null}
           appVersion="0.1.0"
-          openNativeTerminalOnStart={false}
-          onOpenNativeTerminalOnStartChange={vi.fn()}
           error="Boom"
           onDismissError={onDismissError}
         >

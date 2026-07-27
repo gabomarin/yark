@@ -136,12 +136,12 @@ async function run() {
         "Some card is missing a primary action",
       );
 
-      // --- SteamCMD ---
-      await goNav(page, "SteamCMD");
+      // --- Settings (SteamCMD path lives here) ---
+      await goNav(page, "Settings");
       await page.waitForTimeout(250);
-      const steamLayout = await measureLayout(page);
-      const steamShot = await shot(page, outDir, `${size.name}-steamcmd`);
-      assert.equal(steamLayout.hasHorizontalOverflow, false, `Overflow SteamCMD ${size.name}`);
+      const settingsLayout = await measureLayout(page);
+      const settingsShot = await shot(page, outDir, `${size.name}-settings`);
+      assert.equal(settingsLayout.hasHorizontalOverflow, false, `Overflow Settings ${size.name}`);
 
       // --- Logs ---
       await goNav(page, "Logs");
@@ -205,7 +205,7 @@ async function run() {
         overviewScroll,
         screenshots: {
           overview: overviewShot,
-          steamcmd: steamShot,
+          settings: settingsShot,
           logsEvents: logsEventsShot,
           logsUpdates: logsUpdatesShot,
           workspace: workspaceShots,

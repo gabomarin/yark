@@ -53,6 +53,8 @@ function createApiMock(): RendererApi {
         updatedAt: "2026-07-24T00:00:00.000Z",
       },
     }),
+    openSteamCmdCache: vi.fn(),
+    clearSteamCmdCache: vi.fn(),
     getStatuses: vi.fn().mockResolvedValue({ ok: true, data: [] }),
     getInstallationInfo: vi.fn().mockResolvedValue({
       ok: true,
@@ -66,6 +68,8 @@ function createApiMock(): RendererApi {
     sendRconCommand: vi.fn(),
     recentEvents: vi.fn().mockResolvedValue({ ok: true, data: [] }),
     pickPath: vi.fn(),
+    listAppDataFolders: vi.fn().mockResolvedValue({ ok: true, data: [] }),
+    openAppDataFolder: vi.fn(),
     readServerIni: vi.fn(),
     openServerIniInEditor: vi.fn(),
     previewServerIni: vi.fn(),

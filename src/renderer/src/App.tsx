@@ -9,6 +9,7 @@ import type {
   ServerInstallationInfo,
   ServerProfile,
   ServerRuntimeInfo,
+  SteamCmdCacheKind,
   SteamCmdConsoleSnapshot,
   SteamCmdStatus,
 } from "@shared/types";
@@ -28,11 +29,15 @@ import {
   type WorkspaceTab,
 } from "@features/server-workspace/ServerWorkspacePage";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
-import { SteamCmdPage } from "@features/steamcmd/SteamCmdPage";
 import { SteamCmdProgressDock } from "@features/steamcmd/SteamCmdProgressDock";
+import { SettingsPage } from "@features/settings/SettingsPage";
+import {
+  readDefaultBaseFolderPref,
+  readOpenNativeTerminalPref,
+  writeDefaultBaseFolderPref,
+  writeOpenNativeTerminalPref,
+} from "@features/settings/settingsModel";
 import type { Route } from "@layout/Sidebar/Sidebar";
-
-const OPEN_NATIVE_TERMINAL_PREF_KEY = "overview.openNativeTerminalOnStart";
 
 type Overlay =
   | { kind: "create" }
@@ -60,21 +65,24 @@ export function App(): JSX.Element {
   const [steamCmdConsole, setSteamCmdConsole] = useState<SteamCmdConsoleSnapshot | null>(null);
   const [route, setRoute] = useState<Route>("overview");
   const [overlay, setOverlay] = useState<Overlay>(null);
-  const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState<boolean>(() => {
-    const stored = window.localStorage.getItem(OPEN_NATIVE_TERMINAL_PREF_KEY);
-    return stored === "1";
-  });
+  const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState(
+    readOpenNativeTerminalPref,
+  );
+  const [defaultBaseFolder, setDefaultBaseFolder] = useState<string | null>(
+    readDefaultBaseFolderPref,
+  );
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [checkingUpdates, setCheckingUpdates] = useState(false);
   const [overviewLoading, setOverviewLoading] = useState(true);
 
   useEffect(() => {
-    window.localStorage.setItem(
-      OPEN_NATIVE_TERMINAL_PREF_KEY,
-      openNativeTerminalOnStart ? "1" : "0",
-    );
+    writeOpenNativeTerminalPref(openNativeTerminalOnStart);
   }, [openNativeTerminalOnStart]);
+
+  useEffect(() => {
+    writeDefaultBaseFolderPref(defaultBaseFolder);
+  }, [defaultBaseFolder]);
 
   const runningServers = Array.from(statuses.values()).filter(
     (status) => status.status === "running",
@@ -332,6 +340,50 @@ export function App(): JSX.Element {
     await refresh();
   }, [refresh, steamCmdStatus?.executablePath]);
 
+  const openSteamCmdCache = useCallback(
+    (kind: SteamCmdCacheKind) => {
+      void runAction(() => window.api.openSteamCmdCache(kind));
+    },
+    [runAction],
+  );
+
+  const clearSteamCmdCache = useCallback(
+    (kind: SteamCmdCacheKind) => {
+      const label = kind === "depot" ? "download cache" : "shared server files";
+      const detail =
+        kind === "depot"
+          ? "Removes temporary files Steam already downloaded. The next install or update will download them again."
+          : "Removes the ready-made ARK server copy used to set up new servers faster. The next install will rebuild it first.";
+      modals.openConfirmModal({
+        title: `Clear ${label}?`,
+        children: (
+          <Alert color="orange" variant="light" title="Cannot be undone">
+            {detail}
+          </Alert>
+        ),
+        labels: { confirm: "Clear cache", cancel: "Cancel" },
+        confirmProps: { color: "red" },
+        onConfirm: () => {
+          void (async () => {
+            setError(null);
+            const result = await window.api.clearSteamCmdCache(kind);
+            if (!result.ok) {
+              setError(result.error ?? `Could not clear ${label}`);
+              return;
+            }
+            notifications.show({
+              title: `${label.charAt(0).toUpperCase()}${label.slice(1)} cleared`,
+              message: result.data,
+              color: "teal",
+            });
+            await refresh();
+          })();
+        },
+      });
+    },
+    [refresh],
+  );
+
   const restartServer = useCallback(
     async (id: string) => {
       setError(null);
@@ -454,8 +506,6 @@ export function App(): JSX.Element {
           steamCmdRunning={steamCmdBusy}
           officialVersion={officialVersion}
           appVersion={APP_VERSION}
-          openNativeTerminalOnStart={openNativeTerminalOnStart}
-          onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
           error={error}
           onDismissError={() => setError(null)}
         >
@@ -527,6 +577,7 @@ export function App(): JSX.Element {
       return (
         <ServerForm
           initial={overlay.kind === "edit" ? overlay.profile : null}
+          defaultBaseFolder={defaultBaseFolder}
           onCancel={() => setOverlay(null)}
           onSaved={(created) => {
             if (overlay.kind === "create" && created !== undefined) {
@@ -548,8 +599,6 @@ export function App(): JSX.Element {
         officialVersion={officialVersion}
         steamCmdDetected={steamCmdStatus?.detected === true}
         steamCmdRunning={steamCmdBusy}
-        openNativeTerminalOnStart={openNativeTerminalOnStart}
-        onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
         onNavigate={navigate}
         error={error}
         onDismissError={() => setError(null)}
@@ -620,18 +669,6 @@ export function App(): JSX.Element {
             />
           ),
         }}
-        steamcmd={{
-          page: (
-            <SteamCmdPage
-              steamCmdStatus={steamCmdStatus}
-              steamCmdConsole={steamCmdConsole}
-              officialVersion={officialVersion}
-              onInstallSteamCmd={() => void runAction(() => window.api.installSteamCmd())}
-              onPickSteamCmdPath={() => void pickSteamCmdPath()}
-              onCancelSteamCmd={() => void runAction(() => window.api.cancelSteamCmd())}
-            />
-          ),
-        }}
         logs={{
           page: (
             <LogsPage
@@ -651,6 +688,23 @@ export function App(): JSX.Element {
             />
           ),
         }}
+        settings={{
+          page: (
+            <SettingsPage
+              appVersion={APP_VERSION}
+              steamCmdStatus={steamCmdStatus}
+              steamCmdBusy={steamCmdBusy}
+              openNativeTerminalOnStart={openNativeTerminalOnStart}
+              onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
+              defaultBaseFolder={defaultBaseFolder}
+              onDefaultBaseFolderChange={setDefaultBaseFolder}
+              onPickSteamCmdPath={() => void pickSteamCmdPath()}
+              onInstallSteamCmd={() => void runAction(() => window.api.installSteamCmd())}
+              onOpenSteamCmdCache={openSteamCmdCache}
+              onClearSteamCmdCache={clearSteamCmdCache}
+            />
+          ),
+        }}
       />
     );
   };
@@ -658,13 +712,12 @@ export function App(): JSX.Element {
   return (
     <>
       {renderMain()}
-      {steamCmdBusy && steamCmdStatus !== null && route !== "steamcmd" && (
+      {steamCmdBusy && steamCmdStatus !== null && (
         <SteamCmdProgressDock
           status={steamCmdStatus}
           console={steamCmdConsole}
           serverName={steamCmdServerName}
           onCancel={() => void runAction(() => window.api.cancelSteamCmd())}
-          onOpenSteamCmdPage={() => navigate("steamcmd")}
         />
       )}
     </>
