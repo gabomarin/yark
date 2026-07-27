@@ -7,9 +7,11 @@ import {
   ShieldCheck,
   Wrench,
 } from "@phosphor-icons/react";
-import { Button, Card, Stack, Text, Textarea } from "@mantine/core";
+import { Button, Stack, Text, Textarea } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { useState } from "react";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { serverRuntimeStatusLabel } from "@ui/ServerRuntimeStatusBadge/serverRuntimeStatus";
 import classes from "./SidePanel.module.css";
 
 interface Props {
@@ -27,14 +29,6 @@ interface Props {
   onBroadcast: (message: string) => void;
   onKill: () => void;
 }
-
-const STATUS_LABEL: Record<string, string> = {
-  stopped: "Stopped",
-  starting: "Starting",
-  running: "Running",
-  stopping: "Stopping",
-  error: "Error",
-};
 
 function MetaRow({ label, value }: { label: string; value: string }): JSX.Element {
   return (
@@ -73,17 +67,17 @@ export function SidePanel(props: Props): JSX.Element {
 
   return (
     <aside className={classes.panel}>
-      <Card withBorder padding="sm" radius="md" className={classes.card}>
+      <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.card}>
         <Stack gap={6}>
           <Text className={classes.widgetTitle}>Status</Text>
-          <MetaRow label="Status" value={STATUS_LABEL[status] ?? status} />
+          <MetaRow label="Status" value={serverRuntimeStatusLabel(status)} />
           <MetaRow label="Started" value={uptime} />
           <MetaRow label="Version" value={version} />
           <MetaRow label="Cluster" value={props.server.clusterId ?? "No cluster"} />
         </Stack>
-      </Card>
+      </AppSurfaceCard>
 
-      <Card withBorder padding="sm" radius="md" className={classes.card}>
+      <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.card}>
         <Stack gap={6}>
           <Text className={classes.widgetTitle}>Quick actions</Text>
           <Button
@@ -179,7 +173,7 @@ export function SidePanel(props: Props): JSX.Element {
             Force close
           </Button>
         </Stack>
-      </Card>
+      </AppSurfaceCard>
     </aside>
   );
 }

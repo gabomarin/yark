@@ -18,9 +18,9 @@ across features. Prefer feature-local composition.
 
 | Level | Meaning here | Where it lives | Examples |
 | --- | --- | --- | --- |
-| **Atom** | Tiny presentational unit; little/no feature logic | `src/renderer/src/shared/ui/*` or a few lines inside a molecule | Mantine `Badge`/`Button`, `SearchField`, icon chrome |
-| **Molecule** | One reusable UI idea for a feature | `features/<area>/components/` | `ClusterMemberRow`, `ClusterStatusBadge`, `EventDetailsBody` |
-| **Organism** | Section that composes molecules + local state wiring | `features/<area>/components/` | `ClusterDetailPanel`, `ClusterEmptyState`, `ServerLogsPanel` |
+| **Atom** | Tiny presentational unit; little/no feature logic | `src/renderer/src/shared/ui/*` | `AppSurfaceCard`, `EmptyState`, `SearchField`, `ServerRuntimeStatusBadge`, `SelectableListRow`, `AccentIconTile` |
+| **Molecule** | One reusable UI idea for a feature | `features/<area>/components/` | `ClusterMemberRow`, `ServerCardMetaItem`, `EventDetailsBody`, `MetaStrip` (Clusters) |
+| **Organism** | Section that composes molecules + local state wiring | `features/<area>/components/` | `ClusterDetailPanel`, `ServerCard`, `ServerLogsPanel` |
 | **Template / Page** | Route-level layout + data props from `App` | `features/<area>/<Name>Page.tsx` | `ClustersPage`, `LogsPage`, `BackupsPage` |
 
 Shared shell pieces (`PageScaffold`, `Sidebar`) stay under `layout/` / `app/`.
@@ -51,12 +51,17 @@ src/renderer/src/features/<area>/
   <area>Model.ts                 # pure helpers + derived view data (no React)
   <area>.module.css              # feature styles (shared by local components)
   components/
-    <OrganismOrMolecule>.tsx
+    <Name>/                      # prefer a folder when the piece has its own CSS (or tests)
+      <Name>.tsx
+      <Name>.module.css          # optional — omit if styles stay in the feature CSS
+    <TinyOnce.tsx>               # flat file OK for tiny one-offs with no CSS module
 ```
 
 - Prefer **domain names**: `ClusterDetailPanel`, not `RightColumn`.
 - One primary export per file matching the file name.
 - Keep CSS modules **feature-scoped** unless the atom is in `shared/ui`.
+- **Folder rule:** if a component already has (or needs) its own `.module.css`, put it in `components/<Name>/`. Do not invent a CSS module just to justify a folder when styles correctly live in the feature CSS.
+- `shared/ui/<Name>/` always uses a per-component folder (tsx + optional css + helpers).
 - Tests: page tests for user flows; add component tests only for non-trivial
   molecules/organisms.
 
@@ -109,8 +114,27 @@ cap on `src/renderer/src/features/**/*.{ts,tsx}` (excluding `*.test.*`):
   (prefer splitting instead; see
   [issue #44](https://github.com/gabomarin/yark/issues/44)).
 
+## Deferred structural migrations
+
+These files remain **grandfathered** in the baseline. Using shared atoms
+(`AppSurfaceCard`, `EmptyState`, …) or moving into a `components/<Name>/` folder
+is **not** a structural split. Future #44 slices should extract along the
+boundaries below (one area per PR when practical).
+
+| File (baseline path) | Future extraction boundary |
+| --- | --- |
+| `features/backups/BackupsPage.tsx` | Fleet health strip / volume cards; per-server policy expand panel; cleanup + disk-alert modals |
+| `features/backups/ServerBackupPanel.tsx` | Kind settings block; backup list toolbar; backup row molecule; restore/delete confirm flows |
+| `features/logs/ServerLogsPanel.tsx` | Event list + event detail; update-job history/detail; log-file viewer pane |
+| `features/server-workspace/components/ConfigurationEditor/ConfigurationEditor.tsx` | Filter bar; INI section/group accordion; setting row editor controls |
+| `features/server-workspace/components/ConfigurationWizard/ConfigurationWizard.tsx` | Per-step panels (experience / rates / structure); change-summary review step |
+| `features/server-workspace/components/ModsManager/ModsManager.tsx` | Mod list rows; add/remove toolbar (when the panel is wired back into the Server tab) |
+
+Line caps stay in [`component-structure-baseline.json`](../scripts/component-structure-baseline.json); do not raise them while deferring — shrink the file or update the baseline intentionally when splitting.
+
 ## Related docs
 
+- Design system / surfaces: [design-system.md](design-system.md)
 - Shell / feature status: [agent-context.md](agent-context.md)
 - Visual review after layout splits: [visual-testing.md](visual-testing.md)
 - Hooks + CI: [README.md](../README.md) (Local development), [AGENTS.md](../AGENTS.md)

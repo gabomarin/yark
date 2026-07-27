@@ -101,34 +101,14 @@
 }
 
 .panel {
-  border-radius: var(--app-radius-lg);
-  border-color: color-mix(in srgb, var(--app-color-border) 72%, var(--ark-blue-7));
-  background:
-    linear-gradient(
-      112deg,
-      color-mix(in srgb, var(--app-color-panel-cool-emphasis) 48%, var(--app-color-panel-cool)) 0%,
-      var(--app-color-panel-cool) 44%,
-      color-mix(in srgb, var(--app-color-panel-cool) 82%, var(--app-color-panel)) 100%
-    );
+  /* Prefer AppSurfaceCard; keep class for transitional fill helpers. */
+  background-image: var(--app-surface-cool);
+  border-color: var(--app-surface-border);
 }
 
-.historyPanel {
-  background:
-    linear-gradient(
-      112deg,
-      color-mix(in srgb, var(--app-color-panel-cool-emphasis) 38%, var(--app-color-panel-cool)) 0%,
-      color-mix(in srgb, var(--app-color-panel-cool) 88%, var(--app-color-surface-chrome)) 100%
-    );
-}
-
+.historyPanel,
 .detailPanel {
-  background:
-    linear-gradient(
-      112deg,
-      color-mix(in srgb, var(--app-color-panel-cool-emphasis) 52%, var(--app-color-panel-cool)) 0%,
-      var(--app-color-panel-cool) 46%,
-      color-mix(in srgb, var(--app-color-panel-cool) 82%, var(--app-color-panel)) 100%
-    );
+  background-image: var(--app-surface-cool);
 }
 
 .fillPanel {

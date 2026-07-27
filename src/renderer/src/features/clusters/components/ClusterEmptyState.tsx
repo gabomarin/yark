@@ -1,6 +1,8 @@
 import { FolderSimple } from "@phosphor-icons/react";
-import { Card, Stack, Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
 import type { ServerProfile } from "@shared/types";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { groupServersByClusterDir } from "../clusterModel";
 import classes from "../clusters.module.css";
 import { ClusterMemberRow } from "./ClusterMemberRow";
@@ -15,13 +17,22 @@ export function ClusterEmptyState(props: Props): JSX.Element {
   const incompleteGroups = groupServersByClusterDir(props.dirWithoutIdServers);
 
   return (
-    <Card withBorder className={classes.emptyCard}>
-      <div className={classes.emptyState}>
-        <div className={classes.emptyIcon}>
-          <FolderSimple size={24} />
-        </div>
-        <Text fw={600}>No clusters configured</Text>
-        {props.dirWithoutIdServers.length > 0 ? (
+    <AppSurfaceCard fill className={classes.emptyCard}>
+      <EmptyState
+        layout="stacked"
+        icon={<FolderSimple size={24} />}
+        title="No clusters configured"
+        description={
+          props.dirWithoutIdServers.length > 0 ? undefined : (
+            <Text c="dimmed" size="sm" maw={480} ta="center">
+              {props.serverCount === 0
+                ? "Create a server first, then set a Cluster ID and shared cluster directory so maps can transfer together."
+                : "Open a server and set the same Cluster ID plus one shared cluster directory on two or more maps to see compliance here."}
+            </Text>
+          )
+        }
+      >
+        {props.dirWithoutIdServers.length > 0 && (
           <Stack gap="sm" className={classes.incompleteBlock}>
             <Text c="dimmed" size="sm" ta="center" maw={480}>
               {props.dirWithoutIdServers.length === 1
@@ -48,14 +59,8 @@ export function ClusterEmptyState(props: Props): JSX.Element {
               ))}
             </div>
           </Stack>
-        ) : (
-          <Text c="dimmed" size="sm" maw={480} ta="center">
-            {props.serverCount === 0
-              ? "Create a server first, then set a Cluster ID and shared cluster directory so maps can transfer together."
-              : "Open a server and set the same Cluster ID plus one shared cluster directory on two or more maps to see compliance here."}
-          </Text>
         )}
-      </div>
-    </Card>
+      </EmptyState>
+    </AppSurfaceCard>
   );
 }

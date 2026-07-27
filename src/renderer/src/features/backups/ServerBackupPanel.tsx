@@ -12,7 +12,6 @@ import {
   ActionIcon,
   Badge,
   Button,
-  Card,
   Checkbox,
   Group,
   NumberInput,
@@ -37,6 +36,8 @@ import type {
   ServerRuntimeInfo,
 } from "@shared/types";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { EmptyState } from "@ui/EmptyState/EmptyState";
 import classes from "./BackupsPage.module.css";
 
 interface Props {
@@ -567,7 +568,7 @@ export function ServerBackupPanel(props: Props): JSX.Element {
         </Group>
       )}
 
-      <Card withBorder className={`${classes.panel} ${classes.listPanel}`}>
+      <AppSurfaceCard className={classes.listPanel}>
         <Tabs
           value={activeKind}
           onChange={(value) => {
@@ -886,9 +887,11 @@ export function ServerBackupPanel(props: Props): JSX.Element {
                 </div>
               ) : displayedBackups.length === 0 ? (
                 <div className={classes.listEmpty} data-backup-list-empty>
-                  <Text size="sm" c="dimmed" ta="center">
-                    {emptyHint}
-                  </Text>
+                  <EmptyState
+                    icon={<HardDrives size={22} />}
+                    title="No backups"
+                    description={emptyHint}
+                  />
                 </div>
               ) : (
                 <Stack gap={4}>
@@ -985,7 +988,7 @@ export function ServerBackupPanel(props: Props): JSX.Element {
             </div>
           </Stack>
         </Tabs>
-      </Card>
+      </AppSurfaceCard>
     </Stack>
   );
 }

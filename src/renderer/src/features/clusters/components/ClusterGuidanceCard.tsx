@@ -1,14 +1,16 @@
 import { ArrowsLeftRight } from "@phosphor-icons/react";
-import { Card, Group, Stack, Text, Title } from "@mantine/core";
+import { Group, Stack, Text, Title } from "@mantine/core";
+import { AccentIconTile } from "@ui/AccentIconTile/AccentIconTile";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import classes from "../clusters.module.css";
 
 export function ClusterGuidanceCard(): JSX.Element {
   return (
-    <Card withBorder className={classes.guidanceCard}>
+    <AppSurfaceCard tone="coolEmphasis" className={classes.guidanceCard}>
       <Group gap="sm" align="flex-start" wrap="nowrap">
-        <div className={classes.guidanceIcon}>
+        <AccentIconTile>
           <ArrowsLeftRight size={20} />
-        </div>
+        </AccentIconTile>
         <Stack gap={4} className={classes.guidanceCopy}>
           <Title order={3} size="h4">
             How transfers work here
@@ -23,6 +25,6 @@ export function ClusterGuidanceCard(): JSX.Element {
           </Text>
         </Stack>
       </Group>
-    </Card>
+    </AppSurfaceCard>
   );
 }

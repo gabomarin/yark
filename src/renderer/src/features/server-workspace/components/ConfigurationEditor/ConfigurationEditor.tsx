@@ -50,7 +50,7 @@ import {
   withFileText,
   type IniFilterId,
   type IniSettingReference,
-} from "../iniModel";
+} from "../../iniModel";
 import classes from "./ConfigurationEditor.module.css";
 
 export type ConfigSection = "iniFiles";

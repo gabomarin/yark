@@ -1,0 +1,46 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-sm);
+  width: 100%;
+  margin: 0;
+  padding: var(--app-space-xs) var(--app-space-sm);
+  border: 1px solid transparent;
+  border-radius: var(--app-radius-control);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.row:hover {
+  border-color: color-mix(in srgb, var(--app-color-border) 70%, transparent);
+  background: color-mix(in srgb, var(--app-color-panel) 55%, transparent);
+}
+
+.row[data-selected] {
+  border-color: color-mix(in srgb, var(--ark-blue-8) 45%, transparent);
+  background: var(--app-list-selected-bg);
+  box-shadow: var(--app-list-selected-inset);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--ark-blue-a8);
+  outline-offset: 2px;
+}
+
+.leading,
+.trailing {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}

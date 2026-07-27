@@ -12,7 +12,6 @@ import {
   Alert,
   Badge,
   Button,
-  Card,
   Group,
   Stack,
   Tabs,
@@ -23,6 +22,9 @@ import {
 import { modals } from "@mantine/modals";
 import type { ServerOperationalLogs, ServerProfile, ServerUpdateLogFile } from "@shared/types";
 import { useEffect, useRef, useState } from "react";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
 import { EventDetailsBody } from "./EventDetailsBody";
 import classes from "./LogsPage.module.css";
 
@@ -501,7 +503,7 @@ export function ServerLogsPanel(props: Props): JSX.Element {
         </Tabs.List>
 
         <Tabs.Panel value="events" className={classes.tabPanel}>
-          <Card withBorder className={`${classes.panel} ${classes.fillPanel}`}>
+          <AppSurfaceCard fill className={classes.fillPanel}>
             <Stack gap="sm" className={classes.panelStack}>
               <TabIntro
                 title="Events"
@@ -579,11 +581,11 @@ export function ServerLogsPanel(props: Props): JSX.Element {
                 </div>
               )}
             </Stack>
-          </Card>
+          </AppSurfaceCard>
         </Tabs.Panel>
 
         <Tabs.Panel value="runtime" className={classes.tabPanel}>
-          <Card withBorder className={`${classes.panel} ${classes.fillPanel}`}>
+          <AppSurfaceCard fill className={classes.fillPanel}>
             <Stack gap="sm" className={classes.panelStack}>
               <TabIntro
                 title="Runtime"
@@ -616,7 +618,7 @@ export function ServerLogsPanel(props: Props): JSX.Element {
                 </pre>
               )}
             </Stack>
-          </Card>
+          </AppSurfaceCard>
         </Tabs.Panel>
 
         <Tabs.Panel value="updates" className={classes.tabPanel}>
@@ -639,10 +641,7 @@ export function ServerLogsPanel(props: Props): JSX.Element {
               }
             />
           <div className={classes.updatesLayout}>
-            <Card
-              withBorder
-              className={`${classes.panel} ${classes.historyPanel} ${classes.fillPanel}`}
-            >
+            <AppSurfaceCard fill className={`${classes.historyPanel} ${classes.fillPanel}`}>
               <Stack gap="sm" className={classes.panelStack}>
                 <Title order={4} className={classes.panelTitle}>
                   Job history
@@ -661,40 +660,36 @@ export function ServerLogsPanel(props: Props): JSX.Element {
                     {logs.updateFiles.map((file) => {
                       const label = formatUpdateJobLabel(file.fileName, file.modifiedAt);
                       return (
-                      <button
+                      <SelectableListRow
                         key={file.fileName}
-                        type="button"
-                        className={`${classes.updateRow} ${selectedUpdateFile === file.fileName ? classes.updateRowActive : ""}`}
+                        selected={selectedUpdateFile === file.fileName}
                         onClick={() => void openUpdateLog(props.server.id, file.fileName)}
                         title={file.fileName}
+                        trailing={
+                          <Badge
+                            color={statusColor(file.status)}
+                            variant="light"
+                            className={classes.updateStatus}
+                          >
+                            {statusLabel(file.status)}
+                          </Badge>
+                        }
                       >
-                        <div className={classes.updateSummary}>
-                          <Text size="sm" fw={600} className={classes.updateTitle}>
-                            {label.title}
-                          </Text>
-                          <Text size="xs" c="dimmed" className={classes.updateSubtitle}>
-                            {label.subtitle}
-                          </Text>
-                        </div>
-                        <Badge
-                          color={statusColor(file.status)}
-                          variant="light"
-                          className={classes.updateStatus}
-                        >
-                          {statusLabel(file.status)}
-                        </Badge>
-                      </button>
+                        <Text size="sm" fw={600} className={classes.updateTitle}>
+                          {label.title}
+                        </Text>
+                        <Text size="xs" c="dimmed" className={classes.updateSubtitle}>
+                          {label.subtitle}
+                        </Text>
+                      </SelectableListRow>
                       );
                     })}
                   </div>
                 )}
               </Stack>
-            </Card>
+            </AppSurfaceCard>
 
-            <Card
-              withBorder
-              className={`${classes.panel} ${classes.detailPanel} ${classes.fillPanel}`}
-            >
+            <AppSurfaceCard fill className={`${classes.detailPanel} ${classes.fillPanel}`}>
               <Stack gap="sm" className={classes.panelStack}>
                 <Group
                   justify="space-between"
@@ -773,13 +768,13 @@ export function ServerLogsPanel(props: Props): JSX.Element {
                   </>
                 )}
               </Stack>
-            </Card>
+            </AppSurfaceCard>
           </div>
           </Stack>
         </Tabs.Panel>
 
         <Tabs.Panel value="backups" className={classes.tabPanel}>
-          <Card withBorder className={`${classes.panel} ${classes.fillPanel}`}>
+          <AppSurfaceCard fill className={classes.fillPanel}>
             <Stack gap="sm" className={classes.panelStack}>
               <TabIntro
                 title="Backups"
@@ -842,7 +837,7 @@ export function ServerLogsPanel(props: Props): JSX.Element {
                 </div>
               )}
             </Stack>
-          </Card>
+          </AppSurfaceCard>
         </Tabs.Panel>
       </Tabs>
     </Stack>
@@ -925,12 +920,6 @@ function LogEmptyState({
   description,
 }: LogEmptyStateProps): JSX.Element {
   return (
-    <div className={classes.emptyState}>
-      <div className={classes.emptyIcon}>{icon}</div>
-      <Text fw={600}>{title}</Text>
-      <Text c="dimmed" size="sm" maw={420}>
-        {description}
-      </Text>
-    </div>
+    <EmptyState layout="stacked" icon={icon} title={title} description={description} />
   );
 }

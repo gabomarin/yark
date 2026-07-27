@@ -10,7 +10,6 @@ import {
   Alert,
   Badge,
   Button,
-  Card,
   Checkbox,
   Group,
   Modal,
@@ -23,6 +22,8 @@ import {
   Title,
 } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { EmptyState } from "@ui/EmptyState/EmptyState";
 import type {
   BackupCleanupOptions,
   BackupCleanupPreview,
@@ -336,13 +337,17 @@ export function BackupsPage(props: Props): JSX.Element {
         )}
 
         {props.servers.length === 0 ? (
-          <Card withBorder className={classes.panel}>
-            <Text c="dimmed">Create a server first to configure backups.</Text>
-          </Card>
+          <AppSurfaceCard>
+            <EmptyState
+              icon={<HardDrives size={22} />}
+              title="No servers yet"
+              description="Create a server first to configure backups."
+            />
+          </AppSurfaceCard>
         ) : loading && summary === null ? (
-          <Card withBorder className={classes.panel}>
+          <AppSurfaceCard>
             <Text c="dimmed">Loading backup health…</Text>
-          </Card>
+          </AppSurfaceCard>
         ) : summary !== null ? (
           <>
             <div className={classes.statStrip}>
@@ -426,10 +431,11 @@ export function BackupsPage(props: Props): JSX.Element {
                         (disk.freeBytes != null &&
                           disk.freeBytes < summary.diskSettings.warnFreeBytes));
                     return (
-                      <Card
+                      <AppSurfaceCard
                         key={disk.volumePath}
-                        withBorder
+                        tone="flat"
                         padding="sm"
+                        radius="md"
                         className={[
                           classes.volumeCard,
                           critical ? classes.statDanger : "",
@@ -453,7 +459,7 @@ export function BackupsPage(props: Props): JSX.Element {
                             ? ` · ${disk.roots.length} destinations`
                             : ""}
                         </Text>
-                      </Card>
+                      </AppSurfaceCard>
                     );
                   })}
                 </div>
@@ -531,9 +537,13 @@ export function BackupsPage(props: Props): JSX.Element {
 
             <Stack gap="sm">
               {filteredServers.length === 0 ? (
-                <Card withBorder className={classes.panel}>
-                  <Text c="dimmed">No servers match this filter.</Text>
-                </Card>
+                <AppSurfaceCard>
+                  <EmptyState
+                    icon={<HardDrives size={22} />}
+                    title="No matches"
+                    description="No servers match this filter."
+                  />
+                </AppSurfaceCard>
               ) : (
                 filteredServers.map((row) => {
                   const draft = drafts[row.serverId];
@@ -708,7 +718,7 @@ export function BackupsPage(props: Props): JSX.Element {
           />
 
           {cleanupPreview !== null && (
-            <Card withBorder padding="sm" className={classes.cleanupPreview}>
+            <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.cleanupPreview}>
               {cleanupPreview.items.length === 0 ? (
                 <Text size="sm" c="dimmed">
                   Nothing matches these rules.
@@ -727,7 +737,7 @@ export function BackupsPage(props: Props): JSX.Element {
                   ))}
                 </Stack>
               )}
-            </Card>
+            </AppSurfaceCard>
           )}
 
           <Group justify="flex-end">
@@ -831,7 +841,7 @@ interface ServerHealthCardProps {
 function ServerHealthCard(props: ServerHealthCardProps): JSX.Element {
   const { row, draft } = props;
   return (
-    <Card withBorder className={classes.panel}>
+    <AppSurfaceCard>
       <Stack gap="sm">
         <Group justify="space-between" align="flex-start" wrap="wrap">
           <div>
@@ -1006,6 +1016,6 @@ function ServerHealthCard(props: ServerHealthCardProps): JSX.Element {
           </Stack>
         )}
       </Stack>
-    </Card>
+    </AppSurfaceCard>
   );
 }

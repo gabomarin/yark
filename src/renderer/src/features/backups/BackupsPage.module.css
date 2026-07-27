@@ -4,17 +4,7 @@
   overflow: auto;
 }
 
-.panel {
-  border-radius: var(--app-radius-lg);
-  border-color: color-mix(in srgb, var(--app-color-border) 72%, var(--ark-blue-7));
-  background:
-    linear-gradient(
-      112deg,
-      color-mix(in srgb, var(--app-color-panel-cool-emphasis) 48%, var(--app-color-panel-cool)) 0%,
-      var(--app-color-panel-cool) 44%,
-      color-mix(in srgb, var(--app-color-panel-cool) 82%, var(--app-color-panel)) 100%
-    );
-}
+/* Prefer AppSurfaceCard; keep transitional layout helpers only. */
 
 .statStrip {
   display: grid;

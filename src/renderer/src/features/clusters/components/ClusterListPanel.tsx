@@ -1,5 +1,7 @@
-import { Card, Stack, Text, Title } from "@mantine/core";
+import { Stack, Text, Title } from "@mantine/core";
 import type { ClusterComplianceReport, ServerProfile } from "@shared/types";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
 import { sharedClusterDir } from "../clusterModel";
 import classes from "../clusters.module.css";
 import { ClusterStatusBadge } from "./ClusterStatusBadge";
@@ -13,7 +15,7 @@ interface Props {
 
 export function ClusterListPanel(props: Props): JSX.Element {
   return (
-    <Card withBorder className={`${classes.panel} ${classes.listPanel}`}>
+    <AppSurfaceCard fill className={classes.listPanel}>
       <Stack gap="sm" className={classes.panelStack}>
         <Title order={3} size="h4">
           Clusters
@@ -26,32 +28,26 @@ export function ClusterListPanel(props: Props): JSX.Element {
             const dir = sharedClusterDir(members);
             const selected = report.clusterId === props.activeClusterId;
             return (
-              <button
+              <SelectableListRow
                 key={report.clusterId}
-                type="button"
-                className={`${classes.clusterRow} ${selected ? classes.clusterRowActive : ""}`}
+                selected={selected}
                 data-cluster-card={report.clusterId}
-                aria-pressed={selected}
                 onClick={() => props.onSelect(report.clusterId)}
+                trailing={<ClusterStatusBadge report={report} />}
               >
-                <div className={classes.clusterRowInner}>
-                  <div className={classes.clusterSummary}>
-                    <Text fw={600} className={classes.clusterTitle}>
-                      {report.clusterId}
-                    </Text>
-                    <Text size="xs" c="dimmed" className={classes.clusterMeta}>
-                      {report.members.length} member
-                      {report.members.length === 1 ? "" : "s"}
-                      {dir !== null ? ` · ${dir}` : " · mixed or missing dirs"}
-                    </Text>
-                  </div>
-                  <ClusterStatusBadge report={report} />
-                </div>
-              </button>
+                <Text fw={600} className={classes.clusterTitle}>
+                  {report.clusterId}
+                </Text>
+                <Text size="xs" c="dimmed" className={classes.clusterMeta}>
+                  {report.members.length} member
+                  {report.members.length === 1 ? "" : "s"}
+                  {dir !== null ? ` · ${dir}` : " · mixed or missing dirs"}
+                </Text>
+              </SelectableListRow>
             );
           })}
         </div>
       </Stack>
-    </Card>
+    </AppSurfaceCard>
   );
 }

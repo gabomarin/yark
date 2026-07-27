@@ -6,8 +6,9 @@ import {
   Power,
   Wrench,
 } from "@phosphor-icons/react";
-import { ActionIcon, Badge, Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import classes from "./WorkspaceHeader.module.css";
 
 interface Props {
@@ -24,14 +25,6 @@ interface Props {
   onOpenServerSwitcher?: () => void;
   onOpenServerActions?: () => void;
 }
-
-const STATUS_LABEL: Record<string, string> = {
-  stopped: "Stopped",
-  starting: "Starting",
-  running: "Running",
-  stopping: "Stopping",
-  error: "Error",
-};
 
 export function WorkspaceHeader(props: Props): JSX.Element {
   const status = props.runtime?.status ?? "stopped";
@@ -68,21 +61,7 @@ export function WorkspaceHeader(props: Props): JSX.Element {
             <Title order={3} fz="lg" lineClamp={1}>
               {props.server.name}
             </Title>
-            <Badge
-              size="sm"
-              variant="light"
-              color={
-                status === "running"
-                  ? "green"
-                  : status === "error"
-                    ? "red"
-                    : status === "starting" || status === "stopping"
-                      ? "blue"
-                      : "gray"
-              }
-            >
-              {STATUS_LABEL[status] ?? status}
-            </Badge>
+            <ServerRuntimeStatusBadge status={status} size="sm" />
           </Group>
           <Text size="xs" c="dimmed" lineClamp={1}>
             {props.server.map} · port {props.server.gamePort} · version {version}

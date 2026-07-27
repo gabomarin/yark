@@ -52,7 +52,7 @@ import {
   type ExperienceProfileId,
   type ProgressionPresetId,
   type WorldPresetId,
-} from "../configurationWizardModel";
+} from "../../configurationWizardModel";
 import classes from "./ConfigurationWizard.module.css";
 
 interface Props {

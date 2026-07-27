@@ -3,17 +3,18 @@ import {
   Alert,
   Badge,
   Button,
-  Card,
   Group,
   Select,
   Stack,
   Text,
-  TextInput,
   Title,
 } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import type { AppEvent, ServerProfile } from "@shared/types";
 import { useEffect, useMemo, useState } from "react";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { SearchField } from "@ui/SearchField/SearchField";
 import { EventDetailsBody } from "./EventDetailsBody";
 import type { ServerLogsFocus } from "./ServerLogsPanel";
 import classes from "./LogsPage.module.css";
@@ -122,7 +123,7 @@ export function LogsPage(props: Props): JSX.Element {
       <Stack gap="lg" className={classes.logsContent} data-logs-page>
         {error !== null && <Alert color="red">{error}</Alert>}
 
-        <Card withBorder className={`${classes.panel} ${classes.fillPanel}`}>
+        <AppSurfaceCard fill className={classes.fillPanel}>
           <Stack gap="sm" className={classes.panelStack}>
             <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm">
               <Title order={3}>Fleet activity</Title>
@@ -153,11 +154,12 @@ export function LogsPage(props: Props): JSX.Element {
                   ]}
                   w={140}
                 />
-                <TextInput
-                  aria-label="Search fleet events"
-                  placeholder="Search…"
+                <SearchField
                   value={search}
-                  onChange={(event) => setSearch(event.currentTarget.value)}
+                  onChange={setSearch}
+                  label="Search fleet events"
+                  placeholder="Search…"
+                  size="sm"
                   className={classes.fleetSearch}
                 />
               </Group>
@@ -168,21 +170,20 @@ export function LogsPage(props: Props): JSX.Element {
             ) : loading ? (
               <Text c="dimmed">Loading fleet events…</Text>
             ) : filteredFleetEvents.length === 0 ? (
-              <div className={classes.emptyState}>
-                <div className={classes.emptyIcon}>
-                  <ClockCounterClockwise size={24} />
-                </div>
-                <Text fw={600}>
-                  {severityFilter === "problems"
+              <EmptyState
+                layout="stacked"
+                icon={<ClockCounterClockwise size={24} />}
+                title={
+                  severityFilter === "problems"
                     ? "No problems in this window"
-                    : "No matching activity"}
-                </Text>
-                <Text c="dimmed" size="sm" maw={420}>
-                  {severityFilter === "problems"
+                    : "No matching activity"
+                }
+                description={
+                  severityFilter === "problems"
                     ? "No errors or warnings matched the current filters. Switch to “All severity” to see routine activity."
-                    : "Try widening the time range or clearing the search."}
-                </Text>
-              </div>
+                    : "Try widening the time range or clearing the search."
+                }
+              />
             ) : (
               <div className={classes.eventList} data-logs-scroll-region="fleet">
                 {filteredFleetEvents.map((event) => {
@@ -247,7 +248,7 @@ export function LogsPage(props: Props): JSX.Element {
               </div>
             )}
           </Stack>
-        </Card>
+        </AppSurfaceCard>
       </Stack>
     </PageScaffold>
   );
