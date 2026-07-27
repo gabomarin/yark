@@ -20,7 +20,7 @@ Core flows already work (profiles, process control, SteamCMD install/update, bac
 
 - Shared shell and navigation are active.
 - Overview, SteamCMD, Logs, Backups, and Server Workspace (INI editor) use the new renderer.
-- Clusters page surfaces existing compliance for `clusterId` / `clusterDir`; Settings is still a placeholder inside the new shell.
+- Clusters page surfaces existing compliance for `clusterId` / `clusterDir` (see [docs/clusters.md](docs/clusters.md)); Settings is still a placeholder inside the new shell.
 - End-to-end validation against real ASA binaries and SteamCMD on a production host is still ongoing.
 
 Expect gaps, rough edges, and behavior changes between builds.
@@ -100,6 +100,7 @@ Edit `website/index.html` (and `styles.css`) for copy updates; pushes that touch
 - [docs/updates-steamcmd.md](docs/updates-steamcmd.md) — SteamCMD caches, install/update/verify, safe update, availability checks
 - [docs/logs.md](docs/logs.md) — operational logs, event details, clear/seed helpers
 - [docs/server-lifecycle.md](docs/server-lifecycle.md) — launch args, profile→INI sync, spawn, start/stop/kill
+- [docs/clusters.md](docs/clusters.md) — cluster ID/dir compliance, IPC, Clusters page, pitfalls
 - [docs/website.md](docs/website.md) — GitHub Pages site, screenshot gallery, deploy/capture checklist
 - [AGENTS.md](AGENTS.md) — Cursor Cloud / Linux VM run notes (display, Electron, tests, e2e pitfalls)
 - [docs/visual-testing.md](docs/visual-testing.md) — required Playwright review for visible UI changes (+ helper scripts)

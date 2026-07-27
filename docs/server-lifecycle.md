@@ -60,6 +60,7 @@ CLI. Unit tests in `tests/unit/launch-args.test.ts` lock this.
 4. `-mods=id1,id2,…` when `mods.length > 0`
 5. If **both** `clusterId` and `clusterDir` are set:
    `-clusterid=…`, `-ClusterDirOverride=…`, `-NoTransferFromFiltering`
+   (compliance / Clusters UI: [clusters.md](clusters.md))
 6. `…profile.extraArgs`
 
 UI / runtime logs use `formatLaunchCommandLine` (logical `"` quotes). Helper

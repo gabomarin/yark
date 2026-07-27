@@ -42,6 +42,7 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 - [updates-steamcmd.md](updates-steamcmd.md) — caches, safe update auto-stop/rollback, availability compare, progress push.
 - [logs.md](logs.md) — event `details`, clear/export IPC, `logsFocus`, seed/visual helpers.
 - [server-lifecycle.md](server-lifecycle.md) — launch args, profile→INI sync, spawn, start/stop/kill, INI sanitize / assistant.
+- [clusters.md](clusters.md) — `clusterId` / `clusterDir` compliance, IPC, Clusters page, operator pitfalls.
 - [website.md](website.md) — GitHub Pages deploy, screenshot gallery capture/redaction, version pill sync.
 
 ## Current functional status
@@ -49,7 +50,7 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 - The new renderer shell is already active.
 - Overview, SteamCMD, Logs, Backups, and **Clusters** have already been migrated to the new architecture.
 - Server Workspace keeps `Server`, `INI Files`, `Backups`, and **Logs** as its regular navigation. Workspace **Backups** is operational (create / restore / history / destination for that server) with kind subtabs (**World save** | **Player profiles** | **INI**). Sidebar **Backups** is generalized configuration across servers (schedule / destination / retention) with “Open in server” to jump into the workspace tab. Mods are edited on the Server tab (comma-separated CurseForge Project IDs) until a CurseForge API key enables a dedicated Mods UI. A six-step configuration assistant launches on demand from `Server`; it uses an isolated draft and writes only after explicit review.
-- Settings remains a placeholder within the new shell. Clusters surfaces existing `clusterId` / `clusterDir` compliance reports (live transfer validation still deferred).
+- Settings remains a placeholder within the new shell. Clusters surfaces existing `clusterId` / `clusterDir` compliance reports (live transfer validation still deferred). Full rules and IPC: [clusters.md](clusters.md).
 - Sidebar Backups settings page and per-server workspace Backups tab are live.
 - Backups are kind-scoped ZIP archives: `world` (full SavedArks including `.arkprofile*`), `players` (profiles from SavedArks/SaveGames), `ini` (`Game.ini` + `GameUserSettings.ini`).
   - On disk under the shared root: `World/`, `Player profiles/`, `INI/` subfolders; each snapshot is a `.zip` (legacy loose folders still restore). Listing reconciles orphan archives from disk into SQLite.
