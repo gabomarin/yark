@@ -27,6 +27,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Shared renderer atoms for reuse: `AppSurfaceCard`, `ServerRuntimeStatusBadge`, `EmptyState`, `SearchField`, `SelectableListRow`, `AccentIconTile`; `ServerCard` split into local molecules + model.
 - Design-system guide for Mantine surface + spacing tokens: [docs/design-system.md](docs/design-system.md).
 - App spacing scale (`xxs`…`xl`) exposed as `--app-space-*` and Mantine `theme.spacing` (including `gap="xxs"`).
+- Functional **Settings** page for SteamCMD path and native-console-on-start preference (sidebar nav entry; preference moved off the rail).
 
 ### Changed
 

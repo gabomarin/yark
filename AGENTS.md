@@ -7,6 +7,28 @@ issues/PRs, commit messages, docs, code comments, and UI copy in English. Chat w
 the user may follow the user's language; repo and GitHub artifacts stay English.
 See `.cursor/rules/english-project-language.mdc`.
 
+## Pull request merges
+
+**Squash merge** is the default when merging PRs into `main`.
+
+- Prefer one commit on `main` per PR; use the PR title (English) as the squash commit
+  subject.
+- Use a merge commit only when intentionally preserving multiple commits on `main`
+  (rare).
+- Rebase merge is allowed for a linear history when squash is unsuitable, but is not
+  the default.
+
+## Pull request merges
+
+**Squash merge** is the default when merging PRs into `main`.
+
+- Prefer one commit on `main` per PR; use the PR title (English) as the squash commit
+  subject.
+- Use a merge commit only when intentionally preserving multiple commits on `main`
+  (rare).
+- Rebase merge is allowed for a linear history when squash is unsuitable, but is not
+  the default.
+
 ## Cursor Cloud specific instructions
 
 YARK server manager is a single Electron + React + TypeScript desktop app (no separate

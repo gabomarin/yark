@@ -3,6 +3,7 @@ import {
   Circle,
   Dna,
   FileText,
+  GearSix,
   HardDrives,
   ShareNetwork,
   SquaresFour,
@@ -12,7 +13,6 @@ import {
   Divider,
   Group,
   Stack as MantineStack,
-  Switch,
   Text,
   Tooltip,
 } from "@mantine/core";
@@ -32,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "backups", label: "Backups", icon: HardDrives },
   { id: "steamcmd", label: "SteamCMD", icon: ArrowsClockwise },
   { id: "logs", label: "Logs", icon: FileText },
+  { id: "settings", label: "Settings", icon: GearSix },
 ];
 
 interface Props {
@@ -41,8 +42,6 @@ interface Props {
   steamCmdRunning: boolean;
   officialVersion: string | null;
   appVersion: string;
-  openNativeTerminalOnStart: boolean;
-  onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
 }
 
 export function Sidebar(props: Props): JSX.Element {
@@ -95,18 +94,6 @@ export function Sidebar(props: Props): JSX.Element {
       >
         {steamCmdLabel}
       </Button>
-
-      <div className={classes.preference}>
-        <Text size="xs" fw={600}>Preferences</Text>
-        <Switch
-          size="xs"
-          checked={props.openNativeTerminalOnStart}
-          onChange={(event) =>
-            props.onOpenNativeTerminalOnStartChange(event.currentTarget.checked)
-          }
-          label="Show console on start"
-        />
-      </div>
 
       <div className={classes.versionChip}>
         <Tooltip

@@ -30,9 +30,12 @@ import {
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { SteamCmdPage } from "@features/steamcmd/SteamCmdPage";
 import { SteamCmdProgressDock } from "@features/steamcmd/SteamCmdProgressDock";
+import { SettingsPage } from "@features/settings/SettingsPage";
+import {
+  readOpenNativeTerminalPref,
+  writeOpenNativeTerminalPref,
+} from "@features/settings/settingsModel";
 import type { Route } from "@layout/Sidebar/Sidebar";
-
-const OPEN_NATIVE_TERMINAL_PREF_KEY = "overview.openNativeTerminalOnStart";
 
 type Overlay =
   | { kind: "create" }
@@ -60,20 +63,16 @@ export function App(): JSX.Element {
   const [steamCmdConsole, setSteamCmdConsole] = useState<SteamCmdConsoleSnapshot | null>(null);
   const [route, setRoute] = useState<Route>("overview");
   const [overlay, setOverlay] = useState<Overlay>(null);
-  const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState<boolean>(() => {
-    const stored = window.localStorage.getItem(OPEN_NATIVE_TERMINAL_PREF_KEY);
-    return stored === "1";
-  });
+  const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState(
+    readOpenNativeTerminalPref,
+  );
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [checkingUpdates, setCheckingUpdates] = useState(false);
   const [overviewLoading, setOverviewLoading] = useState(true);
 
   useEffect(() => {
-    window.localStorage.setItem(
-      OPEN_NATIVE_TERMINAL_PREF_KEY,
-      openNativeTerminalOnStart ? "1" : "0",
-    );
+    writeOpenNativeTerminalPref(openNativeTerminalOnStart);
   }, [openNativeTerminalOnStart]);
 
   const runningServers = Array.from(statuses.values()).filter(
@@ -454,8 +453,6 @@ export function App(): JSX.Element {
           steamCmdRunning={steamCmdBusy}
           officialVersion={officialVersion}
           appVersion={APP_VERSION}
-          openNativeTerminalOnStart={openNativeTerminalOnStart}
-          onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
           error={error}
           onDismissError={() => setError(null)}
         >
@@ -548,8 +545,6 @@ export function App(): JSX.Element {
         officialVersion={officialVersion}
         steamCmdDetected={steamCmdStatus?.detected === true}
         steamCmdRunning={steamCmdBusy}
-        openNativeTerminalOnStart={openNativeTerminalOnStart}
-        onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
         onNavigate={navigate}
         error={error}
         onDismissError={() => setError(null)}
@@ -648,6 +643,19 @@ export function App(): JSX.Element {
               onOpenServerLogs={(serverId) =>
                 openServerLogs(serverId, { section: "backups" })
               }
+            />
+          ),
+        }}
+        settings={{
+          page: (
+            <SettingsPage
+              appVersion={APP_VERSION}
+              steamCmdStatus={steamCmdStatus}
+              openNativeTerminalOnStart={openNativeTerminalOnStart}
+              onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
+              onPickSteamCmdPath={() => void pickSteamCmdPath()}
+              onInstallSteamCmd={() => void runAction(() => window.api.installSteamCmd())}
+              onOpenSteamCmdPage={() => navigate("steamcmd")}
             />
           ),
         }}

@@ -1,0 +1,42 @@
+.content {
+  max-width: 920px;
+}
+
+.settingRow {
+  display: flex;
+  gap: var(--app-space-md);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.settingCopy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.settingControl {
+  flex: 0 0 auto;
+  padding-top: 2px;
+}
+
+.pathValue {
+  margin-top: var(--app-space-xs);
+  padding: var(--app-space-xs) var(--app-space-sm);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-control);
+  background: color-mix(in srgb, var(--ark-gray-2) 72%, transparent);
+  color: var(--app-color-text);
+  font-family: Consolas, "Cascadia Mono", monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.pathValueMuted {
+  color: var(--app-color-muted);
+  font-style: italic;
+}
+
+.actions {
+  margin-top: var(--app-space-sm);
+}
