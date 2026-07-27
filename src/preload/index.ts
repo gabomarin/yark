@@ -5,6 +5,7 @@ import type {
   ServerProfileInput,
   ServerRuntimeInfo,
   StartServerOptions,
+  SteamCmdCacheKind,
 } from "../shared/types";
 import type { SteamCmdProgressPush, BackupsChangedPush } from "../shared/ipc";
 
@@ -30,6 +31,8 @@ const api: RendererApi = {
   setSteamCmdPath: (path: string) => ipcRenderer.invoke(IPC.steamcmdSetPath, path),
   getSteamCmdStatus: () => ipcRenderer.invoke(IPC.steamcmdStatus),
   getSteamCmdConsole: (limit?: number) => ipcRenderer.invoke(IPC.steamcmdConsole, limit),
+  openSteamCmdCache: (kind: SteamCmdCacheKind) => ipcRenderer.invoke(IPC.steamcmdOpenCache, kind),
+  clearSteamCmdCache: (kind: SteamCmdCacheKind) => ipcRenderer.invoke(IPC.steamcmdClearCache, kind),
   getStatuses: () => ipcRenderer.invoke(IPC.serversStatuses),
   getInstallationInfo: (forceOfficialCheck?: boolean) =>
     ipcRenderer.invoke(IPC.serversInstallation, forceOfficialCheck),

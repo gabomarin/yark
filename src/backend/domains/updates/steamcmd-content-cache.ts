@@ -7,6 +7,7 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import type { SteamCmdCacheKind } from "../../../shared/types";
 
 export const ASA_APP_ID = "2430930";
 
@@ -44,6 +45,15 @@ export function resolveDepotCacheDir(steamCmdHome: string): string {
 
 export function resolveAsaContentCacheDir(steamCmdHome: string): string {
   return join(steamCmdHome, "asa_content_cache");
+}
+
+export function resolveSteamCmdCacheDir(
+  steamCmdHome: string,
+  kind: SteamCmdCacheKind,
+): string {
+  return kind === "depot"
+    ? resolveDepotCacheDir(steamCmdHome)
+    : resolveAsaContentCacheDir(steamCmdHome);
 }
 
 export function asaAppManifestPath(installOrCacheDir: string): string {

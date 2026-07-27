@@ -44,6 +44,8 @@ function createApiMock(): RendererApi {
     setSteamCmdPath: vi.fn(),
     getSteamCmdStatus: vi.fn(),
     getSteamCmdConsole: vi.fn(),
+    openSteamCmdCache: vi.fn(),
+    clearSteamCmdCache: vi.fn(),
     getStatuses: vi.fn(),
     getInstallationInfo: vi.fn(),
     checkCluster: vi.fn(),

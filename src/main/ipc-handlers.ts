@@ -2,7 +2,7 @@ import { BrowserWindow, dialog, ipcMain, shell, type OpenDialogOptions, type Sav
 import { spawn } from "node:child_process";
 import { mkdir } from "node:fs/promises";
 import { IPC, type IpcResult, type PickPathKind } from "../shared/ipc";
-import type { ServerIniPayload, ServerProfileInput, StartServerOptions } from "../shared/types";
+import type { ServerIniPayload, ServerProfileInput, StartServerOptions, SteamCmdCacheKind } from "../shared/types";
 import type { BackupService } from "../backend/domains/backups/backup-service";
 import type { InstanceService } from "../backend/domains/instances/instance-service";
 import type { IniService } from "../backend/domains/config/ini-service";
@@ -141,6 +141,21 @@ export function registerIpcHandlers(
 
   ipcMain.handle(IPC.steamcmdConsole, (_e, limit?: number) =>
     wrap(() => updates.getSteamCmdConsole(limit)),
+  );
+
+  ipcMain.handle(IPC.steamcmdOpenCache, (_e, kind: SteamCmdCacheKind) =>
+    wrap(async () => {
+      const targetPath = updates.resolveSteamCmdCachePath(kind);
+      await mkdir(targetPath, { recursive: true });
+      const error = await shell.openPath(targetPath);
+      if (error) {
+        throw new Error(`Could not open cache folder: ${error}`);
+      }
+    }),
+  );
+
+  ipcMain.handle(IPC.steamcmdClearCache, (_e, kind: SteamCmdCacheKind) =>
+    wrap(() => updates.clearSteamCmdCache(kind)),
   );
 
   ipcMain.handle(IPC.serversStatuses, () =>

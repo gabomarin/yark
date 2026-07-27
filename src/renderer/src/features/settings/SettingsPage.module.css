@@ -40,3 +40,46 @@
 .actions {
   margin-top: var(--app-space-sm);
 }
+
+.cacheSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+  padding-top: var(--app-space-sm);
+  border-top: 1px solid var(--app-color-border-subtle);
+}
+
+.cacheHeading {
+  letter-spacing: 0.04em;
+}
+
+.cacheRow {
+  display: flex;
+  gap: var(--app-space-sm);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.cacheCopy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cachePath {
+  margin-top: 2px;
+  color: var(--app-color-muted);
+  font-family: Consolas, "Cascadia Mono", monospace;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.cacheActions {
+  flex: 0 0 auto;
+  padding-top: 2px;
+}
+
+@media (max-width: 720px) {
+  .cacheRow {
+    flex-direction: column;
+  }
+}

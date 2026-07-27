@@ -1,11 +1,12 @@
 import {
+  Broom,
   CloudArrowDown,
   FolderOpen,
   TerminalWindow,
 } from "@phosphor-icons/react";
 import { Badge, Button, Group, Stack, Switch, Text, Title } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
-import type { SteamCmdStatus } from "@shared/types";
+import type { SteamCmdCacheKind, SteamCmdStatus } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import classes from "./SettingsPage.module.css";
 
@@ -16,11 +17,17 @@ interface Props {
   onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
   onPickSteamCmdPath: () => void;
   onInstallSteamCmd: () => void;
+  onOpenSteamCmdCache: (kind: SteamCmdCacheKind) => void;
+  onClearSteamCmdCache: (kind: SteamCmdCacheKind) => void;
+  steamCmdBusy?: boolean;
 }
 
 export function SettingsPage(props: Props): JSX.Element {
   const detected = props.steamCmdStatus?.detected === true;
   const executablePath = props.steamCmdStatus?.executablePath ?? null;
+  const depotCacheDir = props.steamCmdStatus?.depotCacheDir ?? null;
+  const contentCacheDir = props.steamCmdStatus?.contentCacheDir ?? null;
+  const cacheActionsDisabled = !detected || props.steamCmdBusy === true;
 
   return (
     <PageScaffold
@@ -75,6 +82,28 @@ export function SettingsPage(props: Props): JSX.Element {
                 </Button>
               )}
             </Group>
+
+            <div className={classes.cacheSection} data-steamcmd-caches>
+              <Text size="xs" fw={600} c="dimmed" tt="uppercase" className={classes.cacheHeading}>
+                Shared caches
+              </Text>
+              <CacheRow
+                label="Depotcache"
+                description="Compressed Steam downloads reused across installs and updates."
+                path={depotCacheDir}
+                disabled={cacheActionsDisabled}
+                onOpen={() => props.onOpenSteamCmdCache("depot")}
+                onClear={() => props.onClearSteamCmdCache("depot")}
+              />
+              <CacheRow
+                label="ASA content cache"
+                description="Expanded install tree copied to each server (avoids re-downloading)."
+                path={contentCacheDir}
+                disabled={cacheActionsDisabled}
+                onOpen={() => props.onOpenSteamCmdCache("content")}
+                onClear={() => props.onClearSteamCmdCache("content")}
+              />
+            </div>
           </Stack>
         </AppSurfaceCard>
 
@@ -111,5 +140,49 @@ export function SettingsPage(props: Props): JSX.Element {
         </AppSurfaceCard>
       </Stack>
     </PageScaffold>
+  );
+}
+
+interface CacheRowProps {
+  label: string;
+  description: string;
+  path: string | null;
+  disabled: boolean;
+  onOpen: () => void;
+  onClear: () => void;
+}
+
+function CacheRow(props: CacheRowProps): JSX.Element {
+  return (
+    <div className={classes.cacheRow}>
+      <div className={classes.cacheCopy}>
+        <Text size="sm" fw={600}>{props.label}</Text>
+        <Text size="xs" c="dimmed">{props.description}</Text>
+        <Text size="xs" className={classes.cachePath} title={props.path ?? undefined}>
+          {props.path ?? "Available after SteamCMD is configured"}
+        </Text>
+      </div>
+      <Group gap={6} wrap="nowrap" className={classes.cacheActions}>
+        <Button
+          size="compact-xs"
+          variant="subtle"
+          leftSection={<FolderOpen size={14} />}
+          disabled={props.disabled || props.path === null}
+          onClick={props.onOpen}
+        >
+          Open
+        </Button>
+        <Button
+          size="compact-xs"
+          variant="subtle"
+          color="red"
+          leftSection={<Broom size={14} />}
+          disabled={props.disabled || props.path === null}
+          onClick={props.onClear}
+        >
+          Clear
+        </Button>
+      </Group>
+    </div>
   );
 }

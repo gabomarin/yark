@@ -94,6 +94,9 @@ export interface SteamCmdStatus {
   checkedAt: string;
 }
 
+/** Shared SteamCMD cache folders next to steamcmd.exe. */
+export type SteamCmdCacheKind = "depot" | "content";
+
 export interface SteamCmdConsoleSnapshot {
   lines: string[];
   updatedAt: string;

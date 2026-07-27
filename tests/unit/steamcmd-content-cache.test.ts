@@ -6,6 +6,7 @@ import {
   isRobocopySuccess,
   resolveAsaContentCacheDir,
   resolveDepotCacheDir,
+  resolveSteamCmdCacheDir,
   resolveSteamCmdHome,
   shouldReuseAsaContentCache,
 } from "@backend/domains/updates/steamcmd-content-cache";
@@ -19,6 +20,12 @@ describe("steamcmd-content-cache", () => {
       "C:\\tools\\steamcmd\\steamapps\\depotcache",
     );
     expect(resolveAsaContentCacheDir("C:\\tools\\steamcmd")).toBe(
+      "C:\\tools\\steamcmd\\asa_content_cache",
+    );
+    expect(resolveSteamCmdCacheDir("C:\\tools\\steamcmd", "depot")).toBe(
+      "C:\\tools\\steamcmd\\steamapps\\depotcache",
+    );
+    expect(resolveSteamCmdCacheDir("C:\\tools\\steamcmd", "content")).toBe(
       "C:\\tools\\steamcmd\\asa_content_cache",
     );
   });

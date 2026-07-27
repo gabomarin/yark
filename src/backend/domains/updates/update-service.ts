@@ -1,10 +1,14 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { EventEmitter } from "node:events";
 import { dirname, join } from "node:path";
 import { existsSync, statSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import type { SteamCmdConsoleSnapshot, SteamCmdStatus } from "../../../shared/types";
+import type {
+  SteamCmdCacheKind,
+  SteamCmdConsoleSnapshot,
+  SteamCmdStatus,
+} from "../../../shared/types";
 import { parseSteamCmdProgressLine } from "../../../shared/steamcmd-progress";
 import type { BackupService } from "../backups/backup-service";
 import type { ServerRepository } from "../../infra/db/server-repository";
@@ -19,6 +23,7 @@ import {
   OperationCancelledError,
   resolveAsaContentCacheDir,
   resolveDepotCacheDir,
+  resolveSteamCmdCacheDir,
   resolveSteamCmdHome,
   shouldReuseAsaContentCache,
   syncAsaContentCacheToInstallDir,
@@ -328,6 +333,39 @@ export class UpdateService extends EventEmitter {
       lines: this.steamCmdConsoleLines.slice(-safeLimit),
       updatedAt: this.steamCmdConsoleUpdatedAt,
     };
+  }
+
+  /** Resolves depot or ASA content cache next to the configured SteamCMD home. */
+  resolveSteamCmdCachePath(kind: SteamCmdCacheKind): string {
+    const executablePath = this.findSteamCmdExecutable();
+    if (executablePath === null) {
+      throw new Error("SteamCMD is not configured");
+    }
+    return resolveSteamCmdCacheDir(resolveSteamCmdHome(executablePath), kind);
+  }
+
+  /**
+   * Deletes and recreates a SteamCMD cache folder.
+   * Blocked while a SteamCMD/sync job is active.
+   */
+  async clearSteamCmdCache(kind: SteamCmdCacheKind): Promise<string> {
+    if (
+      this.activeSteamCmd !== null
+      || this.activeSyncChild !== null
+      || this.queue.some((job) => job.status === "running" || job.status === "pending")
+    ) {
+      throw new Error("Stop the current SteamCMD operation before clearing a cache");
+    }
+
+    const target = this.resolveSteamCmdCachePath(kind);
+    await rm(target, { recursive: true, force: true });
+    await mkdir(target, { recursive: true });
+    if (kind === "content") {
+      this.contentCacheUpdatedAtMs = 0;
+    }
+    const label = kind === "depot" ? "Depotcache" : "ASA content cache";
+    this.appendSteamCmdConsole(`${label} cleared: ${target}`);
+    return target;
   }
 
   async installServerFiles(serverId: string): Promise<void> {

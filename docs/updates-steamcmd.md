@@ -107,6 +107,8 @@ Official version and official build each cache for **15 minutes** in-process (`O
 | `steamcmd:install` | Download/extract/validate SteamCMD (PowerShell + steamcdn zip) |
 | `steamcmd:cancel` | Kill active SteamCMD/sync; drain related work |
 | `steamcmd:set-path` | Validate + persist `steamcmd.exe`; resets content-cache freshness |
+| `steamcmd:open-cache` | Open depot or ASA content cache folder in Explorer |
+| `steamcmd:clear-cache` | Empty depot or ASA content cache (blocked while busy) |
 | `logs:read-update` / `logs:open-update-file` / `logs:delete-update` / `logs:clear-updates` | Per-server update log files |
 | **Push** `push:steamcmd-progress` | Live `{ status, console }` while ops run |
 
@@ -114,7 +116,7 @@ UI entry points: sidebar **SteamCMD** page + floating progress dock; Overview in
 
 ## Progress
 
-Live progress combines SteamCMD stdout `%` lines with disk estimates (`steamcmd-disk-progress.ts`: depot/downloading sizes under `force_install_dir`). The floating progress dock (and per-server Logs → Updates history) subscribe to `push:steamcmd-progress`. SteamCMD path/install live under **Settings** (caches stay derived from the SteamCMD home).
+Live progress combines SteamCMD stdout `%` lines with disk estimates (`steamcmd-disk-progress.ts`: depot/downloading sizes under `force_install_dir`). The floating progress dock (and per-server Logs → Updates history) subscribe to `push:steamcmd-progress`. SteamCMD path/install live under **Settings**; cache folders are shown there as read-only paths with Open / Clear (blocked while a job runs).
 
 > Note: agent-context historically said “live log streaming during SteamCMD is pending.” The **console/progress push channel and dock are live**. What may still feel incomplete is richer per-file update-log streaming in the Logs UI—not the SteamCMD progress path.
 

@@ -9,6 +9,7 @@ import type {
   ServerInstallationInfo,
   ServerProfile,
   ServerRuntimeInfo,
+  SteamCmdCacheKind,
   SteamCmdConsoleSnapshot,
   SteamCmdStatus,
 } from "@shared/types";
@@ -330,6 +331,50 @@ export function App(): JSX.Element {
     await refresh();
   }, [refresh, steamCmdStatus?.executablePath]);
 
+  const openSteamCmdCache = useCallback(
+    (kind: SteamCmdCacheKind) => {
+      void runAction(() => window.api.openSteamCmdCache(kind));
+    },
+    [runAction],
+  );
+
+  const clearSteamCmdCache = useCallback(
+    (kind: SteamCmdCacheKind) => {
+      const label = kind === "depot" ? "Depotcache" : "ASA content cache";
+      const detail =
+        kind === "depot"
+          ? "Deletes compressed Steam downloads. The next install or update will re-download what it needs."
+          : "Deletes the shared expanded ASA install. The next install will rebuild it via SteamCMD before copying to servers.";
+      modals.openConfirmModal({
+        title: `Clear ${label}?`,
+        children: (
+          <Alert color="orange" variant="light" title="Cannot be undone">
+            {detail}
+          </Alert>
+        ),
+        labels: { confirm: "Clear cache", cancel: "Cancel" },
+        confirmProps: { color: "red" },
+        onConfirm: () => {
+          void (async () => {
+            setError(null);
+            const result = await window.api.clearSteamCmdCache(kind);
+            if (!result.ok) {
+              setError(result.error ?? `Could not clear ${label}`);
+              return;
+            }
+            notifications.show({
+              title: `${label} cleared`,
+              message: result.data,
+              color: "teal",
+            });
+            await refresh();
+          })();
+        },
+      });
+    },
+    [refresh],
+  );
+
   const restartServer = useCallback(
     async (id: string) => {
       setError(null);
@@ -638,10 +683,13 @@ export function App(): JSX.Element {
             <SettingsPage
               appVersion={APP_VERSION}
               steamCmdStatus={steamCmdStatus}
+              steamCmdBusy={steamCmdBusy}
               openNativeTerminalOnStart={openNativeTerminalOnStart}
               onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
               onPickSteamCmdPath={() => void pickSteamCmdPath()}
               onInstallSteamCmd={() => void runAction(() => window.api.installSteamCmd())}
+              onOpenSteamCmdCache={openSteamCmdCache}
+              onClearSteamCmdCache={clearSteamCmdCache}
             />
           ),
         }}

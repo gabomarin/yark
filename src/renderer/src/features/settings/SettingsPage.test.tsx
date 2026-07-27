@@ -28,7 +28,7 @@ const readyStatus: SteamCmdStatus = {
 describe("SettingsPage", () => {
   afterEach(cleanup);
 
-  it("renders SteamCMD path, startup preference, and version", () => {
+  it("renders SteamCMD path, subtle caches, startup preference, and version", () => {
     render(
       <AppProviders>
         <SettingsPage
@@ -38,6 +38,8 @@ describe("SettingsPage", () => {
           onOpenNativeTerminalOnStartChange={vi.fn()}
           onPickSteamCmdPath={vi.fn()}
           onInstallSteamCmd={vi.fn()}
+          onOpenSteamCmdCache={vi.fn()}
+          onClearSteamCmdCache={vi.fn()}
         />
       </AppProviders>,
     );
@@ -47,10 +49,40 @@ describe("SettingsPage", () => {
       "C:/steamcmd/steamcmd.exe",
     );
     expect(screen.getByText("Configured")).toBeInTheDocument();
-    expect(screen.queryByText("Depotcache")).not.toBeInTheDocument();
+    expect(screen.getByText("Depotcache")).toBeInTheDocument();
+    expect(screen.getByText("ASA content cache")).toBeInTheDocument();
+    expect(screen.getByText(/Compressed Steam downloads/i)).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /^Open$/i })).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: /^Clear$/i })).toHaveLength(2);
     expect(screen.getByText("Version 0.1.0")).toBeInTheDocument();
     expect(document.querySelector("[data-settings-page]")).toBeInTheDocument();
-    expect(document.querySelector('[data-fill-viewport="true"]')).toBeInTheDocument();
+  });
+
+  it("opens and clears caches from subtle actions", async () => {
+    const user = userEvent.setup();
+    const onOpenSteamCmdCache = vi.fn();
+    const onClearSteamCmdCache = vi.fn();
+
+    render(
+      <AppProviders>
+        <SettingsPage
+          appVersion="0.1.0"
+          steamCmdStatus={readyStatus}
+          openNativeTerminalOnStart={false}
+          onOpenNativeTerminalOnStartChange={vi.fn()}
+          onPickSteamCmdPath={vi.fn()}
+          onInstallSteamCmd={vi.fn()}
+          onOpenSteamCmdCache={onOpenSteamCmdCache}
+          onClearSteamCmdCache={onClearSteamCmdCache}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getAllByRole("button", { name: /^Open$/i })[0]!);
+    expect(onOpenSteamCmdCache).toHaveBeenCalledWith("depot");
+
+    await user.click(screen.getAllByRole("button", { name: /^Clear$/i })[1]!);
+    expect(onClearSteamCmdCache).toHaveBeenCalledWith("content");
   });
 
   it("shows install action when SteamCMD is missing and toggles native console", async () => {
@@ -65,17 +97,22 @@ describe("SettingsPage", () => {
             ...readyStatus,
             detected: false,
             executablePath: null,
+            depotCacheDir: null,
+            contentCacheDir: null,
           }}
           openNativeTerminalOnStart={false}
           onOpenNativeTerminalOnStartChange={onOpenNativeTerminalOnStartChange}
           onPickSteamCmdPath={vi.fn()}
           onInstallSteamCmd={vi.fn()}
+          onOpenSteamCmdCache={vi.fn()}
+          onClearSteamCmdCache={vi.fn()}
         />
       </AppProviders>,
     );
 
     expect(screen.getByText("Not configured")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Install SteamCMD/i })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /^Open$/i })[0]).toBeDisabled();
 
     await user.click(
       screen.getByRole("switch", {

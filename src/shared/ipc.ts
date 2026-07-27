@@ -20,6 +20,7 @@ import type {
   ServerRuntimeInfo,
   SteamCmdConsoleSnapshot,
   SteamCmdStatus,
+  SteamCmdCacheKind,
   StartServerOptions,
 } from "./types";
 
@@ -47,6 +48,8 @@ export const IPC = {
   steamcmdInstall: "steamcmd:install",
   steamcmdCancel: "steamcmd:cancel",
   steamcmdSetPath: "steamcmd:set-path",
+  steamcmdOpenCache: "steamcmd:open-cache",
+  steamcmdClearCache: "steamcmd:clear-cache",
   clusterCheck: "cluster:check",
   rconCommand: "rcon:command",
   eventsRecent: "events:recent",
@@ -125,6 +128,8 @@ export interface RendererApi {
   setSteamCmdPath(path: string): Promise<IpcResult<string>>;
   getSteamCmdStatus(): Promise<IpcResult<SteamCmdStatus>>;
   getSteamCmdConsole(limit?: number): Promise<IpcResult<SteamCmdConsoleSnapshot>>;
+  openSteamCmdCache(kind: SteamCmdCacheKind): Promise<IpcResult<void>>;
+  clearSteamCmdCache(kind: SteamCmdCacheKind): Promise<IpcResult<string>>;
   getStatuses(): Promise<IpcResult<ServerRuntimeInfo[]>>;
   getInstallationInfo(forceOfficialCheck?: boolean): Promise<IpcResult<ServerInstallationSnapshot>>;
   checkCluster(): Promise<IpcResult<ClusterComplianceReport[]>>;
