@@ -1,0 +1,20 @@
+---
+description: Project language is English for all authored artifacts
+alwaysApply: true
+---
+
+# Project language: English
+
+All agent-authored project output must be in **English**.
+
+## Must be English
+
+- GitHub issues, PR titles/bodies, review comments, and discussion on tickets
+- Commit messages
+- Docs under `docs/`, `README.md`, `AGENTS.md`, and similar
+- Code comments, JSDoc, and user-facing UI copy (unless an explicit i18n task says otherwise)
+- Test names and assertion messages added or changed by the agent
+
+## Chat
+
+Match the user's language in the conversation. Still write every project artifact above in English.

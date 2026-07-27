@@ -1,5 +1,12 @@
 # AGENTS.md
 
+## Project language
+
+**English** is the language of record for this repository. Agents must write GitHub
+issues/PRs, commit messages, docs, code comments, and UI copy in English. Chat with
+the user may follow the user's language; repo and GitHub artifacts stay English.
+See `.cursor/rules/english-project-language.mdc`.
+
 ## Cursor Cloud specific instructions
 
 YARK server manager is a single Electron + React + TypeScript desktop app (no separate
