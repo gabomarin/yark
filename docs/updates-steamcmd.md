@@ -114,7 +114,7 @@ UI entry points: sidebar **SteamCMD** page + floating progress dock; Overview in
 
 ## Progress
 
-Live progress combines SteamCMD stdout `%` lines with disk estimates (`steamcmd-disk-progress.ts`: depot/downloading sizes under `force_install_dir`). The floating progress dock (and per-server Logs → Updates history) subscribe to `push:steamcmd-progress`. SteamCMD path/install/caches live under **Settings**.
+Live progress combines SteamCMD stdout `%` lines with disk estimates (`steamcmd-disk-progress.ts`: depot/downloading sizes under `force_install_dir`). The floating progress dock (and per-server Logs → Updates history) subscribe to `push:steamcmd-progress`. SteamCMD path/install live under **Settings** (caches stay derived from the SteamCMD home).
 
 > Note: agent-context historically said “live log streaming during SteamCMD is pending.” The **console/progress push channel and dock are live**. What may still feel incomplete is richer per-file update-log streaming in the Logs UI—not the SteamCMD progress path.
 

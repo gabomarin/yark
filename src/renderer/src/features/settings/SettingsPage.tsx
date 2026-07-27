@@ -1,8 +1,6 @@
 import {
   CloudArrowDown,
-  Database,
   FolderOpen,
-  HardDrive,
   TerminalWindow,
 } from "@phosphor-icons/react";
 import { Badge, Button, Group, Stack, Switch, Text, Title } from "@mantine/core";
@@ -23,8 +21,6 @@ interface Props {
 export function SettingsPage(props: Props): JSX.Element {
   const detected = props.steamCmdStatus?.detected === true;
   const executablePath = props.steamCmdStatus?.executablePath ?? null;
-  const depotCacheDir = props.steamCmdStatus?.depotCacheDir ?? null;
-  const contentCacheDir = props.steamCmdStatus?.contentCacheDir ?? null;
 
   return (
     <PageScaffold
@@ -38,9 +34,9 @@ export function SettingsPage(props: Props): JSX.Element {
             <div>
               <Title order={3} size="h4">SteamCMD</Title>
               <Text size="sm" c="dimmed" mt={4}>
-                Executable and shared caches used to install, update, and verify server files.
-                Live progress appears in the floating panel during a job; history is per server
-                under Logs → Updates.
+                Executable used to install, update, and verify server files. Live progress
+                appears in the floating panel during a job; history is per server under
+                Logs → Updates.
               </Text>
             </div>
 
@@ -79,19 +75,6 @@ export function SettingsPage(props: Props): JSX.Element {
                 </Button>
               )}
             </Group>
-
-            <div className={classes.cacheStrip} aria-label="SteamCMD caches">
-              <CacheItem
-                icon={<Database size={16} />}
-                label="Depotcache"
-                value={depotCacheDir ?? "Not configured"}
-              />
-              <CacheItem
-                icon={<HardDrive size={16} />}
-                label="ASA content cache"
-                value={contentCacheDir ?? "Not configured"}
-              />
-            </div>
           </Stack>
         </AppSurfaceCard>
 
@@ -128,20 +111,5 @@ export function SettingsPage(props: Props): JSX.Element {
         </AppSurfaceCard>
       </Stack>
     </PageScaffold>
-  );
-}
-
-interface CacheItemProps {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}
-
-function CacheItem({ icon, label, value }: CacheItemProps): JSX.Element {
-  return (
-    <div className={classes.cacheItem} title={value}>
-      <Text className={classes.cacheLabel}>{icon}{label}</Text>
-      <Text size="xs" className={classes.cacheValue}>{value}</Text>
-    </div>
   );
 }

@@ -28,7 +28,7 @@ const readyStatus: SteamCmdStatus = {
 describe("SettingsPage", () => {
   afterEach(cleanup);
 
-  it("renders SteamCMD path, caches, startup preference, and version", () => {
+  it("renders SteamCMD path, startup preference, and version", () => {
     render(
       <AppProviders>
         <SettingsPage
@@ -47,8 +47,7 @@ describe("SettingsPage", () => {
       "C:/steamcmd/steamcmd.exe",
     );
     expect(screen.getByText("Configured")).toBeInTheDocument();
-    expect(screen.getByText("Depotcache")).toBeInTheDocument();
-    expect(screen.getByText(/asa_content_cache/i)).toBeInTheDocument();
+    expect(screen.queryByText("Depotcache")).not.toBeInTheDocument();
     expect(screen.getByText("Version 0.1.0")).toBeInTheDocument();
     expect(document.querySelector("[data-settings-page]")).toBeInTheDocument();
     expect(document.querySelector('[data-fill-viewport="true"]')).toBeInTheDocument();
@@ -66,8 +65,6 @@ describe("SettingsPage", () => {
             ...readyStatus,
             detected: false,
             executablePath: null,
-            depotCacheDir: null,
-            contentCacheDir: null,
           }}
           openNativeTerminalOnStart={false}
           onOpenNativeTerminalOnStartChange={onOpenNativeTerminalOnStartChange}
@@ -77,7 +74,7 @@ describe("SettingsPage", () => {
       </AppProviders>,
     );
 
-    expect(screen.getAllByText("Not configured").length).toBeGreaterThan(0);
+    expect(screen.getByText("Not configured")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Install SteamCMD/i })).toBeInTheDocument();
 
     await user.click(

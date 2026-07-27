@@ -27,7 +27,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Shared renderer atoms for reuse: `AppSurfaceCard`, `ServerRuntimeStatusBadge`, `EmptyState`, `SearchField`, `SelectableListRow`, `AccentIconTile`; `ServerCard` split into local molecules + model.
 - Design-system guide for Mantine surface + spacing tokens: [docs/design-system.md](docs/design-system.md).
 - App spacing scale (`xxs`…`xl`) exposed as `--app-space-*` and Mantine `theme.spacing` (including `gap="xxs"`).
-- Functional **Settings** page for SteamCMD path/caches and native-console-on-start preference; SteamCMD removed as a primary sidebar route (live progress stays on the floating dock; history under Logs → Updates).
+- Functional **Settings** page for SteamCMD path and native-console-on-start preference; SteamCMD removed as a primary sidebar route (live progress stays on the floating dock; history under Logs → Updates).
 
 ### Changed
 
