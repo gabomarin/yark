@@ -418,7 +418,6 @@ function isPlausibleSettingKey(key) {
 function normalizeKey(k) {
   return String(k || "")
     .replace(/\[.*?\]/g, "")
-    .replace(/<.*>/g, "")
     .replace(/[^A-Za-z0-9_]/g, "")
     .toLowerCase();
 }
