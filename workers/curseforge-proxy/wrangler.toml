@@ -1,0 +1,14 @@
+name = "yark-curseforge-proxy"
+main = "src/index.ts"
+compatibility_date = "2025-07-01"
+workers_dev = true
+
+# Set the secret (do not put the key in this file):
+#   npx wrangler secret put CURSEFORGE_API_KEY
+#
+# Optional local override for `wrangler dev` only — use .dev.vars (gitignored):
+#   CURSEFORGE_API_KEY=...
+
+[vars]
+# Ark: Survival Ascended on CurseForge
+ASA_GAME_ID = "83374"
