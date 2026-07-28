@@ -151,4 +151,54 @@ describe("ServerLogsPanel", () => {
     await user.click(screen.getByRole("button", { name: /Something broke/i }));
     expect(screen.queryByText(/Disk full during backup/i)).not.toBeInTheDocument();
   });
+
+  it("loads update log content only when a job is selected and clears it when leaving Updates", async () => {
+    const user = userEvent.setup();
+    vi.mocked(window.api.listServerLogs).mockResolvedValue({
+      ok: true,
+      data: {
+        serverId: server.id,
+        updateFiles: [
+          {
+            fileName: "job-2026-07-23T10-00-00.log",
+            fullPath: "C:/ARK/TheIsland/Logs/job-2026-07-23T10-00-00.log",
+            modifiedAt: "2026-07-23T10:00:00.000Z",
+            sizeBytes: 1200,
+            status: "success",
+            exitCode: 0,
+            durationMs: 5000,
+          },
+        ],
+        backups: [],
+        events: [],
+        runtimeLogLines: [],
+      },
+    });
+    vi.mocked(window.api.readServerUpdateLog).mockResolvedValue({
+      ok: true,
+      data: "SteamCMD output line",
+    });
+
+    render(
+      <AppProviders>
+        <ServerLogsPanel server={server} embedded />
+      </AppProviders>,
+    );
+
+    await user.click(await screen.findByRole("tab", { name: "Updates" }));
+    expect(window.api.readServerUpdateLog).not.toHaveBeenCalled();
+
+    await user.click(await screen.findByText("2026-07-23 10:00:00"));
+    await waitFor(() => {
+      expect(window.api.readServerUpdateLog).toHaveBeenCalledWith(
+        server.id,
+        "job-2026-07-23T10-00-00.log",
+        150_000,
+      );
+    });
+    expect(await screen.findByText("SteamCMD output line")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Events" }));
+    expect(screen.queryByText("SteamCMD output line")).not.toBeInTheDocument();
+  });
 });
