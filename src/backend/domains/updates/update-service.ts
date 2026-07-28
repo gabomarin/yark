@@ -18,6 +18,8 @@ import type { InstanceLockManager } from "../../orchestration/instance-lock-mana
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
 import {
   buildSteamCmdAppUpdateArgs,
+  STEAMCMD_ENGLISH_ARGS,
+  steamCmdSpawnEnv,
   canSkipAsaContentSync,
   isOperationCancelledError,
   OperationCancelledError,
@@ -821,6 +823,7 @@ export class UpdateService extends EventEmitter {
           ? "Copying files to server…"
           : "Copying update to server…";
     this.beginFileSync(serverId, syncLabel);
+    let syncHeartbeat: ReturnType<typeof setInterval> | null = null;
     try {
       if (canSkipAsaContentSync(contentCacheDir, installDir)) {
         this.appendSteamCmdConsole(
@@ -832,6 +835,16 @@ export class UpdateService extends EventEmitter {
           "No copy needed",
         );
       } else {
+        const syncStartedAt = Date.now();
+        syncHeartbeat = setInterval(() => {
+          if (this.cancelRequested) {
+            return;
+          }
+          const elapsedSec = Math.max(1, Math.round((Date.now() - syncStartedAt) / 1000));
+          this.appendSteamCmdConsole(`Still copying files… (${elapsedSec}s elapsed)`, {
+            forceProgressPush: true,
+          });
+        }, 5_000);
         const robocopyCode = await syncAsaContentCacheToInstallDir(contentCacheDir, installDir, {
           onSpawn: (child) => {
             this.activeSyncChild = child;
@@ -863,6 +876,10 @@ export class UpdateService extends EventEmitter {
         operation,
         serverId,
       );
+    } finally {
+      if (syncHeartbeat !== null) {
+        clearInterval(syncHeartbeat);
+      }
     }
     this.endFileSync();
 
@@ -925,11 +942,7 @@ export class UpdateService extends EventEmitter {
         cwd: steamCmdHome,
         windowsHide: true,
         shell: false,
-        env: {
-          ...process.env,
-          // Best-effort attempt; recent builds may ignore it.
-          STEAMCMD_OUTPUT_BUFFERS: "0",
-        },
+        env: steamCmdSpawnEnv(),
       });
       this.beginSteamCmdProcess(child, operation, serverId);
       this.startDiskProgressMonitor(steamCmdHome, forceInstallDir);
@@ -1185,10 +1198,11 @@ export class UpdateService extends EventEmitter {
   private async verifySteamCmdExecutable(exePath: string): Promise<void> {
     await new Promise<void>((resolve, reject) => {
       this.appendSteamCmdConsole(`Validating SteamCMD: ${exePath}`);
-      const child = spawn(exePath, ["+quit"], {
+      const child = spawn(exePath, [...STEAMCMD_ENGLISH_ARGS, "+quit"], {
         cwd: resolveSteamCmdHome(exePath),
         windowsHide: true,
         shell: false,
+        env: steamCmdSpawnEnv(),
       });
 
       let finished = false;
@@ -1391,8 +1405,13 @@ export class UpdateService extends EventEmitter {
   private beginFileSync(serverId: string, label: string): void {
     this.syncingServerId = serverId;
     this.syncingStartedAt = new Date().toISOString();
-    // Keep a mid-high percent so Success! (90%) does not look like a stall at 100%.
-    this.setProgress(93, label, label);
+    // New phase after SteamCMD: robocopy has no %/bytes — indeterminate bar + label.
+    this.progressBytesDownloaded = null;
+    this.progressBytesTotal = null;
+    this.progressPercent = null;
+    this.progressLabel = label;
+    this.lastProgressLine = label;
+    this.emitProgress(true);
   }
 
   private endFileSync(): void {

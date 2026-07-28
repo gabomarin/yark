@@ -16,6 +16,9 @@ const BYTES_PAIR_RE = /^\s*([\d.,]+)\s*\/\s*([\d.,]+)\s*$/;
 const UPDATE_STATE_RE = /Update state\s*\([^)]*\)\s*([a-z ]+)/i;
 const SUCCESS_RE = /Success!\s*App '?\d+'?\s*fully installed/i;
 const DOWNLOAD_COMPLETE_RE = /Down(?:load|loaded)(?:ing)?\s+(?:item|update)?.*complete/i;
+/** SteamCMD self-update / bootstrapper lines, e.g. `[ 59%] Downloading update (11343 of 19014 KB)...` */
+const BRACKET_PERCENT_RE = /\[\s*(\d+)\s*%\]/;
+const BRACKET_KB_ENGLISH_RE = /\(([\d.,]+)\s+of\s+([\d.,]+)\s*KB\)/i;
 
 function parseNumberToken(raw: string): number | null {
   const normalized = raw.replace(/,/g, "").trim();
@@ -51,6 +54,23 @@ export function formatSteamCmdByteProgress(downloaded: number, total: number): s
 }
 
 /**
+ * True when byte counters are worth showing in the UI.
+ * Rejects nulls and empty totals (e.g. stale `0 / 0 MB` left over before robocopy sync).
+ */
+export function hasMeaningfulSteamCmdByteProgress(
+  downloaded: number | null | undefined,
+  total: number | null | undefined,
+): boolean {
+  return (
+    downloaded != null
+    && total != null
+    && Number.isFinite(downloaded)
+    && Number.isFinite(total)
+    && total > 0
+  );
+}
+
+/**
  * UI noun prefix for byte progress by operation.
  * SteamCMD also reports BytesDownloaded when verifying.
  */
@@ -78,8 +98,8 @@ export function parseSteamCmdProgressLine(line: string): SteamCmdProgressParse {
 
   if (SUCCESS_RE.test(trimmed) || /fully installed/i.test(trimmed)) {
     return {
-      // Not 100%: local cache → server sync still runs after SteamCMD exits.
-      percent: 90,
+      // SteamCMD phase complete; robocopy sync is a separate indeterminate step.
+      percent: 100,
       label: "SteamCMD finished — preparing file sync",
       bytesDownloaded: null,
       bytesTotal: null,
@@ -109,6 +129,42 @@ export function parseSteamCmdProgressLine(line: string): SteamCmdProgressParse {
       label,
       bytesDownloaded: bytes.downloaded,
       bytesTotal: bytes.total,
+    };
+  }
+
+  const bracketPercentMatch = BRACKET_PERCENT_RE.exec(trimmed);
+  if (bracketPercentMatch !== null) {
+    const raw = Number(bracketPercentMatch[1]);
+    const percent = Number.isFinite(raw) ? Math.max(0, Math.min(100, raw)) : null;
+    const kbMatch = BRACKET_KB_ENGLISH_RE.exec(trimmed);
+    const kbDown = kbMatch !== null ? parseNumberToken(kbMatch[1]!) : null;
+    const kbTotal = kbMatch !== null ? parseNumberToken(kbMatch[2]!) : null;
+    const bytesDownloaded = kbDown !== null ? Math.round(kbDown * 1024) : null;
+    const bytesTotal = kbTotal !== null ? Math.round(kbTotal * 1024) : null;
+
+    // English-only labels (spawn uses -language english). Percent still updates if OS localizes.
+    const lower = trimmed.toLowerCase();
+    let label: string | null = null;
+    if (lower.includes("checking")) label = "Checking for SteamCMD updates";
+    else if (lower.includes("verif")) label = "Verifying SteamCMD";
+    else if (lower.includes("extract")) label = "Extracting SteamCMD update";
+    else if (lower.includes("install")) label = "Installing SteamCMD update";
+    else if (lower.includes("download")) label = "Updating SteamCMD";
+
+    if (
+      label !== null
+      && bytesDownloaded !== null
+      && bytesTotal !== null
+      && bytesTotal > 0
+    ) {
+      label = `${label} · ${formatSteamCmdByteProgress(bytesDownloaded, bytesTotal)}`;
+    }
+
+    return {
+      percent,
+      label,
+      bytesDownloaded,
+      bytesTotal,
     };
   }
 

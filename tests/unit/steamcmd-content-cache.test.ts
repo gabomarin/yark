@@ -32,6 +32,8 @@ describe("steamcmd-content-cache", () => {
 
   it("puts force_install_dir before login", () => {
     const args = buildSteamCmdAppUpdateArgs("C:\\ark_servers\\cache");
+    expect(args[0]).toBe("-language");
+    expect(args[1]).toBe("english");
     expect(args.indexOf("+force_install_dir")).toBeLessThan(args.indexOf("+login"));
     expect(args).toContain(ASA_APP_ID);
     expect(args).toContain("validate");
@@ -43,6 +45,14 @@ describe("steamcmd-content-cache", () => {
     expect(isRobocopySuccess(7)).toBe(true);
     expect(isRobocopySuccess(8)).toBe(false);
     expect(isRobocopySuccess(null)).toBe(false);
+  });
+
+  it("uses a moderate robocopy thread count for sync", async () => {
+    const { ASA_CONTENT_SYNC_ROBOCOPY_THREADS } = await import(
+      "@backend/domains/updates/steamcmd-content-cache"
+    );
+    expect(ASA_CONTENT_SYNC_ROBOCOPY_THREADS).toBeGreaterThanOrEqual(2);
+    expect(ASA_CONTENT_SYNC_ROBOCOPY_THREADS).toBeLessThanOrEqual(4);
   });
 
   it("only considers a cache fresh when the manifest is recent", () => {

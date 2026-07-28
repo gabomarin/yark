@@ -2,6 +2,7 @@ import type { ServerInstallationInfo, ServerStatus } from "@shared/types";
 import { getServerUpdateState } from "@shared/server-update-status";
 import {
   formatSteamCmdByteProgress,
+  hasMeaningfulSteamCmdByteProgress,
   steamCmdByteProgressNoun,
 } from "@shared/steamcmd-progress";
 
@@ -151,13 +152,11 @@ export function resolveSteamCmdProgressCopy(input: {
   byteProgressLabel: string | null;
   byteProgressNoun: string;
 } {
+  const downloaded = input.steamCmdProgressBytesDownloaded;
+  const total = input.steamCmdProgressBytesTotal;
   const byteProgressLabel =
-    input.steamCmdProgressBytesDownloaded !== null &&
-    input.steamCmdProgressBytesTotal !== null
-      ? formatSteamCmdByteProgress(
-          input.steamCmdProgressBytesDownloaded,
-          input.steamCmdProgressBytesTotal,
-        )
+    downloaded !== null && total !== null && hasMeaningfulSteamCmdByteProgress(downloaded, total)
+      ? formatSteamCmdByteProgress(downloaded, total)
       : null;
   const byteProgressNoun = steamCmdByteProgressNoun(input.steamCmdOperation);
   const fallback =

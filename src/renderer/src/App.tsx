@@ -1,5 +1,5 @@
 import { APP_VERSION } from "@shared/app-version";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Code, List, Stack, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
@@ -101,12 +101,15 @@ export function App(): JSX.Element {
   }, [servers, search]);
 
   const steamCmdBusy = steamCmdStatus?.busy === true;
+  const steamCmdBusyRef = useRef(steamCmdBusy);
+  steamCmdBusyRef.current = steamCmdBusy;
   const steamCmdServerName =
     steamCmdStatus?.serverId != null
       ? (servers.find((server) => server.id === steamCmdStatus.serverId)?.name ?? null)
       : null;
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (options?: { includeInstallation?: boolean }) => {
+    const includeInstallation = options?.includeInstallation !== false;
     const [
       serversRes,
       statusesRes,
@@ -118,7 +121,9 @@ export function App(): JSX.Element {
     ] = await Promise.all([
       window.api.listServers(),
       window.api.getStatuses(),
-      window.api.getInstallationInfo(false),
+      includeInstallation
+        ? window.api.getInstallationInfo(false)
+        : Promise.resolve(null),
       window.api.getSteamCmdStatus(),
       window.api.getSteamCmdConsole(140),
       window.api.checkCluster(),
@@ -128,7 +133,7 @@ export function App(): JSX.Element {
     if (statusesRes.ok) {
       setStatuses(new Map(statusesRes.data.map((s) => [s.serverId, s])));
     }
-    if (installRes.ok) {
+    if (installRes !== null && installRes.ok) {
       setOfficialVersion(installRes.data.officialVersion);
       setOfficialSteamBuild(installRes.data.officialSteamBuild);
       setInstallationInfo(
@@ -272,15 +277,41 @@ export function App(): JSX.Element {
       setSteamCmdStatus(payload.status);
       setSteamCmdConsole(payload.console);
     });
-    const intervalMs = steamCmdBusy ? 500 : 5000;
-    const interval = setInterval(() => void refresh(), intervalMs);
     return () => {
       active = false;
       unsubscribeStatus();
       unsubscribeProgress();
+    };
+  }, [refresh]);
+
+  useEffect(() => {
+    // Progress arrives via push. Avoid hammering install snapshots (PowerShell
+    // VersionInfo + disk reads) every 500ms while robocopy saturates the same volume.
+    const syncing = steamCmdStatus?.operation === "sync-files";
+    const intervalMs = syncing ? 5_000 : steamCmdBusy ? 2_500 : 5_000;
+    const interval = setInterval(() => {
+      // Read busy from a ref so a just-started sync cannot race a stale closure
+      // and keep calling getInstallationInfo during the copy.
+      void refresh({ includeInstallation: !steamCmdBusyRef.current });
+    }, intervalMs);
+    return () => {
       clearInterval(interval);
     };
-  }, [refresh, steamCmdBusy]);
+  }, [refresh, steamCmdBusy, steamCmdStatus?.operation]);
+
+  // After a SteamCMD/sync job finishes, refresh install snapshots once (binary + build).
+  const wasSteamCmdBusyRef = useRef(false);
+  useEffect(() => {
+    if (steamCmdBusy) {
+      wasSteamCmdBusyRef.current = true;
+      return;
+    }
+    if (!wasSteamCmdBusyRef.current) {
+      return;
+    }
+    wasSteamCmdBusyRef.current = false;
+    void refresh({ includeInstallation: true });
+  }, [steamCmdBusy, refresh]);
 
   const runAction = useCallback(
     async (action: () => Promise<{ ok: boolean; error?: string }>) => {
