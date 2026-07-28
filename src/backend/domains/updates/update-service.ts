@@ -821,6 +821,7 @@ export class UpdateService extends EventEmitter {
           ? "Copying files to server…"
           : "Copying update to server…";
     this.beginFileSync(serverId, syncLabel);
+    let syncHeartbeat: ReturnType<typeof setInterval> | null = null;
     try {
       if (canSkipAsaContentSync(contentCacheDir, installDir)) {
         this.appendSteamCmdConsole(
@@ -832,6 +833,16 @@ export class UpdateService extends EventEmitter {
           "No copy needed",
         );
       } else {
+        const syncStartedAt = Date.now();
+        syncHeartbeat = setInterval(() => {
+          if (this.cancelRequested) {
+            return;
+          }
+          const elapsedSec = Math.max(1, Math.round((Date.now() - syncStartedAt) / 1000));
+          this.appendSteamCmdConsole(`Still copying files… (${elapsedSec}s elapsed)`, {
+            forceProgressPush: true,
+          });
+        }, 5_000);
         const robocopyCode = await syncAsaContentCacheToInstallDir(contentCacheDir, installDir, {
           onSpawn: (child) => {
             this.activeSyncChild = child;
@@ -863,6 +874,10 @@ export class UpdateService extends EventEmitter {
         operation,
         serverId,
       );
+    } finally {
+      if (syncHeartbeat !== null) {
+        clearInterval(syncHeartbeat);
+      }
     }
     this.endFileSync();
 
@@ -1391,7 +1406,11 @@ export class UpdateService extends EventEmitter {
   private beginFileSync(serverId: string, label: string): void {
     this.syncingServerId = serverId;
     this.syncingStartedAt = new Date().toISOString();
+    // Robocopy does not report bytes; clear any SteamCMD/estimate leftovers (incl. 0/0).
+    this.progressBytesDownloaded = null;
+    this.progressBytesTotal = null;
     // Keep a mid-high percent so Success! (90%) does not look like a stall at 100%.
+    // setProgress(93, …) alone would not clear bytes (only percent 0/null does).
     this.setProgress(93, label, label);
   }
 

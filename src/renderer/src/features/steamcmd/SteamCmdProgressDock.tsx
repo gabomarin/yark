@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CaretDown, CaretUp, ProhibitInset, TerminalWindow } from "@phosphor-icons/react";
 import { ActionIcon, Button, Group, Progress, Stack, Text, Title, Tooltip } from "@mantine/core";
-import { formatSteamCmdByteProgress, steamCmdByteProgressNoun } from "@shared/steamcmd-progress";
+import { formatSteamCmdByteProgress, steamCmdByteProgressNoun, hasMeaningfulSteamCmdByteProgress } from "@shared/steamcmd-progress";
 import type { SteamCmdConsoleSnapshot, SteamCmdStatus } from "@shared/types";
 import { AutoScrollConsole } from "./AutoScrollConsole";
 import classes from "./SteamCmdProgressDock.module.css";
@@ -30,12 +30,11 @@ export function SteamCmdProgressDock(props: Props): JSX.Element {
       : "SteamCMD operation";
   const percent = status.progressPercent;
   const lines = props.console?.lines ?? [];
+  const downloaded = status.progressBytesDownloaded;
+  const total = status.progressBytesTotal;
   const byteProgress =
-    status.progressBytesDownloaded !== null && status.progressBytesTotal !== null
-      ? formatSteamCmdByteProgress(
-          status.progressBytesDownloaded,
-          status.progressBytesTotal,
-        )
+    downloaded !== null && total !== null && hasMeaningfulSteamCmdByteProgress(downloaded, total)
+      ? formatSteamCmdByteProgress(downloaded, total)
       : null;
   const byteNoun = steamCmdByteProgressNoun(status.operation);
   const stateLabel = (() => {

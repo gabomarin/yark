@@ -179,3 +179,121 @@ describe("App empty installation snapshot", () => {
     );
   });
 });
+
+describe("App SteamCMD sync-files UX (#48)", () => {
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("hides 0/0 MB on sync push and skips install snapshot polls while busy", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const idleStatus = {
+      detected: true,
+      executablePath: "C:/steamcmd/steamcmd.exe",
+      depotCacheDir: "C:/steamcmd/steamapps/depotcache",
+      contentCacheDir: "C:/steamcmd/asa_content_cache",
+      busy: false,
+      running: false,
+      operation: null,
+      serverId: null,
+      startedAt: null,
+      pid: null,
+      progressPercent: null,
+      progressLabel: null,
+      progressBytesDownloaded: null,
+      progressBytesTotal: null,
+      lastLine: null,
+      queuedCount: 0,
+      checkedAt: "2026-07-27T12:00:00.000Z",
+    };
+    let currentStatus: Record<string, unknown> = { ...idleStatus };
+    let progressListener:
+      | ((payload: {
+          status: Record<string, unknown>;
+          console: { lines: string[]; updatedAt: string };
+        }) => void)
+      | null = null;
+
+    const api = createApiMock();
+    api.getSteamCmdStatus = vi.fn().mockImplementation(async () => ({
+      ok: true,
+      data: currentStatus,
+    }));
+    api.onSteamCmdProgress = vi.fn((listener) => {
+      progressListener = (payload) => {
+        currentStatus = payload.status;
+        listener(payload);
+      };
+      return () => {
+        progressListener = null;
+      };
+    });
+    Object.defineProperty(window, "api", {
+      configurable: true,
+      value: api,
+    });
+
+    render(
+      <AppProviders>
+        <App />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByText("Create your first server")).toBeInTheDocument();
+    expect(progressListener).not.toBeNull();
+
+    const now = "2026-07-27T12:00:00.000Z";
+    progressListener!({
+      status: {
+        ...idleStatus,
+        busy: true,
+        running: true,
+        operation: "sync-files",
+        progressPercent: 93,
+        progressLabel: "Copying files to server…",
+        progressBytesDownloaded: 0,
+        progressBytesTotal: 0,
+        lastLine: "Still copying files… (5s elapsed)",
+        startedAt: now,
+        checkedAt: now,
+      },
+      console: {
+        lines: ["Reusing ASA content cache", "Still copying files… (5s elapsed)"],
+        updatedAt: now,
+      },
+    });
+
+    expect(await screen.findByText(/Copying files to the server/i)).toBeInTheDocument();
+    expect(screen.queryByText(/0\.0\s*\/\s*0\.0\s*MB/i)).not.toBeInTheDocument();
+
+    vi.mocked(api.getInstallationInfo).mockClear();
+    await vi.advanceTimersByTimeAsync(12_000);
+    expect(api.getInstallationInfo).not.toHaveBeenCalled();
+
+    progressListener!({
+      status: {
+        ...idleStatus,
+        busy: false,
+        running: false,
+        operation: null,
+        progressPercent: 100,
+        progressLabel: "Completed",
+        lastLine: "Operation finished",
+        checkedAt: now,
+      },
+      console: {
+        lines: ["ASA cache sync completed (robocopy=1)"],
+        updatedAt: now,
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Copying files to the server/i)).not.toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(api.getInstallationInfo).toHaveBeenCalled();
+    });
+  });
+});

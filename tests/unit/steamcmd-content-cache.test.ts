@@ -45,6 +45,14 @@ describe("steamcmd-content-cache", () => {
     expect(isRobocopySuccess(null)).toBe(false);
   });
 
+  it("uses a moderate robocopy thread count for sync", async () => {
+    const { ASA_CONTENT_SYNC_ROBOCOPY_THREADS } = await import(
+      "@backend/domains/updates/steamcmd-content-cache"
+    );
+    expect(ASA_CONTENT_SYNC_ROBOCOPY_THREADS).toBeGreaterThanOrEqual(2);
+    expect(ASA_CONTENT_SYNC_ROBOCOPY_THREADS).toBeLessThanOrEqual(4);
+  });
+
   it("only considers a cache fresh when the manifest is recent", () => {
     expect(isContentCacheFresh("C:\\missing-cache", Date.now())).toBe(false);
     expect(isContentCacheFresh("C:\\missing-cache", 0)).toBe(false);

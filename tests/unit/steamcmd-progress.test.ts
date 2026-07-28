@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatSteamCmdByteProgress,
+  hasMeaningfulSteamCmdByteProgress,
   parseSteamCmdProgressLine,
   steamCmdByteProgressNoun,
 } from "@shared/steamcmd-progress";
@@ -33,6 +34,13 @@ describe("parseSteamCmdProgressLine", () => {
 
   it("formats byte progress as MB", () => {
     expect(formatSteamCmdByteProgress(1048576, 20971520)).toBe("1.0 / 20.0 MB");
+  });
+
+  it("hides empty or unknown byte totals (avoids 0 / 0 MB during sync)", () => {
+    expect(hasMeaningfulSteamCmdByteProgress(0, 0)).toBe(false);
+    expect(hasMeaningfulSteamCmdByteProgress(null, null)).toBe(false);
+    expect(hasMeaningfulSteamCmdByteProgress(12, 0)).toBe(false);
+    expect(hasMeaningfulSteamCmdByteProgress(512, 1024)).toBe(true);
   });
 
   it("uses Checked noun while verifying", () => {

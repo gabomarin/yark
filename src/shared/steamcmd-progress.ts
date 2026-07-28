@@ -51,6 +51,23 @@ export function formatSteamCmdByteProgress(downloaded: number, total: number): s
 }
 
 /**
+ * True when byte counters are worth showing in the UI.
+ * Rejects nulls and empty totals (e.g. stale `0 / 0 MB` left over before robocopy sync).
+ */
+export function hasMeaningfulSteamCmdByteProgress(
+  downloaded: number | null | undefined,
+  total: number | null | undefined,
+): boolean {
+  return (
+    downloaded != null
+    && total != null
+    && Number.isFinite(downloaded)
+    && Number.isFinite(total)
+    && total > 0
+  );
+}
+
+/**
  * UI noun prefix for byte progress by operation.
  * SteamCMD also reports BytesDownloaded when verifying.
  */

@@ -6,8 +6,12 @@
 
 import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
+import { constants as osConstants, setPriority } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import type { SteamCmdCacheKind } from "../../../shared/types";
+
+/** Threads for robocopy — leave disk headroom so Electron stays responsive. */
+export const ASA_CONTENT_SYNC_ROBOCOPY_THREADS = 4;
 
 export const ASA_APP_ID = "2430930";
 
@@ -167,7 +171,7 @@ export async function syncAsaContentCacheToInstallDir(
       ...ASA_CONTENT_SYNC_EXCLUDE_DIRS,
       "/R:2",
       "/W:2",
-      "/MT:8",
+      `/MT:${ASA_CONTENT_SYNC_ROBOCOPY_THREADS}`,
       "/NFL",
       "/NDL",
       "/NJH",
@@ -180,6 +184,13 @@ export async function syncAsaContentCacheToInstallDir(
       windowsHide: true,
       shell: false,
     });
+    if (child.pid != null) {
+      try {
+        setPriority(child.pid, osConstants.priority.PRIORITY_BELOW_NORMAL);
+      } catch {
+        // Best effort: some hosts disallow priority changes.
+      }
+    }
     options.onSpawn?.(child);
 
     let stderr = "";
