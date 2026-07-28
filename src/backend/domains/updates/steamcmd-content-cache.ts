@@ -90,11 +90,34 @@ export function canSkipAsaContentSync(cacheDir: string, installDir: string): boo
   return source.toLowerCase() === dest.toLowerCase();
 }
 
+/** Shared argv prefix for every steamcmd.exe spawn. */
+export const STEAMCMD_ENGLISH_ARGS = ["-language", "english"] as const;
+
+/**
+ * Env overrides so SteamCMD prefers English even when the OS UI is not.
+ * Best-effort on Windows (bootstrapper may still follow UI language until -language applies).
+ */
+export function steamCmdSpawnEnv(
+  baseEnv: NodeJS.ProcessEnv = process.env,
+): NodeJS.ProcessEnv {
+  return {
+    ...baseEnv,
+    LANG: "en_US.UTF-8",
+    LC_ALL: "en_US.UTF-8",
+    LANGUAGE: "en_US:en",
+    // Best-effort; recent builds may ignore it.
+    STEAMCMD_OUTPUT_BUFFERS: "0",
+  };
+}
+
 /**
  * Order required by modern SteamCMD: force_install_dir before login.
+ * `-language english` keeps bootstrapper/progress text English so we do not
+ * need a multilingual parser (Windows UI language otherwise localizes SteamCMD).
  */
 export function buildSteamCmdAppUpdateArgs(installDir: string): string[] {
   return [
+    ...STEAMCMD_ENGLISH_ARGS,
     "+force_install_dir",
     installDir,
     "+login",

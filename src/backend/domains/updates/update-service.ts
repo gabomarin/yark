@@ -18,6 +18,8 @@ import type { InstanceLockManager } from "../../orchestration/instance-lock-mana
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
 import {
   buildSteamCmdAppUpdateArgs,
+  STEAMCMD_ENGLISH_ARGS,
+  steamCmdSpawnEnv,
   canSkipAsaContentSync,
   isOperationCancelledError,
   OperationCancelledError,
@@ -940,11 +942,7 @@ export class UpdateService extends EventEmitter {
         cwd: steamCmdHome,
         windowsHide: true,
         shell: false,
-        env: {
-          ...process.env,
-          // Best-effort attempt; recent builds may ignore it.
-          STEAMCMD_OUTPUT_BUFFERS: "0",
-        },
+        env: steamCmdSpawnEnv(),
       });
       this.beginSteamCmdProcess(child, operation, serverId);
       this.startDiskProgressMonitor(steamCmdHome, forceInstallDir);
@@ -1200,10 +1198,11 @@ export class UpdateService extends EventEmitter {
   private async verifySteamCmdExecutable(exePath: string): Promise<void> {
     await new Promise<void>((resolve, reject) => {
       this.appendSteamCmdConsole(`Validating SteamCMD: ${exePath}`);
-      const child = spawn(exePath, ["+quit"], {
+      const child = spawn(exePath, [...STEAMCMD_ENGLISH_ARGS, "+quit"], {
         cwd: resolveSteamCmdHome(exePath),
         windowsHide: true,
         shell: false,
+        env: steamCmdSpawnEnv(),
       });
 
       let finished = false;

@@ -32,6 +32,8 @@ describe("steamcmd-content-cache", () => {
 
   it("puts force_install_dir before login", () => {
     const args = buildSteamCmdAppUpdateArgs("C:\\ark_servers\\cache");
+    expect(args[0]).toBe("-language");
+    expect(args[1]).toBe("english");
     expect(args.indexOf("+force_install_dir")).toBeLessThan(args.indexOf("+login"));
     expect(args).toContain(ASA_APP_ID);
     expect(args).toContain("validate");

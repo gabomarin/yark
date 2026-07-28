@@ -32,6 +32,28 @@ describe("parseSteamCmdProgressLine", () => {
     expect(parsed.label).toMatch(/SteamCMD finished/i);
   });
 
+  it("parses English SteamCMD bootstrapper bracket progress", () => {
+    const parsed = parseSteamCmdProgressLine(
+      "[ 59%] Downloading update (11,343 of 19,014 KB)...",
+    );
+    expect(parsed.percent).toBe(59);
+    expect(parsed.label).toMatch(/Updating SteamCMD/i);
+    expect(parsed.label).toMatch(/MB/);
+    expect(parsed.bytesDownloaded).toBe(Math.round(11343 * 1024));
+    expect(parsed.bytesTotal).toBe(Math.round(19014 * 1024));
+  });
+
+  it("updates percent from localized bootstrapper lines without translating labels", () => {
+    const parsed = parseSteamCmdProgressLine(
+      "[ 59%] Descargando archivos (11,343 de 19,014 KB)...",
+    );
+    expect(parsed.percent).toBe(59);
+    // No Spanish dictionary — leave label null so the dock keeps its English status text.
+    expect(parsed.label).toBeNull();
+    expect(parsed.bytesDownloaded).toBeNull();
+    expect(parsed.bytesTotal).toBeNull();
+  });
+
   it("formats byte progress as MB", () => {
     expect(formatSteamCmdByteProgress(1048576, 20971520)).toBe("1.0 / 20.0 MB");
   });

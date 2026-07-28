@@ -118,6 +118,8 @@ UI entry points: sidebar **SteamCMD** page + floating progress dock; Overview in
 
 Live progress combines SteamCMD stdout `%` lines with disk estimates (`steamcmd-disk-progress.ts`: depot/downloading sizes under `force_install_dir`). The floating progress dock (and per-server Logs → Updates history) subscribe to `push:steamcmd-progress`. SteamCMD path/install live under **Settings**; cache folders are shown there as read-only paths with Open / Clear (blocked while a job runs).
 
+Spawns always pass `-language english` (plus `LANG`/`LC_ALL` env) so bootstrapper lines stay English for a single-language parser. SteamCMD otherwise follows the Windows UI language (e.g. Spanish “Descargando archivos…”). Bracket `[ N%]` still updates the percent even if OS localizes; labels/KB pairs are English-only.
+
 During **robocopy** (`sync-files`), progress is a **separate phase**: SteamCMD success may reach 100%, then the dock switches to an **indeterminate** (full striped/animated) bar with the copy label — no byte totals (robocopy runs with progress silenced). A console heartbeat every 5s confirms the job is still running. Sync uses `/MT:4` and below-normal process priority so the Electron UI keeps some disk headroom. While a job is busy, the renderer skips frequent `servers:installation` polls (those do sync PowerShell VersionInfo reads) and refreshes the install snapshot once when the job finishes.
 
 > Note: agent-context historically said “live log streaming during SteamCMD is pending.” The **console/progress push channel and dock are live**. What may still feel incomplete is richer per-file update-log streaming in the Logs UI—not the SteamCMD progress path.
@@ -133,7 +135,7 @@ During **robocopy** (`sync-files`), progress is a **separate phase**: SteamCMD s
 | `Stop the server before update/verify` | Process still active — stop from Overview/workspace first |
 | Update “available” looks wrong vs ARK Version string | Compare Steam `buildid` only; ARK Version is informational |
 | Repeated downloads when installing another server | Cache older than 15 minutes, missing manifest, or SteamCMD path changed |
-| `0 / 0 MB` or frozen UI on “Copying files” | Fixed in #48: sync clears byte counters and uses an indeterminate bar (SteamCMD can hit 100% first); long robocopy can still saturate disk — watch Cancel + console heartbeat. Checks: dock/App unit tests + `tests/integration/steamcmd-sync-responsiveness.test.ts` (event-loop during robocopy on Windows). |
+| Console in Spanish / stuck `0.0%` while `[ N%]` lines scroll | SteamCMD bootstrapper follows Windows UI language. We force `-language english`; percent still reads from `[ N%]`. Restart the update after this build. |
 | World/INI wiped after update | Should not happen via robocopy path (`ShooterGame\Saved` excluded); check whether fallback direct `app_update` on install dir was used (console mentions cache sync failure) |
 | Update failed then server restarted on old files | Expected rollback using `pre_update` backups — inspect Updates log + Backups history |
 | Job stuck after crash | Queue persisted in settings `criticalJobsQueue.v1`; resumes on next launch |
