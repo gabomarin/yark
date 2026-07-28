@@ -419,6 +419,8 @@ export const KNOWN_MAPS = [
   "Extinction_WP",
   "Ragnarok_WP",
   "Astraeos_WP",
+  "Genesis_WP",
+  "LostColony_WP",
 ] as const;
 
 export const PORT_MIN = 1024;
