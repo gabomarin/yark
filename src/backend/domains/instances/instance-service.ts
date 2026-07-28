@@ -179,6 +179,8 @@ export class InstanceService {
         clusterDir: source.clusterDir,
         extraArgs: [...source.extraArgs],
         mods: [...source.mods],
+        disabledMods: [...(source.disabledMods ?? [])],
+        modMetadataCache: { ...(source.modMetadataCache ?? {}) },
       };
       if (findPortConflicts(existing, { ...input, id: undefined }).length === 0) {
         break;

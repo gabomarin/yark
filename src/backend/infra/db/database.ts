@@ -140,6 +140,13 @@ const MIGRATIONS: Migration[] = [
       ALTER TABLE events ADD COLUMN details TEXT;
     `,
   },
+  {
+    version: 7,
+    sql: `
+      ALTER TABLE servers ADD COLUMN disabled_mods TEXT NOT NULL DEFAULT '[]';
+      ALTER TABLE servers ADD COLUMN mod_metadata_cache TEXT NOT NULL DEFAULT '{}';
+    `,
+  },
 ];
 
 /**

@@ -95,6 +95,13 @@ describe("buildLaunchArgs", () => {
     expect(args).toContain("-mods=111,222");
   });
 
+  it("omits disabled mods from -mods=", () => {
+    const args = buildLaunchArgs(
+      profile({ mods: ["111", "222", "333"], disabledMods: ["222"] }),
+    );
+    expect(args).toContain("-mods=111,333");
+  });
+
   it("adds cluster flags when clusterId and clusterDir are set", () => {
     const args = buildLaunchArgs(
       profile({ clusterId: "my-cluster", clusterDir: "C:\\asa\\cluster" }),

@@ -41,7 +41,33 @@ describe("ServerRepository", () => {
     const fetched = repo.get(created.id);
     expect(fetched).toEqual(created);
     expect(fetched!.mods).toEqual(["111", "222"]);
+    expect(fetched!.disabledMods).toEqual([]);
+    expect(fetched!.modMetadataCache).toEqual({});
     expect(fetched!.extraArgs).toEqual(["-NoBattlEye"]);
+  });
+
+  it("persists disabled mods and metadata cache", () => {
+    const created = repo.create(
+      input({
+        disabledMods: ["222"],
+        modMetadataCache: {
+          "111": {
+            id: "111",
+            name: "Demo",
+            summary: "Demo mod",
+            thumbnailUrl: null,
+            authors: ["A"],
+            downloadCount: 1,
+            dateModified: "2026-01-01T00:00:00.000Z",
+            curseforgeUrl:
+              "https://www.curseforge.com/ark-survival-ascended/mods/demo",
+            slug: "demo",
+          },
+        },
+      }),
+    );
+    expect(repo.get(created.id)?.disabledMods).toEqual(["222"]);
+    expect(repo.get(created.id)?.modMetadataCache?.["111"]?.slug).toBe("demo");
   });
 
   it("lists profiles sorted by name", () => {

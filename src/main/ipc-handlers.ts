@@ -2,6 +2,7 @@ import { BrowserWindow, dialog, ipcMain, shell, type OpenDialogOptions, type Sav
 import { spawn } from "node:child_process";
 import { mkdir } from "node:fs/promises";
 import { IPC, type IpcResult, type PickPathKind, type AppDataFolderKind } from "../shared/ipc";
+import { canonicalCurseForgeAsaModUrl } from "../shared/curseforge-url";
 import type { ServerIniPayload, ServerProfileInput, StartServerOptions, SteamCmdCacheKind } from "../shared/types";
 import type { BackupService } from "../backend/domains/backups/backup-service";
 import type { InstanceService } from "../backend/domains/instances/instance-service";
@@ -57,13 +58,25 @@ export function registerIpcHandlers(
   ipcMain.handle(IPC.serversList, () => wrap(() => instances.list()));
 
   ipcMain.handle(IPC.serversCreate, (_e, input: ServerProfileInput) =>
-    wrap(() => instances.create(input)),
+    wrap(async () => {
+      const enriched = await mods.enrichNewServerMods(input, { mods: [] });
+      return instances.create(enriched);
+    }),
   );
 
   ipcMain.handle(
     IPC.serversUpdate,
     (_e, id: string, input: ServerProfileInput) =>
-      wrap(() => instances.update(id, input)),
+      wrap(async () => {
+        const existing = repo.get(id);
+        if (existing === null) throw new Error("Server does not exist");
+        const enriched = await mods.enrichNewServerMods(input, {
+          mods: existing.mods,
+          disabledMods: existing.disabledMods,
+          modMetadataCache: existing.modMetadataCache,
+        });
+        return instances.update(id, enriched);
+      }),
   );
 
   ipcMain.handle(IPC.serversDelete, (_e, id: string) =>
@@ -340,6 +353,23 @@ export function registerIpcHandlers(
 
   ipcMain.handle(IPC.modsGetMany, (_e, modIds: string[], forceRefresh?: boolean) =>
     wrap(() => mods.getMods(modIds, { forceRefresh: forceRefresh === true })),
+  );
+
+  ipcMain.handle(
+    IPC.modsSearch,
+    (_e, query: string, options?: { index?: number; pageSize?: number }) =>
+      wrap(() => mods.search(query, options)),
+  );
+
+  ipcMain.handle(IPC.modsGetByReference, (_e, ref: string) =>
+    wrap(() => mods.getByReference(ref)),
+  );
+
+  ipcMain.handle(IPC.modsOpenCurseForge, (_e, url: string) =>
+    wrap(async () => {
+      // Fail closed: only open a validated ASA CurseForge mod detail URL.
+      await shell.openExternal(canonicalCurseForgeAsaModUrl(url));
+    }),
   );
 
   ipcMain.handle(IPC.backupsList, (_e, serverId: string, limit?: number) =>

@@ -100,6 +100,12 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.modsGet, modId, forceRefresh),
   getModsMetadata: (modIds: string[], forceRefresh?: boolean) =>
     ipcRenderer.invoke(IPC.modsGetMany, modIds, forceRefresh),
+  searchMods: (query, options) =>
+    ipcRenderer.invoke(IPC.modsSearch, query, options),
+  getModByReference: (ref) =>
+    ipcRenderer.invoke(IPC.modsGetByReference, ref),
+  openCurseForgeMod: (url) =>
+    ipcRenderer.invoke(IPC.modsOpenCurseForge, url),
   onServerStatus: (listener) => {
     const handler = (_e: unknown, info: ServerRuntimeInfo) => listener(info);
     ipcRenderer.on(IPC_PUSH.serverStatus, handler);

@@ -1,8 +1,8 @@
 import type { ModMetadata } from "@shared/types";
 
 /**
- * Test catalog until CURSEFORGE_API_KEY is available.
- * Real ASA IDs; replaced by this map when the official API is connected.
+ * Offline / unit-test catalog for `ModsService({ useMockCatalog: true })`.
+ * Production resolves metadata via the CurseForge proxy Worker.
  */
 export const MOCK_MOD_CATALOG: Readonly<Record<string, ModMetadata>> = {
   "928793": {

@@ -101,7 +101,11 @@ function toFormState(
   };
 }
 
-function toInput(state: FormState, isCreate: boolean): ServerProfileInput {
+function toInput(
+  state: FormState,
+  isCreate: boolean,
+  initial: ServerProfile | null,
+): ServerProfileInput {
   const name = state.name.trim();
   const baseOrInstall = state.installDir.trim();
   return {
@@ -127,6 +131,8 @@ function toInput(state: FormState, isCreate: boolean): ServerProfileInput {
       .split(",")
       .map((value) => value.trim())
       .filter((value) => value.length > 0),
+    disabledMods: initial?.disabledMods ?? [],
+    modMetadataCache: initial?.modMetadataCache ?? {},
   };
 }
 
@@ -199,7 +205,7 @@ export function ServerForm(props: Props): JSX.Element {
       return;
     }
     setSaving(true);
-    const input = toInput(state, isCreate);
+    const input = toInput(state, isCreate, props.initial);
     const result =
       props.initial === null
         ? await window.api.createServer(input)
@@ -426,7 +432,7 @@ export function ServerForm(props: Props): JSX.Element {
             value={state.mods}
             onChange={(e) => setField("mods")(e.currentTarget.value)}
             placeholder="928988, 929420"
-            description="Comma-separated CurseForge Project IDs (−mods= on launch)."
+            description="Comma-separated CurseForge Project IDs (−mods= on launch). Disable individual mods from the Mods tab without removing them."
           />
           <Textarea
             label="Extra arguments"

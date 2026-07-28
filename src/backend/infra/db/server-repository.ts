@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import type {
   AppEvent,
   AppEventDetails,
+  ModMetadata,
   ServerProfile,
   ServerProfileInput,
 } from "@shared/types";
@@ -22,8 +23,19 @@ interface ServerRow {
   cluster_dir: string | null;
   extra_args: string;
   mods: string;
+  disabled_mods: string;
+  mod_metadata_cache: string;
   created_at: string;
   updated_at: string;
+}
+
+function parseJson<T>(raw: string | null | undefined, fallback: T): T {
+  if (raw == null || raw.trim().length === 0) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
 }
 
 function rowToProfile(row: ServerRow): ServerProfile {
@@ -42,6 +54,8 @@ function rowToProfile(row: ServerRow): ServerProfile {
     clusterDir: row.cluster_dir,
     extraArgs: JSON.parse(row.extra_args) as string[],
     mods: JSON.parse(row.mods) as string[],
+    disabledMods: parseJson(row.disabled_mods, []),
+    modMetadataCache: parseJson<Record<string, ModMetadata>>(row.mod_metadata_cache, {}),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -68,6 +82,8 @@ export class ServerRepository {
     const now = new Date().toISOString();
     const profile: ServerProfile = {
       ...input,
+      disabledMods: input.disabledMods ?? [],
+      modMetadataCache: input.modMetadataCache ?? {},
       id: randomUUID(),
       createdAt: now,
       updatedAt: now,
@@ -79,8 +95,8 @@ export class ServerRepository {
           game_port, query_port, rcon_port,
           server_password, admin_password,
           cluster_id, cluster_dir, extra_args, mods,
-          created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          disabled_mods, mod_metadata_cache, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         profile.id,
@@ -97,6 +113,8 @@ export class ServerRepository {
         profile.clusterDir,
         JSON.stringify(profile.extraArgs),
         JSON.stringify(profile.mods),
+        JSON.stringify(profile.disabledMods),
+        JSON.stringify(profile.modMetadataCache),
         profile.createdAt,
         profile.updatedAt,
       );
@@ -114,6 +132,7 @@ export class ServerRepository {
           game_port = ?, query_port = ?, rcon_port = ?,
           server_password = ?, admin_password = ?,
           cluster_id = ?, cluster_dir = ?, extra_args = ?, mods = ?,
+          disabled_mods = ?, mod_metadata_cache = ?,
           updated_at = ?
         WHERE id = ?`,
       )
@@ -131,6 +150,8 @@ export class ServerRepository {
         input.clusterDir,
         JSON.stringify(input.extraArgs),
         JSON.stringify(input.mods),
+        JSON.stringify(input.disabledMods ?? existing.disabledMods ?? []),
+        JSON.stringify(input.modMetadataCache ?? existing.modMetadataCache ?? {}),
         updatedAt,
         id,
       );
