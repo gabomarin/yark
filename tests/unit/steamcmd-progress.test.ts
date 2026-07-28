@@ -26,9 +26,9 @@ describe("parseSteamCmdProgressLine", () => {
     expect(parsed.label).toMatch(/Verifying/);
   });
 
-  it("marks SteamCMD success as nearly done, not fully complete", () => {
+  it("marks SteamCMD success as complete before the separate file-sync phase", () => {
     const parsed = parseSteamCmdProgressLine("Success! App '2430930' fully installed.");
-    expect(parsed.percent).toBe(90);
+    expect(parsed.percent).toBe(100);
     expect(parsed.label).toMatch(/SteamCMD finished/i);
   });
 

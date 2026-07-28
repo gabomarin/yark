@@ -251,7 +251,7 @@ describe("App SteamCMD sync-files UX (#48)", () => {
         busy: true,
         running: true,
         operation: "sync-files",
-        progressPercent: 93,
+        progressPercent: null,
         progressLabel: "Copying files to server…",
         progressBytesDownloaded: 0,
         progressBytesTotal: 0,

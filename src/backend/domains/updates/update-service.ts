@@ -1406,12 +1406,13 @@ export class UpdateService extends EventEmitter {
   private beginFileSync(serverId: string, label: string): void {
     this.syncingServerId = serverId;
     this.syncingStartedAt = new Date().toISOString();
-    // Robocopy does not report bytes; clear any SteamCMD/estimate leftovers (incl. 0/0).
+    // New phase after SteamCMD: robocopy has no %/bytes — indeterminate bar + label.
     this.progressBytesDownloaded = null;
     this.progressBytesTotal = null;
-    // Keep a mid-high percent so Success! (90%) does not look like a stall at 100%.
-    // setProgress(93, …) alone would not clear bytes (only percent 0/null does).
-    this.setProgress(93, label, label);
+    this.progressPercent = null;
+    this.progressLabel = label;
+    this.lastProgressLine = label;
+    this.emitProgress(true);
   }
 
   private endFileSync(): void {

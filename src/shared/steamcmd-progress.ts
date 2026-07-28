@@ -95,8 +95,8 @@ export function parseSteamCmdProgressLine(line: string): SteamCmdProgressParse {
 
   if (SUCCESS_RE.test(trimmed) || /fully installed/i.test(trimmed)) {
     return {
-      // Not 100%: local cache → server sync still runs after SteamCMD exits.
-      percent: 90,
+      // SteamCMD phase complete; robocopy sync is a separate indeterminate step.
+      percent: 100,
       label: "SteamCMD finished — preparing file sync",
       bytesDownloaded: null,
       bytesTotal: null,

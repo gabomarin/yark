@@ -29,6 +29,10 @@ export function SteamCmdProgressDock(props: Props): JSX.Element {
       ? OPERATION_LABEL[status.operation]
       : "SteamCMD operation";
   const percent = status.progressPercent;
+  /** Unknown % while busy (e.g. robocopy sync) — full striped bar with loop animation. */
+  const indeterminate = percent === null && status.busy;
+  const progressValue = indeterminate ? 100 : (percent ?? 0);
+  const progressAnimated = indeterminate || (percent !== null && percent < 100);
   const lines = props.console?.lines ?? [];
   const downloaded = status.progressBytesDownloaded;
   const total = status.progressBytesTotal;
@@ -72,9 +76,9 @@ export function SteamCmdProgressDock(props: Props): JSX.Element {
           </Group>
           <Group gap={6} wrap="nowrap">
             <Progress
-              value={percent ?? (status.busy ? 15 : 0)}
-              animated={percent === null || percent < 100}
-              striped={percent === null || percent < 100}
+              value={progressValue}
+              animated={progressAnimated}
+              striped={progressAnimated}
               size="sm"
               radius="xl"
               className={classes.miniProgress}
@@ -159,9 +163,9 @@ export function SteamCmdProgressDock(props: Props): JSX.Element {
         </Group>
 
         <Progress
-          value={percent ?? (status.busy ? 15 : 0)}
-          animated={percent === null || percent < 100}
-          striped={percent === null || percent < 100}
+          value={progressValue}
+          animated={progressAnimated}
+          striped={progressAnimated}
           size="md"
           radius="xl"
         />

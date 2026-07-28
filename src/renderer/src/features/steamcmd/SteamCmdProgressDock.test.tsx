@@ -17,7 +17,7 @@ function baseStatus(overrides: Partial<SteamCmdStatus> = {}): SteamCmdStatus {
     serverId: "srv-1",
     startedAt: "2026-07-27T00:00:00.000Z",
     pid: null,
-    progressPercent: 93,
+    progressPercent: null,
     progressLabel: "Copying files to server…",
     progressBytesDownloaded: null,
     progressBytesTotal: null,
@@ -38,6 +38,7 @@ describe("SteamCmdProgressDock (#48 sync UX)", () => {
       <AppProviders>
         <SteamCmdProgressDock
           status={baseStatus({
+            progressPercent: null,
             progressBytesDownloaded: 0,
             progressBytesTotal: 0,
           })}
@@ -55,6 +56,9 @@ describe("SteamCmdProgressDock (#48 sync UX)", () => {
     expect(screen.getByText(/Copying files to server/i)).toBeInTheDocument();
     expect(screen.queryByText(/0\.0\s*\/\s*0\.0\s*MB/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/^Copied:/i)).not.toBeInTheDocument();
+    // Indeterminate sync: no numeric percent label (full animated bar instead).
+    expect(screen.queryByText(/93\.0%/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/100\.0%/i)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Cancel" })).toBeEnabled();
   });
 
