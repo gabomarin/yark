@@ -292,22 +292,25 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
                 />
               )}
 
-              <div
-                className={classes.configHost}
-                data-visible={workspaceTab === "iniFiles" || undefined}
-              >
-                <ConfigurationEditor
-                  key={`${selectedServer.id}:${iniEditorVersion}`}
-                  server={selectedServer}
-                  section="iniFiles"
-                  serverActive={opsLocked}
-                  filesJobActive={filesJobActive}
-                  onDirtyChange={(dirty) => {
-                    dirtyRef.current = dirty;
-                    setIniDirty(dirty);
-                  }}
-                />
-              </div>
+              {/* Mount only on the INI tab, or while dirty so edits survive tab switches. */}
+              {(workspaceTab === "iniFiles" || iniDirty) && (
+                <div
+                  className={classes.configHost}
+                  data-visible={workspaceTab === "iniFiles" || undefined}
+                >
+                  <ConfigurationEditor
+                    key={`${selectedServer.id}:${iniEditorVersion}`}
+                    server={selectedServer}
+                    section="iniFiles"
+                    serverActive={opsLocked}
+                    filesJobActive={filesJobActive}
+                    onDirtyChange={(dirty) => {
+                      dirtyRef.current = dirty;
+                      setIniDirty(dirty);
+                    }}
+                  />
+                </div>
+              )}
 
               {workspaceTab === "backups" && (
                 <ServerBackupPanel

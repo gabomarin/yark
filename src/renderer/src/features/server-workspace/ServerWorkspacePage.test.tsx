@@ -357,6 +357,19 @@ describe("ServerWorkspacePage", () => {
     ).toBeDisabled();
   });
 
+  it("does not load INI until the INI Files tab is opened", async () => {
+    renderWorkspace();
+
+    await screen.findByRole("heading", { name: "Server information" });
+    expect(window.api.readServerIni).not.toHaveBeenCalled();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("tab", { name: "INI Files" }));
+    await waitFor(() => {
+      expect(window.api.readServerIni).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it("reviews and explicitly applies the assistant draft", async () => {
     const user = userEvent.setup();
     renderWorkspace();
@@ -402,8 +415,8 @@ describe("ServerWorkspacePage", () => {
     ).toBeVisible();
     expect(window.api.previewServerIni).toHaveBeenCalledTimes(1);
     expect(window.api.saveServerIni).toHaveBeenCalledTimes(1);
-    // Hidden editor + wizard initial load + re-read before save.
-    expect(window.api.readServerIni).toHaveBeenCalledTimes(3);
+    // Wizard initial load + re-read before save (INI editor is not pre-mounted).
+    expect(window.api.readServerIni).toHaveBeenCalledTimes(2);
     const savedPayload = vi.mocked(window.api.saveServerIni).mock.calls[0]?.[1];
     expect(savedPayload?.gameUserSettings).toContain("TamingSpeedMultiplier=3");
     expect(savedPayload?.game).toContain("BabyMatureSpeedMultiplier=5");
