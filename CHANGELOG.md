@@ -9,13 +9,21 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-07-28
+
 ### Added
 
-- `npm run e2e:mods` helper and `npm run website:screenshots` gallery capture script for refreshing GitHub Pages screenshots.
+- Backup history **Copy details** action (icon-only) for a plain-text diagnostic payload including status, paths, and error text (#68).
+- `npm run e2e:mods` helper and `npm run website:screenshots` gallery capture script for refreshing GitHub Pages screenshots (#75).
 
 ### Changed
 
-- Project website copy and screenshot gallery aligned with v0.3.0: Mods tab is live (not “planned”), Settings and Clusters are documented as live, privacy notes the CurseForge Worker proxy, and the gallery adds Mods, Clusters, Logs, Settings, and per-server Backups shots.
+- Project website copy and screenshot gallery aligned with v0.3.x: Mods/Settings live, Clusters/Logs/workspace Backups shots, CurseForge Worker privacy note, and capture helpers env-configurable (#75).
+
+### Fixed
+
+- Scheduled world backups no longer overlap or enqueue duplicates while a prior world/scheduled backup is still running; scheduler cycles coalesce (#68).
+- World snapshots skip disappearing transient Ark save artifacts (e.g. timestamped `.arkrbf` / `.tmp`) instead of failing the whole archive; missing essential world data still fails clearly (#68).
 
 ## [0.3.0] - 2026-07-28
 
@@ -94,6 +102,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Tracked in-repo TODO / historical planning docs (moved to local agent context).
 
 [Unreleased]: #unreleased
+[0.3.1]: #031---2026-07-28
 [0.3.0]: #030---2026-07-28
 [0.2.0]: #020---2026-07-27
 [0.1.0]: #010---2026-07-24
