@@ -9,6 +9,7 @@ import {
 } from "@phosphor-icons/react";
 import { Button, Stack, Text, Textarea } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import { resolveDisplayedServerVersion } from "@shared/server-version-display";
 import { useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { serverRuntimeStatusLabel } from "@ui/ServerRuntimeStatusBadge/serverRuntimeStatus";
@@ -55,11 +56,7 @@ export function SidePanel(props: Props): JSX.Element {
     (isActive
       ? "Server will be stopped for SteamCMD, then restarted if the job succeeds"
       : undefined);
-  const version =
-    props.installation?.arkVersion ??
-    props.installation?.build ??
-    props.installation?.version ??
-    "—";
+  const version = resolveDisplayedServerVersion(props.installation) ?? "—";
   const uptime =
     props.runtime?.startedAt != null && status === "running"
       ? new Date(props.runtime.startedAt).toLocaleString()

@@ -55,6 +55,7 @@ describe("ServerCard", () => {
           onRestart={vi.fn()}
           onOpenWorkspace={onOpenWorkspace}
           onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
           onOpenFolder={vi.fn()}
           onInstallFiles={vi.fn()}
           onUpdateNow={vi.fn()}
@@ -67,15 +68,16 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    await user.click(screen.getByRole("button", { name: /^Start$/i }));
+    await user.click(screen.getByRole("button", { name: /^Start server$/i }));
     expect(onStart).toHaveBeenCalledTimes(1);
 
     await user.click(screen.getByRole("button", { name: /Open settings for The Island/i }));
     expect(onOpenWorkspace).toHaveBeenCalledTimes(1);
   });
 
-  it("uses Manage for a running server and keeps secondary actions in the menu", async () => {
+  it("uses Stop for a running server and keeps secondary actions in the menu", async () => {
     const user = userEvent.setup();
+    const onStop = vi.fn();
     const onOpenWorkspace = vi.fn();
 
     const { container } = render(
@@ -92,11 +94,12 @@ describe("ServerCard", () => {
           installation={installed}
           officialSteamBuild={null}
           onStart={vi.fn()}
-          onStop={vi.fn()}
+          onStop={onStop}
           onKill={vi.fn()}
           onRestart={vi.fn()}
           onOpenWorkspace={onOpenWorkspace}
           onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
           onOpenFolder={vi.fn()}
           onInstallFiles={vi.fn()}
           onUpdateNow={vi.fn()}
@@ -110,9 +113,10 @@ describe("ServerCard", () => {
     );
 
     const card = within(container);
-    await user.click(card.getByRole("button", { name: "Manage" }));
-    expect(onOpenWorkspace).toHaveBeenCalledTimes(1);
-    expect(card.queryByRole("button", { name: /^Start$/i })).not.toBeInTheDocument();
+    await user.click(card.getByRole("button", { name: /^Stop server$/i }));
+    expect(onStop).toHaveBeenCalledTimes(1);
+    expect(card.queryByRole("button", { name: /^Start server$/i })).not.toBeInTheDocument();
+    expect(card.getByRole("button", { name: /^Restart server$/i })).toBeEnabled();
 
     await user.click(card.getByRole("button", { name: "More options" }));
     expect(
@@ -124,7 +128,42 @@ describe("ServerCard", () => {
     expect(screen.queryByRole("button", { name: /^Force close \(matar\)$/i })).not.toBeInTheDocument();
   });
 
-  it("uses Install as the primary action when server files are missing", async () => {
+  it("puts Install beside the kebab and reserves Play/Restart when not installed", () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={{ ...installed, installed: false }}
+          officialSteamBuild={null}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const install = screen.getByRole("button", { name: /Install server files/i });
+    expect(install).toBeInTheDocument();
+    expect(install).toHaveAttribute("data-files-action", "install");
+    expect(document.querySelector("[data-primary-action][data-reserved]")).not.toBeNull();
+    expect(document.querySelector("[data-restart-action][data-reserved]")).not.toBeNull();
+    expect(document.querySelector("[data-update-action][data-reserved]")).toBeNull();
+  });
+
+  it("uses Install in the files slot when server files are missing", async () => {
     const user = userEvent.setup();
     const onInstallFiles = vi.fn();
 
@@ -141,6 +180,7 @@ describe("ServerCard", () => {
           onRestart={vi.fn()}
           onOpenWorkspace={vi.fn()}
           onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
           onOpenFolder={vi.fn()}
           onInstallFiles={onInstallFiles}
           onUpdateNow={vi.fn()}
@@ -153,7 +193,7 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    await user.click(screen.getByRole("button", { name: "Install" }));
+    await user.click(screen.getByRole("button", { name: /Install server files/i }));
     expect(onInstallFiles).toHaveBeenCalledTimes(1);
   });
 
@@ -180,6 +220,7 @@ describe("ServerCard", () => {
           onRestart={vi.fn()}
           onOpenWorkspace={vi.fn()}
           onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
           onOpenFolder={vi.fn()}
           onInstallFiles={vi.fn()}
           onUpdateNow={vi.fn()}
@@ -197,7 +238,7 @@ describe("ServerCard", () => {
     expect(screen.getByText(/Downloaded:/i)).toBeInTheDocument();
     expect(screen.getByText(/512\.0 \/ 1024\.0 MB/i)).toBeInTheDocument();
     expect(screen.getByText(/42%/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Cancel files job/i })).toBeInTheDocument();
   });
 
   it("does not offer an update when ARK versions differ but Steam builds match", () => {
@@ -218,6 +259,7 @@ describe("ServerCard", () => {
           onRestart={vi.fn()}
           onOpenWorkspace={vi.fn()}
           onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
           onOpenFolder={vi.fn()}
           onInstallFiles={vi.fn()}
           onUpdateNow={vi.fn()}
@@ -230,17 +272,146 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("Up to date")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Start" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Update" })).not.toBeInTheDocument();
+    const versionMeta = document.querySelector('[data-meta-label="Version"]');
+    expect(versionMeta).toHaveAttribute("data-meta-tone", "ok");
+    expect(screen.getByRole("button", { name: /^Start server$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Server is up to date/i })).toBeDisabled();
   });
 
-  it("offers an update only when the Steam build is behind", () => {
+  it("keeps Start available when the Steam build is behind and enables Update", async () => {
+    const user = userEvent.setup();
+    const onStart = vi.fn();
+    const onUpdateNow = vi.fn();
+
     render(
       <AppProviders>
         <ServerCard
           server={profile}
           runtime={null}
+          installation={{
+            ...installed,
+            arkVersion: "92.23",
+            build: "92.23",
+            steamBuild: "build 24300000",
+          }}
+          officialSteamBuild="build 24346423"
+          onStart={onStart}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={onUpdateNow}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(document.querySelector('[data-meta-label="Version"]')).toHaveAttribute(
+      "data-meta-tone",
+      "attention",
+    );
+    expect(screen.getByText("92.23")).toBeInTheDocument();
+    expect(screen.queryByText("Update available")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Start server$/i })).toBeEnabled();
+    const update = screen.getByRole("button", { name: /^Update server$/i });
+    expect(update).toBeEnabled();
+    await user.click(update);
+    expect(onUpdateNow).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByRole("button", { name: /^Start server$/i }));
+    expect(onStart).toHaveBeenCalledTimes(1);
+  });
+
+  it("marks Version muted when server files are not installed", () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={{ ...installed, installed: false }}
+          officialSteamBuild={null}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(document.querySelector('[data-meta-label="Version"]')).toHaveAttribute(
+      "data-meta-tone",
+      "muted",
+    );
+    expect(screen.queryByText("Not installed")).not.toBeInTheDocument();
+  });
+
+  it("prefers file build over stale log arkVersion for the Version column", () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={{
+            ...installed,
+            arkVersion: "92.25",
+            build: "92.28",
+            version: "92.28",
+            steamBuild: "build 24346423",
+          }}
+          officialSteamBuild="build 24346423"
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("92.28")).toBeInTheDocument();
+    expect(screen.queryByText("92.25")).not.toBeInTheDocument();
+  });
+
+  it("disables Restart and Update while the server is starting, but keeps Stop", () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={{
+            serverId: profile.id,
+            status: "starting",
+            pid: null,
+            startedAt: null,
+            lastError: null,
+          }}
           installation={{
             ...installed,
             arkVersion: "92.23",
@@ -253,6 +424,7 @@ describe("ServerCard", () => {
           onRestart={vi.fn()}
           onOpenWorkspace={vi.fn()}
           onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
           onOpenFolder={vi.fn()}
           onInstallFiles={vi.fn()}
           onUpdateNow={vi.fn()}
@@ -265,7 +437,206 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("Update available")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Update" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Stop server$/i })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^Restart server$/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Update server$/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "More options" })).toBeEnabled();
+  });
+
+  it("keeps Cancel enabled while SteamCMD is busy even if the server is stopping", () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={{
+            serverId: profile.id,
+            status: "stopping",
+            pid: 99,
+            startedAt: "2026-07-23T00:00:00.000Z",
+            lastError: null,
+          }}
+          installation={installed}
+          officialSteamBuild="build 24346423"
+          steamCmdBusy
+          steamCmdOperation="update"
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("button", { name: /Cancel files job/i })).toBeEnabled();
+  });
+
+  it("allows manual Update when official Steam build is unknown", async () => {
+    const user = userEvent.setup();
+    const onUpdateNow = vi.fn();
+
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={{
+            ...installed,
+            build: "92.28",
+            steamBuild: "build 24300000",
+          }}
+          officialSteamBuild={null}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={onUpdateNow}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const update = screen.getByRole("button", { name: /Update status unknown/i });
+    expect(update).toBeEnabled();
+    await user.click(update);
+    expect(onUpdateNow).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps Start after an error and routes review through the error label", async () => {
+    const user = userEvent.setup();
+    const onStart = vi.fn();
+    const onReviewError = vi.fn();
+
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={{
+            serverId: profile.id,
+            status: "error",
+            pid: null,
+            startedAt: null,
+            lastError: "Native console closed during startup",
+          }}
+          installation={installed}
+          officialSteamBuild={null}
+          onStart={onStart}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={onReviewError}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.queryByRole("button", { name: /^Review error$/i })).not.toBeInTheDocument();
+    const start = screen.getByRole("button", { name: /^Start server$/i });
+    expect(start).toBeEnabled();
+    await user.click(start);
+    expect(onStart).toHaveBeenCalledTimes(1);
+
+    await user.click(
+      screen.getByRole("button", { name: /Review error — open runtime logs/i }),
+    );
+    expect(onReviewError).toHaveBeenCalledTimes(1);
+  });
+
+  it("enables Restart only while the server is running", async () => {
+    const user = userEvent.setup();
+    const onRestart = vi.fn();
+
+    const { rerender } = render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={installed}
+          officialSteamBuild={null}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={onRestart}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("button", { name: /^Restart server$/i })).toBeDisabled();
+
+    rerender(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={{
+            serverId: profile.id,
+            status: "running",
+            pid: 4242,
+            startedAt: "2026-07-23T00:00:00.000Z",
+            lastError: null,
+          }}
+          installation={installed}
+          officialSteamBuild={null}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={onRestart}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const restart = screen.getByRole("button", { name: /^Restart server$/i });
+    expect(restart).toBeEnabled();
+    await user.click(restart);
+    expect(onRestart).toHaveBeenCalledTimes(1);
   });
 });

@@ -70,6 +70,8 @@ export const appTokens = {
     accent: radixPalette.blue[8],
     ok: "#58c89a",
     warn: "#d9a85f",
+    /** Needs-attention UI (update pending, card rail). */
+    attention: "#E6ED62",
     bad: "#ef7070",
     cryo: radixPalette.blue[10],
     biomass: "#58c89a",
