@@ -59,6 +59,7 @@ function createApiMock(): RendererApi {
     previewServerIni: vi.fn(),
     saveServerIni: vi.fn(),
     listServerLogs: vi.fn(),
+    getServerRuntimeLog: vi.fn(),
     readServerUpdateLog: vi.fn(),
     exportServerLogs: vi.fn(),
     openServerUpdateLogFile: vi.fn(),

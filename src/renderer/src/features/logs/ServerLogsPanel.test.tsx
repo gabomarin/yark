@@ -67,6 +67,13 @@ describe("ServerLogsPanel", () => {
             runtimeLogLines: ["line"],
           },
         }),
+        getServerRuntimeLog: vi.fn().mockResolvedValue({
+          ok: true,
+          data: {
+            serverId: server.id,
+            runtimeLogLines: ["line"],
+          },
+        }),
         readServerUpdateLog: vi.fn(),
         exportServerLogs: vi.fn(),
         openServerUpdateLogFile: vi.fn(),
@@ -202,10 +209,44 @@ describe("ServerLogsPanel", () => {
     expect(screen.queryByText("SteamCMD output line")).not.toBeInTheDocument();
   });
 
-  it("quietly refreshes Runtime while that tab is open", async () => {
+  it("filters Runtime lines by Source select", async () => {
+    const user = userEvent.setup();
+    vi.mocked(window.api.listServerLogs).mockResolvedValue({
+      ok: true,
+      data: {
+        serverId: server.id,
+        updateFiles: [],
+        backups: [],
+        events: [],
+        runtimeLogLines: [
+          "[2026-07-29T20:11:41.709Z] [system] Starting process",
+          "[2026-07-29T20:11:43.237Z] [log] ARK Version: 92.28",
+          "[2026-07-29T20:11:43.581Z] [stderr] GameAnalytics noise",
+        ],
+      },
+    });
+
+    render(
+      <AppProviders>
+        <ServerLogsPanel server={server} embedded focus={{ section: "runtime" }} />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByText(/ARK Version: 92.28/)).toBeInTheDocument();
+    expect(screen.getByText(/GameAnalytics noise/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("textbox", { name: "Source" }));
+    await user.click(await screen.findByRole("option", { name: "Server log" }));
+
+    expect(screen.getByText(/ARK Version: 92.28/)).toBeInTheDocument();
+    expect(screen.queryByText(/GameAnalytics noise/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Starting process/)).not.toBeInTheDocument();
+  });
+
+  it("quietly refreshes Runtime via runtime-only IPC while that tab is open", async () => {
     vi.useFakeTimers();
     try {
-      const listServerLogs = vi.mocked(window.api.listServerLogs);
+      const getServerRuntimeLog = vi.mocked(window.api.getServerRuntimeLog);
       render(
         <AppProviders>
           <ServerLogsPanel server={server} embedded focus={{ section: "runtime" }} />
@@ -216,13 +257,13 @@ describe("ServerLogsPanel", () => {
         await Promise.resolve();
         await Promise.resolve();
       });
-      expect(listServerLogs.mock.calls.length).toBeGreaterThan(0);
-      const callsAfterMount = listServerLogs.mock.calls.length;
+      expect(getServerRuntimeLog.mock.calls.length).toBe(0);
 
       await act(async () => {
         await vi.advanceTimersByTimeAsync(1600);
       });
-      expect(listServerLogs.mock.calls.length).toBeGreaterThan(callsAfterMount);
+      expect(getServerRuntimeLog.mock.calls.length).toBeGreaterThan(0);
+      expect(getServerRuntimeLog).toHaveBeenCalledWith(server.id);
     } finally {
       vi.useRealTimers();
     }

@@ -24,6 +24,7 @@ import {
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { formatLogDateTime } from "@shared/format-log-datetime";
 import type {
   BackupCleanupOptions,
   BackupCleanupPreview,
@@ -48,10 +49,7 @@ type DraftPolicy = Omit<BackupPolicy, "serverId" | "updatedAt">;
 type HealthFilter = "all" | "at_risk" | "failed" | "protected";
 
 function formatWhen(iso: string | null | undefined): string {
-  if (iso == null) return "—";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleString();
+  return formatLogDateTime(iso);
 }
 
 function formatBytes(bytes: number | null | undefined): string {

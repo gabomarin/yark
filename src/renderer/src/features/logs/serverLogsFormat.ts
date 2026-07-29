@@ -1,4 +1,92 @@
 import type { ServerUpdateLogFile } from "@shared/types";
+import { formatLogDateTime } from "@shared/format-log-datetime";
+
+/** Runtime buffer filter: lines are tagged `[iso] [source] …`. */
+export type RuntimeLogSourceFilter = "all" | "system" | "asa" | "process";
+
+export const RUNTIME_SOURCE_FILTER_OPTIONS: {
+  value: RuntimeLogSourceFilter;
+  label: string;
+}[] = [
+  { value: "all", label: "All sources" },
+  { value: "system", label: "System" },
+  { value: "asa", label: "Server log" },
+  { value: "process", label: "Process (stdout/stderr)" },
+];
+
+const RUNTIME_LINE_SOURCE_RE = /^\[[^\]]+\] \[([a-z]+)\] /i;
+const WRAPPED_RUNTIME_LINE_RE = /^\[([^\]]+)\] \[([a-z]+)\] (.*)$/is;
+/** Unreal / ASA: `[2026.07.29-21.42.52:443][  5]Message` */
+const UNREAL_LOG_STAMP_RE =
+  /^\[(\d{4})\.(\d{2})\.(\d{2})-(\d{2})\.(\d{2})\.(\d{2}):(\d{3})\](\[\s*\d+\])?(.*)$/s;
+
+export function parseRuntimeLogSource(line: string): string | null {
+  const match = RUNTIME_LINE_SOURCE_RE.exec(line);
+  return match?.[1]?.toLowerCase() ?? null;
+}
+
+export function filterRuntimeLogLines(
+  lines: string[],
+  filter: RuntimeLogSourceFilter,
+): string[] {
+  if (filter === "all") return lines;
+  return lines.filter((line) => {
+    const source = parseRuntimeLogSource(line);
+    if (source === null) return false;
+    if (filter === "system") return source === "system" || source === "error";
+    if (filter === "asa") return source === "log";
+    return source === "stdout" || source === "stderr";
+  });
+}
+
+/**
+ * Rewrites an Unreal stamp (UTC wall clock in the file) to local log datetime.
+ * Returns null when the body does not start with that stamp.
+ */
+export function formatUnrealLogBody(body: string): string | null {
+  const match = UNREAL_LOG_STAMP_RE.exec(body);
+  if (match === null) return null;
+  const utcDate = new Date(
+    Date.UTC(
+      Number(match[1]),
+      Number(match[2]) - 1,
+      Number(match[3]),
+      Number(match[4]),
+      Number(match[5]),
+      Number(match[6]),
+      Number(match[7]),
+    ),
+  );
+  const stamp = formatLogDateTime(utcDate, { includeMs: true });
+  const frameRaw = match[8];
+  const frame =
+    frameRaw !== undefined && frameRaw.length > 0
+      ? frameRaw.replace(/\[\s*(\d+)\s*\]/, "[$1]")
+      : "";
+  const rest = (match[9] ?? "").replace(/^\s+/, "");
+  return [stamp, frame, rest].filter((part) => part.length > 0).join(" ");
+}
+
+/**
+ * Viewer-facing line: never show the YARK capture ISO. For server (`log`) lines,
+ * keep only the Unreal wall-clock stamp; other sources keep `[source] body`.
+ */
+export function formatRuntimeLogLineForDisplay(line: string): string {
+  const wrapped = WRAPPED_RUNTIME_LINE_RE.exec(line);
+  if (wrapped === null) return line;
+  const source = wrapped[2]!.toLowerCase();
+  const body = wrapped[3] ?? "";
+
+  if (source === "log") {
+    return formatUnrealLogBody(body) ?? body;
+  }
+
+  return `[${source}] ${body}`;
+}
+
+export function formatRuntimeLogLinesForDisplay(lines: string[]): string[] {
+  return lines.map((line) => formatRuntimeLogLineForDisplay(line));
+}
 
 export function formatSize(sizeBytes: number): string {
   if (sizeBytes >= 1024 * 1024) {
@@ -49,7 +137,7 @@ export function formatUpdateJobLabel(
         )
       : withoutExt.slice(-24);
   return {
-    title: new Date(modifiedAt).toLocaleString(),
+    title: formatLogDateTime(modifiedAt, { fallback: modifiedAt }),
     subtitle,
   };
 }

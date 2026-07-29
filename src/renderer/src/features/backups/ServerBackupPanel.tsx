@@ -27,6 +27,7 @@ import {
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import { backupFinishedAt, playerBackupDisplayName } from "@shared/backup-player-meta";
+import { formatLogDateTime } from "@shared/format-log-datetime";
 import type {
   BackupKind,
   BackupPolicy,
@@ -78,9 +79,7 @@ function formatSize(sizeBytes: number): string {
 }
 
 function formatWhen(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleString();
+  return formatLogDateTime(iso, { fallback: iso });
 }
 
 function formatRelativeTime(iso: string, nowMs = Date.now()): string {

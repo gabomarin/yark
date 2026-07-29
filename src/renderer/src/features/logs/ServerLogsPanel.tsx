@@ -21,18 +21,21 @@ import {
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import type { ServerOperationalLogs, ServerProfile } from "@shared/types";
+import { formatLogDateTime } from "@shared/format-log-datetime";
 import { useEffect, useRef, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
 import { EventDetailsBody } from "./EventDetailsBody";
 import classes from "./LogsPage.module.css";
+import { RuntimeLogSection } from "./RuntimeLogSection";
 import {
   formatDuration,
   formatSize,
   formatUpdateJobLabel,
   statusColor,
   statusLabel,
+  type RuntimeLogSourceFilter,
 } from "./serverLogsFormat";
 
 export type LogsSection = "events" | "runtime" | "updates" | "backups";
@@ -64,9 +67,13 @@ export function ServerLogsPanel(props: Props): JSX.Element {
   const [updateContent, setUpdateContent] = useState("");
   const [highlightedEventId, setHighlightedEventId] = useState<number | null>(null);
   const [expandedEventId, setExpandedEventId] = useState<number | null>(null);
+  const [runtimeSourceFilter, setRuntimeSourceFilter] =
+    useState<RuntimeLogSourceFilter>("all");
   const focusKeyRef = useRef<string | null>(null);
   const autoScrollDoneRef = useRef(false);
   const updateLoadGenRef = useRef(0);
+  const loadGenRef = useRef(0);
+  const runtimePollGenRef = useRef(0);
 
   const clearUpdateContent = () => {
     updateLoadGenRef.current += 1;
@@ -93,6 +100,7 @@ export function ServerLogsPanel(props: Props): JSX.Element {
 
   const load = async (serverId: string, options?: { quiet?: boolean }) => {
     const quiet = options?.quiet === true;
+    const gen = ++loadGenRef.current;
     if (!quiet) {
       setLoading(true);
       setError(null);
@@ -100,6 +108,7 @@ export function ServerLogsPanel(props: Props): JSX.Element {
       clearUpdateContent();
     }
     const result = await window.api.listServerLogs(serverId);
+    if (gen !== loadGenRef.current) return;
     if (!quiet) {
       setLoading(false);
     }
@@ -110,12 +119,35 @@ export function ServerLogsPanel(props: Props): JSX.Element {
       }
       return;
     }
+    if (result.data.serverId !== serverId) return;
     setLogs(result.data);
     return result.data;
   };
 
+  const refreshRuntime = async (serverId: string) => {
+    const gen = ++runtimePollGenRef.current;
+    if (typeof window.api.getServerRuntimeLog !== "function") {
+      await load(serverId, { quiet: true });
+      return;
+    }
+    const result = await window.api.getServerRuntimeLog(serverId);
+    if (gen !== runtimePollGenRef.current) return;
+    if (!result.ok) return;
+    if (result.data.serverId !== serverId) return;
+    setLogs((prev) => {
+      if (prev === null || prev.serverId !== serverId) return prev;
+      return { ...prev, runtimeLogLines: result.data.runtimeLogLines };
+    });
+  };
+
+  useEffect(() => {
+    setRuntimeSourceFilter("all");
+  }, [props.server.id]);
+
   useEffect(() => {
     let alive = true;
+    const serverId = props.server.id;
+    const gen = ++loadGenRef.current;
     void (async () => {
       setLoading(true);
       setError(null);
@@ -125,14 +157,15 @@ export function ServerLogsPanel(props: Props): JSX.Element {
       setExpandedEventId(null);
       focusKeyRef.current = null;
       autoScrollDoneRef.current = false;
-      const result = await window.api.listServerLogs(props.server.id);
-      if (!alive) return;
+      const result = await window.api.listServerLogs(serverId);
+      if (!alive || gen !== loadGenRef.current) return;
       setLoading(false);
       if (!result.ok) {
         setLogs(null);
         setError(result.error ?? "Could not load logs");
         return;
       }
+      if (result.data.serverId !== serverId) return;
       setLogs(result.data);
     })();
     return () => {
@@ -149,13 +182,17 @@ export function ServerLogsPanel(props: Props): JSX.Element {
     });
   }, [props.server.id]);
 
-  // Live refresh Runtime while that tab is open (piped stdout + Saved/Logs tail).
+  // Live refresh Runtime while that tab is open (lightweight runtime-only IPC).
   useEffect(() => {
     if (activeSection !== "runtime") return undefined;
+    const serverId = props.server.id;
     const timer = window.setInterval(() => {
-      void load(props.server.id, { quiet: true });
+      void refreshRuntime(serverId);
     }, 1500);
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearInterval(timer);
+      runtimePollGenRef.current += 1;
+    };
   }, [props.server.id, activeSection]);
 
   // Drop large update-log strings when leaving the Updates section.
@@ -561,7 +598,7 @@ export function ServerLogsPanel(props: Props): JSX.Element {
                         <Group justify="space-between" align="flex-start" gap="sm" wrap="nowrap">
                           <div className={classes.eventRowMain}>
                             <Text size="sm" c="dimmed">
-                              {new Date(event.createdAt).toLocaleString()}
+                              {formatLogDateTime(event.createdAt)}
                             </Text>
                             <Text size="sm" fw={expanded ? 600 : 400}>
                               {event.message}
@@ -591,40 +628,24 @@ export function ServerLogsPanel(props: Props): JSX.Element {
         </Tabs.Panel>
 
         <Tabs.Panel value="runtime" className={classes.tabPanel}>
-          <AppSurfaceCard fill className={classes.fillPanel}>
-            <Stack gap="sm" className={classes.panelStack}>
-              <TabIntro
-                title="Runtime"
-                purpose="Live process output while the server is managed here. With the native console off, YARK follows ShooterGame/Saved/Logs (and any stdout/stderr)."
-                useWhen="The server won’t start, crashes, or players report issues — look here for ASA/engine lines (mods, maps, fatal errors)."
-                action={
-                  <ClearAction
-                    label="Clear captured runtime console output"
-                    onClick={confirmClearRuntime}
-                    disabled={
-                      loading ||
-                      busy ||
-                      logs === null ||
-                      logs.runtimeLogLines.length === 0
-                    }
-                  />
+          <RuntimeLogSection
+            loading={loading}
+            runtimeLogLines={logs?.runtimeLogLines ?? null}
+            sourceFilter={runtimeSourceFilter}
+            onSourceFilterChange={setRuntimeSourceFilter}
+            clearAction={
+              <ClearAction
+                label="Clear captured runtime console output"
+                onClick={confirmClearRuntime}
+                disabled={
+                  loading ||
+                  busy ||
+                  logs === null ||
+                  logs.runtimeLogLines.length === 0
                 }
               />
-              {loading ? (
-                <Text c="dimmed">Loading runtime log...</Text>
-              ) : logs === null || logs.runtimeLogLines.length === 0 ? (
-                <LogEmptyState
-                  icon={<FileText size={24} />}
-                  title="No runtime output"
-                  description="Output appears while the server is running (or after a recent run). With the native console off, ASA lines come from Saved/Logs as well as any piped stdout."
-                />
-              ) : (
-                <pre className={classes.console} data-logs-scroll-region="runtime">
-                  {logs.runtimeLogLines.join("\n")}
-                </pre>
-              )}
-            </Stack>
-          </AppSurfaceCard>
+            }
+          />
         </Tabs.Panel>
 
         <Tabs.Panel value="updates" className={classes.tabPanel}>
@@ -751,7 +772,7 @@ export function ServerLogsPanel(props: Props): JSX.Element {
                     <div className={classes.detailsMeta}>
                       <DetailItem
                         label="Date"
-                        value={new Date(selectedUpdateInfo.modifiedAt).toLocaleString()}
+                        value={formatLogDateTime(selectedUpdateInfo.modifiedAt)}
                         icon={<ClockCounterClockwise size={16} />}
                       />
                       <DetailItem
@@ -817,7 +838,7 @@ export function ServerLogsPanel(props: Props): JSX.Element {
                             {backup.kind} · {backup.type}
                           </Text>
                           <Text size="sm" c="dimmed">
-                            {new Date(backup.createdAt).toLocaleString()} | {backup.status}
+                            {formatLogDateTime(backup.createdAt)} | {backup.status}
                           </Text>
                           <Text size="sm">{backup.path}</Text>
                         </div>
