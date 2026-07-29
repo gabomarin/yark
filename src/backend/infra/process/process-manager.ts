@@ -183,7 +183,12 @@ export class ProcessManager extends EventEmitter {
     const args = options?.launchArgsOverride ?? buildLaunchArgs(profile);
     const nativeConsole = options?.openNativeConsole === true;
     let spawnArgs = args;
-    if (!nativeConsole && !argsIncludeLogFlag(spawnArgs)) {
+    // Only when using profile-built CLI — never mutate launchArgsOverride (tests / custom argv).
+    if (
+      !nativeConsole &&
+      options?.launchArgsOverride === undefined &&
+      !argsIncludeLogFlag(spawnArgs)
+    ) {
       // Helps Unreal write ShooterGame/Saved/Logs while the console is hidden.
       spawnArgs = [...spawnArgs, "-log"];
     }
