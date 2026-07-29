@@ -29,6 +29,8 @@ interface Props {
   onRestart: () => void;
   onOpenWorkspace: () => void;
   onOpenLogs: () => void;
+  /** Opens the runtime logs section for a failed/crashed launch. */
+  onReviewError: () => void;
   onOpenFolder: () => void;
   onInstallFiles: () => void;
   onUpdateNow: () => void;
@@ -64,25 +66,19 @@ export function ServerCard(props: Props): JSX.Element {
     steamCmdProgressBytesTotal,
   });
 
-  const runPrimaryAction = (): void => {
-    switch (view.primaryAction.kind) {
+  const runRuntimeAction = (): void => {
+    switch (view.runtimeAction.kind) {
       case "cancel":
         props.onCancelSteamCmd();
-        break;
-      case "install":
-        props.onInstallFiles();
-        break;
-      case "update":
-        props.onUpdateNow();
         break;
       case "start":
         props.onStart();
         break;
-      case "manage":
+      case "stop":
+        props.onStop();
+        break;
       case "starting":
       case "stopping":
-      case "review-error":
-        props.onOpenWorkspace();
         break;
     }
   };
@@ -127,15 +123,14 @@ export function ServerCard(props: Props): JSX.Element {
               />
             </Group>
 
-            <div className={classes.metaGrid}>
+            <div className={classes.metaGrid} data-meta-grid>
               <ServerCardMetaItem label="Map" value={server.map} />
               <ServerCardMetaItem label="Cluster" value={server.clusterId ?? "—"} />
               <ServerCardMetaItem label="Mods" value={String(server.mods.length)} />
-              <ServerCardMetaItem label="Version" value={view.localVersion ?? "—"} />
               <ServerCardMetaItem
-                label="Files"
-                value={view.installStateLabel}
-                tone={view.filesMetaTone}
+                label="Version"
+                value={view.localVersion ?? "—"}
+                tone={view.versionMetaTone}
               />
             </div>
           </UnstyledButton>
@@ -147,8 +142,10 @@ export function ServerCard(props: Props): JSX.Element {
             updateAvailable={view.updateAvailable}
             steamCmdBusy={steamCmdBusy}
             checkingUpdates={checkingUpdates}
-            primaryAction={view.primaryAction}
-            onPrimaryAction={runPrimaryAction}
+            runtimeAction={view.runtimeAction}
+            restartAction={view.restartAction}
+            updateAction={view.updateAction}
+            onRuntimeAction={runRuntimeAction}
             onOpenWorkspace={props.onOpenWorkspace}
             onStop={props.onStop}
             onRestart={props.onRestart}
@@ -174,9 +171,15 @@ export function ServerCard(props: Props): JSX.Element {
         )}
 
         {runtime?.lastError !== null && runtime?.lastError !== undefined && (
-          <Text c="red" size="sm" className={classes.runtimeError}>
-            {runtime.lastError}
-          </Text>
+          <UnstyledButton
+            className={classes.runtimeError}
+            onClick={props.onReviewError}
+            aria-label="Review error — open runtime logs"
+          >
+            <Text c="red" size="sm" className={classes.runtimeErrorText}>
+              {runtime.lastError}
+            </Text>
+          </UnstyledButton>
         )}
       </Stack>
     </Card>

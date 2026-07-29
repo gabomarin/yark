@@ -28,6 +28,7 @@ interface Props {
   steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null;
   onOpenWorkspace: (server: ServerProfile) => void;
   onOpenLogs: (serverId: string) => void;
+  onReviewError: (serverId: string) => void;
   onStartServer: (serverId: string) => void;
   onStopServer: (serverId: string) => void;
   onRestartServer: (serverId: string) => void;
@@ -98,7 +99,7 @@ export function ServerGrid(props: Props): JSX.Element {
             {attentionLabel !== null && (
               <Badge
                 size="sm"
-                color="orange"
+                color="attention"
                 variant="light"
                 data-attention-count={attentionCount}
               >
@@ -219,6 +220,7 @@ export function ServerGrid(props: Props): JSX.Element {
                 onRestart={() => props.onRestartServer(server.id)}
                 onOpenWorkspace={() => props.onOpenWorkspace(server)}
                 onOpenLogs={() => props.onOpenLogs(server.id)}
+                onReviewError={() => props.onReviewError(server.id)}
                 onOpenFolder={() => props.onOpenFolder(server.id)}
                 onInstallFiles={() => props.onInstallFiles(server.id)}
                 onUpdateNow={() => props.onUpdateNow(server.id)}

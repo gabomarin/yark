@@ -34,6 +34,7 @@ interface Props {
   steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null;
   onOpenWorkspace: (server: ServerProfile) => void;
   onOpenLogs: (serverId: string) => void;
+  onReviewError: (serverId: string) => void;
   onStartServer: (serverId: string) => void;
   onStopServer: (serverId: string) => void;
   onRestartServer: (serverId: string) => void;
@@ -79,6 +80,7 @@ export function OverviewPage(props: Props): JSX.Element {
           steamCmdOperation={props.steamCmdOperation ?? null}
           onOpenWorkspace={props.onOpenWorkspace}
           onOpenLogs={props.onOpenLogs}
+          onReviewError={props.onReviewError}
           onStartServer={props.onStartServer}
           onStopServer={props.onStopServer}
           onRestartServer={props.onRestartServer}

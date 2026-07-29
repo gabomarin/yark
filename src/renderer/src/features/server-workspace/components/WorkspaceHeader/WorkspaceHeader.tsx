@@ -8,6 +8,7 @@ import {
 } from "@phosphor-icons/react";
 import { ActionIcon, Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import { resolveDisplayedServerVersion } from "@shared/server-version-display";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import classes from "./WorkspaceHeader.module.css";
 
@@ -28,11 +29,7 @@ interface Props {
 
 export function WorkspaceHeader(props: Props): JSX.Element {
   const status = props.runtime?.status ?? "stopped";
-  const version =
-    props.installation?.arkVersion ??
-    props.installation?.build ??
-    props.installation?.version ??
-    "—";
+  const version = resolveDisplayedServerVersion(props.installation) ?? "—";
   const canStart =
     (status === "stopped" || status === "error") && props.filesJobActive !== true;
   const canStop = status === "running" || status === "starting";

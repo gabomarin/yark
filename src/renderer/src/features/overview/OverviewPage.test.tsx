@@ -41,6 +41,7 @@ describe("OverviewPage", () => {
           onViewAllActivity={vi.fn()}
           onOpenWorkspace={vi.fn()}
           onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
           onStartServer={vi.fn()}
           onStopServer={vi.fn()}
           onRestartServer={vi.fn()}
@@ -108,6 +109,7 @@ describe("OverviewPage", () => {
           onViewAllActivity={vi.fn()}
           onOpenWorkspace={vi.fn()}
           onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
           onStartServer={vi.fn()}
           onStopServer={vi.fn()}
           onRestartServer={vi.fn()}
@@ -125,7 +127,9 @@ describe("OverviewPage", () => {
     );
 
     expect(screen.getAllByText("1 needs attention").length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("button", { name: "Install" }).length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByRole("button", { name: /Install server files/i }).length,
+    ).toBeGreaterThan(0);
   });
 
   it("distinguishes loading from the actionable empty state", () => {
@@ -145,6 +149,7 @@ describe("OverviewPage", () => {
       onViewAllActivity: vi.fn(),
       onOpenWorkspace: vi.fn(),
       onOpenLogs: vi.fn(),
+      onReviewError: vi.fn(),
       onStartServer: vi.fn(),
       onStopServer: vi.fn(),
       onRestartServer: vi.fn(),
