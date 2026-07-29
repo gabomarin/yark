@@ -20,7 +20,9 @@ export class BackupScheduler {
       if (this.cyclePromise !== null) return;
       this.cyclePromise = this.service
         .runScheduledCycle()
-        .catch(() => undefined)
+        .catch((error: unknown) => {
+          console.error("Scheduled backup cycle failed", error);
+        })
         .finally(() => {
           this.cyclePromise = null;
         });

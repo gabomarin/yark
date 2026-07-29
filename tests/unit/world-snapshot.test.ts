@@ -61,6 +61,21 @@ describe("world-snapshot helpers", () => {
     ).rejects.toThrow(/Essential world save disappeared/);
   });
 
+  it("does not suppress ENOENT for an unclassified file", async () => {
+    const sourceRoot = "C:\\SavedArks";
+    const destRoot = "C:\\Staging\\SavedArks";
+    const sourceFiles = [join(sourceRoot, "metadata.db")];
+    const copyFile = vi.fn(async () => {
+      const err = new Error("destination unavailable") as NodeJS.ErrnoException;
+      err.code = "ENOENT";
+      throw err;
+    });
+
+    await expect(
+      copySavedArksFiles(sourceRoot, destRoot, sourceFiles, copyFile),
+    ).rejects.toThrow("destination unavailable");
+  });
+
   it("detects missing essentials after copy by relative path", () => {
     const sourceRoot = "C:\\SavedArks";
     const destRoot = "C:\\Staging\\SavedArks";

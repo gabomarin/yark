@@ -154,6 +154,11 @@ UI restore is direct. Update rollback uses the queued `restoreBackupForJob` path
 - Overlapping ticks are coalesced (one cycle at a time). While a world backup is
   **running** or a scheduled create is in-flight for that server, further scheduled
   creates are skipped so long archives cannot stack.
+- Policy, retention, or reconciliation failures are recorded per server and do not
+  prevent the remaining fleet from being evaluated during the same cycle.
+- Before treating a persisted `running` row as active, the scheduler reconciles
+  interrupted work from a previous app process so a crash cannot block future backups;
+  this recovery is serialized with UI and cleanup reconciliation.
 - Every cycle applies retention for each server.
 - Creates only when `enabled`, interval elapsed since latest **completed world** backup (or none yet), and process is active.
 - Creates **world only**.

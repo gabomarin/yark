@@ -1,5 +1,4 @@
 import type { BackupRecord } from "@shared/types";
-import { backupFinishedAt } from "@shared/backup-player-meta";
 
 export interface BackupDetailsServer {
   id: string;
@@ -18,7 +17,7 @@ export function formatBackupDetails(
     `Kind: ${backup.kind}`,
     `Status: ${backup.status}`,
     `Created: ${backup.createdAt}`,
-    `Finished: ${backupFinishedAt(backup)}`,
+    `Finished: ${backup.completedAt ?? "(not finished)"}`,
     `Size bytes: ${backup.sizeBytes}`,
     `Path: ${backup.path}`,
     `Notes: ${backup.notes ?? "(none)"}`,

@@ -46,8 +46,6 @@ export async function copySavedArksFiles(
   sourceFiles: string[],
   copyFile: (src: string, dest: string) => Promise<void>,
 ): Promise<CopySavedArksResult> {
-  const essentialSources = sourceFiles.filter((file) =>
-    isEssentialWorldSaveName(basename(file)));
   let copiedFileCount = 0;
   let skippedTransientCount = 0;
   const skippedTransient: string[] = [];
@@ -60,27 +58,20 @@ export async function copySavedArksFiles(
       copiedFileCount += 1;
     } catch (error) {
       if (!isWorldCopyMissingError(error)) throw error;
+      if (isTransientWorldSaveName(name)) {
+        skippedTransientCount += 1;
+        if (skippedTransient.length < 8) {
+          skippedTransient.push(rel);
+        }
+        continue;
+      }
       if (isEssentialWorldSaveName(name)) {
         throw new Error(
           `Essential world save disappeared during backup: ${rel}`,
         );
       }
-      skippedTransientCount += 1;
-      if (skippedTransient.length < 8) {
-        skippedTransient.push(rel);
-      }
+      throw error;
     }
-  }
-
-  if (essentialSources.length > 0) {
-    const normalizeRel = (file: string, root: string) =>
-      relative(root, file).split("\\").join("/").toLowerCase();
-    const expected = new Set(
-      essentialSources.map((file) => normalizeRel(file, sourceRoot)),
-    );
-    // Dest presence is checked by the caller after listing; here we only ensure
-    // we did not skip essentials during the copy loop (already thrown above).
-    void expected;
   }
 
   return { copiedFileCount, skippedTransientCount, skippedTransient };

@@ -258,6 +258,11 @@ export class BackupService extends EventEmitter {
   private readonly reconcileInFlight = new Map<string, Promise<number>>();
   /** Backup ids currently inside createBackup — reconcile must not promote/fail these. */
   private readonly creatingBackupIds = new Set<string>();
+  /** Serialize interrupted-row recovery shared by scheduler and disk reconciliation. */
+  private readonly interruptedReconcileInFlight = new Map<
+    string,
+    Promise<number>
+  >();
   /** Prevent stacked scheduled world backups for the same server. */
   private readonly scheduledWorldInFlight = new Set<string>();
   /** Prevent overlapping runScheduledCycle walks. */
@@ -796,55 +801,99 @@ export class BackupService extends EventEmitter {
     try {
       const allServers = this.servers.list();
       for (const server of allServers) {
-        const policy = this.backups.getPolicy(server.id);
-        await this.applyRetention(server.id, policy);
-        if (!policy.enabled) continue;
-
-        if (
-          this.scheduledWorldInFlight.has(server.id)
-          || this.backups.hasRunning(server.id, "world")
-        ) {
-          continue;
-        }
-
-        const latestWorld = this.backups.latestCompleted(server.id, "world");
-        if (latestWorld !== null) {
-          const finishedAt = backupFinishedAt(latestWorld);
-          const elapsedMs = Date.now() - Date.parse(finishedAt);
-          const requiredMs = policy.intervalMinutes * 60 * 1000;
-          if (Number.isFinite(elapsedMs) && elapsedMs < requiredMs) continue;
-        }
-
-        if (!this.processes.isActive(server.id)) continue;
-
-        this.scheduledWorldInFlight.add(server.id);
         try {
-          await this.createScheduledBackup(server.id);
+          await this.runScheduledServer(server);
         } catch (err) {
-          this.servers.addEvent(
-            server.id,
-            "error",
-            "error",
-            `Scheduled backup failed for \"${server.name}\": ${
-              err instanceof Error ? err.message : String(err)
-            }`,
-            {
-              what: "A scheduled world backup did not complete.",
-              cause: err instanceof Error ? err.message : String(err),
-              suggestion:
-                "Confirm the server is reachable for save flush, destination disk has space, and retry from the Backups tab.",
-              context: {
-                trigger: "scheduled",
-                kind: "world",
-              },
-            },
-          );
-        } finally {
-          this.scheduledWorldInFlight.delete(server.id);
+          this.recordScheduledCycleError(server, err);
         }
       }
     } finally {
       this.scheduledCycleInFlight = false;
+    }
+  }
+
+  private async runScheduledServer(server: ServerProfile): Promise<void> {
+    const policy = this.backups.getPolicy(server.id);
+    await this.applyRetention(server.id, policy);
+    if (!policy.enabled) return;
+
+    const reconciled = await this.reconcileInterruptedRunningBackups(server.id);
+    if (reconciled > 0) {
+      this.emitChanged(server.id);
+    }
+
+    if (
+      this.scheduledWorldInFlight.has(server.id)
+      || this.backups.hasRunning(server.id, "world")
+    ) {
+      return;
+    }
+
+    const latestWorld = this.backups.latestCompleted(server.id, "world");
+    if (latestWorld !== null) {
+      const finishedAt = backupFinishedAt(latestWorld);
+      const elapsedMs = Date.now() - Date.parse(finishedAt);
+      const requiredMs = policy.intervalMinutes * 60 * 1000;
+      if (Number.isFinite(elapsedMs) && elapsedMs < requiredMs) return;
+    }
+
+    if (!this.processes.isActive(server.id)) return;
+
+    this.scheduledWorldInFlight.add(server.id);
+    try {
+      await this.createScheduledBackup(server.id);
+    } catch (err) {
+      this.servers.addEvent(
+        server.id,
+        "error",
+        "error",
+        `Scheduled backup failed for \"${server.name}\": ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+        {
+          what: "A scheduled world backup did not complete.",
+          cause: err instanceof Error ? err.message : String(err),
+          suggestion:
+            "Confirm the server is reachable for save flush, destination disk has space, and retry from the Backups tab.",
+          context: {
+            trigger: "scheduled",
+            kind: "world",
+          },
+        },
+      );
+    } finally {
+      this.scheduledWorldInFlight.delete(server.id);
+    }
+  }
+
+  private recordScheduledCycleError(
+    server: ServerProfile,
+    error: unknown,
+  ): void {
+    const message = error instanceof Error ? error.message : String(error);
+    try {
+      this.servers.addEvent(
+        server.id,
+        "error",
+        "error",
+        `Scheduled backup cycle failed for \"${server.name}\": ${message}`,
+        {
+          what: "The scheduler could not evaluate or maintain this server's backup policy.",
+          cause: message,
+          suggestion:
+            "Check the backup destination and app logs. Other servers will continue to be evaluated.",
+          context: {
+            trigger: "scheduled",
+            phase: "policy-retention-or-reconciliation",
+          },
+        },
+      );
+    } catch (eventError) {
+      console.error(
+        `Scheduled backup cycle failed for "${server.name}"`,
+        error,
+        eventError,
+      );
     }
   }
 
@@ -1852,7 +1901,25 @@ export class BackupService extends EventEmitter {
    * - missing / empty / unreadable / non-backup zip → fail so the UI can clear them
    * Live creates (creatingBackupIds) are left alone.
    */
-  private async reconcileInterruptedRunningBackups(serverId: string): Promise<number> {
+  private reconcileInterruptedRunningBackups(serverId: string): Promise<number> {
+    const existing = this.interruptedReconcileInFlight.get(serverId);
+    if (existing !== undefined) {
+      return existing;
+    }
+    const run = this.reconcileInterruptedRunningBackupsUnlocked(serverId).finally(
+      () => {
+        if (this.interruptedReconcileInFlight.get(serverId) === run) {
+          this.interruptedReconcileInFlight.delete(serverId);
+        }
+      },
+    );
+    this.interruptedReconcileInFlight.set(serverId, run);
+    return run;
+  }
+
+  private async reconcileInterruptedRunningBackupsUnlocked(
+    serverId: string,
+  ): Promise<number> {
     const records = this.backups.listBackups(serverId, 10_000);
     let changed = 0;
     for (const backup of records) {
