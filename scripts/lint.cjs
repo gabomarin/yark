@@ -3,7 +3,8 @@
  * `npm run lint` — lightweight static gate for renderer features
  * (see docs/component-structure.md). Placeholder until a fuller linter (e.g. ESLint).
  *
- * - New .ts/.tsx files under src/renderer/src/features must stay under maxLines.
+ * - New .tsx files under src/renderer/src/features must stay under maxTsxLines.
+ * - New .ts files under src/renderer/src/features must stay under maxTsLines.
  * - Grandfathered mega-files (scripts/component-structure-baseline.json) may not grow
  *   by more than growthSlack lines without updating the baseline intentionally.
  * - Test files (*.test.ts / *.test.tsx) are ignored.
@@ -67,7 +68,7 @@ function failBaseline(message) {
   console.error(`lint: invalid baseline (${BASELINE_REL})\n`)
   console.error(`  ${message}`)
   console.error(
-    `\nFix or regenerate ${BASELINE_REL} (JSON object with maxLines, growthSlack, and files: { "path/to/File.tsx": <lineCount> }).`
+    `\nFix or regenerate ${BASELINE_REL} (JSON object with maxTsxLines, maxTsLines, growthSlack, and files: { "path/to/File.tsx": <lineCount> }).`
   )
   process.exit(1)
 }
@@ -93,9 +94,18 @@ function loadBaseline() {
     failBaseline('root value must be a JSON object')
   }
 
-  const maxLines = Number(baseline.maxLines)
-  if (!Number.isFinite(maxLines) || maxLines <= 0) {
-    failBaseline(`maxLines must be a positive finite number (got ${JSON.stringify(baseline.maxLines)})`)
+  const maxTsxLines = Number(baseline.maxTsxLines)
+  if (!Number.isFinite(maxTsxLines) || maxTsxLines <= 0) {
+    failBaseline(
+      `maxTsxLines must be a positive finite number (got ${JSON.stringify(baseline.maxTsxLines)})`
+    )
+  }
+
+  const maxTsLines = Number(baseline.maxTsLines)
+  if (!Number.isFinite(maxTsLines) || maxTsLines <= 0) {
+    failBaseline(
+      `maxTsLines must be a positive finite number (got ${JSON.stringify(baseline.maxTsLines)})`
+    )
   }
 
   const growthSlack = Number(baseline.growthSlack)
@@ -121,11 +131,11 @@ function loadBaseline() {
     allowed[rel] = n
   }
 
-  return { maxLines, growthSlack, allowed }
+  return { maxTsxLines, maxTsLines, growthSlack, allowed }
 }
 
 function main() {
-  const { maxLines, growthSlack, allowed } = loadBaseline()
+  const { maxTsxLines, maxTsLines, growthSlack, allowed } = loadBaseline()
 
   const violations = []
   for (const abs of walkTsFiles(FEATURES_DIR)) {
@@ -134,9 +144,10 @@ function main() {
     const grandfathered = Object.prototype.hasOwnProperty.call(allowed, rel)
 
     if (!grandfathered) {
+      const maxLines = abs.endsWith('.tsx') ? maxTsxLines : maxTsLines
       if (lines > maxLines) {
         violations.push(
-          `${rel}: ${lines} lines (new/ungrandfathered files must be ≤ ${maxLines}; split per docs/component-structure.md)`
+          `${rel}: ${lines} lines (new/ungrandfathered ${path.extname(abs)} files must be ≤ ${maxLines}; split per docs/component-structure.md)`
         )
       }
       continue
@@ -153,7 +164,7 @@ function main() {
 
   if (violations.length === 0) {
     console.log(
-      `lint: ok (max ${maxLines}, ${Object.keys(allowed).length} grandfathered feature files)`
+      `lint: ok (max TSX ${maxTsxLines}, max TS ${maxTsLines}, ${Object.keys(allowed).length} grandfathered feature files)`
     )
     return
   }

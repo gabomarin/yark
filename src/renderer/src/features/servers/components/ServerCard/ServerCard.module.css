@@ -33,7 +33,7 @@
 }
 
 .card[data-tone="attention"]::before {
-  background: var(--app-color-warn);
+  background: var(--app-color-attention);
 }
 
 .card[data-tone="error"]::before {
@@ -134,8 +134,7 @@
     minmax(100px, 1.2fr)
     minmax(90px, 1fr)
     minmax(64px, 0.6fr)
-    minmax(80px, 0.8fr)
-    minmax(120px, 1.2fr);
+    minmax(88px, 1fr);
   gap: 16px;
   min-width: 0;
 }
@@ -147,37 +146,30 @@
   min-width: 0;
 }
 
-.metaValue-default,
-.metaValue-muted,
-.metaValue-ok,
-.metaValue-warn {
+.metaValue {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.metaValue-default {
-  color: var(--app-color-text);
-}
-
-.metaValue-muted {
-  color: var(--app-color-muted);
-}
-
-.metaValue-ok {
-  color: var(--app-color-ok);
-}
-
-.metaValue-warn {
-  color: var(--app-color-warn);
+  font-variant-numeric: tabular-nums;
 }
 
 .rowActions {
   flex-shrink: 0;
 }
 
-.primaryAction {
-  min-width: 132px;
+.tooltipTarget {
+  display: inline-flex;
+}
+
+.iconAction {
+  flex-shrink: 0;
+}
+
+/* Keeps column width when Restart/Update are not applicable (e.g. not installed). */
+.iconActionReserved {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .progressBlock {
@@ -193,6 +185,19 @@
   position: relative;
   z-index: 1;
   padding-left: 52px;
+  display: block;
+  width: 100%;
+  text-align: left;
+  border-radius: 8px;
+}
+
+.runtimeError:hover .runtimeErrorText,
+.runtimeError:focus-visible .runtimeErrorText {
+  text-decoration: underline;
+}
+
+.runtimeErrorText {
+  line-height: 1.35;
 }
 
 @media (min-width: 1600px) {
@@ -244,10 +249,6 @@
 
   .rowActions {
     justify-content: stretch;
-  }
-
-  .primaryAction {
-    flex: 1;
   }
 
   .runtimeError {

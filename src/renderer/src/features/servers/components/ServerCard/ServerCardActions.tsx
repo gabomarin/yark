@@ -13,9 +13,13 @@ import {
   Trash,
   XCircle,
 } from "@phosphor-icons/react";
-import { ActionIcon, Button, Group, Menu, Tooltip } from "@mantine/core";
+import { ActionIcon, Group, Menu, Tooltip } from "@mantine/core";
 import type { ServerStatus } from "@shared/types";
-import type { ServerCardPrimaryAction } from "./serverCardModel";
+import type {
+  ServerCardRestartAction,
+  ServerCardRuntimeAction,
+  ServerCardUpdateAction,
+} from "./serverCardModel";
 import classes from "./ServerCard.module.css";
 
 interface Props {
@@ -25,15 +29,17 @@ interface Props {
   updateAvailable: boolean;
   steamCmdBusy: boolean;
   checkingUpdates: boolean;
-  primaryAction: ServerCardPrimaryAction;
-  onPrimaryAction: () => void;
+  runtimeAction: ServerCardRuntimeAction;
+  restartAction: ServerCardRestartAction;
+  updateAction: ServerCardUpdateAction;
+  onRuntimeAction: () => void;
+  onRestart: () => void;
+  onUpdateNow: () => void;
   onOpenWorkspace: () => void;
   onStop: () => void;
-  onRestart: () => void;
   onOpenFolder: () => void;
   onOpenLogs: () => void;
   onCheckUpdates: () => void;
-  onUpdateNow: () => void;
   onVerifyFiles: () => void;
   onInstallFiles: () => void;
   onClone: () => void;
@@ -41,55 +47,151 @@ interface Props {
   onDelete: () => void;
 }
 
-function primaryActionIcon(kind: ServerCardPrimaryAction["kind"]): JSX.Element {
+function runtimeActionIcon(kind: ServerCardRuntimeAction["kind"]): JSX.Element {
   switch (kind) {
     case "cancel":
-    case "review-error":
-      return <XCircle size={16} />;
-    case "install":
-    case "update":
-      return <CloudArrowDown size={16} />;
-    case "manage":
-      return <GearSix size={16} />;
+      return <XCircle size={18} />;
     case "starting":
     case "stopping":
-      return <ArrowsClockwise size={16} />;
+      return <ArrowsClockwise size={18} />;
+    case "stop":
+      return <Pause size={18} weight="fill" />;
     case "start":
-      return <Play size={16} weight="fill" />;
+      return <Play size={18} weight="fill" />;
   }
 }
 
+function filesActionClick(
+  kind: ServerCardUpdateAction["kind"],
+  props: Pick<Props, "onInstallFiles" | "onUpdateNow">,
+): void {
+  if (kind === "install") {
+    props.onInstallFiles();
+    return;
+  }
+  props.onUpdateNow();
+}
+
 export function ServerCardActions(props: Props): JSX.Element {
-  const { primaryAction } = props;
+  const { runtimeAction, restartAction, updateAction } = props;
+  // Only model.disabled blocks icons. Do not blanket-disable Cancel/Stop during
+  // starting/stopping — Overview needs escape hatches when a transition sticks.
+  const menuDisabled = props.steamCmdBusy;
 
   return (
-    <Group gap="xs" wrap="nowrap" className={classes.rowActions}>
-      <Button
-        size="sm"
-        variant={primaryAction.variant}
-        color={primaryAction.color}
-        leftSection={primaryActionIcon(primaryAction.kind)}
-        disabled={primaryAction.disabled}
-        onClick={props.onPrimaryAction}
-        className={classes.primaryAction}
-        data-primary-action
-      >
-        {primaryAction.label}
-      </Button>
+    <Group gap="xs" wrap="nowrap" className={classes.rowActions} data-row-actions>
+      {runtimeAction.visible ? (
+        <Tooltip label={runtimeAction.label} withArrow>
+          <span className={classes.tooltipTarget}>
+            <ActionIcon
+              size="lg"
+              variant={runtimeAction.variant}
+              color={runtimeAction.color}
+              aria-label={runtimeAction.label}
+              disabled={runtimeAction.disabled}
+              onClick={props.onRuntimeAction}
+              className={classes.iconAction}
+              data-primary-action
+            >
+              {runtimeActionIcon(runtimeAction.kind)}
+            </ActionIcon>
+          </span>
+        </Tooltip>
+      ) : (
+        <span className={classes.tooltipTarget} aria-hidden>
+          <ActionIcon
+            size="lg"
+            variant="light"
+            className={`${classes.iconAction} ${classes.iconActionReserved}`}
+            tabIndex={-1}
+            data-primary-action
+            data-reserved
+          >
+            <Play size={18} weight="fill" />
+          </ActionIcon>
+        </span>
+      )}
+
+      {restartAction.visible ? (
+        <Tooltip label={restartAction.label} withArrow>
+          <span className={classes.tooltipTarget}>
+            <ActionIcon
+              size="lg"
+              variant="light"
+              color={restartAction.color}
+              aria-label={restartAction.label}
+              disabled={restartAction.disabled}
+              onClick={props.onRestart}
+              className={classes.iconAction}
+              data-restart-action
+            >
+              <ArrowsClockwise size={18} />
+            </ActionIcon>
+          </span>
+        </Tooltip>
+      ) : (
+        <span className={classes.tooltipTarget} aria-hidden>
+          <ActionIcon
+            size="lg"
+            variant="light"
+            className={`${classes.iconAction} ${classes.iconActionReserved}`}
+            tabIndex={-1}
+            data-restart-action
+            data-reserved
+          >
+            <ArrowsClockwise size={18} />
+          </ActionIcon>
+        </span>
+      )}
+
+      {updateAction.visible ? (
+        <Tooltip label={updateAction.label} withArrow>
+          <span className={classes.tooltipTarget}>
+            <ActionIcon
+              size="lg"
+              variant={updateAction.variant}
+              color={updateAction.color}
+              aria-label={updateAction.label}
+              disabled={updateAction.disabled}
+              onClick={() => filesActionClick(updateAction.kind, props)}
+              className={classes.iconAction}
+              data-update-action
+              data-files-action={updateAction.kind}
+            >
+              <CloudArrowDown size={18} />
+            </ActionIcon>
+          </span>
+        </Tooltip>
+      ) : (
+        <span className={classes.tooltipTarget} aria-hidden>
+          <ActionIcon
+            size="lg"
+            variant="light"
+            className={`${classes.iconAction} ${classes.iconActionReserved}`}
+            tabIndex={-1}
+            data-update-action
+            data-reserved
+          >
+            <CloudArrowDown size={18} />
+          </ActionIcon>
+        </span>
+      )}
 
       <Menu shadow="md" withinPortal position="bottom-end">
-        <Menu.Target>
-          <Tooltip label="More options" withArrow>
-            <ActionIcon
-              variant="default"
-              size="lg"
-              aria-label="More options"
-              disabled={props.steamCmdBusy}
-            >
-              <DotsThreeVertical size={18} />
-            </ActionIcon>
-          </Tooltip>
-        </Menu.Target>
+        <Tooltip label="More options" withArrow>
+          <span className={classes.tooltipTarget}>
+            <Menu.Target>
+              <ActionIcon
+                variant="default"
+                size="lg"
+                aria-label="More options"
+                disabled={menuDisabled}
+              >
+                <DotsThreeVertical size={18} />
+              </ActionIcon>
+            </Menu.Target>
+          </span>
+        </Tooltip>
         <Menu.Dropdown>
           <Menu.Label>Server</Menu.Label>
           <Menu.Item leftSection={<GearSix size={16} />} onClick={props.onOpenWorkspace}>
@@ -134,10 +236,17 @@ export function ServerCardActions(props: Props): JSX.Element {
               </Menu.Item>
               <Menu.Item
                 leftSection={<CloudArrowDown size={16} />}
-                color={props.updateAvailable ? "orange" : undefined}
+                color={props.updateAvailable ? "attention" : undefined}
                 onClick={props.onUpdateNow}
+                disabled={
+                  updateAction.kind === "update"
+                    ? updateAction.updateState === "current" || props.steamCmdBusy
+                    : !props.updateAvailable
+                }
               >
-                Update server
+                {updateAction.kind === "update" && updateAction.updateState === "unknown"
+                  ? "Update server (status unknown)"
+                  : "Update server"}
               </Menu.Item>
               <Menu.Item
                 leftSection={<ShieldCheck size={16} />}

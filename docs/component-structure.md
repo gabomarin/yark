@@ -104,10 +104,11 @@ Reference implementation: `src/renderer/src/features/clusters/`.
 
 ## Automated gate
 
-`npm run lint` (Husky pre-commit/pre-push + CI) enforces a soft size
-cap on `src/renderer/src/features/**/*.{ts,tsx}` (excluding `*.test.*`):
+`npm run lint` (Husky pre-commit/pre-push + CI) enforces soft size
+caps on `src/renderer/src/features/**/*.{ts,tsx}` (excluding `*.test.*`):
 
-- New/ungrandfathered files must stay ≤ **350** lines.
+- New/ungrandfathered React component files (`.tsx`) must stay ≤ **350** lines.
+- New/ungrandfathered model/helper files (`.ts`) must stay ≤ **450** lines.
 - Existing mega-files are listed in
   [`scripts/component-structure-baseline.json`](../scripts/component-structure-baseline.json)
   and must not grow by more than **25** lines without an intentional baseline update

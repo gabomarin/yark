@@ -50,6 +50,7 @@ export const appCssVariablesResolver: CSSVariablesResolver = () => ({
     "--app-color-accent": "var(--ark-blue-9)",
     "--app-color-ok": appTokens.colors.ok,
     "--app-color-warn": appTokens.colors.warn,
+    "--app-color-attention": appTokens.colors.attention,
     "--app-color-bad": appTokens.colors.bad,
     "--app-color-danger": "var(--app-color-bad)",
     "--app-color-cryo": "var(--ark-blue-11)",
@@ -115,6 +116,14 @@ export const appCssVariablesResolver: CSSVariablesResolver = () => ({
     "--mantine-color-blue-light": "var(--ark-blue-a3)",
     "--mantine-color-blue-light-hover": "var(--ark-blue-a4)",
     "--mantine-color-blue-light-color": "var(--ark-blue-11)",
+    "--mantine-color-attention-filled": "var(--app-color-attention)",
+    "--mantine-color-attention-filled-hover":
+      "color-mix(in srgb, var(--app-color-attention) 82%, white)",
+    "--mantine-color-attention-light":
+      "color-mix(in srgb, var(--app-color-attention) 22%, transparent)",
+    "--mantine-color-attention-light-hover":
+      "color-mix(in srgb, var(--app-color-attention) 32%, transparent)",
+    "--mantine-color-attention-light-color": "var(--app-color-attention)",
   },
 });
 
@@ -149,6 +158,32 @@ export const appTheme = createTheme({
       radixPalette.blue[4],
       radixPalette.blue[2],
       radixPalette.blue[0],
+    ],
+    /** Matches `--app-color-attention` / server-card attention rail. */
+    attention: [
+      "#fbfce3",
+      "#f7f9c4",
+      "#f2f5a0",
+      "#eef17c",
+      "#eaef6e",
+      appTokens.colors.attention,
+      "#cfd645",
+      "#aeb234",
+      "#8a8e28",
+      "#676b1e",
+    ],
+    /** Matches `--app-color-ok` (current / healthy). */
+    ok: [
+      "#e6f8f0",
+      "#c8efdc",
+      "#a5e5c6",
+      "#7fd9ae",
+      "#68d0a2",
+      appTokens.colors.ok,
+      "#45b585",
+      "#35986e",
+      "#2a7a58",
+      "#1f5c42",
     ],
     dark: [
       radixPalette.gray[11],

@@ -673,6 +673,9 @@ export function App(): JSX.Element {
                 });
               }}
               onOpenLogs={(serverId) => openServerLogs(serverId, { section: "events" })}
+              onReviewError={(serverId) =>
+                openServerLogs(serverId, { section: "runtime" })
+              }
               onStartServer={(id) => void startServer(id)}
               onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
               onRestartServer={(id) => void restartServer(id)}

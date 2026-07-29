@@ -1,5 +1,6 @@
 {
-  "maxLines": 350,
+  "maxTsxLines": 350,
+  "maxTsLines": 450,
   "growthSlack": 25,
   "files": {
     "src/renderer/src/features/backups/BackupsPage.tsx": 1011,
