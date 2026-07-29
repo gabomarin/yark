@@ -119,7 +119,7 @@ describe("LogsPage", () => {
     });
   });
 
-  it("shows fleet problems and opens the matching server logs focus", async () => {
+  it("shows problems across servers and opens the matching server logs focus", async () => {
     const onOpenServerLogs = vi.fn();
     const user = userEvent.setup();
     render(
@@ -128,7 +128,7 @@ describe("LogsPage", () => {
       </AppProviders>,
     );
 
-    expect(await screen.findByText("Fleet activity")).toBeInTheDocument();
+    expect(await screen.findByText("Activity across servers")).toBeInTheDocument();
     expect(await screen.findByText(/Update failed on Island/i)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Update failed on Island/i }));
     expect(

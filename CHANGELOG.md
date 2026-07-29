@@ -21,6 +21,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Overview Version no longer sticks on the previous ARK Version from logs after a successful update (e.g. 92.25 → 92.28).
 - Closing the native console during startup no longer replaces Start with a Review error control that blocked relaunch.
+- User-facing copy drops “fleet” in favor of “all servers” / “across servers” on sidebar Backups and Logs (and matching website/docs wording).
 
 ## [0.3.1] - 2026-07-28
 
