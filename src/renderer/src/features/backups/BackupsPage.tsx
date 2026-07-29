@@ -140,7 +140,7 @@ export function BackupsPage(props: Props): JSX.Element {
     setLoading(false);
     if (!result.ok) {
       setSummary(null);
-      setError(result.error ?? "Could not load backup fleet summary");
+      setError(result.error ?? "Could not load backup summary");
       return;
     }
 
@@ -300,7 +300,7 @@ export function BackupsPage(props: Props): JSX.Element {
   return (
     <PageScaffold
       title="Backups"
-      subtitle="Fleet backup health, disk usage, and shared destination settings. Create and restore from each server’s Backups tab."
+      subtitle="Backup health, disk usage, and shared destination settings across all servers. Create and restore from each server’s Backups tab."
       fillViewport
       actions={
         <Group gap="sm">

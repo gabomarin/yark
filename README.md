@@ -96,7 +96,7 @@ Edit `website/index.html` (and `styles.css`) for copy updates; pushes that touch
 
 ## Engineering docs
 
-- [docs/backups.md](docs/backups.md) — backup kinds, ZIP layout, IPC, schedules, player sessions, fleet health, restore, troubleshooting
+- [docs/backups.md](docs/backups.md) — backup kinds, ZIP layout, IPC, schedules, player sessions, all-servers health, restore, troubleshooting
 - [docs/updates-steamcmd.md](docs/updates-steamcmd.md) — SteamCMD caches, install/update/verify, safe update, availability checks
 - [docs/logs.md](docs/logs.md) — operational logs, event details, clear/seed helpers
 - [docs/server-lifecycle.md](docs/server-lifecycle.md) — launch args, profile→INI sync, spawn, start/stop/kill

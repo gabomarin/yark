@@ -64,7 +64,7 @@ export function LogsPage(props: Props): JSX.Element {
     setLoading(false);
     if (!result.ok) {
       setFleetEvents([]);
-      setError(result.error ?? "Could not load fleet events");
+      setError(result.error ?? "Could not load events across servers");
       return;
     }
     setFleetEvents(result.data);
@@ -126,7 +126,7 @@ export function LogsPage(props: Props): JSX.Element {
         <AppSurfaceCard fill className={classes.fillPanel}>
           <Stack gap="sm" className={classes.panelStack}>
             <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm">
-              <Title order={3}>Fleet activity</Title>
+              <Title order={3}>Activity across servers</Title>
               <Group gap="sm" wrap="wrap">
                 <Select
                   aria-label="Severity filter"
@@ -157,7 +157,7 @@ export function LogsPage(props: Props): JSX.Element {
                 <SearchField
                   value={search}
                   onChange={setSearch}
-                  label="Search fleet events"
+                  label="Search events across servers"
                   placeholder="Search…"
                   size="sm"
                   className={classes.fleetSearch}
@@ -168,7 +168,7 @@ export function LogsPage(props: Props): JSX.Element {
             {props.servers.length === 0 ? (
               <Text c="dimmed">No servers configured yet.</Text>
             ) : loading ? (
-              <Text c="dimmed">Loading fleet events…</Text>
+              <Text c="dimmed">Loading events…</Text>
             ) : filteredFleetEvents.length === 0 ? (
               <EmptyState
                 layout="stacked"
