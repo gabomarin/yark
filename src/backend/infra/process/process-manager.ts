@@ -93,6 +93,8 @@ export interface ProcessManagerOptions {
   readyTimeoutMs?: number;
   /** Interval between RCON attempts. Default 3s. */
   readyPollMs?: number;
+  /** Process factory override for lifecycle tests. */
+  spawnProcess?: typeof spawnAsaProcess;
 }
 
 const RCON_HOST = "127.0.0.1";
@@ -131,11 +133,13 @@ export class ProcessManager extends EventEmitter {
   private readonly runtimePartials = new Map<string, string>();
   private readonly readyTimeoutMs: number;
   private readonly readyPollMs: number;
+  private readonly spawnProcess: typeof spawnAsaProcess;
 
   constructor(options?: ProcessManagerOptions) {
     super();
     this.readyTimeoutMs = options?.readyTimeoutMs ?? DEFAULT_READY_TIMEOUT_MS;
     this.readyPollMs = options?.readyPollMs ?? DEFAULT_READY_POLL_MS;
+    this.spawnProcess = options?.spawnProcess ?? spawnAsaProcess;
   }
 
   getStatus(serverId: string): ServerRuntimeInfo {
@@ -208,7 +212,7 @@ export class ProcessManager extends EventEmitter {
         : spawnArgs !== args
           ? `${formatLaunchCommandLine(profile, binary)} -log`
           : formatLaunchCommandLine(profile, binary);
-    const child = spawnAsaProcess(binary, spawnArgs, profile.installDir, {
+    const child = this.spawnProcess(binary, spawnArgs, profile.installDir, {
       nativeConsole,
     });
 
@@ -227,19 +231,6 @@ export class ProcessManager extends EventEmitter {
         "Piped mode: following ShooterGame/Saved/Logs for Runtime",
       );
     }
-    if (child.stdout !== null) {
-      child.stdout.setEncoding("utf8");
-      child.stdout.on("data", (chunk) => {
-        this.captureRuntimeChunk(profile.id, "stdout", chunk);
-      });
-    }
-    if (child.stderr !== null) {
-      child.stderr.setEncoding("utf8");
-      child.stderr.on("data", (chunk) => {
-        this.captureRuntimeChunk(profile.id, "stderr", chunk);
-      });
-    }
-
     const managed: ManagedProcess = {
       child,
       status: "starting",
@@ -248,18 +239,38 @@ export class ProcessManager extends EventEmitter {
       readinessGeneration: 0,
       logTailer: null,
     };
+    this.processes.set(profile.id, managed);
+    if (child.stdout !== null) {
+      child.stdout.setEncoding("utf8");
+      child.stdout.on("data", (chunk) => {
+        if (this.processes.get(profile.id) !== managed) return;
+        this.captureRuntimeChunk(profile.id, "stdout", chunk);
+      });
+    }
+    if (child.stderr !== null) {
+      child.stderr.setEncoding("utf8");
+      child.stderr.on("data", (chunk) => {
+        if (this.processes.get(profile.id) !== managed) return;
+        this.captureRuntimeChunk(profile.id, "stderr", chunk);
+      });
+    }
     if (!nativeConsole) {
       managed.logTailer = new AsaSavedLogsTailer(
         profile.installDir,
-        (text) => this.captureRuntimeChunk(profile.id, "log", text),
+        (text) => {
+          if (this.processes.get(profile.id) !== managed) return;
+          this.captureRuntimeChunk(profile.id, "log", text);
+        },
       );
       managed.logTailer.start(Date.parse(managed.startedAt));
     }
-    this.processes.set(profile.id, managed);
     this.emitStatus(profile.id);
 
     child.once("spawn", () => {
-      if (managed.status !== "starting") {
+      if (
+        this.processes.get(profile.id) !== managed ||
+        managed.status !== "starting"
+      ) {
         return;
       }
       this.appendRuntimeLog(
@@ -288,6 +299,7 @@ export class ProcessManager extends EventEmitter {
       managed.readinessGeneration += 1;
       managed.logTailer?.stop();
       managed.logTailer = null;
+      if (this.processes.get(profile.id) !== managed) return;
       this.flushRuntimePartials(profile.id);
       managed.status = "error";
       managed.lastError = err.message;
@@ -301,6 +313,7 @@ export class ProcessManager extends EventEmitter {
       managed.readinessGeneration += 1;
       managed.logTailer?.stop();
       managed.logTailer = null;
+      if (this.processes.get(profile.id) !== managed) return;
       this.flushRuntimePartials(profile.id);
       this.appendRuntimeLog(
         profile.id,
@@ -348,16 +361,19 @@ export class ProcessManager extends EventEmitter {
     } catch {
       // RCON unavailable: fall back to process termination.
       this.appendRuntimeLog(profile.id, "warning", "RCON unavailable; applying kill");
-      this.terminateManaged(managed);
+      this.terminateManaged(profile.id, managed);
     }
 
     const exited = await this.waitForExit(managed.child, EXIT_WAIT_MS);
     if (!exited) {
-      this.terminateManaged(managed);
+      this.terminateManaged(profile.id, managed);
       await this.waitForExit(managed.child, 5000);
     }
-    this.processes.delete(profile.id);
-    this.emitStatus(profile.id);
+    if (this.processes.get(profile.id) === managed) {
+      this.stopManagedCapture(profile.id, managed);
+      this.processes.delete(profile.id);
+      this.emitStatus(profile.id);
+    }
   }
 
   /** Immediate termination without save (last resort). */
@@ -368,9 +384,11 @@ export class ProcessManager extends EventEmitter {
     managed.status = "stopping";
     this.appendRuntimeLog(serverId, "warning", "Forcing process shutdown");
     this.emitStatus(serverId);
-    this.terminateManaged(managed);
-    this.processes.delete(serverId);
-    this.emitStatus(serverId);
+    this.terminateManaged(serverId, managed);
+    if (this.processes.get(serverId) === managed) {
+      this.processes.delete(serverId);
+      this.emitStatus(serverId);
+    }
   }
 
   /** Stops all active processes (app shutdown). */
@@ -441,13 +459,14 @@ export class ProcessManager extends EventEmitter {
     this.appendRuntimeLog(profile.id, "error", managed.lastError);
     this.emitStatus(profile.id);
     try {
-      this.terminateManaged(managed);
+      this.terminateManaged(profile.id, managed);
     } catch {
       // ignore
     }
   }
 
-  private terminateManaged(managed: ManagedProcess): void {
+  private terminateManaged(serverId: string, managed: ManagedProcess): void {
+    this.stopManagedCapture(serverId, managed);
     const pid = managed.child.pid;
     if (process.platform === "win32" && pid !== undefined && killWinProcessTree(pid)) {
       return;
@@ -456,6 +475,14 @@ export class ProcessManager extends EventEmitter {
       managed.child.kill();
     } catch {
       // already exited
+    }
+  }
+
+  private stopManagedCapture(serverId: string, managed: ManagedProcess): void {
+    managed.logTailer?.stop();
+    managed.logTailer = null;
+    if (this.processes.get(serverId) === managed) {
+      this.flushRuntimePartials(serverId);
     }
   }
 

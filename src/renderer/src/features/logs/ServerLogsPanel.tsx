@@ -33,6 +33,8 @@ import {
   formatDuration,
   formatSize,
   formatUpdateJobLabel,
+  preserveNewerRuntimeLogs,
+  replaceRuntimeLogs,
   statusColor,
   statusLabel,
   type RuntimeLogSourceFilter,
@@ -74,7 +76,10 @@ export function ServerLogsPanel(props: Props): JSX.Element {
   const updateLoadGenRef = useRef(0);
   const loadGenRef = useRef(0);
   const runtimePollGenRef = useRef(0);
-
+  const runtimeRevisionRef = useRef(0);
+  const applyLoadedLogs = (data: ServerOperationalLogs, revision: number) => setLogs(
+    (prev) => preserveNewerRuntimeLogs(data, prev, runtimeRevisionRef.current !== revision),
+  );
   const clearUpdateContent = () => {
     updateLoadGenRef.current += 1;
     setSelectedUpdateFile(null);
@@ -101,6 +106,7 @@ export function ServerLogsPanel(props: Props): JSX.Element {
   const load = async (serverId: string, options?: { quiet?: boolean }) => {
     const quiet = options?.quiet === true;
     const gen = ++loadGenRef.current;
+    const runtimeRevision = runtimeRevisionRef.current;
     if (!quiet) {
       setLoading(true);
       setError(null);
@@ -120,7 +126,7 @@ export function ServerLogsPanel(props: Props): JSX.Element {
       return;
     }
     if (result.data.serverId !== serverId) return;
-    setLogs(result.data);
+    applyLoadedLogs(result.data, runtimeRevision);
     return result.data;
   };
 
@@ -134,10 +140,10 @@ export function ServerLogsPanel(props: Props): JSX.Element {
     if (gen !== runtimePollGenRef.current) return;
     if (!result.ok) return;
     if (result.data.serverId !== serverId) return;
-    setLogs((prev) => {
-      if (prev === null || prev.serverId !== serverId) return prev;
-      return { ...prev, runtimeLogLines: result.data.runtimeLogLines };
-    });
+    runtimeRevisionRef.current += 1;
+    setLogs((prev) =>
+      replaceRuntimeLogs(prev, serverId, result.data.runtimeLogLines),
+    );
   };
 
   useEffect(() => {
@@ -148,6 +154,7 @@ export function ServerLogsPanel(props: Props): JSX.Element {
     let alive = true;
     const serverId = props.server.id;
     const gen = ++loadGenRef.current;
+    const runtimeRevision = ++runtimeRevisionRef.current;
     void (async () => {
       setLoading(true);
       setError(null);
@@ -166,7 +173,7 @@ export function ServerLogsPanel(props: Props): JSX.Element {
         return;
       }
       if (result.data.serverId !== serverId) return;
-      setLogs(result.data);
+      applyLoadedLogs(result.data, runtimeRevision);
     })();
     return () => {
       alive = false;
@@ -347,6 +354,8 @@ export function ServerLogsPanel(props: Props): JSX.Element {
             setError(result.error ?? "Could not clear runtime log");
             return;
           }
+          runtimeRevisionRef.current += 1;
+          setLogs((prev) => replaceRuntimeLogs(prev, props.server.id, []));
           await load(props.server.id);
           setInfo("Runtime log cleared.");
         })();

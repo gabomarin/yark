@@ -1,4 +1,4 @@
-import type { ServerUpdateLogFile } from "@shared/types";
+import type { ServerOperationalLogs, ServerUpdateLogFile } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
 
 /** Runtime buffer filter: lines are tagged `[iso] [source] …`. */
@@ -33,10 +33,30 @@ export function filterRuntimeLogLines(
   return lines.filter((line) => {
     const source = parseRuntimeLogSource(line);
     if (source === null) return false;
-    if (filter === "system") return source === "system" || source === "error";
+    if (filter === "system") {
+      return source === "system" || source === "warning" || source === "error";
+    }
     if (filter === "asa") return source === "log";
     return source === "stdout" || source === "stderr";
   });
+}
+
+export function preserveNewerRuntimeLogs(
+  incoming: ServerOperationalLogs,
+  previous: ServerOperationalLogs | null,
+  runtimeChanged: boolean,
+): ServerOperationalLogs {
+  if (!runtimeChanged || previous?.serverId !== incoming.serverId) return incoming;
+  return { ...incoming, runtimeLogLines: previous.runtimeLogLines };
+}
+
+export function replaceRuntimeLogs(
+  logs: ServerOperationalLogs | null,
+  serverId: string,
+  runtimeLogLines: string[],
+): ServerOperationalLogs | null {
+  if (logs?.serverId !== serverId) return logs;
+  return { ...logs, runtimeLogLines };
 }
 
 /**

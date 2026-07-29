@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { formatLogDateTime } from "@shared/format-log-datetime";
+import type { ServerOperationalLogs } from "@shared/types";
 import {
   filterRuntimeLogLines,
   formatRuntimeLogLineForDisplay,
   formatUnrealLogBody,
   parseRuntimeLogSource,
+  preserveNewerRuntimeLogs,
 } from "../../src/renderer/src/features/logs/serverLogsFormat";
 
 const sample = [
@@ -12,6 +14,7 @@ const sample = [
   "[2026-07-29T20:11:43.237Z] [log] ARK Version: 92.28",
   "[2026-07-29T20:11:43.581Z] [stderr] GameAnalytics noise",
   "[2026-07-29T20:11:43.600Z] [stdout] rare stdout",
+  "[2026-07-29T20:11:45.000Z] [warning] RCON unavailable; applying kill",
   "[2026-07-29T20:11:50.000Z] [error] Process error: boom",
 ];
 
@@ -27,10 +30,11 @@ describe("filterRuntimeLogLines", () => {
     expect(filterRuntimeLogLines(sample, "all")).toEqual(sample);
   });
 
-  it("filters system including error", () => {
+  it("filters system including warning and error", () => {
     expect(filterRuntimeLogLines(sample, "system")).toEqual([
       sample[0],
       sample[4],
+      sample[5],
     ]);
   });
 
@@ -43,6 +47,29 @@ describe("filterRuntimeLogLines", () => {
       sample[2],
       sample[3],
     ]);
+  });
+});
+
+describe("preserveNewerRuntimeLogs", () => {
+  it("keeps runtime lines updated while an aggregate request was pending", () => {
+    const incoming: ServerOperationalLogs = {
+      serverId: "server-1",
+      updateFiles: [],
+      backups: [],
+      events: [],
+      runtimeLogLines: ["stale"],
+    };
+    const previous: ServerOperationalLogs = {
+      serverId: "server-1",
+      updateFiles: [],
+      backups: [],
+      events: [],
+      runtimeLogLines: ["fresh"],
+    };
+
+    expect(
+      preserveNewerRuntimeLogs(incoming, previous, true).runtimeLogLines,
+    ).toEqual(["fresh"]);
   });
 });
 
