@@ -189,6 +189,24 @@ export class BackupRepository {
     return row ? rowToBackup(row) : null;
   }
 
+  /** True when a backup of the given kind (or any kind) is still running. */
+  hasRunning(serverId: string, kind?: BackupKind): boolean {
+    if (kind !== undefined) {
+      const row = this.db
+        .prepare(
+          "SELECT 1 AS ok FROM backups WHERE server_id = ? AND kind = ? AND status = 'running' LIMIT 1",
+        )
+        .get(serverId, kind) as { ok: number } | undefined;
+      return row !== undefined;
+    }
+    const row = this.db
+      .prepare(
+        "SELECT 1 AS ok FROM backups WHERE server_id = ? AND status = 'running' LIMIT 1",
+      )
+      .get(serverId) as { ok: number } | undefined;
+    return row !== undefined;
+  }
+
   getPolicy(serverId: string): BackupPolicy {
     const row = this.db
       .prepare("SELECT * FROM backup_policies WHERE server_id = ?")

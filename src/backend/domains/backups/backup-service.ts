@@ -32,6 +32,10 @@ import type { AppSettingsRepository } from "../../infra/db/app-settings-reposito
 import { rconExec } from "../../infra/rcon/rcon-client";
 import { syncProfileSettingsToIni } from "../instances/sync-profile-ini";
 import {
+  copySavedArksFiles,
+  missingEssentialWorldRels,
+} from "./world-snapshot";
+import {
   backupKindSubdir,
   extractZip,
   isReadableZipArchive,
@@ -254,6 +258,10 @@ export class BackupService extends EventEmitter {
   private readonly reconcileInFlight = new Map<string, Promise<number>>();
   /** Backup ids currently inside createBackup — reconcile must not promote/fail these. */
   private readonly creatingBackupIds = new Set<string>();
+  /** Prevent stacked scheduled world backups for the same server. */
+  private readonly scheduledWorldInFlight = new Set<string>();
+  /** Prevent overlapping runScheduledCycle walks. */
+  private scheduledCycleInFlight = false;
 
   constructor(
     private readonly servers: ServerRepository,
@@ -783,43 +791,60 @@ export class BackupService extends EventEmitter {
 
   /** Runs policy backups and cleans retention per server. */
   async runScheduledCycle(): Promise<void> {
-    const allServers = this.servers.list();
-    for (const server of allServers) {
-      const policy = this.backups.getPolicy(server.id);
-      await this.applyRetention(server.id, policy);
-      if (!policy.enabled) continue;
+    if (this.scheduledCycleInFlight) return;
+    this.scheduledCycleInFlight = true;
+    try {
+      const allServers = this.servers.list();
+      for (const server of allServers) {
+        const policy = this.backups.getPolicy(server.id);
+        await this.applyRetention(server.id, policy);
+        if (!policy.enabled) continue;
 
-      const latestWorld = this.backups.latestCompleted(server.id, "world");
-      if (latestWorld !== null) {
-        const finishedAt = backupFinishedAt(latestWorld);
-        const elapsedMs = Date.now() - Date.parse(finishedAt);
-        const requiredMs = policy.intervalMinutes * 60 * 1000;
-        if (Number.isFinite(elapsedMs) && elapsedMs < requiredMs) continue;
-      }
+        if (
+          this.scheduledWorldInFlight.has(server.id)
+          || this.backups.hasRunning(server.id, "world")
+        ) {
+          continue;
+        }
 
-      if (!this.processes.isActive(server.id)) continue;
-      try {
-        await this.createScheduledBackup(server.id);
-      } catch (err) {
-        this.servers.addEvent(
-          server.id,
-          "error",
-          "error",
-          `Scheduled backup failed for \"${server.name}\": ${
-            err instanceof Error ? err.message : String(err)
-          }`,
-          {
-            what: "A scheduled world backup did not complete.",
-            cause: err instanceof Error ? err.message : String(err),
-            suggestion:
-              "Confirm the server is reachable for save flush, destination disk has space, and retry from the Backups tab.",
-            context: {
-              trigger: "scheduled",
-              kind: "world",
+        const latestWorld = this.backups.latestCompleted(server.id, "world");
+        if (latestWorld !== null) {
+          const finishedAt = backupFinishedAt(latestWorld);
+          const elapsedMs = Date.now() - Date.parse(finishedAt);
+          const requiredMs = policy.intervalMinutes * 60 * 1000;
+          if (Number.isFinite(elapsedMs) && elapsedMs < requiredMs) continue;
+        }
+
+        if (!this.processes.isActive(server.id)) continue;
+
+        this.scheduledWorldInFlight.add(server.id);
+        try {
+          await this.createScheduledBackup(server.id);
+        } catch (err) {
+          this.servers.addEvent(
+            server.id,
+            "error",
+            "error",
+            `Scheduled backup failed for \"${server.name}\": ${
+              err instanceof Error ? err.message : String(err)
+            }`,
+            {
+              what: "A scheduled world backup did not complete.",
+              cause: err instanceof Error ? err.message : String(err),
+              suggestion:
+                "Confirm the server is reachable for save flush, destination disk has space, and retry from the Backups tab.",
+              context: {
+                trigger: "scheduled",
+                kind: "world",
+              },
             },
-          },
-        );
+          );
+        } finally {
+          this.scheduledWorldInFlight.delete(server.id);
+        }
       }
+    } finally {
+      this.scheduledCycleInFlight = false;
     }
   }
 
@@ -1301,10 +1326,40 @@ export class BackupService extends EventEmitter {
       return { meta: { empty: true, fileCount: 0, savedArksPresent: false } };
     }
 
-    // Full SavedArks snapshot (world + tribes + player profiles).
-    await cp(savedArks, dest, { recursive: true, force: true });
-    const fileCount = (await listFilesRecursive(dest)).length;
-    return { meta: { empty: fileCount === 0, fileCount, savedArksPresent: true } };
+    // File-by-file copy so live Ark save rotation (e.g. .arkrbf) can be skipped
+    // without failing the whole archive, while essential saves still fail loudly.
+    const sourceFiles = await listFilesRecursive(savedArks);
+    const copyResult = await copySavedArksFiles(
+      savedArks,
+      dest,
+      sourceFiles,
+      copyFileTo,
+    );
+    const destFiles = await listFilesRecursive(dest);
+    const missing = missingEssentialWorldRels(
+      savedArks,
+      dest,
+      sourceFiles,
+      destFiles,
+    );
+    if (missing.length > 0) {
+      throw new Error(
+        `World backup incomplete; missing essential save data: ${
+          missing.map((rel) => basename(rel)).slice(0, 5).join(", ")
+        }`,
+      );
+    }
+
+    return {
+      meta: {
+        empty: destFiles.length === 0,
+        fileCount: destFiles.length,
+        savedArksPresent: true,
+        copiedFileCount: copyResult.copiedFileCount,
+        skippedTransientCount: copyResult.skippedTransientCount,
+        skippedTransient: copyResult.skippedTransient,
+      },
+    };
   }
 
   private async packagePlayers(

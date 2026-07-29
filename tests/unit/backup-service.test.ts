@@ -539,6 +539,94 @@ describe("BackupService kinds and retention", () => {
     expect(repo.listCompleted(profile.id, "world")[0]?.id).toBe(first.id);
   });
 
+  it("skips scheduling while a world backup is already running", async () => {
+    repo.setPolicy({
+      serverId: profile.id,
+      enabled: true,
+      intervalMinutes: 5,
+      retainCountWorld: 20,
+      retainCountPlayers: 20,
+      retainCountIni: 10,
+      backupDir: null,
+    });
+    const running = repo.createBackupStart({
+      serverId: profile.id,
+      type: "scheduled",
+      kind: "world",
+      path: join(installDir, "Backups", "World", "running.zip"),
+      notes: null,
+    });
+    expect(repo.hasRunning(profile.id, "world")).toBe(true);
+
+    const processes = {
+      isActive: vi.fn(() => true),
+      start: vi.fn(),
+      stop: vi.fn(),
+    } as unknown as ProcessManager;
+    const servers = {
+      get: vi.fn((id: string) => (id === profile.id ? profile : null)),
+      list: vi.fn(() => [profile]),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const settings = {
+      get: vi.fn(() => null),
+      set: vi.fn(),
+    } as unknown as AppSettingsRepository;
+    const scheduled = new BackupService(
+      servers,
+      repo,
+      processes,
+      settings,
+      join(installDir, "_root"),
+    );
+
+    await scheduled.runScheduledCycle();
+    const worlds = repo.listBackups(profile.id, 20).filter((b) => b.kind === "world");
+    expect(worlds).toHaveLength(1);
+    expect(worlds[0]?.id).toBe(running.id);
+  });
+
+  it("coalesces overlapping scheduled cycles for the same server", async () => {
+    repo.setPolicy({
+      serverId: profile.id,
+      enabled: true,
+      intervalMinutes: 5,
+      retainCountWorld: 20,
+      retainCountPlayers: 20,
+      retainCountIni: 10,
+      backupDir: null,
+    });
+    const processes = {
+      isActive: vi.fn(() => true),
+      start: vi.fn(),
+      stop: vi.fn(),
+    } as unknown as ProcessManager;
+    const servers = {
+      get: vi.fn((id: string) => (id === profile.id ? profile : null)),
+      list: vi.fn(() => [profile]),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const settings = {
+      get: vi.fn(() => null),
+      set: vi.fn(),
+    } as unknown as AppSettingsRepository;
+    const scheduled = new BackupService(
+      servers,
+      repo,
+      processes,
+      settings,
+      join(installDir, "_root"),
+    );
+
+    const first = scheduled.runScheduledCycle();
+    const second = scheduled.runScheduledCycle();
+    await Promise.all([first, second]);
+    const scheduledWorlds = repo
+      .listBackups(profile.id, 20)
+      .filter((b) => b.type === "scheduled" && b.kind === "world");
+    expect(scheduledWorlds).toHaveLength(1);
+  });
+
   it("imports orphan zip archives from disk on list/refresh", async () => {
     const created = await service.createManualBackup(profile.id, ["players"]);
     const record = created[0];

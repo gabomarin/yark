@@ -1,6 +1,5 @@
 import {
   ArrowClockwise,
-  ArrowCounterClockwise,
   CaretDown,
   CaretRight,
   FolderOpen,
@@ -38,6 +37,8 @@ import type {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { BackupHistoryRowActions } from "./BackupHistoryRowActions";
+import { formatBackupDetails } from "./formatBackupDetails";
 import classes from "./BackupsPage.module.css";
 
 interface Props {
@@ -478,6 +479,21 @@ export function ServerBackupPanel(props: Props): JSX.Element {
         })();
       },
     });
+  };
+
+  const copyBackupDetails = async (backup: BackupRecord) => {
+    const payload = formatBackupDetails(
+      { id: props.server.id, name: props.server.name },
+      backup,
+    );
+    try {
+      await navigator.clipboard.writeText(payload);
+      showBackupToast("Backup details copied.");
+    } catch (error) {
+      showBackupError(
+        error instanceof Error ? error.message : "Could not copy backup details",
+      );
+    }
   };
 
   const confirmRestore = (backup: BackupRecord) => {
@@ -951,35 +967,16 @@ export function ServerBackupPanel(props: Props): JSX.Element {
                             </Text>
                           )}
                         </div>
-                        <Group gap={4} className={classes.backupActions}>
-                          <Tooltip label={backup.path} multiline maw={360} withArrow>
-                            <ActionIcon
-                              variant="subtle"
-                              size="sm"
-                              aria-label={`Open folder ${backup.path}`}
-                              disabled={busy}
-                              onClick={() => void openBackupFolder(backup.id)}
-                            >
-                              <FolderOpen size={16} />
-                            </ActionIcon>
-                          </Tooltip>
-                          <Tooltip label="Restore" withArrow>
-                            <ActionIcon
-                              variant="light"
-                              color="orange"
-                              size="sm"
-                              aria-label={`Restore backup ${backup.id}`}
-                              disabled={
-                                busy ||
-                                backup.status !== "completed" ||
-                                opsLocked
-                              }
-                              onClick={() => confirmRestore(backup)}
-                            >
-                              <ArrowCounterClockwise size={16} />
-                            </ActionIcon>
-                          </Tooltip>
-                        </Group>
+                        <div className={classes.backupActions}>
+                          <BackupHistoryRowActions
+                            backup={backup}
+                            busy={busy}
+                            opsLocked={opsLocked}
+                            onCopyDetails={(row) => void copyBackupDetails(row)}
+                            onOpenFolder={(id) => void openBackupFolder(id)}
+                            onRestore={confirmRestore}
+                          />
+                        </div>
                       </div>
                     );
                   })}
