@@ -107,9 +107,12 @@ Constraints:
 - Do **not** set `windowsVerbatimArguments: true` when the exe path has spaces
   (Node leaves the path unquoted and argv breaks). Prefer `false` so Node
   quotes the exe and keeps real `"` on the map token.
-- Native console and piped Runtime logs are mutually exclusive — with a native
-  console, Runtime logs are system messages only (`MAX_RUNTIME_LOG_LINES = 1200`
-  for the in-memory buffer).
+- Native console and piped Runtime logs are mutually exclusive for the **console
+  window** — with a native console, Runtime is mostly system messages. With the
+  console off (piped mode), YARK still captures any stdout/stderr and **tails
+  `ShooterGame/Saved/Logs/*.log`** into the same in-memory Runtime buffer
+  (`MAX_RUNTIME_LOG_LINES = 1200`). Piped mode also appends `-log` when missing
+  so Unreal is more likely to write those disk logs.
 - `servers:open-native-terminal` opens a separate `cmd` in the install dir; that
   is **not** the game process.
 
@@ -207,10 +210,13 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 3. `windowsVerbatimArguments: true` + spaced install path → broken argv.
 4. cmd / start / `.cmd` wrapper → lifecycle tracks the shell, not ASA.
 5. Treating OS spawn as `running` → wait for RCON (or `skipReadinessCheck` in tests).
-6. Expecting Runtime logs with native console → pipes are off in that mode.
-7. Treating client INI regeneration as user dirty → sanitize first.
-8. Assuming restart is one IPC → it is stop + start in the renderer.
-9. Relying on `skipPortValidation` → currently a no-op.
+6. Expecting Runtime logs with native console → pipes and Saved/Logs tail are
+   off in that mode (use the console window, or turn native console off).
+7. Thin Runtime with console off → check `ShooterGame/Saved/Logs` exists and
+   that `-log` is on the command line in Runtime system lines.
+8. Treating client INI regeneration as user dirty → sanitize first.
+9. Assuming restart is one IPC → it is stop + start in the renderer.
+10. Relying on `skipPortValidation` → currently a no-op.
 
 ## Tests that lock behavior
 
@@ -221,8 +227,9 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 | `tests/unit/validation.test.ts` | Ports, paths, cluster, mods, conflicts |
 | `tests/unit/ini-service.test.ts` | Sanitize + semantic validation |
 | `tests/unit/configuration-wizard-model.test.ts` | Presets, difficulty, preserve unknowns |
+| `tests/unit/asa-log-tail.test.ts` | Saved/Logs decode + follow for Runtime |
 | `tests/integration/process-manager-real-start.test.ts` | win32 direct spawn / spaced paths |
 
 See also [backups.md](backups.md) (restore requires `!isActive`),
 [updates-steamcmd.md](updates-steamcmd.md) (safe update stop/restart), and
-[logs.md](logs.md) (runtime buffer from piped stdout/stderr).
+[logs.md](logs.md) (runtime buffer from piped stdout/stderr and Saved/Logs tail).

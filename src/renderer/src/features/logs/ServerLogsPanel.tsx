@@ -20,13 +20,20 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import type { ServerOperationalLogs, ServerProfile, ServerUpdateLogFile } from "@shared/types";
+import type { ServerOperationalLogs, ServerProfile } from "@shared/types";
 import { useEffect, useRef, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
 import { EventDetailsBody } from "./EventDetailsBody";
 import classes from "./LogsPage.module.css";
+import {
+  formatDuration,
+  formatSize,
+  formatUpdateJobLabel,
+  statusColor,
+  statusLabel,
+} from "./serverLogsFormat";
 
 export type LogsSection = "events" | "runtime" | "updates" | "backups";
 
@@ -42,57 +49,6 @@ interface Props {
   focus?: ServerLogsFocus | null;
   /** Called after focus has been applied (so parent can clear one-shot focus). */
   onFocusConsumed?: () => void;
-}
-
-function formatSize(sizeBytes: number): string {
-  if (sizeBytes >= 1024 * 1024) {
-    return `${(sizeBytes / (1024 * 1024)).toFixed(2)} MB`;
-  }
-  return `${(sizeBytes / 1024).toFixed(1)} KB`;
-}
-
-function formatDuration(durationMs: number | null): string {
-  if (durationMs === null) return "—";
-  const seconds = Math.round(durationMs / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const rest = seconds % 60;
-  if (minutes > 0) {
-    return `${minutes}m ${rest}s`;
-  }
-  return `${rest}s`;
-}
-
-function statusColor(status: ServerUpdateLogFile["status"]): string {
-  if (status === "success") return "green";
-  if (status === "failed") return "red";
-  return "gray";
-}
-
-function statusLabel(status: ServerUpdateLogFile["status"]): string {
-  if (status === "success") return "Success";
-  if (status === "failed") return "Failed";
-  return "Unknown";
-}
-
-/** Prefer a readable stamp over the full `{uuid}-{iso}.log` filename. */
-function formatUpdateJobLabel(fileName: string, modifiedAt: string): {
-  title: string;
-  subtitle: string;
-} {
-  const withoutExt = fileName.replace(/\.log$/i, "");
-  const stampMatch = withoutExt.match(/(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2})$/);
-  const rawStamp = stampMatch?.[1];
-  const subtitle =
-    rawStamp !== undefined
-      ? rawStamp.replace(
-          /^(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})$/,
-          "$1 $2:$3:$4",
-        )
-      : withoutExt.slice(-24);
-  return {
-    title: new Date(modifiedAt).toLocaleString(),
-    subtitle,
-  };
 }
 
 export function ServerLogsPanel(props: Props): JSX.Element {
@@ -135,16 +91,23 @@ export function ServerLogsPanel(props: Props): JSX.Element {
     setUpdateContent(result.data);
   };
 
-  const load = async (serverId: string) => {
-    setLoading(true);
-    setError(null);
-    setInfo(null);
-    clearUpdateContent();
+  const load = async (serverId: string, options?: { quiet?: boolean }) => {
+    const quiet = options?.quiet === true;
+    if (!quiet) {
+      setLoading(true);
+      setError(null);
+      setInfo(null);
+      clearUpdateContent();
+    }
     const result = await window.api.listServerLogs(serverId);
-    setLoading(false);
+    if (!quiet) {
+      setLoading(false);
+    }
     if (!result.ok) {
-      setLogs(null);
-      setError(result.error ?? "Could not load logs");
+      if (!quiet) {
+        setLogs(null);
+        setError(result.error ?? "Could not load logs");
+      }
       return;
     }
     setLogs(result.data);
@@ -185,6 +148,15 @@ export function ServerLogsPanel(props: Props): JSX.Element {
       void load(props.server.id);
     });
   }, [props.server.id]);
+
+  // Live refresh Runtime while that tab is open (piped stdout + Saved/Logs tail).
+  useEffect(() => {
+    if (activeSection !== "runtime") return undefined;
+    const timer = window.setInterval(() => {
+      void load(props.server.id, { quiet: true });
+    }, 1500);
+    return () => window.clearInterval(timer);
+  }, [props.server.id, activeSection]);
 
   // Drop large update-log strings when leaving the Updates section.
   useEffect(() => {
@@ -623,7 +595,7 @@ export function ServerLogsPanel(props: Props): JSX.Element {
             <Stack gap="sm" className={classes.panelStack}>
               <TabIntro
                 title="Runtime"
-                purpose="Captured console output from the dedicated server process while it is managed here."
+                purpose="Live process output while the server is managed here. With the native console off, YARK follows ShooterGame/Saved/Logs (and any stdout/stderr)."
                 useWhen="The server won’t start, crashes, or players report issues — look here for ASA/engine lines (mods, maps, fatal errors)."
                 action={
                   <ClearAction
@@ -644,7 +616,7 @@ export function ServerLogsPanel(props: Props): JSX.Element {
                 <LogEmptyState
                   icon={<FileText size={24} />}
                   title="No runtime output"
-                  description="Console output appears while the server is running (or after a recent run). Start the server to capture lines."
+                  description="Output appears while the server is running (or after a recent run). With the native console off, ASA lines come from Saved/Logs as well as any piped stdout."
                 />
               ) : (
                 <pre className={classes.console} data-logs-scroll-region="runtime">

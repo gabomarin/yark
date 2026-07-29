@@ -13,6 +13,7 @@ import {
   serverBinaryPath,
 } from "../../domains/instances/launch-args";
 import { rconExec } from "../rcon/rcon-client";
+import { AsaSavedLogsTailer } from "./asa-log-tail";
 
 interface ManagedProcess {
   child: ChildProcess;
@@ -20,6 +21,7 @@ interface ManagedProcess {
   startedAt: string;
   lastError: string | null;
   readinessGeneration: number;
+  logTailer: AsaSavedLogsTailer | null;
 }
 
 function killWinProcessTree(pid: number): boolean {
@@ -29,6 +31,10 @@ function killWinProcessTree(pid: number): boolean {
     { windowsHide: true, stdio: "ignore" },
   );
   return result.status === 0;
+}
+
+function argsIncludeLogFlag(args: string[]): boolean {
+  return args.some((arg) => /^[-/]log$/i.test(arg.trim()));
 }
 
 /**
@@ -46,7 +52,8 @@ function killWinProcessTree(pid: number): boolean {
  * console and makes ProcessManager track cmd instead of the game.
  *
  * Native console: `windowsHide: false` so Windows gives the dedicated its own
- * console. Piped mode: `windowsHide: true` + stdout/stderr pipes.
+ * console. Piped mode: `windowsHide: true` + stdout/stderr pipes + Saved/Logs
+ * file tail (Unreal rarely prints the console stream to stdout when hidden).
  */
 function spawnAsaProcess(
   binary: string,
@@ -174,27 +181,36 @@ export class ProcessManager extends EventEmitter {
     }
 
     const args = options?.launchArgsOverride ?? buildLaunchArgs(profile);
+    const nativeConsole = options?.openNativeConsole === true;
+    let spawnArgs = args;
+    if (!nativeConsole && !argsIncludeLogFlag(spawnArgs)) {
+      // Helps Unreal write ShooterGame/Saved/Logs while the console is hidden.
+      spawnArgs = [...spawnArgs, "-log"];
+    }
     // Log the logical Unreal shape (real quotes). Spawn uses Node escaping of the same args.
     const displayCommandLine =
       options?.launchArgsOverride !== undefined
-        ? [binary, ...args].join(" ")
-        : formatLaunchCommandLine(profile, binary);
-    const nativeConsole = options?.openNativeConsole === true;
-    const child = spawnAsaProcess(binary, args, profile.installDir, {
+        ? [binary, ...spawnArgs].join(" ")
+        : spawnArgs !== args
+          ? `${formatLaunchCommandLine(profile, binary)} -log`
+          : formatLaunchCommandLine(profile, binary);
+    const child = spawnAsaProcess(binary, spawnArgs, profile.installDir, {
       nativeConsole,
     });
 
     this.appendRuntimeLog(profile.id, "system", `Starting process ${binary}`);
-    this.appendRuntimeLog(
-      profile.id,
-      "system",
-      `Commandline: ${displayCommandLine}`,
-    );
+    this.appendRuntimeLog(profile.id, "system", `Commandline: ${displayCommandLine}`);
     if (nativeConsole) {
       this.appendRuntimeLog(
         profile.id,
         "system",
         "Native server console opened (live output in that window)",
+      );
+    } else {
+      this.appendRuntimeLog(
+        profile.id,
+        "system",
+        "Piped mode: following ShooterGame/Saved/Logs for Runtime (ASA rarely writes the console stream to stdout when hidden)",
       );
     }
     if (child.stdout !== null) {
@@ -214,7 +230,15 @@ export class ProcessManager extends EventEmitter {
       startedAt: new Date().toISOString(),
       lastError: null,
       readinessGeneration: 0,
+      logTailer: null,
     };
+    if (!nativeConsole) {
+      managed.logTailer = new AsaSavedLogsTailer(
+        profile.installDir,
+        (text) => this.captureRuntimeChunk(profile.id, "log", text),
+      );
+      managed.logTailer.start(Date.parse(managed.startedAt));
+    }
     this.processes.set(profile.id, managed);
     this.emitStatus(profile.id);
 
@@ -246,6 +270,8 @@ export class ProcessManager extends EventEmitter {
 
     child.once("error", (err) => {
       managed.readinessGeneration += 1;
+      managed.logTailer?.stop();
+      managed.logTailer = null;
       managed.status = "error";
       managed.lastError = err.message;
       this.appendRuntimeLog(profile.id, "error", `Process error: ${err.message}`);
@@ -256,6 +282,8 @@ export class ProcessManager extends EventEmitter {
       const wasStopping = managed.status === "stopping";
       const wasStarting = managed.status === "starting";
       managed.readinessGeneration += 1;
+      managed.logTailer?.stop();
+      managed.logTailer = null;
       this.appendRuntimeLog(
         profile.id,
         "system",
@@ -450,7 +478,11 @@ export class ProcessManager extends EventEmitter {
     this.emit("status", this.getStatus(serverId));
   }
 
-  private captureRuntimeChunk(serverId: string, source: "stdout" | "stderr", chunk: string): void {
+  private captureRuntimeChunk(
+    serverId: string,
+    source: "stdout" | "stderr" | "log",
+    chunk: string,
+  ): void {
     const lines = chunk
       .split(/\r?\n/)
       .map((line) => line.trim())

@@ -63,9 +63,12 @@ Export (`logs:export`) resolves the same fields so text dumps stay useful.
 | Section | Source |
 | --- | --- |
 | Events | SQLite `events` for that server |
-| Runtime | In-memory process stdout/stderr buffer |
+| Runtime | In-memory buffer: stdout/stderr plus (piped mode) live tail of `ShooterGame/Saved/Logs` |
 | Updates | Files under userData `update-logs/` (`{serverId}-….log`) |
 | Backups | Backup records from `BackupService` / repository |
+
+While the Runtime tab is selected, the panel quietly refreshes about every 1.5s
+so new lines appear without tapping Refresh.
 
 Sidebar **Logs** deep-links into the workspace via `logsFocus`
 (`ServerLogsFocus`: optional `section`, `eventId`, `updateFileName`).

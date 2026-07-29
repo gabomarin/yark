@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
@@ -200,5 +200,31 @@ describe("ServerLogsPanel", () => {
 
     await user.click(screen.getByRole("tab", { name: "Events" }));
     expect(screen.queryByText("SteamCMD output line")).not.toBeInTheDocument();
+  });
+
+  it("quietly refreshes Runtime while that tab is open", async () => {
+    vi.useFakeTimers();
+    try {
+      const listServerLogs = vi.mocked(window.api.listServerLogs);
+      render(
+        <AppProviders>
+          <ServerLogsPanel server={server} embedded focus={{ section: "runtime" }} />
+        </AppProviders>,
+      );
+
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      expect(listServerLogs.mock.calls.length).toBeGreaterThan(0);
+      const callsAfterMount = listServerLogs.mock.calls.length;
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1600);
+      });
+      expect(listServerLogs.mock.calls.length).toBeGreaterThan(callsAfterMount);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
