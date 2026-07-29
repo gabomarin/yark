@@ -539,6 +539,221 @@ describe("BackupService kinds and retention", () => {
     expect(repo.listCompleted(profile.id, "world")[0]?.id).toBe(first.id);
   });
 
+  it("skips scheduling while a world backup is active in this process", async () => {
+    repo.setPolicy({
+      serverId: profile.id,
+      enabled: true,
+      intervalMinutes: 5,
+      retainCountWorld: 20,
+      retainCountPlayers: 20,
+      retainCountIni: 10,
+      backupDir: null,
+    });
+    const running = repo.createBackupStart({
+      serverId: profile.id,
+      type: "scheduled",
+      kind: "world",
+      path: join(installDir, "Backups", "World", "running.zip"),
+      notes: null,
+    });
+    expect(repo.hasRunning(profile.id, "world")).toBe(true);
+
+    const processes = {
+      isActive: vi.fn(() => true),
+      start: vi.fn(),
+      stop: vi.fn(),
+    } as unknown as ProcessManager;
+    const servers = {
+      get: vi.fn((id: string) => (id === profile.id ? profile : null)),
+      list: vi.fn(() => [profile]),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const settings = {
+      get: vi.fn(() => null),
+      set: vi.fn(),
+    } as unknown as AppSettingsRepository;
+    const scheduled = new BackupService(
+      servers,
+      repo,
+      processes,
+      settings,
+      join(installDir, "_root"),
+    );
+    (
+      scheduled as unknown as { creatingBackupIds: Set<string> }
+    ).creatingBackupIds.add(running.id);
+
+    await scheduled.runScheduledCycle();
+    const worlds = repo.listBackups(profile.id, 20).filter((b) => b.kind === "world");
+    expect(worlds).toHaveLength(1);
+    expect(worlds[0]?.id).toBe(running.id);
+  });
+
+  it("reconciles an interrupted running row before scheduling", async () => {
+    repo.setPolicy({
+      serverId: profile.id,
+      enabled: true,
+      intervalMinutes: 5,
+      retainCountWorld: 20,
+      retainCountPlayers: 20,
+      retainCountIni: 10,
+      backupDir: null,
+    });
+    const interrupted = repo.createBackupStart({
+      serverId: profile.id,
+      type: "scheduled",
+      kind: "world",
+      path: join(installDir, "Backups", "World", "interrupted.zip"),
+      notes: null,
+    });
+    const processes = {
+      isActive: vi.fn(() => true),
+      start: vi.fn(),
+      stop: vi.fn(),
+    } as unknown as ProcessManager;
+    const servers = {
+      get: vi.fn((id: string) => (id === profile.id ? profile : null)),
+      list: vi.fn(() => [profile]),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const settings = {
+      get: vi.fn(() => null),
+      set: vi.fn(),
+    } as unknown as AppSettingsRepository;
+    const scheduled = new BackupService(
+      servers,
+      repo,
+      processes,
+      settings,
+      join(installDir, "_root"),
+    );
+
+    await scheduled.runScheduledCycle();
+
+    expect(repo.getBackup(interrupted.id)?.status).toBe("failed");
+    const scheduledWorlds = repo
+      .listBackups(profile.id, 20)
+      .filter((backup) => backup.type === "scheduled" && backup.kind === "world");
+    expect(scheduledWorlds).toHaveLength(2);
+    expect(scheduledWorlds.some((backup) => backup.status === "completed")).toBe(
+      true,
+    );
+  });
+
+  it("coalesces overlapping scheduled cycles for the same server", async () => {
+    repo.setPolicy({
+      serverId: profile.id,
+      enabled: true,
+      intervalMinutes: 5,
+      retainCountWorld: 20,
+      retainCountPlayers: 20,
+      retainCountIni: 10,
+      backupDir: null,
+    });
+    const processes = {
+      isActive: vi.fn(() => true),
+      start: vi.fn(),
+      stop: vi.fn(),
+    } as unknown as ProcessManager;
+    const servers = {
+      get: vi.fn((id: string) => (id === profile.id ? profile : null)),
+      list: vi.fn(() => [profile]),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const settings = {
+      get: vi.fn(() => null),
+      set: vi.fn(),
+    } as unknown as AppSettingsRepository;
+    const scheduled = new BackupService(
+      servers,
+      repo,
+      processes,
+      settings,
+      join(installDir, "_root"),
+    );
+
+    const first = scheduled.runScheduledCycle();
+    const second = scheduled.runScheduledCycle();
+    await Promise.all([first, second]);
+    const scheduledWorlds = repo
+      .listBackups(profile.id, 20)
+      .filter((b) => b.type === "scheduled" && b.kind === "world");
+    expect(scheduledWorlds).toHaveLength(1);
+  });
+
+  it("continues with later servers when one scheduled evaluation fails", async () => {
+    const secondProfile: ServerProfile = {
+      ...profile,
+      id: "srv-2",
+      name: "Scorched Earth",
+      sessionName: "Scorched Earth",
+      gamePort: 7787,
+      queryPort: 27025,
+      rconPort: 27030,
+    };
+    for (const serverId of [profile.id, secondProfile.id]) {
+      repo.setPolicy({
+        serverId,
+        enabled: true,
+        intervalMinutes: 5,
+        retainCountWorld: 20,
+        retainCountPlayers: 20,
+        retainCountIni: 10,
+        backupDir: null,
+      });
+    }
+    const processes = {
+      isActive: vi.fn(() => true),
+      start: vi.fn(),
+      stop: vi.fn(),
+    } as unknown as ProcessManager;
+    const addScheduledEvent = vi.fn();
+    const servers = {
+      get: vi.fn((id: string) => {
+        if (id === profile.id) return profile;
+        if (id === secondProfile.id) return secondProfile;
+        return null;
+      }),
+      list: vi.fn(() => [profile, secondProfile]),
+      addEvent: addScheduledEvent,
+    } as unknown as ServerRepository;
+    const settings = {
+      get: vi.fn(() => null),
+      set: vi.fn(),
+    } as unknown as AppSettingsRepository;
+    const scheduled = new BackupService(
+      servers,
+      repo,
+      processes,
+      settings,
+      join(installDir, "_root"),
+    );
+    vi.spyOn(
+      scheduled as unknown as {
+        applyRetention: (serverId: string, policy: unknown) => Promise<void>;
+      },
+      "applyRetention",
+    ).mockImplementation(async (serverId: string) => {
+      if (serverId === profile.id) {
+        throw new Error("retention destination unavailable");
+      }
+    });
+
+    await scheduled.runScheduledCycle();
+
+    expect(repo.listCompleted(profile.id, "world")).toHaveLength(0);
+    expect(repo.listCompleted(secondProfile.id, "world")).toHaveLength(1);
+    expect(addScheduledEvent).toHaveBeenCalledWith(
+      profile.id,
+      "error",
+      "error",
+      expect.stringContaining("retention destination unavailable"),
+      expect.objectContaining({
+        context: expect.objectContaining({ trigger: "scheduled" }),
+      }),
+    );
+  });
+
   it("imports orphan zip archives from disk on list/refresh", async () => {
     const created = await service.createManualBackup(profile.id, ["players"]);
     const record = created[0];
@@ -622,6 +837,40 @@ describe("BackupService kinds and retention", () => {
     expect(repo.listBackups(profile.id, 50).filter((row) => row.path === record.path)).toHaveLength(
       1,
     );
+  });
+
+  it("coalesces interrupted-row reconciliation across scheduler and list", async () => {
+    repo.setPolicy({
+      serverId: profile.id,
+      enabled: true,
+      intervalMinutes: 5,
+      retainCountWorld: 20,
+      retainCountPlayers: 20,
+      retainCountIni: 10,
+      backupDir: null,
+    });
+    let releaseReconcile: ((value: number) => void) | undefined;
+    const reconcileGate = new Promise<number>((resolve) => {
+      releaseReconcile = resolve;
+    });
+    const internal = service as unknown as {
+      reconcileInterruptedRunningBackupsUnlocked: (
+        serverId: string,
+      ) => Promise<number>;
+    };
+    const reconcileSpy = vi
+      .spyOn(internal, "reconcileInterruptedRunningBackupsUnlocked")
+      .mockReturnValue(reconcileGate);
+
+    const listing = service.list(profile.id, 50);
+    const scheduling = service.runScheduledCycle();
+    await vi.waitFor(() => {
+      expect(reconcileSpy).toHaveBeenCalledTimes(1);
+    });
+    releaseReconcile?.(0);
+    await Promise.all([listing, scheduling]);
+
+    expect(reconcileSpy).toHaveBeenCalledTimes(1);
   });
 
   it("recovers interrupted running backups that already have a zip on disk", async () => {

@@ -237,6 +237,9 @@ describe("ServerBackupPanel", () => {
     expect(screen.getByRole("tab", { name: "INI" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^Backup$/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Open folder C:\/backups\/world/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Copy details bk-world/i }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Open folder C:\/backups\/players/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Open folder C:\/backups\/ini/i })).not.toBeInTheDocument();
     expect(screen.queryByText("C:/backups/world")).not.toBeInTheDocument();
@@ -249,6 +252,31 @@ describe("ServerBackupPanel", () => {
     await user.click(screen.getByRole("tab", { name: "INI" }));
     expect(screen.getByRole("button", { name: /^Backup$/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Open folder C:\/backups\/ini/i })).toBeInTheDocument();
+  });
+
+  it("copies backup details to the clipboard", async () => {
+    const user = userEvent.setup();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+    const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
+    renderPanel();
+
+    await user.click(
+      await screen.findByRole("button", { name: /Copy details bk-world/i }),
+    );
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith(
+        expect.stringContaining("Backup ID: bk-world"),
+      );
+    });
+    expect(writeText).toHaveBeenCalledWith(
+      expect.stringContaining("Server: The Island (srv-1)"),
+    );
+    expect(notifySpy).toHaveBeenCalled();
+    notifySpy.mockRestore();
   });
 
   it("creates a backup for the active kind only and toasts completion", async () => {
