@@ -118,5 +118,5 @@ Skip:
 ## Preview / CurseForge note
 
 Public reviewers should treat `0.x` builds as evolving. Call out WIP limitations
-in the release notes (e.g. Mods tab deferred, placeholder Settings page)
+in the release notes (e.g. unsigned builds, unsigned packaging, remaining polish)
 so expectations stay aligned with the README.

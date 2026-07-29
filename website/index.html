@@ -25,10 +25,10 @@
       <h1>server manager</h1>
       <p class="lede">
         Built for people who host <strong>local</strong> ARK: Survival Ascended
-        dedicated servers on Windows — profiles, SteamCMD, backups, logs, and INI
-        configuration in one desktop app. Early builds are available on GitHub as
-        an <strong>unsigned public prerelease</strong> — expect rough edges and
-        breaking changes between versions.
+        dedicated servers on Windows — profiles, SteamCMD, CurseForge mods,
+        backups, logs, and INI configuration in one desktop app. Early builds are
+        available on GitHub as an <strong>unsigned public prerelease</strong> —
+        expect rough edges and breaking changes between versions.
       </p>
       <div class="cta-row">
         <a class="cta primary" href="https://github.com/gabomarin/yark/releases">Download prerelease</a>
@@ -62,13 +62,25 @@
             <a href="./screenshots/workspace-server.png" target="_blank" rel="noopener">
               <img
                 src="./screenshots/workspace-server.png"
-                alt="Server configuration form with identity, networking ports, access passwords, cluster, and mods fields"
+                alt="Server configuration form with identity, networking ports, access passwords, and cluster fields"
                 loading="lazy"
                 width="1440"
                 height="900"
               />
             </a>
-            <figcaption>Server configuration — identity, ports, access, cluster, and CurseForge mod IDs.</figcaption>
+            <figcaption>Server configuration — identity, ports, access, and cluster. CurseForge mods live on the Mods tab.</figcaption>
+          </figure>
+          <figure class="shot">
+            <a href="./screenshots/workspace-mods.png" target="_blank" rel="noopener">
+              <img
+                src="./screenshots/workspace-mods.png"
+                alt="Mods tab listing CurseForge mods with enable toggles, Project IDs, metadata, and CurseForge links"
+                loading="lazy"
+                width="1440"
+                height="900"
+              />
+            </a>
+            <figcaption>Mods — CurseForge Project IDs, enable/disable, and Worker-backed metadata per server.</figcaption>
           </figure>
           <figure class="shot">
             <a href="./screenshots/workspace-ini.png" target="_blank" rel="noopener">
@@ -83,16 +95,16 @@
             <figcaption>Visual INI editor — edit <code>GameUserSettings.ini</code> with searchable, described controls.</figcaption>
           </figure>
           <figure class="shot">
-            <a href="./screenshots/backups.png" target="_blank" rel="noopener">
+            <a href="./screenshots/workspace-backups.png" target="_blank" rel="noopener">
               <img
-                src="./screenshots/backups.png"
-                alt="Backups dashboard showing fleet backup health, disk usage, volumes, and per-server destinations"
+                src="./screenshots/workspace-backups.png"
+                alt="Per-server Backups tab with world save destination, schedule controls, and backup history"
                 loading="lazy"
                 width="1440"
                 height="900"
               />
             </a>
-            <figcaption>Backups — fleet health, disk usage, and per-server destination and schedule.</figcaption>
+            <figcaption>Server Backups — create, schedule, and restore world / players / INI archives per profile.</figcaption>
           </figure>
           <figure class="shot">
             <a href="./screenshots/configuration-wizard.png" target="_blank" rel="noopener">
@@ -105,6 +117,54 @@
               />
             </a>
             <figcaption>Configuration assistant — a guided six-step wizard with presets; nothing is written until the final review.</figcaption>
+          </figure>
+          <figure class="shot">
+            <a href="./screenshots/backups.png" target="_blank" rel="noopener">
+              <img
+                src="./screenshots/backups.png"
+                alt="Backups dashboard showing fleet backup health, disk usage, volumes, and per-server destinations"
+                loading="lazy"
+                width="1440"
+                height="900"
+              />
+            </a>
+            <figcaption>Fleet Backups — health, disk usage, and shared destination settings across servers.</figcaption>
+          </figure>
+          <figure class="shot">
+            <a href="./screenshots/clusters.png" target="_blank" rel="noopener">
+              <img
+                src="./screenshots/clusters.png"
+                alt="Clusters page showing compliance guidance for Cluster ID and shared cluster directory"
+                loading="lazy"
+                width="1440"
+                height="900"
+              />
+            </a>
+            <figcaption>Clusters — Cluster ID / shared directory compliance checks and transfer guidance.</figcaption>
+          </figure>
+          <figure class="shot">
+            <a href="./screenshots/logs.png" target="_blank" rel="noopener">
+              <img
+                src="./screenshots/logs.png"
+                alt="Logs page listing recent problems and activity across servers with severity filters"
+                loading="lazy"
+                width="1440"
+                height="900"
+              />
+            </a>
+            <figcaption>Logs — fleet problems and activity, with drill-down into each server’s Logs tab.</figcaption>
+          </figure>
+          <figure class="shot">
+            <a href="./screenshots/settings.png" target="_blank" rel="noopener">
+              <img
+                src="./screenshots/settings.png"
+                alt="Settings page with SteamCMD path, default base folder, and app preferences"
+                loading="lazy"
+                width="1440"
+                height="900"
+              />
+            </a>
+            <figcaption>Settings — SteamCMD path, default base folder, and app-wide preferences.</figcaption>
           </figure>
         </div>
       </div>
@@ -125,7 +185,11 @@
           <li>Runtime, update, and backup logs</li>
           <li>Cluster compliance checks and RCON command surface</li>
           <li>Server Workspace with visual/raw INI editing and an on-demand configuration assistant</li>
-          <li>CurseForge mod Project IDs per server via the Server form (<code>-mods=</code>)</li>
+          <li>
+            CurseForge Mods tab — Project IDs, enable/disable without dropping IDs,
+            Worker-backed metadata, and launch-time <code>-mods=</code> for enabled mods
+          </li>
+          <li>Settings for SteamCMD path, theme, and related app preferences</li>
           <li>Official ARK network version from Wildcard’s public status CDN</li>
         </ul>
       </section>
@@ -138,15 +202,15 @@
         <ul class="roadmap-list">
           <li>
             <span class="tag building">Building</span>
-            Finish migrating the Settings page out of its placeholder shell; Clusters compliance page is live
-          </li>
-          <li>
-            <span class="tag building">Building</span>
             Stronger end-to-end validation against real ASA binaries and SteamCMD on production hosts
           </li>
           <li>
             <span class="tag planned">Planned</span>
-            Richer Mods experience (discovery and metadata beyond manual Project IDs)
+            Deeper CurseForge browsing on top of today’s Mods tab (Project IDs, enable/disable, Worker metadata)
+          </li>
+          <li>
+            <span class="tag planned">Planned</span>
+            Clearer ASA update detection when server files need a SteamCMD update
           </li>
           <li>
             <span class="tag planned">Planned</span>
@@ -172,20 +236,28 @@
         <h2>Privacy and data</h2>
         <p class="section-lede">
           Server profiles and app settings stay on your PC (local SQLite). There is
-          no YARK cloud account. Network use is limited to what the workflows need
-          (for example SteamCMD content, and Wildcard’s public official-status CDN
-          for the displayed network version). Future mod metadata lookups would only
-          happen if you opt into that integration.
+          no YARK cloud account. Network use covers SteamCMD content, Wildcard’s
+          public official-status CDN for the displayed network version, and
+          CurseForge mod metadata via a small
+          <a href="https://github.com/gabomarin/yark/tree/main/workers/curseforge-proxy"
+            >Cloudflare Worker proxy</a
+          >
+          hosted for the project (self-hostable from that folder). The desktop app
+          never embeds a CurseForge API key: lookups send Project IDs / search
+          queries only — not server profiles, passwords, or install paths — and
+          returned names/summaries/links are cached locally.
         </p>
       </section>
 
       <section class="section" id="mods">
         <h2>Mods</h2>
         <p class="section-lede">
-          Today you attach CurseForge Project IDs on the Server form; they are passed
-          through as dedicated-server <code>-mods=</code> launch arguments. A richer
-          Mods browser (search, metadata, ordering UX) is planned — not required for
-          basic ID-based launch.
+          The Server Workspace <strong>Mods</strong> tab manages CurseForge Project
+          IDs per profile. Enabled IDs are passed at launch as
+          <code>-mods=</code>; disabled IDs stay on the profile until you turn them
+          back on. Names, summaries, and page links come from Worker-backed
+          CurseForge metadata (cached locally). YARK wires launch IDs and metadata —
+          it does not download or install mod files for you.
         </p>
       </section>
 

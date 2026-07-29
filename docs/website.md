@@ -59,13 +59,40 @@ Styles: `.showcase`, `.shots` (2-column grid; 1-column under `720px`), `.shot`.
 | File | Screen shown |
 | --- | --- |
 | `overview.png` | Servers overview (profiles, status, activity) |
-| `workspace-server.png` | Server form (identity, ports, access, cluster, mods) |
+| `workspace-server.png` | Server form (identity, ports, access, cluster) |
+| `workspace-mods.png` | Mods tab (Project IDs, enable/disable, CurseForge metadata) |
 | `workspace-ini.png` | Visual INI editor (`GameUserSettings.ini`) |
-| `backups.png` | Fleet Backups page (health, disk, destinations) |
+| `workspace-backups.png` | Per-server Backups tab (destination, schedule, history) |
 | `configuration-wizard.png` | Configuration assistant (six-step wizard) |
+| `backups.png` | Fleet Backups page (health, disk, destinations) |
+| `clusters.png` | Clusters compliance (`clusterId` / shared directory) |
+| `logs.png` | Fleet Logs (problems / activity) |
+| `settings.png` | Settings (SteamCMD path, base folder, preferences) |
 
 Images are linked for full-size open (`target="_blank"`). Declared dimensions in
 HTML are `1440 × 900` (capture viewport used for the initial set).
+
+Refresh captures with `npm run build` then `npm run website:screenshots`
+(`scripts/capture-website-screenshots.cjs`). That script cleans leftover `E2E-*`
+profiles, prefers existing renamed servers, seeds a demo only when empty,
+configures a shared Cluster ID + directory on up to three servers for the
+Clusters shot (skips gracefully if fewer than two profiles), and redacts
+`Users\<name>` paths in Settings before capture.
+
+### Capture tooling requirements
+
+- **OS:** Windows preferred (Electron GUI). Linux desktops can capture shell
+  chrome; install paths may look non-production.
+- **Node:** 22.5+ (same as the app; see `package.json` `engines`).
+- **Playwright:** already listed under `devDependencies` (`playwright`). Electron
+  e2e uses Playwright’s `_electron` API from that package — no separate
+  `@playwright/test` browser install is required for these scripts. After
+  `npm install`, run `npm run build`, then unset `ELECTRON_RUN_AS_NODE` if set.
+- **Optional env:** `WEBSITE_SCREENSHOT_OUT`, `WEBSITE_DEMO_SERVER`,
+  `WEBSITE_DEMO_INSTALL_DIR`, `WEBSITE_DEMO_MOD_IDS`, `WEBSITE_DEMO_CLUSTER_ID`,
+  `WEBSITE_DEMO_CLUSTER_DIR`, `WEBSITE_VIEWPORT_WIDTH` / `HEIGHT`. Defaults use
+  `C:\ARK\...` on Windows and `os.tmpdir()/yark-gallery/...` elsewhere.
+  Mods e2e: `E2E_MODS_ID`, `E2E_MODS_INSTALL_ROOT`.
 
 ### When to refresh
 
@@ -112,8 +139,10 @@ Ephemeral review shots stay in temp dirs per [visual-testing.md](visual-testing.
   version for a release people will see on the site, update the pill in the same
   change set (see [versioning.md](versioning.md)).
 - Scope and roadmap lists are editorial; keep them aligned with
-  [README.md](../README.md) and [agent-context.md](agent-context.md) (Settings remains a
-  placeholder; Clusters compliance page and Sidebar/Workspace Backups are live).
+  [README.md](../README.md) and [agent-context.md](agent-context.md). As of v0.3.0,
+  Mods tab + Settings are live; Clusters compliance and Sidebar/Workspace Backups
+  are live. Prefer “deeper CurseForge browsing” on the roadmap — not “Mods not
+  integrated yet.”
 
 ## Constraints and pitfalls
 

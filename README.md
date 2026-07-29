@@ -12,15 +12,15 @@
 - Create backups, restore them, configure schedule/retention, and review backup history (plus related events in Logs).
 - Inspect runtime, update, and backup logs.
 - Review cluster state and RCON status from the interface.
-- Manage CurseForge mod Project IDs per server (`-mods=`) from the Server form. A dedicated Mods tab is deferred until a CurseForge API key is available.
+- Manage CurseForge mods per server from the Mods tab: Project IDs, enable/disable without dropping IDs, Worker-backed metadata, and launch-time `-mods=` for enabled mods only.
 
 ## Current status
 
-Core flows already work (profiles, process control, SteamCMD install/update, backups, logs, INI editing). The UI is being migrated to a cleaner Electron + React + TypeScript shell:
+Core flows already work (profiles, process control, SteamCMD install/update, backups, logs, INI editing, Mods, Settings). The UI lives in an Electron + React + TypeScript shell:
 
 - Shared shell and navigation are active.
-- Overview, SteamCMD, Logs, Backups, and Server Workspace (INI editor) use the new renderer.
-- Clusters page surfaces existing compliance for `clusterId` / `clusterDir`; Settings is still a placeholder inside the new shell.
+- Overview, SteamCMD, Logs, Backups, Settings, and Server Workspace (form, INI editor, Mods, players, and related panels) use the new renderer.
+- Clusters page surfaces existing compliance for `clusterId` / `clusterDir`.
 - End-to-end validation against real ASA binaries and SteamCMD on a production host is still ongoing.
 
 Expect gaps, rough edges, and behavior changes between builds.
@@ -81,7 +81,7 @@ The temporary public site lives in [`website/`](website/) and deploys via [`.git
 
 Expected URL: [https://gabomarin.github.io/yark/](https://gabomarin.github.io/yark/)
 
-Includes a feature screenshot gallery under `website/screenshots/` (overview, server form, INI editor, backups, configuration assistant). Full deploy, capture, and update runbook: [docs/website.md](docs/website.md).
+Includes a feature screenshot gallery under `website/screenshots/` (overview, workspace, Mods, Clusters, Logs, Settings, backups, configuration assistant). Refresh with `npm run build` then `npm run website:screenshots`. Full deploy, capture, and update runbook: [docs/website.md](docs/website.md).
 
 **One-time GitHub setup**
 
