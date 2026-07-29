@@ -9,6 +9,25 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-28
+
+### Added
+
+- Dedicated **Mods** workspace tab: configure CurseForge Project IDs, enable/disable without removing, Discover search, URL/ID import, and metadata detail drawer (#16).
+- Cloudflare Worker proxy (`workers/curseforge-proxy`) so the CurseForge API key stays off the Electron client; ASA-only search and lookup for the Mods tab (#16).
+- Per-server `disabledMods` and `modMetadataCache` (SQLite migration v7); disabled IDs are omitted from `-mods=` on launch (#16).
+- Genesis and Lost Colony added to the known ASA maps list (#66).
+
+### Changed
+
+- Server Workspace mounts the INI editor only on the INI Files tab (or while dirty) and trims Logs panel work when hidden, reducing renderer memory while switching tabs (#73).
+- Server form Mods field notes that individual mods can be disabled from the Mods tab without removing them.
+
+### Fixed
+
+- CurseForge “open in browser” IPC only accepts validated ASA mod detail URLs (no arbitrary HTTPS fallback).
+- New Project IDs are always Worker-verified before create/update; batch metadata hydrate keeps successful items when some IDs are skipped.
+
 ## [0.2.0] - 2026-07-27
 
 ### Added
@@ -67,5 +86,6 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Tracked in-repo TODO / historical planning docs (moved to local agent context).
 
 [Unreleased]: #unreleased
+[0.3.0]: #030---2026-07-28
 [0.2.0]: #020---2026-07-27
 [0.1.0]: #010---2026-07-24

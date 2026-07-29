@@ -226,7 +226,7 @@ describe("ServerModsPanel", () => {
     await user.click(await screen.findByRole("button", {
       name: "Remove Awesome Spyglass!",
     }));
-    await user.click(screen.getByRole("button", { name: "Remove mod" }));
+    await user.click(await screen.findByRole("button", { name: "Remove mod" }));
 
     await waitFor(() => {
       expect(api.updateServer).toHaveBeenCalledWith(
