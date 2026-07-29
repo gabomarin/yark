@@ -20,11 +20,12 @@ import {
 import { ConfigurationWizard } from "./components/ConfigurationWizard/ConfigurationWizard";
 import { ServerListPanel } from "./components/ServerListPanel/ServerListPanel";
 import { ServerOnboardingChecklist } from "./components/ServerOnboardingChecklist/ServerOnboardingChecklist";
+import { ServerModsPanel } from "./components/ServerModsPanel/ServerModsPanel";
 import { SidePanel } from "./components/SidePanel/SidePanel";
 import { WorkspaceHeader } from "./components/WorkspaceHeader/WorkspaceHeader";
 import classes from "./ServerWorkspacePage.module.css";
 
-export type WorkspaceTab = "server" | "iniFiles" | "backups" | "logs";
+export type WorkspaceTab = "server" | "mods" | "iniFiles" | "backups" | "logs";
 
 interface Props {
   servers: ServerProfile[];
@@ -257,6 +258,7 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
           >
             <Tabs.List className={classes.tabList}>
               <Tabs.Tab value="server">Server</Tabs.Tab>
+              <Tabs.Tab value="mods">Mods</Tabs.Tab>
               <Tabs.Tab value="iniFiles">INI Files</Tabs.Tab>
               <Tabs.Tab value="backups">Backups</Tabs.Tab>
               <Tabs.Tab value="logs">Logs</Tabs.Tab>
@@ -279,6 +281,14 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
                     }
                   }}
                   configurationAssistantDisabled={iniDirty}
+                />
+              )}
+
+              {workspaceTab === "mods" && (
+                <ServerModsPanel
+                  key={selectedServer.id}
+                  server={selectedServer}
+                  onServerUpdated={props.onServerUpdated}
                 />
               )}
 

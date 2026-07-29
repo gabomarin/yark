@@ -121,8 +121,10 @@ export function buildLaunchArgs(profile: ServerProfile): string[] {
     args.push("-ServerPlatform=ALL");
   }
 
-  if (profile.mods.length > 0) {
-    args.push(`-mods=${profile.mods.join(",")}`);
+  const disabledMods = new Set(profile.disabledMods ?? []);
+  const enabledMods = profile.mods.filter((id) => !disabledMods.has(id));
+  if (enabledMods.length > 0) {
+    args.push(`-mods=${enabledMods.join(",")}`);
   }
   if (profile.clusterId !== null && profile.clusterDir !== null) {
     args.push(`-clusterid=${profile.clusterId}`);

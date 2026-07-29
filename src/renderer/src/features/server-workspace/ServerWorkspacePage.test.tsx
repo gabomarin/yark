@@ -149,6 +149,12 @@ describe("ServerWorkspacePage", () => {
           slug: modId,
         })),
       })),
+      searchMods: vi.fn(async () => ({
+        ok: true,
+        data: { items: [], pagination: { index: 0, pageSize: 50, resultCount: 0, totalCount: 0 } },
+      })),
+      getModByReference: vi.fn(),
+      openCurseForgeMod: vi.fn(async () => ({ ok: true, data: undefined })),
     });
   });
 
@@ -166,8 +172,7 @@ describe("ServerWorkspacePage", () => {
     );
     expect(screen.getByRole("tab", { name: "INI Files" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Backups" })).toBeInTheDocument();
-    expect(screen.queryByRole("tab", { name: "Mods" })).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/^Mods$/i)).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Mods" })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Configuration wizard" }),
     ).toBeVisible();

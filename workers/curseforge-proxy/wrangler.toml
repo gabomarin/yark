@@ -1,0 +1,16 @@
+name = "yark-curseforge-proxy"
+main = "src/index.ts"
+compatibility_date = "2025-07-01"
+workers_dev = true
+
+# Secrets (dashboard or CLI — never commit real values):
+#   npx wrangler secret put CURSEFORGE_API_KEY
+#
+# Local `wrangler dev`: copy `.dev.vars.example` → `.dev.vars`
+
+[vars]
+# Tunables (safe to commit). Override in Cloudflare dashboard if needed.
+# Ark: Survival Ascended on CurseForge
+ASA_GAME_ID = "83374"
+# MVP: open CORS. Phase 2 (#70) can restrict when auth lands.
+CORS_ALLOW_ORIGIN = "*"

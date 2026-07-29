@@ -102,7 +102,7 @@ void app.whenReady().then(() => {
     join(userData, "update-logs"),
     join(userData, "steamcmd"),
   );
-  const modsService = new ModsService();
+  const modsService = new ModsService({ settings });
 
   backupScheduler.start();
   playerSessionWatcher.start();

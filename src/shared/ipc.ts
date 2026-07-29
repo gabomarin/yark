@@ -11,6 +11,7 @@ import type {
   ClusterComplianceReport,
   IniPreview,
   ModMetadata,
+  ModSearchPage,
   ServerIniPayload,
   ServerIniSnapshot,
   ServerInstallationSnapshot,
@@ -93,6 +94,9 @@ export const IPC = {
   backupsRunCleanup: "backups:run-cleanup",
   modsGet: "mods:get",
   modsGetMany: "mods:get-many",
+  modsSearch: "mods:search",
+  modsGetByReference: "mods:get-by-reference",
+  modsOpenCurseForge: "mods:open-curseforge",
 } as const;
 
 /** Push channel (main -> renderer). */
@@ -221,6 +225,12 @@ export interface RendererApi {
     modIds: string[],
     forceRefresh?: boolean,
   ): Promise<IpcResult<ModMetadata[]>>;
+  searchMods(
+    query: string,
+    options?: { index?: number; pageSize?: number },
+  ): Promise<IpcResult<ModSearchPage>>;
+  getModByReference(ref: string): Promise<IpcResult<ModMetadata>>;
+  openCurseForgeMod(url: string): Promise<IpcResult<void>>;
   onServerStatus(
     listener: (info: ServerRuntimeInfo) => void,
   ): () => void;

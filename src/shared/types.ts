@@ -25,6 +25,10 @@ export interface ServerProfile {
   extraArgs: string[];
   /** Mod IDs in load order. */
   mods: string[];
+  /** Configured mod IDs that are omitted from `-mods=` until re-enabled. */
+  disabledMods?: string[];
+  /** CurseForge metadata retained across UI sessions (Worker-backed). */
+  modMetadataCache?: Record<string, ModMetadata>;
   createdAt: string;
   updatedAt: string;
 }
@@ -440,4 +444,16 @@ export interface ModMetadata {
   dateModified: string;
   curseforgeUrl: string;
   slug: string;
+  categories?: string[];
+}
+
+/** Search page from the CurseForge proxy Worker. */
+export interface ModSearchPage {
+  items: ModMetadata[];
+  pagination: {
+    index: number;
+    pageSize: number;
+    resultCount: number;
+    totalCount: number;
+  };
 }

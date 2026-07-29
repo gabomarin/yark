@@ -1,0 +1,5 @@
+# Local secrets / overrides for `wrangler dev` only (gitignored).
+CURSEFORGE_API_KEY=
+# Optional overrides of wrangler.toml [vars]:
+# ASA_GAME_ID=83374
+# CORS_ALLOW_ORIGIN=*
