@@ -123,7 +123,7 @@ boundaries below (one area per PR when practical).
 
 | File (baseline path) | Future extraction boundary |
 | --- | --- |
-| `features/backups/BackupsPage.tsx` | Fleet health strip / volume cards; per-server policy expand panel; cleanup + disk-alert modals |
+| `features/backups/BackupsPage.tsx` | All-servers health strip / volume cards; per-server policy expand panel; cleanup + disk-alert modals |
 | `features/backups/ServerBackupPanel.tsx` | Kind settings block; backup list toolbar; backup row molecule; restore/delete confirm flows |
 | `features/logs/ServerLogsPanel.tsx` | Event list + event detail; update-job history/detail; log-file viewer pane |
 | `features/server-workspace/components/ConfigurationEditor/ConfigurationEditor.tsx` | Filter bar; INI section/group accordion; setting row editor controls |

@@ -38,7 +38,7 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 
 ## Engineering runbooks
 
-- [backups.md](backups.md) — ZIP kinds, reconcile, fleet health/cleanup, IPC, schedules, player sessions.
+- [backups.md](backups.md) — ZIP kinds, reconcile, all-servers health/cleanup, IPC, schedules, player sessions.
 - [updates-steamcmd.md](updates-steamcmd.md) — caches, safe update auto-stop/rollback, availability compare, progress push.
 - [logs.md](logs.md) — event `details`, clear/export IPC, `logsFocus`, seed/visual helpers.
 - [server-lifecycle.md](server-lifecycle.md) — launch args, profile→INI sync, spawn, start/stop/kill, INI sanitize / assistant.

@@ -1,6 +1,6 @@
 # Operational logs and event details
 
-How YARK records fleet/server activity, structures event guidance, and clears
+How YARK records activity across servers, structures event guidance, and clears
 or seeds logs for development and QA.
 
 ## Intent
@@ -21,7 +21,7 @@ or seeds logs for development and QA.
 | DB migration (details column) | `src/backend/infra/db/database.ts` (migration **v6**) |
 | Detail catalog + merge | `src/shared/event-details.ts` (`resolveEventDetails`) |
 | Contracts | `src/shared/types.ts` (`AppEvent`, `AppEventDetails`, `ServerOperationalLogs`) |
-| Fleet UI | `src/renderer/src/features/logs/LogsPage.tsx` |
+| Sidebar Logs (all servers) | `src/renderer/src/features/logs/LogsPage.tsx` |
 | Server workspace Logs | `src/renderer/src/features/logs/ServerLogsPanel.tsx` |
 | Detail body | `src/renderer/src/features/logs/EventDetailsBody.tsx` |
 
@@ -67,11 +67,11 @@ Export (`logs:export`) resolves the same fields so text dumps stay useful.
 | Updates | Files under userData `update-logs/` (`{serverId}-….log`) |
 | Backups | Backup records from `BackupService` / repository |
 
-Fleet **Logs** deep-links into the workspace via `logsFocus`
+Sidebar **Logs** deep-links into the workspace via `logsFocus`
 (`ServerLogsFocus`: optional `section`, `eventId`, `updateFileName`).
 `App.openServerLogs` defaults to `{ section: "events" }` and clears focus after
 consume so it cannot stick to another server. Overview can open
-`{ section: "updates" }`; Backups fleet can open `{ section: "backups" }`.
+`{ section: "updates" }`; sidebar Backups can open `{ section: "backups" }`.
 
 ## Public IPC
 
@@ -85,7 +85,7 @@ consume so it cannot stick to another server. Overview can open
 | `logs:clear-runtime` | Clear the process runtime buffer |
 | `logs:delete-update` | Delete one update log file |
 | `logs:clear-updates` | Delete all update logs for the server |
-| `events:recent` | Recent fleet-wide events (Overview / fleet Logs) |
+| `events:recent` | Recent events across servers (Overview / sidebar Logs) |
 
 Clear actions are confirmed in the UI per section. There is no single
 “clear everything” IPC — call the relevant clears intentionally.
@@ -101,7 +101,7 @@ Not wired as npm scripts — invoke after the app has created a userData DB:
 # Clear + seed events (with details JSON) + sample update log files
 node scripts/seed-server-logs.cjs [serverName]
 
-# Playwright Electron review of fleet/server logs (needs display + build)
+# Playwright Electron review of sidebar/server logs (needs display + build)
 npm run build
 unset ELECTRON_RUN_AS_NODE
 node scripts/visual-logs.cjs
@@ -122,7 +122,7 @@ Override with `YARK_USER_DATA` when needed (cloud agents, portable profiles).
 | Symptom | Likely cause / next step |
 | --- | --- |
 | Event shows only a bare message | Older row without `details`; catalog still fills What / Try next from `type` |
-| Fleet “Open in server” opens wrong tab | Check `logsFocus.section`; focus is cleared after first workspace render |
+| Sidebar “Open in server” opens wrong tab | Check `logsFocus.section`; focus is cleared after first workspace render |
 | Clear did not remove update files | Events clear ≠ update-log clear — use Updates section clear/delete |
 | Seed script cannot find DB | App never launched, or wrong userData — set `YARK_USER_DATA` |
 | SteamCMD console empty in Logs | Live console is on the SteamCMD dock/progress push; Updates section shows **files** after jobs |

@@ -18,7 +18,7 @@
 - For Windows paths, preserve compatibility with a real Windows environment.
 
 ## Engineering docs
-- Backup subsystem: `docs/backups.md` (ZIP layout, IPC, schedules, fleet health, restore).
+- Backup subsystem: `docs/backups.md` (ZIP layout, IPC, schedules, all-servers health, restore).
 - SteamCMD / safe update: `docs/updates-steamcmd.md`.
 - Operational logs / event details: `docs/logs.md`.
 - Server lifecycle (launch args, spawn, profile→INI): `docs/server-lifecycle.md`.

@@ -35,7 +35,7 @@ Triggers are separated on purpose:
 | Player note helpers | `src/shared/backup-player-meta.ts` |
 | Contracts | `src/shared/types.ts`, `src/shared/ipc.ts` |
 | IPC | `src/main/ipc-handlers.ts`, `src/preload/index.ts` |
-| UI (global / fleet) | `src/renderer/src/features/backups/BackupsPage.tsx` |
+| UI (all servers / sidebar) | `src/renderer/src/features/backups/BackupsPage.tsx` |
 | UI (per-server) | `src/renderer/src/features/backups/ServerBackupPanel.tsx` |
 
 Bootstrap wires the scheduler and watcher in `src/main/index.ts`.
@@ -91,7 +91,7 @@ Zip extract rejects zip-slip paths. Listeners are registered **before**
 
 ## Disk ↔ DB reconcile
 
-`list` / fleet summary call `reconcileDiskBackups` (serialized per server):
+`list` / `getFleetSummary` call `reconcileDiskBackups` (serialized per server):
 
 1. Drop DB rows whose archive path is gone (skip `running` / keep `failed` history).
 2. Import `.zip` and legacy folder archives present on disk but missing from SQLite.
@@ -155,7 +155,7 @@ UI restore is direct. Update rollback uses the queued `restoreBackupForJob` path
   **running** or a scheduled create is in-flight for that server, further scheduled
   creates are skipped so long archives cannot stack.
 - Policy, retention, or reconciliation failures are recorded per server and do not
-  prevent the remaining fleet from being evaluated during the same cycle.
+  prevent the remaining servers from being evaluated during the same cycle.
 - Before treating a persisted `running` row as active, the scheduler reconciles
   interrupted work from a previous app process so a crash cannot block future backups;
   this recovery is serialized with UI and cleanup reconciliation.
@@ -166,7 +166,7 @@ UI restore is direct. Update rollback uses the queued `restoreBackupForJob` path
   that disappear mid-copy are skipped; missing essential `.ark` / tribe / profile data still fails the backup.
 - Retention keeps the last N **completed** backups per kind; players are split by `playersRetentionKey`. Failed rows are not pruned by retain counts. Cannot delete `running` backups.
 
-### Fleet health and alerts
+### Backup health and alerts (all servers)
 
 `getFleetSummary` / sidebar **Backups** page:
 
@@ -178,11 +178,11 @@ UI restore is direct. Update rollback uses the queued `restoreBackupForJob` path
   never-backed-up while active) → `unknown` (schedule off and no world backup) → `ok`.
 - Disk alerts use settings key `backupDiskAlerts.v1` (defaults: warn 85% / critical 95% / free under 20 GiB).
 
-### Fleet UI quiet refresh
+### Sidebar Backups quiet refresh
 
 `BackupsPage` listens to `push:backups-changed` and reloads with `{ quiet: true }`:
 
-- Refreshes the fleet summary without flipping the page loading spinner.
+- Refreshes the all-servers summary without flipping the page loading spinner.
 - Does **not** overwrite in-progress policy or disk-alert draft edits.
 - Initial load and explicit Refresh remain non-quiet (reset drafts from server).
 
@@ -227,14 +227,14 @@ After a successful `ini:save`, `createIniSaveBackup` debounces **2s** per server
 | --- | --- | --- |
 | Hot backup looks stale | `SaveWorld` failed or RCON unreachable | Profile `rconPort` / `adminPassword`; process must be active for flush |
 | No scheduled backups | Policy off, interval not elapsed, or server not running | `enabled`, `intervalMinutes`, runtime status |
-| Stopped server shows “never backed up” / stale | Bug if still present — health should ignore inactive processes | Confirm build includes process-active gating in fleet summary |
+| Stopped server shows “never backed up” / stale | Bug if still present — health should ignore inactive processes | Confirm build includes process-active gating in `getFleetSummary` |
 | Missing player session archive | Short session + RCON miss, or profile not flushed | Watcher mtime safety net; disconnect wait; exact player-key stem |
 | Restore rejected | Server still active or backup not `completed` | Stop the server; only completed backups restore |
 | Empty ZIP restore hangs | Listeners must be registered before `readEntry` | `extractZip` in `backup-archive.ts` |
 | Copied archive missing / wrong id | Manifest id already in DB | Reconcile mints a new id when the manifest id is taken |
 | Retention not shrinking | Failed / running rows | Only **completed** backups count toward retain N |
 | Empty player session backup missing from history | By design | Empty per-player archives are deleted so they do not consume retention |
-| Fleet draft fields reset while editing | Non-quiet reload | Policy/disk drafts refresh only on non-quiet `load()` |
+| Sidebar draft fields reset while editing | Non-quiet reload | Policy/disk drafts refresh only on non-quiet `load()` |
 
 ## Common pitfalls
 

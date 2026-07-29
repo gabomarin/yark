@@ -148,8 +148,8 @@ available. Unset `ELECTRON_RUN_AS_NODE` first (see [AGENTS.md](../AGENTS.md)).
 
 | Script | Purpose |
 | --- | --- |
-| `node scripts/visual-backups.cjs` | Playwright review of fleet / workspace Backups |
-| `node scripts/visual-logs.cjs` | Playwright review of fleet / workspace Logs (expanded event details) |
+| `node scripts/visual-backups.cjs` | Playwright review of sidebar / workspace Backups |
+| `node scripts/visual-logs.cjs` | Playwright review of sidebar / workspace Logs (expanded event details) |
 | `node scripts/visual-clusters.cjs` | Playwright review of Clusters page (sidebar nav + compliance UI) |
 | `node scripts/seed-server-logs.cjs [serverName]` | Clear + seed events/update logs into Electron userData (override with `YARK_USER_DATA`) |
 

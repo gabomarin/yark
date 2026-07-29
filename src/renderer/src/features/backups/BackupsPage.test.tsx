@@ -145,7 +145,7 @@ describe("BackupsPage", () => {
     });
   });
 
-  it("shows fleet health stats and opens server workspace backups", async () => {
+  it("shows backup health stats and opens server workspace backups", async () => {
     const user = userEvent.setup();
     const onOpenServerBackups = vi.fn();
     render(
@@ -158,7 +158,7 @@ describe("BackupsPage", () => {
     );
 
     expect(await screen.findByRole("heading", { name: "Backups" })).toBeInTheDocument();
-    expect(screen.getByText(/Fleet backup health/i)).toBeInTheDocument();
+    expect(screen.getByText(/Backup health, disk usage, and shared destination settings across all servers/i)).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "The Island" })).toBeInTheDocument();
     expect(screen.getByText("0/1")).toBeInTheDocument();
     expect(screen.getByText(/Schedule off/i)).toBeInTheDocument();

@@ -64,9 +64,9 @@ Styles: `.showcase`, `.shots` (2-column grid; 1-column under `720px`), `.shot`.
 | `workspace-ini.png` | Visual INI editor (`GameUserSettings.ini`) |
 | `workspace-backups.png` | Per-server Backups tab (destination, schedule, history) |
 | `configuration-wizard.png` | Configuration assistant (six-step wizard) |
-| `backups.png` | Fleet Backups page (health, disk, destinations) |
+| `backups.png` | Sidebar Backups page (health, disk, destinations across servers) |
 | `clusters.png` | Clusters compliance (`clusterId` / shared directory) |
-| `logs.png` | Fleet Logs (problems / activity) |
+| `logs.png` | Sidebar Logs (problems / activity across servers) |
 | `settings.png` | Settings (SteamCMD path, base folder, preferences) |
 
 Images are linked for full-size open (`target="_blank"`). Declared dimensions in
@@ -113,7 +113,7 @@ Ephemeral review shots stay in temp dirs per [visual-testing.md](visual-testing.
    ratio and `width`/`height` attributes. Crop to the window client area (no OS
    chrome).
 4. Seed enough demo data: multiple profiles for overview; at least one server for
-   workspace; INI editor with searchable settings; Backups fleet with a
+   workspace; INI editor with searchable settings; sidebar Backups with a
    destination/health row when possible.
 5. **Redact secrets.** Admin/RCON passwords and other credentials must not appear
    in committed images (see the Security note on the site itself).
