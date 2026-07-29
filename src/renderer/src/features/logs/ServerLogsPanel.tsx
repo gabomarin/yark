@@ -110,11 +110,22 @@ export function ServerLogsPanel(props: Props): JSX.Element {
   const [expandedEventId, setExpandedEventId] = useState<number | null>(null);
   const focusKeyRef = useRef<string | null>(null);
   const autoScrollDoneRef = useRef(false);
+  const updateLoadGenRef = useRef(0);
+
+  const clearUpdateContent = () => {
+    updateLoadGenRef.current += 1;
+    setSelectedUpdateFile(null);
+    setUpdateContent("");
+    setBusy(false);
+  };
 
   const openUpdateLog = async (serverId: string, fileName: string) => {
+    const gen = ++updateLoadGenRef.current;
     setBusy(true);
     setError(null);
-    const result = await window.api.readServerUpdateLog(serverId, fileName, 300_000);
+    // Cap read size so a single job log cannot dominate renderer memory.
+    const result = await window.api.readServerUpdateLog(serverId, fileName, 150_000);
+    if (gen !== updateLoadGenRef.current) return;
     setBusy(false);
     if (!result.ok) {
       setError(result.error ?? "Could not open update log");
@@ -128,8 +139,7 @@ export function ServerLogsPanel(props: Props): JSX.Element {
     setLoading(true);
     setError(null);
     setInfo(null);
-    setSelectedUpdateFile(null);
-    setUpdateContent("");
+    clearUpdateContent();
     const result = await window.api.listServerLogs(serverId);
     setLoading(false);
     if (!result.ok) {
@@ -142,13 +152,30 @@ export function ServerLogsPanel(props: Props): JSX.Element {
   };
 
   useEffect(() => {
-    void load(props.server.id);
-    setHighlightedEventId(null);
-    setExpandedEventId(null);
-    setSelectedUpdateFile(null);
-    setUpdateContent("");
-    focusKeyRef.current = null;
-    autoScrollDoneRef.current = false;
+    let alive = true;
+    void (async () => {
+      setLoading(true);
+      setError(null);
+      setInfo(null);
+      clearUpdateContent();
+      setHighlightedEventId(null);
+      setExpandedEventId(null);
+      focusKeyRef.current = null;
+      autoScrollDoneRef.current = false;
+      const result = await window.api.listServerLogs(props.server.id);
+      if (!alive) return;
+      setLoading(false);
+      if (!result.ok) {
+        setLogs(null);
+        setError(result.error ?? "Could not load logs");
+        return;
+      }
+      setLogs(result.data);
+    })();
+    return () => {
+      alive = false;
+      clearUpdateContent();
+    };
   }, [props.server.id]);
 
   useEffect(() => {
@@ -158,6 +185,12 @@ export function ServerLogsPanel(props: Props): JSX.Element {
       void load(props.server.id);
     });
   }, [props.server.id]);
+
+  // Drop large update-log strings when leaving the Updates section.
+  useEffect(() => {
+    if (activeSection === "updates") return;
+    clearUpdateContent();
+  }, [activeSection]);
 
   useEffect(() => {
     const focus = props.focus;
@@ -493,6 +526,7 @@ export function ServerLogsPanel(props: Props): JSX.Element {
       <Tabs
         value={activeSection}
         onChange={(value) => setActiveSection((value as LogsSection) ?? "events")}
+        keepMounted={false}
         className={classes.tabs}
       >
         <Tabs.List className={classes.tabList}>
