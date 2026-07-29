@@ -1,24 +1,64 @@
 /**
- * Capture website gallery screenshots at 1440×900 into website/screenshots/.
+ * Capture website gallery screenshots into website/screenshots/ (or WEBSITE_SCREENSHOT_OUT).
  *
  * Usage: node scripts/capture-website-screenshots.cjs
- * Requires: prior npm run build
+ * Requires: prior `npm run build`, Playwright as a project `devDependency`, Windows GUI preferred.
+ * Unset ELECTRON_RUN_AS_NODE before running.
  *
- * Cleans leftover E2E-* profiles. Uses existing servers when present (so renamed
- * demo names stick). Seeds a named demo only if the overview is empty. Also
- * captures Clusters, Settings, and Logs.
+ * Env (optional):
+ *   WEBSITE_SCREENSHOT_OUT       output directory (default: website/screenshots)
+ *   WEBSITE_VIEWPORT_WIDTH       default 1440
+ *   WEBSITE_VIEWPORT_HEIGHT      default 900
+ *   WEBSITE_DEMO_SERVER          seeded profile name when overview is empty
+ *   WEBSITE_DEMO_INSTALL_DIR     install/base path for seeded demo
+ *   WEBSITE_DEMO_MOD_IDS         comma-separated CurseForge Project IDs
+ *   WEBSITE_DEMO_CLUSTER_ID      Cluster ID applied to up to three servers
+ *   WEBSITE_DEMO_CLUSTER_DIR     shared cluster directory for that Cluster ID
+ *
+ * Cleans leftover E2E-* profiles. Uses existing servers when present. Seeds a
+ * named demo only if the overview is empty. Captures Clusters, Settings, Logs.
  */
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
-const VIEWPORT = { width: 1440, height: 900 };
-const DEMO_SERVER = "The Island";
-const DEMO_MOD_IDS = ["947033", "928793", "940975"];
-const DEMO_CLUSTER_ID = "yark";
-const DEMO_CLUSTER_DIR = "C:\\ARK\\Cluster";
+function envOr(name, fallback) {
+  const value = process.env[name]?.trim();
+  return value && value.length > 0 ? value : fallback;
+}
+
+function envInt(name, fallback) {
+  const raw = process.env[name]?.trim();
+  if (!raw) return fallback;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+const projectRoot = path.resolve(__dirname, "..");
+const defaultArkRoot =
+  process.platform === "win32" ? "C:\\ARK" : path.join(os.tmpdir(), "yark-gallery");
+
+const VIEWPORT = {
+  width: envInt("WEBSITE_VIEWPORT_WIDTH", 1440),
+  height: envInt("WEBSITE_VIEWPORT_HEIGHT", 900),
+};
+const DEMO_SERVER = envOr("WEBSITE_DEMO_SERVER", "The Island");
+const DEMO_INSTALL_DIR = envOr(
+  "WEBSITE_DEMO_INSTALL_DIR",
+  path.join(defaultArkRoot, "TheIsland"),
+);
+const DEMO_MOD_IDS = envOr("WEBSITE_DEMO_MOD_IDS", "947033,928793,940975")
+  .split(",")
+  .map((id) => id.trim())
+  .filter(Boolean);
+const DEMO_CLUSTER_ID = envOr("WEBSITE_DEMO_CLUSTER_ID", "yark");
+const DEMO_CLUSTER_DIR = envOr(
+  "WEBSITE_DEMO_CLUSTER_DIR",
+  path.join(defaultArkRoot, "Cluster"),
+);
 
 async function settle(page, ms = 350) {
   await page.waitForTimeout(ms);
@@ -36,27 +76,40 @@ async function shot(page, outPath) {
 }
 
 async function redactPrivatePaths(page) {
-  await page.evaluate(() => {
-    const scrub = (value) =>
-      value
-        .replace(/Users\\[^\\]+/gi, "Users\\You")
-        .replace(/\/Users\/[^/]+/gi, "/Users/You");
+  try {
+    await page.evaluate(() => {
+      const scrub = (value) =>
+        value
+          .replace(/Users\\[^\\]+/gi, "Users\\You")
+          .replace(/\/Users\/[^/]+/gi, "/Users/You");
 
-    for (const input of document.querySelectorAll("input, textarea")) {
-      if (typeof input.value === "string" && /Users[/\\]/i.test(input.value)) {
-        input.value = scrub(input.value);
-        input.dispatchEvent(new Event("input", { bubbles: true }));
+      const roots = [
+        ...document.querySelectorAll("main, [data-settings-page], .mantine-AppShell-main"),
+      ];
+      const scopes = roots.length > 0 ? roots : [document.body];
+
+      for (const scope of scopes) {
+        for (const input of scope.querySelectorAll("input, textarea")) {
+          if (typeof input.value === "string" && /Users[/\\]/i.test(input.value)) {
+            input.value = scrub(input.value);
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+        }
+        const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
+        const nodes = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+        for (const node of nodes) {
+          if (node.nodeValue && /Users[/\\]/i.test(node.nodeValue)) {
+            node.nodeValue = scrub(node.nodeValue);
+          }
+        }
       }
-    }
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-    const nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
-    for (const node of nodes) {
-      if (node.nodeValue && /Users[/\\]/i.test(node.nodeValue)) {
-        node.nodeValue = scrub(node.nodeValue);
-      }
-    }
-  });
+    });
+  } catch (error) {
+    console.warn(
+      `WARN: could not redact private paths before Settings shot: ${error?.message ?? error}`,
+    );
+  }
 }
 
 async function removeServerIfPresent(page, name) {
@@ -113,9 +166,9 @@ async function createDemoServer(page) {
   await page.getByRole("textbox", { name: /^Session name$/ }).fill("YARK Demo");
   const baseFolder = page.getByRole("textbox", { name: /^Base folder$/ });
   if ((await baseFolder.count()) > 0) {
-    await baseFolder.fill("C:\\ARK\\TheIsland");
+    await baseFolder.fill(DEMO_INSTALL_DIR);
   } else {
-    await page.getByPlaceholder("C:\\ark_servers").fill("C:\\ARK\\TheIsland");
+    await page.getByPlaceholder("C:\\ark_servers").fill(DEMO_INSTALL_DIR);
   }
 
   await page.getByLabel("Game port").fill(String(7777 + (suffix % 40)));
@@ -215,15 +268,15 @@ async function ensureDemoCluster(page) {
   const names = await listServerNames(page);
   if (names.length < 2) {
     console.warn("WARN: need at least 2 servers to configure a transfer-ready cluster");
-    return;
+    return false;
   }
 
-  // Prefer up to three distinct profiles so the detail panel looks populated.
   const members = names.slice(0, Math.min(3, names.length));
   for (const name of members) {
     await configureServerCluster(page, name);
   }
   console.log(`WEBSITE_SCREENSHOTS_CLUSTER=${DEMO_CLUSTER_ID} members=${members.join(",")}`);
+  return true;
 }
 
 /** Prefer an existing renamed profile; only seed DEMO_SERVER when overview is empty. */
@@ -242,7 +295,6 @@ async function resolveFeaturedServer(page) {
     return DEMO_SERVER;
   }
 
-  // Prefer DEMO_SERVER if still present, else first card (user-renamed names).
   const demo = page.locator("[data-server-card]", {
     has: page.getByText(DEMO_SERVER, { exact: true }),
   });
@@ -258,11 +310,14 @@ async function resolveFeaturedServer(page) {
 }
 
 async function run() {
-  const projectRoot = path.resolve(__dirname, "..");
   process.chdir(projectRoot);
 
-  const outDir = path.join(projectRoot, "website", "screenshots");
+  const outDir = path.resolve(
+    envOr("WEBSITE_SCREENSHOT_OUT", path.join(projectRoot, "website", "screenshots")),
+  );
   fs.mkdirSync(outDir, { recursive: true });
+  console.log(`WEBSITE_SCREENSHOTS_DIR=${outDir}`);
+  console.log(`WEBSITE_DEMO_CLUSTER_DIR=${DEMO_CLUSTER_DIR}`);
 
   const app = await electron.launch({
     args: ["."],
@@ -283,27 +338,33 @@ async function run() {
     const featured = await resolveFeaturedServer(page);
     console.log(`WEBSITE_SCREENSHOTS_FEATURED=${featured}`);
 
-    // Configure a real cluster before overview + Clusters shots.
-    await ensureDemoCluster(page);
+    const clusterConfigured = await ensureDemoCluster(page);
 
-    // Overview
     await goNav(page, "Servers");
     await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 10000 });
     await settle(page, 700);
     await shot(page, path.join(outDir, "overview.png"));
 
-    // Clusters / Settings / Logs
     await goNav(page, "Clusters");
     await page.getByRole("heading", { name: "Clusters", level: 1 }).waitFor({
       state: "visible",
       timeout: 10000,
     });
     await page.locator("[data-clusters-page]").waitFor({ state: "visible", timeout: 10000 });
-    // Wait for a configured cluster detail (not the empty state).
-    await page.locator(`[data-cluster-detail="${DEMO_CLUSTER_ID}"]`).waitFor({
-      state: "visible",
-      timeout: 15000,
-    });
+    if (clusterConfigured) {
+      try {
+        await page.locator(`[data-cluster-detail="${DEMO_CLUSTER_ID}"]`).waitFor({
+          state: "visible",
+          timeout: 15000,
+        });
+      } catch {
+        console.warn(
+          `WARN: cluster detail "${DEMO_CLUSTER_ID}" not visible; capturing Clusters page as-is`,
+        );
+      }
+    } else {
+      console.warn("WARN: skipping configured-cluster wait; capturing Clusters empty/partial state");
+    }
     await settle(page, 800);
     await shot(page, path.join(outDir, "clusters.png"));
 
@@ -325,9 +386,7 @@ async function run() {
     await settle(page, 700);
     await shot(page, path.join(outDir, "logs.png"));
 
-    // Workspace: Server / INI / Mods / wizard
     await openWorkspaceByName(page, featured);
-    // Only seed sample mods when the featured profile has none yet.
     await page.getByRole("tab", { name: "Mods" }).click();
     await settle(page, 400);
     const hasAnyModId = (await page.getByText(/^\d{5,}$/).count()) > 0;
@@ -378,7 +437,6 @@ async function run() {
     await page.getByLabel(/Back to servers/i).click();
     await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 10000 });
 
-    // Fleet Backups
     await goNav(page, "Backups");
     await page.getByRole("heading", { name: "Backups" }).waitFor({
       state: "visible",
@@ -388,7 +446,6 @@ async function run() {
     await shot(page, path.join(outDir, "backups.png"));
 
     console.log("WEBSITE_SCREENSHOTS_OK");
-    console.log(`WEBSITE_SCREENSHOTS_DIR=${outDir}`);
   } finally {
     await app.close();
   }

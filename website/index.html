@@ -238,9 +238,14 @@
           Server profiles and app settings stay on your PC (local SQLite). There is
           no YARK cloud account. Network use covers SteamCMD content, Wildcard’s
           public official-status CDN for the displayed network version, and
-          CurseForge mod metadata via the public YARK Worker (so the desktop app
-          never embeds a CurseForge API key — only Project IDs and related lookup
-          traffic go to that Worker).
+          CurseForge mod metadata via a small
+          <a href="https://github.com/gabomarin/yark/tree/main/workers/curseforge-proxy"
+            >Cloudflare Worker proxy</a
+          >
+          hosted for the project (self-hostable from that folder). The desktop app
+          never embeds a CurseForge API key: lookups send Project IDs / search
+          queries only — not server profiles, passwords, or install paths — and
+          returned names/summaries/links are cached locally.
         </p>
       </section>
 

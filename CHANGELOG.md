@@ -11,11 +11,11 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
-- Mods e2e helper (`npm run e2e:mods`) and website gallery capture script (`npm run website:screenshots`) for refreshing GitHub Pages screenshots.
+- `npm run e2e:mods` helper and `npm run website:screenshots` gallery capture script for refreshing GitHub Pages screenshots.
 
 ### Changed
 
-- Project website copy and screenshot gallery aligned with v0.3.0: Mods tab is live (not “planned”), Settings and Clusters are documented as live, privacy notes the CurseForge Worker, and the gallery adds Mods, Clusters, Logs, Settings, and per-server Backups shots.
+- Project website copy and screenshot gallery aligned with v0.3.0: Mods tab is live (not “planned”), Settings and Clusters are documented as live, privacy notes the CurseForge Worker proxy, and the gallery adds Mods, Clusters, Logs, Settings, and per-server Backups shots.
 
 ## [0.3.0] - 2026-07-28
 

@@ -75,8 +75,24 @@ HTML are `1440 × 900` (capture viewport used for the initial set).
 Refresh captures with `npm run build` then `npm run website:screenshots`
 (`scripts/capture-website-screenshots.cjs`). That script cleans leftover `E2E-*`
 profiles, prefers existing renamed servers, seeds a demo only when empty,
-configures a shared Cluster ID (`yark`) + directory on up to three servers for
-the Clusters shot, and redacts `Users\<name>` paths in Settings before capture.
+configures a shared Cluster ID + directory on up to three servers for the
+Clusters shot (skips gracefully if fewer than two profiles), and redacts
+`Users\<name>` paths in Settings before capture.
+
+### Capture tooling requirements
+
+- **OS:** Windows preferred (Electron GUI). Linux desktops can capture shell
+  chrome; install paths may look non-production.
+- **Node:** 22.5+ (same as the app; see `package.json` `engines`).
+- **Playwright:** already listed under `devDependencies` (`playwright`). Electron
+  e2e uses Playwright’s `_electron` API from that package — no separate
+  `@playwright/test` browser install is required for these scripts. After
+  `npm install`, run `npm run build`, then unset `ELECTRON_RUN_AS_NODE` if set.
+- **Optional env:** `WEBSITE_SCREENSHOT_OUT`, `WEBSITE_DEMO_SERVER`,
+  `WEBSITE_DEMO_INSTALL_DIR`, `WEBSITE_DEMO_MOD_IDS`, `WEBSITE_DEMO_CLUSTER_ID`,
+  `WEBSITE_DEMO_CLUSTER_DIR`, `WEBSITE_VIEWPORT_WIDTH` / `HEIGHT`. Defaults use
+  `C:\ARK\...` on Windows and `os.tmpdir()/yark-gallery/...` elsewhere.
+  Mods e2e: `E2E_MODS_ID`, `E2E_MODS_INSTALL_ROOT`.
 
 ### When to refresh
 

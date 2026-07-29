@@ -2,26 +2,33 @@
  * E2E: Server Workspace Mods tab (add Project ID, enable/disable, cleanup).
  *
  * Usage: node scripts/e2e-mods.cjs
- * Requires: prior npm run build
+ * Requires: prior `npm run build`, Playwright as a project `devDependency`, Windows GUI preferred.
+ * Unset ELECTRON_RUN_AS_NODE before running.
+ *
+ * Env (optional):
+ *   E2E_MODS_ID              CurseForge Project ID to add (default 947033)
+ *   E2E_MODS_INSTALL_ROOT    parent folder for the temporary server install path
  */
 const assert = require("node:assert/strict");
+const os = require("node:os");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
-const DEMO_MOD_ID = "947033";
+function envOr(name, fallback) {
+  const value = process.env[name]?.trim();
+  return value && value.length > 0 ? value : fallback;
+}
+
+const DEMO_MOD_ID = envOr("E2E_MODS_ID", "947033");
+const INSTALL_ROOT = envOr(
+  "E2E_MODS_INSTALL_ROOT",
+  process.platform === "win32" ? "C:\\asa-e2e" : path.join(os.tmpdir(), "asa-e2e"),
+);
 
 function uniqueSuffix() {
   return `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-}
-
-async function waitForCardByName(page, name, timeout = 15000) {
-  const card = page.locator("[data-server-card]", {
-    has: page.getByText(name, { exact: true }),
-  });
-  await card.first().waitFor({ state: "visible", timeout });
-  return card.first();
 }
 
 async function removeServerIfPresent(page, name) {
@@ -89,12 +96,41 @@ async function openModsTab(page) {
   });
 }
 
+async function clickModSwitch(page, ariaPrefix) {
+  const switchInput = page.getByRole("switch", { name: new RegExp(`^${ariaPrefix} `, "i") }).first();
+  await switchInput.waitFor({ state: "attached", timeout: 10000 });
+  await switchInput.evaluate((el) => {
+    el.scrollIntoView({ block: "center", inline: "center" });
+    el.click();
+  });
+  return switchInput;
+}
+
+async function waitForModSwitchChecked(page, ariaPrefix, checked) {
+  await page.waitForFunction(
+    ({ prefix, wantChecked }) => {
+      const nodes = [
+        ...document.querySelectorAll('input[role="switch"][aria-label]'),
+      ];
+      const match = nodes.find((el) =>
+        (el.getAttribute("aria-label") ?? "")
+          .toLowerCase()
+          .startsWith(prefix.toLowerCase()),
+      );
+      return match instanceof HTMLInputElement && match.checked === wantChecked;
+    },
+    { prefix: `${ariaPrefix} `, wantChecked: checked },
+    { timeout: 10000 },
+  );
+}
+
 async function run() {
   const projectRoot = path.resolve(__dirname, "..");
   process.chdir(projectRoot);
 
   const runId = uniqueSuffix();
   const serverName = `E2E-Mods-${runId}`;
+  console.log(`E2E_MODS_START server=${serverName} modId=${DEMO_MOD_ID} root=${INSTALL_ROOT}`);
 
   const app = await electron.launch({
     args: ["."],
@@ -118,7 +154,7 @@ async function run() {
       query: 24000 + Math.floor(Math.random() * 1000),
       rcon: 25000 + Math.floor(Math.random() * 1000),
     };
-    const installDir = `C:\\asa-e2e\\${runId}`;
+    const installDir = path.join(INSTALL_ROOT, runId);
 
     await createServer(page, serverName, installDir, ports);
     await openModsTab(page);
@@ -127,37 +163,50 @@ async function run() {
     await addInput.fill(DEMO_MOD_ID);
     await page.getByRole("button", { name: "Add mod" }).click();
 
-    await page.getByText(DEMO_MOD_ID, { exact: true }).first().waitFor({
-      state: "visible",
-      timeout: 30000,
-    });
+    try {
+      await page.getByText(DEMO_MOD_ID, { exact: true }).first().waitFor({
+        state: "visible",
+        timeout: 30000,
+      });
+    } catch (error) {
+      throw new Error(
+        `Mod ${DEMO_MOD_ID} did not appear after Add mod (Worker/network?). ${error?.message ?? error}`,
+      );
+    }
 
-    const disableSwitch = page.getByRole("switch", { name: /Disable /i }).first();
-    await disableSwitch.waitFor({ state: "attached", timeout: 10000 });
-    assert.equal(await disableSwitch.isChecked(), true);
+    // Enable/disable: assert the control exists, toggle both ways, assert final states.
+    const modSwitch = page.getByRole("switch", { name: /^(Disable|Enable) /i }).first();
+    await modSwitch.waitFor({ state: "attached", timeout: 10000 });
+    console.log("E2E_MODS_SWITCH_ATTACHED");
 
-    await disableSwitch.evaluate((el) => {
-      el.scrollIntoView({ block: "center", inline: "center" });
-      el.click();
-    });
-    const enableSwitch = page.getByRole("switch", { name: /Enable /i }).first();
-    await enableSwitch.waitFor({ state: "attached", timeout: 10000 });
-    // Mantine may keep the same control; wait until unchecked.
-    await page.waitForFunction(() => {
-      const el = document.querySelector('input[role="switch"][aria-label^="Enable "]');
-      return el instanceof HTMLInputElement && !el.checked;
-    }, null, { timeout: 10000 });
-    assert.equal(await enableSwitch.isChecked(), false);
-
-    await enableSwitch.evaluate((el) => {
-      el.scrollIntoView({ block: "center", inline: "center" });
-      el.click();
-    });
-    await page.waitForFunction(() => {
-      const el = document.querySelector('input[role="switch"][aria-label^="Disable "]');
-      return el instanceof HTMLInputElement && el.checked;
-    }, null, { timeout: 10000 });
-    assert.equal(await disableSwitch.isChecked(), true);
+    const initiallyEnabled = await modSwitch.isChecked();
+    if (initiallyEnabled) {
+      await clickModSwitch(page, "Disable");
+      await waitForModSwitchChecked(page, "Enable", false);
+      assert.equal(
+        await page.getByRole("switch", { name: /^Enable /i }).first().isChecked(),
+        false,
+      );
+      await clickModSwitch(page, "Enable");
+      await waitForModSwitchChecked(page, "Disable", true);
+      assert.equal(
+        await page.getByRole("switch", { name: /^Disable /i }).first().isChecked(),
+        true,
+      );
+    } else {
+      await clickModSwitch(page, "Enable");
+      await waitForModSwitchChecked(page, "Disable", true);
+      assert.equal(
+        await page.getByRole("switch", { name: /^Disable /i }).first().isChecked(),
+        true,
+      );
+      await clickModSwitch(page, "Disable");
+      await waitForModSwitchChecked(page, "Enable", false);
+      assert.equal(
+        await page.getByRole("switch", { name: /^Enable /i }).first().isChecked(),
+        false,
+      );
+    }
 
     await page.getByLabel(/Back to servers/i).click();
     await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 10000 });
