@@ -83,6 +83,10 @@
   flex-shrink: 0;
 }
 
+.runtimeSourceFilter {
+  width: min(280px, 100%);
+}
+
 .tabPanel {
   display: flex;
   flex-direction: column;

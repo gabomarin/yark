@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
@@ -64,6 +64,13 @@ describe("ServerLogsPanel", () => {
                 details: null,
               },
             ],
+            runtimeLogLines: ["line"],
+          },
+        }),
+        getServerRuntimeLog: vi.fn().mockResolvedValue({
+          ok: true,
+          data: {
+            serverId: server.id,
             runtimeLogLines: ["line"],
           },
         }),
@@ -188,7 +195,11 @@ describe("ServerLogsPanel", () => {
     await user.click(await screen.findByRole("tab", { name: "Updates" }));
     expect(window.api.readServerUpdateLog).not.toHaveBeenCalled();
 
-    await user.click(await screen.findByText("2026-07-23 10:00:00"));
+    // One row button contains title + subtitle. On UTC CI both are
+    // "2026-07-23 10:00:00", so findByText is ambiguous; role+name is not.
+    await user.click(
+      await screen.findByRole("button", { name: /2026-07-23 10:00:00/ }),
+    );
     await waitFor(() => {
       expect(window.api.readServerUpdateLog).toHaveBeenCalledWith(
         server.id,
@@ -200,5 +211,65 @@ describe("ServerLogsPanel", () => {
 
     await user.click(screen.getByRole("tab", { name: "Events" }));
     expect(screen.queryByText("SteamCMD output line")).not.toBeInTheDocument();
+  });
+
+  it("filters Runtime lines by Source select", async () => {
+    const user = userEvent.setup();
+    vi.mocked(window.api.listServerLogs).mockResolvedValue({
+      ok: true,
+      data: {
+        serverId: server.id,
+        updateFiles: [],
+        backups: [],
+        events: [],
+        runtimeLogLines: [
+          "[2026-07-29T20:11:41.709Z] [system] Starting process",
+          "[2026-07-29T20:11:43.237Z] [log] ARK Version: 92.28",
+          "[2026-07-29T20:11:43.581Z] [stderr] GameAnalytics noise",
+        ],
+      },
+    });
+
+    render(
+      <AppProviders>
+        <ServerLogsPanel server={server} embedded focus={{ section: "runtime" }} />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByText(/ARK Version: 92.28/)).toBeInTheDocument();
+    expect(screen.getByText(/GameAnalytics noise/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("textbox", { name: "Source" }));
+    await user.click(await screen.findByRole("option", { name: "Server log" }));
+
+    expect(screen.getByText(/ARK Version: 92.28/)).toBeInTheDocument();
+    expect(screen.queryByText(/GameAnalytics noise/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Starting process/)).not.toBeInTheDocument();
+  });
+
+  it("quietly refreshes Runtime via runtime-only IPC while that tab is open", async () => {
+    vi.useFakeTimers();
+    try {
+      const getServerRuntimeLog = vi.mocked(window.api.getServerRuntimeLog);
+      render(
+        <AppProviders>
+          <ServerLogsPanel server={server} embedded focus={{ section: "runtime" }} />
+        </AppProviders>,
+      );
+
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      expect(getServerRuntimeLog.mock.calls.length).toBe(0);
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1600);
+      });
+      expect(getServerRuntimeLog.mock.calls.length).toBeGreaterThan(0);
+      expect(getServerRuntimeLog).toHaveBeenCalledWith(server.id);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

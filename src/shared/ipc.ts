@@ -16,6 +16,7 @@ import type {
   ServerIniSnapshot,
   ServerInstallationSnapshot,
   ServerOperationalLogs,
+  ServerRuntimeLogSnapshot,
   ServerProfile,
   ServerProfileInput,
   ServerRuntimeInfo,
@@ -71,6 +72,7 @@ export const IPC = {
   iniSave: "ini:save",
   iniOpenInEditor: "ini:open-in-editor",
   logsList: "logs:list",
+  logsRuntime: "logs:runtime",
   logsReadUpdate: "logs:read-update",
   logsExport: "logs:export",
   logsOpenUpdateFile: "logs:open-update-file",
@@ -174,6 +176,10 @@ export interface RendererApi {
     payload: ServerIniPayload,
   ): Promise<IpcResult<IniPreview>>;
   listServerLogs(serverId: string): Promise<IpcResult<ServerOperationalLogs>>;
+  getServerRuntimeLog(
+    serverId: string,
+    limit?: number,
+  ): Promise<IpcResult<ServerRuntimeLogSnapshot>>;
   readServerUpdateLog(
     serverId: string,
     fileName: string,

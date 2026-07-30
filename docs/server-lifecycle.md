@@ -62,9 +62,9 @@ CLI. Unit tests in `tests/unit/launch-args.test.ts` lock this.
    `-clusterid=…`, `-ClusterDirOverride=…`, `-NoTransferFromFiltering`
 6. `…profile.extraArgs`
 
-UI / runtime logs use `formatLaunchCommandLine` (logical `"` quotes). Helper
-`buildWindowsVerbatimSpawnArgs` / `buildWindowsCreateProcessCommandLine` are
-for diagnostics only — live spawn does **not** use them.
+UI / runtime logs use `formatLaunchCommandLine` (logical `"` quotes). On
+Windows, live spawn uses `buildWindowsVerbatimSpawnArgs` so Node does not add
+an outer quote pair around the complete, spaced map URL.
 
 Example logical argv:
 
@@ -95,8 +95,8 @@ args** directly with `cwd = installDir`:
 
 | Mode | `shell` | `windowsVerbatimArguments` | `windowsHide` | stdio |
 | --- | --- | --- | --- | --- |
-| Piped (default) | `false` | `false` | `true` | ignore / pipe / pipe |
-| Native console (`openNativeConsole`) | `false` | `false` | `false` | ignore |
+| Piped (default) | `false` | `true` on Windows | `true` | ignore / pipe / pipe |
+| Native console (`openNativeConsole`) | `false` | `true` on Windows | `false` | ignore |
 
 Constraints:
 
@@ -104,12 +104,18 @@ Constraints:
   flashing console. Integration test
   `tests/integration/process-manager-real-start.test.ts` (win32-only) asserts
   the PID is `ArkAscendedServer.exe`.
-- Do **not** set `windowsVerbatimArguments: true` when the exe path has spaces
-  (Node leaves the path unquoted and argv breaks). Prefer `false` so Node
-  quotes the exe and keeps real `"` on the map token.
-- Native console and piped Runtime logs are mutually exclusive — with a native
-  console, Runtime logs are system messages only (`MAX_RUNTIME_LOG_LINES = 1200`
-  for the in-memory buffer).
+- Keep the map URL literal in verbatim mode. Node's default escaping wraps a
+  spaced map URL in an extra pair, producing
+  `""Map"?SessionName="My Server""` in ASA's Commandline log.
+- Quote each other spaced argument independently. CreateProcess receives the
+  executable path separately, and `argv0` is quoted explicitly, so a spaced
+  install path does not require a shell wrapper.
+- Native console and piped Runtime logs are mutually exclusive for the **console
+  window** — with a native console, Runtime is mostly system messages. With the
+  console off (piped mode), YARK still captures any stdout/stderr and **tails
+  `ShooterGame/Saved/Logs/ShooterGame.log`** into the same in-memory Runtime buffer
+  (`MAX_RUNTIME_LOG_LINES = 1200`). Piped mode also appends `-log` when missing
+  so Unreal is more likely to write those disk logs.
 - `servers:open-native-terminal` opens a separate `cmd` in the install dir; that
   is **not** the game process.
 
@@ -204,13 +210,16 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 
 1. Wrong map URL quoting → ASA Commandline log drops quotes / misparses session.
 2. Putting RCON / passwords / QueryPort on CLI → use `syncProfileSettingsToIni`.
-3. `windowsVerbatimArguments: true` + spaced install path → broken argv.
+3. Default Node escaping around the spaced map URL → unwanted outer quotes.
 4. cmd / start / `.cmd` wrapper → lifecycle tracks the shell, not ASA.
 5. Treating OS spawn as `running` → wait for RCON (or `skipReadinessCheck` in tests).
-6. Expecting Runtime logs with native console → pipes are off in that mode.
-7. Treating client INI regeneration as user dirty → sanitize first.
-8. Assuming restart is one IPC → it is stop + start in the renderer.
-9. Relying on `skipPortValidation` → currently a no-op.
+6. Expecting Runtime logs with native console → pipes and Saved/Logs tail are
+   off in that mode (use the console window, or turn native console off).
+7. Thin Runtime with console off → check `ShooterGame/Saved/Logs/ShooterGame.log`
+   exists and that `-log` is on the command line in Runtime system lines.
+8. Treating client INI regeneration as user dirty → sanitize first.
+9. Assuming restart is one IPC → it is stop + start in the renderer.
+10. Relying on `skipPortValidation` → currently a no-op.
 
 ## Tests that lock behavior
 
@@ -221,8 +230,9 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 | `tests/unit/validation.test.ts` | Ports, paths, cluster, mods, conflicts |
 | `tests/unit/ini-service.test.ts` | Sanitize + semantic validation |
 | `tests/unit/configuration-wizard-model.test.ts` | Presets, difficulty, preserve unknowns |
+| `tests/unit/asa-log-tail.test.ts` | Saved/Logs decode + follow for Runtime |
 | `tests/integration/process-manager-real-start.test.ts` | win32 direct spawn / spaced paths |
 
 See also [backups.md](backups.md) (restore requires `!isActive`),
 [updates-steamcmd.md](updates-steamcmd.md) (safe update stop/restart), and
-[logs.md](logs.md) (runtime buffer from piped stdout/stderr).
+[logs.md](logs.md) (runtime buffer from piped stdout/stderr and Saved/Logs tail).

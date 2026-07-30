@@ -54,14 +54,28 @@ export class LogsService {
     const events = this.repo
       .recentEvents(500)
       .filter((event) => event.serverId === serverId);
-    const runtimeLogLines = this.processes.getRuntimeLogSnapshot(serverId, 400);
+    const runtime = this.getRuntimeLogSnapshot(serverId);
 
     return {
       serverId,
       updateFiles,
       backups,
       events,
-      runtimeLogLines,
+      runtimeLogLines: runtime.runtimeLogLines,
+    };
+  }
+
+  getRuntimeLogSnapshot(
+    serverId: string,
+    limit = 400,
+  ): { serverId: string; runtimeLogLines: string[] } {
+    const server = this.repo.get(serverId);
+    if (server === null) {
+      throw new Error("Server does not exist");
+    }
+    return {
+      serverId,
+      runtimeLogLines: this.processes.getRuntimeLogSnapshot(serverId, limit),
     };
   }
 
