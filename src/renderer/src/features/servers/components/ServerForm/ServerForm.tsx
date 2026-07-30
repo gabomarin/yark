@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import {
   ArrowLeft,
   FloppyDisk,
@@ -137,7 +138,7 @@ function toInput(
   };
 }
 
-export function ServerForm(props: Props): JSX.Element {
+export function ServerForm(props: Props): ReactElement {
   const isCreate = props.initial === null;
   const embedded = props.variant === "embedded";
   const serverActive = props.serverActive === true;
@@ -480,7 +481,7 @@ interface SectionProps {
   span2?: boolean;
 }
 
-function Section({ title, children, flat = false, span2 = false }: SectionProps): JSX.Element {
+function Section({ title, children, flat = false, span2 = false }: SectionProps): ReactElement {
   if (flat) {
     return (
       <Stack gap="xs" className={span2 ? classes.span2 : undefined}>
@@ -522,7 +523,7 @@ function PathField({
   size = "sm",
   onChange,
   onBrowse,
-}: PathFieldProps): JSX.Element {
+}: PathFieldProps): ReactElement {
   return (
     <Group align="flex-end" wrap="nowrap" gap="xs">
         <TextInput

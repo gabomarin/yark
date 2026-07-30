@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Warning, WarningCircle } from "@phosphor-icons/react";
 import { Text } from "@mantine/core";
 import type { ClusterComplianceIssue } from "@shared/types";
@@ -8,7 +9,7 @@ interface Props {
   relatedServerName: string | null;
 }
 
-export function ClusterIssueRow(props: Props): JSX.Element {
+export function ClusterIssueRow(props: Props): ReactElement {
   return (
     <li className={classes.issueRow} data-severity={props.issue.severity}>
       <span className={classes.issueIcon}>

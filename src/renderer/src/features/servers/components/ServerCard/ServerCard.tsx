@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { HardDrives } from "@phosphor-icons/react";
 import { Card, Group, Stack, Text, UnstyledButton } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
@@ -44,7 +45,7 @@ interface Props {
   onCancelSteamCmd: () => void;
 }
 
-export function ServerCard(props: Props): JSX.Element {
+export function ServerCard(props: Props): ReactElement {
   const {
     server,
     runtime,

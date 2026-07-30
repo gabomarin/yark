@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import {
   Circle,
   Dna,
@@ -43,7 +44,7 @@ interface Props {
   appVersion: string;
 }
 
-export function Sidebar(props: Props): JSX.Element {
+export function Sidebar(props: Props): ReactElement {
   const density = useUiDensity();
   const compact = density === "compact";
   const brandIconSize = compact ? 16 : 20;

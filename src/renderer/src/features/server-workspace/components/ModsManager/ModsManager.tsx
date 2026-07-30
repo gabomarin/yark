@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import {
   ArrowDown,
   ArrowSquareOut,
@@ -31,7 +32,7 @@ interface Props {
   onModsChanged: (mods: string[]) => Promise<void>;
 }
 
-export function ModsManager(props: Props): JSX.Element {
+export function ModsManager(props: Props): ReactElement {
   const [mods, setMods] = useState<string[]>(props.server.mods);
   const [metadataById, setMetadataById] = useState<Map<string, ModMetadata>>(
     new Map(),

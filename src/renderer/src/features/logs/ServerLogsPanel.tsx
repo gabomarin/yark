@@ -22,7 +22,7 @@ import {
 import { modals } from "@mantine/modals";
 import type { ServerOperationalLogs, ServerProfile } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
@@ -56,7 +56,7 @@ interface Props {
   onFocusConsumed?: () => void;
 }
 
-export function ServerLogsPanel(props: Props): JSX.Element {
+export function ServerLogsPanel(props: Props): ReactElement {
   const [activeSection, setActiveSection] = useState<LogsSection>(
     props.focus?.section ?? "events",
   );
@@ -890,7 +890,7 @@ function ClearAction(props: {
   label: string;
   onClick: () => void;
   disabled?: boolean;
-}): JSX.Element {
+}): ReactElement {
   return (
     <Tooltip label={props.label}>
       <span>
@@ -913,7 +913,7 @@ function TabIntro(props: {
   purpose: string;
   useWhen: string;
   action?: React.ReactNode;
-}): JSX.Element {
+}): ReactElement {
   return (
     <div className={classes.tabIntro}>
       <Group justify="space-between" align="flex-start" gap="sm" wrap="wrap">
@@ -930,7 +930,7 @@ function TabIntro(props: {
   );
 }
 
-function DetailItem({ label, value, icon }: DetailItemProps): JSX.Element {
+function DetailItem({ label, value, icon }: DetailItemProps): ReactElement {
   return (
     <div className={classes.detailItem}>
       <Text className={classes.detailLabel}>
@@ -954,7 +954,7 @@ function LogEmptyState({
   icon,
   title,
   description,
-}: LogEmptyStateProps): JSX.Element {
+}: LogEmptyStateProps): ReactElement {
   return (
     <EmptyState layout="stacked" icon={icon} title={title} description={description} />
   );

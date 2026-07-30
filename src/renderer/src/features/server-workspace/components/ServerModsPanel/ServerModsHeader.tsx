@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Badge, Text, Title } from "@mantine/core";
 import classes from "./ServerModsPanel.module.css";
 
@@ -5,7 +6,7 @@ interface Props {
   activeCount: number;
 }
 
-export function ServerModsHeader(props: Props): JSX.Element {
+export function ServerModsHeader(props: Props): ReactElement {
   return (
     <header className={classes.header}>
       <div>

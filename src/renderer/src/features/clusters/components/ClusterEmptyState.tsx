@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { FolderSimple } from "@phosphor-icons/react";
 import { Stack, Text } from "@mantine/core";
 import type { ServerProfile } from "@shared/types";
@@ -13,7 +14,7 @@ interface Props {
   onOpenServer: (serverId: string) => void;
 }
 
-export function ClusterEmptyState(props: Props): JSX.Element {
+export function ClusterEmptyState(props: Props): ReactElement {
   const incompleteGroups = groupServersByClusterDir(props.dirWithoutIdServers);
 
   return (

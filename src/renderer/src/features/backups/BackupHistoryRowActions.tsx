@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { ClipboardText, FolderOpen, ArrowCounterClockwise } from "@phosphor-icons/react";
 import { ActionIcon, Group, Tooltip } from "@mantine/core";
 import type { BackupRecord } from "@shared/types";
@@ -11,7 +12,7 @@ interface Props {
   onRestore: (backup: BackupRecord) => void;
 }
 
-export function BackupHistoryRowActions(props: Props): JSX.Element {
+export function BackupHistoryRowActions(props: Props): ReactElement {
   return (
     <Group gap={4}>
       <Tooltip label="Copy details" withArrow>

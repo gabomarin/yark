@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Button, Group, TextInput } from "@mantine/core";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import classes from "./ServerModsPanel.module.css";
@@ -9,7 +10,7 @@ interface Props {
   onSearch: () => void;
 }
 
-export function ServerModsSearchInput(props: Props): JSX.Element {
+export function ServerModsSearchInput(props: Props): ReactElement {
   return (
     <Group align="flex-end" wrap="wrap">
       <TextInput

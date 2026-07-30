@@ -6,6 +6,11 @@ const pendingTimeouts = new Set<ReturnType<typeof setTimeout>>();
 const nativeSetTimeout = globalThis.setTimeout.bind(globalThis);
 const nativeClearTimeout = globalThis.clearTimeout.bind(globalThis);
 
+/**
+ * Track timers so afterEach can cancel Mantine Transition timeouts before
+ * Vitest tears down jsdom. React 19 otherwise dispatches setState against a
+ * destroyed window (unhandled "window is not defined").
+ */
 globalThis.setTimeout = ((
 	handler: TimerHandler,
 	delay?: number,
@@ -30,8 +35,6 @@ globalThis.clearTimeout = ((id?: ReturnType<typeof setTimeout>) => {
 
 afterEach(() => {
 	cleanup();
-	// Cancel Mantine Transition timeouts before Vitest tears down jsdom (React 19
-	// otherwise dispatches setState against a destroyed window).
 	for (const id of pendingTimeouts) {
 		nativeClearTimeout(id);
 	}
@@ -81,16 +84,23 @@ Object.defineProperty(document, "fonts", {
 	},
 });
 
-// Floating UI (Menu/Select/Popover) hides when the reference has a 0×0 box.
-HTMLElement.prototype.getBoundingClientRect = () =>
-	({
-		x: 0,
-		y: 0,
+// Floating UI hides when the reference box is 0×0 (common in jsdom). Only
+// patch empty rects so tests that assert real layout still see native values.
+const nativeGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect;
+HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect(): DOMRect {
+	const rect = nativeGetBoundingClientRect.call(this);
+	if (rect.width > 0 || rect.height > 0) {
+		return rect;
+	}
+	return {
+		x: rect.x,
+		y: rect.y,
 		width: 120,
 		height: 32,
-		top: 0,
-		left: 0,
-		right: 120,
-		bottom: 32,
+		top: rect.top,
+		left: rect.left,
+		right: rect.left + 120,
+		bottom: rect.top + 32,
 		toJSON: () => ({}),
-	}) as DOMRect;
+	} as DOMRect;
+};

@@ -1,5 +1,5 @@
 import { Card, Stack, Text } from "@mantine/core";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 import classes from "./AppMetricCard.module.css";
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
   disabled?: boolean;
 }
 
-export function AppMetricCard({ icon, label, value, hint, disabled = false }: Props): JSX.Element {
+export function AppMetricCard({ icon, label, value, hint, disabled = false }: Props): ReactElement {
   return (
     <Card withBorder className={classes.card} padding="sm" data-disabled={disabled || undefined}>
       <Stack gap={2}>

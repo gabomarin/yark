@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { FolderOpen } from "@phosphor-icons/react";
 import { Button, Group, SegmentedControl, Switch, Text, Title } from "@mantine/core";
 import type { UiDensity } from "../settingsModel";
@@ -13,7 +14,7 @@ interface Props {
   onPickDefaultBaseFolder: () => void;
 }
 
-export function SettingsGeneralSection(props: Props): JSX.Element {
+export function SettingsGeneralSection(props: Props): ReactElement {
   return (
     <section className={classes.section} aria-labelledby="settings-general">
       <Title order={3} size="h4" id="settings-general">

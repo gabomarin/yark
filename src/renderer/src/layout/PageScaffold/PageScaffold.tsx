@@ -1,5 +1,5 @@
 import { Stack } from "@mantine/core";
-import type { PropsWithChildren, ReactNode } from "react";
+import type { PropsWithChildren, ReactNode, ReactElement } from "react";
 import classes from "./PageScaffold.module.css";
 
 interface Props extends PropsWithChildren {
@@ -15,7 +15,7 @@ export function PageScaffold({
   actions,
   fillViewport = false,
   children,
-}: Props): JSX.Element {
+}: Props): ReactElement {
   return (
     <Stack
       gap="lg"

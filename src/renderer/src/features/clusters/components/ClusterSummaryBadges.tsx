@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Badge, Group } from "@mantine/core";
 import classes from "../clusters.module.css";
 
@@ -10,7 +11,7 @@ interface Props {
   dirWithoutIdCount: number;
 }
 
-export function ClusterSummaryBadges(props: Props): JSX.Element {
+export function ClusterSummaryBadges(props: Props): ReactElement {
   return (
     <Group gap="sm" wrap="wrap" className={classes.summaryRow}>
       <Badge variant="light" color="gray" size="lg">

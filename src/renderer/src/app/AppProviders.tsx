@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { MantineProvider } from "@mantine/core";
@@ -28,7 +29,7 @@ interface Props extends PropsWithChildren {
 export function AppProviders({
   children,
   density = "compact",
-}: Props): JSX.Element {
+}: Props): ReactElement {
   const theme = useMemo(() => {
     const base = createAppThemeForDensity(density);
     if (process.env.VITEST !== "true") {

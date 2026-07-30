@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import {
   ArrowSquareOut,
   Broom,
@@ -99,7 +100,7 @@ const DEFAULT_CLEANUP: BackupCleanupOptions = {
   protectNewestWorld: true,
 };
 
-export function BackupsPage(props: Props): JSX.Element {
+export function BackupsPage(props: Props): ReactElement {
   const [summary, setSummary] = useState<BackupFleetSummary | null>(null);
   const [drafts, setDrafts] = useState<Record<string, DraftPolicy>>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -777,7 +778,7 @@ interface StatCardProps {
   onClick?: () => void;
 }
 
-function StatCard(props: StatCardProps): JSX.Element {
+function StatCard(props: StatCardProps): ReactElement {
   const tone = props.tone ?? "default";
   const clickable = props.onClick !== undefined;
   const className = [
@@ -836,7 +837,7 @@ interface ServerHealthCardProps {
   onSave: () => void;
 }
 
-function ServerHealthCard(props: ServerHealthCardProps): JSX.Element {
+function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
   const { row, draft } = props;
   return (
     <AppSurfaceCard>

@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import {
   ArrowSquareOut,
   CaretDown,
@@ -66,7 +67,7 @@ interface Props {
   onDirtyChange?: (dirty: boolean) => void;
 }
 
-export function ConfigurationEditor(props: Props): JSX.Element {
+export function ConfigurationEditor(props: Props): ReactElement {
   const { section } = props;
   const filesJobActive = props.filesJobActive === true;
   const [snapshot, setSnapshot] = useState<ServerIniSnapshot | null>(null);

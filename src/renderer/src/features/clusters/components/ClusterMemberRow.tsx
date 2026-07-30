@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Text } from "@mantine/core";
 import type { ServerProfile } from "@shared/types";
 import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
@@ -9,7 +10,7 @@ interface Props {
   onOpen: (serverId: string) => void;
 }
 
-export function ClusterMemberRow(props: Props): JSX.Element {
+export function ClusterMemberRow(props: Props): ReactElement {
   return (
     <SelectableListRow
       onClick={() => props.onOpen(props.server.id)}

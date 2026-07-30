@@ -14,7 +14,7 @@ import {
   type ServerLogsFocus,
 } from "@features/logs/ServerLogsPanel";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import {
   ConfigurationEditor,
 } from "./components/ConfigurationEditor/ConfigurationEditor";
@@ -67,7 +67,7 @@ function isServerActive(runtime: ServerRuntimeInfo | null): boolean {
   return status === "starting" || status === "running" || status === "stopping";
 }
 
-export function ServerWorkspacePage(props: Props): JSX.Element {
+export function ServerWorkspacePage(props: Props): ReactElement {
   const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>(
     props.initialTab ?? "server",
   );

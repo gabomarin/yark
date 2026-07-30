@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, ReactNode, ReactElement } from "react";
 import classes from "./SelectableListRow.module.css";
 
 type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children">;
@@ -25,7 +25,7 @@ export function SelectableListRow({
   className,
   type = "button",
   ...buttonProps
-}: Props): JSX.Element {
+}: Props): ReactElement {
   return (
     <button
       {...buttonProps}

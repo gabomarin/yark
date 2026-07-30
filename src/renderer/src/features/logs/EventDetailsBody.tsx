@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Badge, Text } from "@mantine/core";
 import type { AppEvent } from "@shared/types";
 import { resolveEventDetails } from "@shared/event-details";
@@ -8,7 +9,7 @@ interface Props {
   expanded: boolean;
 }
 
-export function EventDetailsBody({ event, expanded }: Props): JSX.Element | null {
+export function EventDetailsBody({ event, expanded }: Props): ReactElement | null {
   if (!expanded) return null;
   const details = resolveEventDetails(event);
   return (
@@ -37,7 +38,7 @@ export function EventDetailsBody({ event, expanded }: Props): JSX.Element | null
   );
 }
 
-function DetailLine(props: { label: string; value: string }): JSX.Element {
+function DetailLine(props: { label: string; value: string }): ReactElement {
   return (
     <div className={classes.eventDetailLine}>
       <Text size="xs" c="dimmed" className={classes.eventDetailLabel}>

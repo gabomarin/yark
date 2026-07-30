@@ -1,5 +1,5 @@
 import { Stack, Text, Title } from "@mantine/core";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 import classes from "./EmptyState.module.css";
 
 interface Props {
@@ -27,7 +27,7 @@ export function EmptyState({
   layout = "inline",
   className,
   children,
-}: Props): JSX.Element {
+}: Props): ReactElement {
   return (
     <div
       className={[classes.root, className].filter(Boolean).join(" ")}

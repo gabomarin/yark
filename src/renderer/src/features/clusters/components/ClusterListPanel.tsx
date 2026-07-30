@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Stack, Text, Title } from "@mantine/core";
 import type { ClusterComplianceReport, ServerProfile } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
@@ -13,7 +14,7 @@ interface Props {
   onSelect: (clusterId: string) => void;
 }
 
-export function ClusterListPanel(props: Props): JSX.Element {
+export function ClusterListPanel(props: Props): ReactElement {
   return (
     <AppSurfaceCard fill className={classes.listPanel}>
       <Stack gap="sm" className={classes.panelStack}>
