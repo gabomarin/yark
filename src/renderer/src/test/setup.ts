@@ -37,3 +37,28 @@ Object.defineProperty(Element.prototype, "scrollIntoView", {
 	writable: true,
 	value: () => undefined,
 });
+
+// Mantine 9 TextareaAutosize listens on document.fonts (missing in jsdom).
+Object.defineProperty(document, "fonts", {
+	writable: true,
+	configurable: true,
+	value: {
+		addEventListener: () => undefined,
+		removeEventListener: () => undefined,
+		ready: Promise.resolve(),
+	},
+});
+
+// Floating UI (Menu/Select/Popover) hides when the reference has a 0×0 box.
+HTMLElement.prototype.getBoundingClientRect = () =>
+	({
+		x: 0,
+		y: 0,
+		width: 120,
+		height: 32,
+		top: 0,
+		left: 0,
+		right: 120,
+		bottom: 32,
+		toJSON: () => ({}),
+	}) as DOMRect;

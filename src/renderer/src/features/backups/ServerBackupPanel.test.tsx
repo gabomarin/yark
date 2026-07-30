@@ -367,7 +367,7 @@ describe("ServerBackupPanel", () => {
     expect(titles()).toEqual(["Bob"]);
 
     await user.clear(screen.getByLabelText(/Search players/i));
-    await user.click(screen.getByRole("textbox", { name: /Sort player backups/i }));
+    await user.click(screen.getByRole("combobox", { name: /Sort player backups/i }));
     await user.click(await screen.findByRole("option", { name: /Player A–Z/i }));
 
     expect(titles()).toEqual(["Alice", "All players", "Bob"]);

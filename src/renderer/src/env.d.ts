@@ -1,3 +1,4 @@
+import type { JSX as ReactJSX } from "react";
 import type { RendererApi } from "@shared/ipc";
 
 declare module "*.module.css" {
@@ -13,6 +14,11 @@ declare module "*.png" {
 declare global {
   interface Window {
     api: RendererApi;
+  }
+
+  /** React 19 types nest JSX under `react`; keep `JSX.Element` return types compiling. */
+  namespace JSX {
+    type Element = ReactJSX.Element;
   }
 }
 

@@ -253,14 +253,14 @@ describe("ServerWorkspacePage", () => {
     renderWorkspace();
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
-    const fileSelect = screen.getByRole("textbox", { name: "INI file" });
+    const fileSelect = screen.getByRole("combobox", { name: "INI file" });
     await user.click(fileSelect);
     await user.click(screen.getByRole("option", { name: "Game.ini" }));
     await waitFor(() => {
       expect(screen.getAllByText("TotallyUnknownSettingXYZ").length).toBeGreaterThan(0);
     });
 
-    const categorySelect = screen.getByRole("textbox", {
+    const categorySelect = screen.getByRole("combobox", {
       name: "Filter by category",
     });
     expect(categorySelect).toHaveValue("All settings (1)");

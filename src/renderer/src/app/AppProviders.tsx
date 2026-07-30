@@ -29,7 +29,44 @@ export function AppProviders({
   children,
   density = "compact",
 }: Props): JSX.Element {
-  const theme = useMemo(() => createAppThemeForDensity(density), [density]);
+  const theme = useMemo(() => {
+    const base = createAppThemeForDensity(density);
+    if (process.env.VITEST !== "true") {
+      return base;
+    }
+    // jsdom + Floating UI: keep Menu/Select dropdowns mounted inline and
+    // skip enter/exit transitions so Testing Library can see options/items.
+    return {
+      ...base,
+      components: {
+        ...base.components,
+        Transition: {
+          defaultProps: { duration: 0, exitDuration: 0 },
+        },
+        Select: {
+          defaultProps: {
+            comboboxProps: {
+              withinPortal: false,
+              transitionProps: { duration: 0 },
+            },
+          },
+        },
+        Menu: {
+          defaultProps: {
+            withinPortal: false,
+            transitionProps: { duration: 0 },
+          },
+        },
+        Popover: {
+          defaultProps: {
+            withinPortal: false,
+            transitionProps: { duration: 0 },
+            hideDetached: false,
+          },
+        },
+      },
+    };
+  }, [density]);
   const cssVariablesResolver = useMemo(
     () => createAppCssVariablesResolverForDensity(density),
     [density],
