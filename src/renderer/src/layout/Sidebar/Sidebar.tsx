@@ -48,6 +48,9 @@ export function Sidebar(props: Props): JSX.Element {
   const compact = density === "compact";
   const brandIconSize = compact ? 16 : 20;
   const navIconSize = compact ? 16 : 18;
+  // Keep secondary sidebar copy readable in Compact without enlarging Comfortable.
+  const metadataTextSize = compact ? "sm" : "xs";
+  const versionTextSize = compact ? "md" : "sm";
 
   const steamCmdLabel = !props.steamCmdDetected
     ? "SteamCMD: not detected"
@@ -63,7 +66,7 @@ export function Sidebar(props: Props): JSX.Element {
         </div>
         <div className={classes.brandCopy}>
           <Text fw={700}>YARK</Text>
-          <Text size="md" c="dimmed">server manager</Text>
+          <Text size={metadataTextSize} c="dimmed">server manager</Text>
         </div>
       </Group>
 
@@ -114,14 +117,14 @@ export function Sidebar(props: Props): JSX.Element {
           w={260}
           position="right"
         >
-          <Text size="md" fw={600}>Official version ARK</Text>
+          <Text size={metadataTextSize} fw={600}>Official version ARK</Text>
         </Tooltip>
-        <Text size="md" className={classes.versionValue}>
+        <Text size={versionTextSize} className={classes.versionValue}>
           {props.officialVersion ?? "Not detected"}
         </Text>
       </div>
 
-      <Text size="md" c="dimmed">v{props.appVersion}</Text>
+      <Text size={metadataTextSize} c="dimmed">v{props.appVersion}</Text>
     </MantineStack>
   );
 }

@@ -4,7 +4,7 @@ import { MantineProvider } from "@mantine/core";
 import {
   createContext,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   type PropsWithChildren,
 } from "react";
@@ -37,7 +37,7 @@ export function AppProviders({
 
   // On <html> so Mantine portals (Modal/Drawer under document.body) inherit
   // compact input height/padding from globals.css.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement;
     root.dataset.uiDensity = density;
     return () => {

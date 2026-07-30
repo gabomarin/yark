@@ -121,7 +121,7 @@
   font-family: Consolas, "Cascadia Mono", monospace;
 }
 
-/* Compact: tighter chrome; labels stay `md` in Sidebar.tsx */
+/* Compact: tighter chrome; Sidebar.tsx keeps metadata one step above compact `xs`. */
 :global([data-ui-density="compact"]) .sidebar {
   padding: var(--app-space-md) var(--app-space-xs);
 }
