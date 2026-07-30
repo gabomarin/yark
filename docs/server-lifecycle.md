@@ -123,12 +123,13 @@ Kill on win32 uses `taskkill /pid … /T /F`.
 
 ## Start / stop / kill / restart
 
-IPC (no `servers:restart` channel):
+IPC:
 
 | Channel | Backend |
 | --- | --- |
 | `servers:start` | sync INI → `ProcessManager.start` |
-| `servers:stop` | `InstanceService.stop`: RCON `SaveWorld` → wait `SAVE_WAIT_MS` (8s) → `DoExit` exact process → best-effort stable `pre_stop` backup (world/players/ini). Progress via `push:server-stop-progress`. Pass `{ backup: false }` to skip the snapshot (SteamCMD update/verify). |
+| `servers:stop` | `InstanceService.stop`: RCON `SaveWorld` → wait `SAVE_WAIT_MS` (8s) → `DoExit` exact process → best-effort stable `pre_stop` backup (world/players/ini). Progress via `push:server-stop-progress`. Pass `{ backup: false }` to skip the snapshot (SteamCMD update/verify, restart). |
+| `servers:restart` | `InstanceService.restart`: lock `"restart"` → stop with `{ backup: false }` → fail-hard `pre_restart` backup → start. Options match `servers:start` (`StartServerOptions`). |
 | `servers:kill` | immediate terminate (warning event; UI confirms) |
 
 Status push: `push:server-status`. Stop phase progress: `push:server-stop-progress`.
@@ -164,9 +165,28 @@ start, update, and verify are rejected while its backup is active. Normal app
 close waits for active stop jobs before quitting. Kill and app-quit `stopAll`
 otherwise use process-only stop (no pre-stop backup).
 
-**Restart:** renderer-only — `App.restartServer` calls `stopServer` then
-`startServer` (so restart inherits the pre-stop backup). A failure mid-way can
-leave the server stopped. There is no atomic backend restart.
+**Restart** (`InstanceService.restart` via `servers:restart`):
+
+1. Reject if the process is not active.
+2. Hold per-instance lock purpose `"restart"` for the whole sequence.
+3. Register a **critical job** through stop + `pre_restart` (not start) so
+   `isStopInProgress` / backups IPC / Force close cover the recovery ZIP after
+   the inner stop job clears. Concurrent user `stop` rejects while that critical
+   job is active (does not coalesce onto the no-backup stop).
+4. App quit uses `shouldBlockAppQuit` / `settleForAppQuit`: wait for critical
+   stop/backup work **and** the `"restart"` lock (covers post-backup sync →
+   spawn), then `stopAll` if any process is active.
+5. `enqueueStop(id, false)` — SaveWorld / DoExit **without** a nested
+   `pre_stop` snapshot (avoids double backup and nested `stop-and-backup` lock).
+6. `createPreRestartBackup` (`pre_restart`, world/players/ini, `skipFlush: true`)
+   — **fail-hard**: on failure the server stays stopped and start is not called.
+7. `startForMaintenance` under the same `"restart"` lock (same start path as
+   `servers:start`, including `openNativeConsole` from the renderer).
+
+`App.restartServer` calls a single `window.api.restartServer` IPC. Failure
+table: lock conflict / not running → reject before work; stop failure → no
+backup/start; backup failure → stopped, no start; start failure → left stopped
+with a completed `pre_restart` snapshot.
 
 **App quit:** `before-quit` runs `processManager.stopAll` when any server is
 active.
@@ -236,7 +256,8 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 7. Thin Runtime with console off → check `ShooterGame/Saved/Logs/ShooterGame.log`
    exists and that `-log` is on the command line in Runtime system lines.
 8. Treating client INI regeneration as user dirty → sanitize first.
-9. Assuming restart is one IPC → it is stop + start in the renderer.
+9. Assuming restart skips backup → it takes a fail-hard `pre_restart` snapshot
+   after stop and before start (`servers:restart`).
 10. Relying on `skipPortValidation` → currently a no-op.
 
 ## Tests that lock behavior
@@ -249,6 +270,8 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 | `tests/unit/ini-service.test.ts` | Sanitize + semantic validation |
 | `tests/unit/configuration-wizard-model.test.ts` | Presets, difficulty, preserve unknowns |
 | `tests/unit/asa-log-tail.test.ts` | Saved/Logs decode + follow for Runtime |
+| `tests/unit/instance-stop.test.ts` | Pre-stop backup order / best-effort failure |
+| `tests/unit/instance-restart.test.ts` | Restart order, fail-hard backup, lock conflict |
 | `tests/integration/process-manager-real-start.test.ts` | win32 direct spawn / spaced paths |
 
 See also [backups.md](backups.md) (restore requires `!isActive`),

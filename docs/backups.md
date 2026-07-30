@@ -122,10 +122,9 @@ Related (not under `backups:*`):
 - Push: `push:backups-changed` (`BackupChangedPush` with `serverId`).
 - Events: `backup_created`, `backup_deleted`, `backup_restored` (plus `error` on failures).
 
-Internal only (no IPC): scheduled create, player-session create, pre-update queue,
-`createPreStopBackup` (called from `InstanceService.stop` after SaveWorld),
-`backupThenRestart` / `createPreRestartBackup` (implemented but unwired from
-callers outside the service).
+Internal only (no dedicated `backups:*` IPC): scheduled create, player-session
+create, pre-update queue, `createPreStopBackup` (from `InstanceService.stop`),
+and `createPreRestartBackup` (from `InstanceService.restart` / `servers:restart`).
 
 ## Workflows
 
@@ -138,7 +137,7 @@ callers outside the service).
 
 ### Pre-stop backup
 
-User stop / restart (`servers:stop` via `InstanceService.stop`):
+User stop (`servers:stop` via `InstanceService.stop`):
 
 1. RCON `SaveWorld` + wait.
 2. RCON `DoExit` + wait for the exact managed process. A replacement process is
@@ -152,8 +151,24 @@ User stop / restart (`servers:stop` via `InstanceService.stop`):
    and a warning event is recorded.
 6. Stop is single-flight per server. Start, Force close, update, verify, and
    application close are blocked or wait while the stop backup is active.
-7. SteamCMD update/verify passes `{ backup: false }` so only the post-stop
-   `pre_update` snapshot runs. Kill and app-quit `stopAll` skip this path.
+7. SteamCMD update/verify and atomic restart pass `{ backup: false }` so this
+   path does not create a `pre_stop` snapshot. Kill and app-quit `stopAll` skip
+   this path.
+
+### Pre-restart backup
+
+User restart (`servers:restart` via `InstanceService.restart`):
+
+1. Reject if the server process is not active; hold lock purpose `"restart"`.
+2. Stop with `{ backup: false }` (SaveWorld / DoExit, no `pre_stop`).
+3. `createPreRestartBackup` with `skipFlush: true` creates `pre_restart`
+   archives for **world**, **players**, and **ini**.
+4. Backup failure is **fail-hard** — start is not called; the server stays
+   stopped.
+5. On success, start with the same options as `servers:start` (including
+   native console preference from the renderer).
+6. One snapshot per restart (no nested pre-stop). See
+   [server-lifecycle.md](server-lifecycle.md).
 
 ### Restore
 

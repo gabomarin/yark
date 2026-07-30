@@ -456,17 +456,11 @@ export function App({ initialUiDensity = "compact" }: AppProps): JSX.Element {
   const restartServer = useCallback(
     async (id: string) => {
       setError(null);
-      const stopRes = await window.api.stopServer(id);
-      if (!stopRes.ok) {
-        setError(stopRes.error ?? "Could not stop the server for restart");
-        await refresh();
-        return;
-      }
-      const startRes = await window.api.startServer(id, {
+      const res = await window.api.restartServer(id, {
         openNativeConsole: openNativeTerminalOnStart,
       });
-      if (!startRes.ok) {
-        setError(startRes.error ?? "Could not restart the server");
+      if (!res.ok) {
+        setError(res.error ?? "Could not restart the server");
       }
       await refresh();
     },

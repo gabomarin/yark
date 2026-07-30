@@ -30,7 +30,6 @@ import type { BackupRepository } from "../../infra/db/backup-repository";
 import type { ProcessManager } from "../../infra/process/process-manager";
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
 import { rconExec } from "../../infra/rcon/rcon-client";
-import { syncProfileSettingsToIni } from "../instances/sync-profile-ini";
 import {
   copySavedArksFiles,
   missingEssentialWorldRels,
@@ -360,12 +359,19 @@ export class BackupService extends EventEmitter {
     });
   }
 
-  async createPreRestartBackup(serverId: string): Promise<BackupRecord[]> {
+  async createPreRestartBackup(
+    serverId: string,
+    options?: {
+      skipFlush?: boolean;
+      onKindProgress?: (kind: BackupKind, index: number, total: number) => void;
+    },
+  ): Promise<BackupRecord[]> {
     return this.createBackups(
       serverId,
       "pre_restart",
-      null,
+      "Pre-restart backup",
       [...CRITICAL_BACKUP_KINDS],
+      options,
     );
   }
 
@@ -800,26 +806,6 @@ export class BackupService extends EventEmitter {
       );
       throw err;
     }
-  }
-
-  async backupThenRestart(serverId: string): Promise<void> {
-    const server = this.mustServer(serverId);
-    await this.createPreRestartBackup(serverId);
-    await this.processes.stop(server);
-    this.servers.addEvent(
-      serverId,
-      "server_stopped",
-      "info",
-      `Server \"${server.name}\" stopped for safe restart`,
-    );
-    await syncProfileSettingsToIni(server);
-    this.processes.start(server);
-    this.servers.addEvent(
-      serverId,
-      "server_started",
-      "info",
-      `Server \"${server.name}\" restarted with prior backup`,
-    );
   }
 
   /** Runs policy backups and cleans retention per server. */

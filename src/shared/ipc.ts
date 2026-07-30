@@ -48,6 +48,7 @@ export const IPC = {
   serversClone: "servers:clone",
   serversStart: "servers:start",
   serversStop: "servers:stop",
+  serversRestart: "servers:restart",
   serversKill: "servers:kill",
   serversInstallFiles: "servers:install-files",
   serversUpdateNow: "servers:update-now",
@@ -141,6 +142,7 @@ export interface RendererApi {
   cloneServer(id: string): Promise<IpcResult<ServerProfile>>;
   startServer(id: string, options?: StartServerOptions): Promise<IpcResult<void>>;
   stopServer(id: string): Promise<IpcResult<void>>;
+  restartServer(id: string, options?: StartServerOptions): Promise<IpcResult<void>>;
   killServer(id: string): Promise<IpcResult<void>>;
   installServerFiles(id: string): Promise<IpcResult<void>>;
   updateServerNow(id: string): Promise<IpcResult<void>>;
