@@ -1,6 +1,6 @@
 import { HardDrives, MagnifyingGlass, Plus } from "@phosphor-icons/react";
 import { Badge, Button, Group, Skeleton, Stack, Text, Title, VisuallyHidden } from "@mantine/core";
-import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo, ServerStopProgress } from "@shared/types";
 import { getServerUpdateState } from "@shared/server-update-status";
 import { ServerCard } from "@features/servers/components/ServerCard/ServerCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
@@ -26,6 +26,7 @@ interface Props {
   steamCmdProgressBytesDownloaded?: number | null;
   steamCmdProgressBytesTotal?: number | null;
   steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null;
+  stopProgressByServerId?: Map<string, ServerStopProgress>;
   onOpenWorkspace: (server: ServerProfile) => void;
   onOpenLogs: (serverId: string) => void;
   onReviewError: (serverId: string) => void;
@@ -179,7 +180,10 @@ export function ServerGrid(props: Props): JSX.Element {
 
         {!props.loading && props.filteredServers.length > 0 && (
           <div className={classes.serverGrid}>
-            {props.filteredServers.map((server) => (
+            {props.filteredServers.map((server) => {
+              const stopProgress = props.stopProgressByServerId?.get(server.id);
+              const stopBusy = stopProgress?.active === true;
+              return (
               <ServerCard
                 key={server.id}
                 server={server}
@@ -187,6 +191,7 @@ export function ServerGrid(props: Props): JSX.Element {
                 installation={props.installationInfo.get(server.id) ?? null}
                 officialSteamBuild={props.officialSteamBuild}
                 steamCmdBusy={
+                  !stopBusy &&
                   (props.steamCmdBusy ?? props.steamCmdRunning) &&
                   props.steamCmdServerId === server.id
                 }
@@ -213,6 +218,9 @@ export function ServerGrid(props: Props): JSX.Element {
                 steamCmdOperation={
                   props.steamCmdServerId === server.id ? (props.steamCmdOperation ?? null) : null
                 }
+                stopBusy={stopBusy}
+                stopProgressPercent={stopBusy ? (stopProgress?.percent ?? null) : null}
+                stopProgressLabel={stopBusy ? (stopProgress?.label ?? null) : null}
                 checkingUpdates={props.checkingUpdates}
                 onStart={() => props.onStartServer(server.id)}
                 onStop={() => props.onStopServer(server.id)}
@@ -230,7 +238,8 @@ export function ServerGrid(props: Props): JSX.Element {
                 onDelete={() => props.onDeleteServer(server.id)}
                 onCancelSteamCmd={props.onCancelSteamCmd}
               />
-            ))}
+              );
+            })}
           </div>
         )}
       </Stack>

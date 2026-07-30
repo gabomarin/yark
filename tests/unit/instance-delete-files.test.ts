@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { InstanceService } from "@backend/domains/instances/instance-service";
+import { InstanceLockManager } from "@backend/orchestration/instance-lock-manager";
 import type { ProcessManager } from "@backend/infra/process/process-manager";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
 import type { ServerProfile } from "@shared/types";
@@ -58,7 +59,13 @@ describe("InstanceService.delete", () => {
       isActive: vi.fn(() => false),
     } as unknown as ProcessManager;
 
-    const service = new InstanceService(repo, processes);
+    const backups = {} as import("@backend/domains/backups/backup-service").BackupService;
+    const service = new InstanceService(
+      repo,
+      processes,
+      backups,
+      new InstanceLockManager(),
+    );
     await service.delete(profile.id);
 
     expect(repo.delete).toHaveBeenCalledWith(profile.id);
@@ -85,7 +92,13 @@ describe("InstanceService.delete", () => {
       isActive: vi.fn(() => false),
     } as unknown as ProcessManager;
 
-    const service = new InstanceService(repo, processes);
+    const backups = {} as import("@backend/domains/backups/backup-service").BackupService;
+    const service = new InstanceService(
+      repo,
+      processes,
+      backups,
+      new InstanceLockManager(),
+    );
     await expect(service.delete(profile.id)).rejects.toThrow(/also used by/i);
     expect(repo.delete).not.toHaveBeenCalled();
     await expect(access(join(installDir, "marker.txt"), fsConstants.F_OK)).resolves.toBeUndefined();

@@ -1,16 +1,21 @@
 import type {
+  BackupKind,
   ClusterComplianceReport,
   ServerInstallationInfo,
   ServerProfile,
   ServerProfileInput,
   ServerRuntimeInfo,
+  ServerStopProgress,
   StartServerOptions,
 } from "@shared/types";
+import { EventEmitter } from "node:events";
 import { existsSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join, parse as parsePath, resolve } from "node:path";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
 import { resolveServerInstallDir } from "@shared/server-install-path";
+import type { BackupService } from "../backups/backup-service";
+import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { ProcessManager } from "../../infra/process/process-manager";
 import { findPortConflicts, validateProfileInput } from "./validation";
@@ -24,6 +29,23 @@ import {
 import { syncProfileSettingsToIni } from "./sync-profile-ini";
 
 const RCON_HOST = "127.0.0.1";
+
+export interface StopServerOptions {
+  /** When true (default), create a stable stop backup after process exit. */
+  backup?: boolean;
+}
+
+function backupKindLabel(kind: BackupKind): string {
+  if (kind === "world") return "world save";
+  if (kind === "players") return "player profiles";
+  return "INI files";
+}
+
+function backingUpPercent(index: number, total: number): number {
+  if (total <= 1) return 85;
+  // After the process exits, spread archive starts across 40% → 85%.
+  return Math.round(40 + (index / (total - 1)) * 45);
+}
 
 function assertSafeInstallDirForWipe(installDir: string): string {
   const resolved = resolve(installDir);
@@ -46,11 +68,17 @@ function assertSafeInstallDirForWipe(installDir: string): string {
 /**
  * Instance orchestration service: validated CRUD + lifecycle.
  */
-export class InstanceService {
+export class InstanceService extends EventEmitter {
+  private readonly stopJobs = new Map<string, Promise<void>>();
+
   constructor(
     private readonly repo: ServerRepository,
     private readonly processes: ProcessManager,
-  ) {}
+    private readonly backups: BackupService,
+    private readonly locks: InstanceLockManager,
+  ) {
+    super();
+  }
 
   list(): ServerProfile[] {
     return this.repo.list();
@@ -194,6 +222,27 @@ export class InstanceService {
   }
 
   async start(id: string, options?: StartServerOptions): Promise<void> {
+    if (this.stopJobs.has(id)) {
+      throw new Error("Server stop and backup are still in progress");
+    }
+    if (this.locks.isLocked(id)) {
+      throw new Error("Another server operation is already in progress");
+    }
+    await this.startInternal(id, options);
+  }
+
+  /** Start from a job that already owns the per-server operational lock. */
+  async startForMaintenance(
+    id: string,
+    options?: StartServerOptions,
+  ): Promise<void> {
+    await this.startInternal(id, options);
+  }
+
+  private async startInternal(
+    id: string,
+    options?: StartServerOptions,
+  ): Promise<void> {
     const profile = this.mustGet(id);
     const running = this.repo
       .list()
@@ -215,18 +264,165 @@ export class InstanceService {
     );
   }
 
-  async stop(id: string): Promise<void> {
-    const profile = this.mustGet(id);
-    await this.processes.stop(profile);
-    this.repo.addEvent(
-      id,
-      "server_stopped",
-      "info",
-      `Server "${profile.name}" stopped (with prior save)`,
+  stop(id: string, options?: StopServerOptions): Promise<void> {
+    const existing = this.stopJobs.get(id);
+    if (existing !== undefined) return existing;
+
+    if (options?.backup === false) {
+      return this.startStopJob(id, false);
+    }
+    return this.locks.withLock(id, "stop-and-backup", () =>
+      this.startStopJob(id, true),
     );
   }
 
+  isStopInProgress(serverId?: string): boolean {
+    return serverId === undefined
+      ? this.stopJobs.size > 0
+      : this.stopJobs.has(serverId);
+  }
+
+  async waitForStopJobs(): Promise<void> {
+    const failures: unknown[] = [];
+    while (this.stopJobs.size > 0) {
+      const results = await Promise.allSettled([...this.stopJobs.values()]);
+      for (const result of results) {
+        if (result.status === "rejected") failures.push(result.reason);
+      }
+    }
+    if (failures.length > 0) {
+      throw failures[0];
+    }
+  }
+
+  private startStopJob(id: string, wantBackup: boolean): Promise<void> {
+    const existing = this.stopJobs.get(id);
+    if (existing !== undefined) return existing;
+    let job: Promise<void>;
+    job = this.runStop(id, wantBackup).finally(() => {
+      if (this.stopJobs.get(id) === job) {
+        this.stopJobs.delete(id);
+      }
+    });
+    this.stopJobs.set(id, job);
+    return job;
+  }
+
+  private async runStop(id: string, wantBackup: boolean): Promise<void> {
+    const profile = this.mustGet(id);
+    let didBackup = false;
+    let exitedExternally = false;
+
+    if (!this.processes.isActive(id)) {
+      return;
+    }
+
+    try {
+      this.emitStopProgress({
+        serverId: id,
+        active: true,
+        phase: "saving",
+        label: "Saving world…",
+        percent: 10,
+      });
+
+      const preparation = await this.processes.beginGracefulStop(profile);
+      if (preparation.phase === "absent") {
+        return;
+      }
+
+      if (preparation.phase === "killed") {
+        this.repo.addEvent(
+          id,
+          "server_stopped",
+          "warning",
+          `Server "${profile.name}" force-killed because RCON SaveWorld failed`,
+        );
+        return;
+      }
+
+      this.emitStopProgress({
+        serverId: id,
+        active: true,
+        phase: "stopping",
+        label: "Stopping server before backup…",
+        percent: 25,
+      });
+      const finishResult = await this.processes.finishGracefulStop(
+        profile,
+        preparation.handle,
+      );
+      if (finishResult === "replaced") {
+        throw new Error(
+          "The original process was replaced during stop; the new process was left running",
+        );
+      }
+      exitedExternally = finishResult === "already_exited";
+
+      if (wantBackup) {
+        try {
+          await this.backups.createPreStopBackup(id, {
+            skipFlush: true,
+            onKindProgress: (kind, index, total) => {
+              this.emitStopProgress({
+                serverId: id,
+                active: true,
+                phase: "backing_up",
+                label: `Backing up ${backupKindLabel(kind)}…`,
+                percent: backingUpPercent(index, total),
+              });
+            },
+          });
+          didBackup = true;
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          this.repo.addEvent(
+            id,
+            "error",
+            "warning",
+            `Pre-stop backup failed for "${profile.name}": ${message}`,
+          );
+          this.emitStopProgress({
+            serverId: id,
+            active: true,
+            phase: "backing_up",
+            label: "Backup failed — server remains stopped",
+            percent: 70,
+          });
+        }
+      }
+
+      this.repo.addEvent(
+        id,
+        "server_stopped",
+        exitedExternally ? "warning" : "info",
+        exitedExternally
+          ? didBackup
+            ? `Server "${profile.name}" exited externally; stop backup completed`
+            : `Server "${profile.name}" exited externally during safe stop`
+          : didBackup
+            ? `Server "${profile.name}" stopped (save + pre-stop backup)`
+            : `Server "${profile.name}" stopped (with prior save)`,
+      );
+    } finally {
+      this.emitStopProgress({
+        serverId: id,
+        active: false,
+        phase: null,
+        label: "",
+        percent: null,
+      });
+    }
+  }
+
+  private emitStopProgress(payload: ServerStopProgress): void {
+    this.emit("stop-progress", payload);
+  }
+
   kill(id: string): void {
+    if (this.stopJobs.has(id)) {
+      throw new Error("Force close is disabled while stop backup is in progress");
+    }
     const profile = this.mustGet(id);
     this.processes.kill(id);
     this.repo.addEvent(

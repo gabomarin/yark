@@ -6,6 +6,7 @@ import type {
   ServerInstallationInfo,
   ServerProfile,
   ServerRuntimeInfo,
+  ServerStopProgress,
 } from "@shared/types";
 import { ServerBackupPanel } from "@features/backups/ServerBackupPanel";
 import {
@@ -23,6 +24,7 @@ import { ServerOnboardingChecklist } from "./components/ServerOnboardingChecklis
 import { ServerModsPanel } from "./components/ServerModsPanel/ServerModsPanel";
 import { SidePanel } from "./components/SidePanel/SidePanel";
 import { WorkspaceHeader } from "./components/WorkspaceHeader/WorkspaceHeader";
+import { StopProgressAlert, stopProgressForServer } from "./components/StopProgressAlert";
 import classes from "./ServerWorkspacePage.module.css";
 
 export type WorkspaceTab = "server" | "mods" | "iniFiles" | "backups" | "logs";
@@ -42,6 +44,8 @@ interface Props {
   /** SteamCMD is rewriting this server's install (install/update/verify/sync). */
   filesJobActive?: boolean;
   filesJobLabel?: string | null;
+  /** Safe stop in progress for the selected server (SaveWorld → backup → DoExit). */
+  stopProgress?: ServerStopProgress | null;
   onDismissOnboarding?: () => void;
   onSelectServer: (serverId: string) => void;
   onBack: () => void;
@@ -135,7 +139,6 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
       props.onBack();
     });
   };
-
   if (selectedServer === null) {
     return (
       <div className={classes.empty}>
@@ -143,16 +146,16 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
       </div>
     );
   }
-
   const runtime = props.statuses.get(selectedServer.id) ?? null;
   const installation = props.installationInfo.get(selectedServer.id) ?? null;
   const serverActive = isServerActive(runtime);
   const filesJobActive = props.filesJobActive === true;
+  const stopProgress = stopProgressForServer(props.stopProgress, selectedServer.id);
+  const stopJobActive = stopProgress !== null;
   /** Same operational lock as a running server, plus SteamCMD file jobs. */
-  const opsLocked = serverActive || filesJobActive;
-  const filesLockReason =
-    props.filesJobLabel?.trim() ||
-    "SteamCMD is modifying this server's files";
+  const opsLocked = serverActive || filesJobActive || stopJobActive;
+  const filesLockReason = props.filesJobLabel?.trim() || "SteamCMD is modifying this server's files";
+  const stopLockReason = stopProgress?.label.trim() || "Stopping this server (save + backup)";
   const serverListPanel = (
     <ServerListPanel
       servers={props.servers}
@@ -167,8 +170,14 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
       server={selectedServer}
       runtime={runtime}
       installation={installation}
-      opsLocked={filesJobActive}
-      opsLockReason={filesJobActive ? filesLockReason : undefined}
+      opsLocked={filesJobActive || stopJobActive}
+      opsLockReason={
+        stopJobActive
+          ? stopLockReason
+          : filesJobActive
+            ? filesLockReason
+            : undefined
+      }
       onOpenFolder={() => props.onOpenFolder(selectedServer.id)}
       onInstallFiles={() => props.onInstallFiles(selectedServer.id)}
       onUpdateNow={() => props.onUpdateNow(selectedServer.id)}
@@ -187,8 +196,8 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
         server={selectedServer}
         runtime={runtime}
         installation={installation}
-        filesJobActive={filesJobActive}
-        filesJobReason={filesLockReason}
+        filesJobActive={filesJobActive || stopJobActive}
+        filesJobReason={stopJobActive ? stopLockReason : filesLockReason}
         onBack={handleBack}
         onStart={() => props.onStartServer(selectedServer.id)}
         onStop={() => props.onStopServer(selectedServer.id)}
@@ -205,6 +214,7 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
         {!compactWorkspace && serverListPanel}
 
         <section className={classes.main} data-workspace-scroll>
+          {stopProgress !== null && <StopProgressAlert progress={stopProgress} />}
           {filesJobActive && (
             <Alert color="yellow" title="Files job in progress" mb="sm">
               {filesLockReason}. Install/update/verify, start/restart, install path,
@@ -318,7 +328,9 @@ export function ServerWorkspacePage(props: Props): JSX.Element {
                   runtime={runtime}
                   embedded
                   opsLocked={opsLocked}
-                  opsLockReason={filesJobActive ? filesLockReason : undefined}
+                  opsLockReason={stopJobActive ? stopLockReason : filesJobActive ? filesLockReason : undefined}
+                  createLocked={stopJobActive}
+                  createLockReason={stopLockReason}
                 />
               )}
 

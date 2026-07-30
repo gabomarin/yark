@@ -383,17 +383,32 @@ export function registerIpcHandlers(
   ipcMain.handle(
     IPC.backupsCreate,
     (_e, serverId: string, kinds?: BackupKind[]) =>
-      wrap(() => backups.createManualBackup(serverId, kinds)),
+      wrap(() => {
+        if (instances.isStopInProgress(serverId)) {
+          throw new Error("Server stop backup is already in progress");
+        }
+        return backups.createManualBackup(serverId, kinds);
+      }),
   );
 
   ipcMain.handle(
     IPC.backupsDelete,
     (_e, serverId: string, backupIds: string[]) =>
-      wrap(() => backups.deleteBackups(serverId, backupIds)),
+      wrap(() => {
+        if (instances.isStopInProgress(serverId)) {
+          throw new Error("Cannot delete backups while stop backup is in progress");
+        }
+        return backups.deleteBackups(serverId, backupIds);
+      }),
   );
 
   ipcMain.handle(IPC.backupsRestore, (_e, serverId: string, backupId: string) =>
-    wrap(() => backups.restoreBackup(serverId, backupId)),
+    wrap(() => {
+      if (instances.isStopInProgress(serverId)) {
+        throw new Error("Cannot restore while stop backup is in progress");
+      }
+      return backups.restoreBackup(serverId, backupId);
+    }),
   );
 
   ipcMain.handle(IPC.backupsGetPolicy, (_e, serverId: string) =>

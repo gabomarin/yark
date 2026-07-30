@@ -128,10 +128,10 @@ IPC (no `servers:restart` channel):
 | Channel | Backend |
 | --- | --- |
 | `servers:start` | sync INI → `ProcessManager.start` |
-| `servers:stop` | RCON `SaveWorld` → wait `SAVE_WAIT_MS` (8s) → `DoExit`; force after `EXIT_WAIT_MS` (30s) |
+| `servers:stop` | `InstanceService.stop`: RCON `SaveWorld` → wait `SAVE_WAIT_MS` (8s) → `DoExit` exact process → best-effort stable `pre_stop` backup (world/players/ini). Progress via `push:server-stop-progress`. Pass `{ backup: false }` to skip the snapshot (SteamCMD update/verify). |
 | `servers:kill` | immediate terminate (warning event; UI confirms) |
 
-Status push: `push:server-status`.
+Status push: `push:server-status`. Stop phase progress: `push:server-stop-progress`.
 
 **Start** (`InstanceService.start`):
 
@@ -146,9 +146,27 @@ Status push: `push:server-status`.
 transition to `"running"` requires RCON unless `skipReadinessCheck` (tests /
 binaries without RCON). Timeout → `"error"` + terminate.
 
+**Stop** (`InstanceService.stop`):
+
+1. Emit stop-progress (`saving`).
+2. `ProcessManager.beginGracefulStop` — status `stopping`, RCON `SaveWorld` + wait
+   and return an ownership handle for the exact child.
+   RCON failure → kill + clear (no backup).
+3. `finishGracefulStop` validates the ownership handle, then `DoExit` / kill
+   fallback. A replacement process is left untouched.
+4. Unless `{ backup: false }`, `BackupService.createPreStopBackup` packages
+   stable stopped files (skip flush; kinds world/players/ini).
+5. Clear stop-progress. Event distinguishes saved, RCON-killed, externally
+   exited, and backup-failed outcomes.
+
+Stop is single-flight and holds the per-instance operation lock. Force close,
+start, update, and verify are rejected while its backup is active. Normal app
+close waits for active stop jobs before quitting. Kill and app-quit `stopAll`
+otherwise use process-only stop (no pre-stop backup).
+
 **Restart:** renderer-only — `App.restartServer` calls `stopServer` then
-`startServer`. A failure mid-way can leave the server stopped. There is no
-atomic backend restart.
+`startServer` (so restart inherits the pre-stop backup). A failure mid-way can
+leave the server stopped. There is no atomic backend restart.
 
 **App quit:** `before-quit` runs `processManager.stopAll` when any server is
 active.

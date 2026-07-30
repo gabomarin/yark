@@ -50,6 +50,9 @@ interface Props {
   /** Running server or SteamCMD files job — blocks restore (like server active). */
   opsLocked?: boolean;
   opsLockReason?: string;
+  /** Another backup owns this server's archive pipeline. */
+  createLocked?: boolean;
+  createLockReason?: string;
 }
 
 type DraftPolicy = Omit<BackupPolicy, "serverId" | "updatedAt">;
@@ -560,7 +563,9 @@ export function ServerBackupPanel(props: Props): JSX.Element {
 
   const createLabel = activeKind === "players" ? "Backup all players" : "Backup";
   const createTooltip =
-    activeKind === "world"
+    props.createLocked === true
+      ? (props.createLockReason ?? "Wait for the active backup to finish")
+      : activeKind === "world"
       ? "Create a manual world save backup now"
       : activeKind === "players"
         ? "Create a full snapshot of all player profiles"
@@ -870,7 +875,7 @@ export function ServerBackupPanel(props: Props): JSX.Element {
                     leftSection={<HardDrives size={14} />}
                     onClick={() => void createBackup()}
                     loading={busy}
-                    disabled={loading}
+                    disabled={loading || props.createLocked === true}
                   >
                     {createLabel}
                   </Button>
@@ -882,7 +887,11 @@ export function ServerBackupPanel(props: Props): JSX.Element {
                       variant="light"
                       size="compact-sm"
                       leftSection={<Trash size={14} />}
-                      disabled={busy || selectedIds.length === 0}
+                      disabled={
+                        busy ||
+                        props.createLocked === true ||
+                        selectedIds.length === 0
+                      }
                       onClick={confirmDeleteSelected}
                     >
                       Delete

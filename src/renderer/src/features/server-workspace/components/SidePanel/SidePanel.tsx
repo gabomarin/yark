@@ -165,7 +165,8 @@ export function SidePanel(props: Props): JSX.Element {
             justify="flex-start"
             leftSection={<Power size={14} />}
             onClick={props.onKill}
-            disabled={status === "stopped"}
+            disabled={status === "stopped" || steamCmdBusy}
+            title={steamCmdBusy ? steamCmdLockTitle : undefined}
           >
             Force close
           </Button>

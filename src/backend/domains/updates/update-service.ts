@@ -371,10 +371,12 @@ export class UpdateService extends EventEmitter {
   }
 
   async installServerFiles(serverId: string): Promise<void> {
+    this.assertStopBackupIdle(serverId);
     await this.enqueueAndWait("install-files", serverId);
   }
 
   async updateServer(serverId: string): Promise<void> {
+    this.assertStopBackupIdle(serverId);
     // May run while the server is active: performUpdateServer captures wasRunning,
     // stops for SteamCMD, then restarts on success (or after rollback).
     await this.enqueueAndWait("update", serverId);
@@ -382,8 +384,15 @@ export class UpdateService extends EventEmitter {
 
   /** Forces app_update validate (ignores “fresh” cache) and syncs to the server. */
   async verifyServerFiles(serverId: string): Promise<void> {
+    this.assertStopBackupIdle(serverId);
     // Same stop/restart contract as update — do not require a prior manual stop.
     await this.enqueueAndWait("verify-files", serverId);
+  }
+
+  private assertStopBackupIdle(serverId: string): void {
+    if (this.instances.isStopInProgress(serverId)) {
+      throw new Error("Server stop and backup are still in progress");
+    }
   }
 
   private async performInstallServerFiles(serverId: string): Promise<void> {
@@ -455,7 +464,7 @@ export class UpdateService extends EventEmitter {
       try {
         // Stop before snapshotting — live SavedArks writes would tear rollback archives.
         if (wasRunning) {
-          await this.instances.stop(serverId);
+          await this.instances.stop(serverId, { backup: false });
         }
 
         preUpdateBackups = await this.backups.createPreUpdateBackupForJob(serverId);
@@ -490,7 +499,7 @@ export class UpdateService extends EventEmitter {
         }
 
         if (wasRunning) {
-          await this.instances.start(serverId);
+          await this.instances.startForMaintenance(serverId);
           const healthy = await this.waitForHealthy(serverId, 90_000);
           if (!healthy) {
             throw new Error("Server did not reach running state after update");
@@ -528,7 +537,7 @@ export class UpdateService extends EventEmitter {
         );
 
         if (this.processes.isActive(serverId)) {
-          await this.instances.stop(serverId);
+          await this.instances.stop(serverId, { backup: false });
         }
 
         for (const backup of preUpdateBackups) {
@@ -536,7 +545,7 @@ export class UpdateService extends EventEmitter {
         }
 
         if (wasRunning) {
-          await this.instances.start(serverId);
+          await this.instances.startForMaintenance(serverId);
           const rollbackHealthy = await this.waitForHealthy(serverId, 90_000);
           if (!rollbackHealthy) {
             throw new Error(
@@ -600,7 +609,7 @@ export class UpdateService extends EventEmitter {
         this.appendSteamCmdConsole(
           `Stopping "${server.name}" before integrity check…`,
         );
-        await this.instances.stop(serverId);
+        await this.instances.stop(serverId, { backup: false });
       }
 
       try {
@@ -624,7 +633,7 @@ export class UpdateService extends EventEmitter {
         );
 
         if (wasRunning) {
-          await this.instances.start(serverId);
+          await this.instances.startForMaintenance(serverId);
           const healthy = await this.waitForHealthy(serverId, 90_000);
           if (!healthy) {
             throw new Error(
@@ -635,7 +644,7 @@ export class UpdateService extends EventEmitter {
       } catch (error) {
         if (wasRunning && !this.processes.isActive(serverId)) {
           try {
-            await this.instances.start(serverId);
+            await this.instances.startForMaintenance(serverId);
           } catch {
             // The original error is more relevant.
           }

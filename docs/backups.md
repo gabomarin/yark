@@ -123,8 +123,9 @@ Related (not under `backups:*`):
 - Events: `backup_created`, `backup_deleted`, `backup_restored` (plus `error` on failures).
 
 Internal only (no IPC): scheduled create, player-session create, pre-update queue,
-`backupThenRestart` / `createPreRestartBackup` (implemented but unwired from callers
-outside the service).
+`createPreStopBackup` (called from `InstanceService.stop` after SaveWorld),
+`backupThenRestart` / `createPreRestartBackup` (implemented but unwired from
+callers outside the service).
 
 ## Workflows
 
@@ -134,6 +135,25 @@ outside the service).
 2. Service runs `flushWorldIfActive` (RCON `SaveWorld` when the process is active; failures are ignored).
 3. Each requested kind is packaged into a ZIP; empty **per-player** session archives are discarded.
 4. If `kinds` is omitted/empty on the API, all three kinds are created. The UI always passes one kind.
+
+### Pre-stop backup
+
+User stop / restart (`servers:stop` via `InstanceService.stop`):
+
+1. RCON `SaveWorld` + wait.
+2. RCON `DoExit` + wait for the exact managed process. A replacement process is
+   never touched; an external process exit is treated as already stopped.
+3. `createPreStopBackup` with `skipFlush: true` creates `pre_stop` archives for
+   **world**, **players**, and **ini**.
+   Packaging happens after exit so the source files remain stable.
+4. Progress phases push on
+   `push:server-stop-progress` (overview card + workspace alert).
+5. Backup failure is best-effort — the already-stopped server remains stopped
+   and a warning event is recorded.
+6. Stop is single-flight per server. Start, Force close, update, verify, and
+   application close are blocked or wait while the stop backup is active.
+7. SteamCMD update/verify passes `{ backup: false }` so only the post-stop
+   `pre_update` snapshot runs. Kill and app-quit `stopAll` skip this path.
 
 ### Restore
 

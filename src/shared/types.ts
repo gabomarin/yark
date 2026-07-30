@@ -191,12 +191,24 @@ export interface AppEvent {
 export type BackupType =
   | "manual"
   | "scheduled"
+  | "pre_stop"
   | "pre_restart"
   | "pre_update"
   | "pre_restore"
   | "player_connect"
   | "player_disconnect"
   | "ini_save";
+
+/** Phases pushed while a user-initiated stop runs SaveWorld → backup → DoExit. */
+export type ServerStopProgressPhase = "saving" | "backing_up" | "stopping";
+
+export interface ServerStopProgress {
+  serverId: string;
+  active: boolean;
+  phase: ServerStopProgressPhase | null;
+  label: string;
+  percent: number | null;
+}
 
 /** What a backup archive contains (ASA path-scoped). */
 export type BackupKind = "world" | "players" | "ini";

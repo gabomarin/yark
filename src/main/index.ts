@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, dialog } from "electron";
 import { join } from "node:path";
 import { openDatabase } from "../backend/infra/db/database";
 import { AppSettingsRepository } from "../backend/infra/db/app-settings-repository";
@@ -15,7 +15,7 @@ import { UpdateService } from "../backend/domains/updates/update-service";
 import { ModsService } from "../backend/domains/mods/mods-service";
 import { InstanceLockManager } from "../backend/orchestration/instance-lock-manager";
 import { registerIpcHandlers } from "./ipc-handlers";
-import { IPC_PUSH, type SteamCmdProgressPush } from "../shared/ipc";
+import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush } from "../shared/ipc";
 import type { BackupChangedPush } from "../backend/domains/backups/backup-service";
 import type { ServerRuntimeInfo } from "../shared/types";
 
@@ -70,7 +70,6 @@ void app.whenReady().then(() => {
   const repo = new ServerRepository(db);
   const backupRepo = new BackupRepository(db);
   const processManager = new ProcessManager();
-  const instances = new InstanceService(repo, processManager);
   const locks = new InstanceLockManager();
   const backupService = new BackupService(
     repo,
@@ -79,6 +78,7 @@ void app.whenReady().then(() => {
     settings,
     join(userData, "backups"),
   );
+  const instances = new InstanceService(repo, processManager, backupService, locks);
   const backupScheduler = new BackupScheduler(backupService);
   const playerSessionWatcher = new PlayerSessionWatcher(
     backupService,
@@ -131,11 +131,51 @@ void app.whenReady().then(() => {
     sendToRenderer(IPC_PUSH.steamCmdProgress, payload);
   });
 
+  instances.on("stop-progress", (payload: ServerStopProgressPush) => {
+    sendToRenderer(IPC_PUSH.serverStopProgress, payload);
+  });
+
   backupService.on("changed", (payload: BackupChangedPush) => {
     sendToRenderer(IPC_PUSH.backupsChanged, payload);
   });
 
   mainWindow = createWindow();
+  let allowQuit = false;
+  let pendingQuit: Promise<void> | null = null;
+
+  const quitAfter = (work: Promise<unknown>): void => {
+    if (pendingQuit !== null) return;
+    pendingQuit = work
+      .then(() => {
+        allowQuit = true;
+        app.quit();
+      })
+      .catch((error: unknown) => {
+        pendingQuit = null;
+        mainWindow?.show();
+        void dialog.showMessageBox({
+          type: "error",
+          title: "Could not finish server stop",
+          message: "YARK will remain open because the active stop did not finish safely.",
+          detail: error instanceof Error ? error.message : String(error),
+          buttons: ["OK"],
+        });
+      });
+  };
+
+  mainWindow.on("close", (event) => {
+    if (allowQuit || !instances.isStopInProgress()) return;
+    event.preventDefault();
+    mainWindow?.show();
+    void dialog.showMessageBox(mainWindow!, {
+      type: "info",
+      title: "Stop backup in progress",
+      message: "YARK will close after the active server backup finishes.",
+      detail: "Keep the application open so the backup archive can be completed safely.",
+      buttons: ["OK"],
+    });
+    quitAfter(instances.waitForStopJobs());
+  });
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -144,6 +184,13 @@ void app.whenReady().then(() => {
   });
 
   app.on("before-quit", (event) => {
+    if (allowQuit) return;
+    if (instances.isStopInProgress()) {
+      event.preventDefault();
+      mainWindow?.show();
+      quitAfter(instances.waitForStopJobs());
+      return;
+    }
     // Cancel pending SteamCMD/sync on quit (without requiring a live UI).
     try {
       updateService.cancelSteamCmd();
@@ -154,9 +201,7 @@ void app.whenReady().then(() => {
     const anyActive = profiles.some((p) => processManager.isActive(p.id));
     if (anyActive) {
       event.preventDefault();
-      void processManager.stopAll(profiles).finally(() => {
-        app.exit(0);
-      });
+      quitAfter(processManager.stopAll(profiles));
     }
   });
 
