@@ -104,7 +104,7 @@ export function Sidebar(props: Props): JSX.Element {
             className={props.steamCmdDetected ? classes.okDot : classes.badDot}
           />
         }
-        className={classes.navButton}
+        className={`${classes.navButton} ${classes.steamCmdButton}`}
         onClick={() => props.onNavigate("settings")}
       >
         {steamCmdLabel}

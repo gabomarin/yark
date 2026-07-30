@@ -144,6 +144,11 @@
   min-height: 34px;
 }
 
+:global([data-ui-density="compact"]) .steamCmdButton[data-with-left-section] {
+  /* Preserve the md label size while making the longest status fit the compact sidebar. */
+  padding-inline: var(--app-space-xxs);
+}
+
 :global([data-ui-density="compact"]) .navButton[data-active]::before {
   height: 14px;
   box-shadow:
