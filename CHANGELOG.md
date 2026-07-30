@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-07-29
+
 ### Added
 
 - Runtime logs in piped mode (native console off) follow `ShooterGame/Saved/Logs` into the in-memory buffer, and the Runtime tab refreshes live while open (#67).
@@ -124,6 +126,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Tracked in-repo TODO / historical planning docs (moved to local agent context).
 
 [Unreleased]: #unreleased
+[0.3.2]: #032---2026-07-29
 [0.3.1]: #031---2026-07-28
 [0.3.0]: #030---2026-07-28
 [0.2.0]: #020---2026-07-27
