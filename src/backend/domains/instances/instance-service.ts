@@ -35,6 +35,14 @@ export interface StopServerOptions {
   backup?: boolean;
 }
 
+/** Outcome of a graceful stop job (used by restart fail-hard policy). */
+export type StopJobOutcome =
+  | "stopped"
+  | "already_exited"
+  | "killed"
+  | "absent"
+  | "noop";
+
 function backupKindLabel(kind: BackupKind): string {
   if (kind === "world") return "world save";
   if (kind === "players") return "player profiles";
@@ -69,7 +77,9 @@ function assertSafeInstallDirForWipe(installDir: string): string {
  * Instance orchestration service: validated CRUD + lifecycle.
  */
 export class InstanceService extends EventEmitter {
-  private readonly stopJobs = new Map<string, Promise<void>>();
+  private readonly stopJobs = new Map<string, Promise<StopJobOutcome>>();
+  /** Covers restart after stopJobs clears (pre_restart ZIP only; not start). */
+  private readonly criticalJobs = new Map<string, Promise<unknown>>();
 
   constructor(
     private readonly repo: ServerRepository,
@@ -222,13 +232,48 @@ export class InstanceService extends EventEmitter {
   }
 
   async start(id: string, options?: StartServerOptions): Promise<void> {
-    if (this.stopJobs.has(id)) {
+    if (this.isStopInProgress(id)) {
       throw new Error("Server stop and backup are still in progress");
     }
     if (this.locks.isLocked(id)) {
       throw new Error("Another server operation is already in progress");
     }
     await this.startInternal(id, options);
+  }
+
+  /**
+   * Atomic restart: stop (no pre_stop) → fail-hard `pre_restart` backup → start.
+   * Holds the instance lock for the whole sequence (#13).
+   * Registers a critical job through stop + pre_restart only so quit can wait
+   * for the recovery ZIP while the server is still stopped, then run stopAll
+   * if start has already begun.
+   */
+  async restart(id: string, options?: StartServerOptions): Promise<void> {
+    this.mustGet(id);
+    if (!this.processes.isActive(id)) {
+      throw new Error("Server is not running");
+    }
+    if (this.isStopInProgress(id)) {
+      throw new Error("Server stop and backup are still in progress");
+    }
+    return this.locks.withLock(id, "restart", async () => {
+      await this.withCriticalJob(id, async () => {
+        const outcome = await this.enqueueStop(id, false);
+        if (outcome === "killed") {
+          throw new Error(
+            "Restart aborted: SaveWorld failed and the process was force-killed",
+          );
+        }
+        if (outcome === "absent" || outcome === "noop") {
+          throw new Error("Restart aborted: server is not running");
+        }
+        await this.backups.createPreRestartBackup(id, { skipFlush: true });
+      });
+      // Start is outside the critical job so a quit that only waited for
+      // stop/backup would see a stopped server. App quit also waits for the
+      // restart lock (see settleForAppQuit) to cover sync → spawn, then stopAll.
+      await this.startForMaintenance(id, options);
+    });
   }
 
   /** Start from a job that already owns the per-server operational lock. */
@@ -265,27 +310,44 @@ export class InstanceService extends EventEmitter {
   }
 
   stop(id: string, options?: StopServerOptions): Promise<void> {
+    if (this.criticalJobs.has(id)) {
+      return Promise.reject(
+        new Error("Cannot stop while a restart is in progress"),
+      );
+    }
     const existing = this.stopJobs.get(id);
-    if (existing !== undefined) return existing;
+    if (existing !== undefined) return existing.then(() => undefined);
 
     if (options?.backup === false) {
-      return this.startStopJob(id, false);
+      return this.enqueueStop(id, false).then(() => undefined);
     }
-    return this.locks.withLock(id, "stop-and-backup", () =>
-      this.startStopJob(id, true),
-    );
+    return this.locks
+      .withLock(id, "stop-and-backup", () => this.enqueueStop(id, true))
+      .then(() => undefined);
   }
 
   isStopInProgress(serverId?: string): boolean {
-    return serverId === undefined
-      ? this.stopJobs.size > 0
-      : this.stopJobs.has(serverId);
+    if (serverId === undefined) {
+      return this.stopJobs.size > 0 || this.criticalJobs.size > 0;
+    }
+    return this.stopJobs.has(serverId) || this.criticalJobs.has(serverId);
+  }
+
+  /**
+   * True while quit must defer: stop/pre_restart critical work, or a restart
+   * lock still held across the post-backup → start window.
+   */
+  shouldBlockAppQuit(): boolean {
+    return this.isStopInProgress() || this.locks.hasPurpose("restart");
   }
 
   async waitForStopJobs(): Promise<void> {
     const failures: unknown[] = [];
-    while (this.stopJobs.size > 0) {
-      const results = await Promise.allSettled([...this.stopJobs.values()]);
+    while (this.stopJobs.size > 0 || this.criticalJobs.size > 0) {
+      const results = await Promise.allSettled([
+        ...this.stopJobs.values(),
+        ...this.criticalJobs.values(),
+      ]);
       for (const result of results) {
         if (result.status === "rejected") failures.push(result.reason);
       }
@@ -295,10 +357,47 @@ export class InstanceService extends EventEmitter {
     }
   }
 
-  private startStopJob(id: string, wantBackup: boolean): Promise<void> {
+  /**
+   * App quit helper: wait for stop/pre_restart work and any restart lock
+   * (covers sync → spawn), then stop leftover active processes.
+   */
+  async settleForAppQuit(): Promise<void> {
+    await this.waitForStopJobs();
+    await this.locks.waitUntilNoPurpose("restart");
+    const profiles = this.repo.list();
+    if (profiles.some((profile) => this.processes.isActive(profile.id))) {
+      await this.processes.stopAll(profiles);
+    }
+  }
+
+  private async withCriticalJob<T>(
+    id: string,
+    work: () => Promise<T>,
+  ): Promise<T> {
+    if (this.criticalJobs.has(id)) {
+      throw new Error("Another server operation is already in progress");
+    }
+    let job!: Promise<T>;
+    job = (async () => {
+      try {
+        return await work();
+      } finally {
+        if (this.criticalJobs.get(id) === job) {
+          this.criticalJobs.delete(id);
+        }
+      }
+    })();
+    this.criticalJobs.set(id, job);
+    return job;
+  }
+
+  private enqueueStop(
+    id: string,
+    wantBackup: boolean,
+  ): Promise<StopJobOutcome> {
     const existing = this.stopJobs.get(id);
     if (existing !== undefined) return existing;
-    let job: Promise<void>;
+    let job: Promise<StopJobOutcome>;
     job = this.runStop(id, wantBackup).finally(() => {
       if (this.stopJobs.get(id) === job) {
         this.stopJobs.delete(id);
@@ -308,13 +407,16 @@ export class InstanceService extends EventEmitter {
     return job;
   }
 
-  private async runStop(id: string, wantBackup: boolean): Promise<void> {
+  private async runStop(
+    id: string,
+    wantBackup: boolean,
+  ): Promise<StopJobOutcome> {
     const profile = this.mustGet(id);
     let didBackup = false;
     let exitedExternally = false;
 
     if (!this.processes.isActive(id)) {
-      return;
+      return "noop";
     }
 
     try {
@@ -328,7 +430,7 @@ export class InstanceService extends EventEmitter {
 
       const preparation = await this.processes.beginGracefulStop(profile);
       if (preparation.phase === "absent") {
-        return;
+        return "absent";
       }
 
       if (preparation.phase === "killed") {
@@ -338,7 +440,7 @@ export class InstanceService extends EventEmitter {
           "warning",
           `Server "${profile.name}" force-killed because RCON SaveWorld failed`,
         );
-        return;
+        return "killed";
       }
 
       this.emitStopProgress({
@@ -404,6 +506,7 @@ export class InstanceService extends EventEmitter {
             ? `Server "${profile.name}" stopped (save + pre-stop backup)`
             : `Server "${profile.name}" stopped (with prior save)`,
       );
+      return exitedExternally ? "already_exited" : "stopped";
     } finally {
       this.emitStopProgress({
         serverId: id,
@@ -420,8 +523,10 @@ export class InstanceService extends EventEmitter {
   }
 
   kill(id: string): void {
-    if (this.stopJobs.has(id)) {
-      throw new Error("Force close is disabled while stop backup is in progress");
+    if (this.isStopInProgress(id)) {
+      throw new Error(
+        "Force close is disabled while stop or restart backup is in progress",
+      );
     }
     const profile = this.mustGet(id);
     this.processes.kill(id);

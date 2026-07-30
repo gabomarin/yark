@@ -98,6 +98,10 @@ export function registerIpcHandlers(
     wrap(() => instances.stop(id)),
   );
 
+  ipcMain.handle(IPC.serversRestart, (_e, id: string, options?: StartServerOptions) =>
+    wrap(() => instances.restart(id, options)),
+  );
+
   ipcMain.handle(IPC.serversKill, (_e, id: string) =>
     wrap(() => instances.kill(id)),
   );

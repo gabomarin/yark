@@ -20,6 +20,8 @@ const api: RendererApi = {
   startServer: (id: string, options?: StartServerOptions) =>
     ipcRenderer.invoke(IPC.serversStart, id, options),
   stopServer: (id: string) => ipcRenderer.invoke(IPC.serversStop, id),
+  restartServer: (id: string, options?: StartServerOptions) =>
+    ipcRenderer.invoke(IPC.serversRestart, id, options),
   killServer: (id: string) => ipcRenderer.invoke(IPC.serversKill, id),
   installServerFiles: (id: string) => ipcRenderer.invoke(IPC.serversInstallFiles, id),
   updateServerNow: (id: string) => ipcRenderer.invoke(IPC.serversUpdateNow, id),

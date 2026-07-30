@@ -165,17 +165,18 @@ void app.whenReady().then(() => {
   };
 
   mainWindow.on("close", (event) => {
-    if (allowQuit || !instances.isStopInProgress()) return;
+    if (allowQuit || !instances.shouldBlockAppQuit()) return;
     event.preventDefault();
     mainWindow?.show();
     void dialog.showMessageBox(mainWindow!, {
       type: "info",
-      title: "Stop backup in progress",
-      message: "YARK will close after the active server backup finishes.",
-      detail: "Keep the application open so the backup archive can be completed safely.",
+      title: "Server operation in progress",
+      message: "YARK will close after the active server operation finishes.",
+      detail:
+        "Keep the application open so stop/restart backup work can complete safely.",
       buttons: ["OK"],
     });
-    quitAfter(instances.waitForStopJobs());
+    quitAfter(instances.settleForAppQuit());
   });
 
   app.on("activate", () => {
@@ -186,10 +187,10 @@ void app.whenReady().then(() => {
 
   app.on("before-quit", (event) => {
     if (allowQuit) return;
-    if (instances.isStopInProgress()) {
+    if (instances.shouldBlockAppQuit()) {
       event.preventDefault();
       mainWindow?.show();
-      quitAfter(instances.waitForStopJobs());
+      quitAfter(instances.settleForAppQuit());
       return;
     }
     // Cancel pending SteamCMD/sync on quit (without requiring a live UI).

@@ -33,6 +33,7 @@ function createApiMock(): RendererApi {
     cloneServer: vi.fn(),
     startServer: vi.fn(),
     stopServer: vi.fn(),
+    restartServer: vi.fn(),
     killServer: vi.fn(),
     installServerFiles: vi.fn(),
     updateServerNow: vi.fn(),
