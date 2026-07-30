@@ -414,6 +414,12 @@ export interface ServerOperationalLogs {
   runtimeLogLines: string[];
 }
 
+/** Lightweight Runtime-only snapshot (avoids reading update/backup listings). */
+export interface ServerRuntimeLogSnapshot {
+  serverId: string;
+  runtimeLogLines: string[];
+}
+
 /** Known official ASA maps (extensible with mod maps). */
 export const KNOWN_MAPS = [
   "TheIsland_WP",

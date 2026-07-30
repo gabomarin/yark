@@ -11,6 +11,7 @@ import {
 } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import type { AppEvent, ServerProfile } from "@shared/types";
+import { formatLogDateTime } from "@shared/format-log-datetime";
 import { useEffect, useMemo, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
@@ -213,7 +214,7 @@ export function LogsPage(props: Props): JSX.Element {
                         }
                       >
                         <Text size="sm" c="dimmed" className={classes.fleetWhen}>
-                          {new Date(event.createdAt).toLocaleString()}
+                          {formatLogDateTime(event.createdAt)}
                         </Text>
                         <Badge color={severityColor(event.severity)} variant="light">
                           {event.severity}

@@ -28,31 +28,15 @@ export function buildMapUrlArg(map: string, sessionName: string): string {
   return `"${map}"?SessionName="${escapeQuotedValue(sessionName)}"`;
 }
 
-/** True for the ASA/Unreal map URL arg (logical or Windows-verbatim form). */
+/** True for the ASA/Unreal map URL argument. */
 export function isUnrealMapUrlArg(arg: string): boolean {
   return /SessionName=/.test(arg) && !arg.startsWith("-");
 }
 
 /**
- * Convert a logical map URL into the token that must appear on the Windows
- * CreateProcess command line so CommandLineToArgvW keeps literal `"` in argv.
- *
- * Logical:  `"TheIsland_WP"?SessionName="gabo"`
- * Verbatim: `\"TheIsland_WP\"?SessionName=\"gabo\"`
- *
- * Bare `"` on lpCommandLine are treated as delimiters and stripped from argv;
- * ASA's Commandline log then shows `TheIsland_WP?SessionName=gabo` with no quotes.
- * Prefacing each quote with `\` makes Windows keep them in argv (and Unreal/ASA
- * then logs the desired shape).
- */
-export function mapUrlToWindowsVerbatimArg(logicalMapUrl: string): string {
-  return logicalMapUrl.replace(/"/g, '\\"');
-}
-
-/**
  * Quote a Windows CreateProcess argument when it contains whitespace or quotes.
- * Doubles embedded quotes (Windows rules). Leaves simple flags untouched.
- * Does not touch map-URL tokens (use {@link mapUrlToWindowsVerbatimArg} first).
+ * Leaves simple flags untouched. Map-URL tokens must bypass this function so
+ * their map and SessionName quotes remain separate on ASA's raw command line.
  */
 export function quoteWindowsArg(value: string): string {
   if (value.length === 0) {
@@ -61,12 +45,29 @@ export function quoteWindowsArg(value: string): string {
   if (!/[\s"]/.test(value)) {
     return value;
   }
-  return `"${value.replace(/"/g, '""')}"`;
+  let quoted = '"';
+  let backslashes = 0;
+
+  for (const char of value) {
+    if (char === "\\") {
+      backslashes += 1;
+      continue;
+    }
+    if (char === '"') {
+      quoted += `${"\\".repeat(backslashes * 2 + 1)}"`;
+      backslashes = 0;
+      continue;
+    }
+    quoted += `${"\\".repeat(backslashes)}${char}`;
+    backslashes = 0;
+  }
+
+  return `${quoted}${"\\".repeat(backslashes * 2)}"`;
 }
 
 /**
  * Builds the exact Windows lpCommandLine for CreateProcess, including a quoted
- * executable when needed and a verbatim map URL (`\"Map\"?SessionName=\"...\"`).
+ * executable when needed and a literal map URL (`"Map"?SessionName="..."`).
  */
 export function buildWindowsCreateProcessCommandLine(
   binaryPath: string,
@@ -75,11 +76,7 @@ export function buildWindowsCreateProcessCommandLine(
   const parts: string[] = [quoteWindowsArg(binaryPath)];
   for (const arg of args) {
     if (isUnrealMapUrlArg(arg)) {
-      // Accept either logical or already-verbatim map tokens.
-      const verbatim = arg.includes('\\"')
-        ? arg
-        : mapUrlToWindowsVerbatimArg(arg);
-      parts.push(verbatim);
+      parts.push(arg);
       continue;
     }
     parts.push(quoteWindowsArg(arg));
@@ -89,12 +86,12 @@ export function buildWindowsCreateProcessCommandLine(
 
 /**
  * Args for `spawn(exe, args, { windowsVerbatimArguments: true })`.
- * Map URL is converted to the `\"...\"` form; other args are unchanged
- * (Node will not re-escape when verbatim is set — quote paths yourself if needed).
+ * The map URL remains literal so ASA receives no extra outer quote pair.
+ * Other arguments are quoted individually when Windows whitespace requires it.
  */
 export function buildWindowsVerbatimSpawnArgs(args: string[]): string[] {
   return args.map((arg) =>
-    isUnrealMapUrlArg(arg) ? mapUrlToWindowsVerbatimArg(arg) : arg,
+    isUnrealMapUrlArg(arg) ? arg : quoteWindowsArg(arg),
   );
 }
 
@@ -104,14 +101,10 @@ export function buildWindowsVerbatimSpawnArgs(args: string[]): string[] {
  * Shape (ASA manager parity):
  * `"Map"?SessionName="..." -port=N -ServerPlatform=ALL ...`
  *
- * ProcessManager passes these logical args to `spawn(exe, args, {
- *   windowsVerbatimArguments: false, shell: false })`. Node's default
- * escaping quotes spaced exe paths and yields argv with real `"` on the map
- * token. Prefer that over `windowsVerbatimArguments: true` (breaks spaced
- * paths) or a `.cmd` / `cmd /c` wrapper (visible console + wrong tracked pid).
- *
- * {@link buildWindowsVerbatimSpawnArgs} / {@link buildWindowsCreateProcessCommandLine}
- * remain for diagnostics and CreateProcess lpCommandLine experiments.
+ * On Windows, ProcessManager converts these with
+ * {@link buildWindowsVerbatimSpawnArgs} and enables
+ * `windowsVerbatimArguments`. This prevents Node from wrapping the complete
+ * spaced map URL in another pair of quotes.
  */
 export function buildLaunchArgs(profile: ServerProfile): string[] {
   const mapUrl = buildMapUrlArg(profile.map, profile.sessionName);

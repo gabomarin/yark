@@ -9,10 +9,13 @@ import type {
 } from "@shared/types";
 import {
   buildLaunchArgs,
+  buildWindowsVerbatimSpawnArgs,
   formatLaunchCommandLine,
+  quoteWindowsArg,
   serverBinaryPath,
 } from "../../domains/instances/launch-args";
 import { rconExec } from "../rcon/rcon-client";
+import { AsaSavedLogsTailer } from "./asa-log-tail";
 
 interface ManagedProcess {
   child: ChildProcess;
@@ -20,6 +23,7 @@ interface ManagedProcess {
   startedAt: string;
   lastError: string | null;
   readinessGeneration: number;
+  logTailer: AsaSavedLogsTailer | null;
 }
 
 function killWinProcessTree(pid: number): boolean {
@@ -31,22 +35,23 @@ function killWinProcessTree(pid: number): boolean {
   return result.status === 0;
 }
 
+function argsIncludeLogFlag(args: string[]): boolean {
+  return args.some((arg) => /^[-/]log$/i.test(arg.trim()));
+}
+
 /**
- * Spawns ASA so the **child argv** keeps literal quotes on map and SessionName,
+ * Spawns ASA so its raw command line keeps the intended, separate quotes on
+ * map and SessionName,
  * and so `child` is always `ArkAscendedServer.exe` (never `cmd.exe`).
  *
- * Pass **logical** args (`"Map"?SessionName="name"`) with
- * `windowsVerbatimArguments: false`. Node then quotes spaced exe paths and
- * escapes embedded quotes so CommandLineToArgvW yields the real quote chars
- * in argv (ASA Commandline log shows `"Map"?SessionName="name"`).
- *
- * Do **not** use `windowsVerbatimArguments: true` when the exe path has
- * spaces: Node leaves the path unquoted on lpCommandLine and argv breaks.
- * Do **not** wrap with `.cmd` / `cmd /c` / `start`: that flashes a visible
- * console and makes ProcessManager track cmd instead of the game.
+ * On Windows, arguments are prepared individually and passed verbatim. This
+ * avoids Node's default extra wrapper around a map URL that contains spaces:
+ * `""Map"?SessionName="My Server""`. CreateProcess receives `binary`
+ * separately, while `argv0` is explicitly quoted for spaced install paths.
  *
  * Native console: `windowsHide: false` so Windows gives the dedicated its own
- * console. Piped mode: `windowsHide: true` + stdout/stderr pipes.
+ * console. Piped mode: `windowsHide: true` + stdout/stderr pipes + Saved/Logs
+ * file tail (Unreal rarely prints the console stream to stdout when hidden).
  */
 function spawnAsaProcess(
   binary: string,
@@ -54,21 +59,29 @@ function spawnAsaProcess(
   cwd: string,
   options: { nativeConsole: boolean },
 ): ChildProcess {
+  const isWindows = process.platform === "win32";
+  const spawnArgs = isWindows
+    ? buildWindowsVerbatimSpawnArgs(args)
+    : args;
+  const argv0 = isWindows ? quoteWindowsArg(binary) : binary;
+
   if (options.nativeConsole) {
-    return spawn(binary, args, {
+    return spawn(binary, spawnArgs, {
+      argv0,
       cwd,
       shell: false,
-      windowsVerbatimArguments: false,
+      windowsVerbatimArguments: isWindows,
       windowsHide: false,
       stdio: "ignore",
       detached: false,
     });
   }
 
-  return spawn(binary, args, {
+  return spawn(binary, spawnArgs, {
+    argv0,
     cwd,
     shell: false,
-    windowsVerbatimArguments: false,
+    windowsVerbatimArguments: isWindows,
     windowsHide: true,
     stdio: ["ignore", "pipe", "pipe"],
     detached: false,
@@ -80,6 +93,8 @@ export interface ProcessManagerOptions {
   readyTimeoutMs?: number;
   /** Interval between RCON attempts. Default 3s. */
   readyPollMs?: number;
+  /** Process factory override for lifecycle tests. */
+  spawnProcess?: typeof spawnAsaProcess;
 }
 
 const RCON_HOST = "127.0.0.1";
@@ -114,13 +129,17 @@ function delay(ms: number): Promise<void> {
 export class ProcessManager extends EventEmitter {
   private readonly processes = new Map<string, ManagedProcess>();
   private readonly runtimeLogs = new Map<string, string[]>();
+  /** Incomplete trailing line per server+source while chunks arrive mid-line. */
+  private readonly runtimePartials = new Map<string, string>();
   private readonly readyTimeoutMs: number;
   private readonly readyPollMs: number;
+  private readonly spawnProcess: typeof spawnAsaProcess;
 
   constructor(options?: ProcessManagerOptions) {
     super();
     this.readyTimeoutMs = options?.readyTimeoutMs ?? DEFAULT_READY_TIMEOUT_MS;
     this.readyPollMs = options?.readyPollMs ?? DEFAULT_READY_POLL_MS;
+    this.spawnProcess = options?.spawnProcess ?? spawnAsaProcess;
   }
 
   getStatus(serverId: string): ServerRuntimeInfo {
@@ -160,6 +179,7 @@ export class ProcessManager extends EventEmitter {
 
   clearRuntimeLog(serverId: string): void {
     this.runtimeLogs.delete(serverId);
+    this.clearRuntimePartials(serverId);
   }
 
   start(profile: ServerProfile, options?: StartServerOptions): void {
@@ -174,52 +194,83 @@ export class ProcessManager extends EventEmitter {
     }
 
     const args = options?.launchArgsOverride ?? buildLaunchArgs(profile);
-    // Log the logical Unreal shape (real quotes). Spawn uses Node escaping of the same args.
+    const nativeConsole = options?.openNativeConsole === true;
+    let spawnArgs = args;
+    // Only when using profile-built CLI — never mutate launchArgsOverride (tests / custom argv).
+    if (
+      !nativeConsole &&
+      options?.launchArgsOverride === undefined &&
+      !argsIncludeLogFlag(spawnArgs)
+    ) {
+      // Helps Unreal write ShooterGame/Saved/Logs while the console is hidden.
+      spawnArgs = [...spawnArgs, "-log"];
+    }
+    // Log the same logical Unreal shape sent verbatim on Windows.
     const displayCommandLine =
       options?.launchArgsOverride !== undefined
-        ? [binary, ...args].join(" ")
-        : formatLaunchCommandLine(profile, binary);
-    const nativeConsole = options?.openNativeConsole === true;
-    const child = spawnAsaProcess(binary, args, profile.installDir, {
+        ? [binary, ...spawnArgs].join(" ")
+        : spawnArgs !== args
+          ? `${formatLaunchCommandLine(profile, binary)} -log`
+          : formatLaunchCommandLine(profile, binary);
+    const child = this.spawnProcess(binary, spawnArgs, profile.installDir, {
       nativeConsole,
     });
 
     this.appendRuntimeLog(profile.id, "system", `Starting process ${binary}`);
-    this.appendRuntimeLog(
-      profile.id,
-      "system",
-      `Commandline: ${displayCommandLine}`,
-    );
+    this.appendRuntimeLog(profile.id, "system", `Commandline: ${displayCommandLine}`);
     if (nativeConsole) {
       this.appendRuntimeLog(
         profile.id,
         "system",
         "Native server console opened (live output in that window)",
       );
+    } else {
+      this.appendRuntimeLog(
+        profile.id,
+        "system",
+        "Piped mode: following ShooterGame/Saved/Logs for Runtime",
+      );
     }
-    if (child.stdout !== null) {
-      child.stdout.on("data", (chunk) => {
-        this.captureRuntimeChunk(profile.id, "stdout", String(chunk));
-      });
-    }
-    if (child.stderr !== null) {
-      child.stderr.on("data", (chunk) => {
-        this.captureRuntimeChunk(profile.id, "stderr", String(chunk));
-      });
-    }
-
     const managed: ManagedProcess = {
       child,
       status: "starting",
       startedAt: new Date().toISOString(),
       lastError: null,
       readinessGeneration: 0,
+      logTailer: null,
     };
     this.processes.set(profile.id, managed);
+    if (child.stdout !== null) {
+      child.stdout.setEncoding("utf8");
+      child.stdout.on("data", (chunk) => {
+        if (this.processes.get(profile.id) !== managed) return;
+        this.captureRuntimeChunk(profile.id, "stdout", chunk);
+      });
+    }
+    if (child.stderr !== null) {
+      child.stderr.setEncoding("utf8");
+      child.stderr.on("data", (chunk) => {
+        if (this.processes.get(profile.id) !== managed) return;
+        this.captureRuntimeChunk(profile.id, "stderr", chunk);
+      });
+    }
+    if (!nativeConsole) {
+      managed.logTailer = new AsaSavedLogsTailer(
+        profile.installDir,
+        (text) => {
+          if (this.processes.get(profile.id) !== managed) return;
+          this.captureRuntimeChunk(profile.id, "log", text);
+        },
+      );
+      managed.logTailer.start(Date.parse(managed.startedAt));
+    }
     this.emitStatus(profile.id);
 
     child.once("spawn", () => {
-      if (managed.status !== "starting") {
+      if (
+        this.processes.get(profile.id) !== managed ||
+        managed.status !== "starting"
+      ) {
         return;
       }
       this.appendRuntimeLog(
@@ -246,6 +297,10 @@ export class ProcessManager extends EventEmitter {
 
     child.once("error", (err) => {
       managed.readinessGeneration += 1;
+      managed.logTailer?.stop();
+      managed.logTailer = null;
+      if (this.processes.get(profile.id) !== managed) return;
+      this.flushRuntimePartials(profile.id);
       managed.status = "error";
       managed.lastError = err.message;
       this.appendRuntimeLog(profile.id, "error", `Process error: ${err.message}`);
@@ -256,6 +311,10 @@ export class ProcessManager extends EventEmitter {
       const wasStopping = managed.status === "stopping";
       const wasStarting = managed.status === "starting";
       managed.readinessGeneration += 1;
+      managed.logTailer?.stop();
+      managed.logTailer = null;
+      if (this.processes.get(profile.id) !== managed) return;
+      this.flushRuntimePartials(profile.id);
       this.appendRuntimeLog(
         profile.id,
         "system",
@@ -302,16 +361,19 @@ export class ProcessManager extends EventEmitter {
     } catch {
       // RCON unavailable: fall back to process termination.
       this.appendRuntimeLog(profile.id, "warning", "RCON unavailable; applying kill");
-      this.terminateManaged(managed);
+      this.terminateManaged(profile.id, managed);
     }
 
     const exited = await this.waitForExit(managed.child, EXIT_WAIT_MS);
     if (!exited) {
-      this.terminateManaged(managed);
+      this.terminateManaged(profile.id, managed);
       await this.waitForExit(managed.child, 5000);
     }
-    this.processes.delete(profile.id);
-    this.emitStatus(profile.id);
+    if (this.processes.get(profile.id) === managed) {
+      this.stopManagedCapture(profile.id, managed);
+      this.processes.delete(profile.id);
+      this.emitStatus(profile.id);
+    }
   }
 
   /** Immediate termination without save (last resort). */
@@ -322,9 +384,11 @@ export class ProcessManager extends EventEmitter {
     managed.status = "stopping";
     this.appendRuntimeLog(serverId, "warning", "Forcing process shutdown");
     this.emitStatus(serverId);
-    this.terminateManaged(managed);
-    this.processes.delete(serverId);
-    this.emitStatus(serverId);
+    this.terminateManaged(serverId, managed);
+    if (this.processes.get(serverId) === managed) {
+      this.processes.delete(serverId);
+      this.emitStatus(serverId);
+    }
   }
 
   /** Stops all active processes (app shutdown). */
@@ -395,13 +459,14 @@ export class ProcessManager extends EventEmitter {
     this.appendRuntimeLog(profile.id, "error", managed.lastError);
     this.emitStatus(profile.id);
     try {
-      this.terminateManaged(managed);
+      this.terminateManaged(profile.id, managed);
     } catch {
       // ignore
     }
   }
 
-  private terminateManaged(managed: ManagedProcess): void {
+  private terminateManaged(serverId: string, managed: ManagedProcess): void {
+    this.stopManagedCapture(serverId, managed);
     const pid = managed.child.pid;
     if (process.platform === "win32" && pid !== undefined && killWinProcessTree(pid)) {
       return;
@@ -410,6 +475,14 @@ export class ProcessManager extends EventEmitter {
       managed.child.kill();
     } catch {
       // already exited
+    }
+  }
+
+  private stopManagedCapture(serverId: string, managed: ManagedProcess): void {
+    managed.logTailer?.stop();
+    managed.logTailer = null;
+    if (this.processes.get(serverId) === managed) {
+      this.flushRuntimePartials(serverId);
     }
   }
 
@@ -450,13 +523,36 @@ export class ProcessManager extends EventEmitter {
     this.emit("status", this.getStatus(serverId));
   }
 
-  private captureRuntimeChunk(serverId: string, source: "stdout" | "stderr", chunk: string): void {
-    const lines = chunk
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
-    for (const line of lines) {
+  private captureRuntimeChunk(
+    serverId: string,
+    source: "stdout" | "stderr" | "log",
+    chunk: string,
+  ): void {
+    const key = `${serverId}\0${source}`;
+    const combined = `${this.runtimePartials.get(key) ?? ""}${chunk}`;
+    const parts = combined.split(/\r?\n/);
+    const pending = parts.pop() ?? "";
+    this.runtimePartials.set(key, pending);
+    for (const line of parts) {
+      if (line.trim().length === 0) continue;
       this.appendRuntimeLog(serverId, source, line);
+    }
+  }
+
+  private flushRuntimePartials(serverId: string): void {
+    for (const source of ["stdout", "stderr", "log"] as const) {
+      const key = `${serverId}\0${source}`;
+      const pending = this.runtimePartials.get(key);
+      this.runtimePartials.delete(key);
+      if (pending !== undefined && pending.trim().length > 0) {
+        this.appendRuntimeLog(serverId, source, pending);
+      }
+    }
+  }
+
+  private clearRuntimePartials(serverId: string): void {
+    for (const source of ["stdout", "stderr", "log"] as const) {
+      this.runtimePartials.delete(`${serverId}\0${source}`);
     }
   }
 

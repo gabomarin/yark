@@ -9,6 +9,13 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Runtime logs in piped mode (native console off) follow `ShooterGame/Saved/Logs` into the in-memory buffer, and the Runtime tab refreshes live while open (#67).
+- Runtime **Source** select filters All / System / Server log / Process (stdout/stderr) so disk logs and GameAnalytics stderr are not forced together (#67).
+- Log panels share `formatLogDateTime` (`YYYY-MM-DD HH:MM:SS`) for Events, Updates, Backups, and Runtime display (#67).
+- Runtime live refresh uses `logs:runtime` (buffer only), ignores stale polls after server switches, pins `ShooterGame.log`, buffers partial lines, and treats Unreal stamps as UTC (#67).
+
 ### Changed
 
 - Server card actions are icon-only: Play/Pause, Restart (arrows), and Update (download, `attention` token); Start remains available when an update is pending.
@@ -22,6 +29,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Overview Version no longer sticks on the previous ARK Version from logs after a successful update (e.g. 92.25 → 92.28).
 - Closing the native console during startup no longer replaces Start with a Review error control that blocked relaunch.
 - User-facing copy drops “fleet” in favor of “all servers” / “across servers” on sidebar Backups and Logs (and matching website/docs wording).
+- With the native console off, Runtime no longer shows mostly YARK system lines — ASA disk logs are tailed (#67).
 
 ## [0.3.1] - 2026-07-28
 

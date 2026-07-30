@@ -292,6 +292,10 @@ export function registerIpcHandlers(
     wrap(() => logs.listServerLogs(serverId)),
   );
 
+  ipcMain.handle(IPC.logsRuntime, (_e, serverId: string, limit?: number) =>
+    wrap(() => logs.getRuntimeLogSnapshot(serverId, limit)),
+  );
+
   ipcMain.handle(
     IPC.logsReadUpdate,
     (_e, serverId: string, fileName: string, maxBytes?: number) =>

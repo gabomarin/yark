@@ -6,7 +6,6 @@ import {
   buildWindowsVerbatimSpawnArgs,
   formatLaunchCommandLine,
   isUnrealMapUrlArg,
-  mapUrlToWindowsVerbatimArg,
   quoteWindowsArg,
   serverBinaryPath,
 } from "@backend/domains/instances/launch-args";
@@ -123,7 +122,7 @@ describe("buildLaunchArgs", () => {
   });
 });
 
-describe("buildMapUrlArg / mapUrlToWindowsVerbatimArg", () => {
+describe("buildMapUrlArg / buildWindowsVerbatimSpawnArgs", () => {
   it("builds separate quotes for map and SessionName", () => {
     expect(buildMapUrlArg("TheIsland_WP", "gabo")).toBe(
       '"TheIsland_WP"?SessionName="gabo"',
@@ -132,28 +131,39 @@ describe("buildMapUrlArg / mapUrlToWindowsVerbatimArg", () => {
     expect(isUnrealMapUrlArg("-port=7777")).toBe(false);
   });
 
-  it("converts logical quotes to Windows verbatim \\\" so argv keeps them", () => {
-    expect(mapUrlToWindowsVerbatimArg('"TheIsland_WP"?SessionName="gabo"')).toBe(
-      '\\"TheIsland_WP\\"?SessionName=\\"gabo\\"',
+  it("keeps the map URL literal and quotes other spaced arguments", () => {
+    const args = buildWindowsVerbatimSpawnArgs([
+      ...buildLaunchArgs(profile({ sessionName: "Yark Aberration" })),
+      "-ClusterDirOverride=C:\\ARK Cluster",
+    ]);
+
+    expect(args[0]).toBe(
+      '"TheIsland_WP"?SessionName="Yark Aberration"',
     );
-    expect(buildWindowsVerbatimSpawnArgs(buildLaunchArgs(profile({ sessionName: "gabo" })))[0]).toBe(
-      '\\"TheIsland_WP\\"?SessionName=\\"gabo\\"',
+    expect(args.at(-1)).toBe(
+      '"-ClusterDirOverride=C:\\ARK Cluster"',
     );
   });
 });
 
 describe("buildWindowsCreateProcessCommandLine", () => {
-  it("puts \\\" map quotes on the CreateProcess line (not bare delimiter quotes)", () => {
+  it("puts literal map quotes on the CreateProcess line without an outer pair", () => {
     const binary =
       "C:\\asa\\island\\ShooterGame\\Binaries\\Win64\\ArkAscendedServer.exe";
-    const args = buildLaunchArgs(profile({ sessionName: "gabo" }));
+    const args = buildLaunchArgs(profile({
+      map: "Aberration_WP",
+      sessionName: "Yark Aberration",
+      clusterId: "yark",
+      clusterDir: "C:\\ARK\\Cluster",
+    }));
     const line = buildWindowsCreateProcessCommandLine(binary, args);
 
     expect(line).toBe(
-      'C:\\asa\\island\\ShooterGame\\Binaries\\Win64\\ArkAscendedServer.exe \\"TheIsland_WP\\"?SessionName=\\"gabo\\" -port=7777 -ServerPlatform=ALL',
+      'C:\\asa\\island\\ShooterGame\\Binaries\\Win64\\ArkAscendedServer.exe "Aberration_WP"?SessionName="Yark Aberration" -port=7777 -ServerPlatform=ALL -clusterid=yark -ClusterDirOverride=C:\\ARK\\Cluster -NoTransferFromFiltering',
     );
-    expect(line).toContain('\\"TheIsland_WP\\"?SessionName=\\"gabo\\"');
-    expect(line).not.toContain('"TheIsland_WP"?SessionName="gabo"');
+    expect(line).not.toContain(
+      '""Aberration_WP"?SessionName="Yark Aberration""',
+    );
   });
 
   it("quotes exe paths that contain spaces without wrapping the map token", () => {
@@ -162,11 +172,11 @@ describe("buildWindowsCreateProcessCommandLine", () => {
     const args = buildLaunchArgs(profile({ sessionName: "gabo" }));
     const line = buildWindowsCreateProcessCommandLine(binary, args);
     expect(line).toBe(
-      '"C:\\Program Files\\asa\\ShooterGame\\Binaries\\Win64\\ArkAscendedServer.exe" \\"TheIsland_WP\\"?SessionName=\\"gabo\\" -port=7777 -ServerPlatform=ALL',
+      '"C:\\Program Files\\asa\\ShooterGame\\Binaries\\Win64\\ArkAscendedServer.exe" "TheIsland_WP"?SessionName="gabo" -port=7777 -ServerPlatform=ALL',
     );
   });
 
-  it("quotes other args with spaces but leaves the map URL verbatim", () => {
+  it("quotes other args with spaces but leaves the map URL literal", () => {
     const binary = "C:\\asa\\ArkAscendedServer.exe";
     const line = buildWindowsCreateProcessCommandLine(binary, [
       buildMapUrlArg("TheIsland_WP", "gabo"),
@@ -174,13 +184,13 @@ describe("buildWindowsCreateProcessCommandLine", () => {
       "-ClusterDirOverride=C:\\path with spaces\\cluster",
     ]);
     expect(line).toBe(
-      'C:\\asa\\ArkAscendedServer.exe \\"TheIsland_WP\\"?SessionName=\\"gabo\\" -port=7777 "-ClusterDirOverride=C:\\path with spaces\\cluster"',
+      'C:\\asa\\ArkAscendedServer.exe "TheIsland_WP"?SessionName="gabo" -port=7777 "-ClusterDirOverride=C:\\path with spaces\\cluster"',
     );
   });
 
-  it("quoteWindowsArg doubles embedded quotes", () => {
+  it("quoteWindowsArg uses Windows escaping for embedded quotes", () => {
     expect(quoteWindowsArg("a b")).toBe('"a b"');
-    expect(quoteWindowsArg('say "hi"')).toBe('"say ""hi"""');
+    expect(quoteWindowsArg('say "hi"')).toBe('"say \\"hi\\""');
     expect(quoteWindowsArg("-port=7777")).toBe("-port=7777");
   });
 });
