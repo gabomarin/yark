@@ -14,6 +14,7 @@ import {
   XCircle,
 } from "@phosphor-icons/react";
 import { ActionIcon, Group, Menu, Tooltip } from "@mantine/core";
+import { useUiDensity } from "@app/AppProviders";
 import type { ServerStatus } from "@shared/types";
 import type {
   ServerCardRestartAction,
@@ -47,17 +48,20 @@ interface Props {
   onDelete: () => void;
 }
 
-function runtimeActionIcon(kind: ServerCardRuntimeAction["kind"]): JSX.Element {
+function runtimeActionIcon(
+  kind: ServerCardRuntimeAction["kind"],
+  iconSize: number,
+): JSX.Element {
   switch (kind) {
     case "cancel":
-      return <XCircle size={18} />;
+      return <XCircle size={iconSize} />;
     case "starting":
     case "stopping":
-      return <ArrowsClockwise size={18} />;
+      return <ArrowsClockwise size={iconSize} />;
     case "stop":
-      return <Pause size={18} weight="fill" />;
+      return <Pause size={iconSize} weight="fill" />;
     case "start":
-      return <Play size={18} weight="fill" />;
+      return <Play size={iconSize} weight="fill" />;
   }
 }
 
@@ -74,6 +78,9 @@ function filesActionClick(
 
 export function ServerCardActions(props: Props): JSX.Element {
   const { runtimeAction, restartAction, updateAction } = props;
+  const density = useUiDensity();
+  const actionSize = density === "compact" ? "md" : "lg";
+  const iconSize = density === "compact" ? 16 : 18;
   // Only model.disabled blocks icons. Do not blanket-disable Cancel/Stop during
   // starting/stopping — Overview needs escape hatches when a transition sticks.
   const menuDisabled = props.steamCmdBusy;
@@ -84,7 +91,7 @@ export function ServerCardActions(props: Props): JSX.Element {
         <Tooltip label={runtimeAction.label} withArrow>
           <span className={classes.tooltipTarget}>
             <ActionIcon
-              size="lg"
+              size={actionSize}
               variant={runtimeAction.variant}
               color={runtimeAction.color}
               aria-label={runtimeAction.label}
@@ -93,21 +100,21 @@ export function ServerCardActions(props: Props): JSX.Element {
               className={classes.iconAction}
               data-primary-action
             >
-              {runtimeActionIcon(runtimeAction.kind)}
+              {runtimeActionIcon(runtimeAction.kind, iconSize)}
             </ActionIcon>
           </span>
         </Tooltip>
       ) : (
         <span className={classes.tooltipTarget} aria-hidden>
           <ActionIcon
-            size="lg"
+            size={actionSize}
             variant="light"
             className={`${classes.iconAction} ${classes.iconActionReserved}`}
             tabIndex={-1}
             data-primary-action
             data-reserved
           >
-            <Play size={18} weight="fill" />
+            <Play size={iconSize} weight="fill" />
           </ActionIcon>
         </span>
       )}
@@ -116,7 +123,7 @@ export function ServerCardActions(props: Props): JSX.Element {
         <Tooltip label={restartAction.label} withArrow>
           <span className={classes.tooltipTarget}>
             <ActionIcon
-              size="lg"
+              size={actionSize}
               variant="light"
               color={restartAction.color}
               aria-label={restartAction.label}
@@ -125,21 +132,21 @@ export function ServerCardActions(props: Props): JSX.Element {
               className={classes.iconAction}
               data-restart-action
             >
-              <ArrowsClockwise size={18} />
+              <ArrowsClockwise size={iconSize} />
             </ActionIcon>
           </span>
         </Tooltip>
       ) : (
         <span className={classes.tooltipTarget} aria-hidden>
           <ActionIcon
-            size="lg"
+            size={actionSize}
             variant="light"
             className={`${classes.iconAction} ${classes.iconActionReserved}`}
             tabIndex={-1}
             data-restart-action
             data-reserved
           >
-            <ArrowsClockwise size={18} />
+            <ArrowsClockwise size={iconSize} />
           </ActionIcon>
         </span>
       )}
@@ -148,7 +155,7 @@ export function ServerCardActions(props: Props): JSX.Element {
         <Tooltip label={updateAction.label} withArrow>
           <span className={classes.tooltipTarget}>
             <ActionIcon
-              size="lg"
+              size={actionSize}
               variant={updateAction.variant}
               color={updateAction.color}
               aria-label={updateAction.label}
@@ -158,21 +165,21 @@ export function ServerCardActions(props: Props): JSX.Element {
               data-update-action
               data-files-action={updateAction.kind}
             >
-              <CloudArrowDown size={18} />
+              <CloudArrowDown size={iconSize} />
             </ActionIcon>
           </span>
         </Tooltip>
       ) : (
         <span className={classes.tooltipTarget} aria-hidden>
           <ActionIcon
-            size="lg"
+            size={actionSize}
             variant="light"
             className={`${classes.iconAction} ${classes.iconActionReserved}`}
             tabIndex={-1}
             data-update-action
             data-reserved
           >
-            <CloudArrowDown size={18} />
+            <CloudArrowDown size={iconSize} />
           </ActionIcon>
         </span>
       )}
@@ -183,11 +190,11 @@ export function ServerCardActions(props: Props): JSX.Element {
             <Menu.Target>
               <ActionIcon
                 variant="default"
-                size="lg"
+                size={actionSize}
                 aria-label="More options"
                 disabled={menuDisabled}
               >
-                <DotsThreeVertical size={18} />
+                <DotsThreeVertical size={iconSize} />
               </ActionIcon>
             </Menu.Target>
           </span>

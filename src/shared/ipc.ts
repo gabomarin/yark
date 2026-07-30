@@ -25,6 +25,7 @@ import type {
   SteamCmdCacheKind,
   StartServerOptions,
 } from "./types";
+import type { UiDensity } from "./ui-density";
 
 export type PickPathKind = "directory" | "file";
 
@@ -67,6 +68,8 @@ export const IPC = {
   pickPath: "fs:pick-path",
   appListDataFolders: "app:list-data-folders",
   appOpenDataFolder: "app:open-data-folder",
+  appGetUiDensity: "app:get-ui-density",
+  appSetUiDensity: "app:set-ui-density",
   iniRead: "ini:read",
   iniPreview: "ini:preview",
   iniSave: "ini:save",
@@ -162,6 +165,9 @@ export interface RendererApi {
   ): Promise<IpcResult<string | null>>;
   listAppDataFolders(): Promise<IpcResult<AppDataFolderInfo[]>>;
   openAppDataFolder(kind: AppDataFolderKind): Promise<IpcResult<void>>;
+  /** `null` when unset in `app_settings` (caller may migrate / apply default). */
+  getUiDensity(): Promise<IpcResult<UiDensity | null>>;
+  setUiDensity(density: UiDensity): Promise<IpcResult<UiDensity>>;
   readServerIni(serverId: string): Promise<IpcResult<ServerIniSnapshot>>;
   openServerIniInEditor(
     serverId: string,

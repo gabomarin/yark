@@ -1,7 +1,8 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import { AppProviders } from "./app/AppProviders";
+import { loadUiDensityPref } from "@features/settings/settingsModel";
+import { DEFAULT_UI_DENSITY } from "@shared/ui-density";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
 import "./styles/radix-palette.css";
@@ -11,10 +12,18 @@ const container = document.getElementById("root");
 if (container === null) {
   throw new Error("Root element not found");
 }
-createRoot(container).render(
-  <React.StrictMode>
-    <AppProviders>
-      <App />
-    </AppProviders>
-  </React.StrictMode>,
-);
+
+void (async () => {
+  let initialUiDensity = DEFAULT_UI_DENSITY;
+  try {
+    initialUiDensity = await loadUiDensityPref();
+  } catch {
+    initialUiDensity = DEFAULT_UI_DENSITY;
+  }
+
+  createRoot(container).render(
+    <React.StrictMode>
+      <App initialUiDensity={initialUiDensity} />
+    </React.StrictMode>,
+  );
+})();

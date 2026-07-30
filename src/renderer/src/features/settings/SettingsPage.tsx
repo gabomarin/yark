@@ -10,7 +10,6 @@ import {
   Button,
   Group,
   Stack,
-  Switch,
   Text,
   Title,
   UnstyledButton,
@@ -19,6 +18,8 @@ import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import type { AppDataFolderInfo, AppDataFolderKind } from "@shared/ipc";
 import type { SteamCmdCacheKind, SteamCmdStatus } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { SettingsGeneralSection } from "./components/SettingsGeneralSection";
+import type { UiDensity } from "./settingsModel";
 import classes from "./SettingsPage.module.css";
 
 interface Props {
@@ -26,6 +27,8 @@ interface Props {
   steamCmdStatus: SteamCmdStatus | null;
   openNativeTerminalOnStart: boolean;
   onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
+  uiDensity: UiDensity;
+  onUiDensityChange: (density: UiDensity) => void;
   defaultBaseFolder: string | null;
   onDefaultBaseFolderChange: (path: string | null) => void;
   onPickSteamCmdPath: () => void;
@@ -96,65 +99,15 @@ export function SettingsPage(props: Props): JSX.Element {
       <Stack gap="md" data-settings-page>
         <AppSurfaceCard tone="cool">
           <Stack gap="md">
-            <section className={classes.section} aria-labelledby="settings-general">
-              <Title order={3} size="h4" id="settings-general">
-                General
-              </Title>
-              <div className={classes.settingRow}>
-                <div className={classes.settingCopy}>
-                  <Text size="sm" fw={600}>Show server console on start</Text>
-                  <Text size="xs" c="dimmed" mt={2}>
-                    Opens the ARK dedicated-server console window when you start or restart a
-                    server.
-                  </Text>
-                </div>
-                <div className={classes.settingControl}>
-                  <Switch
-                    size="md"
-                    checked={props.openNativeTerminalOnStart}
-                    onChange={(event) =>
-                      props.onOpenNativeTerminalOnStartChange(event.currentTarget.checked)
-                    }
-                    aria-label="Show native console when starting or restarting a server"
-                  />
-                </div>
-              </div>
-
-              <div className={classes.settingBlock}>
-                <div className={classes.settingCopy}>
-                  <Text size="sm" fw={600}>Default base folder</Text>
-                  <Text size="xs" c="dimmed" mt={2}>
-                    Prefills the base folder when you create a new server. Each server still
-                    gets its own subfolder named after it.
-                  </Text>
-                </div>
-                <div className={classes.steamCmdRow} data-default-base-folder>
-                  <Text
-                    className={`${classes.pathValue} ${props.defaultBaseFolder === null ? classes.pathValueMuted : ""}`}
-                  >
-                    {props.defaultBaseFolder ?? "Not set — choose a folder when creating a server"}
-                  </Text>
-                  <Group gap="xs" wrap="wrap" className={classes.steamCmdActions}>
-                    <Button
-                      size="xs"
-                      variant="default"
-                      leftSection={<FolderOpen size={14} />}
-                      onClick={() => void pickDefaultBaseFolder()}
-                    >
-                      Choose…
-                    </Button>
-                    <Button
-                      size="xs"
-                      variant="subtle"
-                      disabled={props.defaultBaseFolder === null}
-                      onClick={() => props.onDefaultBaseFolderChange(null)}
-                    >
-                      Clear
-                    </Button>
-                  </Group>
-                </div>
-              </div>
-            </section>
+            <SettingsGeneralSection
+              openNativeTerminalOnStart={props.openNativeTerminalOnStart}
+              onOpenNativeTerminalOnStartChange={props.onOpenNativeTerminalOnStartChange}
+              uiDensity={props.uiDensity}
+              onUiDensityChange={props.onUiDensityChange}
+              defaultBaseFolder={props.defaultBaseFolder}
+              onDefaultBaseFolderChange={props.onDefaultBaseFolderChange}
+              onPickDefaultBaseFolder={() => void pickDefaultBaseFolder()}
+            />
 
             <div className={classes.sectionRule} />
 

@@ -36,6 +36,8 @@ function renderSettings(
         steamCmdStatus={readyStatus}
         openNativeTerminalOnStart={false}
         onOpenNativeTerminalOnStartChange={vi.fn()}
+        uiDensity="compact"
+        onUiDensityChange={vi.fn()}
         defaultBaseFolder={null}
         onDefaultBaseFolderChange={vi.fn()}
         onPickSteamCmdPath={vi.fn()}
@@ -70,6 +72,8 @@ describe("SettingsPage", () => {
 
     expect(screen.getByText("Settings")).toBeInTheDocument();
     expect(screen.getByText("General")).toBeInTheDocument();
+    expect(screen.getByText("UI density")).toBeInTheDocument();
+    expect(screen.getByLabelText("UI density")).toBeInTheDocument();
     expect(screen.getByText("Default base folder")).toBeInTheDocument();
     expect(document.querySelector("[data-steamcmd-path]")).toHaveTextContent(
       "C:/steamcmd/steamcmd.exe",
@@ -80,6 +84,21 @@ describe("SettingsPage", () => {
     await waitFor(() => {
       expect(window.api.listAppDataFolders).toHaveBeenCalled();
     });
+  });
+
+  it("notifies when UI density changes to Comfortable", async () => {
+    const user = userEvent.setup();
+    const onUiDensityChange = vi.fn();
+    vi.stubGlobal("api", {
+      listAppDataFolders: vi.fn().mockResolvedValue({ ok: true, data: [] }),
+      openAppDataFolder: vi.fn(),
+      pickPath: vi.fn(),
+    });
+
+    renderSettings({ onUiDensityChange });
+
+    await user.click(screen.getByRole("radio", { name: "Comfortable" }));
+    expect(onUiDensityChange).toHaveBeenCalledWith("comfortable");
   });
 
   it("expands caches and supports open/clear actions", async () => {

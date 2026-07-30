@@ -54,6 +54,8 @@ function createApiMock(): RendererApi {
     pickPath: vi.fn(),
     listAppDataFolders: vi.fn().mockResolvedValue({ ok: true, data: [] }),
     openAppDataFolder: vi.fn(),
+    getUiDensity: vi.fn().mockResolvedValue({ ok: true, data: "compact" }),
+    setUiDensity: vi.fn().mockResolvedValue({ ok: true, data: "compact" }),
     readServerIni: vi.fn(),
     openServerIniInEditor: vi.fn(),
     previewServerIni: vi.fn(),

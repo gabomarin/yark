@@ -32,14 +32,25 @@ Use this checklist when reviewing a screen or introducing a pattern. Each catego
 
 Mantine **does** have spacing tokens (`theme.spacing` → `gap="xs"` / `p="md"` / `--mantine-spacing-sm`). YARK overrides them so they match `--app-space-*`.
 
-| Token | px | Typical use |
-| --- | ---: | --- |
-| `xxs` | 4 | Label↔value, micro stacks (`gap="xxs"`) |
-| `xs` | 8 | Compact Group, action button rows |
-| `sm` | 12 | Default Stack inside panels, control padding |
-| `md` | 16 | Section gaps, card body rhythm |
-| `lg` | 20 | PageScaffold section gap / page padding-y |
-| `xl` | 28 | Large empty / hero padding |
+| Token | Comfortable (px) | Compact ≈0.82× (px) | Typical use |
+| --- | ---: | ---: | --- |
+| `xxs` | 4 | 3 | Label↔value, micro stacks (`gap="xxs"`) |
+| `xs` | 8 | 7 | Compact Group, action button rows |
+| `sm` | 12 | 10 | Default Stack inside panels, control padding |
+| `md` | 16 | 13 | Section gaps, card body rhythm |
+| `lg` | 20 | 16 | PageScaffold section gap / page padding-y |
+| `xl` | 28 | 23 | Large empty / hero padding |
+
+**UI density preference** (Settings → General → UI density):
+
+| Mode | Pref key | Effect |
+| --- | --- | --- |
+| Compact (default) | `compact` | Spacing, radius, `fontSizes` / headings / `--app-font-page` × **0.82** from Comfortable baselines; TextInput / Select / Button / ActionIcon default to Mantine `size="xs"`; Switch / Checkbox / Radio stay at `sm` for hit targets; TextInput height/padding tightened via `[data-ui-density="compact"]` on `<html>` (covers portals) |
+| Comfortable | `comfortable` | Pre-density baselines (spacing/radius as before; headings = Mantine defaults **34/26/22** + line-heights **1.3/1.35/1.4/…**; PageScaffold title **28px**); form controls keep Mantine’s prior default (`sm`) — no `size="md"` uplift |
+
+Preference key: SQLite `app_settings.uiDensity` (IPC `app:get-ui-density` / `app:set-ui-density`). Loaded in `main.tsx` **before** the first `AppProviders` theme mount (falls back to Compact if IPC fails). Persisted only from the Settings change handler (not a mount effect — Safe under `StrictMode`). Failed saves keep the previous density and show an error notification. A legacy `localStorage` value (`settings.uiDensity`) is migrated once when the SQLite row is missing — and only cleared after a successful write.
+
+`AppProviders` rebuilds the Mantine theme + `--app-space-*` / `--app-radius-*` / `--app-font-page` CSS vars when density changes and sets `data-ui-density` on `document.documentElement` so Modal/Drawer portals inherit compact input styles. Compact sets `defaultProps.size="xs"` on text inputs / selects / buttons (not Switch/Checkbox/Radio). Forms or icon rows that hardcode larger sizes (e.g. ServerCard ActionIcon `lg`) should follow `useUiDensity()` so Compact still shrinks them. Hardcoded feature CSS `px` values do **not** scale — snap those to tokens when you touch a file (same rule as before). Do **not** use Electron zoom / `html { zoom }` for product density.
 
 ```tsx
 <Stack gap="sm">…</Stack>           // preferred in TSX
@@ -50,12 +61,12 @@ gap: var(--app-space-sm);            // preferred in CSS modules
 
 ### 3. Radius
 
-| Token | px | Use |
-| --- | ---: | --- |
-| `--app-radius-sm` | 10 | Small chips / tight widgets |
-| `--app-radius-control` | 12 | Inputs, list rows, search |
-| `--app-radius-md` | 14 | Nested cards / Paper default |
-| `--app-radius-lg` | 18 | Page `AppSurfaceCard` |
+| Token | Comfortable (px) | Compact (px) | Use |
+| --- | ---: | ---: | --- |
+| `--app-radius-sm` | 10 | 8 | Small chips / tight widgets |
+| `--app-radius-control` | 12 | 10 | Inputs, list rows, search |
+| `--app-radius-md` | 14 | 11 | Nested cards / Paper default |
+| `--app-radius-lg` | 18 | 15 | Page `AppSurfaceCard` |
 
 Avoid raw `border-radius: 8px|14px` when a token fits. Tek icon tiles keep asymmetric radius by design (`AccentIconTile shape="tek"`).
 
@@ -82,12 +93,12 @@ Avoid raw `border-radius: 8px|14px` when a token fits. Tek icon tiles keep asymm
 
 | Role | Current convention |
 | --- | --- |
-| Page title | PageScaffold `h1` (~28px) |
+| Page title | PageScaffold `h1` via `--app-font-page` (Comfortable **28px** / Compact ≈23px) |
 | Panel title | Mantine `Title order={3|4}` |
 | Meta labels | uppercase + `letter-spacing: 0.04em` (e.g. Clusters `MetaStrip`) |
 | Body / muted | Mantine `Text` + `c="dimmed"` |
 
-**Follow-up candidate:** `--app-font-meta|title|page` if more screens invent competing sizes (12 vs 11 meta, 18 vs 16 panel titles).
+**Follow-up candidate:** `--app-font-meta|title` if more screens invent competing sizes (12 vs 11 meta, 18 vs 16 panel titles).
 
 ### 8. Iconography
 
