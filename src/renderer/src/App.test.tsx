@@ -134,6 +134,7 @@ function createApiMock(): RendererApi {
     openCurseForgeMod: vi.fn(),
     onServerStatus: vi.fn(() => () => undefined),
     onSteamCmdProgress: vi.fn(() => () => undefined),
+    onServerStopProgress: vi.fn(() => () => undefined),
     onBackupsChanged: vi.fn(() => () => undefined),
   };
 }

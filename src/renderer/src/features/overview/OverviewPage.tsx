@@ -3,6 +3,7 @@ import type {
   ServerInstallationInfo,
   ServerProfile,
   ServerRuntimeInfo,
+  ServerStopProgress,
 } from "@shared/types";
 import { OverviewHeader } from "./components/OverviewHeader";
 import { RecentActivityPanel } from "./components/RecentActivityPanel";
@@ -32,6 +33,7 @@ interface Props {
   steamCmdProgressBytesDownloaded?: number | null;
   steamCmdProgressBytesTotal?: number | null;
   steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null;
+  stopProgressByServerId?: Map<string, ServerStopProgress>;
   onOpenWorkspace: (server: ServerProfile) => void;
   onOpenLogs: (serverId: string) => void;
   onReviewError: (serverId: string) => void;
@@ -78,6 +80,7 @@ export function OverviewPage(props: Props): JSX.Element {
           steamCmdProgressBytesDownloaded={props.steamCmdProgressBytesDownloaded ?? null}
           steamCmdProgressBytesTotal={props.steamCmdProgressBytesTotal ?? null}
           steamCmdOperation={props.steamCmdOperation ?? null}
+          stopProgressByServerId={props.stopProgressByServerId}
           onOpenWorkspace={props.onOpenWorkspace}
           onOpenLogs={props.onOpenLogs}
           onReviewError={props.onReviewError}

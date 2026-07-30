@@ -177,6 +177,22 @@ describe("ServerBackupPanel", () => {
     });
   });
 
+  it("disables manual backup while the stop backup owns the pipeline", async () => {
+    render(
+      <AppProviders>
+        <ServerBackupPanel
+          server={server}
+          runtime={runtime}
+          embedded
+          createLocked
+          createLockReason="Stop backup in progress"
+        />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByRole("button", { name: "Backup" })).toBeDisabled();
+  });
+
   it("opens kind settings by default and can collapse to a summary", async () => {
     const user = userEvent.setup();
     renderPanel();

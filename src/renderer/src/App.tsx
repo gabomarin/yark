@@ -9,6 +9,7 @@ import type {
   ServerInstallationInfo,
   ServerProfile,
   ServerRuntimeInfo,
+  ServerStopProgress,
   SteamCmdCacheKind,
   SteamCmdConsoleSnapshot,
   SteamCmdStatus,
@@ -63,6 +64,9 @@ export function App(): JSX.Element {
   const [events, setEvents] = useState<AppEvent[]>([]);
   const [steamCmdStatus, setSteamCmdStatus] = useState<SteamCmdStatus | null>(null);
   const [steamCmdConsole, setSteamCmdConsole] = useState<SteamCmdConsoleSnapshot | null>(null);
+  const [stopProgressByServerId, setStopProgressByServerId] = useState<
+    Map<string, ServerStopProgress>
+  >(new Map());
   const [route, setRoute] = useState<Route>("overview");
   const [overlay, setOverlay] = useState<Overlay>(null);
   const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState(
@@ -277,10 +281,22 @@ export function App(): JSX.Element {
       setSteamCmdStatus(payload.status);
       setSteamCmdConsole(payload.console);
     });
+    const unsubscribeStopProgress = window.api.onServerStopProgress((payload) => {
+      setStopProgressByServerId((prev) => {
+        const next = new Map(prev);
+        if (payload.active) {
+          next.set(payload.serverId, payload);
+        } else {
+          next.delete(payload.serverId);
+        }
+        return next;
+      });
+    });
     return () => {
       active = false;
       unsubscribeStatus();
       unsubscribeProgress();
+      unsubscribeStopProgress();
     };
   }, [refresh]);
 
@@ -566,6 +582,9 @@ export function App(): JSX.Element {
                           : "SteamCMD is modifying this server's files"))
                 : null
             }
+            stopProgress={
+              stopProgressByServerId.get(overlay.serverId) ?? null
+            }
             onLogsFocusConsumed={() =>
               setOverlay((current) =>
                 current?.kind === "workspace"
@@ -658,6 +677,7 @@ export function App(): JSX.Element {
               steamCmdProgressBytesDownloaded={steamCmdStatus?.progressBytesDownloaded ?? null}
               steamCmdProgressBytesTotal={steamCmdStatus?.progressBytesTotal ?? null}
               steamCmdOperation={steamCmdStatus?.operation ?? null}
+              stopProgressByServerId={stopProgressByServerId}
               onOpenWorkspace={(server) => {
                 const updatingThisServer =
                   steamCmdBusy && steamCmdStatus?.serverId === server.id;

@@ -422,4 +422,58 @@ describe("ServerWorkspacePage", () => {
     expect(savedPayload?.game).toContain("BabyMatureSpeedMultiplier=5");
     expect(savedPayload?.game).toContain("bUseSingleplayerSettings=True");
   });
+
+  it("shows stop progress alert with label and progress bar", () => {
+    render(
+      <AppProviders>
+        <ServerWorkspacePage
+          servers={[serverA, serverB]}
+          selectedServerId={serverA.id}
+          statuses={
+            new Map([
+              [
+                serverA.id,
+                {
+                  serverId: serverA.id,
+                  status: "stopping",
+                  pid: 42,
+                  startedAt: "2026-07-23T00:00:00.000Z",
+                  lastError: null,
+                },
+              ],
+            ])
+          }
+          installationInfo={new Map()}
+          clusterReports={[]}
+          stopProgress={{
+            serverId: serverA.id,
+            active: true,
+            phase: "backing_up",
+            label: "Backing up player profiles…",
+            percent: 50,
+          }}
+          onSelectServer={vi.fn()}
+          onBack={vi.fn()}
+          onStartServer={vi.fn()}
+          onStopServer={vi.fn()}
+          onRestartServer={vi.fn()}
+          onKillServer={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onSendRcon={vi.fn()}
+          onServerUpdated={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(document.querySelector("[data-stop-progress]")).not.toBeNull();
+    expect(screen.getByText("Stopping server")).toBeInTheDocument();
+    expect(screen.getByText("Backing up player profiles…")).toBeInTheDocument();
+    expect(
+      screen.getByRole("progressbar", { name: "Backing up player profiles…" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Force close" })).toBeDisabled();
+  });
 });

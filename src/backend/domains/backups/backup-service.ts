@@ -258,6 +258,8 @@ export class BackupService extends EventEmitter {
   private readonly reconcileInFlight = new Map<string, Promise<number>>();
   /** Backup ids currently inside createBackup — reconcile must not promote/fail these. */
   private readonly creatingBackupIds = new Set<string>();
+  private readonly backupJobs = new Map<string, Promise<void>>();
+  private readonly preStopBackupServers = new Set<string>();
   /** Serialize interrupted-row recovery shared by scheduler and disk reconciliation. */
   private readonly interruptedReconcileInFlight = new Map<
     string,
@@ -314,7 +316,7 @@ export class BackupService extends EventEmitter {
         this.iniSaveTimers.delete(serverId);
         const pending = this.iniSaveWaiters.get(serverId) ?? [];
         this.iniSaveWaiters.delete(serverId);
-        void this.createBackup(
+        void this.createSingleBackup(
           serverId,
           "ini_save",
           "ini",
@@ -352,7 +354,7 @@ export class BackupService extends EventEmitter {
     const type = event === "connect" ? "player_connect" : "player_disconnect";
     // Same hot-path flush as createBackups — profiles may only exist in memory until SaveWorld.
     await this.flushWorldIfActive(serverId);
-    return this.createBackup(serverId, type, "players", notes, {
+    return this.createSingleBackup(serverId, type, "players", notes, {
       playerKey: key,
       waitForProfile: event === "disconnect",
     });
@@ -367,7 +369,33 @@ export class BackupService extends EventEmitter {
     );
   }
 
+  /**
+   * Full snapshot for a user-initiated stop. Caller should have completed
+   * SaveWorld and stopped the process before skipping the internal flush.
+   */
+  async createPreStopBackup(
+    serverId: string,
+    options?: {
+      skipFlush?: boolean;
+      onKindProgress?: (kind: BackupKind, index: number, total: number) => void;
+    },
+  ): Promise<BackupRecord[]> {
+    this.preStopBackupServers.add(serverId);
+    try {
+      return await this.createBackups(
+        serverId,
+        "pre_stop",
+        "Pre-stop backup",
+        [...CRITICAL_BACKUP_KINDS],
+        options,
+      );
+    } finally {
+      this.preStopBackupServers.delete(serverId);
+    }
+  }
+
   async createScheduledBackup(serverId: string): Promise<BackupRecord[]> {
+    if (this.preStopBackupServers.has(serverId)) return [];
     return this.createBackups(
       serverId,
       "scheduled",
@@ -1184,17 +1212,63 @@ export class BackupService extends EventEmitter {
     type: BackupType,
     notes: string | null,
     kinds: BackupKind[],
+    options?: {
+      skipFlush?: boolean;
+      onKindProgress?: (kind: BackupKind, index: number, total: number) => void;
+    },
   ): Promise<BackupRecord[]> {
-    await this.flushWorldIfActive(serverId);
+    return this.withServerBackupJob(serverId, async () => {
+      if (options?.skipFlush !== true) {
+        await this.flushWorldIfActive(serverId);
+      }
 
-    const created: BackupRecord[] = [];
-    for (const kind of kinds) {
-      const record = await this.createBackup(serverId, type, kind, notes);
-      if (record !== null) {
-        created.push(record);
+      const created: BackupRecord[] = [];
+      const total = kinds.length;
+      for (let index = 0; index < kinds.length; index += 1) {
+        const kind = kinds[index]!;
+        options?.onKindProgress?.(kind, index, total);
+        const record = await this.createBackup(serverId, type, kind, notes);
+        if (record !== null) {
+          created.push(record);
+        }
+      }
+      return created;
+    });
+  }
+
+  private createSingleBackup(
+    serverId: string,
+    type: BackupType,
+    kind: BackupKind,
+    notes: string | null,
+    options?: { playerKey?: string; waitForProfile?: boolean },
+  ): Promise<BackupRecord | null> {
+    // The full stop batch already includes players and INI; do not queue
+    // automatic single-kind work behind it while the app may be waiting to quit.
+    if (this.preStopBackupServers.has(serverId)) return Promise.resolve(null);
+    return this.withServerBackupJob(serverId, () =>
+      this.createBackup(serverId, type, kind, notes, options),
+    );
+  }
+
+  private async withServerBackupJob<T>(
+    serverId: string,
+    work: () => Promise<T>,
+  ): Promise<T> {
+    const previous = this.backupJobs.get(serverId) ?? Promise.resolve();
+    const result = previous.catch(() => undefined).then(work);
+    const tail = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    this.backupJobs.set(serverId, tail);
+    try {
+      return await result;
+    } finally {
+      if (this.backupJobs.get(serverId) === tail) {
+        this.backupJobs.delete(serverId);
       }
     }
-    return created;
   }
 
   private async createBackup(
@@ -2209,6 +2283,7 @@ export class BackupService extends EventEmitter {
     const allowed: BackupType[] = [
       "manual",
       "scheduled",
+      "pre_stop",
       "pre_restart",
       "pre_update",
       "pre_restore",
@@ -2234,6 +2309,7 @@ export class BackupService extends EventEmitter {
     if (lower.includes("ini_save")) return "ini_save";
     if (lower.includes("scheduled")) return "scheduled";
     if (lower.includes("pre_update")) return "pre_update";
+    if (lower.includes("pre_stop")) return "pre_stop";
     if (lower.includes("pre_restart")) return "pre_restart";
     if (lower.includes("pre_restore")) return "pre_restore";
     return "manual";

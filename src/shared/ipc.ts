@@ -20,6 +20,7 @@ import type {
   ServerProfile,
   ServerProfileInput,
   ServerRuntimeInfo,
+  ServerStopProgress,
   SteamCmdConsoleSnapshot,
   SteamCmdStatus,
   SteamCmdCacheKind,
@@ -105,6 +106,7 @@ export const IPC = {
 export const IPC_PUSH = {
   serverStatus: "push:server-status",
   steamCmdProgress: "push:steamcmd-progress",
+  serverStopProgress: "push:server-stop-progress",
   backupsChanged: "push:backups-changed",
 } as const;
 
@@ -112,6 +114,8 @@ export interface SteamCmdProgressPush {
   status: SteamCmdStatus;
   console: SteamCmdConsoleSnapshot;
 }
+
+export type ServerStopProgressPush = ServerStopProgress;
 
 export interface BackupsChangedPush {
   serverId: string;
@@ -242,6 +246,9 @@ export interface RendererApi {
   ): () => void;
   onSteamCmdProgress(
     listener: (payload: SteamCmdProgressPush) => void,
+  ): () => void;
+  onServerStopProgress(
+    listener: (payload: ServerStopProgressPush) => void,
   ): () => void;
   onBackupsChanged(
     listener: (payload: BackupsChangedPush) => void,

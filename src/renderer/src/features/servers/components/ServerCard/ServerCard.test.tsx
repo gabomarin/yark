@@ -639,4 +639,46 @@ describe("ServerCard", () => {
     await user.click(restart);
     expect(onRestart).toHaveBeenCalledTimes(1);
   });
+
+  it("shows stop progress label and percent while a safe stop is running", () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={{
+            serverId: profile.id,
+            status: "stopping",
+            pid: 99,
+            startedAt: "2026-07-23T00:00:00.000Z",
+            lastError: null,
+          }}
+          installation={installed}
+          officialSteamBuild="build 24346423"
+          stopBusy
+          stopProgressPercent={50}
+          stopProgressLabel="Backing up world save…"
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("Backing up world save…")).toBeInTheDocument();
+    expect(screen.getByText("50%")).toBeInTheDocument();
+    expect(screen.getByText("Stopping…")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "More options" })).toBeDisabled();
+  });
 });

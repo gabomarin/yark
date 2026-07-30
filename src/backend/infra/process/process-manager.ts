@@ -19,12 +19,29 @@ import { AsaSavedLogsTailer } from "./asa-log-tail";
 
 interface ManagedProcess {
   child: ChildProcess;
+  identity: object;
   status: ServerStatus;
   startedAt: string;
   lastError: string | null;
   readinessGeneration: number;
   logTailer: AsaSavedLogsTailer | null;
 }
+
+export interface GracefulStopHandle {
+  readonly serverId: string;
+  /** Opaque identity of the exact child that acknowledged SaveWorld. */
+  readonly identity: object;
+}
+
+export type BeginGracefulStopResult =
+  | { phase: "saved"; handle: GracefulStopHandle }
+  | { phase: "killed"; handle: null }
+  | { phase: "absent"; handle: null };
+
+export type FinishGracefulStopResult =
+  | "stopped"
+  | "already_exited"
+  | "replaced";
 
 function killWinProcessTree(pid: number): boolean {
   const result = spawnSync(
@@ -233,6 +250,7 @@ export class ProcessManager extends EventEmitter {
     }
     const managed: ManagedProcess = {
       child,
+      identity: {},
       status: "starting",
       startedAt: new Date().toISOString(),
       lastError: null,
@@ -334,11 +352,15 @@ export class ProcessManager extends EventEmitter {
   }
 
   /**
-   * Safe stop: saveworld via RCON, wait, DoExit, then kill fallback.
+   * Result of {@link beginGracefulStop}: `saved` means RCON SaveWorld
+   * succeeded and the process is still managed; `killed` means RCON failed
+   * and the process was terminated; `absent` means nothing was running.
    */
-  async stop(profile: ServerProfile): Promise<void> {
+  async beginGracefulStop(
+    profile: ServerProfile,
+  ): Promise<BeginGracefulStopResult> {
     const managed = this.processes.get(profile.id);
-    if (managed === undefined) return;
+    if (managed === undefined) return { phase: "absent", handle: null };
     managed.readinessGeneration += 1;
     managed.status = "stopping";
     this.appendRuntimeLog(profile.id, "system", "Attempting safe stop via RCON");
@@ -352,6 +374,49 @@ export class ProcessManager extends EventEmitter {
         "SaveWorld",
       );
       await delay(SAVE_WAIT_MS);
+      return {
+        phase: "saved",
+        handle: { serverId: profile.id, identity: managed.identity },
+      };
+    } catch {
+      this.appendRuntimeLog(profile.id, "warning", "RCON unavailable; applying kill");
+      this.terminateManaged(profile.id, managed);
+      let exited = await this.waitForExit(managed.child, EXIT_WAIT_MS);
+      if (!exited && this.processes.get(profile.id) === managed) {
+        this.terminateManaged(profile.id, managed);
+        exited = await this.waitForExit(managed.child, 5000);
+      }
+      if (!exited && this.processes.get(profile.id) === managed) {
+        managed.status = "error";
+        managed.lastError = "Could not terminate process after RCON SaveWorld failed";
+        this.appendRuntimeLog(profile.id, "error", managed.lastError);
+        this.emitStatus(profile.id);
+        throw new Error(managed.lastError);
+      }
+      if (this.processes.get(profile.id) === managed) {
+        this.stopManagedCapture(profile.id, managed);
+        this.processes.delete(profile.id);
+        this.emitStatus(profile.id);
+      }
+      return { phase: "killed", handle: null };
+    }
+  }
+
+  /**
+   * After a successful {@link beginGracefulStop} (`saved`), send DoExit and
+   * wait / force-kill. No-op if the process is already gone.
+   */
+  async finishGracefulStop(
+    profile: ServerProfile,
+    handle: GracefulStopHandle,
+  ): Promise<FinishGracefulStopResult> {
+    const managed = this.processes.get(profile.id);
+    if (managed === undefined) return "already_exited";
+    if (managed.identity !== handle.identity || handle.serverId !== profile.id) {
+      return "replaced";
+    }
+
+    try {
       await rconExec(
         RCON_HOST,
         profile.rconPort,
@@ -359,20 +424,38 @@ export class ProcessManager extends EventEmitter {
         "DoExit",
       );
     } catch {
-      // RCON unavailable: fall back to process termination.
-      this.appendRuntimeLog(profile.id, "warning", "RCON unavailable; applying kill");
+      this.appendRuntimeLog(profile.id, "warning", "RCON DoExit failed; applying kill");
       this.terminateManaged(profile.id, managed);
     }
 
     const exited = await this.waitForExit(managed.child, EXIT_WAIT_MS);
     if (!exited) {
       this.terminateManaged(profile.id, managed);
-      await this.waitForExit(managed.child, 5000);
+      const forcedExit = await this.waitForExit(managed.child, 5000);
+      if (!forcedExit && this.processes.get(profile.id) === managed) {
+        managed.status = "error";
+        managed.lastError = "Could not terminate process after RCON DoExit";
+        this.appendRuntimeLog(profile.id, "error", managed.lastError);
+        this.emitStatus(profile.id);
+        throw new Error(managed.lastError);
+      }
     }
     if (this.processes.get(profile.id) === managed) {
       this.stopManagedCapture(profile.id, managed);
       this.processes.delete(profile.id);
       this.emitStatus(profile.id);
+    }
+    return "stopped";
+  }
+
+  /**
+   * Safe stop: saveworld via RCON, wait, DoExit, then kill fallback.
+   * Prefer {@link InstanceService.stop} for user-initiated stops (pre-stop backup).
+   */
+  async stop(profile: ServerProfile): Promise<void> {
+    const result = await this.beginGracefulStop(profile);
+    if (result.phase === "saved") {
+      await this.finishGracefulStop(profile, result.handle);
     }
   }
 

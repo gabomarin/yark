@@ -28,6 +28,7 @@ interface Props {
   isInstallationReady: boolean;
   updateAvailable: boolean;
   steamCmdBusy: boolean;
+  stopBusy: boolean;
   checkingUpdates: boolean;
   runtimeAction: ServerCardRuntimeAction;
   restartAction: ServerCardRestartAction;
@@ -76,7 +77,7 @@ export function ServerCardActions(props: Props): JSX.Element {
   const { runtimeAction, restartAction, updateAction } = props;
   // Only model.disabled blocks icons. Do not blanket-disable Cancel/Stop during
   // starting/stopping — Overview needs escape hatches when a transition sticks.
-  const menuDisabled = props.steamCmdBusy;
+  const menuDisabled = props.steamCmdBusy || props.stopBusy;
 
   return (
     <Group gap="xs" wrap="nowrap" className={classes.rowActions} data-row-actions>

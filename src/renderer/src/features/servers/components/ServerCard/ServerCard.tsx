@@ -22,6 +22,9 @@ interface Props {
   steamCmdProgressBytesDownloaded?: number | null;
   steamCmdProgressBytesTotal?: number | null;
   steamCmdOperation?: SteamCmdOperation;
+  stopBusy?: boolean;
+  stopProgressPercent?: number | null;
+  stopProgressLabel?: string | null;
   checkingUpdates?: boolean;
   onStart: () => void;
   onStop: () => void;
@@ -52,6 +55,9 @@ export function ServerCard(props: Props): JSX.Element {
     steamCmdProgressBytesDownloaded = null,
     steamCmdProgressBytesTotal = null,
     steamCmdOperation = null,
+    stopBusy = false,
+    stopProgressPercent = null,
+    stopProgressLabel = null,
     checkingUpdates = false,
   } = props;
   const status = runtime?.status ?? "stopped";
@@ -60,11 +66,16 @@ export function ServerCard(props: Props): JSX.Element {
     installation,
     officialSteamBuild: props.officialSteamBuild,
     steamCmdBusy,
+    stopBusy,
     steamCmdOperation,
     steamCmdProgressLabel,
     steamCmdProgressBytesDownloaded,
     steamCmdProgressBytesTotal,
+    stopProgressLabel,
   });
+  const showProgress = stopBusy || steamCmdBusy;
+  const progressPercent = stopBusy ? stopProgressPercent : steamCmdProgressPercent;
+  const badgeBusy = stopBusy || steamCmdBusy;
 
   const runRuntimeAction = (): void => {
     switch (view.runtimeAction.kind) {
@@ -99,8 +110,8 @@ export function ServerCard(props: Props): JSX.Element {
             className={classes.cardHit}
             onClick={props.onOpenWorkspace}
             aria-label={
-              steamCmdBusy
-                ? `Open ${server.name} (files job in progress)`
+              badgeBusy
+                ? `Open ${server.name} (operation in progress)`
                 : `Open settings for ${server.name}`
             }
           >
@@ -118,8 +129,8 @@ export function ServerCard(props: Props): JSX.Element {
               </div>
               <ServerRuntimeStatusBadge
                 status={status}
-                label={steamCmdBusy ? view.installStateLabel : undefined}
-                color={steamCmdBusy ? "blue" : undefined}
+                label={badgeBusy ? view.installStateLabel : undefined}
+                color={badgeBusy ? "blue" : undefined}
               />
             </Group>
 
@@ -141,6 +152,7 @@ export function ServerCard(props: Props): JSX.Element {
             isInstallationReady={view.isInstallationReady}
             updateAvailable={view.updateAvailable}
             steamCmdBusy={steamCmdBusy}
+            stopBusy={stopBusy}
             checkingUpdates={checkingUpdates}
             runtimeAction={view.runtimeAction}
             restartAction={view.restartAction}
@@ -161,12 +173,12 @@ export function ServerCard(props: Props): JSX.Element {
           />
         </div>
 
-        {steamCmdBusy && (
+        {showProgress && (
           <ServerCardProgress
             shortProgressLabel={view.progress.shortProgressLabel}
             byteProgressLabel={view.progress.byteProgressLabel}
             byteProgressNoun={view.progress.byteProgressNoun}
-            steamCmdProgressPercent={steamCmdProgressPercent}
+            steamCmdProgressPercent={progressPercent}
           />
         )}
 

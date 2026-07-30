@@ -47,11 +47,12 @@ export function resolveInstallStateLabel(input: {
 
 export function resolveRowTone(input: {
   steamCmdBusy: boolean;
+  stopBusy?: boolean;
   status: ServerStatus;
   isInstallationReady: boolean;
   updateAvailable: boolean;
 }): ServerCardRowTone {
-  if (input.steamCmdBusy) return "busy";
+  if (input.stopBusy === true || input.steamCmdBusy) return "busy";
   if (input.status === "running") return "running";
   if (input.status === "error") return "error";
   if (!input.isInstallationReady || input.updateAvailable) return "attention";
@@ -116,10 +117,12 @@ export function deriveServerCardView(input: {
   installation: ServerInstallationInfo | null;
   officialSteamBuild: string | null;
   steamCmdBusy: boolean;
+  stopBusy?: boolean;
   steamCmdOperation: SteamCmdOperation;
   steamCmdProgressLabel: string | null;
   steamCmdProgressBytesDownloaded: number | null;
   steamCmdProgressBytesTotal: number | null;
+  stopProgressLabel?: string | null;
 }) {
   const isInstallationReady = input.installation?.installed === true;
   const localVersion = resolveDisplayedServerVersion(input.installation);
@@ -128,6 +131,7 @@ export function deriveServerCardView(input: {
     input.officialSteamBuild,
   );
   const updateAvailable = updateState === "available";
+  const stopBusy = input.stopBusy === true;
   const installStateLabel = resolveInstallStateLabel({
     steamCmdBusy: input.steamCmdBusy,
     steamCmdOperation: input.steamCmdOperation,
@@ -152,6 +156,13 @@ export function deriveServerCardView(input: {
     updateState,
   });
 
+  const steamProgress = resolveSteamCmdProgressCopy({
+    steamCmdOperation: input.steamCmdOperation,
+    steamCmdProgressLabel: input.steamCmdProgressLabel,
+    steamCmdProgressBytesDownloaded: input.steamCmdProgressBytesDownloaded,
+    steamCmdProgressBytesTotal: input.steamCmdProgressBytesTotal,
+  });
+
   return {
     isInstallationReady,
     isActive:
@@ -161,7 +172,7 @@ export function deriveServerCardView(input: {
     localVersion,
     updateState,
     updateAvailable,
-    installStateLabel,
+    installStateLabel: stopBusy ? "Stopping…" : installStateLabel,
     runtimeAction,
     restartAction,
     updateAction,
@@ -173,21 +184,23 @@ export function deriveServerCardView(input: {
     }),
     rowTone: resolveRowTone({
       steamCmdBusy: input.steamCmdBusy,
+      stopBusy,
       status: input.status,
       isInstallationReady,
       updateAvailable,
     }),
     versionMetaTone: resolveVersionMetaTone({
-      steamCmdBusy: input.steamCmdBusy,
+      steamCmdBusy: input.steamCmdBusy || stopBusy,
       isInstallationReady,
       updateAvailable,
       updateState,
     }),
-    progress: resolveSteamCmdProgressCopy({
-      steamCmdOperation: input.steamCmdOperation,
-      steamCmdProgressLabel: input.steamCmdProgressLabel,
-      steamCmdProgressBytesDownloaded: input.steamCmdProgressBytesDownloaded,
-      steamCmdProgressBytesTotal: input.steamCmdProgressBytesTotal,
-    }),
+    progress: stopBusy
+      ? {
+          shortProgressLabel: input.stopProgressLabel?.trim() || "Stopping…",
+          byteProgressLabel: null,
+          byteProgressNoun: "Progress",
+        }
+      : steamProgress,
   };
 }
