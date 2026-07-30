@@ -154,7 +154,7 @@ export function SidePanel(props: Props): JSX.Element {
                 setBroadcast("");
               }}
             >
-              Enviar anuncio
+              Send announcement
             </Button>
           </div>
           <Button

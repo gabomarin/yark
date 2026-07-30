@@ -435,8 +435,8 @@ export function ConfigurationEditor(props: Props): JSX.Element {
 
             <div className={classes.tableWrap}>
               <div className={classes.tableHead}>
-                <span>Ajuste</span>
-                <span>Valor</span>
+                <span>Setting</span>
+                <span>Value</span>
                 <span>Description</span>
                 <span />
               </div>

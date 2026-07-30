@@ -39,6 +39,18 @@ body {
   font-family: "Segoe UI", Arial, sans-serif;
 }
 
+/* Compact: tighter TextInput height + horizontal padding than Mantine `sm` alone. */
+[data-ui-density="compact"] :where(.mantine-Input-wrapper) {
+  --input-height-xs: 26px;
+  --input-height-sm: 30px;
+  --input-height-md: 36px;
+  --input-height-lg: 42px;
+  --input-padding-y-xs: 3px;
+  --input-padding-y-sm: 4px;
+  --input-padding-y-md: 5px;
+  --input-padding: calc(var(--input-height) / 3.75);
+}
+
 .mantine-Input-input[data-variant="default"] {
   --input-bg: var(--app-color-surface-control);
   --input-bd: var(--app-color-border-control);

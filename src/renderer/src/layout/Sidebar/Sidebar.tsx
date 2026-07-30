@@ -15,6 +15,7 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import { useUiDensity } from "@app/AppProviders";
 import classes from "./Sidebar.module.css";
 
 export type Route = "overview" | "clusters" | "backups" | "logs" | "settings";
@@ -43,6 +44,14 @@ interface Props {
 }
 
 export function Sidebar(props: Props): JSX.Element {
+  const density = useUiDensity();
+  const compact = density === "compact";
+  const brandIconSize = compact ? 16 : 20;
+  const navIconSize = compact ? 16 : 18;
+  // Keep secondary sidebar copy readable in Compact without enlarging Comfortable.
+  const metadataTextSize = compact ? "sm" : "xs";
+  const versionTextSize = compact ? "md" : "sm";
+
   const steamCmdLabel = !props.steamCmdDetected
     ? "SteamCMD: not detected"
     : props.steamCmdRunning
@@ -50,27 +59,28 @@ export function Sidebar(props: Props): JSX.Element {
       : "SteamCMD: connected";
 
   return (
-    <MantineStack gap="md" className={classes.sidebar}>
-      <Group gap="sm" className={classes.brand}>
+    <MantineStack gap={compact ? "sm" : "md"} className={classes.sidebar}>
+      <Group gap={compact ? "xs" : "sm"} className={classes.brand}>
         <div className={classes.brandMark} aria-hidden="true">
-          <Dna size={20} weight="duotone" className={classes.brandIcon} />
+          <Dna size={brandIconSize} weight="duotone" className={classes.brandIcon} />
         </div>
         <div className={classes.brandCopy}>
           <Text fw={700}>YARK</Text>
-          <Text size="xs" c="dimmed">server manager</Text>
+          <Text size={metadataTextSize} c="dimmed">server manager</Text>
         </div>
       </Group>
 
-      <MantineStack gap={6} className={classes.nav}>
+      <MantineStack gap={compact ? "xxs" : "xs"} className={classes.nav}>
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const active = item.id === props.route;
           return (
             <Button
               key={item.id}
+              size="md"
               variant={active ? "light" : "subtle"}
               justify="flex-start"
-              leftSection={<Icon size={18} weight={active ? "fill" : "regular"} />}
+              leftSection={<Icon size={navIconSize} weight={active ? "fill" : "regular"} />}
               className={classes.navButton}
               data-active={active || undefined}
               onClick={() => props.onNavigate(item.id)}
@@ -84,10 +94,17 @@ export function Sidebar(props: Props): JSX.Element {
       <Divider className={classes.rule} />
 
       <Button
+        size="md"
         variant="subtle"
         justify="flex-start"
-        leftSection={<Circle size={12} weight="fill" className={props.steamCmdDetected ? classes.okDot : classes.badDot} />}
-        className={classes.navButton}
+        leftSection={
+          <Circle
+            size={compact ? 10 : 12}
+            weight="fill"
+            className={props.steamCmdDetected ? classes.okDot : classes.badDot}
+          />
+        }
+        className={`${classes.navButton} ${classes.steamCmdButton}`}
         onClick={() => props.onNavigate("settings")}
       >
         {steamCmdLabel}
@@ -100,14 +117,14 @@ export function Sidebar(props: Props): JSX.Element {
           w={260}
           position="right"
         >
-          <Text size="xs" fw={600}>Official version ARK</Text>
+          <Text size={metadataTextSize} fw={600}>Official version ARK</Text>
         </Tooltip>
-        <Text size="sm" className={classes.versionValue}>
+        <Text size={versionTextSize} className={classes.versionValue}>
           {props.officialVersion ?? "Not detected"}
         </Text>
       </div>
 
-      <Text size="xs" c="dimmed">v{props.appVersion}</Text>
+      <Text size={metadataTextSize} c="dimmed">v{props.appVersion}</Text>
     </MantineStack>
   );
 }

@@ -10,6 +10,7 @@ import type { IniService } from "../backend/domains/config/ini-service";
 import type { LogsService } from "../backend/domains/logs/logs-service";
 import type { ModsService } from "../backend/domains/mods/mods-service";
 import type { UpdateService } from "../backend/domains/updates/update-service";
+import type { AppSettingsRepository } from "../backend/infra/db/app-settings-repository";
 import type { ServerRepository } from "../backend/infra/db/server-repository";
 import type {
   BackupCleanupOptions,
@@ -17,6 +18,7 @@ import type {
   BackupKind,
   BackupPolicy,
 } from "../shared/types";
+import { UI_DENSITY_SETTING_KEY, isUiDensity, type UiDensity } from "../shared/ui-density";
 
 export interface AppDataFolderRoots {
   app: string;
@@ -54,6 +56,7 @@ export function registerIpcHandlers(
   mods: ModsService,
   backups: BackupService,
   appDataFolders: AppDataFolderRoots,
+  settings: AppSettingsRepository,
 ): void {
   ipcMain.handle(IPC.serversList, () => wrap(() => instances.list()));
 
@@ -248,6 +251,26 @@ export function registerIpcHandlers(
       if (error.length > 0) {
         throw new Error(`Could not open folder: ${error}`);
       }
+    }),
+  );
+
+  ipcMain.handle(IPC.appGetUiDensity, () =>
+    wrap((): UiDensity | null => {
+      const raw = settings.get(UI_DENSITY_SETTING_KEY);
+      if (raw === null || !isUiDensity(raw)) {
+        return null;
+      }
+      return raw;
+    }),
+  );
+
+  ipcMain.handle(IPC.appSetUiDensity, (_e, density: UiDensity) =>
+    wrap((): UiDensity => {
+      if (!isUiDensity(density)) {
+        throw new Error(`Invalid UI density: ${String(density)}`);
+      }
+      settings.set(UI_DENSITY_SETTING_KEY, density);
+      return density;
     }),
   );
 

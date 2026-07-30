@@ -121,6 +121,7 @@ void app.whenReady().then(() => {
       updateLogs: join(userData, "update-logs"),
       steamcmd: join(userData, "steamcmd"),
     },
+    settings,
   );
 
   processManager.on("status", (info: ServerRuntimeInfo) => {

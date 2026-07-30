@@ -8,12 +8,23 @@ function Probe(): JSX.Element {
 
 describe("AppProviders", () => {
   it("renders children inside Mantine providers", () => {
-    render(
-      <AppProviders>
+    const { rerender, unmount } = render(
+      <AppProviders density="compact">
         <Probe />
       </AppProviders>,
     );
 
     expect(screen.getByText("provider-ready")).toBeInTheDocument();
+    expect(document.documentElement).toHaveAttribute("data-ui-density", "compact");
+
+    rerender(
+      <AppProviders density="comfortable">
+        <Probe />
+      </AppProviders>,
+    );
+    expect(document.documentElement).toHaveAttribute("data-ui-density", "comfortable");
+
+    unmount();
+    expect(document.documentElement).not.toHaveAttribute("data-ui-density");
   });
 });

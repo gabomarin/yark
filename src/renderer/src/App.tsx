@@ -19,6 +19,7 @@ import {
   isServerUpdateAvailable,
 } from "@shared/server-update-status";
 import { AppRouter } from "@app/AppRouter";
+import { AppProviders } from "@app/AppProviders";
 import { AppShellLayout } from "@app/AppShellLayout";
 import { ClustersPage } from "@features/clusters/ClustersPage";
 import { LogsPage } from "@features/logs/LogsPage";
@@ -37,6 +38,8 @@ import {
   readOpenNativeTerminalPref,
   writeDefaultBaseFolderPref,
   writeOpenNativeTerminalPref,
+  writeUiDensityPref,
+  type UiDensity,
 } from "@features/settings/settingsModel";
 import type { Route } from "@layout/Sidebar/Sidebar";
 
@@ -52,7 +55,12 @@ type Overlay =
     }
   | null;
 
-export function App(): JSX.Element {
+interface AppProps {
+  /** Resolved from `app_settings` (via IPC) before first paint. */
+  initialUiDensity?: UiDensity;
+}
+
+export function App({ initialUiDensity = "compact" }: AppProps): JSX.Element {
   const [servers, setServers] = useState<ServerProfile[]>([]);
   const [statuses, setStatuses] = useState<Map<string, ServerRuntimeInfo>>(new Map());
   const [installationInfo, setInstallationInfo] = useState<
@@ -72,6 +80,7 @@ export function App(): JSX.Element {
   const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState(
     readOpenNativeTerminalPref,
   );
+  const [uiDensity, setUiDensity] = useState<UiDensity>(initialUiDensity);
   const [defaultBaseFolder, setDefaultBaseFolder] = useState<string | null>(
     readDefaultBaseFolderPref,
   );
@@ -87,6 +96,19 @@ export function App(): JSX.Element {
   useEffect(() => {
     writeDefaultBaseFolderPref(defaultBaseFolder);
   }, [defaultBaseFolder]);
+
+  const handleUiDensityChange = useCallback(async (density: UiDensity) => {
+    const saved = await writeUiDensityPref(density);
+    if (!saved) {
+      notifications.show({
+        color: "red",
+        title: "Could not save UI density",
+        message: "Your selection was not stored. Try again.",
+      });
+      return;
+    }
+    setUiDensity(density);
+  }, []);
 
   const runningServers = Array.from(statuses.values()).filter(
     (status) => status.status === "running",
@@ -750,6 +772,8 @@ export function App(): JSX.Element {
               steamCmdBusy={steamCmdBusy}
               openNativeTerminalOnStart={openNativeTerminalOnStart}
               onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
+              uiDensity={uiDensity}
+              onUiDensityChange={(density) => void handleUiDensityChange(density)}
               defaultBaseFolder={defaultBaseFolder}
               onDefaultBaseFolderChange={setDefaultBaseFolder}
               onPickSteamCmdPath={() => void pickSteamCmdPath()}
@@ -764,7 +788,7 @@ export function App(): JSX.Element {
   };
 
   return (
-    <>
+    <AppProviders density={uiDensity}>
       {renderMain()}
       {steamCmdBusy && steamCmdStatus !== null && (
         <SteamCmdProgressDock
@@ -774,6 +798,6 @@ export function App(): JSX.Element {
           onCancel={() => void runAction(() => window.api.cancelSteamCmd())}
         />
       )}
-    </>
+    </AppProviders>
   );
 }

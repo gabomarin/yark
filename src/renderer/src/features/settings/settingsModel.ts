@@ -1,5 +1,18 @@
+import {
+  DEFAULT_UI_DENSITY,
+  UI_DENSITY_LEGACY_LOCAL_STORAGE_KEY,
+  isUiDensity,
+  parseUiDensity,
+  type UiDensity,
+} from "@shared/ui-density";
+
+export type { UiDensity };
+
 export const OPEN_NATIVE_TERMINAL_PREF_KEY = "overview.openNativeTerminalOnStart";
 export const DEFAULT_BASE_FOLDER_PREF_KEY = "settings.defaultServerBaseFolder";
+
+/** @deprecated Use `UI_DENSITY_SETTING_KEY` from `@shared/ui-density` (SQLite). Kept for migration. */
+export const UI_DENSITY_PREF_KEY = UI_DENSITY_LEGACY_LOCAL_STORAGE_KEY;
 
 export function readOpenNativeTerminalPref(): boolean {
   if (typeof window === "undefined") {
@@ -26,4 +39,74 @@ export function writeDefaultBaseFolderPref(path: string | null): void {
     return;
   }
   window.localStorage.setItem(DEFAULT_BASE_FOLDER_PREF_KEY, path.trim());
+}
+
+function readLegacyUiDensityLocalStorage(): UiDensity | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  const raw = window.localStorage.getItem(UI_DENSITY_LEGACY_LOCAL_STORAGE_KEY);
+  return isUiDensity(raw) ? raw : null;
+}
+
+function clearLegacyUiDensityLocalStorage(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.removeItem(UI_DENSITY_LEGACY_LOCAL_STORAGE_KEY);
+}
+
+/**
+ * Load density from `app_settings` (via IPC) before the theme mounts.
+ * Migrates a one-shot legacy localStorage value when SQLite has no row yet.
+ * Never clears the legacy key unless SQLite successfully owns the value.
+ * Does not write the product default on read — persist only from user changes.
+ */
+export async function loadUiDensityPref(): Promise<UiDensity> {
+  try {
+    if (typeof window === "undefined" || typeof window.api?.getUiDensity !== "function") {
+      return parseUiDensity(readLegacyUiDensityLocalStorage());
+    }
+
+    const result = await window.api.getUiDensity();
+    if (!result.ok) {
+      return parseUiDensity(readLegacyUiDensityLocalStorage());
+    }
+
+    if (result.data !== null) {
+      clearLegacyUiDensityLocalStorage();
+      return result.data;
+    }
+
+    const legacy = readLegacyUiDensityLocalStorage();
+    if (legacy !== null) {
+      const migrated = await window.api.setUiDensity(legacy);
+      if (migrated.ok) {
+        clearLegacyUiDensityLocalStorage();
+        return migrated.data;
+      }
+      return legacy;
+    }
+
+    return DEFAULT_UI_DENSITY;
+  } catch {
+    return parseUiDensity(readLegacyUiDensityLocalStorage());
+  }
+}
+
+/** @returns true when SQLite accepted the value. */
+export async function writeUiDensityPref(density: UiDensity): Promise<boolean> {
+  if (typeof window === "undefined" || typeof window.api?.setUiDensity !== "function") {
+    return false;
+  }
+  try {
+    const result = await window.api.setUiDensity(density);
+    if (!result.ok) {
+      return false;
+    }
+    clearLegacyUiDensityLocalStorage();
+    return true;
+  } catch {
+    return false;
+  }
 }

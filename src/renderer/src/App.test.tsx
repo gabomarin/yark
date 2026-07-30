@@ -4,7 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { notifications } from "@mantine/notifications";
 import type { RendererApi } from "@shared/ipc";
 import { App } from "./App";
-import { AppProviders } from "@app/AppProviders";
 
 function createApiMock(): RendererApi {
   return {
@@ -70,6 +69,8 @@ function createApiMock(): RendererApi {
     pickPath: vi.fn(),
     listAppDataFolders: vi.fn().mockResolvedValue({ ok: true, data: [] }),
     openAppDataFolder: vi.fn(),
+    getUiDensity: vi.fn().mockResolvedValue({ ok: true, data: "compact" }),
+    setUiDensity: vi.fn().mockResolvedValue({ ok: true, data: "compact" }),
     readServerIni: vi.fn(),
     openServerIniInEditor: vi.fn(),
     previewServerIni: vi.fn(),
@@ -158,9 +159,7 @@ describe("App empty installation snapshot", () => {
     const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
 
     render(
-      <AppProviders>
-        <App />
-      </AppProviders>,
+      <App />,
     );
 
     expect(await screen.findByText("Create your first server")).toBeInTheDocument();
@@ -241,9 +240,7 @@ describe("App SteamCMD sync-files UX (#48)", () => {
     });
 
     render(
-      <AppProviders>
-        <App />
-      </AppProviders>,
+      <App />,
     );
 
     expect(await screen.findByText("Create your first server")).toBeInTheDocument();

@@ -6,7 +6,7 @@ import { AppShellLayout } from "./AppShellLayout";
 describe("AppShellLayout", () => {
   it("renders the sidebar and page content", () => {
     render(
-      <AppProviders>
+      <AppProviders density="compact">
         <AppShellLayout
           route="overview"
           onNavigate={vi.fn()}
@@ -22,6 +22,10 @@ describe("AppShellLayout", () => {
 
     expect(screen.getByText("YARK")).toBeInTheDocument();
     expect(screen.getByText("page-body")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Servers" })).toHaveAttribute(
+      "data-size",
+      "md",
+    );
   });
 
   it("renders and dismisses a global error banner", async () => {

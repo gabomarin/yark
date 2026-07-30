@@ -2,7 +2,7 @@
   position: relative;
   z-index: 1;
   height: 100%;
-  padding: 20px 14px;
+  padding: var(--app-space-lg) var(--app-space-sm);
   background: transparent;
 }
 
@@ -23,7 +23,7 @@
 
 .brand {
   flex-wrap: nowrap;
-  padding: 4px 6px 8px;
+  padding: var(--app-space-xxs) var(--app-space-xxs) var(--app-space-xs);
 }
 
 .brandCopy {
@@ -69,7 +69,7 @@
 .navButton {
   position: relative;
   min-height: 42px;
-  border-radius: 12px;
+  border-radius: var(--app-radius-control);
   color: var(--app-color-text);
 }
 
@@ -107,7 +107,7 @@
 }
 
 .versionChip {
-  padding: 10px 6px 0;
+  padding: var(--app-space-xs) var(--app-space-xxs) 0;
   border-top: 1px solid color-mix(in srgb, var(--app-color-border) 32%, transparent);
 }
 
@@ -119,4 +119,47 @@
 .versionValue {
   color: var(--app-color-cryo);
   font-family: Consolas, "Cascadia Mono", monospace;
+}
+
+/* Compact: tighter chrome; Sidebar.tsx keeps metadata one step above compact `xs`. */
+:global([data-ui-density="compact"]) .sidebar {
+  padding: var(--app-space-md) var(--app-space-xs);
+}
+
+:global([data-ui-density="compact"]) .brand {
+  padding: 0 var(--app-space-xxs) var(--app-space-xxs);
+}
+
+:global([data-ui-density="compact"]) .brandMark {
+  flex-basis: 28px;
+  width: 28px;
+  height: 32px;
+}
+
+:global([data-ui-density="compact"]) .brandMark::after {
+  inset: 4px;
+}
+
+:global([data-ui-density="compact"]) .navButton {
+  min-height: 34px;
+}
+
+:global([data-ui-density="compact"]) .steamCmdButton[data-with-left-section] {
+  /* Preserve the md label size while making the longest status fit the compact sidebar. */
+  padding-inline: var(--app-space-xxs);
+}
+
+:global([data-ui-density="compact"]) .navButton[data-active]::before {
+  height: 14px;
+  box-shadow:
+    0 -5px 0 -1px var(--app-color-fossil),
+    0 5px 0 -1px var(--app-color-biomass);
+}
+
+:global([data-ui-density="compact"]) .versionChip {
+  padding-top: var(--app-space-xxs);
+}
+
+:global([data-ui-density="compact"]) .sidebar::after {
+  height: 72px;
 }

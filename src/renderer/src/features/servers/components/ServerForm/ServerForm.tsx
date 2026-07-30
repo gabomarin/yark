@@ -26,6 +26,7 @@ import {
 } from "@shared/server-install-path";
 import { KNOWN_MAPS, type ServerProfile, type ServerProfileInput } from "@shared/types";
 import { useMemo, useState } from "react";
+import { useUiDensity } from "@app/AppProviders";
 import classes from "./ServerForm.module.css";
 
 interface Props {
@@ -141,7 +142,9 @@ export function ServerForm(props: Props): JSX.Element {
   const embedded = props.variant === "embedded";
   const serverActive = props.serverActive === true;
   const filesJobActive = props.filesJobActive === true;
-  const inputSize = embedded ? "sm" : "md";
+  const density = useUiDensity();
+  /** Comfortable matches prior Mantine `sm`; Compact steps to `xs`. */
+  const inputSize = density === "compact" ? "xs" : "sm";
   const [state, setState] = useState<FormState>(() =>
     toFormState(props.initial, props.defaultBaseFolder),
   );
@@ -231,7 +234,7 @@ export function ServerForm(props: Props): JSX.Element {
               Back
             </Button>
             <Button
-              size="md"
+              size={inputSize}
               leftSection={<FloppyDisk size={16} />}
               onClick={() => void submit()}
               loading={saving}
@@ -505,7 +508,7 @@ interface PathFieldProps {
   placeholder?: string;
   busy: boolean;
   disabled?: boolean;
-  size?: "sm" | "md";
+  size?: "xs" | "sm" | "md";
   onChange: (value: string) => void;
   onBrowse: () => void;
 }
@@ -516,7 +519,7 @@ function PathField({
   placeholder,
   busy,
   disabled = false,
-  size = "md",
+  size = "sm",
   onChange,
   onBrowse,
 }: PathFieldProps): JSX.Element {
