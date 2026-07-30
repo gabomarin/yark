@@ -195,7 +195,11 @@ describe("ServerLogsPanel", () => {
     await user.click(await screen.findByRole("tab", { name: "Updates" }));
     expect(window.api.readServerUpdateLog).not.toHaveBeenCalled();
 
-    await user.click(await screen.findByText("2026-07-23 10:00:00"));
+    // One row button contains title + subtitle. On UTC CI both are
+    // "2026-07-23 10:00:00", so findByText is ambiguous; role+name is not.
+    await user.click(
+      await screen.findByRole("button", { name: /2026-07-23 10:00:00/ }),
+    );
     await waitFor(() => {
       expect(window.api.readServerUpdateLog).toHaveBeenCalledWith(
         server.id,
