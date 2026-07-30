@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import {
   Broadcast,
   CloudArrowDown,
@@ -31,7 +32,7 @@ interface Props {
   onKill: () => void;
 }
 
-function MetaRow({ label, value }: { label: string; value: string }): JSX.Element {
+function MetaRow({ label, value }: { label: string; value: string }): ReactElement {
   return (
     <div className={classes.metaRow}>
       <Text className={classes.metaLabel}>{label}</Text>
@@ -40,7 +41,7 @@ function MetaRow({ label, value }: { label: string; value: string }): JSX.Elemen
   );
 }
 
-export function SidePanel(props: Props): JSX.Element {
+export function SidePanel(props: Props): ReactElement {
   const [broadcast, setBroadcast] = useState("");
   const status = props.runtime?.status ?? "stopped";
   const isActive = status === "starting" || status === "running" || status === "stopping";

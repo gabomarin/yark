@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -97,7 +98,7 @@ const STEP_LABELS = ["Profile", "Pace", "Breeding", "World", "QoL", "Review"];
 const STEP_COUNT = STEP_LABELS.length;
 type DifficultyChoice = "current" | "120" | "150" | "180" | "300" | "custom";
 
-export function ConfigurationWizard(props: Props): JSX.Element {
+export function ConfigurationWizard(props: Props): ReactElement {
   const compactProgress = useMediaQuery("(max-width: 1100px)", false);
   const [activeStep, setActiveStep] = useState(0);
   const [snapshot, setSnapshot] = useState<ServerIniSnapshot | null>(null);
@@ -705,7 +706,7 @@ interface WizardStepProps {
   children: React.ReactNode;
 }
 
-function WizardStep({ title, description, children }: WizardStepProps): JSX.Element {
+function WizardStep({ title, description, children }: WizardStepProps): ReactElement {
   return (
     <Stack gap="lg" className={classes.step}>
       <div>
@@ -733,7 +734,7 @@ const PROFILE_ICONS = {
   hardcore: Skull,
 };
 
-function ProfileCard(props: ProfileCardProps): JSX.Element {
+function ProfileCard(props: ProfileCardProps): ReactElement {
   const Icon = PROFILE_ICONS[props.id];
   return (
     <UnstyledButton
@@ -771,7 +772,7 @@ function PresetSelector({
   presets,
   currentDescription,
   children,
-}: PresetSelectorProps): JSX.Element {
+}: PresetSelectorProps): ReactElement {
   const selected = presets.find((preset) => preset.id === value);
   return (
     <Stack gap="sm">
@@ -800,7 +801,7 @@ function PresetSelector({
   );
 }
 
-function PresetValue({ label, value }: { label: string; value: string }): JSX.Element {
+function PresetValue({ label, value }: { label: string; value: string }): ReactElement {
   return (
     <div className={classes.presetValue}>
       <Text c="dimmed" size="xs">
@@ -825,7 +826,7 @@ function DifficultyControl({
   draft,
   onChoiceChange,
   onCustomLevelChange,
-}: DifficultyControlProps): JSX.Element {
+}: DifficultyControlProps): ReactElement {
   const explicitDifficulty = draft.overrideOfficialDifficulty > 0;
   return (
     <Stack gap="sm">
@@ -904,7 +905,7 @@ function ChangeRow({
   change,
 }: {
   change: ReturnType<typeof wizardChanges>[number];
-}): JSX.Element {
+}): ReactElement {
   return (
     <div className={classes.changeRow}>
       <Text fw={600} size="sm">{change.label}</Text>
@@ -924,7 +925,7 @@ interface SettingSwitchProps {
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
 }
 
-function SettingSwitch({ label, description, checked, onChange }: SettingSwitchProps): JSX.Element {
+function SettingSwitch({ label, description, checked, onChange }: SettingSwitchProps): ReactElement {
   return (
     <div className={classes.switchRow}>
       <div>

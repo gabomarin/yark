@@ -1,7 +1,7 @@
 import { PlaceholderPage } from "@ui/PlaceholderPage/PlaceholderPage";
 import { AppShellLayout } from "./AppShellLayout";
 import type { Route } from "@layout/Sidebar/Sidebar";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 
 interface OverviewSlot {
   page: ReactNode;
@@ -39,7 +39,7 @@ interface Props {
   onDismissError?: () => void;
 }
 
-export function AppRouter(props: Props): JSX.Element {
+export function AppRouter(props: Props): ReactElement {
   const content = (() => {
     switch (props.route) {
       case "overview":

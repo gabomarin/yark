@@ -1,6 +1,6 @@
 import { FileText } from "@phosphor-icons/react";
 import { Group, Select, Stack, Text } from "@mantine/core";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import classes from "./LogsPage.module.css";
@@ -19,7 +19,7 @@ interface Props {
   clearAction: ReactNode;
 }
 
-export function RuntimeLogSection(props: Props): JSX.Element {
+export function RuntimeLogSection(props: Props): ReactElement {
   const lines = props.runtimeLogLines ?? [];
   const filtered = formatRuntimeLogLinesForDisplay(
     filterRuntimeLogLines(lines, props.sourceFilter),

@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { HardDrives, MagnifyingGlass, Plus } from "@phosphor-icons/react";
 import { Badge, Button, Group, Skeleton, Stack, Text, Title, VisuallyHidden } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo, ServerStopProgress } from "@shared/types";
@@ -45,7 +46,7 @@ interface Props {
   onCancelSteamCmd: () => void;
 }
 
-export function ServerGrid(props: Props): JSX.Element {
+export function ServerGrid(props: Props): ReactElement {
   const totalLabel =
     props.servers.length === 1
       ? "1 server configured"

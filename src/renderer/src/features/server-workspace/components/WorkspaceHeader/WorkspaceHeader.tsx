@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import {
   ArrowLeft,
   ArrowsClockwise,
@@ -27,7 +28,7 @@ interface Props {
   onOpenServerActions?: () => void;
 }
 
-export function WorkspaceHeader(props: Props): JSX.Element {
+export function WorkspaceHeader(props: Props): ReactElement {
   const status = props.runtime?.status ?? "stopped";
   const version = resolveDisplayedServerVersion(props.installation) ?? "—";
   const canStart =

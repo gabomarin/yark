@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Badge, Group, Stack, Text, Title } from "@mantine/core";
 import type { ClusterComplianceReport, ServerProfile } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
@@ -14,7 +15,7 @@ interface Props {
   onOpenServer: (serverId: string) => void;
 }
 
-export function ClusterDetailPanel(props: Props): JSX.Element {
+export function ClusterDetailPanel(props: Props): ReactElement {
   const sharedDir = sharedClusterDir(props.members);
 
   return (

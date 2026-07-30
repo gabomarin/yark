@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import {
   ArrowsClockwise,
   CloudArrowDown,
@@ -52,7 +53,7 @@ interface Props {
 function runtimeActionIcon(
   kind: ServerCardRuntimeAction["kind"],
   iconSize: number,
-): JSX.Element {
+): ReactElement {
   switch (kind) {
     case "cancel":
       return <XCircle size={iconSize} />;
@@ -77,7 +78,7 @@ function filesActionClick(
   props.onUpdateNow();
 }
 
-export function ServerCardActions(props: Props): JSX.Element {
+export function ServerCardActions(props: Props): ReactElement {
   const { runtimeAction, restartAction, updateAction } = props;
   const density = useUiDensity();
   const actionSize = density === "compact" ? "md" : "lg";

@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { ArrowsClockwise, Plus } from "@phosphor-icons/react";
 import { Button, Group } from "@mantine/core";
 import classes from "../OverviewPage.module.css";
@@ -12,7 +13,7 @@ export function OverviewHeader({
   onCreateServer,
   onCheckUpdates,
   checkingUpdates = false,
-}: Props): JSX.Element {
+}: Props): ReactElement {
   return (
     <header className={classes.header}>
       <div>

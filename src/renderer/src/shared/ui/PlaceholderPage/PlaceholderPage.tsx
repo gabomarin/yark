@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Card, Stack, Text, Title } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import classes from "./PlaceholderPage.module.css";
@@ -7,7 +8,7 @@ interface Props {
   subtitle: string;
 }
 
-export function PlaceholderPage({ title, subtitle }: Props): JSX.Element {
+export function PlaceholderPage({ title, subtitle }: Props): ReactElement {
   return (
     <PageScaffold title={title} subtitle={subtitle}>
       <Card withBorder className={classes.card}>

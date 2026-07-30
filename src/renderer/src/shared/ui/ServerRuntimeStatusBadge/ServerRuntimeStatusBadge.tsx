@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Badge, type BadgeProps } from "@mantine/core";
 import type { ServerStatus } from "@shared/types";
 import {
@@ -23,7 +24,7 @@ export function ServerRuntimeStatusBadge({
   size = "xs",
   variant = "light",
   className,
-}: Props): JSX.Element {
+}: Props): ReactElement {
   return (
     <Badge
       size={size}

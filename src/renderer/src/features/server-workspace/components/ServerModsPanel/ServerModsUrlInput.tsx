@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Button, Group, Progress, Stack, Text, TextInput } from "@mantine/core";
 import { LinkSimple } from "@phosphor-icons/react";
 import type { ModAddImportProgress } from "@shared/mod-add-input";
@@ -12,7 +13,7 @@ interface Props {
   onAdd: () => void;
 }
 
-export function ServerModsUrlInput(props: Props): JSX.Element {
+export function ServerModsUrlInput(props: Props): ReactElement {
   const progressValue =
     props.progress !== null && props.progress.total > 0
       ? (props.progress.completed / props.progress.total) * 100

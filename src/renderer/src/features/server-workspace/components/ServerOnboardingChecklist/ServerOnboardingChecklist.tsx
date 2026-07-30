@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import {
   CheckCircle,
   HardDrives,
@@ -55,7 +56,7 @@ function toInput(server: ServerProfile): ServerProfileInput {
   };
 }
 
-export function ServerOnboardingChecklist(props: Props): JSX.Element {
+export function ServerOnboardingChecklist(props: Props): ReactElement {
   const [experienceDone, setExperienceDone] = useState(false);
   const [savingCluster, setSavingCluster] = useState(false);
   const [savingPorts, setSavingPorts] = useState(false);

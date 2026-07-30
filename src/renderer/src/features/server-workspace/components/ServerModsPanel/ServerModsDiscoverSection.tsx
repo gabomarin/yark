@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Loader } from "@mantine/core";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
@@ -17,7 +18,7 @@ interface Props {
   onOpenExternal: (url: string) => void;
 }
 
-export function ServerModsDiscoverSection(props: Props): JSX.Element {
+export function ServerModsDiscoverSection(props: Props): ReactElement {
   return (
     <>
       <ServerModsSearchInput

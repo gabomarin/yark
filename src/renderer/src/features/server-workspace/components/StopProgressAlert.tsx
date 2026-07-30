@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Alert, Progress, Stack, Text } from "@mantine/core";
 import type { ServerStopProgress } from "@shared/types";
 
@@ -14,7 +15,7 @@ export function stopProgressForServer(
     : null;
 }
 
-export function StopProgressAlert({ progress }: Props): JSX.Element {
+export function StopProgressAlert({ progress }: Props): ReactElement {
   const label = progress.label.trim() || "Stopping this server safely";
   return (
     <Alert color="blue" title="Stopping server" mb="sm" data-stop-progress>

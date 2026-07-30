@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { CaretRight, HardDrives, Plus } from "@phosphor-icons/react";
 import { Button, Stack, Text, UnstyledButton } from "@mantine/core";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
@@ -15,7 +16,7 @@ interface Props {
   onAddServer?: () => void;
 }
 
-export function ServerListPanel(props: Props): JSX.Element {
+export function ServerListPanel(props: Props): ReactElement {
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {

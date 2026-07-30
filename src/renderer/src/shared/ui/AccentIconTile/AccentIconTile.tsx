@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 import classes from "./AccentIconTile.module.css";
 
 interface Props {
@@ -16,7 +16,7 @@ export function AccentIconTile({
   tone = "accent",
   size = "md",
   className,
-}: Props): JSX.Element {
+}: Props): ReactElement {
   return (
     <div
       className={[classes.tile, className].filter(Boolean).join(" ")}

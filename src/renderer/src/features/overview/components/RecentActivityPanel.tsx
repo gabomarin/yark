@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { ArrowRight } from "@phosphor-icons/react";
 import { Button, Group, Skeleton, Text, Title, VisuallyHidden } from "@mantine/core";
 import type { AppEvent } from "@shared/types";
@@ -9,7 +10,7 @@ interface Props {
   onViewAll: () => void;
 }
 
-export function RecentActivityPanel({ events, loading, onViewAll }: Props): JSX.Element {
+export function RecentActivityPanel({ events, loading, onViewAll }: Props): ReactElement {
   const relevantEvents = events
     .filter((event) => event.type !== "rcon_command")
     .slice(0, 5);

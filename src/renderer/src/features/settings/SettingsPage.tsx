@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 import {
   Broom,
@@ -38,7 +39,7 @@ interface Props {
   steamCmdBusy?: boolean;
 }
 
-export function SettingsPage(props: Props): JSX.Element {
+export function SettingsPage(props: Props): ReactElement {
   const [cachesOpen, setCachesOpen] = useState(false);
   const [dataFoldersOpen, setDataFoldersOpen] = useState(false);
   const [dataFolders, setDataFolders] = useState<AppDataFolderInfo[]>([]);
@@ -264,7 +265,7 @@ interface CacheRowProps {
   onClear: () => void;
 }
 
-function CacheRow(props: CacheRowProps): JSX.Element {
+function CacheRow(props: CacheRowProps): ReactElement {
   return (
     <div className={classes.cacheRow}>
       <div className={classes.cacheCopy}>

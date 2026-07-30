@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Text, type MantineColor } from "@mantine/core";
 import classes from "./ServerCard.module.css";
 
@@ -49,7 +50,7 @@ export function ServerCardMetaItem({
   label,
   value,
   tone = "default",
-}: Props): JSX.Element {
+}: Props): ReactElement {
   const valueTone = tone === "warn" ? "attention" : tone;
 
   return (

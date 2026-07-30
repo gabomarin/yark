@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import {
   Badge,
   Button,
@@ -19,7 +20,7 @@ interface Props {
   onOpenExternal: (url: string) => void;
 }
 
-export function ServerModDetailDrawer(props: Props): JSX.Element {
+export function ServerModDetailDrawer(props: Props): ReactElement {
   const detail = props.detail;
   return (
     <Drawer
@@ -81,7 +82,7 @@ export function ServerModDetailDrawer(props: Props): JSX.Element {
   );
 }
 
-function Meta(props: { label: string; value: string }): JSX.Element {
+function Meta(props: { label: string; value: string }): ReactElement {
   return (
     <Group justify="space-between" wrap="nowrap">
       <Text size="sm" c="dimmed">{props.label}</Text>

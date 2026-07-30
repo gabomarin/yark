@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import {
   Alert,
   SegmentedControl,
@@ -30,7 +31,7 @@ interface Props {
   onServerUpdated: () => void;
 }
 
-export function ServerModsPanel(props: Props): JSX.Element {
+export function ServerModsPanel(props: Props): ReactElement {
   const [view, setView] = useState<"server" | "discover">("server");
   const [configuredIds, setConfiguredIds] = useState(props.server.mods);
   const [disabledIds, setDisabledIds] = useState(props.server.disabledMods ?? []);

@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { ClockCounterClockwise } from "@phosphor-icons/react";
 import {
   Alert,
@@ -41,7 +42,7 @@ function focusForEvent(event: AppEvent): ServerLogsFocus {
   };
 }
 
-export function LogsPage(props: Props): JSX.Element {
+export function LogsPage(props: Props): ReactElement {
   const [fleetEvents, setFleetEvents] = useState<AppEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

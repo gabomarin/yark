@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import {
   ArrowClockwise,
   CaretDown,
@@ -220,7 +221,7 @@ function draftEqualsDraft(a: DraftPolicy, b: DraftPolicy): boolean {
 
 const POLICY_AUTOSAVE_MS = 450;
 
-export function ServerBackupPanel(props: Props): JSX.Element {
+export function ServerBackupPanel(props: Props): ReactElement {
   const [backups, setBackups] = useState<BackupRecord[]>([]);
   const [policy, setPolicy] = useState<BackupPolicy | null>(null);
   const [draftPolicy, setDraftPolicy] = useState<DraftPolicy | null>(null);

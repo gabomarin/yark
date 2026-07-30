@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Button, Stack } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import type { ClusterComplianceReport, ServerProfile } from "@shared/types";
@@ -24,7 +25,7 @@ interface Props {
   onRefresh: () => void;
 }
 
-export function ClustersPage(props: Props): JSX.Element {
+export function ClustersPage(props: Props): ReactElement {
   const [selectedClusterId, setSelectedClusterId] = useState<string | null>(null);
 
   const serverById = useMemo(() => buildServerById(props.servers), [props.servers]);
