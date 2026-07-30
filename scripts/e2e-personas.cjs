@@ -47,7 +47,7 @@ async function setViewportAndCapture(page, outDir, label, size) {
   return shot;
 }
 
-async function createServerAsBeginner(page, name, baseDir) {
+async function createServerAsBeginner(page, name, baseDir, ports) {
   await page.getByRole("button", { name: "New server" }).first().click();
   await page.getByRole("heading", { name: "New server" }).waitFor({ timeout: 10000 });
 
@@ -59,11 +59,33 @@ async function createServerAsBeginner(page, name, baseDir) {
   } else {
     await page.getByPlaceholder("C:\\ark_servers").fill(baseDir);
   }
-  await page.locator("input[type='password']").nth(1).fill("admin1234");
+  await page.getByLabel("Game port").fill(String(ports.game));
+  await page.getByLabel("Query port").fill(String(ports.query));
+  await page.getByLabel("RCON port").fill(String(ports.rcon));
+  await page.locator("input[type='password']").last().fill("admin1234");
 
   await page.getByRole("button", { name: "Save" }).first().click();
 
-  await goToOverview(page);
+  // Create opens workspace onboarding; dismiss, then return to overview.
+  const later = page.getByRole("button", { name: /^Later$/i });
+  try {
+    await later.waitFor({ state: "visible", timeout: 8000 });
+    await later.click();
+  } catch {
+    // onboarding not shown
+  }
+
+  const backByRole = page.getByRole("button", { name: /Back to servers/i });
+  const backByLabel = page.getByLabel("Back to servers");
+  if ((await backByRole.count()) > 0) {
+    await backByRole.first().click();
+  } else if ((await backByLabel.count()) > 0) {
+    await backByLabel.first().click();
+  } else {
+    await goToOverview(page);
+  }
+
+  await waitOverviewReady(page);
   await page.getByText(name).first().waitFor({ timeout: 15000 });
   await page.getByText(/need(s)? attention/i).first().waitFor({ timeout: 10000 });
 }
@@ -168,6 +190,11 @@ async function run() {
   const runId = uid();
   const beginnerServerName = `Beginner-${runId}`;
   const beginnerBaseDir = `C:\\ark_servers_e2e\\${runId}`;
+  const beginnerPorts = {
+    game: 23000 + Math.floor(Math.random() * 1000),
+    query: 24000 + Math.floor(Math.random() * 1000),
+    rcon: 25000 + Math.floor(Math.random() * 1000),
+  };
 
   const app = await electron.launch({ args: ["."], cwd: projectRoot });
   const errors = [];
@@ -202,7 +229,7 @@ async function run() {
     }
 
     // Beginner persona.
-    await createServerAsBeginner(page, beginnerServerName, beginnerBaseDir);
+    await createServerAsBeginner(page, beginnerServerName, beginnerBaseDir, beginnerPorts);
     await openWorkspaceAndAssistant(page, beginnerServerName);
 
     // Experienced persona.
@@ -234,7 +261,7 @@ async function run() {
   }
 }
 
-run().catch((error) => {
+run().catch(async (error) => {
   console.error("E2E_PERSONAS_FAIL");
   console.error(error?.stack ?? String(error));
   process.exit(1);
