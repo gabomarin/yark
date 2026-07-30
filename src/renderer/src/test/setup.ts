@@ -2,8 +2,40 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach } from "vitest";
 
+const pendingTimeouts = new Set<ReturnType<typeof setTimeout>>();
+const nativeSetTimeout = globalThis.setTimeout.bind(globalThis);
+const nativeClearTimeout = globalThis.clearTimeout.bind(globalThis);
+
+globalThis.setTimeout = ((
+	handler: TimerHandler,
+	delay?: number,
+	...args: unknown[]
+): ReturnType<typeof setTimeout> => {
+	const id = nativeSetTimeout((...cbArgs: unknown[]) => {
+		pendingTimeouts.delete(id);
+		if (typeof handler === "function") {
+			(handler as (...xs: unknown[]) => void)(...cbArgs);
+		}
+	}, delay, ...args);
+	pendingTimeouts.add(id);
+	return id;
+}) as unknown as typeof setTimeout;
+
+globalThis.clearTimeout = ((id?: ReturnType<typeof setTimeout>) => {
+	if (id !== undefined) {
+		pendingTimeouts.delete(id);
+	}
+	return nativeClearTimeout(id);
+}) as unknown as typeof clearTimeout;
+
 afterEach(() => {
 	cleanup();
+	// Cancel Mantine Transition timeouts before Vitest tears down jsdom (React 19
+	// otherwise dispatches setState against a destroyed window).
+	for (const id of pendingTimeouts) {
+		nativeClearTimeout(id);
+	}
+	pendingTimeouts.clear();
 });
 
 Object.defineProperty(window, "matchMedia", {

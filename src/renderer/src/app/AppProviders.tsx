@@ -43,6 +43,15 @@ export function AppProviders({
         Transition: {
           defaultProps: { duration: 0, exitDuration: 0 },
         },
+        Modal: {
+          defaultProps: { transitionProps: { duration: 0 } },
+        },
+        Drawer: {
+          defaultProps: { transitionProps: { duration: 0 } },
+        },
+        Tooltip: {
+          defaultProps: { transitionProps: { duration: 0 } },
+        },
         Select: {
           defaultProps: {
             comboboxProps: {
@@ -82,6 +91,8 @@ export function AppProviders({
     };
   }, [density]);
 
+  const notificationsAutoClose = process.env.VITEST === "true" ? false : 5000;
+
   return (
     <UiDensityContext.Provider value={density}>
       <MantineProvider
@@ -90,10 +101,16 @@ export function AppProviders({
         defaultColorScheme="dark"
       >
         <ModalsProvider
-          modalProps={{ centered: true, radius: "md" }}
+          modalProps={{
+            centered: true,
+            radius: "md",
+            ...(process.env.VITEST === "true"
+              ? { transitionProps: { duration: 0 } }
+              : {}),
+          }}
           labels={{ confirm: "Confirm", cancel: "Cancel" }}
         >
-          <Notifications position="top-right" autoClose={5000} />
+          <Notifications position="top-right" autoClose={notificationsAutoClose} />
           {children}
         </ModalsProvider>
       </MantineProvider>
