@@ -8,7 +8,8 @@ and how “update available” is decided.
 - Share one SteamCMD + content cache across many server installs.
 - Keep per-server worlds/INI/players intact when syncing game files.
 - Make explicit **Update** / **Verify** always talk to Steam (no stale cache reuse).
-- Run **safe update** with pre-update backups and automatic rollback on failure.
+- Run **safe update** with auto-stop, pre-update backups, conditional restart, and
+  automatic rollback on failure.
 
 ASA Steam app id: **`2430930`**.
 
@@ -64,23 +65,37 @@ Pipeline for each files job:
 
 | Action | Public constraint | After success |
 | --- | --- | --- |
-| Install files | No “must be stopped” gate | Leaves process state alone |
-| Update | Throws if process is active (`Stop the server before update`) | **Always starts** the server and waits up to **90s** for healthy `running` |
-| Verify | Throws if process is active (`Stop the server before verify`) | Restarts only if it had been running when the job ran |
+| Install files | Prefer a stopped server (UI blocks while active) | Leaves process state alone |
+| Update | May run while active; manager coordinates stop. Blocked only while a stop+backup is in progress | Restarts and waits up to **90s** for healthy `running` **only if** it was running when the job started; otherwise left stopped |
+| Verify | Same auto-stop/restart contract as update (no pre-update backup / rollback) | Restarts only if it had been running when the job ran |
 
 Jobs are queued (`criticalJobsQueue.v1` in app settings): up to **3** attempts, **5s** between retries; pending jobs resume after app restart.
 
 ### Safe update + rollback
 
 ```text
-pre-update backups (world + players + ini)
-  → stop if somehow still active
-  → SteamCMD update + sync
-  → start + health (90s)
-  → on failure: restore pre-update backups → start + health
+wasRunning = process is active at job start
+  → if wasRunning: stop({ backup: false })   # no pre_stop snapshot
+  → create pre_update backups (world + players + ini)
+  → SteamCMD update + robocopy sync
+  → if wasRunning: start + waitForHealthy (90s)
+  → on any failure after backups exist:
+       restore each pre_update backup
+       → if wasRunning: start + waitForHealthy (90s)
+       → rethrow (job fails / may retry up to 3 times)
 ```
 
-Pre-update archives use backup type `pre_update` and kinds `world` / `players` / `ini` (`CRITICAL_BACKUP_KINDS`). Per-server update logs land under userData `update-logs/` as `{serverId}-{timestamp}.log`.
+`wasRunning` is captured once at the beginning of the job. A server that was already
+stopped stays stopped after success; rollback also leaves it stopped. An active
+server is restarted after success, or after a successful rollback.
+
+An active-server update must produce exactly one stable `pre_update` archive set and
+**must not** also create a `pre_stop` set for the same job (SteamCMD paths pass
+`{ backup: false }` into stop). See [backups.md](backups.md).
+
+Pre-update archives use backup type `pre_update` and kinds `world` / `players` / `ini`
+(`CRITICAL_BACKUP_KINDS`). Per-server update logs land under userData `update-logs/` as
+`{serverId}-{timestamp}.log`.
 
 ## Update availability (not SteamCMD)
 
@@ -99,8 +114,8 @@ Official version and official build each cache for **15 minutes** in-process (`O
 | Channel | Purpose |
 | --- | --- |
 | `servers:install-files` | Queue base-file install for a server |
-| `servers:update-now` | Queue safe update (server must be stopped) |
-| `servers:verify-files` | Queue integrity verify (server must be stopped) |
+| `servers:update-now` | Queue safe update (auto-stop / conditional restart; no manual stop required) |
+| `servers:verify-files` | Queue integrity verify (same auto-stop/restart contract; no pre_update) |
 | `servers:installation` | Installation snapshot + official build/version |
 | `steamcmd:status` | Path, caches, busy/progress/queue |
 | `steamcmd:console` | In-memory console lines (`limit`, default 200) |
@@ -112,11 +127,16 @@ Official version and official build each cache for **15 minutes** in-process (`O
 | `logs:read-update` / `logs:open-update-file` / `logs:delete-update` / `logs:clear-updates` | Per-server update log files |
 | **Push** `push:steamcmd-progress` | Live `{ status, console }` while ops run |
 
-UI entry points: sidebar **SteamCMD** page + floating progress dock; Overview install/update/verify; workspace SidePanel; onboarding “Install files”.
+UI entry points: sidebar **SteamCMD** page + floating progress dock; Overview install/update/verify; workspace SidePanel; onboarding “Install files”. Update/verify stay enabled while the server is running (tooltip explains auto-stop); they lock only while SteamCMD is busy or a stop+backup is in progress.
 
 ## Progress
 
 Live progress combines SteamCMD stdout `%` lines with disk estimates (`steamcmd-disk-progress.ts`: depot/downloading sizes under `force_install_dir`). The floating progress dock (and per-server Logs → Updates history) subscribe to `push:steamcmd-progress`. SteamCMD path/install live under **Settings**; cache folders are shown there as read-only paths with Open / Clear (blocked while a job runs).
+
+Update / Verify controls stay enabled while the server is running: Overview cards and
+the workspace SidePanel tooltips explain that the manager will auto-stop for SteamCMD
+and restart only if the server was running. Byte/`%` detail belongs in the progress
+dock, not in those lock tooltips.
 
 Spawns always pass `-language english` (plus `LANG`/`LC_ALL` env) so bootstrapper lines stay English for a single-language parser. SteamCMD otherwise follows the Windows UI language (e.g. Spanish “Descargando archivos…”). Bracket `[ N%]` still updates the percent even if OS localizes; labels/KB pairs are English-only.
 
@@ -132,7 +152,8 @@ During **robocopy** (`sync-files`), progress is a **separate phase**: SteamCMD s
 
 | Symptom | Likely cause / next step |
 | --- | --- |
-| `Stop the server before update/verify` | Process still active — stop from Overview/workspace first |
+| `Server stop and backup are still in progress` | Wait for the stop+backup job to finish, then retry update/verify |
+| Update/verify while the server is running | Expected — manager stops without `pre_stop`, takes `pre_update` (update only), runs SteamCMD, restarts if it was running |
 | Update “available” looks wrong vs ARK Version string | Compare Steam `buildid` only; ARK Version is informational |
 | Repeated downloads when installing another server | Cache older than 15 minutes, missing manifest, or SteamCMD path changed |
 | Console in Spanish / stuck `0.0%` while `[ N%]` lines scroll | SteamCMD bootstrapper follows Windows UI language. We force `-language english`; percent still reads from `[ N%]`. Restart the update after this build. |
@@ -141,10 +162,86 @@ During **robocopy** (`sync-files`), progress is a **separate phase**: SteamCMD s
 | Job stuck after crash | Queue persisted in settings `criticalJobsQueue.v1`; resumes on next launch |
 | `steamcmd:install` fails on Linux agent VM | Expected — PowerShell installer + Windows sync tools |
 
+## Real-host validation (Windows)
+
+Manual release/validation suite for safe update against a real ASA dedicated-server
+install. Complements unit tests; **not run in CI**. Broader Windows E2E aggregation
+lives under GitHub **#12**.
+
+Quick start (interactive Windows session only):
+
+```powershell
+npm run build
+Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+node scripts/validation/validate-safe-update.cjs --dry-run          # prereq check only
+node scripts/validation/validate-safe-update.cjs --confirm          # required gate
+# --force is accepted as an alias of --confirm
+```
+
+Requires: Node 22.5+ (`node:sqlite`), Playwright (devDependency), a built app under
+`out/`, and a disposable ASA profile. See [Helper script](#helper-script) below.
+
+### Prerequisites
+
+- Windows host with a working SteamCMD path configured in YARK Settings.
+- A **test-owned or disposable** ASA server profile (unique game/query/RCON ports;
+  admin password ≥ 4 characters). Do not use an operator production world unless you
+  accept snapshot/rollback risk.
+- Enough disk for SteamCMD cache + one `pre_update` set (world/players/ini).
+- Note expected duration (SteamCMD validate + robocopy can take many minutes).
+- Cleanup: leave operator-owned installs untouched; delete only profiles/paths you created for the run.
+
+### Scenarios
+
+| # | Scenario | Pass criteria |
+| --- | --- | --- |
+| A | Active-server update | Stop → exactly one `pre_update` set (world/players/ini) → **no** `pre_stop` for this job → start + healthy |
+| B | Stopped-server update | Completes; server left stopped |
+| C | Forced failure after backup | Points Settings at a **temporary** failing SteamCMD stub under `os.tmpdir()` (does **not** rename AppData `steamcmd.exe`). Job may retry up to **3** times with rollback each attempt; final user-visible signal is update **failure** (events include `update_failed` / `update_rolled_back`), never success. If rollback itself fails: logs/backups preserved + clear manual-recovery events |
+| D | Cancel mid SteamCMD or sync | Reported cancelled (not success) |
+| E | Crash/reopen mid queue | Job recovers as pending; previous error context not silently lost (present queue behavior; checkpoints belong to **#19**) |
+| F | Verify while running | Auto-stop/restart; **no** `pre_update` |
+
+### Evidence and closure
+
+Before closing the validation, record (issue comment or PR — do not commit secrets/logs):
+
+- Date, commit/build, host notes (SteamCMD path present, disposable profile name).
+- Scenario → pass/fail for A–F.
+- Artifacts checked: Updates log under userData `update-logs/`, events (`update_*` /
+  `update_rolled_back`), backup types/kinds/IDs, final runtime status.
+- Gaps found and fixes applied.
+- **Redact** before sharing: no admin passwords, server passwords, or player PII. The
+  helper script redacts common password fields in its evidence JSON; still review
+  before posting.
+
+Link the filled evidence from GitHub **#12** when used as part of 1.0 readiness.
+
+### Helper script
+
+[`scripts/validation/validate-safe-update.cjs`](../scripts/validation/validate-safe-update.cjs)
+is an **interactive manual** runner (Windows + display). It is not part of CI.
+
+| Flag / env | Purpose |
+| --- | --- |
+| `--confirm` / `--force` | Required for a real run (refuses otherwise) |
+| `--dry-run` | Prereq checks only; no Electron launch |
+| `YARK_VALIDATE_SERVER_ID` | Override target server id |
+| `YARK_VALIDATE_SCENARIOS` | e.g. `C,E,B,A,F,D` |
+
+**Safety:** the script never renames the operator’s real `steamcmd.exe`. Scenario C
+compiles a failing stub under `os.tmpdir()`, temporarily sets `steamcmdPath` to that
+stub via the app API, then restores the previous path. A real ASA start/stop/update
+still mutates the chosen disposable profile (backups, world files) — use a test-owned
+install.
+
+Writes `safe-update-validation-evidence.json` under Electron userData. Do not commit
+secrets or full SteamCMD logs.
+
 ## Verification pointers
 
 ```bash
-npm test          # includes steamcmd-content-cache / update-related unit tests
+npm test          # includes steamcmd-content-cache / update-service safe-update unit tests
 npm run typecheck
 npm run build
 ```

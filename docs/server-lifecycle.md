@@ -275,5 +275,6 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 | `tests/integration/process-manager-real-start.test.ts` | win32 direct spawn / spaced paths |
 
 See also [backups.md](backups.md) (restore requires `!isActive`),
-[updates-steamcmd.md](updates-steamcmd.md) (safe update stop/restart), and
+[updates-steamcmd.md](updates-steamcmd.md) (safe update auto-stop, `pre_update`,
+conditional restart, real-host validation), and
 [logs.md](logs.md) (runtime buffer from piped stdout/stderr and Saved/Logs tail).

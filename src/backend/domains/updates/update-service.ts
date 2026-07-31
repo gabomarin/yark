@@ -80,7 +80,8 @@ function delay(ms: number): Promise<void> {
 
 /**
  * Safe per-instance update flow:
- * pre-backup -> stop -> steamcmd update -> start -> health-check -> rollback.
+ * stop (no pre_stop) -> pre_update backup -> steamcmd update ->
+ * start+health iff wasRunning -> rollback on failure.
  */
 export class UpdateService extends EventEmitter {
   private readonly steamCmdConsoleLines: string[] = [];

@@ -39,7 +39,7 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 ## Engineering runbooks
 
 - [backups.md](backups.md) — ZIP kinds, reconcile, all-servers health/cleanup, IPC, schedules, player sessions.
-- [updates-steamcmd.md](updates-steamcmd.md) — caches, safe update auto-stop/rollback, availability compare, progress push.
+- [updates-steamcmd.md](updates-steamcmd.md) — caches, safe update auto-stop/rollback, availability compare, progress push, Windows real-host validation.
 - [logs.md](logs.md) — event `details`, clear/export IPC, `logsFocus`, seed/visual helpers.
 - [server-lifecycle.md](server-lifecycle.md) — launch args, profile→INI sync, spawn, start/stop/kill, INI sanitize / assistant.
 - [website.md](website.md) — GitHub Pages deploy, screenshot gallery capture/redaction, version pill sync.
@@ -58,7 +58,7 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
   - **INI**: `retainCountIni`; manual + automatic `ini_save` after successful INI save (debounced ~2s).
   - Workspace UI: destination/schedule only on World subtab; auto-refresh (~12s) + Refresh button + `push:backups-changed` for live list updates.
 - SteamCMD progress/console streaming is live via `push:steamcmd-progress` (floating dock during jobs). Path/install are on **Settings**. Richer per-file update-log streaming in Logs may still feel incomplete. Full workflows: [updates-steamcmd.md](updates-steamcmd.md).
-- Real E2E validation against host-side ASA binaries and SteamCMD on a production Windows host is still not covered.
+- Safe-update real-host checklist (Windows ASA) lives in [updates-steamcmd.md](updates-steamcmd.md#real-host-validation-windows); broader lifecycle aggregation is GitHub **#12**.
 
 ## Recommended verification
 

@@ -249,6 +249,10 @@ After a successful `ini:save`, `createIniSaveBackup` debounces **2s** per server
 - Key: `backupCriticalJobsQueue.v1` in app settings.
 - Types: `pre-update-backup` | `restore`; max **3** attempts, **5s** delay; survives restart.
 - Pre-update creates **world + players + ini** (`CRITICAL_BACKUP_KINDS`).
+- Safe update stops with `{ backup: false }` first, then creates this set — an
+  active-server update must **not** also produce a `pre_stop` archive set for the
+  same job. Acceptance and real-host checklist:
+  [updates-steamcmd.md](updates-steamcmd.md#real-host-validation-windows).
 
 ## UI surfaces
 
