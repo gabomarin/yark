@@ -197,8 +197,19 @@ export function registerIpcHandlers(
     wrap(() => instances.statuses()),
   );
 
-  ipcMain.handle(IPC.serversInstallation, (_e, forceOfficialCheck?: boolean) =>
-    wrap(() => instances.installationInfo(forceOfficialCheck === true)),
+  ipcMain.handle(
+    IPC.serversInstallation,
+    (
+      _e,
+      forceOfficialCheck?: boolean,
+      serversMode?: import("@shared/types").InstallationServersMode,
+    ) =>
+      wrap(() =>
+        instances.installationInfo(
+          forceOfficialCheck === true,
+          serversMode ?? true,
+        ),
+      ),
   );
 
   ipcMain.handle(IPC.clusterCheck, () =>

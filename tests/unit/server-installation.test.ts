@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import {
   extractOfficialVersionFromStatusText,
   inspectServerInstallation,
+  parseOfficialServerStatus,
 } from "@backend/domains/instances/server-installation";
 
 describe("inspectServerInstallation", () => {
@@ -253,6 +254,30 @@ describe("inspectServerInstallation", () => {
     }
   });
 
+  it("reads arkVersion from the end of a large log without loading the whole file", () => {
+    const installDir = makeTmpDir();
+    try {
+      const binDir = join(installDir, "ShooterGame", "Binaries", "Win64");
+      mkdirSync(binDir, { recursive: true });
+      writeFileSync(join(binDir, "ArkAscendedServer.exe"), "fake-binary");
+
+      const logsDir = join(installDir, "ShooterGame", "Saved", "Logs");
+      mkdirSync(logsDir, { recursive: true });
+      const prefix = "x".repeat(400 * 1024);
+      writeFileSync(
+        join(logsDir, "ShooterGame.log"),
+        `${prefix}\nARK Version: 59.01\n`,
+      );
+
+      const info = inspectServerInstallation("srv-8-tail", installDir, {
+        bypassCache: true,
+      });
+      expect(info.arkVersion).toBe("59.01");
+    } finally {
+      rmSync(installDir, { recursive: true, force: true });
+    }
+  });
+
   it("uses only the synced in-server appmanifest as the comparable build", () => {
     const installDir = makeTmpDir();
     try {
@@ -274,19 +299,25 @@ describe("inspectServerInstallation", () => {
   });
 });
 
-describe("extractOfficialVersionFromStatusText", () => {
+describe("parseOfficialServerStatus", () => {
   it("reads the published version from the official Wildcard status", () => {
     expect(
-      extractOfficialVersionFromStatusText(
+      parseOfficialServerStatus(
         'ARK Official Server Network Status: <RichColor Color="0, 1, 0, 1">Online (v92.21)</>',
       ),
-    ).toBe("92.21");
+    ).toEqual({ version: "92.21", networkStatus: "online" });
   });
 
-  it("tolerates other network statuses and rejects content without a version", () => {
+  it("detects Deploying and Offline statuses", () => {
+    expect(parseOfficialServerStatus("Deploying (v93.4)")).toEqual({
+      version: "93.4",
+      networkStatus: "deploying",
+    });
     expect(
-      extractOfficialVersionFromStatusText("Deploying (v93.4)"),
-    ).toBe("93.4");
+      parseOfficialServerStatus(
+        'ARK Official Server Network Status: <RichColor Color="1, 0, 0, 1">Offline (v92.21)</>',
+      ),
+    ).toEqual({ version: "92.21", networkStatus: "offline" });
     expect(
       extractOfficialVersionFromStatusText("ARK Official Server Network Status: Offline"),
     ).toBeNull();

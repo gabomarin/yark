@@ -65,9 +65,23 @@ export interface ServerInstallationInfo {
 /** Installation probe plus global official metadata (CDN), even when no servers exist. */
 export interface ServerInstallationSnapshot {
   officialVersion: string | null;
+  /** Network phrase from Wildcard status (Online / Deploying / Offline). */
+  officialNetworkStatus: OfficialNetworkStatus;
   officialSteamBuild: string | null;
   servers: ServerInstallationInfo[];
 }
+
+/** Parsed from `officialserverstatus.ini` ArkML status line. */
+export type OfficialNetworkStatus = "online" | "deploying" | "offline" | "unknown";
+
+/**
+ * Whether `getInstallationInfo` re-reads each server's install dir.
+ * - `true`: always inspect locals
+ * - `false`: return last cached local snapshot (official metadata still refreshed)
+ * - `"when-official-changed"`: inspect locals only if official version/build changed
+ *   (or the server set changed since the last snapshot)
+ */
+export type InstallationServersMode = boolean | "when-official-changed";
 
 export interface SteamCmdStatus {
   detected: boolean;

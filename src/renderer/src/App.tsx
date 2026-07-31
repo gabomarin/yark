@@ -7,6 +7,7 @@ import { notifications } from "@mantine/notifications";
 import type {
   AppEvent,
   ClusterComplianceReport,
+  OfficialNetworkStatus,
   ServerInstallationInfo,
   ServerProfile,
   ServerRuntimeInfo,
@@ -68,6 +69,8 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     Map<string, ServerInstallationInfo>
   >(new Map());
   const [officialVersion, setOfficialVersion] = useState<string | null>(null);
+  const [officialNetworkStatus, setOfficialNetworkStatus] =
+    useState<OfficialNetworkStatus>("unknown");
   const [officialSteamBuild, setOfficialSteamBuild] = useState<string | null>(null);
   const [reports, setReports] = useState<ClusterComplianceReport[]>([]);
   const [events, setEvents] = useState<AppEvent[]>([]);
@@ -135,8 +138,14 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       ? (servers.find((server) => server.id === steamCmdStatus.serverId)?.name ?? null)
       : null;
 
-  const refresh = useCallback(async (options?: { includeInstallation?: boolean }) => {
+  const refresh = useCallback(async (options?: {
+    includeInstallation?: boolean;
+    forceOfficialCheck?: boolean;
+    serversMode?: import("@shared/types").InstallationServersMode;
+  }) => {
     const includeInstallation = options?.includeInstallation !== false;
+    const forceOfficialCheck = options?.forceOfficialCheck === true;
+    const serversMode = options?.serversMode ?? true;
     const [
       serversRes,
       statusesRes,
@@ -149,7 +158,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       window.api.listServers(),
       window.api.getStatuses(),
       includeInstallation
-        ? window.api.getInstallationInfo(false)
+        ? window.api.getInstallationInfo(forceOfficialCheck, serversMode)
         : Promise.resolve(null),
       window.api.getSteamCmdStatus(),
       window.api.getSteamCmdConsole(140),
@@ -162,6 +171,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     }
     if (installRes !== null && installRes.ok) {
       setOfficialVersion(installRes.data.officialVersion);
+      setOfficialNetworkStatus(installRes.data.officialNetworkStatus);
       setOfficialSteamBuild(installRes.data.officialSteamBuild);
       setInstallationInfo(
         new Map(installRes.data.servers.map((s) => [s.serverId, s])),
@@ -192,6 +202,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
           installRes.data.servers.map((info) => [info.serverId, info]),
         );
         setOfficialVersion(installRes.data.officialVersion);
+        setOfficialNetworkStatus(installRes.data.officialNetworkStatus);
         setInstallationInfo(next);
         setOfficialSteamBuild(installRes.data.officialSteamBuild);
 
@@ -329,19 +340,36 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   }, [refresh]);
 
   useEffect(() => {
-    // Progress arrives via push. Avoid hammering install snapshots (PowerShell
-    // VersionInfo + disk reads) every 500ms while robocopy saturates the same volume.
+    // Progress arrives via push. Keep the heartbeat light: statuses/events only.
+    // Full install snapshots (PowerShell VersionInfo + ASA log reads) are expensive
+    // on the main process and freeze hover/click for ~1s when polled too often.
     const syncing = steamCmdStatus?.operation === "sync-files";
     const intervalMs = syncing ? 5_000 : steamCmdBusy ? 2_500 : 5_000;
     const interval = setInterval(() => {
-      // Read busy from a ref so a just-started sync cannot race a stale closure
-      // and keep calling getInstallationInfo during the copy.
-      void refresh({ includeInstallation: !steamCmdBusyRef.current });
+      void refresh({ includeInstallation: false });
     }, intervalMs);
     return () => {
       clearInterval(interval);
     };
   }, [refresh, steamCmdBusy, steamCmdStatus?.operation]);
+
+  useEffect(() => {
+    // Probe official CDN metadata periodically. Re-read local installs only when
+    // official version/build changes (or the server set changes) — disk inspect is
+    // expensive on the Electron main process.
+    const interval = setInterval(() => {
+      if (steamCmdBusyRef.current) {
+        return;
+      }
+      void refresh({
+        includeInstallation: true,
+        serversMode: "when-official-changed",
+      });
+    }, 5 * 60_000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [refresh]);
 
   // After a SteamCMD/sync job finishes, refresh install snapshots once (binary + build).
   const wasSteamCmdBusyRef = useRef(false);
@@ -354,7 +382,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       return;
     }
     wasSteamCmdBusyRef.current = false;
-    void refresh({ includeInstallation: true });
+    void refresh({ includeInstallation: true, forceOfficialCheck: true });
   }, [steamCmdBusy, refresh]);
 
   const runAction = useCallback(
@@ -575,6 +603,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
           steamCmdDetected={steamCmdStatus?.detected === true}
           steamCmdRunning={steamCmdBusy}
           officialVersion={officialVersion}
+          officialNetworkStatus={officialNetworkStatus}
           appVersion={APP_VERSION}
           error={error}
           onDismissError={() => setError(null)}
@@ -669,6 +698,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         route={route}
         appVersion={APP_VERSION}
         officialVersion={officialVersion}
+        officialNetworkStatus={officialNetworkStatus}
         steamCmdDetected={steamCmdStatus?.detected === true}
         steamCmdRunning={steamCmdBusy}
         onNavigate={navigate}

@@ -36,8 +36,10 @@ const api: RendererApi = {
   openSteamCmdCache: (kind: SteamCmdCacheKind) => ipcRenderer.invoke(IPC.steamcmdOpenCache, kind),
   clearSteamCmdCache: (kind: SteamCmdCacheKind) => ipcRenderer.invoke(IPC.steamcmdClearCache, kind),
   getStatuses: () => ipcRenderer.invoke(IPC.serversStatuses),
-  getInstallationInfo: (forceOfficialCheck?: boolean) =>
-    ipcRenderer.invoke(IPC.serversInstallation, forceOfficialCheck),
+  getInstallationInfo: (
+    forceOfficialCheck?: boolean,
+    serversMode?: import("@shared/types").InstallationServersMode,
+  ) => ipcRenderer.invoke(IPC.serversInstallation, forceOfficialCheck, serversMode),
   checkCluster: () => ipcRenderer.invoke(IPC.clusterCheck),
   sendRconCommand: (id: string, command: string) =>
     ipcRenderer.invoke(IPC.rconCommand, id, command),
