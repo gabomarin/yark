@@ -41,7 +41,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
 
       <div className={classes.settingRow}>
         <div className={classes.settingCopy}>
-          <Text size="sm" fw={600}>UI density</Text>
+          <Text size="sm" fw={600}>Display size</Text>
         </div>
         <div className={classes.settingControl}>
           <SegmentedControl
@@ -56,7 +56,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
               { label: "Comfortable", value: "comfortable" },
               { label: "Compact", value: "compact" },
             ]}
-            aria-label="UI density"
+            aria-label="Display size"
           />
         </div>
       </div>

@@ -72,8 +72,8 @@ describe("SettingsPage", () => {
 
     expect(screen.getByText("Settings")).toBeInTheDocument();
     expect(screen.getByText("General")).toBeInTheDocument();
-    expect(screen.getByText("UI density")).toBeInTheDocument();
-    expect(screen.getByLabelText("UI density")).toBeInTheDocument();
+    expect(screen.getByText("Display size")).toBeInTheDocument();
+    expect(screen.getByLabelText("Display size")).toBeInTheDocument();
     expect(screen.getByText("Default base folder")).toBeInTheDocument();
     expect(document.querySelector("[data-steamcmd-path]")).toHaveTextContent(
       "C:/steamcmd/steamcmd.exe",
@@ -86,7 +86,7 @@ describe("SettingsPage", () => {
     });
   });
 
-  it("notifies when UI density changes to Comfortable", async () => {
+  it("notifies when display size changes to Comfortable", async () => {
     const user = userEvent.setup();
     const onUiDensityChange = vi.fn();
     vi.stubGlobal("api", {

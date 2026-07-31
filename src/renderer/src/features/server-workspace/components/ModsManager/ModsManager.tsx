@@ -97,7 +97,7 @@ export function ModsManager(props: Props): ReactElement {
     try {
       await props.onModsChanged(next);
       setMods(next);
-      setInfo("Mods updated in the profile (−mods= on launch).");
+      setInfo("Mods saved. They'll load the next time the server starts.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save mods");
     } finally {
@@ -161,11 +161,7 @@ export function ModsManager(props: Props): ReactElement {
         <div>
           <Title order={3}>Mods</Title>
           <Text c="dimmed" size="sm">
-            Manage CurseForge Project IDs. They are injected into{" "}
-            <Text span fw={600}>
-              -mods=
-            </Text>{" "}
-            on launch. Local stub metadata until an API key is available.
+            Manage CurseForge Project IDs. They load when the server starts.
           </Text>
         </div>
       </header>

@@ -511,7 +511,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
       title: "Restore backup?",
       children: (
         <Text size="sm">
-          Restore <strong>{label}</strong> ({backup.type}) from{" "}
+          Restore <strong>{label}</strong> from{" "}
           {formatWhen(backupFinishedAt(backup))} onto{" "}
           <strong>{props.server.name}</strong>? Only that kind of data is replaced.
           A safety backup of the same kind is created first. The server must stay stopped.
@@ -543,7 +543,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
       : activeKind === "players"
         ? playerSearch.trim().length > 0
           ? "No player backups match this search."
-          : "No player-profile backups yet. Manual backup snapshots all profiles; join/leave also creates per-player archives while the server is running."
+          : "No player profile backups yet. Backup all players now, or they'll be saved automatically when players join or leave."
         : "No INI backups yet. Create one manually — an automatic copy is also taken after each successful INI save.";
 
   const settingsTitle =

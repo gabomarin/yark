@@ -515,7 +515,7 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    const update = screen.getByRole("button", { name: /Update status unknown/i });
+    const update = screen.getByRole("button", { name: /Update \(couldn't check version\)/i });
     expect(update).toBeEnabled();
     await user.click(update);
     expect(onUpdateNow).toHaveBeenCalledTimes(1);

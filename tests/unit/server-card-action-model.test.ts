@@ -43,7 +43,7 @@ const combos: Combo[] = [
     installed: true,
     updateState: "unknown",
     expectRuntime: { kind: "start", disabled: false },
-    expectUpdate: { kind: "update", label: "Update status unknown", disabled: false },
+    expectUpdate: { kind: "update", label: "Update (couldn't check version)", disabled: false },
   },
   {
     name: "not installed",

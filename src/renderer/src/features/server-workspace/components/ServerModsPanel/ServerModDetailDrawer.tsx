@@ -26,7 +26,7 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
     <Drawer
       opened={props.opened}
       onClose={props.onClose}
-      title="Mod metadata"
+      title="Mod details"
       position="right"
       size={440}
     >

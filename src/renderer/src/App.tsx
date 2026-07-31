@@ -103,7 +103,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     if (!saved) {
       notifications.show({
         color: "red",
-        title: "Could not save UI density",
+        title: "Could not save display size",
         message: "Your selection was not stored. Try again.",
       });
       return;
@@ -202,24 +202,24 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
           const name = servers.find((s) => s.id === serverId)?.name ?? serverId;
           if (info === undefined || !info.installed) {
             notifications.show({
-              title: "Not installed",
-              message: `"${name}" does not have installed files yet.`,
+              title: "Not installed yet",
+              message: `Install files for "${name}" before checking for updates.`,
               color: "yellow",
             });
             return;
           }
           if (officialBuild == null) {
             notifications.show({
-              title: "Could not query",
-              message: "Could not fetch the public Steam build. Check your connection.",
+              title: "Couldn't check",
+              message: "Couldn't reach Steam right now. Check your internet and try again.",
               color: "red",
             });
             return;
           }
           if (info.steamBuild == null) {
             notifications.show({
-              title: "Could not verify",
-              message: `Local appmanifest not found for "${name}".`,
+              title: "Couldn't check",
+              message: `Couldn't read the installed version for "${name}". Try Install or Verify files first.`,
               color: "yellow",
             });
             return;
@@ -227,14 +227,14 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
           if (isServerUpdateAvailable(info, officialBuild)) {
             notifications.show({
               title: "Update available",
-              message: `"${name}": ${info.steamBuild} → ${officialBuild}`,
+              message: `"${name}" has a newer version. Use Update on the server card when you're ready.`,
               color: "orange",
               autoClose: 8000,
             });
           } else {
             notifications.show({
               title: "Up to date",
-              message: `"${name}" is up to date (${info.steamBuild}).`,
+              message: `"${name}" is already on the latest version.`,
               color: "teal",
             });
           }
@@ -250,31 +250,36 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             info.installed
             && getServerUpdateState(info, officialBuild) === "unknown",
         );
-        const official = officialBuild ?? "unknown";
         if (outdated.length === 0) {
           if (unverified.length > 0) {
             notifications.show({
-              title: "Incomplete check",
-              message: `${unverified.length} server(s) do not have a comparable local build. Public build: ${official}.`,
+              title: "Couldn't check every server",
+              message: `${unverified.length} server${unverified.length === 1 ? "" : "s"} don't have a version to compare. Try Install or Verify on ${unverified.length === 1 ? "that server" : "those servers"}.`,
               color: "yellow",
             });
           } else {
             notifications.show({
-              title: "No updates",
-              message: `All installed servers are up to date. Public build: ${official}`,
+              title: "You're up to date",
+              message: "All installed servers are on the latest version.",
               color: "teal",
             });
           }
         } else {
-          const lines = outdated
+          const names = outdated
             .map((info) => {
               const name = servers.find((s) => s.id === info.serverId)?.name ?? info.serverId;
-              return `${name}: ${info.steamBuild ?? "—"} → ${official}`;
+              return `"${name}"`;
             })
-            .join("\n");
+            .join(", ");
           notifications.show({
-            title: `${outdated.length} update(s) available`,
-            message: `Public build: ${official}\n${lines}`,
+            title:
+              outdated.length === 1
+                ? "Update available"
+                : `${outdated.length} updates available`,
+            message:
+              outdated.length === 1
+                ? `${names} has a newer version. Use Update on the server card when you're ready.`
+                : `${names} have newer versions. Use Update on each server card when you're ready.`,
             color: "orange",
             autoClose: 10000,
           });
@@ -443,7 +448,8 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             }
             notifications.show({
               title: `${label.charAt(0).toUpperCase()}${label.slice(1)} cleared`,
-              message: result.data,
+              message:
+                "Removed. The next install or update will download what it needs.",
               color: "teal",
             });
             await refresh();
@@ -476,11 +482,11 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         title: `Force close "${label}"`,
         children: (
           <Alert color="red" title="No save" variant="light">
-            Kills the process immediately. This can corrupt the world if it was not saved first.
-            Prefer Stop when possible.
+            Closes the server immediately without saving. This can corrupt the world if it was
+            not saved first. Prefer Stop when possible.
           </Alert>
         ),
-        labels: { confirm: "Kill process", cancel: "Cancel" },
+        labels: { confirm: "Force close", cancel: "Cancel" },
         confirmProps: { color: "red" },
         onConfirm: () => {
           void runAction(() => window.api.killServer(id));
@@ -501,7 +507,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         children: (
           <Stack gap="sm">
             <Alert color="red" title="Everything will be deleted" variant="light">
-              This action cannot be undone. The manager profile and all on-disk content
+              This action cannot be undone. This server in YARK and all on-disk content
               (world, configs, mods, and other files) will be deleted.
             </Alert>
             <div>
@@ -511,9 +517,9 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
               <Code block>{installDir}</Code>
             </div>
             <List size="sm" spacing={4}>
-              <List.Item>Manager profile</List.Item>
-              <List.Item>SavedArks / world</List.Item>
-              <List.Item>INI configs and server data</List.Item>
+              <List.Item>This server in YARK</List.Item>
+              <List.Item>World save</List.Item>
+              <List.Item>Settings and other server files</List.Item>
             </List>
           </Stack>
         ),

@@ -107,7 +107,7 @@ describe("ServerModsPanel", () => {
     expect(api.getModsMetadata).not.toHaveBeenCalled();
     expect(screen.getByText("Visuals and Sounds")).toBeInTheDocument();
     await user.click(screen.getByText("Awesome Spyglass!"));
-    expect(await screen.findByText("Mod metadata")).toBeInTheDocument();
+    expect(await screen.findByText("Mod details")).toBeInTheDocument();
 
     await user.click(screen.getByRole("switch", { name: "Disable Awesome Spyglass!" }));
     await waitFor(() => {
@@ -132,7 +132,7 @@ describe("ServerModsPanel", () => {
     await user.click(screen.getByRole("button", { name: "Add mod" }));
 
     expect(api.getModByReference).toHaveBeenCalledWith(url);
-    expect(screen.queryByText("Mod metadata")).not.toBeInTheDocument();
+    expect(screen.queryByText("Mod details")).not.toBeInTheDocument();
     await waitFor(() => {
       expect(api.updateServer).toHaveBeenCalledWith(
         "server-1",

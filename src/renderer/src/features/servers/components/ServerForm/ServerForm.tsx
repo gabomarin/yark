@@ -436,7 +436,7 @@ export function ServerForm(props: Props): ReactElement {
             value={state.mods}
             onChange={(e) => setField("mods")(e.currentTarget.value)}
             placeholder="928988, 929420"
-            description="Comma-separated CurseForge Project IDs (−mods= on launch). Disable individual mods from the Mods tab without removing them."
+            description="CurseForge mod IDs, separated by commas. Prefer the Mods tab to add or turn mods off."
           />
           <Textarea
             label="Extra arguments"

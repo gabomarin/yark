@@ -662,8 +662,8 @@ export function ServerLogsPanel(props: Props): ReactElement {
           <Stack gap="sm" className={classes.updatesStack}>
             <TabIntro
               title="Updates"
-              purpose="Install, update, and verify logs for this server (raw tool output)."
-              useWhen="An update failed, files look wrong, or you need exit codes — pick a run on the left, read the log on the right."
+              purpose="Detailed download and install logs for this server."
+              useWhen="When an update failed or files look wrong — pick a run on the left, read the log on the right."
               action={
                 <ClearAction
                   label="Clear all update logs for this server"

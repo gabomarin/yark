@@ -11,7 +11,7 @@ export const RUNTIME_SOURCE_FILTER_OPTIONS: {
   { value: "all", label: "All sources" },
   { value: "system", label: "System" },
   { value: "asa", label: "Server log" },
-  { value: "process", label: "Process (stdout/stderr)" },
+  { value: "process", label: "Process output" },
 ];
 
 const RUNTIME_LINE_SOURCE_RE = /^\[[^\]]+\] \[([a-z]+)\] /i;
