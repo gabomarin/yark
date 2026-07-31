@@ -57,5 +57,8 @@ describe("desktop shell preferences (#54)", () => {
     setTrayCloseHintDismissed(settings, true);
     expect(settings.get(TRAY_CLOSE_HINT_DISMISSED_SETTING_KEY)).toBe("true");
     expect(readDesktopShellPreferences(settings).trayCloseHintDismissed).toBe(true);
+
+    expect(setTrayCloseHintDismissed(settings, false)).toBe(false);
+    expect(readDesktopShellPreferences(settings).trayCloseHintDismissed).toBe(false);
   });
 });

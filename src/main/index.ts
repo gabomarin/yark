@@ -33,7 +33,7 @@ const gotSingleInstanceLock = app.requestSingleInstanceLock();
 if (!gotSingleInstanceLock) {
   app.quit();
 } else if (process.platform === "win32") {
-  // Required for Windows toast notifications to associate with this app.
+  // Must run before any Notification so Windows associates toasts with YARK.
   app.setAppUserModelId("com.yark.servermanager");
 }
 
@@ -175,7 +175,13 @@ if (gotSingleInstanceLock) {
     );
 
     let allowQuit = false;
-    /** True once a real quit is in progress (tray Quit, settle, etc.). */
+    /**
+     * Quit coordination:
+     * - `isQuitting`: real shutdown started (tray Quit / settle / before-quit).
+     *   Window `close` must not re-hide to tray while this is true.
+     * - `allowQuit`: stop/settle finished; next `app.quit()` / `before-quit` may exit.
+     * - `pendingQuit`: single-flight promise for async stop-before-quit work.
+     */
     let isQuitting = false;
     let pendingQuit: Promise<void> | null = null;
 
@@ -268,6 +274,9 @@ if (gotSingleInstanceLock) {
 
     const notifyTrayHide = (): void => {
       if (!Notification.isSupported()) {
+        return;
+      }
+      if (readDesktopShellPreferences(settings).trayCloseHintDismissed) {
         return;
       }
       const notification = new Notification({

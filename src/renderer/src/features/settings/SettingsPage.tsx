@@ -110,6 +110,8 @@ export function SettingsPage(props: Props): ReactElement {
               onUiDensityChange={props.onUiDensityChange}
               closeWindowToTray={desktopShell.closeWindowToTray}
               onCloseWindowToTrayChange={desktopShell.onCloseWindowToTrayChange}
+              trayCloseHintDismissed={desktopShell.trayCloseHintDismissed}
+              onTrayCloseHintDismissedChange={desktopShell.onTrayCloseHintDismissedChange}
               startWithWindows={desktopShell.startWithWindows}
               onStartWithWindowsChange={desktopShell.onStartWithWindowsChange}
               desktopShellReady={desktopShell.desktopShellReady}

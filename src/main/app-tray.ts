@@ -16,6 +16,10 @@ export interface AppTrayOptions {
 export function createAppTray(options: AppTrayOptions): Tray | null {
   const image = loadTrayImage(options.iconPath);
   if (image === null) {
+    console.warn(
+      "[yark] System tray icon could not be loaded; tray will be unavailable.",
+      options.iconPath ?? "(no icon path)",
+    );
     return null;
   }
 

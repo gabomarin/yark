@@ -57,6 +57,8 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.appSetCloseWindowToTray, enabled),
   setStartWithWindows: (enabled) =>
     ipcRenderer.invoke(IPC.appSetStartWithWindows, enabled),
+  setTrayCloseHintDismissed: (dismissed) =>
+    ipcRenderer.invoke(IPC.appSetTrayCloseHintDismissed, dismissed),
   readServerIni: (serverId: string) =>
     ipcRenderer.invoke(IPC.iniRead, serverId),
   openServerIniInEditor: (serverId: string, fileKey: "gameUserSettings" | "game") =>
