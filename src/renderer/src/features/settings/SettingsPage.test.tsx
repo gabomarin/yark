@@ -26,6 +26,27 @@ const readyStatus: SteamCmdStatus = {
   checkedAt: "2026-07-23T00:00:00.000Z",
 };
 
+function stubSettingsApi(
+  overrides: Record<string, unknown> = {},
+): void {
+  vi.stubGlobal("api", {
+    listAppDataFolders: vi.fn().mockResolvedValue({ ok: true, data: [] }),
+    openAppDataFolder: vi.fn(),
+    pickPath: vi.fn(),
+    getDesktopShellPreferences: vi.fn().mockResolvedValue({
+      ok: true,
+      data: {
+        closeWindowToTray: true,
+        startWithWindows: false,
+        trayCloseHintDismissed: false,
+      },
+    }),
+    setCloseWindowToTray: vi.fn().mockResolvedValue({ ok: true, data: true }),
+    setStartWithWindows: vi.fn().mockResolvedValue({ ok: true, data: false }),
+    ...overrides,
+  });
+}
+
 function renderSettings(
   overrides: Partial<ComponentProps<typeof SettingsPage>> = {},
 ): void {
@@ -57,21 +78,21 @@ describe("SettingsPage", () => {
   });
 
   it("renders compact SteamCMD, general preference, and version footer", async () => {
-    vi.stubGlobal("api", {
+    stubSettingsApi({
       listAppDataFolders: vi.fn().mockResolvedValue({
         ok: true,
         data: [
           { kind: "app", label: "App data", path: "C:/Users/me/AppData/Roaming/yark" },
         ],
       }),
-      openAppDataFolder: vi.fn(),
-      pickPath: vi.fn(),
     });
 
     renderSettings();
 
     expect(screen.getByText("Settings")).toBeInTheDocument();
     expect(screen.getByText("General")).toBeInTheDocument();
+    expect(screen.getByText("Close window to tray")).toBeInTheDocument();
+    expect(screen.getByText("Start with Windows")).toBeInTheDocument();
     expect(screen.getByText("Display size")).toBeInTheDocument();
     expect(screen.getByLabelText("Display size")).toBeInTheDocument();
     expect(screen.getByText("Default base folder")).toBeInTheDocument();
@@ -83,17 +104,14 @@ describe("SettingsPage", () => {
     expect(screen.getByText(/YARK server manager · v0.1.0/i)).toBeInTheDocument();
     await waitFor(() => {
       expect(window.api.listAppDataFolders).toHaveBeenCalled();
+      expect(window.api.getDesktopShellPreferences).toHaveBeenCalled();
     });
   });
 
   it("notifies when display size changes to Comfortable", async () => {
     const user = userEvent.setup();
     const onUiDensityChange = vi.fn();
-    vi.stubGlobal("api", {
-      listAppDataFolders: vi.fn().mockResolvedValue({ ok: true, data: [] }),
-      openAppDataFolder: vi.fn(),
-      pickPath: vi.fn(),
-    });
+    stubSettingsApi();
 
     renderSettings({ onUiDensityChange });
 
@@ -105,11 +123,7 @@ describe("SettingsPage", () => {
     const user = userEvent.setup();
     const onOpenSteamCmdCache = vi.fn();
     const onClearSteamCmdCache = vi.fn();
-    vi.stubGlobal("api", {
-      listAppDataFolders: vi.fn().mockResolvedValue({ ok: true, data: [] }),
-      openAppDataFolder: vi.fn(),
-      pickPath: vi.fn(),
-    });
+    stubSettingsApi();
 
     renderSettings({
       onOpenSteamCmdCache,
@@ -135,7 +149,7 @@ describe("SettingsPage", () => {
     const user = userEvent.setup();
     const onDefaultBaseFolderChange = vi.fn();
     const openAppDataFolder = vi.fn().mockResolvedValue({ ok: true, data: undefined });
-    vi.stubGlobal("api", {
+    stubSettingsApi({
       listAppDataFolders: vi.fn().mockResolvedValue({
         ok: true,
         data: [
@@ -190,11 +204,7 @@ describe("SettingsPage", () => {
   it("shows install when SteamCMD is missing and toggles native console", async () => {
     const user = userEvent.setup();
     const onOpenNativeTerminalOnStartChange = vi.fn();
-    vi.stubGlobal("api", {
-      listAppDataFolders: vi.fn().mockResolvedValue({ ok: true, data: [] }),
-      openAppDataFolder: vi.fn(),
-      pickPath: vi.fn(),
-    });
+    stubSettingsApi();
 
     renderSettings({
       steamCmdStatus: {

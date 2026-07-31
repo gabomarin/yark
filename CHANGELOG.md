@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Windows system tray + **Close window to tray** (default on) and **Start with Windows** (default off) settings (#54).
+
 ## [0.4.0] - 2026-07-30
 
 ### Added

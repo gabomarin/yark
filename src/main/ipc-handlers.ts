@@ -19,6 +19,13 @@ import type {
   BackupPolicy,
 } from "../shared/types";
 import { UI_DENSITY_SETTING_KEY, isUiDensity, type UiDensity } from "../shared/ui-density";
+import {
+  readDesktopShellPreferences,
+  setCloseWindowToTray,
+  setStartWithWindowsPreference,
+} from "./desktop-shell-settings";
+import { applyWindowsLoginItem } from "./windows-login-item";
+import type { DesktopShellPreferences } from "../shared/desktop-shell";
 
 export interface AppDataFolderRoots {
   app: string;
@@ -275,6 +282,30 @@ export function registerIpcHandlers(
       }
       settings.set(UI_DENSITY_SETTING_KEY, density);
       return density;
+    }),
+  );
+
+  ipcMain.handle(IPC.appGetDesktopShellPreferences, () =>
+    wrap((): DesktopShellPreferences => readDesktopShellPreferences(settings)),
+  );
+
+  ipcMain.handle(IPC.appSetCloseWindowToTray, (_e, enabled: boolean) =>
+    wrap((): boolean => {
+      if (typeof enabled !== "boolean") {
+        throw new Error("closeWindowToTray must be a boolean");
+      }
+      return setCloseWindowToTray(settings, enabled);
+    }),
+  );
+
+  ipcMain.handle(IPC.appSetStartWithWindows, (_e, enabled: boolean) =>
+    wrap((): boolean => {
+      if (typeof enabled !== "boolean") {
+        throw new Error("startWithWindows must be a boolean");
+      }
+      const next = setStartWithWindowsPreference(settings, enabled);
+      applyWindowsLoginItem(next);
+      return next;
     }),
   );
 

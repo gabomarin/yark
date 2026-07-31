@@ -72,6 +72,16 @@ function createApiMock(): RendererApi {
     openAppDataFolder: vi.fn(),
     getUiDensity: vi.fn().mockResolvedValue({ ok: true, data: "compact" }),
     setUiDensity: vi.fn().mockResolvedValue({ ok: true, data: "compact" }),
+    getDesktopShellPreferences: vi.fn().mockResolvedValue({
+      ok: true,
+      data: {
+        closeWindowToTray: true,
+        startWithWindows: false,
+        trayCloseHintDismissed: false,
+      },
+    }),
+    setCloseWindowToTray: vi.fn().mockResolvedValue({ ok: true, data: true }),
+    setStartWithWindows: vi.fn().mockResolvedValue({ ok: true, data: false }),
     readServerIni: vi.fn(),
     openServerIniInEditor: vi.fn(),
     previewServerIni: vi.fn(),

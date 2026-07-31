@@ -27,6 +27,7 @@ import type {
   StartServerOptions,
 } from "./types";
 import type { UiDensity } from "./ui-density";
+import type { DesktopShellPreferences } from "./desktop-shell";
 
 export type PickPathKind = "directory" | "file";
 
@@ -72,6 +73,9 @@ export const IPC = {
   appOpenDataFolder: "app:open-data-folder",
   appGetUiDensity: "app:get-ui-density",
   appSetUiDensity: "app:set-ui-density",
+  appGetDesktopShellPreferences: "app:get-desktop-shell-preferences",
+  appSetCloseWindowToTray: "app:set-close-window-to-tray",
+  appSetStartWithWindows: "app:set-start-with-windows",
   iniRead: "ini:read",
   iniPreview: "ini:preview",
   iniSave: "ini:save",
@@ -174,6 +178,9 @@ export interface RendererApi {
   /** `null` when unset in `app_settings` (caller may migrate / apply default). */
   getUiDensity(): Promise<IpcResult<UiDensity | null>>;
   setUiDensity(density: UiDensity): Promise<IpcResult<UiDensity>>;
+  getDesktopShellPreferences(): Promise<IpcResult<DesktopShellPreferences>>;
+  setCloseWindowToTray(enabled: boolean): Promise<IpcResult<boolean>>;
+  setStartWithWindows(enabled: boolean): Promise<IpcResult<boolean>>;
   readServerIni(serverId: string): Promise<IpcResult<ServerIniSnapshot>>;
   openServerIniInEditor(
     serverId: string,

@@ -49,6 +49,12 @@ const api: RendererApi = {
   openAppDataFolder: (kind) => ipcRenderer.invoke(IPC.appOpenDataFolder, kind),
   getUiDensity: () => ipcRenderer.invoke(IPC.appGetUiDensity),
   setUiDensity: (density) => ipcRenderer.invoke(IPC.appSetUiDensity, density),
+  getDesktopShellPreferences: () =>
+    ipcRenderer.invoke(IPC.appGetDesktopShellPreferences),
+  setCloseWindowToTray: (enabled) =>
+    ipcRenderer.invoke(IPC.appSetCloseWindowToTray, enabled),
+  setStartWithWindows: (enabled) =>
+    ipcRenderer.invoke(IPC.appSetStartWithWindows, enabled),
   readServerIni: (serverId: string) =>
     ipcRenderer.invoke(IPC.iniRead, serverId),
   openServerIniInEditor: (serverId: string, fileKey: "gameUserSettings" | "game") =>

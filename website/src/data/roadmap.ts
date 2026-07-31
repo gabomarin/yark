@@ -29,11 +29,11 @@ export const roadmapItems: RoadmapItem[] = [
   },
   {
     tag: "building",
-    text: "Smarter quit behavior and reattach to servers that kept running",
+    text: "Windows tray + start-with-Windows so YARK can stay out of the way",
   },
   {
-    tag: "planned",
-    text: "Windows tray + start-with-Windows so YARK can stay out of the way",
+    tag: "building",
+    text: "Smarter quit behavior and reattach to servers that kept running",
   },
   {
     tag: "planned",
