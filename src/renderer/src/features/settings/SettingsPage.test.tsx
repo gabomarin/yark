@@ -43,6 +43,7 @@ function stubSettingsApi(
     }),
     setCloseWindowToTray: vi.fn().mockResolvedValue({ ok: true, data: true }),
     setStartWithWindows: vi.fn().mockResolvedValue({ ok: true, data: false }),
+    setTrayCloseHintDismissed: vi.fn().mockResolvedValue({ ok: true, data: false }),
     ...overrides,
   });
 }
@@ -92,6 +93,7 @@ describe("SettingsPage", () => {
     expect(screen.getByText("Settings")).toBeInTheDocument();
     expect(screen.getByText("General")).toBeInTheDocument();
     expect(screen.getByText("Close window to tray")).toBeInTheDocument();
+    expect(screen.getByText("Show notification when hiding to tray")).toBeInTheDocument();
     expect(screen.getByText("Start with Windows")).toBeInTheDocument();
     expect(screen.getByText("Display size")).toBeInTheDocument();
     expect(screen.getByLabelText("Display size")).toBeInTheDocument();
@@ -117,6 +119,26 @@ describe("SettingsPage", () => {
 
     await user.click(screen.getByRole("radio", { name: "Comfortable" }));
     expect(onUiDensityChange).toHaveBeenCalledWith("comfortable");
+  });
+
+  it("persists dismissing the tray-hide notification", async () => {
+    const user = userEvent.setup();
+    stubSettingsApi();
+
+    renderSettings();
+
+    await waitFor(() => {
+      expect(window.api.getDesktopShellPreferences).toHaveBeenCalled();
+    });
+
+    const toastSwitch = await screen.findByRole("switch", {
+      name: "Show notification when hiding to tray",
+    });
+    expect(toastSwitch).toBeChecked();
+    await user.click(toastSwitch);
+    await waitFor(() => {
+      expect(window.api.setTrayCloseHintDismissed).toHaveBeenCalledWith(true);
+    });
   });
 
   it("expands caches and supports open/clear actions", async () => {

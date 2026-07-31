@@ -76,6 +76,7 @@ export const IPC = {
   appGetDesktopShellPreferences: "app:get-desktop-shell-preferences",
   appSetCloseWindowToTray: "app:set-close-window-to-tray",
   appSetStartWithWindows: "app:set-start-with-windows",
+  appSetTrayCloseHintDismissed: "app:set-tray-close-hint-dismissed",
   iniRead: "ini:read",
   iniPreview: "ini:preview",
   iniSave: "ini:save",
@@ -181,6 +182,7 @@ export interface RendererApi {
   getDesktopShellPreferences(): Promise<IpcResult<DesktopShellPreferences>>;
   setCloseWindowToTray(enabled: boolean): Promise<IpcResult<boolean>>;
   setStartWithWindows(enabled: boolean): Promise<IpcResult<boolean>>;
+  setTrayCloseHintDismissed(dismissed: boolean): Promise<IpcResult<boolean>>;
   readServerIni(serverId: string): Promise<IpcResult<ServerIniSnapshot>>;
   openServerIniInEditor(
     serverId: string,

@@ -197,8 +197,9 @@ implemented yet — Quit always stops managed servers today.
 
 - **Close window to tray** (default on): the window close button hides YARK to
   the system tray instead of quitting. Minimize still uses the normal taskbar.
-  Windows shows a toast notification; click it (or the tray icon) to reopen.
-  Quit from the tray menu to exit.
+  Optional Windows toast (Settings: **Show notification when hiding to tray**,
+  default on); click the toast or tray icon to reopen. Quit from the tray menu
+  to exit.
 - **Start with Windows** (default off): uses Electron `setLoginItemSettings` so
   toggling does not leave duplicate login registrations. Dev (`electron .`)
   registers the Electron binary with the app path as an argument; packaged

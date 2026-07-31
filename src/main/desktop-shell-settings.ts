@@ -48,9 +48,10 @@ export function setStartWithWindowsPreference(
 export function setTrayCloseHintDismissed(
   settings: AppSettingsRepository,
   dismissed: boolean,
-): void {
+): boolean {
   settings.set(
     TRAY_CLOSE_HINT_DISMISSED_SETTING_KEY,
     serializeStoredBoolean(dismissed),
   );
+  return dismissed;
 }

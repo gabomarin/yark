@@ -11,6 +11,8 @@ interface Props {
   onUiDensityChange: (density: UiDensity) => void;
   closeWindowToTray: boolean;
   onCloseWindowToTrayChange: (enabled: boolean) => void;
+  trayCloseHintDismissed: boolean;
+  onTrayCloseHintDismissedChange: (dismissed: boolean) => void;
   startWithWindows: boolean;
   onStartWithWindowsChange: (enabled: boolean) => void;
   desktopShellReady: boolean;
@@ -64,6 +66,28 @@ export function SettingsGeneralSection(props: Props): ReactElement {
           />
         </div>
       </div>
+
+      {props.closeWindowToTray ? (
+        <div className={classes.settingRow}>
+          <div className={classes.settingCopy}>
+            <Text size="sm" fw={600}>Show notification when hiding to tray</Text>
+            <Text size="xs" c="dimmed" mt={2}>
+              Windows toast when the window is hidden. Turn off if you do not want
+              the reminder each time.
+            </Text>
+          </div>
+          <div className={classes.settingControl}>
+            <Switch
+              checked={!props.trayCloseHintDismissed}
+              disabled={!props.desktopShellReady}
+              onChange={(event) =>
+                props.onTrayCloseHintDismissedChange(!event.currentTarget.checked)
+              }
+              aria-label="Show notification when hiding to tray"
+            />
+          </div>
+        </div>
+      ) : null}
 
       <div className={classes.settingRow}>
         <div className={classes.settingCopy}>

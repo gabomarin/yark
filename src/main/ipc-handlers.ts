@@ -23,6 +23,7 @@ import {
   readDesktopShellPreferences,
   setCloseWindowToTray,
   setStartWithWindowsPreference,
+  setTrayCloseHintDismissed,
 } from "./desktop-shell-settings";
 import { applyWindowsLoginItem } from "./windows-login-item";
 import type { DesktopShellPreferences } from "../shared/desktop-shell";
@@ -304,8 +305,22 @@ export function registerIpcHandlers(
         throw new Error("startWithWindows must be a boolean");
       }
       const next = setStartWithWindowsPreference(settings, enabled);
-      applyWindowsLoginItem(next);
+      try {
+        applyWindowsLoginItem(next);
+      } catch (error: unknown) {
+        const detail = error instanceof Error ? error.message : String(error);
+        throw new Error(`Could not update Windows startup registration: ${detail}`);
+      }
       return next;
+    }),
+  );
+
+  ipcMain.handle(IPC.appSetTrayCloseHintDismissed, (_e, dismissed: boolean) =>
+    wrap((): boolean => {
+      if (typeof dismissed !== "boolean") {
+        throw new Error("trayCloseHintDismissed must be a boolean");
+      }
+      return setTrayCloseHintDismissed(settings, dismissed);
     }),
   );
 

@@ -82,6 +82,7 @@ function createApiMock(): RendererApi {
     }),
     setCloseWindowToTray: vi.fn().mockResolvedValue({ ok: true, data: true }),
     setStartWithWindows: vi.fn().mockResolvedValue({ ok: true, data: false }),
+    setTrayCloseHintDismissed: vi.fn().mockResolvedValue({ ok: true, data: false }),
     readServerIni: vi.fn(),
     openServerIniInEditor: vi.fn(),
     previewServerIni: vi.fn(),
