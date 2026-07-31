@@ -151,6 +151,27 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 | `SearchField` | `shared/ui/SearchField/` | Search inputs |
 | `ServerRuntimeStatusBadge` | `shared/ui/ServerRuntimeStatusBadge/` | Process status badge |
 
+## Product brand / packaging icons
+
+Canonical sources live under [`brand/`](../brand/) — see [`brand/README.md`](../brand/README.md).
+
+| Asset | Role |
+| --- | --- |
+| `brand/yark-logo.png` | Full lockup → website hero; sidebar uses a 336px-wide export |
+| `brand/yark-icon.png` | Mark → `build/icon.ico`, web favicons, app tab favicon |
+| `brand/yark-logo.svg` | Optional local design source only (gitignored; not runtime) |
+
+Rebuild wired copies after editing sources:
+
+```bash
+npm i --no-save sharp png-to-ico
+node brand/_build-icons.cjs
+```
+
+Electron packaging reads `build/icon.ico` (`package.json` → `build.win.icon` /
+`extraResources`). The BrowserWindow resolves the same ICO via `resolveAppIcon()`
+in `src/main/index.ts`.
+
 ## When adding a new page
 
 1. Use `PageScaffold` (unless Overview / workspace shell).

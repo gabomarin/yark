@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="YARK">
-  <title>YARK mark</title>
-  <!-- Geometric Y monogram — works from 16px to 512px -->
-  <rect width="128" height="128" rx="28" fill="#12141a"/>
-  <path
-    fill="#5b9a8b"
-    d="M36 28h18.5L64 58.5 73.5 28H92L70 68.5V100H58V68.5L36 28z"
-  />
-</svg>

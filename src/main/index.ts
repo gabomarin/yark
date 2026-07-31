@@ -1,4 +1,5 @@
 import { app, BrowserWindow, dialog } from "electron";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { openDatabase } from "../backend/infra/db/database";
 import { AppSettingsRepository } from "../backend/infra/db/app-settings-repository";
@@ -32,14 +33,25 @@ function sendToRenderer(channel: string, payload: unknown): void {
   webContents.send(channel, payload);
 }
 
+function resolveAppIcon(): string | undefined {
+  const candidates = [
+    join(process.resourcesPath, "icon.ico"),
+    join(__dirname, "../../build/icon.ico"),
+    join(app.getAppPath(), "build/icon.ico"),
+  ];
+  return candidates.find((candidate) => existsSync(candidate));
+}
+
 function createWindow(): BrowserWindow {
+  const icon = resolveAppIcon();
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
     minWidth: 960,
     minHeight: 600,
     title: "YARK server manager",
-    backgroundColor: "#12141a",
+    backgroundColor: "#0c1427",
+    ...(icon !== undefined ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
       contextIsolation: true,

@@ -22,44 +22,21 @@
 }
 
 .brand {
-  flex-wrap: nowrap;
+  display: flex;
+  justify-content: center;
   padding: var(--app-space-xxs) var(--app-space-xxs) var(--app-space-xs);
 }
 
-.brandCopy {
-  min-width: 0;
-}
-
-.brandMark {
-  position: relative;
-  display: grid;
-  flex: 0 0 34px;
-  width: 34px;
-  height: 38px;
-  place-items: center;
-  color: var(--app-color-cryo);
-  border: 1px solid color-mix(in srgb, var(--app-color-cryo) 42%, var(--app-color-border));
-  clip-path: polygon(50% 0, 94% 22%, 94% 78%, 50% 100%, 6% 78%, 6% 22%);
-  background:
-    linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--app-color-cryo) 15%, var(--ark-gray-3)),
-      color-mix(in srgb, var(--app-color-fossil) 5%, var(--ark-gray-2))
-    );
-}
-
-.brandMark::after {
-  position: absolute;
-  inset: 5px;
-  border: 1px solid color-mix(in srgb, var(--app-color-fossil) 35%, transparent);
-  clip-path: inherit;
-  content: "";
-}
-
-.brandIcon {
-  position: relative;
-  z-index: 1;
-  color: var(--app-color-cryo);
+.brandLockup {
+  display: block;
+  width: 100%;
+  max-width: 168px;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--app-radius-control);
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
 }
 
 .nav {

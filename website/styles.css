@@ -55,24 +55,14 @@ a:hover {
 .hero {
   max-width: 44rem;
   margin: 0 auto;
-  padding: clamp(4.5rem, 14vh, 7.5rem) 1.5rem 3.25rem;
+  padding: clamp(3.5rem, 12vh, 6.5rem) 1.5rem 3.25rem;
 }
 
-.brand {
-  margin: 0 0 0.35rem;
-  font-size: clamp(3.4rem, 10vw, 5.4rem);
-  font-weight: 700;
-  letter-spacing: -0.045em;
-  line-height: 0.92;
-  color: var(--ink);
-}
-
-.hero h1 {
-  margin: 0 0 1.1rem;
-  font-size: clamp(1.35rem, 3.4vw, 1.85rem);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: color-mix(in srgb, var(--ink) 78%, var(--cryo));
+.brand-lockup {
+  display: block;
+  width: min(100%, 22rem);
+  height: auto;
+  margin: 0 0 1.35rem;
 }
 
 .lede {
