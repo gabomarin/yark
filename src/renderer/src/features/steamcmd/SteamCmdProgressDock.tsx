@@ -28,7 +28,7 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
   const title =
     status.operation !== null
       ? OPERATION_LABEL[status.operation]
-      : "SteamCMD operation";
+      : "Updating files";
   const percent = status.progressPercent;
   /** Unknown % while busy (e.g. robocopy sync) — full striped bar with loop animation. */
   const indeterminate = percent === null && status.busy;
@@ -180,7 +180,7 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
           className={classes.console}
           lines={lines}
           maxLines={60}
-          emptyText="Waiting for SteamCMD output…"
+          emptyText="Waiting for progress…"
         />
       </Stack>
     </aside>

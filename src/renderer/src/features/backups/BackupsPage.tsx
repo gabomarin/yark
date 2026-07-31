@@ -248,7 +248,7 @@ export function BackupsPage(props: Props): ReactElement {
     }
     setDiskModalOpen(false);
     await load();
-    setInfo("Disk alert thresholds updated.");
+    setInfo("Backup drive alerts updated.");
   };
 
   const buildCleanupPayload = (): BackupCleanupOptions => ({
@@ -583,14 +583,14 @@ export function BackupsPage(props: Props): ReactElement {
       <Modal
         opened={diskModalOpen}
         onClose={() => setDiskModalOpen(false)}
-        title="Disk alert thresholds"
+        title="Warn me when the backup drive fills up"
         centered
       >
         {diskDraft !== null && (
           <Stack gap="md">
             <Text size="sm" c="dimmed">
-              Alerts use volume usage for backup destinations. Warning and critical
-              percentages apply to the whole drive, not only backup folders.
+              Based on the whole drive, not just the backup folder. Warning and
+              critical percentages apply to total used space.
             </Text>
             <NumberInput
               label="Warning at used %"
@@ -660,7 +660,7 @@ export function BackupsPage(props: Props): ReactElement {
             }
           />
           <Checkbox
-            label="Enforce retain policy (delete extras beyond keep-last)"
+            label="Delete older backups past each server's keep limit"
             checked={cleanupOptions.enforceRetention}
             onChange={(event) =>
               setCleanupOptions((prev) => ({

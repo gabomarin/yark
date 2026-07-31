@@ -351,9 +351,8 @@ export function ConfigurationEditor(props: Props): ReactElement {
           </Alert>
         )}
         {filesJobActive && (
-          <Alert color="yellow" mb="sm" title="Files job in progress">
-            You can edit INI now; prefer saving after SteamCMD finishes to avoid
-            clobbering files mid-write.
+          <Alert color="yellow" mb="sm" title="Updating server files">
+            You can edit INI now. Prefer saving after the file update finishes.
           </Alert>
         )}
 

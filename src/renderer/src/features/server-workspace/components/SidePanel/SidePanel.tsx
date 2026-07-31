@@ -51,11 +51,11 @@ export function SidePanel(props: Props): ReactElement {
   const steamCmdLockTitle = props.opsLockReason;
   const installLockTitle =
     steamCmdLockTitle ??
-    (isActive ? "Stop the server before installing base files" : undefined);
+    (isActive ? "Stop the server before installing files" : undefined);
   const updateVerifyTitle =
     steamCmdLockTitle ??
     (isActive
-      ? "Server will be stopped for SteamCMD, then restarted if the job succeeds"
+      ? "The server will stop for this check, then restart if it succeeds"
       : undefined);
   const version = resolveDisplayedServerVersion(props.installation) ?? "—";
   const uptime =

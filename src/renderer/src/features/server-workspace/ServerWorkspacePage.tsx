@@ -153,8 +153,8 @@ export function ServerWorkspacePage(props: Props): ReactElement {
   const stopJobActive = stopProgress !== null;
   /** Same operational lock as a running server, plus SteamCMD file jobs. */
   const opsLocked = serverActive || filesJobActive || stopJobActive;
-  const filesLockReason = props.filesJobLabel?.trim() || "SteamCMD is modifying this server's files";
-  const stopLockReason = stopProgress?.label.trim() || "Stopping this server (save + backup)";
+  const filesLockReason = props.filesJobLabel?.trim() || "Updating server files";
+  const stopLockReason = stopProgress?.label.trim() || "Stopping this server…";
   const serverListPanel = (
     <ServerListPanel
       servers={props.servers}
@@ -215,9 +215,8 @@ export function ServerWorkspacePage(props: Props): ReactElement {
         <section className={classes.main} data-workspace-scroll>
           {stopProgress !== null && <StopProgressAlert progress={stopProgress} />}
           {filesJobActive && (
-            <Alert color="yellow" title="Files job in progress" mb="sm">
-              {filesLockReason}. Install/update/verify, start/restart, install path,
-              and restore are locked (same idea as when the server is running).
+            <Alert color="yellow" title={filesLockReason} mb="sm">
+              Start, restore, and other file actions stay locked until this finishes.
             </Alert>
           )}
           {assistantOpen ? (

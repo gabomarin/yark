@@ -368,10 +368,10 @@ export function ServerLogsPanel(props: Props): ReactElement {
     const count = logs?.updateFiles.length ?? 0;
     if (count === 0) return;
     modals.openConfirmModal({
-      title: "Clear update job logs?",
+      title: "Clear update logs?",
       children: (
         <Text size="sm">
-          Permanently delete <strong>{count}</strong> SteamCMD job log
+          Permanently delete <strong>{count}</strong> update log
           {count === 1 ? "" : "s"} for this server? This cannot be undone.
         </Text>
       ),
@@ -662,11 +662,11 @@ export function ServerLogsPanel(props: Props): ReactElement {
           <Stack gap="sm" className={classes.updatesStack}>
             <TabIntro
               title="Updates"
-              purpose="SteamCMD install / update / verify job logs for this server (raw tool output)."
-              useWhen="An update failed, files look wrong, or you need exit codes and SteamCMD stdout — pick a run on the left, read the log on the right."
+              purpose="Detailed download and install logs for this server."
+              useWhen="When an update failed or files look wrong — pick a run on the left, read the log on the right."
               action={
                 <ClearAction
-                  label="Clear all SteamCMD job logs for this server"
+                  label="Clear all update logs for this server"
                   onClick={confirmClearUpdateLogs}
                   disabled={
                     loading ||
@@ -687,7 +687,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
                   <Text c="dimmed">Loading history...</Text>
                 ) : logs === null || logs.updateFiles.length === 0 ? (
                   <Text c="dimmed">
-                    No SteamCMD job logs yet. Install, update, or verify files to create one.
+                    No update logs yet. Install, update, or verify files to create one.
                   </Text>
                 ) : (
                   <div

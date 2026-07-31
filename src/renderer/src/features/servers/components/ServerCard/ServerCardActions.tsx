@@ -254,7 +254,7 @@ export function ServerCardActions(props: Props): ReactElement {
                 }
               >
                 {updateAction.kind === "update" && updateAction.updateState === "unknown"
-                  ? "Update server (status unknown)"
+                  ? "Update (couldn't check version)"
                   : "Update server"}
               </Menu.Item>
               <Menu.Item
@@ -284,7 +284,7 @@ export function ServerCardActions(props: Props): ReactElement {
             onClick={props.onKill}
             disabled={!props.isActive}
           >
-            Force close (kill)
+            Force close
           </Menu.Item>
           <Menu.Item
             color="red"

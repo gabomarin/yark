@@ -238,7 +238,7 @@ describe("ServerCard", () => {
     expect(screen.getByText(/Downloaded:/i)).toBeInTheDocument();
     expect(screen.getByText(/512\.0 \/ 1024\.0 MB/i)).toBeInTheDocument();
     expect(screen.getByText(/42%/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Cancel files job/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Cancel$/i })).toBeInTheDocument();
   });
 
   it("does not offer an update when ARK versions differ but Steam builds match", () => {
@@ -478,7 +478,7 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByRole("button", { name: /Cancel files job/i })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^Cancel$/i })).toBeEnabled();
   });
 
   it("allows manual Update when official Steam build is unknown", async () => {
@@ -515,7 +515,7 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    const update = screen.getByRole("button", { name: /Update status unknown/i });
+    const update = screen.getByRole("button", { name: /Update \(couldn't check version\)/i });
     expect(update).toBeEnabled();
     await user.click(update);
     expect(onUpdateNow).toHaveBeenCalledTimes(1);

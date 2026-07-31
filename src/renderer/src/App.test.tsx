@@ -177,8 +177,8 @@ describe("App empty installation snapshot", () => {
 
     expect(notifySpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        title: "No updates",
-        message: "All installed servers are up to date. Public build: build 24346423",
+        title: "You're up to date",
+        message: "All installed servers are on the latest version.",
         color: "teal",
       }),
     );

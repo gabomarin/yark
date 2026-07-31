@@ -28,7 +28,7 @@ export function ClusterEmptyState(props: Props): ReactElement {
             <Text c="dimmed" size="sm" maw={480} ta="center">
               {props.serverCount === 0
                 ? "Create a server first, then set a Cluster ID and shared cluster directory so maps can transfer together."
-                : "Open a server and set the same Cluster ID plus one shared cluster directory on two or more maps to see compliance here."}
+                : "Open a server and set the same Cluster ID plus one shared cluster directory on two or more maps to see them listed here."}
             </Text>
           )
         }

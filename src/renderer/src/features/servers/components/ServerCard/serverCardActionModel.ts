@@ -57,7 +57,7 @@ export function resolveRuntimeAction(input: {
   if (input.steamCmdBusy) {
     return {
       kind: "cancel",
-      label: "Cancel files job",
+      label: "Cancel",
       color: "red",
       variant: "light",
       disabled: false,
@@ -186,7 +186,7 @@ export function resolveUpdateAction(input: {
   return {
     kind: "update",
     updateState: "unknown",
-    label: "Update status unknown",
+    label: "Update (couldn't check version)",
     color: "gray",
     variant: "light",
     disabled: input.steamCmdBusy || transitioning,

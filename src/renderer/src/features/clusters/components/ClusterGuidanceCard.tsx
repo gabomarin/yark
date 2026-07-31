@@ -17,12 +17,11 @@ export function ClusterGuidanceCard(): ReactElement {
             How transfers work here
           </Title>
           <Text size="sm" c="dimmed">
-            Members of the same <Text span fw={600}>Cluster ID</Text> must share one{" "}
+            Servers with the same <Text span fw={600}>Cluster ID</Text> must share one{" "}
             <Text span fw={600}>cluster directory</Text> so ARK can move creatures and items
-            between maps. Both fields are required: a directory alone does not register a
-            cluster here. Assign them on each server (form or workspace checklist). This page
-            surfaces the compliance checks the backend already runs — it does not validate live
-            transfers yet.
+            between maps. Set both on each server (form or workspace checklist) — a directory
+            alone is not enough. This page checks that Cluster ID and shared folder match. It
+            does not watch live transfers in-game yet.
           </Text>
         </Stack>
       </Group>
