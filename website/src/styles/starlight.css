@@ -1,0 +1,47 @@
+@import "@fontsource-variable/instrument-sans";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+
+/* YARK brand tokens on Starlight surfaces */
+:root {
+  --yark-bg-0: #0c1017;
+  --yark-bg-1: #121821;
+  --yark-ink: #e8eef7;
+  --yark-muted: #9aa8bc;
+  --yark-cryo: #7ec8e3;
+  --yark-fossil: #d4b483;
+  --sl-font: "Instrument Sans Variable", "Instrument Sans", "Segoe UI", sans-serif;
+  --sl-font-mono: "IBM Plex Mono", Consolas, monospace;
+}
+
+:root[data-theme="dark"],
+:root,
+html[data-theme="light"] {
+  /* Force dark tokens even if light was previously stored */
+  --sl-color-accent-low: #1a2a33;
+  --sl-color-accent: #7ec8e3;
+  --sl-color-accent-high: #b7e4f4;
+  --sl-color-white: #e8eef7;
+  --sl-color-gray-1: #e8eef7;
+  --sl-color-gray-2: #c5d0de;
+  --sl-color-gray-3: #9aa8bc;
+  --sl-color-gray-4: #6b7a8f;
+  --sl-color-gray-5: #3a4556;
+  --sl-color-gray-6: #1a222e;
+  --sl-color-black: #0c1017;
+  --sl-color-bg-nav: #0c1017;
+  --sl-color-bg-sidebar: #0e131b;
+  --sl-color-bg: #0c1017;
+  --sl-color-hairline-light: rgba(180, 205, 230, 0.14);
+}
+
+.site-title {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Marketing site link in the docs header area via SiteTitle override alternative:
+   use a small breadcrumb-style note under the logo via CSS on the title. */
+starlight-menu-button button {
+  border-radius: 0.45rem;
+}

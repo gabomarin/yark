@@ -1,0 +1,76 @@
+---
+title: Backups
+description: World, players, and INI backups — schedules, restore rules, and critical-path snapshots.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+Backups are **ZIP archives** under a per-server destination (default `{installDir}\Backups` unless you set another folder). Legacy loose-folder archives can still restore / import.
+
+## What each kind contains
+
+| Kind | Live source | Inside the archive |
+| --- | --- | --- |
+| **World** | `ShooterGame/Saved/SavedArks` | `SavedArks/` |
+| **Players** | `.arkprofile` (+ related) under SavedArks / SaveGames | `PlayerProfiles/` |
+| **INI** | `Game.ini` + `GameUserSettings.ini` in `Config/WindowsServer` | `ConfigWindowsServer/` |
+
+On-disk layout:
+
+```text
+{backupRoot}/
+  World/
+  Player profiles/
+  INI/
+```
+
+## Where to manage them
+
+- **Per server** — Workspace → **Backups** (create, schedule, restore, open folder)
+- **Fleet** — sidebar **Backups** (health, disk pressure, destinations)
+
+## Triggers
+
+| Trigger | Behavior |
+| --- | --- |
+| Manual create | UI creates the selected kind(s); flushes world via RCON `SaveWorld` when active |
+| World schedule | Optional; **world only**; server must be **active**; interval minimum 5 minutes |
+| Player join/leave | Session watcher snapshots (not gated by the world schedule) |
+| INI-on-save | Debounced after a successful INI save |
+| Stop | Best-effort **`pre_stop`** (world + players + INI) after graceful exit |
+| Restart | Fail-hard **`pre_restart`** after stop, before start |
+| Safe update | Fail-hard **`pre_update`** before SteamCMD work |
+
+Default schedule policy (when enabled): interval 60 minutes; retain ~20 world / ~20 players / ~10 INI (configurable).
+
+<Aside type="tip">
+  Stale / “never backed up” warnings on the fleet page only apply when the schedule is **on**
+  and the process is **active**. Stopped servers are not nagged for an elapsed interval.
+</Aside>
+
+## Restore rules
+
+1. Backup must be **completed**
+2. Server must **not** be running
+3. YARK creates a same-kind **`pre_restore`** safeguard first
+4. Then applies the archive:
+
+   - **World** — replaces live `SavedArks`
+   - **Players** — overlays profiles (does not wipe unrelated live profiles)
+   - **INI** — copies present INI files into live config
+
+<Aside type="caution">
+  Restore history is recorded internally; a full restore-audit UI is still on the roadmap.
+</Aside>
+
+## Critical path vs best-effort
+
+| Snapshot | Failure mode |
+| --- | --- |
+| `pre_restart` / `pre_update` | **Fail-hard** — operation stops; no blind continue |
+| `pre_stop` | Best-effort — server already stopped; warning event if packaging fails |
+| INI-on-save | Best-effort |
+
+## Coming later
+
+Portable export/import and richer restore audit history are planned — see the product site roadmap.

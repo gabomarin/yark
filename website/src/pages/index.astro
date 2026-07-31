@@ -1,0 +1,150 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import DownloadIcon from "../components/DownloadIcon.astro";
+import ProductStage from "../components/ProductStage.astro";
+import { site, withBase } from "../data/site";
+import { screenshots } from "../data/screenshots";
+import { roadmapItems } from "../data/roadmap";
+---
+
+<BaseLayout title={site.seoTitle} description={site.description} path="/" softwareSchema>
+  <Fragment slot="before-main">
+    <header class="hero">
+      <img
+        class="brand-lockup"
+        src={withBase("/assets/yark-logo.png")}
+        alt="YARK — ARK Survival Ascended dedicated server manager for Windows"
+        width="420"
+        height="420"
+        data-hero-item
+      />
+      <p class="lede" data-hero-item>
+        Local ARK: Survival Ascended dedicated servers on Windows — managed from one
+        desktop shell. Profiles, SteamCMD, mods, backups, logs, and INI in a single app.
+      </p>
+      <div class="cta-row" data-hero-item>
+        <a class="cta primary" href={site.downloadUrl}>
+          <DownloadIcon />
+          {site.downloadLabel}
+        </a>
+        <a class="cta ghost" href={site.releasesUrl}>All releases</a>
+        <a class="cta ghost" href={site.repoUrl}>GitHub</a>
+      </div>
+      <p class="status-pill" data-hero-item>{site.statusLabel}</p>
+    </header>
+
+    <ProductStage shots={screenshots} />
+
+    <section class="showcase" id="screenshots" aria-label="Application screenshots" data-reveal>
+      <div class="showcase-inner">
+        <p class="showcase-eyebrow" data-reveal-child>A look at the app</p>
+        <h2 class="showcase-title" data-reveal-child>Every workspace surface</h2>
+        <p class="showcase-lede" data-reveal-child>
+          Captured from the Electron + React desktop shell. Interface is under active
+          development and may change between builds.
+        </p>
+        <div class="shots">
+          {
+            screenshots.map((shot) => (
+              <figure class="shot" data-reveal-child>
+                <a href={shot.src} target="_blank" rel="noopener">
+                  <img
+                    src={shot.src}
+                    alt={shot.alt}
+                    loading="lazy"
+                    width="1440"
+                    height="900"
+                  />
+                </a>
+                <figcaption>{shot.caption}</figcaption>
+              </figure>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+  </Fragment>
+
+  <section class="section" id="scope" data-reveal>
+    <h2 data-reveal-child>Current development scope</h2>
+    <p class="section-lede" data-reveal-child>
+      Areas already being built and exercised in early public prerelease builds
+      (Electron + React + TypeScript on Windows). This is not a shipping product checklist.
+    </p>
+    <ul class="feature-list" data-reveal-child>
+      <li>Multiple server profiles from a single desktop shell</li>
+      <li>Start, stop, restart, and force-stop dedicated instances</li>
+      <li>Install, update, and verify server files with SteamCMD</li>
+      <li>Create and restore backups; review operation history</li>
+      <li>Runtime, update, and backup logs</li>
+      <li>Cluster compliance checks and RCON command surface</li>
+      <li>Server Workspace with visual/raw INI editing and an on-demand configuration assistant</li>
+      <li>
+        CurseForge Mods tab — Project IDs, enable/disable without dropping IDs,
+        Worker-backed metadata, and launch-time <code>-mods=</code> for enabled mods
+      </li>
+      <li>Settings for SteamCMD path, theme, and related app preferences</li>
+      <li>Official ARK network version from Wildcard’s public status CDN</li>
+    </ul>
+  </section>
+
+  <section class="section" id="roadmap" data-reveal>
+    <h2 data-reveal-child>In progress / planned</h2>
+    <p class="section-lede" data-reveal-child>
+      Near-term work from the public roadmap (v0.5 recovery &amp; resilience, then desktop
+      operations). Direction may change — nothing here is a promise of a stable 1.0 date.
+    </p>
+    <ul class="roadmap-list" data-reveal-child>
+      {
+        roadmapItems.map((item) => (
+          <li>
+            <span class:list={["tag", item.tag]}>
+              {item.tag === "building" ? "Building" : "Planned"}
+            </span>
+            {item.text}
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="section" id="what-is" data-reveal>
+    <h2 data-reveal-child>ARK Survival Ascended dedicated server manager</h2>
+    <p class="section-lede" data-reveal-child>
+      YARK is a Windows desktop <strong>ASA dedicated server manager</strong> for hosts who run
+      local ARK: Survival Ascended servers. Instead of juggling SteamCMD folders, INI files,
+      CurseForge Project IDs, and backup scripts by hand, you keep multiple server profiles in
+      one shell — install and update files, start and stop instances, schedule world backups,
+      inspect logs, and edit configuration with a visual INI editor and guided assistant.
+    </p>
+  </section>
+
+  <section class="section" id="not" data-reveal>
+    <h2 data-reveal-child>What it is not</h2>
+    <p class="section-lede" data-reveal-child>
+      YARK is not a cloud host, not an ARK game client launcher, and not an official
+      Wildcard product. It is an independent local manager for dedicated-server tooling you
+      run on your own machine.
+    </p>
+  </section>
+
+  <section class="section" id="privacy" data-reveal>
+    <h2 data-reveal-child>Privacy and data</h2>
+    <p class="section-lede" data-reveal-child>
+      Server profiles and app settings stay on your PC (local SQLite). There is no YARK cloud
+      account. Network use covers SteamCMD content, Wildcard’s public official-status CDN,
+      and CurseForge mod metadata via a small{" "}
+      <a href="https://github.com/gabomarin/yark/tree/main/workers/curseforge-proxy"
+        >Cloudflare Worker proxy</a
+      >. The desktop app never embeds a CurseForge API key.
+    </p>
+  </section>
+
+  <section class="section" id="about" data-reveal>
+    <h2 data-reveal-child>About this site</h2>
+    <p class="section-lede" data-reveal-child>
+      Product pages and operator docs for YARK. Source and license: GPL-3.0 on{" "}
+      <a href={site.repoUrl}>GitHub</a>.
+    </p>
+  </section>
+</BaseLayout>

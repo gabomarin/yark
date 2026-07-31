@@ -1,0 +1,43 @@
+---
+title: Docs overview
+description: Operator documentation for YARK server manager — what to read first.
+---
+
+import { LinkCard, CardGrid, LinkButton } from "@astrojs/starlight/components";
+import { withBase } from "../../../data/site";
+
+YARK is a **Windows desktop app** for managing **local** ARK: Survival Ascended dedicated servers.
+These docs are written for operators using the public prerelease — not for reading the Electron source tree.
+
+<LinkButton href={withBase("/docs/getting-started/")}>Start with Getting started</LinkButton>
+<LinkButton href={withBase("/")} variant="secondary">← Back to the product site</LinkButton>
+
+## What YARK is responsible for
+
+- Multiple **server profiles** in one app (install path, ports, passwords, mods, cluster fields)
+- **SteamCMD** install / update / verify of ASA dedicated files into each profile
+- **Start / stop / restart / force close**, with readiness gated on RCON
+- **Backups** (world / players / INI) including critical-path snapshots for safe update & restart
+- **INI** editing (visual + raw) and an on-demand **configuration assistant**
+- **CurseForge mod IDs** on the launch line (`-mods=`), plus metadata lookup
+- **Logs** (events, runtime, update files, backup history)
+- **Cluster** compliance hints (shared Cluster ID + directory)
+
+## What it is not
+
+- Not a cloud host, game client launcher, or official Wildcard product
+- Not a CurseForge mod downloader/installer
+- Not production-ready — builds are **unsigned prereleases**
+
+## Browse by job
+
+<CardGrid>
+  <LinkCard title="First server" href={withBase("/docs/getting-started/")} description="Installer → SteamCMD → profile → install files → start." />
+  <LinkCard title="Keep worlds safe" href={withBase("/docs/backups/")} description="Manual, scheduled, and fail-hard pre-update / pre-restart backups." />
+  <LinkCard title="Patch ASA files" href={withBase("/docs/updates-and-steamcmd/")} description="Shared cache, Update vs Verify, safe update + rollback." />
+  <LinkCard title="Something broke" href={withBase("/docs/troubleshooting/")} description="Common start, update, backup, and log pitfalls." />
+</CardGrid>
+
+## Source of truth
+
+Operator guides here are distilled from the engineering runbooks in the repo (`docs/backups.md`, `docs/updates-steamcmd.md`, `docs/server-lifecycle.md`, `docs/logs.md`). When behavior changes in a release, prefer the app + changelog, then these pages.

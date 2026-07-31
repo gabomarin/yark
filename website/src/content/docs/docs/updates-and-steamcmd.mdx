@@ -1,0 +1,77 @@
+---
+title: Updates & SteamCMD
+description: Shared content cache, Update vs Verify, safe update with backups and rollback.
+---
+
+import { Aside, Steps } from "@astrojs/starlight/components";
+
+ASA dedicated app id: **`2430930`**.
+
+## Shared caches (next to SteamCMD)
+
+| Cache | Purpose |
+| --- | --- |
+| `steamapps/depotcache` | Compressed Steam downloads (network reuse) |
+| `asa_content_cache` | Expanded install copied into each server |
+
+SteamCMD always uses:
+
+```text
++force_install_dir <dir> +login anonymous +app_update 2430930 validate +quit
+```
+
+`validate` is always passed.
+
+## Install / update / verify pipeline
+
+1. Ensure `asa_content_cache` via SteamCMD (unless a fresh in-session cache can be reused for **install**)
+2. **Robocopy** cache → server `installDir`, excluding `ShooterGame\Saved` (worlds, INI, players)
+3. If robocopy fails → fallback SteamCMD update **directly** on the server install dir
+
+| Action | Reuses fresh 15‑min cache? | Notes |
+| --- | --- | --- |
+| Install files | Yes | Prefer stopped server |
+| **Update** | **No** — always talks to Steam | Safe-update path |
+| **Verify** | **No** — always talks to Steam | Same auto-stop/restart idea; no pre_update / rollback |
+
+Jobs queue with retries (up to 3 attempts) and can resume after app restart.
+
+## Safe update
+
+When you run **Update** on a server that was running:
+
+<Steps>
+
+1. Remember `wasRunning`
+2. Stop **without** a nested `pre_stop` backup
+3. Create fail-hard **`pre_update`** backups (world + players + INI)
+4. SteamCMD update + robocopy sync
+5. If it was running → start and wait up to ~90s for healthy **running**
+6. On failure after backups exist → restore each `pre_update` archive, optionally restart if it was running, then fail the job
+
+</Steps>
+
+A server that was already stopped stays stopped after success (and after rollback).
+
+<Aside type="caution">
+  An active-server update must produce exactly one stable `pre_update` set — it must not also
+  create a `pre_stop` set for the same job.
+</Aside>
+
+## “Update available” signal
+
+YARK compares **Steam build ids**:
+
+- Local: `steamapps/appmanifest_2430930.acf` in the install
+- Public: SteamCMD.info API for app `2430930`
+
+The Wildcard **ARK Version** string shown in the UI is informational only — do **not** treat it as the Steam update decision (staggered rollouts make those non-equivalent).
+
+## Tips
+
+- Point Settings → SteamCMD at a disk with room for the shared cache
+- Prefer safe update over manual file copies into `installDir`
+- Check **Logs → Updates** for per-job log files under app userData
+- Live SteamCMD console streams on the progress dock during jobs
+
+Related: [Backups](/docs/backups/), [Troubleshooting](/docs/troubleshooting/).

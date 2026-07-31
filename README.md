@@ -2,7 +2,7 @@
 
 **Work in progress.** YARK server manager is a Windows desktop application for managing local dedicated ARK: Survival Ascended servers. Features will be added, changed, or refined as development continues — treat the current build as an evolving preview, not a finished product.
 
-**Project site (temporary GitHub Pages):** [https://gabomarin.github.io/yark/](https://gabomarin.github.io/yark/)
+**Project site (GitHub Pages):** [https://gabomarin.github.io/yark/](https://gabomarin.github.io/yark/)
 
 ## What it supports today
 
@@ -77,11 +77,13 @@ GitHub Actions CI (`.github/workflows/ci.yml`) on every PR and push to `main`: *
 
 ## Project website (GitHub Pages)
 
-The temporary public site lives in [`website/`](website/) and deploys via [`.github/workflows/pages.yml`](.github/workflows/pages.yml).
+Public site is Astro + Starlight in [`website/`](website/). Deploy: [`.github/workflows/pages.yml`](.github/workflows/pages.yml). Path-filtered build CI: [`.github/workflows/website-ci.yml`](.github/workflows/website-ci.yml).
 
 Expected URL: [https://gabomarin.github.io/yark/](https://gabomarin.github.io/yark/)
 
-Includes a feature screenshot gallery under `website/screenshots/` (overview, workspace, Mods, Clusters, Logs, Settings, backups, configuration assistant). Refresh with `npm run build` then `npm run website:screenshots`. Full deploy, capture, and update runbook: [docs/website.md](docs/website.md).
+Local: `npm run website:dev` → http://localhost:4321/yark/
+
+Screenshot gallery assets live under `website/public/screenshots/`. Refresh with `npm run build` then `npm run website:screenshots`. Full runbook: [docs/website.md](docs/website.md).
 
 **One-time GitHub setup**
 
@@ -92,7 +94,7 @@ Includes a feature screenshot gallery under `website/screenshots/` (overview, wo
 
 If the workflow still fails on `configure-pages` with “Get Pages site failed / Not Found”, the Source is still not set to GitHub Actions. The workflow also passes `enablement: true` so it can create the Pages site when the token is allowed to do so.
 
-Edit `website/index.html` (and `styles.css`) for copy updates; pushes that touch `website/**` redeploy the page.
+Edit pages under `website/src/` (marketing) and `website/src/content/docs/` (Starlight); pushes that touch `website/**` redeploy.
 
 ## Engineering docs
 

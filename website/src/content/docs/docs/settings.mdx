@@ -1,0 +1,24 @@
+---
+title: Settings
+description: SteamCMD path, default folders, theme, and other app-wide preferences.
+---
+
+## SteamCMD
+
+Set the path to the folder that contains `steamcmd.exe`. This is the most important setting — without it, install/update/verify cannot run.
+
+Changing the SteamCMD path resets content-cache freshness tracking so the next install does not reuse a stale “fresh” flag from the previous home.
+
+## Default base folder
+
+Optional convenience when creating new profiles (where you tend to place installs). Each profile still stores its own absolute `installDir`.
+
+## Theme & UI density
+
+Appearance preferences (theme, compact vs comfortable density) apply to the desktop shell only. They do not change dedicated-server behavior.
+
+## What stays local
+
+Profiles, settings, events, and backup metadata live in local SQLite under the app userData folder (on Windows typically under `%APPDATA%`). There is no YARK cloud account.
+
+See [Security & privacy](/docs/security-privacy/).

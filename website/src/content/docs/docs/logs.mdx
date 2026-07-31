@@ -1,0 +1,58 @@
+---
+title: Logs & diagnostics
+description: Events, Runtime, Updates, and Backups history — how to read and clear them.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+## Two surfaces
+
+| Place | Scope |
+| --- | --- |
+| Sidebar **Logs** | Recent problems / activity across servers |
+| Workspace **Logs** | Deep dive for one server |
+
+Workspace sections:
+
+| Section | Source |
+| --- | --- |
+| **Events** | SQLite event stream (with structured details when available) |
+| **Runtime** | In-memory buffer: process output + (piped mode) live tail of `ShooterGame.log` |
+| **Updates** | Files under app userData `update-logs/` |
+| **Backups** | Backup operation history for that server |
+
+## Event details (“What / Cause / Where / Try next”)
+
+Many events carry structured guidance:
+
+- **What** happened
+- **Cause** (when known)
+- **Where** to look
+- **Try next** suggested action
+- Optional context chips (paths, flags, operation names)
+
+Older rows without stored details still get catalog fallbacks by event type. Safe-update failures are especially rich here.
+
+## Runtime tips
+
+- Prefer **piped** mode (native console off) if you want YARK’s Runtime tab to show server log lines
+- Use the **Source** filter: All / System / Server log / Process
+- While Runtime is open, it refreshes about every 1.5s
+- Timestamps display as `YYYY-MM-DD HH:MM:SS` (Unreal stamps treated as UTC, shown locally)
+
+## Clearing data
+
+Clears are **per section** (events ≠ runtime buffer ≠ update log files). There is no single “wipe everything” button — clear intentionally.
+
+Export is available for resolved events and related sections when you need to share diagnostics (**strip passwords** first).
+
+<Aside type="note">
+  Live SteamCMD console during a job appears on the progress dock. The Updates log section stores
+  **files after jobs**, not the live stream.
+</Aside>
+
+## Related
+
+- [Updates & SteamCMD](/docs/updates-and-steamcmd/)
+- [Troubleshooting](/docs/troubleshooting/)
+- [Security & privacy](/docs/security-privacy/)

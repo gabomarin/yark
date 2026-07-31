@@ -1,0 +1,72 @@
+---
+import "@fontsource-variable/instrument-sans";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
+import "../styles/global.css";
+import SiteNav from "../components/SiteNav.astro";
+import SeoHead from "../components/SeoHead.astro";
+import { site, withBase } from "../data/site";
+
+interface Props {
+  title?: string;
+  description?: string;
+  path?: string;
+  wide?: boolean;
+  softwareSchema?: boolean;
+  noindex?: boolean;
+}
+
+const {
+  title = site.seoTitle,
+  description = site.description,
+  path = "/",
+  wide = false,
+  softwareSchema = false,
+  noindex = false,
+} = Astro.props;
+
+const pageTitle = title;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <SeoHead
+      title={pageTitle}
+      description={description}
+      path={path}
+      softwareSchema={softwareSchema}
+      noindex={noindex}
+    />
+    <link rel="icon" href={withBase("/favicon.ico")} sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href={withBase("/favicon-32x32.png")} />
+    <link rel="apple-touch-icon" href={withBase("/apple-touch-icon.png")} />
+  </head>
+  <body>
+    <div class="atmosphere" aria-hidden="true">
+      <div class="atmosphere-aurora"></div>
+      <div class="atmosphere-grain"></div>
+    </div>
+    <SiteNav />
+    <slot name="before-main" />
+    <main class={wide ? "wide" : undefined}>
+      <slot />
+    </main>
+    <footer class="footer">
+      <p>
+        {site.name}
+        <span class="link-sep" aria-hidden="true">·</span>
+        GPL-3.0
+        <span class="link-sep" aria-hidden="true">·</span>
+        <a href={site.repoUrl}>gabomarin/yark</a>
+      </p>
+    </footer>
+    <script>
+      import { initPresence } from "../scripts/presence";
+      initPresence();
+    </script>
+  </body>
+</html>

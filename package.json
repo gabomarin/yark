@@ -23,6 +23,8 @@
     "e2e": "node scripts/e2e-suite.cjs",
     "e2e:mods": "node scripts/e2e-mods.cjs",
     "website:screenshots": "node scripts/capture-website-screenshots.cjs",
+    "website:dev": "npm run dev --prefix website",
+    "website:build": "npm run build --prefix website",
     "prepare": "husky"
   },
   "dependencies": {

@@ -1,0 +1,46 @@
+---
+import { nav, site, withBase } from "../data/site";
+import DownloadIcon from "./DownloadIcon.astro";
+
+const pathname = Astro.url.pathname;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const pathAfterBase =
+  pathname === base || pathname === `${base}/`
+    ? "/"
+    : pathname.startsWith(`${base}/`)
+      ? pathname.slice(base.length)
+      : pathname;
+---
+
+<header class="site-nav">
+  <div class="site-nav-inner">
+    <a class="site-nav-brand" href={withBase("/")}>
+      <img src={withBase("/favicon-32x32.png")} alt="" width="28" height="28" />
+      <span>YARK</span>
+    </a>
+    <nav class="site-nav-links" aria-label="Primary">
+      {
+        nav.map((item) => {
+          const href = withBase(item.href);
+          const current =
+            item.href === "/"
+              ? pathAfterBase === "/"
+              : item.href === "/docs/"
+                ? pathAfterBase.startsWith("/docs")
+                : item.href.endsWith("/")
+                  ? pathAfterBase === item.href || pathAfterBase === item.href.slice(0, -1)
+                  : pathAfterBase.startsWith(item.href);
+          return (
+            <a href={href} aria-current={current ? "page" : undefined}>
+              {item.label}
+            </a>
+          );
+        })
+      }
+      <a class="site-nav-download" href={site.downloadUrl}>
+        <DownloadIcon />
+        {site.downloadLabel}
+      </a>
+    </nav>
+  </div>
+</header>

@@ -1,0 +1,31 @@
+---
+title: Mods
+description: CurseForge Project IDs, enable/disable, launch -mods=, and metadata limits.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+## What YARK does
+
+The Workspace **Mods** tab stores CurseForge **Project IDs** per profile.
+
+- **Enabled** IDs are passed at launch as `-mods=id1,id2,…`
+- **Disabled** IDs stay on the profile until you turn them back on (no need to delete an ID to skip one boot)
+- Names / summaries / links come from a small Cloudflare Worker proxy and are cached locally
+- The desktop app **never embeds** a CurseForge API key — lookups send Project IDs / search queries only
+
+## What YARK does not do
+
+<Aside type="caution">
+  YARK does **not** download or install mod files into the dedicated server. You still need mod
+  content available the way you normally would for ASA.
+</Aside>
+
+## Operator tips
+
+1. Wrong Project IDs still get wired into launch if enabled — verify IDs on CurseForge
+2. Restart after changing the enabled set so the new `-mods=` list applies
+3. Back up the world before enabling mods a world already depends on (or before removing them)
+4. Cluster members that transfer together usually need compatible mod sets
+
+Deeper CurseForge browsing (beyond IDs + metadata) is future work; today’s tab is the supported surface.

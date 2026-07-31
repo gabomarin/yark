@@ -1,0 +1,44 @@
+---
+title: Profiles & ports
+description: How YARK validates server profiles, install paths, and port uniqueness.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+Each profile is one dedicated-server install YARK can manage: path, map, session, ports, passwords, mods, and optional cluster fields.
+
+## Required shape
+
+| Field | Rule |
+| --- | --- |
+| Name | 1–64 characters (Windows folder-safe) |
+| Map + session | Required |
+| Install dir | Absolute Windows path (`C:\…` or UNC) |
+| Ports | 1024–65535; game, query, and RCON **distinct inside the profile** |
+| Admin password | Length ≥ 4 |
+| Mods | Unique Project IDs |
+| Cluster | If `clusterId` is set, `clusterDir` is required |
+
+## Port conflicts
+
+YARK flags the **same numeric port** used by different profiles (any of game / query / RCON).
+
+- **Create / update profile** — checked against all other profiles
+- **Start** — checked against **other active** servers
+
+Clone bumps ports by +10 (retries with higher offsets if needed).
+
+<Aside type="tip">
+  Upcoming work will probe whether ports are already bound on the host before spawn.
+  Until then, conflicts often show up as failed starts or odd networking — keep a port spreadsheet if you run many maps.
+</Aside>
+
+## Hot edits while running
+
+You can edit many profile fields while a server is running. **Ports and map** take effect on the **next restart**. Profile settings that belong in INI (RCON, passwords, query port, session name, game port) are synced to `GameUserSettings.ini` on start (and opportunistically on update).
+
+## Install path tips
+
+- Prefer a dedicated folder per profile under a fast disk
+- Do not point two profiles at the same `installDir`
+- Leave enough free space for Steam content cache + each install + backups

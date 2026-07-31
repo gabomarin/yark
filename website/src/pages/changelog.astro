@@ -1,0 +1,44 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { changelog } from "../data/changelog";
+import { site } from "../data/site";
+---
+
+<BaseLayout
+  title={`Changelog · ${site.name}`}
+  description="YARK server manager release notes — ARK Survival Ascended dedicated server manager prereleases for Windows."
+  path="/changelog/"
+>
+  <header class="page-header">
+    <h1>Changelog</h1>
+    <p>
+      Highlights from recent public builds. Full history:{" "}
+      <a href={`${site.repoUrl}/blob/main/CHANGELOG.md`}>CHANGELOG.md</a>.
+    </p>
+  </header>
+
+  <div class="section" style="border-top: none; padding-top: 0.5rem;">
+    <ul class="changelog-list">
+      {
+        changelog.map((entry) => (
+          <li class="changelog-entry">
+            <div class="changelog-meta">
+              <h2>v{entry.version}</h2>
+              <span class="changelog-date">{entry.date}</span>
+            </div>
+            {entry.sections.map((section) => (
+              <div class="changelog-section">
+                <h3>{section.title}</h3>
+                <ul>
+                  {section.items.map((item) => (
+                    <li>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</BaseLayout>

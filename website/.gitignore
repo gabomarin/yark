@@ -1,0 +1,10 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+.astro/
+
+# Local OS
+.DS_Store
+Thumbs.db

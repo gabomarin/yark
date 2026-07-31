@@ -1,0 +1,15 @@
+---
+/** Force dark theme for docs (matches the marketing site; light theme is unfinished). */
+---
+
+<script is:inline>
+  document.documentElement.dataset.theme = "dark";
+  try {
+    localStorage.setItem("starlight-theme", "dark");
+  } catch {}
+</script>
+<style is:global>
+  :root {
+    color-scheme: dark;
+  }
+</style>

@@ -1,0 +1,92 @@
+---
+import { absoluteUrl, site, siteOrigin } from "../data/site";
+
+interface Props {
+  title: string;
+  description: string;
+  /** Pathname including leading slash, e.g. "/" or "/faq/" */
+  path?: string;
+  ogType?: "website" | "article";
+  noindex?: boolean;
+  /** Include SoftwareApplication JSON-LD (home) */
+  softwareSchema?: boolean;
+}
+
+const {
+  title,
+  description,
+  path = "/",
+  ogType = "website",
+  noindex = false,
+  softwareSchema = false,
+} = Astro.props;
+
+const canonical = absoluteUrl(path);
+const ogImage = absoluteUrl(site.ogImagePath);
+const keywords = site.keywords.join(", ");
+
+const softwareJsonLd = softwareSchema
+  ? {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: site.name,
+      applicationCategory: "UtilitiesApplication",
+      operatingSystem: "Windows",
+      url: siteOrigin + "/",
+      downloadUrl: site.downloadUrl,
+      softwareVersion: site.version,
+      license: "https://www.gnu.org/licenses/gpl-3.0.html",
+      isAccessibleForFree: true,
+      description: site.description,
+      inLanguage: "en",
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+      },
+      author: {
+        "@type": "Person",
+        name: "Gabriel",
+        url: "https://github.com/gabomarin",
+      },
+      codeRepository: site.repoUrl,
+    }
+  : null;
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: site.name,
+  url: siteOrigin + "/",
+  description: site.description,
+  inLanguage: "en",
+};
+---
+
+<meta name="description" content={description} />
+<meta name="keywords" content={keywords} />
+<meta name="author" content="gabomarin" />
+<meta name="theme-color" content="#0c1427" />
+{noindex ? <meta name="robots" content="noindex, nofollow" /> : <meta name="robots" content="index, follow" />}
+<link rel="canonical" href={canonical} />
+
+<meta property="og:type" content={ogType} />
+<meta property="og:site_name" content={site.name} />
+<meta property="og:locale" content="en_US" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:image:alt" content="YARK server manager — servers overview" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+
+<script type="application/ld+json" set:html={JSON.stringify(websiteJsonLd)} />
+{
+  softwareJsonLd && (
+    <script type="application/ld+json" set:html={JSON.stringify(softwareJsonLd)} />
+  )
+}
