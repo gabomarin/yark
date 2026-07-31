@@ -74,13 +74,20 @@ Jobs are queued (`criticalJobsQueue.v1` in app settings): up to **3** attempts, 
 ### Safe update + rollback
 
 ```text
-capture wasRunning
-  → stop if active ({ backup: false } — no pre_stop)
-  → pre_update backups (world + players + ini)
-  → SteamCMD update + sync
-  → if wasRunning: start + health (90s)
-  → on failure: restore pre_update backups → if wasRunning: start + health → rethrow
+wasRunning = process is active at job start
+  → if wasRunning: stop({ backup: false })   # no pre_stop snapshot
+  → create pre_update backups (world + players + ini)
+  → SteamCMD update + robocopy sync
+  → if wasRunning: start + waitForHealthy (90s)
+  → on any failure after backups exist:
+       restore each pre_update backup
+       → if wasRunning: start + waitForHealthy (90s)
+       → rethrow (job fails / may retry up to 3 times)
 ```
+
+`wasRunning` is captured once at the beginning of the job. A server that was already
+stopped stays stopped after success; rollback also leaves it stopped. An active
+server is restarted after success, or after a successful rollback.
 
 An active-server update must produce exactly one stable `pre_update` archive set and
 **must not** also create a `pre_stop` set for the same job (SteamCMD paths pass
@@ -126,6 +133,11 @@ UI entry points: sidebar **SteamCMD** page + floating progress dock; Overview in
 
 Live progress combines SteamCMD stdout `%` lines with disk estimates (`steamcmd-disk-progress.ts`: depot/downloading sizes under `force_install_dir`). The floating progress dock (and per-server Logs → Updates history) subscribe to `push:steamcmd-progress`. SteamCMD path/install live under **Settings**; cache folders are shown there as read-only paths with Open / Clear (blocked while a job runs).
 
+Update / Verify controls stay enabled while the server is running: Overview cards and
+the workspace SidePanel tooltips explain that the manager will auto-stop for SteamCMD
+and restart only if the server was running. Byte/`%` detail belongs in the progress
+dock, not in those lock tooltips.
+
 Spawns always pass `-language english` (plus `LANG`/`LC_ALL` env) so bootstrapper lines stay English for a single-language parser. SteamCMD otherwise follows the Windows UI language (e.g. Spanish “Descargando archivos…”). Bracket `[ N%]` still updates the percent even if OS localizes; labels/KB pairs are English-only.
 
 During **robocopy** (`sync-files`), progress is a **separate phase**: SteamCMD success may reach 100%, then the dock switches to an **indeterminate** (full striped/animated) bar with the copy label — no byte totals (robocopy runs with progress silenced). A console heartbeat every 5s confirms the job is still running. Sync uses `/MT:4` and below-normal process priority so the Electron UI keeps some disk headroom. While a job is busy, the renderer skips frequent `servers:installation` polls (those do sync PowerShell VersionInfo reads) and refreshes the install snapshot once when the job finishes.
@@ -161,8 +173,9 @@ Quick start (interactive Windows session only):
 ```powershell
 npm run build
 Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
-node scripts/validation/validate-safe-update.cjs --dry-run   # prereq check only
-node scripts/validation/validate-safe-update.cjs --confirm   # required gate
+node scripts/validation/validate-safe-update.cjs --dry-run          # prereq check only
+node scripts/validation/validate-safe-update.cjs --confirm          # required gate
+# --force is accepted as an alias of --confirm
 ```
 
 Requires: Node 22.5+ (`node:sqlite`), Playwright (devDependency), a built app under
@@ -211,7 +224,7 @@ is an **interactive manual** runner (Windows + display). It is not part of CI.
 
 | Flag / env | Purpose |
 | --- | --- |
-| `--confirm` | Required for a real run (refuses otherwise) |
+| `--confirm` / `--force` | Required for a real run (refuses otherwise) |
 | `--dry-run` | Prereq checks only; no Electron launch |
 | `YARK_VALIDATE_SERVER_ID` | Override target server id |
 | `YARK_VALIDATE_SCENARIOS` | e.g. `C,E,B,A,F,D` |

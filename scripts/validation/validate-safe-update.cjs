@@ -17,6 +17,7 @@
  *
  * Flags:
  *   --confirm     Required. Acknowledge disposable-profile + Settings mutation risk.
+ *   --force       Alias of --confirm.
  *   --dry-run     Print plan / prereq checks and exit without launching the app.
  *
  * Env:
@@ -30,7 +31,7 @@ const path = require("node:path");
 const { execFileSync } = require("node:child_process");
 
 const ARGS = new Set(process.argv.slice(2));
-const CONFIRM = ARGS.has("--confirm");
+const CONFIRM = ARGS.has("--confirm") || ARGS.has("--force");
 const DRY_RUN = ARGS.has("--dry-run");
 
 const DEFAULT_SERVER_ID = "f3f15932-d57a-4ce1-ae11-d10777c93d0c"; // islandia
@@ -177,6 +178,7 @@ function assertPrerequisites() {
         "It never renames your real steamcmd.exe.",
         "",
         "Re-run with: node scripts/validation/validate-safe-update.cjs --confirm",
+        "  (--force is accepted as an alias of --confirm)",
         "Or inspect only:  node scripts/validation/validate-safe-update.cjs --dry-run",
       ].join("\n"),
     );
