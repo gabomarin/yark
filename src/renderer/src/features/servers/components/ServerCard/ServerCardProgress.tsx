@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Group, Progress, Stack, Text } from "@mantine/core";
 import classes from "./ServerCard.module.css";
 
@@ -13,7 +14,7 @@ export function ServerCardProgress({
   byteProgressLabel,
   byteProgressNoun,
   steamCmdProgressPercent,
-}: Props): JSX.Element {
+}: Props): ReactElement {
   return (
     <Stack gap={6} className={classes.progressBlock}>
       <Group justify="space-between" gap="xs" align="flex-start">

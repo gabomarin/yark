@@ -1,10 +1,11 @@
+import type { ReactElement } from "react";
 import { ArrowsLeftRight } from "@phosphor-icons/react";
 import { Group, Stack, Text, Title } from "@mantine/core";
 import { AccentIconTile } from "@ui/AccentIconTile/AccentIconTile";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import classes from "../clusters.module.css";
 
-export function ClusterGuidanceCard(): JSX.Element {
+export function ClusterGuidanceCard(): ReactElement {
   return (
     <AppSurfaceCard tone="coolEmphasis" className={classes.guidanceCard}>
       <Group gap="sm" align="flex-start" wrap="nowrap">

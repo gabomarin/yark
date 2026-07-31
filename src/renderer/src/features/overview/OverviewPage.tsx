@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import type {
   AppEvent,
   ServerInstallationInfo,
@@ -51,7 +52,7 @@ interface Props {
   onCancelSteamCmd: () => void;
 }
 
-export function OverviewPage(props: Props): JSX.Element {
+export function OverviewPage(props: Props): ReactElement {
   return (
     <div className={classes.page} data-overview-page>
       <OverviewHeader

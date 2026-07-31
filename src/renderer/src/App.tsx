@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { APP_VERSION } from "@shared/app-version";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Code, List, Stack, Text } from "@mantine/core";
@@ -60,7 +61,7 @@ interface AppProps {
   initialUiDensity?: UiDensity;
 }
 
-export function App({ initialUiDensity = "compact" }: AppProps): JSX.Element {
+export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   const [servers, setServers] = useState<ServerProfile[]>([]);
   const [statuses, setStatuses] = useState<Map<string, ServerRuntimeInfo>>(new Map());
   const [installationInfo, setInstallationInfo] = useState<
@@ -559,7 +560,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): JSX.Element {
     setRoute(next);
   }, []);
 
-  const renderMain = (): JSX.Element => {
+  const renderMain = (): ReactElement => {
     if (overlay?.kind === "workspace") {
       return (
         <AppShellLayout

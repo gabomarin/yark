@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { TextInput, type TextInputProps } from "@mantine/core";
 import classes from "./SearchField.module.css";
@@ -18,7 +19,7 @@ export function SearchField({
   label,
   size,
   className,
-}: Props): JSX.Element {
+}: Props): ReactElement {
   return (
     <TextInput
       aria-label={label ?? "Search"}

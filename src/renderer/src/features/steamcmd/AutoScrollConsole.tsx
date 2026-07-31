@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { useEffect, useRef } from "react";
 
 interface Props {
@@ -12,7 +13,7 @@ interface Props {
  * Console that auto-scrolls to the end when new lines arrive.
  * If the user scrolls up manually, do not force scroll until they return near the bottom.
  */
-export function AutoScrollConsole(props: Props): JSX.Element {
+export function AutoScrollConsole(props: Props): ReactElement {
   const { lines, className = "", emptyText = "Esperando salida…", maxLines = 120 } = props;
   const preRef = useRef<HTMLPreElement | null>(null);
   const stickToBottomRef = useRef(true);

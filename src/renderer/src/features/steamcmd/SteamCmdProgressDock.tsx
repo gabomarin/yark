@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { useState } from "react";
 import { CaretDown, CaretUp, ProhibitInset, TerminalWindow } from "@phosphor-icons/react";
 import { ActionIcon, Button, Group, Progress, Stack, Text, Title, Tooltip } from "@mantine/core";
@@ -21,7 +22,7 @@ const OPERATION_LABEL: Record<NonNullable<SteamCmdStatus["operation"]>, string> 
   "verify-files": "Verifying integrity",
 };
 
-export function SteamCmdProgressDock(props: Props): JSX.Element {
+export function SteamCmdProgressDock(props: Props): ReactElement {
   const { status } = props;
   const [minimized, setMinimized] = useState(false);
   const title =

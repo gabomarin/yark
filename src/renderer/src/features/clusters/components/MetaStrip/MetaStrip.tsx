@@ -1,5 +1,5 @@
 import { Text } from "@mantine/core";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 import classes from "./MetaStrip.module.css";
 
 export interface MetaStripItem {
@@ -13,7 +13,7 @@ interface Props {
 }
 
 /** Feature-local label/value strip for cluster detail. Promote to shared/ui only on a second real use. */
-export function MetaStrip({ items, className }: Props): JSX.Element {
+export function MetaStrip({ items, className }: Props): ReactElement {
   return (
     <div className={[classes.strip, className].filter(Boolean).join(" ")}>
       {items.map((item) => (

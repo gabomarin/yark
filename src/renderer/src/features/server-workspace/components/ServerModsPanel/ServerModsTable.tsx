@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import {
   ActionIcon,
   Button,
@@ -25,7 +26,7 @@ interface Props {
   onOpenExternal: (url: string) => void;
 }
 
-export function ServerModsTable(props: Props): JSX.Element {
+export function ServerModsTable(props: Props): ReactElement {
   return (
     <div className={classes.tableViewport}>
       <Table

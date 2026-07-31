@@ -2,7 +2,7 @@ import { AppShell } from "@mantine/core";
 import { Alert, CloseButton, Group, Stack } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import { Sidebar, type Route } from "@layout/Sidebar/Sidebar";
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren, ReactElement } from "react";
 import classes from "./AppShellLayout.module.css";
 
 interface Props extends PropsWithChildren {
@@ -16,7 +16,7 @@ interface Props extends PropsWithChildren {
   onDismissError?: () => void;
 }
 
-export function AppShellLayout({ children, ...sidebarProps }: Props): JSX.Element {
+export function AppShellLayout({ children, ...sidebarProps }: Props): ReactElement {
   const { error = null, onDismissError, ...shellProps } = sidebarProps;
   const density = useUiDensity();
   const navbarWidth = density === "compact" ? 212 : 248;

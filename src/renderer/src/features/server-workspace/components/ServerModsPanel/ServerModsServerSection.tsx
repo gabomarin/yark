@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Button } from "@mantine/core";
 import { PuzzlePiece } from "@phosphor-icons/react";
 import type { ModAddImportProgress } from "@shared/mod-add-input";
@@ -20,7 +21,7 @@ interface Props {
   onOpenExternal: (url: string) => void;
 }
 
-export function ServerModsServerSection(props: Props): JSX.Element {
+export function ServerModsServerSection(props: Props): ReactElement {
   return (
     <>
       <ServerModsUrlInput

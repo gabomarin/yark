@@ -1,5 +1,5 @@
 import { Card, type CardProps } from "@mantine/core";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 import classes from "./AppSurfaceCard.module.css";
 
 export type AppSurfaceTone = "cool" | "coolEmphasis" | "flat" | "chrome";
@@ -30,7 +30,7 @@ export function AppSurfaceCard({
   padding = "md",
   radius = "lg",
   ...cardProps
-}: Props): JSX.Element {
+}: Props): ReactElement {
   return (
     <Card
       {...cardProps}
