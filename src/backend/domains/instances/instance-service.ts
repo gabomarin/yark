@@ -51,10 +51,12 @@ function backupKindLabel(kind: BackupKind): string {
   return "INI files";
 }
 
+/** True when profile ids match the cached install snapshot set (order-independent). */
 function sameServerIds(
   profiles: ReadonlyArray<{ id: string }>,
   cached: ReadonlyArray<ServerInstallationInfo>,
 ): boolean {
+  // Equal length + every profile id present ⇒ same set (no extras on either side).
   if (profiles.length !== cached.length) {
     return false;
   }

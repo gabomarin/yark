@@ -118,6 +118,7 @@ function readVersionFromExecutable(binaryPath: string): string | null {
   }
 }
 
+/** Collapse path separators for stable Windows install-dir comparisons/cache keys. */
 function normalizePath(value: string): string {
   return value.trim().replace(/[\\/]+/g, "\\");
 }
@@ -293,8 +294,13 @@ function readFileTailSync(filePath: string, maxBytes: number): string {
     const length = Math.min(maxBytes, size);
     const start = size - length;
     const buffer = Buffer.alloc(length);
-    readSync(fd, buffer, 0, length, start);
-    return buffer.toString("utf8");
+    try {
+      readSync(fd, buffer, 0, length, start);
+      return buffer.toString("utf8");
+    } catch {
+      // Tail read can fail on some volumes; fall back to a full read.
+      return readFileSync(filePath, "utf8");
+    }
   } finally {
     closeSync(fd);
   }
@@ -449,6 +455,13 @@ function fetchOfficialArkVersion(): Promise<OfficialArkVersionProbe> {
   });
 }
 
+/**
+ * Cached Wildcard official-network probe (`officialserverstatus.ini`).
+ * - Success: cached for `OFFICIAL_VERSION_TTL_MS` (~15m) unless `force`.
+ * - Concurrent callers share one in-flight request.
+ * - Failed probe: keep last success when available; otherwise shorten TTL (~30s)
+ *   so the next poll can retry without waiting the full window.
+ */
 export async function readOfficialArkVersionCached(
   force = false,
 ): Promise<OfficialArkVersionProbe> {
