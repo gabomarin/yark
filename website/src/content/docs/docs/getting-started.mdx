@@ -4,6 +4,7 @@ description: Install YARK, point SteamCMD, create a profile, and start your firs
 ---
 
 import { Aside, Steps } from "@astrojs/starlight/components";
+import { withBase } from "../../../data/site";
 
 <Aside type="caution" title="Unsigned prerelease">
   Public builds are not code-signed. Windows SmartScreen may warn. Download only from
@@ -20,6 +21,17 @@ import { Aside, Steps } from "@astrojs/starlight/components";
 
    Install [SteamCMD](https://developer.valvesoftware.com/wiki/SteamCMD) somewhere writable.
    In YARK → **Settings**, set the SteamCMD path (folder that contains `steamcmd.exe`).
+
+   <figure class="doc-shot">
+     <img
+       src={withBase("/screenshots/settings.png")}
+       alt="Settings page with SteamCMD path, default base folder, and app preferences"
+       width="1440"
+       height="900"
+       loading="eager"
+     />
+     <figcaption>Settings — set the folder that contains steamcmd.exe.</figcaption>
+   </figure>
 
    One SteamCMD home is shared across profiles. Next to it, YARK maintains:
 
@@ -45,6 +57,17 @@ import { Aside, Steps } from "@astrojs/starlight/components";
 5. **Start the server**
 
    Press **Start**. Status stays **starting** until RCON answers on localhost — that means “accepting players”, not merely “process spawned”. Use **Logs → Runtime / Events** if it stalls.
+
+   <figure class="doc-shot">
+     <img
+       src={withBase("/screenshots/overview.png")}
+       alt="Servers overview listing profiles with status and actions"
+       width="1440"
+       height="900"
+       loading="lazy"
+     />
+     <figcaption>Overview — install/update and Start live on each server card.</figcaption>
+   </figure>
 
 6. **Take a backup before experimenting**
 

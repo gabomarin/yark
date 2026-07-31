@@ -9,6 +9,7 @@ on:
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
+# Top-level defaults; job also sets these explicitly (OIDC requires id-token: write).
 permissions:
   contents: read
   pages: write
@@ -16,7 +17,8 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  # Avoid cancelling mid-OIDC / deploy when a second Pages push lands.
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -24,6 +26,10 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,3 +60,6 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # Default is 10m; give OIDC + Pages status polling more headroom on flaky runs.
+          timeout: "900000"

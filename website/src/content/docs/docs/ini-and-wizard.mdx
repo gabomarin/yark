@@ -4,6 +4,7 @@ description: Visual/raw INI editing and the six-step configuration assistant.
 ---
 
 import { Aside, Steps } from "@astrojs/starlight/components";
+import { withBase } from "../../../data/site";
 
 Paths under each install:
 
@@ -23,9 +24,31 @@ Semantic checks when `[ServerSettings]` is present include RCON port range, `Max
 
 Profile networking fields (RCON, passwords, session, ports) are also written on **start** via profile→INI sync. See [Start, stop, restart](/docs/lifecycle/).
 
+<figure class="doc-shot">
+  <img
+    src={withBase("/screenshots/workspace-ini.png")}
+    alt="Visual INI editor showing GameUserSettings.ini options with toggles, values, and descriptions"
+    width="1440"
+    height="900"
+    loading="lazy"
+  />
+  <figcaption>Visual INI editor — searchable controls for GameUserSettings.ini / Game.ini.</figcaption>
+</figure>
+
 ## Configuration assistant
 
 On-demand from the Server tab — **not** a permanent nav item.
+
+<figure class="doc-shot">
+  <img
+    src={withBase("/screenshots/configuration-wizard.png")}
+    alt="Configuration assistant with a six-step wizard and preset server-type cards"
+    width="1440"
+    height="900"
+    loading="lazy"
+  />
+  <figcaption>Configuration assistant — guided presets; nothing is written until you apply.</figcaption>
+</figure>
 
 <Steps>
 
