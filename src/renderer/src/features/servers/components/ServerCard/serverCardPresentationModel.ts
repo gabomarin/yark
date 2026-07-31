@@ -77,7 +77,7 @@ export function resolveSteamCmdProgressCopy(input: {
       : null;
   const byteProgressNoun = steamCmdByteProgressNoun(input.steamCmdOperation);
   const fallback =
-    input.steamCmdOperation === "verify-files" ? "Verifying" : "SteamCMD in progress…";
+    input.steamCmdOperation === "verify-files" ? "Verifying" : "Updating files…";
   const shortProgressLabel =
     byteProgressLabel !== null
       ? input.steamCmdProgressLabel?.split(" · ")[0]?.trim() || fallback

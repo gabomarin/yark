@@ -660,7 +660,7 @@ export function BackupsPage(props: Props): ReactElement {
             }
           />
           <Checkbox
-            label="Enforce retain policy (delete extras beyond keep-last)"
+            label="Delete extras beyond keep-last counts"
             checked={cleanupOptions.enforceRetention}
             onChange={(event) =>
               setCleanupOptions((prev) => ({

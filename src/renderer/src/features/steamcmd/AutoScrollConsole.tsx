@@ -14,7 +14,7 @@ interface Props {
  * If the user scrolls up manually, do not force scroll until they return near the bottom.
  */
 export function AutoScrollConsole(props: Props): ReactElement {
-  const { lines, className = "", emptyText = "Esperando salida…", maxLines = 120 } = props;
+  const { lines, className = "", emptyText = "Waiting for progress…", maxLines = 120 } = props;
   const preRef = useRef<HTMLPreElement | null>(null);
   const stickToBottomRef = useRef(true);
   const visible = lines.slice(-maxLines);

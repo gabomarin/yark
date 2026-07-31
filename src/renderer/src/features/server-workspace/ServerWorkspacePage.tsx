@@ -154,7 +154,7 @@ export function ServerWorkspacePage(props: Props): ReactElement {
   /** Same operational lock as a running server, plus SteamCMD file jobs. */
   const opsLocked = serverActive || filesJobActive || stopJobActive;
   const filesLockReason = props.filesJobLabel?.trim() || "Updating server files";
-  const stopLockReason = stopProgress?.label.trim() || "Stopping this server (save + backup)";
+  const stopLockReason = stopProgress?.label.trim() || "Stopping this server…";
   const serverListPanel = (
     <ServerListPanel
       servers={props.servers}

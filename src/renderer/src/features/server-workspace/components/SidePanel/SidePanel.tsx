@@ -51,7 +51,7 @@ export function SidePanel(props: Props): ReactElement {
   const steamCmdLockTitle = props.opsLockReason;
   const installLockTitle =
     steamCmdLockTitle ??
-    (isActive ? "Stop the server before installing base files" : undefined);
+    (isActive ? "Stop the server before installing files" : undefined);
   const updateVerifyTitle =
     steamCmdLockTitle ??
     (isActive

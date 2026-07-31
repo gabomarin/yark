@@ -54,10 +54,10 @@ export function Sidebar(props: Props): ReactElement {
   const versionTextSize = compact ? "md" : "sm";
 
   const steamCmdLabel = !props.steamCmdDetected
-    ? "SteamCMD: not detected"
+    ? "SteamCMD missing"
     : props.steamCmdRunning
-      ? "SteamCMD: running"
-      : "SteamCMD: connected";
+      ? "SteamCMD busy"
+      : "SteamCMD ready";
 
   return (
     <MantineStack gap={compact ? "sm" : "md"} className={classes.sidebar}>
@@ -113,7 +113,7 @@ export function Sidebar(props: Props): ReactElement {
 
       <div className={classes.versionChip}>
         <Tooltip
-          label="Version published by Wildcard's official network status. Updates are determined from the public SteamCMD build."
+          label="Official ARK version from Wildcard. Update availability still uses the public Steam build."
           multiline
           w={260}
           position="right"
