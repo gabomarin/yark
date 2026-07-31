@@ -220,12 +220,17 @@ export type ServerStopProgressPhase =
   | "backing_up"
   | "stopping";
 
+/** Why a stop job is running — quit overlay only for `"quit"`. */
+export type ServerStopProgressReason = "user" | "quit";
+
 export interface ServerStopProgress {
   serverId: string;
   active: boolean;
   phase: ServerStopProgressPhase | null;
   label: string;
   percent: number | null;
+  /** Defaults to user-initiated stop when omitted by older payloads. */
+  reason: ServerStopProgressReason;
 }
 
 /** What a backup archive contains (ASA path-scoped). */

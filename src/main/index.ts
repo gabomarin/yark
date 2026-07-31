@@ -24,6 +24,11 @@ import {
   type AppTrayOptions,
 } from "./app-tray";
 import { readDesktopShellPreferences } from "./desktop-shell-settings";
+import {
+  removeLeftRunningProcess,
+  upsertLeftRunningProcess,
+} from "../backend/infra/process/left-running-store";
+import { reattachLeftRunningProcesses } from "../backend/infra/process/left-running-reattach";
 import { applyWindowsLoginItem } from "./windows-login-item";
 import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush } from "../shared/ipc";
 import type { BackupChangedPush } from "../backend/domains/backups/backup-service";
@@ -111,7 +116,11 @@ if (gotSingleInstanceLock) {
     const settings = new AppSettingsRepository(db);
     const repo = new ServerRepository(db);
     const backupRepo = new BackupRepository(db);
-    const processManager = new ProcessManager();
+    const processManager = new ProcessManager({
+      onProcessCheckpoint: (record) => upsertLeftRunningProcess(settings, record),
+      onProcessCheckpointCleared: (serverId) =>
+        removeLeftRunningProcess(settings, serverId),
+    });
     const locks = new InstanceLockManager();
     const backupService = new BackupService(
       repo,
@@ -150,6 +159,9 @@ if (gotSingleInstanceLock) {
     playerSessionWatcher.start();
     applyWindowsLoginItem(readDesktopShellPreferences(settings).startWithWindows);
 
+    // Before UI / auto-start: reclaim ASA left after crash / unexpected exit (#59).
+    reattachLeftRunningProcesses(settings, repo, processManager);
+
     registerIpcHandlers(
       instances,
       repo,
@@ -180,7 +192,7 @@ if (gotSingleInstanceLock) {
     let quitPolicyPromptInFlight = false;
 
     const requestAppQuit = (): void => {
-      // Real quit path — goes through before-quit (#59 Ask / Stop / Leave).
+      // Real quit path — goes through before-quit (#59 Ask / Stop).
       // Must set isQuitting before app.quit() so window `close` does not
       // re-interpret the shutdown as “hide to tray”.
       isQuitting = true;
@@ -245,7 +257,7 @@ if (gotSingleInstanceLock) {
         }
 
         // Close-to-tray off + active servers: do not destroy the window yet.
-        // Route through before-quit (#59 Ask/Stop/Leave). Cancel must keep UI alive.
+        // Route through before-quit (#59 Ask/Stop). Cancel must keep UI alive.
         if (hasActiveManagedServers()) {
           event.preventDefault();
           requestAppQuit();
@@ -380,37 +392,27 @@ if (gotSingleInstanceLock) {
         return;
       }
 
-      // Active servers: apply #59 quit policy (Ask / Stop / Leave).
+      // Active servers: apply #59 quit policy (Ask / Stop).
       event.preventDefault();
       if (pendingQuit !== null || quitPolicyPromptInFlight) {
         return;
       }
 
       const policy = readDesktopShellPreferences(settings).onQuitWithActiveServers;
-      const applyQuitDecision = (decision: "stop" | "leave" | "cancel"): void => {
+      const applyQuitDecision = (decision: "stop" | "cancel"): void => {
         if (decision === "cancel") {
           isQuitting = false;
           revealMainWindow();
           return;
         }
-        if (decision === "leave") {
-          // Leave running: exit without stopAll. Durable reattach is remaining #59 work.
-          isQuitting = true;
-          allowQuit = true;
-          app.quit();
-          return;
-        }
         // Keep UI visible so stop-progress (wait / save / backup) can show.
+        // Stopping clears per-server crash-recovery checkpoints as processes exit.
         revealMainWindow();
         quitAfter(instances.stopAllForAppQuit());
       };
 
       if (policy === "stop") {
         applyQuitDecision("stop");
-        return;
-      }
-      if (policy === "leave") {
-        applyQuitDecision("leave");
         return;
       }
 
@@ -422,23 +424,22 @@ if (gotSingleInstanceLock) {
       void dialog
         .showMessageBox(win, {
           type: "question",
-          buttons: ["Stop", "Leave", "Cancel"],
+          buttons: ["Stop", "Cancel"],
           defaultId: 0,
-          cancelId: 2,
+          cancelId: 1,
           noLink: true,
           title: "Quit YARK?",
           message:
             count === 1
               ? "1 server is still running."
               : `${count} servers are still running.`,
-          detail: "Stop them before quitting, or leave them running.",
+          detail:
+            "Stop them before quitting. To keep servers and backups running, use Close window to tray instead.",
         })
         .then((result) => {
           quitPolicyPromptInFlight = false;
           if (result.response === 0) {
             applyQuitDecision("stop");
-          } else if (result.response === 1) {
-            applyQuitDecision("leave");
           } else {
             applyQuitDecision("cancel");
           }

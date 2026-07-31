@@ -116,7 +116,8 @@ export function SettingsGeneralSection(props: Props): ReactElement {
         <div className={classes.settingCopy}>
           <Text size="sm" fw={600}>On quit with active servers</Text>
           <Text size="xs" c="dimmed" mt={2}>
-            When quitting while servers are running. Leave quits without stopping them.
+            When quitting while servers are running. Prefer Close to tray to keep
+            backups running. Crash recovery can reattach leftover ASA processes.
           </Text>
         </div>
         <div className={classes.settingControl}>
@@ -125,14 +126,13 @@ export function SettingsGeneralSection(props: Props): ReactElement {
             value={props.onQuitWithActiveServers}
             disabled={!props.desktopShellReady}
             onChange={(value) => {
-              if (value === "ask" || value === "stop" || value === "leave") {
+              if (value === "ask" || value === "stop") {
                 props.onQuitWithActiveServersChange(value);
               }
             }}
             data={[
               { label: "Ask", value: "ask" },
               { label: "Stop", value: "stop" },
-              { label: "Leave", value: "leave" },
             ]}
             aria-label="On quit with active servers"
           />

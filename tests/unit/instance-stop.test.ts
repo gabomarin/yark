@@ -111,6 +111,7 @@ describe("InstanceService.stop", () => {
     );
 
     expect(progress.some((p) => p.active && p.phase === "saving")).toBe(true);
+    expect(progress.some((p) => p.active && p.reason === "user")).toBe(true);
     expect(progress.some((p) => p.active && p.phase === "backing_up")).toBe(true);
     expect(progress.some((p) => p.active && p.phase === "stopping")).toBe(true);
     expect(

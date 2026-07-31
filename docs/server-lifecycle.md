@@ -93,10 +93,10 @@ Example logical argv:
 `spawnAsaProcess` in `process-manager.ts` always spawns the **exe + logical
 args** directly with `cwd = installDir`:
 
-| Mode | `shell` | `windowsVerbatimArguments` | `windowsHide` | stdio |
-| --- | --- | --- | --- | --- |
-| Piped (default) | `false` | `true` on Windows | `true` | ignore / pipe / pipe |
-| Native console (`openNativeConsole`) | `false` | `true` on Windows | `false` | ignore |
+| Mode | `shell` | `windowsVerbatimArguments` | `windowsHide` | `detached` | stdio |
+| --- | --- | --- | --- | --- | --- |
+| Piped (default) | `false` | `true` on Windows | `true` | `true` | ignore / pipe / pipe |
+| Native console (`openNativeConsole`) | `false` | `true` on Windows | `false` | `true` | ignore |
 
 Constraints:
 
@@ -110,6 +110,13 @@ Constraints:
 - Quote each other spaced argument independently. CreateProcess receives the
   executable path separately, and `argv0` is quoted explicitly, so a spaced
   install path does not require a shell wrapper.
+- Spawn is always **detached** so ASA can survive an unexpected Electron exit
+  (crash / Task Manager). While a server is managed, YARK **checkpoints**
+  process identity (PID + OS creation time required) and clears it on clean
+  stop/exit. On the next launch, startup re-validates identity before reattach.
+  There is no user-facing Leave-running quit option — prefer **Close window to
+  tray** to keep YARK (and backups) alive. Stop waits for starting with a
+  readiness timeout so quit cannot hang forever.
 - Native console and piped Runtime logs are mutually exclusive for the **console
   window** — with a native console, Runtime is mostly system messages. With the
   console off (piped mode), YARK still captures any stdout/stderr and **tails
@@ -194,17 +201,21 @@ with a completed `pre_restart` snapshot.
 window to tray** disabled both enter `before-quit`. When managed servers are
 active, Settings **On quit with active servers** applies:
 
-- **Ask** (default): dialog with Stop / Leave / Cancel.
+- **Ask** (default): dialog with Stop / Cancel.
 - **Stop**: wait for any still-starting servers, then graceful stop (SaveWorld →
   DoExit → pre-stop backup) with stop-progress in the UI, then quit.
-- **Leave**: quit without stopping ASA. Durable process reattachment after Leave
-  is remaining #59 work — YARK will not track those processes on the next launch
-  yet.
+
+There is no Leave-running quit option. Prefer **Close window to tray** so YARK
+(and scheduled/player backups) keep running with the servers. Crash / Task
+Manager recovery uses durable checkpoints written while servers are active:
+startup validates candidates, reattaches matches as `starting` until RCON
+confirms (`running`), and records rejected/stale outcomes. Reattach never
+force-kills on RCON timeout.
 
 Hide-to-tray is **not** a quit and never stops servers. Critical in-flight
 stop/restart work still uses `shouldBlockAppQuit` / `settleForAppQuit` first.
 With **Close window to tray** off, closing while servers are active keeps the
-window open until Ask/Stop/Leave resolves (Cancel restores the UI; Stop keeps
+window open until Ask/Stop resolves (Cancel restores the UI; Stop keeps
 the window visible through wait/save/backup progress).
 
 ### System tray and Windows startup (#54)

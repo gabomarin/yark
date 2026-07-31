@@ -41,7 +41,7 @@ describe("desktop shell preferences (#54 / #59)", () => {
   it("parseOnQuitWithActiveServers defaults to ask and rejects unknown values", () => {
     expect(parseOnQuitWithActiveServers(null)).toBe("ask");
     expect(parseOnQuitWithActiveServers("stop")).toBe("stop");
-    expect(parseOnQuitWithActiveServers("LEAVE")).toBe("leave");
+    expect(parseOnQuitWithActiveServers("LEAVE")).toBe("ask");
     expect(parseOnQuitWithActiveServers("nope")).toBe(DEFAULT_ON_QUIT_WITH_ACTIVE_SERVERS);
   });
 
@@ -74,8 +74,8 @@ describe("desktop shell preferences (#54 / #59)", () => {
     expect(setTrayCloseHintDismissed(settings, false)).toBe(false);
     expect(readDesktopShellPreferences(settings).trayCloseHintDismissed).toBe(false);
 
-    expect(setOnQuitWithActiveServers(settings, "leave")).toBe("leave");
-    expect(settings.get(ON_QUIT_WITH_ACTIVE_SERVERS_SETTING_KEY)).toBe("leave");
-    expect(readDesktopShellPreferences(settings).onQuitWithActiveServers).toBe("leave");
+    expect(setOnQuitWithActiveServers(settings, "stop")).toBe("stop");
+    expect(settings.get(ON_QUIT_WITH_ACTIVE_SERVERS_SETTING_KEY)).toBe("stop");
+    expect(readDesktopShellPreferences(settings).onQuitWithActiveServers).toBe("stop");
   });
 });

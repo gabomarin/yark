@@ -340,7 +340,7 @@ export function registerIpcHandlers(
   ipcMain.handle(IPC.appSetOnQuitWithActiveServers, (_e, policy: unknown) =>
     wrap(() => {
       if (!isOnQuitWithActiveServers(policy)) {
-        throw new Error("onQuitWithActiveServers must be ask, stop, or leave");
+        throw new Error("onQuitWithActiveServers must be ask or stop");
       }
       return setOnQuitWithActiveServers(settings, policy);
     }),

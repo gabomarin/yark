@@ -134,9 +134,9 @@ describe("SettingsPage", () => {
       expect(window.api.getDesktopShellPreferences).toHaveBeenCalled();
     });
 
-    await user.click(screen.getByRole("radio", { name: "Leave" }));
+    await user.click(screen.getByRole("radio", { name: "Stop" }));
     await waitFor(() => {
-      expect(window.api.setOnQuitWithActiveServers).toHaveBeenCalledWith("leave");
+      expect(window.api.setOnQuitWithActiveServers).toHaveBeenCalledWith("stop");
     });
   });
 

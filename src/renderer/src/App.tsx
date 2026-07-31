@@ -135,7 +135,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
   const stopBusyOverlay = useMemo(() => {
     const active = [...stopProgressByServerId.values()].filter(
-      (progress) => progress.active,
+      (progress) => progress.active && progress.reason === "quit",
     );
     if (active.length === 0) {
       return null;

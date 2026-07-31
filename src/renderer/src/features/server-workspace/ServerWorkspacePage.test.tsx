@@ -451,6 +451,7 @@ describe("ServerWorkspacePage", () => {
             phase: "backing_up",
             label: "Backing up player profiles…",
             percent: 50,
+            reason: "user",
           }}
           onSelectServer={vi.fn()}
           onBack={vi.fn()}

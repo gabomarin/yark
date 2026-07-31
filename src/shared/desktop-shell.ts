@@ -16,11 +16,15 @@ export const DEFAULT_START_WITH_WINDOWS = false;
 
 /**
  * What to do when quitting YARK while managed ASA processes are active (#59).
- * - ask: confirmation dialog (Stop / Leave / Cancel)
+ * - ask: confirmation dialog (Stop / Cancel)
  * - stop: always stop servers then quit
- * - leave: quit without stopping (durable reattach is follow-up work on #59)
+ *
+ * There is no user-facing "Leave running": closing the manager should stop
+ * servers or cancel. Crash / Task Manager kill recovery uses durable process
+ * checkpoints written while servers are active (reattach on next launch).
+ * Legacy stored value `"leave"` maps to `"ask"`.
  */
-export type OnQuitWithActiveServers = "ask" | "stop" | "leave";
+export type OnQuitWithActiveServers = "ask" | "stop";
 
 export const DEFAULT_ON_QUIT_WITH_ACTIVE_SERVERS: OnQuitWithActiveServers = "ask";
 
@@ -53,8 +57,12 @@ export function parseOnQuitWithActiveServers(
     return defaultValue;
   }
   const normalized = raw.trim().toLowerCase();
-  if (normalized === "ask" || normalized === "stop" || normalized === "leave") {
+  if (normalized === "ask" || normalized === "stop") {
     return normalized;
+  }
+  // Former "leave" policy: treat as Ask (Stop / Cancel).
+  if (normalized === "leave") {
+    return "ask";
   }
   return defaultValue;
 }
@@ -62,7 +70,7 @@ export function parseOnQuitWithActiveServers(
 export function isOnQuitWithActiveServers(
   value: unknown,
 ): value is OnQuitWithActiveServers {
-  return value === "ask" || value === "stop" || value === "leave";
+  return value === "ask" || value === "stop";
 }
 
 export interface DesktopShellPreferences {
