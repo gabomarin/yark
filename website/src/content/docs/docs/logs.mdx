@@ -4,6 +4,7 @@ description: Events, Runtime, Updates, and Backups history — how to read and c
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import { withBase } from "../../../data/site";
 
 ## Two surfaces
 
@@ -11,6 +12,20 @@ import { Aside } from "@astrojs/starlight/components";
 | --- | --- |
 | Sidebar **Logs** | Recent problems / activity across servers |
 | Workspace **Logs** | Deep dive for one server |
+
+<figure class="doc-shot">
+  <img
+    src={withBase("/screenshots/logs.png")}
+    alt="Logs page listing recent problems and activity across servers with severity filters"
+    width="1440"
+    height="900"
+    loading="lazy"
+  />
+  <figcaption>
+    Sidebar Logs — fleet view of recent problems and activity. Open a row to jump into that
+    server’s Workspace Logs (Events / Runtime / Updates / Backups).
+  </figcaption>
+</figure>
 
 Workspace sections:
 

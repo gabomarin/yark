@@ -45,3 +45,29 @@ html[data-theme="light"] {
 starlight-menu-button button {
   border-radius: 0.45rem;
 }
+
+/* Operator-doc screenshots */
+.sl-markdown-content figure.doc-shot {
+  margin: 1.25rem 0 1.5rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--sl-color-hairline-light) 80%, transparent);
+  border-radius: 0.65rem;
+  overflow: hidden;
+  background: var(--sl-color-gray-6);
+}
+
+.sl-markdown-content figure.doc-shot img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+.sl-markdown-content figure.doc-shot figcaption {
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  border-top: 1px solid color-mix(in srgb, var(--sl-color-hairline-light) 80%, transparent);
+  color: var(--sl-color-gray-3);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}

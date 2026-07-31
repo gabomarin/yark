@@ -3,9 +3,22 @@ title: Settings
 description: SteamCMD path, default folders, theme, and other app-wide preferences.
 ---
 
+import { withBase } from "../../../data/site";
+
 ## SteamCMD
 
 Set the path to the folder that contains `steamcmd.exe`. This is the most important setting — without it, install/update/verify cannot run.
+
+<figure class="doc-shot">
+  <img
+    src={withBase("/screenshots/settings.png")}
+    alt="Settings page with SteamCMD path, default base folder, and app preferences"
+    width="1440"
+    height="900"
+    loading="lazy"
+  />
+  <figcaption>Settings — SteamCMD path, default base folder, and appearance preferences.</figcaption>
+</figure>
 
 Changing the SteamCMD path resets content-cache freshness tracking so the next install does not reuse a stale “fresh” flag from the previous home.
 

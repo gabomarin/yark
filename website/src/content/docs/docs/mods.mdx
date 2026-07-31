@@ -4,6 +4,7 @@ description: CurseForge Project IDs, enable/disable, launch -mods=, and metadata
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import { withBase } from "../../../data/site";
 
 ## What YARK does
 
@@ -12,7 +13,17 @@ The Workspace **Mods** tab stores CurseForge **Project IDs** per profile.
 - **Enabled** IDs are passed at launch as `-mods=id1,id2,…`
 - **Disabled** IDs stay on the profile until you turn them back on (no need to delete an ID to skip one boot)
 - Names / summaries / links come from a small Cloudflare Worker proxy and are cached locally
-- The desktop app **never embeds** a CurseForge API key — lookups send Project IDs / search queries only
+
+<figure class="doc-shot">
+  <img
+    src={withBase("/screenshots/workspace-mods.png")}
+    alt="Mods tab listing CurseForge mods with enable toggles, Project IDs, metadata, and CurseForge links"
+    width="1440"
+    height="900"
+    loading="lazy"
+  />
+  <figcaption>Mods — Project IDs, enable/disable, and Worker-backed metadata per server.</figcaption>
+</figure>
 
 ## What YARK does not do
 

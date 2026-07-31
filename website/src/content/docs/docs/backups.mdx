@@ -4,6 +4,7 @@ description: World, players, and INI backups — schedules, restore rules, and c
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import { withBase } from "../../../data/site";
 
 Backups are **ZIP archives** under a per-server destination (default `{installDir}\Backups` unless you set another folder). Legacy loose-folder archives can still restore / import.
 
@@ -28,6 +29,28 @@ On-disk layout:
 
 - **Per server** — Workspace → **Backups** (create, schedule, restore, open folder)
 - **Fleet** — sidebar **Backups** (health, disk pressure, destinations)
+
+<figure class="doc-shot">
+  <img
+    src={withBase("/screenshots/workspace-backups.png")}
+    alt="Per-server Backups tab with world save destination, schedule controls, and backup history"
+    width="1440"
+    height="900"
+    loading="lazy"
+  />
+  <figcaption>Workspace Backups — create, schedule, and restore for one profile.</figcaption>
+</figure>
+
+<figure class="doc-shot">
+  <img
+    src={withBase("/screenshots/backups.png")}
+    alt="Backups dashboard showing backup health across all servers, disk usage, volumes, and destinations"
+    width="1440"
+    height="900"
+    loading="lazy"
+  />
+  <figcaption>Fleet Backups — health, disk usage, and destinations across servers.</figcaption>
+</figure>
 
 ## Triggers
 
