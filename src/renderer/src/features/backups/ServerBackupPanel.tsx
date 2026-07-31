@@ -854,7 +854,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
                 {opsLocked && (
                   <Badge color="yellow" variant="light" size="sm">
                     {props.opsLockReason != null
-                      ? "Files job — restore locked"
+                      ? "Restore locked while files update"
                       : "Server active — stop before restore"}
                   </Badge>
                 )}

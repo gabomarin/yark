@@ -284,9 +284,9 @@ export function ServerForm(props: Props): ReactElement {
       )}
 
       {filesJobActive && (
-        <Alert color="yellow" title="Files job in progress">
-          You can save profile changes now; avoid touching the install until SteamCMD
-          finishes.
+        <Alert color="yellow" title="Updating server files">
+          You can save profile settings now. Wait until the file update finishes before
+          changing the install path.
         </Alert>
       )}
 

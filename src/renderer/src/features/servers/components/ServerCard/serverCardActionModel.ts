@@ -57,7 +57,7 @@ export function resolveRuntimeAction(input: {
   if (input.steamCmdBusy) {
     return {
       kind: "cancel",
-      label: "Cancel files job",
+      label: "Cancel",
       color: "red",
       variant: "light",
       disabled: false,

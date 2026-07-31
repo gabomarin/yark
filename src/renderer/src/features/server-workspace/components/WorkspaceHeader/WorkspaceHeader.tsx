@@ -35,7 +35,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
     (status === "stopped" || status === "error") && props.filesJobActive !== true;
   const canStop = status === "running" || status === "starting";
   const canRestart = status === "running" && props.filesJobActive !== true;
-  const lockTitle = props.filesJobReason ?? "Wait for the files job to finish";
+  const lockTitle = props.filesJobReason ?? "Wait for the file update to finish";
 
   return (
     <header className={classes.header}>

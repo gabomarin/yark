@@ -587,16 +587,15 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             }
             filesJobLabel={
               steamCmdBusy && steamCmdStatus?.serverId === overlay.serverId
-                ? (steamCmdStatus.progressLabel ??
-                  (steamCmdStatus.operation === "update"
-                    ? "Updating server files"
-                    : steamCmdStatus.operation === "verify-files"
-                      ? "Verifying server files"
-                      : steamCmdStatus.operation === "install-files"
-                        ? "Installing server files"
-                        : steamCmdStatus.operation === "sync-files"
-                          ? "Syncing server files"
-                          : "SteamCMD is modifying this server's files"))
+                ? steamCmdStatus.operation === "update"
+                  ? "Updating server files"
+                  : steamCmdStatus.operation === "verify-files"
+                    ? "Verifying server files"
+                    : steamCmdStatus.operation === "install-files"
+                      ? "Installing server files"
+                      : steamCmdStatus.operation === "sync-files"
+                        ? "Copying files to this server"
+                        : "Updating server files"
                 : null
             }
             stopProgress={
