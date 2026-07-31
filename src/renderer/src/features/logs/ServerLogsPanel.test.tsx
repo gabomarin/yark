@@ -239,7 +239,7 @@ describe("ServerLogsPanel", () => {
     expect(await screen.findByText(/ARK Version: 92.28/)).toBeInTheDocument();
     expect(screen.getByText(/GameAnalytics noise/)).toBeInTheDocument();
 
-    await user.click(screen.getByRole("textbox", { name: "Source" }));
+    await user.click(screen.getByRole("combobox", { name: "Source" }));
     await user.click(await screen.findByRole("option", { name: "Server log" }));
 
     expect(screen.getByText(/ARK Version: 92.28/)).toBeInTheDocument();
