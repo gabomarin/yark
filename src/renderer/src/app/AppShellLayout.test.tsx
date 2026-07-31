@@ -20,7 +20,10 @@ describe("AppShellLayout", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByAltText("YARK server manager")).toBeInTheDocument();
+    // Vite/Vitest resolves `*.png` imports to a URL string (see env.d.ts); no fileMock needed.
+    const brand = screen.getByAltText("YARK server manager");
+    expect(brand).toBeInTheDocument();
+    expect(brand).toHaveAttribute("src", expect.stringMatching(/\S/));
     expect(screen.getByText("page-body")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Servers" })).toHaveAttribute(
       "data-size",

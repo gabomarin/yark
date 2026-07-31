@@ -33,6 +33,17 @@ function sendToRenderer(channel: string, payload: unknown): void {
   webContents.send(channel, payload);
 }
 
+/**
+ * Resolve the Windows `BrowserWindow` icon path.
+ *
+ * Packaging layout (electron-builder on Windows):
+ * - `build.extraResources` copies `build/icon.ico` → `<resources>/icon.ico`
+ *   beside the asar (not inside it), so packaged apps hit `process.resourcesPath` first.
+ * - `build.win.icon` sets the `.exe` / installer icon separately; this helper is only
+ *   for the live window chrome.
+ * - Dev / unpackaged: fall back to repo `build/icon.ico` via compiled `out/main`
+ *   (`__dirname/../../build`) or `app.getAppPath()`.
+ */
 function resolveAppIcon(): string | undefined {
   const candidates = [
     join(process.resourcesPath, "icon.ico"),
