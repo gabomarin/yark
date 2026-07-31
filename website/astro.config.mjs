@@ -1,10 +1,8 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
-// Parallel preview site — does not replace `website/` or GitHub Pages yet.
-// When cutover happens, set base: "/yark" for project Pages.
+/** Canonical GitHub project Pages site (`https://gabomarin.github.io/yark/`). */
 export default defineConfig({
-  // Project Pages URL (artifact root mounts at /yark). Local preview still uses base "/".
   site: "https://gabomarin.github.io/yark",
   base: "/yark",
   trailingSlash: "always",
