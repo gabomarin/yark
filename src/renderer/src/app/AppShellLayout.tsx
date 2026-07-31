@@ -2,6 +2,7 @@ import { AppShell } from "@mantine/core";
 import { Alert, CloseButton, Group, Stack } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import { Sidebar, type Route } from "@layout/Sidebar/Sidebar";
+import type { OfficialNetworkStatus } from "@shared/types";
 import type { PropsWithChildren, ReactElement } from "react";
 import classes from "./AppShellLayout.module.css";
 
@@ -11,6 +12,7 @@ interface Props extends PropsWithChildren {
   steamCmdDetected: boolean;
   steamCmdRunning: boolean;
   officialVersion: string | null;
+  officialNetworkStatus: OfficialNetworkStatus;
   appVersion: string;
   error?: string | null;
   onDismissError?: () => void;

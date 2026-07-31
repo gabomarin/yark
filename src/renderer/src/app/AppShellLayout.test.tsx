@@ -13,6 +13,7 @@ describe("AppShellLayout", () => {
           steamCmdDetected={false}
           steamCmdRunning={false}
           officialVersion={null}
+          officialNetworkStatus="unknown"
           appVersion="0.1.0"
         >
           <div>page-body</div>
@@ -42,6 +43,7 @@ describe("AppShellLayout", () => {
           steamCmdDetected={false}
           steamCmdRunning={false}
           officialVersion={null}
+          officialNetworkStatus="unknown"
           appVersion="0.1.0"
           error="Boom"
           onDismissError={onDismissError}

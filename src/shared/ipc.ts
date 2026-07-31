@@ -10,6 +10,7 @@ import type {
   BackupRecord,
   ClusterComplianceReport,
   IniPreview,
+  InstallationServersMode,
   ModMetadata,
   ModSearchPage,
   ServerIniPayload,
@@ -162,7 +163,10 @@ export interface RendererApi {
   openSteamCmdCache(kind: SteamCmdCacheKind): Promise<IpcResult<void>>;
   clearSteamCmdCache(kind: SteamCmdCacheKind): Promise<IpcResult<string>>;
   getStatuses(): Promise<IpcResult<ServerRuntimeInfo[]>>;
-  getInstallationInfo(forceOfficialCheck?: boolean): Promise<IpcResult<ServerInstallationSnapshot>>;
+  getInstallationInfo(
+    forceOfficialCheck?: boolean,
+    serversMode?: InstallationServersMode,
+  ): Promise<IpcResult<ServerInstallationSnapshot>>;
   checkCluster(): Promise<IpcResult<ClusterComplianceReport[]>>;
   sendRconCommand(
     id: string,

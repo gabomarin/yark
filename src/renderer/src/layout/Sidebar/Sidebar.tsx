@@ -10,11 +10,13 @@ import {
 import {
   Button,
   Divider,
+  Group,
   Stack as MantineStack,
   Text,
   Tooltip,
 } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
+import type { OfficialNetworkStatus } from "@shared/types";
 import yarkLogo from "../../assets/brand/yark-logo.png";
 import classes from "./Sidebar.module.css";
 
@@ -40,7 +42,24 @@ interface Props {
   steamCmdDetected: boolean;
   steamCmdRunning: boolean;
   officialVersion: string | null;
+  officialNetworkStatus: OfficialNetworkStatus;
   appVersion: string;
+}
+
+function officialVersionTooltip(
+  version: string | null,
+  networkStatus: OfficialNetworkStatus,
+): string {
+  if (networkStatus === "deploying" && version !== null) {
+    return `Wildcard is deploying version ${version}.`;
+  }
+  if (networkStatus === "offline" && version !== null) {
+    return `Official network reports Offline (v${version}).`;
+  }
+  if (networkStatus === "offline") {
+    return "Official network reports Offline.";
+  }
+  return "ARK Official Server Network";
 }
 
 export function Sidebar(props: Props): ReactElement {
@@ -50,12 +69,29 @@ export function Sidebar(props: Props): ReactElement {
   // Keep secondary sidebar copy readable in Compact without enlarging Comfortable.
   const metadataTextSize = compact ? "sm" : "xs";
   const versionTextSize = compact ? "md" : "sm";
+  const deploying = props.officialNetworkStatus === "deploying";
+  const offline = props.officialNetworkStatus === "offline";
+  const versionToneClass = deploying
+    ? classes.versionValueDeploying
+    : offline
+      ? classes.versionValueOffline
+      : classes.versionValue;
+  const statusDotClass = deploying
+    ? classes.deployingDot
+    : offline
+      ? classes.badDot
+      : classes.okDot;
 
   const steamCmdLabel = !props.steamCmdDetected
     ? "SteamCMD missing"
     : props.steamCmdRunning
       ? "SteamCMD busy"
       : "SteamCMD ready";
+
+  const versionTooltip = officialVersionTooltip(
+    props.officialVersion,
+    props.officialNetworkStatus,
+  );
 
   return (
     <MantineStack gap={compact ? "sm" : "md"} className={classes.sidebar}>
@@ -109,17 +145,26 @@ export function Sidebar(props: Props): ReactElement {
       </Button>
 
       <div className={classes.versionChip}>
-        <Tooltip
-          label="Official ARK version from Wildcard. Update availability still uses the public Steam build."
-          multiline
-          w={260}
-          position="right"
-        >
+        <Tooltip label="ARK Official Server Network" position="right">
           <Text size={metadataTextSize} fw={600}>Official version ARK</Text>
         </Tooltip>
-        <Text size={versionTextSize} className={classes.versionValue}>
-          {props.officialVersion ?? "Not detected"}
-        </Text>
+        <Tooltip label={versionTooltip} multiline={deploying || offline} w={deploying || offline ? 260 : undefined} position="right">
+          <Group gap={6} wrap="nowrap" className={classes.versionRow}>
+            {(deploying || offline) && (
+              <Circle
+                size={compact ? 8 : 9}
+                weight="fill"
+                className={statusDotClass}
+                aria-label={
+                  deploying ? "Official network deploying" : "Official network offline"
+                }
+              />
+            )}
+            <Text size={versionTextSize} className={versionToneClass}>
+              {props.officialVersion ?? "Not detected"}
+            </Text>
+          </Group>
+        </Tooltip>
       </div>
 
       <Text size={metadataTextSize} c="dimmed">v{props.appVersion}</Text>

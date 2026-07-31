@@ -1,9 +1,9 @@
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { closeSync, existsSync, openSync, readFileSync, readdirSync, readSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { get } from "node:https";
 import { dirname, join } from "node:path";
 import { serverBinaryPath } from "./launch-args";
-import type { ServerInstallationInfo } from "@shared/types";
+import type { OfficialNetworkStatus, ServerInstallationInfo } from "@shared/types";
 
 const ASA_APP_ID = "2430930";
 const OFFICIAL_VERSION_TTL_MS = 15 * 60 * 1000;
@@ -12,10 +12,12 @@ const OFFICIAL_SERVER_STATUS_URL =
 
 let officialVersionCache: {
   value: string | null;
+  networkStatus: OfficialNetworkStatus;
   checkedAt: number;
-  inFlight: Promise<string | null> | null;
+  inFlight: Promise<OfficialArkVersionProbe> | null;
 } = {
   value: null,
+  networkStatus: "unknown",
   checkedAt: 0,
   inFlight: null,
 };
@@ -116,6 +118,7 @@ function readVersionFromExecutable(binaryPath: string): string | null {
   }
 }
 
+/** Collapse path separators for stable Windows install-dir comparisons/cache keys. */
 function normalizePath(value: string): string {
   return value.trim().replace(/[\\/]+/g, "\\");
 }
@@ -262,7 +265,9 @@ function readArkVersionFromLogs(installDir: string): string | null {
 
   for (const item of sorted) {
     try {
-      const raw = readFileSync(item.fullPath, "utf8");
+      // Only scan the newest logs; ASA logs can be multi-MB and sync reads
+      // on the Electron main process freeze the UI.
+      const raw = readFileTailSync(item.fullPath, 256 * 1024);
       const match = raw.match(/ARK\s+Version\s*:\s*([^\r\n]+)/i);
       if (match?.[1] !== undefined) {
         const version = match[1].trim();
@@ -276,6 +281,29 @@ function readArkVersionFromLogs(installDir: string): string | null {
   }
 
   return null;
+}
+
+/** Read the last `maxBytes` of a file without loading the whole thing into memory. */
+function readFileTailSync(filePath: string, maxBytes: number): string {
+  const { size } = statSync(filePath);
+  if (size <= maxBytes) {
+    return readFileSync(filePath, "utf8");
+  }
+  const fd = openSync(filePath, "r");
+  try {
+    const length = Math.min(maxBytes, size);
+    const start = size - length;
+    const buffer = Buffer.alloc(length);
+    try {
+      readSync(fd, buffer, 0, length, start);
+      return buffer.toString("utf8");
+    } catch {
+      // Tail read can fail on some volumes; fall back to a full read.
+      return readFileSync(filePath, "utf8");
+    }
+  } finally {
+    closeSync(fd);
+  }
 }
 
 function readPathValue(source: unknown, path: string[]): unknown {
@@ -359,11 +387,36 @@ function fetchOfficialArkBuild(): Promise<string | null> {
 }
 
 export function extractOfficialVersionFromStatusText(content: string): string | null {
-  const match = content.match(/\(\s*v(\d+(?:\.\d+)+)\s*\)/i);
-  return match?.[1] ?? null;
+  return parseOfficialServerStatus(content).version;
 }
 
-function fetchOfficialArkVersion(): Promise<string | null> {
+export interface OfficialArkVersionProbe {
+  version: string | null;
+  networkStatus: OfficialNetworkStatus;
+}
+
+export function parseOfficialServerStatus(content: string): OfficialArkVersionProbe {
+  const versionMatch = content.match(/\(\s*v(\d+(?:\.\d+)+)\s*\)/i);
+  const version = versionMatch?.[1] ?? null;
+
+  const statusMatch =
+    content.match(/>\s*(Online|Deploying|Offline|Healthy)\b/i) ??
+    content.match(/\b(Online|Deploying|Offline|Healthy)\b/i);
+  const rawStatus = statusMatch?.[1]?.toLowerCase() ?? "";
+
+  let networkStatus: OfficialNetworkStatus = "unknown";
+  if (rawStatus === "online" || rawStatus === "healthy") {
+    networkStatus = "online";
+  } else if (rawStatus === "deploying") {
+    networkStatus = "deploying";
+  } else if (rawStatus === "offline") {
+    networkStatus = "offline";
+  }
+
+  return { version, networkStatus };
+}
+
+function fetchOfficialArkVersion(): Promise<OfficialArkVersionProbe> {
   return new Promise((resolve) => {
     const req = get(
       OFFICIAL_SERVER_STATUS_URL,
@@ -375,7 +428,7 @@ function fetchOfficialArkVersion(): Promise<string | null> {
       },
       (res) => {
         if ((res.statusCode ?? 500) >= 400) {
-          resolve(null);
+          resolve({ version: null, networkStatus: "unknown" });
           res.resume();
           return;
         }
@@ -386,26 +439,38 @@ function fetchOfficialArkVersion(): Promise<string | null> {
           body += chunk;
         });
         res.on("end", () => {
-          resolve(extractOfficialVersionFromStatusText(body));
+          resolve(parseOfficialServerStatus(body));
         });
       },
     );
 
     req.setTimeout(3_500, () => {
       req.destroy();
-      resolve(null);
+      resolve({ version: null, networkStatus: "unknown" });
     });
 
     req.on("error", () => {
-      resolve(null);
+      resolve({ version: null, networkStatus: "unknown" });
     });
   });
 }
 
-export async function readOfficialArkVersionCached(force = false): Promise<string | null> {
+/**
+ * Cached Wildcard official-network probe (`officialserverstatus.ini`).
+ * - Success: cached for `OFFICIAL_VERSION_TTL_MS` (~15m) unless `force`.
+ * - Concurrent callers share one in-flight request.
+ * - Failed probe: keep last success when available; otherwise shorten TTL (~30s)
+ *   so the next poll can retry without waiting the full window.
+ */
+export async function readOfficialArkVersionCached(
+  force = false,
+): Promise<OfficialArkVersionProbe> {
   const now = Date.now();
   if (!force && now - officialVersionCache.checkedAt < OFFICIAL_VERSION_TTL_MS) {
-    return officialVersionCache.value;
+    return {
+      version: officialVersionCache.value,
+      networkStatus: officialVersionCache.networkStatus,
+    };
   }
 
   if (officialVersionCache.inFlight !== null) {
@@ -413,18 +478,26 @@ export async function readOfficialArkVersionCached(force = false): Promise<strin
   }
 
   officialVersionCache.inFlight = fetchOfficialArkVersion()
-    .then((value) => {
-      if (value !== null) {
-        officialVersionCache.value = value;
+    .then((probe) => {
+      if (probe.version !== null) {
+        officialVersionCache.value = probe.version;
+        officialVersionCache.networkStatus = probe.networkStatus;
         officialVersionCache.checkedAt = Date.now();
-        return value;
+        return probe;
       }
       // Do not lock a failed probe for the full TTL — retry soon, keep last success.
       if (officialVersionCache.value === null) {
         officialVersionCache.checkedAt =
           Date.now() - OFFICIAL_VERSION_TTL_MS + 30_000;
+        officialVersionCache.networkStatus = probe.networkStatus;
       }
-      return officialVersionCache.value;
+      return {
+        version: officialVersionCache.value,
+        networkStatus:
+          officialVersionCache.value !== null
+            ? officialVersionCache.networkStatus
+            : probe.networkStatus,
+      };
     })
     .finally(() => {
       officialVersionCache.inFlight = null;
@@ -456,24 +529,43 @@ export async function readOfficialArkBuildCached(force = false): Promise<string 
   return officialBuildCache.inFlight;
 }
 
+const INSTALL_INSPECT_TTL_MS = 20_000;
+
+const installInspectCache = new Map<
+  string,
+  { checkedAt: number; info: ServerInstallationInfo }
+>();
+
 export function inspectServerInstallation(
   serverId: string,
   installDir: string,
+  options?: { bypassCache?: boolean },
 ): ServerInstallationInfo {
+  const cacheKey = `${serverId}\0${normalizePath(installDir)}`;
+  const now = Date.now();
+  if (options?.bypassCache !== true) {
+    const cached = installInspectCache.get(cacheKey);
+    if (cached !== undefined && now - cached.checkedAt < INSTALL_INSPECT_TTL_MS) {
+      return { ...cached.info, serverId, checkedAt: cached.info.checkedAt };
+    }
+  }
+
   const binaryPath = serverBinaryPath(installDir);
   const installed = existsSync(binaryPath);
   const steamBuild = installed ? readSteamBuildFromLocalManifest(installDir) : null;
   const build = installed
     ? (
         readVersionFromKnownFiles(installDir) ??
-        readVersionFromExecutable(binaryPath) ??
         steamBuild ??
-        readBuildIdFromManifest(installDir)
+        readBuildIdFromManifest(installDir) ??
+        // PowerShell VersionInfo is sync and can stall the main process ~1–2s;
+        // keep it as a last resort for installs without manifest/version files.
+        readVersionFromExecutable(binaryPath)
       )
     : null;
   const arkVersion = installed ? readArkVersionFromLogs(installDir) : null;
 
-  return {
+  const info: ServerInstallationInfo = {
     serverId,
     installed,
     build,
@@ -483,4 +575,6 @@ export function inspectServerInstallation(
     binaryPath,
     checkedAt: new Date().toISOString(),
   };
+  installInspectCache.set(cacheKey, { checkedAt: now, info });
+  return info;
 }

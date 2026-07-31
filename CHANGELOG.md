@@ -12,6 +12,11 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Added
 
 - Windows system tray + **Close window to tray** (default on) and **Start with Windows** (default off) settings (#54).
+- Sidebar shows Wildcard **Deploying** / Offline official network status (pulsing indicator + tooltip).
+
+### Changed
+
+- Official version and local install probes run less often (CDN every 5 minutes; disk inspect only when official metadata changes, after SteamCMD, or on Check for updates) to avoid main-process UI freezes.
 
 ## [0.4.0] - 2026-07-30
 

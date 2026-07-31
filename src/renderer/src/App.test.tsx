@@ -60,6 +60,7 @@ function createApiMock(): RendererApi {
       ok: true,
       data: {
         officialVersion: "358.12",
+        officialNetworkStatus: "online",
         officialSteamBuild: "build 24346423",
         servers: [],
       },
@@ -178,7 +179,7 @@ describe("App empty installation snapshot", () => {
     expect(screen.getByText("358.12")).toBeInTheDocument();
 
     const api = window.api;
-    expect(api.getInstallationInfo).toHaveBeenCalledWith(false);
+    expect(api.getInstallationInfo).toHaveBeenCalledWith(false, true);
 
     await user.click(screen.getByRole("button", { name: "Check for updates" }));
 

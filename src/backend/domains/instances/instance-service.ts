@@ -1,6 +1,8 @@
 import type {
   BackupKind,
   ClusterComplianceReport,
+  InstallationServersMode,
+  OfficialNetworkStatus,
   ServerInstallationInfo,
   ServerProfile,
   ServerProfileInput,
@@ -49,6 +51,19 @@ function backupKindLabel(kind: BackupKind): string {
   return "INI files";
 }
 
+/** True when profile ids match the cached install snapshot set (order-independent). */
+function sameServerIds(
+  profiles: ReadonlyArray<{ id: string }>,
+  cached: ReadonlyArray<ServerInstallationInfo>,
+): boolean {
+  // Equal length + every profile id present ⇒ same set (no extras on either side).
+  if (profiles.length !== cached.length) {
+    return false;
+  }
+  const cachedIds = new Set(cached.map((info) => info.serverId));
+  return profiles.every((profile) => cachedIds.has(profile.id));
+}
+
 function backingUpPercent(index: number, total: number): number {
   if (total <= 1) return 85;
   // After the process exits, spread archive starts across 40% → 85%.
@@ -80,6 +95,9 @@ export class InstanceService extends EventEmitter {
   private readonly stopJobs = new Map<string, Promise<StopJobOutcome>>();
   /** Covers restart after stopJobs clears (pre_restart ZIP only; not start). */
   private readonly criticalJobs = new Map<string, Promise<unknown>>();
+  private lastOfficialVersion: string | null | undefined = undefined;
+  private lastOfficialSteamBuild: string | null | undefined = undefined;
+  private lastInstallServers: ServerInstallationInfo[] = [];
 
   constructor(
     private readonly repo: ServerRepository,
@@ -550,21 +568,53 @@ export class InstanceService extends EventEmitter {
     return profile.installDir;
   }
 
-  async installationInfo(forceOfficialCheck = false): Promise<{
+  async installationInfo(
+    forceOfficialCheck = false,
+    serversMode: InstallationServersMode = true,
+  ): Promise<{
     officialVersion: string | null;
+    officialNetworkStatus: OfficialNetworkStatus;
     officialSteamBuild: string | null;
     servers: ServerInstallationInfo[];
   }> {
-    const [officialVersion, officialSteamBuild] = await Promise.all([
+    const [officialProbe, officialSteamBuild] = await Promise.all([
       readOfficialArkVersionCached(forceOfficialCheck),
       readOfficialArkBuildCached(forceOfficialCheck),
     ]);
+    const officialVersion = officialProbe.version;
+    const officialNetworkStatus = officialProbe.networkStatus;
+
+    const profiles = this.repo.list();
+    const officialChanged =
+      this.lastOfficialVersion !== officialVersion ||
+      this.lastOfficialSteamBuild !== officialSteamBuild;
+    const serverSetChanged = !sameServerIds(profiles, this.lastInstallServers);
+
+    const shouldInspectServers =
+      forceOfficialCheck ||
+      serversMode === true ||
+      (serversMode === "when-official-changed" &&
+        (officialChanged || serverSetChanged));
+
+    const servers = shouldInspectServers
+      ? profiles.map((profile) =>
+          inspectServerInstallation(profile.id, profile.installDir, {
+            bypassCache: forceOfficialCheck,
+          }),
+        )
+      : this.lastInstallServers;
+
+    this.lastOfficialVersion = officialVersion;
+    this.lastOfficialSteamBuild = officialSteamBuild;
+    if (shouldInspectServers) {
+      this.lastInstallServers = servers;
+    }
+
     return {
       officialVersion,
+      officialNetworkStatus,
       officialSteamBuild,
-      servers: this.repo
-        .list()
-        .map((profile) => inspectServerInstallation(profile.id, profile.installDir)),
+      servers,
     };
   }
 

@@ -98,6 +98,37 @@
   font-family: Consolas, "Cascadia Mono", monospace;
 }
 
+.versionValueDeploying {
+  color: var(--app-color-attention);
+  font-family: Consolas, "Cascadia Mono", monospace;
+}
+
+.versionValueOffline {
+  color: var(--app-color-bad);
+  font-family: Consolas, "Cascadia Mono", monospace;
+}
+
+.versionRow {
+  width: fit-content;
+  max-width: 100%;
+  cursor: default;
+}
+
+.deployingDot {
+  color: var(--app-color-attention);
+  animation: official-status-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes official-status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.28;
+  }
+}
+
 /* Compact: tighter chrome; Sidebar.tsx keeps metadata one step above compact `xs`. */
 :global([data-ui-density="compact"]) .sidebar {
   padding: var(--app-space-md) var(--app-space-xs);

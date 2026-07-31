@@ -1,6 +1,7 @@
 import { PlaceholderPage } from "@ui/PlaceholderPage/PlaceholderPage";
 import { AppShellLayout } from "./AppShellLayout";
 import type { Route } from "@layout/Sidebar/Sidebar";
+import type { OfficialNetworkStatus } from "@shared/types";
 import type { ReactNode, ReactElement } from "react";
 
 interface OverviewSlot {
@@ -27,6 +28,7 @@ interface Props {
   route: Route;
   appVersion: string;
   officialVersion: string | null;
+  officialNetworkStatus: OfficialNetworkStatus;
   steamCmdDetected: boolean;
   steamCmdRunning: boolean;
   onNavigate: (route: Route) => void;
@@ -89,6 +91,7 @@ export function AppRouter(props: Props): ReactElement {
       steamCmdDetected={props.steamCmdDetected}
       steamCmdRunning={props.steamCmdRunning}
       officialVersion={props.officialVersion}
+      officialNetworkStatus={props.officialNetworkStatus}
       appVersion={props.appVersion}
       error={props.error}
       onDismissError={props.onDismissError}
