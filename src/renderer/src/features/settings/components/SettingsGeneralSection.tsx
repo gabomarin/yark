@@ -116,8 +116,9 @@ export function SettingsGeneralSection(props: Props): ReactElement {
         <div className={classes.settingCopy}>
           <Text size="sm" fw={600}>On quit with active servers</Text>
           <Text size="xs" c="dimmed" mt={2}>
-            When quitting while servers are running. Prefer Close to tray to keep
-            backups running. Crash recovery can reattach leftover ASA processes.
+            When quitting while servers are running. Enable Close window to tray
+            above to keep servers and backups running without quitting. Crash
+            recovery can reattach leftover ASA processes.
           </Text>
         </div>
         <div className={classes.settingControl}>

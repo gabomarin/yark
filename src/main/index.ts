@@ -434,7 +434,7 @@ if (gotSingleInstanceLock) {
               ? "1 server is still running."
               : `${count} servers are still running.`,
           detail:
-            "Stop them before quitting. To keep servers and backups running, use Close window to tray instead.",
+            "Stop them before quitting. To keep servers and backups running, enable Close window to tray in Settings, then close the window instead of quitting.",
         })
         .then((result) => {
           quitPolicyPromptInFlight = false;
