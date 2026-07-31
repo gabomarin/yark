@@ -32,5 +32,6 @@ export default defineConfig({
     include: ["tests/**/*.test.ts", "src/renderer/src/**/*.test.tsx"],
     environment: "jsdom",
     setupFiles: [resolve(__dirname, "src/renderer/src/test/setup.ts")],
+    // `*.png` / static assets are resolved to URL strings by Vite (no Jest fileMock).
   },
 });

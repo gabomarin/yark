@@ -21,7 +21,14 @@ docs here; keep engineering runbooks under [`docs/`](./).
 | `website/index.html` | Copy, sections, screenshot markup |
 | `website/styles.css` | Dark theme, hero, showcase grid, sections |
 | `website/screenshots/*.png` | Versioned feature screenshots |
+| `website/assets/yark-logo.png` | Hero lockup (synced from `brand/yark-logo.png`) |
+| `website/favicon.ico` | Browser tab fallback |
+| `website/favicon-32x32.png` | Browser tab PNG |
+| `website/apple-touch-icon.png` | iOS / Safari home-screen icon |
 | `.github/workflows/pages.yml` | Deploy on `main` when `website/**` (or the workflow) changes |
+
+Brand sources and rebuild steps live under [`brand/README.md`](../brand/README.md)
+(`node brand/_build-icons.cjs` after editing `brand/yark-icon.png` / `yark-logo.png`).
 
 Section order in `index.html` today: hero → showcase (`#screenshots`) → scope /
 roadmap / not / privacy / mods / security / about → footer.
@@ -162,6 +169,7 @@ Ephemeral review shots stay in temp dirs per [visual-testing.md](visual-testing.
 ## Related docs
 
 - [README — Project website](../README.md#project-website-github-pages)
+- [brand/README.md](../brand/README.md) — logo / icon sources and rebuild script
 - [visual-testing.md](visual-testing.md) — Playwright review of the Electron UI
 - [versioning.md](versioning.md) — SemVer / changelog; sync site version pill on release
 - [agent-context.md](agent-context.md) — current functional status for accurate copy

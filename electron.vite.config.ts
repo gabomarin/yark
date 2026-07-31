@@ -44,5 +44,6 @@ export default defineConfig({
     plugins: [react()],
     resolve: { alias: rendererAlias },
     define: appVersionDefine,
+    publicDir: resolve(__dirname, "src/renderer/public"),
   },
 });

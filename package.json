@@ -64,13 +64,21 @@
     "appId": "com.yark.servermanager",
     "productName": "YARK server manager",
     "directories": {
+      "buildResources": "build",
       "output": "dist"
     },
     "files": [
       "out/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "build/icon.ico",
+        "to": "icon.ico"
+      }
+    ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "icon.ico"
     }
   }
 }

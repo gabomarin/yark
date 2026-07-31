@@ -1,7 +1,6 @@
 import type { ReactElement } from "react";
 import {
   Circle,
-  Dna,
   FileText,
   GearSix,
   HardDrives,
@@ -11,12 +10,12 @@ import {
 import {
   Button,
   Divider,
-  Group,
   Stack as MantineStack,
   Text,
   Tooltip,
 } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
+import yarkLogo from "../../assets/brand/yark-logo.png";
 import classes from "./Sidebar.module.css";
 
 export type Route = "overview" | "clusters" | "backups" | "logs" | "settings";
@@ -47,7 +46,6 @@ interface Props {
 export function Sidebar(props: Props): ReactElement {
   const density = useUiDensity();
   const compact = density === "compact";
-  const brandIconSize = compact ? 16 : 20;
   const navIconSize = compact ? 16 : 18;
   // Keep secondary sidebar copy readable in Compact without enlarging Comfortable.
   const metadataTextSize = compact ? "sm" : "xs";
@@ -61,15 +59,14 @@ export function Sidebar(props: Props): ReactElement {
 
   return (
     <MantineStack gap={compact ? "sm" : "md"} className={classes.sidebar}>
-      <Group gap={compact ? "xs" : "sm"} className={classes.brand}>
-        <div className={classes.brandMark} aria-hidden="true">
-          <Dna size={brandIconSize} weight="duotone" className={classes.brandIcon} />
-        </div>
-        <div className={classes.brandCopy}>
-          <Text fw={700}>YARK</Text>
-          <Text size={metadataTextSize} c="dimmed">server manager</Text>
-        </div>
-      </Group>
+      <div className={classes.brand}>
+        <img
+          src={yarkLogo}
+          alt="YARK server manager"
+          className={classes.brandLockup}
+          draggable={false}
+        />
+      </div>
 
       <MantineStack gap={compact ? "xxs" : "xs"} className={classes.nav}>
         {NAV_ITEMS.map((item) => {
