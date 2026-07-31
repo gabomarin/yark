@@ -9,6 +9,13 @@ interface Props {
   onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
   uiDensity: UiDensity;
   onUiDensityChange: (density: UiDensity) => void;
+  closeWindowToTray: boolean;
+  onCloseWindowToTrayChange: (enabled: boolean) => void;
+  trayCloseHintDismissed: boolean;
+  onTrayCloseHintDismissedChange: (dismissed: boolean) => void;
+  startWithWindows: boolean;
+  onStartWithWindowsChange: (enabled: boolean) => void;
+  desktopShellReady: boolean;
   defaultBaseFolder: string | null;
   onDefaultBaseFolderChange: (path: string | null) => void;
   onPickDefaultBaseFolder: () => void;
@@ -35,6 +42,69 @@ export function SettingsGeneralSection(props: Props): ReactElement {
               props.onOpenNativeTerminalOnStartChange(event.currentTarget.checked)
             }
             aria-label="Show native console when starting or restarting a server"
+          />
+        </div>
+      </div>
+
+      <div className={classes.settingRow}>
+        <div className={classes.settingCopy}>
+          <Text size="sm" fw={600}>Close window to tray</Text>
+          <Text size="xs" c="dimmed" mt={2}>
+            Closing the window hides YARK in the system tray instead of quitting.
+            Use the tray icon to show the window again or quit. Minimize still uses
+            the taskbar.
+          </Text>
+        </div>
+        <div className={classes.settingControl}>
+          <Switch
+            checked={props.closeWindowToTray}
+            disabled={!props.desktopShellReady}
+            onChange={(event) =>
+              props.onCloseWindowToTrayChange(event.currentTarget.checked)
+            }
+            aria-label="Close window to system tray"
+          />
+        </div>
+      </div>
+
+      {props.closeWindowToTray ? (
+        <div className={classes.settingRow}>
+          <div className={classes.settingCopy}>
+            <Text size="sm" fw={600}>Show notification when hiding to tray</Text>
+            <Text size="xs" c="dimmed" mt={2}>
+              Windows toast when the window is hidden. Turn off if you do not want
+              the reminder each time.
+            </Text>
+          </div>
+          <div className={classes.settingControl}>
+            <Switch
+              checked={!props.trayCloseHintDismissed}
+              disabled={!props.desktopShellReady}
+              onChange={(event) =>
+                props.onTrayCloseHintDismissedChange(!event.currentTarget.checked)
+              }
+              aria-label="Show notification when hiding to tray"
+            />
+          </div>
+        </div>
+      ) : null}
+
+      <div className={classes.settingRow}>
+        <div className={classes.settingCopy}>
+          <Text size="sm" fw={600}>Start with Windows</Text>
+          <Text size="xs" c="dimmed" mt={2}>
+            Open YARK when you sign in to Windows. Does not start dedicated servers
+            automatically.
+          </Text>
+        </div>
+        <div className={classes.settingControl}>
+          <Switch
+            checked={props.startWithWindows}
+            disabled={!props.desktopShellReady}
+            onChange={(event) =>
+              props.onStartWithWindowsChange(event.currentTarget.checked)
+            }
+            aria-label="Start YARK with Windows"
           />
         </div>
       </div>

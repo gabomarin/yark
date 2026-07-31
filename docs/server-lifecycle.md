@@ -189,7 +189,22 @@ backup/start; backup failure → stopped, no start; start failure → left stopp
 with a completed `pre_restart` snapshot.
 
 **App quit:** `before-quit` runs `processManager.stopAll` when any server is
-active.
+active. Tray **Quit YARK** and closing the window with **Close window to tray**
+disabled use this same quit path. Ask / Stop / Leave-running (#59) is not
+implemented yet — Quit always stops managed servers today.
+
+### System tray and Windows startup (#54)
+
+- **Close window to tray** (default on): the window close button hides YARK to
+  the system tray instead of quitting. Minimize still uses the normal taskbar.
+  Optional Windows toast (Settings: **Show notification when hiding to tray**,
+  default on); click the toast or tray icon to reopen. Quit from the tray menu
+  to exit.
+- **Start with Windows** (default off): uses Electron `setLoginItemSettings` so
+  toggling does not leave duplicate login registrations. Dev (`electron .`)
+  registers the Electron binary with the app path as an argument; packaged
+  builds register `YARK.exe`. This does **not** auto-start ASA servers (#53).
+- Second-instance launches focus the existing window (`requestSingleInstanceLock`).
 
 `StartServerOptions.skipPortValidation` is declared but **unused** today.
 

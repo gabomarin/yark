@@ -21,6 +21,7 @@ import type { SteamCmdCacheKind, SteamCmdStatus } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { SettingsGeneralSection } from "./components/SettingsGeneralSection";
 import type { UiDensity } from "./settingsModel";
+import { useDesktopShellPreferences } from "./useDesktopShellPreferences";
 import classes from "./SettingsPage.module.css";
 
 interface Props {
@@ -44,6 +45,7 @@ export function SettingsPage(props: Props): ReactElement {
   const [dataFoldersOpen, setDataFoldersOpen] = useState(false);
   const [dataFolders, setDataFolders] = useState<AppDataFolderInfo[]>([]);
   const [dataFoldersError, setDataFoldersError] = useState<string | null>(null);
+  const desktopShell = useDesktopShellPreferences();
   const detected = props.steamCmdStatus?.detected === true;
   const executablePath = props.steamCmdStatus?.executablePath ?? null;
   const depotCacheDir = props.steamCmdStatus?.depotCacheDir ?? null;
@@ -86,6 +88,7 @@ export function SettingsPage(props: Props): ReactElement {
 
   const openDataFolder = async (kind: AppDataFolderKind) => {
     setDataFoldersError(null);
+    desktopShell.clearShellError();
     const result = await window.api.openAppDataFolder(kind);
     if (!result.ok) {
       setDataFoldersError(result.error ?? "Could not open folder");
@@ -105,6 +108,13 @@ export function SettingsPage(props: Props): ReactElement {
               onOpenNativeTerminalOnStartChange={props.onOpenNativeTerminalOnStartChange}
               uiDensity={props.uiDensity}
               onUiDensityChange={props.onUiDensityChange}
+              closeWindowToTray={desktopShell.closeWindowToTray}
+              onCloseWindowToTrayChange={desktopShell.onCloseWindowToTrayChange}
+              trayCloseHintDismissed={desktopShell.trayCloseHintDismissed}
+              onTrayCloseHintDismissedChange={desktopShell.onTrayCloseHintDismissedChange}
+              startWithWindows={desktopShell.startWithWindows}
+              onStartWithWindowsChange={desktopShell.onStartWithWindowsChange}
+              desktopShellReady={desktopShell.desktopShellReady}
               defaultBaseFolder={props.defaultBaseFolder}
               onDefaultBaseFolderChange={props.onDefaultBaseFolderChange}
               onPickDefaultBaseFolder={() => void pickDefaultBaseFolder()}
@@ -218,8 +228,10 @@ export function SettingsPage(props: Props): ReactElement {
 
                 {dataFoldersOpen && (
                   <Stack gap="sm" className={classes.cacheList}>
-                    {dataFoldersError !== null && (
-                      <Text size="xs" c="red">{dataFoldersError}</Text>
+                    {(dataFoldersError ?? desktopShell.shellError) !== null && (
+                      <Text size="xs" c="red">
+                        {dataFoldersError ?? desktopShell.shellError}
+                      </Text>
                     )}
                     {dataFolders.map((folder) => (
                       <div key={folder.kind} className={classes.cacheRow}>
