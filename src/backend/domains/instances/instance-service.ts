@@ -376,16 +376,37 @@ export class InstanceService extends EventEmitter {
   }
 
   /**
+   * Quit "Stop": wait for any still-starting servers, then graceful stop with
+   * pre-stop backup and stop-progress UI for every active process.
+   */
+  async stopAllForAppQuit(): Promise<void> {
+    const activeIds = this.repo
+      .list()
+      .filter((profile) => this.processes.isActive(profile.id))
+      .map((profile) => profile.id);
+    if (activeIds.length === 0) {
+      return;
+    }
+    const results = await Promise.allSettled(
+      activeIds.map((id) => this.stop(id)),
+    );
+    const failures = results.filter(
+      (result): result is PromiseRejectedResult => result.status === "rejected",
+    );
+    const firstFailure = failures[0];
+    if (firstFailure !== undefined) {
+      throw firstFailure.reason;
+    }
+  }
+
+  /**
    * App quit helper: wait for stop/pre_restart work and any restart lock
-   * (covers sync → spawn), then stop leftover active processes.
+   * (covers sync → spawn), then graceful-stop leftover active processes.
    */
   async settleForAppQuit(): Promise<void> {
     await this.waitForStopJobs();
     await this.locks.waitUntilNoPurpose("restart");
-    const profiles = this.repo.list();
-    if (profiles.some((profile) => this.processes.isActive(profile.id))) {
-      await this.processes.stopAll(profiles);
-    }
+    await this.stopAllForAppQuit();
   }
 
   private async withCriticalJob<T>(
@@ -438,6 +459,20 @@ export class InstanceService extends EventEmitter {
     }
 
     try {
+      if (this.processes.getStatus(id).status === "starting") {
+        this.emitStopProgress({
+          serverId: id,
+          active: true,
+          phase: "waiting",
+          label: "Waiting for server to finish starting…",
+          percent: 5,
+        });
+        await this.processes.waitWhileStarting(id);
+        if (!this.processes.isActive(id)) {
+          return "absent";
+        }
+      }
+
       this.emitStopProgress({
         serverId: id,
         active: true,

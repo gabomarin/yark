@@ -22,11 +22,13 @@ import { UI_DENSITY_SETTING_KEY, isUiDensity, type UiDensity } from "../shared/u
 import {
   readDesktopShellPreferences,
   setCloseWindowToTray,
+  setOnQuitWithActiveServers,
   setStartWithWindowsPreference,
   setTrayCloseHintDismissed,
 } from "./desktop-shell-settings";
 import { applyWindowsLoginItem } from "./windows-login-item";
 import type { DesktopShellPreferences } from "../shared/desktop-shell";
+import { isOnQuitWithActiveServers } from "../shared/desktop-shell";
 
 export interface AppDataFolderRoots {
   app: string;
@@ -332,6 +334,15 @@ export function registerIpcHandlers(
         throw new Error("trayCloseHintDismissed must be a boolean");
       }
       return setTrayCloseHintDismissed(settings, dismissed);
+    }),
+  );
+
+  ipcMain.handle(IPC.appSetOnQuitWithActiveServers, (_e, policy: unknown) =>
+    wrap(() => {
+      if (!isOnQuitWithActiveServers(policy)) {
+        throw new Error("onQuitWithActiveServers must be ask, stop, or leave");
+      }
+      return setOnQuitWithActiveServers(settings, policy);
     }),
   );
 

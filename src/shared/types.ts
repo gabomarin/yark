@@ -213,8 +213,12 @@ export type BackupType =
   | "player_disconnect"
   | "ini_save";
 
-/** Phases pushed while a user-initiated stop runs SaveWorld → backup → DoExit. */
-export type ServerStopProgressPhase = "saving" | "backing_up" | "stopping";
+/** Phases pushed while a stop runs (optional wait → SaveWorld → DoExit → backup). */
+export type ServerStopProgressPhase =
+  | "waiting"
+  | "saving"
+  | "backing_up"
+  | "stopping";
 
 export interface ServerStopProgress {
   serverId: string;

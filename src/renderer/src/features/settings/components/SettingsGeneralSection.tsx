@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { FolderOpen } from "@phosphor-icons/react";
 import { Button, Group, SegmentedControl, Switch, Text, Title } from "@mantine/core";
+import type { OnQuitWithActiveServers } from "@shared/desktop-shell";
 import type { UiDensity } from "../settingsModel";
 import classes from "../SettingsPage.module.css";
 
@@ -15,6 +16,8 @@ interface Props {
   onTrayCloseHintDismissedChange: (dismissed: boolean) => void;
   startWithWindows: boolean;
   onStartWithWindowsChange: (enabled: boolean) => void;
+  onQuitWithActiveServers: OnQuitWithActiveServers;
+  onQuitWithActiveServersChange: (policy: OnQuitWithActiveServers) => void;
   desktopShellReady: boolean;
   defaultBaseFolder: string | null;
   onDefaultBaseFolderChange: (path: string | null) => void;
@@ -105,6 +108,33 @@ export function SettingsGeneralSection(props: Props): ReactElement {
               props.onStartWithWindowsChange(event.currentTarget.checked)
             }
             aria-label="Start YARK with Windows"
+          />
+        </div>
+      </div>
+
+      <div className={classes.settingBlock}>
+        <div className={classes.settingCopy}>
+          <Text size="sm" fw={600}>On quit with active servers</Text>
+          <Text size="xs" c="dimmed" mt={2}>
+            When quitting while servers are running. Leave quits without stopping them.
+          </Text>
+        </div>
+        <div className={classes.settingControl}>
+          <SegmentedControl
+            size="xs"
+            value={props.onQuitWithActiveServers}
+            disabled={!props.desktopShellReady}
+            onChange={(value) => {
+              if (value === "ask" || value === "stop" || value === "leave") {
+                props.onQuitWithActiveServersChange(value);
+              }
+            }}
+            data={[
+              { label: "Ask", value: "ask" },
+              { label: "Stop", value: "stop" },
+              { label: "Leave", value: "leave" },
+            ]}
+            aria-label="On quit with active servers"
           />
         </div>
       </div>

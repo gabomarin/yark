@@ -161,9 +161,11 @@ binaries without RCON). Timeout → `"error"` + terminate.
    exited, and backup-failed outcomes.
 
 Stop is single-flight and holds the per-instance operation lock. Force close,
-start, update, and verify are rejected while its backup is active. Normal app
-close waits for active stop jobs before quitting. Kill and app-quit `stopAll`
-otherwise use process-only stop (no pre-stop backup).
+start, update, and verify are rejected while its backup is active. If the
+server is still `"starting"`, stop waits for readiness (stop-progress phase
+`waiting`) before SaveWorld so RCON can succeed. Normal app close waits for
+active stop jobs before quitting. App-quit **Stop** uses the same graceful
+path (`InstanceService.stopAllForAppQuit`, including pre-stop backup).
 
 **Restart** (`InstanceService.restart` via `servers:restart`):
 
@@ -175,7 +177,7 @@ otherwise use process-only stop (no pre-stop backup).
    job is active (does not coalesce onto the no-backup stop).
 4. App quit uses `shouldBlockAppQuit` / `settleForAppQuit`: wait for critical
    stop/backup work **and** the `"restart"` lock (covers post-backup sync →
-   spawn), then `stopAll` if any process is active.
+   spawn), then graceful `stopAllForAppQuit` if any process is still active.
 5. `enqueueStop(id, false)` — SaveWorld / DoExit **without** a nested
    `pre_stop` snapshot (avoids double backup and nested `stop-and-backup` lock).
 6. `createPreRestartBackup` (`pre_restart`, world/players/ini, `skipFlush: true`)
@@ -188,10 +190,22 @@ table: lock conflict / not running → reject before work; stop failure → no
 backup/start; backup failure → stopped, no start; start failure → left stopped
 with a completed `pre_restart` snapshot.
 
-**App quit:** `before-quit` runs `processManager.stopAll` when any server is
-active. Tray **Quit YARK** and closing the window with **Close window to tray**
-disabled use this same quit path. Ask / Stop / Leave-running (#59) is not
-implemented yet — Quit always stops managed servers today.
+**App quit (#59):** Tray **Quit YARK** and closing the window with **Close
+window to tray** disabled both enter `before-quit`. When managed servers are
+active, Settings **On quit with active servers** applies:
+
+- **Ask** (default): dialog with Stop / Leave / Cancel.
+- **Stop**: wait for any still-starting servers, then graceful stop (SaveWorld →
+  DoExit → pre-stop backup) with stop-progress in the UI, then quit.
+- **Leave**: quit without stopping ASA. Durable process reattachment after Leave
+  is remaining #59 work — YARK will not track those processes on the next launch
+  yet.
+
+Hide-to-tray is **not** a quit and never stops servers. Critical in-flight
+stop/restart work still uses `shouldBlockAppQuit` / `settleForAppQuit` first.
+With **Close window to tray** off, closing while servers are active keeps the
+window open until Ask/Stop/Leave resolves (Cancel restores the UI; Stop keeps
+the window visible through wait/save/backup progress).
 
 ### System tray and Windows startup (#54)
 

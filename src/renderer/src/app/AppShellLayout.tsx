@@ -2,6 +2,10 @@ import { AppShell } from "@mantine/core";
 import { Alert, CloseButton, Group, Stack } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import { Sidebar, type Route } from "@layout/Sidebar/Sidebar";
+import {
+  AppBusyOverlay,
+  type AppBusyOverlayContent,
+} from "@ui/AppBusyOverlay/AppBusyOverlay";
 import type { OfficialNetworkStatus } from "@shared/types";
 import type { PropsWithChildren, ReactElement } from "react";
 import classes from "./AppShellLayout.module.css";
@@ -16,10 +20,17 @@ interface Props extends PropsWithChildren {
   appVersion: string;
   error?: string | null;
   onDismissError?: () => void;
+  /** Blocks shell chrome while stop/save/backup (or similar) runs. */
+  busyOverlay?: AppBusyOverlayContent | null;
 }
 
 export function AppShellLayout({ children, ...sidebarProps }: Props): ReactElement {
-  const { error = null, onDismissError, ...shellProps } = sidebarProps;
+  const {
+    error = null,
+    onDismissError,
+    busyOverlay = null,
+    ...shellProps
+  } = sidebarProps;
   const density = useUiDensity();
   const navbarWidth = density === "compact" ? 212 : 248;
 
@@ -58,6 +69,7 @@ export function AppShellLayout({ children, ...sidebarProps }: Props): ReactEleme
           {children}
         </Stack>
       </AppShell.Main>
+      {busyOverlay !== null && <AppBusyOverlay content={busyOverlay} />}
     </AppShell>
   );
 }

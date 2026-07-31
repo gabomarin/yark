@@ -13,10 +13,16 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Windows system tray + **Close window to tray** (default on) and **Start with Windows** (default off) settings (#54).
 - Sidebar shows Wildcard **Deploying** / Offline official network status (pulsing indicator + tooltip).
+- **On quit with active servers** policy (Ask / Stop / Leave) with confirmation when quitting while servers run (#59 partial — durable Leave reattach still open).
 
 ### Changed
 
 - Official version and local install probes run less often (CDN every 5 minutes; disk inspect only when official metadata changes, after SteamCMD, or on Check for updates) to avoid main-process UI freezes.
+
+### Fixed
+
+- Cancelling quit with **Close window to tray** off no longer leaves a dead tray-only process (window stays open until Ask/Stop/Leave resolves; tray Show recreates the window if needed).
+- Quit **Stop** waits for still-starting servers, runs save + pre-stop backup with UI progress, then exits (instead of a silent process-only kill).
 
 ## [0.4.0] - 2026-07-30
 

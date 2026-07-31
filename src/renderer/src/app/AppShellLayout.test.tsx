@@ -57,4 +57,31 @@ describe("AppShellLayout", () => {
     screen.getByRole("button", { name: /dismiss error/i }).click();
     expect(onDismissError).toHaveBeenCalledTimes(1);
   });
+
+  it("renders a blocking busy overlay over the shell", () => {
+    render(
+      <AppProviders density="compact">
+        <AppShellLayout
+          route="overview"
+          onNavigate={vi.fn()}
+          steamCmdDetected={false}
+          steamCmdRunning={false}
+          officialVersion={null}
+          officialNetworkStatus="unknown"
+          appVersion="0.1.0"
+          busyOverlay={{
+            title: "Stopping server",
+            message: "Island: Saving world…",
+            percent: 10,
+          }}
+        >
+          <button type="button">should-be-blocked</button>
+        </AppShellLayout>
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("alertdialog")).toHaveAttribute("data-app-busy-overlay");
+    expect(screen.getByText("Stopping server")).toBeInTheDocument();
+    expect(screen.getByText("Island: Saving world…")).toBeInTheDocument();
+  });
 });

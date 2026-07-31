@@ -104,13 +104,6 @@ function createWindow(): BrowserWindow {
 }
 
 if (gotSingleInstanceLock) {
-  app.on("second-instance", () => {
-    if (mainWindow === null || mainWindow.isDestroyed()) {
-      mainWindow = createWindow();
-    }
-    showBrowserWindow(mainWindow);
-  });
-
   void app.whenReady().then(() => {
     const userData = app.getPath("userData");
     const dbPath = join(userData, "yark-server-manager.db");
@@ -184,10 +177,10 @@ if (gotSingleInstanceLock) {
      */
     let isQuitting = false;
     let pendingQuit: Promise<void> | null = null;
+    let quitPolicyPromptInFlight = false;
 
     const requestAppQuit = (): void => {
-      // Real quit path — still goes through before-quit (stop-all / settle).
-      // #59 will layer Ask / Stop / Leave-running on this same entry point.
+      // Real quit path — goes through before-quit (#59 Ask / Stop / Leave).
       // Must set isQuitting before app.quit() so window `close` does not
       // re-interpret the shutdown as “hide to tray”.
       isQuitting = true;
@@ -197,9 +190,73 @@ if (gotSingleInstanceLock) {
     const countActiveServers = (): number =>
       repo.list().filter((profile) => processManager.isActive(profile.id)).length;
 
+    const hasActiveManagedServers = (): boolean => countActiveServers() > 0;
+
+    /** Recreate the main window if it was destroyed (e.g. cancelled quit after close). */
+    const ensureMainWindow = (): BrowserWindow => {
+      if (mainWindow === null || mainWindow.isDestroyed()) {
+        mainWindow = createWindow();
+        attachMainWindowCloseHandler(mainWindow);
+      }
+      return mainWindow;
+    };
+
+    const revealMainWindow = (): void => {
+      showBrowserWindow(ensureMainWindow());
+    };
+
+    const attachMainWindowCloseHandler = (win: BrowserWindow): void => {
+      win.on("close", (event) => {
+        if (allowQuit) {
+          return;
+        }
+        // Keep the window alive while Ask dialog or Stop (save/backup) runs.
+        if (pendingQuit !== null || quitPolicyPromptInFlight) {
+          event.preventDefault();
+          revealMainWindow();
+          return;
+        }
+        if (isQuitting) {
+          return;
+        }
+
+        if (instances.shouldBlockAppQuit()) {
+          event.preventDefault();
+          revealMainWindow();
+          void dialog.showMessageBox(ensureMainWindow(), {
+            type: "info",
+            title: "Server operation in progress",
+            message: "YARK will close after the active server operation finishes.",
+            detail:
+              "Keep the application open so stop/restart backup work can complete safely.",
+            buttons: ["OK"],
+          });
+          quitAfter(instances.settleForAppQuit());
+          return;
+        }
+
+        const { closeWindowToTray } = readDesktopShellPreferences(settings);
+        if (closeWindowToTray) {
+          event.preventDefault();
+          win.hide();
+          ensureTray();
+          notifyTrayHide();
+          return;
+        }
+
+        // Close-to-tray off + active servers: do not destroy the window yet.
+        // Route through before-quit (#59 Ask/Stop/Leave). Cancel must keep UI alive.
+        if (hasActiveManagedServers()) {
+          event.preventDefault();
+          requestAppQuit();
+        }
+        // No active servers: allow destroy → window-all-closed → quit.
+      });
+    };
+
     const trayOptions = (): AppTrayOptions => ({
       iconPath: resolveAppIcon(),
-      onShow: () => showBrowserWindow(mainWindow),
+      onShow: () => revealMainWindow(),
       onQuit: requestAppQuit,
       getStatusLabel: () => formatTrayServerStatus(countActiveServers()),
     });
@@ -248,7 +305,12 @@ if (gotSingleInstanceLock) {
     });
 
     mainWindow = createWindow();
+    attachMainWindowCloseHandler(mainWindow);
     ensureTray();
+
+    app.on("second-instance", () => {
+      revealMainWindow();
+    });
 
     const quitAfter = (work: Promise<unknown>): void => {
       if (pendingQuit !== null) return;
@@ -261,8 +323,8 @@ if (gotSingleInstanceLock) {
         .catch((error: unknown) => {
           pendingQuit = null;
           isQuitting = false;
-          showBrowserWindow(mainWindow);
-          void dialog.showMessageBox({
+          revealMainWindow();
+          void dialog.showMessageBox(ensureMainWindow(), {
             type: "error",
             title: "Could not finish server stop",
             message: "YARK will remain open because the active stop did not finish safely.",
@@ -285,55 +347,23 @@ if (gotSingleInstanceLock) {
         silent: true,
       });
       notification.on("click", () => {
-        showBrowserWindow(mainWindow);
+        revealMainWindow();
       });
       notification.show();
     };
 
-    mainWindow.on("close", (event) => {
-      if (allowQuit || isQuitting) {
-        return;
-      }
-
-      if (instances.shouldBlockAppQuit()) {
-        event.preventDefault();
-        showBrowserWindow(mainWindow);
-        void dialog.showMessageBox(mainWindow!, {
-          type: "info",
-          title: "Server operation in progress",
-          message: "YARK will close after the active server operation finishes.",
-          detail:
-            "Keep the application open so stop/restart backup work can complete safely.",
-          buttons: ["OK"],
-        });
-        quitAfter(instances.settleForAppQuit());
-        return;
-      }
-
-      const { closeWindowToTray } = readDesktopShellPreferences(settings);
-      if (closeWindowToTray) {
-        event.preventDefault();
-        mainWindow?.hide();
-        ensureTray();
-        notifyTrayHide();
-      }
-      // When close-to-tray is off, allow the window to destroy; window-all-closed
-      // requests a real quit through before-quit (same path as tray Quit / #59).
-    });
-
     app.on("activate", () => {
-      if (BrowserWindow.getAllWindows().length === 0) {
-        mainWindow = createWindow();
-      }
-      showBrowserWindow(mainWindow);
+      revealMainWindow();
     });
 
     app.on("before-quit", (event) => {
-      isQuitting = true;
-      if (allowQuit) return;
+      if (allowQuit) {
+        return;
+      }
       if (instances.shouldBlockAppQuit()) {
+        isQuitting = true;
         event.preventDefault();
-        showBrowserWindow(mainWindow);
+        revealMainWindow();
         quitAfter(instances.settleForAppQuit());
         return;
       }
@@ -344,11 +374,80 @@ if (gotSingleInstanceLock) {
         // Ignore: the app is shutting down.
       }
       const profiles = repo.list();
-      const anyActive = profiles.some((p) => processManager.isActive(p.id));
-      if (anyActive) {
-        event.preventDefault();
-        quitAfter(processManager.stopAll(profiles));
+      const activeProfiles = profiles.filter((p) => processManager.isActive(p.id));
+      if (activeProfiles.length === 0) {
+        isQuitting = true;
+        return;
       }
+
+      // Active servers: apply #59 quit policy (Ask / Stop / Leave).
+      event.preventDefault();
+      if (pendingQuit !== null || quitPolicyPromptInFlight) {
+        return;
+      }
+
+      const policy = readDesktopShellPreferences(settings).onQuitWithActiveServers;
+      const applyQuitDecision = (decision: "stop" | "leave" | "cancel"): void => {
+        if (decision === "cancel") {
+          isQuitting = false;
+          revealMainWindow();
+          return;
+        }
+        if (decision === "leave") {
+          // Leave running: exit without stopAll. Durable reattach is remaining #59 work.
+          isQuitting = true;
+          allowQuit = true;
+          app.quit();
+          return;
+        }
+        // Keep UI visible so stop-progress (wait / save / backup) can show.
+        revealMainWindow();
+        quitAfter(instances.stopAllForAppQuit());
+      };
+
+      if (policy === "stop") {
+        applyQuitDecision("stop");
+        return;
+      }
+      if (policy === "leave") {
+        applyQuitDecision("leave");
+        return;
+      }
+
+      quitPolicyPromptInFlight = true;
+      isQuitting = true;
+      const win = ensureMainWindow();
+      revealMainWindow();
+      const count = activeProfiles.length;
+      void dialog
+        .showMessageBox(win, {
+          type: "question",
+          buttons: ["Stop", "Leave", "Cancel"],
+          defaultId: 0,
+          cancelId: 2,
+          noLink: true,
+          title: "Quit YARK?",
+          message:
+            count === 1
+              ? "1 server is still running."
+              : `${count} servers are still running.`,
+          detail: "Stop them before quitting, or leave them running.",
+        })
+        .then((result) => {
+          quitPolicyPromptInFlight = false;
+          if (result.response === 0) {
+            applyQuitDecision("stop");
+          } else if (result.response === 1) {
+            applyQuitDecision("leave");
+          } else {
+            applyQuitDecision("cancel");
+          }
+        })
+        .catch(() => {
+          quitPolicyPromptInFlight = false;
+          isQuitting = false;
+          revealMainWindow();
+        });
     });
 
     app.on("will-quit", () => {

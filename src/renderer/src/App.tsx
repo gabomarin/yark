@@ -132,6 +132,41 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
   const steamCmdBusy = steamCmdStatus?.busy === true;
   const steamCmdBusyRef = useRef(steamCmdBusy);
+
+  const stopBusyOverlay = useMemo(() => {
+    const active = [...stopProgressByServerId.values()].filter(
+      (progress) => progress.active,
+    );
+    if (active.length === 0) {
+      return null;
+    }
+    if (active.length === 1) {
+      const progress = active[0]!;
+      const name =
+        servers.find((server) => server.id === progress.serverId)?.name ??
+        "Server";
+      return {
+        title: "Stopping server",
+        message: `${name}: ${progress.label.trim() || "Stopping…"}`,
+        percent: progress.percent,
+      };
+    }
+    const percentValues = active
+      .map((progress) => progress.percent)
+      .filter((value): value is number => value != null);
+    const percent =
+      percentValues.length > 0
+        ? Math.round(
+            percentValues.reduce((sum, value) => sum + value, 0) /
+              percentValues.length,
+          )
+        : null;
+    return {
+      title: "Stopping servers",
+      message: `Save and backup in progress for ${active.length} servers…`,
+      percent,
+    };
+  }, [servers, stopProgressByServerId]);
   steamCmdBusyRef.current = steamCmdBusy;
   const steamCmdServerName =
     steamCmdStatus?.serverId != null
@@ -607,6 +642,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
           appVersion={APP_VERSION}
           error={error}
           onDismissError={() => setError(null)}
+          busyOverlay={stopBusyOverlay}
         >
           <ServerWorkspacePage
             servers={servers}
@@ -704,6 +740,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         onNavigate={navigate}
         error={error}
         onDismissError={() => setError(null)}
+        busyOverlay={stopBusyOverlay}
         overview={{
           page: (
             <OverviewPage

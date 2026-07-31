@@ -474,13 +474,23 @@ export class ProcessManager extends EventEmitter {
     }
   }
 
-  /** Stops all active processes (app shutdown). */
+  /** Stops all active processes (app shutdown). Prefer InstanceService.stopAllForAppQuit. */
   async stopAll(profiles: ServerProfile[]): Promise<void> {
     await Promise.allSettled(
       profiles
         .filter((p) => this.isActive(p.id))
         .map((p) => this.stop(p)),
     );
+  }
+
+  /**
+   * Resolves when the server is no longer `"starting"` (ready, gone, or error).
+   * Used so Stop can wait for RCON before SaveWorld instead of force-killing.
+   */
+  async waitWhileStarting(serverId: string): Promise<void> {
+    while (this.getStatus(serverId).status === "starting") {
+      await delay(this.readyPollMs);
+    }
   }
 
   private async waitUntilReady(
