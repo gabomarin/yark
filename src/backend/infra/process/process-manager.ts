@@ -439,7 +439,38 @@ export class ProcessManager extends EventEmitter {
         handle: { serverId: profile.id, identity: managed.identity },
       };
     } catch {
-      this.appendRuntimeLog(profile.id, "warning", "RCON unavailable; applying kill");
+      // Prefer DoExit before force-kill when SaveWorld is unavailable (e.g. still
+      // bootstrapping after a readiness wait timeout on quit Stop).
+      this.appendRuntimeLog(
+        profile.id,
+        "warning",
+        "RCON SaveWorld unavailable; attempting DoExit before kill",
+      );
+      try {
+        await rconExec(
+          RCON_HOST,
+          profile.rconPort,
+          profile.adminPassword,
+          "DoExit",
+        );
+        const exitedAfterDoExit = await this.waitForExit(managed.child, EXIT_WAIT_MS);
+        if (exitedAfterDoExit) {
+          if (this.processes.get(profile.id) === managed) {
+            this.stopManagedCapture(profile.id, managed);
+            this.processes.delete(profile.id);
+            this.clearProcessCheckpoint(profile.id);
+            this.emitStatus(profile.id);
+          }
+          return { phase: "killed", handle: null };
+        }
+      } catch {
+        this.appendRuntimeLog(
+          profile.id,
+          "warning",
+          "RCON DoExit unavailable; applying kill",
+        );
+      }
+
       this.terminateManaged(profile.id, managed);
       let exited = await this.waitForExit(managed.child, EXIT_WAIT_MS);
       if (!exited && this.processes.get(profile.id) === managed) {
@@ -554,11 +585,20 @@ export class ProcessManager extends EventEmitter {
     const deadline = Date.now() + this.readyTimeoutMs;
     while (this.getStatus(serverId).status === "starting") {
       if (Date.now() >= deadline) {
-        this.appendRuntimeLog(
-          serverId,
-          "warning",
-          "Timed out waiting for starting server before stop; continuing stop",
-        );
+        const managed = this.processes.get(serverId);
+        if (managed !== undefined && managed.status === "starting") {
+          // Cancel readiness wait (incl. infinite reattach poll) so quit/stop
+          // can attempt SaveWorld → DoExit instead of hanging forever.
+          managed.readinessGeneration += 1;
+          managed.status = "running";
+          managed.lastError = null;
+          this.appendRuntimeLog(
+            serverId,
+            "warning",
+            "Timed out waiting for starting server before stop; treating as running for graceful stop",
+          );
+          this.emitStatus(serverId);
+        }
         return;
       }
       await delay(this.readyPollMs);

@@ -7,7 +7,7 @@ import type { ChildProcess } from "node:child_process";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProcessManager } from "@backend/infra/process/process-manager";
 import { reattachLeftRunningProcesses } from "@backend/infra/process/left-running-reattach";
-import { writeLeftRunningProcesses } from "@backend/infra/process/left-running-store";
+import { writeLeftRunningProcesses, upsertLeftRunningProcess, removeLeftRunningProcess } from "@backend/infra/process/left-running-store";
 import type { AppSettingsRepository } from "@backend/infra/db/app-settings-repository";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
 import {
@@ -116,6 +116,18 @@ describe("reattachLeftRunningProcesses", () => {
       spawnProcess: () => {
         throw new Error("spawn should not run during reattach");
       },
+      onProcessCheckpoint: (next) => {
+        upsertLeftRunningProcess(settings, next);
+      },
+      onProcessCheckpointCleared: (serverId) => {
+        removeLeftRunningProcess(settings, serverId);
+      },
+      queryOsIdentity: (pid) => ({
+        pid,
+        executablePath: binary,
+        commandLine: `"${binary}" -port=7777`,
+        osCreationTime: "20260731120000.000000-420",
+      }),
     });
 
     const outcomes = reattachLeftRunningProcesses(settings, repo, manager, {
@@ -133,12 +145,63 @@ describe("reattachLeftRunningProcesses", () => {
     expect(manager.isActive(profile.id)).toBe(true);
     expect(manager.getStatus(profile.id).status).toBe("starting");
     expect(manager.getStatus(profile.id).pid).toBe(4242);
-    expect(settings.get(LEFT_RUNNING_PROCESSES_SETTING_KEY)).toBeNull();
+    // Successful reattach rewrites the checkpoint (not a wipe-before-adopt).
+    const rewritten = JSON.parse(
+      settings.get(LEFT_RUNNING_PROCESSES_SETTING_KEY) as string,
+    ) as LeftRunningProcessIdentity[];
+    expect(rewritten).toHaveLength(1);
+    expect(rewritten[0]?.pid).toBe(4242);
+    expect(rewritten[0]?.serverId).toBe(profile.id);
     expect(repo.addEvent).toHaveBeenCalledWith(
       profile.id,
       "server_started",
       "info",
       expect.stringContaining("Reattached"),
+    );
+  });
+
+  it("keeps checkpoint when adopt fails after a match", () => {
+    const settings = makeSettings();
+    const record: LeftRunningProcessIdentity = {
+      schemaVersion: LEFT_RUNNING_SCHEMA_VERSION,
+      serverId: "srv-keep",
+      pid: 4242,
+      executablePath: "C:\\ARK\\ArkAscendedServer.exe",
+      installDir: "C:\\ARK",
+      startedAt: "2026-07-31T12:00:00.000Z",
+      expectedCommandLine: "x",
+      launchArgs: [],
+      osCreationTime: "20260731120000.000000-420",
+      osExecutablePath: "C:\\ARK\\ArkAscendedServer.exe",
+      leftAt: "2026-07-31T12:05:00.000Z",
+    };
+    writeLeftRunningProcesses(settings, [record]);
+    const profile = makeProfile("srv-keep", "C:\\ARK");
+    const repo = {
+      get: vi.fn(() => profile),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const manager = new ProcessManager({
+      createAdoptedChild: () => {
+        throw new Error("adopt failed");
+      },
+    });
+
+    const outcomes = reattachLeftRunningProcesses(settings, repo, manager, {
+      queryOsIdentity: (pid) => ({
+        pid,
+        executablePath: record.executablePath,
+        commandLine: record.expectedCommandLine,
+        osCreationTime: record.osCreationTime,
+      }),
+    });
+
+    expect(outcomes[0]).toMatchObject({
+      reattached: false,
+      classification: "inaccessible",
+    });
+    expect(settings.get(LEFT_RUNNING_PROCESSES_SETTING_KEY)).toBe(
+      JSON.stringify([record]),
     );
   });
 

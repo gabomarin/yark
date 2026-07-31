@@ -8,8 +8,8 @@ import {
   type LiveProcessIdentity,
 } from "@shared/left-running";
 import {
-  clearLeftRunningProcesses,
   readLeftRunningProcesses,
+  removeLeftRunningProcess,
 } from "./left-running-store";
 import { queryWindowsProcessIdentity } from "./windows-process-identity";
 
@@ -25,9 +25,11 @@ export interface ReattachLeftRunningOptions {
 
 /**
  * On startup: validate durable process checkpoints (crash / unexpected exit),
- * reattach matches, record outcomes. Clears the store before adopting so stale
- * records do not linger; successful reattach rewrites checkpoints via
- * ProcessManager hooks when configured.
+ * reattach matches, record outcomes.
+ *
+ * Does **not** clear the whole store up front. Stale / missing / mismatched
+ * rows are removed per server; failed adopt attempts keep the checkpoint so a
+ * later launch can retry; successful reattach rewrites via ProcessManager hooks.
  * Must run before any auto-start (#53) so we never spawn a duplicate.
  */
 export function reattachLeftRunningProcesses(
@@ -41,16 +43,27 @@ export function reattachLeftRunningProcesses(
     return [];
   }
 
-  // Drop durable rows first; matches rewrite via onProcessCheckpoint after adopt.
-  clearLeftRunningProcesses(settings);
-
   const queryOs =
     options?.queryOsIdentity ??
     ((pid: number) => queryWindowsProcessIdentity(pid));
   const outcomes: LeaveReattachOutcome[] = [];
 
   for (const record of records) {
-    outcomes.push(processLeaveRecord(record, repo, processes, queryOs));
+    const outcome = processLeaveRecord(record, repo, processes, queryOs);
+    outcomes.push(outcome);
+
+    if (outcome.reattached) {
+      // Fresh checkpoint is written by onProcessCheckpoint when configured.
+      continue;
+    }
+
+    // Keep inaccessible / failed-adopt rows for a later launch retry.
+    if (outcome.classification === "inaccessible") {
+      continue;
+    }
+
+    // missing | stale_pid | mismatched | orphaned profile — drop durable row.
+    removeLeftRunningProcess(settings, record.serverId);
   }
 
   return outcomes;

@@ -44,6 +44,19 @@ if (!gotSingleInstanceLock) {
 
 let mainWindow: BrowserWindow | null = null;
 let appTray: Tray | null = null;
+/** Set once the main window exists; drained if second-instance fired during boot. */
+let pendingSecondInstanceReveal = false;
+
+if (gotSingleInstanceLock) {
+  // Register early so a second launch during whenReady still focuses the UI.
+  app.on("second-instance", () => {
+    if (mainWindow !== null && !mainWindow.isDestroyed()) {
+      showBrowserWindow(mainWindow);
+      return;
+    }
+    pendingSecondInstanceReveal = true;
+  });
+}
 
 function sendToRenderer(channel: string, payload: unknown): void {
   if (mainWindow === null || mainWindow.isDestroyed()) {
@@ -228,7 +241,11 @@ if (gotSingleInstanceLock) {
           revealMainWindow();
           return;
         }
+        // requestAppQuit() sets isQuitting before before-quit installs pending
+        // work — do not destroy the window while quit is still coordinating.
         if (isQuitting) {
+          event.preventDefault();
+          revealMainWindow();
           return;
         }
 
@@ -319,10 +336,10 @@ if (gotSingleInstanceLock) {
     mainWindow = createWindow();
     attachMainWindowCloseHandler(mainWindow);
     ensureTray();
-
-    app.on("second-instance", () => {
+    if (pendingSecondInstanceReveal) {
+      pendingSecondInstanceReveal = false;
       revealMainWindow();
-    });
+    }
 
     const quitAfter = (work: Promise<unknown>): void => {
       if (pendingQuit !== null) return;
