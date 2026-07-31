@@ -107,14 +107,8 @@
   padding: 0 var(--app-space-xxs) var(--app-space-xxs);
 }
 
-:global([data-ui-density="compact"]) .brandMark {
-  flex-basis: 28px;
-  width: 28px;
-  height: 32px;
-}
-
-:global([data-ui-density="compact"]) .brandMark::after {
-  inset: 4px;
+:global([data-ui-density="compact"]) .brandLockup {
+  max-width: 140px;
 }
 
 :global([data-ui-density="compact"]) .navButton {

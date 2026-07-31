@@ -20,7 +20,7 @@ describe("AppShellLayout", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("YARK")).toBeInTheDocument();
+    expect(screen.getByAltText("YARK server manager")).toBeInTheDocument();
     expect(screen.getByText("page-body")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Servers" })).toHaveAttribute(
       "data-size",
