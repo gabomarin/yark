@@ -1,0 +1,51 @@
+---
+title: INI & configuration assistant
+description: Visual/raw INI editing and the six-step configuration assistant.
+---
+
+import { Aside, Steps } from "@astrojs/starlight/components";
+
+Paths under each install:
+
+```text
+{installDir}/ShooterGame/Saved/Config/WindowsServer/
+  GameUserSettings.ini
+  Game.ini
+```
+
+## Visual + raw editors
+
+- Read seeds missing files from built-in defaults and sanitizes client noise (resolution, volume, scalability keys, etc.)
+- Save sanitizes → validates a few semantic ranges → writes both files → best-effort INI backup
+- Do not expect generic INI libraries to round-trip ASA — section names can contain dots literally
+
+Semantic checks when `[ServerSettings]` is present include RCON port range, `MaxPlayers` 1–255, `DifficultyOffset` 0–1.
+
+Profile networking fields (RCON, passwords, session, ports) are also written on **start** via profile→INI sync. See [Start, stop, restart](/docs/lifecycle/).
+
+## Configuration assistant
+
+On-demand from the Server tab — **not** a permanent nav item.
+
+<Steps>
+
+1. **Profile** — identity-oriented choices
+2. **Pace** — progression rate presets
+3. **Breeding**
+4. **World**
+5. **QoL**
+6. **Review** — nothing is written until you apply
+
+</Steps>
+
+Rules that matter:
+
+- Blocked while the manual INI editor has **unsaved dirty** edits
+- Draft-only until **Apply changes**
+- Apply re-reads latest INI, overlays only curated keys, preserves unknown keys / casing
+- Difficulty keys rewrite only when you make an explicit level choice
+
+<Aside type="tip">
+  Use the assistant to bootstrap a server type, then fine-tune in the visual INI editor.
+  Take a backup before large rate changes on a live world.
+</Aside>

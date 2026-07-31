@@ -1,0 +1,61 @@
+---
+import type { Screenshot } from "../data/screenshots";
+
+interface Props {
+  shots: Screenshot[];
+}
+
+const { shots } = Astro.props;
+const featured = shots.slice(0, 5);
+---
+
+<section class="product-band" aria-label="Live product preview" data-reveal>
+  <div class="product-band-inner">
+    <div class="product-stage" data-product-stage>
+      <div class="product-glow" aria-hidden="true"></div>
+      <div class="product-perspective">
+        <div class="product-frame" data-product-frame>
+          <div class="product-bezel">
+            <div class="product-rotator" data-product-rotator>
+              {
+                featured.map((shot, index) => (
+                  <figure
+                    class:list={["product-slide", index === 0 && "is-active"]}
+                    data-product-slide
+                    data-caption={shot.caption}
+                    aria-hidden={index === 0 ? "false" : "true"}
+                  >
+                    <img
+                      src={shot.src}
+                      alt={shot.alt}
+                      width="1440"
+                      height="900"
+                      loading={index === 0 ? "eager" : "lazy"}
+                      decoding="async"
+                    />
+                  </figure>
+                ))
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="product-caption" data-product-caption data-reveal-child>
+        {featured[0]?.caption}
+      </p>
+      <div class="product-dots" role="tablist" aria-label="Preview screens" data-reveal-child>
+        {
+          featured.map((shot, index) => (
+            <button
+              type="button"
+              class:list={["product-dot", index === 0 && "is-active"]}
+              data-product-dot
+              aria-label={`Show: ${shot.caption}`}
+              aria-current={index === 0 ? "true" : "false"}
+            />
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>

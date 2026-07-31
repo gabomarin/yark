@@ -1,0 +1,38 @@
+---
+title: Security & privacy
+description: What YARK stores locally, what leaves your PC, and how to handle secrets.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+## Local by default
+
+- Server profiles, settings, events, and backup metadata → **local SQLite**
+- No YARK cloud account
+- Backup ZIP contents live where you configure (often under the install folder)
+
+## Network use
+
+| Destination | Purpose |
+| --- | --- |
+| Steam / SteamCMD | Dedicated server files |
+| Wildcard public status CDN | Display-only official ARK version string |
+| CurseForge metadata Worker | Names/summaries/links for Project IDs (self-hostable from the repo) |
+| GitHub (optional) | You downloading releases |
+
+The desktop app does **not** embed a CurseForge API key. Lookups send Project IDs / search queries — not profiles, passwords, or install paths.
+
+## Secrets hygiene
+
+<Aside type="danger">
+  Admin and RCON passwords live in local profiles and INI. Treat screenshots, shared logs,
+  exported configs, and GitHub issue attachments carefully.
+</Aside>
+
+- Prefer the site / Releases download buttons over random mirrors  
+- Builds are **unsigned** today — SmartScreen warnings are expected  
+- Strip passwords before posting logs or INI snippets  
+
+## Process trust
+
+YARK spawns `ArkAscendedServer.exe` from your install path. Keep installs on paths you control; do not point profiles at untrusted directories.

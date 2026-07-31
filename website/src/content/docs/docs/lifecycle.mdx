@@ -1,0 +1,81 @@
+---
+title: Start, stop, restart
+description: How YARK launches ArkAscendedServer, decides ready status, and runs safe restart.
+---
+
+import { Aside, Tabs, TabItem } from "@astrojs/starlight/components";
+
+## Launch model
+
+YARK starts `{installDir}/ShooterGame/Binaries/Win64/ArkAscendedServer.exe` directly (no `.cmd` / `cmd /c` wrapper).
+
+### CLI vs INI
+
+| Concern | Where it lives |
+| --- | --- |
+| Map + session name | CLI map URL |
+| Game port | CLI `-port=` **and** INI `SessionSettings.Port` |
+| Platform | CLI `-ServerPlatform=ALL` (unless you set it in extra args) |
+| Enabled mods | CLI `-mods=id1,id2,…` |
+| Cluster trio | CLI when **both** cluster ID and directory are set |
+| RCON enable/port | INI only |
+| Admin / server password | INI only |
+| Query port | INI only |
+
+<Aside type="danger">
+  Never put RCON, passwords, or query port on the command line. YARK syncs those into
+  `GameUserSettings.ini` before start.
+</Aside>
+
+Example logical command line:
+
+```text
+"TheIsland_WP"?SessionName="MyServer" -port=7777 -ServerPlatform=ALL -mods=123,456
+```
+
+## Ready = RCON, not just a process
+
+After spawn, status stays **starting** until RCON `ListPlayers` succeeds on `127.0.0.1` (poll ~3s, timeout up to 10 minutes). Timeout → **error** and the process is terminated.
+
+## Actions
+
+<Tabs>
+  <TabItem label="Start">
+    1. Check ports against other **active** servers  
+    2. Sync profile networking/passwords into INI  
+    3. Spawn the dedicated exe  
+    4. Wait for RCON readiness → **running**
+  </TabItem>
+  <TabItem label="Stop">
+    1. RCON `SaveWorld` + short wait  
+    2. RCON `DoExit` (force-kill fallback)  
+    3. Best-effort **pre_stop** backup (world + players + INI) unless the caller skipped backups  
+    Stop is single-flight; other ops wait or reject while the stop backup runs.
+  </TabItem>
+  <TabItem label="Restart">
+    One backend operation under a single lock:  
+    **stop (no nested pre_stop) → fail-hard pre_restart backup → start**.  
+    If the backup fails, the server stays **stopped** and start is not called.
+  </TabItem>
+  <TabItem label="Force close">
+    Immediate terminate for stuck processes. Confirmed in the UI. Prefer normal stop when possible.
+  </TabItem>
+</Tabs>
+
+## Runtime logs vs native console
+
+| Mode | What you get |
+| --- | --- |
+| Piped (default) | YARK captures process output and tails `ShooterGame/Saved/Logs/ShooterGame.log` into Runtime |
+| Native console on | Separate console window; Runtime is mostly system messages |
+
+Piped mode also appends `-log` when missing so Unreal is more likely to write disk logs.
+
+## Common pitfalls
+
+1. Treating “process started” as ready — wait for RCON  
+2. Port clash with another profile  
+3. Expecting rich Runtime logs with native console enabled  
+4. Assuming restart skips backups — it takes a fail-hard `pre_restart` snapshot  
+
+See also [Backups](/docs/backups/) and [Logs](/docs/logs/).

@@ -1,0 +1,60 @@
+---
+title: Getting started
+description: Install YARK, point SteamCMD, create a profile, and start your first ASA dedicated server.
+---
+
+import { Aside, Steps } from "@astrojs/starlight/components";
+
+<Aside type="caution" title="Unsigned prerelease">
+  Public builds are not code-signed. Windows SmartScreen may warn. Download only from
+  [GitHub Releases](https://github.com/gabomarin/yark/releases) or the site download button.
+</Aside>
+
+<Steps>
+
+1. **Install YARK**
+
+   Download the current Windows installer and run it. After install, open **YARK server manager**.
+
+2. **Point SteamCMD**
+
+   Install [SteamCMD](https://developer.valvesoftware.com/wiki/SteamCMD) somewhere writable.
+   In YARK → **Settings**, set the SteamCMD path (folder that contains `steamcmd.exe`).
+
+   One SteamCMD home is shared across profiles. Next to it, YARK maintains:
+
+   | Cache | Role |
+   | --- | --- |
+   | `steamapps/depotcache` | Compressed Steam downloads |
+   | `asa_content_cache` | Shared expanded ASA files copied into each server |
+
+3. **Create a server profile**
+
+   Add a server with:
+
+   - **Install path** — absolute Windows path (`C:\ARK\MyServer` or UNC)
+   - **Map** + **session name**
+   - **Ports** — unique game / query / RCON within the profile and across other profiles
+   - **Admin password** — at least 4 characters
+   - Optional cluster ID + shared cluster directory (both required together)
+
+4. **Install dedicated files**
+
+   From the server actions, run the files **install / update**. First sync can take a long time and needs free disk for the shared cache **and** the per-server copy. Worlds under `ShooterGame\Saved` are not overwritten by the cache sync.
+
+5. **Start the server**
+
+   Press **Start**. Status stays **starting** until RCON answers on localhost — that means “accepting players”, not merely “process spawned”. Use **Logs → Runtime / Events** if it stalls.
+
+6. **Take a backup before experimenting**
+
+   Open the workspace **Backups** tab and create at least a world backup. Prefer **safe update** / **restart** later so critical-path snapshots run for you.
+
+</Steps>
+
+## Next reads
+
+- [Profiles & ports](/docs/profiles-and-ports/) — validation rules and conflicts
+- [Start, stop, restart](/docs/lifecycle/) — what each action does
+- [Updates & SteamCMD](/docs/updates-and-steamcmd/) — patching without losing worlds
+- [Backups](/docs/backups/) — schedules and restore rules

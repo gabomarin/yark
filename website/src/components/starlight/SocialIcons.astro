@@ -1,0 +1,28 @@
+---
+import Default from "@astrojs/starlight/components/SocialIcons.astro";
+import { withBase } from "../../data/site";
+---
+
+<a class="yark-site-link" href={withBase("/")} data-astro-prefetch>Product site</a>
+<Default><slot /></Default>
+
+<style>
+  .yark-site-link {
+    display: inline-flex;
+    align-items: center;
+    margin-inline-end: 0.65rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 0.4rem;
+    border: 1px solid color-mix(in srgb, var(--sl-color-accent) 40%, transparent);
+    color: var(--sl-color-accent-high);
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .yark-site-link:hover {
+    background: color-mix(in srgb, var(--sl-color-accent) 16%, transparent);
+    color: var(--sl-color-white);
+  }
+</style>

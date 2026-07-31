@@ -1,12 +1,13 @@
 /**
- * Capture website gallery screenshots into website/screenshots/ (or WEBSITE_SCREENSHOT_OUT).
+ * Capture website gallery screenshots into website/public/screenshots/
+ * (or WEBSITE_SCREENSHOT_OUT).
  *
  * Usage: node scripts/capture-website-screenshots.cjs
  * Requires: prior `npm run build`, Playwright as a project `devDependency`, Windows GUI preferred.
  * Unset ELECTRON_RUN_AS_NODE before running.
  *
  * Env (optional):
- *   WEBSITE_SCREENSHOT_OUT       output directory (default: website/screenshots)
+ *   WEBSITE_SCREENSHOT_OUT       output directory (default: website/public/screenshots)
  *   WEBSITE_VIEWPORT_WIDTH       default 1440
  *   WEBSITE_VIEWPORT_HEIGHT      default 900
  *   WEBSITE_DEMO_SERVER          seeded profile name when overview is empty
@@ -313,7 +314,7 @@ async function run() {
   process.chdir(projectRoot);
 
   const outDir = path.resolve(
-    envOr("WEBSITE_SCREENSHOT_OUT", path.join(projectRoot, "website", "screenshots")),
+    envOr("WEBSITE_SCREENSHOT_OUT", path.join(projectRoot, "website", "public", "screenshots")),
   );
   fs.mkdirSync(outDir, { recursive: true });
   console.log(`WEBSITE_SCREENSHOTS_DIR=${outDir}`);

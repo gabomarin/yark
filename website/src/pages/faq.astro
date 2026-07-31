@@ -1,0 +1,40 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { faqItems } from "../data/faq";
+import { site, withBase } from "../data/site";
+---
+
+<BaseLayout
+  title={`FAQ · ${site.name} — ARK Ascended server manager`}
+  description="FAQ for YARK: ARK Survival Ascended dedicated server manager for Windows — installs, SteamCMD, backups, mods, updates, and SmartScreen."
+  path="/faq/"
+>
+  <header class="page-header">
+    <h1>FAQ</h1>
+    <p>
+      Straight answers for operators trying the Windows prerelease — scope, installs, backups,
+      mods, and updates.
+    </p>
+  </header>
+
+  <div class="section" style="border-top: none; padding-top: 0.5rem;">
+    <div class="faq-list">
+      {
+        faqItems.map((item) => (
+          <details class="faq-item">
+            <summary>{item.question}</summary>
+            <div class="faq-body" set:html={item.answerHtml} />
+          </details>
+        ))
+      }
+    </div>
+    <p class="section-lede text-with-links" style="margin-top: 1.75rem;">
+      Prefer a guided walkthrough?{" "}
+      <a href={withBase("/docs/")}>Read the docs</a>
+      <span class="link-sep" aria-hidden="true">·</span>
+      <a href={site.releasesUrl}>GitHub Releases</a>
+      <span class="link-sep" aria-hidden="true">·</span>
+      <a href={`${site.repoUrl}/issues`}>Report an issue</a>
+    </p>
+  </div>
+</BaseLayout>

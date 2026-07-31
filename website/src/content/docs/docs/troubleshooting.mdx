@@ -1,0 +1,54 @@
+---
+title: Troubleshooting
+description: Common start, update, backup, and log problems — and what to try next.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+## Server will not become “running”
+
+| Check | Detail |
+| --- | --- |
+| Ports | Unique game/query/RCON; free on the host; not colliding with another profile |
+| RCON | Enabled in INI with the profile password; readiness waits for RCON `ListPlayers` |
+| Install files | Binary exists under `ShooterGame/Binaries/Win64/ArkAscendedServer.exe` |
+| Events | Open Logs → Events for structured **Try next** hints |
+
+Timeout after ~10 minutes → status **error** and process terminated.
+
+## Update / verify failed
+
+1. Confirm SteamCMD path in Settings  
+2. Free disk for cache + install  
+3. Read **Logs → Updates** file for that job  
+4. If safe update rolled back, worlds should match `pre_update` archives — confirm in Backups  
+5. Retry when Steam / network is healthy (jobs retry a few times automatically)
+
+## Backup / restore issues
+
+| Symptom | Try |
+| --- | --- |
+| Cannot restore | Server must be **stopped**; backup must be **completed** |
+| Schedule never fires | Enabled? Interval elapsed? Process **active**? |
+| Disk warnings | Fleet Backups page — free space / destination path |
+| Restart refused to start | `pre_restart` failed — fix disk/path, then start manually after checking backups |
+
+## Empty or thin Runtime logs
+
+- Turn **native console** off (piped mode) to capture process + `ShooterGame.log` tail  
+- Confirm `ShooterGame/Saved/Logs/ShooterGame.log` exists after a run  
+- Use Source filter; System vs Server log vs Process
+
+## Mods “not working”
+
+YARK only passes Project IDs on the command line. Confirm IDs, enable flags, restart, and that mod files actually exist for the dedicated server outside YARK.
+
+## Still stuck?
+
+1. Note YARK version (About / installer)  
+2. Export or copy relevant Events (redact passwords)  
+3. Open a GitHub issue: [gabomarin/yark/issues](https://github.com/gabomarin/yark/issues)
+
+<Aside type="note">
+  A sanitized diagnostic “support bundle” export is on the roadmap — today, use Logs export + careful redaction.
+</Aside>
