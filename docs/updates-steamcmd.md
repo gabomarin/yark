@@ -153,8 +153,20 @@ During **robocopy** (`sync-files`), progress is a **separate phase**: SteamCMD s
 ## Real-host validation (Windows)
 
 Manual release/validation suite for safe update against a real ASA dedicated-server
-install. Complements unit tests; not run on Linux CI. Broader Windows E2E aggregation
+install. Complements unit tests; **not run in CI**. Broader Windows E2E aggregation
 lives under GitHub **#12**.
+
+Quick start (interactive Windows session only):
+
+```powershell
+npm run build
+Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+node scripts/validation/validate-safe-update.cjs --dry-run   # prereq check only
+node scripts/validation/validate-safe-update.cjs --confirm   # required gate
+```
+
+Requires: Node 22.5+ (`node:sqlite`), Playwright (devDependency), a built app under
+`out/`, and a disposable ASA profile. See [Helper script](#helper-script) below.
 
 ### Prerequisites
 
@@ -172,7 +184,7 @@ lives under GitHub **#12**.
 | --- | --- | --- |
 | A | Active-server update | Stop → exactly one `pre_update` set (world/players/ini) → **no** `pre_stop` for this job → start + healthy |
 | B | Stopped-server update | Completes; server left stopped |
-| C | Forced failure after backup | Rollback restores world/players/INI; final runtime state accurate; never reported as success. If rollback itself fails: logs/backups preserved + clear manual-recovery events |
+| C | Forced failure after backup | Points Settings at a **temporary** failing SteamCMD stub under `os.tmpdir()` (does **not** rename AppData `steamcmd.exe`). Job may retry up to **3** times with rollback each attempt; final user-visible signal is update **failure** (events include `update_failed` / `update_rolled_back`), never success. If rollback itself fails: logs/backups preserved + clear manual-recovery events |
 | D | Cancel mid SteamCMD or sync | Reported cancelled (not success) |
 | E | Crash/reopen mid queue | Job recovers as pending; previous error context not silently lost (present queue behavior; checkpoints belong to **#19**) |
 | F | Verify while running | Auto-stop/restart; **no** `pre_update` |
@@ -186,20 +198,32 @@ Before closing the validation, record (issue comment or PR — do not commit sec
 - Artifacts checked: Updates log under userData `update-logs/`, events (`update_*` /
   `update_rolled_back`), backup types/kinds/IDs, final runtime status.
 - Gaps found and fixes applied.
-- Redaction: no admin passwords or player PII.
+- **Redact** before sharing: no admin passwords, server passwords, or player PII. The
+  helper script redacts common password fields in its evidence JSON; still review
+  before posting.
 
 Link the filled evidence from GitHub **#12** when used as part of 1.0 readiness.
 
 ### Helper script
 
-On a prepared Windows host (after `npm run build`, with `ELECTRON_RUN_AS_NODE` unset):
+[`scripts/validation/validate-safe-update.cjs`](../scripts/validation/validate-safe-update.cjs)
+is an **interactive manual** runner (Windows + display). It is not part of CI.
 
-```powershell
-Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
-node scripts/validate-safe-update.cjs
-```
+| Flag / env | Purpose |
+| --- | --- |
+| `--confirm` | Required for a real run (refuses otherwise) |
+| `--dry-run` | Prereq checks only; no Electron launch |
+| `YARK_VALIDATE_SERVER_ID` | Override target server id |
+| `YARK_VALIDATE_SCENARIOS` | e.g. `C,E,B,A,F,D` |
 
-Optional: `YARK_VALIDATE_SERVER_ID`, `YARK_VALIDATE_SCENARIOS=C,E,B,A,F,D`. Writes a summary JSON under Electron userData (`safe-update-validation-evidence.json`). Do not commit secrets or full SteamCMD logs.
+**Safety:** the script never renames the operator’s real `steamcmd.exe`. Scenario C
+compiles a failing stub under `os.tmpdir()`, temporarily sets `steamcmdPath` to that
+stub via the app API, then restores the previous path. A real ASA start/stop/update
+still mutates the chosen disposable profile (backups, world files) — use a test-owned
+install.
+
+Writes `safe-update-validation-evidence.json` under Electron userData. Do not commit
+secrets or full SteamCMD logs.
 
 ## Verification pointers
 

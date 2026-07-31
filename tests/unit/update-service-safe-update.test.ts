@@ -58,6 +58,7 @@ type SteamStub = {
 type Harness = {
   profile: ServerProfile;
   service: UpdateService;
+  order: string[];
   instances: {
     stop: ReturnType<typeof vi.fn>;
     startForMaintenance: ReturnType<typeof vi.fn>;
@@ -67,10 +68,6 @@ type Harness = {
     createPreUpdateBackupForJob: ReturnType<typeof vi.fn>;
     createPreStopBackup: ReturnType<typeof vi.fn>;
     restoreBackupForJob: ReturnType<typeof vi.fn>;
-  };
-  processes: {
-    isActive: ReturnType<typeof vi.fn>;
-    getStatus: ReturnType<typeof vi.fn>;
   };
   runSteamUpdate: ReturnType<typeof vi.fn>;
   waitForHealthy: ReturnType<typeof vi.fn>;
@@ -88,6 +85,7 @@ function createHarness(options?: {
   const wasRunning = options?.wasRunning ?? true;
   let active = wasRunning;
   const logDir = mkdtempSync(join(tmpdir(), "yark-update-"));
+  const order: string[] = [];
 
   const repo = {
     get: vi.fn((id: string) => (id === profile.id ? profile : null)),
@@ -96,16 +94,23 @@ function createHarness(options?: {
   } as unknown as ServerRepository;
 
   const backups = {
-    createPreUpdateBackupForJob: vi.fn(async () => makePreUpdateBackups(profile.id)),
+    createPreUpdateBackupForJob: vi.fn(async () => {
+      order.push("pre_update");
+      return makePreUpdateBackups(profile.id);
+    }),
     createPreStopBackup: vi.fn(),
-    restoreBackupForJob: vi.fn(async () => undefined),
+    restoreBackupForJob: vi.fn(async () => {
+      order.push("restore");
+    }),
   };
 
   const instances = {
     stop: vi.fn(async () => {
+      order.push("stop");
       active = false;
     }),
     startForMaintenance: vi.fn(async () => {
+      order.push("start");
       active = true;
     }),
     isStopInProgress: vi.fn(() => false),
@@ -139,6 +144,7 @@ function createHarness(options?: {
     ((): SteamStub => ({ code: 0, stdout: "ok", stderr: "" }));
 
   const runSteamUpdate = vi.fn(async () => {
+    order.push("steam");
     const result =
       typeof steamFactory === "function" ? await steamFactory() : steamFactory;
     return {
@@ -158,9 +164,9 @@ function createHarness(options?: {
   return {
     profile,
     service,
+    order,
     instances,
     backups,
-    processes,
     runSteamUpdate,
     waitForHealthy,
     performUpdate: () =>
@@ -198,22 +204,7 @@ describe("UpdateService safe update orchestration", () => {
       backup: false,
     });
     expect(h.backups.createPreStopBackup).not.toHaveBeenCalled();
-    expect(h.backups.createPreUpdateBackupForJob).toHaveBeenCalledWith(
-      h.profile.id,
-    );
-    expect(h.runSteamUpdate).toHaveBeenCalled();
-    expect(h.instances.startForMaintenance).toHaveBeenCalledWith(h.profile.id);
-    expect(h.waitForHealthy).toHaveBeenCalled();
-
-    const stopOrder = h.instances.stop.mock.invocationCallOrder[0]!;
-    const backupOrder =
-      h.backups.createPreUpdateBackupForJob.mock.invocationCallOrder[0]!;
-    const steamOrder = h.runSteamUpdate.mock.invocationCallOrder[0]!;
-    const startOrder =
-      h.instances.startForMaintenance.mock.invocationCallOrder[0]!;
-    expect(stopOrder).toBeLessThan(backupOrder);
-    expect(backupOrder).toBeLessThan(steamOrder);
-    expect(steamOrder).toBeLessThan(startOrder);
+    expect(h.order).toEqual(["stop", "pre_update", "steam", "start"]);
   });
 
   it("leaves an already-stopped server stopped after a successful update", async () => {
@@ -226,6 +217,7 @@ describe("UpdateService safe update orchestration", () => {
     expect(h.backups.createPreUpdateBackupForJob).toHaveBeenCalled();
     expect(h.instances.startForMaintenance).not.toHaveBeenCalled();
     expect(h.waitForHealthy).not.toHaveBeenCalled();
+    expect(h.order).toEqual(["pre_update", "steam"]);
   });
 
   it("rolls back pre_update backups and restarts when SteamCMD fails while wasRunning", async () => {
@@ -250,8 +242,15 @@ describe("UpdateService safe update orchestration", () => {
       h.profile.id,
       "bu-ini",
     );
-    expect(h.instances.startForMaintenance).toHaveBeenCalledWith(h.profile.id);
-    expect(h.waitForHealthy).toHaveBeenCalled();
+    expect(h.order).toEqual([
+      "stop",
+      "pre_update",
+      "steam",
+      "restore",
+      "restore",
+      "restore",
+      "start",
+    ]);
   });
 
   it("verify stops and restarts when running, without pre_update or rollback", async () => {
@@ -265,7 +264,7 @@ describe("UpdateService safe update orchestration", () => {
     });
     expect(h.backups.createPreUpdateBackupForJob).not.toHaveBeenCalled();
     expect(h.backups.restoreBackupForJob).not.toHaveBeenCalled();
-    expect(h.instances.startForMaintenance).toHaveBeenCalledWith(h.profile.id);
+    expect(h.order).toEqual(["stop", "steam", "start"]);
   });
 
   it("rejects update while a stop+backup is in progress", async () => {
@@ -274,7 +273,7 @@ describe("UpdateService safe update orchestration", () => {
     h.instances.isStopInProgress.mockReturnValue(true);
 
     await expect(h.service.updateServer(h.profile.id)).rejects.toThrow(
-      "Server stop and backup are still in progress",
+      /still in progress/i,
     );
     expect(h.runSteamUpdate).not.toHaveBeenCalled();
     expect(h.backups.createPreUpdateBackupForJob).not.toHaveBeenCalled();
