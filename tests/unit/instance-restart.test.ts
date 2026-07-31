@@ -44,6 +44,14 @@ function makeProcesses(profile: ServerProfile, active = true) {
   let isActive = active;
   return {
     isActive: vi.fn(() => isActive),
+    getStatus: vi.fn(() => ({
+      serverId: profile.id,
+      status: isActive ? ("running" as const) : ("stopped" as const),
+      pid: isActive ? 1 : null,
+      startedAt: null,
+      lastError: null,
+    })),
+    waitWhileStarting: vi.fn(async () => undefined),
     beginGracefulStop: vi.fn(async () => {
       return {
         phase: "saved" as const,
@@ -286,7 +294,7 @@ describe("InstanceService.restart", () => {
     expect(processes.start).toHaveBeenCalled();
   });
 
-  it("clears the critical job before start so quit can use stopAll", async () => {
+  it("clears the critical job before start so quit can stop leftover processes", async () => {
     const profile = makeProfile();
     const repo = makeRepo(profile);
     const processes = makeProcesses(profile);
@@ -296,11 +304,10 @@ describe("InstanceService.restart", () => {
     });
     const backups = {
       createPreRestartBackup: vi.fn(async () => []),
+      createPreStopBackup: vi.fn(async () => []),
     } as unknown as BackupService;
     const locks = new InstanceLockManager();
     const service = new InstanceService(repo, processes, backups, locks);
-    const stopAll = vi.fn(async () => undefined);
-    Object.assign(processes, { stopAll });
 
     const syncMod = await import("@backend/domains/instances/sync-profile-ini");
     vi.mocked(syncMod.syncProfileSettingsToIni).mockImplementation(async () => {
@@ -318,13 +325,19 @@ describe("InstanceService.restart", () => {
       expect(service.shouldBlockAppQuit()).toBe(true);
       expect(locks.isLocked(profile.id)).toBe(true);
 
+      const stopsBeforeQuit = vi.mocked(processes.beginGracefulStop).mock.calls.length;
+
       // Simulate quit during the post-backup / pre-start window.
       const settlePromise = service.settleForAppQuit();
       finishStart();
       await restartPromise;
       await settlePromise;
 
-      expect(stopAll).toHaveBeenCalled();
+      expect(vi.mocked(processes.beginGracefulStop).mock.calls.length).toBeGreaterThan(
+        stopsBeforeQuit,
+      );
+      expect(backups.createPreStopBackup).toHaveBeenCalled();
+      expect(processes.isActive(profile.id)).toBe(false);
       expect(service.shouldBlockAppQuit()).toBe(false);
     } finally {
       vi.mocked(syncMod.syncProfileSettingsToIni).mockImplementation(
