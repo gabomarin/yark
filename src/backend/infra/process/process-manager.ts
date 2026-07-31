@@ -891,6 +891,7 @@ export class ProcessManager extends EventEmitter {
         managed.lastError =
           "Timeout waiting for server readiness (RCON did not respond in time)";
         this.appendRuntimeLog(profile.id, "error", managed.lastError);
+        this.clearProcessCheckpoint(profile.id);
         this.emitStatus(profile.id);
         try {
           this.terminateManaged(profile.id, managed);

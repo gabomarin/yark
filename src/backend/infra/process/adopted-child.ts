@@ -13,8 +13,12 @@ function pidAlive(pid: number): boolean {
 }
 
 /**
- * Synthetic ChildProcess for an OS PID we did not spawn (Leave reattach).
+ * Synthetic ChildProcess for an OS PID we did not spawn (crash-recovery reattach).
  * Polls liveness and emits `exit` when the process disappears.
+ *
+ * The poll `setInterval` stays referenced on purpose while YARK tracks the
+ * server (do not unref): an unref'd timer could be GC'd and miss process death.
+ * {@link markExited} clears the interval when the PID disappears or kill succeeds.
  */
 export function createAdoptedChildHandle(pid: number): ChildProcess {
   const child = new EventEmitter() as ChildProcess;
@@ -74,7 +78,7 @@ export function createAdoptedChildHandle(pid: number): ChildProcess {
       markExited(1);
     }
   }, ADOPT_POLL_MS);
-  // Keep the interval referenced while YARK tracks the server (do not unref).
+  // Intentionally referenced — see createAdoptedChildHandle docs.
 
   if (!pidAlive(pid)) {
     // Defer so callers can attach `exit` listeners first.

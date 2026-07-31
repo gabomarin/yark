@@ -24,6 +24,7 @@ import {
   type AppTrayOptions,
 } from "./app-tray";
 import { readDesktopShellPreferences } from "./desktop-shell-settings";
+import { shouldPreventCloseDuringQuit } from "./quit-gate";
 import {
   removeLeftRunningProcess,
   upsertLeftRunningProcess,
@@ -31,6 +32,7 @@ import {
 import { reattachLeftRunningProcesses } from "../backend/infra/process/left-running-reattach";
 import { applyWindowsLoginItem } from "./windows-login-item";
 import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush } from "../shared/ipc";
+import { normalizeServerStopProgress } from "../shared/types";
 import type { BackupChangedPush } from "../backend/domains/backups/backup-service";
 import type { ServerRuntimeInfo } from "../shared/types";
 
@@ -232,18 +234,14 @@ if (gotSingleInstanceLock) {
 
     const attachMainWindowCloseHandler = (win: BrowserWindow): void => {
       win.on("close", (event) => {
-        if (allowQuit) {
-          return;
-        }
-        // Keep the window alive while Ask dialog or Stop (save/backup) runs.
-        if (pendingQuit !== null || quitPolicyPromptInFlight) {
-          event.preventDefault();
-          revealMainWindow();
-          return;
-        }
-        // requestAppQuit() sets isQuitting before before-quit installs pending
-        // work — do not destroy the window while quit is still coordinating.
-        if (isQuitting) {
+        if (
+          shouldPreventCloseDuringQuit({
+            allowQuit,
+            isQuitting,
+            hasPendingQuitWork: pendingQuit !== null,
+            quitPolicyPromptInFlight,
+          })
+        ) {
           event.preventDefault();
           revealMainWindow();
           return;
@@ -326,7 +324,10 @@ if (gotSingleInstanceLock) {
     });
 
     instances.on("stop-progress", (payload: ServerStopProgressPush) => {
-      sendToRenderer(IPC_PUSH.serverStopProgress, payload);
+      sendToRenderer(
+        IPC_PUSH.serverStopProgress,
+        normalizeServerStopProgress(payload),
+      );
     });
 
     backupService.on("changed", (payload: BackupChangedPush) => {

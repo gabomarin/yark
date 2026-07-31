@@ -206,11 +206,16 @@ active, Settings **On quit with active servers** applies:
   DoExit → pre-stop backup) with stop-progress in the UI, then quit.
 
 There is no Leave-running quit option. Prefer **Close window to tray** so YARK
-(and scheduled/player backups) keep running with the servers. Crash / Task
-Manager recovery uses durable checkpoints written while servers are active:
-startup validates candidates, reattaches matches as `starting` until RCON
-confirms (`running`), and records rejected/stale outcomes. Reattach never
+(and scheduled/player backups) keep running with the servers. Process
+attach/detach exists for **crash recovery and forced closes** (Task Manager /
+unexpected Electron exit): durable checkpoints written while servers are
+active; startup validates candidates, reattaches matches as `starting` until
+RCON confirms (`running`), and records rejected/stale outcomes. Reattach never
 force-kills on RCON timeout.
+
+Windows e2e for this path: `npm run e2e:quit-policy` and
+`npm run e2e:crash-reattach` (needs SteamCMD + warm ASA content cache; mark as
+a manual Windows PR check when changing quit/reattach code).
 
 Hide-to-tray is **not** a quit and never stops servers. Critical in-flight
 stop/restart work still uses `shouldBlockAppQuit` / `settleForAppQuit` first.

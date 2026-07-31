@@ -233,6 +233,34 @@ export interface ServerStopProgress {
   reason: ServerStopProgressReason;
 }
 
+/** Normalize push payloads so older emitters without `reason` stay UI-safe. */
+export function normalizeServerStopProgress(
+  payload: Partial<ServerStopProgress> &
+    Pick<ServerStopProgress, "serverId" | "active">,
+): ServerStopProgress {
+  const reason: ServerStopProgressReason =
+    payload.reason === "quit" || payload.reason === "user"
+      ? payload.reason
+      : "user";
+  return {
+    serverId: payload.serverId,
+    active: payload.active === true,
+    phase:
+      payload.phase === "waiting" ||
+      payload.phase === "saving" ||
+      payload.phase === "backing_up" ||
+      payload.phase === "stopping"
+        ? payload.phase
+        : null,
+    label: typeof payload.label === "string" ? payload.label : "",
+    percent:
+      typeof payload.percent === "number" && Number.isFinite(payload.percent)
+        ? payload.percent
+        : null,
+    reason,
+  };
+}
+
 /** What a backup archive contains (ASA path-scoped). */
 export type BackupKind = "world" | "players" | "ini";
 

@@ -8,6 +8,7 @@ import type {
   SteamCmdCacheKind,
 } from "../shared/types";
 import type { SteamCmdProgressPush, BackupsChangedPush, ServerStopProgressPush } from "../shared/ipc";
+import { normalizeServerStopProgress } from "../shared/types";
 
 const api: RendererApi = {
   listServers: () => ipcRenderer.invoke(IPC.serversList),
@@ -139,7 +140,9 @@ const api: RendererApi = {
     };
   },
   onServerStopProgress: (listener) => {
-    const handler = (_e: unknown, payload: ServerStopProgressPush) => listener(payload);
+    const handler = (_e: unknown, payload: ServerStopProgressPush) => {
+      listener(normalizeServerStopProgress(payload));
+    };
     ipcRenderer.on(IPC_PUSH.serverStopProgress, handler);
     return () => {
       ipcRenderer.removeListener(IPC_PUSH.serverStopProgress, handler);

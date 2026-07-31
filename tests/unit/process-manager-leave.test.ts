@@ -264,4 +264,74 @@ describe("ProcessManager crash-recovery checkpoints", () => {
     expect(cleared).toEqual([profile.id]);
     expect(manager.isActive(profile.id)).toBe(false);
   });
+
+  it("clears the checkpoint on process error", async () => {
+    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-checkpoint-err-"));
+    const binaryDir = join(
+      cleanupRoot,
+      "ShooterGame",
+      "Binaries",
+      "Win64",
+    );
+    await mkdir(binaryDir, { recursive: true });
+    const binary = join(binaryDir, "ArkAscendedServer.exe");
+    await writeFile(binary, "");
+
+    const cleared: string[] = [];
+    const child = fakeChild(4243);
+    const manager = new ProcessManager({
+      spawnProcess: () => child,
+      queryOsIdentity: (pid) => ({
+        pid,
+        executablePath: binary,
+        commandLine: `${binary} -port=7777`,
+        osCreationTime: "20260731150000.000000-420",
+      }),
+      onProcessCheckpoint: () => undefined,
+      onProcessCheckpointCleared: (serverId) => {
+        cleared.push(serverId);
+      },
+    });
+    const profile = makeProfile(cleanupRoot);
+    manager.start(profile, { skipReadinessCheck: true });
+    child.emit("spawn");
+    child.emit("error", new Error("spawn failed"));
+    expect(cleared).toEqual([profile.id]);
+  });
+
+  it("clears the checkpoint when readiness times out and terminates", async () => {
+    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-checkpoint-timeout-"));
+    const binaryDir = join(
+      cleanupRoot,
+      "ShooterGame",
+      "Binaries",
+      "Win64",
+    );
+    await mkdir(binaryDir, { recursive: true });
+    const binary = join(binaryDir, "ArkAscendedServer.exe");
+    await writeFile(binary, "");
+
+    const cleared: string[] = [];
+    const child = fakeChild(4244);
+    const manager = new ProcessManager({
+      readyTimeoutMs: 30,
+      readyPollMs: 10,
+      spawnProcess: () => child,
+      queryOsIdentity: (pid) => ({
+        pid,
+        executablePath: binary,
+        commandLine: `${binary} -port=7777`,
+        osCreationTime: "20260731150000.000000-420",
+      }),
+      onProcessCheckpoint: () => undefined,
+      onProcessCheckpointCleared: (serverId) => {
+        cleared.push(serverId);
+      },
+    });
+    const profile = makeProfile(cleanupRoot);
+    manager.start(profile);
+    child.emit("spawn");
+    await new Promise((r) => setTimeout(r, 80));
+    expect(cleared).toContain(profile.id);
+  });
 });

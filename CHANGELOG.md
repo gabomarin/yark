@@ -13,7 +13,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Windows system tray + **Close window to tray** (default on) and **Start with Windows** (default off) settings (#54).
 - Sidebar shows Wildcard **Deploying** / Offline official network status (pulsing indicator + tooltip).
-- **On quit with active servers** policy (Ask / Stop) with confirmation when quitting while servers run (#59). Crash recovery checkpoints managed ASA processes and reattaches on the next launch (no Leave-running quit option — prefer Close to tray).
+- **On quit with active servers** policy (Ask / Stop) with confirmation when quitting while servers run (#59). Prefer **Close window to tray** to keep servers and backups alive. Process attach/detach is for crash recovery / forced closes only (no Leave-running quit option).
 
 ### Changed
 
@@ -23,7 +23,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Cancelling quit with **Close window to tray** off no longer leaves a dead tray-only process (window stays open until Ask/Stop resolves; tray Show recreates the window if needed).
 - Quit **Stop** waits for still-starting servers, runs save + pre-stop backup with UI progress, then exits (instead of a silent process-only kill).
-- Managed servers spawn detached and checkpoint process identity (OS creation time required) while active; clean stop clears the checkpoint. After an unexpected app exit, startup reattach rejects PID reuse and validates readiness via RCON.
+- Managed servers spawn detached and checkpoint process identity (OS creation time required) while active; clean stop clears the checkpoint. After an unexpected app exit or forced close, startup reattach rejects PID reuse and validates readiness via RCON (not a user-facing Leave-running quit).
 
 ## [0.4.0] - 2026-07-30
 

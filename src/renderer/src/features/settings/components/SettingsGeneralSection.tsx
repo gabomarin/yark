@@ -117,8 +117,10 @@ export function SettingsGeneralSection(props: Props): ReactElement {
           <Text size="sm" fw={600}>On quit with active servers</Text>
           <Text size="xs" c="dimmed" mt={2}>
             When quitting while servers are running. Enable Close window to tray
-            above to keep servers and backups running without quitting. Crash
-            recovery can reattach leftover ASA processes.
+            above to keep servers and YARK backups running without quitting.
+            There is no Leave-running quit option — attach/detach is only for
+            crash recovery or forced closes (Task Manager), so leftover ASA
+            processes can be reattached on the next launch.
           </Text>
         </div>
         <div className={classes.settingControl}>
