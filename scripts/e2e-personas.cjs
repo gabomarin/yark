@@ -76,11 +76,8 @@ async function createServerAsBeginner(page, name, baseDir, ports) {
   }
 
   const backByRole = page.getByRole("button", { name: /Back to servers/i });
-  const backByLabel = page.getByLabel("Back to servers");
   if ((await backByRole.count()) > 0) {
     await backByRole.first().click();
-  } else if ((await backByLabel.count()) > 0) {
-    await backByLabel.first().click();
   } else {
     await goToOverview(page);
   }
@@ -108,7 +105,10 @@ async function openWorkspaceAndAssistant(page, serverName) {
 }
 
 async function runExperiencedFlow(page, serverName) {
-  await page.getByLabel("Back to servers").click();
+  const backBtn = page.getByRole("button", { name: /Back to servers/i });
+  if ((await backBtn.count()) > 0) {
+    await backBtn.first().click();
+  }
   await goToOverview(page);
 
   const search = page.getByRole("textbox", { name: "Search servers" });
@@ -196,6 +196,8 @@ async function run() {
     rcon: 25000 + Math.floor(Math.random() * 1000),
   };
 
+  console.log(`E2E_BEGINNER_PORTS=${JSON.stringify(beginnerPorts)}`);
+
   const app = await electron.launch({ args: ["."], cwd: projectRoot });
   const errors = [];
   const artifacts = [];
@@ -261,7 +263,7 @@ async function run() {
   }
 }
 
-run().catch(async (error) => {
+run().catch((error) => {
   console.error("E2E_PERSONAS_FAIL");
   console.error(error?.stack ?? String(error));
   process.exit(1);
