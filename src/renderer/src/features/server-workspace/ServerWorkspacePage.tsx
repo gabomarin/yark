@@ -14,10 +14,9 @@ import {
   type ServerLogsFocus,
 } from "@features/logs/ServerLogsPanel";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
-import {
-  ConfigurationEditor,
-} from "./components/ConfigurationEditor/ConfigurationEditor";
+import type { ReactElement } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ConfigurationEditor } from "./components/ConfigurationEditor/ConfigurationEditor";
 import { ConfigurationWizard } from "./components/ConfigurationWizard/ConfigurationWizard";
 import { ServerListPanel } from "./components/ServerListPanel/ServerListPanel";
 import { ServerOnboardingChecklist } from "./components/ServerOnboardingChecklist/ServerOnboardingChecklist";
