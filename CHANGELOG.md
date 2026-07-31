@@ -9,6 +9,22 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-30
+
+### Added
+
+- **Restart** is one backend operation: stop → fail-hard `pre_restart` backup (world, players, INI) → start, under a single instance lock (#13).
+- Safe-update real-host validation helper (`scripts/validation/validate-safe-update.cjs`) and unit coverage for the stop → `pre_update` → SteamCMD → conditional restart/rollback path (#14).
+
+### Changed
+
+- UI stack upgraded to React 19.2 and Mantine 9 (#98).
+- Operator-facing lock, status, update-check, backups, mods, cluster, and logs copy simplified for clearer actions (#111).
+
+### Fixed
+
+- Safe-update docs and `UpdateService` contract aligned with the implemented auto-stop / single `pre_update` / conditional-restart behavior (#14).
+
 ## [0.3.2] - 2026-07-29
 
 ### Added
@@ -126,6 +142,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Tracked in-repo TODO / historical planning docs (moved to local agent context).
 
 [Unreleased]: #unreleased
+[0.4.0]: #040---2026-07-30
 [0.3.2]: #032---2026-07-29
 [0.3.1]: #031---2026-07-28
 [0.3.0]: #030---2026-07-28
