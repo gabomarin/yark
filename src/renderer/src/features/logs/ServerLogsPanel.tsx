@@ -22,7 +22,8 @@ import {
 import { modals } from "@mantine/modals";
 import type { ServerOperationalLogs, ServerProfile } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
-import { useEffect, useRef, useState, type ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
@@ -945,17 +946,11 @@ function DetailItem({ label, value, icon }: DetailItemProps): ReactElement {
 }
 
 interface LogEmptyStateProps {
-  icon: React.ReactNode;
+  icon: ReactNode;
   title: string;
   description: string;
 }
 
-function LogEmptyState({
-  icon,
-  title,
-  description,
-}: LogEmptyStateProps): ReactElement {
-  return (
-    <EmptyState layout="stacked" icon={icon} title={title} description={description} />
-  );
+function LogEmptyState({ icon, title, description }: LogEmptyStateProps): ReactElement {
+  return <EmptyState layout="stacked" icon={icon} title={title} description={description} />;
 }
