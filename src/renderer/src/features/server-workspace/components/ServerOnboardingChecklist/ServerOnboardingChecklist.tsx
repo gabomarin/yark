@@ -119,40 +119,45 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
   const saveCluster = async (nextClusterId: string | null) => {
     setError(null);
     setSavingCluster(true);
-    const selected =
-      nextClusterId === null
-        ? null
-        : clusterOptions.find((option) => option.clusterId === nextClusterId) ?? null;
-    const input: ServerProfileInput = {
-      ...toInput(props.server),
-      clusterId: selected?.clusterId ?? null,
-      clusterDir: selected?.clusterDir ?? null,
-    };
-    const result = await window.api.updateServer(props.server.id, input);
-    setSavingCluster(false);
-    if (!result.ok) {
-      setError(result.error ?? "Could not update the cluster");
-      return;
+    try {
+      const selected =
+        nextClusterId === null
+          ? null
+          : clusterOptions.find((option) => option.clusterId === nextClusterId) ?? null;
+      const input: ServerProfileInput = {
+        ...toInput(props.server),
+        clusterId: selected?.clusterId ?? null,
+        clusterDir: selected?.clusterDir ?? null,
+      };
+      const result = await window.api.updateServer(props.server.id, input);
+      if (!result.ok) {
+        setError(result.error ?? "Could not update the cluster");
+        return;
+      }
+      setClusterChoice(selected?.clusterId ?? null);
+      props.onServerUpdated();
+    } finally {
+      setSavingCluster(false);
     }
-    setClusterChoice(selected?.clusterId ?? null);
-    props.onServerUpdated();
   };
 
   const savePorts = async () => {
-    setError(null);
-    setSavingPorts(true);
-    const result = await window.api.updateServer(props.server.id, {
-      ...toInput(props.server),
-      gamePort,
-      queryPort,
-      rconPort,
-    });
-    setSavingPorts(false);
-    if (!result.ok) {
-      setError(result.error ?? "Could not save ports");
-      return;
+    setError(null); setSavingPorts(true);
+    try {
+      const result = await window.api.updateServer(props.server.id, {
+        ...toInput(props.server),
+        gamePort,
+        queryPort,
+        rconPort,
+      });
+      if (!result.ok) {
+        setError(result.error ?? "Could not save ports");
+        return;
+      }
+      props.onServerUpdated();
+    } finally {
+      setSavingPorts(false);
     }
-    props.onServerUpdated();
   };
 
   return (

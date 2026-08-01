@@ -58,14 +58,19 @@ export function ModsManager(props: Props): ReactElement {
         return;
       }
       setLoadingMeta(true);
-      const result = await window.api.getModsMetadata(mods);
-      if (!alive) return;
-      setLoadingMeta(false);
-      if (!result.ok) {
-        setError(result.error ?? "Could not load mod metadata");
-        return;
+      try {
+        const result = await window.api.getModsMetadata(mods);
+        if (!alive) return;
+        if (!result.ok) {
+          setError(result.error ?? "Could not load mod metadata");
+          return;
+        }
+        setMetadataById(new Map(result.data.map((item) => [item.id, item])));
+      } finally {
+        if (alive) {
+          setLoadingMeta(false);
+        }
       }
-      setMetadataById(new Map(result.data.map((item) => [item.id, item])));
     };
     void load();
     return () => {
@@ -114,19 +119,22 @@ export function ModsManager(props: Props): ReactElement {
     }
     setBusy(true);
     setError(null);
-    const metaResult = await window.api.getModMetadata(id);
-    setBusy(false);
-    if (!metaResult.ok) {
-      setError(metaResult.error ?? "Invalid mod ID");
-      return;
+    try {
+      const metaResult = await window.api.getModMetadata(id);
+      if (!metaResult.ok) {
+        setError(metaResult.error ?? "Invalid mod ID");
+        return;
+      }
+      setMetadataById((previous) => {
+        const next = new Map(previous);
+        next.set(metaResult.data.id, metaResult.data);
+        return next;
+      });
+      setModDraft("");
+      await persist([...mods, id]);
+    } finally {
+      setBusy(false);
     }
-    setMetadataById((previous) => {
-      const next = new Map(previous);
-      next.set(metaResult.data.id, metaResult.data);
-      return next;
-    });
-    setModDraft("");
-    await persist([...mods, id]);
   };
 
   const moveMod = async (index: number, direction: -1 | 1) => {

@@ -49,8 +49,10 @@ export class LogsService {
       throw new Error("Server does not exist");
     }
 
-    const updateFiles = await this.listUpdateLogsForServer(serverId);
-    const backups = await this.backups.list(serverId, 100);
+    const [updateFiles, backups] = await Promise.all([
+      this.listUpdateLogsForServer(serverId),
+      this.backups.list(serverId, 100),
+    ]);
     const events = this.repo
       .recentEvents(500)
       .filter((event) => event.serverId === serverId);

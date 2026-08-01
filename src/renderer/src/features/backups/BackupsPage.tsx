@@ -122,41 +122,50 @@ export function BackupsPage(props: Props): ReactElement {
   const [keepLastEnabled, setKeepLastEnabled] = useState(false);
   const [keepLastPerKind, setKeepLastPerKind] = useState(5);
 
-  const load = async (opts?: { quiet?: boolean }) => {
+  const load = async (opts?: { quiet?: boolean; cancelled?: () => boolean }) => {
     const quiet = opts?.quiet === true;
+    const cancelled = opts?.cancelled;
     if (!quiet) {
       setLoading(true);
     }
     setError(null);
-    if (props.servers.length === 0) {
-      setSummary(null);
-      setDrafts({});
-      setLoading(false);
-      return;
-    }
-
-    const result = await window.api.getBackupFleetSummary();
-    setLoading(false);
-    if (!result.ok) {
-      setSummary(null);
-      setError(result.error ?? "Could not load backup summary");
-      return;
-    }
-
-    setSummary(result.data);
-    // Quiet refresh must not clobber in-progress policy edits.
-    if (!quiet) {
-      const nextDrafts: Record<string, DraftPolicy> = {};
-      for (const row of result.data.servers) {
-        nextDrafts[row.serverId] = toDraft(row.policy);
+    try {
+      if (props.servers.length === 0) {
+        if (cancelled?.()) return;
+        setSummary(null);
+        setDrafts({});
+        return;
       }
-      setDrafts(nextDrafts);
-      setDiskDraft(result.data.diskSettings);
+
+      const result = await window.api.getBackupFleetSummary();
+      if (cancelled?.()) return;
+      if (!result.ok) {
+        setSummary(null);
+        setError(result.error ?? "Could not load backup summary");
+        return;
+      }
+
+      setSummary(result.data);
+      // Quiet refresh must not clobber in-progress policy edits.
+      if (!quiet) {
+        const nextDrafts: Record<string, DraftPolicy> = {};
+        for (const row of result.data.servers) {
+          nextDrafts[row.serverId] = toDraft(row.policy);
+        }
+        setDrafts(nextDrafts);
+        setDiskDraft(result.data.diskSettings);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    void load();
+    let cancelled = false;
+    void load({ cancelled: () => cancelled });
+    return () => {
+      cancelled = true;
+    };
   }, [props.servers]);
 
   useEffect(() => {
@@ -194,45 +203,54 @@ export function BackupsPage(props: Props): ReactElement {
     setBusyId(serverId);
     setError(null);
     setInfo(null);
-    const result = await window.api.setBackupPolicy(serverId, draft);
-    setBusyId(null);
-    if (!result.ok) {
-      setError(result.error ?? "Could not save backup policy");
-      return;
+    try {
+      const result = await window.api.setBackupPolicy(serverId, draft);
+      if (!result.ok) {
+        setError(result.error ?? "Could not save backup policy");
+        return;
+      }
+      await load({ quiet: true });
+      setInfo("Saved backup settings for the selected server.");
+    } finally {
+      setBusyId(null);
     }
-    await load({ quiet: true });
-    setInfo("Saved backup settings for the selected server.");
   };
 
   const browseBackupDir = async (server: ServerProfile) => {
     const draft = drafts[server.id];
     if (draft === undefined) return;
     setBrowsingId(server.id);
-    const result = await window.api.pickPath(
-      "directory",
-      draft.backupDir ?? server.installDir,
-      `Backup destination for ${server.name}`,
-    );
-    setBrowsingId(null);
-    if (!result.ok) {
-      setError(result.error ?? "Could not open folder picker");
-      return;
-    }
-    if (result.data !== null) {
-      setDrafts((previous) => ({
-        ...previous,
-        [server.id]: { ...draft, backupDir: result.data },
-      }));
+    try {
+      const result = await window.api.pickPath(
+        "directory",
+        draft.backupDir ?? server.installDir,
+        `Backup destination for ${server.name}`,
+      );
+      if (!result.ok) {
+        setError(result.error ?? "Could not open folder picker");
+        return;
+      }
+      if (result.data !== null) {
+        setDrafts((previous) => ({
+          ...previous,
+          [server.id]: { ...draft, backupDir: result.data },
+        }));
+      }
+    } finally {
+      setBrowsingId(null);
     }
   };
 
   const openDestination = async (serverId: string) => {
     setBusyId(serverId);
     setError(null);
-    const result = await window.api.openBackupRoot(serverId);
-    setBusyId(null);
-    if (!result.ok) {
-      setError(result.error ?? "Could not open backup destination");
+    try {
+      const result = await window.api.openBackupRoot(serverId);
+      if (!result.ok) {
+        setError(result.error ?? "Could not open backup destination");
+      }
+    } finally {
+      setBusyId(null);
     }
   };
 
@@ -240,15 +258,18 @@ export function BackupsPage(props: Props): ReactElement {
     if (diskDraft === null) return;
     setDiskBusy(true);
     setError(null);
-    const result = await window.api.setBackupDiskAlertSettings(diskDraft);
-    setDiskBusy(false);
-    if (!result.ok) {
-      setError(result.error ?? "Could not save disk alert settings");
-      return;
+    try {
+      const result = await window.api.setBackupDiskAlertSettings(diskDraft);
+      if (!result.ok) {
+        setError(result.error ?? "Could not save disk alert settings");
+        return;
+      }
+      setDiskModalOpen(false);
+      await load();
+      setInfo("Backup drive alerts updated.");
+    } finally {
+      setDiskBusy(false);
     }
-    setDiskModalOpen(false);
-    await load();
-    setInfo("Backup drive alerts updated.");
   };
 
   const buildCleanupPayload = (): BackupCleanupOptions => ({
@@ -260,35 +281,41 @@ export function BackupsPage(props: Props): ReactElement {
   const runPreviewCleanup = async () => {
     setCleanupBusy(true);
     setError(null);
-    const result = await window.api.previewBackupCleanup(buildCleanupPayload());
-    setCleanupBusy(false);
-    if (!result.ok) {
-      setCleanupPreview(null);
-      setError(result.error ?? "Could not preview cleanup");
-      return;
+    try {
+      const result = await window.api.previewBackupCleanup(buildCleanupPayload());
+      if (!result.ok) {
+        setCleanupPreview(null);
+        setError(result.error ?? "Could not preview cleanup");
+        return;
+      }
+      setCleanupPreview(result.data);
+    } finally {
+      setCleanupBusy(false);
     }
-    setCleanupPreview(result.data);
   };
 
   const confirmCleanup = async () => {
     if (cleanupPreview === null || cleanupPreview.items.length === 0) return;
     setCleanupBusy(true);
     setError(null);
-    const result = await window.api.runBackupCleanup({
-      ...buildCleanupPayload(),
-      confirmedBackupIds: cleanupPreview.items.map((item) => item.backup.id),
-    });
-    setCleanupBusy(false);
-    if (!result.ok) {
-      setError(result.error ?? "Could not run cleanup");
-      return;
+    try {
+      const result = await window.api.runBackupCleanup({
+        ...buildCleanupPayload(),
+        confirmedBackupIds: cleanupPreview.items.map((item) => item.backup.id),
+      });
+      if (!result.ok) {
+        setError(result.error ?? "Could not run cleanup");
+        return;
+      }
+      setCleanupOpen(false);
+      setCleanupPreview(null);
+      await load();
+      setInfo(
+        `Cleanup removed ${result.data.deleted} backup${result.data.deleted === 1 ? "" : "s"} (${formatBytes(result.data.freedBytes)}).`,
+      );
+    } finally {
+      setCleanupBusy(false);
     }
-    setCleanupOpen(false);
-    setCleanupPreview(null);
-    await load();
-    setInfo(
-      `Cleanup removed ${result.data.deleted} backup${result.data.deleted === 1 ? "" : "s"} (${formatBytes(result.data.freedBytes)}).`,
-    );
   };
 
   const serverById = useMemo(() => {

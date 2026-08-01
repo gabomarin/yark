@@ -209,17 +209,20 @@ export function ServerForm(props: Props): ReactElement {
       return;
     }
     setSaving(true);
-    const input = toInput(state, isCreate, props.initial);
-    const result =
-      props.initial === null
-        ? await window.api.createServer(input)
-        : await window.api.updateServer(props.initial.id, input);
-    setSaving(false);
-    if (result.ok) {
-      props.onSaved(props.initial === null ? result.data : undefined);
-      return;
+    try {
+      const input = toInput(state, isCreate, props.initial);
+      const result =
+        props.initial === null
+          ? await window.api.createServer(input)
+          : await window.api.updateServer(props.initial.id, input);
+      if (result.ok) {
+        props.onSaved(props.initial === null ? result.data : undefined);
+        return;
+      }
+      setError(result.error ?? "Could not save the server");
+    } finally {
+      setSaving(false);
     }
-    setError(result.error ?? "Could not save the server");
   };
 
   const formBody = (
