@@ -356,16 +356,12 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       setSteamCmdConsole(payload.console);
     });
     const unsubscribeStopProgress = window.api.onServerStopProgress((payload) => {
-      const normalized = {
-        ...payload,
-        reason: payload.reason === "quit" ? ("quit" as const) : ("user" as const),
-      };
       setStopProgressByServerId((prev) => {
         const next = new Map(prev);
-        if (normalized.active) {
-          next.set(normalized.serverId, normalized);
+        if (payload.active) {
+          next.set(payload.serverId, payload);
         } else {
-          next.delete(normalized.serverId);
+          next.delete(payload.serverId);
         }
         return next;
       });

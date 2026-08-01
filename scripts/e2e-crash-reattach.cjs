@@ -72,30 +72,59 @@ function forceKillPid(pid, { tree = true } = {}) {
   });
 }
 
-/** Kill leftover Electron helpers for this userData without touching ASA. */
-function killElectronForUserData(userData) {
-  const normalized = userData.replace(/'/g, "''");
+/**
+ * List PIDs via PowerShell without interpolating paths into -Command.
+ * The match string is passed through an env var on the child process only.
+ */
+function listPidsMatchingEnv(envName, matchValue, filterScript) {
   try {
+    const encoded = Buffer.from(filterScript, "utf16le").toString("base64");
     const listed = execFileSync(
       "powershell.exe",
-      [
-        "-NoProfile",
-        "-Command",
-        `$ud='${normalized}';` +
-          `Get-CimInstance Win32_Process | Where-Object {` +
-          ` $_.Name -match '^(electron|YARK)\\.exe$' -and $_.CommandLine -like ('*' + $ud + '*')` +
-          ` } | ForEach-Object { $_.ProcessId }`,
-      ],
-      { encoding: "utf8", windowsHide: true, timeout: 10000 },
+      ["-NoProfile", "-NoLogo", "-NonInteractive", "-EncodedCommand", encoded],
+      {
+        encoding: "utf8",
+        windowsHide: true,
+        timeout: 10000,
+        env: { ...process.env, [envName]: matchValue },
+      },
     )
       .split(/\r?\n/)
       .map((line) => Number(line.trim()))
       .filter((pid) => Number.isInteger(pid) && pid > 0);
-    for (const pid of listed) {
-      forceKillPid(pid, { tree: false });
-    }
+    return listed;
   } catch {
-    // ignore
+    return [];
+  }
+}
+
+/** Kill leftover Electron helpers for this userData without touching ASA. */
+function killElectronForUserData(userData) {
+  const envName = "YARK_E2E_USER_DATA_MATCH";
+  const script = [
+    `$ud = [Environment]::GetEnvironmentVariable('${envName}')`,
+    `if ([string]::IsNullOrEmpty($ud)) { return }`,
+    `Get-CimInstance Win32_Process | Where-Object {`,
+    `  $_.Name -match '^(electron|YARK)\\.exe$' -and $null -ne $_.CommandLine -and $_.CommandLine.Contains($ud)`,
+    `} | ForEach-Object { $_.ProcessId }`,
+  ].join("; ");
+  for (const pid of listPidsMatchingEnv(envName, userData, script)) {
+    forceKillPid(pid, { tree: false });
+  }
+}
+
+/** Kill any process whose ExecutablePath is under rootDir. */
+function killProcessesUnderRoot(rootDir) {
+  const envName = "YARK_E2E_ROOT_MATCH";
+  const script = [
+    `$root = [Environment]::GetEnvironmentVariable('${envName}')`,
+    `if ([string]::IsNullOrEmpty($root)) { return }`,
+    `Get-CimInstance Win32_Process | Where-Object {`,
+    `  $null -ne $_.ExecutablePath -and $_.ExecutablePath.StartsWith($root, [StringComparison]::OrdinalIgnoreCase)`,
+    `} | ForEach-Object { $_.ProcessId }`,
+  ].join("; ");
+  for (const pid of listPidsMatchingEnv(envName, rootDir, script)) {
+    forceKillPid(pid, { tree: true });
   }
 }
 
@@ -367,22 +396,17 @@ async function run() {
     );
 
     // 5) Hard-kill UI only (no Playwright app.close — that triggers before-quit
-    // Ask/Stop dialog). No /T so the detached ASA child can survive.
+    // Ask/Stop dialog). No /T on the first shot so the detached ASA child can
+    // survive; then sweep leftover Electron helpers for this userData.
     const electronPid = app.process().pid;
     assert.ok(electronPid, "electron pid missing");
-    // Drop Playwright's handle without asking Electron to quit gracefully.
-    try {
-      app.process().kill("SIGKILL");
-    } catch {
-      // Windows may not support SIGKILL the same way; fall through to taskkill.
-    }
+    console.log(`E2E_CRASH_KILL_UI pid=${electronPid}`);
     forceKillPid(electronPid, { tree: false });
     app = null;
-    await new Promise((r) => setTimeout(r, 1000));
-    // Drop GPU/renderer leftovers so single-instance lock is free for relaunch.
-    // Still no process-tree kill of ASA.
+    await new Promise((r) => setTimeout(r, 800));
     killElectronForUserData(userData);
-    await new Promise((r) => setTimeout(r, 1500));
+    await new Promise((r) => setTimeout(r, 1200));
+    console.log("E2E_CRASH_UI_KILLED");
 
     const liveAfterKill = queryOsIdentity(managedPid);
     assert.ok(
@@ -436,27 +460,7 @@ async function run() {
     if (managedPid !== null) {
       forceKillPid(managedPid, { tree: true });
     }
-    // Best-effort: any ArkAscendedServer still under this temp tree
-    try {
-      const listed = execFileSync(
-        "powershell.exe",
-        [
-          "-NoProfile",
-          "-Command",
-          `$root='${root.replace(/'/g, "''")}';` +
-            `Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -like ($root + '*') } | ForEach-Object { $_.ProcessId }`,
-        ],
-        { encoding: "utf8", windowsHide: true, timeout: 10000 },
-      )
-        .split(/\r?\n/)
-        .map((line) => Number(line.trim()))
-        .filter((pid) => Number.isInteger(pid) && pid > 0);
-      for (const pid of listed) {
-        forceKillPid(pid);
-      }
-    } catch {
-      // ignore
-    }
+    killProcessesUnderRoot(root);
     try {
       rmSync(root, { recursive: true, force: true });
       console.log("E2E_CRASH_CLEANUP_OK");

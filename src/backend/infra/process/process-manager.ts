@@ -912,37 +912,55 @@ export class ProcessManager extends EventEmitter {
     if (this.onProcessCheckpoint === null) {
       return;
     }
-    const pid = managed.child.pid;
-    if (pid === undefined || !Number.isInteger(pid) || pid <= 0) {
-      return;
-    }
-    const live = this.queryOsIdentity(pid);
-    const osCreationTime = live?.osCreationTime?.trim() || null;
-    if (osCreationTime === null) {
+    try {
+      const pid = managed.child.pid;
+      if (pid === undefined || !Number.isInteger(pid) || pid <= 0) {
+        return;
+      }
+      const live = this.queryOsIdentity(pid);
+      const osCreationTime = live?.osCreationTime?.trim() || null;
+      if (osCreationTime === null) {
+        this.appendRuntimeLog(
+          serverId,
+          "warning",
+          "Could not checkpoint process identity (no OS creation time); crash reattach may be unavailable",
+        );
+        return;
+      }
+      this.onProcessCheckpoint({
+        schemaVersion: LEFT_RUNNING_SCHEMA_VERSION,
+        serverId,
+        pid,
+        executablePath: managed.executablePath,
+        installDir: managed.installDir,
+        startedAt: managed.startedAt,
+        expectedCommandLine: managed.expectedCommandLine,
+        launchArgs: [...managed.launchArgs],
+        osCreationTime,
+        osExecutablePath: live?.executablePath ?? null,
+        leftAt: new Date().toISOString(),
+      });
+    } catch (error: unknown) {
+      const detail = error instanceof Error ? error.message : String(error);
       this.appendRuntimeLog(
         serverId,
         "warning",
-        "Could not checkpoint process identity (no OS creation time); crash reattach may be unavailable",
+        `Process checkpoint write failed: ${detail}`,
       );
-      return;
     }
-    this.onProcessCheckpoint({
-      schemaVersion: LEFT_RUNNING_SCHEMA_VERSION,
-      serverId,
-      pid,
-      executablePath: managed.executablePath,
-      installDir: managed.installDir,
-      startedAt: managed.startedAt,
-      expectedCommandLine: managed.expectedCommandLine,
-      launchArgs: [...managed.launchArgs],
-      osCreationTime,
-      osExecutablePath: live?.executablePath ?? null,
-      leftAt: new Date().toISOString(),
-    });
   }
 
   private clearProcessCheckpoint(serverId: string): void {
-    this.onProcessCheckpointCleared?.(serverId);
+    try {
+      this.onProcessCheckpointCleared?.(serverId);
+    } catch (error: unknown) {
+      const detail = error instanceof Error ? error.message : String(error);
+      this.appendRuntimeLog(
+        serverId,
+        "warning",
+        `Process checkpoint clear failed: ${detail}`,
+      );
+    }
   }
 
   private terminateManaged(serverId: string, managed: ManagedProcess): void {

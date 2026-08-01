@@ -82,13 +82,30 @@ describe("quit gate (#59)", () => {
     });
   });
 
-  it("treats double-quit while work pending as still blocked", () => {
+  it("resets all quit flags after cancel (ready for a later quit)", () => {
+    const afterAsk = {
+      allowQuit: false,
+      ...quitFlagsWhileAskPrompt(),
+      hasPendingQuitWork: false,
+    };
+    expect(shouldPreventCloseDuringQuit(afterAsk)).toBe(true);
+    const afterCancel = {
+      ...afterAsk,
+      ...quitFlagsAfterCancel(),
+    };
+    expect(shouldPreventCloseDuringQuit(afterCancel)).toBe(false);
+  });
+
+  it("resets flags after stop-before-quit failure so close is not stuck", () => {
     const duringStop = {
       allowQuit: false,
       ...quitFlagsWhilePendingWork(),
     };
     expect(shouldPreventCloseDuringQuit(duringStop)).toBe(true);
-    // Second close while the same work is in flight stays blocked.
-    expect(shouldPreventCloseDuringQuit(duringStop)).toBe(true);
+    const afterFailure = {
+      ...duringStop,
+      ...quitFlagsAfterCancel(),
+    };
+    expect(shouldPreventCloseDuringQuit(afterFailure)).toBe(false);
   });
 });

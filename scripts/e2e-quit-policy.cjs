@@ -2,6 +2,9 @@
  * E2E bugbash: quit policy / desktop shell Settings (#59).
  *
  * Asserts Ask/Stop only (no Leave), tray help copy, and preference persistence.
+ * Closes via Electron app.quit() (not Playwright window close / taskkill).
+ * Native MessageBox is auto-confirmed so Ask/Stop on quit does not hang CI.
+ *
  * Usage: node scripts/e2e-quit-policy.cjs
  * Requires: prior npm run build
  */
@@ -10,6 +13,48 @@ const path = require("node:path");
 const { _electron: electron } = require("playwright");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
+
+/** Auto-accept Electron dialog.showMessageBox (first button = Stop / OK). */
+async function autoConfirmNativeDialogs(app) {
+  await app.evaluate(async ({ dialog }) => {
+    // Do not call the real MessageBox — that waits for a human click and hangs CI.
+    dialog.showMessageBox = async () => ({ response: 0, checkboxChecked: false });
+  });
+}
+
+/**
+ * Quit via Electron app.quit() (before-quit / Ask·Stop), not Playwright window close.
+ * Closing the BrowserWindow with "Close window to tray" on only hides — process never exits.
+ */
+async function closeAppGracefully(app) {
+  await autoConfirmNativeDialogs(app);
+
+  const timeoutMs = 20_000;
+  const proc = app.process();
+  const exited =
+    proc == null || proc.exitCode != null
+      ? Promise.resolve()
+      : new Promise((resolve) => {
+          proc.once("exit", resolve);
+        });
+
+  await app.evaluate(({ app: electronApp }) => {
+    electronApp.quit();
+  });
+
+  await Promise.race([
+    exited,
+    new Promise((_, reject) => {
+      setTimeout(
+        () =>
+          reject(
+            new Error(`app.quit() timed out after ${timeoutMs}ms (process still alive)`),
+          ),
+        timeoutMs,
+      );
+    }),
+  ]);
+}
 
 async function run() {
   const projectRoot = path.resolve(__dirname, "..");
@@ -23,8 +68,11 @@ async function run() {
     cwd: projectRoot,
   });
 
+  let page = null;
   try {
-    const page = await app.firstWindow();
+    page = await app.firstWindow();
+    await autoConfirmNativeDialogs(app);
+
     page.on("console", (msg) => {
       if (msg.type() === "error") {
         consoleErrors.push(msg.text());
@@ -32,6 +80,10 @@ async function run() {
     });
     page.on("pageerror", (err) => {
       pageErrors.push(err.message);
+    });
+    // HTML dialogs (rare); native MessageBox is handled via autoConfirmNativeDialogs.
+    page.on("dialog", async (dialog) => {
+      await dialog.accept();
     });
 
     await page.waitForLoadState("domcontentloaded");
@@ -157,7 +209,26 @@ async function run() {
 
     console.log("E2E_QUIT_POLICY_OK");
   } finally {
-    await app.close();
+    try {
+      await closeAppGracefully(app);
+    } catch (error) {
+      console.warn(
+        `E2E_QUIT_CLOSE_WARN ${error instanceof Error ? error.message : String(error)}`,
+      );
+      // Last resort only if app.quit() (with dialog auto-confirm) still hangs.
+      try {
+        const pid = app.process()?.pid;
+        if (pid) {
+          require("node:child_process").spawnSync(
+            "taskkill",
+            ["/PID", String(pid), "/T", "/F"],
+            { windowsHide: true, stdio: "ignore" },
+          );
+        }
+      } catch {
+        // ignore
+      }
+    }
   }
 }
 

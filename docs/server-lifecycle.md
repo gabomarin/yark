@@ -213,9 +213,16 @@ active; startup validates candidates, reattaches matches as `starting` until
 RCON confirms (`running`), and records rejected/stale outcomes. Reattach never
 force-kills on RCON timeout.
 
-Windows e2e for this path: `npm run e2e:quit-policy` and
-`npm run e2e:crash-reattach` (needs SteamCMD + warm ASA content cache; mark as
-a manual Windows PR check when changing quit/reattach code).
+Windows e2e for this path (manual Windows check before merge — not in CI):
+
+```bash
+npm run build
+npm run e2e:quit-policy
+npm run e2e:crash-reattach
+```
+
+`e2e:crash-reattach` needs SteamCMD plus a warm ASA content cache (or time for
+a full install). Mark as a required manual step on PRs that touch quit/reattach.
 
 Hide-to-tray is **not** a quit and never stops servers. Critical in-flight
 stop/restart work still uses `shouldBlockAppQuit` / `settleForAppQuit` first.

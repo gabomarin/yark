@@ -592,10 +592,7 @@ export class InstanceService extends EventEmitter {
   }
 
   private emitStopProgress(payload: ServerStopProgress): void {
-    this.emit("stop-progress", {
-      ...payload,
-      reason: payload.reason === "quit" ? "quit" : "user",
-    });
+    this.emit("stop-progress", payload);
   }
 
   kill(id: string): void {

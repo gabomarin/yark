@@ -334,4 +334,50 @@ describe("ProcessManager crash-recovery checkpoints", () => {
     await new Promise((r) => setTimeout(r, 80));
     expect(cleared).toContain(profile.id);
   });
+
+  it("clears the checkpoint on kill even if the clear hook throws once", async () => {
+    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-checkpoint-kill-"));
+    const binaryDir = join(
+      cleanupRoot,
+      "ShooterGame",
+      "Binaries",
+      "Win64",
+    );
+    await mkdir(binaryDir, { recursive: true });
+    const binary = join(binaryDir, "ArkAscendedServer.exe");
+    await writeFile(binary, "");
+
+    const cleared: string[] = [];
+    let clearCalls = 0;
+    const child = fakeChild(4245);
+    const manager = new ProcessManager({
+      spawnProcess: () => child,
+      queryOsIdentity: (pid) => ({
+        pid,
+        executablePath: binary,
+        commandLine: `${binary} -port=7777`,
+        osCreationTime: "20260731150000.000000-420",
+      }),
+      onProcessCheckpoint: () => {
+        throw new Error("checkpoint write boom");
+      },
+      onProcessCheckpointCleared: (serverId) => {
+        clearCalls += 1;
+        if (clearCalls === 1) {
+          throw new Error("clear boom");
+        }
+        cleared.push(serverId);
+      },
+    });
+    const profile = makeProfile(cleanupRoot);
+    manager.start(profile, { skipReadinessCheck: true });
+    child.emit("spawn");
+    // Write hook threw — process still managed.
+    expect(manager.isActive(profile.id)).toBe(true);
+    manager.kill(profile.id);
+    // First clear threw; kill still removed the process. Exit may clear again.
+    child.emit("exit", 1);
+    expect(clearCalls).toBeGreaterThanOrEqual(1);
+    expect(manager.isActive(profile.id)).toBe(false);
+  });
 });

@@ -24,7 +24,10 @@ import {
   type AppTrayOptions,
 } from "./app-tray";
 import { readDesktopShellPreferences } from "./desktop-shell-settings";
-import { shouldPreventCloseDuringQuit } from "./quit-gate";
+import {
+  quitFlagsAfterCancel,
+  shouldPreventCloseDuringQuit,
+} from "./quit-gate";
 import {
   removeLeftRunningProcess,
   upsertLeftRunningProcess,
@@ -234,6 +237,12 @@ if (gotSingleInstanceLock) {
 
     const attachMainWindowCloseHandler = (win: BrowserWindow): void => {
       win.on("close", (event) => {
+        // Final exit (after stop/settle or clean before-quit): destroy the window.
+        // Must run before close-to-tray, or app.quit() would only hide.
+        if (allowQuit) {
+          return;
+        }
+
         if (
           shouldPreventCloseDuringQuit({
             allowQuit,
@@ -345,14 +354,19 @@ if (gotSingleInstanceLock) {
     const quitAfter = (work: Promise<unknown>): void => {
       if (pendingQuit !== null) return;
       isQuitting = true;
+      quitPolicyPromptInFlight = false;
       pendingQuit = work
         .then(() => {
           allowQuit = true;
+          pendingQuit = null;
           app.quit();
         })
         .catch((error: unknown) => {
+          const reset = quitFlagsAfterCancel();
+          allowQuit = reset.allowQuit;
+          isQuitting = reset.isQuitting;
+          quitPolicyPromptInFlight = reset.quitPolicyPromptInFlight;
           pendingQuit = null;
-          isQuitting = false;
           revealMainWindow();
           void dialog.showMessageBox(ensureMainWindow(), {
             type: "error",
@@ -406,6 +420,8 @@ if (gotSingleInstanceLock) {
       const profiles = repo.list();
       const activeProfiles = profiles.filter((p) => processManager.isActive(p.id));
       if (activeProfiles.length === 0) {
+        // Allow BrowserWindow destroy; otherwise isQuitting + tray hide deadlocks quit.
+        allowQuit = true;
         isQuitting = true;
         return;
       }
@@ -419,7 +435,11 @@ if (gotSingleInstanceLock) {
       const policy = readDesktopShellPreferences(settings).onQuitWithActiveServers;
       const applyQuitDecision = (decision: "stop" | "cancel"): void => {
         if (decision === "cancel") {
-          isQuitting = false;
+          const reset = quitFlagsAfterCancel();
+          allowQuit = reset.allowQuit;
+          isQuitting = reset.isQuitting;
+          quitPolicyPromptInFlight = reset.quitPolicyPromptInFlight;
+          pendingQuit = null;
           revealMainWindow();
           return;
         }
@@ -463,8 +483,11 @@ if (gotSingleInstanceLock) {
           }
         })
         .catch(() => {
-          quitPolicyPromptInFlight = false;
-          isQuitting = false;
+          const reset = quitFlagsAfterCancel();
+          allowQuit = reset.allowQuit;
+          isQuitting = reset.isQuitting;
+          quitPolicyPromptInFlight = reset.quitPolicyPromptInFlight;
+          pendingQuit = null;
           revealMainWindow();
         });
     });
