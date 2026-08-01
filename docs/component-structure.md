@@ -129,7 +129,6 @@ boundaries below (one area per PR when practical).
 | `features/logs/ServerLogsPanel.tsx` | Event list + event detail; update-job history/detail; log-file viewer pane |
 | `features/server-workspace/components/ConfigurationEditor/ConfigurationEditor.tsx` | Filter bar; INI section/group accordion; setting row editor controls |
 | `features/server-workspace/components/ConfigurationWizard/ConfigurationWizard.tsx` | Per-step panels (experience / rates / structure); change-summary review step |
-| `features/server-workspace/components/ModsManager/ModsManager.tsx` | Mod list rows; add/remove toolbar (when the panel is wired back into the Server tab) |
 
 Line caps stay in [`component-structure-baseline.json`](../scripts/component-structure-baseline.json); do not raise them while deferring — shrink the file or update the baseline intentionally when splitting.
 

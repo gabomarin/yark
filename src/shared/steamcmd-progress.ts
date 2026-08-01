@@ -40,12 +40,6 @@ export function parseSteamCmdBytePair(detail: string): {
   };
 }
 
-/** Formats bytes as MB text (1 decimal). */
-export function formatBytesAsMb(bytes: number): string {
-  const mb = bytes / (1024 * 1024);
-  return `${mb.toFixed(1)} MB`;
-}
-
 /** E.g. "512.3 / 2800.0 MB" */
 export function formatSteamCmdByteProgress(downloaded: number, total: number): string {
   const downMb = (downloaded / (1024 * 1024)).toFixed(1);
