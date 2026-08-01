@@ -1,17 +1,21 @@
 import { useEffect, useState } from "react";
 import {
   DEFAULT_CLOSE_WINDOW_TO_TRAY,
+  DEFAULT_ON_QUIT_WITH_ACTIVE_SERVERS,
   DEFAULT_START_WITH_WINDOWS,
+  type OnQuitWithActiveServers,
 } from "@shared/desktop-shell";
 
 export function useDesktopShellPreferences(): {
   closeWindowToTray: boolean;
   startWithWindows: boolean;
   trayCloseHintDismissed: boolean;
+  onQuitWithActiveServers: OnQuitWithActiveServers;
   desktopShellReady: boolean;
   onCloseWindowToTrayChange: (enabled: boolean) => void;
   onStartWithWindowsChange: (enabled: boolean) => void;
   onTrayCloseHintDismissedChange: (dismissed: boolean) => void;
+  onQuitWithActiveServersChange: (policy: OnQuitWithActiveServers) => void;
   shellError: string | null;
   clearShellError: () => void;
 } {
@@ -22,6 +26,9 @@ export function useDesktopShellPreferences(): {
     DEFAULT_START_WITH_WINDOWS,
   );
   const [trayCloseHintDismissed, setTrayCloseHintDismissed] = useState(false);
+  const [onQuitWithActiveServers, setOnQuitWithActiveServers] = useState(
+    DEFAULT_ON_QUIT_WITH_ACTIVE_SERVERS,
+  );
   const [desktopShellReady, setDesktopShellReady] = useState(false);
   const [shellError, setShellError] = useState<string | null>(null);
 
@@ -43,6 +50,7 @@ export function useDesktopShellPreferences(): {
       setCloseWindowToTray(result.data.closeWindowToTray);
       setStartWithWindows(result.data.startWithWindows);
       setTrayCloseHintDismissed(result.data.trayCloseHintDismissed);
+      setOnQuitWithActiveServers(result.data.onQuitWithActiveServers);
       setDesktopShellReady(true);
     })();
     return () => {
@@ -88,14 +96,28 @@ export function useDesktopShellPreferences(): {
     })();
   };
 
+  const onQuitWithActiveServersChange = (policy: OnQuitWithActiveServers): void => {
+    const previous = onQuitWithActiveServers;
+    setOnQuitWithActiveServers(policy);
+    void (async () => {
+      const result = await window.api.setOnQuitWithActiveServers(policy);
+      if (!result.ok) {
+        setOnQuitWithActiveServers(previous);
+        setShellError(result.error ?? "Could not update quit policy");
+      }
+    })();
+  };
+
   return {
     closeWindowToTray,
     startWithWindows,
     trayCloseHintDismissed,
+    onQuitWithActiveServers,
     desktopShellReady,
     onCloseWindowToTrayChange,
     onStartWithWindowsChange,
     onTrayCloseHintDismissedChange,
+    onQuitWithActiveServersChange,
     shellError,
     clearShellError: () => setShellError(null),
   };

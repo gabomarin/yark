@@ -8,7 +8,14 @@ import type {
   StartServerOptions,
 } from "@shared/types";
 import {
+  LEFT_RUNNING_SCHEMA_VERSION,
+  classifyLeaveCandidate,
+  type LeftRunningProcessIdentity,
+  type LiveProcessIdentity,
+} from "@shared/left-running";
+import {
   buildLaunchArgs,
+  buildWindowsCreateProcessCommandLine,
   buildWindowsVerbatimSpawnArgs,
   formatLaunchCommandLine,
   quoteWindowsArg,
@@ -16,6 +23,8 @@ import {
 } from "../../domains/instances/launch-args";
 import { rconExec } from "../rcon/rcon-client";
 import { AsaSavedLogsTailer } from "./asa-log-tail";
+import { createAdoptedChildHandle } from "./adopted-child";
+import { queryWindowsProcessIdentity } from "./windows-process-identity";
 
 interface ManagedProcess {
   child: ChildProcess;
@@ -25,6 +34,10 @@ interface ManagedProcess {
   lastError: string | null;
   readinessGeneration: number;
   logTailer: AsaSavedLogsTailer | null;
+  executablePath: string;
+  installDir: string;
+  launchArgs: string[];
+  expectedCommandLine: string;
 }
 
 export interface GracefulStopHandle {
@@ -69,6 +82,10 @@ function argsIncludeLogFlag(args: string[]): boolean {
  * Native console: `windowsHide: false` so Windows gives the dedicated its own
  * console. Piped mode: `windowsHide: true` + stdout/stderr pipes + Saved/Logs
  * file tail (Unreal rarely prints the console stream to stdout when hidden).
+ *
+ * Always `detached: true` so ASA can outlive an unexpected Electron exit
+ * (crash / Task Manager). Windows otherwise kills non-detached children with
+ * the parent. Intentional quit stops servers; there is no Leave-running UX.
  */
 function spawnAsaProcess(
   binary: string,
@@ -90,7 +107,7 @@ function spawnAsaProcess(
       windowsVerbatimArguments: isWindows,
       windowsHide: false,
       stdio: "ignore",
-      detached: false,
+      detached: true,
     });
   }
 
@@ -101,8 +118,21 @@ function spawnAsaProcess(
     windowsVerbatimArguments: isWindows,
     windowsHide: true,
     stdio: ["ignore", "pipe", "pipe"],
-    detached: false,
+    detached: true,
   });
+}
+
+function disconnectChildStdio(child: ChildProcess): void {
+  for (const stream of [child.stdin, child.stdout, child.stderr]) {
+    if (stream == null || stream.destroyed) {
+      continue;
+    }
+    try {
+      stream.destroy();
+    } catch {
+      // Ignore: already closing during Leave.
+    }
+  }
 }
 
 export interface ProcessManagerOptions {
@@ -112,6 +142,14 @@ export interface ProcessManagerOptions {
   readyPollMs?: number;
   /** Process factory override for lifecycle tests. */
   spawnProcess?: typeof spawnAsaProcess;
+  /** Adopted-PID handle factory (Leave reattach tests). */
+  createAdoptedChild?: (pid: number) => ChildProcess;
+  /** OS identity probe (crash-recovery checkpoints / Leave snapshot). */
+  queryOsIdentity?: (pid: number) => LiveProcessIdentity | null;
+  /** Persist durable identity while a managed process is active. */
+  onProcessCheckpoint?: (record: LeftRunningProcessIdentity) => void;
+  /** Clear durable identity after a managed process exits/stops. */
+  onProcessCheckpointCleared?: (serverId: string) => void;
 }
 
 const RCON_HOST = "127.0.0.1";
@@ -151,12 +189,23 @@ export class ProcessManager extends EventEmitter {
   private readonly readyTimeoutMs: number;
   private readonly readyPollMs: number;
   private readonly spawnProcess: typeof spawnAsaProcess;
+  private readonly createAdoptedChild: (pid: number) => ChildProcess;
+  private readonly queryOsIdentity: (pid: number) => LiveProcessIdentity | null;
+  private readonly onProcessCheckpoint:
+    | ((record: LeftRunningProcessIdentity) => void)
+    | null;
+  private readonly onProcessCheckpointCleared: ((serverId: string) => void) | null;
 
   constructor(options?: ProcessManagerOptions) {
     super();
     this.readyTimeoutMs = options?.readyTimeoutMs ?? DEFAULT_READY_TIMEOUT_MS;
     this.readyPollMs = options?.readyPollMs ?? DEFAULT_READY_POLL_MS;
     this.spawnProcess = options?.spawnProcess ?? spawnAsaProcess;
+    this.createAdoptedChild = options?.createAdoptedChild ?? createAdoptedChildHandle;
+    this.queryOsIdentity =
+      options?.queryOsIdentity ?? ((pid) => queryWindowsProcessIdentity(pid));
+    this.onProcessCheckpoint = options?.onProcessCheckpoint ?? null;
+    this.onProcessCheckpointCleared = options?.onProcessCheckpointCleared ?? null;
   }
 
   getStatus(serverId: string): ServerRuntimeInfo {
@@ -229,6 +278,10 @@ export class ProcessManager extends EventEmitter {
         : spawnArgs !== args
           ? `${formatLaunchCommandLine(profile, binary)} -log`
           : formatLaunchCommandLine(profile, binary);
+    const expectedCommandLine =
+      process.platform === "win32"
+        ? buildWindowsCreateProcessCommandLine(binary, spawnArgs)
+        : displayCommandLine;
     const child = this.spawnProcess(binary, spawnArgs, profile.installDir, {
       nativeConsole,
     });
@@ -256,6 +309,10 @@ export class ProcessManager extends EventEmitter {
       lastError: null,
       readinessGeneration: 0,
       logTailer: null,
+      executablePath: binary,
+      installDir: profile.installDir,
+      launchArgs: [...spawnArgs],
+      expectedCommandLine,
     };
     this.processes.set(profile.id, managed);
     if (child.stdout !== null) {
@@ -296,6 +353,7 @@ export class ProcessManager extends EventEmitter {
         "system",
         "Process created; waiting for server readiness (RCON / startup)",
       );
+      this.writeProcessCheckpoint(profile.id, managed);
       this.emitStatus(profile.id);
 
       if (options?.skipReadinessCheck === true) {
@@ -322,6 +380,7 @@ export class ProcessManager extends EventEmitter {
       managed.status = "error";
       managed.lastError = err.message;
       this.appendRuntimeLog(profile.id, "error", `Process error: ${err.message}`);
+      this.clearProcessCheckpoint(profile.id);
       this.emitStatus(profile.id);
     });
 
@@ -338,6 +397,7 @@ export class ProcessManager extends EventEmitter {
         "system",
         `Process exited with code ${code ?? "unknown"}`,
       );
+      this.clearProcessCheckpoint(profile.id);
       if (wasStopping || code === 0) {
         this.processes.delete(profile.id);
         this.emitStatus(profile.id);
@@ -379,7 +439,38 @@ export class ProcessManager extends EventEmitter {
         handle: { serverId: profile.id, identity: managed.identity },
       };
     } catch {
-      this.appendRuntimeLog(profile.id, "warning", "RCON unavailable; applying kill");
+      // Prefer DoExit before force-kill when SaveWorld is unavailable (e.g. still
+      // bootstrapping after a readiness wait timeout on quit Stop).
+      this.appendRuntimeLog(
+        profile.id,
+        "warning",
+        "RCON SaveWorld unavailable; attempting DoExit before kill",
+      );
+      try {
+        await rconExec(
+          RCON_HOST,
+          profile.rconPort,
+          profile.adminPassword,
+          "DoExit",
+        );
+        const exitedAfterDoExit = await this.waitForExit(managed.child, EXIT_WAIT_MS);
+        if (exitedAfterDoExit) {
+          if (this.processes.get(profile.id) === managed) {
+            this.stopManagedCapture(profile.id, managed);
+            this.processes.delete(profile.id);
+            this.clearProcessCheckpoint(profile.id);
+            this.emitStatus(profile.id);
+          }
+          return { phase: "killed", handle: null };
+        }
+      } catch {
+        this.appendRuntimeLog(
+          profile.id,
+          "warning",
+          "RCON DoExit unavailable; applying kill",
+        );
+      }
+
       this.terminateManaged(profile.id, managed);
       let exited = await this.waitForExit(managed.child, EXIT_WAIT_MS);
       if (!exited && this.processes.get(profile.id) === managed) {
@@ -396,6 +487,7 @@ export class ProcessManager extends EventEmitter {
       if (this.processes.get(profile.id) === managed) {
         this.stopManagedCapture(profile.id, managed);
         this.processes.delete(profile.id);
+        this.clearProcessCheckpoint(profile.id);
         this.emitStatus(profile.id);
       }
       return { phase: "killed", handle: null };
@@ -443,6 +535,7 @@ export class ProcessManager extends EventEmitter {
     if (this.processes.get(profile.id) === managed) {
       this.stopManagedCapture(profile.id, managed);
       this.processes.delete(profile.id);
+      this.clearProcessCheckpoint(profile.id);
       this.emitStatus(profile.id);
     }
     return "stopped";
@@ -470,11 +563,12 @@ export class ProcessManager extends EventEmitter {
     this.terminateManaged(serverId, managed);
     if (this.processes.get(serverId) === managed) {
       this.processes.delete(serverId);
+      this.clearProcessCheckpoint(serverId);
       this.emitStatus(serverId);
     }
   }
 
-  /** Stops all active processes (app shutdown). */
+  /** Stops all active processes (app shutdown). Prefer InstanceService.stopAllForAppQuit. */
   async stopAll(profiles: ServerProfile[]): Promise<void> {
     await Promise.allSettled(
       profiles
@@ -483,16 +577,263 @@ export class ProcessManager extends EventEmitter {
     );
   }
 
+  /**
+   * Resolves when the server is no longer `"starting"` (ready, gone, error, or
+   * readiness timeout). Stop/quit must not hang forever on a stuck reattach.
+   */
+  async waitWhileStarting(serverId: string): Promise<void> {
+    const deadline = Date.now() + this.readyTimeoutMs;
+    while (this.getStatus(serverId).status === "starting") {
+      if (Date.now() >= deadline) {
+        const managed = this.processes.get(serverId);
+        if (managed !== undefined && managed.status === "starting") {
+          // Cancel readiness wait (incl. infinite reattach poll) so quit/stop
+          // can attempt SaveWorld → DoExit instead of hanging forever.
+          managed.readinessGeneration += 1;
+          managed.status = "running";
+          managed.lastError = null;
+          this.appendRuntimeLog(
+            serverId,
+            "warning",
+            "Timed out waiting for starting server before stop; treating as running for graceful stop",
+          );
+          this.emitStatus(serverId);
+        }
+        return;
+      }
+      await delay(this.readyPollMs);
+    }
+  }
+
+  /**
+   * Snapshot process identities for durable recovery metadata (tests / legacy
+   * Leave path). Requires OS creation time so the next launch can reject PID
+   * reuse. Does not mutate process state.
+   */
+  collectLeaveIdentities(
+    profiles: ServerProfile[],
+    options?: {
+      queryOsIdentity?: (pid: number) => LiveProcessIdentity | null;
+      leftAt?: string;
+    },
+  ): LeftRunningProcessIdentity[] {
+    const queryOs =
+      options?.queryOsIdentity ??
+      ((pid: number) => queryWindowsProcessIdentity(pid));
+    const leftAt = options?.leftAt ?? new Date().toISOString();
+    const records: LeftRunningProcessIdentity[] = [];
+
+    for (const profile of profiles) {
+      const managed = this.processes.get(profile.id);
+      if (managed === undefined || !this.isActive(profile.id)) {
+        continue;
+      }
+      const pid = managed.child.pid;
+      if (pid === undefined || !Number.isInteger(pid) || pid <= 0) {
+        throw new Error(
+          `Cannot leave "${profile.name}" running: process id is unavailable`,
+        );
+      }
+
+      const live = queryOs(pid);
+      const osCreationTime = live?.osCreationTime?.trim() || null;
+      if (osCreationTime === null) {
+        throw new Error(
+          `Cannot leave "${profile.name}" running: OS process creation time is unavailable (needed to reject PID reuse)`,
+        );
+      }
+
+      records.push({
+        schemaVersion: LEFT_RUNNING_SCHEMA_VERSION,
+        serverId: profile.id,
+        pid,
+        executablePath: managed.executablePath,
+        installDir: managed.installDir,
+        startedAt: managed.startedAt,
+        expectedCommandLine: managed.expectedCommandLine,
+        launchArgs: [...managed.launchArgs],
+        osCreationTime,
+        osExecutablePath: live?.executablePath ?? null,
+        leftAt,
+      });
+    }
+
+    return records;
+  }
+
+  /**
+   * Detach previously snapshotted Leave processes (after durable metadata write).
+   * Stops log capture, disconnects stdio, unrefs, and drops tracking.
+   */
+  detachAfterLeavePersist(records: LeftRunningProcessIdentity[]): void {
+    for (const record of records) {
+      const managed = this.processes.get(record.serverId);
+      if (managed === undefined || !this.isActive(record.serverId)) {
+        continue;
+      }
+      if (managed.child.pid !== record.pid) {
+        throw new Error(
+          `Cannot detach "${record.serverId}": process id changed since Leave snapshot`,
+        );
+      }
+
+      this.appendRuntimeLog(
+        record.serverId,
+        "system",
+        `Detaching for Leave running (pid ${record.pid}); process stays alive`,
+      );
+      this.stopManagedCapture(record.serverId, managed);
+      managed.readinessGeneration += 1;
+      disconnectChildStdio(managed.child);
+      try {
+        managed.child.unref();
+      } catch {
+        // Ignore: some test fakes omit unref.
+      }
+      if (this.processes.get(record.serverId) === managed) {
+        this.processes.delete(record.serverId);
+        this.emitStatus(record.serverId);
+      }
+    }
+  }
+
+  /**
+   * @deprecated Prefer {@link collectLeaveIdentities} + {@link detachAfterLeavePersist}.
+   * Kept for tests that expect a single call; still detaches only after a full snapshot.
+   */
+  detachForLeave(
+    profiles: ServerProfile[],
+    options?: {
+      queryOsIdentity?: (pid: number) => LiveProcessIdentity | null;
+      leftAt?: string;
+    },
+  ): LeftRunningProcessIdentity[] {
+    const records = this.collectLeaveIdentities(profiles, options);
+    this.detachAfterLeavePersist(records);
+    return records;
+  }
+
+  /**
+   * Reattach to a validated crash-recovery process (same profile + OS identity).
+   * Uses a synthetic child handle (PID poll) and Saved/Logs tail — no pipes.
+   */
+  reattach(
+    profile: ServerProfile,
+    record: LeftRunningProcessIdentity,
+    options?: {
+      skipReadinessCheck?: boolean;
+      queryOsIdentity?: (pid: number) => LiveProcessIdentity | null;
+    },
+  ): void {
+    if (this.isActive(profile.id)) {
+      throw new Error(`Server "${profile.name}" is already running`);
+    }
+    if (record.serverId !== profile.id) {
+      throw new Error("Leave identity serverId does not match profile");
+    }
+    if (!Number.isInteger(record.pid) || record.pid <= 0) {
+      throw new Error("Leave identity has an invalid process id");
+    }
+
+    const queryOs = options?.queryOsIdentity ?? this.queryOsIdentity;
+    const live = queryOs(record.pid);
+    const classification = classifyLeaveCandidate(record, live);
+    if (classification !== "match") {
+      throw new Error(
+        `Leave identity for "${profile.name}" failed re-validation (${classification})`,
+      );
+    }
+
+    const child = this.createAdoptedChild(record.pid);
+    const managed: ManagedProcess = {
+      child,
+      identity: {},
+      status: "starting",
+      startedAt: record.startedAt,
+      lastError: null,
+      readinessGeneration: 0,
+      logTailer: null,
+      executablePath: record.executablePath,
+      installDir: record.installDir,
+      launchArgs: [...record.launchArgs],
+      expectedCommandLine: record.expectedCommandLine,
+    };
+    this.processes.set(profile.id, managed);
+    this.appendRuntimeLog(
+      profile.id,
+      "system",
+      `Reattached to left-running process (pid ${record.pid})`,
+    );
+    this.writeProcessCheckpoint(profile.id, managed);
+
+    managed.logTailer = new AsaSavedLogsTailer(profile.installDir, (text) => {
+      if (this.processes.get(profile.id) !== managed) return;
+      this.captureRuntimeChunk(profile.id, "log", text);
+    });
+    managed.logTailer.start(Date.parse(managed.startedAt));
+    this.appendRuntimeLog(
+      profile.id,
+      "system",
+      "Waiting for RCON readiness after crash-recovery reattach…",
+    );
+    this.emitStatus(profile.id);
+
+    child.once("exit", (code) => {
+      const wasStopping = managed.status === "stopping";
+      const wasStarting = managed.status === "starting";
+      managed.readinessGeneration += 1;
+      managed.logTailer?.stop();
+      managed.logTailer = null;
+      if (this.processes.get(profile.id) !== managed) return;
+      this.flushRuntimePartials(profile.id);
+      this.appendRuntimeLog(
+        profile.id,
+        "system",
+        `Process exited with code ${code ?? "unknown"}`,
+      );
+      this.clearProcessCheckpoint(profile.id);
+      if (wasStopping || code === 0) {
+        this.processes.delete(profile.id);
+        this.emitStatus(profile.id);
+        return;
+      }
+      managed.status = "error";
+      managed.lastError = wasStarting
+        ? `Process exited during startup (code ${code ?? "unknown"})`
+        : `Process exited unexpectedly (code ${code ?? "unknown"})`;
+      this.emitStatus(profile.id);
+    });
+
+    if (options?.skipReadinessCheck === true) {
+      managed.status = "running";
+      this.appendRuntimeLog(
+        profile.id,
+        "system",
+        "Readiness skipped after reattach; status running",
+      );
+      this.emitStatus(profile.id);
+      return;
+    }
+
+    managed.readinessGeneration += 1;
+    void this.waitUntilReady(profile, managed, managed.readinessGeneration, {
+      terminateOnTimeout: false,
+    });
+  }
+
   private async waitUntilReady(
     profile: ServerProfile,
     managed: ManagedProcess,
     generation: number,
+    options?: { terminateOnTimeout?: boolean },
   ): Promise<void> {
     const timeoutMs = this.readyTimeoutMs;
     const pollMs = this.readyPollMs;
     const deadline = Date.now() + timeoutMs;
+    const terminateOnTimeout = options?.terminateOnTimeout !== false;
+    let loggedReattachWait = false;
 
-    while (Date.now() < deadline) {
+    for (;;) {
       if (!this.isSameStartingGeneration(profile.id, managed, generation)) {
         return;
       }
@@ -526,25 +867,99 @@ export class ProcessManager extends EventEmitter {
         this.emitStatus(profile.id);
         return;
       } catch {
-        // keep trying until timeout or process exit
+        // keep trying until timeout, process exit, or (reattach) forever
+      }
+
+      if (Date.now() >= deadline) {
+        if (!this.isSameStartingGeneration(profile.id, managed, generation)) {
+          return;
+        }
+        if (!terminateOnTimeout) {
+          if (!loggedReattachWait) {
+            loggedReattachWait = true;
+            this.appendRuntimeLog(
+              profile.id,
+              "warning",
+              "Still waiting for RCON after Leave reattach; UI stays on starting",
+            );
+          }
+          await delay(pollMs);
+          continue;
+        }
+
+        managed.status = "error";
+        managed.lastError =
+          "Timeout waiting for server readiness (RCON did not respond in time)";
+        this.appendRuntimeLog(profile.id, "error", managed.lastError);
+        this.clearProcessCheckpoint(profile.id);
+        this.emitStatus(profile.id);
+        try {
+          this.terminateManaged(profile.id, managed);
+        } catch {
+          // ignore
+        }
+        return;
       }
 
       await delay(pollMs);
     }
+  }
 
-    if (!this.isSameStartingGeneration(profile.id, managed, generation)) {
+  private writeProcessCheckpoint(
+    serverId: string,
+    managed: ManagedProcess,
+  ): void {
+    if (this.onProcessCheckpoint === null) {
       return;
     }
-
-    managed.status = "error";
-    managed.lastError =
-      "Timeout waiting for server readiness (RCON did not respond in time)";
-    this.appendRuntimeLog(profile.id, "error", managed.lastError);
-    this.emitStatus(profile.id);
     try {
-      this.terminateManaged(profile.id, managed);
-    } catch {
-      // ignore
+      const pid = managed.child.pid;
+      if (pid === undefined || !Number.isInteger(pid) || pid <= 0) {
+        return;
+      }
+      const live = this.queryOsIdentity(pid);
+      const osCreationTime = live?.osCreationTime?.trim() || null;
+      if (osCreationTime === null) {
+        this.appendRuntimeLog(
+          serverId,
+          "warning",
+          "Could not checkpoint process identity (no OS creation time); crash reattach may be unavailable",
+        );
+        return;
+      }
+      this.onProcessCheckpoint({
+        schemaVersion: LEFT_RUNNING_SCHEMA_VERSION,
+        serverId,
+        pid,
+        executablePath: managed.executablePath,
+        installDir: managed.installDir,
+        startedAt: managed.startedAt,
+        expectedCommandLine: managed.expectedCommandLine,
+        launchArgs: [...managed.launchArgs],
+        osCreationTime,
+        osExecutablePath: live?.executablePath ?? null,
+        leftAt: new Date().toISOString(),
+      });
+    } catch (error: unknown) {
+      const detail = error instanceof Error ? error.message : String(error);
+      this.appendRuntimeLog(
+        serverId,
+        "warning",
+        `Process checkpoint write failed: ${detail}`,
+      );
+    }
+  }
+
+  private clearProcessCheckpoint(serverId: string): void {
+    try {
+      this.onProcessCheckpointCleared?.(serverId);
+    } catch (error: unknown) {
+      const detail = error instanceof Error ? error.message : String(error);
+      this.appendRuntimeLog(
+        serverId,
+        "warning",
+        `Process checkpoint clear failed: ${detail}`,
+      );
     }
   }
 

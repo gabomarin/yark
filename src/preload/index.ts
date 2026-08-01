@@ -8,6 +8,7 @@ import type {
   SteamCmdCacheKind,
 } from "../shared/types";
 import type { SteamCmdProgressPush, BackupsChangedPush, ServerStopProgressPush } from "../shared/ipc";
+import { normalizeServerStopProgress } from "../shared/types";
 
 const api: RendererApi = {
   listServers: () => ipcRenderer.invoke(IPC.serversList),
@@ -59,6 +60,8 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.appSetStartWithWindows, enabled),
   setTrayCloseHintDismissed: (dismissed) =>
     ipcRenderer.invoke(IPC.appSetTrayCloseHintDismissed, dismissed),
+  setOnQuitWithActiveServers: (policy) =>
+    ipcRenderer.invoke(IPC.appSetOnQuitWithActiveServers, policy),
   readServerIni: (serverId: string) =>
     ipcRenderer.invoke(IPC.iniRead, serverId),
   openServerIniInEditor: (serverId: string, fileKey: "gameUserSettings" | "game") =>
@@ -137,7 +140,9 @@ const api: RendererApi = {
     };
   },
   onServerStopProgress: (listener) => {
-    const handler = (_e: unknown, payload: ServerStopProgressPush) => listener(payload);
+    const handler = (_e: unknown, payload: ServerStopProgressPush) => {
+      listener(normalizeServerStopProgress(payload));
+    };
     ipcRenderer.on(IPC_PUSH.serverStopProgress, handler);
     return () => {
       ipcRenderer.removeListener(IPC_PUSH.serverStopProgress, handler);

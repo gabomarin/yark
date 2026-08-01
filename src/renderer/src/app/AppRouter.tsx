@@ -1,4 +1,5 @@
 import { PlaceholderPage } from "@ui/PlaceholderPage/PlaceholderPage";
+import type { AppBusyOverlayContent } from "@ui/AppBusyOverlay/AppBusyOverlay";
 import { AppShellLayout } from "./AppShellLayout";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import type { OfficialNetworkStatus } from "@shared/types";
@@ -39,6 +40,7 @@ interface Props {
   settings: SettingsSlot | null;
   error?: string | null;
   onDismissError?: () => void;
+  busyOverlay?: AppBusyOverlayContent | null;
 }
 
 export function AppRouter(props: Props): ReactElement {
@@ -95,6 +97,7 @@ export function AppRouter(props: Props): ReactElement {
       appVersion={props.appVersion}
       error={props.error}
       onDismissError={props.onDismissError}
+      busyOverlay={props.busyOverlay}
     >
       {content}
     </AppShellLayout>

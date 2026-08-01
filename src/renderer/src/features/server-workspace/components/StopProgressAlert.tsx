@@ -17,8 +17,14 @@ export function stopProgressForServer(
 
 export function StopProgressAlert({ progress }: Props): ReactElement {
   const label = progress.label.trim() || "Stopping this server safely";
+  const title =
+    progress.phase === "waiting"
+      ? "Waiting for server"
+      : progress.phase === "backing_up"
+        ? "Backing up"
+        : "Stopping server";
   return (
-    <Alert color="blue" title="Stopping server" mb="sm" data-stop-progress>
+    <Alert color="blue" title={title} mb="sm" data-stop-progress>
       <Stack gap="xs">
         <Text size="sm">{label}</Text>
         <Progress

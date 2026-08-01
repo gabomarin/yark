@@ -36,20 +36,31 @@ function makeRepo(profile: ServerProfile): ServerRepository {
   } as unknown as ServerRepository;
 }
 
+function makeProcesses(
+  profile: ServerProfile,
+  overrides: Record<string, unknown> = {},
+): ProcessManager {
+  return {
+    isActive: vi.fn(() => true),
+    getStatus: vi.fn(() => ({ status: "running" })),
+    waitWhileStarting: vi.fn(async () => undefined),
+    beginGracefulStop: vi.fn(async () => ({
+      phase: "saved" as const,
+      handle: { serverId: profile.id, identity: {} },
+    })),
+    finishGracefulStop: vi.fn(async () => "stopped" as const),
+    kill: vi.fn(),
+    ...overrides,
+  } as unknown as ProcessManager;
+}
+
 describe("InstanceService.stop", () => {
   it("runs SaveWorld backup then finish, and emits progress phases", async () => {
     const profile = makeProfile();
     const repo = makeRepo(profile);
     const progress: ServerStopProgress[] = [];
 
-    const processes = {
-      isActive: vi.fn(() => true),
-      beginGracefulStop: vi.fn(async () => ({
-        phase: "saved" as const,
-        handle: { serverId: profile.id, identity: {} },
-      })),
-      finishGracefulStop: vi.fn(async () => undefined),
-    } as unknown as ProcessManager;
+    const processes = makeProcesses(profile);
 
     const backups = {
       createPreStopBackup: vi.fn(
@@ -100,6 +111,7 @@ describe("InstanceService.stop", () => {
     );
 
     expect(progress.some((p) => p.active && p.phase === "saving")).toBe(true);
+    expect(progress.some((p) => p.active && p.reason === "user")).toBe(true);
     expect(progress.some((p) => p.active && p.phase === "backing_up")).toBe(true);
     expect(progress.some((p) => p.active && p.phase === "stopping")).toBe(true);
     expect(
@@ -113,17 +125,41 @@ describe("InstanceService.stop", () => {
     });
   });
 
+  it("waits for starting servers before SaveWorld", async () => {
+    const profile = makeProfile();
+    const repo = makeRepo(profile);
+    const progress: ServerStopProgress[] = [];
+    let status: "starting" | "running" = "starting";
+    const processes = makeProcesses(profile, {
+      getStatus: vi.fn(() => ({ status })),
+      waitWhileStarting: vi.fn(async () => {
+        status = "running";
+      }),
+    });
+    const backups = {
+      createPreStopBackup: vi.fn(async () => []),
+    } as unknown as BackupService;
+    const service = new InstanceService(repo, processes, backups, new InstanceLockManager());
+    service.on("stop-progress", (payload: ServerStopProgress) => {
+      progress.push(payload);
+    });
+
+    await service.stop(profile.id);
+
+    expect(processes.waitWhileStarting).toHaveBeenCalledWith(profile.id);
+    expect(
+      vi.mocked(processes.waitWhileStarting).mock.invocationCallOrder[0],
+    ).toBeLessThan(
+      vi.mocked(processes.beginGracefulStop).mock.invocationCallOrder[0]!,
+    );
+    expect(progress.some((p) => p.active && p.phase === "waiting")).toBe(true);
+    expect(progress.some((p) => p.label.includes("finish starting"))).toBe(true);
+  });
+
   it("skips backup when backup:false", async () => {
     const profile = makeProfile();
     const repo = makeRepo(profile);
-    const processes = {
-      isActive: vi.fn(() => true),
-      beginGracefulStop: vi.fn(async () => ({
-        phase: "saved" as const,
-        handle: { serverId: profile.id, identity: {} },
-      })),
-      finishGracefulStop: vi.fn(async () => undefined),
-    } as unknown as ProcessManager;
+    const processes = makeProcesses(profile);
     const backups = {
       createPreStopBackup: vi.fn(),
     } as unknown as BackupService;
@@ -144,14 +180,7 @@ describe("InstanceService.stop", () => {
   it("continues stop when pre-stop backup fails", async () => {
     const profile = makeProfile();
     const repo = makeRepo(profile);
-    const processes = {
-      isActive: vi.fn(() => true),
-      beginGracefulStop: vi.fn(async () => ({
-        phase: "saved" as const,
-        handle: { serverId: profile.id, identity: {} },
-      })),
-      finishGracefulStop: vi.fn(async () => undefined),
-    } as unknown as ProcessManager;
+    const processes = makeProcesses(profile);
     const backups = {
       createPreStopBackup: vi.fn(async () => {
         throw new Error("disk full");
@@ -181,14 +210,12 @@ describe("InstanceService.stop", () => {
   it("does not backup when RCON kill path already terminated the process", async () => {
     const profile = makeProfile();
     const repo = makeRepo(profile);
-    const processes = {
-      isActive: vi.fn(() => true),
+    const processes = makeProcesses(profile, {
       beginGracefulStop: vi.fn(async () => ({
         phase: "killed" as const,
         handle: null,
       })),
-      finishGracefulStop: vi.fn(async () => undefined),
-    } as unknown as ProcessManager;
+    });
     const backups = {
       createPreStopBackup: vi.fn(),
     } as unknown as BackupService;
@@ -213,15 +240,7 @@ describe("InstanceService.stop", () => {
     const backupPending = new Promise<void>((resolve) => {
       finishBackup = resolve;
     });
-    const processes = {
-      isActive: vi.fn(() => true),
-      beginGracefulStop: vi.fn(async () => ({
-        phase: "saved" as const,
-        handle: { serverId: profile.id, identity: {} },
-      })),
-      finishGracefulStop: vi.fn(async () => "stopped" as const),
-      kill: vi.fn(),
-    } as unknown as ProcessManager;
+    const processes = makeProcesses(profile);
     const backups = {
       createPreStopBackup: vi.fn(async () => {
         await backupPending;
@@ -250,14 +269,9 @@ describe("InstanceService.stop", () => {
   it("finishes the stable backup when the process exited externally", async () => {
     const profile = makeProfile();
     const repo = makeRepo(profile);
-    const processes = {
-      isActive: vi.fn(() => true),
-      beginGracefulStop: vi.fn(async () => ({
-        phase: "saved" as const,
-        handle: { serverId: profile.id, identity: {} },
-      })),
+    const processes = makeProcesses(profile, {
       finishGracefulStop: vi.fn(async () => "already_exited" as const),
-    } as unknown as ProcessManager;
+    });
     const backups = {
       createPreStopBackup: vi.fn(async () => []),
     } as unknown as BackupService;
@@ -277,14 +291,9 @@ describe("InstanceService.stop", () => {
   it("never backs up or stops a replacement process", async () => {
     const profile = makeProfile();
     const repo = makeRepo(profile);
-    const processes = {
-      isActive: vi.fn(() => true),
-      beginGracefulStop: vi.fn(async () => ({
-        phase: "saved" as const,
-        handle: { serverId: profile.id, identity: {} },
-      })),
+    const processes = makeProcesses(profile, {
       finishGracefulStop: vi.fn(async () => "replaced" as const),
-    } as unknown as ProcessManager;
+    });
     const backups = {
       createPreStopBackup: vi.fn(),
     } as unknown as BackupService;
@@ -297,9 +306,7 @@ describe("InstanceService.stop", () => {
   it("rejects user start and stop while another operation owns the server", async () => {
     const profile = makeProfile();
     const repo = makeRepo(profile);
-    const processes = {
-      isActive: vi.fn(() => true),
-    } as unknown as ProcessManager;
+    const processes = makeProcesses(profile);
     const backups = {} as BackupService;
     const locks = new InstanceLockManager();
     const service = new InstanceService(repo, processes, backups, locks);

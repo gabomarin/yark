@@ -1,0 +1,26 @@
+.root {
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--app-space-lg);
+  background: color-mix(in srgb, var(--ark-background) 72%, transparent);
+  backdrop-filter: blur(3px);
+  pointer-events: auto;
+  cursor: wait;
+}
+
+.panel {
+  width: min(100%, 360px);
+  padding: var(--app-space-lg);
+  border-radius: var(--app-radius-lg);
+  border: 1px solid color-mix(in srgb, var(--app-color-border) 55%, transparent);
+  background: color-mix(in srgb, var(--ark-gray-2) 92%, var(--ark-background));
+  box-shadow: 0 12px 40px color-mix(in srgb, #000 45%, transparent);
+}
+
+.progress {
+  width: 100%;
+}

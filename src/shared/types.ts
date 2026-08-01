@@ -213,8 +213,15 @@ export type BackupType =
   | "player_disconnect"
   | "ini_save";
 
-/** Phases pushed while a user-initiated stop runs SaveWorld → backup → DoExit. */
-export type ServerStopProgressPhase = "saving" | "backing_up" | "stopping";
+/** Phases pushed while a stop runs (optional wait → SaveWorld → DoExit → backup). */
+export type ServerStopProgressPhase =
+  | "waiting"
+  | "saving"
+  | "backing_up"
+  | "stopping";
+
+/** Why a stop job is running — quit overlay only for `"quit"`. */
+export type ServerStopProgressReason = "user" | "quit";
 
 export interface ServerStopProgress {
   serverId: string;
@@ -222,6 +229,36 @@ export interface ServerStopProgress {
   phase: ServerStopProgressPhase | null;
   label: string;
   percent: number | null;
+  /** Defaults to user-initiated stop when omitted by older payloads. */
+  reason: ServerStopProgressReason;
+}
+
+/** Normalize push payloads so older emitters without `reason` stay UI-safe. */
+export function normalizeServerStopProgress(
+  payload: Partial<ServerStopProgress> &
+    Pick<ServerStopProgress, "serverId" | "active">,
+): ServerStopProgress {
+  const reason: ServerStopProgressReason =
+    payload.reason === "quit" || payload.reason === "user"
+      ? payload.reason
+      : "user";
+  return {
+    serverId: payload.serverId,
+    active: payload.active === true,
+    phase:
+      payload.phase === "waiting" ||
+      payload.phase === "saving" ||
+      payload.phase === "backing_up" ||
+      payload.phase === "stopping"
+        ? payload.phase
+        : null,
+    label: typeof payload.label === "string" ? payload.label : "",
+    percent:
+      typeof payload.percent === "number" && Number.isFinite(payload.percent)
+        ? payload.percent
+        : null,
+    reason,
+  };
 }
 
 /** What a backup archive contains (ASA path-scoped). */

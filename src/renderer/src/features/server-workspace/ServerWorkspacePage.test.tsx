@@ -451,6 +451,7 @@ describe("ServerWorkspacePage", () => {
             phase: "backing_up",
             label: "Backing up player profiles…",
             percent: 50,
+            reason: "user",
           }}
           onSelectServer={vi.fn()}
           onBack={vi.fn()}
@@ -469,7 +470,7 @@ describe("ServerWorkspacePage", () => {
     );
 
     expect(document.querySelector("[data-stop-progress]")).not.toBeNull();
-    expect(screen.getByText("Stopping server")).toBeInTheDocument();
+    expect(screen.getByText("Backing up")).toBeInTheDocument();
     expect(screen.getByText("Backing up player profiles…")).toBeInTheDocument();
     expect(
       screen.getByRole("progressbar", { name: "Backing up player profiles…" }),

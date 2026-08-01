@@ -8,6 +8,7 @@ import type {
   ServerProfileInput,
   ServerRuntimeInfo,
   ServerStopProgress,
+  ServerStopProgressReason,
   StartServerOptions,
 } from "@shared/types";
 import { EventEmitter } from "node:events";
@@ -35,6 +36,8 @@ const RCON_HOST = "127.0.0.1";
 export interface StopServerOptions {
   /** When true (default), create a stable stop backup after process exit. */
   backup?: boolean;
+  /** Progress reason for UI (quit shows the blocking overlay). Default `"user"`. */
+  reason?: ServerStopProgressReason;
 }
 
 /** Outcome of a graceful stop job (used by restart fail-hard policy). */
@@ -335,12 +338,13 @@ export class InstanceService extends EventEmitter {
     }
     const existing = this.stopJobs.get(id);
     if (existing !== undefined) return existing.then(() => undefined);
+    const reason = options?.reason ?? "user";
 
     if (options?.backup === false) {
-      return this.enqueueStop(id, false).then(() => undefined);
+      return this.enqueueStop(id, false, reason).then(() => undefined);
     }
     return this.locks
-      .withLock(id, "stop-and-backup", () => this.enqueueStop(id, true))
+      .withLock(id, "stop-and-backup", () => this.enqueueStop(id, true, reason))
       .then(() => undefined);
   }
 
@@ -376,16 +380,37 @@ export class InstanceService extends EventEmitter {
   }
 
   /**
+   * Quit "Stop": wait for any still-starting servers, then graceful stop with
+   * pre-stop backup and stop-progress UI for every active process.
+   */
+  async stopAllForAppQuit(): Promise<void> {
+    const activeIds = this.repo
+      .list()
+      .filter((profile) => this.processes.isActive(profile.id))
+      .map((profile) => profile.id);
+    if (activeIds.length === 0) {
+      return;
+    }
+    const results = await Promise.allSettled(
+      activeIds.map((id) => this.stop(id, { reason: "quit" })),
+    );
+    const failures = results.filter(
+      (result): result is PromiseRejectedResult => result.status === "rejected",
+    );
+    const firstFailure = failures[0];
+    if (firstFailure !== undefined) {
+      throw firstFailure.reason;
+    }
+  }
+
+  /**
    * App quit helper: wait for stop/pre_restart work and any restart lock
-   * (covers sync → spawn), then stop leftover active processes.
+   * (covers sync → spawn), then graceful-stop leftover active processes.
    */
   async settleForAppQuit(): Promise<void> {
     await this.waitForStopJobs();
     await this.locks.waitUntilNoPurpose("restart");
-    const profiles = this.repo.list();
-    if (profiles.some((profile) => this.processes.isActive(profile.id))) {
-      await this.processes.stopAll(profiles);
-    }
+    await this.stopAllForAppQuit();
   }
 
   private async withCriticalJob<T>(
@@ -412,11 +437,12 @@ export class InstanceService extends EventEmitter {
   private enqueueStop(
     id: string,
     wantBackup: boolean,
+    reason: ServerStopProgressReason = "user",
   ): Promise<StopJobOutcome> {
     const existing = this.stopJobs.get(id);
     if (existing !== undefined) return existing;
     let job: Promise<StopJobOutcome>;
-    job = this.runStop(id, wantBackup).finally(() => {
+    job = this.runStop(id, wantBackup, reason).finally(() => {
       if (this.stopJobs.get(id) === job) {
         this.stopJobs.delete(id);
       }
@@ -428,6 +454,7 @@ export class InstanceService extends EventEmitter {
   private async runStop(
     id: string,
     wantBackup: boolean,
+    reason: ServerStopProgressReason = "user",
   ): Promise<StopJobOutcome> {
     const profile = this.mustGet(id);
     let didBackup = false;
@@ -437,14 +464,38 @@ export class InstanceService extends EventEmitter {
       return "noop";
     }
 
+    const progress = (
+      partial: Omit<ServerStopProgress, "serverId" | "reason">,
+    ): ServerStopProgress => ({
+      serverId: id,
+      reason,
+      ...partial,
+    });
+
     try {
-      this.emitStopProgress({
-        serverId: id,
-        active: true,
-        phase: "saving",
-        label: "Saving world…",
-        percent: 10,
-      });
+      if (this.processes.getStatus(id).status === "starting") {
+        this.emitStopProgress(
+          progress({
+            active: true,
+            phase: "waiting",
+            label: "Waiting for server to finish starting…",
+            percent: 5,
+          }),
+        );
+        await this.processes.waitWhileStarting(id);
+        if (!this.processes.isActive(id)) {
+          return "absent";
+        }
+      }
+
+      this.emitStopProgress(
+        progress({
+          active: true,
+          phase: "saving",
+          label: "Saving world…",
+          percent: 10,
+        }),
+      );
 
       const preparation = await this.processes.beginGracefulStop(profile);
       if (preparation.phase === "absent") {
@@ -461,13 +512,14 @@ export class InstanceService extends EventEmitter {
         return "killed";
       }
 
-      this.emitStopProgress({
-        serverId: id,
-        active: true,
-        phase: "stopping",
-        label: "Stopping server before backup…",
-        percent: 25,
-      });
+      this.emitStopProgress(
+        progress({
+          active: true,
+          phase: "stopping",
+          label: "Stopping server before backup…",
+          percent: 25,
+        }),
+      );
       const finishResult = await this.processes.finishGracefulStop(
         profile,
         preparation.handle,
@@ -484,13 +536,14 @@ export class InstanceService extends EventEmitter {
           await this.backups.createPreStopBackup(id, {
             skipFlush: true,
             onKindProgress: (kind, index, total) => {
-              this.emitStopProgress({
-                serverId: id,
-                active: true,
-                phase: "backing_up",
-                label: `Backing up ${backupKindLabel(kind)}…`,
-                percent: backingUpPercent(index, total),
-              });
+              this.emitStopProgress(
+                progress({
+                  active: true,
+                  phase: "backing_up",
+                  label: `Backing up ${backupKindLabel(kind)}…`,
+                  percent: backingUpPercent(index, total),
+                }),
+              );
             },
           });
           didBackup = true;
@@ -502,13 +555,14 @@ export class InstanceService extends EventEmitter {
             "warning",
             `Pre-stop backup failed for "${profile.name}": ${message}`,
           );
-          this.emitStopProgress({
-            serverId: id,
-            active: true,
-            phase: "backing_up",
-            label: "Backup failed — server remains stopped",
-            percent: 70,
-          });
+          this.emitStopProgress(
+            progress({
+              active: true,
+              phase: "backing_up",
+              label: "Backup failed — server remains stopped",
+              percent: 70,
+            }),
+          );
         }
       }
 
@@ -526,13 +580,14 @@ export class InstanceService extends EventEmitter {
       );
       return exitedExternally ? "already_exited" : "stopped";
     } finally {
-      this.emitStopProgress({
-        serverId: id,
-        active: false,
-        phase: null,
-        label: "",
-        percent: null,
-      });
+      this.emitStopProgress(
+        progress({
+          active: false,
+          phase: null,
+          label: "",
+          percent: null,
+        }),
+      );
     }
   }
 

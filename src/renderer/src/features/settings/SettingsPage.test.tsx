@@ -39,11 +39,13 @@ function stubSettingsApi(
         closeWindowToTray: true,
         startWithWindows: false,
         trayCloseHintDismissed: false,
+        onQuitWithActiveServers: "ask",
       },
     }),
     setCloseWindowToTray: vi.fn().mockResolvedValue({ ok: true, data: true }),
     setStartWithWindows: vi.fn().mockResolvedValue({ ok: true, data: false }),
     setTrayCloseHintDismissed: vi.fn().mockResolvedValue({ ok: true, data: false }),
+    setOnQuitWithActiveServers: vi.fn().mockResolvedValue({ ok: true, data: "ask" }),
     ...overrides,
   });
 }
@@ -95,6 +97,7 @@ describe("SettingsPage", () => {
     expect(screen.getByText("Close window to tray")).toBeInTheDocument();
     expect(screen.getByText("Show notification when hiding to tray")).toBeInTheDocument();
     expect(screen.getByText("Start with Windows")).toBeInTheDocument();
+    expect(screen.getByText("On quit with active servers")).toBeInTheDocument();
     expect(screen.getByText("Display size")).toBeInTheDocument();
     expect(screen.getByLabelText("Display size")).toBeInTheDocument();
     expect(screen.getByText("Default base folder")).toBeInTheDocument();
@@ -119,6 +122,22 @@ describe("SettingsPage", () => {
 
     await user.click(screen.getByRole("radio", { name: "Comfortable" }));
     expect(onUiDensityChange).toHaveBeenCalledWith("comfortable");
+  });
+
+  it("persists On quit with active servers policy changes", async () => {
+    const user = userEvent.setup();
+    stubSettingsApi();
+
+    renderSettings();
+
+    await waitFor(() => {
+      expect(window.api.getDesktopShellPreferences).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole("radio", { name: "Stop" }));
+    await waitFor(() => {
+      expect(window.api.setOnQuitWithActiveServers).toHaveBeenCalledWith("stop");
+    });
   });
 
   it("persists dismissing the tray-hide notification", async () => {

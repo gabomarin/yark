@@ -28,7 +28,7 @@ import type {
   StartServerOptions,
 } from "./types";
 import type { UiDensity } from "./ui-density";
-import type { DesktopShellPreferences } from "./desktop-shell";
+import type { DesktopShellPreferences, OnQuitWithActiveServers } from "./desktop-shell";
 
 export type PickPathKind = "directory" | "file";
 
@@ -78,6 +78,7 @@ export const IPC = {
   appSetCloseWindowToTray: "app:set-close-window-to-tray",
   appSetStartWithWindows: "app:set-start-with-windows",
   appSetTrayCloseHintDismissed: "app:set-tray-close-hint-dismissed",
+  appSetOnQuitWithActiveServers: "app:set-on-quit-with-active-servers",
   iniRead: "ini:read",
   iniPreview: "ini:preview",
   iniSave: "ini:save",
@@ -187,6 +188,9 @@ export interface RendererApi {
   setCloseWindowToTray(enabled: boolean): Promise<IpcResult<boolean>>;
   setStartWithWindows(enabled: boolean): Promise<IpcResult<boolean>>;
   setTrayCloseHintDismissed(dismissed: boolean): Promise<IpcResult<boolean>>;
+  setOnQuitWithActiveServers(
+    policy: OnQuitWithActiveServers,
+  ): Promise<IpcResult<OnQuitWithActiveServers>>;
   readServerIni(serverId: string): Promise<IpcResult<ServerIniSnapshot>>;
   openServerIniInEditor(
     serverId: string,
