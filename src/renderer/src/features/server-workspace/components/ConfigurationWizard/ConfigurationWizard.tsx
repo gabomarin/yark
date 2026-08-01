@@ -32,7 +32,7 @@ import { useForm } from "@mantine/form";
 import { useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import type { ServerIniSnapshot, ServerProfile } from "@shared/types";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   applyExperienceProfile,
   applyBreedingPreset,
@@ -101,7 +101,7 @@ type DifficultyChoice = "current" | "120" | "150" | "180" | "300" | "custom";
 export function ConfigurationWizard(props: Props): ReactElement {
   const compactProgress = useMediaQuery("(max-width: 1100px)", false);
   const [activeStep, setActiveStep] = useState(0);
-  const [snapshot, setSnapshot] = useState<ServerIniSnapshot | null>(null);
+  const snapshotRef = useRef<ServerIniSnapshot | null>(null);
   const [initialDraft, setInitialDraft] =
     useState<ConfigurationWizardDraft>(EMPTY_DRAFT);
   const [loading, setLoading] = useState(true);
@@ -129,17 +129,22 @@ export function ConfigurationWizard(props: Props): ReactElement {
     let alive = true;
     const load = async () => {
       setLoading(true);
-      const result = await window.api.readServerIni(props.server.id);
-      if (!alive) return;
-      setLoading(false);
-      if (!result.ok) {
-        setError(result.error ?? "Could not read the current configuration");
-        return;
+      try {
+        const result = await window.api.readServerIni(props.server.id);
+        if (!alive) return;
+        if (!result.ok) {
+          setError(result.error ?? "Could not read the current configuration");
+          return;
+        }
+        const draft = draftFromIniPayload(result.data.payload);
+        snapshotRef.current = result.data;
+        setInitialDraft(draft);
+        form.initialize(draft);
+      } finally {
+        if (alive) {
+          setLoading(false);
+        }
       }
-      const draft = draftFromIniPayload(result.data.payload);
-      setSnapshot(result.data);
-      setInitialDraft(draft);
-      form.initialize(draft);
     };
     void load();
     return () => {
@@ -273,7 +278,7 @@ export function ConfigurationWizard(props: Props): ReactElement {
   const previous = () => setActiveStep((current) => Math.max(current - 1, 0));
 
   const apply = async () => {
-    if (snapshot === null) return;
+    if (snapshotRef.current === null) return;
     setError(null);
     const parsed = configurationWizardSchema.safeParse(form.values);
     if (!parsed.success) {
@@ -282,37 +287,38 @@ export function ConfigurationWizard(props: Props): ReactElement {
     }
 
     setSaving(true);
-    const latestResult = await window.api.readServerIni(props.server.id);
-    if (!latestResult.ok) {
+    try {
+      const latestResult = await window.api.readServerIni(props.server.id);
+      if (!latestResult.ok) {
+        setError(
+          latestResult.error ??
+            "Could not re-read the configuration before applying",
+        );
+        return;
+      }
+      // Overlay only curated settings onto the latest version so
+      // external changes made while the wizard was open are not wiped.
+      const payload = applyWizardDraftToIni(latestResult.data.payload, parsed.data);
+      const previewResult = await window.api.previewServerIni(props.server.id, payload);
+      if (!previewResult.ok || !previewResult.data.valid) {
+        setError(
+          previewResult.ok
+            ? previewResult.data.issues[0]?.message ?? "Configuration is not valid"
+            : previewResult.error ?? "Could not validate the configuration",
+        );
+        return;
+      }
+      const result = await window.api.saveServerIni(props.server.id, payload);
+      if (!result.ok) {
+        setError(result.error ?? "Could not apply the configuration");
+        return;
+      }
+      setSaved(true);
+      form.resetDirty();
+      props.onApplied();
+    } finally {
       setSaving(false);
-      setError(
-        latestResult.error ??
-          "Could not re-read the configuration before applying",
-      );
-      return;
     }
-    // Overlay only curated settings onto the latest version so
-    // external changes made while the wizard was open are not wiped.
-    const payload = applyWizardDraftToIni(latestResult.data.payload, parsed.data);
-    const previewResult = await window.api.previewServerIni(props.server.id, payload);
-    if (!previewResult.ok || !previewResult.data.valid) {
-      setSaving(false);
-      setError(
-        previewResult.ok
-          ? previewResult.data.issues[0]?.message ?? "Configuration is not valid"
-          : previewResult.error ?? "Could not validate the configuration",
-      );
-      return;
-    }
-    const result = await window.api.saveServerIni(props.server.id, payload);
-    setSaving(false);
-    if (!result.ok) {
-      setError(result.error ?? "Could not apply the configuration");
-      return;
-    }
-    setSaved(true);
-    form.resetDirty();
-    props.onApplied();
   };
 
   if (loading) {

@@ -152,6 +152,7 @@ async function handleGetMods(
       );
     }
     modIds = [];
+    const seenModIds = new Set<number>();
     for (const value of parsed.modIds) {
       const id = typeof value === "number" ? value : Number(String(value).trim());
       if (!Number.isInteger(id) || id <= 0) {
@@ -162,7 +163,9 @@ async function handleGetMods(
           "Each modId must be a positive integer.",
         );
       }
-      if (!modIds.includes(id)) modIds.push(id);
+      if (seenModIds.has(id)) continue;
+      seenModIds.add(id);
+      modIds.push(id);
     }
   } catch {
     return errorJson(
@@ -250,9 +253,12 @@ async function handleSearch(
   }
 
   const rawMods = extractModList(upstream.json);
-  const items = rawMods
-    .filter((mod) => isAsaMod(mod, asaGameId))
-    .map(toYarkMod);
+  const items: YarkModMetadata[] = [];
+  for (const mod of rawMods) {
+    if (isAsaMod(mod, asaGameId)) {
+      items.push(toYarkMod(mod));
+    }
+  }
 
   const pagination = extractPagination(upstream.json);
   return okJson(corsHeaders, {

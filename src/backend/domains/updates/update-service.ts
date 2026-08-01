@@ -1515,13 +1515,16 @@ export class UpdateService extends EventEmitter {
       if (!Array.isArray(parsed)) {
         return [];
       }
-      return parsed
-        .filter((job) =>
-          typeof job.id === "string"
-          && (job.type === "install-files" || job.type === "update" || job.type === "verify-files")
-          && typeof job.serverId === "string",
-        )
-        .map((job) => ({
+      const jobs: CriticalJob[] = [];
+      for (const job of parsed) {
+        if (
+          typeof job.id !== "string"
+          || (job.type !== "install-files" && job.type !== "update" && job.type !== "verify-files")
+          || typeof job.serverId !== "string"
+        ) {
+          continue;
+        }
+        jobs.push({
           ...job,
           status: "pending",
           attempts: Number.isFinite(job.attempts) ? Math.max(0, Math.floor(job.attempts)) : 0,
@@ -1529,7 +1532,9 @@ export class UpdateService extends EventEmitter {
             ? Math.max(1, Math.floor(job.maxAttempts))
             : 3,
           updatedAt: new Date().toISOString(),
-        }));
+        });
+      }
+      return jobs;
     } catch {
       return [];
     }

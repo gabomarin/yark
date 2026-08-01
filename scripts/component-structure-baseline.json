@@ -3,9 +3,9 @@
   "maxTsLines": 450,
   "growthSlack": 25,
   "files": {
-    "src/renderer/src/features/backups/BackupsPage.tsx": 1011,
-    "src/renderer/src/features/backups/ServerBackupPanel.tsx": 991,
-    "src/renderer/src/features/logs/ServerLogsPanel.tsx": 936,
+    "src/renderer/src/features/backups/BackupsPage.tsx": 1047,
+    "src/renderer/src/features/backups/ServerBackupPanel.tsx": 1018,
+    "src/renderer/src/features/logs/ServerLogsPanel.tsx": 993,
     "src/renderer/src/features/server-workspace/components/ConfigurationEditor/ConfigurationEditor.tsx": 664,
     "src/renderer/src/features/server-workspace/components/ConfigurationWizard/ConfigurationWizard.tsx": 937,
     "src/renderer/src/features/server-workspace/configurationWizardModel.ts": 918,

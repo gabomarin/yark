@@ -570,11 +570,13 @@ export class ProcessManager extends EventEmitter {
 
   /** Stops all active processes (app shutdown). Prefer InstanceService.stopAllForAppQuit. */
   async stopAll(profiles: ServerProfile[]): Promise<void> {
-    await Promise.allSettled(
-      profiles
-        .filter((p) => this.isActive(p.id))
-        .map((p) => this.stop(p)),
-    );
+    const stops: Array<Promise<void>> = [];
+    for (const profile of profiles) {
+      if (this.isActive(profile.id)) {
+        stops.push(this.stop(profile));
+      }
+    }
+    await Promise.allSettled(stops);
   }
 
   /**
