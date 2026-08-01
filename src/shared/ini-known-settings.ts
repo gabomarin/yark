@@ -6,12 +6,15 @@ export interface KnownIniSetting {
 }
 
 function knownKeysForFile(file: AsaIniFileKey): KnownIniSetting[] {
-  return asaServerSettings
-    .filter((setting) => setting.file === file)
-    .map((setting) => ({
+  const keys: KnownIniSetting[] = [];
+  for (const setting of asaServerSettings) {
+    if (setting.file !== file) continue;
+    keys.push({
       section: setting.section.toLowerCase(),
       key: setting.key.toLowerCase(),
-    }));
+    });
+  }
+  return keys;
 }
 
 export const knownGameUserSettingsKeys = knownKeysForFile("gameUserSettings");

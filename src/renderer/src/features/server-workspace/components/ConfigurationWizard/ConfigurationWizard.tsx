@@ -32,7 +32,7 @@ import { useForm } from "@mantine/form";
 import { useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import type { ServerIniSnapshot, ServerProfile } from "@shared/types";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   applyExperienceProfile,
   applyBreedingPreset,
@@ -101,7 +101,7 @@ type DifficultyChoice = "current" | "120" | "150" | "180" | "300" | "custom";
 export function ConfigurationWizard(props: Props): ReactElement {
   const compactProgress = useMediaQuery("(max-width: 1100px)", false);
   const [activeStep, setActiveStep] = useState(0);
-  const [snapshot, setSnapshot] = useState<ServerIniSnapshot | null>(null);
+  const snapshotRef = useRef<ServerIniSnapshot | null>(null);
   const [initialDraft, setInitialDraft] =
     useState<ConfigurationWizardDraft>(EMPTY_DRAFT);
   const [loading, setLoading] = useState(true);
@@ -137,7 +137,7 @@ export function ConfigurationWizard(props: Props): ReactElement {
         return;
       }
       const draft = draftFromIniPayload(result.data.payload);
-      setSnapshot(result.data);
+      snapshotRef.current = result.data;
       setInitialDraft(draft);
       form.initialize(draft);
     };
@@ -273,7 +273,7 @@ export function ConfigurationWizard(props: Props): ReactElement {
   const previous = () => setActiveStep((current) => Math.max(current - 1, 0));
 
   const apply = async () => {
-    if (snapshot === null) return;
+    if (snapshotRef.current === null) return;
     setError(null);
     const parsed = configurationWizardSchema.safeParse(form.values);
     if (!parsed.success) {

@@ -384,10 +384,12 @@ export class InstanceService extends EventEmitter {
    * pre-stop backup and stop-progress UI for every active process.
    */
   async stopAllForAppQuit(): Promise<void> {
-    const activeIds = this.repo
-      .list()
-      .filter((profile) => this.processes.isActive(profile.id))
-      .map((profile) => profile.id);
+    const activeIds: string[] = [];
+    for (const profile of this.repo.list()) {
+      if (this.processes.isActive(profile.id)) {
+        activeIds.push(profile.id);
+      }
+    }
     if (activeIds.length === 0) {
       return;
     }

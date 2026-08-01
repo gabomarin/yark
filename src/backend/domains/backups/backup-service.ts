@@ -675,16 +675,18 @@ export class BackupService extends EventEmitter {
     >();
     let totalBytes = 0;
     for (const item of plan) {
-      totalBytes += Math.max(0, item.backup.sizeBytes);
-      const current = byServerMap.get(item.backup.serverId) ?? {
-        serverId: item.backup.serverId,
+      const serverId = item.backup.serverId;
+      const sizeBytes = Math.max(0, item.backup.sizeBytes);
+      totalBytes += sizeBytes;
+      const current = byServerMap.get(serverId) ?? {
+        serverId,
         serverName: item.serverName,
         count: 0,
         bytes: 0,
       };
       current.count += 1;
-      current.bytes += Math.max(0, item.backup.sizeBytes);
-      byServerMap.set(item.backup.serverId, current);
+      current.bytes += sizeBytes;
+      byServerMap.set(serverId, current);
     }
     return {
       items: plan,
@@ -1803,22 +1805,27 @@ export class BackupService extends EventEmitter {
       if (!Array.isArray(parsed)) {
         return [];
       }
-      return parsed
-        .filter((job) =>
-          typeof job.id === "string"
-          && (job.type === "pre-update-backup" || job.type === "restore")
-          && typeof job.serverId === "string",
-        )
-        .map((job) => ({
+      const jobs: BackupCriticalJob[] = [];
+      for (const job of parsed) {
+        if (
+          typeof job.id !== "string"
+          || (job.type !== "pre-update-backup" && job.type !== "restore")
+          || typeof job.serverId !== "string"
+        ) {
+          continue;
+        }
+        jobs.push({
           ...job,
           backupId: typeof job.backupId === "string" ? job.backupId : null,
-          status: "pending" as const,
+          status: "pending",
           attempts: Number.isFinite(job.attempts) ? Math.max(0, Math.floor(job.attempts)) : 0,
           maxAttempts: Number.isFinite(job.maxAttempts)
             ? Math.max(1, Math.floor(job.maxAttempts))
             : 3,
           updatedAt: new Date().toISOString(),
-        }));
+        });
+      }
+      return jobs;
     } catch {
       return [];
     }

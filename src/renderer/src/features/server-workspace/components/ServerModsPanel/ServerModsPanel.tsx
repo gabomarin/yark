@@ -10,7 +10,7 @@ import type {
   ServerProfile,
 } from "@shared/types";
 import { prepareModAddApply, type ModAddImportProgress } from "@shared/mod-add-input";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ServerModDetailDrawer } from "./ServerModDetailDrawer";
 import { ServerModsDiscoverSection } from "./ServerModsDiscoverSection";
 import { ServerModsHeader } from "./ServerModsHeader";
@@ -35,7 +35,7 @@ export function ServerModsPanel(props: Props): ReactElement {
   const [view, setView] = useState<"server" | "discover">("server");
   const [configuredIds, setConfiguredIds] = useState(props.server.mods);
   const [disabledIds, setDisabledIds] = useState(props.server.disabledMods ?? []);
-  const [cache, setCache] = useState(props.server.modMetadataCache ?? {});
+  const cacheRef = useRef(props.server.modMetadataCache ?? {});
   const [metadata, setMetadata] = useState<Map<string, ModMetadata>>(
     () => metadataMap(props.server.modMetadataCache),
   );
@@ -55,7 +55,7 @@ export function ServerModsPanel(props: Props): ReactElement {
     const nextCache = props.server.modMetadataCache ?? {};
     setConfiguredIds(props.server.mods);
     setDisabledIds(props.server.disabledMods ?? []);
-    setCache(nextCache);
+    cacheRef.current = nextCache;
     setMetadata(metadataMap(nextCache));
     setView("server");
     setCatalog(null);
@@ -66,7 +66,7 @@ export function ServerModsPanel(props: Props): ReactElement {
     setConfiguredIds(props.server.mods);
     setDisabledIds(props.server.disabledMods ?? []);
     const nextCache = props.server.modMetadataCache ?? {};
-    setCache(nextCache);
+    cacheRef.current = nextCache;
     setMetadata((previous) => mergeMetadata(previous, nextCache));
   }, [
     props.server.disabledMods,
@@ -114,7 +114,7 @@ export function ServerModsPanel(props: Props): ReactElement {
     if (!result.ok) throw new Error(result.error);
     setConfiguredIds(nextIds);
     setDisabledIds(nextDisabled);
-    setCache(nextCache);
+    cacheRef.current = nextCache;
     setMetadata((previous) => mergeMetadata(previous, nextCache));
     props.onServerUpdated();
   };
@@ -124,7 +124,7 @@ export function ServerModsPanel(props: Props): ReactElement {
     const nextIds = isNew ? [...configuredIds, modDetail.id] : configuredIds;
     // Re-adding (Discover or URL) always re-enables a previously disabled mod.
     const nextDisabled = disabledIds.filter((id) => id !== modDetail.id);
-    const nextCache = { ...cache, [modDetail.id]: modDetail };
+    const nextCache = { ...cacheRef.current, [modDetail.id]: modDetail };
     await persist(nextIds, nextDisabled, nextCache);
   };
 
@@ -152,7 +152,7 @@ export function ServerModsPanel(props: Props): ReactElement {
         {
           configuredIds,
           disabledIds,
-          cache,
+          cache: cacheRef.current,
         },
         (ref) => window.api.getModByReference(ref),
         {
@@ -206,7 +206,7 @@ export function ServerModsPanel(props: Props): ReactElement {
       ? disabledIds.filter((candidate) => candidate !== id)
       : [...new Set([...disabledIds, id])];
     try {
-      await persist(configuredIds, nextDisabled, cache);
+      await persist(configuredIds, nextDisabled, cacheRef.current);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not update the mod");
     } finally {
@@ -218,7 +218,7 @@ export function ServerModsPanel(props: Props): ReactElement {
     setBusyKey(id);
     setError(null);
     setWarning(null);
-    const nextCache = { ...cache };
+    const nextCache = { ...cacheRef.current };
     delete nextCache[id];
     try {
       await persist(
@@ -239,7 +239,7 @@ export function ServerModsPanel(props: Props): ReactElement {
   };
 
   const inspect = async (row: ModRow) => {
-    const cachedDetail = row.id === null ? undefined : cache[row.id];
+    const cachedDetail = row.id === null ? undefined : cacheRef.current[row.id];
     if (cachedDetail !== undefined) {
       setDetail(cachedDetail);
       return;
@@ -255,7 +255,7 @@ export function ServerModsPanel(props: Props): ReactElement {
       setDetail(result.data);
       if (configuredIds.includes(result.data.id)) {
         await persist(configuredIds, disabledIds, {
-          ...cache,
+          ...cacheRef.current,
           [result.data.id]: result.data,
         });
       }

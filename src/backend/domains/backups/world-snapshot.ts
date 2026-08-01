@@ -90,8 +90,12 @@ export function missingEssentialWorldRels(
   const normalizeRel = (file: string, root: string) =>
     relative(root, file).split("\\").join("/").toLowerCase();
   const destRels = new Set(destFiles.map((file) => normalizeRel(file, destRoot)));
-  return sourceFiles
-    .filter((file) => isEssentialWorldSaveName(basename(file)))
-    .map((file) => relative(sourceRoot, file))
-    .filter((rel) => !destRels.has(rel.split("\\").join("/").toLowerCase()));
+  const missing: string[] = [];
+  for (const file of sourceFiles) {
+    if (!isEssentialWorldSaveName(basename(file))) continue;
+    const rel = relative(sourceRoot, file);
+    if (destRels.has(rel.split("\\").join("/").toLowerCase())) continue;
+    missing.push(rel);
+  }
+  return missing;
 }

@@ -766,21 +766,24 @@ export function wizardChanges(
   initial: ConfigurationWizardDraft,
   current: ConfigurationWizardDraft,
 ): WizardChange[] {
-  const changes = (Object.keys(FIELD_LABELS) as Array<keyof ConfigurationWizardDraft>)
-    .filter(
-      (field) =>
-        field !== "profile" &&
-        field !== "maxWildDinoLevel" &&
-        field !== "difficultyOffset" &&
-        field !== "overrideOfficialDifficulty" &&
-        initial[field] !== current[field],
-    )
-    .map((field) => ({
+  const changes: WizardChange[] = [];
+  for (const field of Object.keys(FIELD_LABELS) as Array<keyof ConfigurationWizardDraft>) {
+    if (
+      field === "profile"
+      || field === "maxWildDinoLevel"
+      || field === "difficultyOffset"
+      || field === "overrideOfficialDifficulty"
+      || initial[field] === current[field]
+    ) {
+      continue;
+    }
+    changes.push({
       field,
       label: FIELD_LABELS[field],
       before: formatFieldValue(field, initial[field]),
       after: formatFieldValue(field, current[field]),
-    }));
+    });
+  }
 
   if (
     initial.maxWildDinoLevel !== current.maxWildDinoLevel ||
