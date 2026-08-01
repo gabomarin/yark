@@ -167,7 +167,9 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       percent,
     };
   }, [servers, stopProgressByServerId]);
-  steamCmdBusyRef.current = steamCmdBusy;
+  useEffect(() => {
+    steamCmdBusyRef.current = steamCmdBusy;
+  }, [steamCmdBusy]);
   const steamCmdServerName =
     steamCmdStatus?.serverId != null
       ? (servers.find((server) => server.id === steamCmdStatus.serverId)?.name ?? null)
