@@ -256,7 +256,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
       setInfo(
         result.data.changedCount > 0
           ? `Saved (${result.data.changedCount} changes)`
-          : "Saved (sin changes)",
+          : "Saved (no changes)",
       );
     } finally {
       setBusy(false);
