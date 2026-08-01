@@ -109,7 +109,42 @@ export interface SteamCmdStatus {
   lastLine: string | null;
   /** Pending critical jobs (besides the one in progress). */
   queuedCount: number;
+  /** Durable update, backup, and restore jobs, including actionable recovery states. */
+  criticalJobs: CriticalJobSummary[];
   checkedAt: string;
+}
+
+export type CriticalJobOperation =
+  | "install-files"
+  | "update"
+  | "verify-files"
+  | "pre-update-backup"
+  | "restore";
+
+export type CriticalJobStatus =
+  | "pending"
+  | "running"
+  | "retrying"
+  | "blocked"
+  | "failed"
+  | "cancelled";
+
+export type CriticalJobNextAction = "retry" | "dismiss" | "cancel";
+
+export interface CriticalJobSummary {
+  id: string;
+  operation: CriticalJobOperation;
+  serverId: string;
+  serverName?: string | null;
+  status: CriticalJobStatus;
+  phase: string;
+  attempts: number;
+  maxAttempts: number;
+  createdAt: string;
+  updatedAt: string;
+  lastError: string | null;
+  recoveryReason: string | null;
+  nextActions: CriticalJobNextAction[];
 }
 
 /** Shared SteamCMD cache folders next to steamcmd.exe. */

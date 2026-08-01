@@ -248,6 +248,10 @@ After a successful `ini:save`, `createIniSaveBackup` debounces **2s** per server
 
 - Key: `backupCriticalJobsQueue.v1` in app settings.
 - Types: `pre-update-backup` | `restore`; max **3** attempts, **5s** delay; survives restart.
+- Interrupted pre-update backups reconcile their job-marked rows/ZIPs and resume
+  from the next missing kind. Restore outcomes remain blocked with Retry/Dismiss
+  actions instead of being replayed blindly. See
+  [Critical job crash recovery](critical-job-recovery.md).
 - Pre-update creates **world + players + ini** (`CRITICAL_BACKUP_KINDS`).
 - Safe update stops with `{ backup: false }` first, then creates this set — an
   active-server update must **not** also produce a `pre_stop` archive set for the

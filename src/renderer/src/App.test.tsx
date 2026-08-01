@@ -23,6 +23,9 @@ function createApiMock(): RendererApi {
     openServerNativeTerminal: vi.fn(),
     installSteamCmd: vi.fn(),
     cancelSteamCmd: vi.fn(),
+    retryCriticalJob: vi.fn(),
+    dismissCriticalJob: vi.fn(),
+    cancelCriticalJob: vi.fn(),
     setSteamCmdPath: vi.fn(),
     getSteamCmdStatus: vi.fn().mockResolvedValue({
       ok: true,

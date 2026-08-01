@@ -169,6 +169,18 @@ export function registerIpcHandlers(
     wrap(() => updates.cancelSteamCmd()),
   );
 
+  ipcMain.handle(IPC.criticalJobRetry, (_e, id: string) =>
+    wrap(() => updates.retryCriticalJob(id)),
+  );
+
+  ipcMain.handle(IPC.criticalJobDismiss, (_e, id: string) =>
+    wrap(() => updates.dismissCriticalJob(id)),
+  );
+
+  ipcMain.handle(IPC.criticalJobCancel, (_e, id: string) =>
+    wrap(() => updates.cancelCriticalJob(id)),
+  );
+
   ipcMain.handle(IPC.steamcmdSetPath, (_e, path: string) =>
     wrap(() => updates.setSteamCmdExecutablePath(path)),
   );

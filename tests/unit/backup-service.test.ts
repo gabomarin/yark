@@ -147,6 +147,315 @@ describe("BackupService kinds and retention", () => {
     ).toThrow(/5 minutes/i);
   });
 
+  it("resumes a pre-update critical job without duplicating completed kinds", async () => {
+    const now = new Date().toISOString();
+    const job = {
+      id: "critical-pre-update-1",
+      type: "pre-update-backup" as const,
+      serverId: profile.id,
+      backupId: null,
+      attempts: 0,
+      maxAttempts: 3,
+      status: "running" as const,
+      phase: "creating-backup:world",
+      createdAt: now,
+      updatedAt: now,
+      lastError: null,
+      recoveryReason: null,
+      idempotencyKey: `pre-update-backup:${profile.id}:`,
+      operatorRetryAllowed: false,
+      context: {} as {
+        completedBackupIds?: string[];
+        nextKindIndex?: number;
+      },
+    };
+    const recovery = service as unknown as {
+      resumePreUpdateBackupJob: (input: typeof job) => Promise<unknown[]>;
+    };
+
+    const first = await recovery.resumePreUpdateBackupJob(job);
+    expect(first).toHaveLength(3);
+    expect(job.context).toMatchObject({ nextKindIndex: 3 });
+
+    // Simulate a crash before the latest in-memory checkpoint was persisted.
+    job.context = {};
+    const resumed = await recovery.resumePreUpdateBackupJob(job);
+    expect(resumed).toHaveLength(3);
+    expect(repo.listBackups(profile.id, 100).filter((row) => row.type === "pre_update"))
+      .toHaveLength(3);
+  });
+
+  it("reconciles restore history and safeguard evidence without repeating a completed restore", async () => {
+    const [source] = await service.createManualBackup(profile.id, ["world"]);
+    expect(source).toBeDefined();
+    if (source === undefined) return;
+
+    const now = new Date().toISOString();
+    const job = {
+      id: "critical-restore-1",
+      type: "restore" as const,
+      serverId: profile.id,
+      backupId: source.id,
+      attempts: 1,
+      maxAttempts: 3,
+      status: "running" as const,
+      phase: "restore-history-started",
+      createdAt: now,
+      updatedAt: now,
+      lastError: null,
+      recoveryReason: null,
+      idempotencyKey: `restore:${profile.id}:${source.id}`,
+      operatorRetryAllowed: false,
+      context: {} as {
+        restoreHistoryId?: number;
+        safeguardBackupIds?: string[];
+      },
+    };
+    const recovery = service as unknown as {
+      resumeRestoreJob: (input: typeof job) => Promise<void>;
+    };
+
+    await recovery.resumeRestoreJob(job);
+    const historyId = job.context.restoreHistoryId;
+    expect(historyId).toBeTypeOf("number");
+    expect(repo.getRestoreHistory(historyId!)).toMatchObject({ status: "completed" });
+    expect(
+      repo.listBackups(profile.id, 100).filter(
+        (row) => row.type === "pre_restore" && row.notes?.includes(job.id),
+      ),
+    ).toHaveLength(1);
+
+    // A restart can observe completed durable history before the queue row is
+    // removed. Re-entering recovery must reconcile, not apply the restore again.
+    const applyRestore = vi.spyOn(
+      service as unknown as { applyRestore: () => Promise<void> },
+      "applyRestore",
+    );
+    await recovery.resumeRestoreJob(job);
+    expect(applyRestore).not.toHaveBeenCalled();
+  });
+
+  it("requires on-disk archives when reusing persisted pre-update backup evidence", async () => {
+    const backups = await service.createPreUpdateBackupForJob(profile.id);
+    expect(backups).toHaveLength(3);
+    const removed = backups[0];
+    expect(removed).toBeDefined();
+    if (removed === undefined) return;
+    await rm(removed.path, { force: true });
+
+    const completed = service.getCompletedBackupsForCriticalJob(
+      profile.id,
+      backups.map((backup) => backup.id),
+    );
+    expect(completed).toHaveLength(2);
+    expect(completed.every((backup) => existsSync(backup.path))).toBe(true);
+  });
+
+  it("quarantines a recovered restore job when restoreHistory points to unrelated evidence", async () => {
+    const [source] = await service.createManualBackup(profile.id, ["world"]);
+    expect(source).toBeDefined();
+    if (source === undefined) return;
+
+    const unrelatedHistoryId = repo.insertRestoreHistory({
+      serverId: profile.id,
+      backupId: source.id,
+      status: "started",
+      notes: "[critical-job:another-job]",
+    });
+    repo.completeRestoreHistory(unrelatedHistoryId, "completed", "[critical-job:another-job]");
+
+    const now = new Date().toISOString();
+    const rawQueue = JSON.stringify([
+      {
+        id: "restore-mismatch",
+        type: "restore",
+        serverId: profile.id,
+        backupId: source.id,
+        attempts: 1,
+        maxAttempts: 3,
+        status: "running",
+        phase: "applying-restore",
+        createdAt: now,
+        updatedAt: now,
+        lastError: null,
+        recoveryReason: null,
+        idempotencyKey: `restore:${profile.id}:${source.id}`,
+        operatorRetryAllowed: false,
+        context: {
+          restoreHistoryId: unrelatedHistoryId,
+        },
+      },
+    ]);
+    const settings = {
+      get: vi.fn((key: string) => (key === "backupCriticalJobsQueue.v1" ? rawQueue : null)),
+      set: vi.fn(),
+    } as unknown as AppSettingsRepository;
+    const servers = {
+      get: vi.fn((id: string) => (id === profile.id ? profile : null)),
+      list: vi.fn(() => [profile]),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const processes = {
+      isActive: vi.fn(() => false),
+      start: vi.fn(),
+      stop: vi.fn(),
+    } as unknown as ProcessManager;
+
+    const recovered = new BackupService(
+      servers,
+      repo,
+      processes,
+      settings,
+      join(installDir, "_root"),
+    );
+
+    expect(recovered.getCriticalJobs()).toEqual([]);
+    expect(settings.set).toHaveBeenCalledWith(
+      expect.stringMatching(/^backupCriticalJobsQueue\.v1\.quarantine\./),
+      rawQueue,
+    );
+  });
+
+  it("blocks duplicate restore rows at the applying-restore phase", () => {
+    const common = {
+      type: "restore",
+      serverId: profile.id,
+      backupId: "backup-duplicate",
+      attempts: 1,
+      maxAttempts: 3,
+      createdAt: "2026-08-01T00:00:00.000Z",
+      lastError: null,
+      recoveryReason: null,
+      idempotencyKey: `restore:${profile.id}:backup-duplicate`,
+      operatorRetryAllowed: false,
+      context: {},
+    };
+    const duplicateRows = [
+      {
+        ...common,
+        id: "restore-applying",
+        status: "blocked",
+        phase: "applying-restore",
+        updatedAt: "2026-08-01T00:01:00.000Z",
+      },
+      {
+        ...common,
+        id: "restore-stale",
+        status: "pending",
+        phase: "queued",
+        updatedAt: "2026-08-01T00:02:00.000Z",
+      },
+    ];
+    const rawQueue = JSON.stringify(duplicateRows);
+    const settings = {
+      get: vi.fn((key: string) =>
+        key === "backupCriticalJobsQueue.v1" ? rawQueue : null),
+      set: vi.fn(),
+    } as unknown as AppSettingsRepository;
+    const servers = {
+      get: vi.fn((id: string) => (id === profile.id ? profile : null)),
+      list: vi.fn(() => [profile]),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const processes = {
+      isActive: vi.fn(() => false),
+    } as unknown as ProcessManager;
+
+    const recovered = new BackupService(
+      servers,
+      repo,
+      processes,
+      settings,
+      join(installDir, "_root"),
+    );
+
+    expect(recovered.getCriticalJobs()).toHaveLength(1);
+    expect(recovered.getCriticalJobs()[0]).toMatchObject({
+      status: "blocked",
+      phase: "applying-restore",
+      nextActions: ["retry", "dismiss"],
+    });
+    expect(settings.set).toHaveBeenCalledWith(
+      expect.stringMatching(/^backupCriticalJobsQueue\.v1\.quarantine\./),
+      rawQueue,
+    );
+  });
+
+  it("blocks an in-process non-transient failure once restore application began", async () => {
+    const now = new Date().toISOString();
+    const job = {
+      id: "restore-permission-failure",
+      type: "restore" as const,
+      serverId: profile.id,
+      backupId: "backup-1",
+      attempts: 0,
+      maxAttempts: 3,
+      status: "pending" as const,
+      phase: "applying-restore",
+      createdAt: now,
+      updatedAt: now,
+      lastError: null,
+      recoveryReason: null,
+      idempotencyKey: `restore:${profile.id}:backup-1`,
+      operatorRetryAllowed: false,
+      context: {},
+    };
+    const queueHarness = service as unknown as {
+      queue: Array<typeof job>;
+      processQueue: () => Promise<void>;
+      resumeRestoreJob: (input: typeof job) => Promise<void>;
+    };
+    queueHarness.queue = [job];
+    vi.spyOn(queueHarness, "resumeRestoreJob").mockRejectedValue(
+      new Error("permission denied while copying SavedArks"),
+    );
+
+    await queueHarness.processQueue();
+
+    expect(service.getCriticalJobs()[0]).toMatchObject({
+      status: "blocked",
+      phase: "applying-restore",
+      nextActions: ["retry", "dismiss"],
+    });
+  });
+
+  it.each(["blocked", "failed"] as const)(
+    "adopts a nested %s retryable restore when its parent rollback is retried",
+    async (status) => {
+      const now = new Date().toISOString();
+      const job = {
+        id: `nested-restore-${status}`,
+        type: "restore" as const,
+        serverId: profile.id,
+        backupId: "backup-from-update",
+        attempts: 1,
+        maxAttempts: 3,
+        status,
+        phase: status === "blocked" ? "applying-restore" : "failed",
+        createdAt: now,
+        updatedAt: now,
+        lastError: "Interrupted while applying restore",
+        recoveryReason: "Restore outcome is ambiguous.",
+        idempotencyKey: `restore:${profile.id}:backup-from-update`,
+        operatorRetryAllowed: true,
+        context: {},
+      };
+      const queueHarness = service as unknown as {
+        queue: Array<typeof job>;
+        resumeRestoreJob: (input: typeof job) => Promise<void>;
+      };
+      queueHarness.queue = [job];
+      const resumeRestoreJob = vi
+        .spyOn(queueHarness, "resumeRestoreJob")
+        .mockResolvedValue(undefined);
+
+      await service.restoreBackupForRollbackRecovery(profile.id, job.backupId);
+
+      expect(resumeRestoreJob).toHaveBeenCalledOnce();
+      expect(service.getCriticalJobs()).toEqual([]);
+    },
+  );
+
   it("packages world including player profiles as a zip under World/", async () => {
     const created = await service.createManualBackup(profile.id, ["world"]);
     const record = created[0];

@@ -69,7 +69,10 @@ Pipeline for each files job:
 | Update | May run while active; manager coordinates stop. Blocked only while a stop+backup is in progress | Restarts and waits up to **90s** for healthy `running` **only if** it was running when the job started; otherwise left stopped |
 | Verify | Same auto-stop/restart contract as update (no pre-update backup / rollback) | Restarts only if it had been running when the job ran |
 
-Jobs are queued (`criticalJobsQueue.v1` in app settings): up to **3** attempts, **5s** between retries; pending jobs resume after app restart.
+Jobs are queued (`criticalJobsQueue.v1` in app settings): up to **3** attempts,
+**5s** between transient retries. Pending and replay-safe jobs resume after an
+app restart; interrupted update/process-transition phases are blocked for
+operator review. See [Critical job crash recovery](critical-job-recovery.md).
 
 ### Safe update + rollback
 

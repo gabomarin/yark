@@ -23,6 +23,7 @@ function baseStatus(overrides: Partial<SteamCmdStatus> = {}): SteamCmdStatus {
     progressBytesTotal: null,
     lastLine: "Copying files to server…",
     queuedCount: 0,
+    criticalJobs: [],
     checkedAt: "2026-07-27T00:00:00.000Z",
     ...overrides,
   };
@@ -48,6 +49,9 @@ describe("SteamCmdProgressDock (#48 sync UX)", () => {
           }}
           serverName="Island"
           onCancel={vi.fn()}
+          onRetryJob={vi.fn()}
+          onDismissJob={vi.fn()}
+          onCancelJob={vi.fn()}
         />
       </AppProviders>,
     );
@@ -75,6 +79,9 @@ describe("SteamCmdProgressDock (#48 sync UX)", () => {
           })}
           console={null}
           onCancel={vi.fn()}
+          onRetryJob={vi.fn()}
+          onDismissJob={vi.fn()}
+          onCancelJob={vi.fn()}
         />
       </AppProviders>,
     );
@@ -92,11 +99,56 @@ describe("SteamCmdProgressDock (#48 sync UX)", () => {
           status={baseStatus()}
           console={{ lines: ["Still copying files… (10s elapsed)"], updatedAt: "2026-07-27T00:00:00.000Z" }}
           onCancel={onCancel}
+          onRetryJob={vi.fn()}
+          onDismissJob={vi.fn()}
+          onCancelJob={vi.fn()}
         />
       </AppProviders>,
     );
 
     await user.click(screen.getByRole("button", { name: "Cancel" }));
     expect(onCancel).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows an interrupted destructive job with explicit recovery actions", async () => {
+    const user = userEvent.setup();
+    const onRetryJob = vi.fn();
+    const onDismissJob = vi.fn();
+    render(
+      <AppProviders>
+        <SteamCmdProgressDock
+          status={baseStatus({
+            busy: false,
+            running: false,
+            operation: null,
+            criticalJobs: [{
+              id: "job-restore",
+              operation: "restore",
+              serverId: "srv-1",
+              status: "blocked",
+              phase: "applying-restore",
+              attempts: 1,
+              maxAttempts: 3,
+              createdAt: "2026-07-27T00:00:00.000Z",
+              updatedAt: "2026-07-27T00:01:00.000Z",
+              lastError: null,
+              recoveryReason: "The outcome is ambiguous and requires operator review.",
+              nextActions: ["retry", "dismiss"],
+            }],
+          })}
+          console={null}
+          onCancel={vi.fn()}
+          onRetryJob={onRetryJob}
+          onDismissJob={onDismissJob}
+          onCancelJob={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("applying-restore", { exact: false })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Retry" }));
+    await user.click(screen.getByRole("button", { name: "Dismiss" }));
+    expect(onRetryJob).toHaveBeenCalledWith("job-restore");
+    expect(onDismissJob).toHaveBeenCalledWith("job-restore");
   });
 });

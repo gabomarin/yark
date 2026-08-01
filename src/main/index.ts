@@ -39,6 +39,13 @@ import { normalizeServerStopProgress } from "../shared/types";
 import type { BackupChangedPush } from "../backend/domains/backups/backup-service";
 import type { ServerRuntimeInfo } from "../shared/types";
 
+const e2eUserData = process.env["YARK_E2E_USER_DATA"]?.trim();
+if (!app.isPackaged && e2eUserData) {
+  // Functional Electron tests use a disposable profile so they never mutate the
+  // developer's real %APPDATA% database, preferences, or browser storage.
+  app.setPath("userData", e2eUserData);
+}
+
 const gotSingleInstanceLock = app.requestSingleInstanceLock();
 if (!gotSingleInstanceLock) {
   app.quit();
