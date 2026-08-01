@@ -16,6 +16,29 @@ async function waitForCardByName(page, name, timeout = 15000) {
   return card.first();
 }
 
+/** Close leftover Mantine menu portals so they cannot intercept the next click. */
+async function dismissOpenMenus(page) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const openMenu = page.locator('[role="menu"]');
+    if ((await openMenu.count()) === 0) {
+      return;
+    }
+    await page.keyboard.press("Escape");
+    try {
+      await openMenu.first().waitFor({ state: "hidden", timeout: 1500 });
+      return;
+    } catch {
+      // Menu still present — try Escape again.
+    }
+  }
+}
+
+async function openServerMoreMenu(page, card) {
+  await dismissOpenMenus(page);
+  await card.getByRole("button", { name: "More options" }).click();
+  await page.getByRole("menu").waitFor({ state: "visible", timeout: 5000 });
+}
+
 async function removeServerIfPresent(page, name) {
   const card = page.locator("[data-server-card]", {
     has: page.getByText(name, { exact: true }),
@@ -24,16 +47,17 @@ async function removeServerIfPresent(page, name) {
     return;
   }
 
-  await card.getByRole("button", { name: "More options" }).click();
+  await openServerMoreMenu(page, card);
   const deleteAction = page.getByRole("menuitem", { name: "Delete server" });
   if ((await deleteAction.count()) === 0) {
-    await page.keyboard.press("Escape");
+    await dismissOpenMenus(page);
     return;
   }
 
   await deleteAction.click();
   await page.getByRole("button", { name: "Delete everything" }).click();
   await card.waitFor({ state: "detached", timeout: 15000 });
+  await dismissOpenMenus(page);
 }
 
 async function createServer(page, serverName, installDir, ports) {
@@ -82,8 +106,9 @@ async function createServer(page, serverName, installDir, ports) {
 
 async function cloneServer(page, serverName) {
   const card = await waitForCardByName(page, serverName);
-  await card.getByRole("button", { name: "More options" }).click();
+  await openServerMoreMenu(page, card);
   await page.getByRole("menuitem", { name: "Clone" }).click();
+  await dismissOpenMenus(page);
 
   const cloneNamePrefix = `${serverName} (copy`;
   const escapedPrefix = cloneNamePrefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

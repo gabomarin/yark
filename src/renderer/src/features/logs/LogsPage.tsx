@@ -59,21 +59,29 @@ export function LogsPage(props: Props): ReactElement {
     return map;
   }, [props.servers]);
 
-  const loadFleet = async () => {
+  const loadFleet = async (opts?: { cancelled?: () => boolean }) => {
     setLoading(true);
     setError(null);
-    const result = await window.api.recentEvents(300);
-    setLoading(false);
-    if (!result.ok) {
-      setFleetEvents([]);
-      setError(result.error ?? "Could not load events across servers");
-      return;
+    try {
+      const result = await window.api.recentEvents(300);
+      if (opts?.cancelled?.()) return;
+      if (!result.ok) {
+        setFleetEvents([]);
+        setError(result.error ?? "Could not load events across servers");
+        return;
+      }
+      setFleetEvents(result.data);
+    } finally {
+      setLoading(false);
     }
-    setFleetEvents(result.data);
   };
 
   useEffect(() => {
-    void loadFleet();
+    let cancelled = false;
+    void loadFleet({ cancelled: () => cancelled });
+    return () => {
+      cancelled = true;
+    };
   }, [props.servers]);
 
   const filteredFleetEvents = useMemo(() => {

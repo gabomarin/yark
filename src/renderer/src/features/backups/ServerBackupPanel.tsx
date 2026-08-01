@@ -386,53 +386,65 @@ export function ServerBackupPanel(props: Props): ReactElement {
 
   const createBackup = async () => {
     setBusy(true);
-    const result = await window.api.createManualBackup(props.server.id, [activeKind]);
-    setBusy(false);
-    if (!result.ok) {
-      showBackupError(result.error ?? "Could not create backup");
-      return;
+    try {
+      const result = await window.api.createManualBackup(props.server.id, [activeKind]);
+      if (!result.ok) {
+        showBackupError(result.error ?? "Could not create backup");
+        return;
+      }
+      await load(props.server.id);
+      showBackupToast(
+        activeKind === "players"
+          ? "Full player-profiles snapshot completed."
+          : `${activeKindLabel} backup completed.`,
+      );
+    } finally {
+      setBusy(false);
     }
-    await load(props.server.id);
-    showBackupToast(
-      activeKind === "players"
-        ? "Full player-profiles snapshot completed."
-        : `${activeKindLabel} backup completed.`,
-    );
   };
 
   const browseBackupDir = async () => {
     if (draftPolicy === null) return;
     setBrowsingDir(true);
-    const result = await window.api.pickPath(
-      "directory",
-      draftPolicy.backupDir ?? props.server.installDir,
-      "Choose backup destination",
-    );
-    setBrowsingDir(false);
-    if (!result.ok) {
-      showBackupError(result.error ?? "Could not open folder picker");
-      return;
-    }
-    if (result.data !== null) {
-      setDraftPolicy({ ...draftPolicy, backupDir: result.data });
+    try {
+      const result = await window.api.pickPath(
+        "directory",
+        draftPolicy.backupDir ?? props.server.installDir,
+        "Choose backup destination",
+      );
+      if (!result.ok) {
+        showBackupError(result.error ?? "Could not open folder picker");
+        return;
+      }
+      if (result.data !== null) {
+        setDraftPolicy({ ...draftPolicy, backupDir: result.data });
+      }
+    } finally {
+      setBrowsingDir(false);
     }
   };
 
   const openDestination = async () => {
     setBusy(true);
-    const result = await window.api.openBackupRoot(props.server.id);
-    setBusy(false);
-    if (!result.ok) {
-      showBackupError(result.error ?? "Could not open backup destination");
+    try {
+      const result = await window.api.openBackupRoot(props.server.id);
+      if (!result.ok) {
+        showBackupError(result.error ?? "Could not open backup destination");
+      }
+    } finally {
+      setBusy(false);
     }
   };
 
   const openBackupFolder = async (backupId: string) => {
     setBusy(true);
-    const result = await window.api.openBackupFolder(props.server.id, backupId);
-    setBusy(false);
-    if (!result.ok) {
-      showBackupError(result.error ?? "Could not open backup folder");
+    try {
+      const result = await window.api.openBackupFolder(props.server.id, backupId);
+      if (!result.ok) {
+        showBackupError(result.error ?? "Could not open backup folder");
+      }
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -468,17 +480,20 @@ export function ServerBackupPanel(props: Props): ReactElement {
       onConfirm: () => {
         void (async () => {
           setBusy(true);
-          const result = await window.api.deleteBackups(props.server.id, selectedIds);
-          setBusy(false);
-          if (!result.ok) {
-            showBackupError(result.error ?? "Could not delete backups");
-            return;
+          try {
+            const result = await window.api.deleteBackups(props.server.id, selectedIds);
+            if (!result.ok) {
+              showBackupError(result.error ?? "Could not delete backups");
+              return;
+            }
+            setSelectedIds([]);
+            await load(props.server.id);
+            showBackupToast(
+              `Deleted ${result.data} backup${result.data === 1 ? "" : "s"}.`,
+            );
+          } finally {
+            setBusy(false);
           }
-          setSelectedIds([]);
-          await load(props.server.id);
-          showBackupToast(
-            `Deleted ${result.data} backup${result.data === 1 ? "" : "s"}.`,
-          );
         })();
       },
     });
@@ -522,16 +537,19 @@ export function ServerBackupPanel(props: Props): ReactElement {
       onConfirm: () => {
         void (async () => {
           setBusy(true);
-          const result = await window.api.restoreBackup(props.server.id, backup.id);
-          setBusy(false);
-          if (!result.ok) {
-            showBackupError(result.error ?? "Could not restore backup");
-            return;
+          try {
+            const result = await window.api.restoreBackup(props.server.id, backup.id);
+            if (!result.ok) {
+              showBackupError(result.error ?? "Could not restore backup");
+              return;
+            }
+            await load(props.server.id);
+            showBackupToast(
+              `${label} backup restored. A pre-restore safety copy was kept.`,
+            );
+          } finally {
+            setBusy(false);
           }
-          await load(props.server.id);
-          showBackupToast(
-            `${label} backup restored. A pre-restore safety copy was kept.`,
-          );
         })();
       },
     });
