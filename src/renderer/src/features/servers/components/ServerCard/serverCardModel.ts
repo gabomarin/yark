@@ -15,7 +15,6 @@ export {
 export type { ServerCardRowTone, SteamCmdOperation } from "./serverCardPresentationModel";
 export {
   deriveServerCardView,
-  resolveFilesMetaTone,
   resolveInstallStateLabel,
   resolveRowTone,
   resolveSteamCmdProgressCopy,

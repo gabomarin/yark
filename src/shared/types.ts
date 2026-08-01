@@ -499,9 +499,6 @@ export const KNOWN_MAPS = [
 export const PORT_MIN = 1024;
 export const PORT_MAX = 65535;
 
-/** Game ID for Ark: Survival Ascended on CurseForge (not in CurseForgeGameEnum yet). */
-export const ASA_CURSEFORGE_GAME_ID = 83374;
-
 /** CurseForge mod metadata cached/exposed to the renderer. */
 export interface ModMetadata {
   id: string;

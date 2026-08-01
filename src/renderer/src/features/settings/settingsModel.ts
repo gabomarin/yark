@@ -11,9 +11,6 @@ export type { UiDensity };
 export const OPEN_NATIVE_TERMINAL_PREF_KEY = "overview.openNativeTerminalOnStart";
 export const DEFAULT_BASE_FOLDER_PREF_KEY = "settings.defaultServerBaseFolder";
 
-/** @deprecated Use `UI_DENSITY_SETTING_KEY` from `@shared/ui-density` (SQLite). Kept for migration. */
-export const UI_DENSITY_PREF_KEY = UI_DENSITY_LEGACY_LOCAL_STORAGE_KEY;
-
 export function readOpenNativeTerminalPref(): boolean {
   if (typeof window === "undefined") {
     return false;

@@ -99,19 +99,6 @@ export function resolveVersionMetaTone(input: {
   return "default";
 }
 
-/** @deprecated Prefer resolveVersionMetaTone. */
-export function resolveFilesMetaTone(input: {
-  steamCmdBusy: boolean;
-  isInstallationReady: boolean;
-  updateAvailable: boolean;
-  updateState: ServerUpdateState;
-}): "muted" | "ok" | "warn" {
-  const tone = resolveVersionMetaTone(input);
-  if (tone === "attention" || tone === "busy") return "warn";
-  if (tone === "ok") return "ok";
-  return "muted";
-}
-
 export function deriveServerCardView(input: {
   status: ServerStatus;
   installation: ServerInstallationInfo | null;

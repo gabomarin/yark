@@ -187,8 +187,7 @@ in `src/main/index.ts`.
 - Server workspace 3-column shell / INI editor tables
 - Domain empty **content** — wrap with shared EmptyState shell
 - Clusters `MetaStrip` (feature-local until a second screen needs the same strip)
-- Backup all-servers `StatCard` strip (candidate for `AppMetricCard` on 2nd use)
-- `AppMetricCard` unused — wire or delete in a follow-up
+- Backup all-servers `StatCard` strip (extract a shared metric card on 2nd use)
 
 ## Candidates for a later slice
 

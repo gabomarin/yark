@@ -42,7 +42,3 @@ export function removeLeftRunningProcess(
   );
   writeLeftRunningProcesses(settings, next);
 }
-
-export function clearLeftRunningProcesses(settings: AppSettingsRepository): void {
-  settings.set(LEFT_RUNNING_PROCESSES_SETTING_KEY, null);
-}

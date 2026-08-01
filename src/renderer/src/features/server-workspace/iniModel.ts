@@ -12,15 +12,12 @@ import {
 } from "@shared/asa-setting-ui-categories";
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
 import {
-  INI_ROOT_SECTION,
   isClientIniKey,
   isClientIniNoise,
   parseIniTextRows,
   sanitizeServerIniPayload,
-  sectionBracketLabel,
   sectionShortName,
   setIniTextValue,
-  stripClientIniKeys,
   type IniTextRow,
 } from "@shared/ini-text";
 
@@ -241,14 +238,6 @@ function isLikelyStringSettingKey(keyLower: string): boolean {
   );
 }
 
-export function categorizeSetting(
-  key: string,
-  fileKey: IniFileKey = "gameUserSettings",
-  section = "ServerSettings",
-): AsaUiCategoryId {
-  return resolveAsaUiCategory(fileKey, section, key);
-}
-
 export function humanizeKey(key: string): string {
   return key
     .replace(/([a-z])([A-Z])/g, "$1 $2")
@@ -305,21 +294,6 @@ export function filterIniSettingReferences(
   return rows.filter(
     (row) => filterIniRows([row], search, filter, row.fileKey).length === 1,
   );
-}
-
-export function groupRowsBySection(
-  rows: IniSettingRow[],
-): Array<{ section: string; rows: IniSettingRow[] }> {
-  const groups: Array<{ section: string; rows: IniSettingRow[] }> = [];
-  for (const row of rows) {
-    const last = groups[groups.length - 1];
-    if (last !== undefined && last.section === row.section) {
-      last.rows.push(row);
-      continue;
-    }
-    groups.push({ section: row.section, rows: [row] });
-  }
-  return groups;
 }
 
 /** Group by UI category (heuristic JSON), in taxonomy order. */
@@ -396,9 +370,6 @@ function rowIdentity(row: Pick<IniTextRow, "section" | "key">): string {
 }
 
 export {
-  INI_ROOT_SECTION,
   sanitizeServerIniPayload,
-  sectionBracketLabel,
   sectionShortName,
-  stripClientIniKeys,
 };

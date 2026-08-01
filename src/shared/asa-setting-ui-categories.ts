@@ -27,10 +27,6 @@ const byId = data.byId as Record<string, AsaUiCategoryId>;
 
 export const ASA_UI_CATEGORIES: readonly AsaUiCategoryDef[] = categories;
 
-export const ASA_UI_CATEGORY_IDS: readonly AsaUiCategoryId[] = categories.map(
-  (item) => item.id,
-);
-
 const labelById = new Map<AsaUiCategoryId, string>(
   categories.map((item) => [item.id, item.label]),
 );

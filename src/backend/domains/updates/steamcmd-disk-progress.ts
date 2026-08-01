@@ -210,11 +210,6 @@ export async function measureInstallDownloadingBytes(forceInstallDir: string): P
   return total;
 }
 
-/** @deprecated use measureInstallDownloadingBytes */
-export async function measureInstallDirDownloadBytes(forceInstallDir: string): Promise<number> {
-  return measureInstallDownloadingBytes(forceInstallDir);
-}
-
 export function estimateProgressFromDisk(
   bytesOnDisk: number,
   knownTotal: number | null,

@@ -288,9 +288,3 @@ export function createAppCssVariablesResolverForDensity(
 ): CSSVariablesResolver {
   return createAppCssVariablesResolver(getAppTokens(density));
 }
-
-/** Compact defaults (product default density). */
-export const appCssVariablesResolver = createAppCssVariablesResolver(
-  getAppTokens("compact"),
-);
-export const appTheme = createAppTheme(getAppTokens("compact"), "compact");
