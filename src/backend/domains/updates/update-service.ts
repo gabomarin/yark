@@ -1080,7 +1080,7 @@ export class UpdateService extends EventEmitter {
               job.serverId,
               "update_failed",
               "error",
-              `Job ${job.type} exhausted retries (${job.maxAttempts}): ${job.lastError}`,
+              `Job ${job.type} failed (${job.attempts}/${job.maxAttempts}): ${job.lastError}`,
             );
             this.persistQueue();
             continue;
