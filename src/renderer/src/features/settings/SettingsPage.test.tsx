@@ -23,6 +23,7 @@ const readyStatus: SteamCmdStatus = {
   progressBytesTotal: null,
   lastLine: null,
   queuedCount: 0,
+  criticalJobs: [],
   checkedAt: "2026-07-23T00:00:00.000Z",
 };
 

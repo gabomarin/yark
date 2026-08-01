@@ -63,6 +63,9 @@ export const IPC = {
   steamcmdConsole: "steamcmd:console",
   steamcmdInstall: "steamcmd:install",
   steamcmdCancel: "steamcmd:cancel",
+  criticalJobRetry: "critical-jobs:retry",
+  criticalJobDismiss: "critical-jobs:dismiss",
+  criticalJobCancel: "critical-jobs:cancel",
   steamcmdSetPath: "steamcmd:set-path",
   steamcmdOpenCache: "steamcmd:open-cache",
   steamcmdClearCache: "steamcmd:clear-cache",
@@ -158,6 +161,9 @@ export interface RendererApi {
   openServerNativeTerminal(id: string): Promise<IpcResult<void>>;
   installSteamCmd(): Promise<IpcResult<string>>;
   cancelSteamCmd(): Promise<IpcResult<boolean>>;
+  retryCriticalJob(id: string): Promise<IpcResult<boolean>>;
+  dismissCriticalJob(id: string): Promise<IpcResult<boolean>>;
+  cancelCriticalJob(id: string): Promise<IpcResult<boolean>>;
   setSteamCmdPath(path: string): Promise<IpcResult<string>>;
   getSteamCmdStatus(): Promise<IpcResult<SteamCmdStatus>>;
   getSteamCmdConsole(limit?: number): Promise<IpcResult<SteamCmdConsoleSnapshot>>;

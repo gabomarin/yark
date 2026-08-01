@@ -29,6 +29,14 @@ import { MIN_INTERVAL_MINUTES } from "../../infra/db/backup-repository";
 import type { BackupRepository } from "../../infra/db/backup-repository";
 import type { ProcessManager } from "../../infra/process/process-manager";
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
+import {
+  isTransientCriticalJobError,
+  makeIdempotencyKey,
+  migrateCriticalJob,
+  toCriticalJobSummary,
+  type DurableCriticalJob,
+} from "../../orchestration/critical-job-recovery";
+import type { CriticalJobSummary } from "../../../shared/types";
 import { rconExec } from "../../infra/rcon/rcon-client";
 import {
   copySavedArksFiles,
@@ -110,6 +118,14 @@ const RCON_HOST = "127.0.0.1";
 const BACKUP_CRITICAL_JOBS_KEY = "backupCriticalJobsQueue.v1";
 const BACKUP_JOB_RETRY_DELAY_MS = 5000;
 const INI_SAVE_BACKUP_DEBOUNCE_MS = 2_000;
+const KNOWN_BACKUP_JOB_STATUSES = new Set([
+  "pending",
+  "running",
+  "retrying",
+  "blocked",
+  "failed",
+  "cancelled",
+]);
 
 /** Scheduled cadence creates world saves only (not players / INI). */
 export const SCHEDULED_BACKUP_KINDS: readonly BackupKind[] = ["world"];
@@ -132,17 +148,15 @@ const STALE_INTERVAL_FACTOR = 1.5;
 
 type BackupCriticalJobType = "pre-update-backup" | "restore";
 
-interface BackupCriticalJob {
-  id: string;
+interface BackupCriticalJob extends DurableCriticalJob {
   type: BackupCriticalJobType;
-  serverId: string;
   backupId: string | null;
-  attempts: number;
-  maxAttempts: number;
-  status: "pending" | "running";
-  createdAt: string;
-  updatedAt: string;
-  lastError: string | null;
+  context: {
+    completedBackupIds?: string[];
+    nextKindIndex?: number;
+    restoreHistoryId?: number;
+    safeguardBackupIds?: string[];
+  };
 }
 
 function delay(ms: number): Promise<void> {
@@ -278,7 +292,7 @@ export class BackupService extends EventEmitter {
   ) {
     super();
     this.queue = this.loadQueue();
-    if (this.queue.length > 0) {
+    if (this.queue.some((job) => job.status === "pending" || job.status === "retrying")) {
       setTimeout(() => {
         void this.processQueue();
       }, 250);
@@ -416,6 +430,89 @@ export class BackupService extends EventEmitter {
 
   async restoreBackupForJob(serverId: string, backupId: string): Promise<void> {
     await this.enqueueAndWait<void>("restore", serverId, backupId);
+  }
+
+  async restoreBackupForRollbackRecovery(
+    serverId: string,
+    backupId: string,
+  ): Promise<void> {
+    await this.enqueueAndWait<void>("restore", serverId, backupId, {
+      adoptRetryableRestore: true,
+    });
+  }
+
+  getCriticalJobs(): CriticalJobSummary[] {
+    return this.queue.map((job) =>
+      toCriticalJobSummary(job, this.servers.get(job.serverId)?.name ?? null));
+  }
+
+  getCompletedBackupsForCriticalJob(
+    serverId: string,
+    backupIds: readonly string[],
+  ): BackupRecord[] {
+    const orderedUniqueIds = [...new Set(backupIds.filter((id) => id.trim().length > 0))];
+    const byKind = new Map<BackupKind, BackupRecord>();
+    for (const backupId of orderedUniqueIds) {
+      const backup = this.backups.getBackup(backupId);
+      if (
+        backup === null
+        || backup.serverId !== serverId
+        || backup.status !== "completed"
+        || backup.type !== "pre_update"
+        || !existsSync(backup.path)
+      ) {
+        continue;
+      }
+      if (byKind.has(backup.kind)) continue;
+      byKind.set(backup.kind, backup);
+    }
+    return CRITICAL_BACKUP_KINDS
+      .map((kind) => byKind.get(kind))
+      .filter((backup): backup is BackupRecord => backup !== undefined);
+  }
+
+  retryCriticalJob(jobId: string): boolean {
+    const job = this.queue.find((candidate) => candidate.id === jobId);
+    if (
+      job === undefined
+      || (job.status !== "blocked" && job.status !== "failed")
+      || !job.operatorRetryAllowed
+    ) {
+      return false;
+    }
+    this.prepareCriticalJobRetry(
+      job,
+      "Retry requested by the operator after reviewing recovery state.",
+    );
+    void this.processQueue();
+    return true;
+  }
+
+  dismissCriticalJob(jobId: string): boolean {
+    const job = this.queue.find((candidate) => candidate.id === jobId);
+    if (
+      job === undefined
+      || (job.status !== "blocked" && job.status !== "failed" && job.status !== "cancelled")
+    ) {
+      return false;
+    }
+    this.removeJob(jobId);
+    this.persistQueue();
+    return true;
+  }
+
+  cancelCriticalJob(jobId: string): boolean {
+    const job = this.queue.find((candidate) => candidate.id === jobId);
+    if (job === undefined || (job.status !== "pending" && job.status !== "retrying")) {
+      return false;
+    }
+    job.status = "cancelled";
+    job.phase = "cancelled";
+    job.recoveryReason = "Cancelled by the operator before execution.";
+    job.updatedAt = new Date().toISOString();
+    this.rejectJob(job.id, new Error("Operation cancelled"));
+    this.persistQueue();
+    return true;
   }
 
   async list(serverId: string, limit: number): Promise<BackupRecord[]> {
@@ -1674,6 +1771,7 @@ export class BackupService extends EventEmitter {
     type: BackupCriticalJobType,
     serverId: string,
     backupId: string | null,
+    options?: { adoptRetryableRestore?: boolean },
   ): Promise<T> {
     const existingPending = this.queue.find(
       (job) =>
@@ -1682,6 +1780,34 @@ export class BackupService extends EventEmitter {
         && job.backupId === backupId,
     );
     if (existingPending !== undefined) {
+      if (
+        existingPending.status === "blocked"
+        || existingPending.status === "failed"
+        || existingPending.status === "cancelled"
+      ) {
+        if (
+          options?.adoptRetryableRestore === true
+          && existingPending.type === "restore"
+          && (existingPending.status === "blocked" || existingPending.status === "failed")
+          && existingPending.operatorRetryAllowed
+        ) {
+          const completion = new Promise<T>((resolve, reject) => {
+            this.addWaiter(existingPending.id, {
+              resolve: (value) => resolve(value as T),
+              reject,
+            });
+          });
+          this.prepareCriticalJobRetry(
+            existingPending,
+            "Retry adopted by the parent update rollback after operator confirmation.",
+          );
+          void this.processQueue();
+          return await completion;
+        }
+        throw new Error(
+          `A previous ${type} job requires Retry or Dismiss before another can be queued`,
+        );
+      }
       return await new Promise<T>((resolve, reject) => {
         this.addWaiter(existingPending.id, {
           resolve: (value) => resolve(value as T),
@@ -1699,9 +1825,14 @@ export class BackupService extends EventEmitter {
       attempts: 0,
       maxAttempts: 3,
       status: "pending",
+      phase: "queued",
       createdAt: now,
       updatedAt: now,
       lastError: null,
+      recoveryReason: null,
+      idempotencyKey: makeIdempotencyKey(type, serverId, backupId),
+      operatorRetryAllowed: false,
+      context: {},
     };
 
     this.queue.push(job);
@@ -1731,7 +1862,9 @@ export class BackupService extends EventEmitter {
 
     try {
       for (;;) {
-        const job = this.queue.find((candidate) => candidate.status === "pending");
+        const job = this.queue.find(
+          (candidate) => candidate.status === "pending" || candidate.status === "retrying",
+        );
         if (job === undefined) {
           break;
         }
@@ -1743,17 +1876,12 @@ export class BackupService extends EventEmitter {
         try {
           let result: unknown;
           if (job.type === "pre-update-backup") {
-            result = await this.createBackups(
-              job.serverId,
-              "pre_update",
-              "Pre-update backup",
-              [...CRITICAL_BACKUP_KINDS],
-            );
+            result = await this.resumePreUpdateBackupJob(job);
           } else {
             if (job.backupId === null || job.backupId.trim().length === 0) {
               throw new Error("backupId required for restore job");
             }
-            await this.restoreBackup(job.serverId, job.backupId);
+            await this.resumeRestoreJob(job);
             result = undefined;
           }
 
@@ -1765,20 +1893,57 @@ export class BackupService extends EventEmitter {
           job.lastError = error instanceof Error ? error.message : String(error);
           job.updatedAt = new Date().toISOString();
 
+          if (job.phase === "applying-restore") {
+            this.rejectJob(job.id, new Error(job.lastError));
+            job.status = "blocked";
+            job.operatorRetryAllowed = true;
+            job.recoveryReason =
+              `Failure during phase "${job.phase}" may have completed a side effect. Inspect backup and restore evidence before retrying.`;
+            this.persistQueue();
+            this.servers.addEvent(
+              job.serverId,
+              "error",
+              "error",
+              `Job ${job.type} blocked with an ambiguous outcome: ${job.lastError}`,
+            );
+            continue;
+          }
+
+          if (!isTransientCriticalJobError(error)) {
+            this.rejectJob(job.id, new Error(job.lastError));
+            job.status = "failed";
+            job.phase = "failed";
+            job.operatorRetryAllowed = false;
+            job.recoveryReason =
+              "This validation, security, cancellation, or missing-resource failure is not safe to retry automatically.";
+            this.persistQueue();
+            this.servers.addEvent(
+              job.serverId,
+              "error",
+              "error",
+              `Job ${job.type} failed without retry: ${job.lastError}`,
+            );
+            continue;
+          }
+
           if (job.attempts >= job.maxAttempts) {
             this.rejectJob(job.id, new Error(job.lastError));
+            job.status = "failed";
+            job.phase = "failed";
+            job.operatorRetryAllowed = true;
+            job.recoveryReason = `Retry limit reached after ${job.maxAttempts} attempts.`;
             this.servers.addEvent(
               job.serverId,
               "error",
               "error",
               `Job ${job.type} exhausted retries (${job.maxAttempts}): ${job.lastError}`,
             );
-            this.removeJob(job.id);
             this.persistQueue();
             continue;
           }
 
-          job.status = "pending";
+          job.status = "retrying";
+          job.recoveryReason = `Transient failure; retry ${job.attempts + 1} of ${job.maxAttempts} is scheduled.`;
           this.persistQueue();
           this.servers.addEvent(
             job.serverId,
@@ -1787,6 +1952,12 @@ export class BackupService extends EventEmitter {
             `Job ${job.type} will retry (${job.attempts}/${job.maxAttempts})`,
           );
           await delay(BACKUP_JOB_RETRY_DELAY_MS);
+          if (job.status === "retrying") {
+            job.status = "pending";
+            job.phase = "queued";
+            job.updatedAt = new Date().toISOString();
+            this.persistQueue();
+          }
         }
       }
     } finally {
@@ -1801,32 +1972,97 @@ export class BackupService extends EventEmitter {
     }
 
     try {
-      const parsed = JSON.parse(raw) as BackupCriticalJob[];
+      const parsed = JSON.parse(raw) as Array<Partial<BackupCriticalJob>>;
       if (!Array.isArray(parsed)) {
-        return [];
+        throw new Error("Backup critical job queue is not an array");
       }
       const jobs: BackupCriticalJob[] = [];
+      let invalidEntryFound = false;
       for (const job of parsed) {
         if (
           typeof job.id !== "string"
           || (job.type !== "pre-update-backup" && job.type !== "restore")
           || typeof job.serverId !== "string"
         ) {
+          invalidEntryFound = true;
           continue;
         }
-        jobs.push({
-          ...job,
-          backupId: typeof job.backupId === "string" ? job.backupId : null,
-          status: "pending",
-          attempts: Number.isFinite(job.attempts) ? Math.max(0, Math.floor(job.attempts)) : 0,
-          maxAttempts: Number.isFinite(job.maxAttempts)
-            ? Math.max(1, Math.floor(job.maxAttempts))
-            : 3,
-          updatedAt: new Date().toISOString(),
+        if (
+          typeof job.status === "string"
+          && !KNOWN_BACKUP_JOB_STATUSES.has(job.status)
+        ) {
+          invalidEntryFound = true;
+          continue;
+        }
+        if (
+          typeof job.phase === "string"
+          && !this.isKnownBackupJobPhase(job.type, job.phase)
+        ) {
+          invalidEntryFound = true;
+          continue;
+        }
+        const backupId = typeof job.backupId === "string" ? job.backupId : null;
+        const context = this.sanitizeBackupJobContext(job.context);
+        if (job.type === "restore") {
+          const historyId = context.restoreHistoryId;
+          const history =
+            typeof historyId === "number"
+              ? this.backups.getRestoreHistory(historyId)
+              : null;
+          if (
+            job.phase === "restore-complete"
+            || (
+              history?.status === "completed"
+              && this.isRestoreHistoryOwnedByJob(job.id, job.serverId, backupId, history)
+            )
+          ) {
+            continue;
+          }
+          if (history?.status === "completed") {
+            invalidEntryFound = true;
+            continue;
+          }
+        }
+        const migrated = migrateCriticalJob<BackupCriticalJob>(job, {
+          type: job.type,
+          serverId: job.serverId,
+          defaultPhase: "queued",
+          interruptedIsAmbiguous:
+            (job.type === "restore" && job.phase === "applying-restore")
+            || (job.type === "pre-update-backup" && typeof job.phase !== "string"),
+          idempotencyDiscriminator: backupId,
+          serverExists: this.servers.get(job.serverId) !== null,
         });
+        migrated.backupId = backupId;
+        migrated.context = context;
+        const duplicateIndex = jobs.findIndex(
+          (candidate) => candidate.idempotencyKey === migrated.idempotencyKey,
+        );
+        if (duplicateIndex >= 0) {
+          const merged = this.mergeBackupCriticalJobs(
+            jobs[duplicateIndex]!,
+            migrated,
+          );
+          if (this.servers.get(job.serverId) !== null) {
+            merged.status = "blocked";
+            merged.operatorRetryAllowed = true;
+            merged.recoveryReason =
+              "Duplicate durable job records were recovered. Review the preserved phase before retrying.";
+          }
+          jobs[duplicateIndex] = merged;
+          invalidEntryFound = true;
+          continue;
+        }
+        jobs.push(migrated);
       }
+      if (invalidEntryFound) {
+        this.settings.set(`${BACKUP_CRITICAL_JOBS_KEY}.quarantine.${Date.now()}`, raw);
+      }
+      this.settings.set(BACKUP_CRITICAL_JOBS_KEY, JSON.stringify(jobs));
       return jobs;
     } catch {
+      this.settings.set(`${BACKUP_CRITICAL_JOBS_KEY}.quarantine.${Date.now()}`, raw);
+      this.settings.set(BACKUP_CRITICAL_JOBS_KEY, "[]");
       return [];
     }
   }
@@ -1837,6 +2073,285 @@ export class BackupService extends EventEmitter {
 
   private removeJob(jobId: string): void {
     this.queue = this.queue.filter((job) => job.id !== jobId);
+  }
+
+  private checkpointJob(job: BackupCriticalJob, phase: string): void {
+    job.phase = phase;
+    job.updatedAt = new Date().toISOString();
+    this.persistQueue();
+  }
+
+  private prepareCriticalJobRetry(job: BackupCriticalJob, reason: string): void {
+    job.status = "pending";
+    job.phase = "queued";
+    if (job.type === "restore") {
+      const historyId = job.context.restoreHistoryId;
+      if (typeof historyId === "number") {
+        const history = this.backups.getRestoreHistory(historyId);
+        if (history?.status === "started") {
+          this.backups.completeRestoreHistory(
+            historyId,
+            "failed",
+            "Superseded by an explicit operator retry after interrupted restore.",
+          );
+        }
+      }
+      job.context = {};
+    }
+    job.maxAttempts = Math.max(job.maxAttempts, job.attempts + 3);
+    job.recoveryReason = reason;
+    job.updatedAt = new Date().toISOString();
+    this.persistQueue();
+  }
+
+  private async resumePreUpdateBackupJob(job: BackupCriticalJob): Promise<BackupRecord[]> {
+    this.checkpointJob(job, "reconciling-backups");
+    await this.reconcileDiskBackups(job.serverId);
+    const marker = `[critical-job:${job.id}]`;
+    const completedIds = new Set(job.context.completedBackupIds ?? []);
+    const existing = this.backups
+      .listBackups(job.serverId, 10_000)
+      .filter(
+        (backup) =>
+          backup.type === "pre_update"
+          && backup.status === "completed"
+          && backup.notes?.includes(marker) === true,
+      );
+    for (const backup of existing) completedIds.add(backup.id);
+
+    let nextKindIndex = Math.max(0, Math.floor(job.context.nextKindIndex ?? 0));
+    while (nextKindIndex < CRITICAL_BACKUP_KINDS.length) {
+      const kind = CRITICAL_BACKUP_KINDS[nextKindIndex]!;
+      const alreadyCompleted = existing.some((backup) => backup.kind === kind);
+      if (!alreadyCompleted) {
+        this.checkpointJob(job, `creating-backup:${kind}`);
+        const created = await this.createBackups(
+          job.serverId,
+          "pre_update",
+          `Pre-update backup ${marker}`,
+          [kind],
+        );
+        for (const backup of created) completedIds.add(backup.id);
+      }
+      nextKindIndex += 1;
+      job.context.completedBackupIds = [...completedIds];
+      job.context.nextKindIndex = nextKindIndex;
+      this.checkpointJob(job, `backup-complete:${kind}`);
+    }
+
+    return [...completedIds]
+      .map((backupId) => this.backups.getBackup(backupId))
+      .filter((backup): backup is BackupRecord => backup?.status === "completed");
+  }
+
+  private async resumeRestoreJob(job: BackupCriticalJob): Promise<void> {
+    const server = this.mustServer(job.serverId);
+    if (this.processes.isActive(job.serverId)) {
+      throw new Error("Stop the server before restoring a backup");
+    }
+    if (job.backupId === null) throw new Error("backupId required for restore job");
+    const backup = this.backups.getBackup(job.backupId);
+    if (
+      backup === null
+      || backup.serverId !== job.serverId
+      || backup.status !== "completed"
+    ) {
+      throw new Error("Invalid backup for restore");
+    }
+
+    const marker = `[critical-job:${job.id}]`;
+    let restoreHistoryId = job.context.restoreHistoryId;
+    const existingHistory =
+      typeof restoreHistoryId === "number"
+        ? this.backups.getRestoreHistory(restoreHistoryId)
+        : null;
+    if (existingHistory?.status === "completed") {
+      if (!this.isRestoreHistoryOwnedByJob(job.id, job.serverId, backup.id, existingHistory)) {
+        throw new Error("Restore history evidence does not belong to this recovery job");
+      }
+      this.checkpointJob(job, "restore-complete");
+      return;
+    }
+    if (
+      existingHistory !== null
+      && !this.isRestoreHistoryOwnedByJob(job.id, job.serverId, backup.id, existingHistory)
+    ) {
+      throw new Error("Restore history evidence does not belong to this recovery job");
+    }
+    if (existingHistory === null || existingHistory.status === "failed") {
+      restoreHistoryId = this.backups.insertRestoreHistory({
+        serverId: job.serverId,
+        backupId: backup.id,
+        status: "started",
+        notes: marker,
+      });
+      job.context.restoreHistoryId = restoreHistoryId;
+      this.checkpointJob(job, "restore-history-started");
+    }
+
+    this.checkpointJob(job, "creating-restore-safeguard");
+    if (restoreHistoryId === undefined) {
+      throw new Error("Restore history checkpoint was not created");
+    }
+    const safeguards = this.backups
+      .listBackups(job.serverId, 10_000)
+      .filter(
+        (candidate) =>
+          candidate.type === "pre_restore"
+          && candidate.kind === backup.kind
+          && candidate.status === "completed"
+          && candidate.notes?.includes(marker) === true,
+      );
+    if (safeguards.length === 0) {
+      const created = await this.createBackups(
+        job.serverId,
+        "pre_restore",
+        `Safeguard before restore ${marker}`,
+        [backup.kind],
+      );
+      job.context.safeguardBackupIds = created.map((candidate) => candidate.id);
+    } else {
+      job.context.safeguardBackupIds = safeguards.map((candidate) => candidate.id);
+    }
+    this.checkpointJob(job, "restore-safeguard-complete");
+
+    this.checkpointJob(job, "applying-restore");
+    await this.applyRestore(server, backup);
+    this.backups.completeRestoreHistory(restoreHistoryId, "completed", marker);
+    this.checkpointJob(job, "restore-complete");
+    this.servers.addEvent(
+      job.serverId,
+      "backup_restored",
+      "info",
+      `Restore applied on "${server.name}" from ${backup.kind} backup ${backup.id}`,
+    );
+    this.emitChanged(job.serverId);
+  }
+
+  private sanitizeBackupJobContext(raw: unknown): BackupCriticalJob["context"] {
+    if (typeof raw !== "object" || raw === null) {
+      return {};
+    }
+    const input = raw as Record<string, unknown>;
+    const context: BackupCriticalJob["context"] = {};
+    if (Array.isArray(input.completedBackupIds)) {
+      context.completedBackupIds = input.completedBackupIds
+        .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+        .map((value) => value.trim());
+    }
+    if (typeof input.nextKindIndex === "number" && Number.isFinite(input.nextKindIndex)) {
+      context.nextKindIndex = Math.max(0, Math.floor(input.nextKindIndex));
+    }
+    if (typeof input.restoreHistoryId === "number" && Number.isFinite(input.restoreHistoryId)) {
+      context.restoreHistoryId = Math.max(1, Math.floor(input.restoreHistoryId));
+    }
+    if (Array.isArray(input.safeguardBackupIds)) {
+      context.safeguardBackupIds = input.safeguardBackupIds
+        .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+        .map((value) => value.trim());
+    }
+    return context;
+  }
+
+  private isKnownBackupJobPhase(type: BackupCriticalJobType, phase: string): boolean {
+    const knownStatic = new Set([
+      "queued",
+      "failed",
+      "cancelled",
+      "reconciling-backups",
+      "restore-history-started",
+      "creating-restore-safeguard",
+      "restore-safeguard-complete",
+      "applying-restore",
+      "restore-complete",
+    ]);
+    if (knownStatic.has(phase)) return true;
+    if (type !== "pre-update-backup") return false;
+    if (!phase.startsWith("creating-backup:") && !phase.startsWith("backup-complete:")) {
+      return false;
+    }
+    const kind = phase.split(":", 2)[1];
+    return kind === "world" || kind === "players" || kind === "ini";
+  }
+
+  private isRestoreHistoryOwnedByJob(
+    jobId: string,
+    serverId: string,
+    backupId: string | null,
+    history: NonNullable<ReturnType<BackupRepository["getRestoreHistory"]>>,
+  ): boolean {
+    const marker = `[critical-job:${jobId}]`;
+    if (history.serverId !== serverId) return false;
+    if (backupId !== null && history.backupId !== backupId) return false;
+    return history.notes?.includes(marker) === true;
+  }
+
+  private mergeBackupCriticalJobs(
+    existing: BackupCriticalJob,
+    incoming: BackupCriticalJob,
+  ): BackupCriticalJob {
+    const phaseOrder = [
+      "failed",
+      "cancelled",
+      "queued",
+      "reconciling-backups",
+      "restore-history-started",
+      "creating-restore-safeguard",
+      "restore-safeguard-complete",
+      "creating-backup:world",
+      "backup-complete:world",
+      "creating-backup:players",
+      "backup-complete:players",
+      "creating-backup:ini",
+      "backup-complete:ini",
+      "restore-complete",
+      "applying-restore",
+    ];
+    const phaseRank = (phase: string): number => {
+      const index = phaseOrder.indexOf(phase);
+      return index >= 0 ? index : -1;
+    };
+    const incomingPhaseRank = phaseRank(incoming.phase);
+    const existingPhaseRank = phaseRank(existing.phase);
+    const preferIncoming =
+      incomingPhaseRank > existingPhaseRank
+      || (
+        incomingPhaseRank === existingPhaseRank
+        && (
+          incoming.attempts > existing.attempts
+          || (
+            incoming.attempts === existing.attempts
+            && incoming.updatedAt > existing.updatedAt
+          )
+        )
+      );
+    const preferred = preferIncoming ? incoming : existing;
+    const secondary = preferIncoming ? existing : incoming;
+    const mergedCompleted = [
+      ...(preferred.context.completedBackupIds ?? []),
+      ...(secondary.context.completedBackupIds ?? []),
+    ];
+    const mergedSafeguards = [
+      ...(preferred.context.safeguardBackupIds ?? []),
+      ...(secondary.context.safeguardBackupIds ?? []),
+    ];
+    return {
+      ...preferred,
+      attempts: Math.max(existing.attempts, incoming.attempts),
+      maxAttempts: Math.max(existing.maxAttempts, incoming.maxAttempts),
+      operatorRetryAllowed: existing.operatorRetryAllowed || incoming.operatorRetryAllowed,
+      context: {
+        completedBackupIds: [...new Set(mergedCompleted)],
+        nextKindIndex: Math.max(
+          preferred.context.nextKindIndex ?? 0,
+          secondary.context.nextKindIndex ?? 0,
+        ),
+        restoreHistoryId:
+          preferred.context.restoreHistoryId
+          ?? secondary.context.restoreHistoryId,
+        safeguardBackupIds: [...new Set(mergedSafeguards)],
+      },
+    };
   }
 
   private resolveJob(jobId: string, value: unknown): void {

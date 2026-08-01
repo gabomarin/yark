@@ -859,12 +859,17 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   return (
     <AppProviders density={uiDensity}>
       {renderMain()}
-      {steamCmdBusy && steamCmdStatus !== null && (
+      {steamCmdStatus !== null
+        && (steamCmdBusy || (steamCmdStatus.criticalJobs?.length ?? 0) > 0)
+        && (
         <SteamCmdProgressDock
           status={steamCmdStatus}
           console={steamCmdConsole}
           serverName={steamCmdServerName}
           onCancel={() => void runAction(() => window.api.cancelSteamCmd())}
+          onRetryJob={(id) => void runAction(() => window.api.retryCriticalJob(id))}
+          onDismissJob={(id) => void runAction(() => window.api.dismissCriticalJob(id))}
+          onCancelJob={(id) => void runAction(() => window.api.cancelCriticalJob(id))}
         />
       )}
     </AppProviders>

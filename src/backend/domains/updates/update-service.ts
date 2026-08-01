@@ -17,6 +17,13 @@ import type { ProcessManager } from "../../infra/process/process-manager";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
 import {
+  isTransientCriticalJobError,
+  makeIdempotencyKey,
+  migrateCriticalJob,
+  toCriticalJobSummary,
+  type DurableCriticalJob,
+} from "../../orchestration/critical-job-recovery";
+import {
   buildSteamCmdAppUpdateArgs,
   STEAMCMD_ENGLISH_ARGS,
   steamCmdSpawnEnv,
@@ -29,6 +36,7 @@ import {
   resolveSteamCmdHome,
   shouldReuseAsaContentCache,
   syncAsaContentCacheToInstallDir,
+  readAsaManifestBuildId,
 } from "./steamcmd-content-cache";
 import {
   estimateProgressFromDisk,
@@ -43,6 +51,31 @@ import { ASA_APP_ID } from "./steamcmd-content-cache";
 const MAX_STEAMCMD_LINES = 500;
 const CRITICAL_JOBS_KEY = "criticalJobsQueue.v1";
 const JOB_RETRY_DELAY_MS = 5000;
+const KNOWN_CRITICAL_JOB_STATUSES = new Set([
+  "pending",
+  "running",
+  "retrying",
+  "blocked",
+  "failed",
+  "cancelled",
+]);
+const KNOWN_CRITICAL_JOB_PHASES = new Set([
+  "queued",
+  "validating",
+  "validated",
+  "stopping-server",
+  "creating-pre-update-backup",
+  "pre-update-backup-complete",
+  "applying-files",
+  "files-applied",
+  "restarting-server",
+  "rollback-stopping-server",
+  "rollback-restoring-backups",
+  "rollback-restarting-server",
+  "rollback-complete",
+  "failed",
+  "cancelled",
+]);
 /** UI push: frequent enough for live % without saturating Electron. */
 const PROGRESS_PUSH_MIN_MS = 100;
 /** Do not spam the console on every SteamCMD \r tick; do update the bar. */
@@ -62,16 +95,23 @@ interface ActiveSteamCmdOperation {
   startedAt: string;
 }
 
-interface CriticalJob {
-  id: string;
+class CriticalJobRecoveryBlockedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CriticalJobRecoveryBlockedError";
+  }
+}
+
+interface CriticalJob extends DurableCriticalJob {
   type: "install-files" | "update" | "verify-files";
-  serverId: string;
-  attempts: number;
-  maxAttempts: number;
-  status: "pending" | "running";
-  createdAt: string;
-  updatedAt: string;
-  lastError: string | null;
+  context: {
+    wasRunning?: boolean;
+    preUpdateBackupIds?: string[];
+    rollbackRestoredBackupIds?: string[];
+    appliedBuildId?: string | null;
+    updateLogPath?: string;
+    steamCmdExitCode?: number;
+  };
 }
 
 function delay(ms: number): Promise<void> {
@@ -127,8 +167,11 @@ export class UpdateService extends EventEmitter {
   ) {
     super();
     this.queue = this.loadQueue();
-    if (this.queue.length > 0) {
-      this.appendSteamCmdConsole(`Resuming ${this.queue.length} pending critical job(s)`);
+    const resumableJobs = this.queue.filter(
+      (job) => job.status === "pending" || job.status === "retrying",
+    );
+    if (resumableJobs.length > 0) {
+      this.appendSteamCmdConsole(`Resuming ${resumableJobs.length} pending critical job(s)`);
       setTimeout(() => {
         void this.processQueue();
       }, 250);
@@ -223,9 +266,11 @@ export class UpdateService extends EventEmitter {
   getSteamCmdStatus(): SteamCmdStatus {
     const executablePath = this.findSteamCmdExecutable();
     const active = this.activeSteamCmd;
-    const queuedPending = this.queue.filter((job) => job.status === "pending");
+    const queuedPending = this.queue.filter(
+      (job) => job.status === "pending" || job.status === "retrying",
+    );
     const queued = this.queue.find(
-      (job) => job.status === "pending" || job.status === "running",
+      (job) => job.status === "pending" || job.status === "retrying" || job.status === "running",
     );
     const steamCmdHome =
       executablePath !== null
@@ -260,8 +305,57 @@ export class UpdateService extends EventEmitter {
       progressBytesTotal: this.progressBytesTotal,
       lastLine: this.lastProgressLine,
       queuedCount: queuedPending.length,
+      criticalJobs: [
+        ...this.queue.map((job) =>
+          toCriticalJobSummary(job, this.servers.get(job.serverId)?.name ?? null)),
+        ...(this.backups.getCriticalJobs?.() ?? []),
+      ].sort((left, right) => left.createdAt.localeCompare(right.createdAt)),
       checkedAt: new Date().toISOString(),
     };
+  }
+
+  retryCriticalJob(jobId: string): boolean {
+    const job = this.queue.find((candidate) => candidate.id === jobId);
+    if (job === undefined) return this.backups.retryCriticalJob(jobId);
+    if (
+      (job.status !== "blocked" && job.status !== "failed")
+      || !job.operatorRetryAllowed
+    ) return false;
+    job.status = "pending";
+    job.phase = this.resumePhaseForRetry(job);
+    job.maxAttempts = Math.max(job.maxAttempts, job.attempts + 3);
+    job.recoveryReason = "Retry requested by the operator after reviewing recovery state.";
+    job.updatedAt = new Date().toISOString();
+    this.persistQueue();
+    this.emitProgress(true);
+    void this.processQueue();
+    return true;
+  }
+
+  dismissCriticalJob(jobId: string): boolean {
+    const job = this.queue.find((candidate) => candidate.id === jobId);
+    if (job === undefined) return this.backups.dismissCriticalJob(jobId);
+    if (job.status !== "blocked" && job.status !== "failed" && job.status !== "cancelled") {
+      return false;
+    }
+    this.removeJob(jobId);
+    this.persistQueue();
+    this.emitProgress(true);
+    return true;
+  }
+
+  cancelCriticalJob(jobId: string): boolean {
+    const job = this.queue.find((candidate) => candidate.id === jobId);
+    if (job === undefined) return this.backups.cancelCriticalJob(jobId);
+    if (job.status !== "pending" && job.status !== "retrying") return false;
+    job.status = "cancelled";
+    job.phase = "cancelled";
+    job.recoveryReason = "Cancelled by the operator before execution.";
+    job.updatedAt = new Date().toISOString();
+    this.rejectJob(job.id, new OperationCancelledError());
+    this.persistQueue();
+    this.emitProgress(true);
+    return true;
   }
 
   cancelSteamCmd(): boolean {
@@ -269,7 +363,9 @@ export class UpdateService extends EventEmitter {
       this.activeSteamCmd !== null
       || this.activeSyncChild !== null
       || this.syncingServerId !== null
-      || this.queue.length > 0;
+      || this.queue.some(
+        (job) => job.status === "pending" || job.status === "retrying" || job.status === "running",
+      );
 
     if (!hadWork) {
       this.appendSteamCmdConsole("Cancel: no active operation");
@@ -295,10 +391,22 @@ export class UpdateService extends EventEmitter {
       this.killProcessTree(child);
     }
 
-    const jobs = [...this.queue];
-    this.queue = [];
-    this.persistQueue();
+    const jobs = this.queue.filter(
+      (job) => job.status === "pending" || job.status === "retrying" || job.status === "running",
+    );
     for (const job of jobs) {
+      if (job.status === "running") {
+        // The active operation may still need to restore backups or return the
+        // server to its original runtime state. Keep it recoverable until that
+        // unwind reaches a durable terminal checkpoint.
+        job.recoveryReason = "Cancellation requested; completing the safe unwind.";
+        job.updatedAt = new Date().toISOString();
+        continue;
+      }
+      job.status = "cancelled";
+      job.phase = "cancelled";
+      job.recoveryReason = "Cancelled by the operator.";
+      job.updatedAt = new Date().toISOString();
       this.servers.addEvent(
         job.serverId,
         "update_failed",
@@ -307,6 +415,7 @@ export class UpdateService extends EventEmitter {
       );
       this.rejectJob(job.id, new OperationCancelledError());
     }
+    this.persistQueue();
 
     this.syncingServerId = null;
     this.syncingStartedAt = null;
@@ -355,7 +464,12 @@ export class UpdateService extends EventEmitter {
     if (
       this.activeSteamCmd !== null
       || this.activeSyncChild !== null
-      || this.queue.some((job) => job.status === "running" || job.status === "pending")
+      || this.queue.some(
+        (job) =>
+          job.status === "running"
+          || job.status === "pending"
+          || job.status === "retrying",
+      )
     ) {
       throw new Error("Stop the current SteamCMD operation before clearing a cache");
     }
@@ -396,8 +510,9 @@ export class UpdateService extends EventEmitter {
     }
   }
 
-  private async performInstallServerFiles(serverId: string): Promise<void> {
+  private async performInstallServerFiles(serverId: string, job?: CriticalJob): Promise<void> {
     await this.locks.withLock(serverId, "install-files", async () => {
+      this.checkpointJob(job, "validating");
       const server = this.servers.get(serverId);
       if (server === null) {
         throw new Error("Server does not exist");
@@ -411,6 +526,7 @@ export class UpdateService extends EventEmitter {
         `Installing base files via SteamCMD on "${server.name}"`,
       );
 
+      this.checkpointJob(job, "applying-files");
       const cmd = await this.runSteamUpdate(server.installDir, "install-files", serverId);
       if (cmd.code !== 0) {
         this.servers.addEvent(
@@ -421,6 +537,11 @@ export class UpdateService extends EventEmitter {
         );
         throw new Error(`SteamCMD exited with code ${cmd.code}`);
       }
+      if (job !== undefined) {
+        job.context.steamCmdExitCode = cmd.code;
+        job.context.appliedBuildId = readAsaManifestBuildId(server.installDir);
+      }
+      this.checkpointJob(job, "files-applied");
 
       this.servers.addEvent(
         serverId,
@@ -431,14 +552,30 @@ export class UpdateService extends EventEmitter {
     });
   }
 
-  private async performUpdateServer(serverId: string): Promise<void> {
+  private async performUpdateServer(serverId: string, job?: CriticalJob): Promise<void> {
     await this.locks.withLock(serverId, "update", async () => {
+      // Backup identity is the durable resume signal. Unlike `phase`, it
+      // survives validation checkpoints and a second crash during retry.
+      const resumeFromPreUpdateBackup =
+        (job?.context.preUpdateBackupIds?.length ?? 0) > 0;
+      if (job !== undefined) {
+        // A new SteamCMD attempt creates a new rollback generation. Evidence
+        // from the prior completed rollback must never suppress this attempt's
+        // restores if the process crashes again.
+        job.context.rollbackRestoredBackupIds = [];
+      }
+      this.checkpointJob(job, "validating");
       const server = this.servers.get(serverId);
       if (server === null) {
         throw new Error("Server does not exist");
       }
 
-      const wasRunning = this.processes.isActive(serverId);
+      const isCurrentlyRunning = this.processes.isActive(serverId);
+      const wasRunning = job?.context.wasRunning ?? isCurrentlyRunning;
+      if (job !== undefined && job.context.wasRunning === undefined) {
+        job.context.wasRunning = isCurrentlyRunning;
+      }
+      this.checkpointJob(job, "validated");
       const startedAt = new Date();
       this.servers.addEvent(
         serverId,
@@ -464,16 +601,37 @@ export class UpdateService extends EventEmitter {
       > = [];
       try {
         // Stop before snapshotting — live SavedArks writes would tear rollback archives.
-        if (wasRunning) {
+        if (isCurrentlyRunning) {
+          this.checkpointJob(job, "stopping-server");
           await this.instances.stop(serverId, { backup: false });
         }
 
-        preUpdateBackups = await this.backups.createPreUpdateBackupForJob(serverId);
+        if (resumeFromPreUpdateBackup) {
+          const persistedIds = job?.context.preUpdateBackupIds ?? [];
+          preUpdateBackups = this.backups.getCompletedBackupsForCriticalJob(
+            serverId,
+            persistedIds,
+          );
+          if (preUpdateBackups.length !== persistedIds.length || persistedIds.length === 0) {
+            throw new CriticalJobRecoveryBlockedError(
+              "Persisted pre-update backup evidence is incomplete; operator review is required",
+            );
+          }
+        } else {
+          this.checkpointJob(job, "creating-pre-update-backup");
+          preUpdateBackups = await this.backups.createPreUpdateBackupForJob(serverId);
+          if (job !== undefined) {
+            job.context.preUpdateBackupIds = preUpdateBackups.map((backup) => backup.id);
+          }
+        }
+        this.checkpointJob(job, "pre-update-backup-complete");
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
         await mkdir(this.updatesLogDir, { recursive: true });
         const logPath = join(this.updatesLogDir, `${serverId}-${timestamp}.log`);
+        if (job !== undefined) job.context.updateLogPath = logPath;
 
+        this.checkpointJob(job, "applying-files");
         const cmd = await this.runSteamUpdate(server.installDir, "update", serverId);
         const durationMs = Date.now() - startedAt.getTime();
         await writeFile(
@@ -499,7 +657,14 @@ export class UpdateService extends EventEmitter {
           );
         }
 
+        if (job !== undefined) {
+          job.context.steamCmdExitCode = cmd.code;
+          job.context.appliedBuildId = readAsaManifestBuildId(server.installDir);
+        }
+        this.checkpointJob(job, "files-applied");
+
         if (wasRunning) {
+          this.checkpointJob(job, "restarting-server");
           await this.instances.startForMaintenance(serverId);
           const healthy = await this.waitForHealthy(serverId, 90_000);
           if (!healthy) {
@@ -516,6 +681,8 @@ export class UpdateService extends EventEmitter {
             : `Update completed on \"${server.name}\" (left stopped)`,
         );
       } catch (err) {
+        if (err instanceof CriticalJobRecoveryBlockedError) throw err;
+        this.checkpointJob(job, "rollback-stopping-server");
         this.servers.addEvent(
           serverId,
           "update_failed",
@@ -542,12 +709,24 @@ export class UpdateService extends EventEmitter {
         }
 
         for (const backup of preUpdateBackups) {
+          this.checkpointJob(job, "rollback-restoring-backups");
           await this.backups.restoreBackupForJob(serverId, backup.id);
+          if (job !== undefined) {
+            const restored = new Set(job.context.rollbackRestoredBackupIds ?? []);
+            restored.add(backup.id);
+            job.context.rollbackRestoredBackupIds = [...restored];
+            this.checkpointJob(job, "rollback-restoring-backups");
+          }
         }
 
         if (wasRunning) {
+          this.checkpointJob(job, "rollback-restarting-server");
           await this.instances.startForMaintenance(serverId);
-          const rollbackHealthy = await this.waitForHealthy(serverId, 90_000);
+          const rollbackHealthy = await this.waitForHealthy(
+            serverId,
+            90_000,
+            { ignoreCancellation: true },
+          );
           if (!rollbackHealthy) {
             throw new Error(
               "Rollback ran but the server did not return to running",
@@ -573,6 +752,7 @@ export class UpdateService extends EventEmitter {
             },
           },
         );
+        this.checkpointJob(job, "rollback-complete");
 
         // Rollback is recovery, not success — surface failure to the job queue / UI.
         throw err instanceof Error ? err : new Error(String(err));
@@ -580,14 +760,20 @@ export class UpdateService extends EventEmitter {
     });
   }
 
-  private async performVerifyServerFiles(serverId: string): Promise<void> {
+  private async performVerifyServerFiles(serverId: string, job?: CriticalJob): Promise<void> {
     await this.locks.withLock(serverId, "verify-files", async () => {
+      this.checkpointJob(job, "validating");
       const server = this.servers.get(serverId);
       if (server === null) {
         throw new Error("Server does not exist");
       }
 
-      const wasRunning = this.processes.isActive(serverId);
+      const isCurrentlyRunning = this.processes.isActive(serverId);
+      const wasRunning = job?.context.wasRunning ?? isCurrentlyRunning;
+      if (job !== undefined && job.context.wasRunning === undefined) {
+        job.context.wasRunning = isCurrentlyRunning;
+      }
+      this.checkpointJob(job, "validated");
       this.servers.addEvent(
         serverId,
         "update_started",
@@ -606,7 +792,8 @@ export class UpdateService extends EventEmitter {
         },
       );
 
-      if (wasRunning) {
+      if (isCurrentlyRunning) {
+        this.checkpointJob(job, "stopping-server");
         this.appendSteamCmdConsole(
           `Stopping "${server.name}" before integrity check…`,
         );
@@ -615,6 +802,7 @@ export class UpdateService extends EventEmitter {
 
       try {
         await mkdir(server.installDir, { recursive: true });
+        this.checkpointJob(job, "applying-files");
         const cmd = await this.runSteamUpdate(server.installDir, "verify-files", serverId);
         if (cmd.code !== 0) {
           this.servers.addEvent(
@@ -626,6 +814,12 @@ export class UpdateService extends EventEmitter {
           throw new Error(`SteamCMD validate exited with code ${cmd.code}`);
         }
 
+        if (job !== undefined) {
+          job.context.steamCmdExitCode = cmd.code;
+          job.context.appliedBuildId = readAsaManifestBuildId(server.installDir);
+        }
+        this.checkpointJob(job, "files-applied");
+
         this.servers.addEvent(
           serverId,
           "update_completed",
@@ -634,6 +828,7 @@ export class UpdateService extends EventEmitter {
         );
 
         if (wasRunning) {
+          this.checkpointJob(job, "restarting-server");
           await this.instances.startForMaintenance(serverId);
           const healthy = await this.waitForHealthy(serverId, 90_000);
           if (!healthy) {
@@ -660,9 +855,20 @@ export class UpdateService extends EventEmitter {
     serverId: string,
   ): Promise<void> {
     const existingPending = this.queue.find(
-      (job) => job.serverId === serverId && job.type === type,
+      (job) =>
+        job.serverId === serverId
+        && job.type === type,
     );
     if (existingPending !== undefined) {
+      if (
+        existingPending.status === "blocked"
+        || existingPending.status === "failed"
+        || existingPending.status === "cancelled"
+      ) {
+        throw new Error(
+          `A previous ${type} job requires Retry or Dismiss before another can be queued`,
+        );
+      }
       await new Promise<void>((resolve, reject) => {
         this.waiters.set(existingPending.id, { resolve, reject });
       });
@@ -677,9 +883,14 @@ export class UpdateService extends EventEmitter {
       attempts: 0,
       maxAttempts: 3,
       status: "pending",
+      phase: "queued",
       createdAt: now,
       updatedAt: now,
       lastError: null,
+      recoveryReason: null,
+      idempotencyKey: makeIdempotencyKey(type, serverId),
+      operatorRetryAllowed: false,
+      context: {},
     };
 
     this.queue.push(job);
@@ -714,7 +925,9 @@ export class UpdateService extends EventEmitter {
 
     try {
       for (;;) {
-        const job = this.queue.find((candidate) => candidate.status === "pending");
+        const job = this.queue.find(
+          (candidate) => candidate.status === "pending" || candidate.status === "retrying",
+        );
         if (job === undefined) {
           break;
         }
@@ -727,11 +940,28 @@ export class UpdateService extends EventEmitter {
 
         try {
           if (job.type === "install-files") {
-            await this.performInstallServerFiles(job.serverId);
+            if (job.phase === "files-applied" || job.phase === "restarting-server") {
+              await this.finishRecoveredFileJob(job);
+            } else {
+              await this.performInstallServerFiles(job.serverId, job);
+            }
           } else if (job.type === "verify-files") {
-            await this.performVerifyServerFiles(job.serverId);
+            if (job.phase === "files-applied" || job.phase === "restarting-server") {
+              await this.finishRecoveredFileJob(job);
+            } else {
+              await this.performVerifyServerFiles(job.serverId, job);
+            }
           } else {
-            await this.performUpdateServer(job.serverId);
+            if (job.phase === "files-applied" || job.phase === "restarting-server") {
+              await this.finishRecoveredFileJob(job);
+            } else if (
+              job.phase.startsWith("rollback-")
+              && job.phase !== "rollback-complete"
+            ) {
+              await this.finishRecoveredRollback(job);
+            } else {
+              await this.performUpdateServer(job.serverId, job);
+            }
           }
           this.resolveJob(job.id);
           this.removeJob(job.id);
@@ -745,13 +975,41 @@ export class UpdateService extends EventEmitter {
             this.appendSteamCmdConsole(
               `Job ${job.type} stopped after cancellation`,
             );
+            const incompleteRollback =
+              job.type === "update"
+              && job.phase.startsWith("rollback-")
+              && job.phase !== "rollback-complete";
+            if (incompleteRollback) {
+              this.rejectJob(
+                job.id,
+                error instanceof Error ? error : new OperationCancelledError(),
+              );
+              job.status = "blocked";
+              job.operatorRetryAllowed = true;
+              job.recoveryReason =
+                `Cancellation interrupted phase "${job.phase}". Inspect backups and runtime state before retrying.`;
+              job.updatedAt = new Date().toISOString();
+              this.persistQueue();
+              this.cancelRequested = false;
+              this.endFileSync();
+              this.emitProgress(true);
+              continue;
+            }
             this.rejectJob(
               job.id,
               isOperationCancelledError(error)
                 ? (error as Error)
                 : new OperationCancelledError(),
             );
-            this.removeJob(job.id);
+            job.status = "cancelled";
+            if (job.phase !== "rollback-complete") {
+              job.phase = "cancelled";
+            }
+            job.recoveryReason =
+              job.phase === "rollback-complete"
+                ? "Cancelled by the operator after rollback completed safely."
+                : "Cancelled by the operator during execution.";
+            job.updatedAt = new Date().toISOString();
             this.persistQueue();
             this.cancelRequested = false;
             this.endFileSync();
@@ -764,20 +1022,72 @@ export class UpdateService extends EventEmitter {
           job.lastError = error instanceof Error ? error.message : String(error);
           job.updatedAt = new Date().toISOString();
 
-          if (job.attempts >= job.maxAttempts) {
+          const ambiguousRollback =
+            job.type === "update"
+            && job.phase.startsWith("rollback-")
+            && job.phase !== "rollback-complete";
+          if (error instanceof CriticalJobRecoveryBlockedError) {
+            this.rejectJob(job.id, error);
+            job.status = "blocked";
+            job.operatorRetryAllowed = true;
+            job.recoveryReason = error.message;
+            this.persistQueue();
+            continue;
+          }
+          if (ambiguousRollback) {
             this.rejectJob(job.id, new Error(job.lastError));
+            job.status = "blocked";
+            job.operatorRetryAllowed = true;
+            job.recoveryReason =
+              `Failure during phase "${job.phase}" left rollback state ambiguous. Inspect backups and runtime state before retrying.`;
+            this.persistQueue();
+            this.servers.addEvent(
+              job.serverId,
+              "update_failed",
+              "error",
+              `Job ${job.type} blocked during ambiguous rollback: ${job.lastError}`,
+            );
+            continue;
+          }
+
+          if (
+            job.type === "update"
+            && job.phase === "rollback-complete"
+            && !isTransientCriticalJobError(error)
+          ) {
+            this.rejectJob(job.id, new Error(job.lastError));
+            job.status = "failed";
+            job.operatorRetryAllowed = true;
+            job.recoveryReason =
+              "The update failed, but rollback completed. Review the update log before retrying.";
+            this.persistQueue();
+            continue;
+          }
+
+          if (job.attempts >= job.maxAttempts || !isTransientCriticalJobError(error)) {
+            this.rejectJob(job.id, new Error(job.lastError));
+            job.status = "failed";
+            const rollbackCompleted =
+              job.type === "update" && job.phase === "rollback-complete";
+            job.phase = rollbackCompleted ? "rollback-complete" : "failed";
+            job.operatorRetryAllowed = isTransientCriticalJobError(error);
+            job.recoveryReason = isTransientCriticalJobError(error)
+              ? rollbackCompleted
+                ? `Retry limit reached after ${job.maxAttempts} attempts; rollback completed successfully.`
+                : `Retry limit reached after ${job.maxAttempts} attempts.`
+              : "This validation, security, cancellation, or missing-resource failure is not safe to retry automatically.";
             this.servers.addEvent(
               job.serverId,
               "update_failed",
               "error",
               `Job ${job.type} exhausted retries (${job.maxAttempts}): ${job.lastError}`,
             );
-            this.removeJob(job.id);
             this.persistQueue();
             continue;
           }
 
-          job.status = "pending";
+          job.status = "retrying";
+          job.recoveryReason = `Transient failure; retry ${job.attempts + 1} of ${job.maxAttempts} is scheduled.`;
           this.persistQueue();
           this.servers.addEvent(
             job.serverId,
@@ -786,6 +1096,12 @@ export class UpdateService extends EventEmitter {
             `Job ${job.type} will retry (${job.attempts}/${job.maxAttempts})`,
           );
           await delay(JOB_RETRY_DELAY_MS);
+          if (job.status === "retrying") {
+            job.status = "pending";
+            job.phase = this.resumePhaseForRetry(job);
+            job.updatedAt = new Date().toISOString();
+            this.persistQueue();
+          }
         }
       }
     } finally {
@@ -1269,14 +1585,20 @@ export class UpdateService extends EventEmitter {
     });
   }
 
-  private async waitForHealthy(serverId: string, timeoutMs: number): Promise<boolean> {
+  private async waitForHealthy(
+    serverId: string,
+    timeoutMs: number,
+    options?: { ignoreCancellation?: boolean },
+  ): Promise<boolean> {
     const started = Date.now();
     while (Date.now() - started < timeoutMs) {
+      if (options?.ignoreCancellation !== true) this.assertNotCancelled();
       const status = this.processes.getStatus(serverId).status;
       if (status === "running") return true;
       if (status === "error" || status === "stopped") return false;
       await delay(1000);
     }
+    if (options?.ignoreCancellation !== true) this.assertNotCancelled();
     return false;
   }
 
@@ -1511,31 +1833,108 @@ export class UpdateService extends EventEmitter {
     }
 
     try {
-      const parsed = JSON.parse(raw) as CriticalJob[];
+      const parsed = JSON.parse(raw) as Array<Partial<CriticalJob>>;
       if (!Array.isArray(parsed)) {
-        return [];
+        throw new Error("Critical job queue is not an array");
       }
       const jobs: CriticalJob[] = [];
+      let invalidEntryFound = false;
       for (const job of parsed) {
         if (
           typeof job.id !== "string"
           || (job.type !== "install-files" && job.type !== "update" && job.type !== "verify-files")
           || typeof job.serverId !== "string"
         ) {
+          invalidEntryFound = true;
           continue;
         }
-        jobs.push({
-          ...job,
-          status: "pending",
-          attempts: Number.isFinite(job.attempts) ? Math.max(0, Math.floor(job.attempts)) : 0,
-          maxAttempts: Number.isFinite(job.maxAttempts)
-            ? Math.max(1, Math.floor(job.maxAttempts))
-            : 3,
-          updatedAt: new Date().toISOString(),
+        if (
+          typeof job.status === "string"
+          && !KNOWN_CRITICAL_JOB_STATUSES.has(job.status)
+        ) {
+          invalidEntryFound = true;
+          continue;
+        }
+        if (
+          typeof job.phase === "string"
+          && !KNOWN_CRITICAL_JOB_PHASES.has(job.phase)
+        ) {
+          invalidEntryFound = true;
+          continue;
+        }
+        const type = job.type;
+        const phase = typeof job.phase === "string" ? job.phase : "queued";
+        const wasInterrupted = job.status === "running";
+        const context = this.sanitizeCriticalJobContext(job.context);
+
+        // A persisted post-side-effect checkpoint is durable evidence that
+        // SteamCMD completed. If the requested runtime state is already present,
+        // the queue row itself is stale and can be reconciled as completed.
+        if (
+          wasInterrupted
+          && (phase === "files-applied" || phase === "restarting-server")
+          && context.wasRunning === true
+          && this.processes.isActive(job.serverId)
+        ) {
+          continue;
+        }
+        if (
+          wasInterrupted
+          && phase === "files-applied"
+          && context.wasRunning !== true
+        ) {
+          continue;
+        }
+
+        const interruptedIsAmbiguous =
+          (type === "update" && phase !== "validating" && phase !== "validated"
+            && phase !== "files-applied")
+          || ((type === "verify-files" || type === "install-files")
+            && (phase === "stopping-server" || phase === "restarting-server"));
+        const migrated = migrateCriticalJob<CriticalJob>(job, {
+          type,
+          serverId: job.serverId,
+          defaultPhase: "queued",
+          interruptedIsAmbiguous,
+          serverExists: this.servers.get(job.serverId) !== null,
         });
+        migrated.context = context;
+        if (wasInterrupted && phase === "files-applied") {
+          migrated.status = "pending";
+          migrated.operatorRetryAllowed = false;
+          migrated.recoveryReason =
+            "SteamCMD completion was checkpointed before restart; resuming only the remaining runtime transition.";
+        } else if (wasInterrupted && phase === "rollback-complete") {
+          migrated.status = "failed";
+          migrated.operatorRetryAllowed = true;
+          migrated.recoveryReason =
+            "The update failed and its rollback was checkpointed as complete. Review the update log before retrying.";
+        }
+        const duplicateIndex = jobs.findIndex(
+          (candidate) => candidate.idempotencyKey === migrated.idempotencyKey,
+        );
+        if (duplicateIndex >= 0) {
+          const merged = this.mergeCriticalJobs(jobs[duplicateIndex]!, migrated);
+          if (this.servers.get(job.serverId) !== null) {
+            merged.status = "blocked";
+            merged.operatorRetryAllowed = true;
+            merged.recoveryReason =
+              "Duplicate durable job records were recovered. Review the preserved phase before retrying.";
+          }
+          jobs[duplicateIndex] = merged;
+          invalidEntryFound = true;
+          continue;
+        }
+        jobs.push(migrated);
       }
+      if (invalidEntryFound) {
+        this.settings.set(`${CRITICAL_JOBS_KEY}.quarantine.${Date.now()}`, raw);
+      }
+      this.settings.set(CRITICAL_JOBS_KEY, JSON.stringify(jobs));
       return jobs;
     } catch {
+      this.settings.set(`${CRITICAL_JOBS_KEY}.quarantine.${Date.now()}`, raw);
+      this.settings.set(CRITICAL_JOBS_KEY, "[]");
       return [];
     }
   }
@@ -1546,6 +1945,231 @@ export class UpdateService extends EventEmitter {
 
   private removeJob(jobId: string): void {
     this.queue = this.queue.filter((job) => job.id !== jobId);
+  }
+
+  private checkpointJob(job: CriticalJob | undefined, phase: string): void {
+    if (job === undefined) return;
+    job.phase = phase;
+    job.updatedAt = new Date().toISOString();
+    this.persistQueue();
+    this.emitProgress(true);
+  }
+
+  private resumePhaseForRetry(job: CriticalJob): string {
+    if (job.phase === "restarting-server") return job.phase;
+    if (
+      job.type === "update"
+      && job.phase.startsWith("rollback-")
+      && job.phase !== "rollback-complete"
+    ) {
+      return job.phase;
+    }
+    if (
+      job.type === "update"
+      && (job.context.preUpdateBackupIds?.length ?? 0) > 0
+    ) {
+      return "pre-update-backup-complete";
+    }
+    return "queued";
+  }
+
+  private sanitizeCriticalJobContext(raw: unknown): CriticalJob["context"] {
+    if (typeof raw !== "object" || raw === null) {
+      return {};
+    }
+    const input = raw as Record<string, unknown>;
+    const context: CriticalJob["context"] = {};
+    if (typeof input.wasRunning === "boolean") {
+      context.wasRunning = input.wasRunning;
+    }
+    if (Array.isArray(input.preUpdateBackupIds)) {
+      context.preUpdateBackupIds = [
+        ...new Set(
+          input.preUpdateBackupIds
+            .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+            .map((value) => value.trim()),
+        ),
+      ];
+    }
+    if (Array.isArray(input.rollbackRestoredBackupIds)) {
+      context.rollbackRestoredBackupIds = [
+        ...new Set(
+          input.rollbackRestoredBackupIds
+            .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+            .map((value) => value.trim()),
+        ),
+      ];
+    }
+    if (typeof input.appliedBuildId === "string" || input.appliedBuildId === null) {
+      context.appliedBuildId = input.appliedBuildId;
+    }
+    if (typeof input.updateLogPath === "string" && input.updateLogPath.trim().length > 0) {
+      context.updateLogPath = input.updateLogPath.trim();
+    }
+    if (typeof input.steamCmdExitCode === "number" && Number.isFinite(input.steamCmdExitCode)) {
+      context.steamCmdExitCode = Math.floor(input.steamCmdExitCode);
+    }
+    return context;
+  }
+
+  private mergeCriticalJobs(existing: CriticalJob, incoming: CriticalJob): CriticalJob {
+    const phaseOrder = [
+      "failed",
+      "cancelled",
+      "queued",
+      "validating",
+      "validated",
+      "rollback-complete",
+      "stopping-server",
+      "creating-pre-update-backup",
+      "pre-update-backup-complete",
+      "applying-files",
+      "files-applied",
+      "restarting-server",
+      "rollback-stopping-server",
+      "rollback-restoring-backups",
+      "rollback-restarting-server",
+    ];
+    const phaseRank = (phase: string): number => {
+      const index = phaseOrder.indexOf(phase);
+      return index >= 0 ? index : -1;
+    };
+    const incomingPhaseRank = phaseRank(incoming.phase);
+    const existingPhaseRank = phaseRank(existing.phase);
+    const preferIncoming =
+      incomingPhaseRank > existingPhaseRank
+      || (
+        incomingPhaseRank === existingPhaseRank
+        && (
+          incoming.attempts > existing.attempts
+          || (
+            incoming.attempts === existing.attempts
+            && incoming.updatedAt > existing.updatedAt
+          )
+        )
+      );
+    const preferred = preferIncoming ? incoming : existing;
+    const secondary = preferIncoming ? existing : incoming;
+    return {
+      ...preferred,
+      attempts: Math.max(existing.attempts, incoming.attempts),
+      maxAttempts: Math.max(existing.maxAttempts, incoming.maxAttempts),
+      operatorRetryAllowed: existing.operatorRetryAllowed || incoming.operatorRetryAllowed,
+      context: {
+        wasRunning:
+          preferred.context.wasRunning
+          ?? secondary.context.wasRunning,
+        preUpdateBackupIds: [
+          ...new Set([
+            ...(preferred.context.preUpdateBackupIds ?? []),
+            ...(secondary.context.preUpdateBackupIds ?? []),
+          ]),
+        ],
+        rollbackRestoredBackupIds: [
+          ...new Set([
+            ...(preferred.context.rollbackRestoredBackupIds ?? []),
+            ...(secondary.context.rollbackRestoredBackupIds ?? []),
+          ]),
+        ],
+        appliedBuildId:
+          preferred.context.appliedBuildId
+          ?? secondary.context.appliedBuildId
+          ?? null,
+        updateLogPath:
+          preferred.context.updateLogPath
+          ?? secondary.context.updateLogPath,
+        steamCmdExitCode:
+          preferred.context.steamCmdExitCode
+          ?? secondary.context.steamCmdExitCode,
+      },
+    };
+  }
+
+  private async finishRecoveredFileJob(job: CriticalJob): Promise<void> {
+    await this.locks.withLock(
+      job.serverId,
+      `${job.type}-recovery`,
+      () => this.finishRecoveredFileJobLocked(job),
+    );
+  }
+
+  private async finishRecoveredFileJobLocked(job: CriticalJob): Promise<void> {
+    const server = this.servers.get(job.serverId);
+    if (server === null) throw new Error("Server does not exist");
+
+    if (job.context.wasRunning === true && !this.processes.isActive(job.serverId)) {
+      this.checkpointJob(job, "restarting-server");
+      await this.instances.startForMaintenance(job.serverId);
+      const healthy = await this.waitForHealthy(job.serverId, 90_000);
+      if (!healthy) {
+        throw new Error("Server did not reach running state while completing recovered work");
+      }
+    }
+
+    this.servers.addEvent(
+      job.serverId,
+      "update_completed",
+      "info",
+      `Recovered ${job.type} reconciled after the persisted files-applied checkpoint`,
+    );
+  }
+
+  private async finishRecoveredRollback(job: CriticalJob): Promise<void> {
+    await this.locks.withLock(
+      job.serverId,
+      "update-rollback-recovery",
+      () => this.finishRecoveredRollbackLocked(job),
+    );
+  }
+
+  private async finishRecoveredRollbackLocked(job: CriticalJob): Promise<void> {
+    const server = this.servers.get(job.serverId);
+    if (server === null) throw new Error("Server does not exist");
+    const backupIds = job.context.preUpdateBackupIds ?? [];
+    const backups = this.backups.getCompletedBackupsForCriticalJob(
+      job.serverId,
+      backupIds,
+    );
+    if (backupIds.length === 0 || backups.length !== backupIds.length) {
+      throw new CriticalJobRecoveryBlockedError(
+        "Rollback backup evidence is incomplete; operator review is required",
+      );
+    }
+
+    const resumeFromRestart = job.phase === "rollback-restarting-server";
+    if (!resumeFromRestart) {
+      if (this.processes.isActive(job.serverId)) {
+        this.checkpointJob(job, "rollback-stopping-server");
+        await this.instances.stop(job.serverId, { backup: false });
+      }
+      const restored = new Set(job.context.rollbackRestoredBackupIds ?? []);
+      for (const backup of backups) {
+        if (restored.has(backup.id)) continue;
+        this.checkpointJob(job, "rollback-restoring-backups");
+        await this.backups.restoreBackupForRollbackRecovery(job.serverId, backup.id);
+        restored.add(backup.id);
+        job.context.rollbackRestoredBackupIds = [...restored];
+        this.checkpointJob(job, "rollback-restoring-backups");
+      }
+    }
+
+    if (job.context.wasRunning === true && !this.processes.isActive(job.serverId)) {
+      this.checkpointJob(job, "rollback-restarting-server");
+      await this.instances.startForMaintenance(job.serverId);
+      const healthy = await this.waitForHealthy(
+        job.serverId,
+        90_000,
+        { ignoreCancellation: true },
+      );
+      if (!healthy) {
+        throw new Error("Rollback completed but the server did not return to running");
+      }
+    }
+
+    this.checkpointJob(job, "rollback-complete");
+    throw new Error(
+      `Recovered rollback completed for "${server.name}"; review the original update failure before retrying`,
+    );
   }
 
   private resolveJob(jobId: string): void {

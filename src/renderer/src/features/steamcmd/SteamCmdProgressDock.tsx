@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { useState } from "react";
 import { CaretDown, CaretUp, ProhibitInset, TerminalWindow } from "@phosphor-icons/react";
-import { ActionIcon, Button, Group, Progress, Stack, Text, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Badge, Button, Divider, Group, Progress, Stack, Text, Title, Tooltip } from "@mantine/core";
 import { formatSteamCmdByteProgress, steamCmdByteProgressNoun, hasMeaningfulSteamCmdByteProgress } from "@shared/steamcmd-progress";
 import type { SteamCmdConsoleSnapshot, SteamCmdStatus } from "@shared/types";
 import { AutoScrollConsole } from "./AutoScrollConsole";
@@ -12,6 +12,9 @@ interface Props {
   console: SteamCmdConsoleSnapshot | null;
   serverName?: string | null;
   onCancel: () => void;
+  onRetryJob: (jobId: string) => void;
+  onDismissJob: (jobId: string) => void;
+  onCancelJob: (jobId: string) => void;
 }
 
 const OPERATION_LABEL: Record<NonNullable<SteamCmdStatus["operation"]>, string> = {
@@ -28,7 +31,7 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
   const title =
     status.operation !== null
       ? OPERATION_LABEL[status.operation]
-      : "Updating files";
+      : "Critical jobs";
   const percent = status.progressPercent;
   /** Unknown % while busy (e.g. robocopy sync) — full striped bar with loop animation. */
   const indeterminate = percent === null && status.busy;
@@ -54,6 +57,7 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
     status.queuedCount > 0
       ? ` · ${status.queuedCount} queued`
       : "";
+  const jobs = status.criticalJobs ?? [];
 
   if (minimized) {
     return (
@@ -94,17 +98,19 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
                 <CaretUp size={14} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Cancel">
-              <ActionIcon
-                size="sm"
-                color="red"
-                variant="light"
-                aria-label="Cancel operation"
-                onClick={props.onCancel}
-              >
-                <ProhibitInset size={14} />
-              </ActionIcon>
-            </Tooltip>
+            {status.busy && (
+              <Tooltip label="Cancel">
+                <ActionIcon
+                  size="sm"
+                  color="red"
+                  variant="light"
+                  aria-label="Cancel operation"
+                  onClick={props.onCancel}
+                >
+                  <ProhibitInset size={14} />
+                </ActionIcon>
+              </Tooltip>
+            )}
           </Group>
         </Group>
       </aside>
@@ -151,25 +157,29 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
                 <CaretDown size={14} />
               </ActionIcon>
             </Tooltip>
-            <Button
-              size="xs"
-              color="red"
-              variant="light"
-              leftSection={<ProhibitInset size={14} />}
-              onClick={props.onCancel}
-            >
-              Cancel
-            </Button>
+            {status.busy && (
+              <Button
+                size="xs"
+                color="red"
+                variant="light"
+                leftSection={<ProhibitInset size={14} />}
+                onClick={props.onCancel}
+              >
+                Cancel
+              </Button>
+            )}
           </Group>
         </Group>
 
-        <Progress
-          value={progressValue}
-          animated={progressAnimated}
-          striped={progressAnimated}
-          size="md"
-          radius="xl"
-        />
+        {status.busy && (
+          <Progress
+            value={progressValue}
+            animated={progressAnimated}
+            striped={progressAnimated}
+            size="md"
+            radius="xl"
+          />
+        )}
         {percent !== null && (
           <Text size="xs" c="dimmed" ta="right">
             {percent.toFixed(1)}%
@@ -182,6 +192,57 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
           maxLines={60}
           emptyText="Waiting for progress…"
         />
+        {jobs.length > 0 && (
+          <Stack gap="xs">
+            <Divider label="Durable job recovery" labelPosition="left" />
+            {jobs.map((job) => (
+              <Group
+                key={job.id}
+                data-critical-job-id={job.id}
+                justify="space-between"
+                align="flex-start"
+                wrap="nowrap"
+              >
+                <div style={{ minWidth: 0 }}>
+                  <Group gap="xs">
+                    <Text size="sm" fw={600}>{job.operation}</Text>
+                    <Badge
+                      size="xs"
+                      color={job.status === "failed" ? "red" : job.status === "blocked" ? "orange" : "blue"}
+                    >
+                      {job.status}
+                    </Badge>
+                  </Group>
+                  <Text size="xs" c="dimmed">
+                    Server: {job.serverName ?? job.serverId} · Phase: {job.phase} · attempts {job.attempts}/{job.maxAttempts}
+                  </Text>
+                  {(job.recoveryReason ?? job.lastError) !== null && (
+                    <Text size="xs" c={job.status === "failed" ? "red" : "dimmed"}>
+                      {job.recoveryReason ?? job.lastError}
+                    </Text>
+                  )}
+                </div>
+                <Group gap={4} wrap="nowrap">
+                  {job.nextActions.includes("retry") && (
+                    <Button size="compact-xs" variant="light" onClick={() => props.onRetryJob(job.id)}>
+                      Retry
+                    </Button>
+                  )}
+                  {job.nextActions.includes("cancel") && (
+                    <Button size="compact-xs" color="red" variant="subtle" onClick={() => props.onCancelJob(job.id)}>
+                      Cancel
+                    </Button>
+                  )}
+                  {job.nextActions.includes("dismiss") && (
+                    <Button size="compact-xs" variant="subtle" onClick={() => props.onDismissJob(job.id)}>
+                      Dismiss
+                    </Button>
+                  )}
+                </Group>
+              </Group>
+            ))}
+          </Stack>
+        )}
       </Stack>
     </aside>
   );

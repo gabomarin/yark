@@ -27,6 +27,26 @@ interface BackupRow {
   notes: string | null;
 }
 
+export interface RestoreHistoryRecord {
+  id: number;
+  serverId: string;
+  backupId: string;
+  startedAt: string;
+  completedAt: string | null;
+  status: "started" | "completed" | "failed";
+  notes: string | null;
+}
+
+interface RestoreHistoryRow {
+  id: number;
+  server_id: string;
+  backup_id: string;
+  started_at: string;
+  completed_at: string | null;
+  status: "started" | "completed" | "failed";
+  notes: string | null;
+}
+
 interface PolicyRow {
   server_id: string;
   enabled: number;
@@ -381,6 +401,22 @@ export class BackupRepository {
       ) as unknown as { lastInsertRowid: number | bigint };
 
     return Number(result.lastInsertRowid);
+  }
+
+  getRestoreHistory(id: number): RestoreHistoryRecord | null {
+    const row = this.db
+      .prepare("SELECT * FROM restore_history WHERE id = ?")
+      .get(id) as RestoreHistoryRow | undefined;
+    if (row === undefined) return null;
+    return {
+      id: row.id,
+      serverId: row.server_id,
+      backupId: row.backup_id,
+      startedAt: row.started_at,
+      completedAt: row.completed_at,
+      status: row.status,
+      notes: row.notes,
+    };
   }
 
   completeRestoreHistory(id: number, status: "completed" | "failed", notes: string | null): void {
