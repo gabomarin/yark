@@ -137,6 +137,7 @@ export async function prepareModAddApply(
   const batchSize = Math.max(1, options.batchSize ?? MOD_ADD_URL_BATCH_SIZE);
   const batchCount = Math.max(1, Math.ceil(refs.length / batchSize));
   let nextIds = [...current.configuredIds];
+  const nextIdSet = new Set(nextIds);
   let nextDisabled = [...current.disabledIds];
   let nextCache = { ...current.cache };
   const resolutionFailures: string[] = [];
@@ -179,8 +180,9 @@ export async function prepareModAddApply(
         continue;
       }
       const detailData = result.data;
-      if (!nextIds.includes(detailData.id)) {
+      if (!nextIdSet.has(detailData.id)) {
         nextIds = [...nextIds, detailData.id];
+        nextIdSet.add(detailData.id);
         batchChanged = true;
       }
       nextDisabled = nextDisabled.filter((candidate) => candidate !== detailData.id);

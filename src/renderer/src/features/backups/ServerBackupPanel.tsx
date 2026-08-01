@@ -86,22 +86,23 @@ function formatWhen(iso: string): string {
   return formatLogDateTime(iso, { fallback: iso });
 }
 
+const relativeTimeFormat = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+
 function formatRelativeTime(iso: string, nowMs = Date.now()): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
   const diffSec = Math.round((date.getTime() - nowMs) / 1000);
   const abs = Math.abs(diffSec);
-  const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
-  if (abs < 60) return rtf.format(diffSec, "second");
+  if (abs < 60) return relativeTimeFormat.format(diffSec, "second");
   const diffMin = Math.round(diffSec / 60);
-  if (Math.abs(diffMin) < 60) return rtf.format(diffMin, "minute");
+  if (Math.abs(diffMin) < 60) return relativeTimeFormat.format(diffMin, "minute");
   const diffHour = Math.round(diffMin / 60);
-  if (Math.abs(diffHour) < 24) return rtf.format(diffHour, "hour");
+  if (Math.abs(diffHour) < 24) return relativeTimeFormat.format(diffHour, "hour");
   const diffDay = Math.round(diffHour / 24);
-  if (Math.abs(diffDay) < 30) return rtf.format(diffDay, "day");
+  if (Math.abs(diffDay) < 30) return relativeTimeFormat.format(diffDay, "day");
   const diffMonth = Math.round(diffDay / 30);
-  if (Math.abs(diffMonth) < 12) return rtf.format(diffMonth, "month");
-  return rtf.format(Math.round(diffMonth / 12), "year");
+  if (Math.abs(diffMonth) < 12) return relativeTimeFormat.format(diffMonth, "month");
+  return relativeTimeFormat.format(Math.round(diffMonth / 12), "year");
 }
 
 function truncateMiddle(value: string, max = 42): string {
@@ -263,9 +264,10 @@ export function ServerBackupPanel(props: Props): ReactElement {
   }, [activeKind, kindBackups, playerSearch, playerSort]);
 
   const selectableBackups = displayedBackups.filter((b) => b.status !== "running");
+  const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const allSelected =
     selectableBackups.length > 0
-    && selectableBackups.every((b) => selectedIds.includes(b.id));
+    && selectableBackups.every((b) => selectedIdSet.has(b.id));
 
   const load = async (serverId: string, opts?: { quiet?: boolean }) => {
     const quiet = opts?.quiet === true;
@@ -951,7 +953,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
                     return (
                       <div key={backup.id} className={classes.backupRow}>
                         <Checkbox
-                          checked={selectedIds.includes(backup.id)}
+                          checked={selectedIdSet.has(backup.id)}
                           disabled={!canSelect || busy}
                           onChange={() => toggleSelected(backup.id)}
                           aria-label={`Select backup ${backup.id}`}

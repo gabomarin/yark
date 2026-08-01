@@ -25,9 +25,13 @@ export function asaPrimaryLogPath(installDir: string): string {
 
 export function listAsaLogFiles(logsDir: string): string[] {
   if (!existsSync(logsDir)) return [];
-  return readdirSync(logsDir)
-    .filter((name) => /\.log$/i.test(name))
-    .map((name) => join(logsDir, name));
+  const files: string[] = [];
+  for (const name of readdirSync(logsDir)) {
+    if (/\.log$/i.test(name)) {
+      files.push(join(logsDir, name));
+    }
+  }
+  return files;
 }
 
 /** Decode ASA/UE log bytes (UTF-8 or UTF-16 LE with BOM). */
