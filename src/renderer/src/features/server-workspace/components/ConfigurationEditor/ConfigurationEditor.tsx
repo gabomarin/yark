@@ -94,31 +94,39 @@ export function ConfigurationEditor(props: Props): ReactElement {
     props.onDirtyChange?.(dirty);
   }, [dirty, props.onDirtyChange]);
 
-  const load = async (serverId: string) => {
+  const load = async (serverId: string, opts?: { cancelled?: () => boolean }) => {
     setLoading(true);
     setError(null);
     setInfo(null);
     setPreview(null);
-    const result = await window.api.readServerIni(serverId);
-    setLoading(false);
-    if (!result.ok) {
-      setSnapshot(null);
-      setPayload(null);
-      setBaseline(null);
-      setError(result.error ?? "Could not read the INI");
-      return;
+    try {
+      const result = await window.api.readServerIni(serverId);
+      if (opts?.cancelled?.()) return;
+      if (!result.ok) {
+        setSnapshot(null);
+        setPayload(null);
+        setBaseline(null);
+        setError(result.error ?? "Could not read the INI");
+        return;
+      }
+      const rawPayload = result.data.payload;
+      const sanitized = sanitizeServerIniPayload(rawPayload);
+      setSnapshot({ ...result.data, payload: sanitized });
+      setPayload(sanitized);
+      // ASA may regenerate client sections on start. They are runtime noise:
+      // must not appear in the editor or turn a read into a pending change.
+      setBaseline(sanitized);
+    } finally {
+      setLoading(false);
     }
-    const rawPayload = result.data.payload;
-    const sanitized = sanitizeServerIniPayload(rawPayload);
-    setSnapshot({ ...result.data, payload: sanitized });
-    setPayload(sanitized);
-    // ASA may regenerate client sections on start. They are runtime noise:
-    // must not appear in the editor or turn a read into a pending change.
-    setBaseline(sanitized);
   };
 
   useEffect(() => {
-    void load(props.server.id);
+    let cancelled = false;
+    void load(props.server.id, { cancelled: () => cancelled });
+    return () => {
+      cancelled = true;
+    };
   }, [props.server.id]);
 
   const activeFileKey = iniFile;
@@ -235,29 +243,35 @@ export function ConfigurationEditor(props: Props): ReactElement {
     setBusy(true);
     setError(null);
     setInfo(null);
-    const sanitized = sanitizeServerIniPayload(payload);
-    const result = await window.api.saveServerIni(props.server.id, sanitized);
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.error ?? "Could not save the INI");
-      return;
+    try {
+      const sanitized = sanitizeServerIniPayload(payload);
+      const result = await window.api.saveServerIni(props.server.id, sanitized);
+      if (!result.ok) {
+        setError(result.error ?? "Could not save the INI");
+        return;
+      }
+      setPayload(sanitized);
+      setPreview(result.data);
+      setBaseline(sanitized);
+      setInfo(
+        result.data.changedCount > 0
+          ? `Saved (${result.data.changedCount} changes)`
+          : "Saved (no changes)",
+      );
+    } finally {
+      setBusy(false);
     }
-    setPayload(sanitized);
-    setPreview(result.data);
-    setBaseline(sanitized);
-    setInfo(
-      result.data.changedCount > 0
-        ? `Saved (${result.data.changedCount} changes)`
-        : "Saved (sin changes)",
-    );
   };
 
   const openExternal = async () => {
     setBusy(true);
-    const result = await window.api.openServerIniInEditor(props.server.id, activeFileKey);
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.error ?? "Could not open the file");
+    try {
+      const result = await window.api.openServerIniInEditor(props.server.id, activeFileKey);
+      if (!result.ok) {
+        setError(result.error ?? "Could not open the file");
+      }
+    } finally {
+      setBusy(false);
     }
   };
 

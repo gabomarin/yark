@@ -88,9 +88,9 @@ export function ClusterDetailPanel(props: Props): ReactElement {
             </Text>
           ) : (
             <ul className={classes.issueList}>
-              {props.report.issues.map((issue, index) => (
+              {props.report.issues.map((issue) => (
                 <ClusterIssueRow
-                  key={`${issue.severity}-${index}-${issue.message}`}
+                  key={`${issue.severity}-${issue.serverId ?? "fleet"}-${issue.message}`}
                   issue={issue}
                   relatedServerName={
                     issue.serverId !== null

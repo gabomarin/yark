@@ -92,16 +92,21 @@ export function ServerLogsPanel(props: Props): ReactElement {
     const gen = ++updateLoadGenRef.current;
     setBusy(true);
     setError(null);
-    // Cap read size so a single job log cannot dominate renderer memory.
-    const result = await window.api.readServerUpdateLog(serverId, fileName, 150_000);
-    if (gen !== updateLoadGenRef.current) return;
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.error ?? "Could not open update log");
-      return;
+    try {
+      // Cap read size so a single job log cannot dominate renderer memory.
+      const result = await window.api.readServerUpdateLog(serverId, fileName, 150_000);
+      if (gen !== updateLoadGenRef.current) return;
+      if (!result.ok) {
+        setError(result.error ?? "Could not open update log");
+        return;
+      }
+      setSelectedUpdateFile(fileName);
+      setUpdateContent(result.data);
+    } finally {
+      if (gen === updateLoadGenRef.current) {
+        setBusy(false);
+      }
     }
-    setSelectedUpdateFile(fileName);
-    setUpdateContent(result.data);
   };
 
   const load = async (serverId: string, options?: { quiet?: boolean }) => {
@@ -114,21 +119,24 @@ export function ServerLogsPanel(props: Props): ReactElement {
       setInfo(null);
       clearUpdateContent();
     }
-    const result = await window.api.listServerLogs(serverId);
-    if (gen !== loadGenRef.current) return;
-    if (!quiet) {
-      setLoading(false);
-    }
-    if (!result.ok) {
-      if (!quiet) {
-        setLogs(null);
-        setError(result.error ?? "Could not load logs");
+    try {
+      const result = await window.api.listServerLogs(serverId);
+      if (gen !== loadGenRef.current) return;
+      if (!result.ok) {
+        if (!quiet) {
+          setLogs(null);
+          setError(result.error ?? "Could not load logs");
+        }
+        return;
       }
-      return;
+      if (result.data.serverId !== serverId) return;
+      applyLoadedLogs(result.data, runtimeRevision);
+      return result.data;
+    } finally {
+      if (!quiet && gen === loadGenRef.current) {
+        setLoading(false);
+      }
     }
-    if (result.data.serverId !== serverId) return;
-    applyLoadedLogs(result.data, runtimeRevision);
-    return result.data;
   };
 
   const refreshRuntime = async (serverId: string) => {
@@ -165,16 +173,21 @@ export function ServerLogsPanel(props: Props): ReactElement {
       setExpandedEventId(null);
       focusKeyRef.current = null;
       autoScrollDoneRef.current = false;
-      const result = await window.api.listServerLogs(serverId);
-      if (!alive || gen !== loadGenRef.current) return;
-      setLoading(false);
-      if (!result.ok) {
-        setLogs(null);
-        setError(result.error ?? "Could not load logs");
-        return;
+      try {
+        const result = await window.api.listServerLogs(serverId);
+        if (!alive || gen !== loadGenRef.current) return;
+        if (!result.ok) {
+          setLogs(null);
+          setError(result.error ?? "Could not load logs");
+          return;
+        }
+        if (result.data.serverId !== serverId) return;
+        applyLoadedLogs(result.data, runtimeRevision);
+      } finally {
+        if (alive && gen === loadGenRef.current) {
+          setLoading(false);
+        }
       }
-      if (result.data.serverId !== serverId) return;
-      applyLoadedLogs(result.data, runtimeRevision);
     })();
     return () => {
       alive = false;
@@ -273,14 +286,17 @@ export function ServerLogsPanel(props: Props): ReactElement {
     setBusy(true);
     setError(null);
     setInfo(null);
-    const result = await window.api.exportServerLogs(props.server.id);
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.error ?? "Could not export logs");
-      return;
-    }
-    if (result.data !== null) {
-      setInfo(`Logs exported to: ${result.data}`);
+    try {
+      const result = await window.api.exportServerLogs(props.server.id);
+      if (!result.ok) {
+        setError(result.error ?? "Could not export logs");
+        return;
+      }
+      if (result.data !== null) {
+        setInfo(`Logs exported to: ${result.data}`);
+      }
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -288,13 +304,16 @@ export function ServerLogsPanel(props: Props): ReactElement {
     if (selectedUpdateFile === null) return;
     setBusy(true);
     setError(null);
-    const result = await window.api.openServerUpdateLogFile(
-      props.server.id,
-      selectedUpdateFile,
-    );
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.error ?? "Could not open the log externally");
+    try {
+      const result = await window.api.openServerUpdateLogFile(
+        props.server.id,
+        selectedUpdateFile,
+      );
+      if (!result.ok) {
+        setError(result.error ?? "Could not open the log externally");
+      }
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -317,17 +336,20 @@ export function ServerLogsPanel(props: Props): ReactElement {
       onConfirm: () => {
         void (async () => {
           setBusy(true);
-          setError(null);
-          const result = await window.api.clearServerEvents(props.server.id);
-          setBusy(false);
-          if (!result.ok) {
-            setError(result.error ?? "Could not clear events");
-            return;
+          try {
+            setError(null);
+            const result = await window.api.clearServerEvents(props.server.id);
+            if (!result.ok) {
+              setError(result.error ?? "Could not clear events");
+              return;
+            }
+            setHighlightedEventId(null);
+            setExpandedEventId(null);
+            await load(props.server.id);
+            setInfo(`Cleared ${result.data} event${result.data === 1 ? "" : "s"}.`);
+          } finally {
+            setBusy(false);
           }
-          setHighlightedEventId(null);
-          setExpandedEventId(null);
-          await load(props.server.id);
-          setInfo(`Cleared ${result.data} event${result.data === 1 ? "" : "s"}.`);
         })();
       },
     });
@@ -348,17 +370,20 @@ export function ServerLogsPanel(props: Props): ReactElement {
       onConfirm: () => {
         void (async () => {
           setBusy(true);
-          setError(null);
-          const result = await window.api.clearServerRuntimeLog(props.server.id);
-          setBusy(false);
-          if (!result.ok) {
-            setError(result.error ?? "Could not clear runtime log");
-            return;
+          try {
+            setError(null);
+            const result = await window.api.clearServerRuntimeLog(props.server.id);
+            if (!result.ok) {
+              setError(result.error ?? "Could not clear runtime log");
+              return;
+            }
+            runtimeRevisionRef.current += 1;
+            setLogs((prev) => replaceRuntimeLogs(prev, props.server.id, []));
+            await load(props.server.id);
+            setInfo("Runtime log cleared.");
+          } finally {
+            setBusy(false);
           }
-          runtimeRevisionRef.current += 1;
-          setLogs((prev) => replaceRuntimeLogs(prev, props.server.id, []));
-          await load(props.server.id);
-          setInfo("Runtime log cleared.");
         })();
       },
     });
@@ -380,17 +405,20 @@ export function ServerLogsPanel(props: Props): ReactElement {
       onConfirm: () => {
         void (async () => {
           setBusy(true);
-          setError(null);
-          const result = await window.api.clearServerUpdateLogs(props.server.id);
-          setBusy(false);
-          if (!result.ok) {
-            setError(result.error ?? "Could not clear update logs");
-            return;
+          try {
+            setError(null);
+            const result = await window.api.clearServerUpdateLogs(props.server.id);
+            if (!result.ok) {
+              setError(result.error ?? "Could not clear update logs");
+              return;
+            }
+            setSelectedUpdateFile(null);
+            setUpdateContent("");
+            await load(props.server.id);
+            setInfo(`Deleted ${result.data} update log${result.data === 1 ? "" : "s"}.`);
+          } finally {
+            setBusy(false);
           }
-          setSelectedUpdateFile(null);
-          setUpdateContent("");
-          await load(props.server.id);
-          setInfo(`Deleted ${result.data} update log${result.data === 1 ? "" : "s"}.`);
         })();
       },
     });
@@ -415,20 +443,23 @@ export function ServerLogsPanel(props: Props): ReactElement {
       onConfirm: () => {
         void (async () => {
           setBusy(true);
-          setError(null);
-          const result = await window.api.deleteServerUpdateLog(
-            props.server.id,
-            fileName,
-          );
-          setBusy(false);
-          if (!result.ok) {
-            setError(result.error ?? "Could not delete update log");
-            return;
+          try {
+            setError(null);
+            const result = await window.api.deleteServerUpdateLog(
+              props.server.id,
+              fileName,
+            );
+            if (!result.ok) {
+              setError(result.error ?? "Could not delete update log");
+              return;
+            }
+            setSelectedUpdateFile(null);
+            setUpdateContent("");
+            await load(props.server.id);
+            setInfo("Update log deleted.");
+          } finally {
+            setBusy(false);
           }
-          setSelectedUpdateFile(null);
-          setUpdateContent("");
-          await load(props.server.id);
-          setInfo("Update log deleted.");
         })();
       },
     });
@@ -465,15 +496,18 @@ export function ServerLogsPanel(props: Props): ReactElement {
       onConfirm: () => {
         void (async () => {
           setBusy(true);
-          setError(null);
-          const result = await window.api.deleteBackups(props.server.id, ids);
-          setBusy(false);
-          if (!result.ok) {
-            setError(result.error ?? "Could not delete backups");
-            return;
+          try {
+            setError(null);
+            const result = await window.api.deleteBackups(props.server.id, ids);
+            if (!result.ok) {
+              setError(result.error ?? "Could not delete backups");
+              return;
+            }
+            await load(props.server.id);
+            setInfo(`Deleted ${result.data} backup${result.data === 1 ? "" : "s"}.`);
+          } finally {
+            setBusy(false);
           }
-          await load(props.server.id);
-          setInfo(`Deleted ${result.data} backup${result.data === 1 ? "" : "s"}.`);
         })();
       },
     });
@@ -493,15 +527,18 @@ export function ServerLogsPanel(props: Props): ReactElement {
       onConfirm: () => {
         void (async () => {
           setBusy(true);
-          setError(null);
-          const result = await window.api.deleteBackups(props.server.id, [backupId]);
-          setBusy(false);
-          if (!result.ok) {
-            setError(result.error ?? "Could not delete backup");
-            return;
+          try {
+            setError(null);
+            const result = await window.api.deleteBackups(props.server.id, [backupId]);
+            if (!result.ok) {
+              setError(result.error ?? "Could not delete backup");
+              return;
+            }
+            await load(props.server.id);
+            setInfo("Backup deleted.");
+          } finally {
+            setBusy(false);
           }
-          await load(props.server.id);
-          setInfo("Backup deleted.");
         })();
       },
     });
