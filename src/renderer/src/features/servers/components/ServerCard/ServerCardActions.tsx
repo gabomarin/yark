@@ -30,6 +30,8 @@ interface Props {
   status: ServerStatus;
   isActive: boolean;
   isInstallationReady: boolean;
+  /** When false, hide Install (suspicious / unknown / inaccessible). */
+  canOfferInstall: boolean;
   updateAvailable: boolean;
   steamCmdBusy: boolean;
   stopBusy: boolean;
@@ -301,14 +303,14 @@ export function ServerCardActions(props: Props): ReactElement {
                 Verify integrity
               </Menu.Item>
             </>
-          ) : (
+          ) : props.canOfferInstall ? (
             <Menu.Item
               leftSection={<CloudArrowDown size={16} color="var(--mantine-color-blue-6)" />}
               onClick={props.onInstallFiles}
             >
               Install files
             </Menu.Item>
-          )}
+          ) : null}
           <Menu.Item
             leftSection={<Copy size={16} color="var(--mantine-color-blue-6)" />}
             onClick={props.onClone}

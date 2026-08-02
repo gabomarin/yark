@@ -19,6 +19,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import { isInstallationReady } from "@shared/installation-health";
 import { resolveDisplayedServerVersion } from "@shared/server-version-display";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import classes from "./WorkspaceHeader.module.css";
@@ -43,13 +44,19 @@ export function WorkspaceHeader(props: Props): ReactElement {
   const status = props.runtime?.status ?? "stopped";
   const version = resolveDisplayedServerVersion(props.installation) ?? "—";
   const isServerDisabled = !props.server.enabled;
+  const filesReady = isInstallationReady(props.installation);
   const canStart =
-    (status === "stopped" || status === "error") && props.filesJobActive !== true && !isServerDisabled;
+    (status === "stopped" || status === "error") &&
+    props.filesJobActive !== true &&
+    !isServerDisabled &&
+    filesReady;
   const canEnable =
-    isServerDisabled && props.filesJobActive !== true && props.installation?.installed === true;
+    isServerDisabled && props.filesJobActive !== true && filesReady;
   const canStop = status === "running" || status === "starting";
-  const canRestart = status === "running" && props.filesJobActive !== true;
+  const canRestart = status === "running" && props.filesJobActive !== true && filesReady;
   const lockTitle = props.filesJobReason ?? "Wait for the file update to finish";
+  const installBlockedTitle =
+    props.installation?.guidance ?? "Install files first";
 
   return (
     <header className={classes.header}>
@@ -97,8 +104,8 @@ export function WorkspaceHeader(props: Props): ReactElement {
               title={
                 props.filesJobActive === true
                   ? lockTitle
-                  : props.installation?.installed !== true
-                    ? "Install files first"
+                  : !filesReady
+                    ? installBlockedTitle
                     : undefined
               }
             >
@@ -112,7 +119,13 @@ export function WorkspaceHeader(props: Props): ReactElement {
               leftSection={<Play size={14} weight="fill" />}
               onClick={props.onStart}
               disabled={!canStart}
-              title={props.filesJobActive === true ? lockTitle : undefined}
+              title={
+                props.filesJobActive === true
+                  ? lockTitle
+                  : !filesReady
+                    ? installBlockedTitle
+                    : undefined
+              }
             >
               Start
             </Button>

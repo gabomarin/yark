@@ -5,6 +5,7 @@ import { loadUiDensityPref } from "@features/settings/settingsModel";
 import { DEFAULT_UI_DENSITY } from "@shared/ui-density";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
+import "@mantine/nprogress/styles.css";
 import "./styles/radix-palette.css";
 import "./styles/globals.css";
 

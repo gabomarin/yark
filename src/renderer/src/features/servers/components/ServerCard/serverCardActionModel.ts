@@ -157,20 +157,23 @@ export function resolveRestartAction(input: {
 export function resolveUpdateAction(input: {
   steamCmdBusy: boolean;
   isInstallationReady: boolean;
+  /** When false, hide Install for suspicious/unknown/inaccessible paths. */
+  canOfferInstall?: boolean;
   status: ServerStatus;
   updateState: ServerUpdateState;
   serverEnabled?: boolean;
 }): ServerCardUpdateAction {
   const transitioning = input.status === "starting" || input.status === "stopping";
   if (!input.isInstallationReady) {
+    const canOfferInstall = input.canOfferInstall !== false;
     return {
       kind: "install",
       updateState: null,
       label: "Install server files",
       color: "blue",
       variant: "light",
-      disabled: input.steamCmdBusy || transitioning,
-      visible: true,
+      disabled: input.steamCmdBusy || transitioning || !canOfferInstall,
+      visible: canOfferInstall,
     };
   }
 
@@ -214,6 +217,7 @@ export function resolveUpdateAction(input: {
 export function resolvePrimaryAction(input: {
   steamCmdBusy: boolean;
   isInstallationReady: boolean;
+  canOfferInstall?: boolean;
   status: ServerStatus;
   updateState: ServerUpdateState;
   serverEnabled?: boolean;
@@ -221,6 +225,15 @@ export function resolvePrimaryAction(input: {
   const runtime = resolveRuntimeAction(input);
   if (!input.isInstallationReady && !input.steamCmdBusy) {
     const files = resolveUpdateAction(input);
+    if (!files.visible) {
+      return {
+        kind: runtime.kind,
+        label: runtime.label,
+        color: runtime.color,
+        variant: runtime.variant,
+        disabled: true,
+      };
+    }
     return {
       kind: "install",
       label: files.label,

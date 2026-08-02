@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import {
   extractOfficialVersionFromStatusText,
   inspectServerInstallation,
+  inspectServerInstallationAsync,
   parseOfficialServerStatus,
 } from "@backend/domains/instances/server-installation";
 
@@ -19,6 +20,8 @@ describe("inspectServerInstallation", () => {
     try {
       const info = inspectServerInstallation("srv-1", installDir);
       expect(info.installed).toBe(false);
+      expect(info.health).toBe("empty");
+      expect(info.reasonCodes).toContain("dir_empty");
       expect(info.build).toBeNull();
       expect(info.steamBuild).toBeNull();
       expect(info.arkVersion).toBeNull();
@@ -37,6 +40,8 @@ describe("inspectServerInstallation", () => {
 
       const info = inspectServerInstallation("srv-2", installDir);
       expect(info.installed).toBe(true);
+      expect(info.health).toBe("ready");
+      expect(info.reasonCodes).toEqual(["ready"]);
     } finally {
       rmSync(installDir, { recursive: true, force: true });
     }
@@ -246,7 +251,9 @@ describe("inspectServerInstallation", () => {
         "[2026.07.23-12.45.00] Startup\nARK Version: 58.31\nReady",
       );
 
-      const info = inspectServerInstallation("srv-8", installDir);
+      const info = inspectServerInstallation("srv-8", installDir, {
+        allowLogVersionProbe: true,
+      });
       expect(info.installed).toBe(true);
       expect(info.arkVersion).toBe("58.31");
     } finally {
@@ -271,6 +278,7 @@ describe("inspectServerInstallation", () => {
 
       const info = inspectServerInstallation("srv-8-tail", installDir, {
         bypassCache: true,
+        allowLogVersionProbe: true,
       });
       expect(info.arkVersion).toBe("59.01");
     } finally {
@@ -293,6 +301,85 @@ describe("inspectServerInstallation", () => {
 
       const info = inspectServerInstallation("srv-9", installDir);
       expect(info.steamBuild).toBe("build 24346423");
+    } finally {
+      rmSync(installDir, { recursive: true, force: true });
+    }
+  });
+
+  it("classifies missing install paths", () => {
+    const info = inspectServerInstallation(
+      "srv-missing",
+      join(tmpdir(), `ark-missing-${Date.now()}-${Math.random()}`),
+      { bypassCache: true },
+    );
+    expect(info.health).toBe("missing");
+    expect(info.installed).toBe(false);
+    expect(info.reasonCodes).toContain("path_missing");
+  });
+
+  it("classifies incomplete trees without the executable", () => {
+    const installDir = makeTmpDir();
+    try {
+      mkdirSync(join(installDir, "ShooterGame", "Binaries", "Win64"), {
+        recursive: true,
+      });
+      const info = inspectServerInstallation("srv-incomplete", installDir, {
+        bypassCache: true,
+      });
+      expect(info.health).toBe("incomplete");
+      expect(info.installed).toBe(false);
+      expect(info.reasonCodes).toContain("exe_absent");
+    } finally {
+      rmSync(installDir, { recursive: true, force: true });
+    }
+  });
+
+  it("classifies non-empty folders without ASA markers as suspicious", () => {
+    const installDir = makeTmpDir();
+    try {
+      writeFileSync(join(installDir, "readme.txt"), "not asa");
+      const info = inspectServerInstallation("srv-foreign", installDir, {
+        bypassCache: true,
+      });
+      expect(info.health).toBe("suspicious");
+      expect(info.reasonCodes).toContain("foreign_contents");
+      expect(info.installed).toBe(false);
+    } finally {
+      rmSync(installDir, { recursive: true, force: true });
+    }
+  });
+
+  it("async classify matches sync for foreign non-ASA contents", async () => {
+    const installDir = makeTmpDir();
+    try {
+      writeFileSync(join(installDir, "notes.txt"), "not asa");
+      const syncInfo = inspectServerInstallation("srv-foreign-sync", installDir, {
+        bypassCache: true,
+      });
+      const asyncInfo = await inspectServerInstallationAsync(
+        "srv-foreign-async",
+        installDir,
+        { bypassCache: true },
+      );
+      expect(asyncInfo.health).toBe("suspicious");
+      expect(asyncInfo.reasonCodes).toEqual(syncInfo.reasonCodes);
+    } finally {
+      rmSync(installDir, { recursive: true, force: true });
+    }
+  });
+
+  it("classifies zero-byte executables as suspicious", () => {
+    const installDir = makeTmpDir();
+    try {
+      const binDir = join(installDir, "ShooterGame", "Binaries", "Win64");
+      mkdirSync(binDir, { recursive: true });
+      writeFileSync(join(binDir, "ArkAscendedServer.exe"), "");
+      const info = inspectServerInstallation("srv-empty-exe", installDir, {
+        bypassCache: true,
+      });
+      expect(info.health).toBe("suspicious");
+      expect(info.reasonCodes).toContain("exe_empty");
+      expect(info.installed).toBe(false);
     } finally {
       rmSync(installDir, { recursive: true, force: true });
     }

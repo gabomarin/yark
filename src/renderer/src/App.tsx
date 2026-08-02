@@ -28,6 +28,7 @@ import { LogsPage } from "@features/logs/LogsPage";
 import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import { BackupsPage } from "@features/backups/BackupsPage";
 import { OverviewPage } from "@features/overview/OverviewPage";
+import { InstallHealthScanProgress } from "@features/overview/components/InstallHealthScanProgress/InstallHealthScanProgress";
 import {
   ServerWorkspacePage,
   type WorkspaceTab,
@@ -93,6 +94,12 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [checkingUpdates, setCheckingUpdates] = useState(false);
+  /** Shared install-health scan job (startup + Check installs). */
+  const [installScan, setInstallScan] = useState<{
+    active: boolean;
+    reason: "startup" | "manual" | null;
+  }>({ active: false, reason: null });
+  const installScanInFlightRef = useRef<Promise<void> | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(true);
 
   useEffect(() => {
@@ -248,6 +255,37 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     if (eventsRes.ok) setEvents(eventsRes.data);
   }, []);
 
+  const runInstallHealthScan = useCallback(
+    async (reason: "startup" | "manual") => {
+      if (installScanInFlightRef.current !== null) {
+        await installScanInFlightRef.current;
+        return;
+      }
+
+      setError(null);
+      setInstallScan({ active: true, reason });
+      const job = (async () => {
+        try {
+          await refresh({
+            includeInstallation: true,
+            forceOfficialCheck: reason === "manual",
+          });
+        } finally {
+          setInstallScan({ active: false, reason: null });
+        }
+      })();
+      installScanInFlightRef.current = job;
+      try {
+        await job;
+      } finally {
+        if (installScanInFlightRef.current === job) {
+          installScanInFlightRef.current = null;
+        }
+      }
+    },
+    [refresh],
+  );
+
   const checkForUpdates = useCallback(
     async (serverId?: string) => {
       setError(null);
@@ -364,11 +402,19 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
   useEffect(() => {
     let active = true;
-    void refresh().finally(() => {
-      if (active) {
-        setOverviewLoading(false);
-      }
-    });
+    void refresh({ includeInstallation: false })
+      .finally(() => {
+        if (active) {
+          setOverviewLoading(false);
+        }
+      })
+      .then(() => {
+        if (!active) {
+          return;
+        }
+        // One-shot startup install-health scan — shared job with Check installs (#57).
+        return runInstallHealthScan("startup");
+      });
     const unsubscribeStatus = window.api.onServerStatus((info) => {
       setStatuses((prev) => {
         const next = new Map(prev);
@@ -397,7 +443,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       unsubscribeProgress();
       unsubscribeStopProgress();
     };
-  }, [refresh]);
+  }, [refresh, runInstallHealthScan]);
 
   useEffect(() => {
     // Progress arrives via push. Keep the heartbeat light: statuses/events only.
@@ -783,6 +829,9 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
               onCreateServer={() => setOverlay({ kind: "create" })}
               checkingUpdates={checkingUpdates}
               onCheckUpdates={() => void checkForUpdates()}
+              checkingInstalls={installScan.active}
+              installsScanning={installScan.active}
+              onCheckInstalls={() => void runInstallHealthScan("manual")}
               servers={servers}
               filteredServers={filteredServers}
               disabledServers={filteredDisabledServers}
@@ -891,6 +940,10 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
   return (
     <AppProviders density={uiDensity}>
+      <InstallHealthScanProgress
+        active={installScan.active}
+        label="Checking install folders…"
+      />
       {renderMain()}
       {steamCmdStatus !== null
         && (steamCmdBusy || (steamCmdStatus.criticalJobs?.length ?? 0) > 0)

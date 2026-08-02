@@ -47,4 +47,12 @@ describe("resolveEventDetails", () => {
     expect(resolved.suggestion).toBe("Do X");
     expect(resolved.context).toContainEqual({ label: "exitCode", value: "8" });
   });
+
+  it("describes installation health degradation", () => {
+    const resolved = resolveEventDetails(
+      base({ type: "installation_health_degraded", severity: "warning" }),
+    );
+    expect(resolved.what).toMatch(/install path/i);
+    expect(resolved.suggestion).toMatch(/Check installs/i);
+  });
 });

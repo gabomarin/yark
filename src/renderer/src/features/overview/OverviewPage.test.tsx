@@ -42,6 +42,7 @@ describe("OverviewPage", () => {
           onSearchChange={vi.fn()}
           onCreateServer={vi.fn()}
           onCheckUpdates={vi.fn()}
+          onCheckInstalls={vi.fn()}
           servers={[server, searchHiddenServer]}
           filteredServers={[server]}
           disabledServers={[]}
@@ -89,7 +90,7 @@ describe("OverviewPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("surfaces how many servers need attention", () => {
+  it("surfaces how many servers need attention", async () => {
     render(
       <AppProviders>
         <OverviewPage
@@ -97,6 +98,7 @@ describe("OverviewPage", () => {
           onSearchChange={vi.fn()}
           onCreateServer={vi.fn()}
           onCheckUpdates={vi.fn()}
+          onCheckInstalls={vi.fn()}
           servers={[server]}
           filteredServers={[server]}
           disabledServers={[]}
@@ -109,6 +111,10 @@ describe("OverviewPage", () => {
                 {
                   serverId: server.id,
                   installed: false,
+                  health: "missing",
+                  reasonCodes: ["path_missing"],
+                  guidance:
+                    "Create the folder or correct the install path, then install server files.",
                   build: null,
                   steamBuild: null,
                   arkVersion: null,
@@ -145,6 +151,12 @@ describe("OverviewPage", () => {
     expect(
       screen.getAllByRole("button", { name: /Install server files/i }).length,
     ).toBeGreaterThan(0);
+
+    await userEvent.click(screen.getByRole("button", { name: "1 needs attention" }));
+    expect(screen.getByText("Missing path")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Create the folder or correct the install path/i),
+    ).toBeInTheDocument();
   });
 
   it("distinguishes loading from the actionable empty state", () => {
@@ -154,6 +166,7 @@ describe("OverviewPage", () => {
       onSearchChange: vi.fn(),
       onCreateServer,
       onCheckUpdates: vi.fn(),
+      onCheckInstalls: vi.fn(),
       servers: [],
       filteredServers: [],
       disabledServers: [],
@@ -216,6 +229,7 @@ describe("OverviewPage", () => {
           onSearchChange={vi.fn()}
           onCreateServer={vi.fn()}
           onCheckUpdates={vi.fn()}
+          onCheckInstalls={vi.fn()}
           servers={[server, disabledServer]}
           filteredServers={[server]}
           disabledServers={[disabledServer]}
@@ -274,6 +288,7 @@ describe("OverviewPage", () => {
           onSearchChange={vi.fn()}
           onCreateServer={vi.fn()}
           onCheckUpdates={vi.fn()}
+          onCheckInstalls={vi.fn()}
           servers={[disabledServer]}
           filteredServers={[]}
           disabledServers={[disabledServer]}

@@ -1,0 +1,28 @@
+.trigger {
+  cursor: pointer !important;
+  border: none;
+}
+
+.dropdown {
+  padding: var(--app-space-sm);
+}
+
+.issueList {
+  max-height: 240px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.issueRow {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--app-space-xs);
+  border-radius: var(--app-radius-sm);
+  border: 1px solid var(--app-color-border-subtle);
+  background: transparent;
+}
+
+.issueName {
+  color: var(--app-color-text);
+}

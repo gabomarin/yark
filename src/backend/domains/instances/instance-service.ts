@@ -1,6 +1,7 @@
 import type {
   BackupKind,
   ClusterComplianceReport,
+  InstallationHealthStatus,
   InstallationServersMode,
   OfficialNetworkStatus,
   ServerInstallationInfo,
@@ -29,11 +30,52 @@ import { findPortConflicts, validateProfileInput } from "./validation";
 import { checkClusterCompliance } from "../cluster/compliance";
 import { rconExec } from "../../infra/rcon/rcon-client";
 import {
-  inspectServerInstallation,
+  inspectServerInstallationAsync,
   readOfficialArkBuildCached,
   readOfficialArkVersionCached,
 } from "./server-installation";
 import { syncProfileSettingsToIni } from "./sync-profile-ini";
+import {
+  isInstallHealthDegradation,
+  isInstallationReady,
+} from "@shared/installation-health";
+
+/** Max concurrent async FS classify probes during a fleet scan. */
+const FLEET_INSPECT_CONCURRENCY = 3;
+
+/** Single-server / gate paths may use heavier version fallbacks. */
+const ENRICHED_INSTALL_INSPECT = {
+  bypassCache: true,
+  allowExecutableVersionProbe: true,
+  allowLogVersionProbe: true,
+} as const;
+
+async function mapPool<T, R>(
+  items: ReadonlyArray<T>,
+  concurrency: number,
+  mapper: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) {
+    return [];
+  }
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+  const workerCount = Math.min(Math.max(1, concurrency), items.length);
+
+  async function worker(): Promise<void> {
+    for (;;) {
+      const index = nextIndex;
+      nextIndex += 1;
+      if (index >= items.length) {
+        return;
+      }
+      results[index] = await mapper(items[index]!, index);
+    }
+  }
+
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+  return results;
+}
 
 const RCON_HOST = "127.0.0.1";
 
@@ -110,6 +152,13 @@ export class InstanceService extends EventEmitter {
   private lastOfficialVersion: string | null | undefined = undefined;
   private lastOfficialSteamBuild: string | null | undefined = undefined;
   private lastInstallServers: ServerInstallationInfo[] = [];
+  /** Last classified health per server — used for degradation-only events (#57). */
+  private readonly lastKnownInstallHealth = new Map<string, InstallationHealthStatus>();
+  /** Coalesce concurrent full-fleet installation inspects for the same profile set + cache mode. */
+  private fleetInspectInFlight: {
+    key: string;
+    promise: Promise<ServerInstallationInfo[]>;
+  } | null = null;
 
   constructor(
     private readonly repo: ServerRepository,
@@ -398,6 +447,17 @@ export class InstanceService extends EventEmitter {
     if (!profile.enabled) {
       throw new Error(`Server "${profile.name}" is disabled`);
     }
+    const installation = await inspectServerInstallationAsync(
+      profile.id,
+      profile.installDir,
+      ENRICHED_INSTALL_INSPECT,
+    );
+    this.recordInstallHealth(installation);
+    if (!isInstallationReady(installation)) {
+      throw new Error(
+        `Server files are not ready (${installation.health}): ${installation.guidance}`,
+      );
+    }
     const running = this.repo
       .list()
       .filter((p) => p.id !== id && this.processes.isActive(p.id));
@@ -455,11 +515,16 @@ export class InstanceService extends EventEmitter {
         );
       }
 
-      const installation = inspectServerInstallation(profile.id, profile.installDir, {
-        bypassCache: true,
-      });
-      if (!installation.installed) {
-        throw new Error(`Server files are not installed: ${profile.installDir}`);
+      const installation = await inspectServerInstallationAsync(
+        profile.id,
+        profile.installDir,
+        ENRICHED_INSTALL_INSPECT,
+      );
+      this.recordInstallHealth(installation);
+      if (!isInstallationReady(installation)) {
+        throw new Error(
+          `Server files are not ready (${installation.health}): ${installation.guidance}`,
+        );
       }
 
       this.assertNoPortConflicts(profile, id);
@@ -810,11 +875,9 @@ export class InstanceService extends EventEmitter {
         (officialChanged || serverSetChanged));
 
     const servers = shouldInspectServers
-      ? profiles.map((profile) =>
-          inspectServerInstallation(profile.id, profile.installDir, {
-            bypassCache: forceOfficialCheck,
-          }),
-        )
+      ? await this.inspectFleetInstallations({
+          bypassCache: forceOfficialCheck,
+        })
       : this.lastInstallServers;
 
     this.lastOfficialVersion = officialVersion;
@@ -829,6 +892,108 @@ export class InstanceService extends EventEmitter {
       officialSteamBuild,
       servers,
     };
+  }
+
+  /**
+   * Bounded, async fleet inspect so many profiles (and slow UNC paths) do not
+   * freeze the Electron main process. Concurrent callers share one in-flight
+   * promise when the profile-set key and cache mode match; after waiting for a
+   * different key they re-check before starting another scan.
+   */
+  private async inspectFleetInstallations(options: {
+    bypassCache: boolean;
+  }): Promise<ServerInstallationInfo[]> {
+    for (;;) {
+      const profiles = this.repo.list();
+      const key = this.fleetInspectKey(profiles, options.bypassCache);
+      const existing = this.fleetInspectInFlight;
+      if (existing !== null && existing.key === key) {
+        return existing.promise;
+      }
+      if (existing !== null) {
+        // Different fleet snapshot or cache mode — wait, then re-evaluate.
+        await existing.promise.catch(() => undefined);
+        continue;
+      }
+
+      // No in-flight work. Capture the latest list and start (sync section — safe).
+      const profilesToScan = this.repo.list();
+      const scanKey = this.fleetInspectKey(profilesToScan, options.bypassCache);
+      const promise = this.runFleetInstallScan(profilesToScan, options.bypassCache).finally(
+        () => {
+          if (this.fleetInspectInFlight?.promise === promise) {
+            this.fleetInspectInFlight = null;
+          }
+        },
+      );
+      this.fleetInspectInFlight = { key: scanKey, promise };
+      return promise;
+    }
+  }
+
+  private async runFleetInstallScan(
+    profilesToScan: ReadonlyArray<ServerProfile>,
+    bypassCache: boolean,
+  ): Promise<ServerInstallationInfo[]> {
+    return mapPool(profilesToScan, FLEET_INSPECT_CONCURRENCY, async (profile) => {
+      // Fleet stays FS/manifest-only — no PowerShell / log tails.
+      let info = await inspectServerInstallationAsync(profile.id, profile.installDir, {
+        bypassCache,
+      });
+      // Manual refresh may enrich a ready install that still lacks a cheap version.
+      if (
+        bypassCache &&
+        info.health === "ready" &&
+        (info.build == null || info.build.trim().length === 0)
+      ) {
+        info = await inspectServerInstallationAsync(profile.id, profile.installDir, {
+          ...ENRICHED_INSTALL_INSPECT,
+        });
+      }
+      this.recordInstallHealth(info);
+      return info;
+    });
+  }
+
+  private fleetInspectKey(
+    profiles: ReadonlyArray<ServerProfile>,
+    bypassCache: boolean,
+  ): string {
+    const ids = profiles
+      .map((profile) => `${profile.id}\0${installDirKey(profile.installDir)}`)
+      .sort()
+      .join("\n");
+    return `${bypassCache ? "1" : "0"}\n${ids}`;
+  }
+
+  /** Update health memory and emit degradation-only events. */
+  private recordInstallHealth(info: ServerInstallationInfo): void {
+    const previous = this.lastKnownInstallHealth.get(info.serverId) ?? null;
+    this.lastKnownInstallHealth.set(info.serverId, info.health);
+    if (!isInstallHealthDegradation(previous, info.health)) {
+      return;
+    }
+    const profile = this.repo.get(info.serverId);
+    const name = profile?.name ?? info.serverId;
+    this.repo.addEvent(
+      info.serverId,
+      "installation_health_degraded",
+      info.health === "inaccessible" || info.health === "suspicious"
+        ? "error"
+        : "warning",
+      `Install health for "${name}" is ${info.health}`,
+      {
+        what: `Installation health changed to ${info.health}.`,
+        cause: info.reasonCodes.length > 0 ? info.reasonCodes.join(", ") : undefined,
+        location: profile?.installDir ?? info.binaryPath,
+        suggestion: info.guidance,
+        context: {
+          health: info.health,
+          reasonCodes: info.reasonCodes.join(","),
+          previousHealth: previous,
+        },
+      },
+    );
   }
 
   checkClusters(): ClusterComplianceReport[] {

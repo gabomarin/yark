@@ -162,6 +162,7 @@ export function ServerCard(props: Props): ReactElement {
             status={status}
             isActive={view.isActive}
             isInstallationReady={view.isInstallationReady}
+            canOfferInstall={view.canOfferInstall}
             updateAvailable={view.updateAvailable}
             steamCmdBusy={steamCmdBusy}
             stopBusy={stopBusy}

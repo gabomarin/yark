@@ -1,5 +1,10 @@
 import type { ServerInstallationInfo, ServerStatus } from "@shared/types";
 import {
+  installationHealthLabel,
+  isInstallOfferHealth,
+  isInstallationReady,
+} from "@shared/installation-health";
+import {
   getServerUpdateState,
   type ServerUpdateState,
 } from "@shared/server-update-status";
@@ -30,6 +35,7 @@ export function resolveInstallStateLabel(input: {
   steamCmdBusy: boolean;
   steamCmdOperation: SteamCmdOperation;
   isInstallationReady: boolean;
+  installation: ServerInstallationInfo | null;
   updateAvailable: boolean;
   updateState: ServerUpdateState;
 }): string {
@@ -39,7 +45,9 @@ export function resolveInstallStateLabel(input: {
     if (input.steamCmdOperation === "update") return "Updating…";
     return "Installing…";
   }
-  if (!input.isInstallationReady) return "Not installed";
+  if (!input.isInstallationReady) {
+    return installationHealthLabel(input.installation?.health);
+  }
   if (input.updateAvailable) return "Update available";
   if (input.updateState === "current") return "Up to date";
   return "Not verified";
@@ -114,7 +122,8 @@ export function deriveServerCardView(input: {
   steamCmdProgressBytesTotal: number | null;
   stopProgressLabel?: string | null;
 }) {
-  const isInstallationReady = input.installation?.installed === true;
+  const ready = isInstallationReady(input.installation);
+  const canOfferInstall = isInstallOfferHealth(input.installation?.health);
   const serverEnabled = input.serverEnabled ?? true;
   const localVersion = resolveDisplayedServerVersion(input.installation);
   const updateState = getServerUpdateState(
@@ -126,25 +135,27 @@ export function deriveServerCardView(input: {
   const installStateLabel = resolveInstallStateLabel({
     steamCmdBusy: input.steamCmdBusy,
     steamCmdOperation: input.steamCmdOperation,
-    isInstallationReady,
+    isInstallationReady: ready,
+    installation: input.installation,
     updateAvailable,
     updateState,
   });
   const runtimeAction = resolveRuntimeAction({
     steamCmdBusy: input.steamCmdBusy,
-    isInstallationReady,
+    isInstallationReady: ready,
     status: input.status,
     serverEnabled,
   });
   const restartAction = resolveRestartAction({
     steamCmdBusy: input.steamCmdBusy,
-    isInstallationReady,
+    isInstallationReady: ready,
     status: input.status,
     serverEnabled,
   });
   const updateAction = resolveUpdateAction({
     steamCmdBusy: input.steamCmdBusy,
-    isInstallationReady,
+    isInstallationReady: ready,
+    canOfferInstall,
     status: input.status,
     serverEnabled,
     updateState,
@@ -158,7 +169,8 @@ export function deriveServerCardView(input: {
   });
 
   return {
-    isInstallationReady,
+    isInstallationReady: ready,
+    canOfferInstall,
     isActive:
       input.status === "starting" ||
       input.status === "running" ||
@@ -172,7 +184,8 @@ export function deriveServerCardView(input: {
     updateAction,
     primaryAction: resolvePrimaryAction({
       steamCmdBusy: input.steamCmdBusy,
-      isInstallationReady,
+      isInstallationReady: ready,
+      canOfferInstall,
       status: input.status,
       updateState,
       serverEnabled,
@@ -181,13 +194,13 @@ export function deriveServerCardView(input: {
       steamCmdBusy: input.steamCmdBusy,
       stopBusy,
       status: input.status,
-      isInstallationReady,
+      isInstallationReady: ready,
       updateAvailable,
       serverEnabled,
     }),
     versionMetaTone: resolveVersionMetaTone({
       steamCmdBusy: input.steamCmdBusy || stopBusy,
-      isInstallationReady,
+      isInstallationReady: ready,
       updateAvailable,
       updateState,
       serverEnabled,

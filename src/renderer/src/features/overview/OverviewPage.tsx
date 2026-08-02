@@ -17,7 +17,10 @@ interface Props {
   loading?: boolean;
   onCreateServer: () => void;
   onCheckUpdates: () => void;
+  onCheckInstalls: () => void;
   checkingUpdates?: boolean;
+  checkingInstalls?: boolean;
+  installsScanning?: boolean;
   servers: ServerProfile[];
   filteredServers: ServerProfile[];
   disabledServers?: ServerProfile[];
@@ -60,7 +63,9 @@ export function OverviewPage(props: Props): ReactElement {
       <OverviewHeader
         onCreateServer={props.onCreateServer}
         onCheckUpdates={props.onCheckUpdates}
+        onCheckInstalls={props.onCheckInstalls}
         checkingUpdates={props.checkingUpdates}
+        checkingInstalls={props.checkingInstalls}
       />
 
       <div className={classes.content} data-overview-content>
@@ -85,6 +90,7 @@ export function OverviewPage(props: Props): ReactElement {
           steamCmdProgressBytesTotal={props.steamCmdProgressBytesTotal ?? null}
           steamCmdOperation={props.steamCmdOperation ?? null}
           stopProgressByServerId={props.stopProgressByServerId}
+          installsScanning={props.installsScanning}
           onOpenWorkspace={props.onOpenWorkspace}
           onOpenLogs={props.onOpenLogs}
           onReviewError={props.onReviewError}
