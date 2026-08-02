@@ -16,7 +16,7 @@ import { rconExec } from "@backend/infra/rcon/rcon-client";
 import type { ProcessManager } from "@backend/infra/process/process-manager";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
 import type { AppSettingsRepository } from "@backend/infra/db/app-settings-repository";
-import type { ServerProfile } from "@shared/types";
+import type { BackupRecord, ServerProfile } from "@shared/types";
 import type { DatabaseSync } from "node:sqlite";
 
 vi.mock("@backend/infra/rcon/rcon-client", () => ({
@@ -183,6 +183,55 @@ describe("BackupService kinds and retention", () => {
     expect(resumed).toHaveLength(3);
     expect(repo.listBackups(profile.id, 100).filter((row) => row.type === "pre_update"))
       .toHaveLength(3);
+  });
+
+  it("rebuilds pre-update progress when persisted context is corrupt", async () => {
+    const [unrelated] = await service.createManualBackup(profile.id, ["world"]);
+    expect(unrelated).toBeDefined();
+    if (unrelated === undefined) return;
+
+    const now = new Date().toISOString();
+    const job = {
+      id: "critical-pre-update-corrupt",
+      type: "pre-update-backup" as const,
+      serverId: profile.id,
+      backupId: null,
+      attempts: 1,
+      maxAttempts: 3,
+      status: "running" as const,
+      phase: "reconciling-backups",
+      createdAt: now,
+      updatedAt: now,
+      lastError: null,
+      recoveryReason: null,
+      idempotencyKey: `pre-update-backup:${profile.id}:`,
+      operatorRetryAllowed: false,
+      context: {
+        completedBackupIds: [unrelated.id],
+        nextKindIndex: 99,
+      },
+    };
+    const recovery = service as unknown as {
+      resumePreUpdateBackupJob: (input: typeof job) => Promise<BackupRecord[]>;
+    };
+
+    const recovered = await recovery.resumePreUpdateBackupJob(job);
+
+    expect(recovered.map((backup) => backup.kind)).toEqual([
+      "world",
+      "players",
+      "ini",
+    ]);
+    expect(recovered.every((backup) =>
+      backup.type === "pre_update"
+      && backup.serverId === profile.id
+      && backup.notes?.includes(`[critical-job:${job.id}]`) === true,
+    )).toBe(true);
+    expect(job.context.nextKindIndex).toBe(3);
+    expect(job.context.completedBackupIds).toEqual(
+      recovered.map((backup) => backup.id),
+    );
+    expect(job.context.completedBackupIds).not.toContain(unrelated.id);
   });
 
   it("reconciles restore history and safeguard evidence without repeating a completed restore", async () => {

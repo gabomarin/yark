@@ -2108,22 +2108,40 @@ export class BackupService extends EventEmitter {
     this.checkpointJob(job, "reconciling-backups");
     await this.reconcileDiskBackups(job.serverId);
     const marker = `[critical-job:${job.id}]`;
-    const completedIds = new Set(job.context.completedBackupIds ?? []);
-    const existing = this.backups
+    const candidates = this.backups
       .listBackups(job.serverId, 10_000)
       .filter(
         (backup) =>
           backup.type === "pre_update"
           && backup.status === "completed"
+          && existsSync(backup.path)
           && backup.notes?.includes(marker) === true,
       );
-    for (const backup of existing) completedIds.add(backup.id);
+    const existing: BackupRecord[] = [];
+    for (const backup of candidates) {
+      try {
+        const readable = await isReadableZipArchive(backup.path);
+        if (readable && (await zipHasBackupLayout(backup.path))) {
+          existing.push(backup);
+        }
+      } catch {
+        // Unreadable or corrupt archive — do not count as completion evidence.
+      }
+    }
+    const completedByKind = new Map<BackupKind, BackupRecord>();
+    for (const backup of existing) {
+      if (!completedByKind.has(backup.kind)) {
+        completedByKind.set(backup.kind, backup);
+      }
+    }
 
-    let nextKindIndex = Math.max(0, Math.floor(job.context.nextKindIndex ?? 0));
+    // The index and IDs in persisted context are hints, not completion
+    // evidence. Rebuild progress from job-marked DB rows whose archives still
+    // exist so corrupt context cannot skip a required backup kind.
+    let nextKindIndex = 0;
     while (nextKindIndex < CRITICAL_BACKUP_KINDS.length) {
       const kind = CRITICAL_BACKUP_KINDS[nextKindIndex]!;
-      const alreadyCompleted = existing.some((backup) => backup.kind === kind);
-      if (!alreadyCompleted) {
+      if (!completedByKind.has(kind)) {
         this.checkpointJob(job, `creating-backup:${kind}`);
         const created = await this.createBackups(
           job.serverId,
@@ -2131,17 +2149,31 @@ export class BackupService extends EventEmitter {
           `Pre-update backup ${marker}`,
           [kind],
         );
-        for (const backup of created) completedIds.add(backup.id);
+        const completed = created.find(
+          (backup) =>
+            backup.serverId === job.serverId
+            && backup.type === "pre_update"
+            && backup.kind === kind
+            && backup.status === "completed"
+            && existsSync(backup.path)
+            && backup.notes?.includes(marker) === true,
+        );
+        if (completed === undefined) {
+          throw new Error(
+            `Pre-update backup did not produce durable ${kind} evidence (server: ${job.serverId}, job: ${job.id})`,
+          );
+        }
+        completedByKind.set(kind, completed);
       }
       nextKindIndex += 1;
-      job.context.completedBackupIds = [...completedIds];
+      job.context.completedBackupIds = CRITICAL_BACKUP_KINDS
+        .map((completedKind) => completedByKind.get(completedKind)?.id)
+        .filter((backupId): backupId is string => backupId !== undefined);
       job.context.nextKindIndex = nextKindIndex;
       this.checkpointJob(job, `backup-complete:${kind}`);
     }
 
-    return [...completedIds]
-      .map((backupId) => this.backups.getBackup(backupId))
-      .filter((backup): backup is BackupRecord => backup?.status === "completed");
+    return CRITICAL_BACKUP_KINDS.map((kind) => completedByKind.get(kind)!);
   }
 
   private async resumeRestoreJob(job: BackupCriticalJob): Promise<void> {
