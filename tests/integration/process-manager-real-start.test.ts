@@ -39,6 +39,7 @@ function makeProfile(installDir: string): ServerProfile {
     clusterDir: null,
     extraArgs: [],
     mods: [],
+    enabled: true,
     createdAt: now,
     updatedAt: now,
   };

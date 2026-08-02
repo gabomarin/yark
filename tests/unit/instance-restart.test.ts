@@ -17,6 +17,7 @@ function makeProfile(id = "srv-1"): ServerProfile {
     name: "Restart Test",
     map: "TheIsland_WP",
     installDir: "C:/ARK/RestartTest",
+    enabled: true,
     sessionName: "Session",
     gamePort: 7777,
     queryPort: 27015,

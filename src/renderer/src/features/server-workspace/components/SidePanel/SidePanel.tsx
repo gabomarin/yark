@@ -2,6 +2,8 @@ import type { ReactElement } from "react";
 import {
   Broadcast,
   CloudArrowDown,
+  Eye,
+  EyeSlash,
   FloppyDisk,
   FolderOpen,
   Power,
@@ -30,6 +32,7 @@ interface Props {
   onSaveWorld: () => void;
   onBroadcast: (message: string) => void;
   onKill: () => void;
+  onToggleEnabled?: () => void;
 }
 
 function MetaRow({ label, value }: { label: string; value: string }): ReactElement {
@@ -57,6 +60,20 @@ export function SidePanel(props: Props): ReactElement {
     (isActive
       ? "The server will stop for this check, then restart if it succeeds"
       : undefined);
+  const toggleDisabled =
+    props.onToggleEnabled === undefined ||
+    steamCmdBusy ||
+    (props.server.enabled ? isActive : props.installation?.installed !== true);
+  const toggleTitle =
+    props.onToggleEnabled === undefined
+      ? undefined
+      : steamCmdBusy
+        ? steamCmdLockTitle ?? "Another server operation is in progress"
+        : props.server.enabled && isActive
+        ? "Stop the server first"
+        : !props.server.enabled && props.installation?.installed !== true
+          ? "Install files first"
+          : undefined;
   const version = resolveDisplayedServerVersion(props.installation) ?? "—";
   const uptime =
     props.runtime?.startedAt != null && status === "running"
@@ -83,7 +100,25 @@ export function SidePanel(props: Props): ReactElement {
             variant="default"
             fullWidth
             justify="flex-start"
-            leftSection={<FolderOpen size={14} />}
+            leftSection={
+              props.server.enabled ? (
+                <EyeSlash size={14} color="var(--mantine-color-red-6)" />
+              ) : (
+                <Eye size={14} weight="fill" color="var(--mantine-color-blue-6)" />
+              )
+            }
+            onClick={props.onToggleEnabled}
+            disabled={toggleDisabled}
+            title={toggleTitle}
+          >
+            {props.server.enabled ? "Disable server" : "Enable server"}
+          </Button>
+          <Button
+            size="sm"
+            variant="default"
+            fullWidth
+            justify="flex-start"
+            leftSection={<FolderOpen size={14} color="var(--mantine-color-blue-6)" />}
             onClick={props.onOpenFolder}
           >
             Open folder
@@ -93,7 +128,7 @@ export function SidePanel(props: Props): ReactElement {
             variant="default"
             fullWidth
             justify="flex-start"
-            leftSection={<Wrench size={14} />}
+            leftSection={<Wrench size={14} color="var(--mantine-color-blue-6)" />}
             onClick={props.onInstallFiles}
             disabled={installLocked}
             title={installLockTitle}
@@ -105,7 +140,7 @@ export function SidePanel(props: Props): ReactElement {
             variant="default"
             fullWidth
             justify="flex-start"
-            leftSection={<ShieldCheck size={14} />}
+            leftSection={<ShieldCheck size={14} color="var(--mantine-color-teal-6)" />}
             onClick={props.onVerifyFiles}
             disabled={updateVerifyLocked}
             title={updateVerifyTitle}
@@ -117,7 +152,7 @@ export function SidePanel(props: Props): ReactElement {
             variant="default"
             fullWidth
             justify="flex-start"
-            leftSection={<CloudArrowDown size={14} />}
+            leftSection={<CloudArrowDown size={14} color="var(--mantine-color-attention-6)" />}
             onClick={props.onUpdateNow}
             disabled={updateVerifyLocked}
             title={updateVerifyTitle}
@@ -129,7 +164,7 @@ export function SidePanel(props: Props): ReactElement {
             variant="default"
             fullWidth
             justify="flex-start"
-            leftSection={<FloppyDisk size={14} />}
+            leftSection={<FloppyDisk size={14} color="var(--mantine-color-teal-6)" />}
             onClick={props.onSaveWorld}
             disabled={status !== "running"}
           >
@@ -148,7 +183,7 @@ export function SidePanel(props: Props): ReactElement {
               variant="default"
               fullWidth
               justify="flex-start"
-              leftSection={<Broadcast size={14} />}
+              leftSection={<Broadcast size={14} color="var(--mantine-color-blue-6)" />}
               disabled={status !== "running" || broadcast.trim().length === 0}
               onClick={() => {
                 props.onBroadcast(broadcast.trim());

@@ -299,6 +299,26 @@ export class BackupService extends EventEmitter {
     }
   }
 
+  hasServerWork(serverId: string): boolean {
+    if (this.backupJobs.has(serverId)) return true;
+    if (this.iniSaveTimers.has(serverId)) return true;
+    if (this.iniSaveWaiters.has(serverId)) return true;
+    if (this.preStopBackupServers.has(serverId)) return true;
+    if (this.scheduledWorldInFlight.has(serverId)) return true;
+    if (this.creatingBackupIds.has(serverId)) return true;
+    if (this.interruptedReconcileInFlight.has(serverId)) return true;
+    if (this.reconcileInFlight.has(serverId)) return true;
+    if (this.waiters.has(serverId)) return true;
+    return this.queue.some(
+      (job) =>
+        job.serverId === serverId &&
+        (job.status === "pending" ||
+          job.status === "running" ||
+          job.status === "retrying" ||
+          job.status === "blocked"),
+    );
+  }
+
   private emitChanged(serverId: string): void {
     this.emit("changed", { serverId } satisfies BackupChangedPush);
   }

@@ -40,6 +40,7 @@ const server: ServerProfile = {
   name: "The Island",
   map: "TheIsland_WP",
   installDir: "C:\\ARK\\TheIsland",
+  enabled: true,
   sessionName: "YARK",
   gamePort: 7777,
   queryPort: 27015,

@@ -112,3 +112,25 @@ export function resolveServerInstallDir(parentDir: string, serverName: string): 
   }
   return `${parent}\\${folder}`;
 }
+
+/** Parent directory of a Windows path (drive root keeps trailing backslash). */
+export function windowsPathParentDir(path: string): string {
+  const normalized = normalizeWindowsPath(path);
+  const idx = normalized.lastIndexOf("\\");
+  if (idx < 0) {
+    return normalized;
+  }
+  const parent = normalized.slice(0, idx);
+  if (parent.length === 0) {
+    return "\\";
+  }
+  if (/^[a-zA-Z]:$/.test(parent)) {
+    return `${parent}\\`;
+  }
+  return parent;
+}
+
+/** Suggested install folder for a clone: sibling of the source under the same parent. */
+export function suggestCloneInstallDir(sourceInstallDir: string, cloneName: string): string {
+  return resolveServerInstallDir(windowsPathParentDir(sourceInstallDir), cloneName);
+}

@@ -13,6 +13,7 @@ function makeProfile(id = "srv-1"): ServerProfile {
     name: "Stop Test",
     map: "TheIsland_WP",
     installDir: "C:/ARK/StopTest",
+    enabled: true,
     sessionName: "Session",
     gamePort: 7777,
     queryPort: 27015,

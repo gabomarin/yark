@@ -92,12 +92,36 @@ export function registerIpcHandlers(
       }),
   );
 
+  ipcMain.handle(IPC.serversSetEnabled, (_e, id: string, enabled: unknown) =>
+    wrap(() => {
+      if (typeof enabled !== "boolean") {
+        throw new Error("enabled must be a boolean");
+      }
+      return instances.setServerEnabled(id, enabled);
+    }),
+  );
+
   ipcMain.handle(IPC.serversDelete, (_e, id: string) =>
     wrap(() => instances.delete(id)),
   );
 
   ipcMain.handle(IPC.serversClone, (_e, id: string) =>
     wrap(() => instances.clone(id)),
+  );
+
+  ipcMain.handle(
+    IPC.serversCloneWithParams,
+    (_e, id: string, params: { name: string; sessionName: string; gamePort: number; queryPort: number; rconPort: number; installDir: string }) =>
+      wrap(() =>
+        instances.cloneWithParams(id, {
+          name: params.name,
+          sessionName: params.sessionName,
+          gamePort: params.gamePort,
+          queryPort: params.queryPort,
+          rconPort: params.rconPort,
+          installDir: params.installDir,
+        }),
+      ),
   );
 
   ipcMain.handle(IPC.serversStart, (_e, id: string, options?: StartServerOptions) =>

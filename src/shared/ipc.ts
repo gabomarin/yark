@@ -46,8 +46,10 @@ export const IPC = {
   serversList: "servers:list",
   serversCreate: "servers:create",
   serversUpdate: "servers:update",
+  serversSetEnabled: "servers:set-enabled",
   serversDelete: "servers:delete",
   serversClone: "servers:clone",
+  serversCloneWithParams: "servers:clone-with-params",
   serversStart: "servers:start",
   serversStop: "servers:stop",
   serversRestart: "servers:restart",
@@ -148,8 +150,20 @@ export interface RendererApi {
     id: string,
     input: ServerProfileInput,
   ): Promise<IpcResult<ServerProfile>>;
+  setServerEnabled(id: string, enabled: boolean): Promise<IpcResult<ServerProfile>>;
   deleteServer(id: string): Promise<IpcResult<void>>;
   cloneServer(id: string): Promise<IpcResult<ServerProfile>>;
+  cloneServerWithParams(
+    id: string,
+    params: {
+      name: string;
+      sessionName: string;
+      gamePort: number;
+      queryPort: number;
+      rconPort: number;
+      installDir: string;
+    },
+  ): Promise<IpcResult<ServerProfile>>;
   startServer(id: string, options?: StartServerOptions): Promise<IpcResult<void>>;
   stopServer(id: string): Promise<IpcResult<void>>;
   restartServer(id: string, options?: StartServerOptions): Promise<IpcResult<void>>;
@@ -185,6 +199,7 @@ export interface RendererApi {
     defaultPath?: string,
     title?: string,
   ): Promise<IpcResult<string | null>>;
+  pickFolder(defaultPath?: string): Promise<string | null>;
   listAppDataFolders(): Promise<IpcResult<AppDataFolderInfo[]>>;
   openAppDataFolder(kind: AppDataFolderKind): Promise<IpcResult<void>>;
   /** `null` when unset in `app_settings` (caller may migrate / apply default). */

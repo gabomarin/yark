@@ -14,6 +14,7 @@ function makeProfile(installDir: string): ServerProfile {
     name: "INI Test",
     map: "TheIsland_WP",
     installDir,
+    enabled: true,
     sessionName: "Session",
     gamePort: 7777,
     queryPort: 27015,

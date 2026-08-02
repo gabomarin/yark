@@ -3,7 +3,7 @@ import type { ServerUpdateState } from "@shared/server-update-status";
 
 /** Runtime control: Play / Pause / Cancel (leading slot). Hidden when not installed. */
 export type ServerCardRuntimeAction = {
-  kind: "cancel" | "start" | "stop" | "starting" | "stopping";
+  kind: "cancel" | "enable" | "start" | "stop" | "starting" | "stopping";
   label: string;
   color: string;
   variant: "filled" | "light";
@@ -36,6 +36,7 @@ export type ServerCardUpdateAction = {
 export type ServerCardPrimaryAction = {
   kind:
     | "cancel"
+    | "enable"
     | "install"
     | "manage"
     | "starting"
@@ -53,7 +54,9 @@ export function resolveRuntimeAction(input: {
   steamCmdBusy: boolean;
   isInstallationReady: boolean;
   status: ServerStatus;
+  serverEnabled?: boolean;
 }): ServerCardRuntimeAction {
+  const serverEnabled = input.serverEnabled ?? true;
   if (input.steamCmdBusy) {
     return {
       kind: "cancel",
@@ -61,6 +64,16 @@ export function resolveRuntimeAction(input: {
       color: "red",
       variant: "light",
       disabled: false,
+      visible: true,
+    };
+  }
+  if (!input.serverEnabled) {
+    return {
+      kind: "enable",
+      label: "Enable server",
+      color: "blue",
+      variant: "filled",
+      disabled: !input.isInstallationReady,
       visible: true,
     };
   }
@@ -121,9 +134,11 @@ export function resolveRestartAction(input: {
   steamCmdBusy: boolean;
   isInstallationReady: boolean;
   status: ServerStatus;
+  serverEnabled?: boolean;
 }): ServerCardRestartAction {
+  const serverEnabled = input.serverEnabled ?? true;
   const transitioning = input.status === "starting" || input.status === "stopping";
-  if (!input.isInstallationReady) {
+  if (!input.serverEnabled || !input.isInstallationReady) {
     return {
       label: "Restart server",
       color: "gray",
@@ -144,6 +159,7 @@ export function resolveUpdateAction(input: {
   isInstallationReady: boolean;
   status: ServerStatus;
   updateState: ServerUpdateState;
+  serverEnabled?: boolean;
 }): ServerCardUpdateAction {
   const transitioning = input.status === "starting" || input.status === "stopping";
   if (!input.isInstallationReady) {
@@ -200,6 +216,7 @@ export function resolvePrimaryAction(input: {
   isInstallationReady: boolean;
   status: ServerStatus;
   updateState: ServerUpdateState;
+  serverEnabled?: boolean;
 }): ServerCardPrimaryAction {
   const runtime = resolveRuntimeAction(input);
   if (!input.isInstallationReady && !input.steamCmdBusy) {

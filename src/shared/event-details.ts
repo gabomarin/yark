@@ -57,6 +57,16 @@ function catalogFor(event: AppEvent): AppEventDetails {
       return {
         what: "The server process was started by the manager.",
       };
+    case "server_enabled":
+      return {
+        what: "A saved server profile was re-enabled.",
+        suggestion: "Confirm the install, cluster, and ports before starting the server again.",
+      };
+    case "server_disabled":
+      return {
+        what: "A saved server profile was disabled.",
+        suggestion: "The profile stays editable and can be re-enabled from the workspace.",
+      };
     case "server_stopped":
       return {
         what: "The server process was stopped by the manager.",

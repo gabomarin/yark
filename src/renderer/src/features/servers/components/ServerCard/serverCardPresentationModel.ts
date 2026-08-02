@@ -51,6 +51,7 @@ export function resolveRowTone(input: {
   status: ServerStatus;
   isInstallationReady: boolean;
   updateAvailable: boolean;
+  serverEnabled?: boolean;
 }): ServerCardRowTone {
   if (input.stopBusy === true || input.steamCmdBusy) return "busy";
   if (input.status === "running") return "running";
@@ -91,6 +92,7 @@ export function resolveVersionMetaTone(input: {
   isInstallationReady: boolean;
   updateAvailable: boolean;
   updateState: ServerUpdateState;
+  serverEnabled?: boolean;
 }): "muted" | "ok" | "attention" | "busy" | "default" {
   if (input.steamCmdBusy) return "busy";
   if (!input.isInstallationReady) return "muted";
@@ -101,6 +103,7 @@ export function resolveVersionMetaTone(input: {
 
 export function deriveServerCardView(input: {
   status: ServerStatus;
+  serverEnabled?: boolean;
   installation: ServerInstallationInfo | null;
   officialSteamBuild: string | null;
   steamCmdBusy: boolean;
@@ -112,6 +115,7 @@ export function deriveServerCardView(input: {
   stopProgressLabel?: string | null;
 }) {
   const isInstallationReady = input.installation?.installed === true;
+  const serverEnabled = input.serverEnabled ?? true;
   const localVersion = resolveDisplayedServerVersion(input.installation);
   const updateState = getServerUpdateState(
     input.installation,
@@ -130,16 +134,19 @@ export function deriveServerCardView(input: {
     steamCmdBusy: input.steamCmdBusy,
     isInstallationReady,
     status: input.status,
+    serverEnabled,
   });
   const restartAction = resolveRestartAction({
     steamCmdBusy: input.steamCmdBusy,
     isInstallationReady,
     status: input.status,
+    serverEnabled,
   });
   const updateAction = resolveUpdateAction({
     steamCmdBusy: input.steamCmdBusy,
     isInstallationReady,
     status: input.status,
+    serverEnabled,
     updateState,
   });
 
@@ -168,6 +175,7 @@ export function deriveServerCardView(input: {
       isInstallationReady,
       status: input.status,
       updateState,
+      serverEnabled: input.serverEnabled,
     }),
     rowTone: resolveRowTone({
       steamCmdBusy: input.steamCmdBusy,
@@ -175,12 +183,14 @@ export function deriveServerCardView(input: {
       status: input.status,
       isInstallationReady,
       updateAvailable,
+      serverEnabled,
     }),
     versionMetaTone: resolveVersionMetaTone({
       steamCmdBusy: input.steamCmdBusy || stopBusy,
       isInstallationReady,
       updateAvailable,
       updateState,
+      serverEnabled,
     }),
     progress: stopBusy
       ? {

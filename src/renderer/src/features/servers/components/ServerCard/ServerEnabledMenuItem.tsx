@@ -1,0 +1,41 @@
+import type { ReactElement } from "react";
+import { Eye, EyeSlash } from "@phosphor-icons/react";
+import { Menu } from "@mantine/core";
+
+interface Props {
+  enabled: boolean;
+  active: boolean;
+  installationReady: boolean;
+  onToggle?: () => void;
+}
+
+export function ServerEnabledMenuItem(props: Props): ReactElement {
+  const disabled =
+    props.onToggle === undefined ||
+    (props.enabled ? props.active : !props.installationReady);
+  const title =
+    props.onToggle === undefined
+      ? undefined
+      : props.enabled && props.active
+        ? "Stop the server first"
+        : !props.enabled && !props.installationReady
+          ? "Install files first"
+          : undefined;
+
+  return (
+    <Menu.Item
+      leftSection={
+        props.enabled ? (
+          <EyeSlash size={16} color="var(--mantine-color-red-6)" />
+        ) : (
+          <Eye size={16} color="var(--mantine-color-blue-6)" />
+        )
+      }
+      onClick={props.onToggle}
+      disabled={disabled}
+      title={title}
+    >
+      {props.enabled ? "Disable server" : "Enable server"}
+    </Menu.Item>
+  );
+}

@@ -55,6 +55,21 @@
     );
 }
 
+.card[data-disabled="true"] {
+  opacity: 0.6;
+  filter: grayscale(0.3);
+  border-color: color-mix(in srgb, var(--app-color-border) 50%, transparent);
+}
+
+.card[data-disabled="true"]:hover {
+  opacity: 0.7;
+  border-color: color-mix(in srgb, var(--app-color-border) 65%, var(--app-color-accent));
+}
+
+.card[data-disabled="true"]::before {
+  background: color-mix(in srgb, var(--app-color-border) 70%, transparent);
+}
+
 .mainRow {
   position: relative;
   z-index: 1;

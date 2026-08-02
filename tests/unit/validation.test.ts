@@ -28,6 +28,7 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
   return {
     ...validInput(),
     id: "id-1",
+    enabled: true,
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
     ...overrides,

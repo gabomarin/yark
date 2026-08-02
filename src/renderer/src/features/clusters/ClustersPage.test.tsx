@@ -6,6 +6,7 @@ import type { ClusterComplianceReport, ServerProfile } from "@shared/types";
 import { ClustersPage } from "./ClustersPage";
 
 function makeServer(overrides: Partial<ServerProfile> & Pick<ServerProfile, "id" | "name">): ServerProfile {
+  const { enabled, ...rest } = overrides;
   return {
     map: "TheIsland_WP",
     installDir: `C:/ARK/${overrides.id}`,
@@ -19,9 +20,10 @@ function makeServer(overrides: Partial<ServerProfile> & Pick<ServerProfile, "id"
     clusterDir: "C:/ARK/cluster",
     extraArgs: [],
     mods: [],
+    enabled: enabled ?? true,
     createdAt: "2026-07-23T00:00:00.000Z",
     updatedAt: "2026-07-23T00:00:00.000Z",
-    ...overrides,
+    ...rest,
   };
 }
 
@@ -131,6 +133,23 @@ describe("ClustersPage", () => {
 
     await user.click(screen.getByRole("button", { name: /recheck/i }));
     expect(onRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("labels disabled cluster members as inactive", async () => {
+    const user = userEvent.setup();
+    render(
+      <AppProviders>
+        <ClustersPage
+          servers={[{ ...island, enabled: false }, scorched]}
+          reports={[readyReport]}
+          onOpenServer={vi.fn()}
+          onRefresh={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /alpha/i }));
+    expect(screen.getByText("Inactive")).toBeInTheDocument();
   });
 
   it("explains when servers have clusterDir but no clusterId", () => {

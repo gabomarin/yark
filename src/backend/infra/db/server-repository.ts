@@ -13,6 +13,7 @@ interface ServerRow {
   name: string;
   map: string;
   install_dir: string;
+  enabled: number;
   session_name: string;
   game_port: number;
   query_port: number;
@@ -44,6 +45,7 @@ function rowToProfile(row: ServerRow): ServerProfile {
     name: row.name,
     map: row.map,
     installDir: row.install_dir,
+    enabled: row.enabled === 1,
     sessionName: row.session_name,
     gamePort: row.game_port,
     queryPort: row.query_port,
@@ -78,10 +80,11 @@ export class ServerRepository {
     return row ? rowToProfile(row) : null;
   }
 
-  create(input: ServerProfileInput): ServerProfile {
+  create(input: ServerProfileInput, enabled = true): ServerProfile {
     const now = new Date().toISOString();
     const profile: ServerProfile = {
       ...input,
+      enabled,
       disabledMods: input.disabledMods ?? [],
       modMetadataCache: input.modMetadataCache ?? {},
       id: randomUUID(),
@@ -91,18 +94,19 @@ export class ServerRepository {
     this.db
       .prepare(
         `INSERT INTO servers (
-          id, name, map, install_dir, session_name,
+          id, name, map, install_dir, enabled, session_name,
           game_port, query_port, rcon_port,
           server_password, admin_password,
           cluster_id, cluster_dir, extra_args, mods,
           disabled_mods, mod_metadata_cache, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         profile.id,
         profile.name,
         profile.map,
         profile.installDir,
+        profile.enabled ? 1 : 0,
         profile.sessionName,
         profile.gamePort,
         profile.queryPort,
@@ -155,6 +159,20 @@ export class ServerRepository {
         updatedAt,
         id,
       );
+    return this.get(id);
+  }
+
+  setEnabled(id: string, enabled: boolean): ServerProfile | null {
+    const existing = this.get(id);
+    if (existing === null || existing.enabled === enabled) {
+      return existing;
+    }
+    const updatedAt = new Date().toISOString();
+    this.db
+      .prepare(
+        `UPDATE servers SET enabled = ?, updated_at = ? WHERE id = ?`,
+      )
+      .run(enabled ? 1 : 0, updatedAt, id);
     return this.get(id);
   }
 

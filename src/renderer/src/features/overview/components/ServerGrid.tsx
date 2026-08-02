@@ -1,6 +1,6 @@
-import type { ReactElement } from "react";
+import { type ReactElement, useState } from "react";
 import { HardDrives, MagnifyingGlass, Plus } from "@phosphor-icons/react";
-import { Badge, Button, Group, Skeleton, Stack, Text, Title, VisuallyHidden } from "@mantine/core";
+import { Badge, Button, Checkbox, Group, Skeleton, Stack, Text, Title, VisuallyHidden } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo, ServerStopProgress } from "@shared/types";
 import { getServerUpdateState } from "@shared/server-update-status";
 import { ServerCard } from "@features/servers/components/ServerCard/ServerCard";
@@ -15,6 +15,7 @@ interface Props {
   onCreateServer: () => void;
   servers: ServerProfile[];
   filteredServers: ServerProfile[];
+  disabledServers: ServerProfile[];
   runningServers: number;
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
@@ -43,14 +44,21 @@ interface Props {
   checkingUpdates?: boolean;
   onCloneServer: (serverId: string) => void;
   onDeleteServer: (serverId: string) => void;
+  onToggleServerEnabled?: (serverId: string, enabled: boolean) => void;
   onCancelSteamCmd: () => void;
 }
 
 export function ServerGrid(props: Props): ReactElement {
-  const totalLabel =
-    props.servers.length === 1
-      ? "1 server configured"
-      : `${props.servers.length} servers configured`;
+  const [showDisabled, setShowDisabled] = useState(false);
+
+  const enabledLabel =
+    props.filteredServers.length === 1
+      ? "1 enabled server"
+      : `${props.filteredServers.length} enabled servers`;
+  const disabledLabel =
+    props.disabledServers.length === 1
+      ? "1 disabled server"
+      : `${props.disabledServers.length} disabled servers`;
   const runningLabel =
     props.runningServers === 0
       ? "none running"
@@ -58,7 +66,7 @@ export function ServerGrid(props: Props): ReactElement {
         ? "1 running"
         : `${props.runningServers} running`;
   const filteredLabel =
-    props.filteredServers.length !== props.servers.length
+    props.filteredServers.length !== props.servers.filter((server) => server.enabled).length
       ? ` · ${props.filteredServers.length} ${
           props.filteredServers.length === 1 ? "result" : "results"
         }`
@@ -82,6 +90,60 @@ export function ServerGrid(props: Props): ReactElement {
         ? "1 needs attention"
         : `${attentionCount} need attention`;
 
+  const renderServerCard = (server: ServerProfile): ReactElement => {
+    const stopProgress = props.stopProgressByServerId?.get(server.id);
+    const stopBusy = stopProgress?.active === true;
+    return (
+      <ServerCard
+        key={server.id}
+        server={server}
+        runtime={props.statuses.get(server.id) ?? null}
+        installation={props.installationInfo.get(server.id) ?? null}
+        officialSteamBuild={props.officialSteamBuild}
+        steamCmdBusy={
+          !stopBusy && (props.steamCmdBusy ?? props.steamCmdRunning) && props.steamCmdServerId === server.id
+        }
+        steamCmdProgressPercent={
+          props.steamCmdServerId === server.id ? (props.steamCmdProgressPercent ?? null) : null
+        }
+        steamCmdProgressLabel={
+          props.steamCmdServerId === server.id ? (props.steamCmdProgressLabel ?? null) : null
+        }
+        steamCmdProgressBytesDownloaded={
+          props.steamCmdServerId === server.id
+            ? (props.steamCmdProgressBytesDownloaded ?? null)
+            : null
+        }
+        steamCmdProgressBytesTotal={
+          props.steamCmdServerId === server.id ? (props.steamCmdProgressBytesTotal ?? null) : null
+        }
+        steamCmdOperation={
+          props.steamCmdServerId === server.id ? (props.steamCmdOperation ?? null) : null
+        }
+        stopBusy={stopBusy}
+        stopProgressPercent={stopBusy ? (stopProgress?.percent ?? null) : null}
+        stopProgressLabel={stopBusy ? (stopProgress?.label ?? null) : null}
+        checkingUpdates={props.checkingUpdates}
+        onStart={() => props.onStartServer(server.id)}
+        onStop={() => props.onStopServer(server.id)}
+        onKill={() => props.onKillServer(server.id)}
+        onRestart={() => props.onRestartServer(server.id)}
+        onOpenWorkspace={() => props.onOpenWorkspace(server)}
+        onOpenLogs={() => props.onOpenLogs(server.id)}
+        onReviewError={() => props.onReviewError(server.id)}
+        onOpenFolder={() => props.onOpenFolder(server.id)}
+        onInstallFiles={() => props.onInstallFiles(server.id)}
+        onUpdateNow={() => props.onUpdateNow(server.id)}
+        onVerifyFiles={() => props.onVerifyFiles(server.id)}
+        onCheckUpdates={() => props.onCheckUpdatesForServer(server.id)}
+        onClone={() => props.onCloneServer(server.id)}
+        onDelete={() => props.onDeleteServer(server.id)}
+        onToggleEnabled={() => props.onToggleServerEnabled?.(server.id, !server.enabled)}
+        onCancelSteamCmd={props.onCancelSteamCmd}
+      />
+    );
+  };
+
   return (
     <section
       className={classes.serverSection}
@@ -95,9 +157,22 @@ export function ServerGrid(props: Props): ReactElement {
           </Title>
           <Group gap="sm" align="center" wrap="wrap" className={classes.serverSummaryRow}>
             <Text c="dimmed" size="sm" data-server-summary>
-              {totalLabel} · {runningLabel}
+              {enabledLabel} · {runningLabel}
               {filteredLabel}
             </Text>
+            {props.disabledServers.length > 0 && (
+              <>
+                <Badge size="sm" color="gray" variant="light" data-disabled-count={props.disabledServers.length}>
+                  {disabledLabel}
+                </Badge>
+                <Checkbox
+                  size="xs"
+                  label="Show disabled"
+                  checked={showDisabled}
+                  onChange={(event) => setShowDisabled(event.currentTarget.checked)}
+                />
+              </>
+            )}
             {attentionLabel !== null && (
               <Badge
                 size="sm"
@@ -169,8 +244,12 @@ export function ServerGrid(props: Props): ReactElement {
           props.filteredServers.length === 0 && (
             <EmptyState
               icon={<MagnifyingGlass size={20} />}
-              title="No matches"
-              description="Try another name, map, or cluster."
+              title={props.disabledServers.length > 0 ? "No enabled servers" : "No matches"}
+              description={
+                props.disabledServers.length > 0
+                  ? "All enabled servers are filtered out. Disabled servers remain below."
+                  : "Try another name, map, or cluster."
+              }
               action={
                 <Button variant="default" size="xs" onClick={() => props.onSearchChange("")}>
                   Clear search
@@ -179,68 +258,12 @@ export function ServerGrid(props: Props): ReactElement {
             />
           )}
 
-        {!props.loading && props.filteredServers.length > 0 && (
+        {!props.loading &&
+          (props.filteredServers.length > 0 ||
+            (showDisabled && props.disabledServers.length > 0)) && (
           <div className={classes.serverGrid}>
-            {props.filteredServers.map((server) => {
-              const stopProgress = props.stopProgressByServerId?.get(server.id);
-              const stopBusy = stopProgress?.active === true;
-              return (
-              <ServerCard
-                key={server.id}
-                server={server}
-                runtime={props.statuses.get(server.id) ?? null}
-                installation={props.installationInfo.get(server.id) ?? null}
-                officialSteamBuild={props.officialSteamBuild}
-                steamCmdBusy={
-                  !stopBusy &&
-                  (props.steamCmdBusy ?? props.steamCmdRunning) &&
-                  props.steamCmdServerId === server.id
-                }
-                steamCmdProgressPercent={
-                  props.steamCmdServerId === server.id
-                    ? (props.steamCmdProgressPercent ?? null)
-                    : null
-                }
-                steamCmdProgressLabel={
-                  props.steamCmdServerId === server.id
-                    ? (props.steamCmdProgressLabel ?? null)
-                    : null
-                }
-                steamCmdProgressBytesDownloaded={
-                  props.steamCmdServerId === server.id
-                    ? (props.steamCmdProgressBytesDownloaded ?? null)
-                    : null
-                }
-                steamCmdProgressBytesTotal={
-                  props.steamCmdServerId === server.id
-                    ? (props.steamCmdProgressBytesTotal ?? null)
-                    : null
-                }
-                steamCmdOperation={
-                  props.steamCmdServerId === server.id ? (props.steamCmdOperation ?? null) : null
-                }
-                stopBusy={stopBusy}
-                stopProgressPercent={stopBusy ? (stopProgress?.percent ?? null) : null}
-                stopProgressLabel={stopBusy ? (stopProgress?.label ?? null) : null}
-                checkingUpdates={props.checkingUpdates}
-                onStart={() => props.onStartServer(server.id)}
-                onStop={() => props.onStopServer(server.id)}
-                onKill={() => props.onKillServer(server.id)}
-                onRestart={() => props.onRestartServer(server.id)}
-                onOpenWorkspace={() => props.onOpenWorkspace(server)}
-                onOpenLogs={() => props.onOpenLogs(server.id)}
-                onReviewError={() => props.onReviewError(server.id)}
-                onOpenFolder={() => props.onOpenFolder(server.id)}
-                onInstallFiles={() => props.onInstallFiles(server.id)}
-                onUpdateNow={() => props.onUpdateNow(server.id)}
-                onVerifyFiles={() => props.onVerifyFiles(server.id)}
-                onCheckUpdates={() => props.onCheckUpdatesForServer(server.id)}
-                onClone={() => props.onCloneServer(server.id)}
-                onDelete={() => props.onDeleteServer(server.id)}
-                onCancelSteamCmd={props.onCancelSteamCmd}
-              />
-              );
-            })}
+            {props.filteredServers.map(renderServerCard)}
+            {showDisabled && props.disabledServers.map(renderServerCard)}
           </div>
         )}
       </Stack>
