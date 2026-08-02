@@ -12,10 +12,13 @@ import type {
   ServerProfile,
   ServerRuntimeInfo,
   ServerStopProgress,
+  SessionPortSet,
   SteamCmdCacheKind,
   SteamCmdConsoleSnapshot,
   SteamCmdStatus,
+  StartServerOptions,
 } from "@shared/types";
+import { isHostPortProbeError } from "@shared/host-port-probe-errors";
 import {
   getServerUpdateState,
   isServerUpdateAvailable,
@@ -35,6 +38,7 @@ import {
 } from "@features/server-workspace/ServerWorkspacePage";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { CloneServerDialog } from "@features/servers/components/CloneServerDialog/CloneServerDialog";
+import { openHostPortProbeModal } from "@features/servers/hostPortProbeModal";
 import { SteamCmdProgressDock } from "@features/steamcmd/SteamCmdProgressDock";
 import { SettingsPage } from "@features/settings/SettingsPage";
 import {
@@ -596,17 +600,41 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   );
 
   const restartServer = useCallback(
-    async (id: string) => {
+    async (id: string, options?: StartServerOptions) => {
       setError(null);
       const res = await window.api.restartServer(id, {
         openNativeConsole: openNativeTerminalOnStart,
+        ...options,
       });
       if (!res.ok) {
-        setError(res.error ?? "Could not restart the server");
+        const message = res.error ?? "Could not restart the server";
+        if (isHostPortProbeError(message)) {
+          const server = servers.find((item) => item.id === id);
+          openHostPortProbeModal({
+            serverName: server?.name ?? id,
+            message,
+            onEditPorts: () => {
+              setRoute("overview");
+              setOverlay({ kind: "workspace", serverId: id, initialTab: "server" });
+            },
+            onStartThisSession: (ports: SessionPortSet) => {
+              void restartServer(id, { sessionPorts: ports });
+            },
+          });
+        } else {
+          setError(message);
+        }
+      } else if (options?.sessionPorts != null) {
+        const ports = options.sessionPorts;
+        notifications.show({
+          title: "Restarted with session ports",
+          message: `Running on game ${ports.gamePort} / query ${ports.queryPort} / RCON ${ports.rconPort}. Saved profile ports are unchanged.`,
+          color: "teal",
+        });
       }
       await refresh();
     },
-    [openNativeTerminalOnStart, refresh],
+    [openNativeTerminalOnStart, refresh, servers],
   );
 
   const confirmKillServer = useCallback(
@@ -687,13 +715,41 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   }, []);
 
   const startServer = useCallback(
-    (id: string) =>
-      runAction(() =>
-        window.api.startServer(id, {
-          openNativeConsole: openNativeTerminalOnStart,
-        }),
-      ),
-    [openNativeTerminalOnStart, runAction],
+    async (id: string, options?: StartServerOptions) => {
+      setError(null);
+      const result = await window.api.startServer(id, {
+        openNativeConsole: openNativeTerminalOnStart,
+        ...options,
+      });
+      if (!result.ok) {
+        const message = result.error ?? "Unknown error";
+        if (isHostPortProbeError(message)) {
+          const server = servers.find((item) => item.id === id);
+          openHostPortProbeModal({
+            serverName: server?.name ?? id,
+            message,
+            onEditPorts: () => {
+              setRoute("overview");
+              setOverlay({ kind: "workspace", serverId: id, initialTab: "server" });
+            },
+            onStartThisSession: (ports: SessionPortSet) => {
+              void startServer(id, { sessionPorts: ports });
+            },
+          });
+        } else {
+          setError(message);
+        }
+      } else if (options?.sessionPorts != null) {
+        const ports = options.sessionPorts;
+        notifications.show({
+          title: "Started with session ports",
+          message: `Running on game ${ports.gamePort} / query ${ports.queryPort} / RCON ${ports.rconPort}. Saved profile ports are unchanged.`,
+          color: "teal",
+        });
+      }
+      await refresh();
+    },
+    [openNativeTerminalOnStart, refresh, servers],
   );
 
   const setServerEnabled = useCallback(

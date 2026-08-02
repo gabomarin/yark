@@ -36,13 +36,14 @@ Each profile is one dedicated-server install YARK can manage: path, map, session
 YARK flags the **same numeric port** used by different profiles (any of game / query / RCON).
 
 - **Create / update profile** — checked against all other profiles
-- **Start** — checked against **other active** servers
+- **Start** — checked against **other active** servers, then a **host bind probe** (UDP game/query, TCP RCON)
+
+If the host probe finds a port **busy** or cannot confirm it (**inconclusive**), start is blocked. When a free alternative set is found, YARK can **Start this session** on those ports (INI + launch for that run only — saved profile ports stay unchanged). Permanent changes go through Server settings (**Edit ports**). There is no “start anyway” on the conflicting ports.
 
 Clone bumps ports by +10 (retries with higher offsets if needed).
 
-<Aside type="tip">
-  Upcoming work will probe whether ports are already bound on the host before spawn.
-  Until then, conflicts often show up as failed starts or odd networking — keep a port spreadsheet if you run many maps.
+<Aside type="note">
+  The host probe is best-effort and does not verify Windows Firewall, NAT, or router port forwarding.
 </Aside>
 
 ## Hot edits while running

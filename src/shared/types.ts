@@ -179,8 +179,23 @@ export interface SteamCmdConsoleSnapshot {
   updatedAt: string;
 }
 
+export interface SessionPortSet {
+  gamePort: number;
+  queryPort: number;
+  rconPort: number;
+}
+
 export interface StartServerOptions {
+  /**
+   * Declared for compatibility; unused. Host probe busy/inconclusive always
+   * blocks start — recover with `sessionPorts` or permanent port edits.
+   */
   skipPortValidation?: boolean;
+  /**
+   * Game / query / RCON for this start only (INI sync + launch args).
+   * Does not update the saved SQLite profile.
+   */
+  sessionPorts?: SessionPortSet;
   launchArgsOverride?: string[];
   /**
    * Skip the readiness wait (RCON). Only for tests or binaries
