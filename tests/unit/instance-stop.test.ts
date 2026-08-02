@@ -314,9 +314,7 @@ describe("InstanceService.stop", () => {
 
     await locks.withLock(profile.id, "update", async () => {
       await expect(service.stop(profile.id)).rejects.toThrow(/running job/i);
-      await expect(service.start(profile.id)).rejects.toThrow(
-        /operation is already in progress/i,
-      );
+      await expect(service.start(profile.id)).rejects.toThrow(/running job/i);
     });
   });
 });
