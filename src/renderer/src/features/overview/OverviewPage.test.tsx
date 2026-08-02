@@ -292,8 +292,13 @@ describe("OverviewPage", () => {
     );
 
     expect(screen.queryByText("The Island")).not.toBeInTheDocument();
+    expect(screen.getByText("No enabled servers")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Clear search" }),
+    ).not.toBeInTheDocument();
     await user.click(screen.getByRole("checkbox", { name: "Show disabled" }));
     expect(screen.getByText("The Island")).toBeInTheDocument();
     expect(screen.getByText("Inactive")).toBeInTheDocument();
+    expect(screen.queryByText("No enabled servers")).not.toBeInTheDocument();
   });
 });

@@ -105,6 +105,17 @@ describe("InstanceService enabled state", () => {
     expect(repo.setEnabled).not.toHaveBeenCalled();
   });
 
+  it("rejects disabling while backup work is active without changing persistence", async () => {
+    const source = profile();
+    const { service, repo, backups } = harness([source]);
+    vi.mocked(backups.hasServerWork).mockReturnValue(true);
+
+    await expect(service.setServerEnabled(source.id, false)).rejects.toThrow(
+      /backup or restore job is still in progress/,
+    );
+    expect(repo.setEnabled).not.toHaveBeenCalled();
+  });
+
   it("leaves a disabled profile unchanged when installation validation fails", async () => {
     const source = profile({ enabled: false });
     const { service, repo } = harness([source]);
@@ -194,7 +205,25 @@ describe("InstanceService cloning", () => {
     expect(clone.name).toBe("Island (copy 2)");
   });
 
-  it("normalizes a selected parent directory before creating a parameterized clone", () => {
+  it("advances the automatic clone suffix when the sibling install directory is owned", () => {
+    const source = profile({ name: "Island" });
+    const existingFolderOwner = profile({
+      id: "srv-2",
+      name: "Archive",
+      installDir: "C:\\ARK\\Island (copy)",
+      gamePort: 7787,
+      queryPort: 27025,
+      rconPort: 27030,
+    });
+    const { service } = harness([source, existingFolderOwner]);
+
+    const clone = service.clone(source.id);
+
+    expect(clone.name).toBe("Island (copy 2)");
+    expect(clone.installDir).toBe("C:\\ARK\\Island (copy 2)");
+  });
+
+  it("treats a customized parameterized clone install directory as the final path", () => {
     const source = profile();
     const { service } = harness([source]);
 
@@ -204,10 +233,10 @@ describe("InstanceService cloning", () => {
       gamePort: 7787,
       queryPort: 27025,
       rconPort: 27030,
-      installDir: "D:\\ARK Servers",
+      installDir: "D:/Custom/Clone/",
     });
 
-    expect(clone.installDir).toBe("D:\\ARK Servers\\Winter");
+    expect(clone.installDir).toBe("D:\\Custom\\Clone");
   });
 
   it("rejects duplicate clone names with an actionable error", () => {
@@ -229,7 +258,7 @@ describe("InstanceService cloning", () => {
         gamePort: 7787,
         queryPort: 27025,
         rconPort: 27030,
-        installDir: "D:\\ARK Servers",
+        installDir: "D:\\ARK Servers\\Winter Clone",
       }),
     ).toThrow(/server named "winter" already exists/i);
   });
@@ -253,7 +282,7 @@ describe("InstanceService cloning", () => {
         gamePort: 7787,
         queryPort: 27025,
         rconPort: 27030,
-        installDir: "D:\\ARK Servers",
+        installDir: "D:\\ARK Servers\\Winter",
       }),
     ).toThrow(/already uses folder/i);
   });

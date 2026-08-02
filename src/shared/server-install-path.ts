@@ -59,7 +59,8 @@ export function sanitizeServerFolderName(name: string): string {
   return cleaned.length > 0 ? cleaned : "server";
 }
 
-function normalizeWindowsPath(path: string): string {
+/** Normalize separators and remove trailing separators from a user-entered Windows path. */
+export function normalizeWindowsPath(path: string): string {
   return path.trim().replace(/\//g, "\\").replace(/\\+$/g, "");
 }
 

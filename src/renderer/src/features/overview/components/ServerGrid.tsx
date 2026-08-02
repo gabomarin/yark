@@ -50,6 +50,12 @@ interface Props {
 
 export function ServerGrid(props: Props): ReactElement {
   const [showDisabled, setShowDisabled] = useState(false);
+  const enabledServerCount = props.servers.filter(
+    (server) => server.enabled,
+  ).length;
+  const hasEnabledServers = enabledServerCount > 0;
+  const showingDisabledServers =
+    showDisabled && props.disabledServers.length > 0;
 
   const enabledLabel =
     props.filteredServers.length === 1
@@ -66,7 +72,7 @@ export function ServerGrid(props: Props): ReactElement {
         ? "1 running"
         : `${props.runningServers} running`;
   const filteredLabel =
-    props.filteredServers.length !== props.servers.filter((server) => server.enabled).length
+    props.filteredServers.length !== enabledServerCount
       ? ` · ${props.filteredServers.length} ${
           props.filteredServers.length === 1 ? "result" : "results"
         }`
@@ -241,19 +247,32 @@ export function ServerGrid(props: Props): ReactElement {
 
         {!props.loading &&
           props.servers.length > 0 &&
-          props.filteredServers.length === 0 && (
+          props.filteredServers.length === 0 &&
+          !showingDisabledServers && (
             <EmptyState
-              icon={<MagnifyingGlass size={20} />}
-              title={props.disabledServers.length > 0 ? "No enabled servers" : "No matches"}
+              icon={
+                hasEnabledServers ? (
+                  <MagnifyingGlass size={20} />
+                ) : (
+                  <HardDrives size={20} />
+                )
+              }
+              title={hasEnabledServers ? "No matches" : "No enabled servers"}
               description={
-                props.disabledServers.length > 0
-                  ? "All enabled servers are filtered out. Disabled servers remain below."
-                  : "Try another name, map, or cluster."
+                hasEnabledServers
+                  ? "Try another name, map, or cluster."
+                  : "All server profiles are disabled. Turn on Show disabled to manage or re-enable them."
               }
               action={
-                <Button variant="default" size="xs" onClick={() => props.onSearchChange("")}>
-                  Clear search
-                </Button>
+                hasEnabledServers ? (
+                  <Button
+                    variant="default"
+                    size="xs"
+                    onClick={() => props.onSearchChange("")}
+                  >
+                    Clear search
+                  </Button>
+                ) : undefined
               }
             />
           )}

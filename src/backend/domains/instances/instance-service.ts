@@ -17,6 +17,7 @@ import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join, parse as parsePath, resolve } from "node:path";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
 import {
+  normalizeWindowsPath,
   resolveServerInstallDir,
   suggestCloneInstallDir,
 } from "@shared/server-install-path";
@@ -219,13 +220,25 @@ export class InstanceService extends EventEmitter {
     }
     const existing = this.repo.list();
     const names = new Set(existing.map((p) => p.name.trim().toLowerCase()));
-    let name = `${source.name} (copy)`;
-    let suffix = 2;
-    while (names.has(name.trim().toLowerCase())) {
-      name = `${source.name} (copy ${suffix})`;
-      suffix++;
+    const installDirs = new Set(existing.map((profile) => resolve(profile.installDir)));
+    let copyNumber = 1;
+    let name: string;
+    let installDir: string;
+    for (;;) {
+      name =
+        copyNumber === 1
+          ? `${source.name} (copy)`
+          : `${source.name} (copy ${copyNumber})`;
+      installDir = suggestCloneInstallDir(source.installDir, name);
+      if (
+        !names.has(name.trim().toLowerCase()) &&
+        !installDirs.has(resolve(installDir)) &&
+        !existsSync(installDir)
+      ) {
+        break;
+      }
+      copyNumber++;
     }
-    const installDir = suggestCloneInstallDir(source.installDir, name);
 
     let offset = 10;
     let input: ServerProfileInput;
@@ -285,7 +298,7 @@ export class InstanceService extends EventEmitter {
       throw new Error("Server to clone does not exist");
     }
 
-    const installDir = resolveServerInstallDir(params.installDir, params.name);
+    const installDir = normalizeWindowsPath(params.installDir);
     const input: ServerProfileInput = {
       name: params.name,
       map: source.map,
