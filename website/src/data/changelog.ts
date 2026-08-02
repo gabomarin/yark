@@ -12,6 +12,36 @@ export type ChangelogEntry = {
 /** Curated site changelog — keep in sync with root CHANGELOG.md when cutting releases. */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.5.0",
+    date: "2026-08-01",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Windows system tray with Close window to tray and Start with Windows settings.",
+          "Quit policy when servers are active (Ask / Stop), with safe stop progress.",
+          "Critical-job crash recovery and idempotent resume for install/update/verify, pre-update backup, and restore.",
+          "Original Windows application icon for window, tray, and installer.",
+          "Public project site rebuilt with Astro + Starlight (docs, FAQ, changelog, download).",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Official version and local install probes run less often to avoid UI freezes.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Quit cancel no longer leaves a dead tray-only process when Close window to tray is off.",
+          "Quit Stop waits for starting servers and runs save + pre-stop backup with progress.",
+          "Pre-update backup recovery requires verified evidence before treating a backup as complete.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.4.0",
     date: "2026-07-30",
     sections: [
