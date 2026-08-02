@@ -209,6 +209,49 @@ describe("ServerCard", () => {
     expect(document.querySelector("[data-update-action][data-reserved]")).toBeNull();
   });
 
+  it("hides Install for suspicious installs in the files slot and kebab menu", async () => {
+    const user = userEvent.setup();
+    const onInstallFiles = vi.fn();
+
+    const { container } = render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={{
+            ...installed,
+            installed: false,
+            health: "suspicious",
+            reasonCodes: ["foreign_contents"],
+            guidance:
+              "This folder already has unrelated files. Point the profile at an empty folder or a real ASA install before installing.",
+          }}
+          officialSteamBuild={null}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={onInstallFiles}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.queryByRole("button", { name: /Install server files/i })).not.toBeInTheDocument();
+    await user.click(within(container).getByRole("button", { name: "More options" }));
+    expect(screen.queryByRole("menuitem", { name: "Install files" })).not.toBeInTheDocument();
+    expect(onInstallFiles).not.toHaveBeenCalled();
+  });
+
   it("uses Install in the files slot when server files are missing", async () => {
     const user = userEvent.setup();
     const onInstallFiles = vi.fn();

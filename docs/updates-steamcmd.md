@@ -126,7 +126,7 @@ Official version and official build each cache for **15 minutes** in-process (`O
 | `suspicious` | Contradictory or unsafe evidence (empty exe, foreign non-ASA contents) |
 | `unknown` | Unclassified I/O failure (final result — not “still scanning”) |
 
-`installed` remains `health === "ready"`. Results include `reasonCodes`, `guidance`, and `checkedAt` (shown in workspace Status and attention details). Cadence: **one-shot background scan after Overview first paint**, plus on-demand **Check installs** (and post-SteamCMD refresh). Fleet scans stay FS/manifest-only (no PowerShell VersionInfo / log tails) and yield between profiles. Heartbeats still skip deep local inspect; the 5‑minute official poll only re-reads locals when official metadata or the server set changes.
+`installed` remains `health === "ready"`. Results include `reasonCodes`, `guidance`, and `checkedAt` (shown in workspace Status and attention details). Cadence: **one-shot background scan after Overview first paint**, plus on-demand **Check installs** (and post-SteamCMD refresh). Fleet scans use async FS classification with bounded concurrency (no PowerShell / log tails by default). Manual refresh may enrich a ready install that still lacks a cheap version file/manifest. Start/enable gates use the enriched single-server path. Heartbeats still skip deep local inspect; the 5‑minute official poll only re-reads locals when official metadata or the server set changes.
 
 Windows e2e (manual — not in Linux CI): seed KB-scale FS fixtures and assert Overview attention / CTAs:
 

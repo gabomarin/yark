@@ -29,7 +29,7 @@ import { findPortConflicts, validateProfileInput } from "./validation";
 import { checkClusterCompliance } from "../cluster/compliance";
 import { rconExec } from "../../infra/rcon/rcon-client";
 import {
-  inspectServerInstallation,
+  inspectServerInstallationAsync,
   readOfficialArkBuildCached,
   readOfficialArkVersionCached,
 } from "./server-installation";
@@ -38,7 +38,43 @@ import {
   isInstallHealthDegradation,
   isInstallationReady,
 } from "@shared/installation-health";
-import type { InstallationHealthStatus } from "@shared/types";
+
+/** Max concurrent async FS classify probes during a fleet scan. */
+const FLEET_INSPECT_CONCURRENCY = 3;
+
+/** Single-server / gate paths may use heavier version fallbacks. */
+const ENRICHED_INSTALL_INSPECT = {
+  bypassCache: true,
+  allowExecutableVersionProbe: true,
+  allowLogVersionProbe: true,
+} as const;
+
+async function mapPool<T, R>(
+  items: ReadonlyArray<T>,
+  concurrency: number,
+  mapper: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) {
+    return [];
+  }
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+  const workerCount = Math.min(Math.max(1, concurrency), items.length);
+
+  async function worker(): Promise<void> {
+    for (;;) {
+      const index = nextIndex;
+      nextIndex += 1;
+      if (index >= items.length) {
+        return;
+      }
+      results[index] = await mapper(items[index]!, index);
+    }
+  }
+
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+  return results;
+}import type { InstallationHealthStatus } from "@shared/types";
 
 const RCON_HOST = "127.0.0.1";
 
@@ -410,9 +446,11 @@ export class InstanceService extends EventEmitter {
     if (!profile.enabled) {
       throw new Error(`Server "${profile.name}" is disabled`);
     }
-    const installation = inspectServerInstallation(profile.id, profile.installDir, {
-      bypassCache: true,
-    });
+    const installation = await inspectServerInstallationAsync(
+      profile.id,
+      profile.installDir,
+      ENRICHED_INSTALL_INSPECT,
+    );
     this.recordInstallHealth(installation);
     if (!isInstallationReady(installation)) {
       throw new Error(
@@ -476,9 +514,11 @@ export class InstanceService extends EventEmitter {
         );
       }
 
-      const installation = inspectServerInstallation(profile.id, profile.installDir, {
-        bypassCache: true,
-      });
+      const installation = await inspectServerInstallationAsync(
+        profile.id,
+        profile.installDir,
+        ENRICHED_INSTALL_INSPECT,
+      );
       this.recordInstallHealth(installation);
       if (!isInstallationReady(installation)) {
         throw new Error(
@@ -854,51 +894,64 @@ export class InstanceService extends EventEmitter {
   }
 
   /**
-   * Bounded, yielding fleet inspect so many profiles do not freeze the main process.
-   * Always reads the latest profile list. Concurrent callers share one in-flight
-   * promise only when the profile-set key and cache mode match.
+   * Bounded, async fleet inspect so many profiles (and slow UNC paths) do not
+   * freeze the Electron main process. Concurrent callers share one in-flight
+   * promise when the profile-set key and cache mode match; after waiting for a
+   * different key they re-check before starting another scan.
    */
   private async inspectFleetInstallations(options: {
     bypassCache: boolean;
   }): Promise<ServerInstallationInfo[]> {
-    const profiles = this.repo.list();
-    const key = this.fleetInspectKey(profiles, options.bypassCache);
-    const existing = this.fleetInspectInFlight;
-    if (existing !== null && existing.key === key) {
-      return existing.promise;
-    }
-    if (existing !== null) {
-      // Different profile set or cache mode — wait, then scan the current list.
-      await existing.promise.catch(() => undefined);
-    }
+    for (;;) {
+      const profiles = this.repo.list();
+      const key = this.fleetInspectKey(profiles, options.bypassCache);
+      const existing = this.fleetInspectInFlight;
+      if (existing !== null && existing.key === key) {
+        return existing.promise;
+      }
+      if (existing !== null) {
+        // Different fleet snapshot or cache mode — wait, then re-evaluate.
+        await existing.promise.catch(() => undefined);
+        continue;
+      }
 
-    // Re-read after waiting so create/clone/delete mid-scan is not missed.
-    const profilesToScan = this.repo.list();
-    const scanKey = this.fleetInspectKey(profilesToScan, options.bypassCache);
+      // No in-flight work. Capture the latest list and start (sync section — safe).
+      const profilesToScan = this.repo.list();
+      const scanKey = this.fleetInspectKey(profilesToScan, options.bypassCache);
+      const promise = this.runFleetInstallScan(profilesToScan, options.bypassCache).finally(
+        () => {
+          if (this.fleetInspectInFlight?.promise === promise) {
+            this.fleetInspectInFlight = null;
+          }
+        },
+      );
+      this.fleetInspectInFlight = { key: scanKey, promise };
+      return promise;
+    }
+  }
 
-    const promise = (async () => {
-      const servers: ServerInstallationInfo[] = [];
-      for (const profile of profilesToScan) {
-        const info = inspectServerInstallation(profile.id, profile.installDir, {
-          bypassCache: options.bypassCache,
-          // Keep fleet probes FS/manifest-only — no PowerShell / log tails.
-        });
-        this.recordInstallHealth(info);
-        servers.push(info);
-        // Yield so renderer IPC / UI stay responsive between sync FS probes.
-        await new Promise<void>((resolveYield) => {
-          setImmediate(resolveYield);
+  private async runFleetInstallScan(
+    profilesToScan: ReadonlyArray<ServerProfile>,
+    bypassCache: boolean,
+  ): Promise<ServerInstallationInfo[]> {
+    return mapPool(profilesToScan, FLEET_INSPECT_CONCURRENCY, async (profile) => {
+      // Fleet stays FS/manifest-only — no PowerShell / log tails.
+      let info = await inspectServerInstallationAsync(profile.id, profile.installDir, {
+        bypassCache,
+      });
+      // Manual refresh may enrich a ready install that still lacks a cheap version.
+      if (
+        bypassCache &&
+        info.health === "ready" &&
+        (info.build == null || info.build.trim().length === 0)
+      ) {
+        info = await inspectServerInstallationAsync(profile.id, profile.installDir, {
+          ...ENRICHED_INSTALL_INSPECT,
         });
       }
-      return servers;
-    })().finally(() => {
-      if (this.fleetInspectInFlight?.promise === promise) {
-        this.fleetInspectInFlight = null;
-      }
+      this.recordInstallHealth(info);
+      return info;
     });
-
-    this.fleetInspectInFlight = { key: scanKey, promise };
-    return promise;
   }
 
   private fleetInspectKey(

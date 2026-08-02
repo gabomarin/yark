@@ -1,4 +1,5 @@
 import { closeSync, existsSync, openSync, readFileSync, readdirSync, readSync, statSync } from "node:fs";
+import { access, readdir, stat } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { get } from "node:https";
 import { dirname, join } from "node:path";
@@ -570,6 +571,18 @@ function hasAsaMarkers(installDir: string): boolean {
   return false;
 }
 
+async function hasAsaMarkersAsync(installDir: string): Promise<boolean> {
+  for (const name of ASA_MARKER_NAMES) {
+    try {
+      await access(join(installDir, name));
+      return true;
+    } catch {
+      // try next marker
+    }
+  }
+  return false;
+}
+
 /**
  * Lightweight FS health classification for a profile install root.
  * No hashing, SteamCMD, or PowerShell — only existence/stat/readdir probes.
@@ -645,39 +658,106 @@ export function classifyInstallHealth(
   return { health: "suspicious", reasonCodes: ["foreign_contents"] };
 }
 
-export function inspectServerInstallation(
-  serverId: string,
+/** Async twin of {@link classifyInstallHealth} — uses libuv FS so UNC stalls do not block the event loop. */
+export async function classifyInstallHealthAsync(
   installDir: string,
-  options?: {
-    bypassCache?: boolean;
-    /**
-     * When true, may call sync PowerShell VersionInfo (can stall main ~1–2s).
-     * Fleet scans keep this false so Overview stays responsive.
-     */
-    allowExecutableVersionProbe?: boolean;
-    /**
-     * When true, may read ASA log tails for ARK Version (I/O heavy on large logs).
-     * Fleet scans keep this false.
-     */
-    allowLogVersionProbe?: boolean;
-  },
-): ServerInstallationInfo {
-  const cacheKey = `${serverId}\0${normalizePath(installDir)}`;
-  const now = Date.now();
-  if (options?.bypassCache !== true) {
-    const cached = installInspectCache.get(cacheKey);
-    if (cached !== undefined && now - cached.checkedAt < INSTALL_INSPECT_TTL_MS) {
-      return { ...cached.info, serverId, checkedAt: cached.info.checkedAt };
+  binaryPath: string,
+): Promise<{
+  health: InstallationHealthStatus;
+  reasonCodes: InstallationHealthReasonCode[];
+}> {
+  const trimmed = installDir.trim();
+  if (trimmed.length === 0) {
+    return { health: "suspicious", reasonCodes: ["path_empty"] };
+  }
+
+  try {
+    const rootStat = await stat(trimmed);
+    if (!rootStat.isDirectory()) {
+      return { health: "suspicious", reasonCodes: ["path_not_directory"] };
+    }
+  } catch (error) {
+    if (isNotFoundErrno(error)) {
+      return { health: "missing", reasonCodes: ["path_missing"] };
+    }
+    if (isAccessErrno(error)) {
+      return { health: "inaccessible", reasonCodes: ["path_eacces"] };
+    }
+    return { health: "unknown", reasonCodes: ["io_error"] };
+  }
+
+  let exeStat: Awaited<ReturnType<typeof stat>> | null = null;
+  try {
+    exeStat = await stat(binaryPath);
+  } catch (error) {
+    if (isAccessErrno(error)) {
+      return { health: "inaccessible", reasonCodes: ["dir_eacces"] };
+    }
+    if (!isNotFoundErrno(error)) {
+      return { health: "unknown", reasonCodes: ["io_error"] };
     }
   }
 
-  const binaryPath = serverBinaryPath(installDir);
-  const classified = classifyInstallHealth(installDir, binaryPath);
+  if (exeStat !== null) {
+    if (!exeStat.isFile()) {
+      return { health: "suspicious", reasonCodes: ["exe_not_file"] };
+    }
+    if (exeStat.size <= 0) {
+      return { health: "suspicious", reasonCodes: ["exe_empty"] };
+    }
+    return { health: "ready", reasonCodes: ["ready"] };
+  }
+
+  let entries: string[] = [];
+  try {
+    entries = await readdir(trimmed);
+  } catch (error) {
+    if (isAccessErrno(error)) {
+      return { health: "inaccessible", reasonCodes: ["dir_eacces"] };
+    }
+    return { health: "unknown", reasonCodes: ["io_error"] };
+  }
+
+  if (entries.length === 0) {
+    return { health: "empty", reasonCodes: ["dir_empty"] };
+  }
+
+  if (await hasAsaMarkersAsync(trimmed)) {
+    return { health: "incomplete", reasonCodes: ["partial_tree", "exe_absent"] };
+  }
+
+  return { health: "suspicious", reasonCodes: ["foreign_contents"] };
+}
+
+export type InspectServerInstallationOptions = {
+  bypassCache?: boolean;
+  /**
+   * When true, may call sync PowerShell VersionInfo (can stall main ~1–2s).
+   * Fleet scans keep this false so Overview stays responsive.
+   */
+  allowExecutableVersionProbe?: boolean;
+  /**
+   * When true, may read ASA log tails for ARK Version (I/O heavy on large logs).
+   * Fleet scans keep this false.
+   */
+  allowLogVersionProbe?: boolean;
+};
+
+function buildInspectedInstallation(
+  serverId: string,
+  installDir: string,
+  classified: {
+    health: InstallationHealthStatus;
+    reasonCodes: InstallationHealthReasonCode[];
+  },
+  options?: InspectServerInstallationOptions,
+): ServerInstallationInfo {
   const healthFields = buildInstallationHealthFields(
     classified.health,
     classified.reasonCodes,
   );
   const ready = healthFields.installed;
+  const binaryPath = serverBinaryPath(installDir);
 
   // Cheap version sources only by default. PowerShell + log tails are opt-in so
   // fleet scans cannot freeze Electron across many ready installs.
@@ -697,7 +777,7 @@ export function inspectServerInstallation(
       ? readArkVersionFromLogs(installDir)
       : null;
 
-  const info: ServerInstallationInfo = {
+  return {
     serverId,
     ...healthFields,
     build,
@@ -707,6 +787,68 @@ export function inspectServerInstallation(
     binaryPath,
     checkedAt: new Date().toISOString(),
   };
-  installInspectCache.set(cacheKey, { checkedAt: now, info });
+}
+
+function readInstallInspectCache(
+  serverId: string,
+  installDir: string,
+  bypassCache: boolean | undefined,
+): ServerInstallationInfo | null {
+  if (bypassCache === true) {
+    return null;
+  }
+  const cacheKey = `${serverId}\0${normalizePath(installDir)}`;
+  const cached = installInspectCache.get(cacheKey);
+  const now = Date.now();
+  if (cached !== undefined && now - cached.checkedAt < INSTALL_INSPECT_TTL_MS) {
+    return { ...cached.info, serverId, checkedAt: cached.info.checkedAt };
+  }
+  return null;
+}
+
+function writeInstallInspectCache(
+  serverId: string,
+  installDir: string,
+  info: ServerInstallationInfo,
+): void {
+  const cacheKey = `${serverId}\0${normalizePath(installDir)}`;
+  installInspectCache.set(cacheKey, { checkedAt: Date.now(), info });
+}
+
+export function inspectServerInstallation(
+  serverId: string,
+  installDir: string,
+  options?: InspectServerInstallationOptions,
+): ServerInstallationInfo {
+  const cached = readInstallInspectCache(serverId, installDir, options?.bypassCache);
+  if (cached !== null) {
+    return cached;
+  }
+
+  const binaryPath = serverBinaryPath(installDir);
+  const classified = classifyInstallHealth(installDir, binaryPath);
+  const info = buildInspectedInstallation(serverId, installDir, classified, options);
+  writeInstallInspectCache(serverId, installDir, info);
+  return info;
+}
+
+/**
+ * Async inspect for fleet scans and enriched single-server checks.
+ * Classification uses `fs.promises` so slow/unavailable UNC paths do not block IPC.
+ */
+export async function inspectServerInstallationAsync(
+  serverId: string,
+  installDir: string,
+  options?: InspectServerInstallationOptions,
+): Promise<ServerInstallationInfo> {
+  const cached = readInstallInspectCache(serverId, installDir, options?.bypassCache);
+  if (cached !== null) {
+    return cached;
+  }
+
+  const binaryPath = serverBinaryPath(installDir);
+  const classified = await classifyInstallHealthAsync(installDir, binaryPath);
+  const info = buildInspectedInstallation(serverId, installDir, classified, options);
+  writeInstallInspectCache(serverId, installDir, info);
   return info;
 }

@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import {
   extractOfficialVersionFromStatusText,
   inspectServerInstallation,
+  inspectServerInstallationAsync,
   parseOfficialServerStatus,
 } from "@backend/domains/instances/server-installation";
 
@@ -343,6 +344,25 @@ describe("inspectServerInstallation", () => {
       expect(info.health).toBe("suspicious");
       expect(info.reasonCodes).toContain("foreign_contents");
       expect(info.installed).toBe(false);
+    } finally {
+      rmSync(installDir, { recursive: true, force: true });
+    }
+  });
+
+  it("async classify matches sync for foreign non-ASA contents", async () => {
+    const installDir = makeTmpDir();
+    try {
+      writeFileSync(join(installDir, "notes.txt"), "not asa");
+      const syncInfo = inspectServerInstallation("srv-foreign-sync", installDir, {
+        bypassCache: true,
+      });
+      const asyncInfo = await inspectServerInstallationAsync(
+        "srv-foreign-async",
+        installDir,
+        { bypassCache: true },
+      );
+      expect(asyncInfo.health).toBe("suspicious");
+      expect(asyncInfo.reasonCodes).toEqual(syncInfo.reasonCodes);
     } finally {
       rmSync(installDir, { recursive: true, force: true });
     }

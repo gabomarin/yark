@@ -170,6 +170,7 @@ export function deriveServerCardView(input: {
 
   return {
     isInstallationReady: ready,
+    canOfferInstall,
     isActive:
       input.status === "starting" ||
       input.status === "running" ||

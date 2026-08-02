@@ -15,6 +15,7 @@ import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@
 import {
   formatInstallationCheckedAt,
   installationHealthLabel,
+  isInstallOfferHealth,
   isInstallationReady,
 } from "@shared/installation-health";
 import { resolveDisplayedServerVersion } from "@shared/server-version-display";
@@ -66,6 +67,7 @@ export function SidePanel(props: Props): ReactElement {
       ? "The server will stop for this check, then restart if it succeeds"
       : undefined);
   const filesReady = isInstallationReady(props.installation);
+  const canOfferInstall = isInstallOfferHealth(props.installation?.health);
   const toggleDisabled =
     props.onToggleEnabled === undefined ||
     steamCmdBusy ||
@@ -80,6 +82,11 @@ export function SidePanel(props: Props): ReactElement {
         : !props.server.enabled && !filesReady
           ? props.installation?.guidance ?? "Install files first"
           : undefined;
+  const installHiddenTitle =
+    !canOfferInstall && !filesReady
+      ? props.installation?.guidance ??
+        "Install is unavailable until the install path looks safe to use."
+      : undefined;
   const version = resolveDisplayedServerVersion(props.installation) ?? "—";
   const installHealthLabel = props.installation
     ? installationHealthLabel(props.installation.health)
@@ -135,18 +142,32 @@ export function SidePanel(props: Props): ReactElement {
           >
             Open folder
           </Button>
-          <Button
-            size="sm"
-            variant="default"
-            fullWidth
-            justify="flex-start"
-            leftSection={<Wrench size={14} color="var(--mantine-color-blue-6)" />}
-            onClick={props.onInstallFiles}
-            disabled={installLocked}
-            title={installLockTitle}
-          >
-            Install files
-          </Button>
+          {canOfferInstall ? (
+            <Button
+              size="sm"
+              variant="default"
+              fullWidth
+              justify="flex-start"
+              leftSection={<Wrench size={14} color="var(--mantine-color-blue-6)" />}
+              onClick={props.onInstallFiles}
+              disabled={installLocked}
+              title={installLockTitle}
+            >
+              Install files
+            </Button>
+          ) : installHiddenTitle !== undefined ? (
+            <Button
+              size="sm"
+              variant="default"
+              fullWidth
+              justify="flex-start"
+              leftSection={<Wrench size={14} color="var(--mantine-color-gray-6)" />}
+              disabled
+              title={installHiddenTitle}
+            >
+              Install files
+            </Button>
+          ) : null}
           <Button
             size="sm"
             variant="default"
