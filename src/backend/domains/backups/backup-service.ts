@@ -2108,7 +2108,7 @@ export class BackupService extends EventEmitter {
     this.checkpointJob(job, "reconciling-backups");
     await this.reconcileDiskBackups(job.serverId);
     const marker = `[critical-job:${job.id}]`;
-    const existing = this.backups
+    const candidates = this.backups
       .listBackups(job.serverId, 10_000)
       .filter(
         (backup) =>
@@ -2117,6 +2117,17 @@ export class BackupService extends EventEmitter {
           && existsSync(backup.path)
           && backup.notes?.includes(marker) === true,
       );
+    const existing: BackupRecord[] = [];
+    for (const backup of candidates) {
+      try {
+        const readable = await isReadableZipArchive(backup.path);
+        if (readable && (await zipHasBackupLayout(backup.path))) {
+          existing.push(backup);
+        }
+      } catch {
+        // Unreadable or corrupt archive — do not count as completion evidence.
+      }
+    }
     const completedByKind = new Map<BackupKind, BackupRecord>();
     for (const backup of existing) {
       if (!completedByKind.has(backup.kind)) {
@@ -2148,7 +2159,9 @@ export class BackupService extends EventEmitter {
             && backup.notes?.includes(marker) === true,
         );
         if (completed === undefined) {
-          throw new Error(`Pre-update backup did not produce durable ${kind} evidence`);
+          throw new Error(
+            `Pre-update backup did not produce durable ${kind} evidence (server: ${job.serverId}, job: ${job.id})`,
+          );
         }
         completedByKind.set(kind, completed);
       }
