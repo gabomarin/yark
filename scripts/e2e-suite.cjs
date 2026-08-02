@@ -108,17 +108,20 @@ async function cloneServer(page, serverName) {
   const card = await waitForCardByName(page, serverName);
   await openServerMoreMenu(page, card);
   await page.getByRole("menuitem", { name: "Clone" }).click();
-  await dismissOpenMenus(page);
 
-  const cloneNamePrefix = `${serverName} (copy`;
-  const escapedPrefix = cloneNamePrefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const cloneCard = page.locator("[data-server-card]", {
-    has: page.getByText(new RegExp(`^${escapedPrefix}`)),
-  }).first();
-  await cloneCard.waitFor({ state: "visible", timeout: 10000 });
+  const dialog = page.getByRole("dialog", { name: /Clone server/i });
+  await dialog.waitFor({ state: "visible", timeout: 10000 });
+  const expectedCloneName = `${serverName}-copy`;
+  const nameField = dialog.getByRole("textbox", { name: /Server name/i });
+  await nameField.waitFor({ state: "visible", timeout: 5000 });
+  // Dialog defaults to `${source}-copy`; keep that contract explicit for the assertion.
+  assert.equal((await nameField.inputValue()).trim(), expectedCloneName);
+  await dialog.getByRole("button", { name: "Clone server" }).click();
+  await dialog.waitFor({ state: "hidden", timeout: 15000 });
 
+  const cloneCard = await waitForCardByName(page, expectedCloneName, 15000);
   const cloneName = await cloneCard.getAttribute("data-server-name");
-  assert.ok(cloneName !== null && cloneName.includes("(copy"));
+  assert.equal(cloneName, expectedCloneName);
 
   return cloneName;
 }

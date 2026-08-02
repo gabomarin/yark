@@ -472,8 +472,13 @@ async function run() {
   }
 }
 
-run().catch((error) => {
-  console.error("E2E_CRASH_REATTACH_FAIL");
-  console.error(error?.stack ?? String(error));
-  process.exit(1);
-});
+run()
+  .then(() => {
+    // Playwright/Electron keep the event loop alive after hard-kill cleanup.
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error("E2E_CRASH_REATTACH_FAIL");
+    console.error(error?.stack ?? String(error));
+    process.exit(1);
+  });
