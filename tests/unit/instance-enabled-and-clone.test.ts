@@ -177,6 +177,23 @@ describe("InstanceService cloning", () => {
     expect(repo.create).toHaveBeenCalled();
   });
 
+  it("avoids case-only collisions when deriving an automatic clone name", () => {
+    const source = profile({ name: "Island" });
+    const existingCopy = profile({
+      id: "srv-2",
+      name: "island (copy)",
+      installDir: "C:\\ARK\\island-copy-existing",
+      gamePort: 7787,
+      queryPort: 27025,
+      rconPort: 27030,
+    });
+    const { service } = harness([source, existingCopy]);
+
+    const clone = service.clone(source.id);
+
+    expect(clone.name).toBe("Island (copy 2)");
+  });
+
   it("normalizes a selected parent directory before creating a parameterized clone", () => {
     const source = profile();
     const { service } = harness([source]);

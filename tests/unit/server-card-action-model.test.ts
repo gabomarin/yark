@@ -133,4 +133,20 @@ describe("serverCardActionModel combos", () => {
       expect(restart.disabled).toBe(true);
     }
   });
+
+  it("treats omitted serverEnabled as enabled", () => {
+    const runtime = resolveRuntimeAction({
+      steamCmdBusy: false,
+      isInstallationReady: true,
+      status: "stopped",
+    });
+    const restart = resolveRestartAction({
+      steamCmdBusy: false,
+      isInstallationReady: true,
+      status: "running",
+    });
+
+    expect(runtime.kind).toBe("start");
+    expect(restart.visible).toBe(true);
+  });
 });

@@ -175,7 +175,7 @@ export function deriveServerCardView(input: {
       isInstallationReady,
       status: input.status,
       updateState,
-      serverEnabled: input.serverEnabled,
+      serverEnabled,
     }),
     rowTone: resolveRowTone({
       steamCmdBusy: input.steamCmdBusy,

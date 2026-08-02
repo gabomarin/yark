@@ -220,7 +220,7 @@ export function CloneServerDialog(props: Props): ReactElement {
           <Group gap="xs" align="flex-end">
             <TextInput
               label="Install directory"
-              placeholder="C:\servers\my-server"
+              placeholder="C:\\servers\\my-server"
               value={state.installDir}
               onChange={(event) => {
                 const installDir = event.currentTarget.value;

@@ -67,7 +67,7 @@ export function resolveRuntimeAction(input: {
       visible: true,
     };
   }
-  if (!input.serverEnabled) {
+  if (!serverEnabled) {
     return {
       kind: "enable",
       label: "Enable server",
@@ -138,7 +138,7 @@ export function resolveRestartAction(input: {
 }): ServerCardRestartAction {
   const serverEnabled = input.serverEnabled ?? true;
   const transitioning = input.status === "starting" || input.status === "stopping";
-  if (!input.serverEnabled || !input.isInstallationReady) {
+  if (!serverEnabled || !input.isInstallationReady) {
     return {
       label: "Restart server",
       color: "gray",

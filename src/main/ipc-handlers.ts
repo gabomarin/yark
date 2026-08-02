@@ -109,19 +109,35 @@ export function registerIpcHandlers(
     wrap(() => instances.clone(id)),
   );
 
-  ipcMain.handle(
-    IPC.serversCloneWithParams,
-    (_e, id: string, params: { name: string; sessionName: string; gamePort: number; queryPort: number; rconPort: number; installDir: string }) =>
-      wrap(() =>
-        instances.cloneWithParams(id, {
-          name: params.name,
-          sessionName: params.sessionName,
-          gamePort: params.gamePort,
-          queryPort: params.queryPort,
-          rconPort: params.rconPort,
-          installDir: params.installDir,
-        }),
-      ),
+  ipcMain.handle(IPC.serversCloneWithParams, (_e, id: string, params: unknown) =>
+    wrap(() => {
+      if (params === null || typeof params !== "object") {
+        throw new Error("clone params must be an object");
+      }
+      const body = params as Record<string, unknown>;
+      const { name, sessionName, gamePort, queryPort, rconPort, installDir } = body;
+      if (typeof name !== "string" || typeof sessionName !== "string" || typeof installDir !== "string") {
+        throw new Error("clone params name, sessionName, and installDir must be strings");
+      }
+      if (
+        typeof gamePort !== "number" ||
+        typeof queryPort !== "number" ||
+        typeof rconPort !== "number" ||
+        !Number.isInteger(gamePort) ||
+        !Number.isInteger(queryPort) ||
+        !Number.isInteger(rconPort)
+      ) {
+        throw new Error("clone params gamePort, queryPort, and rconPort must be integers");
+      }
+      return instances.cloneWithParams(id, {
+        name,
+        sessionName,
+        gamePort,
+        queryPort,
+        rconPort,
+        installDir,
+      });
+    }),
   );
 
   ipcMain.handle(IPC.serversStart, (_e, id: string, options?: StartServerOptions) =>

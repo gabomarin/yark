@@ -218,10 +218,10 @@ export class InstanceService extends EventEmitter {
       throw new Error("Server to clone does not exist");
     }
     const existing = this.repo.list();
-    const names = new Set(existing.map((p) => p.name));
+    const names = new Set(existing.map((p) => p.name.trim().toLowerCase()));
     let name = `${source.name} (copy)`;
     let suffix = 2;
-    while (names.has(name)) {
+    while (names.has(name.trim().toLowerCase())) {
       name = `${source.name} (copy ${suffix})`;
       suffix++;
     }
@@ -875,13 +875,13 @@ export class InstanceService extends EventEmitter {
   }
 
   private assertUniqueName(name: string, excludeId?: string): void {
-    const normalized = name.trim().toLocaleLowerCase();
+    const normalized = name.trim().toLowerCase();
     const clash = this.repo
       .list()
       .find(
         (profile) =>
           profile.id !== excludeId &&
-          profile.name.trim().toLocaleLowerCase() === normalized,
+          profile.name.trim().toLowerCase() === normalized,
       );
     if (clash !== undefined) {
       throw new Error(`A server named "${name}" already exists`);
