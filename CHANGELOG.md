@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Quitting while servers are running always asks for confirmation (Stop / Cancel). Removed the **On quit with active servers** Ask/Stop setting.
+
 ## [0.5.0] - 2026-08-01
 
 ### Added

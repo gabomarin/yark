@@ -218,19 +218,19 @@ with a completed `pre_restart` snapshot.
 
 **App quit (#59):** Tray **Quit YARK** and closing the window with **Close
 window to tray** disabled both enter `before-quit`. When managed servers are
-active, Settings **On quit with active servers** applies:
+active, YARK always shows a confirmation dialog (Stop / Cancel):
 
-- **Ask** (default): dialog with Stop / Cancel.
 - **Stop**: wait for any still-starting servers, then graceful stop (SaveWorld →
   DoExit → pre-stop backup) with stop-progress in the UI, then quit.
+- **Cancel**: abort quit and restore the window.
 
-There is no Leave-running quit option. Prefer **Close window to tray** so YARK
-(and scheduled/player backups) keep running with the servers. Process
-attach/detach exists for **crash recovery and forced closes** (Task Manager /
-unexpected Electron exit): durable checkpoints written while servers are
-active; startup validates candidates, reattaches matches as `starting` until
-RCON confirms (`running`), and records rejected/stale outcomes. Reattach never
-force-kills on RCON timeout.
+There is no Settings Ask/Stop preference and no Leave-running quit option.
+Prefer **Close window to tray** so YARK (and scheduled/player backups) keep
+running with the servers. Process attach/detach exists for **crash recovery and
+forced closes** (Task Manager / unexpected Electron exit): durable checkpoints
+written while servers are active; startup validates candidates, reattaches
+matches as `starting` until RCON confirms (`running`), and records
+rejected/stale outcomes. Reattach never force-kills on RCON timeout.
 
 Windows e2e for this path (manual Windows check before merge — not in CI):
 
@@ -246,7 +246,7 @@ a full install). Mark as a required manual step on PRs that touch quit/reattach.
 Hide-to-tray is **not** a quit and never stops servers. Critical in-flight
 stop/restart work still uses `shouldBlockAppQuit` / `settleForAppQuit` first.
 With **Close window to tray** off, closing while servers are active keeps the
-window open until Ask/Stop resolves (Cancel restores the UI; Stop keeps
+window open until the quit confirmation resolves (Cancel restores the UI; Stop keeps
 the window visible through wait/save/backup progress).
 
 ### System tray and Windows startup (#54)

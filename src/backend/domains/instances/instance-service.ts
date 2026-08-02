@@ -71,6 +71,11 @@ function sameServerIds(
   return profiles.every((profile) => cachedIds.has(profile.id));
 }
 
+/** Windows install-directory comparison key (paths are case-insensitive). */
+function installDirKey(installDir: string): string {
+  return resolve(installDir).toLowerCase();
+}
+
 function backingUpPercent(index: number, total: number): number {
   if (total <= 1) return 85;
   // After the process exits, spread archive starts across 40% → 85%.
@@ -220,7 +225,9 @@ export class InstanceService extends EventEmitter {
     }
     const existing = this.repo.list();
     const names = new Set(existing.map((p) => p.name.trim().toLowerCase()));
-    const installDirs = new Set(existing.map((profile) => resolve(profile.installDir)));
+    const installDirs = new Set(
+      existing.map((profile) => installDirKey(profile.installDir)),
+    );
     let copyNumber = 1;
     let name: string;
     let installDir: string;
@@ -232,7 +239,7 @@ export class InstanceService extends EventEmitter {
       installDir = suggestCloneInstallDir(source.installDir, name);
       if (
         !names.has(name.trim().toLowerCase()) &&
-        !installDirs.has(resolve(installDir)) &&
+        !installDirs.has(installDirKey(installDir)) &&
         !existsSync(installDir)
       ) {
         break;
@@ -336,9 +343,6 @@ export class InstanceService extends EventEmitter {
   async start(id: string, options?: StartServerOptions): Promise<void> {
     if (this.isStopInProgress(id)) {
       throw new Error("Server stop and backup are still in progress");
-    }
-    if (this.locks.isLocked(id)) {
-      throw new Error("Another server operation is already in progress");
     }
     await this.locks.withLock(id, "start", () => this.startInternal(id, options));
   }
@@ -902,10 +906,13 @@ export class InstanceService extends EventEmitter {
   }
 
   private assertUniqueInstallDir(installDir: string, excludeId?: string): void {
-    const target = resolve(installDir);
+    const target = installDirKey(installDir);
     const clash = this.repo
       .list()
-      .find((profile) => profile.id !== excludeId && resolve(profile.installDir) === target);
+      .find(
+        (profile) =>
+          profile.id !== excludeId && installDirKey(profile.installDir) === target,
+      );
     if (clash !== undefined) {
       throw new Error(
         `A server already uses folder "${installDir}" ("${clash.name}")`,

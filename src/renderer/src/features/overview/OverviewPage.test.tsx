@@ -26,14 +26,23 @@ const server = {
 
 describe("OverviewPage", () => {
   it("renders the operational server list and recent activity", () => {
+    const searchHiddenServer = {
+      ...server,
+      id: "srv-2",
+      name: "Scorched Earth",
+      installDir: "C:/ARK/ScorchedEarth",
+      gamePort: 7787,
+      queryPort: 27025,
+      rconPort: 27030,
+    };
     const { container } = render(
       <AppProviders>
         <OverviewPage
-          search=""
+          search="island"
           onSearchChange={vi.fn()}
           onCreateServer={vi.fn()}
           onCheckUpdates={vi.fn()}
-          servers={[server]}
+          servers={[server, searchHiddenServer]}
           filteredServers={[server]}
           disabledServers={[]}
           runningServers={0}
@@ -63,7 +72,9 @@ describe("OverviewPage", () => {
 
     expect(screen.getByRole("heading", { name: "Servers", level: 1 })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Your servers" })).toBeInTheDocument();
-    expect(screen.getByText("1 enabled server · none running")).toBeInTheDocument();
+    expect(
+      screen.getByText("2 enabled servers · none running · 1 result"),
+    ).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Search servers" })).toBeInTheDocument();
     expect(screen.getByText("Recent activity")).toBeInTheDocument();
     expect(screen.getByText("The Island")).toBeInTheDocument();

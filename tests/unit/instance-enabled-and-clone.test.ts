@@ -174,6 +174,23 @@ describe("InstanceService enabled state", () => {
     releaseSync();
     await startPromise;
   });
+
+  it("reports the owning operation when Start is blocked by the instance lock", async () => {
+    const source = profile();
+    const { service, locks } = harness([source]);
+    let releaseUpdate!: () => void;
+    const updateGate = new Promise<void>((resolve) => {
+      releaseUpdate = resolve;
+    });
+    const updatePromise = locks.withLock(source.id, "update", () => updateGate);
+
+    await expect(service.start(source.id)).rejects.toThrow(
+      /running job \(update\); cannot start start/,
+    );
+
+    releaseUpdate();
+    await updatePromise;
+  });
 });
 
 describe("InstanceService cloning", () => {
@@ -205,12 +222,12 @@ describe("InstanceService cloning", () => {
     expect(clone.name).toBe("Island (copy 2)");
   });
 
-  it("advances the automatic clone suffix when the sibling install directory is owned", () => {
+  it("advances the automatic clone suffix for a case-only install-dir collision", () => {
     const source = profile({ name: "Island" });
     const existingFolderOwner = profile({
       id: "srv-2",
       name: "Archive",
-      installDir: "C:\\ARK\\Island (copy)",
+      installDir: "c:\\ark\\ISLAND (COPY)",
       gamePort: 7787,
       queryPort: 27025,
       rconPort: 27030,

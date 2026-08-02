@@ -58,9 +58,9 @@ export function ServerGrid(props: Props): ReactElement {
     showDisabled && props.disabledServers.length > 0;
 
   const enabledLabel =
-    props.filteredServers.length === 1
+    enabledServerCount === 1
       ? "1 enabled server"
-      : `${props.filteredServers.length} enabled servers`;
+      : `${enabledServerCount} enabled servers`;
   const disabledLabel =
     props.disabledServers.length === 1
       ? "1 disabled server"

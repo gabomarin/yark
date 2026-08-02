@@ -114,8 +114,6 @@ export function SettingsPage(props: Props): ReactElement {
               onTrayCloseHintDismissedChange={desktopShell.onTrayCloseHintDismissedChange}
               startWithWindows={desktopShell.startWithWindows}
               onStartWithWindowsChange={desktopShell.onStartWithWindowsChange}
-              onQuitWithActiveServers={desktopShell.onQuitWithActiveServers}
-              onQuitWithActiveServersChange={desktopShell.onQuitWithActiveServersChange}
               desktopShellReady={desktopShell.desktopShellReady}
               defaultBaseFolder={props.defaultBaseFolder}
               onDefaultBaseFolderChange={props.onDefaultBaseFolderChange}
