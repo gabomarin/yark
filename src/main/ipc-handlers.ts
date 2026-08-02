@@ -100,6 +100,10 @@ export function registerIpcHandlers(
     wrap(() => instances.clone(id)),
   );
 
+  ipcMain.handle(IPC.serversSetEnabled, (_e, id: string, enabled: boolean) =>
+    wrap(() => instances.setEnabled(id, enabled)),
+  );
+
   ipcMain.handle(IPC.serversStart, (_e, id: string, options?: StartServerOptions) =>
     wrap(() => instances.start(id, options)),
   );

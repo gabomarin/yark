@@ -3,6 +3,7 @@ import { HardDrives, MagnifyingGlass, Plus } from "@phosphor-icons/react";
 import { Badge, Button, Group, Skeleton, Stack, Text, Title, VisuallyHidden } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo, ServerStopProgress } from "@shared/types";
 import { getServerUpdateState } from "@shared/server-update-status";
+import { useMemo, useState } from "react";
 import { ServerCard } from "@features/servers/components/ServerCard/ServerCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { SearchField } from "@ui/SearchField/SearchField";
@@ -35,6 +36,7 @@ interface Props {
   onStopServer: (serverId: string) => void;
   onRestartServer: (serverId: string) => void;
   onKillServer: (serverId: string) => void;
+  onSetServerEnabled: (serverId: string, enabled: boolean) => void;
   onOpenFolder: (serverId: string) => void;
   onInstallFiles: (serverId: string) => void;
   onUpdateNow: (serverId: string) => void;
@@ -47,10 +49,27 @@ interface Props {
 }
 
 export function ServerGrid(props: Props): ReactElement {
+  const [showInactive, setShowInactive] = useState(false);
+  const enabledTotal = props.servers.filter((server) => server.enabled).length;
+  const inactiveTotal = props.servers.length - enabledTotal;
+  const enabledServers = useMemo(
+    () => props.filteredServers.filter((server) => server.enabled),
+    [props.filteredServers],
+  );
+  const inactiveServers = useMemo(
+    () => props.filteredServers.filter((server) => !server.enabled),
+    [props.filteredServers],
+  );
   const totalLabel =
     props.servers.length === 1
-      ? "1 server configured"
-      : `${props.servers.length} servers configured`;
+      ? "1 profile saved"
+      : `${props.servers.length} profiles saved`;
+  const enabledLabel =
+    enabledTotal === 0
+      ? "no active profiles"
+      : enabledTotal === 1
+        ? "1 active profile"
+        : `${enabledTotal} active profiles`;
   const runningLabel =
     props.runningServers === 0
       ? "none running"
@@ -63,8 +82,14 @@ export function ServerGrid(props: Props): ReactElement {
           props.filteredServers.length === 1 ? "result" : "results"
         }`
       : "";
+  const inactiveLabel =
+    inactiveTotal === 0
+      ? ""
+      : inactiveTotal === 1
+        ? " · 1 inactive"
+        : ` · ${inactiveTotal} inactive`;
 
-  const attentionCount = props.filteredServers.reduce((count, server) => {
+  const attentionCount = enabledServers.reduce((count, server) => {
     const status = props.statuses.get(server.id)?.status ?? "stopped";
     const installation = props.installationInfo.get(server.id) ?? null;
     if (status === "error") return count + 1;
@@ -95,7 +120,7 @@ export function ServerGrid(props: Props): ReactElement {
           </Title>
           <Group gap="sm" align="center" wrap="wrap" className={classes.serverSummaryRow}>
             <Text c="dimmed" size="sm" data-server-summary>
-              {totalLabel} · {runningLabel}
+            {totalLabel} · {enabledLabel}{inactiveLabel} · {runningLabel}
               {filteredLabel}
             </Text>
             {attentionLabel !== null && (
@@ -179,9 +204,24 @@ export function ServerGrid(props: Props): ReactElement {
             />
           )}
 
-        {!props.loading && props.filteredServers.length > 0 && (
+        {!props.loading && enabledServers.length === 0 && props.servers.length > 0 && (
+          <EmptyState
+            icon={<HardDrives size={20} weight="duotone" />}
+            title="No active profiles"
+            description="Enable an inactive profile to bring it back to the default fleet."
+            action={
+              inactiveServers.length > 0 ? (
+                <Button variant="default" size="xs" onClick={() => setShowInactive(true)}>
+                  Show inactive profiles
+                </Button>
+              ) : undefined
+            }
+          />
+        )}
+
+        {!props.loading && enabledServers.length > 0 && (
           <div className={classes.serverGrid}>
-            {props.filteredServers.map((server) => {
+            {enabledServers.map((server) => {
               const stopProgress = props.stopProgressByServerId?.get(server.id);
               const stopBusy = stopProgress?.active === true;
               return (
@@ -227,6 +267,7 @@ export function ServerGrid(props: Props): ReactElement {
                 onStop={() => props.onStopServer(server.id)}
                 onKill={() => props.onKillServer(server.id)}
                 onRestart={() => props.onRestartServer(server.id)}
+                onSetEnabled={(enabled) => props.onSetServerEnabled(server.id, enabled)}
                 onOpenWorkspace={() => props.onOpenWorkspace(server)}
                 onOpenLogs={() => props.onOpenLogs(server.id)}
                 onReviewError={() => props.onReviewError(server.id)}
@@ -242,6 +283,93 @@ export function ServerGrid(props: Props): ReactElement {
               );
             })}
           </div>
+        )}
+
+        {!props.loading && inactiveServers.length > 0 && (
+          <Stack gap="sm">
+            <Group justify="space-between" align="center" wrap="wrap">
+              <div>
+                <Title order={3}>Inactive profiles</Title>
+                <Text c="dimmed" size="sm">
+                  Offline maintenance stays available, but these profiles cannot spawn until enabled again.
+                </Text>
+              </div>
+              <Button
+                variant="default"
+                size="xs"
+                onClick={() => setShowInactive((current) => !current)}
+              >
+                {showInactive ? "Hide inactive" : `Show inactive (${inactiveServers.length})`}
+              </Button>
+            </Group>
+            {showInactive && (
+              <div className={classes.serverGrid}>
+                {inactiveServers.map((server) => {
+                  const stopProgress = props.stopProgressByServerId?.get(server.id);
+                  const stopBusy = stopProgress?.active === true;
+                  return (
+                    <ServerCard
+                      key={server.id}
+                      server={server}
+                      runtime={props.statuses.get(server.id) ?? null}
+                      installation={props.installationInfo.get(server.id) ?? null}
+                      officialSteamBuild={props.officialSteamBuild}
+                      steamCmdBusy={
+                        !stopBusy &&
+                        (props.steamCmdBusy ?? props.steamCmdRunning) &&
+                        props.steamCmdServerId === server.id
+                      }
+                      steamCmdProgressPercent={
+                        props.steamCmdServerId === server.id
+                          ? (props.steamCmdProgressPercent ?? null)
+                          : null
+                      }
+                      steamCmdProgressLabel={
+                        props.steamCmdServerId === server.id
+                          ? (props.steamCmdProgressLabel ?? null)
+                          : null
+                      }
+                      steamCmdProgressBytesDownloaded={
+                        props.steamCmdServerId === server.id
+                          ? (props.steamCmdProgressBytesDownloaded ?? null)
+                          : null
+                      }
+                      steamCmdProgressBytesTotal={
+                        props.steamCmdServerId === server.id
+                          ? (props.steamCmdProgressBytesTotal ?? null)
+                          : null
+                      }
+                      steamCmdOperation={
+                        props.steamCmdServerId === server.id
+                          ? (props.steamCmdOperation ?? null)
+                          : null
+                      }
+                      stopBusy={stopBusy}
+                      stopProgressPercent={stopBusy ? (stopProgress?.percent ?? null) : null}
+                      stopProgressLabel={stopBusy ? (stopProgress?.label ?? null) : null}
+                      checkingUpdates={props.checkingUpdates}
+                      onStart={() => props.onStartServer(server.id)}
+                      onStop={() => props.onStopServer(server.id)}
+                      onKill={() => props.onKillServer(server.id)}
+                      onRestart={() => props.onRestartServer(server.id)}
+                      onSetEnabled={(enabled) => props.onSetServerEnabled(server.id, enabled)}
+                      onOpenWorkspace={() => props.onOpenWorkspace(server)}
+                      onOpenLogs={() => props.onOpenLogs(server.id)}
+                      onReviewError={() => props.onReviewError(server.id)}
+                      onOpenFolder={() => props.onOpenFolder(server.id)}
+                      onInstallFiles={() => props.onInstallFiles(server.id)}
+                      onUpdateNow={() => props.onUpdateNow(server.id)}
+                      onVerifyFiles={() => props.onVerifyFiles(server.id)}
+                      onCheckUpdates={() => props.onCheckUpdatesForServer(server.id)}
+                      onClone={() => props.onCloneServer(server.id)}
+                      onDelete={() => props.onDeleteServer(server.id)}
+                      onCancelSteamCmd={props.onCancelSteamCmd}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </Stack>
         )}
       </Stack>
     </section>

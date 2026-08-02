@@ -25,6 +25,7 @@ import type {
 import classes from "./ServerCard.module.css";
 
 interface Props {
+  enabled: boolean;
   status: ServerStatus;
   isActive: boolean;
   isInstallationReady: boolean;
@@ -48,6 +49,7 @@ interface Props {
   onClone: () => void;
   onKill: () => void;
   onDelete: () => void;
+  onSetEnabled: (enabled: boolean) => void;
 }
 
 function runtimeActionIcon(
@@ -97,7 +99,10 @@ export function ServerCardActions(props: Props): ReactElement {
               variant={runtimeAction.variant}
               color={runtimeAction.color}
               aria-label={runtimeAction.label}
-              disabled={runtimeAction.disabled}
+              disabled={
+                runtimeAction.disabled
+                || (!props.enabled && runtimeAction.kind === "start")
+              }
               onClick={props.onRuntimeAction}
               className={classes.iconAction}
               data-primary-action
@@ -129,7 +134,7 @@ export function ServerCardActions(props: Props): ReactElement {
               variant="light"
               color={restartAction.color}
               aria-label={restartAction.label}
-              disabled={restartAction.disabled}
+              disabled={restartAction.disabled || !props.enabled}
               onClick={props.onRestart}
               className={classes.iconAction}
               data-restart-action
@@ -205,6 +210,12 @@ export function ServerCardActions(props: Props): ReactElement {
           <Menu.Label>Server</Menu.Label>
           <Menu.Item leftSection={<GearSix size={16} />} onClick={props.onOpenWorkspace}>
             Open settings
+          </Menu.Item>
+          <Menu.Item
+            leftSection={props.enabled ? <Pause size={16} /> : <Play size={16} weight="fill" />}
+            onClick={() => props.onSetEnabled(!props.enabled)}
+          >
+            {props.enabled ? "Mark inactive" : "Enable profile"}
           </Menu.Item>
           {props.status === "running" && (
             <>

@@ -626,6 +626,28 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     [openNativeTerminalOnStart, runAction],
   );
 
+  const setServerEnabled = useCallback(
+    async (id: string, enabled: boolean) => {
+      setError(null);
+      const result = await window.api.setServerEnabled(id, enabled);
+      if (!result.ok) {
+        setError(result.error ?? "Could not update the profile state");
+        return;
+      }
+      const name =
+        servers.find((server) => server.id === id)?.name ?? result.data.name;
+      notifications.show({
+        title: enabled ? "Profile enabled" : "Profile marked inactive",
+        message: enabled
+          ? `"${name}" is back in the default fleet.`
+          : `"${name}" stays available offline but cannot start until re-enabled.`,
+        color: enabled ? "teal" : "gray",
+      });
+      await refresh();
+    },
+    [refresh, servers],
+  );
+
   const navigate = useCallback((next: Route) => {
     setOverlay(null);
     setRoute(next);
@@ -703,6 +725,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             onInstallFiles={(id) => startSteamFilesJob(id, "install")}
             onUpdateNow={(id) => startSteamFilesJob(id, "update")}
             onVerifyFiles={(id) => startSteamFilesJob(id, "verify")}
+            onSetServerEnabled={(id, enabled) => void setServerEnabled(id, enabled)}
             onSendRcon={(id, command) =>
               void runAction(() => window.api.sendRconCommand(id, command))
             }
@@ -791,10 +814,11 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
               onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
               onRestartServer={(id) => void restartServer(id)}
               onKillServer={(id) => confirmKillServer(id)}
+              onSetServerEnabled={(id, enabled) => void setServerEnabled(id, enabled)}
               onOpenFolder={(id) => void runAction(() => window.api.openServerFolder(id))}
-            onInstallFiles={(id) => startSteamFilesJob(id, "install")}
-            onUpdateNow={(id) => startSteamFilesJob(id, "update")}
-            onVerifyFiles={(id) => startSteamFilesJob(id, "verify")}
+              onInstallFiles={(id) => startSteamFilesJob(id, "install")}
+              onUpdateNow={(id) => startSteamFilesJob(id, "update")}
+              onVerifyFiles={(id) => startSteamFilesJob(id, "verify")}
               onCheckUpdatesForServer={(id) => void checkForUpdates(id)}
               onCloneServer={(id) => void runAction(() => window.api.cloneServer(id))}
               onDeleteServer={(id) => confirmDeleteServer(id)}

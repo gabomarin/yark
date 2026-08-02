@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { CaretRight, HardDrives, Plus } from "@phosphor-icons/react";
-import { Button, Stack, Text, UnstyledButton } from "@mantine/core";
+import { Badge, Button, Group, Stack, Text, UnstyledButton } from "@mantine/core";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { useMemo, useState } from "react";
 import { SearchField } from "@ui/SearchField/SearchField";
@@ -58,9 +58,16 @@ export function ServerListPanel(props: Props): ReactElement {
                 <HardDrives size={16} weight="duotone" />
               </span>
               <span className={classes.itemBody}>
-                <Text className={classes.itemName} fw={600} title={server.name} lineClamp={1}>
-                  {server.name}
-                </Text>
+                <Group gap={6} wrap="nowrap">
+                  <Text className={classes.itemName} fw={600} title={server.name} lineClamp={1}>
+                    {server.name}
+                  </Text>
+                  {!server.enabled && (
+                    <Badge size="xs" color="gray" variant="light">
+                      Inactive
+                    </Badge>
+                  )}
+                </Group>
                 <Text className={classes.itemMeta} c="dimmed" title={server.map} lineClamp={1}>
                   {server.map}
                 </Text>

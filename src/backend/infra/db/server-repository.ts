@@ -25,6 +25,7 @@ interface ServerRow {
   mods: string;
   disabled_mods: string;
   mod_metadata_cache: string;
+  enabled: number;
   created_at: string;
   updated_at: string;
 }
@@ -56,6 +57,7 @@ function rowToProfile(row: ServerRow): ServerProfile {
     mods: JSON.parse(row.mods) as string[],
     disabledMods: parseJson(row.disabled_mods, []),
     modMetadataCache: parseJson<Record<string, ModMetadata>>(row.mod_metadata_cache, {}),
+    enabled: row.enabled === 1,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -84,6 +86,7 @@ export class ServerRepository {
       ...input,
       disabledMods: input.disabledMods ?? [],
       modMetadataCache: input.modMetadataCache ?? {},
+      enabled: true,
       id: randomUUID(),
       createdAt: now,
       updatedAt: now,
@@ -95,8 +98,8 @@ export class ServerRepository {
           game_port, query_port, rcon_port,
           server_password, admin_password,
           cluster_id, cluster_dir, extra_args, mods,
-          disabled_mods, mod_metadata_cache, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          disabled_mods, mod_metadata_cache, enabled, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         profile.id,
@@ -115,6 +118,7 @@ export class ServerRepository {
         JSON.stringify(profile.mods),
         JSON.stringify(profile.disabledMods),
         JSON.stringify(profile.modMetadataCache),
+        profile.enabled ? 1 : 0,
         profile.createdAt,
         profile.updatedAt,
       );
@@ -133,6 +137,7 @@ export class ServerRepository {
           server_password = ?, admin_password = ?,
           cluster_id = ?, cluster_dir = ?, extra_args = ?, mods = ?,
           disabled_mods = ?, mod_metadata_cache = ?,
+          enabled = ?,
           updated_at = ?
         WHERE id = ?`,
       )
@@ -152,9 +157,25 @@ export class ServerRepository {
         JSON.stringify(input.mods),
         JSON.stringify(input.disabledMods ?? existing.disabledMods ?? []),
         JSON.stringify(input.modMetadataCache ?? existing.modMetadataCache ?? {}),
+        existing.enabled ? 1 : 0,
         updatedAt,
         id,
       );
+    return this.get(id);
+  }
+
+  setEnabled(id: string, enabled: boolean): ServerProfile | null {
+    const existing = this.get(id);
+    if (existing === null) return null;
+    const updatedAt = new Date().toISOString();
+    this.db
+      .prepare(
+        `UPDATE servers SET
+          enabled = ?,
+          updated_at = ?
+        WHERE id = ?`,
+      )
+      .run(enabled ? 1 : 0, updatedAt, id);
     return this.get(id);
   }
 

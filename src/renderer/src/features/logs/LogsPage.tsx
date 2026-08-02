@@ -51,10 +51,10 @@ export function LogsPage(props: Props): ReactElement {
   const [search, setSearch] = useState("");
   const [expandedEventId, setExpandedEventId] = useState<number | null>(null);
 
-  const serverNameById = useMemo(() => {
-    const map = new Map<string, string>();
+  const serverById = useMemo(() => {
+    const map = new Map<string, ServerProfile>();
     for (const server of props.servers) {
-      map.set(server.id, server.name);
+      map.set(server.id, server);
     }
     return map;
   }, [props.servers]);
@@ -106,13 +106,13 @@ export function LogsPage(props: Props): ReactElement {
       }
       if (query.length > 0) {
         const serverName =
-          event.serverId !== null ? (serverNameById.get(event.serverId) ?? "") : "";
+          event.serverId !== null ? (serverById.get(event.serverId)?.name ?? "") : "";
         const haystack = `${serverName} ${event.type} ${event.message}`.toLowerCase();
         if (!haystack.includes(query)) return false;
       }
       return true;
     });
-  }, [fleetEvents, timeFilter, severityFilter, search, serverNameById]);
+  }, [fleetEvents, timeFilter, severityFilter, search, serverById]);
 
   return (
     <PageScaffold
@@ -199,8 +199,11 @@ export function LogsPage(props: Props): ReactElement {
                 {filteredFleetEvents.map((event) => {
                   const serverName =
                     event.serverId !== null
-                      ? (serverNameById.get(event.serverId) ?? "Unknown server")
+                      ? (serverById.get(event.serverId)?.name ?? "Unknown server")
                       : "System";
+                  const inactive =
+                    event.serverId !== null
+                    && serverById.get(event.serverId)?.enabled === false;
                   const expanded = expandedEventId === event.id;
                   return (
                     <div
@@ -228,9 +231,16 @@ export function LogsPage(props: Props): ReactElement {
                         <Badge color={severityColor(event.severity)} variant="light">
                           {event.severity}
                         </Badge>
-                        <Text size="sm" fw={600} className={classes.fleetServer}>
-                          {serverName}
-                        </Text>
+                        <Group gap="xs" wrap="nowrap">
+                          <Text size="sm" fw={600} className={classes.fleetServer}>
+                            {serverName}
+                          </Text>
+                          {inactive && (
+                            <Badge color="gray" variant="light">
+                              Inactive
+                            </Badge>
+                          )}
+                        </Group>
                         <Text size="sm" className={classes.fleetMessage}>
                           {event.message}
                         </Text>

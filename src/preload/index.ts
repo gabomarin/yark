@@ -18,6 +18,8 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.serversUpdate, id, input),
   deleteServer: (id: string) => ipcRenderer.invoke(IPC.serversDelete, id),
   cloneServer: (id: string) => ipcRenderer.invoke(IPC.serversClone, id),
+  setServerEnabled: (id: string, enabled: boolean) =>
+    ipcRenderer.invoke(IPC.serversSetEnabled, id, enabled),
   startServer: (id: string, options?: StartServerOptions) =>
     ipcRenderer.invoke(IPC.serversStart, id, options),
   stopServer: (id: string) => ipcRenderer.invoke(IPC.serversStop, id),

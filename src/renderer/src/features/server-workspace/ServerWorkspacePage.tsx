@@ -53,6 +53,7 @@ interface Props {
   onStopServer: (serverId: string) => void;
   onRestartServer: (serverId: string) => void;
   onKillServer: (serverId: string) => void;
+  onSetServerEnabled: (serverId: string, enabled: boolean) => void;
   onOpenFolder: (serverId: string) => void;
   onInstallFiles: (serverId: string) => void;
   onUpdateNow: (serverId: string) => void;
@@ -181,6 +182,7 @@ export function ServerWorkspacePage(props: Props): ReactElement {
       onInstallFiles={() => props.onInstallFiles(selectedServer.id)}
       onUpdateNow={() => props.onUpdateNow(selectedServer.id)}
       onVerifyFiles={() => props.onVerifyFiles(selectedServer.id)}
+      onSetEnabled={(enabled) => props.onSetServerEnabled(selectedServer.id, enabled)}
       onSaveWorld={() => props.onSendRcon(selectedServer.id, "SaveWorld")}
       onBroadcast={(message) =>
         props.onSendRcon(selectedServer.id, `Broadcast ${message}`)
@@ -213,6 +215,11 @@ export function ServerWorkspacePage(props: Props): ReactElement {
         {!compactWorkspace && serverListPanel}
 
         <section className={classes.main} data-workspace-scroll>
+          {!selectedServer.enabled && (
+            <Alert color="gray" title="Inactive profile" mb="sm">
+              This profile stays available for configuration, logs, backups, and SteamCMD maintenance, but it cannot start until you enable it again.
+            </Alert>
+          )}
           {stopProgress !== null && <StopProgressAlert progress={stopProgress} />}
           {filesJobActive && (
             <Alert color="yellow" title={filesLockReason} mb="sm">

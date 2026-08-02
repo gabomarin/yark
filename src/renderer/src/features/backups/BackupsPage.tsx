@@ -874,6 +874,11 @@ function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
             <Group gap="xs">
               <HardDrives size={16} />
               <Title order={4}>{row.serverName}</Title>
+              {props.server?.enabled === false && (
+                <Badge color="gray" variant="light">
+                  Inactive
+                </Badge>
+              )}
               <Badge color={healthColor(row.health)} variant="light">
                 {healthLabel(row.health)}
               </Badge>

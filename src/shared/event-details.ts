@@ -57,6 +57,16 @@ function catalogFor(event: AppEvent): AppEventDetails {
       return {
         what: "The server process was started by the manager.",
       };
+    case "server_enabled":
+      return {
+        what: "A profile was added back to the active fleet.",
+        suggestion: "Start it manually when you are ready; enabling never launches the server automatically.",
+      };
+    case "server_disabled":
+      return {
+        what: "A profile was marked inactive.",
+        suggestion: "Offline maintenance remains available, but start and restart stay blocked until the profile is enabled again.",
+      };
     case "server_stopped":
       return {
         what: "The server process was stopped by the manager.",

@@ -42,6 +42,7 @@ interface Props {
   onStopServer: (serverId: string) => void;
   onRestartServer: (serverId: string) => void;
   onKillServer: (serverId: string) => void;
+  onSetServerEnabled: (serverId: string, enabled: boolean) => void;
   onOpenFolder: (serverId: string) => void;
   onInstallFiles: (serverId: string) => void;
   onUpdateNow: (serverId: string) => void;
@@ -89,6 +90,7 @@ export function OverviewPage(props: Props): ReactElement {
           onStopServer={props.onStopServer}
           onRestartServer={props.onRestartServer}
           onKillServer={props.onKillServer}
+          onSetServerEnabled={props.onSetServerEnabled}
           onOpenFolder={props.onOpenFolder}
           onInstallFiles={props.onInstallFiles}
           onUpdateNow={props.onUpdateNow}

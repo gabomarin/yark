@@ -29,6 +29,8 @@ export interface ServerProfile {
   disabledMods?: string[];
   /** CurseForge metadata retained across UI sessions (Worker-backed). */
   modMetadataCache?: Record<string, ModMetadata>;
+  /** Inactive profiles stay configurable but cannot be started until re-enabled. */
+  enabled: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -36,7 +38,7 @@ export interface ServerProfile {
 /** Input data to create/edit a profile (without generated fields). */
 export type ServerProfileInput = Omit<
   ServerProfile,
-  "id" | "createdAt" | "updatedAt"
+  "id" | "enabled" | "createdAt" | "updatedAt"
 >;
 
 export interface ServerRuntimeInfo {
@@ -217,6 +219,8 @@ export interface AppEvent {
   type:
     | "server_created"
     | "server_updated"
+    | "server_enabled"
+    | "server_disabled"
     | "server_deleted"
     | "server_started"
     | "server_stopped"

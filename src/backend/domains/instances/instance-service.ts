@@ -249,7 +249,73 @@ export class InstanceService extends EventEmitter {
         throw new Error("No free ports found for the clone");
       }
     }
-    return this.create(input);
+    const clone = this.create(input);
+    if (!source.enabled) {
+      return this.repo.setEnabled(clone.id, false) ?? clone;
+    }
+    return clone;
+  }
+
+  async setEnabled(id: string, enabled: boolean): Promise<ServerProfile> {
+    return this.locks.withLock(
+      id,
+      enabled ? "enable-profile" : "disable-profile",
+      async () => {
+        const profile = this.mustGet(id);
+        if (profile.enabled === enabled) {
+          return profile;
+        }
+        if (!enabled) {
+          if (this.processes.isActive(id) || this.isStopInProgress(id)) {
+            throw new Error("Stop the server and finish current jobs before disabling it");
+          }
+          const updated = this.repo.setEnabled(id, false);
+          if (updated === null) {
+            throw new Error("Server does not exist");
+          }
+          this.repo.addEvent(
+            id,
+            "server_disabled",
+            "info",
+            `Server "${profile.name}" marked inactive`,
+            {
+              what: "The server profile was disabled.",
+              suggestion:
+                "Offline maintenance stays available. Re-enable the profile before starting it again.",
+              context: {
+                enabled: false,
+              },
+            },
+          );
+          return updated;
+        }
+
+        const input = this.profileToInput(profile);
+        this.assertValidInput(input);
+        this.assertNoPortConflicts(input, id);
+        this.assertClusterConsistency(profile);
+
+        const updated = this.repo.setEnabled(id, true);
+        if (updated === null) {
+          throw new Error("Server does not exist");
+        }
+        this.repo.addEvent(
+          id,
+          "server_enabled",
+          "info",
+          `Server "${profile.name}" reactivated`,
+          {
+            what: "The server profile was enabled again.",
+            suggestion:
+              "The profile can appear in the default fleet again, but it stays stopped until you start it.",
+            context: {
+              enabled: true,
+            },
+          },
+        );
+        return updated;
+      },
+    );
   }
 
   async start(id: string, options?: StartServerOptions): Promise<void> {
@@ -310,6 +376,9 @@ export class InstanceService extends EventEmitter {
     options?: StartServerOptions,
   ): Promise<void> {
     const profile = this.mustGet(id);
+    if (!profile.enabled) {
+      throw new Error("Server profile is inactive. Re-enable it before starting.");
+    }
     const running = this.repo
       .list()
       .filter((p) => p.id !== id && this.processes.isActive(p.id));
@@ -681,6 +750,9 @@ export class InstanceService extends EventEmitter {
 
   async sendRcon(id: string, command: string): Promise<string> {
     const profile = this.mustGet(id);
+    if (!profile.enabled) {
+      throw new Error("Inactive profiles cannot use RCON commands");
+    }
     if (!this.processes.isActive(id)) {
       throw new Error("Server is not running");
     }
@@ -744,6 +816,43 @@ export class InstanceService extends EventEmitter {
       throw new Error(
         `A server already uses folder "${installDir}" ("${clash.name}")`,
       );
+    }
+
+    private profileToInput(profile: ServerProfile): ServerProfileInput {
+      return {
+        name: profile.name,
+        map: profile.map,
+        installDir: profile.installDir,
+        sessionName: profile.sessionName,
+        gamePort: profile.gamePort,
+        queryPort: profile.queryPort,
+        rconPort: profile.rconPort,
+        serverPassword: profile.serverPassword,
+        adminPassword: profile.adminPassword,
+        clusterId: profile.clusterId,
+        clusterDir: profile.clusterDir,
+        extraArgs: [...profile.extraArgs],
+        mods: [...profile.mods],
+        disabledMods: [...(profile.disabledMods ?? [])],
+        modMetadataCache: { ...(profile.modMetadataCache ?? {}) },
+      };
+    }
+
+    private assertClusterConsistency(profile: ServerProfile): void {
+      if (profile.clusterId === null) {
+        return;
+      }
+      const report = checkClusterCompliance(this.repo.list()).find(
+        (candidate) => candidate.clusterId === profile.clusterId,
+      );
+      const blockingIssue = report?.issues.find(
+        (issue) =>
+          issue.severity === "error"
+          && (issue.serverId === null || issue.serverId === profile.id),
+      );
+      if (blockingIssue !== undefined) {
+        throw new Error(blockingIssue.message);
+      }
     }
   }
 }

@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { HardDrives } from "@phosphor-icons/react";
-import { Card, Group, Stack, Text, UnstyledButton } from "@mantine/core";
+import { Badge, Card, Group, Stack, Text, UnstyledButton } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import { ServerCardActions } from "./ServerCardActions";
@@ -31,6 +31,7 @@ interface Props {
   onStop: () => void;
   onKill: () => void;
   onRestart: () => void;
+  onSetEnabled: (enabled: boolean) => void;
   onOpenWorkspace: () => void;
   onOpenLogs: () => void;
   /** Opens the runtime logs section for a failed/crashed launch. */
@@ -133,6 +134,11 @@ export function ServerCard(props: Props): ReactElement {
                 label={badgeBusy ? view.installStateLabel : undefined}
                 color={badgeBusy ? "blue" : undefined}
               />
+              {!server.enabled && (
+                <Badge size="sm" color="gray" variant="light">
+                  Inactive
+                </Badge>
+              )}
             </Group>
 
             <div className={classes.metaGrid} data-meta-grid>
@@ -159,6 +165,8 @@ export function ServerCard(props: Props): ReactElement {
             restartAction={view.restartAction}
             updateAction={view.updateAction}
             onRuntimeAction={runRuntimeAction}
+            enabled={server.enabled}
+            onSetEnabled={props.onSetEnabled}
             onOpenWorkspace={props.onOpenWorkspace}
             onStop={props.onStop}
             onRestart={props.onRestart}

@@ -7,7 +7,7 @@ import {
   Power,
   Wrench,
 } from "@phosphor-icons/react";
-import { ActionIcon, Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Badge, Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { resolveDisplayedServerVersion } from "@shared/server-version-display";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
@@ -32,10 +32,15 @@ export function WorkspaceHeader(props: Props): ReactElement {
   const status = props.runtime?.status ?? "stopped";
   const version = resolveDisplayedServerVersion(props.installation) ?? "—";
   const canStart =
-    (status === "stopped" || status === "error") && props.filesJobActive !== true;
+    props.server.enabled
+    && (status === "stopped" || status === "error")
+    && props.filesJobActive !== true;
   const canStop = status === "running" || status === "starting";
-  const canRestart = status === "running" && props.filesJobActive !== true;
-  const lockTitle = props.filesJobReason ?? "Wait for the file update to finish";
+  const canRestart =
+    props.server.enabled && status === "running" && props.filesJobActive !== true;
+  const lockTitle = !props.server.enabled
+    ? "Enable the profile before starting it"
+    : (props.filesJobReason ?? "Wait for the file update to finish");
 
   return (
     <header className={classes.header}>
@@ -60,6 +65,11 @@ export function WorkspaceHeader(props: Props): ReactElement {
               {props.server.name}
             </Title>
             <ServerRuntimeStatusBadge status={status} size="sm" />
+            {!props.server.enabled && (
+              <Badge size="sm" color="gray" variant="light">
+                Inactive
+              </Badge>
+            )}
           </Group>
           <Text size="xs" c="dimmed" lineClamp={1}>
             {props.server.map} · port {props.server.gamePort} · version {version}
