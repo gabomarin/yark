@@ -26,7 +26,7 @@ export function ClusterMemberRow(props: Props): ReactElement {
         <Text fw={600} size="sm">
           {props.server.name}
         </Text>
-        {!props.server.enabled && (
+        {props.server.enabled === false && (
           <Badge size="xs" color="gray" variant="light">
             Inactive
           </Badge>

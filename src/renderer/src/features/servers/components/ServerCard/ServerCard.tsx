@@ -31,7 +31,7 @@ interface Props {
   onStop: () => void;
   onKill: () => void;
   onRestart: () => void;
-  onSetEnabled: (enabled: boolean) => void;
+  onSetEnabled?: (enabled: boolean) => void;
   onOpenWorkspace: () => void;
   onOpenLogs: () => void;
   /** Opens the runtime logs section for a failed/crashed launch. */
@@ -134,7 +134,7 @@ export function ServerCard(props: Props): ReactElement {
                 label={badgeBusy ? view.installStateLabel : undefined}
                 color={badgeBusy ? "blue" : undefined}
               />
-              {!server.enabled && (
+              {server.enabled === false && (
                 <Badge size="sm" color="gray" variant="light">
                   Inactive
                 </Badge>
@@ -165,7 +165,7 @@ export function ServerCard(props: Props): ReactElement {
             restartAction={view.restartAction}
             updateAction={view.updateAction}
             onRuntimeAction={runRuntimeAction}
-            enabled={server.enabled}
+            enabled={server.enabled !== false}
             onSetEnabled={props.onSetEnabled}
             onOpenWorkspace={props.onOpenWorkspace}
             onStop={props.onStop}

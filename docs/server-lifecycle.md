@@ -12,6 +12,8 @@ affect start and config writes are summarized at the end.
 - Track the **game** process (never a `cmd` / `.cmd` wrapper).
 - Gate `running` on RCON readiness so Overview/workspace status matches
   “accepting players”, not merely “OS process started”.
+- Allow profiles to be marked **inactive** without deleting their install,
+  config, history, or offline maintenance access.
 
 ## Module map
 
@@ -143,10 +145,24 @@ Status push: `push:server-status`. Stop phase progress: `push:server-stop-progre
 
 **Start** (`InstanceService.start`):
 
+0. Reject when the profile is inactive (`enabled = false`).
 1. Port-conflict check vs **other active** servers (`findPortConflicts`).
 2. `await syncProfileSettingsToIni`.
 3. `processes.start` (args from `launchArgsOverride` or `buildLaunchArgs`).
 4. Event `server_started` (“waiting for readiness”).
+
+### Inactive profile state
+
+- Profiles default to `enabled = true`.
+- The dedicated enable/disable transition is separate from generic profile
+  edits and runs under the per-server operational lock.
+- An inactive profile stays available for workspace editing, INI changes,
+  backups, logs, health checks, cloning, and offline SteamCMD
+  install/update/verify operations.
+- `startInternal` is the authoritative guard: inactive profiles cannot start
+  manually, through restart/rollback paths, or through future maintenance
+  callers unless they are explicitly re-enabled first.
+- SteamCMD maintenance never re-starts ASA while the profile remains inactive.
 
 **Readiness:** status stays `"starting"` until RCON `ListPlayers` on
 `127.0.0.1` succeeds (poll `DEFAULT_READY_POLL_MS = 3000`, timeout

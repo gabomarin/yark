@@ -53,7 +53,7 @@ interface Props {
   onStopServer: (serverId: string) => void;
   onRestartServer: (serverId: string) => void;
   onKillServer: (serverId: string) => void;
-  onSetServerEnabled: (serverId: string, enabled: boolean) => void;
+  onSetServerEnabled?: (serverId: string, enabled: boolean) => void;
   onOpenFolder: (serverId: string) => void;
   onInstallFiles: (serverId: string) => void;
   onUpdateNow: (serverId: string) => void;
@@ -139,20 +139,13 @@ export function ServerWorkspacePage(props: Props): ReactElement {
       props.onBack();
     });
   };
-  if (selectedServer === null) {
-    return (
-      <div className={classes.empty}>
-        No servers to edit. Create one from Servers.
-      </div>
-    );
-  }
+  if (selectedServer === null) return <div className={classes.empty}>No servers to edit. Create one from Servers.</div>;
   const runtime = props.statuses.get(selectedServer.id) ?? null;
   const installation = props.installationInfo.get(selectedServer.id) ?? null;
   const serverActive = isServerActive(runtime);
   const filesJobActive = props.filesJobActive === true;
   const stopProgress = stopProgressForServer(props.stopProgress, selectedServer.id);
   const stopJobActive = stopProgress !== null;
-  /** Same operational lock as a running server, plus SteamCMD file jobs. */
   const opsLocked = serverActive || filesJobActive || stopJobActive;
   const filesLockReason = props.filesJobLabel?.trim() || "Updating server files";
   const stopLockReason = stopProgress?.label.trim() || "Stopping this server…";
@@ -182,7 +175,7 @@ export function ServerWorkspacePage(props: Props): ReactElement {
       onInstallFiles={() => props.onInstallFiles(selectedServer.id)}
       onUpdateNow={() => props.onUpdateNow(selectedServer.id)}
       onVerifyFiles={() => props.onVerifyFiles(selectedServer.id)}
-      onSetEnabled={(enabled) => props.onSetServerEnabled(selectedServer.id, enabled)}
+      onSetEnabled={(enabled) => props.onSetServerEnabled?.(selectedServer.id, enabled)}
       onSaveWorld={() => props.onSendRcon(selectedServer.id, "SaveWorld")}
       onBroadcast={(message) =>
         props.onSendRcon(selectedServer.id, `Broadcast ${message}`)
@@ -190,7 +183,6 @@ export function ServerWorkspacePage(props: Props): ReactElement {
       onKill={() => props.onKillServer(selectedServer.id)}
     />
   );
-
   return (
     <div className={classes.root}>
       <WorkspaceHeader
@@ -215,10 +207,8 @@ export function ServerWorkspacePage(props: Props): ReactElement {
         {!compactWorkspace && serverListPanel}
 
         <section className={classes.main} data-workspace-scroll>
-          {!selectedServer.enabled && (
-            <Alert color="gray" title="Inactive profile" mb="sm">
-              This profile stays available for configuration, logs, backups, and SteamCMD maintenance, but it cannot start until you enable it again.
-            </Alert>
+          {selectedServer.enabled === false && (
+            <Alert color="gray" title="Inactive profile" mb="sm">This profile stays available for configuration, logs, backups, and SteamCMD maintenance, but it cannot start until you enable it again.</Alert>
           )}
           {stopProgress !== null && <StopProgressAlert progress={stopProgress} />}
           {filesJobActive && (

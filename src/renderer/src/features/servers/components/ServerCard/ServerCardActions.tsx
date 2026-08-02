@@ -49,7 +49,7 @@ interface Props {
   onClone: () => void;
   onKill: () => void;
   onDelete: () => void;
-  onSetEnabled: (enabled: boolean) => void;
+  onSetEnabled?: (enabled: boolean) => void;
 }
 
 function runtimeActionIcon(
@@ -211,12 +211,14 @@ export function ServerCardActions(props: Props): ReactElement {
           <Menu.Item leftSection={<GearSix size={16} />} onClick={props.onOpenWorkspace}>
             Open settings
           </Menu.Item>
-          <Menu.Item
-            leftSection={props.enabled ? <Pause size={16} /> : <Play size={16} weight="fill" />}
-            onClick={() => props.onSetEnabled(!props.enabled)}
-          >
-            {props.enabled ? "Mark inactive" : "Enable profile"}
-          </Menu.Item>
+          {props.onSetEnabled !== undefined && (
+            <Menu.Item
+              leftSection={props.enabled ? <Pause size={16} /> : <Play size={16} weight="fill" />}
+              onClick={() => props.onSetEnabled?.(!props.enabled)}
+            >
+              {props.enabled ? "Mark inactive" : "Enable profile"}
+            </Menu.Item>
+          )}
           {props.status === "running" && (
             <>
               <Menu.Item leftSection={<Pause size={16} />} onClick={props.onStop}>

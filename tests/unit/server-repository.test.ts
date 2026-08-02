@@ -40,6 +40,7 @@ describe("ServerRepository", () => {
     const created = repo.create(input());
     const fetched = repo.get(created.id);
     expect(fetched).toEqual(created);
+    expect(fetched!.enabled).toBe(true);
     expect(fetched!.mods).toEqual(["111", "222"]);
     expect(fetched!.disabledMods).toEqual([]);
     expect(fetched!.modMetadataCache).toEqual({});
@@ -82,6 +83,16 @@ describe("ServerRepository", () => {
     const updated = repo.update(created.id, input({ name: "Renamed" }));
     expect(updated!.name).toBe("Renamed");
     expect(updated!.id).toBe(created.id);
+    expect(updated!.enabled).toBe(true);
+  });
+
+  it("toggles the enabled state through the dedicated repository method", () => {
+    const created = repo.create(input());
+    const disabled = repo.setEnabled(created.id, false);
+    const reenabled = repo.setEnabled(created.id, true);
+    expect(disabled?.enabled).toBe(false);
+    expect(repo.get(created.id)?.enabled).toBe(true);
+    expect(reenabled?.enabled).toBe(true);
   });
 
   it("returns null when updating a nonexistent id", () => {

@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import { OverviewPage } from "./OverviewPage";
@@ -60,7 +61,7 @@ describe("OverviewPage", () => {
 
     expect(screen.getByRole("heading", { name: "Servers", level: 1 })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Your servers" })).toBeInTheDocument();
-    expect(screen.getByText("1 server configured · none running")).toBeInTheDocument();
+    expect(screen.getByText("1 profile saved · 1 active profile · none running")).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Search servers" })).toBeInTheDocument();
     expect(screen.getByText("Recent activity")).toBeInTheDocument();
     expect(screen.getByText("The Island")).toBeInTheDocument();
@@ -130,6 +131,56 @@ describe("OverviewPage", () => {
     expect(
       screen.getAllByRole("button", { name: /Install server files/i }).length,
     ).toBeGreaterThan(0);
+  });
+
+  it("keeps inactive profiles out of the default fleet until expanded", async () => {
+    const user = userEvent.setup();
+    const inactiveServer = {
+      ...server,
+      id: "srv-2",
+      name: "Scorched",
+      enabled: false,
+    };
+
+    render(
+      <AppProviders>
+        <OverviewPage
+          search=""
+          onSearchChange={vi.fn()}
+          onCreateServer={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          servers={[server, inactiveServer]}
+          filteredServers={[server, inactiveServer]}
+          runningServers={0}
+          statuses={new Map()}
+          installationInfo={new Map()}
+          officialSteamBuild={null}
+          events={[]}
+          onViewAllActivity={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onStartServer={vi.fn()}
+          onStopServer={vi.fn()}
+          onRestartServer={vi.fn()}
+          onKillServer={vi.fn()}
+          onSetServerEnabled={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdatesForServer={vi.fn()}
+          onCloneServer={vi.fn()}
+          onDeleteServer={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.queryByText("Scorched")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Show inactive \(1\)/i }));
+    expect(screen.getByText("Scorched")).toBeInTheDocument();
+    expect(screen.getAllByText("Inactive").length).toBeGreaterThan(0);
   });
 
   it("distinguishes loading from the actionable empty state", () => {

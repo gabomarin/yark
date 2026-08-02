@@ -30,7 +30,7 @@ export interface ServerProfile {
   /** CurseForge metadata retained across UI sessions (Worker-backed). */
   modMetadataCache?: Record<string, ModMetadata>;
   /** Inactive profiles stay configurable but cannot be started until re-enabled. */
-  enabled: boolean;
+  enabled?: boolean;
   createdAt: string;
   updatedAt: string;
 }

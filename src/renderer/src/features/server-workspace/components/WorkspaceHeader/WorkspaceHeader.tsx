@@ -32,13 +32,13 @@ export function WorkspaceHeader(props: Props): ReactElement {
   const status = props.runtime?.status ?? "stopped";
   const version = resolveDisplayedServerVersion(props.installation) ?? "—";
   const canStart =
-    props.server.enabled
+    props.server.enabled !== false
     && (status === "stopped" || status === "error")
     && props.filesJobActive !== true;
   const canStop = status === "running" || status === "starting";
   const canRestart =
-    props.server.enabled && status === "running" && props.filesJobActive !== true;
-  const lockTitle = !props.server.enabled
+    props.server.enabled !== false && status === "running" && props.filesJobActive !== true;
+  const lockTitle = props.server.enabled === false
     ? "Enable the profile before starting it"
     : (props.filesJobReason ?? "Wait for the file update to finish");
 
@@ -65,7 +65,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
               {props.server.name}
             </Title>
             <ServerRuntimeStatusBadge status={status} size="sm" />
-            {!props.server.enabled && (
+            {props.server.enabled === false && (
               <Badge size="sm" color="gray" variant="light">
                 Inactive
               </Badge>

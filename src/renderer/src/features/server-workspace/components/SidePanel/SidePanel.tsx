@@ -29,7 +29,7 @@ interface Props {
   onInstallFiles: () => void;
   onUpdateNow: () => void;
   onVerifyFiles: () => void;
-  onSetEnabled: (enabled: boolean) => void;
+  onSetEnabled?: (enabled: boolean) => void;
   onSaveWorld: () => void;
   onBroadcast: (message: string) => void;
   onKill: () => void;
@@ -72,7 +72,10 @@ export function SidePanel(props: Props): ReactElement {
         <Stack gap={6}>
           <Text className={classes.widgetTitle}>Status</Text>
           <MetaRow label="Status" value={serverRuntimeStatusLabel(status)} />
-          <MetaRow label="Profile" value={props.server.enabled ? "Active" : "Inactive"} />
+          <MetaRow
+            label="Profile"
+            value={props.server.enabled === false ? "Inactive" : "Active"}
+          />
           <MetaRow label="Started" value={uptime} />
           <MetaRow label="Version" value={version} />
           <MetaRow label="Cluster" value={props.server.clusterId ?? "No cluster"} />
@@ -128,23 +131,27 @@ export function SidePanel(props: Props): ReactElement {
           >
             Force update
           </Button>
-          <Button
-            size="sm"
-            variant="default"
-            fullWidth
-            justify="flex-start"
-            leftSection={
-              props.server.enabled ? <Pause size={14} /> : <Play size={14} weight="fill" />
-            }
-            onClick={() => props.onSetEnabled(!props.server.enabled)}
-            disabled={steamCmdBusy || isActive}
-            title={
-              steamCmdLockTitle
-              ?? (isActive ? "Stop the server before changing the profile state" : undefined)
-            }
-          >
-            {props.server.enabled ? "Mark inactive" : "Enable profile"}
-          </Button>
+          {props.onSetEnabled !== undefined && (
+            <Button
+              size="sm"
+              variant="default"
+              fullWidth
+              justify="flex-start"
+              leftSection={
+                props.server.enabled === false
+                  ? <Play size={14} weight="fill" />
+                  : <Pause size={14} />
+              }
+              onClick={() => props.onSetEnabled?.(props.server.enabled === false)}
+              disabled={steamCmdBusy || isActive}
+              title={
+                steamCmdLockTitle
+                ?? (isActive ? "Stop the server before changing the profile state" : undefined)
+              }
+            >
+              {props.server.enabled === false ? "Enable profile" : "Mark inactive"}
+            </Button>
+          )}
           <Button
             size="sm"
             variant="default"

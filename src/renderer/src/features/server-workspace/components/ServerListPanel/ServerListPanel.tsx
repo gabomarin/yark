@@ -62,7 +62,7 @@ export function ServerListPanel(props: Props): ReactElement {
                   <Text className={classes.itemName} fw={600} title={server.name} lineClamp={1}>
                     {server.name}
                   </Text>
-                  {!server.enabled && (
+                  {server.enabled === false && (
                     <Badge size="xs" color="gray" variant="light">
                       Inactive
                     </Badge>

@@ -250,7 +250,7 @@ export class InstanceService extends EventEmitter {
       }
     }
     const clone = this.create(input);
-    if (!source.enabled) {
+    if (source.enabled === false) {
       return this.repo.setEnabled(clone.id, false) ?? clone;
     }
     return clone;
@@ -262,7 +262,8 @@ export class InstanceService extends EventEmitter {
       enabled ? "enable-profile" : "disable-profile",
       async () => {
         const profile = this.mustGet(id);
-        if (profile.enabled === enabled) {
+        const currentlyEnabled = profile.enabled !== false;
+        if (currentlyEnabled === enabled) {
           return profile;
         }
         if (!enabled) {
@@ -376,7 +377,7 @@ export class InstanceService extends EventEmitter {
     options?: StartServerOptions,
   ): Promise<void> {
     const profile = this.mustGet(id);
-    if (!profile.enabled) {
+    if (profile.enabled === false) {
       throw new Error("Server profile is inactive. Re-enable it before starting.");
     }
     const running = this.repo
@@ -750,7 +751,7 @@ export class InstanceService extends EventEmitter {
 
   async sendRcon(id: string, command: string): Promise<string> {
     const profile = this.mustGet(id);
-    if (!profile.enabled) {
+    if (profile.enabled === false) {
       throw new Error("Inactive profiles cannot use RCON commands");
     }
     if (!this.processes.isActive(id)) {
@@ -817,42 +818,42 @@ export class InstanceService extends EventEmitter {
         `A server already uses folder "${installDir}" ("${clash.name}")`,
       );
     }
+  }
 
-    private profileToInput(profile: ServerProfile): ServerProfileInput {
-      return {
-        name: profile.name,
-        map: profile.map,
-        installDir: profile.installDir,
-        sessionName: profile.sessionName,
-        gamePort: profile.gamePort,
-        queryPort: profile.queryPort,
-        rconPort: profile.rconPort,
-        serverPassword: profile.serverPassword,
-        adminPassword: profile.adminPassword,
-        clusterId: profile.clusterId,
-        clusterDir: profile.clusterDir,
-        extraArgs: [...profile.extraArgs],
-        mods: [...profile.mods],
-        disabledMods: [...(profile.disabledMods ?? [])],
-        modMetadataCache: { ...(profile.modMetadataCache ?? {}) },
-      };
+  private profileToInput(profile: ServerProfile): ServerProfileInput {
+    return {
+      name: profile.name,
+      map: profile.map,
+      installDir: profile.installDir,
+      sessionName: profile.sessionName,
+      gamePort: profile.gamePort,
+      queryPort: profile.queryPort,
+      rconPort: profile.rconPort,
+      serverPassword: profile.serverPassword,
+      adminPassword: profile.adminPassword,
+      clusterId: profile.clusterId,
+      clusterDir: profile.clusterDir,
+      extraArgs: [...profile.extraArgs],
+      mods: [...profile.mods],
+      disabledMods: [...(profile.disabledMods ?? [])],
+      modMetadataCache: { ...(profile.modMetadataCache ?? {}) },
+    };
+  }
+
+  private assertClusterConsistency(profile: ServerProfile): void {
+    if (profile.clusterId === null) {
+      return;
     }
-
-    private assertClusterConsistency(profile: ServerProfile): void {
-      if (profile.clusterId === null) {
-        return;
-      }
-      const report = checkClusterCompliance(this.repo.list()).find(
-        (candidate) => candidate.clusterId === profile.clusterId,
-      );
-      const blockingIssue = report?.issues.find(
-        (issue) =>
-          issue.severity === "error"
-          && (issue.serverId === null || issue.serverId === profile.id),
-      );
-      if (blockingIssue !== undefined) {
-        throw new Error(blockingIssue.message);
-      }
+    const report = checkClusterCompliance(this.repo.list()).find(
+      (candidate) => candidate.clusterId === profile.clusterId,
+    );
+    const blockingIssue = report?.issues.find(
+      (issue) =>
+        issue.severity === "error"
+        && (issue.serverId === null || issue.serverId === profile.id),
+    );
+    if (blockingIssue !== undefined) {
+      throw new Error(blockingIssue.message);
     }
   }
 }
