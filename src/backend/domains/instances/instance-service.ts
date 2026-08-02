@@ -1,6 +1,7 @@
 import type {
   BackupKind,
   ClusterComplianceReport,
+  InstallationHealthStatus,
   InstallationServersMode,
   OfficialNetworkStatus,
   ServerInstallationInfo,
@@ -74,7 +75,7 @@ async function mapPool<T, R>(
 
   await Promise.all(Array.from({ length: workerCount }, () => worker()));
   return results;
-}import type { InstallationHealthStatus } from "@shared/types";
+}
 
 const RCON_HOST = "127.0.0.1";
 
