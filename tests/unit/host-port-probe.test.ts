@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { createServer, type AddressInfo } from "node:net";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   encodeSuggestedSessionPorts,
   formatHostPortBusyError,
@@ -12,6 +13,7 @@ import {
 import {
   assertHostPortsAvailable,
   collectReservedPorts,
+  parseOwnerLookupJson,
   suggestSessionPortSet,
   type HostPortProbeDeps,
   type ProbeStatus,
@@ -71,6 +73,23 @@ describe("host-port-probe-errors", () => {
   });
 });
 
+describe("parseOwnerLookupJson", () => {
+  it("parses ConvertTo-Json owner rows", () => {
+    expect(
+      parseOwnerLookupJson(
+        '{"OwningProcess":4242,"ProcessName":"ArkAscendedServer"}',
+      ),
+    ).toEqual({ pid: 4242, processName: "ArkAscendedServer" });
+    expect(parseOwnerLookupJson('{"OwningProcess":99,"ProcessName":null}')).toEqual({
+      pid: 99,
+      processName: null,
+    });
+    expect(parseOwnerLookupJson("")).toBeNull();
+    expect(parseOwnerLookupJson("not-json")).toBeNull();
+    expect(parseOwnerLookupJson('{"OwningProcess":0}')).toBeNull();
+  });
+});
+
 describe("host-port-probe", () => {
   it("passes when all endpoints are free", async () => {
     await expect(
@@ -83,7 +102,7 @@ describe("host-port-probe", () => {
           rconPort: 27020,
         },
         [],
-        depsFromMap({}),
+        { deps: depsFromMap({}) },
       ),
     ).resolves.toBeUndefined();
   });
@@ -107,7 +126,7 @@ describe("host-port-probe", () => {
           rconPort: 27020,
         },
         [],
-        deps,
+        { deps },
       ),
     ).rejects.toThrow(/HOST_PORT_BUSY:.*pid 4242 \(ArkAscendedServer\).*suggested=game:7787/);
   });
@@ -123,9 +142,47 @@ describe("host-port-probe", () => {
           rconPort: 27020,
         },
         [],
-        depsFromMap({ "udp:7777": "inconclusive" }),
+        { deps: depsFromMap({ "udp:7777": "inconclusive" }) },
       ),
     ).rejects.toThrow(/^HOST_PORT_PROBE_INCONCLUSIVE:/);
+  });
+
+  it("allows inconclusive when allowInconclusive is set", async () => {
+    await expect(
+      assertHostPortsAvailable(
+        {
+          id: "a",
+          name: "A",
+          gamePort: 7777,
+          queryPort: 27015,
+          rconPort: 27020,
+        },
+        [],
+        {
+          allowInconclusive: true,
+          deps: depsFromMap({ "udp:7777": "inconclusive" }),
+        },
+      ),
+    ).resolves.toBeUndefined();
+  });
+
+  it("still blocks busy when allowInconclusive is set", async () => {
+    await expect(
+      assertHostPortsAvailable(
+        {
+          id: "a",
+          name: "A",
+          gamePort: 7777,
+          queryPort: 27015,
+          rconPort: 27020,
+        },
+        [],
+        {
+          allowInconclusive: true,
+          deps: depsFromMap({ "udp:7777": "busy" }),
+        },
+      ),
+    ).rejects.toThrow(/^HOST_PORT_BUSY:/);
   });
 
   it("suggests a free set skipping reserved YARK ports", async () => {
@@ -191,8 +248,52 @@ describe("host-port-probe owner enrichment", () => {
           rconPort: 27020,
         },
         [],
-        deps,
+        { deps },
       ),
     ).rejects.toThrow(/HOST_PORT_BUSY:.*TCP rcon port 27020 is already in use/);
+  });
+});
+
+describe("host-port-probe real TCP bind", () => {
+  const holders: ReturnType<typeof createServer>[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      holders.splice(0).map(
+        (server) =>
+          new Promise<void>((resolve) => {
+            server.close(() => resolve());
+          }),
+      ),
+    );
+  });
+
+  it("classifies a real listening TCP port as busy", async () => {
+    const holder = createServer();
+    holders.push(holder);
+    await new Promise<void>((resolve, reject) => {
+      holder.once("error", reject);
+      holder.listen(0, "0.0.0.0", () => resolve());
+    });
+    const port = (holder.address() as AddressInfo).port;
+
+    await expect(
+      assertHostPortsAvailable(
+        {
+          id: "a",
+          name: "A",
+          gamePort: 41111,
+          queryPort: 41112,
+          rconPort: port,
+        },
+        [],
+        {
+          deps: {
+            bindUdp: async () => "free",
+            lookupOwner: async () => null,
+          },
+        },
+      ),
+    ).rejects.toThrow(/HOST_PORT_BUSY:.*TCP rcon port/);
   });
 });

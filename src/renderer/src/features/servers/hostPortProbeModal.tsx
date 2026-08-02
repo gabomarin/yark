@@ -11,11 +11,13 @@ export function openHostPortProbeModal(args: {
   serverName: string;
   message: string;
   onStartThisSession: (ports: SessionPortSet) => void;
+  onStartAnyway?: () => void;
   onEditPorts: () => void;
 }): void {
   const suggested = parseSuggestedSessionPorts(args.message);
   const busy = isHostPortBusyError(args.message);
   const detail = humanizeHostPortProbeError(args.message);
+  const canStartAnyway = !busy && args.onStartAnyway != null;
 
   modals.openConfirmModal({
     title: busy
@@ -29,7 +31,11 @@ export function openHostPortProbeModal(args: {
         data-host-port-probe-kind={busy ? "busy" : "inconclusive"}
         data-host-port-probe-suggested={suggested != null ? "true" : "false"}
       >
-        <Alert color="orange" variant="light" title={busy ? "Host port busy" : "Probe inconclusive"}>
+        <Alert
+          color="orange"
+          variant="light"
+          title={busy ? "Host port busy" : "Probe inconclusive"}
+        >
           {detail}
         </Alert>
         {suggested != null ? (
@@ -39,8 +45,9 @@ export function openHostPortProbeModal(args: {
           </Text>
         ) : (
           <Text size="sm" c="dimmed">
-            No free alternative set was found. Edit the saved ports or free the host ports, then try
-            again.
+            {busy
+              ? "No free alternative set was found. Edit the saved ports or free the host ports, then try again."
+              : "No free alternative set was found. You can start anyway, edit saved ports, or free the host ports and retry."}
           </Text>
         )}
         <Button
@@ -53,6 +60,19 @@ export function openHostPortProbeModal(args: {
         >
           Edit ports
         </Button>
+        {canStartAnyway ? (
+          <Button
+            variant="light"
+            color="orange"
+            data-host-port-probe-start-anyway
+            onClick={() => {
+              modals.closeAll();
+              args.onStartAnyway?.();
+            }}
+          >
+            Start anyway
+          </Button>
+        ) : null}
       </Stack>
     ),
     labels: {

@@ -187,8 +187,8 @@ export interface SessionPortSet {
 
 export interface StartServerOptions {
   /**
-   * Declared for compatibility; unused. Host probe busy/inconclusive always
-   * blocks start — recover with `sessionPorts` or permanent port edits.
+   * When true, skip only **inconclusive** host port probe failures.
+   * Busy ports still always block start.
    */
   skipPortValidation?: boolean;
   /**

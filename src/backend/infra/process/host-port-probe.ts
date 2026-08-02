@@ -1,12 +1,15 @@
 import { createSocket } from "node:dgram";
 import { createServer } from "node:net";
-import { execFileSync } from "node:child_process";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import {
   formatHostPortBusyError,
   formatHostPortInconclusiveError,
   type SessionPortSet,
 } from "@shared/host-port-probe-errors";
 import { PORT_MAX, PORT_MIN, type ServerProfile } from "@shared/types";
+
+const execFileAsync = promisify(execFile);
 
 export type PortKind = "game" | "query" | "rcon";
 export type PortProtocol = "udp" | "tcp";
@@ -34,6 +37,15 @@ export interface HostPortProbeDeps {
     protocol: PortProtocol,
     port: number,
   ) => Promise<PortOwnerInfo | null>;
+}
+
+export interface AssertHostPortsOptions {
+  /**
+   * When true, inconclusive probe results do not block start.
+   * Busy endpoints still always block.
+   */
+  allowInconclusive?: boolean;
+  deps?: HostPortProbeDeps;
 }
 
 const BIND_TIMEOUT_MS = 2_000;
@@ -112,9 +124,42 @@ interface NetEndpointRow {
 }
 
 /**
- * Best-effort Windows owner lookup. Numeric port only — never interpolate free text.
+ * Parses ConvertTo-Json output from the Windows owner lookup script.
+ * Exported for unit tests — never treat free text as a port.
  */
-export function defaultLookupOwner(
+export function parseOwnerLookupJson(raw: string): PortOwnerInfo | null {
+  const trimmed = raw.trim();
+  if (trimmed.length === 0) {
+    return null;
+  }
+  let parsed: NetEndpointRow;
+  try {
+    parsed = JSON.parse(trimmed) as NetEndpointRow;
+  } catch {
+    return null;
+  }
+  if (
+    typeof parsed.OwningProcess !== "number" ||
+    !Number.isInteger(parsed.OwningProcess) ||
+    parsed.OwningProcess <= 0
+  ) {
+    return null;
+  }
+  return {
+    pid: parsed.OwningProcess,
+    processName:
+      typeof parsed.ProcessName === "string" &&
+      parsed.ProcessName.trim() !== ""
+        ? parsed.ProcessName
+        : null,
+  };
+}
+
+/**
+ * Best-effort Windows owner lookup. Numeric port only — never interpolate free text.
+ * Uses async execFile so the Electron main process is not blocked.
+ */
+export async function defaultLookupOwner(
   protocol: PortProtocol,
   port: number,
 ): Promise<PortOwnerInfo | null> {
@@ -124,7 +169,7 @@ export function defaultLookupOwner(
     port < PORT_MIN ||
     port > PORT_MAX
   ) {
-    return Promise.resolve(null);
+    return null;
   }
   const safePort = port;
   const endpointCmd =
@@ -142,41 +187,23 @@ export function defaultLookupOwner(
   ].join("; ");
 
   try {
-    const raw = execFileSync(
+    const { stdout } = await execFileAsync(
       "powershell.exe",
       ["-NoProfile", "-NoLogo", "-NonInteractive", "-Command", script],
       {
         encoding: "utf8",
-        stdio: ["ignore", "pipe", "pipe"],
         timeout: OWNER_QUERY_TIMEOUT_MS,
         windowsHide: true,
+        maxBuffer: 1024 * 1024,
       },
-    ).trim();
-    if (raw.length === 0) {
-      return Promise.resolve(null);
-    }
-    const parsed = JSON.parse(raw) as NetEndpointRow;
-    if (
-      typeof parsed.OwningProcess !== "number" ||
-      !Number.isInteger(parsed.OwningProcess) ||
-      parsed.OwningProcess <= 0
-    ) {
-      return Promise.resolve(null);
-    }
-    return Promise.resolve({
-      pid: parsed.OwningProcess,
-      processName:
-        typeof parsed.ProcessName === "string" &&
-        parsed.ProcessName.trim() !== ""
-          ? parsed.ProcessName
-          : null,
-    });
+    );
+    return parseOwnerLookupJson(stdout);
   } catch (error: unknown) {
     const detail = error instanceof Error ? error.message : String(error);
     console.warn(
       `[yark] host port owner lookup failed for ${protocol}/${safePort}: ${detail}`,
     );
-    return Promise.resolve(null);
+    return null;
   }
 }
 
@@ -319,31 +346,43 @@ function describeEndpoint(result: EndpointProbeResult): string {
 
 /**
  * Probes game (UDP), query (UDP), and RCON (TCP). Throws a parseable error when
- * any endpoint is busy or inconclusive. Suggestions are bind-confirmed free only.
+ * any endpoint is busy, or when inconclusive and `allowInconclusive` is false.
+ * Suggestions are bind-confirmed free only.
  */
 export async function assertHostPortsAvailable(
   profile: ProfilePorts,
   otherProfiles: ReadonlyArray<
     Pick<ServerProfile, "gamePort" | "queryPort" | "rconPort">
   >,
-  deps?: HostPortProbeDeps,
+  options?: AssertHostPortsOptions,
 ): Promise<void> {
   const ports: SessionPortSet = {
     gamePort: profile.gamePort,
     queryPort: profile.queryPort,
     rconPort: profile.rconPort,
   };
-  const results = await probeProfilePorts(ports, deps);
+  const results = await probeProfilePorts(ports, options?.deps);
   const busy = results.filter((item) => item.status === "busy");
   const inconclusive = results.filter((item) => item.status === "inconclusive");
   if (busy.length === 0 && inconclusive.length === 0) {
     return;
   }
 
+  if (
+    busy.length === 0 &&
+    inconclusive.length > 0 &&
+    options?.allowInconclusive === true
+  ) {
+    return;
+  }
+
   const reserved = collectReservedPorts([ports, ...otherProfiles]);
-  const suggested = await suggestSessionPortSet(ports, reserved, deps);
+  const suggested = await suggestSessionPortSet(ports, reserved, options?.deps);
   const primary = busy[0] ?? inconclusive[0]!;
-  const detail = `${describeEndpoint(primary)}. Change ports permanently in Server settings, or start this session on a free suggested set when offered.`;
+  const detail =
+    busy.length > 0
+      ? `${describeEndpoint(primary)}. Change ports permanently in Server settings, or start this session on a free suggested set when offered.`
+      : `${describeEndpoint(primary)}. You can start anyway (ports may still fail at bind), use a suggested free set for this session, or edit saved ports.`;
 
   if (busy.length > 0) {
     throw new Error(formatHostPortBusyError(detail, suggested));

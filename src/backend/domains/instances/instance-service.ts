@@ -463,7 +463,8 @@ export class InstanceService extends EventEmitter {
     const effective = this.effectiveStartProfile(profile, options);
     const running = this.repo
       .list()
-      .filter((p) => p.id !== id && this.processes.isActive(p.id));
+      .filter((p) => p.id !== id && this.processes.isActive(p.id))
+      .map((p) => this.processes.applyRuntimePorts(p));
     const conflicts = findPortConflicts(running, { ...effective });
     if (conflicts.length > 0) {
       const c = conflicts[0]!;
@@ -472,7 +473,9 @@ export class InstanceService extends EventEmitter {
       );
     }
     const others = this.repo.list().filter((p) => p.id !== id);
-    await assertHostPortsAvailable(effective, others);
+    await assertHostPortsAvailable(effective, others, {
+      allowInconclusive: options?.skipPortValidation === true,
+    });
     await syncProfileSettingsToIni(effective);
     this.processes.start(effective, options);
     const sessionNote =
@@ -777,7 +780,8 @@ export class InstanceService extends EventEmitter {
         }),
       );
 
-      const preparation = await this.processes.beginGracefulStop(profile);
+      const runtimeProfile = this.processes.applyRuntimePorts(profile);
+      const preparation = await this.processes.beginGracefulStop(runtimeProfile);
       if (preparation.phase === "absent") {
         return "absent";
       }
@@ -801,7 +805,7 @@ export class InstanceService extends EventEmitter {
         }),
       );
       const finishResult = await this.processes.finishGracefulStop(
-        profile,
+        runtimeProfile,
         preparation.handle,
       );
       if (finishResult === "replaced") {
@@ -1058,7 +1062,7 @@ export class InstanceService extends EventEmitter {
   }
 
   async sendRcon(id: string, command: string): Promise<string> {
-    const profile = this.mustGet(id);
+    const profile = this.processes.applyRuntimePorts(this.mustGet(id));
     if (!this.processes.isActive(id)) {
       throw new Error("Server is not running");
     }

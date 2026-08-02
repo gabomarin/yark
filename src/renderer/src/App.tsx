@@ -18,7 +18,7 @@ import type {
   SteamCmdStatus,
   StartServerOptions,
 } from "@shared/types";
-import { isHostPortProbeError } from "@shared/host-port-probe-errors";
+import { isHostPortBusyError, isHostPortProbeError } from "@shared/host-port-probe-errors";
 import {
   getServerUpdateState,
   isServerUpdateAvailable,
@@ -620,6 +620,11 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             onStartThisSession: (ports: SessionPortSet) => {
               void restartServer(id, { sessionPorts: ports });
             },
+            onStartAnyway: isHostPortBusyError(message)
+              ? undefined
+              : () => {
+                  void restartServer(id, { skipPortValidation: true });
+                },
           });
         } else {
           setError(message);
@@ -735,6 +740,11 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             onStartThisSession: (ports: SessionPortSet) => {
               void startServer(id, { sessionPorts: ports });
             },
+            onStartAnyway: isHostPortBusyError(message)
+              ? undefined
+              : () => {
+                  void startServer(id, { skipPortValidation: true });
+                },
           });
         } else {
           setError(message);

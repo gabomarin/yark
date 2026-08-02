@@ -38,7 +38,7 @@ YARK flags the **same numeric port** used by different profiles (any of game / q
 - **Create / update profile** — checked against all other profiles
 - **Start** — checked against **other active** servers, then a **host bind probe** (UDP game/query, TCP RCON)
 
-If the host probe finds a port **busy** or cannot confirm it (**inconclusive**), start is blocked. When a free alternative set is found, YARK can **Start this session** on those ports (INI + launch for that run only — saved profile ports stay unchanged). Permanent changes go through Server settings (**Edit ports**). There is no “start anyway” on the conflicting ports.
+If the host probe finds a port **busy**, start is blocked (edit ports or **Start this session** on a suggested free set). If the probe is **inconclusive**, you can also **Start anyway** — that override never applies when a port is confirmed busy. Session ports affect INI and launch for that run only; the saved profile stays unchanged.
 
 Clone bumps ports by +10 (retries with higher offsets if needed).
 

@@ -71,13 +71,19 @@ function harness(initialProfiles: ServerProfile[]) {
   const processes = {
     isActive: vi.fn((id: string) => id === "peer-running"),
     start: vi.fn(),
+    applyRuntimePorts: vi.fn((p: ServerProfile) => p),
+    getStatus: vi.fn(() => ({ status: "running" })),
+    waitWhileStarting: vi.fn(async () => undefined),
+    beginGracefulStop: vi.fn(async () => ({ phase: "killed" as const, handle: null })),
+    finishGracefulStop: vi.fn(async () => "stopped" as const),
   } as unknown as ProcessManager;
   const backups = {
     hasServerWork: vi.fn(() => false),
+    createPreStopBackup: vi.fn(async () => []),
   } as unknown as BackupService;
   const locks = new InstanceLockManager();
   const service = new InstanceService(repo, processes, backups, locks);
-  return { service, repo, processes };
+  return { service, repo, processes, backups };
 }
 
 beforeEach(() => {
@@ -132,6 +138,20 @@ describe("InstanceService host port start gate", () => {
     expect(processes.start).not.toHaveBeenCalled();
   });
 
+  it("passes allowInconclusive when skipPortValidation is set", async () => {
+    const source = profile();
+    const { service, processes } = harness([source]);
+
+    await service.start(source.id, { skipPortValidation: true });
+
+    expect(assertHostPortsAvailable).toHaveBeenCalledWith(
+      expect.objectContaining({ id: source.id }),
+      [],
+      { allowInconclusive: true },
+    );
+    expect(processes.start).toHaveBeenCalled();
+  });
+
   it("starts with sessionPorts without mutating the saved profile", async () => {
     const source = profile();
     const { service, repo, processes } = harness([source]);
@@ -146,6 +166,7 @@ describe("InstanceService host port start gate", () => {
     expect(assertHostPortsAvailable).toHaveBeenCalledWith(
       expect.objectContaining(sessionPorts),
       [],
+      { allowInconclusive: false },
     );
     expect(syncProfileSettingsToIni).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -164,6 +185,41 @@ describe("InstanceService host port start gate", () => {
       "info",
       expect.stringContaining("session ports"),
     );
+  });
+
+  it("uses peer runtime ports for active conflict checks", async () => {
+    const source = profile();
+    const peer = profile({
+      id: "peer-running",
+      name: "Peer",
+      gamePort: 7777,
+      queryPort: 27015,
+      rconPort: 27020,
+      installDir: "C:\\ARK\\Peer",
+    });
+    const { service, processes } = harness([source, peer]);
+    vi.mocked(processes.applyRuntimePorts).mockImplementation((p) =>
+      p.id === "peer-running"
+        ? {
+            ...p,
+            gamePort: 7787,
+            queryPort: 27025,
+            rconPort: 27030,
+          }
+        : p,
+    );
+
+    await expect(
+      service.start(source.id, {
+        sessionPorts: {
+          gamePort: 7787,
+          queryPort: 27025,
+          rconPort: 27030,
+        },
+      }),
+    ).rejects.toThrow(/Port conflict/);
+    expect(assertHostPortsAvailable).not.toHaveBeenCalled();
+    expect(processes.start).not.toHaveBeenCalled();
   });
 
   it("still hard-fails active profile port conflicts even when sessionPorts are set", async () => {
@@ -206,5 +262,40 @@ describe("InstanceService host port start gate", () => {
     ).rejects.toThrow(/must be distinct/);
     expect(assertHostPortsAvailable).not.toHaveBeenCalled();
     expect(processes.start).not.toHaveBeenCalled();
+  });
+
+  it("does not emit started when spawn fails after a successful probe", async () => {
+    const source = profile();
+    const { service, repo, processes } = harness([source]);
+    vi.mocked(processes.start).mockImplementation(() => {
+      throw new Error("spawn failed");
+    });
+
+    await expect(service.start(source.id)).rejects.toThrow(/spawn failed/);
+    expect(assertHostPortsAvailable).toHaveBeenCalled();
+    expect(repo.addEvent).not.toHaveBeenCalledWith(
+      source.id,
+      "server_started",
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  it("stops using runtime ports for RCON SaveWorld", async () => {
+    const source = profile();
+    const { service, processes } = harness([source]);
+    vi.mocked(processes.isActive).mockReturnValue(true);
+    vi.mocked(processes.applyRuntimePorts).mockImplementation((p) => ({
+      ...p,
+      gamePort: 7787,
+      queryPort: 27025,
+      rconPort: 27030,
+    }));
+
+    await service.stop(source.id, { backup: false });
+
+    expect(processes.beginGracefulStop).toHaveBeenCalledWith(
+      expect.objectContaining({ rconPort: 27030, gamePort: 7787 }),
+    );
   });
 });
