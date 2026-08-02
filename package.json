@@ -23,6 +23,7 @@
     "e2e": "node scripts/e2e-suite.cjs",
     "e2e:mods": "node scripts/e2e-mods.cjs",
     "e2e:critical-job-recovery": "node scripts/e2e-critical-job-recovery.cjs",
+    "e2e:install-health": "node scripts/e2e-install-health.cjs",
     "e2e:quit-policy": "node scripts/e2e-quit-policy.cjs",
     "e2e:crash-reattach": "node scripts/e2e-crash-reattach.cjs",
     "website:screenshots": "node scripts/capture-website-screenshots.cjs",
