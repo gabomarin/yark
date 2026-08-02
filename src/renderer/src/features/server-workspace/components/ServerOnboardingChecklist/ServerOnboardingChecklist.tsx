@@ -18,6 +18,7 @@ import {
   Title,
 } from "@mantine/core";
 import { findPortConflicts } from "@shared/port-conflicts";
+import { isInstallationReady } from "@shared/installation-health";
 import type {
   ClusterComplianceReport,
   ServerInstallationInfo,
@@ -26,7 +27,6 @@ import type {
 } from "@shared/types";
 import { useEffect, useMemo, useState } from "react";
 import classes from "./ServerOnboardingChecklist.module.css";
-
 interface Props {
   server: ServerProfile;
   servers: ServerProfile[];
@@ -114,7 +114,7 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
     return props.clusterReports.find((report) => report.clusterId === clusterId) ?? null;
   }, [props.clusterReports, props.server.clusterId]);
 
-  const filesInstalled = props.installation?.installed === true;
+  const filesInstalled = isInstallationReady(props.installation);
 
   const saveCluster = async (nextClusterId: string | null) => {
     setError(null);

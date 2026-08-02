@@ -2,8 +2,16 @@ import { closeSync, existsSync, openSync, readFileSync, readdirSync, readSync, s
 import { execFileSync } from "node:child_process";
 import { get } from "node:https";
 import { dirname, join } from "node:path";
+import {
+  buildInstallationHealthFields,
+  type InstallationHealthReasonCode,
+} from "@shared/installation-health";
+import type {
+  InstallationHealthStatus,
+  OfficialNetworkStatus,
+  ServerInstallationInfo,
+} from "@shared/types";
 import { serverBinaryPath } from "./launch-args";
-import type { OfficialNetworkStatus, ServerInstallationInfo } from "@shared/types";
 
 const ASA_APP_ID = "2430930";
 const OFFICIAL_VERSION_TTL_MS = 15 * 60 * 1000;
@@ -536,6 +544,110 @@ const installInspectCache = new Map<
   { checkedAt: number; info: ServerInstallationInfo }
 >();
 
+const ASA_MARKER_NAMES = ["ShooterGame", "Engine", "steamapps"] as const;
+
+function isAccessErrno(error: unknown): boolean {
+  if (error == null || typeof error !== "object") {
+    return false;
+  }
+  const code = (error as NodeJS.ErrnoException).code;
+  return code === "EACCES" || code === "EPERM";
+}
+
+function isNotFoundErrno(error: unknown): boolean {
+  if (error == null || typeof error !== "object") {
+    return false;
+  }
+  return (error as NodeJS.ErrnoException).code === "ENOENT";
+}
+
+function hasAsaMarkers(installDir: string): boolean {
+  for (const name of ASA_MARKER_NAMES) {
+    if (existsSync(join(installDir, name))) {
+      return true;
+    }
+  }
+  // Partial Win64 tree without the top-level folder names still counts.
+  if (existsSync(join(installDir, "ShooterGame", "Binaries"))) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Lightweight FS health classification for a profile install root.
+ * No hashing, SteamCMD, or PowerShell — only existence/stat/readdir probes.
+ */
+export function classifyInstallHealth(
+  installDir: string,
+  binaryPath: string,
+): {
+  health: InstallationHealthStatus;
+  reasonCodes: InstallationHealthReasonCode[];
+} {
+  const trimmed = installDir.trim();
+  if (trimmed.length === 0) {
+    return { health: "suspicious", reasonCodes: ["path_empty"] };
+  }
+
+  try {
+    const rootStat = statSync(trimmed);
+    if (!rootStat.isDirectory()) {
+      return { health: "suspicious", reasonCodes: ["path_not_directory"] };
+    }
+  } catch (error) {
+    if (isNotFoundErrno(error)) {
+      return { health: "missing", reasonCodes: ["path_missing"] };
+    }
+    if (isAccessErrno(error)) {
+      return { health: "inaccessible", reasonCodes: ["path_eacces"] };
+    }
+    return { health: "unknown", reasonCodes: ["io_error"] };
+  }
+
+  let exeStat: ReturnType<typeof statSync> | null = null;
+  try {
+    exeStat = statSync(binaryPath);
+  } catch (error) {
+    if (isAccessErrno(error)) {
+      return { health: "inaccessible", reasonCodes: ["dir_eacces"] };
+    }
+    if (!isNotFoundErrno(error)) {
+      return { health: "unknown", reasonCodes: ["io_error"] };
+    }
+  }
+
+  if (exeStat !== null) {
+    if (!exeStat.isFile()) {
+      return { health: "suspicious", reasonCodes: ["path_not_directory"] };
+    }
+    if (exeStat.size <= 0) {
+      return { health: "suspicious", reasonCodes: ["exe_empty"] };
+    }
+    return { health: "ready", reasonCodes: ["ready"] };
+  }
+
+  let entries: string[] = [];
+  try {
+    entries = readdirSync(trimmed);
+  } catch (error) {
+    if (isAccessErrno(error)) {
+      return { health: "inaccessible", reasonCodes: ["dir_eacces"] };
+    }
+    return { health: "unknown", reasonCodes: ["io_error"] };
+  }
+
+  if (entries.length === 0) {
+    return { health: "empty", reasonCodes: ["dir_empty"] };
+  }
+
+  if (hasAsaMarkers(trimmed)) {
+    return { health: "incomplete", reasonCodes: ["partial_tree", "exe_absent"] };
+  }
+
+  return { health: "empty", reasonCodes: ["asa_markers_absent"] };
+}
+
 export function inspectServerInstallation(
   serverId: string,
   installDir: string,
@@ -551,9 +663,17 @@ export function inspectServerInstallation(
   }
 
   const binaryPath = serverBinaryPath(installDir);
-  const installed = existsSync(binaryPath);
-  const steamBuild = installed ? readSteamBuildFromLocalManifest(installDir) : null;
-  const build = installed
+  const classified = classifyInstallHealth(installDir, binaryPath);
+  const healthFields = buildInstallationHealthFields(
+    classified.health,
+    classified.reasonCodes,
+  );
+  const ready = healthFields.installed;
+
+  // Version enrichment only when the install is already classified ready —
+  // avoids PowerShell / log tails on broken paths.
+  const steamBuild = ready ? readSteamBuildFromLocalManifest(installDir) : null;
+  const build = ready
     ? (
         readVersionFromKnownFiles(installDir) ??
         steamBuild ??
@@ -563,11 +683,11 @@ export function inspectServerInstallation(
         readVersionFromExecutable(binaryPath)
       )
     : null;
-  const arkVersion = installed ? readArkVersionFromLogs(installDir) : null;
+  const arkVersion = ready ? readArkVersionFromLogs(installDir) : null;
 
   const info: ServerInstallationInfo = {
     serverId,
-    installed,
+    ...healthFields,
     build,
     steamBuild,
     arkVersion,

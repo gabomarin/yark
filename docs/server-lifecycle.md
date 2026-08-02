@@ -151,10 +151,10 @@ updates cannot change it; only `InstanceService.setServerEnabled` may do so.
 - Disable requires the per-server operation lock and a stopped, idle profile.
   Configuration, INIs, mods, health, logs, backups, offline SteamCMD work,
   cloning, export, and deletion remain available.
-- Enable revalidates the profile, installed files, all saved-profile ports, and
+- Enable revalidates the profile, **install health (`ready`)**, all saved-profile ports, and
   cluster compliance. It does not start ASA.
 - Manual Start also owns the per-server lock. The common `startInternal` path
-  rejects disabled profiles, covering restart and maintenance recovery paths.
+  rejects disabled profiles and non-`ready` installs, covering restart and maintenance recovery paths.
 - Clones inherit the source enabled state and receive a unique sibling install
   directory. Disabled profiles remain cluster members and participate in port
   conflict checks.
@@ -162,10 +162,15 @@ updates cannot change it; only `InstanceService.setServerEnabled` may do so.
 **Start** (`InstanceService.start`):
 
 1. Acquire the per-server operation lock and reject disabled profiles.
-2. Port-conflict check vs **other active** servers (`findPortConflicts`).
-3. `await syncProfileSettingsToIni`.
-4. `processes.start` (args from `launchArgsOverride` or `buildLaunchArgs`).
-5. Event `server_started` (“waiting for readiness”).
+2. Bypass-cache install-health inspect — reject unless `health === "ready"`.
+3. Port-conflict check vs **other active** servers (`findPortConflicts`).
+4. `await syncProfileSettingsToIni`.
+5. `processes.start` (args from `launchArgsOverride` or `buildLaunchArgs`).
+6. Event `server_started` (“waiting for readiness”).
+
+Actionable install degradation (e.g. `ready` → `missing`) emits
+`installation_health_degraded` once per transition (no startup spam). Future
+auto-start (#53) should reuse the same `ready` gate.
 
 **Readiness:** status stays `"starting"` until RCON `ListPlayers` on
 `127.0.0.1` succeeds (poll `DEFAULT_READY_POLL_MS = 3000`, timeout

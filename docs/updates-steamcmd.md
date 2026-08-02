@@ -110,7 +110,23 @@ Pre-update archives use backup type `pre_update` and kinds `world` / `players` /
 
 `isServerUpdateAvailable` / `getServerUpdateState` compare **Steam builds only**. Never treat runtime `ARK Version` vs an official/live server version as an update decision — staggered ASA rollouts make those non-equivalent.
 
-Official version and official build each cache for **15 minutes** in-process (`OFFICIAL_VERSION_TTL_MS`). `servers:installation` accepts `forceOfficialCheck` to bypass (used by **Check for updates**). The status line is also parsed for network state (`Online` / `Deploying` / `Offline`); Deploying tints the sidebar version and shows a pulsing indicator.
+Official version and official build each cache for **15 minutes** in-process (`OFFICIAL_VERSION_TTL_MS`). `servers:installation` accepts `forceOfficialCheck` to bypass (used by **Check for updates** and **Check installs**). The status line is also parsed for network state (`Online` / `Deploying` / `Offline`); Deploying tints the sidebar version and shows a pulsing indicator.
+
+### Installation health (#57)
+
+`inspectServerInstallation` classifies each profile’s install root (lightweight FS only — no hashing / SteamCMD verify):
+
+| `health` | Meaning |
+| --- | --- |
+| `ready` | Required layout + non-empty `ArkAscendedServer.exe` |
+| `missing` | Configured path does not exist |
+| `empty` | Directory exists but ASA is absent |
+| `incomplete` | Partial ASA tree without the executable |
+| `inaccessible` | Permissions/I/O block inspection |
+| `suspicious` | Contradictory evidence (e.g. empty exe) |
+| `unknown` | Unclassified failure |
+
+`installed` remains `health === "ready"`. Results include `reasonCodes`, `guidance`, and `checkedAt`. Cadence: **one-shot background scan after Overview first paint**, plus on-demand **Check installs** (and post-SteamCMD refresh). Heartbeats still skip deep local inspect; the 5‑minute official poll only re-reads locals when official metadata or the server set changes.
 
 ## Public IPC
 

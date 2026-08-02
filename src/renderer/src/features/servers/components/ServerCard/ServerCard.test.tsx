@@ -29,6 +29,9 @@ const profile = {
 const installed = {
   serverId: profile.id,
   installed: true,
+  health: "ready" as const,
+  reasonCodes: ["ready"],
+  guidance: "Installation looks ready to start.",
   build: null,
   steamBuild: null,
   arkVersion: null,
@@ -171,7 +174,13 @@ describe("ServerCard", () => {
         <ServerCard
           server={profile}
           runtime={null}
-          installation={{ ...installed, installed: false }}
+          installation={{
+            ...installed,
+            installed: false,
+            health: "missing",
+            reasonCodes: ["path_missing"],
+            guidance: "Create the folder or correct the install path, then install server files.",
+          }}
           officialSteamBuild={null}
           onStart={vi.fn()}
           onStop={vi.fn()}
@@ -209,7 +218,13 @@ describe("ServerCard", () => {
         <ServerCard
           server={profile}
           runtime={null}
-          installation={{ ...installed, installed: false }}
+          installation={{
+            ...installed,
+            installed: false,
+            health: "missing",
+            reasonCodes: ["path_missing"],
+            guidance: "Create the folder or correct the install path, then install server files.",
+          }}
           officialSteamBuild={null}
           onStart={vi.fn()}
           onStop={vi.fn()}
@@ -243,6 +258,9 @@ describe("ServerCard", () => {
           installation={{
             ...installed,
             installed: false,
+            health: "missing",
+            reasonCodes: ["path_missing"],
+            guidance: "Create the folder or correct the install path, then install server files.",
           }}
           officialSteamBuild={null}
           steamCmdBusy
@@ -372,7 +390,13 @@ describe("ServerCard", () => {
         <ServerCard
           server={profile}
           runtime={null}
-          installation={{ ...installed, installed: false }}
+          installation={{
+            ...installed,
+            installed: false,
+            health: "missing",
+            reasonCodes: ["path_missing"],
+            guidance: "Create the folder or correct the install path, then install server files.",
+          }}
           officialSteamBuild={null}
           onStart={vi.fn()}
           onStop={vi.fn()}

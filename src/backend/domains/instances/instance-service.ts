@@ -34,6 +34,11 @@ import {
   readOfficialArkVersionCached,
 } from "./server-installation";
 import { syncProfileSettingsToIni } from "./sync-profile-ini";
+import {
+  isInstallHealthDegradation,
+  isInstallationReady,
+} from "@shared/installation-health";
+import type { InstallationHealthStatus } from "@shared/types";
 
 const RCON_HOST = "127.0.0.1";
 
@@ -110,6 +115,13 @@ export class InstanceService extends EventEmitter {
   private lastOfficialVersion: string | null | undefined = undefined;
   private lastOfficialSteamBuild: string | null | undefined = undefined;
   private lastInstallServers: ServerInstallationInfo[] = [];
+  /** Last classified health per server — used for degradation-only events (#57). */
+  private readonly lastKnownInstallHealth = new Map<string, InstallationHealthStatus>();
+  /** Coalesce concurrent full-fleet installation inspects with the same cache mode. */
+  private fleetInspectInFlight: {
+    bypassCache: boolean;
+    promise: Promise<ServerInstallationInfo[]>;
+  } | null = null;
 
   constructor(
     private readonly repo: ServerRepository,
@@ -398,6 +410,15 @@ export class InstanceService extends EventEmitter {
     if (!profile.enabled) {
       throw new Error(`Server "${profile.name}" is disabled`);
     }
+    const installation = inspectServerInstallation(profile.id, profile.installDir, {
+      bypassCache: true,
+    });
+    this.recordInstallHealth(installation);
+    if (!isInstallationReady(installation)) {
+      throw new Error(
+        `Server files are not ready (${installation.health}): ${installation.guidance}`,
+      );
+    }
     const running = this.repo
       .list()
       .filter((p) => p.id !== id && this.processes.isActive(p.id));
@@ -458,8 +479,11 @@ export class InstanceService extends EventEmitter {
       const installation = inspectServerInstallation(profile.id, profile.installDir, {
         bypassCache: true,
       });
-      if (!installation.installed) {
-        throw new Error(`Server files are not installed: ${profile.installDir}`);
+      this.recordInstallHealth(installation);
+      if (!isInstallationReady(installation)) {
+        throw new Error(
+          `Server files are not ready (${installation.health}): ${installation.guidance}`,
+        );
       }
 
       this.assertNoPortConflicts(profile, id);
@@ -810,11 +834,9 @@ export class InstanceService extends EventEmitter {
         (officialChanged || serverSetChanged));
 
     const servers = shouldInspectServers
-      ? profiles.map((profile) =>
-          inspectServerInstallation(profile.id, profile.installDir, {
-            bypassCache: forceOfficialCheck,
-          }),
-        )
+      ? await this.inspectFleetInstallations(profiles, {
+          bypassCache: forceOfficialCheck,
+        })
       : this.lastInstallServers;
 
     this.lastOfficialVersion = officialVersion;
@@ -829,6 +851,77 @@ export class InstanceService extends EventEmitter {
       officialSteamBuild,
       servers,
     };
+  }
+
+  /**
+   * Bounded, yielding fleet inspect so many profiles do not freeze the main process.
+   * Concurrent callers share one in-flight promise.
+   */
+  private async inspectFleetInstallations(
+    profiles: ReadonlyArray<ServerProfile>,
+    options: { bypassCache: boolean },
+  ): Promise<ServerInstallationInfo[]> {
+    const existing = this.fleetInspectInFlight;
+    if (existing !== null && existing.bypassCache === options.bypassCache) {
+      return existing.promise;
+    }
+    if (existing !== null) {
+      // Different cache mode — wait for the in-flight scan, then run ours.
+      await existing.promise.catch(() => undefined);
+    }
+
+    const promise = (async () => {
+      const servers: ServerInstallationInfo[] = [];
+      for (const profile of profiles) {
+        const info = inspectServerInstallation(profile.id, profile.installDir, {
+          bypassCache: options.bypassCache,
+        });
+        this.recordInstallHealth(info);
+        servers.push(info);
+        // Yield so renderer IPC / UI stay responsive between sync FS probes.
+        await new Promise<void>((resolveYield) => {
+          setImmediate(resolveYield);
+        });
+      }
+      return servers;
+    })().finally(() => {
+      if (this.fleetInspectInFlight?.promise === promise) {
+        this.fleetInspectInFlight = null;
+      }
+    });
+
+    this.fleetInspectInFlight = { bypassCache: options.bypassCache, promise };
+    return promise;
+  }
+
+  /** Update health memory and emit degradation-only events. */
+  private recordInstallHealth(info: ServerInstallationInfo): void {
+    const previous = this.lastKnownInstallHealth.get(info.serverId) ?? null;
+    this.lastKnownInstallHealth.set(info.serverId, info.health);
+    if (!isInstallHealthDegradation(previous, info.health)) {
+      return;
+    }
+    const profile = this.repo.get(info.serverId);
+    const name = profile?.name ?? info.serverId;
+    this.repo.addEvent(
+      info.serverId,
+      "installation_health_degraded",
+      info.health === "inaccessible" || info.health === "suspicious"
+        ? "error"
+        : "warning",
+      `Install health for "${name}" is ${info.health}`,
+      {
+        what: `Installation health changed to ${info.health}.`,
+        cause: info.reasonCodes.length > 0 ? info.reasonCodes.join(", ") : undefined,
+        location: profile?.installDir ?? info.binaryPath,
+        suggestion: info.guidance,
+        context: {
+          health: info.health,
+          reasonCodes: info.reasonCodes.join(","),
+          previousHealth: previous,
+        },
+      },
+    );
   }
 
   checkClusters(): ClusterComplianceReport[] {

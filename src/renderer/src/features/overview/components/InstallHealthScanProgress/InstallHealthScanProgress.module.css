@@ -1,0 +1,30 @@
+.bar {
+  /* Empty track: full-width strip so the fill target and in-bar label are obvious. */
+  background-color: color-mix(
+    in srgb,
+    var(--mantine-color-dark-5) 72%,
+    var(--mantine-color-blue-8)
+  ) !important;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #000 40%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, #fff 8%, transparent);
+}
+
+.label {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: 10001;
+  height: var(--install-scan-bar-size, 22px);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  margin: 0;
+  color: #fff;
+  text-shadow: 0 1px 2px color-mix(in srgb, #000 65%, transparent);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  pointer-events: none;
+}

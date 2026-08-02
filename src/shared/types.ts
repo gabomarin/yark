@@ -48,9 +48,32 @@ export interface ServerRuntimeInfo {
   lastError: string | null;
 }
 
+/**
+ * Lightweight FS classification of a profile's ASA install root (#57).
+ * Distinct from runtime/process health.
+ */
+export type InstallationHealthStatus =
+  | "ready"
+  | "missing"
+  | "empty"
+  | "incomplete"
+  | "inaccessible"
+  | "suspicious"
+  | "unknown";
+
 export interface ServerInstallationInfo {
   serverId: string;
+  /**
+   * True when `health === "ready"` (required exe + layout present).
+   * Kept for older UI call sites; prefer `health` / `isInstallationReady`.
+   */
   installed: boolean;
+  /** Classified install-folder health from the shared probe. */
+  health: InstallationHealthStatus;
+  /** Stable classifier reason codes (e.g. path_missing, exe_absent). */
+  reasonCodes: string[];
+  /** English operator guidance for the current health. */
+  guidance: string;
   /** Locally detected build (Build.version / exe / appmanifest). */
   build: string | null;
   /** Steam build detected specifically from appmanifest_2430930.acf. */
@@ -232,6 +255,7 @@ export interface AppEvent {
     | "update_completed"
     | "update_failed"
     | "update_rolled_back"
+    | "installation_health_degraded"
     | "error";
   severity: "info" | "warning" | "error";
   message: string;

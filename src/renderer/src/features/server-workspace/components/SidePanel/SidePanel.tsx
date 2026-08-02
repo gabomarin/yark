@@ -12,6 +12,10 @@ import {
 } from "@phosphor-icons/react";
 import { Button, Stack, Text, Textarea } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import {
+  installationHealthLabel,
+  isInstallationReady,
+} from "@shared/installation-health";
 import { resolveDisplayedServerVersion } from "@shared/server-version-display";
 import { useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
@@ -60,10 +64,11 @@ export function SidePanel(props: Props): ReactElement {
     (isActive
       ? "The server will stop for this check, then restart if it succeeds"
       : undefined);
+  const filesReady = isInstallationReady(props.installation);
   const toggleDisabled =
     props.onToggleEnabled === undefined ||
     steamCmdBusy ||
-    (props.server.enabled ? isActive : props.installation?.installed !== true);
+    (props.server.enabled ? isActive : !filesReady);
   const toggleTitle =
     props.onToggleEnabled === undefined
       ? undefined
@@ -71,10 +76,13 @@ export function SidePanel(props: Props): ReactElement {
         ? steamCmdLockTitle ?? "Another server operation is in progress"
         : props.server.enabled && isActive
         ? "Stop the server first"
-        : !props.server.enabled && props.installation?.installed !== true
-          ? "Install files first"
+        : !props.server.enabled && !filesReady
+          ? props.installation?.guidance ?? "Install files first"
           : undefined;
   const version = resolveDisplayedServerVersion(props.installation) ?? "—";
+  const installHealthLabel = props.installation
+    ? installationHealthLabel(props.installation.health)
+    : "Checking…";
   const uptime =
     props.runtime?.startedAt != null && status === "running"
       ? new Date(props.runtime.startedAt).toLocaleString()
@@ -87,6 +95,7 @@ export function SidePanel(props: Props): ReactElement {
           <Text className={classes.widgetTitle}>Status</Text>
           <MetaRow label="Status" value={serverRuntimeStatusLabel(status)} />
           <MetaRow label="Started" value={uptime} />
+          <MetaRow label="Install" value={installHealthLabel} />
           <MetaRow label="Version" value={version} />
           <MetaRow label="Cluster" value={props.server.clusterId ?? "No cluster"} />
         </Stack>

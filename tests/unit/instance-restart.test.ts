@@ -1,14 +1,37 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { InstanceService } from "@backend/domains/instances/instance-service";
 import type { BackupService } from "@backend/domains/backups/backup-service";
 import type { ProcessManager } from "@backend/infra/process/process-manager";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
 import { InstanceLockManager } from "@backend/orchestration/instance-lock-manager";
 import type { ServerProfile } from "@shared/types";
+import { inspectServerInstallation } from "@backend/domains/instances/server-installation";
 
 vi.mock("@backend/domains/instances/sync-profile-ini", () => ({
   syncProfileSettingsToIni: vi.fn(async () => undefined),
 }));
+
+vi.mock("@backend/domains/instances/server-installation", () => ({
+  inspectServerInstallation: vi.fn(),
+  readOfficialArkVersionCached: vi.fn(),
+  readOfficialArkBuildCached: vi.fn(),
+}));
+
+function readyInstallation(serverId: string) {
+  return {
+    serverId,
+    installed: true,
+    health: "ready" as const,
+    reasonCodes: ["ready"],
+    guidance: "Installation looks ready to start.",
+    build: null,
+    steamBuild: null,
+    arkVersion: null,
+    version: null,
+    binaryPath: "C:/ARK/RestartTest/ShooterGame/Binaries/Win64/ArkAscendedServer.exe",
+    checkedAt: new Date().toISOString(),
+  };
+}
 
 function makeProfile(id = "srv-1"): ServerProfile {
   const now = new Date().toISOString();
@@ -75,6 +98,12 @@ function makeProcesses(profile: ServerProfile, active = true) {
 }
 
 describe("InstanceService.restart", () => {
+  beforeEach(() => {
+    vi.mocked(inspectServerInstallation).mockImplementation((serverId: string) =>
+      readyInstallation(serverId),
+    );
+  });
+
   it("stops without pre_stop, then fail-hard pre_restart, then starts", async () => {
     const profile = makeProfile();
     const repo = makeRepo(profile);

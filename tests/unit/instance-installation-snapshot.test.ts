@@ -58,6 +58,9 @@ describe("InstanceService.installationInfo", () => {
     vi.mocked(inspectServerInstallation).mockReturnValue({
       serverId: "srv-1",
       installed: true,
+      health: "ready",
+      reasonCodes: ["ready"],
+      guidance: "Installation looks ready to start.",
       build: "358.12",
       steamBuild: "build 1",
       arkVersion: null,
