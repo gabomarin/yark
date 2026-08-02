@@ -10,13 +10,14 @@ YARK server manager uses **Semantic Versioning** (`MAJOR.MINOR.PATCH`) and a
 | Package / installer version | `package.json` → `"version"` |
 | UI sidebar (`vX.Y.Z`) | `src/shared/app-version.ts` (imports `package.json`) |
 | electron-builder artifacts | reads `package.json` automatically |
-| Human-readable history | `CHANGELOG.md` |
-| Project site hero pill | `website/index.html` (hardcoded `status-pill`; not wired to `package.json`) |
+| Human-readable history | `CHANGELOG.md` (+ curated `website/src/data/changelog.ts` for the site) |
+| Project site hero pill / download CTA | `website/src/data/site.ts` (reads root `package.json` `version`) |
 
 Do **not** hardcode a second app version string in React components. Import
-`APP_VERSION` from `@shared/app-version` when the UI needs it. When cutting a
-release that should show on the public project page, update the site pill in
-the same change set (see [website.md](website.md)).
+`APP_VERSION` from `@shared/app-version` when the UI needs it. Bumping
+`package.json` updates the site pill and download URL automatically (see
+[website.md](website.md)); keep `website/src/data/changelog.ts` in sync when
+cutting a release.
 
 ## SemVer rules for this project
 
@@ -92,8 +93,8 @@ Then watch **Actions → Release Windows**. Rebuild an existing tag via
    - `npm run typecheck`
    - `npm test`
    - `npm run build` (optional local `npm run package` smoke)
-5. If the public site should show the new version, bump the `status-pill` text in
-   `website/index.html` (it does not read `package.json`).
+5. Sync the curated site changelog in `website/src/data/changelog.ts` (version
+   pill / download CTA follow `package.json` via `website/src/data/site.ts`).
 6. Commit with a message that names the version (e.g. `release: v0.2.0`) and merge
    to `main`.
 7. Tag `vX.Y.Z` on that commit and `git push origin vX.Y.Z` — CI publishes the
