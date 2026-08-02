@@ -567,10 +567,6 @@ function hasAsaMarkers(installDir: string): boolean {
       return true;
     }
   }
-  // Partial Win64 tree without the top-level folder names still counts.
-  if (existsSync(join(installDir, "ShooterGame", "Binaries"))) {
-    return true;
-  }
   return false;
 }
 
@@ -619,7 +615,7 @@ export function classifyInstallHealth(
 
   if (exeStat !== null) {
     if (!exeStat.isFile()) {
-      return { health: "suspicious", reasonCodes: ["path_not_directory"] };
+      return { health: "suspicious", reasonCodes: ["exe_not_file"] };
     }
     if (exeStat.size <= 0) {
       return { health: "suspicious", reasonCodes: ["exe_empty"] };
@@ -645,13 +641,26 @@ export function classifyInstallHealth(
     return { health: "incomplete", reasonCodes: ["partial_tree", "exe_absent"] };
   }
 
-  return { health: "empty", reasonCodes: ["asa_markers_absent"] };
+  // Non-empty folder without ASA markers — do not treat as a safe install target.
+  return { health: "suspicious", reasonCodes: ["foreign_contents"] };
 }
 
 export function inspectServerInstallation(
   serverId: string,
   installDir: string,
-  options?: { bypassCache?: boolean },
+  options?: {
+    bypassCache?: boolean;
+    /**
+     * When true, may call sync PowerShell VersionInfo (can stall main ~1–2s).
+     * Fleet scans keep this false so Overview stays responsive.
+     */
+    allowExecutableVersionProbe?: boolean;
+    /**
+     * When true, may read ASA log tails for ARK Version (I/O heavy on large logs).
+     * Fleet scans keep this false.
+     */
+    allowLogVersionProbe?: boolean;
+  },
 ): ServerInstallationInfo {
   const cacheKey = `${serverId}\0${normalizePath(installDir)}`;
   const now = Date.now();
@@ -670,20 +679,23 @@ export function inspectServerInstallation(
   );
   const ready = healthFields.installed;
 
-  // Version enrichment only when the install is already classified ready —
-  // avoids PowerShell / log tails on broken paths.
+  // Cheap version sources only by default. PowerShell + log tails are opt-in so
+  // fleet scans cannot freeze Electron across many ready installs.
   const steamBuild = ready ? readSteamBuildFromLocalManifest(installDir) : null;
   const build = ready
     ? (
         readVersionFromKnownFiles(installDir) ??
         steamBuild ??
         readBuildIdFromManifest(installDir) ??
-        // PowerShell VersionInfo is sync and can stall the main process ~1–2s;
-        // keep it as a last resort for installs without manifest/version files.
-        readVersionFromExecutable(binaryPath)
+        (options?.allowExecutableVersionProbe === true
+          ? readVersionFromExecutable(binaryPath)
+          : null)
       )
     : null;
-  const arkVersion = ready ? readArkVersionFromLogs(installDir) : null;
+  const arkVersion =
+    ready && options?.allowLogVersionProbe === true
+      ? readArkVersionFromLogs(installDir)
+      : null;
 
   const info: ServerInstallationInfo = {
     serverId,

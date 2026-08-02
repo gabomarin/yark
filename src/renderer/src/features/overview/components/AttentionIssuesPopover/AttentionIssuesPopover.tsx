@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { Badge, Popover, Stack, Text } from "@mantine/core";
 import {
+  formatInstallationCheckedAt,
   installationHealthLabel,
   isInstallationReady,
 } from "@shared/installation-health";
@@ -17,6 +18,7 @@ export interface AttentionIssue {
   serverName: string;
   problem: string;
   guidance: string;
+  checkedAt: string | null;
 }
 
 export function collectAttentionIssues(input: {
@@ -39,24 +41,25 @@ export function collectAttentionIssues(input: {
         guidance: lastError && lastError.length > 0
           ? lastError
           : "Open Logs to inspect the failure, then restart if the install is healthy.",
+        checkedAt: installation?.checkedAt ?? null,
       });
       continue;
     }
 
-    if (installation == null || installation.health === "unknown") {
-      // Still scanning — do not count as attention yet.
+    // Missing snapshot = not checked yet (scan pending). `unknown` is a final result.
+    if (installation == null) {
       continue;
     }
 
     if (!isInstallationReady(installation)) {
-      const health = installation?.health;
       issues.push({
         serverId: server.id,
         serverName: server.name,
-        problem: installationHealthLabel(health),
+        problem: installationHealthLabel(installation.health),
         guidance:
-          installation?.guidance ??
+          installation.guidance ||
           "Check the install path, then use Install or Check installs.",
+        checkedAt: installation.checkedAt,
       });
       continue;
     }
@@ -67,6 +70,7 @@ export function collectAttentionIssues(input: {
         serverName: server.name,
         problem: "Update available",
         guidance: "Use Update on the server card when you are ready.",
+        checkedAt: installation.checkedAt,
       });
     }
   }
@@ -132,6 +136,11 @@ export function AttentionIssuesPopover({
                 <Text size="xs" c="dimmed" lineClamp={2}>
                   {issue.guidance}
                 </Text>
+                {issue.checkedAt != null && (
+                  <Text size="xs" c="dimmed">
+                    Checked {formatInstallationCheckedAt(issue.checkedAt)}
+                  </Text>
+                )}
               </div>
             ))
           )}

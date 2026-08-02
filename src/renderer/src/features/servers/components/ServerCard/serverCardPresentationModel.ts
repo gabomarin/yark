@@ -1,6 +1,7 @@
 import type { ServerInstallationInfo, ServerStatus } from "@shared/types";
 import {
   installationHealthLabel,
+  isInstallOfferHealth,
   isInstallationReady,
 } from "@shared/installation-health";
 import {
@@ -122,6 +123,7 @@ export function deriveServerCardView(input: {
   stopProgressLabel?: string | null;
 }) {
   const ready = isInstallationReady(input.installation);
+  const canOfferInstall = isInstallOfferHealth(input.installation?.health);
   const serverEnabled = input.serverEnabled ?? true;
   const localVersion = resolveDisplayedServerVersion(input.installation);
   const updateState = getServerUpdateState(
@@ -153,6 +155,7 @@ export function deriveServerCardView(input: {
   const updateAction = resolveUpdateAction({
     steamCmdBusy: input.steamCmdBusy,
     isInstallationReady: ready,
+    canOfferInstall,
     status: input.status,
     serverEnabled,
     updateState,
@@ -181,6 +184,7 @@ export function deriveServerCardView(input: {
     primaryAction: resolvePrimaryAction({
       steamCmdBusy: input.steamCmdBusy,
       isInstallationReady: ready,
+      canOfferInstall,
       status: input.status,
       updateState,
       serverEnabled,

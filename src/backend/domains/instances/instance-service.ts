@@ -117,9 +117,9 @@ export class InstanceService extends EventEmitter {
   private lastInstallServers: ServerInstallationInfo[] = [];
   /** Last classified health per server — used for degradation-only events (#57). */
   private readonly lastKnownInstallHealth = new Map<string, InstallationHealthStatus>();
-  /** Coalesce concurrent full-fleet installation inspects with the same cache mode. */
+  /** Coalesce concurrent full-fleet installation inspects for the same profile set + cache mode. */
   private fleetInspectInFlight: {
-    bypassCache: boolean;
+    key: string;
     promise: Promise<ServerInstallationInfo[]>;
   } | null = null;
 
@@ -834,7 +834,7 @@ export class InstanceService extends EventEmitter {
         (officialChanged || serverSetChanged));
 
     const servers = shouldInspectServers
-      ? await this.inspectFleetInstallations(profiles, {
+      ? await this.inspectFleetInstallations({
           bypassCache: forceOfficialCheck,
         })
       : this.lastInstallServers;
@@ -855,26 +855,33 @@ export class InstanceService extends EventEmitter {
 
   /**
    * Bounded, yielding fleet inspect so many profiles do not freeze the main process.
-   * Concurrent callers share one in-flight promise.
+   * Always reads the latest profile list. Concurrent callers share one in-flight
+   * promise only when the profile-set key and cache mode match.
    */
-  private async inspectFleetInstallations(
-    profiles: ReadonlyArray<ServerProfile>,
-    options: { bypassCache: boolean },
-  ): Promise<ServerInstallationInfo[]> {
+  private async inspectFleetInstallations(options: {
+    bypassCache: boolean;
+  }): Promise<ServerInstallationInfo[]> {
+    const profiles = this.repo.list();
+    const key = this.fleetInspectKey(profiles, options.bypassCache);
     const existing = this.fleetInspectInFlight;
-    if (existing !== null && existing.bypassCache === options.bypassCache) {
+    if (existing !== null && existing.key === key) {
       return existing.promise;
     }
     if (existing !== null) {
-      // Different cache mode — wait for the in-flight scan, then run ours.
+      // Different profile set or cache mode — wait, then scan the current list.
       await existing.promise.catch(() => undefined);
     }
 
+    // Re-read after waiting so create/clone/delete mid-scan is not missed.
+    const profilesToScan = this.repo.list();
+    const scanKey = this.fleetInspectKey(profilesToScan, options.bypassCache);
+
     const promise = (async () => {
       const servers: ServerInstallationInfo[] = [];
-      for (const profile of profiles) {
+      for (const profile of profilesToScan) {
         const info = inspectServerInstallation(profile.id, profile.installDir, {
           bypassCache: options.bypassCache,
+          // Keep fleet probes FS/manifest-only — no PowerShell / log tails.
         });
         this.recordInstallHealth(info);
         servers.push(info);
@@ -890,8 +897,19 @@ export class InstanceService extends EventEmitter {
       }
     });
 
-    this.fleetInspectInFlight = { bypassCache: options.bypassCache, promise };
+    this.fleetInspectInFlight = { key: scanKey, promise };
     return promise;
+  }
+
+  private fleetInspectKey(
+    profiles: ReadonlyArray<ServerProfile>,
+    bypassCache: boolean,
+  ): string {
+    const ids = profiles
+      .map((profile) => `${profile.id}\0${installDirKey(profile.installDir)}`)
+      .sort()
+      .join("\n");
+    return `${bypassCache ? "1" : "0"}\n${ids}`;
   }
 
   /** Update health memory and emit degradation-only events. */

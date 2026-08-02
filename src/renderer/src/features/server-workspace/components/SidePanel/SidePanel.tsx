@@ -13,6 +13,7 @@ import {
 import { Button, Stack, Text, Textarea } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import {
+  formatInstallationCheckedAt,
   installationHealthLabel,
   isInstallationReady,
 } from "@shared/installation-health";
@@ -83,6 +84,7 @@ export function SidePanel(props: Props): ReactElement {
   const installHealthLabel = props.installation
     ? installationHealthLabel(props.installation.health)
     : "Checking…";
+  const checkedAtLabel = formatInstallationCheckedAt(props.installation?.checkedAt);
   const uptime =
     props.runtime?.startedAt != null && status === "running"
       ? new Date(props.runtime.startedAt).toLocaleString()
@@ -96,6 +98,7 @@ export function SidePanel(props: Props): ReactElement {
           <MetaRow label="Status" value={serverRuntimeStatusLabel(status)} />
           <MetaRow label="Started" value={uptime} />
           <MetaRow label="Install" value={installHealthLabel} />
+          <MetaRow label="Checked" value={checkedAtLabel} />
           <MetaRow label="Version" value={version} />
           <MetaRow label="Cluster" value={props.server.clusterId ?? "No cluster"} />
         </Stack>

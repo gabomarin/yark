@@ -120,13 +120,13 @@ Official version and official build each cache for **15 minutes** in-process (`O
 | --- | --- |
 | `ready` | Required layout + non-empty `ArkAscendedServer.exe` |
 | `missing` | Configured path does not exist |
-| `empty` | Directory exists but ASA is absent |
+| `empty` | Directory exists and is empty (valid install target) |
 | `incomplete` | Partial ASA tree without the executable |
 | `inaccessible` | Permissions/I/O block inspection |
-| `suspicious` | Contradictory evidence (e.g. empty exe) |
-| `unknown` | Unclassified failure |
+| `suspicious` | Contradictory or unsafe evidence (empty exe, foreign non-ASA contents) |
+| `unknown` | Unclassified I/O failure (final result — not “still scanning”) |
 
-`installed` remains `health === "ready"`. Results include `reasonCodes`, `guidance`, and `checkedAt`. Cadence: **one-shot background scan after Overview first paint**, plus on-demand **Check installs** (and post-SteamCMD refresh). Heartbeats still skip deep local inspect; the 5‑minute official poll only re-reads locals when official metadata or the server set changes.
+`installed` remains `health === "ready"`. Results include `reasonCodes`, `guidance`, and `checkedAt` (shown in workspace Status and attention details). Cadence: **one-shot background scan after Overview first paint**, plus on-demand **Check installs** (and post-SteamCMD refresh). Fleet scans stay FS/manifest-only (no PowerShell VersionInfo / log tails) and yield between profiles. Heartbeats still skip deep local inspect; the 5‑minute official poll only re-reads locals when official metadata or the server set changes.
 
 ## Public IPC
 
