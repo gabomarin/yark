@@ -77,6 +77,7 @@ describe("PlayerSessionWatcher", () => {
       addEvent: vi.fn(),
     } as unknown as ServerRepository;
     const processes = Object.assign(new EventEmitter(), {
+      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
       getStatus: vi.fn(() => runningStatus(profile.id)),
     }) as unknown as ProcessManager;
 
@@ -123,6 +124,7 @@ describe("PlayerSessionWatcher", () => {
 
     let status: ServerRuntimeInfo["status"] = "running";
     const processes = Object.assign(new EventEmitter(), {
+      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
       getStatus: vi.fn(() => ({
         ...runningStatus(profile.id),
         status,
@@ -157,6 +159,7 @@ describe("PlayerSessionWatcher", () => {
       addEvent: vi.fn(),
     } as unknown as ServerRepository;
     const processes = Object.assign(new EventEmitter(), {
+      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
       getStatus: vi.fn(() => runningStatus(profile.id)),
     }) as unknown as ProcessManager;
 
@@ -194,6 +197,7 @@ describe("PlayerSessionWatcher", () => {
       addEvent: vi.fn(),
     } as unknown as ServerRepository;
     const processes = Object.assign(new EventEmitter(), {
+      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
       getStatus: vi.fn(() => runningStatus(profile.id)),
     }) as unknown as ProcessManager;
 
