@@ -172,12 +172,14 @@ updates cannot change it; only `InstanceService.setServerEnabled` may do so.
 6. `await syncProfileSettingsToIni` (effective ports).
 7. `processes.start` (args from `launchArgsOverride` or `buildLaunchArgs` on the
    effective profile). Runtime ports are kept on the managed process for the
-   whole session (stop / RCON / player watcher / hot SaveWorld).
+   whole session (stop / RCON / player watcher / hot SaveWorld) and written into
+   the durable process checkpoint / Leave identity so crash reattach restores them.
 8. Event `server_started` (“waiting for readiness”; notes session ports when used).
 
 **Busy** recovery: `sessionPorts` (this run only) or permanently editing saved
 ports. **Inconclusive** also offers **Start anyway** (`skipPortValidation`),
-which does not bypass busy.
+which does not bypass busy. After a **restart** that already stopped the process,
+probe recovery actions call **start** (not restart again).
 
 Actionable install degradation (e.g. `ready` → `missing`) emits
 `installation_health_degraded` once per transition (no startup spam). Future
@@ -280,7 +282,8 @@ the window visible through wait/save/backup progress).
 
 `StartServerOptions.sessionPorts` optionally overrides game/query/RCON for a
 single start (INI sync + launch). It does **not** update the saved profile;
-runtime ports stay on the managed process until exit so stop/RCON use them.
+runtime ports stay on the managed process until exit so stop/RCON use them, and
+are stored on leave/crash checkpoints for reattach.
 `StartServerOptions.skipPortValidation` allows start only when the host probe
 is **inconclusive** (never when busy).
 
@@ -366,8 +369,9 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 | `tests/unit/launch-args.test.ts` | CLI shape; no listen/RCON/passwords/QueryPort |
 | `tests/unit/sync-profile-ini.test.ts` | Exact INI keys / null password → `""` |
 | `tests/unit/validation.test.ts` | Ports, paths, cluster, mods, conflicts |
-| `tests/unit/host-port-probe.test.ts` | Host bind classify, suggestions, error prefixes |
+| `tests/unit/host-port-probe.test.ts` | Host bind classify, suggestions, UDP release, error prefixes |
 | `tests/unit/instance-host-port-start.test.ts` | Start gate busy/inconclusive/sessionPorts |
+| `tests/unit/left-running.test.ts` | Leave identity parse including optional runtimePorts |
 | `npm run e2e:host-port-probe` | Windows UI: busy modal, Edit ports, session start |
 | `tests/unit/ini-service.test.ts` | Sanitize + semantic validation |
 | `tests/unit/configuration-wizard-model.test.ts` | Presets, difficulty, preserve unknowns |

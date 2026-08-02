@@ -687,6 +687,7 @@ export class ProcessManager extends EventEmitter {
         startedAt: managed.startedAt,
         expectedCommandLine: managed.expectedCommandLine,
         launchArgs: [...managed.launchArgs],
+        runtimePorts: { ...managed.runtimePorts },
         osCreationTime,
         osExecutablePath: live?.executablePath ?? null,
         leftAt,
@@ -780,6 +781,11 @@ export class ProcessManager extends EventEmitter {
     }
 
     const child = this.createAdoptedChild(record.pid);
+    const runtimePorts = record.runtimePorts ?? {
+      gamePort: profile.gamePort,
+      queryPort: profile.queryPort,
+      rconPort: profile.rconPort,
+    };
     const managed: ManagedProcess = {
       child,
       identity: {},
@@ -792,11 +798,7 @@ export class ProcessManager extends EventEmitter {
       installDir: record.installDir,
       launchArgs: [...record.launchArgs],
       expectedCommandLine: record.expectedCommandLine,
-      runtimePorts: {
-        gamePort: profile.gamePort,
-        queryPort: profile.queryPort,
-        rconPort: profile.rconPort,
-      },
+      runtimePorts: { ...runtimePorts },
     };
     this.processes.set(profile.id, managed);
     this.appendRuntimeLog(
@@ -856,9 +858,19 @@ export class ProcessManager extends EventEmitter {
     }
 
     managed.readinessGeneration += 1;
-    void this.waitUntilReady(profile, managed, managed.readinessGeneration, {
-      terminateOnTimeout: false,
-    });
+    void this.waitUntilReady(
+      {
+        ...profile,
+        gamePort: managed.runtimePorts.gamePort,
+        queryPort: managed.runtimePorts.queryPort,
+        rconPort: managed.runtimePorts.rconPort,
+      },
+      managed,
+      managed.readinessGeneration,
+      {
+        terminateOnTimeout: false,
+      },
+    );
   }
 
   private async waitUntilReady(
@@ -976,6 +988,7 @@ export class ProcessManager extends EventEmitter {
         startedAt: managed.startedAt,
         expectedCommandLine: managed.expectedCommandLine,
         launchArgs: [...managed.launchArgs],
+        runtimePorts: { ...managed.runtimePorts },
         osCreationTime,
         osExecutablePath: live?.executablePath ?? null,
         leftAt: new Date().toISOString(),

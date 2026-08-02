@@ -599,6 +599,49 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     [refresh],
   );
 
+  const startServer = useCallback(
+    async (id: string, options?: StartServerOptions) => {
+      setError(null);
+      const result = await window.api.startServer(id, {
+        openNativeConsole: openNativeTerminalOnStart,
+        ...options,
+      });
+      if (!result.ok) {
+        const message = result.error ?? "Unknown error";
+        if (isHostPortProbeError(message)) {
+          const server = servers.find((item) => item.id === id);
+          openHostPortProbeModal({
+            serverName: server?.name ?? id,
+            message,
+            onEditPorts: () => {
+              setRoute("overview");
+              setOverlay({ kind: "workspace", serverId: id, initialTab: "server" });
+            },
+            onStartThisSession: (ports: SessionPortSet) => {
+              void startServer(id, { sessionPorts: ports });
+            },
+            onStartAnyway: isHostPortBusyError(message)
+              ? undefined
+              : () => {
+                  void startServer(id, { skipPortValidation: true });
+                },
+          });
+        } else {
+          setError(message);
+        }
+      } else if (options?.sessionPorts != null) {
+        const ports = options.sessionPorts;
+        notifications.show({
+          title: "Started with session ports",
+          message: `Running on game ${ports.gamePort} / query ${ports.queryPort} / RCON ${ports.rconPort}. Saved profile ports are unchanged.`,
+          color: "teal",
+        });
+      }
+      await refresh();
+    },
+    [openNativeTerminalOnStart, refresh, servers],
+  );
+
   const restartServer = useCallback(
     async (id: string, options?: StartServerOptions) => {
       setError(null);
@@ -610,6 +653,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         const message = res.error ?? "Could not restart the server";
         if (isHostPortProbeError(message)) {
           const server = servers.find((item) => item.id === id);
+          // Restart already stopped the process before the probe; recover via start.
           openHostPortProbeModal({
             serverName: server?.name ?? id,
             message,
@@ -618,12 +662,12 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
               setOverlay({ kind: "workspace", serverId: id, initialTab: "server" });
             },
             onStartThisSession: (ports: SessionPortSet) => {
-              void restartServer(id, { sessionPorts: ports });
+              void startServer(id, { sessionPorts: ports });
             },
             onStartAnyway: isHostPortBusyError(message)
               ? undefined
               : () => {
-                  void restartServer(id, { skipPortValidation: true });
+                  void startServer(id, { skipPortValidation: true });
                 },
           });
         } else {
@@ -639,7 +683,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       }
       await refresh();
     },
-    [openNativeTerminalOnStart, refresh, servers],
+    [openNativeTerminalOnStart, refresh, servers, startServer],
   );
 
   const confirmKillServer = useCallback(
@@ -718,49 +762,6 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     setRoute("overview");
     setOverlay({ kind: "workspace", serverId, initialTab: "backups" });
   }, []);
-
-  const startServer = useCallback(
-    async (id: string, options?: StartServerOptions) => {
-      setError(null);
-      const result = await window.api.startServer(id, {
-        openNativeConsole: openNativeTerminalOnStart,
-        ...options,
-      });
-      if (!result.ok) {
-        const message = result.error ?? "Unknown error";
-        if (isHostPortProbeError(message)) {
-          const server = servers.find((item) => item.id === id);
-          openHostPortProbeModal({
-            serverName: server?.name ?? id,
-            message,
-            onEditPorts: () => {
-              setRoute("overview");
-              setOverlay({ kind: "workspace", serverId: id, initialTab: "server" });
-            },
-            onStartThisSession: (ports: SessionPortSet) => {
-              void startServer(id, { sessionPorts: ports });
-            },
-            onStartAnyway: isHostPortBusyError(message)
-              ? undefined
-              : () => {
-                  void startServer(id, { skipPortValidation: true });
-                },
-          });
-        } else {
-          setError(message);
-        }
-      } else if (options?.sessionPorts != null) {
-        const ports = options.sessionPorts;
-        notifications.show({
-          title: "Started with session ports",
-          message: `Running on game ${ports.gamePort} / query ${ports.queryPort} / RCON ${ports.rconPort}. Saved profile ports are unchanged.`,
-          color: "teal",
-        });
-      }
-      await refresh();
-    },
-    [openNativeTerminalOnStart, refresh, servers],
-  );
 
   const setServerEnabled = useCallback(
     (id: string, enabled: boolean) =>

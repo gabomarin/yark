@@ -1,4 +1,5 @@
 import { createServer, type AddressInfo } from "node:net";
+import { createSocket } from "node:dgram";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   encodeSuggestedSessionPorts,
@@ -295,5 +296,68 @@ describe("host-port-probe real TCP bind", () => {
         },
       ),
     ).rejects.toThrow(/HOST_PORT_BUSY:.*TCP rcon port/);
+  });
+});
+
+describe("host-port-probe real UDP release", () => {
+  async function allocateUdpPort(): Promise<number> {
+    const socket = createSocket("udp4");
+    try {
+      await new Promise<void>((resolve, reject) => {
+        socket.once("error", reject);
+        socket.bind({ port: 0, exclusive: true }, () => resolve());
+      });
+      const address = socket.address();
+      return typeof address === "string" ? 0 : address.port;
+    } finally {
+      await new Promise<void>((resolve) => {
+        socket.close(() => resolve());
+      });
+    }
+  }
+
+  it("releases the UDP probe socket before resolving free", async () => {
+    const gamePort = await allocateUdpPort();
+    const queryPort = await allocateUdpPort();
+    expect(gamePort).toBeGreaterThan(0);
+    expect(queryPort).toBeGreaterThan(0);
+    expect(gamePort).not.toBe(queryPort);
+
+    const ports = {
+      id: "a",
+      name: "A",
+      gamePort,
+      queryPort,
+      rconPort: Math.max(gamePort, queryPort) + 1,
+    };
+
+    await assertHostPortsAvailable(ports, [], {
+      deps: {
+        bindTcp: async () => "free",
+        lookupOwner: async () => null,
+      },
+    });
+
+    // Immediate re-probe must succeed; resolving before close would flake as busy.
+    await expect(
+      assertHostPortsAvailable(ports, [], {
+        deps: {
+          bindTcp: async () => "free",
+          lookupOwner: async () => null,
+        },
+      }),
+    ).resolves.toBeUndefined();
+
+    const verify = createSocket("udp4");
+    try {
+      await new Promise<void>((resolve, reject) => {
+        verify.once("error", reject);
+        verify.bind({ port: gamePort, exclusive: true }, () => resolve());
+      });
+    } finally {
+      await new Promise<void>((resolve) => {
+        verify.close(() => resolve());
+      });
+    }
   });
 });

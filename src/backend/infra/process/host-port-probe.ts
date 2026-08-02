@@ -66,12 +66,12 @@ function defaultBindUdp(port: number): Promise<ProbeStatus> {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      socket.removeAllListeners();
       try {
-        socket.close();
+        socket.close(() => resolve(status));
       } catch {
-        // ignore close races
+        resolve(status);
       }
-      resolve(status);
     };
     const timer = setTimeout(() => finish("inconclusive"), BIND_TIMEOUT_MS);
     socket.once("error", (err: NodeJS.ErrnoException) => {

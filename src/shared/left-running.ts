@@ -3,6 +3,8 @@
  * Never trust PID alone — pair with creation time, executable, and command line.
  */
 
+import { PORT_MAX, PORT_MIN, type SessionPortSet } from "./types";
+
 export const LEFT_RUNNING_PROCESSES_SETTING_KEY = "leftRunningProcesses";
 
 export const LEFT_RUNNING_SCHEMA_VERSION = 1 as const;
@@ -21,6 +23,11 @@ export interface LeftRunningProcessIdentity {
   expectedCommandLine: string;
   /** Argv used at spawn (excluding the executable). */
   launchArgs: string[];
+  /**
+   * Ports the live process is actually using (includes session-only overrides).
+   * Optional for older leave/checkpoint rows; reattach falls back to the saved profile.
+   */
+  runtimePorts?: SessionPortSet;
   /**
    * OS process creation stamp (WMI CreationDate or ISO).
    * Rejects stale PID reuse when present on both sides.
@@ -131,6 +138,39 @@ export function parseLeftRunningProcesses(
   }
 }
 
+function coerceSessionPorts(value: unknown): SessionPortSet | undefined {
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+  if (typeof value !== "object") {
+    return undefined;
+  }
+  const row = value as Record<string, unknown>;
+  const gamePort = row.gamePort;
+  const queryPort = row.queryPort;
+  const rconPort = row.rconPort;
+  if (
+    typeof gamePort !== "number" ||
+    typeof queryPort !== "number" ||
+    typeof rconPort !== "number" ||
+    !Number.isInteger(gamePort) ||
+    !Number.isInteger(queryPort) ||
+    !Number.isInteger(rconPort) ||
+    gamePort < PORT_MIN ||
+    gamePort > PORT_MAX ||
+    queryPort < PORT_MIN ||
+    queryPort > PORT_MAX ||
+    rconPort < PORT_MIN ||
+    rconPort > PORT_MAX ||
+    gamePort === queryPort ||
+    gamePort === rconPort ||
+    queryPort === rconPort
+  ) {
+    return undefined;
+  }
+  return { gamePort, queryPort, rconPort };
+}
+
 function coerceLeaveIdentity(value: unknown): LeftRunningProcessIdentity | null {
   if (value === null || typeof value !== "object") {
     return null;
@@ -177,6 +217,7 @@ function coerceLeaveIdentity(value: unknown): LeftRunningProcessIdentity | null 
   if (typeof row.osExecutablePath !== "string" && row.osExecutablePath !== null) {
     return null;
   }
+  const runtimePorts = coerceSessionPorts(row.runtimePorts);
   return {
     schemaVersion: LEFT_RUNNING_SCHEMA_VERSION,
     serverId: row.serverId,
@@ -186,6 +227,7 @@ function coerceLeaveIdentity(value: unknown): LeftRunningProcessIdentity | null 
     startedAt: row.startedAt,
     expectedCommandLine: row.expectedCommandLine,
     launchArgs: row.launchArgs as string[],
+    ...(runtimePorts !== undefined ? { runtimePorts } : {}),
     osCreationTime,
     osExecutablePath,
     leftAt: row.leftAt,
