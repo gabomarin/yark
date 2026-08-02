@@ -26,6 +26,7 @@ const serverA = {
   clusterDir: "C:/ARK/Cluster",
   extraArgs: [],
   mods: ["111"],
+  enabled: true,
   createdAt: "2026-07-23T00:00:00.000Z",
   updatedAt: "2026-07-23T00:00:00.000Z",
 };
@@ -476,5 +477,88 @@ describe("ServerWorkspacePage", () => {
       screen.getByRole("progressbar", { name: "Backing up player profiles…" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Force close" })).toBeDisabled();
+  });
+
+  it("shows an inactive badge and enable action for a disabled workspace server", async () => {
+    const user = userEvent.setup();
+    const onToggleServerEnabled = vi.fn();
+
+    const installationInfo = new Map([
+      [
+        serverA.id,
+        {
+          serverId: serverA.id,
+          installed: true,
+          build: "1234.56",
+          steamBuild: null,
+          arkVersion: "1234.56",
+          version: "1234.56",
+          binaryPath: `${serverA.installDir}/ShooterGame/Binaries/Win64/ArkAscendedServer.exe`,
+          checkedAt: "2026-07-24T00:00:00.000Z",
+        },
+      ],
+    ]);
+
+    render(
+      <AppProviders>
+        <ServerWorkspacePage
+          servers={[{ ...serverA, enabled: false }, serverB]}
+          selectedServerId={serverA.id}
+          statuses={new Map()}
+          installationInfo={installationInfo}
+          clusterReports={[]}
+          onSelectServer={vi.fn()}
+          onBack={vi.fn()}
+          onStartServer={vi.fn()}
+          onStopServer={vi.fn()}
+          onRestartServer={vi.fn()}
+          onKillServer={vi.fn()}
+          onToggleServerEnabled={onToggleServerEnabled}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onSendRcon={vi.fn()}
+          onServerUpdated={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getAllByText("Inactive").length).toBeGreaterThan(0);
+    await user.click(screen.getByRole("button", { name: /^Enable$/i }));
+    expect(onToggleServerEnabled).toHaveBeenCalledWith(serverA.id, true);
+  });
+
+  it("blocks enable and disable actions while a SteamCMD job owns the lock", () => {
+    render(
+      <AppProviders>
+        <ServerWorkspacePage
+          servers={[serverA]}
+          selectedServerId={serverA.id}
+          statuses={new Map()}
+          installationInfo={new Map()}
+          clusterReports={[]}
+          filesJobActive
+          filesJobLabel="Updating server files"
+          onSelectServer={vi.fn()}
+          onBack={vi.fn()}
+          onStartServer={vi.fn()}
+          onStopServer={vi.fn()}
+          onRestartServer={vi.fn()}
+          onKillServer={vi.fn()}
+          onToggleServerEnabled={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onSendRcon={vi.fn()}
+          onServerUpdated={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const toggle = screen.getByRole("button", { name: "Disable server" });
+    expect(toggle).toBeDisabled();
+    expect(toggle).toHaveAttribute("title", "Updating server files");
   });
 });

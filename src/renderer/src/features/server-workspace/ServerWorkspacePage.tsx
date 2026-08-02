@@ -9,10 +9,7 @@ import type {
   ServerStopProgress,
 } from "@shared/types";
 import { ServerBackupPanel } from "@features/backups/ServerBackupPanel";
-import {
-  ServerLogsPanel,
-  type ServerLogsFocus,
-} from "@features/logs/ServerLogsPanel";
+import { ServerLogsPanel, type ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import type { ReactElement } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -35,9 +32,7 @@ interface Props {
   installationInfo: Map<string, ServerInstallationInfo>;
   clusterReports: ClusterComplianceReport[];
   onboarding?: boolean;
-  /** Opens a specific workspace tab (e.g. from sidebar Backup settings). */
   initialTab?: WorkspaceTab;
-  /** One-shot focus for the Logs tab (section / event / update file). */
   logsFocus?: ServerLogsFocus | null;
   onLogsFocusConsumed?: () => void;
   /** SteamCMD is rewriting this server's install (install/update/verify/sync). */
@@ -53,6 +48,7 @@ interface Props {
   onStopServer: (serverId: string) => void;
   onRestartServer: (serverId: string) => void;
   onKillServer: (serverId: string) => void;
+  onToggleServerEnabled?: (serverId: string, enabled: boolean) => void;
   onOpenFolder: (serverId: string) => void;
   onInstallFiles: (serverId: string) => void;
   onUpdateNow: (serverId: string) => void;
@@ -186,6 +182,9 @@ export function ServerWorkspacePage(props: Props): ReactElement {
         props.onSendRcon(selectedServer.id, `Broadcast ${message}`)
       }
       onKill={() => props.onKillServer(selectedServer.id)}
+      onToggleEnabled={() =>
+        props.onToggleServerEnabled?.(selectedServer.id, !selectedServer.enabled)
+      }
     />
   );
 
@@ -201,6 +200,9 @@ export function ServerWorkspacePage(props: Props): ReactElement {
         onStart={() => props.onStartServer(selectedServer.id)}
         onStop={() => props.onStopServer(selectedServer.id)}
         onRestart={() => props.onRestartServer(selectedServer.id)}
+        onToggleEnabled={() =>
+          props.onToggleServerEnabled?.(selectedServer.id, !selectedServer.enabled)
+        }
         onOpenServerSwitcher={
           compactWorkspace ? () => setServerSwitcherOpen(true) : undefined
         }

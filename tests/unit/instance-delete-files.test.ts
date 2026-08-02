@@ -25,6 +25,7 @@ function makeProfile(installDir: string, id = "srv-1"): ServerProfile {
     name: "Delete Me",
     map: "TheIsland_WP",
     installDir,
+    enabled: true,
     sessionName: "Session",
     gamePort: 7777,
     queryPort: 27015,

@@ -18,6 +18,7 @@ function makeProfile(id = "srv-update-1"): ServerProfile {
     name: "Safe Update Test",
     map: "TheIsland_WP",
     installDir: "C:/ARK/SafeUpdateTest",
+    enabled: true,
     sessionName: "Session",
     gamePort: 7777,
     queryPort: 27015,

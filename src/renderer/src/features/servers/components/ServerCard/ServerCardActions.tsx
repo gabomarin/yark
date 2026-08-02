@@ -4,6 +4,7 @@ import {
   CloudArrowDown,
   Copy,
   DotsThreeVertical,
+  Eye,
   FileText,
   FolderOpen,
   GearSix,
@@ -22,6 +23,7 @@ import type {
   ServerCardRuntimeAction,
   ServerCardUpdateAction,
 } from "./serverCardModel";
+import { ServerEnabledMenuItem } from "./ServerEnabledMenuItem";
 import classes from "./ServerCard.module.css";
 
 interface Props {
@@ -48,6 +50,8 @@ interface Props {
   onClone: () => void;
   onKill: () => void;
   onDelete: () => void;
+  serverEnabled?: boolean;
+  onToggleEnabled?: () => void;
 }
 
 function runtimeActionIcon(
@@ -64,6 +68,8 @@ function runtimeActionIcon(
       return <Pause size={iconSize} weight="fill" />;
     case "start":
       return <Play size={iconSize} weight="fill" />;
+    case "enable":
+      return <Eye size={iconSize} weight="fill" />;
   }
 }
 
@@ -80,6 +86,7 @@ function filesActionClick(
 
 export function ServerCardActions(props: Props): ReactElement {
   const { runtimeAction, restartAction, updateAction } = props;
+  const serverEnabled = props.serverEnabled ?? true;
   const density = useUiDensity();
   const actionSize = density === "compact" ? "md" : "lg";
   const iconSize = density === "compact" ? 16 : 18;
@@ -203,29 +210,51 @@ export function ServerCardActions(props: Props): ReactElement {
         </Tooltip>
         <Menu.Dropdown>
           <Menu.Label>Server</Menu.Label>
-          <Menu.Item leftSection={<GearSix size={16} />} onClick={props.onOpenWorkspace}>
+          <Menu.Item
+            leftSection={<GearSix size={16} color="var(--mantine-color-blue-6)" />}
+            onClick={props.onOpenWorkspace}
+          >
             Open settings
           </Menu.Item>
+          <ServerEnabledMenuItem
+            enabled={serverEnabled}
+            active={props.isActive}
+            installationReady={props.isInstallationReady}
+            steamCmdBusy={props.steamCmdBusy}
+            onToggle={props.onToggleEnabled}
+          />
           {props.status === "running" && (
             <>
-              <Menu.Item leftSection={<Pause size={16} />} onClick={props.onStop}>
+              <Menu.Item
+                leftSection={<Pause size={16} color="var(--mantine-color-gray-6)" />}
+                onClick={props.onStop}
+              >
                 Stop safely
               </Menu.Item>
-              <Menu.Item leftSection={<ArrowsClockwise size={16} />} onClick={props.onRestart}>
+              <Menu.Item
+                leftSection={<ArrowsClockwise size={16} color="var(--mantine-color-gray-6)" />}
+                onClick={props.onRestart}
+              >
                 Restart
               </Menu.Item>
             </>
           )}
           {props.status === "starting" && (
-            <Menu.Item leftSection={<Pause size={16} />} onClick={props.onStop}>
+            <Menu.Item
+              leftSection={<Pause size={16} color="var(--mantine-color-gray-6)" />}
+              onClick={props.onStop}
+            >
               Stop
             </Menu.Item>
           )}
-          <Menu.Item leftSection={<FolderOpen size={16} />} onClick={props.onOpenFolder}>
+          <Menu.Item
+            leftSection={<FolderOpen size={16} color="var(--mantine-color-blue-6)" />}
+            onClick={props.onOpenFolder}
+          >
             Open folder
           </Menu.Item>
           <Menu.Item
-            leftSection={<FileText size={16} />}
+            leftSection={<FileText size={16} color="var(--mantine-color-blue-6)" />}
             onClick={props.onOpenLogs}
             disabled={!props.isInstallationReady}
           >
@@ -237,15 +266,23 @@ export function ServerCardActions(props: Props): ReactElement {
           {props.isInstallationReady ? (
             <>
               <Menu.Item
-                leftSection={<MagnifyingGlass size={16} />}
+                leftSection={<MagnifyingGlass size={16} color="var(--mantine-color-blue-6)" />}
                 onClick={props.onCheckUpdates}
                 disabled={props.checkingUpdates}
               >
                 Check for updates
               </Menu.Item>
               <Menu.Item
-                leftSection={<CloudArrowDown size={16} />}
-                color={props.updateAvailable ? "attention" : undefined}
+                leftSection={
+                  <CloudArrowDown
+                    size={16}
+                    color={
+                      props.updateAvailable
+                        ? "var(--mantine-color-attention-6)"
+                        : "var(--mantine-color-gray-6)"
+                    }
+                  />
+                }
                 onClick={props.onUpdateNow}
                 disabled={
                   updateAction.kind === "update"
@@ -258,7 +295,7 @@ export function ServerCardActions(props: Props): ReactElement {
                   : "Update server"}
               </Menu.Item>
               <Menu.Item
-                leftSection={<ShieldCheck size={16} />}
+                leftSection={<ShieldCheck size={16} color="var(--mantine-color-teal-6)" />}
                 onClick={props.onVerifyFiles}
               >
                 Verify integrity
@@ -266,13 +303,16 @@ export function ServerCardActions(props: Props): ReactElement {
             </>
           ) : (
             <Menu.Item
-              leftSection={<CloudArrowDown size={16} />}
+              leftSection={<CloudArrowDown size={16} color="var(--mantine-color-blue-6)" />}
               onClick={props.onInstallFiles}
             >
               Install files
             </Menu.Item>
           )}
-          <Menu.Item leftSection={<Copy size={16} />} onClick={props.onClone}>
+          <Menu.Item
+            leftSection={<Copy size={16} color="var(--mantine-color-blue-6)" />}
+            onClick={props.onClone}
+          >
             Clone
           </Menu.Item>
 

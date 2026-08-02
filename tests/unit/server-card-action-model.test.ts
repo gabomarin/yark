@@ -12,6 +12,7 @@ type Combo = {
   status: ServerStatus;
   steamCmdBusy: boolean;
   installed: boolean;
+  serverEnabled: boolean;
   updateState: ServerUpdateState;
   expectRuntime: { kind: string; disabled: boolean };
   expectUpdate: { kind: string; label: string; disabled: boolean };
@@ -23,6 +24,7 @@ const combos: Combo[] = [
     status: "stopped",
     steamCmdBusy: false,
     installed: true,
+    serverEnabled: true,
     updateState: "current",
     expectRuntime: { kind: "start", disabled: false },
     expectUpdate: { kind: "update", label: "Server is up to date", disabled: true },
@@ -32,6 +34,7 @@ const combos: Combo[] = [
     status: "stopped",
     steamCmdBusy: false,
     installed: true,
+    serverEnabled: true,
     updateState: "available",
     expectRuntime: { kind: "start", disabled: false },
     expectUpdate: { kind: "update", label: "Update server", disabled: false },
@@ -41,6 +44,7 @@ const combos: Combo[] = [
     status: "stopped",
     steamCmdBusy: false,
     installed: true,
+    serverEnabled: true,
     updateState: "unknown",
     expectRuntime: { kind: "start", disabled: false },
     expectUpdate: { kind: "update", label: "Update (couldn't check version)", disabled: false },
@@ -50,8 +54,29 @@ const combos: Combo[] = [
     status: "stopped",
     steamCmdBusy: false,
     installed: false,
+    serverEnabled: true,
     updateState: "unknown",
     expectRuntime: { kind: "start", disabled: true },
+    expectUpdate: { kind: "install", label: "Install server files", disabled: false },
+  },
+  {
+    name: "disabled + installed",
+    status: "stopped",
+    steamCmdBusy: false,
+    installed: true,
+    serverEnabled: false,
+    updateState: "current",
+    expectRuntime: { kind: "enable", disabled: false },
+    expectUpdate: { kind: "update", label: "Server is up to date", disabled: true },
+  },
+  {
+    name: "disabled + not installed",
+    status: "stopped",
+    steamCmdBusy: false,
+    installed: false,
+    serverEnabled: false,
+    updateState: "unknown",
+    expectRuntime: { kind: "enable", disabled: true },
     expectUpdate: { kind: "install", label: "Install server files", disabled: false },
   },
   {
@@ -59,6 +84,7 @@ const combos: Combo[] = [
     status: "starting",
     steamCmdBusy: false,
     installed: true,
+    serverEnabled: true,
     updateState: "current",
     expectRuntime: { kind: "stop", disabled: false },
     expectUpdate: { kind: "update", label: "Server is up to date", disabled: true },
@@ -68,6 +94,7 @@ const combos: Combo[] = [
     status: "stopping",
     steamCmdBusy: true,
     installed: true,
+    serverEnabled: true,
     updateState: "available",
     expectRuntime: { kind: "cancel", disabled: false },
     expectUpdate: { kind: "update", label: "Update server", disabled: true },
@@ -80,17 +107,20 @@ describe("serverCardActionModel combos", () => {
       steamCmdBusy: combo.steamCmdBusy,
       isInstallationReady: combo.installed,
       status: combo.status,
+      serverEnabled: combo.serverEnabled,
     });
     const update = resolveUpdateAction({
       steamCmdBusy: combo.steamCmdBusy,
       isInstallationReady: combo.installed,
       status: combo.status,
+      serverEnabled: combo.serverEnabled,
       updateState: combo.updateState,
     });
     const restart = resolveRestartAction({
       steamCmdBusy: combo.steamCmdBusy,
       isInstallationReady: combo.installed,
       status: combo.status,
+      serverEnabled: combo.serverEnabled,
     });
 
     expect(runtime.kind).toBe(combo.expectRuntime.kind);
@@ -102,5 +132,21 @@ describe("serverCardActionModel combos", () => {
     if (combo.status === "starting" || combo.status === "stopping") {
       expect(restart.disabled).toBe(true);
     }
+  });
+
+  it("treats omitted serverEnabled as enabled", () => {
+    const runtime = resolveRuntimeAction({
+      steamCmdBusy: false,
+      isInstallationReady: true,
+      status: "stopped",
+    });
+    const restart = resolveRestartAction({
+      steamCmdBusy: false,
+      isInstallationReady: true,
+      status: "running",
+    });
+
+    expect(runtime.kind).toBe("start");
+    expect(restart.visible).toBe(true);
   });
 });

@@ -33,6 +33,7 @@ import {
   type WorkspaceTab,
 } from "@features/server-workspace/ServerWorkspacePage";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
+import { CloneServerDialog } from "@features/servers/components/CloneServerDialog/CloneServerDialog";
 import { SteamCmdProgressDock } from "@features/steamcmd/SteamCmdProgressDock";
 import { SettingsPage } from "@features/settings/SettingsPage";
 import {
@@ -48,6 +49,7 @@ import type { Route } from "@layout/Sidebar/Sidebar";
 type Overlay =
   | { kind: "create" }
   | { kind: "edit"; profile: ServerProfile }
+  | { kind: "clone"; sourceServerId: string }
   | {
       kind: "workspace";
       serverId: string;
@@ -118,17 +120,38 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     (status) => status.status === "running",
   ).length;
 
-  const filteredServers = useMemo(() => {
+  const enabledServers = useMemo(
+    () => servers.filter((server) => server.enabled),
+    [servers],
+  );
+  const disabledServers = useMemo(
+    () => servers.filter((server) => !server.enabled),
+    [servers],
+  );
+
+  const filterServers = useCallback(
+    (input: ServerProfile[]) => {
     const query = search.trim().toLowerCase();
     if (query.length === 0) {
-      return servers;
+        return input;
     }
-    return servers.filter((server) =>
+      return input.filter((server) =>
       [server.name, server.map, server.clusterId ?? ""].some((field) =>
         field.toLowerCase().includes(query),
       ),
     );
-  }, [servers, search]);
+    },
+    [search],
+  );
+
+  const filteredServers = useMemo(
+    () => filterServers(enabledServers),
+    [enabledServers, filterServers],
+  );
+  const filteredDisabledServers = useMemo(
+    () => filterServers(disabledServers),
+    [disabledServers, filterServers],
+  );
 
   const steamCmdBusy = steamCmdStatus?.busy === true;
   const steamCmdBusyRef = useRef(steamCmdBusy);
@@ -423,13 +446,14 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   }, [steamCmdBusy, refresh]);
 
   const runAction = useCallback(
-    async (action: () => Promise<{ ok: boolean; error?: string }>) => {
+    async (action: () => Promise<{ ok: boolean; error?: string }>): Promise<boolean> => {
       setError(null);
       const result = await action();
       if (!result.ok) {
         setError(result.error ?? "Unknown error");
       }
       await refresh();
+      return result.ok;
     },
     [refresh],
   );
@@ -626,6 +650,12 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     [openNativeTerminalOnStart, runAction],
   );
 
+  const setServerEnabled = useCallback(
+    (id: string, enabled: boolean) =>
+      runAction(() => window.api.setServerEnabled(id, enabled)),
+    [runAction],
+  );
+
   const navigate = useCallback((next: Route) => {
     setOverlay(null);
     setRoute(next);
@@ -699,6 +729,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
             onRestartServer={(id) => void restartServer(id)}
             onKillServer={(id) => confirmKillServer(id)}
+            onToggleServerEnabled={(id, enabled) => void setServerEnabled(id, enabled)}
             onOpenFolder={(id) => void runAction(() => window.api.openServerFolder(id))}
             onInstallFiles={(id) => startSteamFilesJob(id, "install")}
             onUpdateNow={(id) => startSteamFilesJob(id, "update")}
@@ -754,6 +785,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
               onCheckUpdates={() => void checkForUpdates()}
               servers={servers}
               filteredServers={filteredServers}
+              disabledServers={filteredDisabledServers}
               runningServers={runningServers}
               statuses={statuses}
               installationInfo={installationInfo}
@@ -796,9 +828,10 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             onUpdateNow={(id) => startSteamFilesJob(id, "update")}
             onVerifyFiles={(id) => startSteamFilesJob(id, "verify")}
               onCheckUpdatesForServer={(id) => void checkForUpdates(id)}
-              onCloneServer={(id) => void runAction(() => window.api.cloneServer(id))}
+              onCloneServer={(id) => setOverlay({ kind: "clone", sourceServerId: id })}
               onDeleteServer={(id) => confirmDeleteServer(id)}
-              onCancelSteamCmd={() => void runAction(() => window.api.cancelSteamCmd())}
+            onToggleServerEnabled={(id, enabled) => void setServerEnabled(id, enabled)}
+            onCancelSteamCmd={() => void runAction(() => window.api.cancelSteamCmd())}
             />
           ),
         }}
@@ -872,6 +905,23 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
           onCancelJob={(id) => void runAction(() => window.api.cancelCriticalJob(id))}
         />
       )}
+      <CloneServerDialog
+        opened={overlay?.kind === "clone"}
+        sourceServer={
+          overlay?.kind === "clone"
+            ? servers.find((s) => s.id === overlay.sourceServerId) ?? null
+            : null
+        }
+        onClose={() => setOverlay(null)}
+        onClone={async (params) =>
+          runAction(() =>
+            window.api.cloneServerWithParams(
+              overlay?.kind === "clone" ? overlay.sourceServerId : "",
+              params,
+            ),
+          )
+        }
+      />
     </AppProviders>
   );
 }

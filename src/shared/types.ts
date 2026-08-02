@@ -13,6 +13,7 @@ export interface ServerProfile {
   map: string;
   /** Server install root (contains ShooterGame\...). */
   installDir: string;
+  enabled: boolean;
   sessionName: string;
   gamePort: number;
   queryPort: number;
@@ -36,7 +37,7 @@ export interface ServerProfile {
 /** Input data to create/edit a profile (without generated fields). */
 export type ServerProfileInput = Omit<
   ServerProfile,
-  "id" | "createdAt" | "updatedAt"
+  "id" | "enabled" | "createdAt" | "updatedAt"
 >;
 
 export interface ServerRuntimeInfo {
@@ -218,6 +219,8 @@ export interface AppEvent {
     | "server_created"
     | "server_updated"
     | "server_deleted"
+    | "server_enabled"
+    | "server_disabled"
     | "server_started"
     | "server_stopped"
     | "server_crashed"

@@ -4,6 +4,8 @@ import {
   getWindowsPathError,
   resolveServerInstallDir,
   sanitizeServerFolderName,
+  suggestCloneInstallDir,
+  windowsPathParentDir,
 } from "@shared/server-install-path";
 
 describe("server-install-path", () => {
@@ -41,5 +43,18 @@ describe("server-install-path", () => {
   it("rejects path segments with incompatible characters", () => {
     expect(getWindowsPathError("C:\\ark_servers\\ok")).toBeNull();
     expect(getWindowsPathError("C:\\ark_servers\\bad|name")).toMatch(/bad\|name/);
+  });
+
+  it("returns the parent of a Windows install path", () => {
+    expect(windowsPathParentDir("C:\\ark_servers\\my_server")).toBe("C:\\ark_servers");
+    expect(windowsPathParentDir("C:\\my_server")).toBe("C:\\");
+    expect(windowsPathParentDir("C:/ark_servers/my_server/")).toBe("C:\\ark_servers");
+  });
+
+  it("suggests a sibling folder for clone installs", () => {
+    expect(suggestCloneInstallDir("C:\\ark_servers\\Island", "Island-copy")).toBe(
+      "C:\\ark_servers\\Island-copy",
+    );
+    expect(suggestCloneInstallDir("D:\\ARK", "ARK-copy")).toBe("D:\\ARK-copy");
   });
 });

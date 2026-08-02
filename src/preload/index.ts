@@ -16,8 +16,12 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.serversCreate, input),
   updateServer: (id: string, input: ServerProfileInput) =>
     ipcRenderer.invoke(IPC.serversUpdate, id, input),
+  setServerEnabled: (id: string, enabled: boolean) =>
+    ipcRenderer.invoke(IPC.serversSetEnabled, id, enabled),
   deleteServer: (id: string) => ipcRenderer.invoke(IPC.serversDelete, id),
   cloneServer: (id: string) => ipcRenderer.invoke(IPC.serversClone, id),
+  cloneServerWithParams: (id: string, params: { name: string; sessionName: string; gamePort: number; queryPort: number; rconPort: number; installDir: string }) =>
+    ipcRenderer.invoke(IPC.serversCloneWithParams, id, params),
   startServer: (id: string, options?: StartServerOptions) =>
     ipcRenderer.invoke(IPC.serversStart, id, options),
   stopServer: (id: string) => ipcRenderer.invoke(IPC.serversStop, id),
@@ -51,6 +55,10 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.eventsRecent, limit),
   pickPath: (kind, defaultPath, title) =>
     ipcRenderer.invoke(IPC.pickPath, kind, defaultPath, title),
+  pickFolder: async (defaultPath) => {
+    const result = await ipcRenderer.invoke(IPC.pickPath, "directory", defaultPath);
+    return result.ok ? result.data : null;
+  },
   listAppDataFolders: () => ipcRenderer.invoke(IPC.appListDataFolders),
   openAppDataFolder: (kind) => ipcRenderer.invoke(IPC.appOpenDataFolder, kind),
   getUiDensity: () => ipcRenderer.invoke(IPC.appGetUiDensity),
@@ -63,8 +71,6 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.appSetStartWithWindows, enabled),
   setTrayCloseHintDismissed: (dismissed) =>
     ipcRenderer.invoke(IPC.appSetTrayCloseHintDismissed, dismissed),
-  setOnQuitWithActiveServers: (policy) =>
-    ipcRenderer.invoke(IPC.appSetOnQuitWithActiveServers, policy),
   readServerIni: (serverId: string) =>
     ipcRenderer.invoke(IPC.iniRead, serverId),
   openServerIniInEditor: (serverId: string, fileKey: "gameUserSettings" | "game") =>

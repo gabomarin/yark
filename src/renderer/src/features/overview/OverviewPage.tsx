@@ -20,6 +20,7 @@ interface Props {
   checkingUpdates?: boolean;
   servers: ServerProfile[];
   filteredServers: ServerProfile[];
+  disabledServers?: ServerProfile[];
   runningServers: number;
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
@@ -49,6 +50,7 @@ interface Props {
   onCheckUpdatesForServer: (serverId: string) => void;
   onCloneServer: (serverId: string) => void;
   onDeleteServer: (serverId: string) => void;
+  onToggleServerEnabled?: (serverId: string, enabled: boolean) => void;
   onCancelSteamCmd: () => void;
 }
 
@@ -69,6 +71,7 @@ export function OverviewPage(props: Props): ReactElement {
           onCreateServer={props.onCreateServer}
           servers={props.servers}
           filteredServers={props.filteredServers}
+          disabledServers={props.disabledServers ?? []}
           runningServers={props.runningServers}
           statuses={props.statuses}
           installationInfo={props.installationInfo}
@@ -97,6 +100,7 @@ export function OverviewPage(props: Props): ReactElement {
           checkingUpdates={props.checkingUpdates}
           onCloneServer={props.onCloneServer}
           onDeleteServer={props.onDeleteServer}
+          onToggleServerEnabled={props.onToggleServerEnabled}
           onCancelSteamCmd={props.onCancelSteamCmd}
         />
 

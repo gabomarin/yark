@@ -9,6 +9,7 @@ const server = {
   name: "The Island",
   map: "TheIsland_WP",
   installDir: "C:/ARK/TheIsland",
+  enabled: true,
   sessionName: "The Island Cluster",
   gamePort: 7777,
   queryPort: 27015,

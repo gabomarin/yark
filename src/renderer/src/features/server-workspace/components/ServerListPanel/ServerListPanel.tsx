@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { CaretRight, HardDrives, Plus } from "@phosphor-icons/react";
-import { Button, Stack, Text, UnstyledButton } from "@mantine/core";
+import { Badge, Button, Stack, Text, UnstyledButton } from "@mantine/core";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { useMemo, useState } from "react";
 import { SearchField } from "@ui/SearchField/SearchField";
@@ -64,6 +64,11 @@ export function ServerListPanel(props: Props): ReactElement {
                 <Text className={classes.itemMeta} c="dimmed" title={server.map} lineClamp={1}>
                   {server.map}
                 </Text>
+                {!server.enabled && (
+                  <Badge size="xs" variant="light" color="gray" mt={4} tt="none">
+                    Inactive
+                  </Badge>
+                )}
               </span>
               <ServerRuntimeStatusBadge status={status} size="xs" className={classes.badge} />
               <CaretRight size={12} className={classes.chevron} />

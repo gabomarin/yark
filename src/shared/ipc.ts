@@ -28,7 +28,7 @@ import type {
   StartServerOptions,
 } from "./types";
 import type { UiDensity } from "./ui-density";
-import type { DesktopShellPreferences, OnQuitWithActiveServers } from "./desktop-shell";
+import type { DesktopShellPreferences } from "./desktop-shell";
 
 export type PickPathKind = "directory" | "file";
 
@@ -46,8 +46,10 @@ export const IPC = {
   serversList: "servers:list",
   serversCreate: "servers:create",
   serversUpdate: "servers:update",
+  serversSetEnabled: "servers:set-enabled",
   serversDelete: "servers:delete",
   serversClone: "servers:clone",
+  serversCloneWithParams: "servers:clone-with-params",
   serversStart: "servers:start",
   serversStop: "servers:stop",
   serversRestart: "servers:restart",
@@ -81,7 +83,6 @@ export const IPC = {
   appSetCloseWindowToTray: "app:set-close-window-to-tray",
   appSetStartWithWindows: "app:set-start-with-windows",
   appSetTrayCloseHintDismissed: "app:set-tray-close-hint-dismissed",
-  appSetOnQuitWithActiveServers: "app:set-on-quit-with-active-servers",
   iniRead: "ini:read",
   iniPreview: "ini:preview",
   iniSave: "ini:save",
@@ -148,8 +149,20 @@ export interface RendererApi {
     id: string,
     input: ServerProfileInput,
   ): Promise<IpcResult<ServerProfile>>;
+  setServerEnabled(id: string, enabled: boolean): Promise<IpcResult<ServerProfile>>;
   deleteServer(id: string): Promise<IpcResult<void>>;
   cloneServer(id: string): Promise<IpcResult<ServerProfile>>;
+  cloneServerWithParams(
+    id: string,
+    params: {
+      name: string;
+      sessionName: string;
+      gamePort: number;
+      queryPort: number;
+      rconPort: number;
+      installDir: string;
+    },
+  ): Promise<IpcResult<ServerProfile>>;
   startServer(id: string, options?: StartServerOptions): Promise<IpcResult<void>>;
   stopServer(id: string): Promise<IpcResult<void>>;
   restartServer(id: string, options?: StartServerOptions): Promise<IpcResult<void>>;
@@ -185,6 +198,7 @@ export interface RendererApi {
     defaultPath?: string,
     title?: string,
   ): Promise<IpcResult<string | null>>;
+  pickFolder(defaultPath?: string): Promise<string | null>;
   listAppDataFolders(): Promise<IpcResult<AppDataFolderInfo[]>>;
   openAppDataFolder(kind: AppDataFolderKind): Promise<IpcResult<void>>;
   /** `null` when unset in `app_settings` (caller may migrate / apply default). */
@@ -194,9 +208,6 @@ export interface RendererApi {
   setCloseWindowToTray(enabled: boolean): Promise<IpcResult<boolean>>;
   setStartWithWindows(enabled: boolean): Promise<IpcResult<boolean>>;
   setTrayCloseHintDismissed(dismissed: boolean): Promise<IpcResult<boolean>>;
-  setOnQuitWithActiveServers(
-    policy: OnQuitWithActiveServers,
-  ): Promise<IpcResult<OnQuitWithActiveServers>>;
   readServerIni(serverId: string): Promise<IpcResult<ServerIniSnapshot>>;
   openServerIniInEditor(
     serverId: string,

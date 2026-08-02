@@ -59,7 +59,8 @@ export function sanitizeServerFolderName(name: string): string {
   return cleaned.length > 0 ? cleaned : "server";
 }
 
-function normalizeWindowsPath(path: string): string {
+/** Normalize separators and remove trailing separators from a user-entered Windows path. */
+export function normalizeWindowsPath(path: string): string {
   return path.trim().replace(/\//g, "\\").replace(/\\+$/g, "");
 }
 
@@ -111,4 +112,26 @@ export function resolveServerInstallDir(parentDir: string, serverName: string): 
     return parent;
   }
   return `${parent}\\${folder}`;
+}
+
+/** Parent directory of a Windows path (drive root keeps trailing backslash). */
+export function windowsPathParentDir(path: string): string {
+  const normalized = normalizeWindowsPath(path);
+  const idx = normalized.lastIndexOf("\\");
+  if (idx < 0) {
+    return normalized;
+  }
+  const parent = normalized.slice(0, idx);
+  if (parent.length === 0) {
+    return "\\";
+  }
+  if (/^[a-zA-Z]:$/.test(parent)) {
+    return `${parent}\\`;
+  }
+  return parent;
+}
+
+/** Suggested install folder for a clone: sibling of the source under the same parent. */
+export function suggestCloneInstallDir(sourceInstallDir: string, cloneName: string): string {
+  return resolveServerInstallDir(windowsPathParentDir(sourceInstallDir), cloneName);
 }

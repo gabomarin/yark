@@ -147,6 +147,12 @@ const MIGRATIONS: Migration[] = [
       ALTER TABLE servers ADD COLUMN mod_metadata_cache TEXT NOT NULL DEFAULT '{}';
     `,
   },
+  {
+    version: 8,
+    sql: `
+      ALTER TABLE servers ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1;
+    `,
+  },
 ];
 
 /**

@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { Text } from "@mantine/core";
+import { Badge, Group, Text } from "@mantine/core";
 import type { ServerProfile } from "@shared/types";
 import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
 
@@ -22,9 +22,16 @@ export function ClusterMemberRow(props: Props): ReactElement {
         ) : undefined
       }
     >
-      <Text fw={600} size="sm">
-        {props.server.name}
-      </Text>
+      <Group gap="xs">
+        <Text fw={600} size="sm">
+          {props.server.name}
+        </Text>
+        {!props.server.enabled && (
+          <Badge size="xs" color="gray" variant="light">
+            Inactive
+          </Badge>
+        )}
+      </Group>
       <Text size="xs" c="dimmed">
         {props.subtitle}
       </Text>

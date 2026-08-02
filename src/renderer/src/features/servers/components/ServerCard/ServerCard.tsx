@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { HardDrives } from "@phosphor-icons/react";
-import { Card, Group, Stack, Text, UnstyledButton } from "@mantine/core";
+import { Badge, Card, Group, Stack, Text, UnstyledButton } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import { ServerCardActions } from "./ServerCardActions";
@@ -43,6 +43,7 @@ interface Props {
   onClone: () => void;
   onDelete: () => void;
   onCancelSteamCmd: () => void;
+  onToggleEnabled?: () => void;
 }
 
 export function ServerCard(props: Props): ReactElement {
@@ -73,6 +74,7 @@ export function ServerCard(props: Props): ReactElement {
     steamCmdProgressBytesDownloaded,
     steamCmdProgressBytesTotal,
     stopProgressLabel,
+    serverEnabled: server.enabled,
   });
   const showProgress = stopBusy || steamCmdBusy;
   const progressPercent = stopBusy ? stopProgressPercent : steamCmdProgressPercent;
@@ -82,6 +84,9 @@ export function ServerCard(props: Props): ReactElement {
     switch (view.runtimeAction.kind) {
       case "cancel":
         props.onCancelSteamCmd();
+        break;
+      case "enable":
+        props.onToggleEnabled?.();
         break;
       case "start":
         props.onStart();
@@ -102,6 +107,7 @@ export function ServerCard(props: Props): ReactElement {
       padding="md"
       radius="md"
       data-tone={view.rowTone}
+      data-disabled={!server.enabled}
       data-server-card
       data-server-name={server.name}
     >
@@ -133,6 +139,11 @@ export function ServerCard(props: Props): ReactElement {
                 label={badgeBusy ? view.installStateLabel : undefined}
                 color={badgeBusy ? "blue" : undefined}
               />
+              {!server.enabled && (
+                <Badge size="sm" variant="light" color="gray">
+                  Inactive
+                </Badge>
+              )}
             </Group>
 
             <div className={classes.metaGrid} data-meta-grid>
@@ -171,6 +182,8 @@ export function ServerCard(props: Props): ReactElement {
             onClone={props.onClone}
             onKill={props.onKill}
             onDelete={props.onDelete}
+            serverEnabled={server.enabled}
+            onToggleEnabled={props.onToggleEnabled}
           />
         </div>
 

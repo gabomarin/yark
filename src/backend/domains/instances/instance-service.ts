@@ -16,7 +16,11 @@ import { existsSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join, parse as parsePath, resolve } from "node:path";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
-import { resolveServerInstallDir } from "@shared/server-install-path";
+import {
+  normalizeWindowsPath,
+  resolveServerInstallDir,
+  suggestCloneInstallDir,
+} from "@shared/server-install-path";
 import type { BackupService } from "../backups/backup-service";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";
@@ -65,6 +69,11 @@ function sameServerIds(
   }
   const cachedIds = new Set(cached.map((info) => info.serverId));
   return profiles.every((profile) => cachedIds.has(profile.id));
+}
+
+/** Windows install-directory comparison key (paths are case-insensitive). */
+function installDirKey(installDir: string): string {
+  return resolve(installDir).toLowerCase();
 }
 
 function backingUpPercent(index: number, total: number): number {
@@ -117,6 +126,7 @@ export class InstanceService extends EventEmitter {
 
   create(input: ServerProfileInput): ServerProfile {
     this.assertValidInput(input);
+    this.assertUniqueName(input.name);
     this.assertNoPortConflicts(input);
 
     const installDir = resolveServerInstallDir(input.installDir, input.name);
@@ -158,6 +168,7 @@ export class InstanceService extends EventEmitter {
   update(id: string, input: ServerProfileInput): ServerProfile {
     // Allowed while hot: ports/map/etc. apply when the process restarts.
     this.assertValidInput(input);
+    this.assertUniqueName(input.name, id);
     this.assertNoPortConflicts(input, id);
     const updated = this.repo.update(id, input);
     if (updated === null) {
@@ -213,12 +224,27 @@ export class InstanceService extends EventEmitter {
       throw new Error("Server to clone does not exist");
     }
     const existing = this.repo.list();
-    const names = new Set(existing.map((p) => p.name));
-    let name = `${source.name} (copy)`;
-    let suffix = 2;
-    while (names.has(name)) {
-      name = `${source.name} (copy ${suffix})`;
-      suffix++;
+    const names = new Set(existing.map((p) => p.name.trim().toLowerCase()));
+    const installDirs = new Set(
+      existing.map((profile) => installDirKey(profile.installDir)),
+    );
+    let copyNumber = 1;
+    let name: string;
+    let installDir: string;
+    for (;;) {
+      name =
+        copyNumber === 1
+          ? `${source.name} (copy)`
+          : `${source.name} (copy ${copyNumber})`;
+      installDir = suggestCloneInstallDir(source.installDir, name);
+      if (
+        !names.has(name.trim().toLowerCase()) &&
+        !installDirs.has(installDirKey(installDir)) &&
+        !existsSync(installDir)
+      ) {
+        break;
+      }
+      copyNumber++;
     }
 
     let offset = 10;
@@ -227,7 +253,7 @@ export class InstanceService extends EventEmitter {
       input = {
         name,
         map: source.map,
-        installDir: source.installDir,
+        installDir,
         sessionName: `${source.sessionName} (copy)`,
         gamePort: source.gamePort + offset,
         queryPort: source.queryPort + offset,
@@ -249,17 +275,76 @@ export class InstanceService extends EventEmitter {
         throw new Error("No free ports found for the clone");
       }
     }
-    return this.create(input);
+    this.assertValidInput(input);
+    this.assertUniqueInstallDir(input.installDir);
+    const profile = this.repo.create(input, source.enabled);
+    void this.ensureDefaultIniFiles(profile.installDir);
+    this.repo.addEvent(
+      profile.id,
+      "server_created",
+      "info",
+      `Server "${profile.name}" created at ${profile.installDir} (map ${profile.map})`,
+    );
+    return profile;
+  }
+
+  /** Clones a profile with custom parameters from the dialog. */
+  cloneWithParams(
+    id: string,
+    params: {
+      name: string;
+      sessionName: string;
+      gamePort: number;
+      queryPort: number;
+      rconPort: number;
+      installDir: string;
+    },
+  ): ServerProfile {
+    const source = this.repo.get(id);
+    if (source === null) {
+      throw new Error("Server to clone does not exist");
+    }
+
+    const installDir = normalizeWindowsPath(params.installDir);
+    const input: ServerProfileInput = {
+      name: params.name,
+      map: source.map,
+      installDir,
+      sessionName: params.sessionName,
+      gamePort: params.gamePort,
+      queryPort: params.queryPort,
+      rconPort: params.rconPort,
+      serverPassword: source.serverPassword,
+      adminPassword: source.adminPassword,
+      clusterId: source.clusterId,
+      clusterDir: source.clusterDir,
+      extraArgs: [...source.extraArgs],
+      mods: [...source.mods],
+      disabledMods: [...(source.disabledMods ?? [])],
+      modMetadataCache: { ...(source.modMetadataCache ?? {}) },
+    };
+
+    this.assertValidInput(input);
+    this.assertUniqueName(input.name);
+    this.assertUniqueInstallDir(input.installDir);
+    this.assertNoPortConflicts(input);
+
+    const profile = this.repo.create(input, source.enabled);
+    void this.ensureDefaultIniFiles(profile.installDir);
+    this.repo.addEvent(
+      profile.id,
+      "server_created",
+      "info",
+      `Server "${profile.name}" created at ${profile.installDir} (map ${profile.map})`,
+    );
+    return profile;
   }
 
   async start(id: string, options?: StartServerOptions): Promise<void> {
     if (this.isStopInProgress(id)) {
       throw new Error("Server stop and backup are still in progress");
     }
-    if (this.locks.isLocked(id)) {
-      throw new Error("Another server operation is already in progress");
-    }
-    await this.startInternal(id, options);
+    await this.locks.withLock(id, "start", () => this.startInternal(id, options));
   }
 
   /**
@@ -310,6 +395,9 @@ export class InstanceService extends EventEmitter {
     options?: StartServerOptions,
   ): Promise<void> {
     const profile = this.mustGet(id);
+    if (!profile.enabled) {
+      throw new Error(`Server "${profile.name}" is disabled`);
+    }
     const running = this.repo
       .list()
       .filter((p) => p.id !== id && this.processes.isActive(p.id));
@@ -328,6 +416,74 @@ export class InstanceService extends EventEmitter {
       "info",
       `Server "${profile.name}" starting (waiting for readiness)`,
     );
+  }
+
+  async setServerEnabled(id: string, enabled: boolean): Promise<ServerProfile> {
+    return this.locks.withLock(id, "enable-disable", async () => {
+      const profile = this.mustGet(id);
+      if (profile.enabled === enabled) {
+        return profile;
+      }
+
+      if (!enabled) {
+        if (this.processes.isActive(id)) {
+          throw new Error("Cannot disable a server while it is running");
+        }
+        if (this.isStopInProgress(id)) {
+          throw new Error("Server stop and backup are still in progress");
+        }
+        if (this.backups.hasServerWork(id)) {
+          throw new Error("A backup or restore job is still in progress");
+        }
+        const updated = this.repo.setEnabled(id, false);
+        if (updated === null) {
+          throw new Error("Server does not exist");
+        }
+        this.repo.addEvent(
+          id,
+          "server_disabled",
+          "info",
+          `Server "${updated.name}" disabled`,
+        );
+        return updated;
+      }
+
+      const issues = validateProfileInput(profile);
+      if (issues.length > 0) {
+        throw new Error(
+          issues.map((issue) => `${issue.field}: ${issue.message}`).join(" | "),
+        );
+      }
+
+      const installation = inspectServerInstallation(profile.id, profile.installDir, {
+        bypassCache: true,
+      });
+      if (!installation.installed) {
+        throw new Error(`Server files are not installed: ${profile.installDir}`);
+      }
+
+      this.assertNoPortConflicts(profile, id);
+      const reports = checkClusterCompliance(this.repo.list());
+      if (profile.clusterId !== null) {
+        const clusterReport = reports.find((report) => report.clusterId === profile.clusterId);
+        const firstError = clusterReport?.issues.find((issue) => issue.severity === "error");
+        if (firstError !== undefined) {
+          throw new Error(firstError.message);
+        }
+      }
+
+      const updated = this.repo.setEnabled(id, true);
+      if (updated === null) {
+        throw new Error("Server does not exist");
+      }
+      this.repo.addEvent(
+        id,
+        "server_enabled",
+        "info",
+        `Server "${updated.name}" enabled`,
+      );
+      return updated;
+    });
   }
 
   stop(id: string, options?: StopServerOptions): Promise<void> {
@@ -735,11 +891,28 @@ export class InstanceService extends EventEmitter {
     }
   }
 
-  private assertUniqueInstallDir(installDir: string, excludeId?: string): void {
-    const target = resolve(installDir);
+  private assertUniqueName(name: string, excludeId?: string): void {
+    const normalized = name.trim().toLowerCase();
     const clash = this.repo
       .list()
-      .find((profile) => profile.id !== excludeId && resolve(profile.installDir) === target);
+      .find(
+        (profile) =>
+          profile.id !== excludeId &&
+          profile.name.trim().toLowerCase() === normalized,
+      );
+    if (clash !== undefined) {
+      throw new Error(`A server named "${name}" already exists`);
+    }
+  }
+
+  private assertUniqueInstallDir(installDir: string, excludeId?: string): void {
+    const target = installDirKey(installDir);
+    const clash = this.repo
+      .list()
+      .find(
+        (profile) =>
+          profile.id !== excludeId && installDirKey(profile.installDir) === target,
+      );
     if (clash !== undefined) {
       throw new Error(
         `A server already uses folder "${installDir}" ("${clash.name}")`,

@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import { OverviewPage } from "./OverviewPage";
@@ -8,6 +9,7 @@ const server = {
   name: "The Island",
   map: "TheIsland_WP",
   installDir: "C:/ARK/TheIsland",
+  enabled: true,
   sessionName: "The Island Cluster",
   gamePort: 7777,
   queryPort: 27015,
@@ -24,15 +26,25 @@ const server = {
 
 describe("OverviewPage", () => {
   it("renders the operational server list and recent activity", () => {
+    const searchHiddenServer = {
+      ...server,
+      id: "srv-2",
+      name: "Scorched Earth",
+      installDir: "C:/ARK/ScorchedEarth",
+      gamePort: 7787,
+      queryPort: 27025,
+      rconPort: 27030,
+    };
     const { container } = render(
       <AppProviders>
         <OverviewPage
-          search=""
+          search="island"
           onSearchChange={vi.fn()}
           onCreateServer={vi.fn()}
           onCheckUpdates={vi.fn()}
-          servers={[server]}
+          servers={[server, searchHiddenServer]}
           filteredServers={[server]}
+          disabledServers={[]}
           runningServers={0}
           statuses={new Map()}
           installationInfo={new Map()}
@@ -60,7 +72,9 @@ describe("OverviewPage", () => {
 
     expect(screen.getByRole("heading", { name: "Servers", level: 1 })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Your servers" })).toBeInTheDocument();
-    expect(screen.getByText("1 server configured · none running")).toBeInTheDocument();
+    expect(
+      screen.getByText("2 enabled servers · none running · 1 result"),
+    ).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Search servers" })).toBeInTheDocument();
     expect(screen.getByText("Recent activity")).toBeInTheDocument();
     expect(screen.getByText("The Island")).toBeInTheDocument();
@@ -85,6 +99,7 @@ describe("OverviewPage", () => {
           onCheckUpdates={vi.fn()}
           servers={[server]}
           filteredServers={[server]}
+          disabledServers={[]}
           runningServers={0}
           statuses={new Map()}
           installationInfo={
@@ -141,6 +156,7 @@ describe("OverviewPage", () => {
       onCheckUpdates: vi.fn(),
       servers: [],
       filteredServers: [],
+      disabledServers: [],
       runningServers: 0,
       statuses: new Map(),
       installationInfo: new Map(),
@@ -187,5 +203,113 @@ describe("OverviewPage", () => {
     expect(serverList).not.toBeNull();
     within(serverList as HTMLElement).getByRole("button", { name: "New server" }).click();
     expect(onCreateServer).toHaveBeenCalledOnce();
+  });
+
+  it("shows disabled servers in a separate section without putting them in the enabled fleet", async () => {
+    const user = userEvent.setup();
+    const disabledServer = { ...server, id: "srv-2", name: "Frozen Fjord", enabled: false };
+
+    render(
+      <AppProviders>
+        <OverviewPage
+          search=""
+          onSearchChange={vi.fn()}
+          onCreateServer={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          servers={[server, disabledServer]}
+          filteredServers={[server]}
+          disabledServers={[disabledServer]}
+          runningServers={0}
+          statuses={new Map()}
+          installationInfo={new Map()}
+          officialSteamBuild={null}
+          events={[]}
+          onViewAllActivity={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onStartServer={vi.fn()}
+          onStopServer={vi.fn()}
+          onRestartServer={vi.fn()}
+          onKillServer={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdatesForServer={vi.fn()}
+          onCloneServer={vi.fn()}
+          onDeleteServer={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    // Verify disabled servers badge and toggle are shown
+    expect(screen.getAllByText("1 disabled server").length).toBeGreaterThan(0);
+    const showDisabledCheckbox = screen.getByRole("checkbox", { name: "Show disabled" });
+    expect(showDisabledCheckbox).toBeInTheDocument();
+    expect(showDisabledCheckbox).not.toBeChecked();
+
+    // Verify disabled server is not shown initially
+    expect(screen.queryByText("Frozen Fjord")).not.toBeInTheDocument();
+    expect(screen.getByText("The Island")).toBeInTheDocument();
+
+    // Toggle to show disabled servers
+    await user.click(showDisabledCheckbox);
+
+    // Verify both servers are now shown
+    expect(screen.getByText("Frozen Fjord")).toBeInTheDocument();
+    expect(screen.getByText("The Island")).toBeInTheDocument();
+    expect(screen.getByText("Inactive")).toBeInTheDocument();
+  });
+
+  it("renders disabled cards when no enabled server is visible", async () => {
+    const user = userEvent.setup();
+    const disabledServer = { ...server, enabled: false };
+
+    render(
+      <AppProviders>
+        <OverviewPage
+          search=""
+          onSearchChange={vi.fn()}
+          onCreateServer={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          servers={[disabledServer]}
+          filteredServers={[]}
+          disabledServers={[disabledServer]}
+          runningServers={0}
+          statuses={new Map()}
+          installationInfo={new Map()}
+          officialSteamBuild={null}
+          events={[]}
+          onViewAllActivity={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onStartServer={vi.fn()}
+          onStopServer={vi.fn()}
+          onRestartServer={vi.fn()}
+          onKillServer={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdatesForServer={vi.fn()}
+          onCloneServer={vi.fn()}
+          onDeleteServer={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.queryByText("The Island")).not.toBeInTheDocument();
+    expect(screen.getByText("No enabled servers")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Clear search" }),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole("checkbox", { name: "Show disabled" }));
+    expect(screen.getByText("The Island")).toBeInTheDocument();
+    expect(screen.getByText("Inactive")).toBeInTheDocument();
+    expect(screen.queryByText("No enabled servers")).not.toBeInTheDocument();
   });
 });

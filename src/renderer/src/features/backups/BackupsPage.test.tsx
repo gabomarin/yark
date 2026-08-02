@@ -10,6 +10,7 @@ const server: ServerProfile = {
   name: "The Island",
   map: "TheIsland_WP",
   installDir: "C:/ARK/srv-1",
+  enabled: true,
   sessionName: "Island",
   gamePort: 7777,
   queryPort: 27015,
@@ -192,5 +193,18 @@ describe("BackupsPage", () => {
       );
     });
     expect(await screen.findByText(/Saved backup settings/i)).toBeInTheDocument();
+  });
+
+  it("labels disabled servers as inactive", async () => {
+    render(
+      <AppProviders>
+        <BackupsPage
+          servers={[{ ...server, enabled: false }]}
+          onOpenServerBackups={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByText("Inactive")).toBeInTheDocument();
   });
 });

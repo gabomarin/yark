@@ -22,13 +22,11 @@ import { UI_DENSITY_SETTING_KEY, isUiDensity, type UiDensity } from "../shared/u
 import {
   readDesktopShellPreferences,
   setCloseWindowToTray,
-  setOnQuitWithActiveServers,
   setStartWithWindowsPreference,
   setTrayCloseHintDismissed,
 } from "./desktop-shell-settings";
 import { applyWindowsLoginItem } from "./windows-login-item";
 import type { DesktopShellPreferences } from "../shared/desktop-shell";
-import { isOnQuitWithActiveServers } from "../shared/desktop-shell";
 
 export interface AppDataFolderRoots {
   app: string;
@@ -92,12 +90,52 @@ export function registerIpcHandlers(
       }),
   );
 
+  ipcMain.handle(IPC.serversSetEnabled, (_e, id: string, enabled: unknown) =>
+    wrap(() => {
+      if (typeof enabled !== "boolean") {
+        throw new Error("enabled must be a boolean");
+      }
+      return instances.setServerEnabled(id, enabled);
+    }),
+  );
+
   ipcMain.handle(IPC.serversDelete, (_e, id: string) =>
     wrap(() => instances.delete(id)),
   );
 
   ipcMain.handle(IPC.serversClone, (_e, id: string) =>
     wrap(() => instances.clone(id)),
+  );
+
+  ipcMain.handle(IPC.serversCloneWithParams, (_e, id: string, params: unknown) =>
+    wrap(() => {
+      if (params === null || typeof params !== "object") {
+        throw new Error("clone params must be an object");
+      }
+      const body = params as Record<string, unknown>;
+      const { name, sessionName, gamePort, queryPort, rconPort, installDir } = body;
+      if (typeof name !== "string" || typeof sessionName !== "string" || typeof installDir !== "string") {
+        throw new Error("clone params name, sessionName, and installDir must be strings");
+      }
+      if (
+        typeof gamePort !== "number" ||
+        typeof queryPort !== "number" ||
+        typeof rconPort !== "number" ||
+        !Number.isInteger(gamePort) ||
+        !Number.isInteger(queryPort) ||
+        !Number.isInteger(rconPort)
+      ) {
+        throw new Error("clone params gamePort, queryPort, and rconPort must be integers");
+      }
+      return instances.cloneWithParams(id, {
+        name,
+        sessionName,
+        gamePort,
+        queryPort,
+        rconPort,
+        installDir,
+      });
+    }),
   );
 
   ipcMain.handle(IPC.serversStart, (_e, id: string, options?: StartServerOptions) =>
@@ -346,15 +384,6 @@ export function registerIpcHandlers(
         throw new Error("trayCloseHintDismissed must be a boolean");
       }
       return setTrayCloseHintDismissed(settings, dismissed);
-    }),
-  );
-
-  ipcMain.handle(IPC.appSetOnQuitWithActiveServers, (_e, policy: unknown) =>
-    wrap(() => {
-      if (!isOnQuitWithActiveServers(policy)) {
-        throw new Error("onQuitWithActiveServers must be ask or stop");
-      }
-      return setOnQuitWithActiveServers(settings, policy);
     }),
   );
 

@@ -27,6 +27,7 @@ function makeProfile(installDir: string): ServerProfile {
     name: "Lifecycle Server",
     map: "TheIsland_WP",
     installDir,
+    enabled: true,
     sessionName: "Lifecycle Session",
     gamePort: 7777,
     queryPort: 27015,

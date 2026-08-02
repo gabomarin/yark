@@ -20,6 +20,7 @@ const server = {
   clusterDir: null,
   extraArgs: [],
   mods: [],
+  enabled: true,
   createdAt: "2026-07-23T00:00:00.000Z",
   updatedAt: "2026-07-23T00:00:00.000Z",
 };
@@ -29,8 +30,10 @@ function createApiMock(): RendererApi {
     listServers: vi.fn(),
     createServer: vi.fn(),
     updateServer: vi.fn(),
+    setServerEnabled: vi.fn(),
     deleteServer: vi.fn(),
     cloneServer: vi.fn(),
+    cloneServerWithParams: vi.fn(),
     startServer: vi.fn(),
     stopServer: vi.fn(),
     restartServer: vi.fn(),
@@ -56,6 +59,7 @@ function createApiMock(): RendererApi {
     sendRconCommand: vi.fn(),
     recentEvents: vi.fn(),
     pickPath: vi.fn(),
+    pickFolder: vi.fn(),
     listAppDataFolders: vi.fn().mockResolvedValue({ ok: true, data: [] }),
     openAppDataFolder: vi.fn(),
     getUiDensity: vi.fn().mockResolvedValue({ ok: true, data: "compact" }),
@@ -66,13 +70,11 @@ function createApiMock(): RendererApi {
         closeWindowToTray: true,
         startWithWindows: false,
         trayCloseHintDismissed: false,
-        onQuitWithActiveServers: "ask",
       },
     }),
     setCloseWindowToTray: vi.fn().mockResolvedValue({ ok: true, data: true }),
     setStartWithWindows: vi.fn().mockResolvedValue({ ok: true, data: false }),
     setTrayCloseHintDismissed: vi.fn().mockResolvedValue({ ok: true, data: false }),
-    setOnQuitWithActiveServers: vi.fn().mockResolvedValue({ ok: true, data: "ask" }),
     readServerIni: vi.fn(),
     openServerIniInEditor: vi.fn(),
     previewServerIni: vi.fn(),
@@ -163,5 +165,18 @@ describe("LogsPage", () => {
         eventId: 99,
       }),
     );
+  });
+
+  it("labels activity from a disabled server as inactive", async () => {
+    render(
+      <AppProviders>
+        <LogsPage
+          servers={[{ ...server, enabled: false }]}
+          onOpenServerLogs={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByText("Inactive")).toBeInTheDocument();
   });
 });

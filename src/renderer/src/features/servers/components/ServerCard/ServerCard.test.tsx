@@ -21,6 +21,7 @@ const profile = {
   clusterDir: null,
   extraArgs: [],
   mods: [],
+  enabled: true,
   createdAt: "2026-07-23T00:00:00.000Z",
   updatedAt: "2026-07-23T00:00:00.000Z",
 };
@@ -73,6 +74,42 @@ describe("ServerCard", () => {
 
     await user.click(screen.getByRole("button", { name: /Open settings for The Island/i }));
     expect(onOpenWorkspace).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows an inactive badge and enable action for a disabled profile", async () => {
+    const user = userEvent.setup();
+    const onToggleEnabled = vi.fn();
+
+    render(
+      <AppProviders>
+        <ServerCard
+          server={{ ...profile, enabled: false }}
+          runtime={null}
+          installation={installed}
+          officialSteamBuild={null}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onDelete={vi.fn()}
+          onToggleEnabled={onToggleEnabled}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("Inactive")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^Enable server$/i }));
+    expect(onToggleEnabled).toHaveBeenCalledTimes(1);
   });
 
   it("uses Stop for a running server and keeps secondary actions in the menu", async () => {

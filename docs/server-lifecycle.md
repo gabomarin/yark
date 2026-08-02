@@ -135,18 +135,37 @@ IPC:
 | Channel | Backend |
 | --- | --- |
 | `servers:start` | sync INI → `ProcessManager.start` |
+| `servers:set-enabled` | Locked explicit enable/disable transition; never starts or stops ASA implicitly. |
 | `servers:stop` | `InstanceService.stop`: RCON `SaveWorld` → wait `SAVE_WAIT_MS` (8s) → `DoExit` exact process → best-effort stable `pre_stop` backup (world/players/ini). Progress via `push:server-stop-progress`. Pass `{ backup: false }` to skip the snapshot (SteamCMD update/verify, restart). |
 | `servers:restart` | `InstanceService.restart`: lock `"restart"` → stop with `{ backup: false }` → fail-hard `pre_restart` backup → start. Options match `servers:start` (`StartServerOptions`). |
 | `servers:kill` | immediate terminate (warning event; UI confirms) |
 
 Status push: `push:server-status`. Stop phase progress: `push:server-stop-progress`.
 
+### Enabled and disabled profiles
+
+`ServerProfile.enabled` is persisted profile visibility/lifecycle state, not
+runtime process state. Existing and new rows default to enabled. Generic profile
+updates cannot change it; only `InstanceService.setServerEnabled` may do so.
+
+- Disable requires the per-server operation lock and a stopped, idle profile.
+  Configuration, INIs, mods, health, logs, backups, offline SteamCMD work,
+  cloning, export, and deletion remain available.
+- Enable revalidates the profile, installed files, all saved-profile ports, and
+  cluster compliance. It does not start ASA.
+- Manual Start also owns the per-server lock. The common `startInternal` path
+  rejects disabled profiles, covering restart and maintenance recovery paths.
+- Clones inherit the source enabled state and receive a unique sibling install
+  directory. Disabled profiles remain cluster members and participate in port
+  conflict checks.
+
 **Start** (`InstanceService.start`):
 
-1. Port-conflict check vs **other active** servers (`findPortConflicts`).
-2. `await syncProfileSettingsToIni`.
-3. `processes.start` (args from `launchArgsOverride` or `buildLaunchArgs`).
-4. Event `server_started` (“waiting for readiness”).
+1. Acquire the per-server operation lock and reject disabled profiles.
+2. Port-conflict check vs **other active** servers (`findPortConflicts`).
+3. `await syncProfileSettingsToIni`.
+4. `processes.start` (args from `launchArgsOverride` or `buildLaunchArgs`).
+5. Event `server_started` (“waiting for readiness”).
 
 **Readiness:** status stays `"starting"` until RCON `ListPlayers` on
 `127.0.0.1` succeeds (poll `DEFAULT_READY_POLL_MS = 3000`, timeout
@@ -199,19 +218,19 @@ with a completed `pre_restart` snapshot.
 
 **App quit (#59):** Tray **Quit YARK** and closing the window with **Close
 window to tray** disabled both enter `before-quit`. When managed servers are
-active, Settings **On quit with active servers** applies:
+active, YARK always shows a confirmation dialog (Stop / Cancel):
 
-- **Ask** (default): dialog with Stop / Cancel.
 - **Stop**: wait for any still-starting servers, then graceful stop (SaveWorld →
   DoExit → pre-stop backup) with stop-progress in the UI, then quit.
+- **Cancel**: abort quit and restore the window.
 
-There is no Leave-running quit option. Prefer **Close window to tray** so YARK
-(and scheduled/player backups) keep running with the servers. Process
-attach/detach exists for **crash recovery and forced closes** (Task Manager /
-unexpected Electron exit): durable checkpoints written while servers are
-active; startup validates candidates, reattaches matches as `starting` until
-RCON confirms (`running`), and records rejected/stale outcomes. Reattach never
-force-kills on RCON timeout.
+There is no Settings Ask/Stop preference and no Leave-running quit option.
+Prefer **Close window to tray** so YARK (and scheduled/player backups) keep
+running with the servers. Process attach/detach exists for **crash recovery and
+forced closes** (Task Manager / unexpected Electron exit): durable checkpoints
+written while servers are active; startup validates candidates, reattaches
+matches as `starting` until RCON confirms (`running`), and records
+rejected/stale outcomes. Reattach never force-kills on RCON timeout.
 
 Windows e2e for this path (manual Windows check before merge — not in CI):
 
@@ -227,7 +246,7 @@ a full install). Mark as a required manual step on PRs that touch quit/reattach.
 Hide-to-tray is **not** a quit and never stops servers. Critical in-flight
 stop/restart work still uses `shouldBlockAppQuit` / `settleForAppQuit` first.
 With **Close window to tray** off, closing while servers are active keeps the
-window open until Ask/Stop resolves (Cancel restores the UI; Stop keeps
+window open until the quit confirmation resolves (Cancel restores the UI; Stop keeps
 the window visible through wait/save/backup progress).
 
 ### System tray and Windows startup (#54)

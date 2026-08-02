@@ -217,7 +217,7 @@ if (gotSingleInstanceLock) {
     let quitPolicyPromptInFlight = false;
 
     const requestAppQuit = (): void => {
-      // Real quit path — goes through before-quit (#59 Ask / Stop).
+      // Real quit path — goes through before-quit (#59 confirm Stop / Cancel).
       // Must set isQuitting before app.quit() so window `close` does not
       // re-interpret the shutdown as “hide to tray”.
       isQuitting = true;
@@ -433,13 +433,12 @@ if (gotSingleInstanceLock) {
         return;
       }
 
-      // Active servers: apply #59 quit policy (Ask / Stop).
+      // Active servers: always confirm before stop-and-quit (#59).
       event.preventDefault();
       if (pendingQuit !== null || quitPolicyPromptInFlight) {
         return;
       }
 
-      const policy = readDesktopShellPreferences(settings).onQuitWithActiveServers;
       const applyQuitDecision = (decision: "stop" | "cancel"): void => {
         if (decision === "cancel") {
           const reset = quitFlagsAfterCancel();
@@ -455,11 +454,6 @@ if (gotSingleInstanceLock) {
         revealMainWindow();
         quitAfter(instances.stopAllForAppQuit());
       };
-
-      if (policy === "stop") {
-        applyQuitDecision("stop");
-        return;
-      }
 
       quitPolicyPromptInFlight = true;
       isQuitting = true;

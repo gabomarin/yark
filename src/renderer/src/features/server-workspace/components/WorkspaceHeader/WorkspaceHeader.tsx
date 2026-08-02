@@ -2,12 +2,22 @@ import type { ReactElement } from "react";
 import {
   ArrowLeft,
   ArrowsClockwise,
+  Eye,
   HardDrives,
   Play,
   Power,
   Wrench,
 } from "@phosphor-icons/react";
-import { ActionIcon, Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Button,
+  Group,
+  Stack,
+  Text,
+  Title,
+  Tooltip,
+} from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { resolveDisplayedServerVersion } from "@shared/server-version-display";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
@@ -24,6 +34,7 @@ interface Props {
   onStart: () => void;
   onStop: () => void;
   onRestart: () => void;
+  onToggleEnabled?: () => void;
   onOpenServerSwitcher?: () => void;
   onOpenServerActions?: () => void;
 }
@@ -31,8 +42,11 @@ interface Props {
 export function WorkspaceHeader(props: Props): ReactElement {
   const status = props.runtime?.status ?? "stopped";
   const version = resolveDisplayedServerVersion(props.installation) ?? "—";
+  const isServerDisabled = !props.server.enabled;
   const canStart =
-    (status === "stopped" || status === "error") && props.filesJobActive !== true;
+    (status === "stopped" || status === "error") && props.filesJobActive !== true && !isServerDisabled;
+  const canEnable =
+    isServerDisabled && props.filesJobActive !== true && props.installation?.installed === true;
   const canStop = status === "running" || status === "starting";
   const canRestart = status === "running" && props.filesJobActive !== true;
   const lockTitle = props.filesJobReason ?? "Wait for the file update to finish";
@@ -60,6 +74,11 @@ export function WorkspaceHeader(props: Props): ReactElement {
               {props.server.name}
             </Title>
             <ServerRuntimeStatusBadge status={status} size="sm" />
+            {!props.server.enabled && (
+              <Badge size="sm" variant="light" color="gray">
+                Inactive
+              </Badge>
+            )}
           </Group>
           <Text size="xs" c="dimmed" lineClamp={1}>
             {props.server.map} · port {props.server.gamePort} · version {version}
@@ -69,15 +88,35 @@ export function WorkspaceHeader(props: Props): ReactElement {
 
       <Stack gap={7} align="flex-end" className={classes.controls}>
         <Group gap="xs" wrap="nowrap">
-          <Button
-            size="sm"
-            leftSection={<Play size={14} weight="fill" />}
-            onClick={props.onStart}
-            disabled={!canStart}
-            title={props.filesJobActive === true ? lockTitle : undefined}
-          >
-            Start
-          </Button>
+          {isServerDisabled ? (
+            <Button
+              size="sm"
+              leftSection={<Eye size={14} weight="fill" color="var(--mantine-color-blue-6)" />}
+              onClick={() => props.onToggleEnabled?.()}
+              disabled={!canEnable}
+              title={
+                props.filesJobActive === true
+                  ? lockTitle
+                  : props.installation?.installed !== true
+                    ? "Install files first"
+                    : undefined
+              }
+            >
+              Enable
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="light"
+              color="teal"
+              leftSection={<Play size={14} weight="fill" />}
+              onClick={props.onStart}
+              disabled={!canStart}
+              title={props.filesJobActive === true ? lockTitle : undefined}
+            >
+              Start
+            </Button>
+          )}
           <Button
             size="sm"
             variant="light"
