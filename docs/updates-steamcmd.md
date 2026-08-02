@@ -182,6 +182,7 @@ During **robocopy** (`sync-files`), progress is a **separate phase**: SteamCMD s
 | `Server stop and backup are still in progress` | Wait for the stop+backup job to finish, then retry update/verify |
 | Update/verify while the server is running | Expected — manager stops without `pre_stop`, takes `pre_update` (update only), runs SteamCMD, restarts if it was running |
 | Update “available” looks wrong vs ARK Version string | Compare Steam `buildid` only; ARK Version is informational |
+| Version green but number behind Wildcard | Steam is current; label may be from last boot — tooltip on Version explains it refreshes on next start |
 | Repeated downloads when installing another server | Cache older than 15 minutes, missing manifest, or SteamCMD path changed |
 | Console in Spanish / stuck `0.0%` while `[ N%]` lines scroll | SteamCMD bootstrapper follows Windows UI language. We force `-language english`; percent still reads from `[ N%]`. Restart the update after this build. |
 | World/INI wiped after update | Should not happen via robocopy path (`ShooterGame\Saved` excluded); check whether fallback direct `app_update` on install dir was used (console mentions cache sync failure) |

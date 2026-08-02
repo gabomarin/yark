@@ -23,6 +23,7 @@ interface Props {
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
   officialSteamBuild: string | null;
+  officialVersion?: string | null;
   steamCmdServerId: string | null;
   steamCmdRunning: boolean;
   steamCmdBusy?: boolean;
@@ -112,6 +113,7 @@ export function ServerGrid(props: Props): ReactElement {
         runtime={props.statuses.get(server.id) ?? null}
         installation={props.installationInfo.get(server.id) ?? null}
         officialSteamBuild={props.officialSteamBuild}
+        officialVersion={props.officialVersion ?? null}
         steamCmdBusy={
           !stopBusy && (props.steamCmdBusy ?? props.steamCmdRunning) && props.steamCmdServerId === server.id
         }
