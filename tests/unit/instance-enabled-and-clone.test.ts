@@ -12,9 +12,17 @@ vi.mock("@backend/domains/instances/server-installation", async (importOriginal)
   const actual = await importOriginal<
     typeof import("@backend/domains/instances/server-installation")
   >();
+  const inspectServerInstallation = vi.fn();
   return {
     ...actual,
-    inspectServerInstallation: vi.fn(),
+    inspectServerInstallation,
+    inspectServerInstallationAsync: vi.fn(
+      async (
+        serverId: string,
+        installDir: string,
+        options?: Parameters<typeof actual.inspectServerInstallationAsync>[2],
+      ) => inspectServerInstallation(serverId, installDir, options),
+    ),
   };
 });
 

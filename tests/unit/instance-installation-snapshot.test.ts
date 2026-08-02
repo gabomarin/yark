@@ -4,13 +4,14 @@ import { InstanceLockManager } from "@backend/orchestration/instance-lock-manage
 import type { ProcessManager } from "@backend/infra/process/process-manager";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
 import {
-  inspectServerInstallation,
+  inspectServerInstallationAsync,
   readOfficialArkBuildCached,
   readOfficialArkVersionCached,
 } from "@backend/domains/instances/server-installation";
 
 vi.mock("@backend/domains/instances/server-installation", () => ({
   inspectServerInstallation: vi.fn(),
+  inspectServerInstallationAsync: vi.fn(),
   readOfficialArkVersionCached: vi.fn(),
   readOfficialArkBuildCached: vi.fn(),
 }));
@@ -46,7 +47,7 @@ describe("InstanceService.installationInfo", () => {
     });
     expect(readOfficialArkVersionCached).toHaveBeenCalledWith(false);
     expect(readOfficialArkBuildCached).toHaveBeenCalledWith(false);
-    expect(inspectServerInstallation).not.toHaveBeenCalled();
+    expect(inspectServerInstallationAsync).not.toHaveBeenCalled();
   });
 
   it("skips local inspect when official metadata is unchanged", async () => {
@@ -55,7 +56,7 @@ describe("InstanceService.installationInfo", () => {
       networkStatus: "online",
     });
     vi.mocked(readOfficialArkBuildCached).mockResolvedValue("build 24346423");
-    vi.mocked(inspectServerInstallation).mockReturnValue({
+    vi.mocked(inspectServerInstallationAsync).mockResolvedValue({
       serverId: "srv-1",
       installed: true,
       health: "ready",
@@ -83,11 +84,11 @@ describe("InstanceService.installationInfo", () => {
     );
 
     await service.installationInfo(false, "when-official-changed");
-    expect(inspectServerInstallation).toHaveBeenCalledTimes(1);
+    expect(inspectServerInstallationAsync).toHaveBeenCalledTimes(1);
 
-    vi.mocked(inspectServerInstallation).mockClear();
+    vi.mocked(inspectServerInstallationAsync).mockClear();
     const second = await service.installationInfo(false, "when-official-changed");
-    expect(inspectServerInstallation).not.toHaveBeenCalled();
+    expect(inspectServerInstallationAsync).not.toHaveBeenCalled();
     expect(second.servers).toHaveLength(1);
 
     vi.mocked(readOfficialArkVersionCached).mockResolvedValue({
@@ -95,6 +96,6 @@ describe("InstanceService.installationInfo", () => {
       networkStatus: "online",
     });
     await service.installationInfo(false, "when-official-changed");
-    expect(inspectServerInstallation).toHaveBeenCalledTimes(1);
+    expect(inspectServerInstallationAsync).toHaveBeenCalledTimes(1);
   });
 });

@@ -5,7 +5,7 @@ import type { ProcessManager } from "@backend/infra/process/process-manager";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
 import { InstanceLockManager } from "@backend/orchestration/instance-lock-manager";
 import type { ServerProfile } from "@shared/types";
-import { inspectServerInstallation } from "@backend/domains/instances/server-installation";
+import { inspectServerInstallationAsync } from "@backend/domains/instances/server-installation";
 
 vi.mock("@backend/domains/instances/sync-profile-ini", () => ({
   syncProfileSettingsToIni: vi.fn(async () => undefined),
@@ -13,6 +13,7 @@ vi.mock("@backend/domains/instances/sync-profile-ini", () => ({
 
 vi.mock("@backend/domains/instances/server-installation", () => ({
   inspectServerInstallation: vi.fn(),
+  inspectServerInstallationAsync: vi.fn(),
   readOfficialArkVersionCached: vi.fn(),
   readOfficialArkBuildCached: vi.fn(),
 }));
@@ -99,7 +100,7 @@ function makeProcesses(profile: ServerProfile, active = true) {
 
 describe("InstanceService.restart", () => {
   beforeEach(() => {
-    vi.mocked(inspectServerInstallation).mockImplementation((serverId: string) =>
+    vi.mocked(inspectServerInstallationAsync).mockImplementation(async (serverId: string) =>
       readyInstallation(serverId),
     );
   });
