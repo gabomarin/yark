@@ -38,6 +38,16 @@ describe("resolveDisplayedServerVersion", () => {
     ).toBeNull();
   });
 
+  it("ignores non-ARK-style arkVersion the same way as Steam builds", () => {
+    expect(
+      resolveDisplayedServerVersion({
+        arkVersion: "build 24440006",
+        build: "build 24440006",
+        version: "build 24440006",
+      }),
+    ).toBeNull();
+  });
+
   it("uses build when arkVersion is missing", () => {
     expect(
       resolveDisplayedServerVersion({

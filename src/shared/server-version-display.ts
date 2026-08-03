@@ -28,7 +28,7 @@ export function resolveDisplayedServerVersion(
   const version = installation.version?.trim() || null;
 
   if (build !== null && isArkStyleVersion(build)) return build;
-  if (arkVersion !== null) return arkVersion;
+  if (arkVersion !== null && isArkStyleVersion(arkVersion)) return arkVersion;
   if (version !== null && isArkStyleVersion(version)) return version;
   return null;
 }

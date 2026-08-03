@@ -71,7 +71,7 @@ export function ServerCardMetaItem({
   );
 
   const valueRow = hasHint ? (
-    <span className={classes.metaValueHint}>
+    <span className={classes.metaValueHint} tabIndex={0}>
       {valueText}
       <WarningCircle
         className={classes.metaHintIcon}

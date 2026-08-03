@@ -937,7 +937,8 @@ export class InstanceService extends EventEmitter {
     bypassCache: boolean,
   ): Promise<ServerInstallationInfo[]> {
     return mapPool(profilesToScan, FLEET_INSPECT_CONCURRENCY, async (profile) => {
-      // Fleet stays FS/manifest-only — no PowerShell / log tails.
+      // Fleet starts FS/manifest-only; only no-display-version installs get a
+      // follow-up log probe (and optional exe probe on forced refresh).
       let info = await inspectServerInstallationAsync(profile.id, profile.installDir, {
         bypassCache,
       });
