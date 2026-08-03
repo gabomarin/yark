@@ -55,7 +55,8 @@ Workflow: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
   `0.x` or include a SemVer prerelease label (`-alpha`, `-beta.1`, …) are marked
   **prerelease**.
 - **Signing:** builds are currently **unsigned** (`CSC_IDENTITY_AUTO_DISCOVERY=false`).
-  Windows SmartScreen may warn until an Authenticode certificate is configured.
+  Windows SmartScreen may warn until Authenticode signing and RFC 3161 timestamp verification
+  are implemented in #142.
 
 ### Local `npm run package` on Windows
 
@@ -101,6 +102,9 @@ Then watch **Actions → Release Windows**. Rebuild an existing tag via
    installer to the GitHub Release.
 8. Leave a fresh empty `## [Unreleased]` section at the top of `CHANGELOG.md`
    for the next cycle.
+9. Download the published installer, compare its GitHub-provided SHA-256 digest, and confirm the
+   public site's release-trust copy matches reality. Once #142 lands, also verify Authenticode,
+   publisher identity, and timestamp before considering the release complete.
 
 ## What belongs in the changelog
 

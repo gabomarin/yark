@@ -17,6 +17,9 @@ import { withBase } from "../../../data/site";
 
    Download the current Windows installer and run it. After install, open **YARK server manager**.
 
+   Before running an unsigned prerelease, follow [Verify your download](#verify-your-download)
+   below and compare it with the matching official release asset.
+
 2. **Point SteamCMD**
 
    Install [SteamCMD](https://developer.valvesoftware.com/wiki/SteamCMD) somewhere writable.
@@ -74,6 +77,22 @@ import { withBase } from "../../../data/site";
    Open the workspace **Backups** tab and create at least a world backup. Prefer **safe update** / **restart** later so critical-path snapshots run for you.
 
 </Steps>
+
+## Verify your download
+
+Use the exact installer name for the version you downloaded:
+
+```powershell
+Get-FileHash ".\YARK.server.manager.Setup.VERSION.exe" -Algorithm SHA256
+```
+
+Open [YARK Releases](https://github.com/gabomarin/yark/releases), select the matching version,
+and compare the complete SHA-256 value. Do not install the file if the values differ or if it
+came from a mirror you do not trust.
+
+Current prereleases are unsigned, so `Get-AuthenticodeSignature` will not show a verified YARK
+publisher yet. This page will document the expected publisher and RFC 3161 timestamp once signed
+releases are available.
 
 ## Next reads
 

@@ -7,33 +7,33 @@ export type RoadmapItem = {
 
 /**
  * User-facing roadmap for the marketing site.
- * Sourced from GitHub milestones v0.5 / v0.6 (+ nearby type:feature work).
+ * Sourced from the live release roadmap and open GitHub issues after v0.5.1.
  * Not a ship promise — keep wording directional.
  */
 export const roadmapItems: RoadmapItem[] = [
   {
-    tag: "building",
-    text: "Crash recovery so interrupted updates and critical backups can resume safely",
+    tag: "planned",
+    text: "Signed Windows releases with a verifiable publisher and trusted timestamp",
   },
   {
-    tag: "building",
-    text: "Clear install health — know whether server files look good before you hit Start",
+    tag: "planned",
+    text: "Reliable Windows E2E gates plus prepared-host validation against a real ASA server",
   },
   {
-    tag: "building",
-    text: "Disable a profile without deleting its configuration",
+    tag: "planned",
+    text: "Portable server and backup export / import with audited restore history",
   },
   {
-    tag: "building",
-    text: "Warn when game / query / RCON ports are already in use before spawn",
+    tag: "planned",
+    text: "Retention and rotation controls for operational logs",
   },
   {
-    tag: "building",
-    text: "Windows tray + start-with-Windows so YARK can stay out of the way",
+    tag: "planned",
+    text: "A sanitized support bundle for sharing diagnostics without credentials or world data",
   },
   {
-    tag: "building",
-    text: "Smarter quit behavior and reattach to servers that kept running",
+    tag: "planned",
+    text: "Measured abuse controls, caching, and operational alerts for the CurseForge metadata proxy",
   },
   {
     tag: "planned",
@@ -42,10 +42,6 @@ export const roadmapItems: RoadmapItem[] = [
   {
     tag: "planned",
     text: "Full per-server RCON console with command history",
-  },
-  {
-    tag: "planned",
-    text: "Portable backup export / import and clearer restore history",
   },
   {
     tag: "planned",

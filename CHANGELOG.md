@@ -9,6 +9,20 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-08-02
+
+### Changed
+
+- Reworked the repository README into a product-oriented project overview with release/CI badges, real application screenshots, operator onboarding, architecture, security boundaries, and contribution guidance.
+- Refreshed the public website roadmap after 0.5.1 so shipped host-resilience work is no longer presented as future development and the published v0.6 / 1.0 direction matches the GitHub milestones.
+- Corrected the Settings operator guide to describe the current mandatory Stop/Cancel confirmation when quitting with active servers.
+- Expanded website and release runbooks so unsigned/signed release trust copy must stay synchronized with the artifacts actually published.
+
+### Security
+
+- Added SHA-256 download-verification instructions for unsigned prerelease installers and documented how this guidance must transition to Authenticode publisher/timestamp verification.
+- Documented the current local credential boundary: server/admin credentials may exist in SQLite, ASA INI files, and INI backup archives and are not yet DPAPI-protected by YARK.
+
 ## [0.5.1] - 2026-08-02
 
 ### Added

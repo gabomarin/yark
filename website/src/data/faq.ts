@@ -91,7 +91,9 @@ export const faqItems: FaqItem[] = [
       <p>
         Yes for unsigned prereleases. The installer is not code-signed yet, so Windows may warn
         on first run. Prefer downloading only from the official GitHub Releases page or the
-        download button on this site (same release assets).
+        download button on this site (same release assets). Before running it, compare the file's
+        SHA-256 with the digest GitHub shows for that release asset; the Getting started guide has
+        the PowerShell command.
       </p>`,
   },
   {
