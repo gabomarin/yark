@@ -206,7 +206,7 @@ node scripts/validation/validate-safe-update.cjs --confirm          # required g
 # --force is accepted as an alias of --confirm
 ```
 
-Requires: Node 22.5+ (`node:sqlite`), Playwright (devDependency), a built app under
+Requires: Node 22.12+ (`node:sqlite` and the current Electron toolchain), Playwright (devDependency), a built app under
 `out/`, and a disposable ASA profile. See [Helper script](#helper-script) below.
 
 ### Prerequisites
