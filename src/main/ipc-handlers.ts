@@ -442,9 +442,9 @@ export function registerIpcHandlers(
     wrap(async () => {
       const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
       const options: SaveDialogOptions = {
-        title: "Exportar logs operativos",
+        title: "Export operational logs",
         defaultPath: `${serverId}-logs-${fileStamp()}.txt`,
-        filters: [{ name: "Texto", extensions: ["txt", "log"] }],
+        filters: [{ name: "Text", extensions: ["txt", "log"] }],
       };
       const result =
         win !== undefined

@@ -9,9 +9,29 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-08-02
+
+### Added
+
+- Server profiles can be enabled, disabled, and cloned. Disabled profiles stay visible on demand but cannot start, restart, or resume maintenance jobs (#129).
+- Installation health classification detects missing, partial, invalid, and ready server folders on startup and on demand (#131).
+- Server start probes the host TCP/UDP ports first and offers clear retry or session-port override actions when another process owns a port (#139).
+
 ### Changed
 
 - Quitting while servers are running always asks for confirmation (Stop / Cancel). Removed the **On quit with active servers** Ask/Stop setting.
+- ARK Version is displayed separately from the Steam build used for update decisions (#140).
+- The supported development runtime is Node.js 22.12 or newer.
+
+### Fixed
+
+- Renderer document language and the operational-log export dialog now use the project's English language of record.
+- CurseForge proxy batches and search pagination are bounded to prevent oversized requests from amplifying upstream API usage.
+
+### Security
+
+- Upgraded Electron to 43.2 and electron-builder to 26.15, removing all known npm audit findings from the desktop dependency tree.
+- Enabled Electron renderer sandboxing and denied renderer-initiated navigation and window creation; validated external links continue through allowlisted IPC.
 
 ## [0.5.0] - 2026-08-01
 
@@ -169,6 +189,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Tracked in-repo TODO / historical planning docs (moved to local agent context).
 
 [Unreleased]: #unreleased
+[0.5.1]: #051---2026-08-02
+[0.5.0]: #050---2026-08-01
 [0.4.0]: #040---2026-07-30
 [0.3.2]: #032---2026-07-29
 [0.3.1]: #031---2026-07-28

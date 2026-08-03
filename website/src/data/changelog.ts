@@ -12,6 +12,34 @@ export type ChangelogEntry = {
 /** Curated site changelog — keep in sync with root CHANGELOG.md when cutting releases. */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.5.1",
+    date: "2026-08-02",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Enable, disable, and clone server profiles.",
+          "Installation health checks for missing, partial, invalid, and ready server folders.",
+          "TCP/UDP host-port probes before start, with retry and session-port override actions.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "ARK Version is displayed separately from the Steam build used for update decisions.",
+          "Quitting with active servers always confirms Stop or Cancel.",
+        ],
+      },
+      {
+        title: "Security",
+        items: [
+          "Updated Electron and the Windows packaging toolchain to remove known dependency vulnerabilities.",
+          "Enabled renderer sandboxing, blocked untrusted navigation/window creation, and bounded CurseForge proxy requests.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.5.0",
     date: "2026-08-01",
     sections: [

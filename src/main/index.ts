@@ -115,9 +115,16 @@ function createWindow(): BrowserWindow {
       preload: join(__dirname, "../preload/index.js"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      sandbox: true,
     },
   });
+
+  // The renderer is local-only. External content must go through a narrowly
+  // validated IPC handler instead of replacing or creating app windows.
+  win.webContents.on("will-navigate", (event) => {
+    event.preventDefault();
+  });
+  win.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
 
   win.on("closed", () => {
     if (mainWindow === win) {

@@ -38,6 +38,9 @@ export type YarkApiSuccess<T> = {
 
 /** Fixed upstream contract — not a secret; not expected to change often. */
 const UPSTREAM = "https://api.curseforge.com";
+const MAX_BATCH_MOD_IDS = 50;
+const MAX_SEARCH_FILTER_LENGTH = 200;
+const MAX_SEARCH_PAGE_SIZE = 50;
 
 type CorsHeaders = Record<string, string>;
 
@@ -85,7 +88,7 @@ export default {
 
       const modMatch = /^\/v1\/mods\/(\d+)$/.exec(url.pathname);
       if (request.method === "GET" && modMatch !== null) {
-        return handleGetMod(modMatch[1], apiKey, asaGameId, corsHeaders);
+        return handleGetMod(modMatch[1]!, apiKey, asaGameId, corsHeaders);
       }
 
       if (request.method === "POST" && url.pathname === "/v1/mods") {
@@ -149,6 +152,14 @@ async function handleGetMods(
         400,
         "invalid_body",
         'Body must be { "modIds": number[] }.',
+      );
+    }
+    if (parsed.modIds.length > MAX_BATCH_MOD_IDS) {
+      return errorJson(
+        corsHeaders,
+        400,
+        "too_many_mod_ids",
+        `A batch may contain at most ${MAX_BATCH_MOD_IDS} modIds.`,
       );
     }
     modIds = [];
@@ -228,6 +239,50 @@ async function handleSearch(
 ): Promise<Response> {
   const upstreamUrl = new URL(`${UPSTREAM}/v1/mods/search`);
   upstreamUrl.searchParams.set("gameId", String(asaGameId));
+
+  const searchFilter = clientUrl.searchParams.get("searchFilter");
+  if (
+    searchFilter !== null &&
+    searchFilter.length > MAX_SEARCH_FILTER_LENGTH
+  ) {
+    return errorJson(
+      corsHeaders,
+      400,
+      "invalid_search_filter",
+      `searchFilter may contain at most ${MAX_SEARCH_FILTER_LENGTH} characters.`,
+    );
+  }
+
+  const rawPageSize = clientUrl.searchParams.get("pageSize");
+  if (rawPageSize !== null) {
+    const pageSize = Number(rawPageSize);
+    if (
+      !Number.isInteger(pageSize) ||
+      pageSize < 1 ||
+      pageSize > MAX_SEARCH_PAGE_SIZE
+    ) {
+      return errorJson(
+        corsHeaders,
+        400,
+        "invalid_page_size",
+        `pageSize must be an integer from 1 to ${MAX_SEARCH_PAGE_SIZE}.`,
+      );
+    }
+  }
+
+  const rawIndex = clientUrl.searchParams.get("index");
+  if (rawIndex !== null) {
+    const index = Number(rawIndex);
+    if (!Number.isInteger(index) || index < 0) {
+      return errorJson(
+        corsHeaders,
+        400,
+        "invalid_index",
+        "index must be a non-negative integer.",
+      );
+    }
+  }
+
   for (const key of [
     "searchFilter",
     "classId",

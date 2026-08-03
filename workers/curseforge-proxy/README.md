@@ -12,8 +12,8 @@ Tracked by [#16](https://github.com/gabomarin/yark/issues/16).
 | --- | --- | --- |
 | `GET` | `/health` | Liveness; no secret required |
 | `GET` | `/v1/mods/:modId` | Single ASA mod (normalized) |
-| `POST` | `/v1/mods` | Body `{ "modIds": [number, ...] }` → ASA-only items + skipped |
-| `GET` | `/v1/mods/search?...` | Forces `gameId=83374`; filters non-ASA |
+| `POST` | `/v1/mods` | Body `{ "modIds": [number, ...] }` (maximum 50) → ASA-only items + skipped |
+| `GET` | `/v1/mods/search?...` | Forces `gameId=83374`; filters non-ASA; `pageSize` is limited to 50 |
 
 ## Response envelope
 
