@@ -44,7 +44,7 @@ Domain runbooks: [docs/backups.md](docs/backups.md), [docs/updates-steamcmd.md](
 Notes specific to running this in the Linux cloud VM:
 
 - Dependencies are refreshed automatically by the startup update script (`npm install`).
-  Node 22.5+ is required (`node:sqlite`) and available.
+  Node 22.12+ is required (`node:sqlite` and the current Electron toolchain) and available.
 - Lint/test/build/run all work on Linux. There is no ESLint config yet; `npm run typecheck`
   (`tsc --noEmit`) is the TypeScript gate and `npm run lint` enforces the feature-file
   size policy in [docs/component-structure.md](docs/component-structure.md) (placeholder

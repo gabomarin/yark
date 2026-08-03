@@ -36,7 +36,7 @@ Expect gaps, rough edges, and behavior changes between builds.
 ## Requirements
 
 - Windows (to run the desktop app)
-- Node.js 22.5+ (built-in `node:sqlite`; a recent version compatible with Electron/Vite)
+- Node.js 22.12+ (built-in `node:sqlite`; required by the current Electron toolchain)
 - npm
 
 ## Local development
@@ -67,7 +67,7 @@ npm run package
 
 Skip only in a real emergency: `git commit --no-verify` / `git push --no-verify`, or set `HUSKY=0`. Do **not** skip to land broken typecheck/tests — CI will still fail on PRs and `main`.
 
-If you use **WSL** on a Windows checkout (`/mnt/f/...`), hooks auto-run npm via `cmd.exe` (Windows Node). Native WSL `npm test` fails when `node_modules` were installed for win32 (missing `@rollup/rollup-linux-*`). Prefer Node **22.5+** on Windows; WSL Node 20 is below `engines`.
+If you use **WSL** on a Windows checkout (`/mnt/f/...`), hooks auto-run npm via `cmd.exe` (Windows Node). Native WSL `npm test` fails when `node_modules` were installed for win32 (missing `@rollup/rollup-linux-*`). Prefer Node **22.12+** on Windows; WSL Node 20 is below `engines`.
 
 GitHub Actions CI (`.github/workflows/ci.yml`) on every PR and push to `main`: **typecheck**, **lint**, **test**, and **build** on `windows-latest`. Playwright e2e / visual review stay local (see [docs/visual-testing.md](docs/visual-testing.md)).
 
