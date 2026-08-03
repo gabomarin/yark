@@ -1,16 +1,14 @@
 import type { ReactElement } from "react";
 import {
-  Broadcast,
   CloudArrowDown,
   Eye,
   EyeSlash,
-  FloppyDisk,
   FolderOpen,
   Power,
   ShieldCheck,
   Wrench,
 } from "@phosphor-icons/react";
-import { Button, Stack, Text, Textarea } from "@mantine/core";
+import { Button, Stack, Text } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import {
   formatInstallationCheckedAt,
@@ -19,7 +17,6 @@ import {
   isInstallationReady,
 } from "@shared/installation-health";
 import { resolveDisplayedServerVersion } from "@shared/server-version-display";
-import { useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { serverRuntimeStatusLabel } from "@ui/ServerRuntimeStatusBadge/serverRuntimeStatus";
 import classes from "./SidePanel.module.css";
@@ -35,8 +32,6 @@ interface Props {
   onInstallFiles: () => void;
   onUpdateNow: () => void;
   onVerifyFiles: () => void;
-  onSaveWorld: () => void;
-  onBroadcast: (message: string) => void;
   onKill: () => void;
   onToggleEnabled?: () => void;
 }
@@ -51,7 +46,6 @@ function MetaRow({ label, value }: { label: string; value: string }): ReactEleme
 }
 
 export function SidePanel(props: Props): ReactElement {
-  const [broadcast, setBroadcast] = useState("");
   const status = props.runtime?.status ?? "stopped";
   const isActive = status === "starting" || status === "running" || status === "stopping";
   const steamCmdBusy = props.opsLocked === true;
@@ -78,10 +72,10 @@ export function SidePanel(props: Props): ReactElement {
       : steamCmdBusy
         ? steamCmdLockTitle ?? "Another server operation is in progress"
         : props.server.enabled && isActive
-        ? "Stop the server first"
-        : !props.server.enabled && !filesReady
-          ? props.installation?.guidance ?? "Install files first"
-          : undefined;
+          ? "Stop the server first"
+          : !props.server.enabled && !filesReady
+            ? props.installation?.guidance ?? "Install files first"
+            : undefined;
   const installHiddenTitle =
     !canOfferInstall && !filesReady
       ? props.installation?.guidance ??
@@ -192,40 +186,6 @@ export function SidePanel(props: Props): ReactElement {
           >
             Force update
           </Button>
-          <Button
-            size="sm"
-            variant="default"
-            fullWidth
-            justify="flex-start"
-            leftSection={<FloppyDisk size={14} color="var(--mantine-color-teal-6)" />}
-            onClick={props.onSaveWorld}
-            disabled={status !== "running"}
-          >
-            Save world
-          </Button>
-          <div className={classes.broadcast}>
-            <Textarea
-              placeholder="Message for players"
-              minRows={2}
-              size="xs"
-              value={broadcast}
-              onChange={(event) => setBroadcast(event.currentTarget.value)}
-            />
-            <Button
-              size="sm"
-              variant="default"
-              fullWidth
-              justify="flex-start"
-              leftSection={<Broadcast size={14} color="var(--mantine-color-blue-6)" />}
-              disabled={status !== "running" || broadcast.trim().length === 0}
-              onClick={() => {
-                props.onBroadcast(broadcast.trim());
-                setBroadcast("");
-              }}
-            >
-              Send announcement
-            </Button>
-          </div>
           <Button
             size="sm"
             color="red"

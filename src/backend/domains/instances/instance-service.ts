@@ -30,6 +30,7 @@ import type { ProcessManager } from "../../infra/process/process-manager";
 import { findPortConflicts, validateProfileInput } from "./validation";
 import { checkClusterCompliance } from "../cluster/compliance";
 import { rconExec } from "../../infra/rcon/rcon-client";
+import { RconSessionManager } from "../../infra/rcon/rcon-session-manager";
 import {
   inspectServerInstallationAsync,
   readOfficialArkBuildCached,
@@ -162,6 +163,8 @@ export class InstanceService extends EventEmitter {
     key: string;
     promise: Promise<ServerInstallationInfo[]>;
   } | null = null;
+  /** Persistent RCON session manager. */
+  private readonly rconSessions = new RconSessionManager();
 
   constructor(
     private readonly repo: ServerRepository,
@@ -170,6 +173,26 @@ export class InstanceService extends EventEmitter {
     private readonly locks: InstanceLockManager,
   ) {
     super();
+    
+    // Forward RCON status changes to UI
+    this.rconSessions.on("status-changed", (info) => {
+      this.emit("rcon-status-changed", info);
+    });
+
+    // Auto-connect RCON when server becomes running
+    this.processes.on("status", (status: ServerRuntimeInfo) => {
+      if (status.status === "running") {
+        const profile = this.repo.get(status.serverId);
+        if (profile) {
+          this.autoConnectRcon(profile).catch((err) => {
+            console.error(`[InstanceService] Auto-connect RCON failed for ${profile.name}:`, err);
+          });
+        }
+      } else if (status.status === "stopped" || status.status === "error") {
+        // Disconnect RCON when server stops
+        this.rconSessions.disconnect(status.serverId);
+      }
+    });
   }
 
   list(): ServerProfile[] {
@@ -1070,12 +1093,27 @@ export class InstanceService extends EventEmitter {
     if (!this.processes.isActive(id)) {
       throw new Error("Server is not running");
     }
-    const response = await rconExec(
-      RCON_HOST,
-      profile.rconPort,
-      profile.adminPassword,
-      command,
+
+    // Ensure RCON session is connected
+    const status = this.rconSessions.getStatus(id);
+    if (status.status !== "connected") {
+      console.log(`[RCON] Connecting session for ${profile.name}...`);
+      await this.rconSessions.connect(
+        id,
+        RCON_HOST,
+        profile.rconPort,
+        profile.adminPassword,
+      );
+    }
+
+    // Debug: Log the exact command being sent
+    console.log(
+      `[RCON] Sending to ${profile.name} (${RCON_HOST}:${profile.rconPort}): "${command}"`,
     );
+    
+    const response = await this.rconSessions.send(id, command);
+    console.log(`[RCON] Response: "${response}"`);
+    
     this.repo.addEvent(
       id,
       "rcon_command",
@@ -1083,6 +1121,57 @@ export class InstanceService extends EventEmitter {
       `RCON on "${profile.name}": ${command}`,
     );
     return response;
+  }
+
+  /** Returns RCON connection status for a server. */
+  getRconStatus(id: string) {
+    return this.rconSessions.getStatus(id);
+  }
+
+  /** Returns RCON connection status for all servers. */
+  getAllRconStatus() {
+    return this.rconSessions.getAllStatus();
+  }
+
+  /** Replaces the current RCON session and reconnects using the active runtime port. */
+  async retryRconConnection(id: string): Promise<void> {
+    const profile = this.processes.applyRuntimePorts(this.mustGet(id));
+    if (!this.processes.isActive(id)) {
+      throw new Error("Server is not running");
+    }
+
+    this.rconSessions.disconnect(id);
+    await this.rconSessions.connect(
+      id,
+      RCON_HOST,
+      profile.rconPort,
+      profile.adminPassword,
+    );
+  }
+
+  /** Auto-connects RCON for a running server. */
+  private async autoConnectRcon(profile: ServerProfile): Promise<void> {
+    const runtimeProfile = this.processes.applyRuntimePorts(profile);
+    console.log(`[InstanceService] Auto-connecting RCON for ${profile.name}...`);
+    
+    // Small delay to ensure RCON port is actually listening
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    try {
+      await this.rconSessions.connect(
+        profile.id,
+        RCON_HOST,
+        runtimeProfile.rconPort,
+        profile.adminPassword,
+      );
+      console.log(`[InstanceService] RCON auto-connected for ${profile.name}`);
+    } catch (err) {
+      console.error(
+        `[InstanceService] RCON auto-connect failed for ${profile.name}:`,
+        err,
+      );
+      // Don't throw - auto-connect is best-effort
+    }
   }
 
   private mustGet(id: string): ServerProfile {

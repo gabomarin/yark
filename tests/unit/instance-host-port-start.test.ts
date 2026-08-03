@@ -69,6 +69,7 @@ function harness(initialProfiles: ServerProfile[]) {
     addEvent: vi.fn(),
   } as unknown as ServerRepository;
   const processes = {
+    on: vi.fn(),
     isActive: vi.fn((id: string) => id === "peer-running"),
     start: vi.fn(),
     applyRuntimePorts: vi.fn((p: ServerProfile) => p),

@@ -22,6 +22,7 @@ import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@
 import { isInstallationReady } from "@shared/installation-health";
 import { resolveDisplayedServerVersion } from "@shared/server-version-display";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
+import { RconStatusIcon } from "../RconStatusIcon/RconStatusIcon";
 import classes from "./WorkspaceHeader.module.css";
 
 interface Props {
@@ -81,6 +82,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
               {props.server.name}
             </Title>
             <ServerRuntimeStatusBadge status={status} size="sm" />
+            {status === "running" && <RconStatusIcon serverId={props.server.id} />}
             {!props.server.enabled && (
               <Badge size="sm" variant="light" color="gray">
                 Inactive

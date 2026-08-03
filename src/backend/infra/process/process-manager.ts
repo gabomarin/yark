@@ -72,6 +72,10 @@ function argsIncludeLogFlag(args: string[]): boolean {
   return args.some((arg) => /^[-/]log$/i.test(arg.trim()));
 }
 
+function argsIncludeConsoleFlag(args: string[]): boolean {
+  return args.some((arg) => /^[-/]console$/i.test(arg.trim()));
+}
+
 /**
  * Spawns ASA so its raw command line keeps the intended, separate quotes on
  * map and SessionName,
@@ -292,12 +296,18 @@ export class ProcessManager extends EventEmitter {
     let spawnArgs = args;
     // Only when using profile-built CLI — never mutate launchArgsOverride (tests / custom argv).
     if (
-      !nativeConsole &&
       options?.launchArgsOverride === undefined &&
-      !argsIncludeLogFlag(spawnArgs)
+      !argsIncludeLogFlag(spawnArgs) &&
+      !argsIncludeConsoleFlag(spawnArgs)
     ) {
-      // Helps Unreal write ShooterGame/Saved/Logs while the console is hidden.
-      spawnArgs = [...spawnArgs, "-log"];
+      // Add appropriate flag based on console mode
+      if (nativeConsole) {
+        // Enable Unreal console for interactive RCON commands in the server window.
+        spawnArgs = [...spawnArgs, "-console"];
+      } else {
+        // Helps Unreal write ShooterGame/Saved/Logs while the console is hidden.
+        spawnArgs = [...spawnArgs, "-log"];
+      }
     }
     // Log the same logical Unreal shape sent verbatim on Windows.
     const displayCommandLine =

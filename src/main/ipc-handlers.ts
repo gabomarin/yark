@@ -273,6 +273,18 @@ export function registerIpcHandlers(
     wrap(() => instances.sendRcon(id, command)),
   );
 
+  ipcMain.handle(IPC.rconRetryConnection, (_e, id: string) =>
+    wrap(() => instances.retryRconConnection(id)),
+  );
+
+  ipcMain.handle(IPC.rconGetStatus, (_e, id: string) =>
+    wrap(() => instances.getRconStatus(id)),
+  );
+
+  ipcMain.handle(IPC.rconGetAllStatus, () =>
+    wrap(() => instances.getAllRconStatus()),
+  );
+
   ipcMain.handle(IPC.eventsRecent, (_e, limit: number) =>
     wrap(() => repo.recentEvents(limit)),
   );

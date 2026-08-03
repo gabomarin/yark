@@ -73,6 +73,9 @@ export const IPC = {
   steamcmdClearCache: "steamcmd:clear-cache",
   clusterCheck: "cluster:check",
   rconCommand: "rcon:command",
+  rconRetryConnection: "rcon:retry-connection",
+  rconGetStatus: "rcon:get-status",
+  rconGetAllStatus: "rcon:get-all-status",
   eventsRecent: "events:recent",
   pickPath: "fs:pick-path",
   appListDataFolders: "app:list-data-folders",
@@ -123,6 +126,7 @@ export const IPC_PUSH = {
   steamCmdProgress: "push:steamcmd-progress",
   serverStopProgress: "push:server-stop-progress",
   backupsChanged: "push:backups-changed",
+  rconStatusChanged: "push:rcon-status-changed",
 } as const;
 
 export interface SteamCmdProgressPush {
@@ -134,6 +138,12 @@ export type ServerStopProgressPush = ServerStopProgress;
 
 export interface BackupsChangedPush {
   serverId: string;
+}
+
+export interface RconStatusChangedPush {
+  serverId: string;
+  status: "disconnected" | "connecting" | "connected" | "error";
+  lastError: string | null;
 }
 
 /** Normalized result of IPC operations. */
@@ -192,6 +202,11 @@ export interface RendererApi {
     id: string,
     command: string,
   ): Promise<IpcResult<string>>;
+  retryRconConnection(id: string): Promise<IpcResult<void>>;
+  getRconStatus(
+    id: string,
+  ): Promise<IpcResult<RconStatusChangedPush>>;
+  getAllRconStatus(): Promise<IpcResult<RconStatusChangedPush[]>>;
   recentEvents(limit: number): Promise<IpcResult<AppEvent[]>>;
   pickPath(
     kind: PickPathKind,
@@ -294,5 +309,8 @@ export interface RendererApi {
   ): () => void;
   onBackupsChanged(
     listener: (payload: BackupsChangedPush) => void,
+  ): () => void;
+  onRconStatusChanged(
+    listener: (payload: RconStatusChangedPush) => void,
   ): () => void;
 }

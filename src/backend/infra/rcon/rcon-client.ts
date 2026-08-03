@@ -27,7 +27,7 @@ interface Packet {
  * saveworld, broadcast, kick/ban, and ASA admin commands.
  */
 export class RconClient {
-  private socket: Socket | null = null;
+  socket: Socket | null = null;
   private buffer = Buffer.alloc(0);
   private nextId = 1;
   private pending = new Map<
@@ -43,10 +43,12 @@ export class RconClient {
   ) {}
 
   async connect(): Promise<void> {
+    console.log(`[RconClient] Connecting to ${this.host}:${this.port}...`);
     await new Promise<void>((resolve, reject) => {
       const socket = new Socket();
       const onError = (err: Error) => {
         socket.destroy();
+        console.error(`[RconClient] Connection error: ${err.message}`);
         reject(err);
       };
       socket.setTimeout(this.timeoutMs, () =>
@@ -57,6 +59,7 @@ export class RconClient {
         socket.setTimeout(0);
         socket.removeListener("error", onError);
         this.socket = socket;
+        console.log(`[RconClient] Connected to ${this.host}:${this.port}`);
         socket.on("data", (chunk) => this.onData(chunk));
         socket.on("error", (err) => this.failAll(err));
         socket.on("close", () =>
@@ -66,11 +69,14 @@ export class RconClient {
       });
     });
 
+    console.log(`[RconClient] Authenticating...`);
     const authId = this.nextId++;
     const response = await this.sendPacket(authId, AUTH, this.password);
     if (response === null) {
+      console.error(`[RconClient] Authentication rejected`);
       throw new Error("RCON authentication rejected (incorrect password)");
     }
+    console.log(`[RconClient] Authenticated successfully`);
   }
 
   /** Sends a command and returns the server response. */
@@ -78,9 +84,12 @@ export class RconClient {
     if (this.socket === null) {
       throw new Error("RCON not connected");
     }
+    console.log(`[RconClient] Sending command: "${command}"`);
     const id = this.nextId++;
     const body = await this.sendPacket(id, EXEC_COMMAND, command);
-    return body ?? "";
+    const result = body ?? "";
+    console.log(`[RconClient] Received response (${result.length} bytes): "${result.substring(0, 100)}${result.length > 100 ? "..." : ""}"`);
+    return result;
   }
 
   close(): void {
@@ -193,7 +202,14 @@ export async function rconExec(
   const client = new RconClient(host, port, password, timeoutMs);
   try {
     await client.connect();
-    return await client.send(command);
+    const result = await client.send(command);
+    console.log(`[rconExec] Command successful`);
+    return result;
+  } catch (err) {
+    console.error(
+      `[rconExec] Error: ${err instanceof Error ? err.message : String(err)}`,
+    );
+    throw err;
   } finally {
     client.close();
   }

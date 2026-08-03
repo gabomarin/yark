@@ -83,6 +83,7 @@ function harness(initialProfiles: ServerProfile[]) {
     addEvent: vi.fn(),
   } as unknown as ServerRepository;
   const processes = {
+    on: vi.fn(),
     isActive: vi.fn(() => false),
     start: vi.fn(),
   } as unknown as ProcessManager;

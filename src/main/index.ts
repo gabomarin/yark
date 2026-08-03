@@ -34,7 +34,7 @@ import {
 } from "../backend/infra/process/left-running-store";
 import { reattachLeftRunningProcesses } from "../backend/infra/process/left-running-reattach";
 import { applyWindowsLoginItem } from "./windows-login-item";
-import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush } from "../shared/ipc";
+import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush, type RconStatusChangedPush } from "../shared/ipc";
 import { normalizeServerStopProgress } from "../shared/types";
 import type { BackupChangedPush } from "../backend/domains/backups/backup-service";
 import type { ServerRuntimeInfo } from "../shared/types";
@@ -355,6 +355,10 @@ if (gotSingleInstanceLock) {
 
     backupService.on("changed", (payload: BackupChangedPush) => {
       sendToRenderer(IPC_PUSH.backupsChanged, payload);
+    });
+
+    instances.on("rcon-status-changed", (payload: RconStatusChangedPush) => {
+      sendToRenderer(IPC_PUSH.rconStatusChanged, payload);
     });
 
     mainWindow = createWindow();

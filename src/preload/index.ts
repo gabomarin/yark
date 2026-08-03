@@ -7,7 +7,7 @@ import type {
   StartServerOptions,
   SteamCmdCacheKind,
 } from "../shared/types";
-import type { SteamCmdProgressPush, BackupsChangedPush, ServerStopProgressPush } from "../shared/ipc";
+import type { SteamCmdProgressPush, BackupsChangedPush, ServerStopProgressPush, RconStatusChangedPush } from "../shared/ipc";
 import { normalizeServerStopProgress } from "../shared/types";
 
 const api: RendererApi = {
@@ -51,6 +51,12 @@ const api: RendererApi = {
   checkCluster: () => ipcRenderer.invoke(IPC.clusterCheck),
   sendRconCommand: (id: string, command: string) =>
     ipcRenderer.invoke(IPC.rconCommand, id, command),
+  retryRconConnection: (id: string) =>
+    ipcRenderer.invoke(IPC.rconRetryConnection, id),
+  getRconStatus: (id: string) =>
+    ipcRenderer.invoke(IPC.rconGetStatus, id),
+  getAllRconStatus: () =>
+    ipcRenderer.invoke(IPC.rconGetAllStatus),
   recentEvents: (limit: number) =>
     ipcRenderer.invoke(IPC.eventsRecent, limit),
   pickPath: (kind, defaultPath, title) =>
@@ -162,6 +168,13 @@ const api: RendererApi = {
     ipcRenderer.on(IPC_PUSH.backupsChanged, handler);
     return () => {
       ipcRenderer.removeListener(IPC_PUSH.backupsChanged, handler);
+    };
+  },
+  onRconStatusChanged: (listener) => {
+    const handler = (_e: unknown, payload: RconStatusChangedPush) => listener(payload);
+    ipcRenderer.on(IPC_PUSH.rconStatusChanged, handler);
+    return () => {
+      ipcRenderer.removeListener(IPC_PUSH.rconStatusChanged, handler);
     };
   },
 };

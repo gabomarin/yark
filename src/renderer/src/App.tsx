@@ -34,6 +34,7 @@ import { OverviewPage } from "@features/overview/OverviewPage";
 import { InstallHealthScanProgress } from "@features/overview/components/InstallHealthScanProgress/InstallHealthScanProgress";
 import {
   ServerWorkspacePage,
+  type RconHistoryEntry,
   type WorkspaceTab,
 } from "@features/server-workspace/ServerWorkspacePage";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
@@ -81,6 +82,9 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   const [officialSteamBuild, setOfficialSteamBuild] = useState<string | null>(null);
   const [reports, setReports] = useState<ClusterComplianceReport[]>([]);
   const [events, setEvents] = useState<AppEvent[]>([]);
+  const [rconHistoryByServer, setRconHistoryByServer] = useState<
+    Map<string, RconHistoryEntry[]>
+  >(new Map());
   const [steamCmdStatus, setSteamCmdStatus] = useState<SteamCmdStatus | null>(null);
   const [steamCmdConsole, setSteamCmdConsole] = useState<SteamCmdConsoleSnapshot | null>(null);
   const [stopProgressByServerId, setStopProgressByServerId] = useState<
@@ -508,6 +512,72 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     [refresh],
   );
 
+  const appendRconHistory = useCallback((serverId: string, entry: RconHistoryEntry) => {
+    setRconHistoryByServer((prev) => {
+      const next = new Map(prev);
+      const current = next.get(serverId) ?? [];
+      next.set(serverId, [entry, ...current].slice(0, 100));
+      return next;
+    });
+  }, []);
+
+  const patchRconHistory = useCallback(
+    (
+      serverId: string,
+      entryId: string,
+      patch: Partial<Pick<RconHistoryEntry, "status" | "response" | "error">>,
+    ) => {
+      setRconHistoryByServer((prev) => {
+        const next = new Map(prev);
+        const current = next.get(serverId) ?? [];
+        next.set(
+          serverId,
+          current.map((entry) =>
+            entry.id === entryId
+              ? {
+                  ...entry,
+                  ...patch,
+                }
+              : entry,
+          ),
+        );
+        return next;
+      });
+    },
+    [],
+  );
+
+  const sendRconCommand = useCallback(
+    async (serverId: string, command: string): Promise<boolean> => {
+      setError(null);
+      const createdAt = new Date().toISOString();
+      const entryId =
+        globalThis.crypto?.randomUUID?.() ?? `${createdAt}-${Math.random().toString(36).slice(2, 10)}`;
+      appendRconHistory(serverId, {
+        id: entryId,
+        command,
+        createdAt,
+        status: "pending",
+        response: null,
+        error: null,
+      });
+
+      const result = await window.api.sendRconCommand(serverId, command);
+      await refresh();
+      patchRconHistory(serverId, entryId, {
+        status: result.ok ? "success" : "error",
+        response: result.ok ? (result.data.trim().length > 0 ? result.data : null) : null,
+        error: result.ok ? null : result.error ?? "Unknown error",
+      });
+
+      if (!result.ok) {
+        setError(result.error ?? "Unknown error");
+      }
+      return result.ok;
+    },
+    [appendRconHistory, patchRconHistory, refresh],
+  );
+
   const startSteamFilesJob = useCallback(
     (serverId: string, kind: "install" | "update" | "verify") => {
       setError(null);
@@ -795,6 +865,8 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             statuses={statuses}
             installationInfo={installationInfo}
             clusterReports={reports}
+            events={events}
+            rconHistory={rconHistoryByServer.get(overlay.serverId) ?? []}
             onboarding={overlay.onboarding === true}
             initialTab={overlay.initialTab}
             logsFocus={overlay.logsFocus}
@@ -847,9 +919,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             onInstallFiles={(id) => startSteamFilesJob(id, "install")}
             onUpdateNow={(id) => startSteamFilesJob(id, "update")}
             onVerifyFiles={(id) => startSteamFilesJob(id, "verify")}
-            onSendRcon={(id, command) =>
-              void runAction(() => window.api.sendRconCommand(id, command))
-            }
+            onSendRcon={(id, command) => sendRconCommand(id, command)}
             onServerUpdated={() => void refresh()}
           />
         </AppShellLayout>

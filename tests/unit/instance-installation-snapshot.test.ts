@@ -28,7 +28,7 @@ describe("InstanceService.installationInfo", () => {
       list: vi.fn(() => []),
     } as unknown as ServerRepository;
 
-    const processes = {} as ProcessManager;
+    const processes = { on: vi.fn() } as unknown as ProcessManager;
     const backups = {} as import("@backend/domains/backups/backup-service").BackupService;
     const service = new InstanceService(
       repo,
@@ -78,7 +78,7 @@ describe("InstanceService.installationInfo", () => {
 
     const service = new InstanceService(
       repo,
-      {} as ProcessManager,
+      { on: vi.fn() } as unknown as ProcessManager,
       {} as import("@backend/domains/backups/backup-service").BackupService,
       new InstanceLockManager(),
     );
