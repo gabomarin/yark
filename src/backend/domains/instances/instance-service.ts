@@ -12,6 +12,7 @@ import type {
   ServerStopProgressReason,
   StartServerOptions,
 } from "@shared/types";
+import { PORT_MAX, PORT_MIN } from "@shared/types";
 import { EventEmitter } from "node:events";
 import { existsSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
@@ -39,6 +40,7 @@ import {
   isInstallHealthDegradation,
   isInstallationReady,
 } from "@shared/installation-health";
+import { assertHostPortsAvailable } from "../../infra/process/host-port-probe";
 import { resolveDisplayedServerVersion } from "@shared/server-version-display";
 
 /** Max concurrent async FS classify probes during a fleet scan. */
@@ -459,24 +461,82 @@ export class InstanceService extends EventEmitter {
         `Server files are not ready (${installation.health}): ${installation.guidance}`,
       );
     }
+    const effective = this.effectiveStartProfile(profile, options);
     const running = this.repo
       .list()
-      .filter((p) => p.id !== id && this.processes.isActive(p.id));
-    const conflicts = findPortConflicts(running, { ...profile });
+      .filter((p) => p.id !== id && this.processes.isActive(p.id))
+      .map((p) => this.processes.applyRuntimePorts(p));
+    const conflicts = findPortConflicts(running, { ...effective });
     if (conflicts.length > 0) {
       const c = conflicts[0]!;
       throw new Error(
         `Port conflict ${c.kind} ${c.port} with active server "${c.serverA === profile.name ? c.serverB : c.serverA}"`,
       );
     }
-    await syncProfileSettingsToIni(profile);
-    this.processes.start(profile, options);
+    const others = this.repo.list().filter((p) => p.id !== id);
+    await assertHostPortsAvailable(effective, others, {
+      allowInconclusive: options?.skipPortValidation === true,
+    });
+    await syncProfileSettingsToIni(effective);
+    this.processes.start(effective, options);
+    const sessionNote =
+      options?.sessionPorts != null
+        ? ` (session ports game ${effective.gamePort} / query ${effective.queryPort} / RCON ${effective.rconPort}; saved profile unchanged)`
+        : "";
     this.repo.addEvent(
       id,
       "server_started",
       "info",
-      `Server "${profile.name}" starting (waiting for readiness)`,
+      `Server "${profile.name}" starting (waiting for readiness)${sessionNote}`,
     );
+  }
+
+  /** Applies session-only port overrides without mutating the saved profile. */
+  private effectiveStartProfile(
+    profile: ServerProfile,
+    options?: StartServerOptions,
+  ): ServerProfile {
+    const session = options?.sessionPorts;
+    if (session == null) {
+      return profile;
+    }
+    this.assertValidSessionPorts(session);
+    return {
+      ...profile,
+      gamePort: session.gamePort,
+      queryPort: session.queryPort,
+      rconPort: session.rconPort,
+    };
+  }
+
+  private assertValidSessionPorts(ports: {
+    gamePort: number;
+    queryPort: number;
+    rconPort: number;
+  }): void {
+    const entries: Array<[string, number]> = [
+      ["gamePort", ports.gamePort],
+      ["queryPort", ports.queryPort],
+      ["rconPort", ports.rconPort],
+    ];
+    for (const [field, value] of entries) {
+      if (
+        !Number.isInteger(value) ||
+        value < PORT_MIN ||
+        value > PORT_MAX
+      ) {
+        throw new Error(
+          `${field} must be an integer between ${PORT_MIN} and ${PORT_MAX}`,
+        );
+      }
+    }
+    if (
+      ports.gamePort === ports.queryPort ||
+      ports.gamePort === ports.rconPort ||
+      ports.queryPort === ports.rconPort
+    ) {
+      throw new Error("Game, query, and RCON session ports must be distinct");
+    }
   }
 
   async setServerEnabled(id: string, enabled: boolean): Promise<ServerProfile> {
@@ -721,7 +781,8 @@ export class InstanceService extends EventEmitter {
         }),
       );
 
-      const preparation = await this.processes.beginGracefulStop(profile);
+      const runtimeProfile = this.processes.applyRuntimePorts(profile);
+      const preparation = await this.processes.beginGracefulStop(runtimeProfile);
       if (preparation.phase === "absent") {
         return "absent";
       }
@@ -745,7 +806,7 @@ export class InstanceService extends EventEmitter {
         }),
       );
       const finishResult = await this.processes.finishGracefulStop(
-        profile,
+        runtimeProfile,
         preparation.handle,
       );
       if (finishResult === "replaced") {
@@ -1005,7 +1066,7 @@ export class InstanceService extends EventEmitter {
   }
 
   async sendRcon(id: string, command: string): Promise<string> {
-    const profile = this.mustGet(id);
+    const profile = this.processes.applyRuntimePorts(this.mustGet(id));
     if (!this.processes.isActive(id)) {
       throw new Error("Server is not running");
     }

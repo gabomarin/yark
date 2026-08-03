@@ -11,6 +11,10 @@ vi.mock("@backend/domains/instances/sync-profile-ini", () => ({
   syncProfileSettingsToIni: vi.fn(async () => undefined),
 }));
 
+vi.mock("@backend/infra/process/host-port-probe", () => ({
+  assertHostPortsAvailable: vi.fn(async () => undefined),
+}));
+
 vi.mock("@backend/domains/instances/server-installation", () => ({
   inspectServerInstallation: vi.fn(),
   inspectServerInstallationAsync: vi.fn(),
@@ -77,6 +81,7 @@ function makeProcesses(profile: ServerProfile, active = true) {
       lastError: null,
     })),
     waitWhileStarting: vi.fn(async () => undefined),
+    applyRuntimePorts: vi.fn((p: ServerProfile) => p),
     beginGracefulStop: vi.fn(async () => {
       return {
         phase: "saved" as const,

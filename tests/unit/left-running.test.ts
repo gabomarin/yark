@@ -29,9 +29,32 @@ function makeRecord(
 
 describe("left-running identity", () => {
   it("parses durable leave records from JSON", () => {
-    const record = makeRecord();
+    const record = makeRecord({
+      runtimePorts: { gamePort: 7787, queryPort: 27025, rconPort: 27030 },
+    });
     const parsed = parseLeftRunningProcesses(JSON.stringify([record]));
     expect(parsed).toEqual([record]);
+  });
+
+  it("keeps older leave rows without runtimePorts", () => {
+    const legacy = makeRecord();
+    delete legacy.runtimePorts;
+    const parsed = parseLeftRunningProcesses(JSON.stringify([legacy]));
+    expect(parsed).toEqual([legacy]);
+    expect(parsed[0]?.runtimePorts).toBeUndefined();
+  });
+
+  it("drops invalid runtimePorts without rejecting the leave row", () => {
+    const parsed = parseLeftRunningProcesses(
+      JSON.stringify([
+        {
+          ...makeRecord(),
+          runtimePorts: { gamePort: 7787, queryPort: 7787, rconPort: 27030 },
+        },
+      ]),
+    );
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0]?.runtimePorts).toBeUndefined();
   });
 
   it("rejects invalid or wrong-schema payloads", () => {

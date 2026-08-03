@@ -161,6 +161,61 @@ describe("reattachLeftRunningProcesses", () => {
     );
   });
 
+  it("restores checkpoint runtimePorts on reattach instead of saved profile ports", async () => {
+    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-reattach-ports-"));
+    const binaryDir = join(
+      cleanupRoot,
+      "ShooterGame",
+      "Binaries",
+      "Win64",
+    );
+    await mkdir(binaryDir, { recursive: true });
+    const binary = join(binaryDir, "ArkAscendedServer.exe");
+    await writeFile(binary, "");
+
+    const profile = makeProfile("srv-session-ports", cleanupRoot);
+    const sessionPorts = {
+      gamePort: 7787,
+      queryPort: 27025,
+      rconPort: 27030,
+    };
+    const manager = new ProcessManager({
+      createAdoptedChild: fakeAdoptedChild,
+      spawnProcess: () => {
+        throw new Error("spawn should not run during reattach");
+      },
+      queryOsIdentity: (pid) => ({
+        pid,
+        executablePath: binary,
+        commandLine: `"${binary}" -port=7787`,
+        osCreationTime: "20260731120000.000000-420",
+      }),
+    });
+
+    manager.reattach(
+      profile,
+      {
+        schemaVersion: LEFT_RUNNING_SCHEMA_VERSION,
+        serverId: profile.id,
+        pid: 5150,
+        executablePath: binary,
+        installDir: cleanupRoot,
+        startedAt: "2026-07-31T12:00:00.000Z",
+        expectedCommandLine: `"${binary}" -port=7787`,
+        launchArgs: ["-port=7787"],
+        runtimePorts: sessionPorts,
+        osCreationTime: "20260731120000.000000-420",
+        osExecutablePath: binary,
+        leftAt: "2026-07-31T12:05:00.000Z",
+      },
+      { skipReadinessCheck: true },
+    );
+
+    expect(manager.getRuntimePorts(profile.id)).toEqual(sessionPorts);
+    expect(manager.applyRuntimePorts(profile).rconPort).toBe(27030);
+    expect(manager.applyRuntimePorts(profile).gamePort).not.toBe(profile.gamePort);
+  });
+
   it("keeps checkpoint when adopt fails after a match", () => {
     const settings = makeSettings();
     const record: LeftRunningProcessIdentity = {

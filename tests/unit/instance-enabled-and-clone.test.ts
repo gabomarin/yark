@@ -30,6 +30,10 @@ vi.mock("@backend/domains/instances/sync-profile-ini", () => ({
   syncProfileSettingsToIni: vi.fn(async () => undefined),
 }));
 
+vi.mock("@backend/infra/process/host-port-probe", () => ({
+  assertHostPortsAvailable: vi.fn(async () => undefined),
+}));
+
 function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
   return {
     id: "srv-1",
