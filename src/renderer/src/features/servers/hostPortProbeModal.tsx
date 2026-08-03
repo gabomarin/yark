@@ -47,7 +47,9 @@ export function openHostPortProbeModal(args: {
           <Text size="sm" c="dimmed">
             {busy
               ? "No free alternative set was found. Edit the saved ports or free the host ports, then try again."
-              : "No free alternative set was found. You can start anyway, edit saved ports, or free the host ports and retry."}
+              : canStartAnyway
+                ? "No free alternative set was found. You can start anyway, edit saved ports, or free the host ports and retry."
+                : "No free alternative set was found. Edit the saved ports or free the host ports, then try again."}
           </Text>
         )}
         <Button
