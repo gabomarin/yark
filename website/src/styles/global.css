@@ -272,6 +272,19 @@ a.cta.primary:focus-visible {
   letter-spacing: 0.02em;
 }
 
+.release-trust {
+  max-width: 38rem;
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.release-trust a {
+  color: var(--cryo);
+  text-underline-offset: 0.2em;
+}
+
 .preview-banner {
   max-width: 72rem;
   margin: 0.75rem auto 0;

@@ -27,7 +27,11 @@ Changing the SteamCMD path resets content-cache freshness tracking so the next i
 - **Close window to tray** (default on) — hide to the system tray instead of quitting; tray menu has Show / Quit
 - **Show notification when hiding to tray** (default on) — optional Windows toast; turn off in Settings to stop the reminder
 - **Start with Windows** (default off) — open YARK at sign-in; does not auto-start dedicated servers
-- **On quit with active servers** (default Ask) — Ask / Stop when quitting while servers run. Enable **Close window to tray** in Settings to keep servers and backups alive without quitting. Attach/detach is only for crash recovery or forced closes (Task Manager); there is no Leave-running quit option.
+
+When you explicitly quit while servers are active, YARK always asks you to **Stop** them or
+**Cancel** the quit. Use **Close window to tray** when you want the window hidden while YARK
+and its managed servers keep running. Attach/reattach is reserved for crash recovery or forced
+closes; there is no normal “leave servers running and quit YARK” option.
 
 ## Default base folder
 
@@ -39,6 +43,6 @@ Appearance preferences (theme, compact vs comfortable density) apply to the desk
 
 ## What stays local
 
-Profiles, settings, events, and backup metadata live in local SQLite under the app userData folder (on Windows typically under `%APPDATA%`). There is no YARK cloud account.
+Profiles, settings, events, and backup metadata live in local SQLite under the app userData folder (on Windows typically under `%APPDATA%`). There is no YARK cloud account. Server/admin credentials are local too; review the current storage and backup boundary before sharing app data or INI files.
 
 See [Security & privacy](/docs/security-privacy/).

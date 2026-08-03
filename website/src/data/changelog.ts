@@ -12,6 +12,27 @@ export type ChangelogEntry = {
 /** Curated site changelog — keep in sync with root CHANGELOG.md when cutting releases. */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.5.2",
+    date: "2026-08-02",
+    sections: [
+      {
+        title: "Changed",
+        items: [
+          "Reworked the repository README with product guidance, release badges, screenshots, architecture, and contribution information.",
+          "Updated the public roadmap after 0.5.1 and aligned the Settings guide with the current Stop/Cancel quit behavior.",
+          "Expanded release documentation so unsigned and future signed-build guidance stays synchronized with published artifacts.",
+        ],
+      },
+      {
+        title: "Security",
+        items: [
+          "Added SHA-256 verification instructions for prerelease installer downloads.",
+          "Documented the current SQLite, ASA INI, and backup credential-storage boundary.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.5.1",
     date: "2026-08-02",
     sections: [
