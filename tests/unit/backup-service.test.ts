@@ -121,6 +121,7 @@ describe("BackupService kinds and retention", () => {
       isActive,
       start: vi.fn(),
       stop: vi.fn(),
+      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
     } as unknown as ProcessManager;
 
     const settings = {
@@ -346,6 +347,7 @@ describe("BackupService kinds and retention", () => {
       addEvent: vi.fn(),
     } as unknown as ServerRepository;
     const processes = {
+      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
       isActive: vi.fn(() => false),
       start: vi.fn(),
       stop: vi.fn(),
@@ -408,6 +410,7 @@ describe("BackupService kinds and retention", () => {
       addEvent: vi.fn(),
     } as unknown as ServerRepository;
     const processes = {
+      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
       isActive: vi.fn(() => false),
     } as unknown as ProcessManager;
 
@@ -826,6 +829,7 @@ describe("BackupService kinds and retention", () => {
       backupDir: null,
     });
     const processes = {
+      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
       isActive: vi.fn(() => true),
       start: vi.fn(),
       stop: vi.fn(),
@@ -872,6 +876,7 @@ describe("BackupService kinds and retention", () => {
     );
 
     const processes = {
+      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
       isActive: vi.fn(() => true),
       start: vi.fn(),
       stop: vi.fn(),
@@ -918,6 +923,7 @@ describe("BackupService kinds and retention", () => {
     expect(repo.hasRunning(profile.id, "world")).toBe(true);
 
     const processes = {
+      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
       isActive: vi.fn(() => true),
       start: vi.fn(),
       stop: vi.fn(),
@@ -966,6 +972,7 @@ describe("BackupService kinds and retention", () => {
       notes: null,
     });
     const processes = {
+      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
       isActive: vi.fn(() => true),
       start: vi.fn(),
       stop: vi.fn(),
@@ -1010,6 +1017,7 @@ describe("BackupService kinds and retention", () => {
       backupDir: null,
     });
     const processes = {
+      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
       isActive: vi.fn(() => true),
       start: vi.fn(),
       stop: vi.fn(),
@@ -1062,6 +1070,7 @@ describe("BackupService kinds and retention", () => {
       });
     }
     const processes = {
+      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
       isActive: vi.fn(() => true),
       start: vi.fn(),
       stop: vi.fn(),

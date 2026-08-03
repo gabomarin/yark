@@ -151,10 +151,10 @@ updates cannot change it; only `InstanceService.setServerEnabled` may do so.
 - Disable requires the per-server operation lock and a stopped, idle profile.
   Configuration, INIs, mods, health, logs, backups, offline SteamCMD work,
   cloning, export, and deletion remain available.
-- Enable revalidates the profile, installed files, all saved-profile ports, and
+- Enable revalidates the profile, **install health (`ready`)**, all saved-profile ports, and
   cluster compliance. It does not start ASA.
 - Manual Start also owns the per-server lock. The common `startInternal` path
-  rejects disabled profiles, covering restart and maintenance recovery paths.
+  rejects disabled profiles and non-`ready` installs, covering restart and maintenance recovery paths.
 - Clones inherit the source enabled state and receive a unique sibling install
   directory. Disabled profiles remain cluster members and participate in port
   conflict checks.
@@ -162,10 +162,28 @@ updates cannot change it; only `InstanceService.setServerEnabled` may do so.
 **Start** (`InstanceService.start`):
 
 1. Acquire the per-server operation lock and reject disabled profiles.
-2. Port-conflict check vs **other active** servers (`findPortConflicts`).
-3. `await syncProfileSettingsToIni`.
-4. `processes.start` (args from `launchArgsOverride` or `buildLaunchArgs`).
-5. Event `server_started` (“waiting for readiness”).
+2. Bypass-cache install-health inspect — reject unless `health === "ready"`.
+3. Apply optional `sessionPorts` onto an **effective** profile (not persisted).
+4. Port-conflict check vs **other active** servers (`findPortConflicts` on effective ports).
+5. Host TCP/UDP probe on effective ports (`assertHostPortsAvailable`): UDP game +
+   query, TCP RCON. **Busy** always blocks start. **Inconclusive** blocks unless
+   `skipPortValidation: true` (“Start anyway”). Errors may include a
+   bind-confirmed free `suggested=` set for a session-only retry.
+6. `await syncProfileSettingsToIni` (effective ports).
+7. `processes.start` (args from `launchArgsOverride` or `buildLaunchArgs` on the
+   effective profile). Runtime ports are kept on the managed process for the
+   whole session (stop / RCON / player watcher / hot SaveWorld) and written into
+   the durable process checkpoint / Leave identity so crash reattach restores them.
+8. Event `server_started` (“waiting for readiness”; notes session ports when used).
+
+**Busy** recovery: `sessionPorts` (this run only) or permanently editing saved
+ports. **Inconclusive** also offers **Start anyway** (`skipPortValidation`),
+which does not bypass busy. After a **restart** that already stopped the process,
+probe recovery actions call **start** (not restart again).
+
+Actionable install degradation (e.g. `ready` → `missing`) emits
+`installation_health_degraded` once per transition (no startup spam). Future
+auto-start (#53) should reuse the same `ready` gate.
 
 **Readiness:** status stays `"starting"` until RCON `ListPlayers` on
 `127.0.0.1` succeeds (poll `DEFAULT_READY_POLL_MS = 3000`, timeout
@@ -262,7 +280,12 @@ the window visible through wait/save/backup progress).
   builds register `YARK.exe`. This does **not** auto-start ASA servers (#53).
 - Second-instance launches focus the existing window (`requestSingleInstanceLock`).
 
-`StartServerOptions.skipPortValidation` is declared but **unused** today.
+`StartServerOptions.sessionPorts` optionally overrides game/query/RCON for a
+single start (INI sync + launch). It does **not** update the saved profile;
+runtime ports stay on the managed process until exit so stop/RCON use them, and
+are stored on leave/crash checkpoints for reattach.
+`StartServerOptions.skipPortValidation` allows start only when the host probe
+is **inconclusive** (never when busy).
 
 ## Profile / port validation
 
@@ -279,6 +302,12 @@ Inter-profile: `findPortConflicts` flags the same numeric port used by
 different profile ids (any kind). Create/update check all other profiles;
 start checks **active** others only. Clone bumps ports by +10 (retry up to
 offset 1000).
+
+Host probe (start only): bind-probes UDP game/query and TCP RCON. Busy includes
+best-effort Windows owner PID/name (async PowerShell). Inconclusive never claims
+occupied; it blocks unless `skipPortValidation`. Suggestions use the same bind
+probe and skip ports reserved by other YARK profiles. Start checks active peers
+using each peer’s **runtime** ports (session overrides included).
 
 Hot profile updates while running are allowed; ports/map take effect after the
 next restart.
@@ -329,7 +358,9 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 8. Treating client INI regeneration as user dirty → sanitize first.
 9. Assuming restart skips backup → it takes a fail-hard `pre_restart` snapshot
    after stop and before start (`servers:restart`).
-10. Relying on `skipPortValidation` → currently a no-op.
+10. Using `skipPortValidation` on busy ports → still blocked; only inconclusive may proceed.
+11. Expecting session ports to persist in SQLite → they only affect that run’s INI/CLI;
+    stop/RCON still use the live runtime ports until the process exits.
 
 ## Tests that lock behavior
 
@@ -338,6 +369,10 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 | `tests/unit/launch-args.test.ts` | CLI shape; no listen/RCON/passwords/QueryPort |
 | `tests/unit/sync-profile-ini.test.ts` | Exact INI keys / null password → `""` |
 | `tests/unit/validation.test.ts` | Ports, paths, cluster, mods, conflicts |
+| `tests/unit/host-port-probe.test.ts` | Host bind classify, suggestions, UDP release, error prefixes |
+| `tests/unit/instance-host-port-start.test.ts` | Start gate busy/inconclusive/sessionPorts |
+| `tests/unit/left-running.test.ts` | Leave identity parse including optional runtimePorts |
+| `npm run e2e:host-port-probe` | Windows UI: busy modal, Edit ports, session start |
 | `tests/unit/ini-service.test.ts` | Sanitize + semantic validation |
 | `tests/unit/configuration-wizard-model.test.ts` | Presets, difficulty, preserve unknowns |
 | `tests/unit/asa-log-tail.test.ts` | Saved/Logs decode + follow for Runtime |

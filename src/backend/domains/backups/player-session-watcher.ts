@@ -105,12 +105,13 @@ export class PlayerSessionWatcher {
       return;
     }
 
+    const runtime = this.processes.applyRuntimePorts(server);
     let listed: ListedPlayer[] | null = null;
     try {
       const response = await rconExec(
         RCON_HOST,
-        server.rconPort,
-        server.adminPassword,
+        runtime.rconPort,
+        runtime.adminPassword,
         "ListPlayers",
       );
       listed = parseListPlayersResponse(response);

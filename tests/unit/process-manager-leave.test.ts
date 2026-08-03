@@ -94,6 +94,11 @@ describe("ProcessManager.detachForLeave", () => {
       pid: 9876,
       executablePath: binary,
       installDir: cleanupRoot,
+      runtimePorts: {
+        gamePort: profile.gamePort,
+        queryPort: profile.queryPort,
+        rconPort: profile.rconPort,
+      },
       osCreationTime: "20260731150000.000000-420",
       osExecutablePath: binary,
       leftAt: "2026-07-31T15:00:00.000Z",

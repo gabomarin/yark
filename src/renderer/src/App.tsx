@@ -12,10 +12,13 @@ import type {
   ServerProfile,
   ServerRuntimeInfo,
   ServerStopProgress,
+  SessionPortSet,
   SteamCmdCacheKind,
   SteamCmdConsoleSnapshot,
   SteamCmdStatus,
+  StartServerOptions,
 } from "@shared/types";
+import { isHostPortBusyError, isHostPortProbeError } from "@shared/host-port-probe-errors";
 import {
   getServerUpdateState,
   isServerUpdateAvailable,
@@ -28,12 +31,14 @@ import { LogsPage } from "@features/logs/LogsPage";
 import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import { BackupsPage } from "@features/backups/BackupsPage";
 import { OverviewPage } from "@features/overview/OverviewPage";
+import { InstallHealthScanProgress } from "@features/overview/components/InstallHealthScanProgress/InstallHealthScanProgress";
 import {
   ServerWorkspacePage,
   type WorkspaceTab,
 } from "@features/server-workspace/ServerWorkspacePage";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { CloneServerDialog } from "@features/servers/components/CloneServerDialog/CloneServerDialog";
+import { openHostPortProbeModal } from "@features/servers/hostPortProbeModal";
 import { SteamCmdProgressDock } from "@features/steamcmd/SteamCmdProgressDock";
 import { SettingsPage } from "@features/settings/SettingsPage";
 import {
@@ -93,6 +98,12 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [checkingUpdates, setCheckingUpdates] = useState(false);
+  /** Shared install-health scan job (startup + Check installs). */
+  const [installScan, setInstallScan] = useState<{
+    active: boolean;
+    reason: "startup" | "manual" | null;
+  }>({ active: false, reason: null });
+  const installScanInFlightRef = useRef<Promise<void> | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(true);
 
   useEffect(() => {
@@ -248,6 +259,37 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     if (eventsRes.ok) setEvents(eventsRes.data);
   }, []);
 
+  const runInstallHealthScan = useCallback(
+    async (reason: "startup" | "manual") => {
+      if (installScanInFlightRef.current !== null) {
+        await installScanInFlightRef.current;
+        return;
+      }
+
+      setError(null);
+      setInstallScan({ active: true, reason });
+      const job = (async () => {
+        try {
+          await refresh({
+            includeInstallation: true,
+            forceOfficialCheck: reason === "manual",
+          });
+        } finally {
+          setInstallScan({ active: false, reason: null });
+        }
+      })();
+      installScanInFlightRef.current = job;
+      try {
+        await job;
+      } finally {
+        if (installScanInFlightRef.current === job) {
+          installScanInFlightRef.current = null;
+        }
+      }
+    },
+    [refresh],
+  );
+
   const checkForUpdates = useCallback(
     async (serverId?: string) => {
       setError(null);
@@ -364,11 +406,19 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
   useEffect(() => {
     let active = true;
-    void refresh().finally(() => {
-      if (active) {
-        setOverviewLoading(false);
-      }
-    });
+    void refresh({ includeInstallation: false })
+      .finally(() => {
+        if (active) {
+          setOverviewLoading(false);
+        }
+      })
+      .then(() => {
+        if (!active) {
+          return;
+        }
+        // One-shot startup install-health scan — shared job with Check installs (#57).
+        return runInstallHealthScan("startup");
+      });
     const unsubscribeStatus = window.api.onServerStatus((info) => {
       setStatuses((prev) => {
         const next = new Map(prev);
@@ -397,7 +447,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       unsubscribeProgress();
       unsubscribeStopProgress();
     };
-  }, [refresh]);
+  }, [refresh, runInstallHealthScan]);
 
   useEffect(() => {
     // Progress arrives via push. Keep the heartbeat light: statuses/events only.
@@ -549,18 +599,91 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     [refresh],
   );
 
-  const restartServer = useCallback(
-    async (id: string) => {
+  const startServer = useCallback(
+    async (id: string, options?: StartServerOptions) => {
       setError(null);
-      const res = await window.api.restartServer(id, {
+      const result = await window.api.startServer(id, {
         openNativeConsole: openNativeTerminalOnStart,
+        ...options,
       });
-      if (!res.ok) {
-        setError(res.error ?? "Could not restart the server");
+      if (!result.ok) {
+        const message = result.error ?? "Unknown error";
+        if (isHostPortProbeError(message)) {
+          const server = servers.find((item) => item.id === id);
+          openHostPortProbeModal({
+            serverName: server?.name ?? id,
+            message,
+            onEditPorts: () => {
+              setRoute("overview");
+              setOverlay({ kind: "workspace", serverId: id, initialTab: "server" });
+            },
+            onStartThisSession: (ports: SessionPortSet) => {
+              void startServer(id, { sessionPorts: ports });
+            },
+            onStartAnyway: isHostPortBusyError(message)
+              ? undefined
+              : () => {
+                  void startServer(id, { skipPortValidation: true });
+                },
+          });
+        } else {
+          setError(message);
+        }
+      } else if (options?.sessionPorts != null) {
+        const ports = options.sessionPorts;
+        notifications.show({
+          title: "Started with session ports",
+          message: `Running on game ${ports.gamePort} / query ${ports.queryPort} / RCON ${ports.rconPort}. Saved profile ports are unchanged.`,
+          color: "teal",
+        });
       }
       await refresh();
     },
-    [openNativeTerminalOnStart, refresh],
+    [openNativeTerminalOnStart, refresh, servers],
+  );
+
+  const restartServer = useCallback(
+    async (id: string, options?: StartServerOptions) => {
+      setError(null);
+      const res = await window.api.restartServer(id, {
+        openNativeConsole: openNativeTerminalOnStart,
+        ...options,
+      });
+      if (!res.ok) {
+        const message = res.error ?? "Could not restart the server";
+        if (isHostPortProbeError(message)) {
+          const server = servers.find((item) => item.id === id);
+          // Restart already stopped the process before the probe; recover via start.
+          openHostPortProbeModal({
+            serverName: server?.name ?? id,
+            message,
+            onEditPorts: () => {
+              setRoute("overview");
+              setOverlay({ kind: "workspace", serverId: id, initialTab: "server" });
+            },
+            onStartThisSession: (ports: SessionPortSet) => {
+              void startServer(id, { sessionPorts: ports });
+            },
+            onStartAnyway: isHostPortBusyError(message)
+              ? undefined
+              : () => {
+                  void startServer(id, { skipPortValidation: true });
+                },
+          });
+        } else {
+          setError(message);
+        }
+      } else if (options?.sessionPorts != null) {
+        const ports = options.sessionPorts;
+        notifications.show({
+          title: "Restarted with session ports",
+          message: `Running on game ${ports.gamePort} / query ${ports.queryPort} / RCON ${ports.rconPort}. Saved profile ports are unchanged.`,
+          color: "teal",
+        });
+      }
+      await refresh();
+    },
+    [openNativeTerminalOnStart, refresh, servers, startServer],
   );
 
   const confirmKillServer = useCallback(
@@ -639,16 +762,6 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     setRoute("overview");
     setOverlay({ kind: "workspace", serverId, initialTab: "backups" });
   }, []);
-
-  const startServer = useCallback(
-    (id: string) =>
-      runAction(() =>
-        window.api.startServer(id, {
-          openNativeConsole: openNativeTerminalOnStart,
-        }),
-      ),
-    [openNativeTerminalOnStart, runAction],
-  );
 
   const setServerEnabled = useCallback(
     (id: string, enabled: boolean) =>
@@ -783,6 +896,9 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
               onCreateServer={() => setOverlay({ kind: "create" })}
               checkingUpdates={checkingUpdates}
               onCheckUpdates={() => void checkForUpdates()}
+              checkingInstalls={installScan.active}
+              installsScanning={installScan.active}
+              onCheckInstalls={() => void runInstallHealthScan("manual")}
               servers={servers}
               filteredServers={filteredServers}
               disabledServers={filteredDisabledServers}
@@ -790,6 +906,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
               statuses={statuses}
               installationInfo={installationInfo}
               officialSteamBuild={officialSteamBuild}
+              officialVersion={officialVersion}
               events={events}
               onViewAllActivity={() => navigate("logs")}
               steamCmdServerId={steamCmdStatus?.serverId ?? null}
@@ -891,6 +1008,10 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
   return (
     <AppProviders density={uiDensity}>
+      <InstallHealthScanProgress
+        active={installScan.active}
+        label="Checking install folders…"
+      />
       {renderMain()}
       {steamCmdStatus !== null
         && (steamCmdBusy || (steamCmdStatus.criticalJobs?.length ?? 0) > 0)

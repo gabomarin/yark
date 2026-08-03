@@ -1304,7 +1304,7 @@ export class BackupService extends EventEmitter {
 
   private async flushWorldIfActive(serverId: string): Promise<void> {
     if (!this.processes.isActive(serverId)) return;
-    const server = this.mustServer(serverId);
+    const server = this.processes.applyRuntimePorts(this.mustServer(serverId));
     try {
       await rconExec(RCON_HOST, server.rconPort, server.adminPassword, "SaveWorld");
     } catch {

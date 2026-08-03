@@ -169,6 +169,25 @@
   font-variant-numeric: tabular-nums;
 }
 
+.metaValueHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+  cursor: help;
+}
+
+.metaValueHint .metaValue {
+  min-width: 0;
+}
+
+.metaHintIcon {
+  flex-shrink: 0;
+  color: var(--app-color-warn);
+  opacity: 0.9;
+}
+
 .rowActions {
   flex-shrink: 0;
 }

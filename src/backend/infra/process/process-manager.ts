@@ -5,6 +5,7 @@ import type {
   ServerProfile,
   ServerRuntimeInfo,
   ServerStatus,
+  SessionPortSet,
   StartServerOptions,
 } from "@shared/types";
 import {
@@ -38,6 +39,8 @@ interface ManagedProcess {
   installDir: string;
   launchArgs: string[];
   expectedCommandLine: string;
+  /** Ports used for this live process (including session-only overrides). */
+  runtimePorts: SessionPortSet;
 }
 
 export interface GracefulStopHandle {
@@ -232,6 +235,31 @@ export class ProcessManager extends EventEmitter {
     return serverIds.map((id) => this.getStatus(id));
   }
 
+  /**
+   * Ports the live process was started with (session overrides included).
+   * Null when the server is not managed.
+   */
+  getRuntimePorts(serverId: string): SessionPortSet | null {
+    const managed = this.processes.get(serverId);
+    if (managed === undefined) return null;
+    return { ...managed.runtimePorts };
+  }
+
+  /**
+   * Overlay live runtime ports onto a saved profile for RCON / conflict checks
+   * while the process is active.
+   */
+  applyRuntimePorts(profile: ServerProfile): ServerProfile {
+    const ports = this.getRuntimePorts(profile.id);
+    if (ports == null) return profile;
+    return {
+      ...profile,
+      gamePort: ports.gamePort,
+      queryPort: ports.queryPort,
+      rconPort: ports.rconPort,
+    };
+  }
+
   isActive(serverId: string): boolean {
     const status = this.processes.get(serverId)?.status;
     return status === "starting" || status === "running" || status === "stopping";
@@ -313,6 +341,11 @@ export class ProcessManager extends EventEmitter {
       installDir: profile.installDir,
       launchArgs: [...spawnArgs],
       expectedCommandLine,
+      runtimePorts: {
+        gamePort: profile.gamePort,
+        queryPort: profile.queryPort,
+        rconPort: profile.rconPort,
+      },
     };
     this.processes.set(profile.id, managed);
     if (child.stdout !== null) {
@@ -654,6 +687,7 @@ export class ProcessManager extends EventEmitter {
         startedAt: managed.startedAt,
         expectedCommandLine: managed.expectedCommandLine,
         launchArgs: [...managed.launchArgs],
+        runtimePorts: { ...managed.runtimePorts },
         osCreationTime,
         osExecutablePath: live?.executablePath ?? null,
         leftAt,
@@ -747,6 +781,11 @@ export class ProcessManager extends EventEmitter {
     }
 
     const child = this.createAdoptedChild(record.pid);
+    const runtimePorts = record.runtimePorts ?? {
+      gamePort: profile.gamePort,
+      queryPort: profile.queryPort,
+      rconPort: profile.rconPort,
+    };
     const managed: ManagedProcess = {
       child,
       identity: {},
@@ -759,6 +798,7 @@ export class ProcessManager extends EventEmitter {
       installDir: record.installDir,
       launchArgs: [...record.launchArgs],
       expectedCommandLine: record.expectedCommandLine,
+      runtimePorts: { ...runtimePorts },
     };
     this.processes.set(profile.id, managed);
     this.appendRuntimeLog(
@@ -818,9 +858,19 @@ export class ProcessManager extends EventEmitter {
     }
 
     managed.readinessGeneration += 1;
-    void this.waitUntilReady(profile, managed, managed.readinessGeneration, {
-      terminateOnTimeout: false,
-    });
+    void this.waitUntilReady(
+      {
+        ...profile,
+        gamePort: managed.runtimePorts.gamePort,
+        queryPort: managed.runtimePorts.queryPort,
+        rconPort: managed.runtimePorts.rconPort,
+      },
+      managed,
+      managed.readinessGeneration,
+      {
+        terminateOnTimeout: false,
+      },
+    );
   }
 
   private async waitUntilReady(
@@ -938,6 +988,7 @@ export class ProcessManager extends EventEmitter {
         startedAt: managed.startedAt,
         expectedCommandLine: managed.expectedCommandLine,
         launchArgs: [...managed.launchArgs],
+        runtimePorts: { ...managed.runtimePorts },
         osCreationTime,
         osExecutablePath: live?.executablePath ?? null,
         leftAt: new Date().toISOString(),

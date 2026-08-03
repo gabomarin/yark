@@ -8,6 +8,9 @@ describe("deriveServerCardView stop progress", () => {
       installation: {
         serverId: "srv-1",
         installed: true,
+        health: "ready",
+        reasonCodes: ["ready"],
+        guidance: "Installation looks ready to start.",
         build: null,
         steamBuild: null,
         arkVersion: null,

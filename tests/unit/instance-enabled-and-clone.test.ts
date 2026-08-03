@@ -12,14 +12,26 @@ vi.mock("@backend/domains/instances/server-installation", async (importOriginal)
   const actual = await importOriginal<
     typeof import("@backend/domains/instances/server-installation")
   >();
+  const inspectServerInstallation = vi.fn();
   return {
     ...actual,
-    inspectServerInstallation: vi.fn(),
+    inspectServerInstallation,
+    inspectServerInstallationAsync: vi.fn(
+      async (
+        serverId: string,
+        installDir: string,
+        options?: Parameters<typeof actual.inspectServerInstallationAsync>[2],
+      ) => inspectServerInstallation(serverId, installDir, options),
+    ),
   };
 });
 
 vi.mock("@backend/domains/instances/sync-profile-ini", () => ({
   syncProfileSettingsToIni: vi.fn(async () => undefined),
+}));
+
+vi.mock("@backend/infra/process/host-port-probe", () => ({
+  assertHostPortsAvailable: vi.fn(async () => undefined),
 }));
 
 function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
@@ -88,7 +100,17 @@ function harness(initialProfiles: ServerProfile[]) {
 
 beforeEach(() => {
   vi.mocked(inspectServerInstallation).mockReturnValue({
+    serverId: "srv",
     installed: true,
+    health: "ready",
+    reasonCodes: ["ready"],
+    guidance: "Installation looks ready to start.",
+    build: null,
+    steamBuild: null,
+    arkVersion: null,
+    version: null,
+    binaryPath: "C:\\ARK\\ArkAscendedServer.exe",
+    checkedAt: new Date().toISOString(),
   } as ReturnType<typeof inspectServerInstallation>);
   vi.mocked(syncProfileSettingsToIni).mockResolvedValue(undefined);
 });
@@ -120,11 +142,21 @@ describe("InstanceService enabled state", () => {
     const source = profile({ enabled: false });
     const { service, repo } = harness([source]);
     vi.mocked(inspectServerInstallation).mockReturnValue({
+      serverId: source.id,
       installed: false,
+      health: "missing",
+      reasonCodes: ["path_missing"],
+      guidance: "Create the folder or correct the install path, then install server files.",
+      build: null,
+      steamBuild: null,
+      arkVersion: null,
+      version: null,
+      binaryPath: "C:\\missing\\ArkAscendedServer.exe",
+      checkedAt: new Date().toISOString(),
     } as ReturnType<typeof inspectServerInstallation>);
 
     await expect(service.setServerEnabled(source.id, true)).rejects.toThrow(
-      /files are not installed/,
+      /files are not ready/,
     );
     expect(repo.setEnabled).not.toHaveBeenCalled();
   });

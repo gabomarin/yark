@@ -1,11 +1,14 @@
-import { type ReactElement, useState } from "react";
+import { type ReactElement, useMemo, useState } from "react";
 import { HardDrives, MagnifyingGlass, Plus } from "@phosphor-icons/react";
 import { Badge, Button, Checkbox, Group, Skeleton, Stack, Text, Title, VisuallyHidden } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo, ServerStopProgress } from "@shared/types";
-import { getServerUpdateState } from "@shared/server-update-status";
 import { ServerCard } from "@features/servers/components/ServerCard/ServerCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { SearchField } from "@ui/SearchField/SearchField";
+import {
+  AttentionIssuesPopover,
+  collectAttentionIssues,
+} from "./AttentionIssuesPopover/AttentionIssuesPopover";
 import classes from "../OverviewPage.module.css";
 
 interface Props {
@@ -20,6 +23,7 @@ interface Props {
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
   officialSteamBuild: string | null;
+  officialVersion?: string | null;
   steamCmdServerId: string | null;
   steamCmdRunning: boolean;
   steamCmdBusy?: boolean;
@@ -29,6 +33,7 @@ interface Props {
   steamCmdProgressBytesTotal?: number | null;
   steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null;
   stopProgressByServerId?: Map<string, ServerStopProgress>;
+  installsScanning?: boolean;
   onOpenWorkspace: (server: ServerProfile) => void;
   onOpenLogs: (serverId: string) => void;
   onReviewError: (serverId: string) => void;
@@ -78,23 +83,25 @@ export function ServerGrid(props: Props): ReactElement {
         }`
       : "";
 
-  const attentionCount = props.filteredServers.reduce((count, server) => {
-    const status = props.statuses.get(server.id)?.status ?? "stopped";
-    const installation = props.installationInfo.get(server.id) ?? null;
-    if (status === "error") return count + 1;
-    if (installation?.installed !== true) return count + 1;
-    if (getServerUpdateState(installation, props.officialSteamBuild) === "available") {
-      return count + 1;
-    }
-    return count;
-  }, 0);
-
-  const attentionLabel =
-    attentionCount === 0
-      ? null
-      : attentionCount === 1
-        ? "1 needs attention"
-        : `${attentionCount} need attention`;
+  const attentionIssues = useMemo(
+    () =>
+      collectAttentionIssues({
+        servers: showDisabled
+          ? [...props.filteredServers, ...props.disabledServers]
+          : props.filteredServers,
+        statuses: props.statuses,
+        installationInfo: props.installationInfo,
+        officialSteamBuild: props.officialSteamBuild,
+      }),
+    [
+      showDisabled,
+      props.filteredServers,
+      props.disabledServers,
+      props.statuses,
+      props.installationInfo,
+      props.officialSteamBuild,
+    ],
+  );
 
   const renderServerCard = (server: ServerProfile): ReactElement => {
     const stopProgress = props.stopProgressByServerId?.get(server.id);
@@ -106,6 +113,7 @@ export function ServerGrid(props: Props): ReactElement {
         runtime={props.statuses.get(server.id) ?? null}
         installation={props.installationInfo.get(server.id) ?? null}
         officialSteamBuild={props.officialSteamBuild}
+        officialVersion={props.officialVersion ?? null}
         steamCmdBusy={
           !stopBusy && (props.steamCmdBusy ?? props.steamCmdRunning) && props.steamCmdServerId === server.id
         }
@@ -179,16 +187,10 @@ export function ServerGrid(props: Props): ReactElement {
                 />
               </>
             )}
-            {attentionLabel !== null && (
-              <Badge
-                size="sm"
-                color="attention"
-                variant="light"
-                data-attention-count={attentionCount}
-              >
-                {attentionLabel}
-              </Badge>
-            )}
+            <AttentionIssuesPopover
+              issues={attentionIssues}
+              scanning={props.installsScanning === true}
+            />
           </Group>
         </div>
 

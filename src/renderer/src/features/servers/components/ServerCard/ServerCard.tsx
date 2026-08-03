@@ -17,6 +17,8 @@ interface Props {
   runtime: ServerRuntimeInfo | null;
   installation: ServerInstallationInfo | null;
   officialSteamBuild: string | null;
+  /** Wildcard informational ARK Version (UI only; not used for update decisions). */
+  officialVersion?: string | null;
   steamCmdBusy?: boolean;
   steamCmdProgressPercent?: number | null;
   steamCmdProgressLabel?: string | null;
@@ -67,6 +69,7 @@ export function ServerCard(props: Props): ReactElement {
     status,
     installation,
     officialSteamBuild: props.officialSteamBuild,
+    officialVersion: props.officialVersion,
     steamCmdBusy,
     stopBusy,
     steamCmdOperation,
@@ -154,6 +157,7 @@ export function ServerCard(props: Props): ReactElement {
                 label="Version"
                 value={view.localVersion ?? "—"}
                 tone={view.versionMetaTone}
+                hint={view.versionRefreshHint}
               />
             </div>
           </UnstyledButton>
@@ -162,6 +166,7 @@ export function ServerCard(props: Props): ReactElement {
             status={status}
             isActive={view.isActive}
             isInstallationReady={view.isInstallationReady}
+            canOfferInstall={view.canOfferInstall}
             updateAvailable={view.updateAvailable}
             steamCmdBusy={steamCmdBusy}
             stopBusy={stopBusy}

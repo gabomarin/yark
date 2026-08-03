@@ -34,6 +34,14 @@ function catalogFor(event: AppEvent): AppEventDetails {
         suggestion:
           "Inspect the update log and restored files. If the server was running before the update, the manager may have restarted it already.",
       };
+    case "installation_health_degraded":
+      return {
+        what: "The saved install path no longer looks ready to launch.",
+        cause:
+          "The folder was moved, deleted, partially removed, or became inaccessible since the last healthy check.",
+        suggestion:
+          "Open the server workspace, confirm the install path, then use Install / Verify or Check installs from Overview.",
+      };
     case "backup_created":
       return {
         what: "A backup archive was created or a backup job was queued.",

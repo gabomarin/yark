@@ -1,4 +1,5 @@
 import type { ServerInstallationInfo } from "./types";
+import { isInstallationReady } from "./installation-health";
 
 export type ServerUpdateState = "available" | "current" | "unknown";
 
@@ -11,13 +12,10 @@ export function getServerUpdateState(
   installation: ServerInstallationInfo | null | undefined,
   officialSteamBuild: string | null | undefined,
 ): ServerUpdateState {
-  if (installation?.installed !== true) {
+  if (installation == null || !isInstallationReady(installation)) {
     return "unknown";
   }
-  if (
-    installation.steamBuild == null
-    || officialSteamBuild == null
-  ) {
+  if (installation.steamBuild == null || officialSteamBuild == null) {
     return "unknown";
   }
   return installation.steamBuild === officialSteamBuild

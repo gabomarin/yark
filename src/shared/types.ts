@@ -48,12 +48,35 @@ export interface ServerRuntimeInfo {
   lastError: string | null;
 }
 
+/**
+ * Lightweight FS classification of a profile's ASA install root (#57).
+ * Distinct from runtime/process health.
+ */
+export type InstallationHealthStatus =
+  | "ready"
+  | "missing"
+  | "empty"
+  | "incomplete"
+  | "inaccessible"
+  | "suspicious"
+  | "unknown";
+
 export interface ServerInstallationInfo {
   serverId: string;
+  /**
+   * True when `health === "ready"` (required exe + layout present).
+   * Kept for older UI call sites; prefer `health` / `isInstallationReady`.
+   */
   installed: boolean;
-  /** Locally detected build (Build.version / exe / appmanifest). */
+  /** Classified install-folder health from the shared probe. */
+  health: InstallationHealthStatus;
+  /** Stable classifier reason codes (e.g. path_missing, exe_absent). */
+  reasonCodes: string[];
+  /** English operator guidance for the current health. */
+  guidance: string;
+  /** Locally detected ARK-style build (version.txt / Build.version / exe). */
   build: string | null;
-  /** Steam build detected specifically from appmanifest_2430930.acf. */
+  /** Steam build detected from appmanifest_2430930.acf (`build NNNNN`). */
   steamBuild: string | null;
   /** Version detected from runtime logs (ARK Version: x.y). */
   arkVersion: string | null;
@@ -156,8 +179,23 @@ export interface SteamCmdConsoleSnapshot {
   updatedAt: string;
 }
 
+export interface SessionPortSet {
+  gamePort: number;
+  queryPort: number;
+  rconPort: number;
+}
+
 export interface StartServerOptions {
+  /**
+   * When true, skip only **inconclusive** host port probe failures.
+   * Busy ports still always block start.
+   */
   skipPortValidation?: boolean;
+  /**
+   * Game / query / RCON for this start only (INI sync + launch args).
+   * Does not update the saved SQLite profile.
+   */
+  sessionPorts?: SessionPortSet;
   launchArgsOverride?: string[];
   /**
    * Skip the readiness wait (RCON). Only for tests or binaries
@@ -232,6 +270,7 @@ export interface AppEvent {
     | "update_completed"
     | "update_failed"
     | "update_rolled_back"
+    | "installation_health_degraded"
     | "error";
   severity: "info" | "warning" | "error";
   message: string;

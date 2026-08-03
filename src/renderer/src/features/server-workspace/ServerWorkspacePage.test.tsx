@@ -489,6 +489,9 @@ describe("ServerWorkspacePage", () => {
         {
           serverId: serverA.id,
           installed: true,
+          health: "ready" as const,
+          reasonCodes: ["ready"],
+          guidance: "Installation looks ready to start.",
           build: "1234.56",
           steamBuild: null,
           arkVersion: "1234.56",
