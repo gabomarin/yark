@@ -906,6 +906,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
               statuses={statuses}
               installationInfo={installationInfo}
               officialSteamBuild={officialSteamBuild}
+              officialVersion={officialVersion}
               events={events}
               onViewAllActivity={() => navigate("logs")}
               steamCmdServerId={steamCmdStatus?.serverId ?? null}

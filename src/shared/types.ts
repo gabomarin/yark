@@ -74,9 +74,9 @@ export interface ServerInstallationInfo {
   reasonCodes: string[];
   /** English operator guidance for the current health. */
   guidance: string;
-  /** Locally detected build (Build.version / exe / appmanifest). */
+  /** Locally detected ARK-style build (version.txt / Build.version / exe). */
   build: string | null;
-  /** Steam build detected specifically from appmanifest_2430930.acf. */
+  /** Steam build detected from appmanifest_2430930.acf (`build NNNNN`). */
   steamBuild: string | null;
   /** Version detected from runtime logs (ARK Version: x.y). */
   arkVersion: string | null;

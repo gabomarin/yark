@@ -104,9 +104,9 @@ describe("inspectServerInstallation", () => {
 
       const info = inspectServerInstallation("srv-4", installDir);
       expect(info.installed).toBe(true);
-      expect(info.build).toBe("build 16123456");
-      expect(info.steamBuild).toBeNull();
-      expect(info.version).toBe("build 16123456");
+      expect(info.build).toBeNull();
+      expect(info.steamBuild).toBe("build 16123456");
+      expect(info.version).toBeNull();
     } finally {
       rmSync(steamRoot, { recursive: true, force: true });
     }
@@ -153,7 +153,7 @@ describe("inspectServerInstallation", () => {
     }
   });
 
-  it("uses buildid as fallback when there are no other version sources", () => {
+  it("uses buildid as steamBuild when there are no ARK-style version sources", () => {
     const steamRoot = makeTmpDir();
     const installDir = join(steamRoot, "asa", "xsd");
     try {
@@ -170,9 +170,9 @@ describe("inspectServerInstallation", () => {
 
       const info = inspectServerInstallation("srv-5b", installDir);
       expect(info.installed).toBe(true);
-      expect(info.build).toBe("build 19999999");
-      expect(info.steamBuild).toBeNull();
-      expect(info.version).toBe("build 19999999");
+      expect(info.build).toBeNull();
+      expect(info.steamBuild).toBe("build 19999999");
+      expect(info.version).toBeNull();
     } finally {
       rmSync(steamRoot, { recursive: true, force: true });
     }
@@ -195,9 +195,9 @@ describe("inspectServerInstallation", () => {
 
       const info = inspectServerInstallation("srv-6", installDir);
       expect(info.installed).toBe(true);
-      expect(info.build).toBe("build 17123456");
-      expect(info.steamBuild).toBeNull();
-      expect(info.version).toBe("build 17123456");
+      expect(info.build).toBeNull();
+      expect(info.steamBuild).toBe("build 17123456");
+      expect(info.version).toBeNull();
     } finally {
       rmSync(steamRoot, { recursive: true, force: true });
     }
@@ -223,9 +223,9 @@ describe("inspectServerInstallation", () => {
       process.env["ARK_STEAMCMD_DIR"] = steamRoot;
       const info = inspectServerInstallation("srv-7", installDir);
       expect(info.installed).toBe(true);
-      expect(info.build).toBe("build 18123456");
-      expect(info.steamBuild).toBeNull();
-      expect(info.version).toBe("build 18123456");
+      expect(info.build).toBeNull();
+      expect(info.steamBuild).toBe("build 18123456");
+      expect(info.version).toBeNull();
     } finally {
       if (previousEnv === undefined) {
         delete process.env["ARK_STEAMCMD_DIR"];

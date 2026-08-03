@@ -41,6 +41,7 @@ import {
   isInstallationReady,
 } from "@shared/installation-health";
 import { assertHostPortsAvailable } from "../../infra/process/host-port-probe";
+import { resolveDisplayedServerVersion } from "@shared/server-version-display";
 
 /** Max concurrent async FS classify probes during a fleet scan. */
 const FLEET_INSPECT_CONCURRENCY = 3;
@@ -997,18 +998,21 @@ export class InstanceService extends EventEmitter {
     bypassCache: boolean,
   ): Promise<ServerInstallationInfo[]> {
     return mapPool(profilesToScan, FLEET_INSPECT_CONCURRENCY, async (profile) => {
-      // Fleet stays FS/manifest-only — no PowerShell / log tails.
+      // Fleet starts FS/manifest-only; only no-display-version installs get a
+      // follow-up log probe (and optional exe probe on forced refresh).
       let info = await inspectServerInstallationAsync(profile.id, profile.installDir, {
         bypassCache,
       });
-      // Manual refresh may enrich a ready install that still lacks a cheap version.
+      // When the cheap pass has no ARK-style display version, enrich with log
+      // (and optionally exe) probes. Do not treat Steam buildids as display versions.
       if (
-        bypassCache &&
         info.health === "ready" &&
-        (info.build == null || info.build.trim().length === 0)
+        resolveDisplayedServerVersion(info) == null
       ) {
         info = await inspectServerInstallationAsync(profile.id, profile.installDir, {
-          ...ENRICHED_INSTALL_INSPECT,
+          bypassCache: true,
+          allowLogVersionProbe: true,
+          allowExecutableVersionProbe: bypassCache,
         });
       }
       this.recordInstallHealth(info);

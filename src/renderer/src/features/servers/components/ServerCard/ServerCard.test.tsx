@@ -351,6 +351,7 @@ describe("ServerCard", () => {
             steamBuild: "build 24346423",
           }}
           officialSteamBuild="build 24346423"
+          officialVersion="92.28"
           onStart={vi.fn()}
           onStop={vi.fn()}
           onKill={vi.fn()}
@@ -372,6 +373,7 @@ describe("ServerCard", () => {
 
     const versionMeta = document.querySelector('[data-meta-label="Version"]');
     expect(versionMeta).toHaveAttribute("data-meta-tone", "ok");
+    expect(versionMeta).toHaveAttribute("data-meta-hint", "true");
     expect(screen.getByRole("button", { name: /^Start server$/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Server is up to date/i })).toBeDisabled();
   });

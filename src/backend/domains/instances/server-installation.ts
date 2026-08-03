@@ -761,12 +761,15 @@ function buildInspectedInstallation(
 
   // Cheap version sources only by default. PowerShell + log tails are opt-in so
   // fleet scans cannot freeze Electron across many ready installs.
-  const steamBuild = ready ? readSteamBuildFromLocalManifest(installDir) : null;
+  // Steam buildids stay on `steamBuild` only — never in display `build`/`version`
+  // (those are ARK-style product versions like 92.28).
+  const steamBuild = ready
+    ? (readSteamBuildFromLocalManifest(installDir) ??
+      readBuildIdFromManifest(installDir))
+    : null;
   const build = ready
     ? (
         readVersionFromKnownFiles(installDir) ??
-        steamBuild ??
-        readBuildIdFromManifest(installDir) ??
         (options?.allowExecutableVersionProbe === true
           ? readVersionFromExecutable(binaryPath)
           : null)
