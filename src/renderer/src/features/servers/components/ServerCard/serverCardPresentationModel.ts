@@ -8,7 +8,7 @@ import {
   getServerUpdateState,
   type ServerUpdateState,
 } from "@shared/server-update-status";
-import { resolveDisplayedServerVersion } from "@shared/server-version-display";
+import { resolveDisplayedServerVersion, shouldHintVersionRefreshesOnStart, VERSION_REFRESHES_ON_START_HINT } from "@shared/server-version-display";
 import {
   formatSteamCmdByteProgress,
   hasMeaningfulSteamCmdByteProgress,
@@ -114,6 +114,7 @@ export function deriveServerCardView(input: {
   serverEnabled?: boolean;
   installation: ServerInstallationInfo | null;
   officialSteamBuild: string | null;
+  officialVersion?: string | null;
   steamCmdBusy: boolean;
   stopBusy?: boolean;
   steamCmdOperation: SteamCmdOperation;
@@ -131,6 +132,13 @@ export function deriveServerCardView(input: {
     input.officialSteamBuild,
   );
   const updateAvailable = updateState === "available";
+  const versionRefreshHint = shouldHintVersionRefreshesOnStart({
+    updateState,
+    localVersion,
+    officialVersion: input.officialVersion,
+  })
+    ? VERSION_REFRESHES_ON_START_HINT
+    : null;
   const stopBusy = input.stopBusy === true;
   const installStateLabel = resolveInstallStateLabel({
     steamCmdBusy: input.steamCmdBusy,
@@ -176,6 +184,7 @@ export function deriveServerCardView(input: {
       input.status === "running" ||
       input.status === "stopping",
     localVersion,
+    versionRefreshHint,
     updateState,
     updateAvailable,
     installStateLabel: stopBusy ? "Stopping…" : installStateLabel,
