@@ -31,6 +31,12 @@ import { roadmapItems } from "../data/roadmap";
         <a class="cta ghost" href={site.repoUrl}>GitHub</a>
       </div>
       <p class="status-pill" data-hero-item>{site.statusLabel}</p>
+      <p class="release-trust" data-hero-item>
+        Current installers are unsigned prereleases.{" "}
+        <a href={withBase("/docs/getting-started/#verify-your-download")}
+          >Verify the official download before installing</a
+        >.
+      </p>
     </header>
 
     <ProductStage shots={screenshots} />
@@ -89,10 +95,10 @@ import { roadmapItems } from "../data/roadmap";
   </section>
 
   <section class="section" id="roadmap" data-reveal>
-    <h2 data-reveal-child>In progress / planned</h2>
+    <h2 data-reveal-child>Next on the roadmap</h2>
     <p class="section-lede" data-reveal-child>
-      Near-term work from the public roadmap (v0.5 recovery &amp; resilience, then desktop
-      operations). Direction may change — nothing here is a promise of a stable 1.0 date.
+      Candidate work after v0.5.1, focused on recovery, supportability, release trust, and
+      desktop operations. Milestones are authoritative; nothing here promises a stable 1.0 date.
     </p>
     <ul class="roadmap-list" data-reveal-child>
       {
@@ -137,6 +143,10 @@ import { roadmapItems } from "../data/roadmap";
       <a href="https://github.com/gabomarin/yark/tree/main/workers/curseforge-proxy"
         >Cloudflare Worker proxy</a
       >. The desktop app never embeds a CurseForge API key.
+      Server/admin credentials required by ASA remain local and may be present in app data,
+      INI files, and INI backups. See{" "}
+      <a href={withBase("/docs/security-privacy/")}>Security &amp; privacy</a> for the current
+      protection boundary.
     </p>
   </section>
 
