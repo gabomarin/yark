@@ -105,8 +105,13 @@ export function ServerWorkspacePage(props: Props): ReactElement {
   }, [props.selectedServerId, props.servers]);
 
   const confirmLeaveIfDirty = useCallback((action: () => void) => {
-    if (!dirtyRef.current && !assistantDirtyRef.current) {
+    const run = () => {
+      setAssistantOpen(false);
+      setServerSwitcherOpen(false);
       action();
+    };
+    if (!dirtyRef.current && !assistantDirtyRef.current) {
+      run();
       return;
     }
     modals.openConfirmModal({
@@ -122,7 +127,7 @@ export function ServerWorkspacePage(props: Props): ReactElement {
         dirtyRef.current = false;
         assistantDirtyRef.current = false;
         setIniDirty(false);
-        action();
+        run();
       },
     });
   }, []);
@@ -130,15 +135,12 @@ export function ServerWorkspacePage(props: Props): ReactElement {
   const handleSelectServer = (serverId: string) => {
     if (serverId === props.selectedServerId) return;
     confirmLeaveIfDirty(() => {
-      setAssistantOpen(false);
       props.onSelectServer(serverId);
-      setServerSwitcherOpen(false);
     });
   };
 
   const handleBack = () => {
     confirmLeaveIfDirty(() => {
-      setAssistantOpen(false);
       props.onBack();
     });
   };

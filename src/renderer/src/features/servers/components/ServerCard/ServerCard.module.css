@@ -115,19 +115,9 @@
   flex: 1;
 }
 
+/* Marker class so card hover can polish MapArtThumb chrome. */
 .thumb {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
   flex-shrink: 0;
-  border: 1px solid var(--app-color-border);
-  border-radius: 12px 7px 12px 7px;
-  background: color-mix(in srgb, var(--app-color-accent) 9%, var(--app-color-panel));
-  color: var(--app-color-accent);
-  transition:
-    border-color 140ms ease,
-    background-color 140ms ease;
 }
 
 .title {

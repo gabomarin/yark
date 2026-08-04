@@ -89,7 +89,9 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     Map<string, RconHistoryEntry[]>
   >(new Map());
   const rconHistoryByServerRef = useRef(rconHistoryByServer);
-  rconHistoryByServerRef.current = rconHistoryByServer;
+  useEffect(() => {
+    rconHistoryByServerRef.current = rconHistoryByServer;
+  }, [rconHistoryByServer]);
   const [playerListsByServer, setPlayerListsByServer] = useState<
     Map<string, PlayerListState>
   >(new Map());

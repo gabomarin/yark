@@ -579,6 +579,7 @@ export const KNOWN_MAPS = [
   "Astraeos_WP",
   "Genesis_WP",
   "LostColony_WP",
+  "Valguero_WP",
 ] as const;
 
 export const PORT_MIN = 1024;
