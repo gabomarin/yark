@@ -658,7 +658,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
                 {settingsOpen && activeKind === "world" && (
                   <Stack gap={6} mt={4} className={classes.kindSettingsFields}>
                     <Group align="center" gap={6} wrap="nowrap">
-                      <Text size="xs" component="label" htmlFor="backup-destination" className={classes.inlineLabel}>
+                      <Text size="xs" className={classes.inlineLabel}>
                         Destination
                       </Text>
                       <PathField

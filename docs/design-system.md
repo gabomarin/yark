@@ -151,7 +151,7 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 | `SearchField` | `shared/ui/SearchField/` | Search inputs |
 | `ServerRuntimeStatusBadge` | `shared/ui/ServerRuntimeStatusBadge/` | Process status badge |
 | `ReadonlyPath` | `shared/ui/ReadonlyPath/` | Bordered monospace chip for configured filesystem paths |
-| `PathField` | `shared/ui/PathField/` | Editable path `TextInput` + Browse |
+| `PathField` | `shared/ui/PathField/` | Read-only path chip + Browse/Clear actions |
 
 ## Product brand / packaging icons
 

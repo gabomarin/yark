@@ -29,6 +29,8 @@ export function ReadonlyPath({
 
   return (
     <div
+      role="textbox"
+      aria-readonly="true"
       {...rest}
       className={[
         classes.root,

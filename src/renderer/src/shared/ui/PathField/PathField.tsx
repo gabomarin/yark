@@ -95,7 +95,7 @@ export function PathField({
   return (
     <div className={[classes.root, className].filter(Boolean).join(" ")}>
       {label !== undefined && (
-        <Text size="sm" fw={500} component="label" htmlFor={id}>
+        <Text size="sm" fw={500}>
           {label}
           {required === true ? " *" : ""}
         </Text>
