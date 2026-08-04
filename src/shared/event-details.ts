@@ -71,6 +71,10 @@ function catalogFor(event: AppEvent): AppEventDetails {
         suggestion:
           "Check Inactive state, install health, running/reattached process, or locks if you expected it to start.",
       };
+    case "auto_start_succeeded":
+      return {
+        what: "Opt-in auto-start launched this server at application launch.",
+      };
     case "auto_start_failed":
       return {
         what: "Opt-in auto-start tried to launch this server and failed.",

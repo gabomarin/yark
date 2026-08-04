@@ -120,6 +120,16 @@ async function evaluateAndMaybeStart(
 
   try {
     await ctx.start(profile.id);
+    ctx.repo.addEvent(
+      profile.id,
+      "auto_start_succeeded",
+      "info",
+      `Auto-start launched "${profile.name}"`,
+      {
+        what: "Opt-in auto-start launched this server at application launch.",
+        context: { reason: "started" },
+      },
+    );
     return {
       serverId: profile.id,
       name: profile.name,

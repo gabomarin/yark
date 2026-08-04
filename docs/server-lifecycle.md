@@ -195,7 +195,8 @@ After leave-running reattach completes (`reattachLeftRunningProcesses` in
 3. Skip uncertain reattach (`inaccessible` left-running identity).
 4. Otherwise call `InstanceService.start` (same guards as manual start: ready
    install, ports, locks). Concurrency **1** (sequential). Failures emit
-   `auto_start_failed` and do not stop the queue; success reuses `server_started`.
+   `auto_start_failed` and do not stop the queue; success emits
+   `auto_start_succeeded` (plus the usual `server_started` from start).
 
 Opt-in default is `false`. UI: Server tab Startup switch + Settings summary.
 

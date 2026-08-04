@@ -268,6 +268,7 @@ export interface AppEvent {
     | "server_stopped"
     | "server_crashed"
     | "auto_start_skipped"
+    | "auto_start_succeeded"
     | "auto_start_failed"
     | "rcon_command"
     | "backup_created"

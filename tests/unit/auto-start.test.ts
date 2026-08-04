@@ -57,6 +57,13 @@ describe("runAutoStartOnLaunch", () => {
       expect.stringContaining("Port conflict"),
       expect.any(Object),
     );
+    expect(addEvent).toHaveBeenCalledWith(
+      "b",
+      "auto_start_succeeded",
+      "info",
+      expect.stringContaining("Auto-start launched"),
+      expect.any(Object),
+    );
   });
 
   it("skips inactive, already-running, and uncertain reattach profiles", async () => {
