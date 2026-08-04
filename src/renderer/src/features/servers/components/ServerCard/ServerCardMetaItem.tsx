@@ -71,7 +71,7 @@ export function ServerCardMetaItem({
   );
 
   const valueRow = hasHint ? (
-    <span className={classes.metaValueHint} tabIndex={0}>
+    <span className={classes.metaValueHint}>
       {valueText}
       <WarningCircle
         className={classes.metaHintIcon}
@@ -101,7 +101,7 @@ export function ServerCardMetaItem({
           multiline
           maw={260}
           withArrow
-          events={{ hover: true, focus: true, touch: true }}
+          events={{ hover: true, focus: false, touch: true }}
         >
           {valueRow}
         </Tooltip>
