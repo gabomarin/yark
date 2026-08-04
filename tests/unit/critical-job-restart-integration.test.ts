@@ -18,6 +18,7 @@ function profile(): ServerProfile {
     map: "TheIsland_WP",
     installDir: "C:\\asa-e2e\\servers\\restart-fixture",
     enabled: true,
+    autoStart: false,
     sessionName: "Restart fixture",
     gamePort: 7777,
     queryPort: 27015,

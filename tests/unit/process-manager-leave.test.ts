@@ -30,6 +30,7 @@ function makeProfile(installDir: string): ServerProfile {
     map: "TheIsland_WP",
     installDir,
     enabled: true,
+    autoStart: false,
     sessionName: "Leave Session",
     gamePort: 7777,
     queryPort: 27015,

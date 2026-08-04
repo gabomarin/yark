@@ -36,6 +36,7 @@ function profileInput(mods: string[]): ServerProfileInput {
     clusterDir: null,
     extraArgs: [],
     mods,
+    autoStart: false,
   };
 }
 

@@ -9,6 +9,7 @@ function profile(overrides: Partial<ServerProfile>): ServerProfile {
     map: "TheIsland_WP",
     installDir: "C:\\asa\\island",
     enabled: true,
+    autoStart: false,
     sessionName: "Session",
     gamePort: 7777,
     queryPort: 27015,

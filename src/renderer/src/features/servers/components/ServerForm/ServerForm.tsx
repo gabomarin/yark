@@ -2,7 +2,6 @@ import type { ReactElement } from "react";
 import {
   ArrowLeft,
   FloppyDisk,
-  FolderOpen,
   MagicWand,
 } from "@phosphor-icons/react";
 import {
@@ -28,6 +27,8 @@ import {
 import { KNOWN_MAPS, type ServerProfile, type ServerProfileInput } from "@shared/types";
 import { useMemo, useState } from "react";
 import { useUiDensity } from "@app/AppProviders";
+import { ServerFormPathField } from "./ServerFormPathField";
+import { ServerFormStartupFields } from "./ServerFormStartupFields";
 import classes from "./ServerForm.module.css";
 
 interface Props {
@@ -61,6 +62,7 @@ interface FormState {
   clusterDir: string;
   extraArgs: string;
   mods: string;
+  autoStart: boolean;
 }
 
 function toFormState(
@@ -83,6 +85,7 @@ function toFormState(
       clusterDir: "",
       extraArgs: "",
       mods: "",
+      autoStart: false,
     };
   }
 
@@ -100,6 +103,7 @@ function toFormState(
     clusterDir: profile.clusterDir ?? "",
     extraArgs: profile.extraArgs.join(" "),
     mods: profile.mods.join(", "),
+    autoStart: profile.autoStart,
   };
 }
 
@@ -135,6 +139,7 @@ function toInput(
       .filter((value) => value.length > 0),
     disabledMods: initial?.disabledMods ?? [],
     modMetadataCache: initial?.modMetadataCache ?? {},
+    autoStart: state.autoStart,
   };
 }
 
@@ -337,7 +342,7 @@ export function ServerForm(props: Props): ReactElement {
             allowDeselect={false}
             required
           />
-          <PathField
+          <ServerFormPathField
             label={isCreate ? "Base folder" : "Install directory"}
             value={state.installDir}
             placeholder={isCreate ? "C:\\ark_servers" : "C:\\ark_servers\\my_server"}
@@ -357,6 +362,18 @@ export function ServerForm(props: Props): ReactElement {
               </Text>
             </Text>
           )}
+        </Section>
+
+        <Section title="Startup" flat={embedded}>
+          <ServerFormStartupFields
+            autoStart={state.autoStart}
+            showInactiveWarning={
+              !isCreate && props.initial?.enabled === false && state.autoStart
+            }
+            onAutoStartChange={(autoStart) =>
+              setState((previous) => ({ ...previous, autoStart }))
+            }
+          />
         </Section>
 
         <Section title="Networking" flat={embedded}>
@@ -417,7 +434,7 @@ export function ServerForm(props: Props): ReactElement {
             value={state.clusterId}
             onChange={(e) => setField("clusterId")(e.currentTarget.value)}
           />
-          <PathField
+          <ServerFormPathField
             label="Shared cluster directory"
             value={state.clusterDir}
             placeholder="C:\\ark_servers\\cluster"
@@ -503,50 +520,5 @@ function Section({ title, children, flat = false, span2 = false }: SectionProps)
         {children}
       </Stack>
     </Card>
-  );
-}
-
-interface PathFieldProps {
-  label: string;
-  value: string;
-  placeholder?: string;
-  busy: boolean;
-  disabled?: boolean;
-  size?: "xs" | "sm" | "md";
-  onChange: (value: string) => void;
-  onBrowse: () => void;
-}
-
-function PathField({
-  label,
-  value,
-  placeholder,
-  busy,
-  disabled = false,
-  size = "sm",
-  onChange,
-  onBrowse,
-}: PathFieldProps): ReactElement {
-  return (
-    <Group align="flex-end" wrap="nowrap" gap="xs">
-        <TextInput
-          className={classes.pathInput}
-          label={label}
-          size={size}
-          value={value}
-          placeholder={placeholder}
-          disabled={disabled}
-          onChange={(e) => onChange(e.currentTarget.value)}
-        />
-        <Button
-          variant="default"
-          size={size}
-          leftSection={<FolderOpen size={14} />}
-          onClick={onBrowse}
-          disabled={busy || disabled}
-        >
-          {busy ? "Opening..." : "Browse"}
-        </Button>
-    </Group>
   );
 }

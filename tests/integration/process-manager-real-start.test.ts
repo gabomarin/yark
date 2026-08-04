@@ -40,6 +40,7 @@ function makeProfile(installDir: string): ServerProfile {
     extraArgs: [],
     mods: [],
     enabled: true,
+    autoStart: false,
     createdAt: now,
     updatedAt: now,
   };

@@ -17,8 +17,9 @@ import {
 } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import type { AppDataFolderInfo, AppDataFolderKind } from "@shared/ipc";
-import type { SteamCmdCacheKind, SteamCmdStatus } from "@shared/types";
+import type { SteamCmdCacheKind, SteamCmdStatus, ServerInstallationInfo, ServerProfile } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { SettingsAutoStartSection } from "./components/SettingsAutoStartSection";
 import { SettingsGeneralSection } from "./components/SettingsGeneralSection";
 import type { UiDensity } from "./settingsModel";
 import { useDesktopShellPreferences } from "./useDesktopShellPreferences";
@@ -27,6 +28,9 @@ import classes from "./SettingsPage.module.css";
 interface Props {
   appVersion: string;
   steamCmdStatus: SteamCmdStatus | null;
+  servers: ServerProfile[];
+  installationInfo: Map<string, ServerInstallationInfo>;
+  onOpenServer: (serverId: string) => void;
   openNativeTerminalOnStart: boolean;
   onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
   uiDensity: UiDensity;
@@ -118,6 +122,14 @@ export function SettingsPage(props: Props): ReactElement {
               defaultBaseFolder={props.defaultBaseFolder}
               onDefaultBaseFolderChange={props.onDefaultBaseFolderChange}
               onPickDefaultBaseFolder={() => void pickDefaultBaseFolder()}
+            />
+
+            <div className={classes.sectionRule} />
+
+            <SettingsAutoStartSection
+              servers={props.servers}
+              installationInfo={props.installationInfo}
+              onOpenServer={props.onOpenServer}
             />
 
             <div className={classes.sectionRule} />

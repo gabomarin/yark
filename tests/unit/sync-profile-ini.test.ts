@@ -21,6 +21,7 @@ function profile(installDir: string, overrides: Partial<ServerProfile> = {}): Se
     map: "TheIsland_WP",
     installDir,
     enabled: true,
+    autoStart: false,
     sessionName: "gabo",
     gamePort: 7777,
     queryPort: 27015,

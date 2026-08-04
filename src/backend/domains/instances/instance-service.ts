@@ -364,6 +364,7 @@ export class InstanceService extends EventEmitter {
         mods: [...source.mods],
         disabledMods: [...(source.disabledMods ?? [])],
         modMetadataCache: { ...(source.modMetadataCache ?? {}) },
+        autoStart: source.autoStart,
       };
       if (findPortConflicts(existing, { ...input, id: undefined }).length === 0) {
         break;
@@ -420,6 +421,7 @@ export class InstanceService extends EventEmitter {
       mods: [...source.mods],
       disabledMods: [...(source.disabledMods ?? [])],
       modMetadataCache: { ...(source.modMetadataCache ?? {}) },
+      autoStart: source.autoStart,
     };
 
     this.assertValidInput(input);

@@ -153,6 +153,12 @@ const MIGRATIONS: Migration[] = [
       ALTER TABLE servers ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1;
     `,
   },
+  {
+    version: 9,
+    sql: `
+      ALTER TABLE servers ADD COLUMN auto_start INTEGER NOT NULL DEFAULT 0;
+    `,
+  },
 ];
 
 /**

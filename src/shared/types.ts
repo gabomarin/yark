@@ -14,6 +14,11 @@ export interface ServerProfile {
   /** Server install root (contains ShooterGame\...). */
   installDir: string;
   enabled: boolean;
+  /**
+   * When true, YARK starts this server after app launch and reattach (#53).
+   * Ignored while `enabled` is false. Default false (opt-in).
+   */
+  autoStart: boolean;
   sessionName: string;
   gamePort: number;
   queryPort: number;
@@ -262,6 +267,8 @@ export interface AppEvent {
     | "server_started"
     | "server_stopped"
     | "server_crashed"
+    | "auto_start_skipped"
+    | "auto_start_failed"
     | "rcon_command"
     | "backup_created"
     | "backup_deleted"

@@ -125,6 +125,7 @@ export function toProfileInput(
     mods,
     disabledMods,
     modMetadataCache,
+    autoStart: server.autoStart,
   };
 }
 

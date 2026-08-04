@@ -19,6 +19,7 @@ function input(overrides: Partial<ServerProfileInput> = {}): ServerProfileInput 
     clusterDir: "C:\\asa\\cluster",
     extraArgs: ["-NoBattlEye"],
     mods: ["111", "222"],
+    autoStart: false,
     ...overrides,
   };
 }
@@ -44,6 +45,15 @@ describe("ServerRepository", () => {
     expect(fetched!.disabledMods).toEqual([]);
     expect(fetched!.modMetadataCache).toEqual({});
     expect(fetched!.extraArgs).toEqual(["-NoBattlEye"]);
+    expect(fetched!.autoStart).toBe(false);
+    expect(fetched!.enabled).toBe(true);
+  });
+
+  it("persists autoStart on create and update", () => {
+    const created = repo.create(input({ autoStart: true }));
+    expect(created.autoStart).toBe(true);
+    const updated = repo.update(created.id, input({ autoStart: false, name: "Island" }));
+    expect(updated!.autoStart).toBe(false);
   });
 
   it("persists disabled mods and metadata cache", () => {
