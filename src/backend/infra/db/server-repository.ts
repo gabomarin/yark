@@ -14,6 +14,7 @@ interface ServerRow {
   map: string;
   install_dir: string;
   enabled: number;
+  auto_start: number;
   session_name: string;
   game_port: number;
   query_port: number;
@@ -46,6 +47,7 @@ function rowToProfile(row: ServerRow): ServerProfile {
     map: row.map,
     installDir: row.install_dir,
     enabled: row.enabled === 1,
+    autoStart: row.auto_start === 1,
     sessionName: row.session_name,
     gamePort: row.game_port,
     queryPort: row.query_port,
@@ -85,6 +87,7 @@ export class ServerRepository {
     const profile: ServerProfile = {
       ...input,
       enabled,
+      autoStart: input.autoStart === true,
       disabledMods: input.disabledMods ?? [],
       modMetadataCache: input.modMetadataCache ?? {},
       id: randomUUID(),
@@ -94,12 +97,12 @@ export class ServerRepository {
     this.db
       .prepare(
         `INSERT INTO servers (
-          id, name, map, install_dir, enabled, session_name,
+          id, name, map, install_dir, enabled, auto_start, session_name,
           game_port, query_port, rcon_port,
           server_password, admin_password,
           cluster_id, cluster_dir, extra_args, mods,
           disabled_mods, mod_metadata_cache, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         profile.id,
@@ -107,6 +110,7 @@ export class ServerRepository {
         profile.map,
         profile.installDir,
         profile.enabled ? 1 : 0,
+        profile.autoStart ? 1 : 0,
         profile.sessionName,
         profile.gamePort,
         profile.queryPort,
@@ -137,6 +141,7 @@ export class ServerRepository {
           server_password = ?, admin_password = ?,
           cluster_id = ?, cluster_dir = ?, extra_args = ?, mods = ?,
           disabled_mods = ?, mod_metadata_cache = ?,
+          auto_start = ?,
           updated_at = ?
         WHERE id = ?`,
       )
@@ -156,6 +161,7 @@ export class ServerRepository {
         JSON.stringify(input.mods),
         JSON.stringify(input.disabledMods ?? existing.disabledMods ?? []),
         JSON.stringify(input.modMetadataCache ?? existing.modMetadataCache ?? {}),
+        input.autoStart === true ? 1 : 0,
         updatedAt,
         id,
       );

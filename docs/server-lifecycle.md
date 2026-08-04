@@ -182,8 +182,23 @@ which does not bypass busy. After a **restart** that already stopped the process
 probe recovery actions call **start** (not restart again).
 
 Actionable install degradation (e.g. `ready` → `missing`) emits
-`installation_health_degraded` once per transition (no startup spam). Future
-auto-start (#53) should reuse the same `ready` gate.
+`installation_health_degraded` once per transition (no startup spam).
+
+### Auto-start on application launch (#53)
+
+After leave-running reattach completes (`reattachLeftRunningProcesses` in
+`src/main/index.ts`), `runAutoStartOnLaunch` evaluates profiles with
+`autoStart === true`:
+
+1. Skip Inactive (`enabled === false`) — preference kept; event `auto_start_skipped`.
+2. Skip already managed / reattached (`ProcessManager.isActive`).
+3. Skip uncertain reattach (`inaccessible` left-running identity).
+4. Otherwise call `InstanceService.start` (same guards as manual start: ready
+   install, ports, locks). Concurrency **1** (sequential). Failures emit
+   `auto_start_failed` and do not stop the queue; success emits
+   `auto_start_succeeded` (plus the usual `server_started` from start).
+
+Opt-in default is `false`. UI: Server tab Startup switch + Settings summary.
 
 **Readiness:** status stays `"starting"` until RCON `ListPlayers` on
 `127.0.0.1` succeeds. Probes wait for a startup log signal **or** a minimum boot

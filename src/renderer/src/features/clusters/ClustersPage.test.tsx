@@ -21,6 +21,7 @@ function makeServer(overrides: Partial<ServerProfile> & Pick<ServerProfile, "id"
     extraArgs: [],
     mods: [],
     enabled: enabled ?? true,
+    autoStart: false,
     createdAt: "2026-07-23T00:00:00.000Z",
     updatedAt: "2026-07-23T00:00:00.000Z",
     ...rest,

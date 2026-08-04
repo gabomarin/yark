@@ -33,6 +33,22 @@
   grid-column: 1 / -1;
 }
 
+.pathInput {
+  flex: 1;
+}
+
+.startupRow {
+  display: flex;
+  gap: var(--app-space-md);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.startupCopy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .pageHeader,
 .embeddedHeader {
   position: sticky;

@@ -57,6 +57,9 @@ function renderSettings(
       <SettingsPage
         appVersion="0.1.0"
         steamCmdStatus={readyStatus}
+        servers={[]}
+        installationInfo={new Map()}
+        onOpenServer={vi.fn()}
         openNativeTerminalOnStart={false}
         onOpenNativeTerminalOnStartChange={vi.fn()}
         uiDensity="compact"

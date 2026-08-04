@@ -20,6 +20,7 @@ function validInput(overrides: Partial<ServerProfileInput> = {}): ServerProfileI
     clusterDir: null,
     extraArgs: [],
     mods: [],
+    autoStart: false,
     ...overrides,
   };
 }
@@ -29,6 +30,7 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
     ...validInput(),
     id: "id-1",
     enabled: true,
+    autoStart: false,
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
     ...overrides,

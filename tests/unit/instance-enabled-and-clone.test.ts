@@ -41,6 +41,7 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
     map: "TheIsland_WP",
     installDir: "C:\\ARK\\Island",
     enabled: true,
+    autoStart: false,
     sessionName: "Island Session",
     gamePort: 7777,
     queryPort: 27015,

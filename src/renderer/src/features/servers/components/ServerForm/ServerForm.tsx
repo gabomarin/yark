@@ -27,6 +27,8 @@ import {
 import { KNOWN_MAPS, type ServerProfile, type ServerProfileInput } from "@shared/types";
 import { useMemo, useState } from "react";
 import { useUiDensity } from "@app/AppProviders";
+import { ServerFormPathField } from "./ServerFormPathField";
+import { ServerFormStartupFields } from "./ServerFormStartupFields";
 import { PathField } from "@ui/PathField/PathField";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import classes from "./ServerForm.module.css";
@@ -62,6 +64,7 @@ interface FormState {
   clusterDir: string;
   extraArgs: string;
   mods: string;
+  autoStart: boolean;
 }
 
 function toFormState(
@@ -84,6 +87,7 @@ function toFormState(
       clusterDir: "",
       extraArgs: "",
       mods: "",
+      autoStart: false,
     };
   }
 
@@ -101,6 +105,7 @@ function toFormState(
     clusterDir: profile.clusterDir ?? "",
     extraArgs: profile.extraArgs.join(" "),
     mods: profile.mods.join(", "),
+    autoStart: profile.autoStart,
   };
 }
 
@@ -136,6 +141,7 @@ function toInput(
       .filter((value) => value.length > 0),
     disabledMods: initial?.disabledMods ?? [],
     modMetadataCache: initial?.modMetadataCache ?? {},
+    autoStart: state.autoStart,
   };
 }
 
@@ -338,7 +344,7 @@ export function ServerForm(props: Props): ReactElement {
             allowDeselect={false}
             required
           />
-          <PathField
+          <ServerFormPathField
             label={isCreate ? "Base folder" : "Install directory"}
             value={state.installDir}
             placeholder={isCreate ? "C:\\ark_servers" : "C:\\ark_servers\\my_server"}
@@ -420,13 +426,12 @@ export function ServerForm(props: Props): ReactElement {
             value={state.clusterId}
             onChange={(e) => setField("clusterId")(e.currentTarget.value)}
           />
-          <PathField
+          <ServerFormPathField
             label="Shared cluster directory"
             value={state.clusterDir}
             placeholder="C:\\ark_servers\\cluster"
             busy={browsingField === "clusterDir"}
             size={inputSize}
-            clearable
             onChange={setField("clusterDir")}
             onBrowse={() => void browseDirectory("clusterDir")}
           />
@@ -461,6 +466,20 @@ export function ServerForm(props: Props): ReactElement {
             maxRows={8}
           />
         </Section>
+
+        {!isCreate && (
+          <Section title="Startup" flat={embedded} span2>
+            <ServerFormStartupFields
+              autoStart={state.autoStart}
+              showInactiveWarning={
+                props.initial?.enabled === false && state.autoStart
+              }
+              onAutoStartChange={(autoStart) =>
+                setState((previous) => ({ ...previous, autoStart }))
+              }
+            />
+          </Section>
+        )}
       </SimpleGrid>
 
     </Stack>

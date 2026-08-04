@@ -11,6 +11,7 @@ import { BackupScheduler } from "../backend/domains/backups/backup-scheduler";
 import { PlayerSessionWatcher } from "../backend/domains/backups/player-session-watcher";
 import { IniService } from "../backend/domains/config/ini-service";
 import { InstanceService } from "../backend/domains/instances/instance-service";
+import { runAutoStartOnLaunch } from "../backend/domains/instances/auto-start";
 import { LogsService } from "../backend/domains/logs/logs-service";
 import { UpdateService } from "../backend/domains/updates/update-service";
 import { ModsService } from "../backend/domains/mods/mods-service";
@@ -208,7 +209,22 @@ if (gotSingleInstanceLock) {
     applyWindowsLoginItem(readDesktopShellPreferences(settings).startWithWindows);
 
     // Before UI / auto-start: reclaim ASA left after crash / unexpected exit (#59).
-    reattachLeftRunningProcesses(settings, repo, processManager);
+    const reattachOutcomes = reattachLeftRunningProcesses(
+      settings,
+      repo,
+      processManager,
+    );
+
+    // Per-server opt-in auto-start (#53): after reattach, sequential, isolated failures.
+    void runAutoStartOnLaunch({
+      profiles: repo.list(),
+      reattachOutcomes,
+      processes: processManager,
+      repo,
+      start: (serverId) => instances.start(serverId),
+    }).catch((error: unknown) => {
+      console.error("Auto-start on launch failed", error);
+    });
 
     registerIpcHandlers(
       instances,

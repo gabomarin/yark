@@ -95,8 +95,8 @@ export function SettingsGeneralSection(props: Props): ReactElement {
         <div className={classes.settingCopy}>
           <Text size="sm" fw={600}>Start with Windows</Text>
           <Text size="xs" c="dimmed" mt={2}>
-            Open YARK when you sign in to Windows. Does not start dedicated servers
-            automatically.
+            Open YARK when you sign in to Windows. Does not start dedicated servers —
+            use Server auto-start below for that.
           </Text>
         </div>
         <div className={classes.settingControl}>

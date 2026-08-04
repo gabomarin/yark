@@ -12,6 +12,7 @@ const profile: ServerProfile = {
   map: "TheIsland_WP",
   installDir: "C:\\ARK\\Island",
   enabled: true,
+  autoStart: false,
   sessionName: "Island",
   gamePort: 7777,
   queryPort: 27015,

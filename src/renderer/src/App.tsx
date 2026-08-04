@@ -1276,6 +1276,11 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
               appVersion={APP_VERSION}
               steamCmdStatus={steamCmdStatus}
               steamCmdBusy={steamCmdBusy}
+              servers={servers}
+              installationInfo={installationInfo}
+              onOpenServer={(serverId) =>
+                setOverlay({ kind: "workspace", serverId, initialTab: "server" })
+              }
               openNativeTerminalOnStart={openNativeTerminalOnStart}
               onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
               uiDensity={uiDensity}

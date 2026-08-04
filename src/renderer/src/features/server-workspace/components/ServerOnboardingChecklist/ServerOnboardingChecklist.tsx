@@ -40,19 +40,12 @@ interface Props {
 
 function toInput(server: ServerProfile): ServerProfileInput {
   return {
-    name: server.name,
-    map: server.map,
-    installDir: server.installDir,
-    sessionName: server.sessionName,
-    gamePort: server.gamePort,
-    queryPort: server.queryPort,
-    rconPort: server.rconPort,
-    serverPassword: server.serverPassword,
-    adminPassword: server.adminPassword,
-    clusterId: server.clusterId,
-    clusterDir: server.clusterDir,
-    extraArgs: server.extraArgs,
-    mods: server.mods,
+    name: server.name, map: server.map, installDir: server.installDir,
+    sessionName: server.sessionName, gamePort: server.gamePort,
+    queryPort: server.queryPort, rconPort: server.rconPort,
+    serverPassword: server.serverPassword, adminPassword: server.adminPassword,
+    clusterId: server.clusterId, clusterDir: server.clusterDir,
+    extraArgs: server.extraArgs, mods: server.mods, autoStart: server.autoStart,
   };
 }
 

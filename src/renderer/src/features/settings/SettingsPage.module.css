@@ -107,6 +107,22 @@
   padding: 0 2px;
 }
 
+.autoStartList {
+  padding: var(--app-space-sm);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-control);
+  background: color-mix(in srgb, var(--ark-gray-2) 40%, transparent);
+}
+
+.autoStartRow {
+  width: 100%;
+}
+
+.autoStartCopy {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
 @media (max-width: 720px) {
   .cacheRow {
     flex-direction: column;

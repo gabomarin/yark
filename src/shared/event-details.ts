@@ -65,6 +65,22 @@ function catalogFor(event: AppEvent): AppEventDetails {
       return {
         what: "The server process was started by the manager.",
       };
+    case "auto_start_skipped":
+      return {
+        what: "Opt-in auto-start skipped this server at application launch.",
+        suggestion:
+          "Check Inactive state, install health, running/reattached process, or locks if you expected it to start.",
+      };
+    case "auto_start_succeeded":
+      return {
+        what: "Opt-in auto-start launched this server at application launch.",
+      };
+    case "auto_start_failed":
+      return {
+        what: "Opt-in auto-start tried to launch this server and failed.",
+        suggestion:
+          "Read the error detail, fix install/ports/locks, then start manually or fix auto-start eligibility.",
+      };
     case "server_enabled":
       return {
         what: "A saved server profile was re-enabled.",
