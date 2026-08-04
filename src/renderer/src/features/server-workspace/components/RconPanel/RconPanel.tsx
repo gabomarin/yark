@@ -33,6 +33,7 @@ type QuickCommand = {
 
 const QUICK_COMMANDS: QuickCommand[] = [
   { label: "SaveWorld", command: "SaveWorld" },
+  { label: "Broadcast", command: "Broadcast " },
   { label: "ListPlayers", command: "ListPlayers" },
   { label: "DestroyWildDinos", command: "DestroyWildDinos", danger: true },
   { label: "GetChat", command: "GetChat" },
@@ -146,7 +147,14 @@ export function RconPanel(props: Props): ReactElement {
                   variant={item.danger ? "light" : "default"}
                   color={item.danger ? "red" : "gray"}
                   disabled={!isRunning}
-                  onClick={() => setCommand(item.command)}
+                  onClick={() => {
+                    // Broadcast needs a message — prefill the input for editing.
+                    if (item.command.endsWith(" ")) {
+                      setCommand(item.command);
+                      return;
+                    }
+                    void sendCommand(item.command);
+                  }}
                 >
                   {item.label}
                 </Button>

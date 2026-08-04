@@ -117,4 +117,20 @@ describe("RconSessionManager", () => {
     expect(b).toBe("ok:ListPlayers");
     expect(c).toBe("ok:SaveWorld");
   });
+
+  it("does not schedule reconnect when auto-reconnect is disabled", async () => {
+    vi.useFakeTimers();
+    const manager = new RconSessionManager();
+    await manager.connect("srv-1", "127.0.0.1", 27020, "admin");
+    const client = rconMocks.clients[0];
+    const before = rconMocks.clients.length;
+
+    manager.setAutoReconnect("srv-1", false);
+    client?.socket.emit("close");
+    await vi.advanceTimersByTimeAsync(30_000);
+
+    expect(rconMocks.clients.length).toBe(before);
+    expect(manager.getStatus("srv-1").status).toBe("disconnected");
+    vi.useRealTimers();
+  });
 });

@@ -185,6 +185,12 @@ export function ServerWorkspacePage(props: Props): ReactElement {
       onInstallFiles={() => props.onInstallFiles(selectedServer.id)}
       onUpdateNow={() => props.onUpdateNow(selectedServer.id)}
       onVerifyFiles={() => props.onVerifyFiles(selectedServer.id)}
+      onSaveWorld={() => {
+        void props.onSendRcon(selectedServer.id, "SaveWorld");
+      }}
+      onBroadcast={(message) => {
+        void props.onSendRcon(selectedServer.id, `Broadcast ${message}`);
+      }}
       onKill={() => props.onKillServer(selectedServer.id)}
       onToggleEnabled={() =>
         props.onToggleServerEnabled?.(selectedServer.id, !selectedServer.enabled)

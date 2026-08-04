@@ -291,13 +291,16 @@ describe("ServerWorkspacePage", () => {
     expect(screen.getByText("Console history")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "SaveWorld" }));
+    expect(onSendRcon).toHaveBeenLastCalledWith("srv-a", "SaveWorld");
     const input = screen.getByLabelText(/rcon command/i);
-    expect(input).toHaveValue("SaveWorld");
     await user.clear(input);
     await user.type(input, "cheat ListPlayers");
-    await user.click(screen.getByRole("button", { name: /send/i }));
+    await user.click(screen.getByRole("button", { name: /^Send$/i }));
 
     expect(onSendRcon).toHaveBeenLastCalledWith("srv-a", "cheat ListPlayers");
+
+    await user.click(screen.getByRole("button", { name: "Broadcast" }));
+    expect(input).toHaveValue("Broadcast ");
   });
 
   it("shows RCON responses in the compact history panel", async () => {
@@ -315,12 +318,28 @@ describe("ServerWorkspacePage", () => {
           error: null,
         },
         {
+          id: "rcon-empty",
+          command: "SaveWorld",
+          createdAt: "2026-07-24T12:35:50.000Z",
+          status: "success",
+          response: null,
+          error: null,
+        },
+        {
           id: "rcon-1",
           command: "ListPlayers",
           createdAt: "2026-07-24T12:34:56.000Z",
           status: "success",
           response: "Player1\nPlayer2",
           error: null,
+        },
+        {
+          id: "rcon-err",
+          command: "BadCmd",
+          createdAt: "2026-07-24T12:34:00.000Z",
+          status: "error",
+          response: null,
+          error: "RCON not connected",
         },
       ],
     );
@@ -334,7 +353,142 @@ describe("ServerWorkspacePage", () => {
     expect(
       screen.queryByText("Server received, But no response!!"),
     ).not.toBeInTheDocument();
+    expect(screen.getAllByText("No response")).toHaveLength(2);
+    expect(screen.getByText("RCON not connected")).toBeInTheDocument();
+    expect(screen.getByText("failed")).toBeInTheDocument();
     expect(screen.queryByText(/may not be allowed via RCON/i)).not.toBeInTheDocument();
+  });
+
+  it("disables Send for an identical pending command and Clear keeps pending", async () => {
+    const user = userEvent.setup();
+    const onClearRconHistory = vi.fn();
+    render(
+      <AppProviders>
+        <ServerWorkspacePage
+          servers={[serverA, serverB]}
+          selectedServerId={serverA.id}
+          statuses={
+            new Map([
+              [
+                serverA.id,
+                {
+                  serverId: serverA.id,
+                  status: "running",
+                  pid: 42,
+                  startedAt: "2026-07-23T00:00:00.000Z",
+                  lastError: null,
+                },
+              ],
+            ])
+          }
+          installationInfo={new Map()}
+          clusterReports={[]}
+          events={[]}
+          rconHistory={[
+            {
+              id: "pending-1",
+              command: "ListPlayers",
+              createdAt: "2026-07-24T12:00:00.000Z",
+              status: "pending",
+              response: null,
+              error: null,
+            },
+            {
+              id: "done-1",
+              command: "SaveWorld",
+              createdAt: "2026-07-24T11:00:00.000Z",
+              status: "success",
+              response: null,
+              error: null,
+            },
+          ]}
+          playerList={EMPTY_PLAYER_LIST}
+          onSelectServer={vi.fn()}
+          onBack={vi.fn()}
+          onStartServer={vi.fn()}
+          onStopServer={vi.fn()}
+          onRestartServer={vi.fn()}
+          onKillServer={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onSendRcon={vi.fn(async () => true)}
+          {...playerListHandlers}
+          onClearRconHistory={onClearRconHistory}
+          onServerUpdated={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("tab", { name: "RCON" }));
+    const input = screen.getByLabelText(/rcon command/i);
+    await user.clear(input);
+    await user.type(input, "ListPlayers");
+    expect(screen.getByRole("button", { name: /^Send$/i })).toBeDisabled();
+
+    await user.clear(input);
+    await user.type(input, "GetChat");
+    expect(screen.getByRole("button", { name: /^Send$/i })).toBeEnabled();
+
+    expect(screen.getByText("Sending…")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Clear RCON history" }));
+    expect(onClearRconHistory).toHaveBeenCalledWith("srv-a");
+  });
+
+  it("keeps SidePanel Save world and Broadcast shortcuts wired to RCON history", async () => {
+    const user = userEvent.setup();
+    const onSendRcon = vi.fn(async () => true);
+    render(
+      <AppProviders>
+        <ServerWorkspacePage
+          servers={[serverA, serverB]}
+          selectedServerId={serverA.id}
+          statuses={
+            new Map([
+              [
+                serverA.id,
+                {
+                  serverId: serverA.id,
+                  status: "running",
+                  pid: 42,
+                  startedAt: "2026-07-23T00:00:00.000Z",
+                  lastError: null,
+                },
+              ],
+            ])
+          }
+          installationInfo={new Map()}
+          clusterReports={[]}
+          events={[]}
+          rconHistory={[]}
+          playerList={EMPTY_PLAYER_LIST}
+          onSelectServer={vi.fn()}
+          onBack={vi.fn()}
+          onStartServer={vi.fn()}
+          onStopServer={vi.fn()}
+          onRestartServer={vi.fn()}
+          onKillServer={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onSendRcon={onSendRcon}
+          {...playerListHandlers}
+          onServerUpdated={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Save world" }));
+    expect(onSendRcon).toHaveBeenCalledWith("srv-a", "SaveWorld");
+
+    await user.type(
+      screen.getByPlaceholderText("Message for players"),
+      "Hello tribe",
+    );
+    await user.click(screen.getByRole("button", { name: "Send announcement" }));
+    expect(onSendRcon).toHaveBeenCalledWith("srv-a", "Broadcast Hello tribe");
   });
 
   it("moves secondary panels into drawers in compact workspaces", async () => {

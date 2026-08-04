@@ -180,6 +180,11 @@ export class InstanceService extends EventEmitter {
   } | null = null;
   /** Persistent RCON session manager. */
   private readonly rconSessions = new RconSessionManager();
+  /**
+   * E2E-only: when `YARK_E2E_RCON_MOCK=1`, report servers as running and answer
+   * console commands without a live ASA dedicated (see scripts/e2e-rcon.cjs).
+   */
+  private readonly e2eRconMock = process.env["YARK_E2E_RCON_MOCK"] === "1";
 
   constructor(
     private readonly repo: ServerRepository,
@@ -194,17 +199,20 @@ export class InstanceService extends EventEmitter {
       this.emit("rcon-status-changed", info);
     });
 
-    // Auto-connect RCON when server becomes running
+    // Persistent session only while `running`; keep the socket during
+    // `stopping` for SaveWorld/DoExit but never auto-reconnect.
     this.processes.on("status", (status: ServerRuntimeInfo) => {
       if (status.status === "running") {
+        this.rconSessions.setAutoReconnect(status.serverId, true);
         const profile = this.repo.get(status.serverId);
         if (profile) {
           this.autoConnectRcon(profile).catch((err) => {
             console.error(`[InstanceService] Auto-connect RCON failed for ${profile.name}:`, err);
           });
         }
+      } else if (status.status === "stopping") {
+        this.rconSessions.setAutoReconnect(status.serverId, false);
       } else if (status.status === "stopped" || status.status === "error") {
-        // Disconnect RCON when server stops
         this.rconSessions.disconnect(status.serverId);
       }
     });
@@ -935,7 +943,18 @@ export class InstanceService extends EventEmitter {
   }
 
   statuses(): ServerRuntimeInfo[] {
-    return this.processes.listStatuses(this.repo.list().map((p) => p.id));
+    const ids = this.repo.list().map((p) => p.id);
+    if (!this.e2eRconMock) {
+      return this.processes.listStatuses(ids);
+    }
+    const now = new Date().toISOString();
+    return ids.map((serverId) => ({
+      serverId,
+      status: "running" as const,
+      pid: 4242,
+      startedAt: now,
+      lastError: null,
+    }));
   }
 
   installDirFor(id: string): string {
@@ -1116,6 +1135,10 @@ export class InstanceService extends EventEmitter {
     command: string,
     options?: { recordEvent?: boolean },
   ): Promise<string> {
+    if (this.e2eRconMock) {
+      return this.execRconE2eMock(id, command, options);
+    }
+
     const profile = this.processes.applyRuntimePorts(this.mustGet(id));
     const runtimeStatus = this.processes.getStatus(id).status;
     // Allow during `stopping` for SaveWorld/DoExit; never during bare `starting`
@@ -1137,6 +1160,10 @@ export class InstanceService extends EventEmitter {
         profile.rconPort,
         profile.adminPassword,
       );
+      // Stop / SaveWorld / DoExit may reconnect once, but must not schedule retries.
+      if (runtimeStatus !== "running") {
+        this.rconSessions.setAutoReconnect(id, false);
+      }
     }
 
     console.log(
@@ -1155,6 +1182,42 @@ export class InstanceService extends EventEmitter {
       );
     }
     return response;
+  }
+
+  /** Deterministic RCON replies for UI e2e without a live dedicated. */
+  private async execRconE2eMock(
+    id: string,
+    command: string,
+    options?: { recordEvent?: boolean },
+  ): Promise<string> {
+    const profile = this.mustGet(id);
+    const trimmed = command.trim();
+    if (options?.recordEvent !== false) {
+      this.repo.addEvent(
+        id,
+        "rcon_command",
+        "info",
+        `RCON on "${profile.name}": ${trimmed}`,
+      );
+    }
+    if (trimmed === "E2E_FAIL") {
+      throw new Error("E2E mock failure");
+    }
+    if (trimmed === "E2E_SLOW") {
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+      return "E2E:slow";
+    }
+    if (
+      trimmed === "E2E_EMPTY" ||
+      trimmed === "SaveWorld" ||
+      trimmed === "DestroyWildDinos"
+    ) {
+      return "";
+    }
+    if (trimmed === "ListPlayers") {
+      return "No Players Connected";
+    }
+    return `E2E:${trimmed}`;
   }
 
   /** Lists online players via the persistent session (silent; no history event). */
@@ -1241,16 +1304,29 @@ export class InstanceService extends EventEmitter {
 
   /** Returns RCON connection status for a server. */
   getRconStatus(id: string) {
+    if (this.e2eRconMock) {
+      return { serverId: id, status: "connected" as const, lastError: null };
+    }
     return this.rconSessions.getStatus(id);
   }
 
   /** Returns RCON connection status for all servers. */
   getAllRconStatus() {
+    if (this.e2eRconMock) {
+      return this.repo.list().map((profile) => ({
+        serverId: profile.id,
+        status: "connected" as const,
+        lastError: null,
+      }));
+    }
     return this.rconSessions.getAllStatus();
   }
 
   /** Replaces the current RCON session and reconnects using the active runtime port. */
   async retryRconConnection(id: string): Promise<void> {
+    if (this.e2eRconMock) {
+      return;
+    }
     const profile = this.processes.applyRuntimePorts(this.mustGet(id));
     // Match auto-connect: only after readiness (`running`), not during `starting`.
     if (this.processes.getStatus(id).status !== "running") {

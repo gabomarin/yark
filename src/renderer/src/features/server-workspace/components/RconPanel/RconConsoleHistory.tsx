@@ -8,10 +8,14 @@ import classes from "./RconPanel.module.css";
 
 const NO_CONTENT_RESPONSE = "Server received, But no response!!";
 
-function hasDisplayableResponse(entry: RconHistoryEntry): boolean {
-  if (entry.status !== "success") return true;
+function formatResponseBody(entry: RconHistoryEntry): string {
+  if (entry.status === "pending") return "Sending…";
+  if (entry.status === "error") return entry.error ?? "Unknown error";
   const response = entry.response?.trim() ?? "";
-  return response.length > 0 && response !== NO_CONTENT_RESPONSE;
+  if (response.length === 0 || response === NO_CONTENT_RESPONSE) {
+    return "No response";
+  }
+  return entry.response ?? "No response";
 }
 
 function formatRconTime(date: string): string {
@@ -45,7 +49,6 @@ interface Props {
 }
 
 export function RconConsoleHistory(props: Props): ReactElement {
-  const entries = props.history.filter(hasDisplayableResponse);
   const hasClearable = props.history.some(
     (entry) => entry.status !== "pending",
   );
@@ -68,9 +71,9 @@ export function RconConsoleHistory(props: Props): ReactElement {
           </Tooltip>
         </div>
 
-        {entries.length > 0 ? (
+        {props.history.length > 0 ? (
           <div className={classes.responseList}>
-            {entries.map((entry) => {
+            {props.history.map((entry) => {
               const statusLabel =
                 entry.status === "pending"
                   ? "sending"
@@ -83,14 +86,9 @@ export function RconConsoleHistory(props: Props): ReactElement {
                   : entry.status === "error"
                     ? "red"
                     : "teal";
-              const body =
-                entry.status === "pending"
-                  ? "Sending…"
-                  : (entry.error ?? entry.response ?? "No response");
+              const body = formatResponseBody(entry);
               const responseText =
-                entry.status === "pending"
-                  ? null
-                  : (entry.error ?? entry.response ?? "No response");
+                entry.status === "pending" ? null : body;
               const rerunBlocked =
                 !props.serverRunning ||
                 props.history.some(

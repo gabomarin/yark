@@ -10,6 +10,8 @@ interface RconSession {
   lastError: string | null;
   reconnectTimer: NodeJS.Timeout | null;
   reconnectAttempts: number;
+  /** When false, lost connections and connect failures do not schedule retries. */
+  autoReconnect: boolean;
   host: string;
   port: number;
   password: string;
@@ -55,6 +57,7 @@ export class RconSessionManager extends EventEmitter {
         lastError: null,
         reconnectTimer: null,
         reconnectAttempts: 0,
+        autoReconnect: true,
         host,
         port,
         password,
@@ -118,6 +121,21 @@ export class RconSessionManager extends EventEmitter {
 
       this.updateStatus(serverId, "error", errorMsg);
       this.scheduleReconnect(serverId, host, port, password);
+    }
+  }
+
+  /**
+   * Enables or disables auto-reconnect for an existing session.
+   * Used when leaving `running` (e.g. `stopping`) so SaveWorld/DoExit can
+   * still use the open socket without scheduling new reconnect attempts.
+   */
+  setAutoReconnect(serverId: string, enabled: boolean): void {
+    const session = this.sessions.get(serverId);
+    if (!session) return;
+    session.autoReconnect = enabled;
+    if (!enabled && session.reconnectTimer) {
+      clearTimeout(session.reconnectTimer);
+      session.reconnectTimer = null;
     }
   }
 
@@ -234,7 +252,7 @@ export class RconSessionManager extends EventEmitter {
     password: string,
   ): void {
     const session = this.sessions.get(serverId);
-    if (!session) return;
+    if (!session || !session.autoReconnect) return;
 
     if (session.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
       console.error(`[RconSessionManager] Max reconnect attempts reached for ${serverId}`);

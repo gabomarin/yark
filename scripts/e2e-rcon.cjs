@@ -1,12 +1,14 @@
 /**
- * E2E: RCON Players tab UI + BanList (no live ASA dedicated).
+ * E2E: RCON console + Players/BanList UI (no live ASA dedicated).
  *
- * Seeds a lightweight "ready" install with Win64 BanList.txt, opens the
- * workspace RCON tab while the server is stopped, and checks:
- * - Console chrome (chips, command input, Console history / Clear)
- * - Online stopped copy
- * - Banned list reads names from BanList.txt
- * - Unban while stopped rewrites BanList without resurrecting stale ids
+ * Uses YARK_E2E_RCON_MOCK=1 so InstanceService reports servers as running and
+ * answers console commands deterministically (success / empty / failure).
+ *
+ * Covers:
+ * - Submit, success body, empty → "No response", failure, identical-pending,
+ *   Clear while a command is pending
+ * - BanList names + Unban rewrite (primary Win64 only)
+ * - Visual evidence at HD / Full HD / QHD (docs/visual-testing.md)
  *
  * Usage: npm run build && npm run e2e:rcon
  *
@@ -15,6 +17,7 @@
  */
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
@@ -30,6 +33,13 @@ const fixtureName = `rcon-${runId}`;
 const profileDir = path.join(profilesRoot, fixtureName);
 const serversDir = path.join(serversRoot, fixtureName);
 const dbPath = path.join(profileDir, "yark-server-manager.db");
+const shotsDir = path.join(os.tmpdir(), `yark-e2e-rcon-${runId}`);
+
+const VIEWPORTS = [
+  { name: "hd", width: 1280, height: 720 },
+  { name: "full-hd", width: 1920, height: 1080 },
+  { name: "qhd-2k", width: 2560, height: 1440 },
+];
 
 const PORT_BASE = 29400 + (process.pid % 200);
 const PORTS = {
@@ -113,7 +123,11 @@ async function launchApp() {
   return electron.launch({
     args: ["."],
     cwd: projectRoot,
-    env: { ...process.env, YARK_E2E_USER_DATA: profileDir },
+    env: {
+      ...process.env,
+      YARK_E2E_USER_DATA: profileDir,
+      YARK_E2E_RCON_MOCK: "1",
+    },
   });
 }
 
@@ -138,6 +152,29 @@ function cardFor(page, name) {
   }).first();
 }
 
+async function openRconTab(page) {
+  const card = cardFor(page, serverName);
+  await card.waitFor({ state: "visible", timeout: 15_000 });
+  await card
+    .getByRole("button", { name: new RegExp(`Open settings for ${serverName}`, "i") })
+    .click();
+  await page.getByRole("tab", { name: "RCON" }).waitFor({
+    state: "visible",
+    timeout: 15_000,
+  });
+  await page.getByRole("tab", { name: "RCON" }).click();
+  await page.getByText(/Admin commands for the active server/i).waitFor({
+    state: "visible",
+    timeout: 10_000,
+  });
+}
+
+async function sendCommand(page, command) {
+  const input = page.getByLabel(/rcon command/i);
+  await input.fill(command);
+  await page.getByRole("button", { name: /^Send$/i }).click();
+}
+
 async function run() {
   process.chdir(projectRoot);
   assert.equal(process.platform, "win32", "RCON E2E requires Windows");
@@ -145,6 +182,7 @@ async function run() {
   assertFixturePath(serversRoot, serversDir);
 
   fs.mkdirSync(profileDir, { recursive: true });
+  fs.mkdirSync(shotsDir, { recursive: true });
   writeInstallFixture();
 
   let app = null;
@@ -166,41 +204,87 @@ async function run() {
     await page.waitForLoadState("domcontentloaded");
     await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 15_000 });
 
-    const card = cardFor(page, serverName);
-    await card.waitFor({ state: "visible", timeout: 15_000 });
-    await card
-      .getByRole("button", { name: new RegExp(`Open settings for ${serverName}`, "i") })
-      .click();
-    await page.getByRole("tab", { name: "RCON" }).waitFor({
-      state: "visible",
-      timeout: 15_000,
-    });
-    await page.getByRole("tab", { name: "RCON" }).click();
-
-    await page.getByText(/Admin commands for the active server/i).waitFor({
-      state: "visible",
-      timeout: 10_000,
-    });
+    await openRconTab(page);
+    // Wide layout so SidePanel Save world / Broadcast stay visible.
+    await page.setViewportSize({ width: 1920, height: 1080 });
     await page.getByLabel(/rcon command/i).waitFor({ state: "visible" });
     await page.getByText("Online", { exact: true }).waitFor({ state: "visible" });
     await page.getByText("Banned", { exact: true }).waitFor({ state: "visible" });
     await page.getByText("Console history", { exact: true }).waitFor({ state: "visible" });
-    await page.getByRole("button", { name: "Clear RCON history" }).waitFor({
-      state: "visible",
-    });
 
-    // Server is stopped — Send / quick chips stay disabled (no live RCON).
+    // Mock marks the server running — chips enabled; Send needs a command.
     assert.equal(
       await page.getByRole("button", { name: /^Send$/i }).isDisabled(),
       true,
-      "Send should be disabled while the server is stopped",
+      "Send stays disabled until a command is typed",
     );
     assert.equal(
       await page.getByRole("button", { name: "SaveWorld" }).isDisabled(),
-      true,
-      "SaveWorld chip should be disabled while stopped",
+      false,
+      "SaveWorld chip should be enabled while mock-running",
     );
-    await page.getByText("Server stopped.", { exact: true }).waitFor({
+
+    // Success with a body.
+    await sendCommand(page, "GetChat");
+    await page.getByText("E2E:GetChat", { exact: true }).waitFor({
+      state: "visible",
+      timeout: 10_000,
+    });
+    await page.getByText("ok", { exact: true }).first().waitFor({ state: "visible" });
+
+    // Empty success → "No response".
+    await sendCommand(page, "E2E_EMPTY");
+    await page.getByText("No response", { exact: true }).waitFor({
+      state: "visible",
+      timeout: 10_000,
+    });
+
+    // Failure.
+    await sendCommand(page, "E2E_FAIL");
+    await page
+      .locator("p")
+      .filter({ hasText: /^E2E mock failure$/ })
+      .waitFor({ state: "visible", timeout: 10_000 });
+    await page.getByText("failed", { exact: true }).waitFor({ state: "visible" });
+
+    // Identical pending + Clear keeps in-flight.
+    await sendCommand(page, "E2E_SLOW");
+    await page.getByText("Sending…", { exact: true }).waitFor({
+      state: "visible",
+      timeout: 5_000,
+    });
+    await page.getByLabel(/rcon command/i).fill("E2E_SLOW");
+    assert.equal(
+      await page.getByRole("button", { name: /^Send$/i }).isDisabled(),
+      true,
+      "Identical pending command must disable Send",
+    );
+    await page.getByRole("button", { name: "Clear RCON history" }).click();
+    await page.getByText("Sending…", { exact: true }).waitFor({
+      state: "visible",
+      timeout: 5_000,
+    });
+    await page.getByText("E2E:slow", { exact: true }).waitFor({
+      state: "visible",
+      timeout: 10_000,
+    });
+
+    // SidePanel Broadcast shortcut → history.
+    await page.getByRole("button", { name: "Save world" }).click();
+    await page.getByText("No response", { exact: true }).first().waitFor({
+      state: "visible",
+      timeout: 10_000,
+    });
+    await page.getByPlaceholder("Message for players").fill("E2E hello");
+    await page.getByRole("button", { name: "Send announcement" }).click();
+    await page.getByText("E2E:Broadcast E2E hello", { exact: true }).waitFor({
+      state: "visible",
+      timeout: 10_000,
+    });
+
+    // Clear history removes completed entries.
+    await page.getByRole("button", { name: "Clear RCON history" }).click();
+    await page.getByText("RCON responses will appear here.").waitFor({
       state: "visible",
       timeout: 5_000,
     });
@@ -211,7 +295,6 @@ async function run() {
     await page.getByText(KEEP_ID, { exact: true }).waitFor({ state: "visible" });
     await page.getByText(REMOVE_ID, { exact: true }).waitFor({ state: "visible" });
 
-    // Unban while stopped still rewrites Win64 BanList.txt (no RCON needed).
     await page.getByRole("button", { name: `Unban ${REMOVE_NAME}` }).click();
     await page.getByRole("dialog").waitFor({ state: "visible", timeout: 5_000 });
     await page.getByRole("dialog").getByRole("button", { name: /^Unban$/i }).click();
@@ -225,7 +308,6 @@ async function run() {
     const banListText = fs.readFileSync(banListPath, "utf8");
     assert.match(banListText, new RegExp(`${KEEP_ID},${KEEP_NAME},0`));
     assert.doesNotMatch(banListText, new RegExp(REMOVE_ID));
-    // Alternate BanList must remain untouched / not merged into primary.
     const altText = fs.readFileSync(
       path.join(installDir, "ShooterGame", "Saved", "BanList.txt"),
       "utf8",
@@ -233,12 +315,24 @@ async function run() {
     assert.match(altText, /11111111111111111,StaleAlt,0/);
     assert.doesNotMatch(banListText, /11111111111111111/);
 
+    // Visual matrix (docs/visual-testing.md).
+    for (const size of VIEWPORTS) {
+      await page.setViewportSize({ width: size.width, height: size.height });
+      await page.getByText(/Admin commands for the active server/i).waitFor({
+        state: "visible",
+      });
+      const shot = path.join(shotsDir, `rcon-${size.name}.png`);
+      await page.screenshot({ path: shot, fullPage: false });
+      assert.ok(fs.existsSync(shot), `missing screenshot ${shot}`);
+      console.log(`E2E_RCON_SHOT ${shot}`);
+    }
+
     const actionableErrors = errors.filter(
       (message) => !/Failed to load resource|net::ERR_/i.test(message),
     );
     assert.deepEqual(actionableErrors, []);
     succeeded = true;
-    console.log(`E2E_RCON_OK profile=${profileDir}`);
+    console.log(`E2E_RCON_OK profile=${profileDir} shots=${shotsDir}`);
   } finally {
     if (app !== null) {
       try {
@@ -256,6 +350,7 @@ async function run() {
     } else {
       console.error(`E2E_RCON_PROFILE_PRESERVED ${profileDir}`);
       console.error(`E2E_RCON_SERVERS_PRESERVED ${serversDir}`);
+      console.error(`E2E_RCON_SHOTS_PRESERVED ${shotsDir}`);
     }
   }
 }
