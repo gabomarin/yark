@@ -8,9 +8,12 @@ import astraeos from "@renderer/assets/maps/Astraeos_WP.webp";
 import genesis from "@renderer/assets/maps/Genesis_WP.webp";
 import lostColony from "@renderer/assets/maps/LostColony_WP.webp";
 import valguero from "@renderer/assets/maps/Valguero_WP.webp";
+import { KNOWN_MAPS } from "@shared/types";
+
+type KnownMapId = (typeof KNOWN_MAPS)[number];
 
 /** Bundled ASA map artwork keyed by map id (`KNOWN_MAPS`). */
-const MAP_ART_BY_ID: Record<string, string> = {
+const MAP_ART_BY_ID = {
   TheIsland_WP: theIsland,
   ScorchedEarth_WP: scorchedEarth,
   TheCenter_WP: theCenter,
@@ -21,7 +24,7 @@ const MAP_ART_BY_ID: Record<string, string> = {
   Genesis_WP: genesis,
   LostColony_WP: lostColony,
   Valguero_WP: valguero,
-};
+} as const satisfies Record<KnownMapId, string>;
 
 /** URL for bundled map art, or `null` when unknown / missing. */
 export function resolveMapArtUrl(mapId: string): string | null {
@@ -29,5 +32,8 @@ export function resolveMapArtUrl(mapId: string): string | null {
   if (key.length === 0) {
     return null;
   }
-  return MAP_ART_BY_ID[key] ?? null;
+  if (!(key in MAP_ART_BY_ID)) {
+    return null;
+  }
+  return MAP_ART_BY_ID[key as KnownMapId];
 }
