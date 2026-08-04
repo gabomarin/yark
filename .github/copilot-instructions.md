@@ -26,6 +26,7 @@
 - Cursor Cloud / Linux VM: `AGENTS.md`.
 - Visual UI review: `docs/visual-testing.md`.
 - Broader agent rules: `docs/agent-context.md`.
+- Changelog on feature branches: short Unreleased bullets; CI gate + style in `.cursor/rules/changelog.mdc` / `docs/versioning.md`.
 
 ## Verification
 - If backend, shared, or critical flows change: run `npm test` and `npm run typecheck`.

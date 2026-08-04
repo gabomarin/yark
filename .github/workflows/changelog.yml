@@ -1,0 +1,41 @@
+name: Changelog
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: changelog-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  require-changelog:
+    name: CHANGELOG.md updated
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Require CHANGELOG.md in the PR diff
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          SKIP: ${{ contains(github.event.pull_request.labels.*.name, 'skip-changelog') }}
+        run: |
+          set -euo pipefail
+          if [ "$SKIP" = "true" ]; then
+            echo "Label skip-changelog present — check skipped."
+            exit 0
+          fi
+          if git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -Fxq 'CHANGELOG.md'; then
+            echo "CHANGELOG.md changed in this PR."
+            exit 0
+          fi
+          echo "::error title=Missing changelog::PRs must update CHANGELOG.md under ## [Unreleased] (Keep a Changelog). For non-user-facing work only, add the skip-changelog label. See docs/versioning.md and .cursor/rules/changelog.mdc."
+          exit 1

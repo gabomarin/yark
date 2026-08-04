@@ -12,9 +12,11 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Added
 
 - Opt-in **Auto-start with YARK** per server profile (default off). After leave-running reattach, eligible servers start sequentially through the normal start path; Inactive, already-running, and uncertain reattach cases are skipped with audit events. Configure on the Server tab; Settings shows a summary of opted-in profiles (#53).
+
 ### Changed
 
 - Filesystem paths use shared read-only chips with Browse/Clear (`ReadonlyPath` / `PathField`) across Settings, servers, clusters, and backups (#52).
+- Pull requests must update `CHANGELOG.md` (or use the `skip-changelog` label); agents follow `.cursor/rules/changelog.mdc`.
 
 ## [0.5.2] - 2026-08-02
 

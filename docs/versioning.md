@@ -42,6 +42,14 @@ for user-visible feature batches and PATCH for hotfix builds. Promote to
 Do **not** cut a new version/tag on every merge. Group merged tickets into a MINOR
 (or PATCH hotfix) when the build is worth installing.
 
+### PR gate: changelog required
+
+Workflow: [`.github/workflows/changelog.yml`](../.github/workflows/changelog.yml)
+
+- Every PR must change root `CHANGELOG.md` (a short bullet under `## [Unreleased]`).
+- Escape hatch: GitHub label **`skip-changelog`** for non-user-facing chore/CI/docs-only PRs.
+- Agents: keep notes concise — see [`.cursor/rules/changelog.mdc`](../.cursor/rules/changelog.mdc).
+
 ## GitHub Actions release
 
 Workflow: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
