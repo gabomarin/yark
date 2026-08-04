@@ -47,17 +47,14 @@ describe("CloneServerDialog", () => {
     );
 
     const name = screen.getByRole("textbox", { name: "Server name" });
-    expect(screen.getByLabelText("Install directory")).toHaveTextContent(
-      "C:\\ARK\\Island-copy",
-    );
-    expect(screen.queryByRole("textbox", { name: "Install directory" })).toBeNull();
+    const installDir = screen.getByRole("textbox", { name: "Install directory" });
+    expect(installDir).toHaveAttribute("aria-readonly", "true");
+    expect(installDir).toHaveTextContent("C:\\ARK\\Island-copy");
 
     await user.clear(name);
     await user.type(name, "Winter");
 
-    expect(screen.getByLabelText("Install directory")).toHaveTextContent(
-      "C:\\ARK\\Winter",
-    );
+    expect(installDir).toHaveTextContent("C:\\ARK\\Winter");
   });
 
   it("does not overwrite a Browse-customized install folder when the name changes", async () => {
