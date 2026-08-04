@@ -368,18 +368,6 @@ export function ServerForm(props: Props): ReactElement {
           )}
         </Section>
 
-        <Section title="Startup" flat={embedded}>
-          <ServerFormStartupFields
-            autoStart={state.autoStart}
-            showInactiveWarning={
-              !isCreate && props.initial?.enabled === false && state.autoStart
-            }
-            onAutoStartChange={(autoStart) =>
-              setState((previous) => ({ ...previous, autoStart }))
-            }
-          />
-        </Section>
-
         <Section title="Networking" flat={embedded}>
           <NumberInput
             label="Game port"
@@ -478,6 +466,20 @@ export function ServerForm(props: Props): ReactElement {
             maxRows={8}
           />
         </Section>
+
+        {!isCreate && (
+          <Section title="Startup" flat={embedded} span2>
+            <ServerFormStartupFields
+              autoStart={state.autoStart}
+              showInactiveWarning={
+                props.initial?.enabled === false && state.autoStart
+              }
+              onAutoStartChange={(autoStart) =>
+                setState((previous) => ({ ...previous, autoStart }))
+              }
+            />
+          </Section>
+        )}
       </SimpleGrid>
 
     </Stack>
