@@ -29,6 +29,8 @@ import { useMemo, useState } from "react";
 import { useUiDensity } from "@app/AppProviders";
 import { ServerFormPathField } from "./ServerFormPathField";
 import { ServerFormStartupFields } from "./ServerFormStartupFields";
+import { PathField } from "@ui/PathField/PathField";
+import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import classes from "./ServerForm.module.css";
 
 interface Props {
@@ -353,14 +355,16 @@ export function ServerForm(props: Props): ReactElement {
             onBrowse={() => void browseDirectory("installDir")}
           />
           {isCreate && (
-            <Text size="sm" c="dimmed">
-              Final install path:{" "}
-              <Text span fw={600} c={resolvedInstallPreview.length > 0 ? undefined : "dimmed"}>
-                {resolvedInstallPreview.length > 0
-                  ? resolvedInstallPreview
-                  : "pick a base folder and name"}
+            <Stack gap={4}>
+              <Text size="sm" c="dimmed">
+                Final install path
               </Text>
-            </Text>
+              <ReadonlyPath
+                value={resolvedInstallPreview.length > 0 ? resolvedInstallPreview : null}
+                emptyLabel="pick a base folder and name"
+                compact
+              />
+            </Stack>
           )}
         </Section>
 

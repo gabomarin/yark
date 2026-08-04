@@ -423,10 +423,14 @@ describe("ServerBackupPanel", () => {
     );
 
     renderPanel();
+    (window.api.pickPath as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      data: "D:\\Custom\\Backups",
+    });
     const destination = await screen.findByLabelText(/Destination/i);
-    await user.clear(destination);
-    await user.type(destination, "D:\\Custom\\Backups");
-    expect(destination).toHaveValue("D:\\Custom\\Backups");
+    expect(destination.tagName).toBe("DIV");
+    await user.click(screen.getByRole("button", { name: /Browse/i }));
+    expect(destination).toHaveTextContent("D:\\Custom\\Backups");
 
     (window.api.listBackups as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
@@ -451,7 +455,7 @@ describe("ServerBackupPanel", () => {
     await waitFor(() => {
       expect(window.api.listBackups).toHaveBeenCalledTimes(2);
     });
-    expect(screen.getByLabelText(/Destination/i)).toHaveValue("D:\\Custom\\Backups");
+    expect(screen.getByLabelText(/Destination/i)).toHaveTextContent("D:\\Custom\\Backups");
   });
 
   it("uses relative time as the world row title with type chip", async () => {

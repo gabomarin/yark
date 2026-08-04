@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { FolderOpen } from "@phosphor-icons/react";
 import { Button, Group, SegmentedControl, Switch, Text, Title } from "@mantine/core";
+import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import type { UiDensity } from "../settingsModel";
 import classes from "../SettingsPage.module.css";
 
@@ -140,13 +141,13 @@ export function SettingsGeneralSection(props: Props): ReactElement {
             gets its own subfolder named after it.
           </Text>
         </div>
-        <div className={classes.steamCmdRow} data-default-base-folder>
-          <Text
-            className={`${classes.pathValue} ${props.defaultBaseFolder === null ? classes.pathValueMuted : ""}`}
-          >
-            {props.defaultBaseFolder ?? "Not set — choose a folder when creating a server"}
-          </Text>
-          <Group gap="xs" wrap="wrap" className={classes.steamCmdActions}>
+        <div className={classes.pathActionsRow} data-default-base-folder>
+          <ReadonlyPath
+            className={classes.pathChip}
+            value={props.defaultBaseFolder}
+            emptyLabel="Not set — choose a folder when creating a server"
+          />
+          <Group gap="xs" wrap="wrap" className={classes.pathActions}>
             <Button
               size="xs"
               variant="default"

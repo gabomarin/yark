@@ -20,6 +20,7 @@ import type { AppDataFolderInfo, AppDataFolderKind } from "@shared/ipc";
 import type { SteamCmdCacheKind, SteamCmdStatus, ServerInstallationInfo, ServerProfile } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { SettingsAutoStartSection } from "./components/SettingsAutoStartSection";
+import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { SettingsGeneralSection } from "./components/SettingsGeneralSection";
 import type { UiDensity } from "./settingsModel";
 import { useDesktopShellPreferences } from "./useDesktopShellPreferences";
@@ -153,14 +154,14 @@ export function SettingsPage(props: Props): ReactElement {
                 </Text>
               </Group>
 
-              <div className={classes.steamCmdRow}>
-                <Text
-                  className={`${classes.pathValue} ${executablePath === null ? classes.pathValueMuted : ""}`}
+              <div className={classes.pathActionsRow}>
+                <ReadonlyPath
+                  className={classes.pathChip}
+                  value={executablePath}
+                  emptyLabel="No steamcmd.exe selected yet"
                   data-steamcmd-path
-                >
-                  {executablePath ?? "No steamcmd.exe selected yet"}
-                </Text>
-                <Group gap="xs" wrap="wrap" className={classes.steamCmdActions}>
+                />
+                <Group gap="xs" wrap="wrap" className={classes.pathActions}>
                   <Button
                     size="xs"
                     variant="default"
@@ -249,9 +250,11 @@ export function SettingsPage(props: Props): ReactElement {
                       <div key={folder.kind} className={classes.cacheRow}>
                         <div className={classes.cacheCopy}>
                           <Text size="sm" fw={600}>{folder.label}</Text>
-                          <Text size="xs" className={classes.cachePath} title={folder.path}>
-                            {folder.path}
-                          </Text>
+                          <ReadonlyPath
+                            className={classes.cachePath}
+                            value={folder.path}
+                            compact
+                          />
                         </div>
                         <Group gap={6} wrap="nowrap" className={classes.cacheActions}>
                           <Button
@@ -295,9 +298,12 @@ function CacheRow(props: CacheRowProps): ReactElement {
       <div className={classes.cacheCopy}>
         <Text size="sm" fw={600}>{props.label}</Text>
         <Text size="xs" c="dimmed">{props.description}</Text>
-        <Text size="xs" className={classes.cachePath} title={props.path ?? undefined}>
-          {props.path ?? "Available after SteamCMD is set up"}
-        </Text>
+        <ReadonlyPath
+          className={classes.cachePath}
+          value={props.path}
+          emptyLabel="Available after SteamCMD is set up"
+          compact
+        />
       </div>
       <Group gap={6} wrap="nowrap" className={classes.cacheActions}>
         <Button

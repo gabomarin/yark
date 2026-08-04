@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { Badge, Group, Stack, Text, Title } from "@mantine/core";
 import type { ClusterComplianceReport, ServerProfile } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { MetaStrip } from "./MetaStrip/MetaStrip";
 import { formatCheckedAt, sharedClusterDir } from "../clusterModel";
 import classes from "../clusters.module.css";
@@ -44,7 +45,13 @@ export function ClusterDetailPanel(props: Props): ReactElement {
           items={[
             {
               label: "Shared cluster directory",
-              value: sharedDir ?? "Not consistent across members",
+              value: (
+                <ReadonlyPath
+                  value={sharedDir}
+                  emptyLabel="Not consistent across members"
+                  compact
+                />
+              ),
             },
             { label: "Members", value: String(props.members.length) },
             { label: "Issues", value: String(props.report.issues.length) },

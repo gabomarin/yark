@@ -10,7 +10,6 @@ import {
   Stack,
   TextInput,
 } from "@mantine/core";
-import { FolderOpen as FolderOpenIcon } from "@phosphor-icons/react";
 import type { ServerProfile } from "@shared/types";
 import {
   getServerFolderNameError,
@@ -18,6 +17,7 @@ import {
   suggestCloneInstallDir,
 } from "@shared/server-install-path";
 import { useCallback, useState } from "react";
+import { PathField } from "@ui/PathField/PathField";
 
 interface Props {
   opened: boolean;
@@ -217,27 +217,16 @@ export function CloneServerDialog(props: Props): ReactElement {
             />
           </SimpleGrid>
 
-          <Group gap="xs" align="flex-end">
-            <TextInput
-              label="Install directory"
-              placeholder="C:\\servers\\my-server"
-              value={state.installDir}
-              onChange={(event) => {
-                const installDir = event.currentTarget.value;
-                setState((previous) => ({ ...previous, installDir }));
-              }}
-              style={{ flex: 1 }}
-              required
-            />
-            <Button
-              size="sm"
-              variant="default"
-              onClick={handleOpenFolder}
-              leftSection={<FolderOpenIcon size={14} />}
-            >
-              Browse
-            </Button>
-          </Group>
+          <PathField
+            label="Install directory"
+            placeholder="C:\\servers\\my-server"
+            value={state.installDir}
+            required
+            onChange={(installDir) => {
+              setState((previous) => ({ ...previous, installDir }));
+            }}
+            onBrowse={() => void handleOpenFolder()}
+          />
         </Stack>
 
         <Group justify="flex-end" gap="sm">
