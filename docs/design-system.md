@@ -148,6 +148,7 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 | `EmptyState` | `shared/ui/EmptyState/` | Inline or stacked empties (`layout`) |
 | `SelectableListRow` | `shared/ui/SelectableListRow/` | Selected list/row chrome |
 | `AccentIconTile` | `shared/ui/AccentIconTile/` | Tek / rounded icon tiles |
+| `MapArtThumb` | `shared/ui/MapArtThumb/` | ASA map artwork thumb (list + header) |
 | `SearchField` | `shared/ui/SearchField/` | Search inputs |
 | `ServerRuntimeStatusBadge` | `shared/ui/ServerRuntimeStatusBadge/` | Process status badge |
 | `ReadonlyPath` | `shared/ui/ReadonlyPath/` | Bordered monospace chip for configured filesystem paths |

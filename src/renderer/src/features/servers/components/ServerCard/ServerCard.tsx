@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
-import { HardDrives } from "@phosphor-icons/react";
 import { Badge, Card, Group, Stack, Text, UnstyledButton } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import { ServerCardActions } from "./ServerCardActions";
 import { ServerCardMetaItem } from "./ServerCardMetaItem";
@@ -126,9 +126,12 @@ export function ServerCard(props: Props): ReactElement {
             }
           >
             <Group gap="sm" align="center" wrap="nowrap" className={classes.identity}>
-              <div className={classes.thumb}>
-                <HardDrives size={18} weight="duotone" />
-              </div>
+              <MapArtThumb
+                mapId={server.map}
+                label={server.map}
+                size="md"
+                className={classes.thumb}
+              />
               <div className={classes.identityText}>
                 <Text className={classes.title} lineClamp={1}>
                   {server.name}

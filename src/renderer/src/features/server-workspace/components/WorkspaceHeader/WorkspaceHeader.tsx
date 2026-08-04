@@ -21,6 +21,7 @@ import {
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { isInstallationReady } from "@shared/installation-health";
 import { resolveDisplayedServerVersion } from "@shared/server-version-display";
+import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import { RconStatusIcon } from "../RconStatusIcon/RconStatusIcon";
 import classes from "./WorkspaceHeader.module.css";
@@ -73,6 +74,11 @@ export function WorkspaceHeader(props: Props): ReactElement {
             <ArrowLeft size={18} />
           </ActionIcon>
         </Tooltip>
+        <MapArtThumb
+          mapId={props.server.map}
+          label={props.server.map}
+          size="lg"
+        />
         <Stack gap={2} style={{ minWidth: 0 }}>
           <Text className={classes.crumb} fz="xs" c="dimmed">
             Servers / {props.server.name}
