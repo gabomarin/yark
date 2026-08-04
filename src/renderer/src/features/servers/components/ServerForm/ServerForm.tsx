@@ -2,7 +2,6 @@ import type { ReactElement } from "react";
 import {
   ArrowLeft,
   FloppyDisk,
-  FolderOpen,
   MagicWand,
 } from "@phosphor-icons/react";
 import {
@@ -28,6 +27,8 @@ import {
 import { KNOWN_MAPS, type ServerProfile, type ServerProfileInput } from "@shared/types";
 import { useMemo, useState } from "react";
 import { useUiDensity } from "@app/AppProviders";
+import { PathField } from "@ui/PathField/PathField";
+import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import classes from "./ServerForm.module.css";
 
 interface Props {
@@ -348,14 +349,16 @@ export function ServerForm(props: Props): ReactElement {
             onBrowse={() => void browseDirectory("installDir")}
           />
           {isCreate && (
-            <Text size="sm" c="dimmed">
-              Final install path:{" "}
-              <Text span fw={600} c={resolvedInstallPreview.length > 0 ? undefined : "dimmed"}>
-                {resolvedInstallPreview.length > 0
-                  ? resolvedInstallPreview
-                  : "pick a base folder and name"}
+            <Stack gap={4}>
+              <Text size="sm" c="dimmed">
+                Final install path
               </Text>
-            </Text>
+              <ReadonlyPath
+                value={resolvedInstallPreview.length > 0 ? resolvedInstallPreview : null}
+                emptyLabel="pick a base folder and name"
+                compact
+              />
+            </Stack>
           )}
         </Section>
 
@@ -423,6 +426,7 @@ export function ServerForm(props: Props): ReactElement {
             placeholder="C:\\ark_servers\\cluster"
             busy={browsingField === "clusterDir"}
             size={inputSize}
+            clearable
             onChange={setField("clusterDir")}
             onBrowse={() => void browseDirectory("clusterDir")}
           />
@@ -503,50 +507,5 @@ function Section({ title, children, flat = false, span2 = false }: SectionProps)
         {children}
       </Stack>
     </Card>
-  );
-}
-
-interface PathFieldProps {
-  label: string;
-  value: string;
-  placeholder?: string;
-  busy: boolean;
-  disabled?: boolean;
-  size?: "xs" | "sm" | "md";
-  onChange: (value: string) => void;
-  onBrowse: () => void;
-}
-
-function PathField({
-  label,
-  value,
-  placeholder,
-  busy,
-  disabled = false,
-  size = "sm",
-  onChange,
-  onBrowse,
-}: PathFieldProps): ReactElement {
-  return (
-    <Group align="flex-end" wrap="nowrap" gap="xs">
-        <TextInput
-          className={classes.pathInput}
-          label={label}
-          size={size}
-          value={value}
-          placeholder={placeholder}
-          disabled={disabled}
-          onChange={(e) => onChange(e.currentTarget.value)}
-        />
-        <Button
-          variant="default"
-          size={size}
-          leftSection={<FolderOpen size={14} />}
-          onClick={onBrowse}
-          disabled={busy || disabled}
-        >
-          {busy ? "Opening..." : "Browse"}
-        </Button>
-    </Group>
   );
 }

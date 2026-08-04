@@ -19,12 +19,13 @@ import {
   Stack,
   Switch,
   Text,
-  TextInput,
   Title,
 } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { PathField } from "@ui/PathField/PathField";
+import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { formatLogDateTime } from "@shared/format-log-datetime";
 import type {
   BackupCleanupOptions,
@@ -892,9 +893,10 @@ function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
                 </Badge>
               )}
             </Group>
-            <Text size="sm" c="dimmed">
-              Destination: {row.resolvedRoot}
+            <Text size="sm" c="dimmed" mb={4}>
+              Destination
             </Text>
+            <ReadonlyPath value={row.resolvedRoot} compact />
             <Text size="xs" c="dimmed">
               Latest: {formatWhen(row.latest?.createdAt)}
               {row.latest !== null
@@ -938,35 +940,26 @@ function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
               Players and INI use the same root but their own triggers and retain
               counts.
             </Text>
-            <Group align="flex-end" gap="sm" wrap="nowrap">
-              <TextInput
-                className={classes.dirField}
-                label="Backup destination"
-                description={
-                  draft.backupDir === null || draft.backupDir.length === 0
-                    ? `Default: ${props.server?.installDir ?? ""}\\Backups`
-                    : `Effective: ${row.resolvedRoot}`
-                }
-                value={draft.backupDir ?? ""}
-                placeholder={`${props.server?.installDir ?? ""}\\Backups`}
-                onChange={(event) =>
-                  props.onDraftChange({
-                    ...draft,
-                    backupDir:
-                      event.currentTarget.value.trim().length > 0
-                        ? event.currentTarget.value
-                        : null,
-                  })
-                }
-              />
-              <Button
-                variant="default"
-                loading={props.browsing}
-                onClick={props.onBrowse}
-              >
-                Browse
-              </Button>
-            </Group>
+            <PathField
+              className={classes.dirField}
+              label="Backup destination"
+              description={
+                draft.backupDir === null || draft.backupDir.length === 0
+                  ? `Default: ${props.server?.installDir ?? ""}\\Backups`
+                  : `Effective: ${row.resolvedRoot}`
+              }
+              value={draft.backupDir ?? ""}
+              placeholder={`${props.server?.installDir ?? ""}\\Backups`}
+              busy={props.browsing}
+              clearable
+              onChange={(value) =>
+                props.onDraftChange({
+                  ...draft,
+                  backupDir: value.trim().length > 0 ? value : null,
+                })
+              }
+              onBrowse={props.onBrowse}
+            />
             <Group align="flex-end" gap="md" wrap="wrap">
               <Switch
                 label="Enable scheduled world backups"

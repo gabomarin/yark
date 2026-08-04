@@ -39,6 +39,7 @@ import type {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { PathField } from "@ui/PathField/PathField";
 import { BackupHistoryRowActions } from "./BackupHistoryRowActions";
 import { formatBackupDetails } from "./formatBackupDetails";
 import classes from "./BackupsPage.module.css";
@@ -657,13 +658,14 @@ export function ServerBackupPanel(props: Props): ReactElement {
                 {settingsOpen && activeKind === "world" && (
                   <Stack gap={6} mt={4} className={classes.kindSettingsFields}>
                     <Group align="center" gap={6} wrap="nowrap">
-                      <Text size="xs" component="label" htmlFor="backup-destination" className={classes.inlineLabel}>
+                      <Text size="xs" className={classes.inlineLabel}>
                         Destination
                       </Text>
-                      <TextInput
+                      <PathField
                         id="backup-destination"
                         className={classes.dirField}
                         size="xs"
+                        inline
                         aria-label="Destination"
                         value={draftPolicy.backupDir ?? ""}
                         placeholder={
@@ -671,27 +673,17 @@ export function ServerBackupPanel(props: Props): ReactElement {
                             ? defaultBackupHint
                             : (resolvedRoot ?? draftPolicy.backupDir)
                         }
-                        onChange={(event) =>
+                        busy={browsingDir}
+                        disabled={busy}
+                        clearable
+                        onChange={(value) =>
                           setDraftPolicy({
                             ...draftPolicy,
-                            backupDir:
-                              event.currentTarget.value.trim().length > 0
-                                ? event.currentTarget.value
-                                : null,
+                            backupDir: value.trim().length > 0 ? value : null,
                           })
                         }
+                        onBrowse={() => void browseBackupDir()}
                       />
-                      <Tooltip label="Choose a folder for backup archives">
-                        <Button
-                          variant="default"
-                          size="xs"
-                          onClick={() => void browseBackupDir()}
-                          loading={browsingDir}
-                          disabled={busy}
-                        >
-                          Browse
-                        </Button>
-                      </Tooltip>
                       <Tooltip label="Open the backup destination folder">
                         <Button
                           variant="subtle"

@@ -163,7 +163,8 @@ describe("BackupsPage", () => {
     expect(await screen.findByRole("heading", { name: "The Island" })).toBeInTheDocument();
     expect(screen.getByText("0/1")).toBeInTheDocument();
     expect(screen.getByText(/Schedule off/i)).toBeInTheDocument();
-    expect(screen.getByText(/Destination: C:\/ARK\/srv-1\/Backups/i)).toBeInTheDocument();
+    expect(screen.getByText("Destination")).toBeInTheDocument();
+    expect(screen.getByText("C:/ARK/srv-1/Backups")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /create backup/i })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /open in server/i }));
