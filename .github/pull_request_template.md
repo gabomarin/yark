@@ -14,6 +14,7 @@
 - [ ] `npm run lint`
 - [ ] `npm test`
 - [ ] Manual verification, if applicable
+- [ ] `## [Unreleased]` in `CHANGELOG.md` updated (or PR labeled `skip-changelog`)
 
 <!-- Replace the placeholder with the related issue number, or remove this line. -->
 Closes #ISSUE

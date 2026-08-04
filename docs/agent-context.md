@@ -15,6 +15,7 @@ This repository contains a desktop application for managing dedicated ARK Surviv
 - For visible renderer changes, follow the mandatory [visual testing protocol](visual-testing.md), including HD, Full HD, and QHD/2K review.
 - When growing or splitting React UI, follow [component-structure.md](component-structure.md) (pragmatic Atomic Design for agents).
 - When cutting a release or bumping the app version, follow [versioning.md](versioning.md) and update [CHANGELOG.md](../CHANGELOG.md). `package.json` is the SemVer source of truth; the UI reads it via `@shared/app-version`. Pushing tag `vX.Y.Z` runs `.github/workflows/release.yml` (Windows NSIS → GitHub Release).
+- On feature work, keep a **short** Unreleased changelog bullet (CI requires `CHANGELOG.md` unless `skip-changelog`); see [`.cursor/rules/changelog.mdc`](../.cursor/rules/changelog.mdc).
 
 ## Local project context (Cursor workspace, not in git)
 

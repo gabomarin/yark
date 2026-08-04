@@ -7,16 +7,12 @@ issues/PRs, commit messages, docs, code comments, and UI copy in English. Chat w
 the user may follow the user's language; repo and GitHub artifacts stay English.
 See `.cursor/rules/english-project-language.mdc`.
 
-## Pull request merges
+## Changelog
 
-**Squash merge** is the default when merging PRs into `main`.
-
-- Prefer one commit on `main` per PR; use the PR title (English) as the squash commit
-  subject.
-- Use a merge commit only when intentionally preserving multiple commits on `main`
-  (rare).
-- Rebase merge is allowed for a linear history when squash is unsuitable, but is not
-  the default.
+Update `CHANGELOG.md` under `## [Unreleased]` on feature branches (one short
+operator-facing bullet). CI fails PRs that leave that section unchanged unless
+the PR has the `skip-changelog` label. Details: [`.cursor/rules/changelog.mdc`](.cursor/rules/changelog.mdc),
+[docs/versioning.md](docs/versioning.md).
 
 ## Pull request merges
 
@@ -51,6 +47,8 @@ Notes specific to running this in the Linux cloud VM:
   for a fuller linter later). `npm run build` is clean.
   GitHub Actions **CI** (`.github/workflows/ci.yml`) runs typecheck + lint + tests + build
   on `windows-latest` for every PR and push to `main` (avoids known Linux path-test gaps).
+  PRs also run **Changelog** (`.github/workflows/changelog.yml`): `CHANGELOG.md` must change
+  unless the PR is labeled `skip-changelog`.
   Local Husky hooks (after `npm install`): pre-commit runs typecheck + lint; pre-push runs
   typecheck + test + lint. On WSL with a Windows checkout (`/mnt/...`), hooks delegate to
   `cmd.exe` so win32 `node_modules` (Rollup) work. Skip only with `--no-verify` / `HUSKY=0`
