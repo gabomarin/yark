@@ -147,9 +147,9 @@ export async function writeBanListEntries(
 }
 
 /**
- * Removes a player id from the primary Win64 BanList.txt and rewrites it
- * preserving remaining `id,name,flags` metadata.
- * Does not merge alternate BanList locations (those can resurrect stale bans).
+ * Removes a player id from the primary Win64 BanList.txt with a single
+ * rewrite that preserves remaining lines (including comments / blanks and
+ * `id,name,flags` metadata). Does not merge alternate BanList locations.
  */
 export async function removeFromBanList(
   installDir: string,
@@ -161,32 +161,29 @@ export async function removeFromBanList(
   }
 
   const path = banListPath(installDir);
-  if (existsSync(path)) {
-    const raw = await readFile(path, "utf8");
-    const keptLines: string[] = [];
-    for (const line of raw.replace(/\r/g, "").split("\n")) {
-      const trimmed = line.trim();
-      if (trimmed.length === 0 || trimmed.startsWith("#")) {
-        keptLines.push(line);
-        continue;
-      }
-      if (extractBanListId(trimmed).toLowerCase() === key) {
-        continue;
-      }
-      keptLines.push(line);
-    }
-    while (keptLines.length > 0 && keptLines[keptLines.length - 1]?.trim() === "") {
-      keptLines.pop();
-    }
-    const body = keptLines.join("\n");
-    await writeFile(path, body.length === 0 ? "" : `${body}\n`, "utf8");
+  if (!existsSync(path)) {
+    return [];
   }
 
-  const remaining = (await readBanListEntries(installDir)).filter(
-    (entry) => entry.id.toLowerCase() !== key,
-  );
-  await writeBanListEntries(installDir, remaining);
-  return remaining.map((entry) => entry.id);
+  const raw = await readFile(path, "utf8");
+  const keptLines: string[] = [];
+  for (const line of raw.replace(/\r/g, "").split("\n")) {
+    const trimmed = line.trim();
+    if (trimmed.length === 0 || trimmed.startsWith("#")) {
+      keptLines.push(line);
+      continue;
+    }
+    if (extractBanListId(trimmed).toLowerCase() === key) {
+      continue;
+    }
+    keptLines.push(line);
+  }
+  while (keptLines.length > 0 && keptLines[keptLines.length - 1]?.trim() === "") {
+    keptLines.pop();
+  }
+  const body = keptLines.join("\n");
+  await writeFile(path, body.length === 0 ? "" : `${body}\n`, "utf8");
+  return parseBanListEntries(body).map((entry) => entry.id);
 }
 
 /** Resolve the id to send over RCON (never id,name,flags). */

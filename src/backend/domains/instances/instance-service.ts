@@ -1362,6 +1362,14 @@ export class InstanceService extends EventEmitter {
       return;
     }
 
+    // Status may have left `running` while we waited for the port.
+    if (this.processes.getStatus(profile.id).status !== "running") {
+      console.log(
+        `[InstanceService] Skipping RCON auto-connect for ${profile.name}; server is no longer running`,
+      );
+      return;
+    }
+
     console.log(`[InstanceService] Auto-connecting RCON for ${profile.name}...`);
 
     try {
@@ -1371,6 +1379,17 @@ export class InstanceService extends EventEmitter {
         runtimeProfile.rconPort,
         runtimeProfile.adminPassword,
       );
+      // A stop may have started during the async connect.
+      if (this.processes.getStatus(profile.id).status !== "running") {
+        this.rconSessions.setAutoReconnect(profile.id, false);
+        if (this.processes.getStatus(profile.id).status !== "stopping") {
+          this.rconSessions.disconnect(profile.id);
+        }
+        console.log(
+          `[InstanceService] Dropped late RCON auto-connect for ${profile.name}; server left running`,
+        );
+        return;
+      }
       console.log(`[InstanceService] RCON auto-connected for ${profile.name}`);
     } catch (err) {
       console.error(

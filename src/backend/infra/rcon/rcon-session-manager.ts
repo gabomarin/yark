@@ -29,6 +29,7 @@ export interface RconConnectionInfo {
 
 const MAX_RECONNECT_ATTEMPTS = 10;
 const RECONNECT_BASE_DELAY_MS = 2000;
+const RECONNECT_MAX_DELAY_MS = 30_000;
 const NO_CONTENT_RESPONSE = "Server received, But no response!!";
 
 /**
@@ -41,6 +42,9 @@ export class RconSessionManager extends EventEmitter {
   /**
    * Starts or ensures a persistent RCON connection for a server.
    * Emits 'status-changed' events with { serverId, status, lastError }.
+   *
+   * A new call supersedes any in-flight `connecting` attempt (generation bump)
+   * so a hung TCP/auth handshake cannot block reconnects forever.
    */
   async connect(
     serverId: string,
@@ -71,11 +75,18 @@ export class RconSessionManager extends EventEmitter {
       session.password = password;
     }
 
-    // Already connected or connecting
-    if (session.status === "connected" || session.status === "connecting") {
+    // Already connected — leave the live socket alone.
+    if (session.status === "connected") {
       return;
     }
 
+    // Cancel a pending reconnect timer; this call is taking over.
+    if (session.reconnectTimer) {
+      clearTimeout(session.reconnectTimer);
+      session.reconnectTimer = null;
+    }
+
+    // Supersede any hung/stale connecting attempt.
     session.connectGeneration += 1;
     const generation = session.connectGeneration;
     this.updateStatus(serverId, "connecting", null);
@@ -260,7 +271,10 @@ export class RconSessionManager extends EventEmitter {
       return;
     }
 
-    const delay = RECONNECT_BASE_DELAY_MS * (session.reconnectAttempts + 1);
+    const delay = Math.min(
+      RECONNECT_BASE_DELAY_MS * 2 ** session.reconnectAttempts,
+      RECONNECT_MAX_DELAY_MS,
+    );
     session.reconnectAttempts++;
 
     console.log(

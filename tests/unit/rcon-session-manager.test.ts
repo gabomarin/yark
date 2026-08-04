@@ -92,6 +92,23 @@ describe("RconSessionManager", () => {
     expect(manager.getStatus("srv-1").status).toBe("disconnected");
   });
 
+  it("supersedes a hung connecting attempt so reconnect is not skipped", async () => {
+    rconMocks.nextConnectDelay = true;
+    const manager = new RconSessionManager();
+    const hung = manager.connect("srv-1", "127.0.0.1", 27020, "admin");
+    const hungClient = rconMocks.clients[0];
+    expect(manager.getStatus("srv-1").status).toBe("connecting");
+
+    rconMocks.nextConnectDelay = false;
+    await manager.connect("srv-1", "127.0.0.1", 27020, "admin");
+
+    expect(manager.getStatus("srv-1").status).toBe("connected");
+    hungClient?.connectBarrier?.resolve();
+    await hung;
+    expect(hungClient?.close).toHaveBeenCalled();
+    expect(manager.getStatus("srv-1").status).toBe("connected");
+  });
+
   it("queues concurrent sends so only one command runs at a time", async () => {
     let inFlight = 0;
     let maxInFlight = 0;

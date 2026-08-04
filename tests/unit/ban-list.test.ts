@@ -70,12 +70,14 @@ describe("ban-list", () => {
       await mkdir(win64, { recursive: true });
       await writeFile(
         pathOf(root),
-        "0002e03af5f4487985e94c6ba4080369,gabomarin26,0\n76561198000000000,Alice,0\n",
+        "# keep me\n0002e03af5f4487985e94c6ba4080369,gabomarin26,0\n\n76561198000000000,Alice,0\n",
         "utf8",
       );
       await removeFromBanList(root, "76561198000000000");
       const text = await readFile(pathOf(root), "utf8");
-      expect(text).toBe("0002e03af5f4487985e94c6ba4080369,gabomarin26,0\n");
+      expect(text).toBe(
+        "# keep me\n0002e03af5f4487985e94c6ba4080369,gabomarin26,0\n",
+      );
       expect(parseBanListEntries(text)).toEqual([
         {
           id: "0002e03af5f4487985e94c6ba4080369",
