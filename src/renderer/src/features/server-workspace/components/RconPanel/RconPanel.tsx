@@ -60,9 +60,11 @@ export function RconPanel(props: Props): ReactElement {
   const [rconConnected, setRconConnected] = useState(false);
   const isRunning = props.runtime?.status === "running";
   const isStarting = props.runtime?.status === "starting";
-  // App-level history survives tab unmount; local `sending` would not.
-  const submitPending = props.rconHistory.some(
-    (entry) => entry.status === "pending",
+  const commandTrimmed = command.trim();
+  // App-level history survives tab unmount; only block an identical pending command.
+  const identicalPending = props.rconHistory.some(
+    (entry) =>
+      entry.status === "pending" && entry.command === commandTrimmed,
   );
 
   useEffect(() => {
@@ -106,7 +108,13 @@ export function RconPanel(props: Props): ReactElement {
 
   const sendCommand = async (nextCommand: string): Promise<void> => {
     const trimmed = nextCommand.trim();
-    if (trimmed.length === 0 || !isRunning || submitPending) {
+    if (trimmed.length === 0 || !isRunning) {
+      return;
+    }
+    const pendingSame = props.rconHistory.some(
+      (entry) => entry.status === "pending" && entry.command === trimmed,
+    );
+    if (pendingSame) {
       return;
     }
     const ok = await props.onSendRcon(props.server.id, trimmed);
@@ -137,7 +145,7 @@ export function RconPanel(props: Props): ReactElement {
                   radius="xl"
                   variant={item.danger ? "light" : "default"}
                   color={item.danger ? "red" : "gray"}
-                  disabled={!isRunning || submitPending}
+                  disabled={!isRunning}
                   onClick={() => setCommand(item.command)}
                 >
                   {item.label}
@@ -167,7 +175,9 @@ export function RconPanel(props: Props): ReactElement {
                   size="xs"
                   onClick={() => void sendCommand(command)}
                   disabled={
-                    !isRunning || submitPending || command.trim().length === 0
+                    !isRunning ||
+                    identicalPending ||
+                    commandTrimmed.length === 0
                   }
                 >
                   Send
@@ -211,7 +221,6 @@ export function RconPanel(props: Props): ReactElement {
         <RconConsoleHistory
           history={props.rconHistory}
           serverRunning={isRunning}
-          submitPending={submitPending}
           onRerun={(next) => void sendCommand(next)}
           onClear={() => props.onClearRconHistory(props.server.id)}
         />

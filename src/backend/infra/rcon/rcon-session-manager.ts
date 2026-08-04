@@ -15,6 +15,8 @@ interface RconSession {
   password: string;
   /** Serializes commands so ListPlayers polls cannot overlap on one socket. */
   sendQueue: Promise<void>;
+  /** Bumps on each connect attempt so late TCP wins do not revive a removed session. */
+  connectGeneration: number;
 }
 
 export interface RconConnectionInfo {
@@ -57,6 +59,7 @@ export class RconSessionManager extends EventEmitter {
         port,
         password,
         sendQueue: Promise.resolve(),
+        connectGeneration: 0,
       };
       this.sessions.set(serverId, session);
     } else {
@@ -70,17 +73,28 @@ export class RconSessionManager extends EventEmitter {
       return;
     }
 
+    session.connectGeneration += 1;
+    const generation = session.connectGeneration;
     this.updateStatus(serverId, "connecting", null);
 
     try {
       const client = new RconClient(host, port, password);
       await client.connect();
-      
+
+      // disconnect() / a newer connect may have superseded this attempt.
+      const current = this.sessions.get(serverId);
+      if (
+        current !== session ||
+        current.connectGeneration !== generation
+      ) {
+        client.close();
+        return;
+      }
+
       session.client = client;
       session.reconnectAttempts = 0;
       this.updateStatus(serverId, "connected", null);
 
-      // Setup connection error handlers
       client.socket?.on("error", (err: Error) => {
         console.error(`[RconSessionManager] Connection error for ${serverId}: ${err.message}`);
         this.handleConnectionLost(serverId, client, err.message);
@@ -93,6 +107,15 @@ export class RconSessionManager extends EventEmitter {
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       console.error(`[RconSessionManager] Failed to connect ${serverId}: ${errorMsg}`);
+
+      const current = this.sessions.get(serverId);
+      if (
+        current !== session ||
+        current.connectGeneration !== generation
+      ) {
+        return;
+      }
+
       this.updateStatus(serverId, "error", errorMsg);
       this.scheduleReconnect(serverId, host, port, password);
     }
@@ -104,6 +127,10 @@ export class RconSessionManager extends EventEmitter {
   disconnect(serverId: string): void {
     const session = this.sessions.get(serverId);
     if (!session) return;
+
+    // Invalidate any in-flight connect() so a late TCP auth cannot store
+    // a client on a deleted / replaced session.
+    session.connectGeneration += 1;
 
     if (session.reconnectTimer) {
       clearTimeout(session.reconnectTimer);
@@ -123,6 +150,7 @@ export class RconSessionManager extends EventEmitter {
    * Sends an RCON command to a connected server.
    * Commands are queued per server (ASA Source RCON is single-flight).
    * Throws if the session is not connected.
+   * The command is sent exactly as trimmed — no rewrite.
    */
   async send(serverId: string, command: string): Promise<string> {
     const session = this.sessions.get(serverId);
@@ -131,14 +159,14 @@ export class RconSessionManager extends EventEmitter {
     }
 
     const client = session.client;
-    const normalizedCommand = this.normalizeCommand(command);
+    const trimmed = command.trim();
 
     const run = async (): Promise<string> => {
       if (session.client !== client || session.status !== "connected") {
         throw new Error(`RCON not connected for server ${serverId}`);
       }
       try {
-        const response = await client.send(normalizedCommand);
+        const response = await client.send(trimmed);
         if (response.trim() === NO_CONTENT_RESPONSE) {
           return "";
         }
@@ -158,26 +186,6 @@ export class RconSessionManager extends EventEmitter {
       () => undefined,
     );
     return result;
-  }
-
-  /**
-   * Normalizes RCON commands according to ASA best practices.
-   * Adds proper quoting for Broadcast commands.
-   */
-  private normalizeCommand(command: string): string {
-    const trimmed = command.trim();
-    
-    // Broadcast commands need quotes around the message
-    // Example: "broadcast Hello World" → "broadcast \"Hello World\""
-    if (trimmed.toLowerCase().startsWith("broadcast ")) {
-      const message = trimmed.substring(10).trim();
-      // Only add quotes if not already quoted
-      if (!message.startsWith('"') || !message.endsWith('"')) {
-        return `broadcast "${message}"`;
-      }
-    }
-    
-    return trimmed;
   }
 
   /**

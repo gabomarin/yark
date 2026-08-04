@@ -1210,7 +1210,7 @@ export class InstanceService extends EventEmitter {
 
     if (status === "running" || status === "stopping") {
       try {
-        // ASA expects `Unban <steamid>` (not UnbanPlayer).
+        // ASA expects `Unban <id>` (verified on dedicated; not UnbanPlayer — see #17).
         await this.execRcon(id, `Unban ${matchId}`, { recordEvent: true });
       } catch (error) {
         await removeFromBanList(profile.installDir, key);

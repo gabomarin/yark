@@ -40,25 +40,27 @@ async function copyText(label: string, value: string): Promise<void> {
 interface Props {
   history: RconHistoryEntry[];
   serverRunning: boolean;
-  submitPending: boolean;
   onRerun: (command: string) => void;
   onClear: () => void;
 }
 
 export function RconConsoleHistory(props: Props): ReactElement {
   const entries = props.history.filter(hasDisplayableResponse);
+  const hasClearable = props.history.some(
+    (entry) => entry.status !== "pending",
+  );
 
   return (
     <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.responsesPanel}>
       <Stack gap={4}>
         <div className={classes.header}>
           <Text className={classes.title}>Console history</Text>
-          <Tooltip label="Clear history">
+          <Tooltip label="Clear history (keeps in-flight commands)">
             <ActionIcon
               size="sm"
               variant="default"
               aria-label="Clear RCON history"
-              disabled={props.history.length === 0}
+              disabled={!hasClearable}
               onClick={props.onClear}
             >
               <Trash size={14} />
@@ -89,6 +91,13 @@ export function RconConsoleHistory(props: Props): ReactElement {
                 entry.status === "pending"
                   ? null
                   : (entry.error ?? entry.response ?? "No response");
+              const rerunBlocked =
+                !props.serverRunning ||
+                props.history.some(
+                  (candidate) =>
+                    candidate.status === "pending" &&
+                    candidate.command === entry.command,
+                );
               return (
                 <div key={entry.id} className={classes.responseItem}>
                   <div className={classes.responseHeader}>
@@ -133,7 +142,7 @@ export function RconConsoleHistory(props: Props): ReactElement {
                       size="compact-xs"
                       variant="subtle"
                       leftSection={<ArrowClockwise size={12} />}
-                      disabled={!props.serverRunning || props.submitPending}
+                      disabled={rerunBlocked}
                       onClick={() => props.onRerun(entry.command)}
                     >
                       Re-run

@@ -576,9 +576,15 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       if (trimmed.length === 0) {
         return false;
       }
-      // Survive RCON tab remounts: pending lives in App-level history, not panel state.
+      // Survive RCON tab remounts: pending lives in App-level history.
+      // Ticket: only block an identical command that is already pending.
       const existing = rconHistoryByServerRef.current.get(serverId) ?? [];
-      if (existing.some((entry) => entry.status === "pending")) {
+      if (
+        existing.some(
+          (entry) =>
+            entry.status === "pending" && entry.command === trimmed,
+        )
+      ) {
         return false;
       }
 
@@ -618,7 +624,13 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   const clearRconHistory = useCallback((serverId: string): void => {
     setRconHistoryByServer((prev) => {
       const next = new Map(prev);
-      next.set(serverId, []);
+      const current = next.get(serverId) ?? [];
+      // Keep in-flight commands so their result can still patch history and
+      // identical-submit gating stays correct.
+      next.set(
+        serverId,
+        current.filter((entry) => entry.status === "pending"),
+      );
       return next;
     });
   }, []);

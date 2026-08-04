@@ -4,24 +4,38 @@ import { RconSessionManager } from "@backend/infra/rcon/rcon-session-manager";
 
 const rconMocks = vi.hoisted(() => ({
   send: vi.fn(),
-  clients: [] as Array<{ socket: EventEmitter }>,
+  clients: [] as Array<{
+    socket: EventEmitter;
+    close: ReturnType<typeof vi.fn>;
+    connectBarrier?: { resolve: () => void; promise: Promise<void> };
+  }>,
+  nextConnectDelay: false,
 }));
 
 vi.mock("@backend/infra/rcon/rcon-client", () => ({
   RconClient: class {
     socket = new EventEmitter();
+    close = vi.fn();
+    connectBarrier?: { resolve: () => void; promise: Promise<void> };
 
     constructor() {
       rconMocks.clients.push(this);
     }
 
-    async connect(): Promise<void> {}
+    async connect(): Promise<void> {
+      if (rconMocks.nextConnectDelay) {
+        let resolveFn: () => void = () => undefined;
+        const promise = new Promise<void>((resolve) => {
+          resolveFn = resolve;
+        });
+        this.connectBarrier = { resolve: resolveFn, promise };
+        await promise;
+      }
+    }
 
     send(command: string): Promise<string> {
       return rconMocks.send(command);
     }
-
-    close(): void {}
   },
 }));
 
@@ -29,6 +43,7 @@ describe("RconSessionManager", () => {
   beforeEach(() => {
     rconMocks.send.mockReset();
     rconMocks.clients.length = 0;
+    rconMocks.nextConnectDelay = false;
   });
 
   it("normalizes ASA's generic no-content acknowledgement to an empty response", async () => {
@@ -38,6 +53,16 @@ describe("RconSessionManager", () => {
     await manager.connect("srv-1", "127.0.0.1", 27020, "admin");
 
     await expect(manager.send("srv-1", "DestroyWildDinos")).resolves.toBe("");
+  });
+
+  it("sends the exact trimmed command without rewriting Broadcast", async () => {
+    rconMocks.send.mockResolvedValue("ok");
+    const manager = new RconSessionManager();
+    await manager.connect("srv-1", "127.0.0.1", 27020, "admin");
+
+    await manager.send("srv-1", "  broadcast Hello World  ");
+
+    expect(rconMocks.send).toHaveBeenCalledWith("broadcast Hello World");
   });
 
   it("ignores a delayed close event from a replaced client", async () => {
@@ -50,6 +75,21 @@ describe("RconSessionManager", () => {
     replacedClient?.socket.emit("close");
 
     expect(manager.getStatus("srv-1").status).toBe("connected");
+  });
+
+  it("closes a late connect after disconnect so the socket is not orphaned", async () => {
+    rconMocks.nextConnectDelay = true;
+    const manager = new RconSessionManager();
+    const connecting = manager.connect("srv-1", "127.0.0.1", 27020, "admin");
+    const delayed = rconMocks.clients[0];
+    expect(delayed?.connectBarrier).toBeDefined();
+
+    manager.disconnect("srv-1");
+    delayed?.connectBarrier?.resolve();
+    await connecting;
+
+    expect(delayed?.close).toHaveBeenCalled();
+    expect(manager.getStatus("srv-1").status).toBe("disconnected");
   });
 
   it("queues concurrent sends so only one command runs at a time", async () => {

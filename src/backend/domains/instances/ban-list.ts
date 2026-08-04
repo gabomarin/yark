@@ -9,7 +9,7 @@ export function banListPath(installDir: string): string {
   return join(dirname(serverBinaryPath(installDir)), "BanList.txt");
 }
 
-/** Known locations ASA / tools have used for BanList.txt. */
+/** Known alternate BanList locations (not merged into the active Win64 file). */
 export function banListCandidatePaths(installDir: string): string[] {
   return [
     banListPath(installDir),
@@ -115,25 +115,10 @@ export async function readBanList(installDir: string): Promise<string[]> {
 export async function readBanListEntries(
   installDir: string,
 ): Promise<BanListEntry[]> {
-  const byKey = new Map<string, BanListEntry>();
-  for (const path of banListCandidatePaths(installDir)) {
-    if (!existsSync(path)) continue;
-    const raw = await readFile(path, "utf8");
-    for (const entry of parseBanListEntries(raw)) {
-      const key = entry.id.toLowerCase();
-      const existing = byKey.get(key);
-      if (!existing) {
-        byKey.set(key, entry);
-        continue;
-      }
-      byKey.set(key, {
-        id: existing.id,
-        name: existing.name ?? entry.name,
-        flags: existing.flags ?? entry.flags,
-      });
-    }
-  }
-  return [...byKey.values()];
+  // Ticket #17: only the Win64 BanList next to the dedicated binary.
+  const path = banListPath(installDir);
+  if (!existsSync(path)) return [];
+  return parseBanListEntries(await readFile(path, "utf8"));
 }
 
 /** Ensures the primary BanList.txt exists and returns its absolute path. */
@@ -162,9 +147,9 @@ export async function writeBanListEntries(
 }
 
 /**
- * Removes a player id from every known BanList.txt under the install,
- * then rewrites the primary Win64 BanList so it matches — preserving
- * remaining `id,name,flags` metadata.
+ * Removes a player id from the primary Win64 BanList.txt and rewrites it
+ * preserving remaining `id,name,flags` metadata.
+ * Does not merge alternate BanList locations (those can resurrect stale bans).
  */
 export async function removeFromBanList(
   installDir: string,
@@ -175,8 +160,8 @@ export async function removeFromBanList(
     return readBanList(installDir);
   }
 
-  for (const path of banListCandidatePaths(installDir)) {
-    if (!existsSync(path)) continue;
+  const path = banListPath(installDir);
+  if (existsSync(path)) {
     const raw = await readFile(path, "utf8");
     const keptLines: string[] = [];
     for (const line of raw.replace(/\r/g, "").split("\n")) {
@@ -190,7 +175,6 @@ export async function removeFromBanList(
       }
       keptLines.push(line);
     }
-    // Drop trailing empty lines introduced by join, keep a final newline if non-empty.
     while (keptLines.length > 0 && keptLines[keptLines.length - 1]?.trim() === "") {
       keptLines.pop();
     }

@@ -46,40 +46,46 @@ export class RconClient {
   ) {}
 
   async connect(): Promise<void> {
-    this.log(`[RconClient] Connecting to ${this.host}:${this.port}...`);
-    await new Promise<void>((resolve, reject) => {
-      const socket = new Socket();
-      const onError = (err: Error) => {
-        socket.destroy();
-        this.logError(`[RconClient] Connection error: ${err.message}`);
-        reject(err);
-      };
-      socket.setTimeout(this.timeoutMs, () =>
-        onError(new Error("RCON connection timeout")),
-      );
-      socket.once("error", onError);
-      socket.connect(this.port, this.host, () => {
-        socket.setTimeout(0);
-        socket.removeListener("error", onError);
-        this.socket = socket;
-        this.log(`[RconClient] Connected to ${this.host}:${this.port}`);
-        socket.on("data", (chunk) => this.onData(chunk));
-        socket.on("error", (err) => this.failAll(err));
-        socket.on("close", () =>
-          this.failAll(new Error("RCON connection closed")),
+    try {
+      this.log(`[RconClient] Connecting to ${this.host}:${this.port}...`);
+      await new Promise<void>((resolve, reject) => {
+        const socket = new Socket();
+        const onError = (err: Error) => {
+          socket.destroy();
+          this.logError(`[RconClient] Connection error: ${err.message}`);
+          reject(err);
+        };
+        socket.setTimeout(this.timeoutMs, () =>
+          onError(new Error("RCON connection timeout")),
         );
-        resolve();
+        socket.once("error", onError);
+        socket.connect(this.port, this.host, () => {
+          socket.setTimeout(0);
+          socket.removeListener("error", onError);
+          this.socket = socket;
+          this.log(`[RconClient] Connected to ${this.host}:${this.port}`);
+          socket.on("data", (chunk) => this.onData(chunk));
+          socket.on("error", (err) => this.failAll(err));
+          socket.on("close", () =>
+            this.failAll(new Error("RCON connection closed")),
+          );
+          resolve();
+        });
       });
-    });
 
-    this.log(`[RconClient] Authenticating...`);
-    const authId = this.nextId++;
-    const response = await this.sendPacket(authId, AUTH, this.password);
-    if (response === null) {
-      console.error(`[RconClient] Authentication rejected`);
-      throw new Error("RCON authentication rejected (incorrect password)");
+      this.log(`[RconClient] Authenticating...`);
+      const authId = this.nextId++;
+      const response = await this.sendPacket(authId, AUTH, this.password);
+      if (response === null) {
+        console.error(`[RconClient] Authentication rejected`);
+        throw new Error("RCON authentication rejected (incorrect password)");
+      }
+      this.log(`[RconClient] Authenticated successfully`);
+    } catch (err) {
+      // Always tear down TCP if auth/handshake fails after the socket opened.
+      this.close();
+      throw err;
     }
-    this.log(`[RconClient] Authenticated successfully`);
   }
 
   /** Sends a command and returns the server response (serialized). */

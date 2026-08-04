@@ -158,6 +158,7 @@ export function BannedPlayersSection(props: Props): ReactElement {
                     variant="default"
                     disabled={busy}
                     loading={busy}
+                    aria-label={`Unban ${name}`}
                     onClick={() => confirmUnban(player)}
                   >
                     Unban

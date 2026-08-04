@@ -94,6 +94,47 @@ describe("ban-list", () => {
     }
   });
 
+  it("does not merge alternate BanList paths into the Win64 file on unban", async () => {
+    const {
+      banListPath: pathOf,
+      readBanListEntries,
+      removeFromBanList,
+    } = await import("@backend/domains/instances/ban-list");
+    const { mkdtemp, mkdir, readFile, writeFile, rm } = await import(
+      "node:fs/promises"
+    );
+    const { join } = await import("node:path");
+    const { tmpdir } = await import("node:os");
+    const root = await mkdtemp(join(tmpdir(), "yark-ban-merge-"));
+    try {
+      const win64 = join(root, "ShooterGame", "Binaries", "Win64");
+      const saved = join(root, "ShooterGame", "Saved");
+      await mkdir(win64, { recursive: true });
+      await mkdir(saved, { recursive: true });
+      await writeFile(
+        pathOf(root),
+        "0002e03af5f4487985e94c6ba4080369,gabomarin26,0\n",
+        "utf8",
+      );
+      await writeFile(
+        join(saved, "BanList.txt"),
+        "76561198000000000,StaleAlt,0\n",
+        "utf8",
+      );
+
+      await removeFromBanList(root, "0002e03af5f4487985e94c6ba4080369");
+
+      expect(await readFile(pathOf(root), "utf8")).toBe("");
+      expect(await readBanListEntries(root)).toEqual([]);
+      // Alternate file is left alone (not merged into primary).
+      expect(await readFile(join(saved, "BanList.txt"), "utf8")).toBe(
+        "76561198000000000,StaleAlt,0\n",
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   it("treats blank and N/A INI URLs as empty", () => {
     expect(isBlankOrNaUrl(null)).toBe(true);
     expect(isBlankOrNaUrl("")).toBe(true);
