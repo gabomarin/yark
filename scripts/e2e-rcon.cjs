@@ -55,7 +55,7 @@ const win64Dir = path.join(installDir, "ShooterGame", "Binaries", "Win64");
 const banListPath = path.join(win64Dir, "BanList.txt");
 
 const KEEP_ID = "0002e03af5f4487985e94c6ba4080369";
-const KEEP_NAME = "gabomarin26";
+const KEEP_NAME = "Bob";
 const REMOVE_ID = "76561198000000000";
 const REMOVE_NAME = "Alice";
 
