@@ -57,6 +57,19 @@ function createApiMock(): RendererApi {
     getInstallationInfo: vi.fn(),
     checkCluster: vi.fn(),
     sendRconCommand: vi.fn(),
+    retryRconConnection: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+    getRconStatus: vi.fn().mockResolvedValue({ ok: true, data: { serverId: "", status: "disconnected", lastError: null } }),
+    getAllRconStatus: vi.fn().mockResolvedValue({ ok: true, data: [] }),
+    notifyRconTabFocus: vi.fn().mockResolvedValue({ ok: true, data: [] }),
+    refreshPlayerList: vi.fn().mockResolvedValue({ ok: true, data: [] }),
+    kickPlayer: vi.fn().mockResolvedValue({ ok: true, data: "" }),
+    banPlayer: vi.fn().mockResolvedValue({ ok: true, data: "" }),
+    listBannedPlayers: vi.fn().mockResolvedValue({ ok: true, data: [] }),
+    openBanListFile: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+    unbanPlayer: vi.fn().mockResolvedValue({
+      ok: true,
+      data: { banned: [], warning: null },
+    }),
     recentEvents: vi.fn(),
     pickPath: vi.fn(),
     pickFolder: vi.fn(),
@@ -111,6 +124,8 @@ function createApiMock(): RendererApi {
     onSteamCmdProgress: vi.fn(() => () => undefined),
     onServerStopProgress: vi.fn(() => () => undefined),
     onBackupsChanged: vi.fn(() => () => undefined),
+    onRconStatusChanged: vi.fn(() => () => undefined),
+    onPlayerListUpdated: vi.fn(() => () => undefined),
   };
 }
 

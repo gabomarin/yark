@@ -34,7 +34,7 @@ import {
 } from "../backend/infra/process/left-running-store";
 import { reattachLeftRunningProcesses } from "../backend/infra/process/left-running-reattach";
 import { applyWindowsLoginItem } from "./windows-login-item";
-import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush } from "../shared/ipc";
+import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush, type RconStatusChangedPush, type PlayerListUpdatedPush } from "../shared/ipc";
 import { normalizeServerStopProgress } from "../shared/types";
 import type { BackupChangedPush } from "../backend/domains/backups/backup-service";
 import type { ServerRuntimeInfo } from "../shared/types";
@@ -49,8 +49,11 @@ if (!app.isPackaged && e2eUserData) {
 const gotSingleInstanceLock = app.requestSingleInstanceLock();
 if (!gotSingleInstanceLock) {
   app.quit();
-} else if (process.platform === "win32") {
-  // Must run before any Notification so Windows associates toasts with YARK.
+} else if (process.platform === "win32" && app.isPackaged) {
+  // Must match electron-builder `appId` / Start Menu shortcut so Windows
+  // associates the taskbar button (and toasts) with YARK's .exe icon.
+  // Do not set this while unpackaged: an explicit AUMID makes Windows ignore
+  // BrowserWindow `{ icon }` and fall back to electron.exe (Electron atom).
   app.setAppUserModelId("com.yark.servermanager");
 }
 
@@ -118,6 +121,11 @@ function createWindow(): BrowserWindow {
       sandbox: true,
     },
   });
+
+  // Reinforce window chrome / unpackaged taskbar icon (when no AUMID is set).
+  if (icon !== undefined) {
+    win.setIcon(icon);
+  }
 
   // The renderer is local-only. External content must go through a narrowly
   // validated IPC handler instead of replacing or creating app windows.
@@ -187,6 +195,14 @@ if (gotSingleInstanceLock) {
     );
     const modsService = new ModsService({ settings });
 
+    // Unify RCON traffic on the persistent session (stop / ListPlayers / console).
+    processManager.setRconExecutor((serverId, command) =>
+      instances.execRcon(serverId, command, { recordEvent: false }),
+    );
+    playerSessionWatcher.setListPlayersExecutor((serverId) =>
+      instances.execRcon(serverId, "ListPlayers", { recordEvent: false }),
+    );
+
     backupScheduler.start();
     playerSessionWatcher.start();
     applyWindowsLoginItem(readDesktopShellPreferences(settings).startWithWindows);
@@ -209,6 +225,7 @@ if (gotSingleInstanceLock) {
         steamcmd: join(userData, "steamcmd"),
       },
       settings,
+      playerSessionWatcher,
     );
 
     let allowQuit = false;
@@ -355,6 +372,14 @@ if (gotSingleInstanceLock) {
 
     backupService.on("changed", (payload: BackupChangedPush) => {
       sendToRenderer(IPC_PUSH.backupsChanged, payload);
+    });
+
+    instances.on("rcon-status-changed", (payload: RconStatusChangedPush) => {
+      sendToRenderer(IPC_PUSH.rconStatusChanged, payload);
+    });
+
+    playerSessionWatcher.on("players-updated", (payload: PlayerListUpdatedPush) => {
+      sendToRenderer(IPC_PUSH.playerListUpdated, payload);
     });
 
     mainWindow = createWindow();

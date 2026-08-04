@@ -57,6 +57,7 @@ describe("InstanceService.delete", () => {
     } as unknown as ServerRepository;
 
     const processes = {
+      on: vi.fn(),
       isActive: vi.fn(() => false),
     } as unknown as ProcessManager;
 
@@ -90,6 +91,7 @@ describe("InstanceService.delete", () => {
     } as unknown as ServerRepository;
 
     const processes = {
+      on: vi.fn(),
       isActive: vi.fn(() => false),
     } as unknown as ProcessManager;
 
