@@ -1,9 +1,10 @@
 import type { ReactElement } from "react";
 import { APP_VERSION } from "@shared/app-version";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Code, List, Stack, Text } from "@mantine/core";
+import { Alert, List, Stack, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
+import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import type {
   AppEvent,
   ClusterComplianceReport,
@@ -1000,7 +1001,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
               <Text size="xs" c="dimmed" mb={4}>
                 Folder that will be deleted:
               </Text>
-              <Code block>{installDir}</Code>
+              <ReadonlyPath value={installDir} compact />
             </div>
             <List size="sm" spacing={4}>
               <List.Item>This server in YARK</List.Item>

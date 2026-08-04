@@ -1,0 +1,10 @@
+.input {
+  flex: 1;
+  min-width: 0;
+}
+
+.input :global(.mantine-Input-input) {
+  font-family: Consolas, "Cascadia Mono", monospace;
+  font-size: 12px;
+  cursor: default;
+}

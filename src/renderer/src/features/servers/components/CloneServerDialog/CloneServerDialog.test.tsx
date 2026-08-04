@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import type { ServerProfile } from "@shared/types";
 import { CloneServerDialog } from "./CloneServerDialog";
@@ -26,6 +26,13 @@ const source: ServerProfile = {
 };
 
 describe("CloneServerDialog", () => {
+  beforeEach(() => {
+    window.api = {
+      ...window.api,
+      pickFolder: vi.fn(),
+    } as typeof window.api;
+  });
+
   it("keeps the suggested install folder aligned with name edits", async () => {
     const user = userEvent.setup();
     render(
@@ -42,6 +49,7 @@ describe("CloneServerDialog", () => {
     const name = screen.getByRole("textbox", { name: "Server name" });
     const installDir = screen.getByRole("textbox", { name: "Install directory" });
     expect(installDir).toHaveValue("C:\\ARK\\Island-copy");
+    expect(installDir).toHaveAttribute("readonly");
 
     await user.clear(name);
     await user.type(name, "Winter");
@@ -49,8 +57,10 @@ describe("CloneServerDialog", () => {
     expect(installDir).toHaveValue("C:\\ARK\\Winter");
   });
 
-  it("does not overwrite a manually customized install folder", async () => {
+  it("does not overwrite a Browse-customized install folder when the name changes", async () => {
     const user = userEvent.setup();
+    vi.mocked(window.api.pickFolder).mockResolvedValue("D:\\Custom\\Clone");
+
     render(
       <AppProviders>
         <CloneServerDialog
@@ -64,8 +74,10 @@ describe("CloneServerDialog", () => {
 
     const name = screen.getByRole("textbox", { name: "Server name" });
     const installDir = screen.getByRole("textbox", { name: "Install directory" });
-    await user.clear(installDir);
-    await user.type(installDir, "D:\\Custom\\Clone");
+
+    await user.click(screen.getByRole("button", { name: /Browse/i }));
+    expect(installDir).toHaveValue("D:\\Custom\\Clone");
+
     await user.clear(name);
     await user.type(name, "Winter");
 

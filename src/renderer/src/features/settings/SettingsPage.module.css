@@ -32,34 +32,19 @@
   gap: var(--app-space-sm);
 }
 
-.steamCmdRow {
+.pathActionsRow {
   display: flex;
   gap: var(--app-space-sm);
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  padding: var(--app-space-sm) var(--app-space-md);
-  border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-control);
-  background: color-mix(in srgb, var(--ark-gray-2) 72%, transparent);
 }
 
-.pathValue {
+.pathChip {
   flex: 1 1 280px;
-  min-width: 0;
-  color: var(--app-color-text);
-  font-family: Consolas, "Cascadia Mono", monospace;
-  font-size: 11px;
-  line-height: 1.45;
-  overflow-wrap: anywhere;
 }
 
-.pathValueMuted {
-  color: var(--app-color-muted);
-  font-style: italic;
-}
-
-.steamCmdActions {
+.pathActions {
   flex: 0 0 auto;
 }
 
@@ -110,11 +95,7 @@
 }
 
 .cachePath {
-  margin-top: 2px;
-  color: var(--app-color-muted);
-  font-family: Consolas, "Cascadia Mono", monospace;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
+  margin-top: var(--app-space-xxs);
 }
 
 .cacheActions {

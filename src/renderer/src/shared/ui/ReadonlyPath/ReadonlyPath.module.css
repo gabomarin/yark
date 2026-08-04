@@ -1,0 +1,24 @@
+.root {
+  display: block;
+  min-width: 0;
+  padding: var(--app-space-sm) var(--app-space-md);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-control);
+  background: color-mix(in srgb, var(--ark-gray-2) 72%, transparent);
+  color: var(--app-color-text);
+  font-family: Consolas, "Cascadia Mono", monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.muted {
+  color: var(--app-color-muted);
+  font-style: italic;
+}
+
+.compact {
+  padding: var(--app-space-xxs) var(--app-space-xs);
+  font-size: 11px;
+  line-height: 1.4;
+}

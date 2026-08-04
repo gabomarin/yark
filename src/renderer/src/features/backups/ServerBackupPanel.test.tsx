@@ -422,9 +422,13 @@ describe("ServerBackupPanel", () => {
     );
 
     renderPanel();
+    (window.api.pickPath as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      data: "D:\\Custom\\Backups",
+    });
     const destination = await screen.findByLabelText(/Destination/i);
-    await user.clear(destination);
-    await user.type(destination, "D:\\Custom\\Backups");
+    expect(destination).toHaveAttribute("readonly");
+    await user.click(screen.getByRole("button", { name: /Browse/i }));
     expect(destination).toHaveValue("D:\\Custom\\Backups");
 
     (window.api.listBackups as ReturnType<typeof vi.fn>).mockResolvedValue({

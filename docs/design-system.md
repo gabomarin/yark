@@ -150,6 +150,8 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 | `AccentIconTile` | `shared/ui/AccentIconTile/` | Tek / rounded icon tiles |
 | `SearchField` | `shared/ui/SearchField/` | Search inputs |
 | `ServerRuntimeStatusBadge` | `shared/ui/ServerRuntimeStatusBadge/` | Process status badge |
+| `ReadonlyPath` | `shared/ui/ReadonlyPath/` | Bordered monospace chip for configured filesystem paths |
+| `PathField` | `shared/ui/PathField/` | Editable path `TextInput` + Browse |
 
 ## Product brand / packaging icons
 
@@ -177,8 +179,23 @@ in `src/main/index.ts`.
 1. Use `PageScaffold` (unless Overview / workspace shell).
 2. Wrap major sections in `AppSurfaceCard` (`fill` in split panes).
 3. Use `gap="sm"|…` / `--app-space-*` — no new magic px.
-4. Reuse `EmptyState` / `SearchField` / `SelectableListRow` before inventing chrome.
+4. Reuse `EmptyState` / `SearchField` / `SelectableListRow` / `ReadonlyPath` /
+   `PathField` before inventing chrome.
 5. Keep domain organisms under `features/<area>/components/`.
+
+### Filesystem paths
+
+Operators should recognize filesystem paths the same way everywhere:
+
+| Need | Use |
+| --- | --- |
+| Configured / known path (Settings, confirm dialogs, resolved previews) | `ReadonlyPath` — bordered monospace chip; pass `emptyLabel` for unset |
+| Editable path + folder picker | `PathField` — read-only monospace `TextInput` + Browse (+ optional Clear); value changes only via those actions |
+
+Do **not** use Mantine `Code`, ad-hoc `ff="monospace"`, or a private Browse row for
+filesystem paths. `PathField` inputs are **read-only** (monospace); the value
+changes only via Browse (and optional Clear). Log / console / INI editors stay
+feature-local monospace (not path chips).
 
 ## Still feature-local (by design)
 
