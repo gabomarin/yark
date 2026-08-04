@@ -186,10 +186,13 @@ Actionable install degradation (e.g. `ready` → `missing`) emits
 auto-start (#53) should reuse the same `ready` gate.
 
 **Readiness:** status stays `"starting"` until RCON `ListPlayers` on
-`127.0.0.1` succeeds (poll `DEFAULT_READY_POLL_MS = 3000`, timeout
-`DEFAULT_READY_TIMEOUT_MS = 10 * 60 * 1000`). Log patterns are observational;
-transition to `"running"` requires RCON unless `skipReadinessCheck` (tests /
-binaries without RCON). Timeout → `"error"` + terminate.
+`127.0.0.1` succeeds. Probes wait for a startup log signal **or** a minimum boot
+grace (~45s), then require a successful probe, a settle window (~15s), and a
+confirming probe before `"running"` (poll `DEFAULT_READY_POLL_MS = 3000`, timeout
+`DEFAULT_READY_TIMEOUT_MS = 10 * 60 * 1000`). Log patterns can unlock probes
+early; `skipReadinessCheck` skips this for tests / binaries without RCON.
+Timeout → `"error"` + terminate. The persistent UI RCON session connects a few
+seconds after promotion to `"running"`.
 
 **Stop** (`InstanceService.stop`):
 

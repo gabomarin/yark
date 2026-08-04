@@ -42,6 +42,7 @@ function makeProcesses(
   overrides: Record<string, unknown> = {},
 ): ProcessManager {
   return {
+    on: vi.fn(),
     isActive: vi.fn(() => true),
     getStatus: vi.fn(() => ({ status: "running" })),
     waitWhileStarting: vi.fn(async () => undefined),

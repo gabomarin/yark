@@ -1,29 +1,29 @@
-import { Alert, Drawer, Tabs } from "@mantine/core";
+import { Alert, Drawer } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import type {
+  AppEvent,
   ClusterComplianceReport,
   ServerInstallationInfo,
   ServerProfile,
   ServerRuntimeInfo,
   ServerStopProgress,
 } from "@shared/types";
-import { ServerBackupPanel } from "@features/backups/ServerBackupPanel";
-import { ServerLogsPanel, type ServerLogsFocus } from "@features/logs/ServerLogsPanel";
-import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
+import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import type { ReactElement } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ConfigurationEditor } from "./components/ConfigurationEditor/ConfigurationEditor";
 import { ConfigurationWizard } from "./components/ConfigurationWizard/ConfigurationWizard";
 import { ServerListPanel } from "./components/ServerListPanel/ServerListPanel";
 import { ServerOnboardingChecklist } from "./components/ServerOnboardingChecklist/ServerOnboardingChecklist";
-import { ServerModsPanel } from "./components/ServerModsPanel/ServerModsPanel";
 import { SidePanel } from "./components/SidePanel/SidePanel";
+import { WorkspaceTabs } from "./components/WorkspaceTabs/WorkspaceTabs";
 import { WorkspaceHeader } from "./components/WorkspaceHeader/WorkspaceHeader";
 import { StopProgressAlert, stopProgressForServer } from "./components/StopProgressAlert";
+import type { RconHistoryEntry, WorkspaceTab } from "./serverWorkspaceTypes";
+import type { PlayerListState } from "./components/RconPanel/PlayerListSection";
 import classes from "./ServerWorkspacePage.module.css";
 
-export type WorkspaceTab = "server" | "mods" | "iniFiles" | "backups" | "logs";
+export type { RconHistoryEntry, WorkspaceTab } from "./serverWorkspaceTypes";
 
 interface Props {
   servers: ServerProfile[];
@@ -31,9 +31,12 @@ interface Props {
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
   clusterReports: ClusterComplianceReport[];
+  events: AppEvent[];
   onboarding?: boolean;
   initialTab?: WorkspaceTab;
   logsFocus?: ServerLogsFocus | null;
+  rconHistory: RconHistoryEntry[];
+  playerList: PlayerListState;
   onLogsFocusConsumed?: () => void;
   /** SteamCMD is rewriting this server's install (install/update/verify/sync). */
   filesJobActive?: boolean;
@@ -53,7 +56,12 @@ interface Props {
   onInstallFiles: (serverId: string) => void;
   onUpdateNow: (serverId: string) => void;
   onVerifyFiles: (serverId: string) => void;
-  onSendRcon: (serverId: string, command: string) => void;
+  onSendRcon: (serverId: string, command: string) => Promise<boolean>;
+  onClearRconHistory: (serverId: string) => void;
+  onRconTabFocusChanged: (serverId: string, isFocused: boolean) => Promise<void>;
+  onRefreshPlayers: (serverId: string) => Promise<void>;
+  onKickPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
+  onBanPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
   onServerUpdated: () => void;
 }
 
@@ -177,10 +185,12 @@ export function ServerWorkspacePage(props: Props): ReactElement {
       onInstallFiles={() => props.onInstallFiles(selectedServer.id)}
       onUpdateNow={() => props.onUpdateNow(selectedServer.id)}
       onVerifyFiles={() => props.onVerifyFiles(selectedServer.id)}
-      onSaveWorld={() => props.onSendRcon(selectedServer.id, "SaveWorld")}
-      onBroadcast={(message) =>
-        props.onSendRcon(selectedServer.id, `Broadcast ${message}`)
-      }
+      onSaveWorld={() => {
+        void props.onSendRcon(selectedServer.id, "SaveWorld");
+      }}
+      onBroadcast={(message) => {
+        void props.onSendRcon(selectedServer.id, `Broadcast ${message}`);
+      }}
       onKill={() => props.onKillServer(selectedServer.id)}
       onToggleEnabled={() =>
         props.onToggleServerEnabled?.(selectedServer.id, !selectedServer.enabled)
@@ -258,92 +268,42 @@ export function ServerWorkspacePage(props: Props): ReactElement {
               onServerUpdated={props.onServerUpdated}
             />
           ) : (
-          <Tabs
-            value={workspaceTab}
-            onChange={(value) => {
-              if (value === null) return;
-              setWorkspaceTab(value as WorkspaceTab);
-            }}
-            className={classes.tabs}
-          >
-            <Tabs.List className={classes.tabList}>
-              <Tabs.Tab value="server">Server</Tabs.Tab>
-              <Tabs.Tab value="mods">Mods</Tabs.Tab>
-              <Tabs.Tab value="iniFiles">INI Files</Tabs.Tab>
-              <Tabs.Tab value="backups">Backups</Tabs.Tab>
-              <Tabs.Tab value="logs">Logs</Tabs.Tab>
-            </Tabs.List>
-
-            <div className={classes.tabPanel}>
-              {workspaceTab === "server" && (
-                <ServerForm
-                  key={`${selectedServer.id}:${selectedServer.updatedAt}`}
-                  initial={selectedServer}
-                  variant="embedded"
-                  serverActive={opsLocked}
-                  filesJobActive={filesJobActive}
-                  onCancel={handleBack}
-                  onSaved={props.onServerUpdated}
-                  onOpenConfigurationAssistant={() => {
-                    if (!iniDirty) {
-                      assistantDirtyRef.current = false;
-                      setAssistantOpen(true);
-                    }
-                  }}
-                  configurationAssistantDisabled={iniDirty}
-                />
-              )}
-
-              {workspaceTab === "mods" && (
-                <ServerModsPanel
-                  key={selectedServer.id}
-                  server={selectedServer}
-                  onServerUpdated={props.onServerUpdated}
-                />
-              )}
-
-              {/* Mount only on the INI tab, or while dirty so edits survive tab switches. */}
-              {(workspaceTab === "iniFiles" || iniDirty) && (
-                <div
-                  className={classes.configHost}
-                  data-visible={workspaceTab === "iniFiles" || undefined}
-                >
-                  <ConfigurationEditor
-                    key={`${selectedServer.id}:${iniEditorVersion}`}
-                    server={selectedServer}
-                    section="iniFiles"
-                    serverActive={opsLocked}
-                    filesJobActive={filesJobActive}
-                    onDirtyChange={(dirty) => {
-                      dirtyRef.current = dirty;
-                      setIniDirty(dirty);
-                    }}
-                  />
-                </div>
-              )}
-
-              {workspaceTab === "backups" && (
-                <ServerBackupPanel
-                  server={selectedServer}
-                  runtime={runtime}
-                  embedded
-                  opsLocked={opsLocked}
-                  opsLockReason={stopJobActive ? stopLockReason : filesJobActive ? filesLockReason : undefined}
-                  createLocked={stopJobActive}
-                  createLockReason={stopLockReason}
-                />
-              )}
-
-              {workspaceTab === "logs" && (
-                <ServerLogsPanel
-                  server={selectedServer}
-                  embedded
-                  focus={props.logsFocus}
-                  onFocusConsumed={props.onLogsFocusConsumed}
-                />
-              )}
-            </div>
-          </Tabs>
+            <WorkspaceTabs
+              value={workspaceTab}
+              server={selectedServer}
+              runtime={runtime}
+              events={props.events}
+              rconHistory={props.rconHistory}
+              playerList={props.playerList}
+              opsLocked={opsLocked}
+              filesJobActive={filesJobActive}
+              stopJobActive={stopJobActive}
+              filesLockReason={filesLockReason}
+              stopLockReason={stopLockReason}
+              iniDirty={iniDirty}
+              iniEditorVersion={iniEditorVersion}
+              logsFocus={props.logsFocus}
+              onChange={setWorkspaceTab}
+              onBack={handleBack}
+              onOpenAssistant={() => {
+                if (!iniDirty) {
+                  assistantDirtyRef.current = false;
+                  setAssistantOpen(true);
+                }
+              }}
+              onIniDirtyChange={(dirty) => {
+                dirtyRef.current = dirty;
+                setIniDirty(dirty);
+              }}
+              onLogsFocusConsumed={props.onLogsFocusConsumed}
+              onSendRcon={props.onSendRcon}
+              onClearRconHistory={props.onClearRconHistory}
+              onRconTabFocusChanged={props.onRconTabFocusChanged}
+              onRefreshPlayers={props.onRefreshPlayers}
+              onKickPlayer={props.onKickPlayer}
+              onBanPlayer={props.onBanPlayer}
+              onServerUpdated={props.onServerUpdated}
+            />
           )}
         </section>
 

@@ -1,0 +1,194 @@
+.root {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  gap: var(--app-space-sm);
+  align-items: start;
+}
+
+.mainColumn {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--app-space-sm);
+}
+
+.title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--app-color-muted);
+  margin-bottom: 0;
+}
+
+.sectionTitle {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--app-color-muted);
+  margin-bottom: 0;
+}
+
+.helper {
+  color: var(--app-color-muted);
+}
+
+.mainPanel,
+.responsesPanel,
+.playersPanel {
+  min-width: 0;
+  height: 100%;
+}
+
+.playersPanel {
+  max-width: none;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--app-space-xs);
+}
+
+.commandBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.commandRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: var(--app-space-sm);
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xxs);
+  max-height: 180px;
+  overflow: auto;
+}
+
+.historyItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: var(--app-space-sm);
+  padding: var(--app-space-xs) var(--app-space-sm);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-control);
+  background: var(--app-color-surface-control);
+}
+
+.historyCommand {
+  min-width: 0;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.historyMeta {
+  color: var(--app-color-muted);
+  font-size: var(--mantine-font-size-xxs);
+}
+
+.responseList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xxs);
+  max-height: 360px;
+  overflow: auto;
+}
+
+.responseItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+  padding: var(--app-space-xs) var(--app-space-sm);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-control);
+  background: var(--app-color-surface-control);
+}
+
+.responseHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--app-space-sm);
+}
+
+.responseBody {
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--app-color-text);
+}
+
+.playerList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xxs);
+}
+
+.playerItem {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--app-space-sm);
+  padding: var(--app-space-xs) var(--app-space-sm);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-control);
+  background: var(--app-color-surface-control);
+}
+
+.playerMeta {
+  min-width: 0;
+  flex: 1;
+}
+
+.playerName {
+  font-weight: 600;
+}
+
+.playerId {
+  min-width: 0;
+  color: var(--app-color-muted);
+  font-size: var(--mantine-font-size-xxs);
+  font-family: var(--mantine-font-family-monospace);
+  word-break: break-all;
+}
+
+.playerActions {
+  display: flex;
+  gap: var(--app-space-xxs);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.bannedSection {
+  padding-top: var(--app-space-xs);
+  border-top: 1px solid var(--app-color-border-subtle);
+}
+
+@media (max-width: 1100px) {
+  .root {
+    grid-template-columns: 1fr;
+  }
+
+  .playersPanel {
+    width: 100%;
+    max-width: none;
+  }
+}

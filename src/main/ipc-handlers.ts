@@ -5,6 +5,7 @@ import { IPC, type IpcResult, type PickPathKind, type AppDataFolderKind } from "
 import { canonicalCurseForgeAsaModUrl } from "../shared/curseforge-url";
 import type { ServerIniPayload, ServerProfileInput, StartServerOptions, SteamCmdCacheKind } from "../shared/types";
 import type { BackupService } from "../backend/domains/backups/backup-service";
+import type { PlayerSessionWatcher } from "../backend/domains/backups/player-session-watcher";
 import type { InstanceService } from "../backend/domains/instances/instance-service";
 import type { IniService } from "../backend/domains/config/ini-service";
 import type { LogsService } from "../backend/domains/logs/logs-service";
@@ -65,6 +66,7 @@ export function registerIpcHandlers(
   backups: BackupService,
   appDataFolders: AppDataFolderRoots,
   settings: AppSettingsRepository,
+  playerSessionWatcher: PlayerSessionWatcher,
 ): void {
   ipcMain.handle(IPC.serversList, () => wrap(() => instances.list()));
 
@@ -271,6 +273,79 @@ export function registerIpcHandlers(
 
   ipcMain.handle(IPC.rconCommand, (_e, id: string, command: string) =>
     wrap(() => instances.sendRcon(id, command)),
+  );
+
+  ipcMain.handle(IPC.rconRetryConnection, (_e, id: string) =>
+    wrap(() => instances.retryRconConnection(id)),
+  );
+
+  ipcMain.handle(IPC.rconGetStatus, (_e, id: string) =>
+    wrap(() => instances.getRconStatus(id)),
+  );
+
+  ipcMain.handle(IPC.rconGetAllStatus, () =>
+    wrap(() => instances.getAllRconStatus()),
+  );
+
+  ipcMain.handle(
+    IPC.rconTabFocusChanged,
+    (_e, serverId: string, isFocused: boolean) =>
+      wrap(async () => {
+        if (!isFocused) {
+          return playerSessionWatcher.getOnlinePlayers(serverId);
+        }
+        return playerSessionWatcher.refreshServer(serverId);
+      }),
+  );
+
+  ipcMain.handle(IPC.refreshPlayerList, (_e, serverId: string) =>
+    wrap(() => playerSessionWatcher.refreshServer(serverId)),
+  );
+
+  ipcMain.handle(IPC.kickPlayer, (_e, serverId: string, playerKey: string) =>
+    wrap(async () => {
+      const response = await instances.kickPlayer(serverId, playerKey);
+      await playerSessionWatcher.refreshServer(serverId);
+      return response;
+    }),
+  );
+
+  ipcMain.handle(IPC.banPlayer, (_e, serverId: string, playerKey: string) =>
+    wrap(async () => {
+      const response = await instances.banPlayer(serverId, playerKey);
+      await playerSessionWatcher.refreshServer(serverId);
+      return response;
+    }),
+  );
+
+  ipcMain.handle(IPC.listBannedPlayers, (_e, serverId: string) =>
+    wrap(async () => {
+      const entries = await instances.listBannedPlayers(serverId);
+      return entries.map((entry) => ({ key: entry.id, name: entry.name }));
+    }),
+  );
+
+  ipcMain.handle(IPC.unbanPlayer, (_e, serverId: string, playerKey: string) =>
+    wrap(async () => {
+      const result = await instances.unbanPlayer(serverId, playerKey);
+      return {
+        banned: result.banned.map((entry) => ({
+          key: entry.id,
+          name: entry.name,
+        })),
+        warning: result.warning,
+      };
+    }),
+  );
+
+  ipcMain.handle(IPC.openBanListFile, (_e, serverId: string) =>
+    wrap(async () => {
+      const targetPath = await instances.resolveBanListFilePath(serverId);
+      const error = await shell.openPath(targetPath);
+      if (error.length > 0) {
+        throw new Error(`Could not open BanList.txt: ${error}`);
+      }
+    }),
   );
 
   ipcMain.handle(IPC.eventsRecent, (_e, limit: number) =>

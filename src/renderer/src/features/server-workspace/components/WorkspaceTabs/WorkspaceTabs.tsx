@@ -1,0 +1,148 @@
+import { Tabs } from "@mantine/core";
+import type { AppEvent, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import { ServerBackupPanel } from "@features/backups/ServerBackupPanel";
+import { ServerLogsPanel, type ServerLogsFocus } from "@features/logs/ServerLogsPanel";
+import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
+import type { ReactElement } from "react";
+import type {
+  RconHistoryEntry,
+  WorkspaceTab,
+} from "../../serverWorkspaceTypes";
+import { ConfigurationEditor } from "../ConfigurationEditor/ConfigurationEditor";
+import { RconPanel } from "../RconPanel/RconPanel";
+import type { PlayerListState } from "../RconPanel/PlayerListSection";
+import { ServerModsPanel } from "../ServerModsPanel/ServerModsPanel";
+import classes from "../../ServerWorkspacePage.module.css";
+
+interface Props {
+  value: WorkspaceTab;
+  server: ServerProfile;
+  runtime: ServerRuntimeInfo | null;
+  events: AppEvent[];
+  rconHistory: RconHistoryEntry[];
+  playerList: PlayerListState;
+  opsLocked: boolean;
+  filesJobActive: boolean;
+  stopJobActive: boolean;
+  filesLockReason: string;
+  stopLockReason: string;
+  iniDirty: boolean;
+  iniEditorVersion: number;
+  logsFocus?: ServerLogsFocus | null;
+  onChange: (tab: WorkspaceTab) => void;
+  onBack: () => void;
+  onOpenAssistant: () => void;
+  onIniDirtyChange: (dirty: boolean) => void;
+  onLogsFocusConsumed?: () => void;
+  onSendRcon: (serverId: string, command: string) => Promise<boolean>;
+  onClearRconHistory: (serverId: string) => void;
+  onRconTabFocusChanged: (serverId: string, isFocused: boolean) => Promise<void>;
+  onRefreshPlayers: (serverId: string) => Promise<void>;
+  onKickPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
+  onBanPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
+  onServerUpdated: () => void;
+}
+
+export function WorkspaceTabs(props: Props): ReactElement {
+  return (
+    <Tabs
+      value={props.value}
+      onChange={(value) => {
+        if (value !== null) props.onChange(value as WorkspaceTab);
+      }}
+      className={classes.tabs}
+    >
+      <Tabs.List className={classes.tabList}>
+        <Tabs.Tab value="server">Server</Tabs.Tab>
+        <Tabs.Tab value="mods">Mods</Tabs.Tab>
+        <Tabs.Tab value="iniFiles">INI Files</Tabs.Tab>
+        <Tabs.Tab value="backups">Backups</Tabs.Tab>
+        <Tabs.Tab value="logs">Logs</Tabs.Tab>
+        <Tabs.Tab value="rcon">RCON</Tabs.Tab>
+      </Tabs.List>
+
+      <div className={classes.tabPanel}>
+        {props.value === "server" && (
+          <ServerForm
+            key={`${props.server.id}:${props.server.updatedAt}`}
+            initial={props.server}
+            variant="embedded"
+            serverActive={props.opsLocked}
+            filesJobActive={props.filesJobActive}
+            onCancel={props.onBack}
+            onSaved={props.onServerUpdated}
+            onOpenConfigurationAssistant={props.onOpenAssistant}
+            configurationAssistantDisabled={props.iniDirty}
+          />
+        )}
+
+        {props.value === "mods" && (
+          <ServerModsPanel
+            key={props.server.id}
+            server={props.server}
+            onServerUpdated={props.onServerUpdated}
+          />
+        )}
+
+        {(props.value === "iniFiles" || props.iniDirty) && (
+          <div
+            className={classes.configHost}
+            data-visible={props.value === "iniFiles" || undefined}
+          >
+            <ConfigurationEditor
+              key={`${props.server.id}:${props.iniEditorVersion}`}
+              server={props.server}
+              section="iniFiles"
+              serverActive={props.opsLocked}
+              filesJobActive={props.filesJobActive}
+              onDirtyChange={props.onIniDirtyChange}
+            />
+          </div>
+        )}
+
+        {props.value === "backups" && (
+          <ServerBackupPanel
+            server={props.server}
+            runtime={props.runtime}
+            embedded
+            opsLocked={props.opsLocked}
+            opsLockReason={
+              props.stopJobActive
+                ? props.stopLockReason
+                : props.filesJobActive
+                  ? props.filesLockReason
+                  : undefined
+            }
+            createLocked={props.stopJobActive}
+            createLockReason={props.stopLockReason}
+          />
+        )}
+
+        {props.value === "logs" && (
+          <ServerLogsPanel
+            server={props.server}
+            embedded
+            focus={props.logsFocus}
+            onFocusConsumed={props.onLogsFocusConsumed}
+          />
+        )}
+
+        {props.value === "rcon" && (
+          <RconPanel
+            server={props.server}
+            runtime={props.runtime}
+            events={props.events}
+            rconHistory={props.rconHistory}
+            playerList={props.playerList}
+            onSendRcon={props.onSendRcon}
+            onClearRconHistory={props.onClearRconHistory}
+            onRconTabFocusChanged={props.onRconTabFocusChanged}
+            onRefreshPlayers={props.onRefreshPlayers}
+            onKickPlayer={props.onKickPlayer}
+            onBanPlayer={props.onBanPlayer}
+          />
+        )}
+      </div>
+    </Tabs>
+  );
+}

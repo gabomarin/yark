@@ -72,6 +72,10 @@ function argsIncludeLogFlag(args: string[]): boolean {
   return args.some((arg) => /^[-/]log$/i.test(arg.trim()));
 }
 
+function argsIncludeConsoleFlag(args: string[]): boolean {
+  return args.some((arg) => /^[-/]console$/i.test(arg.trim()));
+}
+
 /**
  * Spawns ASA so its raw command line keeps the intended, separate quotes on
  * map and SessionName,
@@ -138,11 +142,27 @@ function disconnectChildStdio(child: ChildProcess): void {
   }
 }
 
+/** Optional persistent-session RCON path (falls back to one-shot `rconExec`). */
+export type ManagedRconExecutor = (
+  serverId: string,
+  command: string,
+) => Promise<string>;
+
 export interface ProcessManagerOptions {
   /** Timeout waiting for readiness (RCON / log). Default 10 minutes. */
   readyTimeoutMs?: number;
   /** Interval between RCON attempts. Default 3s. */
   readyPollMs?: number;
+  /**
+   * Do not open RCON probes until this long after spawn, unless a startup
+   * log signal was already seen. Default 45s.
+   */
+  readyProbeMinWaitMs?: number;
+  /**
+   * After the first successful ListPlayers, wait this long and confirm once
+   * more before promoting to `running`. Default 15s.
+   */
+  readySettleMs?: number;
   /** Process factory override for lifecycle tests. */
   spawnProcess?: typeof spawnAsaProcess;
   /** Adopted-PID handle factory (Leave reattach tests). */
@@ -161,6 +181,10 @@ const EXIT_WAIT_MS = 30000;
 const MAX_RUNTIME_LOG_LINES = 1200;
 const DEFAULT_READY_TIMEOUT_MS = 10 * 60 * 1000;
 const DEFAULT_READY_POLL_MS = 3000;
+/** Avoid hammering RCON while the dedicated is still booting assets/world. */
+const DEFAULT_READY_PROBE_MIN_WAIT_MS = 45_000;
+/** First RCON success is early; confirm after the world settles. */
+const DEFAULT_READY_SETTLE_MS = 15_000;
 const RCON_PROBE_TIMEOUT_MS = 2500;
 
 /** Typical log signals when the dedicated already accepts players. */
@@ -191,6 +215,8 @@ export class ProcessManager extends EventEmitter {
   private readonly runtimePartials = new Map<string, string>();
   private readonly readyTimeoutMs: number;
   private readonly readyPollMs: number;
+  private readonly readyProbeMinWaitMs: number;
+  private readonly readySettleMs: number;
   private readonly spawnProcess: typeof spawnAsaProcess;
   private readonly createAdoptedChild: (pid: number) => ChildProcess;
   private readonly queryOsIdentity: (pid: number) => LiveProcessIdentity | null;
@@ -198,17 +224,45 @@ export class ProcessManager extends EventEmitter {
     | ((record: LeftRunningProcessIdentity) => void)
     | null;
   private readonly onProcessCheckpointCleared: ((serverId: string) => void) | null;
+  /** Prefer persistent session when wired from InstanceService. */
+  private rconExecutor: ManagedRconExecutor | null = null;
 
   constructor(options?: ProcessManagerOptions) {
     super();
     this.readyTimeoutMs = options?.readyTimeoutMs ?? DEFAULT_READY_TIMEOUT_MS;
     this.readyPollMs = options?.readyPollMs ?? DEFAULT_READY_POLL_MS;
+    this.readyProbeMinWaitMs =
+      options?.readyProbeMinWaitMs ?? DEFAULT_READY_PROBE_MIN_WAIT_MS;
+    this.readySettleMs = options?.readySettleMs ?? DEFAULT_READY_SETTLE_MS;
     this.spawnProcess = options?.spawnProcess ?? spawnAsaProcess;
     this.createAdoptedChild = options?.createAdoptedChild ?? createAdoptedChildHandle;
     this.queryOsIdentity =
       options?.queryOsIdentity ?? ((pid) => queryWindowsProcessIdentity(pid));
     this.onProcessCheckpoint = options?.onProcessCheckpoint ?? null;
     this.onProcessCheckpointCleared = options?.onProcessCheckpointCleared ?? null;
+  }
+
+  /**
+   * Prefer a persistent RCON session (InstanceService) for stop/SaveWorld/DoExit.
+   * Readiness probes stay on one-shot `rconExec` until status is `running`.
+   */
+  setRconExecutor(executor: ManagedRconExecutor | null): void {
+    this.rconExecutor = executor;
+  }
+
+  private async executeRcon(
+    profile: ServerProfile,
+    command: string,
+  ): Promise<string> {
+    if (this.rconExecutor !== null) {
+      return this.rconExecutor(profile.id, command);
+    }
+    return rconExec(
+      RCON_HOST,
+      profile.rconPort,
+      profile.adminPassword,
+      command,
+    );
   }
 
   getStatus(serverId: string): ServerRuntimeInfo {
@@ -292,12 +346,18 @@ export class ProcessManager extends EventEmitter {
     let spawnArgs = args;
     // Only when using profile-built CLI — never mutate launchArgsOverride (tests / custom argv).
     if (
-      !nativeConsole &&
       options?.launchArgsOverride === undefined &&
-      !argsIncludeLogFlag(spawnArgs)
+      !argsIncludeLogFlag(spawnArgs) &&
+      !argsIncludeConsoleFlag(spawnArgs)
     ) {
-      // Helps Unreal write ShooterGame/Saved/Logs while the console is hidden.
-      spawnArgs = [...spawnArgs, "-log"];
+      // Add appropriate flag based on console mode
+      if (nativeConsole) {
+        // Enable Unreal console for interactive RCON commands in the server window.
+        spawnArgs = [...spawnArgs, "-console"];
+      } else {
+        // Helps Unreal write ShooterGame/Saved/Logs while the console is hidden.
+        spawnArgs = [...spawnArgs, "-log"];
+      }
     }
     // Log the same logical Unreal shape sent verbatim on Windows.
     const displayCommandLine =
@@ -460,12 +520,7 @@ export class ProcessManager extends EventEmitter {
     this.emitStatus(profile.id);
 
     try {
-      await rconExec(
-        RCON_HOST,
-        profile.rconPort,
-        profile.adminPassword,
-        "SaveWorld",
-      );
+      await this.executeRcon(profile, "SaveWorld");
       await delay(SAVE_WAIT_MS);
       return {
         phase: "saved",
@@ -480,12 +535,7 @@ export class ProcessManager extends EventEmitter {
         "RCON SaveWorld unavailable; attempting DoExit before kill",
       );
       try {
-        await rconExec(
-          RCON_HOST,
-          profile.rconPort,
-          profile.adminPassword,
-          "DoExit",
-        );
+        await this.executeRcon(profile, "DoExit");
         const exitedAfterDoExit = await this.waitForExit(managed.child, EXIT_WAIT_MS);
         if (exitedAfterDoExit) {
           if (this.processes.get(profile.id) === managed) {
@@ -542,12 +592,7 @@ export class ProcessManager extends EventEmitter {
     }
 
     try {
-      await rconExec(
-        RCON_HOST,
-        profile.rconPort,
-        profile.adminPassword,
-        "DoExit",
-      );
+      await this.executeRcon(profile, "DoExit");
     } catch {
       this.appendRuntimeLog(profile.id, "warning", "RCON DoExit failed; applying kill");
       this.terminateManaged(profile.id, managed);
@@ -884,19 +929,47 @@ export class ProcessManager extends EventEmitter {
     const deadline = Date.now() + timeoutMs;
     const terminateOnTimeout = options?.terminateOnTimeout !== false;
     let loggedReattachWait = false;
+    let loggedWaitingForBoot = false;
+    let loggedProbeStart = false;
+    const bootStartedAt = Date.parse(managed.startedAt) || Date.now();
 
     for (;;) {
       if (!this.isSameStartingGeneration(profile.id, managed, generation)) {
         return;
       }
 
-      if (this.hasReadyLogSignal(profile.id)) {
+      const sawLogSignal = this.hasReadyLogSignal(profile.id);
+      const elapsedMs = Date.now() - bootStartedAt;
+      const mayProbe =
+        sawLogSignal || elapsedMs >= this.readyProbeMinWaitMs;
+
+      if (!mayProbe) {
+        if (!loggedWaitingForBoot) {
+          loggedWaitingForBoot = true;
+          this.appendRuntimeLog(
+            profile.id,
+            "system",
+            `Waiting for startup to progress before RCON probes (min ${Math.round(this.readyProbeMinWaitMs / 1000)}s or log signal)…`,
+          );
+        }
+        await delay(pollMs);
+        continue;
+      }
+
+      if (sawLogSignal && !loggedProbeStart) {
         this.appendRuntimeLog(
           profile.id,
           "system",
           "Startup signal detected in logs; checking RCON…",
         );
+      } else if (!loggedProbeStart) {
+        this.appendRuntimeLog(
+          profile.id,
+          "system",
+          "Minimum startup wait elapsed; checking RCON…",
+        );
       }
+      loggedProbeStart = true;
 
       try {
         await rconExec(
@@ -905,16 +978,47 @@ export class ProcessManager extends EventEmitter {
           profile.adminPassword,
           "ListPlayers",
           RCON_PROBE_TIMEOUT_MS,
+          { quiet: true },
         );
         if (!this.isSameStartingGeneration(profile.id, managed, generation)) {
           return;
         }
+
+        if (this.readySettleMs > 0) {
+          this.appendRuntimeLog(
+            profile.id,
+            "system",
+            `RCON responded; waiting ${Math.round(this.readySettleMs / 1000)}s for the dedicated to finish settling…`,
+          );
+          const settleDeadline = Date.now() + this.readySettleMs;
+          while (Date.now() < settleDeadline) {
+            if (!this.isSameStartingGeneration(profile.id, managed, generation)) {
+              return;
+            }
+            await delay(Math.min(pollMs, settleDeadline - Date.now()));
+          }
+          if (!this.isSameStartingGeneration(profile.id, managed, generation)) {
+            return;
+          }
+          await rconExec(
+            RCON_HOST,
+            profile.rconPort,
+            profile.adminPassword,
+            "ListPlayers",
+            RCON_PROBE_TIMEOUT_MS,
+            { quiet: true },
+          );
+          if (!this.isSameStartingGeneration(profile.id, managed, generation)) {
+            return;
+          }
+        }
+
         managed.status = "running";
         managed.lastError = null;
         this.appendRuntimeLog(
           profile.id,
           "system",
-          "Server ready: RCON responded (waiting for connections)",
+          "Server ready: RCON confirmed after settle (waiting for connections)",
         );
         this.emitStatus(profile.id);
         return;

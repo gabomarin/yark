@@ -78,10 +78,10 @@ export function SidePanel(props: Props): ReactElement {
       : steamCmdBusy
         ? steamCmdLockTitle ?? "Another server operation is in progress"
         : props.server.enabled && isActive
-        ? "Stop the server first"
-        : !props.server.enabled && !filesReady
-          ? props.installation?.guidance ?? "Install files first"
-          : undefined;
+          ? "Stop the server first"
+          : !props.server.enabled && !filesReady
+            ? props.installation?.guidance ?? "Install files first"
+            : undefined;
   const installHiddenTitle =
     !canOfferInstall && !filesReady
       ? props.installation?.guidance ??

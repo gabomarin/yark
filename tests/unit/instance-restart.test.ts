@@ -72,6 +72,7 @@ function makeRepo(profile: ServerProfile): ServerRepository {
 function makeProcesses(profile: ServerProfile, active = true) {
   let isActive = active;
   return {
+    on: vi.fn(),
     isActive: vi.fn(() => isActive),
     getStatus: vi.fn(() => ({
       serverId: profile.id,

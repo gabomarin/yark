@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
 import { basename, join } from "node:path";
+import { EventEmitter } from "node:events";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import type { BackupService } from "./backup-service";
 import type { ServerRepository } from "../../infra/db/server-repository";
@@ -14,6 +15,16 @@ export const DEFAULT_POLL_MS = 10_000;
 const PLAYER_PROFILE_RE = /\.(arkprofile)(\.bak)?$/i;
 const RECENT_BACKUP_DEDUP_MS = 90_000;
 
+/** Prefer persistent session; falls back to one-shot `rconExec`. */
+export type ListPlayersExecutor = (serverId: string) => Promise<string>;
+
+export interface PlayersUpdatedPayload {
+  serverId: string;
+  players: ListedPlayer[];
+  timestamp: string;
+  error: string | null;
+}
+
 /**
  * Polls `ListPlayers` while a server is running and creates per-player
  * profile backups on join/leave. First successful snapshot only seeds
@@ -23,8 +34,10 @@ const RECENT_BACKUP_DEDUP_MS = 90_000;
  * - Immediate tick on process status transitions (running / leaving running)
  * - Flush disconnect backups for remaining online players when leaving `running`
  * - SavedArks `.arkprofile*` mtime scan (catches flushes RCON missed)
+ *
+ * Emits `players-updated` after each ListPlayers attempt (success or failure).
  */
-export class PlayerSessionWatcher {
+export class PlayerSessionWatcher extends EventEmitter {
   private timer: NodeJS.Timeout | null = null;
   private ticking = false;
   private pendingRetick = false;
@@ -33,13 +46,40 @@ export class PlayerSessionWatcher {
   private readonly profileScanSeeded = new Set<string>();
   private readonly recentSessionBackupAt = new Map<string, number>();
   private readonly rconFailStreak = new Map<string, number>();
+  private listPlayersExecutor: ListPlayersExecutor | null = null;
 
   constructor(
     private readonly backups: BackupService,
     private readonly servers: ServerRepository,
     private readonly processes: ProcessManager,
     private readonly pollMs = DEFAULT_POLL_MS,
-  ) {}
+  ) {
+    super();
+  }
+
+  /**
+   * Prefer the persistent RCON session (InstanceService.execRcon).
+   * When unset, falls back to one-shot `rconExec`.
+   */
+  setListPlayersExecutor(executor: ListPlayersExecutor | null): void {
+    this.listPlayersExecutor = executor;
+  }
+
+  getOnlinePlayers(serverId: string): ListedPlayer[] {
+    const online = this.onlineByServer.get(serverId);
+    if (online === undefined) return [];
+    return Array.from(online.values());
+  }
+
+  /** Force an immediate ListPlayers for one server (manual UI refresh). */
+  async refreshServer(serverId: string): Promise<ListedPlayer[]> {
+    const server = this.servers.get(serverId);
+    if (server === null) {
+      return [];
+    }
+    await this.tickServer(server);
+    return this.getOnlinePlayers(serverId);
+  }
 
   start(): void {
     if (this.timer !== null) return;
@@ -94,6 +134,33 @@ export class PlayerSessionWatcher {
     }
   }
 
+  private emitPlayersUpdated(
+    serverId: string,
+    players: ListedPlayer[],
+    error: string | null,
+  ): void {
+    const payload: PlayersUpdatedPayload = {
+      serverId,
+      players,
+      timestamp: new Date().toISOString(),
+      error,
+    };
+    this.emit("players-updated", payload);
+  }
+
+  private async fetchListPlayers(server: ServerProfile): Promise<string> {
+    if (this.listPlayersExecutor !== null) {
+      return this.listPlayersExecutor(server.id);
+    }
+    const runtime = this.processes.applyRuntimePorts(server);
+    return rconExec(
+      RCON_HOST,
+      runtime.rconPort,
+      runtime.adminPassword,
+      "ListPlayers",
+    );
+  }
+
   private async tickServer(server: ServerProfile): Promise<void> {
     const status = this.processes.getStatus(server.id).status;
     if (status !== "running") {
@@ -102,34 +169,35 @@ export class PlayerSessionWatcher {
       this.profileMtimes.delete(server.id);
       this.profileScanSeeded.delete(server.id);
       this.rconFailStreak.delete(server.id);
+      this.emitPlayersUpdated(server.id, [], null);
       return;
     }
 
-    const runtime = this.processes.applyRuntimePorts(server);
     let listed: ListedPlayer[] | null = null;
     try {
-      const response = await rconExec(
-        RCON_HOST,
-        runtime.rconPort,
-        runtime.adminPassword,
-        "ListPlayers",
-      );
+      const response = await this.fetchListPlayers(server);
       listed = parseListPlayersResponse(response);
       this.rconFailStreak.set(server.id, 0);
+      this.emitPlayersUpdated(server.id, listed, null);
     } catch (error) {
       const streak = (this.rconFailStreak.get(server.id) ?? 0) + 1;
       this.rconFailStreak.set(server.id, streak);
+      const message =
+        error instanceof Error ? error.message : String(error);
       // Keep previous online set; log occasionally so silent RCON death is visible.
       if (streak === 1 || streak % 6 === 0) {
         this.servers.addEvent(
           server.id,
           "error",
           "warning",
-          `ListPlayers RCON failed (${streak}x); player session backups may lag: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
+          `ListPlayers RCON failed (${streak}x); player session backups may lag: ${message}`,
         );
       }
+      this.emitPlayersUpdated(
+        server.id,
+        this.getOnlinePlayers(server.id),
+        message,
+      );
     }
 
     if (listed !== null) {

@@ -15,7 +15,8 @@ import type {
 import { PORT_MAX, PORT_MIN } from "@shared/types";
 import { EventEmitter } from "node:events";
 import { existsSync } from "node:fs";
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { createConnection } from "node:net";
 import { join, parse as parsePath, resolve } from "node:path";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
 import {
@@ -29,13 +30,24 @@ import type { ServerRepository } from "../../infra/db/server-repository";
 import type { ProcessManager } from "../../infra/process/process-manager";
 import { findPortConflicts, validateProfileInput } from "./validation";
 import { checkClusterCompliance } from "../cluster/compliance";
-import { rconExec } from "../../infra/rcon/rcon-client";
+import { RconSessionManager } from "../../infra/rcon/rcon-session-manager";
+import type { ListedPlayer } from "../backups/list-players";
+import { parseListPlayersResponse } from "../backups/list-players";
+import {
+  ensureBanListFile,
+  isBlankOrNaUrl,
+  readBanListEntries,
+  readIniServerSetting,
+  removeFromBanList,
+  resolveBanListId,
+  type BanListEntry,
+} from "./ban-list";
 import {
   inspectServerInstallationAsync,
   readOfficialArkBuildCached,
   readOfficialArkVersionCached,
 } from "./server-installation";
-import { syncProfileSettingsToIni } from "./sync-profile-ini";
+import { gameUserSettingsIniPath, syncProfileSettingsToIni } from "./sync-profile-ini";
 import {
   isInstallHealthDegradation,
   isInstallationReady,
@@ -81,6 +93,10 @@ async function mapPool<T, R>(
 }
 
 const RCON_HOST = "127.0.0.1";
+/** Maximum time to wait for the RCON port to start accepting connections. */
+const RCON_AUTO_CONNECT_TIMEOUT_MS = 15_000;
+/** Delay between RCON port probes while the server is starting. */
+const RCON_AUTO_CONNECT_RETRY_DELAY_MS = 1_000;
 
 export interface StopServerOptions {
   /** When true (default), create a stable stop backup after process exit. */
@@ -162,6 +178,13 @@ export class InstanceService extends EventEmitter {
     key: string;
     promise: Promise<ServerInstallationInfo[]>;
   } | null = null;
+  /** Persistent RCON session manager. */
+  private readonly rconSessions = new RconSessionManager();
+  /**
+   * E2E-only: when `YARK_E2E_RCON_MOCK=1`, report servers as running and answer
+   * console commands without a live ASA dedicated (see scripts/e2e-rcon.cjs).
+   */
+  private readonly e2eRconMock = process.env["YARK_E2E_RCON_MOCK"] === "1";
 
   constructor(
     private readonly repo: ServerRepository,
@@ -170,6 +193,29 @@ export class InstanceService extends EventEmitter {
     private readonly locks: InstanceLockManager,
   ) {
     super();
+    
+    // Forward RCON status changes to UI
+    this.rconSessions.on("status-changed", (info) => {
+      this.emit("rcon-status-changed", info);
+    });
+
+    // Persistent session only while `running`; keep the socket during
+    // `stopping` for SaveWorld/DoExit but never auto-reconnect.
+    this.processes.on("status", (status: ServerRuntimeInfo) => {
+      if (status.status === "running") {
+        this.rconSessions.setAutoReconnect(status.serverId, true);
+        const profile = this.repo.get(status.serverId);
+        if (profile) {
+          this.autoConnectRcon(profile).catch((err) => {
+            console.error(`[InstanceService] Auto-connect RCON failed for ${profile.name}:`, err);
+          });
+        }
+      } else if (status.status === "stopping") {
+        this.rconSessions.setAutoReconnect(status.serverId, false);
+      } else if (status.status === "stopped" || status.status === "error") {
+        this.rconSessions.disconnect(status.serverId);
+      }
+    });
   }
 
   list(): ServerProfile[] {
@@ -897,7 +943,18 @@ export class InstanceService extends EventEmitter {
   }
 
   statuses(): ServerRuntimeInfo[] {
-    return this.processes.listStatuses(this.repo.list().map((p) => p.id));
+    const ids = this.repo.list().map((p) => p.id);
+    if (!this.e2eRconMock) {
+      return this.processes.listStatuses(ids);
+    }
+    const now = new Date().toISOString();
+    return ids.map((serverId) => ({
+      serverId,
+      status: "running" as const,
+      pid: 4242,
+      startedAt: now,
+      lastError: null,
+    }));
   }
 
   installDirFor(id: string): string {
@@ -1066,23 +1123,311 @@ export class InstanceService extends EventEmitter {
   }
 
   async sendRcon(id: string, command: string): Promise<string> {
+    return this.execRcon(id, command, { recordEvent: true });
+  }
+
+  /**
+   * Sends an RCON command through the persistent session.
+   * When `recordEvent` is false (polling / stop / backups), skips the audit event.
+   */
+  async execRcon(
+    id: string,
+    command: string,
+    options?: { recordEvent?: boolean },
+  ): Promise<string> {
+    if (this.e2eRconMock) {
+      return this.execRconE2eMock(id, command, options);
+    }
+
     const profile = this.processes.applyRuntimePorts(this.mustGet(id));
-    if (!this.processes.isActive(id)) {
+    const runtimeStatus = this.processes.getStatus(id).status;
+    // Allow during `stopping` for SaveWorld/DoExit; never during bare `starting`
+    // (readiness still uses quiet one-shot probes until `running`).
+    if (runtimeStatus !== "running" && runtimeStatus !== "stopping") {
+      throw new Error(
+        runtimeStatus === "starting"
+          ? "Server is still starting; RCON is not ready yet"
+          : "Server is not running",
+      );
+    }
+
+    const status = this.rconSessions.getStatus(id);
+    if (status.status !== "connected") {
+      console.log(`[RCON] Connecting session for ${profile.name}...`);
+      await this.rconSessions.connect(
+        id,
+        RCON_HOST,
+        profile.rconPort,
+        profile.adminPassword,
+      );
+      // Stop / SaveWorld / DoExit may reconnect once, but must not schedule retries.
+      if (runtimeStatus !== "running") {
+        this.rconSessions.setAutoReconnect(id, false);
+      }
+    }
+
+    console.log(
+      `[RCON] Sending to ${profile.name} (${RCON_HOST}:${profile.rconPort}): "${command}"`,
+    );
+
+    const response = await this.rconSessions.send(id, command);
+    console.log(`[RCON] Response: "${response}"`);
+
+    if (options?.recordEvent !== false) {
+      this.repo.addEvent(
+        id,
+        "rcon_command",
+        "info",
+        `RCON on "${profile.name}": ${command}`,
+      );
+    }
+    return response;
+  }
+
+  /** Deterministic RCON replies for UI e2e without a live dedicated. */
+  private async execRconE2eMock(
+    id: string,
+    command: string,
+    options?: { recordEvent?: boolean },
+  ): Promise<string> {
+    const profile = this.mustGet(id);
+    const trimmed = command.trim();
+    if (options?.recordEvent !== false) {
+      this.repo.addEvent(
+        id,
+        "rcon_command",
+        "info",
+        `RCON on "${profile.name}": ${trimmed}`,
+      );
+    }
+    if (trimmed === "E2E_FAIL") {
+      throw new Error("E2E mock failure");
+    }
+    if (trimmed === "E2E_SLOW") {
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+      return "E2E:slow";
+    }
+    if (
+      trimmed === "E2E_EMPTY" ||
+      trimmed === "SaveWorld" ||
+      trimmed === "DestroyWildDinos"
+    ) {
+      return "";
+    }
+    if (trimmed === "ListPlayers") {
+      return "No Players Connected";
+    }
+    return `E2E:${trimmed}`;
+  }
+
+  /** Lists online players via the persistent session (silent; no history event). */
+  async listPlayers(id: string): Promise<ListedPlayer[]> {
+    const response = await this.execRcon(id, "ListPlayers", { recordEvent: false });
+    return parseListPlayersResponse(response);
+  }
+
+  async kickPlayer(id: string, playerKey: string): Promise<string> {
+    const key = playerKey.trim();
+    if (key.length === 0) {
+      throw new Error("Player id is required");
+    }
+    return this.execRcon(id, `KickPlayer ${key}`, { recordEvent: true });
+  }
+
+  async banPlayer(id: string, playerKey: string): Promise<string> {
+    const key = playerKey.trim();
+    if (key.length === 0) {
+      throw new Error("Player id is required");
+    }
+    return this.execRcon(id, `BanPlayer ${key}`, { recordEvent: true });
+  }
+
+  /** Reads BanList.txt entries (id + optional name from `id,name,0` lines). */
+  async listBannedPlayers(id: string): Promise<BanListEntry[]> {
+    const profile = this.mustGet(id);
+    return readBanListEntries(profile.installDir);
+  }
+
+  /** Absolute path to the primary BanList.txt (created empty if missing). */
+  async resolveBanListFilePath(id: string): Promise<string> {
+    const profile = this.mustGet(id);
+    return ensureBanListFile(profile.installDir);
+  }
+
+  /**
+   * Unbans via RCON `Unban <id>` when the server is active, then scrubs
+   * BanList.txt on disk (ASA may keep an in-memory ban if RCON fails).
+   */
+  async unbanPlayer(id: string, playerKey: string): Promise<{
+    banned: BanListEntry[];
+    warning: string | null;
+  }> {
+    const key = playerKey.trim();
+    if (key.length === 0) {
+      throw new Error("Player id is required");
+    }
+    const profile = this.mustGet(id);
+    const status = this.processes.getStatus(id).status;
+    const matchId = await resolveBanListId(profile.installDir, key);
+    let warning: string | null = null;
+
+    if (status === "running" || status === "stopping") {
+      try {
+        // ASA expects `Unban <id>` (verified on dedicated; not UnbanPlayer — see #17).
+        await this.execRcon(id, `Unban ${matchId}`, { recordEvent: true });
+      } catch (error) {
+        await removeFromBanList(profile.installDir, key);
+        const message =
+          error instanceof Error ? error.message : String(error);
+        warning = `Removed from BanList.txt, but RCON Unban failed (${message}). Restart the server if you still cannot join.`;
+        return {
+          banned: await readBanListEntries(profile.installDir),
+          warning,
+        };
+      }
+    }
+
+    await removeFromBanList(profile.installDir, key);
+    const banned = await readBanListEntries(profile.installDir);
+
+    const gusPath = gameUserSettingsIniPath(profile.installDir);
+    if (existsSync(gusPath)) {
+      const text = await readFile(gusPath, "utf8");
+      const banListUrl = readIniServerSetting(text, "BanListURL");
+      if (!isBlankOrNaUrl(banListUrl)) {
+        warning = `BanListURL is set (${banListUrl?.trim()}). If that remote list still includes this ID, joins stay blocked until you remove it there.`;
+      }
+    }
+
+    return { banned, warning };
+  }
+
+  /** Returns RCON connection status for a server. */
+  getRconStatus(id: string) {
+    if (this.e2eRconMock) {
+      return { serverId: id, status: "connected" as const, lastError: null };
+    }
+    return this.rconSessions.getStatus(id);
+  }
+
+  /** Returns RCON connection status for all servers. */
+  getAllRconStatus() {
+    if (this.e2eRconMock) {
+      return this.repo.list().map((profile) => ({
+        serverId: profile.id,
+        status: "connected" as const,
+        lastError: null,
+      }));
+    }
+    return this.rconSessions.getAllStatus();
+  }
+
+  /** Replaces the current RCON session and reconnects using the active runtime port. */
+  async retryRconConnection(id: string): Promise<void> {
+    if (this.e2eRconMock) {
+      return;
+    }
+    const profile = this.processes.applyRuntimePorts(this.mustGet(id));
+    // Match auto-connect: only after readiness (`running`), not during `starting`.
+    if (this.processes.getStatus(id).status !== "running") {
       throw new Error("Server is not running");
     }
-    const response = await rconExec(
+
+    this.rconSessions.disconnect(id);
+    await this.rconSessions.connect(
+      id,
       RCON_HOST,
       profile.rconPort,
       profile.adminPassword,
-      command,
     );
-    this.repo.addEvent(
-      id,
-      "rcon_command",
-      "info",
-      `RCON on "${profile.name}": ${command}`,
+  }
+
+  /** Auto-connects RCON once the server is actually listening on the RCON port. */
+  private async autoConnectRcon(profile: ServerProfile): Promise<void> {
+    const runtimeProfile = this.processes.applyRuntimePorts(profile);
+    if (this.processes.getStatus(profile.id).status !== "running") {
+      return;
+    }
+
+    console.log(`[InstanceService] Waiting for RCON port ${runtimeProfile.rconPort} for ${profile.name}...`);
+    const isReady = await this.waitForPortReady(
+      RCON_HOST,
+      runtimeProfile.rconPort,
+      RCON_AUTO_CONNECT_TIMEOUT_MS,
     );
-    return response;
+    if (!isReady) {
+      console.log(
+        `[InstanceService] RCON port ${runtimeProfile.rconPort} was not ready for ${profile.name}; skipping connection`,
+      );
+      return;
+    }
+
+    // Status may have left `running` while we waited for the port.
+    if (this.processes.getStatus(profile.id).status !== "running") {
+      console.log(
+        `[InstanceService] Skipping RCON auto-connect for ${profile.name}; server is no longer running`,
+      );
+      return;
+    }
+
+    console.log(`[InstanceService] Auto-connecting RCON for ${profile.name}...`);
+
+    try {
+      await this.rconSessions.connect(
+        profile.id,
+        RCON_HOST,
+        runtimeProfile.rconPort,
+        runtimeProfile.adminPassword,
+      );
+      // A stop may have started during the async connect.
+      if (this.processes.getStatus(profile.id).status !== "running") {
+        this.rconSessions.setAutoReconnect(profile.id, false);
+        if (this.processes.getStatus(profile.id).status !== "stopping") {
+          this.rconSessions.disconnect(profile.id);
+        }
+        console.log(
+          `[InstanceService] Dropped late RCON auto-connect for ${profile.name}; server left running`,
+        );
+        return;
+      }
+      console.log(`[InstanceService] RCON auto-connected for ${profile.name}`);
+    } catch (err) {
+      console.error(
+        `[InstanceService] RCON auto-connect failed for ${profile.name}:`,
+        err,
+      );
+      // Don't throw - auto-connect is best-effort
+    }
+  }
+
+  private async waitForPortReady(host: string, port: number, timeoutMs = 15_000): Promise<boolean> {
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < timeoutMs) {
+      const isOpen = await this.probePort(host, port);
+      if (isOpen) {
+        return true;
+      }
+      await new Promise((resolve) => setTimeout(resolve, RCON_AUTO_CONNECT_RETRY_DELAY_MS));
+    }
+    return false;
+  }
+
+  private probePort(host: string, port: number): Promise<boolean> {
+    return new Promise((resolve) => {
+      const socket = createConnection({ host, port });
+      socket.setTimeout(500);
+      socket.once("connect", () => {
+        socket.destroy();
+        resolve(true);
+      });
+      socket.once("timeout", () => {
+        socket.destroy();
+        resolve(false);
+      });
+      socket.once("error", () => {
+        resolve(false);
+      });
+    });
   }
 
   private mustGet(id: string): ServerProfile {
