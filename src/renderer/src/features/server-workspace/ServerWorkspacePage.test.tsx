@@ -50,6 +50,7 @@ const playerListHandlers = {
   onRefreshPlayers: vi.fn(async () => undefined),
   onKickPlayer: vi.fn(async () => true),
   onBanPlayer: vi.fn(async () => true),
+  onClearRconHistory: vi.fn(),
 };
 
 function renderWorkspace(
@@ -287,7 +288,7 @@ describe("ServerWorkspacePage", () => {
     expect(screen.getByLabelText(/rcon command/i)).toBeInTheDocument();
     expect(screen.getByText("Online")).toBeInTheDocument();
     expect(screen.getByText("Banned")).toBeInTheDocument();
-    expect(screen.getByText("Responses")).toBeInTheDocument();
+    expect(screen.getByText("Console history")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "SaveWorld" }));
     const input = screen.getByLabelText(/rcon command/i);
@@ -326,7 +327,7 @@ describe("ServerWorkspacePage", () => {
 
     await user.click(screen.getByRole("tab", { name: "RCON" }));
 
-    expect(screen.getByText("Responses")).toBeInTheDocument();
+    expect(screen.getByText("Console history")).toBeInTheDocument();
     expect(screen.getAllByText("ListPlayers")).toHaveLength(2);
     expect(screen.getAllByText(/Player1/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Player2/).length).toBeGreaterThan(0);

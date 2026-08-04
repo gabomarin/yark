@@ -87,6 +87,8 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   const [rconHistoryByServer, setRconHistoryByServer] = useState<
     Map<string, RconHistoryEntry[]>
   >(new Map());
+  const rconHistoryByServerRef = useRef(rconHistoryByServer);
+  rconHistoryByServerRef.current = rconHistoryByServer;
   const [playerListsByServer, setPlayerListsByServer] = useState<
     Map<string, PlayerListState>
   >(new Map());
@@ -570,24 +572,39 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   const sendRconCommand = useCallback(
     async (serverId: string, command: string): Promise<boolean> => {
       setError(null);
+      const trimmed = command.trim();
+      if (trimmed.length === 0) {
+        return false;
+      }
+      // Survive RCON tab remounts: pending lives in App-level history, not panel state.
+      const existing = rconHistoryByServerRef.current.get(serverId) ?? [];
+      if (existing.some((entry) => entry.status === "pending")) {
+        return false;
+      }
+
       const createdAt = new Date().toISOString();
       const entryId =
-        globalThis.crypto?.randomUUID?.() ?? `${createdAt}-${Math.random().toString(36).slice(2, 10)}`;
+        globalThis.crypto?.randomUUID?.() ??
+        `${createdAt}-${Math.random().toString(36).slice(2, 10)}`;
       appendRconHistory(serverId, {
         id: entryId,
-        command,
+        command: trimmed,
         createdAt,
         status: "pending",
         response: null,
         error: null,
       });
 
-      const result = await window.api.sendRconCommand(serverId, command);
+      const result = await window.api.sendRconCommand(serverId, trimmed);
       await refresh();
       patchRconHistory(serverId, entryId, {
         status: result.ok ? "success" : "error",
-        response: result.ok ? (result.data.trim().length > 0 ? result.data : null) : null,
-        error: result.ok ? null : result.error ?? "Unknown error",
+        response: result.ok
+          ? result.data.trim().length > 0
+            ? result.data
+            : null
+          : null,
+        error: result.ok ? null : (result.error ?? "Unknown error"),
       });
 
       if (!result.ok) {
@@ -597,6 +614,14 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     },
     [appendRconHistory, patchRconHistory, refresh],
   );
+
+  const clearRconHistory = useCallback((serverId: string): void => {
+    setRconHistoryByServer((prev) => {
+      const next = new Map(prev);
+      next.set(serverId, []);
+      return next;
+    });
+  }, []);
 
   const applyPlayerList = useCallback(
     (serverId: string, players: OnlinePlayerInfo[], error: string | null = null) => {
@@ -1094,6 +1119,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             onUpdateNow={(id) => startSteamFilesJob(id, "update")}
             onVerifyFiles={(id) => startSteamFilesJob(id, "verify")}
             onSendRcon={(id, command) => sendRconCommand(id, command)}
+            onClearRconHistory={clearRconHistory}
             onRconTabFocusChanged={onRconTabFocusChanged}
             onRefreshPlayers={onRefreshPlayers}
             onKickPlayer={onKickPlayer}

@@ -57,6 +57,7 @@ interface Props {
   onUpdateNow: (serverId: string) => void;
   onVerifyFiles: (serverId: string) => void;
   onSendRcon: (serverId: string, command: string) => Promise<boolean>;
+  onClearRconHistory: (serverId: string) => void;
   onRconTabFocusChanged: (serverId: string, isFocused: boolean) => Promise<void>;
   onRefreshPlayers: (serverId: string) => Promise<void>;
   onKickPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
@@ -290,6 +291,7 @@ export function ServerWorkspacePage(props: Props): ReactElement {
               }}
               onLogsFocusConsumed={props.onLogsFocusConsumed}
               onSendRcon={props.onSendRcon}
+              onClearRconHistory={props.onClearRconHistory}
               onRconTabFocusChanged={props.onRconTabFocusChanged}
               onRefreshPlayers={props.onRefreshPlayers}
               onKickPlayer={props.onKickPlayer}

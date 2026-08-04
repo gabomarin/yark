@@ -52,6 +52,48 @@ describe("ban-list", () => {
     expect(formatBanListText([])).toBe("");
   });
 
+  it("preserves id,name,flags when rewriting BanList after unban", async () => {
+    const {
+      banListPath: pathOf,
+      formatBanListEntries,
+      parseBanListEntries,
+      removeFromBanList,
+    } = await import("@backend/domains/instances/ban-list");
+    const { mkdtemp, mkdir, readFile, writeFile, rm } = await import(
+      "node:fs/promises"
+    );
+    const { join } = await import("node:path");
+    const { tmpdir } = await import("node:os");
+    const root = await mkdtemp(join(tmpdir(), "yark-ban-names-"));
+    try {
+      const win64 = join(root, "ShooterGame", "Binaries", "Win64");
+      await mkdir(win64, { recursive: true });
+      await writeFile(
+        pathOf(root),
+        "0002e03af5f4487985e94c6ba4080369,gabomarin26,0\n76561198000000000,Alice,0\n",
+        "utf8",
+      );
+      await removeFromBanList(root, "76561198000000000");
+      const text = await readFile(pathOf(root), "utf8");
+      expect(text).toBe("0002e03af5f4487985e94c6ba4080369,gabomarin26,0\n");
+      expect(parseBanListEntries(text)).toEqual([
+        {
+          id: "0002e03af5f4487985e94c6ba4080369",
+          name: "gabomarin26",
+          flags: "0",
+        },
+      ]);
+      expect(
+        formatBanListEntries([
+          { id: "a", name: "Bob", flags: "0" },
+          { id: "b", name: null, flags: null },
+        ]),
+      ).toBe("a,Bob,0\nb\n");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   it("treats blank and N/A INI URLs as empty", () => {
     expect(isBlankOrNaUrl(null)).toBe(true);
     expect(isBlankOrNaUrl("")).toBe(true);

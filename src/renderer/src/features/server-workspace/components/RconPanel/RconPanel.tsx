@@ -4,6 +4,7 @@ import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import type { RconHistoryEntry } from "../../serverWorkspaceTypes";
+import { RconConsoleHistory } from "./RconConsoleHistory";
 import {
   PlayerListSection,
   type PlayerListState,
@@ -17,6 +18,7 @@ interface Props {
   rconHistory: RconHistoryEntry[];
   playerList: PlayerListState;
   onSendRcon: (serverId: string, command: string) => Promise<boolean>;
+  onClearRconHistory: (serverId: string) => void;
   onRconTabFocusChanged: (serverId: string, isFocused: boolean) => Promise<void>;
   onRefreshPlayers: (serverId: string) => Promise<void>;
   onKickPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
@@ -37,14 +39,6 @@ const QUICK_COMMANDS: QuickCommand[] = [
   { label: "DoExit", command: "DoExit", danger: true },
 ] as const;
 
-const NO_CONTENT_RESPONSE = "Server received, But no response!!";
-
-function hasDisplayableResponse(entry: RconHistoryEntry): boolean {
-  if (entry.status !== "success") return true;
-  const response = entry.response?.trim() ?? "";
-  return response.length > 0 && response !== NO_CONTENT_RESPONSE;
-}
-
 function formatRconTime(date: string): string {
   return new Date(date).toLocaleTimeString([], {
     hour: "2-digit",
@@ -63,13 +57,14 @@ function extractCommand(message: string): string {
 
 export function RconPanel(props: Props): ReactElement {
   const [command, setCommand] = useState("");
-  const [sending, setSending] = useState(false);
   const [rconConnected, setRconConnected] = useState(false);
   const isRunning = props.runtime?.status === "running";
   const isStarting = props.runtime?.status === "starting";
+  // App-level history survives tab unmount; local `sending` would not.
+  const submitPending = props.rconHistory.some(
+    (entry) => entry.status === "pending",
+  );
 
-  // Only poll players once the server is ready (running). Opening the tab
-  // during `starting` must not force an RCON connect while the port is down.
   useEffect(() => {
     if (!isRunning) {
       return;
@@ -98,32 +93,25 @@ export function RconPanel(props: Props): ReactElement {
     };
   }, [props.server.id]);
 
-  const history = useMemo(
+  const auditHistory = useMemo(
     () =>
       props.events
-        .filter((event) => event.serverId === props.server.id && event.type === "rcon_command")
+        .filter(
+          (event) =>
+            event.serverId === props.server.id && event.type === "rcon_command",
+        )
         .slice(0, 5),
     [props.events, props.server.id],
   );
 
-  const responses = useMemo(
-    () => props.rconHistory.filter(hasDisplayableResponse).slice(0, 5),
-    [props.rconHistory],
-  );
-
   const sendCommand = async (nextCommand: string): Promise<void> => {
     const trimmed = nextCommand.trim();
-    if (trimmed.length === 0 || !isRunning || sending) {
+    if (trimmed.length === 0 || !isRunning || submitPending) {
       return;
     }
-    setSending(true);
-    try {
-      const ok = await props.onSendRcon(props.server.id, trimmed);
-      if (ok) {
-        setCommand("");
-      }
-    } finally {
-      setSending(false);
+    const ok = await props.onSendRcon(props.server.id, trimmed);
+    if (ok) {
+      setCommand("");
     }
   };
 
@@ -149,7 +137,7 @@ export function RconPanel(props: Props): ReactElement {
                   radius="xl"
                   variant={item.danger ? "light" : "default"}
                   color={item.danger ? "red" : "gray"}
-                  disabled={!isRunning || sending}
+                  disabled={!isRunning || submitPending}
                   onClick={() => setCommand(item.command)}
                 >
                   {item.label}
@@ -178,7 +166,9 @@ export function RconPanel(props: Props): ReactElement {
                 <Button
                   size="xs"
                   onClick={() => void sendCommand(command)}
-                  disabled={!isRunning || sending || command.trim().length === 0}
+                  disabled={
+                    !isRunning || submitPending || command.trim().length === 0
+                  }
                 >
                   Send
                 </Button>
@@ -187,9 +177,9 @@ export function RconPanel(props: Props): ReactElement {
 
             <Stack gap={4}>
               <Text className={classes.title}>Recent commands</Text>
-              {history.length > 0 ? (
+              {auditHistory.length > 0 ? (
                 <div className={classes.historyList}>
-                  {history.map((event) => (
+                  {auditHistory.map((event) => (
                     <div key={event.id} className={classes.historyItem}>
                       <div style={{ minWidth: 0 }}>
                         <Text size="sm" className={classes.historyCommand}>
@@ -218,57 +208,13 @@ export function RconPanel(props: Props): ReactElement {
           </Stack>
         </AppSurfaceCard>
 
-        <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.responsesPanel}>
-          <Stack gap={4}>
-            <Text className={classes.title}>Responses</Text>
-            {responses.length > 0 ? (
-              <div className={classes.responseList}>
-                {responses.map((entry) => {
-                  const statusLabel =
-                    entry.status === "pending"
-                      ? "sending"
-                      : entry.status === "error"
-                        ? "failed"
-                        : "ok";
-                  const statusColor =
-                    entry.status === "pending"
-                      ? "gray"
-                      : entry.status === "error"
-                        ? "red"
-                        : "teal";
-                  const body =
-                    entry.status === "pending"
-                      ? "Sending…"
-                      : entry.error ?? entry.response ?? "No response";
-                  return (
-                    <div key={entry.id} className={classes.responseItem}>
-                      <div className={classes.responseHeader}>
-                        <div style={{ minWidth: 0 }}>
-                          <Text size="sm" className={classes.historyCommand}>
-                            {entry.command}
-                          </Text>
-                          <Text className={classes.historyMeta}>
-                            {formatRconTime(entry.createdAt)}
-                          </Text>
-                        </div>
-                        <Badge size="sm" variant="light" color={statusColor}>
-                          {statusLabel}
-                        </Badge>
-                      </div>
-                      <Text size="sm" className={classes.responseBody}>
-                        {body}
-                      </Text>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <Text size="sm" c="dimmed">
-                RCON responses will appear here.
-              </Text>
-            )}
-          </Stack>
-        </AppSurfaceCard>
+        <RconConsoleHistory
+          history={props.rconHistory}
+          serverRunning={isRunning}
+          submitPending={submitPending}
+          onRerun={(next) => void sendCommand(next)}
+          onClear={() => props.onClearRconHistory(props.server.id)}
+        />
       </div>
 
       <PlayerListSection

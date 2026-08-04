@@ -90,6 +90,37 @@ describe("InstanceService.retryRconConnection", () => {
     expect(sessions.connect).not.toHaveBeenCalled();
   });
 
+  it("rejects manual RCON retry while the server is still starting", async () => {
+    const repo = {
+      get: vi.fn(() => profile),
+    } as unknown as ServerRepository;
+    const processes = {
+      on: vi.fn(),
+      getStatus: vi.fn(() => ({ status: "starting" as const })),
+      applyRuntimePorts: vi.fn(() => profile),
+    } as unknown as ProcessManager;
+    const service = new InstanceService(
+      repo,
+      processes,
+      {} as BackupService,
+      new InstanceLockManager(),
+    );
+    const sessions = {
+      disconnect: vi.fn(),
+      connect: vi.fn(async () => undefined),
+    };
+    (
+      service as unknown as {
+        rconSessions: typeof sessions;
+      }
+    ).rconSessions = sessions;
+
+    await expect(service.retryRconConnection(profile.id)).rejects.toThrow(
+      /not running/i,
+    );
+    expect(sessions.connect).not.toHaveBeenCalled();
+  });
+
   it("replaces the failed session and reconnects with the active runtime port", async () => {
     const runtimeProfile = { ...profile, rconPort: 37020 };
     const repo = {
@@ -98,6 +129,7 @@ describe("InstanceService.retryRconConnection", () => {
     const processes = {
       on: vi.fn(),
       isActive: vi.fn(() => true),
+      getStatus: vi.fn(() => ({ status: "running" as const })),
       applyRuntimePorts: vi.fn(() => runtimeProfile),
     } as unknown as ProcessManager;
     const service = new InstanceService(

@@ -39,12 +39,24 @@ export function extractBanListName(token: string): string | null {
   return name.length > 0 ? name : null;
 }
 
+/** Flags / trailing fields after `id,name` (e.g. `0`). */
+export function extractBanListFlags(token: string): string | null {
+  const trimmed = token.trim();
+  if (trimmed.length === 0 || !trimmed.includes(",")) return null;
+  const parts = trimmed.split(",");
+  if (parts.length < 3) return null;
+  const flags = parts.slice(2).join(",").trim();
+  return flags.length > 0 ? flags : null;
+}
+
 export interface BanListEntry {
   id: string;
   name: string | null;
+  /** Trailing fields after name (ASA BanPlayer lines use `id,name,0`). */
+  flags: string | null;
 }
 
-/** Parses BanList text into id + optional name (from ASA `id,name,0` lines). */
+/** Parses BanList text into id + optional name/flags (from ASA `id,name,0` lines). */
 export function parseBanListEntries(raw: string): BanListEntry[] {
   const byKey = new Map<string, BanListEntry>();
   for (const line of raw.replace(/\r/g, "").split("\n")) {
@@ -54,14 +66,17 @@ export function parseBanListEntries(raw: string): BanListEntry[] {
     if (id.length === 0) continue;
     const key = id.toLowerCase();
     const name = extractBanListName(trimmed);
+    const flags = extractBanListFlags(trimmed);
     const existing = byKey.get(key);
     if (!existing) {
-      byKey.set(key, { id, name });
+      byKey.set(key, { id, name, flags });
       continue;
     }
-    if (existing.name === null && name !== null) {
-      byKey.set(key, { id: existing.id, name });
-    }
+    byKey.set(key, {
+      id: existing.id,
+      name: existing.name ?? name,
+      flags: existing.flags ?? flags,
+    });
   }
   return [...byKey.values()];
 }
@@ -76,13 +91,17 @@ export function formatBanListText(ids: string[]): string {
   return `${ids.join("\n")}\n`;
 }
 
-/** Writes id-only or `id,name` lines (ASA ignores trailing name fields). */
+/**
+ * Writes BanList lines preserving ASA `id,name,flags` when a name is known.
+ * Id-only lines stay id-only.
+ */
 export function formatBanListEntries(entries: BanListEntry[]): string {
   if (entries.length === 0) return "";
   const lines = entries.map((entry) => {
     const name = entry.name?.trim();
     if (name && name.length > 0) {
-      return `${entry.id},${name}`;
+      const flags = entry.flags?.trim() || "0";
+      return `${entry.id},${name},${flags}`;
     }
     return entry.id;
   });
@@ -107,9 +126,11 @@ export async function readBanListEntries(
         byKey.set(key, entry);
         continue;
       }
-      if (existing.name === null && entry.name !== null) {
-        byKey.set(key, { id: existing.id, name: entry.name });
-      }
+      byKey.set(key, {
+        id: existing.id,
+        name: existing.name ?? entry.name,
+        flags: existing.flags ?? entry.flags,
+      });
     }
   }
   return [...byKey.values()];
@@ -132,9 +153,18 @@ export async function writeBanList(
   await writeFile(path, formatBanListText(ids), "utf8");
 }
 
+export async function writeBanListEntries(
+  installDir: string,
+  entries: BanListEntry[],
+): Promise<void> {
+  const path = banListPath(installDir);
+  await writeFile(path, formatBanListEntries(entries), "utf8");
+}
+
 /**
  * Removes a player id from every known BanList.txt under the install,
- * then rewrites the primary Win64 BanList so it matches.
+ * then rewrites the primary Win64 BanList so it matches — preserving
+ * remaining `id,name,flags` metadata.
  */
 export async function removeFromBanList(
   installDir: string,
@@ -168,11 +198,11 @@ export async function removeFromBanList(
     await writeFile(path, body.length === 0 ? "" : `${body}\n`, "utf8");
   }
 
-  const remaining = (await readBanList(installDir)).filter(
-    (id) => id.toLowerCase() !== key,
+  const remaining = (await readBanListEntries(installDir)).filter(
+    (entry) => entry.id.toLowerCase() !== key,
   );
-  await writeBanList(installDir, remaining);
-  return remaining;
+  await writeBanListEntries(installDir, remaining);
+  return remaining.map((entry) => entry.id);
 }
 
 /** Resolve the id to send over RCON (never id,name,flags). */

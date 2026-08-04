@@ -1252,7 +1252,8 @@ export class InstanceService extends EventEmitter {
   /** Replaces the current RCON session and reconnects using the active runtime port. */
   async retryRconConnection(id: string): Promise<void> {
     const profile = this.processes.applyRuntimePorts(this.mustGet(id));
-    if (!this.processes.isActive(id)) {
+    // Match auto-connect: only after readiness (`running`), not during `starting`.
+    if (this.processes.getStatus(id).status !== "running") {
       throw new Error("Server is not running");
     }
 
