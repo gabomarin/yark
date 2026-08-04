@@ -34,21 +34,24 @@ export class RconClient {
     number,
     { resolve: (body: string) => void; reject: (err: Error) => void }
   >();
+  /** Source RCON is single-flight; overlapping sends corrupt reply matching. */
+  private sendChain: Promise<void> = Promise.resolve();
 
   constructor(
     private readonly host: string,
     private readonly port: number,
     private readonly password: string,
     private readonly timeoutMs = 5000,
+    private readonly quiet = false,
   ) {}
 
   async connect(): Promise<void> {
-    console.log(`[RconClient] Connecting to ${this.host}:${this.port}...`);
+    this.log(`[RconClient] Connecting to ${this.host}:${this.port}...`);
     await new Promise<void>((resolve, reject) => {
       const socket = new Socket();
       const onError = (err: Error) => {
         socket.destroy();
-        console.error(`[RconClient] Connection error: ${err.message}`);
+        this.logError(`[RconClient] Connection error: ${err.message}`);
         reject(err);
       };
       socket.setTimeout(this.timeoutMs, () =>
@@ -59,7 +62,7 @@ export class RconClient {
         socket.setTimeout(0);
         socket.removeListener("error", onError);
         this.socket = socket;
-        console.log(`[RconClient] Connected to ${this.host}:${this.port}`);
+        this.log(`[RconClient] Connected to ${this.host}:${this.port}`);
         socket.on("data", (chunk) => this.onData(chunk));
         socket.on("error", (err) => this.failAll(err));
         socket.on("close", () =>
@@ -69,27 +72,60 @@ export class RconClient {
       });
     });
 
-    console.log(`[RconClient] Authenticating...`);
+    this.log(`[RconClient] Authenticating...`);
     const authId = this.nextId++;
     const response = await this.sendPacket(authId, AUTH, this.password);
     if (response === null) {
       console.error(`[RconClient] Authentication rejected`);
       throw new Error("RCON authentication rejected (incorrect password)");
     }
-    console.log(`[RconClient] Authenticated successfully`);
+    this.log(`[RconClient] Authenticated successfully`);
   }
 
-  /** Sends a command and returns the server response. */
+  /** Sends a command and returns the server response (serialized). */
   async send(command: string): Promise<string> {
     if (this.socket === null) {
       throw new Error("RCON not connected");
     }
-    console.log(`[RconClient] Sending command: "${command}"`);
-    const id = this.nextId++;
-    const body = await this.sendPacket(id, EXEC_COMMAND, command);
-    const result = body ?? "";
-    console.log(`[RconClient] Received response (${result.length} bytes): "${result.substring(0, 100)}${result.length > 100 ? "..." : ""}"`);
-    return result;
+
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const previous = this.sendChain;
+    this.sendChain = previous.then(
+      () => gate,
+      () => gate,
+    );
+    await previous.catch(() => undefined);
+
+    try {
+      if (this.socket === null) {
+        throw new Error("RCON not connected");
+      }
+      this.log(`[RconClient] Sending command: "${command}"`);
+      const id = this.nextId++;
+      const body = await this.sendPacket(id, EXEC_COMMAND, command);
+      const result = body ?? "";
+      this.log(
+        `[RconClient] Received response (${result.length} bytes): "${result.substring(0, 100)}${result.length > 100 ? "..." : ""}"`,
+      );
+      return result;
+    } finally {
+      release();
+    }
+  }
+
+  private log(message: string): void {
+    if (!this.quiet) {
+      console.log(message);
+    }
+  }
+
+  private logError(message: string): void {
+    if (!this.quiet) {
+      console.error(message);
+    }
   }
 
   close(): void {
@@ -110,6 +146,11 @@ export class RconClient {
       }
       const timer = setTimeout(() => {
         this.pending.delete(id);
+        // Drop the socket so late/orphaned replies cannot poison the next command.
+        // Session manager reconnects on close.
+        const socket = this.socket;
+        this.socket = null;
+        socket?.destroy();
         reject(new Error("Timeout waiting for RCON response"));
       }, this.timeoutMs);
 
@@ -191,6 +232,9 @@ export class RconClient {
 /**
  * Runs a single RCON command opening and closing the connection.
  * Useful for one-shot operations (saveworld, broadcast, etc.).
+ *
+ * Pass `quiet: true` for readiness probes that expect ECONNREFUSED until
+ * the dedicated is listening — avoids spamming the Electron console.
  */
 export async function rconExec(
   host: string,
@@ -198,17 +242,23 @@ export async function rconExec(
   password: string,
   command: string,
   timeoutMs = 5000,
+  options?: { quiet?: boolean },
 ): Promise<string> {
-  const client = new RconClient(host, port, password, timeoutMs);
+  const quiet = options?.quiet === true;
+  const client = new RconClient(host, port, password, timeoutMs, quiet);
   try {
     await client.connect();
     const result = await client.send(command);
-    console.log(`[rconExec] Command successful`);
+    if (!quiet) {
+      console.log(`[rconExec] Command successful`);
+    }
     return result;
   } catch (err) {
-    console.error(
-      `[rconExec] Error: ${err instanceof Error ? err.message : String(err)}`,
-    );
+    if (!quiet) {
+      console.error(
+        `[rconExec] Error: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
     throw err;
   } finally {
     client.close();

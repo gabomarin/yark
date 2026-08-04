@@ -10,6 +10,7 @@ import type {
 } from "../../serverWorkspaceTypes";
 import { ConfigurationEditor } from "../ConfigurationEditor/ConfigurationEditor";
 import { RconPanel } from "../RconPanel/RconPanel";
+import type { PlayerListState } from "../RconPanel/PlayerListSection";
 import { ServerModsPanel } from "../ServerModsPanel/ServerModsPanel";
 import classes from "../../ServerWorkspacePage.module.css";
 
@@ -19,6 +20,7 @@ interface Props {
   runtime: ServerRuntimeInfo | null;
   events: AppEvent[];
   rconHistory: RconHistoryEntry[];
+  playerList: PlayerListState;
   opsLocked: boolean;
   filesJobActive: boolean;
   stopJobActive: boolean;
@@ -33,6 +35,10 @@ interface Props {
   onIniDirtyChange: (dirty: boolean) => void;
   onLogsFocusConsumed?: () => void;
   onSendRcon: (serverId: string, command: string) => Promise<boolean>;
+  onRconTabFocusChanged: (serverId: string, isFocused: boolean) => Promise<void>;
+  onRefreshPlayers: (serverId: string) => Promise<void>;
+  onKickPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
+  onBanPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
   onServerUpdated: () => void;
 }
 
@@ -126,7 +132,12 @@ export function WorkspaceTabs(props: Props): ReactElement {
             runtime={props.runtime}
             events={props.events}
             rconHistory={props.rconHistory}
+            playerList={props.playerList}
             onSendRcon={props.onSendRcon}
+            onRconTabFocusChanged={props.onRconTabFocusChanged}
+            onRefreshPlayers={props.onRefreshPlayers}
+            onKickPlayer={props.onKickPlayer}
+            onBanPlayer={props.onBanPlayer}
           />
         )}
       </div>

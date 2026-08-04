@@ -322,6 +322,8 @@ describe("ProcessManager crash-recovery checkpoints", () => {
     const manager = new ProcessManager({
       readyTimeoutMs: 30,
       readyPollMs: 10,
+      readyProbeMinWaitMs: 0,
+      readySettleMs: 0,
       spawnProcess: () => child,
       queryOsIdentity: (pid) => ({
         pid,

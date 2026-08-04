@@ -10,6 +10,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import { ServerWorkspacePage, type RconHistoryEntry } from "./ServerWorkspacePage";
+import type { PlayerListState } from "./components/RconPanel/PlayerListSection";
 
 const serverA = {
   id: "srv-a",
@@ -39,6 +40,18 @@ const serverB = {
   mods: [],
 };
 
+const EMPTY_PLAYER_LIST: PlayerListState = {
+  players: [],
+  error: null,
+  loading: false,
+};
+const playerListHandlers = {
+  onRconTabFocusChanged: vi.fn(async () => undefined),
+  onRefreshPlayers: vi.fn(async () => undefined),
+  onKickPlayer: vi.fn(async () => true),
+  onBanPlayer: vi.fn(async () => true),
+};
+
 function renderWorkspace(
   onSelectServer = vi.fn(),
   onSendRcon = vi.fn(async () => true),
@@ -54,6 +67,7 @@ function renderWorkspace(
         clusterReports={[]}
         events={[]}
         rconHistory={rconHistory}
+        playerList={EMPTY_PLAYER_LIST}
         onSelectServer={onSelectServer}
         onBack={vi.fn()}
         onStartServer={vi.fn()}
@@ -65,6 +79,7 @@ function renderWorkspace(
         onUpdateNow={vi.fn()}
         onVerifyFiles={vi.fn()}
         onSendRcon={onSendRcon}
+        {...playerListHandlers}
         onServerUpdated={vi.fn()}
       />
     </AppProviders>,
@@ -171,7 +186,18 @@ describe("ServerWorkspacePage", () => {
         },
       })),
       retryRconConnection: vi.fn(async () => ({ ok: true, data: undefined })),
+      notifyRconTabFocus: vi.fn(async () => ({ ok: true, data: [] })),
+      refreshPlayerList: vi.fn(async () => ({ ok: true, data: [] })),
+      kickPlayer: vi.fn(async () => ({ ok: true, data: "" })),
+      banPlayer: vi.fn(async () => ({ ok: true, data: "" })),
+      listBannedPlayers: vi.fn(async () => ({ ok: true, data: [] })),
+      openBanListFile: vi.fn(async () => ({ ok: true, data: undefined })),
+      unbanPlayer: vi.fn(async () => ({
+        ok: true,
+        data: { banned: [], warning: null },
+      })),
       onRconStatusChanged: vi.fn(() => () => undefined),
+      onPlayerListUpdated: vi.fn(() => () => undefined),
     });
   });
 
@@ -235,6 +261,7 @@ describe("ServerWorkspacePage", () => {
           clusterReports={[]}
           events={[]}
           rconHistory={[]}
+          playerList={EMPTY_PLAYER_LIST}
           onSelectServer={vi.fn()}
           onBack={vi.fn()}
           onStartServer={vi.fn()}
@@ -246,6 +273,7 @@ describe("ServerWorkspacePage", () => {
           onUpdateNow={vi.fn()}
           onVerifyFiles={vi.fn()}
           onSendRcon={onSendRcon}
+          {...playerListHandlers}
           onServerUpdated={vi.fn()}
         />
       </AppProviders>,
@@ -257,7 +285,8 @@ describe("ServerWorkspacePage", () => {
       screen.getByText(/Admin commands for the active server/i),
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/rcon command/i)).toBeInTheDocument();
-    expect(screen.getByText("Players")).toBeInTheDocument();
+    expect(screen.getByText("Online")).toBeInTheDocument();
+    expect(screen.getByText("Banned")).toBeInTheDocument();
     expect(screen.getByText("Responses")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "SaveWorld" }));
@@ -562,6 +591,7 @@ describe("ServerWorkspacePage", () => {
           clusterReports={[]}
           events={[]}
           rconHistory={[]}
+          playerList={EMPTY_PLAYER_LIST}
           stopProgress={{
             serverId: serverA.id,
             active: true,
@@ -581,6 +611,7 @@ describe("ServerWorkspacePage", () => {
           onUpdateNow={vi.fn()}
           onVerifyFiles={vi.fn()}
           onSendRcon={vi.fn(async () => true)}
+          {...playerListHandlers}
           onServerUpdated={vi.fn()}
         />
       </AppProviders>,
@@ -628,6 +659,7 @@ describe("ServerWorkspacePage", () => {
           clusterReports={[]}
           events={[]}
           rconHistory={[]}
+          playerList={EMPTY_PLAYER_LIST}
           onSelectServer={vi.fn()}
           onBack={vi.fn()}
           onStartServer={vi.fn()}
@@ -640,6 +672,7 @@ describe("ServerWorkspacePage", () => {
           onUpdateNow={vi.fn()}
           onVerifyFiles={vi.fn()}
           onSendRcon={vi.fn(async () => true)}
+          {...playerListHandlers}
           onServerUpdated={vi.fn()}
         />
       </AppProviders>,
@@ -661,6 +694,7 @@ describe("ServerWorkspacePage", () => {
           clusterReports={[]}
           events={[]}
           rconHistory={[]}
+          playerList={EMPTY_PLAYER_LIST}
           filesJobActive
           filesJobLabel="Updating server files"
           onSelectServer={vi.fn()}
@@ -675,6 +709,7 @@ describe("ServerWorkspacePage", () => {
           onUpdateNow={vi.fn()}
           onVerifyFiles={vi.fn()}
           onSendRcon={vi.fn(async () => true)}
+          {...playerListHandlers}
           onServerUpdated={vi.fn()}
         />
       </AppProviders>,

@@ -7,7 +7,7 @@ import type {
   StartServerOptions,
   SteamCmdCacheKind,
 } from "../shared/types";
-import type { SteamCmdProgressPush, BackupsChangedPush, ServerStopProgressPush, RconStatusChangedPush } from "../shared/ipc";
+import type { SteamCmdProgressPush, BackupsChangedPush, ServerStopProgressPush, RconStatusChangedPush, PlayerListUpdatedPush } from "../shared/ipc";
 import { normalizeServerStopProgress } from "../shared/types";
 
 const api: RendererApi = {
@@ -57,6 +57,20 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.rconGetStatus, id),
   getAllRconStatus: () =>
     ipcRenderer.invoke(IPC.rconGetAllStatus),
+  notifyRconTabFocus: (serverId: string, isFocused: boolean) =>
+    ipcRenderer.invoke(IPC.rconTabFocusChanged, serverId, isFocused),
+  refreshPlayerList: (serverId: string) =>
+    ipcRenderer.invoke(IPC.refreshPlayerList, serverId),
+  kickPlayer: (serverId: string, playerKey: string) =>
+    ipcRenderer.invoke(IPC.kickPlayer, serverId, playerKey),
+  banPlayer: (serverId: string, playerKey: string) =>
+    ipcRenderer.invoke(IPC.banPlayer, serverId, playerKey),
+  listBannedPlayers: (serverId: string) =>
+    ipcRenderer.invoke(IPC.listBannedPlayers, serverId),
+  unbanPlayer: (serverId: string, playerKey: string) =>
+    ipcRenderer.invoke(IPC.unbanPlayer, serverId, playerKey),
+  openBanListFile: (serverId: string) =>
+    ipcRenderer.invoke(IPC.openBanListFile, serverId),
   recentEvents: (limit: number) =>
     ipcRenderer.invoke(IPC.eventsRecent, limit),
   pickPath: (kind, defaultPath, title) =>
@@ -175,6 +189,13 @@ const api: RendererApi = {
     ipcRenderer.on(IPC_PUSH.rconStatusChanged, handler);
     return () => {
       ipcRenderer.removeListener(IPC_PUSH.rconStatusChanged, handler);
+    };
+  },
+  onPlayerListUpdated: (listener) => {
+    const handler = (_e: unknown, payload: PlayerListUpdatedPush) => listener(payload);
+    ipcRenderer.on(IPC_PUSH.playerListUpdated, handler);
+    return () => {
+      ipcRenderer.removeListener(IPC_PUSH.playerListUpdated, handler);
     };
   },
 };

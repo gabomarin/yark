@@ -76,6 +76,13 @@ export const IPC = {
   rconRetryConnection: "rcon:retry-connection",
   rconGetStatus: "rcon:get-status",
   rconGetAllStatus: "rcon:get-all-status",
+  rconTabFocusChanged: "rcon:tab-focus-changed",
+  refreshPlayerList: "rcon:refresh-player-list",
+  kickPlayer: "rcon:kick-player",
+  banPlayer: "rcon:ban-player",
+  listBannedPlayers: "rcon:list-banned-players",
+  unbanPlayer: "rcon:unban-player",
+  openBanListFile: "rcon:open-ban-list-file",
   eventsRecent: "events:recent",
   pickPath: "fs:pick-path",
   appListDataFolders: "app:list-data-folders",
@@ -127,6 +134,7 @@ export const IPC_PUSH = {
   serverStopProgress: "push:server-stop-progress",
   backupsChanged: "push:backups-changed",
   rconStatusChanged: "push:rcon-status-changed",
+  playerListUpdated: "push:player-list-updated",
 } as const;
 
 export interface SteamCmdProgressPush {
@@ -144,6 +152,19 @@ export interface RconStatusChangedPush {
   serverId: string;
   status: "disconnected" | "connecting" | "connected" | "error";
   lastError: string | null;
+}
+
+/** Online player from ListPlayers (Steam64 or EOS / UniqueNetId). */
+export interface OnlinePlayerInfo {
+  key: string;
+  name: string | null;
+}
+
+export interface PlayerListUpdatedPush {
+  serverId: string;
+  players: OnlinePlayerInfo[];
+  timestamp: string;
+  error: string | null;
 }
 
 /** Normalized result of IPC operations. */
@@ -207,6 +228,18 @@ export interface RendererApi {
     id: string,
   ): Promise<IpcResult<RconStatusChangedPush>>;
   getAllRconStatus(): Promise<IpcResult<RconStatusChangedPush[]>>;
+  notifyRconTabFocus(
+    serverId: string,
+    isFocused: boolean,
+  ): Promise<IpcResult<OnlinePlayerInfo[]>>;
+  refreshPlayerList(serverId: string): Promise<IpcResult<OnlinePlayerInfo[]>>;
+  kickPlayer(serverId: string, playerKey: string): Promise<IpcResult<string>>;
+  banPlayer(serverId: string, playerKey: string): Promise<IpcResult<string>>;
+  listBannedPlayers(serverId: string): Promise<IpcResult<OnlinePlayerInfo[]>>;
+  unbanPlayer(serverId: string, playerKey: string): Promise<
+    IpcResult<{ banned: OnlinePlayerInfo[]; warning: string | null }>
+  >;
+  openBanListFile(serverId: string): Promise<IpcResult<void>>;
   recentEvents(limit: number): Promise<IpcResult<AppEvent[]>>;
   pickPath(
     kind: PickPathKind,
@@ -312,5 +345,8 @@ export interface RendererApi {
   ): () => void;
   onRconStatusChanged(
     listener: (payload: RconStatusChangedPush) => void,
+  ): () => void;
+  onPlayerListUpdated(
+    listener: (payload: PlayerListUpdatedPush) => void,
   ): () => void;
 }

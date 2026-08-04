@@ -10,6 +10,11 @@ interface RconSession {
   lastError: string | null;
   reconnectTimer: NodeJS.Timeout | null;
   reconnectAttempts: number;
+  host: string;
+  port: number;
+  password: string;
+  /** Serializes commands so ListPlayers polls cannot overlap on one socket. */
+  sendQueue: Promise<void>;
 }
 
 export interface RconConnectionInfo {
@@ -48,8 +53,16 @@ export class RconSessionManager extends EventEmitter {
         lastError: null,
         reconnectTimer: null,
         reconnectAttempts: 0,
+        host,
+        port,
+        password,
+        sendQueue: Promise.resolve(),
       };
       this.sessions.set(serverId, session);
+    } else {
+      session.host = host;
+      session.port = port;
+      session.password = password;
     }
 
     // Already connected or connecting
@@ -108,6 +121,7 @@ export class RconSessionManager extends EventEmitter {
 
   /**
    * Sends an RCON command to a connected server.
+   * Commands are queued per server (ASA Source RCON is single-flight).
    * Throws if the session is not connected.
    */
   async send(serverId: string, command: string): Promise<string> {
@@ -116,23 +130,34 @@ export class RconSessionManager extends EventEmitter {
       throw new Error(`RCON not connected for server ${serverId}`);
     }
 
-    // Normalize commands (like the working repo does)
+    const client = session.client;
     const normalizedCommand = this.normalizeCommand(command);
 
-    try {
-      const response = await session.client.send(normalizedCommand);
-      
-      // ASA uses this acknowledgement for successful commands with no output.
-      if (response.trim() === NO_CONTENT_RESPONSE) {
-        return "";
+    const run = async (): Promise<string> => {
+      if (session.client !== client || session.status !== "connected") {
+        throw new Error(`RCON not connected for server ${serverId}`);
       }
-      
-      return response;
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      console.error(`[RconSessionManager] Command failed for ${serverId}: ${errorMsg}`);
-      throw err;
-    }
+      try {
+        const response = await client.send(normalizedCommand);
+        if (response.trim() === NO_CONTENT_RESPONSE) {
+          return "";
+        }
+        return response;
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        console.error(
+          `[RconSessionManager] Command failed for ${serverId}: ${errorMsg}`,
+        );
+        throw err;
+      }
+    };
+
+    const result = session.sendQueue.then(run, run);
+    session.sendQueue = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
   }
 
   /**
@@ -190,11 +215,8 @@ export class RconSessionManager extends EventEmitter {
     if (!session || session.client !== client) return;
 
     session.client = null;
-    this.updateStatus(serverId, "error", reason);
-
-    // Try to reconnect (connection details need to be stored)
-    // For now, just mark as disconnected - reconnect will be triggered by auto-connect
     this.updateStatus(serverId, "disconnected", reason);
+    this.scheduleReconnect(serverId, session.host, session.port, session.password);
   }
 
   private scheduleReconnect(

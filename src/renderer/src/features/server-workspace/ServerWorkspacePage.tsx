@@ -20,6 +20,7 @@ import { WorkspaceTabs } from "./components/WorkspaceTabs/WorkspaceTabs";
 import { WorkspaceHeader } from "./components/WorkspaceHeader/WorkspaceHeader";
 import { StopProgressAlert, stopProgressForServer } from "./components/StopProgressAlert";
 import type { RconHistoryEntry, WorkspaceTab } from "./serverWorkspaceTypes";
+import type { PlayerListState } from "./components/RconPanel/PlayerListSection";
 import classes from "./ServerWorkspacePage.module.css";
 
 export type { RconHistoryEntry, WorkspaceTab } from "./serverWorkspaceTypes";
@@ -35,6 +36,7 @@ interface Props {
   initialTab?: WorkspaceTab;
   logsFocus?: ServerLogsFocus | null;
   rconHistory: RconHistoryEntry[];
+  playerList: PlayerListState;
   onLogsFocusConsumed?: () => void;
   /** SteamCMD is rewriting this server's install (install/update/verify/sync). */
   filesJobActive?: boolean;
@@ -55,6 +57,10 @@ interface Props {
   onUpdateNow: (serverId: string) => void;
   onVerifyFiles: (serverId: string) => void;
   onSendRcon: (serverId: string, command: string) => Promise<boolean>;
+  onRconTabFocusChanged: (serverId: string, isFocused: boolean) => Promise<void>;
+  onRefreshPlayers: (serverId: string) => Promise<void>;
+  onKickPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
+  onBanPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
   onServerUpdated: () => void;
 }
 
@@ -261,6 +267,7 @@ export function ServerWorkspacePage(props: Props): ReactElement {
               runtime={runtime}
               events={props.events}
               rconHistory={props.rconHistory}
+              playerList={props.playerList}
               opsLocked={opsLocked}
               filesJobActive={filesJobActive}
               stopJobActive={stopJobActive}
@@ -283,6 +290,10 @@ export function ServerWorkspacePage(props: Props): ReactElement {
               }}
               onLogsFocusConsumed={props.onLogsFocusConsumed}
               onSendRcon={props.onSendRcon}
+              onRconTabFocusChanged={props.onRconTabFocusChanged}
+              onRefreshPlayers={props.onRefreshPlayers}
+              onKickPlayer={props.onKickPlayer}
+              onBanPlayer={props.onBanPlayer}
               onServerUpdated={props.onServerUpdated}
             />
           )}

@@ -37,6 +37,8 @@ import {
   type RconHistoryEntry,
   type WorkspaceTab,
 } from "@features/server-workspace/ServerWorkspacePage";
+import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
+import type { OnlinePlayerInfo, PlayerListUpdatedPush } from "@shared/ipc";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { CloneServerDialog } from "@features/servers/components/CloneServerDialog/CloneServerDialog";
 import { openHostPortProbeModal } from "@features/servers/hostPortProbeModal";
@@ -84,6 +86,9 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   const [events, setEvents] = useState<AppEvent[]>([]);
   const [rconHistoryByServer, setRconHistoryByServer] = useState<
     Map<string, RconHistoryEntry[]>
+  >(new Map());
+  const [playerListsByServer, setPlayerListsByServer] = useState<
+    Map<string, PlayerListState>
   >(new Map());
   const [steamCmdStatus, setSteamCmdStatus] = useState<SteamCmdStatus | null>(null);
   const [steamCmdConsole, setSteamCmdConsole] = useState<SteamCmdConsoleSnapshot | null>(null);
@@ -445,11 +450,26 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         return next;
       });
     });
+    const unsubscribePlayers =
+      typeof window.api.onPlayerListUpdated === "function"
+        ? window.api.onPlayerListUpdated((payload: PlayerListUpdatedPush) => {
+            setPlayerListsByServer((prev) => {
+              const next = new Map(prev);
+              next.set(payload.serverId, {
+                players: payload.players,
+                error: payload.error,
+                loading: false,
+              });
+              return next;
+            });
+          })
+        : () => undefined;
     return () => {
       active = false;
       unsubscribeStatus();
       unsubscribeProgress();
       unsubscribeStopProgress();
+      unsubscribePlayers();
     };
   }, [refresh, runInstallHealthScan]);
 
@@ -574,6 +594,153 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         setError(result.error ?? "Unknown error");
       }
       return result.ok;
+    },
+    [appendRconHistory, patchRconHistory, refresh],
+  );
+
+  const applyPlayerList = useCallback(
+    (serverId: string, players: OnlinePlayerInfo[], error: string | null = null) => {
+      setPlayerListsByServer((prev) => {
+        const next = new Map(prev);
+        next.set(serverId, { players, error, loading: false });
+        return next;
+      });
+    },
+    [],
+  );
+
+  const setPlayerListLoading = useCallback((serverId: string, loading: boolean) => {
+    setPlayerListsByServer((prev) => {
+      const next = new Map(prev);
+      const current = next.get(serverId) ?? {
+        players: [],
+        error: null,
+        loading: false,
+      };
+      next.set(serverId, { ...current, loading });
+      return next;
+    });
+  }, []);
+
+  const onRconTabFocusChanged = useCallback(
+    async (serverId: string, isFocused: boolean): Promise<void> => {
+      if (!isFocused) return;
+      setPlayerListLoading(serverId, true);
+      const result = await window.api.notifyRconTabFocus(serverId, true);
+      if (result.ok) {
+        applyPlayerList(serverId, result.data, null);
+        return;
+      }
+      setPlayerListsByServer((prev) => {
+        const next = new Map(prev);
+        const current = next.get(serverId) ?? {
+          players: [],
+          error: null,
+          loading: false,
+        };
+        next.set(serverId, {
+          players: current.players,
+          error: result.error ?? "Could not refresh players",
+          loading: false,
+        });
+        return next;
+      });
+    },
+    [applyPlayerList, setPlayerListLoading],
+  );
+
+  const onRefreshPlayers = useCallback(
+    async (serverId: string): Promise<void> => {
+      setPlayerListLoading(serverId, true);
+      const result = await window.api.refreshPlayerList(serverId);
+      if (result.ok) {
+        applyPlayerList(serverId, result.data, null);
+        return;
+      }
+      setPlayerListsByServer((prev) => {
+        const next = new Map(prev);
+        const current = next.get(serverId) ?? {
+          players: [],
+          error: null,
+          loading: false,
+        };
+        next.set(serverId, {
+          players: current.players,
+          error: result.error ?? "Could not refresh players",
+          loading: false,
+        });
+        return next;
+      });
+    },
+    [applyPlayerList, setPlayerListLoading],
+  );
+
+  const onKickPlayer = useCallback(
+    async (serverId: string, playerKey: string): Promise<boolean> => {
+      setError(null);
+      const command = `KickPlayer ${playerKey}`;
+      const createdAt = new Date().toISOString();
+      const entryId =
+        globalThis.crypto?.randomUUID?.() ?? `${createdAt}-${Math.random().toString(36).slice(2, 10)}`;
+      appendRconHistory(serverId, {
+        id: entryId,
+        command,
+        createdAt,
+        status: "pending",
+        response: null,
+        error: null,
+      });
+      const result = await window.api.kickPlayer(serverId, playerKey);
+      await refresh();
+      patchRconHistory(serverId, entryId, {
+        status: result.ok ? "success" : "error",
+        response: result.ok
+          ? result.data.trim().length > 0
+            ? result.data
+            : null
+          : null,
+        error: result.ok ? null : result.error ?? "Kick failed",
+      });
+      if (!result.ok) {
+        setError(result.error ?? "Kick failed");
+        return false;
+      }
+      return true;
+    },
+    [appendRconHistory, patchRconHistory, refresh],
+  );
+
+  const onBanPlayer = useCallback(
+    async (serverId: string, playerKey: string): Promise<boolean> => {
+      setError(null);
+      const command = `BanPlayer ${playerKey}`;
+      const createdAt = new Date().toISOString();
+      const entryId =
+        globalThis.crypto?.randomUUID?.() ?? `${createdAt}-${Math.random().toString(36).slice(2, 10)}`;
+      appendRconHistory(serverId, {
+        id: entryId,
+        command,
+        createdAt,
+        status: "pending",
+        response: null,
+        error: null,
+      });
+      const result = await window.api.banPlayer(serverId, playerKey);
+      await refresh();
+      patchRconHistory(serverId, entryId, {
+        status: result.ok ? "success" : "error",
+        response: result.ok
+          ? result.data.trim().length > 0
+            ? result.data
+            : null
+          : null,
+        error: result.ok ? null : result.error ?? "Ban failed",
+      });
+      if (!result.ok) {
+        setError(result.error ?? "Ban failed");
+        return false;
+      }
+      return true;
     },
     [appendRconHistory, patchRconHistory, refresh],
   );
@@ -867,6 +1034,13 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             clusterReports={reports}
             events={events}
             rconHistory={rconHistoryByServer.get(overlay.serverId) ?? []}
+            playerList={
+              playerListsByServer.get(overlay.serverId) ?? {
+                players: [],
+                error: null,
+                loading: false,
+              }
+            }
             onboarding={overlay.onboarding === true}
             initialTab={overlay.initialTab}
             logsFocus={overlay.logsFocus}
@@ -920,6 +1094,10 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             onUpdateNow={(id) => startSteamFilesJob(id, "update")}
             onVerifyFiles={(id) => startSteamFilesJob(id, "verify")}
             onSendRcon={(id, command) => sendRconCommand(id, command)}
+            onRconTabFocusChanged={onRconTabFocusChanged}
+            onRefreshPlayers={onRefreshPlayers}
+            onKickPlayer={onKickPlayer}
+            onBanPlayer={onBanPlayer}
             onServerUpdated={() => void refresh()}
           />
         </AppShellLayout>

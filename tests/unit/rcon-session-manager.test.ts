@@ -51,4 +51,30 @@ describe("RconSessionManager", () => {
 
     expect(manager.getStatus("srv-1").status).toBe("connected");
   });
+
+  it("queues concurrent sends so only one command runs at a time", async () => {
+    let inFlight = 0;
+    let maxInFlight = 0;
+    rconMocks.send.mockImplementation(async (command: string) => {
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      inFlight -= 1;
+      return `ok:${command}`;
+    });
+
+    const manager = new RconSessionManager();
+    await manager.connect("srv-1", "127.0.0.1", 27020, "admin");
+
+    const [a, b, c] = await Promise.all([
+      manager.send("srv-1", "ListPlayers"),
+      manager.send("srv-1", "ListPlayers"),
+      manager.send("srv-1", "SaveWorld"),
+    ]);
+
+    expect(maxInFlight).toBe(1);
+    expect(a).toBe("ok:ListPlayers");
+    expect(b).toBe("ok:ListPlayers");
+    expect(c).toBe("ok:SaveWorld");
+  });
 });

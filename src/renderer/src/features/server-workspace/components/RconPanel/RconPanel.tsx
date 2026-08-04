@@ -1,9 +1,13 @@
 import { Badge, Button, Group, Stack, Text, TextInput } from "@mantine/core";
 import type { AppEvent, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import type { ReactElement } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import type { RconHistoryEntry } from "../../serverWorkspaceTypes";
+import {
+  PlayerListSection,
+  type PlayerListState,
+} from "./PlayerListSection";
 import classes from "./RconPanel.module.css";
 
 interface Props {
@@ -11,19 +15,18 @@ interface Props {
   runtime: ServerRuntimeInfo | null;
   events: AppEvent[];
   rconHistory: RconHistoryEntry[];
+  playerList: PlayerListState;
   onSendRcon: (serverId: string, command: string) => Promise<boolean>;
+  onRconTabFocusChanged: (serverId: string, isFocused: boolean) => Promise<void>;
+  onRefreshPlayers: (serverId: string) => Promise<void>;
+  onKickPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
+  onBanPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
 }
 
 type QuickCommand = {
   label: string;
   command: string;
   danger?: boolean;
-};
-
-type MockPlayer = {
-  name: string;
-  steamId: string;
-  onlineFor: string;
 };
 
 const QUICK_COMMANDS: QuickCommand[] = [
@@ -33,12 +36,6 @@ const QUICK_COMMANDS: QuickCommand[] = [
   { label: "GetChat", command: "GetChat" },
   { label: "DoExit", command: "DoExit", danger: true },
 ] as const;
-
-const MOCK_PLAYERS: MockPlayer[] = [
-  { name: "SurvivorOne", steamId: "7656119...", onlineFor: "21m" },
-  { name: "RexHunter", steamId: "7656119...", onlineFor: "7m" },
-  { name: "Maya", steamId: "7656119...", onlineFor: "4m" },
-];
 
 const NO_CONTENT_RESPONSE = "Server received, But no response!!";
 
@@ -67,7 +64,39 @@ function extractCommand(message: string): string {
 export function RconPanel(props: Props): ReactElement {
   const [command, setCommand] = useState("");
   const [sending, setSending] = useState(false);
+  const [rconConnected, setRconConnected] = useState(false);
   const isRunning = props.runtime?.status === "running";
+  const isStarting = props.runtime?.status === "starting";
+
+  // Only poll players once the server is ready (running). Opening the tab
+  // during `starting` must not force an RCON connect while the port is down.
+  useEffect(() => {
+    if (!isRunning) {
+      return;
+    }
+    void props.onRconTabFocusChanged(props.server.id, true);
+    return () => {
+      void props.onRconTabFocusChanged(props.server.id, false);
+    };
+  }, [isRunning, props.server.id, props.onRconTabFocusChanged]);
+
+  useEffect(() => {
+    if (typeof window.api?.getRconStatus !== "function") return;
+    let cancelled = false;
+    const unsubscribe = window.api.onRconStatusChanged((payload) => {
+      if (payload.serverId === props.server.id) {
+        setRconConnected(payload.status === "connected");
+      }
+    });
+    void window.api.getRconStatus(props.server.id).then((result) => {
+      if (cancelled || !result.ok) return;
+      setRconConnected(result.data.status === "connected");
+    });
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [props.server.id]);
 
   const history = useMemo(
     () =>
@@ -110,9 +139,6 @@ export function RconPanel(props: Props): ReactElement {
                   Admin commands for the active server. Commands work best without the 'cheat' prefix (e.g., SaveWorld, ListPlayers, DestroyWildDinos).
                 </Text>
               </div>
-              <Badge size="sm" variant="light" color={isRunning ? "teal" : "gray"}>
-                {isRunning ? "running" : "stopped"}
-              </Badge>
             </div>
 
             <div className={classes.chips}>
@@ -245,41 +271,16 @@ export function RconPanel(props: Props): ReactElement {
         </AppSurfaceCard>
       </div>
 
-      <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.playersPanel}>
-        <Stack gap="xs">
-          <div className={classes.header}>
-            <div>
-              <Text className={classes.title}>Players</Text>
-              <Text size="sm" className={classes.helper}>
-                Mock layout for connected players and admin actions.
-              </Text>
-            </div>
-          </div>
-
-          <div className={classes.playerList}>
-            {MOCK_PLAYERS.map((player) => (
-              <div key={player.name} className={classes.playerItem}>
-                <div className={classes.playerMeta}>
-                  <Text size="sm" className={classes.playerName}>
-                    {player.name}
-                  </Text>
-                  <Text className={classes.historyMeta}>
-                    SteamID: {player.steamId} · Online {player.onlineFor}
-                  </Text>
-                </div>
-                <div className={classes.playerActions}>
-                  <Button size="xs" variant="default" disabled title="Mock only">
-                    Check ID
-                  </Button>
-                  <Button size="xs" variant="light" color="red" disabled title="Mock only">
-                    Kick
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Stack>
-      </AppSurfaceCard>
+      <PlayerListSection
+        serverId={props.server.id}
+        serverRunning={isRunning}
+        serverStarting={isStarting}
+        rconConnected={rconConnected}
+        playerList={props.playerList}
+        onRefreshPlayers={props.onRefreshPlayers}
+        onKickPlayer={props.onKickPlayer}
+        onBanPlayer={props.onBanPlayer}
+      />
     </div>
   );
 }

@@ -1,0 +1,209 @@
+import { existsSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { parseIniTextRows } from "@shared/ini-text";
+import { serverBinaryPath } from "./launch-args";
+
+/** Primary BanList path next to the dedicated binary (ASA convention). */
+export function banListPath(installDir: string): string {
+  return join(dirname(serverBinaryPath(installDir)), "BanList.txt");
+}
+
+/** Known locations ASA / tools have used for BanList.txt. */
+export function banListCandidatePaths(installDir: string): string[] {
+  return [
+    banListPath(installDir),
+    join(installDir, "ShooterGame", "Saved", "BanList.txt"),
+    join(installDir, "BanList.txt"),
+  ];
+}
+
+/**
+ * ASA BanList lines are often `eosId,playerName,0` (no spaces).
+ * RCON `Unban` / `BanPlayer` only accept the id — strip name/flags.
+ */
+export function extractBanListId(token: string): string {
+  const trimmed = token.trim();
+  if (trimmed.length === 0) return "";
+  // Prefer comma (BanList.txt from BanPlayer), then whitespace.
+  const first = trimmed.split(",")[0]?.trim() ?? "";
+  return first.split(/\s+/)[0]?.trim() ?? "";
+}
+
+/** Optional display name from a BanList line (`id,name,flags`). */
+export function extractBanListName(token: string): string | null {
+  const trimmed = token.trim();
+  if (trimmed.length === 0 || !trimmed.includes(",")) return null;
+  const parts = trimmed.split(",");
+  const name = parts[1]?.trim() ?? "";
+  return name.length > 0 ? name : null;
+}
+
+export interface BanListEntry {
+  id: string;
+  name: string | null;
+}
+
+/** Parses BanList text into id + optional name (from ASA `id,name,0` lines). */
+export function parseBanListEntries(raw: string): BanListEntry[] {
+  const byKey = new Map<string, BanListEntry>();
+  for (const line of raw.replace(/\r/g, "").split("\n")) {
+    const trimmed = line.trim();
+    if (trimmed.length === 0 || trimmed.startsWith("#")) continue;
+    const id = extractBanListId(trimmed);
+    if (id.length === 0) continue;
+    const key = id.toLowerCase();
+    const name = extractBanListName(trimmed);
+    const existing = byKey.get(key);
+    if (!existing) {
+      byKey.set(key, { id, name });
+      continue;
+    }
+    if (existing.name === null && name !== null) {
+      byKey.set(key, { id: existing.id, name });
+    }
+  }
+  return [...byKey.values()];
+}
+
+/** One player id per line; blank lines and `#` comments ignored. */
+export function parseBanListText(raw: string): string[] {
+  return parseBanListEntries(raw).map((entry) => entry.id);
+}
+
+export function formatBanListText(ids: string[]): string {
+  if (ids.length === 0) return "";
+  return `${ids.join("\n")}\n`;
+}
+
+/** Writes id-only or `id,name` lines (ASA ignores trailing name fields). */
+export function formatBanListEntries(entries: BanListEntry[]): string {
+  if (entries.length === 0) return "";
+  const lines = entries.map((entry) => {
+    const name = entry.name?.trim();
+    if (name && name.length > 0) {
+      return `${entry.id},${name}`;
+    }
+    return entry.id;
+  });
+  return `${lines.join("\n")}\n`;
+}
+
+export async function readBanList(installDir: string): Promise<string[]> {
+  return (await readBanListEntries(installDir)).map((entry) => entry.id);
+}
+
+export async function readBanListEntries(
+  installDir: string,
+): Promise<BanListEntry[]> {
+  const byKey = new Map<string, BanListEntry>();
+  for (const path of banListCandidatePaths(installDir)) {
+    if (!existsSync(path)) continue;
+    const raw = await readFile(path, "utf8");
+    for (const entry of parseBanListEntries(raw)) {
+      const key = entry.id.toLowerCase();
+      const existing = byKey.get(key);
+      if (!existing) {
+        byKey.set(key, entry);
+        continue;
+      }
+      if (existing.name === null && entry.name !== null) {
+        byKey.set(key, { id: existing.id, name: entry.name });
+      }
+    }
+  }
+  return [...byKey.values()];
+}
+
+/** Ensures the primary BanList.txt exists and returns its absolute path. */
+export async function ensureBanListFile(installDir: string): Promise<string> {
+  const path = banListPath(installDir);
+  if (!existsSync(path)) {
+    await writeFile(path, "", "utf8");
+  }
+  return path;
+}
+
+export async function writeBanList(
+  installDir: string,
+  ids: string[],
+): Promise<void> {
+  const path = banListPath(installDir);
+  await writeFile(path, formatBanListText(ids), "utf8");
+}
+
+/**
+ * Removes a player id from every known BanList.txt under the install,
+ * then rewrites the primary Win64 BanList so it matches.
+ */
+export async function removeFromBanList(
+  installDir: string,
+  playerKey: string,
+): Promise<string[]> {
+  const key = extractBanListId(playerKey).toLowerCase();
+  if (key.length === 0) {
+    return readBanList(installDir);
+  }
+
+  for (const path of banListCandidatePaths(installDir)) {
+    if (!existsSync(path)) continue;
+    const raw = await readFile(path, "utf8");
+    const keptLines: string[] = [];
+    for (const line of raw.replace(/\r/g, "").split("\n")) {
+      const trimmed = line.trim();
+      if (trimmed.length === 0 || trimmed.startsWith("#")) {
+        keptLines.push(line);
+        continue;
+      }
+      if (extractBanListId(trimmed).toLowerCase() === key) {
+        continue;
+      }
+      keptLines.push(line);
+    }
+    // Drop trailing empty lines introduced by join, keep a final newline if non-empty.
+    while (keptLines.length > 0 && keptLines[keptLines.length - 1]?.trim() === "") {
+      keptLines.pop();
+    }
+    const body = keptLines.join("\n");
+    await writeFile(path, body.length === 0 ? "" : `${body}\n`, "utf8");
+  }
+
+  const remaining = (await readBanList(installDir)).filter(
+    (id) => id.toLowerCase() !== key,
+  );
+  await writeBanList(installDir, remaining);
+  return remaining;
+}
+
+/** Resolve the id to send over RCON (never id,name,flags). */
+export async function resolveBanListId(
+  installDir: string,
+  playerKey: string,
+): Promise<string> {
+  const extracted = extractBanListId(playerKey);
+  const key = extracted.toLowerCase();
+  const listed = await readBanList(installDir);
+  return listed.find((id) => id.toLowerCase() === key) ?? extracted;
+}
+
+/** True for empty / blank / N/A INI URL values (BanListURL, etc.). */
+export function isBlankOrNaUrl(value: string | null | undefined): boolean {
+  if (value === null || value === undefined) return true;
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return true;
+  if (/^n\/?a$/i.test(trimmed)) return true;
+  return false;
+}
+
+/** Reads a key from [ServerSettings] in GameUserSettings.ini text. */
+export function readIniServerSetting(
+  text: string,
+  key: string,
+): string | null {
+  const hit = parseIniTextRows(text).find(
+    (row) =>
+      row.section.toLowerCase() === "serversettings" &&
+      row.key.toLowerCase() === key.toLowerCase(),
+  );
+  return hit?.value ?? null;
+}
