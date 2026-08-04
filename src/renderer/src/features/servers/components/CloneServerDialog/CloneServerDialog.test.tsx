@@ -47,14 +47,17 @@ describe("CloneServerDialog", () => {
     );
 
     const name = screen.getByRole("textbox", { name: "Server name" });
-    const installDir = screen.getByRole("textbox", { name: "Install directory" });
-    expect(installDir).toHaveValue("C:\\ARK\\Island-copy");
-    expect(installDir).toHaveAttribute("readonly");
+    expect(screen.getByLabelText("Install directory")).toHaveTextContent(
+      "C:\\ARK\\Island-copy",
+    );
+    expect(screen.queryByRole("textbox", { name: "Install directory" })).toBeNull();
 
     await user.clear(name);
     await user.type(name, "Winter");
 
-    expect(installDir).toHaveValue("C:\\ARK\\Winter");
+    expect(screen.getByLabelText("Install directory")).toHaveTextContent(
+      "C:\\ARK\\Winter",
+    );
   });
 
   it("does not overwrite a Browse-customized install folder when the name changes", async () => {
@@ -73,14 +76,17 @@ describe("CloneServerDialog", () => {
     );
 
     const name = screen.getByRole("textbox", { name: "Server name" });
-    const installDir = screen.getByRole("textbox", { name: "Install directory" });
 
     await user.click(screen.getByRole("button", { name: /Browse/i }));
-    expect(installDir).toHaveValue("D:\\Custom\\Clone");
+    expect(screen.getByLabelText("Install directory")).toHaveTextContent(
+      "D:\\Custom\\Clone",
+    );
 
     await user.clear(name);
     await user.type(name, "Winter");
 
-    expect(installDir).toHaveValue("D:\\Custom\\Clone");
+    expect(screen.getByLabelText("Install directory")).toHaveTextContent(
+      "D:\\Custom\\Clone",
+    );
   });
 });

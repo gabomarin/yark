@@ -1,10 +1,36 @@
-.input {
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xxs);
+  min-width: 0;
   flex: 1;
+}
+
+.row {
+  display: flex;
+  gap: var(--app-space-sm);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   min-width: 0;
 }
 
-.input :global(.mantine-Input-input) {
-  font-family: Consolas, "Cascadia Mono", monospace;
-  font-size: 12px;
-  cursor: default;
+.chip {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.actions {
+  flex: 0 0 auto;
+}
+
+.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--app-space-xs);
+}
+
+.inline .row {
+  flex: 1;
+  min-width: 0;
 }

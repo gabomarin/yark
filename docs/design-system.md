@@ -190,12 +190,12 @@ Operators should recognize filesystem paths the same way everywhere:
 | Need | Use |
 | --- | --- |
 | Configured / known path (Settings, confirm dialogs, resolved previews) | `ReadonlyPath` — bordered monospace chip; pass `emptyLabel` for unset |
-| Editable path + folder picker | `PathField` — read-only monospace `TextInput` + Browse (+ optional Clear); value changes only via those actions |
+| Editable path + folder picker | `PathField` — Settings-style `ReadonlyPath` chip + Browse (+ optional Clear); no keyboard editing |
 
 Do **not** use Mantine `Code`, ad-hoc `ff="monospace"`, or a private Browse row for
-filesystem paths. `PathField` inputs are **read-only** (monospace); the value
-changes only via Browse (and optional Clear). Log / console / INI editors stay
-feature-local monospace (not path chips).
+filesystem paths. `PathField` matches Settings (chip + Browse/Clear); values never
+edit via keyboard. Log / console / INI editors stay feature-local monospace (not
+path chips).
 
 ## Still feature-local (by design)
 

@@ -665,6 +665,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
                         id="backup-destination"
                         className={classes.dirField}
                         size="xs"
+                        inline
                         aria-label="Destination"
                         value={draftPolicy.backupDir ?? ""}
                         placeholder={
