@@ -46,7 +46,7 @@ Do **not** cut a new version/tag on every merge. Group merged tickets into a MIN
 
 Workflow: [`.github/workflows/changelog.yml`](../.github/workflows/changelog.yml)
 
-- Every PR must change root `CHANGELOG.md` (a short bullet under `## [Unreleased]`).
+- Every PR must **change** the `## [Unreleased]` section of root `CHANGELOG.md` (a short bullet under Added/Changed/Fixed/…). Editing only older version sections does not pass.
 - Escape hatch: GitHub label **`skip-changelog`** for non-user-facing chore/CI/docs-only PRs.
 - Agents: keep notes concise — see [`.cursor/rules/changelog.mdc`](../.cursor/rules/changelog.mdc).
 

@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   require-changelog:
-    name: CHANGELOG.md updated
+    name: Unreleased changelog updated
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -22,20 +22,39 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Require CHANGELOG.md in the PR diff
+      - name: Require ## [Unreleased] change
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           SKIP: ${{ contains(github.event.pull_request.labels.*.name, 'skip-changelog') }}
         run: |
           set -euo pipefail
+
           if [ "$SKIP" = "true" ]; then
             echo "Label skip-changelog present — check skipped."
             exit 0
           fi
-          if git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -Fxq 'CHANGELOG.md'; then
-            echo "CHANGELOG.md changed in this PR."
-            exit 0
+
+          # Body of ## [Unreleased] until the next ## [ heading (Keep a Changelog).
+          extract_unreleased() {
+            awk '
+              /^## \[Unreleased\]/ { capture = 1; next }
+              /^## \[/ && capture { exit }
+              capture { print }
+            '
+          }
+
+          base_section="$(git show "${BASE_SHA}:CHANGELOG.md" 2>/dev/null | extract_unreleased || true)"
+          head_section="$(git show "${HEAD_SHA}:CHANGELOG.md" 2>/dev/null | extract_unreleased || true)"
+
+          if [ -z "$head_section" ]; then
+            echo "::error title=Missing Unreleased::CHANGELOG.md must include a ## [Unreleased] section with notes for this PR."
+            exit 1
           fi
-          echo "::error title=Missing changelog::PRs must update CHANGELOG.md under ## [Unreleased] (Keep a Changelog). For non-user-facing work only, add the skip-changelog label. See docs/versioning.md and .cursor/rules/changelog.mdc."
-          exit 1
+
+          if [ "$base_section" = "$head_section" ]; then
+            echo "::error title=Unreleased unchanged::PRs must change the ## [Unreleased] section of CHANGELOG.md (not only older version entries). For non-user-facing work only, add the skip-changelog label. See docs/versioning.md and .cursor/rules/changelog.mdc."
+            exit 1
+          fi
+
+          echo "## [Unreleased] changed between base and head."

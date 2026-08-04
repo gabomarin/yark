@@ -16,7 +16,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Changed
 
 - Filesystem paths use shared read-only chips with Browse/Clear (`ReadonlyPath` / `PathField`) across Settings, servers, clusters, and backups (#52).
-- Pull requests must update `CHANGELOG.md` (or use the `skip-changelog` label); agents follow `.cursor/rules/changelog.mdc`.
+- Pull requests must change the `## [Unreleased]` section of `CHANGELOG.md` (or use the `skip-changelog` label); agents follow `.cursor/rules/changelog.mdc`.
 
 ## [0.5.2] - 2026-08-02
 

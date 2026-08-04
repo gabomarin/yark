@@ -10,8 +10,8 @@ See `.cursor/rules/english-project-language.mdc`.
 ## Changelog
 
 Update `CHANGELOG.md` under `## [Unreleased]` on feature branches (one short
-operator-facing bullet). CI fails PRs that omit it unless the PR has the
-`skip-changelog` label. Details: [`.cursor/rules/changelog.mdc`](.cursor/rules/changelog.mdc),
+operator-facing bullet). CI fails PRs that leave that section unchanged unless
+the PR has the `skip-changelog` label. Details: [`.cursor/rules/changelog.mdc`](.cursor/rules/changelog.mdc),
 [docs/versioning.md](docs/versioning.md).
 
 ## Pull request merges

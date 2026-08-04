@@ -31,4 +31,4 @@ Every user-visible or operator-facing change on a feature branch must update roo
 ## When you may skip
 
 - Pure chore/CI/docs with **no** product or operator impact: ask for / apply the GitHub label `skip-changelog` (CI enforces this).
-- CI fails the PR if `CHANGELOG.md` is unchanged and that label is absent (`.github/workflows/changelog.yml`).
+- CI fails the PR if the `## [Unreleased]` section of `CHANGELOG.md` is unchanged and that label is absent (`.github/workflows/changelog.yml`).
