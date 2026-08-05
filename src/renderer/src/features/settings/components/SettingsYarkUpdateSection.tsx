@@ -75,10 +75,21 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
   const runCheck = async () => {
     setActionBusy(true);
     setActionError(null);
+    setStatus((prev) => ({
+      ...prev,
+      phase: "checking",
+      error: null,
+      percent: null,
+    }));
     const result = await window.api.checkForAppUpdate();
     setActionBusy(false);
     if (!result.ok) {
       setActionError(result.error ?? "Could not check for YARK updates");
+      setStatus((prev) => ({
+        ...prev,
+        phase: "error",
+        error: result.error ?? "Could not check for YARK updates",
+      }));
       return;
     }
     setStatus(result.data);
@@ -116,10 +127,10 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
   };
 
   const checking = status.phase === "checking" || actionBusy;
-  const canDownload =
+  const showDownload =
     status.isPackaged
-    && status.phase === "available"
-    && !actionBusy;
+    && (status.phase === "available" || status.phase === "downloading");
+  const canDownload = status.phase === "available" && !actionBusy;
   const canInstall =
     status.isPackaged
     && status.phase === "ready"
@@ -155,7 +166,7 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
           >
             Check now
           </Button>
-          {status.isPackaged && (
+          {showDownload && (
             <Button
               size="compact-xs"
               leftSection={<CloudArrowDown size={14} />}

@@ -105,16 +105,17 @@ export function parseReleaseVersion(version: string): string | null {
 /**
  * Compare SemVer-ish strings (optional leading `v`, optional prerelease suffix).
  * Returns negative if `a < b`, 0 if equal, positive if `a > b`.
+ * Prerelease identifiers follow SemVer rules (numeric vs alphanumeric, dotted parts).
  */
 export function compareSemver(a: string, b: string): number {
   const left = stripVersionPrefix(a);
   const right = stripVersionPrefix(b);
-  const leftSplit = left.split("-");
-  const rightSplit = right.split("-");
-  const leftCore = leftSplit[0] ?? "";
-  const rightCore = rightSplit[0] ?? "";
-  const leftPre = leftSplit[1] ?? "";
-  const rightPre = rightSplit[1] ?? "";
+  const leftDash = left.indexOf("-");
+  const rightDash = right.indexOf("-");
+  const leftCore = leftDash === -1 ? left : left.slice(0, leftDash);
+  const rightCore = rightDash === -1 ? right : right.slice(0, rightDash);
+  const leftPre = leftDash === -1 ? "" : left.slice(leftDash + 1);
+  const rightPre = rightDash === -1 ? "" : right.slice(rightDash + 1);
   const leftParts = leftCore.split(".").map((part) => Number.parseInt(part, 10) || 0);
   const rightParts = rightCore.split(".").map((part) => Number.parseInt(part, 10) || 0);
   const len = Math.max(leftParts.length, rightParts.length);
@@ -123,10 +124,33 @@ export function compareSemver(a: string, b: string): number {
     const r = rightParts[i] ?? 0;
     if (l !== r) return l - r;
   }
-  if (leftPre === rightPre) return 0;
-  if (leftPre === "") return 1;
-  if (rightPre === "") return -1;
-  return leftPre.localeCompare(rightPre);
+  return comparePrereleaseIdentifiers(leftPre, rightPre);
+}
+
+function comparePrereleaseIdentifiers(left: string, right: string): number {
+  if (left === right) return 0;
+  if (left === "") return 1;
+  if (right === "") return -1;
+  const leftIds = left.split(".");
+  const rightIds = right.split(".");
+  const len = Math.max(leftIds.length, rightIds.length);
+  for (let i = 0; i < len; i += 1) {
+    const l = leftIds[i];
+    const r = rightIds[i];
+    if (l === undefined) return -1;
+    if (r === undefined) return 1;
+    const lNumeric = /^\d+$/.test(l);
+    const rNumeric = /^\d+$/.test(r);
+    if (lNumeric && rNumeric) {
+      const diff = Number(l) - Number(r);
+      if (diff !== 0) return diff;
+      continue;
+    }
+    if (lNumeric !== rNumeric) return lNumeric ? -1 : 1;
+    const cmp = l.localeCompare(r);
+    if (cmp !== 0) return cmp;
+  }
+  return 0;
 }
 
 export function installBlockMessage(

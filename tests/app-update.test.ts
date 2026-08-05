@@ -30,6 +30,9 @@ describe("app-update helpers", () => {
     expect(compareSemver("v0.6.0", "0.5.9")).toBeGreaterThan(0);
     expect(compareSemver("1.0.0", "1.0.0")).toBe(0);
     expect(compareSemver("1.0.0-alpha", "1.0.0")).toBeLessThan(0);
+    expect(compareSemver("1.0.0-alpha.2", "1.0.0-alpha.10")).toBeLessThan(0);
+    expect(compareSemver("1.0.0-alpha.10", "1.0.0-beta.1")).toBeLessThan(0);
+    expect(compareSemver("1.0.0-rc.1", "1.0.0")).toBeLessThan(0);
   });
 
   it("allows GitHub prereleases only while on 0.x", () => {
