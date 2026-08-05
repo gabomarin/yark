@@ -9,14 +9,15 @@ export type Screenshot = {
 export const screenshots: Screenshot[] = [
   {
     src: withBase("/screenshots/overview.png"),
-    alt: "Servers overview listing multiple ARK server profiles with status, map, and recent activity",
-    caption: "Servers overview — profiles, status, and recent activity in one place.",
+    alt: "Servers overview listing ARK profiles with map artwork, status, and recent activity",
+    caption:
+      "Servers overview — profiles with map artwork, status, and recent activity in one place.",
   },
   {
     src: withBase("/screenshots/workspace-server.png"),
-    alt: "Server configuration form with identity, networking ports, access passwords, and cluster fields",
+    alt: "Server configuration with identity, Move installation, networking, cluster, and Auto-start with YARK",
     caption:
-      "Server configuration — identity, ports, access, and cluster. CurseForge mods live on the Mods tab.",
+      "Server configuration — identity, Move installation, ports, access, cluster, and Auto-start. Mods live on the Mods tab.",
   },
   {
     src: withBase("/screenshots/workspace-mods.png"),
@@ -32,9 +33,9 @@ export const screenshots: Screenshot[] = [
   },
   {
     src: withBase("/screenshots/workspace-backups.png"),
-    alt: "Per-server Backups tab with world save destination, schedule controls, and backup history",
+    alt: "Per-server Backups tab with destination, schedule, Import, and Backup actions",
     caption:
-      "Server Backups — create, schedule, and restore world / players / INI archives per profile.",
+      "Server Backups — create, schedule, import, and restore world / players / INI archives per profile.",
   },
   {
     src: withBase("/screenshots/configuration-wizard.png"),
@@ -44,8 +45,9 @@ export const screenshots: Screenshot[] = [
   },
   {
     src: withBase("/screenshots/backups.png"),
-    alt: "Backups dashboard showing backup health across all servers, disk usage, volumes, and destinations",
-    caption: "Backups — health, disk usage, and shared destination settings across servers.",
+    alt: "Backups dashboard with fleet health badges, disk usage, volumes, and per-server destinations",
+    caption:
+      "Backups — fleet health badges, disk usage, destinations, and alerts across servers.",
   },
   {
     src: withBase("/screenshots/clusters.png"),
@@ -61,7 +63,8 @@ export const screenshots: Screenshot[] = [
   },
   {
     src: withBase("/screenshots/settings.png"),
-    alt: "Settings page with SteamCMD path, default base folder, and app preferences",
-    caption: "Settings — SteamCMD path, default base folder, and app-wide preferences.",
+    alt: "Settings page showing log retention and YARK updates alongside SteamCMD and desktop prefs",
+    caption:
+      "Settings — SteamCMD, log retention, YARK updates, auto-start summary, and desktop preferences.",
   },
 ];

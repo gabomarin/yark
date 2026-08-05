@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-08-05
+
 ### Added
 
 - In-app **YARK updates** (Settings + accented sidebar version): quiet check after launch, download and restart-to-install from GitHub Releases, safe busy-state blocking, and an assisted Windows installer for choosing the destination and shortcuts (#165).
@@ -228,6 +230,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Tracked in-repo TODO / historical planning docs (moved to local agent context).
 
 [Unreleased]: #unreleased
+[0.6.0]: #060---2026-08-05
+[0.5.2]: #052---2026-08-02
 [0.5.1]: #051---2026-08-02
 [0.5.0]: #050---2026-08-01
 [0.4.0]: #040---2026-07-30

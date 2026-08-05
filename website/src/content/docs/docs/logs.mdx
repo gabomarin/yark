@@ -61,6 +61,12 @@ Clears are **per section** (events ≠ runtime buffer ≠ update log files). The
 
 Export is available for resolved events and related sections when you need to share diagnostics (**strip passwords** first).
 
+## Log retention
+
+Settings → **Log retention** bounds YARK-owned history: SQLite events and SteamCMD update log files under app userData. Defaults are conservative; you can change limits and run **Clean up now** (preview → confirm).
+
+ASA runtime logs under the install (`Saved/Logs`, including `ShooterGame.log`) are **never** deleted by retention. Deleted retained data is not recoverable.
+
 <Aside type="note">
   Live SteamCMD console during a job appears on the progress dock. The Updates log section stores
   **files after jobs**, not the live stream.
