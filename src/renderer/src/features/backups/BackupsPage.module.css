@@ -4,6 +4,11 @@
   overflow: auto;
 }
 
+/* Keep banners / cards at content height so fillViewport does not crush them. */
+.content > * {
+  flex-shrink: 0;
+}
+
 /* Prefer AppSurfaceCard; keep transitional layout helpers only. */
 
 .statStrip {
@@ -86,15 +91,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
-}
-
-.alertsBand {
-  gap: 8px;
-}
-
-.alertRow {
-  padding-top: 10px;
-  padding-bottom: 10px;
 }
 
 .cleanupPreview {
@@ -291,6 +287,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.backupFileName {
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mantine-font-family-monospace, ui-monospace, monospace);
+  font-size: 11px;
 }
 
 .backupActions {

@@ -31,7 +31,7 @@ import type {
 import type { UiDensity } from "./ui-density";
 import type { DesktopShellPreferences } from "./desktop-shell";
 
-export type PickPathKind = "directory" | "file";
+export type PickPathKind = "directory" | "file" | "save";
 
 /** App-managed folders under Electron userData (Settings diagnostics). */
 export type AppDataFolderKind = "app" | "backups" | "updateLogs" | "steamcmd";
@@ -120,6 +120,8 @@ export const IPC = {
   backupsResolveRoot: "backups:resolve-root",
   backupsOpenFolder: "backups:open-folder",
   backupsOpenRoot: "backups:open-root",
+  backupsExport: "backups:export",
+  backupsImport: "backups:import",
   backupsFleetSummary: "backups:fleet-summary",
   backupsGetDiskAlertSettings: "backups:get-disk-alert-settings",
   backupsSetDiskAlertSettings: "backups:set-disk-alert-settings",
@@ -333,6 +335,18 @@ export interface RendererApi {
   resolveBackupRoot(serverId: string): Promise<IpcResult<string>>;
   openBackupFolder(serverId: string, backupId: string): Promise<IpcResult<void>>;
   openBackupRoot(serverId: string): Promise<IpcResult<void>>;
+  /** Copy a completed managed archive to a user-chosen path (ZIP). */
+  exportBackup(
+    serverId: string,
+    backupId: string,
+    destinationPath: string,
+  ): Promise<IpcResult<string>>;
+  /** Validate and catalog a YARK ZIP under the server backup root (no restore). */
+  importBackup(
+    serverId: string,
+    kind: BackupKind,
+    sourcePath: string,
+  ): Promise<IpcResult<BackupRecord>>;
   getBackupFleetSummary(): Promise<IpcResult<BackupFleetSummary>>;
   getBackupDiskAlertSettings(): Promise<IpcResult<BackupDiskAlertSettings>>;
   setBackupDiskAlertSettings(

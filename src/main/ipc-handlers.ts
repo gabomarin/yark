@@ -398,6 +398,21 @@ export function registerIpcHandlers(
     (_e, kind: PickPathKind, defaultPath?: string, title?: string) =>
       wrap(async () => {
         const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
+        if (kind === "save") {
+          const saveOptions: SaveDialogOptions = {
+            title,
+            defaultPath,
+            filters: [{ name: "ZIP archives", extensions: ["zip"] }],
+          };
+          const result =
+            win !== undefined
+              ? await dialog.showSaveDialog(win, saveOptions)
+              : await dialog.showSaveDialog(saveOptions);
+          if (result.canceled || result.filePath === undefined || result.filePath.length === 0) {
+            return null;
+          }
+          return result.filePath;
+        }
         const options: OpenDialogOptions = {
           title,
           defaultPath,
@@ -699,6 +714,23 @@ export function registerIpcHandlers(
         throw new Error(`Could not open backup destination: ${error}`);
       }
     }),
+  );
+
+  ipcMain.handle(
+    IPC.backupsExport,
+    (_e, serverId: string, backupId: string, destinationPath: string) =>
+      wrap(() => backups.exportBackup(serverId, backupId, destinationPath)),
+  );
+
+  ipcMain.handle(
+    IPC.backupsImport,
+    (_e, serverId: string, kind: BackupKind, sourcePath: string) =>
+      wrap(() => {
+        if (instances.isStopInProgress(serverId)) {
+          throw new Error("Cannot import backups while stop backup is in progress");
+        }
+        return backups.importBackup(serverId, kind, sourcePath);
+      }),
   );
 
   ipcMain.handle(IPC.backupsFleetSummary, () =>

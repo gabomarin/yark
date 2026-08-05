@@ -11,16 +11,23 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- **Portable backup export/import** copies a completed archive to a chosen path or catalogs a validated YARK ZIP into a server’s backup history without restoring; managed and export filenames end with a compact local date (`YYYYMMDD-HHmmss`), and each history row can delete that archive (#15).
 - **Move installation** moves same-drive folders in place (or copies across drives with live progress), verifies, commits the profile path, then removes the previous folder. Install path is read-only in normal server editing (#56).
 - Opt-in **Auto-start with YARK** per server profile (default off). After leave-running reattach, eligible servers start sequentially through the normal start path; Inactive, already-running, and uncertain reattach cases are skipped with audit events. Configure on the Server tab; Settings shows a summary of opted-in profiles (#53).
 - **Map artwork** thumbs for known ASA maps on the server list and workspace header (#158).
 
 ### Fixed
 
+- Sidebar **Backups** suppresses “schedule on, no world backup yet” fleet alerts (and At risk) while the server is stopped; unknown + tooltip cover that idle state instead.
+- Sidebar **Backups** no longer resets unsaved schedule/policy edits when App polls `listServers` (~5s) (#15).
+- Backup **create/restore** (and schedule edits) require installation health Ready; empty installs can still list, export, import, and delete archives (#15).
+- Backup **export** no longer fails with `EPERM` when saving to a Windows drive root (e.g. `H:\archive.zip`), and the suggested filename keeps a real `.zip` extension instead of turning it into `-zip.zip` (#15).
 - **Move installation** recovers orphaned cross-drive staging folders on startup, surfaces cancel failures in the dialog, estimates copy progress from free disk space, clears leftover cleanup state when leaving the old folder, and shows distinct Move-button guidance for an active move vs a files job (#56).
 
 ### Changed
 
+- Sidebar **Backups** health badges (Protected / At risk / Critical / Unknown) show plain-language tooltips.
+- Sidebar **Backups** fleet alerts use a compact scrollable Alerts panel (readable wrapped messages; page banners no longer crush under fill-viewport layout) instead of stacked full-width banners.
 - Filesystem paths use shared read-only chips with Browse/Clear (`ReadonlyPath` / `PathField`) across Settings, servers, clusters, and backups (#52).
 - Pull requests must change the `## [Unreleased]` section of `CHANGELOG.md` (or use the `skip-changelog` label); agents follow `.cursor/rules/changelog.mdc`.
 

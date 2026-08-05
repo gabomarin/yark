@@ -274,6 +274,7 @@ export function ServerWorkspacePage(props: Props): ReactElement {
               value={workspaceTab}
               server={selectedServer}
               runtime={runtime}
+              installation={installation}
               events={props.events}
               rconHistory={props.rconHistory}
               playerList={props.playerList}

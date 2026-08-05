@@ -8,6 +8,7 @@ import {
   isReadableZipArchive,
   readZipTextEntry,
   safeExtractTarget,
+  validatePortableZip,
   zipDirectory,
   zipHasBackupLayout,
 } from "@backend/domains/backups/backup-archive";
@@ -187,5 +188,56 @@ describe("backup-archive zip safety", () => {
     await expect(zipHasBackupLayout(savedZip)).resolves.toBe(true);
     await expect(zipHasBackupLayout(noiseZip)).resolves.toBe(false);
     await expect(zipHasBackupLayout(join(root, "missing.zip"))).resolves.toBe(false);
+  });
+
+  it("validatePortableZip accepts matching kind payload", async () => {
+    const root = await makeTempDir("ark-portable-ok-");
+    const source = join(root, "src");
+    await mkdir(join(source, "SavedArks"), { recursive: true });
+    await writeFile(
+      join(source, "manifest.json"),
+      JSON.stringify({ backup: { kind: "world", id: "w1" } }),
+      "utf8",
+    );
+    await writeFile(join(source, "SavedArks", "map.ark"), "WORLD", "utf8");
+    const zipPath = join(root, "world.zip");
+    await zipDirectory(source, zipPath);
+
+    await expect(validatePortableZip(zipPath, "world")).resolves.toEqual({
+      manifestKind: "world",
+    });
+  });
+
+  it("validatePortableZip rejects kind mismatch and traversal", async () => {
+    const root = await makeTempDir("ark-portable-bad-");
+    const iniSrc = join(root, "ini-src");
+    await mkdir(join(iniSrc, "ConfigWindowsServer"), { recursive: true });
+    await writeFile(
+      join(iniSrc, "manifest.json"),
+      JSON.stringify({ backup: { kind: "ini" } }),
+      "utf8",
+    );
+    await writeFile(join(iniSrc, "ConfigWindowsServer", "Game.ini"), "[/script]", "utf8");
+    const iniZip = join(root, "ini.zip");
+    await zipDirectory(iniSrc, iniZip);
+
+    await expect(validatePortableZip(iniZip, "world")).rejects.toThrow(
+      /missing expected SavedArks|kind is ini/i,
+    );
+
+    const slipZip = join(root, "slip.zip");
+    await writeFile(slipZip, buildStoredZip("../evil.txt", "pwned"));
+    await expect(validatePortableZip(slipZip, "world")).rejects.toThrow(
+      /Unsafe zip entry|corrupt|unreadable|missing expected/i,
+    );
+  });
+
+  it("validatePortableZip rejects corrupt archives", async () => {
+    const root = await makeTempDir("ark-portable-corrupt-");
+    const badZip = join(root, "bad.zip");
+    await writeFile(badZip, "not-a-zip", "utf8");
+    await expect(validatePortableZip(badZip, "world")).rejects.toThrow(
+      /corrupt|unreadable/i,
+    );
   });
 });

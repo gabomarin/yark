@@ -1,6 +1,6 @@
 import { EventEmitter } from "node:events";
 import { existsSync } from "node:fs";
-import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { cp, copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
@@ -9,6 +9,7 @@ import {
   formatPlayerSessionNotes,
   playersRetentionKey,
 } from "@shared/backup-player-meta";
+import { formatBackupFileStamp } from "@shared/backup-file-stamp";
 import type {
   BackupCleanupOptions,
   BackupCleanupPreview,
@@ -49,14 +50,18 @@ import {
   isZipBackupPath,
   kindFromSubdirName,
   readZipTextEntry,
+  validatePortableZip,
   zipDirectory,
   zipHasBackupLayout,
 } from "./backup-archive";
 import {
+  ensureParentDir,
   isBackupDestinationReachable,
   readVolumeSpace,
   volumeRootForPath,
 } from "./backup-disk";
+import { classifyInstallHealth } from "../instances/server-installation";
+import { serverBinaryPath } from "../instances/launch-args";
 
 export {
   backupFinishedAt,
@@ -86,9 +91,9 @@ export function computeBackupServerHealth(input: {
   // INI / player failures are noisy vs world protection — warn, do not mark critical.
   if (input.failed24h > 0) return "warning";
   // World schedule skips stopped servers — without a completed world archive this
-  // is never "Protected", whether the process is running or not.
+  // is never "Protected" while the process is active (first cycle still pending).
   if (input.scheduleEnabled && !input.hasWorldBackup) {
-    return "warning";
+    return input.serverRunning ? "warning" : "unknown";
   }
   if (input.stale) return "warning";
   if (!input.scheduleEnabled && !input.hasWorldBackup) return "unknown";
@@ -689,17 +694,14 @@ export class BackupService extends EventEmitter {
           message: `${server.name}: backup destination is missing or unreachable (${resolvedRoot})`,
         });
       }
-      if (policy.enabled && latestWorld === null) {
-        const runningHint = this.processes.isActive(server.id)
-          ? "waiting for the next scheduled cycle"
-          : "start the server so the world schedule can run";
+      if (policy.enabled && latestWorld === null && this.processes.isActive(server.id)) {
         alerts.push({
           id: `never_backed_up:${server.id}`,
           kind: "never_backed_up",
           severity: "warning",
           serverId: server.id,
           volumePath: null,
-          message: `${server.name}: world schedule is on but no completed world backup exists yet (${runningHint})`,
+          message: `${server.name}: world schedule is on but no completed world backup exists yet (waiting for the next scheduled cycle)`,
         });
       } else if (stale && latestWorld !== null) {
         alerts.push({
@@ -882,8 +884,146 @@ export class BackupService extends EventEmitter {
     return deleted;
   }
 
+  /**
+   * Copy a completed managed archive to `destinationPath`.
+   * ZIP archives are copied as-is; legacy folders are zipped into the destination.
+   * Does not mutate the managed archive or live server files.
+   */
+  async exportBackup(
+    serverId: string,
+    backupId: string,
+    destinationPath: string,
+  ): Promise<string> {
+    this.mustServer(serverId);
+    const backup = this.backups.getBackup(backupId);
+    if (backup === null || backup.serverId !== serverId) {
+      throw new Error("Backup not found");
+    }
+    if (backup.status !== "completed") {
+      throw new Error("Only completed backups can be exported");
+    }
+    const dest = destinationPath.trim();
+    if (dest.length === 0) {
+      throw new Error("Export destination is required");
+    }
+    const destZip = isZipBackupPath(dest) ? dest : `${dest}.zip`;
+    if (!existsSync(backup.path)) {
+      throw new Error("Backup archive is missing on disk");
+    }
+
+    await ensureParentDir(destZip);
+    try {
+      if (isZipBackupPath(backup.path)) {
+        await copyFile(backup.path, destZip);
+      } else {
+        await zipDirectory(backup.path, destZip);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(`Could not write export destination: ${message}`);
+    }
+
+    return destZip;
+  }
+
+  /**
+   * Validate a portable YARK ZIP and copy it into the managed catalog.
+   * Never restores live server files.
+   */
+  async importBackup(
+    serverId: string,
+    kind: BackupKind,
+    sourcePath: string,
+  ): Promise<BackupRecord> {
+    const server = this.mustServer(serverId);
+    const source = sourcePath.trim();
+    if (source.length === 0) {
+      throw new Error("Import source path is required");
+    }
+    if (!existsSync(source)) {
+      throw new Error("Import archive not found");
+    }
+
+    await validatePortableZip(source, kind);
+
+    const sourceResolved = resolve(source);
+    const existingAtSource = this.backups.getBackupByPath(serverId, sourceResolved);
+    if (existingAtSource !== null) {
+      throw new Error("Archive is already in this server's backup catalog");
+    }
+
+    const policy = this.backups.getPolicy(serverId);
+    const rootDir = resolveServerBackupRoot(server.installDir, policy.backupDir);
+    const kindDir = join(rootDir, backupKindSubdir(kind));
+    await mkdir(kindDir, { recursive: true });
+
+    const stamp = formatBackupFileStamp();
+    const preferredName = `${slug(server.name)}-${kind}-imported-${stamp}.zip`;
+    const destPath = this.allocateUniqueZipPath(kindDir, preferredName);
+
+    try {
+      await copyFile(sourceResolved, destPath);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(`Could not copy import into backup destination: ${message}`);
+    }
+
+    let record: BackupRecord;
+    try {
+      const info = await stat(destPath);
+      const manifestRaw = await readZipTextEntry(destPath, "manifest.json");
+      const parsed = this.parseManifest(manifestRaw);
+      const createdAt = parsed?.createdAt ?? info.mtime.toISOString();
+      const type = parsed?.type ?? "manual";
+      const id =
+        parsed?.id !== undefined && this.backups.getBackup(parsed.id) !== null
+          ? undefined
+          : parsed?.id;
+      record = this.backups.insertCompletedBackup({
+        id,
+        serverId,
+        type,
+        kind: parsed?.kind ?? kind,
+        path: destPath,
+        sizeBytes: info.size,
+        createdAt,
+        completedAt: createdAt,
+        notes: parsed?.notes ?? `Imported portable archive: ${basename(sourceResolved)}`,
+      });
+    } catch (err) {
+      await rm(destPath, { force: true }).catch(() => undefined);
+      throw err instanceof Error ? err : new Error(String(err));
+    }
+
+    this.servers.addEvent(
+      serverId,
+      "backup_created",
+      "info",
+      `Imported ${kind} backup: ${basename(destPath)}`,
+    );
+    this.emitChanged(serverId);
+    return record;
+  }
+
+  private allocateUniqueZipPath(kindDir: string, preferredName: string): string {
+    const safeName = basename(preferredName);
+    const candidate = join(kindDir, safeName);
+    if (!existsSync(candidate)) {
+      return candidate;
+    }
+    const stem = safeName.replace(/\.zip$/i, "");
+    for (let i = 2; i < 1000; i += 1) {
+      const next = join(kindDir, `${stem}-${i}.zip`);
+      if (!existsSync(next)) {
+        return next;
+      }
+    }
+    throw new Error("Could not allocate a unique import archive name");
+  }
+
   async restoreBackup(serverId: string, backupId: string): Promise<void> {
     const server = this.mustServer(serverId);
+    this.assertInstallReadyForLiveOps(server);
     if (this.processes.isActive(serverId)) {
       throw new Error("Stop the server before restoring a backup");
     }
@@ -971,6 +1111,7 @@ export class BackupService extends EventEmitter {
     }
 
     if (!this.processes.isActive(server.id)) return;
+    if (!this.isInstallReady(server)) return;
 
     this.scheduledWorldInFlight.add(server.id);
     try {
@@ -1036,6 +1177,20 @@ export class BackupService extends EventEmitter {
       throw new Error("Server does not exist");
     }
     return server;
+  }
+
+  /** Create/restore require a Ready ASA install (exe present). Import/export do not. */
+  private assertInstallReadyForLiveOps(server: ServerProfile): void {
+    const binaryPath = serverBinaryPath(server.installDir);
+    const { health } = classifyInstallHealth(server.installDir, binaryPath);
+    if (health !== "ready") {
+      throw new Error("Install server files before creating or restoring backups");
+    }
+  }
+
+  private isInstallReady(server: ServerProfile): boolean {
+    const binaryPath = serverBinaryPath(server.installDir);
+    return classifyInstallHealth(server.installDir, binaryPath).health === "ready";
   }
 
   private readDiskAlertSettings(): BackupDiskAlertSettings {
@@ -1384,20 +1539,21 @@ export class BackupService extends EventEmitter {
     options?: { playerKey?: string; waitForProfile?: boolean },
   ): Promise<BackupRecord | null> {
     const server = this.mustServer(serverId);
+    this.assertInstallReadyForLiveOps(server);
     const policy = this.backups.getPolicy(serverId);
     const rootDir = resolveServerBackupRoot(server.installDir, policy.backupDir);
     const kindDir = join(rootDir, backupKindSubdir(kind));
 
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const stamp = formatBackupFileStamp();
     const playerSlug =
       options?.playerKey !== undefined && options.playerKey.length > 0
         ? `-${slug(options.playerKey).slice(0, 24)}`
         : "";
-    const baseName = `${timestamp}-${type}-${kind}${playerSlug}-${slug(server.name)}`;
-    const zipPath = join(kindDir, `${baseName}.zip`);
+    const preferredName = `${slug(server.name)}-${kind}-${type}${playerSlug}-${stamp}.zip`;
+    await mkdir(kindDir, { recursive: true });
+    const zipPath = this.allocateUniqueZipPath(kindDir, preferredName);
     const stagingDir = join(tmpdir(), `yark-backup-${randomUUID()}`);
 
-    await mkdir(kindDir, { recursive: true });
     await mkdir(stagingDir, { recursive: true });
 
     const record = this.backups.createBackupStart({
@@ -1425,8 +1581,14 @@ export class BackupService extends EventEmitter {
         && packaged.meta.empty === true
       ) {
         await rm(stagingDir, { recursive: true, force: true });
+        await rm(zipPath, { force: true }).catch(() => undefined);
         this.backups.deleteBackupRecord(record.id);
+        this.creatingBackupIds.delete(record.id);
         return null;
+      }
+
+      if (kind === "world" && packaged.meta.empty === true) {
+        throw new Error("No world save data found to back up");
       }
 
       await writeFile(

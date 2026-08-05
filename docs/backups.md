@@ -27,6 +27,7 @@ Triggers are separated on purpose:
 | --- | --- |
 | Service | `src/backend/domains/backups/backup-service.ts` |
 | ZIP helpers | `src/backend/domains/backups/backup-archive.ts` |
+| Portable UI helpers | `src/renderer/src/features/backups/backupPortability.ts` |
 | Disk / volume helpers | `src/backend/domains/backups/backup-disk.ts` |
 | Scheduler (60s tick) | `src/backend/domains/backups/backup-scheduler.ts` |
 | Player sessions | `src/backend/domains/backups/player-session-watcher.ts` |
@@ -73,13 +74,16 @@ Example policy write (IPC / UI draft — omit `serverId` / `updatedAt`):
 ```text
 {backupRoot}/
   World/
-    {ISO-timestamp}-…-world-….zip
+    {server}-{kind}-{type}-{YYYYMMDD-HHmmss}.zip
   Player profiles/
-    {ISO-timestamp}-…-players-….zip
+    {server}-{kind}-{type}-{player?}-{YYYYMMDD-HHmmss}.zip
   INI/
-    {ISO-timestamp}-…-ini-….zip
+    {server}-{kind}-{type}-{YYYYMMDD-HHmmss}.zip
 ```
 
+New archives put a compact local date stamp (`YYYYMMDD-HHmmss`) at the **end** of
+the filename (before `.zip`), after the server slug and kind/type. Portable
+exports use the same stamp style.
 Each ZIP is built from a staging directory that includes `manifest.json` plus
 the kind payload (`SavedArks/`, `PlayerProfiles/`, or `ConfigWindowsServer/`).
 Legacy flat layout (archives directly under `{backupRoot}`) and loose folders
@@ -111,6 +115,8 @@ Channels in `src/shared/ipc.ts` (preload wrappers return `IpcResult<T>`):
 | `backups:get-policy` / `backups:set-policy` | policy fields | `BackupPolicy` |
 | `backups:resolve-root` | `serverId` | `string` |
 | `backups:open-folder` / `backups:open-root` | ids | `void` |
+| `backups:export` | `serverId`, `backupId`, `destinationPath` | exported ZIP path |
+| `backups:import` | `serverId`, `kind`, `sourcePath` | `BackupRecord` (catalog only) |
 | `backups:fleet-summary` | — | `BackupFleetSummary` |
 | `backups:get-disk-alert-settings` / `backups:set-disk-alert-settings` | thresholds | settings |
 | `backups:preview-cleanup` / `backups:run-cleanup` | cleanup options | preview / result |
@@ -128,12 +134,38 @@ and `createPreRestartBackup` (from `InstanceService.restart` / `servers:restart`
 
 ## Workflows
 
+### Create / restore require Ready install
+
+Manual create, schedule, player-session, INI-on-save, and restore all require
+installation health **Ready** (`ArkAscendedServer.exe` present). The Backups tab
+stays available for list / export / import / delete so operators can stage
+portable archives before Install finishes.
+
 ### Manual create
 
 1. Workspace **Backups** tab calls `createManualBackup(serverId, [activeKind])`.
 2. Service runs `flushWorldIfActive` (RCON `SaveWorld` when the process is active; failures are ignored).
 3. Each requested kind is packaged into a ZIP; empty **per-player** session archives are discarded.
-4. If `kinds` is omitted/empty on the API, all three kinds are created. The UI always passes one kind.
+4. Empty world packages fail (no essential save data) instead of writing an unusable archive.
+5. If `kinds` is omitted/empty on the API, all three kinds are created. The UI always passes one kind.
+
+### Portable export / import
+
+Move recovery archives between disks or hosts without changing live server files:
+
+1. **Export** (`backups:export`) copies a `completed` managed archive to a
+   user-chosen path (`fs:pick-path` kind `save`). ZIP archives are copied as-is;
+   legacy folder archives are zipped into the destination. The managed original
+   is never modified.
+2. **Import** (`backups:import`) validates a portable ZIP for the selected kind,
+   then copies it under `{backupRoot}/{kind subdir}/` with a unique generated
+   name (never silent overwrite) and inserts a `completed` SQLite row.
+3. Validation rejects corrupt archives, zip-slip / absolute entry paths,
+   symlink entries, missing kind payload roots (`SavedArks/`, `PlayerProfiles/`,
+   or `ConfigWindowsServer/`), and `manifest.json` kind mismatches.
+4. Import **never** restores. Operators restore later with the normal restore
+   flow. If the DB insert fails after the copy, only the newly copied ZIP is
+   removed.
 
 ### Pre-stop backup
 
@@ -205,13 +237,17 @@ UI restore is direct. Update rollback uses the queued `restoreBackupForJob` path
 
 `getFleetSummary` / sidebar **Backups** page:
 
-- **Stale** / **never backed up** only apply when the schedule is on **and** the
-  process is active. Stopped servers are not warned for an elapsed interval —
-  scheduled world backups do not run while inactive.
+- **Stale** / **never backed up** fleet alerts only apply when the schedule is on
+  **and** the process is active. Stopped servers are not warned for an elapsed
+  interval or a missing first world backup — scheduled world backups do not run
+  while inactive (health stays `unknown` until a world archive exists or the
+  server is running with schedule on).
 - Stale threshold: last completed world backup older than `intervalMinutes × 1.5`.
-- Health: `critical` (missing destination or failures in 24h) → `warning` (stale /
-  never-backed-up while active) → `unknown` (schedule off and no world backup) → `ok`.
+- Health: `critical` (missing destination or world failures in 24h) → `warning`
+  (stale / never-backed-up **while active**, or non-world failures) → `unknown`
+  (no world backup yet and schedule off or server stopped) → `ok`.
 - Disk alerts use settings key `backupDiskAlerts.v1` (defaults: warn 85% / critical 95% / free under 20 GiB).
+- Fleet alerts render in a compact scrollable **Alerts** panel (not stacked full-width banners), with short action buttons (Open / Logs / Cleanup).
 
 ### Sidebar Backups quiet refresh
 
@@ -219,7 +255,10 @@ UI restore is direct. Update rollback uses the queued `restoreBackupForJob` path
 
 - Refreshes the all-servers summary without flipping the page loading spinner.
 - Does **not** overwrite in-progress policy or disk-alert draft edits.
-- Initial load and explicit Refresh remain non-quiet (reset drafts from server).
+- Reloads when the **server id set** changes (not on every App `listServers` poll
+  identity), and non-quiet loads keep dirty drafts unless **Refresh** uses
+  `forceDraftSync`.
+- Initial load and explicit Refresh remain non-quiet (Refresh resets drafts from server).
 
 ### Player sessions
 
@@ -277,7 +316,7 @@ After a successful `ini:save`, `createIniSaveBackup` debounces **2s** per server
 | Copied archive missing / wrong id | Manifest id already in DB | Reconcile mints a new id when the manifest id is taken |
 | Retention not shrinking | Failed / running rows | Only **completed** backups count toward retain N |
 | Empty player session backup missing from history | By design | Empty per-player archives are deleted so they do not consume retention |
-| Sidebar draft fields reset while editing | Non-quiet reload | Policy/disk drafts refresh only on non-quiet `load()` |
+| Sidebar draft fields reset while editing | Non-quiet reload from App poll | Reload keyed by server ids; dirty drafts kept unless Refresh forces sync |
 
 ## Common pitfalls
 

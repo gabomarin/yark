@@ -1,5 +1,11 @@
 import type { ReactElement } from "react";
-import { ClipboardText, FolderOpen, ArrowCounterClockwise } from "@phosphor-icons/react";
+import {
+  ArrowCounterClockwise,
+  ClipboardText,
+  Export,
+  FolderOpen,
+  Trash,
+} from "@phosphor-icons/react";
 import { ActionIcon, Group, Tooltip } from "@mantine/core";
 import type { BackupRecord } from "@shared/types";
 
@@ -9,10 +15,13 @@ interface Props {
   opsLocked: boolean;
   onCopyDetails: (backup: BackupRecord) => void;
   onOpenFolder: (backupId: string) => void;
+  onExport: (backup: BackupRecord) => void;
   onRestore: (backup: BackupRecord) => void;
+  onDelete: (backup: BackupRecord) => void;
 }
 
 export function BackupHistoryRowActions(props: Props): ReactElement {
+  const canMutate = props.backup.status !== "running";
   return (
     <Group gap={4}>
       <Tooltip label="Copy details" withArrow>
@@ -37,6 +46,17 @@ export function BackupHistoryRowActions(props: Props): ReactElement {
           <FolderOpen size={16} />
         </ActionIcon>
       </Tooltip>
+      <Tooltip label="Export a copy" withArrow>
+        <ActionIcon
+          variant="subtle"
+          size="sm"
+          aria-label={`Export backup ${props.backup.id}`}
+          disabled={props.busy || props.backup.status !== "completed"}
+          onClick={() => props.onExport(props.backup)}
+        >
+          <Export size={16} />
+        </ActionIcon>
+      </Tooltip>
       <Tooltip label="Restore" withArrow>
         <ActionIcon
           variant="light"
@@ -51,6 +71,18 @@ export function BackupHistoryRowActions(props: Props): ReactElement {
           onClick={() => props.onRestore(props.backup)}
         >
           <ArrowCounterClockwise size={16} />
+        </ActionIcon>
+      </Tooltip>
+      <Tooltip label="Delete" withArrow>
+        <ActionIcon
+          variant="subtle"
+          color="red"
+          size="sm"
+          aria-label={`Delete backup ${props.backup.id}`}
+          disabled={props.busy || !canMutate}
+          onClick={() => props.onDelete(props.backup)}
+        >
+          <Trash size={16} />
         </ActionIcon>
       </Tooltip>
     </Group>

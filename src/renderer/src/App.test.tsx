@@ -141,6 +141,8 @@ function createApiMock(): RendererApi {
     resolveBackupRoot: vi.fn().mockResolvedValue({ ok: true, data: "C:/ARK/Backups" }),
     openBackupFolder: vi.fn(),
     openBackupRoot: vi.fn(),
+    exportBackup: vi.fn(),
+    importBackup: vi.fn(),
     getBackupFleetSummary: vi.fn().mockResolvedValue({
       ok: true,
       data: {

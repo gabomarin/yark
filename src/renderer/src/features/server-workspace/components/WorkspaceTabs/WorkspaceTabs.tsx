@@ -1,5 +1,5 @@
 import { Tabs } from "@mantine/core";
-import type { AppEvent, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import type { AppEvent, ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { ServerBackupPanel } from "@features/backups/ServerBackupPanel";
 import { ServerLogsPanel, type ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
@@ -19,6 +19,7 @@ interface Props {
   value: WorkspaceTab;
   server: ServerProfile;
   runtime: ServerRuntimeInfo | null;
+  installation: ServerInstallationInfo | null;
   events: AppEvent[];
   rconHistory: RconHistoryEntry[];
   playerList: PlayerListState;
@@ -114,6 +115,7 @@ export function WorkspaceTabs(props: Props): ReactElement {
             <ServerBackupPanel
               server={props.server}
               runtime={props.runtime}
+              installation={props.installation}
               embedded
               opsLocked={props.opsLocked}
               opsLockReason={
