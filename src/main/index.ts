@@ -13,6 +13,7 @@ import { IniService } from "../backend/domains/config/ini-service";
 import { InstanceService } from "../backend/domains/instances/instance-service";
 import { runAutoStartOnLaunch } from "../backend/domains/instances/auto-start";
 import { LogsService } from "../backend/domains/logs/logs-service";
+import { LogRetentionScheduler } from "../backend/domains/logs/log-retention-scheduler";
 import { UpdateService } from "../backend/domains/updates/update-service";
 import { MoveInstallService } from "../backend/domains/instances/move-install-service";
 import { ModsService } from "../backend/domains/mods/mods-service";
@@ -184,6 +185,7 @@ if (gotSingleInstanceLock) {
       backupService,
       join(userData, "update-logs"),
       processManager,
+      settings,
     );
     const updateService = new UpdateService(
       repo,
@@ -215,6 +217,8 @@ if (gotSingleInstanceLock) {
 
     backupScheduler.start();
     playerSessionWatcher.start();
+    const logRetentionScheduler = new LogRetentionScheduler(logsService);
+    logRetentionScheduler.start();
     applyWindowsLoginItem(readDesktopShellPreferences(settings).startWithWindows);
 
     // Drop leftover YARK move-staging dirs from interrupted attempts (#56).

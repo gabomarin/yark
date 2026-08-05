@@ -29,6 +29,7 @@
     "e2e:rcon": "node scripts/e2e-rcon.cjs",
     "e2e:quit-policy": "node scripts/e2e-quit-policy.cjs",
     "e2e:crash-reattach": "node scripts/e2e-crash-reattach.cjs",
+    "e2e:log-retention": "node scripts/e2e-log-retention.cjs",
     "website:screenshots": "node scripts/capture-website-screenshots.cjs",
     "website:dev": "npm run dev --prefix website",
     "website:build": "npm run build --prefix website",

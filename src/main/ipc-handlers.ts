@@ -618,6 +618,22 @@ export function registerIpcHandlers(
     wrap(() => logs.clearUpdateLogs(serverId)),
   );
 
+  ipcMain.handle(IPC.logsGetRetentionSettings, () =>
+    wrap(() => logs.getRetentionSettings()),
+  );
+
+  ipcMain.handle(IPC.logsSetRetentionSettings, (_e, settings) =>
+    wrap(() => logs.setRetentionSettings(settings)),
+  );
+
+  ipcMain.handle(IPC.logsPreviewCleanup, (_e, options) =>
+    wrap(() => logs.previewCleanup(options ?? {})),
+  );
+
+  ipcMain.handle(IPC.logsRunCleanup, (_e, options) =>
+    wrap(() => logs.runCleanup(options ?? {})),
+  );
+
   ipcMain.handle(IPC.modsGet, (_e, modId: string, forceRefresh?: boolean) =>
     wrap(() => mods.getMod(modId, { forceRefresh: forceRefresh === true })),
   );

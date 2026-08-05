@@ -685,43 +685,51 @@ export function BackupsPage(props: Props): ReactElement {
       >
         <Stack gap="md">
           <Text size="sm" c="dimmed">
-            Preview what will be deleted, then confirm. The newest successful world
+            Finds backups that match your rules. The newest successful world
             backup per server is kept by default.
           </Text>
           <Checkbox
             label="Delete failed backups"
             checked={cleanupOptions.includeFailed}
-            onChange={(event) =>
+            onChange={(event) => {
+              setCleanupPreview(null);
               setCleanupOptions((prev) => ({
                 ...prev,
                 includeFailed: event.currentTarget.checked,
-              }))
-            }
+              }));
+            }}
           />
           <Checkbox
             label="Delete older backups past each server's keep limit"
             checked={cleanupOptions.enforceRetention}
-            onChange={(event) =>
+            onChange={(event) => {
+              setCleanupPreview(null);
               setCleanupOptions((prev) => ({
                 ...prev,
                 enforceRetention: event.currentTarget.checked,
-              }))
-            }
+              }));
+            }}
           />
           <Group align="center" gap="sm">
             <Checkbox
               label="Older than"
               checked={olderThanEnabled}
-              onChange={(event) => setOlderThanEnabled(event.currentTarget.checked)}
+              onChange={(event) => {
+                setCleanupPreview(null);
+                setOlderThanEnabled(event.currentTarget.checked);
+              }}
             />
             <NumberInput
               min={1}
               max={3650}
               value={olderThanDays}
               disabled={!olderThanEnabled}
-              onChange={(value) =>
-                typeof value === "number" && setOlderThanDays(value)
-              }
+              onChange={(value) => {
+                if (typeof value === "number") {
+                  setCleanupPreview(null);
+                  setOlderThanDays(value);
+                }
+              }}
               w={90}
             />
             <Text size="sm">days</Text>
@@ -730,16 +738,22 @@ export function BackupsPage(props: Props): ReactElement {
             <Checkbox
               label="Keep only last"
               checked={keepLastEnabled}
-              onChange={(event) => setKeepLastEnabled(event.currentTarget.checked)}
+              onChange={(event) => {
+                setCleanupPreview(null);
+                setKeepLastEnabled(event.currentTarget.checked);
+              }}
             />
             <NumberInput
               min={1}
               max={500}
               value={keepLastPerKind}
               disabled={!keepLastEnabled}
-              onChange={(value) =>
-                typeof value === "number" && setKeepLastPerKind(value)
-              }
+              onChange={(value) => {
+                if (typeof value === "number") {
+                  setCleanupPreview(null);
+                  setKeepLastPerKind(value);
+                }
+              }}
               w={90}
             />
             <Text size="sm">per kind (per player for profiles)</Text>
@@ -747,12 +761,13 @@ export function BackupsPage(props: Props): ReactElement {
           <Checkbox
             label="Protect newest successful world backup per server"
             checked={cleanupOptions.protectNewestWorld}
-            onChange={(event) =>
+            onChange={(event) => {
+              setCleanupPreview(null);
               setCleanupOptions((prev) => ({
                 ...prev,
                 protectNewestWorld: event.currentTarget.checked,
-              }))
-            }
+              }));
+            }}
           />
 
           {cleanupPreview !== null && (
@@ -786,21 +801,23 @@ export function BackupsPage(props: Props): ReactElement {
             >
               Cancel
             </Button>
-            <Button
-              variant="light"
-              loading={cleanupBusy}
-              onClick={() => void runPreviewCleanup()}
-            >
-              Preview
-            </Button>
-            <Button
-              color="red"
-              loading={cleanupBusy}
-              disabled={cleanupPreview === null || cleanupPreview.items.length === 0}
-              onClick={() => void confirmCleanup()}
-            >
-              Delete {cleanupPreview?.items.length ?? 0} backups
-            </Button>
+            {cleanupPreview !== null && cleanupPreview.items.length > 0 ? (
+              <Button
+                color="red"
+                loading={cleanupBusy}
+                onClick={() => void confirmCleanup()}
+              >
+                Remove {cleanupPreview.items.length}
+              </Button>
+            ) : (
+              <Button
+                variant="light"
+                loading={cleanupBusy}
+                onClick={() => void runPreviewCleanup()}
+              >
+                Scan
+              </Button>
+            )}
           </Group>
         </Stack>
       </Modal>

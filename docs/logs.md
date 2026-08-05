@@ -11,19 +11,52 @@ or seeds logs for development and QA.
   failures (especially safe update / rollback) are actionable.
 - Keep clear/export paths explicit so diagnostic data can be reset without
   deleting the SQLite database wholesale.
+- Bound YARK-owned operational history with a conservative retention policy
+  (#84) while never taking ownership of ASA runtime log files.
 
 ## Module map
 
 | Role | Path |
 | --- | --- |
-| Aggregation / export / clear | `src/backend/domains/logs/logs-service.ts` |
+| Aggregation / export / clear / retention | `src/backend/domains/logs/logs-service.ts` |
+| Retention scheduler | `src/backend/domains/logs/log-retention-scheduler.ts` |
+| Shared defaults / normalize | `src/shared/log-retention.ts` |
 | Event persistence | `src/backend/infra/db/server-repository.ts` (`addEvent`) |
 | DB migration (details column) | `src/backend/infra/db/database.ts` (migration **v6**) |
 | Detail catalog + merge | `src/shared/event-details.ts` (`resolveEventDetails`) |
-| Contracts | `src/shared/types.ts` (`AppEvent`, `AppEventDetails`, `ServerOperationalLogs`) |
+| Contracts | `src/shared/types.ts` (`AppEvent`, `AppEventDetails`, `ServerOperationalLogs`, `LogRetentionSettings`) |
 | Sidebar Logs (all servers) | `src/renderer/src/features/logs/LogsPage.tsx` |
 | Server workspace Logs | `src/renderer/src/features/logs/ServerLogsPanel.tsx` |
 | Detail body | `src/renderer/src/features/logs/EventDetailsBody.tsx` |
+| Settings retention UI | `src/renderer/src/features/settings/components/SettingsLogRetentionSection.tsx` |
+
+## Ownership and retention (#84)
+
+| Source | Owner | Retention |
+| --- | --- | --- |
+| SQLite `events` | YARK | Age-based: routine default **90** days; failure evidence **180** days |
+| `userData/update-logs/{serverId}-*.log` | YARK | Keep last **20** successful files per server; failed/unknown kept **180** days |
+| In-memory runtime buffer | YARK (session) | Hard cap **1200** lines in `ProcessManager` — not a Settings control |
+| `ShooterGame/Saved/Logs` | ASA | **Never** deleted by YARK; read/tail only |
+| Backup ZIP history | BackupService | Own retain counts — see [backups.md](backups.md) |
+
+Persisted policy key: `app_settings` → `logRetention.v1`. Invalid Settings values
+are rejected and the previous policy is kept.
+
+**Failure evidence** (kept longer): event `severity` warning/error, or types such as
+`server_crashed`, `update_failed`, `update_rolled_back`, `auto_start_failed`,
+`install_move_failed`, `error`; update logs with non-zero / unknown exit status.
+
+**Automatic cleanup** (default on): once ~60s after app launch, then about daily.
+**Manual cleanup**: Settings → Log retention → Clean up now (preview → confirm).
+Outcome is a single summary event (`logs_retention_completed` /
+`logs_retention_failed`) — not one event per deleted file.
+
+**Recovery:** deleted events and update-log files are not recoverable. Export
+before cleanup when you need a durable diagnostic snapshot.
+
+ASA runtime logs remain under the game’s own rotation; clearing the Runtime tab
+only clears YARK’s in-memory buffer.
 
 ## Event details
 
@@ -51,8 +84,9 @@ SQLite `events.details` stores optional JSON (`AppEventDetails`):
 | `context` | Key/value chips under the body |
 
 Catalog coverage includes `update_*`, `backup_*`, `server_*`, `error`,
-`rcon_command`, plus a default. Safe-update paths in `UpdateService` pass rich
-details (operation, `wasRunning`, install dir, rollback hints).
+`rcon_command`, `logs_retention_*`, plus a default. Safe-update paths in
+`UpdateService` pass rich details (operation, `wasRunning`, install dir,
+rollback hints).
 
 Export (`logs:export`) resolves the same fields so text dumps stay useful.
 
@@ -95,10 +129,13 @@ consume so it cannot stick to another server. Overview can open
 | `logs:clear-runtime` | Clear the process runtime buffer |
 | `logs:delete-update` | Delete one update log file |
 | `logs:clear-updates` | Delete all update logs for the server |
+| `logs:get-retention-settings` / `logs:set-retention-settings` | Read/write retention policy |
+| `logs:preview-cleanup` / `logs:run-cleanup` | Manual retention preview + confirm |
 | `events:recent` | Recent events across servers (Overview / sidebar Logs) |
 
 Clear actions are confirmed in the UI per section. There is no single
 “clear everything” IPC — call the relevant clears intentionally.
+Retention cleanup is separate (Settings) and never targets ASA Saved/Logs.
 
 Related push (not under `logs:*`): `push:steamcmd-progress` feeds live
 SteamCMD console while jobs run (see [updates-steamcmd.md](updates-steamcmd.md)).
@@ -136,14 +173,19 @@ Override with `YARK_USER_DATA` when needed (cloud agents, portable profiles).
 | Clear did not remove update files | Events clear ≠ update-log clear — use Updates section clear/delete |
 | Seed script cannot find DB | App never launched, or wrong userData — set `YARK_USER_DATA` |
 | SteamCMD console empty in Logs | Live console is on the SteamCMD dock/progress push; Updates section shows **files** after jobs |
+| History disappeared after a few months | Retention policy (#84); check Settings → Log retention; deleted data is not recoverable |
+| Cleanup skipped a file | In use / permission — retry later; paths outside `update-logs` are never deleted |
 
 ## Verification
 
 ```bash
 npm test -- event-details
 npm test -- logs-service
+npm test -- log-retention
 npm run typecheck
+npm run build && npm run e2e:log-retention
 ```
 
-Renderer: `src/renderer/src/features/logs/*.test.tsx`. Visible UI changes follow
+Renderer: `src/renderer/src/features/logs/*.test.tsx`, Settings retention in
+`SettingsPage.test.tsx`. Visible UI changes follow
 [visual-testing.md](visual-testing.md) (`node scripts/visual-logs.cjs`).

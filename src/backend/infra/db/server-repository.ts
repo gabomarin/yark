@@ -254,6 +254,43 @@ export class ServerRepository {
       .run(serverId);
     return Number(result.changes);
   }
+
+  /** All events (oldest first) for retention planning. */
+  listAllEvents(): AppEvent[] {
+    const rows = this.db
+      .prepare(
+        "SELECT id, server_id, type, severity, message, created_at, details FROM events ORDER BY id ASC",
+      )
+      .all() as Array<{
+      id: number;
+      server_id: string | null;
+      type: AppEvent["type"];
+      severity: AppEvent["severity"];
+      message: string;
+      created_at: string;
+      details: string | null;
+    }>;
+    return rows.map((r) => ({
+      id: r.id,
+      serverId: r.server_id,
+      type: r.type,
+      severity: r.severity,
+      message: r.message,
+      createdAt: r.created_at,
+      details: parseEventDetails(r.details),
+    }));
+  }
+
+  deleteEventsByIds(ids: number[]): number {
+    if (ids.length === 0) return 0;
+    let deleted = 0;
+    const stmt = this.db.prepare("DELETE FROM events WHERE id = ?");
+    for (const id of ids) {
+      const result = stmt.run(id);
+      deleted += Number(result.changes);
+    }
+    return deleted;
+  }
 }
 
 function parseEventDetails(raw: string | null | undefined): AppEventDetails | null {

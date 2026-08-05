@@ -285,12 +285,82 @@ export interface AppEvent {
     | "install_move_cancelled"
     | "install_move_cleanup_completed"
     | "install_move_cleanup_failed"
+    | "logs_retention_completed"
+    | "logs_retention_failed"
     | "error";
   severity: "info" | "warning" | "error";
   message: string;
   createdAt: string;
   /** Optional structured detail payload (null on older rows). */
   details: AppEventDetails | null;
+}
+
+/** YARK-owned log categories eligible for retention cleanup (#84). */
+export type LogRetentionCategory = "events" | "updateLogs";
+
+/** Persisted app-wide retention policy (`app_settings` key `logRetention.v1`). */
+export interface LogRetentionSettings {
+  /** Delete routine (non-failure) events older than this many days. Default 90. */
+  eventsRetainDays: number;
+  /** Keep failure-evidence events at least this many days. Default 180. */
+  eventsFailureRetainDays: number;
+  /** Keep at most this many successful update logs per server. Default 20. */
+  updateLogsRetainCount: number;
+  /** Keep failed/unknown update logs at least this many days. Default 180. */
+  updateLogsFailureRetainDays: number;
+  /** When true, a background scheduler enforces the policy. Default true. */
+  autoCleanupEnabled: boolean;
+}
+
+export interface LogCleanupOptions {
+  /** `null` or empty = all servers (plus global/null event rows). */
+  serverIds?: string[] | null;
+  /** Categories to include; empty/undefined = both. */
+  categories?: LogRetentionCategory[] | null;
+  /**
+   * From a prior preview. When set, `runCleanup` deletes only targets that
+   * still match the fresh plan (same idea as backup `confirmedBackupIds`).
+   */
+  confirmedTargets?: LogCleanupTargetRef[] | null;
+}
+
+export interface LogCleanupTargetRef {
+  category: LogRetentionCategory;
+  /** Empty string for global/null `server_id` events. */
+  serverId: string;
+  /** Events: String(event.id). Update logs: fileName under update-logs/. */
+  targetKey: string;
+}
+
+export interface LogCleanupItem {
+  category: LogRetentionCategory;
+  serverId: string;
+  serverName: string;
+  targetKey: string;
+  label: string;
+  reason: string;
+  sizeBytes: number;
+  isFailureEvidence?: boolean;
+}
+
+export interface LogCleanupPreview {
+  items: LogCleanupItem[];
+  totalBytes: number;
+  byCategory: Array<{ category: LogRetentionCategory; count: number; bytes: number }>;
+  byServer: Array<{
+    serverId: string;
+    serverName: string;
+    count: number;
+    bytes: number;
+  }>;
+}
+
+export interface LogCleanupResult {
+  deleted: number;
+  freedBytes: number;
+  byCategory: Array<{ category: LogRetentionCategory; deleted: number; bytes: number }>;
+  skipped: Array<{ category: LogRetentionCategory; targetKey: string; reason: string }>;
+  failed: Array<{ category: LogRetentionCategory; targetKey: string; error: string }>;
 }
 
 export type BackupType =

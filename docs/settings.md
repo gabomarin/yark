@@ -19,12 +19,13 @@ the Server tab / workspace.
 | Page shell | `src/renderer/src/features/settings/SettingsPage.tsx` |
 | General controls | `…/components/SettingsGeneralSection.tsx` |
 | Auto-start summary | `…/components/SettingsAutoStartSection.tsx` |
+| Log retention | `…/components/SettingsLogRetentionSection.tsx` |
 | Density load/migrate | `…/settingsModel.ts` |
 | Tray / Windows startup hook | `…/useDesktopShellPreferences.ts` |
 | Desktop-shell persist | `src/main/desktop-shell-settings.ts` |
 | Windows login item | `src/main/windows-login-item.ts` |
 | Tray icon / menu | `src/main/app-tray.ts` |
-| Shared keys / defaults | `src/shared/desktop-shell.ts`, `src/shared/ui-density.ts` |
+| Shared keys / defaults | `src/shared/desktop-shell.ts`, `src/shared/ui-density.ts`, `src/shared/log-retention.ts` |
 | Density theme apply | `src/renderer/src/app/AppProviders.tsx`, `src/renderer/src/main.tsx` |
 | SteamCMD service | `src/backend/domains/updates/*` (path/install/caches) |
 | IPC | `src/shared/ipc.ts`, `src/preload/index.ts`, `src/main/ipc-handlers.ts` |
@@ -39,6 +40,7 @@ the Server tab / workspace.
 | Default create base folder (`localStorage`) | Profile `installDir` (absolute, per server) |
 | App data folder shortcuts | Backup disk-alert thresholds (Backups page modal) |
 | Opted-in auto-start **summary** | Quit-with-servers Stop/Cancel dialog (hardcoded in main; not a Setting) |
+| **Log retention** limits + Clean up now | Per-section clear on Logs workspace; ASA Saved/Logs never touched — [logs.md](logs.md) |
 
 ## Controls and defaults
 
@@ -91,6 +93,19 @@ Full SteamCMD workflows: [updates-steamcmd.md](updates-steamcmd.md).
 Collapsed list with Open actions for App data, Backups, Update logs, and Bundled
 SteamCMD under Electron `userData`.
 
+### Log retention (#84)
+
+| Control | Storage | Default | Notes |
+| --- | --- | --- | --- |
+| Keep routine events (days) | `logRetention.v1` | 90 | Non-failure SQLite events |
+| Keep failure events (days) | same | 180 | Must be ≥ routine days |
+| Keep successful update logs | same | 20 | Per-server count |
+| Keep failed update logs (days) | same | 180 | Failed/unknown SteamCMD files |
+| Automatic cleanup | same | on | Startup + ~daily; changes save immediately |
+| Clean up now… | IPC preview/run | — | Scan → Remove; reports skipped/failed |
+
+Full ownership table and recovery limits: [logs.md](logs.md#ownership-and-retention-84).
+
 ## Related subsystems (not on this page)
 
 - **Backup disk alerts** — key `backupDiskAlerts.v1`; IPC
@@ -124,7 +139,9 @@ SteamCMD under Electron `userData`.
 
 | File | Focus |
 | --- | --- |
-| `src/renderer/src/features/settings/SettingsPage.test.tsx` | Page controls, density, caches, base folder, SteamCMD setup |
+| `src/renderer/src/features/settings/SettingsPage.test.tsx` | Page controls, density, caches, base folder, SteamCMD setup, log retention |
+| `tests/unit/log-retention.test.ts` | Defaults / normalize / failure classification |
+| `tests/unit/logs-service.test.ts` | Retention preview/run path guards |
 | `tests/unit/ui-density-pref.test.ts` | Load / write / legacy migration |
 | `tests/unit/app-settings-ui-density.test.ts` | SQLite round-trip |
 | `tests/unit/desktop-shell-settings.test.ts` | Tray / Windows prefs persist |

@@ -133,6 +133,18 @@ function catalogFor(event: AppEvent): AppEventDetails {
         what: "An operational error was recorded.",
         suggestion: "Expand this entry for the message details, then check related Backups or Updates tabs.",
       };
+    case "logs_retention_completed":
+      return {
+        what: "YARK applied the operational log retention policy.",
+        suggestion:
+          "Removed history is not recoverable. Adjust limits under Settings → Log retention if needed.",
+      };
+    case "logs_retention_failed":
+      return {
+        what: "Operational log retention could not finish cleanly.",
+        suggestion:
+          "Check disk permissions on the update-logs folder, then retry Clean up now from Settings.",
+      };
     case "rcon_command":
       return {
         what: "An RCON command was sent to the running server.",

@@ -22,6 +22,7 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { SettingsAutoStartSection } from "./components/SettingsAutoStartSection";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { SettingsGeneralSection } from "./components/SettingsGeneralSection";
+import { SettingsLogRetentionSection } from "./components/SettingsLogRetentionSection";
 import type { UiDensity } from "./settingsModel";
 import { useDesktopShellPreferences } from "./useDesktopShellPreferences";
 import classes from "./SettingsPage.module.css";
@@ -219,6 +220,10 @@ export function SettingsPage(props: Props): ReactElement {
                 )}
               </div>
             </section>
+
+            <div className={classes.sectionRule} />
+
+            <SettingsLogRetentionSection />
 
             <div className={classes.sectionRule} />
 
