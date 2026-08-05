@@ -24,7 +24,7 @@ RCON tab** and related IPC (#17 / #154).
 | BanList path / parse / rewrite | `src/backend/domains/instances/ban-list.ts` |
 | Orchestration (`execRcon`, kick/ban/unban, auto-connect) | `src/backend/domains/instances/instance-service.ts` |
 | Readiness / stop one-shots (or session executor when wired) | `src/backend/infra/process/process-manager.ts` |
-| Online poll + `ListPlayers` parse | `src/backend/domains/backups/player-session-watcher.ts`, `list-players.ts` |
+| Online poll + `ListPlayers` parse | `src/backend/domains/backups/player-session-watcher.ts`, `src/backend/domains/instances/list-players.ts` |
 | App-level history + player cache | `src/renderer/src/App.tsx` |
 | Console UI | `…/RconPanel/RconPanel.tsx`, `RconConsoleHistory.tsx` |
 | Players / bans UI | `PlayerListSection.tsx`, `BannedPlayersSection.tsx` |
