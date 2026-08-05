@@ -125,6 +125,14 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.logsDeleteUpdate, serverId, fileName),
   clearServerUpdateLogs: (serverId: string) =>
     ipcRenderer.invoke(IPC.logsClearUpdates, serverId),
+  getLogRetentionSettings: () =>
+    ipcRenderer.invoke(IPC.logsGetRetentionSettings),
+  setLogRetentionSettings: (settings) =>
+    ipcRenderer.invoke(IPC.logsSetRetentionSettings, settings),
+  previewLogCleanup: (options) =>
+    ipcRenderer.invoke(IPC.logsPreviewCleanup, options),
+  runLogCleanup: (options) =>
+    ipcRenderer.invoke(IPC.logsRunCleanup, options),
   listBackups: (serverId: string, limit?: number) =>
     ipcRenderer.invoke(IPC.backupsList, serverId, limit),
   createManualBackup: (serverId, kinds) =>

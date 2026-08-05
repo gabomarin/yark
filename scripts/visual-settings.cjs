@@ -75,7 +75,10 @@ async function run() {
     await page.getByRole("heading", { name: "Settings", level: 1 }).waitFor({
       timeout: 10000,
     });
-    await page.getByText("Native server console").waitFor({ timeout: 10000 });
+    await page.getByText("Show server console on start").waitFor({ timeout: 10000 });
+    await page.getByRole("heading", { name: "Log retention", level: 3 }).waitFor({
+      timeout: 10000,
+    });
 
     for (const size of sizes) {
       await page.setViewportSize({ width: size.width, height: size.height });
@@ -88,7 +91,17 @@ async function run() {
         false,
         `${size.name}: horizontal overflow at ${size.width}x${size.height}`,
       );
+      await page.getByRole("heading", { name: "Log retention", level: 3 }).scrollIntoViewIfNeeded();
       await shot(page, outDir, `settings-${size.name}`);
+      await page.getByRole("button", { name: /Clean up now/i }).click();
+      await page.getByText("Clean up old logs").waitFor({ state: "visible", timeout: 5000 });
+      assert.ok(
+        (await page.getByRole("button", { name: /^Scan$/i }).count()) > 0,
+        `${size.name}: cleanup modal missing Scan`,
+      );
+      await shot(page, outDir, `settings-cleanup-${size.name}`);
+      await page.getByRole("button", { name: /^Cancel$/i }).click();
+      await page.getByText("Clean up old logs").waitFor({ state: "hidden", timeout: 5000 });
     }
 
     console.log("VISUAL_SETTINGS_DIR=" + outDir);

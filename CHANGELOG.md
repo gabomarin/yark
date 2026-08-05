@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- **Log retention** for YARK-owned events and SteamCMD update logs (safe defaults, Settings controls, automatic cleanup, and manual preview) without deleting ASA runtime logs (#84).
 - **Portable backup export/import** copies a completed archive to a chosen path or catalogs a validated YARK ZIP into a server’s backup history without restoring; managed and export filenames end with a compact local date (`YYYYMMDD-HHmmss`), and each history row can delete that archive (#15).
 - Engineering runbooks for **Settings**, workspace **RCON** console, and **Clusters** transfer compliance (`docs/settings.md`, `docs/rcon.md`, `docs/clusters.md`).
 - **Move installation** moves same-drive folders in place (or copies across drives with live progress), verifies, commits the profile path, then removes the previous folder. Install path is read-only in normal server editing (#56).

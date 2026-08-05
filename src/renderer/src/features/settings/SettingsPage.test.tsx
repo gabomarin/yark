@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ComponentProps } from "react";
 import { AppProviders } from "@app/AppProviders";
+import { DEFAULT_LOG_RETENTION_SETTINGS } from "@shared/log-retention";
 import type { SteamCmdStatus } from "@shared/types";
 import { SettingsPage } from "./SettingsPage";
 
@@ -45,6 +46,39 @@ function stubSettingsApi(
     setCloseWindowToTray: vi.fn().mockResolvedValue({ ok: true, data: true }),
     setStartWithWindows: vi.fn().mockResolvedValue({ ok: true, data: false }),
     setTrayCloseHintDismissed: vi.fn().mockResolvedValue({ ok: true, data: false }),
+    getLogRetentionSettings: vi.fn().mockResolvedValue({
+      ok: true,
+      data: { ...DEFAULT_LOG_RETENTION_SETTINGS },
+    }),
+    setLogRetentionSettings: vi.fn().mockImplementation(async (settings) => ({
+      ok: true,
+      data: settings,
+    })),
+    previewLogCleanup: vi.fn().mockResolvedValue({
+      ok: true,
+      data: {
+        items: [],
+        totalBytes: 0,
+        byCategory: [
+          { category: "events", count: 0, bytes: 0 },
+          { category: "updateLogs", count: 0, bytes: 0 },
+        ],
+        byServer: [],
+      },
+    }),
+    runLogCleanup: vi.fn().mockResolvedValue({
+      ok: true,
+      data: {
+        deleted: 0,
+        freedBytes: 0,
+        byCategory: [
+          { category: "events", deleted: 0, bytes: 0 },
+          { category: "updateLogs", deleted: 0, bytes: 0 },
+        ],
+        skipped: [],
+        failed: [],
+      },
+    }),
     ...overrides,
   });
 }
@@ -256,5 +290,50 @@ describe("SettingsPage", () => {
       }),
     );
     expect(onOpenNativeTerminalOnStartChange).toHaveBeenCalledWith(true);
+  });
+
+  it("loads log retention defaults and opens cleanup preview", async () => {
+    const user = userEvent.setup();
+    const previewLogCleanup = vi.fn().mockResolvedValue({
+      ok: true,
+      data: {
+        items: [
+          {
+            category: "events",
+            serverId: "srv-1",
+            serverName: "Alpha",
+            targetKey: "9",
+            label: "old event",
+            reason: "older than 90d",
+            sizeBytes: 0,
+          },
+        ],
+        totalBytes: 0,
+        byCategory: [
+          { category: "events", count: 1, bytes: 0 },
+          { category: "updateLogs", count: 0, bytes: 0 },
+        ],
+        byServer: [{ serverId: "srv-1", serverName: "Alpha", count: 1, bytes: 0 }],
+      },
+    });
+    stubSettingsApi({ previewLogCleanup });
+
+    renderSettings();
+
+    await waitFor(() => {
+      expect(window.api.getLogRetentionSettings).toHaveBeenCalled();
+    });
+    expect(screen.getByText("Log retention")).toBeInTheDocument();
+    expect(screen.getByLabelText("Keep everyday activity history for days")).toHaveValue("90");
+
+    await user.click(screen.getByRole("button", { name: /Clean up now/i }));
+    expect(screen.getByText("Clean up old logs")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^Scan$/i }));
+    await waitFor(() => {
+      expect(previewLogCleanup).toHaveBeenCalled();
+      expect(screen.getByText(/Will remove 1 item/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^Remove 1$/i })).toBeInTheDocument();
+    });
+    expect(screen.queryByRole("button", { name: /^Scan$/i })).not.toBeInTheDocument();
   });
 });

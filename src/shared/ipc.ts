@@ -11,6 +11,10 @@ import type {
   ClusterComplianceReport,
   IniPreview,
   InstallationServersMode,
+  LogCleanupOptions,
+  LogCleanupPreview,
+  LogCleanupResult,
+  LogRetentionSettings,
   ModMetadata,
   ModSearchPage,
   MoveInstallProgress,
@@ -111,6 +115,10 @@ export const IPC = {
   logsClearRuntime: "logs:clear-runtime",
   logsDeleteUpdate: "logs:delete-update",
   logsClearUpdates: "logs:clear-updates",
+  logsGetRetentionSettings: "logs:get-retention-settings",
+  logsSetRetentionSettings: "logs:set-retention-settings",
+  logsPreviewCleanup: "logs:preview-cleanup",
+  logsRunCleanup: "logs:run-cleanup",
   backupsList: "backups:list",
   backupsCreate: "backups:create",
   backupsDelete: "backups:delete",
@@ -317,6 +325,16 @@ export interface RendererApi {
     fileName: string,
   ): Promise<IpcResult<void>>;
   clearServerUpdateLogs(serverId: string): Promise<IpcResult<number>>;
+  getLogRetentionSettings(): Promise<IpcResult<LogRetentionSettings>>;
+  setLogRetentionSettings(
+    settings: LogRetentionSettings,
+  ): Promise<IpcResult<LogRetentionSettings>>;
+  previewLogCleanup(
+    options?: LogCleanupOptions,
+  ): Promise<IpcResult<LogCleanupPreview>>;
+  runLogCleanup(
+    options?: LogCleanupOptions,
+  ): Promise<IpcResult<LogCleanupResult>>;
   listBackups(serverId: string, limit?: number): Promise<IpcResult<BackupRecord[]>>;
   createManualBackup(
     serverId: string,
