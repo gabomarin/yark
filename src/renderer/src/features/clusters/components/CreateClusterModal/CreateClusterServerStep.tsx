@@ -65,7 +65,7 @@ export function CreateClusterServerStep(props: Props): ReactElement {
       <div className={classes.candidateList} data-create-cluster-servers>
         {props.candidates.length === 0 ? (
           <Text size="sm" c="dimmed">
-            Create a server first, then start a cluster from stopped maps.
+            Create a server first, then start a cluster from stopped servers.
           </Text>
         ) : (
           props.candidates.map((candidate) => (

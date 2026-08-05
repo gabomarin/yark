@@ -119,7 +119,8 @@ Report shape:
 - Guidance card: both ID + directory required; page ≠ live transfer validation.
 - **Create cluster** wizard: pick one or more stopped unclustered servers, set/generate a
   unique Cluster ID, choose a shared Windows directory, preview, then save
-  membership via `servers:update` (no standalone cluster entity).
+  membership via `servers:update` (no standalone cluster entity). Partial save
+  failures roll profiles back to the previous cluster fields when possible.
 - Summary badges: cluster count, ready (no errors), error clusters, warning-only
   clusters, unclustered servers (`clusterId === null`), dir-without-id count.
 - Empty state when no reports: explains missing IDs; lists servers that have a
@@ -130,8 +131,8 @@ Report shape:
 ### Server form / onboarding
 
 - Form: edit `clusterId` / browse `clusterDir`.
-- Clusters workspace: create a brand-new cluster ID + directory on the first
-  stopped member (#42). Adding further members is separate (#41).
+- Clusters workspace: create a brand-new cluster ID + directory on one or more
+  stopped servers (#42). Adding further servers later is separate (#41).
 - Onboarding checklist: join an **existing** cluster by copying another
   server’s `{clusterId, clusterDir}` pair (or clear).
 

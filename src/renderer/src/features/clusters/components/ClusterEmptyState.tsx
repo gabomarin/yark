@@ -28,8 +28,8 @@ export function ClusterEmptyState(props: Props): ReactElement {
           props.dirWithoutIdServers.length > 0 ? undefined : (
             <Text c="dimmed" size="sm" maw={480} ta="center">
               {props.serverCount === 0
-                ? "Create a server first, then use Create cluster to assign a Cluster ID and shared directory to the first map."
-                : "Use Create cluster to assign a unique Cluster ID and shared directory to a stopped server, or open a server and set the same pair on two or more maps."}
+                ? "Create a server first, then use Create cluster to assign a Cluster ID and shared directory to the first server."
+                : "Use Create cluster to assign a unique Cluster ID and shared directory to a stopped server, or open a server and set the same pair on two or more servers."}
             </Text>
           )
         }

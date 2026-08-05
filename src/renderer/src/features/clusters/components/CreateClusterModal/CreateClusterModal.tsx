@@ -13,6 +13,7 @@ import {
   resolveSelectedCandidates,
   sharedPrefillClusterDir,
   suggestClusterId,
+  serverProfileToInput,
   toggleSelectedServerId,
   type CreateClusterStep,
 } from "../../createClusterModel";
@@ -123,7 +124,7 @@ export function CreateClusterModal(props: Props): ReactElement {
     if (selected.length === 0 || !identityValid || portError !== null) return;
     setSaving(true);
     setError(null);
-    let saved = 0;
+    const applied: ServerProfile[] = [];
     try {
       for (const candidate of selected) {
         const input = buildCreateClusterInput(
@@ -133,15 +134,33 @@ export function CreateClusterModal(props: Props): ReactElement {
         );
         const result = await window.api.updateServer(candidate.server.id, input);
         if (!result.ok) {
-          setError(
-            saved > 0
-              ? `Saved ${saved} of ${selected.length}; failed on “${candidate.server.name}”: ${result.error ?? "Could not update server"}`
-              : (result.error ?? "Could not create the cluster"),
-          );
-          if (saved > 0) props.onCreated();
+          const failMessage =
+            result.error ?? "Could not create the cluster";
+          const rollbackFailures: string[] = [];
+          for (const previous of [...applied].reverse()) {
+            const rollback = await window.api.updateServer(
+              previous.id,
+              serverProfileToInput(previous),
+            );
+            if (!rollback.ok) {
+              rollbackFailures.push(previous.name);
+            }
+          }
+          if (rollbackFailures.length > 0) {
+            setError(
+              `Failed on “${candidate.server.name}”: ${failMessage}. Could not restore: ${rollbackFailures.join(", ")}.`,
+            );
+            props.onCreated();
+          } else if (applied.length > 0) {
+            setError(
+              `Failed on “${candidate.server.name}”: ${failMessage}. Previous profiles were restored.`,
+            );
+          } else {
+            setError(failMessage);
+          }
           return;
         }
-        saved += 1;
+        applied.push(candidate.server);
       }
       props.onCreated();
       props.onClose();

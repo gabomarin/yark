@@ -285,4 +285,86 @@ describe("ClustersPage", () => {
     // Mount refresh + post-create refresh.
     expect(onRefresh).toHaveBeenCalledTimes(2);
   });
+
+  it("rolls back earlier servers when a later create update fails", async () => {
+    const user = userEvent.setup();
+    const onRefresh = vi.fn();
+    const islandMap = makeServer({
+      id: "island",
+      name: "Island Map",
+      clusterId: null,
+      clusterDir: null,
+      gamePort: 7777,
+      queryPort: 27015,
+      rconPort: 27020,
+    });
+    const scorchedMap = makeServer({
+      id: "scorched",
+      name: "Scorched Map",
+      map: "ScorchedEarth_WP",
+      clusterId: null,
+      clusterDir: null,
+      gamePort: 7779,
+      queryPort: 27017,
+      rconPort: 27022,
+    });
+    const updateServer = vi.fn().mockImplementation(async (id: string, input: unknown) => {
+      const payload = input as { clusterId?: string | null };
+      if (id === "scorched" && payload.clusterId === "ember-nexus-1000") {
+        return { ok: false, error: "Disk full" };
+      }
+      return {
+        ok: true,
+        data: {
+          ...(id === "island" ? islandMap : scorchedMap),
+          ...(input as object),
+        },
+      };
+    });
+    const pickPath = vi.fn().mockResolvedValue({
+      ok: true,
+      data: "D:\\ASA\\Clusters\\Ember",
+    });
+    window.api = {
+      ...window.api,
+      updateServer,
+      pickPath,
+    };
+
+    render(
+      <AppProviders>
+        <ClustersPage
+          servers={[islandMap, scorchedMap]}
+          reports={[]}
+          statuses={makeStatuses([
+            ["island", "stopped"],
+            ["scorched", "stopped"],
+          ])}
+          onOpenServer={vi.fn()}
+          onRefresh={onRefresh}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getAllByRole("button", { name: /create cluster/i })[0]!);
+    const dialog = await screen.findByRole("dialog", { name: /create cluster/i });
+    await user.click(within(dialog).getByRole("button", { name: /Scorched Map/i }));
+    await user.click(within(dialog).getByRole("button", { name: /continue/i }));
+    await user.clear(within(dialog).getByLabelText(/cluster id/i));
+    await user.type(within(dialog).getByLabelText(/cluster id/i), "ember-nexus-1000");
+    await user.click(within(dialog).getByRole("button", { name: /browse/i }));
+    await user.click(within(dialog).getByRole("button", { name: /continue/i }));
+    await user.click(within(dialog).getByRole("button", { name: /^create cluster$/i }));
+
+    expect(await within(dialog).findByText(/Previous profiles were restored/i)).toBeInTheDocument();
+    expect(updateServer).toHaveBeenCalledWith(
+      "island",
+      expect.objectContaining({
+        clusterId: null,
+        clusterDir: null,
+      }),
+    );
+    // Mount only — successful rollback should not refresh as a partial cluster.
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+  });
 });
