@@ -100,8 +100,11 @@ export function ClustersPage(props: Props): ReactElement {
               <ClusterDetailPanel
                 report={activeReport}
                 members={activeMembers}
+                servers={props.servers}
+                statuses={props.statuses}
                 serverById={serverById}
                 onOpenServer={props.onOpenServer}
+                onMembershipChanged={props.onRefresh}
               />
             )}
           </div>

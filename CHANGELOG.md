@@ -12,6 +12,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Added
 
 - **Create cluster** from the Clusters workspace: assign a unique Cluster ID and shared directory to one or more stopped servers (#42).
+- **Add / remove servers** on an existing cluster from the Clusters detail panel (stopped servers only; shared transfer files are never deleted) (#41).
 
 ### Changed
 

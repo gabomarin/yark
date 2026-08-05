@@ -52,6 +52,8 @@ interface Props {
   selectedIds: string[];
   portError: string | null;
   onToggle: (serverId: string) => void;
+  emptyHint?: string;
+  selectionHint?: string;
 }
 
 export function CreateClusterServerStep(props: Props): ReactElement {
@@ -65,7 +67,8 @@ export function CreateClusterServerStep(props: Props): ReactElement {
       <div className={classes.candidateList} data-create-cluster-servers>
         {props.candidates.length === 0 ? (
           <Text size="sm" c="dimmed">
-            Create a server first, then start a cluster from stopped servers.
+            {props.emptyHint ??
+              "Create a server first, then start a cluster from stopped servers."}
           </Text>
         ) : (
           props.candidates.map((candidate) => (
@@ -85,7 +88,8 @@ export function CreateClusterServerStep(props: Props): ReactElement {
         )}
       </div>
       <Text size="xs" c="dimmed">
-        Select one or more stopped servers that are not already in a cluster
+        {props.selectionHint ??
+          "Select one or more stopped servers that are not already in a cluster"}
         {selectedCount > 0 ? ` (${selectedCount} selected)` : ""}.
       </Text>
       {props.portError !== null && (

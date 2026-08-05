@@ -28,7 +28,7 @@ Multiple servers on the same map in one cluster are allowed and not flagged.
 | IPC channel | `src/shared/ipc.ts` (`cluster:check`) → `window.api.checkCluster()` |
 | IPC handler | `src/main/ipc-handlers.ts` |
 | Preload | `src/preload/index.ts` |
-| Fleet UI | `src/renderer/src/features/clusters/` (`ClustersPage`, `clusterModel`, `createClusterModel`, `CreateClusterModal`) |
+| Fleet UI | `src/renderer/src/features/clusters/` (`ClustersPage`, `clusterModel`, `createClusterModel`, `membershipModel`, `CreateClusterModal`, `AddServersModal`, `RemoveServersModal`) |
 | Onboarding join | `src/renderer/src/features/server-workspace/components/ServerOnboardingChecklist/` |
 | Visual helper | `scripts/visual-clusters.cjs` |
 
@@ -125,26 +125,30 @@ Report shape:
   clusters, unclustered servers (`clusterId === null`), dir-without-id count.
 - Empty state when no reports: explains missing IDs; lists servers that have a
   directory but no ID, grouped by path; offers Create cluster when servers exist.
-- List + detail: select a cluster, inspect members / shared dir / issues;
-  “Open server” jumps to workspace.
+- List + detail: select a cluster, inspect servers / shared dir / issues;
+  “Open server” jumps to workspace; **Add servers** / **Remove** manage membership
+  when the cluster has a canonical ID and one shared directory (#41). Partial save
+  failures roll profiles back when possible. Removal clears profile fields only.
 
 ### Server form / onboarding
 
 - Form: edit `clusterId` / browse `clusterDir`.
 - Clusters workspace: create a brand-new cluster ID + directory on one or more
-  stopped servers (#42). Adding further servers later is separate (#41).
+  stopped servers (#42); add or remove stopped servers from an existing cluster
+  in the detail panel (#41).
 - Onboarding checklist: join an **existing** cluster by copying another
   server’s `{clusterId, clusterDir}` pair (or clear).
 
 ## Operator workflow
 
 1. Pick one shared Windows folder for ARK cluster storage.
-2. Create the cluster from **Clusters → Create cluster** (first stopped server),
-   or set the same `clusterId` / `clusterDir` on each map (form or onboarding
-   “join existing”).
-3. Ensure distinct game / query / RCON ports across members.
-4. Prefer matching CurseForge mod Project ID lists if players transfer mod items.
-5. Open **Clusters** (compliance refreshes on open); fix any `error` issues
+2. Create the cluster from **Clusters → Create cluster**, or set the same
+   `clusterId` / `clusterDir` on each map (form or onboarding “join existing”).
+3. Add more stopped servers from the cluster detail **Add servers** action, or
+   remove stopped servers with **Remove** (does not delete transfer files).
+4. Ensure distinct game / query / RCON ports across servers.
+5. Prefer matching CurseForge mod Project ID lists if players transfer mod items.
+6. Open **Clusters** (compliance refreshes on open); fix any `error` issues
    before relying on transfers in-game.
 
 ## Constraints and non-goals
@@ -172,8 +176,10 @@ Report shape:
 | Artifact | Coverage |
 | --- | --- |
 | `tests/unit/compliance.test.ts` | Ready cluster, ignore unclustered, single-server warning, dir mismatch, port conflict, mod mismatch |
-| `src/renderer/src/features/clusters/ClustersPage.test.tsx` | Empty / ready / broken UI, dir-without-id copy, create-cluster wizard |
+| `src/renderer/src/features/clusters/ClustersPage.test.tsx` | Empty / ready / broken UI, dir-without-id copy, create-cluster wizard, add/remove membership |
 | `tests/unit/create-cluster-model.test.ts` | Eligibility, ID/dir validation, create input |
+| `tests/unit/membership-model.test.ts` | Add/remove eligibility, join ports, leave input |
+| `node scripts/e2e-clusters-membership.cjs` | Playwright create → add → remove membership (Windows) |
 | `node scripts/visual-clusters.cjs` | Playwright sidebar → Clusters compliance UI |
 
 Visible Clusters UI changes still follow [visual-testing.md](visual-testing.md)
