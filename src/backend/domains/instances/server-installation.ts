@@ -818,6 +818,16 @@ function writeInstallInspectCache(
   installInspectCache.set(cacheKey, { checkedAt: Date.now(), info });
 }
 
+/** Drop cached inspect rows for a server (call after Move installation commit). */
+export function invalidateInstallInspectCache(serverId: string): void {
+  const prefix = `${serverId}\0`;
+  for (const key of installInspectCache.keys()) {
+    if (key.startsWith(prefix)) {
+      installInspectCache.delete(key);
+    }
+  }
+}
+
 export function inspectServerInstallation(
   serverId: string,
   installDir: string,

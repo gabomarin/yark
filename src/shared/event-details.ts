@@ -42,6 +42,39 @@ function catalogFor(event: AppEvent): AppEventDetails {
         suggestion:
           "Open the server workspace, confirm the install path, then use Install / Verify or Check installs from Overview.",
       };
+    case "install_move_started":
+      return {
+        what: "A Move installation job started.",
+        suggestion:
+          "Wait for copy and verification. The profile path changes only after verification succeeds; the previous folder is removed afterward.",
+      };
+    case "install_move_completed":
+      return {
+        what: "Installation was copied, verified, and the profile path was updated.",
+        suggestion:
+          "The previous install folder is removed after a successful move. If cleanup failed, retry deleting that folder.",
+      };
+    case "install_move_failed":
+      return {
+        what: "Move installation failed before the profile path was updated.",
+        suggestion:
+          "The original install path remains authoritative. Fix disk space, destination conflicts, or access errors, then retry.",
+      };
+    case "install_move_cancelled":
+      return {
+        what: "Move installation was cancelled before the profile path was updated.",
+        suggestion: "The original install path remains authoritative. Retry when ready.",
+      };
+    case "install_move_cleanup_completed":
+      return {
+        what: "The previous install folder was deleted after a successful move.",
+      };
+    case "install_move_cleanup_failed":
+      return {
+        what: "Cleanup of the previous install folder failed.",
+        suggestion:
+          "Confirm nothing is using that folder, then retry cleanup from the server workspace.",
+      };
     case "backup_created":
       return {
         what: "A backup archive was created or a backup job was queued.",

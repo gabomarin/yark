@@ -168,6 +168,19 @@ export class ServerRepository {
     return this.get(id);
   }
 
+  /** Narrow path update used by Move installation after verified copy. */
+  updateInstallDir(id: string, installDir: string): ServerProfile | null {
+    const existing = this.get(id);
+    if (existing === null) return null;
+    const updatedAt = new Date().toISOString();
+    this.db
+      .prepare(
+        `UPDATE servers SET install_dir = ?, updated_at = ? WHERE id = ?`,
+      )
+      .run(installDir, updatedAt, id);
+    return this.get(id);
+  }
+
   setEnabled(id: string, enabled: boolean): ServerProfile | null {
     const existing = this.get(id);
     if (existing === null || existing.enabled === enabled) {

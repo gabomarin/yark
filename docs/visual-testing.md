@@ -182,5 +182,6 @@ for the mandatory three-viewport protocol above unless noted.
 | `visual-overview.cjs` | `npm run build && node scripts/visual-overview.cjs` | Overview layout evidence |
 | `seed-server-logs.cjs` | `node scripts/seed-server-logs.cjs [serverName]` | Seeds events + update log files for Logs UI review. Resolves DB via `%APPDATA%/yark-server-manager` — **Windows `APPDATA`**; on Linux set `APPDATA` to the Electron `userData` parent (often `~/.config`) or the script exits with “DB not found” |
 | `e2e:smoke` / `e2e` | `npm run e2e:smoke` / `npm run e2e` | Need display + `ELECTRON_RUN_AS_NODE` unset in the shell (these two scripts do **not** clear it). Smoke may still fail on stale `section.servers h2`; the suite uses `[data-server-card]`. Server create needs a Windows-style install path, admin password ≥4 chars, unique ports |
+| `e2e:move-install` | `npm run build && npm run e2e:move-install` | Move installation (#56): same-volume rename/verify/commit UI + disk assertions under `C:\asa-e2e`; clears `ELECTRON_RUN_AS_NODE` |
 
 Related domain context: [updates-steamcmd.md](updates-steamcmd.md), [AGENTS.md](../AGENTS.md).

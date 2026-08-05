@@ -11,6 +11,7 @@ import type { IniService } from "../backend/domains/config/ini-service";
 import type { LogsService } from "../backend/domains/logs/logs-service";
 import type { ModsService } from "../backend/domains/mods/mods-service";
 import type { UpdateService } from "../backend/domains/updates/update-service";
+import type { MoveInstallService } from "../backend/domains/instances/move-install-service";
 import type { AppSettingsRepository } from "../backend/infra/db/app-settings-repository";
 import type { ServerRepository } from "../backend/infra/db/server-repository";
 import type {
@@ -64,6 +65,7 @@ export function registerIpcHandlers(
   updates: UpdateService,
   mods: ModsService,
   backups: BackupService,
+  moveInstall: MoveInstallService,
   appDataFolders: AppDataFolderRoots,
   settings: AppSettingsRepository,
   playerSessionWatcher: PlayerSessionWatcher,
@@ -166,6 +168,45 @@ export function registerIpcHandlers(
 
   ipcMain.handle(IPC.serversVerifyFiles, (_e, id: string) =>
     wrap(() => updates.verifyServerFiles(id)),
+  );
+
+  ipcMain.handle(
+    IPC.serversMoveInstall,
+    (_e, id: string, destinationDir: string) =>
+      wrap(async () => {
+        if (typeof destinationDir !== "string" || destinationDir.trim().length === 0) {
+          throw new Error("Destination directory is required");
+        }
+        const result = await moveInstall.moveInstall(id, destinationDir);
+        return {
+          sourceDir: result.sourceDir,
+          destinationDir: result.destinationDir,
+          oldSourceDir: result.oldSourceDir,
+          oldSourceRemoved: result.oldSourceRemoved,
+          cleanupError: result.cleanupError,
+        };
+      }),
+  );
+
+  ipcMain.handle(IPC.serversMoveInstallCancel, () =>
+    wrap(() => moveInstall.cancel()),
+  );
+
+  ipcMain.handle(
+    IPC.serversMoveInstallCleanup,
+    (_e, id: string, oldSourceDir: string) =>
+      wrap(async () => {
+        if (typeof oldSourceDir !== "string" || oldSourceDir.trim().length === 0) {
+          throw new Error("Old source directory is required");
+        }
+        await moveInstall.cleanupOldSource(id, oldSourceDir);
+      }),
+  );
+
+  ipcMain.handle(IPC.serversMoveInstallDismissCleanup, (_e, id: string) =>
+    wrap(() => {
+      moveInstall.dismissCleanupPrompt(id);
+    }),
   );
 
   ipcMain.handle(IPC.serversOpenFolder, (_e, id: string) =>

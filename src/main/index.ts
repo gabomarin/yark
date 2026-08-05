@@ -14,6 +14,7 @@ import { InstanceService } from "../backend/domains/instances/instance-service";
 import { runAutoStartOnLaunch } from "../backend/domains/instances/auto-start";
 import { LogsService } from "../backend/domains/logs/logs-service";
 import { UpdateService } from "../backend/domains/updates/update-service";
+import { MoveInstallService } from "../backend/domains/instances/move-install-service";
 import { ModsService } from "../backend/domains/mods/mods-service";
 import { InstanceLockManager } from "../backend/orchestration/instance-lock-manager";
 import { registerIpcHandlers } from "./ipc-handlers";
@@ -35,7 +36,7 @@ import {
 } from "../backend/infra/process/left-running-store";
 import { reattachLeftRunningProcesses } from "../backend/infra/process/left-running-reattach";
 import { applyWindowsLoginItem } from "./windows-login-item";
-import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush, type RconStatusChangedPush, type PlayerListUpdatedPush } from "../shared/ipc";
+import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush, type MoveInstallProgressPush, type RconStatusChangedPush, type PlayerListUpdatedPush } from "../shared/ipc";
 import { normalizeServerStopProgress } from "../shared/types";
 import type { BackupChangedPush } from "../backend/domains/backups/backup-service";
 import type { ServerRuntimeInfo } from "../shared/types";
@@ -194,6 +195,13 @@ if (gotSingleInstanceLock) {
       join(userData, "update-logs"),
       join(userData, "steamcmd"),
     );
+    const moveInstallService = new MoveInstallService(
+      repo,
+      instances,
+      processManager,
+      backupService,
+      locks,
+    );
     const modsService = new ModsService({ settings });
 
     // Unify RCON traffic on the persistent session (stop / ListPlayers / console).
@@ -207,6 +215,11 @@ if (gotSingleInstanceLock) {
     backupScheduler.start();
     playerSessionWatcher.start();
     applyWindowsLoginItem(readDesktopShellPreferences(settings).startWithWindows);
+
+    // Drop leftover YARK move-staging dirs from interrupted attempts (#56).
+    void moveInstallService.sweepStaleStaging().catch((error: unknown) => {
+      console.error("Move-install staging sweep failed", error);
+    });
 
     // Before UI / auto-start: reclaim ASA left after crash / unexpected exit (#59).
     const reattachOutcomes = reattachLeftRunningProcesses(
@@ -234,6 +247,7 @@ if (gotSingleInstanceLock) {
       updateService,
       modsService,
       backupService,
+      moveInstallService,
       {
         app: userData,
         backups: join(userData, "backups"),
@@ -377,6 +391,10 @@ if (gotSingleInstanceLock) {
 
     updateService.on("progress", (payload: SteamCmdProgressPush) => {
       sendToRenderer(IPC_PUSH.steamCmdProgress, payload);
+    });
+
+    moveInstallService.on("progress", (payload: MoveInstallProgressPush) => {
+      sendToRenderer(IPC_PUSH.moveInstallProgress, payload);
     });
 
     instances.on("stop-progress", (payload: ServerStopProgressPush) => {

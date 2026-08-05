@@ -28,9 +28,10 @@ import { KNOWN_MAPS, type ServerProfile, type ServerProfileInput } from "@shared
 import { useMemo, useState } from "react";
 import { useUiDensity } from "@app/AppProviders";
 import { ServerFormPathField } from "./ServerFormPathField";
+import { ServerFormInstallPath } from "./ServerFormInstallPath";
 import { ServerFormStartupFields } from "./ServerFormStartupFields";
 import { PathField } from "@ui/PathField/PathField";
-import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
+import { MoveInstallDialog } from "../MoveInstallDialog/MoveInstallDialog";
 import classes from "./ServerForm.module.css";
 
 interface Props {
@@ -46,6 +47,13 @@ interface Props {
   serverActive?: boolean;
   /** SteamCMD job specifically — warning copy (ops already covered by serverActive). */
   filesJobActive?: boolean;
+  /** Move installation in progress for this server. */
+  moveJobActive?: boolean;
+  /**
+   * When set (workspace), open Move from the parent so the dialog survives
+   * ServerForm remounts after profile refresh.
+   */
+  onOpenMoveInstall?: () => void;
   onOpenConfigurationAssistant?: () => void;
   configurationAssistantDisabled?: boolean;
 }
@@ -150,15 +158,17 @@ export function ServerForm(props: Props): ReactElement {
   const embedded = props.variant === "embedded";
   const serverActive = props.serverActive === true;
   const filesJobActive = props.filesJobActive === true;
+  const moveJobActive = props.moveJobActive === true;
   const density = useUiDensity();
   /** Comfortable matches prior Mantine `sm`; Compact steps to `xs`. */
-  const inputSize = density === "compact" ? "xs" : "sm";
+  const inputSize: "xs" | "sm" = density === "compact" ? "xs" : "sm";
   const [state, setState] = useState<FormState>(() =>
     toFormState(props.initial, props.defaultBaseFolder),
   );
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [browsingField, setBrowsingField] = useState<"installDir" | "clusterDir" | null>(null);
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
 
   const nameFolderError = useMemo(() => {
     if (state.name.trim().length === 0) {
@@ -295,12 +305,18 @@ export function ServerForm(props: Props): ReactElement {
 
       {filesJobActive && (
         <Alert color="yellow" title="Updating server files">
-          You can save profile settings now. Wait until the file update finishes before
-          changing the install path.
+          You can save profile settings now. Wait until the file update finishes
+          before starting Move installation.
         </Alert>
       )}
 
-      {serverActive && !filesJobActive && (
+      {moveJobActive && (
+        <Alert color="yellow" title="Moving installation">
+          Wait until the move finishes before starting or updating this server.
+        </Alert>
+      )}
+
+      {serverActive && !filesJobActive && !moveJobActive && (
         <Alert color="yellow" title="Server is running">
           You can save changes now; they will apply after the server restarts.
         </Alert>
@@ -344,28 +360,30 @@ export function ServerForm(props: Props): ReactElement {
             allowDeselect={false}
             required
           />
-          <ServerFormPathField
-            label={isCreate ? "Base folder" : "Install directory"}
-            value={state.installDir}
-            placeholder={isCreate ? "C:\\ark_servers" : "C:\\ark_servers\\my_server"}
-            busy={browsingField === "installDir"}
-            disabled={serverActive && !isCreate}
-            size={inputSize}
-            onChange={setField("installDir")}
-            onBrowse={() => void browseDirectory("installDir")}
+          <ServerFormInstallPath
+            isCreate={isCreate}
+            installDir={state.installDir}
+            resolvedInstallPreview={resolvedInstallPreview}
+            inputSize={inputSize}
+            browsingInstallDir={browsingField === "installDir"}
+            moveDisabled={serverActive || filesJobActive || moveJobActive}
+            moveDisabledReason={
+              serverActive
+                ? "Stop the server before moving the installation"
+                : filesJobActive || moveJobActive
+                  ? "Wait for the current files job to finish"
+                  : "Copy, verify, and commit a new install path"
+            }
+            onInstallDirChange={setField("installDir")}
+            onBrowseInstallDir={() => void browseDirectory("installDir")}
+            onOpenMove={() => {
+              if (props.onOpenMoveInstall !== undefined) {
+                props.onOpenMoveInstall();
+                return;
+              }
+              setMoveDialogOpen(true);
+            }}
           />
-          {isCreate && (
-            <Stack gap={4}>
-              <Text size="sm" c="dimmed">
-                Final install path
-              </Text>
-              <ReadonlyPath
-                value={resolvedInstallPreview.length > 0 ? resolvedInstallPreview : null}
-                emptyLabel="pick a base folder and name"
-                compact
-              />
-            </Stack>
-          )}
         </Section>
 
         <Section title="Networking" flat={embedded}>
@@ -495,6 +513,18 @@ export function ServerForm(props: Props): ReactElement {
         <Card withBorder className={classes.card}>
           {formBody}
         </Card>
+      )}
+      {!isCreate
+        && props.initial !== null
+        && props.onOpenMoveInstall === undefined && (
+        <MoveInstallDialog
+          opened={moveDialogOpen}
+          server={props.initial}
+          onClose={() => setMoveDialogOpen(false)}
+          onMoved={() => {
+            props.onSaved();
+          }}
+        />
       )}
     </div>
   );
