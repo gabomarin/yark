@@ -20,14 +20,16 @@ the Server tab / workspace.
 | General controls | `…/components/SettingsGeneralSection.tsx` |
 | Auto-start summary | `…/components/SettingsAutoStartSection.tsx` |
 | Log retention | `…/components/SettingsLogRetentionSection.tsx` |
+| YARK self-update | `…/components/SettingsYarkUpdateSection.tsx` |
 | Density load/migrate | `…/settingsModel.ts` |
 | Tray / Windows startup hook | `…/useDesktopShellPreferences.ts` |
 | Desktop-shell persist | `src/main/desktop-shell-settings.ts` |
 | Windows login item | `src/main/windows-login-item.ts` |
 | Tray icon / menu | `src/main/app-tray.ts` |
-| Shared keys / defaults | `src/shared/desktop-shell.ts`, `src/shared/ui-density.ts`, `src/shared/log-retention.ts` |
+| Shared keys / defaults | `src/shared/desktop-shell.ts`, `src/shared/ui-density.ts`, `src/shared/log-retention.ts`, `src/shared/app-update.ts` |
 | Density theme apply | `src/renderer/src/app/AppProviders.tsx`, `src/renderer/src/main.tsx` |
 | SteamCMD service | `src/backend/domains/updates/*` (path/install/caches) |
+| YARK self-update | `src/main/app-update-service.ts` |
 | IPC | `src/shared/ipc.ts`, `src/preload/index.ts`, `src/main/ipc-handlers.ts` |
 
 ## What lives where
@@ -41,6 +43,7 @@ the Server tab / workspace.
 | App data folder shortcuts | Backup disk-alert thresholds (Backups page modal) |
 | Opted-in auto-start **summary** | Quit-with-servers Stop/Cancel dialog (hardcoded in main; not a Setting) |
 | **Log retention** limits + Clean up now | Per-section clear on Logs workspace; ASA Saved/Logs never touched — [logs.md](logs.md) |
+| **YARK updates** check / download / restart | Overview **Check for updates** is ASA/SteamCMD only; sidebar `vX.Y.Z` accents when a YARK update is available — [versioning.md](versioning.md) |
 
 ## Controls and defaults
 
@@ -106,6 +109,29 @@ SteamCMD under Electron `userData`.
 
 Full ownership table and recovery limits: [logs.md](logs.md#ownership-and-retention-84).
 
+### YARK updates (#165)
+
+In-app update for the **desktop app** (not ASA files). Uses `electron-updater`
+against GitHub Releases (`latest.yml` from the release workflow). While the app is
+`0.x`, GitHub prereleases are accepted (the release workflow marks every `0.x` tag
+as prerelease). From `1.0.0+`, only non-prerelease releases count. No silent
+download — operator must Check → Download → Restart and install.
+
+| Control | IPC | Notes |
+| --- | --- | --- |
+| Status | `app:get-update-status` + `push:app-update` | Quiet check ~60s after launch |
+| Check now | `app:check-for-update` | Packaged: updater feed; unpackaged: GitHub API compare |
+| Download | `app:download-update` | Packaged only |
+| Restart and install | `app:install-update` | Only rendered once a download is ready; blocked if servers running, SteamCMD/critical jobs busy, or settle in progress |
+| Release notes | `app:open-yark-release-notes` | Opens GitHub in the browser |
+
+The section is a single compact row: heading, then `v{APP_VERSION} · <status>`,
+with the actions right-aligned. Progress, install-block, and error lines only
+render when they apply.
+
+Sidebar `vX.Y.Z` uses cryo accent + tooltip when an update is available; click
+opens this Settings section (does not install directly).
+
 ## Related subsystems (not on this page)
 
 - **Backup disk alerts** — key `backupDiskAlerts.v1`; IPC
@@ -139,7 +165,7 @@ Full ownership table and recovery limits: [logs.md](logs.md#ownership-and-retent
 
 | File | Focus |
 | --- | --- |
-| `src/renderer/src/features/settings/SettingsPage.test.tsx` | Page controls, density, caches, base folder, SteamCMD setup, log retention |
+| `src/renderer/src/features/settings/SettingsPage.test.tsx` | Page controls, density, caches, base folder, SteamCMD setup, log retention, YARK updates |
 | `tests/unit/log-retention.test.ts` | Defaults / normalize / failure classification |
 | `tests/unit/logs-service.test.ts` | Retention preview/run path guards |
 | `tests/unit/ui-density-pref.test.ts` | Load / write / legacy migration |

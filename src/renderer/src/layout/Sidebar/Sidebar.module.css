@@ -165,3 +165,26 @@
 :global([data-ui-density="compact"]) .sidebar::after {
   height: 72px;
 }
+
+.appVersionUpdate {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  padding: 2px 0;
+  border-radius: var(--app-radius-control);
+  color: var(--app-color-cryo);
+}
+
+.appVersionUpdate:hover {
+  color: color-mix(in srgb, var(--app-color-cryo) 85%, white);
+}
+
+.appVersionUpdate:focus-visible {
+  outline: 2px solid var(--app-color-cryo);
+  outline-offset: 2px;
+}
+
+.appVersionUpdateText {
+  color: inherit;
+  font-weight: 600;
+}

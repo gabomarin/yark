@@ -32,6 +32,7 @@ import type {
   SteamCmdCacheKind,
   StartServerOptions,
 } from "./types";
+import type { AppUpdateStatus } from "./app-update";
 import type { UiDensity } from "./ui-density";
 import type { DesktopShellPreferences } from "./desktop-shell";
 
@@ -102,6 +103,11 @@ export const IPC = {
   appSetCloseWindowToTray: "app:set-close-window-to-tray",
   appSetStartWithWindows: "app:set-start-with-windows",
   appSetTrayCloseHintDismissed: "app:set-tray-close-hint-dismissed",
+  appGetUpdateStatus: "app:get-update-status",
+  appCheckForUpdate: "app:check-for-update",
+  appDownloadUpdate: "app:download-update",
+  appInstallUpdate: "app:install-update",
+  appOpenYarkReleaseNotes: "app:open-yark-release-notes",
   iniRead: "ini:read",
   iniPreview: "ini:preview",
   iniSave: "ini:save",
@@ -151,6 +157,7 @@ export const IPC_PUSH = {
   backupsChanged: "push:backups-changed",
   rconStatusChanged: "push:rcon-status-changed",
   playerListUpdated: "push:player-list-updated",
+  appUpdate: "push:app-update",
 } as const;
 
 export interface SteamCmdProgressPush {
@@ -290,6 +297,11 @@ export interface RendererApi {
   setCloseWindowToTray(enabled: boolean): Promise<IpcResult<boolean>>;
   setStartWithWindows(enabled: boolean): Promise<IpcResult<boolean>>;
   setTrayCloseHintDismissed(dismissed: boolean): Promise<IpcResult<boolean>>;
+  getAppUpdateStatus(): Promise<IpcResult<AppUpdateStatus>>;
+  checkForAppUpdate(): Promise<IpcResult<AppUpdateStatus>>;
+  downloadAppUpdate(): Promise<IpcResult<AppUpdateStatus>>;
+  installAppUpdate(): Promise<IpcResult<void>>;
+  openYarkReleaseNotes(): Promise<IpcResult<void>>;
   readServerIni(serverId: string): Promise<IpcResult<ServerIniSnapshot>>;
   openServerIniInEditor(
     serverId: string,
@@ -408,4 +420,5 @@ export interface RendererApi {
   onPlayerListUpdated(
     listener: (payload: PlayerListUpdatedPush) => void,
   ): () => void;
+  onAppUpdate(listener: (status: AppUpdateStatus) => void): () => void;
 }

@@ -147,6 +147,46 @@ function createApiMock(): RendererApi {
     onBackupsChanged: vi.fn(() => () => undefined),
     onRconStatusChanged: vi.fn(() => () => undefined),
     onPlayerListUpdated: vi.fn(() => () => undefined),
+    getAppUpdateStatus: vi.fn(async () => ({
+      ok: true as const,
+      data: {
+        phase: "idle" as const,
+        currentVersion: "0.1.0",
+        availableVersion: null,
+        percent: null,
+        error: null,
+        isPackaged: false,
+        releasePageUrl: "https://github.com/gabomarin/yark/releases",
+        releaseNotesUrl: null,
+        installBlockedReason: "dev" as const,
+        installBlockedMessage: "Install is only available in the packaged Windows app.",
+      },
+    })),
+    checkForAppUpdate: vi.fn(async () => ({
+      ok: true as const,
+      data: {
+        phase: "up-to-date" as const,
+        currentVersion: "0.1.0",
+        availableVersion: null,
+        percent: null,
+        error: null,
+        isPackaged: false,
+        releasePageUrl: "https://github.com/gabomarin/yark/releases",
+        releaseNotesUrl: null,
+        installBlockedReason: "dev" as const,
+        installBlockedMessage: "Install is only available in the packaged Windows app.",
+      },
+    })),
+    downloadAppUpdate: vi.fn(async () => ({
+      ok: false as const,
+      error: "not packaged",
+    })),
+    installAppUpdate: vi.fn(async () => ({
+      ok: false as const,
+      error: "not packaged",
+    })),
+    openYarkReleaseNotes: vi.fn(async () => ({ ok: true as const, data: undefined })),
+    onAppUpdate: vi.fn(() => () => undefined),
   };
 }
 

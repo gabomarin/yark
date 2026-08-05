@@ -29,6 +29,7 @@ import {
 } from "./desktop-shell-settings";
 import { applyWindowsLoginItem } from "./windows-login-item";
 import type { DesktopShellPreferences } from "../shared/desktop-shell";
+import type { AppUpdateService } from "./app-update-service";
 
 export interface AppDataFolderRoots {
   app: string;
@@ -69,6 +70,7 @@ export function registerIpcHandlers(
   appDataFolders: AppDataFolderRoots,
   settings: AppSettingsRepository,
   playerSessionWatcher: PlayerSessionWatcher,
+  appUpdate: AppUpdateService,
 ): void {
   ipcMain.handle(IPC.serversList, () => wrap(() => instances.list()));
 
@@ -769,9 +771,27 @@ export function registerIpcHandlers(
       wrap(() => backups.previewCleanup(options)),
   );
 
-  ipcMain.handle(
-    IPC.backupsRunCleanup,
-    (_e, options: BackupCleanupOptions) =>
-      wrap(() => backups.runCleanup(options)),
+  ipcMain.handle(IPC.backupsRunCleanup, (_e, options: BackupCleanupOptions) =>
+    wrap(() => backups.runCleanup(options)),
+  );
+
+  ipcMain.handle(IPC.appGetUpdateStatus, () =>
+    wrap(() => appUpdate.getStatus()),
+  );
+
+  ipcMain.handle(IPC.appCheckForUpdate, () =>
+    wrap(() => appUpdate.checkForUpdate()),
+  );
+
+  ipcMain.handle(IPC.appDownloadUpdate, () =>
+    wrap(() => appUpdate.downloadUpdate()),
+  );
+
+  ipcMain.handle(IPC.appInstallUpdate, () =>
+    wrap(() => appUpdate.installUpdate()),
+  );
+
+  ipcMain.handle(IPC.appOpenYarkReleaseNotes, () =>
+    wrap(() => appUpdate.openReleaseNotes()),
   );
 }
