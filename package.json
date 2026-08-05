@@ -92,6 +92,7 @@
       "target": "nsis",
       "icon": "icon.ico"
     },
+    "artifactName": "YARK-server-manager-Setup-${version}.${ext}",
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,

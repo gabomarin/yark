@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- **YARK updates** no longer fail with a 404 when downloading a new release: installers now publish under a space-free filename (`YARK-server-manager-Setup-<version>.exe`) that matches the updater metadata and the website download button (#165).
+
 ## [0.6.0] - 2026-08-05
 
 ### Added

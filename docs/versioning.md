@@ -62,6 +62,10 @@ Workflow: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
 - **Output:** GitHub Release with `dist/*.exe` (and `*.yml` metadata). Tags that are
   `0.x` or include a SemVer prerelease label (`-alpha`, `-beta.1`, …) are marked
   **prerelease**.
+- **Artifact name:** `build.artifactName` pins `YARK-server-manager-Setup-${version}.${ext}`.
+  Keep it space-free: GitHub rewrites spaces in uploaded asset names to dots, while
+  electron-updater's `latest.yml` uses dashes, and the mismatch makes in-app updates
+  fail with a 404. `website/src/data/site.ts` builds the download CTA from this same name.
 - **Signing:** builds are currently **unsigned** (`CSC_IDENTITY_AUTO_DISCOVERY=false`).
   Windows SmartScreen may warn until Authenticode signing and RFC 3161 timestamp verification
   are implemented in #142.
