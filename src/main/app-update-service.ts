@@ -5,8 +5,8 @@ import {
   compareSemver,
   createIdleAppUpdateStatus,
   installBlockMessage,
+  parseReleaseVersion,
   pickNewestAllowedRelease,
-  stripVersionPrefix,
   YARK_RELEASES_API,
   YARK_RELEASES_URL,
   type AppUpdateInstallBlockReason,
@@ -92,8 +92,8 @@ export class AppUpdateService {
         const result = await autoUpdater.checkForUpdates();
         // Events usually update status; if somehow skipped, fall through.
         if (result?.updateInfo !== undefined) {
-          const remote = stripVersionPrefix(result.updateInfo.version);
-          if (compareSemver(remote, this.currentVersion) > 0) {
+          const remote = parseReleaseVersion(result.updateInfo.version);
+          if (remote !== null && compareSemver(remote, this.currentVersion) > 0) {
             this.applyAvailable(result.updateInfo);
           } else if (this.status.phase === "checking") {
             this.emit({
@@ -225,7 +225,16 @@ export class AppUpdateService {
     });
 
     autoUpdater.on("update-downloaded", (info: UpdateInfo) => {
-      const version = stripVersionPrefix(info.version);
+      const version = parseReleaseVersion(info.version);
+      if (version === null) {
+        this.emit({
+          ...this.status,
+          phase: "error",
+          error: "Downloaded update had an invalid version.",
+          percent: null,
+        });
+        return;
+      }
       this.emit({
         ...this.status,
         phase: "ready",
@@ -249,7 +258,17 @@ export class AppUpdateService {
   }
 
   private applyAvailable(info: UpdateInfo): void {
-    const version = stripVersionPrefix(info.version);
+    const version = parseReleaseVersion(info.version);
+    if (version === null) {
+      this.emit({
+        ...this.status,
+        phase: "error",
+        error: "Update feed reported an invalid version.",
+        availableVersion: null,
+        percent: null,
+      });
+      return;
+    }
     this.emit({
       ...this.status,
       phase: "available",
@@ -278,11 +297,10 @@ export class AppUpdateService {
     if (newest === null) {
       throw new Error("No published GitHub Releases found.");
     }
-    const tag = newest.tag_name;
-    if (typeof tag !== "string" || tag.trim() === "") {
-      throw new Error("GitHub Releases response had no tag.");
+    const remote = parseReleaseVersion(newest.tag_name ?? "");
+    if (remote === null) {
+      throw new Error("GitHub Releases response had no usable version tag.");
     }
-    const remote = stripVersionPrefix(tag);
     if (compareSemver(remote, this.currentVersion) > 0) {
       this.emit({
         ...this.status,
@@ -346,5 +364,9 @@ export class AppUpdateService {
 }
 
 function releaseNotesUrlFor(version: string): string {
-  return `${YARK_RELEASES_URL}/tag/v${stripVersionPrefix(version)}`;
+  const parsed = parseReleaseVersion(version);
+  if (parsed === null) {
+    return YARK_RELEASES_URL;
+  }
+  return `${YARK_RELEASES_URL}/tag/v${parsed}`;
 }

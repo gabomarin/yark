@@ -244,6 +244,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       || appUpdateStatus.phase === "downloading"
       || appUpdateStatus.phase === "ready")
     && appUpdateStatus.availableVersion !== null
+    && appUpdateStatus.availableVersion.length > 0
       ? appUpdateStatus.availableVersion
       : null;
 

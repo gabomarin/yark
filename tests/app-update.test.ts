@@ -4,6 +4,7 @@ import {
   compareSemver,
   createIdleAppUpdateStatus,
   installBlockMessage,
+  parseReleaseVersion,
   pickNewestAllowedRelease,
   stripVersionPrefix,
 } from "../src/shared/app-update";
@@ -12,6 +13,16 @@ describe("app-update helpers", () => {
   it("strips optional v prefix", () => {
     expect(stripVersionPrefix("v1.2.3")).toBe("1.2.3");
     expect(stripVersionPrefix("1.2.3")).toBe("1.2.3");
+    expect(stripVersionPrefix("v")).toBe("");
+    expect(stripVersionPrefix("V")).toBe("");
+  });
+
+  it("rejects empty bodies after stripping the version prefix", () => {
+    expect(parseReleaseVersion("v1.2.3")).toBe("1.2.3");
+    expect(parseReleaseVersion("1.2.3")).toBe("1.2.3");
+    expect(parseReleaseVersion("v")).toBeNull();
+    expect(parseReleaseVersion("V")).toBeNull();
+    expect(parseReleaseVersion("   ")).toBeNull();
   });
 
   it("compares semver cores and prerelease order", () => {
@@ -49,6 +60,15 @@ describe("app-update helpers", () => {
     ];
     const newest = pickNewestAllowedRelease(releases, "0.5.0");
     expect(newest?.tag_name).toBe("v0.5.1");
+  });
+
+  it("skips tags that are only a version prefix", () => {
+    const releases = [
+      { tag_name: "v", prerelease: true, draft: false },
+      { tag_name: "V", prerelease: true, draft: false },
+      { tag_name: "v0.5.1", prerelease: true, draft: false },
+    ];
+    expect(pickNewestAllowedRelease(releases, "0.5.0")?.tag_name).toBe("v0.5.1");
   });
 
   it("ignores GitHub prereleases once the app is 1.0+", () => {

@@ -41,7 +41,8 @@ export function pickNewestAllowedRelease(
     if (!allowPrerelease && release.prerelease === true) continue;
     const tag = release.tag_name;
     if (typeof tag !== "string" || tag.trim() === "") continue;
-    const version = stripVersionPrefix(tag);
+    const version = parseReleaseVersion(tag);
+    if (version === null) continue;
     if (best === null || compareSemver(version, bestVersion) > 0) {
       best = release;
       bestVersion = version;
@@ -90,6 +91,15 @@ export function stripVersionPrefix(version: string): string {
   return trimmed.startsWith("v") || trimmed.startsWith("V")
     ? trimmed.slice(1)
     : trimmed;
+}
+
+/**
+ * Strip an optional `v`/`V` prefix and require a non-empty version body.
+ * Tags that are only `"v"` / `"V"` (or whitespace) are rejected.
+ */
+export function parseReleaseVersion(version: string): string | null {
+  const stripped = stripVersionPrefix(version);
+  return stripped.length > 0 ? stripped : null;
 }
 
 /**

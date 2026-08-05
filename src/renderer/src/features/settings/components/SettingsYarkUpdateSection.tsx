@@ -24,7 +24,7 @@ function statusLabel(status: AppUpdateStatus): string {
     case "up-to-date":
       return "You’re up to date";
     case "available":
-      return status.availableVersion !== null
+      return status.availableVersion !== null && status.availableVersion.length > 0
         ? `Update available · v${status.availableVersion}`
         : "Update available";
     case "downloading":
@@ -32,7 +32,7 @@ function statusLabel(status: AppUpdateStatus): string {
         ? `Downloading… ${status.percent}%`
         : "Downloading…";
     case "ready":
-      return status.availableVersion !== null
+      return status.availableVersion !== null && status.availableVersion.length > 0
         ? `Ready to install · v${status.availableVersion}`
         : "Ready to install";
     case "error":
