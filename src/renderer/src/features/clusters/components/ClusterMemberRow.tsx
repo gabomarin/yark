@@ -46,6 +46,7 @@ export function ClusterMemberRow(props: Props): ReactElement {
         <Button
           size="compact-xs"
           variant="default"
+          aria-label={`Open ${props.server.name}`}
           onClick={() => props.onOpen(props.server.id)}
         >
           Open
@@ -55,6 +56,7 @@ export function ClusterMemberRow(props: Props): ReactElement {
             size="compact-xs"
             variant="light"
             color="red"
+            aria-label={`Remove ${props.server.name}`}
             disabled={props.canRemove === false}
             onClick={() => props.onRemove?.(props.server.id)}
           >

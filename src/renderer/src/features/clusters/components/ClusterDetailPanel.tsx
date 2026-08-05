@@ -74,9 +74,11 @@ export function ClusterDetailPanel(props: Props): ReactElement {
                   : "Align the shared cluster directory on every server first"
               }
             >
-              <Button size="sm" disabled={!canAdd} onClick={() => setAddOpen(true)}>
-                Add servers
-              </Button>
+              <span>
+                <Button size="sm" disabled={!canAdd} onClick={() => setAddOpen(true)}>
+                  Add servers
+                </Button>
+              </span>
             </Tooltip>
           </Group>
         </Group>

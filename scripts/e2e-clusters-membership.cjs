@@ -231,7 +231,7 @@ async function run() {
     const cMemberRow = detail.locator("[class*='memberRow']", {
       has: page.getByText(nameC, { exact: true }),
     });
-    await cMemberRow.getByRole("button", { name: /^remove$/i }).click();
+    await cMemberRow.getByRole("button", { name: /^remove /i }).click();
     const removeDialog = page.getByRole("dialog", {
       name: new RegExp(`remove from ${clusterId}`, "i"),
     });

@@ -52,15 +52,17 @@ export function RemoveServersModal(props: Props): ReactElement {
 
     if (justOpened) {
       const initial = props.initialSelectedIds ?? [];
-      const eligible = new Set(
-        candidates.filter((c) => c.eligible).map((c) => c.server.id),
-      );
+      const eligibleIds = candidates
+        .filter((candidate) => candidate.eligible)
+        .map((candidate) => candidate.server.id);
+      const eligible = new Set(eligibleIds);
       const preselected = initial.filter((id) => eligible.has(id));
+      const firstEligible = eligibleIds[0];
       setSelectedIds(
         preselected.length > 0
           ? preselected
-          : candidates.find((c) => c.eligible)?.server.id !== undefined
-            ? [candidates.find((c) => c.eligible)!.server.id]
+          : firstEligible !== undefined
+            ? [firstEligible]
             : [],
       );
       setSaving(false);

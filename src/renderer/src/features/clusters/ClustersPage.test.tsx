@@ -135,7 +135,9 @@ describe("ClustersPage", () => {
     const islandLabel = within(detail as HTMLElement).getByText("The Island");
     const islandRow = islandLabel.closest("[class*='memberRow']");
     expect(islandRow).not.toBeNull();
-    await user.click(within(islandRow as HTMLElement).getByRole("button", { name: /^open$/i }));
+    await user.click(
+      within(islandRow as HTMLElement).getByRole("button", { name: /^open /i }),
+    );
     expect(onOpenServer).toHaveBeenCalledWith("srv-a");
   });
 
@@ -199,7 +201,7 @@ describe("ClustersPage", () => {
     expect(screen.getAllByText(/directory but no Cluster ID/i).length).toBeGreaterThan(0);
     expect(screen.getByText("C:/ARK/cluster")).toBeInTheDocument();
     expect(screen.getByText("Dir Only")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^open$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^open /i })).toBeInTheDocument();
     expect(screen.getByText(/missing Cluster ID/i)).toBeInTheDocument();
   });
 
@@ -457,7 +459,7 @@ describe("ClustersPage", () => {
       </AppProviders>,
     );
 
-    const removeButtons = screen.getAllByRole("button", { name: /^remove$/i });
+    const removeButtons = screen.getAllByRole("button", { name: /^remove /i });
     await user.click(removeButtons[0]!);
     const dialog = await screen.findByRole("dialog", { name: /remove from alpha/i });
     await user.click(within(dialog).getByRole("button", { name: /remove from cluster/i }));
