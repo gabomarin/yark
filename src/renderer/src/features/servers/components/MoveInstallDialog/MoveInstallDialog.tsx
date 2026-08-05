@@ -79,7 +79,11 @@ export function MoveInstallDialog(props: Props): ReactElement {
     }
   };
 
-  const finishSuccess = (): void => {
+  const finishSuccess = async (): Promise<void> => {
+    if (props.server !== null && !oldSourceRemoved) {
+      // Clear awaitingCleanup so progress state does not linger after the dialog closes.
+      await window.api.dismissMoveServerInstallCleanup(props.server.id);
+    }
     props.onMoved();
     props.onClose();
   };
@@ -260,11 +264,11 @@ export function MoveInstallDialog(props: Props): ReactElement {
             </Button>
           )}
           {phase === "success" && oldSourceRemoved && (
-            <Button onClick={finishSuccess}>Done</Button>
+            <Button onClick={() => void finishSuccess()}>Done</Button>
           )}
           {phase === "success" && !oldSourceRemoved && (
             <>
-              <Button variant="default" onClick={finishSuccess}>
+              <Button variant="default" onClick={() => void finishSuccess()}>
                 Leave previous folder
               </Button>
               <Button

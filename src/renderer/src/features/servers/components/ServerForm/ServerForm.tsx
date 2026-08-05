@@ -370,9 +370,11 @@ export function ServerForm(props: Props): ReactElement {
             moveDisabledReason={
               serverActive
                 ? "Stop the server before moving the installation"
-                : filesJobActive || moveJobActive
-                  ? "Wait for the current files job to finish"
-                  : "Copy, verify, and commit a new install path"
+                : moveJobActive
+                  ? "Wait for the current move to finish"
+                  : filesJobActive
+                    ? "Wait for the current files job to finish"
+                    : "Copy, verify, and commit a new install path"
             }
             onInstallDirChange={setField("installDir")}
             onBrowseInstallDir={() => void browseDirectory("installDir")}

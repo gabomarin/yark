@@ -17,7 +17,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
-- **Move installation** recovers orphaned cross-drive staging folders on startup, surfaces cancel failures in the dialog, and estimates copy progress from free disk space instead of walking the staging tree (#56).
+- **Move installation** recovers orphaned cross-drive staging folders on startup, surfaces cancel failures in the dialog, estimates copy progress from free disk space, clears leftover cleanup state when leaving the old folder, and shows distinct Move-button guidance for an active move vs a files job (#56).
 
 ### Changed
 
