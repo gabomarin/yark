@@ -75,9 +75,11 @@ header in `scripts/capture-website-screenshots.cjs`.
 
 `website/src/data/site.ts` reads the root `package.json` `version` and builds:
 
-`https://github.com/gabomarin/yark/releases/download/v{version}/YARK.server.manager.Setup.{version}.exe`
+`https://github.com/gabomarin/yark/releases/download/v{version}/YARK-server-manager-Setup-{version}.exe`
 
-Bump the app version / cut a matching Release tag so the CTA stays valid.
+Bump the app version / cut a matching Release tag so the CTA stays valid. The asset name
+must stay in sync with `build.artifactName` in the root `package.json` — see
+[versioning.md](versioning.md).
 
 The landing and operator docs must describe the current release trust state consistently:
 

@@ -3,11 +3,12 @@ import rootPackage from "../../../package.json";
 const version = rootPackage.version;
 
 /**
- * electron-builder NSIS default for productName "YARK server manager":
- * `YARK.server.manager.Setup.<version>.exe`
+ * Must match `build.artifactName` in the root package.json. The name is
+ * space-free so GitHub keeps it verbatim and electron-updater's `latest.yml`
+ * URL resolves.
  */
 function windowsSetupDownloadUrl(ver: string): string {
-  const asset = `YARK.server.manager.Setup.${ver}.exe`;
+  const asset = `YARK-server-manager-Setup-${ver}.exe`;
   return `https://github.com/gabomarin/yark/releases/download/v${ver}/${asset}`;
 }
 
