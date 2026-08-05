@@ -1286,6 +1286,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             <ClustersPage
               servers={servers}
               reports={reports}
+              statuses={statuses}
               onRefresh={() => void refresh()}
               onOpenServer={(serverId) =>
                 setOverlay({ kind: "workspace", serverId })

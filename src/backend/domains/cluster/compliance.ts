@@ -29,7 +29,7 @@ export function checkClusterCompliance(
       issues.push({
         serverId: members[0]?.id ?? null,
         severity: "warning",
-        message: `Cluster "${clusterId}" has only one member; transfers require at least 2 maps`,
+        message: `Cluster "${clusterId}" has only one server; transfers require at least 2 servers`,
       });
     }
 
@@ -38,7 +38,7 @@ export function checkClusterCompliance(
       issues.push({
         serverId: null,
         severity: "error",
-        message: `Members of cluster "${clusterId}" use different cluster directories: ${[...dirs].join(" | ")}`,
+        message: `Servers in cluster "${clusterId}" use different cluster directories: ${[...dirs].join(" | ")}`,
       });
     }
     for (const m of members) {
@@ -47,22 +47,6 @@ export function checkClusterCompliance(
           serverId: m.id,
           severity: "error",
           message: `"${m.name}" has no cluster directory configured`,
-        });
-      }
-    }
-
-    const maps = new Map<string, string[]>();
-    for (const m of members) {
-      const list = maps.get(m.map) ?? [];
-      list.push(m.name);
-      maps.set(m.map, list);
-    }
-    for (const [map, names] of maps) {
-      if (names.length > 1) {
-        issues.push({
-          serverId: null,
-          severity: "warning",
-          message: `There are ${names.length} servers with map ${map} in the same cluster (${names.join(", ")})`,
         });
       }
     }
@@ -84,7 +68,7 @@ export function checkClusterCompliance(
       issues.push({
         serverId: null,
         severity: "warning",
-        message: `Members of cluster "${clusterId}" have different mod lists; mod items may be lost on transfer`,
+        message: `Servers in cluster "${clusterId}" have different mod lists; mod items may be lost on transfer`,
       });
     }
 

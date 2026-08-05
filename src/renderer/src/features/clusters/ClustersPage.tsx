@@ -1,8 +1,12 @@
 import type { ReactElement } from "react";
 import { Button, Stack } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
-import type { ClusterComplianceReport, ServerProfile } from "@shared/types";
-import { useMemo, useState } from "react";
+import type {
+  ClusterComplianceReport,
+  ServerProfile,
+  ServerRuntimeInfo,
+} from "@shared/types";
+import { useEffect, useMemo, useState } from "react";
 import {
   buildServerById,
   listDirWithoutIdServers,
@@ -17,16 +21,23 @@ import { ClusterEmptyState } from "./components/ClusterEmptyState";
 import { ClusterGuidanceCard } from "./components/ClusterGuidanceCard";
 import { ClusterListPanel } from "./components/ClusterListPanel";
 import { ClusterSummaryBadges } from "./components/ClusterSummaryBadges";
+import { CreateClusterModal } from "./components/CreateClusterModal/CreateClusterModal";
 
 interface Props {
   servers: ServerProfile[];
   reports: ClusterComplianceReport[];
+  statuses: Map<string, ServerRuntimeInfo>;
   onOpenServer: (serverId: string) => void;
   onRefresh: () => void;
 }
 
 export function ClustersPage(props: Props): ReactElement {
   const [selectedClusterId, setSelectedClusterId] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+
+  useEffect(() => {
+    props.onRefresh();
+  }, []);
 
   const serverById = useMemo(() => buildServerById(props.servers), [props.servers]);
   const unclusteredCount = useMemo(
@@ -56,9 +67,7 @@ export function ClustersPage(props: Props): ReactElement {
       subtitle="Compatibility checks and guidance for Cluster ID and shared cluster directory across your maps"
       fillViewport
       actions={
-        <Button variant="default" onClick={props.onRefresh}>
-          Recheck
-        </Button>
+        <Button onClick={() => setCreateOpen(true)}>Create cluster</Button>
       }
     >
       <Stack gap="md" className={classes.content} data-clusters-page>
@@ -77,6 +86,7 @@ export function ClustersPage(props: Props): ReactElement {
             serverCount={props.servers.length}
             dirWithoutIdServers={dirWithoutIdServers}
             onOpenServer={props.onOpenServer}
+            onCreateCluster={() => setCreateOpen(true)}
           />
         ) : (
           <div className={classes.layout}>
@@ -97,6 +107,14 @@ export function ClustersPage(props: Props): ReactElement {
           </div>
         )}
       </Stack>
+
+      <CreateClusterModal
+        opened={createOpen}
+        servers={props.servers}
+        statuses={props.statuses}
+        onClose={() => setCreateOpen(false)}
+        onCreated={props.onRefresh}
+      />
     </PageScaffold>
   );
 }

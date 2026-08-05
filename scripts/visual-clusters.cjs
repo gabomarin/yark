@@ -147,11 +147,9 @@ async function run() {
       );
     }
 
-    // Interaction: recheck + select first cluster card if present.
+    // Interaction: select first cluster card if present.
     await page.setViewportSize({ width: 1920, height: 1080 });
-    await page.getByRole("button", { name: /Recheck/i }).click();
-    await page.waitForTimeout(500);
-    await shot(page, outDir, "clusters-after-recheck");
+    await shot(page, outDir, "clusters-after-open");
 
     const clusterCard = page.locator("[data-cluster-card]").first();
     if ((await clusterCard.count()) > 0) {

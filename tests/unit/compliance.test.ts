@@ -56,7 +56,7 @@ describe("checkClusterCompliance", () => {
     expect(reports[0]!.ok).toBe(true);
     expect(
       reports[0]!.issues.some(
-        (i) => i.severity === "warning" && i.message.includes("only one member"),
+        (i) => i.severity === "warning" && i.message.includes("only one server"),
       ),
     ).toBe(true);
   });
@@ -88,6 +88,24 @@ describe("checkClusterCompliance", () => {
     expect(
       reports[0]!.issues.some((i) => i.message.includes("port conflict")),
     ).toBe(true);
+  });
+
+  it("allows multiple members on the same map without a warning", () => {
+    const reports = checkClusterCompliance([
+      profile({ id: "a", name: "Island A", map: "TheIsland_WP" }),
+      profile({
+        id: "b",
+        name: "Island B",
+        map: "TheIsland_WP",
+        gamePort: 7787,
+        queryPort: 27025,
+        rconPort: 27030,
+      }),
+    ]);
+    expect(reports[0]!.ok).toBe(true);
+    expect(
+      reports[0]!.issues.some((i) => i.message.toLowerCase().includes("same map") || i.message.includes("servers with map")),
+    ).toBe(false);
   });
 
   it("warns when member mod lists differ", () => {

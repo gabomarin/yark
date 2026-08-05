@@ -12,8 +12,8 @@ and **cluster directory**. The Clusters page surfaces backend reports; it does
 - Guide operators via the Clusters page and the workspace onboarding checklist.
 
 A cluster is **transfer-ready** (`ok: true`) when it has **no error-severity
-issues**. Warnings alone (single member, duplicate map, mod mismatch) still
-leave `ok: true`.
+issues**. Warnings alone (single server, mod mismatch) still leave `ok: true`.
+Multiple servers on the same map in one cluster are allowed and not flagged.
 
 ## Module map
 
@@ -28,12 +28,12 @@ leave `ok: true`.
 | IPC channel | `src/shared/ipc.ts` (`cluster:check`) → `window.api.checkCluster()` |
 | IPC handler | `src/main/ipc-handlers.ts` |
 | Preload | `src/preload/index.ts` |
-| Fleet UI | `src/renderer/src/features/clusters/` (`ClustersPage`, `clusterModel`) |
+| Fleet UI | `src/renderer/src/features/clusters/` (`ClustersPage`, `clusterModel`, `createClusterModel`, `CreateClusterModal`) |
 | Onboarding join | `src/renderer/src/features/server-workspace/components/ServerOnboardingChecklist/` |
 | Visual helper | `scripts/visual-clusters.cjs` |
 
-Reports refresh on App bootstrap/`refresh()` and when the Clusters **Recheck**
-button calls the same path. There is no push channel for cluster changes.
+Reports refresh on App bootstrap/`refresh()` and whenever the Clusters view
+opens (the page calls refresh on mount). There is no separate Recheck button.
 
 ## Profile fields
 
@@ -83,12 +83,11 @@ Example (two maps, same cluster):
 
 | Condition | Severity | Effect on `ok` |
 | --- | --- | --- |
-| Fewer than 2 members | `warning` | still `ok` |
+| Fewer than 2 servers | `warning` | still `ok` |
 | Members use different `clusterDir` values (incl. empty) | `error` | `ok: false` |
-| A member has null/empty `clusterDir` | `error` | `ok: false` |
-| Two+ members share the same `map` | `warning` | still `ok` |
-| Port conflict among members (`game` / `query` / `rcon`) | `error` | `ok: false` |
-| Sorted mod-id lists differ across members | `warning` | still `ok` |
+| A server has null/empty `clusterDir` | `error` | `ok: false` |
+| Port conflict among servers (`game` / `query` / `rcon`) | `error` | `ok: false` |
+| Sorted mod-id lists differ across servers | `warning` | still `ok` |
 
 Port conflicts use `findPortConflicts(members)` — **only servers in that
 cluster group**, not the whole fleet. Fleet-wide port checks live elsewhere
@@ -118,29 +117,34 @@ Report shape:
 ### Clusters page
 
 - Guidance card: both ID + directory required; page ≠ live transfer validation.
+- **Create cluster** wizard: pick one or more stopped unclustered servers, set/generate a
+  unique Cluster ID, choose a shared Windows directory, preview, then save
+  membership via `servers:update` (no standalone cluster entity).
 - Summary badges: cluster count, ready (no errors), error clusters, warning-only
   clusters, unclustered servers (`clusterId === null`), dir-without-id count.
 - Empty state when no reports: explains missing IDs; lists servers that have a
-  directory but no ID, grouped by path.
+  directory but no ID, grouped by path; offers Create cluster when servers exist.
 - List + detail: select a cluster, inspect members / shared dir / issues;
   “Open server” jumps to workspace.
 
 ### Server form / onboarding
 
 - Form: edit `clusterId` / browse `clusterDir`.
+- Clusters workspace: create a brand-new cluster ID + directory on the first
+  stopped member (#42). Adding further members is separate (#41).
 - Onboarding checklist: join an **existing** cluster by copying another
-  server’s `{clusterId, clusterDir}` pair (or clear). Creating a brand-new
-  cluster ID is done on the Server form.
+  server’s `{clusterId, clusterDir}` pair (or clear).
 
 ## Operator workflow
 
 1. Pick one shared Windows folder for ARK cluster storage.
-2. On each map server, set the **same** `clusterId` and `clusterDir` (form or
-   onboarding “join existing”).
+2. Create the cluster from **Clusters → Create cluster** (first stopped server),
+   or set the same `clusterId` / `clusterDir` on each map (form or onboarding
+   “join existing”).
 3. Ensure distinct game / query / RCON ports across members.
 4. Prefer matching CurseForge mod Project ID lists if players transfer mod items.
-5. Open **Clusters** → **Recheck**; fix any `error` issues before relying on
-   transfers in-game.
+5. Open **Clusters** (compliance refreshes on open); fix any `error` issues
+   before relying on transfers in-game.
 
 ## Constraints and non-goals
 
@@ -154,10 +158,10 @@ Report shape:
 
 | Symptom | Likely cause | What to do |
 | --- | --- | --- |
-| Cluster missing from Clusters list | Server has `clusterDir` but null `clusterId` | Set both fields; Recheck |
+| Cluster missing from Clusters list | Server has `clusterDir` but null `clusterId` | Set both fields; reopen Clusters |
 | `ok: false` / different directories | Typo or per-server dirs | Align `clusterDir` on every member |
 | Port conflict error | Overlapping ports inside the cluster | Change ports on one member |
-| Warning: only one member | Single map tagged with that ID | Add another map or ignore if intentional |
+| Warning: only one server | Only one server tagged with that ID | Add another server or ignore if intentional |
 | Warning: different mod lists | Divergent `mods` arrays | Align Project IDs if transfers matter |
 | Launch missing `-clusterid=` | One of ID/dir is null | Both required for the CLI trio |
 | Save rejected | `clusterId` set without `clusterDir` | Provide a Windows absolute cluster path |
@@ -166,8 +170,9 @@ Report shape:
 
 | Artifact | Coverage |
 | --- | --- |
-| `tests/unit/compliance.test.ts` | Ready cluster, ignore unclustered, single-member warning, dir mismatch, port conflict, mod mismatch |
-| `src/renderer/src/features/clusters/ClustersPage.test.tsx` | Empty / ready / broken UI, dir-without-id copy |
+| `tests/unit/compliance.test.ts` | Ready cluster, ignore unclustered, single-server warning, dir mismatch, port conflict, mod mismatch |
+| `src/renderer/src/features/clusters/ClustersPage.test.tsx` | Empty / ready / broken UI, dir-without-id copy, create-cluster wizard |
+| `tests/unit/create-cluster-model.test.ts` | Eligibility, ID/dir validation, create input |
 | `node scripts/visual-clusters.cjs` | Playwright sidebar → Clusters compliance UI |
 
 Visible Clusters UI changes still follow [visual-testing.md](visual-testing.md)

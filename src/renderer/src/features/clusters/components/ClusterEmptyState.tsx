@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { FolderSimple } from "@phosphor-icons/react";
-import { Stack, Text } from "@mantine/core";
+import { Button, Stack, Text } from "@mantine/core";
 import type { ServerProfile } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
@@ -12,6 +12,7 @@ interface Props {
   serverCount: number;
   dirWithoutIdServers: ServerProfile[];
   onOpenServer: (serverId: string) => void;
+  onCreateCluster: () => void;
 }
 
 export function ClusterEmptyState(props: Props): ReactElement {
@@ -27,10 +28,15 @@ export function ClusterEmptyState(props: Props): ReactElement {
           props.dirWithoutIdServers.length > 0 ? undefined : (
             <Text c="dimmed" size="sm" maw={480} ta="center">
               {props.serverCount === 0
-                ? "Create a server first, then set a Cluster ID and shared cluster directory so maps can transfer together."
-                : "Open a server and set the same Cluster ID plus one shared cluster directory on two or more maps to see them listed here."}
+                ? "Create a server first, then use Create cluster to assign a Cluster ID and shared directory to the first map."
+                : "Use Create cluster to assign a unique Cluster ID and shared directory to a stopped server, or open a server and set the same pair on two or more maps."}
             </Text>
           )
+        }
+        action={
+          props.serverCount > 0 ? (
+            <Button onClick={props.onCreateCluster}>Create cluster</Button>
+          ) : undefined
         }
       >
         {props.dirWithoutIdServers.length > 0 && (

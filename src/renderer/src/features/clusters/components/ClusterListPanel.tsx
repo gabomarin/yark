@@ -40,7 +40,7 @@ export function ClusterListPanel(props: Props): ReactElement {
                   {report.clusterId}
                 </Text>
                 <Text size="xs" c="dimmed" className={classes.clusterMeta}>
-                  {report.members.length} member
+                  {report.members.length} server
                   {report.members.length === 1 ? "" : "s"}
                   {dir !== null ? ` · ${dir}` : " · mixed or missing dirs"}
                 </Text>
