@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { IPC, IPC_PUSH, type RendererApi } from "../shared/ipc";
 import type {
+  BackupKind,
   ServerIniPayload,
   ServerProfileInput,
   ServerRuntimeInfo,
@@ -142,6 +143,10 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.backupsOpenFolder, serverId, backupId),
   openBackupRoot: (serverId: string) =>
     ipcRenderer.invoke(IPC.backupsOpenRoot, serverId),
+  exportBackup: (serverId: string, backupId: string, destinationPath: string) =>
+    ipcRenderer.invoke(IPC.backupsExport, serverId, backupId, destinationPath),
+  importBackup: (serverId: string, kind: BackupKind, sourcePath: string) =>
+    ipcRenderer.invoke(IPC.backupsImport, serverId, kind, sourcePath),
   getBackupFleetSummary: () => ipcRenderer.invoke(IPC.backupsFleetSummary),
   getBackupDiskAlertSettings: () =>
     ipcRenderer.invoke(IPC.backupsGetDiskAlertSettings),

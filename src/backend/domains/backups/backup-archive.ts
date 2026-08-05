@@ -5,6 +5,7 @@ import { pipeline } from "node:stream/promises";
 import type { BackupKind } from "@shared/types";
 import yazl from "yazl";
 import yauzl from "yauzl";
+import { ensureParentDir } from "./backup-disk";
 
 /** Resolve an entry path under destDir, rejecting zip-slip (`../`, absolute paths). */
 export function safeExtractTarget(destDir: string, entryName: string): string {
@@ -62,7 +63,7 @@ async function listFilesRecursive(root: string): Promise<string[]> {
 
 /** Zip the contents of `sourceDir` into `zipPath` (paths inside the zip are relative to sourceDir). */
 export async function zipDirectory(sourceDir: string, zipPath: string): Promise<number> {
-  await mkdir(dirname(zipPath), { recursive: true });
+  await ensureParentDir(zipPath);
   const files = await listFilesRecursive(sourceDir);
   const zipfile = new yazl.ZipFile();
 
@@ -270,6 +271,160 @@ export async function zipHasBackupLayout(zipPath: string): Promise<boolean> {
       });
       zipfile.on("end", () => finish(false));
       zipfile.on("error", () => finish(false));
+      zipfile.readEntry();
+    });
+  });
+}
+
+/** Kind payload root expected inside a portable YARK ZIP. */
+export function kindPayloadPrefix(kind: BackupKind): string {
+  if (kind === "world") return "SavedArks";
+  if (kind === "players") return "PlayerProfiles";
+  return "ConfigWindowsServer";
+}
+
+function isUnsafeZipEntryName(entryName: string): boolean {
+  const normalized = entryName.replace(/\\/g, "/");
+  if (normalized.length === 0) return true;
+  if (isAbsolute(normalized) || /^[a-zA-Z]:/.test(normalized)) return true;
+  if (normalized.split("/").includes("..")) return true;
+  return false;
+}
+
+/** Unix symlink bit in the high 16 bits of ZIP external attributes. */
+function isZipSymlinkEntry(entry: yauzl.Entry): boolean {
+  const unixMode = (entry.externalFileAttributes >>> 16) & 0xffff;
+  return unixMode !== 0 && (unixMode & 0xf000) === 0xa000;
+}
+
+function entryMatchesKindPayload(entryName: string, kind: BackupKind): boolean {
+  const name = entryName.replace(/\\/g, "/");
+  const prefix = kindPayloadPrefix(kind);
+  return name === prefix || name.startsWith(`${prefix}/`);
+}
+
+export interface PortableZipValidation {
+  /** Kind declared in manifest.json when present and valid. */
+  manifestKind: BackupKind | null;
+}
+
+/**
+ * Validate a portable YARK ZIP before cataloging.
+ * Rejects corrupt archives, zip-slip / absolute paths, symlinks, and kind mismatch.
+ */
+export async function validatePortableZip(
+  zipPath: string,
+  expectedKind: BackupKind,
+): Promise<PortableZipValidation> {
+  if (!isZipBackupPath(zipPath)) {
+    throw new Error("Import requires a .zip archive");
+  }
+  const readable = await isReadableZipArchive(zipPath);
+  if (!readable) {
+    throw new Error("Archive is corrupt or unreadable");
+  }
+
+  return await new Promise<PortableZipValidation>((resolvePromise, reject) => {
+    yauzl.open(zipPath, { lazyEntries: true }, (openErr, zipfile) => {
+      if (openErr !== null || zipfile === undefined) {
+        reject(openErr ?? new Error("Could not open zip archive"));
+        return;
+      }
+
+      let settled = false;
+      let hasKindPayload = false;
+      let manifestRaw: string | null = null;
+      const fail = (err: unknown): void => {
+        if (settled) return;
+        settled = true;
+        zipfile.close();
+        const message = err instanceof Error ? err.message : String(err);
+        if (/invalid relative path/i.test(message)) {
+          reject(new Error(`Unsafe zip entry path: ${message}`));
+          return;
+        }
+        reject(err instanceof Error ? err : new Error(message));
+      };
+      const succeed = (value: PortableZipValidation): void => {
+        if (settled) return;
+        settled = true;
+        zipfile.close();
+        resolvePromise(value);
+      };
+
+      zipfile.on("entry", (entry: yauzl.Entry) => {
+        if (isUnsafeZipEntryName(entry.fileName)) {
+          fail(new Error(`Unsafe zip entry path: ${entry.fileName}`));
+          return;
+        }
+        if (isZipSymlinkEntry(entry)) {
+          fail(new Error(`Zip contains symlink entry: ${entry.fileName}`));
+          return;
+        }
+
+        const name = entry.fileName.replace(/\\/g, "/");
+        if (entryMatchesKindPayload(name, expectedKind)) {
+          hasKindPayload = true;
+        }
+
+        if (name === "manifest.json" && !/\/$/.test(entry.fileName)) {
+          zipfile.openReadStream(entry, (streamErr, readStream) => {
+            if (streamErr !== null || readStream === undefined) {
+              fail(streamErr ?? new Error("Could not read manifest.json"));
+              return;
+            }
+            const chunks: Buffer[] = [];
+            readStream.on("data", (chunk: Buffer) => chunks.push(chunk));
+            readStream.on("end", () => {
+              manifestRaw = Buffer.concat(chunks).toString("utf8");
+              zipfile.readEntry();
+            });
+            readStream.on("error", fail);
+          });
+          return;
+        }
+
+        zipfile.readEntry();
+      });
+
+      zipfile.on("end", () => {
+        if (!hasKindPayload) {
+          fail(
+            new Error(
+              `Archive is missing expected ${kindPayloadPrefix(expectedKind)}/ content for ${expectedKind} backups`,
+            ),
+          );
+          return;
+        }
+
+        let manifestKind: BackupKind | null = null;
+        if (manifestRaw !== null && manifestRaw.trim().length > 0) {
+          try {
+            const data = JSON.parse(manifestRaw) as {
+              backup?: { kind?: string };
+            };
+            const kind = data.backup?.kind;
+            if (kind === "world" || kind === "players" || kind === "ini") {
+              manifestKind = kind;
+            }
+          } catch {
+            fail(new Error("Archive manifest.json is not valid JSON"));
+            return;
+          }
+        }
+
+        if (manifestKind !== null && manifestKind !== expectedKind) {
+          fail(
+            new Error(
+              `Archive kind is ${manifestKind}, but import target is ${expectedKind}`,
+            ),
+          );
+          return;
+        }
+
+        succeed({ manifestKind });
+      });
+      zipfile.on("error", fail);
       zipfile.readEntry();
     });
   });

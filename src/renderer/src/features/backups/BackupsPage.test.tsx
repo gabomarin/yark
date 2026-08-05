@@ -141,6 +141,8 @@ describe("BackupsPage", () => {
         resolveBackupRoot: vi.fn(),
         openBackupFolder: vi.fn(),
         openBackupRoot: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+        exportBackup: vi.fn(),
+        importBackup: vi.fn(),
         pickPath: vi.fn(),
         onBackupsChanged: vi.fn(() => () => undefined),
       },
@@ -170,6 +172,63 @@ describe("BackupsPage", () => {
 
     await user.click(screen.getByRole("button", { name: /open in server/i }));
     expect(onOpenServerBackups).toHaveBeenCalledWith("srv-1");
+  });
+
+  it("keeps unsaved schedule toggle across quiet refresh and server list poll identity", async () => {
+    const user = userEvent.setup();
+    const changedListeners: Array<(payload: { serverId: string }) => void> = [];
+    (window.api.onBackupsChanged as ReturnType<typeof vi.fn>).mockImplementation(
+      (listener: (payload: { serverId: string }) => void) => {
+        changedListeners.push(listener);
+        return () => {
+          const index = changedListeners.indexOf(listener);
+          if (index >= 0) changedListeners.splice(index, 1);
+        };
+      },
+    );
+
+    const { rerender } = render(
+      <AppProviders>
+        <BackupsPage
+          servers={[server]}
+          onOpenServerBackups={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByRole("heading", { name: "The Island" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /edit settings/i }));
+    const scheduleSwitch = screen.getByRole("switch", {
+      name: /enable scheduled world backups/i,
+    });
+    expect(scheduleSwitch).not.toBeChecked();
+    await user.click(scheduleSwitch);
+    expect(scheduleSwitch).toBeChecked();
+
+    for (const listener of changedListeners) {
+      listener({ serverId: "srv-1" });
+    }
+    await waitFor(() => {
+      expect(window.api.getBackupFleetSummary).toHaveBeenCalledTimes(2);
+    });
+    expect(screen.getByRole("switch", { name: /enable scheduled world backups/i })).toBeChecked();
+
+    // App refresh replaces the servers array every few seconds with the same ids.
+    rerender(
+      <AppProviders>
+        <BackupsPage
+          servers={[{ ...server }]}
+          onOpenServerBackups={vi.fn()}
+        />
+      </AppProviders>,
+    );
+    await waitFor(() => {
+      expect(
+        screen.getByRole("switch", { name: /enable scheduled world backups/i }),
+      ).toBeChecked();
+    });
+    // Same id set must not trigger another non-quiet fleet load.
+    expect(window.api.getBackupFleetSummary).toHaveBeenCalledTimes(2);
   });
 
   it("edits and saves backup policy from the overview", async () => {

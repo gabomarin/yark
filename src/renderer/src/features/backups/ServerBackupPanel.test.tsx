@@ -173,6 +173,22 @@ describe("ServerBackupPanel", () => {
         }),
         openBackupFolder: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
         openBackupRoot: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+        exportBackup: vi.fn().mockResolvedValue({ ok: true, data: "D:/export.zip" }),
+        importBackup: vi.fn().mockResolvedValue({
+          ok: true,
+          data: {
+            id: "imported-1",
+            serverId: "srv-1",
+            type: "manual",
+            kind: "world",
+            path: "D:/Backups/World/imported.zip",
+            sizeBytes: 10,
+            status: "completed",
+            createdAt: "2026-01-01T00:00:00.000Z",
+            completedAt: "2026-01-01T00:00:00.000Z",
+            notes: "Imported",
+          },
+        }),
         pickPath: vi.fn(),
         onBackupsChanged: vi.fn(() => () => undefined),
       },
@@ -193,6 +209,38 @@ describe("ServerBackupPanel", () => {
     );
 
     expect(await screen.findByRole("button", { name: "Backup" })).toBeDisabled();
+  });
+
+  it("locks create and restore when installation is not Ready", async () => {
+    render(
+      <AppProviders>
+        <ServerBackupPanel
+          server={server}
+          runtime={runtime}
+          embedded
+          installation={{
+            serverId: "srv-1",
+            installed: false,
+            health: "empty",
+            reasonCodes: ["dir_empty"],
+            guidance: "Install ASA server files into this empty folder with Install / SteamCMD.",
+            build: null,
+            steamBuild: null,
+            arkVersion: null,
+            version: null,
+            binaryPath: "C:/ARK/srv-1/ShooterGame/Binaries/Win64/ArkAscendedServer.exe",
+            checkedAt: "2026-07-24T00:00:00.000Z",
+          }}
+        />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByText(/Install files required/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Backup" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Import" })).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: `Restore backup ${worldBackup.id}` }),
+    ).toBeDisabled();
   });
 
   it("opens kind settings by default and can collapse to a summary", async () => {

@@ -1,6 +1,6 @@
-import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { constants as fsConstants, existsSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { openDatabase } from "@backend/infra/db/database";
@@ -76,8 +76,12 @@ async function seedInstall(installDir: string): Promise<void> {
     "Config",
     "WindowsServer",
   );
+  const binaries = join(installDir, "ShooterGame", "Binaries", "Win64");
   await mkdir(savedArks, { recursive: true });
   await mkdir(config, { recursive: true });
+  await mkdir(binaries, { recursive: true });
+  // Non-empty exe so classifyInstallHealth reports Ready.
+  await writeFile(join(binaries, "ArkAscendedServer.exe"), "MZ-fake-exe", "utf8");
   await writeFile(join(savedArks, "TheIsland_WP.ark"), "WORLD", "utf8");
   await writeFile(join(savedArks, "tribe.arktribe"), "TRIBE", "utf8");
   await writeFile(join(savedArks, "76561198000000000.arkprofile"), "PLAYER", "utf8");
@@ -510,6 +514,61 @@ describe("BackupService kinds and retention", () => {
     },
   );
 
+  it("rejects create and restore when the install is not Ready", async () => {
+    const emptyDir = await mkdtemp(join(tmpdir(), "ark-backup-empty-"));
+    tmpDirs.push(emptyDir);
+    const emptyProfile = { ...makeProfile(emptyDir), id: "srv-empty", name: "Empty" };
+    const servers = {
+      get: vi.fn((id: string) => {
+        if (id === profile.id) return profile;
+        if (id === emptyProfile.id) return emptyProfile;
+        return null;
+      }),
+      list: vi.fn(() => [profile, emptyProfile]),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const processes = {
+      isActive: vi.fn(() => false),
+      start: vi.fn(),
+      stop: vi.fn(),
+      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
+    } as unknown as ProcessManager;
+    const settings = {
+      get: vi.fn(() => null),
+      set: vi.fn(),
+    } as unknown as AppSettingsRepository;
+    const gated = new BackupService(
+      servers,
+      repo,
+      processes,
+      settings,
+      join(emptyDir, "_root"),
+    );
+
+    await expect(gated.createManualBackup(emptyProfile.id, ["world"])).rejects.toThrow(
+      /Install server files/i,
+    );
+
+    const [ok] = await service.createManualBackup(profile.id, ["world"]);
+    expect(ok).toBeDefined();
+    if (ok === undefined) return;
+    // Point restore at the empty profile by cloning the row's serverId is wrong —
+    // restore uses mustServer(serverId) then apply to that install. Create a completed
+    // backup row for the empty server by exporting/importing is heavy; instead assert
+    // restore on empty profile with a catalogued archive copied in.
+    const exportDir = await mkdtemp(join(tmpdir(), "ark-export-empty-"));
+    tmpDirs.push(exportDir);
+    const portable = await service.exportBackup(
+      profile.id,
+      ok.id,
+      join(exportDir, "world.zip"),
+    );
+    const imported = await gated.importBackup(emptyProfile.id, "world", portable);
+    await expect(gated.restoreBackup(emptyProfile.id, imported.id)).rejects.toThrow(
+      /Install server files/i,
+    );
+  });
+
   it("packages world including player profiles as a zip under World/", async () => {
     const created = await service.createManualBackup(profile.id, ["world"]);
     const record = created[0];
@@ -518,6 +577,9 @@ describe("BackupService kinds and retention", () => {
     expect(record.kind).toBe("world");
     expect(record.path.toLowerCase().endsWith(".zip")).toBe(true);
     expect(record.path).toMatch(/[\\/]World[\\/]/i);
+    expect(basename(record.path)).toMatch(
+      /^island-world-manual-\d{8}-\d{6}\.zip$/i,
+    );
     await withExtractedZip(record.path, async (root) => {
       await expect(
         access(join(root, "SavedArks", "TheIsland_WP.ark"), fsConstants.F_OK),
@@ -1497,6 +1559,27 @@ describe("BackupService kinds and retention", () => {
     expect(summary.disks.length).toBeGreaterThanOrEqual(1);
   });
 
+  it("emits never_backed_up fleet alerts only while the server is running", async () => {
+    service.setPolicy(profile.id, {
+      enabled: true,
+      intervalMinutes: 60,
+      retainCountWorld: 20,
+      retainCountPlayers: 20,
+      retainCountIni: 10,
+      backupDir: null,
+    });
+
+    isActive.mockReturnValue(false);
+    const stopped = await service.getFleetSummary();
+    expect(stopped.alerts.some((alert) => alert.kind === "never_backed_up")).toBe(false);
+    expect(stopped.servers[0]?.health).toBe("unknown");
+
+    isActive.mockReturnValue(true);
+    const running = await service.getFleetSummary();
+    expect(running.alerts.some((alert) => alert.kind === "never_backed_up")).toBe(true);
+    expect(running.servers[0]?.health).toBe("warning");
+  });
+
   it("shows the newest failed attempt as fleet latest, not an older success", async () => {
     const success = (await service.createManualBackup(profile.id, ["world"]))[0]!;
     const failed = repo.createBackupStart({
@@ -1801,10 +1884,109 @@ describe("BackupService kinds and retention", () => {
       preview.items.every((item) => item.reason.includes("keep last 2/players")),
     ).toBe(true);
   });
+
+  it("round-trips export then import without restoring live files", async () => {
+    const [created] = await service.createManualBackup(profile.id, ["world"]);
+    expect(created).toBeDefined();
+    if (created === undefined) return;
+
+    const exportDir = await mkdtemp(join(tmpdir(), "ark-export-"));
+    tmpDirs.push(exportDir);
+    const exportPath = join(exportDir, "portable-world.zip");
+    const written = await service.exportBackup(profile.id, created.id, exportPath);
+    expect(existsSync(written)).toBe(true);
+    expect(existsSync(created.path)).toBe(true);
+
+    const livePath = join(
+      installDir,
+      "ShooterGame",
+      "Saved",
+      "SavedArks",
+      "TheIsland_WP.ark",
+    );
+    const beforeLive = existsSync(livePath) ? await readFile(livePath, "utf8") : null;
+
+    const imported = await service.importBackup(profile.id, "world", written);
+    expect(imported.status).toBe("completed");
+    expect(imported.kind).toBe("world");
+    expect(imported.path).not.toBe(created.path);
+    expect(resolve(imported.path).toLowerCase()).not.toBe(resolve(written).toLowerCase());
+    expect(existsSync(imported.path)).toBe(true);
+
+    const listed = await service.list(profile.id, 50);
+    expect(listed.some((row) => row.id === imported.id)).toBe(true);
+
+    if (beforeLive !== null) {
+      expect(await readFile(livePath, "utf8")).toBe(beforeLive);
+    }
+    expect(
+      repo.listBackups(profile.id, 100).filter((row) => row.type === "pre_restore"),
+    ).toHaveLength(0);
+  });
+
+  it("imports the same portable zip twice with distinct managed paths", async () => {
+    const [created] = await service.createManualBackup(profile.id, ["ini"]);
+    expect(created).toBeDefined();
+    if (created === undefined) return;
+
+    const exportDir = await mkdtemp(join(tmpdir(), "ark-export-clash-"));
+    tmpDirs.push(exportDir);
+    const exportPath = await service.exportBackup(
+      profile.id,
+      created.id,
+      join(exportDir, "ini-portable.zip"),
+    );
+
+    const first = await service.importBackup(profile.id, "ini", exportPath);
+    const second = await service.importBackup(profile.id, "ini", exportPath);
+    expect(second.id).not.toBe(first.id);
+    expect(second.path).not.toBe(first.path);
+    expect(existsSync(first.path)).toBe(true);
+    expect(existsSync(second.path)).toBe(true);
+  });
+
+  it("rejects re-importing a managed archive path even when casing differs", async () => {
+    const [created] = await service.createManualBackup(profile.id, ["world"]);
+    expect(created).toBeDefined();
+    if (created === undefined) return;
+
+    await expect(service.importBackup(profile.id, "world", created.path)).rejects.toThrow(
+      /already in this server's backup catalog/i,
+    );
+
+    if (process.platform === "win32") {
+      const flipped = created.path
+        .split("")
+        .map((ch, index) =>
+          /[a-z]/i.test(ch) && index % 2 === 0 ? ch.toUpperCase() : ch.toLowerCase(),
+        )
+        .join("");
+      await expect(service.importBackup(profile.id, "world", flipped)).rejects.toThrow(
+        /already in this server's backup catalog/i,
+      );
+    }
+  });
+
+  it("rejects unsafe portable zips before writing into the backup root", async () => {
+    const root = service.resolveBackupRootDir(profile.id);
+    const before = existsSync(root) ? await readdir(root) : [];
+
+    const evilDir = await mkdtemp(join(tmpdir(), "ark-evil-"));
+    tmpDirs.push(evilDir);
+    const evilZip = join(evilDir, "evil.zip");
+    await writeFile(evilZip, "not-a-real-zip", "utf8");
+
+    await expect(service.importBackup(profile.id, "world", evilZip)).rejects.toThrow(
+      /corrupt|unreadable/i,
+    );
+
+    const after = existsSync(root) ? await readdir(root) : [];
+    expect(after).toEqual(before);
+  });
 });
 
 describe("computeBackupServerHealth", () => {
-  it("does not mark schedule-on servers without a world backup as protected", () => {
+  it("marks never-backed-up as warning only while the server is running", () => {
     expect(
       computeBackupServerHealth({
         destinationOk: true,
@@ -1815,7 +1997,7 @@ describe("computeBackupServerHealth", () => {
         hasWorldBackup: false,
         serverRunning: false,
       }),
-    ).toBe("warning");
+    ).toBe("unknown");
 
     expect(
       computeBackupServerHealth({

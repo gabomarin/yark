@@ -5,7 +5,6 @@ import {
   FloppyDisk,
   FolderOpen,
   HardDrives,
-  WarningCircle,
 } from "@phosphor-icons/react";
 import {
   Alert,
@@ -20,6 +19,7 @@ import {
   Switch,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
@@ -31,14 +31,19 @@ import type {
   BackupCleanupOptions,
   BackupCleanupPreview,
   BackupDiskAlertSettings,
-  BackupFleetAlert,
   BackupFleetSummary,
   BackupHealthStatus,
-  BackupPolicy,
   BackupServerHealth,
   ServerProfile,
 } from "@shared/types";
 import { useEffect, useMemo, useState } from "react";
+import {
+  isBackupDiskDraftDirty,
+  isBackupPolicyDraftDirty,
+  toBackupPolicyDraft,
+  type BackupPolicyDraft,
+} from "./backupPolicyDraft";
+import { BackupFleetAlertsPanel } from "./components/BackupFleetAlertsPanel/BackupFleetAlertsPanel";
 import classes from "./BackupsPage.module.css";
 
 interface Props {
@@ -47,7 +52,7 @@ interface Props {
   onOpenServerLogs?: (serverId: string) => void;
 }
 
-type DraftPolicy = Omit<BackupPolicy, "serverId" | "updatedAt">;
+type DraftPolicy = BackupPolicyDraft;
 type HealthFilter = "all" | "at_risk" | "failed" | "protected";
 
 function formatWhen(iso: string | null | undefined): string {
@@ -61,17 +66,6 @@ function formatBytes(bytes: number | null | undefined): string {
   if (abs >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
   if (abs >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${Math.round(bytes)} B`;
-}
-
-function toDraft(policy: BackupPolicy): DraftPolicy {
-  return {
-    enabled: policy.enabled,
-    intervalMinutes: policy.intervalMinutes,
-    retainCountWorld: policy.retainCountWorld,
-    retainCountPlayers: policy.retainCountPlayers,
-    retainCountIni: policy.retainCountIni,
-    backupDir: policy.backupDir,
-  };
 }
 
 function healthColor(health: BackupHealthStatus): string {
@@ -88,8 +82,17 @@ function healthLabel(health: BackupHealthStatus): string {
   return "Unknown";
 }
 
-function alertColor(severity: BackupFleetAlert["severity"]): string {
-  return severity === "error" ? "red" : "yellow";
+function healthTooltip(health: BackupHealthStatus): string {
+  if (health === "ok") {
+    return "This server has a completed world backup and is not overdue for its schedule.";
+  }
+  if (health === "warning") {
+    return "Backup protection needs attention — for example the world schedule is on with no world backup yet, the last world backup is overdue, or a recent backup failed.";
+  }
+  if (health === "critical") {
+    return "World backups cannot protect this server right now — the backup folder is missing or a world backup failed in the last 24 hours.";
+  }
+  return "No completed world backup yet. Either the world schedule is off, or it is on but this server is not running so a scheduled backup cannot run yet. Start the server or create a manual world backup.";
 }
 
 const DEFAULT_CLEANUP: BackupCleanupOptions = {
@@ -123,8 +126,14 @@ export function BackupsPage(props: Props): ReactElement {
   const [keepLastEnabled, setKeepLastEnabled] = useState(false);
   const [keepLastPerKind, setKeepLastPerKind] = useState(5);
 
-  const load = async (opts?: { quiet?: boolean; cancelled?: () => boolean }) => {
+  const load = async (opts?: {
+    quiet?: boolean;
+    /** Replace local drafts from server (Refresh). Default merges and keeps dirty edits. */
+    forceDraftSync?: boolean;
+    cancelled?: () => boolean;
+  }) => {
     const quiet = opts?.quiet === true;
+    const forceDraftSync = opts?.forceDraftSync === true;
     const cancelled = opts?.cancelled;
     if (!quiet) {
       setLoading(true);
@@ -148,18 +157,46 @@ export function BackupsPage(props: Props): ReactElement {
 
       setSummary(result.data);
       // Quiet refresh must not clobber in-progress policy edits.
+      // Non-quiet also keeps dirty drafts unless Refresh forces a sync (poll must not wipe toggles).
       if (!quiet) {
-        const nextDrafts: Record<string, DraftPolicy> = {};
-        for (const row of result.data.servers) {
-          nextDrafts[row.serverId] = toDraft(row.policy);
-        }
-        setDrafts(nextDrafts);
-        setDiskDraft(result.data.diskSettings);
+        setDrafts((previous) => {
+          const nextDrafts: Record<string, DraftPolicy> = {};
+          for (const row of result.data.servers) {
+            const existing = previous[row.serverId];
+            if (
+              !forceDraftSync &&
+              existing !== undefined &&
+              isBackupPolicyDraftDirty(existing, row.policy)
+            ) {
+              nextDrafts[row.serverId] = existing;
+            } else {
+              nextDrafts[row.serverId] = toBackupPolicyDraft(row.policy);
+            }
+          }
+          return nextDrafts;
+        });
+        setDiskDraft((previous) => {
+          if (
+            !forceDraftSync &&
+            previous !== null &&
+            isBackupDiskDraftDirty(previous, result.data.diskSettings)
+          ) {
+            return previous;
+          }
+          return result.data.diskSettings;
+        });
       }
     } finally {
       setLoading(false);
     }
   };
+
+  // App polls listServers every few seconds with a new array identity — only reload
+  // when the server set actually changes, not on every parent refresh.
+  const serverIdsKey = useMemo(
+    () => props.servers.map((server) => server.id).join("\0"),
+    [props.servers],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -167,14 +204,16 @@ export function BackupsPage(props: Props): ReactElement {
     return () => {
       cancelled = true;
     };
-  }, [props.servers]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: serverIdsKey, not servers ref
+  }, [serverIdsKey]);
 
   useEffect(() => {
     if (typeof window.api.onBackupsChanged !== "function") return undefined;
     return window.api.onBackupsChanged(() => {
       void load({ quiet: true });
     });
-  }, [props.servers]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- subscribe once per server set
+  }, [serverIdsKey]);
 
   const filteredServers = useMemo(() => {
     const rows = summary?.servers ?? [];
@@ -331,7 +370,11 @@ export function BackupsPage(props: Props): ReactElement {
       fillViewport
       actions={
         <Group gap="sm">
-          <Button variant="default" onClick={() => void load()} loading={loading}>
+          <Button
+            variant="default"
+            onClick={() => void load({ forceDraftSync: true })}
+            loading={loading}
+          >
             Refresh
           </Button>
           <Button
@@ -353,12 +396,22 @@ export function BackupsPage(props: Props): ReactElement {
     >
       <Stack gap="md" className={classes.content}>
         {error !== null && (
-          <Alert color="red" title="Backups" withCloseButton onClose={() => setError(null)}>
+          <Alert
+            color="red"
+            title="Could not complete that action"
+            withCloseButton
+            onClose={() => setError(null)}
+          >
             {error}
           </Alert>
         )}
         {info !== null && (
-          <Alert color="teal" title="Backups" withCloseButton onClose={() => setInfo(null)}>
+          <Alert
+            color="teal"
+            title="Saved"
+            withCloseButton
+            onClose={() => setInfo(null)}
+          >
             {info}
           </Alert>
         )}
@@ -377,6 +430,17 @@ export function BackupsPage(props: Props): ReactElement {
           </AppSurfaceCard>
         ) : summary !== null ? (
           <>
+            <BackupFleetAlertsPanel
+              alerts={summary.alerts}
+              onOpenServerBackups={props.onOpenServerBackups}
+              onOpenServerLogs={props.onOpenServerLogs}
+              onOpenCleanup={() => {
+                setCleanupOptions(DEFAULT_CLEANUP);
+                setCleanupPreview(null);
+                setCleanupOpen(true);
+              }}
+            />
+
             <div className={classes.statStrip}>
               <StatCard
                 label="Protected"
@@ -490,59 +554,6 @@ export function BackupsPage(props: Props): ReactElement {
                     );
                   })}
                 </div>
-              </Stack>
-            )}
-
-            {summary.alerts.length > 0 && (
-              <Stack gap="xs" className={classes.alertsBand}>
-                {summary.alerts.map((alert) => (
-                  <Alert
-                    key={alert.id}
-                    color={alertColor(alert.severity)}
-                    icon={<WarningCircle size={18} />}
-                    className={classes.alertRow}
-                  >
-                    <Group justify="space-between" align="center" wrap="wrap" gap="sm">
-                      <Text size="sm">{alert.message}</Text>
-                      <Group gap="xs">
-                        {alert.kind === "failed" &&
-                          alert.serverId !== null &&
-                          props.onOpenServerLogs !== undefined && (
-                            <Button
-                              size="compact-sm"
-                              variant="light"
-                              onClick={() => props.onOpenServerLogs?.(alert.serverId!)}
-                            >
-                              View logs
-                            </Button>
-                          )}
-                        {alert.serverId !== null && (
-                          <Button
-                            size="compact-sm"
-                            variant="default"
-                            onClick={() => props.onOpenServerBackups(alert.serverId!)}
-                          >
-                            Open in server
-                          </Button>
-                        )}
-                        {(alert.kind === "disk_warning" || alert.kind === "disk_critical") && (
-                          <Button
-                            size="compact-sm"
-                            variant="light"
-                            leftSection={<Broom size={14} />}
-                            onClick={() => {
-                              setCleanupOptions(DEFAULT_CLEANUP);
-                              setCleanupPreview(null);
-                              setCleanupOpen(true);
-                            }}
-                          >
-                            Cleanup…
-                          </Button>
-                        )}
-                      </Group>
-                    </Group>
-                  </Alert>
-                ))}
               </Stack>
             )}
 
@@ -880,9 +891,11 @@ function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
                   Inactive
                 </Badge>
               )}
-              <Badge color={healthColor(row.health)} variant="light">
-                {healthLabel(row.health)}
-              </Badge>
+              <Tooltip label={healthTooltip(row.health)} multiline maw={320} withArrow>
+                <Badge color={healthColor(row.health)} variant="light">
+                  {healthLabel(row.health)}
+                </Badge>
+              </Tooltip>
               {row.policy.enabled ? (
                 <Badge color="teal" variant="outline">
                   Schedule {row.policy.intervalMinutes}m

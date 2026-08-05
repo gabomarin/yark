@@ -7,8 +7,10 @@ import {
   HardDrives,
   MagnifyingGlass,
   Trash,
+  UploadSimple,
 } from "@phosphor-icons/react";
 import {
+  Alert,
   ActionIcon,
   Badge,
   Button,
@@ -29,10 +31,12 @@ import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import { backupFinishedAt, playerBackupDisplayName } from "@shared/backup-player-meta";
 import { formatLogDateTime } from "@shared/format-log-datetime";
+import { isInstallationReady } from "@shared/installation-health";
 import type {
   BackupKind,
   BackupPolicy,
   BackupRecord,
+  ServerInstallationInfo,
   ServerProfile,
   ServerRuntimeInfo,
 } from "@shared/types";
@@ -41,12 +45,15 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { PathField } from "@ui/PathField/PathField";
 import { BackupHistoryRowActions } from "./BackupHistoryRowActions";
+import { runBackupExport, runBackupImport } from "./backupPortability";
 import { formatBackupDetails } from "./formatBackupDetails";
 import classes from "./BackupsPage.module.css";
 
 interface Props {
   server: ServerProfile;
   runtime: ServerRuntimeInfo | null;
+  /** Install probe — create/restore require Ready. */
+  installation?: ServerInstallationInfo | null;
   /** Compact layout for workspace tab (no outer page chrome). */
   embedded?: boolean;
   /** Running server or SteamCMD files job — blocks restore (like server active). */
@@ -57,6 +64,7 @@ interface Props {
   createLockReason?: string;
 }
 
+type BusyOp = "create" | "import" | "export" | "other";
 type DraftPolicy = Omit<BackupPolicy, "serverId" | "updatedAt">;
 type PlayerSort = "newest" | "oldest" | "name-asc" | "name-desc";
 
@@ -85,6 +93,13 @@ function formatSize(sizeBytes: number): string {
 
 function formatWhen(iso: string): string {
   return formatLogDateTime(iso, { fallback: iso });
+}
+
+function archiveFileName(path: string): string {
+  const normalized = path.replace(/\\/g, "/");
+  const parts = normalized.split("/");
+  const name = parts[parts.length - 1] ?? "";
+  return name.length > 0 ? name : path;
 }
 
 const relativeTimeFormat = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
@@ -232,7 +247,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
   const [resolvedRoot, setResolvedRoot] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [busyOp, setBusyOp] = useState<BusyOp | null>(null);
   const [browsingDir, setBrowsingDir] = useState(false);
   const [playerSearch, setPlayerSearch] = useState("");
   const [playerSort, setPlayerSort] = useState<PlayerSort>("newest");
@@ -241,10 +256,27 @@ export function ServerBackupPanel(props: Props): ReactElement {
   const saveGenRef = useRef(0);
 
   const serverActive = isServerActive(props.runtime);
-  const opsLocked = props.opsLocked === true || serverActive;
-  const opsLockReason =
-    props.opsLockReason ??
-    (serverActive ? "Stop the server before restoring a backup." : undefined);
+  const busy = busyOp !== null;
+  // Omitted prop (undefined) keeps prior behavior for isolated callers/tests.
+  // Explicit null / non-ready health locks create and restore.
+  const installReady =
+    props.installation === undefined
+      ? true
+      : isInstallationReady(props.installation);
+  const installLockReason =
+    props.installation?.guidance?.trim()
+    || "Install server files before creating or restoring backups.";
+  const createBlocked = props.createLocked === true || !installReady;
+  const createBlockReason = !installReady
+    ? installLockReason
+    : (props.createLockReason ?? "Wait for the active backup to finish");
+  const restoreLocked = props.opsLocked === true || serverActive || !installReady;
+  const restoreLockReason = !installReady
+    ? installLockReason
+    : props.opsLockReason
+      ?? (serverActive ? "Stop the server before restoring a backup." : undefined);
+  const opsLocked = restoreLocked;
+  const opsLockReason = restoreLockReason;
   const defaultBackupHint = `${props.server.installDir}\\Backups`;
   const activeKindLabel = kindLabel(activeKind);
   const kindBackups = useMemo(
@@ -388,7 +420,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
   };
 
   const createBackup = async () => {
-    setBusy(true);
+    setBusyOp("create");
     try {
       const result = await window.api.createManualBackup(props.server.id, [activeKind]);
       if (!result.ok) {
@@ -402,7 +434,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
           : `${activeKindLabel} backup completed.`,
       );
     } finally {
-      setBusy(false);
+      setBusyOp(null);
     }
   };
 
@@ -428,26 +460,61 @@ export function ServerBackupPanel(props: Props): ReactElement {
   };
 
   const openDestination = async () => {
-    setBusy(true);
+    setBusyOp("other");
     try {
       const result = await window.api.openBackupRoot(props.server.id);
       if (!result.ok) {
         showBackupError(result.error ?? "Could not open backup destination");
       }
     } finally {
-      setBusy(false);
+      setBusyOp(null);
     }
   };
 
   const openBackupFolder = async (backupId: string) => {
-    setBusy(true);
+    setBusyOp("other");
     try {
       const result = await window.api.openBackupFolder(props.server.id, backupId);
       if (!result.ok) {
         showBackupError(result.error ?? "Could not open backup folder");
       }
     } finally {
-      setBusy(false);
+      setBusyOp(null);
+    }
+  };
+
+  const exportBackup = async (backup: BackupRecord) => {
+    setBusyOp("export");
+    try {
+      await runBackupExport({
+        serverId: props.server.id,
+        serverName: props.server.name,
+        backup,
+        onError: showBackupError,
+        onSuccess: (path) => showBackupToast(`Exported to ${path}`),
+      });
+    } finally {
+      setBusyOp(null);
+    }
+  };
+
+  const importBackup = async () => {
+    setBusyOp("import");
+    try {
+      await runBackupImport({
+        serverId: props.server.id,
+        kind: activeKind,
+        kindLabel: activeKindLabel,
+        onError: showBackupError,
+        onSuccess: async () => {
+          await load(props.server.id);
+          showBackupToast(
+            `Imported ${activeKindLabel.toLowerCase()} archive into backup history (not restored).`,
+          );
+        },
+      });
+    } finally {
+      setBusyOp(null);
     }
   };
 
@@ -467,6 +534,24 @@ export function ServerBackupPanel(props: Props): ReactElement {
     setSelectedIds(selectableBackups.map((b) => b.id));
   };
 
+  const deleteBackupsByIds = async (backupIds: string[]) => {
+    setBusyOp("other");
+    try {
+      const result = await window.api.deleteBackups(props.server.id, backupIds);
+      if (!result.ok) {
+        showBackupError(result.error ?? "Could not delete backups");
+        return;
+      }
+      setSelectedIds((prev) => prev.filter((id) => !backupIds.includes(id)));
+      await load(props.server.id);
+      showBackupToast(
+        `Deleted ${result.data} backup${result.data === 1 ? "" : "s"}.`,
+      );
+    } finally {
+      setBusyOp(null);
+    }
+  };
+
   const confirmDeleteSelected = () => {
     if (selectedIds.length === 0) return;
     const count = selectedIds.length;
@@ -481,23 +566,27 @@ export function ServerBackupPanel(props: Props): ReactElement {
       labels: { confirm: "Delete", cancel: "Cancel" },
       confirmProps: { color: "red" },
       onConfirm: () => {
-        void (async () => {
-          setBusy(true);
-          try {
-            const result = await window.api.deleteBackups(props.server.id, selectedIds);
-            if (!result.ok) {
-              showBackupError(result.error ?? "Could not delete backups");
-              return;
-            }
-            setSelectedIds([]);
-            await load(props.server.id);
-            showBackupToast(
-              `Deleted ${result.data} backup${result.data === 1 ? "" : "s"}.`,
-            );
-          } finally {
-            setBusy(false);
-          }
-        })();
+        void deleteBackupsByIds(selectedIds);
+      },
+    });
+  };
+
+  const confirmDeleteOne = (backup: BackupRecord) => {
+    if (backup.status === "running") return;
+    const label =
+      backup.kind === "players" ? playerBackupDisplayName(backup) : activeKindLabel;
+    modals.openConfirmModal({
+      title: `Delete ${label.toLowerCase()} backup?`,
+      children: (
+        <Text size="sm">
+          Permanently delete this <strong>{label}</strong> backup from disk and the
+          database? This cannot be undone.
+        </Text>
+      ),
+      labels: { confirm: "Delete", cancel: "Cancel" },
+      confirmProps: { color: "red" },
+      onConfirm: () => {
+        void deleteBackupsByIds([backup.id]);
       },
     });
   };
@@ -539,7 +628,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
       confirmProps: { color: "orange" },
       onConfirm: () => {
         void (async () => {
-          setBusy(true);
+          setBusyOp("other");
           try {
             const result = await window.api.restoreBackup(props.server.id, backup.id);
             if (!result.ok) {
@@ -551,7 +640,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
               `${label} backup restored. A pre-restore safety copy was kept.`,
             );
           } finally {
-            setBusy(false);
+            setBusyOp(null);
           }
         })();
       },
@@ -584,10 +673,9 @@ export function ServerBackupPanel(props: Props): ReactElement {
           : iniPolicySummary(draftPolicy);
 
   const createLabel = activeKind === "players" ? "Backup all players" : "Backup";
-  const createTooltip =
-    props.createLocked === true
-      ? (props.createLockReason ?? "Wait for the active backup to finish")
-      : activeKind === "world"
+  const createTooltip = createBlocked
+    ? createBlockReason
+    : activeKind === "world"
       ? "Create a manual world save backup now"
       : activeKind === "players"
         ? "Create a full snapshot of all player profiles"
@@ -608,6 +696,18 @@ export function ServerBackupPanel(props: Props): ReactElement {
             </Text>
           </div>
         </Group>
+      )}
+
+      {!installReady && (
+        <Alert
+          color="yellow"
+          variant="light"
+          title="Install files required"
+          data-backup-install-lock
+        >
+          {installLockReason} You can still browse, export, import, and delete
+          archived backups.
+        </Alert>
       )}
 
       <AppSurfaceCard className={classes.listPanel}>
@@ -701,6 +801,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
                         size="sm"
                         label="Schedule"
                         checked={draftPolicy.enabled}
+                        disabled={busy || !installReady}
                         onChange={(event) =>
                           setDraftPolicy({
                             ...draftPolicy,
@@ -719,6 +820,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
                           min={5}
                           max={10_080}
                           value={draftPolicy.intervalMinutes}
+                          disabled={busy || !installReady}
                           onChange={(value) =>
                             setDraftPolicy({
                               ...draftPolicy,
@@ -865,9 +967,11 @@ export function ServerBackupPanel(props: Props): ReactElement {
               <Group gap={6} wrap="wrap" align="center">
                 {opsLocked && (
                   <Badge color="yellow" variant="light" size="sm">
-                    {props.opsLockReason != null
-                      ? "Restore locked while files update"
-                      : "Server active — stop before restore"}
+                    {!installReady
+                      ? "Install files before create/restore"
+                      : props.opsLockReason != null
+                        ? "Restore locked while files update"
+                        : "Server active — stop before restore"}
                   </Badge>
                 )}
                 <Tooltip label="Reload the backup list">
@@ -882,13 +986,33 @@ export function ServerBackupPanel(props: Props): ReactElement {
                     <ArrowClockwise size={16} />
                   </ActionIcon>
                 </Tooltip>
+                <Tooltip label={`Import a YARK ${activeKindLabel.toLowerCase()} ZIP into this catalog`}>
+                  <Button
+                    variant="default"
+                    size="compact-sm"
+                    leftSection={<UploadSimple size={14} />}
+                    onClick={() => void importBackup()}
+                    loading={busyOp === "import"}
+                    disabled={
+                      loading
+                      || props.createLocked === true
+                      || (busy && busyOp !== "import")
+                    }
+                  >
+                    Import
+                  </Button>
+                </Tooltip>
                 <Tooltip label={createTooltip}>
                   <Button
                     size="compact-sm"
                     leftSection={<HardDrives size={14} />}
                     onClick={() => void createBackup()}
-                    loading={busy}
-                    disabled={loading || props.createLocked === true}
+                    loading={busyOp === "create"}
+                    disabled={
+                      loading
+                      || createBlocked
+                      || (busy && busyOp !== "create")
+                    }
                   >
                     {createLabel}
                   </Button>
@@ -942,6 +1066,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
                       ? playerBackupDisplayName(backup)
                       : relative;
                     const hasNotes = backup.notes !== null && backup.notes.length > 0;
+                    const fileName = archiveFileName(backup.path);
                     return (
                       <div key={backup.id} className={classes.backupRow}>
                         <Checkbox
@@ -977,6 +1102,15 @@ export function ServerBackupPanel(props: Props): ReactElement {
                               {backup.type}
                             </Badge>
                           </Group>
+                          <Text
+                            size="xs"
+                            c="dimmed"
+                            className={classes.backupFileName}
+                            title={backup.path}
+                            data-backup-filename
+                          >
+                            {fileName}
+                          </Text>
                           {hasNotes && (
                             <Text
                               size="xs"
@@ -995,7 +1129,9 @@ export function ServerBackupPanel(props: Props): ReactElement {
                             opsLocked={opsLocked}
                             onCopyDetails={(row) => void copyBackupDetails(row)}
                             onOpenFolder={(id) => void openBackupFolder(id)}
+                            onExport={(row) => void exportBackup(row)}
                             onRestore={confirmRestore}
+                            onDelete={confirmDeleteOne}
                           />
                         </div>
                       </div>

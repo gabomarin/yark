@@ -1,5 +1,5 @@
-import { resolve } from "node:path";
-import { statfs } from "node:fs/promises";
+import { dirname, parse, resolve } from "node:path";
+import { mkdir, statfs } from "node:fs/promises";
 import { existsSync } from "node:fs";
 
 export interface VolumeSpace {
@@ -8,7 +8,12 @@ export interface VolumeSpace {
   totalBytes: number;
 }
 
-/** Windows drive root (`C:\`) or UNC share root; otherwise the path itself. */
+/** Case-insensitive path equality after resolve (Windows-safe; fine on POSIX). */
+export function sameFsPath(a: string, b: string): boolean {
+  return resolve(a).toLowerCase() === resolve(b).toLowerCase();
+}
+
+/** Windows drive root (`C:\`) or UNC share root; otherwise the filesystem root. */
 export function volumeRootForPath(absPath: string): string {
   const resolved = resolve(absPath);
   const drive = /^([a-zA-Z]:)[\\/]/.exec(resolved);
@@ -19,7 +24,47 @@ export function volumeRootForPath(absPath: string): string {
   if (unc?.[1] !== undefined) {
     return unc[1];
   }
-  return resolved;
+  // POSIX (and anything else): stop mkdir walks at the real FS root, not the leaf path.
+  const root = parse(resolved).root;
+  return root.length > 0 ? root : resolved;
+}
+
+/**
+ * Ensure the parent directory of `filePath` exists.
+ * Skips creating Windows drive / UNC roots — `mkdir('H:\\')` throws EPERM even when the volume exists.
+ */
+export async function ensureParentDir(filePath: string): Promise<void> {
+  const parent = dirname(resolve(filePath));
+  if (existsSync(parent)) return;
+
+  const volumeRoot = volumeRootForPath(parent);
+  const missing: string[] = [];
+  let cursor = parent;
+  while (!existsSync(cursor) && !sameFsPath(cursor, volumeRoot)) {
+    missing.push(cursor);
+    const next = dirname(cursor);
+    if (sameFsPath(next, cursor)) break;
+    cursor = next;
+  }
+
+  if (!existsSync(volumeRoot) && missing.length > 0) {
+    throw new Error(`Destination volume is unavailable: ${volumeRoot}`);
+  }
+
+  for (const dir of missing.reverse()) {
+    try {
+      await mkdir(dir);
+    } catch (err) {
+      const code =
+        err !== null && typeof err === "object" && "code" in err
+          ? String((err as { code: unknown }).code)
+          : "";
+      if ((code === "EEXIST" || code === "EPERM") && existsSync(dir)) {
+        continue;
+      }
+      throw err;
+    }
+  }
 }
 
 /** True when the backup root exists or its parent can host a new folder. */

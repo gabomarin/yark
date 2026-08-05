@@ -144,6 +144,8 @@ describe("ServerWorkspacePage", () => {
       setBackupPolicy: vi.fn(),
       openBackupFolder: vi.fn(),
       openBackupRoot: vi.fn(),
+      exportBackup: vi.fn(),
+      importBackup: vi.fn(),
       pickPath: vi.fn(),
       getModMetadata: vi.fn(async (modId: string) => ({
         ok: true,

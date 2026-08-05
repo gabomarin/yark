@@ -1,0 +1,61 @@
+.panel {
+  min-width: 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  /* Extra bottom padding so the last row is not clipped under overflow/scrollbar. */
+  padding: 0 4px 8px 0;
+  list-style: none;
+  max-height: 280px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  flex-shrink: 0;
+  padding: 8px 10px;
+  border-radius: var(--app-radius-control, 8px);
+  border: 1px solid color-mix(in srgb, var(--app-color-border) 50%, transparent);
+  background: color-mix(in srgb, var(--app-color-panel) 40%, transparent);
+}
+
+.row[data-severity="error"] {
+  border-color: color-mix(in srgb, var(--app-color-danger) 35%, var(--app-color-border));
+}
+
+.row[data-severity="warning"] {
+  border-color: color-mix(in srgb, var(--app-color-warn) 40%, var(--app-color-border));
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--app-color-warn);
+}
+
+.row[data-severity="error"] .icon {
+  color: var(--app-color-danger);
+}
+
+.message {
+  min-width: 0;
+  flex: 1;
+  line-height: 1.35;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  flex-shrink: 0;
+  align-self: center;
+}
