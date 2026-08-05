@@ -48,23 +48,23 @@ export function ClusterDetailPanel(props: Props): ReactElement {
               value: (
                 <ReadonlyPath
                   value={sharedDir}
-                  emptyLabel="Not consistent across members"
+                  emptyLabel="Not the same on every server"
                   compact
                 />
               ),
             },
-            { label: "Members", value: String(props.members.length) },
+            { label: "Servers", value: String(props.members.length) },
             { label: "Issues", value: String(props.report.issues.length) },
           ]}
         />
 
         <Stack gap="xs">
           <Text fw={600} size="sm">
-            Member servers
+            Servers in this cluster
           </Text>
           {props.members.length === 0 ? (
             <Text size="sm" c="dimmed">
-              Member profiles could not be resolved.
+              Server profiles could not be resolved.
             </Text>
           ) : (
             <div className={classes.memberList}>
@@ -91,7 +91,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
           </Text>
           {props.report.issues.length === 0 ? (
             <Text size="sm" c="dimmed">
-              No issues. Members share a coherent cluster setup for transfers.
+              No issues. Servers share a coherent cluster setup for transfers.
             </Text>
           ) : (
             <ul className={classes.issueList}>

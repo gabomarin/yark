@@ -9,6 +9,15 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- **Create cluster** from the Clusters workspace: assign a unique Cluster ID and shared directory to one or more stopped servers (#42).
+
+### Changed
+
+- Clusters compliance no longer warns when multiple servers share the same map (common for multi-instance fleets).
+- Clusters refreshes compliance automatically when the view opens; the Recheck button was removed.
+
 ### Fixed
 
 - **YARK updates** no longer fail with a 404 when downloading a new release: installers now publish under a space-free filename (`YARK-server-manager-Setup-<version>.exe`) that matches the updater metadata and the website download button (#165).
