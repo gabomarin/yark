@@ -556,13 +556,6 @@ export class LogsService {
     const items: LogCleanupItem[] = [];
 
     for (const event of this.repo.listAllEvents()) {
-      // Retention outcome events should not immediately re-queue themselves.
-      if (
-        event.type === "logs_retention_completed"
-        || event.type === "logs_retention_failed"
-      ) {
-        continue;
-      }
       const serverId = event.serverId ?? "";
       if (serverFilter !== null && !serverFilter.has(serverId)) {
         continue;
