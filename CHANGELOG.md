@@ -16,6 +16,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Server INI editor metadata is built from `defaults/*.ini` only (`ini-setting-meta`); the wiki scrape and catalog merge scripts are removed.
 - Clusters compliance no longer warns when multiple servers share the same map (common for multi-instance fleets).
 - Clusters refreshes compliance automatically when the view opens; the Recheck button was removed.
 
