@@ -108,7 +108,18 @@ export function MoveInstallDialog(props: Props): ReactElement {
   };
 
   const handleCancelCopy = async (): Promise<void> => {
-    await window.api.cancelMoveServerInstall();
+    const result = await window.api.cancelMoveServerInstall();
+    if (!result.ok) {
+      setError(result.error);
+      setPhase("error");
+      return;
+    }
+    if (!result.data) {
+      setError(
+        "No active move to cancel. Close this dialog and try again if it looks stuck.",
+      );
+      setPhase("error");
+    }
   };
 
   const handleRetryCleanup = async (): Promise<void> => {

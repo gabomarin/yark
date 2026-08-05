@@ -7,6 +7,7 @@ import { EventEmitter } from "node:events";
 import {
   access,
   mkdir,
+  readFile,
   readdir,
   rename,
   rm,
@@ -52,10 +53,14 @@ const FREE_SPACE_MARGIN = 1.1;
 /** Progress range while robocopy runs (cross-volume). */
 const COPY_PROGRESS_START = 15;
 const COPY_PROGRESS_END = 75;
-const COPY_PROGRESS_POLL_MS = 1500;
+/** Poll free-space (cheap) rather than walking the staging tree. */
+const COPY_PROGRESS_POLL_MS = 2500;
 
 /** Cap directory-size walks so validation stays bounded. */
 const MAX_SIZE_WALK_ENTRIES = 250_000;
+
+/** Persisted absolute staging paths awaiting sweep after interrupted moves. */
+const STAGING_REGISTRY_KEY = "paths";
 
 export interface MoveInstallResult {
   serverId: string;
@@ -172,6 +177,11 @@ export class MoveInstallService extends EventEmitter {
     private readonly processes: ProcessManager,
     private readonly backups: BackupService,
     private readonly locks: InstanceLockManager,
+    /**
+     * Optional JSON registry of absolute staging dirs so startup sweep can find
+     * leftovers under destination parents that are not profile install parents.
+     */
+    private readonly stagingRegistryPath: string | null = null,
   ) {
     super();
   }
@@ -194,7 +204,8 @@ export class MoveInstallService extends EventEmitter {
   }
 
   /**
-   * Deletes leftover YARK staging dirs near profile install parents.
+   * Deletes leftover YARK staging dirs near profile install parents and any
+   * destination parents recorded in the staging registry (cross-volume orphans).
    * Never touches a path that is still a profile installDir.
    */
   async sweepStaleStaging(): Promise<number> {
@@ -202,10 +213,36 @@ export class MoveInstallService extends EventEmitter {
     const protectedKeys = new Set(
       profiles.map((profile) => installDirKey(profile.installDir)),
     );
+    const registered = await this.readStagingRegistry();
     const parentDirs = new Set(
       profiles.map((profile) => dirname(resolve(profile.installDir))),
     );
+    for (const stagingPath of registered) {
+      parentDirs.add(dirname(resolve(stagingPath)));
+    }
+
+    const removedKeys = new Set<string>();
     let removed = 0;
+
+    const tryRemoveStaging = async (candidate: string): Promise<boolean> => {
+      const key = installDirKey(candidate);
+      if (removedKeys.has(key) || protectedKeys.has(key)) {
+        return false;
+      }
+      const marker = join(candidate, MOVE_STAGING_MARKER);
+      if (!(await pathExists(marker))) {
+        return false;
+      }
+      try {
+        await rm(candidate, { recursive: true, force: true });
+        removedKeys.add(key);
+        return true;
+      } catch {
+        // Best effort — operator can retry later.
+        return false;
+      }
+    };
+
     for (const parent of parentDirs) {
       if (!(await pathExists(parent))) continue;
       let entries: string[];
@@ -216,18 +253,27 @@ export class MoveInstallService extends EventEmitter {
       }
       for (const name of entries) {
         if (!isStagingDirName(name)) continue;
-        const candidate = join(parent, name);
-        if (protectedKeys.has(installDirKey(candidate))) continue;
-        const marker = join(candidate, MOVE_STAGING_MARKER);
-        if (!(await pathExists(marker))) continue;
-        try {
-          await rm(candidate, { recursive: true, force: true });
+        if (await tryRemoveStaging(join(parent, name))) {
           removed += 1;
-        } catch {
-          // Best effort — operator can retry later.
         }
       }
     }
+
+    for (const stagingPath of registered) {
+      const resolved = resolve(stagingPath);
+      if (!(await pathExists(resolved))) {
+        removedKeys.add(installDirKey(resolved));
+        continue;
+      }
+      if (await tryRemoveStaging(resolved)) {
+        removed += 1;
+      }
+    }
+
+    const remaining = registered.filter(
+      (entry) => !removedKeys.has(installDirKey(entry)),
+    );
+    await this.writeStagingRegistry(remaining);
     return removed;
   }
 
@@ -400,6 +446,7 @@ export class MoveInstallService extends EventEmitter {
             `serverId=${serverId}\nsource=${sourceDir}\ndest=${destResolved}\n`,
             "utf8",
           );
+          await this.registerStagingPath(stagingDir);
 
           this.emitProgress({
             serverId,
@@ -424,7 +471,6 @@ export class MoveInstallService extends EventEmitter {
           });
           this.throwIfCancelled();
 
-          await rm(join(stagingDir, MOVE_STAGING_MARKER), { force: true });
           verifyPath = stagingDir;
         }
 
@@ -483,7 +529,9 @@ export class MoveInstallService extends EventEmitter {
         });
 
         if (!useRename) {
+          await rm(join(stagingDir, MOVE_STAGING_MARKER), { force: true });
           await this.promoteStaging(stagingDir, destResolved, destHealth.health);
+          await this.unregisterStagingPath(stagingDir);
         }
 
         const committed = this.instances.commitInstallDir(serverId, destResolved);
@@ -600,9 +648,10 @@ export class MoveInstallService extends EventEmitter {
             await writeFile(marker, `serverId=${serverId}\nfailed=1\n`, "utf8");
           }
           await rm(stagingDir, { recursive: true, force: true });
+          await this.unregisterStagingPath(stagingDir);
         }
       } catch {
-        // Leave for sweepStaleStaging.
+        // Leave for sweepStaleStaging (path stays in the registry).
       }
 
       this.repo.addEvent(
@@ -813,13 +862,26 @@ export class MoveInstallService extends EventEmitter {
   }): Promise<void> {
     const { serverId, sourceDir, stagingDir, destResolved, sourceBytes } = args;
     let pollTimer: ReturnType<typeof setInterval> | null = null;
+    let pollInFlight = false;
+
+    // Free-space delta avoids repeatedly walking hundreds of thousands of files.
+    const spaceBefore = await readVolumeSpace(stagingDir);
+    const freeBaseline = spaceBefore?.freeBytes ?? null;
 
     const publishCopyProgress = async (): Promise<void> => {
-      if (this.cancelRequested || sourceBytes <= 0) {
+      if (this.cancelRequested || sourceBytes <= 0 || freeBaseline === null) {
         return;
       }
+      if (pollInFlight) {
+        return;
+      }
+      pollInFlight = true;
       try {
-        const copied = await estimateDirectoryBytes(stagingDir);
+        const space = await readVolumeSpace(stagingDir);
+        if (space === null) {
+          return;
+        }
+        const copied = Math.max(0, freeBaseline - space.freeBytes);
         const ratio = Math.min(1, copied / sourceBytes);
         const percent = Math.round(
           COPY_PROGRESS_START + ratio * (COPY_PROGRESS_END - COPY_PROGRESS_START),
@@ -839,6 +901,8 @@ export class MoveInstallService extends EventEmitter {
         });
       } catch {
         // Best effort — keep last progress.
+      } finally {
+        pollInFlight = false;
       }
     };
 
@@ -860,6 +924,55 @@ export class MoveInstallService extends EventEmitter {
       }
       this.activeChild = null;
     }
+  }
+
+  private async readStagingRegistry(): Promise<string[]> {
+    if (this.stagingRegistryPath === null) {
+      return [];
+    }
+    try {
+      const raw = await readFile(this.stagingRegistryPath, "utf8");
+      const parsed = JSON.parse(raw) as { [STAGING_REGISTRY_KEY]?: unknown };
+      const paths = parsed[STAGING_REGISTRY_KEY];
+      if (!Array.isArray(paths)) {
+        return [];
+      }
+      return paths.filter((entry): entry is string => typeof entry === "string" && entry.length > 0);
+    } catch {
+      return [];
+    }
+  }
+
+  private async writeStagingRegistry(paths: string[]): Promise<void> {
+    if (this.stagingRegistryPath === null) {
+      return;
+    }
+    const unique = [...new Set(paths.map((entry) => resolve(entry)))];
+    await this.ensureParentDirectory(this.stagingRegistryPath);
+    await writeFile(
+      this.stagingRegistryPath,
+      `${JSON.stringify({ [STAGING_REGISTRY_KEY]: unique }, null, 2)}\n`,
+      "utf8",
+    );
+  }
+
+  private async registerStagingPath(stagingDir: string): Promise<void> {
+    const existing = await this.readStagingRegistry();
+    const key = installDirKey(stagingDir);
+    if (existing.some((entry) => installDirKey(entry) === key)) {
+      return;
+    }
+    await this.writeStagingRegistry([...existing, resolve(stagingDir)]);
+  }
+
+  private async unregisterStagingPath(stagingDir: string): Promise<void> {
+    const existing = await this.readStagingRegistry();
+    const key = installDirKey(stagingDir);
+    const next = existing.filter((entry) => installDirKey(entry) !== key);
+    if (next.length === existing.length) {
+      return;
+    }
+    await this.writeStagingRegistry(next);
   }
 
   private async prepareDestinationForPromote(

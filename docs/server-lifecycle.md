@@ -163,10 +163,11 @@ updates cannot change it; only `InstanceService.setServerEnabled` may do so.
   lock `"move-install"`, source health `ready`, empty/missing destination.
   Same-volume moves use folder rename (with verify + rollback); cross-volume
   copies via a YARK-owned temp folder (includes `ShooterGame\Saved`) with live
-  copy progress, then promote. After verify, commit `install_dir` and delete the
-  previous folder when it still exists. Progress: `push:move-install-progress`.
-  Interrupted temp dirs are swept on app start. Failures before commit never leave
-  the profile on an unverified destination.
+  copy progress (free-space estimate), then promote. After verify, commit
+  `install_dir` and delete the previous folder when it still exists. Progress:
+  `push:move-install-progress`. Interrupted temp dirs are recorded and swept on
+  app start (including destination parents that are not profile parents).
+  Failures before commit never leave the profile on an unverified destination.
 
 **Start** (`InstanceService.start`):
 

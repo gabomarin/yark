@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mkdir, mkdtemp, writeFile, rm, access } from "node:fs/promises";
+import { mkdir, mkdtemp, writeFile, rm, access, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { InstanceService } from "@backend/domains/instances/instance-service";
@@ -71,7 +71,10 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
   };
 }
 
-function harness(initialProfiles: ServerProfile[]) {
+function harness(
+  initialProfiles: ServerProfile[],
+  stagingRegistryPath: string | null = null,
+) {
   let profiles = initialProfiles;
   const repo = {
     get: vi.fn((id: string) => profiles.find((item) => item.id === id) ?? null),
@@ -115,6 +118,7 @@ function harness(initialProfiles: ServerProfile[]) {
     processes,
     backups,
     locks,
+    stagingRegistryPath,
   );
   return { instances, move, repo, processes, backups, getProfiles: () => profiles };
 }
@@ -304,6 +308,35 @@ describe("MoveInstallService", () => {
     const removed = await move.sweepStaleStaging();
     expect(removed).toBe(1);
     await expect(access(staging)).rejects.toThrow();
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it("sweeps registered staging under a non-profile destination parent", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-move-sweep-reg-"));
+    const profileRoot = join(root, "profiles");
+    const destRoot = join(root, "elsewhere");
+    const installDir = join(profileRoot, "Island");
+    const staging = join(destRoot, ".yark-move-srv-1-staging");
+    const registryPath = join(root, "move-install-staging.json");
+    await mkdir(installDir, { recursive: true });
+    await mkdir(staging, { recursive: true });
+    await writeFile(join(staging, MOVE_STAGING_MARKER), "serverId=srv-1\n", "utf8");
+    await writeFile(
+      registryPath,
+      `${JSON.stringify({ paths: [staging] }, null, 2)}\n`,
+      "utf8",
+    );
+
+    const source = profile({ installDir });
+    const { move } = harness([source], registryPath);
+    const removed = await move.sweepStaleStaging();
+    expect(removed).toBe(1);
+    await expect(access(staging)).rejects.toThrow();
+    const registry = JSON.parse(await readFile(registryPath, "utf8")) as {
+      paths: string[];
+    };
+    expect(registry.paths).toEqual([]);
 
     await rm(root, { recursive: true, force: true });
   });

@@ -201,6 +201,7 @@ if (gotSingleInstanceLock) {
       processManager,
       backupService,
       locks,
+      join(userData, "move-install-staging.json"),
     );
     const modsService = new ModsService({ settings });
 
