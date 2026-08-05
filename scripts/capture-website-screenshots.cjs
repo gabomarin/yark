@@ -376,6 +376,12 @@ async function run() {
     });
     await settle(page, 500);
     await redactPrivatePaths(page);
+    // Prefer Log retention + YARK updates in the 1440×900 frame (0.6 surfaces).
+    const yarkUpdates = page.locator("[data-settings-yark-updates]");
+    if ((await yarkUpdates.count()) > 0) {
+      await yarkUpdates.first().scrollIntoViewIfNeeded();
+      await settle(page, 250);
+    }
     await settle(page, 200);
     await shot(page, path.join(outDir, "settings.png"));
 
