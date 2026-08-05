@@ -1,6 +1,6 @@
 ---
 title: Settings
-description: SteamCMD path, default folders, theme, and other app-wide preferences.
+description: SteamCMD path, default folders, desktop shell, UI density, and other app-wide preferences.
 ---
 
 import { withBase } from "../../../data/site";
@@ -17,7 +17,7 @@ Set the path to the folder that contains `steamcmd.exe`. This is the most import
     height="900"
     loading="lazy"
   />
-  <figcaption>Settings — SteamCMD path, default base folder, and appearance preferences.</figcaption>
+  <figcaption>Settings — SteamCMD path, default base folder, and app preferences.</figcaption>
 </figure>
 
 Changing the SteamCMD path resets content-cache freshness tracking so the next install does not reuse a stale “fresh” flag from the previous home.
@@ -37,9 +37,13 @@ closes; there is no normal “leave servers running and quit YARK” option.
 
 Optional convenience when creating new profiles (where you tend to place installs). Each profile still stores its own absolute `installDir`.
 
-## Theme & UI density
+## UI density
 
-Appearance preferences (theme, compact vs comfortable density) apply to the desktop shell only. They do not change dedicated-server behavior.
+**Display size** (compact vs comfortable) applies to the desktop shell only. There is no light/dark theme control — the app uses a dark shell. Density does not change dedicated-server behavior.
+
+## Server auto-start summary
+
+Settings lists profiles that opted into **Auto-start with YARK**. Turn the preference on or off on each server’s Server tab (Startup). Auto-start is separate from **Start with Windows**.
 
 ## What stays local
 

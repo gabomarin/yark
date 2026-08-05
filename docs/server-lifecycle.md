@@ -217,7 +217,8 @@ confirming probe before `"running"` (poll `DEFAULT_READY_POLL_MS = 3000`, timeou
 `DEFAULT_READY_TIMEOUT_MS = 10 * 60 * 1000`). Log patterns can unlock probes
 early; `skipReadinessCheck` skips this for tests / binaries without RCON.
 Timeout → `"error"` + terminate. The persistent UI RCON session connects a few
-seconds after promotion to `"running"`.
+seconds after promotion to `"running"` — workspace console, players, and ban
+list: [rcon.md](rcon.md).
 
 **Stop** (`InstanceService.stop`):
 
@@ -410,5 +411,8 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 
 See also [backups.md](backups.md) (restore requires `!isActive`),
 [updates-steamcmd.md](updates-steamcmd.md) (safe update auto-stop, `pre_update`,
-conditional restart, real-host validation), and
-[logs.md](logs.md) (runtime buffer from piped stdout/stderr and Saved/Logs tail).
+conditional restart, real-host validation),
+[logs.md](logs.md) (runtime buffer from piped stdout/stderr and Saved/Logs tail),
+[rcon.md](rcon.md) (workspace console / players / ban list),
+[settings.md](settings.md) (tray, Start with Windows, auto-start summary), and
+[clusters.md](clusters.md) (transfer-compliance reports and cluster launch trio).
