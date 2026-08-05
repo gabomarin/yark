@@ -12,6 +12,38 @@ export type ChangelogEntry = {
 /** Curated site changelog — keep in sync with root CHANGELOG.md when cutting releases. */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.6.0",
+    date: "2026-08-05",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "In-app YARK updates from GitHub Releases (Settings + accented sidebar version), with safe busy-state blocking and an assisted Windows installer.",
+          "Log retention for YARK-owned events and SteamCMD update logs, with Settings controls and manual cleanup preview.",
+          "Portable backup export/import and per-archive delete, with compact local date stamps on managed filenames.",
+          "Move installation for same-drive rename or cross-drive copy with progress, then profile path commit.",
+          "Opt-in Auto-start with YARK per server profile after leave-running reattach.",
+          "Map artwork thumbs for known ASA maps on the server list and workspace header.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Sidebar Backups no longer resets unsaved schedule edits on App polling, and idle stopped servers no longer false-alarm on missing world backups.",
+          "Backup create/restore require Ready installs; export works to Windows drive roots with a real .zip extension.",
+          "Move installation recovers orphaned cross-drive staging and improves cancel/progress guidance.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Sidebar Backups health badges and fleet alerts use clearer tooltips and a compact Alerts panel.",
+          "Filesystem paths use shared read-only chips with Browse/Clear across Settings, servers, clusters, and backups.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.5.2",
     date: "2026-08-02",
     sections: [
