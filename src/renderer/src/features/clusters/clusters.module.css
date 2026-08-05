@@ -87,6 +87,26 @@
   list-style: none;
 }
 
+.memberRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--app-space-sm);
+  padding: 10px 12px;
+  border-radius: var(--app-radius-control);
+  border: 1px solid color-mix(in srgb, var(--app-color-border) 50%, transparent);
+  background: color-mix(in srgb, var(--app-color-panel) 45%, transparent);
+}
+
+.memberBody {
+  min-width: 0;
+  flex: 1;
+}
+
+.memberActions {
+  flex-shrink: 0;
+}
+
 .clusterTitle,
 .clusterMeta {
   min-width: 0;

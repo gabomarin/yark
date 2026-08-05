@@ -130,7 +130,14 @@ describe("ClustersPage", () => {
     expect(screen.getByText(/no cluster directory configured/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /alpha/i }));
-    await user.click(screen.getByRole("button", { name: /The Island/i }));
+    const detail = document.querySelector('[data-cluster-detail="alpha"]');
+    expect(detail).not.toBeNull();
+    const islandLabel = within(detail as HTMLElement).getByText("The Island");
+    const islandRow = islandLabel.closest("[class*='memberRow']");
+    expect(islandRow).not.toBeNull();
+    await user.click(
+      within(islandRow as HTMLElement).getByRole("button", { name: /^open /i }),
+    );
     expect(onOpenServer).toHaveBeenCalledWith("srv-a");
   });
 
@@ -193,7 +200,8 @@ describe("ClustersPage", () => {
 
     expect(screen.getAllByText(/directory but no Cluster ID/i).length).toBeGreaterThan(0);
     expect(screen.getByText("C:/ARK/cluster")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Dir Only/i })).toBeInTheDocument();
+    expect(screen.getByText("Dir Only")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^open /i })).toBeInTheDocument();
     expect(screen.getByText(/missing Cluster ID/i)).toBeInTheDocument();
   });
 
@@ -366,5 +374,103 @@ describe("ClustersPage", () => {
     );
     // Mount only — successful rollback should not refresh as a partial cluster.
     expect(onRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("adds a stopped unclustered server to an existing cluster", async () => {
+    const user = userEvent.setup();
+    const onRefresh = vi.fn();
+    const free = makeServer({
+      id: "free",
+      name: "Free Map",
+      clusterId: null,
+      clusterDir: null,
+      gamePort: 7783,
+      queryPort: 27021,
+      rconPort: 27026,
+    });
+    const updateServer = vi.fn().mockImplementation(async (id: string, input: unknown) => ({
+      ok: true,
+      data: {
+        ...(id === "free" ? free : island),
+        ...(input as object),
+      },
+    }));
+    window.api = {
+      ...window.api,
+      updateServer,
+    };
+
+    render(
+      <AppProviders>
+        <ClustersPage
+          servers={[island, scorched, free]}
+          reports={[readyReport]}
+          statuses={makeStatuses([
+            ["srv-a", "stopped"],
+            ["srv-b", "stopped"],
+            ["free", "stopped"],
+          ])}
+          onOpenServer={vi.fn()}
+          onRefresh={onRefresh}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /add servers/i }));
+    const dialog = await screen.findByRole("dialog", { name: /add servers to alpha/i });
+    expect(within(dialog).getByText("Free Map")).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: /continue/i }));
+    await user.click(within(dialog).getByRole("button", { name: /add to cluster/i }));
+
+    expect(updateServer).toHaveBeenCalledWith(
+      "free",
+      expect.objectContaining({
+        clusterId: "alpha",
+        clusterDir: expect.stringMatching(/C:[\\/]ARK[\\/]cluster/i),
+      }),
+    );
+    expect(onRefresh).toHaveBeenCalledTimes(2);
+  });
+
+  it("removes a stopped member from the cluster", async () => {
+    const user = userEvent.setup();
+    const onRefresh = vi.fn();
+    const updateServer = vi.fn().mockResolvedValue({
+      ok: true,
+      data: { ...island, clusterId: null, clusterDir: null },
+    });
+    window.api = {
+      ...window.api,
+      updateServer,
+    };
+
+    render(
+      <AppProviders>
+        <ClustersPage
+          servers={[island, scorched]}
+          reports={[readyReport]}
+          statuses={makeStatuses([
+            ["srv-a", "stopped"],
+            ["srv-b", "stopped"],
+          ])}
+          onOpenServer={vi.fn()}
+          onRefresh={onRefresh}
+        />
+      </AppProviders>,
+    );
+
+    const removeButtons = screen.getAllByRole("button", { name: /^remove /i });
+    await user.click(removeButtons[0]!);
+    const dialog = await screen.findByRole("dialog", { name: /remove from alpha/i });
+    await user.click(within(dialog).getByRole("button", { name: /remove from cluster/i }));
+
+    expect(updateServer).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        clusterId: null,
+        clusterDir: null,
+      }),
+    );
+    expect(onRefresh).toHaveBeenCalledTimes(2);
   });
 });

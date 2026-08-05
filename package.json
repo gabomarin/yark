@@ -30,6 +30,7 @@
     "e2e:quit-policy": "node scripts/e2e-quit-policy.cjs",
     "e2e:crash-reattach": "node scripts/e2e-crash-reattach.cjs",
     "e2e:log-retention": "node scripts/e2e-log-retention.cjs",
+    "e2e:clusters-membership": "node scripts/e2e-clusters-membership.cjs",
     "website:screenshots": "node scripts/capture-website-screenshots.cjs",
     "website:dev": "npm run dev --prefix website",
     "website:build": "npm run build --prefix website",

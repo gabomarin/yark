@@ -21,3 +21,6 @@ docs/superpowers/
 
 # Heavy traced SVG design source (optional local file; not used at runtime)
 brand/yark-logo.svg
+
+.magicpath-*/
+
