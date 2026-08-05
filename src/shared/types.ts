@@ -279,6 +279,12 @@ export interface AppEvent {
     | "update_failed"
     | "update_rolled_back"
     | "installation_health_degraded"
+    | "install_move_started"
+    | "install_move_completed"
+    | "install_move_failed"
+    | "install_move_cancelled"
+    | "install_move_cleanup_completed"
+    | "install_move_cleanup_failed"
     | "error";
   severity: "info" | "warning" | "error";
   message: string;
@@ -316,6 +322,63 @@ export interface ServerStopProgress {
   percent: number | null;
   /** Defaults to user-initiated stop when omitted by older payloads. */
   reason: ServerStopProgressReason;
+}
+
+/** Phases for Move installation (copy → verify → commit). */
+export type MoveInstallProgressPhase =
+  | "validating"
+  | "copying"
+  | "verifying"
+  | "committing"
+  | "cleanup";
+
+export interface MoveInstallProgress {
+  serverId: string;
+  active: boolean;
+  phase: MoveInstallProgressPhase | null;
+  label: string;
+  percent: number | null;
+  sourceDir: string | null;
+  stagingDir: string | null;
+  destinationDir: string | null;
+  oldSourceDir: string | null;
+  error: string | null;
+  /** Set when copy+verify+commit succeeded and old files await optional cleanup. */
+  awaitingCleanup: boolean;
+}
+
+/** Normalize push payloads so partial emitters stay UI-safe. */
+export function normalizeMoveInstallProgress(
+  payload: Partial<MoveInstallProgress> &
+    Pick<MoveInstallProgress, "serverId" | "active">,
+): MoveInstallProgress {
+  const phase =
+    payload.phase === "validating"
+    || payload.phase === "copying"
+    || payload.phase === "verifying"
+    || payload.phase === "committing"
+    || payload.phase === "cleanup"
+      ? payload.phase
+      : null;
+  return {
+    serverId: payload.serverId,
+    active: payload.active === true,
+    phase,
+    label: typeof payload.label === "string" ? payload.label : "",
+    percent:
+      typeof payload.percent === "number" && Number.isFinite(payload.percent)
+        ? payload.percent
+        : null,
+    sourceDir: typeof payload.sourceDir === "string" ? payload.sourceDir : null,
+    stagingDir:
+      typeof payload.stagingDir === "string" ? payload.stagingDir : null,
+    destinationDir:
+      typeof payload.destinationDir === "string" ? payload.destinationDir : null,
+    oldSourceDir:
+      typeof payload.oldSourceDir === "string" ? payload.oldSourceDir : null,
+    error: typeof payload.error === "string" ? payload.error : null,
+    awaitingCleanup: payload.awaitingCleanup === true,
+  };
 }
 
 /** Normalize push payloads so older emitters without `reason` stay UI-safe. */

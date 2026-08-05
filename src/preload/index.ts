@@ -7,8 +7,8 @@ import type {
   StartServerOptions,
   SteamCmdCacheKind,
 } from "../shared/types";
-import type { SteamCmdProgressPush, BackupsChangedPush, ServerStopProgressPush, RconStatusChangedPush, PlayerListUpdatedPush } from "../shared/ipc";
-import { normalizeServerStopProgress } from "../shared/types";
+import type { SteamCmdProgressPush, BackupsChangedPush, ServerStopProgressPush, MoveInstallProgressPush, RconStatusChangedPush, PlayerListUpdatedPush } from "../shared/ipc";
+import { normalizeMoveInstallProgress, normalizeServerStopProgress } from "../shared/types";
 
 const api: RendererApi = {
   listServers: () => ipcRenderer.invoke(IPC.serversList),
@@ -31,6 +31,13 @@ const api: RendererApi = {
   installServerFiles: (id: string) => ipcRenderer.invoke(IPC.serversInstallFiles, id),
   updateServerNow: (id: string) => ipcRenderer.invoke(IPC.serversUpdateNow, id),
   verifyServerFiles: (id: string) => ipcRenderer.invoke(IPC.serversVerifyFiles, id),
+  moveServerInstall: (id: string, destinationDir: string) =>
+    ipcRenderer.invoke(IPC.serversMoveInstall, id, destinationDir),
+  cancelMoveServerInstall: () => ipcRenderer.invoke(IPC.serversMoveInstallCancel),
+  cleanupMovedServerInstall: (id: string, oldSourceDir: string) =>
+    ipcRenderer.invoke(IPC.serversMoveInstallCleanup, id, oldSourceDir),
+  dismissMoveServerInstallCleanup: (id: string) =>
+    ipcRenderer.invoke(IPC.serversMoveInstallDismissCleanup, id),
   openServerFolder: (id: string) => ipcRenderer.invoke(IPC.serversOpenFolder, id),
   openServerNativeTerminal: (id: string) => ipcRenderer.invoke(IPC.serversOpenNativeTerminal, id),
   installSteamCmd: () => ipcRenderer.invoke(IPC.steamcmdInstall),
@@ -175,6 +182,15 @@ const api: RendererApi = {
     ipcRenderer.on(IPC_PUSH.serverStopProgress, handler);
     return () => {
       ipcRenderer.removeListener(IPC_PUSH.serverStopProgress, handler);
+    };
+  },
+  onMoveInstallProgress: (listener) => {
+    const handler = (_e: unknown, payload: MoveInstallProgressPush) => {
+      listener(normalizeMoveInstallProgress(payload));
+    };
+    ipcRenderer.on(IPC_PUSH.moveInstallProgress, handler);
+    return () => {
+      ipcRenderer.removeListener(IPC_PUSH.moveInstallProgress, handler);
     };
   },
   onBackupsChanged: (listener) => {

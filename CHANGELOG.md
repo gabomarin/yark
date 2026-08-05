@@ -11,8 +11,13 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- **Move installation** moves same-drive folders in place (or copies across drives with live progress), verifies, commits the profile path, then removes the previous folder. Install path is read-only in normal server editing (#56).
 - Opt-in **Auto-start with YARK** per server profile (default off). After leave-running reattach, eligible servers start sequentially through the normal start path; Inactive, already-running, and uncertain reattach cases are skipped with audit events. Configure on the Server tab; Settings shows a summary of opted-in profiles (#53).
 - **Map artwork** thumbs for known ASA maps on the server list and workspace header (#158).
+
+### Fixed
+
+- **Move installation** recovers orphaned cross-drive staging folders on startup, surfaces cancel failures in the dialog, estimates copy progress from free disk space, clears leftover cleanup state when leaving the old folder, and shows distinct Move-button guidance for an active move vs a files job (#56).
 
 ### Changed
 

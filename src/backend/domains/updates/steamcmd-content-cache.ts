@@ -4,14 +4,20 @@
  * - asa_content_cache: shared install copied to each server (disk reuse)
  */
 
-import { spawn, type ChildProcess } from "node:child_process";
+import type { ChildProcess } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { constants as osConstants, setPriority } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import type { SteamCmdCacheKind } from "../../../shared/types";
+import {
+  DEFAULT_ROBOCOPY_THREADS,
+  isOperationCancelledError,
+  isRobocopySuccess,
+  OperationCancelledError,
+  robocopyTree,
+} from "./robocopy-tree";
 
 /** Threads for robocopy — leave disk headroom so Electron stays responsive. */
-export const ASA_CONTENT_SYNC_ROBOCOPY_THREADS = 4;
+export const ASA_CONTENT_SYNC_ROBOCOPY_THREADS = DEFAULT_ROBOCOPY_THREADS;
 
 export const ASA_APP_ID = "2430930";
 
@@ -21,19 +27,11 @@ export const ASA_CONTENT_SYNC_EXCLUDE_DIRS = ["ShooterGame\\Saved"] as const;
 /** How long a content cache already updated in this session is reused. */
 export const CONTENT_CACHE_FRESH_MS = 15 * 60 * 1000;
 
-export class OperationCancelledError extends Error {
-  constructor(message = "Operation cancelled by the user") {
-    super(message);
-    this.name = "OperationCancelledError";
-  }
-}
-
-export function isOperationCancelledError(error: unknown): boolean {
-  return (
-    error instanceof OperationCancelledError
-    || (error instanceof Error && error.name === "OperationCancelledError")
-  );
-}
+export {
+  OperationCancelledError,
+  isOperationCancelledError,
+  isRobocopySuccess,
+};
 
 export function resolveSteamCmdHome(steamcmdExe: string): string {
   const trimmed = steamcmdExe.trim();
@@ -154,12 +152,6 @@ export function shouldReuseAsaContentCache(
   return operation === "install-files" && isContentCacheFresh(cacheDir, updatedAtMs);
 }
 
-export function isRobocopySuccess(exitCode: number | null): boolean {
-  // Robocopy: 0–7 = success with varying copy degrees; >= 8 = error.
-  const code = exitCode ?? 16;
-  return code >= 0 && code < 8;
-}
-
 export interface SyncAsaContentOptions {
   onSpawn?: (child: ChildProcess) => void;
   isCancelled?: () => boolean;
@@ -174,78 +166,10 @@ export async function syncAsaContentCacheToInstallDir(
   installDir: string,
   options: SyncAsaContentOptions = {},
 ): Promise<number> {
-  const source = resolve(cacheDir);
-  const dest = resolve(installDir);
-  if (source.toLowerCase() === dest.toLowerCase()) {
-    return 0;
-  }
-
-  return await new Promise<number>((resolvePromise, reject) => {
-    if (options.isCancelled?.() === true) {
-      reject(new OperationCancelledError());
-      return;
-    }
-
-    const args = [
-      source,
-      dest,
-      "/E",
-      "/XD",
-      ...ASA_CONTENT_SYNC_EXCLUDE_DIRS,
-      "/R:2",
-      "/W:2",
-      `/MT:${ASA_CONTENT_SYNC_ROBOCOPY_THREADS}`,
-      "/NFL",
-      "/NDL",
-      "/NJH",
-      "/NJS",
-      "/nc",
-      "/ns",
-      "/np",
-    ];
-    const child = spawn("robocopy.exe", args, {
-      windowsHide: true,
-      shell: false,
-    });
-    if (child.pid != null) {
-      try {
-        setPriority(child.pid, osConstants.priority.PRIORITY_BELOW_NORMAL);
-      } catch {
-        // Best effort: some hosts disallow priority changes.
-      }
-    }
-    options.onSpawn?.(child);
-
-    let stderr = "";
-    child.stderr.on("data", (chunk) => {
-      stderr += String(chunk);
-    });
-
-    child.once("error", (error) => {
-      reject(
-        new Error(
-          `Could not run robocopy to sync ASA cache: ${error.message}`,
-        ),
-      );
-    });
-
-    child.once("exit", (code) => {
-      if (options.isCancelled?.() === true) {
-        reject(new OperationCancelledError());
-        return;
-      }
-      const exitCode = code ?? 16;
-      if (!isRobocopySuccess(exitCode)) {
-        reject(
-          new Error(
-            `ASA cache sync failed (robocopy exit ${exitCode})${
-              stderr.trim().length > 0 ? `: ${stderr.trim()}` : ""
-            }`,
-          ),
-        );
-        return;
-      }
-      resolvePromise(exitCode);
-    });
+  return robocopyTree(cacheDir, installDir, {
+    excludeDirs: ASA_CONTENT_SYNC_EXCLUDE_DIRS,
+    onSpawn: options.onSpawn,
+    isCancelled: options.isCancelled,
+    operationLabel: "ASA cache sync",
   });
 }

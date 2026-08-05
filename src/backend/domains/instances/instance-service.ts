@@ -17,7 +17,7 @@ import { EventEmitter } from "node:events";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createConnection } from "node:net";
-import { join, parse as parsePath, resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
 import {
   normalizeWindowsPath,
@@ -43,6 +43,11 @@ import {
   type BanListEntry,
 } from "./ban-list";
 import {
+  assertSafeInstallDirForWipe,
+  installDirKey,
+} from "./install-dir-safety";
+import {
+  invalidateInstallInspectCache,
   inspectServerInstallationAsync,
   readOfficialArkBuildCached,
   readOfficialArkVersionCached,
@@ -132,35 +137,12 @@ function sameServerIds(
   return profiles.every((profile) => cachedIds.has(profile.id));
 }
 
-/** Windows install-directory comparison key (paths are case-insensitive). */
-function installDirKey(installDir: string): string {
-  return resolve(installDir).toLowerCase();
-}
-
 function backingUpPercent(index: number, total: number): number {
   if (total <= 1) return 85;
   // After the process exits, spread archive starts across 40% → 85%.
   return Math.round(40 + (index / (total - 1)) * 45);
 }
 
-function assertSafeInstallDirForWipe(installDir: string): string {
-  const resolved = resolve(installDir);
-  const root = parsePath(resolved).root;
-  if (resolved.length === 0 || resolved === root || /^[a-zA-Z]:\\?$/.test(resolved)) {
-    throw new Error(
-      `Install path is not safe to delete from disk: "${installDir}"`,
-    );
-  }
-  // Avoid deleting roots like C:\Users or C:\Windows by accident.
-  const normalized = resolved.replace(/[/\\]+$/, "").toLowerCase();
-  const forbidden = ["c:\\windows", "c:\\users", "c:\\program files", "c:\\program files (x86)"];
-  if (forbidden.some((item) => normalized === item)) {
-    throw new Error(
-      `Install path is too generic to delete from disk: "${resolved}"`,
-    );
-  }
-  return resolved;
-}
 /**
  * Instance orchestration service: validated CRUD + lifecycle.
  */
@@ -268,7 +250,19 @@ export class InstanceService extends EventEmitter {
     this.assertValidInput(input);
     this.assertUniqueName(input.name, id);
     this.assertNoPortConflicts(input, id);
-    const updated = this.repo.update(id, input);
+    const existing = this.repo.get(id);
+    if (existing === null) {
+      throw new Error("Server does not exist");
+    }
+    if (installDirKey(input.installDir) !== installDirKey(existing.installDir)) {
+      throw new Error(
+        "Install directory cannot be changed here. Use Move installation to copy, verify, and commit a new path.",
+      );
+    }
+    const updated = this.repo.update(id, {
+      ...input,
+      installDir: existing.installDir,
+    });
     if (updated === null) {
       throw new Error("Server does not exist");
     }
@@ -282,6 +276,39 @@ export class InstanceService extends EventEmitter {
       `Server "${updated.name}" updated`,
     );
     return updated;
+  }
+
+  /**
+   * Commits a verified install path after Move installation.
+   * Only {@link MoveInstallService} should call this after copy+verify succeed.
+   */
+  commitInstallDir(id: string, installDir: string): ServerProfile {
+    const existing = this.repo.get(id);
+    if (existing === null) {
+      throw new Error("Server does not exist");
+    }
+    this.assertUniqueInstallDir(installDir, id);
+    const updated = this.repo.updateInstallDir(id, installDir);
+    if (updated === null) {
+      throw new Error("Server does not exist");
+    }
+    this.lastInstallServers = this.lastInstallServers.filter(
+      (info) => info.serverId !== id,
+    );
+    this.lastKnownInstallHealth.delete(id);
+    invalidateInstallInspectCache(id);
+    this.repo.addEvent(
+      id,
+      "server_updated",
+      "info",
+      `Server "${updated.name}" install path committed to ${updated.installDir}`,
+    );
+    return updated;
+  }
+
+  /** Exposed for Move installation uniqueness checks. */
+  assertInstallDirAvailable(installDir: string, excludeId?: string): void {
+    this.assertUniqueInstallDir(installDir, excludeId);
   }
 
   async delete(id: string): Promise<void> {

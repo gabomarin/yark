@@ -13,6 +13,7 @@ import type {
   InstallationServersMode,
   ModMetadata,
   ModSearchPage,
+  MoveInstallProgress,
   ServerIniPayload,
   ServerIniSnapshot,
   ServerInstallationSnapshot,
@@ -57,6 +58,10 @@ export const IPC = {
   serversInstallFiles: "servers:install-files",
   serversUpdateNow: "servers:update-now",
   serversVerifyFiles: "servers:verify-files",
+  serversMoveInstall: "servers:move-install",
+  serversMoveInstallCancel: "servers:move-install-cancel",
+  serversMoveInstallCleanup: "servers:move-install-cleanup",
+  serversMoveInstallDismissCleanup: "servers:move-install-dismiss-cleanup",
   serversOpenFolder: "servers:open-folder",
   serversOpenNativeTerminal: "servers:open-native-terminal",
   serversStatuses: "servers:statuses",
@@ -132,6 +137,7 @@ export const IPC_PUSH = {
   serverStatus: "push:server-status",
   steamCmdProgress: "push:steamcmd-progress",
   serverStopProgress: "push:server-stop-progress",
+  moveInstallProgress: "push:move-install-progress",
   backupsChanged: "push:backups-changed",
   rconStatusChanged: "push:rcon-status-changed",
   playerListUpdated: "push:player-list-updated",
@@ -143,6 +149,8 @@ export interface SteamCmdProgressPush {
 }
 
 export type ServerStopProgressPush = ServerStopProgress;
+
+export type MoveInstallProgressPush = MoveInstallProgress;
 
 export interface BackupsChangedPush {
   serverId: string;
@@ -201,6 +209,22 @@ export interface RendererApi {
   installServerFiles(id: string): Promise<IpcResult<void>>;
   updateServerNow(id: string): Promise<IpcResult<void>>;
   verifyServerFiles(id: string): Promise<IpcResult<void>>;
+  moveServerInstall(
+    id: string,
+    destinationDir: string,
+  ): Promise<IpcResult<{
+    sourceDir: string;
+    destinationDir: string;
+    oldSourceDir: string;
+    oldSourceRemoved: boolean;
+    cleanupError: string | null;
+  }>>;
+  cancelMoveServerInstall(): Promise<IpcResult<boolean>>;
+  cleanupMovedServerInstall(
+    id: string,
+    oldSourceDir: string,
+  ): Promise<IpcResult<void>>;
+  dismissMoveServerInstallCleanup(id: string): Promise<IpcResult<void>>;
   openServerFolder(id: string): Promise<IpcResult<void>>;
   openServerNativeTerminal(id: string): Promise<IpcResult<void>>;
   installSteamCmd(): Promise<IpcResult<string>>;
@@ -339,6 +363,9 @@ export interface RendererApi {
   ): () => void;
   onServerStopProgress(
     listener: (payload: ServerStopProgressPush) => void,
+  ): () => void;
+  onMoveInstallProgress(
+    listener: (payload: MoveInstallProgressPush) => void,
   ): () => void;
   onBackupsChanged(
     listener: (payload: BackupsChangedPush) => void,
