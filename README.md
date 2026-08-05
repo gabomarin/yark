@@ -195,6 +195,9 @@ Persistence uses Node's built-in `node:sqlite`; there is no separate backend ser
 | Guide | Scope |
 | --- | --- |
 | [Server lifecycle](docs/server-lifecycle.md) | Launch composition, process identity, readiness, stop/restart, and recovery. |
+| [RCON console](docs/rcon.md) | Persistent workspace RCON session, players, ban list, and IPC. |
+| [Settings](docs/settings.md) | App-wide preferences, desktop shell, SteamCMD path, and density. |
+| [Clusters](docs/clusters.md) | Transfer-compliance reports, cluster fields, and launch-arg trio. |
 | [Updates and SteamCMD](docs/updates-steamcmd.md) | Caches, install/update/verify, safe-update flow, rollback, and Windows validation. |
 | [Backups](docs/backups.md) | Archive types, schedules, restore policy, retention, and recovery behavior. |
 | [Logs](docs/logs.md) | Events, runtime logs, update history, storage, and troubleshooting. |

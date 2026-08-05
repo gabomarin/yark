@@ -1945,6 +1945,28 @@ describe("BackupService kinds and retention", () => {
     expect(existsSync(second.path)).toBe(true);
   });
 
+  it("rejects re-importing a managed archive path even when casing differs", async () => {
+    const [created] = await service.createManualBackup(profile.id, ["world"]);
+    expect(created).toBeDefined();
+    if (created === undefined) return;
+
+    await expect(service.importBackup(profile.id, "world", created.path)).rejects.toThrow(
+      /already in this server's backup catalog/i,
+    );
+
+    if (process.platform === "win32") {
+      const flipped = created.path
+        .split("")
+        .map((ch, index) =>
+          /[a-z]/i.test(ch) && index % 2 === 0 ? ch.toUpperCase() : ch.toLowerCase(),
+        )
+        .join("");
+      await expect(service.importBackup(profile.id, "world", flipped)).rejects.toThrow(
+        /already in this server's backup catalog/i,
+      );
+    }
+  });
+
   it("rejects unsafe portable zips before writing into the backup root", async () => {
     const root = service.resolveBackupRootDir(profile.id);
     const before = existsSync(root) ? await readdir(root) : [];

@@ -58,6 +58,7 @@ import {
   ensureParentDir,
   isBackupDestinationReachable,
   readVolumeSpace,
+  sameFsPath,
   volumeRootForPath,
 } from "./backup-disk";
 import { classifyInstallHealth } from "../instances/server-installation";
@@ -947,8 +948,10 @@ export class BackupService extends EventEmitter {
     await validatePortableZip(source, kind);
 
     const sourceResolved = resolve(source);
-    const existingAtSource = this.backups.getBackupByPath(serverId, sourceResolved);
-    if (existingAtSource !== null) {
+    const alreadyCataloged = this.backups
+      .listBackupPaths(serverId)
+      .some((catalogPath) => sameFsPath(catalogPath, sourceResolved));
+    if (alreadyCataloged) {
       throw new Error("Archive is already in this server's backup catalog");
     }
 

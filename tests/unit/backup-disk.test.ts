@@ -1,6 +1,7 @@
 import {
   ensureParentDir,
   isBackupDestinationReachable,
+  sameFsPath,
   volumeRootForPath,
 } from "@backend/domains/backups/backup-disk";
 import { existsSync } from "node:fs";
@@ -22,6 +23,11 @@ describe("backup-disk helpers", () => {
   it("resolves Windows drive roots", () => {
     expect(volumeRootForPath("D:\\Backups\\Island")).toBe("D:\\");
     expect(volumeRootForPath("c:/ARK/srv/Backups")).toMatch(/^c:\\$/i);
+  });
+
+  it("compares filesystem paths case-insensitively", () => {
+    expect(sameFsPath("C:\\Backups\\A.zip", "c:\\backups\\a.zip")).toBe(true);
+    expect(sameFsPath("C:\\Backups\\A.zip", "C:\\Backups\\B.zip")).toBe(false);
   });
 
   it("treats missing roots with an existing parent as reachable", () => {

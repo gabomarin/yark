@@ -1,4 +1,4 @@
-import { dirname, resolve } from "node:path";
+import { dirname, parse, resolve } from "node:path";
 import { mkdir, statfs } from "node:fs/promises";
 import { existsSync } from "node:fs";
 
@@ -8,7 +8,12 @@ export interface VolumeSpace {
   totalBytes: number;
 }
 
-/** Windows drive root (`C:\`) or UNC share root; otherwise the path itself. */
+/** Case-insensitive path equality after resolve (Windows-safe; fine on POSIX). */
+export function sameFsPath(a: string, b: string): boolean {
+  return resolve(a).toLowerCase() === resolve(b).toLowerCase();
+}
+
+/** Windows drive root (`C:\`) or UNC share root; otherwise the filesystem root. */
 export function volumeRootForPath(absPath: string): string {
   const resolved = resolve(absPath);
   const drive = /^([a-zA-Z]:)[\\/]/.exec(resolved);
@@ -19,11 +24,9 @@ export function volumeRootForPath(absPath: string): string {
   if (unc?.[1] !== undefined) {
     return unc[1];
   }
-  return resolved;
-}
-
-function samePath(a: string, b: string): boolean {
-  return resolve(a).toLowerCase() === resolve(b).toLowerCase();
+  // POSIX (and anything else): stop mkdir walks at the real FS root, not the leaf path.
+  const root = parse(resolved).root;
+  return root.length > 0 ? root : resolved;
 }
 
 /**
@@ -37,10 +40,10 @@ export async function ensureParentDir(filePath: string): Promise<void> {
   const volumeRoot = volumeRootForPath(parent);
   const missing: string[] = [];
   let cursor = parent;
-  while (!existsSync(cursor) && !samePath(cursor, volumeRoot)) {
+  while (!existsSync(cursor) && !sameFsPath(cursor, volumeRoot)) {
     missing.push(cursor);
     const next = dirname(cursor);
-    if (samePath(next, cursor)) break;
+    if (sameFsPath(next, cursor)) break;
     cursor = next;
   }
 
