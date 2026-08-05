@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { APP_VERSION } from "@shared/app-version";
+import type { AppUpdateStatus } from "@shared/app-update";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, List, Stack, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
@@ -119,6 +120,8 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   }>({ active: false, reason: null });
   const installScanInFlightRef = useRef<Promise<void> | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(true);
+  const [appUpdateStatus, setAppUpdateStatus] = useState<AppUpdateStatus | null>(null);
+  const [focusYarkUpdates, setFocusYarkUpdates] = useState(false);
 
   useEffect(() => {
     writeOpenNativeTerminalPref(openNativeTerminalOnStart);
@@ -218,6 +221,39 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   useEffect(() => {
     steamCmdBusyRef.current = steamCmdBusy;
   }, [steamCmdBusy]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const result = await window.api.getAppUpdateStatus();
+      if (cancelled || !result.ok) return;
+      setAppUpdateStatus(result.data);
+    })();
+    const unsubscribe = window.api.onAppUpdate((status) => {
+      setAppUpdateStatus(status);
+    });
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, []);
+
+  const yarkUpdateAvailableVersion =
+    appUpdateStatus !== null
+    && (appUpdateStatus.phase === "available"
+      || appUpdateStatus.phase === "downloading"
+      || appUpdateStatus.phase === "ready")
+    && appUpdateStatus.availableVersion !== null
+    && appUpdateStatus.availableVersion.length > 0
+      ? appUpdateStatus.availableVersion
+      : null;
+
+  const openYarkUpdateSettings = useCallback(() => {
+    setOverlay(null);
+    setRoute("settings");
+    setFocusYarkUpdates(true);
+  }, []);
+
   const steamCmdServerName =
     steamCmdStatus?.serverId != null
       ? (servers.find((server) => server.id === steamCmdStatus.serverId)?.name ?? null)
@@ -1062,6 +1098,8 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
           officialVersion={officialVersion}
           officialNetworkStatus={officialNetworkStatus}
           appVersion={APP_VERSION}
+          yarkUpdateAvailableVersion={yarkUpdateAvailableVersion}
+          onYarkUpdateClick={openYarkUpdateSettings}
           error={error}
           onDismissError={() => setError(null)}
           busyOverlay={stopBusyOverlay}
@@ -1173,6 +1211,8 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         steamCmdDetected={steamCmdStatus?.detected === true}
         steamCmdRunning={steamCmdBusy}
         onNavigate={navigate}
+        yarkUpdateAvailableVersion={yarkUpdateAvailableVersion}
+        onYarkUpdateClick={openYarkUpdateSettings}
         error={error}
         onDismissError={() => setError(null)}
         busyOverlay={stopBusyOverlay}
@@ -1276,6 +1316,8 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
           page: (
             <SettingsPage
               appVersion={APP_VERSION}
+              focusYarkUpdates={focusYarkUpdates}
+              onYarkUpdatesFocused={() => setFocusYarkUpdates(false)}
               steamCmdStatus={steamCmdStatus}
               steamCmdBusy={steamCmdBusy}
               servers={servers}

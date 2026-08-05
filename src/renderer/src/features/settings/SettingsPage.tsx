@@ -23,12 +23,16 @@ import { SettingsAutoStartSection } from "./components/SettingsAutoStartSection"
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { SettingsGeneralSection } from "./components/SettingsGeneralSection";
 import { SettingsLogRetentionSection } from "./components/SettingsLogRetentionSection";
+import { SettingsYarkUpdateSection } from "./components/SettingsYarkUpdateSection";
 import type { UiDensity } from "./settingsModel";
 import { useDesktopShellPreferences } from "./useDesktopShellPreferences";
 import classes from "./SettingsPage.module.css";
 
 interface Props {
   appVersion: string;
+  /** Scroll/focus the YARK updates section (sidebar deep-link). */
+  focusYarkUpdates?: boolean;
+  onYarkUpdatesFocused?: () => void;
   steamCmdStatus: SteamCmdStatus | null;
   servers: ServerProfile[];
   installationInfo: Map<string, ServerInstallationInfo>;
@@ -224,6 +228,14 @@ export function SettingsPage(props: Props): ReactElement {
             <div className={classes.sectionRule} />
 
             <SettingsLogRetentionSection />
+
+            <div className={classes.sectionRule} />
+
+            <SettingsYarkUpdateSection
+              appVersion={props.appVersion}
+              focusSection={props.focusYarkUpdates === true}
+              onFocused={props.onYarkUpdatesFocused}
+            />
 
             <div className={classes.sectionRule} />
 

@@ -18,6 +18,8 @@ interface Props extends PropsWithChildren {
   officialVersion: string | null;
   officialNetworkStatus: OfficialNetworkStatus;
   appVersion: string;
+  yarkUpdateAvailableVersion?: string | null;
+  onYarkUpdateClick?: () => void;
   error?: string | null;
   onDismissError?: () => void;
   /** Blocks shell chrome while stop/save/backup (or similar) runs. */

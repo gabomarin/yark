@@ -46,6 +46,40 @@ function stubSettingsApi(
     setCloseWindowToTray: vi.fn().mockResolvedValue({ ok: true, data: true }),
     setStartWithWindows: vi.fn().mockResolvedValue({ ok: true, data: false }),
     setTrayCloseHintDismissed: vi.fn().mockResolvedValue({ ok: true, data: false }),
+    getAppUpdateStatus: vi.fn().mockResolvedValue({
+      ok: true,
+      data: {
+        phase: "idle",
+        currentVersion: "0.1.0",
+        availableVersion: null,
+        percent: null,
+        error: null,
+        isPackaged: true,
+        releasePageUrl: "https://github.com/gabomarin/yark/releases",
+        releaseNotesUrl: null,
+        installBlockedReason: "not-ready",
+        installBlockedMessage: "Download the update before restarting to install.",
+      },
+    }),
+    checkForAppUpdate: vi.fn().mockResolvedValue({
+      ok: true,
+      data: {
+        phase: "up-to-date",
+        currentVersion: "0.1.0",
+        availableVersion: null,
+        percent: null,
+        error: null,
+        isPackaged: true,
+        releasePageUrl: "https://github.com/gabomarin/yark/releases",
+        releaseNotesUrl: null,
+        installBlockedReason: "not-ready",
+        installBlockedMessage: "Download the update before restarting to install.",
+      },
+    }),
+    downloadAppUpdate: vi.fn(),
+    installAppUpdate: vi.fn(),
+    openYarkReleaseNotes: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+    onAppUpdate: vi.fn().mockReturnValue(() => undefined),
     getLogRetentionSettings: vi.fn().mockResolvedValue({
       ok: true,
       data: { ...DEFAULT_LOG_RETENTION_SETTINGS },
@@ -335,5 +369,37 @@ describe("SettingsPage", () => {
       expect(screen.getByRole("button", { name: /^Remove 1$/i })).toBeInTheDocument();
     });
     expect(screen.queryByRole("button", { name: /^Scan$/i })).not.toBeInTheDocument();
+  });
+
+  it("checks for YARK updates and shows an available status", async () => {
+    const user = userEvent.setup();
+    const checkForAppUpdate = vi.fn().mockResolvedValue({
+      ok: true,
+      data: {
+        phase: "available",
+        currentVersion: "0.1.0",
+        availableVersion: "0.2.0",
+        percent: null,
+        error: null,
+        isPackaged: true,
+        releasePageUrl: "https://github.com/gabomarin/yark/releases",
+        releaseNotesUrl: "https://github.com/gabomarin/yark/releases/tag/v0.2.0",
+        installBlockedReason: "not-ready",
+        installBlockedMessage: "Download the update before restarting to install.",
+      },
+    });
+    stubSettingsApi({ checkForAppUpdate });
+
+    renderSettings();
+
+    await waitFor(() => {
+      expect(window.api.getAppUpdateStatus).toHaveBeenCalled();
+    });
+    expect(screen.getByText("YARK updates")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Check now/i }));
+    await waitFor(() => {
+      expect(checkForAppUpdate).toHaveBeenCalled();
+      expect(screen.getByText(/Update available · v0\.2\.0/i)).toBeInTheDocument();
+    });
   });
 });

@@ -14,6 +14,7 @@ import {
   Stack as MantineStack,
   Text,
   Tooltip,
+  UnstyledButton,
 } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import type { OfficialNetworkStatus } from "@shared/types";
@@ -44,6 +45,9 @@ interface Props {
   officialVersion: string | null;
   officialNetworkStatus: OfficialNetworkStatus;
   appVersion: string;
+  /** When set, accent the sidebar version and allow click-through to Settings. */
+  yarkUpdateAvailableVersion?: string | null;
+  onYarkUpdateClick?: () => void;
 }
 
 function officialVersionTooltip(
@@ -167,7 +171,31 @@ export function Sidebar(props: Props): ReactElement {
         </Tooltip>
       </div>
 
-      <Text size={metadataTextSize} c="dimmed">v{props.appVersion}</Text>
+      {props.yarkUpdateAvailableVersion != null
+        && props.yarkUpdateAvailableVersion !== ""
+        && props.onYarkUpdateClick !== undefined ? (
+        <Tooltip
+          label={`YARK update available (v${props.yarkUpdateAvailableVersion}) — open Settings to update`}
+          multiline
+          w={240}
+          position="right"
+        >
+          <UnstyledButton
+            className={classes.appVersionUpdate}
+            onClick={props.onYarkUpdateClick}
+            aria-label={`YARK update available, version ${props.yarkUpdateAvailableVersion}`}
+            data-yark-update-version
+          >
+            <Text size={metadataTextSize} className={classes.appVersionUpdateText}>
+              v{props.appVersion}
+            </Text>
+          </UnstyledButton>
+        </Tooltip>
+      ) : (
+        <Text size={metadataTextSize} c="dimmed" data-yark-app-version>
+          v{props.appVersion}
+        </Text>
+      )}
     </MantineStack>
   );
 }

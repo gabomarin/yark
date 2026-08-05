@@ -65,6 +65,16 @@ Workflow: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
 - **Signing:** builds are currently **unsigned** (`CSC_IDENTITY_AUTO_DISCOVERY=false`).
   Windows SmartScreen may warn until Authenticode signing and RFC 3161 timestamp verification
   are implemented in #142.
+- **In-app updater (#165):** `package.json` `build.publish` points at `gabomarin/yark` so
+  packaged apps resolve release metadata even though CI still packages with `--publish never`.
+  Operators use Settings → **YARK updates** (or the accented sidebar version). Install is
+  blocked while ASA servers or critical jobs are busy. Dev/unpackaged builds can check
+  versions but cannot install. While the installed app is `0.x`, GitHub prereleases are
+  treated as update candidates (`allowPrerelease`); from `1.0.0+` only production releases.
+- **Installer UI:** NSIS uses assisted mode (`oneClick: false`). Fresh installs show
+  the Windows wizard (including the GPL license page), allow choosing the destination,
+  and create desktop and Start menu shortcuts. In-app updates still use the updater's
+  unattended install path.
 
 ### Local `npm run package` on Windows
 

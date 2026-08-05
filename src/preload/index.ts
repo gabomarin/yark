@@ -99,6 +99,11 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.appSetStartWithWindows, enabled),
   setTrayCloseHintDismissed: (dismissed) =>
     ipcRenderer.invoke(IPC.appSetTrayCloseHintDismissed, dismissed),
+  getAppUpdateStatus: () => ipcRenderer.invoke(IPC.appGetUpdateStatus),
+  checkForAppUpdate: () => ipcRenderer.invoke(IPC.appCheckForUpdate),
+  downloadAppUpdate: () => ipcRenderer.invoke(IPC.appDownloadUpdate),
+  installAppUpdate: () => ipcRenderer.invoke(IPC.appInstallUpdate),
+  openYarkReleaseNotes: () => ipcRenderer.invoke(IPC.appOpenYarkReleaseNotes),
   readServerIni: (serverId: string) =>
     ipcRenderer.invoke(IPC.iniRead, serverId),
   openServerIniInEditor: (serverId: string, fileKey: "gameUserSettings" | "game") =>
@@ -225,6 +230,14 @@ const api: RendererApi = {
     ipcRenderer.on(IPC_PUSH.playerListUpdated, handler);
     return () => {
       ipcRenderer.removeListener(IPC_PUSH.playerListUpdated, handler);
+    };
+  },
+  onAppUpdate: (listener) => {
+    const handler = (_e: unknown, status: import("../shared/app-update").AppUpdateStatus) =>
+      listener(status);
+    ipcRenderer.on(IPC_PUSH.appUpdate, handler);
+    return () => {
+      ipcRenderer.removeListener(IPC_PUSH.appUpdate, handler);
     };
   },
 };

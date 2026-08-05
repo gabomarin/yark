@@ -1,6 +1,6 @@
 ---
 title: Settings
-description: SteamCMD path, default folders, desktop shell, UI density, and other app-wide preferences.
+description: SteamCMD path, YARK self-update, default folders, desktop shell, UI density, and other app-wide preferences.
 ---
 
 import { withBase } from "../../../data/site";
@@ -44,6 +44,10 @@ Optional convenience when creating new profiles (where you tend to place install
 ## Server auto-start summary
 
 Settings lists profiles that opted into **Auto-start with YARK**. Turn the preference on or off on each server’s Server tab (Startup). Auto-start is separate from **Start with Windows**.
+
+## YARK updates
+
+**YARK updates** checks GitHub Releases for a newer desktop build (not ASA/SteamCMD). After launch, YARK quietly checks in the background; when an update is available, the sidebar version uses an accent color — click it to open this section. Then **Check now** → **Download** → **Restart and install**. Install is blocked while servers or critical jobs are busy. Unpackaged/dev builds can check but cannot install. Windows may warn about an unsigned installer until code signing ships.
 
 ## What stays local
 

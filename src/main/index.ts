@@ -18,6 +18,7 @@ import { UpdateService } from "../backend/domains/updates/update-service";
 import { MoveInstallService } from "../backend/domains/instances/move-install-service";
 import { ModsService } from "../backend/domains/mods/mods-service";
 import { InstanceLockManager } from "../backend/orchestration/instance-lock-manager";
+import { AppUpdateService } from "./app-update-service";
 import { registerIpcHandlers } from "./ipc-handlers";
 import {
   applyTrayContextMenu,
@@ -38,6 +39,7 @@ import {
 import { reattachLeftRunningProcesses } from "../backend/infra/process/left-running-reattach";
 import { applyWindowsLoginItem } from "./windows-login-item";
 import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush, type MoveInstallProgressPush, type RconStatusChangedPush, type PlayerListUpdatedPush } from "../shared/ipc";
+import type { AppUpdateStatus } from "../shared/app-update";
 import { normalizeServerStopProgress } from "../shared/types";
 import type { BackupChangedPush } from "../backend/domains/backups/backup-service";
 import type { ServerRuntimeInfo } from "../shared/types";
@@ -244,6 +246,53 @@ if (gotSingleInstanceLock) {
       console.error("Auto-start on launch failed", error);
     });
 
+    const evaluateAppUpdateSafety = ():
+      | "servers-running"
+      | "critical-job"
+      | "operation-in-progress"
+      | null => {
+      if (instances.shouldBlockAppQuit()) {
+        return "operation-in-progress";
+      }
+      if (repo.list().some((profile) => processManager.isActive(profile.id))) {
+        return "servers-running";
+      }
+      const steam = updateService.getSteamCmdStatus();
+      if (steam.busy) {
+        return "critical-job";
+      }
+      const activeCritical = steam.criticalJobs.some(
+        (job) =>
+          job.status === "pending"
+          || job.status === "retrying"
+          || job.status === "running",
+      );
+      if (activeCritical) {
+        return "critical-job";
+      }
+      return null;
+    };
+
+    let allowQuit = false;
+    /**
+     * Quit coordination:
+     * - `isQuitting`: real shutdown started (tray Quit / settle / before-quit).
+     *   Window `close` must not re-hide to tray while this is true.
+     * - `allowQuit`: stop/settle finished; next `app.quit()` / `before-quit` may exit.
+     * - `pendingQuit`: single-flight promise for async stop-before-quit work.
+     */
+    let isQuitting = false;
+    let pendingQuit: Promise<void> | null = null;
+    let quitPolicyPromptInFlight = false;
+
+    const appUpdateService = new AppUpdateService({
+      evaluate: evaluateAppUpdateSafety,
+      prepareQuit: () => {
+        allowQuit = true;
+        isQuitting = true;
+      },
+    });
+
     registerIpcHandlers(
       instances,
       repo,
@@ -261,19 +310,8 @@ if (gotSingleInstanceLock) {
       },
       settings,
       playerSessionWatcher,
+      appUpdateService,
     );
-
-    let allowQuit = false;
-    /**
-     * Quit coordination:
-     * - `isQuitting`: real shutdown started (tray Quit / settle / before-quit).
-     *   Window `close` must not re-hide to tray while this is true.
-     * - `allowQuit`: stop/settle finished; next `app.quit()` / `before-quit` may exit.
-     * - `pendingQuit`: single-flight promise for async stop-before-quit work.
-     */
-    let isQuitting = false;
-    let pendingQuit: Promise<void> | null = null;
-    let quitPolicyPromptInFlight = false;
 
     const requestAppQuit = (): void => {
       // Real quit path — goes through before-quit (#59 confirm Stop / Cancel).
@@ -421,9 +459,14 @@ if (gotSingleInstanceLock) {
       sendToRenderer(IPC_PUSH.playerListUpdated, payload);
     });
 
+    appUpdateService.onStatus((status: AppUpdateStatus) => {
+      sendToRenderer(IPC_PUSH.appUpdate, status);
+    });
+
     mainWindow = createWindow();
     attachMainWindowCloseHandler(mainWindow);
     ensureTray();
+    appUpdateService.startQuietCheck();
     if (pendingSecondInstanceReveal) {
       pendingSecondInstanceReveal = false;
       revealMainWindow();
