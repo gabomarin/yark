@@ -357,6 +357,41 @@ describe("ClusterIniTemplateApplyService", () => {
     );
   });
 
+  it("seeds a stopped member from the template and preserves profile-owned keys", async () => {
+    const { service, profile, installDir, events } = makeHarness("stopped");
+    const preview = await service.previewSeed("alpha", profile.id);
+    expect(preview.operation).toBe("seed");
+    expect(preview.preview.valid).toBe(true);
+    expect(preview.preview.diff.some((row) => row.key === "RCONPort")).toBe(
+      false,
+    );
+    expect(preview.preview.changedCount).toBeGreaterThan(0);
+
+    const result = await service.seed("alpha", profile.id);
+    expect(result.operation).toBe("seed");
+    expect(result.snapshotDir).not.toBeNull();
+
+    const gus = readFileSync(
+      join(
+        installDir,
+        "ShooterGame",
+        "Saved",
+        "Config",
+        "WindowsServer",
+        "GameUserSettings.ini",
+      ),
+      "utf8",
+    );
+    expect(gus).toContain("MaxPlayers=55");
+    expect(gus).toContain("XPMultiplier=3");
+    expect(gus).toContain("RCONPort=27020");
+    expect(gus).toContain("ServerAdminPassword=admin1234");
+    expect(gus).toContain("SessionName=Ragnarok PvE");
+    expect(
+      events.some((row) => /Seeded INI from cluster template/i.test(row.message)),
+    ).toBe(true);
+  });
+
   it("keeps the previous template when promote validation fails", async () => {
     const installDir = mkdtempSync(join(tmpdir(), "ark-cluster-ini-promote-fail-"));
     tmpDirs.push(installDir);
