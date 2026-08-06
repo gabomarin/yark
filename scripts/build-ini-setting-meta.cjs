@@ -15,11 +15,11 @@ const OUT_PATH = path.join(ROOT, "src/shared/ini-setting-meta.json");
 function clean(s) {
   return String(s || "")
     .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&#039;/g, "'")
     .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, "&")
     .replace(/\s+/g, " ")
     .trim();
 }
