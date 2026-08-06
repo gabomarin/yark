@@ -7,8 +7,6 @@ import {
   Button,
   Group,
   Modal,
-  SegmentedControl,
-  Stack,
   Text,
   Title,
 } from "@mantine/core";
@@ -20,7 +18,7 @@ import type {
 } from "@shared/types";
 import { stripYarkOwnedFromPayload } from "@shared/yark-owned-ini-keys";
 import { sanitizeServerIniPayload } from "@features/server-workspace/iniModel";
-import { IniFileSegmented } from "@ui/IniFileSegmented/IniFileSegmented";
+import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
 import { ClusterIniTemplateVisualPanel } from "./ClusterIniTemplateVisualPanel";
 import classes from "./ClusterIniTemplateModal.module.css";
 
@@ -198,105 +196,127 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
       closeOnClickOutside={!saving && !dirty}
       closeOnEscape={!saving}
       withCloseButton={!saving}
+      classNames={{
+        content: classes.modalContent,
+        header: classes.modalHeader,
+        body: classes.modalBody,
+      }}
+      styles={{
+        content: {
+          display: "flex",
+          flexDirection: "column",
+          height: "min(92vh, 860px)",
+          maxHeight: "min(92vh, 860px)",
+          overflow: "hidden",
+        },
+        header: {
+          flexShrink: 0,
+        },
+        body: {
+          flex: "1 1 0",
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        },
+      }}
     >
-      <Stack gap="md">
-        <Text size="sm" c="dimmed">
-          Shared Game.ini / GameUserSettings.ini for this cluster ID. Session
-          name, ports, and passwords stay per-server. ASE-style ActiveMods keys
-          are omitted — ASA mods use the Mods panel / -mods= CurseForge IDs.
-        </Text>
-
-        {error !== null && (
-          <Alert color="red" variant="light">
-            {error}
-          </Alert>
-        )}
-
-        {preview !== null && preview.changedCount > 0 && (
+      <div className={classes.shell} data-cluster-ini-shell>
+        <div className={classes.top}>
           <Text size="sm" c="dimmed">
-            Last save: {preview.changedCount} change
-            {preview.changedCount === 1 ? "" : "s"}.
+            Shared Game.ini / GameUserSettings.ini for this cluster ID. Session
+            name, ports, and passwords stay per-server.
           </Text>
-        )}
 
-        <Group justify="space-between" wrap="wrap" gap="sm">
-          <Group gap="xs" wrap="wrap">
-            <IniFileSegmented
-              value={iniFile}
-              onChange={setIniFile}
-              disabled={loading || saving}
-            />
-            <SegmentedControl
-              size="xs"
-              aria-label="INI edit mode"
-              value={mode}
-              disabled={loading || saving}
-              onChange={(value) => setMode(value === "raw" ? "raw" : "visual")}
-              data={[
+          {error !== null && (
+            <Alert color="red" variant="light">
+              {error}
+            </Alert>
+          )}
+
+          {preview !== null && preview.changedCount > 0 && (
+            <Text size="sm" c="dimmed">
+              Last save: {preview.changedCount} change
+              {preview.changedCount === 1 ? "" : "s"}.
+            </Text>
+          )}
+
+          <div className={classes.navRow}>
+            <IniEditorNav
+              file={iniFile}
+              onFileChange={setIniFile}
+              mode={mode}
+              onModeChange={(value) => setMode(value === "raw" ? "raw" : "visual")}
+              modeOptions={[
                 { label: "Visual", value: "visual" },
                 { label: "Text", value: "raw" },
               ]}
+              disabled={loading || saving}
             />
-          </Group>
-        </Group>
-
-        {loading || payload === null ? (
-          <Text size="sm" c="dimmed">
-            Loading…
-          </Text>
-        ) : (
-          <ClusterIniTemplateVisualPanel
-            payload={payload}
-            iniFile={iniFile}
-            mode={mode}
-            onPayloadChange={setPayload}
-          />
-        )}
-
-        <div className={classes.notice}>
-          Template edits never write member install folders. Apply/seed to
-          servers is a separate step.
+          </div>
         </div>
 
-        <Group justify="space-between">
-          <Group gap="xs">
-            <Button
-              variant="default"
-              disabled={saving || loading}
-              onClick={requestClose}
-            >
-              Close
-            </Button>
-            {exists && (
+        <div className={classes.editorRegion} data-cluster-ini-editor>
+          {loading || payload === null ? (
+            <Text size="sm" c="dimmed">
+              Loading…
+            </Text>
+          ) : (
+            <ClusterIniTemplateVisualPanel
+              payload={payload}
+              iniFile={iniFile}
+              mode={mode}
+              onPayloadChange={setPayload}
+            />
+          )}
+        </div>
+
+        <div className={classes.footer} data-cluster-ini-footer>
+          <div className={classes.notice}>
+            Template edits never write member install folders. Apply/seed to
+            servers is a separate step.
+          </div>
+
+          <Group justify="space-between">
+            <Group gap="xs">
               <Button
-                variant="light"
-                color="red"
+                variant="default"
                 disabled={saving || loading}
-                onClick={handleDelete}
+                onClick={requestClose}
               >
-                Delete template
+                Close
               </Button>
-            )}
+              {exists && (
+                <Button
+                  variant="light"
+                  color="red"
+                  disabled={saving || loading}
+                  onClick={handleDelete}
+                >
+                  Delete template
+                </Button>
+              )}
+            </Group>
+            <Group gap="xs">
+              <Button
+                variant="default"
+                disabled={saving || loading || !dirty}
+                onClick={() => void load()}
+              >
+                Reload
+              </Button>
+              <Button
+                leftSection={<FloppyDisk size={16} />}
+                loading={saving}
+                disabled={loading || payload === null || (exists && !dirty)}
+                onClick={() => void handleSave()}
+              >
+                {exists ? "Save template" : "Create template"}
+              </Button>
+            </Group>
           </Group>
-          <Group gap="xs">
-            <Button
-              variant="default"
-              disabled={saving || loading || !dirty}
-              onClick={() => void load()}
-            >
-              Reload
-            </Button>
-            <Button
-              leftSection={<FloppyDisk size={16} />}
-              loading={saving}
-              disabled={loading || payload === null || (exists && !dirty)}
-              onClick={() => void handleSave()}
-            >
-              {exists ? "Save template" : "Create template"}
-            </Button>
-          </Group>
-        </Group>
-      </Stack>
+        </div>
+      </div>
     </Modal>
   );
 }

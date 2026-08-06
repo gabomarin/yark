@@ -526,7 +526,9 @@ describe("ClustersPage", () => {
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByText(/cluster ini template/i)).toBeInTheDocument();
     expect(within(dialog).getByText(/^alpha$/i)).toBeInTheDocument();
-    expect(within(dialog).getByText(/ASE-style ActiveMods/i)).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(/session name, ports, and passwords stay per-server/i),
+    ).toBeInTheDocument();
     expect(within(dialog).getByRole("radiogroup", { name: /ini file/i })).toBeInTheDocument();
     expect(window.api.getClusterIniTemplateOrDraft).toHaveBeenCalledWith("alpha");
   });

@@ -18,6 +18,9 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Changed
 
 - Server and cluster INI editors share a **GameUserSettings / Game.ini** segmented file switch; category group headers use a stronger accent rail (#88).
+- INI file and Visual/Text switches share one aligned nav row and the same selected accent as category headers (#88).
+- INI settings tables keep a **720px minimum width** with horizontal scroll so description and restore stay separated on narrow windows (#88).
+- Cluster INI template modal keeps a pinned footer and a full-height Text editor (#88).
 - Server INI editor metadata is built from `defaults/*.ini` only (`ini-setting-meta`); the wiki scrape and catalog merge scripts are removed.
 - Clusters compliance no longer warns when multiple servers share the same map (common for multi-instance fleets).
 - Clusters refreshes compliance automatically when the view opens; the Recheck button was removed.

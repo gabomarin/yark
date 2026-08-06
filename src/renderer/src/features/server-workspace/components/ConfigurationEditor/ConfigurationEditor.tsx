@@ -16,7 +16,6 @@ import {
   Button,
   Group,
   NumberInput,
-  SegmentedControl,
   Select,
   Stack,
   Switch,
@@ -25,7 +24,6 @@ import {
   Textarea,
   Title,
   Tooltip,
-  UnstyledButton,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import type {
@@ -35,7 +33,8 @@ import type {
   ServerIniSnapshot,
   ServerProfile,
 } from "@shared/types";
-import { IniFileSegmented } from "@ui/IniFileSegmented/IniFileSegmented";
+import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
+import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
 import { useEffect, useMemo, useState } from "react";
 import {
   defaultTextForFile,
@@ -317,19 +316,16 @@ export function ConfigurationEditor(props: Props): ReactElement {
     );
 
   const iniNavigation = (
-    <>
-      <IniFileSegmented value={iniFile} onChange={setIniFile} />
-      <SegmentedControl
-        size="xs"
-        aria-label="INI edit mode"
-        value={iniMode}
-        onChange={(value) => setIniMode(value === "text" ? "text" : "visual")}
-        data={[
-          { value: "visual", label: "Visual" },
-          { value: "text", label: "Text" },
-        ]}
-      />
-    </>
+    <IniEditorNav
+      file={iniFile}
+      onFileChange={setIniFile}
+      mode={iniMode}
+      onModeChange={(value) => setIniMode(value === "text" ? "text" : "visual")}
+      modeOptions={[
+        { value: "visual", label: "Visual" },
+        { value: "text", label: "Text" },
+      ]}
+    />
   );
 
   return (
@@ -358,7 +354,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
 
         {section === "iniFiles" && iniMode === "visual" && (
           <Stack gap="md" className={classes.editor}>
-            <Group justify="space-between" align="flex-start">
+            <Stack gap="sm">
               <div>
                 <Group gap="xs" wrap="nowrap">
                   <Title order={3}>
@@ -370,36 +366,38 @@ export function ConfigurationEditor(props: Props): ReactElement {
                   Edit {fileLabel} with visual controls and direct file access.
                 </Text>
               </div>
-              <Group gap="xs" className={classes.headerActions}>
+              <div className={classes.headerToolbar}>
                 {iniNavigation}
-                <Button
-                  size="xs"
-                  variant="default"
-                  leftSection={<ArrowUUpLeft size={16} />}
-                  onClick={resetActiveFileToDefaults}
-                  disabled={payload === null || busy || loading}
-                >
-                  Restore file
-                </Button>
-                <Button
-                  size="xs"
-                  variant="default"
-                  leftSection={<ArrowCounterClockwise size={16} />}
-                  onClick={resetChanges}
-                  disabled={!dirty || busy}
-                >
-                  Discard changes
-                </Button>
-                <Button
-                  size="xs"
-                  leftSection={<FloppyDisk size={16} />}
-                  onClick={() => void saveIni()}
-                  disabled={!dirty || busy || loading}
-                >
-                  Save
-                </Button>
-              </Group>
-            </Group>
+                <Group gap="xs" className={classes.headerActions} wrap="wrap">
+                  <Button
+                    size="xs"
+                    variant="default"
+                    leftSection={<ArrowUUpLeft size={16} />}
+                    onClick={resetActiveFileToDefaults}
+                    disabled={payload === null || busy || loading}
+                  >
+                    Restore file
+                  </Button>
+                  <Button
+                    size="xs"
+                    variant="default"
+                    leftSection={<ArrowCounterClockwise size={16} />}
+                    onClick={resetChanges}
+                    disabled={!dirty || busy}
+                  >
+                    Discard changes
+                  </Button>
+                  <Button
+                    size="xs"
+                    leftSection={<FloppyDisk size={16} />}
+                    onClick={() => void saveIni()}
+                    disabled={!dirty || busy || loading}
+                  >
+                    Save
+                  </Button>
+                </Group>
+              </div>
+            </Stack>
 
             <Group gap="sm" align="center" className={classes.filterBar}>
               <TextInput
@@ -456,20 +454,22 @@ export function ConfigurationEditor(props: Props): ReactElement {
                     const collapsed = collapsedSections[group.category] === true;
                     return (
                       <div key={group.category} className={classes.sectionBlock}>
-                        <UnstyledButton
-                          className={classes.sectionHeader}
+                        <button
+                          type="button"
+                          className={chrome.sectionHeader}
+                          aria-expanded={!collapsed}
                           onClick={() => toggleSection(group.category)}
                         >
                           <Group gap="xs" wrap="nowrap">
                             {collapsed ? <CaretRight size={14} /> : <CaretDown size={14} />}
-                            <Text fw={700} size="sm" className={classes.sectionHeaderLabel}>
+                            <Text fw={700} size="sm" className={chrome.sectionHeaderLabel}>
                               {group.label}
                             </Text>
-                            <Badge size="xs" variant="light" color="blue">
+                            <Badge size="xs" variant="outline" className={chrome.sectionCount}>
                               {group.rows.length}
                             </Badge>
                           </Group>
-                        </UnstyledButton>
+                        </button>
 
                         {!collapsed &&
                           group.rows.map((row) => {
@@ -611,7 +611,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
 
         {section === "iniFiles" && iniMode === "text" && payload !== null && (
           <Stack gap="md" className={classes.editor}>
-            <Group justify="space-between" align="flex-start">
+            <Stack gap="sm">
               <div>
                 <Group gap="xs" wrap="nowrap">
                   <Title order={3}>INI Files</Title>
@@ -621,27 +621,29 @@ export function ConfigurationEditor(props: Props): ReactElement {
                   Direct editing of {fileLabel}. Useful for comparing or pasting blocks between servers.
                 </Text>
               </div>
-              <Group gap="xs" className={classes.headerActions}>
+              <div className={classes.headerToolbar}>
                 {iniNavigation}
-                <Button
-                  size="xs"
-                  variant="default"
-                  leftSection={<ArrowCounterClockwise size={16} />}
-                  onClick={resetChanges}
-                  disabled={!dirty || busy}
-                >
-                  Discard changes
-                </Button>
-                <Button
-                  size="xs"
-                  leftSection={<FloppyDisk size={16} />}
-                  onClick={() => void saveIni()}
-                  disabled={!dirty || busy}
-                >
-                  Save
-                </Button>
-              </Group>
-            </Group>
+                <Group gap="xs" className={classes.headerActions} wrap="wrap">
+                  <Button
+                    size="xs"
+                    variant="default"
+                    leftSection={<ArrowCounterClockwise size={16} />}
+                    onClick={resetChanges}
+                    disabled={!dirty || busy}
+                  >
+                    Discard changes
+                  </Button>
+                  <Button
+                    size="xs"
+                    leftSection={<FloppyDisk size={16} />}
+                    onClick={() => void saveIni()}
+                    disabled={!dirty || busy}
+                  >
+                    Save
+                  </Button>
+                </Group>
+              </div>
+            </Stack>
             <Textarea
               className={classes.rawEditor}
               minRows={22}

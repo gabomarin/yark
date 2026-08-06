@@ -5,6 +5,8 @@ export { isUiDensity } from "@shared/ui-density";
 
 export const radixPalette = {
   background: "#0c1427",
+  /** INI editor category group header fill. */
+  iniCategory: "#131F43",
   blue: [
     "#061232",
     "#06143c",

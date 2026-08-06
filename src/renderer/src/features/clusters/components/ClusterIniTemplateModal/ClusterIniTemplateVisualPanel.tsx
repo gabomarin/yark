@@ -6,12 +6,10 @@ import {
   Group,
   NumberInput,
   Select,
-  Stack,
   Switch,
   Text,
   TextInput,
   Textarea,
-  UnstyledButton,
 } from "@mantine/core";
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
 import { isYarkOwnedIniKey } from "@shared/yark-owned-ini-keys";
@@ -30,6 +28,7 @@ import {
   type IniSettingReference,
 } from "@features/server-workspace/iniModel";
 import { useEffect, useMemo, useState } from "react";
+import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
 import classes from "./ClusterIniTemplateModal.module.css";
 
 interface Props {
@@ -111,24 +110,24 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
 
   if (props.mode === "raw") {
     return (
-      <Textarea
-        className={classes.rawEditor}
-        aria-label={`${props.iniFile} raw editor`}
-        value={activeText}
-        onChange={(event) =>
-          props.onPayloadChange(
-            withFileText(props.payload, props.iniFile, event.currentTarget.value),
-          )
-        }
-        minRows={16}
-        autosize
-        maxRows={28}
-      />
+      <div className={classes.rawRoot} data-cluster-ini-raw>
+        <Textarea
+          className={classes.rawEditor}
+          aria-label={`${props.iniFile} raw editor`}
+          value={activeText}
+          autosize={false}
+          onChange={(event) =>
+            props.onPayloadChange(
+              withFileText(props.payload, props.iniFile, event.currentTarget.value),
+            )
+          }
+        />
+      </div>
     );
   }
 
   return (
-    <Stack gap="sm">
+    <div className={classes.visualRoot}>
       <Group gap="sm" wrap="wrap">
         <TextInput
           style={{ flex: 1, minWidth: 180 }}
@@ -182,8 +181,10 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
               const isCollapsed = collapsed[group.category] === true;
               return (
                 <div key={group.category} className={classes.sectionBlock}>
-                  <UnstyledButton
-                    className={classes.sectionHeader}
+                  <button
+                    type="button"
+                    className={chrome.sectionHeader}
+                    aria-expanded={!isCollapsed}
                     onClick={() =>
                       setCollapsed((prev) => ({
                         ...prev,
@@ -192,13 +193,13 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                     }
                   >
                     {isCollapsed ? <CaretRight size={14} /> : <CaretDown size={14} />}
-                    <Text fw={700} size="sm" className={classes.sectionHeaderLabel}>
+                    <Text fw={700} size="sm" className={chrome.sectionHeaderLabel}>
                       {group.label}
                     </Text>
-                    <Badge size="xs" variant="light" color="blue">
+                    <Badge size="xs" variant="outline" className={chrome.sectionCount}>
                       {group.rows.length}
                     </Badge>
-                  </UnstyledButton>
+                  </button>
                   {!isCollapsed &&
                     group.rows.map((row) => (
                       <SettingRow
@@ -213,7 +214,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
           )}
         </div>
       </div>
-    </Stack>
+    </div>
   );
 }
 
