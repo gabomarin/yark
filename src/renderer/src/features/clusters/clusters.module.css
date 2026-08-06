@@ -98,6 +98,20 @@
   background: color-mix(in srgb, var(--app-color-panel) 45%, transparent);
 }
 
+.memberRow[data-clickable="true"] {
+  cursor: pointer;
+}
+
+.memberRow[data-clickable="true"]:hover {
+  background: color-mix(in srgb, var(--app-color-panel) 70%, transparent);
+  border-color: color-mix(in srgb, var(--app-color-border) 80%, transparent);
+}
+
+.memberRow[data-clickable="true"]:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--mantine-color-blue-6) 70%, transparent);
+  outline-offset: 2px;
+}
+
 .memberBody {
   min-width: 0;
   flex: 1;

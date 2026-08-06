@@ -11,12 +11,14 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Cluster INI templates support per-member **Promote**, **Restore** (with backup), and opt-in **Seed** when adding servers; ports/passwords/session stay profile-owned (#89).
 - **Create cluster** from the Clusters workspace: assign a unique Cluster ID and shared directory to one or more stopped servers (#42).
 - **Add / remove servers** on an existing cluster from the Clusters detail panel (stopped servers only; shared transfer files are never deleted) (#41).
 - Optional **cluster INI templates** (Game.ini / GameUserSettings.ini) editable from Clusters detail with the same visual INI table patterns as the server editor; per-server identity/ports and ASE-legacy ActiveMods keys are stripped — ASA mods stay on the Mods panel (#88).
 
 ### Changed
 
+- Clusters compact density: summary badges use `sm`, detail actions inherit the theme button size, and the ambiguous “Transfer-ready config” header badge is removed (list Ready/Warnings/Errors + card rail remain).
 - Server and cluster INI editors share a **GameUserSettings / Game.ini** segmented file switch; category group headers use a stronger accent rail (#88).
 - INI file and Visual/Text switches share one aligned nav row and the same selected accent as category headers (#88).
 - INI settings tables keep a **720px minimum width** with horizontal scroll so description and restore stay separated on narrow windows (#88).

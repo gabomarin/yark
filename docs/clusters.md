@@ -29,7 +29,7 @@ Multiple servers on the same map in one cluster are allowed and not flagged.
 | IPC handler | `src/main/ipc-handlers.ts` |
 | Preload | `src/preload/index.ts` |
 | Fleet UI | `src/renderer/src/features/clusters/` (`ClustersPage`, `clusterModel`, `createClusterModel`, `membershipModel`, `CreateClusterModal`, `AddServersModal`, `RemoveServersModal`, `ClusterIniTemplateModal`) |
-| Cluster INI templates | `src/backend/domains/config/cluster-ini-template-service.ts`, `src/backend/infra/db/cluster-ini-template-repository.ts`, `src/shared/yark-owned-ini-keys.ts` |
+| Cluster INI templates | `src/backend/domains/config/cluster-ini-template-service.ts`, `src/backend/domains/config/cluster-ini-template-apply-service.ts`, `src/backend/domains/config/ini-compose.ts`, `src/backend/infra/db/cluster-ini-template-repository.ts`, `src/shared/yark-owned-ini-keys.ts` |
 | Onboarding join | `src/renderer/src/features/server-workspace/components/ServerOnboardingChecklist/` |
 | Visual helper | `scripts/visual-clusters.cjs` |
 
@@ -137,18 +137,30 @@ Report shape:
   and never write member install directories. YARK-owned keys (session name, ports,
   passwords) and ASE-legacy mod keys (`ActiveMods`, `ActiveMapMod`,
   `ActiveTotalConversion`) are hidden and stripped on save — ASA mods use
-  CurseForge `-mods=` from the profile. Apply/seed/promote is #89/#90.
+  CurseForge `-mods=` from the profile. Per-member **Promote** / **Restore** and
+  opt-in **Seed** on Add servers are #89; bulk apply is #90.
 
-### Cluster INI templates (#88)
+### Cluster INI templates (#88 / #89)
 
 - One optional template per `clusterId` (`cluster_ini_templates` table).
 - IPC: `cluster-ini:get` / `get-or-draft` / `preview` / `save` / `delete`.
+- Apply IPC (#89): `preview-restore` / `preview-promote` / `preview-seed` /
+  `restore` / `promote` / `seed` (one member at a time).
+- Composition: template overlay → strip owned keys → reapply the **target
+  member’s current** ports/passwords/session (fallback to profile when missing)
+  via `ini-compose.ts`. Owned keys are omitted from operator previews; secrets
+  are redacted.
+- Restore/seed take a local `.yark-pre-template` snapshot before write, and a
+  cataloged INI backup when the install is Ready.
+- Promote updates only the SQLite template (member installs unchanged).
+- Add servers can opt into **Seed INI from cluster template** after membership
+  saves; seed failures keep membership and report which members failed.
 - Deleting a template does not delete any server INI files on disk.
 - Clusters that exist only as profile fields can still own a template (including
   after all members leave — the row remains until deleted).
 - Owned keys catalog: `src/shared/yark-owned-ini-keys.ts`
   - **profileSync**: RCON / passwords / SessionName / Port / QueryPort
-    (`syncProfileSettingsToIni`)
+    (`syncProfileSettingsToIni` / `applyProfileOwnedKeysToGameUserSettings`)
   - **aseLegacy**: `ActiveMods`, `ActiveMapMod`, `ActiveTotalConversion` (ASE /
     Steam Workshop INI path; unused on ASA — YARK launches `-mods=` from
     profile CurseForge IDs)
@@ -158,7 +170,8 @@ Report shape:
 - Form: edit `clusterId` / browse `clusterDir`.
 - Clusters workspace: create a brand-new cluster ID + directory on one or more
   stopped servers (#42); add or remove stopped servers from an existing cluster
-  in the detail panel (#41); edit optional cluster INI templates (#88).
+  in the detail panel (#41); edit optional cluster INI templates (#88); promote
+  or restore a stopped member against the template, or seed on add (#89).
 - Onboarding checklist: join an **existing** cluster by copying another
   server’s `{clusterId, clusterDir}` pair (or clear).
 
@@ -170,7 +183,8 @@ Report shape:
 3. Add more stopped servers from the cluster detail **Add servers** action, or
    remove stopped servers with **Remove** (does not delete transfer files).
 4. Optionally create a cluster **INI template** for shared settings (not ports /
-   session identity — those stay per server).
+   session identity — those stay per server). Promote a known-good member into
+   the template, restore a member from it, or seed new members when adding them.
 5. Ensure distinct game / query / RCON ports across servers.
 6. Prefer matching CurseForge mod Project ID lists if players transfer mod items.
 7. Open **Clusters** (compliance refreshes on open); fix any `error` issues
@@ -181,7 +195,7 @@ Report shape:
 - **No live transfer probe** — reports are static profile math only.
 - **No persistence** of reports — recomputed on each `cluster:check`.
 - **No filesystem check** that `clusterDir` exists or is writable.
-- **No template apply** in this doc’s #88 surface — applying to members is #89/#90.
+- **No bulk template apply** in this doc’s #89 surface — multi-member apply is #90.
 - Product target is **Windows**; path validation and ASA cluster dirs assume
   Windows-style absolute paths.
 
@@ -203,11 +217,13 @@ Report shape:
 | Artifact | Coverage |
 | --- | --- |
 | `tests/unit/compliance.test.ts` | Ready cluster, ignore unclustered, single-server warning, dir mismatch, port conflict, mod mismatch |
-| `src/renderer/src/features/clusters/ClustersPage.test.tsx` | Empty / ready / broken UI, dir-without-id copy, create-cluster wizard, add/remove membership, INI template modal |
+| `src/renderer/src/features/clusters/ClustersPage.test.tsx` | Empty / ready / broken UI, dir-without-id copy, create-cluster wizard, add/remove membership, INI template modal, promote/restore/seed |
 | `tests/unit/create-cluster-model.test.ts` | Eligibility, ID/dir validation, create input |
 | `tests/unit/membership-model.test.ts` | Add/remove eligibility, join ports, leave input |
 | `tests/unit/yark-owned-ini-keys.test.ts` | Owned-key strip / match |
 | `tests/unit/cluster-ini-template.test.ts` | Template repo/service CRUD + validation |
+| `tests/unit/ini-compose.test.ts` | Template↔member composition + secret redaction |
+| `tests/unit/cluster-ini-template-apply.test.ts` | Restore/promote/seed commit + failure preservation |
 | `node scripts/e2e-clusters-membership.cjs` | Playwright create → add → remove membership (Windows) |
 | `node scripts/visual-clusters.cjs` | Playwright sidebar → Clusters compliance UI |
 

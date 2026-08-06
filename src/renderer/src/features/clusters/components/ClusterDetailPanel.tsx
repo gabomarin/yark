@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { Badge, Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
+import { Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import type {
   ClusterComplianceReport,
   ServerProfile,
@@ -15,12 +15,14 @@ import {
   canAddServersToCluster,
   removeIneligibilityReason,
 } from "../membershipModel";
+import { templateApplyIneligibilityReason } from "../templateApplyModel";
 import classes from "../clusters.module.css";
 import { ClusterIssueRow } from "./ClusterIssueRow";
 import { ClusterMemberRow } from "./ClusterMemberRow";
 import { AddServersModal } from "./AddServersModal/AddServersModal";
 import { RemoveServersModal } from "./RemoveServersModal/RemoveServersModal";
 import { ClusterIniTemplateModal } from "./ClusterIniTemplateModal/ClusterIniTemplateModal";
+import { ClusterIniTemplateApplyModal } from "./ClusterIniTemplateApplyModal/ClusterIniTemplateApplyModal";
 
 interface Props {
   report: ClusterComplianceReport;
@@ -43,12 +45,25 @@ export function ClusterDetailPanel(props: Props): ReactElement {
   const [templateStatusError, setTemplateStatusError] = useState<string | null>(
     null,
   );
+  const [applyTarget, setApplyTarget] = useState<{
+    serverId: string;
+    serverName: string;
+    operation: "restore" | "promote";
+  } | null>(null);
 
   const memberStatuses = useMemo(() => {
     return props.members.map((server) => {
       const status = resolveServerStatus(props.statuses, server.id);
       const removeReason = removeIneligibilityReason(status);
-      return { server, status, removeReason, canRemove: removeReason === null };
+      const templateApplyReason = templateApplyIneligibilityReason(status);
+      return {
+        server,
+        status,
+        removeReason,
+        canRemove: removeReason === null,
+        templateApplyReason,
+        canTemplateApply: templateApplyReason === null,
+      };
     });
   }, [props.members, props.statuses]);
 
@@ -114,10 +129,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
             </Text>
           </div>
           <Group gap="xs" wrap="wrap">
-            <Badge size="lg" color={props.report.ok ? "teal" : "red"} variant="light">
-              {props.report.ok ? "Transfer-ready config" : "Needs fixes"}
-            </Badge>
-            <Button size="sm" variant="light" onClick={() => setTemplateOpen(true)}>
+            <Button variant="light" onClick={() => setTemplateOpen(true)}>
               {hasTemplate ? "Edit INI template" : "Create INI template"}
             </Button>
             <Tooltip
@@ -128,7 +140,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
               }
             >
               <span>
-                <Button size="sm" disabled={!canAdd} onClick={() => setAddOpen(true)}>
+                <Button disabled={!canAdd} onClick={() => setAddOpen(true)}>
                   Add servers
                 </Button>
               </span>
@@ -188,25 +200,55 @@ export function ClusterDetailPanel(props: Props): ReactElement {
             </Text>
           ) : (
             <div className={classes.memberList}>
-              {memberStatuses.map(({ server, status, canRemove, removeReason }) => (
-                <ClusterMemberRow
-                  key={server.id}
-                  server={server}
-                  status={status}
-                  canRemove={canRemove}
-                  removeReason={removeReason}
-                  subtitle={`${server.map}${
-                    server.clusterDir !== null
-                      ? ` · ${server.clusterDir}`
-                      : " · no cluster directory"
-                  }`}
-                  onOpen={props.onOpenServer}
-                  onRemove={(serverId) => {
-                    setRemoveInitialIds([serverId]);
-                    setRemoveOpen(true);
-                  }}
-                />
-              ))}
+              {memberStatuses.map(
+                ({
+                  server,
+                  status,
+                  canRemove,
+                  removeReason,
+                  canTemplateApply,
+                  templateApplyReason,
+                }) => (
+                  <ClusterMemberRow
+                    key={server.id}
+                    server={server}
+                    status={status}
+                    canRemove={canRemove}
+                    removeReason={removeReason}
+                    hasTemplate={hasTemplate}
+                    canTemplateApply={canTemplateApply}
+                    templateApplyReason={templateApplyReason}
+                    subtitle={`${server.map}${
+                      server.clusterDir !== null
+                        ? ` · ${server.clusterDir}`
+                        : " · no cluster directory"
+                    }`}
+                    onOpen={props.onOpenServer}
+                    onRemove={(serverId) => {
+                      setRemoveInitialIds([serverId]);
+                      setRemoveOpen(true);
+                    }}
+                    onPromoteToTemplate={(serverId) => {
+                      const member = props.members.find((row) => row.id === serverId);
+                      if (member === undefined) return;
+                      setApplyTarget({
+                        serverId,
+                        serverName: member.name,
+                        operation: "promote",
+                      });
+                    }}
+                    onRestoreFromTemplate={(serverId) => {
+                      const member = props.members.find((row) => row.id === serverId);
+                      if (member === undefined) return;
+                      setApplyTarget({
+                        serverId,
+                        serverName: member.name,
+                        operation: "restore",
+                      });
+                    }}
+                  />
+                ),
+              )}
             </div>
           )}
         </Stack>
@@ -243,6 +285,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
         members={props.members}
         servers={props.servers}
         statuses={props.statuses}
+        hasTemplate={hasTemplate}
         onClose={() => setAddOpen(false)}
         onChanged={props.onMembershipChanged}
       />
@@ -263,6 +306,20 @@ export function ClusterDetailPanel(props: Props): ReactElement {
           void refreshTemplateStatus();
         }}
       />
+      {applyTarget !== null && (
+        <ClusterIniTemplateApplyModal
+          opened
+          clusterId={props.report.clusterId}
+          serverId={applyTarget.serverId}
+          serverName={applyTarget.serverName}
+          operation={applyTarget.operation}
+          onClose={() => setApplyTarget(null)}
+          onApplied={() => {
+            void refreshTemplateStatus();
+            props.onMembershipChanged();
+          }}
+        />
+      )}
     </AppSurfaceCard>
   );
 }

@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { Badge, Button, Group, Text } from "@mantine/core";
+import { ActionIcon, Badge, Button, Group, Text, Tooltip } from "@mantine/core";
+import { X } from "@phosphor-icons/react";
 import type { ServerProfile, ServerStatus } from "@shared/types";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import classes from "../clusters.module.css";
@@ -10,15 +11,56 @@ interface Props {
   status?: ServerStatus;
   canRemove?: boolean;
   removeReason?: string | null;
+  hasTemplate?: boolean;
+  canTemplateApply?: boolean;
+  templateApplyReason?: string | null;
   onOpen: (serverId: string) => void;
   onRemove?: (serverId: string) => void;
+  onPromoteToTemplate?: (serverId: string) => void;
+  onRestoreFromTemplate?: (serverId: string) => void;
 }
 
 export function ClusterMemberRow(props: Props): ReactElement {
   const showRemove = props.onRemove !== undefined;
+  const showPromote = props.onPromoteToTemplate !== undefined;
+  const showRestore = props.onRestoreFromTemplate !== undefined;
+  const canApply = props.canTemplateApply !== false;
+  const hasTemplate = props.hasTemplate === true;
+  const applyReason = props.templateApplyReason ?? "Unavailable";
+  const restoreDisabled = !canApply || !hasTemplate;
+  const restoreReason = !hasTemplate
+    ? "Create an INI template first"
+    : applyReason;
+
+  const stopRowOpen = (event: { stopPropagation: () => void }): void => {
+    event.stopPropagation();
+  };
 
   return (
-    <div className={classes.memberRow}>
+    <div
+      className={classes.memberRow}
+      data-clickable="true"
+      role="button"
+      tabIndex={0}
+      aria-label={`Open ${props.server.name}`}
+      onClick={() => props.onOpen(props.server.id)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          props.onOpen(props.server.id);
+        }
+        if (event.key === " ") {
+          // Prevent page scroll; activate on keyup like a native button.
+          event.preventDefault();
+        }
+      }}
+      onKeyUp={(event) => {
+        if (event.key === " ") {
+          event.preventDefault();
+          props.onOpen(props.server.id);
+        }
+      }}
+    >
       <div className={classes.memberBody}>
         <Group gap="xs">
           <Text fw={600} size="sm">
@@ -39,29 +81,78 @@ export function ClusterMemberRow(props: Props): ReactElement {
           </Text>
         )}
       </div>
-      <Group gap="xs" wrap="nowrap" className={classes.memberActions}>
+      <Group
+        gap="xs"
+        wrap="nowrap"
+        className={classes.memberActions}
+        onClick={stopRowOpen}
+        onKeyDown={stopRowOpen}
+      >
         {props.status !== undefined && (
           <ServerRuntimeStatusBadge status={props.status} size="xs" />
         )}
-        <Button
-          size="compact-xs"
-          variant="default"
-          aria-label={`Open ${props.server.name}`}
-          onClick={() => props.onOpen(props.server.id)}
-        >
-          Open
-        </Button>
-        {showRemove && (
-          <Button
-            size="compact-xs"
-            variant="light"
-            color="red"
-            aria-label={`Remove ${props.server.name}`}
-            disabled={props.canRemove === false}
-            onClick={() => props.onRemove?.(props.server.id)}
+        {showPromote && (
+          <Tooltip
+            label={
+              canApply
+                ? "Copy this member’s INI into the cluster template"
+                : applyReason
+            }
           >
-            Remove
-          </Button>
+            <span>
+              <Button
+                size="compact-xs"
+                variant="light"
+                aria-label={`Promote ${props.server.name} to template`}
+                disabled={!canApply}
+                onClick={() => props.onPromoteToTemplate?.(props.server.id)}
+              >
+                Promote
+              </Button>
+            </span>
+          </Tooltip>
+        )}
+        {showRestore && (
+          <Tooltip
+            label={
+              restoreDisabled
+                ? restoreReason
+                : "Restore this member’s INI from the cluster template"
+            }
+          >
+            <span>
+              <Button
+                size="compact-xs"
+                variant="light"
+                color="teal"
+                aria-label={`Restore ${props.server.name} from template`}
+                disabled={restoreDisabled}
+                onClick={() => props.onRestoreFromTemplate?.(props.server.id)}
+              >
+                Restore INI
+              </Button>
+            </span>
+          </Tooltip>
+        )}
+        {showRemove && (
+          <Tooltip
+            label={
+              props.canRemove === false
+                ? (props.removeReason ?? "Cannot remove")
+                : `Remove ${props.server.name} from this cluster`
+            }
+          >
+            <ActionIcon
+              size="sm"
+              variant="subtle"
+              color="gray"
+              aria-label={`Remove ${props.server.name}`}
+              disabled={props.canRemove === false}
+              onClick={() => props.onRemove?.(props.server.id)}
+            >
+              <X size={14} weight="bold" />
+            </ActionIcon>
+          </Tooltip>
         )}
       </Group>
     </div>
