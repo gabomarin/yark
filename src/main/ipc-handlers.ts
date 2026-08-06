@@ -8,6 +8,7 @@ import type { BackupService } from "../backend/domains/backups/backup-service";
 import type { PlayerSessionWatcher } from "../backend/domains/backups/player-session-watcher";
 import type { InstanceService } from "../backend/domains/instances/instance-service";
 import type { IniService } from "../backend/domains/config/ini-service";
+import type { ClusterIniTemplateService } from "../backend/domains/config/cluster-ini-template-service";
 import type { LogsService } from "../backend/domains/logs/logs-service";
 import type { ModsService } from "../backend/domains/mods/mods-service";
 import type { UpdateService } from "../backend/domains/updates/update-service";
@@ -62,6 +63,7 @@ export function registerIpcHandlers(
   instances: InstanceService,
   repo: ServerRepository,
   ini: IniService,
+  clusterIni: ClusterIniTemplateService,
   logs: LogsService,
   updates: UpdateService,
   mods: ModsService,
@@ -555,6 +557,30 @@ export function registerIpcHandlers(
         void backups.createIniSaveBackup(serverId).catch(() => undefined);
         return preview;
       }),
+  );
+
+  ipcMain.handle(IPC.clusterIniGet, (_e, clusterId: string) =>
+    wrap(() => clusterIni.get(clusterId)),
+  );
+
+  ipcMain.handle(IPC.clusterIniGetOrDraft, (_e, clusterId: string) =>
+    wrap(() => clusterIni.getOrDraft(clusterId)),
+  );
+
+  ipcMain.handle(
+    IPC.clusterIniPreview,
+    (_e, clusterId: string, payload: ServerIniPayload) =>
+      wrap(() => clusterIni.preview(clusterId, payload)),
+  );
+
+  ipcMain.handle(
+    IPC.clusterIniSave,
+    (_e, clusterId: string, payload: ServerIniPayload) =>
+      wrap(() => clusterIni.save(clusterId, payload)),
+  );
+
+  ipcMain.handle(IPC.clusterIniDelete, (_e, clusterId: string) =>
+    wrap(() => clusterIni.delete(clusterId)),
   );
 
   ipcMain.handle(IPC.logsList, (_e, serverId: string) =>

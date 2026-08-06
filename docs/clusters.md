@@ -28,7 +28,8 @@ Multiple servers on the same map in one cluster are allowed and not flagged.
 | IPC channel | `src/shared/ipc.ts` (`cluster:check`) → `window.api.checkCluster()` |
 | IPC handler | `src/main/ipc-handlers.ts` |
 | Preload | `src/preload/index.ts` |
-| Fleet UI | `src/renderer/src/features/clusters/` (`ClustersPage`, `clusterModel`, `createClusterModel`, `membershipModel`, `CreateClusterModal`, `AddServersModal`, `RemoveServersModal`) |
+| Fleet UI | `src/renderer/src/features/clusters/` (`ClustersPage`, `clusterModel`, `createClusterModel`, `membershipModel`, `CreateClusterModal`, `AddServersModal`, `RemoveServersModal`, `ClusterIniTemplateModal`) |
+| Cluster INI templates | `src/backend/domains/config/cluster-ini-template-service.ts`, `src/backend/infra/db/cluster-ini-template-repository.ts`, `src/shared/yark-owned-ini-keys.ts` |
 | Onboarding join | `src/renderer/src/features/server-workspace/components/ServerOnboardingChecklist/` |
 | Visual helper | `scripts/visual-clusters.cjs` |
 
@@ -129,13 +130,33 @@ Report shape:
   “Open server” jumps to workspace; **Add servers** / **Remove** manage membership
   when the cluster has a canonical ID and one shared directory (#41). Partial save
   failures roll profiles back when possible. Removal clears profile fields only.
+  **Create / Edit INI template** opens a cluster-scoped Game.ini /
+  GameUserSettings.ini editor (#88). Templates persist in SQLite by cluster ID
+  and never write member install directories. YARK-owned keys (session name, ports,
+  passwords) and ASE-legacy mod keys (`ActiveMods`, `ActiveMapMod`,
+  `ActiveTotalConversion`) are hidden and stripped on save — ASA mods use
+  CurseForge `-mods=` from the profile. Apply/seed/promote is #89/#90.
+
+### Cluster INI templates (#88)
+
+- One optional template per `clusterId` (`cluster_ini_templates` table).
+- IPC: `cluster-ini:get` / `get-or-draft` / `preview` / `save` / `delete`.
+- Deleting a template does not delete any server INI files on disk.
+- Clusters that exist only as profile fields can still own a template (including
+  after all members leave — the row remains until deleted).
+- Owned keys catalog: `src/shared/yark-owned-ini-keys.ts`
+  - **profileSync**: RCON / passwords / SessionName / Port / QueryPort
+    (`syncProfileSettingsToIni`)
+  - **aseLegacy**: `ActiveMods`, `ActiveMapMod`, `ActiveTotalConversion` (ASE /
+    Steam Workshop INI path; unused on ASA — YARK launches `-mods=` from
+    profile CurseForge IDs)
 
 ### Server form / onboarding
 
 - Form: edit `clusterId` / browse `clusterDir`.
 - Clusters workspace: create a brand-new cluster ID + directory on one or more
   stopped servers (#42); add or remove stopped servers from an existing cluster
-  in the detail panel (#41).
+  in the detail panel (#41); edit optional cluster INI templates (#88).
 - Onboarding checklist: join an **existing** cluster by copying another
   server’s `{clusterId, clusterDir}` pair (or clear).
 
@@ -146,9 +167,11 @@ Report shape:
    `clusterId` / `clusterDir` on each map (form or onboarding “join existing”).
 3. Add more stopped servers from the cluster detail **Add servers** action, or
    remove stopped servers with **Remove** (does not delete transfer files).
-4. Ensure distinct game / query / RCON ports across servers.
-5. Prefer matching CurseForge mod Project ID lists if players transfer mod items.
-6. Open **Clusters** (compliance refreshes on open); fix any `error` issues
+4. Optionally create a cluster **INI template** for shared settings (not ports /
+   session identity — those stay per server).
+5. Ensure distinct game / query / RCON ports across servers.
+6. Prefer matching CurseForge mod Project ID lists if players transfer mod items.
+7. Open **Clusters** (compliance refreshes on open); fix any `error` issues
    before relying on transfers in-game.
 
 ## Constraints and non-goals
@@ -156,6 +179,7 @@ Report shape:
 - **No live transfer probe** — reports are static profile math only.
 - **No persistence** of reports — recomputed on each `cluster:check`.
 - **No filesystem check** that `clusterDir` exists or is writable.
+- **No template apply** in this doc’s #88 surface — applying to members is #89/#90.
 - Product target is **Windows**; path validation and ASA cluster dirs assume
   Windows-style absolute paths.
 
@@ -170,15 +194,18 @@ Report shape:
 | Warning: different mod lists | Divergent `mods` arrays | Align Project IDs if transfers matter |
 | Launch missing `-clusterid=` | One of ID/dir is null | Both required for the CLI trio |
 | Save rejected | `clusterId` set without `clusterDir` | Provide a Windows absolute cluster path |
+| Template missing ports / SessionName / ActiveMods | By design — profileSync + ASE-legacy keys | Set identity/ports on each profile; ASA mods on the Mods panel |
 
 ## Tests and visual review
 
 | Artifact | Coverage |
 | --- | --- |
 | `tests/unit/compliance.test.ts` | Ready cluster, ignore unclustered, single-server warning, dir mismatch, port conflict, mod mismatch |
-| `src/renderer/src/features/clusters/ClustersPage.test.tsx` | Empty / ready / broken UI, dir-without-id copy, create-cluster wizard, add/remove membership |
+| `src/renderer/src/features/clusters/ClustersPage.test.tsx` | Empty / ready / broken UI, dir-without-id copy, create-cluster wizard, add/remove membership, INI template modal |
 | `tests/unit/create-cluster-model.test.ts` | Eligibility, ID/dir validation, create input |
 | `tests/unit/membership-model.test.ts` | Add/remove eligibility, join ports, leave input |
+| `tests/unit/yark-owned-ini-keys.test.ts` | Owned-key strip / match |
+| `tests/unit/cluster-ini-template.test.ts` | Template repo/service CRUD + validation |
 | `node scripts/e2e-clusters-membership.cjs` | Playwright create → add → remove membership (Windows) |
 | `node scripts/visual-clusters.cjs` | Playwright sidebar → Clusters compliance UI |
 

@@ -13,6 +13,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - **Create cluster** from the Clusters workspace: assign a unique Cluster ID and shared directory to one or more stopped servers (#42).
 - **Add / remove servers** on an existing cluster from the Clusters detail panel (stopped servers only; shared transfer files are never deleted) (#41).
+- Optional **cluster INI templates** (Game.ini / GameUserSettings.ini) editable from Clusters detail; per-server identity/ports and ASE-legacy ActiveMods keys are stripped — ASA mods stay on the Mods panel (#88).
 
 ### Changed
 

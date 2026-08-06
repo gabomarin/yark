@@ -159,6 +159,17 @@ const MIGRATIONS: Migration[] = [
       ALTER TABLE servers ADD COLUMN auto_start INTEGER NOT NULL DEFAULT 0;
     `,
   },
+  {
+    version: 10,
+    sql: `
+      CREATE TABLE cluster_ini_templates (
+        cluster_id TEXT PRIMARY KEY NOT NULL,
+        game_user_settings_ini TEXT NOT NULL DEFAULT '',
+        game_ini TEXT NOT NULL DEFAULT '',
+        updated_at TEXT NOT NULL
+      );
+    `,
+  },
 ];
 
 /**

@@ -675,6 +675,16 @@ export interface ServerIniSnapshot {
   payload: ServerIniPayload;
 }
 
+/**
+ * Optional cluster-scoped INI template (#88).
+ * Keyed by cluster ID string; independent of member install directories.
+ */
+export interface ClusterIniTemplate {
+  clusterId: string;
+  payload: ServerIniPayload;
+  updatedAt: string;
+}
+
 export type ServerUpdateLogStatus = "success" | "failed" | "unknown";
 
 export interface ServerUpdateLogFile {

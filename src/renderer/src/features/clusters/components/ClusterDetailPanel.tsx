@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import type {
   ClusterComplianceReport,
@@ -20,6 +20,7 @@ import { ClusterIssueRow } from "./ClusterIssueRow";
 import { ClusterMemberRow } from "./ClusterMemberRow";
 import { AddServersModal } from "./AddServersModal/AddServersModal";
 import { RemoveServersModal } from "./RemoveServersModal/RemoveServersModal";
+import { ClusterIniTemplateModal } from "./ClusterIniTemplateModal/ClusterIniTemplateModal";
 
 interface Props {
   report: ClusterComplianceReport;
@@ -37,6 +38,11 @@ export function ClusterDetailPanel(props: Props): ReactElement {
   const [addOpen, setAddOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
   const [removeInitialIds, setRemoveInitialIds] = useState<string[]>([]);
+  const [templateOpen, setTemplateOpen] = useState(false);
+  const [hasTemplate, setHasTemplate] = useState(false);
+  const [templateStatusError, setTemplateStatusError] = useState<string | null>(
+    null,
+  );
 
   const memberStatuses = useMemo(() => {
     return props.members.map((server) => {
@@ -45,6 +51,32 @@ export function ClusterDetailPanel(props: Props): ReactElement {
       return { server, status, removeReason, canRemove: removeReason === null };
     });
   }, [props.members, props.statuses]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const result = await window.api.getClusterIniTemplate(props.report.clusterId);
+        if (cancelled) return;
+        if (!result.ok) {
+          setTemplateStatusError(result.error ?? "Could not load template status");
+          setHasTemplate(false);
+          return;
+        }
+        setTemplateStatusError(null);
+        setHasTemplate(result.data !== null);
+      } catch (error) {
+        if (cancelled) return;
+        setTemplateStatusError(
+          error instanceof Error ? error.message : String(error),
+        );
+        setHasTemplate(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [props.report.clusterId, templateOpen]);
 
   return (
     <AppSurfaceCard
@@ -67,6 +99,9 @@ export function ClusterDetailPanel(props: Props): ReactElement {
             <Badge size="lg" color={props.report.ok ? "teal" : "red"} variant="light">
               {props.report.ok ? "Transfer-ready config" : "Needs fixes"}
             </Badge>
+            <Button size="sm" variant="light" onClick={() => setTemplateOpen(true)}>
+              {hasTemplate ? "Edit INI template" : "Create INI template"}
+            </Button>
             <Tooltip
               label={
                 canAdd
@@ -83,6 +118,12 @@ export function ClusterDetailPanel(props: Props): ReactElement {
           </Group>
         </Group>
 
+        {templateStatusError !== null && (
+          <Text size="xs" c="orange">
+            {templateStatusError}
+          </Text>
+        )}
+
         <MetaStrip
           items={[
             {
@@ -97,6 +138,10 @@ export function ClusterDetailPanel(props: Props): ReactElement {
             },
             { label: "Servers", value: String(props.members.length) },
             { label: "Issues", value: String(props.report.issues.length) },
+            {
+              label: "INI template",
+              value: hasTemplate ? "Saved" : "None",
+            },
           ]}
         />
 
@@ -191,6 +236,19 @@ export function ClusterDetailPanel(props: Props): ReactElement {
         initialSelectedIds={removeInitialIds}
         onClose={() => setRemoveOpen(false)}
         onChanged={props.onMembershipChanged}
+      />
+      <ClusterIniTemplateModal
+        opened={templateOpen}
+        clusterId={props.report.clusterId}
+        onClose={() => setTemplateOpen(false)}
+        onChanged={() => {
+          void window.api.getClusterIniTemplate(props.report.clusterId).then((result) => {
+            if (result.ok) {
+              setHasTemplate(result.data !== null);
+              setTemplateStatusError(null);
+            }
+          });
+        }}
       />
     </AppSurfaceCard>
   );

@@ -112,6 +112,16 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.iniPreview, serverId, payload),
   saveServerIni: (serverId: string, payload: ServerIniPayload) =>
     ipcRenderer.invoke(IPC.iniSave, serverId, payload),
+  getClusterIniTemplate: (clusterId: string) =>
+    ipcRenderer.invoke(IPC.clusterIniGet, clusterId),
+  getClusterIniTemplateOrDraft: (clusterId: string) =>
+    ipcRenderer.invoke(IPC.clusterIniGetOrDraft, clusterId),
+  previewClusterIniTemplate: (clusterId: string, payload: ServerIniPayload) =>
+    ipcRenderer.invoke(IPC.clusterIniPreview, clusterId, payload),
+  saveClusterIniTemplate: (clusterId: string, payload: ServerIniPayload) =>
+    ipcRenderer.invoke(IPC.clusterIniSave, clusterId, payload),
+  deleteClusterIniTemplate: (clusterId: string) =>
+    ipcRenderer.invoke(IPC.clusterIniDelete, clusterId),
   listServerLogs: (serverId: string) =>
     ipcRenderer.invoke(IPC.logsList, serverId),
   getServerRuntimeLog: (serverId: string, limit?: number) =>
