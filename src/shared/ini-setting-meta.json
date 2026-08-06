@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-05T23:33:34.432Z",
+  "generatedAt": "2026-08-06T00:17:38.946Z",
   "settings": [
     {
       "id": "game:/script/shootergame.shootergamemode:AdjustableMutagenSpawnDelayMultiplier",
@@ -706,8 +706,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -760,8 +759,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -971,8 +969,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -986,8 +983,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -1001,8 +997,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -1016,8 +1011,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -1031,8 +1025,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -1098,8 +1091,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -1113,8 +1105,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -1141,8 +1132,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -1251,8 +1241,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -1385,8 +1374,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -1400,8 +1388,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -1866,8 +1853,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -1881,8 +1867,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -1896,8 +1881,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -2037,8 +2021,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -2539,8 +2522,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -2592,8 +2574,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -2607,8 +2588,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -2622,8 +2602,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -2637,8 +2616,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -2652,8 +2630,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -2667,8 +2644,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -2695,8 +2671,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -2710,8 +2685,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -2725,8 +2699,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -2740,8 +2713,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -2755,8 +2727,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -2770,8 +2741,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -2861,8 +2831,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -2876,8 +2845,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -2966,8 +2934,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -3353,8 +3320,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -3595,8 +3561,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -3660,8 +3625,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -3675,8 +3639,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -3690,8 +3653,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -3792,8 +3754,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {
@@ -3807,8 +3768,7 @@
       "input": {
         "type": "number",
         "integer": true,
-        "step": 1,
-        "min": 0
+        "step": 1
       }
     },
     {

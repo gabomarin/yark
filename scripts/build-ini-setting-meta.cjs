@@ -222,10 +222,9 @@ function inferInput(setting, typeClass) {
   }
 
   if (typeClass === "integer") {
-    const input = { type: "number", integer: true, step: 1 };
-    const n = Number(defaultValue);
-    if (Number.isFinite(n) && n >= 0) input.min = 0;
-    return input;
+    // Do not infer min from a non-negative default — some integers use
+    // negative sentinels (e.g. ChatLogMaxAgeInDays = -1 for infinite).
+    return { type: "number", integer: true, step: 1 };
   }
 
   return {

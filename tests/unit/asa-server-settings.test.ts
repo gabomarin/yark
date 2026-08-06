@@ -65,6 +65,15 @@ describe("ini-setting-meta (defaults-derived)", () => {
     }
   });
 
+  it("does not clamp integers with non-negative defaults to min 0", () => {
+    const chatLogAge = lookupIniSettingInput(
+      "gameUserSettings",
+      "ServerSettings",
+      "ChatLogMaxAgeInDays",
+    );
+    expect(chatLogAge).toEqual({ type: "number", integer: true, step: 1 });
+  });
+
   it("keeps KillXPMultiplier description unpolluted by neighboring templates", () => {
     const description = lookupAsaDescription(
       "game",
