@@ -10,6 +10,8 @@ import type {
   BackupRecord,
   ClusterComplianceReport,
   ClusterIniTemplate,
+  ClusterIniTemplateApplyResult,
+  ClusterIniTemplateMemberPreview,
   IniPreview,
   InstallationServersMode,
   LogCleanupOptions,
@@ -118,6 +120,12 @@ export const IPC = {
   clusterIniPreview: "cluster-ini:preview",
   clusterIniSave: "cluster-ini:save",
   clusterIniDelete: "cluster-ini:delete",
+  clusterIniPreviewRestore: "cluster-ini:preview-restore",
+  clusterIniPreviewPromote: "cluster-ini:preview-promote",
+  clusterIniPreviewSeed: "cluster-ini:preview-seed",
+  clusterIniRestore: "cluster-ini:restore",
+  clusterIniPromote: "cluster-ini:promote",
+  clusterIniSeed: "cluster-ini:seed",
   logsList: "logs:list",
   logsRuntime: "logs:runtime",
   logsReadUpdate: "logs:read-update",
@@ -336,6 +344,30 @@ export interface RendererApi {
     payload: ServerIniPayload,
   ): Promise<IpcResult<{ template: ClusterIniTemplate; preview: IniPreview }>>;
   deleteClusterIniTemplate(clusterId: string): Promise<IpcResult<boolean>>;
+  previewClusterIniRestore(
+    clusterId: string,
+    serverId: string,
+  ): Promise<IpcResult<ClusterIniTemplateMemberPreview>>;
+  previewClusterIniPromote(
+    clusterId: string,
+    serverId: string,
+  ): Promise<IpcResult<ClusterIniTemplateMemberPreview>>;
+  previewClusterIniSeed(
+    clusterId: string,
+    serverId: string,
+  ): Promise<IpcResult<ClusterIniTemplateMemberPreview>>;
+  restoreClusterIniFromTemplate(
+    clusterId: string,
+    serverId: string,
+  ): Promise<IpcResult<ClusterIniTemplateApplyResult>>;
+  promoteClusterIniToTemplate(
+    clusterId: string,
+    serverId: string,
+  ): Promise<IpcResult<ClusterIniTemplateApplyResult>>;
+  seedClusterIniFromTemplate(
+    clusterId: string,
+    serverId: string,
+  ): Promise<IpcResult<ClusterIniTemplateApplyResult>>;
   listServerLogs(serverId: string): Promise<IpcResult<ServerOperationalLogs>>;
   getServerRuntimeLog(
     serverId: string,

@@ -9,6 +9,7 @@ import type { PlayerSessionWatcher } from "../backend/domains/backups/player-ses
 import type { InstanceService } from "../backend/domains/instances/instance-service";
 import type { IniService } from "../backend/domains/config/ini-service";
 import type { ClusterIniTemplateService } from "../backend/domains/config/cluster-ini-template-service";
+import type { ClusterIniTemplateApplyService } from "../backend/domains/config/cluster-ini-template-apply-service";
 import type { LogsService } from "../backend/domains/logs/logs-service";
 import type { ModsService } from "../backend/domains/mods/mods-service";
 import type { UpdateService } from "../backend/domains/updates/update-service";
@@ -64,6 +65,7 @@ export function registerIpcHandlers(
   repo: ServerRepository,
   ini: IniService,
   clusterIni: ClusterIniTemplateService,
+  clusterIniApply: ClusterIniTemplateApplyService,
   logs: LogsService,
   updates: UpdateService,
   mods: ModsService,
@@ -581,6 +583,42 @@ export function registerIpcHandlers(
 
   ipcMain.handle(IPC.clusterIniDelete, (_e, clusterId: string) =>
     wrap(() => clusterIni.delete(clusterId)),
+  );
+
+  ipcMain.handle(
+    IPC.clusterIniPreviewRestore,
+    (_e, clusterId: string, serverId: string) =>
+      wrap(() => clusterIniApply.previewRestore(clusterId, serverId)),
+  );
+
+  ipcMain.handle(
+    IPC.clusterIniPreviewPromote,
+    (_e, clusterId: string, serverId: string) =>
+      wrap(() => clusterIniApply.previewPromote(clusterId, serverId)),
+  );
+
+  ipcMain.handle(
+    IPC.clusterIniPreviewSeed,
+    (_e, clusterId: string, serverId: string) =>
+      wrap(() => clusterIniApply.previewSeed(clusterId, serverId)),
+  );
+
+  ipcMain.handle(
+    IPC.clusterIniRestore,
+    (_e, clusterId: string, serverId: string) =>
+      wrap(() => clusterIniApply.restore(clusterId, serverId)),
+  );
+
+  ipcMain.handle(
+    IPC.clusterIniPromote,
+    (_e, clusterId: string, serverId: string) =>
+      wrap(() => clusterIniApply.promote(clusterId, serverId)),
+  );
+
+  ipcMain.handle(
+    IPC.clusterIniSeed,
+    (_e, clusterId: string, serverId: string) =>
+      wrap(() => clusterIniApply.seed(clusterId, serverId)),
   );
 
   ipcMain.handle(IPC.logsList, (_e, serverId: string) =>

@@ -10,8 +10,8 @@ import type { ServerIniPayload } from "./types";
  *   `profile.mods`); YARK does not read these INI values at launch. Wiki dumps
  *   still list them, but they are not the ASA mod path.
  *
- * After a future template apply (#89/#90), profileSync keys are recomposed from
- * the profile; aseLegacy keys stay absent so operators manage mods on the Mods
+ * After template apply (#89/#90), profileSync keys are recomposed from the
+ * profile; aseLegacy keys stay absent so operators manage mods on the Mods
  * panel instead of stale INI copies.
  */
 export type YarkOwnedIniReason = "profileSync" | "aseLegacy";

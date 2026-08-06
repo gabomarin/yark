@@ -1,6 +1,15 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Button, Group, Modal, Stack, Stepper, Text } from "@mantine/core";
+import {
+  Alert,
+  Button,
+  Checkbox,
+  Group,
+  Modal,
+  Stack,
+  Stepper,
+  Text,
+} from "@mantine/core";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { sharedClusterDir } from "../../clusterModel";
 import {
@@ -22,6 +31,7 @@ interface Props {
   members: ServerProfile[];
   servers: ServerProfile[];
   statuses: Map<string, ServerRuntimeInfo>;
+  hasTemplate?: boolean;
   onClose: () => void;
   onChanged: () => void;
 }
@@ -29,9 +39,11 @@ interface Props {
 export function AddServersModal(props: Props): ReactElement {
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [seedFromTemplate, setSeedFromTemplate] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const wasOpenRef = useRef(false);
+  const hasTemplate = props.hasTemplate === true;
 
   const sharedDir = useMemo(
     () => sharedClusterDir(props.members),
@@ -69,6 +81,7 @@ export function AddServersModal(props: Props): ReactElement {
         candidates.find((candidate) => candidate.eligible)?.server.id ?? null;
       setStep(1);
       setSelectedIds(firstEligible !== null ? [firstEligible] : []);
+      setSeedFromTemplate(hasTemplate);
       setSaving(false);
       setError(null);
       return;
@@ -78,7 +91,7 @@ export function AddServersModal(props: Props): ReactElement {
       const next = pruneSelectedServerIds(current, candidates);
       return next.length === current.length ? current : next;
     });
-  }, [props.opened, candidates]);
+  }, [props.opened, candidates, hasTemplate]);
 
   const handleAdd = async (): Promise<void> => {
     if (!canContinue || sharedDir === null) return;
@@ -119,6 +132,29 @@ export function AddServersModal(props: Props): ReactElement {
         }
         applied.push(candidate.server);
       }
+
+      if (seedFromTemplate && hasTemplate) {
+        const seedFailures: string[] = [];
+        for (const member of applied) {
+          const seed = await window.api.seedClusterIniFromTemplate(
+            props.clusterId,
+            member.id,
+          );
+          if (!seed.ok) {
+            seedFailures.push(
+              `${member.name}: ${seed.error ?? "seed failed"}`,
+            );
+          }
+        }
+        if (seedFailures.length > 0) {
+          props.onChanged();
+          setError(
+            `Servers joined the cluster, but INI seed failed for: ${seedFailures.join("; ")}. Membership was kept.`,
+          );
+          return;
+        }
+      }
+
       props.onChanged();
       props.onClose();
     } finally {
@@ -212,9 +248,33 @@ export function AddServersModal(props: Props): ReactElement {
                 on transfer.
               </Alert>
             )}
-            <Alert color="blue" variant="light">
-              Saves this Cluster ID and shared folder on the selected servers.
-            </Alert>
+            {hasTemplate ? (
+              <Checkbox
+                checked={seedFromTemplate}
+                disabled={saving}
+                onChange={(event) =>
+                  setSeedFromTemplate(event.currentTarget.checked)
+                }
+                label="Seed INI from cluster template"
+                description="After membership is saved, compose the template onto each new member, reapply profile-owned ports/passwords/session name, and take an INI snapshot first. Leave unchecked to only set cluster ID and directory."
+              />
+            ) : (
+              <Alert color="blue" variant="light">
+                Saves this Cluster ID and shared folder on the selected servers.
+                Create an INI template first if you want to seed settings on join.
+              </Alert>
+            )}
+            {hasTemplate && seedFromTemplate && (
+              <Alert color="teal" variant="light">
+                Each selected stopped server will receive a restore-style INI write
+                from the saved cluster template after joining.
+              </Alert>
+            )}
+            {hasTemplate && !seedFromTemplate && (
+              <Alert color="blue" variant="light">
+                Membership only — existing INI files stay unchanged.
+              </Alert>
+            )}
           </Stack>
         )}
 

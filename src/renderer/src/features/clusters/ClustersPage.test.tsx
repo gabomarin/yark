@@ -116,6 +116,103 @@ describe("ClustersPage", () => {
         },
       })),
       deleteClusterIniTemplate: vi.fn(async () => ({ ok: true, data: true })),
+      previewClusterIniRestore: vi.fn(async () => ({
+        ok: true,
+        data: {
+          operation: "restore" as const,
+          clusterId: "alpha",
+          serverId: "srv-a",
+          serverName: "The Island",
+          preview: {
+            valid: true,
+            issues: [],
+            diff: [
+              {
+                fileKey: "gameUserSettings" as const,
+                section: "ServerSettings",
+                key: "XPMultiplier",
+                before: "1",
+                after: "3",
+                change: "changed" as const,
+              },
+            ],
+            changedCount: 1,
+          },
+        },
+      })),
+      previewClusterIniPromote: vi.fn(async () => ({
+        ok: true,
+        data: {
+          operation: "promote" as const,
+          clusterId: "alpha",
+          serverId: "srv-a",
+          serverName: "The Island",
+          preview: {
+            valid: true,
+            issues: [],
+            diff: [
+              {
+                fileKey: "gameUserSettings" as const,
+                section: "ServerSettings",
+                key: "MaxPlayers",
+                before: "40",
+                after: "20",
+                change: "changed" as const,
+              },
+            ],
+            changedCount: 1,
+          },
+        },
+      })),
+      previewClusterIniSeed: vi.fn(),
+      restoreClusterIniFromTemplate: vi.fn(async () => ({
+        ok: true,
+        data: {
+          operation: "restore" as const,
+          clusterId: "alpha",
+          serverId: "srv-a",
+          preview: { valid: true, issues: [], diff: [], changedCount: 1 },
+          template: {
+            clusterId: "alpha",
+            payload: { gameUserSettings: "", game: "" },
+            updatedAt: "2026-08-05T00:00:00.000Z",
+          },
+          backupId: null,
+          snapshotDir: "C:/snap",
+        },
+      })),
+      promoteClusterIniToTemplate: vi.fn(async () => ({
+        ok: true,
+        data: {
+          operation: "promote" as const,
+          clusterId: "alpha",
+          serverId: "srv-a",
+          preview: { valid: true, issues: [], diff: [], changedCount: 1 },
+          template: {
+            clusterId: "alpha",
+            payload: { gameUserSettings: "", game: "" },
+            updatedAt: "2026-08-05T00:00:00.000Z",
+          },
+          backupId: null,
+          snapshotDir: null,
+        },
+      })),
+      seedClusterIniFromTemplate: vi.fn(async () => ({
+        ok: true,
+        data: {
+          operation: "seed" as const,
+          clusterId: "alpha",
+          serverId: "srv-d",
+          preview: { valid: true, issues: [], diff: [], changedCount: 1 },
+          template: {
+            clusterId: "alpha",
+            payload: { gameUserSettings: "", game: "" },
+            updatedAt: "2026-08-05T00:00:00.000Z",
+          },
+          backupId: null,
+          snapshotDir: "C:/snap",
+        },
+      })),
     } as typeof window.api;
   });
 
@@ -166,9 +263,7 @@ describe("ClustersPage", () => {
     const islandLabel = within(detail as HTMLElement).getByText("The Island");
     const islandRow = islandLabel.closest("[class*='memberRow']");
     expect(islandRow).not.toBeNull();
-    await user.click(
-      within(islandRow as HTMLElement).getByRole("button", { name: /^open /i }),
-    );
+    await user.click(islandRow as HTMLElement);
     expect(onOpenServer).toHaveBeenCalledWith("srv-a");
   });
 
@@ -232,7 +327,7 @@ describe("ClustersPage", () => {
     expect(screen.getAllByText(/directory but no Cluster ID/i).length).toBeGreaterThan(0);
     expect(screen.getByText("C:/ARK/cluster")).toBeInTheDocument();
     expect(screen.getByText("Dir Only")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^open /i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/^open /i)).toBeInTheDocument();
     expect(screen.getByText(/missing Cluster ID/i)).toBeInTheDocument();
   });
 
@@ -531,5 +626,182 @@ describe("ClustersPage", () => {
     ).toBeInTheDocument();
     expect(within(dialog).getByRole("radiogroup", { name: /ini file/i })).toBeInTheDocument();
     expect(window.api.getClusterIniTemplateOrDraft).toHaveBeenCalledWith("alpha");
+  });
+
+  it("shows Restore INI disabled until a cluster template exists", async () => {
+    render(
+      <AppProviders>
+        <ClustersPage
+          servers={[island, scorched]}
+          reports={[readyReport]}
+          statuses={makeStatuses([
+            ["srv-a", "stopped"],
+            ["srv-b", "stopped"],
+          ])}
+          onOpenServer={vi.fn()}
+          onRefresh={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const restore = await screen.findByRole("button", {
+      name: /restore the island from template/i,
+    });
+    expect(restore).toBeDisabled();
+  });
+
+  it("promotes a stopped member into the cluster template after confirmation", async () => {
+    const user = userEvent.setup();
+    window.api = {
+      ...window.api,
+      getClusterIniTemplate: vi.fn(async () => ({
+        ok: true,
+        data: {
+          clusterId: "alpha",
+          payload: { gameUserSettings: "[ServerSettings]\nMaxPlayers=40\n", game: "" },
+          updatedAt: "2026-08-05T00:00:00.000Z",
+        },
+      })),
+    } as typeof window.api;
+
+    render(
+      <AppProviders>
+        <ClustersPage
+          servers={[island, scorched]}
+          reports={[readyReport]}
+          statuses={makeStatuses([
+            ["srv-a", "stopped"],
+            ["srv-b", "stopped"],
+          ])}
+          onOpenServer={vi.fn()}
+          onRefresh={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(
+      await screen.findByRole("button", { name: /promote the island to template/i }),
+    );
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText(/promote member to template/i)).toBeInTheDocument();
+    expect(await within(dialog).findByText(/MaxPlayers/i)).toBeInTheDocument();
+
+    await user.click(
+      within(dialog).getByRole("checkbox", {
+        name: /replace the existing cluster template/i,
+      }),
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: /promote to template/i }),
+    );
+    expect(window.api.promoteClusterIniToTemplate).toHaveBeenCalledWith("alpha", "srv-a");
+  });
+
+  it("restores a stopped member from the cluster template after confirmation", async () => {
+    const user = userEvent.setup();
+    window.api = {
+      ...window.api,
+      getClusterIniTemplate: vi.fn(async () => ({
+        ok: true,
+        data: {
+          clusterId: "alpha",
+          payload: { gameUserSettings: "[ServerSettings]\nXPMultiplier=3\n", game: "" },
+          updatedAt: "2026-08-05T00:00:00.000Z",
+        },
+      })),
+    } as typeof window.api;
+
+    render(
+      <AppProviders>
+        <ClustersPage
+          servers={[island, scorched]}
+          reports={[readyReport]}
+          statuses={makeStatuses([
+            ["srv-a", "stopped"],
+            ["srv-b", "stopped"],
+          ])}
+          onOpenServer={vi.fn()}
+          onRefresh={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(
+      await screen.findByRole("button", { name: /restore the island from template/i }),
+    );
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText(/restore member from template/i)).toBeInTheDocument();
+    expect(await within(dialog).findByText(/XPMultiplier/i)).toBeInTheDocument();
+
+    await user.click(
+      within(dialog).getByRole("checkbox", {
+        name: /overwrites the member’s current ini files/i,
+      }),
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: /restore & backup/i }),
+    );
+    expect(window.api.restoreClusterIniFromTemplate).toHaveBeenCalledWith("alpha", "srv-a");
+  });
+
+  it("seeds INI from the template when adding servers with the opt-in checked", async () => {
+    const user = userEvent.setup();
+    const onRefresh = vi.fn();
+    const free = makeServer({
+      id: "free",
+      name: "Free Map",
+      clusterId: null,
+      clusterDir: null,
+      gamePort: 7783,
+      queryPort: 27021,
+      rconPort: 27026,
+    });
+    const updateServer = vi.fn().mockImplementation(async (id: string, input: unknown) => ({
+      ok: true,
+      data: {
+        ...(id === "free" ? free : island),
+        ...(input as object),
+      },
+    }));
+    window.api = {
+      ...window.api,
+      updateServer,
+      getClusterIniTemplate: vi.fn(async () => ({
+        ok: true,
+        data: {
+          clusterId: "alpha",
+          payload: { gameUserSettings: "", game: "" },
+          updatedAt: "2026-08-05T00:00:00.000Z",
+        },
+      })),
+    } as typeof window.api;
+
+    render(
+      <AppProviders>
+        <ClustersPage
+          servers={[island, scorched, free]}
+          reports={[readyReport]}
+          statuses={makeStatuses([
+            ["srv-a", "stopped"],
+            ["srv-b", "stopped"],
+            ["free", "stopped"],
+          ])}
+          onOpenServer={vi.fn()}
+          onRefresh={onRefresh}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: /^add servers$/i }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: /continue/i }));
+    expect(
+      within(dialog).getByRole("checkbox", { name: /seed ini from cluster template/i }),
+    ).toBeChecked();
+    await user.click(within(dialog).getByRole("button", { name: /add to cluster/i }));
+
+    expect(updateServer).toHaveBeenCalled();
+    expect(window.api.seedClusterIniFromTemplate).toHaveBeenCalledWith("alpha", "free");
+    expect(onRefresh).toHaveBeenCalled();
   });
 });

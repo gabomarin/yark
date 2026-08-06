@@ -1,0 +1,117 @@
+.table {
+  overflow: hidden;
+  border-radius: var(--app-radius-md);
+  border: 1px solid var(--app-color-border);
+  background: color-mix(in srgb, var(--app-color-panel) 55%, transparent);
+}
+
+.header,
+.row {
+  display: grid;
+  grid-template-columns: 88px minmax(140px, 1.2fr) minmax(100px, 0.9fr) minmax(100px, 0.9fr) 72px;
+  gap: var(--app-space-xs);
+  align-items: start;
+  padding: 8px 12px;
+}
+
+.header {
+  border-bottom: 1px solid var(--app-color-border);
+  background: color-mix(in srgb, var(--app-color-panel) 25%, #121213);
+  color: var(--app-color-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.body {
+  max-height: 280px;
+  overflow: auto;
+}
+
+.row {
+  border-top: 1px solid color-mix(in srgb, var(--app-color-border) 45%, transparent);
+  font-size: var(--mantine-font-size-sm);
+}
+
+.row:first-child {
+  border-top: none;
+}
+
+.row:hover {
+  background: color-mix(in srgb, var(--app-color-panel) 80%, transparent);
+}
+
+.change {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.change[data-change="added"] {
+  color: var(--app-color-ok);
+}
+
+.change[data-change="removed"] {
+  color: var(--app-color-danger);
+}
+
+.change[data-change="changed"] {
+  color: var(--app-color-attention);
+}
+
+.keyBlock {
+  min-width: 0;
+}
+
+.key {
+  font-weight: 600;
+  color: var(--app-color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.section {
+  color: var(--app-color-muted);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.value {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: 12px;
+  color: var(--app-color-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.valueAfter {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: 12px;
+  color: var(--mantine-color-blue-3, #cde2ff);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file {
+  color: var(--app-color-muted);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.secretNote {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--app-radius-control);
+  border: 1px solid color-mix(in srgb, var(--app-color-attention) 35%, transparent);
+  background: color-mix(in srgb, var(--app-color-attention) 12%, transparent);
+  color: var(--app-color-attention);
+  font-size: 12px;
+}

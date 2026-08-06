@@ -2,8 +2,8 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { defaultGameUserSettingsIni } from "@shared/ini-defaults";
-import { setIniTextValue } from "@shared/ini-text";
 import type { ServerProfile } from "@shared/types";
+import { applyProfileOwnedKeysToGameUserSettings } from "../config/ini-compose";
 
 /** GameUserSettings.ini path under a server install. */
 export function gameUserSettingsIniPath(installDir: string): string {
@@ -33,47 +33,10 @@ export async function syncProfileSettingsToIni(
   profile: ServerProfile,
 ): Promise<void> {
   const path = gameUserSettingsIniPath(profile.installDir);
-  let text = existsSync(path)
+  const existing = existsSync(path)
     ? await readFile(path, "utf8")
     : defaultGameUserSettingsIni;
-
-  text = setIniTextValue(text, "ServerSettings", "RCONEnabled", "True");
-  text = setIniTextValue(
-    text,
-    "ServerSettings",
-    "RCONPort",
-    String(profile.rconPort),
-  );
-  text = setIniTextValue(
-    text,
-    "ServerSettings",
-    "ServerAdminPassword",
-    profile.adminPassword,
-  );
-  text = setIniTextValue(
-    text,
-    "ServerSettings",
-    "ServerPassword",
-    profile.serverPassword ?? "",
-  );
-  text = setIniTextValue(
-    text,
-    "SessionSettings",
-    "SessionName",
-    profile.sessionName,
-  );
-  text = setIniTextValue(
-    text,
-    "SessionSettings",
-    "Port",
-    String(profile.gamePort),
-  );
-  text = setIniTextValue(
-    text,
-    "SessionSettings",
-    "QueryPort",
-    String(profile.queryPort),
-  );
+  const text = applyProfileOwnedKeysToGameUserSettings(existing, profile);
 
   await mkdir(dirname(path), { recursive: true });
   await writeFile(path, text, "utf8");

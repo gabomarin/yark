@@ -685,6 +685,29 @@ export interface ClusterIniTemplate {
   updatedAt: string;
 }
 
+/** Per-member template preview / commit ops (#89). Bulk apply is #90. */
+export type ClusterIniTemplateApplyOperation = "restore" | "promote" | "seed";
+
+export interface ClusterIniTemplateMemberPreview {
+  operation: ClusterIniTemplateApplyOperation;
+  clusterId: string;
+  serverId: string;
+  serverName: string;
+  preview: IniPreview;
+}
+
+export interface ClusterIniTemplateApplyResult {
+  operation: ClusterIniTemplateApplyOperation;
+  clusterId: string;
+  serverId: string;
+  preview: IniPreview;
+  template: ClusterIniTemplate;
+  /** Cataloged INI backup id when the install was Ready enough to archive. */
+  backupId: string | null;
+  /** Local dual-file snapshot directory under Config/WindowsServer/.yark-pre-template. */
+  snapshotDir: string | null;
+}
+
 export type ServerUpdateLogStatus = "success" | "failed" | "unknown";
 
 export interface ServerUpdateLogFile {

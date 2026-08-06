@@ -273,8 +273,8 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
 
         <div className={classes.footer} data-cluster-ini-footer>
           <div className={classes.notice}>
-            Template edits never write member install folders. Apply/seed to
-            servers is a separate step.
+            Template edits never write member install folders. Use Promote /
+            Restore on a stopped member, or opt into seed when adding servers.
           </div>
 
           <Group justify="space-between">
