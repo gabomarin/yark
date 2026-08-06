@@ -1,0 +1,3 @@
+{
+  "$comment": "Optional input overrides keyed by id (file:section:key). Merged by build-ini-setting-meta.cjs."
+}

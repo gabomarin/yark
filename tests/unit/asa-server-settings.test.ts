@@ -7,20 +7,22 @@ import {
   lookupAsaDescription,
   lookupAsaSetting,
 } from "../../src/shared/asa-server-settings";
+import {
+  iniSettingMetaStats,
+  lookupIniSettingInput,
+  lookupIniSettingMeta,
+} from "../../src/shared/ini-setting-meta";
 import { defaultGameIni, defaultGameUserSettingsIni } from "../../src/shared/ini-defaults";
 import { isClientIniKey } from "../../src/shared/ini-text";
 
-describe("asa-server-settings catalog", () => {
-  it("exposes approximate ASA catalog counts", () => {
-    expect(asaServerSettings.length).toBeGreaterThanOrEqual(300);
-    expect(asaServerSettingsMeta.gusCount).toBeGreaterThanOrEqual(200);
-    expect(asaServerSettingsMeta.gameCount).toBeGreaterThanOrEqual(100);
-    expect(
-      asaServerSettings.filter((s) => s.file === "gameUserSettings").length,
-    ).toBe(asaServerSettingsMeta.gusCount);
-    expect(asaServerSettings.filter((s) => s.file === "game").length).toBe(
-      asaServerSettingsMeta.gameCount,
-    );
+describe("ini-setting-meta (defaults-derived)", () => {
+  it("exposes settings generated from defaults", () => {
+    expect(iniSettingMetaStats.total).toBeGreaterThanOrEqual(250);
+    expect(iniSettingMetaStats.gusCount).toBeGreaterThanOrEqual(150);
+    expect(iniSettingMetaStats.gameCount).toBeGreaterThanOrEqual(80);
+    expect(asaServerSettings.length).toBe(iniSettingMetaStats.total);
+    expect(asaServerSettingsMeta.gusCount).toBe(iniSettingMetaStats.gusCount);
+    expect(asaServerSettingsMeta.wikiOnly).toBe(0);
   });
 
   it("looks up AdminLogging case-insensitively by section and key", () => {
@@ -38,7 +40,7 @@ describe("asa-server-settings catalog", () => {
     expect(value?.toLowerCase()).toBe("false");
   });
 
-  it("returns a non-empty AdminLogging description", () => {
+  it("returns a non-empty AdminLogging description from defaults comments", () => {
     const description = lookupAsaDescription(
       "gameUserSettings",
       "ServerSettings",
@@ -47,23 +49,46 @@ describe("asa-server-settings catalog", () => {
     expect(description && description.length > 0).toBe(true);
   });
 
-  it("builds GameUserSettings defaults with ServerSettings and AutoSavePeriodMinutes", () => {
+  it("infers boolean / range inputs from comments", () => {
+    expect(
+      lookupIniSettingInput("gameUserSettings", "ServerSettings", "AdminLogging"),
+    ).toEqual({ type: "boolean" });
+    const fishing = lookupIniSettingMeta(
+      "game",
+      "/script/shootergame.shootergamemode",
+      "FishingLootQualityMultiplier",
+    );
+    expect(fishing?.input.type).toBe("range");
+    if (fishing?.input.type === "range") {
+      expect(fishing.input.min).toBe(1);
+      expect(fishing.input.max).toBe(5);
+    }
+  });
+
+  it("does not clamp integers with non-negative defaults to min 0", () => {
+    const chatLogAge = lookupIniSettingInput(
+      "gameUserSettings",
+      "ServerSettings",
+      "ChatLogMaxAgeInDays",
+    );
+    expect(chatLogAge).toEqual({ type: "number", integer: true, step: 1 });
+  });
+
+  it("keeps KillXPMultiplier description unpolluted by neighboring templates", () => {
+    const description = lookupAsaDescription(
+      "game",
+      "/script/shootergame.shootergamemode",
+      "KillXPMultiplier",
+    );
+    expect(description).toMatch(/XP earned for a kill/i);
+    expect(description).not.toMatch(/ItemStatClamps/i);
+  });
+
+  it("runtime defaults still come from shared/defaults files", () => {
     expect(defaultGameUserSettingsIni).toContain("[ServerSettings]");
     expect(defaultGameUserSettingsIni).toMatch(/AutoSavePeriodMinutes=/i);
-    // Catalog-only builder still works for tooling; runtime defaults come from shared/defaults.
-    const fromCatalogOnly = buildDefaultIniText("gameUserSettings");
-    expect(fromCatalogOnly).toContain("[ServerSettings]");
-    expect(fromCatalogOnly).toMatch(/AutoSavePeriodMinutes=/i);
-  });
-
-  it("does not merge wiki catalog additions into runtime defaults", () => {
-    expect(defaultGameUserSettingsIni).not.toContain("ASA catalog additions");
-    expect(defaultGameIni).not.toContain("ASA catalog additions");
-  });
-
-  it("builds Game.ini defaults with BabyMatureSpeedMultiplier", () => {
     expect(defaultGameIni).toContain("BabyMatureSpeedMultiplier");
-    expect(defaultGameIni).toMatch(/BabyMatureSpeedMultiplier=/i);
+    expect(buildDefaultIniText("gameUserSettings")).toMatch(/AutoSavePeriodMinutes=/i);
     expect(buildDefaultIniText("game")).toMatch(/BabyMatureSpeedMultiplier=/i);
   });
 
@@ -71,9 +96,8 @@ describe("asa-server-settings catalog", () => {
     expect(isClientIniKey("LastJoinedSessionPerCategory")).toBe(true);
   });
 
-  it("does not include ASE-only ActiveEvent in defaults", () => {
+  it("does not include ASE-only ActiveEvent", () => {
     expect(defaultGameUserSettingsIni).not.toMatch(/^\s*ActiveEvent=/im);
-    expect(defaultGameIni).not.toMatch(/^\s*ActiveEvent=/im);
     expect(asaServerSettings.some((s) => s.key === "ActiveEvent")).toBe(false);
   });
 });

@@ -1,6 +1,19 @@
-import catalog from "./asa-server-settings-data.json";
+/**
+ * Compatibility facade over ini-setting-meta (defaults-derived).
+ * Prefer `@shared/ini-setting-meta` for new code.
+ */
+import {
+  iniSettingMetaList,
+  iniSettingMetaStats,
+  lookupIniSettingDefaultValue,
+  lookupIniSettingDescription,
+  lookupIniSettingMeta,
+  settingsMetaForFile,
+  type IniMetaFileKey,
+  type IniSettingMeta,
+} from "./ini-setting-meta";
 
-export type AsaIniFileKey = "gameUserSettings" | "game";
+export type AsaIniFileKey = IniMetaFileKey;
 
 export interface AsaServerSetting {
   section: string;
@@ -10,62 +23,34 @@ export interface AsaServerSetting {
   file: AsaIniFileKey;
   asa: true;
   server: true;
-  source?: "userIni" | "wiki" | "both";
-  category?: string;
   valueType?: string;
 }
 
-const EMPTY_DEFAULT_ALLOWLIST = new Set([
-  "ActiveMods",
-  "ActiveMapMod",
-  "Message",
-  "ServerAdminPassword",
-  "ServerPassword",
-  "SessionName",
-  "CosmeticWhitelistOverride",
-  "CustomLiveTuningUrl",
-  "BanListURL",
-  "BadWordListURL",
-  "BadWordWhiteListURL",
-]);
-
-function isCommandLineOnlySetting(setting: AsaServerSetting): boolean {
-  const key = setting.key.trim();
-  if (key.startsWith("-") || key.startsWith("?")) return true;
-  const category = setting.category?.trim() ?? "";
-  if (/^command line options$/i.test(category)) return true;
-  return false;
+function toAsaSetting(setting: IniSettingMeta): AsaServerSetting {
+  return {
+    section: setting.section,
+    key: setting.key,
+    defaultValue: setting.defaultValue,
+    description: setting.description,
+    file: setting.file,
+    asa: true,
+    server: true,
+    valueType: setting.valueType ?? undefined,
+  };
 }
 
-export const asaServerSettings: readonly AsaServerSetting[] = (
-  catalog.settings as AsaServerSetting[]
-).filter((setting) => !isCommandLineOnlySetting(setting));
+export const asaServerSettings: readonly AsaServerSetting[] =
+  iniSettingMetaList.map(toAsaSetting);
 
-export const asaServerSettingsMeta: {
-  gusCount: number;
-  gameCount: number;
-  fromUserIni: number;
-  wikiOnly: number;
-} = {
-  gusCount: asaServerSettings.filter((s) => s.file === "gameUserSettings").length,
-  gameCount: asaServerSettings.filter((s) => s.file === "game").length,
-  fromUserIni: asaServerSettings.filter(
-    (s) => s.source === "userIni" || s.source === "both",
-  ).length,
-  wikiOnly: asaServerSettings.filter((s) => s.source === "wiki").length,
+export const asaServerSettingsMeta = {
+  gusCount: iniSettingMetaStats.gusCount,
+  gameCount: iniSettingMetaStats.gameCount,
+  fromUserIni: iniSettingMetaStats.total,
+  wikiOnly: 0,
 };
 
 export function settingId(section: string, key: string): string {
   return `${section}.${key}`.toLowerCase();
-}
-
-function idFor(file: AsaIniFileKey, section: string, key: string): string {
-  return `${file}\0${settingId(section, key)}`;
-}
-
-const byFileSectionKey = new Map<string, AsaServerSetting>();
-for (const setting of asaServerSettings) {
-  byFileSectionKey.set(idFor(setting.file, setting.section, setting.key), setting);
 }
 
 export function lookupAsaSetting(
@@ -73,7 +58,8 @@ export function lookupAsaSetting(
   section: string,
   key: string,
 ): AsaServerSetting | undefined {
-  return byFileSectionKey.get(idFor(file, section, key));
+  const hit = lookupIniSettingMeta(file, section, key);
+  return hit ? toAsaSetting(hit) : undefined;
 }
 
 export function lookupAsaDefaultValue(
@@ -81,10 +67,7 @@ export function lookupAsaDefaultValue(
   section: string,
   key: string,
 ): string | null {
-  const setting = lookupAsaSetting(file, section, key);
-  if (!setting) return null;
-  const resolved = resolveEmitDefault(setting);
-  return resolved === undefined ? null : resolved;
+  return lookupIniSettingDefaultValue(file, section, key);
 }
 
 export function lookupAsaDescription(
@@ -92,67 +75,17 @@ export function lookupAsaDescription(
   section: string,
   key: string,
 ): string | null {
-  const setting = lookupAsaSetting(file, section, key);
-  const description = setting?.description?.trim();
-  return description ? description : null;
+  return lookupIniSettingDescription(file, section, key);
 }
 
 export function settingsForFile(file: AsaIniFileKey): readonly AsaServerSetting[] {
-  return asaServerSettings.filter((setting) => setting.file === file);
-}
-
-/** True when defaultValue is wiki/template noise and should not be emitted. */
-function isUnusableDefaultValue(value: string): boolean {
-  const trimmed = value.trim();
-  if (trimmed.startsWith("&nbsp;")) return true;
-  if (/=N\/A$/i.test(trimmed) || trimmed === "N/A" || trimmed.toLowerCase() === "n/a") {
-    return true;
-  }
-  // Malformed wiki cells like `: "http://..."`
-  if (/^:\s*"/.test(trimmed)) return true;
-  // Template placeholders without a concrete scalar
-  if (/<(string|float|integer|attribute|stat_id|type)[^>]*>/i.test(trimmed)) {
-    return true;
-  }
-  return false;
-}
-
-function hasIndexedKeyName(key: string): boolean {
-  return key.includes("[") && key.includes("]");
-}
-
-function isConcreteNumericDefault(value: string): boolean {
-  return /^-?\d+(\.\d+)?$/.test(value.trim());
+  return settingsMetaForFile(file).map(toAsaSetting);
 }
 
 /**
- * Returns the value to emit for defaults INI, or undefined to skip the key.
+ * @deprecated Runtime defaults come from `src/shared/defaults/*.ini` via ini-defaults.
+ * Kept for tests/tooling smoke checks only.
  */
-function resolveEmitDefault(setting: AsaServerSetting): string | undefined {
-  const raw = setting.defaultValue ?? "";
-  const trimmed = raw.trim();
-
-  if (hasIndexedKeyName(setting.key) && !isConcreteNumericDefault(trimmed)) {
-    return undefined;
-  }
-
-  if (trimmed.length === 0) {
-    if (EMPTY_DEFAULT_ALLOWLIST.has(setting.key) || /^ActiveMods/i.test(setting.key)) {
-      return "";
-    }
-    return undefined;
-  }
-
-  if (isUnusableDefaultValue(trimmed)) {
-    if (EMPTY_DEFAULT_ALLOWLIST.has(setting.key) || /^ActiveMods/i.test(setting.key)) {
-      return "";
-    }
-    return undefined;
-  }
-
-  return raw;
-}
-
 export function buildDefaultIniText(file: AsaIniFileKey): string {
   const settings = settingsForFile(file);
   const sections: string[] = [];
@@ -171,16 +104,12 @@ export function buildDefaultIniText(file: AsaIniFileKey): string {
   const lines: string[] = [];
   for (const section of sections) {
     const entries = bySection.get(section) ?? [];
-    const emitted: string[] = [];
-    for (const setting of entries) {
-      const value = resolveEmitDefault(setting);
-      if (value === undefined) continue;
-      emitted.push(`${setting.key}=${value}`);
-    }
-    if (emitted.length === 0) continue;
+    if (entries.length === 0) continue;
     if (lines.length > 0) lines.push("");
     lines.push(`[${section}]`);
-    lines.push(...emitted);
+    for (const setting of entries) {
+      lines.push(`${setting.key}=${setting.defaultValue}`);
+    }
   }
 
   return `${lines.join("\n")}\n`;

@@ -4,6 +4,7 @@ import {
   lookupAsaDescription,
   lookupAsaSetting,
 } from "@shared/asa-server-settings";
+import { lookupIniSettingInput } from "@shared/ini-setting-meta";
 import {
   ASA_UI_CATEGORIES,
   asaUiCategoryLabel,
@@ -173,6 +174,21 @@ export function resolveControlKind(
     ?? (options?.fileKey !== undefined && options.section !== undefined && options.key !== undefined
       ? lookupAsaSetting(options.fileKey, options.section, options.key)?.valueType
       : undefined);
+  if (
+    options?.fileKey !== undefined &&
+    options.section !== undefined &&
+    options.key !== undefined
+  ) {
+    const input = lookupIniSettingInput(
+      options.fileKey,
+      options.section,
+      options.key,
+    );
+    if (input?.type === "boolean") return "boolean";
+    if (input?.type === "text") return "text";
+    if (input?.type === "number" || input?.type === "range") return "number";
+  }
+
   const fromCatalog = controlKindFromValueType(valueType);
   if (fromCatalog !== null) {
     return fromCatalog;

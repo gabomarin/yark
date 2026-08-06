@@ -139,8 +139,7 @@ opens this Settings section (does not install directly).
   Backups page. Defaults and normalize rules: [backups.md](backups.md).
 - **Quit policy (#59)** — always Stop / Cancel when quitting with active
   servers; no Settings Ask/Stop preference.
-- **ASA settings catalog** (`docs/asa-server-settings-catalog.json`) — INI
-  editor metadata, unrelated to this page.
+- **INI setting meta** (`src/shared/ini-setting-meta.json`) — descriptions / value types / inferred editor inputs from `defaults/*.ini` (`npm run catalog:ini-meta`); unrelated to this Settings page.
 
 ## Common pitfalls
 
