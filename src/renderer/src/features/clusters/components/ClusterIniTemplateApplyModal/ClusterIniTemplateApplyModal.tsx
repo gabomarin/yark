@@ -53,7 +53,7 @@ function operationCopy(
     checkbox:
       "I understand this overwrites the member’s current INI files after a recoverable backup.",
     secretNote:
-      "YARK-owned secrets are recomposed from the profile and redacted in the preview",
+      "Ports, passwords, and session stay on this profile and are omitted from the preview",
   };
 }
 

@@ -109,7 +109,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
     return () => {
       cancelled = true;
     };
-  }, [props.report.clusterId, templateOpen, applyTarget]);
+  }, [props.report.clusterId, templateOpen]);
 
   return (
     <AppSurfaceCard

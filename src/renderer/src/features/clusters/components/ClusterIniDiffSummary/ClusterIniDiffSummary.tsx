@@ -5,7 +5,7 @@ import classes from "./ClusterIniDiffSummary.module.css";
 
 interface Props {
   preview: IniPreview;
-  /** Shown under the table when secret keys appear in the diff. */
+  /** Footnote about owned keys omitted from the operator preview. */
   secretNote?: string;
 }
 
@@ -18,8 +18,6 @@ function changeLabel(change: IniDiffEntry["change"]): string {
 function fileLabel(fileKey: IniDiffEntry["fileKey"]): string {
   return fileKey === "game" ? "Game" : "GUS";
 }
-
-const SECRET_KEYS = new Set(["ServerAdminPassword", "ServerPassword"]);
 
 export function ClusterIniDiffSummary(props: Props): ReactElement {
   const { preview } = props;
@@ -42,10 +40,6 @@ export function ClusterIniDiffSummary(props: Props): ReactElement {
       </Text>
     );
   }
-
-  const secretCount = preview.diff.filter((entry) =>
-    SECRET_KEYS.has(entry.key),
-  ).length;
 
   return (
     <Stack gap="sm">
@@ -89,11 +83,8 @@ export function ClusterIniDiffSummary(props: Props): ReactElement {
           ))}
         </div>
       </div>
-      {secretCount > 0 && props.secretNote !== undefined && (
-        <p className={classes.secretNote}>
-          {props.secretNote} ({secretCount} secret field
-          {secretCount === 1 ? "" : "s"} redacted in values)
-        </p>
+      {props.secretNote !== undefined && (
+        <p className={classes.secretNote}>{props.secretNote}</p>
       )}
     </Stack>
   );

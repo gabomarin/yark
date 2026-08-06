@@ -40,11 +40,22 @@ export function ClusterMemberRow(props: Props): ReactElement {
     <div
       className={classes.memberRow}
       data-clickable="true"
+      role="button"
       tabIndex={0}
       aria-label={`Open ${props.server.name}`}
       onClick={() => props.onOpen(props.server.id)}
       onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          props.onOpen(props.server.id);
+        }
+        if (event.key === " ") {
+          // Prevent page scroll; activate on keyup like a native button.
+          event.preventDefault();
+        }
+      }}
+      onKeyUp={(event) => {
+        if (event.key === " ") {
           event.preventDefault();
           props.onOpen(props.server.id);
         }

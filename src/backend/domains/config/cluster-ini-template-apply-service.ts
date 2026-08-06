@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import { copyFile, mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type {
@@ -120,39 +119,44 @@ export class ClusterIniTemplateApplyService {
     const id = normalizeClusterId(clusterId);
     const server = this.requireServer(serverId);
     assertMemberOfCluster(server, id);
-    assertStopped(this.runtime.getStatus(serverId).status, server.name);
 
-    const snapshot = await this.ini.readServerIni(serverId);
-    const next = composeTemplatePayloadFromMember(snapshot.payload);
-    const current = this.templates.get(id)?.payload ?? {
-      gameUserSettings: "",
-      game: "",
-    };
-    const preview = finalizeClusterIniApplyPreview(buildIniPreview(current, next));
-    if (!preview.valid) {
-      throw new Error(
-        `Invalid INI: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`,
+    return this.locks.withLock(serverId, "cluster-ini-promote", async () => {
+      assertStopped(this.runtime.getStatus(serverId).status, server.name);
+
+      const snapshot = await this.ini.readServerIni(serverId);
+      const next = composeTemplatePayloadFromMember(snapshot.payload);
+      const current = this.templates.get(id)?.payload ?? {
+        gameUserSettings: "",
+        game: "",
+      };
+      const preview = finalizeClusterIniApplyPreview(
+        buildIniPreview(current, next),
       );
-    }
+      if (!preview.valid) {
+        throw new Error(
+          `Invalid INI: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`,
+        );
+      }
 
-    // Validate fully before mutating the persisted template.
-    const template = this.templates.upsert(id, next);
-    this.servers.addEvent(
-      serverId,
-      "server_updated",
-      "info",
-      `Promoted INI into cluster template “${id}” (${preview.changedCount} changes)`,
-    );
+      // Validate fully before mutating the persisted template.
+      const template = this.templates.upsert(id, next);
+      this.servers.addEvent(
+        serverId,
+        "server_updated",
+        "info",
+        `Promoted INI into cluster template “${id}” (${preview.changedCount} changes)`,
+      );
 
-    return {
-      operation: "promote",
-      clusterId: id,
-      serverId,
-      preview,
-      template,
-      backupId: null,
-      snapshotDir: null,
-    };
+      return {
+        operation: "promote" as const,
+        clusterId: id,
+        serverId,
+        preview,
+        template,
+        backupId: null,
+        snapshotDir: null,
+      };
+    });
   }
 
   private async buildMemberPreview(
@@ -167,6 +171,7 @@ export class ClusterIniTemplateApplyService {
     } else {
       assertMemberOfCluster(server, id);
     }
+    assertStopped(this.runtime.getStatus(serverId).status, server.name);
 
     const snapshot = await this.ini.readServerIni(serverId);
 
@@ -307,18 +312,31 @@ export class ClusterIniTemplateApplyService {
     const gusDest = join(snapshotDir, "GameUserSettings.ini");
     const gameDest = join(snapshotDir, "Game.ini");
 
-    if (existsSync(current.gameUserSettingsPath)) {
-      await copyFile(current.gameUserSettingsPath, gusDest);
-    } else {
-      await writeFile(gusDest, current.payload.gameUserSettings, "utf8");
-    }
-    if (existsSync(current.gameIniPath)) {
-      await copyFile(current.gameIniPath, gameDest);
-    } else {
-      await writeFile(gameDest, current.payload.game, "utf8");
-    }
+    await this.copyOrWriteIniSnapshot(
+      current.gameUserSettingsPath,
+      gusDest,
+      current.payload.gameUserSettings,
+    );
+    await this.copyOrWriteIniSnapshot(
+      current.gameIniPath,
+      gameDest,
+      current.payload.game,
+    );
 
     return snapshotDir;
+  }
+
+  private async copyOrWriteIniSnapshot(
+    sourcePath: string,
+    destPath: string,
+    fallbackText: string,
+  ): Promise<void> {
+    try {
+      await copyFile(sourcePath, destPath);
+    } catch {
+      // Source missing or raced away — keep a recoverable snapshot from memory.
+      await writeFile(destPath, fallbackText, "utf8");
+    }
   }
 
   private async writeIniPayload(

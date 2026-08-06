@@ -29,7 +29,7 @@ Multiple servers on the same map in one cluster are allowed and not flagged.
 | IPC handler | `src/main/ipc-handlers.ts` |
 | Preload | `src/preload/index.ts` |
 | Fleet UI | `src/renderer/src/features/clusters/` (`ClustersPage`, `clusterModel`, `createClusterModel`, `membershipModel`, `CreateClusterModal`, `AddServersModal`, `RemoveServersModal`, `ClusterIniTemplateModal`) |
-| Cluster INI templates | `src/backend/domains/config/cluster-ini-template-service.ts`, `cluster-ini-template-apply-service.ts`, `ini-compose.ts`, `src/backend/infra/db/cluster-ini-template-repository.ts`, `src/shared/yark-owned-ini-keys.ts` |
+| Cluster INI templates | `src/backend/domains/config/cluster-ini-template-service.ts`, `src/backend/domains/config/cluster-ini-template-apply-service.ts`, `src/backend/domains/config/ini-compose.ts`, `src/backend/infra/db/cluster-ini-template-repository.ts`, `src/shared/yark-owned-ini-keys.ts` |
 | Onboarding join | `src/renderer/src/features/server-workspace/components/ServerOnboardingChecklist/` |
 | Visual helper | `scripts/visual-clusters.cjs` |
 

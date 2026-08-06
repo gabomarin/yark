@@ -293,6 +293,9 @@ describe("ClusterIniTemplateApplyService", () => {
 
   it("rejects restore while the server is running and leaves files unchanged", async () => {
     const { service, profile, installDir } = makeHarness("running");
+    await expect(service.previewRestore("alpha", profile.id)).rejects.toThrow(
+      /must be stopped/i,
+    );
     await expect(service.restore("alpha", profile.id)).rejects.toThrow(/must be stopped/i);
 
     const gus = readFileSync(
