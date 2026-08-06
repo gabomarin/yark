@@ -52,6 +52,24 @@ export function ClusterDetailPanel(props: Props): ReactElement {
     });
   }, [props.members, props.statuses]);
 
+  const refreshTemplateStatus = async (): Promise<void> => {
+    try {
+      const result = await window.api.getClusterIniTemplate(props.report.clusterId);
+      if (!result.ok) {
+        setTemplateStatusError(result.error ?? "Could not load template status");
+        setHasTemplate(false);
+        return;
+      }
+      setTemplateStatusError(null);
+      setHasTemplate(result.data !== null);
+    } catch (error) {
+      setTemplateStatusError(
+        error instanceof Error ? error.message : String(error),
+      );
+      setHasTemplate(false);
+    }
+  };
+
   useEffect(() => {
     let cancelled = false;
     void (async () => {
@@ -242,12 +260,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
         clusterId={props.report.clusterId}
         onClose={() => setTemplateOpen(false)}
         onChanged={() => {
-          void window.api.getClusterIniTemplate(props.report.clusterId).then((result) => {
-            if (result.ok) {
-              setHasTemplate(result.data !== null);
-              setTemplateStatusError(null);
-            }
-          });
+          void refreshTemplateStatus();
         }}
       />
     </AppSurfaceCard>

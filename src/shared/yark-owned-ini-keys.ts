@@ -90,18 +90,16 @@ export const YARK_OWNED_INI_KEYS: readonly YarkOwnedIniKey[] = [
   },
 ] as const;
 
-function ownedKeySet(): Set<string> {
-  return new Set(
-    YARK_OWNED_INI_KEYS.map(
-      (entry) =>
-        `${entry.section.toLowerCase()}\u001f${entry.key.toLowerCase()}`,
-    ),
-  );
-}
+const OWNED_KEY_SET: ReadonlySet<string> = new Set(
+  YARK_OWNED_INI_KEYS.map(
+    (entry) =>
+      `${entry.section.toLowerCase()}\u001f${entry.key.toLowerCase()}`,
+  ),
+);
 
 /** True when this GameUserSettings section/key is YARK-owned (case-insensitive). */
 export function isYarkOwnedIniKey(section: string, key: string): boolean {
-  return ownedKeySet().has(
+  return OWNED_KEY_SET.has(
     `${section.trim().toLowerCase()}\u001f${key.trim().toLowerCase()}`,
   );
 }
@@ -111,7 +109,7 @@ export function isYarkOwnedIniKey(section: string, key: string): boolean {
  * comments, and unknown keys. Empty sections are dropped.
  */
 export function stripYarkOwnedIniKeys(text: string): string {
-  const owned = ownedKeySet();
+  const owned = OWNED_KEY_SET;
   const lines = text.split(/\r?\n/);
   const kept: string[] = [];
   let sectionHeader: string | null = null;

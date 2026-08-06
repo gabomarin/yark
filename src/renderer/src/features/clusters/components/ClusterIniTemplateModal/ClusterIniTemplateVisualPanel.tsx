@@ -27,6 +27,7 @@ import {
   type IniFilterId,
   type IniSettingReference,
 } from "@features/server-workspace/iniModel";
+import { numberInputValueFromIni } from "@features/server-workspace/iniNumberInput";
 import { useEffect, useMemo, useState } from "react";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
 import classes from "./ClusterIniTemplateModal.module.css";
@@ -263,7 +264,7 @@ function SettingRow(props: {
           />
         ) : kind === "number" ? (
           <NumberInput
-            value={Number(row.value)}
+            value={numberInputValueFromIni(row.value)}
             onChange={(value) =>
               onChange(
                 row.section,

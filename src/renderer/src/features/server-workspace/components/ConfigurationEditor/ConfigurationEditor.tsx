@@ -52,6 +52,7 @@ import {
   type IniFilterId,
   type IniSettingReference,
 } from "../../iniModel";
+import { numberInputValueFromIni } from "../../iniNumberInput";
 import classes from "./ConfigurationEditor.module.css";
 
 export type ConfigSection = "iniFiles";
@@ -520,7 +521,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
                                     />
                                   ) : kind === "number" ? (
                                     <NumberInput
-                                      value={Number(row.value)}
+                                      value={numberInputValueFromIni(row.value)}
                                       onChange={(value) =>
                                         updateValue(
                                           row.fileKey,
