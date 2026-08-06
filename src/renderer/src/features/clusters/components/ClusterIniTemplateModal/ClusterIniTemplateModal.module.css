@@ -1,0 +1,78 @@
+.tableWrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 280px;
+  max-height: min(52vh, 520px);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-md);
+  overflow: hidden;
+  background: var(--app-color-surface-chrome);
+}
+
+.tableHead,
+.row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.1fr) minmax(140px, 0.85fr) minmax(160px, 1.3fr) 40px;
+  gap: var(--app-space-sm);
+  align-items: center;
+  padding: 10px 14px;
+}
+
+.tableHead {
+  flex-shrink: 0;
+  background: var(--app-color-surface-control);
+  color: var(--app-color-muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tableBody {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.sectionBlock + .sectionBlock {
+  border-top: 1px solid var(--app-color-border-subtle);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-xs);
+  width: 100%;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--app-color-accent) 18%, var(--app-color-surface-control));
+  color: inherit;
+  text-align: left;
+  box-shadow: inset 3px 0 0 0 var(--app-color-accent);
+  border-block: 1px solid color-mix(in srgb, var(--app-color-accent) 35%, transparent);
+}
+
+.sectionHeader:hover {
+  background: color-mix(in srgb, var(--app-color-accent) 28%, var(--app-color-surface-control-hover));
+}
+
+.sectionHeaderLabel {
+  color: color-mix(in srgb, var(--app-color-accent) 55%, var(--app-color-text));
+}
+
+.row + .row {
+  border-top: 1px solid color-mix(in srgb, var(--app-color-border-subtle) 68%, transparent);
+}
+
+.rawEditor :global(.mantine-Textarea-input) {
+  font-family: var(--mantine-font-family-monospace);
+}
+
+.notice {
+  border-radius: var(--app-radius-control);
+  border: 1px solid color-mix(in srgb, var(--app-color-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--app-color-accent) 12%, transparent);
+  color: color-mix(in srgb, var(--app-color-accent) 40%, var(--app-color-text));
+  padding: var(--app-space-sm) var(--app-space-md);
+  font-size: var(--mantine-font-size-sm);
+}

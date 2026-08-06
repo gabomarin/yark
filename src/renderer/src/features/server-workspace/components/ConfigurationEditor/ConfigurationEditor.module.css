@@ -80,13 +80,19 @@
   gap: 12px;
   width: 100%;
   padding: 10px 14px;
-  background: color-mix(in srgb, var(--app-color-surface-control) 72%, transparent);
+  background: color-mix(in srgb, var(--app-color-accent) 18%, var(--app-color-surface-control));
   color: inherit;
   text-align: left;
+  box-shadow: inset 3px 0 0 0 var(--app-color-accent);
+  border-block: 1px solid color-mix(in srgb, var(--app-color-accent) 35%, transparent);
 }
 
 .sectionHeader:hover {
-  background: var(--app-color-surface-control-hover);
+  background: color-mix(in srgb, var(--app-color-accent) 28%, var(--app-color-surface-control-hover));
+}
+
+.sectionHeaderLabel {
+  color: color-mix(in srgb, var(--app-color-accent) 55%, var(--app-color-text));
 }
 
 .tableBody {

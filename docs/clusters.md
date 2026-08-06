@@ -131,7 +131,9 @@ Report shape:
   when the cluster has a canonical ID and one shared directory (#41). Partial save
   failures roll profiles back when possible. Removal clears profile fields only.
   **Create / Edit INI template** opens a cluster-scoped Game.ini /
-  GameUserSettings.ini editor (#88). Templates persist in SQLite by cluster ID
+  GameUserSettings.ini editor (#88) with the same visual table patterns as the
+  server INI editor (file segmented switch, search, category groups, typed
+  controls). Templates persist in SQLite by cluster ID
   and never write member install directories. YARK-owned keys (session name, ports,
   passwords) and ASE-legacy mod keys (`ActiveMods`, `ActiveMapMod`,
   `ActiveTotalConversion`) are hidden and stripped on save — ASA mods use

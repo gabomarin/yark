@@ -35,6 +35,7 @@ import type {
   ServerIniSnapshot,
   ServerProfile,
 } from "@shared/types";
+import { IniFileSegmented } from "@ui/IniFileSegmented/IniFileSegmented";
 import { useEffect, useMemo, useState } from "react";
 import {
   defaultTextForFile,
@@ -317,22 +318,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
 
   const iniNavigation = (
     <>
-      <Select
-        size="xs"
-        aria-label="INI file"
-        value={iniFile}
-        onChange={(value) => {
-          if (value === "game" || value === "gameUserSettings") {
-            setIniFile(value);
-          }
-        }}
-        data={[
-          { value: "gameUserSettings", label: "GameUserSettings.ini" },
-          { value: "game", label: "Game.ini" },
-        ]}
-        w={190}
-        allowDeselect={false}
-      />
+      <IniFileSegmented value={iniFile} onChange={setIniFile} />
       <SegmentedControl
         size="xs"
         aria-label="INI edit mode"
@@ -476,10 +462,10 @@ export function ConfigurationEditor(props: Props): ReactElement {
                         >
                           <Group gap="xs" wrap="nowrap">
                             {collapsed ? <CaretRight size={14} /> : <CaretDown size={14} />}
-                            <Text fw={700} size="sm">
+                            <Text fw={700} size="sm" className={classes.sectionHeaderLabel}>
                               {group.label}
                             </Text>
-                            <Badge size="xs" variant="light" color="gray">
+                            <Badge size="xs" variant="light" color="blue">
                               {group.rows.length}
                             </Badge>
                           </Group>

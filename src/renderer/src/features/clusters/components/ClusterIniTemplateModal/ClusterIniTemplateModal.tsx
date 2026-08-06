@@ -1,14 +1,16 @@
 import type { ReactElement } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { FloppyDisk } from "@phosphor-icons/react";
 import {
   Alert,
+  Badge,
   Button,
   Group,
   Modal,
   SegmentedControl,
   Stack,
   Text,
-  Textarea,
+  Title,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import type {
@@ -16,14 +18,11 @@ import type {
   IniPreview,
   ServerIniPayload,
 } from "@shared/types";
-import { isYarkOwnedIniKey, stripYarkOwnedFromPayload } from "@shared/yark-owned-ini-keys";
-import {
-  parseIniRows,
-  sanitizeServerIniPayload,
-  setIniValue,
-  textForFile,
-  withFileText,
-} from "@features/server-workspace/iniModel";
+import { stripYarkOwnedFromPayload } from "@shared/yark-owned-ini-keys";
+import { sanitizeServerIniPayload } from "@features/server-workspace/iniModel";
+import { IniFileSegmented } from "@ui/IniFileSegmented/IniFileSegmented";
+import { ClusterIniTemplateVisualPanel } from "./ClusterIniTemplateVisualPanel";
+import classes from "./ClusterIniTemplateModal.module.css";
 
 interface Props {
   opened: boolean;
@@ -51,16 +50,6 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
 
   const dirty =
     payload !== null && baseline !== null && !payloadsEqual(payload, baseline);
-
-  const activeText = payload !== null ? textForFile(payload, iniFile) : "";
-  const visualRows = useMemo(() => {
-    if (iniFile !== "gameUserSettings") {
-      return parseIniRows(activeText);
-    }
-    return parseIniRows(activeText).filter(
-      (row) => !isYarkOwnedIniKey(row.section, row.key),
-    );
-  }, [activeText, iniFile]);
 
   const load = async (): Promise<void> => {
     setLoading(true);
@@ -160,40 +149,62 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
     });
   };
 
-  const updateRaw = (text: string): void => {
-    if (payload === null) return;
-    setPayload(withFileText(payload, iniFile, text));
-  };
-
-  const updateVisualValue = (section: string, key: string, value: string): void => {
-    if (payload === null) return;
-    if (iniFile === "gameUserSettings" && isYarkOwnedIniKey(section, key)) {
+  const requestClose = (): void => {
+    if (dirty) {
+      modals.openConfirmModal({
+        title: "Discard changes?",
+        children: (
+          <Text size="sm">Unsaved template edits will be lost.</Text>
+        ),
+        labels: { confirm: "Discard", cancel: "Keep editing" },
+        confirmProps: { color: "red" },
+        onConfirm: () => props.onClose(),
+      });
       return;
     }
-    setPayload(
-      withFileText(payload, iniFile, setIniValue(activeText, section, key, value)),
-    );
+    props.onClose();
   };
 
   return (
     <Modal
       opened={props.opened}
       onClose={() => {
-        if (!saving) props.onClose();
+        if (!saving) requestClose();
       }}
-      title={`Cluster INI template — ${props.clusterId}`}
-      size="xl"
+      title={
+        <Group gap="xs" wrap="wrap">
+          <Title order={4}>Cluster INI template</Title>
+          <Badge variant="light" color="blue" tt="none">
+            {props.clusterId}
+          </Badge>
+          {exists ? (
+            <Badge variant="light" color="ok" tt="none">
+              Saved
+            </Badge>
+          ) : (
+            <Badge variant="light" color="gray" tt="none">
+              None
+            </Badge>
+          )}
+          {dirty && (
+            <Badge variant="light" color="attention" tt="none">
+              Unsaved
+            </Badge>
+          )}
+        </Group>
+      }
+      size="90%"
       centered
       closeOnClickOutside={!saving && !dirty}
       closeOnEscape={!saving}
       withCloseButton={!saving}
     >
       <Stack gap="md">
-        <Alert color="blue" variant="light">
+        <Text size="sm" c="dimmed">
           Shared Game.ini / GameUserSettings.ini for this cluster ID. Session
           name, ports, and passwords stay per-server. ASE-style ActiveMods keys
           are omitted — ASA mods use the Mods panel / -mods= CurseForge IDs.
-        </Alert>
+        </Text>
 
         {error !== null && (
           <Alert color="red" variant="light">
@@ -208,97 +219,51 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
           </Text>
         )}
 
-        <Group justify="space-between" wrap="wrap">
-          <SegmentedControl
-            value={iniFile}
-            onChange={(value) => setIniFile(value as IniFileKey)}
-            data={[
-              { label: "GameUserSettings.ini", value: "gameUserSettings" },
-              { label: "Game.ini", value: "game" },
-            ]}
-          />
-          <SegmentedControl
-            value={mode}
-            onChange={(value) => setMode(value as "visual" | "raw")}
-            data={[
-              { label: "Visual", value: "visual" },
-              { label: "Raw", value: "raw" },
-            ]}
-          />
+        <Group justify="space-between" wrap="wrap" gap="sm">
+          <Group gap="xs" wrap="wrap">
+            <IniFileSegmented
+              value={iniFile}
+              onChange={setIniFile}
+              disabled={loading || saving}
+            />
+            <SegmentedControl
+              size="xs"
+              aria-label="INI edit mode"
+              value={mode}
+              disabled={loading || saving}
+              onChange={(value) => setMode(value === "raw" ? "raw" : "visual")}
+              data={[
+                { label: "Visual", value: "visual" },
+                { label: "Text", value: "raw" },
+              ]}
+            />
+          </Group>
         </Group>
 
         {loading || payload === null ? (
           <Text size="sm" c="dimmed">
             Loading…
           </Text>
-        ) : mode === "raw" ? (
-          <Textarea
-            aria-label={`${iniFile} raw editor`}
-            value={activeText}
-            onChange={(event) => updateRaw(event.currentTarget.value)}
-            minRows={16}
-            autosize
-            maxRows={28}
-            styles={{ input: { fontFamily: "var(--mantine-font-family-monospace)" } }}
-          />
-        ) : visualRows.length === 0 ? (
-          <Text size="sm" c="dimmed">
-            No editable keys in this file yet. Switch to Raw to paste content, or
-            save defaults and edit further.
-          </Text>
         ) : (
-          <Stack gap="xs" style={{ maxHeight: 420, overflow: "auto" }}>
-            {visualRows.slice(0, 80).map((row, index) => (
-              <Group key={`${row.section}-${row.key}-${index}`} align="flex-start" wrap="nowrap">
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <Text size="sm" fw={600}>
-                    {row.key}
-                  </Text>
-                  <Text size="xs" c="dimmed" lineClamp={1}>
-                    {row.section}
-                  </Text>
-                </div>
-                <Textarea
-                  aria-label={`${row.section} ${row.key}`}
-                  value={row.value}
-                  onChange={(event) =>
-                    updateVisualValue(row.section, row.key, event.currentTarget.value)
-                  }
-                  autosize
-                  minRows={1}
-                  maxRows={4}
-                  style={{ width: 280 }}
-                />
-              </Group>
-            ))}
-            {visualRows.length > 80 && (
-              <Text size="xs" c="dimmed">
-                Showing first 80 keys — use Raw for the full file.
-              </Text>
-            )}
-          </Stack>
+          <ClusterIniTemplateVisualPanel
+            payload={payload}
+            iniFile={iniFile}
+            mode={mode}
+            onPayloadChange={setPayload}
+          />
         )}
+
+        <div className={classes.notice}>
+          Template edits never write member install folders. Apply/seed to
+          servers is a separate step.
+        </div>
 
         <Group justify="space-between">
           <Group gap="xs">
             <Button
               variant="default"
               disabled={saving || loading}
-              onClick={() => {
-                if (dirty) {
-                  modals.openConfirmModal({
-                    title: "Discard changes?",
-                    children: (
-                      <Text size="sm">Unsaved template edits will be lost.</Text>
-                    ),
-                    labels: { confirm: "Discard", cancel: "Keep editing" },
-                    confirmProps: { color: "red" },
-                    onConfirm: () => props.onClose(),
-                  });
-                  return;
-                }
-                props.onClose();
-              }}
+              onClick={requestClose}
             >
               Close
             </Button>
@@ -322,6 +287,7 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
               Reload
             </Button>
             <Button
+              leftSection={<FloppyDisk size={16} />}
               loading={saving}
               disabled={loading || payload === null || (exists && !dirty)}
               onClick={() => void handleSave()}

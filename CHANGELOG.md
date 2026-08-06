@@ -13,10 +13,11 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - **Create cluster** from the Clusters workspace: assign a unique Cluster ID and shared directory to one or more stopped servers (#42).
 - **Add / remove servers** on an existing cluster from the Clusters detail panel (stopped servers only; shared transfer files are never deleted) (#41).
-- Optional **cluster INI templates** (Game.ini / GameUserSettings.ini) editable from Clusters detail; per-server identity/ports and ASE-legacy ActiveMods keys are stripped — ASA mods stay on the Mods panel (#88).
+- Optional **cluster INI templates** (Game.ini / GameUserSettings.ini) editable from Clusters detail with the same visual INI table patterns as the server editor; per-server identity/ports and ASE-legacy ActiveMods keys are stripped — ASA mods stay on the Mods panel (#88).
 
 ### Changed
 
+- Server and cluster INI editors share a **GameUserSettings / Game.ini** segmented file switch; category group headers use a stronger accent rail (#88).
 - Server INI editor metadata is built from `defaults/*.ini` only (`ini-setting-meta`); the wiki scrape and catalog merge scripts are removed.
 - Clusters compliance no longer warns when multiple servers share the same map (common for multi-instance fleets).
 - Clusters refreshes compliance automatically when the view opens; the Recheck button was removed.
