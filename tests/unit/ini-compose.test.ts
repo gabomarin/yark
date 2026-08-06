@@ -203,4 +203,23 @@ describe("ini-compose", () => {
     expect(entry?.before).toBe("••••••••");
     expect(entry?.after).toBe("••••••••");
   });
+
+  it("redacts password keys case-insensitively", () => {
+    const preview = buildIniPreview(
+      {
+        gameUserSettings: "[ServerSettings]\nserverpassword=old\n",
+        game: "",
+      },
+      {
+        gameUserSettings: "[ServerSettings]\nserverpassword=new\n",
+        game: "",
+      },
+    );
+    const redacted = redactIniPreviewSecrets(preview);
+    const entry = redacted.diff.find(
+      (row) => row.key.toLowerCase() === "serverpassword",
+    );
+    expect(entry?.before).toBe("••••••••");
+    expect(entry?.after).toBe("••••••••");
+  });
 });

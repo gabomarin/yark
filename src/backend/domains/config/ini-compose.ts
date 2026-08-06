@@ -15,7 +15,7 @@ export type ProfileIniIdentity = Pick<
 >;
 
 const REDACTED = "••••••••";
-const SECRET_KEYS = new Set(["ServerAdminPassword", "ServerPassword"]);
+const SECRET_KEYS = new Set(["serveradminpassword", "serverpassword"]);
 
 function flatLookup(
   flat: Record<string, string>,
@@ -161,7 +161,7 @@ export function composeTemplatePayloadFromMember(
 }
 
 function redactDiffEntry(entry: IniDiffEntry): IniDiffEntry {
-  if (!SECRET_KEYS.has(entry.key)) {
+  if (!SECRET_KEYS.has(entry.key.toLowerCase())) {
     return entry;
   }
   return {
