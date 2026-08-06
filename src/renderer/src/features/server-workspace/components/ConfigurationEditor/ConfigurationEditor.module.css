@@ -40,27 +40,32 @@
 }
 
 .tableWrap {
-  display: flex;
-  flex-direction: column;
+  display: block;
   flex: 1;
   min-height: 260px;
+  min-width: 0;
   border: 1px solid var(--app-color-border-subtle);
   border-radius: 12px;
-  overflow: hidden;
+  overflow: auto;
   background: var(--app-color-surface-chrome);
 }
 
 .tableHead,
 .row {
   display: grid;
-  grid-template-columns: minmax(140px, 1.1fr) minmax(160px, 1fr) minmax(120px, 1fr) 40px;
+  grid-template-columns: minmax(180px, 1.1fr) minmax(200px, 1fr) minmax(240px, 1.4fr) 48px;
   gap: 12px;
   align-items: center;
   padding: 10px 14px;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 720px;
 }
 
 .tableHead {
-  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 2;
   background: var(--app-color-surface-control);
   color: var(--app-color-muted);
   font-size: 12px;
@@ -73,26 +78,25 @@
   border-top: 1px solid var(--app-color-border-subtle);
 }
 
-.sectionHeader {
+.headerToolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: var(--app-space-sm);
   width: 100%;
-  padding: 10px 14px;
-  background: color-mix(in srgb, var(--app-color-surface-control) 72%, transparent);
-  color: inherit;
-  text-align: left;
 }
 
-.sectionHeader:hover {
-  background: var(--app-color-surface-control-hover);
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--app-space-xs);
+  margin-left: auto;
 }
 
 .tableBody {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
+  min-width: 720px;
+  width: max(100%, 720px);
 }
 
 .row + .row {
@@ -102,6 +106,12 @@
 .rowActions {
   display: flex;
   justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.row > :nth-child(3) {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .footer {

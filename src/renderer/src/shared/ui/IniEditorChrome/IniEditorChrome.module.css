@@ -1,0 +1,75 @@
+/**
+ * Shared INI editor chrome (segmented switches + category headers).
+ * Selected segmented indicator + category header: --app-color-ini-category (#131F43).
+ */
+
+.nav {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--app-space-xs);
+  flex-shrink: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  padding-bottom: 1px;
+}
+
+.segmentedRoot {
+  border: 1px solid var(--app-color-border);
+  background: var(--app-color-surface-control);
+  flex-shrink: 0;
+}
+
+.segmentedIndicator {
+  background: var(--app-color-ini-category) !important;
+}
+
+.segmentedLabel {
+  color: var(--app-color-muted);
+  font-weight: 600;
+}
+
+.segmentedLabel[data-active] {
+  color: var(--ark-blue-12);
+}
+
+/* Native <button> — avoid Mantine UnstyledButton resetting background/padding. */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-xs);
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 14px;
+  border: none;
+  border-block: 1px solid color-mix(in srgb, var(--ark-blue-6) 55%, transparent);
+  border-radius: 0;
+  background: var(--app-color-ini-category);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: inset 3px 0 0 0 var(--ark-blue-9);
+}
+
+.sectionHeader:hover {
+  background: color-mix(in srgb, var(--app-color-ini-category) 72%, var(--ark-blue-3));
+}
+
+.sectionHeader:focus-visible {
+  outline: 2px solid var(--ark-blue-9);
+  outline-offset: -2px;
+}
+
+.sectionHeaderLabel {
+  color: var(--ark-blue-12);
+  letter-spacing: 0.01em;
+}
+
+.sectionCount {
+  border: 1px solid color-mix(in srgb, var(--ark-blue-8) 55%, transparent) !important;
+  background: color-mix(in srgb, var(--ark-blue-1) 40%, var(--app-color-ini-category)) !important;
+  color: var(--ark-blue-11) !important;
+}

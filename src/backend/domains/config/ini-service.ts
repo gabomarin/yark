@@ -2,62 +2,15 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
-import {
-  flattenIniText,
-  parseIniTextRows,
-  sanitizeServerIniPayload,
-  splitFlatIniKey,
-} from "@shared/ini-text";
+import { sanitizeServerIniPayload } from "@shared/ini-text";
 import type {
-  IniDiffEntry,
   IniPreview,
-  IniValidationIssue,
   ServerIniPayload,
   ServerIniSnapshot,
 } from "@shared/types";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
-
-type IniSectionMap = Record<string, Record<string, string>>;
-
-function toSectionMap(text: string): IniSectionMap {
-  const map: IniSectionMap = {};
-  for (const row of parseIniTextRows(text)) {
-    const section = map[row.section] ?? {};
-    section[row.key] = row.value;
-    map[row.section] = section;
-  }
-  return map;
-}
-
-function toDiffEntries(
-  fileKey: IniDiffEntry["fileKey"],
-  beforeMap: Record<string, string>,
-  afterMap: Record<string, string>,
-): IniDiffEntry[] {
-  const keys = new Set([...Object.keys(beforeMap), ...Object.keys(afterMap)]);
-  const entries: IniDiffEntry[] = [];
-
-  for (const fullKey of [...keys].sort()) {
-    const before = beforeMap[fullKey];
-    const after = afterMap[fullKey];
-    if (before === after) continue;
-
-    const { section, key } = splitFlatIniKey(fullKey);
-
-    entries.push({
-      fileKey,
-      section,
-      key,
-      before: before ?? null,
-      after: after ?? null,
-      change:
-        before === undefined ? "added" : after === undefined ? "removed" : "changed",
-    });
-  }
-
-  return entries;
-}
+import { buildIniPreview } from "./ini-preview";
 
 export class IniService {
   constructor(
@@ -136,134 +89,7 @@ export class IniService {
     current: ServerIniPayload,
     next: ServerIniPayload,
   ): IniPreview {
-    const validationIssues: IniValidationIssue[] = [];
-
-    const nextGameUserSettings = this.safeParse(
-      "gameUserSettings",
-      next.gameUserSettings,
-      validationIssues,
-    );
-    const nextGame = this.safeParse("game", next.game, validationIssues);
-
-    if (nextGameUserSettings === null || nextGame === null) {
-      return {
-        valid: false,
-        issues: validationIssues,
-        diff: [],
-        changedCount: 0,
-      };
-    }
-
-    this.validateGameUserSettingsSemantics(nextGameUserSettings, validationIssues);
-
-    const diff: IniDiffEntry[] = [
-      ...toDiffEntries(
-        "gameUserSettings",
-        flattenIniText(current.gameUserSettings),
-        flattenIniText(next.gameUserSettings),
-      ),
-      ...toDiffEntries("game", flattenIniText(current.game), flattenIniText(next.game)),
-    ];
-
-    return {
-      valid: validationIssues.length === 0,
-      issues: validationIssues,
-      diff,
-      changedCount: diff.length,
-    };
-  }
-
-  private validateGameUserSettingsSemantics(
-    parsed: IniSectionMap,
-    issues: IniValidationIssue[],
-  ): void {
-    const section = parsed["ServerSettings"];
-    if (section === undefined) {
-      return;
-    }
-
-    this.validateIntegerRange("RCONPort", section["RCONPort"], 1024, 65535, issues);
-    this.validateIntegerRange("MaxPlayers", section["MaxPlayers"], 1, 255, issues);
-    this.validateNumberRange("DifficultyOffset", section["DifficultyOffset"], 0, 1, issues);
-  }
-
-  private validateIntegerRange(
-    key: string,
-    value: unknown,
-    min: number,
-    max: number,
-    issues: IniValidationIssue[],
-  ): void {
-    if (value === null || value === undefined) {
-      return;
-    }
-    const text = String(value).trim();
-    if (text.length === 0) {
-      return;
-    }
-    const parsed = Number.parseInt(text, 10);
-    if (!Number.isFinite(parsed) || !/^[-+]?\d+$/.test(text)) {
-      issues.push({
-        fileKey: "gameUserSettings",
-        message: `${key} must be a valid integer`,
-      });
-      return;
-    }
-
-    if (parsed < min || parsed > max) {
-      issues.push({
-        fileKey: "gameUserSettings",
-        message: `${key} must be between ${min} and ${max}`,
-      });
-    }
-  }
-
-  private validateNumberRange(
-    key: string,
-    value: unknown,
-    min: number,
-    max: number,
-    issues: IniValidationIssue[],
-  ): void {
-    if (value === null || value === undefined) {
-      return;
-    }
-    const text = String(value).trim();
-    if (text.length === 0) {
-      return;
-    }
-
-    const parsed = Number.parseFloat(text);
-    if (!Number.isFinite(parsed)) {
-      issues.push({
-        fileKey: "gameUserSettings",
-        message: `${key} must be a valid number`,
-      });
-      return;
-    }
-
-    if (parsed < min || parsed > max) {
-      issues.push({
-        fileKey: "gameUserSettings",
-        message: `${key} must be between ${min} and ${max}`,
-      });
-    }
-  }
-
-  private safeParse(
-    fileKey: IniValidationIssue["fileKey"],
-    content: string,
-    issues: IniValidationIssue[],
-  ): IniSectionMap | null {
-    try {
-      return toSectionMap(content);
-    } catch (err) {
-      issues.push({
-        fileKey,
-        message: err instanceof Error ? err.message : String(err),
-      });
-      return null;
-    }
+    return buildIniPreview(current, next);
   }
 
   private async readTextOrDefault(path: string, defaultText: string): Promise<string> {

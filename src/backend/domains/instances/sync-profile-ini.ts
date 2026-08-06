@@ -21,9 +21,13 @@ export function gameUserSettingsIniPath(installDir: string): string {
  * Writes profile networking / auth settings into GameUserSettings.ini so they
  * do not need to appear on the dedicated-server command line.
  *
- * Keys:
+ * Keys (must stay aligned with `@shared/yark-owned-ini-keys` `profileSync`):
  * - `[ServerSettings]` RCONEnabled, RCONPort, ServerAdminPassword, ServerPassword
  * - `[SessionSettings]` SessionName, Port, QueryPort
+ *
+ * Mods are **not** written here — ASA launches with `-mods=` from `profile.mods`
+ * (CurseForge). ASE-era INI keys such as ActiveMods stay out of templates
+ * (`aseLegacy` in `@shared/yark-owned-ini-keys`).
  */
 export async function syncProfileSettingsToIni(
   profile: ServerProfile,

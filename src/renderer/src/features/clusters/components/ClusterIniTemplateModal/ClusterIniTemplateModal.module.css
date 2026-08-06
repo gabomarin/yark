@@ -1,0 +1,159 @@
+.modalContent {
+  display: flex !important;
+  flex-direction: column !important;
+  height: min(92vh, 860px) !important;
+  max-height: min(92vh, 860px) !important;
+  overflow: hidden !important;
+}
+
+.modalHeader {
+  flex-shrink: 0;
+}
+
+.modalBody {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  gap: var(--app-space-md);
+}
+
+.top {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-md);
+}
+
+.navRow {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.editorRegion {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.footer {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-md);
+  padding-top: var(--app-space-xs);
+  background: var(--mantine-color-body);
+}
+
+.visualRoot,
+.rawRoot {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+  gap: var(--app-space-sm);
+}
+
+.tableWrap {
+  display: block;
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-md);
+  overflow: auto;
+  background: var(--app-color-surface-chrome);
+}
+
+.tableHead,
+.row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.1fr) minmax(200px, 1fr) minmax(240px, 1.4fr) 48px;
+  gap: var(--app-space-sm);
+  align-items: center;
+  padding: 10px 14px;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 720px;
+}
+
+.tableHead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--app-color-surface-control);
+  color: var(--app-color-muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tableBody {
+  min-width: 720px;
+  width: max(100%, 720px);
+}
+
+.sectionBlock + .sectionBlock {
+  border-top: 1px solid var(--app-color-border-subtle);
+}
+
+.row + .row {
+  border-top: 1px solid color-mix(in srgb, var(--app-color-border-subtle) 68%, transparent);
+}
+
+.row > :nth-child(3) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.rawEditor {
+  flex: 1 1 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.rawEditor :global(.mantine-Textarea-root),
+.rawEditor :global(.mantine-InputWrapper-root),
+.rawEditor :global(.mantine-Textarea-wrapper),
+.rawEditor :global(.mantine-Input-wrapper) {
+  flex: 1 1 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.rawEditor :global(.mantine-Textarea-input) {
+  flex: 1 1 0;
+  min-height: 0 !important;
+  height: 100% !important;
+  font-family: var(--mantine-font-family-monospace);
+  resize: none;
+}
+
+.notice {
+  border-radius: var(--app-radius-control);
+  border: 1px solid color-mix(in srgb, var(--app-color-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--app-color-accent) 12%, transparent);
+  color: color-mix(in srgb, var(--app-color-accent) 40%, var(--app-color-text));
+  padding: var(--app-space-sm) var(--app-space-md);
+  font-size: var(--mantine-font-size-sm);
+}

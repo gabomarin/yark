@@ -9,6 +9,7 @@ import type {
   BackupPolicy,
   BackupRecord,
   ClusterComplianceReport,
+  ClusterIniTemplate,
   IniPreview,
   InstallationServersMode,
   LogCleanupOptions,
@@ -112,6 +113,11 @@ export const IPC = {
   iniPreview: "ini:preview",
   iniSave: "ini:save",
   iniOpenInEditor: "ini:open-in-editor",
+  clusterIniGet: "cluster-ini:get",
+  clusterIniGetOrDraft: "cluster-ini:get-or-draft",
+  clusterIniPreview: "cluster-ini:preview",
+  clusterIniSave: "cluster-ini:save",
+  clusterIniDelete: "cluster-ini:delete",
   logsList: "logs:list",
   logsRuntime: "logs:runtime",
   logsReadUpdate: "logs:read-update",
@@ -315,6 +321,21 @@ export interface RendererApi {
     serverId: string,
     payload: ServerIniPayload,
   ): Promise<IpcResult<IniPreview>>;
+  getClusterIniTemplate(
+    clusterId: string,
+  ): Promise<IpcResult<ClusterIniTemplate | null>>;
+  getClusterIniTemplateOrDraft(
+    clusterId: string,
+  ): Promise<IpcResult<ClusterIniTemplate>>;
+  previewClusterIniTemplate(
+    clusterId: string,
+    payload: ServerIniPayload,
+  ): Promise<IpcResult<IniPreview>>;
+  saveClusterIniTemplate(
+    clusterId: string,
+    payload: ServerIniPayload,
+  ): Promise<IpcResult<{ template: ClusterIniTemplate; preview: IniPreview }>>;
+  deleteClusterIniTemplate(clusterId: string): Promise<IpcResult<boolean>>;
   listServerLogs(serverId: string): Promise<IpcResult<ServerOperationalLogs>>;
   getServerRuntimeLog(
     serverId: string,

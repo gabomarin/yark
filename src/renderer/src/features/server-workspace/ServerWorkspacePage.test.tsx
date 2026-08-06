@@ -595,9 +595,8 @@ describe("ServerWorkspacePage", () => {
     renderWorkspace();
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
-    const fileSelect = screen.getByRole("combobox", { name: "INI file" });
-    await user.click(fileSelect);
-    await user.click(screen.getByRole("option", { name: "Game.ini" }));
+    const fileSwitch = screen.getByRole("radiogroup", { name: "INI file" });
+    await user.click(within(fileSwitch).getByRole("radio", { name: "Game.ini" }));
     await waitFor(() => {
       expect(screen.getAllByText("TotallyUnknownSettingXYZ").length).toBeGreaterThan(0);
     });
@@ -614,8 +613,7 @@ describe("ServerWorkspacePage", () => {
     await user.click(screen.getByRole("option", { name: "Other (1)" }));
     expect(categorySelect).toHaveValue("Other (1)");
 
-    await user.click(fileSelect);
-    await user.click(screen.getByRole("option", { name: "GameUserSettings.ini" }));
+    await user.click(within(fileSwitch).getByRole("radio", { name: "GameUserSettings.ini" }));
     await waitFor(() => {
       expect(screen.getAllByText("SessionName").length).toBeGreaterThan(0);
       expect(categorySelect).toHaveValue("All settings (1)");
