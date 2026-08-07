@@ -1,6 +1,6 @@
-/** Lifecycle status of a server instance. */
 import type { ConfigTransferSelection } from "./config-transfer";
 
+/** Lifecycle status of a server instance. */
 export type ServerStatus =
   | "stopped"
   | "starting"

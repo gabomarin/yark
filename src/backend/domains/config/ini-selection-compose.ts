@@ -70,6 +70,25 @@ function sectionKeySet(
 }
 
 /**
+ * Full-file Replace base: keep source order/duplicates, drop blocked GUS keys.
+ */
+function stripBlockedGusKeysPreservingText(sourceText: string): string {
+  let result = sourceText;
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const row of parseIniTextRows(result)) {
+      if (isConfigTransferBlockedGusKey(row.section, row.key)) {
+        result = removeIniTextValue(result, row.section, row.key, 0);
+        changed = true;
+        break;
+      }
+    }
+  }
+  return result;
+}
+
+/**
  * Apply merge/replace selection from source onto target for one INI file.
  * Key-level selections always merge. Blocked GUS owned keys are never copied.
  */
@@ -93,13 +112,11 @@ export function composeIniFileFromSelection(
     !file.entireFile && file.sections.length === 0 && file.keys.length > 0;
 
   if (file.strategy === "replace" && file.entireFile && !keyOnly) {
-    // Full-file replace rebuilds from filtered source keys only so blocked
-    // GUS owned/ASE-legacy keys never land on the target.
-    let replaced = "";
-    for (const row of sourceKeys) {
-      replaced = setIniTextValue(replaced, row.section, row.key, row.value);
+    // Preserve source ordering and duplicate keys; only strip blocked GUS keys.
+    if (fileKey === "gameUserSettings") {
+      return stripBlockedGusKeysPreservingText(sourceText);
     }
-    return replaced;
+    return sourceText;
   }
 
   let result = targetText;

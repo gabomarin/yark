@@ -59,13 +59,13 @@ function policyFingerprint(policy: BackupPolicy): string {
 }
 
 function profileTransferFingerprint(profile: ServerProfile): string {
+  // Do not include password plaintext — profile.updatedAt already changes on
+  // password edits, and CodeQL treats password→sha256 as insecure storage.
   return JSON.stringify({
     updatedAt: profile.updatedAt,
     mods: profile.mods,
     disabledMods: profile.disabledMods ?? [],
     extraArgs: profile.extraArgs,
-    adminPassword: profile.adminPassword,
-    serverPassword: profile.serverPassword,
     modMetadataCache: profile.modMetadataCache ?? {},
   });
 }

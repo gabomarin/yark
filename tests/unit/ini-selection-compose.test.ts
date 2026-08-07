@@ -98,6 +98,8 @@ describe("composeIniFileFromSelection", () => {
     const sourceWithMods = [
       "[ServerSettings]",
       "XPMultiplier=3",
+      "OverrideNamedEngramEntries=(a)",
+      "OverrideNamedEngramEntries=(b)",
       "ActiveMods=999,888",
       "ServerAdminPassword=from-source",
       "",
@@ -114,6 +116,8 @@ describe("composeIniFileFromSelection", () => {
       "gameUserSettings",
     );
     expect(next).toContain("XPMultiplier=3");
+    expect(next).toContain("OverrideNamedEngramEntries=(a)");
+    expect(next).toContain("OverrideNamedEngramEntries=(b)");
     expect(next).not.toContain("ActiveMods");
     expect(next).not.toContain("from-source");
     expect(next).not.toContain("MaxPlayers=40");
