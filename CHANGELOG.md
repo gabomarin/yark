@@ -16,6 +16,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Sidebar route items use Mantine **NavLink** (active state + icons) while keeping YARK brand chrome (#106).
 - Launch-options catalog copy is cleaned from wiki noise into **summary + details**, with a pasteable **example** per entry (#92).
 - Extra arguments and the Mods ID field moved off create/edit Server onto the **Mods** / **Launch** workspace tabs (#93).
 - Launch tab dependent flags chain in order (dynamic config URL; game → tribe → RCON logs); `-passivemods=` lives under World & gameplay (#93).

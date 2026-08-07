@@ -30,6 +30,35 @@ describe("Sidebar YARK version update affordance", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("marks the active route on NavLink and navigates on click (#106)", async () => {
+    const user = userEvent.setup();
+    const onNavigate = vi.fn();
+
+    render(
+      <AppProviders>
+        <Sidebar
+          route="overview"
+          onNavigate={onNavigate}
+          steamCmdDetected
+          steamCmdRunning={false}
+          officialVersion="1.0"
+          officialNetworkStatus="online"
+          appVersion="0.5.2"
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("button", { name: "Servers" })).toHaveAttribute(
+      "data-active",
+    );
+    expect(screen.getByRole("button", { name: "Clusters" })).not.toHaveAttribute(
+      "data-active",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Logs" }));
+    expect(onNavigate).toHaveBeenCalledWith("logs");
+  });
+
   it("accents the version and navigates on click when an update is available", async () => {
     const user = userEvent.setup();
     const onYarkUpdateClick = vi.fn();

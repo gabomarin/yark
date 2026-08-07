@@ -11,6 +11,7 @@ import {
   Button,
   Divider,
   Group,
+  NavLink,
   Stack as MantineStack,
   Text,
   Tooltip,
@@ -113,18 +114,18 @@ export function Sidebar(props: Props): ReactElement {
           const Icon = item.icon;
           const active = item.id === props.route;
           return (
-            <Button
+            <NavLink
               key={item.id}
-              size="md"
-              variant={active ? "light" : "subtle"}
-              justify="flex-start"
-              leftSection={<Icon size={navIconSize} weight={active ? "fill" : "regular"} />}
-              className={classes.navButton}
-              data-active={active || undefined}
+              component="button"
+              type="button"
+              active={active}
+              label={item.label}
+              leftSection={
+                <Icon size={navIconSize} weight={active ? "fill" : "regular"} />
+              }
+              className={classes.navLink}
               onClick={() => props.onNavigate(item.id)}
-            >
-              {item.label}
-            </Button>
+            />
           );
         })}
       </MantineStack>
@@ -142,7 +143,7 @@ export function Sidebar(props: Props): ReactElement {
             className={props.steamCmdDetected ? classes.okDot : classes.badDot}
           />
         }
-        className={`${classes.navButton} ${classes.steamCmdButton}`}
+        className={`${classes.steamCmdButton}`}
         onClick={() => props.onNavigate("settings")}
       >
         {steamCmdLabel}
