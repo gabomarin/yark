@@ -11,7 +11,7 @@ import {
 } from "@mantine/core";
 import {
   clusterIniFileSelectionHasWork,
-  emptyClusterIniFileSelection,
+  defaultClusterIniFileSelection,
 } from "@shared/cluster-ini-file-selection";
 import type {
   ClusterIniTemplateApplyOperation,
@@ -68,7 +68,7 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
   const [committing, setCommitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [files, setFiles] = useState<ClusterIniTemplateFileSelection>(
-    () => emptyClusterIniFileSelection(),
+    () => defaultClusterIniFileSelection(),
   );
   const [preview, setPreview] = useState<ClusterIniTemplateMemberPreview | null>(
     null,
@@ -77,7 +77,7 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
   useEffect(() => {
     if (!props.opened) return;
     setError(null);
-    setFiles(emptyClusterIniFileSelection());
+    setFiles(defaultClusterIniFileSelection());
   }, [props.opened, props.clusterId, props.serverId, props.operation]);
 
   useEffect(() => {

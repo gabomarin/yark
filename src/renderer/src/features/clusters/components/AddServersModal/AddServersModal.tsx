@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import {
   clusterIniFileSelectionHasWork,
-  emptyClusterIniFileSelection,
+  defaultClusterIniFileSelection,
 } from "@shared/cluster-ini-file-selection";
 import type {
   ClusterIniTemplateFileSelection,
@@ -50,7 +50,7 @@ export function AddServersModal(props: Props): ReactElement {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [seedFromTemplate, setSeedFromTemplate] = useState(false);
   const [seedFiles, setSeedFiles] = useState<ClusterIniTemplateFileSelection>(
-    () => emptyClusterIniFileSelection(),
+    () => defaultClusterIniFileSelection(),
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +94,7 @@ export function AddServersModal(props: Props): ReactElement {
       setStep(1);
       setSelectedIds(firstEligible !== null ? [firstEligible] : []);
       setSeedFromTemplate(hasTemplate);
-      setSeedFiles(emptyClusterIniFileSelection());
+      setSeedFiles(defaultClusterIniFileSelection());
       setSaving(false);
       setError(null);
       return;

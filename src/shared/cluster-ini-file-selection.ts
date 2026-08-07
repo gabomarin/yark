@@ -11,7 +11,8 @@ export const DEFAULT_CLUSTER_INI_FILE_SELECTION: ClusterIniTemplateFileSelection
     game: true,
   };
 
-export function emptyClusterIniFileSelection(): ClusterIniTemplateFileSelection {
+/** Clone of the default both-files selection for UI / IPC defaults. */
+export function defaultClusterIniFileSelection(): ClusterIniTemplateFileSelection {
   return { ...DEFAULT_CLUSTER_INI_FILE_SELECTION };
 }
 
@@ -21,23 +22,34 @@ export function clusterIniFileSelectionHasWork(
   return files.gameUserSettings || files.game;
 }
 
+function requireBooleanField(
+  record: Record<string, unknown>,
+  key: keyof ClusterIniTemplateFileSelection,
+): boolean {
+  const value = record[key];
+  if (typeof value !== "boolean") {
+    throw new Error(`INI file selection.${key} must be a boolean`);
+  }
+  return value;
+}
+
 /**
  * Normalize IPC/UI payloads. Omitting the arg (or null/undefined) means both files.
- * Rejects empty selections.
+ * Rejects empty selections and non-boolean field values.
  */
 export function assertClusterIniTemplateFileSelection(
   raw?: unknown,
 ): ClusterIniTemplateFileSelection {
   if (raw === undefined || raw === null) {
-    return emptyClusterIniFileSelection();
+    return defaultClusterIniFileSelection();
   }
-  if (typeof raw !== "object") {
+  if (typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error("INI file selection must be an object");
   }
   const record = raw as Record<string, unknown>;
   const files: ClusterIniTemplateFileSelection = {
-    gameUserSettings: Boolean(record.gameUserSettings),
-    game: Boolean(record.game),
+    gameUserSettings: requireBooleanField(record, "gameUserSettings"),
+    game: requireBooleanField(record, "game"),
   };
   if (!clusterIniFileSelectionHasWork(files)) {
     throw new Error("Select at least one INI file (Game.ini or GameUserSettings.ini)");

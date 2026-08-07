@@ -21,6 +21,21 @@ describe("cluster-ini-file-selection", () => {
     ).toThrow(/at least one INI file/i);
   });
 
+  it("rejects non-boolean field values", () => {
+    expect(() =>
+      assertClusterIniTemplateFileSelection({
+        gameUserSettings: true,
+        game: "false",
+      }),
+    ).toThrow(/game must be a boolean/i);
+  });
+
+  it("rejects arrays", () => {
+    expect(() => assertClusterIniTemplateFileSelection([])).toThrow(
+      /must be an object/i,
+    );
+  });
+
   it("keeps baseline text for unselected files", () => {
     const merged = mergeClusterIniPayloadByFileSelection(
       { gameUserSettings: "new-gus", game: "new-game" },
