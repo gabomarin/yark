@@ -11,6 +11,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- **Create server** can pick **None** or an existing fleet cluster (fills ID +
+  shared directory), shows live **port conflicts** vs the fleet, and links to
+  **Create a cluster first…** when none exist; first-run onboarding no longer
+  repeats cluster/ports (#178).
 - **Copy configuration** between server profiles: one-shot selective copy of INI settings, mods, launch args, backup policy, and opt-in passwords to one or more stopped targets (from Overview or workspace Quick actions), with Merge/Replace preview, fingerprint checks, and a recoverable pre-copy snapshot — never copies identity, ports, cluster, or saves (#95).
 - Cluster INI templates support per-member **Promote**, **Restore** (with backup), and opt-in **Seed** when adding servers; ports/passwords/session stay profile-owned (#89).
 - **Create cluster** from the Clusters workspace: assign a unique Cluster ID and shared directory to one or more stopped servers (#42).

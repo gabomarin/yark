@@ -9,7 +9,7 @@ and **cluster directory**. The Clusters page surfaces backend reports; it does
 - Group servers that share a `clusterId` and verify they can plausibly transfer.
 - Catch common misconfigurations before launch (mismatched dirs, missing dir,
   port clashes, divergent mods).
-- Guide operators via the Clusters page and the workspace onboarding checklist.
+- Guide operators via the Clusters page and Create / Edit server forms.
 
 A cluster is **transfer-ready** (`ok: true`) when it has **no error-severity
 issues**. Warnings alone (single server, mod mismatch) still leave `ok: true`.
@@ -30,7 +30,9 @@ Multiple servers on the same map in one cluster are allowed and not flagged.
 | Preload | `src/preload/index.ts` |
 | Fleet UI | `src/renderer/src/features/clusters/` (`ClustersPage`, `clusterModel`, `createClusterModel`, `membershipModel`, `CreateClusterModal`, `AddServersModal`, `RemoveServersModal`, `ClusterIniTemplateModal`) |
 | Cluster INI templates | `src/backend/domains/config/cluster-ini-template-service.ts`, `src/backend/domains/config/cluster-ini-template-apply-service.ts`, `src/backend/domains/config/ini-compose.ts`, `src/backend/infra/db/cluster-ini-template-repository.ts`, `src/shared/yark-owned-ini-keys.ts` |
-| Onboarding join | `src/renderer/src/features/server-workspace/components/ServerOnboardingChecklist/` |
+| Known cluster picker | `src/renderer/src/features/clusters/knownClusterOptions.ts` |
+| Create / edit form | `src/renderer/src/features/servers/components/ServerForm/` |
+| Onboarding (experience + files) | `src/renderer/src/features/server-workspace/components/ServerOnboardingChecklist/` |
 | Visual helper | `scripts/visual-clusters.cjs` |
 
 Reports refresh on App bootstrap/`refresh()` and whenever the Clusters view
@@ -91,8 +93,8 @@ Example (two maps, same cluster):
 | Sorted mod-id lists differ across servers | `warning` | still `ok` |
 
 Port conflicts use `findPortConflicts(members)` — **only servers in that
-cluster group**, not the whole fleet. Fleet-wide port checks live elsewhere
-(form / onboarding).
+cluster group**, not the whole fleet. Fleet-wide port checks live on Create /
+Edit server (`ServerFormPortConflictAlert`) and on save/start in the backend.
 
 `ok` is `!issues.some(i => i.severity === "error")`. `checkedAt` is an ISO
 timestamp at evaluation time (not persisted).
@@ -171,19 +173,28 @@ Report shape:
 
 ### Server form / onboarding
 
-- Form: edit `clusterId` / browse `clusterDir`.
+- **Create server (#178):** Cluster section is a **Cluster** select (**None** or
+  a known `{clusterId, clusterDir}` pair from the fleet). Choosing a cluster
+  fills read-only ID and shared directory; **None** leaves both empty. Does not
+  create a new cluster ID and does not seed INI. When no clusters exist yet,
+  shows **Create a cluster first…** (navigates to Clusters). Networking shows a
+  live **Port conflicts** alert vs the rest of the fleet (same helper as
+  backend save/start; does not implement default-port suggestions — see #55).
+- **Edit server:** free-text `clusterId` / browse `clusterDir` (unchanged); same
+  live port-conflict preview when fleet profiles are passed in.
 - Clusters workspace: create a brand-new cluster ID + directory on one or more
   stopped servers (#42); add or remove stopped servers from an existing cluster
   in the detail panel (#41); edit optional cluster INI templates (#88); promote
   or restore a stopped member against the template, or seed on add (#89).
-- Onboarding checklist: join an **existing** cluster by copying another
-  server’s `{clusterId, clusterDir}` pair (or clear).
+- Onboarding checklist: play experience + install files only (cluster and ports
+  are set on Create / Edit, not duplicated here).
 
 ## Operator workflow
 
 1. Pick one shared Windows folder for ARK cluster storage.
-2. Create the cluster from **Clusters → Create cluster**, or set the same
-   `clusterId` / `clusterDir` on each map (form or onboarding “join existing”).
+2. Create the cluster from **Clusters → Create cluster**, or join an existing
+   one while creating a server (#178), or by setting the same `clusterId` /
+   `clusterDir` on edit.
 3. Add more stopped servers from the cluster detail **Add servers** action, or
    remove stopped servers with **Remove** (does not delete transfer files).
 4. Optionally create a cluster **INI template** for shared settings (not ports /
@@ -230,6 +241,8 @@ Report shape:
 | `tests/unit/cluster-ini-template.test.ts` | Template repo/service CRUD + validation |
 | `tests/unit/ini-compose.test.ts` | Template↔member composition + secret redaction |
 | `tests/unit/cluster-ini-template-apply.test.ts` | Restore/promote/seed commit + selective files (#181) + failure preservation |
+| `tests/unit/known-cluster-options.test.ts` | Fleet `{clusterId, clusterDir}` picker options (#178) |
+| `src/renderer/src/features/servers/components/ServerForm/ServerForm.test.tsx` | Create Cluster select (None / join) + empty-fleet CTA; edit keeps free-text; port-conflict preview (#178) |
 | `node scripts/e2e-clusters-membership.cjs` | Playwright create → add → remove membership (Windows) |
 | `node scripts/visual-clusters.cjs` | Playwright sidebar → Clusters compliance UI |
 

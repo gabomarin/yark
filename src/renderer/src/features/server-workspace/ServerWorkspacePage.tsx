@@ -3,7 +3,6 @@ import { useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import type {
   AppEvent,
-  ClusterComplianceReport,
   ServerInstallationInfo,
   ServerProfile,
   ServerRuntimeInfo,
@@ -30,7 +29,6 @@ interface Props {
   selectedServerId: string;
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
-  clusterReports: ClusterComplianceReport[];
   events: AppEvent[];
   onboarding?: boolean;
   initialTab?: WorkspaceTab;
@@ -252,9 +250,7 @@ export function ServerWorkspacePage(props: Props): ReactElement {
           ) : showOnboarding ? (
             <ServerOnboardingChecklist
               server={selectedServer}
-              servers={props.servers}
               installation={installation}
-              clusterReports={props.clusterReports}
               onDismiss={() => {
                 setShowOnboarding(false);
                 props.onDismissOnboarding?.();
@@ -266,7 +262,6 @@ export function ServerWorkspacePage(props: Props): ReactElement {
                 }
               }}
               onInstallFiles={() => props.onInstallFiles(selectedServer.id)}
-              onServerUpdated={props.onServerUpdated}
             />
           ) : (
             <WorkspaceTabs

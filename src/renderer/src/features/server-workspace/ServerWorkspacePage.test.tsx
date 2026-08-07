@@ -66,7 +66,6 @@ function renderWorkspace(
         selectedServerId={serverA.id}
         statuses={new Map()}
         installationInfo={new Map()}
-        clusterReports={[]}
         events={[]}
         rconHistory={rconHistory}
         playerList={EMPTY_PLAYER_LIST}
@@ -303,7 +302,6 @@ describe("ServerWorkspacePage", () => {
             ])
           }
           installationInfo={new Map()}
-          clusterReports={[]}
           events={[]}
           rconHistory={[]}
           playerList={EMPTY_PLAYER_LIST}
@@ -427,7 +425,6 @@ describe("ServerWorkspacePage", () => {
             ])
           }
           installationInfo={new Map()}
-          clusterReports={[]}
           events={[]}
           rconHistory={[
             {
@@ -506,7 +503,6 @@ describe("ServerWorkspacePage", () => {
             ])
           }
           installationInfo={new Map()}
-          clusterReports={[]}
           events={[]}
           rconHistory={[]}
           playerList={EMPTY_PLAYER_LIST}
@@ -785,7 +781,6 @@ describe("ServerWorkspacePage", () => {
             ])
           }
           installationInfo={new Map()}
-          clusterReports={[]}
           events={[]}
           rconHistory={[]}
           playerList={EMPTY_PLAYER_LIST}
@@ -854,7 +849,6 @@ describe("ServerWorkspacePage", () => {
           selectedServerId={serverA.id}
           statuses={new Map()}
           installationInfo={installationInfo}
-          clusterReports={[]}
           events={[]}
           rconHistory={[]}
           playerList={EMPTY_PLAYER_LIST}
@@ -890,7 +884,6 @@ describe("ServerWorkspacePage", () => {
           selectedServerId={serverA.id}
           statuses={new Map()}
           installationInfo={new Map()}
-          clusterReports={[]}
           events={[]}
           rconHistory={[]}
           playerList={EMPTY_PLAYER_LIST}
