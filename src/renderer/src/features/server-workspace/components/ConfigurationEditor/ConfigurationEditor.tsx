@@ -35,7 +35,7 @@ import type {
 } from "@shared/types";
 import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   defaultTextForFile,
   filterIniSettingReferences,
@@ -68,6 +68,18 @@ interface Props {
   onDirtyChange?: (dirty: boolean) => void;
 }
 
+function iniPayloadsDirty(
+  payload: ServerIniPayload | null,
+  baseline: ServerIniPayload | null,
+): boolean {
+  return (
+    payload !== null &&
+    baseline !== null &&
+    (payload.game !== baseline.game ||
+      payload.gameUserSettings !== baseline.gameUserSettings)
+  );
+}
+
 export function ConfigurationEditor(props: Props): ReactElement {
   const { section } = props;
   const filesJobActive = props.filesJobActive === true;
@@ -84,47 +96,57 @@ export function ConfigurationEditor(props: Props): ReactElement {
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [iniFile, setIniFile] = useState<IniFileKey>("gameUserSettings");
   const [iniMode, setIniMode] = useState<"visual" | "text">("visual");
-
-  const dirty =
-    payload !== null &&
-    baseline !== null &&
-    (payload.game !== baseline.game ||
-      payload.gameUserSettings !== baseline.gameUserSettings);
-
+  const onDirtyChangeRef = useRef(props.onDirtyChange);
   useEffect(() => {
-    props.onDirtyChange?.(dirty);
-  }, [dirty, props.onDirtyChange]);
+    onDirtyChangeRef.current = props.onDirtyChange;
+  });
 
-  const load = async (serverId: string, opts?: { cancelled?: () => boolean }) => {
-    setLoading(true);
-    setError(null);
-    setInfo(null);
-    setPreview(null);
-    try {
-      const result = await window.api.readServerIni(serverId);
-      if (opts?.cancelled?.()) return;
-      if (!result.ok) {
-        setSnapshot(null);
-        setPayload(null);
-        setBaseline(null);
-        setError(result.error ?? "Could not read the INI");
-        return;
-      }
-      const rawPayload = result.data.payload;
-      const sanitized = sanitizeServerIniPayload(rawPayload);
-      setSnapshot({ ...result.data, payload: sanitized });
-      setPayload(sanitized);
-      // ASA may regenerate client sections on start. They are runtime noise:
-      // must not appear in the editor or turn a read into a pending change.
-      setBaseline(sanitized);
-    } finally {
-      setLoading(false);
-    }
+  const dirty = iniPayloadsDirty(payload, baseline);
+
+  const publishDirty = (
+    nextPayload: ServerIniPayload | null,
+    nextBaseline: ServerIniPayload | null,
+  ): void => {
+    onDirtyChangeRef.current?.(iniPayloadsDirty(nextPayload, nextBaseline));
   };
 
   useEffect(() => {
     let cancelled = false;
-    void load(props.server.id, { cancelled: () => cancelled });
+    const serverId = props.server.id;
+
+    setLoading(true);
+    setError(null);
+    setInfo(null);
+    setPreview(null);
+    publishDirty(null, null);
+
+    void (async () => {
+      try {
+        const result = await window.api.readServerIni(serverId);
+        if (cancelled) return;
+        if (!result.ok) {
+          setSnapshot(null);
+          setPayload(null);
+          setBaseline(null);
+          setError(result.error ?? "Could not read the INI");
+          publishDirty(null, null);
+          return;
+        }
+        const rawPayload = result.data.payload;
+        const sanitized = sanitizeServerIniPayload(rawPayload);
+        setSnapshot({ ...result.data, payload: sanitized });
+        setPayload(sanitized);
+        // ASA may regenerate client sections on start. They are runtime noise:
+        // must not appear in the editor or turn a read into a pending change.
+        setBaseline(sanitized);
+        publishDirty(sanitized, sanitized);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    })();
+
     return () => {
       cancelled = true;
     };
@@ -182,7 +204,9 @@ export function ConfigurationEditor(props: Props): ReactElement {
     if (payload === null) return;
     const currentText = textForFile(payload, fileKey);
     const nextText = setIniValue(currentText, rowSection, key, value, occurrence);
-    setPayload(withFileText(payload, fileKey, nextText));
+    const nextPayload = withFileText(payload, fileKey, nextText);
+    setPayload(nextPayload);
+    publishDirty(nextPayload, baseline);
     setInfo(null);
     setPreview(null);
   };
@@ -190,7 +214,9 @@ export function ConfigurationEditor(props: Props): ReactElement {
   const resetChanges = () => {
     if (baseline === null) return;
     // Never reintroduce client keys into the editor.
-    setPayload(sanitizeServerIniPayload(baseline));
+    const nextPayload = sanitizeServerIniPayload(baseline);
+    setPayload(nextPayload);
+    publishDirty(nextPayload, baseline);
     setPreview(null);
     setInfo("Changes discarded");
   };
@@ -210,7 +236,13 @@ export function ConfigurationEditor(props: Props): ReactElement {
       labels: { confirm: "Reset", cancel: "Cancel" },
       confirmProps: { color: "yellow" },
       onConfirm: () => {
-        setPayload(withFileText(payload, activeFileKey, defaultTextForFile(activeFileKey)));
+        const nextPayload = withFileText(
+          payload,
+          activeFileKey,
+          defaultTextForFile(activeFileKey),
+        );
+        setPayload(nextPayload);
+        publishDirty(nextPayload, baseline);
         setPreview(null);
         setInfo(`${label} restored to defaults (pending save)`);
       },
@@ -254,6 +286,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
       setPayload(sanitized);
       setPreview(result.data);
       setBaseline(sanitized);
+      publishDirty(sanitized, sanitized);
       setInfo(
         result.data.changedCount > 0
           ? `Saved (${result.data.changedCount} changes)`
@@ -649,9 +682,15 @@ export function ConfigurationEditor(props: Props): ReactElement {
               className={classes.rawEditor}
               minRows={22}
               value={textForFile(payload, iniFile)}
-              onChange={(event) =>
-                setPayload(withFileText(payload, iniFile, event.currentTarget.value))
-              }
+              onChange={(event) => {
+                const nextPayload = withFileText(
+                  payload,
+                  iniFile,
+                  event.currentTarget.value,
+                );
+                setPayload(nextPayload);
+                publishDirty(nextPayload, baseline);
+              }}
               styles={{
                 input: {
                   fontFamily: "Consolas, 'Courier New', monospace",

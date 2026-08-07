@@ -111,13 +111,15 @@ export function ClustersPage(props: Props): ReactElement {
         )}
       </Stack>
 
-      <CreateClusterModal
-        opened={createOpen}
-        servers={props.servers}
-        statuses={props.statuses}
-        onClose={() => setCreateOpen(false)}
-        onCreated={props.onRefresh}
-      />
+      {createOpen && (
+        <CreateClusterModal
+          opened
+          servers={props.servers}
+          statuses={props.statuses}
+          onClose={() => setCreateOpen(false)}
+          onCreated={props.onRefresh}
+        />
+      )}
     </PageScaffold>
   );
 }

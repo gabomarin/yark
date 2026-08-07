@@ -36,6 +36,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Server and cluster **INI editors** ignore stale async loads when switching server/cluster mid-fetch, and the workspace dirty flag updates from edit events (not a sync effect) so leave-guards stay accurate.
+- Cluster and **Copy configuration** wizards remount when opened so form state resets cleanly without flash-of-stale UI.
 - **Copy configuration** keeps every checked category when several are toggled in quick succession (no longer drops earlier INI picks) (#95).
 - **Copy configuration** no longer loses GameUserSettings rates when mods/launch args are copied in the same run (INI is written before profile→INI sync) (#95).
 - **Copy configuration** full-file Replace no longer copies blocked ASE keys such as ActiveMods; backup schedule copy keeps the target backup folder; select-all only picks stopped targets (#95).

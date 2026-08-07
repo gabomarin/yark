@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Alert,
   Button,
@@ -45,17 +45,29 @@ interface Props {
   onChanged: () => void;
 }
 
+function initialSelectedIds(
+  clusterId: string,
+  servers: ServerProfile[],
+  statuses: Map<string, ServerRuntimeInfo>,
+): string[] {
+  const firstEligible = listAddCandidates(clusterId, servers, statuses).find(
+    (candidate) => candidate.eligible,
+  )?.server.id;
+  return firstEligible !== undefined ? [firstEligible] : [];
+}
+
 export function AddServersModal(props: Props): ReactElement {
+  const hasTemplate = props.hasTemplate === true;
   const [step, setStep] = useState<1 | 2>(1);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [seedFromTemplate, setSeedFromTemplate] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(() =>
+    initialSelectedIds(props.clusterId, props.servers, props.statuses),
+  );
+  const [seedFromTemplate, setSeedFromTemplate] = useState(hasTemplate);
   const [seedFiles, setSeedFiles] = useState<ClusterIniTemplateFileSelection>(
     () => defaultClusterIniFileSelection(),
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const wasOpenRef = useRef(false);
-  const hasTemplate = props.hasTemplate === true;
 
   const sharedDir = useMemo(
     () => sharedClusterDir(props.members),
@@ -65,9 +77,13 @@ export function AddServersModal(props: Props): ReactElement {
     () => listAddCandidates(props.clusterId, props.servers, props.statuses),
     [props.clusterId, props.servers, props.statuses],
   );
+  const activeSelectedIds = useMemo(
+    () => pruneSelectedServerIds(selectedIds, candidates),
+    [selectedIds, candidates],
+  );
   const selected = useMemo(
-    () => resolveSelectedCandidates(candidates, selectedIds),
-    [candidates, selectedIds],
+    () => resolveSelectedCandidates(candidates, activeSelectedIds),
+    [candidates, activeSelectedIds],
   );
   const selectedServers = useMemo(
     () => selected.map((candidate) => candidate.server),
@@ -82,29 +98,6 @@ export function AddServersModal(props: Props): ReactElement {
     [props.members, selectedServers],
   );
   const canContinue = selected.length > 0 && portError === null && sharedDir !== null;
-
-  useEffect(() => {
-    const justOpened = props.opened && !wasOpenRef.current;
-    wasOpenRef.current = props.opened;
-    if (!props.opened) return;
-
-    if (justOpened) {
-      const firstEligible =
-        candidates.find((candidate) => candidate.eligible)?.server.id ?? null;
-      setStep(1);
-      setSelectedIds(firstEligible !== null ? [firstEligible] : []);
-      setSeedFromTemplate(hasTemplate);
-      setSeedFiles(defaultClusterIniFileSelection());
-      setSaving(false);
-      setError(null);
-      return;
-    }
-
-    setSelectedIds((current) => {
-      const next = pruneSelectedServerIds(current, candidates);
-      return next.length === current.length ? current : next;
-    });
-  }, [props.opened, candidates, hasTemplate]);
 
   const seedSelectionOk =
     !seedFromTemplate ||
@@ -222,12 +215,17 @@ export function AddServersModal(props: Props): ReactElement {
         {step === 1 && (
           <CreateClusterServerStep
             candidates={candidates}
-            selectedIds={selectedIds}
+            selectedIds={activeSelectedIds}
             portError={portError}
             emptyHint="No servers available to add. Create a stopped server that is not already in a cluster."
             selectionHint="Select one or more stopped servers that are not already in a cluster"
             onToggle={(serverId) =>
-              setSelectedIds((current) => toggleSelectedServerId(current, serverId))
+              setSelectedIds((current) =>
+                toggleSelectedServerId(
+                  pruneSelectedServerIds(current, candidates),
+                  serverId,
+                ),
+              )
             }
           />
         )}

@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Alert, Modal, Stack, Stepper, Text } from "@mantine/core";
 import type { ConfigTransferSelection } from "@shared/config-transfer";
 import { emptyConfigTransferSelection } from "@shared/config-transfer";
@@ -36,8 +36,14 @@ interface Props {
 
 export function CopyConfigurationWizard(props: Props): ReactElement {
   const [step, setStep] = useState<CopyConfigurationStep>(1);
-  const [sourceId, setSourceId] = useState<string | null>(null);
-  const [targetIds, setTargetIds] = useState<string[]>([]);
+  const [sourceId, setSourceId] = useState<string | null>(
+    () => props.initialSourceId,
+  );
+  const [targetIds, setTargetIds] = useState<string[]>(() =>
+    props.initialTargetId !== null && props.initialTargetId !== undefined
+      ? [props.initialTargetId]
+      : [],
+  );
   const [selection, setSelection] = useState<ConfigTransferSelection>(
     emptyConfigTransferSelection,
   );
@@ -65,28 +71,6 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
     : "stopped";
   const targetsOk = allTargetsEligible(targetIds, props.statuses);
   const targetLabel = formatTargetNames(props.servers, targetIds);
-
-  useEffect(() => {
-    if (!props.opened) return;
-    setStep(1);
-    setSourceId(props.initialSourceId);
-    setTargetIds(
-      props.initialTargetId !== null && props.initialTargetId !== undefined
-        ? [props.initialTargetId]
-        : [],
-    );
-    setSelection(emptyConfigTransferSelection());
-    setDescribe(null);
-    setPreviews([]);
-    setOutcomes([]);
-    setNeverOpen(false);
-    setConfirmed(false);
-    setPasswordConfirmed(false);
-    setError(null);
-    setLoadingDescribe(false);
-    setLoadingPreview(false);
-    setCommitting(false);
-  }, [props.opened, props.initialSourceId, props.initialTargetId]);
 
   const loadDescribe = useCallback(async (id: string): Promise<void> => {
     setLoadingDescribe(true);
