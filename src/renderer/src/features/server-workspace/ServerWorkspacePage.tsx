@@ -267,6 +267,7 @@ export function ServerWorkspacePage(props: Props): ReactElement {
             <WorkspaceTabs
               value={workspaceTab}
               server={selectedServer}
+              servers={props.servers}
               runtime={runtime}
               installation={installation}
               events={props.events}

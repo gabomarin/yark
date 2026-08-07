@@ -7,8 +7,9 @@ export type KnownClusterOption = {
 };
 
 /**
- * Unique `{clusterId, clusterDir}` pairs from the fleet for “join existing”
- * pickers (create server). First server seen wins the label.
+ * Unique cluster IDs from the fleet for “join existing” pickers (create server).
+ * Dedupes by `clusterId` only; when the same ID appears more than once, the first
+ * seen `clusterDir` and label win.
  */
 export function listKnownClusterOptions(
   servers: ServerProfile[],

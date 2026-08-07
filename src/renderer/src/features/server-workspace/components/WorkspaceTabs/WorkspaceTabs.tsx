@@ -18,6 +18,8 @@ import classes from "../../ServerWorkspacePage.module.css";
 interface Props {
   value: WorkspaceTab;
   server: ServerProfile;
+  /** Fleet profiles — live port-conflict preview on the embedded edit form. */
+  servers: ServerProfile[];
   runtime: ServerRuntimeInfo | null;
   installation: ServerInstallationInfo | null;
   events: AppEvent[];
@@ -73,6 +75,7 @@ export function WorkspaceTabs(props: Props): ReactElement {
             <ServerForm
               key={`${props.server.id}:${props.server.updatedAt}`}
               initial={props.server}
+              servers={props.servers}
               variant="embedded"
               serverActive={props.opsLocked}
               filesJobActive={props.filesJobActive}

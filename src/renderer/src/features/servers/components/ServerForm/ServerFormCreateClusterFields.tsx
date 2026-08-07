@@ -3,7 +3,8 @@ import { Anchor, Select, Stack, Text, TextInput } from "@mantine/core";
 import type { KnownClusterOption } from "@features/clusters/knownClusterOptions";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 
-const NONE_VALUE = "__none__";
+/** Select-only sentinel; includes NUL so it cannot match a typed clusterId. */
+const NONE_VALUE = "\0yark.cluster.none";
 
 interface Props {
   options: KnownClusterOption[];

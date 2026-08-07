@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { Alert, Stack, Text } from "@mantine/core";
 import { findPortConflicts } from "@shared/port-conflicts";
-import type { ServerProfile } from "@shared/types";
+import { PORT_MAX, PORT_MIN, type ServerProfile } from "@shared/types";
 import { useMemo } from "react";
 
 interface Props {
@@ -14,16 +14,31 @@ interface Props {
   rconPort: string;
 }
 
+function parsePreviewPort(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (trimmed.length === 0) {
+    return null;
+  }
+  if (!/^\d+$/.test(trimmed)) {
+    return null;
+  }
+  const port = Number(trimmed);
+  if (
+    !Number.isInteger(port) ||
+    port < PORT_MIN ||
+    port > PORT_MAX
+  ) {
+    return null;
+  }
+  return port;
+}
+
 export function ServerFormPortConflictAlert(props: Props): ReactElement | null {
   const conflicts = useMemo(() => {
-    const gamePort = Number(props.gamePort);
-    const queryPort = Number(props.queryPort);
-    const rconPort = Number(props.rconPort);
-    if (
-      !Number.isFinite(gamePort) ||
-      !Number.isFinite(queryPort) ||
-      !Number.isFinite(rconPort)
-    ) {
+    const gamePort = parsePreviewPort(props.gamePort);
+    const queryPort = parsePreviewPort(props.queryPort);
+    const rconPort = parsePreviewPort(props.rconPort);
+    if (gamePort === null || queryPort === null || rconPort === null) {
       return [];
     }
     const others =
