@@ -18,6 +18,7 @@ affect start and config writes are summarized at the end.
 | Role | Path |
 | --- | --- |
 | Launch args | `src/backend/domains/instances/launch-args.ts` |
+| ASA launch-options catalog (#92) | `src/shared/asa-launch-options-catalog.ts` (+ JSON); see [launch-options-catalog.md](launch-options-catalog.md) |
 | Profile → INI sync | `src/backend/domains/instances/sync-profile-ini.ts` |
 | Orchestration | `src/backend/domains/instances/instance-service.ts` |
 | Profile validation | `src/backend/domains/instances/validation.ts` |

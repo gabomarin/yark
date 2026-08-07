@@ -48,6 +48,7 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 - [critical-job-recovery.md](critical-job-recovery.md) — durable phases, replay policy, queue quarantine, and operator recovery actions.
 - [logs.md](logs.md) — event `details`, clear/export IPC, `logsFocus`, seed/visual helpers.
 - [server-lifecycle.md](server-lifecycle.md) — launch args, profile→INI sync, spawn, start/stop/kill, INI sanitize / assistant.
+- [launch-options-catalog.md](launch-options-catalog.md) — verified ASA CLI catalog (#92); regenerates via `npm run catalog:launch-options`.
 - [rcon.md](rcon.md) — workspace RCON console, persistent session, players, ban list.
 - [settings.md](settings.md) — app-wide prefs, desktop shell, SteamCMD path, density, auto-start summary.
 - [clusters.md](clusters.md) — transfer-compliance reports, cluster launch trio, Clusters page.

@@ -140,4 +140,20 @@ describe("ServerForm", () => {
     expect(screen.getByText(/port conflicts/i)).toBeInTheDocument();
     expect(screen.getByText(/port 7777 \(game\)/i)).toBeInTheDocument();
   });
+
+  it("opens the ASA launch-options catalog from Extra arguments (#92)", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AppProviders>
+        <ServerForm initial={null} onCancel={vi.fn()} onSaved={vi.fn()} />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /browse asa catalog/i }));
+    expect(
+      await screen.findByRole("dialog", { name: /asa launch-options catalog/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/ark\.wiki\.gg Command line options/i)).toBeInTheDocument();
+  });
 });

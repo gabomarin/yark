@@ -1,0 +1,3696 @@
+{
+  "version": "0.2.0",
+  "generatedAt": "2026-08-07T18:28:06.531Z",
+  "source": {
+    "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options",
+    "page": "Server_configuration",
+    "section": "Command_line_options",
+    "note": "ASA Check/Missing icons come from template field inASA (Yes/No/Unknown). Catalog is reviewed offline; wiki is not trusted at runtime."
+  },
+  "ownershipRules": {
+    "yarkOwnedExcludedFromSelectable": true,
+    "uncertainNotSelectable": true,
+    "unsupportedNotSelectable": true,
+    "composerOrder": [
+      "\"Map\"?SessionName=",
+      "-port=",
+      "-ServerPlatform=ALL (default)",
+      "-mods=",
+      "-clusterid= / -ClusterDirOverride= / -NoTransferFromFiltering",
+      "extraArgs…"
+    ]
+  },
+  "counts": {
+    "supported": 50,
+    "unsupported": 40,
+    "uncertain": 46,
+    "yarkOwned": 7
+  },
+  "entries": [
+    {
+      "id": "activeevent-eventname",
+      "token": "-ActiveEvent=<eventname>",
+      "aliases": [],
+      "valueType": "enum",
+      "category": "Command line",
+      "summary": "Legacy event switch — leave it off; use CurseForge event mods with -mods instead.",
+      "details": "ASA treats this as obsolete: prefer event mods on the Mods panel / -mods=. Only one name can be set, and most historic events no longer work (WinterWonderland was the last with partial support). Putting ActiveEvent in GameUserSettings.ini has no effect.",
+      "description": "Legacy event switch — leave it off; use CurseForge event mods with -mods instead. ASA treats this as obsolete: prefer event mods on the Mods panel / -mods=. Only one name can be set, and most historic events no longer work (WinterWonderland was the last with partial support). Putting ActiveEvent in GameUserSettings.ini has no effect.",
+      "example": "-ActiveEvent=None",
+      "defaultSemantics": "If omitted, no forced ActiveEvent is applied (recommended).",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "280.114",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "allowansel",
+      "token": "-allowansel",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Activates NVIDIA Ansel support in single player.",
+      "details": "Can be enabled on multiplayer servers with -ServerAllowAnsel since patch 278.0 for servers.",
+      "description": "Activates NVIDIA Ansel support in single player. Can be enabled on multiplayer servers with -ServerAllowAnsel since patch 278.0 for servers.",
+      "example": "-allowansel",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "246.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "allowchatspam",
+      "token": "-AllowChatSpam",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Allows players to spam messages in server chat.",
+      "details": "Note: it may interfere with external plugins allowing cross-map chat. Undocumented by Wildcard.",
+      "description": "Allows players to spam messages in server chat. Note: it may interfere with external plugins allowing cross-map chat. Undocumented by Wildcard.",
+      "example": "-AllowChatSpam",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "allowflyerspeedleveling",
+      "token": "-AllowFlyerSpeedLeveling",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Enables Level Up for Flyer Movement Speed.",
+      "details": "Note: alternatively, it can be enabled adding bAllowFlyerSpeedLeveling=True to the Game.ini file.",
+      "description": "Enables Level Up for Flyer Movement Speed. Note: alternatively, it can be enabled adding bAllowFlyerSpeedLeveling=True to the Game.ini file.",
+      "example": "-AllowFlyerSpeedLeveling",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "321.1",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "alwaystickdedicatedskeletalmeshes",
+      "token": "-AlwaysTickDedicatedSkeletalMeshes",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Disables optimization to dynamically not tick idle/inactive creature animations on the dedicated server based on server frame rate (only…",
+      "details": "becomes active when server is low FPS). Note: side-effects can include inaccurate collisions for idle creatures on the client versus the server (such as inaccurate jumping position while standing on an inactive/idle Brontosaurus and jumping on its tail as it sits in your base).",
+      "description": "Disables optimization to dynamically not tick idle/inactive creature animations on the dedicated server based on server frame rate (only becomes active when server is low FPS). Note: side-effects can include inaccurate collisions for idle creatures on the client versus the server (such as inaccurate jumping position while standing on an inactive/idle Brontosaurus and jumping on its tail as it sits in your base).",
+      "example": "-AlwaysTickDedicatedSkeletalMeshes",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "No",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "ASA 26.36",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "autodestroystructures",
+      "token": "-AutoDestroyStructures",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Enables auto destruction of old structures.",
+      "details": "Timer can be adjusted with option AutoDestroyOldStructuresMultiplier in GameUserSettings.ini under [ServerSettings] section.",
+      "description": "Enables auto destruction of old structures. Timer can be adjusted with option AutoDestroyOldStructuresMultiplier in GameUserSettings.ini under [ServerSettings] section.",
+      "example": "-AutoDestroyStructures",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "245.987",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "automanagedmods",
+      "token": "-automanagedmods",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Steam only, automatic MOD download/installation/updating.",
+      "details": "Mod IDs are listed in Game.ini under [ModInstaller] section.",
+      "description": "Steam only, automatic MOD download/installation/updating. Mod IDs are listed in Game.ini under [ModInstaller] section.",
+      "example": "-automanagedmods",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "244.3",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "backuptransferplayerdatas",
+      "token": "-BackupTransferPlayerDatas",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Fully mimic official (non-legacy) servers on handling player characters data, adding permanent character profile backup files separately from the world-save.",
+      "details": "Requires -usestore option. This option must be used to fully re-enable character profile backups when playing the Official 2023 Server saves backups. Undocumented by Wildcard.",
+      "description": "Fully mimic official (non-legacy) servers on handling player characters data, adding permanent character profile backup files separately from the world-save. Requires -usestore option. This option must be used to fully re-enable character profile backups when playing the Official 2023 Server saves backups. Undocumented by Wildcard.",
+      "example": "-BackupTransferPlayerDatas",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "battleyeserverrecheck",
+      "token": "-BattlEyeServerRecheck",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Adds at every server tick an extra check about BattleEye service status.",
+      "details": "Used in official clusters. Undocumented by Wildcard.",
+      "description": "Adds at every server tick an extra check about BattleEye service status. Used in official clusters. Undocumented by Wildcard.",
+      "example": "-BattlEyeServerRecheck",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "clearolditems",
+      "token": "-ClearOldItems",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Official PvP servers one-time Clearance of all old unequipped items (with the exception of blueprints, eatables, notes, and quest items), to…",
+      "details": "ensure fairness after Item Duplication bug exploit. Server admins can enforce this once if they run with this command argument (will only work ONCE on pre-update save games). Deprecated and no longer present in the executable code.",
+      "description": "Official PvP servers one-time Clearance of all old unequipped items (with the exception of blueprints, eatables, notes, and quest items), to ensure fairness after Item Duplication bug exploit. Server admins can enforce this once if they run with this command argument (will only work ONCE on pre-update save games). Deprecated and no longer present in the executable code.",
+      "example": "-ClearOldItems",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "178.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "cluster-dir",
+      "token": "-ClusterDirOverride=<PATH>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "Emitted with clusterid when both cluster fields are set.",
+      "details": "",
+      "description": "Emitted with clusterid when both cluster fields are set.",
+      "example": "-ClusterDirOverride=C:\\ARK\\Cluster",
+      "defaultSemantics": "Emitted with clusterid when both cluster fields are set.",
+      "status": "yarkOwned",
+      "conflicts": [
+        "extraArgs:-ClusterDirOverride"
+      ],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "247.85",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "YARK-owned lifecycle/profile argument — excluded from user-selectable options."
+    },
+    {
+      "id": "clusterid",
+      "token": "-clusterid=<CLUSTER_NAME>",
+      "aliases": [],
+      "valueType": "enum",
+      "category": "Command line",
+      "summary": "Emitted with cluster dir + NoTransferFromFiltering when clustered.",
+      "details": "",
+      "description": "Emitted with cluster dir + NoTransferFromFiltering when clustered.",
+      "example": "-clusterid=my-cluster",
+      "defaultSemantics": "Emitted with cluster dir + NoTransferFromFiltering when clustered.",
+      "status": "yarkOwned",
+      "conflicts": [
+        "extraArgs:-clusterid"
+      ],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "247.85",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "YARK-owned lifecycle/profile argument — excluded from user-selectable options."
+    },
+    {
+      "id": "converttostore",
+      "token": "-converttostore",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Converts non stored data (default save behaviour of unofficial and legacy) to stored data (default save behaviour of official non-legacy) at next world-save.",
+      "details": "It will not delete older character profile saves. Requires -usestore . Documented by Wildcard in patch notes for ASA 57.12.",
+      "description": "Converts non stored data (default save behaviour of unofficial and legacy) to stored data (default save behaviour of official non-legacy) at next world-save. It will not delete older character profile saves. Requires -usestore . Documented by Wildcard in patch notes for ASA 57.12.",
+      "example": "-converttostore",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "57.12",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "crossplay",
+      "token": "-crossplay",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Enables crossplay (i.e.: EPIC and Steam) on dedicated server.",
+      "details": "Note: PublicIPForEpic must also be set. : Obsolete, use -ServerPlatform argument instead.",
+      "description": "Enables crossplay (i.e.: EPIC and Steam) on dedicated server. Note: PublicIPForEpic must also be set. : Obsolete, use -ServerPlatform argument instead.",
+      "example": "-crossplay",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "311.74",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "culture-lang_code",
+      "token": "-culture=<lang_code>",
+      "aliases": [],
+      "valueType": "enum",
+      "category": "Command line",
+      "summary": "Overrides the server output language.",
+      "details": "If set in server it doesn't override clients' language. List of currently supported language codes: ca , cs , da , de , en , es , eu , fi , fr , hu , it , ja , ka , ko , nl , pl , pt_BR , ru , sv , th , tr , zh , zh-Hans-CN , zh-TW . This is also needed to override some Genesis: Part 2 missions text outputs for clients that otherwise will follow the language settings of the server operating system.",
+      "description": "Overrides the server output language. If set in server it doesn't override clients' language. List of currently supported language codes: ca , cs , da , de , en , es , eu , fi , fr , hu , it , ja , ka , ko , nl , pl , pt_BR , ru , sv , th , tr , zh , zh-Hans-CN , zh-TW . This is also needed to override some Genesis: Part 2 missions text outputs for clients that otherwise will follow the language settings of the server operating system.",
+      "example": "-culture=en",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "235.2",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "customadmincommandtrackingurl-url",
+      "token": "-CustomAdminCommandTrackingURL=<URL>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "Allows server to specify custom URL to post admin commands tracking.",
+      "details": "Supports HTTP protocols only (HTTPS is not supported). If the URL is empty the metrics should be written in a file named ArkCustomAdminCommandTrackingURL.txt in the game save directory. Undocumented by Wildcard.",
+      "description": "Allows server to specify custom URL to post admin commands tracking. Supports HTTP protocols only (HTTPS is not supported). If the URL is empty the metrics should be written in a file named ArkCustomAdminCommandTrackingURL.txt in the game save directory. Undocumented by Wildcard.",
+      "example": "-CustomAdminCommandTrackingURL=https://metrics.example.com/asa",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "custommerticsurl-url",
+      "token": "-CustomMerticsURL=<URL>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "Allows server to specify custom URL to post server metrics statistics.",
+      "details": "Supports HTTP protocols only (HTTPS is not supported). If the URL is empty the metrics should be written in a file named ArkCustomMetricsURL.txt in the game save directory. Undocumented by Wildcard.",
+      "description": "Allows server to specify custom URL to post server metrics statistics. Supports HTTP protocols only (HTTPS is not supported). If the URL is empty the metrics should be written in a file named ArkCustomMetricsURL.txt in the game save directory. Undocumented by Wildcard.",
+      "example": "-CustomMerticsURL=https://metrics.example.com/asa",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "customnotificationurl-url",
+      "token": "-CustomNotificationURL=<URL>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "Allows server custom notification broadcast using the server message feature.",
+      "details": "Supports HTTP protocols only (HTTPS is not supported). Used in official clusters (e.g.: http://arkdedicated.com/pcnotification.html). Undocumented by Wildcard.",
+      "description": "Allows server custom notification broadcast using the server message feature. Supports HTTP protocols only (HTTPS is not supported). Used in official clusters (e.g.: http://arkdedicated.com/pcnotification.html). Undocumented by Wildcard.",
+      "example": "-CustomNotificationURL=https://metrics.example.com/asa",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "d3d10-dx10-sm4",
+      "token": "-d3d10 -dx10 -sm4",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Any of these options forces the use DirectX 10 using shader model 4.",
+      "details": "This will reduce the graphics engine to a lesser version, reducing some graphics, but raising the frame-rate on older and weaker hardware. Using this option on server will not override clients' behaviour, nor bring any benefit.",
+      "description": "Any of these options forces the use DirectX 10 using shader model 4. This will reduce the graphics engine to a lesser version, reducing some graphics, but raising the frame-rate on older and weaker hardware. Using this option on server will not override clients' behaviour, nor bring any benefit.",
+      "example": "-d3d10-dx10-sm4",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "20px",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "d3d11-dx11-sm5",
+      "token": "-d3d11 -dx11 -sm5",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Any of these options forces the use DirectX 11 using shader model 5.",
+      "details": "This is the default rendering mode. Using this option on server will not override clients' behaviour, nor bring any benefit.",
+      "description": "Any of these options forces the use DirectX 11 using shader model 5. This is the default rendering mode. Using this option on server will not override clients' behaviour, nor bring any benefit.",
+      "example": "-d3d11-dx11-sm5",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "20px",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "d3d12-dx12",
+      "token": "-d3d12 -dx12",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "In any of these options were used to force the DirectX 12 back-end.",
+      "details": "This mode no longer works due the removal of D3D12RHI module from the engine. Trying to use this option will crash the client at start-up. In DirectX 12 back-end is enabled by default and using this option will take no effect.",
+      "description": "In any of these options were used to force the DirectX 12 back-end. This mode no longer works due the removal of D3D12RHI module from the engine. Trying to use this option will crash the client at start-up. In DirectX 12 back-end is enabled by default and using this option will take no effect.",
+      "example": "-d3d12-dx12",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "20px",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "dedihibernation",
+      "token": "-dedihibernation",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Forces wild creatures to spawn in hibernation mode.",
+      "details": "Requires -preventhibernation to not be set (which doesn't have effects anyway in dedicated servers). Undocumented by Wildcard.",
+      "description": "Forces wild creatures to spawn in hibernation mode. Requires -preventhibernation to not be set (which doesn't have effects anyway in dedicated servers). Undocumented by Wildcard.",
+      "example": "-dedihibernation",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "disablecharactertracker",
+      "token": "-disableCharacterTracker",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Used to disable character tracking.",
+      "details": "Alternatively, this option can be configured with UseCharacterTracker in file GameUserSettings.ini under [ServerSettings] section (note that the argument from command line has priority over the value set in GameUserSettings.ini). Undocumented by Wildcard.",
+      "description": "Used to disable character tracking. Alternatively, this option can be configured with UseCharacterTracker in file GameUserSettings.ini under [ServerSettings] section (note that the argument from command line has priority over the value set in GameUserSettings.ini). Undocumented by Wildcard.",
+      "example": "-disableCharacterTracker",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "No",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "disablecustomcosmetics",
+      "token": "-DisableCustomCosmetics",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Disables the Custom Cosmetic system (allowing players to use and display special mods that should only be skins and will be downloaded…",
+      "details": "automatically by the connected clients).",
+      "description": "Disables the Custom Cosmetic system (allowing players to use and display special mods that should only be skins and will be downloaded automatically by the connected clients).",
+      "example": "-DisableCustomCosmetics",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "No",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "ASA 34.49",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "disablecustomfoldersintributeinventories",
+      "token": "-DisableCustomFoldersInTributeInventories",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Disables creation of folders in Tribute inventories.",
+      "details": "",
+      "description": "Disables creation of folders in Tribute inventories.",
+      "example": "-DisableCustomFoldersInTributeInventories",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "349.1",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "disabledinonetrangescaling",
+      "token": "-disabledinonetrangescaling",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Disables creature's network replication range optimization.",
+      "details": "Detailed explanation : On dedicated servers the network replication range is scaled dynamically based on the amount of connected players (Note: On PvP servers this replication range is scaled only for small tamed creatures and wild creatures, rather than all tames). The scaling of replication range allows to improve performances for servers with a high amount of connected players. This optimization can be disabled by adding -disabledinonetrangescaling in server startup options.",
+      "description": "Disables creature's network replication range optimization. Detailed explanation : On dedicated servers the network replication range is scaled dynamically based on the amount of connected players (Note: On PvP servers this replication range is scaled only for small tamed creatures and wild creatures, rather than all tames). The scaling of replication range allows to improve performances for servers with a high amount of connected players. This optimization can be disabled by adding -disabledinonetrangescaling in server startup options.",
+      "example": "-disabledinonetrangescaling",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "No",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "ASA 31.41",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "disabledupelogdeletes",
+      "token": "-DisableDupeLogDeletes",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Prevents -ForceDupeLog to take effect.",
+      "details": "Undocumented by Wildcard.",
+      "description": "Prevents -ForceDupeLog to take effect. Undocumented by Wildcard.",
+      "example": "-DisableDupeLogDeletes",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "disablerailgunpvp",
+      "token": "-DisableRailgunPVP",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Disables the Tek Railgun on PvP servers (on official servers this argument is not added to the command line).",
+      "details": "",
+      "description": "Disables the Tek Railgun on PvP servers (on official servers this argument is not added to the command line).",
+      "example": "-DisableRailgunPVP",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "349.1",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "docustomcosmeticvalidation",
+      "token": "-DoCustomCosmeticValidation",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Enables validation of custom cosmetic mods.",
+      "details": "See this [https://survivetheark.com/index.php?/forums/topic/736592-enable-custom-cosmetics-validation-on-unofficial/ post] for details.",
+      "description": "Enables validation of custom cosmetic mods. See this [https://survivetheark.com/index.php?/forums/topic/736592-enable-custom-cosmetics-validation-on-unofficial/ post] for details.",
+      "example": "-DoCustomCosmeticValidation",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "No",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "ASA 34.49",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "dormancynetmultiplier-float",
+      "token": "-DormancyNetMultiplier=<float>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "Multiplier for dormancy rate, controlling when an NPC can enter in a low network bandwidth dormant mode.",
+      "details": "If value is less or equal to 1.0 requires -nodormancythrottling . Default is set at 1.0. Undocumented by Wildcard.",
+      "description": "Multiplier for dormancy rate, controlling when an NPC can enter in a low network bandwidth dormant mode. If value is less or equal to 1.0 requires -nodormancythrottling . Default is set at 1.0. Undocumented by Wildcard.",
+      "example": "-DormancyNetMultiplier=1.0",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "eastercolors",
+      "token": "-EasterColors",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Chance for Easter colors when creatures spawn.",
+      "details": "",
+      "description": "Chance for Easter colors when creatures spawn.",
+      "example": "-EasterColors",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "No",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "ASA 36.27",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "enableidleplayerkick",
+      "token": "-EnableIdlePlayerKick",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Cause characters that have not moved or interacted within the KickIdlePlayersPeriod (GameUserSettings.ini) to be kicked.",
+      "details": "",
+      "description": "Cause characters that have not moved or interacted within the KickIdlePlayersPeriod (GameUserSettings.ini) to be kicked.",
+      "example": "-EnableIdlePlayerKick",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "241.5",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "enableofficialonlyversioningcode",
+      "token": "-EnableOfficialOnlyVersioningCode",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Mimics official versioning code-path on ARK data items upload/download behaviour, deleting them if there is a version mismatch.",
+      "details": "Undocumented by Wildcard.",
+      "description": "Mimics official versioning code-path on ARK data items upload/download behaviour, deleting them if there is a version mismatch. Undocumented by Wildcard.",
+      "example": "-EnableOfficialOnlyVersioningCode",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "enablesteelshield",
+      "token": "-EnableSteelShield",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Used to enable [https://enterprise.nitrado.net/steelshield/ SteelShield] anti-DDOS protection.",
+      "details": "This only works when your server is hosted by Nitrado. Undocumented by Wildcard.",
+      "description": "Used to enable [https://enterprise.nitrado.net/steelshield/ SteelShield] anti-DDOS protection. This only works when your server is hosted by Nitrado. Undocumented by Wildcard.",
+      "example": "-EnableSteelShield",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "No",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "enablevictorycoredupecheck",
+      "token": "-EnableVictoryCoreDupeCheck",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Should enabled an extra anti-duping check on tamed creatures.",
+      "details": "Undocumented by Wildcard.",
+      "description": "Should enabled an extra anti-duping check on tamed creatures. Undocumented by Wildcard.",
+      "example": "-EnableVictoryCoreDupeCheck",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "epiconly",
+      "token": "-epiconly",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Enables Epic Game Store only players to connect to the dedicated server.",
+      "details": ": Obsolete since ASA is not available on Epic.",
+      "description": "Enables Epic Game Store only players to connect to the dedicated server. : Obsolete since ASA is not available on Epic.",
+      "example": "-epiconly",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "311.74",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "exclusivejoin",
+      "token": "-exclusivejoin",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Activate a whitelist only mode on the server, allowing players to join if added to the allow list.",
+      "details": "For more info on whitelists, start with Ark IDs.",
+      "description": "Activate a whitelist only mode on the server, allowing players to join if added to the allow list. For more info on whitelists, start with Ark IDs.",
+      "example": "-exclusivejoin",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "forceallowcaveflyers",
+      "token": "-ForceAllowCaveFlyers",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Force flyer creatures to be allowed into caves (Flyers able to go into caves by default on custom maps).",
+      "details": "",
+      "description": "Force flyer creatures to be allowed into caves (Flyers able to go into caves by default on custom maps).",
+      "example": "-ForceAllowCaveFlyers",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "237.1",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "forcedisablemeshchecking",
+      "token": "-forcedisablemeshchecking",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Disables mesh checking on foliage re-population, not set on official.",
+      "details": "Undocumented by Wildcard.",
+      "description": "Disables mesh checking on foliage re-population, not set on official. Undocumented by Wildcard.",
+      "example": "-forcedisablemeshchecking",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "forcedupelog",
+      "token": "-ForceDupeLog",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Forces dupe logs. Requires -DisableDupeLogDeletes to be not set, enabled behaviour on official.",
+      "details": "Undocumented by Wildcard.",
+      "description": "Forces dupe logs. Requires -DisableDupeLogDeletes to be not set, enabled behaviour on official. Undocumented by Wildcard.",
+      "example": "-ForceDupeLog",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "forceignoresingleplayerspawnrangecheck",
+      "token": "-ForceIgnoreSingleplayerSpawnRangeCheck",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Forces Single Player and Non-Dedicated sessions to ignore spawn range checks, allowing them to behave like a dedicated server in terms of creature spawns.",
+      "details": "Use this option to enable creature spawns across the map, even when the player is not nearby. Enabling this option may impact performance and memory, including significant initial stuttering when creating a new world.",
+      "description": "Forces Single Player and Non-Dedicated sessions to ignore spawn range checks, allowing them to behave like a dedicated server in terms of creature spawns. Use this option to enable creature spawns across the map, even when the player is not nearby. Enabling this option may impact performance and memory, including significant initial stuttering when creating a new world.",
+      "example": "-ForceIgnoreSingleplayerSpawnRangeCheck",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Unknown",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "forcenetthreading",
+      "token": "-forcenetthreading",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Defaulted dedicated server ?bRawSockets mode to not use threaded networking, seemed to generally be a net performance loss.",
+      "details": "Use this to forcefully enable it. Deprecated since 311.78.",
+      "description": "Defaulted dedicated server ?bRawSockets mode to not use threaded networking, seemed to generally be a net performance loss. Use this to forcefully enable it. Deprecated since 311.78.",
+      "example": "-forcenetthreading",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "271.17",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "forcerespawndinos",
+      "token": "-ForceRespawnDinos",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Launch with this command to destroy all wild creatures on server start-up.",
+      "details": "Note: this will only destroy wild creatures that are not currently tamed.",
+      "description": "Launch with this command to destroy all wild creatures on server start-up. Note: this will only destroy wild creatures that are not currently tamed.",
+      "example": "-ForceRespawnDinos",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "216.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "forceuseperfthreads",
+      "token": "-forceuseperfthreads",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Forces the use of performance threads.",
+      "details": "Undocumented by Wildcard.",
+      "description": "Forces the use of performance threads. Undocumented by Wildcard.",
+      "example": "-forceuseperfthreads",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Unknown",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "game",
+      "token": "-game",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "This is an option to start the Unreal Engine Editor (i.e.: the Ark DevKit) the uncooked assets.",
+      "details": "There is no use for the command on either the client or server.",
+      "description": "This is an option to start the Unreal Engine Editor (i.e.: the Ark DevKit) the uncooked assets. There is no use for the command on either the client or server.",
+      "example": "-game",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "20px Editor",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "gbusagetoforcerestart-value",
+      "token": "-GBUsageToForceRestart=<value>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "Enabled an out of memory protection for servers.",
+      "details": "In the event that a server reaches an excessive amount of memory, the world will be forced saved and the server will be restarted to prevent crashes or rollbacks. Replace with the wanted amount in gigabytes. Setting it to 0 disables.",
+      "description": "Enabled an out of memory protection for servers. In the event that a server reaches an excessive amount of memory, the world will be forced saved and the server will be restarted to prevent crashes or rollbacks. Replace with the wanted amount in gigabytes. Setting it to 0 disables.",
+      "example": "-GBUsageToForceRestart=35",
+      "defaultSemantics": "If omitted, ASA uses 35.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "No",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "ASA 26.32",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "ignoredupeditems",
+      "token": "-ignoredupeditems",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "If a duped item is detected in an inventory, this will be ignored and not removed.",
+      "details": "This option does not disable duped items checks. Undocumented by Wildcard.",
+      "description": "If a duped item is detected in an inventory, this will be ignored and not removed. This option does not disable duped items checks. Undocumented by Wildcard.",
+      "example": "-ignoredupeditems",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "imprintlimit-101",
+      "token": "-imprintlimit=101",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "Automatically destroys creatures exceeding the imprinting bonus limit specified, in %.",
+      "details": "It is recommended going 1% higher (101) to catch potential floating-point errors, especially when working with custom imprinting rates.",
+      "description": "Automatically destroys creatures exceeding the imprinting bonus limit specified, in %. It is recommended going 1% higher (101) to catch potential floating-point errors, especially when working with custom imprinting rates.",
+      "example": "-imprintlimit=101",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "349.10",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "inlinesaveload",
+      "token": "-inlinesaveload",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Fixed a save game corruption case with large saves: this is experimental, so try with this command, if you have any saves that don’t load.",
+      "details": "We’ll formally roll this loader change out in a subsequent patch after (Wildcard is) 100% certain it has no side effects. It should be no more needed, and is considered deprecated.",
+      "description": "Fixed a save game corruption case with large saves: this is experimental, so try with this command, if you have any saves that don’t load. We’ll formally roll this loader change out in a subsequent patch after (Wildcard is) 100% certain it has no side effects. It should be no more needed, and is considered deprecated.",
+      "example": "-inlinesaveload",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "214.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "insecure",
+      "token": "-insecure",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Disable Valve Anti-Cheat (VAC) system.",
+      "details": "",
+      "description": "Disable Valve Anti-Cheat (VAC) system.",
+      "example": "-insecure",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "241.5",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "ip-ipv4_address",
+      "token": "-ip=<ipv4_address>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "Option found in Nitrado server setup.",
+      "details": "Expected to work in a -MULTIHOME context. Undocumented by Wildcard.",
+      "description": "Option found in Nitrado server setup. Expected to work in a -MULTIHOME context. Undocumented by Wildcard.",
+      "example": "-ip=203.0.113.10",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "no",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "lanplay",
+      "token": "-LANPLAY",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Unreal Engine option for servers.",
+      "details": "On ARK MaxClientRate is hardcoded to 60K and MaxInternetClientRate is limited to 15K per client. The Unreal Engine code that should double the server updates for LAN play is not present in executable bits. This options has no effect on ARK servers nor clients.",
+      "description": "Unreal Engine option for servers. On ARK MaxClientRate is hardcoded to 60K and MaxInternetClientRate is limited to 15K per client. The Unreal Engine code that should double the server updates for LAN play is not present in executable bits. This options has no effect on ARK servers nor clients.",
+      "example": "-LANPLAY",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "20px Server",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "log",
+      "token": "-log",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "This is an option to start the log window console in the Unreal Engine Editor (i.e.: the Ark DevKit) with -game option.",
+      "details": "There is no use for the command on either the client or server.",
+      "description": "This is an option to start the log window console in the Unreal Engine Editor (i.e.: the Ark DevKit) with -game option. There is no use for the command on either the client or server.",
+      "example": "-log",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "20px",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "lowmemory",
+      "token": "-lowmemory",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Launch options that reduces graphics and audio effects to save about 800 MB RAM, likely enabling 4GB RAM players to get past infinite-loading screens.",
+      "details": "Using this option on server will not override clients' behaviour, nor bring any benefit.",
+      "description": "Launch options that reduces graphics and audio effects to save about 800 MB RAM, likely enabling 4GB RAM players to get past infinite-loading screens. Using this option on server will not override clients' behaviour, nor bring any benefit.",
+      "example": "-lowmemory",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "170.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "mapmodid-modid",
+      "token": "-MapModID=<ModID>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "Dedicated servers can now optionally load custom maps via ModID directly, rather than having to specify the map name, using this syntax…",
+      "details": "(where the MapModID is the Steam Workshop ID of your custom map, and the GameModIds are the Id’s of the stacked mods you wish to use, in order). ActiveMods must also be set in GameUserSettings.ini. : Obsolete, use -mods argument instead. ASA no longer uses Steam Workshop mods and ActiveMods does not need to be set.",
+      "description": "Dedicated servers can now optionally load custom maps via ModID directly, rather than having to specify the map name, using this syntax (where the MapModID is the Steam Workshop ID of your custom map, and the GameModIds are the Id’s of the stacked mods you wish to use, in order). ActiveMods must also be set in GameUserSettings.ini. : Obsolete, use -mods argument instead. ASA no longer uses Steam Workshop mods and ActiveMods does not need to be set.",
+      "example": "-MapModID=928988",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "193.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "maxconnectionsperip-integer",
+      "token": "-MaxConnectionsPerIP=<integer>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "Sets a limit of users connected to the server with the same IP at the same time.",
+      "details": "By default is -1 (virtually unlimited). If an IP reaches such value, any players trying to connect next with such IP will get a connect timeout. Undocumented by Wildcard.",
+      "description": "Sets a limit of users connected to the server with the same IP at the same time. By default is -1 (virtually unlimited). If an IP reaches such value, any players trying to connect next with such IP will get a connect timeout. Undocumented by Wildcard.",
+      "example": "-MaxConnectionsPerIP=35",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "maxnumofsavebackups-integer",
+      "token": "-MaxNumOfSaveBackups=<integer>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "Set the max number of backup to keeps in the save folder.",
+      "details": "Whenever a new backup is created, the oldest ones will be deleted. Since such backups take place every 2 hours and they are uncompressed files, it is suggested to use more flexible third party solutions, especially with bigger saves. Unofficial admins running Official 2023 Server saves may want to set this to 0 when using other backup mechanisms.",
+      "description": "Set the max number of backup to keeps in the save folder. Whenever a new backup is created, the oldest ones will be deleted. Since such backups take place every 2 hours and they are uncompressed files, it is suggested to use more flexible third party solutions, especially with bigger saves. Unofficial admins running Official 2023 Server saves may want to set this to 0 when using other backup mechanisms.",
+      "example": "-MaxNumOfSaveBackups=20",
+      "defaultSemantics": "If omitted, ASA uses 20.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "minimumtimebetweeninventoryretrieval-seconds",
+      "token": "-MinimumTimeBetweenInventoryRetrieval=<seconds>",
+      "aliases": [],
+      "valueType": "number",
+      "category": "Command line",
+      "summary": "cool-down in seconds on retrieval of player's inventory when killed.",
+      "details": "",
+      "description": "cool-down in seconds on retrieval of player's inventory when killed.",
+      "example": "-MinimumTimeBetweenInventoryRetrieval=3600",
+      "defaultSemantics": "If omitted, ASA uses 3600.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "351.5",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "mods",
+      "token": "-mods=<ModId1>[,<ModId2>[...]]",
+      "aliases": [],
+      "valueType": "csv",
+      "category": "Command line",
+      "summary": "Composed from profile.mods minus disabledMods.",
+      "details": "",
+      "description": "Composed from profile.mods minus disabledMods.",
+      "example": "-mods=928988,929420",
+      "defaultSemantics": "Composed from profile.mods minus disabledMods.",
+      "status": "yarkOwned",
+      "conflicts": [
+        "extraArgs:-mods"
+      ],
+      "wikiAsa": "Yes",
+      "wikiAse": "No",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "YARK-owned lifecycle/profile argument — excluded from user-selectable options."
+    },
+    {
+      "id": "multihome",
+      "token": "-MULTIHOME",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Enables multihoming. MULTIHOME= must be specified as well in GameUserSettings.ini under [SessionSettings] or in the command line.",
+      "details": "",
+      "description": "Enables multihoming. MULTIHOME= must be specified as well in GameUserSettings.ini under [SessionSettings] or in the command line.",
+      "example": "-MULTIHOME",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "newsaveformat",
+      "token": "-newsaveformat",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Enables the new save format (version 11), which is quicker at saving cryopods and requires less storage space for them.",
+      "details": "Use only if necessary (e.g.: the default save format fails as well the old save format). This option must be used to start the Official 2023 Server saves backups along with -usestore to correctly load tribe ownership.",
+      "description": "Enables the new save format (version 11), which is quicker at saving cryopods and requires less storage space for them. Use only if necessary (e.g.: the default save format fails as well the old save format). This option must be used to start the Official 2023 Server saves backups along with -usestore to correctly load tribe ownership.",
+      "example": "-newsaveformat",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "244.5",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "newyearevent",
+      "token": "-NewYearEvent",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Enables the ARK: Happy New Year!",
+      "details": "event; it will automatically start at Midnight EST and Noon EST on the 1st of January, unless specified with the following 2 options. This command was only available around the time it was scheduled.",
+      "description": "Enables the ARK: Happy New Year! event; it will automatically start at Midnight EST and Noon EST on the 1st of January, unless specified with the following 2 options. This command was only available around the time it was scheduled.",
+      "example": "-NewYearEvent",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "320.38",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "nitradoqueryport",
+      "token": "-NitradoQueryPort",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Specifics unknown. Undocumented by Wildcard.",
+      "details": "",
+      "description": "Specifics unknown. Undocumented by Wildcard.",
+      "example": "-NitradoQueryPort",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "No",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "nitradotest2",
+      "token": "-nitradotest2",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Limits the tick-rate to 3 when there are no players connected.",
+      "details": "This can have a noticeable impact on CPU for large worlds since there will be less calls per second (less computation/memory allocation, etc.). But as its name clearly state, it seems to be an internal test so use at your own risks. Undocumented by Wildcard.",
+      "description": "Limits the tick-rate to 3 when there are no players connected. This can have a noticeable impact on CPU for large worlds since there will be less calls per second (less computation/memory allocation, etc.). But as its name clearly state, it seems to be an internal test so use at your own risks. Undocumented by Wildcard.",
+      "example": "-nitradotest2",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "noaafonts",
+      "token": "-noaafonts",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Removed fonts anti-aliasing.",
+      "details": "Option is now deprecated.",
+      "description": "Removed fonts anti-aliasing. Option is now deprecated.",
+      "example": "-noaafonts",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "noai",
+      "token": "-NoAI",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "This will disable adding AI controller to creatures.",
+      "details": "Undocumented by Wildcard.",
+      "description": "This will disable adding AI controller to creatures. Undocumented by Wildcard.",
+      "example": "-NoAI",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Unknown",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "noantispeedhack",
+      "token": "-noantispeedhack",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Anti speedhack detection is now enabled by default — you now use this option to disable it.",
+      "details": "",
+      "description": "Anti speedhack detection is now enabled by default — you now use this option to disable it.",
+      "example": "-noantispeedhack",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "218.5",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "nobattleye",
+      "token": "-NoBattlEye",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Run server without BattleEye.",
+      "details": "",
+      "description": "Run server without BattleEye.",
+      "example": "-NoBattlEye",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "253.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "nobiomewalls",
+      "token": "-NoBiomeWalls",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Eliminates the upcoming biome change area wall effects as introduced in an undocumented addition of patch 241.5.",
+      "details": "Deprecated since patch 243.0 and no longer present in the executable code.",
+      "description": "Eliminates the upcoming biome change area wall effects as introduced in an undocumented addition of patch 241.5. Deprecated since patch 243.0 and no longer present in the executable code.",
+      "example": "-NoBiomeWalls",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "242.7",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "nocombineclientmoves",
+      "token": "-nocombineclientmoves",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Server player move physics optimization is now enabled by default (improves performance) — to disable it, use this server option.",
+      "details": "",
+      "description": "Server player move physics optimization is now enabled by default (improves performance) — to disable it, use this server option.",
+      "example": "-nocombineclientmoves",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "218.5",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "nodinos",
+      "token": "-NoDinos",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Prevents wild creatures from being spawned.",
+      "details": "In enabling this option will make the following options unusable: -NoDinosExceptForcedSpawn , -NoDinosExceptStreamingSpawn , -NoDinosExceptManualSpawn and -NoDinosExceptWaterSpawn . Note: wild creatures that were on the server before adding this argument will not get automatically destroyed (you can destroy them with console command cheat destroywilddinos ).",
+      "description": "Prevents wild creatures from being spawned. In enabling this option will make the following options unusable: -NoDinosExceptForcedSpawn , -NoDinosExceptStreamingSpawn , -NoDinosExceptManualSpawn and -NoDinosExceptWaterSpawn . Note: wild creatures that were on the server before adding this argument will not get automatically destroyed (you can destroy them with console command cheat destroywilddinos ).",
+      "example": "-NoDinos",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "nodinosexceptforcedspawn",
+      "token": "-NoDinosExceptForcedSpawn",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Prevents wild creatures from being spawned, except for forced spawns.",
+      "details": "You cannot use this option if -NoDinos is used. Enabling this option will make the following options unusable: -NoDinosExceptStreamingSpawn , -NoDinosExceptManualSpawn and -NoDinosExceptWaterSpawn . Note: wild creatures that were on the server before adding this argument will not get automatically destroyed (you can destroy them with console command cheat destroywilddinos ). Undocumented by Wildcard.",
+      "description": "Prevents wild creatures from being spawned, except for forced spawns. You cannot use this option if -NoDinos is used. Enabling this option will make the following options unusable: -NoDinosExceptStreamingSpawn , -NoDinosExceptManualSpawn and -NoDinosExceptWaterSpawn . Note: wild creatures that were on the server before adding this argument will not get automatically destroyed (you can destroy them with console command cheat destroywilddinos ). Undocumented by Wildcard.",
+      "example": "-NoDinosExceptForcedSpawn",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Unknown",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "nodinosexceptmanualspawn",
+      "token": "-NoDinosExceptManualSpawn",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Prevents wild creatures from being spawned, except for manual spawns.",
+      "details": "You cannot use this option if one of the following options is used: -NoDinos , -NoDinosExceptForcedSpawn or -NoDinosExceptStreamingSpawn . Enabling this option will make option -NoDinosExceptWaterSpawn unusable. Note: wild creatures that were on the server before adding this argument will not get automatically destroyed (you can destroy them with console command cheat destroywilddinos ). Undocumented by Wildcard.",
+      "description": "Prevents wild creatures from being spawned, except for manual spawns. You cannot use this option if one of the following options is used: -NoDinos , -NoDinosExceptForcedSpawn or -NoDinosExceptStreamingSpawn . Enabling this option will make option -NoDinosExceptWaterSpawn unusable. Note: wild creatures that were on the server before adding this argument will not get automatically destroyed (you can destroy them with console command cheat destroywilddinos ). Undocumented by Wildcard.",
+      "example": "-NoDinosExceptManualSpawn",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Unknown",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "nodinosexceptstreamingspawn",
+      "token": "-NoDinosExceptStreamingSpawn",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Prevents wild creatures from being spawned, except for streaming spawns.",
+      "details": "You cannot use this option if one of the following options is used: -NoDinos or -NoDinosExceptForcedSpawn . Enabling this option will make the following options unusable: -NoDinosExceptManualSpawn and -NoDinosExceptWaterSpawn . Note: wild creatures that were on the server before adding this argument will not get automatically destroyed (you can destroy them with console command cheat destroywilddinos ). Undocumented by Wildcard.",
+      "description": "Prevents wild creatures from being spawned, except for streaming spawns. You cannot use this option if one of the following options is used: -NoDinos or -NoDinosExceptForcedSpawn . Enabling this option will make the following options unusable: -NoDinosExceptManualSpawn and -NoDinosExceptWaterSpawn . Note: wild creatures that were on the server before adding this argument will not get automatically destroyed (you can destroy them with console command cheat destroywilddinos ). Undocumented by Wildcard.",
+      "example": "-NoDinosExceptStreamingSpawn",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Unknown",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "nodinosexceptwaterspawn",
+      "token": "-NoDinosExceptWaterSpawn",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Prevents wild creatures from being spawned, except for water spawns.",
+      "details": "You cannot use this option if one of the following options is used: -NoDinos , -NoDinosExceptForcedSpawn , -NoDinosExceptStreamingSpawn or -NoDinosExceptManualSpawn . Note: wild creatures that were on the server before adding this argument will not get automatically destroyed (you can destroy them with console command cheat destroywilddinos ). Undocumented by Wildcard.",
+      "description": "Prevents wild creatures from being spawned, except for water spawns. You cannot use this option if one of the following options is used: -NoDinos , -NoDinosExceptForcedSpawn , -NoDinosExceptStreamingSpawn or -NoDinosExceptManualSpawn . Note: wild creatures that were on the server before adding this argument will not get automatically destroyed (you can destroy them with console command cheat destroywilddinos ). Undocumented by Wildcard.",
+      "example": "-NoDinosExceptWaterSpawn",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Unknown",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "nodormancythrottling",
+      "token": "-nodormancythrottling",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Required to make DormancyNetMultiplier to work if its value is less than 1.0.",
+      "details": "Undocumented by Wildcard.",
+      "description": "Required to make DormancyNetMultiplier to work if its value is less than 1.0. Undocumented by Wildcard.",
+      "example": "-nodormancythrottling",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "nofishloot",
+      "token": "-nofishloot",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Disable non-meat fishing loot when using Fishing Rod.",
+      "details": "Deprecated since patch 260.0 and no longer present in the executable code.",
+      "description": "Disable non-meat fishing loot when using Fishing Rod. Deprecated since patch 260.0 and no longer present in the executable code.",
+      "example": "-nofishloot",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "245.9",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "nohangdetection",
+      "token": "-NoHangDetection",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Prevents the server from shutdown if its start-time takes more than 2700 seconds (45 minutes).",
+      "details": "Useful for servers with big saves or very slow machines. Note: this will disabled further server hangs detection.",
+      "description": "Prevents the server from shutdown if its start-time takes more than 2700 seconds (45 minutes). Useful for servers with big saves or very slow machines. Note: this will disabled further server hangs detection.",
+      "example": "-NoHangDetection",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "246.7",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "nomansky",
+      "token": "-nomansky",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Lots of detailed sky features are disabled, such as clouds and starry night sky.",
+      "details": "This decreases all of those but you can still have them. You still obtain the stars and sun. Using this option on server will not override clients' behaviour, nor bring any benefit.",
+      "description": "Lots of detailed sky features are disabled, such as clouds and starry night sky. This decreases all of those but you can still have them. You still obtain the stars and sun. Using this option on server will not override clients' behaviour, nor bring any benefit.",
+      "example": "-nomansky",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "171.3",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "nomemorybias",
+      "token": "-nomemorybias",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Reduced client game memory usage by about 600 MB system and 600 MB GPU RAM!",
+      "details": "(all meshes now stream LOD's dynamically). This could potentially have a small runtime performance impact, so to use the old method (more RAM usage but no potential performance loss), launch with this option. Using this option on server will not override clients' behaviour, nor bring any benefit.",
+      "description": "Reduced client game memory usage by about 600 MB system and 600 MB GPU RAM! (all meshes now stream LOD's dynamically). This could potentially have a small runtime performance impact, so to use the old method (more RAM usage but no potential performance loss), launch with this option. Using this option on server will not override clients' behaviour, nor bring any benefit.",
+      "example": "-nomemorybias",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "244.6",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "nonetthreading",
+      "token": "-nonetthreading",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Option for ?bRawSockets servers to only utilize a single thread for networking (useful to improve performance for machines with more servers…",
+      "details": "than CPU cores, on Linux in particular). Deprecated with patch 271.17 and no longer present in the executable code.",
+      "description": "Option for ?bRawSockets servers to only utilize a single thread for networking (useful to improve performance for machines with more servers than CPU cores, on Linux in particular). Deprecated with patch 271.17 and no longer present in the executable code.",
+      "example": "-nonetthreading",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "271.15",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "noninlinesaveload",
+      "token": "-noninlinesaveload",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Prevented -inlinesaveload to happen.",
+      "details": "Deprecated and no longer present in the executable code.",
+      "description": "Prevented -inlinesaveload to happen. Deprecated and no longer present in the executable code.",
+      "example": "-noninlinesaveload",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "214.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "noperfthreads",
+      "token": "-noperfthreads",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Disables performance threads.",
+      "details": "Undocumented by Wildcard.",
+      "description": "Disables performance threads. Undocumented by Wildcard.",
+      "example": "-noperfthreads",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Unknown",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "norhithread",
+      "token": "-norhithread",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Used to disable Direct3D 11 parallel batch commands.",
+      "details": "It may be useful only for clients that are having Device Lost crashes, at a performance cost. Using this option on server will not override clients' behaviour, nor bring any benefit.",
+      "description": "Used to disable Direct3D 11 parallel batch commands. It may be useful only for clients that are having Device Lost crashes, at a performance cost. Using this option on server will not override clients' behaviour, nor bring any benefit.",
+      "example": "-norhithread",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "nosound",
+      "token": "-nosound",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Disables sounds to improve performances.",
+      "details": "Undocumented by Wildcard.",
+      "description": "Disables sounds to improve performances. Undocumented by Wildcard.",
+      "example": "-nosound",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Unknown",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "nosteamclient",
+      "token": "-nosteamclient",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Used automatically by client (ShooterGame) to launch the server from HOST\\LOCAL menu.",
+      "details": "Launching the server (ShooterGameServer) directly or through a script using this option will have no effect and will be ignored.",
+      "description": "Used automatically by client (ShooterGame) to launch the server from HOST\\LOCAL menu. Launching the server (ShooterGameServer) directly or through a script using this option will have no effect and will be ignored.",
+      "example": "-nosteamclient",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "notifyadmincommandsinchat",
+      "token": "-NotifyAdminCommandsInChat",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Displays cheat and admincheat commands to admin players only in the global chat.",
+      "details": "Not to be confused with AdminLogging which displays such commands to all players.",
+      "description": "Displays cheat and admincheat commands to admin players only in the global chat. Not to be confused with AdminLogging which displays such commands to all players.",
+      "example": "-NotifyAdminCommandsInChat",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "254.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "no-transfer-from-filtering",
+      "token": "-NoTransferFromFiltering",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Emitted with the cluster trio when clustered.",
+      "details": "",
+      "description": "Emitted with the cluster trio when clustered.",
+      "example": "-NoTransferFromFiltering",
+      "defaultSemantics": "Emitted with the cluster trio when clustered.",
+      "status": "yarkOwned",
+      "conflicts": [
+        "extraArgs:-NoTransferFromFiltering"
+      ],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "YARK-owned lifecycle/profile argument — excluded from user-selectable options."
+    },
+    {
+      "id": "noundermeshchecking",
+      "token": "-noundermeshchecking",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Will turn off the anti-meshing system entirely.",
+      "details": "",
+      "description": "Will turn off the anti-meshing system entirely.",
+      "example": "-noundermeshchecking",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "304.445",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "noundermeshkilling",
+      "token": "-noundermeshkilling",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Will turn off the anti-meshing player kills (but still allow teleporting).",
+      "details": "",
+      "description": "Will turn off the anti-meshing player kills (but still allow teleporting).",
+      "example": "-noundermeshkilling",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "304.445",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "nowildbabies",
+      "token": "-NoWildBabies",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Disables spawning of wild babies.",
+      "details": "",
+      "description": "Disables spawning of wild babies.",
+      "example": "-NoWildBabies",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "No",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "oldsaveformat",
+      "token": "-oldsaveformat",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Used to force the old save format.",
+      "details": "The default save format is based on the newsaveformat, which is approximately 4x faster and 50% smaller. If you want to use the old save format, launch with this option.",
+      "description": "Used to force the old save format. The default save format is based on the newsaveformat, which is approximately 4x faster and 50% smaller. If you want to use the old save format, launch with this option.",
+      "example": "-oldsaveformat",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "244.6",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "onethread",
+      "token": "-onethread",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Disables multithreading. Undocumented by Wildcard.",
+      "details": "",
+      "description": "Disables multithreading. Undocumented by Wildcard.",
+      "example": "-onethread",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Unknown",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "opengl-opengl3-opengl4",
+      "token": "-opengl -opengl3 -opengl4",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Any of these options forces the use OpenGL.",
+      "details": "Theses mode no longer works due the removal of OpenGL RHI mode from the engine. Trying to use this option will crash the client at start-up.",
+      "description": "Any of these options forces the use OpenGL. Theses mode no longer works due the removal of OpenGL RHI mode from the engine. Trying to use this option will crash the client at start-up.",
+      "example": "-opengl-opengl3-opengl4",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "20px",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "parseservertojson",
+      "token": "-parseservertojson",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Dumps at start-up the loading server save to a JSON file located at Saved/Logs/AuditLogs and named AuditLog_%s.json where %s is the current UTC date-time.",
+      "details": "Useful for debugging purposes. Note: this will result in a big slowdown of server start-up and a creation of a big JSON file. On big server saves this may result on server hang before start-up even for hours. Undocumented by Wildcard.",
+      "description": "Dumps at start-up the loading server save to a JSON file located at Saved/Logs/AuditLogs and named AuditLog_%s.json where %s is the current UTC date-time. Useful for debugging purposes. Note: this will result in a big slowdown of server start-up and a creation of a big JSON file. On big server saves this may result on server hang before start-up even for hours. Undocumented by Wildcard.",
+      "example": "-parseservertojson",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "passivemods-modid1-[-modid2-[...]]",
+      "token": "-passivemods=<ModId1>[,<ModId2>[...]]",
+      "aliases": [],
+      "valueType": "csv",
+      "category": "Command line",
+      "summary": "This option disables a mod's functionality while still loading its data.",
+      "details": "This is useful if, for example, you want to have S-Dinos on Astraeos in your cluster but prevent them from spawning on The Island while still allowing them to be transferred back and forth. *Note: The -passivemods function works the same as the regular mod list and will download the specified mod. It does not require the passive mod to also be in the regular mods list. [https://ark.wiki.gg/wiki/Talk:Server_configuration#Passive_Mods_Do_not_need_-mods=]",
+      "description": "This option disables a mod's functionality while still loading its data. This is useful if, for example, you want to have S-Dinos on Astraeos in your cluster but prevent them from spawning on The Island while still allowing them to be transferred back and forth. *Note: The -passivemods function works the same as the regular mod list and will download the specified mod. It does not require the passive mod to also be in the regular mods list. [https://ark.wiki.gg/wiki/Talk:Server_configuration#Passive_Mods_Do_not_need_-mods=]",
+      "example": "-passivemods=928988]",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "No",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "ASA 33.33",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "pauseonddos",
+      "token": "-pauseonddos",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Should pause/halt the game if a DDoS attack by a performed by players is detected.",
+      "details": "Undocumented by Wildcard.",
+      "description": "Should pause/halt the game if a DDoS attack by a performed by players is detected. Undocumented by Wildcard.",
+      "example": "-pauseonddos",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "port",
+      "token": "-port=<Server Port>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "Always composed from profile.gamePort.",
+      "details": "",
+      "description": "Always composed from profile.gamePort.",
+      "example": "-port=7777",
+      "defaultSemantics": "Always composed from profile.gamePort.",
+      "status": "yarkOwned",
+      "conflicts": [
+        "extraArgs:-port"
+      ],
+      "wikiAsa": "Yes",
+      "wikiAse": "No",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "YARK-owned lifecycle/profile argument — excluded from user-selectable options."
+    },
+    {
+      "id": "preventhibernation",
+      "token": "-PreventHibernation",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "In both Single Player and Non-Dedicated sessions, creatures in inactive zones are in hibernation instead of in stasis.",
+      "details": "Use this option to prevent hibernation at the cost of performance and memory usage. Using this option on server will not override clients' behaviour, nor bring any benefit.",
+      "description": "In both Single Player and Non-Dedicated sessions, creatures in inactive zones are in hibernation instead of in stasis. Use this option to prevent hibernation at the cost of performance and memory usage. Using this option on server will not override clients' behaviour, nor bring any benefit.",
+      "example": "-PreventHibernation",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "259.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "preventtotalconversionsavedir",
+      "token": "-PreventTotalConversionSaveDir",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Prevents total conversion mods to use a dedicated save directory, forcing the default save folder.",
+      "details": "Undocumented by Wildcard.",
+      "description": "Prevents total conversion mods to use a dedicated save directory, forcing the default save folder. Undocumented by Wildcard.",
+      "example": "-PreventTotalConversionSaveDir",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "publicipforepic-ipaddress",
+      "token": "-PublicIPForEpic=<IPAddress>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "This is the public IP that EGS clients will attempt to connect to, if this option is missing and -MULTIHOME is specified, then EGS clients…",
+      "details": "will attempt to connect to the multihome IP; note that if you're using multihome and specify a non-public IP address, then players will not be able to connect to your server using EGS. Make sure to set a public IP address (e.g.: WAN or external).",
+      "description": "This is the public IP that EGS clients will attempt to connect to, if this option is missing and -MULTIHOME is specified, then EGS clients will attempt to connect to the multihome IP; note that if you're using multihome and specify a non-public IP address, then players will not be able to connect to your server using EGS. Make sure to set a public IP address (e.g.: WAN or external).",
+      "example": "-PublicIPForEpic=203.0.113.10",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "312.13",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "pveallowtribewar",
+      "token": "-pveallowtribewar",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Opposite of pvedisallowtribewar , allows tribes to officially declare war on each other for mutually-agreed-upon period of time.",
+      "details": "It is suggested to use the Game.ini bPvEAllowTribeWar instead. Undocumented by Wildcard.",
+      "description": "Opposite of pvedisallowtribewar , allows tribes to officially declare war on each other for mutually-agreed-upon period of time. It is suggested to use the Game.ini bPvEAllowTribeWar instead. Undocumented by Wildcard.",
+      "example": "-pveallowtribewar",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "pvedisallowtribewar",
+      "token": "-pvedisallowtribewar",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Prevents tribes in PvE mode to officially declare war on each other for mutually-agreed-upon period of time.",
+      "details": "Alternatively, it is possible to use the Game.ini bPvEAllowTribeWar .",
+      "description": "Prevents tribes in PvE mode to officially declare war on each other for mutually-agreed-upon period of time. Alternatively, it is possible to use the Game.ini bPvEAllowTribeWar .",
+      "example": "-pvedisallowtribewar",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "298.31",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "pvpdisablepenetratinghits",
+      "token": "-PVPDisablePenetratingHits",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Disable the Tek Railgun's ability to shoot through walls.",
+      "details": "Replaced by -DisableRailgunPVP in 349.1 and no longer present in the executable code.",
+      "description": "Disable the Tek Railgun's ability to shoot through walls. Replaced by -DisableRailgunPVP in 349.1 and no longer present in the executable code.",
+      "example": "-PVPDisablePenetratingHits",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "345.25",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "reloadedforbackup",
+      "token": "-ReloadedForBackup",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Marks the world-save to load as a trial backup save, preventing to properly load and continue the game from such world save.",
+      "details": "Useful to spare time when doing tests not needing to fully load the world-save. Undocumented by Wildcard.",
+      "description": "Marks the world-save to load as a trial backup save, preventing to properly load and continue the game from such world save. Useful to spare time when doing tests not needing to fully load the world-save. Undocumented by Wildcard.",
+      "example": "-ReloadedForBackup",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "securesendarkpayload",
+      "token": "-SecureSendArKPayload",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Add this option to protect against the creature upload issue.",
+      "details": "Note: be aware this may have an impact on some mods.",
+      "description": "Add this option to protect against the creature upload issue. Note: be aware this may have an impact on some mods.",
+      "example": "-SecureSendArKPayload",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "357.20",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "server",
+      "token": "-server",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "This is an option to start the Unreal Engine Editor (i.e.: the Ark DevKit) as a dedicated server using the uncooked assets.",
+      "details": "There is no use for the command on either the client or server.",
+      "description": "This is an option to start the Unreal Engine Editor (i.e.: the Ark DevKit) as a dedicated server using the uncooked assets. There is no use for the command on either the client or server.",
+      "example": "-server",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "20px Editor",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "serverallowansel",
+      "token": "-ServerAllowAnsel",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Sets the server to allow clients to use NVIDIA Ansel.",
+      "details": "See link for details on its support.",
+      "description": "Sets the server to allow clients to use NVIDIA Ansel. See link for details on its support.",
+      "example": "-ServerAllowAnsel",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "278.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "servergamelog",
+      "token": "-servergamelog",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Enable server admin logs (including support in the RCON).",
+      "details": "Use RCON command getgamelog to print 100 entries at a time. Also, outputs to dated file in \\Logs , adjust max length of the RCON buffer with the option RCONServerGameLogBuffer=600 .",
+      "description": "Enable server admin logs (including support in the RCON). Use RCON command getgamelog to print 100 entries at a time. Also, outputs to dated file in \\Logs , adjust max length of the RCON buffer with the option RCONServerGameLogBuffer=600 .",
+      "example": "-servergamelog",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "224.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "servergamelogincludetribelogs",
+      "token": "-servergamelogincludetribelogs",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Include tribe logs in the normal server game logs.",
+      "details": "Note that this is required to get the logs from RCON (using -ServerRCONOutputTribeLogs ). Additionally, it will display them in the application's console.",
+      "description": "Include tribe logs in the normal server game logs. Note that this is required to get the logs from RCON (using -ServerRCONOutputTribeLogs ). Additionally, it will display them in the application's console.",
+      "example": "-servergamelogincludetribelogs",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "254.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "serverip-ipv4_address",
+      "token": "-ServerIP=<ipv4_address>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "Option found in Nitrado server setup.",
+      "details": "Expected to work in a -MULTIHOME context. Undocumented by Wildcard.",
+      "description": "Option found in Nitrado server setup. Expected to work in a -MULTIHOME context. Undocumented by Wildcard.",
+      "example": "-ServerIP=203.0.113.10",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "no",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "server-platform",
+      "token": "-ServerPlatform=<plat1>[+<plat2>[...]]",
+      "aliases": [],
+      "valueType": "csv",
+      "category": "Command line",
+      "summary": "Defaults to ALL unless raw extraArgs already sets ServerPlatform.",
+      "details": "",
+      "description": "Defaults to ALL unless raw extraArgs already sets ServerPlatform.",
+      "example": "-ServerPlatform=ALL",
+      "defaultSemantics": "Defaults to ALL unless raw extraArgs already sets ServerPlatform.",
+      "status": "yarkOwned",
+      "conflicts": [
+        "extraArgs:-ServerPlatform"
+      ],
+      "wikiAsa": "Yes",
+      "wikiAse": "No",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "YARK-owned lifecycle/profile argument — excluded from user-selectable options."
+    },
+    {
+      "id": "serverrconoutputtribelogs",
+      "token": "-ServerRCONOutputTribeLogs",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Include tribe logs in the RCON output (which can be recovered with console command GetGameLog ).",
+      "details": "Requires -servergamelogincludetribelogs .",
+      "description": "Include tribe logs in the RCON output (which can be recovered with console command GetGameLog ). Requires -servergamelogincludetribelogs .",
+      "example": "-ServerRCONOutputTribeLogs",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "254.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "serveruseeventcolors",
+      "token": "-ServerUseEventColors",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Enables event colors.",
+      "details": "",
+      "description": "Enables event colors.",
+      "example": "-ServerUseEventColors",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "No",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "56.15",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "speedhackbias-value",
+      "token": "-speedhackbias=<value>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "Bias you can use on your server (can cause more rubber banding on laggy players).",
+      "details": "",
+      "description": "Bias you can use on your server (can cause more rubber banding on laggy players).",
+      "example": "-speedhackbias=1.0",
+      "defaultSemantics": "If omitted, ASA uses 1.0.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "219.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "stasiskeepcontrollers",
+      "token": "-StasisKeepControllers",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "If enabled, the server will keep Unreal Engine actors (e.g.: creatures) AI controller objects in memory when actors go in stasis.",
+      "details": "This favours performance when a portion of a map is rendered by a player and actors go out of stasis. However, especially on large maps, it will result in higher memory usage even with few or no players.",
+      "description": "If enabled, the server will keep Unreal Engine actors (e.g.: creatures) AI controller objects in memory when actors go in stasis. This favours performance when a portion of a map is rendered by a player and actors go out of stasis. However, especially on large maps, it will result in higher memory usage even with few or no players.",
+      "example": "-StasisKeepControllers",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "252.96",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "structuredestructiontag-newbiomesstructureszones",
+      "token": "-StructureDestructionTag=<newBiomesStructuresZones>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "One-Time Auto-Structure Demolish Zones: To do this, which you can only execute once after updating to patch 216, run your server or game with this option.",
+      "details": "could be DestroySwampSnowStructures once updating to version 216.0 or DestroyRedwoodSnowStructures once updating to version 243.0. Deprecated and no longer present in the executable code.",
+      "description": "One-Time Auto-Structure Demolish Zones: To do this, which you can only execute once after updating to patch 216, run your server or game with this option. could be DestroySwampSnowStructures once updating to version 216.0 or DestroyRedwoodSnowStructures once updating to version 243.0. Deprecated and no longer present in the executable code.",
+      "example": "-StructureDestructionTag=newBiomesStructuresZones",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "216.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "structurememopts",
+      "token": "-structurememopts",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Enables structure memory optimizations.",
+      "details": "Note: avoid using it when running structure-related mods (until they get updated) as it can break the snap points of these mod structures.",
+      "description": "Enables structure memory optimizations. Note: avoid using it when running structure-related mods (until they get updated) as it can break the snap points of these mod structures.",
+      "example": "-structurememopts",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "295.108",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "totalconversionmod-modid",
+      "token": "-TotalConversionMod=<ModID>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "Used to specify a total conversion mod (e.g.: Primitive Plus).",
+      "details": "Alternatively, ActiveTotalConversion= in GameUserSettings.ini can also be set.",
+      "description": "Used to specify a total conversion mod (e.g.: Primitive Plus). Alternatively, ActiveTotalConversion= in GameUserSettings.ini can also be set.",
+      "example": "-TotalConversionMod=928988",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "unstasisdinoobstructioncheck",
+      "token": "-UnstasisDinoObstructionCheck",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Should prevent creatures from ghosting through meshes/structures on re-render.",
+      "details": "Undocumented by Wildcard.",
+      "description": "Should prevent creatures from ghosting through meshes/structures on re-render. Undocumented by Wildcard.",
+      "example": "-UnstasisDinoObstructionCheck",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "useallavailablecores",
+      "token": "-USEALLAVAILABLECORES",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "This is an Unreal Engine parameter, used while compiling shaders and cooking assets (i.e.: the ARK DevKit).",
+      "details": "This option is useless for dedicated servers and clients.",
+      "description": "This is an Unreal Engine parameter, used while compiling shaders and cooking assets (i.e.: the ARK DevKit). This option is useless for dedicated servers and clients.",
+      "example": "-USEALLAVAILABLECORES",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "20px Editor",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "usecache",
+      "token": "-usecache",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "~70% faster loading speed option.",
+      "details": "Choose \"Experiment Fast Load Cache\" launch option (use add \"-usecache\" to your launch command line manually). After the first & second times that you start the game & load will be still be slow, but the third time onwards will be fast. Deprecated since 188.2 is enabled by default on all maps and no longer present in the executable code.",
+      "description": "~70% faster loading speed option. Choose \"Experiment Fast Load Cache\" launch option (use add \"-usecache\" to your launch command line manually). After the first & second times that you start the game & load will be still be slow, but the third time onwards will be fast. Deprecated since 188.2 is enabled by default on all maps and no longer present in the executable code.",
+      "example": "-usecache",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "188.1",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "usedynamicconfig",
+      "token": "-UseDynamicConfig",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Enables the use of the dynamic config, if you don't provide a CustomDynamicConfigUrl the server will use the default dynamic config for that…",
+      "details": "platform (the one used on official server). Note: unless you force an immediate update using the ForceUpdateDynamicConfig command, the configuration is checked every time the world is (auto)saved. When you want to \"undo\" the config you should be changing it back to whatever your default is, so it can be read from the updated config and thus applied. Omitting any lines will not update those options.",
+      "description": "Enables the use of the dynamic config, if you don't provide a CustomDynamicConfigUrl the server will use the default dynamic config for that platform (the one used on official server). Note: unless you force an immediate update using the ForceUpdateDynamicConfig command, the configuration is checked every time the world is (auto)saved. When you want to \"undo\" the config you should be changing it back to whatever your default is, so it can be read from the updated config and thus applied. Omitting any lines will not update those options.",
+      "example": "-UseDynamicConfig",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "307.2",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "useitemdupecheck",
+      "token": "-UseItemDupeCheck",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Enables additional dupe protection.",
+      "details": "Note: this could have an impact on mods, so use with caution.",
+      "description": "Enables additional dupe protection. Note: this could have an impact on mods, so use with caution.",
+      "example": "-UseItemDupeCheck",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "333.13",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "usesecurespawnrules",
+      "token": "-UseSecureSpawnRules",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Enables an additional protection for items and creatures spawning.",
+      "details": "Note: This protection is disabled by default since version 349.27, due to server crashes caused by certain mods. The mods in question should now work correctly, so you can now use this option without too much fear.",
+      "description": "Enables an additional protection for items and creatures spawning. Note: This protection is disabled by default since version 349.27, due to server crashes caused by certain mods. The mods in question should now work correctly, so you can now use this option without too much fear.",
+      "example": "-UseSecureSpawnRules",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "349.27",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "useservernetspeedcheck",
+      "token": "-UseServerNetSpeedCheck",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "It should avoid players to accumulate too much movements data per server tick, discarding the last if those are too many.",
+      "details": "Can be turned on also with -GUseServerNetSpeedCheck in dynamic config. Enabled on official clusters. May be useful for servers having too many players and stressed on CPU side. Undocumented by Wildcard.",
+      "description": "It should avoid players to accumulate too much movements data per server tick, discarding the last if those are too many. Can be turned on also with -GUseServerNetSpeedCheck in dynamic config. Enabled on official clusters. May be useful for servers having too many players and stressed on CPU side. Undocumented by Wildcard.",
+      "example": "-UseServerNetSpeedCheck",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "usestore",
+      "token": "-usestore",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Same basic behaviour of official (non-legacy) servers on handling player characters data: character profile file (.arkprofile) is not saved…",
+      "details": "separately from map save (.ark), nor its backup. When necessary (e.g.: a character just transferred or a new character has been created) a temporary character profile file is created and kept until next world-save. Tribe profiles are stored in a different format (.arktributetribe). Allows -BackupTransferPlayerDatas option (for fully mimic official servers save behaviour). Use the option -converttostore to convert previous non stored data to stored data. This option must be used to correctly load the Official 2023 Server saves backups along with -newsaveformat .",
+      "description": "Same basic behaviour of official (non-legacy) servers on handling player characters data: character profile file (.arkprofile) is not saved separately from map save (.ark), nor its backup. When necessary (e.g.: a character just transferred or a new character has been created) a temporary character profile file is created and kept until next world-save. Tribe profiles are stored in a different format (.arktributetribe). Allows -BackupTransferPlayerDatas option (for fully mimic official servers save behaviour). Use the option -converttostore to convert previous non stored data to stored data. This option must be used to correctly load the Official 2023 Server saves backups along with -newsaveformat .",
+      "example": "-usestore",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "57.12",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "usestructurestasisgrid",
+      "token": "-UseStructureStasisGrid",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Enables the structure stasis grid to improve server performance on large bases with lots of players StudioWildcard (October 9, 2020)…",
+      "details": "[https://survivetheark.com/index.php?/articles.html/community-crunch-241-fear-evolved-4-live-tuning-system-network-improvements-and-more-r1652 \"Live Tuning System\"]. Community Crunch 241: Fear Evolved 4, Live Tuning System, Network Improvements, and More! .",
+      "description": "Enables the structure stasis grid to improve server performance on large bases with lots of players StudioWildcard (October 9, 2020) [https://survivetheark.com/index.php?/articles.html/community-crunch-241-fear-evolved-4-live-tuning-system-network-improvements-and-more-r1652 \"Live Tuning System\"]. Community Crunch 241: Fear Evolved 4, Live Tuning System, Network Improvements, and More! .",
+      "example": "-UseStructureStasisGrid",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "314.5",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "usetameeffectivenessclamp",
+      "token": "-UseTameEffectivenessClamp",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Prevents taming effectiveness never going over 100%.",
+      "details": "Undocumented by Wildcard.",
+      "description": "Prevents taming effectiveness never going over 100%. Undocumented by Wildcard.",
+      "example": "-UseTameEffectivenessClamp",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "usevivox",
+      "token": "-UseVivox",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Enables Vivox on Steam only servers.",
+      "details": "Default for EPIC servers but can be enabled for Steam server.",
+      "description": "Enables Vivox on Steam only servers. Default for EPIC servers but can be enabled for Steam server.",
+      "example": "-UseVivox",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "311.74",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "vday",
+      "token": "-vday",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Activated Valentine’s Day Event.",
+      "details": "Deprecated, use -ActiveEvent=vday instead.",
+      "description": "Activated Valentine’s Day Event. Deprecated, use -ActiveEvent=vday instead.",
+      "example": "-vday",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "254.93",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "vulkan",
+      "token": "-vulkan",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Unreal Engine option to force Vulkan rendering path.",
+      "details": "In was added first for the defunct Google Stadia version. In is not supported as well. Trying to use this option will crash the client at start-up.",
+      "description": "Unreal Engine option to force Vulkan rendering path. In was added first for the defunct Google Stadia version. In is not supported as well. Trying to use this option will crash the client at start-up.",
+      "example": "-vulkan",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "20px",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "webalarm",
+      "token": "-webalarm",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Activate Web alarms when important things happen to a tribe, such as Tripwire Alarms going off and Babies being born.",
+      "details": "See Web Notifications for details.",
+      "description": "Activate Web alarms when important things happen to a tribe, such as Tripwire Alarms going off and Babies being born. See Web Notifications for details.",
+      "example": "-webalarm",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "243.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "winlivemaxplayers-integer",
+      "token": "-WinLiveMaxPlayers=<integer>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "Sets the maximum of players for the server.",
+      "details": "This currently replaces the MaxPlayers setting from the GameUserSettings.ini option.",
+      "description": "Sets the maximum of players for the server. This currently replaces the MaxPlayers setting from the GameUserSettings.ini option.",
+      "example": "-WinLiveMaxPlayers=70",
+      "defaultSemantics": "If omitted, ASA uses 70.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "No",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "q-altsavedirectoryname-savedir_name",
+      "token": "?AltSaveDirectoryName=<savedir_name>",
+      "aliases": [],
+      "valueType": "enum",
+      "category": "Command line",
+      "summary": "Allows to specify a custom directory name for server world-save.",
+      "details": "Usually used to manage clusters, read more about it in the Cross-ARK Data Transfer section. : Note that it still uses the / directory structure.",
+      "description": "Allows to specify a custom directory name for server world-save. Usually used to manage clusters, read more about it in the Cross-ARK Data Transfer section. : Note that it still uses the / directory structure.",
+      "example": "?AltSaveDirectoryName=ClusterSave",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "q-brawsockets",
+      "token": "?bRawSockets",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "Direct UDP socket connections rather than Steam P2P.",
+      "details": "Deprecated since 311.78 and no longer present in the executable code.",
+      "description": "Direct UDP socket connections rather than Steam P2P. Deprecated since 311.78 and no longer present in the executable code.",
+      "example": "?bRawSockets",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "213.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "q-eventcolorschanceoverride-float",
+      "token": "?EventColorsChanceOverride=<float>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "Takes a floating point value between 0 and 1.0 (1 = 100% chance for colour override).",
+      "details": "Note: This only affects freshly spawned wild creatures (you can use console command Cheat DestroyWildDinos to wipe wild creatures so that they all respawn with a chance of getting the event colors).",
+      "description": "Takes a floating point value between 0 and 1.0 (1 = 100% chance for colour override). Note: This only affects freshly spawned wild creatures (you can use console command Cheat DestroyWildDinos to wipe wild creatures so that they all respawn with a chance of getting the event colors).",
+      "example": "?EventColorsChanceOverride=1.0",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "355.3",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "q-gamemodids-modid1-[-modid2-[...]]",
+      "token": "?GameModIds=<ModID1>[,<ModID2>[...]]",
+      "aliases": [],
+      "valueType": "csv",
+      "category": "Command line",
+      "summary": "Steam only. Specifies the order and which mods are loaded, ModIDs need to be separated with commas ( , ).",
+      "details": "Mod priority is in descending order left to right (the left-most ID is the top priority mod). It is suggested to use instead the ActiveMods under [ServerSettings] of GameUserSettings.ini. : Obsolete, use argument -mods instead.",
+      "description": "Steam only. Specifies the order and which mods are loaded, ModIDs need to be separated with commas ( , ). Mod priority is in descending order left to right (the left-most ID is the top priority mod). It is suggested to use instead the ActiveMods under [ServerSettings] of GameUserSettings.ini. : Obsolete, use argument -mods instead.",
+      "example": "?GameModIds=928988]",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "190.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "q-listen",
+      "token": "?listen",
+      "aliases": [],
+      "valueType": "flag",
+      "category": "Command line",
+      "summary": "This is an option to start the Unreal Engine Editor (i.e.: the Ark DevKit) as an undedicated server using the uncooked assets.",
+      "details": "There is no use for the command on either the client or server.",
+      "description": "This is an option to start the Unreal Engine Editor (i.e.: the Ark DevKit) as an undedicated server using the uncooked assets. There is no use for the command on either the client or server.",
+      "example": "?listen",
+      "defaultSemantics": "If omitted, this option stays off.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": true,
+      "wikiSincePatch": "20px Server",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07"
+    },
+    {
+      "id": "q-mapplayerlocation-false",
+      "token": "?MapPlayerLocation=false",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "Same as ShowMapPlayerLocation of GameUserSettings.ini (actually using this option will make the server write the ShowMapPlayerLocation entry).",
+      "details": "",
+      "description": "Same as ShowMapPlayerLocation of GameUserSettings.ini (actually using this option will make the server write the ShowMapPlayerLocation entry).",
+      "example": "?MapPlayerLocation=false",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "uncertain",
+      "conflicts": [],
+      "wikiAsa": "Unknown",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "170.0",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "q-newyear1utc-epoch-time",
+      "token": "?NewYear1UTC=<epoch time>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "You can use https://www.epochconverter.com to get your appropriate timestamp.",
+      "details": "Please keep in mind that this event cannot be run before Midnight EST on the 1st of January, so if you wish to change your time it would have to be set after that. Must be used with the with the -NewYearEvent command line option.",
+      "description": "You can use https://www.epochconverter.com to get your appropriate timestamp. Please keep in mind that this event cannot be run before Midnight EST on the 1st of January, so if you wish to change your time it would have to be set after that. Must be used with the with the -NewYearEvent command line option.",
+      "example": "?NewYear1UTC=1704067200",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "320.38",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "q-newyear2utc-epoch-time",
+      "token": "?NewYear2UTC=<epoch time>",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "You can use https://www.epochconverter.com to get your appropriate timestamp.",
+      "details": "Please keep in mind that this event cannot be run before Midnight EST on the 1st of January, so if you wish to change your time it would have to be set after that. Must be used with the with the -NewYearEvent command line option.",
+      "description": "You can use https://www.epochconverter.com to get your appropriate timestamp. Please keep in mind that this event cannot be run before Midnight EST on the 1st of January, so if you wish to change your time it would have to be set after that. Must be used with the with the -NewYearEvent command line option.",
+      "example": "?NewYear2UTC=1704067200",
+      "defaultSemantics": "If omitted, ASA keeps its built-in default.",
+      "status": "unsupported",
+      "conflicts": [],
+      "wikiAsa": "No",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "320.38",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Wiki ASA column is Missing — not advertised as ASA-supported."
+    },
+    {
+      "id": "map-session",
+      "token": "\"Map\"?SessionName=",
+      "aliases": [],
+      "valueType": "string",
+      "category": "Lifecycle",
+      "summary": "Always composed first from profile.map + profile.sessionName.",
+      "details": "",
+      "description": "Always composed first from profile.map + profile.sessionName.",
+      "example": "\"TheIsland_WP\"?SessionName=\"MyASAServer\"",
+      "defaultSemantics": "Always composed first from profile.map + profile.sessionName.",
+      "status": "yarkOwned",
+      "conflicts": [
+        "extraArgs:\"Map\"?SessionName"
+      ],
+      "wikiAsa": "n/a",
+      "wikiAse": "n/a",
+      "wikiDeprecated": false,
+      "wikiSincePatch": null,
+      "sources": [
+        {
+          "label": "YARK launch-args.ts",
+          "url": "https://github.com/gabomarin/yark/blob/main/src/backend/domains/instances/launch-args.ts"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Synthetic YARK-owned entry — not sourced from the wiki Argument table."
+    }
+  ]
+}

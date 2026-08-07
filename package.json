@@ -37,7 +37,8 @@
     "website:build": "npm run build --prefix website",
     "prepare": "husky",
     "catalog:ini-meta": "node scripts/build-ini-setting-meta.cjs",
-    "catalog:rebuild": "npm run catalog:ini-meta && npm run catalog:ui-categories"
+    "catalog:launch-options": "node scripts/build-asa-launch-options-catalog.cjs",
+    "catalog:rebuild": "npm run catalog:ini-meta && npm run catalog:ui-categories && npm run catalog:launch-options"
   },
   "dependencies": {
     "@mantine/core": "^9.5.0",

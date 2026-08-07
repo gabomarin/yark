@@ -16,7 +16,6 @@ import {
   Stack,
   Text,
   TextInput,
-  Textarea,
   Title,
 } from "@mantine/core";
 import {
@@ -33,6 +32,7 @@ import { ServerFormStartupFields } from "./ServerFormStartupFields";
 import { ServerFormClusterFields } from "./ServerFormClusterFields";
 import { ServerFormPortConflictAlert } from "./ServerFormPortConflictAlert";
 import { ServerFormSection } from "./ServerFormSection";
+import { ServerFormExtraArgsField } from "./ServerFormExtraArgsField";
 import { MoveInstallDialog } from "../MoveInstallDialog/MoveInstallDialog";
 import classes from "./ServerForm.module.css";
 
@@ -505,20 +505,11 @@ export function ServerForm(props: Props): ReactElement {
             placeholder="928988, 929420"
             description="CurseForge mod IDs, separated by commas. Prefer the Mods tab to add or turn mods off."
           />
-          <Textarea
-            label="Extra arguments"
-            size={inputSize}
+          <ServerFormExtraArgsField
             value={state.extraArgs}
-            onChange={(e) => setField("extraArgs")(e.currentTarget.value)}
-            placeholder="-NoBattlEye -ForceAllowCaveFlyers -servergamelog"
-            description={
-              embedded
-                ? "Space-separated. Appended to the dedicated server launch command."
-                : undefined
-            }
-            minRows={embedded ? 3 : 2}
-            autosize
-            maxRows={8}
+            inputSize={inputSize}
+            embedded={embedded}
+            onChange={setField("extraArgs")}
           />
         </ServerFormSection>
 
