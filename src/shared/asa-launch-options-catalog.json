@@ -14,17 +14,18 @@
     "composerOrder": [
       "\"Map\"?SessionName=",
       "-port=",
-      "-ServerPlatform=ALL (default)",
+      "-ServerPlatform=ALL (default unless Launch structured / raw sets it)",
       "-mods=",
       "-clusterid= / -ClusterDirOverride= / -NoTransferFromFiltering",
+      "structuredLaunchArgs…",
       "extraArgs…"
     ]
   },
   "counts": {
-    "supported": 50,
+    "supported": 52,
     "unsupported": 40,
     "uncertain": 46,
-    "yarkOwned": 7
+    "yarkOwned": 6
   },
   "entries": [
     {
@@ -440,6 +441,32 @@
       ],
       "reviewedAt": "2026-08-07",
       "notes": "Wiki ASA column is Unknown (neither Check nor Missing) — keep for audit only."
+    },
+    {
+      "id": "customdynamicconfigurl-url",
+      "token": "-CustomDynamicConfigUrl=<url>",
+      "aliases": ["?CustomDynamicConfigUrl="],
+      "valueType": "string",
+      "category": "Command line",
+      "summary": "HTTP URL to a live dynamicconfig.ini (requires -UseDynamicConfig).",
+      "details": "HTTPS is not supported. If omitted while -UseDynamicConfig is set, ASA uses the official platform dynamic config. Can also live in GameUserSettings.ini.",
+      "description": "HTTP URL to a live dynamicconfig.ini (requires -UseDynamicConfig). HTTPS is not supported. If omitted while -UseDynamicConfig is set, ASA uses the official platform dynamic config. Can also live in GameUserSettings.ini.",
+      "example": "-CustomDynamicConfigUrl=\"http://arkdedicated.com/dynamicconfig.ini\"",
+      "defaultSemantics": "If omitted with -UseDynamicConfig, ASA uses the official dynamic config.",
+      "status": "supported",
+      "conflicts": [],
+      "wikiAsa": "Yes",
+      "wikiAse": "Yes",
+      "wikiDeprecated": false,
+      "wikiSincePatch": "307.2",
+      "sources": [
+        {
+          "label": "ark.wiki.gg Server configuration — Command line options",
+          "url": "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options"
+        }
+      ],
+      "reviewedAt": "2026-08-07",
+      "notes": "Companion to -UseDynamicConfig on the Launch tab (#93)."
     },
     {
       "id": "custommerticsurl-url",
@@ -2874,17 +2901,15 @@
       "id": "server-platform",
       "token": "-ServerPlatform=<plat1>[+<plat2>[...]]",
       "aliases": [],
-      "valueType": "csv",
+      "valueType": "enum",
       "category": "Command line",
-      "summary": "Defaults to ALL unless raw extraArgs already sets ServerPlatform.",
-      "details": "",
-      "description": "Defaults to ALL unless raw extraArgs already sets ServerPlatform.",
+      "summary": "Which clients may join (PC, consoles, or ALL).",
+      "details": "Documented platform codes are PC (Steam/Epic), PS5, XSX, and WINGDK (Game Pass). On the Launch tab, pick one or more; selecting every code emits ALL. Combine manually with + in Extra arguments if needed. YARK defaults to ALL when this option is off and Extra arguments do not set it.",
+      "description": "Which clients may join (PC, consoles, or ALL). Documented platform codes are PC (Steam/Epic), PS5, XSX, and WINGDK (Game Pass). On the Launch tab, pick one or more; selecting every code emits ALL. Combine manually with + in Extra arguments if needed. YARK defaults to ALL when this option is off and Extra arguments do not set it.",
       "example": "-ServerPlatform=ALL",
-      "defaultSemantics": "Defaults to ALL unless raw extraArgs already sets ServerPlatform.",
-      "status": "yarkOwned",
-      "conflicts": [
-        "extraArgs:-ServerPlatform"
-      ],
+      "defaultSemantics": "If omitted, YARK adds -ServerPlatform=ALL.",
+      "status": "supported",
+      "conflicts": [],
       "wikiAsa": "Yes",
       "wikiAse": "No",
       "wikiDeprecated": false,
@@ -2896,7 +2921,7 @@
         }
       ],
       "reviewedAt": "2026-08-07",
-      "notes": "YARK-owned lifecycle/profile argument — excluded from user-selectable options."
+      "notes": "Selectable on Launch (tier A). Platform codes from ASA/community docs: ALL, PC, PS5, XSX, WINGDK; + joins multiple."
     },
     {
       "id": "serverrconoutputtribelogs",

@@ -122,6 +122,7 @@ export function toProfileInput(
     clusterId: server.clusterId,
     clusterDir: server.clusterDir,
     extraArgs: server.extraArgs,
+    structuredLaunchArgs: server.structuredLaunchArgs ?? {},
     mods,
     disabledMods,
     modMetadataCache,

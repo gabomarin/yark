@@ -57,8 +57,15 @@ function PreviewBody(props: {
       )}
       {preview.profileDiff.extraArgs !== null && (
         <Text size="sm">
-          Launch args: {preview.profileDiff.extraArgs.before.length} →{" "}
+          Extra args: {preview.profileDiff.extraArgs.before.length} →{" "}
           {preview.profileDiff.extraArgs.after.length}
+        </Text>
+      )}
+      {preview.profileDiff.structuredLaunchArgs !== null && (
+        <Text size="sm">
+          Structured launch:{" "}
+          {preview.profileDiff.structuredLaunchArgs.before.length} →{" "}
+          {preview.profileDiff.structuredLaunchArgs.after.length}
         </Text>
       )}
       {preview.profileDiff.backupPolicy !== null && (

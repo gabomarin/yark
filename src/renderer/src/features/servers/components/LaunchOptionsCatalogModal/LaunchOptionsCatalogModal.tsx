@@ -22,7 +22,14 @@ export function LaunchOptionsCatalogModal(props: Props): ReactElement {
       size={1200}
       classNames={{
         content: classes.modalContent,
+        header: classes.modalHeader,
         body: classes.modalBody,
+      }}
+      styles={{
+        content: {
+          height: "min(84vh, 820px)",
+          maxHeight: "min(84vh, 820px)",
+        },
       }}
     >
       <div className={classes.root} data-density={density}>
@@ -34,6 +41,18 @@ export function LaunchOptionsCatalogModal(props: Props): ReactElement {
               target="_blank"
               rel="noreferrer"
               size="sm"
+              className={classes.sourceLink}
+              underline="always"
+              styles={{
+                root: {
+                  color:
+                    "color-mix(in srgb, var(--app-color-cryo) 50%, white)",
+                  "--anchor-color":
+                    "color-mix(in srgb, var(--app-color-cryo) 50%, white)",
+                  "--anchor-hover-color":
+                    "color-mix(in srgb, var(--app-color-cryo) 35%, white)",
+                },
+              }}
             >
               ark.wiki.gg Command line options
             </Anchor>

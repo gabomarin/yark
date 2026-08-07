@@ -42,6 +42,34 @@ describe("validateProfileInput", () => {
     expect(validateProfileInput(validInput())).toEqual([]);
   });
 
+  it("rejects enabled structured options that need a value (#93)", () => {
+    const issues = validateProfileInput(
+      validInput({
+        structuredLaunchArgs: {
+          usedynamicconfig: { enabled: true },
+          "customdynamicconfigurl-url": { enabled: true, value: "   " },
+        },
+      }),
+    );
+    expect(issues.some((i) => /requires a value/i.test(i.message))).toBe(true);
+    expect(
+      issues.some((i) => i.field === "structuredLaunchArgs"),
+    ).toBe(true);
+  });
+
+  it("rejects raw args that duplicate structured selections (#93)", () => {
+    const issues = validateProfileInput(
+      validInput({
+        structuredLaunchArgs: { nobattleye: { enabled: true } },
+        extraArgs: ["-NoBattlEye"],
+      }),
+    );
+    expect(issues.some((i) => /duplicates a structured/i.test(i.message))).toBe(
+      true,
+    );
+    expect(issues.some((i) => i.field === "extraArgs")).toBe(true);
+  });
+
   it("rejects ports out of range", () => {
     const issues = validateProfileInput(validInput({ gamePort: 80 }));
     expect(issues.some((i) => i.field === "gamePort")).toBe(true);

@@ -112,7 +112,7 @@ export function LaunchOptionsCatalogEntriesTab(props: Props): ReactElement {
           />
         </div>
 
-        <ScrollArea className={classes.listPane} type="auto">
+        <ScrollArea className={classes.listPane} type="auto" h="100%">
           <Stack gap="xs">
             {entries.length === 0 && (
               <Text size="sm" c="dimmed" ta="center" py="lg">
@@ -170,7 +170,7 @@ export function LaunchOptionsCatalogEntriesTab(props: Props): ReactElement {
               <Text className={classes.detailToken}>{selected.token}</Text>
             </div>
 
-            <ScrollArea className={classes.detailPane} type="auto">
+            <ScrollArea className={classes.detailPane} type="auto" h="100%">
               <div className={classes.metaBlock}>
                 <MetaRow label="Summary">{selected.summary}</MetaRow>
                 {selected.details ? (

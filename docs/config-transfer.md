@@ -59,7 +59,7 @@ cluster templates (#40) and bulk apply (#90) can reuse the same engine.
 4. INI files after composition + target-owned reapply (before profile update so
    async profile→INI sync cannot clobber copied rates; only selected INI files
    are written)  
-5. Profile fields (mods / extraArgs / passwords)  
+5. Profile fields (mods / Extra arguments + structured Launch options / passwords)  
 6. Backup policy schedule/retention (target `backupDir` is preserved)  
 7. Emit one auditable event  
 
@@ -77,7 +77,8 @@ Configuration editor (Rates, Breeding, …), not raw `[Section]` headers.
 Selection still maps to section+key for merge/replace compose.
 
 Mods and launch arguments also expose Merge/Replace: merge appends missing
-entries; replace overwrites the target list with the source list.
+Extra tokens / overlays structured Launch selections by catalog id; replace
+overwrites both Extra arguments and structured Launch options from the source.
 
 The Targets step lists destinations as checkboxes (select-all + per-server);
 the source is fixed to the server that opened the wizard. Preview/commit run

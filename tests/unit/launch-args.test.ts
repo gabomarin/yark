@@ -122,6 +122,24 @@ describe("buildLaunchArgs", () => {
     expect(args[args.length - 1]).toBe("-NoBattlEye");
     expect(args).toContain("-ServerPlatform=ALL");
   });
+
+  it("composes structured launch args before raw extraArgs (#93)", () => {
+    const args = buildLaunchArgs(
+      profile({
+        structuredLaunchArgs: {
+          nobattleye: { enabled: true },
+          "gbusagetoforcerestart-value": { enabled: true, value: "35" },
+        },
+        extraArgs: ["-CustomRaw"],
+      }),
+    );
+    expect(args).toContain("-NoBattlEye");
+    expect(args).toContain("-GBUsageToForceRestart=35");
+    expect(args.at(-1)).toBe("-CustomRaw");
+    const noBattlEye = args.indexOf("-NoBattlEye");
+    const custom = args.indexOf("-CustomRaw");
+    expect(noBattlEye).toBeLessThan(custom);
+  });
 });
 
 describe("buildMapUrlArg / buildWindowsVerbatimSpawnArgs", () => {

@@ -7,6 +7,11 @@ import type {
   ServerProfile,
   ServerProfileInput,
 } from "@shared/types";
+import {
+  emptyStructuredLaunchArgs,
+  normalizeStructuredLaunchArgs,
+  type StructuredLaunchArgs,
+} from "@shared/structured-launch-options";
 
 interface ServerRow {
   id: string;
@@ -24,6 +29,7 @@ interface ServerRow {
   cluster_id: string | null;
   cluster_dir: string | null;
   extra_args: string;
+  structured_launch_args: string;
   mods: string;
   disabled_mods: string;
   mod_metadata_cache: string;
@@ -57,6 +63,9 @@ function rowToProfile(row: ServerRow): ServerProfile {
     clusterId: row.cluster_id,
     clusterDir: row.cluster_dir,
     extraArgs: JSON.parse(row.extra_args) as string[],
+    structuredLaunchArgs: normalizeStructuredLaunchArgs(
+      parseJson<StructuredLaunchArgs>(row.structured_launch_args, {}),
+    ),
     mods: JSON.parse(row.mods) as string[],
     disabledMods: parseJson(row.disabled_mods, []),
     modMetadataCache: parseJson<Record<string, ModMetadata>>(row.mod_metadata_cache, {}),
@@ -90,6 +99,9 @@ export class ServerRepository {
       autoStart: input.autoStart === true,
       disabledMods: input.disabledMods ?? [],
       modMetadataCache: input.modMetadataCache ?? {},
+      structuredLaunchArgs: normalizeStructuredLaunchArgs(
+        input.structuredLaunchArgs ?? emptyStructuredLaunchArgs(),
+      ),
       id: randomUUID(),
       createdAt: now,
       updatedAt: now,
@@ -100,9 +112,9 @@ export class ServerRepository {
           id, name, map, install_dir, enabled, auto_start, session_name,
           game_port, query_port, rcon_port,
           server_password, admin_password,
-          cluster_id, cluster_dir, extra_args, mods,
+          cluster_id, cluster_dir, extra_args, structured_launch_args, mods,
           disabled_mods, mod_metadata_cache, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         profile.id,
@@ -120,6 +132,7 @@ export class ServerRepository {
         profile.clusterId,
         profile.clusterDir,
         JSON.stringify(profile.extraArgs),
+        JSON.stringify(profile.structuredLaunchArgs ?? {}),
         JSON.stringify(profile.mods),
         JSON.stringify(profile.disabledMods),
         JSON.stringify(profile.modMetadataCache),
@@ -139,7 +152,7 @@ export class ServerRepository {
           name = ?, map = ?, install_dir = ?, session_name = ?,
           game_port = ?, query_port = ?, rcon_port = ?,
           server_password = ?, admin_password = ?,
-          cluster_id = ?, cluster_dir = ?, extra_args = ?, mods = ?,
+          cluster_id = ?, cluster_dir = ?, extra_args = ?, structured_launch_args = ?, mods = ?,
           disabled_mods = ?, mod_metadata_cache = ?,
           auto_start = ?,
           updated_at = ?
@@ -158,6 +171,11 @@ export class ServerRepository {
         input.clusterId,
         input.clusterDir,
         JSON.stringify(input.extraArgs),
+        JSON.stringify(
+          normalizeStructuredLaunchArgs(
+            input.structuredLaunchArgs ?? existing.structuredLaunchArgs ?? {},
+          ),
+        ),
         JSON.stringify(input.mods),
         JSON.stringify(input.disabledMods ?? existing.disabledMods ?? []),
         JSON.stringify(input.modMetadataCache ?? existing.modMetadataCache ?? {}),

@@ -388,6 +388,7 @@ export class InstanceService extends EventEmitter {
         clusterId: source.clusterId,
         clusterDir: source.clusterDir,
         extraArgs: [...source.extraArgs],
+        structuredLaunchArgs: { ...(source.structuredLaunchArgs ?? {}) },
         mods: [...source.mods],
         disabledMods: [...(source.disabledMods ?? [])],
         modMetadataCache: { ...(source.modMetadataCache ?? {}) },
@@ -445,6 +446,7 @@ export class InstanceService extends EventEmitter {
       clusterId: source.clusterId,
       clusterDir: source.clusterDir,
       extraArgs: [...source.extraArgs],
+      structuredLaunchArgs: { ...(source.structuredLaunchArgs ?? {}) },
       mods: [...source.mods],
       disabledMods: [...(source.disabledMods ?? [])],
       modMetadataCache: { ...(source.modMetadataCache ?? {}) },
@@ -537,6 +539,7 @@ export class InstanceService extends EventEmitter {
       );
     }
     const effective = this.effectiveStartProfile(profile, options);
+    this.assertValidInput(effective);
     const running = this.repo
       .list()
       .filter((p) => p.id !== id && this.processes.isActive(p.id))

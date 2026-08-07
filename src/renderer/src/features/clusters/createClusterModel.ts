@@ -191,6 +191,7 @@ export function serverProfileToInput(server: ServerProfile): ServerProfileInput 
     clusterId: server.clusterId,
     clusterDir: server.clusterDir,
     extraArgs: server.extraArgs,
+    structuredLaunchArgs: server.structuredLaunchArgs ?? {},
     mods: server.mods,
     disabledMods: server.disabledMods ?? [],
     modMetadataCache: server.modMetadataCache ?? {},

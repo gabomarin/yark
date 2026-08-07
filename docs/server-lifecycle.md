@@ -41,7 +41,7 @@ Binary path: `{installDir}/ShooterGame/Binaries/Win64/ArkAscendedServer.exe`
 | --- | --- |
 | Map + session name | CLI map URL (`buildMapUrlArg`) |
 | Game port | CLI `-port=N` **and** INI `[SessionSettings] Port` |
-| `-ServerPlatform` | CLI (default `ALL` unless `extraArgs` already sets it) |
+| `-ServerPlatform` | CLI (default `ALL` unless structured/raw trailing args already set it) |
 | Mods / cluster trio | CLI when present on the profile |
 | RCON enable/port | INI `[ServerSettings]` only |
 | Admin / server password | INI `[ServerSettings]` only |
@@ -57,11 +57,16 @@ CLI. Unit tests in `tests/unit/launch-args.test.ts` lock this.
 1. `"${map}"?SessionName="${escapedSessionName}"` — **separate** quotes around
    map and SessionName (never `"Map?SessionName=…"`).
 2. `-port=${gamePort}`
-3. `-ServerPlatform=ALL` unless any `extraArgs` matches `/ServerPlatform/i`
+3. `-ServerPlatform=ALL` unless structured or raw trailing args match `/ServerPlatform/i`
 4. `-mods=id1,id2,…` when `mods.length > 0`
 5. If **both** `clusterId` and `clusterDir` are set:
    `-clusterid=…`, `-ClusterDirOverride=…`, `-NoTransferFromFiltering`
-6. `…profile.extraArgs`
+6. Structured Launch-tab selections (`structuredLaunchArgs`, catalog id → token)
+7. `…profile.extraArgs` (raw Extra arguments)
+
+UI: workspace tab **Launch** (after Mods) edits structured + raw; create/edit
+Server form no longer hosts Mods IDs or Extra arguments.
+See [docs/launch-options-catalog.md](launch-options-catalog.md) for curation.
 
 UI / runtime logs use `formatLaunchCommandLine` (logical `"` quotes). On
 Windows, live spawn uses `buildWindowsVerbatimSpawnArgs` so Node does not add
@@ -400,6 +405,7 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 | File | Focus |
 | --- | --- |
 | `tests/unit/launch-args.test.ts` | CLI shape; no listen/RCON/passwords/QueryPort |
+| `npm run e2e:launch-args` | Windows UI: structured + raw args on Runtime `Commandline` (piped) |
 | `tests/unit/sync-profile-ini.test.ts` | Exact INI keys / null password → `""` |
 | `tests/unit/validation.test.ts` | Ports, paths, cluster, mods, conflicts |
 | `tests/unit/host-port-probe.test.ts` | Host bind classify, suggestions, UDP release, error prefixes |
@@ -416,7 +422,8 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 See also [backups.md](backups.md) (restore requires `!isActive`),
 [updates-steamcmd.md](updates-steamcmd.md) (safe update auto-stop, `pre_update`,
 conditional restart, real-host validation),
-[logs.md](logs.md) (runtime buffer from piped stdout/stderr and Saved/Logs tail),
+[logs.md](logs.md) (runtime buffer from piped stdout/stderr and Saved/Logs tail;
+`npm run e2e:launch-args` asserts structured/raw tokens on Runtime `Commandline`),
 [rcon.md](rcon.md) (workspace console / players / ban list),
 [settings.md](settings.md) (tray, Start with Windows, auto-start summary), and
 [clusters.md](clusters.md) (transfer-compliance reports and cluster launch trio).

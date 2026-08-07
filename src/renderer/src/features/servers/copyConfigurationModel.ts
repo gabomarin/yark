@@ -29,10 +29,10 @@ export const MODS_REPLACE_TOOLTIP =
   "Replace the target mod list with the source list, including disabled state.";
 
 export const EXTRA_ARGS_MERGE_TOOLTIP =
-  "Add source launch arguments the target does not already have. Existing target args stay.";
+  "Merge Extra arguments and structured Launch options from the source. Matching Extra tokens stay; structured flags are overlaid by id.";
 
 export const EXTRA_ARGS_REPLACE_TOOLTIP =
-  "Replace the target launch arguments with the source list.";
+  "Replace Extra arguments and structured Launch options with the source.";
 
 export function statusLabel(status: ServerStatus): string {
   if (status === "running") return "Running";

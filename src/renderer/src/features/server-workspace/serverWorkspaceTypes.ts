@@ -1,6 +1,7 @@
 export type WorkspaceTab =
   | "server"
   | "mods"
+  | "launch"
   | "iniFiles"
   | "backups"
   | "logs"

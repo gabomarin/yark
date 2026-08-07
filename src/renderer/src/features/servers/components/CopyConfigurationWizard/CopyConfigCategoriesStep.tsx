@@ -101,9 +101,9 @@ export function CopyConfigCategoriesStep(props: Props): ReactElement {
       <CopyConfigCategoryCard
         title="Launch arguments"
         description={
-          describe !== null && describe.extraArgs.length > 0
-            ? `${describe.extraArgs.length} arguments`
-            : "Extra command-line flags"
+          describe !== null
+            ? `${describe.extraArgs.length} extra · ${describe.structuredLaunchArgs.length} structured`
+            : "Extra command-line flags and structured Launch options"
         }
         checked={selection.extraArgs.enabled}
         onChange={(enabled) =>
@@ -125,13 +125,24 @@ export function CopyConfigCategoriesStep(props: Props): ReactElement {
               }))
             }
           />
-          {describe !== null && describe.extraArgs.length > 0 ? (
-            <Text size="xs" c="dimmed" ff="monospace" lineClamp={2}>
-              {describe.extraArgs.join(" ")}
-            </Text>
+          {describe !== null &&
+          (describe.extraArgs.length > 0 ||
+            describe.structuredLaunchArgs.length > 0) ? (
+            <Stack gap={4}>
+              {describe.structuredLaunchArgs.length > 0 ? (
+                <Text size="xs" c="dimmed" ff="monospace" lineClamp={2}>
+                  Structured: {describe.structuredLaunchArgs.join(" ")}
+                </Text>
+              ) : null}
+              {describe.extraArgs.length > 0 ? (
+                <Text size="xs" c="dimmed" ff="monospace" lineClamp={2}>
+                  Extra: {describe.extraArgs.join(" ")}
+                </Text>
+              ) : null}
+            </Stack>
           ) : (
             <Text size="xs" c="dimmed">
-              No extra launch arguments on the source.
+              No launch arguments on the source.
             </Text>
           )}
         </Stack>
