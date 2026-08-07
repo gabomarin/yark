@@ -1,0 +1,107 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-md);
+  background: var(--app-color-panel);
+}
+
+.scroll {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: var(--app-space-md);
+  scrollbar-gutter: stable;
+}
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-md);
+}
+
+.groupSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--app-space-xs);
+}
+
+.groupTitle {
+  color: var(--app-color-cryo);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.optionGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.4rem;
+}
+
+@media (min-width: 960px) {
+  .optionGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.optionRow {
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-sm);
+  background: color-mix(in srgb, var(--app-color-bg) 35%, transparent);
+  padding: 0.4rem 0.55rem;
+}
+
+.optionRowDisabled {
+  opacity: 0.7;
+}
+
+.optionRowCaution {
+  border-color: color-mix(in srgb, var(--app-color-fossil) 45%, transparent);
+  background: color-mix(in srgb, var(--app-color-fossil) 10%, transparent);
+}
+
+.optionLabel {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.7rem;
+  color: var(--app-color-cryo);
+  cursor: help;
+  border-bottom: 1px dotted color-mix(in srgb, var(--app-color-cryo) 45%, transparent);
+}
+
+.previewCode {
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.previewYark {
+  color: var(--app-color-cryo);
+}
+
+.previewStructured {
+  color: var(--app-color-ok);
+}
+
+.previewCaution {
+  color: var(--app-color-fossil);
+}
+
+.previewRaw {
+  color: var(--app-color-muted);
+}

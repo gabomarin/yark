@@ -34,6 +34,7 @@ import {
   profileToIniIdentity,
 } from "./ini-selection-compose";
 import { listIniUiCategoryTree } from "@shared/ini-ui-category-tree";
+import { buildStructuredLaunchArgList } from "@shared/structured-launch-options";
 
 export interface ServerRuntimeStatusReader {
   getStatus(serverId: string): { status: ServerStatus };
@@ -66,6 +67,7 @@ function profileTransferFingerprint(profile: ServerProfile): string {
     mods: profile.mods,
     disabledMods: profile.disabledMods ?? [],
     extraArgs: profile.extraArgs,
+    structuredLaunchArgs: profile.structuredLaunchArgs ?? {},
     modMetadataCache: profile.modMetadataCache ?? {},
   });
 }
@@ -104,6 +106,9 @@ export class ConfigTransferService {
       mods: source.mods,
       disabledMods: source.disabledMods ?? [],
       extraArgs: source.extraArgs,
+      structuredLaunchArgs: buildStructuredLaunchArgList(
+        source.structuredLaunchArgs,
+      ),
       hasPasswords: Boolean(
         (source.adminPassword?.trim().length ?? 0) > 0 ||
           (source.serverPassword?.trim().length ?? 0) > 0,
@@ -292,6 +297,14 @@ export class ConfigTransferService {
                   selection.extraArgs.strategy,
                 )
               : [...target.extraArgs],
+            structuredLaunchArgs: selection.extraArgs.enabled
+              ? selection.extraArgs.strategy === "replace"
+                ? { ...(source.structuredLaunchArgs ?? {}) }
+                : {
+                    ...(target.structuredLaunchArgs ?? {}),
+                    ...(source.structuredLaunchArgs ?? {}),
+                  }
+              : { ...(target.structuredLaunchArgs ?? {}) },
             mods: composedMods !== null ? composedMods.mods : [...target.mods],
             disabledMods:
               composedMods !== null
@@ -452,6 +465,19 @@ export class ConfigTransferService {
             ),
           }
         : null,
+      structuredLaunchArgs: selection.extraArgs.enabled
+        ? {
+            before: buildStructuredLaunchArgList(target.structuredLaunchArgs),
+            after: buildStructuredLaunchArgList(
+              selection.extraArgs.strategy === "replace"
+                ? { ...(source.structuredLaunchArgs ?? {}) }
+                : {
+                    ...(target.structuredLaunchArgs ?? {}),
+                    ...(source.structuredLaunchArgs ?? {}),
+                  },
+            ),
+          }
+        : null,
       backupPolicy: selection.backupPolicy
         ? {
             before: {
@@ -590,6 +616,9 @@ export class ConfigTransferService {
           clusterId: profileSnapshot.clusterId,
           clusterDir: profileSnapshot.clusterDir,
           extraArgs: [...profileSnapshot.extraArgs],
+          structuredLaunchArgs: {
+            ...(profileSnapshot.structuredLaunchArgs ?? {}),
+          },
           mods: [...profileSnapshot.mods],
           disabledMods: [...(profileSnapshot.disabledMods ?? [])],
           modMetadataCache: { ...(profileSnapshot.modMetadataCache ?? {}) },

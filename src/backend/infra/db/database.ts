@@ -170,6 +170,12 @@ const MIGRATIONS: Migration[] = [
       );
     `,
   },
+  {
+    version: 11,
+    sql: `
+      ALTER TABLE servers ADD COLUMN structured_launch_args TEXT NOT NULL DEFAULT '{}';
+    `,
+  },
 ];
 
 /**

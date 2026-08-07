@@ -38,7 +38,7 @@ describe("asa-launch-options-catalog (#92)", () => {
     expect(counts.supported).toBeGreaterThan(0);
     expect(counts.unsupported).toBeGreaterThan(0);
     expect(counts.uncertain).toBeGreaterThan(0);
-    expect(counts.yarkOwned).toBeGreaterThanOrEqual(7);
+    expect(counts.yarkOwned).toBeGreaterThanOrEqual(6);
 
     for (const entry of asaLaunchOptionEntries) {
       expect(["supported", "unsupported", "uncertain", "yarkOwned"]).toContain(
@@ -54,11 +54,10 @@ describe("asa-launch-options-catalog (#92)", () => {
     }
   });
 
-  it("keeps YARK-owned composer tokens non-selectable", () => {
+  it("keeps remaining YARK-owned composer tokens non-selectable", () => {
     for (const id of [
       "port",
       "mods",
-      "server-platform",
       "clusterid",
       "cluster-dir",
       "no-transfer-from-filtering",
@@ -70,9 +69,14 @@ describe("asa-launch-options-catalog (#92)", () => {
       expect(isSelectableLaunchOption(entry!)).toBe(false);
     }
 
+    const platform = lookupLaunchOptionById("server-platform");
+    expect(platform?.status).toBe("supported");
+    expect(isSelectableLaunchOption(platform!)).toBe(true);
+
     const selectable = listSelectableLaunchOptions();
     expect(selectable.every((e) => e.status === "supported")).toBe(true);
     expect(selectable.some((e) => e.id === "port")).toBe(false);
+    expect(selectable.some((e) => e.id === "server-platform")).toBe(true);
   });
 
   it("rejects empty tokens and unknown statuses in committed data", () => {

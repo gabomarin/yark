@@ -1,5 +1,9 @@
 import { join } from "node:path";
 import type { ServerProfile } from "@shared/types";
+import {
+  argsIncludeServerPlatform,
+  buildStructuredLaunchArgList,
+} from "@shared/structured-launch-options";
 
 /** Path to the dedicated server executable inside the install. */
 export function serverBinaryPath(installDir: string): string {
@@ -14,10 +18,6 @@ export function serverBinaryPath(installDir: string): string {
 
 function escapeQuotedValue(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-}
-
-function extraArgsIncludeServerPlatform(extraArgs: string[]): boolean {
-  return extraArgs.some((arg) => /ServerPlatform/i.test(arg));
 }
 
 /**
@@ -108,9 +108,11 @@ export function buildWindowsVerbatimSpawnArgs(args: string[]): string[] {
  */
 export function buildLaunchArgs(profile: ServerProfile): string[] {
   const mapUrl = buildMapUrlArg(profile.map, profile.sessionName);
+  const structuredArgs = buildStructuredLaunchArgList(profile.structuredLaunchArgs);
+  const trailingArgs = [...structuredArgs, ...profile.extraArgs];
   const args: string[] = [mapUrl, `-port=${profile.gamePort}`];
 
-  if (!extraArgsIncludeServerPlatform(profile.extraArgs)) {
+  if (!argsIncludeServerPlatform(trailingArgs)) {
     args.push("-ServerPlatform=ALL");
   }
 
@@ -124,7 +126,7 @@ export function buildLaunchArgs(profile: ServerProfile): string[] {
     args.push(`-ClusterDirOverride=${profile.clusterDir}`);
     args.push("-NoTransferFromFiltering");
   }
-  args.push(...profile.extraArgs);
+  args.push(...trailingArgs);
   return args;
 }
 

@@ -59,7 +59,18 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 - The new renderer shell is already active.
 - Overview, SteamCMD, Logs, Backups, and **Clusters** have already been migrated to the new architecture.
 - Server profiles have a persisted `enabled` state separate from runtime status. Disabled profiles stay editable and visible through inactive navigation, but the shared backend start path cannot spawn them. Enable does not require install files to be ready (#132); Start / Restart / auto-start still do. Enable/disable is an explicit locked IPC operation; clones inherit the source state and use a unique install directory.
-- Server Workspace keeps `Server`, `INI Files`, `Mods`, `Backups`, and **Logs** as its regular navigation. Workspace **Backups** is operational (create / restore / history / destination for that server) with kind subtabs (**World save** | **Player profiles** | **INI**). Sidebar **Backups** is generalized configuration across servers (schedule / destination / retention) with “Open in server” to jump into the workspace tab. **Mods** manages CurseForge Project IDs (enable/disable without dropping IDs, Worker-backed metadata, launch `-mods=` for enabled only). A six-step configuration assistant launches on demand from `Server`; it uses an isolated draft and writes only after explicit review.
+- Server Workspace keeps `Server`, **INI Files**, `Mods`, **Launch**, `Backups`,
+  `Logs`, and **RCON** as its regular navigation. **Launch** edits curated
+  structured ASA flags plus raw Extra arguments (command preview / conflicts);
+  create/edit Server no longer hosts Mods IDs or Extra arguments. Workspace
+  **Backups** is operational (create / restore / history / destination for that
+  server) with kind subtabs (**World save** | **Player profiles** | **INI**).
+  Sidebar **Backups** is generalized configuration across servers (schedule /
+  destination / retention) with “Open in server” to jump into the workspace tab.
+  **Mods** manages CurseForge Project IDs (enable/disable without dropping IDs,
+  Worker-backed metadata, launch `-mods=` for enabled only). A six-step
+  configuration assistant launches on demand from `Server`; it uses an isolated
+  draft and writes only after explicit review.
 - Settings is live in the shell (SteamCMD path, desktop shell, density, and related preferences — no light/dark theme control). Full map: [settings.md](settings.md). Clusters surfaces existing `clusterId` / `clusterDir` compliance reports (live transfer validation still deferred); see [clusters.md](clusters.md). Workspace **RCON** tab: [rcon.md](rcon.md).
 - Sidebar Backups settings page and per-server workspace Backups tab are live.
 - Backups are kind-scoped ZIP archives: `world` (full SavedArks including `.arkprofile*`), `players` (profiles from SavedArks/SaveGames), `ini` (`Game.ini` + `GameUserSettings.ini`).

@@ -11,11 +11,14 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
-- Versioned **ASA launch-options catalog** (wiki ASA Check/Missing + YARK-owned classification) with a browse modal from Extra arguments on create/edit server (#92).
+- Versioned **ASA launch-options catalog** (wiki ASA Check/Missing + YARK-owned classification) with a browse modal (#92).
+- Server workspace **Launch** tab: curated structured ASA flags, raw Extra arguments, command preview, and caution alerts for sticky risky options (#93).
 
 ### Changed
 
 - Launch-options catalog copy is cleaned from wiki noise into **summary + details**, with a pasteable **example** per entry (#92).
+- Extra arguments and the Mods ID field moved off create/edit Server onto the **Mods** / **Launch** workspace tabs (#93).
+- Launch tab dependent flags chain in order (dynamic config URL; game → tribe → RCON logs); `-passivemods=` lives under World & gameplay (#93).
 
 ## [0.7.0] - 2026-08-07
 

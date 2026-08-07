@@ -3,6 +3,7 @@ import {
   getServerFolderNameError,
   getWindowsPathError,
 } from "@shared/server-install-path";
+import { findLaunchArgConflicts } from "@shared/structured-launch-options";
 import {
   PORT_MAX,
   PORT_MIN,
@@ -49,6 +50,15 @@ export const serverProfileInputSchema = z.object({
   clusterId: z.string().trim().min(1).nullable(),
   clusterDir: windowsPathSchema.nullable(),
   extraArgs: z.array(z.string()),
+  structuredLaunchArgs: z
+    .record(
+      z.string(),
+      z.object({
+        enabled: z.boolean(),
+        value: z.string().optional(),
+      }),
+    )
+    .optional(),
   mods: z.array(z.string().trim().min(1)),
 });
 
@@ -97,6 +107,12 @@ export function validateProfileInput(
   const uniqueMods = new Set(parsed.data.mods);
   if (uniqueMods.size !== parsed.data.mods.length) {
     issues.push({ field: "mods", message: "Duplicate mods in the list" });
+  }
+  for (const conflict of findLaunchArgConflicts({
+    structured: parsed.data.structuredLaunchArgs,
+    extraArgs: parsed.data.extraArgs,
+  })) {
+    issues.push({ field: "extraArgs", message: conflict.message });
   }
   return issues;
 }

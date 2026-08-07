@@ -13,6 +13,7 @@ import { ConfigurationEditor } from "../ConfigurationEditor/ConfigurationEditor"
 import { RconPanel } from "../RconPanel/RconPanel";
 import type { PlayerListState } from "../RconPanel/PlayerListSection";
 import { ServerModsPanel } from "../ServerModsPanel/ServerModsPanel";
+import { ServerLaunchPanel } from "../ServerLaunchPanel/ServerLaunchPanel";
 import classes from "../../ServerWorkspacePage.module.css";
 
 interface Props {
@@ -63,8 +64,9 @@ export function WorkspaceTabs(props: Props): ReactElement {
       >
         <Tabs.List className={classes.tabList}>
           <Tabs.Tab value="server">Server</Tabs.Tab>
-          <Tabs.Tab value="mods">Mods</Tabs.Tab>
           <Tabs.Tab value="iniFiles">INI Files</Tabs.Tab>
+          <Tabs.Tab value="mods">Mods</Tabs.Tab>
+          <Tabs.Tab value="launch">Launch</Tabs.Tab>
           <Tabs.Tab value="backups">Backups</Tabs.Tab>
           <Tabs.Tab value="logs">Logs</Tabs.Tab>
           <Tabs.Tab value="rcon">RCON</Tabs.Tab>
@@ -92,6 +94,14 @@ export function WorkspaceTabs(props: Props): ReactElement {
 
           {props.value === "mods" && (
             <ServerModsPanel
+              key={props.server.id}
+              server={props.server}
+              onServerUpdated={props.onServerUpdated}
+            />
+          )}
+
+          {props.value === "launch" && (
+            <ServerLaunchPanel
               key={props.server.id}
               server={props.server}
               onServerUpdated={props.onServerUpdated}

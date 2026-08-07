@@ -41,7 +41,7 @@ Binary path: `{installDir}/ShooterGame/Binaries/Win64/ArkAscendedServer.exe`
 | --- | --- |
 | Map + session name | CLI map URL (`buildMapUrlArg`) |
 | Game port | CLI `-port=N` **and** INI `[SessionSettings] Port` |
-| `-ServerPlatform` | CLI (default `ALL` unless `extraArgs` already sets it) |
+| `-ServerPlatform` | CLI (default `ALL` unless structured/raw trailing args already set it) |
 | Mods / cluster trio | CLI when present on the profile |
 | RCON enable/port | INI `[ServerSettings]` only |
 | Admin / server password | INI `[ServerSettings]` only |
@@ -57,11 +57,16 @@ CLI. Unit tests in `tests/unit/launch-args.test.ts` lock this.
 1. `"${map}"?SessionName="${escapedSessionName}"` — **separate** quotes around
    map and SessionName (never `"Map?SessionName=…"`).
 2. `-port=${gamePort}`
-3. `-ServerPlatform=ALL` unless any `extraArgs` matches `/ServerPlatform/i`
+3. `-ServerPlatform=ALL` unless structured or raw trailing args match `/ServerPlatform/i`
 4. `-mods=id1,id2,…` when `mods.length > 0`
 5. If **both** `clusterId` and `clusterDir` are set:
    `-clusterid=…`, `-ClusterDirOverride=…`, `-NoTransferFromFiltering`
-6. `…profile.extraArgs`
+6. Structured Launch-tab selections (`structuredLaunchArgs`, catalog id → token)
+7. `…profile.extraArgs` (raw Extra arguments)
+
+UI: workspace tab **Launch** (after Mods) edits structured + raw; create/edit
+Server form no longer hosts Mods IDs or Extra arguments.
+See [docs/launch-options-catalog.md](launch-options-catalog.md) for curation.
 
 UI / runtime logs use `formatLaunchCommandLine` (logical `"` quotes). On
 Windows, live spawn uses `buildWindowsVerbatimSpawnArgs` so Node does not add

@@ -35,12 +35,6 @@ const YARK_OWNED = [
     notes: "Always composed from profile.gamePort.",
   },
   {
-    id: "server-platform",
-    pattern: /^-ServerPlatform(=|$)/i,
-    token: "-ServerPlatform=",
-    notes: "Defaults to ALL unless raw extraArgs already sets ServerPlatform.",
-  },
-  {
     id: "mods",
     pattern: /^-mods(=|$)/i,
     token: "-mods=",
@@ -63,6 +57,14 @@ const YARK_OWNED = [
     pattern: /^-NoTransferFromFiltering$/i,
     token: "-NoTransferFromFiltering",
     notes: "Emitted with the cluster trio when clustered.",
+  },
+];
+
+/** Stable catalog ids for tokens that are selectable but need a fixed id across regenerations. */
+const STABLE_IDS = [
+  {
+    id: "server-platform",
+    pattern: /^-ServerPlatform(=|$)/i,
   },
 ];
 
@@ -391,6 +393,10 @@ function findYarkOwned(token) {
   return YARK_OWNED.find((row) => row.pattern.test(token)) ?? null;
 }
 
+function findStableId(token) {
+  return STABLE_IDS.find((row) => row.pattern.test(token))?.id ?? null;
+}
+
 function classifyStatus(fields, owned) {
   if (owned) return "yarkOwned";
   if (String(fields.status || "").toLowerCase() === "deprecated") return "unsupported";
@@ -456,9 +462,11 @@ function buildEntries(rows, reviewedAt) {
     const token = String(fields.name || "").trim();
     if (!token) continue;
     const owned = findYarkOwned(token);
-    const valueType = inferValueType(token);
+    const valueType = /^-ServerPlatform=/i.test(token)
+      ? "enum"
+      : inferValueType(token);
     const status = classifyStatus(fields, owned);
-    const id = owned?.id ?? tokenId(token);
+    const id = owned?.id ?? findStableId(token) ?? tokenId(token);
     const copy = buildCopyFields(token, valueType, fields, owned);
     const entry = {
       id,
@@ -580,11 +588,12 @@ async function main() {
       unsupportedNotSelectable: true,
       composerOrder: [
         '"Map"?SessionName=',
-        "-port=",
-        "-ServerPlatform=ALL (default)",
-        "-mods=",
-        "-clusterid= / -ClusterDirOverride= / -NoTransferFromFiltering",
-        "extraArgs…",
+      "-port=",
+      "-ServerPlatform=ALL (default unless Launch structured / raw sets it)",
+      "-mods=",
+      "-clusterid= / -ClusterDirOverride= / -NoTransferFromFiltering",
+      "structuredLaunchArgs…",
+      "extraArgs…",
       ],
     },
     counts,

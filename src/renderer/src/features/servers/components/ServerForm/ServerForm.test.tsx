@@ -141,19 +141,18 @@ describe("ServerForm", () => {
     expect(screen.getByText(/port 7777 \(game\)/i)).toBeInTheDocument();
   });
 
-  it("opens the ASA launch-options catalog from Extra arguments (#92)", async () => {
-    const user = userEvent.setup();
-
+  it("does not show Mods or Extra arguments on create/edit (#93)", () => {
     render(
       <AppProviders>
         <ServerForm initial={null} onCancel={vi.fn()} onSaved={vi.fn()} />
       </AppProviders>,
     );
 
-    await user.click(screen.getByRole("button", { name: /browse asa catalog/i }));
+    expect(screen.queryByLabelText(/^mods$/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/extra arguments/i)).not.toBeInTheDocument();
     expect(
-      await screen.findByRole("dialog", { name: /asa launch-options catalog/i }),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/ark\.wiki\.gg Command line options/i)).toBeInTheDocument();
+      screen.queryByRole("button", { name: /browse asa catalog/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("server-form-launch-summary")).not.toBeInTheDocument();
   });
 });

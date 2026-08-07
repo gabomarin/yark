@@ -1,4 +1,5 @@
 import type { ConfigTransferSelection } from "./config-transfer";
+import type { StructuredLaunchArgs } from "./structured-launch-options";
 
 /** Lifecycle status of a server instance. */
 export type ServerStatus =
@@ -31,6 +32,11 @@ export interface ServerProfile {
   clusterDir: string | null;
   /** Extra command-line arguments (including the leading dash). */
   extraArgs: string[];
+  /**
+   * Structured Launch-tab selections keyed by ASA catalog entry id (#93).
+   * Composed before `extraArgs`. Empty on migrate so existing commands stay equivalent.
+   */
+  structuredLaunchArgs?: StructuredLaunchArgs;
   /** Mod IDs in load order. */
   mods: string[];
   /** Configured mod IDs that are omitted from `-mods=` until re-enabled. */
@@ -743,6 +749,8 @@ export interface ConfigTransferDescribeResult {
   mods: string[];
   disabledMods: string[];
   extraArgs: string[];
+  /** Structured Launch-tab tokens from the source (composed preview). */
+  structuredLaunchArgs: string[];
   hasPasswords: boolean;
 }
 
@@ -754,6 +762,7 @@ export interface ConfigTransferProfileDiff {
     disabledAfter: string[];
   } | null;
   extraArgs: { before: string[]; after: string[] } | null;
+  structuredLaunchArgs: { before: string[]; after: string[] } | null;
   backupPolicy: {
     before: Omit<BackupPolicy, "serverId" | "updatedAt">;
     after: Omit<BackupPolicy, "serverId" | "updatedAt">;

@@ -32,7 +32,6 @@ import { ServerFormStartupFields } from "./ServerFormStartupFields";
 import { ServerFormClusterFields } from "./ServerFormClusterFields";
 import { ServerFormPortConflictAlert } from "./ServerFormPortConflictAlert";
 import { ServerFormSection } from "./ServerFormSection";
-import { ServerFormExtraArgsField } from "./ServerFormExtraArgsField";
 import { MoveInstallDialog } from "../MoveInstallDialog/MoveInstallDialog";
 import classes from "./ServerForm.module.css";
 
@@ -76,8 +75,6 @@ interface FormState {
   adminPassword: string;
   clusterId: string;
   clusterDir: string;
-  extraArgs: string;
-  mods: string;
   autoStart: boolean;
 }
 
@@ -99,8 +96,6 @@ function toFormState(
       adminPassword: "",
       clusterId: "",
       clusterDir: "",
-      extraArgs: "",
-      mods: "",
       autoStart: false,
     };
   }
@@ -117,8 +112,6 @@ function toFormState(
     adminPassword: profile.adminPassword,
     clusterId: profile.clusterId ?? "",
     clusterDir: profile.clusterDir ?? "",
-    extraArgs: profile.extraArgs.join(" "),
-    mods: profile.mods.join(", "),
     autoStart: profile.autoStart,
   };
 }
@@ -145,14 +138,10 @@ function toInput(
     adminPassword: state.adminPassword,
     clusterId: state.clusterId.trim().length > 0 ? state.clusterId.trim() : null,
     clusterDir: state.clusterDir.trim().length > 0 ? state.clusterDir.trim() : null,
-    extraArgs: state.extraArgs
-      .split(/\s+/)
-      .map((value) => value.trim())
-      .filter((value) => value.length > 0),
-    mods: state.mods
-      .split(",")
-      .map((value) => value.trim())
-      .filter((value) => value.length > 0),
+    // Mods / launch args live on their workspace tabs; preserve on edit.
+    extraArgs: initial?.extraArgs ?? [],
+    structuredLaunchArgs: initial?.structuredLaunchArgs ?? {},
+    mods: initial?.mods ?? [],
     disabledMods: initial?.disabledMods ?? [],
     modMetadataCache: initial?.modMetadataCache ?? {},
     autoStart: state.autoStart,
@@ -277,7 +266,7 @@ export function ServerForm(props: Props): ReactElement {
         <Group justify="space-between" align="flex-start" className={classes.pageHeader}>
           <div>
             <Title order={2}>{isCreate ? "New server" : `Edit: ${props.initial!.name}`}</Title>
-            <Text c="dimmed">Configure identity, network, access, cluster, and server arguments.</Text>
+            <Text c="dimmed">Configure identity, network, access, and cluster.</Text>
           </div>
           <Group gap="xs">
             <Button variant="subtle" leftSection={<ArrowLeft size={16} />} onClick={props.onCancel}>
@@ -300,7 +289,7 @@ export function ServerForm(props: Props): ReactElement {
           <div>
             <Title order={4}>Server information</Title>
             <Text c="dimmed" fz="xs">
-              Name, ports, access, cluster, and launch arguments.
+              Name, ports, access, and cluster. Launch flags live on the Launch tab.
             </Text>
           </div>
           <Group gap="xs">
@@ -489,27 +478,6 @@ export function ServerForm(props: Props): ReactElement {
             onClusterIdChange={setField("clusterId")}
             onClusterDirChange={setField("clusterDir")}
             onBrowseClusterDir={() => void browseDirectory("clusterDir")}
-          />
-        </ServerFormSection>
-
-        <ServerFormSection
-          title="Mods and arguments"
-          flat={embedded}
-          span2={embedded}
-        >
-          <TextInput
-            label="Mods"
-            size={inputSize}
-            value={state.mods}
-            onChange={(e) => setField("mods")(e.currentTarget.value)}
-            placeholder="928988, 929420"
-            description="CurseForge mod IDs, separated by commas. Prefer the Mods tab to add or turn mods off."
-          />
-          <ServerFormExtraArgsField
-            value={state.extraArgs}
-            inputSize={inputSize}
-            embedded={embedded}
-            onChange={setField("extraArgs")}
           />
         </ServerFormSection>
 
