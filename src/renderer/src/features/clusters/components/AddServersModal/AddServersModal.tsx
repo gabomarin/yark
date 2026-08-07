@@ -50,7 +50,7 @@ export function AddServersModal(props: Props): ReactElement {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [seedFromTemplate, setSeedFromTemplate] = useState(false);
   const [seedFiles, setSeedFiles] = useState<ClusterIniTemplateFileSelection>(
-    emptyClusterIniFileSelection,
+    () => emptyClusterIniFileSelection(),
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

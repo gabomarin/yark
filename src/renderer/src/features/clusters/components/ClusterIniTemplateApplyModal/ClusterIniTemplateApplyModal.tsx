@@ -68,7 +68,7 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
   const [committing, setCommitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [files, setFiles] = useState<ClusterIniTemplateFileSelection>(
-    emptyClusterIniFileSelection,
+    () => emptyClusterIniFileSelection(),
   );
   const [preview, setPreview] = useState<ClusterIniTemplateMemberPreview | null>(
     null,
