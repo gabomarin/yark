@@ -651,17 +651,14 @@ export class InstanceService extends EventEmitter {
         );
       }
 
+      // Refresh install health for UI, but do not block Enable — Start/spawn
+      // still require ready files (#132).
       const installation = await inspectServerInstallationAsync(
         profile.id,
         profile.installDir,
         ENRICHED_INSTALL_INSPECT,
       );
       this.recordInstallHealth(installation);
-      if (!isInstallationReady(installation)) {
-        throw new Error(
-          `Server files are not ready (${installation.health}): ${installation.guidance}`,
-        );
-      }
 
       this.assertNoPortConflicts(profile, id);
       const reports = checkClusterCompliance(this.repo.list());

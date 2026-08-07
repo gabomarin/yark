@@ -15,7 +15,6 @@ describe("ServerEnabledMenuItem", () => {
             <ServerEnabledMenuItem
               enabled
               active={false}
-              installationReady
               steamCmdBusy
               onToggle={onToggle}
             />
@@ -30,5 +29,27 @@ describe("ServerEnabledMenuItem", () => {
       "title",
       "Another server operation is in progress",
     );
+  });
+
+  it("allows Enable even when installation files are not ready", () => {
+    const onToggle = vi.fn();
+
+    render(
+      <AppProviders>
+        <Menu opened>
+          <Menu.Dropdown>
+            <ServerEnabledMenuItem
+              enabled={false}
+              active={false}
+              steamCmdBusy={false}
+              onToggle={onToggle}
+            />
+          </Menu.Dropdown>
+        </Menu>
+      </AppProviders>,
+    );
+
+    const item = screen.getByRole("menuitem", { name: "Enable server" });
+    expect(item).not.toBeDisabled();
   });
 });

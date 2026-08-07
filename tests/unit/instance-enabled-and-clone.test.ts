@@ -140,7 +140,7 @@ describe("InstanceService enabled state", () => {
     expect(repo.setEnabled).not.toHaveBeenCalled();
   });
 
-  it("leaves a disabled profile unchanged when installation validation fails", async () => {
+  it("enables a disabled profile even when installation is not ready", async () => {
     const source = profile({ enabled: false });
     const { service, repo } = harness([source]);
     vi.mocked(inspectServerInstallation).mockReturnValue({
@@ -157,10 +157,36 @@ describe("InstanceService enabled state", () => {
       checkedAt: new Date().toISOString(),
     } as ReturnType<typeof inspectServerInstallation>);
 
-    await expect(service.setServerEnabled(source.id, true)).rejects.toThrow(
-      /files are not ready/,
+    const updated = await service.setServerEnabled(source.id, true);
+    expect(updated.enabled).toBe(true);
+    expect(repo.setEnabled).toHaveBeenCalledWith(source.id, true);
+    expect(repo.addEvent).toHaveBeenCalledWith(
+      source.id,
+      "server_enabled",
+      "info",
+      expect.stringContaining("enabled"),
     );
-    expect(repo.setEnabled).not.toHaveBeenCalled();
+  });
+
+  it("still rejects Start when installation is not ready", async () => {
+    const source = profile({ enabled: true });
+    const { service, processes } = harness([source]);
+    vi.mocked(inspectServerInstallation).mockReturnValue({
+      serverId: source.id,
+      installed: false,
+      health: "missing",
+      reasonCodes: ["path_missing"],
+      guidance: "Create the folder or correct the install path, then install server files.",
+      build: null,
+      steamBuild: null,
+      arkVersion: null,
+      version: null,
+      binaryPath: "C:\\missing\\ArkAscendedServer.exe",
+      checkedAt: new Date().toISOString(),
+    } as ReturnType<typeof inspectServerInstallation>);
+
+    await expect(service.start(source.id)).rejects.toThrow(/files are not ready/);
+    expect(processes.start).not.toHaveBeenCalled();
   });
 
   it("rejects enable when another saved profile owns one of its ports", async () => {

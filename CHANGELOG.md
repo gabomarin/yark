@@ -19,6 +19,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- **Enable server** no longer requires installation files to be ready; Start / Restart / auto-start still do (#132).
 - Clusters compact density: summary badges use `sm`, detail actions inherit the theme button size, and the ambiguous “Transfer-ready config” header badge is removed (list Ready/Warnings/Errors + card rail remain).
 - Server and cluster INI editors share a **GameUserSettings / Game.ini** segmented file switch; category group headers use a stronger accent rail (#88).
 - INI file and Visual/Text switches share one aligned nav row and the same selected accent as category headers (#88).

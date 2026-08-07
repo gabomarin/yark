@@ -52,8 +52,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
     props.filesJobActive !== true &&
     !isServerDisabled &&
     filesReady;
-  const canEnable =
-    isServerDisabled && props.filesJobActive !== true && filesReady;
+  const canEnable = isServerDisabled && props.filesJobActive !== true;
   const canStop = status === "running" || status === "starting";
   const canRestart = status === "running" && props.filesJobActive !== true && filesReady;
   const lockTitle = props.filesJobReason ?? "Wait for the file update to finish";
@@ -106,11 +105,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
               onClick={() => props.onToggleEnabled?.()}
               disabled={!canEnable}
               title={
-                props.filesJobActive === true
-                  ? lockTitle
-                  : !filesReady
-                    ? installBlockedTitle
-                    : undefined
+                props.filesJobActive === true ? lockTitle : undefined
               }
             >
               Enable

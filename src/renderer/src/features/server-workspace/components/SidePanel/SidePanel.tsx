@@ -69,7 +69,7 @@ export function SidePanel(props: Props): ReactElement {
   const toggleDisabled =
     props.onToggleEnabled === undefined ||
     steamCmdBusy ||
-    (props.server.enabled ? isActive : !filesReady);
+    (props.server.enabled && isActive);
   const toggleTitle =
     props.onToggleEnabled === undefined
       ? undefined
@@ -77,9 +77,7 @@ export function SidePanel(props: Props): ReactElement {
         ? steamCmdLockTitle ?? "Another server operation is in progress"
         : props.server.enabled && isActive
           ? "Stop the server first"
-          : !props.server.enabled && !filesReady
-            ? props.installation?.guidance ?? "Install files first"
-            : undefined;
+          : undefined;
   const installHiddenTitle =
     !canOfferInstall && !filesReady
       ? props.installation?.guidance ??
