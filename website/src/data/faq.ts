@@ -110,6 +110,26 @@ export const faqItems: FaqItem[] = [
       </p>`,
   },
   {
+    question: "Can I copy settings between servers?",
+    answerHtml: `
+      <p>
+        Yes. Use <strong>Copy configuration</strong> from a server card or workspace Quick actions.
+        Select stopped targets and the categories to copy (INI, mods, launch args, backup policy,
+        optional passwords). Identity, ports, cluster, and world saves are never copied.
+        See the <a href="${import.meta.env.BASE_URL}docs/copy-configuration/">Copy configuration</a> guide.
+      </p>`,
+  },
+  {
+    question: "How do clusters work in YARK?",
+    answerHtml: `
+      <p>
+        Members share a Cluster ID and shared directory. The Clusters page can create a cluster,
+        add or remove stopped members, and manage optional INI templates (Promote / Restore / Seed).
+        Create-server can also join an existing fleet cluster. Compliance checks are profile math —
+        not a live in-game transfer probe. See <a href="${import.meta.env.BASE_URL}docs/clusters/">Clusters</a>.
+      </p>`,
+  },
+  {
     question: "Where can I get help or report a bug?",
     answerHtml: `
       <p>

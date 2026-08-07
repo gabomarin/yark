@@ -88,6 +88,7 @@ export default defineConfig({
           label: "Day-to-day operations",
           items: [
             { label: "Start, stop, restart", link: "/docs/lifecycle/" },
+            { label: "RCON console", link: "/docs/rcon/" },
             { label: "Updates & SteamCMD", link: "/docs/updates-and-steamcmd/" },
             { label: "Backups", link: "/docs/backups/" },
             { label: "Logs & diagnostics", link: "/docs/logs/" },
@@ -97,6 +98,7 @@ export default defineConfig({
           label: "Configuration",
           items: [
             { label: "INI & configuration assistant", link: "/docs/ini-and-wizard/" },
+            { label: "Copy configuration", link: "/docs/copy-configuration/" },
             { label: "Mods", link: "/docs/mods/" },
             { label: "Clusters", link: "/docs/clusters/" },
             { label: "Settings", link: "/docs/settings/" },

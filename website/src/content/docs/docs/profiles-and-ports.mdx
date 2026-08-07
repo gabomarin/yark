@@ -35,12 +35,21 @@ Each profile is one dedicated-server install YARK can manage: path, map, session
 
 YARK flags the **same numeric port** used by different profiles (any of game / query / RCON).
 
-- **Create / update profile** — checked against all other profiles
+- **Create / update profile** — checked against all other profiles (live alerts on the create form)
 - **Start** — checked against **other active** servers, then a **host bind probe** (UDP game/query, TCP RCON)
 
 If the host probe finds a port **busy**, start is blocked (edit ports or **Start this session** on a suggested free set). If the probe is **inconclusive**, you can also **Start anyway** — that override never applies when a port is confirmed busy. Session ports affect INI and launch for that run only; the saved profile stays unchanged.
 
 Clone bumps ports by +10 (retries with higher offsets if needed).
+
+## Enable, disable, and clone
+
+- **Enable / Disable** — Inactive profiles stay out of Start / Restart / auto-start. Enabling does **not** require installation health Ready; Start still does.
+- **Clone** — duplicates profile fields with bumped ports (profile-only). Full install-folder clone is still on the product roadmap.
+
+## Cluster on create
+
+When creating a server you can pick **None** or an **existing fleet cluster** (fills ID + shared directory). Create a cluster first from Clusters if none exist yet — see [Clusters](/docs/clusters/).
 
 <Aside type="note">
   The host probe is best-effort and does not verify Windows Firewall, NAT, or router port forwarding.

@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-08-07
+
 ### Added
 
 - **Create server** can pick **None** or an existing fleet cluster (fills ID +
@@ -33,6 +35,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Server INI editor metadata is built from `defaults/*.ini` only (`ini-setting-meta`); the wiki scrape and catalog merge scripts are removed.
 - Clusters compliance no longer warns when multiple servers share the same map (common for multi-instance fleets).
 - Clusters refreshes compliance automatically when the view opens; the Recheck button was removed.
+- Public site docs cover **Copy configuration** and workspace **RCON**, and Getting started / Profiles / Clusters match create-server join-cluster and membership flows.
 
 ### Fixed
 
