@@ -429,4 +429,83 @@ describe("ClusterIniTemplateApplyService", () => {
     expect(kept?.payload.gameUserSettings).toContain("MaxPlayers=40");
     expect(kept?.payload.game).toContain("A=1");
   });
+
+  it("restores Game.ini only and leaves GameUserSettings.ini unchanged", async () => {
+    const { service, profile, installDir } = makeHarness("stopped");
+    const gusBefore = readFileSync(
+      join(
+        installDir,
+        "ShooterGame",
+        "Saved",
+        "Config",
+        "WindowsServer",
+        "GameUserSettings.ini",
+      ),
+      "utf8",
+    );
+
+    const preview = await service.previewRestore("alpha", profile.id, {
+      gameUserSettings: false,
+      game: true,
+    });
+    expect(preview.files).toEqual({ gameUserSettings: false, game: true });
+    expect(preview.preview.diff.every((row) => row.fileKey === "game")).toBe(
+      true,
+    );
+
+    const result = await service.restore("alpha", profile.id, {
+      gameUserSettings: false,
+      game: true,
+    });
+    expect(result.files).toEqual({ gameUserSettings: false, game: true });
+
+    const gusAfter = readFileSync(
+      join(
+        installDir,
+        "ShooterGame",
+        "Saved",
+        "Config",
+        "WindowsServer",
+        "GameUserSettings.ini",
+      ),
+      "utf8",
+    );
+    const game = readFileSync(
+      join(
+        installDir,
+        "ShooterGame",
+        "Saved",
+        "Config",
+        "WindowsServer",
+        "Game.ini",
+      ),
+      "utf8",
+    );
+    expect(gusAfter).toBe(gusBefore);
+    expect(game).toContain("HarvestAmountMultiplier=5");
+  });
+
+  it("promotes GameUserSettings.ini only and keeps the previous template Game.ini", async () => {
+    const { service, profile, templates } = makeHarness("stopped");
+    const beforeGame = templates.get("alpha")?.payload.game ?? "";
+
+    const result = await service.promote("alpha", profile.id, {
+      gameUserSettings: true,
+      game: false,
+    });
+    expect(result.files).toEqual({ gameUserSettings: true, game: false });
+    expect(result.template.payload.gameUserSettings).toContain("MaxPlayers=20");
+    expect(result.template.payload.game).toBe(beforeGame);
+    expect(result.template.payload.game).toContain("HarvestAmountMultiplier=5");
+  });
+
+  it("rejects an empty INI file selection", async () => {
+    const { service, profile } = makeHarness("stopped");
+    await expect(
+      service.previewRestore("alpha", profile.id, {
+        gameUserSettings: false,
+        game: false,
+      }),
+    ).rejects.toThrow(/at least one INI file/i);
+  });
 });

@@ -138,23 +138,27 @@ Report shape:
   passwords) and ASE-legacy mod keys (`ActiveMods`, `ActiveMapMod`,
   `ActiveTotalConversion`) are hidden and stripped on save — ASA mods use
   CurseForge `-mods=` from the profile. Per-member **Promote** / **Restore** and
-  opt-in **Seed** on Add servers are #89; bulk apply is #90.
+  opt-in **Seed** on Add servers are #89; operators can choose Game.ini and/or
+  GameUserSettings.ini per operation (#181). Bulk apply remains #90 (deferred).
 
-### Cluster INI templates (#88 / #89)
+### Cluster INI templates (#88 / #89 / #181)
 
 - One optional template per `clusterId` (`cluster_ini_templates` table).
 - IPC: `cluster-ini:get` / `get-or-draft` / `preview` / `save` / `delete`.
-- Apply IPC (#89): `preview-restore` / `preview-promote` / `preview-seed` /
-  `restore` / `promote` / `seed` (one member at a time).
+- Apply IPC (#89 / #181): `preview-restore` / `preview-promote` / `preview-seed` /
+  `restore` / `promote` / `seed` (one member at a time; optional `files`
+  selects entire Game.ini and/or GameUserSettings.ini — default both).
 - Composition: template overlay → strip owned keys → reapply the **target
   member’s current** ports/passwords/session (fallback to profile when missing)
   via `ini-compose.ts`. Owned keys are omitted from operator previews; secrets
-  are redacted.
+  are redacted. Unselected files are left unchanged on disk / in the template.
 - Restore/seed take a local `.yark-pre-template` snapshot before write, and a
   cataloged INI backup when the install is Ready.
-- Promote updates only the SQLite template (member installs unchanged).
+- Promote updates only the selected SQLite template files (member installs
+  unchanged).
 - Add servers can opt into **Seed INI from cluster template** after membership
-  saves; seed failures keep membership and report which members failed.
+  saves (with the same file pickers); seed failures keep membership and report
+  which members failed.
 - Deleting a template does not delete any server INI files on disk.
 - Clusters that exist only as profile fields can still own a template (including
   after all members leave — the row remains until deleted).
@@ -184,7 +188,8 @@ Report shape:
    remove stopped servers with **Remove** (does not delete transfer files).
 4. Optionally create a cluster **INI template** for shared settings (not ports /
    session identity — those stay per server). Promote a known-good member into
-   the template, restore a member from it, or seed new members when adding them.
+   the template, restore a member from it, or seed new members when adding them
+   — choosing Game.ini and/or GameUserSettings.ini each time (#181).
 5. Ensure distinct game / query / RCON ports across servers.
 6. Prefer matching CurseForge mod Project ID lists if players transfer mod items.
 7. Open **Clusters** (compliance refreshes on open); fix any `error` issues
@@ -195,7 +200,8 @@ Report shape:
 - **No live transfer probe** — reports are static profile math only.
 - **No persistence** of reports — recomputed on each `cluster:check`.
 - **No filesystem check** that `clusterDir` exists or is writable.
-- **No bulk template apply** in this doc’s #89 surface — multi-member apply is #90.
+- **No bulk template apply** in this doc’s #89 / #181 surface — multi-member
+  apply is #90 (deferred).
 - Product target is **Windows**; path validation and ASA cluster dirs assume
   Windows-style absolute paths.
 
@@ -223,7 +229,7 @@ Report shape:
 | `tests/unit/yark-owned-ini-keys.test.ts` | Owned-key strip / match |
 | `tests/unit/cluster-ini-template.test.ts` | Template repo/service CRUD + validation |
 | `tests/unit/ini-compose.test.ts` | Template↔member composition + secret redaction |
-| `tests/unit/cluster-ini-template-apply.test.ts` | Restore/promote/seed commit + failure preservation |
+| `tests/unit/cluster-ini-template-apply.test.ts` | Restore/promote/seed commit + selective files (#181) + failure preservation |
 | `node scripts/e2e-clusters-membership.cjs` | Playwright create → add → remove membership (Windows) |
 | `node scripts/visual-clusters.cjs` | Playwright sidebar → Clusters compliance UI |
 

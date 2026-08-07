@@ -690,12 +690,22 @@ export interface ClusterIniTemplate {
 /** Per-member template preview / commit ops (#89). Bulk apply is #90. */
 export type ClusterIniTemplateApplyOperation = "restore" | "promote" | "seed";
 
+/**
+ * Which template files to include on Promote / Restore / Seed (#181).
+ * Entire file only; owned GUS keys stay profile-authoritative on member writes.
+ */
+export interface ClusterIniTemplateFileSelection {
+  gameUserSettings: boolean;
+  game: boolean;
+}
+
 export interface ClusterIniTemplateMemberPreview {
   operation: ClusterIniTemplateApplyOperation;
   clusterId: string;
   serverId: string;
   serverName: string;
   preview: IniPreview;
+  files: ClusterIniTemplateFileSelection;
 }
 
 export interface ClusterIniTemplateApplyResult {
@@ -703,6 +713,7 @@ export interface ClusterIniTemplateApplyResult {
   clusterId: string;
   serverId: string;
   preview: IniPreview;
+  files: ClusterIniTemplateFileSelection;
   template: ClusterIniTemplate;
   /** Cataloged INI backup id when the install was Ready enough to archive. */
   backupId: string | null;
