@@ -1,0 +1,36 @@
+---
+title: Copy configuration
+description: One-shot selective copy of INI, mods, launch args, backup policy, and passwords between server profiles.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+**Copy configuration** is a one-shot selective copy from a **source** profile to one or more **stopped targets**. It is not ongoing sync and does not link profiles afterward.
+
+## When to use it
+
+Reuse known-good settings on a test, seasonal, or replacement server without cloning identity, install path, ports, saves, or cluster membership.
+
+## Workflow
+
+1. Overview → server card → **More options → Copy configuration…**, or workspace **Quick actions → Copy configuration** (source is the server you opened from).
+2. Choose one or more distinct **stopped** targets (disabled profiles are fine while stopped).
+3. Opt into categories: INI files (by UI category), mods, raw launch args, backup policy, and passwords. Merge vs Replace tooltips explain what gets removed.
+4. Build a redacted preview per target, confirm, then apply.
+5. When a single target succeeds, you can open that workspace to review. YARK does **not** start or restart targets.
+
+The source may be running; the copy always uses the persisted on-disk / profile snapshot, not live ASA memory.
+
+## Never copied
+
+Profile ID and name, install directory, map, session name, game/query/RCON ports, cluster ID/directory, enabled/auto-start flags, runtime state, world saves, logs, and history.
+
+<Aside type="tip">
+  Before wide copies on a fleet you care about, take a world or INI backup on each target. A recoverable pre-copy snapshot is also written under the target when the copy commits.
+</Aside>
+
+## Related
+
+- [INI & configuration assistant](/docs/ini-and-wizard/) — editing INI on one server
+- [Clusters](/docs/clusters/) — cluster INI templates (Promote / Restore / Seed) for shared cluster settings
+- [Profiles & ports](/docs/profiles-and-ports/) — identity and ports stay per profile

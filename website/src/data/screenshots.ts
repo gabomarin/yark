@@ -51,9 +51,9 @@ export const screenshots: Screenshot[] = [
   },
   {
     src: withBase("/screenshots/clusters.png"),
-    alt: "Clusters page showing compliance guidance for Cluster ID and shared cluster directory",
+    alt: "Clusters page with create/membership actions, INI templates, and compliance for Cluster ID and shared directory",
     caption:
-      "Clusters — Cluster ID / shared directory compliance checks and transfer guidance.",
+      "Clusters — create and membership, INI templates, and Cluster ID / shared directory compliance.",
   },
   {
     src: withBase("/screenshots/logs.png"),

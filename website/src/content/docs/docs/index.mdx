@@ -20,11 +20,12 @@ These docs are written for operators using the public prerelease — not for rea
 - **Backups** (world / players / INI), including portable export/import and critical-path snapshots for safe update & restart
 - **Move installation** and opt-in **Auto-start with YARK**
 - **INI** editing (visual + raw) and an on-demand **configuration assistant**
+- **Copy configuration** between stopped server profiles
+- **RCON** console (commands, players, ban list) while a server is running
 - **CurseForge mod IDs** on the launch line (`-mods=`), plus metadata lookup
 - **Logs** (events, runtime, update files, backup history) with retention for YARK-owned data
 - **YARK updates** from GitHub Releases (Settings / accented sidebar version)
 - **Cluster** create, membership, INI templates, and compliance (shared Cluster ID + directory)
-- **Copy configuration** between stopped server profiles
 
 ## What it is not
 
@@ -38,6 +39,8 @@ These docs are written for operators using the public prerelease — not for rea
   <LinkCard title="First server" href={withBase("/docs/getting-started/")} description="Installer → SteamCMD → profile → install files → start." />
   <LinkCard title="Keep worlds safe" href={withBase("/docs/backups/")} description="Manual, scheduled, and fail-hard pre-update / pre-restart backups." />
   <LinkCard title="Patch ASA files" href={withBase("/docs/updates-and-steamcmd/")} description="Shared cache, Update vs Verify, safe update + rollback." />
+  <LinkCard title="Copy configuration" href={withBase("/docs/copy-configuration/")} description="Selective INI, mods, and policy copy to stopped targets." />
+  <LinkCard title="RCON console" href={withBase("/docs/rcon/")} description="Commands, players, and ban list on a running server." />
   <LinkCard title="Something broke" href={withBase("/docs/troubleshooting/")} description="Common start, update, backup, and log pitfalls." />
 </CardGrid>
 

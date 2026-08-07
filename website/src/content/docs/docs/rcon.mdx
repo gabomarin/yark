@@ -1,0 +1,36 @@
+---
+title: RCON console
+description: Workspace RCON tab — commands, history, online players, and BanList for a running server.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+The workspace **RCON** tab is the admin console for a dedicated server that is **`running`**: a persistent localhost RCON session, command history, online players, and `BanList.txt` management.
+
+Readiness while **starting** and graceful stop still use RCON under the hood; see [Start, stop, restart](/docs/lifecycle/).
+
+## What you can do
+
+- Send console commands and review responses in the session history (history survives switching workspace tabs inside the app session)
+- Kick / Ban / Unban from the players and ban list panels
+- Use SidePanel **Save world** / **Broadcast**, which share the same send path
+
+Host is always `127.0.0.1`. Auth uses the profile admin password and the **runtime** RCON port for that session.
+
+## When the console is available
+
+| Status | Console |
+| --- | --- |
+| **running** | Connected (with auto-reconnect while running) |
+| **starting** | Not ready yet — wait until status becomes running |
+| **stopping** / **stopped** | Session torn down after stop |
+
+<Aside type="caution">
+  Treat RCON responses and BanList contents as sensitive. Do not paste admin passwords or full ban lists into public bug reports.
+</Aside>
+
+## Related
+
+- [Start, stop, restart](/docs/lifecycle/) — readiness gated on RCON
+- [Profiles & ports](/docs/profiles-and-ports/) — RCON port uniqueness and host probes
+- [Logs & diagnostics](/docs/logs/) — events when commands fail

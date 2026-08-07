@@ -30,6 +30,7 @@ export const changelog: ChangelogEntry[] = [
           "Enable server no longer requires installation files to be ready; Start, Restart, and auto-start still do.",
           "Server and cluster INI editors share GameUserSettings / Game.ini switching and denser Clusters chrome.",
           "INI setting metadata is built from defaults only; catalog wiki scrape tooling is removed.",
+          "Public operator docs cover Copy configuration and workspace RCON; Getting started and Clusters match create/join flows.",
         ],
       },
       {
