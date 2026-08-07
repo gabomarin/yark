@@ -1,6 +1,6 @@
 ---
 title: Clusters
-description: Cluster ID, shared directory, compliance checks, and transfer basics.
+description: Cluster ID, shared directory, create/membership flows, INI templates, and transfer basics.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
@@ -25,9 +25,15 @@ When both are set, launch adds:
 -clusterid=… -ClusterDirOverride=… -NoTransferFromFiltering
 ```
 
-## Clusters page today
+## Clusters workspace
 
-The Clusters workspace highlights **compliance** for Cluster ID / shared directory and transfer guidance. Configure fields on each profile; use the page to spot mismatches before players hit transfer issues.
+The Clusters page shows **compliance** for Cluster ID / shared directory, and supports:
+
+- **Create cluster** — assign a Cluster ID and shared folder to one or more stopped servers
+- **Add / remove** membership on an existing cluster (stopped servers only; transfer files are not deleted)
+- **INI templates** — edit Game.ini / GameUserSettings.ini for the cluster, then **Promote**, **Restore**, or **Seed** onto members (ports, passwords, and session stay profile-owned)
+
+You can also join an existing fleet cluster when creating a server profile.
 
 <figure class="doc-shot">
   <img
@@ -40,11 +46,9 @@ The Clusters workspace highlights **compliance** for Cluster ID / shared directo
   <figcaption>Clusters — compliance checks for Cluster ID and shared directory.</figcaption>
 </figure>
 
-## Coming later
+## Operator tips
 
-Richer create/membership flows and cluster INI templates are on the public roadmap. Until then:
-
-- Keep cluster fields identical across members intentionally
+- Keep Cluster ID and directory aligned across members intentionally
 - Prefer backups before wide INI or mod changes on a live cluster
 - Document your shared directory path somewhere durable (disk letter changes break transfers)
 

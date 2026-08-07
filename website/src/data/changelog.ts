@@ -12,6 +12,38 @@ export type ChangelogEntry = {
 /** Curated site changelog — keep in sync with root CHANGELOG.md when cutting releases. */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.7.0",
+    date: "2026-08-07",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Create server can join an existing fleet cluster (or none), with live port-conflict checks against other profiles.",
+          "Copy configuration between server profiles: selective INI, mods, launch args, backup policy, and opt-in passwords to stopped targets.",
+          "Create cluster and add/remove membership from the Clusters workspace (stopped servers only).",
+          "Cluster INI templates with Promote, Restore, and opt-in Seed when adding servers; Game.ini and/or GameUserSettings.ini selectable.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Enable server no longer requires installation files to be ready; Start, Restart, and auto-start still do.",
+          "Server and cluster INI editors share GameUserSettings / Game.ini switching and denser Clusters chrome.",
+          "INI setting metadata is built from defaults only; catalog wiki scrape tooling is removed.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "INI editors ignore stale loads when switching server or cluster mid-fetch; dirty leave-guards stay accurate.",
+          "Cluster and Copy configuration wizards remount cleanly when reopened.",
+          "Copy configuration category toggles, GameUserSettings rates with mods/launch args, and Replace blocked-key handling.",
+          "YARK in-app updates no longer 404 on space-rewritten installer asset names.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.6.0",
     date: "2026-08-05",
     sections: [
