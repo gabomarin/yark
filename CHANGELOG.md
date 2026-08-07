@@ -11,6 +11,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Spike research for **modded ASA maps** beyond `KNOWN_MAPS` (launch contract, Mods→map token heuristics, custom map fallback) documented under `docs/spikes/` (#65).
+- Server Information Map control supports **Custom…** free-text ASA launch tokens (e.g. `Svartalfheim_WP`) for modded maps (#65, #191).
 - Versioned **ASA launch-options catalog** (wiki ASA Check/Missing + YARK-owned classification) with a browse modal (#92).
 - Server workspace **Launch** tab: curated structured ASA flags, raw Extra arguments, command preview, and caution alerts for sticky risky options (#93).
 

@@ -11,7 +11,6 @@ import {
   Group,
   NumberInput,
   PasswordInput,
-  Select,
   SimpleGrid,
   Stack,
   Text,
@@ -23,11 +22,13 @@ import {
   isValidServerFolderName,
   resolveServerInstallDir,
 } from "@shared/server-install-path";
+import { isOfficialMap, normalizeMapToken } from "@shared/map-identity";
 import { KNOWN_MAPS, type ServerProfile, type ServerProfileInput } from "@shared/types";
 import { useMemo, useState } from "react";
 import { useUiDensity } from "@app/AppProviders";
 import { listKnownClusterOptions } from "@features/clusters/knownClusterOptions";
 import { ServerFormInstallPath } from "./ServerFormInstallPath";
+import { ServerFormMapField } from "./ServerFormMapField";
 import { ServerFormStartupFields } from "./ServerFormStartupFields";
 import { ServerFormClusterFields } from "./ServerFormClusterFields";
 import { ServerFormPortConflictAlert } from "./ServerFormPortConflictAlert";
@@ -243,6 +244,19 @@ export function ServerForm(props: Props): ReactElement {
       setError(folderError);
       return;
     }
+    const mapToken = normalizeMapToken(state.map);
+    if (mapToken.length === 0) {
+      setError("Map required");
+      return;
+    }
+    if (/\s/.test(mapToken)) {
+      setError("Map token must not contain spaces");
+      return;
+    }
+    if (!isOfficialMap(mapToken) && !mapToken.includes("_WP")) {
+      setError('Custom map token usually ends with _WP (example: Svartalfheim_WP)');
+      return;
+    }
     setSaving(true);
     try {
       const input = toInput(state, isCreate, props.initial);
@@ -364,19 +378,10 @@ export function ServerForm(props: Props): ReactElement {
             onChange={(e) => setField("sessionName")(e.currentTarget.value)}
             required
           />
-          <Select
-            label="Map"
-            size={inputSize}
-            value={state.map}
-            onChange={(value) => {
-              if (value !== null) {
-                setField("map")(value);
-              }
-            }}
-            data={[...KNOWN_MAPS]}
-            searchable
-            allowDeselect={false}
-            required
+          <ServerFormMapField
+            map={state.map}
+            inputSize={inputSize}
+            onMapChange={setField("map")}
           />
           <ServerFormInstallPath
             isCreate={isCreate}

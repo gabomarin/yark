@@ -78,6 +78,10 @@ Example logical argv:
 "TheIsland_WP"?SessionName="MyServer" -port=7777 -ServerPlatform=ALL -mods=123,456
 ```
 
+Custom / modded map tokens (beyond `KNOWN_MAPS`) are researched in
+[spikes/65-modded-asa-maps.md](spikes/65-modded-asa-maps.md) (#65): argv still
+uses `profile.map`; map packs stay on `-mods=` (not ASE `ActiveMapMod`).
+
 ## Profile → INI sync
 
 `syncProfileSettingsToIni(profile)` writes
