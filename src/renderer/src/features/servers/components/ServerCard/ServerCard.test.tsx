@@ -67,6 +67,7 @@ describe("ServerCard", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -104,6 +105,7 @@ describe("ServerCard", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onToggleEnabled={onToggleEnabled}
           onCancelSteamCmd={vi.fn()}
@@ -147,6 +149,7 @@ describe("ServerCard", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -196,6 +199,7 @@ describe("ServerCard", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -241,6 +245,7 @@ describe("ServerCard", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -283,6 +288,7 @@ describe("ServerCard", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -326,6 +332,7 @@ describe("ServerCard", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -366,6 +373,7 @@ describe("ServerCard", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -409,6 +417,7 @@ describe("ServerCard", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -457,6 +466,7 @@ describe("ServerCard", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -497,6 +507,7 @@ describe("ServerCard", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -538,6 +549,7 @@ describe("ServerCard", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -579,6 +591,7 @@ describe("ServerCard", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -616,6 +629,7 @@ describe("ServerCard", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -659,6 +673,7 @@ describe("ServerCard", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -701,6 +716,7 @@ describe("ServerCard", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -735,6 +751,7 @@ describe("ServerCard", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -777,6 +794,7 @@ describe("ServerCard", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />

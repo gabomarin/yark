@@ -1,0 +1,59 @@
+.sectionsScroll {
+  border: 1px solid var(--app-color-border);
+  border-radius: var(--app-radius-sm);
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+  padding: var(--app-space-xs);
+  min-height: 0;
+}
+
+.section {
+  border: 1px solid var(--app-color-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--app-color-surface-chrome) 55%, transparent);
+  overflow: hidden;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-xs);
+  padding: var(--app-space-xs) var(--app-space-sm);
+  background: color-mix(in srgb, var(--mantine-color-blue-9) 40%, transparent);
+}
+
+.sectionToggle {
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  text-align: left;
+}
+
+.sectionTitle {
+  color: var(--mantine-color-blue-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.keyList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--app-color-border);
+  max-height: none;
+  background: color-mix(in srgb, var(--mantine-color-body) 80%, transparent);
+}
+
+.keyRow {
+  padding: 6px var(--app-space-sm);
+  border-top: 1px solid color-mix(in srgb, var(--app-color-border) 50%, transparent);
+}
+
+.keyRow:first-child {
+  border-top: none;
+}

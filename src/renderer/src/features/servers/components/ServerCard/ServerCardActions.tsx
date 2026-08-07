@@ -50,6 +50,7 @@ interface Props {
   onVerifyFiles: () => void;
   onInstallFiles: () => void;
   onClone: () => void;
+  onCopyConfiguration: () => void;
   onKill: () => void;
   onDelete: () => void;
   serverEnabled?: boolean;
@@ -316,6 +317,12 @@ export function ServerCardActions(props: Props): ReactElement {
             onClick={props.onClone}
           >
             Clone
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<Copy size={16} color="var(--mantine-color-teal-6)" />}
+            onClick={props.onCopyConfiguration}
+          >
+            Copy configuration…
           </Menu.Item>
 
           <Menu.Divider />

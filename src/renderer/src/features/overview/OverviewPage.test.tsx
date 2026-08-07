@@ -66,6 +66,7 @@ describe("OverviewPage", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdatesForServer={vi.fn()}
           onCloneServer={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -142,6 +143,7 @@ describe("OverviewPage", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdatesForServer={vi.fn()}
           onCloneServer={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -190,6 +192,7 @@ describe("OverviewPage", () => {
       onVerifyFiles: vi.fn(),
       onCheckUpdatesForServer: vi.fn(),
       onCloneServer: vi.fn(),
+      onCopyConfiguration: vi.fn(),
       onDeleteServer: vi.fn(),
       onCancelSteamCmd: vi.fn(),
     };
@@ -253,6 +256,7 @@ describe("OverviewPage", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdatesForServer={vi.fn()}
           onCloneServer={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />
@@ -312,6 +316,7 @@ describe("OverviewPage", () => {
           onVerifyFiles={vi.fn()}
           onCheckUpdatesForServer={vi.fn()}
           onCloneServer={vi.fn()}
+          onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
           onCancelSteamCmd={vi.fn()}
         />

@@ -45,9 +45,3 @@
   text-align: right;
   word-break: break-all;
 }
-
-.broadcast {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}

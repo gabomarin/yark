@@ -12,6 +12,9 @@ import type {
   ClusterIniTemplate,
   ClusterIniTemplateApplyResult,
   ClusterIniTemplateMemberPreview,
+  ConfigTransferCommitResult,
+  ConfigTransferDescribeResult,
+  ConfigTransferPreview,
   IniPreview,
   InstallationServersMode,
   LogCleanupOptions,
@@ -126,6 +129,9 @@ export const IPC = {
   clusterIniRestore: "cluster-ini:restore",
   clusterIniPromote: "cluster-ini:promote",
   clusterIniSeed: "cluster-ini:seed",
+  configTransferDescribe: "config-transfer:describe",
+  configTransferPreview: "config-transfer:preview",
+  configTransferCommit: "config-transfer:commit",
   logsList: "logs:list",
   logsRuntime: "logs:runtime",
   logsReadUpdate: "logs:read-update",
@@ -368,6 +374,20 @@ export interface RendererApi {
     clusterId: string,
     serverId: string,
   ): Promise<IpcResult<ClusterIniTemplateApplyResult>>;
+  describeConfigTransferSource(
+    sourceId: string,
+  ): Promise<IpcResult<ConfigTransferDescribeResult>>;
+  previewConfigTransfer(
+    sourceId: string,
+    targetId: string,
+    selection: unknown,
+  ): Promise<IpcResult<ConfigTransferPreview>>;
+  commitConfigTransfer(
+    sourceId: string,
+    targetId: string,
+    selection: unknown,
+    fingerprint: string,
+  ): Promise<IpcResult<ConfigTransferCommitResult>>;
   listServerLogs(serverId: string): Promise<IpcResult<ServerOperationalLogs>>;
   getServerRuntimeLog(
     serverId: string,

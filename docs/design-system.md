@@ -7,11 +7,20 @@ Source of truth for numeric tokens: `src/renderer/src/shared/theme/tokens.ts` �
 
 ## Principles
 
-1. **Surfaces** come from tokens + `AppSurfaceCard`, not copy-pasted gradients.
-2. **Spacing** uses `--app-space-*` / Mantine `gap="sm"` — not one-off `10px` / `gap={6}`.
-3. **Extract shared chrome on the second real use** (same rule as #44).
-4. Prefer Mantine props (`radius`, `padding`, `gap`, `variant`) + CSS variables over raw hex/px.
-5. Workspace “tool” chrome (`flat` / `chrome`) is intentional and different from page cool panels.
+1. **Prefer Mantine first.** Use Mantine components for interaction and structure
+   (`Modal`, `Stepper`, `Tabs`, `Tooltip`, `Alert`, `Checkbox`, `Select`,
+   `TextInput`, `Button`, `Stack`, `Group`, …) before hand-rolling the same
+   widget in CSS modules. Multi-step wizards should use Mantine `Stepper`
+   (`size="sm"`, `allowNextStepsSelect={false}`) like `CreateClusterModal` /
+   `AddServersModal`. Shared YARK atoms (`AppSurfaceCard`, `EmptyState`,
+   `PathField`, …) still win when they already define that chrome.
+2. **Surfaces** come from tokens + `AppSurfaceCard`, not copy-pasted gradients.
+3. **Spacing** uses `--app-space-*` / Mantine `gap="sm"` — not one-off `10px` / `gap={6}`.
+4. **Extract shared chrome on the second real use** (same rule as #44).
+5. Prefer Mantine props (`radius`, `padding`, `gap`, `variant`) + CSS variables over raw hex/px.
+6. Workspace “tool” chrome (`flat` / `chrome`) is intentional and different from page cool panels.
+7. Custom CSS modules polish layout after Mantine + shared atoms are exhausted —
+   they must not reimplement Mantine widgets.
 
 ---
 

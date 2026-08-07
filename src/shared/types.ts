@@ -1,4 +1,6 @@
 /** Lifecycle status of a server instance. */
+import type { ConfigTransferSelection } from "./config-transfer";
+
 export type ServerStatus =
   | "stopped"
   | "starting"
@@ -705,6 +707,74 @@ export interface ClusterIniTemplateApplyResult {
   /** Cataloged INI backup id when the install was Ready enough to archive. */
   backupId: string | null;
   /** Local dual-file snapshot directory under Config/WindowsServer/.yark-pre-template. */
+  snapshotDir: string | null;
+}
+
+/** #95 — one-shot selective configuration copy (not sync). */
+export interface ConfigTransferIniKeyInfo {
+  section: string;
+  key: string;
+}
+
+/** ASA UI category group (same taxonomy as the server INI editor). */
+export interface ConfigTransferIniCategoryInfo {
+  id: string;
+  label: string;
+  keys: ConfigTransferIniKeyInfo[];
+}
+
+export interface ConfigTransferDescribeResult {
+  sourceId: string;
+  sourceName: string;
+  sourceStatus: ServerStatus;
+  gameUserSettings: ConfigTransferIniCategoryInfo[];
+  game: ConfigTransferIniCategoryInfo[];
+  mods: string[];
+  disabledMods: string[];
+  extraArgs: string[];
+  hasPasswords: boolean;
+}
+
+export interface ConfigTransferProfileDiff {
+  mods: {
+    before: string[];
+    after: string[];
+    disabledBefore: string[];
+    disabledAfter: string[];
+  } | null;
+  extraArgs: { before: string[]; after: string[] } | null;
+  backupPolicy: {
+    before: Omit<BackupPolicy, "serverId" | "updatedAt">;
+    after: Omit<BackupPolicy, "serverId" | "updatedAt">;
+  } | null;
+  passwords: { changed: true; redacted: true } | null;
+}
+
+export interface ConfigTransferPreview {
+  sourceId: string;
+  targetId: string;
+  sourceName: string;
+  targetName: string;
+  sourceStatus: ServerStatus;
+  targetStatus: ServerStatus;
+  /** Opaque revision token; commit must echo the same value. */
+  fingerprint: string;
+  /** Echo of the validated selection used to build this preview. */
+  selection: ConfigTransferSelection;
+  iniPreview: IniPreview;
+  profileDiff: ConfigTransferProfileDiff;
+  warnings: string[];
+}
+
+export interface ConfigTransferCommitResult {
+  sourceId: string;
+  targetId: string;
+  sourceName: string;
+  targetName: string;
+  fingerprint: string;
+  iniPreview: IniPreview;
+  profileDiff: ConfigTransferProfileDiff;
+  backupId: string | null;
   snapshotDir: string | null;
 }
 

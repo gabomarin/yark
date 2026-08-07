@@ -1,0 +1,41 @@
+.root {
+  border-radius: 14px;
+  border: 1px solid var(--app-color-border);
+  background: color-mix(in srgb, var(--app-color-surface-chrome) 72%, transparent);
+  padding: 14px 16px;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.root[data-enabled] {
+  border-color: color-mix(in srgb, var(--mantine-color-blue-6) 45%, transparent);
+  background: color-mix(in srgb, var(--mantine-color-blue-9) 32%, transparent);
+}
+
+.body {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--app-color-border) 70%, transparent);
+}
+
+.listScroll {
+  border: 1px solid var(--app-color-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--app-color-surface-chrome) 40%, transparent);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  padding: 8px var(--app-space-sm);
+  border-top: 1px solid color-mix(in srgb, var(--app-color-border) 50%, transparent);
+}
+
+.row:first-child {
+  border-top: none;
+}

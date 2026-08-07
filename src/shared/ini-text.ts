@@ -331,6 +331,55 @@ export function setIniTextValue(
   return out;
 }
 
+/**
+ * Removes one key assignment from a section (first occurrence by default).
+ * Preserves surrounding comments and blank lines when possible.
+ */
+export function removeIniTextValue(
+  text: string,
+  section: string,
+  key: string,
+  occurrence = 0,
+): string {
+  const lines = text.split(/\r?\n/);
+  const result: string[] = [];
+  let currentSection = INI_ROOT_SECTION;
+  let matchIndex = 0;
+  const sectionLower = section.toLowerCase();
+  const keyLower = key.toLowerCase();
+  const targetOccurrence = Math.max(0, Math.floor(occurrence));
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    const sectionMatch = /^\[(.+)\]$/.exec(trimmed);
+    if (sectionMatch !== null) {
+      currentSection = sectionMatch[1] ?? INI_ROOT_SECTION;
+      result.push(line);
+      continue;
+    }
+
+    const eq = trimmed.indexOf("=");
+    if (
+      eq > 0 &&
+      currentSection.toLowerCase() === sectionLower &&
+      trimmed.slice(0, eq).trim().toLowerCase() === keyLower
+    ) {
+      if (matchIndex === targetOccurrence) {
+        matchIndex += 1;
+        continue;
+      }
+      matchIndex += 1;
+    }
+    result.push(line);
+  }
+
+  let out = result.join("\n");
+  if (out.length > 0 && !out.endsWith("\n")) {
+    out += "\n";
+  }
+  return out;
+}
+
 /** Short category name: last part after the dot (GameSession). */
 export function sectionShortName(section: string): string {
   if (section === INI_ROOT_SECTION) {

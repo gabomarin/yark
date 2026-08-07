@@ -43,6 +43,7 @@ interface Props {
   onVerifyFiles: () => void;
   onCheckUpdates: () => void;
   onClone: () => void;
+  onCopyConfiguration: () => void;
   onDelete: () => void;
   onCancelSteamCmd: () => void;
   onToggleEnabled?: () => void;
@@ -183,6 +184,7 @@ export function ServerCard(props: Props): ReactElement {
             onVerifyFiles={props.onVerifyFiles}
             onInstallFiles={props.onInstallFiles}
             onClone={props.onClone}
+            onCopyConfiguration={props.onCopyConfiguration}
             onKill={props.onKill}
             onDelete={props.onDelete}
             serverEnabled={server.enabled}
