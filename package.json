@@ -27,6 +27,7 @@
     "e2e:move-install": "node scripts/e2e-move-install.cjs",
     "e2e:host-port-probe": "node scripts/e2e-host-port-probe.cjs",
     "e2e:rcon": "node scripts/e2e-rcon.cjs",
+    "e2e:launch-args": "node scripts/e2e-launch-args.cjs",
     "e2e:quit-policy": "node scripts/e2e-quit-policy.cjs",
     "e2e:crash-reattach": "node scripts/e2e-crash-reattach.cjs",
     "e2e:log-retention": "node scripts/e2e-log-retention.cjs",

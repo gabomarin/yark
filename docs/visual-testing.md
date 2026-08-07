@@ -184,5 +184,6 @@ for the mandatory three-viewport protocol above unless noted.
 | `e2e:smoke` / `e2e` | `npm run e2e:smoke` / `npm run e2e` | Need display + `ELECTRON_RUN_AS_NODE` unset in the shell (these two scripts do **not** clear it). Smoke may still fail on stale `section.servers h2`; the suite uses `[data-server-card]`. Server create needs a Windows-style install path, admin password ≥4 chars, unique ports |
 | `e2e:move-install` | `npm run build && npm run e2e:move-install` | Move installation (#56): same-volume rename/verify/commit UI + disk assertions under `C:\asa-e2e`; clears `ELECTRON_RUN_AS_NODE` |
 | `e2e:copy-configuration` | `npm run build && npm run e2e:copy-configuration` | Copy configuration (#95): create source with INI/mods/args, copy to two targets, assert disk + SQLite; isolated `YARK_E2E_USER_DATA` |
+| `e2e:launch-args` | `npm run build && npm run e2e:launch-args` | Structured + raw Launch args on Runtime `Commandline` (#93); console-on-start off; fake ready install under `C:\asa-e2e` |
 
 Related domain context: [updates-steamcmd.md](updates-steamcmd.md), [AGENTS.md](../AGENTS.md).

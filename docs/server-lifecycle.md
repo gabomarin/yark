@@ -405,6 +405,7 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 | File | Focus |
 | --- | --- |
 | `tests/unit/launch-args.test.ts` | CLI shape; no listen/RCON/passwords/QueryPort |
+| `npm run e2e:launch-args` | Windows UI: structured + raw args on Runtime `Commandline` (piped) |
 | `tests/unit/sync-profile-ini.test.ts` | Exact INI keys / null password → `""` |
 | `tests/unit/validation.test.ts` | Ports, paths, cluster, mods, conflicts |
 | `tests/unit/host-port-probe.test.ts` | Host bind classify, suggestions, UDP release, error prefixes |
@@ -421,7 +422,8 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 See also [backups.md](backups.md) (restore requires `!isActive`),
 [updates-steamcmd.md](updates-steamcmd.md) (safe update auto-stop, `pre_update`,
 conditional restart, real-host validation),
-[logs.md](logs.md) (runtime buffer from piped stdout/stderr and Saved/Logs tail),
+[logs.md](logs.md) (runtime buffer from piped stdout/stderr and Saved/Logs tail;
+`npm run e2e:launch-args` asserts structured/raw tokens on Runtime `Commandline`),
 [rcon.md](rcon.md) (workspace console / players / ban list),
 [settings.md](settings.md) (tray, Start with Windows, auto-start summary), and
 [clusters.md](clusters.md) (transfer-compliance reports and cluster launch trio).

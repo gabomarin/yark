@@ -184,6 +184,8 @@ npm test -- logs-service
 npm test -- log-retention
 npm run typecheck
 npm run build && npm run e2e:log-retention
+npm run build && npm run e2e:launch-args
+
 ```
 
 Renderer: `src/renderer/src/features/logs/*.test.tsx`, Settings retention in
