@@ -14,6 +14,10 @@ This repository contains a desktop application for managing dedicated ARK Surviv
 - After `npm install`, Husky hooks run typecheck/lint on commit and typecheck/test/lint on push; CI also runs build + `lint`.
 - For visible renderer changes, follow the mandatory [visual testing protocol](visual-testing.md), including HD, Full HD, and QHD/2K review.
 - When growing or splitting React UI, follow [component-structure.md](component-structure.md) (pragmatic Atomic Design for agents).
+- Prefer **Mantine** components/props for renderer UI wherever they fit (Stepper,
+  Modal, Tooltip, forms, layout) before custom chrome; see
+  [design-system.md](design-system.md) and
+  [`.cursor/rules/prefer-mantine.mdc`](../.cursor/rules/prefer-mantine.mdc).
 - When cutting a release or bumping the app version, follow [versioning.md](versioning.md) and update [CHANGELOG.md](../CHANGELOG.md). `package.json` is the SemVer source of truth; the UI reads it via `@shared/app-version`. Pushing tag `vX.Y.Z` runs `.github/workflows/release.yml` (Windows NSIS → GitHub Release).
 - On feature work, keep a **short** Unreleased changelog bullet (CI requires `CHANGELOG.md` unless `skip-changelog`); see [`.cursor/rules/changelog.mdc`](../.cursor/rules/changelog.mdc).
 

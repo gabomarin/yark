@@ -43,6 +43,7 @@ import type { PlayerListState } from "@features/server-workspace/components/Rcon
 import type { OnlinePlayerInfo, PlayerListUpdatedPush } from "@shared/ipc";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { CloneServerDialog } from "@features/servers/components/CloneServerDialog/CloneServerDialog";
+import { CopyConfigurationWizard } from "@features/servers/components/CopyConfigurationWizard/CopyConfigurationWizard";
 import { openHostPortProbeModal } from "@features/servers/hostPortProbeModal";
 import { SteamCmdProgressDock } from "@features/steamcmd/SteamCmdProgressDock";
 import { SettingsPage } from "@features/settings/SettingsPage";
@@ -68,6 +69,11 @@ type Overlay =
       logsFocus?: ServerLogsFocus | null;
     }
   | null;
+
+type CopyConfigSession = {
+  sourceServerId: string;
+  targetServerId?: string;
+};
 
 interface AppProps {
   /** Resolved from `app_settings` (via IPC) before first paint. */
@@ -103,6 +109,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   >(new Map());
   const [route, setRoute] = useState<Route>("overview");
   const [overlay, setOverlay] = useState<Overlay>(null);
+  const [copyConfig, setCopyConfig] = useState<CopyConfigSession | null>(null);
   const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState(
     readOpenNativeTerminalPref,
   );
@@ -1178,6 +1185,9 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             onKickPlayer={onKickPlayer}
             onBanPlayer={onBanPlayer}
             onServerUpdated={() => void refresh()}
+            onCopyConfiguration={(id) =>
+              setCopyConfig({ sourceServerId: id })
+            }
           />
         </AppShellLayout>
       );
@@ -1275,6 +1285,9 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             onVerifyFiles={(id) => startSteamFilesJob(id, "verify")}
               onCheckUpdatesForServer={(id) => void checkForUpdates(id)}
               onCloneServer={(id) => setOverlay({ kind: "clone", sourceServerId: id })}
+              onCopyConfiguration={(id) =>
+                setCopyConfig({ sourceServerId: id })
+              }
               onDeleteServer={(id) => confirmDeleteServer(id)}
             onToggleServerEnabled={(id, enabled) => void setServerEnabled(id, enabled)}
             onCancelSteamCmd={() => void runAction(() => window.api.cancelSteamCmd())}
@@ -1379,6 +1392,24 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             ),
           )
         }
+      />
+      <CopyConfigurationWizard
+        opened={copyConfig !== null}
+        initialSourceId={copyConfig?.sourceServerId ?? null}
+        initialTargetId={copyConfig?.targetServerId ?? null}
+        servers={servers}
+        statuses={statuses}
+        onClose={() => setCopyConfig(null)}
+        onCompleted={(targetIds) => {
+          void refresh();
+          setCopyConfig(null);
+          if (targetIds.length === 1) {
+            setOverlay({
+              kind: "workspace",
+              serverId: targetIds[0]!,
+            });
+          }
+        }}
       />
     </AppProviders>
   );

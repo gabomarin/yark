@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- **Copy configuration** between server profiles: one-shot selective copy of INI settings, mods, launch args, backup policy, and opt-in passwords to one or more stopped targets (from Overview or workspace Quick actions), with Merge/Replace preview, fingerprint checks, and a recoverable pre-copy snapshot — never copies identity, ports, cluster, or saves (#95).
 - Cluster INI templates support per-member **Promote**, **Restore** (with backup), and opt-in **Seed** when adding servers; ports/passwords/session stay profile-owned (#89).
 - **Create cluster** from the Clusters workspace: assign a unique Cluster ID and shared directory to one or more stopped servers (#42).
 - **Add / remove servers** on an existing cluster from the Clusters detail panel (stopped servers only; shared transfer files are never deleted) (#41).
@@ -29,6 +30,9 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- **Copy configuration** keeps every checked category when several are toggled in quick succession (no longer drops earlier INI picks) (#95).
+- **Copy configuration** no longer loses GameUserSettings rates when mods/launch args are copied in the same run (INI is written before profile→INI sync) (#95).
+- **Copy configuration** full-file Replace no longer copies blocked ASE keys such as ActiveMods; backup schedule copy keeps the target backup folder; select-all only picks stopped targets (#95).
 - **YARK updates** no longer fail with a 404 when downloading a new release: installers now publish under a space-free filename (`YARK-server-manager-Setup-<version>.exe`) that matches the updater metadata and the website download button (#165).
 
 ## [0.6.0] - 2026-08-05

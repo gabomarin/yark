@@ -40,24 +40,6 @@ export type IniFilterId = "all" | AsaUiCategoryId;
 
 export type IniControlKind = "boolean" | "number" | "text";
 
-const UI_CATEGORY_LABELS: Record<AsaUiCategoryId, string> = {
-  general: "General",
-  rates: "Rates",
-  breeding: "Breeding",
-  dinos: "Dinosaurs",
-  structures: "Structures",
-  pvp: "PvP",
-  pve: "PvE",
-  world: "World",
-  players: "Players",
-  tribes: "Tribes",
-  chat: "Chat and MOTD",
-  mods: "Mods",
-  networking: "Networking",
-  events: "Events",
-  other: "Other",
-};
-
 export interface IniUiCategoryGroup {
   category: AsaUiCategoryId;
   label: string;
@@ -293,7 +275,6 @@ export function filterIniRows(
       description,
       humanizeKey(row.key),
       asaUiCategoryLabel(category),
-      UI_CATEGORY_LABELS[category],
       category,
     ]
       .join(" ")
@@ -337,7 +318,7 @@ export function groupRowsByUiCategory(
     list.sort((a, b) => a.key.localeCompare(b.key) || a.section.localeCompare(b.section));
     groups.push({
       category: def.id,
-      label: UI_CATEGORY_LABELS[def.id],
+      label: asaUiCategoryLabel(def.id),
       rows: list,
     });
   }
@@ -375,7 +356,7 @@ export function groupSettingReferencesByUiCategory(
     );
     return [{
       category: definition.id,
-      label: UI_CATEGORY_LABELS[definition.id],
+      label: asaUiCategoryLabel(definition.id),
       rows: list,
     }];
   });

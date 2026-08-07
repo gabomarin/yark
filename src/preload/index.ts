@@ -134,6 +134,26 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.clusterIniPromote, clusterId, serverId),
   seedClusterIniFromTemplate: (clusterId: string, serverId: string) =>
     ipcRenderer.invoke(IPC.clusterIniSeed, clusterId, serverId),
+  describeConfigTransferSource: (sourceId: string) =>
+    ipcRenderer.invoke(IPC.configTransferDescribe, sourceId),
+  previewConfigTransfer: (
+    sourceId: string,
+    targetId: string,
+    selection: unknown,
+  ) => ipcRenderer.invoke(IPC.configTransferPreview, sourceId, targetId, selection),
+  commitConfigTransfer: (
+    sourceId: string,
+    targetId: string,
+    selection: unknown,
+    fingerprint: string,
+  ) =>
+    ipcRenderer.invoke(
+      IPC.configTransferCommit,
+      sourceId,
+      targetId,
+      selection,
+      fingerprint,
+    ),
   listServerLogs: (serverId: string) =>
     ipcRenderer.invoke(IPC.logsList, serverId),
   getServerRuntimeLog: (serverId: string, limit?: number) =>

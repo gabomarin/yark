@@ -82,6 +82,7 @@ function renderWorkspace(
         onVerifyFiles={vi.fn()}
         onSendRcon={onSendRcon}
         {...playerListHandlers}
+        onCopyConfiguration={vi.fn()}
         onServerUpdated={vi.fn()}
       />
     </AppProviders>,
@@ -318,7 +319,8 @@ describe("ServerWorkspacePage", () => {
           onVerifyFiles={vi.fn()}
           onSendRcon={onSendRcon}
           {...playerListHandlers}
-          onServerUpdated={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+        onServerUpdated={vi.fn()}
         />
       </AppProviders>,
     );
@@ -459,7 +461,8 @@ describe("ServerWorkspacePage", () => {
           onSendRcon={vi.fn(async () => true)}
           {...playerListHandlers}
           onClearRconHistory={onClearRconHistory}
-          onServerUpdated={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+        onServerUpdated={vi.fn()}
         />
       </AppProviders>,
     );
@@ -479,9 +482,10 @@ describe("ServerWorkspacePage", () => {
     expect(onClearRconHistory).toHaveBeenCalledWith("srv-a");
   });
 
-  it("keeps SidePanel Save world and Broadcast shortcuts wired to RCON history", async () => {
+  it("keeps SidePanel Save world wired to RCON and Copy configuration callable", async () => {
     const user = userEvent.setup();
     const onSendRcon = vi.fn(async () => true);
+    const onCopyConfiguration = vi.fn();
     render(
       <AppProviders>
         <ServerWorkspacePage
@@ -518,6 +522,7 @@ describe("ServerWorkspacePage", () => {
           onVerifyFiles={vi.fn()}
           onSendRcon={onSendRcon}
           {...playerListHandlers}
+          onCopyConfiguration={onCopyConfiguration}
           onServerUpdated={vi.fn()}
         />
       </AppProviders>,
@@ -526,12 +531,8 @@ describe("ServerWorkspacePage", () => {
     await user.click(screen.getByRole("button", { name: "Save world" }));
     expect(onSendRcon).toHaveBeenCalledWith("srv-a", "SaveWorld");
 
-    await user.type(
-      screen.getByPlaceholderText("Message for players"),
-      "Hello tribe",
-    );
-    await user.click(screen.getByRole("button", { name: "Send announcement" }));
-    expect(onSendRcon).toHaveBeenCalledWith("srv-a", "Broadcast Hello tribe");
+    await user.click(screen.getByRole("button", { name: "Copy configuration" }));
+    expect(onCopyConfiguration).toHaveBeenCalledWith("srv-a");
   });
 
   it("moves secondary panels into drawers in compact workspaces", async () => {
@@ -808,7 +809,8 @@ describe("ServerWorkspacePage", () => {
           onVerifyFiles={vi.fn()}
           onSendRcon={vi.fn(async () => true)}
           {...playerListHandlers}
-          onServerUpdated={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+        onServerUpdated={vi.fn()}
         />
       </AppProviders>,
     );
@@ -869,7 +871,8 @@ describe("ServerWorkspacePage", () => {
           onVerifyFiles={vi.fn()}
           onSendRcon={vi.fn(async () => true)}
           {...playerListHandlers}
-          onServerUpdated={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+        onServerUpdated={vi.fn()}
         />
       </AppProviders>,
     );
@@ -906,7 +909,8 @@ describe("ServerWorkspacePage", () => {
           onVerifyFiles={vi.fn()}
           onSendRcon={vi.fn(async () => true)}
           {...playerListHandlers}
-          onServerUpdated={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+        onServerUpdated={vi.fn()}
         />
       </AppProviders>,
     );

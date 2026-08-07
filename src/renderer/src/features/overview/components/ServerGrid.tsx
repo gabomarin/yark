@@ -48,6 +48,7 @@ interface Props {
   onCheckUpdatesForServer: (serverId: string) => void;
   checkingUpdates?: boolean;
   onCloneServer: (serverId: string) => void;
+  onCopyConfiguration: (serverId: string) => void;
   onDeleteServer: (serverId: string) => void;
   onToggleServerEnabled?: (serverId: string, enabled: boolean) => void;
   onCancelSteamCmd: () => void;
@@ -151,6 +152,7 @@ export function ServerGrid(props: Props): ReactElement {
         onVerifyFiles={() => props.onVerifyFiles(server.id)}
         onCheckUpdates={() => props.onCheckUpdatesForServer(server.id)}
         onClone={() => props.onCloneServer(server.id)}
+        onCopyConfiguration={() => props.onCopyConfiguration(server.id)}
         onDelete={() => props.onDeleteServer(server.id)}
         onToggleEnabled={() => props.onToggleServerEnabled?.(server.id, !server.enabled)}
         onCancelSteamCmd={props.onCancelSteamCmd}

@@ -63,6 +63,7 @@ interface Props {
   onKickPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
   onBanPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
   onServerUpdated: () => void;
+  onCopyConfiguration: (serverId: string) => void;
 }
 
 function isServerActive(runtime: ServerRuntimeInfo | null): boolean {
@@ -190,9 +191,7 @@ export function ServerWorkspacePage(props: Props): ReactElement {
       onSaveWorld={() => {
         void props.onSendRcon(selectedServer.id, "SaveWorld");
       }}
-      onBroadcast={(message) => {
-        void props.onSendRcon(selectedServer.id, `Broadcast ${message}`);
-      }}
+      onCopyConfiguration={() => props.onCopyConfiguration(selectedServer.id)}
       onKill={() => props.onKillServer(selectedServer.id)}
       onToggleEnabled={() =>
         props.onToggleServerEnabled?.(selectedServer.id, !selectedServer.enabled)

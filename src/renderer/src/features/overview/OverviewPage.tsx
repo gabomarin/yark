@@ -53,6 +53,7 @@ interface Props {
   onVerifyFiles: (serverId: string) => void;
   onCheckUpdatesForServer: (serverId: string) => void;
   onCloneServer: (serverId: string) => void;
+  onCopyConfiguration: (serverId: string) => void;
   onDeleteServer: (serverId: string) => void;
   onToggleServerEnabled?: (serverId: string, enabled: boolean) => void;
   onCancelSteamCmd: () => void;
@@ -107,6 +108,7 @@ export function OverviewPage(props: Props): ReactElement {
           onCheckUpdatesForServer={props.onCheckUpdatesForServer}
           checkingUpdates={props.checkingUpdates}
           onCloneServer={props.onCloneServer}
+          onCopyConfiguration={props.onCopyConfiguration}
           onDeleteServer={props.onDeleteServer}
           onToggleServerEnabled={props.onToggleServerEnabled}
           onCancelSteamCmd={props.onCancelSteamCmd}

@@ -1,0 +1,27 @@
+---
+description: Prefer Mantine primitives over custom UI chrome in the renderer
+globs: src/renderer/**/*.{tsx,ts,css}
+alwaysApply: false
+---
+
+# Prefer Mantine
+
+YARK’s renderer is a **Mantine** app (theme + tokens in
+`src/renderer/src/shared/theme/`). Prefer Mantine’s built-in components and props
+before inventing custom markup or CSS for the same job.
+
+Full guidance: [docs/design-system.md](../../docs/design-system.md).
+
+## Quick rules
+
+- Use Mantine for wizards/modals (`Modal`, `Stepper`), forms (`TextInput`,
+  `Select`, `Checkbox`, `Switch`, `NumberInput`), feedback (`Alert`, `Tooltip`,
+  `Badge`, `Notification`), and layout (`Stack`, `Group`, `SimpleGrid`).
+- Match existing patterns: `CreateClusterModal` / `AddServersModal` already use
+  `Stepper` (`size="sm"`, `allowNextStepsSelect={false}`).
+- Prefer Mantine props (`gap`, `p`, `radius`, `variant`, `size`) + CSS variables
+  over one-off hex/px and hand-rolled steppers, tabs, or tooltips.
+- Shared YARK atoms (`AppSurfaceCard`, `EmptyState`, `PathField`, …) still win
+  when the design system already defines that chrome.
+- Custom CSS modules are for feature-specific layout/polish after Mantine +
+  shared atoms are exhausted — not for reimplementing Mantine widgets.

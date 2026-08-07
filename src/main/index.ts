@@ -12,6 +12,7 @@ import { PlayerSessionWatcher } from "../backend/domains/backups/player-session-
 import { IniService } from "../backend/domains/config/ini-service";
 import { ClusterIniTemplateService } from "../backend/domains/config/cluster-ini-template-service";
 import { ClusterIniTemplateApplyService } from "../backend/domains/config/cluster-ini-template-apply-service";
+import { ConfigTransferService } from "../backend/domains/config/config-transfer-service";
 import { ClusterIniTemplateRepository } from "../backend/infra/db/cluster-ini-template-repository";
 import { InstanceService } from "../backend/domains/instances/instance-service";
 import { runAutoStartOnLaunch } from "../backend/domains/instances/auto-start";
@@ -195,6 +196,14 @@ if (gotSingleInstanceLock) {
       backupService,
       processManager,
     );
+    const configTransferService = new ConfigTransferService(
+      repo,
+      instances,
+      iniService,
+      locks,
+      backupService,
+      processManager,
+    );
     const logsService = new LogsService(
       repo,
       backupService,
@@ -312,6 +321,7 @@ if (gotSingleInstanceLock) {
       iniService,
       clusterIniService,
       clusterIniApplyService,
+      configTransferService,
       logsService,
       updateService,
       modsService,

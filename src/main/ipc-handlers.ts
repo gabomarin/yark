@@ -10,6 +10,7 @@ import type { InstanceService } from "../backend/domains/instances/instance-serv
 import type { IniService } from "../backend/domains/config/ini-service";
 import type { ClusterIniTemplateService } from "../backend/domains/config/cluster-ini-template-service";
 import type { ClusterIniTemplateApplyService } from "../backend/domains/config/cluster-ini-template-apply-service";
+import type { ConfigTransferService } from "../backend/domains/config/config-transfer-service";
 import type { LogsService } from "../backend/domains/logs/logs-service";
 import type { ModsService } from "../backend/domains/mods/mods-service";
 import type { UpdateService } from "../backend/domains/updates/update-service";
@@ -66,6 +67,7 @@ export function registerIpcHandlers(
   ini: IniService,
   clusterIni: ClusterIniTemplateService,
   clusterIniApply: ClusterIniTemplateApplyService,
+  configTransfer: ConfigTransferService,
   logs: LogsService,
   updates: UpdateService,
   mods: ModsService,
@@ -619,6 +621,30 @@ export function registerIpcHandlers(
     IPC.clusterIniSeed,
     (_e, clusterId: string, serverId: string) =>
       wrap(() => clusterIniApply.seed(clusterId, serverId)),
+  );
+
+  ipcMain.handle(IPC.configTransferDescribe, (_e, sourceId: string) =>
+    wrap(() => configTransfer.describeSource(sourceId)),
+  );
+
+  ipcMain.handle(
+    IPC.configTransferPreview,
+    (_e, sourceId: string, targetId: string, selection: unknown) =>
+      wrap(() => configTransfer.preview(sourceId, targetId, selection)),
+  );
+
+  ipcMain.handle(
+    IPC.configTransferCommit,
+    (
+      _e,
+      sourceId: string,
+      targetId: string,
+      selection: unknown,
+      fingerprint: string,
+    ) =>
+      wrap(() =>
+        configTransfer.commit(sourceId, targetId, selection, fingerprint),
+      ),
   );
 
   ipcMain.handle(IPC.logsList, (_e, serverId: string) =>

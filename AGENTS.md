@@ -33,10 +33,25 @@ Standard commands live in `package.json`, `README.md`, and `docs/agent-context.m
 Domain runbooks: [docs/backups.md](docs/backups.md), [docs/updates-steamcmd.md](docs/updates-steamcmd.md),
 [docs/logs.md](docs/logs.md), [docs/server-lifecycle.md](docs/server-lifecycle.md),
 [docs/rcon.md](docs/rcon.md), [docs/settings.md](docs/settings.md),
-[docs/clusters.md](docs/clusters.md), [docs/website.md](docs/website.md). UI composition for agents:
+[docs/clusters.md](docs/clusters.md), [docs/website.md](docs/website.md),
+[docs/config-transfer.md](docs/config-transfer.md). UI composition for agents:
 [docs/component-structure.md](docs/component-structure.md),
 [docs/design-system.md](docs/design-system.md). Visual/e2e helpers:
 [docs/visual-testing.md](docs/visual-testing.md).
+
+## Prefer Mantine (renderer UI)
+
+When building or changing React UI, **use Mantine components and props wherever
+they fit** before inventing custom chrome (steppers, tooltips, tabs, form
+controls, alerts, modals, layout primitives). Theme/tokens live under
+`src/renderer/src/shared/theme/`; recipe detail and exceptions are in
+[docs/design-system.md](docs/design-system.md). Cursor rule:
+[`.cursor/rules/prefer-mantine.mdc`](.cursor/rules/prefer-mantine.mdc).
+
+Examples already in the app: `CreateClusterModal` / `AddServersModal` use
+Mantine `Stepper`; INI/cluster apply flows use `Modal`, `Checkbox`, `Alert`,
+`Tooltip`. Shared YARK atoms (`AppSurfaceCard`, `EmptyState`, `PathField`, …)
+still take precedence when the design system defines that surface.
 
 Notes specific to running this in the Linux cloud VM:
 
