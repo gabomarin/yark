@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert, Button, Checkbox, Group, Modal, Stack, Text } from "@mantine/core";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
@@ -26,55 +26,45 @@ interface Props {
   onChanged: () => void;
 }
 
+function initialSelectedIds(
+  members: ServerProfile[],
+  statuses: Map<string, ServerRuntimeInfo>,
+  preferredIds: string[] | undefined,
+): string[] {
+  const candidates = listRemoveCandidates(members, statuses);
+  const eligibleIds = candidates
+    .filter((candidate) => candidate.eligible)
+    .map((candidate) => candidate.server.id);
+  const eligible = new Set(eligibleIds);
+  const preselected = (preferredIds ?? []).filter((id) => eligible.has(id));
+  if (preselected.length > 0) return preselected;
+  const firstEligible = eligibleIds[0];
+  return firstEligible !== undefined ? [firstEligible] : [];
+}
+
 export function RemoveServersModal(props: Props): ReactElement {
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState(() =>
+    initialSelectedIds(props.members, props.statuses, props.initialSelectedIds),
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const wasOpenRef = useRef(false);
 
   const candidates = useMemo(
     () => listRemoveCandidates(props.members, props.statuses),
     [props.members, props.statuses],
   );
+  const activeSelectedIds = useMemo(
+    () => pruneSelectedServerIds(selectedIds, candidates),
+    [selectedIds, candidates],
+  );
   const selected = useMemo(
-    () => resolveSelectedCandidates(candidates, selectedIds),
-    [candidates, selectedIds],
+    () => resolveSelectedCandidates(candidates, activeSelectedIds),
+    [candidates, activeSelectedIds],
   );
   const remaining = remainingMemberCountAfterRemove(
     props.members.length,
     selected.length,
   );
-
-  useEffect(() => {
-    const justOpened = props.opened && !wasOpenRef.current;
-    wasOpenRef.current = props.opened;
-    if (!props.opened) return;
-
-    if (justOpened) {
-      const initial = props.initialSelectedIds ?? [];
-      const eligibleIds = candidates
-        .filter((candidate) => candidate.eligible)
-        .map((candidate) => candidate.server.id);
-      const eligible = new Set(eligibleIds);
-      const preselected = initial.filter((id) => eligible.has(id));
-      const firstEligible = eligibleIds[0];
-      setSelectedIds(
-        preselected.length > 0
-          ? preselected
-          : firstEligible !== undefined
-            ? [firstEligible]
-            : [],
-      );
-      setSaving(false);
-      setError(null);
-      return;
-    }
-
-    setSelectedIds((current) => {
-      const next = pruneSelectedServerIds(current, candidates);
-      return next.length === current.length ? current : next;
-    });
-  }, [props.opened, candidates, props.initialSelectedIds]);
 
   const handleRemove = async (): Promise<void> => {
     if (selected.length === 0) return;
@@ -148,19 +138,22 @@ export function RemoveServersModal(props: Props): ReactElement {
           {candidates.map((candidate) => (
             <SelectableListRow
               key={candidate.server.id}
-              selected={selectedIds.includes(candidate.server.id)}
+              selected={activeSelectedIds.includes(candidate.server.id)}
               disabled={!candidate.eligible}
               onClick={() => {
                 if (candidate.eligible) {
                   setSelectedIds((current) =>
-                    toggleSelectedServerId(current, candidate.server.id),
+                    toggleSelectedServerId(
+                      pruneSelectedServerIds(current, candidates),
+                      candidate.server.id,
+                    ),
                   );
                 }
               }}
-              aria-pressed={selectedIds.includes(candidate.server.id)}
+              aria-pressed={activeSelectedIds.includes(candidate.server.id)}
               leading={
                 <Checkbox
-                  checked={selectedIds.includes(candidate.server.id)}
+                  checked={activeSelectedIds.includes(candidate.server.id)}
                   disabled={!candidate.eligible}
                   readOnly
                   tabIndex={-1}

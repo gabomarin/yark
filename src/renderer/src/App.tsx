@@ -1397,24 +1397,26 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
           )
         }
       />
-      <CopyConfigurationWizard
-        opened={copyConfig !== null}
-        initialSourceId={copyConfig?.sourceServerId ?? null}
-        initialTargetId={copyConfig?.targetServerId ?? null}
-        servers={servers}
-        statuses={statuses}
-        onClose={() => setCopyConfig(null)}
-        onCompleted={(targetIds) => {
-          void refresh();
-          setCopyConfig(null);
-          if (targetIds.length === 1) {
-            setOverlay({
-              kind: "workspace",
-              serverId: targetIds[0]!,
-            });
-          }
-        }}
-      />
+      {copyConfig !== null && (
+        <CopyConfigurationWizard
+          opened
+          initialSourceId={copyConfig.sourceServerId}
+          initialTargetId={copyConfig.targetServerId ?? null}
+          servers={servers}
+          statuses={statuses}
+          onClose={() => setCopyConfig(null)}
+          onCompleted={(targetIds) => {
+            void refresh();
+            setCopyConfig(null);
+            if (targetIds.length === 1) {
+              setOverlay({
+                kind: "workspace",
+                serverId: targetIds[0]!,
+              });
+            }
+          }}
+        />
+      )}
     </AppProviders>
   );
 }

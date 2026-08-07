@@ -28,7 +28,7 @@ import {
   type IniSettingReference,
 } from "@features/server-workspace/iniModel";
 import { numberInputValueFromIni } from "@features/server-workspace/iniNumberInput";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
 import classes from "./ClusterIniTemplateModal.module.css";
 
@@ -70,26 +70,17 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
     ],
     [availableRows],
   );
+  const activeFilter = categoryOptions.some((option) => option.value === filter)
+    ? filter
+    : "all";
   const visibleRows = useMemo(
-    () => filterIniSettingReferences(rows, search, filter),
-    [rows, search, filter],
+    () => filterIniSettingReferences(rows, search, activeFilter),
+    [rows, search, activeFilter],
   );
   const groupedRows = useMemo(
     () => groupSettingReferencesByUiCategory(visibleRows),
     [visibleRows],
   );
-
-  useEffect(() => {
-    if (!categoryOptions.some((option) => option.value === filter)) {
-      setFilter("all");
-    }
-  }, [categoryOptions, filter]);
-
-  useEffect(() => {
-    setSearch("");
-    setFilter("all");
-    setCollapsed({});
-  }, [props.iniFile]);
 
   const updateValue = (
     section: string,
@@ -141,7 +132,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
           style={{ width: 240 }}
           aria-label="Filter by category"
           leftSection={<FunnelSimple size={15} />}
-          value={filter}
+          value={activeFilter}
           data={categoryOptions}
           searchable
           allowDeselect={false}

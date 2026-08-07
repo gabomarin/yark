@@ -76,12 +76,6 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
 
   useEffect(() => {
     if (!props.opened) return;
-    setError(null);
-    setFiles(defaultClusterIniFileSelection());
-  }, [props.opened, props.clusterId, props.serverId, props.operation]);
-
-  useEffect(() => {
-    if (!props.opened) return;
     if (!clusterIniFileSelectionHasWork(files)) {
       setPreview(null);
       setLoading(false);

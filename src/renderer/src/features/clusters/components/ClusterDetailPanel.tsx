@@ -279,33 +279,39 @@ export function ClusterDetailPanel(props: Props): ReactElement {
         </Stack>
       </Stack>
 
-      <AddServersModal
-        opened={addOpen}
-        clusterId={props.report.clusterId}
-        members={props.members}
-        servers={props.servers}
-        statuses={props.statuses}
-        hasTemplate={hasTemplate}
-        onClose={() => setAddOpen(false)}
-        onChanged={props.onMembershipChanged}
-      />
-      <RemoveServersModal
-        opened={removeOpen}
-        clusterId={props.report.clusterId}
-        members={props.members}
-        statuses={props.statuses}
-        initialSelectedIds={removeInitialIds}
-        onClose={() => setRemoveOpen(false)}
-        onChanged={props.onMembershipChanged}
-      />
-      <ClusterIniTemplateModal
-        opened={templateOpen}
-        clusterId={props.report.clusterId}
-        onClose={() => setTemplateOpen(false)}
-        onChanged={() => {
-          void refreshTemplateStatus();
-        }}
-      />
+      {addOpen && (
+        <AddServersModal
+          opened
+          clusterId={props.report.clusterId}
+          members={props.members}
+          servers={props.servers}
+          statuses={props.statuses}
+          hasTemplate={hasTemplate}
+          onClose={() => setAddOpen(false)}
+          onChanged={props.onMembershipChanged}
+        />
+      )}
+      {removeOpen && (
+        <RemoveServersModal
+          opened
+          clusterId={props.report.clusterId}
+          members={props.members}
+          statuses={props.statuses}
+          initialSelectedIds={removeInitialIds}
+          onClose={() => setRemoveOpen(false)}
+          onChanged={props.onMembershipChanged}
+        />
+      )}
+      {templateOpen && (
+        <ClusterIniTemplateModal
+          opened
+          clusterId={props.report.clusterId}
+          onClose={() => setTemplateOpen(false)}
+          onChanged={() => {
+            void refreshTemplateStatus();
+          }}
+        />
+      )}
       {applyTarget !== null && (
         <ClusterIniTemplateApplyModal
           opened

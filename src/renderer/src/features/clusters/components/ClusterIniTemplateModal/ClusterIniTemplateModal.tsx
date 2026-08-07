@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { FloppyDisk } from "@phosphor-icons/react";
 import {
   Alert,
@@ -44,12 +44,31 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<IniPreview | null>(null);
-  const wasOpenRef = useRef(false);
 
   const dirty =
     payload !== null && baseline !== null && !payloadsEqual(payload, baseline);
 
-  const load = async (): Promise<void> => {
+  const applyLoadedTemplate = (
+    stored: Awaited<ReturnType<typeof window.api.getClusterIniTemplate>>,
+    draft: Awaited<ReturnType<typeof window.api.getClusterIniTemplateOrDraft>>,
+  ): void => {
+    if (!stored.ok) {
+      setError(stored.error ?? "Could not load cluster INI template");
+      return;
+    }
+    if (!draft.ok) {
+      setError(draft.error ?? "Could not load cluster INI template draft");
+      return;
+    }
+    setExists(stored.data !== null);
+    const next = stripYarkOwnedFromPayload(
+      sanitizeServerIniPayload(draft.data.payload),
+    );
+    setPayload(next);
+    setBaseline(next);
+  };
+
+  const reloadTemplate = async (): Promise<void> => {
     setLoading(true);
     setError(null);
     setPreview(null);
@@ -58,35 +77,39 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
         window.api.getClusterIniTemplate(props.clusterId),
         window.api.getClusterIniTemplateOrDraft(props.clusterId),
       ]);
-      if (!stored.ok) {
-        setError(stored.error ?? "Could not load cluster INI template");
-        return;
-      }
-      if (!draft.ok) {
-        setError(draft.error ?? "Could not load cluster INI template draft");
-        return;
-      }
-      setExists(stored.data !== null);
-      const next = stripYarkOwnedFromPayload(
-        sanitizeServerIniPayload(draft.data.payload),
-      );
-      setPayload(next);
-      setBaseline(next);
+      applyLoadedTemplate(stored, draft);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    const justOpened = props.opened && !wasOpenRef.current;
-    wasOpenRef.current = props.opened;
-    if (!props.opened) return;
-    if (justOpened) {
-      setIniFile("gameUserSettings");
-      setMode("visual");
-      void load();
-    }
-  }, [props.opened, props.clusterId]);
+    let cancelled = false;
+    const clusterId = props.clusterId;
+
+    setLoading(true);
+    setError(null);
+    setPreview(null);
+
+    void (async () => {
+      try {
+        const [stored, draft] = await Promise.all([
+          window.api.getClusterIniTemplate(clusterId),
+          window.api.getClusterIniTemplateOrDraft(clusterId),
+        ]);
+        if (cancelled) return;
+        applyLoadedTemplate(stored, draft);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [props.clusterId]);
 
   const handleSave = async (): Promise<void> => {
     if (payload === null) return;
@@ -263,6 +286,7 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
             </Text>
           ) : (
             <ClusterIniTemplateVisualPanel
+              key={`${iniFile}:${mode}`}
               payload={payload}
               iniFile={iniFile}
               mode={mode}
@@ -301,7 +325,7 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
               <Button
                 variant="default"
                 disabled={saving || loading || !dirty}
-                onClick={() => void load()}
+                onClick={() => void reloadTemplate()}
               >
                 Reload
               </Button>

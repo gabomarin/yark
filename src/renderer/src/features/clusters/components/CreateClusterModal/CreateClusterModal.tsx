@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert, Button, Group, Modal, Stack, Stepper, Text } from "@mantine/core";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import {
@@ -29,17 +29,28 @@ interface Props {
   onCreated: () => void;
 }
 
+function initialSelectedIds(
+  servers: ServerProfile[],
+  statuses: Map<string, ServerRuntimeInfo>,
+): string[] {
+  const firstEligible = listCreateClusterCandidates(servers, statuses).find(
+    (candidate) => candidate.eligible,
+  )?.server.id;
+  return firstEligible !== undefined ? [firstEligible] : [];
+}
+
 export function CreateClusterModal(props: Props): ReactElement {
   const [step, setStep] = useState<CreateClusterStep>(1);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [clusterId, setClusterId] = useState("");
+  const [selectedIds, setSelectedIds] = useState(() =>
+    initialSelectedIds(props.servers, props.statuses),
+  );
+  const [clusterId, setClusterId] = useState(() => suggestClusterId());
   const [clusterDir, setClusterDir] = useState("");
   const [idTouched, setIdTouched] = useState(false);
   const [dirTouched, setDirTouched] = useState(false);
   const [browsing, setBrowsing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const wasOpenRef = useRef(false);
 
   const candidates = useMemo(
     () => listCreateClusterCandidates(props.servers, props.statuses),
@@ -49,9 +60,13 @@ export function CreateClusterModal(props: Props): ReactElement {
     () => listIncompleteClusterGroups(props.servers),
     [props.servers],
   );
+  const activeSelectedIds = useMemo(
+    () => pruneSelectedServerIds(selectedIds, candidates),
+    [selectedIds, candidates],
+  );
   const selected = useMemo(
-    () => resolveSelectedCandidates(candidates, selectedIds),
-    [candidates, selectedIds],
+    () => resolveSelectedCandidates(candidates, activeSelectedIds),
+    [candidates, activeSelectedIds],
   );
   const selectedServers = useMemo(
     () => selected.map((candidate) => candidate.server),
@@ -73,33 +88,6 @@ export function CreateClusterModal(props: Props): ReactElement {
   const identityValid = idError === null && dirError === null;
   const canContinueStep1 = selected.length > 0 && portError === null;
   const canContinueStep2 = identityValid;
-
-  useEffect(() => {
-    const justOpened = props.opened && !wasOpenRef.current;
-    wasOpenRef.current = props.opened;
-    if (!props.opened) return;
-
-    if (justOpened) {
-      const firstEligible =
-        candidates.find((candidate) => candidate.eligible)?.server.id ?? null;
-      setStep(1);
-      setSelectedIds(firstEligible !== null ? [firstEligible] : []);
-      setClusterId(suggestClusterId());
-      setClusterDir("");
-      setIdTouched(false);
-      setDirTouched(false);
-      setBrowsing(false);
-      setSaving(false);
-      setError(null);
-      return;
-    }
-
-    // Keep selection in sync if eligibility changes while the modal stays open.
-    setSelectedIds((current) => {
-      const next = pruneSelectedServerIds(current, candidates);
-      return next.length === current.length ? current : next;
-    });
-  }, [props.opened, candidates]);
 
   const handleBrowse = async (): Promise<void> => {
     setBrowsing(true);
@@ -217,11 +205,14 @@ export function CreateClusterModal(props: Props): ReactElement {
         {step === 1 && (
           <CreateClusterServerStep
             candidates={candidates}
-            selectedIds={selectedIds}
+            selectedIds={activeSelectedIds}
             portError={portError}
             onToggle={(serverId) =>
               setSelectedIds((current) =>
-                toggleSelectedServerId(current, serverId),
+                toggleSelectedServerId(
+                  pruneSelectedServerIds(current, candidates),
+                  serverId,
+                ),
               )
             }
           />
