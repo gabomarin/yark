@@ -9,6 +9,14 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Versioned **ASA launch-options catalog** (wiki ASA Check/Missing + YARK-owned classification) with a browse modal from Extra arguments on create/edit server (#92).
+
+### Changed
+
+- Launch-options catalog copy is cleaned from wiki noise into **summary + details**, with a pasteable **example** per entry (#92).
+
 ## [0.7.0] - 2026-08-07
 
 ### Added

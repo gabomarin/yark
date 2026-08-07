@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Notification, dialog, type Tray } from "electron";
+import { app, BrowserWindow, Notification, dialog, shell, type Tray } from "electron";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { openDatabase } from "../backend/infra/db/database";
@@ -136,12 +136,22 @@ function createWindow(): BrowserWindow {
     win.setIcon(icon);
   }
 
-  // The renderer is local-only. External content must go through a narrowly
-  // validated IPC handler instead of replacing or creating app windows.
+  // The renderer is local-only. Block in-app navigation / new BrowserWindows.
+  // http(s) target=_blank links open in the OS browser (Mantine Anchor, etc.).
   win.webContents.on("will-navigate", (event) => {
     event.preventDefault();
   });
-  win.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+        void shell.openExternal(parsed.toString());
+      }
+    } catch {
+      // Ignore malformed URLs.
+    }
+    return { action: "deny" };
+  });
 
   win.on("closed", () => {
     if (mainWindow === win) {
