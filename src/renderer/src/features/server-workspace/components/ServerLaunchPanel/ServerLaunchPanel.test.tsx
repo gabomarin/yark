@@ -96,4 +96,15 @@ describe("ServerLaunchPanel", () => {
       screen.getByText(/wipes wild dinos on every start/i),
     ).toBeInTheDocument();
   });
+
+  it("exposes option descriptions on a keyboard-focusable label (#93)", () => {
+    render(
+      <AppProviders>
+        <ServerLaunchPanel server={profile()} onServerUpdated={vi.fn()} />
+      </AppProviders>,
+    );
+
+    const label = screen.getByText("-NoBattlEye");
+    expect(label.tabIndex).toBe(0);
+  });
 });

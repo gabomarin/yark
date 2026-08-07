@@ -1,4 +1,5 @@
 import type { ServerProfile, ServerProfileInput } from "@shared/types";
+import { buildMapUrlArg } from "@shared/launch-map-url";
 import {
   argsIncludeServerPlatform,
   buildStructuredLaunchArgList,
@@ -18,12 +19,41 @@ export function previewBinaryPath(installDir: string): string {
   return `${installDir.replace(/[\\/]+$/, "")}\\ShooterGame\\Binaries\\Win64\\ArkAscendedServer.exe`;
 }
 
+/**
+ * Split Extra arguments on whitespace while keeping double-quoted spans intact
+ * (including spaces and `\"` inside quotes). Quotes stay on the token.
+ */
 export function parseRawExtraArgs(raw: string): string[] {
-  return raw
-    .trim()
-    .split(/\s+/)
-    .map((t) => t.trim())
-    .filter(Boolean);
+  const out: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  const text = raw.trim();
+
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i]!;
+    if (ch === '"') {
+      // Count preceding backslashes: odd → escaped quote, stay in/out of quotes.
+      let backslashes = 0;
+      for (let j = i - 1; j >= 0 && text[j] === "\\"; j -= 1) {
+        backslashes += 1;
+      }
+      if (backslashes % 2 === 0) {
+        inQuotes = !inQuotes;
+      }
+      current += ch;
+      continue;
+    }
+    if (!inQuotes && /\s/.test(ch)) {
+      if (current.length > 0) {
+        out.push(current);
+        current = "";
+      }
+      continue;
+    }
+    current += ch;
+  }
+  if (current.length > 0) out.push(current);
+  return out;
 }
 
 export function joinRawExtraArgs(args: string[]): string {
@@ -58,7 +88,7 @@ export function toLaunchProfileInput(
 
 export function yarkOwnedPreviewTokens(server: ServerProfile): string[] {
   const parts = [
-    `"${server.map}"?SessionName="${server.sessionName}"`,
+    buildMapUrlArg(server.map, server.sessionName),
     `-port=${server.gamePort}`,
   ];
   const structured = buildStructuredLaunchArgList(server.structuredLaunchArgs);

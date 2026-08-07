@@ -79,6 +79,13 @@
   color: var(--app-color-cryo);
   cursor: help;
   border-bottom: 1px dotted color-mix(in srgb, var(--app-color-cryo) 45%, transparent);
+  border-radius: 2px;
+  outline: none;
+}
+
+.optionLabel:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--app-color-cryo) 65%, transparent);
+  outline-offset: 2px;
 }
 
 .previewCode {

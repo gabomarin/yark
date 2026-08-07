@@ -77,8 +77,11 @@ export function ServerLaunchOptionRow(props: Props): ReactElement {
               maw={360}
               withArrow
               openDelay={250}
+              events={{ hover: true, focus: true, touch: true }}
             >
-              <span className={classes.optionLabel}>{label}</span>
+              <span className={classes.optionLabel} tabIndex={0}>
+                {label}
+              </span>
             </Tooltip>
             {caution ? (
               <Badge
