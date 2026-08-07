@@ -52,7 +52,10 @@ export function WorkspaceHeader(props: Props): ReactElement {
     props.filesJobActive !== true &&
     !isServerDisabled &&
     filesReady;
-  const canEnable = isServerDisabled && props.filesJobActive !== true;
+  const canEnable =
+    isServerDisabled &&
+    props.onToggleEnabled !== undefined &&
+    props.filesJobActive !== true;
   const canStop = status === "running" || status === "starting";
   const canRestart = status === "running" && props.filesJobActive !== true && filesReady;
   const lockTitle = props.filesJobReason ?? "Wait for the file update to finish";
