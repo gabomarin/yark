@@ -43,36 +43,35 @@
   flex: 1;
 }
 
-.navButton {
+.navLink {
   position: relative;
   min-height: 42px;
   border-radius: var(--app-radius-control);
   color: var(--app-color-text);
+  /* Tune Mantine NavLink active tokens; no custom ::before rail. */
+  --nl-bg: var(--ark-blue-a4);
+  --nl-hover: var(--ark-blue-a3);
+  --nl-color: var(--app-color-text);
 }
 
-.navButton[data-active] {
-  background:
-    linear-gradient(
-      100deg,
-      var(--ark-blue-a4) 0%,
-      var(--ark-blue-a2) 68%,
-      transparent 100%
-    );
-  box-shadow: inset 0 0 0 1px var(--ark-blue-a3);
+.navLink :global(.mantine-NavLink-label) {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+}
+
+.navLink :global(.mantine-NavLink-section[data-position="left"]) {
+  margin-inline-end: var(--app-space-xs);
+}
+
+.navLink:hover:not([data-active]) {
+  background: color-mix(in srgb, var(--app-color-text) 4%, transparent);
+}
+
+.steamCmdButton {
+  position: relative;
+  min-height: 42px;
+  border-radius: var(--app-radius-control);
   color: var(--app-color-text);
-}
-
-.navButton[data-active]::before {
-  position: absolute;
-  left: 4px;
-  width: 3px;
-  height: 18px;
-  border-radius: 1px;
-  background: var(--app-color-cryo);
-  box-shadow:
-    0 -7px 0 -1px var(--app-color-fossil),
-    0 7px 0 -1px var(--app-color-biomass);
-  content: "";
 }
 
 .okDot {
@@ -142,20 +141,14 @@
   max-width: 140px;
 }
 
-:global([data-ui-density="compact"]) .navButton {
+:global([data-ui-density="compact"]) .navLink,
+:global([data-ui-density="compact"]) .steamCmdButton {
   min-height: 34px;
 }
 
 :global([data-ui-density="compact"]) .steamCmdButton[data-with-left-section] {
   /* Preserve the md label size while making the longest status fit the compact sidebar. */
   padding-inline: var(--app-space-xxs);
-}
-
-:global([data-ui-density="compact"]) .navButton[data-active]::before {
-  height: 14px;
-  box-shadow:
-    0 -5px 0 -1px var(--app-color-fossil),
-    0 5px 0 -1px var(--app-color-biomass);
 }
 
 :global([data-ui-density="compact"]) .versionChip {

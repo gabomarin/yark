@@ -26,10 +26,8 @@ describe("AppShellLayout", () => {
     expect(brand).toBeInTheDocument();
     expect(brand).toHaveAttribute("src", expect.stringMatching(/\S/));
     expect(screen.getByText("page-body")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Servers" })).toHaveAttribute(
-      "data-size",
-      "md",
-    );
+    const serversNav = screen.getByRole("button", { name: "Servers" });
+    expect(serversNav).toHaveAttribute("data-active");
   });
 
   it("renders and dismisses a global error banner", async () => {
