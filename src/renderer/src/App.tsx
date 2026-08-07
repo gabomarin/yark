@@ -1116,7 +1116,6 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             selectedServerId={overlay.serverId}
             statuses={statuses}
             installationInfo={installationInfo}
-            clusterReports={reports}
             events={events}
             rconHistory={rconHistoryByServer.get(overlay.serverId) ?? []}
             playerList={
@@ -1198,6 +1197,11 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         <ServerForm
           initial={overlay.kind === "edit" ? overlay.profile : null}
           defaultBaseFolder={defaultBaseFolder}
+          servers={servers}
+          onOpenClusters={() => {
+            setOverlay(null);
+            navigate("clusters");
+          }}
           onCancel={() => setOverlay(null)}
           onSaved={(created) => {
             if (overlay.kind === "create" && created !== undefined) {

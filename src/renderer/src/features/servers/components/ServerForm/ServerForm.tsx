@@ -27,10 +27,12 @@ import {
 import { KNOWN_MAPS, type ServerProfile, type ServerProfileInput } from "@shared/types";
 import { useMemo, useState } from "react";
 import { useUiDensity } from "@app/AppProviders";
-import { ServerFormPathField } from "./ServerFormPathField";
+import { listKnownClusterOptions } from "@features/clusters/knownClusterOptions";
 import { ServerFormInstallPath } from "./ServerFormInstallPath";
 import { ServerFormStartupFields } from "./ServerFormStartupFields";
-import { PathField } from "@ui/PathField/PathField";
+import { ServerFormClusterFields } from "./ServerFormClusterFields";
+import { ServerFormPortConflictAlert } from "./ServerFormPortConflictAlert";
+import { ServerFormSection } from "./ServerFormSection";
 import { MoveInstallDialog } from "../MoveInstallDialog/MoveInstallDialog";
 import classes from "./ServerForm.module.css";
 
@@ -41,6 +43,10 @@ interface Props {
   onSaved: (created?: ServerProfile) => void;
   /** Prefills base folder on create when set in Settings. */
   defaultBaseFolder?: string | null;
+  /** Fleet profiles — create cluster picker + live port-conflict preview (#178). */
+  servers?: ServerProfile[];
+  /** Opens Clusters (create flow) when the fleet has no clusters yet. */
+  onOpenClusters?: () => void;
   /** `embedded` = workspace tab (no full-page header). */
   variant?: "page" | "embedded";
   /** Server in starting/running/stopping, or SteamCMD files job → path / ops lock. */
@@ -170,6 +176,11 @@ export function ServerForm(props: Props): ReactElement {
   const [browsingField, setBrowsingField] = useState<"installDir" | "clusterDir" | null>(null);
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
 
+  const knownClusters = useMemo(
+    () => listKnownClusterOptions(props.servers ?? []),
+    [props.servers],
+  );
+
   const nameFolderError = useMemo(() => {
     if (state.name.trim().length === 0) {
       return null;
@@ -216,6 +227,24 @@ export function ServerForm(props: Props): ReactElement {
     if (result.data !== null) {
       setState((previous) => ({ ...previous, [field]: result.data }));
     }
+  };
+
+  const selectCreateCluster = (clusterId: string | null): void => {
+    if (clusterId === null) {
+      setState((previous) => ({
+        ...previous,
+        clusterId: "",
+        clusterDir: "",
+      }));
+      return;
+    }
+    const selected = knownClusters.find((option) => option.clusterId === clusterId);
+    if (selected === undefined) return;
+    setState((previous) => ({
+      ...previous,
+      clusterId: selected.clusterId,
+      clusterDir: selected.clusterDir,
+    }));
   };
 
   const submit = async () => {
@@ -325,7 +354,7 @@ export function ServerForm(props: Props): ReactElement {
       {error !== null && <Alert color="red">{error}</Alert>}
 
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing={embedded ? "md" : "lg"}>
-        <Section title="Identity" flat={embedded}>
+        <ServerFormSection title="Identity" flat={embedded}>
           <TextInput
             label="Name"
             size={inputSize}
@@ -386,9 +415,9 @@ export function ServerForm(props: Props): ReactElement {
               setMoveDialogOpen(true);
             }}
           />
-        </Section>
+        </ServerFormSection>
 
-        <Section title="Networking" flat={embedded}>
+        <ServerFormSection title="Networking" flat={embedded}>
           <NumberInput
             label="Game port"
             size={inputSize}
@@ -419,9 +448,17 @@ export function ServerForm(props: Props): ReactElement {
             allowDecimal={false}
             required
           />
-        </Section>
+          <ServerFormPortConflictAlert
+            servers={props.servers ?? []}
+            excludeServerId={isCreate ? undefined : props.initial?.id}
+            name={state.name}
+            gamePort={state.gamePort}
+            queryPort={state.queryPort}
+            rconPort={state.rconPort}
+          />
+        </ServerFormSection>
 
-        <Section title="Access" flat={embedded}>
+        <ServerFormSection title="Access" flat={embedded}>
           <PasswordInput
             label="Server password"
             size={inputSize}
@@ -437,27 +474,25 @@ export function ServerForm(props: Props): ReactElement {
             autoComplete="new-password"
             required
           />
-        </Section>
+        </ServerFormSection>
 
-        <Section title="Cluster" flat={embedded}>
-          <TextInput
-            label="Cluster ID"
-            size={inputSize}
-            value={state.clusterId}
-            onChange={(e) => setField("clusterId")(e.currentTarget.value)}
+        <ServerFormSection title="Cluster" flat={embedded}>
+          <ServerFormClusterFields
+            isCreate={isCreate}
+            knownClusters={knownClusters}
+            clusterId={state.clusterId}
+            clusterDir={state.clusterDir}
+            inputSize={inputSize}
+            browsingClusterDir={browsingField === "clusterDir"}
+            onSelectCreateCluster={selectCreateCluster}
+            onOpenClusters={props.onOpenClusters}
+            onClusterIdChange={setField("clusterId")}
+            onClusterDirChange={setField("clusterDir")}
+            onBrowseClusterDir={() => void browseDirectory("clusterDir")}
           />
-          <ServerFormPathField
-            label="Shared cluster directory"
-            value={state.clusterDir}
-            placeholder="C:\\ark_servers\\cluster"
-            busy={browsingField === "clusterDir"}
-            size={inputSize}
-            onChange={setField("clusterDir")}
-            onBrowse={() => void browseDirectory("clusterDir")}
-          />
-        </Section>
+        </ServerFormSection>
 
-        <Section
+        <ServerFormSection
           title="Mods and arguments"
           flat={embedded}
           span2={embedded}
@@ -485,10 +520,10 @@ export function ServerForm(props: Props): ReactElement {
             autosize
             maxRows={8}
           />
-        </Section>
+        </ServerFormSection>
 
         {!isCreate && (
-          <Section title="Startup" flat={embedded} span2>
+          <ServerFormSection title="Startup" flat={embedded} span2>
             <ServerFormStartupFields
               autoStart={state.autoStart}
               showInactiveWarning={
@@ -498,7 +533,7 @@ export function ServerForm(props: Props): ReactElement {
                 setState((previous) => ({ ...previous, autoStart }))
               }
             />
-          </Section>
+          </ServerFormSection>
         )}
       </SimpleGrid>
 
@@ -529,34 +564,5 @@ export function ServerForm(props: Props): ReactElement {
         />
       )}
     </div>
-  );
-}
-
-interface SectionProps {
-  title: string;
-  children: React.ReactNode;
-  flat?: boolean;
-  span2?: boolean;
-}
-
-function Section({ title, children, flat = false, span2 = false }: SectionProps): ReactElement {
-  if (flat) {
-    return (
-      <Stack gap="xs" className={span2 ? classes.span2 : undefined}>
-        <Text fw={600} fz="sm">
-          {title}
-        </Text>
-        {children}
-      </Stack>
-    );
-  }
-
-  return (
-    <Card withBorder className={classes.section}>
-      <Stack gap="sm">
-        <Title order={4}>{title}</Title>
-        {children}
-      </Stack>
-    </Card>
   );
 }
