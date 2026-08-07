@@ -324,9 +324,13 @@ function sampleForPlaceholder(placeholder, token, numericDefault, tableFirstValu
 }
 
 function buildExample(token, valueType, fields, tableFirstValue) {
-  const compact = String(token || "").replace(/\s+/g, "");
-  if (valueType === "flag") return compact;
+  const raw = String(token || "").trim();
+  // Space-separated alternatives ("-d3d10 -dx10 -sm4") → one pasteable token.
+  if (valueType === "flag") {
+    return raw.split(/\s+/)[0] || raw;
+  }
 
+  const compact = raw.replace(/\s+/g, "");
   const wikiDefault = stripInline(fields.default || "");
   const numericDefault = /^\d+(\.\d+)?$/.test(wikiDefault) ? wikiDefault : null;
 
@@ -343,7 +347,9 @@ function buildExample(token, valueType, fields, tableFirstValue) {
   let example = compact
     .replace(/\[,[^\]]*\]/g, "")
     .replace(/\[\.\.\.\]/g, "")
-    .replace(/\[[+\w<>./:-]*\]/g, "");
+    .replace(/\[[+\w<>./:-]*\]/g, "")
+    // Nested optional markers (e.g. `[,<ModId2>[...]]`) can leave stray brackets.
+    .replace(/[\[\]]/g, "");
 
   example = example.replace(/<[^>]+>/g, (ph) =>
     sampleForPlaceholder(ph, compact, numericDefault, tableFirstValue),

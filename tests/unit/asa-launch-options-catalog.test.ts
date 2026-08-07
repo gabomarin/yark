@@ -125,5 +125,18 @@ describe("asa-launch-options-catalog (#92)", () => {
     expect(
       asaLaunchOptionEntries.filter((e) => /=value$/i.test(e.example)).length,
     ).toBe(0);
+
+    // Flag alternatives stay as one token; optional wiki markers leave no brackets.
+    const d3d10 = asaLaunchOptionEntries.find((e) =>
+      /^-d3d10\b/i.test(e.token),
+    );
+    expect(d3d10?.example).toBe("-d3d10");
+    const passivemods = asaLaunchOptionEntries.find((e) =>
+      /^-passivemods=/i.test(e.token),
+    );
+    expect(passivemods?.example).toBe("-passivemods=928988");
+    expect(
+      asaLaunchOptionEntries.filter((e) => /[\[\]]/.test(e.example)).length,
+    ).toBe(0);
   });
 });
