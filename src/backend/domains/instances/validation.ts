@@ -112,7 +112,10 @@ export function validateProfileInput(
     structured: parsed.data.structuredLaunchArgs,
     extraArgs: parsed.data.extraArgs,
   })) {
-    issues.push({ field: "extraArgs", message: conflict.message });
+    issues.push({
+      field: conflict.field ?? "extraArgs",
+      message: conflict.message,
+    });
   }
   return issues;
 }

@@ -260,12 +260,29 @@ export function normalizeStructuredLaunchArgs(
 }
 
 function tokenStem(token: string): string {
-  return token
-    .trim()
-    .split(/[=\s?]/)[0]!
-    .replace(/^-/, "")
-    .replace(/^["']/, "")
-    .toLowerCase();
+  let t = token.trim();
+  // Drop wrapping quotes around the whole token if present.
+  if (
+    (t.startsWith('"') && t.endsWith('"')) ||
+    (t.startsWith("'") && t.endsWith("'"))
+  ) {
+    t = t.slice(1, -1).trim();
+  }
+  // Key is before '=' / whitespace (Unreal `?Option=` or `-Option=`).
+  t = (t.split(/[=\s]/)[0] ?? "").trim();
+  t = t.replace(/^[?-]+/, "");
+  return t.toLowerCase();
+}
+
+/** Strip catalog placeholders like `<url>` / `[optional]` (not HTML sanitization). */
+function stripCatalogPlaceholders(token: string): string {
+  let result = token;
+  for (;;) {
+    const withoutAngles = result.replace(/<[^>]*>/g, "");
+    if (withoutAngles === result) break;
+    result = withoutAngles;
+  }
+  return result.replace(/[\[\]]/g, "");
 }
 
 /**
@@ -281,11 +298,15 @@ export function buildStructuredLaunchToken(
   }
   const rawValue = (value ?? "").trim();
   if (rawValue.length === 0) return null;
+  // CLI quoting only — strip ASCII double quotes from the value payload.
+  const sanitized = Array.from(rawValue)
+    .filter((ch) => ch !== '"')
+    .join("");
   const quoted =
-    /^https?:\/\//i.test(rawValue) || /[\s"]/.test(rawValue)
-      ? `"${rawValue.replace(/"/g, "")}"`
-      : rawValue;
-  const base = entry.token.replace(/<[^>]+>/g, "").replace(/[\[\]]/g, "");
+    /^https?:\/\//i.test(sanitized) || /\s/.test(sanitized)
+      ? `"${sanitized}"`
+      : sanitized;
+  const base = stripCatalogPlaceholders(entry.token);
   if (base.includes("=")) {
     const eq = base.indexOf("=");
     return `${base.slice(0, eq + 1)}${quoted}`;
@@ -295,6 +316,11 @@ export function buildStructuredLaunchToken(
     return `${entry.example.slice(0, exampleEq + 1)}${quoted}`;
   }
   return `${entry.example}${quoted}`;
+}
+
+export interface LaunchArgConflict {
+  message: string;
+  field?: "extraArgs" | "structuredLaunchArgs";
 }
 
 /** Issues for effectively-on valued options missing a usable value. */
@@ -311,6 +337,7 @@ export function findStructuredLaunchValueIssues(
     if ((state[curation.id]?.value ?? "").trim().length > 0) continue;
     const label = entry.token.split(/[=\s]/)[0] ?? curation.id;
     issues.push({
+      field: "structuredLaunchArgs",
       message: `Structured “${label}” requires a value.`,
     });
   }
@@ -332,10 +359,6 @@ export function buildStructuredLaunchArgList(
     if (token !== null) tokens.push(token);
   }
   return tokens;
-}
-
-export interface LaunchArgConflict {
-  message: string;
 }
 
 const YARK_OWNED_STEMS = new Set([
@@ -364,11 +387,13 @@ export function findLaunchArgConflicts(input: {
     const stem = tokenStem(trimmed);
     if (structuredStems.has(stem)) {
       issues.push({
+        field: "extraArgs",
         message: `Raw “${trimmed}” duplicates a structured option.`,
       });
     }
     if (YARK_OWNED_STEMS.has(stem) || /sessionname=/i.test(trimmed)) {
       issues.push({
+        field: "extraArgs",
         message: `Raw “${trimmed}” conflicts with a YARK-owned argument.`,
       });
     }
@@ -385,9 +410,9 @@ export function redactLaunchArgForPreview(token: string): string {
   return token;
 }
 
-/** Whether raw/extra already sets ServerPlatform (case-insensitive). */
+/** True when an arg is a real `-ServerPlatform` / `?ServerPlatform` token. */
 export function argsIncludeServerPlatform(args: readonly string[]): boolean {
-  return args.some((arg) => /ServerPlatform/i.test(arg));
+  return args.some((arg) => tokenStem(arg) === "serverplatform");
 }
 
 /** Catalog entries used only for audit; curated list is the UI source. */

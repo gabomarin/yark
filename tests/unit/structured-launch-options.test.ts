@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   assertStructuredCurationCatalogCoverage,
+  argsIncludeServerPlatform,
   buildStructuredLaunchArgList,
   decodeServerPlatformSelection,
   encodeServerPlatformSelection,
@@ -34,6 +35,32 @@ describe("structured-launch-options", () => {
       true,
     );
     expect(issues.some((i) => /YARK-owned/i.test(i.message))).toBe(true);
+  });
+
+  it("detects ?Option aliases as the same stem as structured flags", () => {
+    const issues = findLaunchArgConflicts({
+      structured: {
+        usedynamicconfig: { enabled: true },
+        "customdynamicconfigurl-url": {
+          enabled: true,
+          value: "http://example.com/dynamicconfig.ini",
+        },
+      },
+      extraArgs: ['?CustomDynamicConfigUrl="http://other.example/x.ini"'],
+    });
+    expect(issues.some((i) => /duplicates a structured/i.test(i.message))).toBe(
+      true,
+    );
+  });
+
+  it("only treats real ServerPlatform tokens as platform overrides", () => {
+    expect(
+      argsIncludeServerPlatform([
+        '-CustomNotificationURL="http://example.com/ServerPlatform.html"',
+      ]),
+    ).toBe(false);
+    expect(argsIncludeServerPlatform(["-ServerPlatform=PC"])).toBe(true);
+    expect(argsIncludeServerPlatform(["?ServerPlatform=ALL"])).toBe(true);
   });
 
   it("encodes ServerPlatform multi-select as ALL when every code is selected", () => {

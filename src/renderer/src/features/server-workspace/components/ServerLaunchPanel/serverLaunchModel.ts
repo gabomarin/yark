@@ -1,5 +1,6 @@
 import type { ServerProfile, ServerProfileInput } from "@shared/types";
 import {
+  argsIncludeServerPlatform,
   buildStructuredLaunchArgList,
   emptyStructuredLaunchArgs,
   findLaunchArgConflicts,
@@ -62,7 +63,7 @@ export function yarkOwnedPreviewTokens(server: ServerProfile): string[] {
   ];
   const structured = buildStructuredLaunchArgList(server.structuredLaunchArgs);
   const trailing = [...structured, ...server.extraArgs];
-  if (!trailing.some((a) => /ServerPlatform/i.test(a))) {
+  if (!argsIncludeServerPlatform(trailing)) {
     parts.push("-ServerPlatform=ALL");
   }
   const disabled = new Set(server.disabledMods ?? []);

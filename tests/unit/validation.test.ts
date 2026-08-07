@@ -52,6 +52,9 @@ describe("validateProfileInput", () => {
       }),
     );
     expect(issues.some((i) => /requires a value/i.test(i.message))).toBe(true);
+    expect(
+      issues.some((i) => i.field === "structuredLaunchArgs"),
+    ).toBe(true);
   });
 
   it("rejects raw args that duplicate structured selections (#93)", () => {
@@ -64,6 +67,7 @@ describe("validateProfileInput", () => {
     expect(issues.some((i) => /duplicates a structured/i.test(i.message))).toBe(
       true,
     );
+    expect(issues.some((i) => i.field === "extraArgs")).toBe(true);
   });
 
   it("rejects ports out of range", () => {
