@@ -123,6 +123,7 @@ describe("ClustersPage", () => {
           clusterId: "alpha",
           serverId: "srv-a",
           serverName: "The Island",
+          files: { gameUserSettings: true, game: true },
           preview: {
             valid: true,
             issues: [],
@@ -147,6 +148,7 @@ describe("ClustersPage", () => {
           clusterId: "alpha",
           serverId: "srv-a",
           serverName: "The Island",
+          files: { gameUserSettings: true, game: true },
           preview: {
             valid: true,
             issues: [],
@@ -171,6 +173,7 @@ describe("ClustersPage", () => {
           operation: "restore" as const,
           clusterId: "alpha",
           serverId: "srv-a",
+          files: { gameUserSettings: true, game: true },
           preview: { valid: true, issues: [], diff: [], changedCount: 1 },
           template: {
             clusterId: "alpha",
@@ -187,6 +190,7 @@ describe("ClustersPage", () => {
           operation: "promote" as const,
           clusterId: "alpha",
           serverId: "srv-a",
+          files: { gameUserSettings: true, game: true },
           preview: { valid: true, issues: [], diff: [], changedCount: 1 },
           template: {
             clusterId: "alpha",
@@ -202,7 +206,8 @@ describe("ClustersPage", () => {
         data: {
           operation: "seed" as const,
           clusterId: "alpha",
-          serverId: "srv-d",
+          serverId: "free",
+          files: { gameUserSettings: true, game: true },
           preview: { valid: true, issues: [], diff: [], changedCount: 1 },
           template: {
             clusterId: "alpha",
@@ -687,14 +692,13 @@ describe("ClustersPage", () => {
     expect(await within(dialog).findByText(/MaxPlayers/i)).toBeInTheDocument();
 
     await user.click(
-      within(dialog).getByRole("checkbox", {
-        name: /replace the existing cluster template/i,
-      }),
-    );
-    await user.click(
       within(dialog).getByRole("button", { name: /promote to template/i }),
     );
-    expect(window.api.promoteClusterIniToTemplate).toHaveBeenCalledWith("alpha", "srv-a");
+    expect(window.api.promoteClusterIniToTemplate).toHaveBeenCalledWith(
+      "alpha",
+      "srv-a",
+      { gameUserSettings: true, game: true },
+    );
   });
 
   it("restores a stopped member from the cluster template after confirmation", async () => {
@@ -734,14 +738,13 @@ describe("ClustersPage", () => {
     expect(await within(dialog).findByText(/XPMultiplier/i)).toBeInTheDocument();
 
     await user.click(
-      within(dialog).getByRole("checkbox", {
-        name: /overwrites the member’s current ini files/i,
-      }),
-    );
-    await user.click(
       within(dialog).getByRole("button", { name: /restore & backup/i }),
     );
-    expect(window.api.restoreClusterIniFromTemplate).toHaveBeenCalledWith("alpha", "srv-a");
+    expect(window.api.restoreClusterIniFromTemplate).toHaveBeenCalledWith(
+      "alpha",
+      "srv-a",
+      { gameUserSettings: true, game: true },
+    );
   });
 
   it("seeds INI from the template when adding servers with the opt-in checked", async () => {
@@ -801,7 +804,11 @@ describe("ClustersPage", () => {
     await user.click(within(dialog).getByRole("button", { name: /add to cluster/i }));
 
     expect(updateServer).toHaveBeenCalled();
-    expect(window.api.seedClusterIniFromTemplate).toHaveBeenCalledWith("alpha", "free");
+    expect(window.api.seedClusterIniFromTemplate).toHaveBeenCalledWith(
+      "alpha",
+      "free",
+      { gameUserSettings: true, game: true },
+    );
     expect(onRefresh).toHaveBeenCalled();
   });
 });

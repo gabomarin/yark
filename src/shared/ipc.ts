@@ -11,6 +11,7 @@ import type {
   ClusterComplianceReport,
   ClusterIniTemplate,
   ClusterIniTemplateApplyResult,
+  ClusterIniTemplateFileSelection,
   ClusterIniTemplateMemberPreview,
   ConfigTransferCommitResult,
   ConfigTransferDescribeResult,
@@ -353,26 +354,32 @@ export interface RendererApi {
   previewClusterIniRestore(
     clusterId: string,
     serverId: string,
+    files?: ClusterIniTemplateFileSelection,
   ): Promise<IpcResult<ClusterIniTemplateMemberPreview>>;
   previewClusterIniPromote(
     clusterId: string,
     serverId: string,
+    files?: ClusterIniTemplateFileSelection,
   ): Promise<IpcResult<ClusterIniTemplateMemberPreview>>;
   previewClusterIniSeed(
     clusterId: string,
     serverId: string,
+    files?: ClusterIniTemplateFileSelection,
   ): Promise<IpcResult<ClusterIniTemplateMemberPreview>>;
   restoreClusterIniFromTemplate(
     clusterId: string,
     serverId: string,
+    files?: ClusterIniTemplateFileSelection,
   ): Promise<IpcResult<ClusterIniTemplateApplyResult>>;
   promoteClusterIniToTemplate(
     clusterId: string,
     serverId: string,
+    files?: ClusterIniTemplateFileSelection,
   ): Promise<IpcResult<ClusterIniTemplateApplyResult>>;
   seedClusterIniFromTemplate(
     clusterId: string,
     serverId: string,
+    files?: ClusterIniTemplateFileSelection,
   ): Promise<IpcResult<ClusterIniTemplateApplyResult>>;
   describeConfigTransferSource(
     sourceId: string,

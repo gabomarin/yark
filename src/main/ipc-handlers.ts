@@ -589,38 +589,38 @@ export function registerIpcHandlers(
 
   ipcMain.handle(
     IPC.clusterIniPreviewRestore,
-    (_e, clusterId: string, serverId: string) =>
-      wrap(() => clusterIniApply.previewRestore(clusterId, serverId)),
+    (_e, clusterId: string, serverId: string, files?: unknown) =>
+      wrap(() => clusterIniApply.previewRestore(clusterId, serverId, files)),
   );
 
   ipcMain.handle(
     IPC.clusterIniPreviewPromote,
-    (_e, clusterId: string, serverId: string) =>
-      wrap(() => clusterIniApply.previewPromote(clusterId, serverId)),
+    (_e, clusterId: string, serverId: string, files?: unknown) =>
+      wrap(() => clusterIniApply.previewPromote(clusterId, serverId, files)),
   );
 
   ipcMain.handle(
     IPC.clusterIniPreviewSeed,
-    (_e, clusterId: string, serverId: string) =>
-      wrap(() => clusterIniApply.previewSeed(clusterId, serverId)),
+    (_e, clusterId: string, serverId: string, files?: unknown) =>
+      wrap(() => clusterIniApply.previewSeed(clusterId, serverId, files)),
   );
 
   ipcMain.handle(
     IPC.clusterIniRestore,
-    (_e, clusterId: string, serverId: string) =>
-      wrap(() => clusterIniApply.restore(clusterId, serverId)),
+    (_e, clusterId: string, serverId: string, files?: unknown) =>
+      wrap(() => clusterIniApply.restore(clusterId, serverId, files)),
   );
 
   ipcMain.handle(
     IPC.clusterIniPromote,
-    (_e, clusterId: string, serverId: string) =>
-      wrap(() => clusterIniApply.promote(clusterId, serverId)),
+    (_e, clusterId: string, serverId: string, files?: unknown) =>
+      wrap(() => clusterIniApply.promote(clusterId, serverId, files)),
   );
 
   ipcMain.handle(
     IPC.clusterIniSeed,
-    (_e, clusterId: string, serverId: string) =>
-      wrap(() => clusterIniApply.seed(clusterId, serverId)),
+    (_e, clusterId: string, serverId: string, files?: unknown) =>
+      wrap(() => clusterIniApply.seed(clusterId, serverId, files)),
   );
 
   ipcMain.handle(IPC.configTransferDescribe, (_e, sourceId: string) =>

@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from "electron";
 import { IPC, IPC_PUSH, type RendererApi } from "../shared/ipc";
 import type {
   BackupKind,
+  ClusterIniTemplateFileSelection,
   ServerIniPayload,
   ServerProfileInput,
   ServerRuntimeInfo,
@@ -122,18 +123,39 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.clusterIniSave, clusterId, payload),
   deleteClusterIniTemplate: (clusterId: string) =>
     ipcRenderer.invoke(IPC.clusterIniDelete, clusterId),
-  previewClusterIniRestore: (clusterId: string, serverId: string) =>
-    ipcRenderer.invoke(IPC.clusterIniPreviewRestore, clusterId, serverId),
-  previewClusterIniPromote: (clusterId: string, serverId: string) =>
-    ipcRenderer.invoke(IPC.clusterIniPreviewPromote, clusterId, serverId),
-  previewClusterIniSeed: (clusterId: string, serverId: string) =>
-    ipcRenderer.invoke(IPC.clusterIniPreviewSeed, clusterId, serverId),
-  restoreClusterIniFromTemplate: (clusterId: string, serverId: string) =>
-    ipcRenderer.invoke(IPC.clusterIniRestore, clusterId, serverId),
-  promoteClusterIniToTemplate: (clusterId: string, serverId: string) =>
-    ipcRenderer.invoke(IPC.clusterIniPromote, clusterId, serverId),
-  seedClusterIniFromTemplate: (clusterId: string, serverId: string) =>
-    ipcRenderer.invoke(IPC.clusterIniSeed, clusterId, serverId),
+  previewClusterIniRestore: (
+    clusterId: string,
+    serverId: string,
+    files?: ClusterIniTemplateFileSelection,
+  ) =>
+    ipcRenderer.invoke(IPC.clusterIniPreviewRestore, clusterId, serverId, files),
+  previewClusterIniPromote: (
+    clusterId: string,
+    serverId: string,
+    files?: ClusterIniTemplateFileSelection,
+  ) =>
+    ipcRenderer.invoke(IPC.clusterIniPreviewPromote, clusterId, serverId, files),
+  previewClusterIniSeed: (
+    clusterId: string,
+    serverId: string,
+    files?: ClusterIniTemplateFileSelection,
+  ) =>
+    ipcRenderer.invoke(IPC.clusterIniPreviewSeed, clusterId, serverId, files),
+  restoreClusterIniFromTemplate: (
+    clusterId: string,
+    serverId: string,
+    files?: ClusterIniTemplateFileSelection,
+  ) => ipcRenderer.invoke(IPC.clusterIniRestore, clusterId, serverId, files),
+  promoteClusterIniToTemplate: (
+    clusterId: string,
+    serverId: string,
+    files?: ClusterIniTemplateFileSelection,
+  ) => ipcRenderer.invoke(IPC.clusterIniPromote, clusterId, serverId, files),
+  seedClusterIniFromTemplate: (
+    clusterId: string,
+    serverId: string,
+    files?: ClusterIniTemplateFileSelection,
+  ) => ipcRenderer.invoke(IPC.clusterIniSeed, clusterId, serverId, files),
   describeConfigTransferSource: (sourceId: string) =>
     ipcRenderer.invoke(IPC.configTransferDescribe, sourceId),
   previewConfigTransfer: (

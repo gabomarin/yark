@@ -57,7 +57,7 @@
 }
 
 .change[data-change="changed"] {
-  color: var(--app-color-attention);
+  color: var(--app-color-fossil);
 }
 
 .keyBlock {
@@ -110,8 +110,8 @@
   margin: 0;
   padding: 8px 12px;
   border-radius: var(--app-radius-control);
-  border: 1px solid color-mix(in srgb, var(--app-color-attention) 35%, transparent);
-  background: color-mix(in srgb, var(--app-color-attention) 12%, transparent);
-  color: var(--app-color-attention);
+  border: 1px solid color-mix(in srgb, var(--app-color-fossil) 35%, transparent);
+  background: color-mix(in srgb, var(--app-color-fossil) 12%, transparent);
+  color: var(--app-color-fossil);
   font-size: 12px;
 }

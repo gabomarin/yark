@@ -10,7 +10,15 @@ import {
   Stepper,
   Text,
 } from "@mantine/core";
-import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import {
+  clusterIniFileSelectionHasWork,
+  defaultClusterIniFileSelection,
+} from "@shared/cluster-ini-file-selection";
+import type {
+  ClusterIniTemplateFileSelection,
+  ServerProfile,
+  ServerRuntimeInfo,
+} from "@shared/types";
 import { sharedClusterDir } from "../../clusterModel";
 import {
   buildCreateClusterInput,
@@ -22,6 +30,7 @@ import {
   serverProfileToInput,
   toggleSelectedServerId,
 } from "../../membershipModel";
+import { ClusterIniFileSelectionFields } from "../ClusterIniFileSelectionFields/ClusterIniFileSelectionFields";
 import { CreateClusterServerStep } from "../CreateClusterModal/CreateClusterServerStep";
 import classes from "../CreateClusterModal/CreateClusterModal.module.css";
 
@@ -40,6 +49,9 @@ export function AddServersModal(props: Props): ReactElement {
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [seedFromTemplate, setSeedFromTemplate] = useState(false);
+  const [seedFiles, setSeedFiles] = useState<ClusterIniTemplateFileSelection>(
+    () => defaultClusterIniFileSelection(),
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const wasOpenRef = useRef(false);
@@ -82,6 +94,7 @@ export function AddServersModal(props: Props): ReactElement {
       setStep(1);
       setSelectedIds(firstEligible !== null ? [firstEligible] : []);
       setSeedFromTemplate(hasTemplate);
+      setSeedFiles(defaultClusterIniFileSelection());
       setSaving(false);
       setError(null);
       return;
@@ -93,8 +106,14 @@ export function AddServersModal(props: Props): ReactElement {
     });
   }, [props.opened, candidates, hasTemplate]);
 
+  const seedSelectionOk =
+    !seedFromTemplate ||
+    !hasTemplate ||
+    clusterIniFileSelectionHasWork(seedFiles);
+  const canAdd = canContinue && seedSelectionOk;
+
   const handleAdd = async (): Promise<void> => {
-    if (!canContinue || sharedDir === null) return;
+    if (!canAdd || sharedDir === null) return;
     setSaving(true);
     setError(null);
     const applied: ServerProfile[] = [];
@@ -139,6 +158,7 @@ export function AddServersModal(props: Props): ReactElement {
           const seed = await window.api.seedClusterIniFromTemplate(
             props.clusterId,
             member.id,
+            seedFiles,
           );
           if (!seed.ok) {
             seedFailures.push(
@@ -256,7 +276,7 @@ export function AddServersModal(props: Props): ReactElement {
                   setSeedFromTemplate(event.currentTarget.checked)
                 }
                 label="Seed INI from cluster template"
-                description="After membership is saved, compose the template onto each new member, reapply profile-owned ports/passwords/session name, and take an INI snapshot first. Leave unchecked to only set cluster ID and directory."
+                description="After membership is saved, write selected template files onto each new member, reapply profile-owned ports/passwords/session name, and take an INI snapshot first. Leave unchecked to only set cluster ID and directory."
               />
             ) : (
               <Alert color="blue" variant="light">
@@ -265,10 +285,18 @@ export function AddServersModal(props: Props): ReactElement {
               </Alert>
             )}
             {hasTemplate && seedFromTemplate && (
-              <Alert color="teal" variant="light">
-                Each selected stopped server will receive a restore-style INI write
-                from the saved cluster template after joining.
-              </Alert>
+              <Stack gap="sm">
+                <ClusterIniFileSelectionFields
+                  value={seedFiles}
+                  disabled={saving}
+                  description="Choose which INI files to seed. Unchecked files stay as they are on disk."
+                  onChange={setSeedFiles}
+                />
+                <Alert color="teal" variant="light">
+                  Each selected stopped server will receive a restore-style write
+                  of the selected files from the saved cluster template after joining.
+                </Alert>
+              </Stack>
             )}
             {hasTemplate && !seedFromTemplate && (
               <Alert color="blue" variant="light">
@@ -299,7 +327,7 @@ export function AddServersModal(props: Props): ReactElement {
           ) : (
             <Button
               loading={saving}
-              disabled={!canContinue}
+              disabled={!canAdd}
               onClick={() => void handleAdd()}
             >
               Add to cluster

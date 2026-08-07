@@ -4,17 +4,22 @@ import {
   Alert,
   Badge,
   Button,
-  Checkbox,
   Group,
   Modal,
   Stack,
   Text,
 } from "@mantine/core";
+import {
+  clusterIniFileSelectionHasWork,
+  defaultClusterIniFileSelection,
+} from "@shared/cluster-ini-file-selection";
 import type {
   ClusterIniTemplateApplyOperation,
+  ClusterIniTemplateFileSelection,
   ClusterIniTemplateMemberPreview,
 } from "@shared/types";
 import { ClusterIniDiffSummary } from "../ClusterIniDiffSummary/ClusterIniDiffSummary";
+import { ClusterIniFileSelectionFields } from "../ClusterIniFileSelectionFields/ClusterIniFileSelectionFields";
 
 interface Props {
   opened: boolean;
@@ -33,27 +38,27 @@ function operationCopy(
   title: string;
   body: string;
   confirmLabel: string;
-  checkbox: string;
   secretNote: string;
+  filesDescription: string;
 } {
   if (operation === "promote") {
     return {
       title: "Promote member to template",
-      body: `Copy the current INI files from “${serverName}” into the cluster template. Session name, ports, and passwords are stripped — they stay per-server. Member install files are not changed.`,
+      body: `Copy selected INI files from “${serverName}” into the cluster template. Session name, ports, and passwords are stripped — they stay per-server. Member install files are not changed.`,
       confirmLabel: "Promote to template",
-      checkbox:
-        "Replace the existing cluster template with this member’s shared settings.",
       secretNote: "Owned keys never enter the template",
+      filesDescription:
+        "Choose which template files to update. Unchecked files keep the current template text.",
     };
   }
   return {
     title: "Restore member from template",
-    body: `Replace Game.ini and GameUserSettings.ini on “${serverName}” with the cluster template. Ports, passwords, and session name stay owned by this profile after composition.`,
+    body: `Replace selected INI files on “${serverName}” with the cluster template. Ports, passwords, and session name stay owned by this profile after composition.`,
     confirmLabel: "Restore & backup",
-    checkbox:
-      "I understand this overwrites the member’s current INI files after a recoverable backup.",
     secretNote:
       "Ports, passwords, and session stay on this profile and are omitted from the preview",
+    filesDescription:
+      "Choose which member files to overwrite. Unchecked files stay as they are on disk.",
   };
 }
 
@@ -61,18 +66,32 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
   const copy = operationCopy(props.operation, props.serverName);
   const [loading, setLoading] = useState(false);
   const [committing, setCommitting] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [files, setFiles] = useState<ClusterIniTemplateFileSelection>(
+    () => defaultClusterIniFileSelection(),
+  );
   const [preview, setPreview] = useState<ClusterIniTemplateMemberPreview | null>(
     null,
   );
 
   useEffect(() => {
     if (!props.opened) return;
+    setError(null);
+    setFiles(defaultClusterIniFileSelection());
+  }, [props.opened, props.clusterId, props.serverId, props.operation]);
+
+  useEffect(() => {
+    if (!props.opened) return;
+    if (!clusterIniFileSelectionHasWork(files)) {
+      setPreview(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     let cancelled = false;
     setLoading(true);
     setCommitting(false);
-    setConfirmed(false);
     setError(null);
     setPreview(null);
 
@@ -83,10 +102,12 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
             ? await window.api.previewClusterIniPromote(
                 props.clusterId,
                 props.serverId,
+                files,
               )
             : await window.api.previewClusterIniRestore(
                 props.clusterId,
                 props.serverId,
+                files,
               );
         if (cancelled) return;
         if (!result.ok) {
@@ -105,12 +126,12 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
     return () => {
       cancelled = true;
     };
-  }, [props.opened, props.clusterId, props.serverId, props.operation]);
+  }, [props.opened, props.clusterId, props.serverId, props.operation, files]);
 
   const canCommit =
-    confirmed &&
     preview !== null &&
     preview.preview.valid &&
+    clusterIniFileSelectionHasWork(files) &&
     !loading &&
     !committing;
 
@@ -124,10 +145,12 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
           ? await window.api.promoteClusterIniToTemplate(
               props.clusterId,
               props.serverId,
+              files,
             )
           : await window.api.restoreClusterIniFromTemplate(
               props.clusterId,
               props.serverId,
+              files,
             );
       if (!result.ok) {
         setError(result.error ?? "Template operation failed");
@@ -169,6 +192,13 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
           {copy.body}
         </Text>
 
+        <ClusterIniFileSelectionFields
+          value={files}
+          disabled={committing}
+          description={copy.filesDescription}
+          onChange={setFiles}
+        />
+
         {preview !== null && preview.preview.valid && (
           <Group gap="xs" wrap="wrap">
             {props.operation === "restore" ? (
@@ -176,7 +206,18 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
                 Backup before write
               </Badge>
             ) : (
-              <Badge size="sm" variant="light" color="attention" tt="none">
+              <Badge
+                size="sm"
+                variant="light"
+                tt="none"
+                styles={{
+                  root: {
+                    color: "var(--app-color-fossil)",
+                    background:
+                      "color-mix(in srgb, var(--app-color-fossil) 22%, transparent)",
+                  },
+                }}
+              >
                 Replaces saved template
               </Badge>
             )}
@@ -213,13 +254,6 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
             secretNote={copy.secretNote}
           />
         )}
-
-        <Checkbox
-          checked={confirmed}
-          disabled={loading || committing || preview === null}
-          onChange={(event) => setConfirmed(event.currentTarget.checked)}
-          label={copy.checkbox}
-        />
 
         <Group justify="space-between">
           <Button

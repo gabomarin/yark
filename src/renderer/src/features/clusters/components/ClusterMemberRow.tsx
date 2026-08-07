@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
-import { ActionIcon, Badge, Button, Group, Text, Tooltip } from "@mantine/core";
-import { X } from "@phosphor-icons/react";
+import { ActionIcon, Badge, Group, Text, Tooltip } from "@mantine/core";
+import { ArrowDown, ArrowUp, X } from "@phosphor-icons/react";
 import type { ServerProfile, ServerStatus } from "@shared/types";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import classes from "../clusters.module.css";
@@ -93,44 +93,47 @@ export function ClusterMemberRow(props: Props): ReactElement {
         )}
         {showPromote && (
           <Tooltip
+            withArrow
             label={
               canApply
-                ? "Copy this member’s INI into the cluster template"
+                ? "Promote to template — copy this member’s INI into the cluster template"
                 : applyReason
             }
           >
             <span>
-              <Button
-                size="compact-xs"
+              <ActionIcon
+                size="sm"
                 variant="light"
+                color="gray"
                 aria-label={`Promote ${props.server.name} to template`}
                 disabled={!canApply}
                 onClick={() => props.onPromoteToTemplate?.(props.server.id)}
               >
-                Promote
-              </Button>
+                <ArrowUp size={14} weight="bold" />
+              </ActionIcon>
             </span>
           </Tooltip>
         )}
         {showRestore && (
           <Tooltip
+            withArrow
             label={
               restoreDisabled
                 ? restoreReason
-                : "Restore this member’s INI from the cluster template"
+                : "Restore from template — overwrite this member’s INI from the cluster template (with backup)"
             }
           >
             <span>
-              <Button
-                size="compact-xs"
+              <ActionIcon
+                size="sm"
                 variant="light"
-                color="teal"
+                color="gray"
                 aria-label={`Restore ${props.server.name} from template`}
                 disabled={restoreDisabled}
                 onClick={() => props.onRestoreFromTemplate?.(props.server.id)}
               >
-                Restore INI
-              </Button>
+                <ArrowDown size={14} weight="bold" />
+              </ActionIcon>
             </span>
           </Tooltip>
         )}
@@ -142,16 +145,18 @@ export function ClusterMemberRow(props: Props): ReactElement {
                 : `Remove ${props.server.name} from this cluster`
             }
           >
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color="gray"
-              aria-label={`Remove ${props.server.name}`}
-              disabled={props.canRemove === false}
-              onClick={() => props.onRemove?.(props.server.id)}
-            >
-              <X size={14} weight="bold" />
-            </ActionIcon>
+            <span>
+              <ActionIcon
+                size="sm"
+                variant="subtle"
+                color="gray"
+                aria-label={`Remove ${props.server.name}`}
+                disabled={props.canRemove === false}
+                onClick={() => props.onRemove?.(props.server.id)}
+              >
+                <X size={14} weight="bold" />
+              </ActionIcon>
+            </span>
           </Tooltip>
         )}
       </Group>
