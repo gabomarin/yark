@@ -5,7 +5,6 @@ import { Menu } from "@mantine/core";
 interface Props {
   enabled: boolean;
   active: boolean;
-  installationReady: boolean;
   steamCmdBusy: boolean;
   onToggle?: () => void;
 }
@@ -14,16 +13,14 @@ export function ServerEnabledMenuItem(props: Props): ReactElement {
   const disabled =
     props.onToggle === undefined ||
     props.steamCmdBusy ||
-    (props.enabled ? props.active : !props.installationReady);
+    (props.enabled && props.active);
   const title =
     props.onToggle === undefined
       ? undefined
       : props.steamCmdBusy
         ? "Another server operation is in progress"
         : props.enabled && props.active
-        ? "Stop the server first"
-        : !props.enabled && !props.installationReady
-          ? "Install files first"
+          ? "Stop the server first"
           : undefined;
 
   return (

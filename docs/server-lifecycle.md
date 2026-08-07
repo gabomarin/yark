@@ -151,10 +151,13 @@ updates cannot change it; only `InstanceService.setServerEnabled` may do so.
 - Disable requires the per-server operation lock and a stopped, idle profile.
   Configuration, INIs, mods, health, logs, backups, offline SteamCMD work,
   cloning, export, and deletion remain available.
-- Enable revalidates the profile, **install health (`ready`)**, all saved-profile ports, and
-  cluster compliance. It does not start ASA.
+- Enable revalidates the profile, all saved-profile ports, and cluster
+  compliance. It refreshes install health for the UI but **does not require**
+  install `ready` (#132). It does not start ASA.
 - Manual Start also owns the per-server lock. The common `startInternal` path
-  rejects disabled profiles and non-`ready` installs, covering restart and maintenance recovery paths.
+  rejects disabled profiles and non-`ready` installs, covering restart and
+  maintenance recovery paths. **enabled** = fleet/profile eligibility;
+  **installation ready** = spawn eligibility.
 - Clones inherit the source enabled state and receive a unique sibling install
   directory. Disabled profiles remain cluster members and participate in port
   conflict checks.

@@ -222,7 +222,6 @@ export function ServerCardActions(props: Props): ReactElement {
           <ServerEnabledMenuItem
             enabled={serverEnabled}
             active={props.isActive}
-            installationReady={props.isInstallationReady}
             steamCmdBusy={props.steamCmdBusy}
             onToggle={props.onToggleEnabled}
           />
