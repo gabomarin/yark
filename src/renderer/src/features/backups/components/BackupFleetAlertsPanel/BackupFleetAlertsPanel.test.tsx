@@ -42,7 +42,7 @@ const alerts: BackupFleetAlert[] = [
 ];
 
 describe("BackupFleetAlertsPanel", () => {
-  it("renders a compact scrollable panel with a single action per alert", async () => {
+  it("renders a compact scrollable panel without duplicate Open/Logs on failed alerts", async () => {
     const user = userEvent.setup();
     const onOpenServerBackups = vi.fn();
     const onOpenFailedBackupLogs = vi.fn();

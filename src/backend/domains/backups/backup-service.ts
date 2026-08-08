@@ -773,6 +773,7 @@ export class BackupService extends EventEmitter {
         `f${Math.floor(disk.freeBytes / (1024 ** 3))}`,
         `w${diskSettings.warnUsedPercent}`,
         `c${diskSettings.criticalUsedPercent}`,
+        `fb${diskSettings.warnFreeBytes}`,
       ].join(":");
       if (overCritical) {
         alerts.push({

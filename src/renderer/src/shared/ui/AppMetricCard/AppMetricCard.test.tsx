@@ -29,6 +29,7 @@ describe("AppMetricCard", () => {
 
     const button = screen.getByRole("button", { name: /Protected/i });
     expect(button).toHaveAttribute("data-active");
+    expect(button).toHaveAttribute("aria-pressed", "true");
     await user.click(button);
     expect(onClick).toHaveBeenCalledTimes(1);
   });

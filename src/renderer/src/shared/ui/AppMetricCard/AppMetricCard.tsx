@@ -66,6 +66,7 @@ export function AppMetricCard(props: Props): ReactElement {
       data-tone={tone === "default" ? undefined : tone}
       data-active={active || undefined}
       data-clickable={clickable || undefined}
+      aria-pressed={clickable ? active : undefined}
     >
       <Text
         size="xs"
