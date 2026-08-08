@@ -18,7 +18,8 @@ interface ServerRow {
   id: string;
   name: string;
   map: string;
-  map_mod_id: string | null;
+  /** SQLite may return number affinity for digit-only TEXT values. */
+  map_mod_id: string | number | null;
   install_dir: string;
   enabled: number;
   auto_start: number;
@@ -48,12 +49,23 @@ function parseJson<T>(raw: string | null | undefined, fallback: T): T {
   }
 }
 
+/** Coerce SQLite `map_mod_id` to string | null at the DB boundary (#190). */
+export function coerceMapModId(
+  value: string | number | null | undefined,
+): string | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  const text = String(value).trim();
+  return text.length > 0 ? text : null;
+}
+
 function rowToProfile(row: ServerRow): ServerProfile {
   return {
     id: row.id,
     name: row.name,
     map: row.map,
-    mapModId: row.map_mod_id,
+    mapModId: coerceMapModId(row.map_mod_id),
     installDir: row.install_dir,
     enabled: row.enabled === 1,
     autoStart: row.auto_start === 1,

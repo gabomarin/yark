@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { DatabaseSync } from "node:sqlite";
 import { openDatabase } from "@backend/infra/db/database";
-import { ServerRepository } from "@backend/infra/db/server-repository";
+import {
+  coerceMapModId,
+  ServerRepository,
+} from "@backend/infra/db/server-repository";
 import type { ServerProfileInput } from "@shared/types";
 
 function input(overrides: Partial<ServerProfileInput> = {}): ServerProfileInput {
@@ -54,6 +57,13 @@ describe("ServerRepository", () => {
     expect(created.autoStart).toBe(true);
     const updated = repo.update(created.id, input({ autoStart: false, name: "Island" }));
     expect(updated!.autoStart).toBe(false);
+  });
+
+  it("coerces numeric SQLite map_mod_id values to strings (#190)", () => {
+    expect(coerceMapModId(962796)).toBe("962796");
+    expect(coerceMapModId(" 962796 ")).toBe("962796");
+    expect(coerceMapModId(null)).toBeNull();
+    expect(coerceMapModId("")).toBeNull();
   });
 
   it("persists mapModId for custom maps and clears it for official maps (#190)", () => {
