@@ -11,6 +11,9 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Main window opens **maximized** by default and remembers the last size, position, and maximized state across launches.
+- App **Sidebar** uses a Docker-style **circular edge toggle** (25px, `50vh`) for Full ↔ icon-rail; preferred mode is remembered (#107).
+- Wide server workspace list uses a **header Full / icon-rail** chevron (280↔72, no free-drag), **status dots**, and **cluster grouping** (icon-rail uses Mantine **Divider**s between clusters); preferred rail mode is remembered (#107).
 - Custom / map-mod servers show the CurseForge mod **logo** as map art on cards, the workspace header, and the server switcher list when linked (#193). Official maps use bundled art in those surfaces too.
 - Enabling a CurseForge **Maps** mod shows a toast and lists it under Server Information → Map (**Map mods** group); choosing it sets the launch token and linked `mapModId` (#192).
 - CurseForge proxy returns truncated plain-text **description** for **Maps**-category mods on get/batch so map-token heuristics can read `Map Name:` (#195).
@@ -29,6 +32,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Launch-options catalog copy is cleaned from wiki noise into **summary + details**, with a pasteable **example** per entry (#92).
 - Extra arguments and the Mods ID field moved off create/edit Server onto the **Mods** / **Launch** workspace tabs (#93).
 - Launch tab dependent flags chain in order (dynamic config URL; game → tribe → RCON logs); `-passivemods=` lives under World & gameplay (#93).
+
+### Removed
+
+- Redundant **Back to servers** control from the workspace header (sidebar navigation still confirms before discarding unsaved INI changes).
 
 ## [0.7.0] - 2026-08-07
 

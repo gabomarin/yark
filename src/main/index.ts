@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Notification, dialog, shell, type Tray } from "electron";
+import { app, BrowserWindow, Notification, dialog, screen, shell, type Tray } from "electron";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { openDatabase } from "../backend/infra/db/database";
@@ -32,6 +32,13 @@ import {
   type AppTrayOptions,
 } from "./app-tray";
 import { readDesktopShellPreferences } from "./desktop-shell-settings";
+import {
+  attachWindowStatePersistence,
+  MIN_WINDOW_HEIGHT,
+  MIN_WINDOW_WIDTH,
+  readStoredWindowState,
+  resolveWindowCreationOptions,
+} from "./window-state";
 import {
   quitFlagsAfterCancel,
   shouldPreventCloseDuringQuit,
@@ -113,13 +120,18 @@ function resolveAppIcon(): string | undefined {
   return candidates.find((candidate) => existsSync(candidate));
 }
 
-function createWindow(): BrowserWindow {
+function createWindow(settings: AppSettingsRepository): BrowserWindow {
   const icon = resolveAppIcon();
+  const displays = screen.getAllDisplays().map((display) => display.workArea);
+  const creation = resolveWindowCreationOptions(readStoredWindowState(settings), displays);
   const win = new BrowserWindow({
-    width: 1280,
-    height: 800,
-    minWidth: 960,
-    minHeight: 600,
+    width: creation.width,
+    height: creation.height,
+    ...(creation.x !== undefined && creation.y !== undefined
+      ? { x: creation.x, y: creation.y }
+      : {}),
+    minWidth: MIN_WINDOW_WIDTH,
+    minHeight: MIN_WINDOW_HEIGHT,
     title: "YARK server manager",
     backgroundColor: "#0c1427",
     ...(icon !== undefined ? { icon } : {}),
@@ -130,6 +142,11 @@ function createWindow(): BrowserWindow {
       sandbox: true,
     },
   });
+
+  if (creation.shouldMaximize) {
+    win.maximize();
+  }
+  attachWindowStatePersistence(win, settings);
 
   // Reinforce window chrome / unpackaged taskbar icon (when no AUMID is set).
   if (icon !== undefined) {
@@ -364,7 +381,7 @@ if (gotSingleInstanceLock) {
     /** Recreate the main window if it was destroyed (e.g. cancelled quit after close). */
     const ensureMainWindow = (): BrowserWindow => {
       if (mainWindow === null || mainWindow.isDestroyed()) {
-        mainWindow = createWindow();
+        mainWindow = createWindow(settings);
         attachMainWindowCloseHandler(mainWindow);
       }
       return mainWindow;
@@ -498,7 +515,7 @@ if (gotSingleInstanceLock) {
       sendToRenderer(IPC_PUSH.appUpdate, status);
     });
 
-    mainWindow = createWindow();
+    mainWindow = createWindow(settings);
     attachMainWindowCloseHandler(mainWindow);
     ensureTray();
     appUpdateService.startQuietCheck();

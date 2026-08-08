@@ -1,0 +1,31 @@
+.anchor {
+  display: inline-flex;
+  pointer-events: none;
+}
+
+.anchor .toggle {
+  pointer-events: auto;
+}
+
+.toggle {
+  width: 25px;
+  height: 25px;
+  min-width: 25px;
+  min-height: 25px;
+  border-radius: 999px;
+  color: var(--app-color-text);
+  background: color-mix(in srgb, var(--app-color-surface-chrome) 92%, var(--ark-gray-3));
+  border: 1px solid color-mix(in srgb, var(--app-color-border) 55%, transparent);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, black 35%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--app-color-border) 18%, transparent);
+}
+
+.toggle:hover {
+  background: color-mix(in srgb, var(--app-color-surface-control) 70%, var(--app-color-surface-chrome));
+  border-color: color-mix(in srgb, var(--app-color-border) 72%, transparent);
+}
+
+.toggle:active {
+  transform: scale(0.96);
+}

@@ -2,10 +2,12 @@ import { AppShell } from "@mantine/core";
 import { Alert, CloseButton, Group, Stack } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import { Sidebar, type Route } from "@layout/Sidebar/Sidebar";
+import { useSidebarRail } from "@layout/useSidebarRail";
 import {
   AppBusyOverlay,
   type AppBusyOverlayContent,
 } from "@ui/AppBusyOverlay/AppBusyOverlay";
+import { ChromeRailEdgeToggle } from "@ui/ChromeRailEdgeToggle/ChromeRailEdgeToggle";
 import type { OfficialNetworkStatus } from "@shared/types";
 import type { PropsWithChildren, ReactElement } from "react";
 import classes from "./AppShellLayout.module.css";
@@ -34,11 +36,12 @@ export function AppShellLayout({ children, ...sidebarProps }: Props): ReactEleme
     ...shellProps
   } = sidebarProps;
   const density = useUiDensity();
-  const navbarWidth = density === "compact" ? 212 : 248;
+  const fullNavbarWidth = density === "compact" ? 212 : 248;
+  const sidebarRail = useSidebarRail(fullNavbarWidth);
 
   return (
     <AppShell
-      navbar={{ width: navbarWidth, breakpoint: "sm" }}
+      navbar={{ width: sidebarRail.railWidthPx, breakpoint: "sm" }}
       padding={0}
       className={classes.shell}
       classNames={{
@@ -47,7 +50,15 @@ export function AppShellLayout({ children, ...sidebarProps }: Props): ReactEleme
       }}
     >
       <AppShell.Navbar>
-        <Sidebar {...shellProps} />
+        <Sidebar {...shellProps} iconMode={sidebarRail.iconMode} />
+        <ChromeRailEdgeToggle
+          className={classes.sidebarEdgeToggle}
+          style={{ left: sidebarRail.railWidthPx }}
+          iconMode={sidebarRail.iconMode}
+          onToggle={sidebarRail.toggleRail}
+          expandLabel="Expand navigation"
+          collapseLabel="Collapse to icon rail"
+        />
       </AppShell.Navbar>
       <AppShell.Main>
         <Stack gap={0} className={classes.content}>
