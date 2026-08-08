@@ -155,4 +155,29 @@ describe("ServerForm", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByTestId("server-form-launch-summary")).not.toBeInTheDocument();
   });
+
+  it("allows Custom map launch token (#65 / #191)", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AppProviders>
+        <ServerForm
+          initial={profile({
+            id: "srv-svart",
+            name: "Svart",
+            map: "Svartalfheim_WP",
+          })}
+          onCancel={vi.fn()}
+          onSaved={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("combobox", { name: /^map$/i })).toHaveValue("Custom…");
+    expect(screen.getByLabelText(/custom map name/i)).toHaveValue("Svartalfheim_WP");
+
+    await user.clear(screen.getByLabelText(/custom map name/i));
+    await user.type(screen.getByLabelText(/custom map name/i), "Amissa_WP");
+    expect(screen.getByLabelText(/custom map name/i)).toHaveValue("Amissa_WP");
+  });
 });
