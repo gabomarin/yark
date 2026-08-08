@@ -649,10 +649,9 @@ export function ServerLogsPanel(props: Props): ReactElement {
                         <Accordion.Item
                           key={event.id}
                           value={String(event.id)}
-                          data-log-event-id={event.id}
                           className={focused ? classes.eventRowFocused : undefined}
                         >
-                          <Accordion.Control>
+                          <Accordion.Control data-log-event-id={event.id}>
                             <Group
                               justify="space-between"
                               align="center"

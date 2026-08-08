@@ -103,8 +103,9 @@ describe("ServerLogsPanel", () => {
     );
 
     expect(await screen.findByText("Something broke")).toBeInTheDocument();
-    const focused = document.querySelector('[data-log-event-id="42"]');
-    expect(focused?.className).toMatch(/eventRowFocused/);
+    const control = document.querySelector('[data-log-event-id="42"]');
+    expect(control).toBeTruthy();
+    expect(control?.closest("[class*='eventRowFocused']")).toBeTruthy();
     await waitFor(() => {
       expect(onFocusConsumed).toHaveBeenCalled();
     });
@@ -126,9 +127,9 @@ describe("ServerLogsPanel", () => {
       "data-active",
       "true",
     );
-    expect(document.querySelector('[data-log-event-id="42"]')?.className).toMatch(
-      /eventRowFocused/,
-    );
+    const control = document.querySelector('[data-log-event-id="42"]');
+    expect(control).toBeTruthy();
+    expect(control?.closest("[class*='eventRowFocused']")).toBeTruthy();
   });
 
   it("expands event details on click and only auto-scrolls once per focus", async () => {
