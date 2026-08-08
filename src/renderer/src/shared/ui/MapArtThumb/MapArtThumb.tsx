@@ -29,11 +29,13 @@ export function MapArtThumb(props: Props): ReactElement {
   const size = props.size ?? "md";
   const shape = props.shape ?? "tek";
   const decorative = props.decorative !== false;
+  const linkedMapModId = props.mapModId?.trim() ?? "";
   const src = resolveMapThumbnailUrl({
     map: props.mapId,
-    mapModId: props.mapModId,
+    mapModId: linkedMapModId.length > 0 ? linkedMapModId : null,
     officialArtUrl: resolveMapArtUrl(props.mapId),
-    modThumbnailUrl: props.modThumbnailUrl,
+    // Logo only when a map pack is linked (#193).
+    modThumbnailUrl: linkedMapModId.length > 0 ? props.modThumbnailUrl : null,
   });
   const [imageFailed, setImageFailed] = useState(false);
   useEffect(() => {

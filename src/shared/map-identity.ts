@@ -159,6 +159,10 @@ export function resolveMapThumbnailUrl(options: {
   if (isOfficialMap(options.map)) {
     return options.officialArtUrl;
   }
+  const mapModId = options.mapModId?.trim() ?? "";
+  if (mapModId.length === 0) {
+    return null;
+  }
   const modThumb = options.modThumbnailUrl?.trim() ?? "";
   return modThumb.length > 0 ? modThumb : null;
 }

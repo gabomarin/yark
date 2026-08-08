@@ -201,6 +201,17 @@ describe("resolveMapThumbnailUrl", () => {
       }),
     ).toBeNull();
   });
+
+  it("ignores mod logos when mapModId is unset (#193)", () => {
+    expect(
+      resolveMapThumbnailUrl({
+        map: "Svartalfheim_WP",
+        mapModId: null,
+        officialArtUrl: null,
+        modThumbnailUrl: "https://cdn.example/svart.png",
+      }),
+    ).toBeNull();
+  });
 });
 
 describe("custom map launch composition (#65)", () => {
