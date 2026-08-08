@@ -217,6 +217,14 @@ editors stay feature-local monospace (not path chips).
 - Clusters `MetaStrip` (feature-local until a second screen needs the same strip)
 - Backup all-servers `StatCard` strip (extract a shared metric card on 2nd use)
 
+### Log / activity expand patterns (#102)
+
+| Surface | Decision |
+| --- | --- |
+| Server Logs events / Fleet Logs | Mantine **Accordion** (`variant="separated"`, controlled, `keepMounted={false}`) |
+| Overview recent activity | Mantine **Timeline** (chronological; no expand) |
+| Event detail body | Shared `EventDetailsBody` inside Accordion.Panel |
+
 ## Candidates for a later slice
 
 | Candidate | Why | Trigger |

@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { ArrowRight } from "@phosphor-icons/react";
-import { Button, Group, Skeleton, Text, Title, VisuallyHidden } from "@mantine/core";
+import { Button, Group, Skeleton, Text, Timeline, Title, VisuallyHidden } from "@mantine/core";
 import type { AppEvent } from "@shared/types";
 import classes from "../OverviewPage.module.css";
 
@@ -8,6 +8,12 @@ interface Props {
   events: AppEvent[];
   loading: boolean;
   onViewAll: () => void;
+}
+
+function severityTimelineColor(severity: AppEvent["severity"]): string {
+  if (severity === "error") return "red";
+  if (severity === "warning") return "yellow";
+  return "blue";
 }
 
 export function RecentActivityPanel({ events, loading, onViewAll }: Props): ReactElement {
@@ -41,35 +47,50 @@ export function RecentActivityPanel({ events, loading, onViewAll }: Props): Reac
       </Group>
 
       {loading ? (
-        <div className={classes.recentList} role="status" aria-live="polite">
+        <div role="status" aria-live="polite">
           <VisuallyHidden>Loading recent activity</VisuallyHidden>
-          {[0, 1, 2].map((item) => (
-            <div className={classes.recentRow} key={item} aria-hidden="true">
-              <Skeleton circle width={6} height={6} />
-              <Skeleton width={44} height={9} radius="xl" />
-              <Skeleton width={`${72 - item * 8}%`} height={10} radius="xl" />
-            </div>
-          ))}
+          <Timeline
+            active={-1}
+            bulletSize={8}
+            lineWidth={2}
+            className={classes.recentTimeline}
+          >
+            {[0, 1, 2].map((item) => (
+              <Timeline.Item
+                key={item}
+                aria-hidden="true"
+                bullet={<Skeleton circle width={8} height={8} />}
+                title={<Skeleton width={44} height={9} radius="xl" />}
+              >
+                <Skeleton width={`${72 - item * 8}%`} height={10} radius="xl" mt={4} />
+              </Timeline.Item>
+            ))}
+          </Timeline>
         </div>
       ) : relevantEvents.length === 0 ? (
         <Text c="dimmed" size="sm" className={classes.recentEmpty}>
           No relevant operational activity yet.
         </Text>
       ) : (
-        <div className={classes.recentList}>
+        <Timeline
+          active={relevantEvents.length}
+          bulletSize={8}
+          lineWidth={2}
+          className={classes.recentTimeline}
+        >
           {relevantEvents.map((event) => (
-            <div key={event.id} className={classes.recentRow}>
-              <span
-                className={classes.eventIndicator}
-                data-severity={event.severity}
-                aria-hidden="true"
-              />
-              <Text c="dimmed" size="xs" className={classes.eventTime}>
-                {new Date(event.createdAt).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </Text>
+            <Timeline.Item
+              key={event.id}
+              color={severityTimelineColor(event.severity)}
+              title={
+                <Text c="dimmed" size="xs" className={classes.eventTime}>
+                  {new Date(event.createdAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Text>
+              }
+            >
               <Text
                 size="sm"
                 lineClamp={1}
@@ -78,9 +99,9 @@ export function RecentActivityPanel({ events, loading, onViewAll }: Props): Reac
               >
                 {event.message}
               </Text>
-            </div>
+            </Timeline.Item>
           ))}
-        </div>
+        </Timeline>
       )}
     </section>
   );

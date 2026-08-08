@@ -8,6 +8,7 @@ import {
   Trash,
 } from "@phosphor-icons/react";
 import {
+  Accordion,
   ActionIcon,
   Alert,
   Badge,
@@ -620,55 +621,73 @@ export function ServerLogsPanel(props: Props): ReactElement {
                 />
               ) : (
                 <div className={classes.eventList} data-logs-scroll-region="events">
-                  {logs.events.map((event) => {
-                    const focused = highlightedEventId === event.id;
-                    const expanded = expandedEventId === event.id;
-                    return (
-                      <button
-                        key={event.id}
-                        type="button"
-                        data-log-event-id={event.id}
-                        className={[
-                          classes.eventRow,
-                          classes.eventRowButton,
-                          focused ? classes.eventRowFocused : "",
-                          expanded ? classes.eventRowExpanded : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                        onClick={() =>
-                          setExpandedEventId((current) =>
-                            current === event.id ? null : event.id,
-                          )
-                        }
-                        aria-expanded={expanded}
-                      >
-                        <Group justify="space-between" align="flex-start" gap="sm" wrap="nowrap">
-                          <div className={classes.eventRowMain}>
-                            <Text size="sm" c="dimmed">
-                              {formatLogDateTime(event.createdAt)}
-                            </Text>
-                            <Text size="sm" fw={expanded ? 600 : 400}>
-                              {event.message}
-                            </Text>
-                          </div>
-                          <Badge
-                            color={
-                              event.severity === "error"
-                                ? "red"
-                                : event.severity === "warning"
-                                  ? "yellow"
-                                  : "gray"
-                            }
-                            variant="light"
-                          >
-                            {event.severity}
-                          </Badge>
-                        </Group>
-                        <EventDetailsBody event={event} expanded={expanded} />
-                      </button>
-                    );
-                  })}
+                  <Accordion
+                    variant="separated"
+                    keepMounted={false}
+                    transitionDuration={0}
+                    value={
+                      expandedEventId !== null ? String(expandedEventId) : null
+                    }
+                    onChange={(value) => {
+                      if (value === null) {
+                        setExpandedEventId(null);
+                        return;
+                      }
+                      const id = Number(value);
+                      setExpandedEventId(Number.isFinite(id) ? id : null);
+                    }}
+                    classNames={{
+                      item: classes.eventAccordionItem,
+                      control: classes.eventAccordionControl,
+                      panel: classes.eventAccordionPanel,
+                    }}
+                  >
+                    {logs.events.map((event) => {
+                      const focused = highlightedEventId === event.id;
+                      const expanded = expandedEventId === event.id;
+                      return (
+                        <Accordion.Item
+                          key={event.id}
+                          value={String(event.id)}
+                          className={focused ? classes.eventRowFocused : undefined}
+                        >
+                          <Accordion.Control data-log-event-id={event.id}>
+                            <Group
+                              justify="space-between"
+                              align="center"
+                              gap="sm"
+                              wrap="nowrap"
+                            >
+                              <div className={classes.eventRowMain}>
+                                <Text size="sm" c="dimmed">
+                                  {formatLogDateTime(event.createdAt)}
+                                </Text>
+                                <Text size="sm" fw={expanded ? 600 : 400}>
+                                  {event.message}
+                                </Text>
+                              </div>
+                              <Badge
+                                className={classes.eventSeverityBadge}
+                                color={
+                                  event.severity === "error"
+                                    ? "red"
+                                    : event.severity === "warning"
+                                      ? "yellow"
+                                      : "gray"
+                                }
+                                variant="light"
+                              >
+                                {event.severity}
+                              </Badge>
+                            </Group>
+                          </Accordion.Control>
+                          <Accordion.Panel>
+                            <EventDetailsBody event={event} />
+                          </Accordion.Panel>
+                        </Accordion.Item>
+                      );
+                    })}
+                  </Accordion>
                 </div>
               )}
             </Stack>

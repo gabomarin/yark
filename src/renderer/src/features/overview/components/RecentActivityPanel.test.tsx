@@ -17,7 +17,7 @@ function event(id: number, type: AppEvent["type"], message: string): AppEvent {
 }
 
 describe("RecentActivityPanel", () => {
-  it("uses compact skeleton rows while activity is loading", () => {
+  it("uses Timeline-shaped skeleton rows while activity is loading", () => {
     const { container } = render(
       <AppProviders>
         <RecentActivityPanel events={[]} loading onViewAll={vi.fn()} />
@@ -25,6 +25,7 @@ describe("RecentActivityPanel", () => {
     );
 
     expect(screen.getByText("Loading recent activity")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeInTheDocument();
     expect(container.querySelectorAll("[data-recent-activity] [aria-hidden='true']")).toHaveLength(
       3,
     );

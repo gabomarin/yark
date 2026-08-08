@@ -25,9 +25,10 @@ or seeds logs for development and QA.
 | DB migration (details column) | `src/backend/infra/db/database.ts` (migration **v6**) |
 | Detail catalog + merge | `src/shared/event-details.ts` (`resolveEventDetails`) |
 | Contracts | `src/shared/types.ts` (`AppEvent`, `AppEventDetails`, `ServerOperationalLogs`, `LogRetentionSettings`) |
-| Sidebar Logs (all servers) | `src/renderer/src/features/logs/LogsPage.tsx` |
-| Server workspace Logs | `src/renderer/src/features/logs/ServerLogsPanel.tsx` |
-| Detail body | `src/renderer/src/features/logs/EventDetailsBody.tsx` |
+| Sidebar Logs (all servers) | `src/renderer/src/features/logs/LogsPage.tsx` (Mantine **Accordion** event rows) |
+| Server workspace Logs | `src/renderer/src/features/logs/ServerLogsPanel.tsx` (Mantine **Accordion** event rows; deep-link focus preserved) |
+| Detail body | `src/renderer/src/features/logs/EventDetailsBody.tsx` (Accordion.Panel content) |
+| Overview recent activity | `src/renderer/src/features/overview/components/RecentActivityPanel.tsx` (Mantine **Timeline**) |
 | Settings retention UI | `src/renderer/src/features/settings/components/SettingsLogRetentionSection.tsx` |
 
 ## Ownership and retention (#84)
