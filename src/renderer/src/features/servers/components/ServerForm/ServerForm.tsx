@@ -227,7 +227,7 @@ export function ServerForm(props: Props): ReactElement {
     const meta = mods
       .map((id) => {
         const row = cache[id];
-        return `${id}:${row?.categories?.join(".") ?? ""}:${row?.description?.length ?? 0}`;
+        return `${id}:${row?.categories?.join(".") ?? ""}:${row?.summary ?? ""}:${row?.description ?? ""}`;
       })
       .join("|");
     return `${disabled}|${meta}`;
@@ -291,11 +291,11 @@ export function ServerForm(props: Props): ReactElement {
       return;
     }
     if (/\s/.test(mapToken)) {
-      setError("Map name must not contain spaces");
+      setError("Map token must not contain spaces");
       return;
     }
     if (!isOfficialMap(mapToken) && !mapToken.includes("_WP")) {
-      setError("Custom map name usually ends with _WP (example: Svartalfheim_WP)");
+      setError("Custom map token usually ends with _WP (example: Svartalfheim_WP)");
       return;
     }
     setSaving(true);

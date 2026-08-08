@@ -56,11 +56,13 @@ export function useMapModEnableNotify(options: {
       }
     }
 
+    const hasToken = suggestMapTokenFromMetadata(detail) !== null;
     notifications.show({
       color: "blue",
       title: "Map mod available",
-      message:
-        "Choose it under Server Information → Map when you want to use it. Your current map is unchanged.",
+      message: hasToken
+        ? "Choose it under Server Information → Map (Map mods) when you want to use it. Your current map is unchanged."
+        : "Set the launch token under Server Information → Map → Custom… when you want to use it. Your current map is unchanged.",
     });
   };
 

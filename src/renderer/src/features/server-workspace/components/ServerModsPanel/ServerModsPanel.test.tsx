@@ -157,6 +157,46 @@ describe("ServerModsPanel", () => {
       expect(notifySpy).toHaveBeenCalledWith(
         expect.objectContaining({
           title: "Map mod available",
+          message: expect.stringContaining("Map mods"),
+        }),
+      );
+    });
+  });
+
+  it("toasts Custom… guidance when a Maps mod has no detectable token", async () => {
+    const api = installApi();
+    const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
+    const mapModWithoutToken: ModMetadata = {
+      ...mapModDetail,
+      summary: "A custom map pack.",
+    };
+    vi.mocked(api.getModByReference).mockResolvedValue({
+      ok: true,
+      data: mapModWithoutToken,
+    });
+    const user = userEvent.setup();
+    render(
+      <AppProviders>
+        <ServerModsPanel
+          server={{
+            ...server,
+            mods: ["962796"],
+            disabledMods: ["962796"],
+            modMetadataCache: { "962796": mapModWithoutToken },
+          }}
+          onServerUpdated={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(
+      screen.getByRole("switch", { name: "Enable Svartalfheim Premium" }),
+    );
+    await waitFor(() => {
+      expect(notifySpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Map mod available",
+          message: expect.stringContaining("Custom…"),
         }),
       );
     });

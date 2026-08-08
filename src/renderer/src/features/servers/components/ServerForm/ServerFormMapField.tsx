@@ -74,11 +74,12 @@ async function enrichMapMod(mod: ModMetadata): Promise<ModMetadata> {
   return result.data;
 }
 
+/** Stable key for enrich effect — includes text so same-length edits still refresh. */
 function mapModsFingerprint(mods: ModMetadata[]): string {
   return mods
     .map(
       (mod) =>
-        `${mod.id}\0${mod.name}\0${mod.description?.length ?? 0}\0${mod.summary.length}`,
+        `${mod.id}\0${mod.name}\0${mod.summary}\0${mod.description ?? ""}\0${suggestMapTokenFromMetadata(mod)?.token ?? ""}`,
     )
     .join("|");
 }
@@ -201,7 +202,7 @@ export function ServerFormMapField(props: Props): ReactElement {
       />
       {customSelected ? (
         <TextInput
-          label="Custom map name"
+          label="Custom map token"
           size={props.inputSize}
           value={props.map}
           onChange={(e) =>
