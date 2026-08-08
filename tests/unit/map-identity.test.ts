@@ -182,6 +182,36 @@ describe("resolveMapThumbnailUrl", () => {
       }),
     ).toBe("https://cdn.example/svart.png");
   });
+
+  it("returns null for custom maps without a mod logo (#193)", () => {
+    expect(
+      resolveMapThumbnailUrl({
+        map: "Svartalfheim_WP",
+        mapModId: "962796",
+        officialArtUrl: "asset://island",
+        modThumbnailUrl: null,
+      }),
+    ).toBeNull();
+    expect(
+      resolveMapThumbnailUrl({
+        map: "Svartalfheim_WP",
+        mapModId: null,
+        officialArtUrl: null,
+        modThumbnailUrl: "  ",
+      }),
+    ).toBeNull();
+  });
+
+  it("ignores mod logos when mapModId is unset (#193)", () => {
+    expect(
+      resolveMapThumbnailUrl({
+        map: "Svartalfheim_WP",
+        mapModId: null,
+        officialArtUrl: null,
+        modThumbnailUrl: "https://cdn.example/svart.png",
+      }),
+    ).toBeNull();
+  });
 });
 
 describe("custom map launch composition (#65)", () => {

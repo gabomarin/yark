@@ -76,7 +76,16 @@ export function WorkspaceHeader(props: Props): ReactElement {
             <ArrowLeft size={18} />
           </ActionIcon>
         </Tooltip>
-        <MapArtThumb mapId={props.server.map} size="lg" />
+        <MapArtThumb
+          mapId={props.server.map}
+          mapModId={props.server.mapModId}
+          modThumbnailUrl={
+            props.server.mapModId
+              ? props.server.modMetadataCache?.[props.server.mapModId]?.thumbnailUrl
+              : null
+          }
+          size="lg"
+        />
         <Stack gap={2} style={{ minWidth: 0 }}>
           <Text className={classes.crumb} fz="xs" c="dimmed">
             Servers / {props.server.name}

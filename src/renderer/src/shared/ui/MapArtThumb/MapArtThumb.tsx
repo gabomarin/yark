@@ -1,10 +1,15 @@
-import type { ReactElement } from "react";
+import { useEffect, useState, type ReactElement } from "react";
 import { HardDrives } from "@phosphor-icons/react";
+import { resolveMapThumbnailUrl } from "@shared/map-identity";
 import { resolveMapArtUrl } from "./mapArt";
 import classes from "./MapArtThumb.module.css";
 
 interface Props {
   mapId: string;
+  /** Linked CurseForge map-pack Project ID for custom maps (#193). */
+  mapModId?: string | null;
+  /** CurseForge logo URL from `modMetadataCache[mapModId].thumbnailUrl`. */
+  modThumbnailUrl?: string | null;
   /**
    * Accessible name when `decorative` is false.
    * Defaults to `mapId` when omitted.
@@ -24,14 +29,26 @@ export function MapArtThumb(props: Props): ReactElement {
   const size = props.size ?? "md";
   const shape = props.shape ?? "tek";
   const decorative = props.decorative !== false;
-  const src = resolveMapArtUrl(props.mapId);
+  const linkedMapModId = props.mapModId?.trim() ?? "";
+  const src = resolveMapThumbnailUrl({
+    map: props.mapId,
+    mapModId: linkedMapModId.length > 0 ? linkedMapModId : null,
+    officialArtUrl: resolveMapArtUrl(props.mapId),
+    // Logo only when a map pack is linked (#193).
+    modThumbnailUrl: linkedMapModId.length > 0 ? props.modThumbnailUrl : null,
+  });
+  const [imageFailed, setImageFailed] = useState(false);
+  useEffect(() => {
+    setImageFailed(false);
+  }, [src]);
+
   const className = [classes.thumb, props.className].filter(Boolean).join(" ");
   const accessibleName =
     props.label !== undefined && props.label.trim().length > 0
       ? props.label.trim()
       : props.mapId;
 
-  if (src === null) {
+  if (src === null || imageFailed) {
     return (
       <div
         className={className}
@@ -63,6 +80,7 @@ export function MapArtThumb(props: Props): ReactElement {
         src={src}
         alt={decorative ? "" : accessibleName}
         draggable={false}
+        onError={() => setImageFailed(true)}
       />
     </div>
   );
