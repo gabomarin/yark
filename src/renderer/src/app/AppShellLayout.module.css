@@ -72,7 +72,16 @@
   position: fixed;
   top: 50vh;
   z-index: 120;
-  transform: translate(-50%, -50%);
+}
+
+/* Flat edge on the seam; curve into content when expanding. */
+.sidebarEdgeToggle[data-direction="expand"] {
+  transform: translateY(-50%);
+}
+
+/* Flat edge on the seam; curve into the sidenav when collapsing. */
+.sidebarEdgeToggle[data-direction="collapse"] {
+  transform: translate(-100%, -50%);
 }
 
 .main {

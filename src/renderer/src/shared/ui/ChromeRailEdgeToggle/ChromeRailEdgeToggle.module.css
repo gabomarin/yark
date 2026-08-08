@@ -8,24 +8,61 @@
 }
 
 .toggle {
-  width: 25px;
-  height: 25px;
-  min-width: 25px;
-  min-height: 25px;
-  border-radius: 999px;
-  color: var(--app-color-text);
-  background: color-mix(in srgb, var(--app-color-surface-chrome) 92%, var(--ark-gray-3));
-  border: 1px solid color-mix(in srgb, var(--app-color-border) 55%, transparent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 32px;
+  min-width: 16px;
+  min-height: 32px;
+  padding: 0;
+  line-height: 0;
+  color: color-mix(in srgb, var(--app-color-text) 88%, var(--ark-blue-9));
+  /* Soft blue close to shell atmosphere — readable but not a loud accent. */
+  background: color-mix(in srgb, var(--ark-blue-4) 48%, var(--ark-gray-3));
+  border: 1px solid color-mix(in srgb, var(--ark-blue-7) 40%, transparent);
   box-shadow:
-    0 1px 2px color-mix(in srgb, black 35%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--app-color-border) 18%, transparent);
+    0 1px 2px color-mix(in srgb, black 28%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--ark-blue-a4) 55%, transparent);
+}
+
+/* Rail: semicircle opens into the main content (expand). */
+.toggle[data-direction="expand"] {
+  border-radius: 0 999px 999px 0;
+  border-left-color: transparent;
+  /* Semicircle centroid sits left of the box center. */
+  padding-right: 2px;
+}
+
+/* Full: semicircle opens into the sidenav (collapse). */
+.toggle[data-direction="collapse"] {
+  border-radius: 999px 0 0 999px;
+  border-right-color: transparent;
+  padding-left: 2px;
 }
 
 .toggle:hover {
-  background: color-mix(in srgb, var(--app-color-surface-control) 70%, var(--app-color-surface-chrome));
-  border-color: color-mix(in srgb, var(--app-color-border) 72%, transparent);
+  background: color-mix(in srgb, var(--ark-blue-5) 52%, var(--ark-gray-3));
+  border-color: color-mix(in srgb, var(--ark-blue-8) 48%, transparent);
+}
+
+.toggle[data-direction="expand"]:hover {
+  border-left-color: transparent;
+}
+
+.toggle[data-direction="collapse"]:hover {
+  border-right-color: transparent;
 }
 
 .toggle:active {
   transform: scale(0.96);
+}
+
+.caret {
+  display: block;
+  flex-shrink: 0;
+}
+
+.toggle[data-direction="collapse"] .caret {
+  transform: rotate(180deg);
 }
