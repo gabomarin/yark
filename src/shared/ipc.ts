@@ -158,6 +158,7 @@ export const IPC = {
   backupsExport: "backups:export",
   backupsImport: "backups:import",
   backupsFleetSummary: "backups:fleet-summary",
+  backupsDismissFleetAlert: "backups:dismiss-fleet-alert",
   backupsGetDiskAlertSettings: "backups:get-disk-alert-settings",
   backupsSetDiskAlertSettings: "backups:set-disk-alert-settings",
   backupsPreviewCleanup: "backups:preview-cleanup",
@@ -458,6 +459,10 @@ export interface RendererApi {
     sourcePath: string,
   ): Promise<IpcResult<BackupRecord>>;
   getBackupFleetSummary(): Promise<IpcResult<BackupFleetSummary>>;
+  dismissBackupFleetAlert(
+    alertId: string,
+    fingerprint: string,
+  ): Promise<IpcResult<void>>;
   getBackupDiskAlertSettings(): Promise<IpcResult<BackupDiskAlertSettings>>;
   setBackupDiskAlertSettings(
     settings: BackupDiskAlertSettings,

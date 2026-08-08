@@ -49,6 +49,8 @@ export interface ServerLogsFocus {
   section?: LogsSection;
   eventId?: number;
   updateFileName?: string;
+  /** Highlights a backup row under Logs → Backups (failed fleet alerts). */
+  backupId?: string;
 }
 
 interface Props {
@@ -71,6 +73,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
   const [selectedUpdateFile, setSelectedUpdateFile] = useState<string | null>(null);
   const [updateContent, setUpdateContent] = useState("");
   const [highlightedEventId, setHighlightedEventId] = useState<number | null>(null);
+  const [highlightedBackupId, setHighlightedBackupId] = useState<string | null>(null);
   const [expandedEventId, setExpandedEventId] = useState<number | null>(null);
   const [runtimeSourceFilter, setRuntimeSourceFilter] =
     useState<RuntimeLogSourceFilter>("all");
@@ -172,6 +175,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
       setInfo(null);
       clearUpdateContent();
       setHighlightedEventId(null);
+      setHighlightedBackupId(null);
       setExpandedEventId(null);
       focusKeyRef.current = null;
       autoScrollDoneRef.current = false;
@@ -230,7 +234,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
       focusKeyRef.current = null;
       return;
     }
-    const key = `${props.server.id}:${focus.section ?? ""}:${focus.eventId ?? ""}:${focus.updateFileName ?? ""}`;
+    const key = `${props.server.id}:${focus.section ?? ""}:${focus.eventId ?? ""}:${focus.updateFileName ?? ""}:${focus.backupId ?? ""}`;
     if (focusKeyRef.current === key) return;
     focusKeyRef.current = key;
     autoScrollDoneRef.current = false;
@@ -244,12 +248,17 @@ export function ServerLogsPanel(props: Props): ReactElement {
     if (typeof focus.eventId === "number") {
       setHighlightedEventId(focus.eventId);
       setExpandedEventId(focus.eventId);
+      setHighlightedBackupId(null);
     } else {
       setHighlightedEventId(null);
+      // Provisional until logs load; refined to newest failed when backupId omitted.
+      setHighlightedBackupId(section === "backups" ? (focus.backupId ?? null) : null);
     }
 
     void (async () => {
       const data = logs?.serverId === props.server.id ? logs : await load(props.server.id);
+      // A newer focus effect may have started while we awaited load/openUpdateLog.
+      if (focusKeyRef.current !== key) return;
       if (data == null) {
         props.onFocusConsumed?.();
         return;
@@ -263,7 +272,18 @@ export function ServerLogsPanel(props: Props): ReactElement {
           null;
         if (preferred !== null) {
           await openUpdateLog(props.server.id, preferred);
+          if (focusKeyRef.current !== key) return;
         }
+      }
+
+      if (section === "backups") {
+        const preferred =
+          focus.backupId ??
+          data.backups.find((backup) => backup.status === "failed")?.id ??
+          null;
+        setHighlightedBackupId(preferred);
+      } else if (typeof focus.eventId !== "number") {
+        setHighlightedBackupId(null);
       }
 
       props.onFocusConsumed?.();
@@ -283,6 +303,20 @@ export function ServerLogsPanel(props: Props): ReactElement {
     });
     return () => window.cancelAnimationFrame(frame);
   }, [highlightedEventId, logs, activeSection]);
+
+  useEffect(() => {
+    if (highlightedBackupId === null || activeSection !== "backups") return;
+    if (autoScrollDoneRef.current) return;
+    const frame = window.requestAnimationFrame(() => {
+      const node = document.querySelector(
+        `[data-backup-id="${CSS.escape(highlightedBackupId)}"]`,
+      ) as HTMLElement | null;
+      if (node === null) return;
+      node.scrollIntoView({ block: "center", behavior: "smooth" });
+      autoScrollDoneRef.current = true;
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [highlightedBackupId, logs, activeSection]);
 
   const exportLogs = async () => {
     setBusy(true);
@@ -898,37 +932,49 @@ export function ServerLogsPanel(props: Props): ReactElement {
                 />
               ) : (
                 <div className={classes.eventList} data-logs-scroll-region="backups">
-                  {logs.backups.map((backup) => (
-                    <div key={backup.id} className={classes.eventRow}>
-                      <Group justify="space-between" align="flex-start" gap="sm" wrap="nowrap">
-                        <div className={classes.eventRowMain}>
-                          <Text fw={600}>
-                            {backup.kind} · {backup.type}
-                          </Text>
-                          <Text size="sm" c="dimmed">
-                            {formatLogDateTime(backup.createdAt)} | {backup.status}
-                          </Text>
-                          <Text size="sm">{backup.path}</Text>
-                        </div>
-                        <Tooltip label={`Delete ${backup.kind} · ${backup.type} backup`}>
-                          <ActionIcon
-                            variant="subtle"
-                            color="red"
-                            aria-label={`Delete ${backup.kind} ${backup.type} backup`}
-                            disabled={busy}
-                            onClick={() =>
-                              confirmDeleteBackup(
-                                backup.id,
-                                `${backup.kind} · ${backup.type}`,
-                              )
-                            }
-                          >
-                            <Trash size={16} />
-                          </ActionIcon>
-                        </Tooltip>
-                      </Group>
-                    </div>
-                  ))}
+                  {logs.backups.map((backup) => {
+                    const focused = highlightedBackupId === backup.id;
+                    return (
+                      <div
+                        key={backup.id}
+                        className={[
+                          classes.eventRow,
+                          focused ? classes.eventRowFocused : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                        data-backup-id={backup.id}
+                      >
+                        <Group justify="space-between" align="flex-start" gap="sm" wrap="nowrap">
+                          <div className={classes.eventRowMain}>
+                            <Text fw={600}>
+                              {backup.kind} · {backup.type}
+                            </Text>
+                            <Text size="sm" c="dimmed">
+                              {formatLogDateTime(backup.createdAt)} | {backup.status}
+                            </Text>
+                            <Text size="sm">{backup.path}</Text>
+                          </div>
+                          <Tooltip label={`Delete ${backup.kind} · ${backup.type} backup`}>
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              aria-label={`Delete ${backup.kind} ${backup.type} backup`}
+                              disabled={busy}
+                              onClick={() =>
+                                confirmDeleteBackup(
+                                  backup.id,
+                                  `${backup.kind} · ${backup.type}`,
+                                )
+                              }
+                            >
+                              <Trash size={16} />
+                            </ActionIcon>
+                          </Tooltip>
+                        </Group>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </Stack>

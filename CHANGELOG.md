@@ -23,9 +23,11 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Server Information Map control supports **Custom…** free-text ASA launch tokens (e.g. `Svartalfheim_WP`) for modded maps (#65, #191).
 - Versioned **ASA launch-options catalog** (wiki ASA Check/Missing + YARK-owned classification) with a browse modal (#92).
 - Server workspace **Launch** tab: curated structured ASA flags, raw Extra arguments, command preview, and caution alerts for sticky risky options (#93).
+- Backup fleet alerts can be **Dismiss**ed; they stay hidden until the condition changes (e.g. a new failed backup).
 
 ### Changed
 
+- Backups fleet health strip uses shared **AppMetricCard** tiles (with disk **RingProgress** and a stronger selected filter state) instead of a local StatCard (#103).
 - Log event lists use Mantine **Accordion** expand/collapse; Overview recent activity uses **Timeline** (#102).
 - SteamCMD and Logs consoles share a **ScrollArea** monospace surface with stick-to-bottom while streaming (#101).
 - Operator docs and website cover CurseForge **Maps** / custom map launch (Mods → Map select → Start checks) from the #65 spike outcomes (#192, #194, #195).
@@ -34,6 +36,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Launch-options catalog copy is cleaned from wiki noise into **summary + details**, with a pasteable **example** per entry (#92).
 - Extra arguments and the Mods ID field moved off create/edit Server onto the **Mods** / **Launch** workspace tabs (#93).
 - Launch tab dependent flags chain in order (dynamic config URL; game → tribe → RCON logs); `-passivemods=` lives under World & gameplay (#93).
+
+### Fixed
+
+- Failed backup fleet alerts use a single **Logs** action that opens Logs → Backups and highlights the failed archive (removed redundant Open).
 
 ### Removed
 

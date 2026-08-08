@@ -15,6 +15,7 @@ import {
   Modal,
   NumberInput,
   Select,
+  SimpleGrid,
   Stack,
   Switch,
   Text,
@@ -22,6 +23,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
+import { AppMetricCard } from "@ui/AppMetricCard/AppMetricCard";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { PathField } from "@ui/PathField/PathField";
@@ -43,13 +45,16 @@ import {
   toBackupPolicyDraft,
   type BackupPolicyDraft,
 } from "./backupPolicyDraft";
-import { BackupFleetAlertsPanel } from "./components/BackupFleetAlertsPanel/BackupFleetAlertsPanel";
+import {
+  BackupFleetAlertsPanel,
+  type OpenFailedBackupLogsArgs,
+} from "./components/BackupFleetAlertsPanel/BackupFleetAlertsPanel";
 import classes from "./BackupsPage.module.css";
 
 interface Props {
   servers: ServerProfile[];
   onOpenServerBackups: (serverId: string) => void;
-  onOpenServerLogs?: (serverId: string) => void;
+  onOpenFailedBackupLogs?: (args: OpenFailedBackupLogsArgs) => void;
 }
 
 type DraftPolicy = BackupPolicyDraft;
@@ -312,6 +317,22 @@ export function BackupsPage(props: Props): ReactElement {
     }
   };
 
+  const dismissFleetAlert = async (alert: {
+    id: string;
+    fingerprint: string;
+  }) => {
+    setError(null);
+    const result = await window.api.dismissBackupFleetAlert(
+      alert.id,
+      alert.fingerprint,
+    );
+    if (!result.ok) {
+      setError(result.error ?? "Could not dismiss alert");
+      return;
+    }
+    await load({ quiet: true });
+  };
+
   const buildCleanupPayload = (): BackupCleanupOptions => ({
     ...cleanupOptions,
     olderThanDays: olderThanEnabled ? olderThanDays : null,
@@ -433,7 +454,8 @@ export function BackupsPage(props: Props): ReactElement {
             <BackupFleetAlertsPanel
               alerts={summary.alerts}
               onOpenServerBackups={props.onOpenServerBackups}
-              onOpenServerLogs={props.onOpenServerLogs}
+              onOpenFailedBackupLogs={props.onOpenFailedBackupLogs}
+              onDismissAlert={(alert) => void dismissFleetAlert(alert)}
               onOpenCleanup={() => {
                 setCleanupOptions(DEFAULT_CLEANUP);
                 setCleanupPreview(null);
@@ -441,8 +463,8 @@ export function BackupsPage(props: Props): ReactElement {
               }}
             />
 
-            <div className={classes.statStrip}>
-              <StatCard
+            <SimpleGrid cols={{ base: 2, sm: 3, lg: 5 }} spacing="sm">
+              <AppMetricCard
                 label="Protected"
                 value={`${summary.stats.protectedCount}/${summary.servers.length}`}
                 active={healthFilter === "protected"}
@@ -450,7 +472,7 @@ export function BackupsPage(props: Props): ReactElement {
                   setHealthFilter((prev) => (prev === "protected" ? "all" : "protected"))
                 }
               />
-              <StatCard
+              <AppMetricCard
                 label="At risk"
                 value={String(summary.stats.atRiskCount)}
                 tone={summary.stats.atRiskCount > 0 ? "warning" : "default"}
@@ -459,7 +481,7 @@ export function BackupsPage(props: Props): ReactElement {
                   setHealthFilter((prev) => (prev === "at_risk" ? "all" : "at_risk"))
                 }
               />
-              <StatCard
+              <AppMetricCard
                 label="Failed (24h)"
                 value={String(summary.stats.failed24h)}
                 tone={summary.stats.failed24h > 0 ? "danger" : "default"}
@@ -468,11 +490,11 @@ export function BackupsPage(props: Props): ReactElement {
                   setHealthFilter((prev) => (prev === "failed" ? "all" : "failed"))
                 }
               />
-              <StatCard
+              <AppMetricCard
                 label="Backup used"
                 value={formatBytes(summary.stats.totalBackupBytes)}
               />
-              <StatCard
+              <AppMetricCard
                 label="Disk free"
                 value={
                   worstDisk?.freeBytes != null
@@ -489,18 +511,25 @@ export function BackupsPage(props: Props): ReactElement {
                       : worstDisk?.volumePath
                 }
                 tone={
-                  summary.alerts.some((alert) => alert.kind === "disk_critical")
+                  worstDisk != null &&
+                  worstDisk.usedPercent != null &&
+                  worstDisk.usedPercent >= summary.diskSettings.criticalUsedPercent
                     ? "danger"
-                    : summary.alerts.some((alert) => alert.kind === "disk_warning")
+                    : worstDisk != null &&
+                        ((worstDisk.usedPercent != null &&
+                          worstDisk.usedPercent >= summary.diskSettings.warnUsedPercent) ||
+                          (worstDisk.freeBytes != null &&
+                            worstDisk.freeBytes < summary.diskSettings.warnFreeBytes))
                       ? "warning"
                       : "default"
                 }
+                progressPercent={worstDisk?.usedPercent ?? null}
                 onClick={() => {
                   setDiskDraft(summary.diskSettings);
                   setDiskModalOpen(true);
                 }}
               />
-            </div>
+            </SimpleGrid>
 
             {summary.disks.length > 0 && (
               <Stack gap="xs">
@@ -822,59 +851,6 @@ export function BackupsPage(props: Props): ReactElement {
         </Stack>
       </Modal>
     </PageScaffold>
-  );
-}
-
-interface StatCardProps {
-  label: string;
-  value: string;
-  hint?: string;
-  tone?: "default" | "warning" | "danger";
-  active?: boolean;
-  onClick?: () => void;
-}
-
-function StatCard(props: StatCardProps): ReactElement {
-  const tone = props.tone ?? "default";
-  const clickable = props.onClick !== undefined;
-  const className = [
-    classes.statCard,
-    tone === "warning" ? classes.statWarning : "",
-    tone === "danger" ? classes.statDanger : "",
-    props.active === true ? classes.statActive : "",
-    clickable ? classes.statClickable : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  if (clickable) {
-    return (
-      <button type="button" className={className} onClick={props.onClick}>
-        <Text size="xs" c="dimmed" className={classes.statLabel}>
-          {props.label}
-        </Text>
-        <Text className={classes.statValue}>{props.value}</Text>
-        {props.hint !== undefined && (
-          <Text size="xs" c="dimmed" className={classes.statHint}>
-            {props.hint}
-          </Text>
-        )}
-      </button>
-    );
-  }
-
-  return (
-    <div className={className}>
-      <Text size="xs" c="dimmed" className={classes.statLabel}>
-        {props.label}
-      </Text>
-      <Text className={classes.statValue}>{props.value}</Text>
-      {props.hint !== undefined && (
-        <Text size="xs" c="dimmed" className={classes.statHint}>
-          {props.hint}
-        </Text>
-      )}
-    </div>
   );
 }
 
