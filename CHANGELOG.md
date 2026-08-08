@@ -26,6 +26,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- SteamCMD and Logs consoles share a **ScrollArea** monospace surface with stick-to-bottom while streaming (#101).
 - Operator docs and website cover CurseForge **Maps** / custom map launch (Mods → Map select → Start checks) from the #65 spike outcomes (#192, #194, #195).
 - Newly added Mods start **disabled**; enable them explicitly before they appear in `-mods=` / Map mods.
 - Sidebar route items use Mantine **NavLink** (active state + icons) while keeping YARK brand chrome (#106).

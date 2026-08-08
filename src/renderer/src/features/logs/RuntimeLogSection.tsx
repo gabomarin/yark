@@ -2,6 +2,7 @@ import { FileText } from "@phosphor-icons/react";
 import { Group, Select, Stack, Text } from "@mantine/core";
 import type { ReactNode, ReactElement } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { ConsoleSurface } from "@ui/ConsoleSurface/ConsoleSurface";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import classes from "./LogsPage.module.css";
 import {
@@ -67,9 +68,11 @@ export function RuntimeLogSection(props: Props): ReactElement {
             description="Try All sources, or wait for output from System, Server log, or Process."
           />
         ) : (
-          <pre className={classes.console} data-logs-scroll-region="runtime">
-            {filtered.join("\n")}
-          </pre>
+          <ConsoleSurface
+            fill
+            text={filtered.join("\n")}
+            data-logs-scroll-region="runtime"
+          />
         )}
       </Stack>
     </AppSurfaceCard>

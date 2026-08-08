@@ -162,6 +162,7 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 | `ServerRuntimeStatusBadge` | `shared/ui/ServerRuntimeStatusBadge/` | Process status badge |
 | `ReadonlyPath` | `shared/ui/ReadonlyPath/` | Bordered monospace chip for configured filesystem paths |
 | `PathField` | `shared/ui/PathField/` | Read-only path chip + Browse/Clear actions |
+| `ConsoleSurface` | `shared/ui/ConsoleSurface/` | ScrollArea monospace console for SteamCMD / Logs (plain text, stick-to-bottom) |
 
 ## Product brand / packaging icons
 
@@ -204,8 +205,8 @@ Operators should recognize filesystem paths the same way everywhere:
 
 Do **not** use Mantine `Code`, ad-hoc `ff="monospace"`, or a private Browse row for
 filesystem paths. `PathField` matches Settings (chip + Browse/Clear); values never
-edit via keyboard. Log / console / INI editors stay feature-local monospace (not
-path chips).
+edit via keyboard. Streaming log / SteamCMD consoles use `ConsoleSurface`; INI
+editors stay feature-local monospace (not path chips).
 
 ## Still feature-local (by design)
 
@@ -224,7 +225,6 @@ path chips).
 | Type scale tokens | Meta/title sizes still ad-hoc | Third conflicting title size |
 | `PageSectionHeader` | Title + filter/actions repeats | Third identical header |
 | `DangerConfirmModal` pattern | Restore/delete/cleanup modals | After second modal copy-paste |
-| Console surface atom | SteamCMD + Logs mono panels | When Logs viewer is extracted |
 | Form section Card defaults | `ServerForm` raw Card | When editing ServerForm chrome |
 
 ## Related
