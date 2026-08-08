@@ -14,6 +14,8 @@ export interface YarkModMetadata {
   id: string;
   name: string;
   summary: string;
+  /** Plain-text description (truncated); null on search rows (#195). */
+  description: string | null;
   thumbnailUrl: string | null;
   authors: string[];
   downloadCount: number;
@@ -22,6 +24,9 @@ export interface YarkModMetadata {
   slug: string;
   categories: string[];
 }
+
+/** Bound SQLite / IPC cache size for author description text. */
+const MAX_DESCRIPTION_CHARS = 8_000;
 
 export interface YarkApiErrorBody {
   ok: false;
@@ -134,7 +139,11 @@ async function handleGetMod(
     );
   }
 
-  return okJson(corsHeaders, toYarkMod(rawMod));
+  // Descriptions are only needed for Maps-category map-token suggest (#195).
+  const description = isMapsCategoryMod(rawMod)
+    ? await fetchModDescription(modId, apiKey)
+    : null;
+  return okJson(corsHeaders, toYarkMod(rawMod, description));
 }
 
 async function handleGetMods(
@@ -213,7 +222,7 @@ async function handleGetMods(
     if (Number.isFinite(id)) byId.set(id, mod);
   }
 
-  const items: YarkModMetadata[] = [];
+  const asaMods: Array<{ id: number; raw: Record<string, unknown> }> = [];
   const skipped: Array<{ id: string; reason: string }> = [];
   for (const id of modIds) {
     const raw = byId.get(id);
@@ -225,8 +234,21 @@ async function handleGetMods(
       skipped.push({ id: String(id), reason: "not_asa_mod" });
       continue;
     }
-    items.push(toYarkMod(raw));
+    asaMods.push({ id, raw });
   }
+
+  // Only Maps-category mods need /description for map-token heuristics; fetching
+  // for every ASA id in the batch is an N+1 that slows the UI and burns CF quota.
+  const mapMods = asaMods.filter(({ raw }) => isMapsCategoryMod(raw));
+  const descriptions = new Map<number, string | null>();
+  await Promise.all(
+    mapMods.map(async ({ id }) => {
+      descriptions.set(id, await fetchModDescription(String(id), apiKey));
+    }),
+  );
+  const items: YarkModMetadata[] = asaMods.map(({ id, raw }) =>
+    toYarkMod(raw, descriptions.get(id) ?? null),
+  );
 
   return okJson(corsHeaders, { items, skipped });
 }
@@ -311,7 +333,7 @@ async function handleSearch(
   const items: YarkModMetadata[] = [];
   for (const mod of rawMods) {
     if (isAsaMod(mod, asaGameId)) {
-      items.push(toYarkMod(mod));
+      items.push(toYarkMod(mod, null));
     }
   }
 
@@ -322,13 +344,59 @@ async function handleSearch(
   });
 }
 
-function toYarkMod(mod: Record<string, unknown>): YarkModMetadata {
+async function fetchModDescription(
+  modId: string,
+  apiKey: string,
+): Promise<string | null> {
+  try {
+    const upstream = await fetchUpstream(
+      `${UPSTREAM}/v1/mods/${modId}/description?stripped=true`,
+      { method: "GET", headers: upstreamHeaders(apiKey) },
+    );
+    if (!upstream.ok) {
+      return null;
+    }
+    const root = asRecord(upstream.json);
+    const data = root?.["data"];
+    if (typeof data !== "string") {
+      return null;
+    }
+    const trimmed = data.trim();
+    if (trimmed.length === 0) {
+      return null;
+    }
+    return trimmed.length > MAX_DESCRIPTION_CHARS
+      ? trimmed.slice(0, MAX_DESCRIPTION_CHARS)
+      : trimmed;
+  } catch {
+    return null;
+  }
+}
+
+/** Aligns with Electron `isMapModCandidate` (CurseForge "Maps" / "Map"). */
+function isMapsCategoryMod(mod: Record<string, unknown>): boolean {
+  return extractCategoryNames(mod).some((entry) => /\bmaps?\b/i.test(entry));
+}
+
+function extractCategoryNames(mod: Record<string, unknown>): string[] {
+  const categoriesRaw = Array.isArray(mod["categories"]) ? mod["categories"] : [];
+  return categoriesRaw
+    .map((entry) => {
+      const row = asRecord(entry);
+      return typeof row?.["name"] === "string" ? row["name"] : null;
+    })
+    .filter((name): name is string => name !== null && name.length > 0);
+}
+
+function toYarkMod(
+  mod: Record<string, unknown>,
+  description: string | null,
+): YarkModMetadata {
   const id = String(mod["id"] ?? "");
   const slug = String(mod["slug"] ?? id);
   const links = asRecord(mod["links"]);
   const logo = asRecord(mod["logo"]);
   const authorsRaw = Array.isArray(mod["authors"]) ? mod["authors"] : [];
-  const categoriesRaw = Array.isArray(mod["categories"]) ? mod["categories"] : [];
 
   const authors = authorsRaw
     .map((entry) => {
@@ -337,12 +405,7 @@ function toYarkMod(mod: Record<string, unknown>): YarkModMetadata {
     })
     .filter((name): name is string => name !== null && name.length > 0);
 
-  const categories = categoriesRaw
-    .map((entry) => {
-      const row = asRecord(entry);
-      return typeof row?.["name"] === "string" ? row["name"] : null;
-    })
-    .filter((name): name is string => name !== null && name.length > 0);
+  const categories = extractCategoryNames(mod);
 
   const websiteUrl =
     typeof links?.["websiteUrl"] === "string" && links["websiteUrl"].length > 0
@@ -367,6 +430,7 @@ function toYarkMod(mod: Record<string, unknown>): YarkModMetadata {
     id,
     name: typeof mod["name"] === "string" ? mod["name"] : `Mod ${id}`,
     summary: typeof mod["summary"] === "string" ? mod["summary"] : "",
+    description,
     thumbnailUrl: thumbnail,
     authors,
     downloadCount:

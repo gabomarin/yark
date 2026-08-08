@@ -109,6 +109,21 @@ beforeEach(() => {
 });
 
 describe("InstanceService host port start gate", () => {
+  it("blocks start when custom map mod identity is inconsistent (#194)", async () => {
+    const source = profile({
+      map: "Svartalfheim_WP",
+      mapModId: "962796",
+      mods: ["962796"],
+      disabledMods: ["962796"],
+    });
+    const { service, processes } = harness([source]);
+
+    await expect(service.start(source.id)).rejects.toThrow(
+      /Map mod Project ID is disabled/,
+    );
+    expect(processes.start).not.toHaveBeenCalled();
+  });
+
   it("blocks start when the host probe reports busy and does not spawn", async () => {
     const source = profile();
     const { service, processes } = harness([source]);

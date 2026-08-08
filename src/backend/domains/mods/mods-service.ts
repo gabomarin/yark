@@ -333,6 +333,7 @@ function normalizeMetadata(item: ModMetadata): ModMetadata {
     id: String(item.id),
     name: item.name,
     summary: item.summary,
+    description: item.description ?? null,
     thumbnailUrl: item.thumbnailUrl,
     authors: [...item.authors],
     downloadCount: item.downloadCount,

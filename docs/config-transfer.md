@@ -30,8 +30,9 @@ snapshot, not live ASA memory.
 
 ## Never copied
 
-Profile ID/name, install directory, map, session name, game/query/RCON ports,
-cluster ID/directory, enabled/auto-start, runtime state, saves, logs, history.
+Profile ID/name, install directory, map (and linked `mapModId`), session name,
+game/query/RCON ports, cluster ID/directory, enabled/auto-start, runtime state,
+saves, logs, history.
 
 ## Architecture (shared pipeline with #40 / #89 / #90)
 

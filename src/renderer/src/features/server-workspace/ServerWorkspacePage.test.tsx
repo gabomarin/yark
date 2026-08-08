@@ -264,7 +264,8 @@ describe("ServerWorkspacePage", () => {
       screen.getByRole("button", { name: "Configuration wizard" }),
     ).toBeVisible();
 
-    await user.click(screen.getByText("Scorched Earth"));
+    // List item title (Map select also shows official label "Scorched Earth").
+    await user.click(screen.getByTitle("Scorched Earth"));
     expect(onSelectServer).toHaveBeenCalledWith("srv-b");
   });
 

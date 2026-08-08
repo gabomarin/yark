@@ -82,6 +82,7 @@ describe("prepareModAddApply", () => {
     expect(outcome.status).toBe("ready");
     if (outcome.status !== "ready") return;
     expect(outcome.next.configuredIds).toEqual(["929420"]);
+    expect(outcome.next.disabledIds).toEqual(["929420"]);
     expect(outcome.next.cache["929420"]).toEqual(sampleDetail);
     expect(outcome.clearInput).toBe(true);
   });
@@ -95,7 +96,7 @@ describe("prepareModAddApply", () => {
     expect(outcome.status).toBe("validation-error");
   });
 
-  it("re-enables a configured mod that was disabled", async () => {
+  it("keeps an already-configured mod disabled when re-added", async () => {
     const outcome = await prepareModAddApply(
       "929420",
       {
@@ -108,6 +109,6 @@ describe("prepareModAddApply", () => {
     expect(outcome.status).toBe("ready");
     if (outcome.status !== "ready") return;
     expect(outcome.next.configuredIds).toEqual(["929420"]);
-    expect(outcome.next.disabledIds).toEqual([]);
+    expect(outcome.next.disabledIds).toEqual(["929420"]);
   });
 });

@@ -13,12 +13,29 @@ Each profile is one dedicated-server install YARK can manage: path, map, session
 | Field | Rule |
 | --- | --- |
 | Name | 1–64 characters (Windows folder-safe) |
-| Map + session | Required |
+| Map + session | Required — Map is Official, an enabled **Map mod**, or **Custom…** |
 | Install dir | Absolute Windows path (`C:\…` or UNC) |
 | Ports | 1024–65535; game, query, and RCON **distinct inside the profile** |
 | Admin password | Length ≥ 4 |
-| Mods | Unique Project IDs |
+| Mods | Unique Project IDs (map packs must be **enabled** when using a custom map) |
 | Cluster | If `clusterId` is set, `clusterDir` is required |
+
+## Map field
+
+Server Information → **Map** groups options as:
+
+| Group | Use when |
+| --- | --- |
+| **Official** | Built-in ASA maps (e.g. The Island) |
+| **Map mods** | Enabled CurseForge **Maps** packs whose launch token YARK could detect |
+| **Other → Custom…** | You type the author launch token yourself (e.g. `Svartalfheim_WP`) |
+
+Choosing a **Map mod** sets the launch token and links the pack’s Project ID on the profile.
+Choosing an **official** map clears that link. **Custom…** is for tokens YARK could not list —
+you still need the matching map pack **enabled** on [Mods](/docs/mods/) for a correct boot.
+
+Clone keeps map + linked map-mod ID with the copied mods list. [Copy configuration](/docs/copy-configuration/)
+never copies map identity (including that link).
 
 <figure class="doc-shot">
   <img

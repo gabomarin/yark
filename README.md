@@ -59,7 +59,7 @@ cloud hosting service, an ARK game launcher, or an official Studio Wildcard prod
 | Safe maintenance | Coordinate stop, recovery backups, update/verify work, conditional restart, and rollback through locked backend operations. |
 | Backups | Create, restore, export, and import world / player / INI archives; schedule world backups and inspect fleet health. |
 | Configuration | Edit `GameUserSettings.ini` and `Game.ini` through visual and raw editors, with a guided configuration wizard. |
-| Mods | Manage CurseForge Project IDs, metadata, enable/disable state, and launch-time `-mods=` composition without embedding the CurseForge API key. |
+| Mods | Manage CurseForge Project IDs, metadata, enable/disable state, and launch-time `-mods=` composition without embedding the CurseForge API key. **Maps** packs: enable on Mods, then pick under Server Information → Map (Map mods / Custom…). |
 | Diagnostics | Review events, runtime output, SteamCMD history, backup activity, installation health, host-port conflicts, and log retention. |
 | Windows integration | System tray, close-to-tray, Start with Windows, Auto-start with YARK, in-app YARK updates, and Windows-aware process/file operations. |
 

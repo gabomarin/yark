@@ -28,7 +28,10 @@ import { useMemo, useState } from "react";
 import { useUiDensity } from "@app/AppProviders";
 import { listKnownClusterOptions } from "@features/clusters/knownClusterOptions";
 import { ServerFormInstallPath } from "./ServerFormInstallPath";
-import { ServerFormMapField } from "./ServerFormMapField";
+import {
+  listEnabledMapMods,
+  ServerFormMapField,
+} from "./ServerFormMapField";
 import { ServerFormStartupFields } from "./ServerFormStartupFields";
 import { ServerFormClusterFields } from "./ServerFormClusterFields";
 import { ServerFormPortConflictAlert } from "./ServerFormPortConflictAlert";
@@ -67,6 +70,7 @@ interface Props {
 interface FormState {
   name: string;
   map: string;
+  mapModId: string | null;
   installDir: string;
   sessionName: string;
   gamePort: string;
@@ -88,6 +92,7 @@ function toFormState(
     return {
       name: "",
       map: KNOWN_MAPS[0],
+      mapModId: null,
       installDir: base,
       sessionName: "",
       gamePort: "7777",
@@ -104,6 +109,7 @@ function toFormState(
   return {
     name: profile.name,
     map: profile.map,
+    mapModId: profile.mapModId ?? null,
     installDir: profile.installDir,
     sessionName: profile.sessionName,
     gamePort: String(profile.gamePort),
@@ -127,8 +133,7 @@ function toInput(
   return {
     name,
     map: state.map.trim(),
-    // Companion Project ID UI is #191; preserve persisted value on edit/save.
-    mapModId: initial?.mapModId ?? null,
+    mapModId: state.mapModId,
     installDir: isCreate
       ? resolveServerInstallDir(baseOrInstall, name)
       : baseOrInstall,
@@ -194,9 +199,43 @@ export function ServerForm(props: Props): ReactElement {
     return resolveServerInstallDir(state.installDir, state.name);
   }, [isCreate, state.installDir, state.name]);
 
-  const setField = (field: keyof FormState) => (value: string) => {
-    setState((previous) => ({ ...previous, [field]: value }));
-  };
+  const setField =
+    (field: Exclude<keyof FormState, "mapModId" | "autoStart">) =>
+    (value: string) => {
+      setState((previous) => ({ ...previous, [field]: value }));
+    };
+
+  const mapMods = useMemo(
+    () =>
+      listEnabledMapMods({
+        mods: props.initial?.mods ?? [],
+        disabledMods: props.initial?.disabledMods,
+        modMetadataCache: props.initial?.modMetadataCache,
+      }),
+    [
+      props.initial?.disabledMods,
+      props.initial?.modMetadataCache,
+      props.initial?.mods,
+    ],
+  );
+
+  /** Remount only the Map control when Mods list/metadata changes (not the whole form). */
+  const mapFieldKey = useMemo(() => {
+    const mods = props.initial?.mods ?? [];
+    const disabled = [...(props.initial?.disabledMods ?? [])].sort().join(",");
+    const cache = props.initial?.modMetadataCache ?? {};
+    const meta = mods
+      .map((id) => {
+        const row = cache[id];
+        return `${id}:${row?.categories?.join(".") ?? ""}:${row?.summary ?? ""}:${row?.description ?? ""}`;
+      })
+      .join("|");
+    return `${disabled}|${meta}`;
+  }, [
+    props.initial?.disabledMods,
+    props.initial?.modMetadataCache,
+    props.initial?.mods,
+  ]);
 
   const browseDirectory = async (field: "installDir" | "clusterDir") => {
     setError(null);
@@ -256,7 +295,7 @@ export function ServerForm(props: Props): ReactElement {
       return;
     }
     if (!isOfficialMap(mapToken) && !mapToken.includes("_WP")) {
-      setError('Custom map token usually ends with _WP (example: Svartalfheim_WP)');
+      setError("Custom map token usually ends with _WP (example: Svartalfheim_WP)");
       return;
     }
     setSaving(true);
@@ -381,9 +420,18 @@ export function ServerForm(props: Props): ReactElement {
             required
           />
           <ServerFormMapField
+            key={mapFieldKey}
             map={state.map}
+            mapModId={state.mapModId}
+            mapMods={mapMods}
             inputSize={inputSize}
-            onMapChange={setField("map")}
+            onChange={(next) =>
+              setState((previous) => ({
+                ...previous,
+                map: next.map,
+                mapModId: next.mapModId,
+              }))
+            }
           />
           <ServerFormInstallPath
             isCreate={isCreate}

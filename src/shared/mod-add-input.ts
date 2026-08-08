@@ -183,9 +183,12 @@ export async function prepareModAddApply(
       if (!nextIdSet.has(detailData.id)) {
         nextIds = [...nextIds, detailData.id];
         nextIdSet.add(detailData.id);
+        // New mods start disabled; operator enables explicitly.
+        if (!nextDisabled.includes(detailData.id)) {
+          nextDisabled = [...nextDisabled, detailData.id];
+        }
         batchChanged = true;
       }
-      nextDisabled = nextDisabled.filter((candidate) => candidate !== detailData.id);
       nextCache = { ...nextCache, [detailData.id]: detailData };
       succeeded += 1;
       batchChanged = true;

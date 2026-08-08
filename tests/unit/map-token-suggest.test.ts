@@ -94,8 +94,8 @@ describe("suggestMapTokenFromModText", () => {
   });
 });
 
-describe("suggestMapTokenFromMetadata / summary gap", () => {
-  it("fails when only slug/name are present (no Map Name in summary)", () => {
+describe("suggestMapTokenFromMetadata / description (#195)", () => {
+  it("fails when only slug/name/summary are present (no Map Name)", () => {
     const svart = meta({
       id: "962796",
       name: "Svartalfheim Premium [PC & Crossplay]",
@@ -111,17 +111,22 @@ describe("suggestMapTokenFromMetadata / summary gap", () => {
       name: "Svartalfheim Premium [PC & Crossplay]",
       slug: "svartalfheim-premium",
       summary: "A dwarven inspired map.",
+      description: FIXTURES.svartalfheimPremium,
     });
-    expect(
-      suggestMapTokenFromMetadata(svart, FIXTURES.svartalfheimPremium)?.token,
-    ).toBe("Svartalfheim_WP");
+    expect(suggestMapTokenFromMetadata(svart)).toEqual({
+      token: "Svartalfheim_WP",
+      source: "labeled",
+      matchIndex: 0,
+    });
   });
 
-  it("builds haystack with optional description last", () => {
-    const haystack = buildModMapSuggestHaystack(
-      { name: "Amissa", summary: "Fantasy map", slug: "amissa" },
-      "Map Name: Amissa_WP",
-    );
+  it("builds haystack with description from metadata", () => {
+    const haystack = buildModMapSuggestHaystack({
+      name: "Amissa",
+      summary: "Fantasy map",
+      slug: "amissa",
+      description: "Map Name: Amissa_WP",
+    });
     expect(haystack).toContain("amissa");
     expect(haystack).toContain("Map Name: Amissa_WP");
   });

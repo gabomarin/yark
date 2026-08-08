@@ -77,6 +77,27 @@ describe("ServerLaunchPanel", () => {
     ).toBeDisabled();
   });
 
+  it("warns when custom map mod is disabled (#194)", () => {
+    render(
+      <AppProviders>
+        <ServerLaunchPanel
+          server={profile({
+            map: "Svartalfheim_WP",
+            mapModId: "962796",
+            mods: ["962796"],
+            disabledMods: ["962796"],
+          })}
+          onServerUpdated={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText(/custom map mod inconsistent/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/disabled and will be omitted from -mods=/i),
+    ).toBeInTheDocument();
+  });
+
   it("shows inline caution on ForceRespawnDinos when enabled (#93)", () => {
     render(
       <AppProviders>

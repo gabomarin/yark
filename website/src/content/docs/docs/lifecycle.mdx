@@ -13,10 +13,10 @@ YARK starts `{installDir}/ShooterGame/Binaries/Win64/ArkAscendedServer.exe` dire
 
 | Concern | Where it lives |
 | --- | --- |
-| Map + session name | CLI map URL |
+| Map + session name | CLI map URL (`token`?SessionName=…) |
 | Game port | CLI `-port=` **and** INI `SessionSettings.Port` |
 | Platform | CLI `-ServerPlatform=ALL` (unless you set it in extra args) |
-| Enabled mods | CLI `-mods=id1,id2,…` |
+| Enabled mods | CLI `-mods=id1,id2,…` (includes CurseForge **map packs**) |
 | Cluster trio | CLI when **both** cluster ID and directory are set |
 | RCON enable/port | INI only |
 | Admin / server password | INI only |
@@ -27,11 +27,22 @@ YARK starts `{installDir}/ShooterGame/Binaries/Win64/ArkAscendedServer.exe` dire
   `GameUserSettings.ini` before start.
 </Aside>
 
-Example logical command line:
+Example logical command lines:
 
 ```text
 "TheIsland_WP"?SessionName="MyServer" -port=7777 -ServerPlatform=ALL -mods=123,456
+"Svartalfheim_WP"?SessionName="MyMap" -port=7777 -ServerPlatform=ALL -mods=962796
 ```
+
+Custom / modded maps use the same shape: author launch token in the map URL, and the map pack
+Project ID on `-mods=`. YARK does **not** write ASE `ActiveMapMod` or obsolete `-MapModID=`.
+See [Mods → Maps / custom worlds](/docs/mods/#maps--custom-worlds).
+
+### Map identity checks
+
+Before **Start**, YARK blocks when a **custom** map’s linked map mod is missing from the mods
+list, disabled, or unset. The **Launch** tab shows a yellow alert for the same cases so you can
+fix Map / Mods before attempting a boot. Official maps do not use that link.
 
 ## Ready = RCON, not just a process
 
@@ -86,5 +97,6 @@ When a server is stopped and idle, **Move installation** relocates the install f
 3. Expecting rich Runtime logs with native console enabled  
 4. Assuming restart skips backups — it takes a fail-hard `pre_restart` snapshot  
 5. Expecting Auto-start to run while the profile is Inactive or still reattaching  
+6. Custom map token without the map pack **enabled** on Mods (or Map still on an official world)  
 
-See also [Backups](/docs/backups/), [Logs](/docs/logs/), and [Settings](/docs/settings/).
+See also [Mods](/docs/mods/), [Backups](/docs/backups/), [Logs](/docs/logs/), and [Settings](/docs/settings/).

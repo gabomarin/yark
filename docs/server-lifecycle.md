@@ -78,9 +78,26 @@ Example logical argv:
 "TheIsland_WP"?SessionName="MyServer" -port=7777 -ServerPlatform=ALL -mods=123,456
 ```
 
-Custom / modded map tokens (beyond `KNOWN_MAPS`) are researched in
-[spikes/65-modded-asa-maps.md](spikes/65-modded-asa-maps.md) (#65): argv still
-uses `profile.map`; map packs stay on `-mods=` (not ASE `ActiveMapMod`).
+### Custom / modded maps (#65 Phase 1)
+
+ASA map packs use the same launch shape as content mods:
+
+| Concern | Behavior |
+| --- | --- |
+| Launch token | `profile.map` in argv[0] map URL (official `KNOWN_MAPS` or free-form e.g. `Svartalfheim_WP`) |
+| Map pack Project ID | Must be **enabled** on `profile.mods` → `-mods=` |
+| Linked identity | Optional `profile.mapModId` for custom maps; cleared for official maps |
+| ASE `ActiveMapMod` / `-MapModID=` | **Not used** |
+
+Operator flow: enable a CurseForge **Maps** mod → toast (map unchanged) → Server Information
+**Map** groups Official / Map mods / Custom… → choosing a Map mod sets `map` + `mapModId`.
+
+**Start blockers** (`mapIdentityStartBlockers` / `assertMapIdentityReadyForStart`): for a custom
+map, Start fails when `mapModId` is unset, missing from `mods`, or listed in `disabledMods`.
+The Launch tab shows a yellow alert for the same cases (soft). Save remains soft-warn only.
+
+Research archive + live evidence: [spikes/65-modded-asa-maps.md](spikes/65-modded-asa-maps.md).
+Operator guide: website `docs/mods.mdx` (Maps / custom worlds) and `docs/lifecycle.mdx`.
 
 ## Profile → INI sync
 
