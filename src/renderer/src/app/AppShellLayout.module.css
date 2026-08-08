@@ -2,6 +2,7 @@
   position: relative;
   min-height: 100vh;
   isolation: isolate;
+  overflow: visible;
   background-color: var(--ark-gray-1);
   background-image:
     radial-gradient(ellipse 58% 48% at 92% -10%, var(--ark-blue-a3), transparent 70%),
@@ -59,10 +60,28 @@
 .navbar {
   position: relative;
   z-index: 1;
+  overflow: visible;
   background: transparent;
   background-color: transparent;
   --app-shell-border-color: color-mix(in srgb, var(--app-color-border) 35%, transparent);
   border-right: 1px solid color-mix(in srgb, var(--app-color-border) 28%, transparent);
+  transition: width 180ms ease;
+}
+
+.sidebarEdgeToggle {
+  position: fixed;
+  top: 50vh;
+  z-index: 120;
+}
+
+/* Flat edge on the seam; curve into content when expanding. */
+.sidebarEdgeToggle[data-direction="expand"] {
+  transform: translateY(-50%);
+}
+
+/* Flat edge on the seam; curve into the sidenav when collapsing. */
+.sidebarEdgeToggle[data-direction="collapse"] {
+  transform: translate(-100%, -50%);
 }
 
 .main {

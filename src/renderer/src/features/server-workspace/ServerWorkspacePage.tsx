@@ -15,6 +15,7 @@ import { ConfigurationWizard } from "./components/ConfigurationWizard/Configurat
 import { ServerListPanel } from "./components/ServerListPanel/ServerListPanel";
 import { ServerOnboardingChecklist } from "./components/ServerOnboardingChecklist/ServerOnboardingChecklist";
 import { SidePanel } from "./components/SidePanel/SidePanel";
+import { WorkspaceSplitBody } from "./components/WorkspaceSplitBody/WorkspaceSplitBody";
 import { WorkspaceTabs } from "./components/WorkspaceTabs/WorkspaceTabs";
 import { WorkspaceHeader } from "./components/WorkspaceHeader/WorkspaceHeader";
 import { StopProgressAlert, stopProgressForServer } from "./components/StopProgressAlert";
@@ -44,6 +45,8 @@ interface Props {
   onDismissOnboarding?: () => void;
   onSelectServer: (serverId: string) => void;
   onBack: () => void;
+  /** Register dirty-leave guard so shell navigation (sidebar) can confirm before closing workspace. */
+  onRegisterLeaveGuard?: (guard: ((action: () => void) => void) | null) => void;
   onCreateServer?: () => void;
   onStartServer: (serverId: string) => void;
   onStopServer: (serverId: string) => void;
@@ -131,6 +134,11 @@ export function ServerWorkspacePage(props: Props): ReactElement {
     });
   }, []);
 
+  useEffect(() => {
+    props.onRegisterLeaveGuard?.(confirmLeaveIfDirty);
+    return () => props.onRegisterLeaveGuard?.(null);
+  }, [confirmLeaveIfDirty, props.onRegisterLeaveGuard]);
+
   const handleSelectServer = (serverId: string) => {
     if (serverId === props.selectedServerId) return;
     confirmLeaveIfDirty(() => {
@@ -160,11 +168,15 @@ export function ServerWorkspacePage(props: Props): ReactElement {
   const opsLocked = serverActive || filesJobActive || stopJobActive;
   const filesLockReason = props.filesJobLabel?.trim() || "Updating server files";
   const stopLockReason = stopProgress?.label.trim() || "Stopping this server…";
-  const serverListPanel = (
+  const renderServerList = (
+    options: { iconMode?: boolean; onToggleRail?: () => void } = {},
+  ) => (
     <ServerListPanel
       servers={props.servers}
       selectedServerId={selectedServer.id}
       statuses={props.statuses}
+      iconMode={options.iconMode === true}
+      onToggleRail={options.onToggleRail}
       onSelectServer={handleSelectServer}
       onAddServer={props.onCreateServer}
     />
@@ -197,6 +209,90 @@ export function ServerWorkspacePage(props: Props): ReactElement {
     />
   );
 
+  const mainSection = (
+    <section className={classes.main} data-workspace-scroll>
+      {stopProgress !== null && <StopProgressAlert progress={stopProgress} />}
+      {filesJobActive && (
+        <Alert color="yellow" title={filesLockReason} mb="sm">
+          Start, restore, and other file actions stay locked until this finishes.
+        </Alert>
+      )}
+      {assistantOpen ? (
+        <ConfigurationWizard
+          server={selectedServer}
+          serverActive={opsLocked}
+          onCancel={() => {
+            assistantDirtyRef.current = false;
+            setAssistantOpen(false);
+          }}
+          onApplied={() => {
+            assistantDirtyRef.current = false;
+            setIniDirty(false);
+            setIniEditorVersion((current) => current + 1);
+          }}
+          onDraftChange={(dirty) => {
+            assistantDirtyRef.current = dirty;
+          }}
+        />
+      ) : showOnboarding ? (
+        <ServerOnboardingChecklist
+          server={selectedServer}
+          installation={installation}
+          onDismiss={() => {
+            setShowOnboarding(false);
+            props.onDismissOnboarding?.();
+          }}
+          onOpenAssistant={() => {
+            if (!iniDirty) {
+              assistantDirtyRef.current = false;
+              setAssistantOpen(true);
+            }
+          }}
+          onInstallFiles={() => props.onInstallFiles(selectedServer.id)}
+        />
+      ) : (
+        <WorkspaceTabs
+          value={workspaceTab}
+          server={selectedServer}
+          servers={props.servers}
+          runtime={runtime}
+          installation={installation}
+          events={props.events}
+          rconHistory={props.rconHistory}
+          playerList={props.playerList}
+          opsLocked={opsLocked}
+          filesJobActive={filesJobActive}
+          stopJobActive={stopJobActive}
+          filesLockReason={filesLockReason}
+          stopLockReason={stopLockReason}
+          iniDirty={iniDirty}
+          iniEditorVersion={iniEditorVersion}
+          logsFocus={props.logsFocus}
+          onChange={setWorkspaceTab}
+          onBack={handleBack}
+          onOpenAssistant={() => {
+            if (!iniDirty) {
+              assistantDirtyRef.current = false;
+              setAssistantOpen(true);
+            }
+          }}
+          onIniDirtyChange={(dirty) => {
+            dirtyRef.current = dirty;
+            setIniDirty(dirty);
+          }}
+          onLogsFocusConsumed={props.onLogsFocusConsumed}
+          onSendRcon={props.onSendRcon}
+          onClearRconHistory={props.onClearRconHistory}
+          onRconTabFocusChanged={props.onRconTabFocusChanged}
+          onRefreshPlayers={props.onRefreshPlayers}
+          onKickPlayer={props.onKickPlayer}
+          onBanPlayer={props.onBanPlayer}
+          onServerUpdated={props.onServerUpdated}
+        />
+      )}
+    </section>
+  );
+
   return (
     <div className={classes.root}>
       <WorkspaceHeader
@@ -205,7 +301,6 @@ export function ServerWorkspacePage(props: Props): ReactElement {
         installation={installation}
         filesJobActive={filesJobActive || stopJobActive}
         filesJobReason={stopJobActive ? stopLockReason : filesLockReason}
-        onBack={handleBack}
         onStart={() => props.onStartServer(selectedServer.id)}
         onStop={() => props.onStopServer(selectedServer.id)}
         onRestart={() => props.onRestartServer(selectedServer.id)}
@@ -221,91 +316,15 @@ export function ServerWorkspacePage(props: Props): ReactElement {
       />
 
       <div className={classes.body} data-compact={compactWorkspace || undefined}>
-        {!compactWorkspace && serverListPanel}
-
-        <section className={classes.main} data-workspace-scroll>
-          {stopProgress !== null && <StopProgressAlert progress={stopProgress} />}
-          {filesJobActive && (
-            <Alert color="yellow" title={filesLockReason} mb="sm">
-              Start, restore, and other file actions stay locked until this finishes.
-            </Alert>
-          )}
-          {assistantOpen ? (
-            <ConfigurationWizard
-              server={selectedServer}
-              serverActive={opsLocked}
-              onCancel={() => {
-                assistantDirtyRef.current = false;
-                setAssistantOpen(false);
-              }}
-              onApplied={() => {
-                assistantDirtyRef.current = false;
-                setIniDirty(false);
-                setIniEditorVersion((current) => current + 1);
-              }}
-              onDraftChange={(dirty) => {
-                assistantDirtyRef.current = dirty;
-              }}
-            />
-          ) : showOnboarding ? (
-            <ServerOnboardingChecklist
-              server={selectedServer}
-              installation={installation}
-              onDismiss={() => {
-                setShowOnboarding(false);
-                props.onDismissOnboarding?.();
-              }}
-              onOpenAssistant={() => {
-                if (!iniDirty) {
-                  assistantDirtyRef.current = false;
-                  setAssistantOpen(true);
-                }
-              }}
-              onInstallFiles={() => props.onInstallFiles(selectedServer.id)}
-            />
-          ) : (
-            <WorkspaceTabs
-              value={workspaceTab}
-              server={selectedServer}
-              servers={props.servers}
-              runtime={runtime}
-              installation={installation}
-              events={props.events}
-              rconHistory={props.rconHistory}
-              playerList={props.playerList}
-              opsLocked={opsLocked}
-              filesJobActive={filesJobActive}
-              stopJobActive={stopJobActive}
-              filesLockReason={filesLockReason}
-              stopLockReason={stopLockReason}
-              iniDirty={iniDirty}
-              iniEditorVersion={iniEditorVersion}
-              logsFocus={props.logsFocus}
-              onChange={setWorkspaceTab}
-              onBack={handleBack}
-              onOpenAssistant={() => {
-                if (!iniDirty) {
-                  assistantDirtyRef.current = false;
-                  setAssistantOpen(true);
-                }
-              }}
-              onIniDirtyChange={(dirty) => {
-                dirtyRef.current = dirty;
-                setIniDirty(dirty);
-              }}
-              onLogsFocusConsumed={props.onLogsFocusConsumed}
-              onSendRcon={props.onSendRcon}
-              onClearRconHistory={props.onClearRconHistory}
-              onRconTabFocusChanged={props.onRconTabFocusChanged}
-              onRefreshPlayers={props.onRefreshPlayers}
-              onKickPlayer={props.onKickPlayer}
-              onBanPlayer={props.onBanPlayer}
-              onServerUpdated={props.onServerUpdated}
-            />
-          )}
-        </section>
-
-        {!compactWorkspace && sidePanel}
+        {compactWorkspace ? (
+          mainSection
+        ) : (
+          <WorkspaceSplitBody
+            renderList={renderServerList}
+            main={mainSection}
+            side={sidePanel}
+          />
+        )}
       </div>
 
       {compactWorkspace && (
@@ -323,7 +342,7 @@ export function ServerWorkspacePage(props: Props): ReactElement {
               body: classes.drawerBody,
             }}
           >
-            <div className={classes.drawerPanel}>{serverListPanel}</div>
+            <div className={classes.drawerPanel}>{renderServerList()}</div>
           </Drawer>
 
           <Drawer

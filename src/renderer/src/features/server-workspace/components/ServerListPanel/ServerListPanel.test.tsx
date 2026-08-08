@@ -1,5 +1,6 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { ServerListPanel } from "./ServerListPanel";
@@ -80,5 +81,114 @@ describe("ServerListPanel", () => {
         return /TheIsland_WP|theIsland|maps/i.test(src);
       }),
     ).toBe(true);
+  });
+
+  it("groups by cluster and uses status dots instead of badges (#107)", () => {
+    render(
+      <AppProviders>
+        <ServerListPanel
+          servers={[
+            profile({ id: "a", name: "Island", clusterId: "Alpha" }),
+            profile({ id: "b", name: "Scorched", clusterId: "Alpha", map: "ScorchedEarth_WP" }),
+            profile({ id: "c", name: "Solo", clusterId: null }),
+          ]}
+          selectedServerId="a"
+          statuses={new Map([["a", { status: "running" } as ServerRuntimeInfo]])}
+          onSelectServer={() => undefined}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("Alpha")).toBeInTheDocument();
+    expect(screen.getByText("Unclustered")).toBeInTheDocument();
+    expect(screen.queryByText("Running")).not.toBeInTheDocument();
+    expect(screen.getByText("Island")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Island · TheIsland_WP · Running/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("hides labels and exposes rail tooltips in icon mode (#107)", () => {
+    render(
+      <AppProviders>
+        <ServerListPanel
+          servers={[profile()]}
+          selectedServerId="srv-1"
+          statuses={new Map()}
+          iconMode
+          onSelectServer={() => undefined}
+          onAddServer={() => undefined}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.queryByText("All servers")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Search servers")).not.toBeInTheDocument();
+    expect(screen.queryByText("The Island")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /The Island · TheIsland_WP · Stopped/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add server" })).toBeInTheDocument();
+  });
+
+  it("calls onToggleRail from the header control (#107)", async () => {
+    const user = userEvent.setup();
+    const onToggleRail = vi.fn();
+    render(
+      <AppProviders>
+        <ServerListPanel
+          servers={[profile()]}
+          selectedServerId="srv-1"
+          statuses={new Map()}
+          onToggleRail={onToggleRail}
+          onSelectServer={() => undefined}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Collapse to icon rail" }));
+    expect(onToggleRail).toHaveBeenCalledTimes(1);
+  });
+
+  it("separates icon-rail clusters with dividers (#107)", () => {
+    render(
+      <AppProviders>
+        <ServerListPanel
+          servers={[
+            profile({ id: "a", name: "Island", clusterId: "Alpha" }),
+            profile({ id: "b", name: "Solo", clusterId: null }),
+          ]}
+          selectedServerId="a"
+          statuses={new Map()}
+          iconMode
+          onSelectServer={() => undefined}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("group", { name: "Alpha" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Unclustered" })).toBeInTheDocument();
+    expect(screen.getByRole("separator", { name: "Unclustered cluster" })).toBeInTheDocument();
+  });
+
+  it("keeps the selected server visible when its cluster would collapse (#107)", () => {
+    render(
+      <AppProviders>
+        <ServerListPanel
+          servers={[
+            profile({ id: "a", name: "Island", clusterId: "Alpha" }),
+            profile({ id: "b", name: "Scorched", clusterId: "Alpha", map: "ScorchedEarth_WP" }),
+            profile({ id: "c", name: "Solo", clusterId: null }),
+          ]}
+          selectedServerId="a"
+          statuses={new Map()}
+          onSelectServer={() => undefined}
+        />
+      </AppProviders>,
+    );
+
+    const alphaHeader = screen.getByRole("button", { name: /^Alpha\s*2$/i });
+    alphaHeader.click();
+    expect(screen.getByText("Island")).toBeInTheDocument();
   });
 });

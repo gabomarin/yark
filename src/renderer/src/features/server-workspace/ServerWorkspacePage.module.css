@@ -9,8 +9,7 @@
 }
 
 .body {
-  display: grid;
-  grid-template-columns: 280px minmax(0, 1fr) 260px;
+  display: flex;
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -18,6 +17,7 @@
 }
 
 .body[data-compact] {
+  display: grid;
   grid-template-columns: minmax(0, 1fr);
 }
 
@@ -126,6 +126,7 @@
   }
 
   .body {
+    display: grid;
     grid-template-columns: 1fr;
   }
 

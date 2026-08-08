@@ -86,4 +86,25 @@ describe("Sidebar YARK version update affordance", () => {
     await user.click(button);
     expect(onYarkUpdateClick).toHaveBeenCalledTimes(1);
   });
+
+  it("shows icon-only nav with tooltips in rail mode (#107)", () => {
+    render(
+      <AppProviders>
+        <Sidebar
+          route="overview"
+          onNavigate={vi.fn()}
+          steamCmdDetected
+          steamCmdRunning={false}
+          officialVersion="1.0"
+          officialNetworkStatus="online"
+          appVersion="0.5.2"
+          iconMode
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("button", { name: "Servers" })).toBeInTheDocument();
+    expect(screen.queryByText("Official version ARK")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "SteamCMD ready" })).toBeInTheDocument();
+  });
 });

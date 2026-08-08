@@ -8,6 +8,7 @@ import {
   SquaresFour,
 } from "@phosphor-icons/react";
 import {
+  ActionIcon,
   Button,
   Divider,
   Group,
@@ -19,6 +20,7 @@ import {
 } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import type { OfficialNetworkStatus } from "@shared/types";
+import { Fragment } from "react";
 import yarkLogo from "../../assets/brand/yark-logo.png";
 import classes from "./Sidebar.module.css";
 
@@ -49,6 +51,8 @@ interface Props {
   /** When set, accent the sidebar version and allow click-through to Settings. */
   yarkUpdateAvailableVersion?: string | null;
   onYarkUpdateClick?: () => void;
+  /** Icon-only chrome rail (#107 recipe). */
+  iconMode?: boolean;
 }
 
 function officialVersionTooltip(
@@ -70,6 +74,7 @@ function officialVersionTooltip(
 export function Sidebar(props: Props): ReactElement {
   const density = useUiDensity();
   const compact = density === "compact";
+  const iconMode = props.iconMode === true;
   const navIconSize = compact ? 16 : 18;
   // Keep secondary sidebar copy readable in Compact without enlarging Comfortable.
   const metadataTextSize = compact ? "sm" : "xs";
@@ -99,27 +104,38 @@ export function Sidebar(props: Props): ReactElement {
   );
 
   return (
-    <MantineStack gap={compact ? "sm" : "md"} className={classes.sidebar}>
-      <div className={classes.brand}>
-        <img
-          src={yarkLogo}
-          alt="YARK server manager"
-          className={classes.brandLockup}
-          draggable={false}
-        />
+    <MantineStack
+      gap={compact ? "sm" : "md"}
+      align={iconMode ? "center" : undefined}
+      className={classes.sidebar}
+      data-icon-mode={iconMode || undefined}
+    >
+      <div className={classes.brandRow}>
+        <div className={classes.brand}>
+          <img
+            src={yarkLogo}
+            alt="YARK server manager"
+            className={classes.brandLockup}
+            draggable={false}
+          />
+        </div>
       </div>
 
-      <MantineStack gap={compact ? "xxs" : "xs"} className={classes.nav}>
+      <MantineStack
+        gap={compact ? "xxs" : "xs"}
+        align={iconMode ? "center" : undefined}
+        className={classes.nav}
+      >
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const active = item.id === props.route;
-          return (
+          const link = (
             <NavLink
-              key={item.id}
               component="button"
               type="button"
               active={active}
-              label={item.label}
+              label={iconMode ? undefined : item.label}
+              aria-label={item.label}
               leftSection={
                 <Icon size={navIconSize} weight={active ? "fill" : "regular"} />
               }
@@ -127,54 +143,118 @@ export function Sidebar(props: Props): ReactElement {
               onClick={() => props.onNavigate(item.id)}
             />
           );
+          if (!iconMode) {
+            return <Fragment key={item.id}>{link}</Fragment>;
+          }
+          return (
+            <Tooltip key={item.id} label={item.label} position="right" withArrow openDelay={200}>
+              {link}
+            </Tooltip>
+          );
         })}
       </MantineStack>
 
       <Divider className={classes.rule} />
 
-      <Button
-        size="md"
-        variant="subtle"
-        justify="flex-start"
-        leftSection={
-          <Circle
-            size={compact ? 10 : 12}
-            weight="fill"
-            className={props.steamCmdDetected ? classes.okDot : classes.badDot}
-          />
-        }
-        className={`${classes.steamCmdButton}`}
-        onClick={() => props.onNavigate("settings")}
-      >
-        {steamCmdLabel}
-      </Button>
-
-      <div className={classes.versionChip}>
-        <Tooltip label="ARK Official Server Network" position="right">
-          <Text size={metadataTextSize} fw={600}>Official version ARK</Text>
+      {iconMode ? (
+        <Tooltip label={steamCmdLabel} position="right" withArrow>
+          <ActionIcon
+            variant="subtle"
+            size="lg"
+            aria-label={steamCmdLabel}
+            className={classes.steamCmdIcon}
+            onClick={() => props.onNavigate("settings")}
+          >
+            <Circle
+              size={compact ? 10 : 12}
+              weight="fill"
+              className={props.steamCmdDetected ? classes.okDot : classes.badDot}
+            />
+          </ActionIcon>
         </Tooltip>
-        <Tooltip label={versionTooltip} multiline={deploying || offline} w={deploying || offline ? 260 : undefined} position="right">
-          <Group gap={6} wrap="nowrap" className={classes.versionRow}>
-            {(deploying || offline) && (
-              <Circle
-                size={compact ? 8 : 9}
-                weight="fill"
-                className={statusDotClass}
-                aria-label={
-                  deploying ? "Official network deploying" : "Official network offline"
-                }
-              />
-            )}
-            <Text size={versionTextSize} className={versionToneClass}>
-              {props.officialVersion ?? "Not detected"}
+      ) : (
+        <Button
+          size="md"
+          variant="subtle"
+          justify="flex-start"
+          leftSection={
+            <Circle
+              size={compact ? 10 : 12}
+              weight="fill"
+              className={props.steamCmdDetected ? classes.okDot : classes.badDot}
+            />
+          }
+          className={classes.steamCmdButton}
+          onClick={() => props.onNavigate("settings")}
+        >
+          {steamCmdLabel}
+        </Button>
+      )}
+
+      {!iconMode && (
+        <div className={classes.versionChip}>
+          <Tooltip label="ARK Official Server Network" position="right">
+            <Text size={metadataTextSize} fw={600}>
+              Official version ARK
             </Text>
-          </Group>
-        </Tooltip>
-      </div>
+          </Tooltip>
+          <Tooltip
+            label={versionTooltip}
+            multiline={deploying || offline}
+            w={deploying || offline ? 260 : undefined}
+            position="right"
+          >
+            <Group gap={6} wrap="nowrap" className={classes.versionRow}>
+              {(deploying || offline) && (
+                <Circle
+                  size={compact ? 8 : 9}
+                  weight="fill"
+                  className={statusDotClass}
+                  aria-label={
+                    deploying ? "Official network deploying" : "Official network offline"
+                  }
+                />
+              )}
+              <Text size={versionTextSize} className={versionToneClass}>
+                {props.officialVersion ?? "Not detected"}
+              </Text>
+            </Group>
+          </Tooltip>
+        </div>
+      )}
 
-      {props.yarkUpdateAvailableVersion != null
-        && props.yarkUpdateAvailableVersion !== ""
-        && props.onYarkUpdateClick !== undefined ? (
+      {iconMode ? (
+        <Tooltip
+          label={
+            props.yarkUpdateAvailableVersion
+              ? `YARK v${props.appVersion} — update ${props.yarkUpdateAvailableVersion} available`
+              : `YARK v${props.appVersion}`
+          }
+          position="right"
+          withArrow
+        >
+          {props.yarkUpdateAvailableVersion != null &&
+          props.yarkUpdateAvailableVersion !== "" &&
+          props.onYarkUpdateClick !== undefined ? (
+            <UnstyledButton
+              className={classes.appVersionUpdate}
+              onClick={props.onYarkUpdateClick}
+              aria-label={`YARK update available, version ${props.yarkUpdateAvailableVersion}`}
+              data-yark-update-version
+            >
+              <Text size={metadataTextSize} className={classes.appVersionUpdateText}>
+                v{props.appVersion}
+              </Text>
+            </UnstyledButton>
+          ) : (
+            <Text size={metadataTextSize} c="dimmed" data-yark-app-version className={classes.appVersionRail}>
+              v{props.appVersion}
+            </Text>
+          )}
+        </Tooltip>
+      ) : props.yarkUpdateAvailableVersion != null &&
+        props.yarkUpdateAvailableVersion !== "" &&
+        props.onYarkUpdateClick !== undefined ? (
         <Tooltip
           label={`YARK update available (v${props.yarkUpdateAvailableVersion}) — open Settings to update`}
           multiline
