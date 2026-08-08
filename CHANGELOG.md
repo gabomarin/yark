@@ -22,6 +22,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Operator docs and website cover CurseForge **Maps** / custom map launch (Mods → Map select → Start checks) from the #65 spike outcomes (#192, #194, #195).
 - Newly added Mods start **disabled**; enable them explicitly before they appear in `-mods=` / Map mods.
 - Sidebar route items use Mantine **NavLink** (active state + icons) while keeping YARK brand chrome (#106).
 - Launch-options catalog copy is cleaned from wiki noise into **summary + details**, with a pasteable **example** per entry (#92).

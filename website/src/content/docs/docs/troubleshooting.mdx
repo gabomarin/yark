@@ -41,7 +41,18 @@ Timeout after ~10 minutes → status **error** and process terminated.
 
 ## Mods “not working”
 
-YARK only passes Project IDs on the command line. Confirm IDs, enable flags, restart, and that mod files actually exist for the dedicated server outside YARK.
+YARK only passes Project IDs on the command line. Confirm IDs, enable flags, restart, and that mod files actually exist for the dedicated server outside YARK. Newly added mods start **disabled** until you enable them.
+
+## Custom / Maps pack will not start
+
+| Check | Detail |
+| --- | --- |
+| Map selection | Server Information → Map is the pack under **Map mods**, or **Custom…** with the author token (e.g. `Svartalfheim_WP`) |
+| Mods enable | The same Project ID is **enabled** on the Mods tab (appears in Launch `-mods=`) |
+| Start / Launch alert | Yellow Launch warning or Start blocked → fix missing / disabled / unset map-mod link |
+| Mod files | YARK does not download map packs — content must exist for the dedicated server as usual |
+
+Official maps do not need a linked map-mod ID. See [Mods → Maps / custom worlds](/docs/mods/#maps--custom-worlds).
 
 ## Still stuck?
 

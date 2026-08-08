@@ -76,6 +76,19 @@ export const faqItems: FaqItem[] = [
       </p>`,
   },
   {
+    question: "Can I run CurseForge Maps / custom ASA worlds?",
+    answerHtml: `
+      <p>
+        Yes. Enable the map pack on the <strong>Mods</strong> tab, then choose it under
+        Server Information → <strong>Map</strong> (<strong>Map mods</strong> group, or
+        <strong>Custom…</strong> with the author launch token such as
+        <code>Svartalfheim_WP</code>). Enabling a Maps mod does not change your current map —
+        you pick when to switch. Start is blocked if the custom map’s linked pack is missing or
+        disabled. See
+        <a href="${import.meta.env.BASE_URL}docs/mods/#maps--custom-worlds">Mods → Maps / custom worlds</a>.
+      </p>`,
+  },
+  {
     question: "How do backups work?",
     answerHtml: `
       <p>

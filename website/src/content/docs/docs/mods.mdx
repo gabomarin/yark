@@ -1,6 +1,6 @@
 ---
 title: Mods
-description: CurseForge Project IDs, enable/disable, launch -mods=, and metadata limits.
+description: CurseForge Project IDs, enable/disable, Maps packs, launch -mods=, and metadata limits.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
@@ -12,6 +12,7 @@ The Workspace **Mods** tab stores CurseForge **Project IDs** per profile.
 
 - **Enabled** IDs are passed at launch as `-mods=id1,id2,…`
 - **Disabled** IDs stay on the profile until you turn them back on (no need to delete an ID to skip one boot)
+- Newly added IDs start **disabled** — enable them explicitly before they appear on `-mods=`
 - Names / summaries / links come from a small Cloudflare Worker proxy and are cached locally
 
 <figure class="doc-shot">
@@ -24,6 +25,32 @@ The Workspace **Mods** tab stores CurseForge **Project IDs** per profile.
   />
   <figcaption>Mods — Project IDs, enable/disable, and Worker-backed metadata per server.</figcaption>
 </figure>
+
+## Maps / custom worlds
+
+CurseForge **Maps** packs are ordinary Project IDs on `-mods=` — ASA does **not** use legacy
+`ActiveMapMod` / `-MapModID=` for these boots. A correct custom-map server needs **both**:
+
+1. The map pack Project ID **enabled** on this Mods tab, and  
+2. The author launch token selected under **Server Information → Map** (see [Profiles & ports](/docs/profiles-and-ports/))
+
+### Happy path
+
+1. Add the map pack Project ID (or URL) on Mods — it starts disabled  
+2. **Enable** it — YARK shows a toast that the mod is available under Map; your current map is **not** changed  
+3. Open the **Server** tab → **Map** → pick the pack under **Map mods** (or **Custom…** if you must type the token yourself)  
+4. Check **Launch** preview, then **Start**
+
+Enabling a Maps mod never overwrites the map you already have. You choose when to switch.
+
+If YARK can read a `Map Name:` / `Server Name:` / `*_WP` token from CurseForge metadata, the pack
+appears under **Map mods**. If not, use **Custom…** with the token from the author page, and keep
+the map pack enabled on Mods.
+
+<Aside type="tip">
+  Start is blocked when a custom map’s linked map mod is missing, disabled, or unset. Fix the Map
+  selection or enable the pack, then try again — see [Start, stop, restart](/docs/lifecycle/).
+</Aside>
 
 ## What YARK does not do
 
@@ -38,5 +65,6 @@ The Workspace **Mods** tab stores CurseForge **Project IDs** per profile.
 2. Restart after changing the enabled set so the new `-mods=` list applies
 3. Back up the world before enabling mods a world already depends on (or before removing them)
 4. Cluster members that transfer together usually need compatible mod sets
+5. For map packs, confirm both **enabled on Mods** and the correct **Map** token before Start
 
 Deeper CurseForge browsing (beyond IDs + metadata) is future work; today’s tab is the supported surface.

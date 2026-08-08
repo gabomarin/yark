@@ -1,6 +1,14 @@
 # Spike #65: Modded ASA maps beyond `KNOWN_MAPS`
 
-Research spike (not production UX). Branch: `spike/65-modded-maps`.
+Research spike and live-validation archive. Branch: `spike/65-modded-maps`.
+
+**Phase 1 status (shipped / in PR):** `mapModId` persistence (#190), Custom… + Map mods
+grouped select (#191 / #192), enable toast without overwriting map (#192), Worker
+Maps-only description (#195), Launch alert + Start blockers (#194). Operator docs:
+website **Mods → Maps / custom worlds**, **Profiles & ports → Map field**, **Start, stop,
+restart → Map identity checks**. Engineering SoT: [server-lifecycle.md](../server-lifecycle.md)
+(Custom / modded maps). Remaining: optional custom-map thumb (#193); optional companion
+Project ID field polish under #191.
 
 ## Launch contract (current ASA / YARK)
 
@@ -11,13 +19,16 @@ Research spike (not production UX). Branch: `spike/65-modded-maps`.
 | ASE `ActiveMapMod` / `ActiveMods` | **Not used** — stripped as `aseLegacy` |
 | Obsolete `-MapModID=` | Catalogued **unsupported**; live checklist must confirm map token + `-mods=` is enough |
 
-YARK already accepts any non-empty `profile.map` string in validation. Server Information supports **Custom…** map tokens on this spike branch. CurseForge `ModMetadata` has **no** dedicated launch-map field today (`summary`, `categories`, `thumbnailUrl` only — Worker does not return full description HTML).
+YARK accepts any non-empty `profile.map` string in validation. Server Information groups
+**Official / Map mods / Custom…**; optional `mapModId` links a custom token to its pack.
+Worker returns truncated plain-text `description` for **Maps**-category mods only (not search
+rows; not every batch item).
 
-Prototype helpers / UI:
+Helpers / UI:
 
-- [`src/shared/map-identity.ts`](../../src/shared/map-identity.ts) — official vs custom, validation, thumb fallback
-- [`src/shared/map-token-suggest.ts`](../../src/shared/map-token-suggest.ts) — Maps category + `Map Name` / `Server Name` / `*_WP` heuristics
-- [`ServerFormMapField`](../../src/renderer/src/features/servers/components/ServerForm/ServerFormMapField.tsx) — Custom… control
+- [`src/shared/map-identity.ts`](../../src/shared/map-identity.ts) — official vs custom, validation, Start blockers
+- [`src/shared/map-token-suggest.ts`](../../src/shared/map-token-suggest.ts) — Maps category + `Map Name` / `Server Name` / `*_WP` heuristics (uses `description` when present)
+- [`ServerFormMapField`](../../src/renderer/src/features/servers/components/ServerForm/ServerFormMapField.tsx) — grouped Map select
 
 ## Evidence catalog
 
@@ -44,7 +55,9 @@ Unit fixtures for extraction live in `tests/unit/map-token-suggest.test.ts`.
 
 **Conclusion:** reliable auto-suggest needs either (a) Worker/`ModMetadata` optional plain-text `description` (or equivalent), or (b) operator-entered custom map in Server Information. Phase 1 must ship **(b)** regardless; **(a)** unlocks high hit-rate Mods-panel prompts. Do **not** scrape CurseForge HTML from the Electron app.
 
-**Phase 1 (#192 / #195):** no Project ID catalog. Worker exposes truncated description; Mods enable toasts and Map Select groups Official / Map mods / Custom….
+**Phase 1 (#192 / #195) — shipped:** no Project ID catalog. Worker exposes truncated
+description for Maps mods; enable toast (no map overwrite); Map Select groups Official /
+Map mods / Custom….
 
 ## Ticket questions
 
@@ -69,18 +82,17 @@ If either side is missing or the linked `mapModId` is disabled / not on the mods
 
 `validateMapIdentity` already returns warnings for “not on mods list” / “disabled”; wire those into UI/start in #194.
 
-## Phase 1 product recommendation
+## Phase 1 product recommendation (as shipped)
 
-1. **Happy path:** enable a Maps-category mod → extract token when possible → confirm dialog (editable) → set `map` + `mapModId`.
-2. **Fallback (required):** Server Information → Map → **Custom…** free-text launch token when extract fails or operator declines. (**Shipped on this spike branch** via `ServerFormMapField`.)
-3. **Consistency alerts:** custom map without enabled map mod (or `mapModId` mismatch) → warn operator (#194).
-4. **Thumb:** bundled art for official; mod logo (`thumbnailUrl`) for custom when `mapModId` is linked.
-5. **Failure:** empty/invalid token blocks save/start; missing/disabled map mod warns (or blocks start after #190).
-6. Persist `mapModId` in SQLite in the implementation PR (#190).
+1. **Happy path:** enable a Maps-category mod → toast (map unchanged) → operator picks under Map → **Map mods** → sets `map` + `mapModId`. (No confirm dialog; no hardcoded Project ID catalog.)
+2. **Fallback:** Server Information → Map → **Custom…** free-text launch token when extract fails.
+3. **Consistency alerts:** Launch yellow alert + **Start blocked** when custom map / `mapModId` inconsistent (#194).
+4. **Thumb:** bundled art for official; custom mod-logo thumb still [#193](https://github.com/gabomarin/yark/issues/193).
+5. **Failure:** empty/invalid token blocks save; missing/disabled/unset map mod blocks Start.
+6. Persist `mapModId` in SQLite (#190).
 
 ```text
-Enable Maps mod → extract? → confirm → map + mapModId
-                    └ miss / dismiss → Server Information Custom map name
+Enable Maps mod → toast (map unchanged) → Map → Map mods | Custom…
 ```
 
 ## Live validation (operator-owned Svartalfheim Premium)
@@ -103,34 +115,27 @@ Date: 2026-08-07. Install with Premium content; YARK profile on spike branch.
 2. **Both** custom map token and enabled map mod are required for a correct custom-map server; YARK should alert on inconsistency (#194).
 3. Join failures with `-exclusivejoin` and an empty whitelist are operator/config issues, not map-mod failures.
 
-## Prototype status
+## Prototype / Phase 1 status
 
 | Deliverable | Status |
 | --- | --- |
 | Evidence catalog + Q&A | Done (this doc) |
 | `map-identity` / `map-token-suggest` + unit tests | Done |
-| ServerForm **Custom…** map token | Done on spike branch (covers core of #191) |
-| Persist `mapModId`, Mods auto-suggest, thumbs, warnings, Worker description | Follow-up issues below |
+| ServerForm Official / Map mods / **Custom…** | Done (#191 / #192) |
+| Persist `mapModId` + clone / official clear | Done (#190) |
+| Mods enable toast (no map overwrite) | Done (#192) |
+| Worker Maps-only description | Done (#195) |
+| Launch alert + Start blockers | Done (#194) |
+| Custom map thumb from mod logo | Open [#193](https://github.com/gabomarin/yark/issues/193) |
 | Live boot | Validated end-to-end (install + advertise); join fixed after removing `-exclusivejoin` |
-
-## Implementation plan (Phase 1+)
-
-Recommended order after merging this spike:
-
-1. **[#190](https://github.com/gabomarin/yark/issues/190)** — Persist optional `mapModId`; wire `validateMapIdentity` / clone; keep config-transfer map as identity.
-2. **[#191](https://github.com/gabomarin/yark/issues/191)** — Close or slim: Custom Select already landed here; remaining = optional “Map mod Project ID” companion field + polish.
-3. **[#192](https://github.com/gabomarin/yark/issues/192)** — Mods enable → extract/confirm (needs #195 for high hit rate); on miss, hint to Custom map.
-4. **[#195](https://github.com/gabomarin/yark/issues/195)** — Worker optional description text for `Map Name:` heuristics.
-5. **[#193](https://github.com/gabomarin/yark/issues/193)** — Custom map thumb from mod `thumbnailUrl`.
-6. **[#194](https://github.com/gabomarin/yark/issues/194)** — **Priority product outcome:** Launch/start alerts when custom map is set but map mod is missing/disabled (or `mapModId` inconsistent). Spike confirmed this pairing is required for a correct boot.
 
 Do **not** revive `ActiveMapMod` / `-MapModID=` unless a later map fails the token + `-mods=` path.
 
 ## Follow-up issues
 
-1. [#190](https://github.com/gabomarin/yark/issues/190) — Persist `mapModId` + official/custom validation
-2. [#191](https://github.com/gabomarin/yark/issues/191) — ServerForm Custom map (partially done; remaining companion field)
-3. [#192](https://github.com/gabomarin/yark/issues/192) — Mods enable → extract/confirm; on miss, hint to Custom
+1. ~~[#190](https://github.com/gabomarin/yark/issues/190) — Persist `mapModId`~~ (shipped)
+2. [#191](https://github.com/gabomarin/yark/issues/191) — Optional companion Project ID field / polish (Custom… already shipped)
+3. ~~[#192](https://github.com/gabomarin/yark/issues/192) — Mods enable → Map select path~~ (toast + Map mods group; no confirm dialog)
 4. [#193](https://github.com/gabomarin/yark/issues/193) — Mod logo thumbnails for custom maps
-5. [#194](https://github.com/gabomarin/yark/issues/194) — Warn when map mod disabled/missing
-6. [#195](https://github.com/gabomarin/yark/issues/195) — CurseForge Worker description for heuristics
+5. ~~[#194](https://github.com/gabomarin/yark/issues/194) — Launch/start when map mod disabled/missing~~ (shipped)
+6. ~~[#195](https://github.com/gabomarin/yark/issues/195) — CurseForge Worker description for heuristics~~ (shipped; Maps-category only on batch)
