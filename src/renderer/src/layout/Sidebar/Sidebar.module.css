@@ -6,6 +6,11 @@
   background: transparent;
 }
 
+.sidebar[data-icon-mode] {
+  padding: var(--app-space-md) 0;
+  align-items: center;
+}
+
 .sidebar::after {
   position: absolute;
   top: 0;
@@ -21,9 +26,22 @@
   content: "";
 }
 
+.brandRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--app-space-xxs);
+}
+
+.sidebar[data-icon-mode] .brandRow {
+  justify-content: center;
+}
+
 .brand {
   display: flex;
   justify-content: center;
+  flex: 1;
+  min-width: 0;
   padding: var(--app-space-xxs) var(--app-space-xxs) var(--app-space-xs);
 }
 
@@ -39,8 +57,26 @@
   pointer-events: none;
 }
 
+.sidebar[data-icon-mode] .brand {
+  padding: var(--app-space-xxs) 0;
+}
+
+.sidebar[data-icon-mode] .brandLockup {
+  max-width: 40px;
+}
+
 .nav {
   flex: 1;
+  width: 100%;
+}
+
+.sidebar[data-icon-mode] .nav {
+  align-items: center;
+  width: 100%;
+}
+
+.sidebar[data-icon-mode] .steamCmdIcon {
+  align-self: center;
 }
 
 .navLink {
@@ -52,6 +88,22 @@
   --nl-bg: var(--ark-blue-a4);
   --nl-hover: var(--ark-blue-a3);
   --nl-color: var(--app-color-text);
+}
+
+.sidebar[data-icon-mode] .navLink {
+  width: 42px;
+  padding-inline: 0;
+  justify-content: center;
+}
+
+/* Body keeps flex:1 even with an empty label — hide it so the icon centers. */
+.sidebar[data-icon-mode] .navLink :global(.mantine-NavLink-body),
+.sidebar[data-icon-mode] .navLink :global(.mantine-NavLink-label) {
+  display: none;
+}
+
+.sidebar[data-icon-mode] .navLink :global(.mantine-NavLink-section[data-position="left"]) {
+  margin-inline: 0;
 }
 
 .navLink :global(.mantine-NavLink-label) {
@@ -74,6 +126,10 @@
   color: var(--app-color-text);
 }
 
+.steamCmdIcon {
+  color: var(--app-color-text);
+}
+
 .okDot {
   color: var(--app-color-ok);
 }
@@ -90,6 +146,7 @@
 .rule {
   border-color: color-mix(in srgb, var(--app-color-border) 28%, transparent);
   opacity: 0.7;
+  width: 100%;
 }
 
 .versionValue {
@@ -133,6 +190,10 @@
   padding: var(--app-space-md) var(--app-space-xs);
 }
 
+:global([data-ui-density="compact"]) .sidebar[data-icon-mode] {
+  padding: var(--app-space-sm) 0;
+}
+
 :global([data-ui-density="compact"]) .brand {
   padding: 0 var(--app-space-xxs) var(--app-space-xxs);
 }
@@ -141,8 +202,17 @@
   max-width: 140px;
 }
 
+:global([data-ui-density="compact"]) .sidebar[data-icon-mode] .brandLockup {
+  max-width: 36px;
+}
+
 :global([data-ui-density="compact"]) .navLink,
 :global([data-ui-density="compact"]) .steamCmdButton {
+  min-height: 34px;
+}
+
+:global([data-ui-density="compact"]) .sidebar[data-icon-mode] .navLink {
+  width: 34px;
   min-height: 34px;
 }
 
@@ -166,6 +236,13 @@
   padding: 2px 0;
   border-radius: var(--app-radius-control);
   color: var(--app-color-cryo);
+}
+
+.appVersionRail {
+  text-align: center;
+  font-size: 10px;
+  line-height: 1.2;
+  word-break: break-all;
 }
 
 .appVersionUpdate:hover {

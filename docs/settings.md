@@ -24,6 +24,7 @@ the Server tab / workspace.
 | Density load/migrate | `…/settingsModel.ts` |
 | Tray / Windows startup hook | `…/useDesktopShellPreferences.ts` |
 | Desktop-shell persist | `src/main/desktop-shell-settings.ts` |
+| Window bounds / maximized | `src/main/window-state.ts` (`app_settings.windowState`) |
 | Windows login item | `src/main/windows-login-item.ts` |
 | Tray icon / menu | `src/main/app-tray.ts` |
 | Shared keys / defaults | `src/shared/desktop-shell.ts`, `src/shared/ui-density.ts`, `src/shared/log-retention.ts`, `src/shared/app-update.ts` |
@@ -56,6 +57,7 @@ the Server tab / workspace.
 | Show notification when hiding to tray | SQLite `trayCloseHintDismissed` (UI inverted) | toast **on** | Visible only when close-to-tray is on |
 | Start with Windows | SQLite `startWithWindows` + `setLoginItemSettings` | **off** | App only — does **not** start ASA (#54 vs #53) |
 | Display size | SQLite `uiDensity` | **compact** | `compact` \| `comfortable`; see [design-system.md](design-system.md) |
+| Window size / position | SQLite `windowState` | **maximized** | Remembers last bounds + maximized; off-screen → maximize again |
 | Default base folder | `localStorage` `settings.defaultServerBaseFolder` | unset | Prefills create-server base path only |
 
 IPC for shell / density:

@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { AppProviders } from "./AppProviders";
 import { AppShellLayout } from "./AppShellLayout";
@@ -81,5 +82,30 @@ describe("AppShellLayout", () => {
     expect(screen.getByRole("alertdialog")).toHaveAttribute("data-app-busy-overlay");
     expect(screen.getByText("Stopping server")).toBeInTheDocument();
     expect(screen.getByText("Island: Saving world…")).toBeInTheDocument();
+  });
+
+  it("renders a Docker-style sidebar rail edge toggle (#107)", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AppProviders density="compact">
+        <AppShellLayout
+          route="overview"
+          onNavigate={vi.fn()}
+          steamCmdDetected={false}
+          steamCmdRunning={false}
+          officialVersion={null}
+          officialNetworkStatus="unknown"
+          appVersion="0.1.0"
+        >
+          <div>page-body</div>
+        </AppShellLayout>
+      </AppProviders>,
+    );
+
+    const toggle = screen.getByRole("button", { name: "Collapse to icon rail" });
+    expect(toggle).toBeInTheDocument();
+    await user.click(toggle);
+    expect(screen.getByRole("button", { name: "Expand navigation" })).toBeInTheDocument();
   });
 });

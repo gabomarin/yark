@@ -109,6 +109,8 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   >(new Map());
   const [route, setRoute] = useState<Route>("overview");
   const [overlay, setOverlay] = useState<Overlay>(null);
+  /** Dirty-leave guard registered by ServerWorkspacePage while the overlay is open. */
+  const workspaceLeaveGuardRef = useRef<((action: () => void) => void) | null>(null);
   const [copyConfig, setCopyConfig] = useState<CopyConfigSession | null>(null);
   const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState(
     readOpenNativeTerminalPref,
@@ -1090,9 +1092,24 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   );
 
   const navigate = useCallback((next: Route) => {
-    setOverlay(null);
-    setRoute(next);
+    const go = () => {
+      setOverlay(null);
+      setRoute(next);
+    };
+    const guard = workspaceLeaveGuardRef.current;
+    if (guard !== null) {
+      guard(go);
+      return;
+    }
+    go();
   }, []);
+
+  const registerWorkspaceLeaveGuard = useCallback(
+    (guard: ((action: () => void) => void) | null) => {
+      workspaceLeaveGuardRef.current = guard;
+    },
+    [],
+  );
 
   const renderMain = (): ReactElement => {
     if (overlay?.kind === "workspace") {
@@ -1166,6 +1183,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
                 logsFocus: null,
               })
             }
+            onRegisterLeaveGuard={registerWorkspaceLeaveGuard}
             onBack={() => setOverlay(null)}
             onCreateServer={() => setOverlay({ kind: "create" })}
             onStartServer={(id) => void startServer(id)}

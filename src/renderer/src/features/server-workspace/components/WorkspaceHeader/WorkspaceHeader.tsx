@@ -1,6 +1,5 @@
 import type { ReactElement } from "react";
 import {
-  ArrowLeft,
   ArrowsClockwise,
   Eye,
   HardDrives,
@@ -9,14 +8,12 @@ import {
   Wrench,
 } from "@phosphor-icons/react";
 import {
-  ActionIcon,
   Badge,
   Button,
   Group,
   Stack,
   Text,
   Title,
-  Tooltip,
 } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { isInstallationReady } from "@shared/installation-health";
@@ -33,7 +30,6 @@ interface Props {
   /** SteamCMD is rewriting this install — block start/restart like a live process. */
   filesJobActive?: boolean;
   filesJobReason?: string;
-  onBack: () => void;
   onStart: () => void;
   onStop: () => void;
   onRestart: () => void;
@@ -65,17 +61,6 @@ export function WorkspaceHeader(props: Props): ReactElement {
   return (
     <header className={classes.header}>
       <Group gap="sm" align="flex-start" wrap="nowrap" className={classes.identity}>
-        <Tooltip label="Back to servers">
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            size="md"
-            aria-label="Back to servers"
-            onClick={props.onBack}
-          >
-            <ArrowLeft size={18} />
-          </ActionIcon>
-        </Tooltip>
         <MapArtThumb
           mapId={props.server.map}
           mapModId={props.server.mapModId}

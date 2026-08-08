@@ -1,0 +1,46 @@
+.root {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.listPane {
+  flex-shrink: 0;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  transition: flex-basis 180ms ease, width 180ms ease;
+  border-right: 1px solid var(--app-color-border-subtle);
+}
+
+.listPane > aside {
+  height: 100%;
+  border-right: 0;
+}
+
+.mainPane {
+  flex: 1 1 0%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.mainPane > section {
+  height: 100%;
+}
+
+.side {
+  flex-shrink: 0;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.side > aside {
+  height: 100%;
+}
