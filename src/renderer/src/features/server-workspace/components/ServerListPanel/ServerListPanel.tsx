@@ -34,7 +34,7 @@ interface Props {
   onToggleRail?: () => void;
 }
 
-function railTooltipLabel(server: ServerProfile, status: string): string {
+function rowAccessibleName(server: ServerProfile, status: string): string {
   const parts = [server.name, server.map, serverRuntimeStatusLabel(status)];
   if (!server.enabled) {
     parts.push("Inactive");
@@ -53,11 +53,11 @@ function ServerRow(props: {
   onSelect: () => void;
 }): ReactElement {
   const tone = serverRuntimeStatusTone(props.status);
-  const tip = railTooltipLabel(props.server, props.status);
+  const accessibleName = rowAccessibleName(props.server, props.status);
 
   return (
     <Tooltip
-      label={tip}
+      label={accessibleName}
       position="right"
       withArrow
       openDelay={200}
@@ -67,7 +67,7 @@ function ServerRow(props: {
         className={classes.item}
         data-selected={props.selected || undefined}
         data-status-tone={tone}
-        aria-label={props.iconMode ? tip : undefined}
+        aria-label={accessibleName}
         onClick={props.onSelect}
       >
         <span className={classes.thumbWrap}>
@@ -81,15 +81,14 @@ function ServerRow(props: {
             }
             size="sm"
             shape="rounded"
-            decorative={!props.iconMode}
-            label={props.iconMode ? props.server.name : undefined}
+            decorative
             className={classes.thumb}
           />
           {props.iconMode && <span className={classes.statusDot} aria-hidden="true" />}
         </span>
         {!props.iconMode && (
           <>
-            <span className={classes.itemBody}>
+            <span className={classes.itemBody} aria-hidden="true">
               <Text className={classes.itemName} fw={600} title={props.server.name} lineClamp={1}>
                 {props.server.name}
               </Text>

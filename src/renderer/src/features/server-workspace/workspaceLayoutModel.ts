@@ -69,24 +69,23 @@ export interface ServerClusterGroup {
   servers: ServerProfile[];
 }
 
-/** Group servers by `clusterId`; null/empty → Unclustered. Stable label sort with Unclustered last. */
+/** Group servers by `clusterId`; null/empty → Unclustered (key `""`, never collides with a real id). */
 export function groupServersByCluster(servers: ServerProfile[]): ServerClusterGroup[] {
   const map = new Map<string, ServerProfile[]>();
   for (const server of servers) {
-    const raw = server.clusterId?.trim() ?? "";
-    const key = raw.length > 0 ? raw : "__unclustered__";
+    const key = server.clusterId?.trim() ?? "";
     const list = map.get(key) ?? [];
     list.push(server);
     map.set(key, list);
   }
   const groups: ServerClusterGroup[] = [...map.entries()].map(([key, groupServers]) => ({
     key,
-    label: key === "__unclustered__" ? "Unclustered" : key,
+    label: key.length === 0 ? "Unclustered" : key,
     servers: groupServers,
   }));
   groups.sort((a, b) => {
-    if (a.key === "__unclustered__") return 1;
-    if (b.key === "__unclustered__") return -1;
+    if (a.key.length === 0) return 1;
+    if (b.key.length === 0) return -1;
     return a.label.localeCompare(b.label, undefined, { sensitivity: "base" });
   });
   return groups;

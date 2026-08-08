@@ -103,6 +103,9 @@ describe("ServerListPanel", () => {
     expect(screen.getByText("Unclustered")).toBeInTheDocument();
     expect(screen.queryByText("Running")).not.toBeInTheDocument();
     expect(screen.getByText("Island")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Island · TheIsland_WP · Running/i }),
+    ).toBeInTheDocument();
   });
 
   it("hides labels and exposes rail tooltips in icon mode (#107)", () => {
@@ -184,7 +187,7 @@ describe("ServerListPanel", () => {
       </AppProviders>,
     );
 
-    const alphaHeader = screen.getByRole("button", { name: /Alpha/i });
+    const alphaHeader = screen.getByRole("button", { name: /^Alpha\s*2$/i });
     alphaHeader.click();
     expect(screen.getByText("Island")).toBeInTheDocument();
   });

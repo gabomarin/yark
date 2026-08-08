@@ -71,6 +71,15 @@ describe("workspaceLayoutModel", () => {
     ]);
     expect(groups.map((g) => g.label)).toEqual(["Alpha", "Beta", "Unclustered"]);
     expect(groups[0]?.servers).toHaveLength(2);
+    expect(groups[2]?.key).toBe("");
     expect(groups[2]?.servers[0]?.id).toBe("u");
+  });
+
+  it("keeps a literal cluster id that looks like a sentinel", () => {
+    const groups = groupServersByCluster([
+      profile({ id: "u", name: "Solo", clusterId: null }),
+      profile({ id: "s", name: "Named", clusterId: "__unclustered__" }),
+    ]);
+    expect(groups.map((g) => g.label)).toEqual(["__unclustered__", "Unclustered"]);
   });
 });
