@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
@@ -179,5 +179,65 @@ describe("ServerForm", () => {
     await user.clear(screen.getByLabelText(/custom map name/i));
     await user.type(screen.getByLabelText(/custom map name/i), "Amissa_WP");
     expect(screen.getByLabelText(/custom map name/i)).toHaveValue("Amissa_WP");
+  });
+
+  it("lists enabled Map mods in a grouped Map select (#192)", async () => {
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    window.api = {
+      ...(window.api ?? {}),
+      updateServer: vi.fn(async (_id, input) => ({
+        ok: true as const,
+        data: profile({ ...input, id: "srv-svart" }),
+      })),
+    } as typeof window.api;
+
+    render(
+      <AppProviders>
+        <ServerForm
+          initial={profile({
+            id: "srv-svart",
+            name: "Svart",
+            map: "TheIsland_WP",
+            mods: ["962796"],
+            disabledMods: [],
+            modMetadataCache: {
+              "962796": {
+                id: "962796",
+                name: "Svartalfheim Premium",
+                summary: "Map pack",
+                description: "Map Name: Svartalfheim_WP",
+                thumbnailUrl: null,
+                authors: ["Author"],
+                downloadCount: 1,
+                dateModified: "2026-01-01T00:00:00.000Z",
+                curseforgeUrl:
+                  "https://www.curseforge.com/ark-survival-ascended/mods/svartalfheim-premium",
+                slug: "svartalfheim-premium",
+                categories: ["Maps"],
+              },
+            },
+          })}
+          onCancel={vi.fn()}
+          onSaved={onSaved}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("combobox", { name: /^map$/i }));
+    expect(await screen.findByText("Map mods")).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("option", { name: /^Svartalfheim Premium$/i }),
+    );
+    await user.click(screen.getByRole("button", { name: /save/i }));
+    await waitFor(() => {
+      expect(window.api.updateServer).toHaveBeenCalledWith(
+        "srv-svart",
+        expect.objectContaining({
+          map: "Svartalfheim_WP",
+          mapModId: "962796",
+        }),
+      );
+    });
   });
 });

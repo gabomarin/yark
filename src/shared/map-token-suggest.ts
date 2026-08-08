@@ -61,12 +61,16 @@ export function suggestMapTokenFromModText(text: string): MapTokenSuggestion | n
 
 /**
  * Prefer richer description text when present; otherwise name + summary + slug.
- * Does not fetch network — caller supplies description if the Worker exposes it.
+ * Description normally carries `Map Name:` for map packs (#195).
  */
 export function buildModMapSuggestHaystack(
-  meta: Pick<ModMetadata, "name" | "summary" | "slug">,
-  description?: string | null,
+  meta: Pick<ModMetadata, "name" | "summary" | "slug" | "description">,
+  descriptionOverride?: string | null,
 ): string {
+  const description =
+    descriptionOverride !== undefined && descriptionOverride !== null
+      ? descriptionOverride
+      : (meta.description ?? null);
   const parts = [meta.name, meta.summary, meta.slug];
   if (description && description.trim().length > 0) {
     parts.push(description);
@@ -75,8 +79,10 @@ export function buildModMapSuggestHaystack(
 }
 
 export function suggestMapTokenFromMetadata(
-  meta: Pick<ModMetadata, "name" | "summary" | "slug" | "categories">,
-  description?: string | null,
+  meta: Pick<ModMetadata, "name" | "summary" | "slug" | "categories" | "description">,
+  descriptionOverride?: string | null,
 ): MapTokenSuggestion | null {
-  return suggestMapTokenFromModText(buildModMapSuggestHaystack(meta, description));
+  return suggestMapTokenFromModText(
+    buildModMapSuggestHaystack(meta, descriptionOverride),
+  );
 }

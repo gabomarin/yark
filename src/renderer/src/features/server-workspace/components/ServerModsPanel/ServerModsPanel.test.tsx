@@ -1,5 +1,6 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { notifications } from "@mantine/notifications";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import type { RendererApi } from "@shared/ipc";
@@ -33,6 +34,21 @@ const superDetail: ModMetadata = {
     "https://www.curseforge.com/ark-survival-ascended/mods/super-spyglass-plus",
   slug: "super-spyglass-plus",
   categories: ["General"],
+};
+
+const mapModDetail: ModMetadata = {
+  ...awesomeDetail,
+  id: "962796",
+  name: "Svartalfheim Premium",
+  summary: "Map Name: Svartalfheim_WP",
+  thumbnailUrl: null,
+  authors: ["Author"],
+  downloadCount: 1000,
+  dateModified: "2026-06-01T00:00:00.000Z",
+  curseforgeUrl:
+    "https://www.curseforge.com/ark-survival-ascended/mods/svartalfheim-premium",
+  slug: "svartalfheim-premium",
+  categories: ["Maps"],
 };
 
 const server: ServerProfile = {
@@ -100,6 +116,52 @@ describe("ServerModsPanel", () => {
     vi.restoreAllMocks();
   });
 
+  it("toasts when enabling a Maps mod without changing map (#192)", async () => {
+    const api = installApi();
+    const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
+    vi.mocked(api.getModByReference).mockResolvedValue({
+      ok: true,
+      data: {
+        ...mapModDetail,
+        description: "Map Name: Svartalfheim_WP\nMod ID: 962796",
+      },
+    });
+    const user = userEvent.setup();
+    const mapServer: ServerProfile = {
+      ...server,
+      mods: ["962796"],
+      disabledMods: ["962796"],
+      modMetadataCache: { "962796": mapModDetail },
+    };
+    render(
+      <AppProviders>
+        <ServerModsPanel server={mapServer} onServerUpdated={vi.fn()} />
+      </AppProviders>,
+    );
+
+    await user.click(
+      screen.getByRole("switch", { name: "Enable Svartalfheim Premium" }),
+    );
+    await waitFor(() => {
+      expect(api.updateServer).toHaveBeenCalledWith(
+        "server-1",
+        expect.objectContaining({
+          map: "TheIsland_WP",
+          mods: ["962796"],
+          disabledMods: [],
+        }),
+      );
+    });
+    expect(screen.queryByRole("dialog", { name: /use as server map/i })).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(notifySpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Map mod available",
+        }),
+      );
+    });
+  });
+
   it("uses cached metadata and disables a mod without removing it", async () => {
     const api = installApi();
     const user = userEvent.setup();
@@ -140,7 +202,7 @@ describe("ServerModsPanel", () => {
         "server-1",
         expect.objectContaining({
           mods: ["947033", "929420"],
-          disabledMods: [],
+          disabledMods: ["929420"],
           modMetadataCache: {
             "947033": awesomeDetail,
             "929420": superDetail,
@@ -202,7 +264,10 @@ describe("ServerModsPanel", () => {
     await waitFor(() => {
       expect(api.updateServer).toHaveBeenCalledWith(
         "server-1",
-        expect.objectContaining({ mods: ["947033", "929420"] }),
+        expect.objectContaining({
+          mods: ["947033", "929420"],
+          disabledMods: ["929420"],
+        }),
       );
     });
   });
@@ -265,7 +330,10 @@ describe("ServerModsPanel", () => {
     await waitFor(() => {
       expect(api.updateServer).toHaveBeenCalledWith(
         "server-1",
-        expect.objectContaining({ mods: ["947033", "929420"] }),
+        expect.objectContaining({
+          mods: ["947033", "929420"],
+          disabledMods: ["929420"],
+        }),
       );
     });
   });

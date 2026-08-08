@@ -8,6 +8,7 @@ import {
   Text,
   Textarea,
 } from "@mantine/core";
+import { validateMapIdentity } from "@shared/map-identity";
 import type { ServerProfile } from "@shared/types";
 import {
   buildStructuredLaunchToken,
@@ -51,6 +52,21 @@ export function ServerLaunchPanel(props: Props): ReactElement {
     persistExtraArgsFromRaw,
   } = useServerLaunchPersist(props.server, props.onServerUpdated);
 
+  const mapIdentityWarnings = useMemo(
+    () =>
+      validateMapIdentity({
+        map: props.server.map,
+        mapModId: props.server.mapModId,
+        mods: props.server.mods,
+        disabledMods: props.server.disabledMods,
+      }).filter((issue) => issue.severity === "warning"),
+    [
+      props.server.disabledMods,
+      props.server.map,
+      props.server.mapModId,
+      props.server.mods,
+    ],
+  );
   const conflicts = useMemo(
     () => findLaunchArgConflicts({ structured, extraArgs }),
     [structured, extraArgs],
@@ -108,6 +124,21 @@ export function ServerLaunchPanel(props: Props): ReactElement {
           </Group>
 
           {error !== null ? <Alert color="red">{error}</Alert> : null}
+          {mapIdentityWarnings.length > 0 ? (
+            <Alert color="yellow" title="Custom map mod inconsistent">
+              <Stack gap={4}>
+                {mapIdentityWarnings.map((issue) => (
+                  <Text key={`${issue.field}:${issue.message}`} size="sm">
+                    {issue.message}
+                  </Text>
+                ))}
+                <Text size="xs" c="dimmed">
+                  Fix Map / Mods before Start — YARK blocks launch until the map
+                  pack is linked and enabled.
+                </Text>
+              </Stack>
+            </Alert>
+          ) : null}
 
           <div className={classes.groups}>
             {STRUCTURED_LAUNCH_GROUP_ORDER.map((groupId) => {

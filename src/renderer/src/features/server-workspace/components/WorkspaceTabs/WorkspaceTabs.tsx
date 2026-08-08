@@ -75,7 +75,7 @@ export function WorkspaceTabs(props: Props): ReactElement {
         <div className={classes.tabPanel}>
           {props.value === "server" && (
             <ServerForm
-              key={`${props.server.id}:${props.server.updatedAt}`}
+              key={props.server.id}
               initial={props.server}
               servers={props.servers}
               variant="embedded"

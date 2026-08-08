@@ -44,6 +44,8 @@ Unit fixtures for extraction live in `tests/unit/map-token-suggest.test.ts`.
 
 **Conclusion:** reliable auto-suggest needs either (a) Worker/`ModMetadata` optional plain-text `description` (or equivalent), or (b) operator-entered custom map in Server Information. Phase 1 must ship **(b)** regardless; **(a)** unlocks high hit-rate Mods-panel prompts. Do **not** scrape CurseForge HTML from the Electron app.
 
+**Phase 1 (#192 / #195):** no Project ID catalog. Worker exposes truncated description; Mods enable toasts and Map Select groups Official / Map mods / Custom….
+
 ## Ticket questions
 
 | Question | Answer |

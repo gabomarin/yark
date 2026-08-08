@@ -1,14 +1,6 @@
 import type { ReactElement } from "react";
-import {
-  Alert,
-  SegmentedControl,
-  Stack,
-} from "@mantine/core";
-import type {
-  ModMetadata,
-  ModSearchPage,
-  ServerProfile,
-} from "@shared/types";
+import { Alert, SegmentedControl, Stack } from "@mantine/core";
+import type { ModMetadata, ModSearchPage, ServerProfile } from "@shared/types";
 import { prepareModAddApply, type ModAddImportProgress } from "@shared/mod-add-input";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ServerModDetailDrawer } from "./ServerModDetailDrawer";
@@ -24,6 +16,7 @@ import {
   toProfileInput,
   type ModRow,
 } from "./serverModsModel";
+import { useMapModEnableNotify } from "./useMapModEnableNotify";
 import classes from "./ServerModsPanel.module.css";
 
 interface Props {
@@ -118,12 +111,20 @@ export function ServerModsPanel(props: Props): ReactElement {
     setMetadata((previous) => mergeMetadata(previous, nextCache));
     props.onServerUpdated();
   };
+  const { notifyMapModIfNeeded } = useMapModEnableNotify({
+    configuredIds,
+    disabledIds,
+    cacheRef,
+    persist,
+  });
 
   const addDetail = async (modDetail: ModMetadata) => {
     const isNew = !configuredIds.includes(modDetail.id);
     const nextIds = isNew ? [...configuredIds, modDetail.id] : configuredIds;
-    // Re-adding (Discover or URL) always re-enables a previously disabled mod.
-    const nextDisabled = disabledIds.filter((id) => id !== modDetail.id);
+    // New mods start disabled; re-adding an existing row keeps enable state.
+    const nextDisabled = isNew
+      ? [...new Set([...disabledIds, modDetail.id])]
+      : disabledIds;
     const nextCache = { ...cacheRef.current, [modDetail.id]: modDetail };
     await persist(nextIds, nextDisabled, nextCache);
   };
@@ -207,6 +208,10 @@ export function ServerModsPanel(props: Props): ReactElement {
       : [...new Set([...disabledIds, id])];
     try {
       await persist(configuredIds, nextDisabled, cacheRef.current);
+      if (enabled) {
+        const meta = cacheRef.current[id] ?? metadata.get(id);
+        await notifyMapModIfNeeded(id, meta);
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not update the mod");
     } finally {

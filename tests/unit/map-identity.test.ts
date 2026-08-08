@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   isOfficialMap,
+  mapIdentityStartBlockers,
   persistableMapModId,
   resolveMapIdentity,
   resolveMapThumbnailUrl,
   validateMapIdentity,
 } from "@shared/map-identity";
+import { KNOWN_MAP_OPTIONS, KNOWN_MAPS } from "@shared/types";
 import { buildLaunchArgs } from "@backend/domains/instances/launch-args";
 import type { ServerProfile } from "@shared/types";
 
@@ -34,6 +36,14 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
 }
 
 describe("isOfficialMap / resolveMapIdentity", () => {
+  it("keeps hardcoded official labels on KNOWN_MAP_OPTIONS", () => {
+    expect(KNOWN_MAP_OPTIONS[0]).toEqual({
+      id: "TheIsland_WP",
+      label: "The Island",
+    });
+    expect(KNOWN_MAP_OPTIONS.map((entry) => entry.id)).toEqual([...KNOWN_MAPS]);
+  });
+
   it("classifies KNOWN_MAPS as official and clears mapModId", () => {
     expect(isOfficialMap("TheIsland_WP")).toBe(true);
     expect(
@@ -82,6 +92,23 @@ describe("validateMapIdentity", () => {
     });
   });
 
+  it("warns when mapModId is unset on a custom map", () => {
+    expect(
+      validateMapIdentity({
+        map: "Svartalfheim_WP",
+        mapModId: null,
+        mods: ["962796"],
+      }),
+    ).toEqual([
+      {
+        field: "mapModId",
+        message:
+          "Custom map needs a linked map mod Project ID enabled on Mods (required for -mods=)",
+        severity: "warning",
+      },
+    ]);
+  });
+
   it("warns when mapModId is missing from mods or disabled", () => {
     expect(
       validateMapIdentity({
@@ -111,6 +138,25 @@ describe("validateMapIdentity", () => {
         severity: "warning",
       },
     ]);
+  });
+
+  it("exposes warnings as start blockers (#194)", () => {
+    expect(
+      mapIdentityStartBlockers({
+        map: "Svartalfheim_WP",
+        mapModId: "962796",
+        mods: ["962796"],
+        disabledMods: ["962796"],
+      }),
+    ).toHaveLength(1);
+    expect(
+      mapIdentityStartBlockers({
+        map: "Svartalfheim_WP",
+        mapModId: "962796",
+        mods: ["962796"],
+        disabledMods: [],
+      }),
+    ).toEqual([]);
   });
 });
 

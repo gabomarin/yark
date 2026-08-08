@@ -28,6 +28,7 @@ import type { BackupService } from "../backups/backup-service";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { ProcessManager } from "../../infra/process/process-manager";
+import { mapIdentityStartBlockers } from "@shared/map-identity";
 import { findPortConflicts, validateProfileInput } from "./validation";
 import { checkClusterCompliance } from "../cluster/compliance";
 import { RconSessionManager } from "../../infra/rcon/rcon-session-manager";
@@ -542,6 +543,7 @@ export class InstanceService extends EventEmitter {
     }
     const effective = this.effectiveStartProfile(profile, options);
     this.assertValidInput(effective);
+    this.assertMapIdentityReadyForStart(effective);
     const running = this.repo
       .list()
       .filter((p) => p.id !== id && this.processes.isActive(p.id))
@@ -1474,6 +1476,16 @@ export class InstanceService extends EventEmitter {
     if (issues.length > 0) {
       throw new Error(
         issues.map((i) => `${i.field}: ${i.message}`).join(" | "),
+      );
+    }
+  }
+
+  /** Soft map-mod warnings on save; hard-block dedicated start (#194). */
+  private assertMapIdentityReadyForStart(input: ServerProfile): void {
+    const blockers = mapIdentityStartBlockers(input);
+    if (blockers.length > 0) {
+      throw new Error(
+        blockers.map((i) => `${i.field}: ${i.message}`).join(" | "),
       );
     }
   }

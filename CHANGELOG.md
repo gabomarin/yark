@@ -11,6 +11,9 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Enabling a CurseForge **Maps** mod shows a toast and lists it under Server Information → Map (**Map mods** group); choosing it sets the launch token and linked `mapModId` (#192).
+- CurseForge proxy returns truncated plain-text **description** on mod get/batch so map-token heuristics can read `Map Name:` (#195).
+- Launch tab yellow alert and Start block when a custom map’s linked map mod is missing, disabled, or unset (#194).
 - Profiles can store an optional **map mod Project ID** (`mapModId`) for custom ASA maps; clones keep it and official maps clear it (#190).
 - Spike research for **modded ASA maps** beyond `KNOWN_MAPS` (launch contract, Mods→map token heuristics, custom map fallback) documented under `docs/spikes/` (#65).
 - Server Information Map control supports **Custom…** free-text ASA launch tokens (e.g. `Svartalfheim_WP`) for modded maps (#65, #191).
@@ -19,6 +22,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Newly added Mods start **disabled**; enable them explicitly before they appear in `-mods=` / Map mods.
 - Sidebar route items use Mantine **NavLink** (active state + icons) while keeping YARK brand chrome (#106).
 - Launch-options catalog copy is cleaned from wiki noise into **summary + details**, with a pasteable **example** per entry (#92).
 - Extra arguments and the Mods ID field moved off create/edit Server onto the **Mods** / **Launch** workspace tabs (#93).

@@ -99,34 +99,51 @@ export function validateMapIdentity(fields: MapIdentityFields): MapIdentityIssue
     return issues;
   }
 
-  if (fields.mapModId !== null && fields.mapModId !== undefined && fields.mapModId.trim() !== "") {
-    if (!isValidMapModId(fields.mapModId)) {
-      issues.push({
-        field: "mapModId",
-        message: "Map mod Project ID must be digits only",
-        severity: "error",
-      });
-    } else {
-      const modId = fields.mapModId.trim();
-      const mods = fields.mods ?? [];
-      const disabled = new Set(fields.disabledMods ?? []);
-      if (!mods.includes(modId)) {
-        issues.push({
-          field: "mapModId",
-          message: "Map mod Project ID is not on the server mods list",
-          severity: "warning",
-        });
-      } else if (disabled.has(modId)) {
-        issues.push({
-          field: "mapModId",
-          message: "Map mod Project ID is disabled and will be omitted from -mods=",
-          severity: "warning",
-        });
-      }
-    }
+  const rawModId = fields.mapModId?.trim() ?? "";
+  if (rawModId.length === 0) {
+    issues.push({
+      field: "mapModId",
+      message:
+        "Custom map needs a linked map mod Project ID enabled on Mods (required for -mods=)",
+      severity: "warning",
+    });
+    return issues;
+  }
+
+  if (!isValidMapModId(rawModId)) {
+    issues.push({
+      field: "mapModId",
+      message: "Map mod Project ID must be digits only",
+      severity: "error",
+    });
+    return issues;
+  }
+
+  const modId = rawModId;
+  const mods = fields.mods ?? [];
+  const disabled = new Set(fields.disabledMods ?? []);
+  if (!mods.includes(modId)) {
+    issues.push({
+      field: "mapModId",
+      message: "Map mod Project ID is not on the server mods list",
+      severity: "warning",
+    });
+  } else if (disabled.has(modId)) {
+    issues.push({
+      field: "mapModId",
+      message: "Map mod Project ID is disabled and will be omitted from -mods=",
+      severity: "warning",
+    });
   }
 
   return issues;
+}
+
+/** Warnings that should block dedicated start until the operator fixes Mods / map link (#194). */
+export function mapIdentityStartBlockers(
+  fields: MapIdentityFields,
+): MapIdentityIssue[] {
+  return validateMapIdentity(fields).filter((issue) => issue.severity === "warning");
 }
 
 /**

@@ -829,7 +829,7 @@ export interface ServerRuntimeLogSnapshot {
   runtimeLogLines: string[];
 }
 
-/** Known official ASA maps (extensible with mod maps). */
+/** Known official ASA map launch tokens. */
 export const KNOWN_MAPS = [
   "TheIsland_WP",
   "ScorchedEarth_WP",
@@ -843,6 +843,26 @@ export const KNOWN_MAPS = [
   "Valguero_WP",
 ] as const;
 
+/**
+ * Official ASA maps for UI: launch `id` + hardcoded operator-facing `label`.
+ * Keep in sync with `KNOWN_MAPS`.
+ */
+export const KNOWN_MAP_OPTIONS: ReadonlyArray<{
+  readonly id: (typeof KNOWN_MAPS)[number];
+  readonly label: string;
+}> = [
+  { id: "TheIsland_WP", label: "The Island" },
+  { id: "ScorchedEarth_WP", label: "Scorched Earth" },
+  { id: "TheCenter_WP", label: "The Center" },
+  { id: "Aberration_WP", label: "Aberration" },
+  { id: "Extinction_WP", label: "Extinction" },
+  { id: "Ragnarok_WP", label: "Ragnarok" },
+  { id: "Astraeos_WP", label: "Astraeos" },
+  { id: "Genesis_WP", label: "Genesis" },
+  { id: "LostColony_WP", label: "Lost Colony" },
+  { id: "Valguero_WP", label: "Valguero" },
+];
+
 export const PORT_MIN = 1024;
 export const PORT_MAX = 65535;
 
@@ -851,6 +871,11 @@ export interface ModMetadata {
   id: string;
   name: string;
   summary: string;
+  /**
+   * Plain-text (truncated) CurseForge description when the Worker fetched it.
+   * Used for map-token heuristics (`Map Name:`); absent on search rows (#195).
+   */
+  description?: string | null;
   thumbnailUrl: string | null;
   authors: string[];
   downloadCount: number;
