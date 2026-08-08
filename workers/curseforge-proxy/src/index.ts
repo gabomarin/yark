@@ -139,9 +139,11 @@ async function handleGetMod(
     );
   }
 
-  const base = toYarkMod(rawMod, null);
-  const description = await fetchModDescription(modId, apiKey);
-  return okJson(corsHeaders, { ...base, description });
+  // Descriptions are only needed for Maps-category map-token suggest (#195).
+  const description = isMapsCategoryMod(rawMod)
+    ? await fetchModDescription(modId, apiKey)
+    : null;
+  return okJson(corsHeaders, toYarkMod(rawMod, description));
 }
 
 async function handleGetMods(
@@ -235,11 +237,17 @@ async function handleGetMods(
     asaMods.push({ id, raw });
   }
 
-  const descriptions = await Promise.all(
-    asaMods.map(({ id }) => fetchModDescription(String(id), apiKey)),
+  // Only Maps-category mods need /description for map-token heuristics; fetching
+  // for every ASA id in the batch is an N+1 that slows the UI and burns CF quota.
+  const mapMods = asaMods.filter(({ raw }) => isMapsCategoryMod(raw));
+  const descriptions = new Map<number, string | null>();
+  await Promise.all(
+    mapMods.map(async ({ id }) => {
+      descriptions.set(id, await fetchModDescription(String(id), apiKey));
+    }),
   );
-  const items: YarkModMetadata[] = asaMods.map(({ raw }, index) =>
-    toYarkMod(raw, descriptions[index] ?? null),
+  const items: YarkModMetadata[] = asaMods.map(({ id, raw }) =>
+    toYarkMod(raw, descriptions.get(id) ?? null),
   );
 
   return okJson(corsHeaders, { items, skipped });
@@ -365,6 +373,21 @@ async function fetchModDescription(
   }
 }
 
+/** Aligns with Electron `isMapModCandidate` (CurseForge "Maps" / "Map"). */
+function isMapsCategoryMod(mod: Record<string, unknown>): boolean {
+  return extractCategoryNames(mod).some((entry) => /\bmaps?\b/i.test(entry));
+}
+
+function extractCategoryNames(mod: Record<string, unknown>): string[] {
+  const categoriesRaw = Array.isArray(mod["categories"]) ? mod["categories"] : [];
+  return categoriesRaw
+    .map((entry) => {
+      const row = asRecord(entry);
+      return typeof row?.["name"] === "string" ? row["name"] : null;
+    })
+    .filter((name): name is string => name !== null && name.length > 0);
+}
+
 function toYarkMod(
   mod: Record<string, unknown>,
   description: string | null,
@@ -374,7 +397,6 @@ function toYarkMod(
   const links = asRecord(mod["links"]);
   const logo = asRecord(mod["logo"]);
   const authorsRaw = Array.isArray(mod["authors"]) ? mod["authors"] : [];
-  const categoriesRaw = Array.isArray(mod["categories"]) ? mod["categories"] : [];
 
   const authors = authorsRaw
     .map((entry) => {
@@ -383,12 +405,7 @@ function toYarkMod(
     })
     .filter((name): name is string => name !== null && name.length > 0);
 
-  const categories = categoriesRaw
-    .map((entry) => {
-      const row = asRecord(entry);
-      return typeof row?.["name"] === "string" ? row["name"] : null;
-    })
-    .filter((name): name is string => name !== null && name.length > 0);
+  const categories = extractCategoryNames(mod);
 
   const websiteUrl =
     typeof links?.["websiteUrl"] === "string" && links["websiteUrl"].length > 0
