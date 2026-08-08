@@ -56,6 +56,28 @@ describe("ServerRepository", () => {
     expect(updated!.autoStart).toBe(false);
   });
 
+  it("persists mapModId for custom maps and clears it for official maps (#190)", () => {
+    const created = repo.create(
+      input({
+        map: "Svartalfheim_WP",
+        mapModId: "962796",
+        mods: ["962796"],
+      }),
+    );
+    expect(created.mapModId).toBe("962796");
+    expect(repo.get(created.id)?.mapModId).toBe("962796");
+
+    const official = repo.update(
+      created.id,
+      input({
+        map: "TheIsland_WP",
+        mapModId: "962796",
+        mods: ["962796"],
+      }),
+    );
+    expect(official!.mapModId).toBeNull();
+  });
+
   it("persists disabled mods and metadata cache", () => {
     const created = repo.create(
       input({

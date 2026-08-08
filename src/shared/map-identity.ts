@@ -54,6 +54,11 @@ export function resolveMapIdentity(fields: MapIdentityFields): ResolvedMapIdenti
   return { kind: "custom", map, mapModId };
 }
 
+/** Value to persist for `mapModId` (null for official maps or unset/invalid). */
+export function persistableMapModId(fields: MapIdentityFields): string | null {
+  return resolveMapIdentity(fields).mapModId;
+}
+
 export interface MapIdentityIssue {
   field: "map" | "mapModId";
   message: string;

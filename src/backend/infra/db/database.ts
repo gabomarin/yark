@@ -176,6 +176,12 @@ const MIGRATIONS: Migration[] = [
       ALTER TABLE servers ADD COLUMN structured_launch_args TEXT NOT NULL DEFAULT '{}';
     `,
   },
+  {
+    version: 12,
+    sql: `
+      ALTER TABLE servers ADD COLUMN map_mod_id TEXT;
+    `,
+  },
 ];
 
 /**

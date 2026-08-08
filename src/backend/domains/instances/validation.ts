@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validateMapIdentity } from "@shared/map-identity";
 import {
   getServerFolderNameError,
   getWindowsPathError,
@@ -117,5 +118,18 @@ export function validateProfileInput(
       message: conflict.message,
     });
   }
+
+  for (const mapIssue of validateMapIdentity({
+    map: parsed.data.map,
+    mapModId: input.mapModId,
+    mods: parsed.data.mods,
+    disabledMods: input.disabledMods,
+  })) {
+    // Warnings (disabled/missing map mod) surface in Launch/start (#194).
+    if (mapIssue.severity === "error") {
+      issues.push({ field: mapIssue.field, message: mapIssue.message });
+    }
+  }
+
   return issues;
 }

@@ -14,6 +14,11 @@ export interface ServerProfile {
   id: string;
   name: string;
   map: string;
+  /**
+   * CurseForge Project ID for the custom map pack when `map` is not a
+   * `KNOWN_MAPS` token (#190). Cleared for official maps. Null/undefined when unset.
+   */
+  mapModId?: string | null;
   /** Server install root (contains ShooterGame\...). */
   installDir: string;
   enabled: boolean;
