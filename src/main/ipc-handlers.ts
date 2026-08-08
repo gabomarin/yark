@@ -845,6 +845,14 @@ export function registerIpcHandlers(
     wrap(() => backups.getFleetSummary()),
   );
 
+  ipcMain.handle(
+    IPC.backupsDismissFleetAlert,
+    (_e, alertId: string, fingerprint: string) =>
+      wrap(() => {
+        backups.dismissFleetAlert(alertId, fingerprint);
+      }),
+  );
+
   ipcMain.handle(IPC.backupsGetDiskAlertSettings, () =>
     wrap(() => backups.getDiskAlertSettings()),
   );

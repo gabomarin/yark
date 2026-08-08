@@ -225,6 +225,8 @@ const api: RendererApi = {
   importBackup: (serverId: string, kind: BackupKind, sourcePath: string) =>
     ipcRenderer.invoke(IPC.backupsImport, serverId, kind, sourcePath),
   getBackupFleetSummary: () => ipcRenderer.invoke(IPC.backupsFleetSummary),
+  dismissBackupFleetAlert: (alertId: string, fingerprint: string) =>
+    ipcRenderer.invoke(IPC.backupsDismissFleetAlert, alertId, fingerprint),
   getBackupDiskAlertSettings: () =>
     ipcRenderer.invoke(IPC.backupsGetDiskAlertSettings),
   setBackupDiskAlertSettings: (settings) =>

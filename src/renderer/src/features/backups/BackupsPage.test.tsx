@@ -108,6 +108,7 @@ describe("BackupsPage", () => {
       configurable: true,
       value: {
         getBackupFleetSummary: vi.fn().mockResolvedValue({ ok: true, data: fleetSummary }),
+        dismissBackupFleetAlert: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
         getBackupDiskAlertSettings: vi.fn().mockResolvedValue({
           ok: true,
           data: fleetSummary.diskSettings,

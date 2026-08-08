@@ -592,6 +592,13 @@ export interface BackupFleetAlert {
   serverId: string | null;
   volumePath: string | null;
   message: string;
+  /**
+   * Opaque dismiss token. Hiding an alert suppresses it until this value changes
+   * (e.g. a newer failed backup id, or updated disk usage).
+   */
+  fingerprint: string;
+  /** Newest relevant failed backup for `kind: "failed"` deep-links into Logs → Backups. */
+  backupId?: string | null;
 }
 
 export interface BackupFleetSummary {

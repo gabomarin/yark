@@ -163,6 +163,7 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 | `ReadonlyPath` | `shared/ui/ReadonlyPath/` | Bordered monospace chip for configured filesystem paths |
 | `PathField` | `shared/ui/PathField/` | Read-only path chip + Browse/Clear actions |
 | `ConsoleSurface` | `shared/ui/ConsoleSurface/` | ScrollArea monospace console for SteamCMD / Logs (plain text, stick-to-bottom) |
+| `AppMetricCard` | `shared/ui/AppMetricCard/` | Compact scalar metric tile (fleet strips; optional RingProgress) |
 
 ## Product brand / packaging icons
 
@@ -215,7 +216,7 @@ editors stay feature-local monospace (not path chips).
 - Server workspace 3-column shell / INI editor tables
 - Domain empty **content** — wrap with shared EmptyState shell
 - Clusters `MetaStrip` (feature-local until a second screen needs the same strip)
-- Backup all-servers `StatCard` strip (extract a shared metric card on 2nd use)
+- Backup volume detail cards (multi-line destination/disk copy; scalar strip uses `AppMetricCard`)
 
 ### Log / activity expand patterns (#102)
 

@@ -145,6 +145,7 @@ function createApiMock(): RendererApi {
     exportBackup: vi.fn(),
     importBackup: vi.fn(),
     getBackupFleetSummary: vi.fn(),
+    dismissBackupFleetAlert: vi.fn(),
     getBackupDiskAlertSettings: vi.fn(),
     setBackupDiskAlertSettings: vi.fn(),
     previewBackupCleanup: vi.fn(),

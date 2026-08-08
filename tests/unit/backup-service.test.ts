@@ -129,9 +129,12 @@ describe("BackupService kinds and retention", () => {
       applyRuntimePorts: vi.fn((p: ServerProfile) => p),
     } as unknown as ProcessManager;
 
+    const settingsStore = new Map<string, string | null>();
     const settings = {
-      get: vi.fn(() => null),
-      set: vi.fn(),
+      get: vi.fn((key: string) => settingsStore.get(key) ?? null),
+      set: vi.fn((key: string, value: string | null) => {
+        settingsStore.set(key, value);
+      }),
     } as unknown as AppSettingsRepository;
 
     service = new BackupService(servers, repo, processes, settings, join(installDir, "_root"));
@@ -1643,9 +1646,10 @@ describe("BackupService kinds and retention", () => {
     const summary = await service.getFleetSummary();
     expect(summary.servers[0]?.counts.failed24h).toBe(1);
     expect(summary.stats.failed24h).toBe(1);
-    expect(summary.alerts.some((alert) => /failed (world )?backup/i.test(alert.message))).toBe(
-      true,
-    );
+    const failedAlert = summary.alerts.find((alert) => alert.id === `failed:${profile.id}`);
+    expect(failedAlert?.message).toMatch(/failed (world )?backup/i);
+    expect(failedAlert?.backupId).toBe(oldStart.id);
+    expect(failedAlert?.fingerprint).toBe(`${oldStart.id}:1`);
   });
 
   it("does not mark fleet health critical for failed INI/player when world is healthy", async () => {
@@ -1674,6 +1678,42 @@ describe("BackupService kinds and retention", () => {
     const failedAlert = summary.alerts.find((alert) => alert.id === `failed:${profile.id}`);
     expect(failedAlert?.severity).toBe("warning");
     expect(failedAlert?.message).toMatch(/non-world/i);
+    // Newest finished failed (players after ini) for Logs deep-link.
+    expect(failedAlert?.backupId).toBe(failedPlayers.id);
+  });
+
+  it("dismisses a fleet alert until its fingerprint changes", async () => {
+    const failed = repo.createBackupStart({
+      serverId: profile.id,
+      type: "scheduled",
+      kind: "world",
+      path: join(installDir, "Backups", "World", "failed-world.zip"),
+      notes: null,
+    });
+    repo.failBackup(failed.id, "boom");
+
+    const before = await service.getFleetSummary();
+    const alert = before.alerts.find((row) => row.id === `failed:${profile.id}`);
+    expect(alert).toBeDefined();
+    expect(alert?.fingerprint).toBe(`${failed.id}:1`);
+
+    service.dismissFleetAlert(alert!.id, alert!.fingerprint);
+    const hidden = await service.getFleetSummary();
+    expect(hidden.alerts.find((row) => row.id === `failed:${profile.id}`)).toBeUndefined();
+
+    const newer = repo.createBackupStart({
+      serverId: profile.id,
+      type: "scheduled",
+      kind: "world",
+      path: join(installDir, "Backups", "World", "failed-world-2.zip"),
+      notes: null,
+    });
+    repo.failBackup(newer.id, "boom again");
+
+    const again = await service.getFleetSummary();
+    const resurfaced = again.alerts.find((row) => row.id === `failed:${profile.id}`);
+    expect(resurfaced?.fingerprint).toBe(`${newer.id}:2`);
+    expect(resurfaced?.backupId).toBe(newer.id);
   });
 
   it("previews and runs cleanup for failed backups while protecting newest world", async () => {

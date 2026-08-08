@@ -247,7 +247,8 @@ UI restore is direct. Update rollback uses the queued `restoreBackupForJob` path
   (stale / never-backed-up **while active**, or non-world failures) → `unknown`
   (no world backup yet and schedule off or server stopped) → `ok`.
 - Disk alerts use settings key `backupDiskAlerts.v1` (defaults: warn 85% / critical 95% / free under 20 GiB).
-- Fleet alerts render in a compact scrollable **Alerts** panel (not stacked full-width banners), with short action buttons (Open / Logs / Cleanup).
+- Fleet alerts render in a compact scrollable **Alerts** panel (not stacked full-width banners), with short action buttons (Open / Logs / Cleanup / Dismiss).
+- **Dismiss** stores a fingerprint under `backupFleetAlerts.dismissed.v1` and hides that alert until the fingerprint changes (new failed backup, updated disk usage bucket, new stale world stamp, etc.).
 
 ### Sidebar Backups quiet refresh
 

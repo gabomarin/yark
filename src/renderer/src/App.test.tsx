@@ -189,6 +189,7 @@ function createApiMock(): RendererApi {
         },
       },
     }),
+    dismissBackupFleetAlert: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
     getBackupDiskAlertSettings: vi.fn(),
     setBackupDiskAlertSettings: vi.fn(),
     previewBackupCleanup: vi.fn(),

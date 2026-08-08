@@ -16,6 +16,7 @@ const alerts: BackupFleetAlert[] = [
     severity: "warning",
     serverId: "srv-1",
     volumePath: null,
+    fingerprint: "pending",
     message:
       "Gabo Scorched yark: world schedule is on but no completed world backup exists yet (start the server so the world schedule can run)",
   },
@@ -25,6 +26,8 @@ const alerts: BackupFleetAlert[] = [
     severity: "error",
     serverId: "srv-2",
     volumePath: null,
+    fingerprint: "bak-failed-1",
+    backupId: "bak-failed-1",
     message: "Gabo Scorched yark1: 1 failed world backup in the last 24h",
   },
   {
@@ -33,24 +36,27 @@ const alerts: BackupFleetAlert[] = [
     severity: "warning",
     serverId: null,
     volumePath: "C:\\",
+    fingerprint: "u90:f20:w85:c95",
     message: "C:\\: 90% used (warning threshold)",
   },
 ];
 
 describe("BackupFleetAlertsPanel", () => {
-  it("renders a compact scrollable panel with actions", async () => {
+  it("renders a compact scrollable panel with a single action per alert", async () => {
     const user = userEvent.setup();
     const onOpenServerBackups = vi.fn();
-    const onOpenServerLogs = vi.fn();
+    const onOpenFailedBackupLogs = vi.fn();
     const onOpenCleanup = vi.fn();
+    const onDismissAlert = vi.fn();
 
     render(
       <AppProviders>
         <BackupFleetAlertsPanel
           alerts={alerts}
           onOpenServerBackups={onOpenServerBackups}
-          onOpenServerLogs={onOpenServerLogs}
+          onOpenFailedBackupLogs={onOpenFailedBackupLogs}
           onOpenCleanup={onOpenCleanup}
+          onDismissAlert={onDismissAlert}
         />
       </AppProviders>,
     );
@@ -60,14 +66,27 @@ describe("BackupFleetAlertsPanel", () => {
 
     expect(document.querySelector("[data-backup-alerts-list]")).not.toBeNull();
 
-    await user.click(screen.getByRole("button", { name: "Logs" }));
-    expect(onOpenServerLogs).toHaveBeenCalledWith("srv-2");
+    // Failed alerts only offer Logs (deep-link), not Open.
+    expect(screen.getAllByRole("button", { name: "Open" })).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Logs" })).toBeInTheDocument();
 
-    await user.click(screen.getAllByRole("button", { name: "Open" })[0]!);
+    await user.click(screen.getByRole("button", { name: "Logs" }));
+    expect(onOpenFailedBackupLogs).toHaveBeenCalledWith({
+      serverId: "srv-2",
+      backupId: "bak-failed-1",
+    });
+    expect(onOpenServerBackups).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Open" }));
     expect(onOpenServerBackups).toHaveBeenCalledWith("srv-1");
 
     await user.click(screen.getByRole("button", { name: /Cleanup/i }));
     expect(onOpenCleanup).toHaveBeenCalled();
+
+    await user.click(screen.getAllByRole("button", { name: "Dismiss" })[1]!);
+    expect(onDismissAlert).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "a2", fingerprint: "bak-failed-1" }),
+    );
   });
 
   it("returns null when there are no alerts", () => {

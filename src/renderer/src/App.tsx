@@ -1342,8 +1342,11 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             <BackupsPage
               servers={servers}
               onOpenServerBackups={openServerBackups}
-              onOpenServerLogs={(serverId) =>
-                openServerLogs(serverId, { section: "backups" })
+              onOpenFailedBackupLogs={({ serverId, backupId }) =>
+                openServerLogs(serverId, {
+                  section: "backups",
+                  backupId: backupId ?? undefined,
+                })
               }
             />
           ),

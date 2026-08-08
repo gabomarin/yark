@@ -149,8 +149,15 @@ const DEFAULT_DISK_ALERT_SETTINGS: BackupDiskAlertSettings = {
   criticalUsedPercent: 95,
   warnFreeBytes: 20 * 1024 * 1024 * 1024,
 };
+/** Dismissed fleet alerts: alertId → fingerprint that was hidden. */
+const DISMISSED_FLEET_ALERTS_KEY = "backupFleetAlerts.dismissed.v1";
 /** World backup is stale when older than interval × this factor. */
 const STALE_INTERVAL_FACTOR = 1.5;
+
+interface DismissedFleetAlertEntry {
+  fingerprint: string;
+  dismissedAt: string;
+}
 
 type BackupCriticalJobType = "pre-update-backup" | "restore";
 
@@ -612,6 +619,21 @@ export class BackupService extends EventEmitter {
     return next;
   }
 
+  /**
+   * Hide a fleet alert until its fingerprint changes (new failure, recovered then
+   * re-failed, disk usage moved, etc.).
+   */
+  dismissFleetAlert(alertId: string, fingerprint: string): void {
+    const id = alertId.trim();
+    const fp = fingerprint.trim();
+    if (id.length === 0 || fp.length === 0) {
+      throw new Error("Alert id and fingerprint are required");
+    }
+    const map = this.readDismissedFleetAlerts();
+    map[id] = { fingerprint: fp, dismissedAt: new Date().toISOString() };
+    this.writeDismissedFleetAlerts(map);
+  }
+
   /** Fleet health overview: per-server status, disk usage, and actionable alerts. */
   async getFleetSummary(): Promise<BackupFleetSummary> {
     const servers = this.servers.list();
@@ -692,6 +714,7 @@ export class BackupService extends EventEmitter {
           severity: "error",
           serverId: server.id,
           volumePath: null,
+          fingerprint: resolvedRoot,
           message: `${server.name}: backup destination is missing or unreachable (${resolvedRoot})`,
         });
       }
@@ -702,6 +725,7 @@ export class BackupService extends EventEmitter {
           severity: "warning",
           serverId: server.id,
           volumePath: null,
+          fingerprint: "pending",
           message: `${server.name}: world schedule is on but no completed world backup exists yet (waiting for the next scheduled cycle)`,
         });
       } else if (stale && latestWorld !== null) {
@@ -711,17 +735,23 @@ export class BackupService extends EventEmitter {
           severity: "warning",
           serverId: server.id,
           volumePath: null,
+          fingerprint: `${latestWorld.id}:${backupFinishedAt(latestWorld)}`,
           message: `${server.name}: last world backup is older than the scheduled interval`,
         });
       }
       if (counts.failed24h > 0) {
         const worldOnly = failedWorld24h.length === counts.failed24h;
+        // Prefer newest failed world (list is finish-time DESC); else newest failed.
+        const focusBackup = failedWorld24h[0] ?? failed24h[0] ?? null;
         alerts.push({
           id: `failed:${server.id}`,
           kind: "failed",
           severity: failedWorld24h.length > 0 ? "error" : "warning",
           serverId: server.id,
           volumePath: null,
+          // Include count so dismiss resurfaces when more failures arrive.
+          fingerprint: `${focusBackup?.id ?? "failed"}:${counts.failed24h}`,
+          backupId: focusBackup?.id ?? null,
           message: worldOnly
             ? `${server.name}: ${counts.failed24h} failed world backup${counts.failed24h === 1 ? "" : "s"} in the last 24h`
             : failedWorld24h.length > 0
@@ -737,6 +767,13 @@ export class BackupService extends EventEmitter {
       const overCritical = disk.usedPercent >= diskSettings.criticalUsedPercent;
       const overWarn = disk.usedPercent >= diskSettings.warnUsedPercent;
       const lowFree = disk.freeBytes < diskSettings.warnFreeBytes;
+      // Bucket free space to GiB so tiny freelist churn does not re-open dismissals.
+      const diskFingerprint = [
+        `u${Math.floor(disk.usedPercent)}`,
+        `f${Math.floor(disk.freeBytes / (1024 ** 3))}`,
+        `w${diskSettings.warnUsedPercent}`,
+        `c${diskSettings.criticalUsedPercent}`,
+      ].join(":");
       if (overCritical) {
         alerts.push({
           id: `disk_critical:${disk.volumePath}`,
@@ -744,6 +781,7 @@ export class BackupService extends EventEmitter {
           severity: "error",
           serverId: null,
           volumePath: disk.volumePath,
+          fingerprint: diskFingerprint,
           message: `${disk.volumePath} is ${disk.usedPercent.toFixed(0)}% full (critical ≥ ${diskSettings.criticalUsedPercent}%)`,
         });
       } else if (overWarn || lowFree) {
@@ -760,6 +798,7 @@ export class BackupService extends EventEmitter {
           severity: "warning",
           serverId: null,
           volumePath: disk.volumePath,
+          fingerprint: diskFingerprint,
           message: `${disk.volumePath}: ${parts.join(" · ")} (warning threshold)`,
         });
       }
@@ -771,6 +810,7 @@ export class BackupService extends EventEmitter {
     ).length;
     const failed24h = healthRows.reduce((sum, row) => sum + row.counts.failed24h, 0);
     const totalBackupBytes = healthRows.reduce((sum, row) => sum + row.usedBytes, 0);
+    const visibleAlerts = this.applyDismissedFleetAlerts(alerts);
 
     return {
       servers: healthRows,
@@ -781,7 +821,7 @@ export class BackupService extends EventEmitter {
         totalBackupBytes,
       },
       disks,
-      alerts,
+      alerts: visibleAlerts,
       diskSettings,
     };
   }
@@ -1220,6 +1260,69 @@ export class BackupService extends EventEmitter {
     } catch {
       return { ...DEFAULT_DISK_ALERT_SETTINGS };
     }
+  }
+
+  private readDismissedFleetAlerts(): Record<string, DismissedFleetAlertEntry> {
+    const raw = this.settings.get(DISMISSED_FLEET_ALERTS_KEY);
+    if (raw === null || raw.trim().length === 0) return {};
+    try {
+      const parsed = JSON.parse(raw) as Record<string, Partial<DismissedFleetAlertEntry>>;
+      if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+        return {};
+      }
+      const out: Record<string, DismissedFleetAlertEntry> = {};
+      for (const [id, entry] of Object.entries(parsed)) {
+        if (
+          typeof id === "string" &&
+          id.length > 0 &&
+          entry !== null &&
+          typeof entry === "object" &&
+          typeof entry.fingerprint === "string" &&
+          entry.fingerprint.trim().length > 0
+        ) {
+          out[id] = {
+            fingerprint: entry.fingerprint.trim(),
+            dismissedAt:
+              typeof entry.dismissedAt === "string" && entry.dismissedAt.length > 0
+                ? entry.dismissedAt
+                : new Date(0).toISOString(),
+          };
+        }
+      }
+      return out;
+    } catch {
+      return {};
+    }
+  }
+
+  private writeDismissedFleetAlerts(
+    map: Record<string, DismissedFleetAlertEntry>,
+  ): void {
+    this.settings.set(DISMISSED_FLEET_ALERTS_KEY, JSON.stringify(map));
+  }
+
+  /** Drop alerts whose current fingerprint was dismissed; prune stale dismiss rows. */
+  private applyDismissedFleetAlerts(alerts: BackupFleetAlert[]): BackupFleetAlert[] {
+    const dismissed = this.readDismissedFleetAlerts();
+    if (Object.keys(dismissed).length === 0) return alerts;
+
+    const kept: Record<string, DismissedFleetAlertEntry> = {};
+    const visible: BackupFleetAlert[] = [];
+    for (const alert of alerts) {
+      const entry = dismissed[alert.id];
+      if (entry !== undefined && entry.fingerprint === alert.fingerprint) {
+        kept[alert.id] = entry;
+        continue;
+      }
+      visible.push(alert);
+    }
+
+    const prevKeys = Object.keys(dismissed).sort().join("\0");
+    const nextKeys = Object.keys(kept).sort().join("\0");
+    if (prevKeys !== nextKeys) {
+      this.writeDismissedFleetAlerts(kept);
+    }
+    return visible;
   }
 
   private normalizeDiskAlertSettings(

@@ -111,6 +111,167 @@ describe("ServerLogsPanel", () => {
     });
   });
 
+  it("highlights the focused backup under Logs → Backups", async () => {
+    const onFocusConsumed = vi.fn();
+    vi.mocked(window.api.listServerLogs).mockResolvedValue({
+      ok: true,
+      data: {
+        serverId: server.id,
+        updateFiles: [],
+        backups: [
+          {
+            id: "bak-ok",
+            serverId: server.id,
+            type: "manual",
+            kind: "world",
+            path: "C:/ARK/backups/ok.zip",
+            sizeBytes: 100,
+            status: "completed",
+            createdAt: "2026-07-23T11:00:00.000Z",
+            completedAt: "2026-07-23T11:01:00.000Z",
+            notes: null,
+          },
+          {
+            id: "bak-fail",
+            serverId: server.id,
+            type: "scheduled",
+            kind: "world",
+            path: "C:/ARK/backups/fail.zip",
+            sizeBytes: 0,
+            status: "failed",
+            createdAt: "2026-07-23T10:00:00.000Z",
+            completedAt: "2026-07-23T10:01:00.000Z",
+            notes: "Disk full",
+          },
+        ],
+        events: [],
+        runtimeLogLines: [],
+      },
+    });
+
+    render(
+      <AppProviders>
+        <ServerLogsPanel
+          server={server}
+          embedded
+          focus={{ section: "backups", backupId: "bak-fail" }}
+          onFocusConsumed={onFocusConsumed}
+        />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByText("C:/ARK/backups/fail.zip")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Backups" })).toHaveAttribute(
+      "data-active",
+      "true",
+    );
+    const row = document.querySelector('[data-backup-id="bak-fail"]');
+    expect(row).toBeTruthy();
+    expect(row?.className).toMatch(/eventRowFocused/);
+    await waitFor(() => {
+      expect(onFocusConsumed).toHaveBeenCalled();
+    });
+  });
+
+  it("ignores stale backup focus after a newer focus wins the race", async () => {
+    const onFocusConsumed = vi.fn();
+    const resolvers: Array<
+      (value: Awaited<ReturnType<typeof window.api.listServerLogs>>) => void
+    > = [];
+    vi.mocked(window.api.listServerLogs).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolvers.push(resolve);
+        }),
+    );
+
+    const logsPayload = {
+      serverId: server.id,
+      updateFiles: [] as [],
+      backups: [
+        {
+          id: "bak-fail",
+          serverId: server.id,
+          type: "scheduled" as const,
+          kind: "world" as const,
+          path: "C:/ARK/backups/fail.zip",
+          sizeBytes: 0,
+          status: "failed" as const,
+          createdAt: "2026-07-23T10:00:00.000Z",
+          completedAt: "2026-07-23T10:01:00.000Z",
+          notes: "Disk full",
+        },
+      ],
+      events: [
+        {
+          id: 42,
+          serverId: server.id,
+          type: "error" as const,
+          severity: "error" as const,
+          message: "Something broke",
+          createdAt: "2026-07-23T10:01:00.000Z",
+          details: null,
+        },
+      ],
+      runtimeLogLines: [] as string[],
+    };
+
+    const { rerender } = render(
+      <AppProviders>
+        <ServerLogsPanel
+          server={server}
+          embedded
+          focus={{ section: "backups", backupId: "bak-fail" }}
+          onFocusConsumed={onFocusConsumed}
+        />
+      </AppProviders>,
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    // Mount load + backups focus load may both call listServerLogs.
+    const pendingBeforeRerender = resolvers.length;
+    expect(pendingBeforeRerender).toBeGreaterThanOrEqual(1);
+
+    rerender(
+      <AppProviders>
+        <ServerLogsPanel
+          server={server}
+          embedded
+          focus={{ section: "events", eventId: 42 }}
+          onFocusConsumed={onFocusConsumed}
+        />
+      </AppProviders>,
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(resolvers.length).toBeGreaterThan(pendingBeforeRerender);
+
+    await act(async () => {
+      // Resolve newest focus first, then any stale loads — stale must not win.
+      for (let i = resolvers.length - 1; i >= 0; i -= 1) {
+        resolvers[i]!({ ok: true, data: logsPayload });
+        await Promise.resolve();
+      }
+      await Promise.resolve();
+    });
+
+    expect(await screen.findByText("Something broke")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Events" })).toHaveAttribute(
+      "data-active",
+      "true",
+    );
+    expect(document.querySelector('[data-backup-id="bak-fail"]')).toBeNull();
+    const eventControl = document.querySelector('[data-log-event-id="42"]');
+    expect(eventControl?.closest("[class*='eventRowFocused']")).toBeTruthy();
+    await waitFor(() => {
+      expect(onFocusConsumed).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it("forces Events tab when focus includes an eventId even if section is updates", async () => {
     render(
       <AppProviders>
