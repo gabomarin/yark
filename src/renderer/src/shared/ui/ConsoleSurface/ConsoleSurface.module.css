@@ -1,0 +1,24 @@
+.root {
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--ark-gray-a3);
+  border-radius: var(--app-radius-md);
+  background: var(--ark-gray-1);
+  color: var(--ark-blue-12);
+}
+
+.fill {
+  flex: 1 1 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.content {
+  margin: 0;
+  padding: var(--app-space-sm);
+  font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

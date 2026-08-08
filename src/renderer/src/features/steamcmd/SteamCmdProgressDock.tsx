@@ -4,7 +4,7 @@ import { CaretDown, CaretUp, ProhibitInset, TerminalWindow } from "@phosphor-ico
 import { ActionIcon, Badge, Button, Divider, Group, Progress, Stack, Text, Title, Tooltip } from "@mantine/core";
 import { formatSteamCmdByteProgress, steamCmdByteProgressNoun, hasMeaningfulSteamCmdByteProgress } from "@shared/steamcmd-progress";
 import type { SteamCmdConsoleSnapshot, SteamCmdStatus } from "@shared/types";
-import { AutoScrollConsole } from "./AutoScrollConsole";
+import { ConsoleSurface } from "@ui/ConsoleSurface/ConsoleSurface";
 import classes from "./SteamCmdProgressDock.module.css";
 
 interface Props {
@@ -186,11 +186,13 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
           </Text>
         )}
 
-        <AutoScrollConsole
-          className={classes.console}
-          lines={lines}
-          maxLines={60}
-          emptyText="Waiting for progress…"
+        <ConsoleSurface
+          h={180}
+          text={
+            lines.length === 0
+              ? "Waiting for progress…"
+              : lines.slice(-60).join("\n")
+          }
         />
         {jobs.length > 0 && (
           <Stack gap="xs">

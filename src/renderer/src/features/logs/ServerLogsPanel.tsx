@@ -25,6 +25,7 @@ import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { ReactElement, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { ConsoleSurface } from "@ui/ConsoleSurface/ConsoleSurface";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
 import { EventDetailsBody } from "./EventDetailsBody";
@@ -833,12 +834,13 @@ export function ServerLogsPanel(props: Props): ReactElement {
                         icon={<FileText size={16} />}
                       />
                     </div>
-                    <pre
-                      className={classes.console}
+                    <ConsoleSurface
+                      fill
+                      text={
+                        updateContent.length > 0 ? updateContent : "Loading log content..."
+                      }
                       data-logs-scroll-region="update-content"
-                    >
-                      {updateContent.length > 0 ? updateContent : "Loading log content..."}
-                    </pre>
+                    />
                   </>
                 )}
               </Stack>

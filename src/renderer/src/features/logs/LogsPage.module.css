@@ -391,22 +391,6 @@
   white-space: nowrap;
 }
 
-.console {
-  flex: 1;
-  min-height: 0;
-  margin: 0;
-  padding: 12px;
-  border-radius: 14px;
-  border: 1px solid var(--ark-gray-a3);
-  background: var(--ark-gray-1);
-  color: var(--ark-blue-12);
-  font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
-  font-size: 12px;
-  line-height: 1.45;
-  overflow: auto;
-  white-space: pre-wrap;
-}
-
 @media (max-width: 960px) {
   .updatesLayout {
     grid-template-columns: 1fr;

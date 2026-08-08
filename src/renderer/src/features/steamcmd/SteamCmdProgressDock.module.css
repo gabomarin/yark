@@ -22,18 +22,3 @@
   width: 72px;
   flex-shrink: 0;
 }
-
-.console {
-  margin: 0;
-  padding: 10px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: #0d1118;
-  color: #d8e7ff;
-  font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
-  font-size: 12px;
-  line-height: 1.4;
-  max-height: 180px;
-  overflow: auto;
-  white-space: pre-wrap;
-}
