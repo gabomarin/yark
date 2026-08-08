@@ -162,6 +162,90 @@ describe("ServerModsPanel", () => {
     });
   });
 
+  it("does not revert a concurrent toggle while refreshing map-mod metadata", async () => {
+    const api = installApi();
+    vi.spyOn(notifications, "show").mockImplementation(() => "id");
+    let releaseDetail!: () => void;
+    const detailGate = new Promise<void>((resolve) => {
+      releaseDetail = resolve;
+    });
+    const mapModWithoutToken: ModMetadata = {
+      ...mapModDetail,
+      summary: "A custom map pack.",
+    };
+    vi.mocked(api.getModByReference).mockImplementation(async () => {
+      await detailGate;
+      return {
+        ok: true,
+        data: {
+          ...mapModWithoutToken,
+          description: "Map Name: Svartalfheim_WP\nMod ID: 962796",
+        },
+      };
+    });
+    const user = userEvent.setup();
+    const mapServer: ServerProfile = {
+      ...server,
+      mods: ["962796", "947033"],
+      disabledMods: ["962796"],
+      modMetadataCache: {
+        "962796": mapModWithoutToken,
+        "947033": awesomeDetail,
+      },
+    };
+    render(
+      <AppProviders>
+        <ServerModsPanel server={mapServer} onServerUpdated={vi.fn()} />
+      </AppProviders>,
+    );
+
+    await user.click(
+      screen.getByRole("switch", { name: "Enable Svartalfheim Premium" }),
+    );
+    await waitFor(() => {
+      expect(api.updateServer).toHaveBeenCalledWith(
+        "server-1",
+        expect.objectContaining({
+          mods: ["962796", "947033"],
+          disabledMods: [],
+        }),
+      );
+    });
+
+    await user.click(
+      screen.getByRole("switch", { name: "Disable Awesome Spyglass!" }),
+    );
+    await waitFor(() => {
+      expect(api.updateServer).toHaveBeenCalledWith(
+        "server-1",
+        expect.objectContaining({
+          mods: ["962796", "947033"],
+          disabledMods: ["947033"],
+        }),
+      );
+    });
+
+    const callsBeforeRelease = vi.mocked(api.updateServer).mock.calls.length;
+    releaseDetail();
+    await waitFor(() => {
+      expect(vi.mocked(api.updateServer).mock.calls.length).toBeGreaterThan(
+        callsBeforeRelease,
+      );
+    });
+    const lastCall = vi.mocked(api.updateServer).mock.calls.at(-1)?.[1];
+    expect(lastCall).toEqual(
+      expect.objectContaining({
+        mods: ["962796", "947033"],
+        disabledMods: ["947033"],
+        modMetadataCache: expect.objectContaining({
+          "962796": expect.objectContaining({
+            description: "Map Name: Svartalfheim_WP\nMod ID: 962796",
+          }),
+        }),
+      }),
+    );
+  });
+
   it("uses cached metadata and disables a mod without removing it", async () => {
     const api = installApi();
     const user = userEvent.setup();

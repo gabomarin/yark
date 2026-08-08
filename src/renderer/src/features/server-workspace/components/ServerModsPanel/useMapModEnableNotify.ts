@@ -19,8 +19,8 @@ interface PersistCacheFn {
  * toast the operator to pick it under Server Information → Map. Never changes map (#192).
  */
 export function useMapModEnableNotify(options: {
-  configuredIds: string[];
-  disabledIds: string[];
+  configuredIdsRef: MutableRefObject<string[]>;
+  disabledIdsRef: MutableRefObject<string[]>;
   cacheRef: MutableRefObject<Record<string, ModMetadata>>;
   persist: PersistCacheFn;
 }): {
@@ -40,11 +40,11 @@ export function useMapModEnableNotify(options: {
         const result = await window.api.getModByReference(modId);
         if (result.ok && isMapModCandidate(result.data)) {
           detail = result.data;
+          // Re-read lists after the await so a concurrent toggle is not reverted.
+          // Only enrich cache; do not force-enable this mod if the operator disabled it.
           await options.persist(
-            options.configuredIds.includes(modId)
-              ? options.configuredIds
-              : [...options.configuredIds, modId],
-            options.disabledIds.filter((id) => id !== modId),
+            options.configuredIdsRef.current,
+            options.disabledIdsRef.current,
             {
               ...options.cacheRef.current,
               [detail.id]: detail,

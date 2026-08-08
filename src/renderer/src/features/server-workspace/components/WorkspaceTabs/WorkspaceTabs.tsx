@@ -75,7 +75,9 @@ export function WorkspaceTabs(props: Props): ReactElement {
         <div className={classes.tabPanel}>
           {props.value === "server" && (
             <ServerForm
-              key={props.server.id}
+              // Remount when install path changes (Move) without remounting on every
+              // mods/metadata refresh (updatedAt), which closed the Map select mid-pick.
+              key={`${props.server.id}:${props.server.installDir}`}
               initial={props.server}
               servers={props.servers}
               variant="embedded"

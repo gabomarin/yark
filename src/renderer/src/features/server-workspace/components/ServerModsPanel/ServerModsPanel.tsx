@@ -28,6 +28,10 @@ export function ServerModsPanel(props: Props): ReactElement {
   const [view, setView] = useState<"server" | "discover">("server");
   const [configuredIds, setConfiguredIds] = useState(props.server.mods);
   const [disabledIds, setDisabledIds] = useState(props.server.disabledMods ?? []);
+  const configuredIdsRef = useRef(configuredIds);
+  const disabledIdsRef = useRef(disabledIds);
+  configuredIdsRef.current = configuredIds;
+  disabledIdsRef.current = disabledIds;
   const cacheRef = useRef(props.server.modMetadataCache ?? {});
   const [metadata, setMetadata] = useState<Map<string, ModMetadata>>(
     () => metadataMap(props.server.modMetadataCache),
@@ -112,8 +116,8 @@ export function ServerModsPanel(props: Props): ReactElement {
     props.onServerUpdated();
   };
   const { notifyMapModIfNeeded } = useMapModEnableNotify({
-    configuredIds,
-    disabledIds,
+    configuredIdsRef,
+    disabledIdsRef,
     cacheRef,
     persist,
   });
