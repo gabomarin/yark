@@ -11,12 +11,13 @@ Research spike (not production UX). Branch: `spike/65-modded-maps`.
 | ASE `ActiveMapMod` / `ActiveMods` | **Not used** — stripped as `aseLegacy` |
 | Obsolete `-MapModID=` | Catalogued **unsupported**; live checklist must confirm map token + `-mods=` is enough |
 
-YARK already accepts any non-empty `profile.map` string in validation. The create/edit UI currently locks the field to `KNOWN_MAPS` only. CurseForge `ModMetadata` has **no** dedicated launch-map field today (`summary`, `categories`, `thumbnailUrl` only — Worker does not return full description HTML).
+YARK already accepts any non-empty `profile.map` string in validation. Server Information supports **Custom…** map tokens on this spike branch. CurseForge `ModMetadata` has **no** dedicated launch-map field today (`summary`, `categories`, `thumbnailUrl` only — Worker does not return full description HTML).
 
-Prototype helpers (tests only; not wired to UI/DB):
+Prototype helpers / UI:
 
 - [`src/shared/map-identity.ts`](../../src/shared/map-identity.ts) — official vs custom, validation, thumb fallback
 - [`src/shared/map-token-suggest.ts`](../../src/shared/map-token-suggest.ts) — Maps category + `Map Name` / `Server Name` / `*_WP` heuristics
+- [`ServerFormMapField`](../../src/renderer/src/features/servers/components/ServerForm/ServerFormMapField.tsx) — Custom… control
 
 ## Evidence catalog
 
@@ -49,19 +50,31 @@ Unit fixtures for extraction live in `tests/unit/map-token-suggest.test.ts`.
 | --- | --- |
 | Launch token + INI for current ASA map mods? | Map token in argv[0]; Project ID on `-mods=`. Do **not** write `ActiveMapMod`. |
 | Is CurseForge Project ID enough to derive the token? | **No.** Same `_WP` can map to free + Premium IDs (Svartalfheim, Forglar). Token comes from author text / operator input. |
-| Must the map mod appear in `-mods=`? | **Yes** (observed hoster + author practice). Link via proposed `mapModId` and warn if disabled/missing. |
-| Official vs custom identity? | Official = `map ∈ KNOWN_MAPS`. Custom = free-form `map` + optional `mapModId`. |
+| Must the map mod appear in `-mods=`? | **Yes — required for a correct custom-map boot.** Custom launch token alone is not enough; the map pack Project ID must be **enabled** on Mods so it appears in `-mods=`. Live-validated with Svartalfheim Premium. |
+| Official vs custom identity? | Official = `map ∈ KNOWN_MAPS`. Custom = free-form `map` + linked `mapModId` (recommended). |
 | Offline vs Mods metadata validation? | Offline: non-empty token, no spaces. Metadata: Maps category + heuristic when description available; thumb from `thumbnailUrl`. |
-| Disabled / removed / unresolved map mod? | Keep `map` / `mapModId`; warn on Launch/start; do not auto-clear. |
+| Disabled / removed / unresolved map mod? | Keep `map` / `mapModId`; **alert the operator** on Launch preview and start (inconsistency); do not auto-clear. |
 | Clone / import / export? | Clone should copy `map` + `mapModId` with mods. Config transfer keeps map as **identity** (not copied). |
+
+## Consistency rule (spike outcome — must ship in Phase 1)
+
+For a **custom** map, a correct dedicated boot needs **both**:
+
+1. `profile.map` = author launch token (e.g. `Svartalfheim_WP` via Custom…), and  
+2. The map’s CurseForge Project ID **enabled** in Mods → present on `-mods=`.
+
+If either side is missing or the linked `mapModId` is disabled / not on the mods list, YARK should **surface an explicit operator alert** (Launch tab + start path). Soft-warn is the minimum; blocking start is acceptable once `mapModId` is persisted (#190 / #194).
+
+`validateMapIdentity` already returns warnings for “not on mods list” / “disabled”; wire those into UI/start in #194.
 
 ## Phase 1 product recommendation
 
 1. **Happy path:** enable a Maps-category mod → extract token when possible → confirm dialog (editable) → set `map` + `mapModId`.
 2. **Fallback (required):** Server Information → Map → **Custom…** free-text launch token when extract fails or operator declines. (**Shipped on this spike branch** via `ServerFormMapField`.)
-3. **Thumb:** bundled art for official; mod logo (`thumbnailUrl`) for custom when `mapModId` is linked.
-4. **Failure:** empty/invalid token blocks save/start; missing/disabled `mapModId` warns (soft).
-5. Persist `mapModId` in SQLite in the implementation PR (not this spike).
+3. **Consistency alerts:** custom map without enabled map mod (or `mapModId` mismatch) → warn operator (#194).
+4. **Thumb:** bundled art for official; mod logo (`thumbnailUrl`) for custom when `mapModId` is linked.
+5. **Failure:** empty/invalid token blocks save/start; missing/disabled map mod warns (or blocks start after #190).
+6. Persist `mapModId` in SQLite in the implementation PR (#190).
 
 ```text
 Enable Maps mod → extract? → confirm → map + mapModId
@@ -77,11 +90,16 @@ Date: 2026-08-07. Install with Premium content; YARK profile on spike branch.
 | Mods: enable `962796` | OK |
 | Server Information → Map → **Custom…** → `Svartalfheim_WP` | OK (UI shipped on this branch) |
 | Launch preview: map URL + `-mods=…962796…` | OK |
-| Dedicated boot | ASA started downloading the map mod (CurseForge content pull) |
-| `-MapModID=` | **Not used** — download proceeded with map token + `-mods=` only |
-| Final join / world identity | Operator confirming after download completes (not a spike blocker) |
+| Dedicated boot | ASA downloaded + installed mod `962796`, loaded mods, advertised for join |
+| Commandline (ASA log) | `"Svartalfheim_WP?SessionName=…"` `-mods=962796` (no `-MapModID`) |
+| Join timeout (initial) | **False alarm for the map** — operator had `-exclusivejoin` without whitelist; same timeout on The Island |
+| Join after removing exclusivejoin | Unblocked; map path confirmed viable |
 
-**Finding:** for Svartalfheim Premium, the ASA dedicated path accepts **`Svartalfheim_WP` + `-mods=962796`** without ASE `ActiveMapMod` or `-MapModID=`. That matches the YARK launch contract and unblocks Phase 1 implementation.
+**Findings:**
+
+1. Svartalfheim Premium boots with **`Svartalfheim_WP` + enabled `-mods=962796`** only — no `ActiveMapMod` / `-MapModID=`.
+2. **Both** custom map token and enabled map mod are required for a correct custom-map server; YARK should alert on inconsistency (#194).
+3. Join failures with `-exclusivejoin` and an empty whitelist are operator/config issues, not map-mod failures.
 
 ## Prototype status
 
@@ -91,7 +109,7 @@ Date: 2026-08-07. Install with Premium content; YARK profile on spike branch.
 | `map-identity` / `map-token-suggest` + unit tests | Done |
 | ServerForm **Custom…** map token | Done on spike branch (covers core of #191) |
 | Persist `mapModId`, Mods auto-suggest, thumbs, warnings, Worker description | Follow-up issues below |
-| Live boot | Validated through mod download; world confirm optional |
+| Live boot | Validated end-to-end (install + advertise); join fixed after removing `-exclusivejoin` |
 
 ## Implementation plan (Phase 1+)
 
@@ -102,7 +120,7 @@ Recommended order after merging this spike:
 3. **[#192](https://github.com/gabomarin/yark/issues/192)** — Mods enable → extract/confirm (needs #195 for high hit rate); on miss, hint to Custom map.
 4. **[#195](https://github.com/gabomarin/yark/issues/195)** — Worker optional description text for `Map Name:` heuristics.
 5. **[#193](https://github.com/gabomarin/yark/issues/193)** — Custom map thumb from mod `thumbnailUrl`.
-6. **[#194](https://github.com/gabomarin/yark/issues/194)** — Launch/start warnings when `mapModId` disabled/missing.
+6. **[#194](https://github.com/gabomarin/yark/issues/194)** — **Priority product outcome:** Launch/start alerts when custom map is set but map mod is missing/disabled (or `mapModId` inconsistent). Spike confirmed this pairing is required for a correct boot.
 
 Do **not** revive `ActiveMapMod` / `-MapModID=` unless a later map fails the token + `-mods=` path.
 
