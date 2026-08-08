@@ -24,6 +24,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Versioned **ASA launch-options catalog** (wiki ASA Check/Missing + YARK-owned classification) with a browse modal (#92).
 - Server workspace **Launch** tab: curated structured ASA flags, raw Extra arguments, command preview, and caution alerts for sticky risky options (#93).
 - Backup fleet alerts can be **Dismiss**ed; they stay hidden until the condition changes (e.g. a new failed backup).
+- Global **command palette** (Ctrl/Cmd+K) via Mantine Spotlight for page jumps and opening a server by name (#104).
 
 ### Changed
 

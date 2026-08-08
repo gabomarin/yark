@@ -56,6 +56,7 @@ import {
   type UiDensity,
 } from "@features/settings/settingsModel";
 import type { Route } from "@layout/Sidebar/Sidebar";
+import { AppSpotlight } from "@layout/AppSpotlight/AppSpotlight";
 
 type Overlay =
   | { kind: "create" }
@@ -1091,18 +1092,34 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     [runAction],
   );
 
-  const navigate = useCallback((next: Route) => {
-    const go = () => {
-      setOverlay(null);
-      setRoute(next);
-    };
+  const runWithWorkspaceLeaveGuard = useCallback((action: () => void) => {
     const guard = workspaceLeaveGuardRef.current;
     if (guard !== null) {
-      guard(go);
+      guard(action);
       return;
     }
-    go();
+    action();
   }, []);
+
+  const navigate = useCallback(
+    (next: Route) => {
+      runWithWorkspaceLeaveGuard(() => {
+        setOverlay(null);
+        setRoute(next);
+      });
+    },
+    [runWithWorkspaceLeaveGuard],
+  );
+
+  const openServerFromSpotlight = useCallback(
+    (serverId: string) => {
+      runWithWorkspaceLeaveGuard(() => {
+        setRoute("overview");
+        setOverlay({ kind: "workspace", serverId, initialTab: "server" });
+      });
+    },
+    [runWithWorkspaceLeaveGuard],
+  );
 
   const registerWorkspaceLeaveGuard = useCallback(
     (guard: ((action: () => void) => void) | null) => {
@@ -1383,6 +1400,11 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
   return (
     <AppProviders density={uiDensity}>
+      <AppSpotlight
+        servers={servers}
+        onNavigate={navigate}
+        onOpenServer={openServerFromSpotlight}
+      />
       <InstallHealthScanProgress
         active={installScan.active}
         label="Checking install folders…"
