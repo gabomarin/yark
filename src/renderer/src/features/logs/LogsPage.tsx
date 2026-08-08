@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { ClockCounterClockwise } from "@phosphor-icons/react";
 import {
+  Accordion,
   Alert,
   Badge,
   Button,
@@ -196,72 +197,82 @@ export function LogsPage(props: Props): ReactElement {
               />
             ) : (
               <div className={classes.eventList} data-logs-scroll-region="fleet">
-                {filteredFleetEvents.map((event) => {
-                  const server =
-                    event.serverId !== null ? serverById.get(event.serverId) : undefined;
-                  const serverName =
-                    event.serverId !== null
-                      ? (server?.name ?? "Unknown server")
-                      : "System";
-                  const expanded = expandedEventId === event.id;
-                  return (
-                    <div
-                      key={event.id}
-                      className={[
-                        classes.fleetCard,
-                        expanded ? classes.eventRowExpanded : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                    >
-                      <button
-                        type="button"
-                        className={`${classes.fleetRow} ${classes.fleetRowClickable}`}
-                        aria-expanded={expanded}
-                        onClick={() =>
-                          setExpandedEventId((current) =>
-                            current === event.id ? null : event.id,
-                          )
-                        }
-                      >
-                        <Text size="sm" c="dimmed" className={classes.fleetWhen}>
-                          {formatLogDateTime(event.createdAt)}
-                        </Text>
-                        <Badge color={severityColor(event.severity)} variant="light">
-                          {event.severity}
-                        </Badge>
-                        <Text size="sm" fw={600} className={classes.fleetServer}>
-                          {serverName}
-                        </Text>
-                        {server?.enabled === false && (
-                          <Badge size="xs" color="gray" variant="light">
-                            Inactive
-                          </Badge>
-                        )}
-                        <Text size="sm" className={classes.fleetMessage}>
-                          {event.message}
-                        </Text>
-                      </button>
-                      <EventDetailsBody event={event} expanded={expanded} />
-                      {expanded && event.serverId !== null && (
-                        <Group justify="flex-end" px="sm" pb="sm">
-                          <Button
-                            size="compact-sm"
-                            variant="light"
-                            onClick={() =>
-                              props.onOpenServerLogs(
-                                event.serverId!,
-                                focusForEvent(event),
-                              )
-                            }
-                          >
-                            Open in server
-                          </Button>
-                        </Group>
-                      )}
-                    </div>
-                  );
-                })}
+                <Accordion
+                  variant="separated"
+                  keepMounted={false}
+                  transitionDuration={0}
+                  value={
+                    expandedEventId !== null ? String(expandedEventId) : null
+                  }
+                  onChange={(value) => {
+                    if (value === null) {
+                      setExpandedEventId(null);
+                      return;
+                    }
+                    const id = Number(value);
+                    setExpandedEventId(Number.isFinite(id) ? id : null);
+                  }}
+                  classNames={{
+                    item: classes.fleetAccordionItem,
+                    control: classes.fleetAccordionControl,
+                    panel: classes.eventAccordionPanel,
+                  }}
+                >
+                  {filteredFleetEvents.map((event) => {
+                    const server =
+                      event.serverId !== null
+                        ? serverById.get(event.serverId)
+                        : undefined;
+                    const serverName =
+                      event.serverId !== null
+                        ? (server?.name ?? "Unknown server")
+                        : "System";
+                    return (
+                      <Accordion.Item key={event.id} value={String(event.id)}>
+                        <Accordion.Control>
+                          <div className={classes.fleetRow}>
+                            <Text size="sm" c="dimmed" className={classes.fleetWhen}>
+                              {formatLogDateTime(event.createdAt)}
+                            </Text>
+                            <Badge color={severityColor(event.severity)} variant="light">
+                              {event.severity}
+                            </Badge>
+                            <Text size="sm" fw={600} className={classes.fleetServer}>
+                              {serverName}
+                            </Text>
+                            {server?.enabled === false && (
+                              <Badge size="xs" color="gray" variant="light">
+                                Inactive
+                              </Badge>
+                            )}
+                            <Text size="sm" className={classes.fleetMessage}>
+                              {event.message}
+                            </Text>
+                          </div>
+                        </Accordion.Control>
+                        <Accordion.Panel>
+                          <EventDetailsBody event={event} />
+                          {event.serverId !== null && (
+                            <Group justify="flex-end" mt="sm">
+                              <Button
+                                size="compact-sm"
+                                variant="light"
+                                onClick={() =>
+                                  props.onOpenServerLogs(
+                                    event.serverId!,
+                                    focusForEvent(event),
+                                  )
+                                }
+                              >
+                                Open in server
+                              </Button>
+                            </Group>
+                          )}
+                        </Accordion.Panel>
+                      </Accordion.Item>
+                    );
+                  })}
+                </Accordion>
               </div>
             )}
           </Stack>

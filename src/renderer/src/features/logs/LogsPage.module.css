@@ -12,36 +12,18 @@
   grid-template-columns: 160px 88px 140px minmax(0, 1fr);
   gap: 10px;
   align-items: center;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--app-color-border) 50%, transparent);
-  background: color-mix(in srgb, var(--app-color-panel) 45%, transparent);
   text-align: left;
   color: inherit;
   width: 100%;
+  min-width: 0;
 }
 
-.fleetRowClickable {
-  cursor: pointer;
-}
-
-.fleetRowClickable:hover {
-  border-color: color-mix(in srgb, var(--ark-blue-7) 50%, var(--app-color-border));
-}
-
-.fleetCard {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 4px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--app-color-border) 45%, transparent);
+.fleetAccordionItem {
   background: color-mix(in srgb, var(--app-color-panel) 35%, transparent);
 }
 
-.fleetCard .fleetRow {
-  border: none;
-  background: transparent;
+.fleetAccordionControl {
+  padding-block: var(--app-space-xs);
 }
 
 .fleetWhen,
@@ -198,26 +180,16 @@
   overflow: auto;
 }
 
-.eventRow {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  border-top: 1px solid var(--ark-gray-a3);
-}
-
-.eventRowButton {
-  width: 100%;
-  text-align: left;
-  color: inherit;
+.eventAccordionItem {
   background: color-mix(in srgb, var(--app-color-panel) 35%, transparent);
-  cursor: pointer;
 }
 
-.eventRowButton:hover {
-  border-color: color-mix(in srgb, var(--ark-blue-7) 40%, transparent);
+.eventAccordionControl {
+  text-align: left;
+}
+
+.eventAccordionPanel {
+  padding-top: 0;
 }
 
 .eventRowMain {
@@ -225,20 +197,17 @@
   flex: 1;
 }
 
-.eventRow:first-child {
-  border-top-color: transparent;
-  padding-top: 10px;
+/* Keep severity badge vertically centered with the Accordion chevron. */
+.eventSeverityBadge {
+  flex-shrink: 0;
+  align-self: center;
+  margin-inline-end: var(--app-space-xs);
 }
 
 .eventRowFocused {
   border-color: color-mix(in srgb, var(--ark-blue-7) 65%, transparent);
-  border-top-color: color-mix(in srgb, var(--ark-blue-7) 65%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ark-blue-7) 35%, transparent);
   background: color-mix(in srgb, var(--ark-blue-7) 12%, var(--app-color-panel));
-}
-
-.eventRowExpanded {
-  gap: 10px;
 }
 
 .eventDetails {

@@ -158,7 +158,9 @@ describe("ServerLogsPanel", () => {
     expect(scrollIntoView.mock.calls.length).toBe(scrollCalls);
 
     await user.click(screen.getByRole("button", { name: /Something broke/i }));
-    expect(screen.queryByText(/Disk full during backup/i)).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText(/Disk full during backup/i)).not.toBeInTheDocument();
+    });
   });
 
   it("loads update log content only when a job is selected and clears it when leaving Updates", async () => {

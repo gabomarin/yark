@@ -109,22 +109,8 @@
   font-size: 18px;
 }
 
-.recentList {
-  display: flex;
-  flex-direction: column;
-}
-
-.recentRow {
-  display: grid;
-  grid-template-columns: 8px 64px minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-  min-height: 36px;
-  border-bottom: 1px solid color-mix(in srgb, var(--app-color-border) 70%, transparent);
-}
-
-.recentRow:last-child {
-  border-bottom: 0;
+.recentTimeline {
+  padding-top: var(--app-space-xs);
 }
 
 .recentEmpty {
@@ -132,23 +118,9 @@
   padding: 7px 0;
 }
 
-.eventIndicator {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--app-color-accent);
-}
-
-.eventIndicator[data-severity="warning"] {
-  background: var(--app-color-warn);
-}
-
-.eventIndicator[data-severity="error"] {
-  background: var(--app-color-bad);
-}
-
 .eventTime {
   font-variant-numeric: tabular-nums;
+  font-weight: 400;
 }
 
 .event-info {

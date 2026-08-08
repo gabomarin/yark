@@ -6,11 +6,10 @@ import classes from "./LogsPage.module.css";
 
 interface Props {
   event: AppEvent;
-  expanded: boolean;
 }
 
-export function EventDetailsBody({ event, expanded }: Props): ReactElement | null {
-  if (!expanded) return null;
+/** Detail body for an expanded log event (Accordion.Panel content). */
+export function EventDetailsBody({ event }: Props): ReactElement {
   const details = resolveEventDetails(event);
   return (
     <div className={classes.eventDetails}>
