@@ -11,7 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
-- Custom / map-mod servers show the CurseForge mod **logo** as map art on cards and the workspace header when linked (#193).
+- Custom / map-mod servers show the CurseForge mod **logo** as map art on cards, the workspace header, and the server switcher list when linked (#193). Official maps use bundled art in those surfaces too.
 - Enabling a CurseForge **Maps** mod shows a toast and lists it under Server Information → Map (**Map mods** group); choosing it sets the launch token and linked `mapModId` (#192).
 - CurseForge proxy returns truncated plain-text **description** for **Maps**-category mods on get/batch so map-token heuristics can read `Map Name:` (#195).
 - Launch tab yellow alert and Start block when a custom map’s linked map mod is missing, disabled, or unset (#194).

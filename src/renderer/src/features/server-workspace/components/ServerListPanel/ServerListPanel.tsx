@@ -1,11 +1,11 @@
 import type { ReactElement } from "react";
-import { CaretRight, HardDrives, Plus } from "@phosphor-icons/react";
+import { CaretRight, Plus } from "@phosphor-icons/react";
 import { Badge, Button, Stack, Text, UnstyledButton } from "@mantine/core";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { useMemo, useState } from "react";
+import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import { SearchField } from "@ui/SearchField/SearchField";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
-import { serverRuntimeStatusTone } from "@ui/ServerRuntimeStatusBadge/serverRuntimeStatus";
 import classes from "./ServerListPanel.module.css";
 
 interface Props {
@@ -46,7 +46,6 @@ export function ServerListPanel(props: Props): ReactElement {
         {filtered.map((server) => {
           const status = props.statuses.get(server.id)?.status ?? "stopped";
           const selected = server.id === props.selectedServerId;
-          const tone = serverRuntimeStatusTone(status);
           return (
             <UnstyledButton
               key={server.id}
@@ -54,9 +53,18 @@ export function ServerListPanel(props: Props): ReactElement {
               data-selected={selected || undefined}
               onClick={() => props.onSelectServer(server.id)}
             >
-              <span className={classes.thumb} data-tone={tone}>
-                <HardDrives size={16} weight="duotone" />
-              </span>
+              <MapArtThumb
+                mapId={server.map}
+                mapModId={server.mapModId}
+                modThumbnailUrl={
+                  server.mapModId
+                    ? server.modMetadataCache?.[server.mapModId]?.thumbnailUrl
+                    : null
+                }
+                size="sm"
+                shape="rounded"
+                className={classes.thumb}
+              />
               <span className={classes.itemBody}>
                 <Text className={classes.itemName} fw={600} title={server.name} lineClamp={1}>
                   {server.name}

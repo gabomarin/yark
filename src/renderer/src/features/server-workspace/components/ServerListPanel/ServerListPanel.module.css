@@ -65,31 +65,12 @@
 
 .item[data-selected] .thumb {
   border-color: var(--ark-blue-a5);
-  background: var(--ark-blue-a2);
 }
 
 .thumb {
-  display: grid;
-  place-items: center;
+  flex-shrink: 0;
   width: 32px;
   height: 32px;
-  flex-shrink: 0;
-  border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--app-color-cryo) 24%, var(--app-color-border));
-  background: color-mix(in srgb, var(--app-color-cryo) 8%, var(--app-color-panel));
-  color: var(--app-color-accent);
-}
-
-.thumb[data-tone="ok"] {
-  color: var(--app-color-ok);
-}
-
-.thumb[data-tone="bad"] {
-  color: var(--app-color-bad);
-}
-
-.thumb[data-tone="info"] {
-  color: var(--app-color-accent);
 }
 
 .itemBody {
