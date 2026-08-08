@@ -51,7 +51,7 @@ export function ConsoleSurface(props: Props): ReactElement {
       return;
     }
     programmaticScrollRef.current = true;
-    node.scrollTop = node.scrollHeight;
+    node.scrollTop = Math.max(0, node.scrollHeight - node.clientHeight);
     // Release after paint so layout/scrollbar updates do not clear stickiness.
     requestAnimationFrame(() => {
       programmaticScrollRef.current = false;

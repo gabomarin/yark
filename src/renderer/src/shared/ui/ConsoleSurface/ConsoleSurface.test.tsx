@@ -65,8 +65,10 @@ describe("ConsoleSurface", () => {
     );
 
     const viewport = getViewport(container);
-    mockViewportMetrics(viewport, { scrollHeight: 400, clientHeight: 120, scrollTop: 280 });
+    const metrics = { scrollHeight: 400, clientHeight: 120, scrollTop: 280 };
+    mockViewportMetrics(viewport, metrics);
 
+    metrics.scrollHeight = 800;
     rerender(
       <AppProviders>
         <ConsoleSurface text={"a\n".repeat(40)} h={120} />
@@ -77,7 +79,7 @@ describe("ConsoleSurface", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    expect(viewport.scrollTop).toBe(400);
+    expect(viewport.scrollTop).toBe(800 - 120);
   });
 
   it("does not force scroll after the user scrolls up past the threshold", async () => {
