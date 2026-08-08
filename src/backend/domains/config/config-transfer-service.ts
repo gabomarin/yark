@@ -276,6 +276,7 @@ export class ConfigTransferService {
           this.instances.update(targetId, {
             name: target.name,
             map: target.map,
+            mapModId: target.mapModId ?? null,
             installDir: target.installDir,
             autoStart: target.autoStart,
             sessionName: target.sessionName,
@@ -605,6 +606,7 @@ export class ConfigTransferService {
         this.instances.update(targetId, {
           name: profileSnapshot.name,
           map: profileSnapshot.map,
+          mapModId: profileSnapshot.mapModId ?? null,
           installDir: profileSnapshot.installDir,
           autoStart: profileSnapshot.autoStart,
           sessionName: profileSnapshot.sessionName,

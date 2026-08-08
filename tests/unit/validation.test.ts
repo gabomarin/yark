@@ -70,6 +70,27 @@ describe("validateProfileInput", () => {
     expect(issues.some((i) => i.field === "extraArgs")).toBe(true);
   });
 
+  it("rejects invalid mapModId digits but not missing map-mod warnings (#190)", () => {
+    const invalid = validateProfileInput(
+      validInput({
+        map: "Svartalfheim_WP",
+        mapModId: "0abc",
+        mods: ["962796"],
+      }),
+    );
+    expect(invalid.some((i) => i.field === "mapModId")).toBe(true);
+
+    const missingMod = validateProfileInput(
+      validInput({
+        map: "Svartalfheim_WP",
+        mapModId: "962796",
+        mods: [],
+      }),
+    );
+    // Soft inconsistency warnings are reserved for Launch/start (#194).
+    expect(missingMod).toEqual([]);
+  });
+
   it("rejects ports out of range", () => {
     const issues = validateProfileInput(validInput({ gamePort: 80 }));
     expect(issues.some((i) => i.field === "gamePort")).toBe(true);

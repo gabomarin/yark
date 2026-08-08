@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   isOfficialMap,
+  persistableMapModId,
   resolveMapIdentity,
   resolveMapThumbnailUrl,
   validateMapIdentity,
@@ -53,6 +54,20 @@ describe("isOfficialMap / resolveMapIdentity", () => {
       map: "Svartalfheim_WP",
       mapModId: "962796",
     });
+  });
+});
+
+describe("persistableMapModId", () => {
+  it("returns null for official maps even when a mod id is supplied", () => {
+    expect(
+      persistableMapModId({ map: "TheIsland_WP", mapModId: "962796" }),
+    ).toBeNull();
+  });
+
+  it("keeps a valid custom map mod id", () => {
+    expect(
+      persistableMapModId({ map: "Svartalfheim_WP", mapModId: "962796" }),
+    ).toBe("962796");
   });
 });
 

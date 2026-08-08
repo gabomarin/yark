@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { DatabaseSync } from "node:sqlite";
 import { openDatabase } from "@backend/infra/db/database";
-import { ServerRepository } from "@backend/infra/db/server-repository";
+import {
+  coerceMapModId,
+  ServerRepository,
+} from "@backend/infra/db/server-repository";
 import type { ServerProfileInput } from "@shared/types";
 
 function input(overrides: Partial<ServerProfileInput> = {}): ServerProfileInput {
@@ -54,6 +57,35 @@ describe("ServerRepository", () => {
     expect(created.autoStart).toBe(true);
     const updated = repo.update(created.id, input({ autoStart: false, name: "Island" }));
     expect(updated!.autoStart).toBe(false);
+  });
+
+  it("coerces numeric SQLite map_mod_id values to strings (#190)", () => {
+    expect(coerceMapModId(962796)).toBe("962796");
+    expect(coerceMapModId(" 962796 ")).toBe("962796");
+    expect(coerceMapModId(null)).toBeNull();
+    expect(coerceMapModId("")).toBeNull();
+  });
+
+  it("persists mapModId for custom maps and clears it for official maps (#190)", () => {
+    const created = repo.create(
+      input({
+        map: "Svartalfheim_WP",
+        mapModId: "962796",
+        mods: ["962796"],
+      }),
+    );
+    expect(created.mapModId).toBe("962796");
+    expect(repo.get(created.id)?.mapModId).toBe("962796");
+
+    const official = repo.update(
+      created.id,
+      input({
+        map: "TheIsland_WP",
+        mapModId: "962796",
+        mods: ["962796"],
+      }),
+    );
+    expect(official!.mapModId).toBeNull();
   });
 
   it("persists disabled mods and metadata cache", () => {

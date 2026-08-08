@@ -127,6 +127,8 @@ function toInput(
   return {
     name,
     map: state.map.trim(),
+    // Companion Project ID UI is #191; preserve persisted value on edit/save.
+    mapModId: initial?.mapModId ?? null,
     installDir: isCreate
       ? resolveServerInstallDir(baseOrInstall, name)
       : baseOrInstall,

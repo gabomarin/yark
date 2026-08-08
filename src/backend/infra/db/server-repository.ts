@@ -7,6 +7,7 @@ import type {
   ServerProfile,
   ServerProfileInput,
 } from "@shared/types";
+import { persistableMapModId } from "@shared/map-identity";
 import {
   emptyStructuredLaunchArgs,
   normalizeStructuredLaunchArgs,
@@ -17,6 +18,8 @@ interface ServerRow {
   id: string;
   name: string;
   map: string;
+  /** SQLite may return number affinity for digit-only TEXT values. */
+  map_mod_id: string | number | null;
   install_dir: string;
   enabled: number;
   auto_start: number;
@@ -46,11 +49,23 @@ function parseJson<T>(raw: string | null | undefined, fallback: T): T {
   }
 }
 
+/** Coerce SQLite `map_mod_id` to string | null at the DB boundary (#190). */
+export function coerceMapModId(
+  value: string | number | null | undefined,
+): string | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  const text = String(value).trim();
+  return text.length > 0 ? text : null;
+}
+
 function rowToProfile(row: ServerRow): ServerProfile {
   return {
     id: row.id,
     name: row.name,
     map: row.map,
+    mapModId: coerceMapModId(row.map_mod_id),
     installDir: row.install_dir,
     enabled: row.enabled === 1,
     autoStart: row.auto_start === 1,
@@ -93,8 +108,13 @@ export class ServerRepository {
 
   create(input: ServerProfileInput, enabled = true): ServerProfile {
     const now = new Date().toISOString();
+    const mapModId = persistableMapModId({
+      map: input.map,
+      mapModId: input.mapModId,
+    });
     const profile: ServerProfile = {
       ...input,
+      mapModId,
       enabled,
       autoStart: input.autoStart === true,
       disabledMods: input.disabledMods ?? [],
@@ -109,17 +129,18 @@ export class ServerRepository {
     this.db
       .prepare(
         `INSERT INTO servers (
-          id, name, map, install_dir, enabled, auto_start, session_name,
+          id, name, map, map_mod_id, install_dir, enabled, auto_start, session_name,
           game_port, query_port, rcon_port,
           server_password, admin_password,
           cluster_id, cluster_dir, extra_args, structured_launch_args, mods,
           disabled_mods, mod_metadata_cache, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         profile.id,
         profile.name,
         profile.map,
+        profile.mapModId ?? null,
         profile.installDir,
         profile.enabled ? 1 : 0,
         profile.autoStart ? 1 : 0,
@@ -146,10 +167,14 @@ export class ServerRepository {
     const existing = this.get(id);
     if (existing === null) return null;
     const updatedAt = new Date().toISOString();
+    const mapModId = persistableMapModId({
+      map: input.map,
+      mapModId: input.mapModId !== undefined ? input.mapModId : existing.mapModId,
+    });
     this.db
       .prepare(
         `UPDATE servers SET
-          name = ?, map = ?, install_dir = ?, session_name = ?,
+          name = ?, map = ?, map_mod_id = ?, install_dir = ?, session_name = ?,
           game_port = ?, query_port = ?, rcon_port = ?,
           server_password = ?, admin_password = ?,
           cluster_id = ?, cluster_dir = ?, extra_args = ?, structured_launch_args = ?, mods = ?,
@@ -161,6 +186,7 @@ export class ServerRepository {
       .run(
         input.name,
         input.map,
+        mapModId,
         input.installDir,
         input.sessionName,
         input.gamePort,

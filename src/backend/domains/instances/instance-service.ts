@@ -378,6 +378,7 @@ export class InstanceService extends EventEmitter {
       input = {
         name,
         map: source.map,
+        mapModId: source.mapModId ?? null,
         installDir,
         sessionName: `${source.sessionName} (copy)`,
         gamePort: source.gamePort + offset,
@@ -436,6 +437,7 @@ export class InstanceService extends EventEmitter {
     const input: ServerProfileInput = {
       name: params.name,
       map: source.map,
+      mapModId: source.mapModId ?? null,
       installDir,
       sessionName: params.sessionName,
       gamePort: params.gamePort,
