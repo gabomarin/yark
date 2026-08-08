@@ -57,6 +57,7 @@ import {
 } from "@features/settings/settingsModel";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import { AppSpotlight } from "@layout/AppSpotlight/AppSpotlight";
+import { pushSpotlightRecent } from "@layout/AppSpotlight/appSpotlightRecent";
 
 type Overlay =
   | { kind: "create" }
@@ -1120,6 +1121,16 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     },
     [runWithWorkspaceLeaveGuard],
   );
+
+  // Feed Spotlight "Recent" from normal workspace opens (not only palette picks).
+  const workspaceServerId =
+    overlay?.kind === "workspace" ? overlay.serverId : null;
+  useEffect(() => {
+    if (workspaceServerId === null) {
+      return;
+    }
+    pushSpotlightRecent({ kind: "server", serverId: workspaceServerId });
+  }, [workspaceServerId]);
 
   const registerWorkspaceLeaveGuard = useCallback(
     (guard: ((action: () => void) => void) | null) => {

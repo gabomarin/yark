@@ -164,7 +164,7 @@ describe("SettingsPage", () => {
 
     expect(screen.getByText("Settings")).toBeInTheDocument();
     expect(screen.getByText("General")).toBeInTheDocument();
-    expect(screen.getByText("Command palette")).toBeInTheDocument();
+    expect(screen.getByText("Quick jump")).toBeInTheDocument();
     expect(screen.getByText(/Ctrl/i)).toBeInTheDocument();
     expect(screen.getByText("Close window to tray")).toBeInTheDocument();
     expect(screen.getByText("Show notification when hiding to tray")).toBeInTheDocument();

@@ -57,7 +57,7 @@ the Server tab / workspace.
 | Show notification when hiding to tray | SQLite `trayCloseHintDismissed` (UI inverted) | toast **on** | Visible only when close-to-tray is on |
 | Start with Windows | SQLite `startWithWindows` + `setLoginItemSettings` | **off** | App only — does **not** start ASA (#54 vs #53) |
 | Display size | SQLite `uiDensity` | **compact** | `compact` \| `comfortable`; see [design-system.md](design-system.md) |
-| Command palette | — (keyboard only) | Ctrl/Cmd+K | Jump to pages or open a server workspace by name (#104); see General help copy |
+| Quick jump | localStorage `yark.spotlightRecent.v1` (MRU) | Ctrl+K | Jump to pages/servers; Recent group; Settings → General + logo tooltip (#104) |
 | Window size / position | SQLite `windowState` | **maximized** | Remembers last bounds + maximized; off-screen → maximize again |
 | Default base folder | `localStorage` `settings.defaultServerBaseFolder` | unset | Prefills create-server base path only |
 

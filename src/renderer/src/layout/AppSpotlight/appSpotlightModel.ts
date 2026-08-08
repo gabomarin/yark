@@ -1,83 +1,66 @@
-import type {
-  SpotlightActionData,
-  SpotlightActionGroupData,
-} from "@mantine/spotlight";
+import {
+  FileText,
+  GearSix,
+  HardDrives,
+  ShareNetwork,
+  SquaresFour,
+} from "@phosphor-icons/react";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import type { ServerProfile } from "@shared/types";
 
-export interface SpotlightNavHandlers {
-  onNavigate: (route: Route) => void;
-  onOpenServer: (serverId: string) => void;
-}
-
-const NAV_ACTIONS: Array<{
+export interface SpotlightNavItem {
   id: Route;
   label: string;
   description: string;
   keywords: string[];
-}> = [
+  /** Same Phosphor icons as the app Sidebar. */
+  icon: typeof HardDrives;
+}
+
+/** Navigate entries for Spotlight (mirrors Sidebar labels/icons). */
+export const SPOTLIGHT_NAV_ITEMS: SpotlightNavItem[] = [
   {
     id: "overview",
     label: "Servers",
     description: "Overview and server list",
     keywords: ["home", "overview", "fleet"],
+    icon: SquaresFour,
   },
   {
     id: "clusters",
     label: "Clusters",
     description: "Cluster membership and transfer",
     keywords: ["cluster", "transfer"],
+    icon: ShareNetwork,
   },
   {
     id: "backups",
     label: "Backups",
     description: "Fleet backup health and cleanup",
     keywords: ["backup", "archive", "restore"],
+    icon: HardDrives,
   },
   {
     id: "logs",
     label: "Logs",
     description: "Fleet activity and problems",
     keywords: ["log", "events", "activity"],
+    icon: FileText,
   },
   {
     id: "settings",
     label: "Settings",
     description: "App preferences and SteamCMD",
     keywords: ["preferences", "options", "steamcmd"],
+    icon: GearSix,
   },
 ];
 
-/** Pure action list for Spotlight (groups: Navigate + Servers). */
-export function buildSpotlightActions(
+/** Stable A→Z order for the Servers group. */
+export function sortServersForSpotlight(
   servers: ServerProfile[],
-  handlers: SpotlightNavHandlers,
-): Array<SpotlightActionGroupData | SpotlightActionData> {
-  const navigateGroup: SpotlightActionGroupData = {
-    group: "Navigate",
-    actions: NAV_ACTIONS.map((item) => ({
-      id: `nav:${item.id}`,
-      label: item.label,
-      description: item.description,
-      keywords: item.keywords,
-      onClick: () => handlers.onNavigate(item.id),
-    })),
-  };
-
-  const sorted = [...servers].sort((a, b) =>
+): ServerProfile[] {
+  return [...servers].sort((a, b) =>
     a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
   );
-
-  const serverGroup: SpotlightActionGroupData = {
-    group: "Servers",
-    actions: sorted.map((server) => ({
-      id: `server:${server.id}`,
-      label: server.name,
-      description: `${server.map} · Open workspace`,
-      keywords: [server.map, server.sessionName, server.installDir, server.id],
-      onClick: () => handlers.onOpenServer(server.id),
-    })),
-  };
-
-  return [navigateGroup, serverGroup];
 }

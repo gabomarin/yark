@@ -104,7 +104,29 @@ describe("Sidebar YARK version update affordance", () => {
     );
 
     expect(screen.getByRole("button", { name: "Servers" })).toBeInTheDocument();
-    expect(screen.queryByText("Official version ARK")).not.toBeInTheDocument();
+    expect(screen.queryByText("ARK official version")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "SteamCMD ready" })).toBeInTheDocument();
+  });
+
+  it("hints Ctrl+K quick jump on the brand logo (#104)", async () => {
+    const user = userEvent.setup();
+    render(
+      <AppProviders>
+        <Sidebar
+          route="overview"
+          onNavigate={vi.fn()}
+          steamCmdDetected
+          steamCmdRunning={false}
+          officialVersion="1.0"
+          officialNetworkStatus="online"
+          appVersion="0.5.2"
+        />
+      </AppProviders>,
+    );
+
+    await user.hover(screen.getByAltText("YARK server manager"));
+    expect(
+      await screen.findByRole("tooltip", { name: /Quick jump · Ctrl\+K/i }),
+    ).toBeInTheDocument();
   });
 });

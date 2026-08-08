@@ -14,8 +14,8 @@ Source of truth for numeric tokens: `src/renderer/src/shared/theme/tokens.ts` �
    (`size="sm"`, `allowNextStepsSelect={false}`) like `CreateClusterModal` /
    `AddServersModal`. Shared YARK atoms (`AppSurfaceCard`, `EmptyState`,
    `PathField`, …) still win when they already define that chrome. Global jump
-   navigation uses `@mantine/spotlight` (`AppSpotlight`, Ctrl/Cmd+K) — do not
-   invent a second command palette.
+   navigation uses `@mantine/spotlight` (`AppSpotlight`, Ctrl+K) — do not
+   invent a second quick-jump overlay.
 2. **Surfaces** come from tokens + `AppSurfaceCard`, not copy-pasted gradients.
 3. **Spacing** uses `--app-space-*` / Mantine `gap="sm"` — not one-off `10px` / `gap={6}`.
 4. **Extract shared chrome on the second real use** (same rule as #44).

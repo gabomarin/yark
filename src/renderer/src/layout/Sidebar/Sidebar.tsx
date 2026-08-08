@@ -111,14 +111,21 @@ export function Sidebar(props: Props): ReactElement {
       data-icon-mode={iconMode || undefined}
     >
       <div className={classes.brandRow}>
-        <div className={classes.brand}>
-          <img
-            src={yarkLogo}
-            alt="YARK server manager"
-            className={classes.brandLockup}
-            draggable={false}
-          />
-        </div>
+        <Tooltip
+          label="Quick jump · Ctrl+K"
+          position="right"
+          withArrow
+          openDelay={200}
+        >
+          <div className={classes.brand}>
+            <img
+              src={yarkLogo}
+              alt="YARK server manager"
+              className={classes.brandLockup}
+              draggable={false}
+            />
+          </div>
+        </Tooltip>
       </div>
 
       <MantineStack
@@ -194,32 +201,34 @@ export function Sidebar(props: Props): ReactElement {
       {!iconMode && (
         <div className={classes.versionChip}>
           <Tooltip label="ARK Official Server Network" position="right">
-            <Text size={metadataTextSize} fw={600}>
-              Official version ARK
+            <Text size={metadataTextSize} fw={600} ta="center" className={classes.versionLabel}>
+              ARK official version
             </Text>
           </Tooltip>
-          <Tooltip
-            label={versionTooltip}
-            multiline={deploying || offline}
-            w={deploying || offline ? 260 : undefined}
-            position="right"
-          >
-            <Group gap={6} wrap="nowrap" className={classes.versionRow}>
-              {(deploying || offline) && (
-                <Circle
-                  size={compact ? 8 : 9}
-                  weight="fill"
-                  className={statusDotClass}
-                  aria-label={
-                    deploying ? "Official network deploying" : "Official network offline"
-                  }
-                />
-              )}
-              <Text size={versionTextSize} className={versionToneClass}>
-                {props.officialVersion ?? "Not detected"}
-              </Text>
-            </Group>
-          </Tooltip>
+          <div className={classes.versionRow}>
+            <Tooltip
+              label={versionTooltip}
+              multiline={deploying || offline}
+              w={deploying || offline ? 260 : undefined}
+              position="right"
+            >
+              <Group gap={6} wrap="nowrap" justify="center">
+                {(deploying || offline) && (
+                  <Circle
+                    size={compact ? 8 : 9}
+                    weight="fill"
+                    className={statusDotClass}
+                    aria-label={
+                      deploying ? "Official network deploying" : "Official network offline"
+                    }
+                  />
+                )}
+                <Text size={versionTextSize} ta="center" className={versionToneClass}>
+                  {props.officialVersion ?? "Not detected"}
+                </Text>
+              </Group>
+            </Tooltip>
+          </div>
         </div>
       )}
 
@@ -273,7 +282,12 @@ export function Sidebar(props: Props): ReactElement {
           </UnstyledButton>
         </Tooltip>
       ) : (
-        <Text size={metadataTextSize} c="dimmed" data-yark-app-version>
+        <Text
+          size={metadataTextSize}
+          c="dimmed"
+          data-yark-app-version
+          className={classes.appVersion}
+        >
           v{props.appVersion}
         </Text>
       )}

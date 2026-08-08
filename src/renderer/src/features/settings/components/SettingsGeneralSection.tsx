@@ -113,13 +113,12 @@ export function SettingsGeneralSection(props: Props): ReactElement {
 
       <div className={classes.settingRow}>
         <div className={classes.settingCopy}>
-          <Text size="sm" fw={600}>Command palette</Text>
+          <Text size="sm" fw={600}>Quick jump</Text>
           <Text size="xs" c="dimmed" mt={2}>
             Press <Text span fw={600} inherit>Ctrl</Text>+
-            <Text span fw={600} inherit>K</Text> (or{" "}
-            <Text span fw={600} inherit>⌘</Text>+
-            <Text span fw={600} inherit>K</Text> on Mac) to jump to Servers,
-            Clusters, Backups, Logs, Settings, or open a server workspace by name.
+            <Text span fw={600} inherit>K</Text> to jump to Servers, Clusters,
+            Backups, Logs, Settings, or open a server workspace by name.
+            Recent pages and servers appear at the top.
           </Text>
         </div>
       </div>

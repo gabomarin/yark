@@ -139,8 +139,18 @@
 }
 
 .versionChip {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
   padding: var(--app-space-xs) var(--app-space-xxs) 0;
   border-top: 1px solid color-mix(in srgb, var(--app-color-border) 32%, transparent);
+  text-align: center;
+}
+
+.versionLabel {
+  display: block;
+  width: 100%;
 }
 
 .rule {
@@ -165,8 +175,9 @@
 }
 
 .versionRow {
-  width: fit-content;
-  max-width: 100%;
+  display: flex;
+  justify-content: center;
+  width: 100%;
   cursor: default;
 }
 
@@ -229,9 +240,16 @@
   height: 72px;
 }
 
+.appVersion {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
 .appVersionUpdate {
   display: inline-flex;
-  width: fit-content;
+  justify-content: center;
+  width: 100%;
   max-width: 100%;
   padding: 2px 0;
   border-radius: var(--app-radius-control);
