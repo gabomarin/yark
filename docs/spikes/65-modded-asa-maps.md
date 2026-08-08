@@ -2,13 +2,12 @@
 
 Research spike and live-validation archive. Branch: `spike/65-modded-maps`.
 
-**Phase 1 status (shipped / in PR):** `mapModId` persistence (#190), Custom… + Map mods
+**Phase 1 status (shipped):** `mapModId` persistence (#190), Custom… + Map mods
 grouped select (#191 / #192), enable toast without overwriting map (#192), Worker
-Maps-only description (#195), Launch alert + Start blockers (#194). Operator docs:
-website **Mods → Maps / custom worlds**, **Profiles & ports → Map field**, **Start, stop,
-restart → Map identity checks**. Engineering SoT: [server-lifecycle.md](../server-lifecycle.md)
-(Custom / modded maps). Remaining: optional custom-map thumb (#193); optional companion
-Project ID field polish under #191.
+Maps-only description (#195), Launch alert + Start blockers (#194), custom-map
+thumb from mod logo (#193). Operator docs: website **Mods → Maps / custom worlds**,
+**Profiles & ports → Map field**, **Start, stop, restart → Map identity checks**.
+Engineering SoT: [server-lifecycle.md](../server-lifecycle.md) (Custom / modded maps).
 
 ## Launch contract (current ASA / YARK)
 
@@ -87,7 +86,7 @@ If either side is missing or the linked `mapModId` is disabled / not on the mods
 1. **Happy path:** enable a Maps-category mod → toast (map unchanged) → operator picks under Map → **Map mods** → sets `map` + `mapModId`. (No confirm dialog; no hardcoded Project ID catalog.)
 2. **Fallback:** Server Information → Map → **Custom…** free-text launch token when extract fails.
 3. **Consistency alerts:** Launch yellow alert + **Start blocked** when custom map / `mapModId` inconsistent (#194).
-4. **Thumb:** bundled art for official; custom mod-logo thumb still [#193](https://github.com/gabomarin/yark/issues/193).
+4. **Thumb:** bundled art for official; custom mod-logo thumb via `resolveMapThumbnailUrl` (#193).
 5. **Failure:** empty/invalid token blocks save; missing/disabled/unset map mod blocks Start.
 6. Persist `mapModId` in SQLite (#190).
 
@@ -126,7 +125,7 @@ Date: 2026-08-07. Install with Premium content; YARK profile on spike branch.
 | Mods enable toast (no map overwrite) | Done (#192) |
 | Worker Maps-only description | Done (#195) |
 | Launch alert + Start blockers | Done (#194) |
-| Custom map thumb from mod logo | Open [#193](https://github.com/gabomarin/yark/issues/193) |
+| Custom map thumb from mod logo | Done (#193) |
 | Live boot | Validated end-to-end (install + advertise); join fixed after removing `-exclusivejoin` |
 
 Do **not** revive `ActiveMapMod` / `-MapModID=` unless a later map fails the token + `-mods=` path.
@@ -134,8 +133,8 @@ Do **not** revive `ActiveMapMod` / `-MapModID=` unless a later map fails the tok
 ## Follow-up issues
 
 1. ~~[#190](https://github.com/gabomarin/yark/issues/190) — Persist `mapModId`~~ (shipped)
-2. [#191](https://github.com/gabomarin/yark/issues/191) — Optional companion Project ID field / polish (Custom… already shipped)
+2. ~~[#191](https://github.com/gabomarin/yark/issues/191) — ServerForm Custom map~~ (closed; Map mods + Custom… shipped)
 3. ~~[#192](https://github.com/gabomarin/yark/issues/192) — Mods enable → Map select path~~ (toast + Map mods group; no confirm dialog)
-4. [#193](https://github.com/gabomarin/yark/issues/193) — Mod logo thumbnails for custom maps
+4. ~~[#193](https://github.com/gabomarin/yark/issues/193) — Mod logo thumbnails for custom maps~~ (shipped)
 5. ~~[#194](https://github.com/gabomarin/yark/issues/194) — Launch/start when map mod disabled/missing~~ (shipped)
 6. ~~[#195](https://github.com/gabomarin/yark/issues/195) — CurseForge Worker description for heuristics~~ (shipped; Maps-category only on batch)

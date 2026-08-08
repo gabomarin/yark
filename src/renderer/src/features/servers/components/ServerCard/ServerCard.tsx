@@ -127,7 +127,17 @@ export function ServerCard(props: Props): ReactElement {
             }
           >
             <Group gap="sm" align="center" wrap="nowrap" className={classes.identity}>
-              <MapArtThumb mapId={server.map} size="md" className={classes.thumb} />
+              <MapArtThumb
+                mapId={server.map}
+                mapModId={server.mapModId}
+                modThumbnailUrl={
+                  server.mapModId
+                    ? server.modMetadataCache?.[server.mapModId]?.thumbnailUrl
+                    : null
+                }
+                size="md"
+                className={classes.thumb}
+              />
               <div className={classes.identityText}>
                 <Text className={classes.title} lineClamp={1}>
                   {server.name}
