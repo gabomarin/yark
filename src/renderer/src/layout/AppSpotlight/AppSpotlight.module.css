@@ -1,0 +1,10 @@
+/* Keep map thumbs compact inside dense Spotlight rows. */
+.serverThumb {
+  width: 28px;
+  height: 28px;
+}
+
+.recentMark {
+  color: var(--app-color-text-muted, var(--mantine-color-dimmed));
+  opacity: 0.85;
+}

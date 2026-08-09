@@ -9,11 +9,13 @@ Source of truth for numeric tokens: `src/renderer/src/shared/theme/tokens.ts` �
 
 1. **Prefer Mantine first.** Use Mantine components for interaction and structure
    (`Modal`, `Stepper`, `Tabs`, `Tooltip`, `Alert`, `Checkbox`, `Select`,
-   `TextInput`, `Button`, `Stack`, `Group`, …) before hand-rolling the same
+   `TextInput`, `Button`, `Stack`, `Group`, `Spotlight`, …) before hand-rolling the same
    widget in CSS modules. Multi-step wizards should use Mantine `Stepper`
    (`size="sm"`, `allowNextStepsSelect={false}`) like `CreateClusterModal` /
    `AddServersModal`. Shared YARK atoms (`AppSurfaceCard`, `EmptyState`,
-   `PathField`, …) still win when they already define that chrome.
+   `PathField`, …) still win when they already define that chrome. Global jump
+   navigation uses `@mantine/spotlight` (`AppSpotlight`, Ctrl+K) — do not
+   invent a second quick-jump overlay.
 2. **Surfaces** come from tokens + `AppSurfaceCard`, not copy-pasted gradients.
 3. **Spacing** uses `--app-space-*` / Mantine `gap="sm"` — not one-off `10px` / `gap={6}`.
 4. **Extract shared chrome on the second real use** (same rule as #44).

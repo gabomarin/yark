@@ -24,9 +24,11 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Versioned **ASA launch-options catalog** (wiki ASA Check/Missing + YARK-owned classification) with a browse modal (#92).
 - Server workspace **Launch** tab: curated structured ASA flags, raw Extra arguments, command preview, and caution alerts for sticky risky options (#93).
 - Backup fleet alerts can be **Dismiss**ed; they stay hidden until the condition changes (e.g. a new failed backup).
+- Global **Quick jump** (Ctrl+K) via Mantine Spotlight for page jumps, opening a server by name, and a small **Recent** list (#104).
 
 ### Changed
 
+- Sidebar footer copy reads **ARK official version**, with that block and the YARK version label centered.
 - Backups fleet health strip uses shared **AppMetricCard** tiles (with disk **RingProgress** and a stronger selected filter state) instead of a local StatCard (#103).
 - Log event lists use Mantine **Accordion** expand/collapse; Overview recent activity uses **Timeline** (#102).
 - SteamCMD and Logs consoles share a **ScrollArea** monospace surface with stick-to-bottom while streaming (#101).

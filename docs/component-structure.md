@@ -20,7 +20,7 @@ across features. Prefer feature-local composition.
 | --- | --- | --- | --- |
 | **Atom** | Tiny presentational unit; little/no feature logic | `src/renderer/src/shared/ui/*` | `AppSurfaceCard`, `EmptyState`, `SearchField`, `ReadonlyPath`, `PathField`, `ConsoleSurface`, `AppMetricCard`, `ServerRuntimeStatusBadge`, `SelectableListRow`, `AccentIconTile` |
 | **Molecule** | One reusable UI idea for a feature | `features/<area>/components/` | `ClusterMemberRow`, `ServerCardMetaItem`, `EventDetailsBody`, `MetaStrip` (Clusters) |
-| **Organism** | Section that composes molecules + local state wiring | `features/<area>/components/` | `ClusterDetailPanel`, `ServerCard`, `ServerLogsPanel` |
+| **Organism** | Section that composes molecules + local state wiring | `features/<area>/components/` or `layout/` for shell | `ClusterDetailPanel`, `ServerCard`, `ServerLogsPanel`, `AppSpotlight` |
 | **Template / Page** | Route-level layout + data props from `App` | `features/<area>/<Name>Page.tsx` | `ClustersPage`, `LogsPage`, `BackupsPage` |
 
 Shared shell pieces (`PageScaffold`, `Sidebar`) stay under `layout/` / `app/`.
