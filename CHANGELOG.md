@@ -14,7 +14,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Fleet `refresh` ignores stale overlapping IPC snapshots so a slower poll cannot regress server list/status (#209).
 - Launch tab draft no longer resets mid-edit when a save bumps `updatedAt`; Launch/Mods persists read the latest profile/mod id refs and skip local apply after a mid-flight server switch (#209).
 - `target=_blank` opens only allowlisted http(s) hosts (wiki / CurseForge / GitHub) via `shell.openExternal`; empty/leading-dot hosts cannot match the CurseForge suffix rule (#209).
-- CurseForge proxy refuses upstream redirects away from `api.curseforge.com` (#209).
+- CurseForge proxy refuses upstream redirects away from HTTPS `api.curseforge.com` (#209).
 - Quick jump (Ctrl+K) no longer rebuilds its action tree on every App poll when servers/recent are unchanged (#209).
 - Logs/Backups loading spinners clear only for the latest in-flight load; Mods Discover search always clears its busy state (#209).
 

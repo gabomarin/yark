@@ -486,8 +486,9 @@ function extractPagination(payload: unknown): {
 function isAllowedUpstreamUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
+    // HTTPS only — API key headers must never follow an HTTPS→HTTP downgrade.
     return (
-      (parsed.protocol === "https:" || parsed.protocol === "http:")
+      parsed.protocol === "https:"
       && parsed.hostname.toLowerCase() === UPSTREAM_HOST
     );
   } catch {

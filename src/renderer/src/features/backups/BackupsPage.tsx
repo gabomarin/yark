@@ -139,15 +139,18 @@ export function BackupsPage(props: Props): ReactElement {
     const quiet = opts?.quiet === true;
     const forceDraftSync = opts?.forceDraftSync === true;
     const cancelled = opts?.cancelled;
-    // Quiet live updates must not clear a newer non-quiet load's spinner.
-    const generation = quiet ? null : ++loadGenerationRef.current;
+    // Non-quiet loads bump the generation. Quiet loads snapshot it so a slow
+    // onBackupsChanged update no-ops if a newer Refresh starts mid-flight.
+    const generation = quiet
+      ? loadGenerationRef.current
+      : ++loadGenerationRef.current;
     if (!quiet) {
       setLoading(true);
     }
     try {
       if (props.servers.length === 0) {
         if (cancelled?.()) return;
-        if (generation !== null && generation !== loadGenerationRef.current) return;
+        if (generation !== loadGenerationRef.current) return;
         setSummary(null);
         setDrafts({});
         return;
@@ -155,7 +158,7 @@ export function BackupsPage(props: Props): ReactElement {
 
       const result = await window.api.getBackupFleetSummary();
       if (cancelled?.()) return;
-      if (generation !== null && generation !== loadGenerationRef.current) return;
+      if (generation !== loadGenerationRef.current) return;
       if (!result.ok) {
         setSummary(null);
         showOperatorError(
@@ -197,7 +200,8 @@ export function BackupsPage(props: Props): ReactElement {
         });
       }
     } finally {
-      if (generation !== null && generation === loadGenerationRef.current) {
+      // Quiet updates never own the spinner; only the latest non-quiet load clears it.
+      if (!quiet && generation === loadGenerationRef.current) {
         setLoading(false);
       }
     }

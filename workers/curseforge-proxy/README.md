@@ -71,8 +71,8 @@ npx wrangler secret put CURSEFORGE_API_KEY
 npx wrangler deploy
 ```
 
-Upstream fetches use `redirect: "manual"` and only follow hops that stay on
-`api.curseforge.com` (no open redirect following to arbitrary hosts).
+Upstream fetches use `redirect: "manual"` and only follow HTTPS hops that stay on
+`api.curseforge.com` (no open redirects or HTTPS→HTTP downgrades that could leak the API key).
 
 Or set the secret in the Cloudflare dashboard (Workers → Settings → Variables).
 

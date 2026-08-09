@@ -110,7 +110,21 @@ export function useServerLaunchPersist(
     setError(null);
   }
 
+  /** Drop debounce/queue/waiters so a mid-edit server switch cannot persist onto the next profile. */
+  function cancelPendingPersistWork(): void {
+    if (valuePersistTimer.current !== null) {
+      clearTimeout(valuePersistTimer.current);
+      valuePersistTimer.current = null;
+    }
+    queuedPersist.current = null;
+    persistGenerationRef.current += 1;
+    const waiters = persistWaiters.current.splice(0);
+    for (const resolve of waiters) resolve(false);
+    setSaving(false);
+  }
+
   useEffect(() => {
+    cancelPendingPersistWork();
     applyServerDraft(server);
     // Reset local draft when switching profiles only.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: server.id
