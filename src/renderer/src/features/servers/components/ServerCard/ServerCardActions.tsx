@@ -2,28 +2,22 @@ import type { ReactElement } from "react";
 import {
   ArrowsClockwise,
   CloudArrowDown,
-  Copy,
   DotsThreeVertical,
   Eye,
-  FileText,
-  FolderOpen,
-  GearSix,
-  MagnifyingGlass,
   Pause,
   Play,
-  ShieldCheck,
-  Trash,
   XCircle,
 } from "@phosphor-icons/react";
 import { ActionIcon, Group, Menu, Tooltip } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import type { ServerStatus } from "@shared/types";
+import { RowActionMenuItems } from "@ui/RowActionMenu/RowActionMenuItems";
 import type {
   ServerCardRestartAction,
   ServerCardRuntimeAction,
   ServerCardUpdateAction,
 } from "./serverCardModel";
-import { ServerEnabledMenuItem } from "./ServerEnabledMenuItem";
+import { buildServerCardMenuActions } from "./serverCardMenuActions";
 import classes from "./ServerCard.module.css";
 
 interface Props {
@@ -89,13 +83,37 @@ function filesActionClick(
 
 export function ServerCardActions(props: Props): ReactElement {
   const { runtimeAction, restartAction, updateAction } = props;
-  const serverEnabled = props.serverEnabled ?? true;
   const density = useUiDensity();
   const actionSize = density === "compact" ? "md" : "lg";
   const iconSize = density === "compact" ? 16 : 18;
   // Only model.disabled blocks icons. Do not blanket-disable Cancel/Stop during
   // starting/stopping — Overview needs escape hatches when a transition sticks.
   const menuDisabled = props.steamCmdBusy || props.stopBusy;
+  const menuEntries = buildServerCardMenuActions({
+    status: props.status,
+    isActive: props.isActive,
+    isInstallationReady: props.isInstallationReady,
+    canOfferInstall: props.canOfferInstall,
+    updateAvailable: props.updateAvailable,
+    steamCmdBusy: props.steamCmdBusy,
+    checkingUpdates: props.checkingUpdates,
+    updateAction: props.updateAction,
+    serverEnabled: props.serverEnabled ?? true,
+    onOpenWorkspace: props.onOpenWorkspace,
+    onStop: props.onStop,
+    onRestart: props.onRestart,
+    onOpenFolder: props.onOpenFolder,
+    onOpenLogs: props.onOpenLogs,
+    onCheckUpdates: props.onCheckUpdates,
+    onUpdateNow: props.onUpdateNow,
+    onVerifyFiles: props.onVerifyFiles,
+    onInstallFiles: props.onInstallFiles,
+    onClone: props.onClone,
+    onCopyConfiguration: props.onCopyConfiguration,
+    onKill: props.onKill,
+    onDelete: props.onDelete,
+    onToggleEnabled: props.onToggleEnabled,
+  });
 
   return (
     <Group gap="xs" wrap="nowrap" className={classes.rowActions} data-row-actions>
@@ -212,136 +230,7 @@ export function ServerCardActions(props: Props): ReactElement {
           </span>
         </Tooltip>
         <Menu.Dropdown>
-          <Menu.Label>Server</Menu.Label>
-          <Menu.Item
-            leftSection={<GearSix size={16} color="var(--mantine-color-blue-6)" />}
-            onClick={props.onOpenWorkspace}
-          >
-            Open settings
-          </Menu.Item>
-          <ServerEnabledMenuItem
-            enabled={serverEnabled}
-            active={props.isActive}
-            steamCmdBusy={props.steamCmdBusy}
-            onToggle={props.onToggleEnabled}
-          />
-          {props.status === "running" && (
-            <>
-              <Menu.Item
-                leftSection={<Pause size={16} color="var(--mantine-color-gray-6)" />}
-                onClick={props.onStop}
-              >
-                Stop safely
-              </Menu.Item>
-              <Menu.Item
-                leftSection={<ArrowsClockwise size={16} color="var(--mantine-color-gray-6)" />}
-                onClick={props.onRestart}
-              >
-                Restart
-              </Menu.Item>
-            </>
-          )}
-          {props.status === "starting" && (
-            <Menu.Item
-              leftSection={<Pause size={16} color="var(--mantine-color-gray-6)" />}
-              onClick={props.onStop}
-            >
-              Stop
-            </Menu.Item>
-          )}
-          <Menu.Item
-            leftSection={<FolderOpen size={16} color="var(--mantine-color-blue-6)" />}
-            onClick={props.onOpenFolder}
-          >
-            Open folder
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<FileText size={16} color="var(--mantine-color-blue-6)" />}
-            onClick={props.onOpenLogs}
-            disabled={!props.isInstallationReady}
-          >
-            View logs
-          </Menu.Item>
-
-          <Menu.Divider />
-          <Menu.Label>Maintenance</Menu.Label>
-          {props.isInstallationReady ? (
-            <>
-              <Menu.Item
-                leftSection={<MagnifyingGlass size={16} color="var(--mantine-color-blue-6)" />}
-                onClick={props.onCheckUpdates}
-                disabled={props.checkingUpdates}
-              >
-                Check for updates
-              </Menu.Item>
-              <Menu.Item
-                leftSection={
-                  <CloudArrowDown
-                    size={16}
-                    color={
-                      props.updateAvailable
-                        ? "var(--mantine-color-attention-6)"
-                        : "var(--mantine-color-gray-6)"
-                    }
-                  />
-                }
-                onClick={props.onUpdateNow}
-                disabled={
-                  updateAction.kind === "update"
-                    ? updateAction.updateState === "current" || props.steamCmdBusy
-                    : !props.updateAvailable
-                }
-              >
-                {updateAction.kind === "update" && updateAction.updateState === "unknown"
-                  ? "Update (couldn't check version)"
-                  : "Update server"}
-              </Menu.Item>
-              <Menu.Item
-                leftSection={<ShieldCheck size={16} color="var(--mantine-color-teal-6)" />}
-                onClick={props.onVerifyFiles}
-              >
-                Verify integrity
-              </Menu.Item>
-            </>
-          ) : props.canOfferInstall ? (
-            <Menu.Item
-              leftSection={<CloudArrowDown size={16} color="var(--mantine-color-blue-6)" />}
-              onClick={props.onInstallFiles}
-            >
-              Install files
-            </Menu.Item>
-          ) : null}
-          <Menu.Item
-            leftSection={<Copy size={16} color="var(--mantine-color-blue-6)" />}
-            onClick={props.onClone}
-          >
-            Clone
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<Copy size={16} color="var(--mantine-color-teal-6)" />}
-            onClick={props.onCopyConfiguration}
-          >
-            Copy configuration…
-          </Menu.Item>
-
-          <Menu.Divider />
-          <Menu.Label>Danger</Menu.Label>
-          <Menu.Item
-            color="red"
-            leftSection={<XCircle size={16} />}
-            onClick={props.onKill}
-            disabled={!props.isActive}
-          >
-            Force close
-          </Menu.Item>
-          <Menu.Item
-            color="red"
-            leftSection={<Trash size={16} />}
-            onClick={props.onDelete}
-            disabled={props.isActive}
-          >
-            {props.isActive ? "Delete (stop the server first)" : "Delete server"}
-          </Menu.Item>
+          <RowActionMenuItems entries={menuEntries} />
         </Menu.Dropdown>
       </Menu>
     </Group>

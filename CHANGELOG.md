@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Right-click **context menus** on server cards, backup history rows, and mods table rows reuse the same Mantine **Menu** chrome as kebabs (#105).
 - Main window opens **maximized** by default and remembers the last size, position, and maximized state across launches.
 - App **Sidebar** uses a Docker-style **half-circle edge toggle** (`50vh`; curve faces sidenav when expanded, content when rail) for Full ↔ icon-rail; preferred mode is remembered (#107).
 - Wide server workspace list uses a **header Full / icon-rail** chevron (280↔72, no free-drag), **status dots**, and **cluster grouping** (icon-rail uses Mantine **Divider**s between clusters); preferred rail mode is remembered (#107).

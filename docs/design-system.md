@@ -157,6 +157,7 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 | --- | --- | --- |
 | `AppSurfaceCard` | `shared/ui/AppSurfaceCard/` | Homogeneous Card container |
 | `EmptyState` | `shared/ui/EmptyState/` | Inline or stacked empties (`layout`) |
+| `RowActionMenu` | `shared/ui/RowActionMenu/` | Shared kebab + context-menu action model (`RowActionEntry`) |
 | `SelectableListRow` | `shared/ui/SelectableListRow/` | Selected list/row chrome |
 | `AccentIconTile` | `shared/ui/AccentIconTile/` | Tek / rounded icon tiles |
 | `MapArtThumb` | `shared/ui/MapArtThumb/` | ASA map artwork thumb (list + header) |
@@ -227,6 +228,16 @@ editors stay feature-local monospace (not path chips).
 | Server Logs events / Fleet Logs | Mantine **Accordion** (`variant="separated"`, controlled, `keepMounted={false}`) |
 | Overview recent activity | Mantine **Timeline** (chronological; no expand) |
 | Event detail body | Shared `EventDetailsBody` inside Accordion.Panel |
+
+### Row context menus (#105)
+
+| Choice | Decision |
+| --- | --- |
+| Shell | Same Mantine **`Menu` / `Menu.Dropdown`** as kebabs (cursor-anchored via `RowActionMenuProvider`) |
+| Why | One chrome for the same actions; avoids a second popup theme |
+| Sync model | Shared `RowActionEntry[]` + `RowActionMenuItems` for kebab and right-click |
+| Surfaces | Server cards, backup history rows, mods table rows |
+| A11y | Kebab / icon rows remain for keyboard and screen readers |
 
 ## Candidates for a later slice
 

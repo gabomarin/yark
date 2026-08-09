@@ -2,10 +2,12 @@ import type { ReactElement } from "react";
 import { Badge, Card, Group, Stack, Text, UnstyledButton } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
+import { useRowContextMenu } from "@ui/RowActionMenu/useRowContextMenu";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import { ServerCardActions } from "./ServerCardActions";
 import { ServerCardMetaItem } from "./ServerCardMetaItem";
 import { ServerCardProgress } from "./ServerCardProgress";
+import { buildServerCardMenuActions } from "./serverCardMenuActions";
 import {
   deriveServerCardView,
   type SteamCmdOperation,
@@ -104,6 +106,34 @@ export function ServerCard(props: Props): ReactElement {
     }
   };
 
+  const menuDisabled = steamCmdBusy || stopBusy;
+  const menuEntries = buildServerCardMenuActions({
+    status,
+    isActive: view.isActive,
+    isInstallationReady: view.isInstallationReady,
+    canOfferInstall: view.canOfferInstall,
+    updateAvailable: view.updateAvailable,
+    steamCmdBusy,
+    checkingUpdates,
+    updateAction: view.updateAction,
+    serverEnabled: server.enabled,
+    onOpenWorkspace: props.onOpenWorkspace,
+    onStop: props.onStop,
+    onRestart: props.onRestart,
+    onOpenFolder: props.onOpenFolder,
+    onOpenLogs: props.onOpenLogs,
+    onCheckUpdates: props.onCheckUpdates,
+    onUpdateNow: props.onUpdateNow,
+    onVerifyFiles: props.onVerifyFiles,
+    onInstallFiles: props.onInstallFiles,
+    onClone: props.onClone,
+    onCopyConfiguration: props.onCopyConfiguration,
+    onKill: props.onKill,
+    onDelete: props.onDelete,
+    onToggleEnabled: props.onToggleEnabled,
+  });
+  const onContextMenu = useRowContextMenu(menuEntries, { disabled: menuDisabled });
+
   return (
     <Card
       withBorder
@@ -114,6 +144,7 @@ export function ServerCard(props: Props): ReactElement {
       data-disabled={!server.enabled}
       data-server-card
       data-server-name={server.name}
+      onContextMenu={onContextMenu}
     >
       <Stack gap="sm">
         <div className={classes.mainRow}>
