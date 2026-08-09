@@ -79,6 +79,34 @@ describe("reconcilePollSnapshots", () => {
     expect(next).toBe(previous);
   });
 
+  it("treats missing criticalJobs as empty for steamcmd reconcile", () => {
+    const previous = {
+      detected: true,
+      executablePath: "C:/steamcmd.exe",
+      depotCacheDir: null,
+      contentCacheDir: null,
+      busy: false,
+      running: false,
+      operation: null,
+      serverId: null,
+      startedAt: null,
+      pid: null,
+      progressPercent: null,
+      progressLabel: null,
+      progressBytesDownloaded: null,
+      progressBytesTotal: null,
+      lastLine: null,
+      queuedCount: 0,
+      checkedAt: "t1",
+    } as SteamCmdStatus;
+    const next = reconcileSteamCmdStatus(previous, {
+      ...previous,
+      criticalJobs: [],
+      checkedAt: "t2",
+    });
+    expect(next).toBe(previous);
+  });
+
   it("reuses events when ids match", () => {
     const previous = [{ id: 1 }, { id: 2 }] as never[];
     expect(reconcileEvents(previous, [{ id: 1 }, { id: 2 }] as never[])).toBe(

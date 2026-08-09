@@ -150,6 +150,8 @@ export function reconcileSteamCmdStatus(
   next: SteamCmdStatus,
 ): SteamCmdStatus {
   if (previous === null) return next;
+  const previousJobs = previous.criticalJobs ?? [];
+  const nextJobs = next.criticalJobs ?? [];
   if (
     previous.detected === next.detected
     && previous.executablePath === next.executablePath
@@ -168,12 +170,12 @@ export function reconcileSteamCmdStatus(
     && previous.lastLine === next.lastLine
     && previous.queuedCount === next.queuedCount
     // Ignore checkedAt — getSteamCmdStatus() stamps a fresh ISO on every call.
-    && previous.criticalJobs.length === next.criticalJobs.length
-    && previous.criticalJobs.every(
+    && previousJobs.length === nextJobs.length
+    && previousJobs.every(
       (job, index) =>
-        job.id === next.criticalJobs[index]?.id
-        && job.updatedAt === next.criticalJobs[index]?.updatedAt
-        && job.status === next.criticalJobs[index]?.status,
+        job.id === nextJobs[index]?.id
+        && job.updatedAt === nextJobs[index]?.updatedAt
+        && job.status === nextJobs[index]?.status,
     )
   ) {
     return previous;
