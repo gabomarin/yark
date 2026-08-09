@@ -1,7 +1,20 @@
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import { ConsoleSurface } from "./ConsoleSurface";
+
+let nextRafId = 1;
+const rafCallbacks = new Map<number, FrameRequestCallback>();
+
+async function flushRaf(): Promise<void> {
+  await act(async () => {
+    const pending = [...rafCallbacks.entries()];
+    rafCallbacks.clear();
+    for (const [, cb] of pending) {
+      cb(0);
+    }
+  });
+}
 
 function mockViewportMetrics(
   node: HTMLElement,
@@ -35,15 +48,22 @@ function getViewport(container: HTMLElement): HTMLElement {
 
 describe("ConsoleSurface", () => {
   beforeEach(() => {
-    vi.stubGlobal(
-      "requestAnimationFrame",
-      (cb: FrameRequestCallback) => window.setTimeout(() => cb(0), 0) as unknown as number,
-    );
-    vi.stubGlobal("cancelAnimationFrame", (id: number) => window.clearTimeout(id));
+    nextRafId = 1;
+    rafCallbacks.clear();
+    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
+      const id = nextRafId;
+      nextRafId += 1;
+      rafCallbacks.set(id, cb);
+      return id;
+    });
+    vi.stubGlobal("cancelAnimationFrame", (id: number) => {
+      rafCallbacks.delete(id);
+    });
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    rafCallbacks.clear();
   });
 
   it("renders plain console text", () => {
@@ -75,9 +95,7 @@ describe("ConsoleSurface", () => {
       </AppProviders>,
     );
 
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
+    await flushRaf();
 
     expect(viewport.scrollTop).toBe(800 - 120);
   });
@@ -89,16 +107,15 @@ describe("ConsoleSurface", () => {
       </AppProviders>,
     );
 
-    // Let the mount pin + requestAnimationFrame guard clear.
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
+    // Mount pin schedules a follow-up rAF pin + a programmatic-scroll release.
+    await flushRaf();
+    await flushRaf();
 
     const viewport = getViewport(container);
     mockViewportMetrics(viewport, { scrollHeight: 400, clientHeight: 120, scrollTop: 100 });
 
-    // Simulate user scroll away from bottom (Mantine onScrollPositionChange path).
-    viewport.dispatchEvent(new Event("scroll", { bubbles: true }));
+    // Mantine ScrollArea feeds onScrollPositionChange from viewport scroll.
+    fireEvent.scroll(viewport);
 
     rerender(
       <AppProviders>
@@ -106,9 +123,8 @@ describe("ConsoleSurface", () => {
       </AppProviders>,
     );
 
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
+    await flushRaf();
+    await flushRaf();
 
     expect(viewport.scrollTop).toBe(100);
   });

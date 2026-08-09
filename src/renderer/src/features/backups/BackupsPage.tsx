@@ -255,11 +255,12 @@ export function BackupsPage(props: Props): ReactElement {
         );
         return;
       }
-      await load({ quiet: true });
+      // Toast before refresh so a failed reload cannot precede a success message.
       showOperatorToast({
         title: "Saved",
         message: "Saved backup settings for the selected server.",
       });
+      await load({ quiet: true });
     } finally {
       setBusyId(null);
     }
@@ -315,11 +316,11 @@ export function BackupsPage(props: Props): ReactElement {
         return;
       }
       setDiskModalOpen(false);
-      await load();
       showOperatorToast({
         title: "Saved",
         message: "Backup drive alerts updated.",
       });
+      await load();
     } finally {
       setDiskBusy(false);
     }
@@ -375,11 +376,11 @@ export function BackupsPage(props: Props): ReactElement {
       }
       setCleanupOpen(false);
       setCleanupPreview(null);
-      await load();
       showOperatorToast({
         title: "Cleanup finished",
         message: `Cleanup removed ${result.data.deleted} backup${result.data.deleted === 1 ? "" : "s"} (${formatBytes(result.data.freedBytes)}).`,
       });
+      await load();
     } finally {
       setCleanupBusy(false);
     }
