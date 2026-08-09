@@ -110,6 +110,11 @@ function renderPanel(): void {
 
 const addLabel = "Add CurseForge Project ID or mod URL";
 
+/** Avoid per-keystroke typing of long CurseForge URLs (flaky under CI 5s timeout). */
+function fillAddField(value: string): void {
+  fireEvent.change(screen.getByLabelText(addLabel), { target: { value } });
+}
+
 describe("ServerModsPanel", () => {
   afterEach(() => {
     cleanup();
@@ -316,7 +321,7 @@ describe("ServerModsPanel", () => {
     renderPanel();
     const url = superDetail.curseforgeUrl;
 
-    await user.type(screen.getByLabelText(addLabel), url);
+    fillAddField(url);
     await user.click(screen.getByRole("button", { name: "Add mod" }));
 
     expect(api.getModByReference).toHaveBeenCalledWith(url);
@@ -363,7 +368,7 @@ describe("ServerModsPanel", () => {
       "https://www.curseforge.com/ark-survival-ascended/mods/two",
     ].join(",");
 
-    await user.type(screen.getByLabelText(addLabel), urls);
+    fillAddField(urls);
     await user.click(screen.getByRole("button", { name: "Add mod" }));
 
     expect(await screen.findByText(/Importing mods 0\/2/)).toBeInTheDocument();
