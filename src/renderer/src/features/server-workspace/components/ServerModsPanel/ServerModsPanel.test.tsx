@@ -462,7 +462,11 @@ describe("ServerModsPanel", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    await user.click(await screen.findByRole("button", { name: "CurseForge" }));
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Open CurseForge Awesome Spyglass!",
+      }),
+    );
     expect(api.openCurseForgeMod).toHaveBeenCalledWith(awesomeDetail.curseforgeUrl);
   });
 
@@ -475,7 +479,7 @@ describe("ServerModsPanel", () => {
     await user.click(screen.getByRole("button", { name: "Search mods" }));
     expect(await screen.findByText("Super Spyglass Plus")).toBeInTheDocument();
     expect(screen.queryByText("Awesome Spyglass!")).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Add" }));
+    await user.click(screen.getByRole("button", { name: "Add Super Spyglass Plus" }));
 
     await waitFor(() => {
       expect(api.updateServer).toHaveBeenCalledWith(

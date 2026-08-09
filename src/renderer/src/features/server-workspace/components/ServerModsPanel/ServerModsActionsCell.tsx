@@ -1,15 +1,12 @@
-import type { ReactElement, MouseEvent } from "react";
-import { useId } from "react";
+import type { ReactElement } from "react";
+import { ActionIcon, Group, Tooltip } from "@mantine/core";
 import {
-  ActionIcon,
-  Button,
-  Group,
-  Tooltip,
-} from "@mantine/core";
-import { DotsThreeVertical, Plus, Trash } from "@phosphor-icons/react";
-import { useRowActionMenuApi } from "@ui/RowActionMenu/RowActionMenuProvider";
+  ArrowSquareOut,
+  MagnifyingGlass,
+  Plus,
+  Trash,
+} from "@phosphor-icons/react";
 import { confirmRemoveServerMod } from "./confirmRemoveServerMod";
-import { buildServerModsRowActions } from "./serverModsRowActions";
 import type { ModRow } from "./serverModsModel";
 
 interface Props {
@@ -23,67 +20,71 @@ interface Props {
 }
 
 /**
- * Row actions for Mods. Kebab opens the shared RowActionMenu portal so a table
- * remount (status push / DataTable refresh) does not dismiss an open menu.
+ * Icon-only row actions for Mods (details, CurseForge, add/remove).
+ * Context menu still reuses `buildServerModsRowActions` on the table.
  */
 export function ServerModsActionsCell(props: Props): ReactElement {
   const { row } = props;
-  const sourceId = useId();
-  const { openAt } = useRowActionMenuApi();
-  const menuEntries = buildServerModsRowActions({
-    row,
-    mode: props.mode,
-    busy: props.busy,
-    onInspect: props.onInspect,
-    onAdd: props.onAdd,
-    onRemove: (target: ModRow) => {
-      confirmRemoveServerMod(target, props.onRemove);
-    },
-    onOpenExternal: props.onOpenExternal,
-  });
-
-  const openKebab = (event: MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    event.preventDefault();
-    const rect = event.currentTarget.getBoundingClientRect();
-    openAt(sourceId, menuEntries, rect.right, rect.bottom);
-  };
+  const curseForgeDisabled = row.url === null || props.busy;
 
   return (
-    <Group gap="xs" justify="flex-end" wrap="nowrap">
-      {props.mode === "discover" ? (
-        <Button
-          size="compact-sm"
-          leftSection={<Plus size={14} />}
-          loading={props.busy}
-          disabled={row.configured}
-          onClick={() => props.onAdd(row)}
+    <Group gap={4} justify="flex-end" wrap="nowrap">
+      <Tooltip label="View details" withArrow>
+        <ActionIcon
+          variant="subtle"
+          size="sm"
+          aria-label={`View details ${row.name}`}
+          disabled={props.busy}
+          onClick={() => props.onInspect(row)}
         >
-          {row.configured ? "Added" : "Add"}
-        </Button>
-      ) : row.id !== null && (
-        <Tooltip label={`Remove ${row.name}`}>
+          <MagnifyingGlass size={16} />
+        </ActionIcon>
+      </Tooltip>
+      <Tooltip label="Open CurseForge" withArrow>
+        <ActionIcon
+          variant="subtle"
+          size="sm"
+          aria-label={`Open CurseForge ${row.name}`}
+          disabled={curseForgeDisabled}
+          onClick={() => {
+            if (row.url === null) return;
+            props.onOpenExternal(row.url);
+          }}
+        >
+          <ArrowSquareOut size={16} />
+        </ActionIcon>
+      </Tooltip>
+      {props.mode === "discover" ? (
+        <Tooltip
+          label={row.configured ? "Already added" : `Add ${row.name}`}
+          withArrow
+        >
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            color="teal"
+            aria-label={row.configured ? `Already added ${row.name}` : `Add ${row.name}`}
+            loading={props.busy}
+            disabled={row.configured || props.busy}
+            onClick={() => props.onAdd(row)}
+          >
+            <Plus size={16} />
+          </ActionIcon>
+        </Tooltip>
+      ) : row.id !== null ? (
+        <Tooltip label={`Remove ${row.name}`} withArrow>
           <ActionIcon
             color="red"
             variant="subtle"
+            size="sm"
             aria-label={`Remove ${row.name}`}
             disabled={props.busy}
             onClick={() => confirmRemoveServerMod(row, props.onRemove)}
           >
-            <Trash size={17} />
+            <Trash size={16} />
           </ActionIcon>
         </Tooltip>
-      )}
-      <Tooltip label="More options" withArrow>
-        <ActionIcon
-          variant="default"
-          size="sm"
-          aria-label={`More options ${row.name}`}
-          onClick={openKebab}
-        >
-          <DotsThreeVertical size={16} />
-        </ActionIcon>
-      </Tooltip>
+      ) : null}
     </Group>
   );
 }

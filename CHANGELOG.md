@@ -48,8 +48,9 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Heartbeat `setState` reuses unchanged status / SteamCMD / events / install snapshots so a quiet poll does not re-render the whole app tree (#94).
 - Quiet **player-list** pushes (~10s ListPlayers poll) and unchanged SteamCMD progress no longer re-render workspace chrome (Mods tooltips/toolbar) (#94).
 - SteamCMD quiet reconcile ignores `checkedAt` clock stamps so Overview heartbeats do not thrash status identity (#94).
-- Mods context-menu Remove uses the same confirm dialog as the trash/kebab; drag handle uses a correct DnD `innerRef`; reorder busy disables row toggles (#94).
-- Mods row kebab opens the shared row-action portal so a table remount no longer dismisses an open menu (#94).
+- Mods context-menu Remove uses the same confirm dialog as the trash button; drag handle uses a correct DnD `innerRef`; reorder busy disables row toggles (#94).
+- Mods Metadata column shows category and downloads only (Updated stays in its own column) (#94).
+- Mods row actions are three icon-only buttons (details, CurseForge, add/remove); the URL column and kebab are removed (#94).
 - Fleet poll no longer replaces unchanged server profile object identities, so Mods/Backups mid-edit actions and open context menus are not cancelled every few seconds (#94).
 - Failed backup fleet alerts use a single **Logs** action that opens Logs → Backups and highlights the failed archive (removed redundant Open).
 

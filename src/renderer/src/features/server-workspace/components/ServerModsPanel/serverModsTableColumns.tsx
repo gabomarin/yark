@@ -1,6 +1,5 @@
 import type { ReactElement } from "react";
 import {
-  Button,
   Group,
   Loader,
   Switch,
@@ -114,7 +113,7 @@ export function buildServerModsTableColumns(input: {
               {row.category ?? "Uncategorized"}
             </Text>
             <Text size="xs" c="dimmed" lineClamp={1}>
-              {row.downloads} · {row.updated}
+              {row.downloads}
             </Text>
           </>
         ),
@@ -129,28 +128,9 @@ export function buildServerModsTableColumns(input: {
       ),
     },
     {
-      accessor: "url",
-      title: "URL",
-      width: 120,
-      render: (row) => (
-        <Button
-          variant="subtle"
-          size="compact-sm"
-          disabled={row.url === null}
-          onClick={(event) => {
-            event.stopPropagation();
-            if (row.url === null) return;
-            input.onOpenExternal(row.url);
-          }}
-        >
-          CurseForge
-        </Button>
-      ),
-    },
-    {
       accessor: "actions",
       title: "",
-      width: 140,
+      width: 112,
       textAlign: "right",
       render: (row): ReactElement => (
         <div onClick={(event) => event.stopPropagation()}>

@@ -2,7 +2,7 @@ import { Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import type { ModRow } from "./serverModsModel";
 
-/** Confirm before removing a configured mod (kebab, trash, and context menu). */
+/** Confirm before removing a configured mod (trash button and context menu). */
 export function confirmRemoveServerMod(
   row: ModRow,
   onRemove: (id: string) => void,
