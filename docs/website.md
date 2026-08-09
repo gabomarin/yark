@@ -21,7 +21,7 @@ Public product site and operator docs for YARK server manager.
 | `website/src/pages/` | Marketing routes (`/`, `/faq/`, `/changelog/`) |
 | `website/src/content/docs/docs/` | Starlight docs under `/docs/` |
 | `website/public/` | Favicons, logo, screenshots |
-| `website/astro.config.mjs` | `base: "/yark"`, Starlight sidebar, dark-only theme |
+| `website/astro.config.mjs` | `base: "/yark"`, Starlight sidebar, dark-only theme; remark plugin prefixes content `/docs/…` links with that base |
 | `.github/workflows/pages.yml` | Build Astro → deploy `website/dist` |
 
 ## Local preview

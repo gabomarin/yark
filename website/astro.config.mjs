@@ -1,13 +1,21 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import { remarkBaseLinks } from "./src/plugins/remark-base-links.mjs";
+
+const siteBase = "/yark";
 
 /** Canonical GitHub project Pages site (`https://gabomarin.github.io/yark/`). */
 export default defineConfig({
   site: "https://gabomarin.github.io/yark",
-  base: "/yark",
+  base: siteBase,
   trailingSlash: "always",
   server: {
     port: 4321,
+  },
+  markdown: {
+    // Content body links like `/docs/logs/` do not get `base` automatically
+    // (Starlight sidebar/prev-next do). Keep authoring root-relative paths.
+    remarkPlugins: [remarkBaseLinks(siteBase)],
   },
   integrations: [
     starlight({
