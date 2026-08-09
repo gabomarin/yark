@@ -15,10 +15,23 @@ export interface ModRow {
   thumbnailUrl: string | null;
   category: string | null;
   downloads: string;
+  /** Numeric downloads for view-sort; null when unknown. */
+  downloadCount: number | null;
   updated: string;
+  /** Epoch ms for view-sort; null when unknown. */
+  updatedAt: number | null;
+  /** 0-based position in profile load order (`-mods=`). */
+  loadIndex: number;
   url: string | null;
   configured: boolean;
   enabled: boolean;
+}
+
+export type ModRowSortAccessor = "name" | "downloadCount" | "updatedAt";
+
+export interface ModRowSortStatus {
+  columnAccessor: ModRowSortAccessor;
+  direction: "asc" | "desc";
 }
 
 export function buildServerRows(
@@ -26,8 +39,8 @@ export function buildServerRows(
   disabledIds: Set<string>,
   metadata: Map<string, ModMetadata>,
 ): ModRow[] {
-  return configuredIds.map((id) =>
-    metadataRow(id, metadata.get(id), !disabledIds.has(id)));
+  return configuredIds.map((id, loadIndex) =>
+    metadataRow(id, metadata.get(id), !disabledIds.has(id), loadIndex));
 }
 
 export function buildDiscoveryRows(
@@ -42,22 +55,76 @@ export function buildDiscoveryRows(
       .filter((item): item is ModMetadata => item !== undefined)
       .map((item) => [item.slug, item]),
   );
-  return (catalog?.items ?? []).map((item) => {
+  return (catalog?.items ?? []).map((item, loadIndex) => {
     const configuredMetadata = configuredBySlug.get(item.slug);
     return catalogRow(
       item,
       configuredMetadata,
       configuredMetadata !== undefined
         && !disabledIds.has(configuredMetadata.id),
+      loadIndex,
     );
   });
+}
+
+/** Temporary view order — does not mutate load order. */
+export function sortModRows(
+  rows: ModRow[],
+  sort: ModRowSortStatus | null,
+): ModRow[] {
+  if (sort === null) return rows;
+  const dir = sort.direction === "desc" ? -1 : 1;
+  return [...rows].sort((left, right) => {
+    const cmp = compareModRows(left, right, sort.columnAccessor);
+    return cmp === 0 ? left.loadIndex - right.loadIndex : cmp * dir;
+  });
+}
+
+export function reorderModIds(
+  ids: string[],
+  fromIndex: number,
+  toIndex: number,
+): string[] {
+  if (
+    fromIndex === toIndex
+    || fromIndex < 0
+    || toIndex < 0
+    || fromIndex >= ids.length
+    || toIndex >= ids.length
+  ) {
+    return ids;
+  }
+  const next = [...ids];
+  const [moved] = next.splice(fromIndex, 1);
+  if (moved === undefined) return ids;
+  next.splice(toIndex, 0, moved);
+  return next;
+}
+
+function compareModRows(
+  left: ModRow,
+  right: ModRow,
+  accessor: ModRowSortAccessor,
+): number {
+  if (accessor === "name") {
+    return left.name.localeCompare(right.name, undefined, {
+      sensitivity: "base",
+    });
+  }
+  if (accessor === "downloadCount") {
+    return (left.downloadCount ?? -1) - (right.downloadCount ?? -1);
+  }
+  return (left.updatedAt ?? 0) - (right.updatedAt ?? 0);
 }
 
 function metadataRow(
   id: string,
   item: ModMetadata | undefined,
   enabled: boolean,
+  loadIndex: number,
 ): ModRow {
+  const unknownUpdated =
+    item === undefined || item.dateModified === new Date(0).toISOString();
   return {
     key: `id:${id}`,
     id,
@@ -71,12 +138,14 @@ function metadataRow(
       item === undefined
         ? "Unknown downloads"
         : `${item.downloadCount.toLocaleString()} downloads`,
-    updated:
-      item === undefined || item.dateModified === new Date(0).toISOString()
-        ? "Unknown update"
-        : new Date(item.dateModified).toLocaleDateString(),
+    downloadCount: item?.downloadCount ?? null,
+    updated: unknownUpdated
+      ? "Unknown update"
+      : new Date(item!.dateModified).toLocaleDateString(),
+    updatedAt: unknownUpdated ? null : Date.parse(item!.dateModified),
+    loadIndex,
     url: item?.curseforgeUrl ?? null,
-      configured: true,
+    configured: true,
     enabled,
   };
 }
@@ -85,6 +154,7 @@ function catalogRow(
   item: ModMetadata,
   configuredMetadata: ModMetadata | undefined,
   enabled: boolean,
+  loadIndex: number,
 ): ModRow {
   return {
     key: `slug:${item.slug}`,
@@ -96,7 +166,10 @@ function catalogRow(
     thumbnailUrl: item.thumbnailUrl,
     category: item.categories?.[0] ?? null,
     downloads: `${item.downloadCount.toLocaleString()} downloads`,
+    downloadCount: item.downloadCount,
     updated: new Date(item.dateModified).toLocaleDateString(),
+    updatedAt: Date.parse(item.dateModified),
+    loadIndex,
     url: item.curseforgeUrl,
     configured: configuredMetadata !== undefined,
     enabled,
@@ -137,24 +210,89 @@ export function metadataMap(
   return mergeMetadata(new Map(), cache ?? {});
 }
 
+function sameStringList(left: string[] | undefined, right: string[] | undefined): boolean {
+  const a = left ?? [];
+  const b = right ?? [];
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
+
+/** True when every user-visible ModMetadata field matches. */
+export function sameModMetadata(left: ModMetadata, right: ModMetadata): boolean {
+  return (
+    left.id === right.id
+    && left.name === right.name
+    && left.summary === right.summary
+    && (left.description ?? null) === (right.description ?? null)
+    && left.thumbnailUrl === right.thumbnailUrl
+    && left.downloadCount === right.downloadCount
+    && left.dateModified === right.dateModified
+    && left.curseforgeUrl === right.curseforgeUrl
+    && left.slug === right.slug
+    && sameStringList(left.authors, right.authors)
+    && sameStringList(left.categories, right.categories)
+  );
+}
+
+function modMetadataFingerprint(item: ModMetadata): string {
+  return [
+    item.id,
+    item.name,
+    item.summary,
+    item.description ?? "",
+    item.thumbnailUrl ?? "",
+    String(item.downloadCount),
+    item.dateModified,
+    item.curseforgeUrl,
+    item.slug,
+    (item.authors ?? []).join(","),
+    (item.categories ?? []).join(","),
+  ].join("\0");
+}
+
+export function modsMetadataSyncKey(
+  cache: Record<string, ModMetadata> | undefined,
+): string {
+  if (cache === undefined) return "";
+  return Object.keys(cache)
+    .sort()
+    .map((id) => {
+      const item = cache[id];
+      return item === undefined ? id : modMetadataFingerprint(item);
+    })
+    .join("|");
+}
+
+export function sameIdList(left: string[], right: string[]): boolean {
+  return left.length === right.length && left.every((id, index) => id === right[index]);
+}
+
 export function mergeMetadata(
   previous: Map<string, ModMetadata>,
   cache: Record<string, ModMetadata>,
 ): Map<string, ModMetadata> {
+  let changed = false;
   const next = new Map(previous);
   for (const detail of Object.values(cache)) {
-    next.set(detail.id, detail);
+    const existing = next.get(detail.id);
+    if (existing === undefined || !sameModMetadata(existing, detail)) {
+      next.set(detail.id, detail);
+      changed = true;
+    }
   }
-  return next;
+  return changed ? next : previous;
 }
 
 export function mergeMissingMetadata(
   previous: Map<string, ModMetadata>,
   fallbackItems: ModMetadata[],
 ): Map<string, ModMetadata> {
+  let changed = false;
   const next = new Map(previous);
   for (const item of fallbackItems) {
-    if (!next.has(item.id)) next.set(item.id, item);
+    if (!next.has(item.id)) {
+      next.set(item.id, item);
+      changed = true;
+    }
   }
-  return next;
+  return changed ? next : previous;
 }

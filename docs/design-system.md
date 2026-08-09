@@ -116,12 +116,20 @@ Secondary badges (attention counts, etc.) stay for outcomes — not a second
 
 Manual **Check Servers Health** ends with a toast (attention count or “all healthy”); startup scan stays silent. SteamCMD job outcomes, `runAction` failures, and Backups page save/cleanup results use toasts, not page or AppShell banners.
 
-### 6. Empty states
+### 6. Dense operational tables
+
+Prefer shared `YarkDataTable` (`shared/ui/YarkDataTable`, wraps `mantine-datatable`) for dense
+lists that need selection, sort/filter chrome, or consistent empty/loading — not for cards,
+accordions, or short semantic lists. Honor compact/comfortable via `useUiDensity`. See
+[datatable.md](datatable.md) for adopt/keep decisions (#94). **Mods** uses dual order: column
+sort is a temporary view; drag-to-reorder load order is enabled only while unsorted.
+
+### 7. Empty states
 
 - Always `EmptyState` (`layout="inline"` | `"stacked"`).
 - Domain content (incomplete clusters, etc.) nests **inside** EmptyState — don’t rebuild the shell.
 
-### 7. Typography (still light)
+### 8. Typography (still light)
 
 | Role | Current convention |
 | --- | --- |
@@ -132,18 +140,18 @@ Manual **Check Servers Health** ends with a toast (attention count or “all hea
 
 **Follow-up candidate:** `--app-font-meta|title` if more screens invent competing sizes (12 vs 11 meta, 18 vs 16 panel titles).
 
-### 8. Iconography
+### 9. Iconography
 
 - Phosphor icons; size usually 14–16 in actions, 20–24 in empties / hero tiles.
 - Prefer `AccentIconTile` for branded tiles (ServerCard / SteamCMD / guidance).
 
-### 9. Elevation / motion
+### 10. Elevation / motion
 
 - Panels: `--app-shadow-panel` (hairline).
 - Floating / dock: `--app-shadow-elevated` (SteamCMD dock — keep feature-local behavior).
 - Motion: short transitions on selection/hover only; no decorative ambient animation in tool chrome.
 
-### 10. Interaction density
+### 11. Interaction density
 
 | Context | Density |
 | --- | --- |

@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { notifications } from "@mantine/notifications";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -109,6 +109,11 @@ function renderPanel(): void {
 }
 
 const addLabel = "Add CurseForge Project ID or mod URL";
+
+/** Avoid per-keystroke typing of long CurseForge URLs (flaky under CI 5s timeout). */
+function fillAddField(value: string): void {
+  fireEvent.change(screen.getByLabelText(addLabel), { target: { value } });
+}
 
 describe("ServerModsPanel", () => {
   afterEach(() => {
@@ -316,7 +321,7 @@ describe("ServerModsPanel", () => {
     renderPanel();
     const url = superDetail.curseforgeUrl;
 
-    await user.type(screen.getByLabelText(addLabel), url);
+    fillAddField(url);
     await user.click(screen.getByRole("button", { name: "Add mod" }));
 
     expect(api.getModByReference).toHaveBeenCalledWith(url);
@@ -363,7 +368,7 @@ describe("ServerModsPanel", () => {
       "https://www.curseforge.com/ark-survival-ascended/mods/two",
     ].join(",");
 
-    await user.type(screen.getByLabelText(addLabel), urls);
+    fillAddField(urls);
     await user.click(screen.getByRole("button", { name: "Add mod" }));
 
     expect(await screen.findByText(/Importing mods 0\/2/)).toBeInTheDocument();
@@ -431,12 +436,42 @@ describe("ServerModsPanel", () => {
     });
   });
 
+  it("confirms before removing from the row context menu", async () => {
+    const api = installApi();
+    const user = userEvent.setup();
+    renderPanel();
+
+    const row = document.querySelector("[data-mod-row]");
+    expect(row).not.toBeNull();
+    fireEvent.contextMenu(row!);
+
+    await user.click(
+      await screen.findByRole("menuitem", { name: /Remove Awesome Spyglass/i }),
+    );
+    expect(api.updateServer).not.toHaveBeenCalled();
+
+    await user.click(await screen.findByRole("button", { name: "Remove mod" }));
+    await waitFor(() => {
+      expect(api.updateServer).toHaveBeenCalledWith(
+        "server-1",
+        expect.objectContaining({
+          mods: [],
+          modMetadataCache: {},
+        }),
+      );
+    });
+  });
+
   it("opens CurseForge links through the operating system", async () => {
     const api = installApi();
     const user = userEvent.setup();
     renderPanel();
 
-    await user.click(await screen.findByRole("button", { name: "CurseForge" }));
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Open CurseForge Awesome Spyglass!",
+      }),
+    );
     expect(api.openCurseForgeMod).toHaveBeenCalledWith(awesomeDetail.curseforgeUrl);
   });
 
@@ -449,7 +484,7 @@ describe("ServerModsPanel", () => {
     await user.click(screen.getByRole("button", { name: "Search mods" }));
     expect(await screen.findByText("Super Spyglass Plus")).toBeInTheDocument();
     expect(screen.queryByText("Awesome Spyglass!")).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Add" }));
+    await user.click(screen.getByRole("button", { name: "Add Super Spyglass Plus" }));
 
     await waitFor(() => {
       expect(api.updateServer).toHaveBeenCalledWith(

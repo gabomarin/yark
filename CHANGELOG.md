@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Shared **YarkDataTable** (`mantine-datatable`) powers backup history and the Mods load-order table (density, empty/loading, dual view-sort vs drag reorder); adopt/keep decisions for other lists are in `docs/datatable.md` (#94).
 - Right-click **context menus** on server cards, backup history rows, and mods table rows reuse the same Mantine **Menu** chrome as kebabs (#105).
 - Main window opens **maximized** by default and remembers the last size, position, and maximized state across launches.
 - App **Sidebar** uses a Docker-style **half-circle edge toggle** (`50vh`; curve faces sidenav when expanded, content when rail) for Full ↔ icon-rail; preferred mode is remembered (#107).
@@ -43,6 +44,14 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Fleet poll runs only on the **Servers** list (not inside workspace / other routes); backup history quiet refresh stays scoped to the Backups panel while it is open (#94).
+- Heartbeat `setState` reuses unchanged status / SteamCMD / events / install snapshots so a quiet poll does not re-render the whole app tree (#94).
+- Quiet **player-list** pushes (~10s ListPlayers poll) and unchanged SteamCMD progress no longer re-render workspace chrome (Mods tooltips/toolbar) (#94).
+- SteamCMD quiet reconcile ignores `checkedAt` clock stamps so Overview heartbeats do not thrash status identity (#94).
+- Mods context-menu Remove uses the same confirm dialog as the trash button; drag handle uses a correct DnD `innerRef`; reorder busy disables row toggles (#94).
+- Mods Metadata column shows category and downloads only (Updated stays in its own column) (#94).
+- Mods row actions are three icon-only buttons (details, CurseForge, add/remove); the URL column and kebab are removed (#94).
+- Fleet poll no longer replaces unchanged server profile object identities, so Mods/Backups mid-edit actions and open context menus are not cancelled every few seconds (#94).
 - Failed backup fleet alerts use a single **Logs** action that opens Logs → Backups and highlights the failed archive (removed redundant Open).
 
 ### Removed

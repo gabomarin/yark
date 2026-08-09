@@ -232,4 +232,63 @@ describe("PlayerSessionWatcher", () => {
     );
     watcher.stop();
   });
+
+  it("skips quiet players-updated pushes when the roster is unchanged", async () => {
+    const backups = {
+      createPlayerSessionBackup: vi.fn().mockResolvedValue(null),
+    } as unknown as BackupService;
+    const servers = {
+      list: vi.fn(() => [profile]),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const processes = Object.assign(new EventEmitter(), {
+      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
+      getStatus: vi.fn(() => runningStatus(profile.id)),
+    }) as unknown as ProcessManager;
+
+    vi.spyOn(rconClient, "rconExec").mockResolvedValue(
+      "0. Alice, 76561198000000000\n",
+    );
+
+    const watcher = new PlayerSessionWatcher(backups, servers, processes, 60_000);
+    const pushes: unknown[] = [];
+    watcher.on("players-updated", (payload) => {
+      pushes.push(payload);
+    });
+
+    await watcher.tick();
+    await watcher.tick();
+    expect(pushes).toHaveLength(1);
+    watcher.stop();
+  });
+
+  it("does not emit empty players-updated for already-stopped servers", async () => {
+    const backups = {
+      createPlayerSessionBackup: vi.fn().mockResolvedValue(null),
+    } as unknown as BackupService;
+    const servers = {
+      list: vi.fn(() => [profile]),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const processes = Object.assign(new EventEmitter(), {
+      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
+      getStatus: vi.fn(() => ({
+        ...runningStatus(profile.id),
+        status: "stopped" as const,
+        pid: null,
+        startedAt: null,
+      })),
+    }) as unknown as ProcessManager;
+
+    const watcher = new PlayerSessionWatcher(backups, servers, processes, 60_000);
+    const pushes: unknown[] = [];
+    watcher.on("players-updated", (payload) => {
+      pushes.push(payload);
+    });
+
+    await watcher.tick();
+    await watcher.tick();
+    expect(pushes).toHaveLength(0);
+    watcher.stop();
+  });
 });

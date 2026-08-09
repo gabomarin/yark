@@ -13,9 +13,12 @@ import {
   mergeMissingMetadata,
   mergeMetadata,
   metadataMap,
+  modsMetadataSyncKey,
+  sameIdList,
   toProfileInput,
   type ModRow,
 } from "./serverModsModel";
+import { createServerModsListMutations } from "./serverModsListMutations";
 import { useMapModEnableNotify } from "./useMapModEnableNotify";
 import classes from "./ServerModsPanel.module.css";
 
@@ -60,15 +63,24 @@ export function ServerModsPanel(props: Props): ReactElement {
   }, [props.server.id]);
 
   useEffect(() => {
-    setConfiguredIds(props.server.mods);
-    setDisabledIds(props.server.disabledMods ?? []);
+    const nextMods = props.server.mods;
+    const nextDisabled = props.server.disabledMods ?? [];
     const nextCache = props.server.modMetadataCache ?? {};
+    setConfiguredIds((previous) =>
+      sameIdList(previous, nextMods) ? previous : nextMods,
+    );
+    setDisabledIds((previous) =>
+      sameIdList(previous, nextDisabled) ? previous : nextDisabled,
+    );
     cacheRef.current = nextCache;
     setMetadata((previous) => mergeMetadata(previous, nextCache));
+    // Content keys — App polls listServers with new object identities even when
+    // the profile is unchanged; reference deps would reset mid-drag / open menus.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional content keys
   }, [
-    props.server.disabledMods,
-    props.server.modMetadataCache,
-    props.server.mods,
+    props.server.mods.join("\0"),
+    (props.server.disabledMods ?? []).join("\0"),
+    modsMetadataSyncKey(props.server.modMetadataCache),
   ]);
 
   useEffect(() => {
@@ -203,44 +215,17 @@ export function ServerModsPanel(props: Props): ReactElement {
     }
   };
 
-  const toggle = async (id: string, enabled: boolean) => {
-    setBusyKey(id);
-    setError(null);
-    setWarning(null);
-    const nextDisabled = enabled
-      ? disabledIds.filter((candidate) => candidate !== id)
-      : [...new Set([...disabledIds, id])];
-    try {
-      await persist(configuredIds, nextDisabled, cacheRef.current);
-      if (enabled) {
-        const meta = cacheRef.current[id] ?? metadata.get(id);
-        await notifyMapModIfNeeded(id, meta);
-      }
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not update the mod");
-    } finally {
-      setBusyKey(null);
-    }
-  };
-
-  const remove = async (id: string) => {
-    setBusyKey(id);
-    setError(null);
-    setWarning(null);
-    const nextCache = { ...cacheRef.current };
-    delete nextCache[id];
-    try {
-      await persist(
-        configuredIds.filter((candidate) => candidate !== id),
-        disabledIds.filter((candidate) => candidate !== id),
-        nextCache,
-      );
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not remove the mod");
-    } finally {
-      setBusyKey(null);
-    }
-  };
+  const { toggle, remove, reorder } = createServerModsListMutations({
+    configuredIds,
+    disabledIds,
+    metadata,
+    cacheRef,
+    setBusyKey,
+    setError,
+    setWarning,
+    persist,
+    notifyMapModIfNeeded,
+  });
 
   const openExternal = async (curseForgeUrl: string) => {
     const result = await window.api.openCurseForgeMod(curseForgeUrl);
@@ -317,6 +302,7 @@ export function ServerModsPanel(props: Props): ReactElement {
               onToggle={(id, enabled) => void toggle(id, enabled)}
               onRemove={(id) => void remove(id)}
               onOpenExternal={(target) => void openExternal(target)}
+              onReorder={(orderedIds) => void reorder(orderedIds)}
             />
           ) : (
             <ServerModsDiscoverSection

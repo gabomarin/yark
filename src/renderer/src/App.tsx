@@ -21,6 +21,17 @@ import type {
   SteamCmdStatus,
   StartServerOptions,
 } from "@shared/types";
+import { reconcileServerList } from "./shared/reconcileServerList";
+import {
+  reconcileClusterReports,
+  reconcileEvents,
+  reconcileInstallationMap,
+  reconcileStatusMap,
+  reconcileSteamCmdConsole,
+  reconcileSteamCmdStatus,
+  upsertRuntimeStatus,
+  upsertPlayerListState,
+} from "./shared/reconcilePollSnapshots";
 import { isHostPortBusyError, isHostPortProbeError } from "@shared/host-port-probe-errors";
 import {
   getServerUpdateState,
@@ -297,27 +308,55 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       window.api.checkCluster(),
       window.api.recentEvents(100),
     ]);
-    if (serversRes.ok) setServers(serversRes.data);
+    if (serversRes.ok) {
+      setServers((previous) =>
+        reconcileServerList(previous, serversRes.data),
+      );
+    }
     if (statusesRes.ok) {
-      setStatuses(new Map(statusesRes.data.map((s) => [s.serverId, s])));
+      setStatuses((previous) =>
+        reconcileStatusMap(previous, statusesRes.data),
+      );
     }
     if (installRes !== null && installRes.ok) {
-      setOfficialVersion(installRes.data.officialVersion);
-      setOfficialNetworkStatus(installRes.data.officialNetworkStatus);
-      setOfficialSteamBuild(installRes.data.officialSteamBuild);
-      setInstallationInfo(
-        new Map(installRes.data.servers.map((s) => [s.serverId, s])),
+      setOfficialVersion((previous) =>
+        previous === installRes.data.officialVersion
+          ? previous
+          : installRes.data.officialVersion,
+      );
+      setOfficialNetworkStatus((previous) =>
+        previous === installRes.data.officialNetworkStatus
+          ? previous
+          : installRes.data.officialNetworkStatus,
+      );
+      setOfficialSteamBuild((previous) =>
+        previous === installRes.data.officialSteamBuild
+          ? previous
+          : installRes.data.officialSteamBuild,
+      );
+      setInstallationInfo((previous) =>
+        reconcileInstallationMap(previous, installRes.data.servers),
       );
     }
     if (steamCmdRes.ok) {
-      setSteamCmdStatus(steamCmdRes.data);
+      setSteamCmdStatus((previous) =>
+        reconcileSteamCmdStatus(previous, steamCmdRes.data),
+      );
     }
     if (steamCmdConsoleRes.ok) {
-      setSteamCmdConsole(steamCmdConsoleRes.data);
+      setSteamCmdConsole((previous) =>
+        reconcileSteamCmdConsole(previous, steamCmdConsoleRes.data),
+      );
     }
 
-    if (clusterRes.ok) setReports(clusterRes.data);
-    if (eventsRes.ok) setEvents(eventsRes.data);
+    if (clusterRes.ok) {
+      setReports((previous) =>
+        reconcileClusterReports(previous, clusterRes.data),
+      );
+    }
+    if (eventsRes.ok) {
+      setEvents((previous) => reconcileEvents(previous, eventsRes.data));
+    }
 
     return {
       servers: serversRes.ok ? serversRes.data : null,
@@ -555,15 +594,15 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         return runInstallHealthScan("startup");
       });
     const unsubscribeStatus = window.api.onServerStatus((info) => {
-      setStatuses((prev) => {
-        const next = new Map(prev);
-        next.set(info.serverId, info);
-        return next;
-      });
+      setStatuses((prev) => upsertRuntimeStatus(prev, info));
     });
     const unsubscribeProgress = window.api.onSteamCmdProgress((payload) => {
-      setSteamCmdStatus(payload.status);
-      setSteamCmdConsole(payload.console);
+      setSteamCmdStatus((previous) =>
+        reconcileSteamCmdStatus(previous, payload.status),
+      );
+      setSteamCmdConsole((previous) =>
+        reconcileSteamCmdConsole(previous, payload.console),
+      );
     });
     const unsubscribeStopProgress = window.api.onServerStopProgress((payload) => {
       setStopProgressByServerId((prev) => {
@@ -579,15 +618,13 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     const unsubscribePlayers =
       typeof window.api.onPlayerListUpdated === "function"
         ? window.api.onPlayerListUpdated((payload: PlayerListUpdatedPush) => {
-            setPlayerListsByServer((prev) => {
-              const next = new Map(prev);
-              next.set(payload.serverId, {
+            setPlayerListsByServer((prev) =>
+              upsertPlayerListState(prev, payload.serverId, {
                 players: payload.players,
                 error: payload.error,
                 loading: false,
-              });
-              return next;
-            });
+              }),
+            );
           })
         : () => undefined;
     return () => {
@@ -600,9 +637,13 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   }, [refresh, runInstallHealthScan]);
 
   useEffect(() => {
-    // Progress arrives via push. Keep the heartbeat light: statuses/events only.
-    // Full install snapshots (PowerShell VersionInfo + ASA log reads) are expensive
-    // on the main process and freeze hover/click for ~1s when polled too often.
+    // Heartbeat only on the Servers list (overview with no overlay). Runtime status,
+    // SteamCMD progress, and player lists arrive via push; polling listServers from
+    // workspace / Backups / Settings was rewriting props and cancelling open UI.
+    const onServerList = route === "overview" && overlay === null;
+    if (!onServerList) {
+      return;
+    }
     const syncing = steamCmdStatus?.operation === "sync-files";
     const intervalMs = syncing ? 5_000 : steamCmdBusy ? 2_500 : 5_000;
     const interval = setInterval(() => {
@@ -611,7 +652,13 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     return () => {
       clearInterval(interval);
     };
-  }, [refresh, steamCmdBusy, steamCmdStatus?.operation]);
+  }, [
+    refresh,
+    steamCmdBusy,
+    steamCmdStatus?.operation,
+    route,
+    overlay,
+  ]);
 
   useEffect(() => {
     // Probe official CDN metadata periodically. Re-read local installs only when
@@ -759,25 +806,21 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
   const applyPlayerList = useCallback(
     (serverId: string, players: OnlinePlayerInfo[], error: string | null = null) => {
-      setPlayerListsByServer((prev) => {
-        const next = new Map(prev);
-        next.set(serverId, { players, error, loading: false });
-        return next;
-      });
+      setPlayerListsByServer((prev) =>
+        upsertPlayerListState(prev, serverId, { players, error, loading: false }),
+      );
     },
     [],
   );
 
   const setPlayerListLoading = useCallback((serverId: string, loading: boolean) => {
     setPlayerListsByServer((prev) => {
-      const next = new Map(prev);
-      const current = next.get(serverId) ?? {
+      const current = prev.get(serverId) ?? {
         players: [],
         error: null,
         loading: false,
       };
-      next.set(serverId, { ...current, loading });
-      return next;
+      return upsertPlayerListState(prev, serverId, { ...current, loading });
     });
   }, []);
 

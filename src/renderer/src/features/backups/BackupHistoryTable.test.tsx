@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import type { BackupRecord } from "@shared/types";
-import { BackupHistoryRow } from "./BackupHistoryRow";
+import { BackupHistoryTable } from "./BackupHistoryTable";
 
 const backup: BackupRecord = {
   id: "bk-world",
@@ -18,19 +18,21 @@ const backup: BackupRecord = {
   notes: null,
 };
 
-describe("BackupHistoryRow", () => {
+describe("BackupHistoryTable", () => {
   it("offers the same restore action from the right-click context menu", async () => {
     const user = userEvent.setup();
     const onRestore = vi.fn();
 
     render(
       <AppProviders>
-        <BackupHistoryRow
-          backup={backup}
+        <BackupHistoryTable
+          records={[backup]}
+          selectedIds={[]}
           busy={false}
           opsLocked={false}
-          selected={false}
-          onToggleSelected={vi.fn()}
+          fetching={false}
+          emptyHint="No backups yet"
+          onSelectedIdsChange={vi.fn()}
           onCopyDetails={vi.fn()}
           onOpenFolder={vi.fn()}
           onExport={vi.fn()}
@@ -44,6 +46,7 @@ describe("BackupHistoryRow", () => {
 
     const row = document.querySelector("[data-backup-row]");
     expect(row).not.toBeNull();
+    expect(screen.getByRole("button", { name: /Open folder/i })).toBeTruthy();
     fireEvent.contextMenu(row!);
 
     await user.click(await screen.findByRole("menuitem", { name: /^Restore$/ }));

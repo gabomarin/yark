@@ -196,8 +196,8 @@ export function BackupsPage(props: Props): ReactElement {
     }
   };
 
-  // App polls listServers every few seconds with a new array identity — only reload
-  // when the server set actually changes, not on every parent refresh.
+  // Reload when the server set changes. Live backup updates use onBackupsChanged;
+  // App no longer heartbeats listServers off the Servers list.
   const serverIdsKey = useMemo(
     () => props.servers.map((server) => server.id).join("\0"),
     [props.servers],

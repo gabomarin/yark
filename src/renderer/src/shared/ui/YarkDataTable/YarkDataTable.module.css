@@ -1,0 +1,20 @@
+.root {
+  min-height: 0;
+}
+
+.root :global(.mantine-datatable) {
+  --mantine-datatable-row-border-color: color-mix(
+    in srgb,
+    var(--app-color-border) 55%,
+    transparent
+  );
+  background: color-mix(in srgb, var(--app-color-panel) 40%, transparent);
+}
+
+.root :global(.mantine-datatable-header) {
+  background: color-mix(in srgb, var(--app-color-panel) 70%, transparent);
+}
+
+.root :global(.mantine-datatable-empty-state) {
+  min-height: 160px;
+}

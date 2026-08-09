@@ -14,7 +14,6 @@ import {
   ActionIcon,
   Badge,
   Button,
-  Checkbox,
   Group,
   NumberInput,
   Select,
@@ -42,9 +41,8 @@ import type {
 } from "@shared/types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
-import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { PathField } from "@ui/PathField/PathField";
-import { BackupHistoryRow } from "./BackupHistoryRow";
+import { BackupHistoryTable } from "./BackupHistoryTable";
 import { runBackupExport, runBackupImport } from "./backupPortability";
 import { formatBackupDetails } from "./formatBackupDetails";
 import classes from "./BackupsPage.module.css";
@@ -225,6 +223,25 @@ function draftEqualsDraft(a: DraftPolicy, b: DraftPolicy): boolean {
 
 const POLICY_AUTOSAVE_MS = 450;
 
+function backupsListKey(rows: BackupRecord[]): string {
+  return rows
+    .map(
+      (backup) =>
+        [
+          backup.id,
+          backup.status,
+          backup.type,
+          backup.kind,
+          String(backup.sizeBytes),
+          backup.createdAt,
+          backup.completedAt ?? "",
+          backup.path,
+          backup.notes ?? "",
+        ].join(":"),
+    )
+    .join("\0");
+}
+
 export function ServerBackupPanel(props: Props): ReactElement {
   const [backups, setBackups] = useState<BackupRecord[]>([]);
   const [policy, setPolicy] = useState<BackupPolicy | null>(null);
@@ -283,12 +300,6 @@ export function ServerBackupPanel(props: Props): ReactElement {
     return sortPlayerBackups(filtered, playerSort);
   }, [activeKind, kindBackups, playerSearch, playerSort]);
 
-  const selectableBackups = displayedBackups.filter((b) => b.status !== "running");
-  const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
-  const allSelected =
-    selectableBackups.length > 0
-    && selectableBackups.every((b) => selectedIdSet.has(b.id));
-
   const load = async (serverId: string, opts?: { quiet?: boolean }) => {
     const quiet = opts?.quiet === true;
     const gen = ++loadGenRef.current;
@@ -317,7 +328,11 @@ export function ServerBackupPanel(props: Props): ReactElement {
         return;
       }
       if (!policyRes.ok) {
-        setBackups(listRes.data);
+        setBackups((previous) =>
+          backupsListKey(previous) === backupsListKey(listRes.data)
+            ? previous
+            : listRes.data,
+        );
         if (!quiet) {
           setPolicy(null);
           setDraftPolicy(null);
@@ -327,18 +342,29 @@ export function ServerBackupPanel(props: Props): ReactElement {
         showBackupError(policyRes.error ?? "Could not load backup policy");
         return;
       }
-      setBackups(listRes.data);
+      setBackups((previous) =>
+        backupsListKey(previous) === backupsListKey(listRes.data)
+          ? previous
+          : listRes.data,
+      );
       setSelectedIds((prev) =>
         prev.filter((id) =>
           listRes.data.some((b) => b.id === id && b.status !== "running"),
         ),
       );
-      setPolicy(policyRes.data);
+      setPolicy((previous) =>
+        previous !== null && draftEqualsPolicy(toDraft(previous), policyRes.data)
+          ? previous
+          : policyRes.data,
+      );
       // Quiet refresh must not clobber unsaved destination/schedule/retention edits.
       if (!quiet) {
         setDraftPolicy(toDraft(policyRes.data));
       }
-      setResolvedRoot(rootRes.ok ? rootRes.data : null);
+      setResolvedRoot((previous) => {
+        const nextRoot = rootRes.ok ? rootRes.data : null;
+        return previous === nextRoot ? previous : nextRoot;
+      });
     } finally {
       if (gen === loadGenRef.current) {
         setLoading(false);
@@ -351,7 +377,8 @@ export function ServerBackupPanel(props: Props): ReactElement {
     void load(props.server.id);
   }, [props.server.id, props.server.updatedAt]);
 
-  // Auto-refresh while the panel is open (picks up join/leave archives).
+  // Quiet refresh only while this panel is mounted (workspace Backups tab).
+  // Join/leave archives also arrive via onBackupsChanged; no App-level backup poll.
   useEffect(() => {
     const timer = window.setInterval(() => {
       void load(props.server.id, { quiet: true });
@@ -503,22 +530,6 @@ export function ServerBackupPanel(props: Props): ReactElement {
     } finally {
       setBusyOp(null);
     }
-  };
-
-  const toggleSelected = (backupId: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(backupId)
-        ? prev.filter((id) => id !== backupId)
-        : [...prev, backupId],
-    );
-  };
-
-  const toggleSelectAll = () => {
-    if (allSelected) {
-      setSelectedIds([]);
-      return;
-    }
-    setSelectedIds(selectableBackups.map((b) => b.id));
   };
 
   const deleteBackupsByIds = async (backupIds: string[]) => {
@@ -909,16 +920,6 @@ export function ServerBackupPanel(props: Props): ReactElement {
               className={classes.listToolbar}
             >
               <Group gap="xs" wrap="wrap" align="center">
-                {selectableBackups.length > 0 && (
-                  <Checkbox
-                    label="Select all"
-                    size="xs"
-                    checked={allSelected}
-                    indeterminate={selectedIds.length > 0 && !allSelected}
-                    onChange={toggleSelectAll}
-                    disabled={busy}
-                  />
-                )}
                 {activeKind === "players" && kindBackups.length > 0 && (
                   <>
                     <TextInput
@@ -1027,41 +1028,22 @@ export function ServerBackupPanel(props: Props): ReactElement {
             </Group>
 
             <div className={classes.listScroll} data-backup-list>
-              {loading && kindBackups.length === 0 ? (
-                <div className={classes.listEmpty}>
-                  <Text size="sm" c="dimmed">
-                    Loading backups…
-                  </Text>
-                </div>
-              ) : displayedBackups.length === 0 ? (
-                <div className={classes.listEmpty} data-backup-list-empty>
-                  <EmptyState
-                    icon={<HardDrives size={22} />}
-                    title="No backups"
-                    description={emptyHint}
-                  />
-                </div>
-              ) : (
-                <Stack gap={4}>
-                  {displayedBackups.map((backup) => (
-                    <BackupHistoryRow
-                      key={backup.id}
-                      backup={backup}
-                      busy={busy}
-                      opsLocked={opsLocked}
-                      selected={selectedIdSet.has(backup.id)}
-                      onToggleSelected={() => toggleSelected(backup.id)}
-                      onCopyDetails={(row) => void copyBackupDetails(row)}
-                      onOpenFolder={(id) => void openBackupFolder(id)}
-                      onExport={(row) => void exportBackup(row)}
-                      onRestore={confirmRestore}
-                      onDelete={confirmDeleteOne}
-                      formatSize={formatSize}
-                      formatRelativeTime={formatRelativeTime}
-                    />
-                  ))}
-                </Stack>
-              )}
+              <BackupHistoryTable
+                records={displayedBackups}
+                selectedIds={selectedIds}
+                busy={busy}
+                opsLocked={opsLocked}
+                fetching={loading && kindBackups.length === 0}
+                emptyHint={emptyHint}
+                onSelectedIdsChange={setSelectedIds}
+                onCopyDetails={(row) => void copyBackupDetails(row)}
+                onOpenFolder={(id) => void openBackupFolder(id)}
+                onExport={(row) => void exportBackup(row)}
+                onRestore={confirmRestore}
+                onDelete={confirmDeleteOne}
+                formatSize={formatSize}
+                formatRelativeTime={formatRelativeTime}
+              />
             </div>
           </Stack>
         </Tabs>
