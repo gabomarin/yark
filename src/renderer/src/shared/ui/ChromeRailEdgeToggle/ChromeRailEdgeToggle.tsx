@@ -3,8 +3,8 @@ import { CaretRight } from "@phosphor-icons/react";
 import { UnstyledButton, Tooltip } from "@mantine/core";
 import classes from "./ChromeRailEdgeToggle.module.css";
 
-/** Semicircle height (width is ~half). */
-export const CHROME_RAIL_EDGE_TOGGLE_PX = 28;
+/** Visible control box (width × height); used by layout seam math. */
+export const CHROME_RAIL_EDGE_TOGGLE_PX = 40;
 
 interface Props {
   iconMode: boolean;
@@ -34,6 +34,7 @@ export function ChromeRailEdgeToggle(props: Props): ReactElement {
           onClick={props.onToggle}
           className={classes.toggle}
           data-direction={direction}
+          style={{ minHeight: CHROME_RAIL_EDGE_TOGGLE_PX }}
         >
           <CaretRight size={12} weight="bold" className={classes.caret} aria-hidden />
         </UnstyledButton>

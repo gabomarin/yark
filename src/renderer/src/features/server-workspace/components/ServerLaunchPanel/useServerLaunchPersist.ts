@@ -18,6 +18,18 @@ interface PersistJob {
   extraArgs: string[];
 }
 
+interface DraftBaseline {
+  structured: StructuredLaunchArgs;
+  rawText: string;
+}
+
+function sameStructured(
+  left: StructuredLaunchArgs,
+  right: StructuredLaunchArgs,
+): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
 /** Local Launch draft + serialized/coalesced profile updates. */
 export function useServerLaunchPersist(
   server: ServerProfile,
@@ -37,16 +49,19 @@ export function useServerLaunchPersist(
   setValue: (id: string, value: string) => void;
   persistExtraArgsFromRaw: () => Promise<void>;
 } {
-  const [structured, setStructured] = useState<StructuredLaunchArgs>(() =>
-    normalizeStructuredLaunchArgs(server.structuredLaunchArgs),
+  const initialStructured = normalizeStructuredLaunchArgs(
+    server.structuredLaunchArgs,
   );
-  const [rawText, setRawText] = useState(() =>
-    joinRawExtraArgs(server.extraArgs),
+  const initialRaw = joinRawExtraArgs(server.extraArgs);
+  const [structured, setStructured] = useState<StructuredLaunchArgs>(
+    () => initialStructured,
   );
+  const [rawText, setRawText] = useState(() => initialRaw);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const structuredRef = useRef(structured);
+  const rawTextRef = useRef(rawText);
   const extraArgsRef = useRef<string[]>(parseRawExtraArgs(rawText));
   const valuePersistTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const queuedPersist = useRef<PersistJob | null>(null);
@@ -55,10 +70,16 @@ export function useServerLaunchPersist(
   const serverIdRef = useRef(server.id);
   const onServerUpdatedRef = useRef(onServerUpdated);
   const serverProfileRef = useRef(server);
+  const baselineRef = useRef<DraftBaseline>({
+    structured: initialStructured,
+    rawText: initialRaw,
+  });
+  const persistGenerationRef = useRef(0);
 
   serverIdRef.current = server.id;
   onServerUpdatedRef.current = onServerUpdated;
   serverProfileRef.current = server;
+  rawTextRef.current = rawText;
 
   const extraArgs = parseRawExtraArgs(rawText);
   extraArgsRef.current = extraArgs;
@@ -67,11 +88,44 @@ export function useServerLaunchPersist(
     structuredRef.current = structured;
   }, [structured]);
 
-  useEffect(() => {
-    setStructured(normalizeStructuredLaunchArgs(server.structuredLaunchArgs));
-    setRawText(joinRawExtraArgs(server.extraArgs));
+  function isDraftDirty(): boolean {
+    const baseline = baselineRef.current;
+    return (
+      rawTextRef.current !== baseline.rawText
+      || !sameStructured(structuredRef.current, baseline.structured)
+    );
+  }
+
+  function applyServerDraft(nextServer: ServerProfile): void {
+    const nextStructured = normalizeStructuredLaunchArgs(
+      nextServer.structuredLaunchArgs,
+    );
+    const nextRaw = joinRawExtraArgs(nextServer.extraArgs);
+    structuredRef.current = nextStructured;
+    rawTextRef.current = nextRaw;
+    extraArgsRef.current = parseRawExtraArgs(nextRaw);
+    baselineRef.current = { structured: nextStructured, rawText: nextRaw };
+    setStructured(nextStructured);
+    setRawText(nextRaw);
     setError(null);
-  }, [server.id, server.updatedAt]);
+  }
+
+  useEffect(() => {
+    applyServerDraft(server);
+    // Reset local draft when switching profiles only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: server.id
+  }, [server.id]);
+
+  useEffect(() => {
+    // After a successful save, parent refresh bumps updatedAt. Apply remote
+    // changes only when the local draft is idle/clean so keystrokes are not wiped.
+    if (saving) return;
+    if (valuePersistTimer.current !== null) return;
+    if (queuedPersist.current !== null) return;
+    if (isDraftDirty()) return;
+    applyServerDraft(server);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: updatedAt sync
+  }, [server.updatedAt]);
 
   useEffect(() => {
     return () => {
@@ -90,25 +144,42 @@ export function useServerLaunchPersist(
       setError(conflictsNow.map((c) => c.message).join(" "));
       return false;
     }
+    const generation = ++persistGenerationRef.current;
+    const targetServerId = serverIdRef.current;
     setSaving(true);
     setError(null);
     try {
       const result = await window.api.updateServer(
-        serverIdRef.current,
+        targetServerId,
         toLaunchProfileInput(
           serverProfileRef.current,
           job.structured,
           job.extraArgs,
         ),
       );
+      if (generation !== persistGenerationRef.current) {
+        return false;
+      }
+      if (serverIdRef.current !== targetServerId) {
+        return false;
+      }
       if (!result.ok) {
         setError(result.error);
         return false;
       }
+      baselineRef.current = {
+        structured: job.structured,
+        rawText: joinRawExtraArgs(job.extraArgs),
+      };
       onServerUpdatedRef.current();
       return true;
     } finally {
-      setSaving(false);
+      if (
+        generation === persistGenerationRef.current
+        && serverIdRef.current === targetServerId
+      ) {
+        setSaving(false);
+      }
     }
   }
 
@@ -177,14 +248,13 @@ export function useServerLaunchPersist(
   }
 
   function setValue(id: string, value: string): void {
-    setStructured((prev) => {
-      const next = {
-        ...prev,
-        [id]: { enabled: prev[id]?.enabled === true, value },
-      };
-      structuredRef.current = next;
-      return next;
-    });
+    const prev = structuredRef.current;
+    const next = {
+      ...prev,
+      [id]: { enabled: prev[id]?.enabled === true, value },
+    };
+    structuredRef.current = next;
+    setStructured(next);
     if (valuePersistTimer.current !== null) {
       clearTimeout(valuePersistTimer.current);
     }
@@ -204,12 +274,14 @@ export function useServerLaunchPersist(
   }
 
   async function persistExtraArgsFromRaw(): Promise<void> {
-    const nextExtra = parseRawExtraArgs(rawText);
+    const nextExtra = parseRawExtraArgs(rawTextRef.current);
     extraArgsRef.current = nextExtra;
-    const prev = server.extraArgs;
+    const prev = serverProfileRef.current.extraArgs;
     const ok = await schedulePersist(structuredRef.current, nextExtra);
     if (!ok) {
-      setRawText(joinRawExtraArgs(prev));
+      const rolledBack = joinRawExtraArgs(prev);
+      rawTextRef.current = rolledBack;
+      setRawText(rolledBack);
       extraArgsRef.current = [...prev];
     }
   }

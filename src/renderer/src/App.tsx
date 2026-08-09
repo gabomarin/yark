@@ -141,6 +141,8 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     reason: "startup" | "manual" | null;
   }>({ active: false, reason: null });
   const installScanInFlightRef = useRef<Promise<void> | null>(null);
+  /** Bumps on each refresh start; stale overlapping polls must not apply setState. */
+  const refreshGenerationRef = useRef(0);
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [appUpdateStatus, setAppUpdateStatus] = useState<AppUpdateStatus | null>(null);
   const [focusYarkUpdates, setFocusYarkUpdates] = useState(false);
@@ -289,6 +291,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     const includeInstallation = options?.includeInstallation !== false;
     const forceOfficialCheck = options?.forceOfficialCheck === true;
     const serversMode = options?.serversMode ?? true;
+    const generation = ++refreshGenerationRef.current;
     const [
       serversRes,
       statusesRes,
@@ -308,6 +311,14 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       window.api.checkCluster(),
       window.api.recentEvents(100),
     ]);
+    if (generation !== refreshGenerationRef.current) {
+      return {
+        servers: null,
+        statuses: null,
+        installationInfo: null,
+        officialSteamBuild: null,
+      };
+    }
     if (serversRes.ok) {
       setServers((previous) =>
         reconcileServerList(previous, serversRes.data),

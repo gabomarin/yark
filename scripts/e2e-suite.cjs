@@ -1,6 +1,7 @@
 const assert = require("node:assert/strict");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
+const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -92,14 +93,7 @@ async function createServer(page, serverName, installDir, ports) {
     // onboarding not shown
   }
 
-  const backToServers = page.getByRole("button", { name: /Back to servers/i });
-  await backToServers.first().waitFor({ state: "visible", timeout: 10000 });
-  await backToServers.first().click();
-
-  await page.locator("[data-overview-page]").waitFor({
-    state: "visible",
-    timeout: 15000,
-  });
+  await leaveWorkspaceToServers(page);
 
   return await waitForCardByName(page, serverName);
 }

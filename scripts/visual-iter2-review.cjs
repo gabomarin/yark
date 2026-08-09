@@ -189,12 +189,8 @@ async function run() {
           );
         }
 
-        const back = page.getByLabel(/Back to servers/i);
-        if ((await back.count()) > 0) {
-          await back.click();
-        } else {
-          await goNav(page, "Servers");
-        }
+        const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
+        await leaveWorkspaceToServers(page, 10000);
         await page.waitForTimeout(200);
       }
 

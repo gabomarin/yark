@@ -38,7 +38,7 @@ import type {
   BackupServerHealth,
   ServerProfile,
 } from "@shared/types";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   isBackupDiskDraftDirty,
   isBackupPolicyDraftDirty,
@@ -129,6 +129,7 @@ export function BackupsPage(props: Props): ReactElement {
   const [keepLastEnabled, setKeepLastEnabled] = useState(false);
   const [keepLastPerKind, setKeepLastPerKind] = useState(5);
 
+  const loadGenerationRef = useRef(0);
   const load = async (opts?: {
     quiet?: boolean;
     /** Replace local drafts from server (Refresh). Default merges and keeps dirty edits. */
@@ -138,12 +139,15 @@ export function BackupsPage(props: Props): ReactElement {
     const quiet = opts?.quiet === true;
     const forceDraftSync = opts?.forceDraftSync === true;
     const cancelled = opts?.cancelled;
+    // Quiet live updates must not clear a newer non-quiet load's spinner.
+    const generation = quiet ? null : ++loadGenerationRef.current;
     if (!quiet) {
       setLoading(true);
     }
     try {
       if (props.servers.length === 0) {
         if (cancelled?.()) return;
+        if (generation !== null && generation !== loadGenerationRef.current) return;
         setSummary(null);
         setDrafts({});
         return;
@@ -151,6 +155,7 @@ export function BackupsPage(props: Props): ReactElement {
 
       const result = await window.api.getBackupFleetSummary();
       if (cancelled?.()) return;
+      if (generation !== null && generation !== loadGenerationRef.current) return;
       if (!result.ok) {
         setSummary(null);
         showOperatorError(
@@ -192,7 +197,9 @@ export function BackupsPage(props: Props): ReactElement {
         });
       }
     } finally {
-      setLoading(false);
+      if (generation !== null && generation === loadGenerationRef.current) {
+        setLoading(false);
+      }
     }
   };
 

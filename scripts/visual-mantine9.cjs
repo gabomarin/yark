@@ -133,14 +133,8 @@ async function run() {
             );
           }
 
-          const back = page.getByLabel("Back to servers");
-          if ((await back.count()) > 0) {
-            await back.first().click();
-            await page.locator("[data-overview-page]").waitFor({
-              state: "visible",
-              timeout: 10000,
-            });
-          }
+          const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
+          await leaveWorkspaceToServers(page, 10000);
         }
       }
     }

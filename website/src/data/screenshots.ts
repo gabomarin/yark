@@ -23,7 +23,7 @@ export const screenshots: Screenshot[] = [
     src: withBase("/screenshots/workspace-mods.png"),
     alt: "Mods tab listing CurseForge mods with enable toggles, Project IDs, metadata, and CurseForge links",
     caption:
-      "Mods — CurseForge Project IDs, enable/disable, and Worker-backed metadata per server.",
+      "Mods — dense load-order table with enable toggles, Project IDs, and Worker-backed metadata.",
   },
   {
     src: withBase("/screenshots/workspace-ini.png"),

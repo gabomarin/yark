@@ -12,6 +12,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
+const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -76,10 +77,7 @@ async function dismissOnboarding(page) {
   } catch {
     // onboarding not shown
   }
-  const back = page.getByRole("button", { name: /Back to servers/i });
-  await back.first().waitFor({ state: "visible", timeout: 10000 });
-  await back.first().click();
-  await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 15000 });
+  await leaveWorkspaceToServers(page);
 }
 
 async function createServer(page, name, installDir, ports) {

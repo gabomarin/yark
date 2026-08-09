@@ -1,3 +1,6 @@
+react-doctor-report.json
+react-doctor-delta-renderer.json
+react-doctor-triage.mjs
 node_modules/
 out/
 dist/

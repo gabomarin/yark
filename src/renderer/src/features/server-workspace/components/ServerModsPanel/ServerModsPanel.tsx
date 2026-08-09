@@ -33,8 +33,10 @@ export function ServerModsPanel(props: Props): ReactElement {
   const [disabledIds, setDisabledIds] = useState(props.server.disabledMods ?? []);
   const configuredIdsRef = useRef(configuredIds);
   const disabledIdsRef = useRef(disabledIds);
+  const serverRef = useRef(props.server);
   configuredIdsRef.current = configuredIds;
   disabledIdsRef.current = disabledIds;
+  serverRef.current = props.server;
   const cacheRef = useRef(props.server.modMetadataCache ?? {});
   const [metadata, setMetadata] = useState<Map<string, ModMetadata>>(
     () => metadataMap(props.server.modMetadataCache),
@@ -116,11 +118,16 @@ export function ServerModsPanel(props: Props): ReactElement {
     nextDisabled: string[],
     nextCache: Record<string, ModMetadata>,
   ) => {
+    // Snapshot profile at call time so the write does not pick up a mid-flight
+    // workspace switch; after await, skip local apply if we left that server.
+    const server = serverRef.current;
+    const targetServerId = server.id;
     const result = await window.api.updateServer(
-      props.server.id,
-      toProfileInput(props.server, nextIds, nextDisabled, nextCache),
+      targetServerId,
+      toProfileInput(server, nextIds, nextDisabled, nextCache),
     );
     if (!result.ok) throw new Error(result.error);
+    if (serverRef.current.id !== targetServerId) return;
     setConfiguredIds(nextIds);
     setDisabledIds(nextDisabled);
     cacheRef.current = nextCache;
@@ -149,13 +156,16 @@ export function ServerModsPanel(props: Props): ReactElement {
     setSearching(true);
     setError(null);
     setWarning(null);
-    const result = await window.api.searchMods(query);
-    setSearching(false);
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const result = await window.api.searchMods(query);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setCatalog(result.data);
+    } finally {
+      setSearching(false);
     }
-    setCatalog(result.data);
   };
 
   const addFromInput = async () => {
@@ -216,8 +226,8 @@ export function ServerModsPanel(props: Props): ReactElement {
   };
 
   const { toggle, remove, reorder } = createServerModsListMutations({
-    configuredIds,
-    disabledIds,
+    configuredIdsRef,
+    disabledIdsRef,
     metadata,
     cacheRef,
     setBusyKey,
@@ -247,8 +257,8 @@ export function ServerModsPanel(props: Props): ReactElement {
       const result = await window.api.getModByReference(ref);
       if (!result.ok) throw new Error(result.error);
       setDetail(result.data);
-      if (configuredIds.includes(result.data.id)) {
-        await persist(configuredIds, disabledIds, {
+      if (configuredIdsRef.current.includes(result.data.id)) {
+        await persist(configuredIdsRef.current, disabledIdsRef.current, {
           ...cacheRef.current,
           [result.data.id]: result.data,
         });
