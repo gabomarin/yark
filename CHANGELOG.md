@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- Public docs body links under GitHub Pages now keep the `/yark` base (e.g. Settings → Logs & diagnostics no longer jumps to `/docs/logs/`).
+
 ## [0.8.0] - 2026-08-09
 
 ### Added
