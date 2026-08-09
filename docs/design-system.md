@@ -9,7 +9,7 @@ Source of truth for numeric tokens: `src/renderer/src/shared/theme/tokens.ts` �
 
 1. **Prefer Mantine first.** Use Mantine components for interaction and structure
    (`Modal`, `Stepper`, `Tabs`, `Tooltip`, `Alert`, `Checkbox`, `Select`,
-   `TextInput`, `Button`, `Stack`, `Group`, Spotlight, …) before hand-rolling the same
+   `TextInput`, `Button`, `Stack`, `Group`, `Spotlight`, …) before hand-rolling the same
    widget in CSS modules. Multi-step wizards should use Mantine `Stepper`
    (`size="sm"`, `allowNextStepsSelect={false}`) like `CreateClusterModal` /
    `AddServersModal`. Shared YARK atoms (`AppSurfaceCard`, `EmptyState`,

@@ -1107,6 +1107,8 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       runWithWorkspaceLeaveGuard(() => {
         setOverlay(null);
         setRoute(next);
+        // Only after leave-guard confirms — cancelled jumps must not hit Recent.
+        pushSpotlightRecent({ kind: "nav", route: next });
       });
     },
     [runWithWorkspaceLeaveGuard],

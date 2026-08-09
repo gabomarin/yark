@@ -14,7 +14,6 @@ import {
 } from "./appSpotlightModel";
 import {
   getSpotlightRecentSnapshot,
-  pushSpotlightRecent,
   subscribeSpotlightRecent,
   type SpotlightRecentEntry,
 } from "./appSpotlightRecent";
@@ -54,16 +53,8 @@ export function AppSpotlight(props: Props): ReactElement {
     () => [],
   );
 
-  const navigate = (route: Route): void => {
-    pushSpotlightRecent({ kind: "nav", route });
-    props.onNavigate(route);
-  };
-
-  const openServer = (serverId: string): void => {
-    pushSpotlightRecent({ kind: "server", serverId });
-    props.onOpenServer(serverId);
-  };
-
+  // Recent is recorded in App after the workspace leave-guard actually applies
+  // the navigation / workspace open — not here on click.
   const serversById = new Map(props.servers.map((server) => [server.id, server]));
   const navById = new Map(SPOTLIGHT_NAV_ITEMS.map((item) => [item.id, item]));
 
@@ -72,8 +63,8 @@ export function AppSpotlight(props: Props): ReactElement {
     const action = resolveRecentAction(entry, {
       navById,
       serversById,
-      onNavigate: navigate,
-      onOpenServer: openServer,
+      onNavigate: props.onNavigate,
+      onOpenServer: props.onOpenServer,
     });
     if (action !== null) {
       recentActions.push(action);
@@ -90,7 +81,7 @@ export function AppSpotlight(props: Props): ReactElement {
         description: item.description,
         keywords: item.keywords,
         leftSection: <Icon size={20} weight="duotone" aria-hidden />,
-        onClick: () => navigate(item.id),
+        onClick: () => props.onNavigate(item.id),
       } satisfies SpotlightActionData;
     }),
   };
@@ -103,7 +94,7 @@ export function AppSpotlight(props: Props): ReactElement {
       description: `${server.map} · Open workspace`,
       keywords: [server.map, server.sessionName, server.installDir, server.id],
       leftSection: serverThumb(server),
-      onClick: () => openServer(server.id),
+      onClick: () => props.onOpenServer(server.id),
     })),
   };
 
