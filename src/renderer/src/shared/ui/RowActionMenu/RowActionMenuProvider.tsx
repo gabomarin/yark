@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { RowActionMenuItems } from "./RowActionMenuItems";
@@ -56,13 +57,16 @@ interface Props {
  */
 export function RowActionMenuProvider(props: Props): ReactElement {
   const [state, setState] = useState<RowActionMenuState | null>(null);
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   const close = useCallback(() => {
     setState(null);
   }, []);
 
   const closeSource = useCallback((sourceId: string) => {
-    setState((current) => (current?.sourceId === sourceId ? null : current));
+    if (stateRef.current?.sourceId !== sourceId) return;
+    setState(null);
   }, []);
 
   const openAt = useCallback(
@@ -80,13 +84,15 @@ export function RowActionMenuProvider(props: Props): ReactElement {
   );
 
   const sync = useCallback((sourceId: string, entries: readonly RowActionEntry[]) => {
-    setState((current) => {
-      if (current === null || current.sourceId !== sourceId) return current;
-      const normalized = normalizeRowActionEntries(entries);
-      if (visibleRowActionItems(normalized).length === 0) return null;
-      // Always replace entries so item onClick closures stay current.
-      return { ...current, entries: normalized };
-    });
+    const current = stateRef.current;
+    // Closed menus: skip setState so every row mount does not schedule updates.
+    if (current === null || current.sourceId !== sourceId) return;
+    const normalized = normalizeRowActionEntries(entries);
+    if (visibleRowActionItems(normalized).length === 0) {
+      setState(null);
+      return;
+    }
+    setState({ ...current, entries: normalized });
   }, []);
 
   const api = useMemo(
