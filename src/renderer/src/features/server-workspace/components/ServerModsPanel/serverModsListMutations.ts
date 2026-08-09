@@ -3,8 +3,8 @@ import type { ModMetadata } from "@shared/types";
 import { MODS_REORDER_BUSY_KEY } from "./serverModsBusy";
 
 interface Input {
-  configuredIds: string[];
-  disabledIds: string[];
+  configuredIdsRef: MutableRefObject<string[]>;
+  disabledIdsRef: MutableRefObject<string[]>;
   metadata: Map<string, ModMetadata>;
   cacheRef: MutableRefObject<Record<string, ModMetadata>>;
   setBusyKey: Dispatch<SetStateAction<string | null>>;
@@ -26,11 +26,13 @@ export function createServerModsListMutations(input: Input) {
     input.setBusyKey(id);
     input.setError(null);
     input.setWarning(null);
+    const configuredIds = input.configuredIdsRef.current;
+    const disabledIds = input.disabledIdsRef.current;
     const nextDisabled = enabled
-      ? input.disabledIds.filter((candidate) => candidate !== id)
-      : [...new Set([...input.disabledIds, id])];
+      ? disabledIds.filter((candidate) => candidate !== id)
+      : [...new Set([...disabledIds, id])];
     try {
-      await input.persist(input.configuredIds, nextDisabled, input.cacheRef.current);
+      await input.persist(configuredIds, nextDisabled, input.cacheRef.current);
       if (enabled) {
         const meta = input.cacheRef.current[id] ?? input.metadata.get(id);
         await input.notifyMapModIfNeeded(id, meta);
@@ -48,12 +50,14 @@ export function createServerModsListMutations(input: Input) {
     input.setBusyKey(id);
     input.setError(null);
     input.setWarning(null);
+    const configuredIds = input.configuredIdsRef.current;
+    const disabledIds = input.disabledIdsRef.current;
     const nextCache = { ...input.cacheRef.current };
     delete nextCache[id];
     try {
       await input.persist(
-        input.configuredIds.filter((candidate) => candidate !== id),
-        input.disabledIds.filter((candidate) => candidate !== id),
+        configuredIds.filter((candidate) => candidate !== id),
+        disabledIds.filter((candidate) => candidate !== id),
         nextCache,
       );
     } catch (cause) {
@@ -66,20 +70,22 @@ export function createServerModsListMutations(input: Input) {
   };
 
   const reorder = async (orderedIds: string[]) => {
+    const configuredIds = input.configuredIdsRef.current;
+    const disabledIds = input.disabledIdsRef.current;
     if (
-      orderedIds.length !== input.configuredIds.length
-      || orderedIds.some((id) => !input.configuredIds.includes(id))
+      orderedIds.length !== configuredIds.length
+      || orderedIds.some((id) => !configuredIds.includes(id))
     ) {
       return;
     }
-    if (orderedIds.every((id, index) => id === input.configuredIds[index])) {
+    if (orderedIds.every((id, index) => id === configuredIds[index])) {
       return;
     }
     input.setBusyKey(MODS_REORDER_BUSY_KEY);
     input.setError(null);
     input.setWarning(null);
     try {
-      await input.persist(orderedIds, input.disabledIds, input.cacheRef.current);
+      await input.persist(orderedIds, disabledIds, input.cacheRef.current);
     } catch (cause) {
       input.setError(
         cause instanceof Error ? cause.message : "Could not reorder mods",

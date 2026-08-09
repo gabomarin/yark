@@ -15,6 +15,7 @@
  */
 const assert = require("node:assert/strict");
 const { spawnSync, execFileSync } = require("node:child_process");
+const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
 const {
   existsSync,
   mkdirSync,
@@ -204,14 +205,7 @@ async function createServer(page, serverName, baseFolder, ports) {
     // onboarding not shown
   }
 
-  const backToServers = page.getByRole("button", { name: /Back to servers/i });
-  await backToServers.first().waitFor({ state: "visible", timeout: 10000 });
-  await backToServers.first().click();
-
-  await page.locator("[data-overview-page]").waitFor({
-    state: "visible",
-    timeout: 15000,
-  });
+  await leaveWorkspaceToServers(page);
 
   const card = page
     .locator("[data-server-card]", {

@@ -11,10 +11,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 32px;
-  min-width: 16px;
-  min-height: 32px;
+  /* ≥24×24 touch/pointer target (WCAG 2.5.8) while keeping the half-circle look. */
+  width: 24px;
+  height: 40px;
+  min-width: 24px;
+  min-height: 40px;
   padding: 0;
   line-height: 0;
   color: color-mix(in srgb, var(--app-color-text) 88%, var(--ark-blue-9));

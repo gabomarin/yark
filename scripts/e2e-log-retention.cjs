@@ -12,6 +12,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
+const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -215,13 +216,7 @@ async function createSeedServer(page, serverName, installDir, ports) {
     // onboarding not shown
   }
 
-  const backToServers = page.getByRole("button", { name: /Back to servers/i });
-  await backToServers.first().waitFor({ state: "visible", timeout: 10000 });
-  await backToServers.first().click();
-  await page.locator("[data-overview-page]").waitFor({
-    state: "visible",
-    timeout: 15000,
-  });
+  await leaveWorkspaceToServers(page);
 }
 
 async function launchApp(projectRoot, userData) {

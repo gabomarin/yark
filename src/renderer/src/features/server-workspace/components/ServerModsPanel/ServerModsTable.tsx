@@ -1,5 +1,5 @@
-import type { ReactElement } from "react";
-import { useMemo, useRef, useState } from "react";
+import type { MouseEvent as ReactMouseEvent, ReactElement } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Badge,
   Button,
@@ -125,18 +125,59 @@ export function ServerModsTable(props: Props): ReactElement {
     [props.mode, props.busyKey],
   );
 
-  const handleDragEnd = (result: DropResult) => {
-    if (!dragEnabled || !result.destination) return;
-    if (result.source.index === result.destination.index) return;
-    const orderedIds = records
-      .map((row) => row.id)
-      .filter((id): id is string => id !== null);
-    const next = [...orderedIds];
-    const [moved] = next.splice(result.source.index, 1);
-    if (moved === undefined) return;
-    next.splice(result.destination.index, 0, moved);
-    handlersRef.current.onReorder?.(next);
-  };
+  const handleDragEnd = useCallback(
+    (result: DropResult) => {
+      if (!dragEnabled || !result.destination) return;
+      if (result.source.index === result.destination.index) return;
+      const orderedIds = records
+        .map((row) => row.id)
+        .filter((id): id is string => id !== null);
+      const next = [...orderedIds];
+      const [moved] = next.splice(result.source.index, 1);
+      if (moved === undefined) return;
+      next.splice(result.destination.index, 0, moved);
+      handlersRef.current.onReorder?.(next);
+    },
+    [dragEnabled, records],
+  );
+
+  const customRowAttributes = useCallback(
+    (row: ModRow) => ({
+      "data-mod-row": true,
+      "data-mod-key": row.key,
+    }),
+    [],
+  );
+
+  const onRowClick = useCallback(
+    ({ record }: { record: ModRow }) => {
+      handlersRef.current.onInspect(record);
+    },
+    [],
+  );
+
+  const onRowContextMenu = useCallback(
+    ({ record, event }: { record: ModRow; event: ReactMouseEvent }) => {
+      const busy = isModRowBusy(props.busyKey, record);
+      const entries = buildServerModsRowActions({
+        row: record,
+        mode: props.mode,
+        busy,
+        onInspect: (row) => handlersRef.current.onInspect(row),
+        onAdd: (row) => handlersRef.current.onAdd(row),
+        onRemove: (target: ModRow) => {
+          confirmRemoveServerMod(target, (id) => {
+            handlersRef.current.onRemove(id);
+          });
+        },
+        onOpenExternal: (url) => handlersRef.current.onOpenExternal(url),
+      });
+      event.preventDefault();
+      event.stopPropagation();
+      openAt(CONTEXT_SOURCE_ID, entries, event.clientX, event.clientY);
+    },
+    [openAt, props.busyKey, props.mode],
+  );
 
   const table = (
     <YarkDataTable
@@ -149,32 +190,9 @@ export function ServerModsTable(props: Props): ReactElement {
       minHeight={160}
       sortStatus={sortStatus}
       onSortStatusChange={setSortStatus}
-      customRowAttributes={(row) => ({
-        "data-mod-row": true,
-        "data-mod-key": row.key,
-      })}
-      onRowClick={({ record }) => {
-        handlersRef.current.onInspect(record);
-      }}
-      onRowContextMenu={({ record, event }) => {
-        const busy = isModRowBusy(props.busyKey, record);
-        const entries = buildServerModsRowActions({
-          row: record,
-          mode: props.mode,
-          busy,
-          onInspect: (row) => handlersRef.current.onInspect(row),
-          onAdd: (row) => handlersRef.current.onAdd(row),
-          onRemove: (target: ModRow) => {
-            confirmRemoveServerMod(target, (id) => {
-              handlersRef.current.onRemove(id);
-            });
-          },
-          onOpenExternal: (url) => handlersRef.current.onOpenExternal(url),
-        });
-        event.preventDefault();
-        event.stopPropagation();
-        openAt(CONTEXT_SOURCE_ID, entries, event.clientX, event.clientY);
-      }}
+      customRowAttributes={customRowAttributes}
+      onRowClick={onRowClick}
+      onRowContextMenu={onRowContextMenu}
       tableWrapper={
         useDnD
           ? ({ children }) => (

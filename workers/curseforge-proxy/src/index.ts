@@ -43,6 +43,8 @@ export type YarkApiSuccess<T> = {
 
 /** Fixed upstream contract — not a secret; not expected to change often. */
 const UPSTREAM = "https://api.curseforge.com";
+const UPSTREAM_HOST = "api.curseforge.com";
+const MAX_UPSTREAM_REDIRECTS = 3;
 const MAX_BATCH_MOD_IDS = 50;
 const MAX_SEARCH_FILTER_LENGTH = 200;
 const MAX_SEARCH_PAGE_SIZE = 50;
@@ -481,23 +483,66 @@ function extractPagination(payload: unknown): {
   };
 }
 
+function isAllowedUpstreamUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    // HTTPS only — API key headers must never follow an HTTPS→HTTP downgrade.
+    return (
+      parsed.protocol === "https:"
+      && parsed.hostname.toLowerCase() === UPSTREAM_HOST
+    );
+  } catch {
+    return false;
+  }
+}
+
 async function fetchUpstream(
   url: string,
   init: RequestInit,
 ): Promise<{ ok: boolean; status: number; bodyText: string; json: unknown }> {
-  const response = await fetch(url, init);
-  const bodyText = await response.text();
-  let json: unknown = null;
-  try {
-    json = bodyText.length > 0 ? JSON.parse(bodyText) : null;
-  } catch {
-    json = null;
+  let currentUrl = url;
+  for (let hop = 0; hop <= MAX_UPSTREAM_REDIRECTS; hop += 1) {
+    if (!isAllowedUpstreamUrl(currentUrl)) {
+      return {
+        ok: false,
+        status: 502,
+        bodyText: "Blocked upstream redirect to a non-CurseForge host.",
+        json: null,
+      };
+    }
+    const response = await fetch(currentUrl, { ...init, redirect: "manual" });
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("Location");
+      if (location === null || location.length === 0) {
+        return {
+          ok: false,
+          status: 502,
+          bodyText: "Upstream redirect missing Location.",
+          json: null,
+        };
+      }
+      currentUrl = new URL(location, currentUrl).toString();
+      continue;
+    }
+    const bodyText = await response.text();
+    let json: unknown = null;
+    try {
+      json = bodyText.length > 0 ? JSON.parse(bodyText) : null;
+    } catch {
+      json = null;
+    }
+    return {
+      ok: response.ok,
+      status: response.status,
+      bodyText,
+      json,
+    };
   }
   return {
-    ok: response.ok,
-    status: response.status,
-    bodyText,
-    json,
+    ok: false,
+    status: 502,
+    bodyText: "Too many upstream redirects.",
+    json: null,
   };
 }
 

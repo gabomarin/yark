@@ -12,6 +12,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
+const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -75,12 +76,7 @@ async function createServerAsBeginner(page, name, baseDir, ports) {
     // onboarding not shown
   }
 
-  const backByRole = page.getByRole("button", { name: /Back to servers/i });
-  if ((await backByRole.count()) > 0) {
-    await backByRole.first().click();
-  } else {
-    await goToOverview(page);
-  }
+  await leaveWorkspaceToServers(page);
 
   await waitOverviewReady(page);
   await page.getByText(name).first().waitFor({ timeout: 15000 });
@@ -105,11 +101,7 @@ async function openWorkspaceAndAssistant(page, serverName) {
 }
 
 async function runExperiencedFlow(page, serverName) {
-  const backBtn = page.getByRole("button", { name: /Back to servers/i });
-  if ((await backBtn.count()) > 0) {
-    await backBtn.first().click();
-  }
-  await goToOverview(page);
+  await leaveWorkspaceToServers(page);
 
   const search = page.getByRole("textbox", { name: "Search servers" });
   await search.fill(serverName);

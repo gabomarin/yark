@@ -14,7 +14,7 @@ import {
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import type { AppEvent, ServerProfile } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { SearchField } from "@ui/SearchField/SearchField";
@@ -60,12 +60,14 @@ export function LogsPage(props: Props): ReactElement {
     return map;
   }, [props.servers]);
 
+  const loadGenerationRef = useRef(0);
   const loadFleet = async (opts?: { cancelled?: () => boolean }) => {
+    const generation = ++loadGenerationRef.current;
     setLoading(true);
     setError(null);
     try {
       const result = await window.api.recentEvents(300);
-      if (opts?.cancelled?.()) return;
+      if (opts?.cancelled?.() || generation !== loadGenerationRef.current) return;
       if (!result.ok) {
         setFleetEvents([]);
         setError(result.error ?? "Could not load events across servers");
@@ -73,7 +75,9 @@ export function LogsPage(props: Props): ReactElement {
       }
       setFleetEvents(result.data);
     } finally {
-      setLoading(false);
+      if (generation === loadGenerationRef.current) {
+        setLoading(false);
+      }
     }
   };
 

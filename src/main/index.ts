@@ -32,6 +32,7 @@ import {
   type AppTrayOptions,
 } from "./app-tray";
 import { readDesktopShellPreferences } from "./desktop-shell-settings";
+import { isAllowedExternalUrl } from "../shared/external-url-policy";
 import {
   attachWindowStatePersistence,
   MIN_WINDOW_HEIGHT,
@@ -154,18 +155,13 @@ function createWindow(settings: AppSettingsRepository): BrowserWindow {
   }
 
   // The renderer is local-only. Block in-app navigation / new BrowserWindows.
-  // http(s) target=_blank links open in the OS browser (Mantine Anchor, etc.).
+  // Allowlisted http(s) target=_blank links open in the OS browser (Mantine Anchor, etc.).
   win.webContents.on("will-navigate", (event) => {
     event.preventDefault();
   });
   win.webContents.setWindowOpenHandler(({ url }) => {
-    try {
-      const parsed = new URL(url);
-      if (parsed.protocol === "http:" || parsed.protocol === "https:") {
-        void shell.openExternal(parsed.toString());
-      }
-    } catch {
-      // Ignore malformed URLs.
+    if (isAllowedExternalUrl(url)) {
+      void shell.openExternal(url);
     }
     return { action: "deny" };
   });

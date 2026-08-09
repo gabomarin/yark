@@ -13,6 +13,7 @@ const assert = require("node:assert/strict");
 const os = require("node:os");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
+const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -227,8 +228,7 @@ async function run() {
       );
     }
 
-    await page.getByLabel(/Back to servers/i).click();
-    await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 10000 });
+    await leaveWorkspaceToServers(page, 10000);
     await removeServerIfPresent(page, serverName);
 
     console.log("E2E_MODS_OK");

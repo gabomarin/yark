@@ -116,8 +116,13 @@ export function RowActionMenuProvider(props: Props): ReactElement {
         closeOnItemClick
       >
         <Menu.Target>
+          {/*
+            Positioning anchor for the shared context menu. Keep it focusable
+            (tabIndex=-1, not aria-hidden) so Menu focus-return has a real node.
+            Keyboard operators still use per-row kebabs / action buttons.
+          */}
           <div
-            aria-hidden
+            tabIndex={-1}
             data-row-action-menu-anchor
             style={{
               position: "fixed",

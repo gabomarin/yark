@@ -17,6 +17,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
+const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -126,10 +127,7 @@ async function dismissOnboarding(page) {
   } catch {
     // onboarding not shown
   }
-  const back = page.getByRole("button", { name: /Back to servers/i });
-  await back.first().waitFor({ state: "visible", timeout: 10000 });
-  await back.first().click();
-  await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 15000 });
+  await leaveWorkspaceToServers(page);
 }
 
 async function createServer(page, name, installDir, ports) {
@@ -165,26 +163,39 @@ async function openServerWorkspace(page, name) {
   await card
     .getByRole("button", { name: new RegExp(`Open settings for ${escapeRegExp(name)}`, "i") })
     .click();
-  await page.getByRole("button", { name: /Back to servers/i }).first().waitFor({
+  await page.locator("[data-workspace-scroll]").waitFor({
     state: "visible",
     timeout: 15000,
   });
 }
 
 async function backToOverview(page) {
-  await page.getByRole("button", { name: /Back to servers/i }).first().click();
-  await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 15000 });
+  await leaveWorkspaceToServers(page);
 }
 
 async function configureSourceProfile(page, name, installDir) {
   await openServerWorkspace(page, name);
-  await page.getByRole("tab", { name: "Server" }).click();
-  await page.getByLabel(/^Mods$/).fill(SOURCE_MODS.join(", "));
-  await page
-    .getByLabel(/^Extra arguments$/)
-    .fill(SOURCE_EXTRA_ARGS.join(" "));
-  await page.getByRole("button", { name: "Save", exact: true }).click();
-  await page.waitForTimeout(500);
+
+  // Mods / Extra args live on workspace tabs (#93), not the Server form.
+  await page.getByRole("tab", { name: "Mods" }).click();
+  const addInput = page.getByLabel("Add CurseForge Project ID or mod URL");
+  await addInput.waitFor({ state: "visible", timeout: 10000 });
+  await addInput.fill(SOURCE_MODS.join(", "));
+  await page.getByRole("button", { name: "Add mod" }).click();
+  for (const modId of SOURCE_MODS) {
+    await page.getByText(modId, { exact: true }).first().waitFor({
+      state: "visible",
+      timeout: 30000,
+    });
+  }
+  // Configured mod IDs are enough for copy (new adds start disabled by design).
+
+  await page.getByRole("tab", { name: "Launch" }).click();
+  const extra = page.getByLabel(/^Extra arguments$/i);
+  await extra.waitFor({ state: "visible", timeout: 10000 });
+  await extra.fill(SOURCE_EXTRA_ARGS.join(" "));
+  await extra.blur(); // Launch persists raw Extra arguments on blur (#93)
+  await page.waitForTimeout(800);
   await backToOverview(page);
 
   // Persist varied INI on disk (same path the transfer service reads).

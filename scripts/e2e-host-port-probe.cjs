@@ -16,6 +16,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
+const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -235,8 +236,7 @@ async function run() {
     const gamePortValue = await page.getByLabel("Game port").inputValue();
     assert.equal(gamePortValue, String(PORTS.game), "saved profile ports must stay unchanged");
 
-    await page.getByRole("button", { name: /Back to servers/i }).click();
-    await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 10_000 });
+    await leaveWorkspaceToServers(page, 10_000);
 
     // --- Start this session uses suggested free ports (probe passes) ---
     await clickStart(page);

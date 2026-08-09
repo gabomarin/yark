@@ -66,6 +66,9 @@ export function buildServerModsTableColumns(input: {
               checked={row.enabled}
               disabled={isModRowBusy(input.busyKey, row)}
               aria-label={`${row.enabled ? "Disable" : "Enable"} ${row.name}`}
+              // Mantine trackLabel is aria-hidden but still intercepts hits; keep
+              // the input as the real click target for mouse + Playwright.
+              styles={{ trackLabel: { pointerEvents: "none" } }}
               onChange={(event) =>
                 input.onToggle(row.id!, event.currentTarget.checked)}
             />

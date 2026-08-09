@@ -1,4 +1,9 @@
-import { useSyncExternalStore, type ReactElement } from "react";
+import {
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+  type ReactElement,
+} from "react";
 import { ClockCounterClockwise, MagnifyingGlass } from "@phosphor-icons/react";
 import {
   Spotlight,
@@ -25,6 +30,12 @@ interface Props {
   onOpenServer: (serverId: string) => void;
 }
 
+const SEARCH_PROPS = {
+  leftSection: <MagnifyingGlass size={18} />,
+  placeholder: "Jump to page or server…",
+  "aria-label": "Quick jump search",
+} as const;
+
 function serverThumb(server: ServerProfile): ReactElement {
   return (
     <MapArtThumb
@@ -43,6 +54,15 @@ function serverThumb(server: ServerProfile): ReactElement {
   );
 }
 
+function serversFingerprint(servers: ServerProfile[]): string {
+  return servers
+    .map(
+      (server) =>
+        `${server.id}\0${server.updatedAt}\0${server.name}\0${server.map}\0${server.mapModId ?? ""}`,
+    )
+    .join("\n");
+}
+
 /**
  * Global Ctrl+K quick jump for routes and server workspace open (#104).
  */
@@ -52,57 +72,79 @@ export function AppSpotlight(props: Props): ReactElement {
     getSpotlightRecentSnapshot,
     () => [],
   );
+  const callbacksRef = useRef({
+    onNavigate: props.onNavigate,
+    onOpenServer: props.onOpenServer,
+  });
+  callbacksRef.current = {
+    onNavigate: props.onNavigate,
+    onOpenServer: props.onOpenServer,
+  };
+
+  const serverKey = serversFingerprint(props.servers);
+  const recentKey = recent
+    .map((entry) =>
+      entry.kind === "nav" ? `nav:${entry.route}` : `server:${entry.serverId}`,
+    )
+    .join("|");
 
   // Recent is recorded in App after the workspace leave-guard actually applies
   // the navigation / workspace open — not here on click.
-  const serversById = new Map(props.servers.map((server) => [server.id, server]));
-  const navById = new Map(SPOTLIGHT_NAV_ITEMS.map((item) => [item.id, item]));
+  const actions = useMemo(() => {
+    const serversById = new Map(
+      props.servers.map((server) => [server.id, server]),
+    );
+    const navById = new Map(SPOTLIGHT_NAV_ITEMS.map((item) => [item.id, item]));
 
-  const recentActions: SpotlightActionData[] = [];
-  for (const entry of recent) {
-    const action = resolveRecentAction(entry, {
-      navById,
-      serversById,
-      onNavigate: props.onNavigate,
-      onOpenServer: props.onOpenServer,
-    });
-    if (action !== null) {
-      recentActions.push(action);
+    const recentActions: SpotlightActionData[] = [];
+    for (const entry of recent) {
+      const action = resolveRecentAction(entry, {
+        navById,
+        serversById,
+        onNavigate: (route) => callbacksRef.current.onNavigate(route),
+        onOpenServer: (serverId) => callbacksRef.current.onOpenServer(serverId),
+      });
+      if (action !== null) {
+        recentActions.push(action);
+      }
     }
-  }
 
-  const navigateGroup: SpotlightActionGroupData = {
-    group: "Navigate",
-    actions: SPOTLIGHT_NAV_ITEMS.map((item) => {
-      const Icon = item.icon;
-      return {
-        id: `nav:${item.id}`,
-        label: item.label,
-        description: item.description,
-        keywords: item.keywords,
-        leftSection: <Icon size={20} weight="duotone" aria-hidden />,
-        onClick: () => props.onNavigate(item.id),
-      } satisfies SpotlightActionData;
-    }),
-  };
+    const navigateGroup: SpotlightActionGroupData = {
+      group: "Navigate",
+      actions: SPOTLIGHT_NAV_ITEMS.map((item) => {
+        const Icon = item.icon;
+        return {
+          id: `nav:${item.id}`,
+          label: item.label,
+          description: item.description,
+          keywords: item.keywords,
+          leftSection: <Icon size={20} weight="duotone" aria-hidden />,
+          onClick: () => callbacksRef.current.onNavigate(item.id),
+        } satisfies SpotlightActionData;
+      }),
+    };
 
-  const serverGroup: SpotlightActionGroupData = {
-    group: "Servers",
-    actions: sortServersForSpotlight(props.servers).map((server) => ({
-      id: `server:${server.id}`,
-      label: server.name,
-      description: `${server.map} · Open workspace`,
-      keywords: [server.map, server.sessionName, server.installDir, server.id],
-      leftSection: serverThumb(server),
-      onClick: () => props.onOpenServer(server.id),
-    })),
-  };
+    const serverGroup: SpotlightActionGroupData = {
+      group: "Servers",
+      actions: sortServersForSpotlight(props.servers).map((server) => ({
+        id: `server:${server.id}`,
+        label: server.name,
+        description: `${server.map} · Open workspace`,
+        keywords: [server.map, server.sessionName, server.installDir, server.id],
+        leftSection: serverThumb(server),
+        onClick: () => callbacksRef.current.onOpenServer(server.id),
+      })),
+    };
 
-  const actions: Array<SpotlightActionGroupData | SpotlightActionData> = [];
-  if (recentActions.length > 0) {
-    actions.push({ group: "Recent", actions: recentActions });
-  }
-  actions.push(navigateGroup, serverGroup);
+    const next: Array<SpotlightActionGroupData | SpotlightActionData> = [];
+    if (recentActions.length > 0) {
+      next.push({ group: "Recent", actions: recentActions });
+    }
+    next.push(navigateGroup, serverGroup);
+    return next;
+    // Fingerprints keep the memo aligned with content, not object identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional keys
+  }, [serverKey, recentKey]);
 
   return (
     <Spotlight
@@ -113,11 +155,7 @@ export function AppSpotlight(props: Props): ReactElement {
       limit={12}
       scrollable
       maxHeight={360}
-      searchProps={{
-        leftSection: <MagnifyingGlass size={18} />,
-        placeholder: "Jump to page or server…",
-        "aria-label": "Quick jump search",
-      }}
+      searchProps={SEARCH_PROPS}
     />
   );
 }
