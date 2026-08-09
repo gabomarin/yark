@@ -12,6 +12,44 @@ export type ChangelogEntry = {
 /** Curated site changelog — keep in sync with root CHANGELOG.md when cutting releases. */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.8.0",
+    date: "2026-08-09",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Workspace Launch tab with curated ASA flags, Extra arguments, command preview, and a browseable launch-options catalog.",
+          "Quick jump (Ctrl+K) to pages and servers, with a small Recent list.",
+          "Custom / CurseForge Maps launch tokens with map-mod linking, Start/Launch alerts, and CurseForge logos as map art.",
+          "Shared YarkDataTable for backup history and Mods load order, plus right-click context menus on cards and table rows.",
+          "Sidebar and workspace icon-rail chrome with remembered Full ↔ rail modes.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Mods and Extra arguments live on the Mods / Launch workspace tabs (not the create/edit Server form); new mods start disabled.",
+          "Servers health feedback, AppMetricCard fleet strip, Accordion/Timeline logs, and shared console ScrollArea surfaces.",
+          "Operator docs and screenshots cover Launch, Quick jump, and custom Maps flows; gallery capture uses an isolated demo fleet.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Stale fleet refresh and Launch/Mods persist races no longer clobber newer UI after overlapping polls or server switches.",
+          "External links open only allowlisted hosts; CurseForge proxy follows HTTPS on-host redirects only.",
+          "Fleet poll identity and quiet player-list updates stop resetting Mods/Backups mid-edit chrome.",
+        ],
+      },
+      {
+        title: "Removed",
+        items: [
+          "Redundant Back to servers control from the workspace header (use the sidebar Servers nav).",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.7.0",
     date: "2026-08-07",
     sections: [

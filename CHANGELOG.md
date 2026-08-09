@@ -9,21 +9,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
-### Fixed
-
-- Fleet `refresh` ignores stale overlapping IPC snapshots so a slower poll cannot regress server list/status (#209).
-- Launch tab draft no longer resets mid-edit when a save bumps `updatedAt`; Launch/Mods persists read the latest profile/mod id refs and skip local apply after a mid-flight server switch (#209).
-- `target=_blank` opens only allowlisted http(s) hosts (wiki / CurseForge / GitHub) via `shell.openExternal`; empty/leading-dot hosts cannot match the CurseForge suffix rule (#209).
-- CurseForge proxy refuses upstream redirects away from HTTPS `api.curseforge.com` (#209).
-- Quick jump (Ctrl+K) no longer rebuilds its action tree on every App poll when servers/recent are unchanged (#209).
-- Logs/Backups loading spinners clear only for the latest in-flight load; Mods Discover search always clears its busy state (#209).
-
-### Changed
-
-- Sidebar rail edge toggle uses a larger hit target (≥24×24) for pointer/touch accessibility (#209).
-- E2E helpers leave the server workspace via the sidebar **Servers** nav (the removed header Back control no longer breaks suite/mods/copy/clusters scripts).
-- Website screenshot capture always uses an isolated temp profile and seeded demo fleet (never the operator’s real userData).
-- Mods enable Switch ignores Mantine track-label hit interception so toggles respond reliably to pointer clicks.
+## [0.8.0] - 2026-08-09
 
 ### Added
 
@@ -57,9 +43,19 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Launch-options catalog copy is cleaned from wiki noise into **summary + details**, with a pasteable **example** per entry (#92).
 - Extra arguments and the Mods ID field moved off create/edit Server onto the **Mods** / **Launch** workspace tabs (#93).
 - Launch tab dependent flags chain in order (dynamic config URL; game → tribe → RCON logs); `-passivemods=` lives under World & gameplay (#93).
+- Sidebar rail edge toggle uses a larger hit target (≥24×24) for pointer/touch accessibility (#209).
+- E2E helpers leave the server workspace via the sidebar **Servers** nav (the removed header Back control no longer breaks suite/mods/copy/clusters scripts).
+- Website screenshot capture always uses an isolated temp profile and seeded demo fleet (never the operator’s real userData).
+- Mods enable Switch ignores Mantine track-label hit interception so toggles respond reliably to pointer clicks.
 
 ### Fixed
 
+- Fleet `refresh` ignores stale overlapping IPC snapshots so a slower poll cannot regress server list/status (#209).
+- Launch tab draft no longer resets mid-edit when a save bumps `updatedAt`; Launch/Mods persists read the latest profile/mod id refs and skip local apply after a mid-flight server switch (#209).
+- `target=_blank` opens only allowlisted http(s) hosts (wiki / CurseForge / GitHub) via `shell.openExternal`; empty/leading-dot hosts cannot match the CurseForge suffix rule (#209).
+- CurseForge proxy refuses upstream redirects away from HTTPS `api.curseforge.com` (#209).
+- Quick jump (Ctrl+K) no longer rebuilds its action tree on every App poll when servers/recent are unchanged (#209).
+- Logs/Backups loading spinners clear only for the latest in-flight load; Mods Discover search always clears its busy state (#209).
 - Fleet poll runs only on the **Servers** list (not inside workspace / other routes); backup history quiet refresh stays scoped to the Backups panel while it is open (#94).
 - Heartbeat `setState` reuses unchanged status / SteamCMD / events / install snapshots so a quiet poll does not re-render the whole app tree (#94).
 - Quiet **player-list** pushes (~10s ListPlayers poll) and unchanged SteamCMD progress no longer re-render workspace chrome (Mods tooltips/toolbar) (#94).
