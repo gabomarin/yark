@@ -227,7 +227,17 @@ function backupsListKey(rows: BackupRecord[]): string {
   return rows
     .map(
       (backup) =>
-        `${backup.id}:${backup.status}:${backup.sizeBytes}:${backup.completedAt ?? ""}:${backup.path}`,
+        [
+          backup.id,
+          backup.status,
+          backup.type,
+          backup.kind,
+          String(backup.sizeBytes),
+          backup.createdAt,
+          backup.completedAt ?? "",
+          backup.path,
+          backup.notes ?? "",
+        ].join(":"),
     )
     .join("\0");
 }

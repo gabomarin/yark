@@ -210,6 +210,45 @@ export function metadataMap(
   return mergeMetadata(new Map(), cache ?? {});
 }
 
+function sameStringList(left: string[] | undefined, right: string[] | undefined): boolean {
+  const a = left ?? [];
+  const b = right ?? [];
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
+
+/** True when every user-visible ModMetadata field matches. */
+export function sameModMetadata(left: ModMetadata, right: ModMetadata): boolean {
+  return (
+    left.id === right.id
+    && left.name === right.name
+    && left.summary === right.summary
+    && (left.description ?? null) === (right.description ?? null)
+    && left.thumbnailUrl === right.thumbnailUrl
+    && left.downloadCount === right.downloadCount
+    && left.dateModified === right.dateModified
+    && left.curseforgeUrl === right.curseforgeUrl
+    && left.slug === right.slug
+    && sameStringList(left.authors, right.authors)
+    && sameStringList(left.categories, right.categories)
+  );
+}
+
+function modMetadataFingerprint(item: ModMetadata): string {
+  return [
+    item.id,
+    item.name,
+    item.summary,
+    item.description ?? "",
+    item.thumbnailUrl ?? "",
+    String(item.downloadCount),
+    item.dateModified,
+    item.curseforgeUrl,
+    item.slug,
+    (item.authors ?? []).join(","),
+    (item.categories ?? []).join(","),
+  ].join("\0");
+}
+
 export function modsMetadataSyncKey(
   cache: Record<string, ModMetadata> | undefined,
 ): string {
@@ -218,7 +257,7 @@ export function modsMetadataSyncKey(
     .sort()
     .map((id) => {
       const item = cache[id];
-      return `${id}:${item?.dateModified ?? ""}:${item?.name ?? ""}`;
+      return item === undefined ? id : modMetadataFingerprint(item);
     })
     .join("|");
 }
@@ -235,13 +274,7 @@ export function mergeMetadata(
   const next = new Map(previous);
   for (const detail of Object.values(cache)) {
     const existing = next.get(detail.id);
-    if (
-      existing === undefined
-      || existing.dateModified !== detail.dateModified
-      || existing.name !== detail.name
-      || existing.thumbnailUrl !== detail.thumbnailUrl
-      || existing.summary !== detail.summary
-    ) {
+    if (existing === undefined || !sameModMetadata(existing, detail)) {
       next.set(detail.id, detail);
       changed = true;
     }

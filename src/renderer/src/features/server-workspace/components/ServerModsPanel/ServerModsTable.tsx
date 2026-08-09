@@ -222,6 +222,8 @@ export function ServerModsTable(props: Props): ReactElement {
                       <Center
                         {...(dragEnabled ? provided.dragHandleProps : {})}
                         role="button"
+                        tabIndex={dragEnabled ? 0 : -1}
+                        aria-disabled={!dragEnabled}
                         className={
                           dragEnabled
                             ? classes.dragHandle

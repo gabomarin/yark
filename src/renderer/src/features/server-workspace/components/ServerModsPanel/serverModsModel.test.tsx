@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
+import type { ModMetadata } from "@shared/types";
 import {
+  mergeMetadata,
+  modsMetadataSyncKey,
   reorderModIds,
   sortModRows,
   type ModRow,
@@ -24,6 +27,19 @@ function row(partial: Partial<ModRow> & Pick<ModRow, "key" | "name" | "loadIndex
   };
 }
 
+const baseMeta: ModMetadata = {
+  id: "1",
+  name: "Mod",
+  summary: "Summary",
+  thumbnailUrl: null,
+  authors: ["A"],
+  downloadCount: 10,
+  dateModified: "2026-01-01T00:00:00.000Z",
+  curseforgeUrl: "https://example.com/m",
+  slug: "mod",
+  categories: ["General"],
+};
+
 describe("serverModsModel sort/reorder", () => {
   it("sorts by name without changing loadIndex values", () => {
     const rows = [
@@ -42,5 +58,24 @@ describe("serverModsModel sort/reorder", () => {
     expect(reorderModIds(["1", "2", "3"], 0, 2)).toEqual(["2", "3", "1"]);
     expect(reorderModIds(["1", "2", "3"], 2, 0)).toEqual(["3", "1", "2"]);
     expect(reorderModIds(["1", "2", "3"], 1, 1)).toEqual(["1", "2", "3"]);
+  });
+});
+
+describe("serverModsModel metadata sync", () => {
+  it("changes sync key when downloadCount changes with same name/date", () => {
+    const previous = modsMetadataSyncKey({ "1": baseMeta });
+    const next = modsMetadataSyncKey({
+      "1": { ...baseMeta, downloadCount: 99 },
+    });
+    expect(next).not.toBe(previous);
+  });
+
+  it("merges when thumbnail changes without date/name change", () => {
+    const previous = new Map([["1", baseMeta]]);
+    const next = mergeMetadata(previous, {
+      "1": { ...baseMeta, thumbnailUrl: "https://cdn.example/t.png" },
+    });
+    expect(next).not.toBe(previous);
+    expect(next.get("1")?.thumbnailUrl).toBe("https://cdn.example/t.png");
   });
 });
