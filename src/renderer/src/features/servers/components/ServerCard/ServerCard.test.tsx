@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
@@ -170,6 +170,95 @@ describe("ServerCard", () => {
     expect(screen.getByRole("menuitem", { name: "Open folder" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Delete server$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Force close \(matar\)$/i })).not.toBeInTheDocument();
+  });
+
+  it("opens the same actions from a right-click context menu", async () => {
+    const user = userEvent.setup();
+    const onOpenFolder = vi.fn();
+
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={{
+            serverId: profile.id,
+            status: "running",
+            pid: 1234,
+            startedAt: "2026-07-23T00:00:00.000Z",
+            lastError: null,
+          }}
+          installation={installed}
+          officialSteamBuild={null}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={onOpenFolder}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const card = document.querySelector("[data-server-card]");
+    expect(card).not.toBeNull();
+    fireEvent.contextMenu(card!);
+
+    const openFolder = await screen.findByRole("menuitem", { name: /^Open folder$/ });
+    expect(screen.getByRole("menuitem", { name: /^Stop safely$/ })).toBeInTheDocument();
+    await user.click(openFolder);
+    expect(onOpenFolder).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not claim right-click while SteamCMD owns the server lock", () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={installed}
+          officialSteamBuild={null}
+          steamCmdBusy
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const card = document.querySelector("[data-server-card]");
+    expect(card).not.toBeNull();
+    const event = new MouseEvent("contextmenu", {
+      bubbles: true,
+      cancelable: true,
+      clientX: 12,
+      clientY: 20,
+    });
+    card!.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+    expect(screen.queryByRole("menuitem", { name: /^Open folder$/ })).not.toBeInTheDocument();
   });
 
   it("puts Install beside the kebab and reserves Play/Restart when not installed", () => {

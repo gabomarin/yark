@@ -44,7 +44,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { PathField } from "@ui/PathField/PathField";
-import { BackupHistoryRowActions } from "./BackupHistoryRowActions";
+import { BackupHistoryRow } from "./BackupHistoryRow";
 import { runBackupExport, runBackupImport } from "./backupPortability";
 import { formatBackupDetails } from "./formatBackupDetails";
 import classes from "./BackupsPage.module.css";
@@ -95,13 +95,6 @@ function formatWhen(iso: string): string {
   return formatLogDateTime(iso, { fallback: iso });
 }
 
-function archiveFileName(path: string): string {
-  const normalized = path.replace(/\\/g, "/");
-  const parts = normalized.split("/");
-  const name = parts[parts.length - 1] ?? "";
-  return name.length > 0 ? name : path;
-}
-
 const relativeTimeFormat = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
 
 function formatRelativeTime(iso: string, nowMs = Date.now()): string {
@@ -125,12 +118,6 @@ function truncateMiddle(value: string, max = 42): string {
   if (value.length <= max) return value;
   const keep = Math.floor((max - 1) / 2);
   return `${value.slice(0, keep)}…${value.slice(-keep)}`;
-}
-
-function statusColor(status: BackupRecord["status"]): string {
-  if (status === "completed") return "green";
-  if (status === "failed") return "red";
-  return "yellow";
 }
 
 function kindLabel(kind: BackupKind): string {
@@ -1056,87 +1043,23 @@ export function ServerBackupPanel(props: Props): ReactElement {
                 </div>
               ) : (
                 <Stack gap={4}>
-                  {displayedBackups.map((backup) => {
-                    const canSelect = backup.status !== "running";
-                    const isPlayers = backup.kind === "players";
-                    const finishedAt = backupFinishedAt(backup);
-                    const relative = formatRelativeTime(finishedAt);
-                    const absolute = formatWhen(finishedAt);
-                    const displayTitle = isPlayers
-                      ? playerBackupDisplayName(backup)
-                      : relative;
-                    const hasNotes = backup.notes !== null && backup.notes.length > 0;
-                    const fileName = archiveFileName(backup.path);
-                    return (
-                      <div key={backup.id} className={classes.backupRow}>
-                        <Checkbox
-                          checked={selectedIdSet.has(backup.id)}
-                          disabled={!canSelect || busy}
-                          onChange={() => toggleSelected(backup.id)}
-                          aria-label={`Select backup ${backup.id}`}
-                          className={classes.backupCheck}
-                          size="xs"
-                        />
-                        <div className={classes.backupMeta}>
-                          <Group gap={6} wrap="nowrap" className={classes.backupPrimary}>
-                            <Tooltip label={absolute} withArrow>
-                              <Text
-                                fw={600}
-                                size="sm"
-                                data-backup-title
-                                className={classes.backupTitle}
-                                title={isPlayers ? absolute : undefined}
-                              >
-                                {displayTitle}
-                              </Text>
-                            </Tooltip>
-                            <Text size="xs" c="dimmed" className={classes.backupMetaInline}>
-                              {isPlayers ? relative : null}
-                              {isPlayers ? " · " : null}
-                              {formatSize(backup.sizeBytes)}
-                            </Text>
-                            <Badge size="xs" color={statusColor(backup.status)} variant="light">
-                              {backup.status}
-                            </Badge>
-                            <Badge size="xs" variant="outline" color="gray">
-                              {backup.type}
-                            </Badge>
-                          </Group>
-                          <Text
-                            size="xs"
-                            c="dimmed"
-                            className={classes.backupFileName}
-                            title={backup.path}
-                            data-backup-filename
-                          >
-                            {fileName}
-                          </Text>
-                          {hasNotes && (
-                            <Text
-                              size="xs"
-                              c="dimmed"
-                              className={classes.backupNotes}
-                              title={backup.notes ?? undefined}
-                            >
-                              {backup.notes}
-                            </Text>
-                          )}
-                        </div>
-                        <div className={classes.backupActions}>
-                          <BackupHistoryRowActions
-                            backup={backup}
-                            busy={busy}
-                            opsLocked={opsLocked}
-                            onCopyDetails={(row) => void copyBackupDetails(row)}
-                            onOpenFolder={(id) => void openBackupFolder(id)}
-                            onExport={(row) => void exportBackup(row)}
-                            onRestore={confirmRestore}
-                            onDelete={confirmDeleteOne}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {displayedBackups.map((backup) => (
+                    <BackupHistoryRow
+                      key={backup.id}
+                      backup={backup}
+                      busy={busy}
+                      opsLocked={opsLocked}
+                      selected={selectedIdSet.has(backup.id)}
+                      onToggleSelected={() => toggleSelected(backup.id)}
+                      onCopyDetails={(row) => void copyBackupDetails(row)}
+                      onOpenFolder={(id) => void openBackupFolder(id)}
+                      onExport={(row) => void exportBackup(row)}
+                      onRestore={confirmRestore}
+                      onDelete={confirmDeleteOne}
+                      formatSize={formatSize}
+                      formatRelativeTime={formatRelativeTime}
+                    />
+                  ))}
                 </Stack>
               )}
             </div>

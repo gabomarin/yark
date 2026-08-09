@@ -7,29 +7,35 @@ import {
   Trash,
 } from "@phosphor-icons/react";
 import { ActionIcon, Group, Tooltip } from "@mantine/core";
-import type { BackupRecord } from "@shared/types";
+import {
+  buildBackupHistoryRowActions,
+  type BackupHistoryRowActionInput,
+} from "./backupHistoryRowActionModel";
 
-interface Props {
-  backup: BackupRecord;
-  busy: boolean;
-  opsLocked: boolean;
-  onCopyDetails: (backup: BackupRecord) => void;
-  onOpenFolder: (backupId: string) => void;
-  onExport: (backup: BackupRecord) => void;
-  onRestore: (backup: BackupRecord) => void;
-  onDelete: (backup: BackupRecord) => void;
+interface Props extends BackupHistoryRowActionInput {}
+
+function itemDisabled(
+  entries: ReturnType<typeof buildBackupHistoryRowActions>,
+  key: string,
+): boolean {
+  const item = entries.find((entry) => entry.kind === "item" && entry.key === key);
+  return item?.kind === "item" ? item.disabled === true : true;
 }
 
+/**
+ * Icon row for backup history. Right-click on the row uses the same action model.
+ */
 export function BackupHistoryRowActions(props: Props): ReactElement {
-  const canMutate = props.backup.status !== "running";
+  const menuEntries = buildBackupHistoryRowActions(props);
+
   return (
-    <Group gap={4}>
+    <Group gap={4} wrap="nowrap">
       <Tooltip label="Copy details" withArrow>
         <ActionIcon
           variant="subtle"
           size="sm"
           aria-label={`Copy details ${props.backup.id}`}
-          disabled={props.busy}
+          disabled={itemDisabled(menuEntries, "copy-details")}
           onClick={() => props.onCopyDetails(props.backup)}
         >
           <ClipboardText size={16} />
@@ -40,7 +46,7 @@ export function BackupHistoryRowActions(props: Props): ReactElement {
           variant="subtle"
           size="sm"
           aria-label={`Open folder ${props.backup.path}`}
-          disabled={props.busy}
+          disabled={itemDisabled(menuEntries, "open-folder")}
           onClick={() => props.onOpenFolder(props.backup.id)}
         >
           <FolderOpen size={16} />
@@ -51,7 +57,7 @@ export function BackupHistoryRowActions(props: Props): ReactElement {
           variant="subtle"
           size="sm"
           aria-label={`Export backup ${props.backup.id}`}
-          disabled={props.busy || props.backup.status !== "completed"}
+          disabled={itemDisabled(menuEntries, "export")}
           onClick={() => props.onExport(props.backup)}
         >
           <Export size={16} />
@@ -63,11 +69,7 @@ export function BackupHistoryRowActions(props: Props): ReactElement {
           color="orange"
           size="sm"
           aria-label={`Restore backup ${props.backup.id}`}
-          disabled={
-            props.busy
-            || props.backup.status !== "completed"
-            || props.opsLocked
-          }
+          disabled={itemDisabled(menuEntries, "restore")}
           onClick={() => props.onRestore(props.backup)}
         >
           <ArrowCounterClockwise size={16} />
@@ -79,7 +81,7 @@ export function BackupHistoryRowActions(props: Props): ReactElement {
           color="red"
           size="sm"
           aria-label={`Delete backup ${props.backup.id}`}
-          disabled={props.busy || !canMutate}
+          disabled={itemDisabled(menuEntries, "delete")}
           onClick={() => props.onDelete(props.backup)}
         >
           <Trash size={16} />

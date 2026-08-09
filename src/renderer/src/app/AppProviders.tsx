@@ -14,6 +14,7 @@ import {
   createAppThemeForDensity,
 } from "@theme/theme";
 import type { UiDensity } from "@theme/tokens";
+import { RowActionMenuProvider } from "@ui/RowActionMenu/RowActionMenuProvider";
 
 const UiDensityContext = createContext<UiDensity>("compact");
 
@@ -111,8 +112,10 @@ export function AppProviders({
           }}
           labels={{ confirm: "Confirm", cancel: "Cancel" }}
         >
-          <Notifications position="top-right" autoClose={notificationsAutoClose} />
-          {children}
+          <RowActionMenuProvider>
+            <Notifications position="top-right" autoClose={notificationsAutoClose} />
+            {children}
+          </RowActionMenuProvider>
         </ModalsProvider>
       </MantineProvider>
     </UiDensityContext.Provider>

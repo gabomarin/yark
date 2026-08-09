@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { Eye, EyeSlash } from "@phosphor-icons/react";
 import { Menu } from "@mantine/core";
+import { getServerEnabledMenuState } from "./serverCardMenuActions";
 
 interface Props {
   enabled: boolean;
@@ -10,18 +11,7 @@ interface Props {
 }
 
 export function ServerEnabledMenuItem(props: Props): ReactElement {
-  const disabled =
-    props.onToggle === undefined ||
-    props.steamCmdBusy ||
-    (props.enabled && props.active);
-  const title =
-    props.onToggle === undefined
-      ? undefined
-      : props.steamCmdBusy
-        ? "Another server operation is in progress"
-        : props.enabled && props.active
-          ? "Stop the server first"
-          : undefined;
+  const state = getServerEnabledMenuState(props);
 
   return (
     <Menu.Item
@@ -33,10 +23,10 @@ export function ServerEnabledMenuItem(props: Props): ReactElement {
         )
       }
       onClick={props.onToggle}
-      disabled={disabled}
-      title={title}
+      disabled={state.disabled}
+      title={state.title}
     >
-      {props.enabled ? "Disable server" : "Enable server"}
+      {state.label}
     </Menu.Item>
   );
 }
