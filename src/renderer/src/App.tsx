@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, List, Stack, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
+import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import type {
   AppEvent,
@@ -33,7 +34,7 @@ import { LogsPage } from "@features/logs/LogsPage";
 import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import { BackupsPage } from "@features/backups/BackupsPage";
 import { OverviewPage } from "@features/overview/OverviewPage";
-import { InstallHealthScanProgress } from "@features/overview/components/InstallHealthScanProgress/InstallHealthScanProgress";
+import { collectAttentionIssues } from "@features/overview/components/AttentionIssuesPopover/AttentionIssuesPopover";
 import {
   ServerWorkspacePage,
   type RconHistoryEntry,
@@ -122,9 +123,8 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     readDefaultBaseFolderPref,
   );
   const [search, setSearch] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [checkingUpdates, setCheckingUpdates] = useState(false);
-  /** Shared install-health scan job (startup + Check installs). */
+  /** Shared install-health scan job (startup + Check Servers Health). */
   const [installScan, setInstallScan] = useState<{
     active: boolean;
     reason: "startup" | "manual" | null;
@@ -318,6 +318,21 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
     if (clusterRes.ok) setReports(clusterRes.data);
     if (eventsRes.ok) setEvents(eventsRes.data);
+
+    return {
+      servers: serversRes.ok ? serversRes.data : null,
+      statuses: statusesRes.ok
+        ? new Map(statusesRes.data.map((s) => [s.serverId, s]))
+        : null,
+      installationInfo:
+        installRes !== null && installRes.ok
+          ? new Map(installRes.data.servers.map((s) => [s.serverId, s]))
+          : null,
+      officialSteamBuild:
+        installRes !== null && installRes.ok
+          ? installRes.data.officialSteamBuild
+          : null,
+    };
   }, []);
 
   const runInstallHealthScan = useCallback(
@@ -327,13 +342,70 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         return;
       }
 
-      setError(null);
       setInstallScan({ active: true, reason });
       const job = (async () => {
         try {
-          await refresh({
+          const snapshot = await refresh({
             includeInstallation: true,
             forceOfficialCheck: reason === "manual",
+          });
+          if (reason !== "manual") {
+            return;
+          }
+          if (
+            snapshot.servers === null
+            || snapshot.statuses === null
+            || snapshot.installationInfo === null
+          ) {
+            showOperatorError(
+              "Try Check Servers Health again in a moment.",
+              "Could not finish health check",
+            );
+            return;
+          }
+          if (snapshot.servers.length === 0) {
+            showOperatorToast({
+              title: "No servers to check",
+              message: "Add a server first, then run Check Servers Health again.",
+              color: "gray",
+            });
+            return;
+          }
+          const issues = collectAttentionIssues({
+            servers: snapshot.servers,
+            statuses: snapshot.statuses,
+            installationInfo: snapshot.installationInfo,
+            officialSteamBuild: snapshot.officialSteamBuild,
+          });
+          if (issues.length > 0) {
+            showOperatorToast({
+              title:
+                issues.length === 1
+                  ? "1 server needs attention"
+                  : `${issues.length} servers need attention`,
+              message: "Open the attention badge above the server list for details.",
+              color: "orange",
+              autoClose: 8000,
+            });
+            return;
+          }
+          const unverifiedInstalls = [...snapshot.installationInfo.values()].filter(
+            (info) =>
+              info.installed
+              && getServerUpdateState(info, snapshot.officialSteamBuild) === "unknown",
+          ).length;
+          if (unverifiedInstalls > 0) {
+            showOperatorToast({
+              title: "Installs look OK; updates unverified",
+              message:
+                "Couldn't confirm Steam update status for every server. Try Check for updates.",
+              color: "yellow",
+            });
+            return;
+          }
+          showOperatorToast({
+            title: "All servers look healthy",
+            message: "Install folders look good.",
           });
         } finally {
           setInstallScan({ active: false, reason: null });
@@ -353,12 +425,14 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
   const checkForUpdates = useCallback(
     async (serverId?: string) => {
-      setError(null);
       setCheckingUpdates(true);
       try {
         const installRes = await window.api.getInstallationInfo(true);
         if (!installRes.ok) {
-          setError(installRes.error ?? "Could not check for updates");
+          showOperatorError(
+            installRes.error ?? "Could not check for updates",
+            "Could not check for updates",
+          );
           return;
         }
         const next = new Map(
@@ -477,7 +551,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         if (!active) {
           return;
         }
-        // One-shot startup install-health scan — shared job with Check installs (#57).
+        // One-shot startup install-health scan — shared job with Check Servers Health (#57).
         return runInstallHealthScan("startup");
       });
     const unsubscribeStatus = window.api.onServerStatus((info) => {
@@ -573,10 +647,9 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
   const runAction = useCallback(
     async (action: () => Promise<{ ok: boolean; error?: string }>): Promise<boolean> => {
-      setError(null);
       const result = await action();
       if (!result.ok) {
-        setError(result.error ?? "Unknown error");
+        showOperatorError(result.error ?? "Unknown error");
       }
       await refresh();
       return result.ok;
@@ -621,7 +694,6 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
   const sendRconCommand = useCallback(
     async (serverId: string, command: string): Promise<boolean> => {
-      setError(null);
       const trimmed = command.trim();
       if (trimmed.length === 0) {
         return false;
@@ -664,7 +736,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       });
 
       if (!result.ok) {
-        setError(result.error ?? "Unknown error");
+        showOperatorError(result.error ?? "Unknown error", "RCON command failed");
       }
       return result.ok;
     },
@@ -764,7 +836,6 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
   const onKickPlayer = useCallback(
     async (serverId: string, playerKey: string): Promise<boolean> => {
-      setError(null);
       const command = `KickPlayer ${playerKey}`;
       const createdAt = new Date().toISOString();
       const entryId =
@@ -789,7 +860,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         error: result.ok ? null : result.error ?? "Kick failed",
       });
       if (!result.ok) {
-        setError(result.error ?? "Kick failed");
+        showOperatorError(result.error ?? "Kick failed", "Kick failed");
         return false;
       }
       return true;
@@ -799,7 +870,6 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
   const onBanPlayer = useCallback(
     async (serverId: string, playerKey: string): Promise<boolean> => {
-      setError(null);
       const command = `BanPlayer ${playerKey}`;
       const createdAt = new Date().toISOString();
       const entryId =
@@ -824,7 +894,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         error: result.ok ? null : result.error ?? "Ban failed",
       });
       if (!result.ok) {
-        setError(result.error ?? "Ban failed");
+        showOperatorError(result.error ?? "Ban failed", "Ban failed");
         return false;
       }
       return true;
@@ -834,7 +904,28 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
   const startSteamFilesJob = useCallback(
     (serverId: string, kind: "install" | "update" | "verify") => {
-      setError(null);
+      const serverName = servers.find((server) => server.id === serverId)?.name ?? serverId;
+      const labels = {
+        install: {
+          doneTitle: "Install finished",
+          doneMessage: `Server files for "${serverName}" are ready.`,
+          failTitle: "Install failed",
+          cancelMessage: `Install for "${serverName}" was cancelled.`,
+        },
+        update: {
+          doneTitle: "Update finished",
+          doneMessage: `"${serverName}" is on the latest files.`,
+          failTitle: "Update failed",
+          cancelMessage: `Update for "${serverName}" was cancelled.`,
+        },
+        verify: {
+          doneTitle: "Verification complete",
+          doneMessage: `Integrity check for "${serverName}" finished.`,
+          failTitle: "Verification failed",
+          cancelMessage: `Integrity check for "${serverName}" was cancelled.`,
+        },
+      } as const;
+      const copy = labels[kind];
       void (async () => {
         const result =
           kind === "install"
@@ -844,26 +935,36 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
               : await window.api.updateServerNow(serverId);
         if (!result.ok) {
           const message = result.error ?? "Unknown error";
-          // Deliberate cancellation: do not show as a red error.
-          if (!/cancelad/i.test(message)) {
-            setError(message);
+          // Deliberate cancellation: toast, not a red global banner.
+          if (/cancell?ed|cancelad/i.test(message)) {
+            showOperatorToast({
+              title: "Cancelled",
+              message: copy.cancelMessage,
+              color: "gray",
+            });
+          } else {
+            showOperatorError(message, copy.failTitle);
           }
+        } else {
+          showOperatorToast({
+            title: copy.doneTitle,
+            message: copy.doneMessage,
+          });
         }
         await refresh();
       })();
     },
-    [refresh],
+    [refresh, servers],
   );
 
   const pickSteamCmdPath = useCallback(async () => {
-    setError(null);
     const pick = await window.api.pickPath(
       "file",
       steamCmdStatus?.executablePath ?? undefined,
       "Select steamcmd.exe",
     );
     if (!pick.ok) {
-      setError(pick.error ?? "Could not open file picker");
+      showOperatorError(pick.error ?? "Could not open file picker");
       return;
     }
     if (pick.data === null) {
@@ -872,7 +973,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
     const setRes = await window.api.setSteamCmdPath(pick.data);
     if (!setRes.ok) {
-      setError(setRes.error ?? "Could not configure steamcmd.exe");
+      showOperatorError(setRes.error ?? "Could not configure steamcmd.exe");
       return;
     }
     await refresh();
@@ -903,17 +1004,15 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         confirmProps: { color: "red" },
         onConfirm: () => {
           void (async () => {
-            setError(null);
             const result = await window.api.clearSteamCmdCache(kind);
             if (!result.ok) {
-              setError(result.error ?? `Could not clear ${label}`);
+              showOperatorError(result.error ?? `Could not clear ${label}`);
               return;
             }
-            notifications.show({
+            showOperatorToast({
               title: `${label.charAt(0).toUpperCase()}${label.slice(1)} cleared`,
               message:
                 "Removed. The next install or update will download what it needs.",
-              color: "teal",
             });
             await refresh();
           })();
@@ -925,7 +1024,6 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
   const startServer = useCallback(
     async (id: string, options?: StartServerOptions) => {
-      setError(null);
       const result = await window.api.startServer(id, {
         openNativeConsole: openNativeTerminalOnStart,
         ...options,
@@ -951,14 +1049,13 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
                 },
           });
         } else {
-          setError(message);
+          showOperatorError(message, "Could not start server");
         }
       } else if (options?.sessionPorts != null) {
         const ports = options.sessionPorts;
-        notifications.show({
+        showOperatorToast({
           title: "Started with session ports",
           message: `Running on game ${ports.gamePort} / query ${ports.queryPort} / RCON ${ports.rconPort}. Saved profile ports are unchanged.`,
-          color: "teal",
         });
       }
       await refresh();
@@ -968,7 +1065,6 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
   const restartServer = useCallback(
     async (id: string, options?: StartServerOptions) => {
-      setError(null);
       const res = await window.api.restartServer(id, {
         openNativeConsole: openNativeTerminalOnStart,
         ...options,
@@ -995,14 +1091,13 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
                 },
           });
         } else {
-          setError(message);
+          showOperatorError(message, "Could not restart server");
         }
       } else if (options?.sessionPorts != null) {
         const ports = options.sessionPorts;
-        notifications.show({
+        showOperatorToast({
           title: "Restarted with session ports",
           message: `Running on game ${ports.gamePort} / query ${ports.queryPort} / RCON ${ports.rconPort}. Saved profile ports are unchanged.`,
-          color: "teal",
         });
       }
       await refresh();
@@ -1154,8 +1249,6 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
           appVersion={APP_VERSION}
           yarkUpdateAvailableVersion={yarkUpdateAvailableVersion}
           onYarkUpdateClick={openYarkUpdateSettings}
-          error={error}
-          onDismissError={() => setError(null)}
           busyOverlay={stopBusyOverlay}
         >
           <ServerWorkspacePage
@@ -1275,8 +1368,6 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         onNavigate={navigate}
         yarkUpdateAvailableVersion={yarkUpdateAvailableVersion}
         onYarkUpdateClick={openYarkUpdateSettings}
-        error={error}
-        onDismissError={() => setError(null)}
         busyOverlay={stopBusyOverlay}
         overview={{
           page: (
@@ -1288,7 +1379,6 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
               checkingUpdates={checkingUpdates}
               onCheckUpdates={() => void checkForUpdates()}
               checkingInstalls={installScan.active}
-              installsScanning={installScan.active}
               onCheckInstalls={() => void runInstallHealthScan("manual")}
               servers={servers}
               filteredServers={filteredServers}
@@ -1417,10 +1507,6 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         servers={servers}
         onNavigate={navigate}
         onOpenServer={openServerFromSpotlight}
-      />
-      <InstallHealthScanProgress
-        active={installScan.active}
-        label="Checking install folders…"
       />
       {renderMain()}
       {steamCmdStatus !== null

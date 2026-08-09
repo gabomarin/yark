@@ -29,6 +29,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Overview **Check Servers Health** shows progress on the button itself and a completion toast (attention count or all-clear); SteamCMD install/update/verify, `runAction` failures, and Backups page save/cleanup results use toasts instead of the top/page error banners; the redundant **Your servers** heading is removed; **Recent activity** stays side-by-side on wide layouts only (narrower Servers shows **View logs** instead); secondary pages snap closer to shared spacing/selection tokens (#96).
 - Sidebar footer copy reads **ARK official version**, with that block and the YARK version label centered.
 - Backups fleet health strip uses shared **AppMetricCard** tiles (with disk **RingProgress** and a stronger selected filter state) instead of a local StatCard (#103).
 - Log event lists use Mantine **Accordion** expand/collapse; Overview recent activity uses **Timeline** (#102).

@@ -93,7 +93,28 @@ Avoid raw `border-radius: 8px|14px` when a token fits. Tek icon tiles keep asymm
 ### 5. Selection / focus
 
 - Selected rows: `SelectableListRow` → `--app-list-selected-bg` + `--app-list-selected-inset`.
+  Feature list rows that cannot use `SelectableListRow` still bind those two vars (no
+  one-off `inset 3px` / local selection gradients).
 - Focus rings: reuse existing `:focus-visible` patterns (ark-blue outline), don’t invent per-page rings.
+
+### 5b. Page-local job status (toolbar cohesion)
+
+When a page action starts a longer job (e.g. Overview **Check Servers Health**),
+put progress **on the initiating control** (Mantine `Button` `loading` + busy label).
+Do **not** add a second status chip beside the button or a window-fixed top overlay.
+Secondary badges (attention counts, etc.) stay for outcomes — not a second
+“scanning…” primary.
+
+### 5c. Operator feedback channels
+
+| Channel | Use for |
+| --- | --- |
+| **Toast** (`notifications.show`) | Completed / failed / cancelled **operator actions** that do not need to stay on screen (Check Servers Health summary, Check for updates, SteamCMD install/update/verify, backup CRUD, prefs save fail) |
+| **Inline Alert** | **State that remains true** (files locked while updating, server running, wizard warnings, port conflicts) or confirm-modal decision context |
+| **Panel / dock** | Long-running or multi-item work (SteamCMD dock, stop progress, fleet backup alerts, Overview attention list) |
+| **Global AppShell banner** | Optional shell prop kept for rare app-wide hard failures; **App does not use it** for per-action IPC — prefer `showOperatorToast` / `showOperatorError` (`shared/ui/operatorToast.ts`) |
+
+Manual **Check Servers Health** ends with a toast (attention count or “all healthy”); startup scan stays silent. SteamCMD job outcomes, `runAction` failures, and Backups page save/cleanup results use toasts, not page or AppShell banners.
 
 ### 6. Empty states
 
@@ -131,6 +152,8 @@ Avoid raw `border-radius: 8px|14px` when a token fits. Tek icon tiles keep asymm
 | Page tool panels (Logs/Clusters) | Medium (`sm` stacks inside `AppSurfaceCard`) |
 
 Don’t mix comfortable Overview padding into dense INI/backup toolbars without intent.
+
+**Servers layout:** **Recent activity** is a wide-only side panel (`min-width: 1600px`). Below that breakpoint, hide the stacked panel so the server list keeps the viewport; keep a compact **View logs** link (Logs nav remains available).
 
 ---
 

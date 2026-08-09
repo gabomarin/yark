@@ -176,11 +176,15 @@ function cardFor(page, name) {
 async function waitForAttentionSettled(page, expectedCount, timeout = 30_000) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
+    const scanning = page.locator("[data-install-health-scan]");
+    if ((await scanning.count()) > 0) {
+      await page.waitForTimeout(250);
+      continue;
+    }
     const badge = page.locator("[data-attention-count]");
     if ((await badge.count()) > 0) {
       const count = Number(await badge.first().getAttribute("data-attention-count"));
-      const scanning = await badge.first().getAttribute("data-attention-scanning");
-      if (scanning == null && count === expectedCount) {
+      if (count === expectedCount) {
         return badge.first();
       }
     }
@@ -268,8 +272,8 @@ async function run() {
       "ready install should expose Start",
     );
 
-    // Shared on-demand job: Check installs should keep attention stable.
-    await page.getByRole("button", { name: "Check installs" }).click();
+    // Shared on-demand job: Check Servers Health should keep attention stable.
+    await page.getByRole("button", { name: "Check Servers Health" }).click();
     await waitForAttentionSettled(page, expectedAttention, 30_000);
 
     // Workspace surfaces health + last checked time (hit the card identity, not actions).

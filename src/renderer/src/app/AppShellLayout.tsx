@@ -22,6 +22,7 @@ interface Props extends PropsWithChildren {
   appVersion: string;
   yarkUpdateAvailableVersion?: string | null;
   onYarkUpdateClick?: () => void;
+  /** Rare app-wide hard failure only — prefer operator toasts for action results. */
   error?: string | null;
   onDismissError?: () => void;
   /** Blocks shell chrome while stop/save/backup (or similar) runs. */

@@ -178,8 +178,8 @@ for the mandatory three-viewport protocol above unless noted.
 | Script | How to run | Notes |
 | --- | --- | --- |
 | `visual-backups.cjs` | `npm run build && node scripts/visual-backups.cjs` | HD / Full HD / QHD matrix for workspace Backups; clears `ELECTRON_RUN_AS_NODE`; needs ≥1 server (may create a temp profile) |
-| `visual-logs.cjs` | Prefer `node scripts/seed-server-logs.cjs` first, then `npm run build && node scripts/visual-logs.cjs` | Single **1440×900** evidence pass (supplement only); clears `ELECTRON_RUN_AS_NODE` |
-| `visual-overview.cjs` | `npm run build && node scripts/visual-overview.cjs` | Overview layout evidence |
+| `visual-logs.cjs` | Prefer `node scripts/seed-server-logs.cjs` first, then `npm run build && node scripts/visual-logs.cjs` | Fleet + server Logs at **1280×720 / 1920×1080 / 2560×1440**; clears `ELECTRON_RUN_AS_NODE` |
+| `visual-overview.cjs` | `npm run build && node scripts/visual-overview.cjs` | Isolated `YARK_E2E_USER_DATA` + SQLite seeds for empty/small/populated; Compact + Comfortable; install-check toolbar cohesion at HD / Full HD / QHD |
 | `seed-server-logs.cjs` | `node scripts/seed-server-logs.cjs [serverName]` | Seeds events + update log files for Logs UI review. Resolves DB via `%APPDATA%/yark-server-manager` — **Windows `APPDATA`**; on Linux set `APPDATA` to the Electron `userData` parent (often `~/.config`) or the script exits with “DB not found” |
 | `e2e:smoke` / `e2e` | `npm run e2e:smoke` / `npm run e2e` | Need display + `ELECTRON_RUN_AS_NODE` unset in the shell (these two scripts do **not** clear it). Smoke may still fail on stale `section.servers h2`; the suite uses `[data-server-card]`. Server create needs a Windows-style install path, admin password ≥4 chars, unique ports |
 | `e2e:move-install` | `npm run build && npm run e2e:move-install` | Move installation (#56): same-volume rename/verify/commit UI + disk assertions under `C:\asa-e2e`; clears `ELECTRON_RUN_AS_NODE` |

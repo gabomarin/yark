@@ -193,7 +193,7 @@ export function SettingsPage(props: Props): ReactElement {
                   onClick={() => setCachesOpen((open) => !open)}
                   aria-expanded={cachesOpen}
                 >
-                  <Group gap={6} wrap="nowrap">
+                  <Group gap="xs" wrap="nowrap">
                     {cachesOpen ? <CaretDown size={14} /> : <CaretRight size={14} />}
                     <Text size="sm" fw={600}>Shared caches</Text>
                     <Text size="xs" c="dimmed">
@@ -247,7 +247,7 @@ export function SettingsPage(props: Props): ReactElement {
                   aria-expanded={dataFoldersOpen}
                   aria-controls="settings-data"
                 >
-                  <Group gap={6} wrap="nowrap">
+                  <Group gap="xs" wrap="nowrap">
                     {dataFoldersOpen ? <CaretDown size={14} /> : <CaretRight size={14} />}
                     <Text size="sm" fw={600} id="settings-data">App data folders</Text>
                     <Text size="xs" c="dimmed">
@@ -273,7 +273,7 @@ export function SettingsPage(props: Props): ReactElement {
                             compact
                           />
                         </div>
-                        <Group gap={6} wrap="nowrap" className={classes.cacheActions}>
+                        <Group gap="xs" wrap="nowrap" className={classes.cacheActions}>
                           <Button
                             size="compact-xs"
                             variant="subtle"
@@ -322,7 +322,7 @@ function CacheRow(props: CacheRowProps): ReactElement {
           compact
         />
       </div>
-      <Group gap={6} wrap="nowrap" className={classes.cacheActions}>
+      <Group gap="xs" wrap="nowrap" className={classes.cacheActions}>
         <Button
           size="compact-xs"
           variant="subtle"

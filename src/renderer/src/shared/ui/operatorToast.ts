@@ -1,0 +1,29 @@
+import { notifications } from "@mantine/notifications";
+
+/** Shared operator toast channel (design-system §5c). */
+export function showOperatorToast(input: {
+  title: string;
+  message: string;
+  color?: string;
+  autoClose?: number | false;
+}): void {
+  notifications.show({
+    title: input.title,
+    message: input.message,
+    color: input.color ?? "teal",
+    autoClose: input.autoClose ?? 5000,
+    withCloseButton: true,
+  });
+}
+
+export function showOperatorError(
+  message: string,
+  title = "Something went wrong",
+): void {
+  showOperatorToast({
+    title,
+    message,
+    color: "red",
+    autoClose: 8000,
+  });
+}

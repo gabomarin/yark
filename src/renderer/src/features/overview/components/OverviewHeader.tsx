@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { ArrowsClockwise, HardDrives, Plus } from "@phosphor-icons/react";
-import { Button, Group } from "@mantine/core";
+import { Button, Group, VisuallyHidden } from "@mantine/core";
 import classes from "../OverviewPage.module.css";
 
 interface Props {
@@ -28,12 +28,23 @@ export function OverviewHeader({
         <Button
           variant="subtle"
           color="gray"
-          leftSection={<HardDrives size={16} />}
+          leftSection={checkingInstalls ? undefined : <HardDrives size={16} />}
           onClick={onCheckInstalls}
           loading={checkingInstalls}
+          data-install-health-scan={checkingInstalls || undefined}
+          aria-busy={checkingInstalls || undefined}
         >
-          Check installs
+          {checkingInstalls ? "Checking servers health…" : "Check Servers Health"}
         </Button>
+        {checkingInstalls ? (
+          <VisuallyHidden
+            component="span"
+            role="status"
+            aria-live="polite"
+          >
+            Checking servers health…
+          </VisuallyHidden>
+        ) : null}
         <Button
           variant="subtle"
           color="gray"

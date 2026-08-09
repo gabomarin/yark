@@ -53,7 +53,7 @@ describe("resolveEventDetails", () => {
       base({ type: "installation_health_degraded", severity: "warning" }),
     );
     expect(resolved.what).toMatch(/install path/i);
-    expect(resolved.suggestion).toMatch(/Check installs/i);
+    expect(resolved.suggestion).toMatch(/Check Servers Health/i);
   });
 
   it("describes move installation outcomes", () => {

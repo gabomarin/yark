@@ -14,11 +14,11 @@
 .volumeStrip {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 8px;
+  gap: var(--app-space-xs);
 }
 
 .volumeCard {
-  border-radius: 10px;
+  border-radius: var(--app-radius-sm);
   background: color-mix(in srgb, var(--app-color-panel) 50%, transparent);
 }
 
@@ -60,8 +60,8 @@
 }
 
 .kindSettings {
-  padding: 6px 10px;
-  border-radius: 8px;
+  padding: var(--app-space-xs) var(--app-space-xs);
+  border-radius: var(--app-radius-sm);
   border: 1px solid color-mix(in srgb, var(--app-color-border) 55%, transparent);
   background: color-mix(in srgb, var(--app-color-panel) 42%, transparent);
 }
@@ -80,7 +80,7 @@
 }
 
 .kindSettingsFields {
-  gap: 6px;
+  gap: var(--app-space-xs);
 }
 
 .kindSettingsMeta {
@@ -131,7 +131,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--app-space-xs);
 }
 
 .kindTabList {
@@ -177,19 +177,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px 12px;
-  border-radius: 10px;
+  padding: var(--app-space-md) var(--app-space-sm);
+  border-radius: var(--app-radius-sm);
   border: 1px dashed color-mix(in srgb, var(--app-color-border) 70%, transparent);
   background: color-mix(in srgb, var(--app-color-panel) 35%, transparent);
 }
 
 .backupRow {
   display: flex;
-  gap: 8px;
+  gap: var(--app-space-xs);
   align-items: center;
   justify-content: space-between;
-  padding: 6px 8px;
-  border-radius: 8px;
+  padding: var(--app-space-xs);
+  border-radius: var(--app-radius-sm);
   border: 1px solid color-mix(in srgb, var(--app-color-border) 55%, transparent);
   background: color-mix(in srgb, var(--app-color-panel) 55%, transparent);
 }
