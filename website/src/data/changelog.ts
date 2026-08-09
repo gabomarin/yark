@@ -18,7 +18,7 @@ export const changelog: ChangelogEntry[] = [
       {
         title: "Added",
         items: [
-          "Workspace Launch tab with curated ASA flags, Extra arguments, command preview, and a browseable launch-options catalog.",
+          "Workspace Launch tab with curated ASA flags, Extra arguments, command preview, and a browsable launch-options catalog.",
           "Quick jump (Ctrl+K) to pages and servers, with a small Recent list.",
           "Custom / CurseForge Maps launch tokens with map-mod linking, Start/Launch alerts, and CurseForge logos as map art.",
           "Shared YarkDataTable for backup history and Mods load order, plus right-click context menus on cards and table rows.",
