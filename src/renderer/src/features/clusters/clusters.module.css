@@ -29,7 +29,7 @@
 .incompleteList {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--app-space-sm);
   width: 100%;
   text-align: left;
 }
@@ -37,7 +37,7 @@
 .incompleteGroup {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--app-space-xs);
 }
 
 .incompleteDir {
@@ -50,7 +50,7 @@
 .layout {
   display: grid;
   grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
-  gap: 12px;
+  gap: var(--app-space-sm);
   flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
@@ -81,7 +81,7 @@
 .issueList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--app-space-xs);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -92,7 +92,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--app-space-sm);
-  padding: 10px 12px;
+  padding: var(--app-space-xs) var(--app-space-sm);
   border-radius: var(--app-radius-control);
   border: 1px solid color-mix(in srgb, var(--app-color-border) 50%, transparent);
   background: color-mix(in srgb, var(--app-color-panel) 45%, transparent);
@@ -135,9 +135,9 @@
 
 .issueRow {
   display: flex;
-  gap: 10px;
+  gap: var(--app-space-xs);
   align-items: flex-start;
-  padding: 10px 12px;
+  padding: var(--app-space-xs) var(--app-space-sm);
   border-radius: var(--app-radius-control);
   border: 1px solid color-mix(in srgb, var(--app-color-border) 50%, transparent);
   background: color-mix(in srgb, var(--app-color-panel) 45%, transparent);

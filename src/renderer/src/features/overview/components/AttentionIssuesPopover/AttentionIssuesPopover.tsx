@@ -58,7 +58,7 @@ export function collectAttentionIssues(input: {
         problem: installationHealthLabel(installation.health),
         guidance:
           installation.guidance ||
-          "Check the install path, then use Install or Check installs.",
+          "Check the install path, then use Install or Check Servers Health.",
         checkedAt: installation.checkedAt,
       });
       continue;
@@ -79,23 +79,16 @@ export function collectAttentionIssues(input: {
 
 interface Props {
   issues: AttentionIssue[];
-  scanning?: boolean;
 }
 
-export function AttentionIssuesPopover({
-  issues,
-  scanning = false,
-}: Props): ReactElement | null {
-  if (!scanning && issues.length === 0) {
+/** Issue-count badge only — install-scan progress lives on Check Servers Health (#96). */
+export function AttentionIssuesPopover({ issues }: Props): ReactElement | null {
+  if (issues.length === 0) {
     return null;
   }
 
   const label =
-    scanning && issues.length === 0
-      ? "Checking installs…"
-      : issues.length === 1
-        ? "1 needs attention"
-        : `${issues.length} need attention`;
+    issues.length === 1 ? "1 needs attention" : `${issues.length} need attention`;
 
   return (
     <Popover width={340} position="bottom-start" shadow="md" withinPortal>
@@ -109,41 +102,34 @@ export function AttentionIssuesPopover({
           className={classes.trigger}
           style={{ cursor: "pointer" }}
           data-attention-count={issues.length}
-          data-attention-scanning={scanning || undefined}
         >
           {label}
         </Badge>
       </Popover.Target>
       <Popover.Dropdown className={classes.dropdown} data-attention-issues>
         <Stack gap="xs" className={classes.issueList}>
-          {scanning && issues.length === 0 ? (
-            <Text size="sm" c="dimmed">
-              Checking install folders in the background…
-            </Text>
-          ) : (
-            issues.map((issue) => (
-              <div
-                key={issue.serverId}
-                className={classes.issueRow}
-                data-attention-issue={issue.serverId}
-              >
-                <Text size="sm" fw={600} className={classes.issueName}>
-                  {issue.serverName}
+          {issues.map((issue) => (
+            <div
+              key={issue.serverId}
+              className={classes.issueRow}
+              data-attention-issue={issue.serverId}
+            >
+              <Text size="sm" fw={600} className={classes.issueName}>
+                {issue.serverName}
+              </Text>
+              <Text size="xs" c="attention.6" fw={600}>
+                {issue.problem}
+              </Text>
+              <Text size="xs" c="dimmed" lineClamp={2}>
+                {issue.guidance}
+              </Text>
+              {issue.checkedAt != null && (
+                <Text size="xs" c="dimmed">
+                  Checked {formatInstallationCheckedAt(issue.checkedAt)}
                 </Text>
-                <Text size="xs" c="attention.6" fw={600}>
-                  {issue.problem}
-                </Text>
-                <Text size="xs" c="dimmed" lineClamp={2}>
-                  {issue.guidance}
-                </Text>
-                {issue.checkedAt != null && (
-                  <Text size="xs" c="dimmed">
-                    Checked {formatInstallationCheckedAt(issue.checkedAt)}
-                  </Text>
-                )}
-              </div>
-            ))
-          )}
+              )}
+            </div>
+          ))}
         </Stack>
       </Popover.Dropdown>
     </Popover>

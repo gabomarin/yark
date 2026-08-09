@@ -3,8 +3,8 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px;
+  gap: var(--app-space-xs);
+  padding: var(--app-space-sm);
   border-left: 1px solid var(--app-color-border-subtle);
   background: var(--app-color-surface-chrome);
   overflow: auto;
@@ -29,7 +29,7 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 10px;
+  gap: var(--app-space-xs);
   min-height: 20px;
 }
 

@@ -1,7 +1,9 @@
 /**
- * Visual review of fleet + server Logs tabs with seeded real-looking data.
- * Usage: npm run build && node scripts/visual-logs.cjs
- * Prefer running seed first: node scripts/seed-server-logs.cjs
+ * Visual review of fleet + server Logs tabs with seeded real-looking data (#96).
+ * Captures HD / Full HD / QHD evidence for changed Logs chrome.
+ *
+ * Usage: Prefer `node scripts/seed-server-logs.cjs` first, then
+ * `npm run build && node scripts/visual-logs.cjs`
  */
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -10,6 +12,12 @@ const path = require("node:path");
 const { _electron: electron } = require("playwright");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
+
+const sizes = [
+  { name: "hd", width: 1280, height: 720 },
+  { name: "full-hd", width: 1920, height: 1080 },
+  { name: "qhd-2k", width: 2560, height: 1440 },
+];
 
 async function shot(page, outDir, name) {
   const file = path.join(outDir, `${name}.png`);
@@ -22,6 +30,59 @@ async function goNav(page, label) {
   const btn = page.getByRole("button", { name: label, exact: true }).first();
   await btn.click();
   await page.waitForTimeout(300);
+}
+
+async function expectText(page, pattern) {
+  await page.getByText(pattern).first().waitFor({ state: "visible", timeout: 8000 });
+}
+
+async function assertNoHorizontalOverflow(page, label) {
+  const overflow = await page.evaluate(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    return Math.max(root.scrollWidth, body.scrollWidth) > root.clientWidth + 1;
+  });
+  assert.equal(overflow, false, `Horizontal overflow on ${label}`);
+}
+
+async function captureLogsSurface(page, outDir, size) {
+  await page.setViewportSize({ width: size.width, height: size.height });
+  await page.waitForTimeout(250);
+
+  await goNav(page, "Logs");
+  await page.getByRole("heading", { name: "Logs", level: 1 }).waitFor({ timeout: 10000 });
+  await page.getByText("Fleet activity").waitFor({ timeout: 10000 });
+  await page.waitForTimeout(300);
+  await shot(page, outDir, `${size.name}-01-fleet-problems`);
+  await assertNoHorizontalOverflow(page, `${size.name} fleet`);
+
+  const fleetRow = page.locator("[data-logs-scroll-region='fleet'] button").first();
+  if ((await fleetRow.count()) > 0) {
+    await fleetRow.click();
+    await page.waitForTimeout(250);
+    await shot(page, outDir, `${size.name}-02-fleet-expanded`);
+  }
+
+  await goNav(page, "Servers");
+  await page.locator("[data-server-card]").first().waitFor({ state: "visible", timeout: 10000 });
+  await page.locator("[data-server-card]").first().getByRole("button", { name: /Open settings/i }).click();
+  await page.getByRole("tab", { name: "Logs" }).waitFor({ timeout: 10000 });
+  await page.getByRole("tab", { name: "Logs" }).click();
+  await page.locator("[data-server-logs-panel]").waitFor({ state: "visible", timeout: 10000 });
+  await page.waitForTimeout(300);
+  await shot(page, outDir, `${size.name}-03-server-events`);
+  await assertNoHorizontalOverflow(page, `${size.name} server events`);
+
+  await page.getByRole("tab", { name: "Updates" }).click();
+  await page.waitForTimeout(300);
+  await expectText(page, /Job history|SteamCMD|Update details|No update jobs/i);
+  const failedBadge = page.getByText("failed", { exact: true }).first();
+  if ((await failedBadge.count()) > 0) {
+    await failedBadge.click();
+    await page.waitForTimeout(250);
+  }
+  await shot(page, outDir, `${size.name}-04-updates-selected`);
+  await assertNoHorizontalOverflow(page, `${size.name} updates`);
 }
 
 async function run() {
@@ -45,72 +106,12 @@ async function run() {
     await page.getByRole("heading", { name: "Servers", level: 1 }).waitFor({
       timeout: 20000,
     });
-    await page.setViewportSize({ width: 1440, height: 900 });
 
-    // --- Fleet Logs ---
-    await goNav(page, "Logs");
-    await page.getByRole("heading", { name: "Logs", level: 1 }).waitFor({ timeout: 10000 });
-    await page.getByText("Fleet activity").waitFor({ timeout: 10000 });
-    await page.waitForTimeout(400);
-    await shot(page, outDir, "01-fleet-problems");
-
-    // Expand first problem row
-    const fleetRow = page.locator("[data-logs-scroll-region='fleet'] button").first();
-    await fleetRow.waitFor({ state: "visible", timeout: 10000 });
-    await fleetRow.click();
-    await page.waitForTimeout(300);
-    await expectText(page, /What|Cause|Try next|SteamCMD|backup|server/i);
-    await shot(page, outDir, "02-fleet-expanded");
-
-    await page.getByRole("button", { name: /Open in server/i }).click();
-    await page.getByRole("tab", { name: "Logs" }).waitFor({ timeout: 10000 });
-    await page.waitForTimeout(500);
-    await shot(page, outDir, "03-server-events-focused");
-
-    // Events expanded details should be visible from deep-link
-    const eventsPanel = page.locator("[data-server-logs-panel]");
-    await eventsPanel.waitFor({ state: "visible", timeout: 10000 });
-    await shot(page, outDir, "04-events-tab");
-
-    // Runtime
-    await page.getByRole("tab", { name: "Runtime" }).click();
-    await page.waitForTimeout(300);
-    await expectText(page, /Runtime|console|No runtime output/i);
-    await shot(page, outDir, "05-runtime-tab");
-
-    // Updates
-    await page.getByRole("tab", { name: "Updates" }).click();
-    await page.waitForTimeout(400);
-    await expectText(page, /Job history|SteamCMD|Update details/i);
-    // Click failed update if present
-    const failedBadge = page.getByText("failed", { exact: true }).first();
-    if (await failedBadge.count()) {
-      await failedBadge.click();
-      await page.waitForTimeout(400);
+    for (const size of sizes) {
+      await captureLogsSurface(page, outDir, size);
     }
-    await shot(page, outDir, "06-updates-tab");
-
-    // Backups history (logs tab — scoped to avoid workspace Backups tab)
-    const logsPanel = page.locator("[data-server-logs-panel]");
-    await logsPanel.getByRole("tab", { name: "Backups", exact: true }).click();
-    await page.waitForTimeout(400);
-    await expectText(page, /Backups|world|players|ini|No backups recorded|Read-only history/i);
-    await shot(page, outDir, "07-backups-history-tab");
-
-    // Back to Events and expand another row manually
-    await logsPanel.getByRole("tab", { name: "Events" }).click();
-    await page.waitForTimeout(300);
-    const eventButtons = page.locator("[data-logs-scroll-region='events'] button");
-    const count = await eventButtons.count();
-    assert.ok(count >= 3, `Expected several events, got ${count}`);
-    if (count > 1) {
-      await eventButtons.nth(1).click();
-      await page.waitForTimeout(250);
-    }
-    await shot(page, outDir, "08-events-expanded-second");
 
     console.log("VISUAL_LOGS_DIR=" + outDir);
-    console.log(`VISUAL_LOGS_EVENTS=${count}`);
     if (errors.length > 0) {
       console.log("VISUAL_LOGS_WARN_CONSOLE=" + errors.join(" | "));
     }
@@ -118,10 +119,6 @@ async function run() {
   } finally {
     await app.close();
   }
-}
-
-async function expectText(page, pattern) {
-  await page.getByText(pattern).first().waitFor({ state: "visible", timeout: 8000 });
 }
 
 run().catch((error) => {

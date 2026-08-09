@@ -3,26 +3,26 @@
   max-width: 2200px;
   min-height: 100vh;
   margin: 0 auto;
-  padding: 20px 28px 28px;
+  padding: var(--app-space-lg) var(--app-space-xl) var(--app-space-xl);
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--app-space-md);
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  margin-bottom: var(--app-space-lg);
 }
 
 .title {
   margin: 0;
-  font-size: 28px;
+  font-size: var(--app-font-page);
   line-height: 1.1;
 }
 
 .subtitle {
-  margin: 6px 0 0;
+  margin: var(--app-space-xs) 0 0;
   color: var(--app-color-muted);
 }
 
@@ -33,30 +33,26 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: var(--app-space-lg);
   min-width: 0;
 }
 
 .serverSection {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--app-space-sm);
   min-width: 0;
 }
 
 .serverSectionHeader {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-}
-
-.serverSectionTitle {
-  font-size: 20px;
+  gap: var(--app-space-md);
 }
 
 .serverSummaryRow {
-  margin-top: 4px;
+  min-width: 0;
 }
 
 .serverSearch {
@@ -66,21 +62,21 @@
 .serverGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 10px;
+  gap: var(--app-space-xs);
 }
 
 .serverSkeletons {
   display: grid;
-  gap: 10px;
+  gap: var(--app-space-xs);
 }
 
 .serverSkeleton {
   display: grid;
   grid-template-columns: 44px minmax(180px, 1.15fr) minmax(260px, 1fr) auto;
   align-items: center;
-  gap: 16px;
+  gap: var(--app-space-md);
   min-height: 82px;
-  padding: 14px 16px;
+  padding: var(--app-space-sm) var(--app-space-md);
   border: 1px solid var(--app-color-border);
   border-radius: var(--app-radius-md);
   background: color-mix(in srgb, var(--app-color-panel-cool) 74%, transparent);
@@ -88,25 +84,30 @@
 
 .serverSkeletonIdentity {
   display: grid;
-  gap: 9px;
+  gap: var(--app-space-xs);
 }
 
 .serverSkeletonMeta {
   display: flex;
-  gap: 18px;
+  gap: var(--app-space-md);
 }
 
-.recentSection {
+/* Compact Logs affordance when Recent activity is hidden (below wide breakpoint). */
+.narrowLogsLink {
   display: flex;
+  justify-content: flex-end;
+}
+
+/* Side panel only — hide stacked Recent activity under the server list. */
+.recentSection {
+  display: none;
   flex-direction: column;
-  gap: 12px;
-  padding-top: 18px;
-  border-top: 1px solid var(--app-color-border);
+  gap: var(--app-space-sm);
   min-width: 0;
 }
 
 .recentTitle {
-  font-size: 18px;
+  font-size: var(--mantine-font-size-lg);
 }
 
 .recentTimeline {
@@ -115,7 +116,7 @@
 
 .recentEmpty {
   min-height: 36px;
-  padding: 7px 0;
+  padding: var(--app-space-xs) 0;
 }
 
 .eventTime {
@@ -135,24 +136,28 @@
   color: var(--app-color-bad);
 }
 
-/* Wide desktop: servers + activity in parallel (fills 2K without metrics). */
+/* Wide desktop: servers + Recent activity side-by-side (hidden below this width). */
 @media (min-width: 1600px) {
   .page {
-    padding: 24px 32px 32px;
+    padding: var(--app-space-xl) 32px 32px;
   }
 
   .content {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
     align-items: start;
-    gap: 28px;
+    gap: var(--app-space-xl);
+  }
+
+  .narrowLogsLink {
+    display: none;
   }
 
   .recentSection {
+    display: flex;
     position: sticky;
-    top: 20px;
-    padding: 16px 16px 14px;
-    border-top: 0;
+    top: var(--app-space-lg);
+    padding: var(--app-space-md) var(--app-space-md) var(--app-space-sm);
     border: 1px solid var(--app-color-border-subtle);
     border-radius: var(--app-radius-md);
     background: color-mix(in srgb, var(--app-color-surface-panel) 88%, transparent);

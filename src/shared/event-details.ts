@@ -40,7 +40,7 @@ function catalogFor(event: AppEvent): AppEventDetails {
         cause:
           "The folder was moved, deleted, partially removed, or became inaccessible since the last healthy check.",
         suggestion:
-          "Open the server workspace, confirm the install path, then use Install / Verify or Check installs from Overview.",
+          "Open the server workspace, confirm the install path, then use Install / Verify or Check Servers Health.",
       };
     case "install_move_started":
       return {

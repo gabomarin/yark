@@ -31,7 +31,7 @@ describe("AppShellLayout", () => {
     expect(serversNav).toHaveAttribute("data-active");
   });
 
-  it("renders and dismisses a global error banner", async () => {
+  it("still supports an optional global error banner for rare app-wide failures", async () => {
     const onDismissError = vi.fn();
 
     render(

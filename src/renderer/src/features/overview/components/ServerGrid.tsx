@@ -1,6 +1,6 @@
 import { type ReactElement, useMemo, useState } from "react";
 import { HardDrives, MagnifyingGlass, Plus } from "@phosphor-icons/react";
-import { Badge, Button, Checkbox, Group, Skeleton, Stack, Text, Title, VisuallyHidden } from "@mantine/core";
+import { Badge, Button, Checkbox, Group, Skeleton, Stack, Text, VisuallyHidden } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo, ServerStopProgress } from "@shared/types";
 import { ServerCard } from "@features/servers/components/ServerCard/ServerCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
@@ -33,7 +33,6 @@ interface Props {
   steamCmdProgressBytesTotal?: number | null;
   steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null;
   stopProgressByServerId?: Map<string, ServerStopProgress>;
-  installsScanning?: boolean;
   onOpenWorkspace: (server: ServerProfile) => void;
   onOpenLogs: (serverId: string) => void;
   onReviewError: (serverId: string) => void;
@@ -163,38 +162,30 @@ export function ServerGrid(props: Props): ReactElement {
   return (
     <section
       className={classes.serverSection}
-      aria-labelledby="server-list-title"
+      aria-label="Server list"
       data-server-list
     >
       <div className={classes.serverSectionHeader}>
-        <div>
-          <Title order={2} id="server-list-title" className={classes.serverSectionTitle}>
-            Your servers
-          </Title>
-          <Group gap="sm" align="center" wrap="wrap" className={classes.serverSummaryRow}>
-            <Text c="dimmed" size="sm" data-server-summary>
-              {enabledLabel} · {runningLabel}
-              {filteredLabel}
-            </Text>
-            {props.disabledServers.length > 0 && (
-              <>
-                <Badge size="sm" color="gray" variant="light" data-disabled-count={props.disabledServers.length}>
-                  {disabledLabel}
-                </Badge>
-                <Checkbox
-                  size="xs"
-                  label="Show disabled"
-                  checked={showDisabled}
-                  onChange={(event) => setShowDisabled(event.currentTarget.checked)}
-                />
-              </>
-            )}
-            <AttentionIssuesPopover
-              issues={attentionIssues}
-              scanning={props.installsScanning === true}
-            />
-          </Group>
-        </div>
+        <Group gap="sm" align="center" wrap="wrap" className={classes.serverSummaryRow}>
+          <Text c="dimmed" size="sm" data-server-summary>
+            {enabledLabel} · {runningLabel}
+            {filteredLabel}
+          </Text>
+          {props.disabledServers.length > 0 && (
+            <>
+              <Badge size="sm" color="gray" variant="light" data-disabled-count={props.disabledServers.length}>
+                {disabledLabel}
+              </Badge>
+              <Checkbox
+                size="xs"
+                label="Show disabled"
+                checked={showDisabled}
+                onChange={(event) => setShowDisabled(event.currentTarget.checked)}
+              />
+            </>
+          )}
+          <AttentionIssuesPopover issues={attentionIssues} />
+        </Group>
 
         {!props.loading && props.servers.length > 0 && (
           <div className={classes.serverSearch}>

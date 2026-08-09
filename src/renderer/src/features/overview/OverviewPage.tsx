@@ -1,4 +1,6 @@
 import type { ReactElement } from "react";
+import { ArrowRight } from "@phosphor-icons/react";
+import { Button } from "@mantine/core";
 import type {
   AppEvent,
   ServerInstallationInfo,
@@ -20,7 +22,6 @@ interface Props {
   onCheckInstalls: () => void;
   checkingUpdates?: boolean;
   checkingInstalls?: boolean;
-  installsScanning?: boolean;
   servers: ServerProfile[];
   filteredServers: ServerProfile[];
   disabledServers?: ServerProfile[];
@@ -93,7 +94,6 @@ export function OverviewPage(props: Props): ReactElement {
           steamCmdProgressBytesTotal={props.steamCmdProgressBytesTotal ?? null}
           steamCmdOperation={props.steamCmdOperation ?? null}
           stopProgressByServerId={props.stopProgressByServerId}
-          installsScanning={props.installsScanning}
           onOpenWorkspace={props.onOpenWorkspace}
           onOpenLogs={props.onOpenLogs}
           onReviewError={props.onReviewError}
@@ -113,6 +113,17 @@ export function OverviewPage(props: Props): ReactElement {
           onToggleServerEnabled={props.onToggleServerEnabled}
           onCancelSteamCmd={props.onCancelSteamCmd}
         />
+
+        <div className={classes.narrowLogsLink}>
+          <Button
+            variant="subtle"
+            size="compact-sm"
+            rightSection={<ArrowRight size={14} />}
+            onClick={props.onViewAllActivity}
+          >
+            View logs
+          </Button>
+        </div>
 
         <RecentActivityPanel
           events={props.events}

@@ -74,12 +74,13 @@ describe("OverviewPage", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Servers", level: 1 })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Your servers" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Your servers" })).not.toBeInTheDocument();
     expect(
       screen.getByText("2 enabled servers · none running · 1 result"),
     ).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Search servers" })).toBeInTheDocument();
-    expect(screen.getByText("Recent activity")).toBeInTheDocument();
+    // Narrow viewports hide the Recent activity panel; View logs stays available.
+    expect(screen.getAllByRole("button", { name: "View logs" }).length).toBeGreaterThan(0);
     expect(screen.getByText("The Island")).toBeInTheDocument();
     expect(screen.queryByText("Advertencias")).not.toBeInTheDocument();
 
@@ -88,8 +89,103 @@ describe("OverviewPage", () => {
     const nextSection = header?.nextElementSibling as HTMLElement | null;
     expect(nextSection).not.toBeNull();
     expect(
-      within(nextSection as HTMLElement).getByRole("heading", { name: "Your servers" }),
+      within(nextSection as HTMLElement).getByRole("region", { name: "Server list" }),
     ).toBeInTheDocument();
+  });
+
+  it("turns Check Servers Health into a loading control while scanning", () => {
+    const { container, rerender } = render(
+      <AppProviders>
+        <OverviewPage
+          search=""
+          onSearchChange={vi.fn()}
+          onCreateServer={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onCheckInstalls={vi.fn()}
+          checkingInstalls
+          servers={[server]}
+          filteredServers={[server]}
+          disabledServers={[]}
+          runningServers={0}
+          statuses={new Map()}
+          installationInfo={new Map()}
+          officialSteamBuild={null}
+          events={[]}
+          onViewAllActivity={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onStartServer={vi.fn()}
+          onStopServer={vi.fn()}
+          onRestartServer={vi.fn()}
+          onKillServer={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdatesForServer={vi.fn()}
+          onCloneServer={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDeleteServer={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const header = container.querySelector("header");
+    expect(header).not.toBeNull();
+    const scanning = within(header as HTMLElement).getByRole("button", {
+      name: /Checking servers health/i,
+    });
+    expect(scanning).toHaveAttribute("data-install-health-scan");
+    expect(scanning).toHaveAttribute("data-loading", "true");
+    expect(within(header as HTMLElement).getByRole("status")).toHaveTextContent(
+      "Checking servers health…",
+    );
+    expect(screen.queryByText("Checking install folders…")).not.toBeInTheDocument();
+
+    rerender(
+      <AppProviders>
+        <OverviewPage
+          search=""
+          onSearchChange={vi.fn()}
+          onCreateServer={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onCheckInstalls={vi.fn()}
+          checkingInstalls={false}
+          servers={[server]}
+          filteredServers={[server]}
+          disabledServers={[]}
+          runningServers={0}
+          statuses={new Map()}
+          installationInfo={new Map()}
+          officialSteamBuild={null}
+          events={[]}
+          onViewAllActivity={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onStartServer={vi.fn()}
+          onStopServer={vi.fn()}
+          onRestartServer={vi.fn()}
+          onKillServer={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdatesForServer={vi.fn()}
+          onCloneServer={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDeleteServer={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Check Servers Health" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Checking servers health/i })).not.toBeInTheDocument();
   });
 
   it("surfaces how many servers need attention", async () => {

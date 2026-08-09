@@ -7,7 +7,6 @@ import {
   HardDrives,
 } from "@phosphor-icons/react";
 import {
-  Alert,
   Badge,
   Button,
   Checkbox,
@@ -26,6 +25,7 @@ import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { AppMetricCard } from "@ui/AppMetricCard/AppMetricCard";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import { PathField } from "@ui/PathField/PathField";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { formatLogDateTime } from "@shared/format-log-datetime";
@@ -116,8 +116,6 @@ export function BackupsPage(props: Props): ReactElement {
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [browsingId, setBrowsingId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
   const [healthFilter, setHealthFilter] = useState<HealthFilter>("all");
   const [diskModalOpen, setDiskModalOpen] = useState(false);
   const [diskDraft, setDiskDraft] = useState<BackupDiskAlertSettings | null>(null);
@@ -143,7 +141,6 @@ export function BackupsPage(props: Props): ReactElement {
     if (!quiet) {
       setLoading(true);
     }
-    setError(null);
     try {
       if (props.servers.length === 0) {
         if (cancelled?.()) return;
@@ -156,7 +153,10 @@ export function BackupsPage(props: Props): ReactElement {
       if (cancelled?.()) return;
       if (!result.ok) {
         setSummary(null);
-        setError(result.error ?? "Could not load backup summary");
+        showOperatorError(
+          result.error ?? "Could not load backup summary",
+          "Could not load backups",
+        );
         return;
       }
 
@@ -246,16 +246,21 @@ export function BackupsPage(props: Props): ReactElement {
     const draft = drafts[serverId];
     if (draft === undefined) return;
     setBusyId(serverId);
-    setError(null);
-    setInfo(null);
     try {
       const result = await window.api.setBackupPolicy(serverId, draft);
       if (!result.ok) {
-        setError(result.error ?? "Could not save backup policy");
+        showOperatorError(
+          result.error ?? "Could not save backup policy",
+          "Could not save backup settings",
+        );
         return;
       }
+      // Toast before refresh so a failed reload cannot precede a success message.
+      showOperatorToast({
+        title: "Saved",
+        message: "Saved backup settings for the selected server.",
+      });
       await load({ quiet: true });
-      setInfo("Saved backup settings for the selected server.");
     } finally {
       setBusyId(null);
     }
@@ -272,7 +277,7 @@ export function BackupsPage(props: Props): ReactElement {
         `Backup destination for ${server.name}`,
       );
       if (!result.ok) {
-        setError(result.error ?? "Could not open folder picker");
+        showOperatorError(result.error ?? "Could not open folder picker");
         return;
       }
       if (result.data !== null) {
@@ -288,11 +293,10 @@ export function BackupsPage(props: Props): ReactElement {
 
   const openDestination = async (serverId: string) => {
     setBusyId(serverId);
-    setError(null);
     try {
       const result = await window.api.openBackupRoot(serverId);
       if (!result.ok) {
-        setError(result.error ?? "Could not open backup destination");
+        showOperatorError(result.error ?? "Could not open backup destination");
       }
     } finally {
       setBusyId(null);
@@ -302,16 +306,21 @@ export function BackupsPage(props: Props): ReactElement {
   const saveDiskSettings = async () => {
     if (diskDraft === null) return;
     setDiskBusy(true);
-    setError(null);
     try {
       const result = await window.api.setBackupDiskAlertSettings(diskDraft);
       if (!result.ok) {
-        setError(result.error ?? "Could not save disk alert settings");
+        showOperatorError(
+          result.error ?? "Could not save disk alert settings",
+          "Could not save drive alerts",
+        );
         return;
       }
       setDiskModalOpen(false);
+      showOperatorToast({
+        title: "Saved",
+        message: "Backup drive alerts updated.",
+      });
       await load();
-      setInfo("Backup drive alerts updated.");
     } finally {
       setDiskBusy(false);
     }
@@ -321,13 +330,12 @@ export function BackupsPage(props: Props): ReactElement {
     id: string;
     fingerprint: string;
   }) => {
-    setError(null);
     const result = await window.api.dismissBackupFleetAlert(
       alert.id,
       alert.fingerprint,
     );
     if (!result.ok) {
-      setError(result.error ?? "Could not dismiss alert");
+      showOperatorError(result.error ?? "Could not dismiss alert");
       return;
     }
     await load({ quiet: true });
@@ -341,12 +349,11 @@ export function BackupsPage(props: Props): ReactElement {
 
   const runPreviewCleanup = async () => {
     setCleanupBusy(true);
-    setError(null);
     try {
       const result = await window.api.previewBackupCleanup(buildCleanupPayload());
       if (!result.ok) {
         setCleanupPreview(null);
-        setError(result.error ?? "Could not preview cleanup");
+        showOperatorError(result.error ?? "Could not preview cleanup");
         return;
       }
       setCleanupPreview(result.data);
@@ -358,22 +365,22 @@ export function BackupsPage(props: Props): ReactElement {
   const confirmCleanup = async () => {
     if (cleanupPreview === null || cleanupPreview.items.length === 0) return;
     setCleanupBusy(true);
-    setError(null);
     try {
       const result = await window.api.runBackupCleanup({
         ...buildCleanupPayload(),
         confirmedBackupIds: cleanupPreview.items.map((item) => item.backup.id),
       });
       if (!result.ok) {
-        setError(result.error ?? "Could not run cleanup");
+        showOperatorError(result.error ?? "Could not run cleanup");
         return;
       }
       setCleanupOpen(false);
       setCleanupPreview(null);
+      showOperatorToast({
+        title: "Cleanup finished",
+        message: `Cleanup removed ${result.data.deleted} backup${result.data.deleted === 1 ? "" : "s"} (${formatBytes(result.data.freedBytes)}).`,
+      });
       await load();
-      setInfo(
-        `Cleanup removed ${result.data.deleted} backup${result.data.deleted === 1 ? "" : "s"} (${formatBytes(result.data.freedBytes)}).`,
-      );
     } finally {
       setCleanupBusy(false);
     }
@@ -416,26 +423,6 @@ export function BackupsPage(props: Props): ReactElement {
       }
     >
       <Stack gap="md" className={classes.content}>
-        {error !== null && (
-          <Alert
-            color="red"
-            title="Could not complete that action"
-            withCloseButton
-            onClose={() => setError(null)}
-          >
-            {error}
-          </Alert>
-        )}
-        {info !== null && (
-          <Alert
-            color="teal"
-            title="Saved"
-            withCloseButton
-            onClose={() => setInfo(null)}
-          >
-            {info}
-          </Alert>
-        )}
 
         {props.servers.length === 0 ? (
           <AppSurfaceCard>

@@ -22,20 +22,20 @@
 .panel[data-icon-mode] .footer {
   display: flex;
   justify-content: center;
-  padding: 10px 6px;
+  padding: var(--app-space-xs) var(--app-space-xs);
 }
 
 .header {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px 14px 12px;
+  gap: var(--app-space-xs);
+  padding: var(--app-space-md) var(--app-space-sm) var(--app-space-sm);
   border-bottom: 1px solid var(--app-color-border);
 }
 
 .header[data-icon-mode] {
   align-items: center;
-  padding: 10px 6px;
+  padding: var(--app-space-xs) var(--app-space-xs);
 }
 
 .title {
@@ -49,7 +49,7 @@
 .list {
   flex: 1;
   overflow: auto;
-  padding: 10px;
+  padding: var(--app-space-xs);
   min-height: 0;
 }
 
@@ -221,6 +221,6 @@
 }
 
 .footer {
-  padding: 12px;
+  padding: var(--app-space-sm);
   border-top: 1px solid var(--app-color-border);
 }

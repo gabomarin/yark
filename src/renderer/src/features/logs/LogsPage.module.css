@@ -10,7 +10,7 @@
 .fleetRow {
   display: grid;
   grid-template-columns: 160px 88px 140px minmax(0, 1fr);
-  gap: 10px;
+  gap: var(--app-space-xs);
   align-items: center;
   text-align: left;
   color: inherit;
@@ -74,7 +74,7 @@
   flex-direction: column;
   flex: 1 1 0;
   min-height: 0;
-  padding-top: 16px;
+  padding-top: var(--app-space-md);
   overflow: hidden;
 }
 
@@ -127,7 +127,7 @@
 .tabIntro {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--app-space-xxs);
   flex-shrink: 0;
 }
 
@@ -136,7 +136,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--app-space-xs);
   overflow: hidden;
 }
 
@@ -151,9 +151,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--app-space-xs);
   min-height: 0;
-  padding: 32px;
+  padding: var(--app-space-xl);
   text-align: center;
 }
 
@@ -162,9 +162,9 @@
   place-items: center;
   width: 48px;
   height: 48px;
-  margin-bottom: 4px;
+  margin-bottom: var(--app-space-xxs);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: 14px;
+  border-radius: var(--app-radius-md);
   background: var(--app-color-surface-control);
   color: var(--app-color-accent);
 }
@@ -174,9 +174,9 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--app-space-xs);
   min-height: 0;
-  padding-right: 4px;
+  padding-right: var(--app-space-xxs);
   overflow: auto;
 }
 
@@ -213,15 +213,15 @@
 .eventDetails {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding-top: 4px;
+  gap: var(--app-space-xs);
+  padding-top: var(--app-space-xxs);
   border-top: 1px dashed color-mix(in srgb, var(--app-color-border) 55%, transparent);
 }
 
 .eventDetailLine {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--app-space-xxs);
 }
 
 .eventDetailLabel {
@@ -233,7 +233,7 @@
 .eventContext {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--app-space-xs);
 }
 
 .embedded {
@@ -247,7 +247,7 @@
 .updatesLayout {
   display: grid;
   grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
-  gap: 12px;
+  gap: var(--app-space-sm);
   flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
@@ -262,12 +262,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: var(--app-space-xs);
   width: 100%;
   min-width: 0;
   text-align: left;
-  padding: 10px 12px;
-  border-radius: 14px;
+  padding: var(--app-space-xs) var(--app-space-sm);
+  border-radius: var(--app-radius-md);
   border: 1px solid var(--ark-gray-a3);
   background: var(--app-color-surface-control);
   color: var(--app-color-text);
@@ -303,13 +303,8 @@
 
 .updateRowActive {
   border-color: var(--ark-blue-a3);
-  background:
-    linear-gradient(
-      100deg,
-      color-mix(in srgb, var(--ark-gray-2) 88%, var(--ark-blue-4)) 0%,
-      color-mix(in srgb, var(--ark-gray-2) 97%, var(--ark-blue-2)) 100%
-    );
-  box-shadow: inset 3px 0 0 var(--ark-blue-9);
+  background: var(--app-list-selected-bg);
+  box-shadow: var(--app-list-selected-inset);
 }
 
 .detailHeader {
@@ -321,9 +316,9 @@
   flex-shrink: 0;
   align-items: stretch;
   height: 58px;
-  padding: 4px 8px;
+  padding: var(--app-space-xxs) var(--app-space-xs);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: 12px;
+  border-radius: var(--app-radius-control);
   background: var(--app-color-surface-control);
 }
 
@@ -335,7 +330,7 @@
   align-items: flex-start;
   gap: 1px;
   min-width: 0;
-  padding: 0 12px;
+  padding: 0 var(--app-space-sm);
 }
 
 .detailItem + .detailItem {
@@ -347,7 +342,7 @@
   --text-lh: 1.35;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--app-space-xs);
   color: var(--app-color-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
