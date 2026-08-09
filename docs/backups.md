@@ -38,6 +38,7 @@ Triggers are separated on purpose:
 | IPC | `src/main/ipc-handlers.ts`, `src/preload/index.ts` |
 | UI (all servers / sidebar) | `src/renderer/src/features/backups/BackupsPage.tsx` |
 | UI (per-server) | `src/renderer/src/features/backups/ServerBackupPanel.tsx` |
+| UI (history table) | `src/renderer/src/features/backups/BackupHistoryTable.tsx` (`YarkDataTable`) |
 
 Bootstrap wires the scheduler and watcher in `src/main/index.ts`.
 
@@ -303,6 +304,7 @@ After a successful `ini:save`, `createIniSaveBackup` debounces **2s** per server
 - **Sidebar → Backups** — cross-server health, schedule / destination / retention, disk alerts, cleanup; “Open in server” jumps to the workspace tab.
 - **Server Workspace → Backups** — kind subtabs (**World save** | **Player profiles** | **INI**), create/restore/history for that server.
 - Destination and schedule controls live primarily on the World subtab; Players/INI keep compact retain controls near history.
+- **Backup history** uses shared **`YarkDataTable`** (`mantine-datatable`) for selection, density, and empty/loading; row actions and right-click menus stay on `backupHistoryRowActionModel` (#94).
 
 ## Troubleshooting
 

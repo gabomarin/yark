@@ -183,28 +183,8 @@
   background: color-mix(in srgb, var(--app-color-panel) 35%, transparent);
 }
 
-.backupRow {
-  display: flex;
-  gap: var(--app-space-xs);
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--app-space-xs);
-  border-radius: var(--app-radius-sm);
-  border: 1px solid color-mix(in srgb, var(--app-color-border) 55%, transparent);
-  background: color-mix(in srgb, var(--app-color-panel) 55%, transparent);
-}
-
-.backupCheck {
-  flex-shrink: 0;
-}
-
-.backupMeta {
-  min-width: 0;
-  flex: 1;
-}
-
-.backupPrimary {
-  min-width: 0;
+.historyTable {
+  width: 100%;
 }
 
 .backupTitle {
@@ -214,20 +194,13 @@
   white-space: nowrap;
 }
 
-.backupMetaInline {
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
 .backupNotes {
-  margin-top: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .backupFileName {
-  margin-top: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -236,7 +209,8 @@
 }
 
 .backupActions {
-  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .path {

@@ -36,31 +36,26 @@
 
 .tableViewport {
   overflow-x: auto;
-  border: 1px solid var(--app-color-border-subtle);
   border-radius: var(--app-radius-sm);
 }
 
-.table {
-  min-width: 900px;
-  table-layout: fixed;
-  background: var(--app-color-surface-chrome);
+.modsTable {
+  min-width: 960px;
 }
 
-.serverTable th:nth-child(1) { width: 10%; }
-.serverTable th:nth-child(2) { width: 29%; }
-.serverTable th:nth-child(3) { width: 12%; }
-.serverTable th:nth-child(4) { width: 25%; }
-.serverTable th:nth-child(5) { width: 16%; }
-.serverTable th:nth-child(6) { width: 8%; }
+.dragHandle {
+  cursor: grab;
+  color: var(--mantine-color-dimmed);
+}
 
-.discoveryTable th:nth-child(1) { width: 32%; }
-.discoveryTable th:nth-child(2) { width: 12%; }
-.discoveryTable th:nth-child(3) { width: 30%; }
-.discoveryTable th:nth-child(4) { width: 14%; }
-.discoveryTable th:nth-child(5) { width: 12%; }
+.dragHandle:active {
+  cursor: grabbing;
+}
 
-.table tbody tr:hover {
-  background: var(--app-color-surface-control-hover);
+.dragHandleDisabled {
+  cursor: not-allowed;
+  color: var(--mantine-color-dimmed);
+  opacity: 0.45;
 }
 
 .clickableRow {

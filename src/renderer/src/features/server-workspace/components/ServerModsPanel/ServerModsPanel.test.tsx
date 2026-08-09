@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { notifications } from "@mantine/notifications";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -425,6 +425,32 @@ describe("ServerModsPanel", () => {
         expect.objectContaining({
           mods: [],
           disabledMods: [],
+          modMetadataCache: {},
+        }),
+      );
+    });
+  });
+
+  it("confirms before removing from the row context menu", async () => {
+    const api = installApi();
+    const user = userEvent.setup();
+    renderPanel();
+
+    const row = document.querySelector("[data-mod-row]");
+    expect(row).not.toBeNull();
+    fireEvent.contextMenu(row!);
+
+    await user.click(
+      await screen.findByRole("menuitem", { name: /Remove Awesome Spyglass/i }),
+    );
+    expect(api.updateServer).not.toHaveBeenCalled();
+
+    await user.click(await screen.findByRole("button", { name: "Remove mod" }));
+    await waitFor(() => {
+      expect(api.updateServer).toHaveBeenCalledWith(
+        "server-1",
+        expect.objectContaining({
+          mods: [],
           modMetadataCache: {},
         }),
       );

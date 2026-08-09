@@ -46,6 +46,10 @@ export class PlayerSessionWatcher extends EventEmitter {
   private readonly profileScanSeeded = new Set<string>();
   private readonly recentSessionBackupAt = new Map<string, number>();
   private readonly rconFailStreak = new Map<string, number>();
+  private readonly lastPlayersPush = new Map<
+    string,
+    { error: string | null; fingerprint: string }
+  >();
   private listPlayersExecutor: ListPlayersExecutor | null = null;
 
   constructor(
@@ -102,6 +106,7 @@ export class PlayerSessionWatcher extends EventEmitter {
     this.profileScanSeeded.clear();
     this.recentSessionBackupAt.clear();
     this.rconFailStreak.clear();
+    this.lastPlayersPush.clear();
   }
 
   private readonly onProcessStatus = (info: ServerRuntimeInfo): void => {
@@ -139,6 +144,14 @@ export class PlayerSessionWatcher extends EventEmitter {
     players: ListedPlayer[],
     error: string | null,
   ): void {
+    const fingerprint = players
+      .map((player) => `${player.key}\0${player.name ?? ""}`)
+      .join("\n");
+    const prior = this.lastPlayersPush.get(serverId);
+    if (prior !== undefined && prior.error === error && prior.fingerprint === fingerprint) {
+      return;
+    }
+    this.lastPlayersPush.set(serverId, { error, fingerprint });
     const payload: PlayersUpdatedPayload = {
       serverId,
       players,
@@ -164,12 +177,23 @@ export class PlayerSessionWatcher extends EventEmitter {
   private async tickServer(server: ServerProfile): Promise<void> {
     const status = this.processes.getStatus(server.id).status;
     if (status !== "running") {
+      const hadTrackedSession =
+        this.onlineByServer.has(server.id)
+        || this.profileMtimes.has(server.id)
+        || this.profileScanSeeded.has(server.id)
+        || this.rconFailStreak.has(server.id);
       await this.flushOnlineAsDisconnect(server.id);
       this.onlineByServer.delete(server.id);
       this.profileMtimes.delete(server.id);
       this.profileScanSeeded.delete(server.id);
       this.rconFailStreak.delete(server.id);
-      this.emitPlayersUpdated(server.id, [], null);
+      // Avoid a quiet empty push every poll tick for stopped servers — that
+      // was remounting workspace chrome (tooltips/menus) every ~10s.
+      if (hadTrackedSession) {
+        this.emitPlayersUpdated(server.id, [], null);
+      } else {
+        this.lastPlayersPush.delete(server.id);
+      }
       return;
     }
 

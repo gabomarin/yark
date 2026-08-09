@@ -46,7 +46,10 @@ Object.defineProperty(window, "matchMedia", {
 	value: (query: string) => ({
 		// Prefer reduced motion in tests so Mantine skips transition timeouts
 		// (use-lock-scroll) that otherwise fire after jsdom teardown.
-		matches: /prefers-reduced-motion:\s*reduce/i.test(query),
+		// Empty query must match: mantine-datatable calls useMediaQuery("") when
+		// visibleMediaQuery is unset; Chromium treats "" as matching.
+		matches:
+			query === "" || /prefers-reduced-motion:\s*reduce/i.test(query),
 		media: query,
 		onchange: null,
 		addListener: () => undefined,
