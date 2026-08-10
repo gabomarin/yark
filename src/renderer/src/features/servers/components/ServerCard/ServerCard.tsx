@@ -15,7 +15,7 @@ import {
 } from "./serverCardModel";
 import classes from "./ServerCard.module.css";
 
-export type ServerCardProps = {
+type ServerCardSharedProps = {
   server: ServerProfile;
   runtime: ServerRuntimeInfo | null;
   installation: ServerInstallationInfo | null;
@@ -32,27 +32,61 @@ export type ServerCardProps = {
   stopProgressPercent?: number | null;
   stopProgressLabel?: string | null;
   checkingUpdates?: boolean;
-  /** Preferred Overview path: stable bag so memo can skip unrelated poll updates (#209). */
-  handlers?: ServerCardHandlers;
-  onStart?: () => void;
-  onStop?: () => void;
-  onKill?: () => void;
-  onRestart?: () => void;
-  onOpenWorkspace?: () => void;
-  onOpenLogs?: () => void;
+};
+
+type ServerCardCallbackProps = {
+  onStart: () => void;
+  onStop: () => void;
+  onKill: () => void;
+  onRestart: () => void;
+  onOpenWorkspace: () => void;
+  onOpenLogs: () => void;
   /** Opens the runtime logs section for a failed/crashed launch. */
-  onReviewError?: () => void;
-  onOpenFolder?: () => void;
-  onInstallFiles?: () => void;
-  onUpdateNow?: () => void;
-  onVerifyFiles?: () => void;
-  onCheckUpdates?: () => void;
-  onClone?: () => void;
-  onCopyConfiguration?: () => void;
-  onDelete?: () => void;
-  onCancelSteamCmd?: () => void;
+  onReviewError: () => void;
+  onOpenFolder: () => void;
+  onInstallFiles: () => void;
+  onUpdateNow: () => void;
+  onVerifyFiles: () => void;
+  onCheckUpdates: () => void;
+  onClone: () => void;
+  onCopyConfiguration: () => void;
+  onDelete: () => void;
+  onCancelSteamCmd: () => void;
   onToggleEnabled?: () => void;
 };
+
+/** Overview: stable `handlers` bag. Tests/other callers: explicit zero-arg callbacks. */
+export type ServerCardProps =
+  | (ServerCardSharedProps & { handlers: ServerCardHandlers })
+  | (ServerCardSharedProps & ServerCardCallbackProps);
+
+function bindServerCardHandlers(
+  handlers: ServerCardHandlers,
+  server: ServerProfile,
+): ServerCardCallbackProps {
+  const id = server.id;
+  return {
+    onStart: () => handlers.onStartServer(id),
+    onStop: () => handlers.onStopServer(id),
+    onKill: () => handlers.onKillServer(id),
+    onRestart: () => handlers.onRestartServer(id),
+    onOpenWorkspace: () => handlers.onOpenWorkspace(server),
+    onOpenLogs: () => handlers.onOpenLogs(id),
+    onReviewError: () => handlers.onReviewError(id),
+    onOpenFolder: () => handlers.onOpenFolder(id),
+    onInstallFiles: () => handlers.onInstallFiles(id),
+    onUpdateNow: () => handlers.onUpdateNow(id),
+    onVerifyFiles: () => handlers.onVerifyFiles(id),
+    onCheckUpdates: () => handlers.onCheckUpdatesForServer(id),
+    onClone: () => handlers.onCloneServer(id),
+    onCopyConfiguration: () => handlers.onCopyConfiguration(id),
+    onDelete: () => handlers.onDeleteServer(id),
+    onCancelSteamCmd: () => handlers.onCancelSteamCmd(),
+    onToggleEnabled: handlers.onToggleServerEnabled
+      ? () => handlers.onToggleServerEnabled?.(id, !server.enabled)
+      : undefined,
+  };
+}
 
 function ServerCardComponent(props: ServerCardProps): ReactElement {
   const {
@@ -69,34 +103,28 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     stopProgressPercent = null,
     stopProgressLabel = null,
     checkingUpdates = false,
-    handlers,
   } = props;
-  const id = server.id;
-  const onStart = props.onStart ?? (() => handlers?.onStartServer(id));
-  const onStop = props.onStop ?? (() => handlers?.onStopServer(id));
-  const onKill = props.onKill ?? (() => handlers?.onKillServer(id));
-  const onRestart = props.onRestart ?? (() => handlers?.onRestartServer(id));
-  const onOpenWorkspace =
-    props.onOpenWorkspace ?? (() => handlers?.onOpenWorkspace(server));
-  const onOpenLogs = props.onOpenLogs ?? (() => handlers?.onOpenLogs(id));
-  const onReviewError = props.onReviewError ?? (() => handlers?.onReviewError(id));
-  const onOpenFolder = props.onOpenFolder ?? (() => handlers?.onOpenFolder(id));
-  const onInstallFiles = props.onInstallFiles ?? (() => handlers?.onInstallFiles(id));
-  const onUpdateNow = props.onUpdateNow ?? (() => handlers?.onUpdateNow(id));
-  const onVerifyFiles = props.onVerifyFiles ?? (() => handlers?.onVerifyFiles(id));
-  const onCheckUpdates =
-    props.onCheckUpdates ?? (() => handlers?.onCheckUpdatesForServer(id));
-  const onClone = props.onClone ?? (() => handlers?.onCloneServer(id));
-  const onCopyConfiguration =
-    props.onCopyConfiguration ?? (() => handlers?.onCopyConfiguration(id));
-  const onDelete = props.onDelete ?? (() => handlers?.onDeleteServer(id));
-  const onCancelSteamCmd =
-    props.onCancelSteamCmd ?? (() => handlers?.onCancelSteamCmd());
-  const onToggleEnabled =
-    props.onToggleEnabled ??
-    (handlers?.onToggleServerEnabled
-      ? () => handlers.onToggleServerEnabled?.(id, !server.enabled)
-      : undefined);
+  const {
+    onStart,
+    onStop,
+    onKill,
+    onRestart,
+    onOpenWorkspace,
+    onOpenLogs,
+    onReviewError,
+    onOpenFolder,
+    onInstallFiles,
+    onUpdateNow,
+    onVerifyFiles,
+    onCheckUpdates,
+    onClone,
+    onCopyConfiguration,
+    onDelete,
+    onCancelSteamCmd,
+    onToggleEnabled,
+  } = "handlers" in props
+    ? bindServerCardHandlers(props.handlers, server)
+    : props;
   const status = runtime?.status ?? "stopped";
   const view = deriveServerCardView({
     status,

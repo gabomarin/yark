@@ -306,13 +306,16 @@ export class InstanceService extends EventEmitter {
   async withProfileWrite<T>(id: string, work: () => Promise<T> | T): Promise<T> {
     const previous = this.profileWriteChains.get(id) ?? Promise.resolve();
     const run = previous.then(() => work(), () => work());
-    this.profileWriteChains.set(
-      id,
-      run.then(
-        () => undefined,
-        () => undefined,
-      ),
+    const settled = run.then(
+      () => undefined,
+      () => undefined,
     );
+    this.profileWriteChains.set(id, settled);
+    void settled.finally(() => {
+      if (this.profileWriteChains.get(id) === settled) {
+        this.profileWriteChains.delete(id);
+      }
+    });
     return run;
   }
 

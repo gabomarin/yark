@@ -153,5 +153,11 @@ describe("InstanceService.updatePatch concurrency (#209)", () => {
     });
     expect(final.mods).toEqual(["111", "222"]);
     expect(final.disabledMods).toEqual(["222"]);
+    // Settled chains drop their Map entry so deleted/churned IDs cannot leak.
+    await Promise.resolve();
+    expect(
+      (instances as unknown as { profileWriteChains: Map<string, unknown> })
+        .profileWriteChains.has(created.id),
+    ).toBe(false);
   });
 });
