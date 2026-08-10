@@ -1,8 +1,9 @@
-import { type ReactElement, useMemo, useState } from "react";
+import { type ReactElement, useMemo, useRef, useState } from "react";
 import { HardDrives, MagnifyingGlass, Plus } from "@phosphor-icons/react";
 import { Badge, Button, Checkbox, Group, Skeleton, Stack, Text, VisuallyHidden } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo, ServerStopProgress } from "@shared/types";
 import { ServerCard } from "@features/servers/components/ServerCard/ServerCard";
+import type { ServerCardHandlers } from "@features/servers/components/ServerCard/serverCardHandlers";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { SearchField } from "@ui/SearchField/SearchField";
 import {
@@ -55,6 +56,36 @@ interface Props {
 
 export function ServerGrid(props: Props): ReactElement {
   const [showDisabled, setShowDisabled] = useState(false);
+  const propsRef = useRef(props);
+  propsRef.current = props;
+
+  /** Stable across Overview polls so memoized ServerCard can skip unrelated rows (#209). */
+  const cardHandlers = useMemo<ServerCardHandlers>(
+    () => ({
+      onStartServer: (serverId) => propsRef.current.onStartServer(serverId),
+      onStopServer: (serverId) => propsRef.current.onStopServer(serverId),
+      onKillServer: (serverId) => propsRef.current.onKillServer(serverId),
+      onRestartServer: (serverId) => propsRef.current.onRestartServer(serverId),
+      onOpenWorkspace: (server) => propsRef.current.onOpenWorkspace(server),
+      onOpenLogs: (serverId) => propsRef.current.onOpenLogs(serverId),
+      onReviewError: (serverId) => propsRef.current.onReviewError(serverId),
+      onOpenFolder: (serverId) => propsRef.current.onOpenFolder(serverId),
+      onInstallFiles: (serverId) => propsRef.current.onInstallFiles(serverId),
+      onUpdateNow: (serverId) => propsRef.current.onUpdateNow(serverId),
+      onVerifyFiles: (serverId) => propsRef.current.onVerifyFiles(serverId),
+      onCheckUpdatesForServer: (serverId) =>
+        propsRef.current.onCheckUpdatesForServer(serverId),
+      onCloneServer: (serverId) => propsRef.current.onCloneServer(serverId),
+      onCopyConfiguration: (serverId) =>
+        propsRef.current.onCopyConfiguration(serverId),
+      onDeleteServer: (serverId) => propsRef.current.onDeleteServer(serverId),
+      onCancelSteamCmd: () => propsRef.current.onCancelSteamCmd(),
+      onToggleServerEnabled: (serverId, enabled) =>
+        propsRef.current.onToggleServerEnabled?.(serverId, enabled),
+    }),
+    [],
+  );
+
   const enabledServerCount = props.servers.filter(
     (server) => server.enabled,
   ).length;
@@ -138,23 +169,7 @@ export function ServerGrid(props: Props): ReactElement {
         stopProgressPercent={stopBusy ? (stopProgress?.percent ?? null) : null}
         stopProgressLabel={stopBusy ? (stopProgress?.label ?? null) : null}
         checkingUpdates={props.checkingUpdates}
-        onStart={() => props.onStartServer(server.id)}
-        onStop={() => props.onStopServer(server.id)}
-        onKill={() => props.onKillServer(server.id)}
-        onRestart={() => props.onRestartServer(server.id)}
-        onOpenWorkspace={() => props.onOpenWorkspace(server)}
-        onOpenLogs={() => props.onOpenLogs(server.id)}
-        onReviewError={() => props.onReviewError(server.id)}
-        onOpenFolder={() => props.onOpenFolder(server.id)}
-        onInstallFiles={() => props.onInstallFiles(server.id)}
-        onUpdateNow={() => props.onUpdateNow(server.id)}
-        onVerifyFiles={() => props.onVerifyFiles(server.id)}
-        onCheckUpdates={() => props.onCheckUpdatesForServer(server.id)}
-        onClone={() => props.onCloneServer(server.id)}
-        onCopyConfiguration={() => props.onCopyConfiguration(server.id)}
-        onDelete={() => props.onDeleteServer(server.id)}
-        onToggleEnabled={() => props.onToggleServerEnabled?.(server.id, !server.enabled)}
-        onCancelSteamCmd={props.onCancelSteamCmd}
+        handlers={cardHandlers}
       />
     );
   };

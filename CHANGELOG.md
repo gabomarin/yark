@@ -12,6 +12,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Changed
 
 - Launch and Mods profile saves use narrow `updateServerPatch` IPC with server-side merge and per-server write serialization so concurrent panel edits no longer last-write-wins (#209).
+- Overview server cards skip re-render on unrelated status polls via a memoized card and a stable fleet action bag; focused cards open the row menu with Shift+F10 (#209).
 
 ### Fixed
 

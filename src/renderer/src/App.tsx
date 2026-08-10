@@ -25,6 +25,7 @@ import type {
   SteamCmdStatus,
   StartServerOptions,
 } from "@shared/types";
+import { createGenerationGate } from "@shared/createGenerationGate";
 import { reconcileServerList } from "./shared/reconcileServerList";
 import {
   reconcileClusterReports,
@@ -146,7 +147,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   }>({ active: false, reason: null });
   const installScanInFlightRef = useRef<Promise<void> | null>(null);
   /** Bumps on each refresh start; stale overlapping polls must not apply setState. */
-  const refreshGenerationRef = useRef(0);
+  const refreshGenerationGateRef = useRef(createGenerationGate());
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [appUpdateStatus, setAppUpdateStatus] = useState<AppUpdateStatus | null>(null);
   const [focusYarkUpdates, setFocusYarkUpdates] = useState(false);
@@ -314,7 +315,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     const includeInstallation = options?.includeInstallation !== false;
     const forceOfficialCheck = options?.forceOfficialCheck === true;
     const serversMode = options?.serversMode ?? true;
-    const generation = ++refreshGenerationRef.current;
+    const generation = refreshGenerationGateRef.current.begin();
     const [
       serversRes,
       statusesRes,
@@ -334,7 +335,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       window.api.checkCluster(),
       window.api.recentEvents(100),
     ]);
-    if (generation !== refreshGenerationRef.current) {
+    if (!refreshGenerationGateRef.current.isCurrent(generation)) {
       return {
         servers: null,
         statuses: null,
