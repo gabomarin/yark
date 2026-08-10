@@ -122,8 +122,10 @@ export const logFileNameSchema = z
     (name) =>
       name !== "." &&
       name !== ".." &&
+      !name.includes("..") &&
       !name.includes("/") &&
       !name.includes("\\") &&
+      !name.includes(":") &&
       !name.includes("\0"),
     { message: "Invalid log file name" },
   );

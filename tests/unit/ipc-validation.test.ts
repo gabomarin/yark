@@ -168,6 +168,16 @@ describe("validated arg schemas (reject)", () => {
       ipcArgSchemas[IPC.logsDeleteUpdate].safeParse(["srv-1", "../secret.log"])
         .success,
     ).toBe(false);
+    expect(
+      ipcArgSchemas[IPC.logsDeleteUpdate].safeParse(["srv-1", "srv-1-foo..bar.log"])
+        .success,
+    ).toBe(false);
+    expect(
+      ipcArgSchemas[IPC.logsOpenUpdateFile].safeParse([
+        "srv-1",
+        "srv-1-ok.log:ads",
+      ]).success,
+    ).toBe(false);
   });
 
   it("accepts omitted cluster file selection and empty global cleanup serverId", () => {
