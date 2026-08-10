@@ -3,7 +3,7 @@ import { formatBackupFileStamp } from "@shared/backup-file-stamp";
 import {
   slugFilePart,
   suggestedExportFileName,
-} from "../../src/renderer/src/features/backups/backupPortability";
+} from "@features/backups/backupPortability";
 import type { BackupRecord } from "@shared/types";
 
 function makeBackup(overrides: Partial<BackupRecord> = {}): BackupRecord {

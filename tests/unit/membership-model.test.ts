@@ -9,7 +9,7 @@ import {
   listRemoveCandidates,
   modsMayDiverge,
   remainingMemberCountAfterRemove,
-} from "../../src/renderer/src/features/clusters/membershipModel";
+} from "@features/clusters/membershipModel";
 
 function makeServer(
   overrides: Partial<ServerProfile> & Pick<ServerProfile, "id" | "name">,

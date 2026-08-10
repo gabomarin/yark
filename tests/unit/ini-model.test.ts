@@ -4,7 +4,7 @@ import {
   sectionShortName,
   setIniTextValue,
   stripClientIniKeys,
-} from "../../src/shared/ini-text";
+} from "@shared/ini-text";
 import {
   filterIniRows,
   inferControlKind,
@@ -12,7 +12,7 @@ import {
   parseIniRows,
   resolveControlKind,
   setIniValue,
-} from "../../src/renderer/src/features/server-workspace/iniModel";
+} from "@features/server-workspace/iniModel";
 
 describe("ini-text / iniModel section parsing", () => {
   const sample = `[/Script/Engine.GameSession]

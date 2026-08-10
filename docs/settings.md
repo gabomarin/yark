@@ -133,7 +133,10 @@ with the actions right-aligned. Progress, install-block, and error lines only
 render when they apply.
 
 Sidebar `vX.Y.Z` uses cryo accent + tooltip when an update is available; click
-opens this Settings section (does not install directly).
+opens this Settings section (does not install directly). When a quiet check (or
+**Check now**) finds an update — or a download finishes — the shell also shows an
+operator toast that deep-links here. Up-to-date and quiet-check failures stay
+silent outside Settings status text.
 
 ## Related subsystems (not on this page)
 

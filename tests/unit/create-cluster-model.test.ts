@@ -11,7 +11,7 @@ import {
   sharedPrefillClusterDir,
   suggestClusterId,
   toggleSelectedServerId,
-} from "../../src/renderer/src/features/clusters/createClusterModel";
+} from "@features/clusters/createClusterModel";
 
 function makeServer(
   overrides: Partial<ServerProfile> & Pick<ServerProfile, "id" | "name">,

@@ -5,11 +5,11 @@ import {
   UI_DENSITY_SETTING_KEY,
   isUiDensity,
   parseUiDensity,
-} from "../../src/shared/ui-density";
+} from "@shared/ui-density";
 import {
   loadUiDensityPref,
   writeUiDensityPref,
-} from "../../src/renderer/src/features/settings/settingsModel";
+} from "@features/settings/settingsModel";
 
 describe("ui density shared helpers", () => {
   it("parses valid values and falls back to compact", () => {

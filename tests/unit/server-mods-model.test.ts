@@ -3,7 +3,7 @@ import type { ModMetadata } from "@shared/types";
 import {
   buildServerRows,
   mergeMissingMetadata,
-} from "../../src/renderer/src/features/server-workspace/components/ServerModsPanel/serverModsModel";
+} from "@features/server-workspace/components/ServerModsPanel/serverModsModel";
 
 const scraped: ModMetadata = {
   id: "929420",

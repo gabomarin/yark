@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deriveServerCardView } from "../../src/renderer/src/features/servers/components/ServerCard/serverCardPresentationModel";
+import { deriveServerCardView } from "@features/servers/components/ServerCard/serverCardPresentationModel";
 
 describe("deriveServerCardView stop progress", () => {
   it("prefers stop progress copy and Stopping label when stopBusy", () => {

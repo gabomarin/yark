@@ -9,7 +9,7 @@ import {
   configurationWizardSchema,
   draftFromIniPayload,
   wizardChanges,
-} from "../../src/renderer/src/features/server-workspace/configurationWizardModel";
+} from "@features/server-workspace/configurationWizardModel";
 
 function settingOccurrences(iniText: string, key: string): string[] {
   return iniText.match(new RegExp(`^${key}=[^\\n]*$`, "gm")) ?? [];

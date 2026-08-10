@@ -5,7 +5,7 @@ import {
   resolveRestartAction,
   resolveRuntimeAction,
   resolveUpdateAction,
-} from "../../src/renderer/src/features/servers/components/ServerCard/serverCardActionModel";
+} from "@features/servers/components/ServerCard/serverCardActionModel";
 
 type Combo = {
   name: string;

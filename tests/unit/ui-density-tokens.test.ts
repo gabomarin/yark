@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   UI_DENSITY_COMPACT_SCALE,
   getAppTokens,
-} from "../../src/renderer/src/shared/theme/tokens";
+} from "@theme/tokens";
 
 describe("UI density tokens (#62)", () => {
   it("keeps comfortable spacing at the baseline scale", () => {

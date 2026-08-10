@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isAllowedExternalUrl } from "../../src/shared/external-url-policy";
+import { isAllowedExternalUrl } from "@shared/external-url-policy";
 
 describe("isAllowedExternalUrl", () => {
   it("allows wiki, CurseForge, and GitHub https links", () => {

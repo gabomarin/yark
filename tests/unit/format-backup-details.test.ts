@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatBackupDetails } from "../../src/renderer/src/features/backups/formatBackupDetails";
+import { formatBackupDetails } from "@features/backups/formatBackupDetails";
 import type { BackupRecord } from "@shared/types";
 
 describe("formatBackupDetails", () => {
