@@ -845,7 +845,8 @@ export class ProcessManager extends EventEmitter {
       "system",
       `Reattached to left-running process (pid ${record.pid})`,
     );
-    await this.writeProcessCheckpoint(profile.id, managed);
+    // Fire-and-forget like start(); pass live identity to skip a second PowerShell probe.
+    void this.writeProcessCheckpoint(profile.id, managed, live);
 
     managed.logTailer = new AsaSavedLogsTailer(profile.installDir, (text) => {
       if (this.processes.get(profile.id) !== managed) return;
@@ -1058,6 +1059,7 @@ export class ProcessManager extends EventEmitter {
   private async writeProcessCheckpoint(
     serverId: string,
     managed: ManagedProcess,
+    liveIdentity?: LiveProcessIdentity | null,
   ): Promise<void> {
     if (this.onProcessCheckpoint === null) {
       return;
@@ -1067,7 +1069,12 @@ export class ProcessManager extends EventEmitter {
       if (pid === undefined || !Number.isInteger(pid) || pid <= 0) {
         return;
       }
-      const live = await this.queryOsIdentity(pid);
+      // Reuse a just-fetched identity when provided (reattach) to avoid a second
+      // PowerShell round-trip during startup (#145 review).
+      const live =
+        liveIdentity !== undefined
+          ? liveIdentity
+          : await this.queryOsIdentity(pid);
       const osCreationTime = live?.osCreationTime?.trim() || null;
       if (osCreationTime === null) {
         this.appendRuntimeLog(

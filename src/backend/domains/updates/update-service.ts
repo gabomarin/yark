@@ -156,6 +156,8 @@ export class UpdateService extends EventEmitter {
   private diskProgressBaselineBytes = 0;
   private consoleLogOffset = 0;
   private lastDiskEstimateConsoleAtMs = 0;
+  /** Last path confirmed by async discovery / persist — status polls must not `existsSync`. */
+  private lastKnownSteamCmdPath: string | null = null;
 
   constructor(
     private readonly servers: ServerRepository,
@@ -168,6 +170,10 @@ export class UpdateService extends EventEmitter {
     private readonly steamcmdDir: string,
   ) {
     super();
+    const configured = this.settings.get("steamcmdPath")?.trim();
+    if (configured != null && configured.length > 0) {
+      this.lastKnownSteamCmdPath = configured;
+    }
     this.queue = this.loadQueue();
     const resumableJobs = this.queue.filter(
       (job) => job.status === "pending" || job.status === "retrying",
@@ -1469,12 +1475,25 @@ export class UpdateService extends EventEmitter {
     return "steamcmd.exe";
   }
 
-  /** Candidate paths only — no `where.exe` (safe for status polls). */
+  /**
+   * Status/cache path for polls — memory + settings/env only.
+   * Never probes disk (no `existsSync`) so UNC/AV stalls cannot block main (#145).
+   */
   private findSteamCmdExecutableCached(): string | null {
-    for (const candidate of this.steamCmdCandidatePaths()) {
-      if (candidate != null && candidate.trim().length > 0 && existsSync(candidate)) {
-        return candidate;
-      }
+    if (
+      this.lastKnownSteamCmdPath != null
+      && this.lastKnownSteamCmdPath.trim().length > 0
+    ) {
+      return this.lastKnownSteamCmdPath;
+    }
+    const configured = this.settings.get("steamcmdPath");
+    if (configured != null && configured.trim().length > 0) {
+      this.lastKnownSteamCmdPath = configured.trim();
+      return this.lastKnownSteamCmdPath;
+    }
+    const envPath = process.env["STEAMCMD_PATH"];
+    if (envPath != null && envPath.trim().length > 0) {
+      return envPath.trim();
     }
     return null;
   }
@@ -1508,6 +1527,7 @@ export class UpdateService extends EventEmitter {
       }
       try {
         await access(candidate);
+        this.lastKnownSteamCmdPath = candidate;
         return candidate;
       } catch {
         // try next candidate
@@ -1531,6 +1551,7 @@ export class UpdateService extends EventEmitter {
       for (const line of lines) {
         try {
           await access(line);
+          this.lastKnownSteamCmdPath = line;
           return line;
         } catch {
           // try next PATH hit
@@ -1544,6 +1565,7 @@ export class UpdateService extends EventEmitter {
   }
 
   private persistSteamCmdPath(exePath: string): void {
+    this.lastKnownSteamCmdPath = exePath;
     this.settings.set("steamcmdPath", exePath);
     process.env["STEAMCMD_PATH"] = exePath;
     process.env["ARK_STEAMCMD_DIR"] = dirname(exePath);

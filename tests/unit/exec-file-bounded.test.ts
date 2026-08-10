@@ -59,6 +59,10 @@ describe("execFileBounded", () => {
             { timeoutMs: 5_000, maxBuffer: 256 },
           );
 
-    await expect(bloated).rejects.toBeInstanceOf(ExecFileBoundedError);
+    await expect(bloated).rejects.toMatchObject({
+      name: "ExecFileBoundedError",
+      timedOut: false,
+      code: "ERR_CHILD_PROCESS_STDIO_MAXBUFFER",
+    });
   });
 });
