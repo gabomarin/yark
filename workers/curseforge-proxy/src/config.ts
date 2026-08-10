@@ -3,6 +3,11 @@
  * Secrets (`CURSEFORGE_API_KEY`) are never listed here.
  */
 
+/** Cloudflare Workers Rate Limiting binding (see wrangler `[[ratelimits]]`). */
+export interface RateLimiter {
+  limit(options: { key: string }): Promise<{ success: boolean }>;
+}
+
 export interface Env {
   /** Cloudflare secret — never commit. */
   CURSEFORGE_API_KEY: string;
@@ -10,9 +15,15 @@ export interface Env {
   ASA_GAME_ID: string;
   /**
    * CORS Access-Control-Allow-Origin (wrangler `[vars]`).
-   * MVP default `*`; tighten later if the client origin is fixed.
+   * Electron main-process fetch has no browser origin; `*` is acceptable.
    */
   CORS_ALLOW_ORIGIN: string;
+  /** Search route class — tighter (amplification path). */
+  RATE_LIMIT_SEARCH?: RateLimiter;
+  /** GET single-mod route class. */
+  RATE_LIMIT_READ?: RateLimiter;
+  /** POST batch route class. */
+  RATE_LIMIT_BATCH?: RateLimiter;
 }
 
 export interface WorkerConfig {

@@ -7,10 +7,29 @@ workers_dev = true
 #   npx wrangler secret put CURSEFORGE_API_KEY
 #
 # Local `wrangler dev`: copy `.dev.vars.example` → `.dev.vars`
+#
+# Abuse controls / runbook: docs/curseforge-proxy.md (#70)
 
 [vars]
 # Tunables (safe to commit). Override in Cloudflare dashboard if needed.
 # Ark: Survival Ascended on CurseForge
 ASA_GAME_ID = "83374"
-# MVP: open CORS. Phase 2 (#70) can restrict when auth lands.
+# Electron talks from the main process (no browser origin). Open CORS is fine.
 CORS_ALLOW_ORIGIN = "*"
+
+# Route-class IP rate limits (per Cloudflare PoP). Tune after traffic measurements.
+# Keys are CF-Connecting-IP + route class — not install identity (#70).
+[[ratelimits]]
+name = "RATE_LIMIT_SEARCH"
+namespace_id = "1001"
+simple = { limit = 30, period = 60 }
+
+[[ratelimits]]
+name = "RATE_LIMIT_READ"
+namespace_id = "1002"
+simple = { limit = 60, period = 60 }
+
+[[ratelimits]]
+name = "RATE_LIMIT_BATCH"
+namespace_id = "1003"
+simple = { limit = 20, period = 60 }

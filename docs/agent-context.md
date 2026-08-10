@@ -68,9 +68,10 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
   Sidebar **Backups** is generalized configuration across servers (schedule /
   destination / retention) with “Open in server” to jump into the workspace tab.
   **Mods** manages CurseForge Project IDs (enable/disable without dropping IDs,
-  Worker-backed metadata, launch `-mods=` for enabled only). A six-step
-  configuration assistant launches on demand from `Server`; it uses an isolated
-  draft and writes only after explicit review.
+  Worker-backed metadata, launch `-mods=` for enabled only). CurseForge proxy
+  abuse controls and operator runbook: [curseforge-proxy.md](curseforge-proxy.md)
+  (#70). A six-step configuration assistant launches on demand from `Server`; it
+  uses an isolated draft and writes only after explicit review.
 - Settings is live in the shell (SteamCMD path, desktop shell, density, and related preferences — no light/dark theme control). Full map: [settings.md](settings.md). Clusters surfaces existing `clusterId` / `clusterDir` compliance reports (live transfer validation still deferred); see [clusters.md](clusters.md). Workspace **RCON** tab: [rcon.md](rcon.md).
 - Sidebar Backups settings page and per-server workspace Backups tab are live.
 - Backups are kind-scoped ZIP archives: `world` (full SavedArks including `.arkprofile*`), `players` (profiles from SavedArks/SaveGames), `ini` (`Game.ini` + `GameUserSettings.ini`).
