@@ -1,9 +1,8 @@
-import type { ReactElement } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { Alert, SegmentedControl, Stack } from "@mantine/core";
 import { isMetadataServiceNotConfiguredMessage } from "@shared/curseforge-proxy-url";
 import type { ModMetadata, ModSearchPage, ServerProfile } from "@shared/types";
 import { prepareModAddApply, type ModAddImportProgress } from "@shared/mod-add-input";
-import { useEffect, useMemo, useRef, useState } from "react";
 import { ServerModDetailDrawer } from "./ServerModDetailDrawer";
 import { ServerModsDiscoverSection } from "./ServerModsDiscoverSection";
 import { ServerModsHeader } from "./ServerModsHeader";
@@ -34,9 +33,11 @@ export function ServerModsPanel(props: Props): ReactElement {
   const configuredIdsRef = useRef(configuredIds);
   const disabledIdsRef = useRef(disabledIds);
   const serverRef = useRef(props.server);
-  configuredIdsRef.current = configuredIds;
-  disabledIdsRef.current = disabledIds;
-  serverRef.current = props.server;
+  useEffect(() => {
+    configuredIdsRef.current = configuredIds;
+    disabledIdsRef.current = disabledIds;
+    serverRef.current = props.server;
+  });
   const cacheRef = useRef(props.server.modMetadataCache ?? {});
   const [metadata, setMetadata] = useState<Map<string, ModMetadata>>(
     () => metadataMap(props.server.modMetadataCache),

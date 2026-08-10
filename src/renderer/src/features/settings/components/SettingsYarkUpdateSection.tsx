@@ -81,40 +81,48 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
       error: null,
       percent: null,
     }));
-    const result = await window.api.checkForAppUpdate();
-    setActionBusy(false);
-    if (!result.ok) {
-      setActionError(result.error ?? "Could not check for YARK updates");
-      setStatus((prev) => ({
-        ...prev,
-        phase: "error",
-        error: result.error ?? "Could not check for YARK updates",
-      }));
-      return;
+    try {
+      const result = await window.api.checkForAppUpdate();
+      if (!result.ok) {
+        setActionError(result.error ?? "Could not check for YARK updates");
+        setStatus((prev) => ({
+          ...prev,
+          phase: "error",
+          error: result.error ?? "Could not check for YARK updates",
+        }));
+        return;
+      }
+      setStatus(result.data);
+    } finally {
+      setActionBusy(false);
     }
-    setStatus(result.data);
   };
 
   const runDownload = async () => {
     setActionBusy(true);
     setActionError(null);
-    const result = await window.api.downloadAppUpdate();
-    setActionBusy(false);
-    if (!result.ok) {
-      setActionError(result.error ?? "Could not download the YARK update");
-      return;
+    try {
+      const result = await window.api.downloadAppUpdate();
+      if (!result.ok) {
+        setActionError(result.error ?? "Could not download the YARK update");
+        return;
+      }
+      setStatus(result.data);
+    } finally {
+      setActionBusy(false);
     }
-    setStatus(result.data);
   };
 
   const runInstall = async () => {
     setActionBusy(true);
     setActionError(null);
-    const result = await window.api.installAppUpdate();
-    setActionBusy(false);
-    if (!result.ok) {
-      setActionError(result.error ?? "Could not install the YARK update");
-      return;
+    try {
+      const result = await window.api.installAppUpdate();
+      if (!result.ok) {
+        setActionError(result.error ?? "Could not install the YARK update");
+      }
+    } finally {
+      setActionBusy(false);
     }
   };
 

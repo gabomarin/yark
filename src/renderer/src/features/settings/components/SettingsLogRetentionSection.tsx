@@ -64,14 +64,17 @@ export function SettingsLogRetentionSection(): ReactElement {
     setBusy(true);
     setError(null);
     void (async () => {
-      const result = await window.api.setLogRetentionSettings(coerced);
-      setBusy(false);
-      if (!result.ok) {
-        setSettings(previous);
-        setError(result.error ?? "Could not update log retention settings");
-        return;
+      try {
+        const result = await window.api.setLogRetentionSettings(coerced);
+        if (!result.ok) {
+          setSettings(previous);
+          setError(result.error ?? "Could not update log retention settings");
+          return;
+        }
+        setSettings(result.data);
+      } finally {
+        setBusy(false);
       }
-      setSettings(result.data);
     })();
   };
 
@@ -85,14 +88,17 @@ export function SettingsLogRetentionSection(): ReactElement {
   const previewCleanup = async () => {
     setCleanupBusy(true);
     setError(null);
-    const result = await window.api.previewLogCleanup({});
-    setCleanupBusy(false);
-    if (!result.ok) {
-      setError(result.error ?? "Could not scan for cleanup");
-      setCleanupPreview(null);
-      return;
+    try {
+      const result = await window.api.previewLogCleanup({});
+      if (!result.ok) {
+        setError(result.error ?? "Could not scan for cleanup");
+        setCleanupPreview(null);
+        return;
+      }
+      setCleanupPreview(result.data);
+    } finally {
+      setCleanupBusy(false);
     }
-    setCleanupPreview(result.data);
   };
 
   const runCleanup = async () => {
@@ -104,23 +110,26 @@ export function SettingsLogRetentionSection(): ReactElement {
       serverId: item.serverId,
       targetKey: item.targetKey,
     }));
-    const result = await window.api.runLogCleanup({ confirmedTargets });
-    setCleanupBusy(false);
-    if (!result.ok) {
-      setError(result.error ?? "Could not run cleanup");
-      return;
+    try {
+      const result = await window.api.runLogCleanup({ confirmedTargets });
+      if (!result.ok) {
+        setError(result.error ?? "Could not run cleanup");
+        return;
+      }
+      setCleanupOpen(false);
+      setCleanupPreview(null);
+      const skipped = result.data.skipped.length;
+      const failed = result.data.failed.length;
+      const parts = [
+        `Removed ${result.data.deleted} item${result.data.deleted === 1 ? "" : "s"}`,
+        result.data.freedBytes > 0 ? `${result.data.freedBytes} bytes freed` : null,
+      ].filter((part): part is string => part !== null);
+      if (skipped > 0) parts.push(`${skipped} skipped`);
+      if (failed > 0) parts.push(`${failed} failed`);
+      setInfo(`Cleanup finished: ${parts.join(" · ")}.`);
+    } finally {
+      setCleanupBusy(false);
     }
-    setCleanupOpen(false);
-    setCleanupPreview(null);
-    const skipped = result.data.skipped.length;
-    const failed = result.data.failed.length;
-    const parts = [
-      `Removed ${result.data.deleted} item${result.data.deleted === 1 ? "" : "s"}`,
-      result.data.freedBytes > 0 ? `${result.data.freedBytes} bytes freed` : null,
-    ].filter((part): part is string => part !== null);
-    if (skipped > 0) parts.push(`${skipped} skipped`);
-    if (failed > 0) parts.push(`${failed} failed`);
-    setInfo(`Cleanup finished: ${parts.join(" · ")}.`);
   };
 
   return (
