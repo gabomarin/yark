@@ -44,6 +44,7 @@ const pageTitle = title;
     <link rel="icon" href={withBase("/favicon.ico")} sizes="any" />
     <link rel="icon" type="image/png" sizes="32x32" href={withBase("/favicon-32x32.png")} />
     <link rel="apple-touch-icon" href={withBase("/apple-touch-icon.png")} />
+    <slot name="head" />
   </head>
   <body>
     <div class="atmosphere" aria-hidden="true">

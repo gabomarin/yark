@@ -3,6 +3,20 @@ export type FaqItem = {
   answerHtml: string;
 };
 
+/** Strip tags/entities for FAQPage JSON-LD text answers. */
+export function faqAnswerPlainText(html: string): string {
+  return html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export const faqItems: FaqItem[] = [
   {
     question: "What is YARK?",

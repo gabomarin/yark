@@ -1,5 +1,6 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import sitemap from "@astrojs/sitemap";
 import { remarkBaseLinks } from "./src/plugins/remark-base-links.mjs";
 
 const siteBase = "/";
@@ -43,6 +44,7 @@ export default defineConfig({
       },
       customCss: ["./src/styles/starlight.css"],
       components: {
+        Head: "./src/components/starlight/Head.astro",
         ThemeProvider: "./src/components/starlight/ForceDarkTheme.astro",
         ThemeSelect: "./src/components/starlight/EmptyThemeSelect.astro",
         SiteTitle: "./src/components/starlight/SiteTitle.astro",
@@ -123,6 +125,14 @@ export default defineConfig({
           ],
         },
       ],
+    }),
+    sitemap({
+      serialize(item) {
+        return {
+          ...item,
+          lastmod: new Date(),
+        };
+      },
     }),
   ],
 });
