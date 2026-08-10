@@ -98,7 +98,7 @@ describe("ProcessManager real start (Windows)", () => {
     expect(String(tasklist.stdout)).toMatch(/ArkAscendedServer\.exe/i);
     expect(String(tasklist.stdout)).not.toMatch(/cmd\.exe/i);
 
-    manager.kill(profile.id);
+    await manager.kill(profile.id);
 
     const reachedStopped = await waitFor(
       () => manager.getStatus(profile.id).status === "stopped",

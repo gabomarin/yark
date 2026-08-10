@@ -1,5 +1,5 @@
-import { mkdir, rm, writeFile } from "node:fs/promises";
-import { execFileSync, spawn, type ChildProcess } from "node:child_process";
+import { mkdir, rm, writeFile, access } from "node:fs/promises";
+import { spawn, type ChildProcess } from "node:child_process";
 import { EventEmitter } from "node:events";
 import { dirname, join } from "node:path";
 import { existsSync, statSync } from "node:fs";
@@ -13,6 +13,8 @@ import { parseSteamCmdProgressLine } from "../../../shared/steamcmd-progress";
 import type { BackupService } from "../backups/backup-service";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { InstanceService } from "../instances/instance-service";
+import { killChildProcessTreeAsync } from "../../infra/process/kill-win-process-tree";
+import { execFileBounded } from "../../infra/process/exec-file-bounded";
 import type { ProcessManager } from "../../infra/process/process-manager";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
@@ -180,7 +182,7 @@ export class UpdateService extends EventEmitter {
 
   async installSteamCmd(): Promise<string> {
     this.appendSteamCmdConsole("Starting SteamCMD verification/installation...");
-    const existing = this.findSteamCmdExecutable();
+    const existing = await this.findSteamCmdExecutable();
     if (existing !== null) {
       this.appendSteamCmdConsole(`SteamCMD detected at: ${existing}`);
       await this.verifySteamCmdExecutable(existing);
@@ -264,7 +266,7 @@ export class UpdateService extends EventEmitter {
   }
 
   getSteamCmdStatus(): SteamCmdStatus {
-    const executablePath = this.findSteamCmdExecutable();
+    const executablePath = this.findSteamCmdExecutableCached();
     const active = this.activeSteamCmd;
     const queuedPending = this.queue.filter(
       (job) => job.status === "pending" || job.status === "retrying",
@@ -358,7 +360,7 @@ export class UpdateService extends EventEmitter {
     return true;
   }
 
-  cancelSteamCmd(): boolean {
+  async cancelSteamCmd(): Promise<boolean> {
     const hadWork =
       this.activeSteamCmd !== null
       || this.activeSyncChild !== null
@@ -383,12 +385,12 @@ export class UpdateService extends EventEmitter {
     if (this.activeSteamCmd !== null) {
       const child = this.activeSteamCmd.child;
       this.activeSteamCmd = null;
-      this.killProcessTree(child);
+      await this.killProcessTree(child);
     }
     if (this.activeSyncChild !== null) {
       const child = this.activeSyncChild;
       this.activeSyncChild = null;
-      this.killProcessTree(child);
+      await this.killProcessTree(child);
     }
 
     const jobs = this.queue.filter(
@@ -449,7 +451,7 @@ export class UpdateService extends EventEmitter {
 
   /** Resolves depot or ASA content cache next to the configured SteamCMD home. */
   resolveSteamCmdCachePath(kind: SteamCmdCacheKind): string {
-    const executablePath = this.findSteamCmdExecutable();
+    const executablePath = this.findSteamCmdExecutableCached();
     if (executablePath === null) {
       throw new Error("SteamCMD is not configured");
     }
@@ -1115,7 +1117,7 @@ export class UpdateService extends EventEmitter {
     serverId: string,
   ): Promise<CommandResult> {
     this.assertNotCancelled();
-    const steamcmdExe = this.resolveSteamCmdExecutable();
+    const steamcmdExe = await this.resolveSteamCmdExecutable();
     const steamCmdHome = resolveSteamCmdHome(steamcmdExe);
     const depotCacheDir = resolveDepotCacheDir(steamCmdHome);
     const contentCacheDir = resolveAsaContentCacheDir(steamCmdHome);
@@ -1457,8 +1459,8 @@ export class UpdateService extends EventEmitter {
     }
   }
 
-  private resolveSteamCmdExecutable(): string {
-    const discovered = this.findSteamCmdExecutable();
+  private async resolveSteamCmdExecutable(): Promise<string> {
+    const discovered = await this.findSteamCmdExecutable();
     if (discovered !== null) {
       this.persistSteamCmdPath(discovered);
       return discovered;
@@ -1467,14 +1469,24 @@ export class UpdateService extends EventEmitter {
     return "steamcmd.exe";
   }
 
-  private findSteamCmdExecutable(): string | null {
+  /** Candidate paths only — no `where.exe` (safe for status polls). */
+  private findSteamCmdExecutableCached(): string | null {
+    for (const candidate of this.steamCmdCandidatePaths()) {
+      if (candidate != null && candidate.trim().length > 0 && existsSync(candidate)) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
+  private steamCmdCandidatePaths(): Array<string | null | undefined> {
     const configured = this.settings.get("steamcmdPath");
     const envPath = process.env["STEAMCMD_PATH"];
     const programFilesX86 = process.env["ProgramFiles(x86)"] ?? "C:\\Program Files (x86)";
     const programFiles = process.env["ProgramFiles"] ?? "C:\\Program Files";
     const localAppData = process.env["LOCALAPPDATA"];
 
-    const candidates = [
+    return [
       configured,
       envPath,
       join(this.steamcmdDir, "steamcmd.exe"),
@@ -1487,26 +1499,42 @@ export class UpdateService extends EventEmitter {
         ? join(localAppData, "Programs", "steamcmd", "steamcmd.exe")
         : null,
     ];
+  }
 
-    for (const candidate of candidates) {
-      if (candidate != null && candidate.trim().length > 0 && existsSync(candidate)) {
+  private async findSteamCmdExecutable(): Promise<string | null> {
+    for (const candidate of this.steamCmdCandidatePaths()) {
+      if (candidate == null || candidate.trim().length === 0) {
+        continue;
+      }
+      try {
+        await access(candidate);
         return candidate;
+      } catch {
+        // try next candidate
       }
     }
 
     try {
-      const raw = execFileSync("where.exe", ["steamcmd.exe"], {
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "ignore"],
-        windowsHide: true,
-        timeout: 2_000,
-      });
-      const fromPath = raw
+      const { stdout } = await execFileBounded(
+        "where.exe",
+        ["steamcmd.exe"],
+        {
+          timeoutMs: 2_000,
+          maxBuffer: 64 * 1024,
+          windowsHide: true,
+        },
+      );
+      const lines = stdout
         .split(/\r?\n/)
         .map((line) => line.trim())
-        .find((line) => line.length > 0 && existsSync(line));
-      if (fromPath !== undefined) {
-        return fromPath;
+        .filter((line) => line.length > 0);
+      for (const line of lines) {
+        try {
+          await access(line);
+          return line;
+        } catch {
+          // try next PATH hit
+        }
       }
     } catch {
       // Best effort: if where.exe does not find steamcmd, continue without a detected path.
@@ -1809,21 +1837,8 @@ export class UpdateService extends EventEmitter {
     }
   }
 
-  private killProcessTree(child: ChildProcess): void {
-    const pid = child.pid;
-    if (pid !== undefined && process.platform === "win32") {
-      try {
-        execFileSync("taskkill.exe", ["/PID", String(pid), "/T", "/F"], {
-          windowsHide: true,
-          stdio: ["ignore", "ignore", "ignore"],
-          timeout: 5_000,
-        });
-        return;
-      } catch {
-        // Fall back to direct kill if taskkill fails.
-      }
-    }
-    child.kill();
+  private async killProcessTree(child: ChildProcess): Promise<void> {
+    await killChildProcessTreeAsync(child);
   }
 
   private loadQueue(): CriticalJob[] {

@@ -16,6 +16,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Electron main hot paths (fleet install inspect, crash reattach, stop/kill, SteamCMD discovery/cancel) use bounded async I/O instead of sync filesystem and child-process calls (#145).
 - Overview status heartbeat no longer re-fetches the server profile list; Logs fleet and workspace Backups quiet polls stop resetting UI from host refresh identity churn (#163).
 - Workspace tab crashes show a recoverable panel error instead of blanking the whole app shell (#209).
 

@@ -78,9 +78,9 @@ describe("ProcessManager.detachForLeave", () => {
     child.emit("spawn");
     expect(manager.isActive(profile.id)).toBe(true);
 
-    const records = manager.detachForLeave([profile], {
+    const records = await manager.detachForLeave([profile], {
       leftAt: "2026-07-31T15:00:00.000Z",
-      queryOsIdentity: (pid) => ({
+      queryOsIdentity: async (pid) => ({
         pid,
         executablePath: binary,
         commandLine: `${binary} -port=7777`,
@@ -136,11 +136,11 @@ describe("ProcessManager.detachForLeave", () => {
     manager.start(profile, { skipReadinessCheck: true });
     child.emit("spawn");
 
-    expect(() =>
+    await expect(
       manager.collectLeaveIdentities([profile], {
-        queryOsIdentity: () => null,
+        queryOsIdentity: async () => null,
       }),
-    ).toThrow(/process id is unavailable/i);
+    ).rejects.toThrow(/process id is unavailable/i);
     expect(manager.isActive(profile.id)).toBe(true);
   });
 
@@ -163,16 +163,16 @@ describe("ProcessManager.detachForLeave", () => {
     manager.start(profile, { skipReadinessCheck: true });
     child.emit("spawn");
 
-    expect(() =>
+    await expect(
       manager.collectLeaveIdentities([profile], {
-        queryOsIdentity: (pid) => ({
+        queryOsIdentity: async (pid) => ({
           pid,
           executablePath: join(binaryDir, "ArkAscendedServer.exe"),
           commandLine: "x",
           osCreationTime: null,
         }),
       }),
-    ).toThrow(/creation time/i);
+    ).rejects.toThrow(/creation time/i);
     expect(manager.isActive(profile.id)).toBe(true);
   });
 
@@ -196,8 +196,8 @@ describe("ProcessManager.detachForLeave", () => {
     manager.start(profile, { skipReadinessCheck: true });
     child.emit("spawn");
 
-    const records = manager.collectLeaveIdentities([profile], {
-      queryOsIdentity: (pid) => ({
+    const records = await manager.collectLeaveIdentities([profile], {
+      queryOsIdentity: async (pid) => ({
         pid,
         executablePath: binary,
         commandLine: `${binary} -port=7777`,
@@ -242,7 +242,7 @@ describe("ProcessManager crash-recovery checkpoints", () => {
     const child = fakeChild(4242);
     const manager = new ProcessManager({
       spawnProcess: () => child,
-      queryOsIdentity: (pid) => ({
+      queryOsIdentity: async (pid) => ({
         pid,
         executablePath: binary,
         commandLine: `${binary} -port=7777`,
@@ -259,7 +259,9 @@ describe("ProcessManager crash-recovery checkpoints", () => {
     manager.start(profile, { skipReadinessCheck: true });
     child.emit("spawn");
 
-    expect(checkpoints).toHaveLength(1);
+    await vi.waitFor(() => {
+      expect(checkpoints).toHaveLength(1);
+    });
     expect(checkpoints[0]).toMatchObject({
       schemaVersion: LEFT_RUNNING_SCHEMA_VERSION,
       serverId: profile.id,
@@ -288,7 +290,7 @@ describe("ProcessManager crash-recovery checkpoints", () => {
     const child = fakeChild(4243);
     const manager = new ProcessManager({
       spawnProcess: () => child,
-      queryOsIdentity: (pid) => ({
+      queryOsIdentity: async (pid) => ({
         pid,
         executablePath: binary,
         commandLine: `${binary} -port=7777`,
@@ -326,7 +328,7 @@ describe("ProcessManager crash-recovery checkpoints", () => {
       readyProbeMinWaitMs: 0,
       readySettleMs: 0,
       spawnProcess: () => child,
-      queryOsIdentity: (pid) => ({
+      queryOsIdentity: async (pid) => ({
         pid,
         executablePath: binary,
         commandLine: `${binary} -port=7777`,
@@ -361,7 +363,7 @@ describe("ProcessManager crash-recovery checkpoints", () => {
     const child = fakeChild(4245);
     const manager = new ProcessManager({
       spawnProcess: () => child,
-      queryOsIdentity: (pid) => ({
+      queryOsIdentity: async (pid) => ({
         pid,
         executablePath: binary,
         commandLine: `${binary} -port=7777`,
@@ -383,7 +385,7 @@ describe("ProcessManager crash-recovery checkpoints", () => {
     child.emit("spawn");
     // Write hook threw — process still managed.
     expect(manager.isActive(profile.id)).toBe(true);
-    manager.kill(profile.id);
+    await manager.kill(profile.id);
     // First clear threw; kill still removed the process. Exit may clear again.
     child.emit("exit", 1);
     expect(clearCalls).toBeGreaterThanOrEqual(1);

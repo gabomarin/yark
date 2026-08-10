@@ -181,7 +181,7 @@ function createWindow(settings: AppSettingsRepository): BrowserWindow {
 }
 
 if (gotSingleInstanceLock) {
-  void app.whenReady().then(() => {
+  void app.whenReady().then(async () => {
     const userData = app.getPath("userData");
     const dbPath = join(userData, "yark-server-manager.db");
     const db = openDatabase(dbPath);
@@ -275,7 +275,7 @@ if (gotSingleInstanceLock) {
     });
 
     // Before UI / auto-start: reclaim ASA left after crash / unexpected exit (#59).
-    const reattachOutcomes = reattachLeftRunningProcesses(
+    const reattachOutcomes = await reattachLeftRunningProcesses(
       settings,
       repo,
       processManager,
@@ -583,7 +583,7 @@ if (gotSingleInstanceLock) {
       }
       // Cancel pending SteamCMD/sync on quit (without requiring a live UI).
       try {
-        updateService.cancelSteamCmd();
+        void updateService.cancelSteamCmd();
       } catch {
         // Ignore: the app is shutting down.
       }

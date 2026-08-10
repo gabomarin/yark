@@ -349,6 +349,30 @@ describe("inspectServerInstallation", () => {
     }
   });
 
+  it("async inspect reads version and local steam build without sync FS", async () => {
+    const installDir = makeTmpDir();
+    try {
+      const binDir = join(installDir, "ShooterGame", "Binaries", "Win64");
+      mkdirSync(binDir, { recursive: true });
+      writeFileSync(join(binDir, "ArkAscendedServer.exe"), "fake-binary");
+      writeFileSync(join(binDir, "version.txt"), "v61.0\n");
+      mkdirSync(join(installDir, "steamapps"), { recursive: true });
+      writeFileSync(
+        join(installDir, "steamapps", "appmanifest_2430930.acf"),
+        '"AppState"\n{\n  "appid" "2430930"\n  "buildid" "1999"\n  "installdir" "asa"\n}',
+      );
+
+      const info = await inspectServerInstallationAsync("srv-async-ver", installDir, {
+        bypassCache: true,
+      });
+      expect(info.installed).toBe(true);
+      expect(info.build).toBe("v61.0");
+      expect(info.steamBuild).toBe("build 1999");
+    } finally {
+      rmSync(installDir, { recursive: true, force: true });
+    }
+  });
+
   it("async classify matches sync for foreign non-ASA contents", async () => {
     const installDir = makeTmpDir();
     try {

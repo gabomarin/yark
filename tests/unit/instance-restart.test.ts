@@ -315,7 +315,7 @@ describe("InstanceService.restart", () => {
 
     expect(service.isStopInProgress(profile.id)).toBe(true);
     expect(service.isStopInProgress()).toBe(true);
-    expect(() => service.kill(profile.id)).toThrow(/restart backup is in progress/);
+    await expect(service.kill(profile.id)).rejects.toThrow(/restart backup is in progress/);
     await expect(service.stop(profile.id)).rejects.toThrow(
       /restart is in progress/,
     );

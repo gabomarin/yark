@@ -260,7 +260,7 @@ describe("InstanceService.stop", () => {
     const second = service.stop(profile.id);
 
     expect(service.isStopInProgress(profile.id)).toBe(true);
-    expect(() => service.kill(profile.id)).toThrow(/disabled/i);
+    await expect(service.kill(profile.id)).rejects.toThrow(/disabled/i);
     expect(processes.kill).not.toHaveBeenCalled();
 
     finishBackup();
