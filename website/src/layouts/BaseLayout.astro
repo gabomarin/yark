@@ -5,6 +5,7 @@ import "@fontsource/ibm-plex-mono/500.css";
 import "../styles/global.css";
 import SiteNav from "../components/SiteNav.astro";
 import SeoHead from "../components/SeoHead.astro";
+import CloudflareAnalytics from "../components/CloudflareAnalytics.astro";
 import { site, withBase } from "../data/site";
 
 interface Props {
@@ -44,6 +45,7 @@ const pageTitle = title;
     <link rel="icon" href={withBase("/favicon.ico")} sizes="any" />
     <link rel="icon" type="image/png" sizes="32x32" href={withBase("/favicon-32x32.png")} />
     <link rel="apple-touch-icon" href={withBase("/apple-touch-icon.png")} />
+    <CloudflareAnalytics />
     <slot name="head" />
   </head>
   <body>

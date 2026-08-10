@@ -23,6 +23,7 @@ From repo root: `npm run website:dev` / `npm run website:build`.
 - Canonical `src/pages/404.astro` → `dist/404.html` (GitHub Pages); Starlight `disable404Route` avoids a duplicate `/404` warning (#149)
 - Download URL from root `package.json` version
 - SEO: canonical, Open Graph, Twitter, JSON-LD (SoftwareApplication, FAQPage, BreadcrumbList), `robots.txt`, sitemap with `lastmod`
+- Optional Cloudflare Web Analytics via `PUBLIC_CF_WEB_ANALYTICS_TOKEN` (see `docs/website.md`)
 
 ## Deploy
 

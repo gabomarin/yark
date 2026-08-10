@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Optional **Cloudflare Web Analytics** beacon on the public site (`PUBLIC_CF_WEB_ANALYTICS_TOKEN` at Pages build time).
+
 ### Fixed
 
 - Release CI no longer flakes on `execFileBounded` maxBuffer coverage: the test drives Node stdout overflow on all platforms instead of a slow PowerShell spawn on Windows runners.
