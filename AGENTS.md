@@ -33,6 +33,7 @@ Standard commands live in `package.json`, `README.md`, and `docs/agent-context.m
 Domain runbooks: [docs/backups.md](docs/backups.md), [docs/updates-steamcmd.md](docs/updates-steamcmd.md),
 [docs/logs.md](docs/logs.md), [docs/server-lifecycle.md](docs/server-lifecycle.md),
 [docs/rcon.md](docs/rcon.md), [docs/settings.md](docs/settings.md),
+[docs/profile-database.md](docs/profile-database.md),
 [docs/clusters.md](docs/clusters.md), [docs/website.md](docs/website.md),
 [docs/config-transfer.md](docs/config-transfer.md), [docs/github-actions.md](docs/github-actions.md),
 [docs/curseforge-proxy.md](docs/curseforge-proxy.md). UI composition for agents:
