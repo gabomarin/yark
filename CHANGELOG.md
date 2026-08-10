@@ -18,6 +18,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Workspace tab crashes show a recoverable panel error instead of blanking the whole app shell (#209).
 
+### Security
+
+- CurseForge proxy adds route-class IP rate limits, POST body/time bounds, GET response caching, privacy-safe request logs, and an abuse/secret-rotation runbook (#70).
+
 ## [0.8.1] - 2026-08-09
 
 ### Added

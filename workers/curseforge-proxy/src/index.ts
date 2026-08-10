@@ -3,9 +3,12 @@
  *
  * Returns a normalized YARK envelope suitable for caching / UI.
  * Never echoes the API key (or upstream auth headers) to clients.
+ *
+ * Abuse controls (#70): route-class IP rate limits, body/time bounds,
+ * Cache API for safe GETs, privacy-conscious structured logs.
  */
 
-import { resolveWorkerConfig, type Env } from "./config";
+import { resolveWorkerConfig, type Env, type RateLimiter } from "./config";
 
 export type { Env };
 
@@ -48,76 +51,209 @@ const MAX_UPSTREAM_REDIRECTS = 3;
 const MAX_BATCH_MOD_IDS = 50;
 const MAX_SEARCH_FILTER_LENGTH = 200;
 const MAX_SEARCH_PAGE_SIZE = 50;
+/** POST /v1/mods body cap (50 mod IDs is far smaller). */
+export const MAX_POST_BODY_BYTES = 16 * 1024;
+/** Bounded upstream execution time per hop chain. */
+export const UPSTREAM_TIMEOUT_MS = 10_000;
+/** Edge cache TTL for GET /v1/mods/:id. */
+const CACHE_TTL_READ_SECONDS = 600;
+/** Edge cache TTL for GET /v1/mods/search. */
+const CACHE_TTL_SEARCH_SECONDS = 60;
+/** Synthetic origin for Cache API keys (stable across workers.dev hostnames). */
+const CACHE_KEY_ORIGIN = "https://yark-curseforge-proxy.cache";
+/** Query params forwarded upstream and used for search cache keys (single-valued). */
+const SEARCH_FORWARD_PARAMS = [
+  "searchFilter",
+  "classId",
+  "categoryId",
+  "slug",
+  "sortField",
+  "sortOrder",
+  "index",
+  "pageSize",
+] as const;
 
 type CorsHeaders = Record<string, string>;
+type RouteClass = "health" | "search" | "read" | "batch" | "unknown";
+type CacheOutcome = "HIT" | "MISS" | "BYPASS";
+
+interface RequestMetrics {
+  routeClass: RouteClass;
+  method: string;
+  cache: CacheOutcome;
+  upstreamStatus: number | null;
+  rateLimited: boolean;
+}
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    const started = Date.now();
+    const metrics: RequestMetrics = {
+      routeClass: "unknown",
+      method: request.method,
+      cache: "BYPASS",
+      upstreamStatus: null,
+      rateLimited: false,
+    };
+
+    const respond = (response: Response): Response => {
+      logRequest(metrics, response.status, Date.now() - started);
+      return response;
+    };
+
     const config = resolveWorkerConfig(env);
     if ("error" in config) {
-      return errorJson(
-        {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Accept",
-        },
-        503,
-        "misconfigured",
-        config.error,
+      return respond(
+        errorJson(
+          {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Accept",
+          },
+          503,
+          "misconfigured",
+          config.error,
+        ),
       );
     }
 
     const { asaGameId, corsHeaders } = config;
 
     if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: corsHeaders });
+      return respond(new Response(null, { status: 204, headers: corsHeaders }));
     }
 
     const url = new URL(request.url);
     try {
-      if (request.method === "GET" && url.pathname === "/health") {
-        return okJson(corsHeaders, { service: "yark-curseforge-proxy" });
+      if (url.pathname === "/health") {
+        metrics.routeClass = "health";
+        if (request.method !== "GET") {
+          return respond(methodNotAllowed(corsHeaders, "GET"));
+        }
+        return respond(okJson(corsHeaders, { service: "yark-curseforge-proxy" }));
       }
 
       const apiKey = (env.CURSEFORGE_API_KEY ?? "").trim();
       if (apiKey.length === 0) {
-        return errorJson(
-          corsHeaders,
-          503,
-          "missing_api_key",
-          "CurseForge proxy is not configured. Set the Worker secret in Cloudflare.",
+        return respond(
+          errorJson(
+            corsHeaders,
+            503,
+            "missing_api_key",
+            "CurseForge proxy is not configured. Set the Worker secret in Cloudflare.",
+          ),
         );
       }
 
-      if (request.method === "GET" && url.pathname === "/v1/mods/search") {
-        return handleSearch(url, apiKey, asaGameId, corsHeaders);
+      if (url.pathname === "/v1/mods/search") {
+        metrics.routeClass = "search";
+        if (request.method !== "GET") {
+          return respond(methodNotAllowed(corsHeaders, "GET"));
+        }
+        const limited = await enforceRateLimit(
+          env.RATE_LIMIT_SEARCH,
+          request,
+          "search",
+          corsHeaders,
+          metrics,
+        );
+        if (limited !== null) return respond(limited);
+        return respond(
+          await handleSearch(url, apiKey, asaGameId, corsHeaders, metrics),
+        );
+      }
+
+      if (url.pathname === "/v1/mods") {
+        metrics.routeClass = "batch";
+        if (request.method !== "POST") {
+          return respond(methodNotAllowed(corsHeaders, "POST"));
+        }
+        const limited = await enforceRateLimit(
+          env.RATE_LIMIT_BATCH,
+          request,
+          "batch",
+          corsHeaders,
+          metrics,
+        );
+        if (limited !== null) return respond(limited);
+        return respond(
+          await handleGetMods(request, apiKey, asaGameId, corsHeaders, metrics),
+        );
       }
 
       const modMatch = /^\/v1\/mods\/(\d+)$/.exec(url.pathname);
-      if (request.method === "GET" && modMatch !== null) {
-        return handleGetMod(modMatch[1]!, apiKey, asaGameId, corsHeaders);
+      if (modMatch !== null) {
+        metrics.routeClass = "read";
+        if (request.method !== "GET") {
+          return respond(methodNotAllowed(corsHeaders, "GET"));
+        }
+        const limited = await enforceRateLimit(
+          env.RATE_LIMIT_READ,
+          request,
+          "read",
+          corsHeaders,
+          metrics,
+        );
+        if (limited !== null) return respond(limited);
+        return respond(
+          await handleGetMod(
+            modMatch[1]!,
+            apiKey,
+            asaGameId,
+            corsHeaders,
+            metrics,
+          ),
+        );
       }
 
-      if (request.method === "POST" && url.pathname === "/v1/mods") {
-        return handleGetMods(request, apiKey, asaGameId, corsHeaders);
-      }
-
-      return errorJson(corsHeaders, 404, "not_found", "Unknown route.");
+      return respond(errorJson(corsHeaders, 404, "not_found", "Unknown route."));
     } catch (cause) {
-      return errorJson(corsHeaders, 502, "proxy_error", sanitizeErrorMessage(cause));
+      return respond(
+        errorJson(corsHeaders, 502, "proxy_error", sanitizeErrorMessage(cause)),
+      );
     }
   },
 };
+
+async function enforceRateLimit(
+  limiter: RateLimiter | undefined,
+  request: Request,
+  routeClass: "search" | "read" | "batch",
+  corsHeaders: CorsHeaders,
+  metrics: RequestMetrics,
+): Promise<Response | null> {
+  if (limiter === undefined) return null;
+  const ip = request.headers.get("CF-Connecting-IP")?.trim() || "unknown";
+  const { success } = await limiter.limit({ key: `${routeClass}:${ip}` });
+  if (success) return null;
+  metrics.rateLimited = true;
+  return errorJson(
+    corsHeaders,
+    429,
+    "rate_limited",
+    "Too many requests. Try again in a moment.",
+  );
+}
 
 async function handleGetMod(
   modId: string,
   apiKey: string,
   asaGameId: number,
   corsHeaders: CorsHeaders,
+  metrics: RequestMetrics,
 ): Promise<Response> {
+  const cacheKeyUrl = `${CACHE_KEY_ORIGIN}/v1/mods/${modId}`;
+  const cached = await matchCachedResponse(cacheKeyUrl);
+  if (cached !== null) {
+    metrics.cache = "HIT";
+    return withCacheHeader(cached, "HIT", corsHeaders);
+  }
+
+  metrics.cache = "MISS";
   const upstream = await fetchUpstream(
     `${UPSTREAM}/v1/mods/${modId}`,
     { method: "GET", headers: upstreamHeaders(apiKey) },
+    metrics,
   );
   if (!upstream.ok) {
     return mapUpstreamError(corsHeaders, upstream.status, upstream.bodyText);
@@ -143,9 +279,11 @@ async function handleGetMod(
 
   // Descriptions are only needed for Maps-category map-token suggest (#195).
   const description = isMapsCategoryMod(rawMod)
-    ? await fetchModDescription(modId, apiKey)
+    ? await fetchModDescription(modId, apiKey, metrics)
     : null;
-  return okJson(corsHeaders, toYarkMod(rawMod, description));
+  const response = okJson(corsHeaders, toYarkMod(rawMod, description));
+  await putCachedResponse(cacheKeyUrl, response, CACHE_TTL_READ_SECONDS);
+  return withCacheHeader(response, "MISS", corsHeaders);
 }
 
 async function handleGetMods(
@@ -153,10 +291,15 @@ async function handleGetMods(
   apiKey: string,
   asaGameId: number,
   corsHeaders: CorsHeaders,
+  metrics: RequestMetrics,
 ): Promise<Response> {
+  metrics.cache = "BYPASS";
+  const bodyResult = await readJsonBody(request, corsHeaders);
+  if (!bodyResult.ok) return bodyResult.response;
+
   let modIds: number[];
   try {
-    const parsed = (await request.json()) as { modIds?: unknown };
+    const parsed = bodyResult.value as { modIds?: unknown };
     if (!Array.isArray(parsed.modIds)) {
       return errorJson(
         corsHeaders,
@@ -205,14 +348,18 @@ async function handleGetMods(
     });
   }
 
-  const upstream = await fetchUpstream(`${UPSTREAM}/v1/mods`, {
-    method: "POST",
-    headers: {
-      ...upstreamHeaders(apiKey),
-      "Content-Type": "application/json",
+  const upstream = await fetchUpstream(
+    `${UPSTREAM}/v1/mods`,
+    {
+      method: "POST",
+      headers: {
+        ...upstreamHeaders(apiKey),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ modIds }),
     },
-    body: JSON.stringify({ modIds }),
-  });
+    metrics,
+  );
   if (!upstream.ok) {
     return mapUpstreamError(corsHeaders, upstream.status, upstream.bodyText);
   }
@@ -245,7 +392,7 @@ async function handleGetMods(
   const descriptions = new Map<number, string | null>();
   await Promise.all(
     mapMods.map(async ({ id }) => {
-      descriptions.set(id, await fetchModDescription(String(id), apiKey));
+      descriptions.set(id, await fetchModDescription(String(id), apiKey, metrics));
     }),
   );
   const items: YarkModMetadata[] = asaMods.map(({ id, raw }) =>
@@ -260,10 +407,8 @@ async function handleSearch(
   apiKey: string,
   asaGameId: number,
   corsHeaders: CorsHeaders,
+  metrics: RequestMetrics,
 ): Promise<Response> {
-  const upstreamUrl = new URL(`${UPSTREAM}/v1/mods/search`);
-  upstreamUrl.searchParams.set("gameId", String(asaGameId));
-
   const searchFilter = clientUrl.searchParams.get("searchFilter");
   if (
     searchFilter !== null &&
@@ -307,26 +452,32 @@ async function handleSearch(
     }
   }
 
-  for (const key of [
-    "searchFilter",
-    "classId",
-    "categoryId",
-    "slug",
-    "sortField",
-    "sortOrder",
-    "index",
-    "pageSize",
-  ]) {
+  const cacheKeyUrl = buildSearchCacheKey(clientUrl);
+  const cached = await matchCachedResponse(cacheKeyUrl);
+  if (cached !== null) {
+    metrics.cache = "HIT";
+    return withCacheHeader(cached, "HIT", corsHeaders);
+  }
+
+  metrics.cache = "MISS";
+  const upstreamUrl = new URL(`${UPSTREAM}/v1/mods/search`);
+  upstreamUrl.searchParams.set("gameId", String(asaGameId));
+
+  for (const key of SEARCH_FORWARD_PARAMS) {
     const value = clientUrl.searchParams.get(key);
     if (value !== null && value.length > 0) {
       upstreamUrl.searchParams.set(key, value);
     }
   }
 
-  const upstream = await fetchUpstream(upstreamUrl.toString(), {
-    method: "GET",
-    headers: upstreamHeaders(apiKey),
-  });
+  const upstream = await fetchUpstream(
+    upstreamUrl.toString(),
+    {
+      method: "GET",
+      headers: upstreamHeaders(apiKey),
+    },
+    metrics,
+  );
   if (!upstream.ok) {
     return mapUpstreamError(corsHeaders, upstream.status, upstream.bodyText);
   }
@@ -340,20 +491,24 @@ async function handleSearch(
   }
 
   const pagination = extractPagination(upstream.json);
-  return okJson(corsHeaders, {
+  const response = okJson(corsHeaders, {
     items,
     pagination,
   });
+  await putCachedResponse(cacheKeyUrl, response, CACHE_TTL_SEARCH_SECONDS);
+  return withCacheHeader(response, "MISS", corsHeaders);
 }
 
 async function fetchModDescription(
   modId: string,
   apiKey: string,
+  metrics: RequestMetrics,
 ): Promise<string | null> {
   try {
     const upstream = await fetchUpstream(
       `${UPSTREAM}/v1/mods/${modId}/description?stripped=true`,
       { method: "GET", headers: upstreamHeaders(apiKey) },
+      metrics,
     );
     if (!upstream.ok) {
       return null;
@@ -499,10 +654,18 @@ function isAllowedUpstreamUrl(url: string): boolean {
 async function fetchUpstream(
   url: string,
   init: RequestInit,
+  metrics: RequestMetrics,
 ): Promise<{ ok: boolean; status: number; bodyText: string; json: unknown }> {
+  const timeoutSignal = AbortSignal.timeout(UPSTREAM_TIMEOUT_MS);
+  const signal =
+    init.signal === undefined || init.signal === null
+      ? timeoutSignal
+      : AbortSignal.any([init.signal, timeoutSignal]);
+
   let currentUrl = url;
   for (let hop = 0; hop <= MAX_UPSTREAM_REDIRECTS; hop += 1) {
     if (!isAllowedUpstreamUrl(currentUrl)) {
+      metrics.upstreamStatus = 502;
       return {
         ok: false,
         status: 502,
@@ -510,10 +673,29 @@ async function fetchUpstream(
         json: null,
       };
     }
-    const response = await fetch(currentUrl, { ...init, redirect: "manual" });
+    let response: Response;
+    try {
+      response = await fetch(currentUrl, {
+        ...init,
+        signal,
+        redirect: "manual",
+      });
+    } catch (cause) {
+      if (isAbortError(cause)) {
+        metrics.upstreamStatus = 504;
+        return {
+          ok: false,
+          status: 504,
+          bodyText: "Upstream request timed out.",
+          json: null,
+        };
+      }
+      throw cause;
+    }
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get("Location");
       if (location === null || location.length === 0) {
+        metrics.upstreamStatus = 502;
         return {
           ok: false,
           status: 502,
@@ -531,6 +713,7 @@ async function fetchUpstream(
     } catch {
       json = null;
     }
+    metrics.upstreamStatus = response.status;
     return {
       ok: response.ok,
       status: response.status,
@@ -538,6 +721,7 @@ async function fetchUpstream(
       json,
     };
   }
+  metrics.upstreamStatus = 502;
   return {
     ok: false,
     status: 502,
@@ -552,6 +736,14 @@ function mapUpstreamError(
   bodyText: string,
 ): Response {
   void bodyText;
+  if (status === 504) {
+    return errorJson(
+      corsHeaders,
+      504,
+      "upstream_timeout",
+      "CurseForge request timed out. Try again in a moment.",
+    );
+  }
   if (status === 401 || status === 403) {
     return errorJson(
       corsHeaders,
@@ -594,6 +786,175 @@ function upstreamHeaders(apiKey: string): HeadersInit {
   };
 }
 
+async function readJsonBody(
+  request: Request,
+  corsHeaders: CorsHeaders,
+): Promise<
+  { ok: true; value: unknown } | { ok: false; response: Response }
+> {
+  const contentLength = request.headers.get("Content-Length");
+  if (contentLength !== null && contentLength.length > 0) {
+    const length = Number(contentLength);
+    if (Number.isFinite(length) && length > MAX_POST_BODY_BYTES) {
+      return {
+        ok: false,
+        response: errorJson(
+          corsHeaders,
+          413,
+          "body_too_large",
+          `Request body may be at most ${MAX_POST_BODY_BYTES} bytes.`,
+        ),
+      };
+    }
+  }
+
+  let buffer: ArrayBuffer;
+  try {
+    buffer = await request.arrayBuffer();
+  } catch {
+    return {
+      ok: false,
+      response: errorJson(
+        corsHeaders,
+        400,
+        "invalid_body",
+        'Body must be JSON { "modIds": number[] }.',
+      ),
+    };
+  }
+
+  if (buffer.byteLength > MAX_POST_BODY_BYTES) {
+    return {
+      ok: false,
+      response: errorJson(
+        corsHeaders,
+        413,
+        "body_too_large",
+        `Request body may be at most ${MAX_POST_BODY_BYTES} bytes.`,
+      ),
+    };
+  }
+
+  try {
+    const text = new TextDecoder("utf-8").decode(buffer);
+    if (text.trim().length === 0) {
+      return {
+        ok: false,
+        response: errorJson(
+          corsHeaders,
+          400,
+          "invalid_body",
+          'Body must be JSON { "modIds": number[] }.',
+        ),
+      };
+    }
+    return { ok: true, value: JSON.parse(text) as unknown };
+  } catch {
+    return {
+      ok: false,
+      response: errorJson(
+        corsHeaders,
+        400,
+        "invalid_body",
+        'Body must be JSON { "modIds": number[] }.',
+      ),
+    };
+  }
+}
+
+function buildSearchCacheKey(clientUrl: URL): string {
+  // Same allow-listed, single-valued params as upstream forwarding — ignore junk
+  // query keys so callers cannot bust cache cardinality (#70 review).
+  const params = new URLSearchParams();
+  for (const key of [...SEARCH_FORWARD_PARAMS].sort()) {
+    const value = clientUrl.searchParams.get(key);
+    if (value !== null && value.length > 0) {
+      params.set(key, value);
+    }
+  }
+  const query = params.toString();
+  return query.length > 0
+    ? `${CACHE_KEY_ORIGIN}/v1/mods/search?${query}`
+    : `${CACHE_KEY_ORIGIN}/v1/mods/search`;
+}
+
+async function matchCachedResponse(cacheKeyUrl: string): Promise<Response | null> {
+  const cache = getEdgeCache();
+  if (cache === null) return null;
+  try {
+    const matched = await cache.match(new Request(cacheKeyUrl, { method: "GET" }));
+    return matched ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function putCachedResponse(
+  cacheKeyUrl: string,
+  response: Response,
+  ttlSeconds: number,
+): Promise<void> {
+  if (response.status !== 200) return;
+  const cache = getEdgeCache();
+  if (cache === null) return;
+  try {
+    const headers = new Headers(response.headers);
+    headers.set("Cache-Control", `public, max-age=${ttlSeconds}`);
+    const toStore = new Response(await response.clone().arrayBuffer(), {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+    await cache.put(new Request(cacheKeyUrl, { method: "GET" }), toStore);
+  } catch {
+    // Cache is best-effort; never fail the client response.
+  }
+}
+
+/** Workers expose `caches.default`; DOM `CacheStorage` typings omit it. */
+type WorkersCacheStorage = CacheStorage & { default: Cache };
+
+function getEdgeCache(): Cache | null {
+  try {
+    const cachesApi = (globalThis as unknown as { caches?: WorkersCacheStorage })
+      .caches;
+    if (cachesApi === undefined) return null;
+    return cachesApi.default;
+  } catch {
+    return null;
+  }
+}
+
+function withCacheHeader(
+  response: Response,
+  outcome: "HIT" | "MISS",
+  corsHeaders: CorsHeaders,
+): Response {
+  const headers = new Headers(response.headers);
+  for (const [key, value] of Object.entries(corsHeaders)) {
+    headers.set(key, value);
+  }
+  // Cache-Control on stored edge entries is for Cache API TTL only. Do not leak
+  // public max-age to clients (HIT would otherwise differ from MISS).
+  headers.delete("Cache-Control");
+  headers.delete("Expires");
+  headers.set("Cache-Control", "no-store");
+  headers.set("X-Yark-Cache", outcome);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+function methodNotAllowed(corsHeaders: CorsHeaders, allow: string): Response {
+  const headers = {
+    ...corsHeaders,
+    Allow: allow,
+  };
+  return errorJson(headers, 405, "method_not_allowed", `Use ${allow} for this route.`);
+}
+
 function okJson<T>(corsHeaders: CorsHeaders, data: T, status = 200): Response {
   const body: YarkApiSuccess<T> = { ok: true, data };
   return Response.json(body, { status, headers: corsHeaders });
@@ -615,11 +976,37 @@ function errorJson(
   return Response.json(body, { status, headers: corsHeaders });
 }
 
+function logRequest(
+  metrics: RequestMetrics,
+  status: number,
+  latencyMs: number,
+): void {
+  // Privacy: never log API keys, bearer tokens, searchFilter text, full IPs, or bodies.
+  console.log(
+    JSON.stringify({
+      service: "yark-curseforge-proxy",
+      routeClass: metrics.routeClass,
+      method: metrics.method,
+      status,
+      latencyMs,
+      cache: metrics.cache,
+      upstreamStatus: metrics.upstreamStatus,
+      rateLimited: metrics.rateLimited,
+    }),
+  );
+}
+
 function sanitizeErrorMessage(cause: unknown): string {
   if (cause instanceof Error) {
     return redactSecrets(cause.message) || "Proxy error";
   }
   return "Proxy error";
+}
+
+function isAbortError(cause: unknown): boolean {
+  if (cause === null || typeof cause !== "object") return false;
+  const name = (cause as { name?: unknown }).name;
+  return name === "AbortError" || name === "TimeoutError";
 }
 
 function redactSecrets(value: string): string {

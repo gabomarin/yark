@@ -4,16 +4,21 @@ Holds `CURSEFORGE_API_KEY` on Cloudflare and proxies the official CurseForge Cor
 API for Ark: Survival Ascended (`gameId` **83374**). The Electron app must call
 this Worker — never embed the API key in the client.
 
-Tracked by [#16](https://github.com/gabomarin/yark/issues/16).
+Tracked by [#16](https://github.com/gabomarin/yark/issues/16). Abuse controls,
+rate limits, caching, and the operator runbook: [#70](https://github.com/gabomarin/yark/issues/70)
+and [docs/curseforge-proxy.md](../../docs/curseforge-proxy.md).
 
 ## Routes
 
 | Method | Path | Notes |
 | --- | --- | --- |
 | `GET` | `/health` | Liveness; no secret required |
-| `GET` | `/v1/mods/:modId` | Single ASA mod (normalized) |
-| `POST` | `/v1/mods` | Body `{ "modIds": [number, ...] }` (maximum 50) → ASA-only items + skipped |
-| `GET` | `/v1/mods/search?...` | Forces `gameId=83374`; filters non-ASA; `pageSize` is limited to 50 |
+| `GET` | `/v1/mods/:modId` | Single ASA mod (normalized); edge-cached ~10 min |
+| `POST` | `/v1/mods` | Body `{ "modIds": [number, ...] }` (maximum 50, body ≤ 16 KiB) → ASA-only items + skipped |
+| `GET` | `/v1/mods/search?...` | Forces `gameId=83374`; filters non-ASA; `pageSize` ≤ 50; edge-cached ~60s |
+
+Wrong methods on known paths return `405`. Route-class IP rate limits return
+`429` / `rate_limited`. Successful GET responses include `X-Yark-Cache: HIT|MISS`.
 
 ## Response envelope
 
