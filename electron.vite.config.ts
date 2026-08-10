@@ -1,7 +1,37 @@
 import { defineConfig, externalizeDepsPlugin } from "electron-vite";
 import react from "@vitejs/plugin-react";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { readFileSync } from "node:fs";
+
+/**
+ * Load gitignored `.env` / `.env.local` into `process.env` for local/dev.
+ * Does not override vars already set in the shell (User env / CI). Cursor
+ * terminals often miss new User env vars until the IDE restarts (#151).
+ */
+function loadLocalEnvFiles(): void {
+  for (const name of [".env", ".env.local"] as const) {
+    const filePath = resolve(__dirname, name);
+    if (!existsSync(filePath)) continue;
+    for (const rawLine of readFileSync(filePath, "utf8").split(/\r?\n/)) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith("#")) continue;
+      const eq = line.indexOf("=");
+      if (eq <= 0) continue;
+      const key = line.slice(0, eq).trim();
+      if (!key || process.env[key] !== undefined) continue;
+      let value = line.slice(eq + 1).trim();
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      }
+      process.env[key] = value;
+    }
+  }
+}
+
+loadLocalEnvFiles();
 
 const packageJsonPath = resolve(__dirname, "package.json");
 const packageJsonRaw = readFileSync(packageJsonPath, "utf8");

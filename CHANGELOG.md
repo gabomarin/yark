@@ -9,6 +9,11 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Local Electron loads gitignored `.env` / `.env.local` for `YARK_CURSEFORGE_PROXY_URL` so CurseForge metadata works in `npm run dev` / `start` without relying on Windows User env inheritance (#151).
+- Corrupt or unopenable **profile database** shows a boot recovery dialog (open folder / quit / start empty). YARK does not repair the file; start empty quarantines it and continues with a blank DB. Open also uses a short lock wait and `quick_check` (#218).
+
 ### Changed
 
 - Launch and Mods profile saves use narrow `updateServerPatch` IPC with server-side merge and per-server write serialization so concurrent panel edits no longer last-write-wins (#209).
