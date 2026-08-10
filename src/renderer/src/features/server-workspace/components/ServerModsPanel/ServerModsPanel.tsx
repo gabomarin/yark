@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { Alert, SegmentedControl, Stack } from "@mantine/core";
+import { isMetadataServiceNotConfiguredMessage } from "@shared/curseforge-proxy-url";
 import type { ModMetadata, ModSearchPage, ServerProfile } from "@shared/types";
 import { prepareModAddApply, type ModAddImportProgress } from "@shared/mod-add-input";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -91,6 +92,10 @@ export function ServerModsPanel(props: Props): ReactElement {
     void window.api.getModsMetadata(missingIds).then((result) => {
       if (!alive) return;
       if (!result.ok) {
+        if (isMetadataServiceNotConfiguredMessage(result.error)) {
+          setWarning(result.error);
+          return;
+        }
         setError(result.error);
         return;
       }
@@ -291,7 +296,11 @@ export function ServerModsPanel(props: Props): ReactElement {
             className={classes.viewSelector}
           />
           {error !== null && (
-            <Alert color="red" withCloseButton onClose={() => setError(null)}>
+            <Alert
+              color={isMetadataServiceNotConfiguredMessage(error) ? "yellow" : "red"}
+              withCloseButton
+              onClose={() => setError(null)}
+            >
               {error}
             </Alert>
           )}

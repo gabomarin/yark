@@ -1,10 +1,13 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { MOCK_MOD_CATALOG } from "@backend/domains/mods/mock-mod-catalog";
 import {
-  DEFAULT_CURSEFORGE_PROXY_URL,
   ModsService,
   normalizeModId,
 } from "@backend/domains/mods/mods-service";
+import {
+  METADATA_SERVICE_NOT_CONFIGURED_MESSAGE,
+  normalizeCurseforgeProxyUrl,
+} from "@shared/curseforge-proxy-url";
 import type { ModMetadata, ServerProfileInput } from "@shared/types";
 
 const awesome: ModMetadata = {
@@ -40,6 +43,34 @@ function profileInput(mods: string[]): ServerProfileInput {
   };
 }
 
+afterEach(() => {
+  delete process.env.YARK_CURSEFORGE_PROXY_URL;
+});
+
+describe("normalizeCurseforgeProxyUrl", () => {
+  it("normalizes https URLs and strips trailing slashes", () => {
+    expect(normalizeCurseforgeProxyUrl("https://proxy.example/")).toBe(
+      "https://proxy.example",
+    );
+  });
+
+  it("allows loopback http only", () => {
+    expect(normalizeCurseforgeProxyUrl("http://127.0.0.1:8787")).toBe(
+      "http://127.0.0.1:8787",
+    );
+    expect(() => normalizeCurseforgeProxyUrl("http://example.com")).toThrow(/loopback/);
+  });
+
+  it("rejects credentials and query strings", () => {
+    expect(() =>
+      normalizeCurseforgeProxyUrl("https://user:pass@proxy.example"),
+    ).toThrow(/credentials/);
+    expect(() => normalizeCurseforgeProxyUrl("https://proxy.example?x=1")).toThrow(
+      /query/,
+    );
+  });
+});
+
 describe("ModsService (mock catalog)", () => {
   const service = new ModsService({ useMockCatalog: true });
 
@@ -67,8 +98,8 @@ describe("ModsService (mock catalog)", () => {
     expect(list[0]?.name).toBe(MOCK_MOD_CATALOG["929420"]!.name);
   });
 
-  it("defaults to the deployed Worker URL", () => {
-    expect(new ModsService().getBaseUrl()).toBe(DEFAULT_CURSEFORGE_PROXY_URL);
+  it("has no official Worker URL as a source fallback", () => {
+    expect(new ModsService({ buildDefaultUrl: "" }).getBaseUrl()).toBeNull();
   });
 
   it("searches the mock catalog", async () => {
@@ -79,6 +110,30 @@ describe("ModsService (mock catalog)", () => {
   it("resolves a known catalog slug", async () => {
     const meta = await service.getByReference("cryopods");
     expect(meta.id).toBe("928793");
+  });
+});
+
+describe("ModsService proxy URL precedence (#151)", () => {
+  it("prefers env over build", () => {
+    process.env.YARK_CURSEFORGE_PROXY_URL = "https://env.example/";
+    const service = new ModsService({
+      buildDefaultUrl: "https://build.example",
+    });
+    expect(service.getBaseUrl()).toBe("https://env.example");
+  });
+
+  it("uses build default when env is empty", () => {
+    const service = new ModsService({
+      buildDefaultUrl: "https://build.example/",
+    });
+    expect(service.getBaseUrl()).toBe("https://build.example");
+  });
+
+  it("fails closed when no endpoint is configured", async () => {
+    const service = new ModsService({ buildDefaultUrl: "" });
+    await expect(service.getMod("947033")).rejects.toThrow(
+      METADATA_SERVICE_NOT_CONFIGURED_MESSAGE,
+    );
   });
 });
 
@@ -95,6 +150,7 @@ describe("ModsService (Worker client)", () => {
       }) as Response,
     );
     const service = new ModsService({
+      buildDefaultUrl: "",
       baseUrl: "https://proxy.test",
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
@@ -110,6 +166,7 @@ describe("ModsService (Worker client)", () => {
 
   it("surfaces Worker error messages", async () => {
     const service = new ModsService({
+      buildDefaultUrl: "",
       baseUrl: "https://proxy.test",
       fetchImpl: (async () =>
         ({
@@ -139,6 +196,7 @@ describe("ModsService (Worker client)", () => {
       }) as Response,
     );
     const service = new ModsService({
+      buildDefaultUrl: "",
       baseUrl: "https://proxy.test",
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
@@ -167,6 +225,7 @@ describe("ModsService (Worker client)", () => {
       }) as Response,
     );
     const service = new ModsService({
+      buildDefaultUrl: "",
       baseUrl: "https://proxy.test",
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
@@ -192,6 +251,7 @@ describe("ModsService.enrichNewServerMods", () => {
       }) as Response,
     );
     const service = new ModsService({
+      buildDefaultUrl: "",
       baseUrl: "https://proxy.test",
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
@@ -214,6 +274,7 @@ describe("ModsService.enrichNewServerMods", () => {
 
   it("rejects a new ID the Worker cannot resolve", async () => {
     const service = new ModsService({
+      buildDefaultUrl: "",
       baseUrl: "https://proxy.test",
       fetchImpl: (async () =>
         ({
@@ -233,6 +294,7 @@ describe("ModsService.enrichNewServerMods", () => {
   it("preserves IDs already stored on the profile without re-fetch", async () => {
     const fetchImpl = vi.fn();
     const service = new ModsService({
+      buildDefaultUrl: "",
       baseUrl: "https://proxy.test",
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });

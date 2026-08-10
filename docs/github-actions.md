@@ -19,6 +19,11 @@ Release runs only when `github.repository == 'gabomarin/yark'` (tag push or
 `workflow_dispatch`). It does not run on pull requests, so fork PRs cannot publish
 releases or consume release write tokens.
 
+Official Windows packages require repository variable
+`YARK_CURSEFORGE_PROXY_URL` (baked into main at build time; see
+[curseforge-proxy.md](curseforge-proxy.md)). The package job fails if that variable
+is empty.
+
 ## Pin format
 
 Put the human-readable version on the **same line** as the SHA. Dependabot uses that

@@ -87,6 +87,24 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Require official CurseForge proxy URL
+        shell: bash
+        env:
+          YARK_CURSEFORGE_PROXY_URL: ${{ vars.YARK_CURSEFORGE_PROXY_URL }}
+        run: |
+          if [ -z "${YARK_CURSEFORGE_PROXY_URL}" ]; then
+            echo "::error::Repository variable YARK_CURSEFORGE_PROXY_URL is empty. Official releases must bake a CurseForge proxy base URL (see docs/curseforge-proxy.md)."
+            exit 1
+          fi
+          case "$YARK_CURSEFORGE_PROXY_URL" in
+            https://*) ;;
+            *)
+              echo "::error::YARK_CURSEFORGE_PROXY_URL must be an https:// base URL (got: $YARK_CURSEFORGE_PROXY_URL)"
+              exit 1
+              ;;
+          esac
+          echo "Official CurseForge proxy URL is set for this release build."
+
       - name: Package Windows installer
         # softprops/action-gh-release uploads artifacts; do not let electron-builder
         # auto-publish (it requires GH_TOKEN and races the Release step).
@@ -95,6 +113,8 @@ jobs:
           # No Authenticode cert in CI yet — skip auto-discovery so the build
           # does not fail looking for a signing identity.
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
+          # Baked into main via electron-vite define (#151).
+          YARK_CURSEFORGE_PROXY_URL: ${{ vars.YARK_CURSEFORGE_PROXY_URL }}
 
       - name: Upload build artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
