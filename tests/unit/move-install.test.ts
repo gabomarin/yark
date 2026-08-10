@@ -74,6 +74,7 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
 function harness(
   initialProfiles: ServerProfile[],
   stagingRegistryPath: string | null = null,
+  pendingCleanupRegistryPath: string | null = null,
 ) {
   let profiles = initialProfiles;
   const repo = {
@@ -119,6 +120,7 @@ function harness(
     backups,
     locks,
     stagingRegistryPath,
+    pendingCleanupRegistryPath,
   );
   return { instances, move, repo, processes, backups, getProfiles: () => profiles };
 }
@@ -287,12 +289,119 @@ describe("MoveInstallService", () => {
   });
 
   it("refuses cleanup while the profile still points at the old path", async () => {
-    const source = profile({ installDir: "C:\\ARK\\Island" });
-    const { move } = harness([source]);
+    const root = await mkdtemp(join(tmpdir(), "yark-move-cleanup-points-"));
+    const pendingPath = join(root, "pending-cleanup.json");
+    const oldDir = join(root, "Island");
+    await mkdir(oldDir, { recursive: true });
+    await writeFile(
+      pendingPath,
+      `${JSON.stringify({ byServerId: { "srv-1": oldDir } }, null, 2)}\n`,
+      "utf8",
+    );
+    const source = profile({ installDir: oldDir });
+    const { move } = harness([source], null, pendingPath);
 
-    await expect(
-      move.cleanupOldSource(source.id, "C:\\ARK\\Island"),
-    ).rejects.toThrow(/still points at it/);
+    await expect(move.cleanupOldSource(source.id, oldDir)).rejects.toThrow(
+      /still points at it/,
+    );
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it("binds cleanup deletes to the main-recorded prior path (#215)", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-move-cleanup-bind-"));
+    const pendingPath = join(root, "pending-cleanup.json");
+    const oldDir = join(root, "old-Island");
+    const otherDir = join(root, "unrelated");
+    const newDir = join(root, "new-Island");
+    await mkdir(oldDir, { recursive: true });
+    await writeFile(join(oldDir, "keep-me.txt"), "data", "utf8");
+    await mkdir(otherDir, { recursive: true });
+    await writeFile(join(otherDir, "do-not-delete.txt"), "safe", "utf8");
+    await writeFile(
+      pendingPath,
+      `${JSON.stringify({ byServerId: { "srv-1": oldDir } }, null, 2)}\n`,
+      "utf8",
+    );
+
+    const source = profile({ installDir: newDir });
+    const { move } = harness([source], null, pendingPath);
+
+    await expect(move.cleanupOldSource(source.id, otherDir)).rejects.toThrow(
+      /does not match the previous installation recorded/,
+    );
+    await access(join(otherDir, "do-not-delete.txt"));
+    await access(join(oldDir, "keep-me.txt"));
+
+    await expect(move.cleanupOldSource(source.id, `${oldDir}\\`)).resolves.toBeUndefined();
+    await expect(access(oldDir)).rejects.toThrow();
+
+    const pendingRaw = await readFile(pendingPath, "utf8");
+    expect(JSON.parse(pendingRaw)).toEqual({ byServerId: {} });
+
+    await expect(move.cleanupOldSource(source.id, oldDir)).rejects.toThrow(
+      /No pending install cleanup/,
+    );
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it("clears pending cleanup on dismiss without deleting files (#215)", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-move-cleanup-dismiss-"));
+    const pendingPath = join(root, "pending-cleanup.json");
+    const oldDir = join(root, "old-Island");
+    await mkdir(oldDir, { recursive: true });
+    await writeFile(join(oldDir, "keep-me.txt"), "data", "utf8");
+    await writeFile(
+      pendingPath,
+      `${JSON.stringify({ byServerId: { "srv-1": oldDir } }, null, 2)}\n`,
+      "utf8",
+    );
+
+    const source = profile({ installDir: join(root, "new-Island") });
+    const { move } = harness([source], null, pendingPath);
+
+    await move.dismissCleanupPrompt(source.id);
+    await access(join(oldDir, "keep-me.txt"));
+    await expect(move.cleanupOldSource(source.id, oldDir)).rejects.toThrow(
+      /No pending install cleanup/,
+    );
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it("keeps an older pending leftover when a later move auto-deletes successfully (#215)", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-move-cleanup-preserve-"));
+    const pendingPath = join(root, "pending-cleanup.json");
+    const leftoverA = join(root, "leftover-A");
+    const sourceB = join(root, "source-B");
+    const destC = join(root, "dest-C");
+    await mkdir(leftoverA, { recursive: true });
+    await writeFile(join(leftoverA, "keep-me.txt"), "old", "utf8");
+    await makeReadyInstall(sourceB);
+    await writeFile(
+      pendingPath,
+      `${JSON.stringify({ byServerId: { "srv-1": leftoverA } }, null, 2)}\n`,
+      "utf8",
+    );
+
+    const source = profile({ installDir: sourceB });
+    const { move, getProfiles } = harness([source], null, pendingPath);
+
+    const result = await move.moveInstall(source.id, destC);
+    expect(result.oldSourceRemoved).toBe(true);
+    expect(getProfiles()[0]?.installDir).toBe(destC);
+
+    const pendingRaw = await readFile(pendingPath, "utf8");
+    expect(JSON.parse(pendingRaw)).toEqual({
+      byServerId: { "srv-1": leftoverA },
+    });
+    await access(join(leftoverA, "keep-me.txt"));
+
+    await expect(move.cleanupOldSource(source.id, leftoverA)).resolves.toBeUndefined();
+    await expect(access(leftoverA)).rejects.toThrow();
+
+    await rm(root, { recursive: true, force: true });
   });
 
   it("cleans up a leftover staging marker directory", async () => {

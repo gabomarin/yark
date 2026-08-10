@@ -62,6 +62,9 @@ const MAX_SIZE_WALK_ENTRIES = 250_000;
 /** Persisted absolute staging paths awaiting sweep after interrupted moves. */
 const STAGING_REGISTRY_KEY = "paths";
 
+/** Persisted prior install paths awaiting operator cleanup after a successful move (#215). */
+const PENDING_CLEANUP_REGISTRY_KEY = "byServerId";
+
 export interface MoveInstallResult {
   serverId: string;
   sourceDir: string;
@@ -182,6 +185,11 @@ export class MoveInstallService extends EventEmitter {
      * leftovers under destination parents that are not profile install parents.
      */
     private readonly stagingRegistryPath: string | null = null,
+    /**
+     * Optional JSON registry of per-server prior install paths awaiting cleanup
+     * after a successful move (#215). Cleanup IPC may only wipe a recorded path.
+     */
+    private readonly pendingCleanupRegistryPath: string | null = null,
   ) {
     super();
   }
@@ -617,6 +625,20 @@ export class MoveInstallService extends EventEmitter {
           cleanupError,
         };
 
+        if (oldSourceRemoved) {
+          // Only drop a pending leftover if we just removed that same path.
+          // A later successful move must not erase an older unbound leftover (#215).
+          const pending = await this.getPendingCleanup(serverId);
+          if (
+            pending === null
+            || installDirKey(pending) === installDirKey(sourceDir)
+          ) {
+            await this.clearPendingCleanup(serverId);
+          }
+        } else {
+          await this.setPendingCleanup(serverId, sourceDir);
+        }
+
         this.emitProgress({
           serverId,
           active: false,
@@ -701,7 +723,8 @@ export class MoveInstallService extends EventEmitter {
 
   /**
    * Deletes the old source tree after a successful move.
-   * Requires the profile to no longer reference `oldSourceDir`.
+   * Requires a main-process-recorded prior path for this server (#215) and that
+   * the profile no longer reference that path.
    */
   async cleanupOldSource(
     serverId: string,
@@ -715,9 +738,22 @@ export class MoveInstallService extends EventEmitter {
       throw new Error("Stop the server before cleaning up the old installation");
     }
 
-    const oldSourceDir = assertSafeInstallDirForWipe(
+    const requestedDir = assertSafeInstallDirForWipe(
       normalizeWindowsPath(oldSourceDirRaw),
     );
+    const recordedDir = await this.getPendingCleanup(serverId);
+    if (recordedDir === null) {
+      throw new Error(
+        "No pending install cleanup for this server. The previous folder may already have been removed or dismissed.",
+      );
+    }
+    if (installDirKey(recordedDir) !== installDirKey(requestedDir)) {
+      throw new Error(
+        "Cleanup path does not match the previous installation recorded for this server.",
+      );
+    }
+    // Wipe only the main-recorded path (renderer value is for equality only).
+    const oldSourceDir = recordedDir;
 
     this.emitProgress({
       serverId,
@@ -739,6 +775,7 @@ export class MoveInstallService extends EventEmitter {
           alreadyLocked: true,
         });
       });
+      await this.clearPendingCleanup(serverId);
       this.clearAwaitingCleanup(serverId);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -773,7 +810,8 @@ export class MoveInstallService extends EventEmitter {
   }
 
   /** Dismiss the post-move cleanup prompt without deleting files. */
-  dismissCleanupPrompt(serverId: string): void {
+  async dismissCleanupPrompt(serverId: string): Promise<void> {
+    await this.clearPendingCleanup(serverId);
     this.clearAwaitingCleanup(serverId);
   }
 
@@ -924,6 +962,81 @@ export class MoveInstallService extends EventEmitter {
       }
       this.activeChild = null;
     }
+  }
+
+  private async readPendingCleanupRegistry(): Promise<Record<string, string>> {
+    if (this.pendingCleanupRegistryPath === null) {
+      return {};
+    }
+    try {
+      const raw = await readFile(this.pendingCleanupRegistryPath, "utf8");
+      const parsed = JSON.parse(raw) as {
+        [PENDING_CLEANUP_REGISTRY_KEY]?: unknown;
+      };
+      const byServerId = parsed[PENDING_CLEANUP_REGISTRY_KEY];
+      if (
+        byServerId === null
+        || typeof byServerId !== "object"
+        || Array.isArray(byServerId)
+      ) {
+        return {};
+      }
+      const result: Record<string, string> = {};
+      for (const [serverId, pathValue] of Object.entries(byServerId)) {
+        if (typeof pathValue === "string" && pathValue.trim().length > 0) {
+          result[serverId] = resolve(pathValue);
+        }
+      }
+      return result;
+    } catch {
+      return {};
+    }
+  }
+
+  private async writePendingCleanupRegistry(
+    byServerId: Record<string, string>,
+  ): Promise<void> {
+    if (this.pendingCleanupRegistryPath === null) {
+      return;
+    }
+    await this.ensureParentDirectory(this.pendingCleanupRegistryPath);
+    await writeFile(
+      this.pendingCleanupRegistryPath,
+      `${JSON.stringify({ [PENDING_CLEANUP_REGISTRY_KEY]: byServerId }, null, 2)}\n`,
+      "utf8",
+    );
+  }
+
+  private async getPendingCleanup(serverId: string): Promise<string | null> {
+    const registry = await this.readPendingCleanupRegistry();
+    const pathValue = registry[serverId];
+    return typeof pathValue === "string" && pathValue.length > 0
+      ? pathValue
+      : null;
+  }
+
+  private async setPendingCleanup(
+    serverId: string,
+    oldSourceDir: string,
+  ): Promise<void> {
+    if (this.pendingCleanupRegistryPath === null) {
+      return;
+    }
+    const registry = await this.readPendingCleanupRegistry();
+    registry[serverId] = resolve(normalizeWindowsPath(oldSourceDir));
+    await this.writePendingCleanupRegistry(registry);
+  }
+
+  private async clearPendingCleanup(serverId: string): Promise<void> {
+    if (this.pendingCleanupRegistryPath === null) {
+      return;
+    }
+    const registry = await this.readPendingCleanupRegistry();
+    if (!(serverId in registry)) {
+      return;
+    }
+    delete registry[serverId];
+    await this.writePendingCleanupRegistry(registry);
   }
 
   private async readStagingRegistry(): Promise<string[]> {

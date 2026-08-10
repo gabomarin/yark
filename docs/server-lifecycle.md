@@ -198,6 +198,12 @@ updates cannot change it; only `InstanceService.setServerEnabled` may do so.
   `push:move-install-progress`. Interrupted temp dirs are recorded and swept on
   app start (including destination parents that are not profile parents).
   Failures before commit never leave the profile on an unverified destination.
+  If deleting the previous folder fails, main records that prior path
+  (`move-install-pending-cleanup.json`); `servers:move-install-cleanup` may only
+  wipe that recorded path for that server (#215) — renderer-supplied mismatches
+  are rejected with no filesystem side effects. A later successful move clears
+  pending only when it removed that same recorded path, so an older leftover is
+  not dropped from the registry.
 
 **Start** (`InstanceService.start`):
 
