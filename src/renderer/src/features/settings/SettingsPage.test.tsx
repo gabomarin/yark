@@ -373,6 +373,28 @@ describe("SettingsPage", () => {
     expect(screen.queryByRole("button", { name: /^Scan$/i })).not.toBeInTheDocument();
   });
 
+  it("rolls back log retention when the IPC call rejects", async () => {
+    const user = userEvent.setup();
+    const setLogRetentionSettings = vi
+      .fn()
+      .mockRejectedValue(new Error("Settings transport unavailable"));
+    stubSettingsApi({ setLogRetentionSettings });
+
+    renderSettings();
+
+    const autoCleanup = await screen.findByRole("switch", {
+      name: "Clean up logs automatically",
+    });
+    const initialChecked = (autoCleanup as HTMLInputElement).checked;
+    await user.click(autoCleanup);
+
+    await waitFor(() => {
+      expect(screen.getByText("Settings transport unavailable")).toBeInTheDocument();
+      expect((autoCleanup as HTMLInputElement).checked).toBe(initialChecked);
+      expect(autoCleanup).toBeEnabled();
+    });
+  });
+
   it("checks for YARK updates and shows an available status", async () => {
     const user = userEvent.setup();
     const checkForAppUpdate = vi.fn().mockResolvedValue({
@@ -402,6 +424,28 @@ describe("SettingsPage", () => {
     await waitFor(() => {
       expect(checkForAppUpdate).toHaveBeenCalled();
       expect(screen.getByText(/Update available · v0\.2\.0/i)).toBeInTheDocument();
+    });
+  });
+
+  it("leaves checking state when the update IPC call rejects", async () => {
+    const user = userEvent.setup();
+    const checkForAppUpdate = vi
+      .fn()
+      .mockRejectedValue(new Error("Update transport unavailable"));
+    stubSettingsApi({ checkForAppUpdate });
+
+    renderSettings();
+
+    await waitFor(() => {
+      expect(window.api.getAppUpdateStatus).toHaveBeenCalled();
+    });
+    const checkButton = screen.getByRole("button", { name: /Check now/i });
+    await user.click(checkButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/v0\.1\.0 · Check failed/i)).toBeInTheDocument();
+      expect(screen.getByText("Update transport unavailable")).toBeInTheDocument();
+      expect(checkButton).toBeEnabled();
     });
   });
 });

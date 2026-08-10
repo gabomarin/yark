@@ -1,0 +1,72 @@
+---
+/**
+ * Starlight Head override — inject BreadcrumbList JSON-LD for docs routes.
+ */
+import Default from "@astrojs/starlight/components/Head.astro";
+import { siteOrigin } from "../../data/site";
+
+function humanizeSegment(segment: string): string {
+  return segment
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+const pageTitle =
+  typeof Astro.props.entry?.data?.title === "string"
+    ? Astro.props.entry.data.title
+    : undefined;
+
+const pathname = Astro.url.pathname.replace(/\/+$/, "") || "/";
+const segments = pathname.split("/").filter(Boolean);
+
+const crumbLabels: Record<string, string> = {
+  docs: "Docs",
+};
+
+const items: Array<{
+  "@type": "ListItem";
+  position: number;
+  name: string;
+  item: string;
+}> = [
+  {
+    "@type": "ListItem",
+    position: 1,
+    name: "Home",
+    item: `${siteOrigin}/`,
+  },
+];
+
+let cumulative = "";
+for (let i = 0; i < segments.length; i++) {
+  const segment = segments[i]!;
+  cumulative += `/${segment}`;
+  const isLast = i === segments.length - 1;
+  const name = isLast
+    ? (pageTitle ?? humanizeSegment(segment))
+    : (crumbLabels[segment] ?? humanizeSegment(segment));
+  items.push({
+    "@type": "ListItem",
+    position: i + 2,
+    name,
+    item: `${siteOrigin}${cumulative}/`,
+  });
+}
+
+const breadcrumbJsonLd =
+  items.length > 1
+    ? {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: items,
+      }
+    : null;
+---
+
+<Default {...Astro.props} />
+{
+  breadcrumbJsonLd && (
+    <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd)} />
+  )
+}

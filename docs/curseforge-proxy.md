@@ -152,6 +152,20 @@ The Electron client never accepts a CurseForge API key.
 3. Local/`npm run build` without that env leaves an empty bake (fail closed unless
    runtime `YARK_CURSEFORGE_PROXY_URL` is set).
 
+### Local / Cursor development
+
+Windows User env vars are easy to miss: terminals inside Cursor inherit the IDE’s
+environment from when Cursor started, so a newly set User variable may not appear
+until you fully quit and reopen Cursor (or set the var in that shell).
+
+Preferred local setup:
+
+1. Copy [`.env.example`](../.env.example) → `.env.local` (gitignored).
+2. Set `YARK_CURSEFORGE_PROXY_URL` to your Worker base URL (same value as the
+   Actions variable is fine).
+3. Restart `npm run dev` or `npm run start` — `electron.vite.config.ts` loads
+   `.env` / `.env.local` into `process.env` before bake and before Electron starts.
+
 ### Migration and retirement (operator)
 
 Keep the legacy Worker that **0.5.1** embeds while older installs remain in use.

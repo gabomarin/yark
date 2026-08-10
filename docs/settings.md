@@ -99,6 +99,14 @@ Full SteamCMD workflows: [updates-steamcmd.md](updates-steamcmd.md).
 Collapsed list with Open actions for App data, Backups, Update logs, and Bundled
 SteamCMD under Electron `userData`.
 
+The profile SQLite file is `yark-server-manager.db` under App data. On open,
+YARK sets `busy_timeout` (5s) so a brief lock does not fail boot immediately.
+If the database cannot open or migrate, boot shows a recovery dialog instead of
+a blank window: **Open folder**, **Quit**, or **Start empty…** (YARK does not
+repair the file; choosing Start empty renames the broken DB + WAL/SHM as
+`*.corrupt.<timestamp>` and continues with a blank DB). ASA installs on disk are
+not deleted. See [profile-database.md](profile-database.md) (#218).
+
 ### Log retention (#84)
 
 | Control | Storage | Default | Notes |
@@ -176,6 +184,7 @@ silent outside Settings status text.
 | `tests/unit/ui-density-pref.test.ts` | Load / write / legacy migration |
 | `tests/unit/app-settings-ui-density.test.ts` | SQLite round-trip |
 | `tests/unit/desktop-shell-settings.test.ts` | Tray / Windows prefs persist |
+| `tests/unit/database-boot-recovery.test.ts` | Corrupt DB open/migrate errors, quarantine, recovery loop |
 | `tests/unit/auto-start.test.ts` | Launch skip/start behavior |
 | `scripts/visual-settings.cjs` | Packaged Settings visual review |
 

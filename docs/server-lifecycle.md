@@ -378,6 +378,31 @@ using each peer’s **runtime** ports (session overrides included).
 Hot profile updates while running are allowed; ports/map take effect after the
 next restart.
 
+## Main-process I/O (#145)
+
+Interactive fleet/start/stop/update paths must not use unbounded `*Sync`
+filesystem or child-process APIs. Shared helper:
+`src/backend/infra/process/exec-file-bounded.ts` (timeout + `maxBuffer`).
+
+| Path | Behavior |
+|------|----------|
+| Install inspect (fleet / start) | `inspectServerInstallationAsync` — promise FS; opt-in PowerShell VersionInfo / log tails via `execFileBounded` |
+| Crash reattach / checkpoints | `queryWindowsProcessIdentity` async PowerShell |
+| Stop / kill / SteamCMD cancel / move cancel | `killWinProcessTreeAsync` (`taskkill` bounded) |
+| SteamCMD discovery | Candidate `access` + bounded `where.exe` (status polls skip `where`) |
+
+Local Windows sample (2026-08-10, `node scripts/bench-main-hot-paths.cjs`):
+
+| Probe | p50 | p95 |
+|-------|-----|-----|
+| Async FS install probe (version + manifest) | ~1.0 ms | ~1.4 ms |
+| Bounded `where.exe steamcmd` | ~39 ms | ~45 ms |
+| Bounded PowerShell PID identity | ~221 ms | ~586 ms |
+
+These remain wall-clock work but run off the main thread’s sync call stack so
+IPC/UI can continue. Re-run the script after storage changes; CI does not gate
+on the numbers.
+
 ## INI read / save / sanitize (adjacent)
 
 Paths under `{installDir}/ShooterGame/Saved/Config/WindowsServer/`:

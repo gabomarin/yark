@@ -1,0 +1,35 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { site, withBase } from "../data/site";
+---
+
+{/*
+  Canonical static 404 for GitHub Pages (`dist/404.html`).
+  Starlight’s injected `/404` is disabled in astro.config.mjs so the docs
+  catch-all does not also emit `/404` (#149).
+*/}
+<BaseLayout
+  title={`Page not found · ${site.name}`}
+  description="That page is not part of the YARK product site or operator docs."
+  path="/404"
+  noindex={true}
+>
+  <header class="page-header">
+    <p class="eyebrow">404</p>
+    <h1>Page not found</h1>
+    <p>
+      That URL is not in the YARK product site or operator docs. Check the link, or
+      start from the homepage or docs overview.
+    </p>
+  </header>
+
+  <div class="section" style="border-top: none; padding-top: 0.5rem;">
+    <p class="section-lede text-with-links">
+      <a href={withBase("/")}>Product site</a>
+      <span class="link-sep" aria-hidden="true">·</span>
+      <a href={withBase("/docs/")}>Docs home</a>
+      <span class="link-sep" aria-hidden="true">·</span>
+      <a href={site.releasesUrl}>GitHub Releases</a>
+    </p>
+  </div>
+</BaseLayout>

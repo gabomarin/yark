@@ -81,13 +81,17 @@ export function LogsPage(props: Props): ReactElement {
     }
   };
 
+  // Mount / explicit Reload only — do not key on props.servers (#163).
+  // App may refresh the profile list while this page is open; servers is a
+  // name lookup for the fleet table, not a signal to re-fetch recentEvents.
   useEffect(() => {
     let cancelled = false;
     void loadFleet({ cancelled: () => cancelled });
     return () => {
       cancelled = true;
     };
-  }, [props.servers]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only load
+  }, []);
 
   const filteredFleetEvents = useMemo(() => {
     const now = Date.now();

@@ -13,17 +13,40 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Engineering runbook for workspace **Mods** (CurseForge inventory, load order, metadata proxy, and `-mods=` launch) in `docs/mods.md`.
 
+### Fixed
+
+- Release CI no longer flakes on `execFileBounded` maxBuffer coverage: the test drives Node stdout overflow on all platforms instead of a slow PowerShell spawn on Windows runners.
+
 ### Changed
 
+- Public website roadmap highlights operator-facing work after v0.9.0 (import install, signing, SteamCMD queue, RCON whitelist, port suggestions, optional assistant).
+- Public site canonical origin is **https://getyark.com** (GitHub Pages custom domain) with Astro `base: "/"` so assets and docs resolve at the domain root.
+- Marketing SEO: home H1, richer SoftwareApplication JSON-LD, FAQPage schema, docs BreadcrumbList, and sitemap `lastmod`.
+
+## [0.9.0] - 2026-08-10
+
+### Added
+
+- Local Electron loads gitignored `.env` / `.env.local` for `YARK_CURSEFORGE_PROXY_URL` so CurseForge metadata works in `npm run dev` / `start` without relying on Windows User env inheritance (#151).
+- Corrupt or unopenable **profile database** shows a boot recovery dialog (open folder / quit / start empty). YARK does not repair the file; start empty quarantines it and continues with a blank DB. Open also uses a short lock wait and `quick_check` (#218).
+
+### Changed
+
+- Public docs cover profile-database boot recovery; marketing roadmap refreshed for work after v0.9.0 (#218).
 - Launch and Mods profile saves use narrow `updateServerPatch` IPC with server-side merge and per-server write serialization so concurrent panel edits no longer last-write-wins (#209).
 - Overview server cards skip re-render on unrelated status polls via a memoized card and a stable fleet action bag; focused cards open the row menu with Shift+F10 (#209).
 
 ### Fixed
 
+- Settings **YARK updates** and **Log retention** clear busy state even when the underlying IPC call fails, so controls do not stick disabled.
+- Website build no longer warns about a duplicate `/404` route; GitHub Pages keeps a single `404.html` from `website/src/pages/404.astro` (#149).
+- Electron main hot paths (fleet install inspect, crash reattach, stop/kill, SteamCMD discovery/cancel) use bounded async I/O instead of sync filesystem and child-process calls (#145).
+- Overview status heartbeat no longer re-fetches the server profile list; Logs fleet and workspace Backups quiet polls stop resetting UI from host refresh identity churn (#163).
 - Workspace tab crashes show a recoverable panel error instead of blanking the whole app shell (#209).
 
 ### Security
 
+- YARK update **Open release notes** only calls `shell.openExternal` after the shared host allowlist check (same policy as `target=_blank`) (#216).
 - Official CurseForge proxy URL is no longer a source fallback; release builds bake it from a protected Actions variable (#151).
 - GitHub Actions are pinned to immutable commit SHAs (Node 24 runtimes), with Dependabot updates and a lint gate against mutable Action tags (#148).
 - Every renderer→main IPC invoke validates arguments with Zod before domain code runs (#143).

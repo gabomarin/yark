@@ -38,7 +38,10 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 - [src/preload](../src/preload): exposed APIs for the renderer.
 - [src/renderer](../src/renderer): React UI, layouts, features, and components.
 - [src/backend](../src/backend): services, domains, process management, and persistence.
-- [src/shared](../src/shared): shared types and IPC contracts.
+- [src/shared](../src/shared): shared types and IPC contracts. External browser opens
+  (`target=_blank`, YARK update release notes) go through
+  [`external-url-policy.ts`](../src/shared/external-url-policy.ts) before
+  `shell.openExternal`.
 - [docs](../docs): in-repo agent docs (this file, runbooks, visual testing, [website](website.md)). Backlog/plans live under `.cursor/project-context/`.
 - [website](../website): static GitHub Pages project site + versioned feature screenshots.
 - [AGENTS.md](../AGENTS.md): Cursor Cloud / Linux VM specifics (display, `ELECTRON_RUN_AS_NODE`, expected vitest path failures, e2e notes).
@@ -48,6 +51,7 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 - [backups.md](backups.md) — ZIP kinds, reconcile, all-servers health/cleanup, IPC, schedules, player sessions.
 - [updates-steamcmd.md](updates-steamcmd.md) — caches, safe update auto-stop/rollback, availability compare, progress push, Windows real-host validation.
 - [critical-job-recovery.md](critical-job-recovery.md) — durable phases, replay policy, queue quarantine, and operator recovery actions.
+- [profile-database.md](profile-database.md) — SQLite boot open/migrate, busy_timeout, corrupt-DB operator recovery (#218).
 - [logs.md](logs.md) — event `details`, clear/export IPC, `logsFocus`, seed/visual helpers.
 - [server-lifecycle.md](server-lifecycle.md) — launch args, profile→INI sync, spawn, start/stop/kill, INI sanitize / assistant; custom / Maps pack launch + Start blockers (#65 Phase 1 / #190–#195). Research archive: [spikes/65-modded-asa-maps.md](spikes/65-modded-asa-maps.md).
 - [launch-options-catalog.md](launch-options-catalog.md) — verified ASA CLI catalog (#92); regenerates via `npm run catalog:launch-options`.
@@ -117,6 +121,12 @@ cmd.exe /c npm run build
 ## Implementation notes
 
 - Launch args, profile→INI sync, Windows spawn flags, start/stop/kill/restart, readiness, port rules, INI sanitize, and the on-demand configuration assistant: [server-lifecycle.md](server-lifecycle.md). Do not add a permanent Guided Configuration tab; keep the six-step assistant on-demand from `Server`.
+- **Main-process I/O (#145):** do not add `execFileSync` / `spawnSync` / sync directory walks on fleet, start, stop, or SteamCMD cancel paths. Use `execFileBounded` / `fs.promises` / `killWinProcessTreeAsync`. Measurements and inventory: [server-lifecycle.md](server-lifecycle.md#main-process-io-145).
+- **App refresh contract (#163):** `App.refresh` is the shared host poll. Prefer push (`onStatus`, `onBackupsChanged`, SteamCMD progress, etc.) for live runtime. Do **not** `useEffect(..., [props.servers])` (or the whole `servers` array) to reload page data — poll identity / re-render is not a membership signal. Patterns:
+  - **Lookup only** (`useMemo` name maps, enabled flags): OK to depend on `props.servers`.
+  - **Page data load:** mount + explicit Reload/Refresh; for membership use a stable `serverIdsKey` (see Backups), never the full profile array.
+  - **Drafts:** never reset from quiet/poll refresh; dirty-preserve or load only when not dirty.
+  - Overview heartbeat calls `refresh({ includeInstallation: false, includeServerList: false })` (statuses / SteamCMD / events). Profiles refresh on mutations, operator Refresh, and the slower install/CDN timer (`includeServerList` defaults true).
 - The new renderer follows a feature-based pattern with a shared shell and CSS Modules.
 - IPC-layer changes should keep the contracts aligned in [src/shared/ipc.ts](../src/shared/ipc.ts), [src/preload/index.ts](../src/preload/index.ts), and [src/main/ipc-handlers.ts](../src/main/ipc-handlers.ts). High-risk invoke args use Zod via `handleValidated` — inventory, validated-channel list, and verification steps: [ipc-validation.md](ipc-validation.md) (#143).
 - Update availability must compare the local Steam `buildid` from `appmanifest_2430930.acf` with the public Steam build. Never compare the local runtime `ARK Version` with a version observed on an external official server; staggered deployments make those values non-equivalent.

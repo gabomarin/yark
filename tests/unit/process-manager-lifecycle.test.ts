@@ -80,7 +80,7 @@ describe("ProcessManager lifecycle ownership", () => {
     expect(manager.getStatus(profile.id).status).toBe("running");
 
     const stopsBeforeKill = stopTailer.mock.calls.length;
-    manager.kill(profile.id);
+    await manager.kill(profile.id);
     expect(stopTailer).toHaveBeenCalledTimes(stopsBeforeKill + 1);
 
     manager.start(profile, { skipReadinessCheck: true });
@@ -97,6 +97,6 @@ describe("ProcessManager lifecycle ownership", () => {
       ]),
     );
 
-    manager.kill(profile.id);
+    await manager.kill(profile.id);
   });
 });

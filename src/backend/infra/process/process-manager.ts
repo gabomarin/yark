@@ -1,4 +1,4 @@
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
 import { EventEmitter } from "node:events";
 import type {
@@ -25,6 +25,7 @@ import {
 import { rconExec } from "../rcon/rcon-client";
 import { AsaSavedLogsTailer } from "./asa-log-tail";
 import { createAdoptedChildHandle } from "./adopted-child";
+import { killWinProcessTreeAsync } from "./kill-win-process-tree";
 import { queryWindowsProcessIdentity } from "./windows-process-identity";
 
 interface ManagedProcess {
@@ -58,15 +59,6 @@ export type FinishGracefulStopResult =
   | "stopped"
   | "already_exited"
   | "replaced";
-
-function killWinProcessTree(pid: number): boolean {
-  const result = spawnSync(
-    "taskkill",
-    ["/pid", String(pid), "/T", "/F"],
-    { windowsHide: true, stdio: "ignore" },
-  );
-  return result.status === 0;
-}
 
 function argsIncludeLogFlag(args: string[]): boolean {
   return args.some((arg) => /^[-/]log$/i.test(arg.trim()));
@@ -168,7 +160,7 @@ export interface ProcessManagerOptions {
   /** Adopted-PID handle factory (Leave reattach tests). */
   createAdoptedChild?: (pid: number) => ChildProcess;
   /** OS identity probe (crash-recovery checkpoints / Leave snapshot). */
-  queryOsIdentity?: (pid: number) => LiveProcessIdentity | null;
+  queryOsIdentity?: (pid: number) => Promise<LiveProcessIdentity | null>;
   /** Persist durable identity while a managed process is active. */
   onProcessCheckpoint?: (record: LeftRunningProcessIdentity) => void;
   /** Clear durable identity after a managed process exits/stops. */
@@ -219,7 +211,9 @@ export class ProcessManager extends EventEmitter {
   private readonly readySettleMs: number;
   private readonly spawnProcess: typeof spawnAsaProcess;
   private readonly createAdoptedChild: (pid: number) => ChildProcess;
-  private readonly queryOsIdentity: (pid: number) => LiveProcessIdentity | null;
+  private readonly queryOsIdentity: (
+    pid: number,
+  ) => Promise<LiveProcessIdentity | null>;
   private readonly onProcessCheckpoint:
     | ((record: LeftRunningProcessIdentity) => void)
     | null;
@@ -446,7 +440,7 @@ export class ProcessManager extends EventEmitter {
         "system",
         "Process created; waiting for server readiness (RCON / startup)",
       );
-      this.writeProcessCheckpoint(profile.id, managed);
+      void this.writeProcessCheckpoint(profile.id, managed);
       this.emitStatus(profile.id);
 
       if (options?.skipReadinessCheck === true) {
@@ -554,10 +548,10 @@ export class ProcessManager extends EventEmitter {
         );
       }
 
-      this.terminateManaged(profile.id, managed);
+      await this.terminateManaged(profile.id, managed);
       let exited = await this.waitForExit(managed.child, EXIT_WAIT_MS);
       if (!exited && this.processes.get(profile.id) === managed) {
-        this.terminateManaged(profile.id, managed);
+        await this.terminateManaged(profile.id, managed);
         exited = await this.waitForExit(managed.child, 5000);
       }
       if (!exited && this.processes.get(profile.id) === managed) {
@@ -595,12 +589,12 @@ export class ProcessManager extends EventEmitter {
       await this.executeRcon(profile, "DoExit");
     } catch {
       this.appendRuntimeLog(profile.id, "warning", "RCON DoExit failed; applying kill");
-      this.terminateManaged(profile.id, managed);
+      await this.terminateManaged(profile.id, managed);
     }
 
     const exited = await this.waitForExit(managed.child, EXIT_WAIT_MS);
     if (!exited) {
-      this.terminateManaged(profile.id, managed);
+      await this.terminateManaged(profile.id, managed);
       const forcedExit = await this.waitForExit(managed.child, 5000);
       if (!forcedExit && this.processes.get(profile.id) === managed) {
         managed.status = "error";
@@ -631,14 +625,14 @@ export class ProcessManager extends EventEmitter {
   }
 
   /** Immediate termination without save (last resort). */
-  kill(serverId: string): void {
+  async kill(serverId: string): Promise<void> {
     const managed = this.processes.get(serverId);
     if (managed === undefined) return;
     managed.readinessGeneration += 1;
     managed.status = "stopping";
     this.appendRuntimeLog(serverId, "warning", "Forcing process shutdown");
     this.emitStatus(serverId);
-    this.terminateManaged(serverId, managed);
+    await this.terminateManaged(serverId, managed);
     if (this.processes.get(serverId) === managed) {
       this.processes.delete(serverId);
       this.clearProcessCheckpoint(serverId);
@@ -690,16 +684,16 @@ export class ProcessManager extends EventEmitter {
    * Leave path). Requires OS creation time so the next launch can reject PID
    * reuse. Does not mutate process state.
    */
-  collectLeaveIdentities(
+  async collectLeaveIdentities(
     profiles: ServerProfile[],
     options?: {
-      queryOsIdentity?: (pid: number) => LiveProcessIdentity | null;
+      queryOsIdentity?: (pid: number) => Promise<LiveProcessIdentity | null>;
       leftAt?: string;
     },
-  ): LeftRunningProcessIdentity[] {
+  ): Promise<LeftRunningProcessIdentity[]> {
     const queryOs =
       options?.queryOsIdentity ??
-      ((pid: number) => queryWindowsProcessIdentity(pid));
+      ((pid: number) => this.queryOsIdentity(pid));
     const leftAt = options?.leftAt ?? new Date().toISOString();
     const records: LeftRunningProcessIdentity[] = [];
 
@@ -715,7 +709,7 @@ export class ProcessManager extends EventEmitter {
         );
       }
 
-      const live = queryOs(pid);
+      const live = await queryOs(pid);
       const osCreationTime = live?.osCreationTime?.trim() || null;
       if (osCreationTime === null) {
         throw new Error(
@@ -782,14 +776,14 @@ export class ProcessManager extends EventEmitter {
    * @deprecated Prefer {@link collectLeaveIdentities} + {@link detachAfterLeavePersist}.
    * Kept for tests that expect a single call; still detaches only after a full snapshot.
    */
-  detachForLeave(
+  async detachForLeave(
     profiles: ServerProfile[],
     options?: {
-      queryOsIdentity?: (pid: number) => LiveProcessIdentity | null;
+      queryOsIdentity?: (pid: number) => Promise<LiveProcessIdentity | null>;
       leftAt?: string;
     },
-  ): LeftRunningProcessIdentity[] {
-    const records = this.collectLeaveIdentities(profiles, options);
+  ): Promise<LeftRunningProcessIdentity[]> {
+    const records = await this.collectLeaveIdentities(profiles, options);
     this.detachAfterLeavePersist(records);
     return records;
   }
@@ -798,14 +792,14 @@ export class ProcessManager extends EventEmitter {
    * Reattach to a validated crash-recovery process (same profile + OS identity).
    * Uses a synthetic child handle (PID poll) and Saved/Logs tail — no pipes.
    */
-  reattach(
+  async reattach(
     profile: ServerProfile,
     record: LeftRunningProcessIdentity,
     options?: {
       skipReadinessCheck?: boolean;
-      queryOsIdentity?: (pid: number) => LiveProcessIdentity | null;
+      queryOsIdentity?: (pid: number) => Promise<LiveProcessIdentity | null>;
     },
-  ): void {
+  ): Promise<void> {
     if (this.isActive(profile.id)) {
       throw new Error(`Server "${profile.name}" is already running`);
     }
@@ -817,7 +811,7 @@ export class ProcessManager extends EventEmitter {
     }
 
     const queryOs = options?.queryOsIdentity ?? this.queryOsIdentity;
-    const live = queryOs(record.pid);
+    const live = await queryOs(record.pid);
     const classification = classifyLeaveCandidate(record, live);
     if (classification !== "match") {
       throw new Error(
@@ -851,7 +845,8 @@ export class ProcessManager extends EventEmitter {
       "system",
       `Reattached to left-running process (pid ${record.pid})`,
     );
-    this.writeProcessCheckpoint(profile.id, managed);
+    // Fire-and-forget like start(); pass live identity to skip a second PowerShell probe.
+    void this.writeProcessCheckpoint(profile.id, managed, live);
 
     managed.logTailer = new AsaSavedLogsTailer(profile.installDir, (text) => {
       if (this.processes.get(profile.id) !== managed) return;
@@ -1050,7 +1045,7 @@ export class ProcessManager extends EventEmitter {
         this.clearProcessCheckpoint(profile.id);
         this.emitStatus(profile.id);
         try {
-          this.terminateManaged(profile.id, managed);
+          await this.terminateManaged(profile.id, managed);
         } catch {
           // ignore
         }
@@ -1061,10 +1056,11 @@ export class ProcessManager extends EventEmitter {
     }
   }
 
-  private writeProcessCheckpoint(
+  private async writeProcessCheckpoint(
     serverId: string,
     managed: ManagedProcess,
-  ): void {
+    liveIdentity?: LiveProcessIdentity | null,
+  ): Promise<void> {
     if (this.onProcessCheckpoint === null) {
       return;
     }
@@ -1073,7 +1069,12 @@ export class ProcessManager extends EventEmitter {
       if (pid === undefined || !Number.isInteger(pid) || pid <= 0) {
         return;
       }
-      const live = this.queryOsIdentity(pid);
+      // Reuse a just-fetched identity when provided (reattach) to avoid a second
+      // PowerShell round-trip during startup (#145 review).
+      const live =
+        liveIdentity !== undefined
+          ? liveIdentity
+          : await this.queryOsIdentity(pid);
       const osCreationTime = live?.osCreationTime?.trim() || null;
       if (osCreationTime === null) {
         this.appendRuntimeLog(
@@ -1120,10 +1121,17 @@ export class ProcessManager extends EventEmitter {
     }
   }
 
-  private terminateManaged(serverId: string, managed: ManagedProcess): void {
+  private async terminateManaged(
+    serverId: string,
+    managed: ManagedProcess,
+  ): Promise<void> {
     this.stopManagedCapture(serverId, managed);
     const pid = managed.child.pid;
-    if (process.platform === "win32" && pid !== undefined && killWinProcessTree(pid)) {
+    if (
+      process.platform === "win32"
+      && pid !== undefined
+      && (await killWinProcessTreeAsync(pid))
+    ) {
       return;
     }
     try {

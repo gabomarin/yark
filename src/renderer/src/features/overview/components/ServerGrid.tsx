@@ -1,4 +1,4 @@
-import { type ReactElement, useMemo, useRef, useState } from "react";
+import { type ReactElement, useEffect, useMemo, useRef, useState } from "react";
 import { HardDrives, MagnifyingGlass, Plus } from "@phosphor-icons/react";
 import { Badge, Button, Checkbox, Group, Skeleton, Stack, Text, VisuallyHidden } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo, ServerStopProgress } from "@shared/types";
@@ -57,7 +57,9 @@ interface Props {
 export function ServerGrid(props: Props): ReactElement {
   const [showDisabled, setShowDisabled] = useState(false);
   const propsRef = useRef(props);
-  propsRef.current = props;
+  useEffect(() => {
+    propsRef.current = props;
+  });
 
   /** Stable across Overview polls so memoized ServerCard can skip unrelated rows (#209). */
   const cardHandlers = useMemo<ServerCardHandlers>(

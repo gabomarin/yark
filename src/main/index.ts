@@ -1,8 +1,13 @@
 import { app, BrowserWindow, Notification, dialog, screen, shell, type Tray } from "electron";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { openDatabase } from "../backend/infra/db/database";
+import type { DatabaseSync } from "node:sqlite";
 import { AppSettingsRepository } from "../backend/infra/db/app-settings-repository";
+import {
+  createElectronDatabaseRecoveryUi,
+  DatabaseRecoveryAbortedError,
+  openDatabaseWithOperatorRecovery,
+} from "./database-boot-recovery";
 import { BackupRepository } from "../backend/infra/db/backup-repository";
 import { ServerRepository } from "../backend/infra/db/server-repository";
 import { ProcessManager } from "../backend/infra/process/process-manager";
@@ -181,10 +186,27 @@ function createWindow(settings: AppSettingsRepository): BrowserWindow {
 }
 
 if (gotSingleInstanceLock) {
-  void app.whenReady().then(() => {
+  void app.whenReady().then(async () => {
     const userData = app.getPath("userData");
     const dbPath = join(userData, "yark-server-manager.db");
-    const db = openDatabase(dbPath);
+    let db: DatabaseSync;
+    try {
+      db = await openDatabaseWithOperatorRecovery(
+        dbPath,
+        createElectronDatabaseRecoveryUi({
+          showMessageBox: (options) => dialog.showMessageBox(options),
+          showItemInFolder: (fullPath) => shell.showItemInFolder(fullPath),
+          quitApp: () => {
+            app.exit(1);
+          },
+        }),
+      );
+    } catch (error) {
+      if (error instanceof DatabaseRecoveryAbortedError) {
+        return;
+      }
+      throw error;
+    }
     const settings = new AppSettingsRepository(db);
     const repo = new ServerRepository(db);
     const backupRepo = new BackupRepository(db);
@@ -275,7 +297,7 @@ if (gotSingleInstanceLock) {
     });
 
     // Before UI / auto-start: reclaim ASA left after crash / unexpected exit (#59).
-    const reattachOutcomes = reattachLeftRunningProcesses(
+    const reattachOutcomes = await reattachLeftRunningProcesses(
       settings,
       repo,
       processManager,
@@ -583,7 +605,7 @@ if (gotSingleInstanceLock) {
       }
       // Cancel pending SteamCMD/sync on quit (without requiring a live UI).
       try {
-        updateService.cancelSteamCmd();
+        void updateService.cancelSteamCmd();
       } catch {
         // Ignore: the app is shutting down.
       }

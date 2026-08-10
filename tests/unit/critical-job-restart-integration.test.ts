@@ -284,7 +284,7 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
     ]);
     Object.assign(service as object, {
       performUpdateServer: vi.fn(async (_serverId: string, input: { phase: string }) => {
-        service.cancelSteamCmd();
+        void service.cancelSteamCmd();
         input.phase = "rollback-restoring-backups";
         throw new Error("Operation cancelled during rollback");
       }),

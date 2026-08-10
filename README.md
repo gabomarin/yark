@@ -23,9 +23,9 @@
 </p>
 
 <p align="center">
-  <a href="https://gabomarin.github.io/yark/">Website</a>
+  <a href="https://getyark.com/">Website</a>
   ·
-  <a href="https://gabomarin.github.io/yark/docs/">Operator docs</a>
+  <a href="https://getyark.com/docs/">Operator docs</a>
   ·
   <a href="https://github.com/gabomarin/yark/releases">Releases</a>
   ·
@@ -36,7 +36,7 @@
 > YARK is a public prerelease and is not production-ready. Current Windows installers are
 > unsigned, so SmartScreen may warn. Download only from the official
 > [GitHub Releases](https://github.com/gabomarin/yark/releases) page and follow the
-> [download verification guide](https://gabomarin.github.io/yark/docs/getting-started/#verify-your-download).
+> [download verification guide](https://getyark.com/docs/getting-started/#verify-your-download).
 
 ![YARK servers overview](website/public/screenshots/overview.png)
 
@@ -75,7 +75,7 @@ cloud hosting service, an ARK game launcher, or an official Studio Wildcard prod
 | ![CurseForge mods workspace](website/public/screenshots/workspace-mods.png) | ![Backup operations](website/public/screenshots/backups.png) |
 | Per-server Project IDs, metadata, and enable/disable state. | Fleet health, destinations, schedules, and export/import across servers. |
 
-More screenshots are available on the [project website](https://gabomarin.github.io/yark/#screenshots).
+More screenshots are available on the [project website](https://getyark.com/#screenshots).
 
 ## Getting started
 
@@ -93,14 +93,14 @@ Then:
 
 1. Download the latest installer from [GitHub Releases](https://github.com/gabomarin/yark/releases).
 2. Verify its SHA-256 digest using the
-   [operator guide](https://gabomarin.github.io/yark/docs/getting-started/#verify-your-download).
+   [operator guide](https://getyark.com/docs/getting-started/#verify-your-download).
 3. Open **Settings** and select the folder containing `steamcmd.exe`.
 4. Create a server profile with an absolute install path, unique game/query/RCON ports, and an
    admin password.
 5. Install the dedicated-server files, review installation health, and start the server.
 6. Create a backup before experimenting with updates, restores, or configuration changes.
 
-See [Getting started](https://gabomarin.github.io/yark/docs/getting-started/) for the complete
+See [Getting started](https://getyark.com/docs/getting-started/) for the complete
 operator walkthrough.
 
 ## Security and data boundaries
@@ -119,7 +119,7 @@ operator walkthrough.
 - Current installers are unsigned. Authenticode signing and RFC 3161 timestamp verification are
   tracked in [#142](https://github.com/gabomarin/yark/issues/142).
 
-Read [Security & privacy](https://gabomarin.github.io/yark/docs/security-privacy/) before sharing
+Read [Security & privacy](https://getyark.com/docs/security-privacy/) before sharing
 logs, configurations, app data, or backup archives.
 
 ## Development
@@ -210,7 +210,7 @@ Persistence uses Node's built-in `node:sqlite`; there is no separate backend ser
 | [Agent context](docs/agent-context.md) | Repository orientation for AI-assisted development. |
 
 Public operator documentation lives at
-[gabomarin.github.io/yark/docs](https://gabomarin.github.io/yark/docs/).
+[getyark.com/docs](https://getyark.com/docs/).
 
 ## Roadmap and contributing
 

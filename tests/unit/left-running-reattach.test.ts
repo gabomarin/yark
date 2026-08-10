@@ -124,7 +124,7 @@ describe("reattachLeftRunningProcesses", () => {
       onProcessCheckpointCleared: (serverId) => {
         removeLeftRunningProcess(settings, serverId);
       },
-      queryOsIdentity: (pid) => ({
+      queryOsIdentity: async (pid) => ({
         pid,
         executablePath: binary,
         commandLine: `"${binary}" -port=7777`,
@@ -132,8 +132,8 @@ describe("reattachLeftRunningProcesses", () => {
       }),
     });
 
-    const outcomes = reattachLeftRunningProcesses(settings, repo, manager, {
-      queryOsIdentity: (pid) => ({
+    const outcomes = await reattachLeftRunningProcesses(settings, repo, manager, {
+      queryOsIdentity: async (pid) => ({
         pid,
         executablePath: binary,
         commandLine: `"${binary}" -port=7777`,
@@ -185,7 +185,7 @@ describe("reattachLeftRunningProcesses", () => {
       spawnProcess: () => {
         throw new Error("spawn should not run during reattach");
       },
-      queryOsIdentity: (pid) => ({
+      queryOsIdentity: async (pid) => ({
         pid,
         executablePath: binary,
         commandLine: `"${binary}" -port=7787`,
@@ -193,7 +193,7 @@ describe("reattachLeftRunningProcesses", () => {
       }),
     });
 
-    manager.reattach(
+    await manager.reattach(
       profile,
       {
         schemaVersion: LEFT_RUNNING_SCHEMA_VERSION,
@@ -217,7 +217,7 @@ describe("reattachLeftRunningProcesses", () => {
     expect(manager.applyRuntimePorts(profile).gamePort).not.toBe(profile.gamePort);
   });
 
-  it("keeps checkpoint when adopt fails after a match", () => {
+  it("keeps checkpoint when adopt fails after a match", async () => {
     const settings = makeSettings();
     const record: LeftRunningProcessIdentity = {
       schemaVersion: LEFT_RUNNING_SCHEMA_VERSION,
@@ -244,8 +244,8 @@ describe("reattachLeftRunningProcesses", () => {
       },
     });
 
-    const outcomes = reattachLeftRunningProcesses(settings, repo, manager, {
-      queryOsIdentity: (pid) => ({
+    const outcomes = await reattachLeftRunningProcesses(settings, repo, manager, {
+      queryOsIdentity: async (pid) => ({
         pid,
         executablePath: record.executablePath,
         commandLine: record.expectedCommandLine,
@@ -262,7 +262,7 @@ describe("reattachLeftRunningProcesses", () => {
     );
   });
 
-  it("clears stale leave metadata without adopting", () => {
+  it("clears stale leave metadata without adopting", async () => {
     const settings = makeSettings();
     const record: LeftRunningProcessIdentity = {
       schemaVersion: LEFT_RUNNING_SCHEMA_VERSION,
@@ -284,8 +284,8 @@ describe("reattachLeftRunningProcesses", () => {
     } as unknown as ServerRepository;
     const manager = new ProcessManager();
 
-    const outcomes = reattachLeftRunningProcesses(settings, repo, manager, {
-      queryOsIdentity: () => null,
+    const outcomes = await reattachLeftRunningProcesses(settings, repo, manager, {
+      queryOsIdentity: async () => null,
     });
 
     expect(outcomes[0]?.reattached).toBe(false);

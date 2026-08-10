@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useMemo,
   useRef,
   useSyncExternalStore,
@@ -76,10 +77,12 @@ export function AppSpotlight(props: Props): ReactElement {
     onNavigate: props.onNavigate,
     onOpenServer: props.onOpenServer,
   });
-  callbacksRef.current = {
-    onNavigate: props.onNavigate,
-    onOpenServer: props.onOpenServer,
-  };
+  useEffect(() => {
+    callbacksRef.current = {
+      onNavigate: props.onNavigate,
+      onOpenServer: props.onOpenServer,
+    };
+  });
 
   const serverKey = serversFingerprint(props.servers);
   const recentKey = recent

@@ -309,10 +309,13 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
 
   const refresh = useCallback(async (options?: {
     includeInstallation?: boolean;
+    /** When false, skip listServers (status/SteamCMD/events poll only). Default true. */
+    includeServerList?: boolean;
     forceOfficialCheck?: boolean;
     serversMode?: import("@shared/types").InstallationServersMode;
   }) => {
     const includeInstallation = options?.includeInstallation !== false;
+    const includeServerList = options?.includeServerList !== false;
     const forceOfficialCheck = options?.forceOfficialCheck === true;
     const serversMode = options?.serversMode ?? true;
     const generation = refreshGenerationGateRef.current.begin();
@@ -325,7 +328,9 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       clusterRes,
       eventsRes,
     ] = await Promise.all([
-      window.api.listServers(),
+      includeServerList
+        ? window.api.listServers()
+        : Promise.resolve(null),
       window.api.getStatuses(),
       includeInstallation
         ? window.api.getInstallationInfo(forceOfficialCheck, serversMode)
@@ -343,7 +348,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         officialSteamBuild: null,
       };
     }
-    if (serversRes.ok) {
+    if (serversRes !== null && serversRes.ok) {
       setServers((previous) =>
         reconcileServerList(previous, serversRes.data),
       );
@@ -394,7 +399,8 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     }
 
     return {
-      servers: serversRes.ok ? serversRes.data : null,
+      servers:
+        serversRes !== null && serversRes.ok ? serversRes.data : null,
       statuses: statusesRes.ok
         ? new Map(statusesRes.data.map((s) => [s.serverId, s]))
         : null,
@@ -672,9 +678,9 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   }, [refresh, runInstallHealthScan]);
 
   useEffect(() => {
-    // Heartbeat only on the Servers list (overview with no overlay). Runtime status,
-    // SteamCMD progress, and player lists arrive via push; polling listServers from
-    // workspace / Backups / Settings was rewriting props and cancelling open UI.
+    // Overview heartbeat: statuses / SteamCMD / events only — not listServers.
+    // Profiles refresh on mutation, explicit Refresh, and the slower CDN timer.
+    // See docs/agent-context.md § App refresh contract (#163).
     const onServerList = route === "overview" && overlay === null;
     if (!onServerList) {
       return;
@@ -682,7 +688,10 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     const syncing = steamCmdStatus?.operation === "sync-files";
     const intervalMs = syncing ? 5_000 : steamCmdBusy ? 2_500 : 5_000;
     const interval = setInterval(() => {
-      void refresh({ includeInstallation: false });
+      void refresh({
+        includeInstallation: false,
+        includeServerList: false,
+      });
     }, intervalMs);
     return () => {
       clearInterval(interval);

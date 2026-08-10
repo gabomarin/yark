@@ -20,7 +20,7 @@ export interface LeaveReattachOutcome {
 }
 
 export interface ReattachLeftRunningOptions {
-  queryOsIdentity?: (pid: number) => LiveProcessIdentity | null;
+  queryOsIdentity?: (pid: number) => Promise<LiveProcessIdentity | null>;
 }
 
 /**
@@ -32,12 +32,12 @@ export interface ReattachLeftRunningOptions {
  * later launch can retry; successful reattach rewrites via ProcessManager hooks.
  * Must run before any auto-start (#53) so we never spawn a duplicate.
  */
-export function reattachLeftRunningProcesses(
+export async function reattachLeftRunningProcesses(
   settings: AppSettingsRepository,
   repo: ServerRepository,
   processes: ProcessManager,
   options?: ReattachLeftRunningOptions,
-): LeaveReattachOutcome[] {
+): Promise<LeaveReattachOutcome[]> {
   const records = readLeftRunningProcesses(settings);
   if (records.length === 0) {
     return [];
@@ -49,7 +49,7 @@ export function reattachLeftRunningProcesses(
   const outcomes: LeaveReattachOutcome[] = [];
 
   for (const record of records) {
-    const outcome = processLeaveRecord(record, repo, processes, queryOs);
+    const outcome = await processLeaveRecord(record, repo, processes, queryOs);
     outcomes.push(outcome);
 
     if (outcome.reattached) {
@@ -69,12 +69,12 @@ export function reattachLeftRunningProcesses(
   return outcomes;
 }
 
-function processLeaveRecord(
+async function processLeaveRecord(
   record: LeftRunningProcessIdentity,
   repo: ServerRepository,
   processes: ProcessManager,
-  queryOs: (pid: number) => LiveProcessIdentity | null,
-): LeaveReattachOutcome {
+  queryOs: (pid: number) => Promise<LiveProcessIdentity | null>,
+): Promise<LeaveReattachOutcome> {
   const profile = repo.get(record.serverId);
   if (profile === null) {
     repo.addEvent(
@@ -90,7 +90,7 @@ function processLeaveRecord(
     };
   }
 
-  const live = queryOs(record.pid);
+  const live = await queryOs(record.pid);
   const classification = classifyLeaveCandidate(record, live);
 
   if (classification !== "match") {
@@ -100,7 +100,7 @@ function processLeaveRecord(
   }
 
   try {
-    processes.reattach(profile, record, { queryOsIdentity: queryOs });
+    await processes.reattach(profile, record, { queryOsIdentity: queryOs });
     repo.addEvent(
       profile.id,
       "server_started",

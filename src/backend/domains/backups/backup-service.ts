@@ -61,7 +61,7 @@ import {
   sameFsPath,
   volumeRootForPath,
 } from "./backup-disk";
-import { classifyInstallHealth } from "../instances/server-installation";
+import { classifyInstallHealthAsync } from "../instances/server-installation";
 import { serverBinaryPath } from "../instances/launch-args";
 
 export {
@@ -1070,7 +1070,7 @@ export class BackupService extends EventEmitter {
 
   async restoreBackup(serverId: string, backupId: string): Promise<void> {
     const server = this.mustServer(serverId);
-    this.assertInstallReadyForLiveOps(server);
+    await this.assertInstallReadyForLiveOps(server);
     if (this.processes.isActive(serverId)) {
       throw new Error("Stop the server before restoring a backup");
     }
@@ -1158,7 +1158,7 @@ export class BackupService extends EventEmitter {
     }
 
     if (!this.processes.isActive(server.id)) return;
-    if (!this.isInstallReady(server)) return;
+    if (!(await this.isInstallReady(server))) return;
 
     this.scheduledWorldInFlight.add(server.id);
     try {
@@ -1227,17 +1227,23 @@ export class BackupService extends EventEmitter {
   }
 
   /** Create/restore require a Ready ASA install (exe present). Import/export do not. */
-  private assertInstallReadyForLiveOps(server: ServerProfile): void {
+  private async assertInstallReadyForLiveOps(server: ServerProfile): Promise<void> {
     const binaryPath = serverBinaryPath(server.installDir);
-    const { health } = classifyInstallHealth(server.installDir, binaryPath);
+    const { health } = await classifyInstallHealthAsync(
+      server.installDir,
+      binaryPath,
+    );
     if (health !== "ready") {
       throw new Error("Install server files before creating or restoring backups");
     }
   }
 
-  private isInstallReady(server: ServerProfile): boolean {
+  private async isInstallReady(server: ServerProfile): Promise<boolean> {
     const binaryPath = serverBinaryPath(server.installDir);
-    return classifyInstallHealth(server.installDir, binaryPath).health === "ready";
+    return (
+      (await classifyInstallHealthAsync(server.installDir, binaryPath)).health
+      === "ready"
+    );
   }
 
   private readDiskAlertSettings(): BackupDiskAlertSettings {
@@ -1649,7 +1655,7 @@ export class BackupService extends EventEmitter {
     options?: { playerKey?: string; waitForProfile?: boolean },
   ): Promise<BackupRecord | null> {
     const server = this.mustServer(serverId);
-    this.assertInstallReadyForLiveOps(server);
+    await this.assertInstallReadyForLiveOps(server);
     const policy = this.backups.getPolicy(serverId);
     const rootDir = resolveServerBackupRoot(server.installDir, policy.backupDir);
     const kindDir = join(rootDir, backupKindSubdir(kind));

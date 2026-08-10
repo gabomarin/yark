@@ -446,7 +446,7 @@ describe("UpdateService safe update orchestration", () => {
     ).resolves.toBe(true);
   });
 
-  it("keeps a running update recoverable while cancellation unwinds", () => {
+  it("keeps a running update recoverable while cancellation unwinds", async () => {
     const h = createHarness({ wasRunning: true });
     dirs.push(h.logDir);
     const now = new Date().toISOString();
@@ -471,7 +471,7 @@ describe("UpdateService safe update orchestration", () => {
     };
     (h.service as unknown as { queue: Array<typeof job> }).queue = [job];
 
-    expect(h.service.cancelSteamCmd()).toBe(true);
+    expect(await h.service.cancelSteamCmd()).toBe(true);
 
     expect(job).toMatchObject({
       status: "running",
