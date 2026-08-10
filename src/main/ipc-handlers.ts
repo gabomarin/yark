@@ -242,8 +242,8 @@ export function registerIpcHandlers(
   );
 
   ipcMain.handle(IPC.serversMoveInstallDismissCleanup, (_e, id: string) =>
-    wrap(() => {
-      moveInstall.dismissCleanupPrompt(id);
+    wrap(async () => {
+      await moveInstall.dismissCleanupPrompt(id);
     }),
   );
 

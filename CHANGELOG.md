@@ -21,6 +21,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Security
 
 - CurseForge proxy adds route-class IP rate limits, POST body/time bounds, GET response caching, privacy-safe request logs, and an abuse/secret-rotation runbook (#70).
+- Move-install cleanup may only delete the prior install path recorded by main for that server after a successful move (#215).
 
 ## [0.8.1] - 2026-08-09
 

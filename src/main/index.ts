@@ -251,6 +251,7 @@ if (gotSingleInstanceLock) {
       backupService,
       locks,
       join(userData, "move-install-staging.json"),
+      join(userData, "move-install-pending-cleanup.json"),
     );
     const modsService = new ModsService({ settings });
 
