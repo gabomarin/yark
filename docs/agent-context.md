@@ -19,6 +19,7 @@ This repository contains a desktop application for managing dedicated ARK Surviv
   [design-system.md](design-system.md) and
   [`.cursor/rules/prefer-mantine.mdc`](../.cursor/rules/prefer-mantine.mdc).
 - When cutting a release or bumping the app version, follow [versioning.md](versioning.md) and update [CHANGELOG.md](../CHANGELOG.md). `package.json` is the SemVer source of truth; the UI reads it via `@shared/app-version`. Pushing tag `vX.Y.Z` runs `.github/workflows/release.yml` (Windows NSIS → GitHub Release).
+- Third-party GitHub Actions must stay SHA-pinned; see [github-actions.md](github-actions.md). `npm run lint` rejects mutable `@vN` Action tags.
 - On feature work, keep a **short** Unreleased changelog bullet (CI requires `CHANGELOG.md` unless `skip-changelog`); see [`.cursor/rules/changelog.mdc`](../.cursor/rules/changelog.mdc).
 
 ## Local project context (Cursor workspace, not in git)

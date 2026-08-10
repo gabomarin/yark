@@ -34,7 +34,7 @@ Domain runbooks: [docs/backups.md](docs/backups.md), [docs/updates-steamcmd.md](
 [docs/logs.md](docs/logs.md), [docs/server-lifecycle.md](docs/server-lifecycle.md),
 [docs/rcon.md](docs/rcon.md), [docs/settings.md](docs/settings.md),
 [docs/clusters.md](docs/clusters.md), [docs/website.md](docs/website.md),
-[docs/config-transfer.md](docs/config-transfer.md). UI composition for agents:
+[docs/config-transfer.md](docs/config-transfer.md), [docs/github-actions.md](docs/github-actions.md). UI composition for agents:
 [docs/component-structure.md](docs/component-structure.md),
 [docs/design-system.md](docs/design-system.md), [docs/datatable.md](docs/datatable.md).
 Visual/e2e helpers: [docs/visual-testing.md](docs/visual-testing.md).
