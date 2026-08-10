@@ -4,7 +4,7 @@ import { visit } from "unist-util-visit";
  * Prepend Astro `base` to root-relative markdown/MDX links and images.
  * Starlight already prefixes sidebar/prev-next; content body links do not.
  *
- * @param {string} base Astro `base` (e.g. `/yark` or `/yark/`)
+ * @param {string} base Astro `base` (e.g. `/` or `/docs-preview/`)
  */
 export function remarkBaseLinks(base) {
   const prefix = normalizeBase(base);

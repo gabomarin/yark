@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://gabomarin.github.io/yark/sitemap-index.xml
+Sitemap: https://getyark.com/sitemap-index.xml

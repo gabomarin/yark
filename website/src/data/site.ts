@@ -14,9 +14,9 @@ function windowsSetupDownloadUrl(ver: string): string {
 
 /**
  * Public site origin for canonical / Open Graph / JSON-LD.
- * GitHub project Pages: https://gabomarin.github.io/yark/
+ * Custom domain on GitHub Pages: https://getyark.com/
  */
-export const siteOrigin = "https://gabomarin.github.io/yark";
+export const siteOrigin = "https://getyark.com";
 
 /** Site content config — version + download URL come from the root package.json. */
 export const site = {
@@ -52,7 +52,7 @@ export function absoluteUrl(path = "/"): string {
   return `${siteOrigin}${normalized}`;
 }
 
-/** Prefix an in-app path with Astro `base` (GitHub Pages: `/yark/`). */
+/** Prefix an in-app path with Astro `base` (custom domain root: `/`). */
 export function withBase(path = "/"): string {
   const base = import.meta.env.BASE_URL;
   if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("mailto:")) {

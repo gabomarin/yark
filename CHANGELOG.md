@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Public site canonical origin is **https://getyark.com** (GitHub Pages custom domain) with Astro `base: "/"` so assets and docs resolve at the domain root.
+
 ## [0.9.0] - 2026-08-10
 
 ### Added

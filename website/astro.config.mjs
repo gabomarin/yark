@@ -2,11 +2,11 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import { remarkBaseLinks } from "./src/plugins/remark-base-links.mjs";
 
-const siteBase = "/yark";
+const siteBase = "/";
 
-/** Canonical GitHub project Pages site (`https://gabomarin.github.io/yark/`). */
+/** Canonical public site (`https://getyark.com/` via GitHub Pages custom domain). */
 export default defineConfig({
-  site: "https://gabomarin.github.io/yark",
+  site: "https://getyark.com",
   base: siteBase,
   trailingSlash: "always",
   server: {
@@ -55,7 +55,7 @@ export default defineConfig({
             rel: "icon",
             type: "image/png",
             sizes: "32x32",
-            href: "/yark/favicon-32x32.png",
+            href: "/favicon-32x32.png",
           },
         },
         {
@@ -74,7 +74,7 @@ export default defineConfig({
           tag: "meta",
           attrs: {
             property: "og:image",
-            content: "https://gabomarin.github.io/yark/screenshots/overview.png",
+            content: "https://getyark.com/screenshots/overview.png",
           },
         },
         {
