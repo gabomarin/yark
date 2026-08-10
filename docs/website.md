@@ -18,11 +18,22 @@ Public product site and operator docs for YARK server manager.
 
 | Path | Role |
 | --- | --- |
-| `website/src/pages/` | Marketing routes (`/`, `/faq/`, `/changelog/`) |
+| `website/src/pages/` | Marketing routes (`/`, `/faq/`, `/changelog/`) plus canonical `404.astro` → `dist/404.html` for GitHub Pages |
 | `website/src/content/docs/docs/` | Starlight docs under `/docs/` |
 | `website/public/` | Favicons, logo, screenshots |
-| `website/astro.config.mjs` | `base: "/yark"`, Starlight sidebar, dark-only theme; remark plugin prefixes content `/docs/…` links with that base |
+| `website/astro.config.mjs` | `base: "/yark"`, Starlight sidebar, dark-only theme, `disable404Route: true` (avoid duplicate `/404` with docs catch-all); remark plugin prefixes content `/docs/…` links with that base |
 | `.github/workflows/pages.yml` | Build Astro → deploy `website/dist` |
+
+## 404 page
+
+Canonical not-found page: [`website/src/pages/404.astro`](../website/src/pages/404.astro)
+→ `website/dist/404.html` (what GitHub Pages serves for missing paths).
+
+Do **not** add `website/src/content/docs/404.md` while Starlight’s docs catch-all
+is enabled — that collides with the dedicated `/404` route and reintroduces an
+Astro build warning (#149). Starlight’s injected 404 is disabled via
+`disable404Route: true`. `npm run build` in `website/` runs
+`scripts/assert-canonical-404.mjs` after the Astro build.
 
 ## Local preview
 

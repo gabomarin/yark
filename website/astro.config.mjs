@@ -22,6 +22,9 @@ export default defineConfig({
       title: "YARK Docs",
       description:
         "Operator docs for YARK — Windows manager for local ARK: Survival Ascended dedicated servers (SteamCMD, backups, mods, INI).",
+      // Keep Starlight from injecting its own `/404` — the canonical page is
+      // `src/pages/404.astro` → `dist/404.html` for GitHub Pages (#149).
+      disable404Route: true,
       favicon: "/favicon.ico",
       logo: {
         src: "./public/favicon-32x32.png",

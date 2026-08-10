@@ -16,12 +16,14 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Website build no longer warns about a duplicate `/404` route; GitHub Pages keeps a single `404.html` from `website/src/pages/404.astro` (#149).
 - Electron main hot paths (fleet install inspect, crash reattach, stop/kill, SteamCMD discovery/cancel) use bounded async I/O instead of sync filesystem and child-process calls (#145).
 - Overview status heartbeat no longer re-fetches the server profile list; Logs fleet and workspace Backups quiet polls stop resetting UI from host refresh identity churn (#163).
 - Workspace tab crashes show a recoverable panel error instead of blanking the whole app shell (#209).
 
 ### Security
 
+- YARK update **Open release notes** only calls `shell.openExternal` after the shared host allowlist check (same policy as `target=_blank`) (#216).
 - Official CurseForge proxy URL is no longer a source fallback; release builds bake it from a protected Actions variable (#151).
 - GitHub Actions are pinned to immutable commit SHAs (Node 24 runtimes), with Dependabot updates and a lint gate against mutable Action tags (#148).
 - Every renderer→main IPC invoke validates arguments with Zod before domain code runs (#143).

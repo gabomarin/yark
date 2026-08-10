@@ -37,3 +37,24 @@ export function isAllowedExternalUrl(url: string): boolean {
     return false;
   }
 }
+
+/**
+ * Returns `url` when it passes {@link isAllowedExternalUrl}; otherwise throws a
+ * sanitized operator-facing Error (does not echo the raw URL into IPC/toasts).
+ * Used by main before `shell.openExternal` (window-open handler + release notes).
+ */
+export function requireAllowedExternalUrl(
+  url: string | null | undefined,
+): string {
+  if (typeof url !== "string") {
+    throw new Error("No external URL is available.");
+  }
+  const normalized = url.trim();
+  if (normalized.length === 0) {
+    throw new Error("No external URL is available.");
+  }
+  if (!isAllowedExternalUrl(normalized)) {
+    throw new Error("That link is not on the allowed external hosts list.");
+  }
+  return normalized;
+}

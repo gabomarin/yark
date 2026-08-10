@@ -38,7 +38,10 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 - [src/preload](../src/preload): exposed APIs for the renderer.
 - [src/renderer](../src/renderer): React UI, layouts, features, and components.
 - [src/backend](../src/backend): services, domains, process management, and persistence.
-- [src/shared](../src/shared): shared types and IPC contracts.
+- [src/shared](../src/shared): shared types and IPC contracts. External browser opens
+  (`target=_blank`, YARK update release notes) go through
+  [`external-url-policy.ts`](../src/shared/external-url-policy.ts) before
+  `shell.openExternal`.
 - [docs](../docs): in-repo agent docs (this file, runbooks, visual testing, [website](website.md)). Backlog/plans live under `.cursor/project-context/`.
 - [website](../website): static GitHub Pages project site + versioned feature screenshots.
 - [AGENTS.md](../AGENTS.md): Cursor Cloud / Linux VM specifics (display, `ELECTRON_RUN_AS_NODE`, expected vitest path failures, e2e notes).

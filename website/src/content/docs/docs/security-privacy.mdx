@@ -66,3 +66,7 @@ release control is implemented.
 ## Process trust
 
 YARK spawns `ArkAscendedServer.exe` from your install path. Keep installs on paths you control; do not point profiles at untrusted directories.
+
+## External browser opens
+
+In-app links that open your OS browser (`target=_blank`, **Open release notes** under YARK updates) only proceed for allowlisted http(s) hosts (ARK wiki, CurseForge, GitHub). Other hosts are refused.

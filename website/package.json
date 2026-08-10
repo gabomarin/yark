@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev --host",
-    "build": "astro build",
-    "preview": "astro preview --host"
+    "build": "astro build && node scripts/assert-canonical-404.mjs",
+    "preview": "astro preview --host",
+    "assert:404": "node scripts/assert-canonical-404.mjs"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.41.5",

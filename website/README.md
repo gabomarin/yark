@@ -20,6 +20,7 @@ From repo root: `npm run website:dev` / `npm run website:build`.
 
 - Marketing: home, FAQ, changelog (Lenis + Motion product stage)
 - Docs: Starlight under `/docs/` (dark-only, sidebar, Pagefind search)
+- Canonical `src/pages/404.astro` → `dist/404.html` (GitHub Pages); Starlight `disable404Route` avoids a duplicate `/404` warning (#149)
 - Download URL from root `package.json` version
 - SEO: canonical, Open Graph, Twitter, JSON-LD, `robots.txt`, sitemap
 
