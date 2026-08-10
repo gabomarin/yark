@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Quiet **YARK updates** check (and Settings **Check now**) show an operator toast when a new desktop build is available or ready to install; click opens Settings → YARK updates.
+
 ### Fixed
 
 - Public docs body links under GitHub Pages now keep the `/yark` base (e.g. Settings → Logs & diagnostics no longer jumps to `/docs/logs/`).

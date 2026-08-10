@@ -5,7 +5,7 @@ import {
   isEssentialWorldSaveName,
   isTransientWorldSaveName,
   missingEssentialWorldRels,
-} from "../../src/backend/domains/backups/world-snapshot";
+} from "@backend/domains/backups/world-snapshot";
 
 describe("world-snapshot helpers", () => {
   it("classifies transient and essential save names", () => {

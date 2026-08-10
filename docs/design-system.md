@@ -114,7 +114,7 @@ Secondary badges (attention counts, etc.) stay for outcomes — not a second
 | **Panel / dock** | Long-running or multi-item work (SteamCMD dock, stop progress, fleet backup alerts, Overview attention list) |
 | **Global AppShell banner** | Optional shell prop kept for rare app-wide hard failures; **App does not use it** for per-action IPC — prefer `showOperatorToast` / `showOperatorError` (`shared/ui/operatorToast.ts`) |
 
-Manual **Check Servers Health** ends with a toast (attention count or “all healthy”); startup scan stays silent. SteamCMD job outcomes, `runAction` failures, and Backups page save/cleanup results use toasts, not page or AppShell banners.
+Manual **Check Servers Health** ends with a toast (attention count or “all healthy”); startup **server** health scan stays silent. Quiet **YARK app** update check (~60s) toasts only when an update is available or ready to install (sidebar accent remains). SteamCMD job outcomes, `runAction` failures, and Backups page save/cleanup results use toasts, not page or AppShell banners.
 
 ### 6. Dense operational tables
 

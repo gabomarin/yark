@@ -6,6 +6,10 @@ import { Alert, List, Stack, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
+import {
+  yarkUpdateToastCopy,
+  yarkUpdateToastDedupeKey,
+} from "@ui/yarkUpdateOperatorToast";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import type {
   AppEvent,
@@ -277,6 +281,25 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     setRoute("settings");
     setFocusYarkUpdates(true);
   }, []);
+
+  /** Quiet check (~60s) and Settings Check now only accented the sidebar before — toast once. */
+  const yarkUpdateToastKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (appUpdateStatus === null) return;
+    const key = yarkUpdateToastDedupeKey(appUpdateStatus);
+    const copy = yarkUpdateToastCopy(appUpdateStatus);
+    if (key === null || copy === null) return;
+    if (yarkUpdateToastKeyRef.current === key) return;
+    yarkUpdateToastKeyRef.current = key;
+    showOperatorToast({
+      id: "yark-update-operator",
+      title: copy.title,
+      message: copy.message,
+      color: "orange",
+      autoClose: 12_000,
+      onClick: openYarkUpdateSettings,
+    });
+  }, [appUpdateStatus, openYarkUpdateSettings]);
 
   const steamCmdServerName =
     steamCmdStatus?.serverId != null

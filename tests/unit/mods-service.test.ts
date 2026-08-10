@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { MOCK_MOD_CATALOG } from "../../src/backend/domains/mods/mock-mod-catalog";
+import { MOCK_MOD_CATALOG } from "@backend/domains/mods/mock-mod-catalog";
 import {
   DEFAULT_CURSEFORGE_PROXY_URL,
   ModsService,
   normalizeModId,
-} from "../../src/backend/domains/mods/mods-service";
+} from "@backend/domains/mods/mods-service";
 import type { ModMetadata, ServerProfileInput } from "@shared/types";
 
 const awesome: ModMetadata = {

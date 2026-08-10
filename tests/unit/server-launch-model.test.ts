@@ -5,7 +5,7 @@ import {
   joinRawExtraArgs,
   parseRawExtraArgs,
   yarkOwnedPreviewTokens,
-} from "../../src/renderer/src/features/server-workspace/components/ServerLaunchPanel/serverLaunchModel";
+} from "@features/server-workspace/components/ServerLaunchPanel/serverLaunchModel";
 
 function profile(partial: Partial<ServerProfile> = {}): ServerProfile {
   return {

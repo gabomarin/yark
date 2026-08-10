@@ -8,7 +8,7 @@ import {
   filterIniRows,
   groupRowsByUiCategory,
   parseIniRows,
-} from "../../src/renderer/src/features/server-workspace/iniModel";
+} from "@features/server-workspace/iniModel";
 
 describe("asa UI categories", () => {
   it("maps known catalog keys from the pregenerated JSON", () => {
