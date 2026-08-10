@@ -13,7 +13,8 @@ RCON tab** and related IPC (#17 / #154).
   for every command.
 - Give operators Kick / Ban / Unban and a console history that survives tab
   switches inside the app session.
-- Share the same send path with SidePanel **Save world** / **Broadcast**.
+- Share the same send path with SidePanel **Save world** and RCON quick chips
+  (including **Broadcast**, which prefills the command input).
 
 ## Module map
 

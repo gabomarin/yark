@@ -3,6 +3,9 @@
  * The user picks a base folder; the server lives in base\<name>.
  */
 
+/** Soft long-path bound shared by IPC Zod and domain path checks (#143). */
+export const MAX_WINDOWS_PATH_LENGTH = 4096;
+
 /** Characters forbidden in a Windows folder name. */
 const INVALID_FOLDER_CHARS = /[<>:"/\\|?*\u0000-\u001f]/;
 
@@ -88,6 +91,9 @@ export function getWindowsPathError(path: string, fieldLabel = "Path"): string |
   const trimmed = path.trim();
   if (trimmed.length === 0) {
     return `${fieldLabel} required`;
+  }
+  if (trimmed.length > MAX_WINDOWS_PATH_LENGTH) {
+    return `${fieldLabel} must be at most ${MAX_WINDOWS_PATH_LENGTH} characters`;
   }
   for (const segment of windowsPathFolderSegments(trimmed)) {
     const error = getServerFolderNameError(segment);

@@ -572,6 +572,9 @@ export class BackupService extends EventEmitter {
     if (policy.intervalMinutes < MIN_INTERVAL_MINUTES) {
       throw new Error(`Minimum backup interval is ${MIN_INTERVAL_MINUTES} minutes`);
     }
+    if (policy.intervalMinutes > 10_080) {
+      throw new Error("Backup interval must be at most 10080 minutes (7 days)");
+    }
     assertRetainCount("retainCountWorld", policy.retainCountWorld);
     assertRetainCount("retainCountPlayers", policy.retainCountPlayers);
     assertRetainCount("retainCountIni", policy.retainCountIni);

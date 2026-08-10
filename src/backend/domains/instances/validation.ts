@@ -3,6 +3,7 @@ import { validateMapIdentity } from "@shared/map-identity";
 import {
   getServerFolderNameError,
   getWindowsPathError,
+  MAX_WINDOWS_PATH_LENGTH,
 } from "@shared/server-install-path";
 import { findLaunchArgConflicts } from "@shared/structured-launch-options";
 import {
@@ -26,6 +27,7 @@ const portSchema = z
 const windowsPathSchema = z
   .string()
   .min(3, "Path required")
+  .max(MAX_WINDOWS_PATH_LENGTH, "Path too long")
   .regex(WINDOWS_ABS_PATH, "Must be an absolute Windows path");
 
 export const serverProfileInputSchema = z.object({
