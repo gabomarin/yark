@@ -1,5 +1,5 @@
-import { execFileSync } from "node:child_process";
 import type { LiveProcessIdentity } from "@shared/left-running";
+import { execFileBounded } from "./exec-file-bounded";
 
 interface WmiProcessRow {
   ProcessId?: number;
@@ -17,8 +17,12 @@ const QUERY_TIMEOUT_MS = 5_000;
  * Only a validated integer PID is interpolated into PowerShell — never paths or
  * free-form strings — so quoting/escaping issues from install dirs cannot break
  * the filter.
+ *
+ * Uses async exec so the Electron main process is not blocked (#145).
  */
-export function queryWindowsProcessIdentity(pid: number): LiveProcessIdentity | null {
+export async function queryWindowsProcessIdentity(
+  pid: number,
+): Promise<LiveProcessIdentity | null> {
   if (process.platform !== "win32" || !Number.isInteger(pid) || pid <= 0) {
     return null;
   }
@@ -32,16 +36,16 @@ export function queryWindowsProcessIdentity(pid: number): LiveProcessIdentity | 
       `if ($null -eq $p) { '' } else { $p | Select-Object ProcessId,ExecutablePath,CommandLine,CreationDate | ConvertTo-Json -Compress }`,
     ].join("; ");
 
-    const raw = execFileSync(
+    const { stdout } = await execFileBounded(
       "powershell.exe",
       ["-NoProfile", "-NoLogo", "-NonInteractive", "-Command", script],
       {
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "pipe"],
-        timeout: QUERY_TIMEOUT_MS,
+        timeoutMs: QUERY_TIMEOUT_MS,
+        maxBuffer: 1024 * 1024,
         windowsHide: true,
       },
-    ).trim();
+    );
+    const raw = stdout.trim();
     if (raw.length === 0) {
       return null;
     }

@@ -999,14 +999,14 @@ export class InstanceService extends EventEmitter {
     this.emit("stop-progress", payload);
   }
 
-  kill(id: string): void {
+  async kill(id: string): Promise<void> {
     if (this.isStopInProgress(id)) {
       throw new Error(
         "Force close is disabled while stop or restart backup is in progress",
       );
     }
     const profile = this.mustGet(id);
-    this.processes.kill(id);
+    await this.processes.kill(id);
     this.repo.addEvent(
       id,
       "server_stopped",

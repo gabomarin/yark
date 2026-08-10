@@ -1,5 +1,5 @@
 import { closeSync, existsSync, openSync, readFileSync, readdirSync, readSync, statSync } from "node:fs";
-import { access, readdir, stat } from "node:fs/promises";
+import { access, open, readFile, readdir, stat } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { get } from "node:https";
 import { dirname, join } from "node:path";
@@ -12,6 +12,7 @@ import type {
   OfficialNetworkStatus,
   ServerInstallationInfo,
 } from "@shared/types";
+import { execFileBounded } from "../../infra/process/exec-file-bounded";
 import { serverBinaryPath } from "./launch-args";
 
 const ASA_APP_ID = "2430930";
@@ -49,8 +50,8 @@ function firstMeaningfulLine(content: string): string | null {
   return lines[0] ?? null;
 }
 
-function readVersionFromKnownFiles(installDir: string): string | null {
-  const candidates = [
+function versionCandidatePaths(installDir: string): string[] {
+  return [
     join(installDir, "ShooterGame", "Binaries", "Win64", "version.txt"),
     join(installDir, "ShooterGame", "Binaries", "Win64", "version"),
     join(installDir, "ShooterGame", "Binaries", "Win64", "Build.version"),
@@ -59,35 +60,41 @@ function readVersionFromKnownFiles(installDir: string): string | null {
     join(installDir, "Engine", "Binaries", "Win64", "Build.version"),
     join(installDir, "version.txt"),
   ];
+}
 
-  for (const filePath of candidates) {
+function parseVersionFileContent(rawInput: string): string | null {
+  const raw = rawInput.trim();
+  if (raw.length === 0) {
+    return null;
+  }
+
+  if (raw.startsWith("{")) {
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const buildVersion = parsed.BuildVersion ?? parsed.buildVersion ?? parsed.Version;
+    if (typeof buildVersion === "string" && buildVersion.trim().length > 0) {
+      return buildVersion.trim();
+    }
+    const changelist = parsed.Changelist ?? parsed.changelist;
+    if (typeof changelist === "number") {
+      return `CL ${changelist}`;
+    }
+    if (typeof changelist === "string" && changelist.trim().length > 0) {
+      return `CL ${changelist.trim()}`;
+    }
+  }
+
+  return firstMeaningfulLine(raw);
+}
+
+function readVersionFromKnownFiles(installDir: string): string | null {
+  for (const filePath of versionCandidatePaths(installDir)) {
     if (!existsSync(filePath)) {
       continue;
     }
     try {
-      const raw = readFileSync(filePath, "utf8").trim();
-      if (raw.length === 0) {
-        continue;
-      }
-
-      if (raw.startsWith("{")) {
-        const parsed = JSON.parse(raw) as Record<string, unknown>;
-        const buildVersion = parsed.BuildVersion ?? parsed.buildVersion ?? parsed.Version;
-        if (typeof buildVersion === "string" && buildVersion.trim().length > 0) {
-          return buildVersion.trim();
-        }
-        const changelist = parsed.Changelist ?? parsed.changelist;
-        if (typeof changelist === "number") {
-          return `CL ${changelist}`;
-        }
-        if (typeof changelist === "string" && changelist.trim().length > 0) {
-          return `CL ${changelist.trim()}`;
-        }
-      }
-
-      const line = firstMeaningfulLine(raw);
-      if (line !== null) {
-        return line;
+      const parsed = parseVersionFileContent(readFileSync(filePath, "utf8"));
+      if (parsed !== null) {
+        return parsed;
       }
     } catch {
       // Best effort: if a version file is corrupt, try the next source.
@@ -97,13 +104,28 @@ function readVersionFromKnownFiles(installDir: string): string | null {
   return null;
 }
 
+async function readVersionFromKnownFilesAsync(
+  installDir: string,
+): Promise<string | null> {
+  for (const filePath of versionCandidatePaths(installDir)) {
+    try {
+      const parsed = parseVersionFileContent(await readFile(filePath, "utf8"));
+      if (parsed !== null) {
+        return parsed;
+      }
+    } catch {
+      // Missing or corrupt — try the next source.
+    }
+  }
+  return null;
+}
+
 function readVersionFromExecutable(binaryPath: string): string | null {
   if (!existsSync(binaryPath)) {
     return null;
   }
 
   const escapedPath = binaryPath.replace(/'/g, "''");
-
   try {
     const raw = execFileSync(
       "powershell.exe",
@@ -118,11 +140,40 @@ function readVersionFromExecutable(binaryPath: string): string | null {
         timeout: 2_500,
       },
     );
-
     const version = raw.trim();
     return version.length > 0 ? version : null;
   } catch {
-    // Best effort: some binaries do not expose ProductVersion or PowerShell is unavailable.
+    return null;
+  }
+}
+
+async function readVersionFromExecutableAsync(
+  binaryPath: string,
+): Promise<string | null> {
+  try {
+    await access(binaryPath);
+  } catch {
+    return null;
+  }
+
+  const escapedPath = binaryPath.replace(/'/g, "''");
+  try {
+    const { stdout } = await execFileBounded(
+      "powershell.exe",
+      [
+        "-NoProfile",
+        "-Command",
+        `$i=(Get-Item -LiteralPath '${escapedPath}').VersionInfo; $v=$i.ProductVersion; if(-not $v){$v=$i.FileVersion}; if($v){$v}`,
+      ],
+      {
+        timeoutMs: 2_500,
+        maxBuffer: 64 * 1024,
+        windowsHide: true,
+      },
+    );
+    const version = stdout.trim();
+    return version.length > 0 ? version : null;
+  } catch {
     return null;
   }
 }
@@ -132,7 +183,8 @@ function normalizePath(value: string): string {
   return value.trim().replace(/[\\/]+/g, "\\");
 }
 
-function collectManifestRoots(installDir: string): string[] {
+/** Nearby roots only (install ancestors + SteamCMD env) — no drive-letter storm. */
+function collectNearbyManifestRoots(installDir: string): string[] {
   const roots: string[] = [];
   const seen = new Set<string>();
 
@@ -165,14 +217,67 @@ function collectManifestRoots(installDir: string): string[] {
   addRoot(process.env["ARK_STEAMCMD_DIR"]);
   addRoot(process.env["STEAMCMD_DIR"]);
   addRoot(process.env["STEAMCMD_PATH"]);
+  return roots;
+}
 
+function collectDriveManifestRoots(): string[] {
+  const roots: string[] = [];
   for (const drive of "CDEFGHIJKLMNOPQRSTUVWXYZ") {
-    addRoot(`${drive}:\\steamcmd`);
-    addRoot(`${drive}:\\SteamCMD`);
-    addRoot(`${drive}:\\tools\\steamcmd`);
+    roots.push(`${drive}:\\steamcmd`);
+    roots.push(`${drive}:\\SteamCMD`);
+    roots.push(`${drive}:\\tools\\steamcmd`);
+  }
+  return roots;
+}
+
+/** Full root list for sync inspect/tests (includes drive letters). */
+function collectManifestRoots(installDir: string): string[] {
+  const nearby = collectNearbyManifestRoots(installDir);
+  const seen = new Set(nearby.map((root) => root.toLowerCase()));
+  const roots = [...nearby];
+  for (const root of collectDriveManifestRoots()) {
+    const key = root.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    roots.push(root);
+  }
+  return roots;
+}
+
+function parseBuildIdFromManifestContent(
+  content: string,
+  installDirNormalized: string,
+  installDirLeaf: string | undefined,
+  fallbackBuildIds: Set<string>,
+): string | null {
+  const buildMatch = content.match(/"buildid"\s+"([^"]+)"/i);
+  const installMatch = content.match(/"installdir"\s+"([^"]+)"/i);
+  const buildId = buildMatch?.[1]?.trim() ?? "";
+  const manifestInstallDir =
+    installMatch?.[1]?.trim().replace(/[\\/]+/g, "\\").toLowerCase() ?? "";
+
+  if (buildId.length === 0 || manifestInstallDir.length === 0) {
+    return null;
   }
 
-  return roots;
+  const manifestLeaf = manifestInstallDir
+    .split("\\")
+    .filter((part) => part.length > 0)
+    .at(-1);
+
+  const matchesInstallDir =
+    manifestInstallDir === installDirNormalized
+    || installDirNormalized.endsWith(`\\${manifestInstallDir}`)
+    || (installDirLeaf !== undefined
+      && manifestLeaf !== undefined
+      && installDirLeaf === manifestLeaf);
+
+  if (matchesInstallDir) {
+    return `build ${buildId}`;
+  }
+
+  fallbackBuildIds.add(buildId);
+  return null;
 }
 
 function readSteamBuildFromLocalManifest(installDir: string): string | null {
@@ -182,6 +287,19 @@ function readSteamBuildFromLocalManifest(installDir: string): string | null {
   }
   try {
     const content = readFileSync(manifestPath, "utf8");
+    const buildId = content.match(/"buildid"\s+"([^"]+)"/i)?.[1]?.trim() ?? "";
+    return buildId.length > 0 ? `build ${buildId}` : null;
+  } catch {
+    return null;
+  }
+}
+
+async function readSteamBuildFromLocalManifestAsync(
+  installDir: string,
+): Promise<string | null> {
+  const manifestPath = join(installDir, "steamapps", `appmanifest_${ASA_APP_ID}.acf`);
+  try {
+    const content = await readFile(manifestPath, "utf8");
     const buildId = content.match(/"buildid"\s+"([^"]+)"/i)?.[1]?.trim() ?? "";
     return buildId.length > 0 ? `build ${buildId}` : null;
   } catch {
@@ -206,33 +324,85 @@ function readBuildIdFromManifest(installDir: string): string | null {
     }
     try {
       const content = readFileSync(manifestPath, "utf8");
-      const buildMatch = content.match(/"buildid"\s+"([^"]+)"/i);
-      const installMatch = content.match(/"installdir"\s+"([^"]+)"/i);
-      const buildId = buildMatch?.[1]?.trim() ?? "";
-      const manifestInstallDir = installMatch?.[1]?.trim().replace(/[\\/]+/g, "\\").toLowerCase() ?? "";
-
-      if (buildId.length === 0 || manifestInstallDir.length === 0) {
-        continue;
+      const matched = parseBuildIdFromManifestContent(
+        content,
+        installDirNormalized,
+        installDirLeaf,
+        fallbackBuildIds,
+      );
+      if (matched !== null) {
+        return matched;
       }
-
-      const manifestLeaf = manifestInstallDir
-        .split("\\")
-        .filter((part) => part.length > 0)
-        .at(-1);
-
-      const matchesInstallDir =
-        manifestInstallDir === installDirNormalized ||
-        installDirNormalized.endsWith(`\\${manifestInstallDir}`) ||
-        (installDirLeaf !== undefined && manifestLeaf !== undefined && installDirLeaf === manifestLeaf);
-
-      if (matchesInstallDir) {
-        return `build ${buildId}`;
-      }
-
-      fallbackBuildIds.add(buildId);
     } catch {
-      // Best effort: omite manifest ilegible.
+      // Best effort: skip unreadable manifest.
     }
+  }
+
+  if (fallbackBuildIds.size === 1) {
+    const onlyBuildId = [...fallbackBuildIds][0];
+    if (onlyBuildId !== undefined && onlyBuildId.length > 0) {
+      return `build ${onlyBuildId}`;
+    }
+  }
+
+  return null;
+}
+
+async function readBuildIdFromManifestRootsAsync(
+  roots: string[],
+  installDirNormalized: string,
+  installDirLeaf: string | undefined,
+  fallbackBuildIds: Set<string>,
+): Promise<string | null> {
+  for (const root of roots) {
+    const manifestPath = join(root, "steamapps", `appmanifest_${ASA_APP_ID}.acf`);
+    try {
+      const content = await readFile(manifestPath, "utf8");
+      const matched = parseBuildIdFromManifestContent(
+        content,
+        installDirNormalized,
+        installDirLeaf,
+        fallbackBuildIds,
+      );
+      if (matched !== null) {
+        return matched;
+      }
+    } catch {
+      // Missing or unreadable — try next root.
+    }
+  }
+  return null;
+}
+
+async function readBuildIdFromManifestAsync(
+  installDir: string,
+): Promise<string | null> {
+  const installDirNormalized = normalizePath(installDir).toLowerCase();
+  const installDirLeaf = installDirNormalized
+    .split("\\")
+    .filter((part) => part.length > 0)
+    .at(-1);
+  const fallbackBuildIds = new Set<string>();
+
+  // Prefer nearby roots; widen to drive letters only when nothing matched.
+  const nearbyHit = await readBuildIdFromManifestRootsAsync(
+    collectNearbyManifestRoots(installDir),
+    installDirNormalized,
+    installDirLeaf,
+    fallbackBuildIds,
+  );
+  if (nearbyHit !== null) {
+    return nearbyHit;
+  }
+
+  const driveHit = await readBuildIdFromManifestRootsAsync(
+    collectDriveManifestRoots(),
+    installDirNormalized,
+    installDirLeaf,
+    fallbackBuildIds,
+  );
+  if (driveHit !== null) {
+    return driveHit;
   }
 
   if (fallbackBuildIds.size === 1) {
@@ -274,8 +444,6 @@ function readArkVersionFromLogs(installDir: string): string | null {
 
   for (const item of sorted) {
     try {
-      // Only scan the newest logs; ASA logs can be multi-MB and sync reads
-      // on the Electron main process freeze the UI.
       const raw = readFileTailSync(item.fullPath, 256 * 1024);
       const match = raw.match(/ARK\s+Version\s*:\s*([^\r\n]+)/i);
       if (match?.[1] !== undefined) {
@@ -285,7 +453,52 @@ function readArkVersionFromLogs(installDir: string): string | null {
         }
       }
     } catch {
-      // Best effort: omite logs no legibles.
+      // Best effort: skip unreadable logs.
+    }
+  }
+
+  return null;
+}
+
+async function readArkVersionFromLogsAsync(
+  installDir: string,
+): Promise<string | null> {
+  const logsDir = join(installDir, "ShooterGame", "Saved", "Logs");
+  let logNames: string[];
+  try {
+    logNames = (await readdir(logsDir)).filter((name) =>
+      /\.(log|txt)$/i.test(name),
+    );
+  } catch {
+    return null;
+  }
+
+  const withMtime = await Promise.all(
+    logNames.map(async (name) => {
+      const fullPath = join(logsDir, name);
+      let mtimeMs = 0;
+      try {
+        mtimeMs = (await stat(fullPath)).mtimeMs;
+      } catch {
+        mtimeMs = 0;
+      }
+      return { fullPath, mtimeMs };
+    }),
+  );
+  withMtime.sort((a, b) => b.mtimeMs - a.mtimeMs);
+
+  for (const item of withMtime) {
+    try {
+      const raw = await readFileTailAsync(item.fullPath, 256 * 1024);
+      const match = raw.match(/ARK\s+Version\s*:\s*([^\r\n]+)/i);
+      if (match?.[1] !== undefined) {
+        const version = match[1].trim();
+        if (version.length > 0) {
+          return version;
+        }
+      }
+    } catch {
+      // Best effort: skip unreadable logs.
     }
   }
 
@@ -307,11 +520,34 @@ function readFileTailSync(filePath: string, maxBytes: number): string {
       readSync(fd, buffer, 0, length, start);
       return buffer.toString("utf8");
     } catch {
-      // Tail read can fail on some volumes; fall back to a full read.
       return readFileSync(filePath, "utf8");
     }
   } finally {
     closeSync(fd);
+  }
+}
+
+async function readFileTailAsync(
+  filePath: string,
+  maxBytes: number,
+): Promise<string> {
+  const { size } = await stat(filePath);
+  if (size <= maxBytes) {
+    return readFile(filePath, "utf8");
+  }
+  const handle = await open(filePath, "r");
+  try {
+    const length = Math.min(maxBytes, size);
+    const start = size - length;
+    const buffer = Buffer.alloc(length);
+    try {
+      await handle.read(buffer, 0, length, start);
+      return buffer.toString("utf8");
+    } catch {
+      return readFile(filePath, "utf8");
+    }
+  } finally {
+    await handle.close();
   }
 }
 
@@ -792,6 +1028,54 @@ function buildInspectedInstallation(
   };
 }
 
+async function buildInspectedInstallationAsync(
+  serverId: string,
+  installDir: string,
+  classified: {
+    health: InstallationHealthStatus;
+    reasonCodes: InstallationHealthReasonCode[];
+  },
+  options?: InspectServerInstallationOptions,
+): Promise<ServerInstallationInfo> {
+  const healthFields = buildInstallationHealthFields(
+    classified.health,
+    classified.reasonCodes,
+  );
+  const ready = healthFields.installed;
+  const binaryPath = serverBinaryPath(installDir);
+
+  let steamBuild: string | null = null;
+  let build: string | null = null;
+  let arkVersion: string | null = null;
+
+  if (ready) {
+    steamBuild =
+      (await readSteamBuildFromLocalManifestAsync(installDir))
+      ?? (await readBuildIdFromManifestAsync(installDir));
+    build =
+      (await readVersionFromKnownFilesAsync(installDir))
+      ?? (
+        options?.allowExecutableVersionProbe === true
+          ? await readVersionFromExecutableAsync(binaryPath)
+          : null
+      );
+    if (options?.allowLogVersionProbe === true) {
+      arkVersion = await readArkVersionFromLogsAsync(installDir);
+    }
+  }
+
+  return {
+    serverId,
+    ...healthFields,
+    build,
+    steamBuild,
+    arkVersion,
+    version: build,
+    binaryPath,
+    checkedAt: new Date().toISOString(),
+  };
+}
+
 function readInstallInspectCache(
   serverId: string,
   installDir: string,
@@ -847,7 +1131,8 @@ export function inspectServerInstallation(
 
 /**
  * Async inspect for fleet scans and enriched single-server checks.
- * Classification uses `fs.promises` so slow/unavailable UNC paths do not block IPC.
+ * Classification and version/manifest probes use promise FS / bounded exec so
+ * slow disks and PowerShell cannot block the Electron main thread (#145).
  */
 export async function inspectServerInstallationAsync(
   serverId: string,
@@ -861,7 +1146,12 @@ export async function inspectServerInstallationAsync(
 
   const binaryPath = serverBinaryPath(installDir);
   const classified = await classifyInstallHealthAsync(installDir, binaryPath);
-  const info = buildInspectedInstallation(serverId, installDir, classified, options);
+  const info = await buildInspectedInstallationAsync(
+    serverId,
+    installDir,
+    classified,
+    options,
+  );
   writeInstallInspectCache(serverId, installDir, info);
   return info;
 }

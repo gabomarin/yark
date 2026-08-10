@@ -14,7 +14,7 @@ import {
   stat,
   writeFile,
 } from "node:fs/promises";
-import { execFileSync, type ChildProcess } from "node:child_process";
+import { type ChildProcess } from "node:child_process";
 import { basename, dirname, join, resolve } from "node:path";
 import {
   getWindowsPathError,
@@ -25,6 +25,7 @@ import type { MoveInstallProgress } from "@shared/types";
 import { readVolumeSpace, volumeRootForPath } from "../backups/backup-disk";
 import type { BackupService } from "../backups/backup-service";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
+import { killChildProcessTreeAsync } from "../../infra/process/kill-win-process-tree";
 import type { ProcessManager } from "../../infra/process/process-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import {
@@ -151,23 +152,6 @@ async function estimateDirectoryBytes(root: string): Promise<number> {
   return total;
 }
 
-function killChildTree(child: ChildProcess | null): void {
-  if (child === null || child.pid == null) return;
-  const pid = child.pid;
-  try {
-    execFileSync("taskkill.exe", ["/PID", String(pid), "/T", "/F"], {
-      windowsHide: true,
-      stdio: "ignore",
-    });
-  } catch {
-    try {
-      child.kill();
-    } catch {
-      // Best effort.
-    }
-  }
-}
-
 export class MoveInstallService extends EventEmitter {
   private cancelRequested = false;
   private activeServerId: string | null = null;
@@ -207,7 +191,7 @@ export class MoveInstallService extends EventEmitter {
   cancel(): boolean {
     if (this.activeServerId === null) return false;
     this.cancelRequested = true;
-    killChildTree(this.activeChild);
+    void killChildProcessTreeAsync(this.activeChild);
     return true;
   }
 
