@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-08-10
+
 ### Added
 
 - Local Electron loads gitignored `.env` / `.env.local` for `YARK_CURSEFORGE_PROXY_URL` so CurseForge metadata works in `npm run dev` / `start` without relying on Windows User env inheritance (#151).
@@ -16,6 +18,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Public docs cover profile-database boot recovery; marketing roadmap refreshed for work after v0.9.0 (#218).
 - Launch and Mods profile saves use narrow `updateServerPatch` IPC with server-side merge and per-server write serialization so concurrent panel edits no longer last-write-wins (#209).
 - Overview server cards skip re-render on unrelated status polls via a memoized card and a stable fleet action bag; focused cards open the row menu with Shift+F10 (#209).
 

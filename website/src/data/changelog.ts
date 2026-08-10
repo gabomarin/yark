@@ -12,6 +12,45 @@ export type ChangelogEntry = {
 /** Curated site changelog — keep in sync with root CHANGELOG.md when cutting releases. */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.9.0",
+    date: "2026-08-10",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Corrupt or unopenable profile database shows a boot recovery dialog (open folder / quit / start empty).",
+          "Local/dev builds can set the CurseForge proxy URL via gitignored .env / .env.local.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Public docs cover profile-database boot recovery; marketing roadmap refreshed for work after v0.9.0.",
+          "Launch and Mods saves use narrow patch IPC with server-side merge so concurrent edits no longer last-write-wins.",
+          "Overview server cards skip re-render on unrelated status polls; focused cards open the row menu with Shift+F10.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Main-process fleet/SteamCMD/stop hot paths use bounded async I/O instead of blocking sync calls.",
+          "Overview/Logs/Backups quiet polls no longer wipe UI from host refresh identity churn.",
+          "Website build keeps a single GitHub Pages 404.html without a duplicate /404 route warning.",
+          "Settings YARK updates and Log retention clear busy state when IPC fails.",
+        ],
+      },
+      {
+        title: "Security",
+        items: [
+          "Every renderer→main IPC invoke validates arguments with Zod.",
+          "GitHub Actions are SHA-pinned; CurseForge proxy URL is baked from a protected Actions variable (no source fallback).",
+          "CurseForge proxy adds rate limits, body/time bounds, caching, and an abuse runbook.",
+          "Open release notes and target=_blank opens use the shared host allowlist; move-install cleanup is path-gated.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.8.1",
     date: "2026-08-09",
     sections: [

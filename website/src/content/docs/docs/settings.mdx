@@ -60,3 +60,15 @@ Settings lists profiles that opted into **Auto-start with YARK**. Turn the prefe
 Profiles, settings, events, and backup metadata live in local SQLite under the app userData folder (on Windows typically under `%APPDATA%`). There is no YARK cloud account. Server/admin credentials are local too; review the current storage and backup boundary before sharing app data or INI files.
 
 See [Security & privacy](/docs/security-privacy/).
+
+## Profile database recovery
+
+The profile SQLite file is `yark-server-manager.db` under App data (open that folder from Settings). On open, YARK waits briefly for a lock so a short contention does not fail boot immediately.
+
+If the database cannot open or migrate, boot shows a recovery dialog instead of a blank window:
+
+- **Open folder** — inspect or copy the DB (and related WAL/SHM files) from App data
+- **Quit** — exit without changing files
+- **Start empty…** — YARK does not repair the file; it renames the broken DB + WAL/SHM as `*.corrupt.<timestamp>` and continues with a blank database
+
+ASA installs on disk are not deleted. You will need to re-add profiles if you start empty.
