@@ -120,6 +120,7 @@ describe("ServerWorkspacePage", () => {
       })),
       openServerIniInEditor: vi.fn(async () => ({ ok: true, data: undefined })),
       updateServer: vi.fn(async () => ({ ok: true, data: serverA })),
+      updateServerPatch: vi.fn(async () => ({ ok: true, data: serverA })),
       listBackups: vi.fn(async () => ({ ok: true, data: [] })),
       getBackupPolicy: vi.fn(async (serverId: string) => ({
         ok: true,

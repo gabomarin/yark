@@ -36,7 +36,7 @@ describe("ServerLaunchPanel", () => {
   beforeEach(() => {
     window.api = {
       ...(window.api ?? {}),
-      updateServer: vi.fn(async () => ({ ok: true as const, data: profile() })),
+      updateServerPatch: vi.fn(async () => ({ ok: true as const, data: profile() })),
     } as typeof window.api;
   });
 

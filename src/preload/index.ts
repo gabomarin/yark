@@ -5,6 +5,7 @@ import type {
   ClusterIniTemplateFileSelection,
   ServerIniPayload,
   ServerProfileInput,
+  ServerProfilePatch,
   ServerRuntimeInfo,
   StartServerOptions,
   SteamCmdCacheKind,
@@ -18,6 +19,8 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.serversCreate, input),
   updateServer: (id: string, input: ServerProfileInput) =>
     ipcRenderer.invoke(IPC.serversUpdate, id, input),
+  updateServerPatch: (id: string, patch: ServerProfilePatch) =>
+    ipcRenderer.invoke(IPC.serversUpdatePatch, id, patch),
   setServerEnabled: (id: string, enabled: boolean) =>
     ipcRenderer.invoke(IPC.serversSetEnabled, id, enabled),
   deleteServer: (id: string) => ipcRenderer.invoke(IPC.serversDelete, id),

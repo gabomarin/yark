@@ -28,6 +28,7 @@ import type {
   ServerIniPayload,
   ServerIniSnapshot,
   ServerInstallationSnapshot,
+  ServerProfilePatch,
   ServerOperationalLogs,
   ServerRuntimeLogSnapshot,
   ServerProfile,
@@ -59,6 +60,7 @@ export const IPC = {
   serversList: "servers:list",
   serversCreate: "servers:create",
   serversUpdate: "servers:update",
+  serversUpdatePatch: "servers:update-patch",
   serversSetEnabled: "servers:set-enabled",
   serversDelete: "servers:delete",
   serversClone: "servers:clone",
@@ -226,6 +228,10 @@ export interface RendererApi {
   updateServer(
     id: string,
     input: ServerProfileInput,
+  ): Promise<IpcResult<ServerProfile>>;
+  updateServerPatch(
+    id: string,
+    patch: ServerProfilePatch,
   ): Promise<IpcResult<ServerProfile>>;
   setServerEnabled(id: string, enabled: boolean): Promise<IpcResult<ServerProfile>>;
   deleteServer(id: string): Promise<IpcResult<void>>;

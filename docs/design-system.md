@@ -268,7 +268,7 @@ editors stay feature-local monospace (not path chips).
 | Why | One chrome for the same actions; avoids a second popup theme |
 | Sync model | Shared `RowActionEntry[]` + `RowActionMenuItems` for kebab and right-click |
 | Surfaces | Server cards, backup history rows, mods table rows |
-| A11y | Kebab / icon rows remain for keyboard and screen readers |
+| A11y | Server cards: kebab + **Shift+F10** / ContextMenu key on the focused card (`aria-haspopup="menu"`). Backup/mods table rows: row kebab / action icons remain the keyboard path (DataTable rows stay mouse-context only) |
 
 ## Candidates for a later slice
 
@@ -279,6 +279,7 @@ editors stay feature-local monospace (not path chips).
 | `PageSectionHeader` | Title + filter/actions repeats | Third identical header |
 | `DangerConfirmModal` pattern | Restore/delete/cleanup modals | After second modal copy-paste |
 | Form section Card defaults | `ServerForm` raw Card | When editing ServerForm chrome |
+| React Compiler | Spike deferred for v0.9 (#209) — current memo/`handlersRef` patterns cover Overview fan-out; revisit after Babel/Vite cost is measured | Explicit compile-time memo budget / regression |
 
 ## Related
 

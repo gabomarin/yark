@@ -94,7 +94,7 @@ function installApi(): RendererApi {
       data: superDetail,
     }),
     openCurseForgeMod: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
-    updateServer: vi.fn().mockResolvedValue({ ok: true, data: server }),
+    updateServerPatch: vi.fn().mockResolvedValue({ ok: true, data: server }),
   } as unknown as RendererApi;
   Object.defineProperty(window, "api", { configurable: true, value: api });
   return api;
@@ -148,10 +148,10 @@ describe("ServerModsPanel", () => {
       screen.getByRole("switch", { name: "Enable Svartalfheim Premium" }),
     );
     await waitFor(() => {
-      expect(api.updateServer).toHaveBeenCalledWith(
+      expect(api.updateServerPatch).toHaveBeenCalledWith(
         "server-1",
         expect.objectContaining({
-          map: "TheIsland_WP",
+          group: "mods",
           mods: ["962796"],
           disabledMods: [],
         }),
@@ -248,9 +248,10 @@ describe("ServerModsPanel", () => {
       screen.getByRole("switch", { name: "Enable Svartalfheim Premium" }),
     );
     await waitFor(() => {
-      expect(api.updateServer).toHaveBeenCalledWith(
+      expect(api.updateServerPatch).toHaveBeenCalledWith(
         "server-1",
         expect.objectContaining({
+          group: "mods",
           mods: ["962796", "947033"],
           disabledMods: [],
         }),
@@ -261,25 +262,27 @@ describe("ServerModsPanel", () => {
       screen.getByRole("switch", { name: "Disable Awesome Spyglass!" }),
     );
     await waitFor(() => {
-      expect(api.updateServer).toHaveBeenCalledWith(
+      expect(api.updateServerPatch).toHaveBeenCalledWith(
         "server-1",
         expect.objectContaining({
+          group: "mods",
           mods: ["962796", "947033"],
           disabledMods: ["947033"],
         }),
       );
     });
 
-    const callsBeforeRelease = vi.mocked(api.updateServer).mock.calls.length;
+    const callsBeforeRelease = vi.mocked(api.updateServerPatch).mock.calls.length;
     releaseDetail();
     await waitFor(() => {
-      expect(vi.mocked(api.updateServer).mock.calls.length).toBeGreaterThan(
+      expect(vi.mocked(api.updateServerPatch).mock.calls.length).toBeGreaterThan(
         callsBeforeRelease,
       );
     });
-    const lastCall = vi.mocked(api.updateServer).mock.calls.at(-1)?.[1];
+    const lastCall = vi.mocked(api.updateServerPatch).mock.calls.at(-1)?.[1];
     expect(lastCall).toEqual(
       expect.objectContaining({
+        group: "mods",
         mods: ["962796", "947033"],
         disabledMods: ["947033"],
         modMetadataCache: expect.objectContaining({
@@ -304,9 +307,10 @@ describe("ServerModsPanel", () => {
 
     await user.click(screen.getByRole("switch", { name: "Disable Awesome Spyglass!" }));
     await waitFor(() => {
-      expect(api.updateServer).toHaveBeenCalledWith(
+      expect(api.updateServerPatch).toHaveBeenCalledWith(
         "server-1",
         expect.objectContaining({
+          group: "mods",
           mods: ["947033"],
           disabledMods: ["947033"],
           modMetadataCache: { "947033": awesomeDetail },
@@ -327,9 +331,10 @@ describe("ServerModsPanel", () => {
     expect(api.getModByReference).toHaveBeenCalledWith(url);
     expect(screen.queryByText("Mod details")).not.toBeInTheDocument();
     await waitFor(() => {
-      expect(api.updateServer).toHaveBeenCalledWith(
+      expect(api.updateServerPatch).toHaveBeenCalledWith(
         "server-1",
         expect.objectContaining({
+          group: "mods",
           mods: ["947033", "929420"],
           disabledMods: ["929420"],
           modMetadataCache: {
@@ -374,7 +379,7 @@ describe("ServerModsPanel", () => {
     expect(await screen.findByText(/Importing mods 0\/2/)).toBeInTheDocument();
     releaseFirst();
     await waitFor(() => {
-      expect(api.updateServer).toHaveBeenCalled();
+      expect(api.updateServerPatch).toHaveBeenCalled();
     });
     await waitFor(() => {
       expect(screen.queryByText(/Importing mods/)).not.toBeInTheDocument();
@@ -391,9 +396,10 @@ describe("ServerModsPanel", () => {
 
     expect(api.getModByReference).toHaveBeenCalledWith("929420");
     await waitFor(() => {
-      expect(api.updateServer).toHaveBeenCalledWith(
+      expect(api.updateServerPatch).toHaveBeenCalledWith(
         "server-1",
         expect.objectContaining({
+          group: "mods",
           mods: ["947033", "929420"],
           disabledMods: ["929420"],
         }),
@@ -411,7 +417,7 @@ describe("ServerModsPanel", () => {
 
     expect(await screen.findByText(/No valid mods to add/)).toBeInTheDocument();
     expect(api.getModByReference).not.toHaveBeenCalled();
-    expect(api.updateServer).not.toHaveBeenCalled();
+    expect(api.updateServerPatch).not.toHaveBeenCalled();
   });
 
   it("removes a configured mod and its cached metadata after confirmation", async () => {
@@ -425,9 +431,10 @@ describe("ServerModsPanel", () => {
     await user.click(await screen.findByRole("button", { name: "Remove mod" }));
 
     await waitFor(() => {
-      expect(api.updateServer).toHaveBeenCalledWith(
+      expect(api.updateServerPatch).toHaveBeenCalledWith(
         "server-1",
         expect.objectContaining({
+          group: "mods",
           mods: [],
           disabledMods: [],
           modMetadataCache: {},
@@ -448,13 +455,14 @@ describe("ServerModsPanel", () => {
     await user.click(
       await screen.findByRole("menuitem", { name: /Remove Awesome Spyglass/i }),
     );
-    expect(api.updateServer).not.toHaveBeenCalled();
+    expect(api.updateServerPatch).not.toHaveBeenCalled();
 
     await user.click(await screen.findByRole("button", { name: "Remove mod" }));
     await waitFor(() => {
-      expect(api.updateServer).toHaveBeenCalledWith(
+      expect(api.updateServerPatch).toHaveBeenCalledWith(
         "server-1",
         expect.objectContaining({
+          group: "mods",
           mods: [],
           modMetadataCache: {},
         }),
@@ -487,9 +495,10 @@ describe("ServerModsPanel", () => {
     await user.click(screen.getByRole("button", { name: "Add Super Spyglass Plus" }));
 
     await waitFor(() => {
-      expect(api.updateServer).toHaveBeenCalledWith(
+      expect(api.updateServerPatch).toHaveBeenCalledWith(
         "server-1",
         expect.objectContaining({
+          group: "mods",
           mods: ["947033", "929420"],
           disabledMods: ["929420"],
         }),

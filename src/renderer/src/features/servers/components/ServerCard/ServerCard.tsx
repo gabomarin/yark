@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import { memo, type ReactElement } from "react";
 import { Badge, Card, Group, Stack, Text, UnstyledButton } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
@@ -8,13 +8,14 @@ import { ServerCardActions } from "./ServerCardActions";
 import { ServerCardMetaItem } from "./ServerCardMetaItem";
 import { ServerCardProgress } from "./ServerCardProgress";
 import { buildServerCardMenuActions } from "./serverCardMenuActions";
+import type { ServerCardHandlers } from "./serverCardHandlers";
 import {
   deriveServerCardView,
   type SteamCmdOperation,
 } from "./serverCardModel";
 import classes from "./ServerCard.module.css";
 
-interface Props {
+type ServerCardSharedProps = {
   server: ServerProfile;
   runtime: ServerRuntimeInfo | null;
   installation: ServerInstallationInfo | null;
@@ -31,6 +32,9 @@ interface Props {
   stopProgressPercent?: number | null;
   stopProgressLabel?: string | null;
   checkingUpdates?: boolean;
+};
+
+type ServerCardCallbackProps = {
   onStart: () => void;
   onStop: () => void;
   onKill: () => void;
@@ -49,9 +53,42 @@ interface Props {
   onDelete: () => void;
   onCancelSteamCmd: () => void;
   onToggleEnabled?: () => void;
+};
+
+/** Overview: stable `handlers` bag. Tests/other callers: explicit zero-arg callbacks. */
+export type ServerCardProps =
+  | (ServerCardSharedProps & { handlers: ServerCardHandlers })
+  | (ServerCardSharedProps & ServerCardCallbackProps);
+
+function bindServerCardHandlers(
+  handlers: ServerCardHandlers,
+  server: ServerProfile,
+): ServerCardCallbackProps {
+  const id = server.id;
+  return {
+    onStart: () => handlers.onStartServer(id),
+    onStop: () => handlers.onStopServer(id),
+    onKill: () => handlers.onKillServer(id),
+    onRestart: () => handlers.onRestartServer(id),
+    onOpenWorkspace: () => handlers.onOpenWorkspace(server),
+    onOpenLogs: () => handlers.onOpenLogs(id),
+    onReviewError: () => handlers.onReviewError(id),
+    onOpenFolder: () => handlers.onOpenFolder(id),
+    onInstallFiles: () => handlers.onInstallFiles(id),
+    onUpdateNow: () => handlers.onUpdateNow(id),
+    onVerifyFiles: () => handlers.onVerifyFiles(id),
+    onCheckUpdates: () => handlers.onCheckUpdatesForServer(id),
+    onClone: () => handlers.onCloneServer(id),
+    onCopyConfiguration: () => handlers.onCopyConfiguration(id),
+    onDelete: () => handlers.onDeleteServer(id),
+    onCancelSteamCmd: () => handlers.onCancelSteamCmd(),
+    onToggleEnabled: handlers.onToggleServerEnabled
+      ? () => handlers.onToggleServerEnabled?.(id, !server.enabled)
+      : undefined,
+  };
 }
 
-export function ServerCard(props: Props): ReactElement {
+function ServerCardComponent(props: ServerCardProps): ReactElement {
   const {
     server,
     runtime,
@@ -67,6 +104,27 @@ export function ServerCard(props: Props): ReactElement {
     stopProgressLabel = null,
     checkingUpdates = false,
   } = props;
+  const {
+    onStart,
+    onStop,
+    onKill,
+    onRestart,
+    onOpenWorkspace,
+    onOpenLogs,
+    onReviewError,
+    onOpenFolder,
+    onInstallFiles,
+    onUpdateNow,
+    onVerifyFiles,
+    onCheckUpdates,
+    onClone,
+    onCopyConfiguration,
+    onDelete,
+    onCancelSteamCmd,
+    onToggleEnabled,
+  } = "handlers" in props
+    ? bindServerCardHandlers(props.handlers, server)
+    : props;
   const status = runtime?.status ?? "stopped";
   const view = deriveServerCardView({
     status,
@@ -89,16 +147,16 @@ export function ServerCard(props: Props): ReactElement {
   const runRuntimeAction = (): void => {
     switch (view.runtimeAction.kind) {
       case "cancel":
-        props.onCancelSteamCmd();
+        onCancelSteamCmd();
         break;
       case "enable":
-        props.onToggleEnabled?.();
+        onToggleEnabled?.();
         break;
       case "start":
-        props.onStart();
+        onStart();
         break;
       case "stop":
-        props.onStop();
+        onStop();
         break;
       case "starting":
       case "stopping":
@@ -117,22 +175,25 @@ export function ServerCard(props: Props): ReactElement {
     checkingUpdates,
     updateAction: view.updateAction,
     serverEnabled: server.enabled,
-    onOpenWorkspace: props.onOpenWorkspace,
-    onStop: props.onStop,
-    onRestart: props.onRestart,
-    onOpenFolder: props.onOpenFolder,
-    onOpenLogs: props.onOpenLogs,
-    onCheckUpdates: props.onCheckUpdates,
-    onUpdateNow: props.onUpdateNow,
-    onVerifyFiles: props.onVerifyFiles,
-    onInstallFiles: props.onInstallFiles,
-    onClone: props.onClone,
-    onCopyConfiguration: props.onCopyConfiguration,
-    onKill: props.onKill,
-    onDelete: props.onDelete,
-    onToggleEnabled: props.onToggleEnabled,
+    onOpenWorkspace,
+    onStop,
+    onRestart,
+    onOpenFolder,
+    onOpenLogs,
+    onCheckUpdates,
+    onUpdateNow,
+    onVerifyFiles,
+    onInstallFiles,
+    onClone,
+    onCopyConfiguration,
+    onKill,
+    onDelete,
+    onToggleEnabled,
   });
-  const onContextMenu = useRowContextMenu(menuEntries, { disabled: menuDisabled });
+  const { onContextMenu, onKeyDown, menuTriggerProps } = useRowContextMenu(
+    menuEntries,
+    { disabled: menuDisabled },
+  );
 
   return (
     <Card
@@ -145,12 +206,14 @@ export function ServerCard(props: Props): ReactElement {
       data-server-card
       data-server-name={server.name}
       onContextMenu={onContextMenu}
+      onKeyDown={onKeyDown}
+      {...menuTriggerProps}
     >
       <Stack gap="sm">
         <div className={classes.mainRow}>
           <UnstyledButton
             className={classes.cardHit}
-            onClick={props.onOpenWorkspace}
+            onClick={onOpenWorkspace}
             aria-label={
               badgeBusy
                 ? `Open ${server.name} (operation in progress)`
@@ -215,21 +278,21 @@ export function ServerCard(props: Props): ReactElement {
             restartAction={view.restartAction}
             updateAction={view.updateAction}
             onRuntimeAction={runRuntimeAction}
-            onOpenWorkspace={props.onOpenWorkspace}
-            onStop={props.onStop}
-            onRestart={props.onRestart}
-            onOpenFolder={props.onOpenFolder}
-            onOpenLogs={props.onOpenLogs}
-            onCheckUpdates={props.onCheckUpdates}
-            onUpdateNow={props.onUpdateNow}
-            onVerifyFiles={props.onVerifyFiles}
-            onInstallFiles={props.onInstallFiles}
-            onClone={props.onClone}
-            onCopyConfiguration={props.onCopyConfiguration}
-            onKill={props.onKill}
-            onDelete={props.onDelete}
+            onOpenWorkspace={onOpenWorkspace}
+            onStop={onStop}
+            onRestart={onRestart}
+            onOpenFolder={onOpenFolder}
+            onOpenLogs={onOpenLogs}
+            onCheckUpdates={onCheckUpdates}
+            onUpdateNow={onUpdateNow}
+            onVerifyFiles={onVerifyFiles}
+            onInstallFiles={onInstallFiles}
+            onClone={onClone}
+            onCopyConfiguration={onCopyConfiguration}
+            onKill={onKill}
+            onDelete={onDelete}
             serverEnabled={server.enabled}
-            onToggleEnabled={props.onToggleEnabled}
+            onToggleEnabled={onToggleEnabled}
           />
         </div>
 
@@ -245,7 +308,7 @@ export function ServerCard(props: Props): ReactElement {
         {runtime?.lastError !== null && runtime?.lastError !== undefined && (
           <UnstyledButton
             className={classes.runtimeError}
-            onClick={props.onReviewError}
+            onClick={onReviewError}
             aria-label="Review error — open runtime logs"
           >
             <Text c="red" size="sm" className={classes.runtimeErrorText}>
@@ -257,3 +320,5 @@ export function ServerCard(props: Props): ReactElement {
     </Card>
   );
 }
+
+export const ServerCard = memo(ServerCardComponent);

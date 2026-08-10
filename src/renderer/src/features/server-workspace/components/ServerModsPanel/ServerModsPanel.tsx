@@ -15,7 +15,6 @@ import {
   metadataMap,
   modsMetadataSyncKey,
   sameIdList,
-  toProfileInput,
   type ModRow,
 } from "./serverModsModel";
 import { createServerModsListMutations } from "./serverModsListMutations";
@@ -122,10 +121,12 @@ export function ServerModsPanel(props: Props): ReactElement {
     // workspace switch; after await, skip local apply if we left that server.
     const server = serverRef.current;
     const targetServerId = server.id;
-    const result = await window.api.updateServer(
-      targetServerId,
-      toProfileInput(server, nextIds, nextDisabled, nextCache),
-    );
+    const result = await window.api.updateServerPatch(targetServerId, {
+      group: "mods",
+      mods: nextIds,
+      disabledMods: nextDisabled,
+      modMetadataCache: nextCache,
+    });
     if (!result.ok) throw new Error(result.error);
     if (serverRef.current.id !== targetServerId) return;
     setConfiguredIds(nextIds);
