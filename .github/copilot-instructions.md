@@ -25,6 +25,7 @@
 - Workspace RCON console / players / ban list: `docs/rcon.md`.
 - Settings (app-wide prefs, desktop shell, SteamCMD path): `docs/settings.md`.
 - Clusters transfer compliance: `docs/clusters.md`.
+- Workspace Mods / CurseForge load order: `docs/mods.md` (proxy ops: `docs/curseforge-proxy.md`).
 - GitHub Pages site / screenshot gallery: `docs/website.md`.
 - Cursor Cloud / Linux VM: `AGENTS.md`.
 - Visual UI review: `docs/visual-testing.md`.

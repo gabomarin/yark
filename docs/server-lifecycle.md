@@ -97,7 +97,8 @@ map, Start fails when `mapModId` is unset, missing from `mods`, or listed in `di
 The Launch tab shows a yellow alert for the same cases (soft). Save remains soft-warn only.
 
 Research archive + live evidence: [spikes/65-modded-asa-maps.md](spikes/65-modded-asa-maps.md).
-Operator guide: website `docs/mods.mdx` (Maps / custom worlds) and `docs/lifecycle.mdx`.
+Engineering Mods inventory / `-mods=`: [mods.md](mods.md). Operator guide: website
+`docs/mods.mdx` (Maps / custom worlds) and `docs/lifecycle.mdx`.
 
 ## Profile → INI sync
 

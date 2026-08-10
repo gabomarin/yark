@@ -3,7 +3,8 @@
 Operator runbook for the Cloudflare Worker in
 [`workers/curseforge-proxy`](../workers/curseforge-proxy/). Tracks
 [#70](https://github.com/gabomarin/yark/issues/70). Setup and route shapes:
-[Worker README](../workers/curseforge-proxy/README.md).
+[Worker README](../workers/curseforge-proxy/README.md). Electron Mods
+workspace (inventory, IPC, `-mods=`): [mods.md](mods.md).
 
 ## Threat model
 

@@ -58,6 +58,8 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 - [rcon.md](rcon.md) — workspace RCON console, persistent session, players, ban list.
 - [settings.md](settings.md) — app-wide prefs, desktop shell, SteamCMD path, density, auto-start summary.
 - [clusters.md](clusters.md) — transfer-compliance reports, cluster launch trio, Clusters page.
+- [mods.md](mods.md) — workspace CurseForge inventory, enable/disable, load order, metadata proxy, `-mods=`.
+- [curseforge-proxy.md](curseforge-proxy.md) — Worker abuse controls, URL ownership, secret rotation.
 - [website.md](website.md) — GitHub Pages deploy, screenshot gallery capture/redaction, version pill sync.
 
 ## Current functional status
@@ -74,10 +76,11 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
   Sidebar **Backups** is generalized configuration across servers (schedule /
   destination / retention) with “Open in server” to jump into the workspace tab.
   **Mods** manages CurseForge Project IDs (enable/disable without dropping IDs,
-  Worker-backed metadata, launch `-mods=` for enabled only). CurseForge proxy
-  abuse controls and operator runbook: [curseforge-proxy.md](curseforge-proxy.md)
-  (#70). A six-step configuration assistant launches on demand from `Server`; it
-  uses an isolated draft and writes only after explicit review.
+  Worker-backed metadata, launch `-mods=` for enabled only) — full map:
+  [mods.md](mods.md). CurseForge proxy abuse controls:
+  [curseforge-proxy.md](curseforge-proxy.md) (#70). A six-step configuration
+  assistant launches on demand from `Server`; it uses an isolated draft and
+  writes only after explicit review.
 - Settings is live in the shell (SteamCMD path, desktop shell, density, and related preferences — no light/dark theme control). Full map: [settings.md](settings.md). Clusters surfaces existing `clusterId` / `clusterDir` compliance reports (live transfer validation still deferred); see [clusters.md](clusters.md). Workspace **RCON** tab: [rcon.md](rcon.md).
 - Sidebar Backups settings page and per-server workspace Backups tab are live.
 - Backups are kind-scoped ZIP archives: `world` (full SavedArks including `.arkprofile*`), `players` (profiles from SavedArks/SaveGames), `ini` (`Game.ini` + `GameUserSettings.ini`).
