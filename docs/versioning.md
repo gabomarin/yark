@@ -52,6 +52,8 @@ Workflow: [`.github/workflows/changelog.yml`](../.github/workflows/changelog.yml
 
 ## GitHub Actions release
 
+Supply-chain pins, permissions, and Action update/rollback: [github-actions.md](github-actions.md).
+
 Workflow: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
 
 - **Trigger:** push of tag `v*` (or manual **workflow_dispatch** with an existing tag).

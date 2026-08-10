@@ -162,19 +162,26 @@ function main() {
     }
   }
 
+  let exitCode = 0
+
   if (violations.length === 0) {
     console.log(
       `lint: ok (max TSX ${maxTsxLines}, max TS ${maxTsLines}, ${Object.keys(allowed).length} grandfathered feature files)`
     )
-    return
+  } else {
+    console.error('lint: failed\n')
+    for (const v of violations) console.error(`  - ${v}`)
+    console.error(
+      `\nSee docs/component-structure.md. To intentionally allow growth, update ${BASELINE_REL}.`
+    )
+    exitCode = 1
   }
 
-  console.error('lint: failed\n')
-  for (const v of violations) console.error(`  - ${v}`)
-  console.error(
-    `\nSee docs/component-structure.md. To intentionally allow growth, update ${BASELINE_REL}.`
-  )
-  process.exit(1)
+  // Supply-chain gate for workflow Action pins (#148).
+  const { lintActionsPins } = require('./lint-actions-pins.cjs')
+  if (lintActionsPins() !== 0) exitCode = 1
+
+  process.exitCode = exitCode
 }
 
 main()
