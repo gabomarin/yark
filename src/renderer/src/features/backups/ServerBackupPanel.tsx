@@ -305,9 +305,8 @@ export function ServerBackupPanel(props: Props): ReactElement {
     const gen = ++loadGenRef.current;
     if (!quiet) {
       setLoading(true);
-    } else {
-      setRefreshing(true);
     }
+    // Quiet interval / push: no toolbar spinner — avoid ~12s flicker (#163).
     try {
       const [listRes, policyRes, rootRes] = await Promise.all([
         window.api.listBackups(serverId, 100),
@@ -347,11 +346,18 @@ export function ServerBackupPanel(props: Props): ReactElement {
           ? previous
           : listRes.data,
       );
-      setSelectedIds((prev) =>
-        prev.filter((id) =>
+      setSelectedIds((prev) => {
+        const next = prev.filter((id) =>
           listRes.data.some((b) => b.id === id && b.status !== "running"),
-        ),
-      );
+        );
+        if (
+          next.length === prev.length &&
+          next.every((id, index) => id === prev[index])
+        ) {
+          return prev;
+        }
+        return next;
+      });
       setPolicy((previous) =>
         previous !== null && draftEqualsPolicy(toDraft(previous), policyRes.data)
           ? previous
@@ -368,11 +374,9 @@ export function ServerBackupPanel(props: Props): ReactElement {
     } finally {
       if (gen === loadGenRef.current) {
         setLoading(false);
-        setRefreshing(false);
       }
     }
   };
-
   useEffect(() => {
     void load(props.server.id);
   }, [props.server.id, props.server.updatedAt]);
@@ -423,8 +427,13 @@ export function ServerBackupPanel(props: Props): ReactElement {
   }, [draftPolicy, policy, props.server.id]);
 
   const forceRefresh = async () => {
-    await load(props.server.id, { quiet: true });
-    showBackupToast("Backup list refreshed.");
+    setRefreshing(true);
+    try {
+      await load(props.server.id, { quiet: true });
+      showBackupToast("Backup list refreshed.");
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const selectKind = (kind: BackupKind) => {

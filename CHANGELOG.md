@@ -16,6 +16,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Overview status heartbeat no longer re-fetches the server profile list; Logs fleet and workspace Backups quiet polls stop resetting UI from host refresh identity churn (#163).
 - Workspace tab crashes show a recoverable panel error instead of blanking the whole app shell (#209).
 
 ### Security
