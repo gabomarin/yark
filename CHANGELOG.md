@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- Release CI no longer flakes on `execFileBounded` maxBuffer coverage: the test drives Node stdout overflow on all platforms instead of a slow PowerShell spawn on Windows runners.
+
 ### Changed
 
 - Public site canonical origin is **https://getyark.com** (GitHub Pages custom domain) with Astro `base: "/"` so assets and docs resolve at the domain root.
