@@ -271,4 +271,28 @@ describe("LogsPage", () => {
 
     expect(await screen.findByText("Inactive")).toBeInTheDocument();
   });
+
+  it("does not reload fleet events when servers prop identity changes", async () => {
+    const recentEvents = vi.mocked(window.api.recentEvents);
+    const { rerender } = render(
+      <AppProviders>
+        <LogsPage servers={[server]} onOpenServerLogs={vi.fn()} />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByText(/Update failed on Island/i)).toBeInTheDocument();
+    expect(recentEvents).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <AppProviders>
+        <LogsPage
+          servers={[{ ...server }]}
+          onOpenServerLogs={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await screen.findByText(/Update failed on Island/i);
+    expect(recentEvents).toHaveBeenCalledTimes(1);
+  });
 });

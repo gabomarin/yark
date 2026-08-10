@@ -114,6 +114,11 @@ cmd.exe /c npm run build
 ## Implementation notes
 
 - Launch args, profile→INI sync, Windows spawn flags, start/stop/kill/restart, readiness, port rules, INI sanitize, and the on-demand configuration assistant: [server-lifecycle.md](server-lifecycle.md). Do not add a permanent Guided Configuration tab; keep the six-step assistant on-demand from `Server`.
+- **App refresh contract (#163):** `App.refresh` is the shared host poll. Prefer push (`onStatus`, `onBackupsChanged`, SteamCMD progress, etc.) for live runtime. Do **not** `useEffect(..., [props.servers])` (or the whole `servers` array) to reload page data — poll identity / re-render is not a membership signal. Patterns:
+  - **Lookup only** (`useMemo` name maps, enabled flags): OK to depend on `props.servers`.
+  - **Page data load:** mount + explicit Reload/Refresh; for membership use a stable `serverIdsKey` (see Backups), never the full profile array.
+  - **Drafts:** never reset from quiet/poll refresh; dirty-preserve or load only when not dirty.
+  - Overview heartbeat calls `refresh({ includeInstallation: false, includeServerList: false })` (statuses / SteamCMD / events). Profiles refresh on mutations, operator Refresh, and the slower install/CDN timer (`includeServerList` defaults true).
 - The new renderer follows a feature-based pattern with a shared shell and CSS Modules.
 - IPC-layer changes should keep the contracts aligned in [src/shared/ipc.ts](../src/shared/ipc.ts), [src/preload/index.ts](../src/preload/index.ts), and [src/main/ipc-handlers.ts](../src/main/ipc-handlers.ts). High-risk invoke args use Zod via `handleValidated` — inventory, validated-channel list, and verification steps: [ipc-validation.md](ipc-validation.md) (#143).
 - Update availability must compare the local Steam `buildid` from `appmanifest_2430930.acf` with the public Steam build. Never compare the local runtime `ARK Version` with a version observed on an external official server; staggered deployments make those values non-equivalent.
