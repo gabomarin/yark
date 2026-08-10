@@ -205,6 +205,16 @@ a:hover {
   filter: drop-shadow(0 18px 40px rgba(126, 200, 227, 0.12));
 }
 
+.hero-title {
+  margin: 0 0 0.85rem;
+  max-width: 36rem;
+  color: var(--text);
+  font-size: clamp(1.15rem, 2.4vw, 1.45rem);
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
 .lede {
   margin: 0 0 1.6rem;
   max-width: 36rem;

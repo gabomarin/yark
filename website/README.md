@@ -2,7 +2,7 @@
 
 Canonical GitHub Pages site for [gabomarin/yark](https://github.com/gabomarin/yark).
 
-**Live:** https://gabomarin.github.io/yark/
+**Live:** https://getyark.com/
 
 ## Local preview
 
@@ -12,7 +12,7 @@ npm install
 npm run dev
 ```
 
-Open **http://localhost:4321/yark/** (`base: "/yark"` matches project Pages).
+Open **http://localhost:4321/** (`base: "/"` matches getyark.com).
 
 From repo root: `npm run website:dev` / `npm run website:build`.
 
@@ -22,7 +22,7 @@ From repo root: `npm run website:dev` / `npm run website:build`.
 - Docs: Starlight under `/docs/` (dark-only, sidebar, Pagefind search)
 - Canonical `src/pages/404.astro` → `dist/404.html` (GitHub Pages); Starlight `disable404Route` avoids a duplicate `/404` warning (#149)
 - Download URL from root `package.json` version
-- SEO: canonical, Open Graph, Twitter, JSON-LD, `robots.txt`, sitemap
+- SEO: canonical, Open Graph, Twitter, JSON-LD (SoftwareApplication, FAQPage, BreadcrumbList), `robots.txt`, sitemap with `lastmod`
 
 ## Deploy
 

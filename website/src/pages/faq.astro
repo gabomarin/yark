@@ -1,7 +1,20 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { faqItems } from "../data/faq";
+import { faqAnswerPlainText, faqItems } from "../data/faq";
 import { site, withBase } from "../data/site";
+
+const faqPageJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqItems.map((item) => ({
+    "@type": "Question",
+    name: item.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faqAnswerPlainText(item.answerHtml),
+    },
+  })),
+};
 ---
 
 <BaseLayout
@@ -9,6 +22,7 @@ import { site, withBase } from "../data/site";
   description="FAQ for YARK: ARK Survival Ascended dedicated server manager for Windows — installs, SteamCMD, backups, mods, updates, and SmartScreen."
   path="/faq/"
 >
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(faqPageJsonLd)} />
   <header class="page-header">
     <h1>FAQ</h1>
     <p>
