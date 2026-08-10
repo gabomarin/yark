@@ -7,37 +7,35 @@ export type RoadmapItem = {
 
 /**
  * User-facing roadmap for the marketing site.
- * Sourced from open GitHub issues after v0.9.0 (1.0 readiness first).
- * Not a ship promise — keep wording directional.
+ * Prefer operator-visible product work from open issues (not CI/packaging hygiene).
+ * Not a ship promise — keep wording directional. Milestones on GitHub stay authoritative.
  *
- * Later polish (keep on the radar; not listed as ship promises yet):
- * deeper Create-server / installation-health screenshots, FAQ for enable+health,
- * richer restore-audit history, sanitized support bundle, full install-folder clone,
- * and 1.1 assistant / product expansion.
+ * Intentionally omitted from this list (still tracked in-repo): Electron fuses (#217),
+ * E2E/real-host validation (#12, #22), profile-DB snapshots (#252).
  */
 export const roadmapItems: RoadmapItem[] = [
-  {
-    tag: "planned",
-    text: "Signed Windows releases with a verifiable publisher and trusted timestamp",
-  },
-  {
-    tag: "planned",
-    text: "Electron fuses and asar integrity checks on packaged Windows builds",
-  },
-  {
-    tag: "planned",
-    text: "Reliable Windows E2E gates plus prepared-host validation against a real ASA server",
-  },
   {
     tag: "planned",
     text: "Import an existing ASA install as a YARK profile (discover mods, leave them disabled)",
   },
   {
     tag: "planned",
-    text: "Automatic profile-database snapshots before schema migrations and on healthy boot",
+    text: "Signed Windows installers so SmartScreen stops treating every build as unknown",
   },
   {
     tag: "planned",
-    text: "Validate real ASA cluster transfers across two managed servers",
+    text: "Steam-style SteamCMD download queue with a persistent workspace footer",
+  },
+  {
+    tag: "planned",
+    text: "Admin whitelist controls on the RCON Players panel",
+  },
+  {
+    tag: "planned",
+    text: "Smarter default ports and suggestions when creating a new server",
+  },
+  {
+    tag: "planned",
+    text: "Optional AI chat assistant (bring-your-own OpenAI-compatible key) for fleet help",
   },
 ];
