@@ -31,7 +31,9 @@ export function useRowContextMenu(
   const disabled = options?.disabled === true;
   const fingerprint = rowActionFingerprint(entries);
   const entriesRef = useRef(entries);
-  entriesRef.current = entries;
+  useEffect(() => {
+    entriesRef.current = entries;
+  });
   const canOpen =
     !disabled && visibleRowActionItems(normalizeRowActionEntries(entries)).length > 0;
 

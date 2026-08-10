@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -58,7 +59,9 @@ interface Props {
 export function RowActionMenuProvider(props: Props): ReactElement {
   const [state, setState] = useState<RowActionMenuState | null>(null);
   const stateRef = useRef(state);
-  stateRef.current = state;
+  useEffect(() => {
+    stateRef.current = state;
+  });
 
   const close = useCallback(() => {
     setState(null);

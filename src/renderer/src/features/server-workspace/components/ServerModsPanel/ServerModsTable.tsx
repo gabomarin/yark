@@ -1,5 +1,5 @@
 import type { MouseEvent as ReactMouseEvent, ReactElement } from "react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Badge,
   Button,
@@ -101,14 +101,16 @@ export function ServerModsTable(props: Props): ReactElement {
     onOpenExternal: props.onOpenExternal,
     onReorder: props.onReorder,
   });
-  handlersRef.current = {
-    onInspect: props.onInspect,
-    onAdd: props.onAdd,
-    onToggle: props.onToggle,
-    onRemove: props.onRemove,
-    onOpenExternal: props.onOpenExternal,
-    onReorder: props.onReorder,
-  };
+  useEffect(() => {
+    handlersRef.current = {
+      onInspect: props.onInspect,
+      onAdd: props.onAdd,
+      onToggle: props.onToggle,
+      onRemove: props.onRemove,
+      onOpenExternal: props.onOpenExternal,
+      onReorder: props.onReorder,
+    };
+  });
 
   const columns = useMemo(
     () =>

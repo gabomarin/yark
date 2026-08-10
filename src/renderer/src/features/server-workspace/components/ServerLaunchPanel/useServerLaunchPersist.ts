@@ -72,13 +72,15 @@ export function useServerLaunchPersist(
   });
   const persistGenerationRef = useRef(0);
 
-  serverIdRef.current = server.id;
-  onServerUpdatedRef.current = onServerUpdated;
-  serverProfileRef.current = server;
-  rawTextRef.current = rawText;
-
   const extraArgs = parseRawExtraArgs(rawText);
-  extraArgsRef.current = extraArgs;
+
+  useEffect(() => {
+    serverIdRef.current = server.id;
+    onServerUpdatedRef.current = onServerUpdated;
+    serverProfileRef.current = server;
+    rawTextRef.current = rawText;
+    extraArgsRef.current = extraArgs;
+  });
 
   useEffect(() => {
     structuredRef.current = structured;
