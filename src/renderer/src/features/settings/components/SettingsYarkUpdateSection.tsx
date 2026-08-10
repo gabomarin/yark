@@ -42,6 +42,12 @@ function statusLabel(status: AppUpdateStatus): string {
   }
 }
 
+function actionFailureMessage(cause: unknown, fallback: string): string {
+  return cause instanceof Error && cause.message.trim().length > 0
+    ? cause.message
+    : fallback;
+}
+
 export function SettingsYarkUpdateSection(props: Props): ReactElement {
   const [status, setStatus] = useState<AppUpdateStatus>(() =>
     createIdleAppUpdateStatus(props.appVersion, true),
@@ -93,6 +99,18 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
         return;
       }
       setStatus(result.data);
+    } catch (cause) {
+      const message = actionFailureMessage(
+        cause,
+        "Could not check for YARK updates",
+      );
+      setActionError(message);
+      setStatus((prev) => ({
+        ...prev,
+        phase: "error",
+        error: message,
+        percent: null,
+      }));
     } finally {
       setActionBusy(false);
     }
@@ -108,6 +126,10 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
         return;
       }
       setStatus(result.data);
+    } catch (cause) {
+      setActionError(
+        actionFailureMessage(cause, "Could not download the YARK update"),
+      );
     } finally {
       setActionBusy(false);
     }
@@ -121,6 +143,10 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
       if (!result.ok) {
         setActionError(result.error ?? "Could not install the YARK update");
       }
+    } catch (cause) {
+      setActionError(
+        actionFailureMessage(cause, "Could not install the YARK update"),
+      );
     } finally {
       setActionBusy(false);
     }

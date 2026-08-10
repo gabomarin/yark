@@ -27,6 +27,12 @@ function withValidFailureDays(settings: LogRetentionSettings): LogRetentionSetti
   };
 }
 
+function cleanupFailureMessage(cause: unknown, fallback: string): string {
+  return cause instanceof Error && cause.message.trim().length > 0
+    ? cause.message
+    : fallback;
+}
+
 export function SettingsLogRetentionSection(): ReactElement {
   const [settings, setSettings] = useState<LogRetentionSettings>({
     ...DEFAULT_LOG_RETENTION_SETTINGS,
@@ -72,6 +78,14 @@ export function SettingsLogRetentionSection(): ReactElement {
           return;
         }
         setSettings(result.data);
+      } catch (cause) {
+        setSettings(previous);
+        setError(
+          cleanupFailureMessage(
+            cause,
+            "Could not update log retention settings",
+          ),
+        );
       } finally {
         setBusy(false);
       }
@@ -96,6 +110,9 @@ export function SettingsLogRetentionSection(): ReactElement {
         return;
       }
       setCleanupPreview(result.data);
+    } catch (cause) {
+      setError(cleanupFailureMessage(cause, "Could not scan for cleanup"));
+      setCleanupPreview(null);
     } finally {
       setCleanupBusy(false);
     }
@@ -127,6 +144,8 @@ export function SettingsLogRetentionSection(): ReactElement {
       if (skipped > 0) parts.push(`${skipped} skipped`);
       if (failed > 0) parts.push(`${failed} failed`);
       setInfo(`Cleanup finished: ${parts.join(" · ")}.`);
+    } catch (cause) {
+      setError(cleanupFailureMessage(cause, "Could not run cleanup"));
     } finally {
       setCleanupBusy(false);
     }
