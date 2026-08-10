@@ -165,7 +165,11 @@ describe("quarantineProfileDatabase", () => {
     const result = quarantineProfileDatabase(dbPath, { now });
 
     expect(result.stamp).toBe(stamp);
-    expect(result.quarantinedPaths).toHaveLength(3);
+    expect(result.quarantinedPaths).toEqual([
+      `${dbPath}-wal.corrupt.${stamp}`,
+      `${dbPath}-shm.corrupt.${stamp}`,
+      `${dbPath}.corrupt.${stamp}`,
+    ]);
     expect(existsSync(dbPath)).toBe(false);
     expect(existsSync(`${dbPath}.corrupt.${stamp}`)).toBe(true);
     expect(existsSync(`${dbPath}-wal.corrupt.${stamp}`)).toBe(true);

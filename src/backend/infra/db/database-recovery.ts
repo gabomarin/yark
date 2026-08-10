@@ -8,9 +8,11 @@ export function formatDatabaseQuarantineStamp(now: Date = new Date()): string {
   return now.toISOString().replace(/[:.]/g, "-");
 }
 
-/** Main DB file plus WAL/SHM sidecars that must move together on reset. */
+/** WAL/SHM first, then the main DB — rename order for safe quarantine. */
 export function listProfileDatabaseSidecars(dbPath: string): string[] {
-  return [dbPath, `${dbPath}-wal`, `${dbPath}-shm`];
+  // Move sidecars before the main file. If a later rename fails (lock/permissions),
+  // we must not leave old WAL/SHM beside a path that boot will reopen as a new DB.
+  return [`${dbPath}-wal`, `${dbPath}-shm`, dbPath];
 }
 
 /**
