@@ -5,10 +5,10 @@
  *
  * Allowed `uses:` forms:
  * - Local / same-repo composite: ./path/to/action
- * - Third-party: owner/name@<40-char-sha>
- * - Reusable workflow: owner/repo/.github/workflows/file.yml@<40-char-sha>
+ * - Third-party: owner/name@<40-char-sha> # vX.Y.Z
+ * - Reusable workflow: owner/repo/.github/workflows/file.yml@<40-char-sha> # vX.Y.Z
  *
- * Rejected: @v4, @v4.2.2, @main, short SHAs, floating branch tags.
+ * Rejected: @v4, @v4.2.2, @main, short SHAs, floating branch tags, SHA without version comment.
  */
 const fs = require('node:fs')
 const path = require('node:path')
@@ -16,6 +16,8 @@ const path = require('node:path')
 const ROOT = path.resolve(__dirname, '..')
 const WORKFLOWS_DIR = path.join(ROOT, '.github', 'workflows')
 const FULL_SHA = /^[0-9a-f]{40}$/i
+/** Dependabot looks for an inline `# vX.Y.Z` (or similar) after the SHA. */
+const VERSION_COMMENT = /#\s*v?\d+(?:\.\d+){0,3}\b/i
 
 function listWorkflowFiles() {
   if (!fs.existsSync(WORKFLOWS_DIR)) return []
@@ -24,12 +26,6 @@ function listWorkflowFiles() {
     .filter((name) => /\.ya?ml$/i.test(name))
     .map((name) => path.join(WORKFLOWS_DIR, name))
     .sort()
-}
-
-/** Strip a trailing YAML `# comment` from a uses value. */
-function stripInlineComment(value) {
-  const idx = value.search(/\s+#/)
-  return idx >= 0 ? value.slice(0, idx).trim() : value.trim()
 }
 
 /**
@@ -43,10 +39,14 @@ function findViolations(absPath) {
   const out = []
 
   for (let i = 0; i < lines.length; i++) {
-    const match = lines[i].match(/^\s*uses:\s*(.+?)\s*$/)
+    const raw = lines[i]
+    const match = raw.match(/^\s*uses:\s*(.+?)\s*$/)
     if (!match) continue
 
-    const uses = stripInlineComment(match[1])
+    const usesRaw = match[1].trim()
+    const commentIdx = usesRaw.search(/\s+#/)
+    const uses = commentIdx >= 0 ? usesRaw.slice(0, commentIdx).trim() : usesRaw
+    const inlineComment = commentIdx >= 0 ? usesRaw.slice(commentIdx).trim() : ''
 
     if (uses.startsWith('./') || uses.startsWith('.\\')) {
       continue
@@ -56,7 +56,7 @@ function findViolations(absPath) {
       out.push({
         file: rel,
         line: i + 1,
-        uses,
+        uses: usesRaw,
         reason:
           'docker:// Actions must not use mutable tags; prefer a digest or avoid docker Actions',
       })
@@ -68,8 +68,8 @@ function findViolations(absPath) {
       out.push({
         file: rel,
         line: i + 1,
-        uses,
-        reason: 'missing @ref (expected owner/name@<40-char-sha>)',
+        uses: usesRaw,
+        reason: 'missing @ref (expected owner/name@<40-char-sha> # vX.Y.Z)',
       })
       continue
     }
@@ -79,8 +79,19 @@ function findViolations(absPath) {
       out.push({
         file: rel,
         line: i + 1,
-        uses,
+        uses: usesRaw,
         reason: `mutable or non-SHA ref "${ref}" — pin to a full 40-character commit SHA (see docs/github-actions.md)`,
+      })
+      continue
+    }
+
+    if (!VERSION_COMMENT.test(inlineComment)) {
+      out.push({
+        file: rel,
+        line: i + 1,
+        uses: usesRaw,
+        reason:
+          'missing same-line version comment (use `# vX.Y.Z` after the SHA so Dependabot can update the pin)',
       })
     }
   }
@@ -113,7 +124,7 @@ function lintActionsPins() {
     console.error(`    ${v.reason}\n`)
   }
   console.error(
-    'Pin each Action to a full commit SHA and keep a `# owner/name@vX.Y.Z` comment above the uses line. See docs/github-actions.md.'
+    'Pin each Action as `uses: owner/name@<40-char-sha> # vX.Y.Z`. See docs/github-actions.md.'
   )
   return 1
 }

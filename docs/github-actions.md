@@ -21,14 +21,17 @@ releases or consume release write tokens.
 
 ## Pin format
 
+Put the human-readable version on the **same line** as the SHA. Dependabot uses that
+inline comment when it proposes pin bumps; a comment on the previous line alone is not
+enough for reliable updates.
+
 ```yaml
 - name: Checkout
-  # actions/checkout@v7.0.1
-  uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 ```
 
-- Comment records the upstream release that was reviewed.
-- `uses` must end with a **40-character** git SHA (not a tag, branch, or short SHA).
+- `# vX.Y.Z` records the upstream release that was reviewed (required by lint).
+- `uses` must pin a **40-character** git SHA (not a tag, branch, or short SHA).
 - Prefer Actions that already run on the current Actions Node runtime (Node 24 as of
   the #148 upgrade) so CI does not emit deprecated-runtime warnings.
 
@@ -53,7 +56,7 @@ the bump is worth calling out).
 ## Emergency rollback
 
 1. Identify the last known-good workflow commit on `main` (or the prior pin SHA from
-   git history / the `# owner/name@vX.Y.Z` comment).
+   git history / the inline `# vX.Y.Z` comment).
 2. Open a PR that restores the previous `uses: …@<sha>` lines (and matching comments).
 3. Merge promptly; for a broken **release** workflow, use
    **Actions → Release Windows → Run workflow** on a known-good tag after the pin
