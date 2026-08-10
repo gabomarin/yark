@@ -10,8 +10,11 @@ const appVersion =
   typeof packageJson.version === "string" && packageJson.version.trim().length > 0
     ? packageJson.version
     : "0.0.0";
-const appVersionDefine = {
+const curseforgeProxyUrl = process.env.YARK_CURSEFORGE_PROXY_URL?.trim() ?? "";
+const appDefines = {
   __APP_VERSION__: JSON.stringify(appVersion),
+  // Official release builds inject via Actions `vars.YARK_CURSEFORGE_PROXY_URL` (#151).
+  __YARK_CURSEFORGE_PROXY_URL__: JSON.stringify(curseforgeProxyUrl),
 };
 
 const sharedAlias = {
@@ -33,17 +36,17 @@ export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
     resolve: { alias: sharedAlias },
-    define: appVersionDefine,
+    define: appDefines,
   },
   preload: {
     plugins: [externalizeDepsPlugin()],
     resolve: { alias: sharedAlias },
-    define: appVersionDefine,
+    define: appDefines,
   },
   renderer: {
     plugins: [react()],
     resolve: { alias: rendererAlias },
-    define: appVersionDefine,
+    define: appDefines,
     publicDir: resolve(__dirname, "src/renderer/public"),
   },
 });

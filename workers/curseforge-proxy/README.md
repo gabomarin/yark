@@ -86,8 +86,8 @@ then `npm run dev`.
 
 ## Electron
 
-`ModsService` calls this Worker (default base URL =
-`https://yark-curseforge-proxy.gabomarin26.workers.dev`). Override with env
-`YARK_CURSEFORGE_PROXY_URL` or the `curseforgeProxyUrl` app setting. Do not
-commit secrets. Expect `{ ok, data }` / `{ ok: false, error }` — map into
-`ModMetadata` cache as-is.
+`ModsService` resolves the Worker base URL from runtime
+`YARK_CURSEFORGE_PROXY_URL`, then the build-injected official URL (release
+packages), then **none** (fail closed). There is no committed project-owned
+`workers.dev` fallback (#151). Do not commit secrets. Expect `{ ok, data }` /
+`{ ok: false, error }` — map into `ModMetadata` cache as-is.

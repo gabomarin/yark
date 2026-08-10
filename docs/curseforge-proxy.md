@@ -121,8 +121,49 @@ same for clients).
 3. **Rollback** — redeploy the previous known-good Worker version from the
    dashboard version history or git tag.
 
-Electron can point at another base URL via `YARK_CURSEFORGE_PROXY_URL` or the
-`curseforgeProxyUrl` setting if a replacement Worker is stood up (#151).
+Electron can use a different base URL via runtime `YARK_CURSEFORGE_PROXY_URL`
+or a rebuilt package with a different baked URL; see
+[Electron endpoint ownership](#electron-endpoint-ownership-151) below.
+
+## Electron endpoint ownership (#151)
+
+The CurseForge proxy URL is **public configuration**, not a secret. It must not
+appear as a committed runtime fallback in source.
+
+### Precedence
+
+1. Runtime `YARK_CURSEFORGE_PROXY_URL` (maintainer/dev automation).
+2. Official URL baked at `electron-vite build` from Actions
+   `vars.YARK_CURSEFORGE_PROXY_URL` (release packages).
+3. **None** — metadata search / refresh / new-ID validation fail closed with an
+   actionable “metadata service is not configured” message. Existing mod IDs and
+   launch `-mods=` still work; cached metadata may remain visible.
+
+The Electron client never accepts a CurseForge API key.
+
+### Official release injection
+
+1. Repo **Settings → Secrets and variables → Actions → Variables**: set
+   `YARK_CURSEFORGE_PROXY_URL` to the Worker base URL (no trailing slash required).
+2. `.github/workflows/release.yml` fails the package job if the variable is empty
+   or not `https://…`, then passes it into `npm run build` so main embeds
+   `__YARK_CURSEFORGE_PROXY_URL__`.
+3. Local/`npm run build` without that env leaves an empty bake (fail closed unless
+   runtime `YARK_CURSEFORGE_PROXY_URL` is set).
+
+### Migration and retirement (operator)
+
+Keep the legacy Worker that **0.5.1** embeds while older installs remain in use.
+
+1. Ensure #70 abuse controls are live on the Worker that will become “official”.
+2. Set `vars.YARK_CURSEFORGE_PROXY_URL` (same hostname first is fine) and ship a
+   release that bakes it — confirm the installer has no silent source fallback.
+3. When ready, point the variable at a replacement hostname and cut a release.
+4. On the legacy Worker: tighten rate limits, then return an actionable upgrade
+   response (for example `410 Gone` with upgrade copy) for `/v1/*` while keeping
+   `/health` for diagnostics.
+5. After the compatibility window: delete the old Worker and rotate the CurseForge
+   API key if traffic/logs suggest abuse.
 
 ### Secret rotation
 

@@ -253,7 +253,7 @@ if (gotSingleInstanceLock) {
       join(userData, "move-install-staging.json"),
       join(userData, "move-install-pending-cleanup.json"),
     );
-    const modsService = new ModsService({ settings });
+    const modsService = new ModsService();
 
     // Unify RCON traffic on the persistent session (stop / ListPlayers / console).
     processManager.setRconExecutor((serverId, command) =>

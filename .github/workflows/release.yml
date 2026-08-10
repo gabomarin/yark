@@ -87,6 +87,45 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Require official CurseForge proxy URL
+        shell: bash
+        env:
+          YARK_CURSEFORGE_PROXY_URL: ${{ vars.YARK_CURSEFORGE_PROXY_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${YARK_CURSEFORGE_PROXY_URL}" ]; then
+            echo "::error::Repository variable YARK_CURSEFORGE_PROXY_URL is empty. Official releases must bake a CurseForge proxy base URL (see docs/curseforge-proxy.md)."
+            exit 1
+          fi
+          # Same rules as normalizeCurseforgeProxyUrl (https, no credentials/query/hash).
+          node <<'NODE'
+          const raw = (process.env.YARK_CURSEFORGE_PROXY_URL ?? "").trim();
+          let parsed;
+          try {
+            parsed = new URL(raw);
+          } catch {
+            console.error("::error::YARK_CURSEFORGE_PROXY_URL is not a valid URL");
+            process.exit(1);
+          }
+          if (parsed.protocol !== "https:") {
+            console.error("::error::YARK_CURSEFORGE_PROXY_URL must use https:");
+            process.exit(1);
+          }
+          if (parsed.username || parsed.password) {
+            console.error("::error::YARK_CURSEFORGE_PROXY_URL must not include credentials");
+            process.exit(1);
+          }
+          if (parsed.search || parsed.hash) {
+            console.error("::error::YARK_CURSEFORGE_PROXY_URL must not include query or hash");
+            process.exit(1);
+          }
+          if (!parsed.hostname) {
+            console.error("::error::YARK_CURSEFORGE_PROXY_URL is missing a hostname");
+            process.exit(1);
+          }
+          console.log("Official CurseForge proxy URL is set for this release build.");
+          NODE
+
       - name: Package Windows installer
         # softprops/action-gh-release uploads artifacts; do not let electron-builder
         # auto-publish (it requires GH_TOKEN and races the Release step).
@@ -95,6 +134,8 @@ jobs:
           # No Authenticode cert in CI yet — skip auto-discovery so the build
           # does not fail looking for a signing identity.
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
+          # Baked into main via electron-vite define (#151).
+          YARK_CURSEFORGE_PROXY_URL: ${{ vars.YARK_CURSEFORGE_PROXY_URL }}
 
       - name: Upload build artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

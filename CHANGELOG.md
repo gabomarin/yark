@@ -20,6 +20,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Security
 
+- Official CurseForge proxy URL is no longer a source fallback; release builds bake it from a protected Actions variable (#151).
 - GitHub Actions are pinned to immutable commit SHAs (Node 24 runtimes), with Dependabot updates and a lint gate against mutable Action tags (#148).
 - Every renderer→main IPC invoke validates arguments with Zod before domain code runs (#143).
 - CurseForge proxy adds route-class IP rate limits, POST body/time bounds, GET response caching, privacy-safe request logs, and an abuse/secret-rotation runbook (#70).

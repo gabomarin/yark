@@ -1,8 +1,12 @@
-import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
 import {
   curseForgeAsaSlugFromUrl,
   getCurseForgeAsaModUrlError,
 } from "@shared/curseforge-url";
+import { BUILD_CURSEFORGE_PROXY_URL } from "@shared/curseforge-proxy-build-url";
+import {
+  MetadataServiceNotConfiguredError,
+  normalizeCurseforgeProxyUrl,
+} from "@shared/curseforge-proxy-url";
 import type {
   ModMetadata,
   ModSearchPage,
@@ -13,15 +17,11 @@ import {
   buildPlaceholderMetadata,
 } from "./mock-mod-catalog";
 
-/** Default deployed Worker (override via env or app setting). */
-export const DEFAULT_CURSEFORGE_PROXY_URL =
-  "https://yark-curseforge-proxy.gabomarin26.workers.dev";
-
-export const CURSEFORGE_PROXY_URL_SETTING_KEY = "curseforgeProxyUrl";
-
 export interface ModsServiceOptions {
-  settings?: AppSettingsRepository;
-  /** Explicit base URL (wins over settings / default; loses to env). */
+  /**
+   * Explicit base URL for tests / DI.
+   * Precedence: env → explicit → build → none.
+   */
   baseUrl?: string;
   fetchImpl?: typeof fetch;
   /**
@@ -29,6 +29,8 @@ export interface ModsServiceOptions {
    * Production main process leaves this false.
    */
   useMockCatalog?: boolean;
+  /** Override build-injected official URL (tests). */
+  buildDefaultUrl?: string;
 }
 
 interface WorkerErrorBody {
@@ -48,27 +50,40 @@ type WorkerEnvelope<T> = WorkerSuccessBody<T> | WorkerErrorBody;
  * The API key never leaves Cloudflare.
  */
 export class ModsService {
-  private readonly settings: AppSettingsRepository | undefined;
   private readonly explicitBaseUrl: string | undefined;
   private readonly fetchImpl: typeof fetch;
   private readonly useMockCatalog: boolean;
+  private readonly buildDefaultUrl: string;
 
   constructor(options: ModsServiceOptions = {}) {
-    this.settings = options.settings;
     this.explicitBaseUrl = options.baseUrl?.trim() || undefined;
     this.fetchImpl = options.fetchImpl ?? fetch;
     this.useMockCatalog = options.useMockCatalog === true;
+    this.buildDefaultUrl =
+      options.buildDefaultUrl !== undefined
+        ? options.buildDefaultUrl.trim()
+        : BUILD_CURSEFORGE_PROXY_URL;
   }
 
-  getBaseUrl(): string {
-    const fromEnv = process.env.YARK_CURSEFORGE_PROXY_URL?.trim();
-    if (fromEnv && fromEnv.length > 0) return stripTrailingSlash(fromEnv);
-    if (this.explicitBaseUrl) return stripTrailingSlash(this.explicitBaseUrl);
-    const fromSettings = this.settings?.get(CURSEFORGE_PROXY_URL_SETTING_KEY)?.trim();
-    if (fromSettings && fromSettings.length > 0) {
-      return stripTrailingSlash(fromSettings);
+  /**
+   * Effective base URL, or null when no endpoint is configured (#151).
+   * Never falls back to a committed project-owned Worker URL.
+   * Non-empty but malformed env/build values throw (no silent fallback).
+   */
+  getBaseUrl(): string | null {
+    const envRaw = process.env.YARK_CURSEFORGE_PROXY_URL?.trim() ?? "";
+    if (envRaw.length > 0) {
+      return normalizeCurseforgeProxyUrl(envRaw);
     }
-    return DEFAULT_CURSEFORGE_PROXY_URL;
+    if (this.explicitBaseUrl) {
+      const explicit = this.explicitBaseUrl.trim();
+      if (explicit.length > 0) {
+        return normalizeCurseforgeProxyUrl(explicit);
+      }
+    }
+    const buildRaw = this.buildDefaultUrl.trim();
+    if (buildRaw.length === 0) return null;
+    return normalizeCurseforgeProxyUrl(buildRaw);
   }
 
   async getMod(modId: string, _options?: { forceRefresh?: boolean }): Promise<ModMetadata> {
@@ -104,7 +119,6 @@ export class ModsService {
     }>("/v1/mods", {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
-      // Send strings; Worker accepts number|string and parses safely.
       body: JSON.stringify({ modIds: unique }),
     });
 
@@ -244,14 +258,12 @@ export class ModsService {
       }
     }
 
-    // Prefer UI cache refresh for IDs that already existed on the profile.
     for (const [id, detail] of Object.entries(input.modMetadataCache ?? {})) {
       if (existingIds.has(id)) {
         cache[id] = detail;
       }
     }
 
-    // Drop cache entries for mods no longer configured.
     const configured = new Set(input.mods.map((id) => normalizeModId(id)));
     for (const id of Object.keys(cache)) {
       if (!configured.has(id)) delete cache[id];
@@ -267,8 +279,17 @@ export class ModsService {
     };
   }
 
+  private requireBaseUrl(): string {
+    const base = this.getBaseUrl();
+    if (base === null) {
+      throw new MetadataServiceNotConfiguredError();
+    }
+    return base;
+  }
+
   private async fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
-    const url = `${this.getBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
+    const base = this.requireBaseUrl();
+    const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
     let response: Response;
     try {
       response = await this.fetchImpl(url, {
@@ -280,7 +301,7 @@ export class ModsService {
       });
     } catch (cause) {
       throw new Error(
-        `Could not reach CurseForge proxy at ${this.getBaseUrl()}: ${
+        `Could not reach CurseForge proxy at ${base}: ${
           cause instanceof Error ? cause.message : String(cause)
         }`,
       );
@@ -312,7 +333,6 @@ export function normalizeModId(raw: string): string {
       `Invalid mod ID: "${raw}". Use the numeric CurseForge Project ID.`,
     );
   }
-  // Reject leading zeros so Number()/Worker parsing cannot change the ID.
   if (/^0\d/.test(id)) {
     throw new Error(
       `Invalid mod ID: "${raw}". CurseForge Project IDs must not have leading zeros.`,
@@ -322,10 +342,6 @@ export function normalizeModId(raw: string): string {
     throw new Error(`Invalid mod ID: "${raw}". Project ID is out of range.`);
   }
   return id;
-}
-
-function stripTrailingSlash(value: string): string {
-  return value.replace(/\/+$/, "");
 }
 
 function normalizeMetadata(item: ModMetadata): ModMetadata {
