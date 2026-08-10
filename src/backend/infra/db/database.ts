@@ -226,6 +226,15 @@ export type OpenDatabaseOptions = {
   busyTimeoutMs?: number;
 };
 
+/** Finite non-negative integer ms for `PRAGMA busy_timeout`; non-finite → default. */
+export function resolveBusyTimeoutMs(value: number | undefined): number {
+  const raw = value ?? DATABASE_BUSY_TIMEOUT_MS;
+  if (!Number.isFinite(raw)) {
+    return DATABASE_BUSY_TIMEOUT_MS;
+  }
+  return Math.max(0, Math.trunc(raw));
+}
+
 /**
  * Opens (or creates) the database and applies pending migrations
  * transactionally using PRAGMA user_version.
@@ -242,7 +251,7 @@ export function openDatabaseApplyingMigrations(
   migrations: readonly Migration[],
   options?: OpenDatabaseOptions,
 ): DatabaseSync {
-  const busyTimeoutMs = Math.max(0, Math.trunc(options?.busyTimeoutMs ?? DATABASE_BUSY_TIMEOUT_MS));
+  const busyTimeoutMs = resolveBusyTimeoutMs(options?.busyTimeoutMs);
   assertOnDiskDatabaseFilePlausible(path);
 
   let db: DatabaseSync;

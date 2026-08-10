@@ -53,6 +53,18 @@ describe("openDatabase boot hardening", () => {
     }
   });
 
+  it("falls back to the default busy_timeout for non-finite overrides", () => {
+    for (const bad of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+      const db = openDatabase(":memory:", { busyTimeoutMs: bad });
+      try {
+        const row = db.prepare("PRAGMA busy_timeout").get() as { timeout: number };
+        expect(row.timeout).toBe(DATABASE_BUSY_TIMEOUT_MS);
+      } finally {
+        db.close();
+      }
+    }
+  });
+
   it("wraps corrupt open failures as DatabaseBootError kind open", () => {
     const dir = tempDir("yark-db-corrupt-");
     const dbPath = join(dir, "broken.db");
