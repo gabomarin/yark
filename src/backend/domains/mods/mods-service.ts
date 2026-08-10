@@ -68,15 +68,22 @@ export class ModsService {
   /**
    * Effective base URL, or null when no endpoint is configured (#151).
    * Never falls back to a committed project-owned Worker URL.
+   * Non-empty but malformed env/build values throw (no silent fallback).
    */
   getBaseUrl(): string | null {
-    const fromEnv = tryNormalizeProxyUrl(process.env.YARK_CURSEFORGE_PROXY_URL ?? "");
-    if (fromEnv !== null) return fromEnv;
-    if (this.explicitBaseUrl) {
-      const explicit = tryNormalizeProxyUrl(this.explicitBaseUrl);
-      if (explicit !== null) return explicit;
+    const envRaw = process.env.YARK_CURSEFORGE_PROXY_URL?.trim() ?? "";
+    if (envRaw.length > 0) {
+      return normalizeCurseforgeProxyUrl(envRaw);
     }
-    return tryNormalizeProxyUrl(this.buildDefaultUrl);
+    if (this.explicitBaseUrl) {
+      const explicit = this.explicitBaseUrl.trim();
+      if (explicit.length > 0) {
+        return normalizeCurseforgeProxyUrl(explicit);
+      }
+    }
+    const buildRaw = this.buildDefaultUrl.trim();
+    if (buildRaw.length === 0) return null;
+    return normalizeCurseforgeProxyUrl(buildRaw);
   }
 
   async getMod(modId: string, _options?: { forceRefresh?: boolean }): Promise<ModMetadata> {
@@ -316,16 +323,6 @@ export class ModsService {
       throw new Error(`CurseForge proxy HTTP ${response.status}`);
     }
     return body.data;
-  }
-}
-
-function tryNormalizeProxyUrl(raw: string): string | null {
-  const trimmed = raw.trim();
-  if (trimmed.length === 0) return null;
-  try {
-    return normalizeCurseforgeProxyUrl(trimmed);
-  } catch {
-    return null;
   }
 }
 

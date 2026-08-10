@@ -135,6 +135,14 @@ describe("ModsService proxy URL precedence (#151)", () => {
       METADATA_SERVICE_NOT_CONFIGURED_MESSAGE,
     );
   });
+
+  it("rejects a malformed env URL instead of falling through to build", () => {
+    process.env.YARK_CURSEFORGE_PROXY_URL = "http://example.com";
+    const service = new ModsService({
+      buildDefaultUrl: "https://build.example",
+    });
+    expect(() => service.getBaseUrl()).toThrow(/loopback/);
+  });
 });
 
 describe("ModsService (Worker client)", () => {

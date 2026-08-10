@@ -93,6 +93,7 @@ export function ServerModsPanel(props: Props): ReactElement {
       if (!alive) return;
       if (!result.ok) {
         if (isMetadataServiceNotConfiguredMessage(result.error)) {
+          setError(null);
           setWarning(result.error);
           return;
         }
@@ -101,9 +102,7 @@ export function ServerModsPanel(props: Props): ReactElement {
       }
       setMetadata((previous) => mergeMissingMetadata(previous, result.data));
     });
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, [configuredIds, props.server.id]);
 
   const disabledSet = useMemo(() => new Set(disabledIds), [disabledIds]);

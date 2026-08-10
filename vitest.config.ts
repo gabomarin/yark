@@ -15,10 +15,8 @@ export default defineConfig({
   plugins: [react()],
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
-    // Unit tests default to no baked official endpoint (#151).
-    __YARK_CURSEFORGE_PROXY_URL__: JSON.stringify(
-      process.env.YARK_CURSEFORGE_PROXY_URL?.trim() ?? "",
-    ),
+    // Unit tests always use an empty bake so local env cannot leak into hermetic runs (#151).
+    __YARK_CURSEFORGE_PROXY_URL__: JSON.stringify(""),
   },
   resolve: {
     alias: {
