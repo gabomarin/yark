@@ -61,6 +61,17 @@ const CACHE_TTL_READ_SECONDS = 600;
 const CACHE_TTL_SEARCH_SECONDS = 60;
 /** Synthetic origin for Cache API keys (stable across workers.dev hostnames). */
 const CACHE_KEY_ORIGIN = "https://yark-curseforge-proxy.cache";
+/** Query params forwarded upstream and used for search cache keys (single-valued). */
+const SEARCH_FORWARD_PARAMS = [
+  "searchFilter",
+  "classId",
+  "categoryId",
+  "slug",
+  "sortField",
+  "sortOrder",
+  "index",
+  "pageSize",
+] as const;
 
 type CorsHeaders = Record<string, string>;
 type RouteClass = "health" | "search" | "read" | "batch" | "unknown";
@@ -452,16 +463,7 @@ async function handleSearch(
   const upstreamUrl = new URL(`${UPSTREAM}/v1/mods/search`);
   upstreamUrl.searchParams.set("gameId", String(asaGameId));
 
-  for (const key of [
-    "searchFilter",
-    "classId",
-    "categoryId",
-    "slug",
-    "sortField",
-    "sortOrder",
-    "index",
-    "pageSize",
-  ]) {
+  for (const key of SEARCH_FORWARD_PARAMS) {
     const value = clientUrl.searchParams.get(key);
     if (value !== null && value.length > 0) {
       upstreamUrl.searchParams.set(key, value);
@@ -861,12 +863,13 @@ async function readJsonBody(
 }
 
 function buildSearchCacheKey(clientUrl: URL): string {
+  // Same allow-listed, single-valued params as upstream forwarding — ignore junk
+  // query keys so callers cannot bust cache cardinality (#70 review).
   const params = new URLSearchParams();
-  const keys = [...clientUrl.searchParams.keys()].sort();
-  for (const key of keys) {
-    const values = clientUrl.searchParams.getAll(key).sort();
-    for (const value of values) {
-      params.append(key, value);
+  for (const key of [...SEARCH_FORWARD_PARAMS].sort()) {
+    const value = clientUrl.searchParams.get(key);
+    if (value !== null && value.length > 0) {
+      params.set(key, value);
     }
   }
   const query = params.toString();
@@ -931,6 +934,11 @@ function withCacheHeader(
   for (const [key, value] of Object.entries(corsHeaders)) {
     headers.set(key, value);
   }
+  // Cache-Control on stored edge entries is for Cache API TTL only. Do not leak
+  // public max-age to clients (HIT would otherwise differ from MISS).
+  headers.delete("Cache-Control");
+  headers.delete("Expires");
+  headers.set("Cache-Control", "no-store");
   headers.set("X-Yark-Cache", outcome);
   return new Response(response.body, {
     status: response.status,

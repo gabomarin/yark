@@ -218,6 +218,7 @@ describe("CurseForge proxy abuse controls (#70)", () => {
     );
     expect(first.status).toBe(200);
     expect(first.headers.get("X-Yark-Cache")).toBe("MISS");
+    expect(first.headers.get("Cache-Control")).toBe("no-store");
     expect(upstream).toHaveBeenCalledTimes(1);
 
     const second = await worker.fetch(
@@ -226,6 +227,7 @@ describe("CurseForge proxy abuse controls (#70)", () => {
     );
     expect(second.status).toBe(200);
     expect(second.headers.get("X-Yark-Cache")).toBe("HIT");
+    expect(second.headers.get("Cache-Control")).toBe("no-store");
     expect(upstream).toHaveBeenCalledTimes(1);
 
     const body = (await second.json()) as {
@@ -234,5 +236,60 @@ describe("CurseForge proxy abuse controls (#70)", () => {
     };
     expect(body.ok).toBe(true);
     expect(body.data.id).toBe("99");
+  });
+
+  it("ignores junk search query params when keying the edge cache", async () => {
+    const store = new Map<string, Response>();
+    Object.defineProperty(globalThis, "caches", {
+      configurable: true,
+      value: {
+        default: {
+          match: async (request: Request) => store.get(request.url) ?? undefined,
+          put: async (request: Request, response: Response) => {
+            store.set(
+              request.url,
+              new Response(await response.arrayBuffer(), {
+                status: response.status,
+                headers: response.headers,
+              }),
+            );
+          },
+        },
+      },
+    });
+
+    const upstream = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: [asaModPayload(7)],
+          pagination: {
+            index: 0,
+            pageSize: 10,
+            resultCount: 1,
+            totalCount: 1,
+          },
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+
+    const first = await worker.fetch(
+      new Request("https://proxy.test/v1/mods/search?pageSize=10&noise=1"),
+      baseEnv,
+    );
+    expect(first.status).toBe(200);
+    expect(first.headers.get("X-Yark-Cache")).toBe("MISS");
+    expect(upstream).toHaveBeenCalledTimes(1);
+
+    const second = await worker.fetch(
+      new Request("https://proxy.test/v1/mods/search?pageSize=10&noise=different"),
+      baseEnv,
+    );
+    expect(second.status).toBe(200);
+    expect(second.headers.get("X-Yark-Cache")).toBe("HIT");
+    expect(upstream).toHaveBeenCalledTimes(1);
   });
 });

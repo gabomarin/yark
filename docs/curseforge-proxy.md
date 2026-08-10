@@ -100,9 +100,13 @@ errors. Correlate with `X-Yark-Cache` when debugging upstream exposure.
 | Route | Cached? | TTL | Cache key |
 | --- | --- | --- | --- |
 | `GET /v1/mods/:id` | Yes (HTTP 200 only) | 600s | Synthetic origin + path |
-| `GET /v1/mods/search` | Yes (HTTP 200 only) | 60s | Path + sorted query string |
+| `GET /v1/mods/search` | Yes (HTTP 200 only) | 60s | Allow-listed query params only (same as upstream) |
 | `POST /v1/mods` | No | — | — |
 | Errors / rate limits | No | — | — |
+
+Edge `Cache-Control` is for Cache API TTL only. Client responses always get
+`Cache-Control: no-store` plus `X-Yark-Cache: HIT|MISS` (HIT and MISS behave the
+same for clients).
 
 ## Emergency procedures
 
