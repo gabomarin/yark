@@ -58,6 +58,25 @@ export type ServerProfileInput = Omit<
   "id" | "enabled" | "createdAt" | "updatedAt"
 >;
 
+/**
+ * Narrow profile write for Launch / Mods panels (#209).
+ * Main process re-reads the row and merges so concurrent group writes do not clobber.
+ */
+export type ServerProfileLaunchPatch = {
+  group: "launch";
+  extraArgs: string[];
+  structuredLaunchArgs: StructuredLaunchArgs;
+};
+
+export type ServerProfileModsPatch = {
+  group: "mods";
+  mods: string[];
+  disabledMods: string[];
+  modMetadataCache?: Record<string, ModMetadata>;
+};
+
+export type ServerProfilePatch = ServerProfileLaunchPatch | ServerProfileModsPatch;
+
 export interface ServerRuntimeInfo {
   serverId: string;
   status: ServerStatus;

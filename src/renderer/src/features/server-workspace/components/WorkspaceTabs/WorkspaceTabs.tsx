@@ -14,6 +14,7 @@ import { RconPanel } from "../RconPanel/RconPanel";
 import type { PlayerListState } from "../RconPanel/PlayerListSection";
 import { ServerModsPanel } from "../ServerModsPanel/ServerModsPanel";
 import { ServerLaunchPanel } from "../ServerLaunchPanel/ServerLaunchPanel";
+import { WorkspacePanelErrorBoundary } from "@ui/WorkspacePanelErrorBoundary/WorkspacePanelErrorBoundary";
 import classes from "../../ServerWorkspacePage.module.css";
 
 interface Props {
@@ -73,102 +74,106 @@ export function WorkspaceTabs(props: Props): ReactElement {
         </Tabs.List>
 
         <div className={classes.tabPanel}>
-          {props.value === "server" && (
-            <ServerForm
-              // Remount when install path changes (Move) without remounting on every
-              // mods/metadata refresh (updatedAt), which closed the Map select mid-pick.
-              key={`${props.server.id}:${props.server.installDir}`}
-              initial={props.server}
-              servers={props.servers}
-              variant="embedded"
-              serverActive={props.opsLocked}
-              filesJobActive={props.filesJobActive}
-              onCancel={props.onBack}
-              onSaved={props.onServerUpdated}
-              onOpenMoveInstall={() => {
-                setMoveServer(props.server);
-                setMoveDialogOpen(true);
-              }}
-              onOpenConfigurationAssistant={props.onOpenAssistant}
-              configurationAssistantDisabled={props.iniDirty}
-            />
-          )}
-
-          {props.value === "mods" && (
-            <ServerModsPanel
-              key={props.server.id}
-              server={props.server}
-              onServerUpdated={props.onServerUpdated}
-            />
-          )}
-
-          {props.value === "launch" && (
-            <ServerLaunchPanel
-              key={props.server.id}
-              server={props.server}
-              onServerUpdated={props.onServerUpdated}
-            />
-          )}
-
-          {(props.value === "iniFiles" || props.iniDirty) && (
-            <div
-              className={classes.configHost}
-              data-visible={props.value === "iniFiles" || undefined}
-            >
-              <ConfigurationEditor
-                key={`${props.server.id}:${props.iniEditorVersion}`}
-                server={props.server}
-                section="iniFiles"
+          <WorkspacePanelErrorBoundary
+            resetKey={`${props.value}:${props.server.id}:${props.server.installDir}`}
+          >
+            {props.value === "server" && (
+              <ServerForm
+                // Remount when install path changes (Move) without remounting on every
+                // mods/metadata refresh (updatedAt), which closed the Map select mid-pick.
+                key={`${props.server.id}:${props.server.installDir}`}
+                initial={props.server}
+                servers={props.servers}
+                variant="embedded"
                 serverActive={props.opsLocked}
                 filesJobActive={props.filesJobActive}
-                onDirtyChange={props.onIniDirtyChange}
+                onCancel={props.onBack}
+                onSaved={props.onServerUpdated}
+                onOpenMoveInstall={() => {
+                  setMoveServer(props.server);
+                  setMoveDialogOpen(true);
+                }}
+                onOpenConfigurationAssistant={props.onOpenAssistant}
+                configurationAssistantDisabled={props.iniDirty}
               />
-            </div>
-          )}
+            )}
 
-          {props.value === "backups" && (
-            <ServerBackupPanel
-              server={props.server}
-              runtime={props.runtime}
-              installation={props.installation}
-              embedded
-              opsLocked={props.opsLocked}
-              opsLockReason={
-                props.stopJobActive
-                  ? props.stopLockReason
-                  : props.filesJobActive
-                    ? props.filesLockReason
-                    : undefined
-              }
-              createLocked={props.stopJobActive}
-              createLockReason={props.stopLockReason}
-            />
-          )}
+            {props.value === "mods" && (
+              <ServerModsPanel
+                key={props.server.id}
+                server={props.server}
+                onServerUpdated={props.onServerUpdated}
+              />
+            )}
 
-          {props.value === "logs" && (
-            <ServerLogsPanel
-              server={props.server}
-              embedded
-              focus={props.logsFocus}
-              onFocusConsumed={props.onLogsFocusConsumed}
-            />
-          )}
+            {props.value === "launch" && (
+              <ServerLaunchPanel
+                key={props.server.id}
+                server={props.server}
+                onServerUpdated={props.onServerUpdated}
+              />
+            )}
 
-          {props.value === "rcon" && (
-            <RconPanel
-              server={props.server}
-              runtime={props.runtime}
-              events={props.events}
-              rconHistory={props.rconHistory}
-              playerList={props.playerList}
-              onSendRcon={props.onSendRcon}
-              onClearRconHistory={props.onClearRconHistory}
-              onRconTabFocusChanged={props.onRconTabFocusChanged}
-              onRefreshPlayers={props.onRefreshPlayers}
-              onKickPlayer={props.onKickPlayer}
-              onBanPlayer={props.onBanPlayer}
-            />
-          )}
+            {(props.value === "iniFiles" || props.iniDirty) && (
+              <div
+                className={classes.configHost}
+                data-visible={props.value === "iniFiles" || undefined}
+              >
+                <ConfigurationEditor
+                  key={`${props.server.id}:${props.iniEditorVersion}`}
+                  server={props.server}
+                  section="iniFiles"
+                  serverActive={props.opsLocked}
+                  filesJobActive={props.filesJobActive}
+                  onDirtyChange={props.onIniDirtyChange}
+                />
+              </div>
+            )}
+
+            {props.value === "backups" && (
+              <ServerBackupPanel
+                server={props.server}
+                runtime={props.runtime}
+                installation={props.installation}
+                embedded
+                opsLocked={props.opsLocked}
+                opsLockReason={
+                  props.stopJobActive
+                    ? props.stopLockReason
+                    : props.filesJobActive
+                      ? props.filesLockReason
+                      : undefined
+                }
+                createLocked={props.stopJobActive}
+                createLockReason={props.stopLockReason}
+              />
+            )}
+
+            {props.value === "logs" && (
+              <ServerLogsPanel
+                server={props.server}
+                embedded
+                focus={props.logsFocus}
+                onFocusConsumed={props.onLogsFocusConsumed}
+              />
+            )}
+
+            {props.value === "rcon" && (
+              <RconPanel
+                server={props.server}
+                runtime={props.runtime}
+                events={props.events}
+                rconHistory={props.rconHistory}
+                playerList={props.playerList}
+                onSendRcon={props.onSendRcon}
+                onClearRconHistory={props.onClearRconHistory}
+                onRconTabFocusChanged={props.onRconTabFocusChanged}
+                onRefreshPlayers={props.onRefreshPlayers}
+                onKickPlayer={props.onKickPlayer}
+                onBanPlayer={props.onBanPlayer}
+              />
+            )}
+          </WorkspacePanelErrorBoundary>
         </div>
       </Tabs>
 

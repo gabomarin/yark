@@ -7,12 +7,14 @@ import type {
   ServerInstallationInfo,
   ServerProfile,
   ServerProfileInput,
+  ServerProfilePatch,
   ServerRuntimeInfo,
   ServerStopProgress,
   ServerStopProgressReason,
   StartServerOptions,
 } from "@shared/types";
 import { PORT_MAX, PORT_MIN } from "@shared/types";
+import { applyServerProfilePatch } from "@shared/server-profile";
 import { EventEmitter } from "node:events";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -151,6 +153,8 @@ export class InstanceService extends EventEmitter {
   private readonly stopJobs = new Map<string, Promise<StopJobOutcome>>();
   /** Covers restart after stopJobs clears (pre_restart ZIP only; not start). */
   private readonly criticalJobs = new Map<string, Promise<unknown>>();
+  /** Serializes profile row writes so Launch/Mods patches cannot clobber (#209). */
+  private readonly profileWriteChains = new Map<string, Promise<unknown>>();
   private lastOfficialVersion: string | null | undefined = undefined;
   private lastOfficialSteamBuild: string | null | undefined = undefined;
   private lastInstallServers: ServerInstallationInfo[] = [];
@@ -277,6 +281,39 @@ export class InstanceService extends EventEmitter {
       `Server "${updated.name}" updated`,
     );
     return updated;
+  }
+
+  /**
+   * Apply a Launch/Mods field-group patch against the latest row (#209).
+   * Serialized per server so concurrent panel persists cannot last-write-wins.
+   */
+  async updatePatch(
+    id: string,
+    patch: ServerProfilePatch,
+    prepare: (merged: ServerProfileInput, existing: ServerProfile) => Promise<ServerProfileInput> | ServerProfileInput = (merged) => merged,
+  ): Promise<ServerProfile> {
+    return this.withProfileWrite(id, async () => {
+      const existing = this.repo.get(id);
+      if (existing === null) {
+        throw new Error("Server does not exist");
+      }
+      const merged = await prepare(applyServerProfilePatch(existing, patch), existing);
+      return this.update(id, merged);
+    });
+  }
+
+  /** Queue profile mutations so overlapping IPC updates run one-at-a-time per server. */
+  async withProfileWrite<T>(id: string, work: () => Promise<T> | T): Promise<T> {
+    const previous = this.profileWriteChains.get(id) ?? Promise.resolve();
+    const run = previous.then(() => work(), () => work());
+    this.profileWriteChains.set(
+      id,
+      run.then(
+        () => undefined,
+        () => undefined,
+      ),
+    );
+    return run;
   }
 
   /**

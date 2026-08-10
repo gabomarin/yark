@@ -5,11 +5,7 @@ import {
   normalizeStructuredLaunchArgs,
   type StructuredLaunchArgs,
 } from "@shared/structured-launch-options";
-import {
-  joinRawExtraArgs,
-  parseRawExtraArgs,
-  toLaunchProfileInput,
-} from "./serverLaunchModel";
+import { joinRawExtraArgs, parseRawExtraArgs } from "./serverLaunchModel";
 
 const VALUE_PERSIST_DEBOUNCE_MS = 400;
 
@@ -163,14 +159,11 @@ export function useServerLaunchPersist(
     setSaving(true);
     setError(null);
     try {
-      const result = await window.api.updateServer(
-        targetServerId,
-        toLaunchProfileInput(
-          serverProfileRef.current,
-          job.structured,
-          job.extraArgs,
-        ),
-      );
+      const result = await window.api.updateServerPatch(targetServerId, {
+        group: "launch",
+        extraArgs: job.extraArgs,
+        structuredLaunchArgs: job.structured,
+      });
       if (generation !== persistGenerationRef.current) {
         return false;
       }

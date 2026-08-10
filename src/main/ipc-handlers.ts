@@ -3,7 +3,14 @@ import { spawn } from "node:child_process";
 import { mkdir } from "node:fs/promises";
 import { IPC, type IpcResult, type PickPathKind, type AppDataFolderKind } from "../shared/ipc";
 import { canonicalCurseForgeAsaModUrl } from "../shared/curseforge-url";
-import type { ServerIniPayload, ServerProfileInput, StartServerOptions, SteamCmdCacheKind } from "../shared/types";
+import type {
+  ServerIniPayload,
+  ServerProfileInput,
+  ServerProfilePatch,
+  StartServerOptions,
+  SteamCmdCacheKind,
+} from "../shared/types";
+import { isServerProfilePatch } from "../shared/server-profile";
 import type { BackupService } from "../backend/domains/backups/backup-service";
 import type { PlayerSessionWatcher } from "../backend/domains/backups/player-session-watcher";
 import type { InstanceService } from "../backend/domains/instances/instance-service";
@@ -90,15 +97,38 @@ export function registerIpcHandlers(
   ipcMain.handle(
     IPC.serversUpdate,
     (_e, id: string, input: ServerProfileInput) =>
+      wrap(async () =>
+        instances.withProfileWrite(id, async () => {
+          const existing = repo.get(id);
+          if (existing === null) throw new Error("Server does not exist");
+          const enriched = await mods.enrichNewServerMods(input, {
+            mods: existing.mods,
+            disabledMods: existing.disabledMods,
+            modMetadataCache: existing.modMetadataCache,
+          });
+          return instances.update(id, enriched);
+        }),
+      ),
+  );
+
+  ipcMain.handle(
+    IPC.serversUpdatePatch,
+    (_e, id: string, patch: unknown) =>
       wrap(async () => {
-        const existing = repo.get(id);
-        if (existing === null) throw new Error("Server does not exist");
-        const enriched = await mods.enrichNewServerMods(input, {
-          mods: existing.mods,
-          disabledMods: existing.disabledMods,
-          modMetadataCache: existing.modMetadataCache,
+        if (!isServerProfilePatch(patch)) {
+          throw new Error("Invalid server profile patch");
+        }
+        const typedPatch: ServerProfilePatch = patch;
+        return instances.updatePatch(id, typedPatch, async (merged, existing) => {
+          if (typedPatch.group !== "mods") {
+            return merged;
+          }
+          return mods.enrichNewServerMods(merged, {
+            mods: existing.mods,
+            disabledMods: existing.disabledMods,
+            modMetadataCache: existing.modMetadataCache,
+          });
         });
-        return instances.update(id, enriched);
       }),
   );
 

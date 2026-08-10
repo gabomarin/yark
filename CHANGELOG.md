@@ -9,6 +9,14 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Launch and Mods profile saves use narrow `updateServerPatch` IPC with server-side merge and per-server write serialization so concurrent panel edits no longer last-write-wins (#209).
+
+### Fixed
+
+- Workspace tab crashes show a recoverable panel error instead of blanking the whole app shell (#209).
+
 ## [0.8.1] - 2026-08-09
 
 ### Added
