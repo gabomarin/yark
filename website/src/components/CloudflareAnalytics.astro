@@ -6,15 +6,13 @@
  */
 const token = import.meta.env.PUBLIC_CF_WEB_ANALYTICS_TOKEN;
 const enabled = typeof token === "string" && token.trim().length > 0;
-const beacon = enabled
-  ? JSON.stringify({ token: token.trim(), spa: false })
-  : "";
+const beacon = enabled ? JSON.stringify({ token: token.trim() }) : "";
 ---
 
 {
   enabled && (
     <script
-      defer
+      type="module"
       src="https://static.cloudflareinsights.com/beacon.min.js"
       data-cf-beacon={beacon}
     />
