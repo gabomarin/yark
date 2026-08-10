@@ -46,11 +46,15 @@ export function isAllowedExternalUrl(url: string): boolean {
 export function requireAllowedExternalUrl(
   url: string | null | undefined,
 ): string {
-  if (typeof url !== "string" || url.trim().length === 0) {
+  if (typeof url !== "string") {
     throw new Error("No external URL is available.");
   }
-  if (!isAllowedExternalUrl(url)) {
+  const normalized = url.trim();
+  if (normalized.length === 0) {
+    throw new Error("No external URL is available.");
+  }
+  if (!isAllowedExternalUrl(normalized)) {
     throw new Error("That link is not on the allowed external hosts list.");
   }
-  return url;
+  return normalized;
 }

@@ -45,6 +45,7 @@ describe("requireAllowedExternalUrl", () => {
     const tag = "https://github.com/gabomarin/yark/releases/tag/v0.8.1";
     expect(requireAllowedExternalUrl(releases)).toBe(releases);
     expect(requireAllowedExternalUrl(tag)).toBe(tag);
+    expect(requireAllowedExternalUrl(`  ${releases}  `)).toBe(releases);
   });
 
   it("rejects empty, missing, and malformed URLs without echoing them", () => {

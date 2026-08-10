@@ -22,8 +22,8 @@ export default defineConfig({
       title: "YARK Docs",
       description:
         "Operator docs for YARK — Windows manager for local ARK: Survival Ascended dedicated servers (SteamCMD, backups, mods, INI).",
-      // Avoid injecting Starlight’s dedicated `/404` route alongside the docs
-      // catch-all that already renders `src/content/docs/404.md` (#149).
+      // Keep Starlight from injecting its own `/404` — the canonical page is
+      // `src/pages/404.astro` → `dist/404.html` for GitHub Pages (#149).
       disable404Route: true,
       favicon: "/favicon.ico",
       logo: {
