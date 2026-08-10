@@ -42,27 +42,18 @@ describe("execFileBounded", () => {
   });
 
   it("rejects when stdout exceeds maxBuffer", async () => {
-    const bloated =
-      process.platform === "win32"
-        ? execFileBounded(
-            "powershell.exe",
-            [
-              "-NoProfile",
-              "-Command",
-              "$s = 'x' * 20000; Write-Output $s",
-            ],
-            { timeoutMs: 5_000, maxBuffer: 256 },
-          )
-        : execFileBounded(
-            "node",
-            ["-e", "process.stdout.write('x'.repeat(20000))"],
-            { timeoutMs: 5_000, maxBuffer: 256 },
-          );
+    // Use Node on all platforms — PowerShell cold start on Windows CI can exceed
+    // a short vitest timeout before maxBuffer is even hit.
+    const bloated = execFileBounded(
+      "node",
+      ["-e", "process.stdout.write('x'.repeat(20000))"],
+      { timeoutMs: 10_000, maxBuffer: 256 },
+    );
 
     await expect(bloated).rejects.toMatchObject({
       name: "ExecFileBoundedError",
       timedOut: false,
       code: "ERR_CHILD_PROCESS_STDIO_MAXBUFFER",
     });
-  });
+  }, 15_000);
 });
