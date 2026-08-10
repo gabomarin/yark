@@ -205,7 +205,7 @@ async function run() {
     await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 15_000 });
 
     await openRconTab(page);
-    // Wide layout so SidePanel Save world / Broadcast stay visible.
+    // Wide layout so SidePanel Save world stays visible next to RCON chips.
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.getByLabel(/rcon command/i).waitFor({ state: "visible" });
     await page.getByText("Online", { exact: true }).waitFor({ state: "visible" });
@@ -269,14 +269,22 @@ async function run() {
       timeout: 10_000,
     });
 
-    // SidePanel Broadcast shortcut → history.
+    // SidePanel Save world + RCON Broadcast chip (prefill) → history.
     await page.getByRole("button", { name: "Save world" }).click();
     await page.getByText("No response", { exact: true }).first().waitFor({
       state: "visible",
       timeout: 10_000,
     });
-    await page.getByPlaceholder("Message for players").fill("E2E hello");
-    await page.getByRole("button", { name: "Send announcement" }).click();
+    await page.getByRole("button", { name: "Broadcast" }).click();
+    const broadcastInput = page.getByLabel(/rcon command/i);
+    await broadcastInput.waitFor({ state: "visible" });
+    assert.equal(
+      await broadcastInput.inputValue(),
+      "Broadcast ",
+      "Broadcast chip should prefill the command input",
+    );
+    await broadcastInput.fill("Broadcast E2E hello");
+    await page.getByRole("button", { name: /^Send$/i }).click();
     await page.getByText("E2E:Broadcast E2E hello", { exact: true }).waitFor({
       state: "visible",
       timeout: 10_000,

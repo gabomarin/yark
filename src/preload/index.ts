@@ -88,7 +88,12 @@ const api: RendererApi = {
   pickPath: (kind, defaultPath, title) =>
     ipcRenderer.invoke(IPC.pickPath, kind, defaultPath, title),
   pickFolder: async (defaultPath) => {
-    const result = await ipcRenderer.invoke(IPC.pickPath, "directory", defaultPath);
+    const result = await ipcRenderer.invoke(
+      IPC.pickPath,
+      "directory",
+      defaultPath,
+      undefined,
+    );
     return result.ok ? result.data : null;
   },
   listAppDataFolders: () => ipcRenderer.invoke(IPC.appListDataFolders),
