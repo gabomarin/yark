@@ -14,6 +14,7 @@ import {
   type GithubReleaseRef,
 } from "../shared/app-update";
 import { APP_VERSION } from "../shared/app-version";
+import { requireAllowedExternalUrl } from "../shared/external-url-policy";
 
 export type AppUpdateSafetyReason =
   | "servers-running"
@@ -180,7 +181,9 @@ export class AppUpdateService {
   }
 
   async openReleaseNotes(): Promise<void> {
-    const url = this.status.releaseNotesUrl ?? this.status.releasePageUrl;
+    const url = requireAllowedExternalUrl(
+      this.status.releaseNotesUrl ?? this.status.releasePageUrl,
+    );
     await shell.openExternal(url);
   }
 

@@ -23,6 +23,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Security
 
+- YARK update **Open release notes** only calls `shell.openExternal` after the shared host allowlist check (same policy as `target=_blank`) (#216).
 - Official CurseForge proxy URL is no longer a source fallback; release builds bake it from a protected Actions variable (#151).
 - GitHub Actions are pinned to immutable commit SHAs (Node 24 runtimes), with Dependabot updates and a lint gate against mutable Action tags (#148).
 - Every renderer→main IPC invoke validates arguments with Zod before domain code runs (#143).
