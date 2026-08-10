@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Engineering runbook for workspace **Mods** (CurseForge inventory, load order, metadata proxy, and `-mods=` launch) in `docs/mods.md`.
+
 ### Fixed
 
 - Release CI no longer flakes on `execFileBounded` maxBuffer coverage: the test drives Node stdout overflow on all platforms instead of a slow PowerShell spawn on Windows runners.
