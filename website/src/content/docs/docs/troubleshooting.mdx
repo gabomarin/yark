@@ -5,6 +5,18 @@ description: Common start, update, backup, and log problems — and what to try 
 
 import { Aside } from "@astrojs/starlight/components";
 
+## YARK will not start (corrupt profile database)
+
+Boot shows a recovery dialog instead of the normal UI when `yark-server-manager.db` cannot open or migrate:
+
+| Choice | Effect |
+| --- | --- |
+| Open folder | Opens App data so you can copy or inspect the DB (and WAL/SHM) |
+| Quit | Leaves files unchanged |
+| Start empty… | Quarantines the broken files as `*.corrupt.<timestamp>` and opens a blank database |
+
+ASA installs on disk are not deleted. Prefer copying the DB out before Start empty if you hope to recover profiles later. See [Settings → Profile database recovery](/docs/settings/#profile-database-recovery).
+
 ## Server will not become “running”
 
 | Check | Detail |
