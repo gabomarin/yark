@@ -7,7 +7,7 @@ export type RoadmapItem = {
 
 /**
  * User-facing roadmap for the marketing site.
- * Sourced from open GitHub issues after v0.8.0.
+ * Sourced from open GitHub issues after v0.8.1.
  * Not a ship promise — keep wording directional.
  *
  * Later polish (keep on the radar; not listed as ship promises yet):

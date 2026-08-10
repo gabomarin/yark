@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-08-09
+
 ### Added
 
 - Quiet **YARK updates** check (and Settings **Check now**) show an operator toast when a new desktop build is available or ready to install; click opens Settings → YARK updates.

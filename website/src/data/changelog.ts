@@ -12,6 +12,24 @@ export type ChangelogEntry = {
 /** Curated site changelog — keep in sync with root CHANGELOG.md when cutting releases. */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.8.1",
+    date: "2026-08-09",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Quiet YARK updates check (and Settings Check now) shows an operator toast when a new desktop build is available or ready to install.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Public docs body links under GitHub Pages keep the /yark base path.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.8.0",
     date: "2026-08-09",
     sections: [
