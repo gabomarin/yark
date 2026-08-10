@@ -370,6 +370,40 @@ describe("MoveInstallService", () => {
     await rm(root, { recursive: true, force: true });
   });
 
+  it("keeps an older pending leftover when a later move auto-deletes successfully (#215)", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-move-cleanup-preserve-"));
+    const pendingPath = join(root, "pending-cleanup.json");
+    const leftoverA = join(root, "leftover-A");
+    const sourceB = join(root, "source-B");
+    const destC = join(root, "dest-C");
+    await mkdir(leftoverA, { recursive: true });
+    await writeFile(join(leftoverA, "keep-me.txt"), "old", "utf8");
+    await makeReadyInstall(sourceB);
+    await writeFile(
+      pendingPath,
+      `${JSON.stringify({ byServerId: { "srv-1": leftoverA } }, null, 2)}\n`,
+      "utf8",
+    );
+
+    const source = profile({ installDir: sourceB });
+    const { move, getProfiles } = harness([source], null, pendingPath);
+
+    const result = await move.moveInstall(source.id, destC);
+    expect(result.oldSourceRemoved).toBe(true);
+    expect(getProfiles()[0]?.installDir).toBe(destC);
+
+    const pendingRaw = await readFile(pendingPath, "utf8");
+    expect(JSON.parse(pendingRaw)).toEqual({
+      byServerId: { "srv-1": leftoverA },
+    });
+    await access(join(leftoverA, "keep-me.txt"));
+
+    await expect(move.cleanupOldSource(source.id, leftoverA)).resolves.toBeUndefined();
+    await expect(access(leftoverA)).rejects.toThrow();
+
+    await rm(root, { recursive: true, force: true });
+  });
+
   it("cleans up a leftover staging marker directory", async () => {
     const root = await mkdtemp(join(tmpdir(), "yark-move-sweep-"));
     const installDir = join(root, "Island");

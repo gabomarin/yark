@@ -626,7 +626,15 @@ export class MoveInstallService extends EventEmitter {
         };
 
         if (oldSourceRemoved) {
-          await this.clearPendingCleanup(serverId);
+          // Only drop a pending leftover if we just removed that same path.
+          // A later successful move must not erase an older unbound leftover (#215).
+          const pending = await this.getPendingCleanup(serverId);
+          if (
+            pending === null
+            || installDirKey(pending) === installDirKey(sourceDir)
+          ) {
+            await this.clearPendingCleanup(serverId);
+          }
         } else {
           await this.setPendingCleanup(serverId, sourceDir);
         }

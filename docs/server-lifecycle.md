@@ -201,7 +201,9 @@ updates cannot change it; only `InstanceService.setServerEnabled` may do so.
   If deleting the previous folder fails, main records that prior path
   (`move-install-pending-cleanup.json`); `servers:move-install-cleanup` may only
   wipe that recorded path for that server (#215) — renderer-supplied mismatches
-  are rejected with no filesystem side effects.
+  are rejected with no filesystem side effects. A later successful move clears
+  pending only when it removed that same recorded path, so an older leftover is
+  not dropped from the registry.
 
 **Start** (`InstanceService.start`):
 
