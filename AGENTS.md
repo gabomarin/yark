@@ -64,8 +64,10 @@ Notes specific to running this in the Linux cloud VM:
   (`tsc --noEmit`) is the TypeScript gate and `npm run lint` enforces the feature-file
   size policy in [docs/component-structure.md](docs/component-structure.md) (placeholder
   for a fuller linter later). `npm run build` is clean.
-  GitHub Actions **CI** (`.github/workflows/ci.yml`) runs typecheck + lint + tests + build
-  on `windows-latest` for every PR and push to `main` (avoids known Linux path-test gaps).
+ GitHub Actions **CI** (`.github/workflows/ci.yml`) runs typecheck + lint + tests + build
+ on `windows-latest` for every PR and push to `main` (avoids known Linux path-test gaps),
+ then Electron E2E smoke / CRUD / install-health / host-port-probe (#12). Matrix:
+ [docs/e2e-validation.md](docs/e2e-validation.md).
   PRs also run **Changelog** (`.github/workflows/changelog.yml`): `CHANGELOG.md` must change
   unless the PR is labeled `skip-changelog`.
   Local Husky hooks (after `npm install`): pre-commit runs typecheck + lint; pre-push runs

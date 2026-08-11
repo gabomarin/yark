@@ -41,3 +41,16 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      # Electron UI gates (#12). Isolated YARK_E2E_USER_DATA; no real ASA depot.
+      - name: E2E smoke
+        run: npm run e2e:smoke
+
+      - name: E2E CRUD suite
+        run: npm run e2e
+
+      - name: E2E install health
+        run: npm run e2e:install-health
+
+      - name: E2E host port probe
+        run: npm run e2e:host-port-probe
