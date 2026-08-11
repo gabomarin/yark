@@ -18,7 +18,9 @@ const {
 
 async function run() {
   process.chdir(projectRoot);
-  const { profileDir, fixtureName, root } = createE2eFixtureRoots("smoke");
+  const { profileDir, fixtureName, root } = createE2eFixtureRoots("smoke", {
+    createServers: false,
+  });
   assertUnderFixtureRoot(path.join(root, "profiles"), profileDir);
 
   let app = null;

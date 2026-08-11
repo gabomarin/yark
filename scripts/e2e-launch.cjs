@@ -17,9 +17,11 @@ const projectRoot = path.resolve(__dirname, "..");
 
 /**
  * @param {string} [label]
- * @returns {{ profileDir: string; serversDir: string; runId: string; fixtureName: string }}
+ * @param {{ createServers?: boolean }} [options]
+ * @returns {{ profileDir: string; serversDir: string | null; runId: string; fixtureName: string; root: string }}
  */
-function createE2eFixtureRoots(label = "e2e") {
+function createE2eFixtureRoots(label = "e2e", options = {}) {
+  const createServers = options.createServers !== false;
   const runId = `${Date.now()}-${process.pid}`;
   const fixtureName = `${label}-${runId}`;
   const preferAsa = process.platform === "win32";
@@ -29,8 +31,16 @@ function createE2eFixtureRoots(label = "e2e") {
   const profileDir = path.join(root, "profiles", fixtureName);
   const serversDir = path.join(root, "servers", fixtureName);
   fs.mkdirSync(profileDir, { recursive: true });
-  fs.mkdirSync(serversDir, { recursive: true });
-  return { profileDir, serversDir, runId, fixtureName, root };
+  if (createServers) {
+    fs.mkdirSync(serversDir, { recursive: true });
+  }
+  return {
+    profileDir,
+    serversDir: createServers ? serversDir : null,
+    runId,
+    fixtureName,
+    root,
+  };
 }
 
 /**

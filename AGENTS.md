@@ -78,9 +78,8 @@ Notes specific to running this in the Linux cloud VM:
   real Electron window on the VM desktop display, so it must run through the GUI/desktop
   environment (e.g. computer use), not as a plain headless process.
 - If `ELECTRON_RUN_AS_NODE=1` is set in the environment, Electron will not open its window.
-  `unset ELECTRON_RUN_AS_NODE` before `npm run dev` / `npm start` / the e2e scripts.
-  Packaged visual helpers clear the variable themselves; `e2e:smoke` / `e2e` currently do
-  **not** — unset it in the shell first.
+  `unset ELECTRON_RUN_AS_NODE` before `npm run dev` / `npm start`. Packaged visual helpers
+  and the `e2e:*` scripts (via `scripts/e2e-launch.cjs`) clear the variable themselves.
 - On the headless Linux desktop, Electron prints benign `dbus/bus.cc ... Failed to connect
   to the bus` and `viz_main_impl.cc ... Exiting GPU process` errors on launch. These are
   harmless; the window still renders and the app is fully usable.
@@ -89,9 +88,8 @@ Notes specific to running this in the Linux cloud VM:
   `path` module cannot reproduce off Windows. This is a platform limitation, not a
   regression; these pass on Windows / via `cmd.exe /c` per the README.
 - `npm run e2e:smoke` / `npm run e2e` launch the compiled app via Playwright's
-  `_electron` and need a display + `ELECTRON_RUN_AS_NODE` unset. The app launches fine;
-  note the smoke script may still fail on a stale `section.servers h2` selector (the suite
-  uses `[data-server-card]` instead).
+  `_electron` and need a display. They use isolated `YARK_E2E_USER_DATA` and assert
+  `[data-overview-page]` / `[data-server-card]` (see [docs/e2e-validation.md](docs/e2e-validation.md)).
 - Creating a server requires a Windows-style absolute install path (e.g. `C:\ARK`) and an
   admin password of at least 4 chars, and each server needs unique game/query/RCON ports.
   Launch / spawn / profile→INI details: `docs/server-lifecycle.md`.
