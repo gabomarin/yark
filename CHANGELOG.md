@@ -19,8 +19,13 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Packaged Windows builds enable Electron fuses and ASAR integrity validation (no RunAsNode / Node CLI inspect / `NODE_OPTIONS`; load only from integrity-checked `app.asar`) (#217).
 
+### Changed
+
+- **World backups** skip `.arkrbf`/`.tmp`, keep only the 2 newest dated autosaves per map, and lightly compress `.ark` blobs (deflate level 1) so stop/restart/update snapshots finish faster on large SavedArks.
+
 ### Fixed
 
+- Safe **Update** shows console/progress while creating pre-update backups, Cancel aborts that work (and pre-restore safeguards) instead of hanging on “Waiting for progress…”, and skips rollback restore when SteamCMD never changed game files.
 - **YARK updates** keep a finished or in-progress download when Check now or the quiet startup check runs again, so Restart and install no longer disappears behind Download.
 
 ## [0.9.1] - 2026-08-10

@@ -160,6 +160,8 @@ UI entry points: sidebar **SteamCMD** page + floating progress dock; Overview in
 
 Live progress combines SteamCMD stdout `%` lines with disk estimates (`steamcmd-disk-progress.ts`: depot/downloading sizes under `force_install_dir`). The floating progress dock (and per-server Logs → Updates history) subscribe to `push:steamcmd-progress`. SteamCMD path/install live under **Settings**; cache folders are shown there as read-only paths with Open / Clear (blocked while a job runs).
 
+**Safe update** also writes dock console lines during the silent-looking pre-update backup phase (world / players / INI packaging and zip), so the dock should not sit on “Waiting for progress…” until SteamCMD starts. Cancel during that phase aborts backup critical jobs between kinds and skips rollback restore when SteamCMD never changed game files.
+
 Update / Verify controls stay enabled while the server is running: Overview cards and
 the workspace SidePanel tooltips explain that the manager will auto-stop for SteamCMD
 and restart only if the server was running. Byte/`%` detail belongs in the progress
@@ -186,7 +188,7 @@ During **robocopy** (`sync-files`), progress is a **separate phase**: SteamCMD s
 | Repeated downloads when installing another server | Cache older than 15 minutes, missing manifest, or SteamCMD path changed |
 | Console in Spanish / stuck `0.0%` while `[ N%]` lines scroll | SteamCMD bootstrapper follows Windows UI language. We force `-language english`; percent still reads from `[ N%]`. Restart the update after this build. |
 | World/INI wiped after update | Should not happen via robocopy path (`ShooterGame\Saved` excluded); check whether fallback direct `app_update` on install dir was used (console mentions cache sync failure) |
-| Update failed then server restarted on old files | Expected rollback using `pre_update` backups — inspect Updates log + Backups history |
+| Console stuck on “Waiting for progress…” during Update | Older builds were silent while zipping pre-update backups (large imported worlds take minutes). Current builds log backup kinds; Cancel aborts that phase without a fake rollback |
 | Job stuck after crash | Queue persisted in settings `criticalJobsQueue.v1`; resumes on next launch |
 | `steamcmd:install` fails on Linux agent VM | Expected — PowerShell installer + Windows sync tools |
 
@@ -227,6 +229,7 @@ Requires: Node 22.12+ (`node:sqlite` and the current Electron toolchain), Playwr
 | B | Stopped-server update | Completes; server left stopped |
 | C | Forced failure after backup | Points Settings at a **temporary** failing SteamCMD stub under `os.tmpdir()` (does **not** rename AppData `steamcmd.exe`). Job may retry up to **3** times with rollback each attempt; final user-visible signal is update **failure** (events include `update_failed` / `update_rolled_back`), never success. If rollback itself fails: logs/backups preserved + clear manual-recovery events |
 | D | Cancel mid SteamCMD or sync | Reported cancelled (not success) |
+| D2 | Cancel during pre-update backup (before SteamCMD) | Console shows backup progress; cancel stops without restore/safeguard unwind; restart if the server was running |
 | E | Crash/reopen mid queue | Job recovers as pending; previous error context not silently lost (present queue behavior; checkpoints belong to **#19**) |
 | F | Verify while running | Auto-stop/restart; **no** `pre_update` |
 

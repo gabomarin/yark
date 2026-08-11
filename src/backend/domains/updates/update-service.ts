@@ -367,10 +367,17 @@ export class UpdateService extends EventEmitter {
   }
 
   async cancelSteamCmd(): Promise<boolean> {
+    const backupBusy = this.backups.getCriticalJobs().some(
+      (job) =>
+        job.status === "pending"
+        || job.status === "retrying"
+        || job.status === "running",
+    );
     const hadWork =
       this.activeSteamCmd !== null
       || this.activeSyncChild !== null
       || this.syncingServerId !== null
+      || backupBusy
       || this.queue.some(
         (job) => job.status === "pending" || job.status === "retrying" || job.status === "running",
       );
@@ -382,6 +389,7 @@ export class UpdateService extends EventEmitter {
     }
 
     this.cancelRequested = true;
+    this.backups.requestCancel();
     this.stopDiskProgressMonitor();
     this.appendSteamCmdConsole(
       `Cancelling operation (steamcmd=${this.activeSteamCmd?.child.pid ?? "n/a"}, sync=${this.activeSyncChild?.pid ?? "n/a"}, jobs=${this.queue.length})`,
@@ -625,14 +633,49 @@ export class UpdateService extends EventEmitter {
               "Persisted pre-update backup evidence is incomplete; operator review is required",
             );
           }
+          this.appendSteamCmdConsole(
+            `Reusing ${preUpdateBackups.length} completed pre-update backup(s) from a prior attempt.`,
+          );
         } else {
           this.checkpointJob(job, "creating-pre-update-backup");
-          preUpdateBackups = await this.backups.createPreUpdateBackupForJob(serverId);
+          this.appendSteamCmdConsole(
+            "Creating pre-update backups (world, players, INI) before SteamCMD…",
+          );
+          this.setProgress(
+            5,
+            "Creating pre-update backups…",
+            "World / players / INI snapshots protect rollback if SteamCMD fails",
+          );
+          preUpdateBackups = await this.backups.createPreUpdateBackupForJob(serverId, {
+            onKindProgress: (kind, index, total) => {
+              const label =
+                kind === "world"
+                  ? "world save"
+                  : kind === "players"
+                    ? "player profiles"
+                    : "INI files";
+              const percent = Math.round(5 + ((index + 0.5) / Math.max(total, 1)) * 20);
+              this.appendSteamCmdConsole(
+                `Pre-update backup ${index + 1}/${total}: ${label}…`,
+              );
+              this.setProgress(
+                percent,
+                `Backing up ${label}…`,
+                `Pre-update backup ${index + 1} of ${total}`,
+              );
+            },
+            onProgressMessage: (message) => {
+              this.appendSteamCmdConsole(message);
+              this.setProgress(null, message, message);
+            },
+          });
           if (job !== undefined) {
             job.context.preUpdateBackupIds = preUpdateBackups.map((backup) => backup.id);
           }
         }
         this.checkpointJob(job, "pre-update-backup-complete");
+        this.appendSteamCmdConsole("Pre-update backups ready; starting SteamCMD…");
+        this.setProgress(25, "Starting SteamCMD…", "Pre-update backups complete");
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
         await mkdir(this.updatesLogDir, { recursive: true });
@@ -690,7 +733,56 @@ export class UpdateService extends EventEmitter {
         );
       } catch (err) {
         if (err instanceof CriticalJobRecoveryBlockedError) throw err;
+
+        const phaseAtFailure = job?.phase ?? "";
+        const cancelled =
+          this.cancelRequested || isOperationCancelledError(err);
+        const installMayHaveChanged =
+          phaseAtFailure === "applying-files"
+          || phaseAtFailure === "files-applied"
+          || phaseAtFailure === "restarting-server"
+          || typeof job?.context.steamCmdExitCode === "number"
+          || job?.context.appliedBuildId != null;
+
+        // Cancel (or failure) before SteamCMD touched the install: do not invent a
+        // restore/safeguard unwind — that was the silent multi-minute "Waiting…" hang.
+        if (cancelled && !installMayHaveChanged) {
+          this.appendSteamCmdConsole(
+            "Cancel before SteamCMD applied files; skipping rollback restore.",
+          );
+          this.setProgress(
+            null,
+            "Cancelled",
+            "Stopped before game files changed; no rollback restore needed",
+          );
+          if (wasRunning && !this.processes.isActive(serverId)) {
+            this.appendSteamCmdConsole(
+              `Restarting "${server.name}" after cancel (server was running before update)…`,
+            );
+            await this.instances.startForMaintenance(serverId);
+            const healthy = await this.waitForHealthy(serverId, 90_000, {
+              ignoreCancellation: true,
+            });
+            if (!healthy) {
+              throw new Error(
+                "Update was cancelled before SteamCMD, but the server did not return to running",
+              );
+            }
+          }
+          throw isOperationCancelledError(err) ? err : new OperationCancelledError();
+        }
+
         this.checkpointJob(job, "rollback-stopping-server");
+        this.appendSteamCmdConsole(
+          installMayHaveChanged
+            ? "Update failed after SteamCMD began; restoring pre-update backups…"
+            : "Update failed; restoring pre-update backups…",
+        );
+        this.setProgress(
+          null,
+          "Rolling back…",
+          "Restoring pre-update backups",
+        );
         this.servers.addEvent(
           serverId,
           "update_failed",
@@ -718,7 +810,20 @@ export class UpdateService extends EventEmitter {
 
         for (const backup of preUpdateBackups) {
           this.checkpointJob(job, "rollback-restoring-backups");
-          await this.backups.restoreBackupForJob(serverId, backup.id);
+          this.appendSteamCmdConsole(
+            `Restoring pre-update ${backup.kind} backup…`,
+          );
+          this.setProgress(
+            null,
+            `Restoring ${backup.kind}…`,
+            `Rollback restore (${backup.kind})`,
+          );
+          await this.backups.restoreBackupForJob(serverId, backup.id, {
+            onProgressMessage: (message) => {
+              this.appendSteamCmdConsole(message);
+              this.setProgress(null, message, message);
+            },
+          });
           if (job !== undefined) {
             const restored = new Set(job.context.rollbackRestoredBackupIds ?? []);
             restored.add(backup.id);

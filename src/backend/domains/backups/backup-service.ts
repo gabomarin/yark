@@ -42,6 +42,7 @@ import { rconExec } from "../../infra/rcon/rcon-client";
 import {
   copySavedArksFiles,
   missingEssentialWorldRels,
+  selectWorldBackupSourceFiles,
 } from "./world-snapshot";
 import {
   backupKindSubdir,
@@ -63,6 +64,10 @@ import {
 } from "./backup-disk";
 import { classifyInstallHealthAsync } from "../instances/server-installation";
 import { serverBinaryPath } from "../instances/launch-args";
+import {
+  isOperationCancelledError,
+  OperationCancelledError,
+} from "../updates/robocopy-tree";
 
 export {
   backupFinishedAt,
@@ -160,6 +165,11 @@ interface DismissedFleetAlertEntry {
 }
 
 type BackupCriticalJobType = "pre-update-backup" | "restore";
+
+interface BackupCriticalJobProgressHandlers {
+  onKindProgress?: (kind: BackupKind, index: number, total: number) => void;
+  onProgressMessage?: (message: string) => void;
+}
 
 interface BackupCriticalJob extends DurableCriticalJob {
   type: BackupCriticalJobType;
@@ -295,6 +305,10 @@ export class BackupService extends EventEmitter {
   private readonly scheduledWorldInFlight = new Set<string>();
   /** Prevent overlapping runScheduledCycle walks. */
   private scheduledCycleInFlight = false;
+  /** Set by SteamCMD Cancel (and similar) so long backup/restore zips can abort between steps. */
+  private cancelRequested = false;
+  /** In-memory only — progress callbacks must not be persisted with the durable queue. */
+  private readonly jobProgressHandlers = new Map<string, BackupCriticalJobProgressHandlers>();
 
   constructor(
     private readonly servers: ServerRepository,
@@ -457,12 +471,59 @@ export class BackupService extends EventEmitter {
     );
   }
 
-  async createPreUpdateBackupForJob(serverId: string): Promise<BackupRecord[]> {
-    return this.enqueueAndWait<BackupRecord[]>("pre-update-backup", serverId, null);
+  async createPreUpdateBackupForJob(
+    serverId: string,
+    options?: BackupCriticalJobProgressHandlers,
+  ): Promise<BackupRecord[]> {
+    return this.enqueueAndWait<BackupRecord[]>("pre-update-backup", serverId, null, {
+      progress: options,
+    });
   }
 
-  async restoreBackupForJob(serverId: string, backupId: string): Promise<void> {
-    await this.enqueueAndWait<void>("restore", serverId, backupId);
+  async restoreBackupForJob(
+    serverId: string,
+    backupId: string,
+    options?: BackupCriticalJobProgressHandlers,
+  ): Promise<void> {
+    await this.enqueueAndWait<void>("restore", serverId, backupId, {
+      progress: options,
+    });
+  }
+
+  /**
+   * Abort pending backup critical jobs and signal running pre-apply work to stop
+   * between kinds / packaging steps (does not interrupt `applying-restore`).
+   */
+  requestCancel(): boolean {
+    const actionable = this.queue.filter(
+      (job) =>
+        job.status === "pending"
+        || job.status === "retrying"
+        || (
+          job.status === "running"
+          && job.phase !== "applying-restore"
+        ),
+    );
+    if (actionable.length === 0 && !this.cancelRequested) {
+      return false;
+    }
+
+    this.cancelRequested = true;
+    for (const job of actionable) {
+      if (job.status === "pending" || job.status === "retrying") {
+        job.status = "cancelled";
+        job.phase = "cancelled";
+        job.recoveryReason = "Cancelled by the operator before execution.";
+        job.updatedAt = new Date().toISOString();
+        this.rejectJob(job.id, new OperationCancelledError());
+        this.jobProgressHandlers.delete(job.id);
+        continue;
+      }
+      job.recoveryReason = "Cancellation requested; stopping before restore apply.";
+      job.updatedAt = new Date().toISOString();
+    }
+    this.persistQueue();
+    return true;
   }
 
   async restoreBackupForRollbackRecovery(
@@ -1591,6 +1652,8 @@ export class BackupService extends EventEmitter {
     options?: {
       skipFlush?: boolean;
       onKindProgress?: (kind: BackupKind, index: number, total: number) => void;
+      onProgressMessage?: (message: string) => void;
+      respectCancel?: boolean;
     },
   ): Promise<BackupRecord[]> {
     return this.withServerBackupJob(serverId, async () => {
@@ -1601,9 +1664,15 @@ export class BackupService extends EventEmitter {
       const created: BackupRecord[] = [];
       const total = kinds.length;
       for (let index = 0; index < kinds.length; index += 1) {
+        if (options?.respectCancel === true) {
+          this.throwIfCancelled();
+        }
         const kind = kinds[index]!;
         options?.onKindProgress?.(kind, index, total);
-        const record = await this.createBackup(serverId, type, kind, notes);
+        const record = await this.createBackup(serverId, type, kind, notes, {
+          onProgressMessage: options?.onProgressMessage,
+          respectCancel: options?.respectCancel === true,
+        });
         if (record !== null) {
           created.push(record);
         }
@@ -1652,10 +1721,18 @@ export class BackupService extends EventEmitter {
     type: BackupType,
     kind: BackupKind,
     notes: string | null,
-    options?: { playerKey?: string; waitForProfile?: boolean },
+    options?: {
+      playerKey?: string;
+      waitForProfile?: boolean;
+      onProgressMessage?: (message: string) => void;
+      respectCancel?: boolean;
+    },
   ): Promise<BackupRecord | null> {
     const server = this.mustServer(serverId);
     await this.assertInstallReadyForLiveOps(server);
+    if (options?.respectCancel === true) {
+      this.throwIfCancelled();
+    }
     const policy = this.backups.getPolicy(serverId);
     const rootDir = resolveServerBackupRoot(server.installDir, policy.backupDir);
     const kindDir = join(rootDir, backupKindSubdir(kind));
@@ -1682,6 +1759,10 @@ export class BackupService extends EventEmitter {
     this.creatingBackupIds.add(record.id);
 
     try {
+      options?.onProgressMessage?.(`Packaging ${kind} files for backup…`);
+      if (options?.respectCancel === true) {
+        this.throwIfCancelled();
+      }
       const packaged =
         options?.playerKey !== undefined && kind === "players"
           ? await this.packageSinglePlayer(server, stagingDir, options.playerKey, {
@@ -1705,6 +1786,10 @@ export class BackupService extends EventEmitter {
 
       if (kind === "world" && packaged.meta.empty === true) {
         throw new Error("No world save data found to back up");
+      }
+
+      if (options?.respectCancel === true) {
+        this.throwIfCancelled();
       }
 
       await writeFile(
@@ -1732,7 +1817,18 @@ export class BackupService extends EventEmitter {
         "utf8",
       );
 
-      const sizeBytes = await zipDirectory(stagingDir, zipPath);
+      const lightCompressBinarySaves = kind === "world" || kind === "players";
+      options?.onProgressMessage?.(
+        lightCompressBinarySaves
+          ? `Writing ${kind} backup archive…`
+          : `Compressing ${kind} backup archive…`,
+      );
+      const sizeBytes = await zipDirectory(stagingDir, zipPath, {
+        lightCompressBinarySaves,
+      });
+      if (options?.respectCancel === true) {
+        this.throwIfCancelled();
+      }
       await rm(stagingDir, { recursive: true, force: true });
 
       const completed = this.backups.completeBackup(record.id, sizeBytes);
@@ -1834,7 +1930,19 @@ export class BackupService extends EventEmitter {
 
     // File-by-file copy so live Ark save rotation (e.g. .arkrbf) can be skipped
     // without failing the whole archive, while essential saves still fail loudly.
-    const sourceFiles = await listFilesRecursive(savedArks);
+    const enumerated = await listFilesRecursive(savedArks);
+    const candidates = await Promise.all(
+      enumerated.map(async (path) => {
+        const info = await stat(path);
+        return {
+          path,
+          name: basename(path),
+          mtimeMs: info.mtimeMs,
+        };
+      }),
+    );
+    const selection = selectWorldBackupSourceFiles(candidates);
+    const sourceFiles = selection.selected.map((candidate) => candidate.path);
     const copyResult = await copySavedArksFiles(
       savedArks,
       dest,
@@ -1862,8 +1970,11 @@ export class BackupService extends EventEmitter {
         fileCount: destFiles.length,
         savedArksPresent: true,
         copiedFileCount: copyResult.copiedFileCount,
-        skippedTransientCount: copyResult.skippedTransientCount,
+        skippedTransientCount:
+          selection.skippedTransientCount + copyResult.skippedTransientCount,
         skippedTransient: copyResult.skippedTransient,
+        skippedOlderDatedCount: selection.skippedOlderDatedCount,
+        retainedDatedCount: selection.retainedDatedCount,
       },
     };
   }
@@ -2065,11 +2176,20 @@ export class BackupService extends EventEmitter {
     }
   }
 
+  private throwIfCancelled(): void {
+    if (this.cancelRequested) {
+      throw new OperationCancelledError();
+    }
+  }
+
   private async enqueueAndWait<T>(
     type: BackupCriticalJobType,
     serverId: string,
     backupId: string | null,
-    options?: { adoptRetryableRestore?: boolean },
+    options?: {
+      adoptRetryableRestore?: boolean;
+      progress?: BackupCriticalJobProgressHandlers;
+    },
   ): Promise<T> {
     const existingPending = this.queue.find(
       (job) =>
@@ -2089,6 +2209,9 @@ export class BackupService extends EventEmitter {
           && (existingPending.status === "blocked" || existingPending.status === "failed")
           && existingPending.operatorRetryAllowed
         ) {
+          if (options.progress !== undefined) {
+            this.jobProgressHandlers.set(existingPending.id, options.progress);
+          }
           const completion = new Promise<T>((resolve, reject) => {
             this.addWaiter(existingPending.id, {
               resolve: (value) => resolve(value as T),
@@ -2105,6 +2228,9 @@ export class BackupService extends EventEmitter {
         throw new Error(
           `A previous ${type} job requires Retry or Dismiss before another can be queued`,
         );
+      }
+      if (options?.progress !== undefined) {
+        this.jobProgressHandlers.set(existingPending.id, options.progress);
       }
       return await new Promise<T>((resolve, reject) => {
         this.addWaiter(existingPending.id, {
@@ -2134,6 +2260,9 @@ export class BackupService extends EventEmitter {
     };
 
     this.queue.push(job);
+    if (options?.progress !== undefined) {
+      this.jobProgressHandlers.set(job.id, options.progress);
+    }
     this.persistQueue();
     this.servers.addEvent(
       serverId,
@@ -2169,6 +2298,7 @@ export class BackupService extends EventEmitter {
 
         job.status = "running";
         job.updatedAt = new Date().toISOString();
+        this.cancelRequested = false;
         this.persistQueue();
 
         try {
@@ -2184,6 +2314,7 @@ export class BackupService extends EventEmitter {
           }
 
           this.resolveJob(job.id, result);
+          this.jobProgressHandlers.delete(job.id);
           this.removeJob(job.id);
           this.persistQueue();
         } catch (error) {
@@ -2191,8 +2322,34 @@ export class BackupService extends EventEmitter {
           job.lastError = error instanceof Error ? error.message : String(error);
           job.updatedAt = new Date().toISOString();
 
+          if (isOperationCancelledError(error) || this.cancelRequested) {
+            this.rejectJob(
+              job.id,
+              isOperationCancelledError(error)
+                ? (error as Error)
+                : new OperationCancelledError(),
+            );
+            this.jobProgressHandlers.delete(job.id);
+            job.status = "cancelled";
+            if (job.phase !== "applying-restore") {
+              job.phase = "cancelled";
+            }
+            job.operatorRetryAllowed = false;
+            job.recoveryReason = "Cancelled by the operator during execution.";
+            this.cancelRequested = false;
+            this.persistQueue();
+            this.servers.addEvent(
+              job.serverId,
+              "error",
+              "warning",
+              `Job ${job.type} cancelled by the operator`,
+            );
+            continue;
+          }
+
           if (job.phase === "applying-restore") {
             this.rejectJob(job.id, new Error(job.lastError));
+            this.jobProgressHandlers.delete(job.id);
             job.status = "blocked";
             job.operatorRetryAllowed = true;
             job.recoveryReason =
@@ -2209,6 +2366,7 @@ export class BackupService extends EventEmitter {
 
           if (!isTransientCriticalJobError(error)) {
             this.rejectJob(job.id, new Error(job.lastError));
+            this.jobProgressHandlers.delete(job.id);
             job.status = "failed";
             job.phase = "failed";
             job.operatorRetryAllowed = false;
@@ -2226,6 +2384,7 @@ export class BackupService extends EventEmitter {
 
           if (job.attempts >= job.maxAttempts) {
             this.rejectJob(job.id, new Error(job.lastError));
+            this.jobProgressHandlers.delete(job.id);
             job.status = "failed";
             job.phase = "failed";
             job.operatorRetryAllowed = true;
@@ -2403,8 +2562,14 @@ export class BackupService extends EventEmitter {
   }
 
   private async resumePreUpdateBackupJob(job: BackupCriticalJob): Promise<BackupRecord[]> {
+    const progress = this.jobProgressHandlers.get(job.id);
+    this.throwIfCancelled();
+    progress?.onProgressMessage?.(
+      "Creating pre-update backups (world, players, INI) before SteamCMD…",
+    );
     this.checkpointJob(job, "reconciling-backups");
     await this.reconcileDiskBackups(job.serverId);
+    this.throwIfCancelled();
     const marker = `[critical-job:${job.id}]`;
     const candidates = this.backups
       .listBackups(job.serverId, 10_000)
@@ -2437,15 +2602,22 @@ export class BackupService extends EventEmitter {
     // evidence. Rebuild progress from job-marked DB rows whose archives still
     // exist so corrupt context cannot skip a required backup kind.
     let nextKindIndex = 0;
+    const total = CRITICAL_BACKUP_KINDS.length;
     while (nextKindIndex < CRITICAL_BACKUP_KINDS.length) {
+      this.throwIfCancelled();
       const kind = CRITICAL_BACKUP_KINDS[nextKindIndex]!;
       if (!completedByKind.has(kind)) {
         this.checkpointJob(job, `creating-backup:${kind}`);
+        progress?.onKindProgress?.(kind, nextKindIndex, total);
         const created = await this.createBackups(
           job.serverId,
           "pre_update",
           `Pre-update backup ${marker}`,
           [kind],
+          {
+            respectCancel: true,
+            onProgressMessage: progress?.onProgressMessage,
+          },
         );
         const completed = created.find(
           (backup) =>
@@ -2471,6 +2643,7 @@ export class BackupService extends EventEmitter {
       this.checkpointJob(job, `backup-complete:${kind}`);
     }
 
+    progress?.onProgressMessage?.("Pre-update backups completed.");
     return CRITICAL_BACKUP_KINDS.map((kind) => completedByKind.get(kind)!);
   }
 
@@ -2519,10 +2692,15 @@ export class BackupService extends EventEmitter {
       this.checkpointJob(job, "restore-history-started");
     }
 
+    this.throwIfCancelled();
     this.checkpointJob(job, "creating-restore-safeguard");
     if (restoreHistoryId === undefined) {
       throw new Error("Restore history checkpoint was not created");
     }
+    const progress = this.jobProgressHandlers.get(job.id);
+    progress?.onProgressMessage?.(
+      `Creating pre-restore safeguard (${backup.kind}) before applying the archive…`,
+    );
     const safeguards = this.backups
       .listBackups(job.serverId, 10_000)
       .filter(
@@ -2533,19 +2711,26 @@ export class BackupService extends EventEmitter {
           && candidate.notes?.includes(marker) === true,
       );
     if (safeguards.length === 0) {
+      progress?.onKindProgress?.(backup.kind, 0, 1);
       const created = await this.createBackups(
         job.serverId,
         "pre_restore",
         `Safeguard before restore ${marker}`,
         [backup.kind],
+        {
+          respectCancel: true,
+          onProgressMessage: progress?.onProgressMessage,
+        },
       );
       job.context.safeguardBackupIds = created.map((candidate) => candidate.id);
     } else {
       job.context.safeguardBackupIds = safeguards.map((candidate) => candidate.id);
     }
+    this.throwIfCancelled();
     this.checkpointJob(job, "restore-safeguard-complete");
 
     this.checkpointJob(job, "applying-restore");
+    progress?.onProgressMessage?.(`Applying ${backup.kind} restore…`);
     await this.applyRestore(server, backup);
     this.backups.completeRestoreHistory(restoreHistoryId, "completed", marker);
     this.checkpointJob(job, "restore-complete");
