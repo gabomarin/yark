@@ -61,16 +61,45 @@ async function listFilesRecursive(root: string): Promise<string[]> {
   return out;
 }
 
+/**
+ * ASA save blobs are already dense; use zlib level 1 (fast) instead of the
+ * default level 6 when packaging world/players archives.
+ */
+export const ASA_SAVE_ZIP_COMPRESSION_LEVEL = 1;
+
+export function isAsaSaveBlobZipEntry(entryName: string): boolean {
+  const lower = basename(entryName).toLowerCase();
+  return (
+    lower.endsWith(".ark")
+    || lower.endsWith(".arktribe")
+    || lower.endsWith(".arkprofile")
+    || lower.endsWith(".arkprofile.bak")
+    || lower.endsWith(".profilebak")
+  );
+}
+
 /** Zip the contents of `sourceDir` into `zipPath` (paths inside the zip are relative to sourceDir). */
-export async function zipDirectory(sourceDir: string, zipPath: string): Promise<number> {
+export async function zipDirectory(
+  sourceDir: string,
+  zipPath: string,
+  options?: { lightCompressBinarySaves?: boolean },
+): Promise<number> {
   await ensureParentDir(zipPath);
   const files = await listFilesRecursive(sourceDir);
   const zipfile = new yazl.ZipFile();
+  const lightCompressBinarySaves = options?.lightCompressBinarySaves === true;
 
   for (const file of files) {
     const entryName = relative(sourceDir, file).split(sep).join("/");
     if (entryName.length === 0) continue;
-    zipfile.addFile(file, entryName);
+    if (lightCompressBinarySaves && isAsaSaveBlobZipEntry(entryName)) {
+      zipfile.addFile(file, entryName, {
+        compress: true,
+        compressionLevel: ASA_SAVE_ZIP_COMPRESSION_LEVEL,
+      });
+    } else {
+      zipfile.addFile(file, entryName);
+    }
   }
 
   zipfile.end();

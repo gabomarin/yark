@@ -53,9 +53,13 @@ restore history. Dismiss removes only the queue record; it does not delete
 installations, backups, logs, or restore evidence.
 
 Cancelling queued work makes it terminal immediately. Cancelling active work
-first stops SteamCMD and completes any required rollback/runtime unwind; the job
-does not become terminal while destructive recovery is still in progress. If
-that unwind is interrupted, it remains blocked with Retry/Dismiss.
+first stops SteamCMD and signals backup critical jobs to stop between kinds /
+packaging steps (except during `applying-restore`). If SteamCMD never changed
+game files, update cancel skips rollback restore and only restores runtime
+(restart when the server was running). When files may have changed, cancel still
+completes any required rollback/runtime unwind; the job does not become terminal
+while destructive recovery is still in progress. If that unwind is interrupted,
+it remains blocked with Retry/Dismiss.
 
 For updates, Retry preserves the interrupted recovery route: `restarting-server`
 continues only start/health checks, incomplete `rollback-*` phases finish the

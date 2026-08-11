@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   extractZip,
+  isAsaSaveBlobZipEntry,
   isReadableZipArchive,
   readZipTextEntry,
   safeExtractTarget,
@@ -12,6 +13,7 @@ import {
   zipDirectory,
   zipHasBackupLayout,
 } from "@backend/domains/backups/backup-archive";
+import yauzl from "yauzl";
 
 const tmpDirs: string[] = [];
 
@@ -93,6 +95,53 @@ function crc32(buf: Buffer): number {
 }
 
 describe("backup-archive zip safety", () => {
+  it("lightly compresses ASA save blobs when lightCompressBinarySaves is enabled", async () => {
+    expect(isAsaSaveBlobZipEntry("SavedArks/Genesis_WP.ark")).toBe(true);
+    expect(isAsaSaveBlobZipEntry("manifest.json")).toBe(false);
+
+    const root = await makeTempDir("ark-zip-light-");
+    const source = join(root, "src");
+    const zipPath = join(root, "world.zip");
+    await mkdir(join(source, "SavedArks"), { recursive: true });
+    // Highly compressible zeros: level 1 should still shrink vs raw size.
+    const arkBytes = Buffer.alloc(64 * 1024, 0);
+    await writeFile(join(source, "SavedArks", "Genesis_WP.ark"), arkBytes);
+    await writeFile(join(source, "manifest.json"), '{"ok":true}', "utf8");
+    await zipDirectory(source, zipPath, { lightCompressBinarySaves: true });
+
+    const entries = await new Promise<
+      Map<string, { method: number; compressed: number; uncompressed: number }>
+    >((resolvePromise, reject) => {
+      yauzl.open(zipPath, { lazyEntries: true }, (openErr, zipfile) => {
+        if (openErr !== null || zipfile === undefined) {
+          reject(openErr ?? new Error("Could not open zip"));
+          return;
+        }
+        const out = new Map<
+          string,
+          { method: number; compressed: number; uncompressed: number }
+        >();
+        zipfile.readEntry();
+        zipfile.on("entry", (entry: yauzl.Entry) => {
+          out.set(entry.fileName, {
+            method: entry.compressionMethod,
+            compressed: entry.compressedSize,
+            uncompressed: entry.uncompressedSize,
+          });
+          zipfile.readEntry();
+        });
+        zipfile.on("end", () => resolvePromise(out));
+        zipfile.on("error", reject);
+      });
+    });
+
+    const ark = entries.get("SavedArks/Genesis_WP.ark");
+    const manifest = entries.get("manifest.json");
+    expect(ark?.method).toBe(8); // deflate (light level)
+    expect(ark!.compressed).toBeLessThan(ark!.uncompressed);
+    expect(manifest?.method).toBe(8); // default deflate
+  });
+
   it("rejects zip-slip entry names before extract", () => {
     const dest = join(tmpdir(), "ark-safe-dest");
     expect(() => safeExtractTarget(dest, "../evil.txt")).toThrow(/Unsafe zip entry/i);
