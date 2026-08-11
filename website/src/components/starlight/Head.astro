@@ -3,6 +3,7 @@
  * Starlight Head override — inject BreadcrumbList JSON-LD for docs routes.
  */
 import Default from "@astrojs/starlight/components/Head.astro";
+import CloudflareAnalytics from "../CloudflareAnalytics.astro";
 import { siteOrigin } from "../../data/site";
 
 function humanizeSegment(segment: string): string {
@@ -65,6 +66,7 @@ const breadcrumbJsonLd =
 ---
 
 <Default {...Astro.props} />
+<CloudflareAnalytics />
 {
   breadcrumbJsonLd && (
     <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd)} />

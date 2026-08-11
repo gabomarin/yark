@@ -43,6 +43,9 @@ jobs:
 
       - name: Install and build site
         working-directory: website
+        env:
+          # Optional: Cloudflare Web Analytics beacon (repo variable; public by design).
+          PUBLIC_CF_WEB_ANALYTICS_TOKEN: ${{ vars.PUBLIC_CF_WEB_ANALYTICS_TOKEN }}
         run: |
           npm ci
           npm run build

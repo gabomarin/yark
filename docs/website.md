@@ -70,6 +70,22 @@ Workflow: [`.github/workflows/pages.yml`](../.github/workflows/pages.yml)
 After deploy, submit `https://getyark.com/sitemap-index.xml` in Search Console
 when you care about SEO indexing.
 
+## Analytics (optional)
+
+Privacy-first traffic via [Cloudflare Web Analytics](https://www.cloudflare.com/web-analytics/)
+(no cookie banner required for the default beacon).
+
+1. Cloudflare dashboard → **Web Analytics** → **Add a site** → hostname `getyark.com`
+   (JS snippet mode is fine; DNS does not need to move to Cloudflare).
+2. Copy the **token** from the beacon snippet (`data-cf-beacon='{"token":"…"}'`).
+3. GitHub repo **Settings → Secrets and variables → Actions → Variables** →
+   create `PUBLIC_CF_WEB_ANALYTICS_TOKEN` with that token.
+4. Redeploy Pages (`workflow_dispatch` on Deploy GitHub Pages, or push a `website/**` change).
+
+Local preview skips the beacon unless you set the same env var when building. The token is
+public by design (it ships in HTML); keeping it in a GitHub Actions variable avoids baking
+a personal site id into every fork clone.
+
 ## Screenshots
 
 Gallery assets live in `website/public/screenshots/`.

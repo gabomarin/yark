@@ -13,6 +13,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Optional **Cloudflare Web Analytics** beacon on the public site (`PUBLIC_CF_WEB_ANALYTICS_TOKEN` at Pages build time).
 - Engineering runbook for workspace **Mods** (CurseForge inventory, load order, metadata proxy, and `-mods=` launch) in `docs/mods.md`.
 
 ### Fixed
