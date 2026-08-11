@@ -155,6 +155,11 @@ export class InstanceService extends EventEmitter {
   private readonly criticalJobs = new Map<string, Promise<unknown>>();
   /** Serializes profile row writes so Launch/Mods patches cannot clobber (#209). */
   private readonly profileWriteChains = new Map<string, Promise<unknown>>();
+  /**
+   * Serializes fleet-wide profile creation (create / import / clone) so uniqueness
+   * checks for name, ports, and installDir cannot race across concurrent IPC (#254).
+   */
+  private fleetCreateChain: Promise<unknown> = Promise.resolve();
   private lastOfficialVersion: string | null | undefined = undefined;
   private lastOfficialSteamBuild: string | null | undefined = undefined;
   private lastInstallServers: ServerInstallationInfo[] = [];
@@ -209,33 +214,48 @@ export class InstanceService extends EventEmitter {
     return this.repo.list();
   }
 
-  create(input: ServerProfileInput): ServerProfile {
-    this.assertValidInput(input);
-    this.assertUniqueName(input.name);
-    this.assertNoPortConflicts(input);
-
-    const installDir = resolveServerInstallDir(input.installDir, input.name);
-    const normalized: ServerProfileInput = { ...input, installDir };
-    this.assertValidInput(normalized);
-    this.assertUniqueInstallDir(installDir);
-
-    // create() sync; ensureDefaultIniFiles async — mkdir root here synchronously via ensure
-    const profile = this.repo.create(normalized);
-    void this.ensureDefaultIniFiles(profile.installDir);
-    this.repo.addEvent(
-      profile.id,
-      "server_created",
-      "info",
-      `Server "${profile.name}" created at ${profile.installDir} (map ${profile.map})`,
+  /**
+   * Queue create/import/clone so overlapping uniqueness checks see a consistent fleet.
+   */
+  private async withFleetCreateLock<T>(work: () => Promise<T> | T): Promise<T> {
+    const run = this.fleetCreateChain.then(() => work(), () => work());
+    this.fleetCreateChain = run.then(
+      () => undefined,
+      () => undefined,
     );
-    return profile;
+    return run;
+  }
+
+  async create(input: ServerProfileInput): Promise<ServerProfile> {
+    return this.withFleetCreateLock(() => {
+      this.assertValidInput(input);
+      this.assertUniqueName(input.name);
+      this.assertNoPortConflicts(input);
+
+      const installDir = resolveServerInstallDir(input.installDir, input.name);
+      const normalized: ServerProfileInput = { ...input, installDir };
+      this.assertValidInput(normalized);
+      this.assertUniqueInstallDir(installDir);
+
+      // create() sync body; ensureDefaultIniFiles async — mkdir root here synchronously via ensure
+      const profile = this.repo.create(normalized);
+      void this.ensureDefaultIniFiles(profile.installDir);
+      this.repo.addEvent(
+        profile.id,
+        "server_created",
+        "info",
+        `Server "${profile.name}" created at ${profile.installDir} (map ${profile.map})`,
+      );
+      return profile;
+    });
   }
 
   /**
    * Adopt an existing ASA dedicated root as a YARK profile (#254).
    * Uses the absolute `installDir` as-is (does not nest via resolveServerInstallDir).
-   * No SteamCMD sync. Requires install health `ready` (no incomplete/suspicious).
-   * All discovered mods are forced into `disabledMods` until the operator enables them.
+   * No SteamCMD sync and **no INI writes** — Start (or later edits) sync profile-owned
+   * keys. Requires install health `ready`. All discovered mods are forced into
+   * `disabledMods` until the operator enables them.
    */
   async importExisting(input: ServerProfileInput): Promise<ServerProfile> {
     const installDir = normalizeWindowsPath(input.installDir);
@@ -263,20 +283,22 @@ export class InstanceService extends EventEmitter {
       );
     }
 
-    const profile = this.repo.create(normalized);
-    await this.ensureDefaultIniFiles(profile.installDir);
-    try {
-      await syncProfileSettingsToIni(profile);
-    } catch {
-      // Existing GUS may be locked; start() syncs again before launch.
-    }
-    this.repo.addEvent(
-      profile.id,
-      "server_created",
-      "info",
-      `Server "${profile.name}" imported from existing install at ${profile.installDir} (map ${profile.map})`,
-    );
-    return profile;
+    // Re-check uniqueness under the fleet create lock after the async probe so a
+    // concurrent create/import cannot claim the same name, ports, or installDir.
+    return this.withFleetCreateLock(() => {
+      this.assertUniqueName(normalized.name);
+      this.assertNoPortConflicts(normalized);
+      this.assertUniqueInstallDir(installDir);
+
+      const profile = this.repo.create(normalized);
+      this.repo.addEvent(
+        profile.id,
+        "server_created",
+        "info",
+        `Server "${profile.name}" imported from existing install at ${profile.installDir} (map ${profile.map})`,
+      );
+      return profile;
+    });
   }
 
   private async ensureDefaultIniFiles(installDir: string): Promise<void> {
@@ -432,47 +454,109 @@ export class InstanceService extends EventEmitter {
   }
 
   /** Clones a profile with a derived name and ports shifted +10. */
-  clone(id: string): ServerProfile {
-    const source = this.repo.get(id);
-    if (source === null) {
-      throw new Error("Server to clone does not exist");
-    }
-    const existing = this.repo.list();
-    const names = new Set(existing.map((p) => p.name.trim().toLowerCase()));
-    const installDirs = new Set(
-      existing.map((profile) => installDirKey(profile.installDir)),
-    );
-    let copyNumber = 1;
-    let name: string;
-    let installDir: string;
-    for (;;) {
-      name =
-        copyNumber === 1
-          ? `${source.name} (copy)`
-          : `${source.name} (copy ${copyNumber})`;
-      installDir = suggestCloneInstallDir(source.installDir, name);
-      if (
-        !names.has(name.trim().toLowerCase()) &&
-        !installDirs.has(installDirKey(installDir)) &&
-        !existsSync(installDir)
-      ) {
-        break;
+  async clone(id: string): Promise<ServerProfile> {
+    return this.withFleetCreateLock(() => {
+      const source = this.repo.get(id);
+      if (source === null) {
+        throw new Error("Server to clone does not exist");
       }
-      copyNumber++;
-    }
+      const existing = this.repo.list();
+      const names = new Set(existing.map((p) => p.name.trim().toLowerCase()));
+      const installDirs = new Set(
+        existing.map((profile) => installDirKey(profile.installDir)),
+      );
+      let copyNumber = 1;
+      let name: string;
+      let installDir: string;
+      for (;;) {
+        name =
+          copyNumber === 1
+            ? `${source.name} (copy)`
+            : `${source.name} (copy ${copyNumber})`;
+        installDir = suggestCloneInstallDir(source.installDir, name);
+        if (
+          !names.has(name.trim().toLowerCase()) &&
+          !installDirs.has(installDirKey(installDir)) &&
+          !existsSync(installDir)
+        ) {
+          break;
+        }
+        copyNumber++;
+      }
 
-    let offset = 10;
-    let input: ServerProfileInput;
-    for (;;) {
-      input = {
-        name,
+      let offset = 10;
+      let input: ServerProfileInput;
+      for (;;) {
+        input = {
+          name,
+          map: source.map,
+          mapModId: source.mapModId ?? null,
+          installDir,
+          sessionName: `${source.sessionName} (copy)`,
+          gamePort: source.gamePort + offset,
+          queryPort: source.queryPort + offset,
+          rconPort: source.rconPort + offset,
+          serverPassword: source.serverPassword,
+          adminPassword: source.adminPassword,
+          clusterId: source.clusterId,
+          clusterDir: source.clusterDir,
+          extraArgs: [...source.extraArgs],
+          structuredLaunchArgs: { ...(source.structuredLaunchArgs ?? {}) },
+          mods: [...source.mods],
+          disabledMods: [...(source.disabledMods ?? [])],
+          modMetadataCache: { ...(source.modMetadataCache ?? {}) },
+          autoStart: source.autoStart,
+        };
+        if (findPortConflicts(existing, { ...input, id: undefined }).length === 0) {
+          break;
+        }
+        offset += 10;
+        if (offset > 1000) {
+          throw new Error("No free ports found for the clone");
+        }
+      }
+      this.assertValidInput(input);
+      this.assertUniqueInstallDir(input.installDir);
+      const profile = this.repo.create(input, source.enabled);
+      void this.ensureDefaultIniFiles(profile.installDir);
+      this.repo.addEvent(
+        profile.id,
+        "server_created",
+        "info",
+        `Server "${profile.name}" created at ${profile.installDir} (map ${profile.map})`,
+      );
+      return profile;
+    });
+  }
+
+  /** Clones a profile with custom parameters from the dialog. */
+  async cloneWithParams(
+    id: string,
+    params: {
+      name: string;
+      sessionName: string;
+      gamePort: number;
+      queryPort: number;
+      rconPort: number;
+      installDir: string;
+    },
+  ): Promise<ServerProfile> {
+    return this.withFleetCreateLock(() => {
+      const source = this.repo.get(id);
+      if (source === null) {
+        throw new Error("Server to clone does not exist");
+      }
+
+      const installDir = normalizeWindowsPath(params.installDir);
+      const input: ServerProfileInput = {
+        name: params.name,
         map: source.map,
         mapModId: source.mapModId ?? null,
         installDir,
-        sessionName: `${source.sessionName} (copy)`,
-        gamePort: source.gamePort + offset,
-        queryPort: source.queryPort + offset,
-        rconPort: source.rconPort + offset,
+        sessionName: params.sessionName,
+        gamePort: params.gamePort,
+        queryPort: params.queryPort,
+        rconPort: params.rconPort,
         serverPassword: source.serverPassword,
         adminPassword: source.adminPassword,
         clusterId: source.clusterId,
@@ -484,80 +568,22 @@ export class InstanceService extends EventEmitter {
         modMetadataCache: { ...(source.modMetadataCache ?? {}) },
         autoStart: source.autoStart,
       };
-      if (findPortConflicts(existing, { ...input, id: undefined }).length === 0) {
-        break;
-      }
-      offset += 10;
-      if (offset > 1000) {
-        throw new Error("No free ports found for the clone");
-      }
-    }
-    this.assertValidInput(input);
-    this.assertUniqueInstallDir(input.installDir);
-    const profile = this.repo.create(input, source.enabled);
-    void this.ensureDefaultIniFiles(profile.installDir);
-    this.repo.addEvent(
-      profile.id,
-      "server_created",
-      "info",
-      `Server "${profile.name}" created at ${profile.installDir} (map ${profile.map})`,
-    );
-    return profile;
-  }
 
-  /** Clones a profile with custom parameters from the dialog. */
-  cloneWithParams(
-    id: string,
-    params: {
-      name: string;
-      sessionName: string;
-      gamePort: number;
-      queryPort: number;
-      rconPort: number;
-      installDir: string;
-    },
-  ): ServerProfile {
-    const source = this.repo.get(id);
-    if (source === null) {
-      throw new Error("Server to clone does not exist");
-    }
+      this.assertValidInput(input);
+      this.assertUniqueName(input.name);
+      this.assertUniqueInstallDir(input.installDir);
+      this.assertNoPortConflicts(input);
 
-    const installDir = normalizeWindowsPath(params.installDir);
-    const input: ServerProfileInput = {
-      name: params.name,
-      map: source.map,
-      mapModId: source.mapModId ?? null,
-      installDir,
-      sessionName: params.sessionName,
-      gamePort: params.gamePort,
-      queryPort: params.queryPort,
-      rconPort: params.rconPort,
-      serverPassword: source.serverPassword,
-      adminPassword: source.adminPassword,
-      clusterId: source.clusterId,
-      clusterDir: source.clusterDir,
-      extraArgs: [...source.extraArgs],
-      structuredLaunchArgs: { ...(source.structuredLaunchArgs ?? {}) },
-      mods: [...source.mods],
-      disabledMods: [...(source.disabledMods ?? [])],
-      modMetadataCache: { ...(source.modMetadataCache ?? {}) },
-      autoStart: source.autoStart,
-    };
-
-    this.assertValidInput(input);
-    this.assertUniqueName(input.name);
-    this.assertUniqueInstallDir(input.installDir);
-    this.assertNoPortConflicts(input);
-
-    const profile = this.repo.create(input, source.enabled);
-    void this.ensureDefaultIniFiles(profile.installDir);
-    this.repo.addEvent(
-      profile.id,
-      "server_created",
-      "info",
-      `Server "${profile.name}" created at ${profile.installDir} (map ${profile.map})`,
-    );
-    return profile;
+      const profile = this.repo.create(input, source.enabled);
+      void this.ensureDefaultIniFiles(profile.installDir);
+      this.repo.addEvent(
+        profile.id,
+        "server_created",
+        "info",
+        `Server "${profile.name}" created at ${profile.installDir} (map ${profile.map})`,
+      );
+      return profile;
+    });
   }
 
   async start(id: string, options?: StartServerOptions): Promise<void> {

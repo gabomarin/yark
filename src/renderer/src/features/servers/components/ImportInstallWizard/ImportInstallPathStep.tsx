@@ -28,7 +28,7 @@ export function ImportInstallPathStep(props: Props): ReactElement {
     <Stack gap="sm">
       <Alert color="blue" title="ASA install folder">
         Select the root that contains <Text span fw={600}>ShooterGame</Text>.
-        YARK only creates a profile — files stay as they are.
+        YARK only creates a profile — ASA files on disk are not modified until Start.
       </Alert>
       <PathField
         label="Install folder"

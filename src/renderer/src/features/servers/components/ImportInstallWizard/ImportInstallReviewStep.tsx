@@ -88,6 +88,8 @@ export function ImportInstallReviewStep(props: Props): ReactElement {
     <Stack gap="sm">
       <Alert color="yellow" title="Profile only">
         Schedules, clusters, and other managers&apos; databases are not imported.
+        Game.ini / GameUserSettings.ini on disk are left unchanged until you Start
+        (or edit and save) this profile.
       </Alert>
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
         {[

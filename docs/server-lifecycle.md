@@ -453,10 +453,12 @@ from another manager) but YARK has no profile:
    `resolveServerInstallDir` / base-folder create). Map prefill prefers the
    newest world `.ark` under `SavedArks` (mtime), then GUS leftovers, else
    `TheIsland_WP`.
-4. No SteamCMD sync. Discovered mod Project IDs import **disabled**. Missing
-   default INI files may be created; profile-owned GUS keys sync after import.
-5. Workspace opens on the new profile **without** first-steps onboarding (INI and
-   world already exist on disk).
+4. No SteamCMD sync and **no INI writes** on import — profile-owned GUS keys
+   sync on **Start** (same as other profiles). Discovered mod Project IDs import
+   **disabled**.
+5. Workspace opens on the new profile **without** first-steps onboarding (ASA
+   files and world already exist on disk). Create/import/clone uniqueness checks
+   are serialized so concurrent imports cannot share an `installDir` or ports.
 
 Helpers: `src/backend/domains/instances/import-existing-install.ts`
 (`resolveNestedAsaInstallRoot`, `probeImportInstall`).
