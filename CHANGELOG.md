@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-08-10
+
 ### Added
 
 - Engineering runbook for workspace **Mods** (CurseForge inventory, load order, metadata proxy, and `-mods=` launch) in `docs/mods.md`.
@@ -19,6 +21,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Sidebar shows an **update** icon next to the YARK version when an app update is available, and centers the SteamCMD status label.
 - Public website roadmap highlights operator-facing work after v0.9.0 (import install, signing, SteamCMD queue, RCON whitelist, port suggestions, optional assistant).
 - Public site canonical origin is **https://getyark.com** (GitHub Pages custom domain) with Astro `base: "/"` so assets and docs resolve at the domain root.
 - Marketing SEO: home H1, richer SoftwareApplication JSON-LD, FAQPage schema, docs BreadcrumbList, and sitemap `lastmod`.

@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import {
+  ArrowCircleUp,
   Circle,
   FileText,
   GearSix,
@@ -183,7 +184,7 @@ export function Sidebar(props: Props): ReactElement {
         <Button
           size="md"
           variant="subtle"
-          justify="flex-start"
+          justify="center"
           leftSection={
             <Circle
               size={compact ? 10 : 12}
@@ -251,9 +252,17 @@ export function Sidebar(props: Props): ReactElement {
               aria-label={`YARK update available, version ${props.yarkUpdateAvailableVersion}`}
               data-yark-update-version
             >
-              <Text size={metadataTextSize} className={classes.appVersionUpdateText}>
-                v{props.appVersion}
-              </Text>
+              <Group gap={4} wrap="nowrap" justify="center" className={classes.appVersionUpdateInner}>
+                <ArrowCircleUp
+                  size={compact ? 12 : 14}
+                  weight="bold"
+                  className={classes.appVersionUpdateIcon}
+                  aria-hidden
+                />
+                <Text size={metadataTextSize} className={classes.appVersionUpdateText}>
+                  v{props.appVersion}
+                </Text>
+              </Group>
             </UnstyledButton>
           ) : (
             <Text size={metadataTextSize} c="dimmed" data-yark-app-version className={classes.appVersionRail}>
@@ -276,9 +285,17 @@ export function Sidebar(props: Props): ReactElement {
             aria-label={`YARK update available, version ${props.yarkUpdateAvailableVersion}`}
             data-yark-update-version
           >
-            <Text size={metadataTextSize} className={classes.appVersionUpdateText}>
-              v{props.appVersion}
-            </Text>
+            <Group gap={5} wrap="nowrap" justify="center" className={classes.appVersionUpdateInner}>
+              <ArrowCircleUp
+                size={compact ? 13 : 15}
+                weight="bold"
+                className={classes.appVersionUpdateIcon}
+                aria-hidden
+              />
+              <Text size={metadataTextSize} className={classes.appVersionUpdateText}>
+                v{props.appVersion}
+              </Text>
+            </Group>
           </UnstyledButton>
         </Tooltip>
       ) : (

@@ -83,6 +83,7 @@ describe("Sidebar YARK version update affordance", () => {
       name: /yark update available, version 0\.6\.0/i,
     });
     expect(button).toHaveAttribute("data-yark-update-version");
+    expect(button.querySelector("svg")).not.toBeNull();
     await user.click(button);
     expect(onYarkUpdateClick).toHaveBeenCalledTimes(1);
   });
