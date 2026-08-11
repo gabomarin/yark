@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Profile SQLite **snapshots** before schema migrations and after each healthy reopen of an existing DB; boot recovery can **Restore snapshot** (preferred) instead of only starting empty (#252).
+
 ### Security
 
 - Packaged Windows builds enable Electron fuses and ASAR integrity validation (no RunAsNode / Node CLI inspect / `NODE_OPTIONS`; load only from integrity-checked `app.asar`) (#217).
