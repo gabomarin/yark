@@ -27,7 +27,7 @@ export const site = {
   tagline:
     "Built for people who host local ARK: Survival Ascended dedicated servers on Windows.",
   description:
-    "YARK is a free Windows desktop app to manage local ARK: Survival Ascended dedicated servers — profiles, SteamCMD updates, CurseForge mod IDs, backups, logs, clusters, and INI configuration in one place. Public unsigned prerelease.",
+    "YARK is a free Windows desktop app to manage local ARK: Survival Ascended dedicated servers — profiles, SteamCMD updates, CurseForge mod IDs, backups, logs, clusters, and INI configuration in one place. Public prerelease.",
   keywords: [
     "ARK Survival Ascended server manager",
     "ASA dedicated server manager",

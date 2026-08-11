@@ -6,9 +6,9 @@ description: Install YARK, point SteamCMD, create a profile, and start your firs
 import { Aside, Steps } from "@astrojs/starlight/components";
 import { withBase } from "../../../data/site";
 
-<Aside type="caution" title="Unsigned prerelease">
-  Public builds are not code-signed. Windows SmartScreen may warn. Download only from
-  [GitHub Releases](https://github.com/gabomarin/yark/releases) or the site download button.
+<Aside type="caution" title="Public prerelease">
+  Download only from [GitHub Releases](https://github.com/gabomarin/yark/releases) or the site
+  download button, then verify the installer hash below.
 </Aside>
 
 <Steps>
@@ -17,7 +17,7 @@ import { withBase } from "../../../data/site";
 
    Download the current Windows installer and run it. After install, open **YARK server manager**.
 
-   Before running an unsigned prerelease, follow [Verify your download](#verify-your-download)
+   Before running the installer, follow [Verify your download](#verify-your-download)
    below and compare it with the matching official release asset.
 
 2. **Point SteamCMD**
@@ -94,10 +94,6 @@ Get-FileHash ".\YARK-server-manager-Setup-VERSION.exe" -Algorithm SHA256
 Open [YARK Releases](https://github.com/gabomarin/yark/releases), select the matching version,
 and compare the complete SHA-256 value. Do not install the file if the values differ or if it
 came from a mirror you do not trust.
-
-Current prereleases are unsigned, so `Get-AuthenticodeSignature` will not show a verified YARK
-publisher yet. This page will document the expected publisher and RFC 3161 timestamp once signed
-releases are available.
 
 ## Next reads
 

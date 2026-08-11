@@ -22,6 +22,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Changed
 
 - **World backups** skip `.arkrbf`/`.tmp`, keep only the 2 newest dated autosaves per map, and lightly compress `.ark` blobs (deflate level 1) so stop/restart/update snapshots finish faster on large SavedArks.
+- Public site and operator docs no longer highlight code signing / Authenticode as near-term roadmap; download trust stays on official sources and SHA-256 checks (#142).
+
 
 ### Fixed
 

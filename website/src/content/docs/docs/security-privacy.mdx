@@ -36,7 +36,6 @@ The desktop app does **not** embed a CurseForge API key. Lookups send Project ID
 </Aside>
 
 - Prefer the site / Releases download buttons over random mirrors  
-- Builds are **unsigned** today — SmartScreen warnings are expected  
 - Compare the installer SHA-256 with the digest on the matching GitHub Release
 - Strip passwords before posting logs or INI snippets
 - Store backups only in locations trusted by the same Windows account boundary
@@ -49,9 +48,7 @@ Get-FileHash ".\YARK-server-manager-Setup-VERSION.exe" -Algorithm SHA256
 
 Compare the complete value with the digest GitHub shows for the matching asset under
 [YARK Releases](https://github.com/gabomarin/yark/releases). A mismatch means the file must not
-be installed. SHA-256 verifies the bytes against the official asset; it does not identify a
-publisher. Signed releases will add Authenticode publisher and timestamp verification when that
-release control is implemented.
+be installed.
 
 ## Current protection boundary
 
