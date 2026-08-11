@@ -9,12 +9,25 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Profile SQLite **snapshots** before schema migrations and after each healthy reopen of an existing DB; boot recovery can **Restore snapshot** (preferred) instead of only starting empty (#252).
+- **Import install** wizard adopts an existing ASA dedicated folder as a YARK profile (no SteamCMD, no INI writes until Start); discovers mods disabled; blocks already-managed folders (#254).
+- Windows CI runs Electron **E2E** smoke, CRUD suite, install-health, and host-port-probe with isolated app data; validation matrix in `docs/e2e-validation.md` (#12).
+
+### Security
+
+- Packaged Windows builds enable Electron fuses and ASAR integrity validation (no RunAsNode / Node CLI inspect / `NODE_OPTIONS`; load only from integrity-checked `app.asar`) (#217).
+
 ### Changed
 
+- **World backups** skip `.arkrbf`/`.tmp`, keep only the 2 newest dated autosaves per map, and lightly compress `.ark` blobs (deflate level 1) so stop/restart/update snapshots finish faster on large SavedArks.
 - Public site and operator docs no longer highlight code signing / Authenticode as near-term roadmap; download trust stays on official sources and SHA-256 checks (#142).
+
 
 ### Fixed
 
+- Safe **Update** shows console/progress while creating pre-update backups, Cancel aborts that work (and pre-restore safeguards) instead of hanging on “Waiting for progress…”, and skips rollback restore when SteamCMD never changed game files.
 - **YARK updates** keep a finished or in-progress download when Check now or the quiet startup check runs again, so Restart and install no longer disappears behind Download.
 
 ## [0.9.1] - 2026-08-10

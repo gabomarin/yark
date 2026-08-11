@@ -38,7 +38,7 @@ describe("installation-health helpers", () => {
 
   it("resolves guidance from reason codes", () => {
     expect(guidanceForReasonCodes(["exe_absent"])).toMatch(/Install or Verify/i);
-    expect(guidanceForReasonCodes(["foreign_contents"])).toMatch(/unrelated files/i);
+    expect(guidanceForReasonCodes(["foreign_contents"])).toMatch(/real ASA server install/i);
   });
 
   it("formats checkedAt for display", () => {

@@ -34,6 +34,7 @@ import type {
   ServerProfile,
   ServerProfileInput,
   ServerRuntimeInfo,
+  ImportInstallProbe,
   ServerStopProgress,
   SteamCmdConsoleSnapshot,
   SteamCmdStatus,
@@ -65,6 +66,8 @@ export const IPC = {
   serversDelete: "servers:delete",
   serversClone: "servers:clone",
   serversCloneWithParams: "servers:clone-with-params",
+  serversProbeImport: "servers:probe-import",
+  serversImportExisting: "servers:import-existing",
   serversStart: "servers:start",
   serversStop: "servers:stop",
   serversRestart: "servers:restart",
@@ -225,6 +228,8 @@ export type IpcResult<T> =
 export interface RendererApi {
   listServers(): Promise<IpcResult<ServerProfile[]>>;
   createServer(input: ServerProfileInput): Promise<IpcResult<ServerProfile>>;
+  probeImportInstall(installDir: string): Promise<IpcResult<ImportInstallProbe>>;
+  importExistingServer(input: ServerProfileInput): Promise<IpcResult<ServerProfile>>;
   updateServer(
     id: string,
     input: ServerProfileInput,

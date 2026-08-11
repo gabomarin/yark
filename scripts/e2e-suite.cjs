@@ -1,13 +1,22 @@
+/**
+ * E2E suite: create → clone → route nav → delete (#12).
+ *
+ * Usage: npm run build && npm run e2e
+ * Isolates SQLite + install dirs under C:\asa-e2e (or tmp). Clears ELECTRON_RUN_AS_NODE.
+ */
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
 const path = require("node:path");
-const { _electron: electron } = require("playwright");
 const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
-
-delete process.env.ELECTRON_RUN_AS_NODE;
-
-function uniqueSuffix() {
-  return `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-}
+const {
+  projectRoot,
+  createE2eFixtureRoots,
+  assertUnderFixtureRoot,
+  launchElectronApp,
+  waitForOverview,
+  quitElectronApp,
+  removeFixtureDir,
+} = require("./e2e-launch.cjs");
 
 async function waitForCardByName(page, name, timeout = 15000) {
   const card = page.locator("[data-server-card]", {
@@ -41,9 +50,11 @@ async function openServerMoreMenu(page, card) {
 }
 
 async function removeServerIfPresent(page, name) {
-  const card = page.locator("[data-server-card]", {
-    has: page.getByText(name, { exact: true }),
-  }).first();
+  const card = page
+    .locator("[data-server-card]", {
+      has: page.getByText(name, { exact: true }),
+    })
+    .first();
   if ((await card.count()) === 0) {
     return;
   }
@@ -62,7 +73,7 @@ async function removeServerIfPresent(page, name) {
 }
 
 async function createServer(page, serverName, installDir, ports) {
-  await page.getByRole("button", { name: "New server" }).click();
+  await page.getByRole("button", { name: "New server" }).first().click();
   await page.getByRole("heading", { name: "New server" }).waitFor({
     state: "visible",
     timeout: 10000,
@@ -121,35 +132,35 @@ async function cloneServer(page, serverName) {
 }
 
 async function run() {
-  const projectRoot = path.resolve(__dirname, "..");
   process.chdir(projectRoot);
+  assert.equal(process.platform, "win32", "CRUD E2E suite requires Windows paths");
 
-  const runId = uniqueSuffix();
+  const { profileDir, serversDir, runId, fixtureName, root } =
+    createE2eFixtureRoots("suite");
+  assertUnderFixtureRoot(path.join(root, "profiles"), profileDir);
+  assertUnderFixtureRoot(path.join(root, "servers"), serversDir);
+
   const serverName = `E2E-${runId}`;
   let cloneName = null;
-
-  const app = await electron.launch({
-    args: ["."],
-    cwd: projectRoot,
-  });
+  let app = null;
+  let succeeded = false;
 
   try {
-    const page = await app.firstWindow();
+    app = await launchElectronApp({ profileDir });
+    const page = await waitForOverview(app);
+    await page.setViewportSize({ width: 1920, height: 1080 });
 
     page.on("dialog", async (dialog) => {
       await dialog.accept();
     });
 
-    await page.waitForLoadState("domcontentloaded");
-
-    await removeServerIfPresent(page, serverName);
-
     const ports = {
-      game: 20000 + Math.floor(Math.random() * 1000),
-      query: 21000 + Math.floor(Math.random() * 1000),
-      rcon: 22000 + Math.floor(Math.random() * 1000),
+      game: 20000 + (process.pid % 700) + Math.floor(Math.random() * 50),
+      query: 21000 + (process.pid % 700) + Math.floor(Math.random() * 50),
+      rcon: 22000 + (process.pid % 700) + Math.floor(Math.random() * 50),
     };
-    const installDir = `C:\\asa-e2e\\${runId}`;
+    const installDir = path.join(serversDir, "base");
+    fs.mkdirSync(installDir, { recursive: true });
 
     await createServer(page, serverName, installDir, ports);
     cloneName = await cloneServer(page, serverName);
@@ -166,18 +177,35 @@ async function run() {
       await removeServerIfPresent(page, cloneName);
     }
 
+    succeeded = true;
     console.log("E2E_SUITE_OK");
     console.log(`E2E_CREATED_SERVER=${serverName}`);
     if (cloneName !== null) {
       console.log(`E2E_CLONED_SERVER=${cloneName}`);
     }
+    console.log(`E2E_PROFILE=${profileDir}`);
   } finally {
-    await app.close();
+    if (app !== null) {
+      try {
+        await quitElectronApp(app);
+      } catch (error) {
+        console.warn(`E2E_SUITE_CLOSE_WARN ${error?.message ?? String(error)}`);
+        await app.close().catch(() => {});
+      }
+    }
+    if (succeeded) {
+      await removeFixtureDir(profileDir);
+      await removeFixtureDir(serversDir);
+    } else {
+      console.error(`E2E_SUITE_PROFILE_PRESERVED ${profileDir}`);
+      console.error(`E2E_SUITE_SERVERS_PRESERVED ${serversDir}`);
+      console.error(`E2E_SUITE_FIXTURE ${fixtureName}`);
+    }
   }
 }
 
 run().catch((error) => {
   console.error("E2E_SUITE_FAIL");
   console.error(error?.stack ?? String(error));
-  process.exit(1);
+  process.exitCode = 1;
 });

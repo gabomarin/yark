@@ -254,18 +254,18 @@ describe("InstanceService enabled state", () => {
 });
 
 describe("InstanceService cloning", () => {
-  it("creates automatic clones in a unique sibling install directory", () => {
+  it("creates automatic clones in a unique sibling install directory", async () => {
     const source = profile();
     const { service, repo } = harness([source]);
 
-    const clone = service.clone(source.id);
+    const clone = await service.clone(source.id);
 
     expect(clone.installDir).toBe("C:\\ARK\\Island (copy)");
     expect(clone.installDir).not.toBe(source.installDir);
     expect(repo.create).toHaveBeenCalled();
   });
 
-  it("avoids case-only collisions when deriving an automatic clone name", () => {
+  it("avoids case-only collisions when deriving an automatic clone name", async () => {
     const source = profile({ name: "Island" });
     const existingCopy = profile({
       id: "srv-2",
@@ -277,12 +277,12 @@ describe("InstanceService cloning", () => {
     });
     const { service } = harness([source, existingCopy]);
 
-    const clone = service.clone(source.id);
+    const clone = await service.clone(source.id);
 
     expect(clone.name).toBe("Island (copy 2)");
   });
 
-  it("advances the automatic clone suffix for a case-only install-dir collision", () => {
+  it("advances the automatic clone suffix for a case-only install-dir collision", async () => {
     const source = profile({ name: "Island" });
     const existingFolderOwner = profile({
       id: "srv-2",
@@ -294,17 +294,17 @@ describe("InstanceService cloning", () => {
     });
     const { service } = harness([source, existingFolderOwner]);
 
-    const clone = service.clone(source.id);
+    const clone = await service.clone(source.id);
 
     expect(clone.name).toBe("Island (copy 2)");
     expect(clone.installDir).toBe("C:\\ARK\\Island (copy 2)");
   });
 
-  it("treats a customized parameterized clone install directory as the final path", () => {
+  it("treats a customized parameterized clone install directory as the final path", async () => {
     const source = profile();
     const { service } = harness([source]);
 
-    const clone = service.cloneWithParams(source.id, {
+    const clone = await service.cloneWithParams(source.id, {
       name: "Winter",
       sessionName: "Winter Session",
       gamePort: 7787,
@@ -316,7 +316,7 @@ describe("InstanceService cloning", () => {
     expect(clone.installDir).toBe("D:\\Custom\\Clone");
   });
 
-  it("rejects duplicate clone names with an actionable error", () => {
+  it("rejects duplicate clone names with an actionable error", async () => {
     const source = profile();
     const duplicate = profile({
       id: "srv-2",
@@ -328,7 +328,7 @@ describe("InstanceService cloning", () => {
     });
     const { service } = harness([source, duplicate]);
 
-    expect(() =>
+    await expect(
       service.cloneWithParams(source.id, {
         name: "winter",
         sessionName: "Winter Session",
@@ -337,10 +337,10 @@ describe("InstanceService cloning", () => {
         rconPort: 27030,
         installDir: "D:\\ARK Servers\\Winter Clone",
       }),
-    ).toThrow(/server named "winter" already exists/i);
+    ).rejects.toThrow(/server named "winter" already exists/i);
   });
 
-  it("rejects a clone whose normalized install directory is already owned", () => {
+  it("rejects a clone whose normalized install directory is already owned", async () => {
     const source = profile();
     const existing = profile({
       id: "srv-2",
@@ -352,7 +352,7 @@ describe("InstanceService cloning", () => {
     });
     const { service } = harness([source, existing]);
 
-    expect(() =>
+    await expect(
       service.cloneWithParams(source.id, {
         name: "Winter",
         sessionName: "Winter Session",
@@ -361,6 +361,6 @@ describe("InstanceService cloning", () => {
         rconPort: 27030,
         installDir: "D:\\ARK Servers\\Winter",
       }),
-    ).toThrow(/already uses folder/i);
+    ).rejects.toThrow(/already uses folder/i);
   });
 });

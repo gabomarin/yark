@@ -18,6 +18,7 @@ interface Props {
   onSearchChange: (value: string) => void;
   loading?: boolean;
   onCreateServer: () => void;
+  onImportServer: () => void;
   onCheckUpdates: () => void;
   onCheckInstalls: () => void;
   checkingUpdates?: boolean;
@@ -65,6 +66,7 @@ export function OverviewPage(props: Props): ReactElement {
     <div className={classes.page} data-overview-page>
       <OverviewHeader
         onCreateServer={props.onCreateServer}
+        onImportServer={props.onImportServer}
         onCheckUpdates={props.onCheckUpdates}
         onCheckInstalls={props.onCheckInstalls}
         checkingUpdates={props.checkingUpdates}
@@ -77,6 +79,7 @@ export function OverviewPage(props: Props): ReactElement {
           onSearchChange={props.onSearchChange}
           loading={props.loading ?? false}
           onCreateServer={props.onCreateServer}
+          onImportServer={props.onImportServer}
           servers={props.servers}
           filteredServers={props.filteredServers}
           disabledServers={props.disabledServers ?? []}

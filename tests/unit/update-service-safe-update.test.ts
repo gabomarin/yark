@@ -73,6 +73,8 @@ type Harness = {
     createPreStopBackup: ReturnType<typeof vi.fn>;
     restoreBackupForJob: ReturnType<typeof vi.fn>;
     restoreBackupForRollbackRecovery: ReturnType<typeof vi.fn>;
+    requestCancel: ReturnType<typeof vi.fn>;
+    getCriticalJobs: ReturnType<typeof vi.fn>;
   };
   runSteamUpdate: ReturnType<typeof vi.fn>;
   waitForHealthy: ReturnType<typeof vi.fn>;
@@ -115,6 +117,8 @@ function createHarness(options?: {
     restoreBackupForRollbackRecovery: vi.fn(async () => {
       order.push("restore");
     }),
+    requestCancel: vi.fn(() => false),
+    getCriticalJobs: vi.fn(() => []),
   };
 
   const instances = {
@@ -472,12 +476,31 @@ describe("UpdateService safe update orchestration", () => {
     (h.service as unknown as { queue: Array<typeof job> }).queue = [job];
 
     expect(await h.service.cancelSteamCmd()).toBe(true);
+    expect(h.backups.requestCancel).toHaveBeenCalled();
 
     expect(job).toMatchObject({
       status: "running",
       phase: "applying-files",
       recoveryReason: expect.stringMatching(/safe unwind/i),
     });
+  });
+
+  it("skips rollback restore when cancelled during pre-update backup", async () => {
+    const h = createHarness({ wasRunning: true });
+    dirs.push(h.logDir);
+    const { OperationCancelledError } = await import(
+      "@backend/domains/updates/robocopy-tree"
+    );
+    h.backups.createPreUpdateBackupForJob.mockImplementation(async () => {
+      h.order.push("pre_update");
+      (h.service as unknown as { cancelRequested: boolean }).cancelRequested = true;
+      throw new OperationCancelledError();
+    });
+
+    await expect(h.performUpdate()).rejects.toThrow(/cancelled/i);
+
+    expect(h.backups.restoreBackupForJob).not.toHaveBeenCalled();
+    expect(h.order).toEqual(["stop", "pre_update", "start"]);
   });
 
   it("rolls back pre_update backups and restarts when SteamCMD fails while wasRunning", async () => {
@@ -493,14 +516,17 @@ describe("UpdateService safe update orchestration", () => {
     expect(h.backups.restoreBackupForJob).toHaveBeenCalledWith(
       h.profile.id,
       "bu-world",
+      expect.objectContaining({ onProgressMessage: expect.any(Function) }),
     );
     expect(h.backups.restoreBackupForJob).toHaveBeenCalledWith(
       h.profile.id,
       "bu-players",
+      expect.objectContaining({ onProgressMessage: expect.any(Function) }),
     );
     expect(h.backups.restoreBackupForJob).toHaveBeenCalledWith(
       h.profile.id,
       "bu-ini",
+      expect.objectContaining({ onProgressMessage: expect.any(Function) }),
     );
     expect(h.order).toEqual([
       "stop",

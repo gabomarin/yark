@@ -106,7 +106,9 @@ operator walkthrough.
 ## Security and data boundaries
 
 - Electron runs with context isolation, renderer sandboxing, no renderer Node integration, and an
-  explicit preload bridge.
+  explicit preload bridge. Packaged Windows builds also flip Electron fuses (no `ELECTRON_RUN_AS_NODE`,
+  no Node CLI inspect / `NODE_OPTIONS`, ASAR integrity + only-load-from-asar); see
+  [docs/versioning.md](docs/versioning.md).
 - Renderer navigation and new-window creation are denied; approved external CurseForge links pass
   through validated application handling.
 - Profiles, settings, events, and backup metadata are stored locally in embedded SQLite. YARK has

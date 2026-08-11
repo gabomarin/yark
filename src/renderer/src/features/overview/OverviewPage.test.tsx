@@ -42,6 +42,7 @@ describe("OverviewPage", () => {
           search="island"
           onSearchChange={vi.fn()}
           onCreateServer={vi.fn()}
+          onImportServer={vi.fn()}
           onCheckUpdates={vi.fn()}
           onCheckInstalls={vi.fn()}
           servers={[server, searchHiddenServer]}
@@ -100,6 +101,7 @@ describe("OverviewPage", () => {
           search=""
           onSearchChange={vi.fn()}
           onCreateServer={vi.fn()}
+          onImportServer={vi.fn()}
           onCheckUpdates={vi.fn()}
           onCheckInstalls={vi.fn()}
           checkingInstalls
@@ -150,6 +152,7 @@ describe("OverviewPage", () => {
           search=""
           onSearchChange={vi.fn()}
           onCreateServer={vi.fn()}
+          onImportServer={vi.fn()}
           onCheckUpdates={vi.fn()}
           onCheckInstalls={vi.fn()}
           checkingInstalls={false}
@@ -195,6 +198,7 @@ describe("OverviewPage", () => {
           search=""
           onSearchChange={vi.fn()}
           onCreateServer={vi.fn()}
+          onImportServer={vi.fn()}
           onCheckUpdates={vi.fn()}
           onCheckInstalls={vi.fn()}
           servers={[server]}
@@ -264,6 +268,7 @@ describe("OverviewPage", () => {
       search: "",
       onSearchChange: vi.fn(),
       onCreateServer,
+      onImportServer: vi.fn(),
       onCheckUpdates: vi.fn(),
       onCheckInstalls: vi.fn(),
       servers: [],
@@ -328,6 +333,7 @@ describe("OverviewPage", () => {
           search=""
           onSearchChange={vi.fn()}
           onCreateServer={vi.fn()}
+          onImportServer={vi.fn()}
           onCheckUpdates={vi.fn()}
           onCheckInstalls={vi.fn()}
           servers={[server, disabledServer]}
@@ -388,6 +394,7 @@ describe("OverviewPage", () => {
           search=""
           onSearchChange={vi.fn()}
           onCreateServer={vi.fn()}
+          onImportServer={vi.fn()}
           onCheckUpdates={vi.fn()}
           onCheckInstalls={vi.fn()}
           servers={[disabledServer]}

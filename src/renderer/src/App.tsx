@@ -50,6 +50,7 @@ import { LogsPage } from "@features/logs/LogsPage";
 import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import { BackupsPage } from "@features/backups/BackupsPage";
 import { OverviewPage } from "@features/overview/OverviewPage";
+import { ImportInstallWizard } from "@features/servers/components/ImportInstallWizard/ImportInstallWizard";
 import { collectAttentionIssues } from "@features/overview/components/AttentionIssuesPopover/AttentionIssuesPopover";
 import {
   ServerWorkspacePage,
@@ -128,6 +129,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   >(new Map());
   const [route, setRoute] = useState<Route>("overview");
   const [overlay, setOverlay] = useState<Overlay>(null);
+  const [importInstallOpen, setImportInstallOpen] = useState(false);
   /** Dirty-leave guard registered by ServerWorkspacePage while the overlay is open. */
   const workspaceLeaveGuardRef = useRef<((action: () => void) => void) | null>(null);
   const [copyConfig, setCopyConfig] = useState<CopyConfigSession | null>(null);
@@ -1396,6 +1398,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             onRegisterLeaveGuard={registerWorkspaceLeaveGuard}
             onBack={() => setOverlay(null)}
             onCreateServer={() => setOverlay({ kind: "create" })}
+            onImportServer={() => setImportInstallOpen(true)}
             onStartServer={(id) => void startServer(id)}
             onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
             onRestartServer={(id) => void restartServer(id)}
@@ -1463,6 +1466,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
               onSearchChange={setSearch}
               loading={overviewLoading}
               onCreateServer={() => setOverlay({ kind: "create" })}
+              onImportServer={() => setImportInstallOpen(true)}
               checkingUpdates={checkingUpdates}
               onCheckUpdates={() => void checkForUpdates()}
               checkingInstalls={installScan.active}
@@ -1646,6 +1650,25 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
           }}
         />
       )}
+      <ImportInstallWizard
+        opened={importInstallOpen}
+        servers={servers}
+        onClose={() => setImportInstallOpen(false)}
+        onOpenClusters={() => {
+          setImportInstallOpen(false);
+          setOverlay(null);
+          navigate("clusters");
+        }}
+        onImported={(profile) => {
+          setImportInstallOpen(false);
+          // Skip first-steps onboarding — imported installs already have INI/world (#254).
+          setOverlay({
+            kind: "workspace",
+            serverId: profile.id,
+          });
+          void refresh();
+        }}
+      />
     </AppProviders>
   );
 }

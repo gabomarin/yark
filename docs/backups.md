@@ -230,8 +230,12 @@ UI restore is direct. Update rollback uses the queued `restoreBackupForJob` path
 - Every cycle applies retention for each server.
 - Creates only when `enabled`, interval elapsed since latest **completed world** backup (or none yet), and process is active.
 - Creates **world only**.
-- World packaging copies `SavedArks` file-by-file: transient rotating files (e.g. `.arkrbf`)
-  that disappear mid-copy are skipped; missing essential `.ark` / tribe / profile data still fails the backup.
+- World packaging copies `SavedArks` file-by-file: skips `.arkrbf` / `.tmp` up front,
+  keeps every primary map `.ark`, and retains only the **2 newest dated autosaves**
+  per map (e.g. `Map_WP_DD.MM.YYYY_….ark`). Missing essential primary `.ark` / tribe /
+  profile data still fails the backup. World/players ZIPs use **light deflate
+  (level 1)** for `.ark` / profile blobs (faster than default level 6); `manifest.json`
+  and other small files still use default deflate.
 - Retention keeps the last N **completed** backups per kind; players are split by `playersRetentionKey`. Failed rows are not pruned by retain counts. Cannot delete `running` backups.
 
 ### Backup health and alerts (all servers)

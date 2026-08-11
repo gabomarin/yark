@@ -1,10 +1,12 @@
 import type { ReactElement } from "react";
-import { ArrowsClockwise, HardDrives, Plus } from "@phosphor-icons/react";
+import { ArrowsClockwise, HardDrives } from "@phosphor-icons/react";
 import { Button, Group, VisuallyHidden } from "@mantine/core";
+import { AddServerSplitButton } from "@features/servers/components/AddServerSplitButton/AddServerSplitButton";
 import classes from "../OverviewPage.module.css";
 
 interface Props {
   onCreateServer: () => void;
+  onImportServer: () => void;
   onCheckUpdates: () => void;
   onCheckInstalls: () => void;
   checkingUpdates?: boolean;
@@ -13,6 +15,7 @@ interface Props {
 
 export function OverviewHeader({
   onCreateServer,
+  onImportServer,
   onCheckUpdates,
   onCheckInstalls,
   checkingUpdates = false,
@@ -54,9 +57,12 @@ export function OverviewHeader({
         >
           Check for updates
         </Button>
-        <Button leftSection={<Plus size={16} />} onClick={onCreateServer}>
-          New server
-        </Button>
+        <AddServerSplitButton
+          primaryLabel="New server"
+          onCreate={onCreateServer}
+          onImport={onImportServer}
+          menuAriaLabel="More new-server options"
+        />
       </Group>
     </header>
   );

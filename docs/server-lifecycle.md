@@ -22,6 +22,7 @@ affect start and config writes are summarized at the end.
 | Profile → INI sync | `src/backend/domains/instances/sync-profile-ini.ts` |
 | Orchestration | `src/backend/domains/instances/instance-service.ts` |
 | Profile validation | `src/backend/domains/instances/validation.ts` |
+| Import existing install (#254) | `src/backend/domains/instances/import-existing-install.ts` |
 | Port conflicts | `src/shared/port-conflicts.ts` |
 | Process lifecycle | `src/backend/infra/process/process-manager.ts` |
 | INI read/save | `src/backend/domains/config/ini-service.ts` |
@@ -339,7 +340,8 @@ the window visible through wait/save/backup progress).
   the system tray instead of quitting. Minimize still uses the normal taskbar.
   Optional Windows toast (Settings: **Show notification when hiding to tray**,
   default on); click the toast or tray icon to reopen. Quit from the tray menu
-  to exit.
+  to exit. There is no native application menu bar (Electron default File/Edit/
+  View/Help is disabled).
 - **Start with Windows** (default off): uses Electron `setLoginItemSettings` so
   toggling does not leave duplicate login registrations. Dev (`electron .`)
   registers the Electron binary with the app path as an argument; packaged
@@ -435,6 +437,52 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 - Wizard `MaxPlayers` writes `/Script/Engine.GameSession` (not
   `ServerSettings` — note the dual home vs IniService range-check).
 
+## Import existing ASA install (#254)
+
+When ASA files already exist on disk (orphaned after **Start empty**, or adopted
+from another manager) but YARK has no profile:
+
+1. Overview / workspace **New server ▾** → **Import install** (empty fleet also
+   offers **Import existing install**).
+2. Point at the **ASA dedicated root** (folder that contains `ShooterGame`).
+3. YARK probes install health on folder selection. Only **ready** installs can
+   continue. Paths under `ShooterGame\...` (e.g. `Binaries\Win64`) are rejected as
+   nested folders with a suggested dedicated root. Incomplete / wrong shape are
+   blocked. Best-effort GUS / SavedArks / Mods detection then creates a profile
+   with the **absolute** `installDir` (does **not** nest via
+   `resolveServerInstallDir` / base-folder create). Map prefill prefers the
+   newest world `.ark` under `SavedArks` (mtime), then GUS leftovers, else
+   `TheIsland_WP`.
+4. No SteamCMD sync and **no INI writes** on import — profile-owned GUS keys
+   sync on **Start** (same as other profiles). Discovered mod Project IDs import
+   **disabled**.
+5. Workspace opens on the new profile **without** first-steps onboarding (ASA
+   files and world already exist on disk). Create/import/clone uniqueness checks
+   are serialized so concurrent imports cannot share an `installDir` or ports.
+
+Helpers: `src/backend/domains/instances/import-existing-install.ts`
+(`resolveNestedAsaInstallRoot`, `probeImportInstall`).
+IPC: `servers:probe-import`, `servers:import-existing`.
+UI badges: `importHealthBadgeLabel` in
+`src/renderer/src/features/servers/importInstallModel.ts`.
+
+### Import probe badges
+
+Only **Ready** unlocks Continue. Other badges block import and show guidance
+next to the path field (including folders already owned by another YARK profile):
+
+| Badge | When it appears |
+| --- | --- |
+| **Ready** | Chosen folder is a usable ASA dedicated root (`ArkAscendedServer.exe` present under the expected Win64 path). |
+| **Already managed** | Folder matches an existing YARK profile `installDir` (case-insensitive). Continue is blocked; open that server instead. |
+| **Nested folder** | Path contains a `ShooterGame` segment but is not the dedicated root (e.g. `...\ShooterGame\Binaries\Win64`). YARK suggests the parent of `ShooterGame` and offers **Use suggested folder**. |
+| **Empty folder** | Path exists and is empty — fine for SteamCMD install, not for import. |
+| **Incomplete** | ASA markers exist (`ShooterGame` / `Engine` / `steamapps`) but the dedicated executable is missing or the tree is only partial. |
+| **Missing path** | Path does not exist on disk. |
+| **Inaccessible** | Path exists but YARK cannot read it (permissions). |
+| **Not an ASA install** | Non-empty folder without ASA layout (wrong folder / foreign contents). Operator-facing label for classifier health `suspicious` — not a malware warning. |
+| **Check failed** | Unexpected I/O while probing the path. |
+
 ## Common pitfalls
 
 1. Wrong map URL quoting → ASA Commandline log drops quotes / misparses session.
@@ -458,7 +506,7 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 | File | Focus |
 | --- | --- |
 | `tests/unit/launch-args.test.ts` | CLI shape; no listen/RCON/passwords/QueryPort |
-| `npm run e2e:launch-args` | Windows UI: structured + raw args on Runtime `Commandline` (piped) |
+| `npm run e2e:import-install` | Windows UI: Import install wizard (#254) — nested/ready/Already managed, profile-only INI |
 | `tests/unit/sync-profile-ini.test.ts` | Exact INI keys / null password → `""` |
 | `tests/unit/validation.test.ts` | Ports, paths, cluster, mods, conflicts |
 | `tests/unit/host-port-probe.test.ts` | Host bind classify, suggestions, UDP release, error prefixes |
@@ -466,6 +514,7 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 | `tests/unit/left-running.test.ts` | Leave identity parse including optional runtimePorts |
 | `npm run e2e:host-port-probe` | Windows UI: busy modal, Edit ports, session start |
 | `tests/unit/ini-service.test.ts` | Sanitize + semantic validation |
+| `tests/unit/import-existing-install.test.ts` | Mod tree discovery + GUS prefill + health gates |
 | `tests/unit/configuration-wizard-model.test.ts` | Presets, difficulty, preserve unknowns |
 | `tests/unit/asa-log-tail.test.ts` | Saved/Logs decode + follow for Runtime |
 | `tests/unit/instance-stop.test.ts` | Pre-stop backup order / best-effort failure |

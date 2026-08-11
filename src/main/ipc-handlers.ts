@@ -11,6 +11,7 @@ import type {
 import type { BackupService } from "../backend/domains/backups/backup-service";
 import type { PlayerSessionWatcher } from "../backend/domains/backups/player-session-watcher";
 import type { InstanceService } from "../backend/domains/instances/instance-service";
+import { probeImportInstall } from "../backend/domains/instances/import-existing-install";
 import type { IniService } from "../backend/domains/config/ini-service";
 import type { ClusterIniTemplateService } from "../backend/domains/config/cluster-ini-template-service";
 import type { ClusterIniTemplateApplyService } from "../backend/domains/config/cluster-ini-template-apply-service";
@@ -123,6 +124,52 @@ export function registerIpcHandlers(
     IPC.serversCloneWithParams,
     ipcArgSchemas[IPC.serversCloneWithParams],
     ([id, params]) => instances.cloneWithParams(id, params),
+  );
+
+  handleValidated(IPC.serversProbeImport, ipcArgSchemas[IPC.serversProbeImport], ([installDir]) =>
+    probeImportInstall(
+      installDir,
+      instances.list().map((profile) => ({
+        name: profile.name,
+        installDir: profile.installDir,
+      })),
+    ),
+  );
+
+  handleValidated(
+    IPC.serversImportExisting,
+    ipcArgSchemas[IPC.serversImportExisting],
+    async ([input]) => {
+      const profileInput = input as ServerProfileInput;
+      const modsList = profileInput.mods ?? [];
+      // Soft CurseForge resolve: keep all disk-discovered IDs even when some
+      // names are missing; do not fail import on proxy gaps (#254).
+      // Product rule: import always leaves discovered mods disabled (service enforces too).
+      const disabled = [...modsList];
+      const cache = { ...(profileInput.modMetadataCache ?? {}) };
+      try {
+        const fetched = await mods.getMods(modsList);
+        for (const row of fetched) {
+          cache[row.id] = row;
+        }
+      } catch {
+        // Keep client-side cache / empty names; import still proceeds.
+      }
+      const enriched = await mods.enrichNewServerMods(
+        {
+          ...profileInput,
+          mods: modsList,
+          disabledMods: disabled,
+          modMetadataCache: cache,
+        },
+        {
+          mods: modsList,
+          disabledMods: disabled,
+          modMetadataCache: cache,
+        },
+      );
+      return instances.importExisting(enriched);
+    },
   );
 
   handleValidated(IPC.serversStart, ipcArgSchemas[IPC.serversStart], ([id, options]) =>

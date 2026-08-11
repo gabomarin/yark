@@ -1,25 +1,36 @@
+/**
+ * E2E smoke: Electron launch + overview + sidebar nav (#12).
+ *
+ * Usage: npm run build && npm run e2e:smoke
+ * Isolates SQLite via YARK_E2E_USER_DATA. Clears ELECTRON_RUN_AS_NODE.
+ */
 const assert = require("node:assert/strict");
 const path = require("node:path");
-const { _electron: electron } = require("playwright");
-
-delete process.env.ELECTRON_RUN_AS_NODE;
+const {
+  projectRoot,
+  createE2eFixtureRoots,
+  assertUnderFixtureRoot,
+  launchElectronApp,
+  waitForOverview,
+  quitElectronApp,
+  removeFixtureDir,
+} = require("./e2e-launch.cjs");
 
 async function run() {
-  const projectRoot = path.resolve(__dirname, "..");
   process.chdir(projectRoot);
-
-  const app = await electron.launch({
-    args: ["."],
-    cwd: projectRoot,
+  const { profileDir, fixtureName, root } = createE2eFixtureRoots("smoke", {
+    createServers: false,
   });
+  assertUnderFixtureRoot(path.join(root, "profiles"), profileDir);
 
+  let app = null;
+  let succeeded = false;
   try {
-    const window = await app.firstWindow();
-    await window.waitForLoadState("domcontentloaded");
+    app = await launchElectronApp({ profileDir });
+    const page = await waitForOverview(app);
+    await page.setViewportSize({ width: 1280, height: 720 });
 
-    await window.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 15000 });
-    const h1 = await window.locator("h1").first().textContent();
-
+    const h1 = await page.locator("h1").first().textContent();
     assert.ok(h1 !== null, "Main UI title was not found");
     assert.ok(
       h1.includes("Servers") || h1.includes("YARK"),
@@ -28,19 +39,34 @@ async function run() {
 
     const navLabels = ["Servers", "Clusters", "Backups", "Logs", "Settings"];
     for (const label of navLabels) {
-      const btn = window.getByRole("button", { name: label, exact: true }).first();
+      const btn = page.getByRole("button", { name: label, exact: true }).first();
       assert.ok((await btn.count()) > 0, `Missing sidebar nav: ${label}`);
     }
 
+    succeeded = true;
     console.log("E2E_OK");
     console.log(`UI_H1=${h1}`);
+    console.log(`E2E_PROFILE=${profileDir}`);
   } finally {
-    await app.close();
+    if (app !== null) {
+      try {
+        await quitElectronApp(app);
+      } catch (error) {
+        console.warn(`E2E_SMOKE_CLOSE_WARN ${error?.message ?? String(error)}`);
+        await app.close().catch(() => {});
+      }
+    }
+    if (succeeded) {
+      await removeFixtureDir(profileDir);
+    } else {
+      console.error(`E2E_SMOKE_PROFILE_PRESERVED ${profileDir}`);
+      console.error(`E2E_SMOKE_FIXTURE ${fixtureName}`);
+    }
   }
 }
 
 run().catch((error) => {
   console.error("E2E_FAIL");
   console.error(error?.stack ?? String(error));
-  process.exit(1);
+  process.exitCode = 1;
 });

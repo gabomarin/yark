@@ -9,7 +9,7 @@ human-readable version comment on the line above each `uses:` entry. Mutable tag
 
 | Workflow | Purpose | Default permissions |
 | --- | --- | --- |
-| [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Typecheck, lint, test, build | `contents: read` |
+| [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Typecheck, lint, test, build, Windows Electron E2E (#12) | `contents: read` |
 | [`.github/workflows/website-ci.yml`](../.github/workflows/website-ci.yml) | Astro site build | `contents: read` |
 | [`.github/workflows/changelog.yml`](../.github/workflows/changelog.yml) | Require Unreleased changelog | `contents: read`, `pull-requests: read` |
 | [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) | Deploy site to GitHub Pages | `contents: read`, `pages: write`, `id-token: write` |
@@ -75,6 +75,8 @@ the bump is worth calling out).
 1. Tag `vX.Y.Z` on the commit that passed CI on `main` (see [versioning.md](versioning.md)).
 2. `release.yml` checks out **that tag** (`ref: steps.tag.outputs.name`), verifies
    `package.json` version alignment, runs typecheck + tests, then packages NSIS.
+   After packaging, `npm run verify:fuses` asserts `build.electronFuses` on
+   `dist/win-unpacked` (#217).
 3. Artifacts upload and the GitHub Release attach the same `dist/*.exe` / `*.yml`
    built from that tagged tree — not from an unrelated branch tip.
 
