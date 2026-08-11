@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Security
+
+- Packaged Windows builds enable Electron fuses and ASAR integrity validation (no RunAsNode / Node CLI inspect / `NODE_OPTIONS`; load only from integrity-checked `app.asar`) (#217).
+
 ### Fixed
 
 - **YARK updates** keep a finished or in-progress download when Check now or the quiet startup check runs again, so Restart and install no longer disappears behind Download.

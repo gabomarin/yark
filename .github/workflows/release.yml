@@ -137,6 +137,10 @@ jobs:
           # Baked into main via electron-vite define (#151).
           YARK_CURSEFORGE_PROXY_URL: ${{ vars.YARK_CURSEFORGE_PROXY_URL }}
 
+      - name: Verify Electron fuses
+        run: npm run verify:fuses
+        # Reads dist/win-unpacked (left by electron-builder) against build.electronFuses (#217).
+
       - name: Upload build artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

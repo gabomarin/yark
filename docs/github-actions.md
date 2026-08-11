@@ -75,6 +75,8 @@ the bump is worth calling out).
 1. Tag `vX.Y.Z` on the commit that passed CI on `main` (see [versioning.md](versioning.md)).
 2. `release.yml` checks out **that tag** (`ref: steps.tag.outputs.name`), verifies
    `package.json` version alignment, runs typecheck + tests, then packages NSIS.
+   After packaging, `npm run verify:fuses` asserts `build.electronFuses` on
+   `dist/win-unpacked` (#217).
 3. Artifacts upload and the GitHub Release attach the same `dist/*.exe` / `*.yml`
    built from that tagged tree — not from an unrelated branch tip.
 
