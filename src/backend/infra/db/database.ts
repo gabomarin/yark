@@ -1,5 +1,9 @@
 import { DatabaseSync } from "node:sqlite";
 import { existsSync, statSync } from "node:fs";
+import {
+  isOnDiskProfileDatabasePath,
+  writeProfileDatabaseSnapshot,
+} from "./database-snapshots";
 
 interface Migration {
   version: number;
@@ -224,6 +228,11 @@ export class DatabaseBootError extends Error {
 export type OpenDatabaseOptions = {
   /** Overrides {@link DATABASE_BUSY_TIMEOUT_MS}. */
   busyTimeoutMs?: number;
+  /**
+   * When false, skip #252 profile-DB snapshots (tests that only care about open/migrate).
+   * Default true for on-disk databases.
+   */
+  takeSnapshots?: boolean;
 };
 
 /** Finite non-negative integer ms for `PRAGMA busy_timeout`; non-finite → default. */
@@ -252,6 +261,9 @@ export function openDatabaseApplyingMigrations(
   options?: OpenDatabaseOptions,
 ): DatabaseSync {
   const busyTimeoutMs = resolveBusyTimeoutMs(options?.busyTimeoutMs);
+  const takeSnapshots = options?.takeSnapshots !== false;
+  const hadExistingOnDiskDb =
+    takeSnapshots && isOnDiskProfileDatabasePath(path) && existsSync(path);
   assertOnDiskDatabaseFilePlausible(path);
 
   let db: DatabaseSync;
@@ -269,8 +281,17 @@ export function openDatabaseApplyingMigrations(
 
     const currentRow = db.prepare("PRAGMA user_version").get() as { user_version: number };
     const current = currentRow.user_version;
-    for (const migration of migrations) {
-      if (migration.version <= current) continue;
+    const pendingMigrations = migrations.filter((migration) => migration.version > current);
+
+    if (hadExistingOnDiskDb && pendingMigrations.length > 0) {
+      try {
+        writeProfileDatabaseSnapshot(db, path, "pre-migrate");
+      } catch (error) {
+        throw new DatabaseBootError("migrate", path, error);
+      }
+    }
+
+    for (const migration of pendingMigrations) {
       migrating = true;
       db.exec("BEGIN;");
       try {
@@ -288,6 +309,15 @@ export function openDatabaseApplyingMigrations(
     }
 
     assertProfileDatabaseUsable(db, path);
+
+    if (hadExistingOnDiskDb) {
+      try {
+        writeProfileDatabaseSnapshot(db, path, "healthy-boot");
+      } catch (error) {
+        throw new DatabaseBootError("open", path, error);
+      }
+    }
+
     return db;
   } catch (error) {
     try {

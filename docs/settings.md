@@ -101,6 +101,9 @@ SteamCMD under Electron `userData`.
 
 The profile SQLite file is `yark-server-manager.db` under App data. On open,
 YARK sets `busy_timeout` (5s) so a brief lock does not fail boot immediately.
+When that file already exists, boot also keeps rotating snapshots under
+`profile-db-snapshots/` (before schema migrations and after each healthy reopen)
+for manual rollback — see [profile-database.md](profile-database.md) (#252).
 If the database cannot open or migrate, boot shows a recovery dialog instead of
 a blank window: **Open folder**, **Quit**, or **Start empty…** (YARK does not
 repair the file; choosing Start empty renames the broken DB + WAL/SHM as
