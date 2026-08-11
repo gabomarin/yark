@@ -51,8 +51,26 @@ describe("ProcessManager real start (Windows)", () => {
 
   afterEach(async () => {
     if (installDir !== null) {
-      await rm(installDir, { recursive: true, force: true });
+      const target = installDir;
       installDir = null;
+      let lastError: unknown = null;
+      for (let attempt = 0; attempt < 6; attempt += 1) {
+        try {
+          await rm(target, { recursive: true, force: true });
+          return;
+        } catch (error) {
+          lastError = error;
+          const code =
+            error !== null && typeof error === "object" && "code" in error
+              ? String((error as { code?: unknown }).code)
+              : "";
+          if (code !== "EBUSY" && code !== "EPERM" && code !== "ENOTEMPTY") {
+            throw error;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 150 * (attempt + 1)));
+        }
+      }
+      throw lastError;
     }
   });
 

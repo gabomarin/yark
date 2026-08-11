@@ -13,6 +13,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Profile SQLite **snapshots** before schema migrations and after each healthy reopen of an existing DB; boot recovery can **Restore snapshot** (preferred) instead of only starting empty (#252).
 - **Import install** wizard adopts an existing ASA dedicated folder as a YARK profile (no SteamCMD, no INI writes until Start); discovers mods disabled; blocks already-managed folders (#254).
+- Windows CI runs Electron **E2E** smoke, CRUD suite, install-health, and host-port-probe with isolated app data; validation matrix in `docs/e2e-validation.md` (#12).
 
 ### Security
 
