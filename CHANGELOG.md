@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-08-10
+
 ### Added
 
 - Engineering runbook for workspace **Mods** (CurseForge inventory, load order, metadata proxy, and `-mods=` launch) in `docs/mods.md`.

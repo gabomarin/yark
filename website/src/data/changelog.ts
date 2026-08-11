@@ -12,6 +12,31 @@ export type ChangelogEntry = {
 /** Curated site changelog — keep in sync with root CHANGELOG.md when cutting releases. */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.9.1",
+    date: "2026-08-10",
+    sections: [
+      {
+        title: "Changed",
+        items: [
+          "Sidebar shows an update icon next to the YARK version when an app update is available, and centers the SteamCMD status label.",
+          "Public site serves at https://getyark.com with SEO and operator-facing roadmap updates after v0.9.0.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Release CI no longer flakes on execFileBounded maxBuffer coverage on Windows runners.",
+        ],
+      },
+      {
+        title: "Added",
+        items: [
+          "Engineering runbook for workspace Mods in docs/mods.md.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.9.0",
     date: "2026-08-10",
     sections: [
