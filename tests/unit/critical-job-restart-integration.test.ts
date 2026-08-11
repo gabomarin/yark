@@ -73,6 +73,7 @@ function createRestartedService(
   } as unknown as ServerRepository;
   const backups = {
     getCriticalJobs: vi.fn(() => []),
+    requestCancel: vi.fn(() => false),
     retryCriticalJob: vi.fn(() => false),
     dismissCriticalJob: vi.fn(() => false),
     cancelCriticalJob: vi.fn(() => false),
