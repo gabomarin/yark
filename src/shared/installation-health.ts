@@ -24,10 +24,8 @@ const GUIDANCE_BY_REASON: Record<InstallationHealthReasonCode, string> = {
   path_eacces: "Fix folder permissions or run YARK with access to the install path.",
   dir_eacces: "Fix folder permissions so YARK can read the install directory.",
   dir_empty: "Install ASA server files into this empty folder with Install / SteamCMD.",
-  foreign_contents:
-    "This folder already has unrelated files. Point the profile at an empty folder or a real ASA install before installing.",
-  asa_markers_absent:
-    "This folder already has unrelated files. Point the profile at an empty folder or a real ASA install before installing.",
+  foreign_contents: "Point the profile at a real ASA server install.",
+  asa_markers_absent: "Point the profile at a real ASA server install.",
   exe_absent: "Run Install or Verify — ArkAscendedServer.exe is missing.",
   exe_empty: "Reinstall or Verify — the server executable is empty or corrupt.",
   exe_not_file:

@@ -17,6 +17,7 @@ interface Props {
   onSearchChange: (value: string) => void;
   loading: boolean;
   onCreateServer: () => void;
+  onImportServer: () => void;
   servers: ServerProfile[];
   filteredServers: ServerProfile[];
   disabledServers: ServerProfile[];
@@ -250,9 +251,14 @@ export function ServerGrid(props: Props): ReactElement {
             description="Set up a world to play with friends or manage your community."
             titleOrder="h3"
             action={
-              <Button leftSection={<Plus size={16} />} onClick={props.onCreateServer}>
-                New server
-              </Button>
+              <Group gap="xs">
+                <Button leftSection={<Plus size={16} />} onClick={props.onCreateServer}>
+                  New server
+                </Button>
+                <Button variant="default" onClick={props.onImportServer}>
+                  Import existing install
+                </Button>
+              </Group>
             }
           />
         )}

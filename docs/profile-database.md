@@ -65,7 +65,10 @@ Start empty renames the main DB and `-wal` / `-shm` sidecars to
 `*.corrupt.<timestamp>` next to the original path (no silent delete), then
 creates a new empty database. That keeps a copy of the broken file on disk, but
 YARK does **not** repair or reload profiles from it. ASA game install directories
-are untouched — the operator re-adds servers in YARK if needed.
+are untouched — the operator re-adds servers in YARK if needed. Prefer
+**Import install** (Overview / workspace split button) to point at an existing
+ASA dedicated root when #252 snapshots are missing or Start empty cleared the
+profile DB — see [server-lifecycle.md](server-lifecycle.md#import-existing-asa-install-254).
 
 ## Module map
 

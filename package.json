@@ -26,6 +26,7 @@
     "e2e:critical-job-recovery": "node scripts/e2e-critical-job-recovery.cjs",
     "e2e:install-health": "node scripts/e2e-install-health.cjs",
     "e2e:move-install": "node scripts/e2e-move-install.cjs",
+    "e2e:import-install": "node scripts/e2e-import-install.cjs",
     "e2e:host-port-probe": "node scripts/e2e-host-port-probe.cjs",
     "e2e:rcon": "node scripts/e2e-rcon.cjs",
     "e2e:launch-args": "node scripts/e2e-launch-args.cjs",

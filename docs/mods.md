@@ -77,7 +77,13 @@ Comma-separated Project IDs and/or ASA CurseForge mod URLs
 persists immediately so a partial import is not lost.
 
 **New IDs start disabled.** Re-adding an already-configured ID keeps its enable
-state and refreshes cache when metadata is returned.
+state and refreshes cache when metadata is returned. **Import install** (#254)
+discovers Project IDs from
+`ShooterGame/Binaries/Win64/ShooterGame/Mods/83374/{projectId}_{fileId}/`
+(and optionally top-level `ShooterGame/Mods/83374/`), then persists them all in
+`mods` + `disabledMods` until the operator enables them here. The import review
+step batch-fetches CurseForge names via `mods:get-many` when the proxy is
+configured (IDs without metadata still import).
 
 ### Maps mods (#192)
 

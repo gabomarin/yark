@@ -17,6 +17,10 @@ const api: RendererApi = {
   listServers: () => ipcRenderer.invoke(IPC.serversList),
   createServer: (input: ServerProfileInput) =>
     ipcRenderer.invoke(IPC.serversCreate, input),
+  probeImportInstall: (installDir: string) =>
+    ipcRenderer.invoke(IPC.serversProbeImport, installDir),
+  importExistingServer: (input: ServerProfileInput) =>
+    ipcRenderer.invoke(IPC.serversImportExisting, input),
   updateServer: (id: string, input: ServerProfileInput) =>
     ipcRenderer.invoke(IPC.serversUpdate, id, input),
   updateServerPatch: (id: string, patch: ServerProfilePatch) =>
