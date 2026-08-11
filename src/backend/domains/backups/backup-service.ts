@@ -40,6 +40,7 @@ import {
 import type { CriticalJobSummary } from "../../../shared/types";
 import { rconExec } from "../../infra/rcon/rcon-client";
 import {
+  collectWorldBackupCandidates,
   copySavedArksFiles,
   missingEssentialWorldRels,
   selectWorldBackupSourceFiles,
@@ -1931,16 +1932,7 @@ export class BackupService extends EventEmitter {
     // File-by-file copy so live Ark save rotation (e.g. .arkrbf) can be skipped
     // without failing the whole archive, while essential saves still fail loudly.
     const enumerated = await listFilesRecursive(savedArks);
-    const candidates = await Promise.all(
-      enumerated.map(async (path) => {
-        const info = await stat(path);
-        return {
-          path,
-          name: basename(path),
-          mtimeMs: info.mtimeMs,
-        };
-      }),
-    );
+    const candidates = await collectWorldBackupCandidates(enumerated, stat);
     const selection = selectWorldBackupSourceFiles(candidates);
     const sourceFiles = selection.selected.map((candidate) => candidate.path);
     const copyResult = await copySavedArksFiles(
@@ -2191,6 +2183,7 @@ export class BackupService extends EventEmitter {
       progress?: BackupCriticalJobProgressHandlers;
     },
   ): Promise<T> {
+    const progress = options?.progress;
     const existingPending = this.queue.find(
       (job) =>
         job.serverId === serverId
@@ -2209,8 +2202,8 @@ export class BackupService extends EventEmitter {
           && (existingPending.status === "blocked" || existingPending.status === "failed")
           && existingPending.operatorRetryAllowed
         ) {
-          if (options.progress !== undefined) {
-            this.jobProgressHandlers.set(existingPending.id, options.progress);
+          if (progress !== undefined) {
+            this.jobProgressHandlers.set(existingPending.id, progress);
           }
           const completion = new Promise<T>((resolve, reject) => {
             this.addWaiter(existingPending.id, {
@@ -2229,8 +2222,8 @@ export class BackupService extends EventEmitter {
           `A previous ${type} job requires Retry or Dismiss before another can be queued`,
         );
       }
-      if (options?.progress !== undefined) {
-        this.jobProgressHandlers.set(existingPending.id, options.progress);
+      if (progress !== undefined) {
+        this.jobProgressHandlers.set(existingPending.id, progress);
       }
       return await new Promise<T>((resolve, reject) => {
         this.addWaiter(existingPending.id, {
@@ -2260,8 +2253,8 @@ export class BackupService extends EventEmitter {
     };
 
     this.queue.push(job);
-    if (options?.progress !== undefined) {
-      this.jobProgressHandlers.set(job.id, options.progress);
+    if (progress !== undefined) {
+      this.jobProgressHandlers.set(job.id, progress);
     }
     this.persistQueue();
     this.servers.addEvent(

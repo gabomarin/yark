@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { join } from "node:path";
 import {
+  collectWorldBackupCandidates,
   copySavedArksFiles,
   isDatedWorldAutosaveName,
   isEssentialWorldSaveName,
@@ -82,6 +83,41 @@ describe("world-snapshot helpers", () => {
     expect(selection.skippedTransientCount).toBe(1);
     expect(selection.skippedOlderDatedCount).toBe(2);
     expect(selection.retainedDatedCount).toBe(2);
+  });
+
+  it("skips transients that vanish between enumerate and stat", async () => {
+    const paths = [
+      join("C:\\SavedArks", "Genesis_WP.ark"),
+      join("C:\\SavedArks", "Genesis_WP_28.07.2026_06.53.34.arkrbf"),
+    ];
+    const candidates = await collectWorldBackupCandidates(paths, async (path) => {
+      if (path.endsWith(".arkrbf")) {
+        const err = new Error("ENOENT") as NodeJS.ErrnoException;
+        err.code = "ENOENT";
+        throw err;
+      }
+      return { mtimeMs: 100 };
+    });
+    expect(candidates).toEqual([
+      {
+        path: paths[0],
+        name: "Genesis_WP.ark",
+        mtimeMs: 100,
+      },
+    ]);
+  });
+
+  it("still fails when a non-transient path disappears during stat", async () => {
+    await expect(
+      collectWorldBackupCandidates(
+        [join("C:\\SavedArks", "Genesis_WP.ark")],
+        async () => {
+          const err = new Error("ENOENT") as NodeJS.ErrnoException;
+          err.code = "ENOENT";
+          throw err;
+        },
+      ),
+    ).rejects.toThrow("ENOENT");
   });
 
   it("skips a disappearing transient file during copy", async () => {

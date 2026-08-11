@@ -86,6 +86,37 @@ export interface WorldBackupSourceSelection {
 }
 
 /**
+ * Stat SavedArks paths for packaging. Transient files that vanish between
+ * enumerate and stat are skipped (same contract as mid-copy ENOENT).
+ */
+export async function collectWorldBackupCandidates(
+  paths: readonly string[],
+  statFile: (path: string) => Promise<{ mtimeMs: number }>,
+): Promise<WorldBackupFileCandidate[]> {
+  const candidates = await Promise.all(
+    paths.map(async (path): Promise<WorldBackupFileCandidate | null> => {
+      const name = basename(path);
+      try {
+        const info = await statFile(path);
+        return {
+          path,
+          name,
+          mtimeMs: info.mtimeMs,
+        };
+      } catch (error) {
+        if (isWorldCopyMissingError(error) && isTransientWorldSaveName(name)) {
+          return null;
+        }
+        throw error;
+      }
+    }),
+  );
+  return candidates.filter(
+    (candidate): candidate is WorldBackupFileCandidate => candidate !== null,
+  );
+}
+
+/**
  * Choose which SavedArks files to package: drop transients, keep every primary
  * map save, and retain only the newest dated autosaves per map token.
  */
