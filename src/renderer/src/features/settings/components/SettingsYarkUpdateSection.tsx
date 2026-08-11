@@ -81,21 +81,32 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
   const runCheck = async () => {
     setActionBusy(true);
     setActionError(null);
-    setStatus((prev) => ({
-      ...prev,
-      phase: "checking",
-      error: null,
-      percent: null,
-    }));
+    setStatus((prev) => {
+      // Do not hide Restart and install while a download is ready / in progress.
+      if (prev.phase === "downloading" || prev.phase === "ready") {
+        return { ...prev, error: null };
+      }
+      return {
+        ...prev,
+        phase: "checking",
+        error: null,
+        percent: null,
+      };
+    });
     try {
       const result = await window.api.checkForAppUpdate();
       if (!result.ok) {
         setActionError(result.error ?? "Could not check for YARK updates");
-        setStatus((prev) => ({
-          ...prev,
-          phase: "error",
-          error: result.error ?? "Could not check for YARK updates",
-        }));
+        setStatus((prev) => {
+          if (prev.phase === "downloading" || prev.phase === "ready") {
+            return prev;
+          }
+          return {
+            ...prev,
+            phase: "error",
+            error: result.error ?? "Could not check for YARK updates",
+          };
+        });
         return;
       }
       setStatus(result.data);
@@ -105,12 +116,17 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
         "Could not check for YARK updates",
       );
       setActionError(message);
-      setStatus((prev) => ({
-        ...prev,
-        phase: "error",
-        error: message,
-        percent: null,
-      }));
+      setStatus((prev) => {
+        if (prev.phase === "downloading" || prev.phase === "ready") {
+          return prev;
+        }
+        return {
+          ...prev,
+          phase: "error",
+          error: message,
+          percent: null,
+        };
+      });
     } finally {
       setActionBusy(false);
     }

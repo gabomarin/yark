@@ -60,6 +60,25 @@ export type AppUpdatePhase =
   | "ready"
   | "error";
 
+/** True while a download is in flight or waiting on Restart and install. */
+export function isAppUpdateDownloadInFlight(phase: AppUpdatePhase): boolean {
+  return phase === "downloading" || phase === "ready";
+}
+
+/**
+ * Keep downloading/ready across a later check when the feed still reports the
+ * same (or older) version. A newer remote version may replace the in-flight one.
+ */
+export function shouldPreserveAppUpdateDownload(
+  phase: AppUpdatePhase,
+  availableVersion: string | null,
+  remoteVersion: string,
+): boolean {
+  if (!isAppUpdateDownloadInFlight(phase)) return false;
+  if (availableVersion === null || availableVersion.trim() === "") return true;
+  return compareSemver(remoteVersion, availableVersion) <= 0;
+}
+
 /**
  * Why Restart and install is disabled.
  * `null` means install is allowed (packaged + downloaded + safety gates clear).
@@ -151,6 +170,25 @@ function comparePrereleaseIdentifiers(left: string, right: string): number {
     if (cmp !== 0) return cmp;
   }
   return 0;
+}
+
+/** True while a download is in flight or waiting for Restart and install. */
+export function isAppUpdateInFlight(phase: AppUpdatePhase): boolean {
+  return phase === "downloading" || phase === "ready";
+}
+
+/**
+ * Keep downloading/ready across a later check when the remote version is the
+ * same or older. A newer remote version should still replace the in-flight state.
+ */
+export function shouldPreserveAppUpdateProgress(
+  phase: AppUpdatePhase,
+  availableVersion: string | null,
+  remoteVersion: string,
+): boolean {
+  if (!isAppUpdateInFlight(phase)) return false;
+  if (availableVersion === null || availableVersion.trim() === "") return true;
+  return compareSemver(remoteVersion, availableVersion) <= 0;
 }
 
 export function installBlockMessage(
