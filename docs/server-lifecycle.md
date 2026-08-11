@@ -506,7 +506,7 @@ next to the path field (including folders already owned by another YARK profile)
 | File | Focus |
 | --- | --- |
 | `tests/unit/launch-args.test.ts` | CLI shape; no listen/RCON/passwords/QueryPort |
-| `npm run e2e:launch-args` | Windows UI: structured + raw args on Runtime `Commandline` (piped) |
+| `npm run e2e:import-install` | Windows UI: Import install wizard (#254) — nested/ready/Already managed, profile-only INI |
 | `tests/unit/sync-profile-ini.test.ts` | Exact INI keys / null password → `""` |
 | `tests/unit/validation.test.ts` | Ports, paths, cluster, mods, conflicts |
 | `tests/unit/host-port-probe.test.ts` | Host bind classify, suggestions, UDP release, error prefixes |
