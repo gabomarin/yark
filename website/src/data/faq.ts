@@ -31,7 +31,7 @@ export const faqItems: FaqItem[] = [
     question: "Is it production-ready?",
     answerHtml: `
       <p>
-        No. Public builds are an <strong>unsigned prerelease</strong>. Expect rough edges
+        No. Public builds are a <strong>prerelease</strong>. Expect rough edges
         and breaking changes between versions. Treat it as early tooling, not a finished product.
         Prefer backups before risky updates or restores.
       </p>`,
@@ -116,11 +116,10 @@ export const faqItems: FaqItem[] = [
     question: "Windows SmartScreen / antivirus flags the installer. Is that expected?",
     answerHtml: `
       <p>
-        Yes for unsigned prereleases. The installer is not code-signed yet, so Windows may warn
-        on first run. Prefer downloading only from the official GitHub Releases page or the
-        download button on this site (same release assets). Before running it, compare the file's
-        SHA-256 with the digest GitHub shows for that release asset; the Getting started guide has
-        the PowerShell command.
+        It can happen with a young prerelease. Prefer downloading only from the official
+        GitHub Releases page or the download button on this site (same release assets). Before
+        running it, compare the file's SHA-256 with the digest GitHub shows for that release
+        asset; the Getting started guide has the PowerShell command.
       </p>`,
   },
   {
@@ -130,8 +129,7 @@ export const faqItems: FaqItem[] = [
         <strong>YARK itself:</strong> Settings → <strong>YARK updates</strong> (or click the
         accented sidebar version when an update is waiting). Check, download, then restart to
         install. Packaged builds use GitHub Releases; you can still grab the installer from
-        Releases manually if needed. Windows may warn about an unsigned build until code signing
-        ships.
+        Releases manually if needed.
         <strong>ASA dedicated files:</strong> use Update / Verify inside the app — that talks to
         SteamCMD and can run the safe-update path with backups.
       </p>`,

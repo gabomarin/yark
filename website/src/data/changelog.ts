@@ -205,7 +205,7 @@ export const changelog: ChangelogEntry[] = [
         items: [
           "Reworked the repository README with product guidance, release badges, screenshots, architecture, and contribution information.",
           "Updated the public roadmap after 0.5.1 and aligned the Settings guide with the current Stop/Cancel quit behavior.",
-          "Expanded release documentation so unsigned and future signed-build guidance stays synchronized with published artifacts.",
+          "Expanded release documentation so download-verification guidance stays synchronized with published artifacts.",
         ],
       },
       {

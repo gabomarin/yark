@@ -11,16 +11,12 @@ export type RoadmapItem = {
  * Not a ship promise — keep wording directional. Milestones on GitHub stay authoritative.
  *
  * Intentionally omitted from this list (still tracked in-repo): Electron fuses (#217),
- * E2E/real-host validation (#12, #22), profile-DB snapshots (#252).
+ * E2E/real-host validation (#12, #22), profile-DB snapshots (#252), Authenticode (#142).
  */
 export const roadmapItems: RoadmapItem[] = [
   {
     tag: "planned",
     text: "Import an existing ASA install as a YARK profile (discover mods, leave them disabled)",
-  },
-  {
-    tag: "planned",
-    text: "Signed Windows installers so SmartScreen stops treating every build as unknown",
   },
   {
     tag: "planned",

@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Public site and operator docs no longer highlight code signing / Authenticode as near-term roadmap; download trust stays on official sources and SHA-256 checks (#142).
+
 ### Fixed
 
 - **YARK updates** keep a finished or in-progress download when Check now or the quiet startup check runs again, so Restart and install no longer disappears behind Download.

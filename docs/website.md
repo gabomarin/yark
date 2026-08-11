@@ -10,7 +10,7 @@ Public product site and operator docs for YARK server manager.
 
 - Product overview, screenshots, FAQ, changelog, and download CTA
 - Operator documentation (Starlight) distilled from repo runbooks
-- Honest prerelease framing (unsigned builds, not production-ready)
+- Honest prerelease framing (not production-ready)
 - Official-download provenance and SHA-256 verification guidance
 - Current local credential/storage boundary without overstating protection
 
@@ -113,10 +113,9 @@ Bump the app version / cut a matching Release tag so the CTA stays valid. The as
 must stay in sync with `build.artifactName` in the root `package.json` — see
 [versioning.md](versioning.md).
 
-The landing and operator docs must describe the current release trust state consistently:
+The landing and operator docs must describe download trust consistently:
 
-- while installers are unsigned, keep the SmartScreen warning and SHA-256 verification steps;
-- after Authenticode is enabled, replace the unsigned copy across the landing, FAQ, Getting
-  started, Docs overview, and Security & privacy in the same release;
-- never claim a publisher identity or trusted timestamp until the published installer has been
-  verified after download.
+- keep SHA-256 verification steps against official GitHub Release assets;
+- prefer official site / Releases download CTAs over third-party mirrors;
+- do not promise Authenticode publisher identity or code signing on the public site while
+  [#142](https://github.com/gabomarin/yark/issues/142) remains deferred.
