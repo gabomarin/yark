@@ -81,6 +81,23 @@ Workflow: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
   the Windows wizard (including the GPL license page), allow choosing the destination,
   and create desktop and Start menu shortcuts. In-app updates still use the updater's
   unattended install path.
+- **Electron fuses / ASAR integrity (#217):** `package.json` → `build.electronFuses`
+  flips production hardening after pack (before any future code signing). `asar: true`
+  stays on so electron-builder embeds Windows ASAR integrity resources. Release CI runs
+  `npm run verify:fuses` against `dist/win-unpacked`.
+
+| Fuse | Packaged value | Why |
+| --- | --- | --- |
+| `runAsNode` | off | Blocks `ELECTRON_RUN_AS_NODE` turning the shipped `.exe` into plain Node (SteamCMD/ASA still use normal `spawn`, not `process.fork`) |
+| `enableCookieEncryption` | on | OS-backed Chromium cookie store encryption |
+| `enableNodeOptionsEnvironmentVariable` | off | Ignores `NODE_OPTIONS` / `NODE_EXTRA_CA_CERTS` injection |
+| `enableNodeCliInspectArguments` | off | Ignores `--inspect` / related main-process debugger flags |
+| `enableEmbeddedAsarIntegrityValidation` | on | Validates `app.asar` against the embedded integrity hash (Electron ≥ 30 on Windows) |
+| `onlyLoadAppFromAsar` | on | Loads app code only from `app.asar` (no unpacked `app/` sideload bypass) |
+| `loadBrowserProcessSpecificV8Snapshot` | off | No custom main-process V8 snapshot |
+| `grantFileProtocolExtraPrivileges` | off | Renderer is a static `loadFile` SPA; no elevated `file://` privileges |
+
+Unpackaged `npm run dev` / `npm start` still use Electron’s default fuse wire. E2E/visual helpers unset `ELECTRON_RUN_AS_NODE` for those workflows; that env escape is disabled only on packaged binaries.
 
 ### Local `npm run package` on Windows
 
