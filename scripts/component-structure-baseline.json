@@ -4,7 +4,7 @@
   "growthSlack": 25,
   "files": {
     "src/renderer/src/features/backups/BackupsPage.tsx": 1058,
-    "src/renderer/src/features/backups/ServerBackupPanel.tsx": 1071,
+    "src/renderer/src/features/backups/ServerBackupPanel.tsx": 1119,
     "src/renderer/src/features/logs/ServerLogsPanel.tsx": 1060,
     "src/renderer/src/features/server-workspace/components/ConfigurationEditor/ConfigurationEditor.tsx": 706,
     "src/renderer/src/features/server-workspace/components/ConfigurationWizard/ConfigurationWizard.tsx": 937,

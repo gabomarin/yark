@@ -168,6 +168,8 @@
 .listScroll {
   flex: 1;
   min-height: 240px;
+  width: 100%;
+  min-width: 0;
   overflow: auto;
   padding-right: 4px;
 }
@@ -184,7 +186,39 @@
 }
 
 .historyTable {
+  display: block;
   width: 100%;
+  min-width: 0;
+}
+
+.historyTable :global(.mantine-datatable) {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ScrollArea chain must stretch or the table sizes to column intrinsic width. */
+.historyTable :global(.mantine-datatable-scroll-area),
+.historyTable :global(.mantine-ScrollArea-root),
+.historyTable :global(.mantine-ScrollArea-viewport),
+.historyTable :global(.mantine-ScrollArea-content) {
+  width: 100%;
+}
+
+.historyTable :global(.mantine-datatable-table) {
+  /* Fill the panel even when content columns hug (0%) + Actions is 100%. */
+  width: 100% !important;
+  min-width: 100%;
+}
+
+.historyTable :global(.mantine-datatable-table th),
+.historyTable :global(.mantine-datatable-table td) {
+  box-sizing: border-box;
+}
+
+/* Actions is width 100% — keep icons on the trailing edge as the column grows. */
+.historyTable :global(td[data-accessor="actions"]),
+.historyTable :global(th[data-accessor="actions"]) {
+  text-align: right;
 }
 
 .backupTitle {

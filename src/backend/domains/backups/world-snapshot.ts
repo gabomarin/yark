@@ -1,14 +1,92 @@
+import { existsSync, type Dirent } from "node:fs";
 import { basename, join, relative } from "node:path";
+import { readdir } from "node:fs/promises";
 import { mapTokenFromWorldSaveName } from "../instances/import-existing-install";
 
 /**
  * Helpers for live ASA SavedArks snapshots during world backups.
- * Timestamped rollback buffers rotate while the dedicated server is writing;
- * primary map / tribe / profile files must still be present for a valid backup.
+ * World archives are scoped to one map folder under SavedArks.
+ * Folder name may differ from the launch map token (e.g. mod map
+ * `Svartalfheim/` with files `Svartalfheim_WP.ark`) — resolve by folder
+ * **name** candidates only, never by searching for `.ark` across siblings
+ * (rotation leftovers can leave another map's `.ark` in the wrong folder).
  */
 
-/** Newest dated autosaves kept per map token (in addition to the primary `.ark`). */
-export const MAX_DATED_AUTOSAVES_PER_MAP = 2;
+/** Dated game autosaves are never packaged in YARK world ZIPs. */
+export const MAX_DATED_AUTOSAVES_PER_MAP = 0;
+
+/** Folder name candidates for a launch map token (exact, then strip trailing `_WP`). */
+export function worldMapDirNameCandidates(mapToken: string): string[] {
+  const token = mapToken.trim();
+  if (token.length === 0) return [];
+  const out: string[] = [token];
+  if (/_WP$/i.test(token)) {
+    const stripped = token.replace(/_WP$/i, "");
+    if (stripped.length > 0) out.push(stripped);
+  }
+  return out;
+}
+
+function primaryArkPath(dir: string, mapToken: string): string {
+  return join(dir, `${mapToken.trim()}.ark`);
+}
+
+/**
+ * Locate the live SavedArks subfolder for a launch map token by **folder name**
+ * only (`{MapToken}`, then strip trailing `_WP`). Does not scan sibling folders
+ * for `.ark` files (unsafe under map rotation leftovers).
+ */
+export async function resolveWorldMapSaveDir(
+  savedArksDir: string,
+  mapToken: string,
+): Promise<{ dir: string; folderName: string } | null> {
+  const token = mapToken.trim();
+  if (token.length === 0 || !existsSync(savedArksDir)) {
+    return null;
+  }
+
+  const candidates = worldMapDirNameCandidates(token);
+  const candidateLower = new Set(candidates.map((name) => name.toLowerCase()));
+
+  // Prefer a candidate folder that already holds the primary `.ark`.
+  for (const folderName of candidates) {
+    const dir = join(savedArksDir, folderName);
+    if (existsSync(dir) && existsSync(primaryArkPath(dir, token))) {
+      return { dir, folderName };
+    }
+  }
+
+  // Case-insensitive match against the same candidate names only.
+  let entries: Dirent[] = [];
+  try {
+    entries = await readdir(savedArksDir, { withFileTypes: true });
+  } catch {
+    entries = [];
+  }
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (!candidateLower.has(entry.name.toLowerCase())) continue;
+    const dir = join(savedArksDir, entry.name);
+    if (existsSync(primaryArkPath(dir, token))) {
+      return { dir, folderName: entry.name };
+    }
+  }
+
+  // Folder exists under a candidate name but primary is not present yet.
+  for (const folderName of candidates) {
+    const dir = join(savedArksDir, folderName);
+    if (existsSync(dir)) {
+      return { dir, folderName };
+    }
+  }
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (!candidateLower.has(entry.name.toLowerCase())) continue;
+    return { dir: join(savedArksDir, entry.name), folderName: entry.name };
+  }
+
+  return null;
+}
 
 /** Transient / rotating names that may vanish mid-copy without failing the backup. */
 export function isTransientWorldSaveName(fileName: string): boolean {
@@ -50,20 +128,68 @@ export function isPrimaryWorldSaveName(fileName: string): boolean {
   return mapTokenFromWorldSaveName(baseName) !== null;
 }
 
-/**
- * Files that must copy successfully when present on the *selected* source list.
- * Dated autosaves are optional history — never fail the backup if older ones are trimmed.
- */
-export function isEssentialWorldSaveName(fileName: string): boolean {
-  if (isDatedWorldAutosaveName(fileName)) return false;
-  const lower = fileName.toLowerCase();
+/** Player / tribe companions packaged with a map-scoped world snapshot. */
+export function isWorldProfileOrTribeName(fileName: string): boolean {
+  const lower = basename(fileName).toLowerCase();
   return (
-    lower.endsWith(".ark")
-    || lower.endsWith(".arktribe")
+    lower.endsWith(".arktribe")
+    || lower.endsWith(".tribebak")
     || lower.endsWith(".arkprofile")
     || lower.endsWith(".arkprofile.bak")
     || lower.endsWith(".profilebak")
   );
+}
+
+/**
+ * Anti-corruption companion next to the primary map save
+ * (e.g. `TheIsland_WP.ark.bak` or ASA `*anticorruption*.bak`).
+ */
+export function isAntiCorruptionWorldSaveName(
+  fileName: string,
+  mapToken: string,
+): boolean {
+  const baseName = basename(fileName);
+  const lower = baseName.toLowerCase();
+  const token = mapToken.trim().toLowerCase();
+  if (token.length === 0) return false;
+  if (lower === `${token}.ark.bak`) return true;
+  if (lower.includes("anticorruption") && lower.endsWith(".bak")) return true;
+  return false;
+}
+
+/**
+ * Files that must copy successfully when present on the *selected* source list.
+ * Dated autosaves are never selected for packaging.
+ */
+export function isEssentialWorldSaveName(
+  fileName: string,
+  mapToken?: string,
+): boolean {
+  if (isDatedWorldAutosaveName(fileName)) return false;
+  if (isTransientWorldSaveName(fileName)) return false;
+  if (isPrimaryWorldSaveName(fileName)) return true;
+  if (isWorldProfileOrTribeName(fileName)) return true;
+  if (mapToken !== undefined && isAntiCorruptionWorldSaveName(fileName, mapToken)) {
+    return true;
+  }
+  const lower = basename(fileName).toLowerCase();
+  return lower.endsWith(".ark.bak");
+}
+
+/** Whether a file under a map folder should be packaged into a world ZIP. */
+export function isSelectableWorldBackupFileName(
+  fileName: string,
+  mapToken: string,
+): boolean {
+  if (isTransientWorldSaveName(fileName)) return false;
+  if (isDatedWorldAutosaveName(fileName)) return false;
+  if (isPrimaryWorldSaveName(fileName)) {
+    const token = mapTokenFromWorldSaveName(fileName);
+    return token !== null && token.toLowerCase() === mapToken.trim().toLowerCase();
+  }
+  if (isAntiCorruptionWorldSaveName(fileName, mapToken)) return true;
+  if (isWorldProfileOrTribeName(fileName)) return true;
+  return false;
 }
 
 export function isWorldCopyMissingError(error: unknown): boolean {
@@ -117,19 +243,23 @@ export async function collectWorldBackupCandidates(
 }
 
 /**
- * Choose which SavedArks files to package: drop transients, keep every primary
- * map save, and retain only the newest dated autosaves per map token.
+ * Choose which map-folder files to package: drop transients and dated autosaves;
+ * keep primary `.ark`, anti-corruption bak, and profile/tribe companions.
  */
 export function selectWorldBackupSourceFiles(
   candidates: readonly WorldBackupFileCandidate[],
-  options?: { maxDatedAutosavesPerMap?: number },
+  options?: { mapToken?: string; maxDatedAutosavesPerMap?: number },
 ): WorldBackupSourceSelection {
+  const mapToken = options?.mapToken?.trim() ?? "";
+  // Dated autosaves are omitted from world ZIPs (default 0). Callers may pass
+  // a positive cap only for tests / experimental tooling.
   const maxDated = Math.max(
     0,
     options?.maxDatedAutosavesPerMap ?? MAX_DATED_AUTOSAVES_PER_MAP,
   );
   const selected: WorldBackupFileCandidate[] = [];
   let skippedTransientCount = 0;
+  let skippedOlderDatedCount = 0;
   const datedByMap = new Map<string, WorldBackupFileCandidate[]>();
 
   for (const candidate of candidates) {
@@ -139,9 +269,13 @@ export function selectWorldBackupSourceFiles(
       continue;
     }
     if (isDatedWorldAutosaveName(name)) {
+      if (maxDated <= 0) {
+        skippedOlderDatedCount += 1;
+        continue;
+      }
       const token = mapTokenFromWorldSaveName(name);
       if (token === null) {
-        selected.push(candidate);
+        skippedOlderDatedCount += 1;
         continue;
       }
       const key = token.toLowerCase();
@@ -150,11 +284,15 @@ export function selectWorldBackupSourceFiles(
       datedByMap.set(key, list);
       continue;
     }
+    if (mapToken.length > 0) {
+      if (!isSelectableWorldBackupFileName(name, mapToken)) {
+        continue;
+      }
+    }
     selected.push(candidate);
   }
 
   let retainedDatedCount = 0;
-  let skippedOlderDatedCount = 0;
   for (const list of datedByMap.values()) {
     list.sort((a, b) => {
       if (b.mtimeMs !== a.mtimeMs) return b.mtimeMs - a.mtimeMs;
@@ -189,10 +327,12 @@ export async function copySavedArksFiles(
   destRoot: string,
   sourceFiles: string[],
   copyFile: (src: string, dest: string) => Promise<void>,
+  options?: { mapToken?: string },
 ): Promise<CopySavedArksResult> {
   let copiedFileCount = 0;
   let skippedTransientCount = 0;
   const skippedTransient: string[] = [];
+  const mapToken = options?.mapToken;
 
   for (const src of sourceFiles) {
     const rel = relative(sourceRoot, src);
@@ -209,7 +349,7 @@ export async function copySavedArksFiles(
         }
         continue;
       }
-      if (isEssentialWorldSaveName(name)) {
+      if (isEssentialWorldSaveName(name, mapToken)) {
         throw new Error(
           `Essential world save disappeared during backup: ${rel}`,
         );
@@ -230,13 +370,14 @@ export function missingEssentialWorldRels(
   destRoot: string,
   sourceFiles: string[],
   destFiles: string[],
+  options?: { mapToken?: string },
 ): string[] {
   const normalizeRel = (file: string, root: string) =>
     relative(root, file).split("\\").join("/").toLowerCase();
   const destRels = new Set(destFiles.map((file) => normalizeRel(file, destRoot)));
   const missing: string[] = [];
   for (const file of sourceFiles) {
-    if (!isEssentialWorldSaveName(basename(file))) continue;
+    if (!isEssentialWorldSaveName(basename(file), options?.mapToken)) continue;
     const rel = relative(sourceRoot, file);
     if (destRels.has(rel.split("\\").join("/").toLowerCase())) continue;
     missing.push(rel);

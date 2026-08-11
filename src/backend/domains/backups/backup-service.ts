@@ -23,6 +23,7 @@ import type {
   BackupRecord,
   BackupServerHealth,
   BackupType,
+  RestoreBackupOptions,
   ServerProfile,
 } from "@shared/types";
 import type { ServerRepository } from "../../infra/db/server-repository";
@@ -42,7 +43,11 @@ import { rconExec } from "../../infra/rcon/rcon-client";
 import {
   collectWorldBackupCandidates,
   copySavedArksFiles,
+  isAntiCorruptionWorldSaveName,
+  isPrimaryWorldSaveName,
+  isWorldProfileOrTribeName,
   missingEssentialWorldRels,
+  resolveWorldMapSaveDir,
   selectWorldBackupSourceFiles,
 } from "./world-snapshot";
 import {
@@ -189,6 +194,17 @@ function delay(ms: number): Promise<void> {
 
 function slug(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+/** Keep map tokens readable in filenames (`TheIsland_WP` → `TheIsland_WP`). */
+function mapTokenFileSlug(mapToken: string): string {
+  const trimmed = mapToken.trim();
+  if (trimmed.length === 0) return "map";
+  return trimmed.replace(/[^A-Za-z0-9_]+/g, "-").replace(/^-+|-+$/g, "") || "map";
+}
+
+function worldRetentionKey(backup: BackupRecord): string {
+  return backup.mapToken?.trim().toLowerCase() || "__unscoped__";
 }
 
 function isPlayerProfileFile(name: string): boolean {
@@ -1098,6 +1114,7 @@ export class BackupService extends EventEmitter {
         createdAt,
         completedAt: createdAt,
         notes: parsed?.notes ?? `Imported portable archive: ${basename(sourceResolved)}`,
+        mapToken: parsed?.mapToken ?? null,
       });
     } catch (err) {
       await rm(destPath, { force: true }).catch(() => undefined);
@@ -1130,7 +1147,11 @@ export class BackupService extends EventEmitter {
     throw new Error("Could not allocate a unique import archive name");
   }
 
-  async restoreBackup(serverId: string, backupId: string): Promise<void> {
+  async restoreBackup(
+    serverId: string,
+    backupId: string,
+    options?: RestoreBackupOptions,
+  ): Promise<void> {
     const server = this.mustServer(serverId);
     await this.assertInstallReadyForLiveOps(server);
     if (this.processes.isActive(serverId)) {
@@ -1156,7 +1177,7 @@ export class BackupService extends EventEmitter {
         "Safeguard before restore",
         [backup.kind],
       );
-      await this.applyRestore(server, backup);
+      await this.applyRestore(server, backup, options);
 
       this.servers.addEvent(
         serverId,
@@ -1211,15 +1232,24 @@ export class BackupService extends EventEmitter {
       return;
     }
 
+    const requiredMs = policy.intervalMinutes * 60 * 1000;
     const latestWorld = this.backups.latestCompleted(server.id, "world");
     if (latestWorld !== null) {
       const finishedAt = backupFinishedAt(latestWorld);
       const elapsedMs = Date.now() - Date.parse(finishedAt);
-      const requiredMs = policy.intervalMinutes * 60 * 1000;
       if (Number.isFinite(elapsedMs) && elapsedMs < requiredMs) return;
     }
 
     if (!this.processes.isActive(server.id)) return;
+    // Wait a full interval after the process became active so a fresh start
+    // does not package on the first scheduler tick.
+    const startedAtRaw = this.processes.getStatus(server.id).startedAt;
+    const startedAtMs =
+      startedAtRaw !== null && startedAtRaw.length > 0
+        ? Date.parse(startedAtRaw)
+        : Number.NaN;
+    if (!Number.isFinite(startedAtMs)) return;
+    if (Date.now() - startedAtMs < requiredMs) return;
     if (!(await this.isInstallReady(server))) return;
 
     this.scheduledWorldInFlight.add(server.id);
@@ -1743,19 +1773,26 @@ export class BackupService extends EventEmitter {
       options?.playerKey !== undefined && options.playerKey.length > 0
         ? `-${slug(options.playerKey).slice(0, 24)}`
         : "";
-    const preferredName = `${slug(server.name)}-${kind}-${type}${playerSlug}-${stamp}.zip`;
+    const mapSlug =
+      kind === "world" && server.map.trim().length > 0
+        ? `-${mapTokenFileSlug(server.map)}`
+        : "";
+    const preferredName =
+      `${slug(server.name)}-${kind}-${type}${mapSlug}${playerSlug}-${stamp}.zip`;
     await mkdir(kindDir, { recursive: true });
     const zipPath = this.allocateUniqueZipPath(kindDir, preferredName);
     const stagingDir = join(tmpdir(), `yark-backup-${randomUUID()}`);
 
     await mkdir(stagingDir, { recursive: true });
 
+    const mapToken = kind === "world" ? server.map.trim() || null : null;
     const record = this.backups.createBackupStart({
       serverId,
       type,
       kind,
       path: zipPath,
       notes,
+      mapToken,
     });
     this.creatingBackupIds.add(record.id);
 
@@ -1921,32 +1958,56 @@ export class BackupService extends EventEmitter {
     server: ServerProfile,
     targetDir: string,
   ): Promise<{ meta: Record<string, unknown> }> {
-    const savedArks = this.savedArksDir(server);
-    const dest = join(targetDir, "SavedArks");
-
-    if (!existsSync(savedArks)) {
-      await mkdir(dest, { recursive: true });
-      return { meta: { empty: true, fileCount: 0, savedArksPresent: false } };
+    const mapToken = server.map.trim();
+    if (mapToken.length === 0) {
+      throw new Error("Server map token is required for a world backup");
     }
+
+    const savedArks = this.savedArksDir(server);
+    const resolved = await resolveWorldMapSaveDir(savedArks, mapToken);
+    const dest = join(targetDir, "SavedArks", mapToken);
+
+    if (resolved === null) {
+      await mkdir(dest, { recursive: true });
+      return {
+        meta: {
+          empty: true,
+          fileCount: 0,
+          savedArksPresent: existsSync(savedArks),
+          mapToken,
+        },
+      };
+    }
+
+    const mapSourceDir = resolved.dir;
 
     // File-by-file copy so live Ark save rotation (e.g. .arkrbf) can be skipped
     // without failing the whole archive, while essential saves still fail loudly.
-    const enumerated = await listFilesRecursive(savedArks);
+    const enumerated = await listFilesRecursive(mapSourceDir);
     const candidates = await collectWorldBackupCandidates(enumerated, stat);
-    const selection = selectWorldBackupSourceFiles(candidates);
+    const selection = selectWorldBackupSourceFiles(candidates, { mapToken });
     const sourceFiles = selection.selected.map((candidate) => candidate.path);
+    const hasPrimary = sourceFiles.some((file) => isPrimaryWorldSaveName(basename(file)));
+    if (!hasPrimary) {
+      throw new Error(
+        `No primary world save found for map ${mapToken} (${mapToken}.ark in ${resolved.folderName})`,
+      );
+    }
+
     const copyResult = await copySavedArksFiles(
-      savedArks,
+      mapSourceDir,
       dest,
       sourceFiles,
       copyFileTo,
+      { mapToken },
     );
     const destFiles = await listFilesRecursive(dest);
     const missing = missingEssentialWorldRels(
-      savedArks,
+      mapSourceDir,
       dest,
       sourceFiles,
       destFiles,
+      { mapToken },
     );
     if (missing.length > 0) {
       throw new Error(
@@ -1961,6 +2022,8 @@ export class BackupService extends EventEmitter {
         empty: destFiles.length === 0,
         fileCount: destFiles.length,
         savedArksPresent: true,
+        mapToken,
+        mapFolderName: resolved.folderName,
         copiedFileCount: copyResult.copiedFileCount,
         skippedTransientCount:
           selection.skippedTransientCount + copyResult.skippedTransientCount,
@@ -2081,10 +2144,14 @@ export class BackupService extends EventEmitter {
     };
   }
 
-  private async applyRestore(server: ServerProfile, backup: BackupRecord): Promise<void> {
+  private async applyRestore(
+    server: ServerProfile,
+    backup: BackupRecord,
+    options?: RestoreBackupOptions,
+  ): Promise<void> {
     await this.withBackupContents(backup.path, async (root) => {
       if (backup.kind === "world") {
-        await this.restoreWorld(server, root);
+        await this.restoreWorld(server, root, backup, options);
         return;
       }
       if (backup.kind === "players") {
@@ -2113,17 +2180,84 @@ export class BackupService extends EventEmitter {
     }
   }
 
-  private async restoreWorld(server: ServerProfile, backupPath: string): Promise<void> {
+  private async restoreWorld(
+    server: ServerProfile,
+    backupPath: string,
+    backup: BackupRecord,
+    options?: RestoreBackupOptions,
+  ): Promise<void> {
     const backupSaved = join(backupPath, "SavedArks");
-    const live = this.savedArksDir(server);
     if (!existsSync(backupSaved)) {
       throw new Error("World backup is missing SavedArks data");
     }
-    // Replace semantics: remove old artifacts that are not present in the backup.
-    await rm(live, { recursive: true, force: true });
-    await mkdir(dirname(live), { recursive: true });
-    // Full SavedArks restore (includes profiles present in the world backup).
-    await cp(backupSaved, live, { recursive: true, force: true });
+
+    const mapToken = await this.resolveWorldRestoreMapToken(backupSaved, backup, server);
+    const backupMapDir = join(backupSaved, mapToken);
+    if (!existsSync(backupMapDir)) {
+      throw new Error(`World backup is missing map folder ${mapToken}`);
+    }
+
+    const restoreProfilesTribes = options?.restoreProfilesTribes !== false;
+    const liveSavedArks = this.savedArksDir(server);
+    const liveResolved = await resolveWorldMapSaveDir(liveSavedArks, mapToken);
+    const liveMapDir = liveResolved?.dir ?? join(liveSavedArks, mapToken);
+    await mkdir(liveMapDir, { recursive: true });
+
+    const files = await listFilesRecursive(backupMapDir);
+    let copied = 0;
+    for (const file of files) {
+      const name = basename(file);
+      if (!restoreProfilesTribes && isWorldProfileOrTribeName(name)) {
+        continue;
+      }
+      // Always allow primary + anti-corruption; skip dated/transient if somehow present.
+      if (isWorldProfileOrTribeName(name) || isPrimaryWorldSaveName(name)
+        || isAntiCorruptionWorldSaveName(name, mapToken)
+        || name.toLowerCase().endsWith(".ark.bak")) {
+        const rel = relative(backupMapDir, file);
+        await copyFileTo(file, join(liveMapDir, rel));
+        copied += 1;
+        continue;
+      }
+      // Other companions already filtered by packaging; copy remaining non-noise.
+      const lower = name.toLowerCase();
+      if (lower.endsWith(".arkrbf") || lower.endsWith(".tmp")) continue;
+      if (lower.endsWith(".ark") && !isPrimaryWorldSaveName(name)) continue;
+      const rel = relative(backupMapDir, file);
+      await copyFileTo(file, join(liveMapDir, rel));
+      copied += 1;
+    }
+
+    if (copied === 0) {
+      throw new Error(`World restore found no files to apply for map ${mapToken}`);
+    }
+  }
+
+  private async resolveWorldRestoreMapToken(
+    backupSaved: string,
+    backup: BackupRecord,
+    server: ServerProfile,
+  ): Promise<string> {
+    if (backup.mapToken !== null && backup.mapToken.trim().length > 0) {
+      return backup.mapToken.trim();
+    }
+    if (server.map.trim().length > 0 && existsSync(join(backupSaved, server.map.trim()))) {
+      return server.map.trim();
+    }
+    let entries;
+    try {
+      entries = await readdir(backupSaved, { withFileTypes: true });
+    } catch {
+      throw new Error("World backup SavedArks folder is unreadable");
+    }
+    const dirs = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+    if (dirs.length === 1) {
+      return dirs[0]!;
+    }
+    if (server.map.trim().length > 0) {
+      return server.map.trim();
+    }
+    throw new Error("World backup map token could not be resolved");
   }
 
   private async restorePlayers(server: ServerProfile, backupPath: string): Promise<void> {
@@ -2891,7 +3025,7 @@ export class BackupService extends EventEmitter {
     this.waiters.set(jobId, current);
   }
 
-  /** Retain last N completed backups; players use per-player pools when annotated. */
+  /** Retain last N completed backups; world uses per-map pools; players use per-player pools. */
   private async applyRetention(serverId: string, policy: BackupPolicy): Promise<void> {
     for (const kind of ALL_BACKUP_KINDS) {
       const retain = retainCountForKind(policy, kind);
@@ -2906,6 +3040,23 @@ export class BackupService extends EventEmitter {
           byPlayer.set(key, list);
         }
         for (const [, list] of byPlayer) {
+          if (list.length <= retain) continue;
+          for (const backup of list.slice(retain)) {
+            await this.removeRetainedBackup(serverId, backup);
+          }
+        }
+        continue;
+      }
+
+      if (kind === "world") {
+        const byMap = new Map<string, BackupRecord[]>();
+        for (const backup of completed) {
+          const key = worldRetentionKey(backup);
+          const list = byMap.get(key) ?? [];
+          list.push(backup);
+          byMap.set(key, list);
+        }
+        for (const [, list] of byMap) {
           if (list.length <= retain) continue;
           for (const backup of list.slice(retain)) {
             await this.removeRetainedBackup(serverId, backup);
@@ -3208,6 +3359,7 @@ export class BackupService extends EventEmitter {
         createdAt,
         completedAt: createdAt,
         notes,
+        mapToken: parsed?.mapToken ?? null,
       });
       known.add(resolve(zipPath).toLowerCase());
       return true;
@@ -3253,6 +3405,7 @@ export class BackupService extends EventEmitter {
         createdAt,
         completedAt: createdAt,
         notes,
+        mapToken: parsed?.mapToken ?? null,
       });
       known.add(resolve(folderPath).toLowerCase());
       return true;
@@ -3267,28 +3420,38 @@ export class BackupService extends EventEmitter {
     kind?: BackupKind;
     createdAt?: string;
     notes?: string;
+    mapToken?: string | null;
   } | null {
     if (raw === null || raw.trim().length === 0) return null;
     try {
       const data = JSON.parse(raw) as {
+        server?: { map?: string };
         backup?: {
           id?: string;
           type?: string;
           kind?: string;
           createdAt?: string;
           notes?: string;
+          mapToken?: string;
         };
       };
       const backup = data.backup;
       if (backup === undefined) return null;
       const type = this.asBackupType(backup.type);
       const kind = this.asBackupKind(backup.kind);
+      const mapTokenRaw =
+        typeof backup.mapToken === "string" && backup.mapToken.trim().length > 0
+          ? backup.mapToken.trim()
+          : typeof data.server?.map === "string" && data.server.map.trim().length > 0
+            ? data.server.map.trim()
+            : null;
       return {
         id: typeof backup.id === "string" ? backup.id : undefined,
         type,
         kind,
         createdAt: typeof backup.createdAt === "string" ? backup.createdAt : undefined,
         notes: typeof backup.notes === "string" ? backup.notes : undefined,
+        mapToken: mapTokenRaw,
       };
     } catch {
       return null;

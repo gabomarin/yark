@@ -16,12 +16,14 @@ describe("formatBackupDetails", () => {
       completedAt: "2026-07-28T12:01:00.000Z",
       notes:
         "ENOENT: no such file or directory, lstat 'C:\\SavedArks\\x.arkrbf'",
+      mapToken: "TheIsland_WP",
     };
     const text = formatBackupDetails({ id: "srv-a", name: "Island" }, backup);
     expect(text).toContain("Server: Island (srv-a)");
     expect(text).toContain("Backup ID: bak-1");
     expect(text).toContain("Type: scheduled");
     expect(text).toContain("Kind: world");
+    expect(text).toContain("Map: TheIsland_WP");
     expect(text).toContain("Status: failed");
     expect(text).toContain("Path: C:\\Backups\\World\\a.zip");
     expect(text).toContain("ENOENT: no such file or directory");
@@ -39,10 +41,12 @@ describe("formatBackupDetails", () => {
       createdAt: "2026-07-28T12:00:00.000Z",
       completedAt: null,
       notes: null,
+      mapToken: "TheIsland_WP",
     };
 
     const text = formatBackupDetails({ id: "srv-a", name: "Island" }, backup);
     expect(text).toContain("Created: 2026-07-28T12:00:00.000Z");
     expect(text).toContain("Finished: (not finished)");
+    expect(text).toContain("Map: TheIsland_WP");
   });
 });

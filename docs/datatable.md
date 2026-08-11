@@ -19,7 +19,7 @@ Selective use of `mantine-datatable` via the shared `YarkDataTable` wrapper
 
 | Surface | Decision | Notes |
 | --- | --- | --- |
-| **Backup history** | **Adopt** (shipped first) | Multi-select, status/type, restore/delete actions |
+| **Backup history** | **Adopt** (shipped first) | Multi-select, status/type, restore/delete actions; column sort + resize |
 | **INI visual grid** | Conditional / keep custom for now | Needs sticky UI-category headers + in-cell editors |
 | **Fleet / server events** | **Keep** Accordion | Narrative expand (#102); poor table fit |
 | **Updates job history** | Keep `SelectableListRow` master–detail for now | Optional later |

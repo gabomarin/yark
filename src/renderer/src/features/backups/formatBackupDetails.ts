@@ -15,6 +15,9 @@ export function formatBackupDetails(
     `Backup ID: ${backup.id}`,
     `Type: ${backup.type}`,
     `Kind: ${backup.kind}`,
+    ...(backup.kind === "world"
+      ? [`Map: ${backup.mapToken ?? "(unknown)"}`]
+      : []),
     `Status: ${backup.status}`,
     `Created: ${backup.createdAt}`,
     `Finished: ${backup.completedAt ?? "(not finished)"}`,

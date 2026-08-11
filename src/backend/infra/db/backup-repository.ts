@@ -25,6 +25,7 @@ interface BackupRow {
   created_at: string;
   completed_at: string | null;
   notes: string | null;
+  map_token: string | null;
 }
 
 export interface RestoreHistoryRecord {
@@ -66,6 +67,12 @@ function normalizeKind(value: string | null | undefined): BackupKind {
   return "world";
 }
 
+function normalizeMapToken(value: string | null | undefined): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 function rowToBackup(row: BackupRow): BackupRecord {
   return {
     id: row.id,
@@ -78,6 +85,7 @@ function rowToBackup(row: BackupRow): BackupRecord {
     createdAt: row.created_at,
     completedAt: row.completed_at,
     notes: row.notes,
+    mapToken: normalizeMapToken(row.map_token),
   };
 }
 
@@ -115,14 +123,16 @@ export class BackupRepository {
     kind: BackupKind;
     path: string;
     notes: string | null;
+    mapToken?: string | null;
   }): BackupRecord {
     const id = randomUUID();
     const createdAt = new Date().toISOString();
+    const mapToken = normalizeMapToken(input.mapToken);
     this.db
       .prepare(
         `INSERT INTO backups (
-          id, server_id, type, kind, path, size_bytes, status, created_at, completed_at, notes
-        ) VALUES (?, ?, ?, ?, ?, 0, 'running', ?, NULL, ?)`,
+          id, server_id, type, kind, path, size_bytes, status, created_at, completed_at, notes, map_token
+        ) VALUES (?, ?, ?, ?, ?, 0, 'running', ?, NULL, ?, ?)`,
       )
       .run(
         id,
@@ -132,6 +142,7 @@ export class BackupRepository {
         input.path,
         createdAt,
         input.notes,
+        mapToken,
       );
 
     return {
@@ -145,6 +156,7 @@ export class BackupRepository {
       createdAt,
       completedAt: null,
       notes: input.notes,
+      mapToken,
     };
   }
 
@@ -335,13 +347,15 @@ export class BackupRepository {
     createdAt: string;
     completedAt: string;
     notes: string | null;
+    mapToken?: string | null;
   }): BackupRecord {
     const id = input.id ?? randomUUID();
+    const mapToken = normalizeMapToken(input.mapToken);
     this.db
       .prepare(
         `INSERT INTO backups (
-          id, server_id, type, kind, path, size_bytes, status, created_at, completed_at, notes
-        ) VALUES (?, ?, ?, ?, ?, ?, 'completed', ?, ?, ?)`,
+          id, server_id, type, kind, path, size_bytes, status, created_at, completed_at, notes, map_token
+        ) VALUES (?, ?, ?, ?, ?, ?, 'completed', ?, ?, ?, ?)`,
       )
       .run(
         id,
@@ -353,6 +367,7 @@ export class BackupRepository {
         input.createdAt,
         input.completedAt,
         input.notes,
+        mapToken,
       );
     const record = this.getBackup(id);
     if (record === null) {

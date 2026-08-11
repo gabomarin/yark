@@ -560,6 +560,20 @@ export interface BackupRecord {
   createdAt: string;
   completedAt: string | null;
   notes: string | null;
+  /**
+   * Active map token for world backups (e.g. `TheIsland_WP`).
+   * `null` for players/ini and pre-per-map world rows.
+   */
+  mapToken: string | null;
+}
+
+/** Options for restoring a completed backup archive. */
+export interface RestoreBackupOptions {
+  /**
+   * World restore only: when true (default), overlay `.arkprofile` / `.arktribe`
+   * companions from the archive. When false, apply map `.ark` (+ anti-corruption bak) only.
+   */
+  restoreProfilesTribes?: boolean;
 }
 
 export interface BackupPolicy {
@@ -568,7 +582,7 @@ export interface BackupPolicy {
   enabled: boolean;
   /** Minutes between scheduled world backups. Minimum 5; default 60. */
   intervalMinutes: number;
-  /** Keep the last N completed world backups. Default 20. */
+  /** Keep the last N completed world backups per map token. Default 20. */
   retainCountWorld: number;
   /**
    * Keep the last N completed player-profile backups per player

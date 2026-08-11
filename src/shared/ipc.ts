@@ -8,6 +8,7 @@ import type {
   BackupKind,
   BackupPolicy,
   BackupRecord,
+  RestoreBackupOptions,
   ClusterComplianceReport,
   ClusterIniTemplate,
   ClusterIniTemplateApplyResult,
@@ -448,7 +449,11 @@ export interface RendererApi {
     serverId: string,
     backupIds: string[],
   ): Promise<IpcResult<number>>;
-  restoreBackup(serverId: string, backupId: string): Promise<IpcResult<void>>;
+  restoreBackup(
+    serverId: string,
+    backupId: string,
+    options?: RestoreBackupOptions,
+  ): Promise<IpcResult<void>>;
   getBackupPolicy(serverId: string): Promise<IpcResult<BackupPolicy>>;
   setBackupPolicy(
     serverId: string,

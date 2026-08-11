@@ -187,6 +187,12 @@ const MIGRATIONS: Migration[] = [
       ALTER TABLE servers ADD COLUMN map_mod_id TEXT;
     `,
   },
+  {
+    version: 13,
+    sql: `
+      ALTER TABLE backups ADD COLUMN map_token TEXT;
+    `,
+  },
 ];
 
 /** Default SQLite lock wait before open/migrate fails (see #218). */

@@ -23,19 +23,23 @@ describe("BackupRepository", () => {
       kind: "world",
       path: "C:\\backups\\x",
       notes: null,
+      mapToken: "TheIsland_WP",
     });
     expect(started.status).toBe("running");
     expect(started.kind).toBe("world");
+    expect(started.mapToken).toBe("TheIsland_WP");
 
     const completed = repo.completeBackup(started.id, 1024);
     expect(completed?.status).toBe("completed");
     expect(completed?.sizeBytes).toBe(1024);
     expect(completed?.kind).toBe("world");
+    expect(completed?.mapToken).toBe("TheIsland_WP");
     expect(completed?.completedAt).toBeTruthy();
 
     const list = repo.listBackups("s1", 10);
     expect(list).toHaveLength(1);
     expect(list[0]?.id).toBe(started.id);
+    expect(list[0]?.mapToken).toBe("TheIsland_WP");
   });
 
   it("completeBackup accepts an explicit completedAt for recovery", () => {

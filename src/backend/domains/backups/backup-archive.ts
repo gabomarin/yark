@@ -62,16 +62,18 @@ async function listFilesRecursive(root: string): Promise<string[]> {
 }
 
 /**
- * ASA save blobs are already dense; use zlib level 1 (fast) instead of the
- * default level 6 when packaging world/players archives.
+ * ASA save blobs are already dense; use zlib level 4 (moderate) instead of the
+ * yazl default (6) when packaging world/players archives.
  */
-export const ASA_SAVE_ZIP_COMPRESSION_LEVEL = 1;
+export const ASA_SAVE_ZIP_COMPRESSION_LEVEL = 4;
 
 export function isAsaSaveBlobZipEntry(entryName: string): boolean {
   const lower = basename(entryName).toLowerCase();
   return (
     lower.endsWith(".ark")
+    || lower.endsWith(".ark.bak")
     || lower.endsWith(".arktribe")
+    || lower.endsWith(".tribebak")
     || lower.endsWith(".arkprofile")
     || lower.endsWith(".arkprofile.bak")
     || lower.endsWith(".profilebak")

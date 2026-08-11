@@ -13,6 +13,7 @@ import {
   backupDiskAlertSettingsSchema,
   backupKindSchema,
   backupPolicyWriteSchema,
+  restoreBackupOptionsSchema,
   cloneWithParamsSchema,
   clusterIdSchema,
   clusterIniFileSelectionSchema,
@@ -345,10 +346,11 @@ export const ipcArgSchemas = {
       .array(nonEmptyStringSchema("Backup id", MAX_BACKUP_ID_LENGTH))
       .max(MAX_BACKUP_IDS_PER_REQUEST),
   ]),
-  [IPC.backupsRestore]: z.tuple([
+  [IPC.backupsRestore]: ipcTuple(
     serverIdSchema,
     nonEmptyStringSchema("Backup id", MAX_BACKUP_ID_LENGTH),
-  ]),
+    restoreBackupOptionsSchema.nullish(),
+  ),
   [IPC.backupsGetPolicy]: z.tuple([serverIdSchema]),
   [IPC.backupsSetPolicy]: z.tuple([serverIdSchema, backupPolicyWriteSchema]),
   [IPC.backupsResolveRoot]: z.tuple([serverIdSchema]),

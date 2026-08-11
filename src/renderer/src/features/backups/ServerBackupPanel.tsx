@@ -14,9 +14,9 @@ import {
   ActionIcon,
   Badge,
   Button,
+  Checkbox,
   Group,
   NumberInput,
-  Select,
   Stack,
   Switch,
   Tabs,
@@ -28,8 +28,7 @@ import {
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
-import { backupFinishedAt, playerBackupDisplayName } from "@shared/backup-player-meta";
-import { formatLogDateTime } from "@shared/format-log-datetime";
+import { playerBackupDisplayName } from "@shared/backup-player-meta";
 import { isInstallationReady } from "@shared/installation-health";
 import type {
   BackupKind,
@@ -43,6 +42,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { PathField } from "@ui/PathField/PathField";
 import { BackupHistoryTable } from "./BackupHistoryTable";
+import { BackupRestoreModal } from "./BackupRestoreModal";
 import { runBackupExport, runBackupImport } from "./backupPortability";
 import { formatBackupDetails } from "./formatBackupDetails";
 import classes from "./BackupsPage.module.css";
@@ -64,19 +64,11 @@ interface Props {
 
 type BusyOp = "create" | "import" | "export" | "other";
 type DraftPolicy = Omit<BackupPolicy, "serverId" | "updatedAt">;
-type PlayerSort = "newest" | "oldest" | "name-asc" | "name-desc";
 
 const KIND_TABS: Array<{ kind: BackupKind; label: string }> = [
   { kind: "world", label: "World save" },
   { kind: "players", label: "Player profiles" },
   { kind: "ini", label: "INI" },
-];
-
-const PLAYER_SORT_OPTIONS: Array<{ value: PlayerSort; label: string }> = [
-  { value: "newest", label: "Newest first" },
-  { value: "oldest", label: "Oldest first" },
-  { value: "name-asc", label: "Player A–Z" },
-  { value: "name-desc", label: "Player Z–A" },
 ];
 
 const TOAST_POSITION = "bottom-right" as const;
@@ -87,10 +79,6 @@ function formatSize(sizeBytes: number): string {
     return `${(sizeBytes / (1024 * 1024)).toFixed(2)} MB`;
   }
   return `${(sizeBytes / 1024).toFixed(1)} KB`;
-}
-
-function formatWhen(iso: string): string {
-  return formatLogDateTime(iso, { fallback: iso });
 }
 
 const relativeTimeFormat = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
@@ -156,26 +144,6 @@ function showBackupError(message: string): void {
   showBackupToast(message, { color: "red", autoClose: 8000 });
 }
 
-function compareByFinishedAt(a: BackupRecord, b: BackupRecord, newestFirst: boolean): number {
-  const diff =
-    new Date(backupFinishedAt(a)).getTime() - new Date(backupFinishedAt(b)).getTime();
-  return newestFirst ? -diff : diff;
-}
-
-function sortPlayerBackups(backups: BackupRecord[], sort: PlayerSort): BackupRecord[] {
-  const next = [...backups];
-  next.sort((a, b) => {
-    if (sort === "newest") return compareByFinishedAt(a, b, true);
-    if (sort === "oldest") return compareByFinishedAt(a, b, false);
-    const nameA = playerBackupDisplayName(a).toLocaleLowerCase();
-    const nameB = playerBackupDisplayName(b).toLocaleLowerCase();
-    const byName = nameA.localeCompare(nameB);
-    if (byName !== 0) return sort === "name-asc" ? byName : -byName;
-    return compareByFinishedAt(a, b, true);
-  });
-  return next;
-}
-
 function worldPolicySummary(
   draft: DraftPolicy,
   resolvedRoot: string | null,
@@ -223,6 +191,13 @@ function draftEqualsDraft(a: DraftPolicy, b: DraftPolicy): boolean {
 
 const POLICY_AUTOSAVE_MS = 450;
 
+function sameMapToken(a: string | null | undefined, b: string | null | undefined): boolean {
+  const left = (a ?? "").trim().toLowerCase();
+  const right = (b ?? "").trim().toLowerCase();
+  if (left.length === 0 || right.length === 0) return false;
+  return left === right;
+}
+
 function backupsListKey(rows: BackupRecord[]): string {
   return rows
     .map(
@@ -237,6 +212,7 @@ function backupsListKey(rows: BackupRecord[]): string {
           backup.completedAt ?? "",
           backup.path,
           backup.notes ?? "",
+          backup.mapToken ?? "",
         ].join(":"),
     )
     .join("\0");
@@ -254,7 +230,9 @@ export function ServerBackupPanel(props: Props): ReactElement {
   const [busyOp, setBusyOp] = useState<BusyOp | null>(null);
   const [browsingDir, setBrowsingDir] = useState(false);
   const [playerSearch, setPlayerSearch] = useState("");
-  const [playerSort, setPlayerSort] = useState<PlayerSort>("newest");
+  const [currentMapOnly, setCurrentMapOnly] = useState(true);
+  const [restoreTarget, setRestoreTarget] = useState<BackupRecord | null>(null);
+  const [restoreProfilesTribes, setRestoreProfilesTribes] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const loadGenRef = useRef(0);
   const saveGenRef = useRef(0);
@@ -289,16 +267,33 @@ export function ServerBackupPanel(props: Props): ReactElement {
   );
 
   const displayedBackups = useMemo(() => {
-    if (activeKind !== "players") return kindBackups;
-    const query = playerSearch.trim().toLocaleLowerCase();
-    const filtered =
-      query.length === 0
-        ? kindBackups
-        : kindBackups.filter((backup) =>
-            playerBackupDisplayName(backup).toLocaleLowerCase().includes(query),
-          );
-    return sortPlayerBackups(filtered, playerSort);
-  }, [activeKind, kindBackups, playerSearch, playerSort]);
+    if (activeKind === "players") {
+      const query = playerSearch.trim().toLocaleLowerCase();
+      if (query.length === 0) return kindBackups;
+      return kindBackups.filter((backup) =>
+        playerBackupDisplayName(backup).toLocaleLowerCase().includes(query),
+      );
+    }
+    if (activeKind === "world" && currentMapOnly) {
+      return kindBackups.filter((backup) =>
+        sameMapToken(backup.mapToken, props.server.map),
+      );
+    }
+    return kindBackups;
+  }, [
+    activeKind,
+    kindBackups,
+    playerSearch,
+    currentMapOnly,
+    props.server.map,
+  ]);
+
+  const hiddenOtherMapWorldCount = useMemo(() => {
+    if (activeKind !== "world" || !currentMapOnly) return 0;
+    return kindBackups.filter(
+      (backup) => !sameMapToken(backup.mapToken, props.server.map),
+    ).length;
+  }, [activeKind, currentMapOnly, kindBackups, props.server.map]);
 
   const load = async (serverId: string, opts?: { quiet?: boolean }) => {
     const quiet = opts?.quiet === true;
@@ -620,43 +615,47 @@ export function ServerBackupPanel(props: Props): ReactElement {
       );
       return;
     }
+    setRestoreProfilesTribes(true);
+    setRestoreTarget(backup);
+  };
+
+  const closeRestoreModal = () => {
+    if (busyOp === "other") return;
+    setRestoreTarget(null);
+  };
+
+  const runRestore = async () => {
+    if (restoreTarget === null) return;
+    const backup = restoreTarget;
     const label = kindLabel(backup.kind);
-    modals.openConfirmModal({
-      title: "Restore backup?",
-      children: (
-        <Text size="sm">
-          Restore <strong>{label}</strong> from{" "}
-          {formatWhen(backupFinishedAt(backup))} onto{" "}
-          <strong>{props.server.name}</strong>? Only that kind of data is replaced.
-          A safety backup of the same kind is created first. The server must stay stopped.
-        </Text>
-      ),
-      labels: { confirm: "Restore", cancel: "Cancel" },
-      confirmProps: { color: "orange" },
-      onConfirm: () => {
-        void (async () => {
-          setBusyOp("other");
-          try {
-            const result = await window.api.restoreBackup(props.server.id, backup.id);
-            if (!result.ok) {
-              showBackupError(result.error ?? "Could not restore backup");
-              return;
-            }
-            await load(props.server.id);
-            showBackupToast(
-              `${label} backup restored. A pre-restore safety copy was kept.`,
-            );
-          } finally {
-            setBusyOp(null);
-          }
-        })();
-      },
-    });
+    setBusyOp("other");
+    try {
+      const result = await window.api.restoreBackup(
+        props.server.id,
+        backup.id,
+        backup.kind === "world"
+          ? { restoreProfilesTribes }
+          : undefined,
+      );
+      if (!result.ok) {
+        showBackupError(result.error ?? "Could not restore backup");
+        return;
+      }
+      setRestoreTarget(null);
+      await load(props.server.id);
+      showBackupToast(
+        `${label} backup restored. A pre-restore safety copy was kept.`,
+      );
+    } finally {
+      setBusyOp(null);
+    }
   };
 
   const emptyHint =
     activeKind === "world"
-      ? "No world backups yet. Create one manually or enable the world schedule."
+      ? currentMapOnly && hiddenOtherMapWorldCount > 0
+        ? `No world backups for ${props.server.map} yet. ${hiddenOtherMapWorldCount} backup${hiddenOtherMapWorldCount === 1 ? "" : "s"} for other maps are hidden — uncheck “Current map only” to show them.`
+        : "No world backups yet. Create one manually or enable the world schedule."
       : activeKind === "players"
         ? playerSearch.trim().length > 0
           ? "No player backups match this search."
@@ -842,11 +841,11 @@ export function ServerBackupPanel(props: Props): ReactElement {
                       </Group>
                       <Group gap={6} align="center" wrap="nowrap">
                         <Text size="xs" component="label" htmlFor="backup-retain-world">
-                          Keep last
+                          Keep last (per map)
                         </Text>
                         <NumberInput
                           id="backup-retain-world"
-                          aria-label="Keep last"
+                          aria-label="Keep last (per map)"
                           size="xs"
                           min={1}
                           max={500}
@@ -929,36 +928,24 @@ export function ServerBackupPanel(props: Props): ReactElement {
               className={classes.listToolbar}
             >
               <Group gap="xs" wrap="wrap" align="center">
+                {activeKind === "world" && kindBackups.length > 0 && (
+                  <Checkbox
+                    size="xs"
+                    label={`Current map only (${props.server.map})`}
+                    checked={currentMapOnly}
+                    onChange={(event) => setCurrentMapOnly(event.currentTarget.checked)}
+                  />
+                )}
                 {activeKind === "players" && kindBackups.length > 0 && (
-                  <>
-                    <TextInput
-                      size="xs"
-                      placeholder="Search players"
-                      aria-label="Search players"
-                      leftSection={<MagnifyingGlass size={14} />}
-                      value={playerSearch}
-                      onChange={(event) => setPlayerSearch(event.currentTarget.value)}
-                      className={classes.playerSearch}
-                    />
-                    <Select
-                      size="xs"
-                      aria-label="Sort player backups"
-                      data={PLAYER_SORT_OPTIONS}
-                      value={playerSort}
-                      onChange={(value) => {
-                        if (
-                          value === "newest"
-                          || value === "oldest"
-                          || value === "name-asc"
-                          || value === "name-desc"
-                        ) {
-                          setPlayerSort(value);
-                        }
-                      }}
-                      allowDeselect={false}
-                      className={classes.playerSort}
-                    />
-                  </>
+                  <TextInput
+                    size="xs"
+                    placeholder="Search players"
+                    aria-label="Search players"
+                    leftSection={<MagnifyingGlass size={14} />}
+                    value={playerSearch}
+                    onChange={(event) => setPlayerSearch(event.currentTarget.value)}
+                    className={classes.playerSearch}
+                  />
                 )}
               </Group>
               <Group gap={6} wrap="wrap" align="center">
@@ -1038,6 +1025,8 @@ export function ServerBackupPanel(props: Props): ReactElement {
 
             <div className={classes.listScroll} data-backup-list>
               <BackupHistoryTable
+                key={activeKind}
+                kind={activeKind}
                 records={displayedBackups}
                 selectedIds={selectedIds}
                 busy={busy}
@@ -1057,6 +1046,17 @@ export function ServerBackupPanel(props: Props): ReactElement {
           </Stack>
         </Tabs>
       </AppSurfaceCard>
+
+      <BackupRestoreModal
+        backup={restoreTarget}
+        serverName={props.server.name}
+        serverMap={props.server.map}
+        restoreProfilesTribes={restoreProfilesTribes}
+        busy={busyOp === "other"}
+        onRestoreProfilesTribesChange={setRestoreProfilesTribes}
+        onClose={closeRestoreModal}
+        onConfirm={() => void runRestore()}
+      />
     </Stack>
   );
 }
