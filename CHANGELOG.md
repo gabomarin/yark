@@ -11,7 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
-- Profile SQLite **snapshots** before schema migrations and after each healthy reopen of an existing DB (rotating copies under `profile-db-snapshots/` for manual rollback) (#252).
+- Profile SQLite **snapshots** before schema migrations and after each healthy reopen of an existing DB; boot recovery can **Restore snapshot** (preferred) instead of only starting empty (#252).
 
 ### Security
 

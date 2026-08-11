@@ -105,10 +105,10 @@ When that file already exists, boot also keeps rotating snapshots under
 `profile-db-snapshots/` (before schema migrations and after each healthy reopen)
 for manual rollback — see [profile-database.md](profile-database.md) (#252).
 If the database cannot open or migrate, boot shows a recovery dialog instead of
-a blank window: **Open folder**, **Quit**, or **Start empty…** (YARK does not
-repair the file; choosing Start empty renames the broken DB + WAL/SHM as
-`*.corrupt.<timestamp>` and continues with a blank DB). ASA installs on disk are
-not deleted. See [profile-database.md](profile-database.md) (#218).
+a blank window: **Restore snapshot** (when available), **Open folder**, **Quit**,
+or **Start empty…** (YARK does not repair the live file; Start empty / Restore
+rename the broken DB + WAL/SHM as `*.corrupt.<timestamp>` first). ASA installs on
+disk are not deleted. See [profile-database.md](profile-database.md) (#218, #252).
 
 ### Log retention (#84)
 

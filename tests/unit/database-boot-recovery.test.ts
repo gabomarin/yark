@@ -233,4 +233,28 @@ describe("openDatabaseWithOperatorRecovery", () => {
       db.close();
     }
   });
+
+  it("restores the preferred snapshot then reopens", async () => {
+    const dir = tempDir("yark-db-restore-");
+    const dbPath = join(dir, "yark-server-manager.db");
+    openDatabase(dbPath, { takeSnapshots: false }).close();
+    openDatabase(dbPath).close();
+
+    writeFileSync(dbPath, "not a sqlite database");
+
+    const ui: DatabaseRecoveryUi = {
+      promptRecovery: vi.fn().mockResolvedValue("restore"),
+      revealDatabase: vi.fn(),
+      quitApp: vi.fn(),
+    };
+
+    const db = await openDatabaseWithOperatorRecovery(dbPath, ui);
+    try {
+      expect(db.prepare("PRAGMA quick_check").get()).toEqual({ quick_check: "ok" });
+      expect(readdirSync(dir).some((name) => name.includes(".corrupt."))).toBe(true);
+      expect(ui.promptRecovery).toHaveBeenCalledTimes(1);
+    } finally {
+      db.close();
+    }
+  });
 });

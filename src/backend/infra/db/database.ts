@@ -284,6 +284,8 @@ export function openDatabaseApplyingMigrations(
     const pendingMigrations = migrations.filter((migration) => migration.version > current);
 
     if (hadExistingOnDiskDb && pendingMigrations.length > 0) {
+      // Do not preserve or migrate a database that already fails its integrity checks.
+      assertProfileDatabaseUsable(db, path);
       try {
         writeProfileDatabaseSnapshot(db, path, "pre-migrate");
       } catch (error) {
@@ -314,7 +316,9 @@ export function openDatabaseApplyingMigrations(
       try {
         writeProfileDatabaseSnapshot(db, path, "healthy-boot");
       } catch (error) {
-        throw new DatabaseBootError("open", path, error);
+        // The live database is already known-good. Snapshot failure must not send
+        // the operator into recovery (where Start empty would quarantine valid data).
+        console.warn("[yark] Failed to write healthy profile database snapshot:", error);
       }
     }
 

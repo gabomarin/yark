@@ -1,13 +1,14 @@
 import {
   existsSync,
   mkdtempSync,
+  readFileSync,
   readdirSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   DatabaseBootError,
   openDatabase,
@@ -18,7 +19,9 @@ import {
   PROFILE_DB_SNAPSHOT_RETAIN_PER_KIND,
   formatProfileDatabaseSnapshotFileName,
   isProfileDatabaseSnapshotFileName,
+  pickPreferredProfileDatabaseSnapshot,
   resolveProfileDatabaseSnapshotDir,
+  restoreProfileDatabaseFromSnapshot,
   rotateProfileDatabaseSnapshots,
   writeProfileDatabaseSnapshot,
 } from "@backend/infra/db/database-snapshots";
@@ -166,6 +169,121 @@ describe("profile database snapshots (#252)", () => {
     expect(names).toHaveLength(1);
     expect(names[0]).toContain("healthy-boot");
     expect(names.some((name) => name.includes("pre-migrate"))).toBe(false);
+  });
+
+  it("keeps a healthy database open when its healthy-boot snapshot cannot be written", () => {
+    const dir = tempDir("yark-db-snap-healthy-fail-");
+    const dbPath = join(dir, "healthy.db");
+    openDatabase(dbPath, { takeSnapshots: false }).close();
+
+    // Occupy the snapshot directory path so mkdir fails on the healthy reopen.
+    writeFileSync(resolveProfileDatabaseSnapshotDir(dbPath), "not-a-directory");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+    const db = openDatabase(dbPath);
+    try {
+      expect(db.prepare("PRAGMA quick_check").get()).toEqual({ quick_check: "ok" });
+      expect(warn).toHaveBeenCalledWith(
+        "[yark] Failed to write healthy profile database snapshot:",
+        expect.anything(),
+      );
+    } finally {
+      db.close();
+      warn.mockRestore();
+    }
+  });
+
+  it("rejects corruption before taking a required pre-migrate snapshot", () => {
+    const dir = tempDir("yark-db-snap-corrupt-migrate-");
+    const dbPath = join(dir, "corrupt.db");
+    openDatabaseApplyingMigrations(
+      dbPath,
+      [{ version: 1, sql: "CREATE TABLE ok (id INTEGER PRIMARY KEY);" }],
+      { takeSnapshots: false },
+    ).close();
+
+    const bytes = Buffer.from(readFileSync(dbPath));
+    for (let index = 100; index < Math.min(200, bytes.length); index += 1) {
+      bytes[index] = bytes[index]! ^ 0xff;
+    }
+    writeFileSync(dbPath, bytes);
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    try {
+      openDatabaseApplyingMigrations(dbPath, [
+        { version: 1, sql: "CREATE TABLE ok (id INTEGER PRIMARY KEY);" },
+        { version: 2, sql: "ALTER TABLE ok ADD COLUMN note TEXT;" },
+      ]);
+      expect.unreachable("expected the corrupt database to fail before migration");
+    } catch (error) {
+      expect(error).toBeInstanceOf(DatabaseBootError);
+      expect((error as DatabaseBootError).kind).toBe("open");
+      expect(existsSync(resolveProfileDatabaseSnapshotDir(dbPath))).toBe(false);
+    } finally {
+      errorLog.mockRestore();
+    }
+  });
+
+  it("prefers pre-migrate snapshots for migrate failures and healthy-boot for open failures", () => {
+    const dir = tempDir("yark-db-snap-pick-");
+    const dbPath = join(dir, "pick.db");
+    const db = openDatabase(dbPath, { takeSnapshots: false });
+    try {
+      writeProfileDatabaseSnapshot(db, dbPath, "healthy-boot", {
+        now: new Date("2026-08-10T10:00:00.000Z"),
+      });
+      writeProfileDatabaseSnapshot(db, dbPath, "pre-migrate", {
+        now: new Date("2026-08-10T11:00:00.000Z"),
+      });
+      writeProfileDatabaseSnapshot(db, dbPath, "healthy-boot", {
+        now: new Date("2026-08-10T12:00:00.000Z"),
+      });
+    } finally {
+      db.close();
+    }
+
+    const forMigrate = pickPreferredProfileDatabaseSnapshot(dbPath, "migrate");
+    expect(forMigrate?.kind).toBe("pre-migrate");
+    expect(forMigrate?.fileName).toContain("2026-08-10T11-00-00-000Z");
+
+    const forOpen = pickPreferredProfileDatabaseSnapshot(dbPath, "open");
+    expect(forOpen?.kind).toBe("healthy-boot");
+    expect(forOpen?.fileName).toContain("2026-08-10T12-00-00-000Z");
+  });
+
+  it("restores a snapshot by quarantining the live DB then copying the file", () => {
+    const dir = tempDir("yark-db-snap-restore-file-");
+    const dbPath = join(dir, "live.db");
+    openDatabase(dbPath, { takeSnapshots: false }).close();
+    const db = openDatabase(dbPath, { takeSnapshots: false });
+    let snapshotPath = "";
+    try {
+      db.prepare(
+        "INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)",
+      ).run("restored", "yes", new Date().toISOString());
+      snapshotPath = writeProfileDatabaseSnapshot(db, dbPath, "healthy-boot", {
+        now: new Date("2026-08-10T13:00:00.000Z"),
+      }).snapshotPath;
+    } finally {
+      db.close();
+    }
+
+    writeFileSync(dbPath, "broken");
+    const result = restoreProfileDatabaseFromSnapshot(dbPath, snapshotPath, {
+      now: new Date("2026-08-10T14:00:00.000Z"),
+    });
+    expect(result.restoredFrom).toBe(snapshotPath);
+    expect(existsSync(`${dbPath}.corrupt.2026-08-10T14-00-00-000Z`)).toBe(true);
+
+    const restored = openDatabase(dbPath, { takeSnapshots: false });
+    try {
+      const row = restored
+        .prepare("SELECT value FROM app_settings WHERE key = ?")
+        .get("restored") as { value: string };
+      expect(row.value).toBe("yes");
+    } finally {
+      restored.close();
+    }
   });
 
   it("fails migration when a required pre-migrate snapshot cannot be written", () => {
