@@ -318,7 +318,7 @@ describe("ServerCard", () => {
             health: "suspicious",
             reasonCodes: ["foreign_contents"],
             guidance:
-              "This folder already has unrelated files. Point the profile at an empty folder or a real ASA install before installing.",
+              "Point the profile at a real ASA server install.",
           }}
           officialSteamBuild={null}
           onStart={vi.fn()}

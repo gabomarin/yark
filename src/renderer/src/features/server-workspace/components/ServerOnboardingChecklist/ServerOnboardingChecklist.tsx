@@ -90,7 +90,7 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
             </Group>
             <Text c="dimmed" size="sm" mb="sm">
               {filesInstalled
-                ? "Files are already installed. You can verify or update from the side panel."
+                ? "ASA files are already on disk for this profile. You can verify or update from the side panel when needed."
                 : "Download the binaries with SteamCMD whenever you want. It does not block the rest of the workspace."}
             </Text>
             <Group gap="xs">

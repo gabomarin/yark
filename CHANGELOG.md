@@ -12,6 +12,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Added
 
 - Profile SQLite **snapshots** before schema migrations and after each healthy reopen of an existing DB; boot recovery can **Restore snapshot** (preferred) instead of only starting empty (#252).
+- **Import install** wizard adopts an existing ASA dedicated folder as a YARK profile (no SteamCMD); discovers mods disabled, and loads CurseForge names when the proxy is available (#254).
 
 ### Security
 
@@ -19,6 +20,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- **Import install** blocks folders already used by a YARK profile, and keeps Server password optional without shifting the Admin password row (#254).
 - **YARK updates** keep a finished or in-progress download when Check now or the quiet startup check runs again, so Restart and install no longer disappears behind Download.
 
 ## [0.9.1] - 2026-08-10

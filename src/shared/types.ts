@@ -123,6 +123,39 @@ export interface ServerInstallationInfo {
   checkedAt: string;
 }
 
+/** Prefill values from probing an existing ASA install root (#254). */
+export interface ImportInstallSuggestions {
+  name: string;
+  sessionName: string;
+  map: string;
+  mapModId: string | null;
+  gamePort: number;
+  queryPort: number;
+  rconPort: number;
+  adminPassword: string;
+  serverPassword: string | null;
+  /** Discovered CurseForge Project IDs (persist disabled on import). */
+  mods: string[];
+}
+
+/** Result of `servers:probe-import` before creating a profile (#254). */
+export interface ImportInstallProbe {
+  installDir: string;
+  installation: ServerInstallationInfo;
+  suggestions: ImportInstallSuggestions;
+  /** True only when install health is `ready` and the folder is not already managed (#254). */
+  canContinue: boolean;
+  /**
+   * True when the chosen path sits under a `ShooterGame` segment
+   * (e.g. `...\ShooterGame\Binaries\Win64`) instead of the dedicated root.
+   */
+  nestedSubfolder: boolean;
+  /** Suggested dedicated root (parent of `ShooterGame`) when nested, else null. */
+  suggestedInstallDir: string | null;
+  /** Existing profile name when `installDir` is already used by YARK; else null. */
+  alreadyManagedBy: string | null;
+}
+
 /** Installation probe plus global official metadata (CDN), even when no servers exist. */
 export interface ServerInstallationSnapshot {
   officialVersion: string | null;

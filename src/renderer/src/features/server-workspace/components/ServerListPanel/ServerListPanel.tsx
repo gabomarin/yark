@@ -6,6 +6,7 @@ import {
   Button,
   Divider,
   Group,
+  Menu,
   Stack,
   Text,
   Tooltip,
@@ -13,6 +14,7 @@ import {
 } from "@mantine/core";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { Fragment, useMemo, useState } from "react";
+import { AddServerSplitButton } from "@features/servers/components/AddServerSplitButton/AddServerSplitButton";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import { SearchField } from "@ui/SearchField/SearchField";
 import {
@@ -28,6 +30,7 @@ interface Props {
   statuses: Map<string, ServerRuntimeInfo>;
   onSelectServer: (serverId: string) => void;
   onAddServer?: () => void;
+  onImportServer?: () => void;
   /** Compact icon-rail (#107). */
   iconMode?: boolean;
   /** Explicit Full ↔ Rail toggle (wide layout). */
@@ -273,16 +276,44 @@ export function ServerListPanel(props: Props): ReactElement {
       {props.onAddServer !== undefined && (
         <div className={classes.footer}>
           {iconMode ? (
-            <Tooltip label="Add server" position="right" withArrow>
-              <ActionIcon
-                variant="light"
-                size="lg"
-                aria-label="Add server"
-                onClick={props.onAddServer}
-              >
-                <Plus size={18} />
-              </ActionIcon>
-            </Tooltip>
+            <Group gap={4} justify="center" wrap="nowrap">
+              <Tooltip label="Add server" position="right" withArrow>
+                <ActionIcon
+                  variant="light"
+                  size="lg"
+                  aria-label="Add server"
+                  onClick={props.onAddServer}
+                >
+                  <Plus size={18} />
+                </ActionIcon>
+              </Tooltip>
+              {props.onImportServer !== undefined && (
+                <Menu shadow="md" withinPortal position="right-end">
+                  <Menu.Target>
+                    <ActionIcon
+                      variant="default"
+                      size="lg"
+                      aria-label="More add-server options"
+                    >
+                      <CaretDown size={14} />
+                    </ActionIcon>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item onClick={props.onImportServer}>
+                      Import install
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+              )}
+            </Group>
+          ) : props.onImportServer !== undefined ? (
+            <AddServerSplitButton
+              primaryLabel="Add server"
+              onCreate={props.onAddServer}
+              onImport={props.onImportServer}
+              fullWidth
+              size="sm"
+            />
           ) : (
             <Button
               fullWidth

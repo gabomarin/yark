@@ -231,6 +231,54 @@ export class InstanceService extends EventEmitter {
     return profile;
   }
 
+  /**
+   * Adopt an existing ASA dedicated root as a YARK profile (#254).
+   * Uses the absolute `installDir` as-is (does not nest via resolveServerInstallDir).
+   * No SteamCMD sync. Requires install health `ready` (no incomplete/suspicious).
+   * All discovered mods are forced into `disabledMods` until the operator enables them.
+   */
+  async importExisting(input: ServerProfileInput): Promise<ServerProfile> {
+    const installDir = normalizeWindowsPath(input.installDir);
+    const mods = [...(input.mods ?? [])];
+    const normalized: ServerProfileInput = {
+      ...input,
+      installDir,
+      mods,
+      disabledMods: [...mods],
+    };
+    this.assertValidInput(normalized);
+    this.assertUniqueName(normalized.name);
+    this.assertNoPortConflicts(normalized);
+    this.assertUniqueInstallDir(installDir);
+
+    const installation = await inspectServerInstallationAsync(
+      `import:${normalized.name}`,
+      installDir,
+      { bypassCache: true },
+    );
+    if (installation.health !== "ready") {
+      throw new Error(
+        installation.guidance ||
+          `Folder is not a ready ASA dedicated root (health: ${installation.health}). Pick the folder that contains ShooterGame.`,
+      );
+    }
+
+    const profile = this.repo.create(normalized);
+    await this.ensureDefaultIniFiles(profile.installDir);
+    try {
+      await syncProfileSettingsToIni(profile);
+    } catch {
+      // Existing GUS may be locked; start() syncs again before launch.
+    }
+    this.repo.addEvent(
+      profile.id,
+      "server_created",
+      "info",
+      `Server "${profile.name}" imported from existing install at ${profile.installDir} (map ${profile.map})`,
+    );
+    return profile;
+  }
+
   private async ensureDefaultIniFiles(installDir: string): Promise<void> {
     const configDir = join(
       installDir,
@@ -1564,12 +1612,13 @@ export class InstanceService extends EventEmitter {
   }
 
   private assertUniqueInstallDir(installDir: string, excludeId?: string): void {
-    const target = installDirKey(installDir);
+    const target = installDirKey(normalizeWindowsPath(installDir));
     const clash = this.repo
       .list()
       .find(
         (profile) =>
-          profile.id !== excludeId && installDirKey(profile.installDir) === target,
+          profile.id !== excludeId &&
+          installDirKey(normalizeWindowsPath(profile.installDir)) === target,
       );
     if (clash !== undefined) {
       throw new Error(

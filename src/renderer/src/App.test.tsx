@@ -9,6 +9,8 @@ function createApiMock(): RendererApi {
   return {
     listServers: vi.fn().mockResolvedValue({ ok: true, data: [] }),
     createServer: vi.fn(),
+    probeImportInstall: vi.fn(),
+    importExistingServer: vi.fn(),
     updateServer: vi.fn(),
     updateServerPatch: vi.fn(),
     setServerEnabled: vi.fn(),
