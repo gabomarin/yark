@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- **YARK updates** keep a finished or in-progress download when Check now or the quiet startup check runs again, so Restart and install no longer disappears behind Download.
+
 ## [0.9.1] - 2026-08-10
 
 ### Added

@@ -5,8 +5,10 @@ import {
   compareSemver,
   createIdleAppUpdateStatus,
   installBlockMessage,
+  isAppUpdateInFlight,
   parseReleaseVersion,
   pickNewestAllowedRelease,
+  shouldPreserveAppUpdateProgress,
   YARK_RELEASES_API,
   YARK_RELEASES_URL,
   type AppUpdateInstallBlockReason,
@@ -65,6 +67,8 @@ export class AppUpdateService {
     if (this.startupTimer !== null) return;
     this.startupTimer = setTimeout(() => {
       this.startupTimer = null;
+      // Do not wipe a finished/in-progress download with the startup check.
+      if (isAppUpdateInFlight(this.status.phase)) return;
       void this.checkForUpdate().catch((error: unknown) => {
         console.error("Quiet YARK update check failed", error);
       });
@@ -80,12 +84,15 @@ export class AppUpdateService {
   }
 
   async checkForUpdate(): Promise<AppUpdateStatus> {
-    this.emit({
-      ...this.status,
-      phase: "checking",
-      error: null,
-      percent: null,
-    });
+    const preserveInFlight = isAppUpdateInFlight(this.status.phase);
+    if (!preserveInFlight) {
+      this.emit({
+        ...this.status,
+        phase: "checking",
+        error: null,
+        percent: null,
+      });
+    }
 
     try {
       if (this.isPackaged) {
@@ -112,6 +119,10 @@ export class AppUpdateService {
       await this.checkViaGitHubApi();
       return this.getStatus();
     } catch (error: unknown) {
+      // Keep a downloaded/in-progress update usable if the re-check fails.
+      if (isAppUpdateInFlight(this.status.phase)) {
+        return this.getStatus();
+      }
       const message = error instanceof Error ? error.message : String(error);
       this.emit({
         ...this.status,
@@ -143,6 +154,15 @@ export class AppUpdateService {
 
     try {
       await autoUpdater.downloadUpdate();
+      // Belt-and-suspenders if update-downloaded lagged the promise settle.
+      if (this.status.phase === "downloading") {
+        this.emit({
+          ...this.status,
+          phase: "ready",
+          percent: 100,
+          error: null,
+        });
+      }
       return this.getStatus();
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
@@ -196,6 +216,7 @@ export class AppUpdateService {
     autoUpdater.allowDowngrade = false;
 
     autoUpdater.on("checking-for-update", () => {
+      if (isAppUpdateInFlight(this.status.phase)) return;
       this.emit({
         ...this.status,
         phase: "checking",
@@ -208,6 +229,7 @@ export class AppUpdateService {
     });
 
     autoUpdater.on("update-not-available", () => {
+      if (isAppUpdateInFlight(this.status.phase)) return;
       this.emit({
         ...this.status,
         phase: "up-to-date",
@@ -272,6 +294,21 @@ export class AppUpdateService {
       });
       return;
     }
+    if (
+      shouldPreserveAppUpdateProgress(
+        this.status.phase,
+        this.status.availableVersion,
+        version,
+      )
+    ) {
+      this.emit({
+        ...this.status,
+        availableVersion: version,
+        releaseNotesUrl: releaseNotesUrlFor(version),
+        error: null,
+      });
+      return;
+    }
     this.emit({
       ...this.status,
       phase: "available",
@@ -305,6 +342,24 @@ export class AppUpdateService {
       throw new Error("GitHub Releases response had no usable version tag.");
     }
     if (compareSemver(remote, this.currentVersion) > 0) {
+      if (
+        shouldPreserveAppUpdateProgress(
+          this.status.phase,
+          this.status.availableVersion,
+          remote,
+        )
+      ) {
+        this.emit({
+          ...this.status,
+          availableVersion: remote,
+          releaseNotesUrl:
+            typeof newest.html_url === "string" && newest.html_url.length > 0
+              ? newest.html_url
+              : releaseNotesUrlFor(remote),
+          error: null,
+        });
+        return;
+      }
       this.emit({
         ...this.status,
         phase: "available",
@@ -316,6 +371,9 @@ export class AppUpdateService {
         error: null,
         percent: null,
       });
+      return;
+    }
+    if (isAppUpdateInFlight(this.status.phase)) {
       return;
     }
     this.emit({

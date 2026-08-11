@@ -4,8 +4,10 @@ import {
   compareSemver,
   createIdleAppUpdateStatus,
   installBlockMessage,
+  isAppUpdateInFlight,
   parseReleaseVersion,
   pickNewestAllowedRelease,
+  shouldPreserveAppUpdateProgress,
   stripVersionPrefix,
 } from "../src/shared/app-update";
 
@@ -91,5 +93,24 @@ describe("app-update helpers", () => {
   it("marks packaged idle builds as not-ready until download completes", () => {
     const status = createIdleAppUpdateStatus("0.5.2", true);
     expect(status.installBlockedReason).toBe("not-ready");
+  });
+
+  it("treats downloading and ready as in-flight update phases", () => {
+    expect(isAppUpdateInFlight("downloading")).toBe(true);
+    expect(isAppUpdateInFlight("ready")).toBe(true);
+    expect(isAppUpdateInFlight("available")).toBe(false);
+    expect(isAppUpdateInFlight("checking")).toBe(false);
+  });
+
+  it("preserves download progress when a later check reports the same version", () => {
+    expect(shouldPreserveAppUpdateProgress("ready", "0.9.1", "0.9.1")).toBe(true);
+    expect(shouldPreserveAppUpdateProgress("downloading", "0.9.1", "0.9.1")).toBe(
+      true,
+    );
+    expect(shouldPreserveAppUpdateProgress("ready", "0.9.1", "0.9.0")).toBe(true);
+    expect(shouldPreserveAppUpdateProgress("ready", "0.9.1", "0.9.2")).toBe(false);
+    expect(shouldPreserveAppUpdateProgress("available", "0.9.1", "0.9.1")).toBe(
+      false,
+    );
   });
 });

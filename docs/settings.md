@@ -126,7 +126,9 @@ In-app update for the **desktop app** (not ASA files). Uses `electron-updater`
 against GitHub Releases (`latest.yml` from the release workflow). While the app is
 `0.x`, GitHub prereleases are accepted (the release workflow marks every `0.x` tag
 as prerelease). From `1.0.0+`, only non-prerelease releases count. No silent
-download — operator must Check → Download → Restart and install.
+download — operator must Check → Download → Restart and install. A later
+Check now (or the quiet ~60s startup check) must not downgrade `ready` /
+`downloading` back to Download for the same version.
 
 | Control | IPC | Notes |
 | --- | --- | --- |
