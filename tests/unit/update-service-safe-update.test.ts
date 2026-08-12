@@ -291,10 +291,45 @@ describe("UpdateService safe update orchestration", () => {
           performUpdateServer: (serverId: string, input: typeof job) => Promise<void>;
         }
       ).performUpdateServer(h.profile.id, job),
-    ).rejects.toThrow(/stop the server before updating files/i);
+    ).rejects.toMatchObject({
+      name: "CriticalJobRecoveryBlockedError",
+      message: expect.stringMatching(/stop the server before updating files/i),
+    });
 
     expect(h.instances.stop).not.toHaveBeenCalled();
     expect(h.backups.createPreUpdateBackupForJob).not.toHaveBeenCalled();
+    expect(h.runSteamUpdate).not.toHaveBeenCalled();
+  });
+
+  it("marks an active-server queue race as blocked so Stop → Retry is offered", async () => {
+    const h = createHarness({ wasRunning: true });
+    dirs.push(h.logDir);
+    const now = new Date().toISOString();
+    const job = {
+      id: "queued-update-active-retryable",
+      type: "update" as const,
+      serverId: h.profile.id,
+      attempts: 0,
+      maxAttempts: 3,
+      status: "pending" as const,
+      phase: "queued",
+      createdAt: now,
+      updatedAt: now,
+      lastError: null,
+      recoveryReason: null,
+      idempotencyKey: `update:${h.profile.id}:`,
+      operatorRetryAllowed: false,
+      context: {},
+    };
+    (h.service as unknown as { queue: Array<typeof job> }).queue = [job];
+
+    await (
+      h.service as unknown as { processQueue: () => Promise<void> }
+    ).processQueue();
+
+    expect(job.status).toBe("blocked");
+    expect(job.operatorRetryAllowed).toBe(true);
+    expect(job.recoveryReason).toMatch(/stop the server before updating files/i);
     expect(h.runSteamUpdate).not.toHaveBeenCalled();
   });
 
@@ -325,7 +360,10 @@ describe("UpdateService safe update orchestration", () => {
           performUpdateServer: (serverId: string, input: typeof job) => Promise<void>;
         }
       ).performUpdateServer(h.profile.id, job),
-    ).rejects.toThrow(/stop the server before updating files/i);
+    ).rejects.toMatchObject({
+      name: "CriticalJobRecoveryBlockedError",
+      message: expect.stringMatching(/stop the server before updating files/i),
+    });
 
     expect(h.instances.stop).not.toHaveBeenCalled();
     expect(h.backups.createPreUpdateBackupForJob).not.toHaveBeenCalled();

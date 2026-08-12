@@ -586,7 +586,11 @@ export class UpdateService extends EventEmitter {
         && job !== undefined
         && job.context.wasRunning !== true
       ) {
-        throw new Error("Stop the server before updating files");
+        // Operator-actionable: Stop → Retry. A plain Error would mark the job
+        // failed with operatorRetryAllowed=false and only offer Dismiss.
+        throw new CriticalJobRecoveryBlockedError(
+          "Stop the server before updating files",
+        );
       }
 
       // Backup identity is the durable resume signal. Unlike `phase`, it
