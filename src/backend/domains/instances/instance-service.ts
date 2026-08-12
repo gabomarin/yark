@@ -49,6 +49,7 @@ import {
   assertSafeInstallDirForWipe,
   installDirKey,
 } from "./install-dir-safety";
+import { assertImportHealthAllowed, assertImportNotNested } from "./import-existing-install";
 import {
   invalidateInstallInspectCache,
   inspectServerInstallationAsync,
@@ -254,10 +255,14 @@ export class InstanceService extends EventEmitter {
    * Adopt an existing ASA dedicated root as a YARK profile (#254).
    * Uses the absolute `installDir` as-is (does not nest via resolveServerInstallDir).
    * No SteamCMD sync and **no INI writes** — Start (or later edits) sync profile-owned
-   * keys. Requires install health `ready`. All discovered mods are forced into
+   * keys. Requires install health `ready`, or `incomplete` with
+   * `allowIncompleteInstall` (#283). All discovered mods are forced into
    * `disabledMods` until the operator enables them.
    */
-  async importExisting(input: ServerProfileInput): Promise<ServerProfile> {
+  async importExisting(
+    input: ServerProfileInput,
+    options?: { allowIncompleteInstall?: boolean },
+  ): Promise<ServerProfile> {
     const installDir = normalizeWindowsPath(input.installDir);
     const mods = [...(input.mods ?? [])];
     const normalized: ServerProfileInput = {
@@ -270,18 +275,20 @@ export class InstanceService extends EventEmitter {
     this.assertUniqueName(normalized.name);
     this.assertNoPortConflicts(normalized);
     this.assertUniqueInstallDir(installDir);
+    // Match probeImportInstall: nested ShooterGame paths never become profiles,
+    // even if IPC sends allowIncompleteInstall on an incomplete nested tree (#283).
+    assertImportNotNested(installDir);
 
     const installation = await inspectServerInstallationAsync(
       `import:${normalized.name}`,
       installDir,
       { bypassCache: true },
     );
-    if (installation.health !== "ready") {
-      throw new Error(
-        installation.guidance ||
-          `Folder is not a ready ASA dedicated root (health: ${installation.health}). Pick the folder that contains ShooterGame.`,
-      );
-    }
+    assertImportHealthAllowed(
+      installation.health,
+      options,
+      installation.guidance,
+    );
 
     // Re-check uniqueness under the fleet create lock after the async probe so a
     // concurrent create/import cannot claim the same name, ports, or installDir.
@@ -291,11 +298,15 @@ export class InstanceService extends EventEmitter {
       this.assertUniqueInstallDir(installDir);
 
       const profile = this.repo.create(normalized);
+      const incompleteNote =
+        installation.health === "incomplete"
+          ? " (incomplete — Install/Verify before Start)"
+          : "";
       this.repo.addEvent(
         profile.id,
         "server_created",
         "info",
-        `Server "${profile.name}" imported from existing install at ${profile.installDir} (map ${profile.map})`,
+        `Server "${profile.name}" imported from existing install at ${profile.installDir} (map ${profile.map})${incompleteNote}`,
       );
       return profile;
     });

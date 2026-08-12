@@ -215,13 +215,14 @@ reject while the process is active. Missing profiles are a no-op.
 
 | Mode | UI | Disk | Notes |
 | --- | --- | --- | --- |
-| **Remove from YARK only** (default when a choice is shown) | Keeps install path copy; blue “kept” alert | Never calls `rm` on `installDir` | Allowed even when another profile shares the path. Import (#254) can re-adopt only a **ready** ASA tree |
+| **Remove from YARK only** (default when a choice is shown) | Keeps install path copy; blue “kept” alert | Never calls `rm` on `installDir` | Allowed even when another profile shares the path. Import (#254/#283) can re-adopt a **ready** tree, or an **incomplete** tree with opt-in |
 | **Delete everything** | Danger alert; confirm **Delete everything** | Recursive wipe of `installDir` after wipe-safety + shared-path checks | Same full wipe as before #267 |
 
 **Empty install folder:** when install health is `empty` (folder exists but has
 no ASA files — typical never-installed profile), the mode picker is hidden and
 delete always wipes the empty path. Keeping an empty folder is not useful:
-Import rejects empty / incomplete trees. Health `missing` and `incomplete` still
+Import rejects empty trees (use New server + Install). Incomplete trees need an
+explicit Import opt-in (#283). Health `missing` and `incomplete` still
 show both modes (partial work or path issues may still matter to the operator).
 The empty shortcut sends `requireEmptyInstall: true`; the backend re-inspects
 with cache bypass and refuses the wipe if the folder is no longer empty, so the
@@ -470,7 +471,7 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 - Wizard `MaxPlayers` writes `/Script/Engine.GameSession` (not
   `ServerSettings` — note the dual home vs IniService range-check).
 
-## Import existing ASA install (#254)
+## Import existing ASA install (#254 / #283)
 
 When ASA files already exist on disk (orphaned after **Start empty**, or adopted
 from another manager) but YARK has no profile:
@@ -478,39 +479,50 @@ from another manager) but YARK has no profile:
 1. Overview / workspace **New server ▾** → **Import install** (empty fleet also
    offers **Import existing install**).
 2. Point at the **ASA dedicated root** (folder that contains `ShooterGame`).
-3. YARK probes install health on folder selection. Only **ready** installs can
-   continue. Paths under `ShooterGame\...` (e.g. `Binaries\Win64`) are rejected as
-   nested folders with a suggested dedicated root. Incomplete / wrong shape are
-   blocked. Best-effort GUS / SavedArks / Mods detection then creates a profile
-   with the **absolute** `installDir` (does **not** nest via
-   `resolveServerInstallDir` / base-folder create). Map prefill prefers the
+3. YARK probes install health on folder selection:
+   - **Ready** — Continue unlocked (default Import path).
+   - **Incomplete** — Continue stays blocked until the operator checks
+     **Import anyway — Install/Verify before Start** (#283). Profile is created;
+     Start remains gated until Install/Verify makes the tree ready (same as
+     New server pointed at an incomplete path).
+   - **Empty** — blocked with no opt-in; use **New server** on that path, then
+     Install.
+   - Paths under `ShooterGame\...` (e.g. `Binaries\Win64`) are rejected as
+     nested folders with a suggested dedicated root. Other non-ready healths
+     stay blocked.
+   Best-effort GUS / SavedArks / Mods detection (for ready and incomplete)
+   then creates a profile with the **absolute** `installDir` (does **not** nest
+   via `resolveServerInstallDir` / base-folder create). Map prefill prefers the
    newest world `.ark` under `SavedArks` (mtime), then GUS leftovers, else
    `TheIsland_WP`.
 4. No SteamCMD sync and **no INI writes** on import — profile-owned GUS keys
    sync on **Start** (same as other profiles). Discovered mod Project IDs import
-   **disabled**.
-5. Workspace opens on the new profile **without** first-steps onboarding (ASA
-   files and world already exist on disk). Create/import/clone uniqueness checks
-   are serialized so concurrent imports cannot share an `installDir` or ports.
+   **disabled**. Incomplete import does **not** auto-start SteamCMD.
+5. Workspace opens on the new profile **without** first-steps onboarding.
+   Create/import/clone uniqueness checks are serialized so concurrent imports
+   cannot share an `installDir` or ports. Backend rejects incomplete import
+   unless `allowIncompleteInstall` is set (`servers:import-existing`), and
+   always rejects nested `ShooterGame\...` paths (same as the probe).
 
 Helpers: `src/backend/domains/instances/import-existing-install.ts`
-(`resolveNestedAsaInstallRoot`, `probeImportInstall`).
+(`resolveNestedAsaInstallRoot`, `probeImportInstall`, `assertImportHealthAllowed`).
 IPC: `servers:probe-import`, `servers:import-existing`.
 UI badges: `importHealthBadgeLabel` in
 `src/renderer/src/features/servers/importInstallModel.ts`.
 
 ### Import probe badges
 
-Only **Ready** unlocks Continue. Other badges block import and show guidance
-next to the path field (including folders already owned by another YARK profile):
+**Ready** unlocks Continue. **Incomplete** unlocks Continue only after the
+explicit opt-in checkbox. Other badges block import and show guidance next to
+the path field (including folders already owned by another YARK profile):
 
 | Badge | When it appears |
 | --- | --- |
 | **Ready** | Chosen folder is a usable ASA dedicated root (`ArkAscendedServer.exe` present under the expected Win64 path). |
 | **Already managed** | Folder matches an existing YARK profile `installDir` (case-insensitive). Continue is blocked; open that server instead. |
 | **Nested folder** | Path contains a `ShooterGame` segment but is not the dedicated root (e.g. `...\ShooterGame\Binaries\Win64`). YARK suggests the parent of `ShooterGame` and offers **Use suggested folder**. |
-| **Empty folder** | Path exists and is empty — fine for SteamCMD install, not for import. |
-| **Incomplete** | ASA markers exist (`ShooterGame` / `Engine` / `steamapps`) but the dedicated executable is missing or the tree is only partial. |
+| **Empty folder** | Path exists and is empty — fine for SteamCMD install via New server, not for Import (no opt-in). |
+| **Incomplete** | ASA markers exist (`ShooterGame` / `Engine` / `steamapps`) but the dedicated executable is missing or the tree is only partial. Opt-in checkbox required to Continue (#283). |
 | **Missing path** | Path does not exist on disk. |
 | **Inaccessible** | Path exists but YARK cannot read it (permissions). |
 | **Not an ASA install** | Non-empty folder without ASA layout (wrong folder / foreign contents). Operator-facing label for classifier health `suspicious` — not a malware warning. |

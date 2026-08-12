@@ -146,12 +146,28 @@ export interface ImportInstallSuggestions {
   mods: string[];
 }
 
+/**
+ * Options for `servers:import-existing` (#283).
+ * Incomplete trees require an explicit opt-in; empty / other non-ready stay blocked.
+ */
+export interface ImportExistingOptions {
+  /**
+   * When true, allow creating a profile from an `incomplete` ASA tree.
+   * Operator must finish files with Install/Verify before Start.
+   */
+  allowIncompleteInstall?: boolean;
+}
+
 /** Result of `servers:probe-import` before creating a profile (#254). */
 export interface ImportInstallProbe {
   installDir: string;
   installation: ServerInstallationInfo;
   suggestions: ImportInstallSuggestions;
-  /** True only when install health is `ready` and the folder is not already managed (#254). */
+  /**
+   * True only when install health is `ready` and the folder is not already managed (#254).
+   * Incomplete folders stay false; the UI may unlock Continue with
+   * {@link ImportExistingOptions.allowIncompleteInstall} (#283).
+   */
   canContinue: boolean;
   /**
    * True when the chosen path sits under a `ShooterGame` segment

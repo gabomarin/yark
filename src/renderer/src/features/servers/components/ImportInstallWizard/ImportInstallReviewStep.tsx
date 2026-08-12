@@ -91,6 +91,11 @@ export function ImportInstallReviewStep(props: Props): ReactElement {
         Game.ini / GameUserSettings.ini on disk are left unchanged until you Start
         (or edit and save) this profile.
       </Alert>
+      {probe.installation.health === "incomplete" ? (
+        <Alert color="orange" title="Incomplete install" variant="light">
+          Start stays blocked until Install or Verify finishes this ASA tree.
+        </Alert>
+      ) : null}
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
         {[
           ["Profile name", probe.suggestions.name],

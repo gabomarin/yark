@@ -5,6 +5,10 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import {
   classifyImportContinue,
+  assertImportHealthAllowed,
+  assertImportNotNested,
+  isImportIncompleteEligible,
+  shouldBuildImportSuggestions,
   collectModProjectIdsFromTree,
   discoverAsaModProjectIds,
   extractModIdsFromText,
@@ -128,6 +132,47 @@ ServerPassword=joinme
     expect(classifyImportContinue("missing")).toEqual({
       canContinue: false,
     });
+    expect(classifyImportContinue("empty")).toEqual({
+      canContinue: false,
+    });
+  });
+
+  it("allows incomplete import only with explicit opt-in", () => {
+    expect(() => assertImportHealthAllowed("ready")).not.toThrow();
+    expect(() =>
+      assertImportHealthAllowed("incomplete", { allowIncompleteInstall: true }),
+    ).not.toThrow();
+    expect(() => assertImportHealthAllowed("incomplete")).toThrow(/incomplete/i);
+    expect(() =>
+      assertImportHealthAllowed("incomplete", { allowIncompleteInstall: false }),
+    ).toThrow(/incomplete/i);
+    expect(() =>
+      assertImportHealthAllowed("empty", { allowIncompleteInstall: true }),
+    ).toThrow(/ready ASA/i);
+    expect(() =>
+      assertImportHealthAllowed("missing", { allowIncompleteInstall: true }),
+    ).toThrow(/ready ASA/i);
+    expect(() =>
+      assertImportHealthAllowed("suspicious", { allowIncompleteInstall: true }),
+    ).toThrow(/ready ASA/i);
+  });
+
+  it("rejects nested import roots before the health gate", () => {
+    expect(() =>
+      assertImportNotNested(
+        "C:\\ASA\\LostColony\\ShooterGame\\Binaries\\Win64",
+      ),
+    ).toThrow(/inside an ASA install/i);
+    expect(() => assertImportNotNested("C:\\ASA\\LostColony")).not.toThrow();
+  });
+
+  it("builds suggestions for ready and incomplete only", () => {
+    expect(shouldBuildImportSuggestions("ready")).toBe(true);
+    expect(shouldBuildImportSuggestions("incomplete")).toBe(true);
+    expect(shouldBuildImportSuggestions("empty")).toBe(false);
+    expect(shouldBuildImportSuggestions("missing")).toBe(false);
+    expect(isImportIncompleteEligible("incomplete")).toBe(true);
+    expect(isImportIncompleteEligible("empty")).toBe(false);
   });
 
   it("detects nested paths under ShooterGame and suggests the dedicated root", () => {

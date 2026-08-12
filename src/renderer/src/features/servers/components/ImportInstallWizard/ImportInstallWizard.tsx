@@ -9,6 +9,7 @@ import { isOfficialMap, normalizeMapToken } from "@shared/map-identity";
 import type { ImportInstallProbe, ModMetadata, ServerProfile } from "@shared/types";
 import { listKnownClusterOptions } from "@features/clusters/knownClusterOptions";
 import {
+  canImportInstallProceed,
   emptyImportForm,
   formToProfileInput,
   suggestionsToForm,
@@ -38,6 +39,7 @@ export function ImportInstallWizard(props: Props): ReactElement {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [probe, setProbe] = useState<ImportInstallProbe | null>(null);
+  const [allowIncompleteInstall, setAllowIncompleteInstall] = useState(false);
   const [modsOpen, setModsOpen] = useState(false);
   const [modMetadata, setModMetadata] = useState<Record<string, ModMetadata>>({});
   const [form, setForm] = useState<ImportFormState>(emptyImportForm);
@@ -52,6 +54,7 @@ export function ImportInstallWizard(props: Props): ReactElement {
       setStep(1);
       setInstallDir("");
       setProbe(null);
+      setAllowIncompleteInstall(false);
       setError(null);
       setForm(emptyImportForm());
       setModsOpen(false);
@@ -63,6 +66,7 @@ export function ImportInstallWizard(props: Props): ReactElement {
     // Keep UI path in sync with backend normalizeWindowsPath (trailing separators, etc.).
     setInstallDir(next.installDir);
     setProbe(next);
+    setAllowIncompleteInstall(false);
     setForm(suggestionsToForm(next.suggestions));
     setModMetadata({});
     setModsOpen(
@@ -80,7 +84,7 @@ export function ImportInstallWizard(props: Props): ReactElement {
     installDir.trim().length > 0 &&
     probe !== null &&
     probe.installDir === installDir.trim() &&
-    probe.canContinue;
+    canImportInstallProceed(probe, allowIncompleteInstall);
 
   const probePath = async (path: string): Promise<ImportInstallProbe | null> => {
     const trimmed = path.trim();
@@ -98,11 +102,8 @@ export function ImportInstallWizard(props: Props): ReactElement {
         return null;
       }
       applyProbe(result.data);
-      if (!result.data.canContinue) {
-        // Path step already shows badge + guidance — avoid a duplicate Alert.
-        setError(null);
-        return null;
-      }
+      // Always return the probe — incomplete may continue after opt-in (#283).
+      setError(null);
       return result.data;
     } finally {
       setProbing(false);
@@ -125,6 +126,7 @@ export function ImportInstallWizard(props: Props): ReactElement {
       if (result.data !== null) {
         setInstallDir(result.data);
         setProbe(null);
+        setAllowIncompleteInstall(false);
         setModMetadata({});
         await probePath(result.data);
       }
@@ -135,16 +137,29 @@ export function ImportInstallWizard(props: Props): ReactElement {
 
   const handleContinueFromStep1 = async (): Promise<void> => {
     let current = probe;
+    let optedIn = allowIncompleteInstall;
     if (current === null || current.installDir !== installDir.trim()) {
+      const previousOptIn = allowIncompleteInstall;
       current = await probePath(installDir);
       if (current === null) return;
+      // applyProbe clears the checkbox; restore when the new probe is still incomplete.
+      optedIn =
+        previousOptIn &&
+        current.alreadyManagedBy === null &&
+        !current.nestedSubfolder &&
+        current.installation.health === "incomplete";
+      if (optedIn) {
+        setAllowIncompleteInstall(true);
+      }
     }
-    if (!current.canContinue) return;
+    if (!canImportInstallProceed(current, optedIn)) return;
     setStep(2);
   };
 
   const handleImport = async (): Promise<void> => {
-    if (probe === null || !probe.canContinue) return;
+    if (probe === null || !canImportInstallProceed(probe, allowIncompleteInstall)) {
+      return;
+    }
     if (nameError !== null) {
       setError(nameError);
       return;
@@ -177,7 +192,12 @@ export function ImportInstallWizard(props: Props): ReactElement {
     setSaving(true);
     setError(null);
     try {
-      const result = await window.api.importExistingServer(inputOrError);
+      const result = await window.api.importExistingServer(inputOrError, {
+        allowIncompleteInstall:
+          probe.installation.health === "incomplete"
+            ? allowIncompleteInstall
+            : undefined,
+      });
       if (!result.ok) {
         setError(result.error ?? "Could not import install");
         return;
@@ -218,9 +238,12 @@ export function ImportInstallWizard(props: Props): ReactElement {
             browsing={browsing}
             probing={probing}
             probe={probe}
+            allowIncompleteInstall={allowIncompleteInstall}
+            onAllowIncompleteInstallChange={setAllowIncompleteInstall}
             onInstallDirChange={(value) => {
               setInstallDir(value);
               setProbe(null);
+              setAllowIncompleteInstall(false);
               setModMetadata({});
               setError(null);
             }}
@@ -228,6 +251,7 @@ export function ImportInstallWizard(props: Props): ReactElement {
             onUseSuggestedDir={(path) => {
               setInstallDir(path);
               setProbe(null);
+              setAllowIncompleteInstall(false);
               setModMetadata({});
               setError(null);
               void probePath(path);

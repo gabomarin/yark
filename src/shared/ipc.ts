@@ -37,6 +37,7 @@ import type {
   ServerProfileInput,
   ServerRuntimeInfo,
   ImportInstallProbe,
+  ImportExistingOptions,
   ServerStopProgress,
   SteamCmdConsoleSnapshot,
   SteamCmdStatus,
@@ -233,7 +234,10 @@ export interface RendererApi {
   listServers(): Promise<IpcResult<ServerProfile[]>>;
   createServer(input: ServerProfileInput): Promise<IpcResult<ServerProfile>>;
   probeImportInstall(installDir: string): Promise<IpcResult<ImportInstallProbe>>;
-  importExistingServer(input: ServerProfileInput): Promise<IpcResult<ServerProfile>>;
+  importExistingServer(
+    input: ServerProfileInput,
+    options?: ImportExistingOptions,
+  ): Promise<IpcResult<ServerProfile>>;
   updateServer(
     id: string,
     input: ServerProfileInput,

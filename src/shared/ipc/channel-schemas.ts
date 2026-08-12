@@ -190,7 +190,14 @@ export const ipcArgSchemas = {
   [IPC.serversClone]: z.tuple([serverIdSchema]),
   [IPC.serversCloneWithParams]: z.tuple([serverIdSchema, cloneWithParamsSchema]),
   [IPC.serversProbeImport]: z.tuple([windowsAbsPathSchema]),
-  [IPC.serversImportExisting]: z.tuple([plainObjectSchema]),
+  [IPC.serversImportExisting]: ipcTuple(
+    plainObjectSchema,
+    z
+      .object({
+        allowIncompleteInstall: z.boolean().optional(),
+      })
+      .nullish(),
+  ),
   [IPC.serversStart]: ipcTuple(serverIdSchema, startServerOptionsSchema.nullish()),
   [IPC.serversStop]: z.tuple([serverIdSchema]),
   [IPC.serversRestart]: ipcTuple(serverIdSchema, startServerOptionsSchema.nullish()),
