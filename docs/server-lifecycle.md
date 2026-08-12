@@ -223,6 +223,9 @@ no ASA files — typical never-installed profile), the mode picker is hidden and
 delete always wipes the empty path. Keeping an empty folder is not useful:
 Import rejects empty / incomplete trees. Health `missing` and `incomplete` still
 show both modes (partial work or path issues may still matter to the operator).
+The empty shortcut sends `requireEmptyInstall: true`; the backend re-inspects
+with cache bypass and refuses the wipe if the folder is no longer empty, so the
+UI falls back to an explicit mode choice.
 
 **What is purged:** the `servers` row and one fleet audit event (`server_deleted`).
 Related `events` / `backups` / `backup_policies` rows are **not** FK-cascaded

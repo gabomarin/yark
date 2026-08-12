@@ -209,4 +209,63 @@ describe("InstanceService.delete", () => {
       access(join(installDir, "marker.txt"), fsConstants.F_OK),
     ).resolves.toBeUndefined();
   });
+
+  it("wipes when requireEmptyInstall and the folder is still empty", async () => {
+    const installDir = await mkdtemp(join(tmpdir(), "ark-delete-empty-ok-"));
+    tmpDirs.push(installDir);
+
+    const profile = makeProfile(installDir);
+    const repo = {
+      get: vi.fn((id: string) => (id === profile.id ? profile : null)),
+      list: vi.fn(() => [profile]),
+      delete: vi.fn(() => true),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+
+    const processes = {
+      on: vi.fn(),
+      isActive: vi.fn(() => false),
+    } as unknown as ProcessManager;
+
+    const service = makeService(repo, processes);
+    await service.delete(profile.id, {
+      deleteInstallFiles: true,
+      requireEmptyInstall: true,
+    });
+
+    expect(repo.delete).toHaveBeenCalledWith(profile.id);
+    await expect(access(installDir, fsConstants.F_OK)).rejects.toThrow();
+  });
+
+  it("refuses requireEmptyInstall wipe when the folder is no longer empty", async () => {
+    const installDir = await mkdtemp(join(tmpdir(), "ark-delete-empty-stale-"));
+    tmpDirs.push(installDir);
+    await writeFile(join(installDir, "marker.txt"), "x", "utf8");
+
+    const profile = makeProfile(installDir);
+    const repo = {
+      get: vi.fn((id: string) => (id === profile.id ? profile : null)),
+      list: vi.fn(() => [profile]),
+      delete: vi.fn(() => true),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+
+    const processes = {
+      on: vi.fn(),
+      isActive: vi.fn(() => false),
+    } as unknown as ProcessManager;
+
+    const service = makeService(repo, processes);
+    await expect(
+      service.delete(profile.id, {
+        deleteInstallFiles: true,
+        requireEmptyInstall: true,
+      }),
+    ).rejects.toThrow(/no longer empty/i);
+
+    expect(repo.delete).not.toHaveBeenCalled();
+    await expect(
+      access(join(installDir, "marker.txt"), fsConstants.F_OK),
+    ).resolves.toBeUndefined();
+  });
 });

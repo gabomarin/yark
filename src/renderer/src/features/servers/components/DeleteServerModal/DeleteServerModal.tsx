@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Badge,
@@ -11,14 +11,19 @@ import {
   Text,
 } from "@mantine/core";
 import type { DeleteServerOptions, InstallationHealthStatus } from "@shared/types";
+import { EMPTY_WIPE_STALE_MESSAGE } from "@shared/types";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import classes from "./DeleteServerModal.module.css";
 
 export type DeleteServerMode = "profileOnly" | "wipe";
 
+export type DeleteServerConfirmResult =
+  | { ok: true }
+  | { ok: false; emptyWipeStale?: boolean };
+
 /**
  * Empty install folders have nothing worth keeping, and Import (#254) rejects
- * them — skip the mode picker and always wipe.
+ * them — skip the mode picker and always wipe (backend revalidates emptiness).
  */
 export function isForcedWipeInstallHealth(
   health: InstallationHealthStatus | null | undefined,
@@ -28,48 +33,81 @@ export function isForcedWipeInstallHealth(
 
 interface Props {
   opened: boolean;
+  /** Profile id for the open target; used to ignore stale in-flight completions. */
+  serverId: string;
   serverName: string;
   installDir: string;
-  /** Latest install-health classification for this server (may be unknown). */
+  /** Latest install-health classification for this server (may be stale). */
   installHealth?: InstallationHealthStatus | null;
   onClose: () => void;
-  /** Returns true when delete succeeded; modal closes only then. */
-  onConfirm: (options: DeleteServerOptions) => Promise<boolean>;
+  /** Returns ok when delete succeeded; modal closes only then. */
+  onConfirm: (options: DeleteServerOptions) => Promise<DeleteServerConfirmResult>;
 }
 
 export function DeleteServerModal(props: Props): ReactElement {
-  const forcedWipe = isForcedWipeInstallHealth(props.installHealth);
+  const cachedEmpty = isForcedWipeInstallHealth(props.installHealth);
+  /** Drop forced-empty shortcut after backend says the folder is no longer empty. */
+  const [emptyShortcutAllowed, setEmptyShortcutAllowed] = useState(true);
   const [mode, setMode] = useState<DeleteServerMode>("profileOnly");
   const [loading, setLoading] = useState(false);
+  const [staleEmptyNotice, setStaleEmptyNotice] = useState(false);
+  const activeServerIdRef = useRef(props.serverId);
+  activeServerIdRef.current = props.serverId;
+
+  const forcedWipe = cachedEmpty && emptyShortcutAllowed;
 
   useEffect(() => {
-    if (props.opened) {
-      setMode(forcedWipe ? "wipe" : "profileOnly");
-      setLoading(false);
-    }
-  }, [props.opened, forcedWipe]);
+    if (!props.opened) return;
+    setEmptyShortcutAllowed(true);
+    setStaleEmptyNotice(false);
+    setMode(
+      isForcedWipeInstallHealth(props.installHealth) ? "wipe" : "profileOnly",
+    );
+    setLoading(false);
+    // Reset when opening or switching target; ignore installHealth polls mid-open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional open/target reset
+  }, [props.opened, props.serverId]);
 
   const wipe = forcedWipe || mode === "wipe";
 
   const handleConfirm = async (): Promise<void> => {
+    const requestServerId = props.serverId;
     setLoading(true);
     try {
-      const ok = await props.onConfirm({ deleteInstallFiles: wipe });
-      if (ok) {
+      const result = await props.onConfirm(
+        forcedWipe
+          ? { deleteInstallFiles: true, requireEmptyInstall: true }
+          : { deleteInstallFiles: wipe },
+      );
+      if (activeServerIdRef.current !== requestServerId) return;
+      if (result.ok) {
         props.onClose();
+        return;
+      }
+      if (result.emptyWipeStale === true) {
+        setEmptyShortcutAllowed(false);
+        setStaleEmptyNotice(true);
+        setMode("profileOnly");
       }
     } finally {
-      setLoading(false);
+      if (activeServerIdRef.current === requestServerId) {
+        setLoading(false);
+      }
     }
   };
 
   return (
     <Modal
       opened={props.opened}
-      onClose={props.onClose}
+      onClose={() => {
+        if (!loading) props.onClose();
+      }}
       title={`Remove server "${props.serverName}"`}
       centered
       size="md"
+      closeOnClickOutside={!loading}
+      closeOnEscape={!loading}
+      withCloseButton={!loading}
     >
       <Stack gap="sm">
         {forcedWipe ? (
@@ -80,10 +118,17 @@ export function DeleteServerModal(props: Props): ReactElement {
             color="gray"
           >
             This profile never received ASA files (empty folder). YARK will remove the server
-            and delete the empty install path. Import cannot adopt an empty folder later.
+            and delete the empty install path. Import cannot adopt an empty folder later. The
+            folder is rechecked before wipe.
           </Alert>
         ) : (
           <>
+            {staleEmptyNotice ? (
+              <Alert color="orange" title="Folder is no longer empty" variant="light">
+                {EMPTY_WIPE_STALE_MESSAGE}
+              </Alert>
+            ) : null}
+
             <Radio.Group
               value={mode}
               onChange={(value) => {

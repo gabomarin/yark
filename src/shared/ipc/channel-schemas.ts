@@ -182,7 +182,10 @@ export const ipcArgSchemas = {
   [IPC.serversSetEnabled]: z.tuple([serverIdSchema, z.boolean()]),
   [IPC.serversDelete]: z.tuple([
     serverIdSchema,
-    z.object({ deleteInstallFiles: z.boolean() }),
+    z.object({
+      deleteInstallFiles: z.boolean(),
+      requireEmptyInstall: z.boolean().optional(),
+    }),
   ]),
   [IPC.serversClone]: z.tuple([serverIdSchema]),
   [IPC.serversCloneWithParams]: z.tuple([serverIdSchema, cloneWithParamsSchema]),

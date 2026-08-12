@@ -24,6 +24,7 @@ import type {
   SteamCmdStatus,
   StartServerOptions,
 } from "@shared/types";
+import { EMPTY_WIPE_STALE_MESSAGE } from "@shared/types";
 import { createGenerationGate } from "@shared/createGenerationGate";
 import { reconcileServerList } from "./shared/reconcileServerList";
 import {
@@ -1600,6 +1601,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       />
       <DeleteServerModal
         opened={deleteServerId !== null}
+        serverId={deleteServerId ?? ""}
         serverName={
           deleteServerId !== null
             ? (servers.find((s) => s.id === deleteServerId)?.name ?? deleteServerId)
@@ -1617,8 +1619,20 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         }
         onClose={() => setDeleteServerId(null)}
         onConfirm={async (options) => {
-          if (deleteServerId === null) return false;
-          return runAction(() => window.api.deleteServer(deleteServerId, options));
+          if (deleteServerId === null) return { ok: false };
+          const targetId = deleteServerId;
+          const result = await window.api.deleteServer(targetId, options);
+          if (!result.ok) {
+            const message = result.error ?? "Unknown error";
+            const emptyWipeStale = message === EMPTY_WIPE_STALE_MESSAGE;
+            if (!emptyWipeStale) {
+              showOperatorError(message);
+            }
+            await refresh({ includeInstallation: true });
+            return { ok: false, emptyWipeStale };
+          }
+          await refresh({ includeInstallation: true });
+          return { ok: true };
         }}
       />
       {copyConfig !== null && (
