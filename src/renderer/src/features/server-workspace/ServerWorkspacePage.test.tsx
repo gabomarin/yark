@@ -485,6 +485,7 @@ describe("ServerWorkspacePage", () => {
     const user = userEvent.setup();
     const onSendRcon = vi.fn(async () => true);
     const onCopyConfiguration = vi.fn();
+    const onUpdateNow = vi.fn();
     render(
       <AppProviders>
         <ServerWorkspacePage
@@ -516,7 +517,7 @@ describe("ServerWorkspacePage", () => {
           onKillServer={vi.fn()}
           onOpenFolder={vi.fn()}
           onInstallFiles={vi.fn()}
-          onUpdateNow={vi.fn()}
+          onUpdateNow={onUpdateNow}
           onVerifyFiles={vi.fn()}
           onSendRcon={onSendRcon}
           {...playerListHandlers}
@@ -526,11 +527,56 @@ describe("ServerWorkspacePage", () => {
       </AppProviders>,
     );
 
+    const forceUpdate = screen.getByRole("button", { name: "Force update" });
+    expect(forceUpdate).toBeDisabled();
+    expect(forceUpdate).toHaveAttribute(
+      "title",
+      "Stop the server before updating files",
+    );
+    await user.click(forceUpdate);
+    expect(onUpdateNow).not.toHaveBeenCalled();
+
     await user.click(screen.getByRole("button", { name: "Save world" }));
     expect(onSendRcon).toHaveBeenCalledWith("srv-a", "SaveWorld");
 
     await user.click(screen.getByRole("button", { name: "Copy configuration" }));
     expect(onCopyConfiguration).toHaveBeenCalledWith("srv-a");
+  });
+
+  it("enables Force update when the server is stopped", async () => {
+    const onUpdateNow = vi.fn();
+    render(
+      <AppProviders>
+        <ServerWorkspacePage
+          servers={[serverA, serverB]}
+          selectedServerId={serverA.id}
+          statuses={new Map()}
+          installationInfo={new Map()}
+          events={[]}
+          rconHistory={[]}
+          playerList={EMPTY_PLAYER_LIST}
+          onSelectServer={vi.fn()}
+          onBack={vi.fn()}
+          onStartServer={vi.fn()}
+          onStopServer={vi.fn()}
+          onRestartServer={vi.fn()}
+          onKillServer={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={onUpdateNow}
+          onVerifyFiles={vi.fn()}
+          onSendRcon={vi.fn(async () => true)}
+          {...playerListHandlers}
+          onCopyConfiguration={vi.fn()}
+          onServerUpdated={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const forceUpdate = screen.getByRole("button", { name: "Force update" });
+    expect(forceUpdate).toBeEnabled();
+    await userEvent.setup().click(forceUpdate);
+    expect(onUpdateNow).toHaveBeenCalledTimes(1);
   });
 
   it("moves secondary panels into drawers in compact workspaces", async () => {

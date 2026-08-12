@@ -164,6 +164,7 @@ export function resolveUpdateAction(input: {
   serverEnabled?: boolean;
 }): ServerCardUpdateAction {
   const transitioning = input.status === "starting" || input.status === "stopping";
+  const active = input.status === "running" || transitioning;
   if (!input.isInstallationReady) {
     const canOfferInstall = input.canOfferInstall !== false;
     return {
@@ -184,7 +185,7 @@ export function resolveUpdateAction(input: {
       label: "Update server",
       color: "attention",
       variant: "light",
-      disabled: input.steamCmdBusy || transitioning,
+      disabled: input.steamCmdBusy || active,
       visible: true,
     };
   }
@@ -208,7 +209,7 @@ export function resolveUpdateAction(input: {
     label: "Update (couldn't check version)",
     color: "gray",
     variant: "light",
-    disabled: input.steamCmdBusy || transitioning,
+    disabled: input.steamCmdBusy || active,
     visible: true,
   };
 }

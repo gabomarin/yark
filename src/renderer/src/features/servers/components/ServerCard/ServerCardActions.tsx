@@ -182,7 +182,14 @@ export function ServerCardActions(props: Props): ReactElement {
       )}
 
       {updateAction.visible ? (
-        <Tooltip label={updateAction.label} withArrow>
+        <Tooltip
+          label={
+            updateAction.kind === "update" && props.isActive
+              ? "Stop the server before updating files"
+              : updateAction.label
+          }
+          withArrow
+        >
           <span className={classes.tooltipTarget}>
             <ActionIcon
               size={actionSize}

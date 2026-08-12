@@ -122,6 +122,7 @@ describe("ServerCard", () => {
     const user = userEvent.setup();
     const onStop = vi.fn();
     const onOpenWorkspace = vi.fn();
+    const onUpdateNow = vi.fn();
 
     const { container } = render(
       <AppProviders>
@@ -145,7 +146,7 @@ describe("ServerCard", () => {
           onReviewError={vi.fn()}
           onOpenFolder={vi.fn()}
           onInstallFiles={vi.fn()}
-          onUpdateNow={vi.fn()}
+          onUpdateNow={onUpdateNow}
           onVerifyFiles={vi.fn()}
           onCheckUpdates={vi.fn()}
           onClone={vi.fn()}
@@ -161,6 +162,12 @@ describe("ServerCard", () => {
     expect(onStop).toHaveBeenCalledTimes(1);
     expect(card.queryByRole("button", { name: /^Start server$/i })).not.toBeInTheDocument();
     expect(card.getByRole("button", { name: /^Restart server$/i })).toBeEnabled();
+    const update = card.getByRole("button", {
+      name: /Update \(couldn't check version\)/i,
+    });
+    expect(update).toBeDisabled();
+    await user.click(update);
+    expect(onUpdateNow).not.toHaveBeenCalled();
 
     await user.click(card.getByRole("button", { name: "More options" }));
     expect(
@@ -168,6 +175,14 @@ describe("ServerCard", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Restart" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Open folder" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /Update \(couldn't check version\)/i })).toHaveAttribute(
+      "data-disabled",
+      "true",
+    );
+    expect(screen.getByRole("menuitem", { name: "Verify integrity" })).not.toHaveAttribute(
+      "data-disabled",
+      "true",
+    );
     expect(screen.queryByRole("button", { name: /^Delete server$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Force close \(matar\)$/i })).not.toBeInTheDocument();
   });

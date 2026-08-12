@@ -522,8 +522,8 @@ next to the path field (including folders already owned by another YARK profile)
 | `tests/integration/process-manager-real-start.test.ts` | win32 direct spawn / spaced paths |
 
 See also [backups.md](backups.md) (restore requires `!isActive`),
-[updates-steamcmd.md](updates-steamcmd.md) (safe update auto-stop, `pre_update`,
-conditional restart, real-host validation),
+[updates-steamcmd.md](updates-steamcmd.md) (stopped-server safe update,
+`pre_update`, rollback, real-host validation),
 [logs.md](logs.md) (runtime buffer from piped stdout/stderr and Saved/Logs tail;
 `npm run e2e:launch-args` asserts structured/raw tokens on Runtime `Commandline`),
 [rcon.md](rcon.md) (workspace console / players / ban list),

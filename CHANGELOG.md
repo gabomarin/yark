@@ -12,6 +12,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Fixed
 
 - Resizing the window no longer resets the server **Backups** kind tab (World save / Player profiles / INI) to World save (#271).
+- Server update controls stay disabled while the server is active; queued jobs recheck before touching files and stay **Retry**-able after Stop (#277).
 
 ## [0.10.0] - 2026-08-12
 

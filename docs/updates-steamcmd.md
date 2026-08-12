@@ -8,8 +8,8 @@ and how “update available” is decided.
 - Share one SteamCMD + content cache across many server installs.
 - Keep per-server worlds/INI/players intact when syncing game files.
 - Make explicit **Update** / **Verify** always talk to Steam (no stale cache reuse).
-- Run **safe update** with auto-stop, pre-update backups, conditional restart, and
-  automatic rollback on failure.
+- Run **safe update** for stopped servers with pre-update backups and automatic
+  rollback on failure.
 
 ASA Steam app id: **`2430930`**.
 
@@ -66,8 +66,8 @@ Pipeline for each files job:
 | Action | Public constraint | After success |
 | --- | --- | --- |
 | Install files | Prefer a stopped server (UI blocks while active) | Leaves process state alone |
-| Update | May run while active; manager coordinates stop. Blocked only while a stop+backup is in progress | Restarts and waits up to **90s** for healthy `running` **only if** it was running when the job started; otherwise left stopped |
-| Verify | Same auto-stop/restart contract as update (no pre-update backup / rollback) | Restarts only if it had been running when the job ran |
+| Update | Requires the server to be stopped before queueing and again when execution begins | Leaves the server stopped |
+| Verify | May run while active; manager coordinates stop (no pre-update backup / rollback) | Restarts only if it had been running when the job ran |
 
 Jobs are queued (`criticalJobsQueue.v1` in app settings): up to **3** attempts,
 **5s** between transient retries. Pending and replay-safe jobs resume after an
@@ -77,24 +77,22 @@ operator review. See [Critical job crash recovery](critical-job-recovery.md).
 ### Safe update + rollback
 
 ```text
-wasRunning = process is active at job start
-  → if wasRunning: stop({ backup: false })   # no pre_stop snapshot
+server is stopped at request and execution time
   → create pre_update backups (world + players + ini)
   → SteamCMD update + robocopy sync
-  → if wasRunning: start + waitForHealthy (90s)
   → on any failure after backups exist:
        restore each pre_update backup
-       → if wasRunning: start + waitForHealthy (90s)
        → rethrow (job fails / may retry up to 3 times)
 ```
 
-`wasRunning` is captured once at the beginning of the job. A server that was already
-stopped stays stopped after success; rollback also leaves it stopped. An active
-server is restarted after success, or after a successful rollback.
+New update jobs are accepted only while the server is stopped and recheck that state
+inside the per-server execution lock. This prevents a queued or resumed job from
+updating a server that started while it was waiting. Rollback leaves it stopped.
+Legacy jobs that recorded running intent before this policy changed retain their
+stop/restart recovery behavior.
 
-An active-server update must produce exactly one stable `pre_update` archive set and
-**must not** also create a `pre_stop` set for the same job (SteamCMD paths pass
-`{ backup: false }` into stop). See [backups.md](backups.md).
+An update produces exactly one stable `pre_update` archive set and does not create a
+`pre_stop` set for the same job. See [backups.md](backups.md).
 
 Pre-update archives use backup type `pre_update` and kinds `world` / `players` / `ini`
 (`CRITICAL_BACKUP_KINDS`). Per-server update logs land under userData `update-logs/` as
@@ -141,7 +139,7 @@ Requires a display and `ELECTRON_RUN_AS_NODE` unset. Fixtures under `C:\asa-e2e`
 | Channel | Purpose |
 | --- | --- |
 | `servers:install-files` | Queue base-file install for a server |
-| `servers:update-now` | Queue safe update (auto-stop / conditional restart; no manual stop required) |
+| `servers:update-now` | Queue safe update for a stopped server; rejects an active process at request or execution time |
 | `servers:verify-files` | Queue integrity verify (same auto-stop/restart contract; no pre_update) |
 | `servers:installation` | Installation snapshot + official build/version |
 | `steamcmd:status` | Path, caches, busy/progress/queue |
@@ -154,7 +152,7 @@ Requires a display and `ELECTRON_RUN_AS_NODE` unset. Fixtures under `C:\asa-e2e`
 | `logs:read-update` / `logs:open-update-file` / `logs:delete-update` / `logs:clear-updates` | Per-server update log files |
 | **Push** `push:steamcmd-progress` | Live `{ status, console }` while ops run |
 
-UI entry points: sidebar **SteamCMD** page + floating progress dock; Overview install/update/verify; workspace SidePanel; onboarding “Install files”. Update/verify stay enabled while the server is running (tooltip explains auto-stop); they lock only while SteamCMD is busy or a stop+backup is in progress.
+UI entry points: sidebar **SteamCMD** page + floating progress dock; Overview install/update/verify; workspace SidePanel; onboarding “Install files”. Update requires a stopped server. Verify stays enabled while running (tooltip explains auto-stop); both lock while SteamCMD is busy or a stop+backup is in progress.
 
 ## Progress
 
@@ -162,10 +160,10 @@ Live progress combines SteamCMD stdout `%` lines with disk estimates (`steamcmd-
 
 **Safe update** also writes dock console lines during the silent-looking pre-update backup phase (world / players / INI packaging and zip), so the dock should not sit on “Waiting for progress…” until SteamCMD starts. Cancel during that phase aborts backup critical jobs between kinds and skips rollback restore when SteamCMD never changed game files.
 
-Update / Verify controls stay enabled while the server is running: Overview cards and
-the workspace SidePanel tooltips explain that the manager will auto-stop for SteamCMD
-and restart only if the server was running. Byte/`%` detail belongs in the progress
-dock, not in those lock tooltips.
+Update controls are disabled while the server is active in Overview cards and the
+workspace SidePanel. Verify remains enabled while running; its tooltip explains that
+the manager will auto-stop for SteamCMD and restart only if the server was running.
+Byte/`%` detail belongs in the progress dock, not in those lock tooltips.
 
 Spawns always pass `-language english` (plus `LANG`/`LC_ALL` env) so bootstrapper lines stay English for a single-language parser. SteamCMD otherwise follows the Windows UI language (e.g. Spanish “Descargando archivos…”). Bracket `[ N%]` still updates the percent even if OS localizes; labels/KB pairs are English-only.
 
@@ -182,7 +180,8 @@ During **robocopy** (`sync-files`), progress is a **separate phase**: SteamCMD s
 | Symptom | Likely cause / next step |
 | --- | --- |
 | `Server stop and backup are still in progress` | Wait for the stop+backup job to finish, then retry update/verify |
-| Update/verify while the server is running | Expected — manager stops without `pre_stop`, takes `pre_update` (update only), runs SteamCMD, restarts if it was running |
+| Update while the server is running | Stop the server first; UI and API reject the request, and queued jobs recheck before execution |
+| Verify while the server is running | Expected — manager auto-stops, runs SteamCMD, and restarts if it was running |
 | Update “available” looks wrong vs ARK Version string | Compare Steam `buildid` only; ARK Version is informational |
 | Version green but number behind Wildcard | Steam is current; label may be from last boot — tooltip on Version explains it refreshes on next start |
 | Repeated downloads when installing another server | Cache older than 15 minutes, missing manifest, or SteamCMD path changed |
@@ -225,11 +224,11 @@ Requires: Node 22.12+ (`node:sqlite` and the current Electron toolchain), Playwr
 
 | # | Scenario | Pass criteria |
 | --- | --- | --- |
-| A | Active-server update | Stop → exactly one `pre_update` set (world/players/ini) → **no** `pre_stop` for this job → start + healthy |
+| A | Active-server update rejection | API rejects before queueing; no SteamCMD job or update backups; server remains running |
 | B | Stopped-server update | Completes; server left stopped |
 | C | Forced failure after backup | Points Settings at a **temporary** failing SteamCMD stub under `os.tmpdir()` (does **not** rename AppData `steamcmd.exe`). Job may retry up to **3** times with rollback each attempt; final user-visible signal is update **failure** (events include `update_failed` / `update_rolled_back`), never success. If rollback itself fails: logs/backups preserved + clear manual-recovery events |
 | D | Cancel mid SteamCMD or sync | Reported cancelled (not success) |
-| D2 | Cancel during pre-update backup (before SteamCMD) | Console shows backup progress; cancel stops without restore/safeguard unwind; restart if the server was running |
+| D2 | Cancel during pre-update backup (before SteamCMD) | Console shows backup progress; cancel stops without restore/safeguard unwind |
 | E | Crash/reopen mid queue | Job recovers as pending; previous error context not silently lost (present queue behavior; checkpoints belong to **#19**) |
 | F | Verify while running | Auto-stop/restart; **no** `pre_update` |
 
