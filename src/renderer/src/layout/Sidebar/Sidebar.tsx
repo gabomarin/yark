@@ -49,8 +49,11 @@ interface Props {
   officialVersion: string | null;
   officialNetworkStatus: OfficialNetworkStatus;
   appVersion: string;
-  /** When set, accent the sidebar version and allow click-through to Settings. */
+  /** When set, show the update icon next to the version label. */
   yarkUpdateAvailableVersion?: string | null;
+  /** Opens What's new — wired only to the `vX.Y.Z` text, not the full row. */
+  onWhatsNewClick?: () => void;
+  /** Opens Settings → YARK updates — wired only to the update icon. */
   onYarkUpdateClick?: () => void;
   /** Icon-only chrome rail (#107 recipe). */
   iconMode?: boolean;
@@ -102,6 +105,19 @@ export function Sidebar(props: Props): ReactElement {
   const versionTooltip = officialVersionTooltip(
     props.officialVersion,
     props.officialNetworkStatus,
+  );
+  const updateAvailable =
+    props.yarkUpdateAvailableVersion != null
+    && props.yarkUpdateAvailableVersion !== "";
+  const versionLabel = (
+    <Text
+      size={metadataTextSize}
+      c={updateAvailable ? undefined : "dimmed"}
+      className={updateAvailable ? classes.appVersionUpdateText : undefined}
+      component="span"
+    >
+      v{props.appVersion}
+    </Text>
   );
 
   return (
@@ -234,79 +250,100 @@ export function Sidebar(props: Props): ReactElement {
       )}
 
       {iconMode ? (
-        <Tooltip
-          label={
-            props.yarkUpdateAvailableVersion
-              ? `YARK v${props.appVersion} — update ${props.yarkUpdateAvailableVersion} available`
-              : `YARK v${props.appVersion}`
-          }
-          position="right"
-          withArrow
-        >
-          {props.yarkUpdateAvailableVersion != null &&
-          props.yarkUpdateAvailableVersion !== "" &&
-          props.onYarkUpdateClick !== undefined ? (
-            <UnstyledButton
-              className={classes.appVersionUpdate}
-              onClick={props.onYarkUpdateClick}
-              aria-label={`YARK update available, version ${props.yarkUpdateAvailableVersion}`}
-              data-yark-update-version
+        <Group gap={4} wrap="nowrap" justify="center" className={classes.appVersionRow}>
+          {updateAvailable && props.onYarkUpdateClick !== undefined && (
+            <Tooltip
+              label={`Update ${props.yarkUpdateAvailableVersion} available — open Settings`}
+              position="right"
+              withArrow
             >
-              <Group gap={4} wrap="nowrap" justify="center" className={classes.appVersionUpdateInner}>
+              <UnstyledButton
+                className={classes.appVersionUpdateIconBtn}
+                onClick={props.onYarkUpdateClick}
+                aria-label={`YARK update available, version ${props.yarkUpdateAvailableVersion}`}
+                data-yark-update-version
+              >
                 <ArrowCircleUp
                   size={compact ? 12 : 14}
                   weight="bold"
                   className={classes.appVersionUpdateIcon}
                   aria-hidden
                 />
-                <Text size={metadataTextSize} className={classes.appVersionUpdateText}>
-                  v{props.appVersion}
-                </Text>
-              </Group>
-            </UnstyledButton>
+              </UnstyledButton>
+            </Tooltip>
+          )}
+          {props.onWhatsNewClick !== undefined ? (
+            <Tooltip label={`YARK v${props.appVersion} — What's new`} position="right" withArrow>
+              <UnstyledButton
+                className={
+                  updateAvailable ? classes.appVersionLabelUpdate : classes.appVersionLabelRail
+                }
+                onClick={props.onWhatsNewClick}
+                aria-label={`What's new in YARK v${props.appVersion}`}
+                data-yark-app-version
+              >
+                {versionLabel}
+              </UnstyledButton>
+            </Tooltip>
           ) : (
-            <Text size={metadataTextSize} c="dimmed" data-yark-app-version className={classes.appVersionRail}>
+            <Text
+              size={metadataTextSize}
+              c="dimmed"
+              data-yark-app-version
+              className={classes.appVersionLabelRail}
+            >
               v{props.appVersion}
             </Text>
           )}
-        </Tooltip>
-      ) : props.yarkUpdateAvailableVersion != null &&
-        props.yarkUpdateAvailableVersion !== "" &&
-        props.onYarkUpdateClick !== undefined ? (
-        <Tooltip
-          label={`YARK update available (v${props.yarkUpdateAvailableVersion}) — open Settings to update`}
-          multiline
-          w={240}
-          position="right"
-        >
-          <UnstyledButton
-            className={classes.appVersionUpdate}
-            onClick={props.onYarkUpdateClick}
-            aria-label={`YARK update available, version ${props.yarkUpdateAvailableVersion}`}
-            data-yark-update-version
-          >
-            <Group gap={5} wrap="nowrap" justify="center" className={classes.appVersionUpdateInner}>
-              <ArrowCircleUp
-                size={compact ? 13 : 15}
-                weight="bold"
-                className={classes.appVersionUpdateIcon}
-                aria-hidden
-              />
-              <Text size={metadataTextSize} className={classes.appVersionUpdateText}>
-                v{props.appVersion}
-              </Text>
-            </Group>
-          </UnstyledButton>
-        </Tooltip>
+        </Group>
       ) : (
-        <Text
-          size={metadataTextSize}
-          c="dimmed"
-          data-yark-app-version
-          className={classes.appVersion}
-        >
-          v{props.appVersion}
-        </Text>
+        <Group gap={5} wrap="nowrap" justify="center" className={classes.appVersionRow}>
+          {updateAvailable && props.onYarkUpdateClick !== undefined && (
+            <Tooltip
+              label={`YARK update available (v${props.yarkUpdateAvailableVersion}) — open Settings to update`}
+              multiline
+              w={220}
+              position="right"
+            >
+              <UnstyledButton
+                className={classes.appVersionUpdateIconBtn}
+                onClick={props.onYarkUpdateClick}
+                aria-label={`YARK update available, version ${props.yarkUpdateAvailableVersion}`}
+                data-yark-update-version
+              >
+                <ArrowCircleUp
+                  size={compact ? 13 : 15}
+                  weight="bold"
+                  className={classes.appVersionUpdateIcon}
+                  aria-hidden
+                />
+              </UnstyledButton>
+            </Tooltip>
+          )}
+          {props.onWhatsNewClick !== undefined ? (
+            <Tooltip label="What's new in this version" position="right">
+              <UnstyledButton
+                className={
+                  updateAvailable ? classes.appVersionLabelUpdate : classes.appVersionLabel
+                }
+                onClick={props.onWhatsNewClick}
+                aria-label={`What's new in YARK v${props.appVersion}`}
+                data-yark-app-version
+              >
+                {versionLabel}
+              </UnstyledButton>
+            </Tooltip>
+          ) : (
+            <Text
+              size={metadataTextSize}
+              c="dimmed"
+              data-yark-app-version
+              className={classes.appVersionLabel}
+            >
+              v{props.appVersion}
+            </Text>
+          )}
+        </Group>
       )}
     </MantineStack>
   );

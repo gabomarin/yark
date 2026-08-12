@@ -9,7 +9,10 @@ afterEach(() => {
 });
 
 describe("Sidebar YARK version update affordance", () => {
-  it("keeps a dimmed non-interactive version when no update is available", () => {
+  it("makes only the version label open What's new when no update is available", async () => {
+    const user = userEvent.setup();
+    const onWhatsNewClick = vi.fn();
+
     render(
       <AppProviders>
         <Sidebar
@@ -20,14 +23,17 @@ describe("Sidebar YARK version update affordance", () => {
           officialVersion="1.0"
           officialNetworkStatus="online"
           appVersion="0.5.2"
+          onWhatsNewClick={onWhatsNewClick}
         />
       </AppProviders>,
     );
 
-    expect(screen.getByText("v0.5.2")).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /yark update available/i }),
-    ).not.toBeInTheDocument();
+    const button = screen.getByRole("button", {
+      name: /what's new in yark v0\.5\.2/i,
+    });
+    expect(button).toHaveAttribute("data-yark-app-version");
+    await user.click(button);
+    expect(onWhatsNewClick).toHaveBeenCalledTimes(1);
   });
 
   it("marks the active route on NavLink and navigates on click (#106)", async () => {
@@ -59,8 +65,9 @@ describe("Sidebar YARK version update affordance", () => {
     expect(onNavigate).toHaveBeenCalledWith("logs");
   });
 
-  it("accents the version and navigates on click when an update is available", async () => {
+  it("keeps update icon and version label as separate actions", async () => {
     const user = userEvent.setup();
+    const onWhatsNewClick = vi.fn();
     const onYarkUpdateClick = vi.fn();
 
     render(
@@ -74,17 +81,25 @@ describe("Sidebar YARK version update affordance", () => {
           officialNetworkStatus="online"
           appVersion="0.5.2"
           yarkUpdateAvailableVersion="0.6.0"
+          onWhatsNewClick={onWhatsNewClick}
           onYarkUpdateClick={onYarkUpdateClick}
         />
       </AppProviders>,
     );
 
-    const button = screen.getByRole("button", {
+    const updateButton = screen.getByRole("button", {
       name: /yark update available, version 0\.6\.0/i,
     });
-    expect(button).toHaveAttribute("data-yark-update-version");
-    expect(button.querySelector("svg")).not.toBeNull();
-    await user.click(button);
+    expect(updateButton).toHaveAttribute("data-yark-update-version");
+    expect(updateButton.querySelector("svg")).not.toBeNull();
+    await user.click(updateButton);
+    expect(onYarkUpdateClick).toHaveBeenCalledTimes(1);
+    expect(onWhatsNewClick).not.toHaveBeenCalled();
+
+    await user.click(
+      screen.getByRole("button", { name: /what's new in yark v0\.5\.2/i }),
+    );
+    expect(onWhatsNewClick).toHaveBeenCalledTimes(1);
     expect(onYarkUpdateClick).toHaveBeenCalledTimes(1);
   });
 

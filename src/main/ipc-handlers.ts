@@ -23,6 +23,8 @@ import type { MoveInstallService } from "../backend/domains/instances/move-insta
 import type { AppSettingsRepository } from "../backend/infra/db/app-settings-repository";
 import type { ServerRepository } from "../backend/infra/db/server-repository";
 import { UI_DENSITY_SETTING_KEY, isUiDensity, type UiDensity } from "../shared/ui-density";
+import { LAST_SEEN_CHANGELOG_VERSION_SETTING_KEY } from "../shared/changelog";
+import { APP_VERSION } from "../shared/app-version";
 import {
   readDesktopShellPreferences,
   setCloseWindowToTray,
@@ -475,6 +477,32 @@ export function registerIpcHandlers(
     settings.set(UI_DENSITY_SETTING_KEY, density);
     return density;
   });
+
+  handleValidated(
+    IPC.appGetLastSeenChangelogVersion,
+    ipcArgSchemas[IPC.appGetLastSeenChangelogVersion],
+    (): string | null => {
+      // Fresh E2E profiles must not block smoke on the post-update What's new modal.
+      if ((process.env["YARK_E2E_USER_DATA"] ?? "").trim().length > 0) {
+        return APP_VERSION;
+      }
+      const raw = settings.get(LAST_SEEN_CHANGELOG_VERSION_SETTING_KEY);
+      if (raw === null || raw.trim().length === 0) {
+        return null;
+      }
+      return raw.trim();
+    },
+  );
+
+  handleValidated(
+    IPC.appSetLastSeenChangelogVersion,
+    ipcArgSchemas[IPC.appSetLastSeenChangelogVersion],
+    ([version]): string => {
+      const normalized = version.trim().replace(/^v/i, "");
+      settings.set(LAST_SEEN_CHANGELOG_VERSION_SETTING_KEY, normalized);
+      return normalized;
+    },
+  );
 
   handleValidated(
     IPC.appGetDesktopShellPreferences,

@@ -10,6 +10,14 @@ export default defineConfig({
   site: "https://getyark.com",
   base: siteBase,
   trailingSlash: "always",
+  vite: {
+    // Shared curated changelog lives in the Electron app package (`src/shared`).
+    server: {
+      fs: {
+        allow: [".."],
+      },
+    },
+  },
   server: {
     port: 4321,
   },

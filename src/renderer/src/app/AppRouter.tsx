@@ -34,6 +34,7 @@ interface Props {
   steamCmdRunning: boolean;
   onNavigate: (route: Route) => void;
   yarkUpdateAvailableVersion?: string | null;
+  onWhatsNewClick?: () => void;
   onYarkUpdateClick?: () => void;
   overview: OverviewSlot | null;
   clusters: ClustersSlot | null;
@@ -98,6 +99,7 @@ export function AppRouter(props: Props): ReactElement {
       officialNetworkStatus={props.officialNetworkStatus}
       appVersion={props.appVersion}
       yarkUpdateAvailableVersion={props.yarkUpdateAvailableVersion}
+      onWhatsNewClick={props.onWhatsNewClick}
       onYarkUpdateClick={props.onYarkUpdateClick}
       error={props.error}
       onDismissError={props.onDismissError}

@@ -264,16 +264,14 @@ export function SettingsPage(props: Props): ReactElement {
                       </Text>
                     )}
                     {dataFolders.map((folder) => (
-                      <div key={folder.kind} className={classes.cacheRow}>
-                        <div className={classes.cacheCopy}>
-                          <Text size="sm" fw={600}>{folder.label}</Text>
+                      <div key={folder.kind} className={classes.dataFolderRow}>
+                        <Text size="sm" fw={600}>{folder.label}</Text>
+                        <div className={classes.dataFolderPathRow}>
                           <ReadonlyPath
-                            className={classes.cachePath}
+                            className={classes.dataFolderPath}
                             value={folder.path}
                             compact
                           />
-                        </div>
-                        <Group gap="xs" wrap="nowrap" className={classes.cacheActions}>
                           <Button
                             size="compact-xs"
                             variant="subtle"
@@ -282,7 +280,7 @@ export function SettingsPage(props: Props): ReactElement {
                           >
                             Open
                           </Button>
-                        </Group>
+                        </div>
                       </div>
                     ))}
                   </Stack>

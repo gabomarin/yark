@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- In-app **What's new** changelog (Settings, sidebar version click, one-shot after upgrade) from the curated notes shared with the public site (#290).
+
 ## [0.11.0] - 2026-08-12
 
 ### Added
