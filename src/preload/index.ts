@@ -27,7 +27,8 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.serversUpdatePatch, id, patch),
   setServerEnabled: (id: string, enabled: boolean) =>
     ipcRenderer.invoke(IPC.serversSetEnabled, id, enabled),
-  deleteServer: (id: string) => ipcRenderer.invoke(IPC.serversDelete, id),
+  deleteServer: (id: string, options: { deleteInstallFiles: boolean }) =>
+    ipcRenderer.invoke(IPC.serversDelete, id, options),
   cloneServer: (id: string) => ipcRenderer.invoke(IPC.serversClone, id),
   cloneServerWithParams: (id: string, params: { name: string; sessionName: string; gamePort: number; queryPort: number; rconPort: number; installDir: string }) =>
     ipcRenderer.invoke(IPC.serversCloneWithParams, id, params),

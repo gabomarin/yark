@@ -263,6 +263,26 @@ export interface SessionPortSet {
   rconPort: number;
 }
 
+/** Options for removing a server profile (`servers:delete`). */
+export interface DeleteServerOptions {
+  /**
+   * When true, recursively wipe the ASA `installDir` after safety checks
+   * (full wipe). When false, remove only the YARK profile and leave files.
+   */
+  deleteInstallFiles: boolean;
+  /**
+   * When true with `deleteInstallFiles`, re-inspect the folder (bypass cache)
+   * and refuse the wipe unless health is still `empty`. Use for UI shortcuts
+   * that assumed emptiness from a stale renderer snapshot (#267).
+   */
+  requireEmptyInstall?: boolean;
+}
+
+/** Backend error when an empty-only wipe finds the folder is no longer empty. */
+export const EMPTY_WIPE_STALE_MESSAGE =
+  "Install folder is no longer empty. Choose Remove from YARK only or Delete everything explicitly.";
+
+
 export interface StartServerOptions {
   /**
    * When true, skip only **inconclusive** host port probe failures.

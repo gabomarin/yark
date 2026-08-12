@@ -68,6 +68,7 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
 - The new renderer shell is already active.
 - Overview, SteamCMD, Logs, Backups, and **Clusters** have already been migrated to the new architecture.
 - Server profiles have a persisted `enabled` state separate from runtime status. Disabled profiles stay editable and visible through inactive navigation, but the shared backend start path cannot spawn them. Enable does not require install files to be ready (#132); Start / Restart / auto-start still do. Enable/disable is an explicit locked IPC operation; clones inherit the source state and use a unique install directory.
+- **Remove from YARK** vs **Delete everything** (#267): `servers:delete` requires `{ deleteInstallFiles }`. Profile-only never wipes `installDir`; full wipe keeps shared-path and wipe-safety guards. Details: [server-lifecycle.md](server-lifecycle.md#remove-or-delete-a-server-267).
 - Server Workspace keeps `Server`, **INI Files**, `Mods`, **Launch**, `Backups`,
   `Logs`, and **RCON** as its regular navigation. **Launch** edits curated
   structured ASA flags plus raw Extra arguments (command preview / conflicts);
