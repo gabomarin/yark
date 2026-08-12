@@ -695,7 +695,7 @@ describe("BackupService kinds and retention", () => {
     });
   });
 
-  it("restores mod map into short SavedArks folder after a wipe", async () => {
+  it("restores mod map into short SavedArks folder when live folder is empty or missing", async () => {
     const savedArks = join(installDir, "ShooterGame", "Saved", "SavedArks");
     const svartDir = join(savedArks, "Svartalfheim");
     await mkdir(svartDir, { recursive: true });
@@ -739,8 +739,8 @@ describe("BackupService kinds and retention", () => {
     expect(record).toBeDefined();
     if (record === undefined) return;
 
-    await rm(savedArks, { recursive: true, force: true });
-    await mkdir(savedArks, { recursive: true });
+    await rm(svartDir, { recursive: true, force: true });
+    await mkdir(svartDir, { recursive: true });
     await svartService.restoreBackup(svartProfile.id, record.id);
     expect(await readFile(join(svartDir, "Svartalfheim_WP.ark"), "utf8")).toBe(
       "SVART",
@@ -748,6 +748,13 @@ describe("BackupService kinds and retention", () => {
     await expect(
       access(join(savedArks, "Svartalfheim_WP", "Svartalfheim_WP.ark"), fsConstants.F_OK),
     ).rejects.toThrow();
+
+    await rm(savedArks, { recursive: true, force: true });
+    await mkdir(savedArks, { recursive: true });
+    await svartService.restoreBackup(svartProfile.id, record.id);
+    expect(await readFile(join(svartDir, "Svartalfheim_WP.ark"), "utf8")).toBe(
+      "SVART",
+    );
   });
 
   it("packages players profiles only", async () => {

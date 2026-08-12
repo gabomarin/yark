@@ -2102,6 +2102,17 @@ export class BackupService extends EventEmitter {
     // File-by-file copy so live Ark save rotation (e.g. .arkrbf) can be skipped
     // without failing the whole archive, while essential saves still fail loudly.
     const enumerated = await listFilesRecursive(mapSourceDir);
+    if (enumerated.length === 0) {
+      return {
+        meta: {
+          empty: true,
+          fileCount: 0,
+          savedArksPresent: true,
+          mapToken,
+          mapFolderName: resolved.folderName,
+        },
+      };
+    }
     const candidates = await collectWorldBackupCandidates(enumerated, stat);
     const selection = selectWorldBackupSourceFiles(candidates, { mapToken });
     const sourceFiles = selection.selected.map((candidate) => candidate.path);
