@@ -575,6 +575,84 @@ describe("ServerWorkspacePage", () => {
     });
   });
 
+  it("keeps the Backups kind tab when the workspace crosses the compact breakpoint", async () => {
+    const compactQuery = "(max-width: 1599px)";
+    let compactMatches = false;
+    const listeners = new Set<(event: MediaQueryListEvent) => void>();
+
+    vi.stubGlobal("matchMedia", (query: string) => {
+      const isCompactQuery = query === compactQuery;
+      const mediaQueryList = {
+        get matches() {
+          if (isCompactQuery) return compactMatches;
+          return /prefers-reduced-motion:\s*reduce/i.test(query);
+        },
+        media: query,
+        onchange: null as ((this: MediaQueryList, ev: MediaQueryListEvent) => unknown) | null,
+        addListener: (listener: (event: MediaQueryListEvent) => void) => {
+          if (isCompactQuery) listeners.add(listener);
+        },
+        removeListener: (listener: (event: MediaQueryListEvent) => void) => {
+          listeners.delete(listener);
+        },
+        addEventListener: (
+          type: string,
+          listener: EventListenerOrEventListenerObject | ((event: MediaQueryListEvent) => void),
+        ) => {
+          if (type === "change" && isCompactQuery && typeof listener === "function") {
+            listeners.add(listener as (event: MediaQueryListEvent) => void);
+          }
+        },
+        removeEventListener: (
+          type: string,
+          listener: EventListenerOrEventListenerObject | ((event: MediaQueryListEvent) => void),
+        ) => {
+          if (typeof listener === "function") {
+            listeners.delete(listener as (event: MediaQueryListEvent) => void);
+          }
+        },
+        dispatchEvent: () => false,
+      };
+      return mediaQueryList;
+    });
+
+    const user = userEvent.setup();
+    renderWorkspace();
+
+    await user.click(screen.getByRole("tab", { name: "Backups" }));
+    await user.click(await screen.findByRole("tab", { name: "INI" }));
+    expect(screen.getByRole("tab", { name: "INI" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+
+    compactMatches = true;
+    for (const listener of [...listeners]) {
+      listener({ matches: true, media: compactQuery } as MediaQueryListEvent);
+    }
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Switch server" })).toBeVisible();
+    });
+    expect(screen.getByRole("tab", { name: "INI" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+
+    compactMatches = false;
+    for (const listener of [...listeners]) {
+      listener({ matches: false, media: compactQuery } as MediaQueryListEvent);
+    }
+
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: "Switch server" })).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole("tab", { name: "INI" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
   it("shows only available category filters and resets an invalid filter between INI files", async () => {
     const user = userEvent.setup();
     vi.mocked(window.api.readServerIni).mockResolvedValue({

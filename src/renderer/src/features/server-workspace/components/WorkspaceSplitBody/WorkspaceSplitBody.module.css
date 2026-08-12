@@ -6,6 +6,11 @@
   overflow: hidden;
 }
 
+.root[data-compact] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .listPane {
   flex-shrink: 0;
   min-width: 0;
@@ -14,6 +19,11 @@
   overflow: hidden;
   transition: flex-basis 180ms ease, width 180ms ease;
   border-right: 1px solid var(--app-color-border-subtle);
+}
+
+.listPane[data-hidden],
+.side[data-hidden] {
+  display: none;
 }
 
 .listPane > aside {

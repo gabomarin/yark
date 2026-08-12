@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- Resizing the window no longer resets the server **Backups** kind tab (World save / Player profiles / INI) to World save (#271).
+
 ## [0.10.0] - 2026-08-12
 
 ### Added

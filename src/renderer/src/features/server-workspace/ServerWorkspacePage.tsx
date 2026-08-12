@@ -318,15 +318,13 @@ export function ServerWorkspacePage(props: Props): ReactElement {
       />
 
       <div className={classes.body} data-compact={compactWorkspace || undefined}>
-        {compactWorkspace ? (
-          mainSection
-        ) : (
-          <WorkspaceSplitBody
-            renderList={renderServerList}
-            main={mainSection}
-            side={sidePanel}
-          />
-        )}
+        {/* Keep main mounted across compact ↔ wide so Backups kind tabs survive resize (#271). */}
+        <WorkspaceSplitBody
+          compact={compactWorkspace}
+          renderList={renderServerList}
+          main={mainSection}
+          side={sidePanel}
+        />
       </div>
 
       {compactWorkspace && (
