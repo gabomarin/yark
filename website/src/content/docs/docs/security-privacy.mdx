@@ -64,6 +64,18 @@ be installed.
 
 YARK spawns `ArkAscendedServer.exe` from your install path. Keep installs on paths you control; do not point profiles at untrusted directories.
 
+Packaged Windows builds enable Electron fuses and ASAR integrity validation (see the
+[versioning / packaging notes](https://github.com/gabomarin/yark/blob/main/docs/versioning.md)
+in the repository). Unpackaged `npm run dev` builds use Electron’s default fuse wire.
+
+## Report a vulnerability in YARK
+
+If you believe you found a security bug **in YARK itself** (not ASA / SteamCMD):
+
+- Prefer [private vulnerability reporting](https://github.com/gabomarin/yark/security/advisories/new)
+  when enabled, or follow [`SECURITY.md`](https://github.com/gabomarin/yark/blob/main/SECURITY.md).
+- **Do not** open a public GitHub issue with exploit details.
+
 ## External browser opens
 
 In-app links that open your OS browser (`target=_blank`, **Open release notes** under YARK updates) only proceed for allowlisted http(s) hosts (ARK wiki, CurseForge, GitHub). Other hosts are refused.

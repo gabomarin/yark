@@ -14,6 +14,15 @@ operator-facing bullet). CI fails PRs that leave that section unchanged unless
 the PR has the `skip-changelog` label. Details: [`.cursor/rules/changelog.mdc`](.cursor/rules/changelog.mdc),
 [docs/versioning.md](docs/versioning.md).
 
+## Security policy
+
+Root [`SECURITY.md`](SECURITY.md) is the vulnerability-reporting policy. Keep it
+aligned when trust boundaries change (IPC, wipe/import paths, credentials,
+installer signing, Electron fuses). Sync operator copy in
+`website/src/content/docs/docs/security-privacy.mdx` and the README Security
+section when those stories change. Details:
+[`.cursor/rules/security-policy.mdc`](.cursor/rules/security-policy.mdc).
+
 ## Pull request merges
 
 **Squash merge** is the default when merging PRs into `main`.
@@ -30,6 +39,8 @@ the PR has the `skip-changelog` label. Details: [`.cursor/rules/changelog.mdc`](
 YARK server manager is a single Electron + React + TypeScript desktop app (no separate
 backend service; persistence is embedded SQLite via Node's built-in `node:sqlite`).
 Standard commands live in `package.json`, `README.md`, and `docs/agent-context.md`.
+Vulnerability reporting: [SECURITY.md](SECURITY.md)
+([`.cursor/rules/security-policy.mdc`](.cursor/rules/security-policy.mdc)).
 Domain runbooks: [docs/backups.md](docs/backups.md), [docs/updates-steamcmd.md](docs/updates-steamcmd.md),
 [docs/logs.md](docs/logs.md), [docs/server-lifecycle.md](docs/server-lifecycle.md),
 [docs/rcon.md](docs/rcon.md), [docs/settings.md](docs/settings.md),

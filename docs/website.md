@@ -119,3 +119,12 @@ The landing and operator docs must describe download trust consistently:
 - prefer official site / Releases download CTAs over third-party mirrors;
 - do not promise Authenticode publisher identity or code signing on the public site while
   [#142](https://github.com/gabomarin/yark/issues/142) remains deferred.
+
+## Security policy sync
+
+Root [`SECURITY.md`](../SECURITY.md) is the vulnerability-reporting policy (GitHub Security
+tab). Operator storage / secrets copy lives in
+[`website/src/content/docs/docs/security-privacy.mdx`](../website/src/content/docs/docs/security-privacy.mdx).
+When either trust-boundary story changes, update both (and the README Security section)
+so reporting channels and “what YARK stores” stay aligned. Agent rule:
+[`.cursor/rules/security-policy.mdc`](../.cursor/rules/security-policy.mdc).

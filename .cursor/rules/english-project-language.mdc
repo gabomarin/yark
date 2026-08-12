@@ -11,7 +11,7 @@ All agent-authored project output must be in **English**.
 
 - GitHub issues, PR titles/bodies, review comments, and discussion on tickets
 - Commit messages
-- Docs under `docs/`, `README.md`, `AGENTS.md`, and similar
+- Docs under `docs/`, `README.md`, `AGENTS.md`, `SECURITY.md`, and similar
 - Code comments, JSDoc, and user-facing UI copy (unless an explicit i18n task says otherwise)
 - Test names and assertion messages added or changed by the agent
 
