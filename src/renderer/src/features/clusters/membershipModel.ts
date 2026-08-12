@@ -48,6 +48,7 @@ export function listAddCandidates(
   statuses: Map<string, Pick<ServerRuntimeInfo, "status" | "processLive">>,
 ): MembershipCandidate[] {
   return [...servers]
+    .filter((server) => server.clusterId === null && server.enabled)
     .sort((a, b) => a.name.localeCompare(b.name))
     .map((server) => {
       const runtime = resolveServerRuntime(statuses, server.id);

@@ -76,12 +76,14 @@ describe("membershipModel", () => {
     });
     const running = makeServer({ id: "run", name: "Run" });
     const errored = makeServer({ id: "err", name: "Error" });
+    const disabled = makeServer({ id: "off", name: "Off", enabled: false });
     const statuses = new Map([
       ["free", { status: "stopped" as const, processLive: false }],
       ["here", { status: "stopped" as const, processLive: false }],
       ["other", { status: "stopped" as const, processLive: false }],
       ["run", { status: "running" as const, processLive: true }],
       ["err", { status: "error" as const, processLive: false }],
+      ["off", { status: "stopped" as const, processLive: false }],
     ]);
 
     expect(addIneligibilityReason(here, { status: "stopped", processLive: false }, "ember")).toBe(
@@ -97,13 +99,12 @@ describe("membershipModel", () => {
 
     const candidates = listAddCandidates(
       "ember",
-      [free, here, other, running, errored],
+      [free, here, other, running, errored, disabled],
       statuses,
     );
+    expect(candidates.map((c) => c.server.id)).toEqual(["err", "free", "run"]);
     expect(candidates.find((c) => c.server.id === "free")?.eligible).toBe(true);
     expect(candidates.find((c) => c.server.id === "err")?.eligible).toBe(true);
-    expect(candidates.find((c) => c.server.id === "here")?.eligible).toBe(false);
-    expect(candidates.find((c) => c.server.id === "other")?.eligible).toBe(false);
     expect(candidates.find((c) => c.server.id === "run")?.eligible).toBe(false);
   });
 

@@ -44,23 +44,10 @@ interface Props {
   onChanged: () => void;
 }
 
-function initialSelectedIds(
-  clusterId: string,
-  servers: ServerProfile[],
-  statuses: Map<string, ServerRuntimeInfo>,
-): string[] {
-  const firstEligible = listAddCandidates(clusterId, servers, statuses).find(
-    (candidate) => candidate.eligible,
-  )?.server.id;
-  return firstEligible !== undefined ? [firstEligible] : [];
-}
-
 export function AddServersModal(props: Props): ReactElement {
   const hasTemplate = props.hasTemplate === true;
   const [step, setStep] = useState<1 | 2>(1);
-  const [selectedIds, setSelectedIds] = useState(() =>
-    initialSelectedIds(props.clusterId, props.servers, props.statuses),
-  );
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [seedFromTemplate, setSeedFromTemplate] = useState(false);
   const [seedFiles, setSeedFiles] = useState<ClusterIniTemplateFileSelection>(() => ({
     gameUserSettings: false,
@@ -190,7 +177,7 @@ export function AddServersModal(props: Props): ReactElement {
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
-          Choose servers that are not running and not already in a cluster. They will receive
+          Choose enabled servers that are not running and not already in a cluster. They will receive
           this cluster’s ID and shared directory.
         </Text>
 
@@ -217,8 +204,8 @@ export function AddServersModal(props: Props): ReactElement {
             candidates={candidates}
             selectedIds={activeSelectedIds}
             portError={portError}
-            emptyHint="No servers available to add. Create a server that is not running and not already in a cluster."
-            selectionHint="Select one or more servers that are not running and not already in a cluster"
+            emptyHint="No servers available to add. Create an enabled server that is not running and not already in a cluster."
+            selectionHint="Select one or more enabled servers that are not running and not already in a cluster"
             onToggle={(serverId) =>
               setSelectedIds((current) =>
                 toggleSelectedServerId(

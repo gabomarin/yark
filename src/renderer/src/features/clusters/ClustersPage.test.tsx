@@ -550,6 +550,11 @@ describe("ClustersPage", () => {
     await user.click(screen.getByRole("button", { name: /add servers/i }));
     const dialog = await screen.findByRole("dialog", { name: /add servers to alpha/i });
     expect(within(dialog).getByText("Free Map")).toBeInTheDocument();
+    expect(within(dialog).queryByText("The Island")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("Scorched")).not.toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: /continue/i })).toBeDisabled();
+    await user.click(within(dialog).getByRole("button", { name: /Free Map/i }));
+    expect(within(dialog).getByText(/1 selected/i)).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: /continue/i }));
     await user.click(within(dialog).getByRole("button", { name: /add to cluster/i }));
 
@@ -797,6 +802,7 @@ describe("ClustersPage", () => {
 
     await user.click(await screen.findByRole("button", { name: /^add servers$/i }));
     const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: /Free Map/i }));
     await user.click(within(dialog).getByRole("button", { name: /continue/i }));
     const seedToggle = within(dialog).getByRole("checkbox", {
       name: /seed ini from cluster template/i,
@@ -870,6 +876,7 @@ describe("ClustersPage", () => {
     await user.click(screen.getByRole("button", { name: /add servers/i }));
     const dialog = await screen.findByRole("dialog", { name: /add servers to alpha/i });
     expect(within(dialog).getByText("Free Map")).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: /Free Map/i }));
     await user.click(within(dialog).getByRole("button", { name: /continue/i }));
     await user.click(within(dialog).getByRole("button", { name: /add to cluster/i }));
 
