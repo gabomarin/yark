@@ -1,6 +1,8 @@
 import { Menu, Tray, nativeImage, type BrowserWindow, type NativeImage } from "electron";
 import { existsSync } from "node:fs";
 
+export { formatTrayServerStatus } from "@shared/app-tray-status";
+
 export interface AppTrayOptions {
   iconPath: string | undefined;
   onShow: () => void;
@@ -72,14 +74,4 @@ export function showBrowserWindow(win: BrowserWindow | null): void {
   }
   win.show();
   win.focus();
-}
-
-export function formatTrayServerStatus(runningCount: number): string {
-  if (runningCount <= 0) {
-    return "No servers running";
-  }
-  if (runningCount === 1) {
-    return "1 server running";
-  }
-  return `${runningCount} servers running`;
 }
