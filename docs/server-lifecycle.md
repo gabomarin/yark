@@ -207,6 +207,36 @@ updates cannot change it; only `InstanceService.setServerEnabled` may do so.
   pending only when it removed that same recorded path, so an older leftover is
   not dropped from the registry.
 
+### Remove or delete a server (#267)
+
+Overview card kebab / context menu → **Delete server** opens a confirm
+(`servers:delete` with required `{ deleteInstallFiles: boolean }`). Both modes
+reject while the process is active. Missing profiles are a no-op.
+
+| Mode | UI | Disk | Notes |
+| --- | --- | --- | --- |
+| **Remove from YARK only** (default when a choice is shown) | Keeps install path copy; blue “kept” alert | Never calls `rm` on `installDir` | Allowed even when another profile shares the path. Import (#254) can re-adopt only a **ready** ASA tree |
+| **Delete everything** | Danger alert; confirm **Delete everything** | Recursive wipe of `installDir` after wipe-safety + shared-path checks | Same full wipe as before #267 |
+
+**Empty install folder:** when install health is `empty` (folder exists but has
+no ASA files — typical never-installed profile), the mode picker is hidden and
+delete always wipes the empty path. Keeping an empty folder is not useful:
+Import rejects empty / incomplete trees. Health `missing` and `incomplete` still
+show both modes (partial work or path issues may still matter to the operator).
+
+**What is purged:** the `servers` row and one fleet audit event (`server_deleted`).
+Related `events` / `backups` / `backup_policies` rows are **not** FK-cascaded
+(same as historical delete). Profile-only events state that files were kept and
+record the path.
+
+**Contrast with related flows:**
+
+- **Disable** (#129) — profile stays in YARK; no spawn. Not a removal.
+- **Remove from YARK only** (#267) — catalog row gone; ASA folder untouched.
+- **Delete everything** (#267) — profile + install folder wipe.
+- **Import install** (#254) — reverse of profile-only remove: adopt an existing
+  on-disk folder as a new profile (ready installs only).
+
 **Start** (`InstanceService.start`):
 
 1. Acquire the per-server operation lock and reject disabled profiles.

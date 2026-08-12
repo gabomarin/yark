@@ -163,6 +163,7 @@ async function removeServerIfPresent(page, name) {
   }
 
   await deleteAction.click();
+  await page.getByRole("radio", { name: "Delete everything" }).click();
   await page.getByRole("button", { name: "Delete everything" }).click();
   await card.waitFor({ state: "detached", timeout: 15000 });
   await dismissOpenMenus(page);

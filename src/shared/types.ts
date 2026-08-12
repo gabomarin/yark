@@ -263,6 +263,15 @@ export interface SessionPortSet {
   rconPort: number;
 }
 
+/** Options for removing a server profile (`servers:delete`). */
+export interface DeleteServerOptions {
+  /**
+   * When true, recursively wipe the ASA `installDir` after safety checks
+   * (full wipe). When false, remove only the YARK profile and leave files.
+   */
+  deleteInstallFiles: boolean;
+}
+
 export interface StartServerOptions {
   /**
    * When true, skip only **inconclusive** host port probe failures.

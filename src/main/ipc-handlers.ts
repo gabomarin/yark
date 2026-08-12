@@ -112,8 +112,10 @@ export function registerIpcHandlers(
     instances.setServerEnabled(id, enabled),
   );
 
-  handleValidated(IPC.serversDelete, ipcArgSchemas[IPC.serversDelete], ([id]) =>
-    instances.delete(id),
+  handleValidated(
+    IPC.serversDelete,
+    ipcArgSchemas[IPC.serversDelete],
+    ([id, options]) => instances.delete(id, options),
   );
 
   handleValidated(IPC.serversClone, ipcArgSchemas[IPC.serversClone], ([id]) =>

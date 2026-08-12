@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { APP_VERSION } from "@shared/app-version";
 import type { AppUpdateStatus } from "@shared/app-update";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, List, Stack, Text } from "@mantine/core";
+import { Alert } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
@@ -10,7 +10,6 @@ import {
   yarkUpdateToastCopy,
   yarkUpdateToastDedupeKey,
 } from "@ui/yarkUpdateOperatorToast";
-import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import type {
   AppEvent,
   ClusterComplianceReport,
@@ -61,6 +60,7 @@ import type { PlayerListState } from "@features/server-workspace/components/Rcon
 import type { OnlinePlayerInfo, PlayerListUpdatedPush } from "@shared/ipc";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { CloneServerDialog } from "@features/servers/components/CloneServerDialog/CloneServerDialog";
+import { DeleteServerModal } from "@features/servers/components/DeleteServerModal/DeleteServerModal";
 import { CopyConfigurationWizard } from "@features/servers/components/CopyConfigurationWizard/CopyConfigurationWizard";
 import { openHostPortProbeModal } from "@features/servers/hostPortProbeModal";
 import { SteamCmdProgressDock } from "@features/steamcmd/SteamCmdProgressDock";
@@ -130,6 +130,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   const [route, setRoute] = useState<Route>("overview");
   const [overlay, setOverlay] = useState<Overlay>(null);
   const [importInstallOpen, setImportInstallOpen] = useState(false);
+  const [deleteServerId, setDeleteServerId] = useState<string | null>(null);
   /** Dirty-leave guard registered by ServerWorkspacePage while the overlay is open. */
   const workspaceLeaveGuardRef = useRef<((action: () => void) => void) | null>(null);
   const [copyConfig, setCopyConfig] = useState<CopyConfigSession | null>(null);
@@ -1216,42 +1217,9 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     [runAction, servers],
   );
 
-  const confirmDeleteServer = useCallback(
-    (id: string) => {
-      const server = servers.find((item) => item.id === id);
-      const label = server?.name ?? id;
-      const installDir = server?.installDir ?? "(unknown path)";
-      modals.openConfirmModal({
-        title: `Delete server "${label}"`,
-        centered: true,
-        children: (
-          <Stack gap="sm">
-            <Alert color="red" title="Everything will be deleted" variant="light">
-              This action cannot be undone. This server in YARK and all on-disk content
-              (world, configs, mods, and other files) will be deleted.
-            </Alert>
-            <div>
-              <Text size="xs" c="dimmed" mb={4}>
-                Folder that will be deleted:
-              </Text>
-              <ReadonlyPath value={installDir} compact />
-            </div>
-            <List size="sm" spacing={4}>
-              <List.Item>This server in YARK</List.Item>
-              <List.Item>World save</List.Item>
-              <List.Item>Settings and other server files</List.Item>
-            </List>
-          </Stack>
-        ),
-        labels: { confirm: "Delete everything", cancel: "Cancel" },
-        confirmProps: { color: "red" },
-        onConfirm: () => {
-          void runAction(() => window.api.deleteServer(id));
-        },
-      });
-    },
-    [runAction, servers],
-  );
+  const confirmDeleteServer = useCallback((id: string) => {
+    setDeleteServerId(id);
+  }, []);
 
   const openServerLogs = useCallback(
     (serverId: string, focus?: ServerLogsFocus) => {
@@ -1629,6 +1597,29 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             ),
           )
         }
+      />
+      <DeleteServerModal
+        opened={deleteServerId !== null}
+        serverName={
+          deleteServerId !== null
+            ? (servers.find((s) => s.id === deleteServerId)?.name ?? deleteServerId)
+            : ""
+        }
+        installDir={
+          deleteServerId !== null
+            ? (servers.find((s) => s.id === deleteServerId)?.installDir ?? "(unknown path)")
+            : ""
+        }
+        installHealth={
+          deleteServerId !== null
+            ? (installationInfo.get(deleteServerId)?.health ?? null)
+            : null
+        }
+        onClose={() => setDeleteServerId(null)}
+        onConfirm={async (options) => {
+          if (deleteServerId === null) return false;
+          return runAction(() => window.api.deleteServer(deleteServerId, options));
+        }}
       />
       {copyConfig !== null && (
         <CopyConfigurationWizard

@@ -42,8 +42,16 @@ function makeProfile(installDir: string, id = "srv-1"): ServerProfile {
   };
 }
 
+function makeService(
+  repo: ServerRepository,
+  processes: ProcessManager,
+): InstanceService {
+  const backups = {} as import("@backend/domains/backups/backup-service").BackupService;
+  return new InstanceService(repo, processes, backups, new InstanceLockManager());
+}
+
 describe("InstanceService.delete", () => {
-  it("deletes the profile and the install folder from disk", async () => {
+  it("deletes the profile and the install folder from disk when wipe is requested", async () => {
     const installDir = await mkdtemp(join(tmpdir(), "ark-delete-"));
     tmpDirs.push(installDir);
     await mkdir(join(installDir, "ShooterGame"), { recursive: true });
@@ -62,20 +70,53 @@ describe("InstanceService.delete", () => {
       isActive: vi.fn(() => false),
     } as unknown as ProcessManager;
 
-    const backups = {} as import("@backend/domains/backups/backup-service").BackupService;
-    const service = new InstanceService(
-      repo,
-      processes,
-      backups,
-      new InstanceLockManager(),
-    );
-    await service.delete(profile.id);
+    const service = makeService(repo, processes);
+    await service.delete(profile.id, { deleteInstallFiles: true });
 
     expect(repo.delete).toHaveBeenCalledWith(profile.id);
+    expect(repo.addEvent).toHaveBeenCalledWith(
+      null,
+      "server_deleted",
+      "info",
+      expect.stringMatching(/profile \+ files/),
+    );
     await expect(access(installDir, fsConstants.F_OK)).rejects.toThrow();
   });
 
-  it("does not delete disk when another profile shares the same installDir", async () => {
+  it("removes the profile and keeps install files when wipe is not requested", async () => {
+    const installDir = await mkdtemp(join(tmpdir(), "ark-delete-keep-"));
+    tmpDirs.push(installDir);
+    await writeFile(join(installDir, "marker.txt"), "x", "utf8");
+
+    const profile = makeProfile(installDir);
+    const repo = {
+      get: vi.fn((id: string) => (id === profile.id ? profile : null)),
+      list: vi.fn(() => [profile]),
+      delete: vi.fn(() => true),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+
+    const processes = {
+      on: vi.fn(),
+      isActive: vi.fn(() => false),
+    } as unknown as ProcessManager;
+
+    const service = makeService(repo, processes);
+    await service.delete(profile.id, { deleteInstallFiles: false });
+
+    expect(repo.delete).toHaveBeenCalledWith(profile.id);
+    expect(repo.addEvent).toHaveBeenCalledWith(
+      null,
+      "server_deleted",
+      "info",
+      expect.stringMatching(/files kept at/),
+    );
+    await expect(
+      access(join(installDir, "marker.txt"), fsConstants.F_OK),
+    ).resolves.toBeUndefined();
+  });
+
+  it("does not wipe disk when another profile shares the same installDir", async () => {
     const installDir = await mkdtemp(join(tmpdir(), "ark-delete-shared-"));
     tmpDirs.push(installDir);
     await writeFile(join(installDir, "marker.txt"), "x", "utf8");
@@ -96,15 +137,76 @@ describe("InstanceService.delete", () => {
       isActive: vi.fn(() => false),
     } as unknown as ProcessManager;
 
-    const backups = {} as import("@backend/domains/backups/backup-service").BackupService;
-    const service = new InstanceService(
-      repo,
-      processes,
-      backups,
-      new InstanceLockManager(),
-    );
-    await expect(service.delete(profile.id)).rejects.toThrow(/also used by/i);
+    const service = makeService(repo, processes);
+    await expect(
+      service.delete(profile.id, { deleteInstallFiles: true }),
+    ).rejects.toThrow(/also used by/i);
     expect(repo.delete).not.toHaveBeenCalled();
-    await expect(access(join(installDir, "marker.txt"), fsConstants.F_OK)).resolves.toBeUndefined();
+    await expect(
+      access(join(installDir, "marker.txt"), fsConstants.F_OK),
+    ).resolves.toBeUndefined();
+  });
+
+  it("allows profile-only remove when another profile shares the same installDir", async () => {
+    const installDir = await mkdtemp(join(tmpdir(), "ark-delete-shared-keep-"));
+    tmpDirs.push(installDir);
+    await writeFile(join(installDir, "marker.txt"), "x", "utf8");
+
+    const profile = makeProfile(installDir, "srv-a");
+    const clone = makeProfile(installDir, "srv-b");
+    clone.name = "Clone";
+
+    const repo = {
+      get: vi.fn((id: string) => (id === profile.id ? profile : null)),
+      list: vi.fn(() => [profile, clone]),
+      delete: vi.fn(() => true),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+
+    const processes = {
+      on: vi.fn(),
+      isActive: vi.fn(() => false),
+    } as unknown as ProcessManager;
+
+    const service = makeService(repo, processes);
+    await service.delete(profile.id, { deleteInstallFiles: false });
+
+    expect(repo.delete).toHaveBeenCalledWith(profile.id);
+    await expect(
+      access(join(installDir, "marker.txt"), fsConstants.F_OK),
+    ).resolves.toBeUndefined();
+  });
+
+  it("rejects both modes while the server process is active", async () => {
+    const installDir = await mkdtemp(join(tmpdir(), "ark-delete-running-"));
+    tmpDirs.push(installDir);
+    await writeFile(join(installDir, "marker.txt"), "x", "utf8");
+
+    const profile = makeProfile(installDir);
+    const repo = {
+      get: vi.fn((id: string) => (id === profile.id ? profile : null)),
+      list: vi.fn(() => [profile]),
+      delete: vi.fn(() => true),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+
+    const processes = {
+      on: vi.fn(),
+      isActive: vi.fn(() => true),
+    } as unknown as ProcessManager;
+
+    const service = makeService(repo, processes);
+
+    await expect(
+      service.delete(profile.id, { deleteInstallFiles: false }),
+    ).rejects.toThrow(/while it is running/i);
+    await expect(
+      service.delete(profile.id, { deleteInstallFiles: true }),
+    ).rejects.toThrow(/while it is running/i);
+
+    expect(repo.delete).not.toHaveBeenCalled();
+    await expect(
+      access(join(installDir, "marker.txt"), fsConstants.F_OK),
+    ).resolves.toBeUndefined();
   });
 });

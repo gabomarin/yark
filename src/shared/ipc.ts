@@ -42,6 +42,7 @@ import type {
   SteamCmdStatus,
   SteamCmdCacheKind,
   StartServerOptions,
+  DeleteServerOptions,
 } from "./types";
 import type { AppUpdateStatus } from "./app-update";
 import type { UiDensity } from "./ui-density";
@@ -242,7 +243,10 @@ export interface RendererApi {
     patch: ServerProfilePatch,
   ): Promise<IpcResult<ServerProfile>>;
   setServerEnabled(id: string, enabled: boolean): Promise<IpcResult<ServerProfile>>;
-  deleteServer(id: string): Promise<IpcResult<void>>;
+  deleteServer(
+    id: string,
+    options: DeleteServerOptions,
+  ): Promise<IpcResult<void>>;
   cloneServer(id: string): Promise<IpcResult<ServerProfile>>;
   cloneServerWithParams(
     id: string,

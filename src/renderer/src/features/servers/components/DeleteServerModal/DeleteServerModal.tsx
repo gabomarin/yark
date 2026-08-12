@@ -1,0 +1,199 @@
+import type { ReactElement } from "react";
+import { useEffect, useState } from "react";
+import {
+  Alert,
+  Badge,
+  Button,
+  Group,
+  Modal,
+  Radio,
+  Stack,
+  Text,
+} from "@mantine/core";
+import type { DeleteServerOptions, InstallationHealthStatus } from "@shared/types";
+import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
+import classes from "./DeleteServerModal.module.css";
+
+export type DeleteServerMode = "profileOnly" | "wipe";
+
+/**
+ * Empty install folders have nothing worth keeping, and Import (#254) rejects
+ * them — skip the mode picker and always wipe.
+ */
+export function isForcedWipeInstallHealth(
+  health: InstallationHealthStatus | null | undefined,
+): boolean {
+  return health === "empty";
+}
+
+interface Props {
+  opened: boolean;
+  serverName: string;
+  installDir: string;
+  /** Latest install-health classification for this server (may be unknown). */
+  installHealth?: InstallationHealthStatus | null;
+  onClose: () => void;
+  /** Returns true when delete succeeded; modal closes only then. */
+  onConfirm: (options: DeleteServerOptions) => Promise<boolean>;
+}
+
+export function DeleteServerModal(props: Props): ReactElement {
+  const forcedWipe = isForcedWipeInstallHealth(props.installHealth);
+  const [mode, setMode] = useState<DeleteServerMode>("profileOnly");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (props.opened) {
+      setMode(forcedWipe ? "wipe" : "profileOnly");
+      setLoading(false);
+    }
+  }, [props.opened, forcedWipe]);
+
+  const wipe = forcedWipe || mode === "wipe";
+
+  const handleConfirm = async (): Promise<void> => {
+    setLoading(true);
+    try {
+      const ok = await props.onConfirm({ deleteInstallFiles: wipe });
+      if (ok) {
+        props.onClose();
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal
+      opened={props.opened}
+      onClose={props.onClose}
+      title={`Remove server "${props.serverName}"`}
+      centered
+      size="md"
+    >
+      <Stack gap="sm">
+        {forcedWipe ? (
+          <Alert
+            title="Empty install folder"
+            variant="light"
+            className={classes.dangerAlert}
+            color="gray"
+          >
+            This profile never received ASA files (empty folder). YARK will remove the server
+            and delete the empty install path. Import cannot adopt an empty folder later.
+          </Alert>
+        ) : (
+          <>
+            <Radio.Group
+              value={mode}
+              onChange={(value) => {
+                if (value === "profileOnly" || value === "wipe") {
+                  setMode(value);
+                }
+              }}
+              name="delete-server-mode"
+              aria-label="Removal mode"
+            >
+              <div className={classes.options}>
+                <Radio.Card
+                  className={classes.card}
+                  value="profileOnly"
+                  radius="md"
+                  withBorder={false}
+                >
+                  <div className={classes.cardInner}>
+                    <div className={classes.titleRow}>
+                      <Radio.Indicator className={classes.indicator} />
+                      <div className={classes.titleText}>
+                        <Text size="sm" fw={600} lh={1.35}>
+                          Remove from YARK only
+                        </Text>
+                      </div>
+                    </div>
+                    <Text size="xs" c="dimmed" lh={1.45} className={classes.description}>
+                      Delete the managed profile. Keep world, configs, mods, and binaries on disk.
+                    </Text>
+                  </div>
+                </Radio.Card>
+
+                <Radio.Card
+                  className={classes.card}
+                  value="wipe"
+                  radius="md"
+                  withBorder={false}
+                  mod={{ danger: true }}
+                >
+                  <div className={classes.cardInner}>
+                    <div className={classes.titleRow}>
+                      <Radio.Indicator className={classes.indicator} />
+                      <div className={classes.titleText}>
+                        <Text
+                          size="sm"
+                          fw={600}
+                          lh={1.35}
+                          className={wipe ? classes.dangerTitle : undefined}
+                        >
+                          Delete everything
+                        </Text>
+                        <Badge
+                          size="xs"
+                          variant="outline"
+                          tt="uppercase"
+                          className={classes.dangerBadge}
+                        >
+                          Danger
+                        </Badge>
+                      </div>
+                    </div>
+                    <Text size="xs" c="dimmed" lh={1.45} className={classes.description}>
+                      Remove the profile and permanently wipe the install folder.
+                    </Text>
+                  </div>
+                </Radio.Card>
+              </div>
+            </Radio.Group>
+
+            {wipe ? (
+              <Alert
+                title="Everything will be deleted"
+                variant="light"
+                className={classes.dangerAlert}
+                color="gray"
+              >
+                This server in YARK and all on-disk content (world, configs, mods, and binaries)
+                will be deleted. This cannot be undone.
+              </Alert>
+            ) : (
+              <Alert color="blue" title="Install folder will be kept" variant="light">
+                YARK stops managing this server. The ASA folder stays on disk for manual launch
+                or a later Import (Import requires a ready ASA install).
+              </Alert>
+            )}
+          </>
+        )}
+
+        <div>
+          <Text size="xs" c="dimmed" mb={4}>
+            {wipe ? "Folder that will be deleted:" : "Folder that will be kept:"}
+          </Text>
+          <ReadonlyPath value={props.installDir} compact />
+        </div>
+
+        <Group justify="flex-end" gap="sm" mt="xs">
+          <Button variant="default" onClick={props.onClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button
+            className={wipe ? classes.dangerButton : undefined}
+            loading={loading}
+            onClick={() => {
+              void handleConfirm();
+            }}
+          >
+            {wipe ? "Delete everything" : "Remove from YARK"}
+          </Button>
+        </Group>
+      </Stack>
+    </Modal>
+  );
+}

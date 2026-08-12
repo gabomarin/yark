@@ -422,12 +422,26 @@ export class InstanceService extends EventEmitter {
     this.assertUniqueInstallDir(installDir, excludeId);
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(
+    id: string,
+    options: { deleteInstallFiles: boolean },
+  ): Promise<void> {
     if (this.processes.isActive(id)) {
       throw new Error("Cannot delete a server while it is running");
     }
     const profile = this.repo.get(id);
     if (profile === null) return;
+
+    if (!options.deleteInstallFiles) {
+      this.repo.delete(id);
+      this.repo.addEvent(
+        null,
+        "server_deleted",
+        "info",
+        `Server "${profile.name}" removed from YARK (files kept at ${profile.installDir})`,
+      );
+      return;
+    }
 
     const installDir = assertSafeInstallDirForWipe(profile.installDir);
     const shared = this.repo

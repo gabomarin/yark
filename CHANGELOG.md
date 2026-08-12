@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- **Remove from YARK only** when deleting a server: keep the ASA install folder on disk, or choose **Delete everything** for a full wipe; empty never-installed folders skip the choice and always wipe (#267).
+
 ### Changed
 
 - **Player backups** are join/leave only: flat profile files under `PlayerProfiles/`, restore into the current map folder, no manual “Backup all players” / Players Import; critical-path snapshots are world + INI (#275).

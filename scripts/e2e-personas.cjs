@@ -138,6 +138,7 @@ async function runExperiencedFlow(page, serverName) {
 
   await cloneCard.getByRole("button", { name: "More options" }).click();
   await page.getByRole("menuitem", { name: "Delete server" }).click();
+  await page.getByRole("radio", { name: "Delete everything" }).click();
   await page.getByRole("button", { name: "Delete everything" }).click();
 
   await cloneCard.waitFor({ state: "detached", timeout: 15000 });
@@ -165,6 +166,7 @@ async function deleteServerIfPresent(page, serverName) {
   const deleteAction = page.getByRole("menuitem", { name: "Delete server" });
   if ((await deleteAction.count()) > 0) {
     await deleteAction.click();
+    await page.getByRole("radio", { name: "Delete everything" }).click();
     await page.getByRole("button", { name: "Delete everything" }).click();
     await card.waitFor({ state: "detached", timeout: 15000 });
   }
