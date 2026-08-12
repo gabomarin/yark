@@ -123,6 +123,21 @@ export function healthTone(
   return probe.canContinue ? "ready" : "blocked";
 }
 
+/**
+ * Whether the Import wizard may leave step 1 (#254 / #283).
+ * Ready probes unlock via `canContinue`; incomplete requires explicit opt-in.
+ */
+export function canImportInstallProceed(
+  probe: ImportInstallProbe,
+  allowIncompleteInstall: boolean,
+): boolean {
+  if (probe.canContinue) return true;
+  if (!allowIncompleteInstall) return false;
+  if (probe.alreadyManagedBy !== null) return false;
+  if (probe.nestedSubfolder) return false;
+  return probe.installation.health === "incomplete";
+}
+
 /** Operator-facing badge text for import (never show raw `suspicious`). */
 export function importHealthBadgeLabel(
   probe: Pick<

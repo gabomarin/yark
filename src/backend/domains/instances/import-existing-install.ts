@@ -405,6 +405,47 @@ export function classifyImportContinue(
   return { canContinue: health === "ready" };
 }
 
+/** Incomplete ASA trees may be imported only with an explicit opt-in (#283). */
+export function isImportIncompleteEligible(
+  health: ServerInstallationInfo["health"],
+): boolean {
+  return health === "incomplete";
+}
+
+/**
+ * Whether probe suggestions should be built for this health.
+ * Ready and incomplete both carry GUS/mods/SavedArks hints for the wizard (#283).
+ */
+export function shouldBuildImportSuggestions(
+  health: ServerInstallationInfo["health"],
+): boolean {
+  return health === "ready" || health === "incomplete";
+}
+
+/**
+ * Enforce import health gate for `importExisting` (do not trust the renderer).
+ * Ready always allowed; incomplete only with `allowIncompleteInstall`.
+ */
+export function assertImportHealthAllowed(
+  health: ServerInstallationInfo["health"],
+  options?: { allowIncompleteInstall?: boolean },
+  guidance?: string | null,
+): void {
+  if (health === "ready") return;
+  if (
+    health === "incomplete" &&
+    options?.allowIncompleteInstall === true
+  ) {
+    return;
+  }
+  throw new Error(
+    guidance ||
+      (health === "incomplete"
+        ? "Folder is an incomplete ASA install. Check “Import anyway” to adopt it and finish with Install/Verify, or pick a ready folder."
+        : `Folder is not a ready ASA dedicated root (health: ${health}). Pick the folder that contains ShooterGame.`),
+  );
+}
+
 /** Exact install-folder match against existing YARK profiles (case-insensitive). */
 export function findManagedInstallClash(
   installDir: string,
@@ -498,7 +539,7 @@ export async function probeImportInstall(
     { bypassCache: true },
   );
   const gate = classifyImportContinue(installation.health);
-  const suggestions = gate.canContinue
+  const suggestions = shouldBuildImportSuggestions(installation.health)
     ? await buildImportSuggestions(normalized)
     : emptySuggestions(normalized);
   return {

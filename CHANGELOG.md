@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- **Import anyway** opt-in for incomplete ASA folders: adopt the path as a YARK profile and finish with Install/Verify; empty folders stay blocked (#283).
 - **Remove from YARK only** when deleting a server: keep the ASA install folder on disk, or choose **Delete everything** for a full wipe; empty never-installed folders skip the choice and always wipe, with a live emptiness recheck before wipe (#267).
 
 ### Changed

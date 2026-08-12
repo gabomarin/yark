@@ -141,7 +141,7 @@ export function registerIpcHandlers(
   handleValidated(
     IPC.serversImportExisting,
     ipcArgSchemas[IPC.serversImportExisting],
-    async ([input]) => {
+    async ([input, options]) => {
       const profileInput = input as ServerProfileInput;
       const modsList = profileInput.mods ?? [];
       // Soft CurseForge resolve: keep all disk-discovered IDs even when some
@@ -170,7 +170,7 @@ export function registerIpcHandlers(
           modMetadataCache: cache,
         },
       );
-      return instances.importExisting(enriched);
+      return instances.importExisting(enriched, options ?? undefined);
     },
   );
 

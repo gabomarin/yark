@@ -19,8 +19,10 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.serversCreate, input),
   probeImportInstall: (installDir: string) =>
     ipcRenderer.invoke(IPC.serversProbeImport, installDir),
-  importExistingServer: (input: ServerProfileInput) =>
-    ipcRenderer.invoke(IPC.serversImportExisting, input),
+  importExistingServer: (
+    input: ServerProfileInput,
+    options?: { allowIncompleteInstall?: boolean },
+  ) => ipcRenderer.invoke(IPC.serversImportExisting, input, options),
   updateServer: (id: string, input: ServerProfileInput) =>
     ipcRenderer.invoke(IPC.serversUpdate, id, input),
   updateServerPatch: (id: string, patch: ServerProfilePatch) =>
