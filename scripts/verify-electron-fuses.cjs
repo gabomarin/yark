@@ -21,7 +21,7 @@ const EXPECTED = {
   EnableEmbeddedAsarIntegrityValidation: true,
   OnlyLoadAppFromAsar: true,
   LoadBrowserProcessSpecificV8Snapshot: false,
-  GrantFileProtocolExtraPrivileges: false,
+  GrantFileProtocolExtraPrivileges: true,
 };
 
 /**

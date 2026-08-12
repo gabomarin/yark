@@ -34,12 +34,13 @@ export const changelog: ChangelogEntry[] = [
       {
         title: "Security",
         items: [
-          "Packaged builds enable Electron fuses and ASAR integrity validation.",
+          "Packaged builds enable Electron fuses and ASAR integrity validation; grantFileProtocolExtraPrivileges stays on while loadFile serves the UI.",
         ],
       },
       {
         title: "Fixed",
         items: [
+          "Packaged builds keep grantFileProtocolExtraPrivileges enabled so the renderer loads (blank window / ERR_FILE_NOT_FOUND when the fuse was off).",
           "World restore after a wipe recreates the live map folder from the backup (mod maps like Svartalfheim/), not a mistaken MapToken directory; empty live maps skip the pre-restore safeguard.",
           "Import install map detection finds nested SavedArks folders even when the folder name is not a MapToken.",
           "Safe Update backup progress/cancel and large world snapshot packaging; YARK update Ready state survives re-checks.",
