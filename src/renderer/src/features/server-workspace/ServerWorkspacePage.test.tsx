@@ -296,6 +296,7 @@ describe("ServerWorkspacePage", () => {
                 {
                   serverId: serverA.id,
                   status: "running",
+                  processLive: true,
                   pid: 42,
                   startedAt: "2026-07-23T00:00:00.000Z",
                   lastError: null,
@@ -419,6 +420,7 @@ describe("ServerWorkspacePage", () => {
                 {
                   serverId: serverA.id,
                   status: "running",
+                  processLive: true,
                   pid: 42,
                   startedAt: "2026-07-23T00:00:00.000Z",
                   lastError: null,
@@ -498,6 +500,7 @@ describe("ServerWorkspacePage", () => {
                 {
                   serverId: serverA.id,
                   status: "running",
+                  processLive: true,
                   pid: 42,
                   startedAt: "2026-07-23T00:00:00.000Z",
                   lastError: null,
@@ -899,6 +902,7 @@ describe("ServerWorkspacePage", () => {
                 {
                   serverId: serverA.id,
                   status: "stopping",
+                  processLive: true,
                   pid: 42,
                   startedAt: "2026-07-23T00:00:00.000Z",
                   lastError: null,

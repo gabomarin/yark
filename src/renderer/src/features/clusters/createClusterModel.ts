@@ -3,9 +3,15 @@ import {
   normalizeWindowsPath,
 } from "@shared/server-install-path";
 import { findPortConflicts } from "@shared/port-conflicts";
+import {
+  clusterProcessBusyReason as sharedClusterProcessBusyReason,
+  isServerProcessBusyForClusterOps as sharedIsServerProcessBusyForClusterOps,
+  type ServerProcessRuntime,
+} from "@shared/server-process-idle";
 import type {
   ServerProfile,
   ServerProfileInput,
+  ServerRuntimeInfo,
   ServerStatus,
 } from "@shared/types";
 import { listDirWithoutIdServers, groupServersByClusterDir } from "./clusterModel";
@@ -30,50 +36,65 @@ export interface CreateClusterCandidate {
   reason: string | null;
 }
 
+export function resolveServerRuntime(
+  statuses: Map<string, Pick<ServerRuntimeInfo, "status" | "processLive">>,
+  serverId: string,
+): ServerProcessRuntime {
+  const info = statuses.get(serverId);
+  if (info === undefined) {
+    return { status: "stopped", processLive: false };
+  }
+  return {
+    status: info.status,
+    processLive: info.processLive ?? false,
+  };
+}
+
 export function resolveServerStatus(
-  statuses: Map<string, { status: ServerStatus }>,
+  statuses: Map<string, Pick<ServerRuntimeInfo, "status" | "processLive">>,
   serverId: string,
 ): ServerStatus {
-  return statuses.get(serverId)?.status ?? "stopped";
+  return resolveServerRuntime(statuses, serverId).status;
 }
 
 /**
- * Cluster membership / template apply is safe when the ASA process is idle.
- * `error` means the process is not running (e.g. closed outside YARK) (#276).
+ * Cluster membership / template apply is safe when the ASA child is not live.
+ * Idle `error` (process exited) is allowed (#276).
  */
-export function isServerProcessBusyForClusterOps(status: ServerStatus): boolean {
-  return status === "starting" || status === "running" || status === "stopping";
+export function isServerProcessBusyForClusterOps(
+  runtime: ServerProcessRuntime,
+): boolean {
+  return sharedIsServerProcessBusyForClusterOps(runtime);
 }
 
-export function clusterProcessBusyReason(status: ServerStatus): string | null {
-  if (isServerProcessBusyForClusterOps(status)) {
-    return "Server must not be running";
-  }
-  return null;
+export function clusterProcessBusyReason(
+  runtime: ServerProcessRuntime,
+): string | null {
+  return sharedClusterProcessBusyReason(runtime);
 }
 
 export function ineligibilityReason(
   server: ServerProfile,
-  status: ServerStatus,
+  runtime: ServerProcessRuntime,
 ): string | null {
   if (server.clusterId !== null) {
     return `Already in cluster “${server.clusterId}”`;
   }
-  return clusterProcessBusyReason(status);
+  return clusterProcessBusyReason(runtime);
 }
 
 export function listCreateClusterCandidates(
   servers: ServerProfile[],
-  statuses: Map<string, { status: ServerStatus }>,
+  statuses: Map<string, Pick<ServerRuntimeInfo, "status" | "processLive">>,
 ): CreateClusterCandidate[] {
   return [...servers]
     .sort((a, b) => a.name.localeCompare(b.name))
     .map((server) => {
-      const status = resolveServerStatus(statuses, server.id);
-      const reason = ineligibilityReason(server, status);
+      const runtime = resolveServerRuntime(statuses, server.id);
+      const reason = ineligibilityReason(server, runtime);
       return {
         server,
-        status,
+        status: runtime.status,
         eligible: reason === null,
         reason,
       };

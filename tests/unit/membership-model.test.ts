@@ -77,21 +77,21 @@ describe("membershipModel", () => {
     const running = makeServer({ id: "run", name: "Run" });
     const errored = makeServer({ id: "err", name: "Error" });
     const statuses = new Map([
-      ["free", { status: "stopped" as const }],
-      ["here", { status: "stopped" as const }],
-      ["other", { status: "stopped" as const }],
-      ["run", { status: "running" as const }],
-      ["err", { status: "error" as const }],
+      ["free", { status: "stopped" as const, processLive: false }],
+      ["here", { status: "stopped" as const, processLive: false }],
+      ["other", { status: "stopped" as const, processLive: false }],
+      ["run", { status: "running" as const, processLive: true }],
+      ["err", { status: "error" as const, processLive: false }],
     ]);
 
-    expect(addIneligibilityReason(here, "stopped", "ember")).toBe(
+    expect(addIneligibilityReason(here, { status: "stopped", processLive: false }, "ember")).toBe(
       "Already in this cluster",
     );
-    expect(addIneligibilityReason(other, "stopped", "ember")).toMatch(
+    expect(addIneligibilityReason(other, { status: "stopped", processLive: false }, "ember")).toMatch(
       /Already in cluster/,
     );
-    expect(addIneligibilityReason(errored, "error", "ember")).toBeNull();
-    expect(addIneligibilityReason(running, "running", "ember")).toBe(
+    expect(addIneligibilityReason(errored, { status: "error", processLive: false }, "ember")).toBeNull();
+    expect(addIneligibilityReason(running, { status: "running", processLive: true }, "ember")).toBe(
       "Server must not be running",
     );
 
@@ -105,6 +105,17 @@ describe("membershipModel", () => {
     expect(candidates.find((c) => c.server.id === "here")?.eligible).toBe(false);
     expect(candidates.find((c) => c.server.id === "other")?.eligible).toBe(false);
     expect(candidates.find((c) => c.server.id === "run")?.eligible).toBe(false);
+  });
+
+  it("blocks error servers while the child process is still live", () => {
+    const erroredLive = makeServer({ id: "err-live", name: "Error Live" });
+    const candidates = listAddCandidates(
+      "ember",
+      [erroredLive],
+      new Map([["err-live", { status: "error", processLive: true }]]),
+    );
+    expect(candidates[0]?.eligible).toBe(false);
+    expect(candidates[0]?.reason).toBe("Server must not be running");
   });
 
   it("blocks join when ports conflict with current members", () => {
@@ -171,9 +182,9 @@ describe("membershipModel", () => {
     const candidates = listRemoveCandidates(
       [stopped, running, errored],
       new Map([
-        ["s", { status: "stopped" }],
-        ["r", { status: "running" }],
-        ["e", { status: "error" }],
+        ["s", { status: "stopped", processLive: false }],
+        ["r", { status: "running", processLive: true }],
+        ["e", { status: "error", processLive: false }],
       ]),
     );
     expect(candidates.find((c) => c.server.id === "s")?.eligible).toBe(true);

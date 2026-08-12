@@ -16,6 +16,7 @@ describe("reconcilePollSnapshots", () => {
     const row: ServerRuntimeInfo = {
       serverId: "a",
       status: "running",
+      processLive: true,
       pid: 1,
       startedAt: "t",
       lastError: null,

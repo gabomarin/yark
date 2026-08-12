@@ -131,6 +131,7 @@ describe("ServerCard", () => {
           runtime={{
             serverId: profile.id,
             status: "running",
+            processLive: true,
             pid: 1234,
             startedAt: "2026-07-23T00:00:00.000Z",
             lastError: null,
@@ -198,6 +199,7 @@ describe("ServerCard", () => {
           runtime={{
             serverId: profile.id,
             status: "running",
+            processLive: true,
             pid: 1234,
             startedAt: "2026-07-23T00:00:00.000Z",
             lastError: null,
@@ -630,6 +632,7 @@ describe("ServerCard", () => {
           runtime={{
             serverId: profile.id,
             status: "starting",
+            processLive: true,
             pid: null,
             startedAt: null,
             lastError: null,
@@ -674,6 +677,7 @@ describe("ServerCard", () => {
           runtime={{
             serverId: profile.id,
             status: "stopping",
+            processLive: true,
             pid: 99,
             startedAt: "2026-07-23T00:00:00.000Z",
             lastError: null,
@@ -758,6 +762,7 @@ describe("ServerCard", () => {
           runtime={{
             serverId: profile.id,
             status: "error",
+            processLive: false,
             pid: null,
             startedAt: null,
             lastError: "Native console closed during startup",
@@ -836,6 +841,7 @@ describe("ServerCard", () => {
           runtime={{
             serverId: profile.id,
             status: "running",
+            processLive: true,
             pid: 4242,
             startedAt: "2026-07-23T00:00:00.000Z",
             lastError: null,
@@ -876,6 +882,7 @@ describe("ServerCard", () => {
           runtime={{
             serverId: profile.id,
             status: "stopping",
+            processLive: true,
             pid: 99,
             startedAt: "2026-07-23T00:00:00.000Z",
             lastError: null,

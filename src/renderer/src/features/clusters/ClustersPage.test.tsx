@@ -38,7 +38,7 @@ function makeStatuses(
   return new Map(
     entries.map(([serverId, status]) => [
       serverId,
-      { serverId, status, pid: null, startedAt: null, lastError: null },
+      { serverId, status, processLive: status !== "stopped" && status !== "error", pid: null, startedAt: null, lastError: null },
     ]),
   );
 }

@@ -39,6 +39,7 @@ function runningStatus(serverId: string): ServerRuntimeInfo {
   return {
     serverId,
     status: "running",
+    processLive: true,
     pid: 1,
     startedAt: "2026-07-25T00:00:00.000Z",
     lastError: null,

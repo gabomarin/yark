@@ -61,11 +61,10 @@ function sameRuntime(
     && left.status === right.status
     && left.pid === right.pid
     && left.startedAt === right.startedAt
+    && left.processLive === right.processLive
     && left.lastError === right.lastError
   );
 }
-
-/** Keep prior Map / entry identities when runtime rows are unchanged. */
 export function reconcileStatusMap(
   previous: Map<string, ServerRuntimeInfo>,
   nextList: ServerRuntimeInfo[],

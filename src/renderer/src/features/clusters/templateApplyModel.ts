@@ -1,9 +1,9 @@
-import type { ServerStatus } from "@shared/types";
+import type { ServerProcessRuntime } from "@shared/server-process-idle";
 import { clusterProcessBusyReason } from "./createClusterModel";
 
 /** Restore / promote / seed require an idle (non-running) server. */
 export function templateApplyIneligibilityReason(
-  status: ServerStatus,
+  runtime: ServerProcessRuntime,
 ): string | null {
-  return clusterProcessBusyReason(status);
+  return clusterProcessBusyReason(runtime);
 }

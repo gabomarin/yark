@@ -1100,6 +1100,7 @@ export class InstanceService extends EventEmitter {
     return ids.map((serverId) => ({
       serverId,
       status: "running" as const,
+      processLive: true,
       pid: 4242,
       startedAt: now,
       lastError: null,
