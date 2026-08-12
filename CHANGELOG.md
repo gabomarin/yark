@@ -31,6 +31,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Harden world-backup map paths and make folder overrides, current-map selection, and all-failed history cleanup behave safely and predictably (#262).
 - Hide the native Electron application menu bar (File/Edit/View/Help); quit remains on the system tray.
+- Packaged Windows builds report publisher/author as **gabomarin26** (was Gabriel).
 - Safe **Update** shows console/progress while creating pre-update backups, Cancel aborts that work (and pre-restore safeguards) instead of hanging on “Waiting for progress…”, and skips rollback restore when SteamCMD never changed game files.
 - **YARK updates** keep a finished or in-progress download when Check now or the quiet startup check runs again, so Restart and install no longer disappears behind Download.
 
