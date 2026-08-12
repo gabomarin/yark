@@ -325,9 +325,9 @@ After a successful `ini:save`, `createIniSaveBackup` debounces **2s** per server
   actions instead of being replayed blindly. See
   [Critical job crash recovery](critical-job-recovery.md).
 - Pre-update creates **world + ini** (`CRITICAL_BACKUP_KINDS`). World archives already include profiles/tribes for the active map.
-- Safe update stops with `{ backup: false }` first, then creates this set — an
-  active-server update must **not** also produce a `pre_stop` archive set for the
-  same job. Acceptance and real-host checklist:
+- Safe update requires a stopped server, then creates this set. It must **not**
+  also produce a `pre_stop` archive set for the same job. Acceptance and
+  real-host checklist:
   [updates-steamcmd.md](updates-steamcmd.md#real-host-validation-windows).
 
 ## UI surfaces

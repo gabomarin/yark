@@ -508,8 +508,9 @@ export class UpdateService extends EventEmitter {
 
   async updateServer(serverId: string): Promise<void> {
     this.assertStopBackupIdle(serverId);
-    // May run while the server is active: performUpdateServer captures wasRunning,
-    // stops for SteamCMD, then restarts on success (or after rollback).
+    if (this.processes.isActive(serverId)) {
+      throw new Error("Stop the server before updating files");
+    }
     await this.enqueueAndWait("update", serverId);
   }
 
@@ -570,6 +571,28 @@ export class UpdateService extends EventEmitter {
 
   private async performUpdateServer(serverId: string, job?: CriticalJob): Promise<void> {
     await this.locks.withLock(serverId, "update", async () => {
+      const server = this.servers.get(serverId);
+      if (server === null) {
+        throw new Error("Server does not exist");
+      }
+
+      const isCurrentlyRunning = this.processes.isActive(serverId);
+      // Every production update runs as a durable job. Recheck after acquiring
+      // the instance lock because the server may have started while this job
+      // waited behind another SteamCMD operation or an app restart. Preserve
+      // recovery for pre-policy jobs that already recorded running intent.
+      if (
+        isCurrentlyRunning
+        && job !== undefined
+        && job.context.wasRunning !== true
+      ) {
+        // Operator-actionable: Stop → Retry. A plain Error would mark the job
+        // failed with operatorRetryAllowed=false and only offer Dismiss.
+        throw new CriticalJobRecoveryBlockedError(
+          "Stop the server before updating files",
+        );
+      }
+
       // Backup identity is the durable resume signal. Unlike `phase`, it
       // survives validation checkpoints and a second crash during retry.
       const resumeFromPreUpdateBackup =
@@ -581,12 +604,6 @@ export class UpdateService extends EventEmitter {
         job.context.rollbackRestoredBackupIds = [];
       }
       this.checkpointJob(job, "validating");
-      const server = this.servers.get(serverId);
-      if (server === null) {
-        throw new Error("Server does not exist");
-      }
-
-      const isCurrentlyRunning = this.processes.isActive(serverId);
       const wasRunning = job?.context.wasRunning ?? isCurrentlyRunning;
       if (job !== undefined && job.context.wasRunning === undefined) {
         job.context.wasRunning = isCurrentlyRunning;
@@ -599,7 +616,9 @@ export class UpdateService extends EventEmitter {
         "info",
         `Starting safe update for \"${server.name}\"`,
         {
-          what: "Safe update job started (stop if needed → pre-update backup → SteamCMD → restart if it was running).",
+          what: wasRunning
+            ? "Legacy safe update resumed (stop if needed → pre-update backup → SteamCMD → restart if it was running)."
+            : "Safe update job started (stopped server → pre-update backup → SteamCMD).",
           location: server.installDir,
           suggestion: wasRunning
             ? "The manager will stop the server for a consistent pre-update backup and SteamCMD, then restart it if the update succeeds."

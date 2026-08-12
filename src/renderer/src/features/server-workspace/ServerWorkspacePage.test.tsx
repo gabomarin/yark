@@ -485,6 +485,7 @@ describe("ServerWorkspacePage", () => {
     const user = userEvent.setup();
     const onSendRcon = vi.fn(async () => true);
     const onCopyConfiguration = vi.fn();
+    const onUpdateNow = vi.fn();
     render(
       <AppProviders>
         <ServerWorkspacePage
@@ -516,7 +517,7 @@ describe("ServerWorkspacePage", () => {
           onKillServer={vi.fn()}
           onOpenFolder={vi.fn()}
           onInstallFiles={vi.fn()}
-          onUpdateNow={vi.fn()}
+          onUpdateNow={onUpdateNow}
           onVerifyFiles={vi.fn()}
           onSendRcon={onSendRcon}
           {...playerListHandlers}
@@ -526,11 +527,56 @@ describe("ServerWorkspacePage", () => {
       </AppProviders>,
     );
 
+    const forceUpdate = screen.getByRole("button", { name: "Force update" });
+    expect(forceUpdate).toBeDisabled();
+    expect(forceUpdate).toHaveAttribute(
+      "title",
+      "Stop the server before updating files",
+    );
+    await user.click(forceUpdate);
+    expect(onUpdateNow).not.toHaveBeenCalled();
+
     await user.click(screen.getByRole("button", { name: "Save world" }));
     expect(onSendRcon).toHaveBeenCalledWith("srv-a", "SaveWorld");
 
     await user.click(screen.getByRole("button", { name: "Copy configuration" }));
     expect(onCopyConfiguration).toHaveBeenCalledWith("srv-a");
+  });
+
+  it("enables Force update when the server is stopped", async () => {
+    const onUpdateNow = vi.fn();
+    render(
+      <AppProviders>
+        <ServerWorkspacePage
+          servers={[serverA, serverB]}
+          selectedServerId={serverA.id}
+          statuses={new Map()}
+          installationInfo={new Map()}
+          events={[]}
+          rconHistory={[]}
+          playerList={EMPTY_PLAYER_LIST}
+          onSelectServer={vi.fn()}
+          onBack={vi.fn()}
+          onStartServer={vi.fn()}
+          onStopServer={vi.fn()}
+          onRestartServer={vi.fn()}
+          onKillServer={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={onUpdateNow}
+          onVerifyFiles={vi.fn()}
+          onSendRcon={vi.fn(async () => true)}
+          {...playerListHandlers}
+          onCopyConfiguration={vi.fn()}
+          onServerUpdated={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const forceUpdate = screen.getByRole("button", { name: "Force update" });
+    expect(forceUpdate).toBeEnabled();
+    await userEvent.setup().click(forceUpdate);
+    expect(onUpdateNow).toHaveBeenCalledTimes(1);
   });
 
   it("moves secondary panels into drawers in compact workspaces", async () => {
@@ -573,6 +619,84 @@ describe("ServerWorkspacePage", () => {
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "Status and actions" })).not.toBeInTheDocument();
     });
+  });
+
+  it("keeps the Backups kind tab when the workspace crosses the compact breakpoint", async () => {
+    const compactQuery = "(max-width: 1599px)";
+    let compactMatches = false;
+    const listeners = new Set<(event: MediaQueryListEvent) => void>();
+
+    vi.stubGlobal("matchMedia", (query: string) => {
+      const isCompactQuery = query === compactQuery;
+      const mediaQueryList = {
+        get matches() {
+          if (isCompactQuery) return compactMatches;
+          return /prefers-reduced-motion:\s*reduce/i.test(query);
+        },
+        media: query,
+        onchange: null as ((this: MediaQueryList, ev: MediaQueryListEvent) => unknown) | null,
+        addListener: (listener: (event: MediaQueryListEvent) => void) => {
+          if (isCompactQuery) listeners.add(listener);
+        },
+        removeListener: (listener: (event: MediaQueryListEvent) => void) => {
+          listeners.delete(listener);
+        },
+        addEventListener: (
+          type: string,
+          listener: EventListenerOrEventListenerObject | ((event: MediaQueryListEvent) => void),
+        ) => {
+          if (type === "change" && isCompactQuery && typeof listener === "function") {
+            listeners.add(listener as (event: MediaQueryListEvent) => void);
+          }
+        },
+        removeEventListener: (
+          type: string,
+          listener: EventListenerOrEventListenerObject | ((event: MediaQueryListEvent) => void),
+        ) => {
+          if (typeof listener === "function") {
+            listeners.delete(listener as (event: MediaQueryListEvent) => void);
+          }
+        },
+        dispatchEvent: () => false,
+      };
+      return mediaQueryList;
+    });
+
+    const user = userEvent.setup();
+    renderWorkspace();
+
+    await user.click(screen.getByRole("tab", { name: "Backups" }));
+    await user.click(await screen.findByRole("tab", { name: "INI" }));
+    expect(screen.getByRole("tab", { name: "INI" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+
+    compactMatches = true;
+    for (const listener of [...listeners]) {
+      listener({ matches: true, media: compactQuery } as MediaQueryListEvent);
+    }
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Switch server" })).toBeVisible();
+    });
+    expect(screen.getByRole("tab", { name: "INI" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+
+    compactMatches = false;
+    for (const listener of [...listeners]) {
+      listener({ matches: false, media: compactQuery } as MediaQueryListEvent);
+    }
+
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: "Switch server" })).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole("tab", { name: "INI" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
   });
 
   it("shows only available category filters and resets an invalid filter between INI files", async () => {

@@ -54,12 +54,16 @@ export function SidePanel(props: Props): ReactElement {
   const isActive = status === "starting" || status === "running" || status === "stopping";
   const steamCmdBusy = props.opsLocked === true;
   const installLocked = steamCmdBusy || isActive;
-  const updateVerifyLocked = steamCmdBusy;
+  const updateLocked = steamCmdBusy || isActive;
+  const verifyLocked = steamCmdBusy;
   const steamCmdLockTitle = props.opsLockReason;
   const installLockTitle =
     steamCmdLockTitle ??
     (isActive ? "Stop the server before installing files" : undefined);
-  const updateVerifyTitle =
+  const updateLockTitle =
+    steamCmdLockTitle ??
+    (isActive ? "Stop the server before updating files" : undefined);
+  const verifyLockTitle =
     steamCmdLockTitle ??
     (isActive
       ? "The server will stop for this check, then restart if it succeeds"
@@ -171,8 +175,8 @@ export function SidePanel(props: Props): ReactElement {
             justify="flex-start"
             leftSection={<ShieldCheck size={14} color="var(--mantine-color-teal-6)" />}
             onClick={props.onVerifyFiles}
-            disabled={updateVerifyLocked}
-            title={updateVerifyTitle}
+            disabled={verifyLocked}
+            title={verifyLockTitle}
           >
             Verify integrity
           </Button>
@@ -183,8 +187,8 @@ export function SidePanel(props: Props): ReactElement {
             justify="flex-start"
             leftSection={<CloudArrowDown size={14} color="var(--mantine-color-attention-6)" />}
             onClick={props.onUpdateNow}
-            disabled={updateVerifyLocked}
-            title={updateVerifyTitle}
+            disabled={updateLocked}
+            title={updateLockTitle}
           >
             Force update
           </Button>

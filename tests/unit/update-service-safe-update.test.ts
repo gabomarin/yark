@@ -244,6 +244,132 @@ describe("UpdateService safe update orchestration", () => {
     expect(h.order).toEqual(["pre_update", "steam"]);
   });
 
+  it("rejects updateServer while the server process is active", async () => {
+    const h = createHarness({ wasRunning: true });
+    dirs.push(h.logDir);
+
+    await expect(h.service.updateServer(h.profile.id)).rejects.toThrow(
+      /stop the server before updating files/i,
+    );
+    expect(h.runSteamUpdate).not.toHaveBeenCalled();
+  });
+
+  it("allows updateServer when the server is stopped", async () => {
+    const h = createHarness({ wasRunning: false });
+    dirs.push(h.logDir);
+
+    await h.service.updateServer(h.profile.id);
+
+    expect(h.backups.createPreUpdateBackupForJob).toHaveBeenCalled();
+    expect(h.runSteamUpdate).toHaveBeenCalled();
+  });
+
+  it("rejects a queued update if the server starts before execution", async () => {
+    const h = createHarness({ wasRunning: true });
+    dirs.push(h.logDir);
+    const now = new Date().toISOString();
+    const job = {
+      id: "queued-update-active",
+      type: "update" as const,
+      serverId: h.profile.id,
+      attempts: 0,
+      maxAttempts: 3,
+      status: "running" as const,
+      phase: "queued",
+      createdAt: now,
+      updatedAt: now,
+      lastError: null,
+      recoveryReason: null,
+      idempotencyKey: `update:${h.profile.id}:`,
+      operatorRetryAllowed: false,
+      context: {},
+    };
+
+    await expect(
+      (
+        h.service as unknown as {
+          performUpdateServer: (serverId: string, input: typeof job) => Promise<void>;
+        }
+      ).performUpdateServer(h.profile.id, job),
+    ).rejects.toMatchObject({
+      name: "CriticalJobRecoveryBlockedError",
+      message: expect.stringMatching(/stop the server before updating files/i),
+    });
+
+    expect(h.instances.stop).not.toHaveBeenCalled();
+    expect(h.backups.createPreUpdateBackupForJob).not.toHaveBeenCalled();
+    expect(h.runSteamUpdate).not.toHaveBeenCalled();
+  });
+
+  it("marks an active-server queue race as blocked so Stop → Retry is offered", async () => {
+    const h = createHarness({ wasRunning: true });
+    dirs.push(h.logDir);
+    const now = new Date().toISOString();
+    const job = {
+      id: "queued-update-active-retryable",
+      type: "update" as const,
+      serverId: h.profile.id,
+      attempts: 0,
+      maxAttempts: 3,
+      status: "pending" as const,
+      phase: "queued",
+      createdAt: now,
+      updatedAt: now,
+      lastError: null,
+      recoveryReason: null,
+      idempotencyKey: `update:${h.profile.id}:`,
+      operatorRetryAllowed: false,
+      context: {},
+    };
+    (h.service as unknown as { queue: Array<typeof job> }).queue = [job];
+
+    await (
+      h.service as unknown as { processQueue: () => Promise<void> }
+    ).processQueue();
+
+    expect(job.status).toBe("blocked");
+    expect(job.operatorRetryAllowed).toBe(true);
+    expect(job.recoveryReason).toMatch(/stop the server before updating files/i);
+    expect(h.runSteamUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a resumed stopped-server update if the server started meanwhile", async () => {
+    const h = createHarness({ wasRunning: true });
+    dirs.push(h.logDir);
+    const now = new Date().toISOString();
+    const job = {
+      id: "resumed-stopped-update-active",
+      type: "update" as const,
+      serverId: h.profile.id,
+      attempts: 1,
+      maxAttempts: 3,
+      status: "running" as const,
+      phase: "validated",
+      createdAt: now,
+      updatedAt: now,
+      lastError: "network timed out",
+      recoveryReason: null,
+      idempotencyKey: `update:${h.profile.id}:`,
+      operatorRetryAllowed: false,
+      context: { wasRunning: false },
+    };
+
+    await expect(
+      (
+        h.service as unknown as {
+          performUpdateServer: (serverId: string, input: typeof job) => Promise<void>;
+        }
+      ).performUpdateServer(h.profile.id, job),
+    ).rejects.toMatchObject({
+      name: "CriticalJobRecoveryBlockedError",
+      message: expect.stringMatching(/stop the server before updating files/i),
+    });
+
+    expect(h.instances.stop).not.toHaveBeenCalled();
+    expect(h.backups.createPreUpdateBackupForJob).not.toHaveBeenCalled();
+    expect(h.runSteamUpdate).not.toHaveBeenCalled();
+  });
+
   it("preserves original running intent when verify replays after the server was stopped", async () => {
     const h = createHarness({ wasRunning: false });
     dirs.push(h.logDir);
