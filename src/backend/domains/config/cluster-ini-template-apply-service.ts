@@ -38,10 +38,10 @@ function normalizeClusterId(clusterId: string): string {
   return id;
 }
 
-function assertStopped(status: ServerStatus, serverName: string): void {
-  if (status !== "stopped") {
+function assertIdleForTemplateApply(status: ServerStatus, serverName: string): void {
+  if (status === "starting" || status === "running" || status === "stopping") {
     throw new Error(
-      `Server “${serverName}” must be stopped before template apply (status: ${status})`,
+      `Server “${serverName}” must not be running before template apply (status: ${status})`,
     );
   }
 }
@@ -133,7 +133,7 @@ export class ClusterIniTemplateApplyService {
     const selection = assertClusterIniTemplateFileSelection(files);
 
     return this.locks.withLock(serverId, "cluster-ini-promote", async () => {
-      assertStopped(this.runtime.getStatus(serverId).status, server.name);
+      assertIdleForTemplateApply(this.runtime.getStatus(serverId).status, server.name);
 
       const snapshot = await this.ini.readServerIni(serverId);
       const composed = composeTemplatePayloadFromMember(snapshot.payload);
@@ -191,7 +191,7 @@ export class ClusterIniTemplateApplyService {
     } else {
       assertMemberOfCluster(server, id);
     }
-    assertStopped(this.runtime.getStatus(serverId).status, server.name);
+    assertIdleForTemplateApply(this.runtime.getStatus(serverId).status, server.name);
 
     const snapshot = await this.ini.readServerIni(serverId);
 
@@ -255,7 +255,7 @@ export class ClusterIniTemplateApplyService {
     }
 
     return this.locks.withLock(serverId, `cluster-ini-${operation}`, async () => {
-      assertStopped(this.runtime.getStatus(serverId).status, server.name);
+      assertIdleForTemplateApply(this.runtime.getStatus(serverId).status, server.name);
 
       const template = this.requireTemplate(id);
       const current = await this.ini.readServerIni(serverId);

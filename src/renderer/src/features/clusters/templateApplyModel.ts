@@ -1,11 +1,9 @@
 import type { ServerStatus } from "@shared/types";
+import { clusterProcessBusyReason } from "./createClusterModel";
 
-/** Restore / promote / seed require a stopped server. */
+/** Restore / promote / seed require an idle (non-running) server. */
 export function templateApplyIneligibilityReason(
   status: ServerStatus,
 ): string | null {
-  if (status !== "stopped") {
-    return "Server must be stopped";
-  }
-  return null;
+  return clusterProcessBusyReason(status);
 }

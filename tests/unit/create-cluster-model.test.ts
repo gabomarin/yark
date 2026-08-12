@@ -54,8 +54,11 @@ describe("createClusterModel", () => {
       ["c", { status: "stopped" as const }],
     ]);
 
-    expect(ineligibilityReason(running, "running")).toBe("Server must be stopped");
+    expect(ineligibilityReason(running, "running")).toBe("Server must not be running");
     expect(ineligibilityReason(member, "stopped")).toMatch(/Already in cluster/);
+    expect(ineligibilityReason(running, "error")).toBeNull();
+    expect(ineligibilityReason(makeServer({ id: "d", name: "D" }), "error")).toBeNull();
+    expect(ineligibilityReason(running, "starting")).toBe("Server must not be running");
 
     const candidates = listCreateClusterCandidates(
       [running, member, eligible],

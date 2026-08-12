@@ -135,7 +135,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
             <Tooltip
               label={
                 canAdd
-                  ? "Assign this cluster’s ID and directory to stopped servers"
+                  ? "Assign this cluster’s ID and directory to servers that are not running"
                   : "Align the shared cluster directory on every server first"
               }
             >

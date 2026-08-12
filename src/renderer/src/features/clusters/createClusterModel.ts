@@ -37,6 +37,21 @@ export function resolveServerStatus(
   return statuses.get(serverId)?.status ?? "stopped";
 }
 
+/**
+ * Cluster membership / template apply is safe when the ASA process is idle.
+ * `error` means the process is not running (e.g. closed outside YARK) (#276).
+ */
+export function isServerProcessBusyForClusterOps(status: ServerStatus): boolean {
+  return status === "starting" || status === "running" || status === "stopping";
+}
+
+export function clusterProcessBusyReason(status: ServerStatus): string | null {
+  if (isServerProcessBusyForClusterOps(status)) {
+    return "Server must not be running";
+  }
+  return null;
+}
+
 export function ineligibilityReason(
   server: ServerProfile,
   status: ServerStatus,
@@ -44,10 +59,7 @@ export function ineligibilityReason(
   if (server.clusterId !== null) {
     return `Already in cluster “${server.clusterId}”`;
   }
-  if (status !== "stopped") {
-    return "Server must be stopped";
-  }
-  return null;
+  return clusterProcessBusyReason(status);
 }
 
 export function listCreateClusterCandidates(

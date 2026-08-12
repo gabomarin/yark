@@ -3,6 +3,7 @@ import type { ServerProfile, ServerProfileInput, ServerStatus } from "@shared/ty
 import { sharedClusterDir } from "./clusterModel";
 import {
   buildCreateClusterInput,
+  clusterProcessBusyReason,
   pruneSelectedServerIds,
   resolveSelectedCandidates,
   resolveServerStatus,
@@ -37,10 +38,7 @@ export function addIneligibilityReason(
     }
     return `Already in cluster “${server.clusterId}”`;
   }
-  if (status !== "stopped") {
-    return "Server must be stopped";
-  }
-  return null;
+  return clusterProcessBusyReason(status);
 }
 
 export function listAddCandidates(
@@ -65,10 +63,7 @@ export function listAddCandidates(
 export function removeIneligibilityReason(
   status: ServerStatus,
 ): string | null {
-  if (status !== "stopped") {
-    return "Server must be stopped";
-  }
-  return null;
+  return clusterProcessBusyReason(status);
 }
 
 export function listRemoveCandidates(

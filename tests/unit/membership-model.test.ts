@@ -75,11 +75,13 @@ describe("membershipModel", () => {
       clusterDir: "D:\\Other",
     });
     const running = makeServer({ id: "run", name: "Run" });
+    const errored = makeServer({ id: "err", name: "Error" });
     const statuses = new Map([
       ["free", { status: "stopped" as const }],
       ["here", { status: "stopped" as const }],
       ["other", { status: "stopped" as const }],
       ["run", { status: "running" as const }],
+      ["err", { status: "error" as const }],
     ]);
 
     expect(addIneligibilityReason(here, "stopped", "ember")).toBe(
@@ -88,13 +90,18 @@ describe("membershipModel", () => {
     expect(addIneligibilityReason(other, "stopped", "ember")).toMatch(
       /Already in cluster/,
     );
+    expect(addIneligibilityReason(errored, "error", "ember")).toBeNull();
+    expect(addIneligibilityReason(running, "running", "ember")).toBe(
+      "Server must not be running",
+    );
 
     const candidates = listAddCandidates(
       "ember",
-      [free, here, other, running],
+      [free, here, other, running, errored],
       statuses,
     );
     expect(candidates.find((c) => c.server.id === "free")?.eligible).toBe(true);
+    expect(candidates.find((c) => c.server.id === "err")?.eligible).toBe(true);
     expect(candidates.find((c) => c.server.id === "here")?.eligible).toBe(false);
     expect(candidates.find((c) => c.server.id === "other")?.eligible).toBe(false);
     expect(candidates.find((c) => c.server.id === "run")?.eligible).toBe(false);
@@ -157,17 +164,20 @@ describe("membershipModel", () => {
     expect(remainingMemberCountAfterRemove(3, 2)).toBe(1);
   });
 
-  it("lists remove candidates requiring stopped status", () => {
+  it("lists remove candidates requiring an idle process", () => {
     const stopped = makeServer({ id: "s", name: "Stopped" });
     const running = makeServer({ id: "r", name: "Running" });
+    const errored = makeServer({ id: "e", name: "Error" });
     const candidates = listRemoveCandidates(
-      [stopped, running],
+      [stopped, running, errored],
       new Map([
         ["s", { status: "stopped" }],
         ["r", { status: "running" }],
+        ["e", { status: "error" }],
       ]),
     );
     expect(candidates.find((c) => c.server.id === "s")?.eligible).toBe(true);
+    expect(candidates.find((c) => c.server.id === "e")?.eligible).toBe(true);
     expect(candidates.find((c) => c.server.id === "r")?.eligible).toBe(false);
   });
 });
