@@ -63,8 +63,45 @@ describe("world-snapshot helpers", () => {
       "Svartalfheim",
     ]);
     expect(worldMapDirNameCandidates("Ragnarok")).toEqual(["Ragnarok"]);
+    expect(worldMapDirNameCandidates("Svartalfheim_WP", "Svartalfheim")).toEqual([
+      "Svartalfheim",
+      "Svartalfheim_WP",
+    ]);
   });
 
+  it("prefers mapSaveFolder override when resolving SavedArks dirs", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-map-override-"));
+    try {
+      const custom = join(root, "CustomSave");
+      await mkdir(custom, { recursive: true });
+      await writeFile(join(custom, "Svartalfheim_WP.ark"), "S", "utf8");
+      const resolved = await resolveWorldMapSaveDir(
+        root,
+        "Svartalfheim_WP",
+        "CustomSave",
+      );
+      expect(resolved).toEqual({ dir: custom, folderName: "CustomSave" });
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("does not fall back to auto folders when an explicit override is present", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-map-override-authoritative-"));
+    try {
+      const custom = join(root, "CustomSave");
+      const automatic = join(root, "Svartalfheim_WP");
+      await mkdir(custom, { recursive: true });
+      await mkdir(automatic, { recursive: true });
+      await writeFile(join(automatic, "Svartalfheim_WP.ark"), "STALE", "utf8");
+
+      await expect(
+        resolveWorldMapSaveDir(root, "Svartalfheim_WP", "CustomSave"),
+      ).resolves.toEqual({ dir: custom, folderName: "CustomSave" });
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
   it("resolves mod map folders by name (strip _WP), not by hunting .ark across maps", async () => {
     const root = await mkdtemp(join(tmpdir(), "yark-map-dir-"));
     try {

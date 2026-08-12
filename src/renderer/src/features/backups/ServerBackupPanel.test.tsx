@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
@@ -152,10 +152,12 @@ describe("ServerBackupPanel", () => {
             retainCountIni: 10,
             backupDir: null,
             updatedAt: "2026-07-24T00:00:00.000Z",
+            schedulePaused: false,
           },
         }),
         createManualBackup: vi.fn().mockResolvedValue({ ok: true, data: [worldBackup] }),
         deleteBackups: vi.fn().mockResolvedValue({ ok: true, data: 1 }),
+        deleteFailedBackups: vi.fn().mockResolvedValue({ ok: true, data: 0 }),
         restoreBackup: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
         setBackupPolicy: vi.fn().mockImplementation(async (_id: string, draft: {
           enabled: boolean;
@@ -402,6 +404,43 @@ describe("ServerBackupPanel", () => {
     expect(screen.getByRole("checkbox", { name: /Select backup bk-players/i })).not.toBeChecked();
   });
 
+  it("clears hidden selections when current-map filtering is enabled", async () => {
+    const user = userEvent.setup();
+    const otherMap: BackupRecord = {
+      ...worldBackup,
+      id: "bk-other-map",
+      path: "C:/backups/other-map",
+      mapToken: "ScorchedEarth_WP",
+    };
+    renderPanel([worldBackup, otherMap]);
+
+    const currentMapOnly = await screen.findByRole("checkbox", {
+      name: /Current map only/i,
+    });
+    await user.click(currentMapOnly);
+    await user.click(screen.getByRole("checkbox", { name: /Select backup bk-other-map/i }));
+    expect(screen.getByRole("button", { name: /Delete \(1\)/i })).toBeEnabled();
+
+    await user.click(currentMapOnly);
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /^Delete$/i })).toBeDisabled();
+    });
+  });
+
+  it("clears failed rows through the unpaginated backend operation", async () => {
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(await screen.findByRole("button", { name: "Clear failed" }));
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", { name: "Clear failed" }),
+    );
+
+    await waitFor(() => {
+      expect(window.api.deleteFailedBackups).toHaveBeenCalledWith("srv-1", "world");
+    });
+  });
+
   it("lists player names and supports search", async () => {
     const user = userEvent.setup();
     renderPanel();
@@ -496,6 +535,7 @@ describe("ServerBackupPanel", () => {
         retainCountIni: 10,
         backupDir: null,
         updatedAt: "2026-07-24T00:00:00.000Z",
+        schedulePaused: false,
       },
     });
 

@@ -732,6 +732,17 @@ export function registerIpcHandlers(
   });
 
   handleValidated(
+    IPC.backupsDeleteFailed,
+    ipcArgSchemas[IPC.backupsDeleteFailed],
+    ([serverId, kind]) => {
+      if (instances.isStopInProgress(serverId)) {
+        throw new Error("Cannot delete backups while stop backup is in progress");
+      }
+      return backups.deleteFailedBackups(serverId, kind);
+    },
+  );
+
+  handleValidated(
     IPC.backupsRestore,
     ipcArgSchemas[IPC.backupsRestore],
     ([serverId, backupId, options]) => {

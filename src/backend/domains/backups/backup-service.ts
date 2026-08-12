@@ -4,6 +4,7 @@ import { cp, copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "nod
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
+import { isSafeMapToken } from "@shared/map-identity";
 import {
   backupFinishedAt,
   formatPlayerSessionNotes,
@@ -20,6 +21,7 @@ import type {
   BackupHealthStatus,
   BackupKind,
   BackupPolicy,
+  BackupPolicyStatus,
   BackupRecord,
   BackupServerHealth,
   BackupType,
@@ -146,6 +148,9 @@ const KNOWN_BACKUP_JOB_STATUSES = new Set([
 
 /** Scheduled cadence creates world saves only (not players / INI). */
 export const SCHEDULED_BACKUP_KINDS: readonly BackupKind[] = ["world"];
+
+/** Pause further scheduled world creates after this many consecutive failures (session only). */
+export const SCHEDULED_WORLD_FAIL_LIMIT = 3;
 
 /** Kinds created for pre-update / pre-restart safety. */
 export const CRITICAL_BACKUP_KINDS: readonly BackupKind[] = ["world", "players", "ini"];
@@ -320,6 +325,13 @@ export class BackupService extends EventEmitter {
   >();
   /** Prevent stacked scheduled world backups for the same server. */
   private readonly scheduledWorldInFlight = new Set<string>();
+  /**
+   * Consecutive scheduled world failures per server (this YARK process only).
+   * Cleared on success; at {@link SCHEDULED_WORLD_FAIL_LIMIT} the schedule pauses.
+   */
+  private readonly scheduledWorldFailStreak = new Map<string, number>();
+  /** Session pause after repeated scheduled world failures — does not change policy.enabled. */
+  private readonly scheduledWorldPaused = new Set<string>();
   /** Prevent overlapping runScheduledCycle walks. */
   private scheduledCycleInFlight = false;
   /** Set by SteamCMD Cancel (and similar) so long backup/restore zips can abort between steps. */
@@ -361,6 +373,11 @@ export class BackupService extends EventEmitter {
           job.status === "retrying" ||
           job.status === "blocked"),
     );
+  }
+
+  /** True when scheduled world creates are paused for this YARK session (#262). */
+  isScheduledWorldPaused(serverId: string): boolean {
+    return this.scheduledWorldPaused.has(serverId);
   }
 
   private emitChanged(serverId: string): void {
@@ -637,9 +654,12 @@ export class BackupService extends EventEmitter {
     return this.list(serverId, limit);
   }
 
-  getPolicy(serverId: string): BackupPolicy {
+  getPolicy(serverId: string): BackupPolicyStatus {
     this.mustServer(serverId);
-    return this.backups.getPolicy(serverId);
+    return {
+      ...this.backups.getPolicy(serverId),
+      schedulePaused: this.scheduledWorldPaused.has(serverId),
+    };
   }
 
   setPolicy(
@@ -786,6 +806,7 @@ export class BackupService extends EventEmitter {
         usedBytes,
         stale,
         destinationOk,
+        schedulePaused: this.scheduledWorldPaused.has(server.id),
       });
 
       if (!destinationOk) {
@@ -797,6 +818,17 @@ export class BackupService extends EventEmitter {
           volumePath: null,
           fingerprint: resolvedRoot,
           message: `${server.name}: backup destination is missing or unreachable (${resolvedRoot})`,
+        });
+      }
+      if (this.scheduledWorldPaused.has(server.id) && policy.enabled) {
+        alerts.push({
+          id: `schedule_paused:${server.id}`,
+          kind: "schedule_paused",
+          severity: "error",
+          serverId: server.id,
+          volumePath: null,
+          fingerprint: "session",
+          message: `${server.name}: world schedule paused for this YARK session after ${SCHEDULED_WORLD_FAIL_LIMIT} consecutive failures (restarts clear the pause; policy stays enabled)`,
         });
       }
       if (policy.enabled && latestWorld === null && this.processes.isActive(server.id)) {
@@ -1005,6 +1037,25 @@ export class BackupService extends EventEmitter {
       this.emitChanged(serverId);
     }
     return deleted;
+  }
+
+  /** Remove every failed catalog row for one kind, including disk-less attempts. */
+  async deleteFailedBackups(serverId: string, kind: BackupKind): Promise<number> {
+    this.mustServer(serverId);
+    const failed = this.backups.listFailed(serverId, kind);
+    if (failed.length === 0) return 0;
+    for (const backup of failed) {
+      await rm(backup.path, { recursive: true, force: true });
+      this.backups.deleteBackupRecord(backup.id);
+      this.servers.addEvent(
+        serverId,
+        "backup_deleted",
+        "info",
+        `Failed backup record cleared: ${basename(backup.path)} (${backup.kind})`,
+      );
+    }
+    this.emitChanged(serverId);
+    return failed.length;
   }
 
   /**
@@ -1219,6 +1270,7 @@ export class BackupService extends EventEmitter {
     const policy = this.backups.getPolicy(server.id);
     await this.applyRetention(server.id, policy);
     if (!policy.enabled) return;
+    if (this.scheduledWorldPaused.has(server.id)) return;
 
     const reconciled = await this.reconcileInterruptedRunningBackups(server.id);
     if (reconciled > 0) {
@@ -1233,9 +1285,15 @@ export class BackupService extends EventEmitter {
     }
 
     const requiredMs = policy.intervalMinutes * 60 * 1000;
-    const latestWorld = this.backups.latestCompleted(server.id, "world");
-    if (latestWorld !== null) {
-      const finishedAt = backupFinishedAt(latestWorld);
+    // Gate on last finished scheduled world (completed or failed) so failures
+    // do not retry every ~60s scheduler tick.
+    const latestScheduledWorld = this.backups.latestFinished(
+      server.id,
+      "world",
+      "scheduled",
+    );
+    if (latestScheduledWorld !== null) {
+      const finishedAt = backupFinishedAt(latestScheduledWorld);
       const elapsedMs = Date.now() - Date.parse(finishedAt);
       if (Number.isFinite(elapsedMs) && elapsedMs < requiredMs) return;
     }
@@ -1255,7 +1313,30 @@ export class BackupService extends EventEmitter {
     this.scheduledWorldInFlight.add(server.id);
     try {
       await this.createScheduledBackup(server.id);
+      this.scheduledWorldFailStreak.delete(server.id);
     } catch (err) {
+      const streak = (this.scheduledWorldFailStreak.get(server.id) ?? 0) + 1;
+      this.scheduledWorldFailStreak.set(server.id, streak);
+      if (streak >= SCHEDULED_WORLD_FAIL_LIMIT) {
+        this.scheduledWorldPaused.add(server.id);
+        this.servers.addEvent(
+          server.id,
+          "error",
+          "error",
+          `World schedule paused for \"${server.name}\" after ${SCHEDULED_WORLD_FAIL_LIMIT} consecutive scheduled failures (this YARK session only)`,
+          {
+            what: "Scheduled world backups are paused until YARK restarts.",
+            cause: err instanceof Error ? err.message : String(err),
+            suggestion:
+              "Fix the failure cause (destination, map folder, disk space), then restart YARK to resume the schedule. Policy.enabled is unchanged.",
+            context: {
+              trigger: "scheduled",
+              kind: "world",
+              failStreak: streak,
+            },
+          },
+        );
+      }
       this.servers.addEvent(
         server.id,
         "error",
@@ -1959,12 +2040,16 @@ export class BackupService extends EventEmitter {
     targetDir: string,
   ): Promise<{ meta: Record<string, unknown> }> {
     const mapToken = server.map.trim();
-    if (mapToken.length === 0) {
-      throw new Error("Server map token is required for a world backup");
+    if (!isSafeMapToken(mapToken)) {
+      throw new Error("Server map token must be a single safe folder name");
     }
 
     const savedArks = this.savedArksDir(server);
-    const resolved = await resolveWorldMapSaveDir(savedArks, mapToken);
+    const resolved = await resolveWorldMapSaveDir(
+      savedArks,
+      mapToken,
+      server.mapSaveFolder,
+    );
     const dest = join(targetDir, "SavedArks", mapToken);
 
     if (resolved === null) {
@@ -2199,7 +2284,11 @@ export class BackupService extends EventEmitter {
 
     const restoreProfilesTribes = options?.restoreProfilesTribes !== false;
     const liveSavedArks = this.savedArksDir(server);
-    const liveResolved = await resolveWorldMapSaveDir(liveSavedArks, mapToken);
+    const liveResolved = await resolveWorldMapSaveDir(
+      liveSavedArks,
+      mapToken,
+      server.mapSaveFolder,
+    );
     const liveMapDir = liveResolved?.dir ?? join(liveSavedArks, mapToken);
     await mkdir(liveMapDir, { recursive: true });
 
@@ -2238,10 +2327,10 @@ export class BackupService extends EventEmitter {
     backup: BackupRecord,
     server: ServerProfile,
   ): Promise<string> {
-    if (backup.mapToken !== null && backup.mapToken.trim().length > 0) {
+    if (backup.mapToken !== null && isSafeMapToken(backup.mapToken)) {
       return backup.mapToken.trim();
     }
-    if (server.map.trim().length > 0 && existsSync(join(backupSaved, server.map.trim()))) {
+    if (isSafeMapToken(server.map) && existsSync(join(backupSaved, server.map.trim()))) {
       return server.map.trim();
     }
     let entries;
@@ -2251,10 +2340,10 @@ export class BackupService extends EventEmitter {
       throw new Error("World backup SavedArks folder is unreadable");
     }
     const dirs = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
-    if (dirs.length === 1) {
+    if (dirs.length === 1 && isSafeMapToken(dirs[0])) {
       return dirs[0]!;
     }
-    if (server.map.trim().length > 0) {
+    if (isSafeMapToken(server.map)) {
       return server.map.trim();
     }
     throw new Error("World backup map token could not be resolved");
@@ -3439,12 +3528,16 @@ export class BackupService extends EventEmitter {
       if (backup === undefined) return null;
       const type = this.asBackupType(backup.type);
       const kind = this.asBackupKind(backup.kind);
-      const mapTokenRaw =
+      const mapTokenCandidate =
         typeof backup.mapToken === "string" && backup.mapToken.trim().length > 0
           ? backup.mapToken.trim()
           : typeof data.server?.map === "string" && data.server.map.trim().length > 0
             ? data.server.map.trim()
             : null;
+      const mapTokenRaw =
+        mapTokenCandidate !== null && isSafeMapToken(mapTokenCandidate)
+          ? mapTokenCandidate
+          : null;
       return {
         id: typeof backup.id === "string" ? backup.id : undefined,
         type,

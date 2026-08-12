@@ -230,19 +230,32 @@ UI restore uses a confirm modal (world: profiles/tribes checkbox). Update rollba
   interrupted work from a previous app process so a crash cannot block future backups;
   this recovery is serialized with UI and cleanup reconciliation.
 - Every cycle applies retention for each server.
-- Creates only when `enabled`, interval elapsed since latest **completed world**
-  backup (or none yet), process is active, and at least `intervalMinutes` have
+- Creates only when `enabled`, interval elapsed since the latest **finished
+  scheduled world** attempt (completed **or** failed — so failures do not retry
+  every ~60s tick), process is active, and at least `intervalMinutes` have
   passed since the process **became active** (fresh starts do not backup on the
   first scheduler tick).
+- After **3 consecutive** scheduled world failures in this YARK process, further
+  scheduled creates for that server are **paused for the session only**
+  (`policy.enabled` is unchanged). Pause clears on app restart; fleet alert
+  `schedule_paused` and the server Backups tab banner surface the state.
 - Creates **world only** for the profile’s active `server.map`.
-- World packaging copies `SavedArks/{MapToken}/` file-by-file: includes primary
+- World packaging resolves the live SavedArks folder by name:
+  optional profile `mapSaveFolder` override → `{MapToken}` → strip trailing `_WP`
+  (no sibling `.ark` hunt). A configured override is authoritative: YARK fails
+  instead of falling back to an automatic folder. Custom/mod maps can set
+  **World save folder** on the server form when the disk folder differs from the
+  launch token.
+- World packaging copies that folder file-by-file: includes primary
   `{MapToken}.ark`, anti-corruption bak, and profile/tribe companions; **omits**
   dated autosaves and `.arkrbf` / `.tmp`. Missing primary `.ark` fails the backup.
   World/players ZIPs use **moderate deflate (level 4)** for ASA save blobs;
   `manifest.json` and other small files still use default deflate.
 - Retention keeps the last N **completed** world backups **per map token** (and
   players by `playersRetentionKey`). Failed rows are not pruned by retain counts.
-  Cannot delete `running` backups.
+  Cannot delete `running` backups. Operators can **Clear failed** on the server
+  Backups history tab to remove every failed row for that server and kind
+  (catalog cleanup when the ZIP is already gone).
 - History UI: **Current map only** checkbox (default on) filters world rows to
   `server.map`. World/INI columns: **File**, **Map** (world only), **Date**, Size,
   Status, Type, Actions. Players tab: **Player** (name + player id metadata),

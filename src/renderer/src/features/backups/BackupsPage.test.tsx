@@ -73,6 +73,7 @@ const fleetSummary: BackupFleetSummary = {
       usedBytes: 2048,
       stale: false,
       destinationOk: true,
+      schedulePaused: false,
     },
   ],
   stats: {

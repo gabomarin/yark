@@ -19,6 +19,12 @@ export interface ServerProfile {
    * `KNOWN_MAPS` token (#190). Cleared for official maps. Null/undefined when unset.
    */
   mapModId?: string | null;
+  /**
+   * Relative SavedArks folder name for world backups when auto-resolve is wrong
+   * (custom/mod maps). Empty/null = try `{MapToken}` then strip `_WP` (#262).
+   * Cleared for official maps.
+   */
+  mapSaveFolder?: string | null;
   /** Server install root (contains ShooterGame\...). */
   installDir: string;
   enabled: boolean;
@@ -601,6 +607,15 @@ export interface BackupPolicy {
   updatedAt: string;
 }
 
+/** Policy plus session-only schedule pause flag for the UI (#262). */
+export interface BackupPolicyStatus extends BackupPolicy {
+  /**
+   * True when scheduled world creates are paused for this YARK session after
+   * repeated failures. Does not change `enabled`. Cleared on app restart.
+   */
+  schedulePaused: boolean;
+}
+
 export type BackupHealthStatus = "ok" | "warning" | "critical" | "unknown";
 
 export type BackupFleetAlertKind =
@@ -609,7 +624,8 @@ export type BackupFleetAlertKind =
   | "missing_destination"
   | "disk_warning"
   | "disk_critical"
-  | "never_backed_up";
+  | "never_backed_up"
+  | "schedule_paused";
 
 export interface BackupDiskAlertSettings {
   /** Warn when volume used percent is at or above this value. Default 85. */
@@ -649,6 +665,8 @@ export interface BackupServerHealth {
   usedBytes: number;
   stale: boolean;
   destinationOk: boolean;
+  /** True when scheduled world creates are paused for this YARK session (#262). */
+  schedulePaused: boolean;
 }
 
 export interface BackupFleetAlert {

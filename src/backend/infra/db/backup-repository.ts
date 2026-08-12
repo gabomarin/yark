@@ -204,6 +204,17 @@ export class BackupRepository {
     return rows.map(rowToBackup);
   }
 
+  listFailed(serverId: string, kind: BackupKind): BackupRecord[] {
+    const rows = this.db
+      .prepare(
+        `SELECT * FROM backups
+         WHERE server_id = ? AND kind = ? AND status = 'failed'
+         ORDER BY completed_at DESC, created_at DESC, rowid DESC`,
+      )
+      .all(serverId, kind) as unknown as BackupRow[];
+    return rows.map(rowToBackup);
+  }
+
   latestCompleted(serverId: string, kind?: BackupKind): BackupRecord | null {
     if (kind !== undefined) {
       const row = this.db
@@ -218,6 +229,35 @@ export class BackupRepository {
         "SELECT * FROM backups WHERE server_id = ? AND status = 'completed' ORDER BY completed_at DESC, created_at DESC, rowid DESC LIMIT 1",
       )
       .get(serverId) as unknown as BackupRow | undefined;
+    return row ? rowToBackup(row) : null;
+  }
+
+  /**
+   * Newest finished (completed/failed) backup for schedule gating.
+   * Optional `type` narrows to scheduled vs manual/etc.
+   */
+  latestFinished(
+    serverId: string,
+    kind?: BackupKind,
+    type?: BackupRecord["type"],
+  ): BackupRecord | null {
+    const clauses = ["server_id = ?", "status IN ('completed', 'failed')"];
+    const params: unknown[] = [serverId];
+    if (kind !== undefined) {
+      clauses.push("kind = ?");
+      params.push(kind);
+    }
+    if (type !== undefined) {
+      clauses.push("type = ?");
+      params.push(type);
+    }
+    const row = this.db
+      .prepare(
+        `SELECT * FROM backups WHERE ${clauses.join(" AND ")}
+         ORDER BY COALESCE(completed_at, created_at) DESC, created_at DESC, rowid DESC
+         LIMIT 1`,
+      )
+      .get(...(params as [string, ...string[]])) as unknown as BackupRow | undefined;
     return row ? rowToBackup(row) : null;
   }
 

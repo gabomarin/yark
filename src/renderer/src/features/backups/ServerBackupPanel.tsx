@@ -33,6 +33,7 @@ import { isInstallationReady } from "@shared/installation-health";
 import type {
   BackupKind,
   BackupPolicy,
+  BackupPolicyStatus,
   BackupRecord,
   ServerInstallationInfo,
   ServerProfile,
@@ -220,7 +221,7 @@ function backupsListKey(rows: BackupRecord[]): string {
 
 export function ServerBackupPanel(props: Props): ReactElement {
   const [backups, setBackups] = useState<BackupRecord[]>([]);
-  const [policy, setPolicy] = useState<BackupPolicy | null>(null);
+  const [policy, setPolicy] = useState<BackupPolicyStatus | null>(null);
   const [draftPolicy, setDraftPolicy] = useState<DraftPolicy | null>(null);
   const [activeKind, setActiveKind] = useState<BackupKind>("world");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -295,6 +296,21 @@ export function ServerBackupPanel(props: Props): ReactElement {
     ).length;
   }, [activeKind, currentMapOnly, kindBackups, props.server.map]);
 
+  const displayedBackupIds = useMemo(
+    () => new Set(displayedBackups.map((backup) => backup.id)),
+    [displayedBackups],
+  );
+  const actionableSelectedIds = useMemo(
+    () => selectedIds.filter((id) => displayedBackupIds.has(id)),
+    [selectedIds, displayedBackupIds],
+  );
+
+  useEffect(() => {
+    setSelectedIds((previous) => {
+      const next = previous.filter((id) => displayedBackupIds.has(id));
+      return next.length === previous.length ? previous : next;
+    });
+  }, [displayedBackupIds]);
   const load = async (serverId: string, opts?: { quiet?: boolean }) => {
     const quiet = opts?.quiet === true;
     const gen = ++loadGenRef.current;
@@ -408,7 +424,10 @@ export function ServerBackupPanel(props: Props): ReactElement {
           showBackupError(result.error ?? "Could not save backup policy");
           return;
         }
-        setPolicy(result.data);
+        setPolicy((prev) => ({
+          ...result.data,
+          schedulePaused: prev?.schedulePaused ?? false,
+        }));
         setDraftPolicy((current) => {
           if (current === null) return toDraft(result.data);
           return draftEqualsDraft(current, snapshot) ? toDraft(result.data) : current;
@@ -555,8 +574,9 @@ export function ServerBackupPanel(props: Props): ReactElement {
   };
 
   const confirmDeleteSelected = () => {
-    if (selectedIds.length === 0) return;
-    const count = selectedIds.length;
+    if (actionableSelectedIds.length === 0) return;
+    const ids = [...actionableSelectedIds];
+    const count = ids.length;
     modals.openConfirmModal({
       title: `Delete selected ${activeKindLabel.toLowerCase()} backups?`,
       children: (
@@ -568,7 +588,44 @@ export function ServerBackupPanel(props: Props): ReactElement {
       labels: { confirm: "Delete", cancel: "Cancel" },
       confirmProps: { color: "red" },
       onConfirm: () => {
-        void deleteBackupsByIds(selectedIds);
+        void deleteBackupsByIds(ids);
+      },
+    });
+  };
+
+  const confirmClearFailed = () => {
+    modals.openConfirmModal({
+      title: `Clear failed ${activeKindLabel.toLowerCase()} backups?`,
+      children: (
+        <Text size="sm">
+          Remove every failed {activeKindLabel.toLowerCase()} record for this server
+          from history. Archives are usually already missing; this is catalog cleanup.
+        </Text>
+      ),
+      labels: { confirm: "Clear failed", cancel: "Cancel" },
+      confirmProps: { color: "red" },
+      onConfirm: () => {
+        void (async () => {
+          setBusyOp("other");
+          try {
+            const result = await window.api.deleteFailedBackups(
+              props.server.id,
+              activeKind,
+            );
+            if (!result.ok) {
+              showBackupError(result.error ?? "Could not clear failed backups");
+              return;
+            }
+            await load(props.server.id);
+            showBackupToast(
+              result.data === 0
+                ? "No failed backup records to clear."
+                : `Cleared ${result.data} failed backup record${result.data === 1 ? "" : "s"}.`,
+            );
+          } finally {
+            setBusyOp(null);
+          }
+        })();
       },
     });
   };
@@ -687,9 +744,9 @@ export function ServerBackupPanel(props: Props): ReactElement {
         ? "Create a full snapshot of all player profiles"
         : "Create a manual backup of Game.ini and GameUserSettings.ini";
   const deleteTooltip =
-    selectedIds.length === 0
+    actionableSelectedIds.length === 0
       ? "Select backups to delete"
-      : `Permanently delete ${selectedIds.length} selected backup${selectedIds.length === 1 ? "" : "s"}`;
+      : `Permanently delete ${actionableSelectedIds.length} selected backup${actionableSelectedIds.length === 1 ? "" : "s"}`;
 
   return (
     <Stack gap="md" className={props.embedded ? classes.embedded : undefined}>
@@ -713,6 +770,19 @@ export function ServerBackupPanel(props: Props): ReactElement {
         >
           {installLockReason} You can still browse, export, import, and delete
           archived backups.
+        </Alert>
+      )}
+
+      {policy?.schedulePaused === true && (
+        <Alert
+          color="red"
+          variant="light"
+          title="World schedule paused"
+          data-backup-schedule-paused
+        >
+          Scheduled world backups are paused for this YARK session after repeated
+          failures. Policy stays enabled; restart YARK to resume after fixing the
+          cause (destination, map folder, or disk space).
         </Alert>
       )}
 
@@ -1011,14 +1081,26 @@ export function ServerBackupPanel(props: Props): ReactElement {
                       disabled={
                         busy ||
                         props.createLocked === true ||
-                        selectedIds.length === 0
+                        actionableSelectedIds.length === 0
                       }
                       onClick={confirmDeleteSelected}
                     >
                       Delete
-                      {selectedIds.length > 0 ? ` (${selectedIds.length})` : ""}
+                      {actionableSelectedIds.length > 0 ? ` (${actionableSelectedIds.length})` : ""}
                     </Button>
                   </span>
+                </Tooltip>
+                <Tooltip label="Remove every failed row for this server and backup kind">
+                  <Button
+                    color="red"
+                    variant="subtle"
+                    size="compact-sm"
+                    disabled={busy || props.createLocked === true}
+                    onClick={confirmClearFailed}
+                    data-backup-clear-failed
+                  >
+                    Clear failed
+                  </Button>
                 </Tooltip>
               </Group>
             </Group>

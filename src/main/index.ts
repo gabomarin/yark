@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Notification, dialog, screen, shell, type Tray } from "electron";
+import { app, BrowserWindow, Menu, Notification, dialog, screen, shell, type Tray } from "electron";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { DatabaseSync } from "node:sqlite";
@@ -187,6 +187,9 @@ function createWindow(settings: AppSettingsRepository): BrowserWindow {
 
 if (gotSingleInstanceLock) {
   void app.whenReady().then(async () => {
+    // No native File/Edit/View/Help bar — Quit lives on the system tray menu.
+    Menu.setApplicationMenu(null);
+
     const userData = app.getPath("userData");
     const dbPath = join(userData, "yark-server-manager.db");
     let db: DatabaseSync;

@@ -153,6 +153,7 @@ function createApiMock(): RendererApi {
     listBackups: vi.fn().mockResolvedValue({ ok: true, data: [] }),
     createManualBackup: vi.fn(),
     deleteBackups: vi.fn(),
+    deleteFailedBackups: vi.fn(),
     restoreBackup: vi.fn(),
     getBackupPolicy: vi.fn().mockResolvedValue({
       ok: true,

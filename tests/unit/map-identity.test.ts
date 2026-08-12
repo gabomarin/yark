@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   isOfficialMap,
+  isSafeMapToken,
   mapIdentityStartBlockers,
   persistableMapModId,
   resolveMapIdentity,
@@ -90,6 +91,18 @@ describe("validateMapIdentity", () => {
       field: "map",
       severity: "error",
     });
+  });
+
+  it("rejects map tokens that can escape or corrupt SavedArks paths", () => {
+    expect(isSafeMapToken("Svartalfheim_WP")).toBe(true);
+    for (const token of ["../Config", "Map/Child", "Map\\Child", "CON", "Map."]) {
+      expect(isSafeMapToken(token)).toBe(false);
+      expect(validateMapIdentity({ map: token })).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ field: "map", severity: "error" }),
+        ]),
+      );
+    }
   });
 
   it("warns when mapModId is unset on a custom map", () => {

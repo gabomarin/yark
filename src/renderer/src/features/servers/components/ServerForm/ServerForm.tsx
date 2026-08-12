@@ -71,6 +71,7 @@ interface FormState {
   name: string;
   map: string;
   mapModId: string | null;
+  mapSaveFolder: string | null;
   installDir: string;
   sessionName: string;
   gamePort: string;
@@ -93,6 +94,7 @@ function toFormState(
       name: "",
       map: KNOWN_MAPS[0],
       mapModId: null,
+      mapSaveFolder: null,
       installDir: base,
       sessionName: "",
       gamePort: "7777",
@@ -110,6 +112,7 @@ function toFormState(
     name: profile.name,
     map: profile.map,
     mapModId: profile.mapModId ?? null,
+    mapSaveFolder: profile.mapSaveFolder ?? null,
     installDir: profile.installDir,
     sessionName: profile.sessionName,
     gamePort: String(profile.gamePort),
@@ -134,6 +137,7 @@ function toInput(
     name,
     map: state.map.trim(),
     mapModId: state.mapModId,
+    mapSaveFolder: state.mapSaveFolder,
     installDir: isCreate
       ? resolveServerInstallDir(baseOrInstall, name)
       : baseOrInstall,
@@ -423,6 +427,7 @@ export function ServerForm(props: Props): ReactElement {
             key={mapFieldKey}
             map={state.map}
             mapModId={state.mapModId}
+            mapSaveFolder={state.mapSaveFolder}
             mapMods={mapMods}
             inputSize={inputSize}
             onChange={(next) =>
@@ -430,6 +435,7 @@ export function ServerForm(props: Props): ReactElement {
                 ...previous,
                 map: next.map,
                 mapModId: next.mapModId,
+                mapSaveFolder: next.mapSaveFolder,
               }))
             }
           />

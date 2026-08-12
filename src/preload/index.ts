@@ -220,6 +220,8 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.backupsCreate, serverId, kinds),
   deleteBackups: (serverId, backupIds) =>
     ipcRenderer.invoke(IPC.backupsDelete, serverId, backupIds),
+  deleteFailedBackups: (serverId, kind) =>
+    ipcRenderer.invoke(IPC.backupsDeleteFailed, serverId, kind),
   restoreBackup: (serverId, backupId, options) =>
     ipcRenderer.invoke(IPC.backupsRestore, serverId, backupId, options),
   getBackupPolicy: (serverId: string) =>

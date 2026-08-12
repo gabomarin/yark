@@ -35,11 +35,14 @@ export function parseMapModSelectValue(value: string): string | null {
 export interface MapFieldChange {
   map: string;
   mapModId: string | null;
+  /** Relative SavedArks folder; only meaningful for custom maps. */
+  mapSaveFolder: string | null;
 }
 
 interface Props {
   map: string;
   mapModId: string | null;
+  mapSaveFolder: string | null;
   inputSize: "xs" | "sm";
   /** Enabled Maps mods available as Map select options. */
   mapMods: ModMetadata[];
@@ -164,6 +167,20 @@ export function ServerFormMapField(props: Props): ReactElement {
     ];
   }, [mapModsWithToken, props.map, props.mapModId]);
 
+  const showSaveFolder = !official && props.map.trim().length > 0;
+
+  const emit = (next: { map: string; mapModId: string | null }) => {
+    const nextOfficial = isOfficialMap(next.map);
+    const sameCustomMap =
+      !nextOfficial
+      && next.map.trim().toLowerCase() === props.map.trim().toLowerCase();
+    props.onChange({
+      map: next.map,
+      mapModId: next.mapModId,
+      mapSaveFolder: sameCustomMap ? props.mapSaveFolder : null,
+    });
+  };
+
   return (
     <Stack gap="xs">
       <Select
@@ -175,7 +192,7 @@ export function ServerFormMapField(props: Props): ReactElement {
             return;
           }
           if (value === CUSTOM_MAP_SELECT_VALUE) {
-            props.onChange({
+            emit({
               map: official ? "" : props.map,
               mapModId: null,
             });
@@ -185,15 +202,15 @@ export function ServerFormMapField(props: Props): ReactElement {
           if (modId !== null) {
             const match = mapModsWithToken.find((entry) => entry.mod.id === modId);
             if (match !== undefined) {
-              props.onChange({ map: match.token, mapModId: modId });
+              emit({ map: match.token, mapModId: modId });
               return;
             }
             if (props.mapModId === modId && props.map.trim().length > 0) {
-              props.onChange({ map: props.map, mapModId: modId });
+              emit({ map: props.map, mapModId: modId });
             }
             return;
           }
-          props.onChange({ map: value, mapModId: null });
+          emit({ map: value, mapModId: null });
         }}
         data={selectData}
         searchable
@@ -206,7 +223,7 @@ export function ServerFormMapField(props: Props): ReactElement {
           size={props.inputSize}
           value={props.map}
           onChange={(e) =>
-            props.onChange({
+            emit({
               map: e.currentTarget.value,
               mapModId: null,
             })
@@ -214,6 +231,24 @@ export function ServerFormMapField(props: Props): ReactElement {
           placeholder="e.g. Svartalfheim_WP"
           description="Usually ends in _WP. Prefer a Map mods option when the pack is enabled on the Mods tab."
           required
+        />
+      ) : null}
+      {showSaveFolder ? (
+        <TextInput
+          label="World save folder"
+          size={props.inputSize}
+          value={props.mapSaveFolder ?? ""}
+          onChange={(e) =>
+            props.onChange({
+              map: props.map,
+              mapModId: props.mapModId,
+              mapSaveFolder: e.currentTarget.value.trim().length > 0
+                ? e.currentTarget.value.trim()
+                : null,
+            })
+          }
+          placeholder="e.g. Svartalfheim"
+          description="Usually leave this blank. Only needed when the save folder name differs from the map token (e.g. Svartalfheim vs Svartalfheim_WP). If YARK can’t find the folder, world backups will fail."
         />
       ) : null}
     </Stack>

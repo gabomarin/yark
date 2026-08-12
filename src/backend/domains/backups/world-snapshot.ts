@@ -1,6 +1,7 @@
 import { existsSync, type Dirent } from "node:fs";
 import { basename, join, relative } from "node:path";
 import { readdir } from "node:fs/promises";
+import { isSafeMapToken, isSafeWindowsFolderName } from "@shared/map-identity";
 import { mapTokenFromWorldSaveName } from "../instances/import-existing-install";
 
 /**
@@ -15,14 +16,30 @@ import { mapTokenFromWorldSaveName } from "../instances/import-existing-install"
 /** Dated game autosaves are never packaged in YARK world ZIPs. */
 export const MAX_DATED_AUTOSAVES_PER_MAP = 0;
 
-/** Folder name candidates for a launch map token (exact, then strip trailing `_WP`). */
-export function worldMapDirNameCandidates(mapToken: string): string[] {
+/**
+ * Folder name candidates under SavedArks: optional operator override, then exact
+ * `{MapToken}`, then strip trailing `_WP`. Deduped case-insensitively.
+ */
+export function worldMapDirNameCandidates(
+  mapToken: string,
+  mapSaveFolder?: string | null,
+): string[] {
   const token = mapToken.trim();
   if (token.length === 0) return [];
-  const out: string[] = [token];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  const push = (name: string) => {
+    const trimmed = name.trim();
+    if (trimmed.length === 0) return;
+    const key = trimmed.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push(trimmed);
+  };
+  push(mapSaveFolder ?? "");
+  push(token);
   if (/_WP$/i.test(token)) {
-    const stripped = token.replace(/_WP$/i, "");
-    if (stripped.length > 0) out.push(stripped);
+    push(token.replace(/_WP$/i, ""));
   }
   return out;
 }
@@ -33,19 +50,38 @@ function primaryArkPath(dir: string, mapToken: string): string {
 
 /**
  * Locate the live SavedArks subfolder for a launch map token by **folder name**
- * only (`{MapToken}`, then strip trailing `_WP`). Does not scan sibling folders
- * for `.ark` files (unsafe under map rotation leftovers).
+ * only (override → `{MapToken}` → strip trailing `_WP`). Does not scan sibling
+ * folders for `.ark` files (unsafe under map rotation leftovers).
  */
 export async function resolveWorldMapSaveDir(
   savedArksDir: string,
   mapToken: string,
+  mapSaveFolder?: string | null,
 ): Promise<{ dir: string; folderName: string } | null> {
   const token = mapToken.trim();
-  if (token.length === 0 || !existsSync(savedArksDir)) {
+  if (!isSafeMapToken(token) || !existsSync(savedArksDir)) {
     return null;
   }
 
-  const candidates = worldMapDirNameCandidates(token);
+  const candidates = worldMapDirNameCandidates(token, mapSaveFolder);
+  const override = mapSaveFolder?.trim() ?? "";
+  if (override.length > 0) {
+    if (!isSafeWindowsFolderName(override)) return null;
+    const exactDir = join(savedArksDir, override);
+    if (existsSync(exactDir)) {
+      return { dir: exactDir, folderName: override };
+    }
+    try {
+      const match = (await readdir(savedArksDir, { withFileTypes: true })).find(
+        (entry) => entry.isDirectory() && entry.name.toLowerCase() === override.toLowerCase(),
+      );
+      return match === undefined
+        ? null
+        : { dir: join(savedArksDir, match.name), folderName: match.name };
+    } catch {
+      return null;
+    }
+  }
   const candidateLower = new Set(candidates.map((name) => name.toLowerCase()));
 
   // Prefer a candidate folder that already holds the primary `.ark`.

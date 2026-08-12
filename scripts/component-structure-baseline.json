@@ -11,6 +11,6 @@
     "src/renderer/src/features/server-workspace/configurationWizardModel.ts": 918,
     "src/renderer/src/features/server-workspace/iniModel.ts": 375,
     "src/renderer/src/features/server-workspace/ServerWorkspacePage.tsx": 365,
-    "src/renderer/src/features/servers/components/ServerForm/ServerForm.tsx": 559
+    "src/renderer/src/features/servers/components/ServerForm/ServerForm.tsx": 588
   }
 }

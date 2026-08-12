@@ -1095,9 +1095,10 @@ describe("BackupService kinds and retention", () => {
     });
     const first = (await service.createManualBackup(profile.id, ["world"]))[0]!;
     // Started long ago, but finished recently — must not schedule again yet.
-    db.prepare(`UPDATE backups SET created_at = ?, completed_at = ? WHERE id = ?`).run(
+    db.prepare(`UPDATE backups SET created_at = ?, completed_at = ?, type = ? WHERE id = ?`).run(
       new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
       new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+      "scheduled",
       first.id,
     );
 
@@ -1122,6 +1123,103 @@ describe("BackupService kinds and retention", () => {
     await scheduled.runScheduledCycle();
     expect(repo.listCompleted(profile.id, "world")).toHaveLength(1);
     expect(repo.listCompleted(profile.id, "world")[0]?.id).toBe(first.id);
+  });
+
+  it("skips scheduled world until intervalMinutes after a failed scheduled attempt", async () => {
+    repo.setPolicy({
+      serverId: profile.id,
+      enabled: true,
+      intervalMinutes: 60,
+      retainCountWorld: 20,
+      retainCountPlayers: 20,
+      retainCountIni: 10,
+      backupDir: null,
+    });
+    const started = repo.createBackupStart({
+      serverId: profile.id,
+      type: "scheduled",
+      kind: "world",
+      path: join(installDir, "Backups", "World", "failed-sched.zip"),
+      notes: null,
+    });
+    repo.failBackup(started.id, "disk full");
+    db.prepare(`UPDATE backups SET completed_at = ? WHERE id = ?`).run(
+      new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+      started.id,
+    );
+
+    const processes = mockActiveProcesses();
+    const servers = {
+      get: vi.fn((id: string) => (id === profile.id ? profile : null)),
+      list: vi.fn(() => [profile]),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const settings = {
+      get: vi.fn(() => null),
+      set: vi.fn(),
+    } as unknown as AppSettingsRepository;
+    const scheduled = new BackupService(
+      servers,
+      repo,
+      processes,
+      settings,
+      join(installDir, "_root"),
+    );
+
+    await scheduled.runScheduledCycle();
+    expect(repo.listBackups(profile.id, 20)).toHaveLength(1);
+  });
+
+  it("pauses scheduled world creates after 3 consecutive failures this session", async () => {
+    repo.setPolicy({
+      serverId: profile.id,
+      enabled: true,
+      intervalMinutes: 5,
+      retainCountWorld: 20,
+      retainCountPlayers: 20,
+      retainCountIni: 10,
+      backupDir: null,
+    });
+    const processes = mockActiveProcesses();
+    const servers = {
+      get: vi.fn((id: string) => (id === profile.id ? profile : null)),
+      list: vi.fn(() => [profile]),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const settings = {
+      get: vi.fn(() => null),
+      set: vi.fn(),
+    } as unknown as AppSettingsRepository;
+    const scheduled = new BackupService(
+      servers,
+      repo,
+      processes,
+      settings,
+      join(installDir, "_root"),
+    );
+    const createSpy = vi
+      .spyOn(scheduled, "createScheduledBackup")
+      .mockRejectedValue(new Error("disk full"));
+
+    await scheduled.runScheduledCycle();
+    await scheduled.runScheduledCycle();
+    await scheduled.runScheduledCycle();
+    expect(scheduled.isScheduledWorldPaused(profile.id)).toBe(true);
+    expect(scheduled.getPolicy(profile.id).enabled).toBe(true);
+    expect(scheduled.getPolicy(profile.id).schedulePaused).toBe(true);
+
+    createSpy.mockClear();
+    await scheduled.runScheduledCycle();
+    expect(createSpy).not.toHaveBeenCalled();
+
+    const summary = await scheduled.getFleetSummary();
+    expect(
+      summary.alerts.some(
+        (alert) =>
+          alert.kind === "schedule_paused" && alert.serverId === profile.id,
+      ),
+    ).toBe(true);
+    expect(summary.servers[0]?.schedulePaused).toBe(true);
   });
 
   it("skips scheduling while a world backup is active in this process", async () => {
@@ -1208,6 +1306,20 @@ describe("BackupService kinds and retention", () => {
     await scheduled.runScheduledCycle();
 
     expect(repo.getBackup(interrupted.id)?.status).toBe("failed");
+    // Reconcile finishes the interrupted attempt now — interval must elapse
+    // before another scheduled create (same as any failed scheduled finish).
+    expect(
+      repo
+        .listBackups(profile.id, 20)
+        .filter((backup) => backup.type === "scheduled" && backup.kind === "world"),
+    ).toHaveLength(1);
+
+    db.prepare(`UPDATE backups SET completed_at = ? WHERE id = ?`).run(
+      new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+      interrupted.id,
+    );
+    await scheduled.runScheduledCycle();
+
     const scheduledWorlds = repo
       .listBackups(profile.id, 20)
       .filter((backup) => backup.type === "scheduled" && backup.kind === "world");
@@ -1652,6 +1764,31 @@ describe("BackupService kinds and retention", () => {
     for (const call of addEvent.mock.calls) {
       expect(call[1]).toBe("backup_deleted");
     }
+  });
+
+  it("clears every failed row for one kind beyond the history page limit", async () => {
+    for (let index = 0; index < 205; index += 1) {
+      const record = repo.createBackupStart({
+        serverId: profile.id,
+        type: "scheduled",
+        kind: "world",
+        path: join(installDir, "Backups", `failed-${index}.zip`),
+        notes: null,
+      });
+      repo.failBackup(record.id, "expected test failure");
+    }
+    const ini = repo.createBackupStart({
+      serverId: profile.id,
+      type: "manual",
+      kind: "ini",
+      path: join(installDir, "Backups", "failed-ini.zip"),
+      notes: null,
+    });
+    repo.failBackup(ini.id, "keep other kind");
+
+    await expect(service.deleteFailedBackups(profile.id, "world")).resolves.toBe(205);
+    expect(repo.listFailed(profile.id, "world")).toHaveLength(0);
+    expect(repo.listFailed(profile.id, "ini")).toHaveLength(1);
   });
 
   it("records backup_deleted when retention prunes old backups", async () => {

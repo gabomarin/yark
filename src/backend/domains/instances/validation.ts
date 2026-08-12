@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { validateMapIdentity } from "@shared/map-identity";
+import { isValidMapSaveFolder, validateMapIdentity } from "@shared/map-identity";
 import {
   getServerFolderNameError,
   getWindowsPathError,
@@ -131,6 +131,14 @@ export function validateProfileInput(
     if (mapIssue.severity === "error") {
       issues.push({ field: mapIssue.field, message: mapIssue.message });
     }
+  }
+
+  if (!isValidMapSaveFolder(input.mapSaveFolder)) {
+    issues.push({
+      field: "mapSaveFolder",
+      message:
+        "World save folder must be a single folder name under SavedArks (no path separators)",
+    });
   }
 
   return issues;
