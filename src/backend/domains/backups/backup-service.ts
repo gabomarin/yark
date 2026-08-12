@@ -1270,12 +1270,14 @@ export class BackupService extends EventEmitter {
     const policy = this.backups.getPolicy(server.id);
     await this.applyRetention(server.id, policy);
     if (!policy.enabled) return;
-    if (this.scheduledWorldPaused.has(server.id)) return;
 
+    // Reconcile even when creates are session-paused so interrupted running
+    // rows / temp artifacts are not stranded for the rest of the process.
     const reconciled = await this.reconcileInterruptedRunningBackups(server.id);
     if (reconciled > 0) {
       this.emitChanged(server.id);
     }
+    if (this.scheduledWorldPaused.has(server.id)) return;
 
     if (
       this.scheduledWorldInFlight.has(server.id)
