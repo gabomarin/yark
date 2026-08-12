@@ -695,6 +695,68 @@ describe("BackupService kinds and retention", () => {
     });
   });
 
+  it("restores mod map into short SavedArks folder when live folder is empty or missing", async () => {
+    const savedArks = join(installDir, "ShooterGame", "Saved", "SavedArks");
+    const svartDir = join(savedArks, "Svartalfheim");
+    await mkdir(svartDir, { recursive: true });
+    await writeFile(join(svartDir, "Svartalfheim_WP.ark"), "SVART", "utf8");
+    await writeFile(
+      join(svartDir, "Svartalfheim_WP_AntiCorruptionBackup.bak"),
+      "BAK",
+      "utf8",
+    );
+    await writeFile(join(svartDir, "Extinction_WP.ark"), "LEFTOVER", "utf8");
+
+    const svartProfile = { ...profile, map: "Svartalfheim_WP", name: "Svart" };
+    const servers = {
+      get: vi.fn((id: string) => (id === svartProfile.id ? svartProfile : null)),
+      list: vi.fn(() => [svartProfile]),
+      addEvent,
+    } as unknown as ServerRepository;
+    const processes = {
+      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
+      isActive,
+      start: vi.fn(),
+      stop: vi.fn(),
+    } as unknown as ProcessManager;
+    const settingsStore = new Map<string, string | null>();
+    const settings = {
+      get: vi.fn((key: string) => settingsStore.get(key) ?? null),
+      set: vi.fn((key: string, value: string | null) => {
+        settingsStore.set(key, value);
+      }),
+    } as unknown as AppSettingsRepository;
+    const svartService = new BackupService(
+      servers,
+      repo,
+      processes,
+      settings,
+      join(installDir, "_root"),
+    );
+
+    const created = await svartService.createManualBackup(svartProfile.id, ["world"]);
+    const record = created[0];
+    expect(record).toBeDefined();
+    if (record === undefined) return;
+
+    await rm(svartDir, { recursive: true, force: true });
+    await mkdir(svartDir, { recursive: true });
+    await svartService.restoreBackup(svartProfile.id, record.id);
+    expect(await readFile(join(svartDir, "Svartalfheim_WP.ark"), "utf8")).toBe(
+      "SVART",
+    );
+    await expect(
+      access(join(savedArks, "Svartalfheim_WP", "Svartalfheim_WP.ark"), fsConstants.F_OK),
+    ).rejects.toThrow();
+
+    await rm(savedArks, { recursive: true, force: true });
+    await mkdir(savedArks, { recursive: true });
+    await svartService.restoreBackup(svartProfile.id, record.id);
+    expect(await readFile(join(svartDir, "Svartalfheim_WP.ark"), "utf8")).toBe(
+      "SVART",
+    );
+  });
+
   it("packages players profiles only", async () => {
     const created = await service.createManualBackup(profile.id, ["players"]);
     const record = created[0];

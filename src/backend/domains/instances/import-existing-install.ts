@@ -290,13 +290,8 @@ async function collectWorldSaveCandidates(
       continue;
     }
     if (entry.isDirectory()) {
-      // Some hosts nest under SavedArks/<MapToken>/…
-      const dirLooksLikeMap =
-        mapTokenFromWorldSaveName(`${entry.name}.ark`) !== null ||
-        suggestMapFromText(entry.name) !== null;
-      if (!dirLooksLikeMap) {
-        continue;
-      }
+      // Scan one level of nest (SavedArks/<folder>/*.ark). Mod maps often use
+      // short folder names (e.g. Svartalfheim/) that are not themselves MapTokens.
       let nested;
       try {
         nested = await readdir(full, { withFileTypes: true });

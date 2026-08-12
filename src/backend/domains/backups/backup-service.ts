@@ -4,7 +4,7 @@ import { cp, copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "nod
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
-import { isSafeMapToken } from "@shared/map-identity";
+import { isSafeMapToken, isSafeWindowsFolderName } from "@shared/map-identity";
 import {
   backupFinishedAt,
   formatPlayerSessionNotes,
@@ -210,6 +210,28 @@ function mapTokenFileSlug(mapToken: string): string {
 
 function worldRetentionKey(backup: BackupRecord): string {
   return backup.mapToken?.trim().toLowerCase() || "__unscoped__";
+}
+
+/**
+ * Folder name to create under SavedArks when the live map dir is missing
+ * (wipe / first restore). Prefer profile override, then manifest folder, then
+ * launch token — never invent a strip-`_WP` guess that would break official maps.
+ */
+function preferredWorldMapRestoreFolderName(options: {
+  mapToken: string;
+  mapSaveFolder?: string | null;
+  mapFolderName?: string | null;
+}): string | null {
+  const token = options.mapToken.trim();
+  if (!isSafeMapToken(token)) return null;
+  const picks = [options.mapSaveFolder, options.mapFolderName, token];
+  for (const pick of picks) {
+    const name = pick?.trim() ?? "";
+    if (name.length === 0) continue;
+    if (!isSafeWindowsFolderName(name)) continue;
+    return name;
+  }
+  return null;
 }
 
 function isPlayerProfileFile(name: string): boolean {
@@ -1906,6 +1928,15 @@ export class BackupService extends EventEmitter {
       }
 
       if (kind === "world" && packaged.meta.empty === true) {
+        // Disaster recovery: live map folder may already be gone. Skip the
+        // empty pre_restore safeguard so restore can recreate it.
+        if (type === "pre_restore") {
+          await rm(stagingDir, { recursive: true, force: true });
+          await rm(zipPath, { force: true }).catch(() => undefined);
+          this.backups.deleteBackupRecord(record.id);
+          this.creatingBackupIds.delete(record.id);
+          return null;
+        }
         throw new Error("No world save data found to back up");
       }
 
@@ -2071,6 +2102,17 @@ export class BackupService extends EventEmitter {
     // File-by-file copy so live Ark save rotation (e.g. .arkrbf) can be skipped
     // without failing the whole archive, while essential saves still fail loudly.
     const enumerated = await listFilesRecursive(mapSourceDir);
+    if (enumerated.length === 0) {
+      return {
+        meta: {
+          empty: true,
+          fileCount: 0,
+          savedArksPresent: true,
+          mapToken,
+          mapFolderName: resolved.folderName,
+        },
+      };
+    }
     const candidates = await collectWorldBackupCandidates(enumerated, stat);
     const selection = selectWorldBackupSourceFiles(candidates, { mapToken });
     const sourceFiles = selection.selected.map((candidate) => candidate.path);
@@ -2291,7 +2333,27 @@ export class BackupService extends EventEmitter {
       mapToken,
       server.mapSaveFolder,
     );
-    const liveMapDir = liveResolved?.dir ?? join(liveSavedArks, mapToken);
+    // After a wipe the live folder is gone; prefer manifest mapFolderName (mod
+    // maps often live under SavedArks/Svartalfheim/ while the ZIP uses the
+    // launch token) over blindly mkdir'ing SavedArks/{mapToken}.
+    let manifestFolder: string | null = null;
+    try {
+      const manifestRaw = await readFile(join(backupPath, "manifest.json"), "utf8");
+      manifestFolder = this.parseManifest(manifestRaw)?.mapFolderName ?? null;
+    } catch {
+      manifestFolder = null;
+    }
+    const restoreFolder =
+      liveResolved?.folderName
+      ?? preferredWorldMapRestoreFolderName({
+        mapToken,
+        mapSaveFolder: server.mapSaveFolder,
+        mapFolderName: manifestFolder,
+      });
+    if (restoreFolder === null) {
+      throw new Error(`Cannot resolve live map folder for ${mapToken}`);
+    }
+    const liveMapDir = liveResolved?.dir ?? join(liveSavedArks, restoreFolder);
     await mkdir(liveMapDir, { recursive: true });
 
     const files = await listFilesRecursive(backupMapDir);
@@ -3512,6 +3574,7 @@ export class BackupService extends EventEmitter {
     createdAt?: string;
     notes?: string;
     mapToken?: string | null;
+    mapFolderName?: string | null;
   } | null {
     if (raw === null || raw.trim().length === 0) return null;
     try {
@@ -3524,6 +3587,7 @@ export class BackupService extends EventEmitter {
           createdAt?: string;
           notes?: string;
           mapToken?: string;
+          mapFolderName?: string;
         };
       };
       const backup = data.backup;
@@ -3540,6 +3604,12 @@ export class BackupService extends EventEmitter {
         mapTokenCandidate !== null && isSafeMapToken(mapTokenCandidate)
           ? mapTokenCandidate
           : null;
+      const mapFolderRaw =
+        typeof backup.mapFolderName === "string" ? backup.mapFolderName.trim() : "";
+      const mapFolderName =
+        mapFolderRaw.length > 0 && isSafeWindowsFolderName(mapFolderRaw)
+          ? mapFolderRaw
+          : null;
       return {
         id: typeof backup.id === "string" ? backup.id : undefined,
         type,
@@ -3547,6 +3617,7 @@ export class BackupService extends EventEmitter {
         createdAt: typeof backup.createdAt === "string" ? backup.createdAt : undefined,
         notes: typeof backup.notes === "string" ? backup.notes : undefined,
         mapToken: mapTokenRaw,
+        mapFolderName,
       };
     } catch {
       return null;

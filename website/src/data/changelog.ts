@@ -12,6 +12,43 @@ export type ChangelogEntry = {
 /** Curated site changelog — keep in sync with root CHANGELOG.md when cutting releases. */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.10.0",
+    date: "2026-08-12",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Import an existing ASA dedicated folder as a YARK profile (mods discovered disabled; no SteamCMD until you choose).",
+          "Profile database snapshots before migrations and on healthy reopen; boot recovery can restore a snapshot.",
+          "Windows CI Electron E2E gates for smoke, CRUD, install-health, and host-port-probe.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "World backups are scoped to the active map folder (smaller ZIPs, safer restore); custom maps can set a World save folder override.",
+          "World schedule waits after process start, respects the interval after failures, and pauses for the session after repeated failures; Clear failed cleans history noise.",
+          "Public site trust copy focuses on official downloads and SHA-256 checks (Authenticode remains deferred).",
+        ],
+      },
+      {
+        title: "Security",
+        items: [
+          "Packaged builds enable Electron fuses and ASAR integrity validation.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "World restore after a wipe recreates the live map folder from the backup (mod maps like Svartalfheim/), not a mistaken MapToken directory; empty live maps skip the pre-restore safeguard.",
+          "Import install map detection finds nested SavedArks folders even when the folder name is not a MapToken.",
+          "Safe Update backup progress/cancel and large world snapshot packaging; YARK update Ready state survives re-checks.",
+          "Native Electron menu bar hidden; Windows publisher/author shows gabomarin26.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.9.1",
     date: "2026-08-10",
     sections: [

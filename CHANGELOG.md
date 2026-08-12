@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-08-12
+
 ### Added
 
 - Profile SQLite **snapshots** before schema migrations and after each healthy reopen of an existing DB; boot recovery can **Restore snapshot** (preferred) instead of only starting empty (#252).
@@ -26,9 +28,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - World schedule gates on the last **finished** scheduled attempt (success or fail), pauses further scheduled creates for the YARK session after 3 consecutive failures (no policy change), supports custom-map **World save folder** override, and lets operators **Clear failed** history rows (#262).
 - Public site and operator docs no longer highlight code signing / Authenticode as near-term roadmap; download trust stays on official sources and SHA-256 checks (#142).
 
-
 ### Fixed
 
+- World restore after a wipe recreates the **live** map folder from the backup manifest (mod maps like `Svartalfheim/`), not a mistaken `{MapToken}` directory; empty live maps skip the pre-restore safeguard so recovery can proceed (#262).
+- **Import install** map detection scans nested `SavedArks` folders even when the folder name is not a MapToken (#254).
 - Harden world-backup map paths and make folder overrides, current-map selection, and all-failed history cleanup behave safely and predictably (#262).
 - Hide the native Electron application menu bar (File/Edit/View/Help); quit remains on the system tray.
 - Packaged Windows builds report publisher/author as **gabomarin26** (was Gabriel).

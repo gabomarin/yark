@@ -14,7 +14,7 @@ Protect three content scopes independently:
 | `players` | `.arkprofile` / `.arkprofile.bak` / `.profilebak` under `SavedArks` and `SaveGames` | `PlayerProfiles/` |
 | `ini` | `Game.ini` + `GameUserSettings.ini` in `Config/WindowsServer` | `ConfigWindowsServer/` |
 
-**Breaking (1.1):** world archives are **per-map**, not a full `SavedArks` tree. Older full-folder world ZIPs are not restored by the current path.
+**Breaking (0.10):** world archives are **per-map**, not a full `SavedArks` tree. Older full-folder world ZIPs are not restored by the current path.
 
 Triggers are separated on purpose:
 
@@ -208,7 +208,7 @@ User restart (`servers:restart` via `InstanceService.restart`):
 ### Restore
 
 1. Backup must be `completed`; server must **not** be active (`ProcessManager.isActive`).
-2. A same-kind `pre_restore` safeguard backup is created first.
+2. A same-kind `pre_restore` safeguard backup is created first (skipped when the live world map folder is already empty so wipe recovery can proceed).
 3. ZIP archives extract to a temp staging dir; legacy folders are used in place.
 4. Apply:
    - **world** — overlay into live `SavedArks/{MapToken}/` only (sibling map folders untouched). Optional `restoreProfilesTribes` (default **true**) controls whether `.arkprofile` / `.arktribe` companions are copied; map `.ark` + anti-corruption bak always apply. INI untouched.

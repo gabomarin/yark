@@ -184,6 +184,16 @@ ServerPassword=joinme
     expect(suggestions.map).toBe("LostColony_WP");
   });
 
+  it("suggests map from nested mod folders that are not MapToken-shaped", async () => {
+    const install = join(await tempRoot(), "NestedModMap");
+    const savedArks = join(install, "ShooterGame", "Saved", "SavedArks");
+    const nested = join(savedArks, "Svartalfheim");
+    await mkdir(nested, { recursive: true });
+    await writeFile(join(nested, "Svartalfheim_WP.ark"), "svart");
+
+    expect(await suggestMapFromSavedArks(install)).toBe("Svartalfheim_WP");
+  });
+
   it("detects install dirs already managed by YARK", () => {
     const clash = findManagedInstallClash("D:\\Servers\\Island", [
       { name: "Island", installDir: "d:/Servers/Island/" },
