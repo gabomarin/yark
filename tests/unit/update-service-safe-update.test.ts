@@ -244,6 +244,26 @@ describe("UpdateService safe update orchestration", () => {
     expect(h.order).toEqual(["pre_update", "steam"]);
   });
 
+  it("rejects updateServer while the server process is active", async () => {
+    const h = createHarness({ wasRunning: true });
+    dirs.push(h.logDir);
+
+    await expect(h.service.updateServer(h.profile.id)).rejects.toThrow(
+      /stop the server before updating files/i,
+    );
+    expect(h.runSteamUpdate).not.toHaveBeenCalled();
+  });
+
+  it("allows updateServer when the server is stopped", async () => {
+    const h = createHarness({ wasRunning: false });
+    dirs.push(h.logDir);
+
+    await h.service.updateServer(h.profile.id);
+
+    expect(h.backups.createPreUpdateBackupForJob).toHaveBeenCalled();
+    expect(h.runSteamUpdate).toHaveBeenCalled();
+  });
+
   it("preserves original running intent when verify replays after the server was stopped", async () => {
     const h = createHarness({ wasRunning: false });
     dirs.push(h.logDir);

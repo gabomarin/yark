@@ -508,8 +508,9 @@ export class UpdateService extends EventEmitter {
 
   async updateServer(serverId: string): Promise<void> {
     this.assertStopBackupIdle(serverId);
-    // May run while the server is active: performUpdateServer captures wasRunning,
-    // stops for SteamCMD, then restarts on success (or after rollback).
+    if (this.processes.isActive(serverId)) {
+      throw new Error("Stop the server before updating files");
+    }
     await this.enqueueAndWait("update", serverId);
   }
 
