@@ -12,8 +12,9 @@ import type {
   ClusterIniTemplateMemberPreview,
   ServerIniPayload,
   ServerProfile,
-  ServerStatus,
+  ServerRuntimeInfo,
 } from "@shared/types";
+import { isServerProcessLive } from "@shared/server-process-idle";
 import type { ClusterIniTemplateRepository } from "../../infra/db/cluster-ini-template-repository";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
@@ -27,7 +28,7 @@ import { buildIniPreview } from "./ini-preview";
 import type { IniService } from "./ini-service";
 
 export interface ServerRuntimeStatusReader {
-  getStatus(serverId: string): { status: ServerStatus };
+  getStatus(serverId: string): Pick<ServerRuntimeInfo, "status" | "processLive">;
 }
 
 function normalizeClusterId(clusterId: string): string {
@@ -38,10 +39,13 @@ function normalizeClusterId(clusterId: string): string {
   return id;
 }
 
-function assertStopped(status: ServerStatus, serverName: string): void {
-  if (status !== "stopped") {
+function assertIdleForTemplateApply(
+  runtime: Pick<ServerRuntimeInfo, "status" | "processLive">,
+  serverName: string,
+): void {
+  if (isServerProcessLive(runtime)) {
     throw new Error(
-      `Server “${serverName}” must be stopped before template apply (status: ${status})`,
+      `Server “${serverName}” must not be running before template apply (status: ${runtime.status})`,
     );
   }
 }
@@ -133,7 +137,7 @@ export class ClusterIniTemplateApplyService {
     const selection = assertClusterIniTemplateFileSelection(files);
 
     return this.locks.withLock(serverId, "cluster-ini-promote", async () => {
-      assertStopped(this.runtime.getStatus(serverId).status, server.name);
+      assertIdleForTemplateApply(this.runtime.getStatus(serverId), server.name);
 
       const snapshot = await this.ini.readServerIni(serverId);
       const composed = composeTemplatePayloadFromMember(snapshot.payload);
@@ -191,7 +195,7 @@ export class ClusterIniTemplateApplyService {
     } else {
       assertMemberOfCluster(server, id);
     }
-    assertStopped(this.runtime.getStatus(serverId).status, server.name);
+    assertIdleForTemplateApply(this.runtime.getStatus(serverId), server.name);
 
     const snapshot = await this.ini.readServerIni(serverId);
 
@@ -255,7 +259,7 @@ export class ClusterIniTemplateApplyService {
     }
 
     return this.locks.withLock(serverId, `cluster-ini-${operation}`, async () => {
-      assertStopped(this.runtime.getStatus(serverId).status, server.name);
+      assertIdleForTemplateApply(this.runtime.getStatus(serverId), server.name);
 
       const template = this.requireTemplate(id);
       const current = await this.ini.readServerIni(serverId);

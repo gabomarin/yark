@@ -38,7 +38,7 @@ function makeStatuses(
   return new Map(
     entries.map(([serverId, status]) => [
       serverId,
-      { serverId, status, pid: null, startedAt: null, lastError: null },
+      { serverId, status, processLive: status !== "stopped" && status !== "error", pid: null, startedAt: null, lastError: null },
     ]),
   );
 }
@@ -550,6 +550,11 @@ describe("ClustersPage", () => {
     await user.click(screen.getByRole("button", { name: /add servers/i }));
     const dialog = await screen.findByRole("dialog", { name: /add servers to alpha/i });
     expect(within(dialog).getByText("Free Map")).toBeInTheDocument();
+    expect(within(dialog).queryByText("The Island")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("Scorched")).not.toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: /continue/i })).toBeDisabled();
+    await user.click(within(dialog).getByRole("button", { name: /Free Map/i }));
+    expect(within(dialog).getByText(/1 selected/i)).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: /continue/i }));
     await user.click(within(dialog).getByRole("button", { name: /add to cluster/i }));
 
@@ -747,7 +752,7 @@ describe("ClustersPage", () => {
     );
   });
 
-  it("seeds INI from the template when adding servers with the opt-in checked", async () => {
+  it("seeds INI from the template only after explicit Seed INI opt-in", async () => {
     const user = userEvent.setup();
     const onRefresh = vi.fn();
     const free = makeServer({
@@ -797,10 +802,26 @@ describe("ClustersPage", () => {
 
     await user.click(await screen.findByRole("button", { name: /^add servers$/i }));
     const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: /Free Map/i }));
     await user.click(within(dialog).getByRole("button", { name: /continue/i }));
-    expect(
-      within(dialog).getByRole("checkbox", { name: /seed ini from cluster template/i }),
-    ).toBeChecked();
+    const seedToggle = within(dialog).getByRole("checkbox", {
+      name: /seed ini from cluster template/i,
+    });
+    expect(seedToggle).not.toBeChecked();
+    expect(window.api.seedClusterIniFromTemplate).not.toHaveBeenCalled();
+
+    await user.click(seedToggle);
+    expect(seedToggle).toBeChecked();
+    const gus = within(dialog).getByRole("checkbox", {
+      name: /gameusersettings\.ini/i,
+    });
+    const game = within(dialog).getByRole("checkbox", { name: /^game\.ini$/i });
+    expect(gus).not.toBeChecked();
+    expect(game).not.toBeChecked();
+    expect(within(dialog).getByRole("button", { name: /add to cluster/i })).toBeDisabled();
+
+    await user.click(gus);
+    await user.click(game);
     await user.click(within(dialog).getByRole("button", { name: /add to cluster/i }));
 
     expect(updateServer).toHaveBeenCalled();
@@ -809,6 +830,64 @@ describe("ClustersPage", () => {
       "free",
       { gameUserSettings: true, game: true },
     );
+    expect(onRefresh).toHaveBeenCalled();
+  });
+
+  it("allows an Error-state idle server to join a cluster without seeding", async () => {
+    const user = userEvent.setup();
+    const onRefresh = vi.fn();
+    const free = makeServer({
+      id: "free",
+      name: "Free Map",
+      clusterId: null,
+      clusterDir: null,
+      gamePort: 7783,
+      queryPort: 27021,
+      rconPort: 27026,
+    });
+    const updateServer = vi.fn().mockImplementation(async (id: string, input: unknown) => ({
+      ok: true,
+      data: {
+        ...(id === "free" ? free : island),
+        ...(input as object),
+      },
+    }));
+    window.api = {
+      ...window.api,
+      updateServer,
+    };
+
+    render(
+      <AppProviders>
+        <ClustersPage
+          servers={[island, scorched, free]}
+          reports={[readyReport]}
+          statuses={makeStatuses([
+            ["srv-a", "stopped"],
+            ["srv-b", "stopped"],
+            ["free", "error"],
+          ])}
+          onOpenServer={vi.fn()}
+          onRefresh={onRefresh}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /add servers/i }));
+    const dialog = await screen.findByRole("dialog", { name: /add servers to alpha/i });
+    expect(within(dialog).getByText("Free Map")).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: /Free Map/i }));
+    await user.click(within(dialog).getByRole("button", { name: /continue/i }));
+    await user.click(within(dialog).getByRole("button", { name: /add to cluster/i }));
+
+    expect(updateServer).toHaveBeenCalledWith(
+      "free",
+      expect.objectContaining({
+        clusterId: "alpha",
+        clusterDir: expect.stringMatching(/C:[\\/]ARK[\\/]cluster/i),
+      }),
+    );
+    expect(window.api.seedClusterIniFromTemplate).not.toHaveBeenCalled();
     expect(onRefresh).toHaveBeenCalled();
   });
 });

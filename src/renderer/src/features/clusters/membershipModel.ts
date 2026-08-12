@@ -1,11 +1,13 @@
 import { findPortConflicts } from "@shared/port-conflicts";
-import type { ServerProfile, ServerProfileInput, ServerStatus } from "@shared/types";
+import type { ServerProfile, ServerProfileInput, ServerRuntimeInfo } from "@shared/types";
+import type { ServerProcessRuntime } from "@shared/server-process-idle";
 import { sharedClusterDir } from "./clusterModel";
 import {
   buildCreateClusterInput,
+  clusterProcessBusyReason,
   pruneSelectedServerIds,
   resolveSelectedCandidates,
-  resolveServerStatus,
+  resolveServerRuntime,
   serverProfileToInput,
   toggleSelectedServerId,
   type CreateClusterCandidate,
@@ -28,7 +30,7 @@ export function canAddServersToCluster(members: ServerProfile[]): boolean {
 
 export function addIneligibilityReason(
   server: ServerProfile,
-  status: ServerStatus,
+  runtime: ServerProcessRuntime,
   clusterId: string,
 ): string | null {
   if (server.clusterId !== null) {
@@ -37,25 +39,23 @@ export function addIneligibilityReason(
     }
     return `Already in cluster “${server.clusterId}”`;
   }
-  if (status !== "stopped") {
-    return "Server must be stopped";
-  }
-  return null;
+  return clusterProcessBusyReason(runtime);
 }
 
 export function listAddCandidates(
   clusterId: string,
   servers: ServerProfile[],
-  statuses: Map<string, { status: ServerStatus }>,
+  statuses: Map<string, Pick<ServerRuntimeInfo, "status" | "processLive">>,
 ): MembershipCandidate[] {
   return [...servers]
+    .filter((server) => server.clusterId === null && server.enabled)
     .sort((a, b) => a.name.localeCompare(b.name))
     .map((server) => {
-      const status = resolveServerStatus(statuses, server.id);
-      const reason = addIneligibilityReason(server, status, clusterId);
+      const runtime = resolveServerRuntime(statuses, server.id);
+      const reason = addIneligibilityReason(server, runtime, clusterId);
       return {
         server,
-        status,
+        status: runtime.status,
         eligible: reason === null,
         reason,
       };
@@ -63,26 +63,23 @@ export function listAddCandidates(
 }
 
 export function removeIneligibilityReason(
-  status: ServerStatus,
+  runtime: ServerProcessRuntime,
 ): string | null {
-  if (status !== "stopped") {
-    return "Server must be stopped";
-  }
-  return null;
+  return clusterProcessBusyReason(runtime);
 }
 
 export function listRemoveCandidates(
   members: ServerProfile[],
-  statuses: Map<string, { status: ServerStatus }>,
+  statuses: Map<string, Pick<ServerRuntimeInfo, "status" | "processLive">>,
 ): MembershipCandidate[] {
   return [...members]
     .sort((a, b) => a.name.localeCompare(b.name))
     .map((server) => {
-      const status = resolveServerStatus(statuses, server.id);
-      const reason = removeIneligibilityReason(status);
+      const runtime = resolveServerRuntime(statuses, server.id);
+      const reason = removeIneligibilityReason(runtime);
       return {
         server,
-        status,
+        status: runtime.status,
         eligible: reason === null,
         reason,
       };

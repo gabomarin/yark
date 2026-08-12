@@ -10,7 +10,7 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { MetaStrip } from "./MetaStrip/MetaStrip";
 import { formatCheckedAt, sharedClusterDir } from "../clusterModel";
-import { resolveServerStatus } from "../createClusterModel";
+import { resolveServerRuntime } from "../createClusterModel";
 import {
   canAddServersToCluster,
   removeIneligibilityReason,
@@ -53,12 +53,12 @@ export function ClusterDetailPanel(props: Props): ReactElement {
 
   const memberStatuses = useMemo(() => {
     return props.members.map((server) => {
-      const status = resolveServerStatus(props.statuses, server.id);
-      const removeReason = removeIneligibilityReason(status);
-      const templateApplyReason = templateApplyIneligibilityReason(status);
+      const runtime = resolveServerRuntime(props.statuses, server.id);
+      const removeReason = removeIneligibilityReason(runtime);
+      const templateApplyReason = templateApplyIneligibilityReason(runtime);
       return {
         server,
-        status,
+        status: runtime.status,
         removeReason,
         canRemove: removeReason === null,
         templateApplyReason,
@@ -135,7 +135,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
             <Tooltip
               label={
                 canAdd
-                  ? "Assign this cluster’s ID and directory to stopped servers"
+                  ? "Assign this cluster’s ID and directory to servers that are not running"
                   : "Align the shared cluster directory on every server first"
               }
             >

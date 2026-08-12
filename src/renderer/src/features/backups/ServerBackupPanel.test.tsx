@@ -31,6 +31,7 @@ const server: ServerProfile = {
 const runtime: ServerRuntimeInfo = {
   serverId: "srv-1",
   status: "stopped",
+  processLive: false,
   pid: null,
   startedAt: null,
   lastError: null,

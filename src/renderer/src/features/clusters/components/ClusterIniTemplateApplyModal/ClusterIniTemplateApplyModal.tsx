@@ -220,7 +220,7 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
             </Badge>
             {props.operation === "restore" ? (
               <Badge size="sm" variant="default" tt="none">
-                Server must be stopped
+                Server must not be running
               </Badge>
             ) : (
               <Badge size="sm" variant="default" tt="none">

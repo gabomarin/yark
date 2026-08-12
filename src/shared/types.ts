@@ -86,6 +86,8 @@ export type ServerProfilePatch = ServerProfileLaunchPatch | ServerProfileModsPat
 export interface ServerRuntimeInfo {
   serverId: string;
   status: ServerStatus;
+  /** True while the tracked child process has not exited (incl. error + live PID). */
+  processLive: boolean;
   pid: number | null;
   startedAt: string | null;
   lastError: string | null;

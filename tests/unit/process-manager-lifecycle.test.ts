@@ -11,11 +11,36 @@ import type { ServerProfile } from "@shared/types";
 
 function fakeChild(): ChildProcess {
   const child = new EventEmitter() as ChildProcess;
+  let exitCode: number | null = null;
+  let signalCode: NodeJS.Signals | null = null;
+  child.on("exit", (code, signal) => {
+    exitCode = code;
+    signalCode = signal;
+  });
   Object.assign(child, {
-    exitCode: null,
     stdout: new PassThrough(),
     stderr: new PassThrough(),
     kill: vi.fn(() => true),
+  });
+  Object.defineProperty(child, "exitCode", {
+    configurable: true,
+    get: () => exitCode,
+    set: (value: number | null) => {
+      exitCode = value;
+    },
+  });
+  Object.defineProperty(child, "signalCode", {
+    configurable: true,
+    get: () => signalCode,
+    set: (value: NodeJS.Signals | null) => {
+      signalCode = value;
+    },
+  });
+  Object.assign(child, {
+    resetExitObservation: () => {
+      exitCode = null;
+      signalCode = null;
+    },
   });
   return child;
 }
@@ -98,5 +123,32 @@ describe("ProcessManager lifecycle ownership", () => {
     );
 
     await manager.kill(profile.id);
+  });
+
+  it("reports error with live child as active until exit is observed", async () => {
+    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-lifecycle-"));
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
+    await mkdir(binaryDir, { recursive: true });
+    await writeFile(join(binaryDir, "ArkAscendedServer.exe"), "");
+
+    const child = fakeChild();
+    const manager = new ProcessManager({
+      spawnProcess: () => child,
+    });
+    const profile = makeProfile(cleanupRoot);
+
+    manager.start(profile, { skipReadinessCheck: true });
+    child.emit("spawn");
+    expect(manager.isActive(profile.id)).toBe(true);
+
+    child.emit("exit", 1);
+    expect(manager.getStatus(profile.id).status).toBe("error");
+    expect(manager.getStatus(profile.id).processLive).toBe(false);
+    expect(manager.hasLiveProcess(profile.id)).toBe(false);
+    expect(manager.isActive(profile.id)).toBe(false);
+
+    (child as ChildProcess & { resetExitObservation: () => void }).resetExitObservation();
+    expect(manager.hasLiveProcess(profile.id)).toBe(true);
+    expect(manager.isActive(profile.id)).toBe(true);
   });
 });

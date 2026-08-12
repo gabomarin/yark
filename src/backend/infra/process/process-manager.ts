@@ -259,12 +259,24 @@ export class ProcessManager extends EventEmitter {
     );
   }
 
+  /**
+   * True when a managed child is still in the OS process table (exit not observed).
+   */
+  hasLiveProcess(serverId: string): boolean {
+    const managed = this.processes.get(serverId);
+    if (managed === undefined) return false;
+    const { child } = managed;
+    // Treat missing props (test fakes / adopted handles) like Node's null = not exited.
+    return child.exitCode == null && child.signalCode == null;
+  }
+
   getStatus(serverId: string): ServerRuntimeInfo {
     const managed = this.processes.get(serverId);
     if (managed === undefined) {
       return {
         serverId,
         status: "stopped",
+        processLive: false,
         pid: null,
         startedAt: null,
         lastError: null,
@@ -273,6 +285,7 @@ export class ProcessManager extends EventEmitter {
     return {
       serverId,
       status: managed.status,
+      processLive: this.hasLiveProcess(serverId),
       pid: managed.child.pid ?? null,
       startedAt: managed.startedAt,
       lastError: managed.lastError,
@@ -309,8 +322,14 @@ export class ProcessManager extends EventEmitter {
   }
 
   isActive(serverId: string): boolean {
+    if (!this.hasLiveProcess(serverId)) return false;
     const status = this.processes.get(serverId)?.status;
-    return status === "starting" || status === "running" || status === "stopping";
+    return (
+      status === "starting"
+      || status === "running"
+      || status === "stopping"
+      || status === "error"
+    );
   }
 
   getRuntimeLogSnapshot(serverId: string, limit = 300): string[] {

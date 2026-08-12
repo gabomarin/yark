@@ -86,7 +86,10 @@ const MEMBER_GUS = [
   "",
 ].join("\n");
 
-function makeHarness(status: ServerStatus = "stopped") {
+function makeHarness(
+  status: ServerStatus = "stopped",
+  processLive = status === "running" || status === "starting" || status === "stopping",
+) {
   const installDir = mkdtempSync(join(tmpdir(), "ark-cluster-ini-apply-"));
   tmpDirs.push(installDir);
   prepareIniFiles(
@@ -125,7 +128,7 @@ function makeHarness(status: ServerStatus = "stopped") {
   } as unknown as BackupService;
 
   const runtime = {
-    getStatus: () => ({ status }),
+    getStatus: () => ({ status, processLive }),
   };
 
   const service = new ClusterIniTemplateApplyService(
@@ -236,7 +239,7 @@ describe("ClusterIniTemplateApplyService", () => {
           throw new Error("Install server files before creating or restoring backups");
         }),
       } as unknown as BackupService,
-      { getStatus: () => ({ status: "stopped" as const }) },
+      { getStatus: () => ({ status: "stopped" as const, processLive: false }) },
     );
 
     await service.promote("alpha", sourceProfile.id);
@@ -294,9 +297,9 @@ describe("ClusterIniTemplateApplyService", () => {
   it("rejects restore while the server is running and leaves files unchanged", async () => {
     const { service, profile, installDir } = makeHarness("running");
     await expect(service.previewRestore("alpha", profile.id)).rejects.toThrow(
-      /must be stopped/i,
+      /must not be running/i,
     );
-    await expect(service.restore("alpha", profile.id)).rejects.toThrow(/must be stopped/i);
+    await expect(service.restore("alpha", profile.id)).rejects.toThrow(/must not be running/i);
 
     const gus = readFileSync(
       join(
@@ -310,6 +313,25 @@ describe("ClusterIniTemplateApplyService", () => {
       "utf8",
     );
     expect(gus).toContain("MaxPlayers=20");
+  });
+
+  it("allows restore when the server is in error with no live process", async () => {
+    const { service, profile, templates } = makeHarness("error", false);
+    templates.upsert("alpha", {
+      gameUserSettings: "[ServerSettings]\nMaxPlayers=40\n",
+      game: "",
+    });
+
+    const result = await service.restore("alpha", profile.id);
+    expect(result.operation).toBe("restore");
+  });
+
+  it("rejects restore when error status still has a live child process", async () => {
+    const { service, profile } = makeHarness("error", true);
+    await expect(service.previewRestore("alpha", profile.id)).rejects.toThrow(
+      /must not be running/i,
+    );
+    await expect(service.restore("alpha", profile.id)).rejects.toThrow(/must not be running/i);
   });
 
   it("promotes a member into the template without changing install INI files", async () => {
@@ -421,7 +443,7 @@ describe("ClusterIniTemplateApplyService", () => {
       new IniService(repo, locks),
       locks,
       { createManualBackup: vi.fn() } as unknown as BackupService,
-      { getStatus: () => ({ status: "stopped" as const }) },
+      { getStatus: () => ({ status: "stopped" as const, processLive: false }) },
     );
 
     await expect(service.promote("alpha", profile.id)).rejects.toThrow(/MaxPlayers/i);

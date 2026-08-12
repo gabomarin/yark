@@ -49,13 +49,30 @@ describe("createClusterModel", () => {
     const eligible = makeServer({ id: "c", name: "C" });
 
     const statuses = new Map([
-      ["a", { status: "running" as const }],
-      ["b", { status: "stopped" as const }],
-      ["c", { status: "stopped" as const }],
+      ["a", { status: "running" as const, processLive: true }],
+      ["b", { status: "stopped" as const, processLive: false }],
+      ["c", { status: "stopped" as const, processLive: false }],
     ]);
 
-    expect(ineligibilityReason(running, "running")).toBe("Server must be stopped");
-    expect(ineligibilityReason(member, "stopped")).toMatch(/Already in cluster/);
+    expect(ineligibilityReason(running, { status: "running", processLive: true })).toBe(
+      "Server must not be running",
+    );
+    expect(ineligibilityReason(member, { status: "stopped", processLive: false })).toMatch(
+      /Already in cluster/,
+    );
+    expect(ineligibilityReason(running, { status: "error", processLive: false })).toBeNull();
+    expect(
+      ineligibilityReason(makeServer({ id: "d", name: "D" }), {
+        status: "error",
+        processLive: false,
+      }),
+    ).toBeNull();
+    expect(
+      ineligibilityReason(running, { status: "error", processLive: true }),
+    ).toBe("Server must not be running");
+    expect(ineligibilityReason(running, { status: "starting", processLive: true })).toBe(
+      "Server must not be running",
+    );
 
     const candidates = listCreateClusterCandidates(
       [running, member, eligible],
@@ -96,9 +113,9 @@ describe("createClusterModel", () => {
         }),
       ],
       new Map([
-        ["a", { status: "stopped" as const }],
-        ["b", { status: "running" as const }],
-        ["c", { status: "stopped" as const }],
+        ["a", { status: "stopped" as const, processLive: false }],
+        ["b", { status: "running" as const, processLive: true }],
+        ["c", { status: "stopped" as const, processLive: false }],
       ]),
     );
     expect(pruneSelectedServerIds(["a", "b", "c"], candidates)).toEqual(["a"]);
