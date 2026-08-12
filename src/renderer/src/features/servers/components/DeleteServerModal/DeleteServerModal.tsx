@@ -44,30 +44,26 @@ interface Props {
   onConfirm: (options: DeleteServerOptions) => Promise<DeleteServerConfirmResult>;
 }
 
+/**
+ * Parent should remount this modal when `serverId` changes (e.g. `key={serverId}`)
+ * so form state resets without an adjust-on-prop-change effect.
+ */
 export function DeleteServerModal(props: Props): ReactElement {
   const cachedEmpty = isForcedWipeInstallHealth(props.installHealth);
   /** Drop forced-empty shortcut after backend says the folder is no longer empty. */
   const [emptyShortcutAllowed, setEmptyShortcutAllowed] = useState(true);
-  const [mode, setMode] = useState<DeleteServerMode>("profileOnly");
+  const [mode, setMode] = useState<DeleteServerMode>(() =>
+    isForcedWipeInstallHealth(props.installHealth) ? "wipe" : "profileOnly",
+  );
   const [loading, setLoading] = useState(false);
   const [staleEmptyNotice, setStaleEmptyNotice] = useState(false);
   const activeServerIdRef = useRef(props.serverId);
-  activeServerIdRef.current = props.serverId;
-
-  const forcedWipe = cachedEmpty && emptyShortcutAllowed;
 
   useEffect(() => {
-    if (!props.opened) return;
-    setEmptyShortcutAllowed(true);
-    setStaleEmptyNotice(false);
-    setMode(
-      isForcedWipeInstallHealth(props.installHealth) ? "wipe" : "profileOnly",
-    );
-    setLoading(false);
-    // Reset when opening or switching target; ignore installHealth polls mid-open.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional open/target reset
-  }, [props.opened, props.serverId]);
+    activeServerIdRef.current = props.serverId;
+  }, [props.serverId]);
 
+  const forcedWipe = cachedEmpty && emptyShortcutAllowed;
   const wipe = forcedWipe || mode === "wipe";
 
   const handleConfirm = async (): Promise<void> => {
@@ -211,7 +207,7 @@ export function DeleteServerModal(props: Props): ReactElement {
             ) : (
               <Alert color="blue" title="Install folder will be kept" variant="light">
                 YARK stops managing this server. The ASA folder stays on disk for manual launch
-                or a later Import (Import requires a ready ASA install).
+                or a later Import (ready trees, or incomplete with opt-in).
               </Alert>
             )}
           </>

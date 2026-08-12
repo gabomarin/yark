@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-08-12
+
 ### Added
 
 - **Import anyway** opt-in for incomplete ASA folders: adopt the path as a YARK profile and finish with Install/Verify; empty folders stay blocked (#283).

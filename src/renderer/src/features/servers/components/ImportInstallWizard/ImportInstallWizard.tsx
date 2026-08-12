@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert, Button, Group, Modal, Stack, Stepper } from "@mantine/core";
 import {
   getServerFolderNameError,
@@ -49,18 +49,8 @@ export function ImportInstallWizard(props: Props): ReactElement {
     [props.servers],
   );
 
-  useEffect(() => {
-    if (!props.opened) {
-      setStep(1);
-      setInstallDir("");
-      setProbe(null);
-      setAllowIncompleteInstall(false);
-      setError(null);
-      setForm(emptyImportForm());
-      setModsOpen(false);
-      setModMetadata({});
-    }
-  }, [props.opened]);
+  // Parent remounts this wizard on each open (`key={importWizardKey}`) so form
+  // state starts fresh without an adjust-on-prop-change close effect.
 
   const applyProbe = (next: ImportInstallProbe): void => {
     // Keep UI path in sync with backend normalizeWindowsPath (trailing separators, etc.).
