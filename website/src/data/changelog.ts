@@ -40,6 +40,8 @@ export const changelog: ChangelogEntry[] = [
       {
         title: "Fixed",
         items: [
+          "World restore after a wipe recreates the live map folder from the backup (mod maps like Svartalfheim/), not a mistaken MapToken directory; empty live maps skip the pre-restore safeguard.",
+          "Import install map detection finds nested SavedArks folders even when the folder name is not a MapToken.",
           "Safe Update backup progress/cancel and large world snapshot packaging; YARK update Ready state survives re-checks.",
           "Native Electron menu bar hidden; Windows publisher/author shows gabomarin26.",
         ],

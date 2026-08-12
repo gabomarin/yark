@@ -55,11 +55,11 @@ import { withBase } from "../../../data/site";
 
    You can leave a new profile **disabled** until files are ready; **Enable** does not require a Ready install. **Start**, **Restart**, and auto-start still do. For a first custom map, see [Mods → Maps / custom worlds](/docs/mods/#maps--custom-worlds).
 
-   Already have ASA files on disk? Use **Import install** (Overview / workspace **New server ▾**) to adopt that folder as a profile without running SteamCMD or rewriting INI until you Start.
+   Already have ASA files on disk? Use **Import install** (Overview / workspace **New server ▾**) to adopt that folder as a profile without running SteamCMD or rewriting INI until you Start. When Import reports installation health **Ready**, skip step 4 and go to **Start** (or take a backup first).
 
-4. **Install dedicated files**
+4. **Install dedicated files** (new installs only)
 
-   From the server actions, run the files **install / update**. First sync can take a long time and needs free disk for the shared cache **and** the per-server copy. Worlds under `ShooterGame\Saved` are not overwritten by the cache sync.
+   From the server actions, run the files **install / update**. First sync can take a long time and needs free disk for the shared cache **and** the per-server copy. Worlds under `ShooterGame\Saved` are not overwritten by the cache sync. Skip this step when you used **Import install** and the profile is already **Ready**.
 
 5. **Start the server**
 

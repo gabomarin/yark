@@ -30,6 +30,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- World restore after a wipe recreates the **live** map folder from the backup manifest (mod maps like `Svartalfheim/`), not a mistaken `{MapToken}` directory; empty live maps skip the pre-restore safeguard so recovery can proceed (#262).
+- **Import install** map detection scans nested `SavedArks` folders even when the folder name is not a MapToken (#254).
 - Harden world-backup map paths and make folder overrides, current-map selection, and all-failed history cleanup behave safely and predictably (#262).
 - Hide the native Electron application menu bar (File/Edit/View/Help); quit remains on the system tray.
 - Packaged Windows builds report publisher/author as **gabomarin26** (was Gabriel).
