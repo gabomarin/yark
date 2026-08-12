@@ -35,7 +35,7 @@ export const screenshots: Screenshot[] = [
     src: withBase("/screenshots/workspace-backups.png"),
     alt: "Per-server Backups tab with destination, schedule, Import, and Backup actions",
     caption:
-      "Server Backups — create, schedule, import, and restore world / players / INI archives per profile.",
+      "Server Backups — schedule world saves, browse join/leave player archives, and restore world / players / INI per profile.",
   },
   {
     src: withBase("/screenshots/configuration-wizard.png"),

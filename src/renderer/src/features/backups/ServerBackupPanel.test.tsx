@@ -220,6 +220,7 @@ describe("ServerBackupPanel", () => {
   });
 
   it("locks create and restore when installation is not Ready", async () => {
+    const user = userEvent.setup();
     render(
       <AppProviders>
         <ServerBackupPanel
@@ -249,6 +250,10 @@ describe("ServerBackupPanel", () => {
     expect(
       screen.getByRole("button", { name: `Restore backup ${worldBackup.id}` }),
     ).toBeDisabled();
+
+    await user.click(screen.getByRole("tab", { name: "Player profiles" }));
+    expect(screen.queryByRole("button", { name: "Backup" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Import" })).not.toBeInTheDocument();
   });
 
   it("opens kind settings by default and can collapse to a summary", async () => {
@@ -319,12 +324,15 @@ describe("ServerBackupPanel", () => {
     expect(screen.queryByText("C:/backups/world")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "Player profiles" }));
-    expect(screen.getByRole("button", { name: /Backup all players/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Backup all players/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Backup$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Import$/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Open folder C:\/backups\/players/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Open folder C:\/backups\/world/i })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "INI" }));
     expect(screen.getByRole("button", { name: /^Backup$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Import$/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Open folder C:\/backups\/ini/i })).toBeInTheDocument();
   });
 
@@ -383,11 +391,8 @@ describe("ServerBackupPanel", () => {
     });
 
     await user.click(screen.getByRole("tab", { name: "Player profiles" }));
-    await user.click(screen.getByRole("button", { name: /Backup all players/i }));
-
-    await waitFor(() => {
-      expect(window.api.createManualBackup).toHaveBeenCalledWith("srv-1", ["players"]);
-    });
+    expect(screen.queryByRole("button", { name: /^Backup$/i })).not.toBeInTheDocument();
+    expect(window.api.createManualBackup).not.toHaveBeenCalledWith("srv-1", ["players"]);
   });
 
   it("scopes selection to the active kind subtab", async () => {

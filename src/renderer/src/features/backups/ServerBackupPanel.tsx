@@ -465,11 +465,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
         return;
       }
       await load(props.server.id);
-      showBackupToast(
-        activeKind === "players"
-          ? "Full player-profiles snapshot completed."
-          : `${activeKindLabel} backup completed.`,
-      );
+      showBackupToast(`${activeKindLabel} backup completed.`);
     } finally {
       setBusyOp(null);
     }
@@ -716,7 +712,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
       : activeKind === "players"
         ? playerSearch.trim().length > 0
           ? "No player backups match this search."
-          : "No player profile backups yet. Backup all players now, or they'll be saved automatically when players join or leave."
+          : "No player profile backups yet. Profiles are saved automatically when players join or leave. Use a World backup when you need everyone at once."
         : "No INI backups yet. Create one manually — an automatic copy is also taken after each successful INI save.";
 
   const settingsTitle =
@@ -735,14 +731,14 @@ export function ServerBackupPanel(props: Props): ReactElement {
           ? playersPolicySummary(draftPolicy)
           : iniPolicySummary(draftPolicy);
 
-  const createLabel = activeKind === "players" ? "Backup all players" : "Backup";
+  const createLabel = "Backup";
   const createTooltip = createBlocked
     ? createBlockReason
     : activeKind === "world"
       ? "Create a manual world save backup now"
-      : activeKind === "players"
-        ? "Create a full snapshot of all player profiles"
-        : "Create a manual backup of Game.ini and GameUserSettings.ini";
+      : "Create a manual backup of Game.ini and GameUserSettings.ini";
+  const showManualCreate = activeKind !== "players";
+  const showImport = activeKind !== "players";
   const deleteTooltip =
     actionableSelectedIds.length === 0
       ? "Select backups to delete"
@@ -1040,37 +1036,41 @@ export function ServerBackupPanel(props: Props): ReactElement {
                     <ArrowClockwise size={16} />
                   </ActionIcon>
                 </Tooltip>
-                <Tooltip label={`Import a YARK ${activeKindLabel.toLowerCase()} ZIP into this catalog`}>
-                  <Button
-                    variant="default"
-                    size="compact-sm"
-                    leftSection={<UploadSimple size={14} />}
-                    onClick={() => void importBackup()}
-                    loading={busyOp === "import"}
-                    disabled={
-                      loading
-                      || props.createLocked === true
-                      || (busy && busyOp !== "import")
-                    }
-                  >
-                    Import
-                  </Button>
-                </Tooltip>
-                <Tooltip label={createTooltip}>
-                  <Button
-                    size="compact-sm"
-                    leftSection={<HardDrives size={14} />}
-                    onClick={() => void createBackup()}
-                    loading={busyOp === "create"}
-                    disabled={
-                      loading
-                      || createBlocked
-                      || (busy && busyOp !== "create")
-                    }
-                  >
-                    {createLabel}
-                  </Button>
-                </Tooltip>
+                {showImport && (
+                  <Tooltip label={`Import a YARK ${activeKindLabel.toLowerCase()} ZIP into this catalog`}>
+                    <Button
+                      variant="default"
+                      size="compact-sm"
+                      leftSection={<UploadSimple size={14} />}
+                      onClick={() => void importBackup()}
+                      loading={busyOp === "import"}
+                      disabled={
+                        loading
+                        || props.createLocked === true
+                        || (busy && busyOp !== "import")
+                      }
+                    >
+                      Import
+                    </Button>
+                  </Tooltip>
+                )}
+                {showManualCreate && (
+                  <Tooltip label={createTooltip}>
+                    <Button
+                      size="compact-sm"
+                      leftSection={<HardDrives size={14} />}
+                      onClick={() => void createBackup()}
+                      loading={busyOp === "create"}
+                      disabled={
+                        loading
+                        || createBlocked
+                        || (busy && busyOp !== "create")
+                      }
+                    >
+                      {createLabel}
+                    </Button>
+                  </Tooltip>
+                )}
                 <Tooltip label={deleteTooltip}>
                   <span>
                     <Button

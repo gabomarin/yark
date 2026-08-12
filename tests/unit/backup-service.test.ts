@@ -1,6 +1,6 @@
 import { access, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { constants as fsConstants, existsSync } from "node:fs";
-import { basename, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { openDatabase } from "@backend/infra/db/database";
@@ -206,15 +206,15 @@ describe("BackupService kinds and retention", () => {
     };
 
     const first = await recovery.resumePreUpdateBackupJob(job);
-    expect(first).toHaveLength(3);
-    expect(job.context).toMatchObject({ nextKindIndex: 3 });
+    expect(first).toHaveLength(2);
+    expect(job.context).toMatchObject({ nextKindIndex: 2 });
 
     // Simulate a crash before the latest in-memory checkpoint was persisted.
     job.context = {};
     const resumed = await recovery.resumePreUpdateBackupJob(job);
-    expect(resumed).toHaveLength(3);
+    expect(resumed).toHaveLength(2);
     expect(repo.listBackups(profile.id, 100).filter((row) => row.type === "pre_update"))
-      .toHaveLength(3);
+      .toHaveLength(2);
   });
 
   it("rebuilds pre-update progress when persisted context is corrupt", async () => {
@@ -251,7 +251,6 @@ describe("BackupService kinds and retention", () => {
 
     expect(recovered.map((backup) => backup.kind)).toEqual([
       "world",
-      "players",
       "ini",
     ]);
     expect(recovered.every((backup) =>
@@ -259,7 +258,7 @@ describe("BackupService kinds and retention", () => {
       && backup.serverId === profile.id
       && backup.notes?.includes(`[critical-job:${job.id}]`) === true,
     )).toBe(true);
-    expect(job.context.nextKindIndex).toBe(3);
+    expect(job.context.nextKindIndex).toBe(2);
     expect(job.context.completedBackupIds).toEqual(
       recovered.map((backup) => backup.id),
     );
@@ -318,7 +317,7 @@ describe("BackupService kinds and retention", () => {
 
   it("requires on-disk archives when reusing persisted pre-update backup evidence", async () => {
     const backups = await service.createPreUpdateBackupForJob(profile.id);
-    expect(backups).toHaveLength(3);
+    expect(backups).toHaveLength(2);
     const removed = backups[0];
     expect(removed).toBeDefined();
     if (removed === undefined) return;
@@ -328,7 +327,7 @@ describe("BackupService kinds and retention", () => {
       profile.id,
       backups.map((backup) => backup.id),
     );
-    expect(completed).toHaveLength(2);
+    expect(completed).toHaveLength(1);
     expect(completed.every((backup) => existsSync(backup.path))).toBe(true);
   });
 
@@ -757,28 +756,13 @@ describe("BackupService kinds and retention", () => {
     );
   });
 
-  it("packages players profiles only", async () => {
-    const created = await service.createManualBackup(profile.id, ["players"]);
-    const record = created[0];
-    expect(record).toBeDefined();
-    if (record === undefined) return;
-    expect(record.kind).toBe("players");
-    expect(record.path).toMatch(/[\\/]Player profiles[\\/]/i);
-    expect(record.path.toLowerCase().endsWith(".zip")).toBe(true);
-    await withExtractedZip(record.path, async (root) => {
-      await expect(
-        access(
-          join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP", "76561198000000000.arkprofile"),
-          fsConstants.F_OK,
-        ),
-      ).resolves.toBeUndefined();
-      await expect(
-        access(join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP", "TheIsland_WP.ark"), fsConstants.F_OK),
-      ).rejects.toThrow();
-    });
+  it("rejects manual full player-profile snapshots", async () => {
+    await expect(service.createManualBackup(profile.id, ["players"])).rejects.toThrow(
+      /no longer supported/i,
+    );
   });
 
-  it("packages a single player session backup", async () => {
+  it("packages a single player session backup as flat profile files", async () => {
     const record = await service.createPlayerSessionBackup(
       profile.id,
       "connect",
@@ -795,17 +779,103 @@ describe("BackupService kinds and retention", () => {
     await withExtractedZip(record.path, async (root) => {
       await expect(
         access(
-          join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP", "76561198000000000.arkprofile"),
+          join(root, "PlayerProfiles", "76561198000000000.arkprofile"),
           fsConstants.F_OK,
         ),
       ).resolves.toBeUndefined();
       await expect(
         access(
-          join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP", "76561198000000001.arkprofile"),
+          join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP", "76561198000000000.arkprofile"),
+          fsConstants.F_OK,
+        ),
+      ).rejects.toThrow();
+      await expect(
+        access(
+          join(root, "PlayerProfiles", "76561198000000001.arkprofile"),
           fsConstants.F_OK,
         ),
       ).rejects.toThrow();
     });
+  });
+
+  it("prefers the current map profile when the same player exists on another map", async () => {
+    const islandDir = join(installDir, "ShooterGame", "Saved", "SavedArks", "TheIsland_WP");
+    const scorchedDir = join(installDir, "ShooterGame", "Saved", "SavedArks", "ScorchedEarth_WP");
+    await mkdir(scorchedDir, { recursive: true });
+    await writeFile(join(scorchedDir, "ScorchedEarth_WP.ark"), "SCORCHED", "utf8");
+    await writeFile(join(scorchedDir, "76561198000000000.arkprofile"), "SCORCHED_PLAYER", "utf8");
+    await writeFile(join(islandDir, "76561198000000000.arkprofile"), "ISLAND_PLAYER", "utf8");
+
+    profile.map = "ScorchedEarth_WP";
+    const record = await service.createPlayerSessionBackup(
+      profile.id,
+      "connect",
+      "76561198000000000",
+      "Alice",
+    );
+    expect(record).not.toBeNull();
+    if (record === null) return;
+    await withExtractedZip(record.path, async (root) => {
+      expect(
+        await readFile(join(root, "PlayerProfiles", "76561198000000000.arkprofile"), "utf8"),
+      ).toBe("SCORCHED_PLAYER");
+    });
+  });
+
+  it("restores flat player profiles into the current map folder", async () => {
+    const record = await service.createPlayerSessionBackup(
+      profile.id,
+      "connect",
+      "76561198000000000",
+      "Alice",
+    );
+    expect(record).not.toBeNull();
+    if (record === null) return;
+
+    const islandDir = join(installDir, "ShooterGame", "Saved", "SavedArks", "TheIsland_WP");
+    const scorchedDir = join(installDir, "ShooterGame", "Saved", "SavedArks", "ScorchedEarth_WP");
+    await rm(join(islandDir, "76561198000000000.arkprofile"), { force: true });
+    await mkdir(scorchedDir, { recursive: true });
+    await writeFile(join(scorchedDir, "ScorchedEarth_WP.ark"), "SCORCHED", "utf8");
+
+    profile.map = "ScorchedEarth_WP";
+
+    await service.restoreBackup(profile.id, record.id);
+    expect(await readFile(join(scorchedDir, "76561198000000000.arkprofile"), "utf8")).toBe(
+      "PLAYER",
+    );
+    await expect(
+      access(join(islandDir, "76561198000000000.arkprofile"), fsConstants.F_OK),
+    ).rejects.toThrow();
+  });
+
+  it("rejects nested legacy player archive layouts on restore", async () => {
+    const staging = join(installDir, "_legacy-players");
+    await mkdir(join(staging, "PlayerProfiles", "SavedArks", "TheIsland_WP"), {
+      recursive: true,
+    });
+    await writeFile(
+      join(staging, "PlayerProfiles", "SavedArks", "TheIsland_WP", "76561198000000000.arkprofile"),
+      "LEGACY",
+      "utf8",
+    );
+    const { zipDirectory } = await import("@backend/domains/backups/backup-archive");
+    const zipPath = join(installDir, "Backups", "Player profiles", "legacy-nested.zip");
+    await mkdir(dirname(zipPath), { recursive: true });
+    await zipDirectory(staging, zipPath);
+
+    const started = repo.createBackupStart({
+      serverId: profile.id,
+      type: "manual",
+      kind: "players",
+      path: zipPath,
+      notes: "legacy nested",
+    });
+    repo.completeBackup(started.id, 100);
+
+    await expect(service.restoreBackup(profile.id, started.id)).rejects.toThrow(
+      /legacy layout/i,
+    );
   });
 
   it("flushes SaveWorld before player session backup when server is running", async () => {
@@ -840,13 +910,13 @@ describe("BackupService kinds and retention", () => {
     await withExtractedZip(record.path, async (root) => {
       await expect(
         access(
-          join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP", "76561198000000000.arkprofile"),
+          join(root, "PlayerProfiles", "76561198000000000.arkprofile"),
           fsConstants.F_OK,
         ),
       ).resolves.toBeUndefined();
       await expect(
         access(
-          join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP", "765611980000000001.arkprofile"),
+          join(root, "PlayerProfiles", "765611980000000001.arkprofile"),
           fsConstants.F_OK,
         ),
       ).rejects.toThrow();
@@ -914,13 +984,13 @@ describe("BackupService kinds and retention", () => {
     await withExtractedZip(record.path, async (root) => {
       await expect(
         access(
-          join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP", "76561198009999999.arkprofile"),
+          join(root, "PlayerProfiles", "76561198009999999.arkprofile"),
           fsConstants.F_OK,
         ),
       ).resolves.toBeUndefined();
       expect(
         await readFile(
-          join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP", "76561198009999999.arkprofile"),
+          join(root, "PlayerProfiles", "76561198009999999.arkprofile"),
           "utf8",
         ),
       ).toBe("LATE_FLUSH");
@@ -1498,10 +1568,14 @@ describe("BackupService kinds and retention", () => {
   });
 
   it("imports orphan zip archives from disk on list/refresh", async () => {
-    const created = await service.createManualBackup(profile.id, ["players"]);
-    const record = created[0];
-    expect(record).toBeDefined();
-    if (record === undefined) return;
+    const record = await service.createPlayerSessionBackup(
+      profile.id,
+      "connect",
+      "76561198000000000",
+      "Alice",
+    );
+    expect(record).not.toBeNull();
+    if (record === null) return;
 
     // Simulate DB loss while the zip remains on disk.
     repo.deleteBackupRecord(record.id);
@@ -1561,10 +1635,14 @@ describe("BackupService kinds and retention", () => {
   });
 
   it("does not double-import the same orphan zip under concurrent list calls", async () => {
-    const created = await service.createManualBackup(profile.id, ["players"]);
-    const record = created[0];
-    expect(record).toBeDefined();
-    if (record === undefined) return;
+    const record = await service.createPlayerSessionBackup(
+      profile.id,
+      "connect",
+      "76561198000000000",
+      "Alice",
+    );
+    expect(record).not.toBeNull();
+    if (record === null) return;
 
     repo.deleteBackupRecord(record.id);
     expect(repo.listBackups(profile.id, 50)).toHaveLength(0);
@@ -1815,9 +1893,17 @@ describe("BackupService kinds and retention", () => {
   });
 
   it("deletes multiple selected backups", async () => {
-    const created = await service.createManualBackup(profile.id, ["world", "players", "ini"]);
-    expect(created).toHaveLength(3);
-    const ids = created.map((b) => b.id);
+    const created = await service.createManualBackup(profile.id, ["world", "ini"]);
+    const player = await service.createPlayerSessionBackup(
+      profile.id,
+      "connect",
+      "76561198000000000",
+      "Alice",
+    );
+    expect(player).not.toBeNull();
+    if (player === null) return;
+    expect(created).toHaveLength(2);
+    const ids = [...created.map((b) => b.id), player.id];
     addEvent.mockClear();
     const deleted = await service.deleteBackups(profile.id, ids);
     expect(deleted).toBe(3);
