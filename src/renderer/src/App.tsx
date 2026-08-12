@@ -131,6 +131,8 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   const [route, setRoute] = useState<Route>("overview");
   const [overlay, setOverlay] = useState<Overlay>(null);
   const [importInstallOpen, setImportInstallOpen] = useState(false);
+  /** Remount Import wizard on each open so step/probe state resets without adjust-on-prop effects. */
+  const [importWizardKey, setImportWizardKey] = useState(0);
   const [deleteServerId, setDeleteServerId] = useState<string | null>(null);
   /** Dirty-leave guard registered by ServerWorkspacePage while the overlay is open. */
   const workspaceLeaveGuardRef = useRef<((action: () => void) => void) | null>(null);
@@ -1367,7 +1369,10 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             onRegisterLeaveGuard={registerWorkspaceLeaveGuard}
             onBack={() => setOverlay(null)}
             onCreateServer={() => setOverlay({ kind: "create" })}
-            onImportServer={() => setImportInstallOpen(true)}
+            onImportServer={() => {
+              setImportWizardKey((key) => key + 1);
+              setImportInstallOpen(true);
+            }}
             onStartServer={(id) => void startServer(id)}
             onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
             onRestartServer={(id) => void restartServer(id)}
@@ -1435,7 +1440,10 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
               onSearchChange={setSearch}
               loading={overviewLoading}
               onCreateServer={() => setOverlay({ kind: "create" })}
-              onImportServer={() => setImportInstallOpen(true)}
+              onImportServer={() => {
+                setImportWizardKey((key) => key + 1);
+                setImportInstallOpen(true);
+              }}
               checkingUpdates={checkingUpdates}
               onCheckUpdates={() => void checkForUpdates()}
               checkingInstalls={installScan.active}
@@ -1600,6 +1608,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         }
       />
       <DeleteServerModal
+        key={deleteServerId ?? "closed"}
         opened={deleteServerId !== null}
         serverId={deleteServerId ?? ""}
         serverName={
@@ -1656,6 +1665,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         />
       )}
       <ImportInstallWizard
+        key={importWizardKey}
         opened={importInstallOpen}
         servers={servers}
         onClose={() => setImportInstallOpen(false)}

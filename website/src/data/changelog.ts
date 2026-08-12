@@ -12,6 +12,33 @@ export type ChangelogEntry = {
 /** Curated site changelog — keep in sync with root CHANGELOG.md when cutting releases. */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.11.0",
+    date: "2026-08-12",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Remove a server from YARK only (keep the ASA folder) or wipe everything; empty never-installed folders always wipe after a live emptiness check.",
+          "Import incomplete ASA folders with an explicit Import anyway opt-in, then finish with Install/Verify; empty folders stay blocked.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Player backups are join/leave only (flat PlayerProfiles/); restore into the current map; critical-path snapshots stay world + INI.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Backups kind tab no longer resets to World save when resizing the window.",
+          "Force update stays disabled while the server is active; queued jobs recheck and stay Retry-able after Stop.",
+          "Add servers to cluster: nothing selected by default, enabled unclustered only, Error-state idle allowed, Seed INI opt-in.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.10.0",
     date: "2026-08-12",
     sections: [

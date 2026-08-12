@@ -97,6 +97,17 @@ On each server’s **Server** tab (Startup), you can opt in to **Auto-start with
 
 When a server is stopped and idle, **Move installation** relocates the install folder: same-drive rename in place, or cross-drive copy with live progress, then verifies, updates the profile path, and removes the previous folder. The install path is read-only in normal server editing — use Move instead of typing a new path.
 
+## Remove or delete a server
+
+Overview card kebab / context menu → **Delete server**:
+
+| Mode | Result |
+| --- | --- |
+| **Remove from YARK only** (default when a choice is shown) | Profile gone; ASA folder kept for manual launch or later Import |
+| **Delete everything** | Profile + recursive wipe of the install folder |
+
+Empty never-installed folders skip the choice and always wipe (with a live emptiness recheck). Disable is separate — the profile stays in YARK but cannot start.
+
 ## Common pitfalls
 
 1. Treating “process started” as ready — wait for RCON  
