@@ -6,15 +6,17 @@ description: World, players, and INI backups — schedules, restore rules, and c
 import { Aside } from "@astrojs/starlight/components";
 import { withBase } from "../../../data/site";
 
-Backups are **ZIP archives** under a per-server destination (default `{installDir}\Backups` unless you set another folder). Legacy loose-folder archives can still restore / import.
+Backups are **ZIP archives** under a per-server destination (default `{installDir}\Backups` unless you set another folder).
 
 ## What each kind contains
 
 | Kind | Live source | Inside the archive |
 | --- | --- | --- |
-| **World** | `ShooterGame/Saved/SavedArks` | `SavedArks/` |
+| **World** | Active map folder under `SavedArks` (exact map token, or shorter folder for some mod maps) | `SavedArks/{MapToken}/` |
 | **Players** | `.arkprofile` (+ related) under SavedArks / SaveGames | `PlayerProfiles/` |
 | **INI** | `Game.ini` + `GameUserSettings.ini` in `Config/WindowsServer` | `ConfigWindowsServer/` |
+
+World backups package **one map** (primary `.ark`, bak companions, profiles/tribes in that folder) — not the entire `SavedArks` tree. Custom maps can set an optional **World save folder** when the on-disk folder name differs from the launch token.
 
 On-disk layout:
 
@@ -66,7 +68,7 @@ New archives are named `{server}-{kind}-{type}-…-{YYYYMMDD-HHmmss}.zip` (compa
 | Restart | Fail-hard **`pre_restart`** after stop, before start |
 | Safe update | Fail-hard **`pre_update`** before SteamCMD work |
 
-Default schedule policy (when enabled): interval 60 minutes; retain ~20 world / ~20 players / ~10 INI (configurable).
+Default schedule policy (when enabled): interval 60 minutes; retain ~20 world **per map** / ~20 players / ~10 INI (configurable). The schedule waits a full interval after the process becomes active, counts failed attempts toward the interval, and can pause for the rest of the YARK session after repeated failures (policy stays enabled). Use **Clear failed** on the history toolbar to drop failed rows that left no archive on disk.
 
 <Aside type="tip">
   Stale / “never backed up” warnings on the fleet page only apply when the schedule is **on**
@@ -90,7 +92,7 @@ Unsafe or corrupt ZIPs are rejected before anything is written outside the manag
 3. YARK creates a same-kind **`pre_restore`** safeguard first
 4. Then applies the archive:
 
-   - **World** — replaces live `SavedArks`
+   - **World** — overlays the archived map folder (other SavedArks maps stay put); optional profiles/tribes toggle
    - **Players** — overlays profiles (does not wipe unrelated live profiles)
    - **INI** — copies present INI files into live config
 

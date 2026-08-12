@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-08-12
+
 ### Added
 
 - Profile SQLite **snapshots** before schema migrations and after each healthy reopen of an existing DB; boot recovery can **Restore snapshot** (preferred) instead of only starting empty (#252).
@@ -25,7 +27,6 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Scheduled world backups wait a full `intervalMinutes` after the process becomes active before the first attempt; history table columns are **File**, **Map** (world only), **Date** (was When), then Size/Status/Type/Actions — players tab uses **Player** (name + id) instead of File; column sort (Date newest-first by default) and resizable widths (#262).
 - World schedule gates on the last **finished** scheduled attempt (success or fail), pauses further scheduled creates for the YARK session after 3 consecutive failures (no policy change), supports custom-map **World save folder** override, and lets operators **Clear failed** history rows (#262).
 - Public site and operator docs no longer highlight code signing / Authenticode as near-term roadmap; download trust stays on official sources and SHA-256 checks (#142).
-
 
 ### Fixed
 

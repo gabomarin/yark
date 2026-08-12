@@ -10,13 +10,14 @@ export type RoadmapItem = {
  * Prefer operator-visible product work from open issues (not CI/packaging hygiene).
  * Not a ship promise — keep wording directional. Milestones on GitHub stay authoritative.
  *
- * Intentionally omitted from this list (still tracked in-repo): Electron fuses (#217),
- * E2E/real-host validation (#12, #22), profile-DB snapshots (#252), Authenticode (#142).
+ * Shipped in v0.10.0 (removed from this list): import existing install (#254),
+ * profile-DB snapshots (#252), per-map world backups (#262), Electron fuses (#217).
+ * Still omitted here (tracked in-repo): E2E/real-host validation (#12, #22), Authenticode (#142).
  */
 export const roadmapItems: RoadmapItem[] = [
   {
     tag: "planned",
-    text: "Import an existing ASA install as a YARK profile (discover mods, leave them disabled)",
+    text: "Remove a server from YARK without deleting the install folder on disk",
   },
   {
     tag: "planned",
