@@ -150,7 +150,8 @@ portable archives before Install finishes.
 2. Service runs `flushWorldIfActive` (RCON `SaveWorld` when the process is active; failures are ignored).
 3. Each requested kind is packaged into a ZIP; empty **per-player** session archives are discarded.
 4. Empty world packages fail (no essential save data) instead of writing an unusable archive.
-5. If `kinds` is omitted/empty on the API, all three kinds are created. The UI always passes one kind.
+5. If `kinds` is omitted/empty on the API, **world + INI** are created (players are
+   join/leave only and are rejected on manual create). The UI always passes one kind.
 
 ### Portable export / import
 

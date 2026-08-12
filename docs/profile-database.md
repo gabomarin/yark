@@ -68,7 +68,7 @@ YARK does **not** repair or reload profiles from it. ASA game install directorie
 are untouched — the operator re-adds servers in YARK if needed. Prefer
 **Import install** (Overview / workspace split button) to point at an existing
 ASA dedicated root when #252 snapshots are missing or Start empty cleared the
-profile DB — see [server-lifecycle.md](server-lifecycle.md#import-existing-asa-install-254).
+profile DB — see [server-lifecycle.md](server-lifecycle.md#import-existing-asa-install-254--283).
 
 ## Module map
 

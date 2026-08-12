@@ -53,11 +53,11 @@ cloud hosting service, an ARK game launcher, or an official Studio Wildcard prod
 
 | Area | What YARK provides |
 | --- | --- |
-| Server profiles | Create, clone, enable, disable, and manage multiple servers with independent paths, maps, ports, access settings, mods, and cluster fields. |
-| Lifecycle | Start, stop, restart, and force-close exact managed processes; readiness waits for RCON instead of assuming a spawned process is healthy. |
+| Server profiles | Create, clone, enable, disable, and manage multiple servers with independent paths, maps, ports, access settings, mods, and cluster fields. **Import install** adopts an existing ASA folder (ready by default; incomplete with opt-in). |
+| Lifecycle | Start, stop, restart, and force-close exact managed processes; readiness waits for RCON instead of assuming a spawned process is healthy. **Remove from YARK only** keeps the install folder, or wipe everything on delete. |
 | SteamCMD | Install, update, and verify ASA server files using a shared content cache and per-server operation history. |
 | Safe maintenance | Coordinate stop, recovery backups, update/verify work, conditional restart, and rollback through locked backend operations. |
-| Backups | Create, restore, export, and import world / player / INI archives; schedule world backups and inspect fleet health. |
+| Backups | Create, restore, export, and import world / INI archives; player join/leave archives; schedule world backups and inspect fleet health. |
 | Configuration | Edit `GameUserSettings.ini` and `Game.ini` through visual and raw editors, with a guided configuration wizard. |
 | Mods | Manage CurseForge Project IDs, metadata, enable/disable state, and launch-time `-mods=` composition without embedding the CurseForge API key. **Maps** packs: enable on Mods, then pick under Server Information → Map (Map mods / Custom…). |
 | Diagnostics | Review events, runtime output, SteamCMD history, backup activity, installation health, host-port conflicts, and log retention. |
@@ -122,7 +122,8 @@ operator walkthrough.
   tracked in [#142](https://github.com/gabomarin/yark/issues/142).
 
 Read [Security & privacy](https://getyark.com/docs/security-privacy/) before sharing
-logs, configurations, app data, or backup archives.
+logs, configurations, app data, or backup archives. To report a vulnerability in YARK
+itself, see [`SECURITY.md`](SECURITY.md) (do not use public issues for security bugs).
 
 ## Development
 

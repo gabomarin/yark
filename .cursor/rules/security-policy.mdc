@@ -1,0 +1,40 @@
+---
+description: Keep SECURITY.md accurate when trust boundaries or reporting change
+alwaysApply: true
+---
+
+# Security policy (agents)
+
+Root [`SECURITY.md`](SECURITY.md) is the canonical vulnerability-reporting policy
+(GitHub Security tab). Do not invent alternate public channels in docs or issues.
+
+## When you must update `SECURITY.md`
+
+Update it (same PR when practical) if the change affects any of:
+
+- How to report vulns (private advisory URL, contact, disclosure expectations)
+- Supported versions / prerelease support stance
+- **In scope / out of scope** trust boundaries (IPC, wipe/import/move path safety,
+  credential storage, installer signing, Electron fuses, allowlisted browser opens)
+- Known documented limits that are explicitly called out as out-of-scope
+  (e.g. DPAPI [#144], Authenticode [#142]) when those issues close or the product
+  behavior changes
+
+## Keep related operator docs in sync
+
+| Surface | Role |
+| --- | --- |
+| `SECURITY.md` | Researcher / reporter policy |
+| `website/.../security-privacy.mdx` | Operator storage, network, secrets hygiene |
+| `README.md` Security section | Short pointer + high-level boundary |
+| `docs/versioning.md` | Packaged fuses / release trust |
+
+When you change credential storage, installer trust, or packaged hardening, update
+the matching rows above so they do not contradict each other. Prefer one short
+cross-link over duplicating long prose.
+
+## Do not
+
+- File or suggest **public** GitHub issues for security vulns
+- Paste exploit PoCs into public PR descriptions
+- Claim DPAPI, Authenticode, or encryption that the product does not ship yet
