@@ -90,6 +90,16 @@ const combos: Combo[] = [
     expectUpdate: { kind: "update", label: "Server is up to date", disabled: true },
   },
   {
+    name: "running + available disables Update",
+    status: "running",
+    steamCmdBusy: false,
+    installed: true,
+    serverEnabled: true,
+    updateState: "available",
+    expectRuntime: { kind: "stop", disabled: false },
+    expectUpdate: { kind: "update", label: "Update server", disabled: true },
+  },
+  {
     name: "steamCmd busy + stopping keeps Cancel",
     status: "stopping",
     steamCmdBusy: true,

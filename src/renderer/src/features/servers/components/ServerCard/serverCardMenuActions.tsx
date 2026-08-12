@@ -189,8 +189,12 @@ export function buildServerCardMenuActions(
         ),
         disabled:
           input.updateAction.kind === "update"
-            ? input.updateAction.updateState === "current" || input.steamCmdBusy
+            ? input.updateAction.disabled
             : !input.updateAvailable,
+        title:
+          input.updateAction.kind === "update" && input.isActive
+            ? "Stop the server before updating files"
+            : undefined,
         onClick: input.onUpdateNow,
       },
       {

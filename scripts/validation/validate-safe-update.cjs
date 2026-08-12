@@ -563,34 +563,37 @@ async function scenarioA() {
     await api(window, "startServer", SERVER_ID, { openNativeConsole: false });
     await waitForStatus(window, SERVER_ID, "running", 600_000);
 
-    const updatePromise = api(window, "updateServerNow", SERVER_ID);
-    await waitUntilSteamBusy(window, 120_000);
-    await updatePromise;
-    await waitUntilSteamIdle(window, 30_000);
-    await waitForStatus(window, SERVER_ID, "running", 180_000);
+    let updateError = null;
+    try {
+      await api(window, "updateServerNow", SERVER_ID);
+    } catch (error) {
+      updateError = error instanceof Error ? error.message : String(error);
+    }
+    assert.match(
+      updateError ?? "",
+      /stop the server before updating files/i,
+      `Expected active update rejection, got: ${updateError ?? "success"}`,
+    );
 
     const db = openDb();
     const backups = listBackupsSince(db, SERVER_ID, since);
     const events = listEventsSince(db, SERVER_ID, since);
     db.close();
     const byType = summarizeBackups(backups);
+    assert.equal(byType.pre_update, undefined, "Rejected update must not create backups");
+    assert.equal(byType.pre_stop, undefined, "Rejected update must not stop the server");
     assert.ok(
-      (byType.pre_update || []).includes("world") &&
-        (byType.pre_update || []).includes("players") &&
-        (byType.pre_update || []).includes("ini"),
-      `Expected one pre_update set, got ${JSON.stringify(byType)}`,
+      !events.some((event) => event.type.startsWith("update_")),
+      `Rejected update must not emit update events: ${events.map((event) => event.type)}`,
     );
-    assert.equal(
-      byType.pre_stop,
-      undefined,
-      `Active update must not create pre_stop: ${JSON.stringify(byType)}`,
-    );
-    assert.ok(events.some((e) => e.type === "update_completed"));
+    const finalStatus = await getServerStatus(window, SERVER_ID);
+    assert.equal(finalStatus, "running", "Rejected update must leave the server running");
 
     evidence.scenarios.A = {
       pass: true,
+      updateError,
       backups: byType,
-      preUpdateCount: (byType.pre_update || []).length,
+      finalStatus,
       events: events.map((e) => e.type),
     };
   } finally {
