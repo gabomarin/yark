@@ -44,7 +44,7 @@ When you run **Update** on a server that was running:
 
 1. Remember `wasRunning`
 2. Stop **without** a nested `pre_stop` backup
-3. Create fail-hard **`pre_update`** backups (world + players + INI)
+3. Create fail-hard **`pre_update`** backups (world + INI)
 4. SteamCMD update + robocopy sync
 5. If it was running → start and wait up to ~90s for healthy **running**
 6. On failure after backups exist → restore each `pre_update` archive, optionally restart if it was running, then fail the job

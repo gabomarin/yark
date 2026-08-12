@@ -67,7 +67,7 @@ After spawn, status stays **starting** until RCON `ListPlayers` succeeds on `127
   <TabItem label="Stop">
     1. RCON `SaveWorld` + short wait  
     2. RCON `DoExit` (force-kill fallback)  
-    3. Best-effort **pre_stop** backup (world + players + INI) unless the caller skipped backups  
+    3. Best-effort **pre_stop** backup (world + INI) unless the caller skipped backups  
     Stop is single-flight; other ops wait or reject while the stop backup runs.
   </TabItem>
   <TabItem label="Restart">

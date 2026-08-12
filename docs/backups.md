@@ -11,7 +11,7 @@ Protect three content scopes independently:
 | Kind | Live source | Paths inside the archive |
 | --- | --- | --- |
 | `world` | `{installDir}/ShooterGame/Saved/SavedArks/{MapToken}/` (or mod folder without `_WP`, e.g. `Svartalfheim/` for launch token `Svartalfheim_WP`) | `SavedArks/{MapToken}/` (primary `.ark`, anti-corruption bak, profiles/tribes; no dated autosaves) |
-| `players` | `.arkprofile` / `.arkprofile.bak` / `.profilebak` under `SavedArks` and `SaveGames` | `PlayerProfiles/` |
+| `players` | `.arkprofile` / `.arkprofile.bak` / `.profilebak` under `SavedArks` and `SaveGames` (join/leave only) | `PlayerProfiles/{id}.arkprofile` (flat; no map subfolder) |
 | `ini` | `Game.ini` + `GameUserSettings.ini` in `Config/WindowsServer` | `ConfigWindowsServer/` |
 
 **Breaking (0.10):** world archives are **per-map**, not a full `SavedArks` tree. Older full-folder world ZIPs are not restored by the current path.
@@ -53,7 +53,7 @@ Bootstrap wires the scheduler and watcher in `src/main/index.ts`.
 | `enabled` | `false` | Schedule creates **world** backups only |
 | `intervalMinutes` | `60` | Minimum **5** |
 | `retainCountWorld` | `20` | 1–500; **per map token** |
-| `retainCountPlayers` | `20` | 1–500; **per-player** pools (full snapshots share `__all__`) |
+| `retainCountPlayers` | `20` | 1–500; **per-player** pools |
 | `retainCountIni` | `10` | 1–500 |
 | `backupDir` | `null` | `null` → `{installDir}\Backups` |
 
@@ -178,7 +178,7 @@ User stop (`servers:stop` via `InstanceService.stop`):
 2. RCON `DoExit` + wait for the exact managed process. A replacement process is
    never touched; an external process exit is treated as already stopped.
 3. `createPreStopBackup` with `skipFlush: true` creates `pre_stop` archives for
-   **world**, **players**, and **ini**.
+   **world** and **ini** (profiles travel with the world map folder).
    Packaging happens after exit so the source files remain stable.
 4. Progress phases push on
    `push:server-stop-progress` (overview card + workspace alert).
@@ -197,7 +197,7 @@ User restart (`servers:restart` via `InstanceService.restart`):
 1. Reject if the server process is not active; hold lock purpose `"restart"`.
 2. Stop with `{ backup: false }` (SaveWorld / DoExit, no `pre_stop`).
 3. `createPreRestartBackup` with `skipFlush: true` creates `pre_restart`
-   archives for **world**, **players**, and **ini**.
+   archives for **world** and **ini**.
 4. Backup failure is **fail-hard** — start is not called; the server stays
    stopped.
 5. On success, start with the same options as `servers:start` (including
@@ -212,7 +212,7 @@ User restart (`servers:restart` via `InstanceService.restart`):
 3. ZIP archives extract to a temp staging dir; legacy folders are used in place.
 4. Apply:
    - **world** — overlay into live `SavedArks/{MapToken}/` only (sibling map folders untouched). Optional `restoreProfilesTribes` (default **true**) controls whether `.arkprofile` / `.arktribe` companions are copied; map `.ark` + anti-corruption bak always apply. INI untouched.
-   - **players** — overlay from `PlayerProfiles/` (legacy: profiles inside `SavedArks`); does not wipe unrelated live profiles.
+   - **players** — overlays flat files from `PlayerProfiles/` into the **current** live map folder (`resolveWorldMapSaveDir`); does not wipe unrelated live profiles. Nested legacy `PlayerProfiles/SavedArks/...` archives are rejected.
    - **ini** — copy present `Game.ini` / `GameUserSettings.ini` into live config.
 5. Restore history is written to SQLite; there is **no** list IPC/UI for it yet.
 
@@ -304,6 +304,7 @@ UI restore uses a confirm modal (world: profiles/tribes checkbox). Update rollba
 - SavedArks profile mtime scan creates disconnect-type backups for offline players when files appear/change (covers short sessions RCON missed).
 - Dedup window **90s**; empty/null result clears dedup so a retry can happen.
 - Disconnect packaging retries up to **8 × 400ms** for late disk flush; profile stem match is **exact** after lowercasing and stripping `eos:`.
+- Archives store **flat** files under `PlayerProfiles/` (no `SavedArks/{Map}/…`); restore writes into the **current** map folder.
 
 Session notes look like:
 
@@ -323,7 +324,7 @@ After a successful `ini:save`, `createIniSaveBackup` debounces **2s** per server
   from the next missing kind. Restore outcomes remain blocked with Retry/Dismiss
   actions instead of being replayed blindly. See
   [Critical job crash recovery](critical-job-recovery.md).
-- Pre-update creates **world + players + ini** (`CRITICAL_BACKUP_KINDS`).
+- Pre-update creates **world + ini** (`CRITICAL_BACKUP_KINDS`). World archives already include profiles/tribes for the active map.
 - Safe update stops with `{ backup: false }` first, then creates this set — an
   active-server update must **not** also produce a `pre_stop` archive set for the
   same job. Acceptance and real-host checklist:
@@ -332,7 +333,7 @@ After a successful `ini:save`, `createIniSaveBackup` debounces **2s** per server
 ## UI surfaces
 
 - **Sidebar → Backups** — cross-server health, schedule / destination / retention, disk alerts, cleanup; “Open in server” jumps to the workspace tab.
-- **Server Workspace → Backups** — kind subtabs (**World save** | **Player profiles** | **INI**), create/restore/history for that server.
+- **Server Workspace → Backups** — kind subtabs (**World save** | **Player profiles** | **INI**). World/INI support create + import; Players is join/leave history (export/delete/restore) with no manual “all players” create or import.
 - Destination and schedule controls live primarily on the World subtab; Players/INI keep compact retain controls near history.
 - **Backup history** uses shared **`YarkDataTable`** (`mantine-datatable`) for selection, density, and empty/loading; row actions and right-click menus stay on `backupHistoryRowActionModel` (#94).
 
@@ -356,7 +357,7 @@ After a successful `ini:save`, `createIniSaveBackup` debounces **2s** per server
 - World restore **overlays one map folder**; uncheck profiles/tribes to keep live characters.
 - Player-session backups **cannot be disabled** via policy today.
 - `SaveWorld` is best-effort — backups proceed even when RCON fails.
-- Manual UI creates one kind; API without `kinds` creates all three.
+- Manual UI creates one kind (world/INI only); player archives come from join/leave. API manual create without `kinds` creates world + INI.
 - `rootBackupDir` passed into `BackupService` from main is unused for snapshot roots; policy `backupDir` / `{installDir}\Backups` wins.
 - No incremental or offsite sync; packaging is full ZIP per kind.
 - Do not document restore-history as a product surface until list IPC/UI exists.

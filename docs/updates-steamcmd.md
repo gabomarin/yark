@@ -79,7 +79,7 @@ operator review. See [Critical job crash recovery](critical-job-recovery.md).
 ```text
 wasRunning = process is active at job start
   → if wasRunning: stop({ backup: false })   # no pre_stop snapshot
-  → create pre_update backups (world + players + ini)
+  → create pre_update backups (world + ini)
   → SteamCMD update + robocopy sync
   → if wasRunning: start + waitForHealthy (90s)
   → on any failure after backups exist:
@@ -96,7 +96,7 @@ An active-server update must produce exactly one stable `pre_update` archive set
 **must not** also create a `pre_stop` set for the same job (SteamCMD paths pass
 `{ backup: false }` into stop). See [backups.md](backups.md).
 
-Pre-update archives use backup type `pre_update` and kinds `world` / `players` / `ini`
+Pre-update archives use backup type `pre_update` and kinds `world` / `ini`
 (`CRITICAL_BACKUP_KINDS`). Per-server update logs land under userData `update-logs/` as
 `{serverId}-{timestamp}.log`.
 
@@ -217,7 +217,7 @@ Requires: Node 22.12+ (`node:sqlite` and the current Electron toolchain), Playwr
 - A **test-owned or disposable** ASA server profile (unique game/query/RCON ports;
   admin password ≥ 4 characters). Do not use an operator production world unless you
   accept snapshot/rollback risk.
-- Enough disk for SteamCMD cache + one `pre_update` set (world/players/ini).
+- Enough disk for SteamCMD cache + one `pre_update` set (world/ini).
 - Note expected duration (SteamCMD validate + robocopy can take many minutes).
 - Cleanup: leave operator-owned installs untouched; delete only profiles/paths you created for the run.
 
@@ -225,7 +225,7 @@ Requires: Node 22.12+ (`node:sqlite` and the current Electron toolchain), Playwr
 
 | # | Scenario | Pass criteria |
 | --- | --- | --- |
-| A | Active-server update | Stop → exactly one `pre_update` set (world/players/ini) → **no** `pre_stop` for this job → start + healthy |
+| A | Active-server update | Stop → exactly one `pre_update` set (world/ini) → **no** `pre_stop` for this job → start + healthy |
 | B | Stopped-server update | Completes; server left stopped |
 | C | Forced failure after backup | Points Settings at a **temporary** failing SteamCMD stub under `os.tmpdir()` (does **not** rename AppData `steamcmd.exe`). Job may retry up to **3** times with rollback each attempt; final user-visible signal is update **failure** (events include `update_failed` / `update_rolled_back`), never success. If rollback itself fails: logs/backups preserved + clear manual-recovery events |
 | D | Cancel mid SteamCMD or sync | Reported cancelled (not success) |

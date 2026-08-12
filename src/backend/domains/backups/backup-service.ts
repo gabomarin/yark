@@ -51,6 +51,7 @@ import {
   missingEssentialWorldRels,
   resolveWorldMapSaveDir,
   selectWorldBackupSourceFiles,
+  worldMapDirNameCandidates,
 } from "./world-snapshot";
 import {
   backupKindSubdir,
@@ -152,8 +153,12 @@ export const SCHEDULED_BACKUP_KINDS: readonly BackupKind[] = ["world"];
 /** Pause further scheduled world creates after this many consecutive failures (session only). */
 export const SCHEDULED_WORLD_FAIL_LIMIT = 3;
 
-/** Kinds created for pre-update / pre-restart safety. */
-export const CRITICAL_BACKUP_KINDS: readonly BackupKind[] = ["world", "players", "ini"];
+/**
+ * Kinds created for pre-update / pre-stop / pre-restart safety.
+ * World already includes profiles/tribes in the active map folder, so a full
+ * `players` snapshot is not duplicated on the critical path (#275).
+ */
+export const CRITICAL_BACKUP_KINDS: readonly BackupKind[] = ["world", "ini"];
 
 const ALL_BACKUP_KINDS: readonly BackupKind[] = ["world", "players", "ini"];
 
@@ -410,7 +415,16 @@ export class BackupService extends EventEmitter {
     serverId: string,
     kinds?: BackupKind[],
   ): Promise<BackupRecord[]> {
-    return this.createBackups(serverId, "manual", null, normalizeKinds(kinds));
+    const source =
+      kinds === undefined || kinds.length === 0
+        ? (["world", "ini"] as BackupKind[])
+        : kinds;
+    if (source.includes("players")) {
+      throw new Error(
+        "Full player-profile snapshots are no longer supported. Use a World backup for everyone, or rely on automatic join/leave player archives.",
+      );
+    }
+    return this.createBackups(serverId, "manual", null, normalizeKinds(source));
   }
 
   /**
@@ -1824,7 +1838,7 @@ export class BackupService extends EventEmitter {
     notes: string | null,
     options?: { playerKey?: string; waitForProfile?: boolean },
   ): Promise<BackupRecord | null> {
-    // The full stop batch already includes players and INI; do not queue
+    // The full stop batch already includes world + INI; do not queue
     // automatic single-kind work behind it while the app may be waiting to quit.
     if (this.preStopBackupServers.has(serverId)) return Promise.resolve(null);
     return this.withServerBackupJob(serverId, () =>
@@ -2163,26 +2177,21 @@ export class BackupService extends EventEmitter {
     };
   }
 
+  /**
+   * Flat profile snapshot used only as a same-kind `pre_restore` safeguard.
+   * Manual / critical-path “all players” archives are not created (#275).
+   */
   private async packagePlayers(
     server: ServerProfile,
     targetDir: string,
   ): Promise<{ meta: Record<string, unknown> }> {
     const profilesRoot = join(targetDir, "PlayerProfiles");
     await mkdir(profilesRoot, { recursive: true });
-    let fileCount = 0;
-
-    for (const root of this.playerSearchRoots(server)) {
-      if (!existsSync(root.path)) continue;
-      const files = await listFilesRecursive(root.path);
-      for (const file of files) {
-        if (!isPlayerProfileFile(basename(file))) continue;
-        const rel = join(root.label, relative(root.path, file));
-        await copyFileTo(file, join(profilesRoot, rel));
-        fileCount += 1;
-      }
+    const sources = await this.collectFlatPlayerProfileSources(server);
+    for (const file of sources) {
+      await copyFileTo(file, join(profilesRoot, basename(file)));
     }
-
-    return { meta: { empty: fileCount === 0, fileCount } };
+    return { meta: { empty: sources.length === 0, fileCount: sources.length } };
   }
 
   private async packageSinglePlayer(
@@ -2195,35 +2204,23 @@ export class BackupService extends EventEmitter {
     await mkdir(profilesRoot, { recursive: true });
     const needle = normalizePlayerKey(playerKey);
     const maxAttempts = options?.waitForProfile === true ? 8 : 1;
-    let fileCount = 0;
-    const matched: string[] = [];
+    let matched: string[] = [];
 
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-      fileCount = 0;
-      matched.length = 0;
-
-      for (const root of this.playerSearchRoots(server)) {
-        if (!existsSync(root.path)) continue;
-        const files = await listFilesRecursive(root.path);
-        for (const file of files) {
-          const name = basename(file);
-          if (!isPlayerProfileFile(name)) continue;
-          const stem = name
-            .replace(/\.(arkprofile)(\.bak)?$/i, "")
-            .replace(/\.profilebak$/i, "");
-          const normalizedStem = normalizePlayerKey(stem);
-          // Exact match only — substring/prefix matching can pull in other players' profiles.
-          if (normalizedStem !== needle) {
-            continue;
-          }
-          const rel = join(root.label, relative(root.path, file));
-          await copyFileTo(file, join(profilesRoot, rel));
-          fileCount += 1;
-          matched.push(rel);
-        }
+      matched = [];
+      const sources = await this.collectFlatPlayerProfileSources(server);
+      for (const file of sources) {
+        const name = basename(file);
+        const stem = name
+          .replace(/\.(arkprofile)(\.bak)?$/i, "")
+          .replace(/\.profilebak$/i, "");
+        if (normalizePlayerKey(stem) !== needle) continue;
+        // Map-agnostic layout: flat under PlayerProfiles/ (no SavedArks/{Map}/…).
+        await copyFileTo(file, join(profilesRoot, name));
+        matched.push(name);
       }
 
-      if (fileCount > 0) break;
+      if (matched.length > 0) break;
       if (attempt < maxAttempts - 1) {
         await delay(400);
       }
@@ -2231,12 +2228,53 @@ export class BackupService extends EventEmitter {
 
     return {
       meta: {
-        empty: fileCount === 0,
-        fileCount,
+        empty: matched.length === 0,
+        fileCount: matched.length,
         playerKey: needle,
         files: matched,
       },
     };
+  }
+
+  /**
+   * Profile files for flat player archives, one basename each.
+   * Prefer the current map folder so leftovers from a previous map do not win.
+   */
+  private async collectFlatPlayerProfileSources(
+    server: ServerProfile,
+  ): Promise<string[]> {
+    const selected: string[] = [];
+    const seen = new Set<string>();
+
+    const takeFrom = async (dir: string): Promise<void> => {
+      if (!existsSync(dir)) return;
+      for (const file of await listFilesRecursive(dir)) {
+        const name = basename(file);
+        if (!isPlayerProfileFile(name)) continue;
+        const key = name.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        selected.push(file);
+      }
+    };
+
+    const mapToken = server.map.trim();
+    if (isSafeMapToken(mapToken)) {
+      const resolved = await resolveWorldMapSaveDir(
+        this.savedArksDir(server),
+        mapToken,
+        server.mapSaveFolder,
+      );
+      if (resolved !== null) {
+        await takeFrom(resolved.dir);
+      }
+    }
+
+    for (const root of this.playerSearchRoots(server)) {
+      await takeFrom(root.path);
+    }
+
+    return selected;
   }
 
   private playerSearchRoots(
@@ -2415,30 +2453,60 @@ export class BackupService extends EventEmitter {
 
   private async restorePlayers(server: ServerProfile, backupPath: string): Promise<void> {
     const profilesRoot = join(backupPath, "PlayerProfiles");
-    const legacySaved = join(backupPath, "SavedArks");
-    const savedRoot = this.savedRootDir(server);
-
-    if (existsSync(profilesRoot)) {
-      const files = await listFilesRecursive(profilesRoot);
-      for (const file of files) {
-        const rel = relative(profilesRoot, file);
-        await copyFileTo(file, join(savedRoot, rel));
+    if (!existsSync(profilesRoot)) {
+      if (existsSync(join(backupPath, "SavedArks"))) {
+        throw new Error(
+          "This player archive uses a legacy nested layout and cannot be restored. Create a new join/leave player backup.",
+        );
       }
-      return;
+      throw new Error("Players backup has no profile data");
     }
 
-    // Legacy full backups stored profiles inside SavedArks.
-    if (existsSync(legacySaved)) {
-      const files = await listFilesRecursive(legacySaved);
-      for (const file of files) {
-        if (!isPlayerProfileFile(basename(file))) continue;
-        const rel = relative(legacySaved, file);
-        await copyFileTo(file, join(this.savedArksDir(server), rel));
-      }
-      return;
+    const files = await listFilesRecursive(profilesRoot);
+    if (files.length === 0) {
+      throw new Error("Players backup has no profile data");
     }
 
-    throw new Error("Players backup has no profile data");
+    for (const file of files) {
+      const rel = relative(profilesRoot, file);
+      if (dirname(rel) !== ".") {
+        throw new Error(
+          "This player archive nests profiles under a map folder (legacy layout) and cannot be restored. Create a new join/leave player backup.",
+        );
+      }
+    }
+
+    const destDir = await this.resolveLivePlayerProfileDir(server);
+    await mkdir(destDir, { recursive: true });
+    let copied = 0;
+    for (const file of files) {
+      const name = basename(file);
+      if (!isPlayerProfileFile(name)) continue;
+      await copyFileTo(file, join(destDir, name));
+      copied += 1;
+    }
+    if (copied === 0) {
+      throw new Error("Players backup has no profile data");
+    }
+  }
+
+  /** Live map folder where restored flat player profiles should land (#275). */
+  private async resolveLivePlayerProfileDir(server: ServerProfile): Promise<string> {
+    const mapToken = server.map.trim();
+    if (!isSafeMapToken(mapToken)) {
+      throw new Error("Server map token must be a single safe folder name");
+    }
+    const savedArks = this.savedArksDir(server);
+    const resolved = await resolveWorldMapSaveDir(
+      savedArks,
+      mapToken,
+      server.mapSaveFolder,
+    );
+    if (resolved !== null) {
+      return resolved.dir;
+    }
+    const folderName = worldMapDirNameCandidates(mapToken, server.mapSaveFolder)[0] ?? mapToken;
+    return join(savedArks, folderName);
   }
 
   private async restoreIni(server: ServerProfile, backupPath: string): Promise<void> {
@@ -2845,7 +2913,7 @@ export class BackupService extends EventEmitter {
     const progress = this.jobProgressHandlers.get(job.id);
     this.throwIfCancelled();
     progress?.onProgressMessage?.(
-      "Creating pre-update backups (world, players, INI) before SteamCMD…",
+      "Creating pre-update backups (world, INI) before SteamCMD…",
     );
     this.checkpointJob(job, "reconciling-backups");
     await this.reconcileDiskBackups(job.serverId);

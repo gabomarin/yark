@@ -106,10 +106,10 @@ export const faqItems: FaqItem[] = [
     question: "How do backups work?",
     answerHtml: `
       <p>
-        Backups are ZIP archives per server for <strong>world</strong>, <strong>players</strong>,
-        and <strong>INI</strong>. You can create them on demand, schedule world backups, and
-        restore from history. Safe update / restart also create pre-operation backups on the
-        critical path.
+        Backups are ZIP archives per server for <strong>world</strong>, <strong>players</strong>
+        (join/leave snapshots), and <strong>INI</strong>. Schedule world backups; player profiles
+        are saved when players join or leave. Safe update / restart create world + INI snapshots
+        on the critical path (world archives already include profiles for the active map).
       </p>`,
   },
   {

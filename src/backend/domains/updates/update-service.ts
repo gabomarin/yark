@@ -639,21 +639,21 @@ export class UpdateService extends EventEmitter {
         } else {
           this.checkpointJob(job, "creating-pre-update-backup");
           this.appendSteamCmdConsole(
-            "Creating pre-update backups (world, players, INI) before SteamCMD…",
+            "Creating pre-update backups (world, INI) before SteamCMD…",
           );
           this.setProgress(
             5,
             "Creating pre-update backups…",
-            "World / players / INI snapshots protect rollback if SteamCMD fails",
+            "World / INI snapshots protect rollback if SteamCMD fails",
           );
           preUpdateBackups = await this.backups.createPreUpdateBackupForJob(serverId, {
             onKindProgress: (kind, index, total) => {
               const label =
                 kind === "world"
                   ? "world save"
-                  : kind === "players"
-                    ? "player profiles"
-                    : "INI files";
+                  : kind === "ini"
+                    ? "INI files"
+                    : "player profiles";
               const percent = Math.round(5 + ((index + 0.5) / Math.max(total, 1)) * 20);
               this.appendSteamCmdConsole(
                 `Pre-update backup ${index + 1}/${total}: ${label}…`,

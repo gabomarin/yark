@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- **Player backups** are join/leave only: flat profile files under `PlayerProfiles/`, restore into the current map folder, no manual “Backup all players” / Players Import; critical-path snapshots are world + INI (#275).
+
 ## [0.10.0] - 2026-08-12
 
 ### Added
