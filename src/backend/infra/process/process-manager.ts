@@ -266,7 +266,8 @@ export class ProcessManager extends EventEmitter {
     const managed = this.processes.get(serverId);
     if (managed === undefined) return false;
     const { child } = managed;
-    return child.exitCode === null && child.signalCode === null;
+    // Treat missing props (test fakes / adopted handles) like Node's null = not exited.
+    return child.exitCode == null && child.signalCode == null;
   }
 
   getStatus(serverId: string): ServerRuntimeInfo {
