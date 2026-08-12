@@ -121,4 +121,28 @@ describe("InstanceService.importExisting incomplete opt-in (#283)", () => {
     ).rejects.toThrow(/ready ASA|empty/i);
     expect(repo.create).not.toHaveBeenCalled();
   });
+
+  it("rejects nested ShooterGame paths even with allowIncompleteInstall", async () => {
+    const root = await mkdtemp(join(tmpdir(), "ark-import-nested-"));
+    tmpDirs.push(root);
+    // Nested Win64 path can look incomplete (inner ShooterGame markers) without
+    // being the dedicated root — must not import via IPC opt-in alone.
+    const nested = join(root, "ShooterGame", "Binaries", "Win64");
+    await mkdir(join(nested, "ShooterGame"), { recursive: true });
+
+    const repo = {
+      get: vi.fn(() => null),
+      list: vi.fn(() => [] as ServerProfile[]),
+      create: vi.fn(),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+
+    const service = makeService(repo);
+    await expect(
+      service.importExisting(baseInput(nested), {
+        allowIncompleteInstall: true,
+      }),
+    ).rejects.toThrow(/inside an ASA install/i);
+    expect(repo.create).not.toHaveBeenCalled();
+  });
 });

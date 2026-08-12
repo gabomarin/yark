@@ -124,6 +124,18 @@ export function resolveNestedAsaInstallRoot(selected: string): {
   return { nestedSubfolder: true, suggestedInstallDir: suggestedNorm };
 }
 
+/** Reject nested paths under ShooterGame for importExisting (do not trust the renderer). */
+export function assertImportNotNested(installDir: string): void {
+  const nested = resolveNestedAsaInstallRoot(installDir);
+  if (!nested.nestedSubfolder) return;
+  const suggested = nested.suggestedInstallDir;
+  throw new Error(
+    suggested !== null
+      ? `This is inside an ASA install. Select ${suggested} (the folder that contains ShooterGame).`
+      : "This is inside an ASA install. Select the folder that contains ShooterGame.",
+  );
+}
+
 function emptySuggestions(installDir: string): ImportInstallSuggestions {
   return {
     name: leafFolderName(installDir),

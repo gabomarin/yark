@@ -501,7 +501,8 @@ from another manager) but YARK has no profile:
 5. Workspace opens on the new profile **without** first-steps onboarding.
    Create/import/clone uniqueness checks are serialized so concurrent imports
    cannot share an `installDir` or ports. Backend rejects incomplete import
-   unless `allowIncompleteInstall` is set (`servers:import-existing`).
+   unless `allowIncompleteInstall` is set (`servers:import-existing`), and
+   always rejects nested `ShooterGame\...` paths (same as the probe).
 
 Helpers: `src/backend/domains/instances/import-existing-install.ts`
 (`resolveNestedAsaInstallRoot`, `probeImportInstall`, `assertImportHealthAllowed`).

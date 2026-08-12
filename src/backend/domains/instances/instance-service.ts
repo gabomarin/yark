@@ -49,7 +49,7 @@ import {
   assertSafeInstallDirForWipe,
   installDirKey,
 } from "./install-dir-safety";
-import { assertImportHealthAllowed } from "./import-existing-install";
+import { assertImportHealthAllowed, assertImportNotNested } from "./import-existing-install";
 import {
   invalidateInstallInspectCache,
   inspectServerInstallationAsync,
@@ -275,6 +275,9 @@ export class InstanceService extends EventEmitter {
     this.assertUniqueName(normalized.name);
     this.assertNoPortConflicts(normalized);
     this.assertUniqueInstallDir(installDir);
+    // Match probeImportInstall: nested ShooterGame paths never become profiles,
+    // even if IPC sends allowIncompleteInstall on an incomplete nested tree (#283).
+    assertImportNotNested(installDir);
 
     const installation = await inspectServerInstallationAsync(
       `import:${normalized.name}`,

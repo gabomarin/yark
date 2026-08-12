@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import {
   classifyImportContinue,
   assertImportHealthAllowed,
+  assertImportNotNested,
   isImportIncompleteEligible,
   shouldBuildImportSuggestions,
   collectModProjectIdsFromTree,
@@ -154,6 +155,15 @@ ServerPassword=joinme
     expect(() =>
       assertImportHealthAllowed("suspicious", { allowIncompleteInstall: true }),
     ).toThrow(/ready ASA/i);
+  });
+
+  it("rejects nested import roots before the health gate", () => {
+    expect(() =>
+      assertImportNotNested(
+        "C:\\ASA\\LostColony\\ShooterGame\\Binaries\\Win64",
+      ),
+    ).toThrow(/inside an ASA install/i);
+    expect(() => assertImportNotNested("C:\\ASA\\LostColony")).not.toThrow();
   });
 
   it("builds suggestions for ready and incomplete only", () => {
