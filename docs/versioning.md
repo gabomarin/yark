@@ -95,7 +95,7 @@ Workflow: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
 | `enableEmbeddedAsarIntegrityValidation` | on | Validates `app.asar` against the embedded integrity hash (Electron ≥ 30 on Windows) |
 | `onlyLoadAppFromAsar` | on | Loads app code only from `app.asar` (no unpacked `app/` sideload bypass) |
 | `loadBrowserProcessSpecificV8Snapshot` | off | No custom main-process V8 snapshot |
-| `grantFileProtocolExtraPrivileges` | off | Renderer is a static `loadFile` SPA; no elevated `file://` privileges |
+| `grantFileProtocolExtraPrivileges` | on | Required while the shell loads the renderer via `loadFile` (`file://`); turn off only after migrating to a custom protocol |
 
 Unpackaged `npm run dev` / `npm start` still use Electron’s default fuse wire. E2E/visual helpers unset `ELECTRON_RUN_AS_NODE` for those workflows; that env escape is disabled only on packaged binaries.
 

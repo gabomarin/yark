@@ -19,7 +19,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Security
 
-- Packaged Windows builds enable Electron fuses and ASAR integrity validation (no RunAsNode / Node CLI inspect / `NODE_OPTIONS`; load only from integrity-checked `app.asar`) (#217).
+- Packaged Windows builds enable Electron fuses and ASAR integrity validation (no RunAsNode / Node CLI inspect / `NODE_OPTIONS`; load only from integrity-checked `app.asar`). **`grantFileProtocolExtraPrivileges` stays on** while the shell loads the renderer via `loadFile` (#217).
 
 ### Changed
 
@@ -30,6 +30,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Packaged builds keep **`grantFileProtocolExtraPrivileges`** enabled so `loadFile` can open the renderer (blank window / `ERR_FILE_NOT_FOUND` on `app.asar/.../index.html` when the fuse was off) (#217).
 - World restore after a wipe recreates the **live** map folder from the backup manifest (mod maps like `Svartalfheim/`), not a mistaken `{MapToken}` directory; empty live maps skip the pre-restore safeguard so recovery can proceed (#262).
 - **Import install** map detection scans nested `SavedArks` folders even when the folder name is not a MapToken (#254).
 - Harden world-backup map paths and make folder overrides, current-map selection, and all-failed history cleanup behave safely and predictably (#262).
