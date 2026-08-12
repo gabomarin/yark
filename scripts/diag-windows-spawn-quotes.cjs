@@ -28,7 +28,9 @@ function quoteWindowsArg(value) {
 }
 
 function mapUrlToWindowsVerbatimArg(logical) {
-  return logical.replace(/"/g, '\\"');
+  // Escape `\` before `"` so existing backslashes are not eaten by `\"` pairs
+  // (same order as escapeQuotedLaunchValue in src/shared/launch-map-url.ts).
+  return logical.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
 const logicalMap = '"TheIsland_WP"?SessionName="gabo"';
