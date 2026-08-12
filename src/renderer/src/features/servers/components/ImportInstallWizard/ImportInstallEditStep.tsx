@@ -66,9 +66,16 @@ export function ImportInstallEditStep(props: Props): ReactElement {
       <ServerFormMapField
         map={props.form.map}
         mapModId={props.form.mapModId}
+        mapSaveFolder={props.form.mapSaveFolder}
         inputSize="sm"
         mapMods={props.mapMods}
-        onChange={(next) => set({ map: next.map, mapModId: next.mapModId })}
+        onChange={(next) =>
+          set({
+            map: next.map,
+            mapModId: next.mapModId,
+            mapSaveFolder: next.mapSaveFolder,
+          })
+        }
       />
       <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
         <NumberInput

@@ -7,7 +7,10 @@ import type {
   ServerProfile,
   ServerProfileInput,
 } from "@shared/types";
-import { persistableMapModId } from "@shared/map-identity";
+import {
+  persistableMapModId,
+  persistableMapSaveFolder,
+} from "@shared/map-identity";
 import {
   emptyStructuredLaunchArgs,
   normalizeStructuredLaunchArgs,
@@ -20,6 +23,7 @@ interface ServerRow {
   map: string;
   /** SQLite may return number affinity for digit-only TEXT values. */
   map_mod_id: string | number | null;
+  map_save_folder: string | null;
   install_dir: string;
   enabled: number;
   auto_start: number;
@@ -66,6 +70,9 @@ function rowToProfile(row: ServerRow): ServerProfile {
     name: row.name,
     map: row.map,
     mapModId: coerceMapModId(row.map_mod_id),
+    mapSaveFolder: row.map_save_folder?.trim()
+      ? row.map_save_folder.trim()
+      : null,
     installDir: row.install_dir,
     enabled: row.enabled === 1,
     autoStart: row.auto_start === 1,
@@ -112,9 +119,14 @@ export class ServerRepository {
       map: input.map,
       mapModId: input.mapModId,
     });
+    const mapSaveFolder = persistableMapSaveFolder({
+      map: input.map,
+      mapSaveFolder: input.mapSaveFolder,
+    });
     const profile: ServerProfile = {
       ...input,
       mapModId,
+      mapSaveFolder,
       enabled,
       autoStart: input.autoStart === true,
       disabledMods: input.disabledMods ?? [],
@@ -129,18 +141,19 @@ export class ServerRepository {
     this.db
       .prepare(
         `INSERT INTO servers (
-          id, name, map, map_mod_id, install_dir, enabled, auto_start, session_name,
+          id, name, map, map_mod_id, map_save_folder, install_dir, enabled, auto_start, session_name,
           game_port, query_port, rcon_port,
           server_password, admin_password,
           cluster_id, cluster_dir, extra_args, structured_launch_args, mods,
           disabled_mods, mod_metadata_cache, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         profile.id,
         profile.name,
         profile.map,
         profile.mapModId ?? null,
+        profile.mapSaveFolder ?? null,
         profile.installDir,
         profile.enabled ? 1 : 0,
         profile.autoStart ? 1 : 0,
@@ -171,10 +184,17 @@ export class ServerRepository {
       map: input.map,
       mapModId: input.mapModId !== undefined ? input.mapModId : existing.mapModId,
     });
+    const mapSaveFolder = persistableMapSaveFolder({
+      map: input.map,
+      mapSaveFolder:
+        input.mapSaveFolder !== undefined
+          ? input.mapSaveFolder
+          : existing.mapSaveFolder,
+    });
     this.db
       .prepare(
         `UPDATE servers SET
-          name = ?, map = ?, map_mod_id = ?, install_dir = ?, session_name = ?,
+          name = ?, map = ?, map_mod_id = ?, map_save_folder = ?, install_dir = ?, session_name = ?,
           game_port = ?, query_port = ?, rcon_port = ?,
           server_password = ?, admin_password = ?,
           cluster_id = ?, cluster_dir = ?, extra_args = ?, structured_launch_args = ?, mods = ?,
@@ -187,6 +207,7 @@ export class ServerRepository {
         input.name,
         input.map,
         mapModId,
+        mapSaveFolder,
         input.installDir,
         input.sessionName,
         input.gamePort,

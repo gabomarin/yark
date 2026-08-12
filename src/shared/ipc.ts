@@ -7,7 +7,9 @@ import type {
   BackupFleetSummary,
   BackupKind,
   BackupPolicy,
+  BackupPolicyStatus,
   BackupRecord,
+  RestoreBackupOptions,
   ClusterComplianceReport,
   ClusterIniTemplate,
   ClusterIniTemplateApplyResult,
@@ -154,6 +156,7 @@ export const IPC = {
   backupsList: "backups:list",
   backupsCreate: "backups:create",
   backupsDelete: "backups:delete",
+  backupsDeleteFailed: "backups:delete-failed",
   backupsRestore: "backups:restore",
   backupsGetPolicy: "backups:get-policy",
   backupsSetPolicy: "backups:set-policy",
@@ -448,8 +451,16 @@ export interface RendererApi {
     serverId: string,
     backupIds: string[],
   ): Promise<IpcResult<number>>;
-  restoreBackup(serverId: string, backupId: string): Promise<IpcResult<void>>;
-  getBackupPolicy(serverId: string): Promise<IpcResult<BackupPolicy>>;
+  deleteFailedBackups(
+    serverId: string,
+    kind: BackupKind,
+  ): Promise<IpcResult<number>>;
+  restoreBackup(
+    serverId: string,
+    backupId: string,
+    options?: RestoreBackupOptions,
+  ): Promise<IpcResult<void>>;
+  getBackupPolicy(serverId: string): Promise<IpcResult<BackupPolicyStatus>>;
   setBackupPolicy(
     serverId: string,
     policy: Omit<BackupPolicy, "serverId" | "updatedAt">,

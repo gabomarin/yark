@@ -67,8 +67,29 @@ function makeProfile(installDir: string): ServerProfile {
   };
 }
 
+/** Active process mock with startedAt old enough for schedule grace by default. */
+function mockActiveProcesses(
+  startedAgoMs = 60 * 60 * 1000,
+): ProcessManager {
+  const startedAt = new Date(Date.now() - startedAgoMs).toISOString();
+  return {
+    applyRuntimePorts: vi.fn((p: ServerProfile) => p),
+    isActive: vi.fn(() => true),
+    getStatus: vi.fn(() => ({
+      serverId: "srv-1",
+      status: "running" as const,
+      pid: 4242,
+      startedAt,
+      lastError: null,
+    })),
+    start: vi.fn(),
+    stop: vi.fn(),
+  } as unknown as ProcessManager;
+}
+
 async function seedInstall(installDir: string): Promise<void> {
   const savedArks = join(installDir, "ShooterGame", "Saved", "SavedArks");
+  const mapDir = join(savedArks, "TheIsland_WP");
   const config = join(
     installDir,
     "ShooterGame",
@@ -77,15 +98,16 @@ async function seedInstall(installDir: string): Promise<void> {
     "WindowsServer",
   );
   const binaries = join(installDir, "ShooterGame", "Binaries", "Win64");
-  await mkdir(savedArks, { recursive: true });
+  await mkdir(mapDir, { recursive: true });
   await mkdir(config, { recursive: true });
   await mkdir(binaries, { recursive: true });
   // Non-empty exe so classifyInstallHealth reports Ready.
   await writeFile(join(binaries, "ArkAscendedServer.exe"), "MZ-fake-exe", "utf8");
-  await writeFile(join(savedArks, "TheIsland_WP.ark"), "WORLD", "utf8");
-  await writeFile(join(savedArks, "tribe.arktribe"), "TRIBE", "utf8");
-  await writeFile(join(savedArks, "76561198000000000.arkprofile"), "PLAYER", "utf8");
-  await writeFile(join(savedArks, "76561198000000001.arkprofile"), "PLAYER2", "utf8");
+  await writeFile(join(mapDir, "TheIsland_WP.ark"), "WORLD", "utf8");
+  await writeFile(join(mapDir, "TheIsland_WP.ark.bak"), "WORLD_BAK", "utf8");
+  await writeFile(join(mapDir, "tribe.arktribe"), "TRIBE", "utf8");
+  await writeFile(join(mapDir, "76561198000000000.arkprofile"), "PLAYER", "utf8");
+  await writeFile(join(mapDir, "76561198000000001.arkprofile"), "PLAYER2", "utf8");
   await writeFile(join(config, "Game.ini"), "[/Script/Engine]\nx=1\n", "utf8");
   await writeFile(
     join(config, "GameUserSettings.ini"),
@@ -572,28 +594,104 @@ describe("BackupService kinds and retention", () => {
     );
   });
 
-  it("packages world including player profiles as a zip under World/", async () => {
+  it("packages world for the active map folder as a zip under World/", async () => {
     const created = await service.createManualBackup(profile.id, ["world"]);
     const record = created[0];
     expect(record).toBeDefined();
     if (record === undefined) return;
     expect(record.kind).toBe("world");
+    expect(record.mapToken).toBe("TheIsland_WP");
     expect(record.path.toLowerCase().endsWith(".zip")).toBe(true);
     expect(record.path).toMatch(/[\\/]World[\\/]/i);
     expect(basename(record.path)).toMatch(
-      /^island-world-manual-\d{8}-\d{6}\.zip$/i,
+      /^island-world-manual-TheIsland_WP-\d{8}-\d{6}\.zip$/i,
     );
     await withExtractedZip(record.path, async (root) => {
       await expect(
-        access(join(root, "SavedArks", "TheIsland_WP.ark"), fsConstants.F_OK),
+        access(
+          join(root, "SavedArks", "TheIsland_WP", "TheIsland_WP.ark"),
+          fsConstants.F_OK,
+        ),
       ).resolves.toBeUndefined();
       await expect(
-        access(join(root, "SavedArks", "76561198000000000.arkprofile"), fsConstants.F_OK),
+        access(
+          join(root, "SavedArks", "TheIsland_WP", "76561198000000000.arkprofile"),
+          fsConstants.F_OK,
+        ),
       ).resolves.toBeUndefined();
       const manifest = JSON.parse(
         await readFile(join(root, "manifest.json"), "utf8"),
-      ) as { backup: { kind: string } };
+      ) as { backup: { kind: string; mapToken?: string } };
       expect(manifest.backup.kind).toBe("world");
+      expect(manifest.backup.mapToken).toBe("TheIsland_WP");
+    });
+  });
+
+  it("resolves mod map folders without _WP and ignores leftover foreign .ark files", async () => {
+    const savedArks = join(installDir, "ShooterGame", "Saved", "SavedArks");
+    const svartDir = join(savedArks, "Svartalfheim");
+    await mkdir(svartDir, { recursive: true });
+    await writeFile(join(svartDir, "Svartalfheim_WP.ark"), "SVART", "utf8");
+    await writeFile(
+      join(svartDir, "Svartalfheim_WP_AntiCorruptionBackup.bak"),
+      "BAK",
+      "utf8",
+    );
+    await writeFile(join(svartDir, "Extinction_WP.ark"), "LEFTOVER", "utf8");
+
+    const svartProfile = { ...profile, map: "Svartalfheim_WP", name: "Svart" };
+    const servers = {
+      get: vi.fn((id: string) => (id === svartProfile.id ? svartProfile : null)),
+      list: vi.fn(() => [svartProfile]),
+      addEvent,
+    } as unknown as ServerRepository;
+    const processes = {
+      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
+      isActive,
+      start: vi.fn(),
+      stop: vi.fn(),
+    } as unknown as ProcessManager;
+    const settingsStore = new Map<string, string | null>();
+    const settings = {
+      get: vi.fn((key: string) => settingsStore.get(key) ?? null),
+      set: vi.fn((key: string, value: string | null) => {
+        settingsStore.set(key, value);
+      }),
+    } as unknown as AppSettingsRepository;
+    const svartService = new BackupService(
+      servers,
+      repo,
+      processes,
+      settings,
+      join(installDir, "_root"),
+    );
+
+    const created = await svartService.createManualBackup(svartProfile.id, ["world"]);
+    const record = created[0];
+    expect(record).toBeDefined();
+    if (record === undefined) return;
+    expect(record.mapToken).toBe("Svartalfheim_WP");
+    expect(basename(record.path)).toMatch(
+      /^svart-world-manual-Svartalfheim_WP-\d{8}-\d{6}\.zip$/i,
+    );
+    await withExtractedZip(record.path, async (root) => {
+      await expect(
+        access(
+          join(root, "SavedArks", "Svartalfheim_WP", "Svartalfheim_WP.ark"),
+          fsConstants.F_OK,
+        ),
+      ).resolves.toBeUndefined();
+      await expect(
+        access(
+          join(root, "SavedArks", "Svartalfheim_WP", "Extinction_WP.ark"),
+          fsConstants.F_OK,
+        ),
+      ).rejects.toThrow();
+      const manifest = JSON.parse(
+        await readFile(join(root, "manifest.json"), "utf8"),
+      ) as { backup: { mapFolderName?: string; mapToken?: string } };
+      expect(manifest.backup.mapToken).toBe("Svartalfheim_WP");
+      expect(manifest.backup.mapFolderName).toBe("Svartalfheim");
     });
   });
 
@@ -608,12 +706,12 @@ describe("BackupService kinds and retention", () => {
     await withExtractedZip(record.path, async (root) => {
       await expect(
         access(
-          join(root, "PlayerProfiles", "SavedArks", "76561198000000000.arkprofile"),
+          join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP", "76561198000000000.arkprofile"),
           fsConstants.F_OK,
         ),
       ).resolves.toBeUndefined();
       await expect(
-        access(join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP.ark"), fsConstants.F_OK),
+        access(join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP", "TheIsland_WP.ark"), fsConstants.F_OK),
       ).rejects.toThrow();
     });
   });
@@ -635,13 +733,13 @@ describe("BackupService kinds and retention", () => {
     await withExtractedZip(record.path, async (root) => {
       await expect(
         access(
-          join(root, "PlayerProfiles", "SavedArks", "76561198000000000.arkprofile"),
+          join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP", "76561198000000000.arkprofile"),
           fsConstants.F_OK,
         ),
       ).resolves.toBeUndefined();
       await expect(
         access(
-          join(root, "PlayerProfiles", "SavedArks", "76561198000000001.arkprofile"),
+          join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP", "76561198000000001.arkprofile"),
           fsConstants.F_OK,
         ),
       ).rejects.toThrow();
@@ -666,8 +764,8 @@ describe("BackupService kinds and retention", () => {
   });
 
   it("does not match other player profiles that share an id prefix", async () => {
-    const savedArks = join(installDir, "ShooterGame", "Saved", "SavedArks");
-    await writeFile(join(savedArks, "765611980000000001.arkprofile"), "PREFIXED", "utf8");
+    const mapDir = join(installDir, "ShooterGame", "Saved", "SavedArks", "TheIsland_WP");
+    await writeFile(join(mapDir, "765611980000000001.arkprofile"), "PREFIXED", "utf8");
 
     const record = await service.createPlayerSessionBackup(
       profile.id,
@@ -680,13 +778,13 @@ describe("BackupService kinds and retention", () => {
     await withExtractedZip(record.path, async (root) => {
       await expect(
         access(
-          join(root, "PlayerProfiles", "SavedArks", "76561198000000000.arkprofile"),
+          join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP", "76561198000000000.arkprofile"),
           fsConstants.F_OK,
         ),
       ).resolves.toBeUndefined();
       await expect(
         access(
-          join(root, "PlayerProfiles", "SavedArks", "765611980000000001.arkprofile"),
+          join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP", "765611980000000001.arkprofile"),
           fsConstants.F_OK,
         ),
       ).rejects.toThrow();
@@ -730,8 +828,8 @@ describe("BackupService kinds and retention", () => {
   });
 
   it("retries finding a profile file on disconnect flush", async () => {
-    const savedArks = join(installDir, "ShooterGame", "Saved", "SavedArks");
-    const latePath = join(savedArks, "76561198009999999.arkprofile");
+    const mapDir = join(installDir, "ShooterGame", "Saved", "SavedArks", "TheIsland_WP");
+    const latePath = join(mapDir, "76561198009999999.arkprofile");
     // Profile appears shortly after disconnect (ASA flush).
     const writeLater = (async () => {
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -754,13 +852,13 @@ describe("BackupService kinds and retention", () => {
     await withExtractedZip(record.path, async (root) => {
       await expect(
         access(
-          join(root, "PlayerProfiles", "SavedArks", "76561198009999999.arkprofile"),
+          join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP", "76561198009999999.arkprofile"),
           fsConstants.F_OK,
         ),
       ).resolves.toBeUndefined();
       expect(
         await readFile(
-          join(root, "PlayerProfiles", "SavedArks", "76561198009999999.arkprofile"),
+          join(root, "PlayerProfiles", "SavedArks", "TheIsland_WP", "76561198009999999.arkprofile"),
           "utf8",
         ),
       ).toBe("LATE_FLUSH");
@@ -811,6 +909,7 @@ describe("BackupService kinds and retention", () => {
       "ShooterGame",
       "Saved",
       "SavedArks",
+      "TheIsland_WP",
       "TheIsland_WP.ark",
     );
     const liveProfile = join(
@@ -818,6 +917,7 @@ describe("BackupService kinds and retention", () => {
       "ShooterGame",
       "Saved",
       "SavedArks",
+      "TheIsland_WP",
       "76561198000000000.arkprofile",
     );
     const liveIni = join(
@@ -836,9 +936,42 @@ describe("BackupService kinds and retention", () => {
     await service.restoreBackup(profile.id, worldBackup.id);
 
     expect(await readFile(liveWorld, "utf8")).toBe("WORLD");
-    // World backups include profiles, so restore replaces them too.
+    // World backups include profiles, so restore replaces them too (default).
     expect(await readFile(liveProfile, "utf8")).toBe("PLAYER");
     expect(await readFile(liveIni, "utf8")).toBe("CHANGED_INI");
+  });
+
+  it("can restore world map without overwriting live profiles/tribes", async () => {
+    const created = await service.createManualBackup(profile.id, ["world"]);
+    const worldBackup = created[0];
+    expect(worldBackup).toBeDefined();
+    if (worldBackup === undefined) return;
+    const liveWorld = join(
+      installDir,
+      "ShooterGame",
+      "Saved",
+      "SavedArks",
+      "TheIsland_WP",
+      "TheIsland_WP.ark",
+    );
+    const liveProfile = join(
+      installDir,
+      "ShooterGame",
+      "Saved",
+      "SavedArks",
+      "TheIsland_WP",
+      "76561198000000000.arkprofile",
+    );
+
+    await writeFile(liveWorld, "CHANGED_WORLD", "utf8");
+    await writeFile(liveProfile, "CHANGED_PLAYER", "utf8");
+
+    await service.restoreBackup(profile.id, worldBackup.id, {
+      restoreProfilesTribes: false,
+    });
+
+    expect(await readFile(liveWorld, "utf8")).toBe("WORLD");
+    expect(await readFile(liveProfile, "utf8")).toBe("CHANGED_PLAYER");
   });
 
   it("prunes by per-kind retain counts", async () => {
@@ -894,12 +1027,7 @@ describe("BackupService kinds and retention", () => {
       retainCountIni: 10,
       backupDir: null,
     });
-    const processes = {
-      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
-      isActive: vi.fn(() => true),
-      start: vi.fn(),
-      stop: vi.fn(),
-    } as unknown as ProcessManager;
+    const processes = mockActiveProcesses();
     const servers = {
       get: vi.fn((id: string) => (id === profile.id ? profile : null)),
       list: vi.fn(() => [profile]),
@@ -923,6 +1051,38 @@ describe("BackupService kinds and retention", () => {
     expect(list.some((b) => b.type === "scheduled")).toBe(true);
   });
 
+  it("skips scheduled world until intervalMinutes after process start", async () => {
+    repo.setPolicy({
+      serverId: profile.id,
+      enabled: true,
+      intervalMinutes: 5,
+      retainCountWorld: 20,
+      retainCountPlayers: 20,
+      retainCountIni: 10,
+      backupDir: null,
+    });
+    const processes = mockActiveProcesses(60_000); // started 1 minute ago
+    const servers = {
+      get: vi.fn((id: string) => (id === profile.id ? profile : null)),
+      list: vi.fn(() => [profile]),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const settings = {
+      get: vi.fn(() => null),
+      set: vi.fn(),
+    } as unknown as AppSettingsRepository;
+    const scheduled = new BackupService(
+      servers,
+      repo,
+      processes,
+      settings,
+      join(installDir, "_root"),
+    );
+
+    await scheduled.runScheduledCycle();
+    expect(repo.listBackups(profile.id, 20)).toHaveLength(0);
+  });
+
   it("scheduled cycle measures interval from completedAt, not createdAt", async () => {
     repo.setPolicy({
       serverId: profile.id,
@@ -935,18 +1095,14 @@ describe("BackupService kinds and retention", () => {
     });
     const first = (await service.createManualBackup(profile.id, ["world"]))[0]!;
     // Started long ago, but finished recently — must not schedule again yet.
-    db.prepare(`UPDATE backups SET created_at = ?, completed_at = ? WHERE id = ?`).run(
+    db.prepare(`UPDATE backups SET created_at = ?, completed_at = ?, type = ? WHERE id = ?`).run(
       new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
       new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+      "scheduled",
       first.id,
     );
 
-    const processes = {
-      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
-      isActive: vi.fn(() => true),
-      start: vi.fn(),
-      stop: vi.fn(),
-    } as unknown as ProcessManager;
+    const processes = mockActiveProcesses();
     const servers = {
       get: vi.fn((id: string) => (id === profile.id ? profile : null)),
       list: vi.fn(() => [profile]),
@@ -969,6 +1125,103 @@ describe("BackupService kinds and retention", () => {
     expect(repo.listCompleted(profile.id, "world")[0]?.id).toBe(first.id);
   });
 
+  it("skips scheduled world until intervalMinutes after a failed scheduled attempt", async () => {
+    repo.setPolicy({
+      serverId: profile.id,
+      enabled: true,
+      intervalMinutes: 60,
+      retainCountWorld: 20,
+      retainCountPlayers: 20,
+      retainCountIni: 10,
+      backupDir: null,
+    });
+    const started = repo.createBackupStart({
+      serverId: profile.id,
+      type: "scheduled",
+      kind: "world",
+      path: join(installDir, "Backups", "World", "failed-sched.zip"),
+      notes: null,
+    });
+    repo.failBackup(started.id, "disk full");
+    db.prepare(`UPDATE backups SET completed_at = ? WHERE id = ?`).run(
+      new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+      started.id,
+    );
+
+    const processes = mockActiveProcesses();
+    const servers = {
+      get: vi.fn((id: string) => (id === profile.id ? profile : null)),
+      list: vi.fn(() => [profile]),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const settings = {
+      get: vi.fn(() => null),
+      set: vi.fn(),
+    } as unknown as AppSettingsRepository;
+    const scheduled = new BackupService(
+      servers,
+      repo,
+      processes,
+      settings,
+      join(installDir, "_root"),
+    );
+
+    await scheduled.runScheduledCycle();
+    expect(repo.listBackups(profile.id, 20)).toHaveLength(1);
+  });
+
+  it("pauses scheduled world creates after 3 consecutive failures this session", async () => {
+    repo.setPolicy({
+      serverId: profile.id,
+      enabled: true,
+      intervalMinutes: 5,
+      retainCountWorld: 20,
+      retainCountPlayers: 20,
+      retainCountIni: 10,
+      backupDir: null,
+    });
+    const processes = mockActiveProcesses();
+    const servers = {
+      get: vi.fn((id: string) => (id === profile.id ? profile : null)),
+      list: vi.fn(() => [profile]),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const settings = {
+      get: vi.fn(() => null),
+      set: vi.fn(),
+    } as unknown as AppSettingsRepository;
+    const scheduled = new BackupService(
+      servers,
+      repo,
+      processes,
+      settings,
+      join(installDir, "_root"),
+    );
+    const createSpy = vi
+      .spyOn(scheduled, "createScheduledBackup")
+      .mockRejectedValue(new Error("disk full"));
+
+    await scheduled.runScheduledCycle();
+    await scheduled.runScheduledCycle();
+    await scheduled.runScheduledCycle();
+    expect(scheduled.isScheduledWorldPaused(profile.id)).toBe(true);
+    expect(scheduled.getPolicy(profile.id).enabled).toBe(true);
+    expect(scheduled.getPolicy(profile.id).schedulePaused).toBe(true);
+
+    createSpy.mockClear();
+    await scheduled.runScheduledCycle();
+    expect(createSpy).not.toHaveBeenCalled();
+
+    const summary = await scheduled.getFleetSummary();
+    expect(
+      summary.alerts.some(
+        (alert) =>
+          alert.kind === "schedule_paused" && alert.serverId === profile.id,
+      ),
+    ).toBe(true);
+    expect(summary.servers[0]?.schedulePaused).toBe(true);
+  });
+
   it("skips scheduling while a world backup is active in this process", async () => {
     repo.setPolicy({
       serverId: profile.id,
@@ -988,12 +1241,7 @@ describe("BackupService kinds and retention", () => {
     });
     expect(repo.hasRunning(profile.id, "world")).toBe(true);
 
-    const processes = {
-      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
-      isActive: vi.fn(() => true),
-      start: vi.fn(),
-      stop: vi.fn(),
-    } as unknown as ProcessManager;
+    const processes = mockActiveProcesses();
     const servers = {
       get: vi.fn((id: string) => (id === profile.id ? profile : null)),
       list: vi.fn(() => [profile]),
@@ -1037,12 +1285,7 @@ describe("BackupService kinds and retention", () => {
       path: join(installDir, "Backups", "World", "interrupted.zip"),
       notes: null,
     });
-    const processes = {
-      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
-      isActive: vi.fn(() => true),
-      start: vi.fn(),
-      stop: vi.fn(),
-    } as unknown as ProcessManager;
+    const processes = mockActiveProcesses();
     const servers = {
       get: vi.fn((id: string) => (id === profile.id ? profile : null)),
       list: vi.fn(() => [profile]),
@@ -1063,6 +1306,20 @@ describe("BackupService kinds and retention", () => {
     await scheduled.runScheduledCycle();
 
     expect(repo.getBackup(interrupted.id)?.status).toBe("failed");
+    // Reconcile finishes the interrupted attempt now — interval must elapse
+    // before another scheduled create (same as any failed scheduled finish).
+    expect(
+      repo
+        .listBackups(profile.id, 20)
+        .filter((backup) => backup.type === "scheduled" && backup.kind === "world"),
+    ).toHaveLength(1);
+
+    db.prepare(`UPDATE backups SET completed_at = ? WHERE id = ?`).run(
+      new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+      interrupted.id,
+    );
+    await scheduled.runScheduledCycle();
+
     const scheduledWorlds = repo
       .listBackups(profile.id, 20)
       .filter((backup) => backup.type === "scheduled" && backup.kind === "world");
@@ -1082,12 +1339,7 @@ describe("BackupService kinds and retention", () => {
       retainCountIni: 10,
       backupDir: null,
     });
-    const processes = {
-      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
-      isActive: vi.fn(() => true),
-      start: vi.fn(),
-      stop: vi.fn(),
-    } as unknown as ProcessManager;
+    const processes = mockActiveProcesses();
     const servers = {
       get: vi.fn((id: string) => (id === profile.id ? profile : null)),
       list: vi.fn(() => [profile]),
@@ -1135,12 +1387,7 @@ describe("BackupService kinds and retention", () => {
         backupDir: null,
       });
     }
-    const processes = {
-      applyRuntimePorts: vi.fn((p: ServerProfile) => p),
-      isActive: vi.fn(() => true),
-      start: vi.fn(),
-      stop: vi.fn(),
-    } as unknown as ProcessManager;
+    const processes = mockActiveProcesses();
     const addScheduledEvent = vi.fn();
     const servers = {
       get: vi.fn((id: string) => {
@@ -1517,6 +1764,31 @@ describe("BackupService kinds and retention", () => {
     for (const call of addEvent.mock.calls) {
       expect(call[1]).toBe("backup_deleted");
     }
+  });
+
+  it("clears every failed row for one kind beyond the history page limit", async () => {
+    for (let index = 0; index < 205; index += 1) {
+      const record = repo.createBackupStart({
+        serverId: profile.id,
+        type: "scheduled",
+        kind: "world",
+        path: join(installDir, "Backups", `failed-${index}.zip`),
+        notes: null,
+      });
+      repo.failBackup(record.id, "expected test failure");
+    }
+    const ini = repo.createBackupStart({
+      serverId: profile.id,
+      type: "manual",
+      kind: "ini",
+      path: join(installDir, "Backups", "failed-ini.zip"),
+      notes: null,
+    });
+    repo.failBackup(ini.id, "keep other kind");
+
+    await expect(service.deleteFailedBackups(profile.id, "world")).resolves.toBe(205);
+    expect(repo.listFailed(profile.id, "world")).toHaveLength(0);
+    expect(repo.listFailed(profile.id, "ini")).toHaveLength(1);
   });
 
   it("records backup_deleted when retention prunes old backups", async () => {

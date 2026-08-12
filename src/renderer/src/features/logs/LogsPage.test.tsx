@@ -139,6 +139,7 @@ function createApiMock(): RendererApi {
     listBackups: vi.fn(),
     createManualBackup: vi.fn(),
     deleteBackups: vi.fn(),
+    deleteFailedBackups: vi.fn(),
     restoreBackup: vi.fn(),
     getBackupPolicy: vi.fn(),
     setBackupPolicy: vi.fn(),

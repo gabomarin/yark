@@ -48,6 +48,7 @@ function makePreUpdateBackups(serverId: string): BackupRecord[] {
     createdAt: now,
     completedAt: now,
     notes: null,
+    mapToken: kind === "world" ? "TheIsland_WP" : null,
   }));
 }
 

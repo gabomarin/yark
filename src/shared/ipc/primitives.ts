@@ -196,6 +196,12 @@ export const backupPolicyWriteSchema = z
   })
   .strict();
 
+export const restoreBackupOptionsSchema = z
+  .object({
+    restoreProfilesTribes: z.boolean().optional(),
+  })
+  .strict();
+
 export const backupDiskAlertSettingsSchema = z
   .object({
     warnUsedPercent: z.number().int().min(50).max(99),

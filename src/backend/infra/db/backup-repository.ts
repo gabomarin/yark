@@ -25,6 +25,7 @@ interface BackupRow {
   created_at: string;
   completed_at: string | null;
   notes: string | null;
+  map_token: string | null;
 }
 
 export interface RestoreHistoryRecord {
@@ -66,6 +67,12 @@ function normalizeKind(value: string | null | undefined): BackupKind {
   return "world";
 }
 
+function normalizeMapToken(value: string | null | undefined): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 function rowToBackup(row: BackupRow): BackupRecord {
   return {
     id: row.id,
@@ -78,6 +85,7 @@ function rowToBackup(row: BackupRow): BackupRecord {
     createdAt: row.created_at,
     completedAt: row.completed_at,
     notes: row.notes,
+    mapToken: normalizeMapToken(row.map_token),
   };
 }
 
@@ -115,14 +123,16 @@ export class BackupRepository {
     kind: BackupKind;
     path: string;
     notes: string | null;
+    mapToken?: string | null;
   }): BackupRecord {
     const id = randomUUID();
     const createdAt = new Date().toISOString();
+    const mapToken = normalizeMapToken(input.mapToken);
     this.db
       .prepare(
         `INSERT INTO backups (
-          id, server_id, type, kind, path, size_bytes, status, created_at, completed_at, notes
-        ) VALUES (?, ?, ?, ?, ?, 0, 'running', ?, NULL, ?)`,
+          id, server_id, type, kind, path, size_bytes, status, created_at, completed_at, notes, map_token
+        ) VALUES (?, ?, ?, ?, ?, 0, 'running', ?, NULL, ?, ?)`,
       )
       .run(
         id,
@@ -132,6 +142,7 @@ export class BackupRepository {
         input.path,
         createdAt,
         input.notes,
+        mapToken,
       );
 
     return {
@@ -145,6 +156,7 @@ export class BackupRepository {
       createdAt,
       completedAt: null,
       notes: input.notes,
+      mapToken,
     };
   }
 
@@ -192,6 +204,17 @@ export class BackupRepository {
     return rows.map(rowToBackup);
   }
 
+  listFailed(serverId: string, kind: BackupKind): BackupRecord[] {
+    const rows = this.db
+      .prepare(
+        `SELECT * FROM backups
+         WHERE server_id = ? AND kind = ? AND status = 'failed'
+         ORDER BY completed_at DESC, created_at DESC, rowid DESC`,
+      )
+      .all(serverId, kind) as unknown as BackupRow[];
+    return rows.map(rowToBackup);
+  }
+
   latestCompleted(serverId: string, kind?: BackupKind): BackupRecord | null {
     if (kind !== undefined) {
       const row = this.db
@@ -206,6 +229,35 @@ export class BackupRepository {
         "SELECT * FROM backups WHERE server_id = ? AND status = 'completed' ORDER BY completed_at DESC, created_at DESC, rowid DESC LIMIT 1",
       )
       .get(serverId) as unknown as BackupRow | undefined;
+    return row ? rowToBackup(row) : null;
+  }
+
+  /**
+   * Newest finished (completed/failed) backup for schedule gating.
+   * Optional `type` narrows to scheduled vs manual/etc.
+   */
+  latestFinished(
+    serverId: string,
+    kind?: BackupKind,
+    type?: BackupRecord["type"],
+  ): BackupRecord | null {
+    const clauses = ["server_id = ?", "status IN ('completed', 'failed')"];
+    const params: unknown[] = [serverId];
+    if (kind !== undefined) {
+      clauses.push("kind = ?");
+      params.push(kind);
+    }
+    if (type !== undefined) {
+      clauses.push("type = ?");
+      params.push(type);
+    }
+    const row = this.db
+      .prepare(
+        `SELECT * FROM backups WHERE ${clauses.join(" AND ")}
+         ORDER BY COALESCE(completed_at, created_at) DESC, created_at DESC, rowid DESC
+         LIMIT 1`,
+      )
+      .get(...(params as [string, ...string[]])) as unknown as BackupRow | undefined;
     return row ? rowToBackup(row) : null;
   }
 
@@ -335,13 +387,15 @@ export class BackupRepository {
     createdAt: string;
     completedAt: string;
     notes: string | null;
+    mapToken?: string | null;
   }): BackupRecord {
     const id = input.id ?? randomUUID();
+    const mapToken = normalizeMapToken(input.mapToken);
     this.db
       .prepare(
         `INSERT INTO backups (
-          id, server_id, type, kind, path, size_bytes, status, created_at, completed_at, notes
-        ) VALUES (?, ?, ?, ?, ?, ?, 'completed', ?, ?, ?)`,
+          id, server_id, type, kind, path, size_bytes, status, created_at, completed_at, notes, map_token
+        ) VALUES (?, ?, ?, ?, ?, ?, 'completed', ?, ?, ?, ?)`,
       )
       .run(
         id,
@@ -353,6 +407,7 @@ export class BackupRepository {
         input.createdAt,
         input.completedAt,
         input.notes,
+        mapToken,
       );
     const record = this.getBackup(id);
     if (record === null) {

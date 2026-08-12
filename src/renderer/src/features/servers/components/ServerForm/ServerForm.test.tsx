@@ -166,6 +166,7 @@ describe("ServerForm", () => {
             id: "srv-svart",
             name: "Svart",
             map: "Svartalfheim_WP",
+            mapSaveFolder: "Svartalfheim",
           })}
           onCancel={vi.fn()}
           onSaved={vi.fn()}
@@ -175,10 +176,12 @@ describe("ServerForm", () => {
 
     expect(screen.getByRole("combobox", { name: /^map$/i })).toHaveValue("Custom…");
     expect(screen.getByLabelText(/custom map token/i)).toHaveValue("Svartalfheim_WP");
+    expect(screen.getByLabelText(/world save folder/i)).toHaveValue("Svartalfheim");
 
     await user.clear(screen.getByLabelText(/custom map token/i));
     await user.type(screen.getByLabelText(/custom map token/i), "Amissa_WP");
     expect(screen.getByLabelText(/custom map token/i)).toHaveValue("Amissa_WP");
+    expect(screen.getByLabelText(/world save folder/i)).toHaveValue("");
   });
 
   it("lists enabled Map mods in a grouped Map select (#192)", async () => {

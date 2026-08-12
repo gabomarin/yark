@@ -13,6 +13,7 @@ import {
   backupDiskAlertSettingsSchema,
   backupKindSchema,
   backupPolicyWriteSchema,
+  restoreBackupOptionsSchema,
   cloneWithParamsSchema,
   clusterIdSchema,
   clusterIniFileSelectionSchema,
@@ -80,6 +81,7 @@ export const VALIDATED_IPC_CHANNELS = [
   IPC.pickPath,
   IPC.appOpenDataFolder,
   IPC.backupsDelete,
+  IPC.backupsDeleteFailed,
   IPC.backupsRestore,
   IPC.backupsImport,
   IPC.backupsRunCleanup,
@@ -345,10 +347,12 @@ export const ipcArgSchemas = {
       .array(nonEmptyStringSchema("Backup id", MAX_BACKUP_ID_LENGTH))
       .max(MAX_BACKUP_IDS_PER_REQUEST),
   ]),
-  [IPC.backupsRestore]: z.tuple([
+  [IPC.backupsDeleteFailed]: z.tuple([serverIdSchema, backupKindSchema]),
+  [IPC.backupsRestore]: ipcTuple(
     serverIdSchema,
     nonEmptyStringSchema("Backup id", MAX_BACKUP_ID_LENGTH),
-  ]),
+    restoreBackupOptionsSchema.nullish(),
+  ),
   [IPC.backupsGetPolicy]: z.tuple([serverIdSchema]),
   [IPC.backupsSetPolicy]: z.tuple([serverIdSchema, backupPolicyWriteSchema]),
   [IPC.backupsResolveRoot]: z.tuple([serverIdSchema]),
@@ -377,4 +381,3 @@ export const ipcArgSchemas = {
   [IPC.backupsPreviewCleanup]: z.tuple([backupCleanupOptionsSchema]),
   [IPC.backupsRunCleanup]: z.tuple([backupCleanupOptionsSchema]),
 } as const satisfies Record<ValidatedIpcChannel, z.ZodTypeAny>;
-

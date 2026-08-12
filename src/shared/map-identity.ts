@@ -35,6 +35,29 @@ export function normalizeMapToken(map: string): string {
   return map.trim();
 }
 
+const WINDOWS_RESERVED_FOLDER_RE = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
+
+/** True when `value` is one safe Windows folder component (never a path). */
+export function isSafeWindowsFolderName(value: string): boolean {
+  const trimmed = value.trim();
+  return (
+    trimmed.length > 0
+    && trimmed.length <= 128
+    && trimmed !== "."
+    && trimmed !== ".."
+    && !/[\\/<>:"|?*\u0000-\u001f]/.test(trimmed)
+    && !/[. ]$/.test(trimmed)
+    && !WINDOWS_RESERVED_FOLDER_RE.test(trimmed)
+  );
+}
+
+/** Map tokens become SavedArks folder/file names during backup and restore. */
+export function isSafeMapToken(map: string | null | undefined): boolean {
+  if (typeof map !== "string") return false;
+  const trimmed = map.trim();
+  return isSafeWindowsFolderName(trimmed) && !/\s/.test(trimmed);
+}
+
 /** Digits-only CurseForge Project ID (no leading zeros). */
 export function isValidMapModId(id: string | null | undefined): boolean {
   if (id === null || id === undefined) {
@@ -57,6 +80,39 @@ export function resolveMapIdentity(fields: MapIdentityFields): ResolvedMapIdenti
 /** Value to persist for `mapModId` (null for official maps or unset/invalid). */
 export function persistableMapModId(fields: MapIdentityFields): string | null {
   return resolveMapIdentity(fields).mapModId;
+}
+
+/**
+ * Relative SavedArks folder name only (no path separators). Null when empty or
+ * official map — auto-resolve uses `{MapToken}` then strip `_WP`.
+ */
+export function persistableMapSaveFolder(fields: {
+  map: string;
+  mapSaveFolder?: string | null;
+}): string | null {
+  if (isOfficialMap(fields.map)) {
+    return null;
+  }
+  const raw = fields.mapSaveFolder?.trim() ?? "";
+  if (raw.length === 0) {
+    return null;
+  }
+  if (!isSafeWindowsFolderName(raw)) {
+    return null;
+  }
+  return raw;
+}
+
+/** True when `mapSaveFolder` is a safe relative SavedArks folder name (or empty). */
+export function isValidMapSaveFolder(value: string | null | undefined): boolean {
+  if (value === null || value === undefined) {
+    return true;
+  }
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return true;
+  }
+  return isSafeWindowsFolderName(trimmed);
 }
 
 export interface MapIdentityIssue {
@@ -82,6 +138,14 @@ export function validateMapIdentity(fields: MapIdentityFields): MapIdentityIssue
     issues.push({
       field: "map",
       message: "Map token must not contain spaces",
+      severity: "error",
+    });
+  }
+
+  if (map.length > 0 && !isSafeMapToken(map)) {
+    issues.push({
+      field: "map",
+      message: "Map token must be a single safe folder name",
       severity: "error",
     });
   }

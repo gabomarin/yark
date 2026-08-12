@@ -54,6 +54,7 @@ const fleetSummary: BackupFleetSummary = {
         createdAt: "2026-07-24T12:00:00.000Z",
         completedAt: "2026-07-24T12:01:00.000Z",
         notes: null,
+        mapToken: "TheIsland_WP",
       },
       latestWorld: {
         id: "bk-1",
@@ -66,11 +67,13 @@ const fleetSummary: BackupFleetSummary = {
         createdAt: "2026-07-24T12:00:00.000Z",
         completedAt: "2026-07-24T12:01:00.000Z",
         notes: null,
+        mapToken: "TheIsland_WP",
       },
       counts: { world: 1, players: 0, ini: 0, failed24h: 0 },
       usedBytes: 2048,
       stale: false,
       destinationOk: true,
+      schedulePaused: false,
     },
   ],
   stats: {

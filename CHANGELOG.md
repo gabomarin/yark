@@ -21,12 +21,17 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
-- **World backups** skip `.arkrbf`/`.tmp`, keep only the 2 newest dated autosaves per map, and lightly compress `.ark` blobs (deflate level 1) so stop/restart/update snapshots finish faster on large SavedArks.
+- **World backups** are per active map (`SavedArks/{MapToken}/` or mod folders without `_WP`, e.g. `Svartalfheim/`): omit dated autosaves, name ZIPs with the map token, retain last-N per map, overlay restore with optional profiles/tribes, and filter history to the current map by default (#262).
+- Scheduled world backups wait a full `intervalMinutes` after the process becomes active before the first attempt; history table columns are **File**, **Map** (world only), **Date** (was When), then Size/Status/Type/Actions — players tab uses **Player** (name + id) instead of File; column sort (Date newest-first by default) and resizable widths (#262).
+- World schedule gates on the last **finished** scheduled attempt (success or fail), pauses further scheduled creates for the YARK session after 3 consecutive failures (no policy change), supports custom-map **World save folder** override, and lets operators **Clear failed** history rows (#262).
 - Public site and operator docs no longer highlight code signing / Authenticode as near-term roadmap; download trust stays on official sources and SHA-256 checks (#142).
 
 
 ### Fixed
 
+- Harden world-backup map paths and make folder overrides, current-map selection, and all-failed history cleanup behave safely and predictably (#262).
+- Hide the native Electron application menu bar (File/Edit/View/Help); quit remains on the system tray.
+- Packaged Windows builds report publisher/author as **gabomarin26** (was Gabriel).
 - Safe **Update** shows console/progress while creating pre-update backups, Cancel aborts that work (and pre-restore safeguards) instead of hanging on “Waiting for progress…”, and skips rollback restore when SteamCMD never changed game files.
 - **YARK updates** keep a finished or in-progress download when Check now or the quiet startup check runs again, so Restart and install no longer disappears behind Download.
 

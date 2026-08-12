@@ -731,12 +731,27 @@ export function registerIpcHandlers(
     return backups.deleteBackups(serverId, backupIds);
   });
 
-  handleValidated(IPC.backupsRestore, ipcArgSchemas[IPC.backupsRestore], ([serverId, backupId]) => {
-    if (instances.isStopInProgress(serverId)) {
-      throw new Error("Cannot restore while stop backup is in progress");
-    }
-    return backups.restoreBackup(serverId, backupId);
-  });
+  handleValidated(
+    IPC.backupsDeleteFailed,
+    ipcArgSchemas[IPC.backupsDeleteFailed],
+    ([serverId, kind]) => {
+      if (instances.isStopInProgress(serverId)) {
+        throw new Error("Cannot delete backups while stop backup is in progress");
+      }
+      return backups.deleteFailedBackups(serverId, kind);
+    },
+  );
+
+  handleValidated(
+    IPC.backupsRestore,
+    ipcArgSchemas[IPC.backupsRestore],
+    ([serverId, backupId, options]) => {
+      if (instances.isStopInProgress(serverId)) {
+        throw new Error("Cannot restore while stop backup is in progress");
+      }
+      return backups.restoreBackup(serverId, backupId, options ?? undefined);
+    },
+  );
 
   handleValidated(IPC.backupsGetPolicy, ipcArgSchemas[IPC.backupsGetPolicy], ([serverId]) =>
     backups.getPolicy(serverId),

@@ -69,6 +69,7 @@ export function toLaunchProfileInput(
     name: server.name,
     map: server.map,
     mapModId: server.mapModId ?? null,
+    mapSaveFolder: server.mapSaveFolder ?? null,
     installDir: server.installDir,
     sessionName: server.sessionName,
     gamePort: server.gamePort,

@@ -130,6 +130,7 @@ describe("ServerLogsPanel", () => {
             createdAt: "2026-07-23T11:00:00.000Z",
             completedAt: "2026-07-23T11:01:00.000Z",
             notes: null,
+            mapToken: "TheIsland_WP",
           },
           {
             id: "bak-fail",
@@ -142,6 +143,7 @@ describe("ServerLogsPanel", () => {
             createdAt: "2026-07-23T10:00:00.000Z",
             completedAt: "2026-07-23T10:01:00.000Z",
             notes: "Disk full",
+            mapToken: "TheIsland_WP",
           },
         ],
         events: [],
@@ -200,6 +202,7 @@ describe("ServerLogsPanel", () => {
           createdAt: "2026-07-23T10:00:00.000Z",
           completedAt: "2026-07-23T10:01:00.000Z",
           notes: "Disk full",
+          mapToken: "TheIsland_WP",
         },
       ],
       events: [

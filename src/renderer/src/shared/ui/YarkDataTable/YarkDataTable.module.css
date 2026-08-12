@@ -1,5 +1,6 @@
 .root {
   min-height: 0;
+  width: 100%;
 }
 
 .root :global(.mantine-datatable) {

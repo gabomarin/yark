@@ -10,9 +10,11 @@ Protect three content scopes independently:
 
 | Kind | Live source | Paths inside the archive |
 | --- | --- | --- |
-| `world` | `{installDir}/ShooterGame/Saved/SavedArks` | `SavedArks/` (full folder, including profiles) |
+| `world` | `{installDir}/ShooterGame/Saved/SavedArks/{MapToken}/` (or mod folder without `_WP`, e.g. `Svartalfheim/` for launch token `Svartalfheim_WP`) | `SavedArks/{MapToken}/` (primary `.ark`, anti-corruption bak, profiles/tribes; no dated autosaves) |
 | `players` | `.arkprofile` / `.arkprofile.bak` / `.profilebak` under `SavedArks` and `SaveGames` | `PlayerProfiles/` |
 | `ini` | `Game.ini` + `GameUserSettings.ini` in `Config/WindowsServer` | `ConfigWindowsServer/` |
+
+**Breaking (1.1):** world archives are **per-map**, not a full `SavedArks` tree. Older full-folder world ZIPs are not restored by the current path.
 
 Triggers are separated on purpose:
 
@@ -50,7 +52,7 @@ Bootstrap wires the scheduler and watcher in `src/main/index.ts`.
 | --- | ---: | --- |
 | `enabled` | `false` | Schedule creates **world** backups only |
 | `intervalMinutes` | `60` | Minimum **5** |
-| `retainCountWorld` | `20` | 1–500 |
+| `retainCountWorld` | `20` | 1–500; **per map token** |
 | `retainCountPlayers` | `20` | 1–500; **per-player** pools (full snapshots share `__all__`) |
 | `retainCountIni` | `10` | 1–500 |
 | `backupDir` | `null` | `null` → `{installDir}\Backups` |
@@ -75,7 +77,7 @@ Example policy write (IPC / UI draft — omit `serverId` / `updatedAt`):
 ```text
 {backupRoot}/
   World/
-    {server}-{kind}-{type}-{YYYYMMDD-HHmmss}.zip
+    {server}-{kind}-{type}-{MapToken}-{YYYYMMDD-HHmmss}.zip
   Player profiles/
     {server}-{kind}-{type}-{player?}-{YYYYMMDD-HHmmss}.zip
   INI/
@@ -83,10 +85,10 @@ Example policy write (IPC / UI draft — omit `serverId` / `updatedAt`):
 ```
 
 New archives put a compact local date stamp (`YYYYMMDD-HHmmss`) at the **end** of
-the filename (before `.zip`), after the server slug and kind/type. Portable
-exports use the same stamp style.
+the filename (before `.zip`), after the server slug, kind/type, and (for world)
+the map token. Portable exports use the same stamp style.
 Each ZIP is built from a staging directory that includes `manifest.json` plus
-the kind payload (`SavedArks/`, `PlayerProfiles/`, or `ConfigWindowsServer/`).
+the kind payload (`SavedArks/{MapToken}/`, `PlayerProfiles/`, or `ConfigWindowsServer/`).
 Legacy flat layout (archives directly under `{backupRoot}`) and loose folders
 are still scanned on reconcile.
 
@@ -112,7 +114,7 @@ Channels in `src/shared/ipc.ts` (preload wrappers return `IpcResult<T>`):
 | `backups:list` | `serverId`, `limit?` (service clamps 1–200) | `BackupRecord[]` |
 | `backups:create` | `serverId`, `kinds?: BackupKind[]` | `BackupRecord[]` |
 | `backups:delete` | `serverId`, `backupIds` | `number` deleted |
-| `backups:restore` | `serverId`, `backupId` | `void` |
+| `backups:restore` | `serverId`, `backupId`, `options?` (`restoreProfilesTribes?`, default true) | `void` |
 | `backups:get-policy` / `backups:set-policy` | policy fields | `BackupPolicy` |
 | `backups:resolve-root` | `serverId` | `string` |
 | `backups:open-folder` / `backups:open-root` | ids | `void` |
@@ -209,12 +211,12 @@ User restart (`servers:restart` via `InstanceService.restart`):
 2. A same-kind `pre_restore` safeguard backup is created first.
 3. ZIP archives extract to a temp staging dir; legacy folders are used in place.
 4. Apply:
-   - **world** — replace live `SavedArks` (profiles included; INI untouched).
+   - **world** — overlay into live `SavedArks/{MapToken}/` only (sibling map folders untouched). Optional `restoreProfilesTribes` (default **true**) controls whether `.arkprofile` / `.arktribe` companions are copied; map `.ark` + anti-corruption bak always apply. INI untouched.
    - **players** — overlay from `PlayerProfiles/` (legacy: profiles inside `SavedArks`); does not wipe unrelated live profiles.
    - **ini** — copy present `Game.ini` / `GameUserSettings.ini` into live config.
 5. Restore history is written to SQLite; there is **no** list IPC/UI for it yet.
 
-UI restore is direct. Update rollback uses the queued `restoreBackupForJob` path.
+UI restore uses a confirm modal (world: profiles/tribes checkbox). Update rollback uses the queued `restoreBackupForJob` path (profiles/tribes on).
 
 ### World schedule and retention
 
@@ -228,15 +230,39 @@ UI restore is direct. Update rollback uses the queued `restoreBackupForJob` path
   interrupted work from a previous app process so a crash cannot block future backups;
   this recovery is serialized with UI and cleanup reconciliation.
 - Every cycle applies retention for each server.
-- Creates only when `enabled`, interval elapsed since latest **completed world** backup (or none yet), and process is active.
-- Creates **world only**.
-- World packaging copies `SavedArks` file-by-file: skips `.arkrbf` / `.tmp` up front,
-  keeps every primary map `.ark`, and retains only the **2 newest dated autosaves**
-  per map (e.g. `Map_WP_DD.MM.YYYY_….ark`). Missing essential primary `.ark` / tribe /
-  profile data still fails the backup. World/players ZIPs use **light deflate
-  (level 1)** for `.ark` / profile blobs (faster than default level 6); `manifest.json`
-  and other small files still use default deflate.
-- Retention keeps the last N **completed** backups per kind; players are split by `playersRetentionKey`. Failed rows are not pruned by retain counts. Cannot delete `running` backups.
+- Creates only when `enabled`, interval elapsed since the latest **finished
+  scheduled world** attempt (completed **or** failed — so failures do not retry
+  every ~60s tick), process is active, and at least `intervalMinutes` have
+  passed since the process **became active** (fresh starts do not backup on the
+  first scheduler tick).
+- After **3 consecutive** scheduled world failures in this YARK process, further
+  scheduled creates for that server are **paused for the session only**
+  (`policy.enabled` is unchanged). Pause clears on app restart; fleet alert
+  `schedule_paused` and the server Backups tab banner surface the state.
+- Creates **world only** for the profile’s active `server.map`.
+- World packaging resolves the live SavedArks folder by name:
+  optional profile `mapSaveFolder` override → `{MapToken}` → strip trailing `_WP`
+  (no sibling `.ark` hunt). A configured override is authoritative: YARK fails
+  instead of falling back to an automatic folder. Custom/mod maps can set
+  **World save folder** on the server form when the disk folder differs from the
+  launch token.
+- World packaging copies that folder file-by-file: includes primary
+  `{MapToken}.ark`, anti-corruption bak, and profile/tribe companions; **omits**
+  dated autosaves and `.arkrbf` / `.tmp`. Missing primary `.ark` fails the backup.
+  World/players ZIPs use **moderate deflate (level 4)** for ASA save blobs;
+  `manifest.json` and other small files still use default deflate.
+- Retention keeps the last N **completed** world backups **per map token** (and
+  players by `playersRetentionKey`). Failed rows are not pruned by retain counts.
+  Cannot delete `running` backups. Operators can **Clear failed** on the server
+  Backups history tab to remove every failed row for that server and kind
+  (catalog cleanup when the ZIP is already gone).
+- History UI: **Current map only** checkbox (default on) filters world rows to
+  `server.map`. World/INI columns: **File**, **Map** (world only), **Date**, Size,
+  Status, Type, Actions. Players tab: **Player** (name + player id metadata),
+  **Date** (time only), Size, Status, Type, Actions. Columns are sortable
+  (default Date newest-first) and resizable; content columns use `width: 0%`
+  (hug content) and **Actions** uses `width: 100%` so leftover space stays on
+  the right without inflating File/Status/Type.
 
 ### Backup health and alerts (all servers)
 
@@ -327,7 +353,7 @@ After a successful `ini:save`, `createIniSaveBackup` debounces **2s** per server
 
 ## Common pitfalls
 
-- World restore **replaces all SavedArks**, including profiles.
+- World restore **overlays one map folder**; uncheck profiles/tribes to keep live characters.
 - Player-session backups **cannot be disabled** via policy today.
 - `SaveWorld` is best-effort — backups proceed even when RCON fails.
 - Manual UI creates one kind; API without `kinds` creates all three.

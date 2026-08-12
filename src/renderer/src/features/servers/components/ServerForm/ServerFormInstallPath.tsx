@@ -19,6 +19,8 @@ interface Props {
 
 /** Create-time base folder picker vs edit-time read-only path + Move. */
 export function ServerFormInstallPath(props: Props): ReactElement {
+  const pathCompact = props.inputSize === "xs";
+
   if (props.isCreate) {
     return (
       <>
@@ -42,7 +44,7 @@ export function ServerFormInstallPath(props: Props): ReactElement {
                 : null
             }
             emptyLabel="pick a base folder and name"
-            compact
+            compact={pathCompact}
           />
         </Stack>
       </>
@@ -54,7 +56,7 @@ export function ServerFormInstallPath(props: Props): ReactElement {
       <Text size="sm" fw={500}>
         Install directory
       </Text>
-      <ReadonlyPath value={props.installDir} compact />
+      <ReadonlyPath value={props.installDir} compact={pathCompact} />
       <Group>
         <Button
           size={props.inputSize}

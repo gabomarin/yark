@@ -19,6 +19,12 @@ export interface ServerProfile {
    * `KNOWN_MAPS` token (#190). Cleared for official maps. Null/undefined when unset.
    */
   mapModId?: string | null;
+  /**
+   * Relative SavedArks folder name for world backups when auto-resolve is wrong
+   * (custom/mod maps). Empty/null = try `{MapToken}` then strip `_WP` (#262).
+   * Cleared for official maps.
+   */
+  mapSaveFolder?: string | null;
   /** Server install root (contains ShooterGame\...). */
   installDir: string;
   enabled: boolean;
@@ -560,6 +566,20 @@ export interface BackupRecord {
   createdAt: string;
   completedAt: string | null;
   notes: string | null;
+  /**
+   * Active map token for world backups (e.g. `TheIsland_WP`).
+   * `null` for players/ini and pre-per-map world rows.
+   */
+  mapToken: string | null;
+}
+
+/** Options for restoring a completed backup archive. */
+export interface RestoreBackupOptions {
+  /**
+   * World restore only: when true (default), overlay `.arkprofile` / `.arktribe`
+   * companions from the archive. When false, apply map `.ark` (+ anti-corruption bak) only.
+   */
+  restoreProfilesTribes?: boolean;
 }
 
 export interface BackupPolicy {
@@ -568,7 +588,7 @@ export interface BackupPolicy {
   enabled: boolean;
   /** Minutes between scheduled world backups. Minimum 5; default 60. */
   intervalMinutes: number;
-  /** Keep the last N completed world backups. Default 20. */
+  /** Keep the last N completed world backups per map token. Default 20. */
   retainCountWorld: number;
   /**
    * Keep the last N completed player-profile backups per player
@@ -587,6 +607,15 @@ export interface BackupPolicy {
   updatedAt: string;
 }
 
+/** Policy plus session-only schedule pause flag for the UI (#262). */
+export interface BackupPolicyStatus extends BackupPolicy {
+  /**
+   * True when scheduled world creates are paused for this YARK session after
+   * repeated failures. Does not change `enabled`. Cleared on app restart.
+   */
+  schedulePaused: boolean;
+}
+
 export type BackupHealthStatus = "ok" | "warning" | "critical" | "unknown";
 
 export type BackupFleetAlertKind =
@@ -595,7 +624,8 @@ export type BackupFleetAlertKind =
   | "missing_destination"
   | "disk_warning"
   | "disk_critical"
-  | "never_backed_up";
+  | "never_backed_up"
+  | "schedule_paused";
 
 export interface BackupDiskAlertSettings {
   /** Warn when volume used percent is at or above this value. Default 85. */
@@ -635,6 +665,8 @@ export interface BackupServerHealth {
   usedBytes: number;
   stale: boolean;
   destinationOk: boolean;
+  /** True when scheduled world creates are paused for this YARK session (#262). */
+  schedulePaused: boolean;
 }
 
 export interface BackupFleetAlert {
