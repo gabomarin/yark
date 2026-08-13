@@ -1,7 +1,6 @@
 import { Alert, Drawer } from "@mantine/core";
 import { HardDrives } from "@phosphor-icons/react";
 import { useMediaQuery } from "@mantine/hooks";
-import { modals } from "@mantine/modals";
 import type {
   AppEvent,
   ServerInstallationInfo,
@@ -11,7 +10,7 @@ import type {
 } from "@shared/types";
 import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import type { ReactElement } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ConfigurationWizard } from "./components/ConfigurationWizard/ConfigurationWizard";
 import { ServerListPanel } from "./components/ServerListPanel/ServerListPanel";
 import { ServerOnboardingChecklist } from "./components/ServerOnboardingChecklist/ServerOnboardingChecklist";
@@ -23,6 +22,7 @@ import { StopProgressAlert, stopProgressForServer } from "./components/StopProgr
 import type { RconHistoryEntry, WorkspaceTab } from "./serverWorkspaceTypes";
 import type { PlayerListState } from "./components/RconPanel/PlayerListSection";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { useWorkspaceLeaveGuard } from "./useWorkspaceLeaveGuard";
 import classes from "./ServerWorkspacePage.module.css";
 
 export type { RconHistoryEntry, WorkspaceTab } from "./serverWorkspaceTypes";
@@ -82,12 +82,22 @@ export function ServerWorkspacePage(props: Props): ReactElement {
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(props.onboarding === true);
   const [iniEditorVersion, setIniEditorVersion] = useState(0);
-  const [iniDirty, setIniDirty] = useState(false);
   const [serverSwitcherOpen, setServerSwitcherOpen] = useState(false);
   const [serverActionsOpen, setServerActionsOpen] = useState(false);
   const compactWorkspace = useMediaQuery("(max-width: 1599px)", false);
-  const dirtyRef = useRef(false);
-  const assistantDirtyRef = useRef(false);
+  const {
+    iniDirty,
+    setIniDirty,
+    assistantDirtyRef,
+    onProfileDirtyChange,
+    registerProfileLeaveGuard,
+    registerProfileSave,
+    registerIniSave,
+    confirmLeaveIfDirty,
+  } = useWorkspaceLeaveGuard(props.onRegisterLeaveGuard, () => {
+    setAssistantOpen(false);
+    setServerSwitcherOpen(false);
+  });
 
   useEffect(() => {
     if (props.onboarding === true) {
@@ -108,39 +118,6 @@ export function ServerWorkspacePage(props: Props): ReactElement {
       null
     );
   }, [props.selectedServerId, props.servers]);
-
-  const confirmLeaveIfDirty = useCallback((action: () => void) => {
-    const run = () => {
-      setAssistantOpen(false);
-      setServerSwitcherOpen(false);
-      action();
-    };
-    if (!dirtyRef.current && !assistantDirtyRef.current) {
-      run();
-      return;
-    }
-    modals.openConfirmModal({
-      title: "Unsaved changes",
-      children: (
-        <Alert color="yellow" title="INI modified" variant="light">
-          There are unsaved INI configuration changes. If you continue, they will be discarded.
-        </Alert>
-      ),
-      labels: { confirm: "Discard and continue", cancel: "Keep editing" },
-      confirmProps: { color: "yellow" },
-      onConfirm: () => {
-        dirtyRef.current = false;
-        assistantDirtyRef.current = false;
-        setIniDirty(false);
-        run();
-      },
-    });
-  }, []);
-
-  useEffect(() => {
-    props.onRegisterLeaveGuard?.(confirmLeaveIfDirty);
-    return () => props.onRegisterLeaveGuard?.(null);
-  }, [confirmLeaveIfDirty, props.onRegisterLeaveGuard]);
 
   const handleSelectServer = (serverId: string) => {
     if (serverId === props.selectedServerId) return;
@@ -184,7 +161,11 @@ export function ServerWorkspacePage(props: Props): ReactElement {
       iconMode={options.iconMode === true}
       onToggleRail={options.onToggleRail}
       onSelectServer={handleSelectServer}
-      onAddServer={props.onCreateServer}
+      onAddServer={
+        props.onCreateServer === undefined
+          ? undefined
+          : () => confirmLeaveIfDirty(() => props.onCreateServer?.())
+      }
       onImportServer={props.onImportServer}
     />
   );
@@ -275,18 +256,24 @@ export function ServerWorkspacePage(props: Props): ReactElement {
           iniDirty={iniDirty}
           iniEditorVersion={iniEditorVersion}
           logsFocus={props.logsFocus}
-          onChange={setWorkspaceTab}
+          onChange={(tab) => {
+            if (tab === workspaceTab) return;
+            confirmLeaveIfDirty(() => setWorkspaceTab(tab), "tab");
+          }}
           onBack={handleBack}
           onOpenAssistant={() => {
             if (!iniDirty) {
-              assistantDirtyRef.current = false;
-              setAssistantOpen(true);
+                confirmLeaveIfDirty(() => {
+                assistantDirtyRef.current = false;
+                setAssistantOpen(true);
+              }, "tab");
             }
           }}
-          onIniDirtyChange={(dirty) => {
-            dirtyRef.current = dirty;
-            setIniDirty(dirty);
-          }}
+          onIniDirtyChange={setIniDirty}
+          onRegisterProfileLeaveGuard={registerProfileLeaveGuard}
+          onProfileDirtyChange={onProfileDirtyChange}
+          onRegisterProfileSave={registerProfileSave}
+          onRegisterIniSave={registerIniSave}
           onLogsFocusConsumed={props.onLogsFocusConsumed}
           onSendRcon={props.onSendRcon}
           onClearRconHistory={props.onClearRconHistory}

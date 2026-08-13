@@ -1,4 +1,5 @@
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -58,6 +59,12 @@ function renderWorkspace(
   onSelectServer = vi.fn(),
   onSendRcon = vi.fn(async () => true),
   rconHistory: RconHistoryEntry[] = [],
+  extra: {
+    onBack?: () => void;
+    onCreateServer?: () => void;
+    onRegisterLeaveGuard?: (guard: ((action: () => void) => void) | null) => void;
+    onServerUpdated?: () => void;
+  } = {},
 ): void {
   render(
     <AppProviders>
@@ -70,7 +77,9 @@ function renderWorkspace(
         rconHistory={rconHistory}
         playerList={EMPTY_PLAYER_LIST}
         onSelectServer={onSelectServer}
-        onBack={vi.fn()}
+        onBack={extra.onBack ?? vi.fn()}
+        onCreateServer={extra.onCreateServer}
+        onRegisterLeaveGuard={extra.onRegisterLeaveGuard}
         onStartServer={vi.fn()}
         onStopServer={vi.fn()}
         onRestartServer={vi.fn()}
@@ -82,7 +91,7 @@ function renderWorkspace(
         onSendRcon={onSendRcon}
         {...playerListHandlers}
         onCopyConfiguration={vi.fn()}
-        onServerUpdated={vi.fn()}
+        onServerUpdated={extra.onServerUpdated ?? vi.fn()}
       />
     </AppProviders>,
   );
@@ -809,7 +818,7 @@ describe("ServerWorkspacePage", () => {
     expect(window.api.saveServerIni).not.toHaveBeenCalled();
   });
 
-  it("blocks the assistant while the manual INI editor has pending changes", async () => {
+  it("confirms before leaving INI Files with unsaved changes (#299)", async () => {
     const user = userEvent.setup();
     renderWorkspace();
 
@@ -818,9 +827,28 @@ describe("ServerWorkspacePage", () => {
     fireEvent.change(maxPlayers, { target: { value: "80" } });
     await user.click(screen.getByRole("tab", { name: "Server" }));
 
+    expect(screen.getByText(/^ini modified$/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /save and continue/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "INI Files" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+
+    await user.click(screen.getByRole("button", { name: /keep editing/i }));
+    expect(screen.getByRole("tab", { name: "INI Files" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+
+    await user.click(screen.getByRole("tab", { name: "Server" }));
+    await user.click(screen.getByRole("button", { name: /discard and continue/i }));
+    expect(screen.getByRole("tab", { name: "Server" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
     expect(
       screen.getByRole("button", { name: "Configuration wizard" }),
-    ).toBeDisabled();
+    ).toBeEnabled();
   });
 
   it("does not load INI until the INI Files tab is opened", async () => {
@@ -834,6 +862,7 @@ describe("ServerWorkspacePage", () => {
     await waitFor(() => {
       expect(window.api.readServerIni).toHaveBeenCalledTimes(1);
     });
+    expect(await screen.findByText("MaxPlayers")).toBeVisible();
   });
 
   it("reviews and explicitly applies the assistant draft", async () => {
@@ -1041,5 +1070,192 @@ describe("ServerWorkspacePage", () => {
     const toggle = screen.getByRole("button", { name: "Disable server" });
     expect(toggle).toBeDisabled();
     expect(toggle).toHaveAttribute("title", "Updating server files");
+  });
+
+  it("confirms before shell leave discards a dirty Server-tab profile (#299)", async () => {
+    const user = userEvent.setup();
+    const onLeave = vi.fn();
+    let leaveGuard: ((action: () => void) => void) | null = null;
+
+    renderWorkspace(vi.fn(), vi.fn(async () => true), [], {
+      onRegisterLeaveGuard: (guard) => {
+        leaveGuard = guard;
+      },
+    });
+
+    await user.type(await screen.findByRole("textbox", { name: /^name$/i }), " X");
+    expect(leaveGuard).not.toBeNull();
+
+    act(() => leaveGuard?.(onLeave));
+
+    expect(onLeave).not.toHaveBeenCalled();
+    expect(screen.getByText(/unsaved server changes/i)).toBeInTheDocument();
+    expect(screen.getByText(/unsaved server profile changes/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /save and continue/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /keep editing/i }));
+    expect(onLeave).not.toHaveBeenCalled();
+    expect(screen.getByRole("tab", { name: "Server" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+
+    act(() => leaveGuard?.(onLeave));
+    await user.click(screen.getByRole("button", { name: /discard and continue/i }));
+    expect(onLeave).toHaveBeenCalledOnce();
+  });
+
+  it("does not confirm shell leave when the Server tab is pristine (#299)", async () => {
+    const onLeave = vi.fn();
+    let leaveGuard: ((action: () => void) => void) | null = null;
+
+    renderWorkspace(vi.fn(), vi.fn(async () => true), [], {
+      onRegisterLeaveGuard: (guard) => {
+        leaveGuard = guard;
+      },
+    });
+
+    await screen.findByRole("heading", { name: "Server information" });
+    act(() => leaveGuard?.(onLeave));
+
+    expect(onLeave).toHaveBeenCalledOnce();
+    expect(screen.queryByText(/unsaved server changes/i)).not.toBeInTheDocument();
+  });
+
+  it("confirms before switching server or opening Create with a dirty profile (#299)", async () => {
+    const user = userEvent.setup();
+    const onSelectServer = vi.fn();
+    const onCreateServer = vi.fn();
+
+    renderWorkspace(onSelectServer, vi.fn(async () => true), [], { onCreateServer });
+
+    await user.type(await screen.findByRole("textbox", { name: /^name$/i }), " X");
+    await user.click(screen.getByTitle("Scorched Earth"));
+
+    expect(onSelectServer).not.toHaveBeenCalled();
+    expect(screen.getByText(/unsaved server profile changes/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /keep editing/i }));
+    await user.click(screen.getByRole("button", { name: "Add server" }));
+    expect(onCreateServer).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: /discard and continue/i }));
+    expect(onCreateServer).toHaveBeenCalledOnce();
+  });
+
+  it("confirms before leaving the Server tab with a dirty profile (#299)", async () => {
+    const user = userEvent.setup();
+    renderWorkspace();
+
+    await user.type(await screen.findByRole("textbox", { name: /^name$/i }), " X");
+    await user.click(screen.getByRole("tab", { name: "INI Files" }));
+
+    expect(screen.getByText(/unsaved server profile changes/i)).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Server" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+
+    await user.click(screen.getByRole("button", { name: /keep editing/i }));
+    expect(screen.getByRole("tab", { name: "Server" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+
+    await user.click(screen.getByRole("tab", { name: "INI Files" }));
+    await user.click(screen.getByRole("button", { name: /discard and continue/i }));
+    expect(screen.getByRole("tab", { name: "INI Files" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  it("does not confirm leave after saving Server-tab profile changes (#299)", async () => {
+    const user = userEvent.setup();
+    const onLeave = vi.fn();
+    const onServerUpdated = vi.fn();
+    let leaveGuard: ((action: () => void) => void) | null = null;
+
+    renderWorkspace(vi.fn(), vi.fn(async () => true), [], {
+      onRegisterLeaveGuard: (guard) => {
+        leaveGuard = guard;
+      },
+      onServerUpdated,
+    });
+
+    await user.type(await screen.findByRole("textbox", { name: /^name$/i }), " X");
+    await user.click(screen.getByRole("button", { name: /^save changes$/i }));
+    await waitFor(() => {
+      expect(onServerUpdated).toHaveBeenCalled();
+    });
+
+    act(() => leaveGuard?.(onLeave));
+    expect(onLeave).toHaveBeenCalledOnce();
+    expect(screen.queryByText(/unsaved server changes/i)).not.toBeInTheDocument();
+  });
+
+  it("still confirms INI-only dirty shell leave (#299)", async () => {
+    const user = userEvent.setup();
+    const onLeave = vi.fn();
+    let leaveGuard: ((action: () => void) => void) | null = null;
+
+    renderWorkspace(vi.fn(), vi.fn(async () => true), [], {
+      onRegisterLeaveGuard: (guard) => {
+        leaveGuard = guard;
+      },
+    });
+
+    await user.click(screen.getByRole("tab", { name: "INI Files" }));
+    const maxPlayers = await screen.findByDisplayValue("70");
+    fireEvent.change(maxPlayers, { target: { value: "80" } });
+
+    act(() => leaveGuard?.(onLeave));
+    expect(onLeave).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog", { name: /unsaved changes/i })).toBeInTheDocument();
+    expect(screen.getByText(/^ini modified$/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /save and continue/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /discard and continue/i }));
+    expect(onLeave).toHaveBeenCalledOnce();
+  });
+
+  it("shows Cancel on the Server tab only when the profile is dirty (#299)", async () => {
+    const user = userEvent.setup();
+    renderWorkspace();
+
+    await screen.findByRole("heading", { name: "Server information" });
+    expect(screen.queryByRole("button", { name: /^cancel$/i })).not.toBeInTheDocument();
+
+    const name = screen.getByRole("textbox", { name: /^name$/i });
+    await user.type(name, " X");
+    expect(screen.getByRole("button", { name: /^cancel$/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /^cancel$/i }));
+    expect(name).toHaveValue("The Island");
+    expect(screen.queryByRole("button", { name: /^cancel$/i })).not.toBeInTheDocument();
+  });
+
+  it("saves the profile from the leave confirm then continues (#299)", async () => {
+    const user = userEvent.setup();
+    const onLeave = vi.fn();
+    const onServerUpdated = vi.fn();
+    let leaveGuard: ((action: () => void) => void) | null = null;
+
+    renderWorkspace(vi.fn(), vi.fn(async () => true), [], {
+      onRegisterLeaveGuard: (guard) => {
+        leaveGuard = guard;
+      },
+      onServerUpdated,
+    });
+
+    await user.type(await screen.findByRole("textbox", { name: /^name$/i }), " X");
+    act(() => leaveGuard?.(onLeave));
+    await user.click(screen.getByRole("button", { name: /save and continue/i }));
+
+    await waitFor(() => {
+      expect(onServerUpdated).toHaveBeenCalled();
+    });
+    expect(onLeave).toHaveBeenCalledOnce();
+    expect(window.api.updateServer).toHaveBeenCalled();
   });
 });

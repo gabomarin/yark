@@ -136,6 +136,14 @@ export function createAppCssVariablesResolver(
       "--mantine-color-attention-light-hover":
         "color-mix(in srgb, var(--app-color-attention) 32%, transparent)",
       "--mantine-color-attention-light-color": "var(--app-color-attention)",
+      "--mantine-color-fossil-filled": "var(--app-color-fossil)",
+      "--mantine-color-fossil-filled-hover":
+        "color-mix(in srgb, var(--app-color-fossil) 82%, white)",
+      "--mantine-color-fossil-light":
+        "color-mix(in srgb, var(--app-color-fossil) 22%, transparent)",
+      "--mantine-color-fossil-light-hover":
+        "color-mix(in srgb, var(--app-color-fossil) 32%, transparent)",
+      "--mantine-color-fossil-light-color": "var(--app-color-fossil)",
     },
   });
 }
@@ -231,6 +239,19 @@ export function createAppTheme(
         "#aeb234",
         "#8a8e28",
         "#676b1e",
+      ],
+      /** Matches `--app-color-fossil` / warn amber (unsaved-leave alerts). */
+      fossil: [
+        "#fbf4e8",
+        "#f5e6c8",
+        "#edcfa0",
+        "#e5b878",
+        "#dfac68",
+        tokens.colors.fossil,
+        "#c49452",
+        "#a67a42",
+        "#866032",
+        "#624724",
       ],
       /** Matches `--app-color-ok` (current / healthy). */
       ok: [

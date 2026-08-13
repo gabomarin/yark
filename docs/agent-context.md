@@ -83,7 +83,10 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
   [mods.md](mods.md). CurseForge proxy abuse controls:
   [curseforge-proxy.md](curseforge-proxy.md) (#70). A six-step configuration
   assistant launches on demand from `Server`; it uses an isolated draft and
-  writes only after explicit review.
+  writes only after explicit review. Workspace leave-guard (#292 / #299) confirms
+  before sidebar / Spotlight / Back / server switch / Create / leaving Server or
+  INI Files with unsaved drafts (fossil alert; Save and continue / Discard / Keep
+  editing). Server tab shows Cancel when the profile is dirty.
 - Settings is live in the shell (SteamCMD path, desktop shell, density, and related preferences — no light/dark theme control). Full map: [settings.md](settings.md). Clusters surfaces existing `clusterId` / `clusterDir` compliance reports (live transfer validation still deferred); see [clusters.md](clusters.md). Workspace **RCON** tab: [rcon.md](rcon.md).
 - Sidebar Backups settings page and per-server workspace Backups tab are live.
 - Backups are kind-scoped ZIP archives: `world` (per-map folder under `SavedArks/{MapToken}/`, including profiles/tribes in that folder), `players` (profiles from SavedArks/SaveGames), `ini` (`Game.ini` + `GameUserSettings.ini`).
