@@ -249,24 +249,60 @@
   height: 72px;
 }
 
-.appVersion {
-  display: block;
+.appVersionRow {
   width: 100%;
+}
+
+.appVersionLabel,
+.appVersionLabelUpdate,
+.appVersionLabelRail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  max-width: 100%;
+  padding: 2px 6px;
+  border-radius: var(--app-radius-control);
   text-align: center;
 }
 
-.appVersionUpdate {
+.appVersionLabelRail {
+  font-size: 10px;
+  line-height: 1.2;
+  word-break: break-all;
+}
+
+.appVersionLabel:hover,
+.appVersionLabelUpdate:hover,
+.appVersionLabelRail:hover {
+  background: color-mix(in srgb, var(--mantine-color-dark-4) 35%, transparent);
+}
+
+.appVersionLabel:focus-visible,
+.appVersionLabelUpdate:focus-visible,
+.appVersionLabelRail:focus-visible {
+  outline: 2px solid var(--app-color-cryo);
+  outline-offset: 2px;
+}
+
+.appVersionUpdateIconBtn {
   display: inline-flex;
+  align-items: center;
   justify-content: center;
-  width: 100%;
-  max-width: 100%;
-  padding: 2px 0;
-  border-radius: var(--app-radius-control);
+  flex-shrink: 0;
+  padding: 2px;
+  border-radius: var(--app-radius-sm);
   color: var(--app-color-cryo);
 }
 
-.appVersionUpdateInner {
-  width: 100%;
+.appVersionUpdateIconBtn:hover {
+  color: color-mix(in srgb, var(--app-color-cryo) 70%, white);
+  background: color-mix(in srgb, var(--app-color-cryo) 12%, transparent);
+}
+
+.appVersionUpdateIconBtn:focus-visible {
+  outline: 2px solid var(--app-color-cryo);
+  outline-offset: 2px;
 }
 
 .appVersionUpdateIcon {
@@ -275,24 +311,8 @@
   animation: yark-update-nudge 1.6s ease-in-out infinite;
 }
 
-.appVersionRail {
-  text-align: center;
-  font-size: 10px;
-  line-height: 1.2;
-  word-break: break-all;
-}
-
-.appVersionUpdate:hover {
-  color: color-mix(in srgb, var(--app-color-cryo) 70%, white);
-}
-
-.appVersionUpdate:focus-visible {
-  outline: 2px solid var(--app-color-cryo);
-  outline-offset: 2px;
-}
-
 .appVersionUpdateText {
-  color: inherit;
+  color: var(--app-color-cryo);
   font-weight: 700;
 }
 

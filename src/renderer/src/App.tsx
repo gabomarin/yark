@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { APP_VERSION } from "@shared/app-version";
+import { shouldShowWhatsNewForVersion } from "@shared/changelog";
 import type { AppUpdateStatus } from "@shared/app-update";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "@mantine/core";
@@ -66,6 +67,7 @@ import { CopyConfigurationWizard } from "@features/servers/components/CopyConfig
 import { openHostPortProbeModal } from "@features/servers/hostPortProbeModal";
 import { SteamCmdProgressDock } from "@features/steamcmd/SteamCmdProgressDock";
 import { SettingsPage } from "@features/settings/SettingsPage";
+import { AppChangelogModal } from "@features/settings/components/AppChangelogModal";
 import {
   readDefaultBaseFolderPref,
   readOpenNativeTerminalPref,
@@ -157,6 +159,12 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [appUpdateStatus, setAppUpdateStatus] = useState<AppUpdateStatus | null>(null);
   const [focusYarkUpdates, setFocusYarkUpdates] = useState(false);
+  const [changelogOpen, setChangelogOpen] = useState(false);
+  const [changelogInitialTab, setChangelogInitialTab] = useState<"current" | "recent">(
+    "current",
+  );
+  /** Blocks a late getLastSeen result from reopening after manual open/dismiss. */
+  const changelogPromptSettledRef = useRef(false);
 
   useEffect(() => {
     writeOpenNativeTerminalPref(openNativeTerminalOnStart);
@@ -287,6 +295,51 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     setOverlay(null);
     setRoute("settings");
     setFocusYarkUpdates(true);
+  }, []);
+
+  const markChangelogSeen = useCallback(() => {
+    changelogPromptSettledRef.current = true;
+    void window.api.setLastSeenChangelogVersion(APP_VERSION);
+  }, []);
+
+  const openWhatsNew = useCallback((tab: "current" | "recent" = "current") => {
+    changelogPromptSettledRef.current = true;
+    setChangelogInitialTab(tab);
+    setChangelogOpen(true);
+  }, []);
+
+  const onWhatsNewClick = useCallback(() => {
+    openWhatsNew("current");
+  }, [openWhatsNew]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      if (typeof window.api.getLastSeenChangelogVersion !== "function") {
+        return;
+      }
+      const result = await window.api.getLastSeenChangelogVersion();
+      if (cancelled || !result.ok || changelogPromptSettledRef.current) {
+        return;
+      }
+      if (!shouldShowWhatsNewForVersion(APP_VERSION, result.data)) {
+        return;
+      }
+      // Re-check after await: Settings/manual dismiss may have persisted seen meanwhile.
+      const latest = await window.api.getLastSeenChangelogVersion();
+      if (cancelled || !latest.ok || changelogPromptSettledRef.current) {
+        return;
+      }
+      if (!shouldShowWhatsNewForVersion(APP_VERSION, latest.data)) {
+        return;
+      }
+      changelogPromptSettledRef.current = true;
+      setChangelogInitialTab("current");
+      setChangelogOpen(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   /** Quiet check (~60s) and Settings Check now only accented the sidebar before — toast once. */
@@ -1308,6 +1361,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
           officialNetworkStatus={officialNetworkStatus}
           appVersion={APP_VERSION}
           yarkUpdateAvailableVersion={yarkUpdateAvailableVersion}
+          onWhatsNewClick={onWhatsNewClick}
           onYarkUpdateClick={openYarkUpdateSettings}
           busyOverlay={stopBusyOverlay}
         >
@@ -1431,6 +1485,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         steamCmdRunning={steamCmdBusy}
         onNavigate={navigate}
         yarkUpdateAvailableVersion={yarkUpdateAvailableVersion}
+        onWhatsNewClick={onWhatsNewClick}
         onYarkUpdateClick={openYarkUpdateSettings}
         busyOverlay={stopBusyOverlay}
         overview={{
@@ -1575,6 +1630,13 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         servers={servers}
         onNavigate={navigate}
         onOpenServer={openServerFromSpotlight}
+      />
+      <AppChangelogModal
+        opened={changelogOpen}
+        onClose={() => setChangelogOpen(false)}
+        onDismiss={markChangelogSeen}
+        appVersion={APP_VERSION}
+        initialTab={changelogInitialTab}
       />
       {renderMain()}
       {steamCmdStatus !== null

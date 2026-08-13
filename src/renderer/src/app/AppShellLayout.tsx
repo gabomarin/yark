@@ -21,6 +21,7 @@ interface Props extends PropsWithChildren {
   officialNetworkStatus: OfficialNetworkStatus;
   appVersion: string;
   yarkUpdateAvailableVersion?: string | null;
+  onWhatsNewClick?: () => void;
   onYarkUpdateClick?: () => void;
   /** Rare app-wide hard failure only — prefer operator toasts for action results. */
   error?: string | null;

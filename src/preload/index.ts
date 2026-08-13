@@ -107,6 +107,10 @@ const api: RendererApi = {
   openAppDataFolder: (kind) => ipcRenderer.invoke(IPC.appOpenDataFolder, kind),
   getUiDensity: () => ipcRenderer.invoke(IPC.appGetUiDensity),
   setUiDensity: (density) => ipcRenderer.invoke(IPC.appSetUiDensity, density),
+  getLastSeenChangelogVersion: () =>
+    ipcRenderer.invoke(IPC.appGetLastSeenChangelogVersion),
+  setLastSeenChangelogVersion: (version) =>
+    ipcRenderer.invoke(IPC.appSetLastSeenChangelogVersion, version),
   getDesktopShellPreferences: () =>
     ipcRenderer.invoke(IPC.appGetDesktopShellPreferences),
   setCloseWindowToTray: (enabled) =>

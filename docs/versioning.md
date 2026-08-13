@@ -10,14 +10,14 @@ YARK server manager uses **Semantic Versioning** (`MAJOR.MINOR.PATCH`) and a
 | Package / installer version | `package.json` → `"version"` |
 | UI sidebar (`vX.Y.Z`) | `src/shared/app-version.ts` (imports `package.json`) |
 | electron-builder artifacts | reads `package.json` automatically |
-| Human-readable history | `CHANGELOG.md` (+ curated `website/src/data/changelog.ts` for the site) |
+| Human-readable history | `CHANGELOG.md` (+ curated `src/shared/changelog.ts` for site + in-app What's new) |
 | Project site hero pill / download CTA | `website/src/data/site.ts` (reads root `package.json` `version`) |
 
 Do **not** hardcode a second app version string in React components. Import
 `APP_VERSION` from `@shared/app-version` when the UI needs it. Bumping
 `package.json` updates the site pill and download URL automatically (see
-[website.md](website.md)); keep `website/src/data/changelog.ts` in sync when
-cutting a release.
+[website.md](website.md)); keep `src/shared/changelog.ts` in sync when
+cutting a release (`website/src/data/changelog.ts` re-exports it).
 
 ## SemVer rules for this project
 
@@ -135,8 +135,9 @@ Then watch **Actions → Release Windows**. Rebuild an existing tag via
    - `npm run typecheck`
    - `npm test`
    - `npm run build` (optional local `npm run package` smoke)
-5. Sync the curated site changelog in `website/src/data/changelog.ts` (version
-   pill / download CTA follow `package.json` via `website/src/data/site.ts`).
+5. Sync the curated changelog in `src/shared/changelog.ts` (site + in-app What's
+   new; `website/src/data/changelog.ts` re-exports it). Version pill / download
+   CTA follow `package.json` via `website/src/data/site.ts`.
 6. Commit with a message that names the version (e.g. `release: v0.2.0`) and merge
    to `main`.
 7. Tag `vX.Y.Z` on that commit and `git push origin vX.Y.Z` — CI publishes the

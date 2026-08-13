@@ -4,10 +4,12 @@ import {
   ArrowSquareOut,
   ArrowClockwise,
   CloudArrowDown,
+  Newspaper,
 } from "@phosphor-icons/react";
 import { Button, Group, Progress, Text, Title } from "@mantine/core";
 import type { AppUpdateStatus } from "@shared/app-update";
 import { createIdleAppUpdateStatus } from "@shared/app-update";
+import { AppChangelogModal } from "./AppChangelogModal";
 import classes from "../SettingsPage.module.css";
 
 interface Props {
@@ -54,6 +56,7 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
   );
   const [actionBusy, setActionBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [changelogOpen, setChangelogOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -242,6 +245,14 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
           )}
           <Button
             size="compact-xs"
+            leftSection={<Newspaper size={14} />}
+            onClick={() => setChangelogOpen(true)}
+            data-yark-update-whats-new
+          >
+            What&apos;s new
+          </Button>
+          <Button
+            size="compact-xs"
             variant="subtle"
             leftSection={<ArrowSquareOut size={14} />}
             onClick={() => void openNotes()}
@@ -270,6 +281,16 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
           {actionError ?? status.error}
         </Text>
       )}
+
+      <AppChangelogModal
+        opened={changelogOpen}
+        onClose={() => setChangelogOpen(false)}
+        appVersion={props.appVersion}
+        initialTab="recent"
+        onDismiss={() => {
+          void window.api.setLastSeenChangelogVersion(props.appVersion);
+        }}
+      />
     </section>
   );
 }

@@ -79,6 +79,8 @@ function stubSettingsApi(
     downloadAppUpdate: vi.fn(),
     installAppUpdate: vi.fn(),
     openYarkReleaseNotes: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+    getLastSeenChangelogVersion: vi.fn().mockResolvedValue({ ok: true, data: "0.1.0" }),
+    setLastSeenChangelogVersion: vi.fn().mockResolvedValue({ ok: true, data: "0.1.0" }),
     onAppUpdate: vi.fn().mockReturnValue(() => undefined),
     getLogRetentionSettings: vi.fn().mockResolvedValue({
       ok: true,
@@ -425,6 +427,20 @@ describe("SettingsPage", () => {
       expect(checkForAppUpdate).toHaveBeenCalled();
       expect(screen.getByText(/Update available · v0\.2\.0/i)).toBeInTheDocument();
     });
+  });
+
+  it("opens the in-app What's new changelog from YARK updates (#290)", async () => {
+    const user = userEvent.setup();
+    stubSettingsApi();
+    renderSettings({ appVersion: "0.11.0" });
+
+    await waitFor(() => {
+      expect(window.api.getAppUpdateStatus).toHaveBeenCalled();
+    });
+    await user.click(screen.getByRole("button", { name: /What's new/i }));
+    expect(await screen.findByText("Changelog")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Got it/i })).toBeInTheDocument();
+    expect(document.querySelector("[data-changelog-modal]")).not.toBeNull();
   });
 
   it("leaves checking state when the update IPC call rejects", async () => {

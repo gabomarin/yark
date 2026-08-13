@@ -115,6 +115,8 @@ export const IPC = {
   appOpenDataFolder: "app:open-data-folder",
   appGetUiDensity: "app:get-ui-density",
   appSetUiDensity: "app:set-ui-density",
+  appGetLastSeenChangelogVersion: "app:get-last-seen-changelog-version",
+  appSetLastSeenChangelogVersion: "app:set-last-seen-changelog-version",
   appGetDesktopShellPreferences: "app:get-desktop-shell-preferences",
   appSetCloseWindowToTray: "app:set-close-window-to-tray",
   appSetStartWithWindows: "app:set-start-with-windows",
@@ -337,6 +339,9 @@ export interface RendererApi {
   /** `null` when unset in `app_settings` (caller may migrate / apply default). */
   getUiDensity(): Promise<IpcResult<UiDensity | null>>;
   setUiDensity(density: UiDensity): Promise<IpcResult<UiDensity>>;
+  /** `null` when the operator has not dismissed What's new yet. */
+  getLastSeenChangelogVersion(): Promise<IpcResult<string | null>>;
+  setLastSeenChangelogVersion(version: string): Promise<IpcResult<string>>;
   getDesktopShellPreferences(): Promise<IpcResult<DesktopShellPreferences>>;
   setCloseWindowToTray(enabled: boolean): Promise<IpcResult<boolean>>;
   setStartWithWindows(enabled: boolean): Promise<IpcResult<boolean>>;
