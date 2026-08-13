@@ -20,7 +20,7 @@ import classes from "../../ServerWorkspacePage.module.css";
 interface Props {
   value: WorkspaceTab;
   server: ServerProfile;
-  /** Fleet profiles — live port-conflict preview on the embedded edit form. */
+  /** Fleet profiles — port-conflict preview on edit and Move dest nesting (#294). */
   servers: ServerProfile[];
   runtime: ServerRuntimeInfo | null;
   installation: ServerInstallationInfo | null;
@@ -180,6 +180,7 @@ export function WorkspaceTabs(props: Props): ReactElement {
       <MoveInstallDialog
         opened={moveDialogOpen}
         server={moveServer}
+        servers={props.servers}
         onClose={() => {
           setMoveDialogOpen(false);
           setMoveServer(null);

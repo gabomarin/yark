@@ -353,6 +353,7 @@ export function ServerForm(props: Props): ReactElement {
       <MoveInstallDialog
         opened={moveDialogOpen}
         server={props.initial}
+        servers={props.servers}
         onClose={() => setMoveDialogOpen(false)}
         onMoved={() => {
           props.onSaved();

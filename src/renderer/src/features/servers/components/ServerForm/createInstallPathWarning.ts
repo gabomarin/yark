@@ -8,8 +8,9 @@ import type { ImportInstallProbe } from "@shared/types";
 export function fleetCreateInstallWarning(
   candidate: string,
   fleet: readonly FleetInstallRef[],
+  excludeId?: string,
 ): string | null {
-  const conflict = findInstallDirConflict(candidate, fleet);
+  const conflict = findInstallDirConflict(candidate, fleet, excludeId);
   if (conflict === null) {
     return null;
   }
@@ -17,7 +18,10 @@ export function fleetCreateInstallWarning(
 }
 
 /** Disk probe for create: missing/empty OK; ASA/managed/non-empty must Import. */
-export function diskCreateInstallWarning(probe: ImportInstallProbe): string | null {
+export function diskCreateInstallWarning(
+  probe: ImportInstallProbe,
+  options?: { nonEmptyMessage?: string },
+): string | null {
   if (probe.alreadyManagedBy !== null) {
     return `A server already uses folder "${probe.installDir}" ("${probe.alreadyManagedBy}")`;
   }
@@ -34,5 +38,15 @@ export function diskCreateInstallWarning(probe: ImportInstallProbe): string | nu
   if (health === "inaccessible") {
     return `Cannot read install folder "${probe.installDir}".`;
   }
-  return `Install folder is not empty: "${probe.installDir}". Pick an empty folder, or use Import install for an existing ASA server.`;
+  return (
+    options?.nonEmptyMessage ??
+    `Install folder is not empty: "${probe.installDir}". Pick an empty folder, or use Import install for an existing ASA server.`
+  );
+}
+
+/** Same disk rules as create; copy is dest-oriented (no Import CTA). */
+export function diskMoveInstallWarning(probe: ImportInstallProbe): string | null {
+  return diskCreateInstallWarning(probe, {
+    nonEmptyMessage: `Destination is not empty ("${probe.installDir}"). It must have no files or subfolders.`,
+  });
 }

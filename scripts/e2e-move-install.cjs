@@ -174,13 +174,15 @@ async function run() {
     const dialog = page.getByRole("dialog", { name: /Move installation/i });
     await dialog.waitFor({ state: "visible", timeout: 10_000 });
     await expectText(dialog, sourceDir);
-    await expectText(dialog, /same drive/i);
+    await expectText(dialog, /new folder must be empty/i);
 
-    // Destination does not exist yet — same-volume rename path.
-    assert.equal(fs.existsSync(destDir), false);
+    // Empty base + Create folder (default) → dest\source.
+    fs.mkdirSync(destDir, { recursive: true });
+    const finalDest = path.join(destDir, "source");
     await stubFolderPicker(app, destDir);
     await dialog.getByRole("button", { name: /^Browse$/i }).click();
     await expectText(dialog, destDir);
+    await expectText(dialog, finalDest);
 
     await dialog.getByRole("button", { name: /^Start move$/i }).click();
     await dialog.getByText("Move completed", { exact: false }).waitFor({
@@ -194,22 +196,22 @@ async function run() {
     const committedDir = readInstallDirFromDb();
     assert.equal(
       path.resolve(committedDir).toLowerCase(),
-      path.resolve(destDir).toLowerCase(),
+      path.resolve(finalDest).toLowerCase(),
     );
     assert.equal(fs.existsSync(sourceDir), false, "previous install folder should be removed");
     assert.ok(
-      fs.existsSync(path.join(destDir, "ShooterGame", "Binaries", "Win64", "ArkAscendedServer.exe")),
+      fs.existsSync(path.join(finalDest, "ShooterGame", "Binaries", "Win64", "ArkAscendedServer.exe")),
       "destination should contain the ASA binary",
     );
     const movedSave = fs.readFileSync(
-      path.join(destDir, "ShooterGame", "Saved", "save.ark"),
+      path.join(finalDest, "ShooterGame", "Saved", "save.ark"),
       "utf8",
     );
     assert.match(movedSave, new RegExp(saveMarker));
 
     // UI shows the new install path on the Server tab after Done refresh.
     await page.getByRole("tab", { name: "Server" }).click();
-    await expectText(page.locator("[data-server-form-scroll]"), destDir);
+    await expectText(page.locator("[data-server-form-scroll]"), finalDest);
 
     const actionableErrors = errors.filter(
       (message) => !/Failed to load resource|net::ERR_/i.test(message),
