@@ -36,6 +36,7 @@ import type {
 import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useUiDensity } from "@app/AppProviders";
 import {
   defaultTextForFile,
   filterIniSettingReferences,
@@ -66,6 +67,8 @@ interface Props {
   /** SteamCMD job specifically — warning copy. */
   filesJobActive?: boolean;
   onDirtyChange?: (dirty: boolean) => void;
+  /** Workspace leave modal: save INI then continue. */
+  onRegisterSave?: (save: (() => Promise<boolean>) | null) => void;
 }
 
 function iniPayloadsDirty(
@@ -83,6 +86,9 @@ function iniPayloadsDirty(
 export function ConfigurationEditor(props: Props): ReactElement {
   const { section } = props;
   const filesJobActive = props.filesJobActive === true;
+  const density = useUiDensity();
+  const openFileIconSize = density === "compact" ? "sm" : "md";
+  const openFileGlyphSize = density === "compact" ? 14 : 16;
   const [snapshot, setSnapshot] = useState<ServerIniSnapshot | null>(null);
   const [payload, setPayload] = useState<ServerIniPayload | null>(null);
   const [baseline, setBaseline] = useState<ServerIniPayload | null>(null);
@@ -271,8 +277,8 @@ export function ConfigurationEditor(props: Props): ReactElement {
     setCollapsedSections(next);
   };
 
-  const saveIni = async () => {
-    if (payload === null) return;
+  const saveIni = async (): Promise<boolean> => {
+    if (payload === null) return false;
     setBusy(true);
     setError(null);
     setInfo(null);
@@ -281,7 +287,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
       const result = await window.api.saveServerIni(props.server.id, sanitized);
       if (!result.ok) {
         setError(result.error ?? "Could not save the INI");
-        return;
+        return false;
       }
       setPayload(sanitized);
       setPreview(result.data);
@@ -292,10 +298,19 @@ export function ConfigurationEditor(props: Props): ReactElement {
           ? `Saved (${result.data.changedCount} changes)`
           : "Saved (no changes)",
       );
+      return true;
     } finally {
       setBusy(false);
     }
   };
+
+  const saveIniRef = useRef(saveIni);
+  saveIniRef.current = saveIni;
+
+  useEffect(() => {
+    props.onRegisterSave?.(async () => saveIniRef.current());
+    return () => props.onRegisterSave?.(null);
+  }, [props.onRegisterSave]);
 
   const openExternal = async () => {
     setBusy(true);
@@ -337,13 +352,13 @@ export function ConfigurationEditor(props: Props): ReactElement {
       >
         <span>
           <ActionIcon
-            size="md"
+            size={openFileIconSize}
             variant="default"
             aria-label={`Open ${fileLabel}`}
             onClick={() => void openExternal()}
             disabled={busy || snapshot === null}
           >
-            <ArrowSquareOut size={16} />
+            <ArrowSquareOut size={openFileGlyphSize} />
           </ActionIcon>
         </span>
       </Tooltip>

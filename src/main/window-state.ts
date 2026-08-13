@@ -103,6 +103,86 @@ export function isWindowStateVisibleOnDisplays(
   return false;
 }
 
+export function findWorkAreaContainingPoint(
+  x: number,
+  y: number,
+  displays: DisplayWorkArea[],
+): DisplayWorkArea | null {
+  for (const area of displays) {
+    if (
+      x >= area.x &&
+      x < area.x + area.width &&
+      y >= area.y &&
+      y < area.y + area.height
+    ) {
+      return area;
+    }
+  }
+  return null;
+}
+
+export function nearestWorkArea(
+  x: number,
+  y: number,
+  displays: DisplayWorkArea[],
+): DisplayWorkArea | null {
+  const hit = findWorkAreaContainingPoint(x, y, displays);
+  if (hit !== null) {
+    return hit;
+  }
+  const first = displays[0];
+  if (first === undefined) {
+    return null;
+  }
+  let best = first;
+  let bestDist = Number.POSITIVE_INFINITY;
+  for (const area of displays) {
+    const cx = area.x + area.width / 2;
+    const cy = area.y + area.height / 2;
+    const dist = (cx - x) ** 2 + (cy - y) ** 2;
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = area;
+    }
+  }
+  return best;
+}
+
+export function centerSizeInWorkArea(
+  width: number,
+  height: number,
+  area: DisplayWorkArea,
+): { x: number; y: number } {
+  return {
+    x: Math.round(area.x + (area.width - width) / 2),
+    y: Math.round(area.y + (area.height - height) / 2),
+  };
+}
+
+/**
+ * Center a splash on the same display the main window will use.
+ * Saved bounds → that monitor; otherwise the fallback point's monitor.
+ */
+export function resolveSplashPlacement(
+  size: { width: number; height: number },
+  creation: Pick<WindowCreationOptions, "x" | "y" | "width" | "height">,
+  displays: DisplayWorkArea[],
+  fallbackPoint: { x: number; y: number },
+): { x: number; y: number } {
+  const anchorX =
+    creation.x !== undefined ? creation.x + creation.width / 2 : fallbackPoint.x;
+  const anchorY =
+    creation.y !== undefined ? creation.y + creation.height / 2 : fallbackPoint.y;
+  const area = nearestWorkArea(anchorX, anchorY, displays);
+  if (area === null) {
+    return {
+      x: Math.round(fallbackPoint.x - size.width / 2),
+      y: Math.round(fallbackPoint.y - size.height / 2),
+    };
+  }
+  return centerSizeInWorkArea(size.width, size.height, area);
+}
+
 /**
  * First launch / invalid state → maximize.
  * Saved restored bounds on-screen → restore.

@@ -11,11 +11,14 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Animated **startup splash** from `brand/splashscreen.svg` (1.5s min, until main is ready) on the same display as the restored window; honors reduced motion and does not block boot if splash assets fail; skipped during E2E (#317).
 - In-app **What's new** changelog (Settings, sidebar version click, one-shot after upgrade) from the curated notes shared with the public site (#290).
 - Create/clone **install folder** must be empty (or missing) and must not sit inside or wrap another YARK or ASA server, including unmanaged ASA parents.
 
 ### Changed
 
+- Agent docs treat private Notion Product Lab as canonical for unreleased planning (hub URL stays gitignored).
+- Compact **UI density** shrinks workspace Add server / rail icons, INI open-file, and sidebar SteamCMD controls that were stuck at md/lg (#233).
 - Create/edit **server form** paths use the same Browse chip as Settings (no typed install/cluster paths) (#222).
 - **Create/edit server** form uses AppSurfaceCard identity + reachability columns in the app shell and workspace tab, a reserved port-conflict slot, and a fixed Create server / Save changes footer (#292).
 - **New server** Map is official maps only; Custom… stays on edit, import, and clone (#292).
@@ -26,6 +29,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - **Move installation** on the same drive renames the folder back if cancel or commit fails after the rename, so the profile is not left pointing at an empty source while files sit at the destination.
 - Safe update resume/rollback accepts legacy pre-update jobs that still list a `players` backup id, so world+INI evidence is enough after the critical-path change.
+- Workspace **Server** and **INI Files** confirm before leaving unsaved edits (fossil alert, Save and continue); Server tab shows Cancel when dirty (#299).
 - Create/edit server forms confirm before app-shell navigation (sidebar, Spotlight, YARK update badge) discards unsaved profile changes (#292).
 - Create/Move install-path checks walk ASA ancestors on disk (not only a `ShooterGame` dest segment) and stay async so a slow UNC folder cannot freeze YARK.
 - **Move installation** dest preview matches create (empty folder, not another YARK or ASA tree), blocks dest inside or wrapping the current install, can create `base\<current-folder>` like Create, and keeps Start disabled if dest probe fails (#294).

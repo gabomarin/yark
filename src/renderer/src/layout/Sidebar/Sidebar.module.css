@@ -231,7 +231,8 @@
   min-height: 34px;
 }
 
-:global([data-ui-density="compact"]) .sidebar[data-icon-mode] .navLink {
+:global([data-ui-density="compact"]) .sidebar[data-icon-mode] .navLink,
+:global([data-ui-density="compact"]) .sidebar[data-icon-mode] .steamCmdIcon {
   width: 34px;
   min-height: 34px;
 }

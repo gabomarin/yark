@@ -1,7 +1,6 @@
 import type { ReactElement } from "react";
 import { MagicWand } from "@phosphor-icons/react";
 import { Alert, Button, Group, Stack, Text, Title } from "@mantine/core";
-import { modals } from "@mantine/modals";
 import {
   getServerFolderNameError,
   isValidServerFolderName,
@@ -22,6 +21,7 @@ import { listEnabledMapMods } from "./ServerFormMapField";
 import { ServerFormAlerts } from "./ServerFormAlerts";
 import { ServerFormProfileFields } from "./ServerFormProfileFields";
 import { ServerFormShellPage } from "./ServerFormShellPage";
+import { openUnsavedLeaveModal } from "@features/server-workspace/openUnsavedLeaveModal";
 import { MoveInstallDialog } from "../MoveInstallDialog/MoveInstallDialog";
 import classes from "./ServerForm.module.css";
 
@@ -38,6 +38,10 @@ interface Props {
   onOpenClusters?: () => void;
   /** Register a dirty-leave guard for app-shell navigation while this form is open. */
   onRegisterLeaveGuard?: (guard: ((action: () => void) => void) | null) => void;
+  /** Workspace composer: profile dirty without replacing the INI leave guard. */
+  onDirtyChange?: (dirty: boolean) => void;
+  /** Workspace leave modal: save profile then continue. */
+  onRegisterSave?: (save: (() => Promise<boolean>) | null) => void;
   /** `embedded` = workspace tab (no full-page header). */
   variant?: "page" | "embedded";
   /** Server in starting/running/stopping, or SteamCMD files job → path / ops lock. */
@@ -68,33 +72,40 @@ export function ServerForm(props: Props): ReactElement {
   );
   const initialStateRef = useRef(state);
   const dirtyRef = useRef(false);
-  dirtyRef.current = Object.keys(state).some((key) => {
+  const isDirty = Object.keys(state).some((key) => {
     const field = key as keyof ServerFormState;
     return state[field] !== initialStateRef.current[field];
   });
+  dirtyRef.current = isDirty;
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [createPathIssue, setCreatePathIssue] = useState<string | null>(null);
   const [browsingField, setBrowsingField] = useState<"installDir" | "clusterDir" | null>(null);
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const submitRef = useRef<() => Promise<boolean>>(async () => false);
 
   const confirmLeaveIfDirty = useCallback((action: () => void) => {
     if (!dirtyRef.current) {
       action();
       return;
     }
-    modals.openConfirmModal({
-      title: "Unsaved server changes",
-      children: (
-        <Alert color="yellow" title="Server form modified" variant="light">
-          There are unsaved server profile changes. If you continue, they will be discarded.
-        </Alert>
-      ),
-      labels: { confirm: "Discard and continue", cancel: "Keep editing" },
-      confirmProps: { color: "yellow" },
-      onConfirm: () => {
+    openUnsavedLeaveModal({
+      copy: {
+        kind: "confirm",
+        title: "Unsaved server changes",
+        alertTitle: "Server form modified",
+        message:
+          "There are unsaved server profile changes. If you continue, they will be discarded.",
+      },
+      onDiscard: () => {
         dirtyRef.current = false;
         action();
+      },
+      onSave: async () => {
+        const ok = await submitRef.current();
+        if (!ok) return false;
+        action();
+        return true;
       },
     });
   }, []);
@@ -103,6 +114,19 @@ export function ServerForm(props: Props): ReactElement {
     props.onRegisterLeaveGuard?.(confirmLeaveIfDirty);
     return () => props.onRegisterLeaveGuard?.(null);
   }, [confirmLeaveIfDirty, props.onRegisterLeaveGuard]);
+
+  useEffect(() => {
+    props.onDirtyChange?.(isDirty);
+  }, [isDirty, props.onDirtyChange]);
+
+  useEffect(() => {
+    return () => props.onDirtyChange?.(false);
+  }, [props.onDirtyChange]);
+
+  useEffect(() => {
+    props.onRegisterSave?.(async () => submitRef.current());
+    return () => props.onRegisterSave?.(null);
+  }, [props.onRegisterSave]);
 
   const knownClusters = useMemo(
     () => listKnownClusterOptions(props.servers ?? []),
@@ -208,33 +232,33 @@ export function ServerForm(props: Props): ReactElement {
     }));
   };
 
-  const submit = async () => {
+  const submit = async (): Promise<boolean> => {
     setError(null);
     const folderError = getServerFolderNameError(state.name);
     if (folderError !== null) {
       setError(folderError);
-      return;
+      return false;
     }
     const mapToken = normalizeMapToken(state.map);
     if (mapToken.length === 0) {
       setError("Map required");
-      return;
+      return false;
     }
     if (/\s/.test(mapToken)) {
       setError("Map token must not contain spaces");
-      return;
+      return false;
     }
     if (isCreate && !isOfficialMap(mapToken)) {
       setError("New servers must use an official map");
-      return;
+      return false;
     }
     if (!isOfficialMap(mapToken) && !mapToken.includes("_WP")) {
       setError("Custom map token usually ends with _WP (example: Svartalfheim_WP)");
-      return;
+      return false;
     }
     if (isCreate && createPathIssue !== null) {
       setError(createPathIssue);
-      return;
+      return false;
     }
     setSaving(true);
     try {
@@ -244,26 +268,37 @@ export function ServerForm(props: Props): ReactElement {
           ? await window.api.createServer(input)
           : await window.api.updateServer(props.initial.id, input);
       if (result.ok) {
+        initialStateRef.current = state;
         dirtyRef.current = false;
+        props.onDirtyChange?.(false);
         if (props.initial === null) {
           showOperatorToast({
             title: "Server created",
             message: `"${input.name}" is ready to configure.`,
           });
           props.onSaved(result.data);
-          return;
+          return true;
         }
         showOperatorToast({
           title: "Server saved",
           message: `"${input.name}" profile updated.`,
         });
         props.onSaved();
-        return;
+        return true;
       }
       setError(result.error ?? "Could not save the server");
+      return false;
     } finally {
       setSaving(false);
     }
+  };
+  submitRef.current = submit;
+
+  const revertProfile = (): void => {
+    setState(initialStateRef.current);
+    dirtyRef.current = false;
+    props.onDirtyChange?.(false);
+    setError(null);
   };
 
   const openMove = (): void => {
@@ -430,6 +465,16 @@ export function ServerForm(props: Props): ReactElement {
       </div>
       <footer className={classes.embeddedFooter}>
         <Group justify="flex-end">
+          {isDirty && (
+            <Button
+              size={inputSize}
+              variant="default"
+              onClick={revertProfile}
+              disabled={saving}
+            >
+              Cancel
+            </Button>
+          )}
           <Button
             size={inputSize}
             onClick={() => void submit()}

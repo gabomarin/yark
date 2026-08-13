@@ -6,7 +6,12 @@ This repository contains a desktop application for managing dedicated ARK Surviv
 
 ## Working rules
 
-- Review `.cursor/project-context/TODO.md` before starting or continuing work (local Cursor workspace context; gitignored; not part of the public repo).
+- Private product, design identity, and unreleased specs: prefer Notion Product Lab
+  when MCP is available (hub URL only in gitignored `.cursor/project-context/README.md`).
+  If Notion is unavailable, use the **full snapshots** under `.cursor/project-context/`.
+  Do not link that hub from tracked files.
+- Public backlog is GitHub Project #4 / Issues. Local `.cursor/project-context/TODO.md`
+  is historical only.
 - Keep the current architecture: Electron + React + TypeScript + local SQLite.
 - Prefer small, verifiable changes.
 - Avoid introducing unnecessary native dependencies when a Node/TypeScript alternative exists.
@@ -25,12 +30,11 @@ This repository contains a desktop application for managing dedicated ARK Surviv
 
 ## Local project context (Cursor workspace, not in git)
 
-Until a project-management tool is adopted, planning / status / historical design notes live here:
-
-- `.cursor/project-context/TODO.md` — backlog / status
-- `.cursor/project-context/docs/` — design notes and historical plans/specs
-
-Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not hardcode machine-absolute paths to this context.
+Private planning is canonical in Notion Product Lab when reachable.
+`.cursor/project-context/` keeps **full offline snapshots** plus the hub URL so
+agents without Notion can still work. Do not recreate `TODO.md`, design identity,
+or private specs as tracked repository files. Do not hardcode machine-absolute
+paths or the Notion hub URL in tracked files.
 
 ## Key folder map
 
@@ -42,7 +46,7 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
   (`target=_blank`, YARK update release notes) go through
   [`external-url-policy.ts`](../src/shared/external-url-policy.ts) before
   `shell.openExternal`.
-- [docs](../docs): in-repo agent docs (this file, runbooks, visual testing, [website](website.md)). Backlog/plans live under `.cursor/project-context/`.
+- [docs](../docs): in-repo agent docs (this file, runbooks, visual testing, [website](website.md)). Private plans: Notion Product Lab; local stubs under `.cursor/project-context/`.
 - [website](../website): static GitHub Pages project site + versioned feature screenshots.
 - [AGENTS.md](../AGENTS.md): Cursor Cloud / Linux VM specifics (display, `ELECTRON_RUN_AS_NODE`, expected vitest path failures, e2e notes).
 
@@ -83,7 +87,10 @@ Do not recreate `TODO.md` or tech-debt plans as tracked repository files. Do not
   [mods.md](mods.md). CurseForge proxy abuse controls:
   [curseforge-proxy.md](curseforge-proxy.md) (#70). A six-step configuration
   assistant launches on demand from `Server`; it uses an isolated draft and
-  writes only after explicit review.
+  writes only after explicit review. Workspace leave-guard (#292 / #299) confirms
+  before sidebar / Spotlight / Back / server switch / Create / leaving Server or
+  INI Files with unsaved drafts (fossil alert; Save and continue / Discard / Keep
+  editing). Server tab shows Cancel when the profile is dirty.
 - Settings is live in the shell (SteamCMD path, desktop shell, density, and related preferences — no light/dark theme control). Full map: [settings.md](settings.md). Clusters surfaces existing `clusterId` / `clusterDir` compliance reports (live transfer validation still deferred); see [clusters.md](clusters.md). Workspace **RCON** tab: [rcon.md](rcon.md).
 - Sidebar Backups settings page and per-server workspace Backups tab are live.
 - Backups are kind-scoped ZIP archives: `world` (per-map folder under `SavedArks/{MapToken}/`, including profiles/tribes in that folder), `players` (profiles from SavedArks/SaveGames), `ini` (`Game.ini` + `GameUserSettings.ini`).

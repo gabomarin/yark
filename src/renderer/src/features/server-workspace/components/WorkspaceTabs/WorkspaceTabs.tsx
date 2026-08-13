@@ -39,6 +39,11 @@ interface Props {
   onBack: () => void;
   onOpenAssistant: () => void;
   onIniDirtyChange: (dirty: boolean) => void;
+  /** Embedded ServerForm leave guard — composed on the workspace page, not App. */
+  onRegisterProfileLeaveGuard?: (guard: ((action: () => void) => void) | null) => void;
+  onProfileDirtyChange?: (dirty: boolean) => void;
+  onRegisterProfileSave?: (save: (() => Promise<boolean>) | null) => void;
+  onRegisterIniSave?: (save: (() => Promise<boolean>) | null) => void;
   onLogsFocusConsumed?: () => void;
   onSendRcon: (serverId: string, command: string) => Promise<boolean>;
   onClearRconHistory: (serverId: string) => void;
@@ -89,6 +94,9 @@ export function WorkspaceTabs(props: Props): ReactElement {
                 filesJobActive={props.filesJobActive}
                 onCancel={props.onBack}
                 onSaved={props.onServerUpdated}
+                onRegisterLeaveGuard={props.onRegisterProfileLeaveGuard}
+                onDirtyChange={props.onProfileDirtyChange}
+                onRegisterSave={props.onRegisterProfileSave}
                 onOpenMoveInstall={() => {
                   setMoveServer(props.server);
                   setMoveDialogOpen(true);
@@ -114,11 +122,8 @@ export function WorkspaceTabs(props: Props): ReactElement {
               />
             )}
 
-            {(props.value === "iniFiles" || props.iniDirty) && (
-              <div
-                className={classes.configHost}
-                data-visible={props.value === "iniFiles" || undefined}
-              >
+            {props.value === "iniFiles" && (
+              <div className={classes.configHost}>
                 <ConfigurationEditor
                   key={`${props.server.id}:${props.iniEditorVersion}`}
                   server={props.server}
@@ -126,6 +131,7 @@ export function WorkspaceTabs(props: Props): ReactElement {
                   serverActive={props.opsLocked}
                   filesJobActive={props.filesJobActive}
                   onDirtyChange={props.onIniDirtyChange}
+                  onRegisterSave={props.onRegisterIniSave}
                 />
               </div>
             )}
