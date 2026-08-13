@@ -33,6 +33,7 @@ Requirements:
 
 - Built `out/` tree before any `e2e:*` script.
 - Isolated app data (`YARK_E2E_USER_DATA`); never the developer’s real AppData.
+  The same env skips the startup splash so `waitForOverview` hits the main window.
 - Cleanup only fixture paths created by that run (`C:\asa-e2e\…` or tmp).
 - Launch failures must mention Electron/display/`ELECTRON_RUN_AS_NODE`/missing
   build — not only a Playwright selector timeout. Shared helpers:

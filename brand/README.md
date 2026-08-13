@@ -6,6 +6,7 @@
 | --- | --- |
 | `yark-logo.png` | Full lockup — website hero; sidebar gets a resized copy |
 | `yark-icon.png` | Mark only — source for Windows/web icons |
+| `splashscreen.svg` | Animated lockup for the Electron startup splash |
 | `yark-logo.svg` | Optional local design source (gitignored; not committed / not runtime) |
 
 ## Derived / wired
@@ -19,6 +20,7 @@
 | `src/renderer/public/favicon.png` | `yark-icon.png` (32×32) |
 | `src/renderer/src/assets/brand/yark-logo.png` | `yark-logo.png` resized to 336px wide |
 | `website/assets/yark-logo.png` | `yark-logo.png` (full lockup) |
+| `out/main/splash/splashscreen.svg` | `splashscreen.svg` (copied at Electron build) |
 
 After replacing `yark-icon.png` or `yark-logo.png`:
 

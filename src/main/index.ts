@@ -43,8 +43,11 @@ import {
   MIN_WINDOW_HEIGHT,
   MIN_WINDOW_WIDTH,
   readStoredWindowState,
+  resolveSplashPlacement,
   resolveWindowCreationOptions,
+  type PersistedWindowState,
 } from "./window-state";
+import { peekStoredWindowState } from "./window-state-peek";
 import {
   quitFlagsAfterCancel,
   shouldPreventCloseDuringQuit,
@@ -55,6 +58,16 @@ import {
 } from "../backend/infra/process/left-running-store";
 import { reattachLeftRunningProcesses } from "../backend/infra/process/left-running-reattach";
 import { applyWindowsLoginItem } from "./windows-login-item";
+import { APP_VERSION } from "../shared/app-version";
+import {
+  SPLASH_HEIGHT,
+  SPLASH_MAX_MS,
+  SPLASH_WIDTH,
+  closeSplashWindow,
+  createSplashWindow,
+  remainingSplashHoldMs,
+  shouldShowSplash,
+} from "./splash-window";
 import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush, type MoveInstallProgressPush, type RconStatusChangedPush, type PlayerListUpdatedPush } from "../shared/ipc";
 import type { AppUpdateStatus } from "../shared/app-update";
 import { normalizeServerStopProgress } from "../shared/types";
@@ -126,10 +139,18 @@ function resolveAppIcon(): string | undefined {
   return candidates.find((candidate) => existsSync(candidate));
 }
 
-function createWindow(settings: AppSettingsRepository): BrowserWindow {
+function createWindow(
+  settings: AppSettingsRepository,
+  options?: {
+    onReadyToShow?: (win: BrowserWindow) => boolean | void;
+    /** Keep off-screen/taskbar until the caller shows it (startup splash). */
+    hiddenUntilReveal?: boolean;
+  },
+): BrowserWindow {
   const icon = resolveAppIcon();
   const displays = screen.getAllDisplays().map((display) => display.workArea);
   const creation = resolveWindowCreationOptions(readStoredWindowState(settings), displays);
+  const hiddenUntilReveal = options?.hiddenUntilReveal === true;
   const win = new BrowserWindow({
     width: creation.width,
     height: creation.height,
@@ -138,6 +159,9 @@ function createWindow(settings: AppSettingsRepository): BrowserWindow {
       : {}),
     minWidth: MIN_WINDOW_WIDTH,
     minHeight: MIN_WINDOW_HEIGHT,
+    show: false,
+    skipTaskbar: hiddenUntilReveal,
+    focusable: !hiddenUntilReveal,
     title: "YARK server manager",
     backgroundColor: "#0c1427",
     ...(icon !== undefined ? { icon } : {}),
@@ -149,9 +173,20 @@ function createWindow(settings: AppSettingsRepository): BrowserWindow {
     },
   });
 
+  // maximize() on a hidden window shows it on Windows — wait until `show`.
   if (creation.shouldMaximize) {
-    win.maximize();
+    win.once("show", () => {
+      if (!win.isDestroyed() && !win.isMaximized()) {
+        win.maximize();
+      }
+    });
   }
+  win.once("ready-to-show", () => {
+    const deferShow = options?.onReadyToShow?.(win) === false;
+    if (!deferShow && !win.isDestroyed() && !win.isVisible()) {
+      win.show();
+    }
+  });
   attachWindowStatePersistence(win, settings);
 
   // Reinforce window chrome / unpackaged taskbar icon (when no AUMID is set).
@@ -190,8 +225,108 @@ if (gotSingleInstanceLock) {
     // No native File/Edit/View/Help bar — Quit lives on the system tray menu.
     Menu.setApplicationMenu(null);
 
+    let splash: BrowserWindow | null = null;
+    let splashDismissed = false;
+    let splashHoldTimer: ReturnType<typeof setTimeout> | null = null;
+    let splashMaxTimer: ReturnType<typeof setTimeout> | null = null;
+    let mainReadyToShow = false;
+    let splashShownAt = 0;
+    const clearSplashTimers = (): void => {
+      if (splashHoldTimer !== null) {
+        clearTimeout(splashHoldTimer);
+        splashHoldTimer = null;
+      }
+      if (splashMaxTimer !== null) {
+        clearTimeout(splashMaxTimer);
+        splashMaxTimer = null;
+      }
+    };
+    const dismissSplash = (): void => {
+      splashDismissed = true;
+      clearSplashTimers();
+      closeSplashWindow(splash);
+      splash = null;
+    };
+    const revealMainAfterSplash = (): void => {
+      const win = mainWindow;
+      dismissSplash();
+      if (win === null || win.isDestroyed()) {
+        return;
+      }
+      win.setSkipTaskbar(false);
+      win.setFocusable(true);
+      if (!win.isVisible()) {
+        win.show();
+      }
+      win.focus();
+    };
+    const scheduleSplashHandoff = (): void => {
+      if (!mainReadyToShow || splashShownAt === 0) {
+        return;
+      }
+      const remaining = remainingSplashHoldMs(splashShownAt, Date.now());
+      if (splashHoldTimer !== null) {
+        clearTimeout(splashHoldTimer);
+      }
+      splashHoldTimer = setTimeout(() => {
+        splashHoldTimer = null;
+        revealMainAfterSplash();
+      }, remaining);
+    };
+
     const userData = app.getPath("userData");
     const dbPath = join(userData, "yark-server-manager.db");
+    const displayWorkAreas = (): Array<{ x: number; y: number; width: number; height: number }> =>
+      screen.getAllDisplays().map((display) => display.workArea);
+    const primaryDisplayCenter = (): { x: number; y: number } => {
+      const area = screen.getPrimaryDisplay().workArea;
+      return {
+        x: area.x + Math.floor(area.width / 2),
+        y: area.y + Math.floor(area.height / 2),
+      };
+    };
+    const splashPositionForStored = (
+      stored: PersistedWindowState | null,
+    ): { x: number; y: number } => {
+      const displays = displayWorkAreas();
+      return resolveSplashPlacement(
+        { width: SPLASH_WIDTH, height: SPLASH_HEIGHT },
+        resolveWindowCreationOptions(stored, displays),
+        displays,
+        primaryDisplayCenter(),
+      );
+    };
+
+    if (shouldShowSplash()) {
+      const placement = splashPositionForStored(peekStoredWindowState(dbPath));
+      splash = createSplashWindow({
+        version: APP_VERSION,
+        icon: resolveAppIcon(),
+        x: placement.x,
+        y: placement.y,
+      });
+      splash.once("show", () => {
+        splashShownAt = Date.now();
+        scheduleSplashHandoff();
+      });
+      splash.on("closed", () => {
+        if (splashDismissed) {
+          return;
+        }
+        if (mainWindow !== null && !mainWindow.isDestroyed()) {
+          if (!mainWindow.isVisible()) {
+            mainWindow.show();
+          }
+          return;
+        }
+        app.quit();
+      });
+      splashMaxTimer = setTimeout(() => {
+        splashMaxTimer = null;
+        revealMainAfterSplash();
+      }, SPLASH_MAX_MS);
+    }
+
     let db: DatabaseSync;
     try {
       db = await openDatabaseWithOperatorRecovery(
@@ -205,12 +340,17 @@ if (gotSingleInstanceLock) {
         }),
       );
     } catch (error) {
+      dismissSplash();
       if (error instanceof DatabaseRecoveryAbortedError) {
         return;
       }
       throw error;
     }
     const settings = new AppSettingsRepository(db);
+    if (splash !== null && !splash.isDestroyed()) {
+      const aligned = splashPositionForStored(readStoredWindowState(settings));
+      splash.setPosition(aligned.x, aligned.y);
+    }
     const repo = new ServerRepository(db);
     const backupRepo = new BackupRepository(db);
     const processManager = new ProcessManager({
@@ -537,7 +677,23 @@ if (gotSingleInstanceLock) {
       sendToRenderer(IPC_PUSH.appUpdate, status);
     });
 
-    mainWindow = createWindow(settings);
+    mainWindow = createWindow(settings, {
+      hiddenUntilReveal: splash !== null,
+      onReadyToShow:
+        splash !== null
+          ? () => {
+              mainReadyToShow = true;
+              scheduleSplashHandoff();
+              return false;
+            }
+          : undefined,
+    });
+    if (splash !== null && !splash.isDestroyed()) {
+      splash.setAlwaysOnTop(true);
+    }
+    if (splash !== null && mainWindow.isVisible()) {
+      mainWindow.hide();
+    }
     attachMainWindowCloseHandler(mainWindow);
     ensureTray();
     appUpdateService.startQuietCheck();
