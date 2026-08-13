@@ -88,11 +88,6 @@
   display: flex;
 }
 
-.empty {
-  padding: 32px;
-  color: var(--app-color-muted);
-}
-
 .drawerContent {
   background: var(--app-color-surface-chrome);
 }

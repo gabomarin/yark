@@ -1,4 +1,5 @@
 import { Alert, Drawer } from "@mantine/core";
+import { HardDrives } from "@phosphor-icons/react";
 import { useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import type {
@@ -21,6 +22,7 @@ import { WorkspaceHeader } from "./components/WorkspaceHeader/WorkspaceHeader";
 import { StopProgressAlert, stopProgressForServer } from "./components/StopProgressAlert";
 import type { RconHistoryEntry, WorkspaceTab } from "./serverWorkspaceTypes";
 import type { PlayerListState } from "./components/RconPanel/PlayerListSection";
+import { EmptyState } from "@ui/EmptyState/EmptyState";
 import classes from "./ServerWorkspacePage.module.css";
 
 export type { RconHistoryEntry, WorkspaceTab } from "./serverWorkspaceTypes";
@@ -154,9 +156,12 @@ export function ServerWorkspacePage(props: Props): ReactElement {
   };
   if (selectedServer === null) {
     return (
-      <div className={classes.empty}>
-        No servers to edit. Create one from Servers.
-      </div>
+      <EmptyState
+        layout="stacked"
+        icon={<HardDrives size={24} />}
+        title="No servers to edit"
+        description="Create one from Servers."
+      />
     );
   }
   const runtime = props.statuses.get(selectedServer.id) ?? null;

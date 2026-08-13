@@ -16,13 +16,13 @@ describe("log-retention helpers", () => {
 
   it("normalizes and clamps values", () => {
     const next = normalizeLogRetentionSettings({
-      eventsRetainDays: 3,
+      eventsRetainDays: 0,
       eventsFailureRetainDays: 10,
       updateLogsRetainCount: 999,
       updateLogsFailureRetainDays: 4000,
       autoCleanupEnabled: false,
     });
-    expect(next.eventsRetainDays).toBe(7);
+    expect(next.eventsRetainDays).toBe(1);
     expect(next.eventsFailureRetainDays).toBe(10);
     expect(next.updateLogsRetainCount).toBe(200);
     expect(next.updateLogsFailureRetainDays).toBe(3650);
@@ -33,9 +33,16 @@ describe("log-retention helpers", () => {
     expect(() =>
       assertLogRetentionSettings({
         ...DEFAULT_LOG_RETENTION_SETTINGS,
-        eventsRetainDays: 2,
+        eventsRetainDays: 0,
       }),
     ).toThrow(/eventsRetainDays/);
+    expect(() =>
+      assertLogRetentionSettings({
+        ...DEFAULT_LOG_RETENTION_SETTINGS,
+        eventsRetainDays: 1,
+        eventsFailureRetainDays: 1,
+      }),
+    ).not.toThrow();
     expect(() =>
       assertLogRetentionSettings({
         ...DEFAULT_LOG_RETENTION_SETTINGS,

@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { PORT_MAX, PORT_MIN } from "../types";
 import { MAX_WINDOWS_PATH_LENGTH } from "../server-install-path";
+import {
+  MAX_LOG_RETENTION_DAYS,
+  MIN_LOG_RETENTION_DAYS,
+} from "../log-retention";
 
 /** Absolute Windows path (drive letter or UNC). */
 const WINDOWS_ABS_PATH = /^(?:[a-zA-Z]:[\\/]|\\\\)/;
@@ -237,10 +241,10 @@ export const clusterIniFileSelectionSchema = z
 
 export const logRetentionSettingsSchema = z
   .object({
-    eventsRetainDays: z.number().int().min(7).max(3650),
-    eventsFailureRetainDays: z.number().int().min(7).max(3650),
+    eventsRetainDays: z.number().int().min(MIN_LOG_RETENTION_DAYS).max(MAX_LOG_RETENTION_DAYS),
+    eventsFailureRetainDays: z.number().int().min(MIN_LOG_RETENTION_DAYS).max(MAX_LOG_RETENTION_DAYS),
     updateLogsRetainCount: z.number().int().min(1).max(200),
-    updateLogsFailureRetainDays: z.number().int().min(7).max(3650),
+    updateLogsFailureRetainDays: z.number().int().min(MIN_LOG_RETENTION_DAYS).max(MAX_LOG_RETENTION_DAYS),
     autoCleanupEnabled: z.boolean(),
   })
   .strict()

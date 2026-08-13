@@ -27,7 +27,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { notifications } from "@mantine/notifications";
+import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import { playerBackupDisplayName } from "@shared/backup-player-meta";
 import { isInstallationReady } from "@shared/installation-health";
 import type {
@@ -71,8 +71,6 @@ const KIND_TABS: Array<{ kind: BackupKind; label: string }> = [
   { kind: "players", label: "Player profiles" },
   { kind: "ini", label: "INI" },
 ];
-
-const TOAST_POSITION = "bottom-right" as const;
 
 function formatSize(sizeBytes: number): string {
   if (sizeBytes <= 0) return "—";
@@ -131,18 +129,16 @@ function showBackupToast(
   message: string,
   options?: { color?: string; title?: string; autoClose?: number | false },
 ): void {
-  notifications.show({
+  showOperatorToast({
     title: options?.title ?? "Backups",
     message,
     color: options?.color ?? "teal",
-    position: TOAST_POSITION,
     autoClose: options?.autoClose ?? 5000,
-    withCloseButton: true,
   });
 }
 
 function showBackupError(message: string): void {
-  showBackupToast(message, { color: "red", autoClose: 8000 });
+  showOperatorError(message, "Backups");
 }
 
 function worldPolicySummary(

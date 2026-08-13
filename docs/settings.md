@@ -114,10 +114,10 @@ disk are not deleted. See [profile-database.md](profile-database.md) (#218, #252
 
 | Control | Storage | Default | Notes |
 | --- | --- | --- | --- |
-| Keep routine events (days) | `logRetention.v1` | 90 | Non-failure SQLite events |
-| Keep failure events (days) | same | 180 | Must be ≥ routine days |
+| Keep routine events (days) | `logRetention.v1` | 90 | Non-failure SQLite events; min 1 day |
+| Keep failure events (days) | same | 180 | Must be ≥ routine days; min 1 day |
 | Keep successful update logs | same | 20 | Per-server count |
-| Keep failed update logs (days) | same | 180 | Failed/unknown SteamCMD files |
+| Keep failed update logs (days) | same | 180 | Failed/unknown SteamCMD files; min 1 day |
 | Automatic cleanup | same | on | Startup + ~daily; changes save immediately |
 | Clean up now… | IPC preview/run | — | Scan → Remove; reports skipped/failed |
 

@@ -1,9 +1,9 @@
 import { ActionIcon, Badge, Button, Group, Stack, Text, Tooltip } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
 import { ArrowClockwise, Copy, Trash } from "@phosphor-icons/react";
 import type { ReactElement } from "react";
 import type { RconHistoryEntry } from "../../serverWorkspaceTypes";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import classes from "./RconPanel.module.css";
 
 const NO_CONTENT_RESPONSE = "Server received, But no response!!";
@@ -28,16 +28,13 @@ function formatRconTime(date: string): string {
 async function copyText(label: string, value: string): Promise<void> {
   try {
     await navigator.clipboard.writeText(value);
-    notifications.show({
-      color: "teal",
+    showOperatorToast({
+      title: "Copied",
       message: `${label} copied`,
       autoClose: 1500,
     });
   } catch {
-    notifications.show({
-      color: "red",
-      message: `Could not copy ${label.toLowerCase()}`,
-    });
+    showOperatorError(`Could not copy ${label.toLowerCase()}`, "Copy failed");
   }
 }
 

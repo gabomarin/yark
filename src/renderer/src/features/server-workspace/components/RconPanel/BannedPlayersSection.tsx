@@ -1,10 +1,10 @@
 import { ActionIcon, Button, Group, Loader, Text, Tooltip } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
 import { modals } from "@mantine/modals";
 import { FileText } from "@phosphor-icons/react";
 import type { OnlinePlayerInfo } from "@shared/ipc";
 import type { MutableRefObject, ReactElement } from "react";
 import { useCallback, useEffect, useState } from "react";
+import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import {
   PlayerIdentityRow,
   resolvePlayerDisplayName,
@@ -57,10 +57,7 @@ export function BannedPlayersSection(props: Props): ReactElement {
   const openBanList = async (): Promise<void> => {
     const result = await window.api.openBanListFile(props.serverId);
     if (!result.ok) {
-      notifications.show({
-        color: "red",
-        message: result.error ?? "Could not open BanList.txt",
-      });
+      showOperatorError(result.error ?? "Could not open BanList.txt");
     }
   };
 
@@ -89,10 +86,10 @@ export function BannedPlayersSection(props: Props): ReactElement {
             if (result.ok) {
               setBanned(result.data.banned);
               if (result.data.warning) {
-                notifications.show({
-                  color: "orange",
+                showOperatorToast({
                   title: "Unban",
                   message: result.data.warning,
+                  color: "orange",
                   autoClose: 8000,
                 });
               }
