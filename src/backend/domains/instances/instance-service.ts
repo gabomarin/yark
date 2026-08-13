@@ -22,6 +22,8 @@ import { createConnection } from "node:net";
 import { join, resolve } from "node:path";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
 import {
+  findInstallDirConflict,
+  installDirConflictMessage,
   normalizeWindowsPath,
   resolveServerInstallDir,
   suggestCloneInstallDir,
@@ -46,6 +48,7 @@ import {
   type BanListEntry,
 } from "./ban-list";
 import {
+  assertInstallDirVacantForCreate,
   assertSafeInstallDirForWipe,
   installDirKey,
 } from "./install-dir-safety";
@@ -236,7 +239,7 @@ export class InstanceService extends EventEmitter {
       const installDir = resolveServerInstallDir(input.installDir, input.name);
       const normalized: ServerProfileInput = { ...input, installDir };
       this.assertValidInput(normalized);
-      this.assertUniqueInstallDir(installDir);
+      this.assertCreateInstallTarget(installDir);
 
       // create() sync body; ensureDefaultIniFiles async — mkdir root here synchronously via ensure
       const profile = this.repo.create(normalized);
@@ -275,6 +278,7 @@ export class InstanceService extends EventEmitter {
     this.assertUniqueName(normalized.name);
     this.assertNoPortConflicts(normalized);
     this.assertUniqueInstallDir(installDir);
+    this.assertInstallDirNotNestedWithFleet(installDir);
     // Match probeImportInstall: nested ShooterGame paths never become profiles,
     // even if IPC sends allowIncompleteInstall on an incomplete nested tree (#283).
     assertImportNotNested(installDir);
@@ -296,6 +300,7 @@ export class InstanceService extends EventEmitter {
       this.assertUniqueName(normalized.name);
       this.assertNoPortConflicts(normalized);
       this.assertUniqueInstallDir(installDir);
+      this.assertInstallDirNotNestedWithFleet(installDir);
 
       const profile = this.repo.create(normalized);
       const incompleteNote =
@@ -410,6 +415,7 @@ export class InstanceService extends EventEmitter {
       throw new Error("Server does not exist");
     }
     this.assertUniqueInstallDir(installDir, id);
+    this.assertInstallDirNotNestedWithFleet(installDir, id);
     const updated = this.repo.updateInstallDir(id, installDir);
     if (updated === null) {
       throw new Error("Server does not exist");
@@ -428,9 +434,10 @@ export class InstanceService extends EventEmitter {
     return updated;
   }
 
-  /** Exposed for Move installation uniqueness checks. */
+  /** Exposed for Move installation uniqueness and nesting checks. */
   assertInstallDirAvailable(installDir: string, excludeId?: string): void {
     this.assertUniqueInstallDir(installDir, excludeId);
+    this.assertInstallDirNotNestedWithFleet(installDir, excludeId);
   }
 
   async delete(
@@ -553,7 +560,7 @@ export class InstanceService extends EventEmitter {
         }
       }
       this.assertValidInput(input);
-      this.assertUniqueInstallDir(input.installDir);
+      this.assertCreateInstallTarget(input.installDir);
       const profile = this.repo.create(input, source.enabled);
       void this.ensureDefaultIniFiles(profile.installDir);
       this.repo.addEvent(
@@ -609,7 +616,7 @@ export class InstanceService extends EventEmitter {
 
       this.assertValidInput(input);
       this.assertUniqueName(input.name);
-      this.assertUniqueInstallDir(input.installDir);
+      this.assertCreateInstallTarget(input.installDir);
       this.assertNoPortConflicts(input);
 
       const profile = this.repo.create(input, source.enabled);
@@ -1690,5 +1697,32 @@ export class InstanceService extends EventEmitter {
         `A server already uses folder "${installDir}" ("${clash.name}")`,
       );
     }
+  }
+
+  private assertInstallDirNotNestedWithFleet(
+    installDir: string,
+    excludeId?: string,
+  ): void {
+    const conflict = findInstallDirConflict(
+      installDir,
+      this.repo.list().map((profile) => ({
+        id: profile.id,
+        name: profile.name,
+        installDir: profile.installDir,
+      })),
+      excludeId,
+    );
+    if (conflict === null || conflict.relation === "same") {
+      return;
+    }
+    throw new Error(installDirConflictMessage(conflict));
+  }
+
+  /** Unique, not nested with the fleet or ShooterGame, and vacant on disk. */
+  private assertCreateInstallTarget(installDir: string): void {
+    this.assertUniqueInstallDir(installDir);
+    this.assertInstallDirNotNestedWithFleet(installDir);
+    assertImportNotNested(installDir);
+    assertInstallDirVacantForCreate(installDir);
   }
 }

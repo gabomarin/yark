@@ -12,6 +12,11 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Added
 
 - In-app **What's new** changelog (Settings, sidebar version click, one-shot after upgrade) from the curated notes shared with the public site (#290).
+- Create/clone **install folder** must be empty (or missing) and must not sit inside or wrap another YARK or ASA server.
+
+### Changed
+
+- Create/edit **server form** paths use the same Browse chip as Settings (no typed install/cluster paths) (#222).
 
 ## [0.11.0] - 2026-08-12
 

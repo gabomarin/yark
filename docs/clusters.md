@@ -242,7 +242,7 @@ Report shape:
 | `tests/unit/ini-compose.test.ts` | Template↔member composition + secret redaction |
 | `tests/unit/cluster-ini-template-apply.test.ts` | Restore/promote/seed commit + selective files (#181) + failure preservation |
 | `tests/unit/known-cluster-options.test.ts` | Fleet `{clusterId, clusterDir}` picker options (#178) |
-| `src/renderer/src/features/servers/components/ServerForm/ServerForm.test.tsx` | Create Cluster select (None / join) + empty-fleet CTA; edit keeps free-text; port-conflict preview (#178) |
+| `src/renderer/src/features/servers/components/ServerForm/ServerForm.test.tsx` | Create Cluster select (None / join) + empty-fleet CTA; edit keeps free-text Cluster ID + PathField dir (#178 / #222); port-conflict preview |
 | `node scripts/e2e-clusters-membership.cjs` | Playwright create → add → remove membership (Windows) |
 | `node scripts/visual-clusters.cjs` | Playwright sidebar → Clusters compliance UI |
 

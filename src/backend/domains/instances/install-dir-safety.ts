@@ -1,3 +1,4 @@
+import { existsSync, readdirSync, statSync } from "node:fs";
 import { parse as parsePath, resolve } from "node:path";
 
 /** Windows install-directory comparison key (paths are case-insensitive). */
@@ -40,4 +41,36 @@ export function assertSafeInstallDirForWipe(installDir: string): string {
     );
   }
   return resolved;
+}
+
+/**
+ * Create/clone may only target a missing folder or an empty directory.
+ * Non-empty trees (including ASA installs) must use Import instead.
+ */
+export function assertInstallDirVacantForCreate(installDir: string): void {
+  if (!existsSync(installDir)) {
+    return;
+  }
+  let stat;
+  try {
+    stat = statSync(installDir);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`Cannot read install folder "${installDir}": ${detail}`);
+  }
+  if (!stat.isDirectory()) {
+    throw new Error(`Install path is not a folder: "${installDir}"`);
+  }
+  let entries: string[];
+  try {
+    entries = readdirSync(installDir);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`Cannot read install folder "${installDir}": ${detail}`);
+  }
+  if (entries.length > 0) {
+    throw new Error(
+      `Install folder is not empty: "${installDir}". Pick an empty folder, or use Import install for an existing ASA server.`,
+    );
+  }
 }
