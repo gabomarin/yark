@@ -90,8 +90,17 @@ async function launchElectronApp(options) {
  * @param {import('playwright').ElectronApplication} app
  * @param {{ timeoutMs?: number }} [options]
  */
+async function pageLooksLikeSplash(page) {
+  try {
+    return (await page.locator("[data-yark-splash]").count()) > 0;
+  } catch {
+    return false;
+  }
+}
+
 async function waitForOverview(app, options = {}) {
   const timeoutMs = options.timeoutMs ?? 20_000;
+  const deadline = Date.now() + timeoutMs;
   let page;
   try {
     page = await app.firstWindow({ timeout: timeoutMs });
@@ -102,11 +111,33 @@ async function waitForOverview(app, options = {}) {
         `(windows=${windows.length}). ${error?.message ?? error}`,
     );
   }
+
+  while ((await pageLooksLikeSplash(page)) && Date.now() < deadline) {
+    const mainCandidate = [];
+    for (const win of app.windows()) {
+      if (!(await pageLooksLikeSplash(win))) {
+        mainCandidate.push(win);
+        break;
+      }
+    }
+    if (mainCandidate.length > 0) {
+      page = mainCandidate[0];
+      break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  if (await pageLooksLikeSplash(page)) {
+    throw new Error(
+      `Electron splash was still open after ${timeoutMs}ms ` +
+        `(windows=${app.windows().length}).`,
+    );
+  }
+
   await page.waitForLoadState("domcontentloaded");
   try {
     await page.locator("[data-overview-page]").waitFor({
       state: "visible",
-      timeout: timeoutMs,
+      timeout: Math.max(1000, deadline - Date.now()),
     });
   } catch (error) {
     const title = await page.title().catch(() => "(title unavailable)");

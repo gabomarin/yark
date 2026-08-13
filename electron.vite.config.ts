@@ -1,7 +1,8 @@
 import { defineConfig, externalizeDepsPlugin } from "electron-vite";
 import react from "@vitejs/plugin-react";
-import { existsSync, readFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import type { Plugin } from "vite";
 
 /**
  * Load gitignored `.env` / `.env.local` into `process.env` for local/dev.
@@ -52,6 +53,26 @@ const sharedAlias = {
   "@backend": resolve(__dirname, "src/backend"),
 };
 
+function copySplashAssetsPlugin(): Plugin {
+  const copy = (): void => {
+    const dest = resolve(__dirname, "out/main/splash");
+    mkdirSync(dest, { recursive: true });
+    copyFileSync(
+      resolve(__dirname, "src/main/splash/splash.html"),
+      resolve(dest, "splash.html"),
+    );
+    copyFileSync(
+      resolve(__dirname, "brand/splashscreen.svg"),
+      resolve(dest, "splashscreen.svg"),
+    );
+  };
+  return {
+    name: "copy-yark-splash-assets",
+    buildStart: copy,
+    writeBundle: copy,
+  };
+}
+
 const rendererAlias = {
   ...sharedAlias,
   "@app": resolve(__dirname, "src/renderer/src/app"),
@@ -64,7 +85,7 @@ const rendererAlias = {
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()],
+    plugins: [externalizeDepsPlugin(), copySplashAssetsPlugin()],
     resolve: { alias: sharedAlias },
     define: appDefines,
   },

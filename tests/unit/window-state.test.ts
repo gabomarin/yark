@@ -7,6 +7,7 @@ import {
   clampWindowSize,
   isWindowStateVisibleOnDisplays,
   parseWindowState,
+  resolveSplashPlacement,
   resolveWindowCreationOptions,
   serializeWindowState,
   type PersistedWindowState,
@@ -17,6 +18,12 @@ const primary: { x: number; y: number; width: number; height: number } = {
   y: 0,
   width: 1920,
   height: 1080,
+};
+const secondary: { x: number; y: number; width: number; height: number } = {
+  x: 1920,
+  y: 0,
+  width: 2560,
+  height: 1440,
 };
 
 describe("window-state", () => {
@@ -93,5 +100,36 @@ describe("window-state", () => {
     expect(maximized.shouldMaximize).toBe(true);
     expect(maximized.x).toBe(12);
     expect(maximized.y).toBe(34);
+  });
+});
+
+describe("resolveSplashPlacement", () => {
+  const splash = { width: 520, height: 560 };
+  const primaryCenter = { x: 960, y: 540 };
+
+  it("centers on the saved window's monitor", () => {
+    const pos = resolveSplashPlacement(
+      splash,
+      { x: 2100, y: 80, width: 1280, height: 800 },
+      [primary, secondary],
+      primaryCenter,
+    );
+    expect(pos).toEqual({
+      x: Math.round(1920 + (2560 - 520) / 2),
+      y: Math.round((1440 - 560) / 2),
+    });
+  });
+
+  it("falls back to the fallback point's monitor", () => {
+    const pos = resolveSplashPlacement(
+      splash,
+      { width: 1280, height: 800 },
+      [primary, secondary],
+      primaryCenter,
+    );
+    expect(pos).toEqual({
+      x: Math.round((1920 - 520) / 2),
+      y: Math.round((1080 - 560) / 2),
+    });
   });
 });
