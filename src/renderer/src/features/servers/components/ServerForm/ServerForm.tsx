@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { MagicWand } from "@phosphor-icons/react";
 import { Alert, Button, Group, Stack, Text, Title } from "@mantine/core";
+import { modals } from "@mantine/modals";
 import {
   getServerFolderNameError,
   isValidServerFolderName,
@@ -8,7 +9,7 @@ import {
 } from "@shared/server-install-path";
 import { isOfficialMap, normalizeMapToken } from "@shared/map-identity";
 import type { ServerProfile } from "@shared/types";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useUiDensity } from "@app/AppProviders";
 import { listKnownClusterOptions } from "@features/clusters/knownClusterOptions";
 import { showOperatorToast } from "@ui/operatorToast";
@@ -35,6 +36,8 @@ interface Props {
   servers?: ServerProfile[];
   /** Opens Clusters (create flow) when the fleet has no clusters yet. */
   onOpenClusters?: () => void;
+  /** Register a dirty-leave guard for app-shell navigation while this form is open. */
+  onRegisterLeaveGuard?: (guard: ((action: () => void) => void) | null) => void;
   /** `embedded` = workspace tab (no full-page header). */
   variant?: "page" | "embedded";
   /** Server in starting/running/stopping, or SteamCMD files job → path / ops lock. */
@@ -63,11 +66,43 @@ export function ServerForm(props: Props): ReactElement {
   const [state, setState] = useState<ServerFormState>(() =>
     toServerFormState(props.initial, props.defaultBaseFolder),
   );
+  const initialStateRef = useRef(state);
+  const dirtyRef = useRef(false);
+  dirtyRef.current = Object.keys(state).some((key) => {
+    const field = key as keyof ServerFormState;
+    return state[field] !== initialStateRef.current[field];
+  });
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [createPathIssue, setCreatePathIssue] = useState<string | null>(null);
   const [browsingField, setBrowsingField] = useState<"installDir" | "clusterDir" | null>(null);
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+
+  const confirmLeaveIfDirty = useCallback((action: () => void) => {
+    if (!dirtyRef.current) {
+      action();
+      return;
+    }
+    modals.openConfirmModal({
+      title: "Unsaved server changes",
+      children: (
+        <Alert color="yellow" title="Server form modified" variant="light">
+          There are unsaved server profile changes. If you continue, they will be discarded.
+        </Alert>
+      ),
+      labels: { confirm: "Discard and continue", cancel: "Keep editing" },
+      confirmProps: { color: "yellow" },
+      onConfirm: () => {
+        dirtyRef.current = false;
+        action();
+      },
+    });
+  }, []);
+
+  useEffect(() => {
+    props.onRegisterLeaveGuard?.(confirmLeaveIfDirty);
+    return () => props.onRegisterLeaveGuard?.(null);
+  }, [confirmLeaveIfDirty, props.onRegisterLeaveGuard]);
 
   const knownClusters = useMemo(
     () => listKnownClusterOptions(props.servers ?? []),
@@ -209,6 +244,7 @@ export function ServerForm(props: Props): ReactElement {
           ? await window.api.createServer(input)
           : await window.api.updateServer(props.initial.id, input);
       if (result.ok) {
+        dirtyRef.current = false;
         if (props.initial === null) {
           showOperatorToast({
             title: "Server created",
@@ -335,7 +371,7 @@ export function ServerForm(props: Props): ReactElement {
           submitSize={inputSize}
           saving={saving}
           onSubmit={() => void submit()}
-          onCancel={props.onCancel}
+          onCancel={() => confirmLeaveIfDirty(props.onCancel)}
         >
           {!isCreate && (
             <ServerFormAlerts

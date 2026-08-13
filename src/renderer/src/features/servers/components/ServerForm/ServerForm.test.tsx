@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
@@ -49,6 +49,37 @@ describe("ServerForm", () => {
       "aria-readonly",
       "true",
     );
+  });
+
+  it("confirms before shell navigation discards a dirty create form (#292)", async () => {
+    const user = userEvent.setup();
+    const onLeave = vi.fn();
+    let leaveGuard: ((action: () => void) => void) | null = null;
+
+    render(
+      <AppProviders>
+        <ServerForm
+          initial={null}
+          onRegisterLeaveGuard={(guard) => {
+            leaveGuard = guard;
+          }}
+          onCancel={vi.fn()}
+          onSaved={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.type(screen.getByRole("textbox", { name: /^name$/i }), "The Island");
+    expect(leaveGuard).not.toBeNull();
+
+    act(() => leaveGuard?.(onLeave));
+
+    expect(onLeave).not.toHaveBeenCalled();
+    expect(screen.getByText(/unsaved server changes/i)).toBeInTheDocument();
+    expect(screen.getByText(/unsaved server profile changes/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /discard and continue/i }));
+    expect(onLeave).toHaveBeenCalledOnce();
   });
 
   it("joins an existing cluster from the create picker (#178)", async () => {
