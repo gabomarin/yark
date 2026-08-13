@@ -108,7 +108,7 @@ async function ensureServer(app, page, outDir) {
   await page.getByLabel("Query port").fill("38016");
   await page.getByLabel("RCON port").fill("38021");
   await page.locator("input[type='password']").last().fill("visual-test-admin");
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Create server" }).click();
   await page.locator("[data-server-card]").first().waitFor({ state: "visible", timeout: 15000 });
 }
 

@@ -1451,27 +1451,74 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       );
     }
 
-    if (overlay?.kind === "create" || overlay?.kind === "edit") {
+    if (overlay?.kind === "create") {
       return (
-        <ServerForm
-          initial={overlay.kind === "edit" ? overlay.profile : null}
-          defaultBaseFolder={defaultBaseFolder}
-          servers={servers}
-          onOpenClusters={() => {
-            setOverlay(null);
-            navigate("clusters");
-          }}
-          onCancel={() => setOverlay(null)}
-          onSaved={(created) => {
-            if (overlay.kind === "create" && created !== undefined) {
-              setOverlay({ kind: "workspace", serverId: created.id, onboarding: true });
+        <AppShellLayout
+          route="overview"
+          onNavigate={navigate}
+          steamCmdDetected={steamCmdStatus?.detected === true}
+          steamCmdRunning={steamCmdBusy}
+          officialVersion={officialVersion}
+          officialNetworkStatus={officialNetworkStatus}
+          appVersion={APP_VERSION}
+          yarkUpdateAvailableVersion={yarkUpdateAvailableVersion}
+          onWhatsNewClick={onWhatsNewClick}
+          onYarkUpdateClick={openYarkUpdateSettings}
+          busyOverlay={stopBusyOverlay}
+        >
+          <ServerForm
+            initial={null}
+            defaultBaseFolder={defaultBaseFolder}
+            servers={servers}
+            onOpenClusters={() => {
+              setOverlay(null);
+              navigate("clusters");
+            }}
+            onCancel={() => setOverlay(null)}
+            onSaved={(created) => {
+              if (created !== undefined) {
+                setOverlay({ kind: "workspace", serverId: created.id, onboarding: true });
+                void refresh();
+                return;
+              }
+              setOverlay(null);
               void refresh();
-              return;
-            }
-            setOverlay(null);
-            void refresh();
-          }}
-        />
+            }}
+          />
+        </AppShellLayout>
+      );
+    }
+
+    if (overlay?.kind === "edit") {
+      return (
+        <AppShellLayout
+          route="overview"
+          onNavigate={navigate}
+          steamCmdDetected={steamCmdStatus?.detected === true}
+          steamCmdRunning={steamCmdBusy}
+          officialVersion={officialVersion}
+          officialNetworkStatus={officialNetworkStatus}
+          appVersion={APP_VERSION}
+          yarkUpdateAvailableVersion={yarkUpdateAvailableVersion}
+          onWhatsNewClick={onWhatsNewClick}
+          onYarkUpdateClick={openYarkUpdateSettings}
+          busyOverlay={stopBusyOverlay}
+        >
+          <ServerForm
+            initial={overlay.profile}
+            defaultBaseFolder={defaultBaseFolder}
+            servers={servers}
+            onOpenClusters={() => {
+              setOverlay(null);
+              navigate("clusters");
+            }}
+            onCancel={() => setOverlay(null)}
+            onSaved={() => {
+              setOverlay(null);
+              void refresh();
+            }}
+          />
+        </AppShellLayout>
       );
     }
 

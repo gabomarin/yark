@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { Select, Stack, TextInput } from "@mantine/core";
+import { Alert, Select, Stack, TextInput } from "@mantine/core";
 import { isOfficialMap } from "@shared/map-identity";
 import {
   isMapModCandidate,
@@ -46,6 +46,8 @@ interface Props {
   inputSize: "xs" | "sm";
   /** Enabled Maps mods available as Map select options. */
   mapMods: ModMetadata[];
+  /** Create has no Mods tab yet — copy must not pretend map packs are pickable. */
+  isCreate?: boolean;
   onChange: (next: MapFieldChange) => void;
 }
 
@@ -140,6 +142,8 @@ export function ServerFormMapField(props: Props): ReactElement {
 
   const customSelected = selectValue === CUSTOM_MAP_SELECT_VALUE;
 
+  const allowCustom = props.isCreate !== true;
+
   const selectData = useMemo(() => {
     const mapModItems = mapModsWithToken.map(({ mod }) => ({
       value: mapModSelectValue(mod.id),
@@ -160,12 +164,16 @@ export function ServerFormMapField(props: Props): ReactElement {
       ...(mapModItems.length > 0
         ? [{ group: "Map mods", items: mapModItems }]
         : []),
-      {
-        group: "Other",
-        items: [{ value: CUSTOM_MAP_SELECT_VALUE, label: "Custom…" }],
-      },
+      ...(allowCustom
+        ? [
+            {
+              group: "Other",
+              items: [{ value: CUSTOM_MAP_SELECT_VALUE, label: "Custom…" }],
+            },
+          ]
+        : []),
     ];
-  }, [mapModsWithToken, props.map, props.mapModId]);
+  }, [allowCustom, mapModsWithToken, props.map, props.mapModId]);
 
   const showSaveFolder = !official && props.map.trim().length > 0;
 
@@ -192,6 +200,9 @@ export function ServerFormMapField(props: Props): ReactElement {
             return;
           }
           if (value === CUSTOM_MAP_SELECT_VALUE) {
+            if (!allowCustom) {
+              return;
+            }
             emit({
               map: official ? "" : props.map,
               mapModId: null,
@@ -217,7 +228,7 @@ export function ServerFormMapField(props: Props): ReactElement {
         allowDeselect={false}
         required
       />
-      {customSelected ? (
+      {customSelected && allowCustom ? (
         <TextInput
           label="Custom map token"
           size={props.inputSize}
@@ -229,9 +240,20 @@ export function ServerFormMapField(props: Props): ReactElement {
             })
           }
           placeholder="e.g. Svartalfheim_WP"
-          description="Usually ends in _WP. Prefer a Map mods option when the pack is enabled on the Mods tab."
+          description={
+            props.mapMods.length === 0
+              ? "Launch token, usually ends in _WP (example: Svartalfheim_WP)."
+              : "Usually ends in _WP. Prefer a Map mods option when the pack is enabled on the Mods tab."
+          }
           required
         />
+      ) : null}
+      {customSelected && allowCustom && props.mapMods.length === 0 ? (
+        <Alert color="blue" variant="light" title="Map pack comes next">
+          No Maps mods enabled yet. Add the CurseForge pack on Mods, then pick it
+          here instead of Custom…. Start stays blocked until that pack is
+          enabled and linked.
+        </Alert>
       ) : null}
       {showSaveFolder ? (
         <TextInput

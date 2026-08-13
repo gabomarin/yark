@@ -12,6 +12,8 @@ interface Props {
   gamePort: string;
   queryPort: string;
   rconPort: string;
+  /** Stretch into reserved leftover space (create Reachability card). */
+  slot?: boolean;
 }
 
 function parsePreviewPort(raw: string): number | null {
@@ -66,7 +68,12 @@ export function ServerFormPortConflictAlert(props: Props): ReactElement | null {
   }
 
   return (
-    <Alert color="red" title="Port conflicts" mt="xs">
+    <Alert
+      color="red"
+      title="Port conflicts"
+      mt={props.slot === true ? 0 : "xs"}
+      style={props.slot === true ? { flex: 1, width: "100%" } : undefined}
+    >
       <Stack gap={4}>
         {conflicts.map((conflict) => (
           <Text

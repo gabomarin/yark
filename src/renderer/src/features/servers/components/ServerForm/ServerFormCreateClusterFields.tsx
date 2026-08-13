@@ -67,23 +67,23 @@ export function ServerFormCreateClusterFields(props: Props): ReactElement {
             here.
           </Text>
         ))}
-      <TextInput
-        label="Cluster ID"
-        size={props.inputSize}
-        value={selected?.clusterId ?? ""}
-        disabled
-        readOnly
-        placeholder="—"
-      />
-      <div>
-        <Text size="sm" fw={500} mb={4}>
-          Shared cluster directory
-        </Text>
-        <ReadonlyPath
-          value={selected?.clusterDir}
-          emptyLabel="—"
-        />
-      </div>
+      {selected !== null && (
+        <>
+          <TextInput
+            label="Cluster ID"
+            size={props.inputSize}
+            value={selected.clusterId}
+            disabled
+            readOnly
+          />
+          <div>
+            <Text size="sm" fw={500} mb={4}>
+              Shared cluster directory
+            </Text>
+            <ReadonlyPath value={selected.clusterDir} />
+          </div>
+        </>
+      )}
     </Stack>
   );
 }

@@ -232,13 +232,13 @@ export class InstanceService extends EventEmitter {
 
   async create(input: ServerProfileInput): Promise<ServerProfile> {
     return this.withFleetCreateLock(async () => {
-      this.assertValidInput(input);
+      this.assertValidInput(input, { create: true });
       this.assertUniqueName(input.name);
       this.assertNoPortConflicts(input);
 
       const installDir = resolveServerInstallDir(input.installDir, input.name);
       const normalized: ServerProfileInput = { ...input, installDir };
-      this.assertValidInput(normalized);
+      this.assertValidInput(normalized, { create: true });
       await this.assertCreateInstallTarget(installDir);
 
       // ensureDefaultIniFiles async — mkdir root here synchronously via ensure
@@ -1636,8 +1636,11 @@ export class InstanceService extends EventEmitter {
     return profile;
   }
 
-  private assertValidInput(input: ServerProfileInput): void {
-    const issues = validateProfileInput(input);
+  private assertValidInput(
+    input: ServerProfileInput,
+    options?: { create?: boolean },
+  ): void {
+    const issues = validateProfileInput(input, options);
     if (issues.length > 0) {
       throw new Error(
         issues.map((i) => `${i.field}: ${i.message}`).join(" | "),

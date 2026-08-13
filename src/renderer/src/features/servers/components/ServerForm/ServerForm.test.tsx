@@ -40,6 +40,10 @@ describe("ServerForm", () => {
     expect(screen.getAllByLabelText(/name/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/^map$/i)).toBeInTheDocument();
     expect(screen.getByText(/new server/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^create server$/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^save$/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/untitled profile/i)).toBeInTheDocument();
+    expect(screen.getByText(/the island · 7777\/27015\/27020/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^browse$/i })).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: /base folder/i })).toHaveAttribute(
       "aria-readonly",
@@ -69,8 +73,7 @@ describe("ServerForm", () => {
     );
 
     expect(screen.getByRole("combobox", { name: /^cluster$/i })).toHaveValue("None");
-    expect(screen.getByLabelText(/^cluster id$/i)).toHaveValue("");
-    expect(screen.getByText("—")).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^cluster id$/i)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("combobox", { name: /^cluster$/i }));
     await user.click(await screen.findByRole("option", { name: /alpha · via the island/i }));
@@ -96,7 +99,7 @@ describe("ServerForm", () => {
     );
 
     expect(screen.getByRole("combobox", { name: /^cluster$/i })).toHaveValue("None");
-    expect(screen.getByLabelText(/^cluster id$/i)).toHaveValue("");
+    expect(screen.queryByLabelText(/^cluster id$/i)).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /create a cluster first/i }));
     expect(onOpenClusters).toHaveBeenCalledOnce();
   });
@@ -124,6 +127,9 @@ describe("ServerForm", () => {
     expect(
       screen.getByRole("textbox", { name: /shared cluster directory/i }),
     ).toHaveAttribute("aria-readonly", "true");
+    expect(screen.getByRole("button", { name: /^save changes$/i })).toBeInTheDocument();
+    expect(screen.getByText(/the island · 7777\/27015\/27020/i)).toBeInTheDocument();
+    expect(screen.getByText(/^reachability$/i)).toBeInTheDocument();
   });
 
   it("previews port conflicts against the fleet (#178)", () => {
@@ -163,6 +169,41 @@ describe("ServerForm", () => {
       screen.queryByRole("button", { name: /browse asa catalog/i }),
     ).not.toBeInTheDocument();
     expect(screen.queryByTestId("server-form-launch-summary")).not.toBeInTheDocument();
+  });
+
+  it("uses the same grid in the embedded workspace tab (#292)", () => {
+    render(
+      <AppProviders>
+        <ServerForm
+          initial={profile({ id: "srv-a", name: "The Island" })}
+          variant="embedded"
+          onOpenConfigurationAssistant={vi.fn()}
+          onCancel={vi.fn()}
+          onSaved={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText(/^server information$/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /configuration wizard/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^save changes$/i })).toBeInTheDocument();
+    expect(screen.getByText(/^reachability$/i)).toBeInTheDocument();
+    expect(screen.getByText(/the island · 7777\/27015\/27020/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/auto-start with yark/i)).toBeInTheDocument();
+  });
+
+  it("hides Custom map on create (#292)", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AppProviders>
+        <ServerForm initial={null} onCancel={vi.fn()} onSaved={vi.fn()} />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("combobox", { name: /^map$/i }));
+    expect(screen.queryByRole("option", { name: /^custom/i })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/custom map token/i)).not.toBeInTheDocument();
   });
 
   it("allows Custom map launch token (#65 / #191)", async () => {
@@ -241,7 +282,7 @@ describe("ServerForm", () => {
     await user.click(
       screen.getByRole("option", { name: /^Svartalfheim Premium$/i }),
     );
-    await user.click(screen.getByRole("button", { name: /save/i }));
+    await user.click(screen.getByRole("button", { name: /^save changes$/i }));
     await waitFor(() => {
       expect(window.api.updateServer).toHaveBeenCalledWith(
         "srv-svart",

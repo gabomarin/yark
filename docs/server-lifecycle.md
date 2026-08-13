@@ -90,8 +90,10 @@ ASA map packs use the same launch shape as content mods:
 | Linked identity | Optional `profile.mapModId` for custom maps; cleared for official maps |
 | ASE `ActiveMapMod` / `-MapModID=` | **Not used** |
 
-Operator flow: enable a CurseForge **Maps** mod → toast (map unchanged) → Server Information
-**Map** groups Official / Map mods / Custom… → choosing a Map mod sets `map` + `mapModId`.
+**Create (`servers:create`)** only accepts official `KNOWN_MAPS` tokens. Custom maps stay on
+edit, import, and clone. Operator flow after create: enable a CurseForge **Maps** mod → toast
+(map unchanged) → Server Information **Map** groups Official / Map mods / Custom… → choosing a
+Map mod sets `map` + `mapModId`.
 
 **Start blockers** (`mapIdentityStartBlockers` / `assertMapIdentityReadyForStart`): for a custom
 map, Start fails when `mapModId` is unset, missing from `mods`, or listed in `disabledMods`.

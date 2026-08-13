@@ -160,7 +160,7 @@ async function createDemoServer(app, page, demo, portOffset) {
   await page.getByLabel("Query port").fill(String(27015 + portOffset));
   await page.getByLabel("RCON port").fill(String(27020 + portOffset));
   await page.locator("input[type='password']").last().fill("admin1234");
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Create server" }).click();
 
   const later = page.getByRole("button", { name: /^Later$/i });
   try {

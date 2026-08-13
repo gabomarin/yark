@@ -1,32 +1,106 @@
-.page {
-  min-height: 100vh;
-  padding: 20px 24px;
+.formShell {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.formHeader {
+  flex-shrink: 0;
+  padding: var(--app-space-lg) var(--app-space-xl) var(--app-space-md);
+}
+
+.formTitle {
+  margin: 0;
+  font-size: var(--app-font-page);
+  line-height: 1.1;
+}
+
+.formBodyScroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding: 0 var(--app-space-xl) var(--app-space-md);
+}
+
+.formInner {
+  width: 100%;
+}
+
+.formFooter {
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+  border-top: 1px solid var(--app-color-border);
+  padding: var(--app-space-lg) var(--app-space-xl);
+  background: color-mix(in srgb, var(--app-color-panel) 88%, transparent);
+}
+
+.identityHero {
+  display: flex;
+  gap: var(--app-space-md);
+  align-items: flex-start;
+}
+
+.identityHeroCopy {
+  min-width: 0;
+  flex: 1;
+}
+
+.sectionFill {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.reachabilityAlertSlot {
+  flex: 1 1 auto;
+  min-height: 5.5rem;
+  display: flex;
+  align-items: stretch;
+}
+
+.reachabilityAlertSlot > * {
+  flex: 1 1 auto;
+  width: 100%;
 }
 
 .embedded {
   padding: 0;
   min-height: 0;
   flex: 1;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: 14px;
+  border-radius: var(--app-radius-md);
   background: var(--app-color-panel);
 }
 
-.embeddedSurface {
-  height: 100%;
+.embeddedHeader {
+  flex-shrink: 0;
+  padding: var(--app-space-sm) var(--app-space-md);
+  border-bottom: 1px solid var(--app-color-border);
+}
+
+.embeddedScroll {
+  flex: 1 1 auto;
   min-height: 0;
-  padding: 16px;
   overflow-y: auto;
   scrollbar-gutter: stable;
+  padding: var(--app-space-md);
 }
 
-.card,
-.section {
-  border-radius: var(--app-radius-lg);
-  border-color: var(--app-color-border-subtle);
-  background: var(--app-color-panel);
-  box-shadow: var(--app-shadow-panel);
+.embeddedFooter {
+  flex-shrink: 0;
+  border-top: 1px solid var(--app-color-border);
+  padding: var(--app-space-sm) var(--app-space-md);
+  background: color-mix(in srgb, var(--app-color-panel) 92%, transparent);
 }
 
 .span2 {
@@ -43,25 +117,4 @@
 .startupCopy {
   flex: 1 1 auto;
   min-width: 0;
-}
-
-.pageHeader,
-.embeddedHeader {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--app-color-border);
-}
-
-.pageHeader {
-  background: var(--app-color-panel);
-}
-
-.embeddedHeader {
-  top: 0;
-  margin-top: -16px;
-  padding-top: 16px;
-  background: var(--app-color-panel);
-  box-shadow: 0 -16px 0 var(--app-color-panel);
 }

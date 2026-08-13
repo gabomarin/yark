@@ -13,7 +13,7 @@ Each profile is one dedicated-server install YARK can manage: path, map, session
 | Field | Rule |
 | --- | --- |
 | Name | 1–64 characters (Windows folder-safe) |
-| Map + session | Required — Map is Official, an enabled **Map mod**, or **Custom…** |
+| Map + session | Required. **New server** is official maps only; edit / import / clone may use an enabled **Map mod** or **Custom…** |
 | Install dir | Absolute Windows path (`C:\…` or UNC) |
 | Ports | 1024–65535; game, query, and RCON **distinct inside the profile** |
 | Admin password | Length ≥ 4 |
@@ -30,9 +30,10 @@ Server Information → **Map** groups options as:
 | **Map mods** | Enabled CurseForge **Maps** packs whose launch token YARK could detect |
 | **Other → Custom…** | You type the author launch token yourself (e.g. `Svartalfheim_WP`) |
 
-Choosing a **Map mod** sets the launch token and links the pack’s Project ID on the profile.
-Choosing an **official** map clears that link. **Custom…** is for tokens YARK could not list —
-you still need the matching map pack **enabled** on [Mods](/docs/mods/) for a correct boot.
+**New server** only lists **Official**. After create (or on import / clone), choosing a **Map
+mod** sets the launch token and links the pack’s Project ID on the profile. Choosing an
+**official** map clears that link. **Custom…** is for tokens YARK could not list — you still
+need the matching map pack **enabled** on [Mods](/docs/mods/) for a correct boot.
 
 Official maps use bundled artwork on cards, the workspace server list / Switch server
 panel, and the workspace header. Custom maps with a linked pack show that mod’s CurseForge
