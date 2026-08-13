@@ -15,6 +15,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
+const { stubFolderPicker } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -127,15 +128,6 @@ function cardFor(page, name) {
   return page.locator("[data-server-card]", {
     has: page.getByText(name, { exact: true }),
   }).first();
-}
-
-async function stubFolderPicker(app, folderPath) {
-  await app.evaluate(({ dialog }, chosen) => {
-    dialog.showOpenDialog = async () => ({
-      canceled: false,
-      filePaths: [chosen],
-    });
-  }, folderPath);
 }
 
 async function run() {

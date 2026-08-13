@@ -7,6 +7,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
+const { pickPathField } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -59,7 +60,7 @@ async function measureClusters(page) {
   });
 }
 
-async function ensureClusterSeed(page, outDir) {
+async function ensureClusterSeed(app, page, outDir) {
   await goNav(page, "Servers");
   await page.locator("[data-overview-page]").waitFor({ timeout: 15000 });
   await page.waitForTimeout(400);
@@ -76,20 +77,11 @@ async function ensureClusterSeed(page, outDir) {
     });
     await page.getByRole("textbox", { name: /^Name$/ }).fill(serverName);
     await page.getByRole("textbox", { name: /^Session name$/ }).fill(`Session ${serverName}`);
-    const baseFolder = page.getByRole("textbox", { name: /^Base folder$/ });
-    if ((await baseFolder.count()) > 0) {
-      await baseFolder.fill(installDir);
-    } else {
-      await page.getByPlaceholder("C:\\ark_servers").fill(installDir);
-    }
+    await pickPathField(app, page, "Base folder", installDir);
     await page.getByLabel("Game port").fill("18777");
     await page.getByLabel("Query port").fill("38015");
     await page.getByLabel("RCON port").fill("38020");
     await page.locator("input[type='password']").last().fill("visual-test-admin");
-    await page.getByRole("textbox", { name: /Cluster ID/i }).fill("visual-alpha");
-    await page.getByRole("textbox", { name: /Shared cluster directory/i }).fill(
-      path.join(outDir, "cluster-share"),
-    );
     await page.getByRole("button", { name: "Save" }).click();
     await page.locator("[data-server-card]").first().waitFor({ state: "visible", timeout: 15000 });
     return { seeded: true };
@@ -122,7 +114,7 @@ async function run() {
       timeout: 20000,
     }).catch(() => undefined);
 
-    await ensureClusterSeed(page, outDir);
+    await ensureClusterSeed(app, page, outDir);
 
     // Navigation: Servers → Clusters should be one click from sidebar.
     await goNav(page, "Clusters");

@@ -15,6 +15,7 @@ const {
   launchElectronApp,
   waitForOverview,
   quitElectronApp,
+  pickPathField,
   removeFixtureDir,
 } = require("./e2e-launch.cjs");
 
@@ -73,7 +74,7 @@ async function removeServerIfPresent(page, name) {
   await dismissOpenMenus(page);
 }
 
-async function createServer(page, serverName, installDir, ports) {
+async function createServer(app, page, serverName, installDir, ports) {
   await page.getByRole("button", { name: "New server" }).first().click();
   await page.getByRole("heading", { name: "New server" }).waitFor({
     state: "visible",
@@ -82,12 +83,7 @@ async function createServer(page, serverName, installDir, ports) {
 
   await page.getByRole("textbox", { name: /^Name$/ }).fill(serverName);
   await page.getByRole("textbox", { name: /^Session name$/ }).fill(`Session ${serverName}`);
-  const baseFolder = page.getByRole("textbox", { name: /^Base folder$/ });
-  if ((await baseFolder.count()) > 0) {
-    await baseFolder.fill(installDir);
-  } else {
-    await page.getByPlaceholder("C:\\ark_servers").fill(installDir);
-  }
+  await pickPathField(app, page, "Base folder", installDir);
 
   await page.getByLabel("Game port").fill(String(ports.game));
   await page.getByLabel("Query port").fill(String(ports.query));
@@ -163,7 +159,7 @@ async function run() {
     const installDir = path.join(serversDir, "base");
     fs.mkdirSync(installDir, { recursive: true });
 
-    await createServer(page, serverName, installDir, ports);
+    await createServer(app, page, serverName, installDir, ports);
     cloneName = await cloneServer(page, serverName);
 
     // Shell navigation smoke across main routes

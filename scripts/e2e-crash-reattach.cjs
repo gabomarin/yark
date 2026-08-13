@@ -27,6 +27,7 @@ const { tmpdir } = require("node:os");
 const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
+const { pickPathField } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -172,7 +173,7 @@ async function launchApp(projectRoot, userData, steamCmdExe) {
   });
 }
 
-async function createServer(page, serverName, baseFolder, ports) {
+async function createServer(app, page, serverName, baseFolder, ports) {
   await page.getByRole("button", { name: "New server" }).first().click();
   await page.getByRole("heading", { name: "New server" }).waitFor({
     state: "visible",
@@ -183,12 +184,7 @@ async function createServer(page, serverName, baseFolder, ports) {
   await page
     .getByRole("textbox", { name: /^Session name$/ })
     .fill(`Session ${serverName}`);
-  const baseInput = page.getByRole("textbox", { name: /^Base folder$/ });
-  if ((await baseInput.count()) > 0) {
-    await baseInput.fill(baseFolder);
-  } else {
-    await page.getByPlaceholder("C:\\ark_servers").fill(baseFolder);
-  }
+  await pickPathField(app, page, "Base folder", baseFolder);
 
   await page.getByLabel("Game port").fill(String(ports.game));
   await page.getByLabel("Query port").fill(String(ports.query));
@@ -320,7 +316,7 @@ async function run() {
     assert.equal(steamSet.ok, true, `setSteamCmdPath failed: ${steamSet.error ?? "?"}`);
 
     // 2) Create server in temp folder
-    await createServer(page, serverName, serversRoot, ports);
+    await createServer(app, page, serverName, serversRoot, ports);
     const listed = await page.evaluate(async () => window.api.listServers());
     assert.equal(listed.ok, true, `listServers failed: ${listed.error ?? "?"}`);
     const profile = (listed.data ?? []).find((row) => row.name === serverName);

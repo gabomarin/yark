@@ -8,6 +8,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
+const { pickPathField } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -61,7 +62,7 @@ async function goNav(page, label) {
   await page.waitForTimeout(200);
 }
 
-async function ensureServer(page, outDir) {
+async function ensureServer(app, page, outDir) {
   await goNav(page, "Servers");
   await page.locator("[data-overview-page]").waitFor({ timeout: 15000 });
   await page.waitForTimeout(500);
@@ -88,12 +89,7 @@ async function ensureServer(page, outDir) {
   });
   await page.getByRole("textbox", { name: /^Name$/ }).fill(serverName);
   await page.getByRole("textbox", { name: /^Session name$/ }).fill(`Session ${serverName}`);
-  const baseFolder = page.getByRole("textbox", { name: /^Base folder$/ });
-  if ((await baseFolder.count()) > 0) {
-    await baseFolder.fill(installDir);
-  } else {
-    await page.getByPlaceholder("C:\\ark_servers").fill(installDir);
-  }
+  await pickPathField(app, page, "Base folder", installDir);
   await page.getByLabel("Game port").fill("17777");
   await page.getByLabel("Query port").fill("37015");
   await page.getByLabel("RCON port").fill("37020");
@@ -103,8 +99,8 @@ async function ensureServer(page, outDir) {
   return { created: true, name: serverName };
 }
 
-async function openFirstWorkspace(page, outDir) {
-  await ensureServer(page, outDir);
+async function openFirstWorkspace(app, page, outDir) {
+  await ensureServer(app, page, outDir);
   const firstCard = page.locator("[data-server-card]").first();
   assert.ok((await firstCard.count()) > 0, "Need at least one server for backups visual review");
   await firstCard.getByRole("button", { name: /Open settings/i }).click();
@@ -153,7 +149,7 @@ async function run() {
       timeout: 20000,
     });
 
-    await openFirstWorkspace(page, outDir);
+    await openFirstWorkspace(app, page, outDir);
 
     for (const size of sizes) {
       await page.setViewportSize({ width: size.width, height: size.height });

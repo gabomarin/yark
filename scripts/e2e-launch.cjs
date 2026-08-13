@@ -155,6 +155,66 @@ async function quitElectronApp(app) {
  * Remove a disposable fixture directory with a few EBUSY/EPERM retries (Windows).
  * @param {string} target
  */
+/**
+ * Stub Electron `dialog.showOpenDialog` so PathField Browse returns `folderPath`.
+ * @param {import('playwright').ElectronApplication} app
+ * @param {string} folderPath
+ */
+async function stubFolderPicker(app, folderPath) {
+  await app.evaluate(({ dialog }, chosen) => {
+    dialog.showOpenDialog = async () => ({
+      canceled: false,
+      filePaths: [chosen],
+    });
+  }, folderPath);
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Fill a browse-only PathField chip (#222): stub the native dialog, click Browse.
+ * @param {import('playwright').ElectronApplication} app
+ * @param {import('playwright').Page} page
+ * @param {string} ariaLabel e.g. "Base folder"
+ * @param {string} folderPath
+ * @param {{ scope?: import('playwright').Locator }} [options]
+ */
+async function pickPathField(app, page, ariaLabel, folderPath, options = {}) {
+  fs.mkdirSync(folderPath, { recursive: true });
+  await stubFolderPicker(app, folderPath);
+  const scope = options.scope ?? page;
+  const chip = scope.getByRole("textbox", {
+    name: new RegExp(`^${escapeRegExp(ariaLabel)}$`, "i"),
+  });
+  await chip.waitFor({ state: "visible", timeout: 10000 });
+  await chip.locator("xpath=..").getByRole("button", { name: /^Browse$/i }).click();
+  const expectedLower = folderPath.replace(/\//g, "\\").toLowerCase();
+  await page.waitForFunction(
+    ({ label, expected }) => {
+      const nodes = [...document.querySelectorAll('[role="textbox"][aria-label]')];
+      const el = nodes.find(
+        (node) =>
+          (node.getAttribute("aria-label") || "").toLowerCase() === label.toLowerCase(),
+      );
+      if (!el) {
+        return false;
+      }
+      const shown = `${el.getAttribute("title") || ""} ${el.textContent || ""}`
+        .replace(/\//g, "\\")
+        .toLowerCase();
+      return shown.includes(expected);
+    },
+    { label: ariaLabel, expected: expectedLower },
+    { timeout: 10000 },
+  );
+}
+
+/**
+ * Remove a disposable fixture directory with a few EBUSY/EPERM retries (Windows).
+ * @param {string} target
+ */
 async function removeFixtureDir(target) {
   if (!fs.existsSync(target)) return;
   let lastError = null;
@@ -181,5 +241,7 @@ module.exports = {
   launchElectronApp,
   waitForOverview,
   quitElectronApp,
+  stubFolderPicker,
+  pickPathField,
   removeFixtureDir,
 };

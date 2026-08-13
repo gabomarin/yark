@@ -37,6 +37,9 @@ Requirements:
 - Launch failures must mention Electron/display/`ELECTRON_RUN_AS_NODE`/missing
   build — not only a Playwright selector timeout. Shared helpers:
   [`scripts/e2e-launch.cjs`](../scripts/e2e-launch.cjs).
+- Create/edit **Base folder** (and other PathFields) are browse-only chips
+  (`aria-readonly`). Do not `.fill()` them — stub `dialog.showOpenDialog` and
+  click **Browse** (`pickPathField` / `stubFolderPicker`).
 
 Out of PR CI: SteamCMD depot download, real ASA process lifecycle, safe-update
 rollback demos, and long move/import suites (keep local / release audit).
