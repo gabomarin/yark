@@ -103,6 +103,67 @@ describe("Sidebar YARK version update affordance", () => {
     expect(onYarkUpdateClick).toHaveBeenCalledTimes(1);
   });
 
+  it("sizes SteamCMD controls by UI density (#233)", () => {
+    const { rerender } = render(
+      <AppProviders density="compact">
+        <Sidebar
+          route="overview"
+          onNavigate={vi.fn()}
+          steamCmdDetected
+          steamCmdRunning={false}
+          officialVersion="1.0"
+          officialNetworkStatus="online"
+          appVersion="0.5.2"
+          iconMode
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("button", { name: "SteamCMD ready" })).toHaveAttribute(
+      "data-size",
+      "md",
+    );
+
+    rerender(
+      <AppProviders density="comfortable">
+        <Sidebar
+          route="overview"
+          onNavigate={vi.fn()}
+          steamCmdDetected
+          steamCmdRunning={false}
+          officialVersion="1.0"
+          officialNetworkStatus="online"
+          appVersion="0.5.2"
+          iconMode
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("button", { name: "SteamCMD ready" })).toHaveAttribute(
+      "data-size",
+      "lg",
+    );
+
+    rerender(
+      <AppProviders density="compact">
+        <Sidebar
+          route="overview"
+          onNavigate={vi.fn()}
+          steamCmdDetected
+          steamCmdRunning={false}
+          officialVersion="1.0"
+          officialNetworkStatus="online"
+          appVersion="0.5.2"
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("button", { name: "SteamCMD ready" })).toHaveAttribute(
+      "data-size",
+      "sm",
+    );
+  });
+
   it("shows icon-only nav with tooltips in rail mode (#107)", () => {
     render(
       <AppProviders>

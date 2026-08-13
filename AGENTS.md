@@ -7,6 +7,14 @@ issues/PRs, commit messages, docs, code comments, and UI copy in English. Chat w
 the user may follow the user's language; repo and GitHub artifacts stay English.
 See `.cursor/rules/english-project-language.mdc`.
 
+## Private planning
+
+Unreleased product specs, design identity, and private tickets are canonical in
+the private Notion Product Lab when Notion MCP is available. The hub URL lives
+only in gitignored `.cursor/project-context/README.md`, which also keeps full
+offline snapshots for agents without Notion. Do not recreate those specs as
+tracked Markdown or link the hub from the public repository.
+
 ## Changelog
 
 Update `CHANGELOG.md` under `## [Unreleased]` on feature branches (one short

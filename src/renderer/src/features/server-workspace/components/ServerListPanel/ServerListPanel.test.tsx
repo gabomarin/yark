@@ -108,6 +108,44 @@ describe("ServerListPanel", () => {
     ).toBeInTheDocument();
   });
 
+  it("sizes rail Add server by UI density (#233)", () => {
+    const { rerender } = render(
+      <AppProviders density="compact">
+        <ServerListPanel
+          servers={[profile()]}
+          selectedServerId="srv-1"
+          statuses={new Map()}
+          iconMode
+          onSelectServer={() => undefined}
+          onAddServer={() => undefined}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("button", { name: "Add server" })).toHaveAttribute(
+      "data-size",
+      "md",
+    );
+
+    rerender(
+      <AppProviders density="comfortable">
+        <ServerListPanel
+          servers={[profile()]}
+          selectedServerId="srv-1"
+          statuses={new Map()}
+          iconMode
+          onSelectServer={() => undefined}
+          onAddServer={() => undefined}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("button", { name: "Add server" })).toHaveAttribute(
+      "data-size",
+      "lg",
+    );
+  });
+
   it("hides labels and exposes rail tooltips in icon mode (#107)", () => {
     render(
       <AppProviders>
