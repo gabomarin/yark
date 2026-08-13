@@ -69,6 +69,24 @@ export default defineConfig({
           },
         },
         {
+          tag: "link",
+          attrs: {
+            rel: "icon",
+            type: "image/png",
+            sizes: "48x48",
+            href: "/favicon-48x48.png",
+          },
+        },
+        {
+          tag: "link",
+          attrs: {
+            rel: "icon",
+            type: "image/png",
+            sizes: "192x192",
+            href: "/favicon-192x192.png",
+          },
+        },
+        {
           tag: "meta",
           attrs: {
             name: "keywords",
@@ -118,7 +136,7 @@ export default defineConfig({
         {
           label: "Configuration",
           items: [
-            { label: "INI & configuration assistant", link: "/docs/ini-and-wizard/" },
+            { label: "INI & wizard", link: "/docs/ini-and-wizard/" },
             { label: "Copy configuration", link: "/docs/copy-configuration/" },
             { label: "Mods", link: "/docs/mods/" },
             { label: "Clusters", link: "/docs/clusters/" },

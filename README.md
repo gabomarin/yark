@@ -46,6 +46,14 @@
 
 ## Why YARK?
 
+YARK started because I was tired of the tools I used to manage my ASA servers. They worked,
+but I spent too much time fighting their configuration screens — and several features I wanted
+sat behind paid tiers.
+
+I wanted a Windows app that was easier to live with, kept everything local, and did not lock
+the useful parts behind a paywall. At first it was just for my own servers. Once it became
+useful enough, I released it as a free, open-source prerelease.
+
 Running an ASA dedicated server normally means coordinating SteamCMD folders, launch arguments,
 INI files, ports, backups, logs, mods, and Windows processes by hand. YARK brings those concerns
 into one desktop shell while keeping server files and operational data on the host you control.
