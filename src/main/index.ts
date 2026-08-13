@@ -298,33 +298,37 @@ if (gotSingleInstanceLock) {
     };
 
     if (shouldShowSplash()) {
-      const placement = splashPositionForStored(peekStoredWindowState(dbPath));
-      splash = createSplashWindow({
-        version: APP_VERSION,
-        icon: resolveAppIcon(),
-        x: placement.x,
-        y: placement.y,
-      });
-      splash.once("show", () => {
-        splashShownAt = Date.now();
-        scheduleSplashHandoff();
-      });
-      splash.on("closed", () => {
-        if (splashDismissed) {
-          return;
-        }
-        if (mainWindow !== null && !mainWindow.isDestroyed()) {
-          if (!mainWindow.isVisible()) {
-            mainWindow.show();
+      try {
+        const placement = splashPositionForStored(peekStoredWindowState(dbPath));
+        splash = createSplashWindow({
+          version: APP_VERSION,
+          icon: resolveAppIcon(),
+          x: placement.x,
+          y: placement.y,
+        });
+        splash.once("show", () => {
+          splashShownAt = Date.now();
+          scheduleSplashHandoff();
+        });
+        splash.on("closed", () => {
+          if (splashDismissed) {
+            return;
           }
-          return;
-        }
-        app.quit();
-      });
-      splashMaxTimer = setTimeout(() => {
-        splashMaxTimer = null;
-        revealMainAfterSplash();
-      }, SPLASH_MAX_MS);
+          if (mainWindow !== null && !mainWindow.isDestroyed()) {
+            if (!mainWindow.isVisible()) {
+              mainWindow.show();
+            }
+            return;
+          }
+          app.quit();
+        });
+        splashMaxTimer = setTimeout(() => {
+          splashMaxTimer = null;
+          revealMainAfterSplash();
+        }, SPLASH_MAX_MS);
+      } catch {
+        splash = null;
+      }
     }
 
     let db: DatabaseSync;

@@ -6,7 +6,7 @@
 | --- | --- |
 | `yark-logo.png` | Full lockup — website hero; sidebar gets a resized copy |
 | `yark-icon.png` | Mark only — source for Windows/web icons |
-| `splashscreen.svg` | Animated lockup for the Electron startup splash |
+| `splashscreen.svg` | Splash lockup (CSS glow in `splash.html`; static under reduced motion) |
 | `yark-logo.svg` | Optional local design source (gitignored; not committed / not runtime) |
 
 ## Derived / wired

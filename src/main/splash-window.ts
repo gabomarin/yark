@@ -1,7 +1,17 @@
 import { app, BrowserWindow } from "electron";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-import { SPLASH_HEIGHT, SPLASH_WIDTH, buildSplashDocument } from "./splash-policy";
+import { randomUUID } from "node:crypto";
+import { existsSync, readFileSync, rmSync } from "node:fs";
+import { dirname, join } from "node:path";
+import {
+  FALLBACK_SPLASH_TEMPLATE,
+  SPLASH_HEIGHT,
+  SPLASH_WIDTH,
+  applySplashVersion,
+  buildSplashDocument,
+  splashDocumentDataUrl,
+  splashDocumentDataUrlIfSafe,
+  writePrivateSplashDocument,
+} from "./splash-policy";
 
 export {
   SPLASH_HEIGHT,
@@ -11,6 +21,8 @@ export {
   remainingSplashHoldMs,
   shouldShowSplash,
 } from "./splash-policy";
+
+const splashTempDirs = new WeakMap<BrowserWindow, string>();
 
 function firstExisting(paths: string[]): string | undefined {
   return paths.find((candidate) => existsSync(candidate));
@@ -28,6 +40,54 @@ function resolveSplashSvgPath(): string | undefined {
     join(__dirname, "splash/splashscreen.svg"),
     join(__dirname, "../../brand/splashscreen.svg"),
   ]);
+}
+
+function cleanupSplashTempDir(win: BrowserWindow): void {
+  const dir = splashTempDirs.get(win);
+  if (dir === undefined) {
+    return;
+  }
+  splashTempDirs.delete(win);
+  try {
+    rmSync(dir, { recursive: true, force: true });
+  } catch {
+    /* ignore */
+  }
+}
+
+function readSplashDocumentHtml(version: string): string {
+  const fallback = applySplashVersion(FALLBACK_SPLASH_TEMPLATE, version);
+  try {
+    const htmlPath = resolveSplashHtmlPath();
+    const svgPath = resolveSplashSvgPath();
+    if (htmlPath === undefined || svgPath === undefined) {
+      return fallback;
+    }
+    return buildSplashDocument(readFileSync(htmlPath, "utf8"), readFileSync(svgPath, "utf8"), version);
+  } catch {
+    return fallback;
+  }
+}
+
+function loadSplashHtml(win: BrowserWindow, html: string, fallbackHtml: string): void {
+  const loadFallback = (): void => {
+    if (win.isDestroyed()) {
+      return;
+    }
+    void win.loadURL(splashDocumentDataUrl(fallbackHtml)).catch(() => undefined);
+  };
+  const dataUrl = splashDocumentDataUrlIfSafe(html);
+  if (dataUrl !== undefined) {
+    void win.loadURL(dataUrl).catch(loadFallback);
+    return;
+  }
+  try {
+    const tempPath = writePrivateSplashDocument(html, app.getPath("temp"), randomUUID());
+    splashTempDirs.set(win, dirname(tempPath));
+    void win.loadFile(tempPath).catch(loadFallback);
+  } catch {
+    loadFallback();
+  }
 }
 
 export function createSplashWindow(options: {
@@ -64,29 +124,12 @@ export function createSplashWindow(options: {
       win.show();
     }
   });
+  win.on("closed", () => {
+    cleanupSplashTempDir(win);
+  });
 
-  const htmlPath = resolveSplashHtmlPath();
-  const svgPath = resolveSplashSvgPath();
-  if (htmlPath !== undefined && svgPath !== undefined) {
-    const documentHtml = buildSplashDocument(
-      readFileSync(htmlPath, "utf8"),
-      readFileSync(svgPath, "utf8"),
-      options.version,
-    );
-    const tmpPath = join(app.getPath("temp"), "yark-splash.html");
-    writeFileSync(tmpPath, documentHtml);
-    void win.loadFile(tmpPath);
-  } else {
-    void win.loadURL(
-      `data:text/html;charset=utf-8,${encodeURIComponent(
-        buildSplashDocument(
-          "<!DOCTYPE html><title>YARK</title><p>__YARK_VERSION__</p>",
-          "",
-          options.version,
-        ),
-      )}`,
-    );
-  }
+  const fallbackHtml = applySplashVersion(FALLBACK_SPLASH_TEMPLATE, options.version);
+  loadSplashHtml(win, readSplashDocumentHtml(options.version), fallbackHtml);
   return win;
 }
 
@@ -94,5 +137,6 @@ export function closeSplashWindow(win: BrowserWindow | null): void {
   if (win === null || win.isDestroyed()) {
     return;
   }
+  cleanupSplashTempDir(win);
   win.destroy();
 }

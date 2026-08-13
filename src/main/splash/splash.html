@@ -60,6 +60,34 @@
         height: auto;
       }
 
+      .yark-glow-soft {
+        animation: yark-glow-soft 2.6s ease-in-out infinite;
+      }
+
+      .yark-glow-core {
+        animation: yark-glow-core 2.6s ease-in-out infinite;
+      }
+
+      @keyframes yark-glow-soft {
+        0%,
+        100% {
+          opacity: 0.2;
+        }
+        50% {
+          opacity: 0.85;
+        }
+      }
+
+      @keyframes yark-glow-core {
+        0%,
+        100% {
+          opacity: 0.28;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
       .meta {
         margin: 8px 0 0;
         color: var(--muted);
@@ -105,6 +133,11 @@
         .dot {
           animation: none !important;
           opacity: 1 !important;
+        }
+
+        .yark-glow-soft,
+        .yark-glow-core {
+          animation: none !important;
         }
       }
     </style>
