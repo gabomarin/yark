@@ -50,7 +50,7 @@ YARK started because I was tired of the tools I used to manage my ASA servers. T
 but I spent too much time fighting their configuration screens — and several features I wanted
 sat behind paid tiers.
 
-I wanted a Windows app that was easier to live with, kept everything local, and did not lock
+I wanted a Windows app that was easier to live with, ran on my own machine, and did not lock
 the useful parts behind a paywall. At first it was just for my own servers. Once it became
 useful enough, I released it as a free, open-source prerelease.
 
