@@ -17,6 +17,9 @@ Research archive: [spikes/65-modded-asa-maps.md](spikes/65-modded-asa-maps.md).
   app never holds a CurseForge API key.
 - Allow operators to stage mods **disabled** (new adds start disabled) so load
   order can be prepared before a restart.
+- Dedicated servers with the default `-ServerPlatform=ALL` cannot load Custom
+  Cosmetics / PC-only mods; CFCore then logs “Not all mods were installed” and
+  ASA may exit. Runtime + `server_crashed` Events surface that (#326).
 - Persist Mods and Launch edits as **narrow patches** (`servers:update-patch`) so
   concurrent panel saves merge instead of last-write-wins (#209).
 

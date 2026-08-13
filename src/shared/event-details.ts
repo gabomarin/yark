@@ -92,7 +92,8 @@ function catalogFor(event: AppEvent): AppEventDetails {
       return {
         what: "The dedicated server process exited unexpectedly.",
         cause: "Crash, kill, or OS-level termination while the manager expected it to stay running.",
-        suggestion: "Check runtime logs and recent updates/mods, then start again if the install is healthy.",
+        suggestion:
+          "Open Logs → Runtime (ShooterGame.log). After a SteamCMD update, check Mods for cosmetics or PC-only IDs if CFCore reported mods not installed.",
       };
     case "server_started":
       return {

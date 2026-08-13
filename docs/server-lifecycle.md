@@ -148,12 +148,15 @@ Constraints:
   There is no user-facing Leave-running quit option — prefer **Close window to
   tray** to keep YARK (and backups) alive. Stop waits for starting with a
   readiness timeout so quit cannot hang forever.
-- Native console and piped Runtime logs are mutually exclusive for the **console
-  window** — with a native console, Runtime is mostly system messages. With the
-  console off (piped mode), YARK still captures any stdout/stderr and **tails
-  `ShooterGame/Saved/Logs/ShooterGame.log`** into the same in-memory Runtime buffer
-  (`MAX_RUNTIME_LOG_LINES = 1200`). Piped mode also appends `-log` when missing
-  so Unreal is more likely to write those disk logs.
+- Native console and piped stdout remain separate **windows**. Runtime always
+  tails `ShooterGame/Saved/Logs/ShooterGame.log` (and still captures piped
+  stdout/stderr when the native console is off). Start appends `-log` even with
+  `-console` so Unreal writes that file. The in-memory Runtime buffer
+  (`MAX_RUNTIME_LOG_LINES = 1200`) is cleared on the **next Start**, not when
+  the process crashes — so CFCore/Fatal lines stay visible until you launch again.
+  An unexpected exit during `starting` (including exit code 0) is an error;
+  YARK records `server_crashed` with a ShooterGame.log diagnosis when it can
+  (for example ASAMods “Not all mods were installed”).
 - `servers:open-native-terminal` opens a separate `cmd` in the install dir; that
   is **not** the game process.
 

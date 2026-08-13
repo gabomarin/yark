@@ -47,13 +47,16 @@ Timeout after ~10 minutes → status **error** and process terminated.
 
 ## Empty or thin Runtime logs
 
-- Turn **native console** off (piped mode) to capture process + `ShooterGame.log` tail  
-- Confirm `ShooterGame/Saved/Logs/ShooterGame.log` exists after a run  
+- Runtime tails `ShooterGame/Saved/Logs/ShooterGame.log` even with native console on
+- Confirm that file exists after a run; fatals sometimes only appear there
 - Use Source filter; System vs Server log vs Process
+- After a crash, do not Start again until you have read Runtime — Start clears the buffer
 
 ## Mods “not working”
 
 YARK only passes Project IDs on the command line. Confirm IDs, enable flags, restart, and that mod files actually exist for the dedicated server outside YARK. Newly added mods start **disabled** until you enable them.
+
+If the process dies at CFCore with **Not all mods were installed**, remove Custom Cosmetics / skins IDs and any PC-only mods while Launch uses `-ServerPlatform=ALL`. Events should show `server_crashed` with the missing IDs.
 
 ## Custom / Maps pack will not start
 

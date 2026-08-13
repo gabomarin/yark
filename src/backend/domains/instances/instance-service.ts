@@ -33,6 +33,7 @@ import type { InstanceLockManager } from "../../orchestration/instance-lock-mana
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { ProcessManager } from "../../infra/process/process-manager";
 import { mapIdentityStartBlockers } from "@shared/map-identity";
+import { diagnoseAsaStartupFailure } from "@shared/asa-startup-failure";
 import { findPortConflicts, validateProfileInput } from "./validation";
 import { checkClusterCompliance } from "../cluster/compliance";
 import { RconSessionManager } from "../../infra/rcon/rcon-session-manager";
@@ -169,6 +170,7 @@ export class InstanceService extends EventEmitter {
   private lastInstallServers: ServerInstallationInfo[] = [];
   /** Last classified health per server — used for degradation-only events (#57). */
   private readonly lastKnownInstallHealth = new Map<string, InstallationHealthStatus>();
+  private readonly lastRuntimeStatus = new Map<string, ServerRuntimeInfo["status"]>();
   /** Coalesce concurrent full-fleet installation inspects for the same profile set + cache mode. */
   private fleetInspectInFlight: {
     key: string;
@@ -198,6 +200,8 @@ export class InstanceService extends EventEmitter {
     // Persistent session only while `running`; keep the socket during
     // `stopping` for SaveWorld/DoExit but never auto-reconnect.
     this.processes.on("status", (status: ServerRuntimeInfo) => {
+      const previous = this.lastRuntimeStatus.get(status.serverId);
+      this.lastRuntimeStatus.set(status.serverId, status.status);
       if (status.status === "running") {
         this.rconSessions.setAutoReconnect(status.serverId, true);
         const profile = this.repo.get(status.serverId);
@@ -210,6 +214,9 @@ export class InstanceService extends EventEmitter {
         this.rconSessions.setAutoReconnect(status.serverId, false);
       } else if (status.status === "stopped" || status.status === "error") {
         this.rconSessions.disconnect(status.serverId);
+      }
+      if (status.status === "error" && previous !== "error") {
+        this.recordUnexpectedProcessExit(status);
       }
     });
   }
@@ -1284,6 +1291,31 @@ export class InstanceService extends EventEmitter {
       .sort()
       .join("\n");
     return `${bypassCache ? "1" : "0"}\n${ids}`;
+  }
+
+  private recordUnexpectedProcessExit(status: ServerRuntimeInfo): void {
+    const profile = this.repo.get(status.serverId);
+    const name = profile?.name ?? status.serverId;
+    const diagnosis = diagnoseAsaStartupFailure(
+      this.processes.getRuntimeLogSnapshot(status.serverId, 400).join("\n"),
+    );
+    const summary =
+      diagnosis?.summary ??
+      status.lastError ??
+      `Server "${name}" exited unexpectedly`;
+    this.repo.addEvent(status.serverId, "server_crashed", "error", summary, {
+      what: summary,
+      cause: diagnosis?.cause,
+      location: "ShooterGame/Saved/Logs/ShooterGame.log",
+      suggestion: diagnosis?.suggestion,
+      context: {
+        lastError: status.lastError,
+        missingModIds:
+          diagnosis !== null && diagnosis.missingModIds.length > 0
+            ? diagnosis.missingModIds.join(",")
+            : null,
+      },
+    });
   }
 
   /** Update health memory and emit degradation-only events. */

@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { open } from "node:fs/promises";
 import { join } from "node:path";
 import { StringDecoder } from "node:string_decoder";
@@ -21,6 +21,24 @@ export function asaSavedLogsDir(installDir: string): string {
 /** Canonical ASA session log; do not follow other *.log files in the folder. */
 export function asaPrimaryLogPath(installDir: string): string {
   return join(asaSavedLogsDir(installDir), "ShooterGame.log");
+}
+
+const DEFAULT_EXCERPT_BYTES = 64 * 1024;
+
+/** Last chunk of ShooterGame.log (for crash diagnosis if the live tail missed lines). */
+export function readAsaLogTailExcerpt(
+  installDir: string,
+  maxBytes = DEFAULT_EXCERPT_BYTES,
+): string {
+  const path = asaPrimaryLogPath(installDir);
+  try {
+    const buffer = readFileSync(path);
+    const slice =
+      buffer.length > maxBytes ? buffer.subarray(buffer.length - maxBytes) : buffer;
+    return decodeAsaLogBytes(slice);
+  } catch {
+    return "";
+  }
 }
 
 export function listAsaLogFiles(logsDir: string): string[] {

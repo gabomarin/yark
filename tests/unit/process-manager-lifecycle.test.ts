@@ -125,6 +125,52 @@ describe("ProcessManager lifecycle ownership", () => {
     await manager.kill(profile.id);
   });
 
+  it("tails ShooterGame.log with native console and keeps Runtime until the next start", async () => {
+    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-lifecycle-"));
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
+    await mkdir(binaryDir, { recursive: true });
+    await writeFile(join(binaryDir, "ArkAscendedServer.exe"), "");
+    const logsDir = join(cleanupRoot, "ShooterGame", "Saved", "Logs");
+    await mkdir(logsDir, { recursive: true });
+    await writeFile(
+      join(logsDir, "ShooterGame.log"),
+      [
+        "ASAMods: Error: Not all mods were installed. Check the log for CFCore errors.",
+        "If you have any Custom Cosmetics in the mod list please remove them.",
+        "Attempting to install pc-only mods on a cross-platform server will also fail to install.",
+        "Mods not installed: 1039450",
+        "",
+      ].join("\n"),
+    );
+
+    const first = fakeChild();
+    const second = fakeChild();
+    const children = [first, second];
+    const startTailer = vi.spyOn(AsaSavedLogsTailer.prototype, "start");
+    const manager = new ProcessManager({
+      spawnProcess: () => children.shift()!,
+    });
+    const profile = makeProfile(cleanupRoot);
+
+    manager.start(profile, { openNativeConsole: true });
+    expect(startTailer).toHaveBeenCalled();
+    first.emit("spawn");
+    first.emit("exit", 0);
+
+    expect(manager.getStatus(profile.id).status).toBe("error");
+    expect(manager.getStatus(profile.id).lastError).toContain("1039450");
+    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain(
+      "Not all mods were installed",
+    );
+
+    manager.start(profile, { openNativeConsole: true });
+    expect(
+      manager.getRuntimeLogSnapshot(profile.id).join("\n"),
+    ).not.toContain("Not all mods were installed");
+    second.emit("spawn");
+    await manager.kill(profile.id);
+  });
+
   it("reports error with live child as active until exit is observed", async () => {
     cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-lifecycle-"));
     const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");

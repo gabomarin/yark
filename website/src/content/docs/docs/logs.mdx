@@ -32,7 +32,7 @@ Workspace sections:
 | Section | Source |
 | --- | --- |
 | **Events** | SQLite event stream (with structured details when available) |
-| **Runtime** | In-memory buffer: process output + (piped mode) live tail of `ShooterGame.log` |
+| **Runtime** | In-memory buffer: process output + live tail of `ShooterGame.log` (native console on or off) |
 | **Updates** | Files under app userData `update-logs/` |
 | **Backups** | Backup operation history for that server |
 
@@ -50,7 +50,8 @@ Older rows without stored details still get catalog fallbacks by event type. Saf
 
 ## Runtime tips
 
-- Prefer **piped** mode (native console off) if you want YARK’s Runtime tab to show server log lines
+- Native console can stay on; Runtime still follows `ShooterGame.log`
+- A crash keeps Runtime until you **Start** again (or clear Runtime manually)
 - Use the **Source** filter: All / System / Server log / Process
 - While Runtime is open, it refreshes about every 1.5s
 - Timestamps display as `YYYY-MM-DD HH:MM:SS` (Unreal stamps treated as UTC, shown locally)

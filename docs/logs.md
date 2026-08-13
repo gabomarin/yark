@@ -98,7 +98,7 @@ Export (`logs:export`) resolves the same fields so text dumps stay useful.
 | Section | Source |
 | --- | --- |
 | Events | SQLite `events` for that server |
-| Runtime | In-memory buffer: stdout/stderr plus (piped mode) live tail of `ShooterGame/Saved/Logs` |
+| Runtime | In-memory buffer: stdout/stderr plus live tail of `ShooterGame/Saved/Logs/ShooterGame.log` (native console on or off). Cleared on the next Start, not on crash. |
 | Updates | Files under userData `update-logs/` (`{serverId}-….log`) |
 | Backups | Backup records from `BackupService` / repository |
 
@@ -108,9 +108,11 @@ after switching servers are ignored. A compact **Source** select filters
 All / System / Server log / Process. The viewer hides YARK capture timestamps;
 Server log lines show Unreal stamps interpreted as UTC and formatted locally.
 UI timestamps across Events / Runtime / Updates / Backups use `formatLogDateTime`
-(`YYYY-MM-DD HH:MM:SS`, with `.mmm` for Unreal stamps). Piped mode tails
-`ShooterGame/Saved/Logs/ShooterGame.log` only (with truncate/rotation handling)
-and buffers partial lines/UTF-16 bytes before appending to Runtime.
+(`YYYY-MM-DD HH:MM:SS`, with `.mmm` for Unreal stamps). Runtime tails
+`ShooterGame/Saved/Logs/ShooterGame.log` in both native-console and piped modes
+(truncate/rotation handling) and buffers partial lines/UTF-16 bytes. Native
+console still opens the OS window; it does not replace Runtime. The buffer is
+kept after a crash and cleared on the next Start (or a manual Runtime clear).
 
 Sidebar **Logs** deep-links into the workspace via `logsFocus`
 (`ServerLogsFocus`: optional `section`, `eventId`, `updateFileName`).
