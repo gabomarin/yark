@@ -70,6 +70,20 @@ Workflow: [`.github/workflows/pages.yml`](../.github/workflows/pages.yml)
 After deploy, submit `https://getyark.com/sitemap-index.xml` in Search Console
 when you care about SEO indexing.
 
+### SEO notes (getyark.com)
+
+- GitHub repo **About → Website** must be `https://getyark.com` (not the old
+  `gabomarin.github.io/yark` Pages URL). Topics and description should match the
+  product site, not leftover github.io copy.
+- Home `SoftwareApplication` JSON-LD may include `screenshot` and `featureList`.
+  Do **not** emit `aggregateRating` / `review` without real public ratings —
+  invented stars violate Google structured-data policies.
+- Favicon: ship an explicit **48×48** (and larger) PNG `rel=icon` in addition to
+  `favicon.ico`. Google SERP favicons and sitelinks are crawl/authority-side;
+  we cannot force sitelinks or a thumbnail beside the blue web result.
+- Validate `/` with [Rich Results Test](https://search.google.com/test/rich-results)
+  after schema changes.
+
 ## Analytics (optional)
 
 Privacy-first traffic via [Cloudflare Web Analytics](https://www.cloudflare.com/web-analytics/)
