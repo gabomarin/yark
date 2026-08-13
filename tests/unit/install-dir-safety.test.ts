@@ -22,19 +22,19 @@ describe("assertInstallDirVacantForCreate", () => {
 
   it("allows a missing path", async () => {
     const dir = join(await tempRoot(), "missing");
-    expect(() => assertInstallDirVacantForCreate(dir)).not.toThrow();
+    await expect(assertInstallDirVacantForCreate(dir)).resolves.toBeUndefined();
   });
 
   it("allows an empty folder", async () => {
     const dir = join(await tempRoot(), "empty");
     await mkdir(dir, { recursive: true });
-    expect(() => assertInstallDirVacantForCreate(dir)).not.toThrow();
+    await expect(assertInstallDirVacantForCreate(dir)).resolves.toBeUndefined();
   });
 
   it("rejects a non-empty folder", async () => {
     const dir = join(await tempRoot(), "used");
     await mkdir(dir, { recursive: true });
     await writeFile(join(dir, "readme.txt"), "x");
-    expect(() => assertInstallDirVacantForCreate(dir)).toThrow(/not empty/i);
+    await expect(assertInstallDirVacantForCreate(dir)).rejects.toThrow(/not empty/i);
   });
 });

@@ -191,10 +191,12 @@ updates cannot change it; only `InstanceService.setServerEnabled` may do so.
   directory. Disabled profiles remain cluster members and participate in port
   conflict checks.
 - **Create / clone install path** must be missing or an empty folder, not inside
-  another YARK profile or ASA `ShooterGame` tree, and must not contain another
-  managed install (nested servers). Non-empty ASA trees use **Import install**.
-  The create form previews fleet nesting immediately and probes disk on the
-  resolved `base\<name>` path. Move destination uses the same nesting gate.
+  another YARK profile or ASA tree (path segment *or* unmanaged parent that
+  contains `ShooterGame`), and must not contain another managed install.
+  Non-empty ASA trees use **Import install**. Disk probes are async under the
+  fleet-create lock. The create form previews fleet nesting immediately and
+  probes disk on the resolved `base\<name>` path. Move destination uses the
+  same nesting gate.
 - **Install directory** is read-only in normal profile editing. Relocate with
   **Move installation** (`servers:move-install`): requires stopped idle server,
   lock `"move-install"`, source health `ready`, empty/missing destination.

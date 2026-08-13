@@ -355,7 +355,7 @@ export class MoveInstallService extends EventEmitter {
           );
         }
 
-        this.instances.assertInstallDirAvailable(destResolved, serverId);
+        await this.instances.assertInstallDirAvailable(destResolved, serverId);
 
         const destBinary = serverBinaryPath(destResolved);
         const destHealth = await classifyInstallHealthAsync(

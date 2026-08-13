@@ -12,11 +12,15 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Added
 
 - In-app **What's new** changelog (Settings, sidebar version click, one-shot after upgrade) from the curated notes shared with the public site (#290).
-- Create/clone **install folder** must be empty (or missing) and must not sit inside or wrap another YARK or ASA server.
+- Create/clone **install folder** must be empty (or missing) and must not sit inside or wrap another YARK or ASA server, including unmanaged ASA parents.
 
 ### Changed
 
 - Create/edit **server form** paths use the same Browse chip as Settings (no typed install/cluster paths) (#222).
+
+### Fixed
+
+- Create/Move install-path checks walk ASA ancestors on disk (not only a `ShooterGame` dest segment) and stay async so a slow UNC folder cannot freeze YARK.
 
 ## [0.11.0] - 2026-08-12
 

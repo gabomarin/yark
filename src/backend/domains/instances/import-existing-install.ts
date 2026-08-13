@@ -5,7 +5,7 @@
 
 import { existsSync } from "node:fs";
 import { readdir, readFile, stat } from "node:fs/promises";
-import { basename, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { flattenIniText, INI_FLAT_SEP } from "@shared/ini-text";
 import { isOfficialMap, normalizeMapToken } from "@shared/map-identity";
 import {
@@ -124,16 +124,94 @@ export function resolveNestedAsaInstallRoot(selected: string): {
   return { nestedSubfolder: true, suggestedInstallDir: suggestedNorm };
 }
 
+export function asaNestedGuidance(suggestedInstallDir: string | null): string {
+  return suggestedInstallDir !== null
+    ? `This is inside an ASA install. Select ${suggestedInstallDir} (the folder that contains ShooterGame).`
+    : "This is inside an ASA install. Select the folder that contains ShooterGame.";
+}
+
+function shouldStopAncestorWalk(dir: string): boolean {
+  const trimmed = dir.replace(/[/\\]+$/, "");
+  if (trimmed.length === 0 || trimmed === "/" || /^[a-zA-Z]:$/i.test(trimmed)) {
+    return true;
+  }
+  return dirname(dir) === dir;
+}
+
+function isUncShareRoot(dir: string): boolean {
+  const win = normalizeWindowsPath(dir);
+  if (!win.startsWith("\\\\")) {
+    return false;
+  }
+  const parts = win.slice(2).split("\\").filter((part) => part.length > 0);
+  return parts.length === 2;
+}
+
+async function hasShooterGameChild(dir: string): Promise<boolean> {
+  try {
+    const st = await stat(join(dir, "ShooterGame"));
+    return st.isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Walk parents on disk looking for an unmanaged ASA dedicated root
+ * (folder that contains a `ShooterGame` directory). Does not use path
+ * segments — covers `C:\ExistingASA\NewServer` when NewServer does not exist yet.
+ * Stops at drive roots; still checks a UNC share root (`\\nas\ark`).
+ */
+export async function findAsaInstallAncestorOnDisk(
+  installDir: string,
+): Promise<string | null> {
+  const start = installDir.trim();
+  if (start.length === 0) {
+    return null;
+  }
+  let current = start;
+  const seen = new Set<string>();
+  while (true) {
+    const parent = dirname(current);
+    if (parent === current) {
+      return null;
+    }
+    const key = parent.toLowerCase();
+    if (seen.has(key)) {
+      return null;
+    }
+    seen.add(key);
+    if (shouldStopAncestorWalk(parent)) {
+      return null;
+    }
+    if (await hasShooterGameChild(parent)) {
+      return parent;
+    }
+    if (isUncShareRoot(parent)) {
+      return null;
+    }
+    current = parent;
+  }
+}
+
 /** Reject nested paths under ShooterGame for importExisting (do not trust the renderer). */
 export function assertImportNotNested(installDir: string): void {
   const nested = resolveNestedAsaInstallRoot(installDir);
   if (!nested.nestedSubfolder) return;
-  const suggested = nested.suggestedInstallDir;
-  throw new Error(
-    suggested !== null
-      ? `This is inside an ASA install. Select ${suggested} (the folder that contains ShooterGame).`
-      : "This is inside an ASA install. Select the folder that contains ShooterGame.",
-  );
+  throw new Error(asaNestedGuidance(nested.suggestedInstallDir));
+}
+
+/**
+ * Segment check plus on-disk ancestor walk. Use for create/clone/move/import
+ * so unmanaged ASA parents are rejected without blocking the event loop.
+ */
+export async function assertNotInsideAsaInstall(installDir: string): Promise<void> {
+  assertImportNotNested(installDir);
+  const ancestor = await findAsaInstallAncestorOnDisk(installDir);
+  if (ancestor === null) {
+    return;
+  }
+  throw new Error(asaNestedGuidance(ancestor));
 }
 
 function emptySuggestions(installDir: string): ImportInstallSuggestions {
@@ -517,12 +595,16 @@ export async function probeImportInstall(
   }
 
   const nested = resolveNestedAsaInstallRoot(normalized);
-  if (nested.nestedSubfolder) {
-    const suggested = nested.suggestedInstallDir;
-    const guidance =
-      suggested !== null
-        ? `This is inside an ASA install. Select ${suggested} (the folder that contains ShooterGame).`
-        : "This is inside an ASA install. Select the folder that contains ShooterGame.";
+  const ancestor =
+    nested.nestedSubfolder
+      ? null
+      : await findAsaInstallAncestorOnDisk(normalized);
+  const suggested =
+    nested.nestedSubfolder
+      ? nested.suggestedInstallDir
+      : ancestor;
+  if (nested.nestedSubfolder || ancestor !== null) {
+    const guidance = asaNestedGuidance(suggested);
     const installation = await inspectServerInstallationAsync(
       `import:${basename(normalized)}`,
       normalized,
