@@ -85,7 +85,9 @@ Avoid raw `border-radius: 8px|14px` when a token fits. Tek icon tiles keep asymm
 
 - Semantic: `--app-color-ok|warn|attention|danger` (danger aliases bad). Use Mantine
   `color="attention"` for update / needs-attention controls (matches the server-card
-  attention rail). Version status text uses theme shade refs (`c="ok.5"`, `c="attention.5"`).
+  attention rail). Use `color="fossil"` for unsaved-leave alerts (same amber as
+  `--app-color-fossil` / warn). Version status text uses theme shade refs (`c="ok.5"`,
+  `c="attention.5"`).
 - Text: `--app-color-text` / `--app-color-muted`.
 - Borders: `--app-color-border` / `--app-color-border-subtle`.
 - Never hardcode status hex (`#e5484d`, `#58c89a`, …) in feature CSS.

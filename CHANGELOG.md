@@ -24,6 +24,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Workspace **Server** and **INI Files** confirm before leaving unsaved edits (fossil alert, Save and continue); Server tab shows Cancel when dirty (#299).
 - Create/edit server forms confirm before app-shell navigation (sidebar, Spotlight, YARK update badge) discards unsaved profile changes (#292).
 - Create/Move install-path checks walk ASA ancestors on disk (not only a `ShooterGame` dest segment) and stay async so a slow UNC folder cannot freeze YARK.
 - **Move installation** dest preview matches create (empty folder, not another YARK or ASA tree), blocks dest inside or wrapping the current install, can create `base\<current-folder>` like Create, and keeps Start disabled if dest probe fails (#294).

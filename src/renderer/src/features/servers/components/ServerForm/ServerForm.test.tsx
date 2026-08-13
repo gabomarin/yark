@@ -51,6 +51,43 @@ describe("ServerForm", () => {
     );
   });
 
+  it("does not confirm leave after a successful save resets the dirty baseline (#299)", async () => {
+    const user = userEvent.setup();
+    const onLeave = vi.fn();
+    const onSaved = vi.fn();
+    let leaveGuard: ((action: () => void) => void) | null = null;
+    window.api = {
+      ...(window.api ?? {}),
+      updateServer: vi.fn(async () => ({
+        ok: true as const,
+        data: profile({ id: "srv-a", name: "The Island X" }),
+      })),
+    } as typeof window.api;
+
+    render(
+      <AppProviders>
+        <ServerForm
+          initial={profile({ id: "srv-a", name: "The Island" })}
+          onRegisterLeaveGuard={(guard) => {
+            leaveGuard = guard;
+          }}
+          onCancel={vi.fn()}
+          onSaved={onSaved}
+        />
+      </AppProviders>,
+    );
+
+    await user.type(screen.getByRole("textbox", { name: /^name$/i }), " X");
+    await user.click(screen.getByRole("button", { name: /^save changes$/i }));
+    await waitFor(() => {
+      expect(onSaved).toHaveBeenCalledOnce();
+    });
+
+    act(() => leaveGuard?.(onLeave));
+    expect(onLeave).toHaveBeenCalledOnce();
+    expect(screen.queryByText(/unsaved server changes/i)).not.toBeInTheDocument();
+  });
+
   it("confirms before shell navigation discards a dirty create form (#292)", async () => {
     const user = userEvent.setup();
     const onLeave = vi.fn();
@@ -77,6 +114,7 @@ describe("ServerForm", () => {
     expect(onLeave).not.toHaveBeenCalled();
     expect(screen.getByText(/unsaved server changes/i)).toBeInTheDocument();
     expect(screen.getByText(/unsaved server profile changes/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /save and continue/i })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /discard and continue/i }));
     expect(onLeave).toHaveBeenCalledOnce();
@@ -200,6 +238,28 @@ describe("ServerForm", () => {
       screen.queryByRole("button", { name: /browse asa catalog/i }),
     ).not.toBeInTheDocument();
     expect(screen.queryByTestId("server-form-launch-summary")).not.toBeInTheDocument();
+  });
+
+  it("shows Cancel on the embedded tab only when dirty and reverts (#299)", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AppProviders>
+        <ServerForm
+          initial={profile({ id: "srv-a", name: "The Island" })}
+          variant="embedded"
+          onCancel={vi.fn()}
+          onSaved={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.queryByRole("button", { name: /^cancel$/i })).not.toBeInTheDocument();
+    const name = screen.getByRole("textbox", { name: /^name$/i });
+    await user.type(name, " X");
+    await user.click(screen.getByRole("button", { name: /^cancel$/i }));
+    expect(name).toHaveValue("The Island");
+    expect(screen.queryByRole("button", { name: /^cancel$/i })).not.toBeInTheDocument();
   });
 
   it("uses the same grid in the embedded workspace tab (#292)", () => {
