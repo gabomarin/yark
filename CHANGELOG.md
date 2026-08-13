@@ -17,6 +17,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Compact **UI density** shrinks workspace Add server / rail icons, INI open-file, and sidebar SteamCMD controls that were stuck at md/lg (#233).
 - Create/edit **server form** paths use the same Browse chip as Settings (no typed install/cluster paths) (#222).
 - **Create/edit server** form uses AppSurfaceCard identity + reachability columns in the app shell and workspace tab, a reserved port-conflict slot, and a fixed Create server / Save changes footer (#292).
 - **New server** Map is official maps only; Custom… stays on edit, import, and clone (#292).

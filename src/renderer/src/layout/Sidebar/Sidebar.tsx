@@ -101,6 +101,9 @@ export function Sidebar(props: Props): ReactElement {
     : props.steamCmdRunning
       ? "SteamCMD busy"
       : "SteamCMD ready";
+  /** Hardcoded lg/md → compact md|sm, else lg|md (#233). */
+  const steamCmdIconSize = compact ? "md" : "lg";
+  const steamCmdButtonSize = compact ? "sm" : "md";
 
   const versionTooltip = officialVersionTooltip(
     props.officialVersion,
@@ -184,7 +187,7 @@ export function Sidebar(props: Props): ReactElement {
         <Tooltip label={steamCmdLabel} position="right" withArrow>
           <ActionIcon
             variant="subtle"
-            size="lg"
+            size={steamCmdIconSize}
             aria-label={steamCmdLabel}
             className={classes.steamCmdIcon}
             onClick={() => props.onNavigate("settings")}
@@ -198,7 +201,7 @@ export function Sidebar(props: Props): ReactElement {
         </Tooltip>
       ) : (
         <Button
-          size="md"
+          size={steamCmdButtonSize}
           variant="subtle"
           justify="center"
           leftSection={

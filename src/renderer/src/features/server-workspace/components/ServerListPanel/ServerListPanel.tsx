@@ -14,6 +14,7 @@ import {
 } from "@mantine/core";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { Fragment, useMemo, useState } from "react";
+import { useUiDensity } from "@app/AppProviders";
 import { AddServerSplitButton } from "@features/servers/components/AddServerSplitButton/AddServerSplitButton";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import { SearchField } from "@ui/SearchField/SearchField";
@@ -126,6 +127,13 @@ export function ServerListPanel(props: Props): ReactElement {
   const [search, setSearch] = useState("");
   const [openClusters, setOpenClusters] = useState<Record<string, boolean>>({});
   const iconMode = props.iconMode === true;
+  const density = useUiDensity();
+  const compact = density === "compact";
+  /** Hardcoded md/lg → compact sm|md, else md|lg (#233). */
+  const expandSize = compact ? "sm" : "md";
+  const railActionSize = compact ? "md" : "lg";
+  const addButtonSize = compact ? "xs" : "sm";
+  const plusIconSize = compact ? 16 : 18;
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -164,7 +172,7 @@ export function ServerListPanel(props: Props): ReactElement {
             <Tooltip label="Expand server list" position="right" withArrow>
               <ActionIcon
                 variant="subtle"
-                size="md"
+                size={expandSize}
                 aria-label="Expand server list"
                 onClick={props.onToggleRail}
               >
@@ -280,11 +288,11 @@ export function ServerListPanel(props: Props): ReactElement {
               <Tooltip label="Add server" position="right" withArrow>
                 <ActionIcon
                   variant="light"
-                  size="lg"
+                  size={railActionSize}
                   aria-label="Add server"
                   onClick={props.onAddServer}
                 >
-                  <Plus size={18} />
+                  <Plus size={plusIconSize} />
                 </ActionIcon>
               </Tooltip>
               {props.onImportServer !== undefined && (
@@ -292,7 +300,7 @@ export function ServerListPanel(props: Props): ReactElement {
                   <Menu.Target>
                     <ActionIcon
                       variant="default"
-                      size="lg"
+                      size={railActionSize}
                       aria-label="More add-server options"
                     >
                       <CaretDown size={14} />
@@ -312,14 +320,14 @@ export function ServerListPanel(props: Props): ReactElement {
               onCreate={props.onAddServer}
               onImport={props.onImportServer}
               fullWidth
-              size="sm"
+              size={addButtonSize}
             />
           ) : (
             <Button
               fullWidth
-              size="sm"
+              size={addButtonSize}
               variant="light"
-              leftSection={<Plus size={16} />}
+              leftSection={<Plus size={compact ? 14 : 16} />}
               onClick={props.onAddServer}
             >
               Add server

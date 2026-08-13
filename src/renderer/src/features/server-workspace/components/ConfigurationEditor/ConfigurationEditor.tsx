@@ -36,6 +36,7 @@ import type {
 import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useUiDensity } from "@app/AppProviders";
 import {
   defaultTextForFile,
   filterIniSettingReferences,
@@ -85,6 +86,9 @@ function iniPayloadsDirty(
 export function ConfigurationEditor(props: Props): ReactElement {
   const { section } = props;
   const filesJobActive = props.filesJobActive === true;
+  const density = useUiDensity();
+  const openFileIconSize = density === "compact" ? "sm" : "md";
+  const openFileGlyphSize = density === "compact" ? 14 : 16;
   const [snapshot, setSnapshot] = useState<ServerIniSnapshot | null>(null);
   const [payload, setPayload] = useState<ServerIniPayload | null>(null);
   const [baseline, setBaseline] = useState<ServerIniPayload | null>(null);
@@ -348,13 +352,13 @@ export function ConfigurationEditor(props: Props): ReactElement {
       >
         <span>
           <ActionIcon
-            size="md"
+            size={openFileIconSize}
             variant="default"
             aria-label={`Open ${fileLabel}`}
             onClick={() => void openExternal()}
             disabled={busy || snapshot === null}
           >
-            <ArrowSquareOut size={16} />
+            <ArrowSquareOut size={openFileGlyphSize} />
           </ActionIcon>
         </span>
       </Tooltip>
