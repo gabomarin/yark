@@ -17,6 +17,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Incomplete cluster directories and create/add-cluster summary folders use the same **ReadonlyPath** chips as Settings (#234).
 - Agent docs treat private Notion Product Lab as canonical for unreleased planning (hub URL stays gitignored).
 - Compact **UI density** shrinks workspace Add server / rail icons, INI open-file, and sidebar SteamCMD controls that were stuck at md/lg (#233).
 - Create/edit **server form** paths use the same Browse chip as Settings (no typed install/cluster paths) (#222).

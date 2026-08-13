@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { Alert, Stack, Text } from "@mantine/core";
+import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import classes from "./CreateClusterModal.module.css";
 
 interface ServerPreview {
@@ -41,7 +42,14 @@ export function CreateClusterPreviewStep(props: Props): ReactElement {
           </div>
           <div>
             <dt>Directory</dt>
-            <dd className={classes.mono}>{props.clusterDir}</dd>
+            <dd className={classes.previewPath}>
+              <ReadonlyPath
+                value={props.clusterDir}
+                compact
+                emptyLabel="No directory"
+                aria-label="Shared cluster directory"
+              />
+            </dd>
           </div>
         </dl>
       </div>

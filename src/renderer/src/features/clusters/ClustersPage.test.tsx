@@ -330,10 +330,51 @@ describe("ClustersPage", () => {
     );
 
     expect(screen.getAllByText(/directory but no Cluster ID/i).length).toBeGreaterThan(0);
-    expect(screen.getByText("C:/ARK/cluster")).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /incomplete cluster directory/i }),
+    ).toHaveTextContent("C:/ARK/cluster");
     expect(screen.getByText("Dir Only")).toBeInTheDocument();
     expect(screen.getByLabelText(/^open /i)).toBeInTheDocument();
     expect(screen.getByText(/missing Cluster ID/i)).toBeInTheDocument();
+  });
+
+  it("shows incomplete cluster directories as readonly path chips when creating a cluster", async () => {
+    const user = userEvent.setup();
+    const eligible = makeServer({
+      id: "eligible",
+      name: "Eligible Map",
+      clusterId: null,
+      clusterDir: null,
+    });
+    const dirOnly = makeServer({
+      id: "dir-only",
+      name: "Dir Only",
+      clusterId: null,
+      clusterDir: "C:/ARK/cluster",
+    });
+
+    render(
+      <AppProviders>
+        <ClustersPage
+          servers={[eligible, dirOnly]}
+          reports={[]}
+          statuses={makeStatuses([
+            ["eligible", "stopped"],
+            ["dir-only", "stopped"],
+          ])}
+          onOpenServer={vi.fn()}
+          onRefresh={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getAllByRole("button", { name: /create cluster/i })[0]!);
+    const dialog = await screen.findByRole("dialog", { name: /create cluster/i });
+    await user.click(within(dialog).getByRole("button", { name: /continue/i }));
+    expect(within(dialog).getByText(/Incomplete setups/i)).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("textbox", { name: /incomplete cluster directory/i }),
+    ).toHaveTextContent("C:/ARK/cluster");
   });
 
   it("creates a cluster from multiple eligible stopped servers", async () => {
@@ -404,6 +445,9 @@ describe("ClustersPage", () => {
     await user.click(within(dialog).getByRole("button", { name: /continue/i }));
     expect(within(dialog).getByText("Island Map")).toBeInTheDocument();
     expect(within(dialog).getByText("Scorched Map")).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("textbox", { name: /shared cluster directory/i }),
+    ).toHaveTextContent("D:\\ASA\\Clusters\\Ember");
     await user.click(within(dialog).getByRole("button", { name: /^create cluster$/i }));
 
     expect(updateServer).toHaveBeenCalledTimes(2);
@@ -556,6 +600,9 @@ describe("ClustersPage", () => {
     await user.click(within(dialog).getByRole("button", { name: /Free Map/i }));
     expect(within(dialog).getByText(/1 selected/i)).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: /continue/i }));
+    expect(
+      within(dialog).getByRole("textbox", { name: /shared cluster directory/i }),
+    ).toHaveTextContent(/C:[\\/]ARK[\\/]cluster/i);
     await user.click(within(dialog).getByRole("button", { name: /add to cluster/i }));
 
     expect(updateServer).toHaveBeenCalledWith(

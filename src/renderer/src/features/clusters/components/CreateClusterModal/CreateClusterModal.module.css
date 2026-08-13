@@ -63,6 +63,11 @@
   font-weight: 500;
 }
 
+.previewList dd.previewPath {
+  text-align: left;
+  font-weight: 400;
+}
+
 .mono {
   font-family: var(--mantine-font-family-monospace);
   font-weight: 500;

@@ -88,7 +88,7 @@ preference on the Server tab. Launch order and skip rules:
 
 | Control | IPC / storage | Notes |
 | --- | --- | --- |
-| Path + Choose… | SQLite `steamcmdPath` via `steamcmd:set-path` | Validates file exists + `steamcmd +quit`; resets content-cache freshness |
+| Path + Choose… | SQLite `steamcmdPath` via `steamcmd:set-path` | Validates file exists + `steamcmd +quit`; resets content-cache freshness. Chip is shared `ReadonlyPath` with Choose… and **Install SteamCMD** on the same row (not `PathField`) so the install CTA stays beside the path (#234). |
 | Install SteamCMD | `steamcmd:install` | Shown when `detected === false` |
 | Shared caches | `steamcmd:open-cache` / `steamcmd:clear-cache` (`depot` \| `content`) | Clear blocked while jobs run |
 

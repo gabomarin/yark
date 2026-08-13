@@ -243,12 +243,18 @@ Operators should recognize filesystem paths the same way everywhere:
 Do **not** use Mantine `Code`, ad-hoc `ff="monospace"`, or a private Browse row for
 filesystem paths. `PathField` matches Settings (chip + Browse/Clear); values never
 edit via keyboard. Streaming log / SteamCMD consoles use `ConsoleSurface`; INI
-editors stay feature-local monospace (not path chips).
+editors stay feature-local monospace (not path chips). Map tokens and other
+non-path identifiers may stay monospace `Text` (not `ReadonlyPath`).
+
+**Exception:** Settings SteamCMD keeps a hand-rolled `ReadonlyPath` + Choose… +
+**Install SteamCMD** row (not `PathField`) so the install CTA stays on the same
+line (#234).
 
 ## Still feature-local (by design)
 
 - `ServerCard` product chrome (status rail clip-path)
 - SteamCMD floating dock elevation behavior
+- Settings SteamCMD path row (`ReadonlyPath` + Choose… + Install CTA; not `PathField`)
 - Server workspace 3-column shell / INI editor tables
 - Domain empty **content** — wrap with shared EmptyState shell
 - Clusters `MetaStrip` (feature-local until a second screen needs the same strip)
