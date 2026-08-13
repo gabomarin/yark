@@ -43,14 +43,11 @@ export function AppChangelogModal(props: Props): ReactElement {
   }, [props.opened, initialTab]);
 
   const source = props.entries;
-  const current =
-    getChangelogForVersion(props.appVersion, source) ??
-    getRecentChangelog(1, source)[0] ??
-    null;
+  const current = getChangelogForVersion(props.appVersion, source);
   const recent = getRecentChangelog(undefined, source);
   const title =
-    tab === "current" && current !== null
-      ? `What's new in v${current.version}`
+    tab === "current"
+      ? `What's new in v${props.appVersion.replace(/^v/i, "")}`
       : "Changelog";
   const subtitle =
     tab === "current"

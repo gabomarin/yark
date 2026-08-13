@@ -59,4 +59,28 @@ describe("AppChangelogModal", () => {
     expect(onDismiss).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it("shows empty current notes without falling back to another version", () => {
+    vi.stubGlobal("api", {
+      openYarkReleaseNotes: vi.fn().mockResolvedValue({ ok: true }),
+    });
+
+    render(
+      <AppProviders>
+        <AppChangelogModal
+          opened
+          onClose={vi.fn()}
+          appVersion="0.12.0"
+          initialTab="current"
+          entries={entries}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText(/What's new in v0\.12\.0/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/No curated notes for v0\.12\.0 yet/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("In-app changelog notes.")).not.toBeInTheDocument();
+  });
 });

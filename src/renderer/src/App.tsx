@@ -163,6 +163,8 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   const [changelogInitialTab, setChangelogInitialTab] = useState<"current" | "recent">(
     "current",
   );
+  /** Blocks a late getLastSeen result from reopening after manual open/dismiss. */
+  const changelogPromptSettledRef = useRef(false);
 
   useEffect(() => {
     writeOpenNativeTerminalPref(openNativeTerminalOnStart);
@@ -296,10 +298,12 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   }, []);
 
   const markChangelogSeen = useCallback(() => {
+    changelogPromptSettledRef.current = true;
     void window.api.setLastSeenChangelogVersion(APP_VERSION);
   }, []);
 
   const openWhatsNew = useCallback((tab: "current" | "recent" = "current") => {
+    changelogPromptSettledRef.current = true;
     setChangelogInitialTab(tab);
     setChangelogOpen(true);
   }, []);
@@ -315,12 +319,21 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         return;
       }
       const result = await window.api.getLastSeenChangelogVersion();
-      if (cancelled || !result.ok) {
+      if (cancelled || !result.ok || changelogPromptSettledRef.current) {
         return;
       }
       if (!shouldShowWhatsNewForVersion(APP_VERSION, result.data)) {
         return;
       }
+      // Re-check after await: Settings/manual dismiss may have persisted seen meanwhile.
+      const latest = await window.api.getLastSeenChangelogVersion();
+      if (cancelled || !latest.ok || changelogPromptSettledRef.current) {
+        return;
+      }
+      if (!shouldShowWhatsNewForVersion(APP_VERSION, latest.data)) {
+        return;
+      }
+      changelogPromptSettledRef.current = true;
       setChangelogInitialTab("current");
       setChangelogOpen(true);
     })();
