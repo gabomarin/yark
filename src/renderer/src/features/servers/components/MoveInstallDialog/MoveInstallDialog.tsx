@@ -58,7 +58,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
     props.server?.name ?? "server",
   );
   const resolvedDest = resolveMoveDestDir(destinationDir, folderName, createFolder);
-  const { previewIssue, probePending } = useMoveDestPreview({
+  const { previewIssue, probePending, destVacant } = useMoveDestPreview({
     opened: props.opened,
     destDir: resolvedDest,
     sourceDir: props.server?.installDir ?? "",
@@ -129,7 +129,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
       setError("Destination directory is required");
       return;
     }
-    if (previewIssue !== null || probePending) {
+    if (previewIssue !== null || probePending || !destVacant) {
       return;
     }
     setError(null);
@@ -195,7 +195,8 @@ export function MoveInstallDialog(props: Props): ReactElement {
     phase === "form" || phase === "error"
       ? resolvedDest.trim().length > 0 &&
         previewIssue === null &&
-        !probePending
+        !probePending &&
+        destVacant
       : false;
   const allowChromeClose = phase === "form" || phase === "error";
 

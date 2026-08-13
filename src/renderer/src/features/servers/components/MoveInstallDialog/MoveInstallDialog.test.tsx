@@ -87,14 +87,23 @@ const ragnarok = profile({
 function stubApi(options: {
   pickedDest: string;
   probeHealth?: ServerInstallationInfo["health"];
+  probeFailure?: { ok: false; error: string } | "reject";
 }): void {
   Object.defineProperty(window, "api", {
     configurable: true,
     value: {
-      probeImportInstall: vi.fn(async (dir: string) => ({
-        ok: true as const,
-        data: probeResult(dir, options.probeHealth ?? "missing"),
-      })),
+      probeImportInstall: vi.fn(async (dir: string) => {
+        if (options.probeFailure === "reject") {
+          throw new Error("disk unreachable");
+        }
+        if (options.probeFailure !== undefined) {
+          return options.probeFailure;
+        }
+        return {
+          ok: true as const,
+          data: probeResult(dir, options.probeHealth ?? "missing"),
+        };
+      }),
       pickPath: vi.fn(async () => ({ ok: true as const, data: options.pickedDest })),
       onMoveInstallProgress: vi.fn(() => () => undefined),
       moveServerInstall: vi.fn(),
@@ -250,5 +259,51 @@ describe("MoveInstallDialog dest preview (#294)", () => {
     expect(await screen.findByText(/not empty/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /start move/i })).toBeDisabled();
     expect(window.api.probeImportInstall).toHaveBeenCalledWith("F:\\Diego");
+  });
+
+  it("keeps Start disabled when dest probe returns an IPC error", async () => {
+    const user = userEvent.setup();
+    stubApi({
+      pickedDest: "C:\\ark\\Scorched",
+      probeFailure: { ok: false, error: "UNC timed out" },
+    });
+
+    render(
+      <AppProviders>
+        <MoveInstallDialog
+          opened
+          server={island}
+          servers={[island, ragnarok]}
+          onClose={vi.fn()}
+          onMoved={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /^browse$/i }));
+    expect(await screen.findByText(/could not check the destination folder/i)).toBeInTheDocument();
+    expect(await screen.findByText(/UNC timed out/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /start move/i })).toBeDisabled();
+  });
+
+  it("keeps Start disabled when dest probe rejects", async () => {
+    const user = userEvent.setup();
+    stubApi({ pickedDest: "C:\\ark\\Scorched", probeFailure: "reject" });
+
+    render(
+      <AppProviders>
+        <MoveInstallDialog
+          opened
+          server={island}
+          servers={[island, ragnarok]}
+          onClose={vi.fn()}
+          onMoved={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /^browse$/i }));
+    expect(await screen.findByText(/could not check the destination folder/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /start move/i })).toBeDisabled();
   });
 });
