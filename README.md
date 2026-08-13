@@ -16,6 +16,10 @@
   <a href="https://github.com/gabomarin/yark/releases">
     <img src="https://img.shields.io/github/v/release/gabomarin/yark?include_prereleases&label=release" alt="Latest release">
   </a>
+  <a href="https://github.com/gabomarin/yark/releases">
+    <img src="https://img.shields.io/github/downloads/gabomarin/yark/total" alt="Cumulative downloads">
+  </a>
+  <img src="https://img.shields.io/badge/status-prerelease-orange" alt="Prerelease">
   <a href="LICENSE">
     <img src="https://img.shields.io/github/license/gabomarin/yark" alt="GPL-3.0 license">
   </a>

@@ -17,6 +17,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- README hero adds cumulative GitHub Release **downloads** and a static **prerelease** status badge (#304).
 - Incomplete cluster directories and create/add-cluster summary folders use the same **ReadonlyPath** chips as Settings (#234).
 - Agent docs treat private Notion Product Lab as canonical for unreleased planning (hub URL stays gitignored).
 - Compact **UI density** shrinks workspace Add server / rail icons, INI open-file, and sidebar SteamCMD controls that were stuck at md/lg (#233).
