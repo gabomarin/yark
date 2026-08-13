@@ -198,7 +198,10 @@ updates cannot change it; only `InstanceService.setServerEnabled` may do so.
   Non-empty ASA trees use **Import install**. Disk probes are async under the
   fleet-create lock. The create form previews fleet nesting immediately and
   probes disk on the resolved `base\<name>` path. Move destination uses the
-  same nesting gate.
+  same nesting gate, plus dest-inside-source / dest-wrapping-source (fleet
+  exclude would miss that), a live dest preview, optional **Create folder**
+  (`base\<current-folder-name>`, default on), and Start stays blocked until
+  dest is empty (#294).
 - **Install directory** is read-only in normal profile editing. Relocate with
   **Move installation** (`servers:move-install`): requires stopped idle server,
   lock `"move-install"`, source health `ready`, empty/missing destination.

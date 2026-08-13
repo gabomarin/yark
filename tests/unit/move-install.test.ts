@@ -186,6 +186,37 @@ describe("InstanceService.update installDir lock", () => {
 });
 
 describe("MoveInstallService", () => {
+  it("rejects dest inside the current install (#294)", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-move-selfnest-"));
+    const sourceDir = join(root, "Island");
+    const destDir = join(sourceDir, "Backup");
+    await mkdir(sourceDir, { recursive: true });
+
+    const source = profile({ installDir: sourceDir });
+    const { move } = harness([source]);
+
+    await expect(move.moveInstall(source.id, destDir)).rejects.toThrow(
+      /inside the current install/i,
+    );
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it("rejects dest that would contain the current install (#294)", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-move-wrap-"));
+    const sourceDir = join(root, "Island");
+    await mkdir(sourceDir, { recursive: true });
+
+    const source = profile({ installDir: sourceDir });
+    const { move } = harness([source]);
+
+    await expect(move.moveInstall(source.id, root)).rejects.toThrow(
+      /would contain the current install/i,
+    );
+
+    await rm(root, { recursive: true, force: true });
+  });
+
   it("same-volume: renames, verifies, commits, and leaves no old source", async () => {
     const root = await mkdtemp(join(tmpdir(), "yark-move-"));
     const sourceDir = join(root, "source");

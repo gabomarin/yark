@@ -7,6 +7,7 @@ import {
   isWindowsPathInside,
   resolveServerInstallDir,
   sanitizeServerFolderName,
+  selfNestInstallWarning,
   suggestCloneInstallDir,
   windowsPathParentDir,
 } from "@shared/server-install-path";
@@ -83,5 +84,16 @@ describe("server-install-path", () => {
     expect(
       findInstallDirConflict("C:\\ark\\Island\\Foo", fleet, "a"),
     ).toBeNull();
+  });
+
+  it("detects dest inside or wrapping the current install (#294)", () => {
+    expect(selfNestInstallWarning("C:\\ark\\Island", "C:\\ark\\Ragnarok")).toBeNull();
+    expect(selfNestInstallWarning("C:\\ark\\Island", "C:\\ark\\Island")).toBeNull();
+    expect(selfNestInstallWarning("C:\\ark\\Island", "C:\\ark\\Island\\Backup")).toMatch(
+      /inside the current install/i,
+    );
+    expect(selfNestInstallWarning("C:\\ark\\Island", "C:\\ark")).toMatch(
+      /would contain the current install/i,
+    );
   });
 });

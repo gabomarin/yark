@@ -209,6 +209,28 @@ export function installDirConflictMessage(conflict: InstallDirConflict): string 
   return `Install path would contain "${conflict.otherName}" (${conflict.otherInstallDir}). Nested servers are not supported.`;
 }
 
+/**
+ * Dest must not sit inside the current install, and must not wrap it.
+ * Fleet nesting excludes this profile, so create helpers miss this case (#294).
+ */
+export function selfNestInstallWarning(
+  sourceDir: string,
+  destDir: string,
+): string | null {
+  const source = normalizeWindowsPath(sourceDir);
+  const dest = normalizeWindowsPath(destDir);
+  if (source.length === 0 || dest.length === 0 || isWindowsPathEqual(source, dest)) {
+    return null;
+  }
+  if (isWindowsPathInside(dest, source)) {
+    return `Destination is inside the current install (${source}). Nested servers are not supported.`;
+  }
+  if (isWindowsPathInside(source, dest)) {
+    return `Destination would contain the current install (${source}). Nested servers are not supported.`;
+  }
+  return null;
+}
+
 /** Parent directory of a Windows path (drive root keeps trailing backslash). */
 export function windowsPathParentDir(path: string): string {
   const normalized = normalizeWindowsPath(path);

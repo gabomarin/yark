@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Button,
@@ -10,14 +10,22 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
+import type { FleetInstallRef } from "@shared/server-install-path";
 import type { MoveInstallProgress, ServerProfile } from "@shared/types";
 import { normalizeMoveInstallProgress } from "@shared/types";
-import { PathField } from "@ui/PathField/PathField";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
+import { MoveInstallDestFields } from "./MoveInstallDestFields";
+import {
+  moveDestFolderName,
+  resolveMoveDestDir,
+} from "./moveInstallPathWarning";
+import { useMoveDestPreview } from "./useMoveDestPreview";
 
 interface Props {
   opened: boolean;
   server: ServerProfile | null;
+  /** Fleet profiles for dest nesting preview (#294). */
+  servers?: readonly ServerProfile[];
   onClose: () => void;
   /** Called after a successful move when the operator dismisses the result. */
   onMoved: () => void;
@@ -27,6 +35,7 @@ type Phase = "form" | "running" | "success" | "error";
 
 export function MoveInstallDialog(props: Props): ReactElement {
   const [destinationDir, setDestinationDir] = useState("");
+  const [createFolder, setCreateFolder] = useState(true);
   const [browsing, setBrowsing] = useState(false);
   const [phase, setPhase] = useState<Phase>("form");
   const [error, setError] = useState<string | null>(null);
@@ -35,11 +44,34 @@ export function MoveInstallDialog(props: Props): ReactElement {
   const [oldSourceRemoved, setOldSourceRemoved] = useState(true);
   const [cleanupBusy, setCleanupBusy] = useState(false);
 
+  const fleet = useMemo(
+    (): FleetInstallRef[] =>
+      (props.servers ?? []).map((server) => ({
+        id: server.id,
+        name: server.name,
+        installDir: server.installDir,
+      })),
+    [props.servers],
+  );
+  const folderName = moveDestFolderName(
+    props.server?.installDir ?? "",
+    props.server?.name ?? "server",
+  );
+  const resolvedDest = resolveMoveDestDir(destinationDir, folderName, createFolder);
+  const { previewIssue, probePending, destVacant } = useMoveDestPreview({
+    opened: props.opened,
+    destDir: resolvedDest,
+    sourceDir: props.server?.installDir ?? "",
+    excludeId: props.server?.id,
+    fleet,
+  });
+
   useEffect(() => {
     if (!props.opened || props.server === null) {
       return;
     }
     setDestinationDir("");
+    setCreateFolder(true);
     setPhase("form");
     setError(null);
     setProgress(null);
@@ -69,7 +101,9 @@ export function MoveInstallDialog(props: Props): ReactElement {
         destinationDir.trim().length > 0
           ? destinationDir
           : props.server?.installDir,
-        "Choose destination install folder",
+        createFolder
+          ? "Choose destination base folder"
+          : "Choose destination install folder",
       );
       if (result.ok && result.data !== null) {
         setDestinationDir(result.data);
@@ -90,9 +124,12 @@ export function MoveInstallDialog(props: Props): ReactElement {
 
   const handleStart = async (): Promise<void> => {
     if (props.server === null) return;
-    const dest = destinationDir.trim();
+    const dest = resolvedDest.trim();
     if (dest.length === 0) {
       setError("Destination directory is required");
+      return;
+    }
+    if (previewIssue !== null || probePending || !destVacant) {
       return;
     }
     setError(null);
@@ -156,7 +193,10 @@ export function MoveInstallDialog(props: Props): ReactElement {
   const percent = progress?.percent ?? null;
   const canStart =
     phase === "form" || phase === "error"
-      ? destinationDir.trim().length > 0
+      ? resolvedDest.trim().length > 0 &&
+        previewIssue === null &&
+        !probePending &&
+        destVacant
       : false;
   const allowChromeClose = phase === "form" || phase === "error";
 
@@ -182,22 +222,16 @@ export function MoveInstallDialog(props: Props): ReactElement {
         )}
 
         {(phase === "form" || phase === "error") && (
-          <>
-            <Alert color="blue" variant="light">
-              On the same drive, YARK moves the folder in place. Across drives it
-              copies first, then switches the profile and removes the previous
-              folder after a successful check.
-            </Alert>
-            <PathField
-              label="Destination install directory"
-              placeholder="C:\\ark_servers\\my_server_new"
-              value={destinationDir}
-              required
-              onChange={setDestinationDir}
-              onBrowse={() => void handleBrowse()}
-              busy={browsing}
-            />
-          </>
+          <MoveInstallDestFields
+            pickedDir={destinationDir}
+            createFolder={createFolder}
+            folderName={folderName}
+            resolvedDest={resolvedDest}
+            browsing={browsing}
+            previewIssue={previewIssue}
+            onBrowse={() => void handleBrowse()}
+            onCreateFolderChange={setCreateFolder}
+          />
         )}
 
         {phase === "running" && (

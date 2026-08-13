@@ -19,6 +19,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import {
   getWindowsPathError,
   normalizeWindowsPath,
+  selfNestInstallWarning,
 } from "@shared/server-install-path";
 import { isInstallationReady } from "@shared/installation-health";
 import type { MoveInstallProgress } from "@shared/types";
@@ -305,6 +306,10 @@ export class MoveInstallService extends EventEmitter {
     if (installDirKey(sourceDir) === installDirKey(destResolved)) {
       throw new Error("Destination must differ from the current install path");
     }
+    const selfNest = selfNestInstallWarning(sourceDir, destResolved);
+    if (selfNest !== null) {
+      throw new Error(selfNest);
+    }
     if (isWindowsDriveRoot(destResolved)) {
       throw new Error(
         "Destination must be a folder on the drive (for example H:\\ARK\\MyServer), not the drive root itself.",
@@ -364,7 +369,7 @@ export class MoveInstallService extends EventEmitter {
         );
         if (destHealth.health !== "missing" && destHealth.health !== "empty") {
           throw new Error(
-            `Destination must be missing or an empty folder (found: ${destHealth.health}). Choose a different path.`,
+            "Destination is not empty. It must have no files or subfolders.",
           );
         }
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ImportInstallProbe, ServerInstallationInfo } from "@shared/types";
 import {
   diskCreateInstallWarning,
+  diskMoveInstallWarning,
   fleetCreateInstallWarning,
 } from "../../src/renderer/src/features/servers/components/ServerForm/createInstallPathWarning";
 
@@ -69,6 +70,15 @@ describe("createInstallPathWarning", () => {
     expect(fleetCreateInstallWarning("C:\\ark\\Island", fleet)).toMatch(/already uses folder/i);
   });
 
+  it("skips the excluded profile when checking fleet (#294)", () => {
+    const fleetWithIds = [{ id: "a", name: "The Island", installDir: "C:\\ark\\Island" }];
+    expect(fleetCreateInstallWarning("C:\\ark\\Island", fleetWithIds, "a")).toBeNull();
+    expect(fleetCreateInstallWarning("C:\\ark\\Island\\Nested", fleetWithIds, "a")).toBeNull();
+    expect(fleetCreateInstallWarning("C:\\ark\\Island", fleetWithIds, "b")).toMatch(
+      /already uses folder/i,
+    );
+  });
+
   it("allows missing or empty disk probes", () => {
     expect(
       diskCreateInstallWarning(
@@ -97,5 +107,15 @@ describe("createInstallPathWarning", () => {
         probe({ installation: installation({ health: "ready", guidance: "" }) }),
       ),
     ).toMatch(/not empty/i);
+    expect(
+      diskMoveInstallWarning(
+        probe({ installation: installation({ health: "ready", guidance: "" }) }),
+      ),
+    ).toMatch(/not empty/i);
+    expect(
+      diskMoveInstallWarning(
+        probe({ installation: installation({ health: "ready", guidance: "" }) }),
+      ),
+    ).not.toMatch(/Import install/i);
   });
 });
