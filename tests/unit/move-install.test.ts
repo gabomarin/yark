@@ -356,6 +356,40 @@ describe("MoveInstallService", () => {
     await rm(root, { recursive: true, force: true });
   });
 
+  it("same-volume: keeps destination authoritative when commit event recording fails", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-move-commit-event-fail-"));
+    const sourceDir = join(root, "source");
+    const destDir = join(root, "dest");
+    await makeReadyInstall(sourceDir);
+
+    const source = profile({ installDir: sourceDir });
+    const { move, getProfiles, repo } = harness([source]);
+    vi.mocked(repo.addEvent).mockImplementation((_serverId, type) => {
+      if (type === "server_updated") {
+        throw new Error("sqlite event write failed");
+      }
+    });
+
+    await expect(move.moveInstall(source.id, destDir)).rejects.toThrow(
+      /sqlite event write failed/,
+    );
+    expect(getProfiles()[0]?.installDir).toBe(destDir);
+    await expect(access(sourceDir)).rejects.toThrow();
+    await access(join(destDir, "ShooterGame", "Binaries", "Win64", "ArkAscendedServer.exe"));
+    expect(repo.addEvent).toHaveBeenCalledWith(
+      source.id,
+      "install_move_failed",
+      "error",
+      expect.stringMatching(/committed.*profile uses the destination/i),
+      expect.objectContaining({
+        location: resolve(destDir),
+        suggestion: expect.stringMatching(/destination is authoritative/i),
+      }),
+    );
+
+    await rm(root, { recursive: true, force: true });
+  });
+
   it("leaves the profile on the source when copy fails", async () => {
     const root = await mkdtemp(join(tmpdir(), "yark-move-fail-"));
     const sourceDir = join(root, "source");

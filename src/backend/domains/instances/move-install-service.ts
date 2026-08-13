@@ -681,7 +681,16 @@ export class MoveInstallService extends EventEmitter {
         const stillOnSource =
           current !== null
           && installDirKey(current.installDir) === installDirKey(sourceDir);
-        if (stillOnSource) {
+        const alreadyOnDestination =
+          current !== null
+          && installDirKey(current.installDir) === installDirKey(destResolved);
+        if (alreadyOnDestination) {
+          // commitInstallDir updates the profile before recording its event. If
+          // that event write throws, the move is already committed and dest is
+          // authoritative; moving the files back would break the profile.
+          profileCommittedToDest = true;
+          renamedAwayFromSource = false;
+        } else if (stillOnSource) {
           try {
             if (!(await this.rollbackSameVolumeRename(sourceDir, destResolved))) {
               renameRollbackFailed = true;
@@ -709,14 +718,21 @@ export class MoveInstallService extends EventEmitter {
       }
 
       const authoritativePath =
-        renameRollbackFailed || (renamedAwayFromSource && !profileCommittedToDest)
+        profileCommittedToDest
+          ? destResolved
+          : renameRollbackFailed || renamedAwayFromSource
           ? destResolved
           : sourceDir;
+      const destinationCommittedMessage = cancelled
+        ? `Move cancellation arrived after profile commit. Profile uses ${destResolved}.`
+        : `Move installation committed to ${destResolved}, but finalization failed: ${message}. Profile uses the destination.`;
       this.repo.addEvent(
         serverId,
         cancelled ? "install_move_cancelled" : "install_move_failed",
         cancelled ? "warning" : "error",
-        cancelled
+        profileCommittedToDest
+          ? destinationCommittedMessage
+          : cancelled
           ? renameRollbackFailed
             ? `Move installation cancelled after rename; files may remain at ${destResolved} while the profile still points at ${sourceDir}.`
             : `Move installation cancelled. Profile still uses ${sourceDir}.`
@@ -724,12 +740,16 @@ export class MoveInstallService extends EventEmitter {
             ? `Move installation failed: ${message}. Files may remain at ${destResolved} while the profile still points at ${sourceDir}.`
             : `Move installation failed: ${message}. Profile still uses ${sourceDir}.`,
         {
-          what: cancelled
+          what: profileCommittedToDest
+            ? "Move reached profile commit before finalization failed."
+            : cancelled
             ? "Move installation was cancelled before profile commit."
             : "Move installation failed before profile commit.",
           cause: cancelled ? "Cancelled by the operator." : message,
           location: authoritativePath,
-          suggestion: renameRollbackFailed
+          suggestion: profileCommittedToDest
+            ? "The destination is authoritative. Verify it before retrying Move installation."
+            : renameRollbackFailed
             ? `Move the folder back from ${destResolved} to ${sourceDir} manually, or update the profile after confirming the destination tree is intact.`
             : "The original install path remains authoritative. Fix the issue and retry Move installation.",
         },
@@ -751,7 +771,9 @@ export class MoveInstallService extends EventEmitter {
 
       if (cancelled) {
         throw new OperationCancelledError(
-          "Move installation cancelled. The profile still points at the original path.",
+          profileCommittedToDest
+            ? "Move cancellation arrived after the profile switched to the destination path."
+            : "Move installation cancelled. The profile still points at the original path.",
         );
       }
       throw error;
