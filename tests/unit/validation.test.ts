@@ -70,6 +70,20 @@ describe("validateProfileInput", () => {
     expect(issues.some((i) => i.field === "extraArgs")).toBe(true);
   });
 
+  it("rejects custom maps on create but allows them on edit (#292)", () => {
+    const custom = validInput({ map: "Svartalfheim_WP", mapModId: "962796" });
+    expect(
+      validateProfileInput(custom, { create: true }).some((i) => i.field === "map"),
+    ).toBe(true);
+    expect(
+      validateProfileInput(custom, { create: true }).some(
+        (i) => i.field === "mapModId",
+      ),
+    ).toBe(true);
+    expect(validateProfileInput(custom)).toEqual([]);
+    expect(validateProfileInput(validInput(), { create: true })).toEqual([]);
+  });
+
   it("rejects invalid mapModId digits but not missing map-mod warnings (#190)", () => {
     const invalid = validateProfileInput(
       validInput({

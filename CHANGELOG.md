@@ -17,9 +17,12 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Changed
 
 - Create/edit **server form** paths use the same Browse chip as Settings (no typed install/cluster paths) (#222).
+- **Create/edit server** form uses AppSurfaceCard identity + reachability columns in the app shell and workspace tab, a reserved port-conflict slot, and a fixed Create server / Save changes footer (#292).
+- **New server** Map is official maps only; Custom… stays on edit, import, and clone (#292).
 
 ### Fixed
 
+- Create/edit server forms confirm before app-shell navigation (sidebar, Spotlight, YARK update badge) discards unsaved profile changes (#292).
 - Create/Move install-path checks walk ASA ancestors on disk (not only a `ShooterGame` dest segment) and stay async so a slow UNC folder cannot freeze YARK.
 
 ## [0.11.0] - 2026-08-12

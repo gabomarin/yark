@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { isValidMapSaveFolder, validateMapIdentity } from "@shared/map-identity";
+import {
+  isOfficialMap,
+  isValidMapSaveFolder,
+  validateMapIdentity,
+} from "@shared/map-identity";
 import {
   getServerFolderNameError,
   getWindowsPathError,
@@ -65,11 +69,20 @@ export const serverProfileInputSchema = z.object({
   mods: z.array(z.string().trim().min(1)),
 });
 
+export interface ValidateProfileInputOptions {
+  /**
+   * New YARK profiles (`servers:create`) must use an official `KNOWN_MAPS`
+   * token. Import, clone, and edit may keep custom maps.
+   */
+  create?: boolean;
+}
+
 /**
  * Validates a profile input. Returns a list of issues (empty if valid).
  */
 export function validateProfileInput(
   input: ServerProfileInput,
+  options?: ValidateProfileInputOptions,
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const parsed = serverProfileInputSchema.safeParse(input);
@@ -82,6 +95,23 @@ export function validateProfileInput(
 
   const { gamePort, queryPort, rconPort, clusterId, clusterDir, installDir } =
     parsed.data;
+
+  if (options?.create === true && !isOfficialMap(parsed.data.map)) {
+    issues.push({
+      field: "map",
+      message:
+        "New servers must use an official map. Add a CurseForge map pack on Mods after create.",
+    });
+  }
+  if (options?.create === true) {
+    const mapModId = input.mapModId?.trim() ?? "";
+    if (mapModId.length > 0) {
+      issues.push({
+        field: "mapModId",
+        message: "New servers cannot link a custom map pack yet.",
+      });
+    }
+  }
 
   const installDirError = getWindowsPathError(installDir, "Install directory");
   if (installDirError !== null) {

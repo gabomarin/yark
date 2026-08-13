@@ -86,7 +86,7 @@ async function createServer(app, page, name, installDir, ports) {
   await page.getByLabel("Query port").fill(String(ports.query));
   await page.getByLabel("RCON port").fill(String(ports.rcon));
   await page.locator("input[type='password']").last().fill("admin1234");
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Create server" }).click();
   await dismissOnboarding(page);
   await page
     .locator("[data-server-card]", { has: page.getByText(name, { exact: true }) })

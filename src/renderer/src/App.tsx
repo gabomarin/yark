@@ -136,8 +136,16 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   /** Remount Import wizard on each open so step/probe state resets without adjust-on-prop effects. */
   const [importWizardKey, setImportWizardKey] = useState(0);
   const [deleteServerId, setDeleteServerId] = useState<string | null>(null);
-  /** Dirty-leave guard registered by ServerWorkspacePage while the overlay is open. */
-  const workspaceLeaveGuardRef = useRef<((action: () => void) => void) | null>(null);
+  /** Dirty-leave guard registered by the active workspace or form overlay. */
+  const overlayLeaveGuardRef = useRef<((action: () => void) => void) | null>(null);
+  const runWithOverlayLeaveGuard = useCallback((action: () => void) => {
+    const guard = overlayLeaveGuardRef.current;
+    if (guard !== null) {
+      guard(action);
+      return;
+    }
+    action();
+  }, []);
   const [copyConfig, setCopyConfig] = useState<CopyConfigSession | null>(null);
   const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState(
     readOpenNativeTerminalPref,
@@ -292,10 +300,12 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       : null;
 
   const openYarkUpdateSettings = useCallback(() => {
-    setOverlay(null);
-    setRoute("settings");
-    setFocusYarkUpdates(true);
-  }, []);
+    runWithOverlayLeaveGuard(() => {
+      setOverlay(null);
+      setRoute("settings");
+      setFocusYarkUpdates(true);
+    });
+  }, [runWithOverlayLeaveGuard]);
 
   const markChangelogSeen = useCallback(() => {
     changelogPromptSettledRef.current = true;
@@ -1301,35 +1311,26 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     [runAction],
   );
 
-  const runWithWorkspaceLeaveGuard = useCallback((action: () => void) => {
-    const guard = workspaceLeaveGuardRef.current;
-    if (guard !== null) {
-      guard(action);
-      return;
-    }
-    action();
-  }, []);
-
   const navigate = useCallback(
     (next: Route) => {
-      runWithWorkspaceLeaveGuard(() => {
+      runWithOverlayLeaveGuard(() => {
         setOverlay(null);
         setRoute(next);
         // Only after leave-guard confirms — cancelled jumps must not hit Recent.
         pushSpotlightRecent({ kind: "nav", route: next });
       });
     },
-    [runWithWorkspaceLeaveGuard],
+    [runWithOverlayLeaveGuard],
   );
 
   const openServerFromSpotlight = useCallback(
     (serverId: string) => {
-      runWithWorkspaceLeaveGuard(() => {
+      runWithOverlayLeaveGuard(() => {
         setRoute("overview");
         setOverlay({ kind: "workspace", serverId, initialTab: "server" });
       });
     },
-    [runWithWorkspaceLeaveGuard],
+    [runWithOverlayLeaveGuard],
   );
 
   // Feed Spotlight "Recent" from normal workspace opens (not only palette picks).
@@ -1342,9 +1343,9 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     pushSpotlightRecent({ kind: "server", serverId: workspaceServerId });
   }, [workspaceServerId]);
 
-  const registerWorkspaceLeaveGuard = useCallback(
+  const registerOverlayLeaveGuard = useCallback(
     (guard: ((action: () => void) => void) | null) => {
-      workspaceLeaveGuardRef.current = guard;
+      overlayLeaveGuardRef.current = guard;
     },
     [],
   );
@@ -1420,7 +1421,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
                 logsFocus: null,
               })
             }
-            onRegisterLeaveGuard={registerWorkspaceLeaveGuard}
+            onRegisterLeaveGuard={registerOverlayLeaveGuard}
             onBack={() => setOverlay(null)}
             onCreateServer={() => setOverlay({ kind: "create" })}
             onImportServer={() => {
@@ -1451,27 +1452,70 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       );
     }
 
-    if (overlay?.kind === "create" || overlay?.kind === "edit") {
+    if (overlay?.kind === "create") {
       return (
-        <ServerForm
-          initial={overlay.kind === "edit" ? overlay.profile : null}
-          defaultBaseFolder={defaultBaseFolder}
-          servers={servers}
-          onOpenClusters={() => {
-            setOverlay(null);
-            navigate("clusters");
-          }}
-          onCancel={() => setOverlay(null)}
-          onSaved={(created) => {
-            if (overlay.kind === "create" && created !== undefined) {
-              setOverlay({ kind: "workspace", serverId: created.id, onboarding: true });
+        <AppShellLayout
+          route="overview"
+          onNavigate={navigate}
+          steamCmdDetected={steamCmdStatus?.detected === true}
+          steamCmdRunning={steamCmdBusy}
+          officialVersion={officialVersion}
+          officialNetworkStatus={officialNetworkStatus}
+          appVersion={APP_VERSION}
+          yarkUpdateAvailableVersion={yarkUpdateAvailableVersion}
+          onWhatsNewClick={onWhatsNewClick}
+          onYarkUpdateClick={openYarkUpdateSettings}
+          busyOverlay={stopBusyOverlay}
+        >
+          <ServerForm
+            initial={null}
+            defaultBaseFolder={defaultBaseFolder}
+            servers={servers}
+            onRegisterLeaveGuard={registerOverlayLeaveGuard}
+            onOpenClusters={() => navigate("clusters")}
+            onCancel={() => runWithOverlayLeaveGuard(() => setOverlay(null))}
+            onSaved={(created) => {
+              if (created !== undefined) {
+                setOverlay({ kind: "workspace", serverId: created.id, onboarding: true });
+                void refresh();
+                return;
+              }
+              setOverlay(null);
               void refresh();
-              return;
-            }
-            setOverlay(null);
-            void refresh();
-          }}
-        />
+            }}
+          />
+        </AppShellLayout>
+      );
+    }
+
+    if (overlay?.kind === "edit") {
+      return (
+        <AppShellLayout
+          route="overview"
+          onNavigate={navigate}
+          steamCmdDetected={steamCmdStatus?.detected === true}
+          steamCmdRunning={steamCmdBusy}
+          officialVersion={officialVersion}
+          officialNetworkStatus={officialNetworkStatus}
+          appVersion={APP_VERSION}
+          yarkUpdateAvailableVersion={yarkUpdateAvailableVersion}
+          onWhatsNewClick={onWhatsNewClick}
+          onYarkUpdateClick={openYarkUpdateSettings}
+          busyOverlay={stopBusyOverlay}
+        >
+          <ServerForm
+            initial={overlay.profile}
+            defaultBaseFolder={defaultBaseFolder}
+            servers={servers}
+            onRegisterLeaveGuard={registerOverlayLeaveGuard}
+            onOpenClusters={() => navigate("clusters")}
+            onCancel={() => runWithOverlayLeaveGuard(() => setOverlay(null))}
+            onSaved={() => {
+              setOverlay(null);
+              void refresh();
+            }}
+          />
+        </AppShellLayout>
       );
     }
 

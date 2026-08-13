@@ -61,7 +61,7 @@ async function createServerAsBeginner(app, page, name, baseDir, ports) {
   await page.getByLabel("RCON port").fill(String(ports.rcon));
   await page.locator("input[type='password']").last().fill("admin1234");
 
-  await page.getByRole("button", { name: "Save" }).first().click();
+  await page.getByRole("button", { name: "Create server" }).first().click();
 
   // Create opens workspace onboarding; dismiss, then return to overview.
   const later = page.getByRole("button", { name: /^Later$/i });
