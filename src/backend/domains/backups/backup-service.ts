@@ -610,6 +610,11 @@ export class BackupService extends EventEmitter {
       toCriticalJobSummary(job, this.servers.get(job.serverId)?.name ?? null));
   }
 
+  /**
+   * Resolve on-disk completed pre-update backups for resume/rollback.
+   * Returns only {@link CRITICAL_BACKUP_KINDS} (world + ini), in that order.
+   * Extra persisted ids (e.g. legacy `players` from before #275) are ignored.
+   */
   getCompletedBackupsForCriticalJob(
     serverId: string,
     backupIds: readonly string[],

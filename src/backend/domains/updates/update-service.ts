@@ -10,7 +10,10 @@ import type {
   SteamCmdStatus,
 } from "../../../shared/types";
 import { parseSteamCmdProgressLine } from "../../../shared/steamcmd-progress";
-import type { BackupService } from "../backups/backup-service";
+import {
+  CRITICAL_BACKUP_KINDS,
+  type BackupService,
+} from "../backups/backup-service";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { InstanceService } from "../instances/instance-service";
 import { killChildProcessTreeAsync } from "../../infra/process/kill-win-process-tree";
@@ -647,7 +650,12 @@ export class UpdateService extends EventEmitter {
             serverId,
             persistedIds,
           );
-          if (preUpdateBackups.length !== persistedIds.length || persistedIds.length === 0) {
+          // Compare against required critical kinds, not persisted id count:
+          // pre-#275 jobs may still list a `players` id that is intentionally ignored.
+          if (
+            persistedIds.length === 0
+            || preUpdateBackups.length !== CRITICAL_BACKUP_KINDS.length
+          ) {
             throw new CriticalJobRecoveryBlockedError(
               "Persisted pre-update backup evidence is incomplete; operator review is required",
             );
@@ -2291,7 +2299,11 @@ export class UpdateService extends EventEmitter {
       job.serverId,
       backupIds,
     );
-    if (backupIds.length === 0 || backups.length !== backupIds.length) {
+    // Legacy jobs may persist a `players` id; evidence is complete when world+ini exist.
+    if (
+      backupIds.length === 0
+      || backups.length !== CRITICAL_BACKUP_KINDS.length
+    ) {
       throw new CriticalJobRecoveryBlockedError(
         "Rollback backup evidence is incomplete; operator review is required",
       );

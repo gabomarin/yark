@@ -27,6 +27,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- **Move installation** on the same drive renames the folder back if cancel or commit fails after the rename, so the profile is not left pointing at an empty source while files sit at the destination.
+- Safe update resume/rollback accepts legacy pre-update jobs that still list a `players` backup id, so world+INI evidence is enough after the critical-path change.
 - Workspace **Server** and **INI Files** confirm before leaving unsaved edits (fossil alert, Save and continue); Server tab shows Cancel when dirty (#299).
 - Create/edit server forms confirm before app-shell navigation (sidebar, Spotlight, YARK update badge) discards unsaved profile changes (#292).
 - Create/Move install-path checks walk ASA ancestors on disk (not only a `ShooterGame` dest segment) and stay async so a slow UNC folder cannot freeze YARK.
