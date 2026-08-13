@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mkdir, mkdtemp, writeFile, rm, access, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { InstanceService } from "@backend/domains/instances/instance-service";
 import { MoveInstallService, MOVE_STAGING_MARKER } from "@backend/domains/instances/move-install-service";
 import { InstanceLockManager } from "@backend/orchestration/instance-lock-manager";
@@ -282,6 +282,76 @@ describe("MoveInstallService", () => {
     expect(getProfiles()[0]?.installDir).toBe(destDir);
     await expect(access(sourceDir)).rejects.toThrow();
     await access(join(destDir, "ShooterGame", "Binaries", "Win64", "ArkAscendedServer.exe"));
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it("same-volume: cancel during verify renames the install back to source", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-move-cancel-verify-"));
+    const sourceDir = join(root, "source");
+    const destDir = join(root, "dest");
+    await makeReadyInstall(sourceDir);
+
+    const source = profile({ installDir: sourceDir });
+    const { move, getProfiles, repo } = harness([source]);
+
+    vi.mocked(inspectServerInstallation).mockImplementation((serverId, installDir) => {
+      if (resolve(installDir) === resolve(destDir)) {
+        move.cancel();
+      }
+      return {
+        serverId,
+        installed: true,
+        health: "ready",
+        reasonCodes: ["ready"],
+        guidance: "Installation looks ready to start.",
+        build: null,
+        steamBuild: null,
+        arkVersion: null,
+        version: null,
+        binaryPath: join(
+          installDir,
+          "ShooterGame",
+          "Binaries",
+          "Win64",
+          "ArkAscendedServer.exe",
+        ),
+        checkedAt: new Date().toISOString(),
+      };
+    });
+
+    await expect(move.moveInstall(source.id, destDir)).rejects.toThrow(/cancelled/i);
+    expect(getProfiles()[0]?.installDir).toBe(sourceDir);
+    expect(repo.updateInstallDir).not.toHaveBeenCalled();
+    await access(join(sourceDir, "ShooterGame", "Binaries", "Win64", "ArkAscendedServer.exe"));
+    await expect(access(destDir)).rejects.toThrow();
+    expect(repo.addEvent).toHaveBeenCalledWith(
+      source.id,
+      "install_move_cancelled",
+      "warning",
+      expect.stringContaining("still uses"),
+      expect.any(Object),
+    );
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it("same-volume: commit failure renames the install back to source", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-move-commit-fail-"));
+    const sourceDir = join(root, "source");
+    const destDir = join(root, "dest");
+    await makeReadyInstall(sourceDir);
+
+    const source = profile({ installDir: sourceDir });
+    const { move, getProfiles, repo } = harness([source]);
+    vi.mocked(repo.updateInstallDir).mockImplementation(() => {
+      throw new Error("sqlite commit failed");
+    });
+
+    await expect(move.moveInstall(source.id, destDir)).rejects.toThrow(/sqlite commit failed/);
+    expect(getProfiles()[0]?.installDir).toBe(sourceDir);
+    await access(join(sourceDir, "ShooterGame", "Binaries", "Win64", "ArkAscendedServer.exe"));
+    await expect(access(destDir)).rejects.toThrow();
 
     await rm(root, { recursive: true, force: true });
   });

@@ -319,6 +319,13 @@ export class MoveInstallService extends EventEmitter {
     this.cancelRequested = false;
     this.activeServerId = serverId;
     const stagingDir = stagingDirFor(serverId, destResolved);
+    /**
+     * Same-volume rename moves the only copy of the install. Track until commit so
+     * cancel/fail can rename back; otherwise the profile still points at the empty
+     * source while files sit orphaned at dest.
+     */
+    let renamedAwayFromSource = false;
+    let profileCommittedToDest = false;
 
     try {
       return await this.locks.withLock(serverId, "move-install", async () => {
@@ -418,15 +425,14 @@ export class MoveInstallService extends EventEmitter {
             );
           }
           oldSourceStillPresent = false;
+          renamedAwayFromSource = true;
 
           try {
             this.throwIfCancelled();
           } catch (cancelError) {
-            try {
-              await rename(destResolved, sourceDir);
+            if (await this.rollbackSameVolumeRename(sourceDir, destResolved)) {
               oldSourceStillPresent = true;
-            } catch {
-              // Leave dest in place; profile still points at source until we fail.
+              renamedAwayFromSource = false;
             }
             throw cancelError;
           }
@@ -493,8 +499,11 @@ export class MoveInstallService extends EventEmitter {
         if (!isInstallationReady(verified)) {
           if (useRename && !oldSourceStillPresent) {
             try {
-              await rename(destResolved, sourceDir);
+              if (!(await this.rollbackSameVolumeRename(sourceDir, destResolved))) {
+                throw new Error("rename rollback did not restore the original path");
+              }
               oldSourceStillPresent = true;
+              renamedAwayFromSource = false;
             } catch (rollbackError) {
               const rollbackMessage =
                 rollbackError instanceof Error
@@ -510,7 +519,18 @@ export class MoveInstallService extends EventEmitter {
           );
         }
 
-        this.throwIfCancelled();
+        try {
+          this.throwIfCancelled();
+        } catch (cancelError) {
+          // Post-verify cancel used to skip rename-back and orphan the tree at dest.
+          if (useRename && renamedAwayFromSource) {
+            if (await this.rollbackSameVolumeRename(sourceDir, destResolved)) {
+              oldSourceStillPresent = true;
+              renamedAwayFromSource = false;
+            }
+          }
+          throw cancelError;
+        }
         this.emitProgress({
           serverId,
           active: true,
@@ -535,6 +555,8 @@ export class MoveInstallService extends EventEmitter {
         if (installDirKey(committed.installDir) !== installDirKey(destResolved)) {
           throw new Error("Profile commit did not apply the new install path");
         }
+        profileCommittedToDest = true;
+        renamedAwayFromSource = false;
 
         let oldSourceRemoved = !oldSourceStillPresent;
         let cleanupError: string | null = null;
@@ -651,6 +673,27 @@ export class MoveInstallService extends EventEmitter {
       const message =
         error instanceof Error ? error.message : String(error);
 
+      // Same-volume rename left the only copy at dest; restore before we claim
+      // the profile still uses sourceDir (cancel/fail between rename and commit).
+      let renameRollbackFailed = false;
+      if (renamedAwayFromSource && !profileCommittedToDest) {
+        const current = this.repo.get(serverId);
+        const stillOnSource =
+          current !== null
+          && installDirKey(current.installDir) === installDirKey(sourceDir);
+        if (stillOnSource) {
+          try {
+            if (!(await this.rollbackSameVolumeRename(sourceDir, destResolved))) {
+              renameRollbackFailed = true;
+            } else {
+              renamedAwayFromSource = false;
+            }
+          } catch {
+            renameRollbackFailed = true;
+          }
+        }
+      }
+
       // Best-effort staging cleanup; leftover dirs are swept on next start.
       try {
         if (await pathExists(stagingDir)) {
@@ -665,21 +708,30 @@ export class MoveInstallService extends EventEmitter {
         // Leave for sweepStaleStaging (path stays in the registry).
       }
 
+      const authoritativePath =
+        renameRollbackFailed || (renamedAwayFromSource && !profileCommittedToDest)
+          ? destResolved
+          : sourceDir;
       this.repo.addEvent(
         serverId,
         cancelled ? "install_move_cancelled" : "install_move_failed",
         cancelled ? "warning" : "error",
         cancelled
-          ? `Move installation cancelled. Profile still uses ${sourceDir}.`
-          : `Move installation failed: ${message}. Profile still uses ${sourceDir}.`,
+          ? renameRollbackFailed
+            ? `Move installation cancelled after rename; files may remain at ${destResolved} while the profile still points at ${sourceDir}.`
+            : `Move installation cancelled. Profile still uses ${sourceDir}.`
+          : renameRollbackFailed
+            ? `Move installation failed: ${message}. Files may remain at ${destResolved} while the profile still points at ${sourceDir}.`
+            : `Move installation failed: ${message}. Profile still uses ${sourceDir}.`,
         {
           what: cancelled
             ? "Move installation was cancelled before profile commit."
             : "Move installation failed before profile commit.",
           cause: cancelled ? "Cancelled by the operator." : message,
-          location: sourceDir,
-          suggestion:
-            "The original install path remains authoritative. Fix the issue and retry Move installation.",
+          location: authoritativePath,
+          suggestion: renameRollbackFailed
+            ? `Move the folder back from ${destResolved} to ${sourceDir} manually, or update the profile after confirming the destination tree is intact.`
+            : "The original install path remains authoritative. Fix the issue and retry Move installation.",
         },
       );
 
@@ -1131,6 +1183,25 @@ export class MoveInstallService extends EventEmitter {
     if (this.cancelRequested) {
       throw new OperationCancelledError();
     }
+  }
+
+  /**
+   * After a same-volume rename, put the install tree back at `sourceDir` when
+   * cancel/fail happens before profile commit. Returns false when dest is gone
+   * or source already exists (nothing safe to do).
+   */
+  private async rollbackSameVolumeRename(
+    sourceDir: string,
+    destResolved: string,
+  ): Promise<boolean> {
+    if (!(await pathExists(destResolved))) {
+      return false;
+    }
+    if (await pathExists(sourceDir)) {
+      return false;
+    }
+    await rename(destResolved, sourceDir);
+    return true;
   }
 
   private emitProgress(progress: MoveInstallProgress): void {
