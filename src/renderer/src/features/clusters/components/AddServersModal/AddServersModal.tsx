@@ -18,6 +18,7 @@ import type {
   ServerProfile,
   ServerRuntimeInfo,
 } from "@shared/types";
+import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { sharedClusterDir } from "../../clusterModel";
 import {
   buildCreateClusterInput,
@@ -243,7 +244,14 @@ export function AddServersModal(props: Props): ReactElement {
                 </div>
                 <div>
                   <dt>Directory</dt>
-                  <dd className={classes.mono}>{sharedDir}</dd>
+                  <dd className={classes.previewPath}>
+                    <ReadonlyPath
+                      value={sharedDir}
+                      compact
+                      emptyLabel="No directory"
+                      aria-label="Shared cluster directory"
+                    />
+                  </dd>
                 </div>
               </dl>
             </div>

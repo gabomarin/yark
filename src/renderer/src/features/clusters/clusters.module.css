@@ -40,13 +40,6 @@
   gap: var(--app-space-xs);
 }
 
-.incompleteDir {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  padding: 0 2px;
-}
-
 .layout {
   display: grid;
   grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);

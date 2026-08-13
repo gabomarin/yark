@@ -4,6 +4,7 @@ import { Button, Stack, Text } from "@mantine/core";
 import type { ServerProfile } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { groupServersByClusterDir } from "../clusterModel";
 import classes from "../clusters.module.css";
 import { ClusterMemberRow } from "./ClusterMemberRow";
@@ -49,9 +50,12 @@ export function ClusterEmptyState(props: Props): ReactElement {
             <div className={classes.incompleteList} data-incomplete-clusters>
               {incompleteGroups.map(({ dir, members }) => (
                 <div key={dir} className={classes.incompleteGroup}>
-                  <Text size="xs" c="dimmed" className={classes.incompleteDir}>
-                    {dir}
-                  </Text>
+                  <ReadonlyPath
+                    value={dir}
+                    compact
+                    emptyLabel="No directory"
+                    aria-label="Incomplete cluster directory"
+                  />
                   <div className={classes.memberList}>
                     {members.map((server) => (
                       <ClusterMemberRow

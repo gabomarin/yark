@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { Alert, Button, Group, Stack, Text, TextInput } from "@mantine/core";
 import type { ServerProfile } from "@shared/types";
 import { PathField } from "@ui/PathField/PathField";
+import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 
 interface Props {
   clusterId: string;
@@ -62,9 +63,12 @@ export function CreateClusterIdentityStep(props: Props): ReactElement {
           <Stack gap="xs">
             {props.incompleteGroups.map((group) => (
               <div key={group.dir}>
-                <Text size="xs" c="dimmed" ff="monospace">
-                  {group.dir}
-                </Text>
+                <ReadonlyPath
+                  value={group.dir}
+                  compact
+                  emptyLabel="No directory"
+                  aria-label="Incomplete cluster directory"
+                />
                 <Text size="sm">
                   {group.members.map((server) => server.name).join(", ")} ·
                   Directory set, missing Cluster ID
