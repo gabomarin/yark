@@ -11,8 +11,10 @@ export const DEFAULT_LOG_RETENTION_SETTINGS: LogRetentionSettings = {
   autoCleanupEnabled: true,
 };
 
-const MIN_DAYS = 7;
-const MAX_DAYS = 3650;
+export const MIN_LOG_RETENTION_DAYS = 1;
+export const MAX_LOG_RETENTION_DAYS = 3650;
+const MIN_DAYS = MIN_LOG_RETENTION_DAYS;
+const MAX_DAYS = MAX_LOG_RETENTION_DAYS;
 const MIN_COUNT = 1;
 const MAX_COUNT = 200;
 

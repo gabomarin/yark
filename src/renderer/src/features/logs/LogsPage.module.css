@@ -145,30 +145,6 @@
   min-height: 0;
 }
 
-.emptyState {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--app-space-xs);
-  min-height: 0;
-  padding: var(--app-space-xl);
-  text-align: center;
-}
-
-.emptyIcon {
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  margin-bottom: var(--app-space-xxs);
-  border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-md);
-  background: var(--app-color-surface-control);
-  color: var(--app-color-accent);
-}
-
 .eventList,
 .updateList {
   display: flex;

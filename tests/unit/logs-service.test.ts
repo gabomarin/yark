@@ -228,7 +228,7 @@ describe("LogsService retention (#84)", () => {
     expect(() =>
       service.setRetentionSettings({
         ...before,
-        eventsRetainDays: 2,
+        eventsRetainDays: 0,
       }),
     ).toThrow(/eventsRetainDays/);
     expect(service.getRetentionSettings()).toEqual(before);

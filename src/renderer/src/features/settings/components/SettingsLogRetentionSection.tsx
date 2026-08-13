@@ -13,7 +13,11 @@ import type {
   LogCleanupTargetRef,
   LogRetentionSettings,
 } from "@shared/types";
-import { DEFAULT_LOG_RETENTION_SETTINGS } from "@shared/log-retention";
+import {
+  DEFAULT_LOG_RETENTION_SETTINGS,
+  MAX_LOG_RETENTION_DAYS,
+  MIN_LOG_RETENTION_DAYS,
+} from "@shared/log-retention";
 import { LogRetentionCleanupModal } from "./LogRetentionCleanupModal";
 import classes from "../SettingsPage.module.css";
 
@@ -176,8 +180,8 @@ export function SettingsLogRetentionSection(): ReactElement {
         </div>
         <div className={classes.settingControl}>
           <NumberInput
-            min={7}
-            max={3650}
+            min={MIN_LOG_RETENTION_DAYS}
+            max={MAX_LOG_RETENTION_DAYS}
             value={settings.eventsRetainDays}
             disabled={!ready || busy}
             onChange={(value) => {
@@ -202,8 +206,8 @@ export function SettingsLogRetentionSection(): ReactElement {
         </div>
         <div className={classes.settingControl}>
           <NumberInput
-            min={7}
-            max={3650}
+            min={MIN_LOG_RETENTION_DAYS}
+            max={MAX_LOG_RETENTION_DAYS}
             value={settings.eventsFailureRetainDays}
             disabled={!ready || busy}
             onChange={(value) => {
@@ -254,8 +258,8 @@ export function SettingsLogRetentionSection(): ReactElement {
         </div>
         <div className={classes.settingControl}>
           <NumberInput
-            min={7}
-            max={3650}
+            min={MIN_LOG_RETENTION_DAYS}
+            max={MAX_LOG_RETENTION_DAYS}
             value={settings.updateLogsFailureRetainDays}
             disabled={!ready || busy}
             onChange={(value) => {

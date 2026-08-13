@@ -19,6 +19,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Create/edit **server form** paths use the same Browse chip as Settings (no typed install/cluster paths) (#222).
 - **Create/edit server** form uses AppSurfaceCard identity + reachability columns in the app shell and workspace tab, a reserved port-conflict slot, and a fixed Create server / Save changes footer (#292).
 - **New server** Map is official maps only; Custom… stays on edit, import, and clone (#292).
+- Workspace, Settings auto-start, and Logs fleet empties use the shared **EmptyState** shell; backup and RCON action toasts go through `showOperatorToast` / `showOperatorError` (#223).
+- **Log retention** day fields accept a minimum of 1 day (was 7).
 
 ### Fixed
 

@@ -376,8 +376,8 @@ describe("ServerBackupPanel", () => {
     await waitFor(() => {
       expect(notifySpy).toHaveBeenCalledWith(
         expect.objectContaining({
+          title: "Backups",
           message: "World save backup completed.",
-          position: "bottom-right",
           color: "teal",
         }),
       );

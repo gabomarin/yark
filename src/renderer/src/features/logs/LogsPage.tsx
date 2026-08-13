@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { ClockCounterClockwise } from "@phosphor-icons/react";
+import { ClockCounterClockwise, HardDrives } from "@phosphor-icons/react";
 import {
   Accordion,
   Alert,
@@ -185,7 +185,12 @@ export function LogsPage(props: Props): ReactElement {
             </Group>
 
             {props.servers.length === 0 ? (
-              <Text c="dimmed">No servers configured yet.</Text>
+              <EmptyState
+                layout="stacked"
+                icon={<HardDrives size={24} />}
+                title="No servers configured yet"
+                description="Create a server first to see fleet activity here."
+              />
             ) : loading ? (
               <Text c="dimmed">Loading events…</Text>
             ) : filteredFleetEvents.length === 0 ? (

@@ -1,7 +1,7 @@
 import { ActionIcon, Group, Text, Tooltip } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
 import { Copy } from "@phosphor-icons/react";
 import type { ReactElement, ReactNode } from "react";
+import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import classes from "./RconPanel.module.css";
 
 export function resolvePlayerDisplayName(
@@ -31,16 +31,13 @@ export function mergeNameHints(
 async function copyPlayerId(playerKey: string): Promise<void> {
   try {
     await navigator.clipboard.writeText(playerKey);
-    notifications.show({
-      color: "teal",
+    showOperatorToast({
+      title: "Copied",
       message: "Player ID copied",
       autoClose: 1500,
     });
   } catch {
-    notifications.show({
-      color: "red",
-      message: "Could not copy player ID",
-    });
+    showOperatorError("Could not copy player ID", "Copy failed");
   }
 }
 

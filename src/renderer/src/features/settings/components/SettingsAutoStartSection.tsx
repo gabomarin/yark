@@ -1,7 +1,9 @@
 import type { ReactElement } from "react";
+import { Play } from "@phosphor-icons/react";
 import { Badge, Button, Group, Stack, Text, Title } from "@mantine/core";
 import { isInstallationReady } from "@shared/installation-health";
 import type { ServerInstallationInfo, ServerProfile } from "@shared/types";
+import { EmptyState } from "@ui/EmptyState/EmptyState";
 import classes from "../SettingsPage.module.css";
 
 export type AutoStartSummaryState = "armed" | "ignored" | "blocked";
@@ -80,15 +82,15 @@ export function SettingsAutoStartSection(props: Props): ReactElement {
         Server auto-start
       </Title>
       <Text size="xs" c="dimmed">
-        Start with Windows launches YARK only — it does not start ASA. Opt in per
-        server on the Server tab. This list is a summary; edit the preference on
-        each server.
+        When YARK opens, these servers start automatically.
       </Text>
 
       {rows.length === 0 ? (
-        <Text size="sm" c="dimmed">
-          No servers opted in. Open a server → Server tab → Auto-start with YARK.
-        </Text>
+        <EmptyState
+          icon={<Play size={22} />}
+          title="No servers opted in"
+          description="Open a server → Server tab → Auto-start with YARK."
+        />
       ) : (
         <Stack gap="sm" className={classes.autoStartList}>
           {rows.map((row) => (
