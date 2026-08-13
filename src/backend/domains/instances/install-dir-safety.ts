@@ -1,3 +1,4 @@
+import { readdir, stat } from "node:fs/promises";
 import { parse as parsePath, resolve } from "node:path";
 
 /** Windows install-directory comparison key (paths are case-insensitive). */
@@ -40,4 +41,48 @@ export function assertSafeInstallDirForWipe(installDir: string): string {
     );
   }
   return resolved;
+}
+
+function isNotFoundErrno(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as NodeJS.ErrnoException).code === "ENOENT"
+  );
+}
+
+/**
+ * Create/clone may only target a missing folder or an empty directory.
+ * Non-empty trees (including ASA installs) must use Import instead.
+ * Async so UNC/network stalls do not freeze the Electron main process.
+ */
+export async function assertInstallDirVacantForCreate(
+  installDir: string,
+): Promise<void> {
+  let st;
+  try {
+    st = await stat(installDir);
+  } catch (error) {
+    if (isNotFoundErrno(error)) {
+      return;
+    }
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`Cannot read install folder "${installDir}": ${detail}`);
+  }
+  if (!st.isDirectory()) {
+    throw new Error(`Install path is not a folder: "${installDir}"`);
+  }
+  let entries: string[];
+  try {
+    entries = await readdir(installDir);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`Cannot read install folder "${installDir}": ${detail}`);
+  }
+  if (entries.length > 0) {
+    throw new Error(
+      `Install folder is not empty: "${installDir}". Pick an empty folder, or use Import install for an existing ASA server.`,
+    );
+  }
 }

@@ -13,6 +13,7 @@ const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
 const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
+const { pickPathField } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -187,7 +188,7 @@ async function goNav(page, label) {
   await page.waitForTimeout(250);
 }
 
-async function createSeedServer(page, serverName, installDir, ports) {
+async function createSeedServer(app, page, serverName, installDir, ports) {
   await page.getByRole("button", { name: "New server" }).first().click();
   await page.getByRole("heading", { name: "New server" }).waitFor({
     state: "visible",
@@ -196,12 +197,7 @@ async function createSeedServer(page, serverName, installDir, ports) {
 
   await page.getByRole("textbox", { name: /^Name$/ }).fill(serverName);
   await page.getByRole("textbox", { name: /^Session name$/ }).fill(`Session ${serverName}`);
-  const baseFolder = page.getByRole("textbox", { name: /^Base folder$/ });
-  if ((await baseFolder.count()) > 0) {
-    await baseFolder.fill(installDir);
-  } else {
-    await page.getByPlaceholder("C:\\ark_servers").fill(installDir);
-  }
+  await pickPathField(app, page, "Base folder", installDir);
 
   await page.getByLabel("Game port").fill(String(ports.game));
   await page.getByLabel("Query port").fill(String(ports.query));
@@ -302,7 +298,7 @@ async function run() {
     );
 
     await goNav(page, "Servers");
-    await createSeedServer(page, serverName, installDir, ports);
+    await createSeedServer(app, page, serverName, installDir, ports);
 
     await app.close();
     app = null;

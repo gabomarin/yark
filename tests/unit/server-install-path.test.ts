@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  findInstallDirConflict,
   getServerFolderNameError,
   getWindowsPathError,
+  isWindowsPathEqual,
+  isWindowsPathInside,
   resolveServerInstallDir,
   sanitizeServerFolderName,
   suggestCloneInstallDir,
@@ -56,5 +59,29 @@ describe("server-install-path", () => {
       "C:\\ark_servers\\Island-copy",
     );
     expect(suggestCloneInstallDir("D:\\ARK", "ARK-copy")).toBe("D:\\ARK-copy");
+  });
+
+  it("detects Windows path containment without prefix false positives", () => {
+    expect(isWindowsPathEqual("C:/ark/Island", "C:\\ark\\Island\\")).toBe(true);
+    expect(isWindowsPathInside("C:\\ark\\Island\\Saved", "C:\\ark\\Island")).toBe(true);
+    expect(isWindowsPathInside("C:\\ark\\Island", "C:\\ark\\Island")).toBe(false);
+    expect(isWindowsPathInside("C:\\ark-servers", "C:\\ark")).toBe(false);
+    expect(isWindowsPathInside("C:\\ark\\Island2", "C:\\ark\\Island")).toBe(false);
+  });
+
+  it("finds same-folder and nested fleet install conflicts", () => {
+    const fleet = [
+      { id: "a", name: "The Island", installDir: "C:\\ark\\Island" },
+      { id: "b", name: "Ragnarok", installDir: "C:\\ark\\Ragnarok" },
+    ];
+    expect(findInstallDirConflict("C:\\ark\\Scorched", fleet)).toBeNull();
+    expect(findInstallDirConflict("C:\\ark\\Island", fleet)?.relation).toBe("same");
+    expect(findInstallDirConflict("C:\\ark\\Island\\Foo", fleet)?.relation).toBe(
+      "inside-other",
+    );
+    expect(findInstallDirConflict("C:\\ark", fleet)?.relation).toBe("contains-other");
+    expect(
+      findInstallDirConflict("C:\\ark\\Island\\Foo", fleet, "a"),
+    ).toBeNull();
   });
 });

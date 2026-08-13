@@ -8,6 +8,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
+const { pickPathField } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -82,7 +83,7 @@ async function measureIniNav(page) {
   });
 }
 
-async function ensureServer(page, outDir) {
+async function ensureServer(app, page, outDir) {
   await goNav(page, "Servers");
   await page.locator("[data-overview-page]").waitFor({ timeout: 15000 });
   await page.waitForTimeout(400);
@@ -102,12 +103,7 @@ async function ensureServer(page, outDir) {
   });
   await page.getByRole("textbox", { name: /^Name$/ }).fill(serverName);
   await page.getByRole("textbox", { name: /^Session name$/ }).fill(`Session ${serverName}`);
-  const baseFolder = page.getByRole("textbox", { name: /^Base folder$/ });
-  if ((await baseFolder.count()) > 0) {
-    await baseFolder.fill(installDir);
-  } else {
-    await page.getByPlaceholder("C:\\ark_servers").fill(installDir);
-  }
+  await pickPathField(app, page, "Base folder", installDir);
   await page.getByLabel("Game port").fill("18778");
   await page.getByLabel("Query port").fill("38016");
   await page.getByLabel("RCON port").fill("38021");
@@ -179,7 +175,7 @@ async function run() {
       timeout: 20000,
     }).catch(() => undefined);
 
-    await ensureServer(page, outDir);
+    await ensureServer(app, page, outDir);
     await openWorkspaceIni(page);
 
     for (const size of sizes) {

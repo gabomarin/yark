@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { TextInput } from "@mantine/core";
 import type { KnownClusterOption } from "@features/clusters/knownClusterOptions";
-import { ServerFormPathField } from "./ServerFormPathField";
+import { PathField } from "@ui/PathField/PathField";
 import { ServerFormCreateClusterFields } from "./ServerFormCreateClusterFields";
 
 interface Props {
@@ -41,12 +41,13 @@ export function ServerFormClusterFields(props: Props): ReactElement {
         value={props.clusterId}
         onChange={(e) => props.onClusterIdChange(e.currentTarget.value)}
       />
-      <ServerFormPathField
+      <PathField
         label="Shared cluster directory"
         value={props.clusterDir}
         placeholder="C:\\ark_servers\\cluster"
         busy={props.browsingClusterDir}
         size={props.inputSize}
+        clearable
         onChange={props.onClusterDirChange}
         onBrowse={props.onBrowseClusterDir}
       />

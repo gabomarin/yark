@@ -20,6 +20,7 @@ const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
 const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
+const { stubFolderPicker } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -141,15 +142,6 @@ async function quitApp(app) {
       setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000),
     ),
   ]);
-}
-
-async function stubFolderPicker(app, folderPath) {
-  await app.evaluate(({ dialog }, chosen) => {
-    dialog.showOpenDialog = async () => ({
-      canceled: false,
-      filePaths: [chosen],
-    });
-  }, folderPath);
 }
 
 async function expectText(locator, value) {

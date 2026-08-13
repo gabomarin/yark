@@ -190,6 +190,13 @@ updates cannot change it; only `InstanceService.setServerEnabled` may do so.
 - Clones inherit the source enabled state and receive a unique sibling install
   directory. Disabled profiles remain cluster members and participate in port
   conflict checks.
+- **Create / clone install path** must be missing or an empty folder, not inside
+  another YARK profile or ASA tree (path segment *or* unmanaged parent that
+  contains `ShooterGame`), and must not contain another managed install.
+  Non-empty ASA trees use **Import install**. Disk probes are async under the
+  fleet-create lock. The create form previews fleet nesting immediately and
+  probes disk on the resolved `base\<name>` path. Move destination uses the
+  same nesting gate.
 - **Install directory** is read-only in normal profile editing. Relocate with
   **Move installation** (`servers:move-install`): requires stopped idle server,
   lock `"move-install"`, source health `ready`, empty/missing destination.
@@ -485,8 +492,8 @@ from another manager) but YARK has no profile:
      **Import anyway — Install/Verify before Start** (#283). Profile is created;
      Start remains gated until Install/Verify makes the tree ready (same as
      New server pointed at an incomplete path).
-   - **Empty** — blocked with no opt-in; use **New server** on that path, then
-     Install.
+   - **Empty** — blocked with no opt-in; use **New server** on that path (create
+     requires empty/missing), then Install.
    - Paths under `ShooterGame\...` (e.g. `Binaries\Win64`) are rejected as
      nested folders with a suggested dedicated root. Other non-ready healths
      stay blocked.

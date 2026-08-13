@@ -14,6 +14,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
 const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
+const { pickPathField } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -74,7 +75,7 @@ async function removeServerIfPresent(page, name) {
   await dismissOpenMenus(page);
 }
 
-async function createServer(page, serverName, installDir, ports) {
+async function createServer(app, page, serverName, installDir, ports) {
   await page.getByRole("button", { name: "New server" }).click();
   await page.getByRole("heading", { name: "New server" }).waitFor({
     state: "visible",
@@ -83,12 +84,7 @@ async function createServer(page, serverName, installDir, ports) {
 
   await page.getByRole("textbox", { name: /^Name$/ }).fill(serverName);
   await page.getByRole("textbox", { name: /^Session name$/ }).fill(`Session ${serverName}`);
-  const baseFolder = page.getByRole("textbox", { name: /^Base folder$/ });
-  if ((await baseFolder.count()) > 0) {
-    await baseFolder.fill(installDir);
-  } else {
-    await page.getByPlaceholder("C:\\ark_servers").fill(installDir);
-  }
+  await pickPathField(app, page, "Base folder", installDir);
 
   await page.getByLabel("Game port").fill(String(ports.game));
   await page.getByLabel("Query port").fill(String(ports.query));
@@ -177,7 +173,7 @@ async function run() {
     };
     const installDir = path.join(INSTALL_ROOT, runId);
 
-    await createServer(page, serverName, installDir, ports);
+    await createServer(app, page, serverName, installDir, ports);
     await openModsTab(page);
 
     const addInput = page.getByLabel("Add CurseForge Project ID or mod URL");

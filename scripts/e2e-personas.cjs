@@ -13,6 +13,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
 const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
+const { pickPathField } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -48,18 +49,13 @@ async function setViewportAndCapture(page, outDir, label, size) {
   return shot;
 }
 
-async function createServerAsBeginner(page, name, baseDir, ports) {
+async function createServerAsBeginner(app, page, name, baseDir, ports) {
   await page.getByRole("button", { name: "New server" }).first().click();
   await page.getByRole("heading", { name: "New server" }).waitFor({ timeout: 10000 });
 
   await page.getByRole("textbox", { name: /^Name$/ }).fill(name);
   await page.getByRole("textbox", { name: /^Session name$/ }).fill(`Session ${name}`);
-  const baseDirByLabel = page.getByRole("textbox", { name: /^Base folder$/ });
-  if ((await baseDirByLabel.count()) > 0) {
-    await baseDirByLabel.first().fill(baseDir);
-  } else {
-    await page.getByPlaceholder("C:\\ark_servers").fill(baseDir);
-  }
+  await pickPathField(app, page, "Base folder", baseDir);
   await page.getByLabel("Game port").fill(String(ports.game));
   await page.getByLabel("Query port").fill(String(ports.query));
   await page.getByLabel("RCON port").fill(String(ports.rcon));
@@ -225,7 +221,7 @@ async function run() {
     }
 
     // Beginner persona.
-    await createServerAsBeginner(page, beginnerServerName, beginnerBaseDir, beginnerPorts);
+    await createServerAsBeginner(app, page, beginnerServerName, beginnerBaseDir, beginnerPorts);
     await openWorkspaceAndAssistant(page, beginnerServerName);
 
     // Experienced persona.

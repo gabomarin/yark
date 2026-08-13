@@ -26,6 +26,7 @@ const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
 const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
+const { pickPathField } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -140,7 +141,7 @@ async function redactPrivatePaths(page) {
   }
 }
 
-async function createDemoServer(page, demo, portOffset) {
+async function createDemoServer(app, page, demo, portOffset) {
   const installDir = path.join(DEMO_INSTALL_ROOT, demo.folder);
   fs.mkdirSync(installDir, { recursive: true });
 
@@ -153,12 +154,7 @@ async function createDemoServer(page, demo, portOffset) {
 
   await page.getByRole("textbox", { name: /^Name$/ }).fill(demo.name);
   await page.getByRole("textbox", { name: /^Session name$/ }).fill(demo.session);
-  const baseFolder = page.getByRole("textbox", { name: /^Base folder$/ });
-  if ((await baseFolder.count()) > 0) {
-    await baseFolder.fill(installDir);
-  } else {
-    await page.getByPlaceholder("C:\\ark_servers").fill(installDir);
-  }
+  await pickPathField(app, page, "Base folder", installDir);
 
   await page.getByLabel("Game port").fill(String(7777 + portOffset));
   await page.getByLabel("Query port").fill(String(27015 + portOffset));
@@ -233,15 +229,14 @@ async function openWorkspaceByName(page, name) {
   await settle(page, 500);
 }
 
-async function configureServerCluster(page, serverName) {
+async function configureServerCluster(app, page, serverName) {
   await openWorkspaceByName(page, serverName);
   await page.getByRole("tab", { name: "Server" }).click();
   await settle(page, 300);
 
   const clusterId = page.getByLabel("Cluster ID");
   await clusterId.fill(DEMO_CLUSTER_ID);
-  const clusterDir = page.getByLabel("Shared cluster directory");
-  await clusterDir.fill(DEMO_CLUSTER_DIR);
+  await pickPathField(app, page, "Shared cluster directory", DEMO_CLUSTER_DIR);
 
   const save = page.getByRole("button", { name: "Save" }).first();
   await save.click();
@@ -250,10 +245,10 @@ async function configureServerCluster(page, serverName) {
   await leaveWorkspaceToServers(page);
 }
 
-async function seedIsolatedFleet(page) {
+async function seedIsolatedFleet(app, page) {
   for (let i = 0; i < DEMO_FLEET.length; i += 1) {
     const demo = DEMO_FLEET[i];
-    await createDemoServer(page, demo, i * 10);
+    await createDemoServer(app, page, demo, i * 10);
     if (i === 0) {
       await ensureDemoMods(page);
     }
@@ -264,10 +259,10 @@ async function seedIsolatedFleet(page) {
   );
 }
 
-async function ensureDemoCluster(page) {
+async function ensureDemoCluster(app, page) {
   const members = DEMO_FLEET.slice(0, 3).map((d) => d.name);
   for (const name of members) {
-    await configureServerCluster(page, name);
+    await configureServerCluster(app, page, name);
   }
   console.log(`WEBSITE_SCREENSHOTS_CLUSTER=${DEMO_CLUSTER_ID} members=${members.join(",")}`);
   return true;
@@ -322,8 +317,8 @@ async function run() {
       });
       await page.waitForLoadState("domcontentloaded");
       await page.setViewportSize(VIEWPORT);
-      await seedIsolatedFleet(page);
-      await ensureDemoCluster(page);
+      await seedIsolatedFleet(app, page);
+      await ensureDemoCluster(app, page);
     } finally {
       await quitApp(app);
     }

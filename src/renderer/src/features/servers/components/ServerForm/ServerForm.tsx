@@ -174,6 +174,7 @@ export function ServerForm(props: Props): ReactElement {
   );
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [createPathIssue, setCreatePathIssue] = useState<string | null>(null);
   const [browsingField, setBrowsingField] = useState<"installDir" | "clusterDir" | null>(null);
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
 
@@ -300,6 +301,10 @@ export function ServerForm(props: Props): ReactElement {
     }
     if (!isOfficialMap(mapToken) && !mapToken.includes("_WP")) {
       setError("Custom map token usually ends with _WP (example: Svartalfheim_WP)");
+      return;
+    }
+    if (isCreate && createPathIssue !== null) {
+      setError(createPathIssue);
       return;
     }
     setSaving(true);
@@ -443,6 +448,12 @@ export function ServerForm(props: Props): ReactElement {
             isCreate={isCreate}
             installDir={state.installDir}
             resolvedInstallPreview={resolvedInstallPreview}
+            fleetInstalls={(props.servers ?? []).map((server) => ({
+              id: server.id,
+              name: server.name,
+              installDir: server.installDir,
+            }))}
+            onCreatePathIssueChange={setCreatePathIssue}
             inputSize={inputSize}
             browsingInstallDir={browsingField === "installDir"}
             moveDisabled={serverActive || filesJobActive || moveJobActive}

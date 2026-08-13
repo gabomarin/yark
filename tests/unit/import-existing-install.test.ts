@@ -7,6 +7,8 @@ import {
   classifyImportContinue,
   assertImportHealthAllowed,
   assertImportNotNested,
+  assertNotInsideAsaInstall,
+  findAsaInstallAncestorOnDisk,
   isImportIncompleteEligible,
   shouldBuildImportSuggestions,
   collectModProjectIdsFromTree,
@@ -164,6 +166,24 @@ ServerPassword=joinme
       ),
     ).toThrow(/inside an ASA install/i);
     expect(() => assertImportNotNested("C:\\ASA\\LostColony")).not.toThrow();
+  });
+
+  it("detects an unmanaged ASA parent when the dest folder does not exist yet", async () => {
+    const asa = join(await tempRoot(), "ExistingASA");
+    await mkdir(join(asa, "ShooterGame"), { recursive: true });
+    const dest = join(asa, "NewServer");
+
+    expect(assertImportNotNested(dest)).toBeUndefined();
+    expect(await findAsaInstallAncestorOnDisk(dest)).toBe(asa);
+    await expect(assertNotInsideAsaInstall(dest)).rejects.toThrow(/inside an ASA install/i);
+  });
+
+  it("allows a sibling folder next to an unmanaged ASA install", async () => {
+    const root = await tempRoot();
+    await mkdir(join(root, "ExistingASA", "ShooterGame"), { recursive: true });
+    const sibling = join(root, "NewServer");
+    expect(await findAsaInstallAncestorOnDisk(sibling)).toBeNull();
+    await expect(assertNotInsideAsaInstall(sibling)).resolves.toBeUndefined();
   });
 
   it("builds suggestions for ready and incomplete only", () => {

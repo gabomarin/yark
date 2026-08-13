@@ -120,6 +120,95 @@ export function resolveServerInstallDir(parentDir: string, serverName: string): 
   return `${parent}\\${folder}`;
 }
 
+/** Case-insensitive equality after {@link normalizeWindowsPath}. */
+export function isWindowsPathEqual(a: string, b: string): boolean {
+  return normalizeWindowsPath(a).toLowerCase() === normalizeWindowsPath(b).toLowerCase();
+}
+
+/**
+ * True when `inner` is strictly inside `outer` (not equal).
+ * Uses a trailing-separator prefix so `C:\ark` does not match `C:\ark-servers`.
+ */
+export function isWindowsPathInside(inner: string, outer: string): boolean {
+  const child = normalizeWindowsPath(inner).toLowerCase();
+  const parent = normalizeWindowsPath(outer).toLowerCase();
+  if (child.length === 0 || parent.length === 0 || child === parent) {
+    return false;
+  }
+  const prefix = parent.endsWith("\\") ? parent : `${parent}\\`;
+  return child.startsWith(prefix);
+}
+
+export type FleetInstallRef = {
+  name: string;
+  installDir: string;
+  id?: string;
+};
+
+export type InstallDirConflictRelation = "same" | "inside-other" | "contains-other";
+
+export type InstallDirConflict = {
+  otherName: string;
+  otherInstallDir: string;
+  relation: InstallDirConflictRelation;
+};
+
+/**
+ * Exact match or parent/child overlap with another fleet install.
+ * Both directions nest ASA trees and must be rejected on create.
+ */
+export function findInstallDirConflict(
+  candidate: string,
+  fleet: readonly FleetInstallRef[],
+  excludeId?: string,
+): InstallDirConflict | null {
+  const target = normalizeWindowsPath(candidate);
+  if (target.length === 0) {
+    return null;
+  }
+  for (const profile of fleet) {
+    if (excludeId !== undefined && profile.id === excludeId) {
+      continue;
+    }
+    const other = normalizeWindowsPath(profile.installDir);
+    if (other.length === 0) {
+      continue;
+    }
+    if (isWindowsPathEqual(target, other)) {
+      return {
+        otherName: profile.name,
+        otherInstallDir: profile.installDir,
+        relation: "same",
+      };
+    }
+    if (isWindowsPathInside(target, other)) {
+      return {
+        otherName: profile.name,
+        otherInstallDir: profile.installDir,
+        relation: "inside-other",
+      };
+    }
+    if (isWindowsPathInside(other, target)) {
+      return {
+        otherName: profile.name,
+        otherInstallDir: profile.installDir,
+        relation: "contains-other",
+      };
+    }
+  }
+  return null;
+}
+
+export function installDirConflictMessage(conflict: InstallDirConflict): string {
+  if (conflict.relation === "same") {
+    return `A server already uses folder "${conflict.otherInstallDir}" ("${conflict.otherName}")`;
+  }
+  if (conflict.relation === "inside-other") {
+    return `Install path is inside "${conflict.otherName}" (${conflict.otherInstallDir}). Nested servers are not supported.`;
+  }
+  return `Install path would contain "${conflict.otherName}" (${conflict.otherInstallDir}). Nested servers are not supported.`;
+}
+
 /** Parent directory of a Windows path (drive root keeps trailing backslash). */
 export function windowsPathParentDir(path: string): string {
   const normalized = normalizeWindowsPath(path);

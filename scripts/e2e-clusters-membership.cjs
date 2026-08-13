@@ -13,6 +13,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
 const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
+const { pickPathField, stubFolderPicker } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -60,15 +61,6 @@ async function quitApp(app) {
   ]);
 }
 
-async function stubFolderPicker(app, folderPath) {
-  await app.evaluate(({ dialog }, chosen) => {
-    dialog.showOpenDialog = async () => ({
-      canceled: false,
-      filePaths: [chosen],
-    });
-  }, folderPath);
-}
-
 async function dismissOnboarding(page) {
   const later = page.getByRole("button", { name: /^Later$/i });
   try {
@@ -80,7 +72,7 @@ async function dismissOnboarding(page) {
   await leaveWorkspaceToServers(page);
 }
 
-async function createServer(page, name, installDir, ports) {
+async function createServer(app, page, name, installDir, ports) {
   fs.mkdirSync(installDir, { recursive: true });
   await page.getByRole("button", { name: "New server" }).first().click();
   await page.getByRole("heading", { name: "New server" }).waitFor({
@@ -89,12 +81,7 @@ async function createServer(page, name, installDir, ports) {
   });
   await page.getByRole("textbox", { name: /^Name$/ }).fill(name);
   await page.getByRole("textbox", { name: /^Session name$/ }).fill(`Session ${name}`);
-  const baseFolder = page.getByRole("textbox", { name: /^Base folder$/ });
-  if ((await baseFolder.count()) > 0) {
-    await baseFolder.fill(installDir);
-  } else {
-    await page.getByPlaceholder("C:\\ark_servers").fill(installDir);
-  }
+  await pickPathField(app, page, "Base folder", installDir);
   await page.getByLabel("Game port").fill(String(ports.game));
   await page.getByLabel("Query port").fill(String(ports.query));
   await page.getByLabel("RCON port").fill(String(ports.rcon));
@@ -146,9 +133,9 @@ async function run() {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 20000 });
 
-    await createServer(page, nameA, path.join(serversRoot, "a"), uniquePorts(1));
-    await createServer(page, nameB, path.join(serversRoot, "b"), uniquePorts(2));
-    await createServer(page, nameC, path.join(serversRoot, "c"), uniquePorts(3));
+    await createServer(app, page, nameA, path.join(serversRoot, "a"), uniquePorts(1));
+    await createServer(app, page, nameB, path.join(serversRoot, "b"), uniquePorts(2));
+    await createServer(app, page, nameC, path.join(serversRoot, "c"), uniquePorts(3));
 
     // --- Create cluster (#42) with A + B ---
     await goNav(page, "Clusters");

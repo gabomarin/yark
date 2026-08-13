@@ -18,6 +18,7 @@ const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
 const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
+const { pickPathField } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -130,7 +131,7 @@ async function dismissOnboarding(page) {
   await leaveWorkspaceToServers(page);
 }
 
-async function createServer(page, name, installDir, ports) {
+async function createServer(app, page, name, installDir, ports) {
   fs.mkdirSync(installDir, { recursive: true });
   await page.getByRole("button", { name: "New server" }).first().click();
   await page.getByRole("heading", { name: "New server" }).waitFor({
@@ -139,12 +140,7 @@ async function createServer(page, name, installDir, ports) {
   });
   await page.getByRole("textbox", { name: /^Name$/ }).fill(name);
   await page.getByRole("textbox", { name: /^Session name$/ }).fill(`Session ${name}`);
-  const baseFolder = page.getByRole("textbox", { name: /^Base folder$/ });
-  if ((await baseFolder.count()) > 0) {
-    await baseFolder.fill(installDir);
-  } else {
-    await page.getByPlaceholder("C:\\ark_servers").fill(installDir);
-  }
+  await pickPathField(app, page, "Base folder", installDir);
   await page.getByLabel("Game port").fill(String(ports.game));
   await page.getByLabel("Query port").fill(String(ports.query));
   await page.getByLabel("RCON port").fill(String(ports.rcon));
@@ -413,9 +409,9 @@ async function run() {
     await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 20000 });
 
     console.log("E2E_COPY_CONFIG create servers");
-    await createServer(page, nameSource, dirSource, uniquePorts(1));
-    await createServer(page, nameB, dirB, uniquePorts(2));
-    await createServer(page, nameC, dirC, uniquePorts(3));
+    await createServer(app, page, nameSource, dirSource, uniquePorts(1));
+    await createServer(app, page, nameB, dirB, uniquePorts(2));
+    await createServer(app, page, nameC, dirC, uniquePorts(3));
 
     const installSource = resolvedInstallDir(dirSource, nameSource);
     const installB = resolvedInstallDir(dirB, nameB);

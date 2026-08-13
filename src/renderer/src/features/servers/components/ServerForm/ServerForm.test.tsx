@@ -40,7 +40,11 @@ describe("ServerForm", () => {
     expect(screen.getAllByLabelText(/name/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/^map$/i)).toBeInTheDocument();
     expect(screen.getByText(/new server/i)).toBeInTheDocument();
-    expect(screen.getByText(/^base folder$/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^browse$/i })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: /base folder/i })).toHaveAttribute(
+      "aria-readonly",
+      "true",
+    );
   });
 
   it("joins an existing cluster from the create picker (#178)", async () => {
@@ -97,7 +101,7 @@ describe("ServerForm", () => {
     expect(onOpenClusters).toHaveBeenCalledOnce();
   });
 
-  it("keeps free-text cluster fields on edit (#178)", () => {
+  it("keeps free-text cluster id and PathField cluster dir on edit (#178 / #222)", () => {
     render(
       <AppProviders>
         <ServerForm
@@ -115,6 +119,11 @@ describe("ServerForm", () => {
 
     expect(screen.queryByRole("combobox", { name: /^cluster$/i })).not.toBeInTheDocument();
     expect(screen.getByLabelText(/cluster id/i)).toHaveValue("alpha");
+    expect(screen.getByText("C:\\ark_servers\\cluster\\alpha")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^browse$/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /shared cluster directory/i }),
+    ).toHaveAttribute("aria-readonly", "true");
   });
 
   it("previews port conflicts against the fleet (#178)", () => {
