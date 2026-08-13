@@ -331,6 +331,34 @@ describe("BackupService kinds and retention", () => {
     expect(completed.every((backup) => existsSync(backup.path))).toBe(true);
   });
 
+  it("ignores a legacy players id when collecting critical pre-update evidence (#275)", async () => {
+    const critical = await service.createPreUpdateBackupForJob(profile.id);
+    expect(critical.map((backup) => backup.kind)).toEqual(["world", "ini"]);
+
+    const playersPath = join(installDir, "Backups", "legacy-players-pre-update.zip");
+    await mkdir(dirname(playersPath), { recursive: true });
+    await writeFile(playersPath, "players", "utf8");
+    const players = repo.createBackupStart({
+      serverId: profile.id,
+      type: "pre_update",
+      kind: "players",
+      path: playersPath,
+      notes: "legacy pre-update players",
+    });
+    repo.completeBackup(players.id, 7);
+
+    const completed = service.getCompletedBackupsForCriticalJob(profile.id, [
+      critical[0]!.id,
+      players.id,
+      critical[1]!.id,
+    ]);
+    expect(completed.map((backup) => backup.kind)).toEqual(["world", "ini"]);
+    expect(completed.map((backup) => backup.id)).toEqual([
+      critical[0]!.id,
+      critical[1]!.id,
+    ]);
+  });
+
   it("quarantines a recovered restore job when restoreHistory points to unrelated evidence", async () => {
     const [source] = await service.createManualBackup(profile.id, ["world"]);
     expect(source).toBeDefined();

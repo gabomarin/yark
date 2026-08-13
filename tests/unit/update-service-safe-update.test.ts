@@ -37,7 +37,7 @@ function makeProfile(id = "srv-update-1"): ServerProfile {
 
 function makePreUpdateBackups(serverId: string): BackupRecord[] {
   const now = new Date().toISOString();
-  return (["world", "players", "ini"] as const).map((kind, index) => ({
+  return (["world", "ini"] as const).map((kind, index) => ({
     id: `bu-${kind}`,
     serverId,
     type: "pre_update",
@@ -50,6 +50,32 @@ function makePreUpdateBackups(serverId: string): BackupRecord[] {
     notes: null,
     mapToken: kind === "world" ? "TheIsland_WP" : null,
   }));
+}
+
+/** Legacy pre-#275 evidence that still lists a players archive id. */
+function makeLegacyPreUpdateBackupIds(serverId: string): {
+  ids: string[];
+  critical: BackupRecord[];
+} {
+  const critical = makePreUpdateBackups(serverId);
+  const now = new Date().toISOString();
+  const players: BackupRecord = {
+    id: "bu-players",
+    serverId,
+    type: "pre_update",
+    kind: "players",
+    path: "C:/backups/players.zip",
+    sizeBytes: 50,
+    status: "completed",
+    createdAt: now,
+    completedAt: now,
+    notes: null,
+    mapToken: null,
+  };
+  return {
+    ids: [critical[0]!.id, players.id, critical[1]!.id],
+    critical,
+  };
 }
 
 type SteamStub = {
@@ -110,7 +136,11 @@ function createHarness(options?: {
     createPreStopBackup: vi.fn(),
     getCompletedBackupsForCriticalJob: vi.fn(
       (_serverId: string, backupIds: readonly string[]) =>
-        makePreUpdateBackups(profile.id).filter((backup) => backupIds.includes(backup.id)),
+        makePreUpdateBackups(profile.id).filter(
+          (backup) =>
+            backupIds.includes(backup.id)
+            && (backup.kind === "world" || backup.kind === "ini"),
+        ),
     ),
     restoreBackupForJob: vi.fn(async () => {
       order.push("restore");
@@ -450,7 +480,8 @@ describe("UpdateService safe update orchestration", () => {
     const h = createHarness({ wasRunning: false });
     dirs.push(h.logDir);
     const backups = makePreUpdateBackups(h.profile.id);
-    h.backups.getCompletedBackupsForCriticalJob.mockReturnValue([backups[0]!, backups[1]!]);
+    // Only world present — ini missing is incomplete for critical resume.
+    h.backups.getCompletedBackupsForCriticalJob.mockReturnValue([backups[0]!]);
     const now = new Date().toISOString();
     const job = {
       id: "update-missing-evidence",
@@ -480,6 +511,48 @@ describe("UpdateService safe update orchestration", () => {
       ).performUpdateServer(h.profile.id, job),
     ).rejects.toThrow(/backup evidence is incomplete/i);
     expect(h.runSteamUpdate).not.toHaveBeenCalled();
+  });
+
+  it("resumes update when legacy jobs still list a players pre-update id", async () => {
+    const h = createHarness({ wasRunning: false });
+    dirs.push(h.logDir);
+    const legacy = makeLegacyPreUpdateBackupIds(h.profile.id);
+    h.backups.getCompletedBackupsForCriticalJob.mockReturnValue(legacy.critical);
+    const now = new Date().toISOString();
+    const job = {
+      id: "update-legacy-players-id",
+      type: "update" as const,
+      serverId: h.profile.id,
+      attempts: 1,
+      maxAttempts: 3,
+      status: "running" as const,
+      phase: "validated",
+      createdAt: now,
+      updatedAt: now,
+      lastError: "network timed out",
+      recoveryReason: null,
+      idempotencyKey: `update:${h.profile.id}:`,
+      operatorRetryAllowed: false,
+      context: {
+        wasRunning: true,
+        preUpdateBackupIds: legacy.ids,
+        rollbackRestoredBackupIds: legacy.ids,
+      },
+    };
+
+    await (
+      h.service as unknown as {
+        performUpdateServer: (serverId: string, input: typeof job) => Promise<void>;
+      }
+    ).performUpdateServer(h.profile.id, job);
+
+    expect(h.backups.getCompletedBackupsForCriticalJob).toHaveBeenCalledWith(
+      h.profile.id,
+      legacy.ids,
+    );
+    expect(h.backups.createPreUpdateBackupForJob).not.toHaveBeenCalled();
+    expect(h.runSteamUpdate).toHaveBeenCalled();
+    expect(job.context.rollbackRestoredBackupIds).toEqual([]);
   });
 
   it("finishes an interrupted rollback under the instance lock without launching SteamCMD", async () => {
@@ -523,10 +596,10 @@ describe("UpdateService safe update orchestration", () => {
       "update-rollback-recovery",
       expect.any(Function),
     );
-    expect(h.backups.restoreBackupForRollbackRecovery).toHaveBeenCalledTimes(2);
+    expect(h.backups.restoreBackupForRollbackRecovery).toHaveBeenCalledTimes(1);
     expect(h.instances.startForMaintenance).toHaveBeenCalledWith(h.profile.id);
     expect(job.phase).toBe("rollback-complete");
-    expect(h.order).toEqual(["restore", "restore", "start"]);
+    expect(h.order).toEqual(["restore", "start"]);
   });
 
   it("blocks cache clearing while a critical job is retrying", async () => {
@@ -639,15 +712,10 @@ describe("UpdateService safe update orchestration", () => {
 
     await expect(h.performUpdate()).rejects.toThrow(/SteamCMD exited with code 1/);
 
-    expect(h.backups.restoreBackupForJob).toHaveBeenCalledTimes(3);
+    expect(h.backups.restoreBackupForJob).toHaveBeenCalledTimes(2);
     expect(h.backups.restoreBackupForJob).toHaveBeenCalledWith(
       h.profile.id,
       "bu-world",
-      expect.objectContaining({ onProgressMessage: expect.any(Function) }),
-    );
-    expect(h.backups.restoreBackupForJob).toHaveBeenCalledWith(
-      h.profile.id,
-      "bu-players",
       expect.objectContaining({ onProgressMessage: expect.any(Function) }),
     );
     expect(h.backups.restoreBackupForJob).toHaveBeenCalledWith(
@@ -659,7 +727,6 @@ describe("UpdateService safe update orchestration", () => {
       "stop",
       "pre_update",
       "steam",
-      "restore",
       "restore",
       "restore",
       "start",
