@@ -17,6 +17,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Settings uses a **category sidebar** (General, Servers, SteamCMD, Logs, About); setup guidance clarifies saved changes, suggests a cluster folder, and prevents conflicting SteamCMD actions while work is active (#298).
 
+### Fixed
+
+- First-run setup does not auto-open when setup status cannot be read, so Overview stays usable if the database is unavailable (#298).
+
 ## [0.12.0] - 2026-08-13
 
 ### Added

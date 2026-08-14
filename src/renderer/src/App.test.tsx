@@ -347,6 +347,58 @@ describe("App empty installation snapshot", () => {
     expect(dialog).toBeInTheDocument();
   });
 
+  it("does not auto-open setup when onboarding read fails", async () => {
+    const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
+    const api = window.api;
+    vi.mocked(api.getOnboarding).mockResolvedValue({
+      ok: false,
+      error: "database unavailable",
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText("Create your first server")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: /set up yark/i })).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(notifySpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "onboarding-load-failed",
+          title: "Could not load setup status",
+          message: expect.stringContaining("database unavailable"),
+          color: "red",
+          autoClose: false,
+        }),
+      );
+    });
+  });
+
+  it("retries onboarding read from the error toast and opens setup when unset", async () => {
+    const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
+    const api = window.api;
+    vi.mocked(api.getOnboarding).mockResolvedValue({
+      ok: false,
+      error: "database unavailable",
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText("Create your first server")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(notifySpy).toHaveBeenCalledWith(
+        expect.objectContaining({ id: "onboarding-load-failed" }),
+      );
+    });
+
+    vi.mocked(api.getOnboarding).mockResolvedValue({ ok: true, data: null });
+    const toast = notifySpy.mock.calls.find(
+      (call) => call[0]?.id === "onboarding-load-failed",
+    )?.[0];
+    expect(toast?.onClick).toEqual(expect.any(Function));
+    toast?.onClick?.({} as never);
+
+    expect(await screen.findByRole("dialog", { name: /set up yark/i })).toBeInTheDocument();
+  });
+
   it("restores a pending setup cluster for the next create handoff", async () => {
     const user = userEvent.setup();
     const api = window.api;

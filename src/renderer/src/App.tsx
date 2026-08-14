@@ -425,37 +425,73 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     openWhatsNew("current");
   }, [openWhatsNew]);
 
+  const retryOnboardingReadRef = useRef<(() => void) | null>(null);
+
   useEffect(() => {
     if (overviewLoading) {
       return;
     }
     let cancelled = false;
-    void (async () => {
+
+    const loadOnboardingAndMaybeOpen = async (): Promise<boolean> => {
       if (
-        typeof window.api.getOnboarding === "function" &&
-        !setupWizardPromptSettledRef.current
+        typeof window.api.getOnboarding !== "function" ||
+        setupWizardPromptSettledRef.current
       ) {
-        const onboardingRes = await window.api.getOnboarding();
-        if (cancelled) {
-          return;
-        }
-        const record = onboardingRes.ok ? onboardingRes.data : null;
-        if (onboardingRes.ok) {
-          onboardingRecordRef.current = record;
-          setPendingSetupCluster(record?.pendingCluster ?? null);
-          setupWizardPromptSettledRef.current = true;
-        }
-        if (
-          shouldAutoShowSetupWizard({
-            record,
-            serverCount: servers.length,
-          })
-        ) {
-          setupWizardPromptSettledRef.current = true;
-          changelogPromptSettledRef.current = true;
-          setSetupWizardMode("first-run");
-          return;
-        }
+        return false;
+      }
+      let onboardingRes: Awaited<ReturnType<typeof window.api.getOnboarding>>;
+      try {
+        onboardingRes = await window.api.getOnboarding();
+      } catch (error: unknown) {
+        onboardingRes = {
+          ok: false,
+          error: error instanceof Error ? error.message : String(error),
+        };
+      }
+      if (cancelled) {
+        return true;
+      }
+      if (!onboardingRes.ok) {
+        showOperatorToast({
+          id: "onboarding-load-failed",
+          title: "Could not load setup status",
+          message: `${onboardingRes.error ?? "Setup progress could not be read."} Click this message to retry.`,
+          color: "red",
+          autoClose: false,
+          onClick: () => {
+            retryOnboardingReadRef.current?.();
+          },
+        });
+        return false;
+      }
+      notifications.hide("onboarding-load-failed");
+      const record = onboardingRes.data;
+      onboardingRecordRef.current = record;
+      setPendingSetupCluster(record?.pendingCluster ?? null);
+      setupWizardPromptSettledRef.current = true;
+      if (
+        shouldAutoShowSetupWizard({
+          record,
+          serverCount: servers.length,
+          readOk: true,
+        })
+      ) {
+        changelogPromptSettledRef.current = true;
+        setSetupWizardMode("first-run");
+        return true;
+      }
+      return false;
+    };
+
+    retryOnboardingReadRef.current = () => {
+      void loadOnboardingAndMaybeOpen();
+    };
+
+    void (async () => {
+      const openedWizard = await loadOnboardingAndMaybeOpen();
+      if (openedWizard || cancelled) {
+        return;
       }
       if (typeof window.api.getLastSeenChangelogVersion !== "function") {
         return;
@@ -480,6 +516,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     })();
     return () => {
       cancelled = true;
+      retryOnboardingReadRef.current = null;
     };
   }, [overviewLoading, servers.length]);
 

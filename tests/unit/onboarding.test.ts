@@ -57,16 +57,27 @@ describe("serializeOnboardingRecord", () => {
 describe("shouldAutoShowSetupWizard", () => {
   it("shows only when the flag is unset and the fleet is empty", () => {
     expect(
-      shouldAutoShowSetupWizard({ record: null, serverCount: 0 }),
+      shouldAutoShowSetupWizard({ record: null, serverCount: 0, readOk: true }),
     ).toBe(true);
     expect(
       shouldAutoShowSetupWizard({
         record: createOnboardingRecord("skipped"),
         serverCount: 0,
+        readOk: true,
       }),
     ).toBe(false);
     expect(
-      shouldAutoShowSetupWizard({ record: null, serverCount: 1 }),
+      shouldAutoShowSetupWizard({ record: null, serverCount: 1, readOk: true }),
+    ).toBe(false);
+  });
+
+  it("never auto-shows when the onboarding read failed", () => {
+    expect(
+      shouldAutoShowSetupWizard({
+        record: null,
+        serverCount: 0,
+        readOk: false,
+      }),
     ).toBe(false);
   });
 
@@ -76,6 +87,7 @@ describe("shouldAutoShowSetupWizard", () => {
         record: null,
         serverCount: 0,
         e2eUserData: "C:\\tmp\\yark-e2e",
+        readOk: true,
       }),
     ).toBe(false);
   });
