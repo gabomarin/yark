@@ -24,6 +24,12 @@ import type { AppSettingsRepository } from "../backend/infra/db/app-settings-rep
 import type { ServerRepository } from "../backend/infra/db/server-repository";
 import { UI_DENSITY_SETTING_KEY, isUiDensity, type UiDensity } from "../shared/ui-density";
 import { LAST_SEEN_CHANGELOG_VERSION_SETTING_KEY } from "../shared/changelog";
+import {
+  ONBOARDING_SETTING_KEY,
+  parseOnboardingRecord,
+  serializeOnboardingRecord,
+  type OnboardingRecord,
+} from "../shared/onboarding";
 import { APP_VERSION } from "../shared/app-version";
 import {
   readDesktopShellPreferences,
@@ -501,6 +507,34 @@ export function registerIpcHandlers(
       const normalized = version.trim().replace(/^v/i, "");
       settings.set(LAST_SEEN_CHANGELOG_VERSION_SETTING_KEY, normalized);
       return normalized;
+    },
+  );
+
+  handleValidated(
+    IPC.appGetOnboarding,
+    ipcArgSchemas[IPC.appGetOnboarding],
+    (): OnboardingRecord | null => {
+      // Fresh E2E profiles must not block smoke on the first-run setup wizard.
+      if ((process.env["YARK_E2E_USER_DATA"] ?? "").trim().length > 0) {
+        return {
+          status: "completed",
+          completedAt: "1970-01-01T00:00:00.000Z",
+        };
+      }
+      return parseOnboardingRecord(settings.get(ONBOARDING_SETTING_KEY));
+    },
+  );
+
+  handleValidated(
+    IPC.appSetOnboarding,
+    ipcArgSchemas[IPC.appSetOnboarding],
+    ([record]): OnboardingRecord | null => {
+      if (record === null) {
+        settings.set(ONBOARDING_SETTING_KEY, null);
+        return null;
+      }
+      settings.set(ONBOARDING_SETTING_KEY, serializeOnboardingRecord(record));
+      return record;
     },
   );
 

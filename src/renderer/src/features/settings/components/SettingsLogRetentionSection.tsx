@@ -160,10 +160,6 @@ export function SettingsLogRetentionSection(): ReactElement {
       <Title order={3} size="h4" id="settings-log-retention">
         Log retention
       </Title>
-      <Text size="xs" c="dimmed">
-        How long YARK keeps its own activity history and update logs. Game console
-        logs on disk are never deleted; backups are managed under Backups.
-      </Text>
 
       {(error !== null || info !== null) && (
         <Text size="xs" c={error !== null ? "red" : "dimmed"}>

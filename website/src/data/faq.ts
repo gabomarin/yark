@@ -126,7 +126,7 @@ export const faqItems: FaqItem[] = [
     question: "How do I update the app vs the ASA server files?",
     answerHtml: `
       <p>
-        <strong>YARK itself:</strong> Settings → <strong>YARK updates</strong> (or click the
+        <strong>YARK itself:</strong> Settings → <strong>About</strong> (or click the
         accented sidebar version when an update is waiting). Check, download, then restart to
         install. Packaged builds use GitHub Releases; you can still grab the installer from
         Releases manually if needed.

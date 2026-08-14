@@ -11,7 +11,9 @@ runbook + redacted evidence: [spikes/22-cluster-live-transfers.md](spikes/22-clu
 - Group servers that share a `clusterId` and verify they can plausibly transfer.
 - Catch common misconfigurations before launch (mismatched dirs, missing dir,
   port clashes, divergent mods).
-- Guide operators via the Clusters page and Create / Edit server forms.
+- Guide operators via the Clusters page, Create / Edit server forms, and the
+  skippable first-run setup wizard (optional Cluster ID + folder in memory until
+  the first create or import).
 
 A cluster is **transfer-ready** (`ok: true`) when it has **no error-severity
 issues**. Warnings alone (single server, mod mismatch) still leave `ok: true`.
@@ -33,6 +35,7 @@ Multiple servers on the same map in one cluster are allowed and not flagged.
 | Fleet UI | `src/renderer/src/features/clusters/` (`ClustersPage`, `clusterModel`, `createClusterModel`, `membershipModel`, `CreateClusterModal`, `AddServersModal`, `RemoveServersModal`, `ClusterIniTemplateModal`) |
 | Cluster INI templates | `src/backend/domains/config/cluster-ini-template-service.ts`, `src/backend/domains/config/cluster-ini-template-apply-service.ts`, `src/backend/domains/config/ini-compose.ts`, `src/backend/infra/db/cluster-ini-template-repository.ts`, `src/shared/yark-owned-ini-keys.ts` |
 | Known cluster picker | `src/renderer/src/features/clusters/knownClusterOptions.ts` |
+| First-run setup (in-memory cluster) | `src/renderer/src/features/setup-wizard/` — optional Cluster ID/dir held until first create/import (#298) |
 | Create / edit form | `src/renderer/src/features/servers/components/ServerForm/` |
 | Onboarding (experience + files) | `src/renderer/src/features/server-workspace/components/ServerOnboardingChecklist/` |
 | Visual helper | `scripts/visual-clusters.cjs` |

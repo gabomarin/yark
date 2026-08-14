@@ -53,7 +53,7 @@ interface Props {
   yarkUpdateAvailableVersion?: string | null;
   /** Opens What's new — wired only to the `vX.Y.Z` text, not the full row. */
   onWhatsNewClick?: () => void;
-  /** Opens Settings → YARK updates — wired only to the update icon. */
+  /** Opens Settings → About — wired only to the update icon. */
   onYarkUpdateClick?: () => void;
   /** Icon-only chrome rail (#107 recipe). */
   iconMode?: boolean;

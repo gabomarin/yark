@@ -68,6 +68,13 @@ import { openHostPortProbeModal } from "@features/servers/hostPortProbeModal";
 import { SteamCmdProgressDock } from "@features/steamcmd/SteamCmdProgressDock";
 import { SettingsPage } from "@features/settings/SettingsPage";
 import { AppChangelogModal } from "@features/settings/components/AppChangelogModal";
+import { SetupWizard } from "@features/setup-wizard/SetupWizard";
+import {
+  toSyntheticClusterOption,
+  type PendingSetupCluster,
+  type SetupWizardMode,
+} from "@features/setup-wizard/setupWizardModel";
+import { createOnboardingRecord, shouldAutoShowSetupWizard } from "@shared/onboarding";
 import {
   readDefaultBaseFolderPref,
   readOpenNativeTerminalPref,
@@ -173,6 +180,10 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   );
   /** Blocks a late getLastSeen result from reopening after manual open/dismiss. */
   const changelogPromptSettledRef = useRef(false);
+  const [setupWizardMode, setSetupWizardMode] = useState<SetupWizardMode | null>(null);
+  const [pendingSetupCluster, setPendingSetupCluster] =
+    useState<PendingSetupCluster | null>(null);
+  const setupWizardPromptSettledRef = useRef(false);
 
   useEffect(() => {
     writeOpenNativeTerminalPref(openNativeTerminalOnStart);
@@ -206,6 +217,36 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   const disabledServers = useMemo(
     () => servers.filter((server) => !server.enabled),
     [servers],
+  );
+  const extraClusterOptions = useMemo(
+    () =>
+      pendingSetupCluster === null
+        ? undefined
+        : [toSyntheticClusterOption(pendingSetupCluster)],
+    [pendingSetupCluster],
+  );
+
+  const persistOnboardingStatus = useCallback(
+    (status: "completed" | "skipped") => {
+      if (typeof window.api.setOnboarding !== "function") {
+        return;
+      }
+      void window.api.setOnboarding(createOnboardingRecord(status));
+    },
+    [],
+  );
+
+  const closeSetupWizard = useCallback(() => {
+    setSetupWizardMode(null);
+  }, []);
+
+  const finishSetupWizard = useCallback(
+    (status: "completed" | "skipped", cluster: PendingSetupCluster | null) => {
+      persistOnboardingStatus(status);
+      setPendingSetupCluster(cluster);
+      closeSetupWizard();
+    },
+    [closeSetupWizard, persistOnboardingStatus],
   );
 
   const filterServers = useCallback(
@@ -323,8 +364,32 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   }, [openWhatsNew]);
 
   useEffect(() => {
+    if (overviewLoading) {
+      return;
+    }
     let cancelled = false;
     void (async () => {
+      if (
+        typeof window.api.getOnboarding === "function" &&
+        !setupWizardPromptSettledRef.current
+      ) {
+        const onboardingRes = await window.api.getOnboarding();
+        if (cancelled) {
+          return;
+        }
+        const record = onboardingRes.ok ? onboardingRes.data : null;
+        if (
+          shouldAutoShowSetupWizard({
+            record,
+            serverCount: servers.length,
+          })
+        ) {
+          setupWizardPromptSettledRef.current = true;
+          changelogPromptSettledRef.current = true;
+          setSetupWizardMode("first-run");
+          return;
+        }
+      }
       if (typeof window.api.getLastSeenChangelogVersion !== "function") {
         return;
       }
@@ -335,7 +400,6 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       if (!shouldShowWhatsNewForVersion(APP_VERSION, result.data)) {
         return;
       }
-      // Re-check after await: Settings/manual dismiss may have persisted seen meanwhile.
       const latest = await window.api.getLastSeenChangelogVersion();
       if (cancelled || !latest.ok || changelogPromptSettledRef.current) {
         return;
@@ -350,7 +414,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [overviewLoading, servers.length]);
 
   /** Quiet check (~60s) and Settings Check now only accented the sidebar before — toast once. */
   const yarkUpdateToastKeyRef = useRef<string | null>(null);
@@ -1471,10 +1535,12 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             initial={null}
             defaultBaseFolder={defaultBaseFolder}
             servers={servers}
+            extraClusterOptions={extraClusterOptions}
             onRegisterLeaveGuard={registerOverlayLeaveGuard}
             onOpenClusters={() => navigate("clusters")}
             onCancel={() => runWithOverlayLeaveGuard(() => setOverlay(null))}
             onSaved={(created) => {
+              setPendingSetupCluster(null);
               if (created !== undefined) {
                 setOverlay({ kind: "workspace", serverId: created.id, onboarding: true });
                 void refresh();
@@ -1661,6 +1727,17 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
               onInstallSteamCmd={() => void runAction(() => window.api.installSteamCmd())}
               onOpenSteamCmdCache={openSteamCmdCache}
               onClearSteamCmdCache={clearSteamCmdCache}
+              onRunSetupAgain={() => {
+                if (servers.length === 0) {
+                  if (typeof window.api.setOnboarding === "function") {
+                    void window.api.setOnboarding(null);
+                  }
+                  setupWizardPromptSettledRef.current = true;
+                  setSetupWizardMode("first-run");
+                  return;
+                }
+                setSetupWizardMode("paths-shell");
+              }}
             />
           ),
         }}
@@ -1681,6 +1758,36 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         onDismiss={markChangelogSeen}
         appVersion={APP_VERSION}
         initialTab={changelogInitialTab}
+      />
+      <SetupWizard
+        opened={setupWizardMode !== null}
+        mode={setupWizardMode ?? "first-run"}
+        servers={servers}
+        steamCmdStatus={steamCmdStatus}
+        steamCmdBusy={steamCmdBusy}
+        defaultBaseFolder={defaultBaseFolder}
+        uiDensity={uiDensity}
+        openNativeTerminalOnStart={openNativeTerminalOnStart}
+        onPickSteamCmdPath={() => void pickSteamCmdPath()}
+        onInstallSteamCmd={() => void runAction(() => window.api.installSteamCmd())}
+        onDefaultBaseFolderChange={setDefaultBaseFolder}
+        onUiDensityChange={(density) => void handleUiDensityChange(density)}
+        onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
+        onSkip={() => finishSetupWizard("skipped", null)}
+        onDismiss={closeSetupWizard}
+        onPathsShellDone={closeSetupWizard}
+        onCreateServer={(cluster) => {
+          finishSetupWizard("completed", cluster);
+          setOverlay({ kind: "create" });
+        }}
+        onImport={(cluster) => {
+          finishSetupWizard("completed", cluster);
+          setImportWizardKey((key) => key + 1);
+          setImportInstallOpen(true);
+        }}
+        onExplore={(cluster) => {
+          finishSetupWizard("completed", cluster);
+        }}
       />
       {renderMain()}
       {steamCmdStatus !== null
@@ -1774,6 +1881,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         key={importWizardKey}
         opened={importInstallOpen}
         servers={servers}
+        extraClusterOptions={extraClusterOptions}
         onClose={() => setImportInstallOpen(false)}
         onOpenClusters={() => {
           setImportInstallOpen(false);
@@ -1781,6 +1889,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
           navigate("clusters");
         }}
         onImported={(profile) => {
+          setPendingSetupCluster(null);
           setImportInstallOpen(false);
           // Skip first-steps onboarding — imported installs already have INI/world (#254).
           setOverlay({

@@ -1,0 +1,51 @@
+.statusReady {
+  color: var(--app-color-ok);
+}
+
+.statusNeedsSetup {
+  color: var(--app-color-warn);
+}
+
+.pathRow {
+  display: flex;
+  gap: var(--app-space-sm);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.pathChip {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.pathActions {
+  flex: 0 0 auto;
+}
+
+.settingRow {
+  display: flex;
+  gap: var(--app-space-md);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.settingCopy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.settingControl {
+  flex: 0 0 auto;
+  padding-top: 2px;
+}
+
+.actionCard {
+  cursor: pointer;
+  text-align: left;
+}
+
+.actionCard:focus-visible {
+  outline: 2px solid var(--app-color-cryo);
+  outline-offset: 2px;
+}

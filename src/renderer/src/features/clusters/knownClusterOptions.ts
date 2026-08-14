@@ -13,7 +13,7 @@ export type KnownClusterOption = {
  */
 export function listKnownClusterOptions(
   servers: ServerProfile[],
-  options?: { excludeServerId?: string },
+  options?: { excludeServerId?: string; extra?: KnownClusterOption[] },
 ): KnownClusterOption[] {
   const excludeId = options?.excludeServerId;
   const byId = new Map<string, KnownClusterOption>();
@@ -26,6 +26,10 @@ export function listKnownClusterOptions(
       clusterDir: candidate.clusterDir,
       label: `${candidate.clusterId} · via ${candidate.name}`,
     });
+  }
+  for (const extra of options?.extra ?? []) {
+    if (byId.has(extra.clusterId)) continue;
+    byId.set(extra.clusterId, extra);
   }
   return Array.from(byId.values());
 }

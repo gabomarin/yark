@@ -9,6 +9,14 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Skippable **first-run setup** (SteamCMD, Windows shell, optional cluster, then create or import); Settings can run Paths + Shell again (#298).
+
+### Changed
+
+- Settings uses a **category sidebar** (General, Servers, SteamCMD, Logs, About); About notes when **Bundled SteamCMD** is unused; first-run Windows step includes **Show server console on start** (#298).
+
 ## [0.12.0] - 2026-08-13
 
 ### Added

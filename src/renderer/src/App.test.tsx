@@ -107,6 +107,14 @@ function createApiMock(): RendererApi {
       ok: true,
       data: "0.11.0",
     }),
+    getOnboarding: vi.fn().mockResolvedValue({
+      ok: true,
+      data: { status: "completed", completedAt: "2026-01-01T00:00:00.000Z" },
+    }),
+    setOnboarding: vi.fn().mockResolvedValue({
+      ok: true,
+      data: { status: "completed", completedAt: "2026-01-01T00:00:00.000Z" },
+    }),
     getDesktopShellPreferences: vi.fn().mockResolvedValue({
       ok: true,
       data: {
@@ -302,6 +310,23 @@ describe("App empty installation snapshot", () => {
         color: "teal",
       }),
     );
+  });
+
+  it("auto-opens the first-run setup wizard when onboarding is unset", async () => {
+    const user = userEvent.setup();
+    const api = window.api;
+    vi.mocked(api.getOnboarding).mockResolvedValue({ ok: true, data: null });
+
+    render(<App />);
+
+    expect(await screen.findByRole("dialog", { name: /set up yark/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /skip setup/i }));
+    await waitFor(() => {
+      expect(api.setOnboarding).toHaveBeenCalledWith(
+        expect.objectContaining({ status: "skipped" }),
+      );
+    });
+    expect(await screen.findByText("Create your first server")).toBeInTheDocument();
   });
 });
 

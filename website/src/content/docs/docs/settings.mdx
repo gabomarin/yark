@@ -53,9 +53,9 @@ Settings lists profiles that opted into **Auto-start with YARK**. Turn the prefe
 
 ## YARK updates
 
-**YARK updates** checks GitHub Releases for a newer desktop build (not ASA/SteamCMD). After launch, YARK quietly checks in the background; when an update is available (or a download finishes), you get an operator toast and the sidebar version uses an accent color — click either to open this section. Then **Check now** → **Download** → **Restart and install**. Install is blocked while servers or critical jobs are busy. Unpackaged/dev builds can check but cannot install.
+**YARK updates** checks GitHub Releases for a newer desktop build (not ASA/SteamCMD). After launch, YARK quietly checks in the background; when an update is available (or a download finishes), you get an operator toast and the sidebar version uses an accent color — click either to open Settings → About. Then **Check now** → **Download** → **Restart and install**. Install is blocked while servers or critical jobs are busy. Unpackaged/dev builds can check but cannot install.
 
-**What's new** (same notes as the public changelog) opens once after you upgrade to a version that has curated notes. Open it anytime from Settings → YARK updates, or by clicking the sidebar `vX.Y.Z` label (the update badge still opens this YARK updates section).
+**What's new** (same notes as the public changelog) opens once after you upgrade to a version that has curated notes. Open it anytime from Settings → About, or by clicking the sidebar `vX.Y.Z` label (the update badge still opens About).
 
 ## What stays local
 
@@ -65,7 +65,7 @@ See [Security & privacy](/docs/security-privacy/).
 
 ## Profile database recovery
 
-The profile SQLite file is `yark-server-manager.db` under App data (open that folder from Settings). On open, YARK waits briefly for a lock so a short contention does not fail boot immediately.
+The profile SQLite file is `yark-server-manager.db` under App data (open that folder from Settings → About). On open, YARK waits briefly for a lock so a short contention does not fail boot immediately.
 
 If the database cannot open or migrate, boot shows a recovery dialog instead of a blank window:
 

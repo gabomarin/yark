@@ -20,10 +20,16 @@ import { withBase } from "../../../data/site";
    Before running the installer, follow [Verify your download](#verify-your-download)
    below and compare it with the matching official release asset.
 
+   On first launch with no server profiles, YARK opens a skippable **Set up YARK**
+   wizard (SteamCMD, Windows shell, optional cluster, then create or import). You
+   can skip and run it later from Settings → **Run setup again**.
+
 2. **Point SteamCMD**
 
    Install [SteamCMD](https://developer.valvesoftware.com/wiki/SteamCMD) somewhere writable.
-   In YARK → **Settings**, set the SteamCMD path (folder that contains `steamcmd.exe`).
+   Set the path in the first-run wizard or in YARK → **Settings** (folder that contains `steamcmd.exe`).
+   You can continue setup and **create a profile** while SteamCMD still shows **Needs setup**;
+   **Install files** will fail until SteamCMD is Ready.
 
    <figure class="doc-shot">
      <img

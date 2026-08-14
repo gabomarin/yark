@@ -171,6 +171,23 @@ During **robocopy** (`sync-files`), progress is a **separate phase**: SteamCMD s
 
 > Note: agent-context historically said “live log streaming during SteamCMD is pending.” The **console/progress push channel and dock are live**. What may still feel incomplete is richer per-file update-log streaming in the Logs UI—not the SteamCMD progress path.
 
+## SteamCMD not configured
+
+Creating or importing a **profile** does not require SteamCMD. The record
+(map, ports, install path) is saved even when Settings shows **Needs setup**.
+
+**Install files**, **Update**, and **Verify** do. Discovery order: Settings
+`steamcmdPath`, `STEAMCMD_PATH`, YARK’s bundled SteamCMD dir, well-known
+install paths, then `where.exe steamcmd.exe`. If none exist, YARK still tries
+to spawn `steamcmd.exe`; spawn fails and the operator sees **Install failed**
+(or Update/Verify failed) with *Could not run SteamCMD… Install or configure
+it.* The profile is unchanged. Choose a path or **Install SteamCMD** in
+Settings (or first-run setup), then retry.
+
+The Overview / workspace **Install files** action is offered from install
+health (files missing), not from SteamCMD **Ready**. First-run lets the
+operator continue while SteamCMD is still installing.
+
 ## SteamCMD bootstrap
 
 `steamcmd:install` uses PowerShell to fetch `https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip`, extract next to the app SteamCMD dir, and validate the exe. This path is **Windows-oriented** (PowerShell + `robocopy.exe` for sync). Linux cloud VMs can run the Electron UI and unit tests, but real SteamCMD install/sync against ASA binaries is a Windows host concern.
@@ -189,7 +206,7 @@ During **robocopy** (`sync-files`), progress is a **separate phase**: SteamCMD s
 | World/INI wiped after update | Should not happen via robocopy path (`ShooterGame\Saved` excluded); check whether fallback direct `app_update` on install dir was used (console mentions cache sync failure) |
 | Console stuck on “Waiting for progress…” during Update | Older builds were silent while zipping pre-update backups (large imported worlds take minutes). Current builds log backup kinds; Cancel aborts that phase without a fake rollback |
 | Job stuck after crash | Queue persisted in settings `criticalJobsQueue.v1`; resumes on next launch |
-| `steamcmd:install` fails on Linux agent VM | Expected — PowerShell installer + Windows sync tools |
+| Install failed: *Could not run SteamCMD* | `steamcmd.exe` not found — Choose a path or **Install SteamCMD** in Settings, then retry. Creating the profile itself does not need SteamCMD. |
 
 ## Real-host validation (Windows)
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ImportInstallProbe, ServerInstallationInfo } from "@shared/types";
-import { canImportInstallProceed } from "../../src/renderer/src/features/servers/importInstallModel";
+import { canImportInstallProceed, applyPreferredCluster, suggestionsToForm } from "../../src/renderer/src/features/servers/importInstallModel";
 
 function installation(
   health: ServerInstallationInfo["health"],
@@ -83,5 +83,22 @@ describe("canImportInstallProceed", () => {
         true,
       ),
     ).toBe(false);
+  });
+});
+
+describe("applyPreferredCluster", () => {
+  it("overlays a setup cluster onto probe suggestions", () => {
+    const form = suggestionsToForm(probe().suggestions);
+    expect(form.clusterId).toBe("");
+    expect(
+      applyPreferredCluster(form, {
+        clusterId: "ember",
+        clusterDir: "D:\\ASA\\Clusters\\Ember",
+      }),
+    ).toMatchObject({
+      clusterId: "ember",
+      clusterDir: "D:\\ASA\\Clusters\\Ember",
+    });
+    expect(applyPreferredCluster(form, undefined).clusterId).toBe("");
   });
 });
