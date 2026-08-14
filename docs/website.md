@@ -117,6 +117,12 @@ temp profile and seeds a public demo fleet there. It never opens your normal app
 userData, so private server names/paths cannot leak into marketing shots. See
 `scripts/capture-website-screenshots.cjs`.
 
+Home and the product preview use build-time **WebP** derivatives (`website/public/media/`,
+gitignored) so phones do not download 1440×900 PNGs. Canonical PNGs stay at
+`/screenshots/*.png` for Open Graph, JSON-LD, and “open original”. Recapture PNGs as
+usual; `astro build` / `astro dev` regenerate WebP via
+`website/src/integrations/optimize-marketing-images.mjs`.
+
 ## Download button
 
 `website/src/data/site.ts` reads the root `package.json` `version` and builds:

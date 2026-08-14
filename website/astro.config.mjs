@@ -2,6 +2,7 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import sitemap from "@astrojs/sitemap";
 import { remarkBaseLinks } from "./src/plugins/remark-base-links.mjs";
+import { optimizeMarketingImages } from "./src/integrations/optimize-marketing-images.mjs";
 
 const siteBase = "/";
 
@@ -27,6 +28,7 @@ export default defineConfig({
     remarkPlugins: [remarkBaseLinks(siteBase)],
   },
   integrations: [
+    optimizeMarketingImages(),
     starlight({
       title: "YARK Docs",
       description:

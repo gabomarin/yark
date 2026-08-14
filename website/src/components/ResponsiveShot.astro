@@ -1,0 +1,45 @@
+---
+import { withBase } from "../data/site";
+
+interface Props {
+  slug: string;
+  alt: string;
+  fallbackSrc: string;
+  widths: number[];
+  sizes: string;
+  width: number;
+  height: number;
+  loading?: "eager" | "lazy";
+  fetchpriority?: "high" | "low";
+}
+
+const {
+  slug,
+  alt,
+  fallbackSrc,
+  widths,
+  sizes,
+  width,
+  height,
+  loading = "lazy",
+  fetchpriority,
+} = Astro.props;
+
+const srcset = widths
+  .map((w) => `${withBase(`/media/${slug}-${w}.webp`)} ${w}w`)
+  .join(", ");
+---
+
+<picture>
+  <source type="image/webp" srcset={srcset} sizes={sizes} />
+  <img
+    src={fallbackSrc}
+    alt={alt}
+    width={width}
+    height={height}
+    sizes={sizes}
+    loading={loading}
+    decoding="async"
+    fetchpriority={fetchpriority}
+  />
+</picture>

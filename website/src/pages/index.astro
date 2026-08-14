@@ -2,22 +2,43 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import DownloadIcon from "../components/DownloadIcon.astro";
 import ProductStage from "../components/ProductStage.astro";
+import ResponsiveShot from "../components/ResponsiveShot.astro";
 import { site, withBase } from "../data/site";
-import { screenshots } from "../data/screenshots";
+import { screenshotSlug, screenshots } from "../data/screenshots";
 import { roadmapItems } from "../data/roadmap";
+
+const logoSizes = "(max-width: 22rem) calc(100vw - 3rem), 22rem";
+const gallerySizes = "(max-width: 720px) calc(100vw - 3rem), calc(min(72rem, 100vw) / 2)";
+const logoSrcset = `${withBase("/media/yark-logo-320.webp")} 320w, ${withBase("/media/yark-logo-640.webp")} 640w`;
 ---
 
 <BaseLayout title={site.seoTitle} description={site.description} path="/" softwareSchema>
+  <Fragment slot="head">
+    <link
+      rel="preload"
+      as="image"
+      type="image/webp"
+      href={withBase("/media/yark-logo-640.webp")}
+      imagesrcset={logoSrcset}
+      imagesizes={logoSizes}
+      fetchpriority="high"
+    />
+  </Fragment>
   <Fragment slot="before-main">
     <header class="hero">
-      <img
-        class="brand-lockup"
-        src={withBase("/assets/yark-logo.png")}
-        alt=""
-        width="420"
-        height="420"
-        data-hero-item
-      />
+      <div class="brand-lockup" data-hero-item>
+        <ResponsiveShot
+          slug="yark-logo"
+          alt=""
+          fallbackSrc={withBase("/assets/yark-logo.png")}
+          widths={[320, 640]}
+          sizes={logoSizes}
+          width={420}
+          height={420}
+          loading="eager"
+          fetchpriority="high"
+        />
+      </div>
       <h1 class="hero-title" data-hero-item>
         YARK — ARK Survival Ascended dedicated server manager for Windows
       </h1>
@@ -57,12 +78,15 @@ import { roadmapItems } from "../data/roadmap";
             screenshots.map((shot) => (
               <figure class="shot" data-reveal-child>
                 <a href={shot.src} target="_blank" rel="noopener">
-                  <img
-                    src={shot.src}
+                  <ResponsiveShot
+                    slug={screenshotSlug(shot)}
                     alt={shot.alt}
+                    fallbackSrc={shot.src}
+                    widths={[640, 960, 1280]}
+                    sizes={gallerySizes}
+                    width={1440}
+                    height={900}
                     loading="lazy"
-                    width="1440"
-                    height="900"
                   />
                 </a>
                 <figcaption>{shot.caption}</figcaption>

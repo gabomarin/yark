@@ -16,6 +16,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Changed
 
 - Settings uses a **category sidebar** (General, Servers, SteamCMD, Logs, About); setup guidance clarifies saved changes, suggests a cluster folder, and prevents conflicting SteamCMD actions while work is active (#298).
+- getyark.com serves responsive WebP screenshots, preloads the home logo, and skips heavy motion work on phones so the static site loads faster.
 
 ### Fixed
 
