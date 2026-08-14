@@ -33,7 +33,9 @@ export function useWorkspaceLeaveGuard(
   const profileSaveRef = useRef<SaveHandler | null>(null);
   const iniSaveRef = useRef<SaveHandler | null>(null);
   const onAfterContinueRef = useRef(onAfterContinue);
-  onAfterContinueRef.current = onAfterContinue;
+  useEffect(() => {
+    onAfterContinueRef.current = onAfterContinue;
+  }, [onAfterContinue]);
 
   const setIniDirty = useCallback((dirty: boolean) => {
     iniDirtyRef.current = dirty;

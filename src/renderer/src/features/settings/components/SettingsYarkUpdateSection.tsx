@@ -222,6 +222,7 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
           {showDownload && (
             <Button
               size="compact-xs"
+              color="fossil"
               leftSection={<CloudArrowDown size={14} />}
               disabled={!canDownload && status.phase !== "downloading"}
               loading={status.phase === "downloading"}
@@ -234,7 +235,7 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
           {status.isPackaged && status.phase === "ready" && (
             <Button
               size="compact-xs"
-              color="teal"
+              color="fossil"
               disabled={!canInstall}
               loading={actionBusy}
               onClick={() => void runInstall()}

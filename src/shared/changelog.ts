@@ -21,6 +21,38 @@ export const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.12.0",
+    date: "2026-08-13",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Animated startup splash (brand SVG, 1.5s min until the main window is ready); honors reduced motion; skipped in E2E.",
+          "In-app What's new from the curated notes shared with the public site (Settings, sidebar version, one-shot after upgrade).",
+          "Create/clone install folders must be empty (or missing) and must not sit inside or wrap another YARK or ASA server.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Create/edit server form: Browse chips for paths, identity + reachability columns, reserved port-conflict slot, fixed Save footer; New server Map is official maps only.",
+          "Compact UI density and shared EmptyState on workspace, Settings auto-start, and Logs fleet empties.",
+          "Runtime keeps the ShooterGame.log tail with native console on; the buffer survives a crash until the next Start; unexpected exits record server_crashed with a log excerpt.",
+          "Log retention day fields accept a minimum of 1 day (was 7).",
+          "YARK updates Download and Restart and install use fossil amber instead of teal.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Move installation dest preview matches create (empty folder, not another YARK or ASA tree); same-drive rename restores the source if cancel or commit fails.",
+          "Workspace Server/INI and create/edit server forms confirm before navigation discards unsaved edits.",
+          "Create/Move install-path checks walk ASA ancestors on disk and stay async so a slow UNC folder cannot freeze YARK.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.11.0",
     date: "2026-08-12",
     sections: [

@@ -305,7 +305,9 @@ export function ConfigurationEditor(props: Props): ReactElement {
   };
 
   const saveIniRef = useRef(saveIni);
-  saveIniRef.current = saveIni;
+  useEffect(() => {
+    saveIniRef.current = saveIni;
+  });
 
   useEffect(() => {
     props.onRegisterSave?.(async () => saveIniRef.current());
