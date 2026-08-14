@@ -1,5 +1,6 @@
 import { EventEmitter } from "node:events";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { appendFileSync } from "node:fs";
+import { mkdir, mkdtemp, rm, writeFile, appendFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PassThrough } from "node:stream";
@@ -69,6 +70,22 @@ function makeProfile(installDir: string): ServerProfile {
   };
 }
 
+async function waitForRuntimeLine(
+  manager: ProcessManager,
+  serverId: string,
+  expected: string,
+): Promise<void> {
+  const deadline = Date.now() + 1_000;
+  while (
+    !manager.getRuntimeLogSnapshot(serverId).join("\n").includes(expected)
+  ) {
+    if (Date.now() >= deadline) {
+      throw new Error(`Timed out waiting for Runtime line: ${expected}`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
+
 describe("ProcessManager lifecycle ownership", () => {
   let cleanupRoot: string | null = null;
 
@@ -123,6 +140,151 @@ describe("ProcessManager lifecycle ownership", () => {
     );
 
     await manager.kill(profile.id);
+  });
+
+  it("tails ShooterGame.log with native console and keeps Runtime until the next start", async () => {
+    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-lifecycle-"));
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
+    await mkdir(binaryDir, { recursive: true });
+    await writeFile(join(binaryDir, "ArkAscendedServer.exe"), "");
+    const logsDir = join(cleanupRoot, "ShooterGame", "Saved", "Logs");
+    await mkdir(logsDir, { recursive: true });
+    const logPath = join(logsDir, "ShooterGame.log");
+    await writeFile(logPath, "ARK Version: 92.37\n");
+
+    const first = fakeChild();
+    const second = fakeChild();
+    const children = [first, second];
+    const startTailer = vi.spyOn(AsaSavedLogsTailer.prototype, "start");
+    const manager = new ProcessManager({
+      spawnProcess: () => children.shift()!,
+    });
+    const profile = makeProfile(cleanupRoot);
+
+    manager.start(profile, { openNativeConsole: true });
+    expect(startTailer).toHaveBeenCalled();
+    await appendFile(
+      logPath,
+      [
+        "ASAMods: Error: Not all mods were installed. Check the log for CFCore errors.",
+        "If you have any Custom Cosmetics in the mod list please remove them.",
+        "Attempting to install pc-only mods on a cross-platform server will also fail to install.",
+        "Mods not installed: 1039450",
+        "",
+      ].join("\n"),
+    );
+    first.emit("spawn");
+    first.emit("exit", 0);
+
+    expect(manager.getStatus(profile.id).status).toBe("error");
+    expect(manager.getStatus(profile.id).processLive).toBe(false);
+    expect(manager.getStatus(profile.id).lastError).toContain("1039450");
+    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain(
+      "Not all mods were installed",
+    );
+
+    manager.start(profile, { openNativeConsole: true });
+    expect(
+      manager.getRuntimeLogSnapshot(profile.id).join("\n"),
+    ).not.toContain("Not all mods were installed");
+    second.emit("spawn");
+    await manager.kill(profile.id);
+  });
+
+  it("captures log bytes written between process creation and tailer start", async () => {
+    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-spawn-log-"));
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
+    await mkdir(binaryDir, { recursive: true });
+    await writeFile(join(binaryDir, "ArkAscendedServer.exe"), "");
+    const logsDir = join(cleanupRoot, "ShooterGame", "Saved", "Logs");
+    await mkdir(logsDir, { recursive: true });
+    const logPath = join(logsDir, "ShooterGame.log");
+    await writeFile(logPath, "previous-run\n");
+
+    const child = fakeChild();
+    const manager = new ProcessManager({
+      spawnProcess: () => {
+        appendFileSync(logPath, "written-during-spawn\n", "utf8");
+        return child;
+      },
+    });
+    const profile = makeProfile(cleanupRoot);
+
+    manager.start(profile, { skipReadinessCheck: true });
+    child.emit("spawn");
+    await waitForRuntimeLine(manager, profile.id, "written-during-spawn");
+
+    const runtime = manager.getRuntimeLogSnapshot(profile.id).join("\n");
+    expect(runtime).toContain("written-during-spawn");
+    expect(runtime).not.toContain("previous-run");
+
+    await manager.kill(profile.id);
+  });
+
+  it("does not diagnose a previous run's ShooterGame.log when this start writes nothing", async () => {
+    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-stale-log-"));
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
+    await mkdir(binaryDir, { recursive: true });
+    await writeFile(join(binaryDir, "ArkAscendedServer.exe"), "");
+    const logsDir = join(cleanupRoot, "ShooterGame", "Saved", "Logs");
+    await mkdir(logsDir, { recursive: true });
+    await writeFile(
+      join(logsDir, "ShooterGame.log"),
+      [
+        "ASAMods: Error: Not all mods were installed. Check the log for CFCore errors.",
+        "Mods not installed: 1039450",
+        "",
+      ].join("\n"),
+    );
+
+    const child = fakeChild();
+    const unexpected = vi.fn();
+    const manager = new ProcessManager({
+      spawnProcess: () => child,
+    });
+    manager.on("unexpected-exit", unexpected);
+    const profile = makeProfile(cleanupRoot);
+
+    manager.start(profile, { openNativeConsole: true });
+    child.emit("spawn");
+    child.emit("exit", 0);
+
+    expect(manager.getStatus(profile.id).status).toBe("error");
+    expect(manager.getStatus(profile.id).lastError).toMatch(/exited during startup/i);
+    expect(manager.getStatus(profile.id).lastError).not.toContain("1039450");
+    expect(unexpected).toHaveBeenCalledWith(
+      expect.objectContaining({
+        serverId: profile.id,
+        phase: "starting",
+        diagnosis: null,
+      }),
+    );
+  });
+
+  it("does not emit unexpected-exit when spawn fails without a process exit", async () => {
+    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-spawn-error-"));
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
+    await mkdir(binaryDir, { recursive: true });
+    await writeFile(join(binaryDir, "ArkAscendedServer.exe"), "");
+
+    const child = fakeChild();
+    const unexpected = vi.fn();
+    const manager = new ProcessManager({
+      spawnProcess: () => child,
+    });
+    manager.on("unexpected-exit", unexpected);
+    const profile = makeProfile(cleanupRoot);
+
+    manager.start(profile);
+    child.emit("error", new Error("spawn ENOENT"));
+
+    expect(manager.getStatus(profile.id).status).toBe("error");
+    expect(unexpected).not.toHaveBeenCalled();
+
+    child.emit("exit", 1);
+    expect(unexpected).not.toHaveBeenCalled();
+    expect(manager.getStatus(profile.id).status).toBe("error");
+    expect(manager.getStatus(profile.id).lastError).toContain("spawn ENOENT");
   });
 
   it("reports error with live child as active until exit is observed", async () => {

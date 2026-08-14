@@ -13,9 +13,12 @@ import {
   AsaSavedLogsTailer,
   asaPrimaryLogPath,
   asaSavedLogsDir,
+  captureAsaLogSessionAnchor,
   decodeAsaLogBytes,
   listAsaLogFiles,
   pickAsaLogFile,
+  readAsaLogSessionExcerpt,
+  readAsaLogTailExcerpt,
 } from "@backend/infra/process/asa-log-tail";
 
 describe("decodeAsaLogBytes", () => {
@@ -79,21 +82,21 @@ describe("AsaSavedLogsTailer", () => {
     const logsDir = asaSavedLogsDir(root);
     mkdirSync(logsDir, { recursive: true });
     const chunks: string[] = [];
-    const startedAt = Date.now();
     const logPath = join(logsDir, "ShooterGame.log");
     writeFileSync(logPath, "boot\n", "utf8");
 
     const tailer = new AsaSavedLogsTailer(root, (text) => chunks.push(text), {
       pollMs: 10,
     });
-    tailer.start(startedAt);
-    await waitFor(() => chunks.join("").includes("boot"));
+    tailer.start();
+    await delay(30);
+    expect(chunks.join("")).not.toContain("boot");
     expect(listAsaLogFiles(logsDir)).toEqual([logPath]);
-    expect(chunks.join("")).toContain("boot");
 
     appendFileSync(logPath, "ready\n", "utf8");
     await waitFor(() => chunks.join("").includes("ready"));
     expect(chunks.join("")).toContain("ready");
+    expect(chunks.join("")).not.toContain("boot");
 
     tailer.stop();
   });
@@ -105,11 +108,10 @@ describe("AsaSavedLogsTailer", () => {
     const logPath = join(logsDir, "ShooterGame.log");
     writeFileSync(logPath, "", "utf8");
     const chunks: string[] = [];
-    const startedAt = Date.now();
     const tailer = new AsaSavedLogsTailer(root, (text) => chunks.push(text), {
       pollMs: 10,
     });
-    tailer.start(startedAt);
+    tailer.start();
     await delay(30);
 
     appendFileSync(logPath, "partial", "utf8");
@@ -133,7 +135,7 @@ describe("AsaSavedLogsTailer", () => {
     const tailer = new AsaSavedLogsTailer(root, (text) => chunks.push(text), {
       pollMs: 10,
     });
-    tailer.start(Date.now());
+    tailer.start();
     await delay(30);
 
     const encoded = Buffer.from("🦖", "utf8");
@@ -162,7 +164,7 @@ describe("AsaSavedLogsTailer", () => {
     const tailer = new AsaSavedLogsTailer(root, (text) => chunks.push(text), {
       pollMs: 10,
     });
-    tailer.start(Date.now());
+    tailer.start();
     await delay(30);
 
     appendFileSync(logPath, Buffer.from("x\n", "utf16le"));
@@ -186,11 +188,10 @@ describe("AsaSavedLogsTailer", () => {
     writeFileSync(logPath, `${big}\n`, "utf8");
 
     const chunks: string[] = [];
-    const startedAt = Date.now() + 10_000;
     const tailer = new AsaSavedLogsTailer(root, (text) => chunks.push(text), {
       pollMs: 10,
     });
-    tailer.start(startedAt);
+    tailer.start();
     await delay(30);
     expect(chunks).toEqual([]);
 
@@ -213,7 +214,7 @@ describe("AsaSavedLogsTailer", () => {
     const tailer = new AsaSavedLogsTailer(root, (text) => chunks.push(text), {
       pollMs: 10,
     });
-    tailer.start(Date.now() + 10_000);
+    tailer.start();
     await delay(30);
     expect(chunks).toEqual([]);
 
@@ -237,7 +238,7 @@ describe("AsaSavedLogsTailer", () => {
     const tailer = new AsaSavedLogsTailer(root, (text) => chunks.push(text), {
       pollMs: 10,
     });
-    tailer.start(Date.now());
+    tailer.start();
     await delay(30);
 
     const line = `${"x".repeat(300 * 1024)}\n`;
@@ -257,13 +258,16 @@ describe("AsaSavedLogsTailer", () => {
     writeFileSync(primary, "from-primary\n", "utf8");
     writeFileSync(secondary, "from-secondary\n", "utf8");
     const chunks: string[] = [];
-    const startedAt = Date.now();
     const tailer = new AsaSavedLogsTailer(root, (text) => chunks.push(text), {
       pollMs: 10,
     });
-    tailer.start(startedAt);
-    await waitFor(() => chunks.join("").includes("from-primary"));
-    expect(chunks.join("")).toContain("from-primary");
+    tailer.start();
+    await delay(30);
+    expect(chunks.join("")).not.toContain("from-primary");
+
+    appendFileSync(primary, "later-primary\n", "utf8");
+    await waitFor(() => chunks.join("").includes("later-primary"));
+    expect(chunks.join("")).toContain("later-primary");
     expect(chunks.join("")).not.toContain("from-secondary");
 
     appendFileSync(secondary, "more-secondary\n", "utf8");
@@ -271,5 +275,45 @@ describe("AsaSavedLogsTailer", () => {
     expect(chunks.join("")).not.toContain("more-secondary");
 
     tailer.stop();
+  });
+});
+
+describe("ShooterGame.log excerpt reads", () => {
+  it("reads only the last maxBytes of a large file", () => {
+    const root = mkdtempSync(join(tmpdir(), "asa-log-excerpt-"));
+    const logsDir = asaSavedLogsDir(root);
+    mkdirSync(logsDir, { recursive: true });
+    const head = "HEAD-UNIQUE-MARKER\n";
+    const tail = "TAIL-UNIQUE-MARKER\n";
+    writeFileSync(
+      join(logsDir, "ShooterGame.log"),
+      `${head}${"x".repeat(80 * 1024)}${tail}`,
+      "utf8",
+    );
+    const excerpt = readAsaLogTailExcerpt(root, 64 * 1024);
+    expect(excerpt).toContain("TAIL-UNIQUE-MARKER");
+    expect(excerpt).not.toContain("HEAD-UNIQUE-MARKER");
+  });
+
+  it("ignores bytes that existed before the session anchor", () => {
+    const root = mkdtempSync(join(tmpdir(), "asa-log-session-"));
+    const logsDir = asaSavedLogsDir(root);
+    mkdirSync(logsDir, { recursive: true });
+    writeFileSync(
+      join(logsDir, "ShooterGame.log"),
+      "ASAMods: Error: Not all mods were installed.\nMods not installed: 1039450\n",
+      "utf8",
+    );
+    const anchor = captureAsaLogSessionAnchor(root);
+    expect(readAsaLogSessionExcerpt(root, anchor)).toBe("");
+
+    appendFileSync(
+      join(logsDir, "ShooterGame.log"),
+      "Fatal error!\nAssertion failed: this-run\n",
+      "utf8",
+    );
+    const excerpt = readAsaLogSessionExcerpt(root, anchor);
+    expect(excerpt).toContain("Assertion failed: this-run");
+    expect(excerpt).not.toContain("1039450");
   });
 });

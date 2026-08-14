@@ -84,10 +84,10 @@ After spawn, status stays **starting** until RCON `ListPlayers` succeeds on `127
 
 | Mode | What you get |
 | --- | --- |
-| Piped (default) | YARK captures process output and tails `ShooterGame/Saved/Logs/ShooterGame.log` into Runtime |
-| Native console on | Separate console window; Runtime is mostly system messages |
+| Piped (default) | Hidden process; Runtime tails `ShooterGame.log` plus any stdout/stderr |
+| Native console on | Separate ASA console window **and** the same `ShooterGame.log` tail in Runtime |
 
-Piped mode also appends `-log` when missing so Unreal is more likely to write disk logs.
+Both modes append `-log` so Unreal writes the disk log. Runtime is cleared on the **next Start**, not when the process crashes.
 
 ## Auto-start with YARK
 
@@ -112,7 +112,7 @@ Empty never-installed folders skip the choice and always wipe (with a live empti
 
 1. Treating “process started” as ready — wait for RCON  
 2. Port clash with another profile  
-3. Expecting rich Runtime logs with native console enabled  
+3. Ignoring Runtime after a crash — ShooterGame.log stays there until the next Start  
 4. Assuming restart skips backups — it takes a fail-hard `pre_restart` snapshot  
 5. Expecting Auto-start to run while the profile is Inactive or still reattaching  
 6. Custom map token without the map pack **enabled** on Mods (or Map still on an official world)  

@@ -18,12 +18,17 @@ import {
   buildLaunchArgs,
   buildWindowsCreateProcessCommandLine,
   buildWindowsVerbatimSpawnArgs,
-  formatLaunchCommandLine,
   quoteWindowsArg,
   serverBinaryPath,
 } from "../../domains/instances/launch-args";
 import { rconExec } from "../rcon/rcon-client";
-import { AsaSavedLogsTailer } from "./asa-log-tail";
+import { diagnoseAsaStartupFailure, type AsaStartupFailure } from "@shared/asa-startup-failure";
+import {
+  AsaSavedLogsTailer,
+  captureAsaLogSessionAnchor,
+  readAsaLogSessionExcerpt,
+  type AsaLogSessionAnchor,
+} from "./asa-log-tail";
 import { createAdoptedChildHandle } from "./adopted-child";
 import { killWinProcessTreeAsync } from "./kill-win-process-tree";
 import { queryWindowsProcessIdentity } from "./windows-process-identity";
@@ -36,6 +41,7 @@ interface ManagedProcess {
   lastError: string | null;
   readinessGeneration: number;
   logTailer: AsaSavedLogsTailer | null;
+  logSessionAnchor: AsaLogSessionAnchor;
   executablePath: string;
   installDir: string;
   launchArgs: string[];
@@ -60,6 +66,15 @@ export type FinishGracefulStopResult =
   | "already_exited"
   | "replaced";
 
+/** Observed child exit that was not an operator stop. */
+export interface UnexpectedManagedExit {
+  serverId: string;
+  exitCode: number | null;
+  phase: "starting" | "running";
+  lastError: string;
+  diagnosis: AsaStartupFailure | null;
+}
+
 function argsIncludeLogFlag(args: string[]): boolean {
   return args.some((arg) => /^[-/]log$/i.test(arg.trim()));
 }
@@ -79,8 +94,9 @@ function argsIncludeConsoleFlag(args: string[]): boolean {
  * separately, while `argv0` is explicitly quoted for spaced install paths.
  *
  * Native console: `windowsHide: false` so Windows gives the dedicated its own
- * console. Piped mode: `windowsHide: true` + stdout/stderr pipes + Saved/Logs
- * file tail (Unreal rarely prints the console stream to stdout when hidden).
+ * console. Piped mode: `windowsHide: true` + stdout/stderr pipes. Both modes
+ * tail `ShooterGame/Saved/Logs/ShooterGame.log` into Runtime (Unreal rarely
+ * prints the console stream to stdout when hidden).
  *
  * Always `detached: true` so ASA can outlive an unexpected Electron exit
  * (crash / Task Manager). Windows otherwise kills non-detached children with
@@ -354,54 +370,37 @@ export class ProcessManager extends EventEmitter {
       );
     }
 
+    this.clearRuntimeLog(profile.id);
+    const logSessionAnchor = captureAsaLogSessionAnchor(profile.installDir);
     const args = options?.launchArgsOverride ?? buildLaunchArgs(profile);
     const nativeConsole = options?.openNativeConsole === true;
     let spawnArgs = args;
     // Only when using profile-built CLI — never mutate launchArgsOverride (tests / custom argv).
-    if (
-      options?.launchArgsOverride === undefined &&
-      !argsIncludeLogFlag(spawnArgs) &&
-      !argsIncludeConsoleFlag(spawnArgs)
-    ) {
-      // Add appropriate flag based on console mode
-      if (nativeConsole) {
-        // Enable Unreal console for interactive RCON commands in the server window.
+    if (options?.launchArgsOverride === undefined) {
+      if (nativeConsole && !argsIncludeConsoleFlag(spawnArgs)) {
         spawnArgs = [...spawnArgs, "-console"];
-      } else {
-        // Helps Unreal write ShooterGame/Saved/Logs while the console is hidden.
+      }
+      if (!argsIncludeLogFlag(spawnArgs)) {
         spawnArgs = [...spawnArgs, "-log"];
       }
     }
-    // Log the same logical Unreal shape sent verbatim on Windows.
-    const displayCommandLine =
-      options?.launchArgsOverride !== undefined
-        ? [binary, ...spawnArgs].join(" ")
-        : spawnArgs !== args
-          ? `${formatLaunchCommandLine(profile, binary)} -log`
-          : formatLaunchCommandLine(profile, binary);
     const expectedCommandLine =
       process.platform === "win32"
         ? buildWindowsCreateProcessCommandLine(binary, spawnArgs)
-        : displayCommandLine;
+        : [binary, ...spawnArgs].join(" ");
     const child = this.spawnProcess(binary, spawnArgs, profile.installDir, {
       nativeConsole,
     });
 
     this.appendRuntimeLog(profile.id, "system", `Starting process ${binary}`);
-    this.appendRuntimeLog(profile.id, "system", `Commandline: ${displayCommandLine}`);
-    if (nativeConsole) {
-      this.appendRuntimeLog(
-        profile.id,
-        "system",
-        "Native server console opened (live output in that window)",
-      );
-    } else {
-      this.appendRuntimeLog(
-        profile.id,
-        "system",
-        "Piped mode: following ShooterGame/Saved/Logs for Runtime",
-      );
-    }
+    this.appendRuntimeLog(profile.id, "system", `Commandline: ${expectedCommandLine}`);
+    this.appendRuntimeLog(
+      profile.id,
+      "system",
+      nativeConsole
+        ? "Native server console opened; Runtime follows ShooterGame.log"
+        : "Piped mode: following ShooterGame/Saved/Logs for Runtime",
+    );
     const managed: ManagedProcess = {
       child,
       identity: {},
@@ -410,6 +409,7 @@ export class ProcessManager extends EventEmitter {
       lastError: null,
       readinessGeneration: 0,
       logTailer: null,
+      logSessionAnchor,
       executablePath: binary,
       installDir: profile.installDir,
       launchArgs: [...spawnArgs],
@@ -435,16 +435,14 @@ export class ProcessManager extends EventEmitter {
         this.captureRuntimeChunk(profile.id, "stderr", chunk);
       });
     }
-    if (!nativeConsole) {
-      managed.logTailer = new AsaSavedLogsTailer(
-        profile.installDir,
-        (text) => {
-          if (this.processes.get(profile.id) !== managed) return;
-          this.captureRuntimeChunk(profile.id, "log", text);
-        },
-      );
-      managed.logTailer.start(Date.parse(managed.startedAt));
-    }
+    managed.logTailer = new AsaSavedLogsTailer(
+      profile.installDir,
+      (text) => {
+        if (this.processes.get(profile.id) !== managed) return;
+        this.captureRuntimeChunk(profile.id, "log", text);
+      },
+    );
+    managed.logTailer.start(managed.logSessionAnchor);
     this.emitStatus(profile.id);
 
     child.once("spawn", () => {
@@ -491,29 +489,7 @@ export class ProcessManager extends EventEmitter {
     });
 
     child.once("exit", (code) => {
-      const wasStopping = managed.status === "stopping";
-      const wasStarting = managed.status === "starting";
-      managed.readinessGeneration += 1;
-      managed.logTailer?.stop();
-      managed.logTailer = null;
-      if (this.processes.get(profile.id) !== managed) return;
-      this.flushRuntimePartials(profile.id);
-      this.appendRuntimeLog(
-        profile.id,
-        "system",
-        `Process exited with code ${code ?? "unknown"}`,
-      );
-      this.clearProcessCheckpoint(profile.id);
-      if (wasStopping || code === 0) {
-        this.processes.delete(profile.id);
-        this.emitStatus(profile.id);
-        return;
-      }
-      managed.status = "error";
-      managed.lastError = wasStarting
-        ? `Process exited during startup (code ${code ?? "unknown"})`
-        : `Process exited unexpectedly (code ${code ?? "unknown"})`;
-      this.emitStatus(profile.id);
+      this.onManagedExit(profile.id, managed, code);
     });
   }
 
@@ -852,6 +828,7 @@ export class ProcessManager extends EventEmitter {
       lastError: null,
       readinessGeneration: 0,
       logTailer: null,
+      logSessionAnchor: captureAsaLogSessionAnchor(record.installDir),
       executablePath: record.executablePath,
       installDir: record.installDir,
       launchArgs: [...record.launchArgs],
@@ -871,7 +848,7 @@ export class ProcessManager extends EventEmitter {
       if (this.processes.get(profile.id) !== managed) return;
       this.captureRuntimeChunk(profile.id, "log", text);
     });
-    managed.logTailer.start(Date.parse(managed.startedAt));
+    managed.logTailer.start(managed.logSessionAnchor);
     this.appendRuntimeLog(
       profile.id,
       "system",
@@ -880,29 +857,7 @@ export class ProcessManager extends EventEmitter {
     this.emitStatus(profile.id);
 
     child.once("exit", (code) => {
-      const wasStopping = managed.status === "stopping";
-      const wasStarting = managed.status === "starting";
-      managed.readinessGeneration += 1;
-      managed.logTailer?.stop();
-      managed.logTailer = null;
-      if (this.processes.get(profile.id) !== managed) return;
-      this.flushRuntimePartials(profile.id);
-      this.appendRuntimeLog(
-        profile.id,
-        "system",
-        `Process exited with code ${code ?? "unknown"}`,
-      );
-      this.clearProcessCheckpoint(profile.id);
-      if (wasStopping || code === 0) {
-        this.processes.delete(profile.id);
-        this.emitStatus(profile.id);
-        return;
-      }
-      managed.status = "error";
-      managed.lastError = wasStarting
-        ? `Process exited during startup (code ${code ?? "unknown"})`
-        : `Process exited unexpectedly (code ${code ?? "unknown"})`;
-      this.emitStatus(profile.id);
+      this.onManagedExit(profile.id, managed, code);
     });
 
     if (options?.skipReadinessCheck === true) {
@@ -1199,6 +1154,62 @@ export class ProcessManager extends EventEmitter {
       };
       child.once("exit", onExit);
     });
+  }
+
+  private onManagedExit(
+    serverId: string,
+    managed: ManagedProcess,
+    code: number | null,
+  ): void {
+    const wasStopping = managed.status === "stopping";
+    const wasStarting = managed.status === "starting";
+    const wasRunning = managed.status === "running";
+    managed.readinessGeneration += 1;
+    managed.logTailer?.stop();
+    managed.logTailer = null;
+    if (this.processes.get(serverId) !== managed) return;
+    this.flushRuntimePartials(serverId);
+    this.appendRuntimeLog(
+      serverId,
+      "system",
+      `Process exited with code ${code ?? "unknown"}`,
+    );
+    this.clearProcessCheckpoint(serverId);
+    const unexpected = !wasStopping && (wasStarting || (wasRunning && code !== 0));
+    if (!unexpected) {
+      if (managed.status !== "error") {
+        this.processes.delete(serverId);
+      }
+      this.emitStatus(serverId);
+      return;
+    }
+
+    const diagnosis = diagnoseAsaStartupFailure(
+      [
+        this.getRuntimeLogSnapshot(serverId, 400).join("\n"),
+        readAsaLogSessionExcerpt(managed.installDir, managed.logSessionAnchor),
+      ].join("\n"),
+    );
+    if (diagnosis !== null) {
+      this.appendRuntimeLog(serverId, "error", diagnosis.summary);
+      for (const line of diagnosis.excerpt.split("\n")) {
+        this.appendRuntimeLog(serverId, "log", line);
+      }
+    }
+    managed.status = "error";
+    managed.lastError =
+      diagnosis?.summary ??
+      (wasStarting
+        ? `Process exited during startup (code ${code ?? "unknown"})`
+        : `Process exited unexpectedly (code ${code ?? "unknown"})`);
+    this.emit("unexpected-exit", {
+      serverId,
+      exitCode: code,
+      phase: wasStarting ? "starting" : "running",
+      lastError: managed.lastError,
+      diagnosis,
+    } satisfies UnexpectedManagedExit);
+    this.emitStatus(serverId);
   }
 
   private emitStatus(serverId: string): void {

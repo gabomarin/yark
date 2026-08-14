@@ -31,7 +31,7 @@ import {
 import type { BackupService } from "../backups/backup-service";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";
-import type { ProcessManager } from "../../infra/process/process-manager";
+import type { ProcessManager, UnexpectedManagedExit } from "../../infra/process/process-manager";
 import { mapIdentityStartBlockers } from "@shared/map-identity";
 import { findPortConflicts, validateProfileInput } from "./validation";
 import { checkClusterCompliance } from "../cluster/compliance";
@@ -211,6 +211,9 @@ export class InstanceService extends EventEmitter {
       } else if (status.status === "stopped" || status.status === "error") {
         this.rconSessions.disconnect(status.serverId);
       }
+    });
+    this.processes.on("unexpected-exit", (payload: UnexpectedManagedExit) => {
+      this.recordUnexpectedProcessExit(payload);
     });
   }
 
@@ -1284,6 +1287,33 @@ export class InstanceService extends EventEmitter {
       .sort()
       .join("\n");
     return `${bypassCache ? "1" : "0"}\n${ids}`;
+  }
+
+  private recordUnexpectedProcessExit(payload: UnexpectedManagedExit): void {
+    const profile = this.repo.get(payload.serverId);
+    const name = profile?.name ?? payload.serverId;
+    const diagnosis = payload.diagnosis;
+    const summary =
+      diagnosis?.summary ??
+      payload.lastError ??
+      `Server "${name}" exited unexpectedly`;
+    const excerpt = diagnosis?.excerpt?.trim() ?? "";
+    this.repo.addEvent(payload.serverId, "server_crashed", "error", summary, {
+      what: summary,
+      cause: diagnosis?.cause,
+      location: "ShooterGame/Saved/Logs/ShooterGame.log",
+      suggestion: diagnosis?.suggestion,
+      excerpt: excerpt.length > 0 ? excerpt : undefined,
+      context: {
+        lastError: payload.lastError,
+        phase: payload.phase,
+        exitCode: payload.exitCode,
+        missingModIds:
+          diagnosis !== null && diagnosis.missingModIds.length > 0
+            ? diagnosis.missingModIds.join(",")
+            : null,
+      },
+    });
   }
 
   /** Update health memory and emit degradation-only events. */

@@ -1,4 +1,12 @@
-import { existsSync, readdirSync } from "node:fs";
+import {
+  closeSync,
+  existsSync,
+  fstatSync,
+  openSync,
+  readSync,
+  readdirSync,
+  statSync,
+} from "node:fs";
 import { open } from "node:fs/promises";
 import { join } from "node:path";
 import { StringDecoder } from "node:string_decoder";
@@ -21,6 +29,102 @@ export function asaSavedLogsDir(installDir: string): string {
 /** Canonical ASA session log; do not follow other *.log files in the folder. */
 export function asaPrimaryLogPath(installDir: string): string {
   return join(asaSavedLogsDir(installDir), "ShooterGame.log");
+}
+
+const DEFAULT_EXCERPT_BYTES = 64 * 1024;
+
+/** Identity + size of ShooterGame.log at process start (crash diagnosis must ignore older bytes). */
+export interface AsaLogSessionAnchor {
+  identity: string | null;
+  size: number;
+  mtimeMs: number;
+}
+
+export function asaLogFileIdentity(stats: {
+  dev: number | bigint;
+  ino: number | bigint;
+  birthtimeMs: number;
+}): string {
+  return `${String(stats.dev)}:${String(stats.ino)}:${stats.birthtimeMs}`;
+}
+
+export function captureAsaLogSessionAnchor(installDir: string): AsaLogSessionAnchor {
+  const path = asaPrimaryLogPath(installDir);
+  try {
+    const stats = statSync(path);
+    return {
+      identity: asaLogFileIdentity(stats),
+      size: stats.size,
+      mtimeMs: stats.mtimeMs,
+    };
+  } catch {
+    return { identity: null, size: 0, mtimeMs: 0 };
+  }
+}
+
+function readFdTailRange(
+  fd: number,
+  fileSize: number,
+  rangeStart: number,
+  maxBytes: number,
+): Buffer {
+  if (fileSize <= rangeStart) return Buffer.alloc(0);
+  const position = Math.max(rangeStart, fileSize - maxBytes);
+  const length = fileSize - position;
+  const buffer = Buffer.alloc(length);
+  const bytesRead = readSync(fd, buffer, 0, length, position);
+  return bytesRead === length ? buffer : buffer.subarray(0, bytesRead);
+}
+
+/**
+ * Last `maxBytes` of ShooterGame.log without reading the whole file into memory.
+ */
+export function readAsaLogTailExcerpt(
+  installDir: string,
+  maxBytes = DEFAULT_EXCERPT_BYTES,
+): string {
+  const path = asaPrimaryLogPath(installDir);
+  let fd: number;
+  try {
+    fd = openSync(path, "r");
+  } catch {
+    return "";
+  }
+  try {
+    const stats = fstatSync(fd);
+    return decodeAsaLogBytes(readFdTailRange(fd, stats.size, 0, maxBytes));
+  } finally {
+    closeSync(fd);
+  }
+}
+
+/**
+ * Bytes written to ShooterGame.log after `anchor` (or a replaced/truncated file).
+ * Caps at the last `maxBytes` of that session range.
+ */
+export function readAsaLogSessionExcerpt(
+  installDir: string,
+  anchor: AsaLogSessionAnchor,
+  maxBytes = DEFAULT_EXCERPT_BYTES,
+): string {
+  const path = asaPrimaryLogPath(installDir);
+  let fd: number;
+  try {
+    fd = openSync(path, "r");
+  } catch {
+    return "";
+  }
+  try {
+    const stats = fstatSync(fd);
+    const replacedOrTruncated =
+      anchor.identity === null ||
+      asaLogFileIdentity(stats) !== anchor.identity ||
+      stats.size < anchor.size;
+    const sessionStart = replacedOrTruncated ? 0 : anchor.size;
+    return decodeAsaLogBytes(readFdTailRange(fd, stats.size, sessionStart, maxBytes));
+  } finally {
+    closeSync(fd);
+  }
 }
 
 export function listAsaLogFiles(logsDir: string): string[] {
@@ -81,7 +185,6 @@ export class AsaSavedLogsTailer {
   private generation = 0;
   private activeFileIdentity: string | null = null;
   private offset = 0;
-  private startedAtMs = 0;
   private readonly pollMs: number;
   private pendingBytes = Buffer.alloc(0);
   private pendingText = "";
@@ -96,11 +199,12 @@ export class AsaSavedLogsTailer {
     this.pollMs = options?.pollMs ?? DEFAULT_POLL_MS;
   }
 
-  start(startedAtMs = Date.now()): void {
+  start(
+    anchor: AsaLogSessionAnchor = captureAsaLogSessionAnchor(this.installDir),
+  ): void {
     this.stop();
-    this.startedAtMs = startedAtMs;
-    this.activeFileIdentity = null;
-    this.offset = 0;
+    this.activeFileIdentity = anchor.identity;
+    this.offset = anchor.size;
     this.resetDecodingState();
     const generation = ++this.generation;
     void this.poll(generation);
@@ -150,12 +254,9 @@ export class AsaSavedLogsTailer {
       const snapshot = this.snapshot(stats);
 
       if (this.activeFileIdentity === null) {
+        // File appeared after start — read from the beginning of the new file.
         this.activeFileIdentity = snapshot.identity;
-        this.offset =
-          snapshot.mtimeMs >= this.startedAtMs - 2_000 &&
-          snapshot.size < 64 * 1024
-            ? 0
-            : snapshot.size;
+        this.offset = 0;
         this.resetDecodingState();
       } else if (snapshot.identity !== this.activeFileIdentity) {
         // ShooterGame.log was renamed/replaced, even if the new file is larger.
@@ -292,7 +393,7 @@ export class AsaSavedLogsTailer {
     size: number;
   }): FileSnapshot {
     return {
-      identity: `${String(stats.dev)}:${String(stats.ino)}:${stats.birthtimeMs}`,
+      identity: asaLogFileIdentity(stats),
       mtimeMs: stats.mtimeMs,
       size: stats.size,
     };
