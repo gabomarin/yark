@@ -77,4 +77,44 @@ describe("listKnownClusterOptions", () => {
 
     expect(options.map((option) => option.clusterId)).toEqual(["beta"]);
   });
+
+  it("merges extra synthetic options after fleet rows", () => {
+    const options = listKnownClusterOptions(
+      [
+        profile({
+          id: "a",
+          name: "Island",
+          clusterId: "alpha",
+          clusterDir: "C:\\cluster\\alpha",
+        }),
+      ],
+      {
+        extra: [
+          {
+            clusterId: "ember",
+            clusterDir: "D:\\ASA\\Clusters\\Ember",
+            label: "ember · from setup",
+          },
+          {
+            clusterId: "alpha",
+            clusterDir: "C:\\ignored",
+            label: "alpha · from setup",
+          },
+        ],
+      },
+    );
+
+    expect(options).toEqual([
+      {
+        clusterId: "alpha",
+        clusterDir: "C:\\cluster\\alpha",
+        label: "alpha · via Island",
+      },
+      {
+        clusterId: "ember",
+        clusterDir: "D:\\ASA\\Clusters\\Ember",
+        label: "ember · from setup",
+      },
+    ]);
+  });
 });

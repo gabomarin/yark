@@ -10,7 +10,10 @@ import { isOfficialMap, normalizeMapToken } from "@shared/map-identity";
 import type { ServerProfile } from "@shared/types";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useUiDensity } from "@app/AppProviders";
-import { listKnownClusterOptions } from "@features/clusters/knownClusterOptions";
+import {
+  listKnownClusterOptions,
+  type KnownClusterOption,
+} from "@features/clusters/knownClusterOptions";
 import { showOperatorToast } from "@ui/operatorToast";
 import {
   serverFormToInput,
@@ -36,6 +39,8 @@ interface Props {
   servers?: ServerProfile[];
   /** Opens Clusters (create flow) when the fleet has no clusters yet. */
   onOpenClusters?: () => void;
+  /** Extra cluster picker rows (first-run setup synthetic cluster). */
+  extraClusterOptions?: KnownClusterOption[];
   /** Register a dirty-leave guard for app-shell navigation while this form is open. */
   onRegisterLeaveGuard?: (guard: ((action: () => void) => void) | null) => void;
   /** Workspace composer: profile dirty without replacing the INI leave guard. */
@@ -67,8 +72,10 @@ export function ServerForm(props: Props): ReactElement {
   const moveJobActive = props.moveJobActive === true;
   const density = useUiDensity();
   const inputSize: "xs" | "sm" = density === "compact" ? "xs" : "sm";
+  const preferredCluster =
+    props.extraClusterOptions?.length === 1 ? props.extraClusterOptions[0] : undefined;
   const [state, setState] = useState<ServerFormState>(() =>
-    toServerFormState(props.initial, props.defaultBaseFolder),
+    toServerFormState(props.initial, props.defaultBaseFolder, preferredCluster),
   );
   const initialStateRef = useRef(state);
   const dirtyRef = useRef(false);
@@ -129,8 +136,11 @@ export function ServerForm(props: Props): ReactElement {
   }, [props.onRegisterSave]);
 
   const knownClusters = useMemo(
-    () => listKnownClusterOptions(props.servers ?? []),
-    [props.servers],
+    () =>
+      listKnownClusterOptions(props.servers ?? [], {
+        extra: props.extraClusterOptions,
+      }),
+    [props.extraClusterOptions, props.servers],
   );
 
   const nameFolderError = useMemo(() => {

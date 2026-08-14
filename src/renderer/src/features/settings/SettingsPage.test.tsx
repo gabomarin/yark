@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ComponentProps } from "react";
@@ -119,6 +119,14 @@ function stubSettingsApi(
   });
 }
 
+async function openCategory(
+  user: ReturnType<typeof userEvent.setup>,
+  label: string,
+): Promise<void> {
+  const nav = screen.getByRole("navigation", { name: "Settings categories" });
+  await user.click(within(nav).getByRole("button", { name: label }));
+}
+
 function renderSettings(
   overrides: Partial<ComponentProps<typeof SettingsPage>> = {},
 ): void {
@@ -140,6 +148,17 @@ function renderSettings(
         onInstallSteamCmd={vi.fn()}
         onOpenSteamCmdCache={vi.fn()}
         onClearSteamCmdCache={vi.fn()}
+        desktopShell={{
+          closeWindowToTray: true,
+          startWithWindows: false,
+          trayCloseHintDismissed: false,
+          desktopShellReady: true,
+          onCloseWindowToTrayChange: vi.fn(),
+          onStartWithWindowsChange: vi.fn(),
+          onTrayCloseHintDismissedChange: vi.fn(),
+          shellError: null,
+          clearShellError: vi.fn(),
+        }}
         {...overrides}
       />
     </AppProviders>,
@@ -152,7 +171,7 @@ describe("SettingsPage", () => {
     vi.restoreAllMocks();
   });
 
-  it("renders compact SteamCMD, general preference, and version footer", async () => {
+  it("lands on General and keeps SteamCMD off-screen until that category", async () => {
     stubSettingsApi({
       listAppDataFolders: vi.fn().mockResolvedValue({
         ok: true,
@@ -165,7 +184,8 @@ describe("SettingsPage", () => {
     renderSettings();
 
     expect(screen.getByText("Settings")).toBeInTheDocument();
-    expect(screen.getByText("General")).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Settings categories" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "General" })).toBeInTheDocument();
     expect(screen.getByText("Quick jump")).toBeInTheDocument();
     expect(screen.getByText(/Ctrl/i)).toBeInTheDocument();
     expect(screen.getByText("Close window to tray")).toBeInTheDocument();
@@ -174,17 +194,39 @@ describe("SettingsPage", () => {
     expect(screen.queryByText("On quit with active servers")).not.toBeInTheDocument();
     expect(screen.getByText("Display size")).toBeInTheDocument();
     expect(screen.getByLabelText("Display size")).toBeInTheDocument();
-    expect(screen.getByText("Default base folder")).toBeInTheDocument();
+    expect(screen.queryByText("Show server console on start")).not.toBeInTheDocument();
+    expect(document.querySelector("[data-steamcmd-path]")).toBeNull();
+    expect(screen.queryByText(/YARK server manager · v0.1.0/i)).not.toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await openCategory(user, "SteamCMD");
     expect(document.querySelector("[data-steamcmd-path]")).toHaveTextContent(
       "C:/steamcmd/steamcmd.exe",
     );
     expect(screen.getByText("Ready")).toBeInTheDocument();
-    expect(screen.queryByText("Download cache")).not.toBeInTheDocument();
-    expect(screen.getByText(/YARK server manager · v0.1.0/i)).toBeInTheDocument();
-    await waitFor(() => {
-      expect(window.api.listAppDataFolders).toHaveBeenCalled();
-      expect(window.api.getDesktopShellPreferences).toHaveBeenCalled();
-    });
+    expect(screen.getByText("Download cache")).toBeInTheDocument();
+  });
+
+  it("offers the setup assistant when the parent provides the callback", async () => {
+    const user = userEvent.setup();
+    const onRunSetupAgain = vi.fn();
+    stubSettingsApi();
+    renderSettings({ onRunSetupAgain });
+
+    await user.click(screen.getByRole("button", { name: /open setup assistant/i }));
+    expect(onRunSetupAgain).toHaveBeenCalledTimes(1);
+  });
+
+  it("resets panel scroll when switching categories", async () => {
+    const user = userEvent.setup();
+    stubSettingsApi();
+    renderSettings();
+
+    const panel = document.querySelector<HTMLElement>("[data-settings-panel-scroll]");
+    expect(panel).not.toBeNull();
+    panel!.scrollTop = 240;
+    await openCategory(user, "Servers");
+    expect(panel).toHaveProperty("scrollTop", 0);
   });
 
   it("notifies when display size changes to Comfortable", async () => {
@@ -200,12 +242,21 @@ describe("SettingsPage", () => {
 
   it("persists dismissing the tray-hide notification", async () => {
     const user = userEvent.setup();
+    const onTrayCloseHintDismissedChange = vi.fn();
     stubSettingsApi();
 
-    renderSettings();
-
-    await waitFor(() => {
-      expect(window.api.getDesktopShellPreferences).toHaveBeenCalled();
+    renderSettings({
+      desktopShell: {
+        closeWindowToTray: true,
+        startWithWindows: false,
+        trayCloseHintDismissed: false,
+        desktopShellReady: true,
+        onCloseWindowToTrayChange: vi.fn(),
+        onStartWithWindowsChange: vi.fn(),
+        onTrayCloseHintDismissedChange,
+        shellError: null,
+        clearShellError: vi.fn(),
+      },
     });
 
     const toastSwitch = await screen.findByRole("switch", {
@@ -213,9 +264,7 @@ describe("SettingsPage", () => {
     });
     expect(toastSwitch).toBeChecked();
     await user.click(toastSwitch);
-    await waitFor(() => {
-      expect(window.api.setTrayCloseHintDismissed).toHaveBeenCalledWith(true);
-    });
+    expect(onTrayCloseHintDismissedChange).toHaveBeenCalledWith(true);
   });
 
   it("expands caches and supports open/clear actions", async () => {
@@ -229,7 +278,7 @@ describe("SettingsPage", () => {
       onClearSteamCmdCache,
     });
 
-    await user.click(screen.getByRole("button", { name: /Shared caches/i }));
+    await openCategory(user, "SteamCMD");
     expect(screen.getByText("Download cache")).toBeInTheDocument();
     expect(screen.getByText("Shared server files")).toBeInTheDocument();
     expect(
@@ -240,7 +289,7 @@ describe("SettingsPage", () => {
     await user.click(screen.getAllByRole("button", { name: /^Open$/i })[0]!);
     expect(onOpenSteamCmdCache).toHaveBeenCalledWith("depot");
 
-    await user.click(screen.getAllByRole("button", { name: /^Clear$/i })[2]!);
+    await user.click(screen.getAllByRole("button", { name: /^Clear$/i })[1]!);
     expect(onClearSteamCmdCache).toHaveBeenCalledWith("content");
   });
 
@@ -265,6 +314,7 @@ describe("SettingsPage", () => {
       onDefaultBaseFolderChange,
     });
 
+    await openCategory(user, "Servers");
     const baseRow = document.querySelector("[data-default-base-folder]");
     expect(baseRow).not.toBeNull();
     await user.click(
@@ -279,6 +329,7 @@ describe("SettingsPage", () => {
       defaultBaseFolder: "D:/ARK",
       onDefaultBaseFolderChange,
     });
+    await openCategory(user, "Servers");
     const baseRowFilled = document.querySelector("[data-default-base-folder]");
     await user.click(
       Array.from(baseRowFilled!.querySelectorAll("button")).find((el) =>
@@ -287,9 +338,9 @@ describe("SettingsPage", () => {
     );
     expect(onDefaultBaseFolderChange).toHaveBeenCalledWith(null);
 
-    await user.click(screen.getByRole("button", { name: /App data folders/i }));
+    await openCategory(user, "About");
     await waitFor(() => {
-      expect(screen.getByText("App data")).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "App data folders" })).toBeInTheDocument();
     });
     const dataSection = document.querySelector("[data-app-data-folders]");
     await user.click(
@@ -298,6 +349,65 @@ describe("SettingsPage", () => {
       )!,
     );
     expect(openAppDataFolder).toHaveBeenCalledWith("app");
+  });
+
+  it("notes when Bundled SteamCMD is unused because another path is configured", async () => {
+    const user = userEvent.setup();
+    stubSettingsApi({
+      listAppDataFolders: vi.fn().mockResolvedValue({
+        ok: true,
+        data: [
+          {
+            kind: "steamcmd",
+            label: "Bundled SteamCMD",
+            path: "C:/Users/me/AppData/Roaming/yark/steamcmd",
+          },
+        ],
+      }),
+    });
+
+    renderSettings({
+      steamCmdStatus: {
+        ...readyStatus,
+        executablePath: "C:/tools/steamcmd/steamcmd.exe",
+      },
+    });
+    await openCategory(user, "About");
+
+    await waitFor(() => {
+      expect(screen.getByText("Bundled SteamCMD")).toBeInTheDocument();
+    });
+    expect(screen.getByText(/Not in use/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/using the SteamCMD you chose in Settings → SteamCMD/i),
+    ).toBeInTheDocument();
+  });
+
+  it("omits the unused note when SteamCMD is the bundled copy", async () => {
+    const user = userEvent.setup();
+    const bundledDir = "C:/Users/me/AppData/Roaming/yark/steamcmd";
+    stubSettingsApi({
+      listAppDataFolders: vi.fn().mockResolvedValue({
+        ok: true,
+        data: [
+          { kind: "steamcmd", label: "Bundled SteamCMD", path: bundledDir },
+        ],
+      }),
+    });
+
+    renderSettings({
+      steamCmdStatus: {
+        ...readyStatus,
+        executablePath: `${bundledDir}/steamcmd.exe`,
+      },
+    });
+    await openCategory(user, "About");
+
+    await waitFor(() => {
+      expect(screen.getByText("Bundled SteamCMD")).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/Not in use/i)).not.toBeInTheDocument();
+    expect(document.querySelector("[data-bundled-steamcmd-note]")).toBeNull();
   });
 
   it("shows install when SteamCMD is missing and toggles native console", async () => {
@@ -317,17 +427,41 @@ describe("SettingsPage", () => {
     });
 
     expect(screen.getByText("Needs setup")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Install SteamCMD/i })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /Shared caches/i }));
+    await openCategory(user, "SteamCMD");
+    expect(screen.getByRole("button", { name: /Install SteamCMD/i })).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /^Open$/i })[0]).toBeDisabled();
 
+    await openCategory(user, "Servers");
     await user.click(
       screen.getByRole("switch", {
         name: /Show native console when starting or restarting a server/i,
       }),
     );
     expect(onOpenNativeTerminalOnStartChange).toHaveBeenCalledWith(true);
+  });
+
+  it("prevents conflicting SteamCMD actions while installation is active", async () => {
+    const user = userEvent.setup();
+    stubSettingsApi();
+
+    renderSettings({
+      steamCmdBusy: true,
+      steamCmdStatus: {
+        ...readyStatus,
+        detected: false,
+        executablePath: null,
+        operation: "install-steamcmd",
+        busy: true,
+        running: true,
+      },
+    });
+
+    expect(screen.getByText("Working")).toBeInTheDocument();
+    await openCategory(user, "SteamCMD");
+    expect(screen.getByText("Installing…")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^choose/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /install steamcmd/i })).toBeDisabled();
   });
 
   it("loads log retention defaults and opens cleanup preview", async () => {
@@ -357,6 +491,7 @@ describe("SettingsPage", () => {
     stubSettingsApi({ previewLogCleanup });
 
     renderSettings();
+    await openCategory(user, "Logs");
 
     await waitFor(() => {
       expect(window.api.getLogRetentionSettings).toHaveBeenCalled();
@@ -383,6 +518,7 @@ describe("SettingsPage", () => {
     stubSettingsApi({ setLogRetentionSettings });
 
     renderSettings();
+    await openCategory(user, "Logs");
 
     const autoCleanup = await screen.findByRole("switch", {
       name: "Clean up logs automatically",
@@ -417,6 +553,7 @@ describe("SettingsPage", () => {
     stubSettingsApi({ checkForAppUpdate });
 
     renderSettings();
+    await openCategory(user, "About");
 
     await waitFor(() => {
       expect(window.api.getAppUpdateStatus).toHaveBeenCalled();
@@ -433,6 +570,7 @@ describe("SettingsPage", () => {
     const user = userEvent.setup();
     stubSettingsApi();
     renderSettings({ appVersion: "0.11.0" });
+    await openCategory(user, "About");
 
     await waitFor(() => {
       expect(window.api.getAppUpdateStatus).toHaveBeenCalled();
@@ -451,6 +589,7 @@ describe("SettingsPage", () => {
     stubSettingsApi({ checkForAppUpdate });
 
     renderSettings();
+    await openCategory(user, "About");
 
     await waitFor(() => {
       expect(window.api.getAppUpdateStatus).toHaveBeenCalled();

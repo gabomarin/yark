@@ -1,3 +1,4 @@
+import type { OnboardingRecord } from "./onboarding";
 import type {
   AppEvent,
   BackupCleanupOptions,
@@ -117,6 +118,8 @@ export const IPC = {
   appSetUiDensity: "app:set-ui-density",
   appGetLastSeenChangelogVersion: "app:get-last-seen-changelog-version",
   appSetLastSeenChangelogVersion: "app:set-last-seen-changelog-version",
+  appGetOnboarding: "app:get-onboarding",
+  appSetOnboarding: "app:set-onboarding",
   appGetDesktopShellPreferences: "app:get-desktop-shell-preferences",
   appSetCloseWindowToTray: "app:set-close-window-to-tray",
   appSetStartWithWindows: "app:set-start-with-windows",
@@ -342,6 +345,11 @@ export interface RendererApi {
   /** `null` when the operator has not dismissed What's new yet. */
   getLastSeenChangelogVersion(): Promise<IpcResult<string | null>>;
   setLastSeenChangelogVersion(version: string): Promise<IpcResult<string>>;
+  /** `null` when first-run setup has not been completed or skipped. */
+  getOnboarding(): Promise<IpcResult<OnboardingRecord | null>>;
+  setOnboarding(
+    record: OnboardingRecord | null,
+  ): Promise<IpcResult<OnboardingRecord | null>>;
   getDesktopShellPreferences(): Promise<IpcResult<DesktopShellPreferences>>;
   setCloseWindowToTray(enabled: boolean): Promise<IpcResult<boolean>>;
   setStartWithWindows(enabled: boolean): Promise<IpcResult<boolean>>;

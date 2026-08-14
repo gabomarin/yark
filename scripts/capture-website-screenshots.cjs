@@ -373,6 +373,11 @@ async function run() {
       timeout: 10000,
     });
     await settle(page, 500);
+    const settingsNav = page.getByRole("navigation", { name: "Settings categories" });
+    if ((await settingsNav.count()) > 0) {
+      await settingsNav.getByRole("button", { name: "About" }).click();
+      await settle(page, 400);
+    }
     await redactPrivatePaths(page);
     const yarkUpdates = page.locator("[data-settings-yark-updates]");
     if ((await yarkUpdates.count()) > 0) {

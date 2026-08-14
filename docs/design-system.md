@@ -26,6 +26,62 @@ Source of truth for numeric tokens: `src/renderer/src/shared/theme/tokens.ts` �
 
 ---
 
+## Operator-facing copy
+
+UI strings are for the **operator** sitting at this PC. Write what they see and
+why the control helps them run dedicated servers — not an inventory of wizard
+steps, IPC names, or implementation.
+
+Canonical product name: **YARK server manager**. Short identity (README /
+`package.json` / getting-started): a **local Windows desktop app** that
+installs, configures, operates, and recovers **ARK: Survival Ascended dedicated
+servers**. It is not a game client, not a hosted service, and not “localhost”.
+
+Prefer “server manager” / “on this PC” over “local host” (reads as localhost).
+
+### What each thing is (use this in descriptions)
+
+| Thing | Operator meaning |
+| --- | --- |
+| **YARK** | The manager app. Profiles, Start/Stop, INI, backups, RCON live here. |
+| **SteamCMD** | Valve’s tool that downloads/updates **dedicated server files**. One SteamCMD home is shared across profiles. Settings shows **Needs setup** until `steamcmd.exe` is chosen or installed; the skippable assistant uses **Recommended** when the operator may continue. |
+| **Default base folder** | Where **New server** creates a named subfolder. Not the SteamCMD home. |
+| **Server / profile** | YARK’s record (map, ports, install path, cluster). **Create** does not download ASA files. |
+| **Install files** | SteamCMD fills the shared ASA cache, then copies into that profile’s folder. Requires SteamCMD Ready. |
+| **Start** | Spawns `ArkAscendedServer.exe`. Needs a **Ready** install. Enable does not. |
+| **Cluster** | Shared folder + Cluster ID so survivors/items transfer between maps on this PC. |
+| **Import install** | Point YARK at an ASA tree already on disk (folder that contains `ShooterGame`). |
+
+Domain runbooks: [updates-steamcmd.md](updates-steamcmd.md),
+[server-lifecycle.md](server-lifecycle.md), [clusters.md](clusters.md),
+[settings.md](settings.md). Public first-run: website
+[getting-started](../website/src/content/docs/docs/getting-started.mdx).
+
+### How to write helper text
+
+| Do | Don’t |
+| --- | --- |
+| One or two sentences: what it does for the operator | List every step the wizard or IPC will take |
+| Match Settings when the same control exists in first-run | Invent first-run-only jargon Settings does not use |
+| Name the product **server manager** when you need an identity line | “A local host for…” / localhost / “this Electron app” |
+| Status words operators already see (`Ready`, `Needs setup`, `Recommended`, `Installing…`) | Internal keys (`onboarding.v1`, `detected === false`) |
+
+Examples:
+
+- SteamCMD: “Installs and updates dedicated server files. You can continue while it runs.”
+- Default base folder: “New servers are created here, each in its own named subfolder.”
+- Welcome: “A server manager for ARK: Survival Ascended dedicated servers on this PC.”
+
+### Wizards
+
+Multi-step setup (`SetupWizard`, create/import/cluster) should not dismiss on
+overlay click (`closeOnClickOutside={false}`). The operator uses **Skip** /
+**Close**, **Back**, or the header close — not an accidental click outside.
+
+First-run setup also: [`.cursor/rules/setup-wizard.mdc`](../.cursor/rules/setup-wizard.mdc).
+
+---
+
 ## UX rule categories (audit lens)
 
 Use this checklist when reviewing a screen or introducing a pattern. Each category should have **one recipe**, not N local variants.
@@ -52,7 +108,7 @@ Mantine **does** have spacing tokens (`theme.spacing` → `gap="xs"` / `p="md"` 
 | `lg` | 20 | 16 | PageScaffold section gap / page padding-y |
 | `xl` | 28 | 23 | Large empty / hero padding |
 
-**UI density preference** (Settings → General → UI density):
+**UI density preference** (Settings → General → Display size):
 
 | Mode | Pref key | Effect |
 | --- | --- | --- |
@@ -292,4 +348,5 @@ line (#234).
 ## Related
 
 - Atomic file layout: [component-structure.md](component-structure.md)
+- Operator-facing copy: [Operator-facing copy](#operator-facing-copy)
 - Issue tracker: [#44](https://github.com/gabomarin/yark/issues/44)

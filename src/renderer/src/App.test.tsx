@@ -107,6 +107,14 @@ function createApiMock(): RendererApi {
       ok: true,
       data: "0.11.0",
     }),
+    getOnboarding: vi.fn().mockResolvedValue({
+      ok: true,
+      data: { status: "completed", completedAt: "2026-01-01T00:00:00.000Z" },
+    }),
+    setOnboarding: vi.fn().mockResolvedValue({
+      ok: true,
+      data: { status: "completed", completedAt: "2026-01-01T00:00:00.000Z" },
+    }),
     getDesktopShellPreferences: vi.fn().mockResolvedValue({
       ok: true,
       data: {
@@ -302,6 +310,117 @@ describe("App empty installation snapshot", () => {
         color: "teal",
       }),
     );
+  });
+
+  it("auto-opens the first-run setup wizard when onboarding is unset", async () => {
+    const user = userEvent.setup();
+    const api = window.api;
+    vi.mocked(api.getOnboarding).mockResolvedValue({ ok: true, data: null });
+
+    render(<App />);
+
+    expect(await screen.findByRole("dialog", { name: /set up yark/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /skip setup/i }));
+    await waitFor(() => {
+      expect(api.setOnboarding).toHaveBeenCalledWith(
+        expect.objectContaining({ status: "skipped" }),
+      );
+    });
+    expect(await screen.findByText("Create your first server")).toBeInTheDocument();
+  });
+
+  it("keeps setup open when onboarding persistence fails", async () => {
+    const user = userEvent.setup();
+    const api = window.api;
+    vi.mocked(api.getOnboarding).mockResolvedValue({ ok: true, data: null });
+    vi.mocked(api.setOnboarding).mockResolvedValue({
+      ok: false,
+      error: "database unavailable",
+    });
+
+    render(<App />);
+
+    const dialog = await screen.findByRole("dialog", { name: /set up yark/i });
+    await user.click(screen.getByRole("button", { name: /skip setup/i }));
+
+    await waitFor(() => expect(api.setOnboarding).toHaveBeenCalledTimes(1));
+    expect(dialog).toBeInTheDocument();
+  });
+
+  it("does not auto-open setup when onboarding read fails", async () => {
+    const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
+    const api = window.api;
+    vi.mocked(api.getOnboarding).mockResolvedValue({
+      ok: false,
+      error: "database unavailable",
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText("Create your first server")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: /set up yark/i })).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(notifySpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "onboarding-load-failed",
+          title: "Could not load setup status",
+          message: expect.stringContaining("database unavailable"),
+          color: "red",
+          autoClose: false,
+        }),
+      );
+    });
+  });
+
+  it("retries onboarding read from the error toast and opens setup when unset", async () => {
+    const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
+    const api = window.api;
+    vi.mocked(api.getOnboarding).mockResolvedValue({
+      ok: false,
+      error: "database unavailable",
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText("Create your first server")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(notifySpy).toHaveBeenCalledWith(
+        expect.objectContaining({ id: "onboarding-load-failed" }),
+      );
+    });
+
+    vi.mocked(api.getOnboarding).mockResolvedValue({ ok: true, data: null });
+    const toast = notifySpy.mock.calls.find(
+      (call) => call[0]?.id === "onboarding-load-failed",
+    )?.[0];
+    expect(toast?.onClick).toEqual(expect.any(Function));
+    toast?.onClick?.({} as never);
+
+    expect(await screen.findByRole("dialog", { name: /set up yark/i })).toBeInTheDocument();
+  });
+
+  it("restores a pending setup cluster for the next create handoff", async () => {
+    const user = userEvent.setup();
+    const api = window.api;
+    vi.mocked(api.getOnboarding).mockResolvedValue({
+      ok: true,
+      data: {
+        status: "completed",
+        completedAt: "2026-08-14T12:00:00.000Z",
+        pendingCluster: {
+          clusterId: "ember",
+          clusterDir: "D:\\ASA\\Clusters\\Ember",
+        },
+      },
+    });
+
+    render(<App />);
+
+    await user.click(await screen.findByRole("button", { name: "New server" }));
+    expect(await screen.findByRole("combobox", { name: /^cluster$/i })).toHaveValue(
+      "ember · from setup",
+    );
+    expect(screen.getByLabelText(/^cluster id$/i)).toHaveValue("ember");
   });
 });
 

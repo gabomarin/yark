@@ -81,9 +81,6 @@ export function SettingsAutoStartSection(props: Props): ReactElement {
       <Title order={3} size="h4" id="settings-auto-start">
         Server auto-start
       </Title>
-      <Text size="xs" c="dimmed">
-        When YARK opens, these servers start automatically.
-      </Text>
 
       {rows.length === 0 ? (
         <EmptyState

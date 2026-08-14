@@ -29,6 +29,12 @@ async function goNav(page, label) {
   await page.waitForTimeout(250);
 }
 
+async function openSettingsCategory(page, label) {
+  const nav = page.getByRole("navigation", { name: "Settings categories" });
+  await nav.getByRole("button", { name: label }).click();
+  await page.waitForTimeout(200);
+}
+
 async function measureSettings(page) {
   return page.evaluate(() => {
     const root = document.documentElement;
@@ -75,24 +81,37 @@ async function run() {
     await page.getByRole("heading", { name: "Settings", level: 1 }).waitFor({
       timeout: 10000,
     });
-    await page.getByText("Show server console on start").waitFor({ timeout: 10000 });
-    await page.getByRole("heading", { name: "Log retention", level: 3 }).waitFor({
+    await page.getByRole("heading", { name: "General", level: 3 }).waitFor({
       timeout: 10000,
     });
 
     for (const size of sizes) {
       await page.setViewportSize({ width: size.width, height: size.height });
       await page.waitForTimeout(300);
-      const metrics = await measureSettings(page);
-      assert.equal(metrics.pageVisible, true, `${size.name}: settings page not visible`);
-      assert.equal(metrics.hasSteamCmdPath, true, `${size.name}: missing steamcmd path`);
+      await openSettingsCategory(page, "General");
+      const landing = await measureSettings(page);
+      assert.equal(landing.pageVisible, true, `${size.name}: settings page not visible`);
       assert.equal(
-        metrics.hasHorizontalOverflow,
+        landing.hasHorizontalOverflow,
         false,
         `${size.name}: horizontal overflow at ${size.width}x${size.height}`,
       );
-      await page.getByRole("heading", { name: "Log retention", level: 3 }).scrollIntoViewIfNeeded();
       await shot(page, outDir, `settings-${size.name}`);
+
+      await openSettingsCategory(page, "SteamCMD");
+      const steamCmd = await measureSettings(page);
+      assert.equal(steamCmd.hasSteamCmdPath, true, `${size.name}: missing steamcmd path`);
+      assert.equal(
+        steamCmd.hasHorizontalOverflow,
+        false,
+        `${size.name}: horizontal overflow on SteamCMD`,
+      );
+
+      await openSettingsCategory(page, "Logs");
+      await page.getByRole("heading", { name: "Log retention", level: 3 }).waitFor({
+        timeout: 10000,
+      });
+      await shot(page, outDir, `settings-logs-${size.name}`);
       await page.getByRole("button", { name: /Clean up now/i }).click();
       await page.getByText("Clean up old logs").waitFor({ state: "visible", timeout: 5000 });
       assert.ok(

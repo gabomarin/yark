@@ -11,17 +11,24 @@ the Server tab / workspace.
   the profile that owns them; Settings only summarizes where helpful.
 - Persist durable prefs in SQLite `app_settings`; keep a few create-flow
   conveniences in renderer `localStorage`.
+- Category rail (General, Servers, SteamCMD, Logs, About) — one pane at a
+  time, like a native desktop settings window. Sidebar YARK-update icon
+  opens **About**.
 
 ## Module map
 
 | Role | Path |
 | --- | --- |
 | Page shell | `src/renderer/src/features/settings/SettingsPage.tsx` |
-| General controls | `…/components/SettingsGeneralSection.tsx` |
+| Category rail | `…/components/SettingsNav.tsx` (`SETTINGS_CATEGORIES`) |
+| General | `…/components/SettingsGeneralSection.tsx` |
+| Servers (console, base folder) | `…/components/SettingsServersSection.tsx` |
 | Auto-start summary | `…/components/SettingsAutoStartSection.tsx` |
+| SteamCMD | `…/components/SettingsSteamCmdSection.tsx` |
 | Log retention | `…/components/SettingsLogRetentionSection.tsx` |
-| YARK self-update | `…/components/SettingsYarkUpdateSection.tsx` |
+| About (YARK updates + app data folders) | `…/components/SettingsYarkUpdateSection.tsx`, `…/components/SettingsAppDataSection.tsx` |
 | Density load/migrate | `…/settingsModel.ts` |
+| First-run setup wizard | `src/renderer/src/features/setup-wizard/` (`onboarding.v1`) |
 | Tray / Windows startup hook | `…/useDesktopShellPreferences.ts` |
 | Desktop-shell persist | `src/main/desktop-shell-settings.ts` |
 | Window bounds / maximized | `src/main/window-state.ts` (`app_settings.windowState`) |
@@ -45,7 +52,8 @@ the Server tab / workspace.
 | Opted-in auto-start **summary** | Quit-with-servers Stop/Cancel dialog (hardcoded in main; not a Setting) |
 | **Log retention** limits + Clean up now | Per-section clear on Logs workspace; ASA Saved/Logs never touched — [logs.md](logs.md) |
 | **YARK updates** check / download / restart | Overview **Check for updates** is ASA/SteamCMD only; sidebar `vX.Y.Z` accents when a YARK update is available — [versioning.md](versioning.md) |
-| **What's new** (curated notes, one-shot after upgrade) | Sidebar version label; Settings → YARK updates → What's new (#290) |
+| **What's new** (curated notes, one-shot after upgrade) | Sidebar version label; Settings → About → What's new (#290) |
+| **Open setup assistant** (SteamCMD + Windows shell; full wizard when the fleet is empty) | First-run auto-show after a **successful** read when `onboarding.v1` is unset and there are no profiles; a read error keeps Overview usable and can be retried (#298) |
 
 ## Controls and defaults
 
@@ -53,14 +61,21 @@ the Server tab / workspace.
 
 | Control | Storage | Default | Notes |
 | --- | --- | --- | --- |
-| Show server console on start | `localStorage` `overview.openNativeTerminalOnStart` (`"1"`/`"0"`) | off | Passed as `StartServerOptions.openNativeConsole` |
 | Close window to tray | SQLite `closeWindowToTray` | **on** | Hide on close; minimize still uses the taskbar |
 | Show notification when hiding to tray | SQLite `trayCloseHintDismissed` (UI inverted) | toast **on** | Visible only when close-to-tray is on |
 | Start with Windows | SQLite `startWithWindows` + `setLoginItemSettings` | **off** | App only — does **not** start ASA (#54 vs #53) |
 | Display size | SQLite `uiDensity` | **compact** | `compact` \| `comfortable`; see [design-system.md](design-system.md) |
 | Quick jump | localStorage `yark.spotlightRecent.v1` (MRU) | Ctrl+K | Jump to pages/servers; Recent group; Settings → General + logo tooltip (#104) |
 | Window size / position | SQLite `windowState` | **maximized** | Remembers last bounds + maximized; off-screen → maximize again |
+| Open setup assistant | SQLite `onboarding.v1` | unset until skip/complete | Empty fleet reopens the full wizard; otherwise Paths + Windows only. Does not reset SteamCMD (#298) |
+
+### Servers
+
+| Control | Storage | Default | Notes |
+| --- | --- | --- | --- |
+| Show server console on start | `localStorage` `overview.openNativeTerminalOnStart` (`"1"`/`"0"`) | off | Passed as `StartServerOptions.openNativeConsole`. Also on first-run Windows step. |
 | Default base folder | `localStorage` `settings.defaultServerBaseFolder` | unset | Prefills create-server base path only |
+| Server auto-start summary | Profile `autoStart` | off | Lists opted-in servers; edit on the Server tab |
 
 IPC for shell / density:
 
@@ -68,6 +83,8 @@ IPC for shell / density:
 | --- | --- |
 | `app:get-ui-density` / `app:set-ui-density` | `getUiDensity` / `setUiDensity` |
 | `app:get-desktop-shell-preferences` | `getDesktopShellPreferences` |
+| `app:get-last-seen-changelog-version` / `app:set-last-seen-changelog-version` | What's new dismiss |
+| `app:get-onboarding` / `app:set-onboarding` | First-run wizard `onboarding.v1` (`completed` \| `skipped`, or `null` to clear) |
 | `app:set-close-window-to-tray` | `setCloseWindowToTray` |
 | `app:set-start-with-windows` | `setStartWithWindows` |
 | `app:set-tray-close-hint-dismissed` | `setTrayCloseHintDismissed` |
@@ -93,12 +110,21 @@ preference on the Server tab. Launch order and skip rules:
 | Install SteamCMD | `steamcmd:install` | Shown when `detected === false` |
 | Shared caches | `steamcmd:open-cache` / `steamcmd:clear-cache` (`depot` \| `content`) | Clear blocked while jobs run |
 
+Create/import a profile does **not** wait for SteamCMD. **Install files** /
+Update / Verify fail until a `steamcmd.exe` is found — see
+[updates-steamcmd.md](updates-steamcmd.md#steamcmd-not-configured). Operator
+copy for this row matches first-run setup
+([design-system.md](design-system.md#operator-facing-copy)).
+
 Full SteamCMD workflows: [updates-steamcmd.md](updates-steamcmd.md).
 
 ### App data folders
 
-Collapsed list with Open actions for App data, Backups, Update logs, and Bundled
-SteamCMD under Electron `userData`.
+Lives under **About**. Collapsed list with Open actions for App data, Backups, Update logs, and Bundled
+SteamCMD under Electron `userData`. Bundled SteamCMD is YARK’s own install folder
+(used by **Install SteamCMD**). When Settings → SteamCMD points at another
+`steamcmd.exe`, About shows **Not in use** on that row. When SteamCMD is not
+configured yet, the row says it stays empty until Install SteamCMD.
 
 The profile SQLite file is `yark-server-manager.db` under App data. On open,
 YARK sets `busy_timeout` (5s) so a brief lock does not fail boot immediately.
@@ -126,7 +152,7 @@ Full ownership table and recovery limits: [logs.md](logs.md#ownership-and-retent
 
 ### YARK updates (#165)
 
-In-app update for the **desktop app** (not ASA files). Uses `electron-updater`
+Lives under **About**. In-app update for the **desktop app** (not ASA files). Uses `electron-updater`
 against GitHub Releases (`latest.yml` from the release workflow). While the app is
 `0.x`, GitHub prereleases are accepted (the release workflow marks every `0.x` tag
 as prerelease). From `1.0.0+`, only non-prerelease releases count. No silent
@@ -147,7 +173,7 @@ with the actions right-aligned. Progress, install-block, and error lines only
 render when they apply.
 
 Sidebar `vX.Y.Z` uses cryo accent + tooltip when an update is available; click
-opens this Settings section (does not install directly). When a quiet check (or
+opens Settings → About (does not install directly). When a quiet check (or
 **Check now**) finds an update — or a download finishes — the shell also shows an
 operator toast that deep-links here. Up-to-date and quiet-check failures stay
 silent outside Settings status text.

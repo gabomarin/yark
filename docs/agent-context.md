@@ -23,6 +23,8 @@ This repository contains a desktop application for managing dedicated ARK Surviv
   Modal, Tooltip, forms, layout) before custom chrome; see
   [design-system.md](design-system.md) and
   [`.cursor/rules/prefer-mantine.mdc`](../.cursor/rules/prefer-mantine.mdc).
+  Operator-facing copy (YARK is a **server manager**; SteamCMD vs profile vs
+  Install files): [design-system.md](design-system.md#operator-facing-copy).
 - When cutting a release or bumping the app version, follow [versioning.md](versioning.md) and update [CHANGELOG.md](../CHANGELOG.md). `package.json` is the SemVer source of truth; the UI reads it via `@shared/app-version`. Pushing tag `vX.Y.Z` runs `.github/workflows/release.yml` (Windows NSIS → GitHub Release).
 - Third-party GitHub Actions must stay SHA-pinned; see [github-actions.md](github-actions.md). `npm run lint` rejects mutable `@vN` Action tags.
 - CurseForge proxy endpoint ownership (no source fallback; release bake): [curseforge-proxy.md](curseforge-proxy.md).
@@ -61,7 +63,7 @@ paths or the Notion hub URL in tracked files.
 - [server-lifecycle.md](server-lifecycle.md) — launch args, profile→INI sync, spawn, start/stop/kill, INI sanitize / assistant; custom / Maps pack launch + Start blockers (#65 Phase 1 / #190–#195). Research archive: [spikes/65-modded-asa-maps.md](spikes/65-modded-asa-maps.md).
 - [launch-options-catalog.md](launch-options-catalog.md) — verified ASA CLI catalog (#92); regenerates via `npm run catalog:launch-options`.
 - [rcon.md](rcon.md) — workspace RCON console, persistent session, players, ban list.
-- [settings.md](settings.md) — app-wide prefs, desktop shell, SteamCMD path, density, auto-start summary.
+- [settings.md](settings.md) — app-wide prefs, category rail (General / Servers / SteamCMD / Logs / About), desktop shell, SteamCMD path, density, auto-start summary.
 - [clusters.md](clusters.md) — transfer-compliance reports, cluster launch trio, Clusters page. Live-host archive: [spikes/22-cluster-live-transfers.md](spikes/22-cluster-live-transfers.md) (#22).
 - [mods.md](mods.md) — workspace CurseForge inventory, enable/disable, load order, metadata proxy, `-mods=`.
 - [curseforge-proxy.md](curseforge-proxy.md) — Worker abuse controls, URL ownership, secret rotation.

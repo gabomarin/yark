@@ -36,6 +36,20 @@ export function suggestionsToForm(suggestions: ImportInstallSuggestions): Import
   };
 }
 
+export function applyPreferredCluster(
+  form: ImportFormState,
+  preferred: { clusterId: string; clusterDir: string } | undefined,
+): ImportFormState {
+  if (preferred === undefined) {
+    return form;
+  }
+  return {
+    ...form,
+    clusterId: preferred.clusterId,
+    clusterDir: preferred.clusterDir,
+  };
+}
+
 export function emptyImportForm(): ImportFormState {
   return {
     name: "",

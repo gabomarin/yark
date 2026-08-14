@@ -8,6 +8,24 @@ import {
 
 export type { UiDensity };
 
+export type SettingsCategory =
+  | "general"
+  | "servers"
+  | "steamcmd"
+  | "logs"
+  | "about";
+
+export const SETTINGS_CATEGORIES: ReadonlyArray<{
+  id: SettingsCategory;
+  label: string;
+}> = [
+  { id: "general", label: "General" },
+  { id: "servers", label: "Servers" },
+  { id: "steamcmd", label: "SteamCMD" },
+  { id: "logs", label: "Logs" },
+  { id: "about", label: "About" },
+];
+
 export const OPEN_NATIVE_TERMINAL_PREF_KEY = "overview.openNativeTerminalOnStart";
 export const DEFAULT_BASE_FOLDER_PREF_KEY = "settings.defaultServerBaseFolder";
 
@@ -106,4 +124,34 @@ export async function writeUiDensityPref(density: UiDensity): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/** True when `child` is `parent` or nested under it (Windows, case-insensitive). */
+export function isPathUnderParent(parent: string, child: string | null): boolean {
+  if (child == null) {
+    return false;
+  }
+  const p = parent.trim().replace(/[/\\]+$/, "").toLowerCase();
+  const c = child.trim().replace(/[/\\]+$/, "").toLowerCase();
+  if (p.length === 0 || c.length === 0) {
+    return false;
+  }
+  return c === p || c.startsWith(`${p}\\`) || c.startsWith(`${p}/`);
+}
+
+/**
+ * Note for About → Bundled SteamCMD when YARK is not using that folder.
+ * Null when the active steamcmd.exe lives there.
+ */
+export function bundledSteamCmdUnusedNote(
+  bundledDir: string,
+  steamCmdExePath: string | null,
+): string | null {
+  if (isPathUnderParent(bundledDir, steamCmdExePath)) {
+    return null;
+  }
+  if (steamCmdExePath != null && steamCmdExePath.trim().length > 0) {
+    return "Not in use. YARK is using the SteamCMD you chose in Settings → SteamCMD.";
+  }
+  return "Empty until you use Install SteamCMD.";
 }

@@ -1,0 +1,38 @@
+---
+description: Keep the first-run setup wizard aligned with Settings and create/import
+alwaysApply: true
+---
+
+# First-run setup wizard
+
+When changing operator-facing UI or behavior, check whether the first-run wizard
+(`src/renderer/src/features/setup-wizard/`) and Settings **Open setup assistant** still
+match. If the change belongs in first-run, update the wizard (and its tests/docs)
+in the **same PR**.
+
+Trigger surfaces:
+
+- SteamCMD path / install / status copy
+- Default base folder
+- Desktop shell (tray, Start with Windows, density)
+- Show server console on start
+- Create server / Import cluster join (`listKnownClusterOptions`, `ServerForm`,
+  `ImportInstallWizard`)
+- Cluster ID/dir validation (`createClusterModel`, `CreateClusterIdentityStep`)
+- Overview empty CTAs
+- Shared atoms used in the wizard (`PathField`, `ReadonlyPath`, `AppSurfaceCard`,
+  `EmptyState`)
+
+Do not add first-run-only chrome that Settings does not already own. Telemetry
+consent is #309 — do not add it here.
+
+## Operator copy and wizard chrome
+
+Write helper text for the operator (what they see, why it helps), not an
+inventory of steps. YARK is a **server manager** for ASA dedicated servers on
+this PC — not a game client and not “localhost”. Canonical sentences, the
+SteamCMD vs profile vs Install files distinction, and examples:
+[docs/design-system.md](../../docs/design-system.md#operator-facing-copy).
+
+`SetupWizard` uses `closeOnClickOutside={false}` so Skip / Close / Back is
+explicit. Keep **Back** on the last first-run step (**First server**).

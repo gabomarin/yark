@@ -68,6 +68,17 @@ import { openHostPortProbeModal } from "@features/servers/hostPortProbeModal";
 import { SteamCmdProgressDock } from "@features/steamcmd/SteamCmdProgressDock";
 import { SettingsPage } from "@features/settings/SettingsPage";
 import { AppChangelogModal } from "@features/settings/components/AppChangelogModal";
+import { SetupWizard } from "@features/setup-wizard/SetupWizard";
+import {
+  toSyntheticClusterOption,
+  type PendingSetupCluster,
+  type SetupWizardMode,
+} from "@features/setup-wizard/setupWizardModel";
+import {
+  createOnboardingRecord,
+  shouldAutoShowSetupWizard,
+  type OnboardingRecord,
+} from "@shared/onboarding";
 import {
   readDefaultBaseFolderPref,
   readOpenNativeTerminalPref,
@@ -76,6 +87,7 @@ import {
   writeUiDensityPref,
   type UiDensity,
 } from "@features/settings/settingsModel";
+import { useDesktopShellPreferences } from "@features/settings/useDesktopShellPreferences";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import { AppSpotlight } from "@layout/AppSpotlight/AppSpotlight";
 import { pushSpotlightRecent } from "@layout/AppSpotlight/appSpotlightRecent";
@@ -173,6 +185,14 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   );
   /** Blocks a late getLastSeen result from reopening after manual open/dismiss. */
   const changelogPromptSettledRef = useRef(false);
+  const [setupWizardMode, setSetupWizardMode] = useState<SetupWizardMode | null>(null);
+  const [setupWizardBusy, setSetupWizardBusy] = useState(false);
+  const [pendingSetupCluster, setPendingSetupCluster] =
+    useState<PendingSetupCluster | null>(null);
+  const setupWizardPromptSettledRef = useRef(false);
+  const setupWizardBusyRef = useRef(false);
+  const onboardingRecordRef = useRef<OnboardingRecord | null>(null);
+  const desktopShell = useDesktopShellPreferences();
 
   useEffect(() => {
     writeOpenNativeTerminalPref(openNativeTerminalOnStart);
@@ -207,6 +227,89 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     () => servers.filter((server) => !server.enabled),
     [servers],
   );
+  const extraClusterOptions = useMemo(
+    () =>
+      pendingSetupCluster === null
+        ? undefined
+        : [toSyntheticClusterOption(pendingSetupCluster)],
+    [pendingSetupCluster],
+  );
+
+  const persistOnboardingStatus = useCallback(
+    async (
+      status: "completed" | "skipped",
+      cluster: PendingSetupCluster | null,
+    ): Promise<boolean> => {
+      if (typeof window.api.setOnboarding !== "function") {
+        showOperatorError("Onboarding settings are unavailable. Try restarting YARK.");
+        return false;
+      }
+      const record = createOnboardingRecord(status, new Date(), cluster);
+      try {
+        const result = await window.api.setOnboarding(record);
+        if (!result.ok) {
+          showOperatorError(result.error ?? "Could not save setup progress");
+          return false;
+        }
+        onboardingRecordRef.current = result.data ?? record;
+        return true;
+      } catch (error: unknown) {
+        const detail = error instanceof Error ? error.message : String(error);
+        showOperatorError(detail, "Could not save setup progress");
+        return false;
+      }
+    },
+    [],
+  );
+
+  const closeSetupWizard = useCallback(() => {
+    setSetupWizardMode(null);
+  }, []);
+
+  const finishSetupWizard = useCallback(
+    async (
+      status: "completed" | "skipped",
+      cluster: PendingSetupCluster | null,
+    ): Promise<boolean> => {
+      if (setupWizardBusyRef.current) {
+        return false;
+      }
+      setupWizardBusyRef.current = true;
+      setSetupWizardBusy(true);
+      try {
+        const saved = await persistOnboardingStatus(status, cluster);
+        if (!saved) {
+          return false;
+        }
+        setPendingSetupCluster(cluster);
+        closeSetupWizard();
+        return true;
+      } finally {
+        setupWizardBusyRef.current = false;
+        setSetupWizardBusy(false);
+      }
+    },
+    [closeSetupWizard, persistOnboardingStatus],
+  );
+
+  const consumePendingSetupCluster = useCallback(() => {
+    setPendingSetupCluster(null);
+    const current = onboardingRecordRef.current;
+    if (current?.pendingCluster === undefined || typeof window.api.setOnboarding !== "function") {
+      return;
+    }
+    const { pendingCluster: _pendingCluster, ...next } = current;
+    void (async () => {
+      try {
+        const result = await window.api.setOnboarding(next);
+        if (result.ok) {
+          onboardingRecordRef.current = result.data ?? next;
+        }
+      } catch {
+        // The created/imported server now owns the cluster; fleet dedupe prevents a duplicate option.
+      }
+    })();
+  }, []);
 
   const filterServers = useCallback(
     (input: ServerProfile[]) => {
@@ -322,9 +425,74 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     openWhatsNew("current");
   }, [openWhatsNew]);
 
+  const retryOnboardingReadRef = useRef<(() => void) | null>(null);
+
   useEffect(() => {
+    if (overviewLoading) {
+      return;
+    }
     let cancelled = false;
+
+    const loadOnboardingAndMaybeOpen = async (): Promise<boolean> => {
+      if (
+        typeof window.api.getOnboarding !== "function" ||
+        setupWizardPromptSettledRef.current
+      ) {
+        return false;
+      }
+      let onboardingRes: Awaited<ReturnType<typeof window.api.getOnboarding>>;
+      try {
+        onboardingRes = await window.api.getOnboarding();
+      } catch (error: unknown) {
+        onboardingRes = {
+          ok: false,
+          error: error instanceof Error ? error.message : String(error),
+        };
+      }
+      if (cancelled) {
+        return true;
+      }
+      if (!onboardingRes.ok) {
+        showOperatorToast({
+          id: "onboarding-load-failed",
+          title: "Could not load setup status",
+          message: `${onboardingRes.error ?? "Setup progress could not be read."} Click this message to retry.`,
+          color: "red",
+          autoClose: false,
+          onClick: () => {
+            retryOnboardingReadRef.current?.();
+          },
+        });
+        return false;
+      }
+      notifications.hide("onboarding-load-failed");
+      const record = onboardingRes.data;
+      onboardingRecordRef.current = record;
+      setPendingSetupCluster(record?.pendingCluster ?? null);
+      setupWizardPromptSettledRef.current = true;
+      if (
+        shouldAutoShowSetupWizard({
+          record,
+          serverCount: servers.length,
+          readOk: true,
+        })
+      ) {
+        changelogPromptSettledRef.current = true;
+        setSetupWizardMode("first-run");
+        return true;
+      }
+      return false;
+    };
+
+    retryOnboardingReadRef.current = () => {
+      void loadOnboardingAndMaybeOpen();
+    };
+
     void (async () => {
+      const openedWizard = await loadOnboardingAndMaybeOpen();
+      if (openedWizard || cancelled) {
+        return;
+      }
       if (typeof window.api.getLastSeenChangelogVersion !== "function") {
         return;
       }
@@ -335,7 +503,6 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
       if (!shouldShowWhatsNewForVersion(APP_VERSION, result.data)) {
         return;
       }
-      // Re-check after await: Settings/manual dismiss may have persisted seen meanwhile.
       const latest = await window.api.getLastSeenChangelogVersion();
       if (cancelled || !latest.ok || changelogPromptSettledRef.current) {
         return;
@@ -349,8 +516,9 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
     })();
     return () => {
       cancelled = true;
+      retryOnboardingReadRef.current = null;
     };
-  }, []);
+  }, [overviewLoading, servers.length]);
 
   /** Quiet check (~60s) and Settings Check now only accented the sidebar before — toast once. */
   const yarkUpdateToastKeyRef = useRef<string | null>(null);
@@ -1471,10 +1639,12 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             initial={null}
             defaultBaseFolder={defaultBaseFolder}
             servers={servers}
+            extraClusterOptions={extraClusterOptions}
             onRegisterLeaveGuard={registerOverlayLeaveGuard}
             onOpenClusters={() => navigate("clusters")}
             onCancel={() => runWithOverlayLeaveGuard(() => setOverlay(null))}
             onSaved={(created) => {
+              consumePendingSetupCluster();
               if (created !== undefined) {
                 setOverlay({ kind: "workspace", serverId: created.id, onboarding: true });
                 void refresh();
@@ -1661,6 +1831,33 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
               onInstallSteamCmd={() => void runAction(() => window.api.installSteamCmd())}
               onOpenSteamCmdCache={openSteamCmdCache}
               onClearSteamCmdCache={clearSteamCmdCache}
+              desktopShell={desktopShell}
+              onRunSetupAgain={() => {
+                if (servers.length === 0) {
+                  void (async () => {
+                    if (typeof window.api.setOnboarding !== "function") {
+                      showOperatorError("Onboarding settings are unavailable. Try restarting YARK.");
+                      return;
+                    }
+                    try {
+                      const result = await window.api.setOnboarding(null);
+                      if (!result.ok) {
+                        showOperatorError(result.error ?? "Could not reset setup progress");
+                        return;
+                      }
+                      onboardingRecordRef.current = null;
+                      setPendingSetupCluster(null);
+                      setupWizardPromptSettledRef.current = true;
+                      setSetupWizardMode("first-run");
+                    } catch (error: unknown) {
+                      const detail = error instanceof Error ? error.message : String(error);
+                      showOperatorError(detail, "Could not reset setup progress");
+                    }
+                  })();
+                  return;
+                }
+                setSetupWizardMode("paths-shell");
+              }}
             />
           ),
         }}
@@ -1681,6 +1878,44 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         onDismiss={markChangelogSeen}
         appVersion={APP_VERSION}
         initialTab={changelogInitialTab}
+      />
+      <SetupWizard
+        opened={setupWizardMode !== null}
+        mode={setupWizardMode ?? "first-run"}
+        servers={servers}
+        steamCmdStatus={steamCmdStatus}
+        steamCmdBusy={steamCmdBusy}
+        defaultBaseFolder={defaultBaseFolder}
+        uiDensity={uiDensity}
+        openNativeTerminalOnStart={openNativeTerminalOnStart}
+        desktopShell={desktopShell}
+        busy={setupWizardBusy}
+        onPickSteamCmdPath={() => void pickSteamCmdPath()}
+        onInstallSteamCmd={() => void runAction(() => window.api.installSteamCmd())}
+        onDefaultBaseFolderChange={setDefaultBaseFolder}
+        onUiDensityChange={(density) => void handleUiDensityChange(density)}
+        onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
+        onSkip={async () => {
+          await finishSetupWizard("skipped", null);
+        }}
+        onDismiss={closeSetupWizard}
+        onPathsShellDone={closeSetupWizard}
+        onCreateServer={async (cluster) => {
+          if (!(await finishSetupWizard("completed", cluster))) {
+            return;
+          }
+          setOverlay({ kind: "create" });
+        }}
+        onImport={async (cluster) => {
+          if (!(await finishSetupWizard("completed", cluster))) {
+            return;
+          }
+          setImportWizardKey((key) => key + 1);
+          setImportInstallOpen(true);
+        }}
+        onExplore={async (cluster) => {
+          await finishSetupWizard("completed", cluster);
+        }}
       />
       {renderMain()}
       {steamCmdStatus !== null
@@ -1774,6 +2009,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         key={importWizardKey}
         opened={importInstallOpen}
         servers={servers}
+        extraClusterOptions={extraClusterOptions}
         onClose={() => setImportInstallOpen(false)}
         onOpenClusters={() => {
           setImportInstallOpen(false);
@@ -1781,6 +2017,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
           navigate("clusters");
         }}
         onImported={(profile) => {
+          consumePendingSetupCluster();
           setImportInstallOpen(false);
           // Skip first-steps onboarding — imported installs already have INI/world (#254).
           setOverlay({

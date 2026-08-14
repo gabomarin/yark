@@ -111,6 +111,8 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.appGetLastSeenChangelogVersion),
   setLastSeenChangelogVersion: (version) =>
     ipcRenderer.invoke(IPC.appSetLastSeenChangelogVersion, version),
+  getOnboarding: () => ipcRenderer.invoke(IPC.appGetOnboarding),
+  setOnboarding: (record) => ipcRenderer.invoke(IPC.appSetOnboarding, record),
   getDesktopShellPreferences: () =>
     ipcRenderer.invoke(IPC.appGetDesktopShellPreferences),
   setCloseWindowToTray: (enabled) =>

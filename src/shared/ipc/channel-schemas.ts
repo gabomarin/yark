@@ -6,6 +6,7 @@
 
 import { z } from "zod";
 import { IPC } from "../ipc";
+import { onboardingRecordSchema } from "../onboarding";
 import { isServerProfilePatch } from "../server-profile";
 import {
   appDataFolderKindSchema,
@@ -105,6 +106,7 @@ export const VALIDATED_IPC_CHANNELS = [
   IPC.eventsRecent,
   IPC.appSetUiDensity,
   IPC.appSetLastSeenChangelogVersion,
+  IPC.appSetOnboarding,
   IPC.appSetCloseWindowToTray,
   IPC.appSetStartWithWindows,
   IPC.appSetTrayCloseHintDismissed,
@@ -167,6 +169,7 @@ export const VALIDATED_IPC_CHANNELS = [
   IPC.appListDataFolders,
   IPC.appGetUiDensity,
   IPC.appGetLastSeenChangelogVersion,
+  IPC.appGetOnboarding,
   IPC.appGetDesktopShellPreferences,
   IPC.appGetUpdateStatus,
   IPC.logsGetRetentionSettings,
@@ -254,6 +257,8 @@ export const ipcArgSchemas = {
   [IPC.appSetLastSeenChangelogVersion]: z.tuple([
     nonEmptyStringSchema("App version"),
   ]),
+  [IPC.appGetOnboarding]: z.tuple([]),
+  [IPC.appSetOnboarding]: z.tuple([onboardingRecordSchema.nullable()]),
   [IPC.appGetDesktopShellPreferences]: z.tuple([]),
   [IPC.appSetCloseWindowToTray]: z.tuple([z.boolean()]),
   [IPC.appSetStartWithWindows]: z.tuple([z.boolean()]),

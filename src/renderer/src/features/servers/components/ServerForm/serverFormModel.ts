@@ -23,6 +23,7 @@ export interface ServerFormState {
 export function toServerFormState(
   profile: ServerProfile | null,
   defaultBaseFolder?: string | null,
+  preferredCluster?: { clusterId: string; clusterDir: string } | null,
 ): ServerFormState {
   if (profile === null) {
     const base = defaultBaseFolder?.trim() ?? "";
@@ -38,8 +39,8 @@ export function toServerFormState(
       rconPort: "27020",
       serverPassword: "",
       adminPassword: "",
-      clusterId: "",
-      clusterDir: "",
+      clusterId: preferredCluster?.clusterId ?? "",
+      clusterDir: preferredCluster?.clusterDir ?? "",
       autoStart: false,
     };
   }

@@ -7,8 +7,10 @@ import {
 } from "@shared/server-install-path";
 import { isOfficialMap, normalizeMapToken } from "@shared/map-identity";
 import type { ImportInstallProbe, ModMetadata, ServerProfile } from "@shared/types";
+import type { KnownClusterOption } from "@features/clusters/knownClusterOptions";
 import { listKnownClusterOptions } from "@features/clusters/knownClusterOptions";
 import {
+  applyPreferredCluster,
   canImportInstallProceed,
   emptyImportForm,
   formToProfileInput,
@@ -29,6 +31,7 @@ interface Props {
   onClose: () => void;
   onImported: (profile: ServerProfile) => void;
   onOpenClusters?: () => void;
+  extraClusterOptions?: KnownClusterOption[];
 }
 
 export function ImportInstallWizard(props: Props): ReactElement {
@@ -45,9 +48,14 @@ export function ImportInstallWizard(props: Props): ReactElement {
   const [form, setForm] = useState<ImportFormState>(emptyImportForm);
 
   const knownClusters = useMemo(
-    () => listKnownClusterOptions(props.servers),
-    [props.servers],
+    () =>
+      listKnownClusterOptions(props.servers, {
+        extra: props.extraClusterOptions,
+      }),
+    [props.extraClusterOptions, props.servers],
   );
+  const preferredCluster =
+    props.extraClusterOptions?.length === 1 ? props.extraClusterOptions[0] : undefined;
 
   // Parent remounts this wizard on each open (`key={importWizardKey}`) so form
   // state starts fresh without an adjust-on-prop-change close effect.
@@ -57,7 +65,9 @@ export function ImportInstallWizard(props: Props): ReactElement {
     setInstallDir(next.installDir);
     setProbe(next);
     setAllowIncompleteInstall(false);
-    setForm(suggestionsToForm(next.suggestions));
+    setForm(
+      applyPreferredCluster(suggestionsToForm(next.suggestions), preferredCluster),
+    );
     setModMetadata({});
     setModsOpen(
       next.suggestions.mods.length > 0 &&

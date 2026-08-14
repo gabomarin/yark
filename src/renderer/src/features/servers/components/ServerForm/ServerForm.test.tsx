@@ -151,6 +151,31 @@ describe("ServerForm", () => {
     expect(screen.getByText("C:\\ark_servers\\cluster\\alpha")).toBeInTheDocument();
   });
 
+  it("preselects a single extra cluster from setup", () => {
+    render(
+      <AppProviders>
+        <ServerForm
+          initial={null}
+          extraClusterOptions={[
+            {
+              clusterId: "ember",
+              clusterDir: "D:\\ASA\\Clusters\\Ember",
+              label: "ember · from setup",
+            },
+          ]}
+          onCancel={vi.fn()}
+          onSaved={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("combobox", { name: /^cluster$/i })).toHaveValue(
+      "ember · from setup",
+    );
+    expect(screen.getByLabelText(/^cluster id$/i)).toHaveValue("ember");
+    expect(screen.getByText("D:\\ASA\\Clusters\\Ember")).toBeInTheDocument();
+  });
+
   it("shows create-a-cluster-first when no clusters exist (#178)", async () => {
     const user = userEvent.setup();
     const onOpenClusters = vi.fn();

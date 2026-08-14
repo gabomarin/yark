@@ -75,6 +75,13 @@ Mantine `Stepper`; INI/cluster apply flows use `Modal`, `Checkbox`, `Alert`,
 `Tooltip`. Shared YARK atoms (`AppSurfaceCard`, `EmptyState`, `PathField`, …)
 still take precedence when the design system defines that surface.
 
+First-run setup wizard: when changing Settings, SteamCMD, desktop shell, create/
+import cluster join, or shared path atoms, check whether
+`src/renderer/src/features/setup-wizard/` still matches
+([`.cursor/rules/setup-wizard.mdc`](.cursor/rules/setup-wizard.mdc)).
+Operator-facing copy (product identity, what SteamCMD vs a profile vs Install
+files means): [docs/design-system.md](docs/design-system.md#operator-facing-copy).
+
 Notes specific to running this in the Linux cloud VM:
 
 - Dependencies are refreshed automatically by the startup update script (`npm install`).

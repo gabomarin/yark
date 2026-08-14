@@ -93,6 +93,14 @@ function createApiMock(): RendererApi {
       ok: true,
       data: "0.11.0",
     }),
+    getOnboarding: vi.fn().mockResolvedValue({
+      ok: true,
+      data: { status: "completed", completedAt: "2026-01-01T00:00:00.000Z" },
+    }),
+    setOnboarding: vi.fn().mockResolvedValue({
+      ok: true,
+      data: { status: "completed", completedAt: "2026-01-01T00:00:00.000Z" },
+    }),
     getDesktopShellPreferences: vi.fn().mockResolvedValue({
       ok: true,
       data: {

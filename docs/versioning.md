@@ -73,7 +73,7 @@ Workflow: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
   are implemented in #142.
 - **In-app updater (#165):** `package.json` `build.publish` points at `gabomarin/yark` so
   packaged apps resolve release metadata even though CI still packages with `--publish never`.
-  Operators use Settings → **YARK updates** (or the accented sidebar version). Install is
+  Operators use Settings → **About** (or the accented sidebar version). Install is
   blocked while ASA servers or critical jobs are busy. Dev/unpackaged builds can check
   versions but cannot install. While the installed app is `0.x`, GitHub prereleases are
   treated as update candidates (`allowPrerelease`); from `1.0.0+` only production releases.
