@@ -12,7 +12,7 @@ const beacon = enabled ? JSON.stringify({ token: token.trim() }) : "";
 {
   enabled && (
     <script
-      type="module"
+      defer
       src="https://static.cloudflareinsights.com/beacon.min.js"
       data-cf-beacon={beacon}
     />

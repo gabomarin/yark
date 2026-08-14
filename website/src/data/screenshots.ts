@@ -6,6 +6,12 @@ export type Screenshot = {
   caption: string;
 };
 
+/** Basename without extension (`overview.png` → `overview`) for `/media/{slug}-*.webp`. */
+export function screenshotSlug(shot: Screenshot): string {
+  const file = shot.src.split("/").pop() ?? "";
+  return file.replace(/\.png$/i, "");
+}
+
 export const screenshots: Screenshot[] = [
   {
     src: withBase("/screenshots/overview.png"),

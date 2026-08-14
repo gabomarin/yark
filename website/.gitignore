@@ -5,6 +5,9 @@ node_modules/
 dist/
 .astro/
 
+# Generated WebP derivatives (see src/integrations/optimize-marketing-images.mjs)
+public/media/
+
 # Local OS
 .DS_Store
 Thumbs.db

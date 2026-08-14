@@ -1,5 +1,6 @@
 ---
-import type { Screenshot } from "../data/screenshots";
+import ResponsiveShot from "./ResponsiveShot.astro";
+import { screenshotSlug, type Screenshot } from "../data/screenshots";
 
 interface Props {
   shots: Screenshot[];
@@ -7,6 +8,7 @@ interface Props {
 
 const { shots } = Astro.props;
 const featured = shots.slice(0, 5);
+const stageSizes = "(max-width: 720px) 100vw, min(78rem, 100vw)";
 ---
 
 <section class="product-band" aria-label="Live product preview" data-reveal>
@@ -25,13 +27,16 @@ const featured = shots.slice(0, 5);
                     data-caption={shot.caption}
                     aria-hidden={index === 0 ? "false" : "true"}
                   >
-                    <img
-                      src={shot.src}
+                    <ResponsiveShot
+                      slug={screenshotSlug(shot)}
                       alt={shot.alt}
-                      width="1440"
-                      height="900"
+                      fallbackSrc={shot.src}
+                      widths={[640, 960, 1280]}
+                      sizes={stageSizes}
+                      width={1440}
+                      height={900}
                       loading={index === 0 ? "eager" : "lazy"}
-                      decoding="async"
+                      fetchpriority={index === 0 ? "low" : undefined}
                     />
                   </figure>
                 ))

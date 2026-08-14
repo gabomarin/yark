@@ -1,13 +1,18 @@
-import Lenis from "lenis";
-import { animate, inView, stagger } from "motion";
-import "lenis/dist/lenis.css";
-
 function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-function initLenis(): void {
-  if (prefersReducedMotion()) return;
+function canUseDesktopMotion(): boolean {
+  return (
+    !prefersReducedMotion() &&
+    window.matchMedia("(pointer: fine)").matches &&
+    window.matchMedia("(min-width: 800px)").matches
+  );
+}
+
+async function initLenis(): Promise<void> {
+  if (!canUseDesktopMotion()) return;
+  const { default: Lenis } = await import("lenis");
   document.documentElement.classList.add("lenis-active");
   new Lenis({
     autoRaf: true,
@@ -19,9 +24,10 @@ function initLenis(): void {
 function initProductTilt(): void {
   const stage = document.querySelector<HTMLElement>("[data-product-stage]");
   const frame = document.querySelector<HTMLElement>("[data-product-frame]");
-  if (!stage || !frame || prefersReducedMotion()) return;
+  if (!stage || !frame || !canUseDesktopMotion()) return;
 
   let raf = 0;
+  let running = false;
   let targetX = 0;
   let targetY = 0;
   let currentX = 0;
@@ -30,28 +36,46 @@ function initProductTilt(): void {
   const tick = () => {
     currentX += (targetX - currentX) * 0.08;
     currentY += (targetY - currentY) * 0.08;
+    const settled =
+      targetX === 0 &&
+      targetY === 0 &&
+      Math.abs(currentX) < 0.02 &&
+      Math.abs(currentY) < 0.02;
+    if (settled) {
+      running = false;
+      frame.style.transform = "";
+      return;
+    }
     frame.style.transform = `rotateX(${currentY}deg) rotateY(${currentX}deg) translateZ(0)`;
     raf = requestAnimationFrame(tick);
   };
-  raf = requestAnimationFrame(tick);
 
+  const ensureTick = () => {
+    if (running) return;
+    running = true;
+    raf = requestAnimationFrame(tick);
+  };
+
+  stage.addEventListener("pointerenter", ensureTick);
   stage.addEventListener("pointermove", (event) => {
     const rect = stage.getBoundingClientRect();
     const px = (event.clientX - rect.left) / rect.width - 0.5;
     const py = (event.clientY - rect.top) / rect.height - 0.5;
     targetX = px * 10;
     targetY = py * -8;
+    ensureTick();
   });
-
   stage.addEventListener("pointerleave", () => {
     targetX = 0;
     targetY = 0;
+    ensureTick();
   });
 
   window.addEventListener(
     "pagehide",
     () => {
       cancelAnimationFrame(raf);
+      running = false;
     },
     { once: true },
   );
@@ -102,14 +126,18 @@ function initProductRotator(): void {
   schedule();
 }
 
-function initScrollReveals(): void {
+async function initScrollReveals(): Promise<void> {
+  const roots = document.querySelectorAll<HTMLElement>("[data-reveal]");
+  if (!roots.length) return;
+
   if (prefersReducedMotion()) {
-    document.querySelectorAll<HTMLElement>("[data-reveal]").forEach((el) => {
+    roots.forEach((el) => {
       el.style.opacity = "1";
     });
     return;
   }
 
+  const { animate, inView, stagger } = await import("motion");
   inView(
     "[data-reveal]",
     (element) => {
@@ -133,21 +161,9 @@ function initScrollReveals(): void {
   );
 }
 
-function initHeroEntrance(): void {
-  if (prefersReducedMotion()) return;
-  const items = document.querySelectorAll<HTMLElement>("[data-hero-item]");
-  if (!items.length) return;
-  animate(
-    items,
-    { opacity: [0, 1], y: [18, 0] },
-    { duration: 0.75, delay: stagger(0.09), easing: [0.22, 1, 0.36, 1] },
-  );
-}
-
 export function initPresence(): void {
-  initLenis();
-  initHeroEntrance();
-  initProductTilt();
   initProductRotator();
-  initScrollReveals();
+  void initLenis();
+  initProductTilt();
+  void initScrollReveals();
 }

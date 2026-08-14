@@ -1,7 +1,7 @@
 ---
-import "@fontsource-variable/instrument-sans";
-import "@fontsource/ibm-plex-mono/400.css";
-import "@fontsource/ibm-plex-mono/500.css";
+import "@fontsource-variable/instrument-sans/wght.css";
+import instrumentSansLatin from "@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2?url";
+import "@fontsource/ibm-plex-mono/latin-400.css";
 import "../styles/global.css";
 import SiteNav from "../components/SiteNav.astro";
 import SeoHead from "../components/SeoHead.astro";
@@ -42,12 +42,18 @@ const pageTitle = title;
       softwareSchema={softwareSchema}
       noindex={noindex}
     />
+    <link
+      rel="preload"
+      href={instrumentSansLatin}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <link rel="icon" href={withBase("/favicon.ico")} sizes="any" />
     <link rel="icon" type="image/png" sizes="32x32" href={withBase("/favicon-32x32.png")} />
     <link rel="icon" type="image/png" sizes="48x48" href={withBase("/favicon-48x48.png")} />
     <link rel="icon" type="image/png" sizes="192x192" href={withBase("/favicon-192x192.png")} />
     <link rel="apple-touch-icon" href={withBase("/apple-touch-icon.png")} />
-    <CloudflareAnalytics />
     <slot name="head" />
   </head>
   <body>
@@ -73,5 +79,6 @@ const pageTitle = title;
       import { initPresence } from "../scripts/presence";
       initPresence();
     </script>
+    <CloudflareAnalytics />
   </body>
 </html>
