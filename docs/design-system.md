@@ -44,7 +44,7 @@ Prefer “server manager” / “on this PC” over “local host” (reads as l
 | Thing | Operator meaning |
 | --- | --- |
 | **YARK** | The manager app. Profiles, Start/Stop, INI, backups, RCON live here. |
-| **SteamCMD** | Valve’s tool that downloads/updates **dedicated server files**. One SteamCMD home is shared across profiles. Settings / first-run **Needs setup** until `steamcmd.exe` is chosen or installed. |
+| **SteamCMD** | Valve’s tool that downloads/updates **dedicated server files**. One SteamCMD home is shared across profiles. Settings shows **Needs setup** until `steamcmd.exe` is chosen or installed; the skippable assistant uses **Recommended** when the operator may continue. |
 | **Default base folder** | Where **New server** creates a named subfolder. Not the SteamCMD home. |
 | **Server / profile** | YARK’s record (map, ports, install path, cluster). **Create** does not download ASA files. |
 | **Install files** | SteamCMD fills the shared ASA cache, then copies into that profile’s folder. Requires SteamCMD Ready. |
@@ -64,7 +64,7 @@ Domain runbooks: [updates-steamcmd.md](updates-steamcmd.md),
 | One or two sentences: what it does for the operator | List every step the wizard or IPC will take |
 | Match Settings when the same control exists in first-run | Invent first-run-only jargon Settings does not use |
 | Name the product **server manager** when you need an identity line | “A local host for…” / localhost / “this Electron app” |
-| Status words operators already see (`Ready`, `Needs setup`) | Internal keys (`onboarding.v1`, `detected === false`) |
+| Status words operators already see (`Ready`, `Needs setup`, `Recommended`, `Installing…`) | Internal keys (`onboarding.v1`, `detected === false`) |
 
 Examples:
 

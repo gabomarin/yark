@@ -328,6 +328,48 @@ describe("App empty installation snapshot", () => {
     });
     expect(await screen.findByText("Create your first server")).toBeInTheDocument();
   });
+
+  it("keeps setup open when onboarding persistence fails", async () => {
+    const user = userEvent.setup();
+    const api = window.api;
+    vi.mocked(api.getOnboarding).mockResolvedValue({ ok: true, data: null });
+    vi.mocked(api.setOnboarding).mockResolvedValue({
+      ok: false,
+      error: "database unavailable",
+    });
+
+    render(<App />);
+
+    const dialog = await screen.findByRole("dialog", { name: /set up yark/i });
+    await user.click(screen.getByRole("button", { name: /skip setup/i }));
+
+    await waitFor(() => expect(api.setOnboarding).toHaveBeenCalledTimes(1));
+    expect(dialog).toBeInTheDocument();
+  });
+
+  it("restores a pending setup cluster for the next create handoff", async () => {
+    const user = userEvent.setup();
+    const api = window.api;
+    vi.mocked(api.getOnboarding).mockResolvedValue({
+      ok: true,
+      data: {
+        status: "completed",
+        completedAt: "2026-08-14T12:00:00.000Z",
+        pendingCluster: {
+          clusterId: "ember",
+          clusterDir: "D:\\ASA\\Clusters\\Ember",
+        },
+      },
+    });
+
+    render(<App />);
+
+    await user.click(await screen.findByRole("button", { name: "New server" }));
+    expect(await screen.findByRole("combobox", { name: /^cluster$/i })).toHaveValue(
+      "ember · from setup",
+    );
+    expect(screen.getByLabelText(/^cluster id$/i)).toHaveValue("ember");
+  });
 });
 
 describe("App SteamCMD sync-files UX (#48)", () => {

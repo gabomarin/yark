@@ -5,6 +5,7 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import classes from "../setupWizard.module.css";
 
 interface Props {
+  disabled: boolean;
   onCreateServer: () => void;
   onImport: () => void;
   onExplore: () => void;
@@ -21,6 +22,7 @@ export function SetupWizardFirstActionStep(props: Props): ReactElement {
       </div>
       <UnstyledButton
         className={classes.actionCard}
+        disabled={props.disabled}
         onClick={props.onCreateServer}
         aria-label="New server"
       >
@@ -30,13 +32,15 @@ export function SetupWizardFirstActionStep(props: Props): ReactElement {
               <Plus size={14} /> New server
             </Text>
             <Text size="xs" c="dimmed">
-              Create a new dedicated folder. YARK installs the files next.
+              Create a server profile and its dedicated folder, then choose Install
+              files when you are ready.
             </Text>
           </Stack>
         </AppSurfaceCard>
       </UnstyledButton>
       <UnstyledButton
         className={classes.actionCard}
+        disabled={props.disabled}
         onClick={props.onImport}
         aria-label="Import install"
       >
@@ -53,6 +57,7 @@ export function SetupWizardFirstActionStep(props: Props): ReactElement {
       </UnstyledButton>
       <UnstyledButton
         className={classes.actionCard}
+        disabled={props.disabled}
         onClick={props.onExplore}
         aria-label="I'll explore"
       >

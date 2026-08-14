@@ -127,15 +127,15 @@ export function SettingsGeneralSection(props: Props): ReactElement {
       {props.onRunSetupAgain !== undefined && (
         <div className={classes.settingRow}>
           <div className={classes.settingCopy}>
-            <Text size="sm" fw={600}>First-run setup</Text>
+            <Text size="sm" fw={600}>Setup assistant</Text>
             <Text size="xs" c="dimmed" mt={2}>
-              SteamCMD and Windows options. With no servers yet, you also pick a
-              cluster and the first map.
+              Review SteamCMD, server-folder, and Windows options. With no servers
+              yet, it also offers a cluster and your first map.
             </Text>
           </div>
           <div className={classes.settingControl}>
             <Button size="xs" variant="default" onClick={props.onRunSetupAgain}>
-              Run setup again
+              Open setup assistant
             </Button>
           </div>
         </div>

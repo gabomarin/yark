@@ -148,6 +148,17 @@ function renderSettings(
         onInstallSteamCmd={vi.fn()}
         onOpenSteamCmdCache={vi.fn()}
         onClearSteamCmdCache={vi.fn()}
+        desktopShell={{
+          closeWindowToTray: true,
+          startWithWindows: false,
+          trayCloseHintDismissed: false,
+          desktopShellReady: true,
+          onCloseWindowToTrayChange: vi.fn(),
+          onStartWithWindowsChange: vi.fn(),
+          onTrayCloseHintDismissedChange: vi.fn(),
+          shellError: null,
+          clearShellError: vi.fn(),
+        }}
         {...overrides}
       />
     </AppProviders>,
@@ -194,19 +205,28 @@ describe("SettingsPage", () => {
     );
     expect(screen.getByText("Ready")).toBeInTheDocument();
     expect(screen.getByText("Download cache")).toBeInTheDocument();
-    await waitFor(() => {
-      expect(window.api.getDesktopShellPreferences).toHaveBeenCalled();
-    });
   });
 
-  it("offers Run setup again when the parent provides the callback", async () => {
+  it("offers the setup assistant when the parent provides the callback", async () => {
     const user = userEvent.setup();
     const onRunSetupAgain = vi.fn();
     stubSettingsApi();
     renderSettings({ onRunSetupAgain });
 
-    await user.click(screen.getByRole("button", { name: /run setup again/i }));
+    await user.click(screen.getByRole("button", { name: /open setup assistant/i }));
     expect(onRunSetupAgain).toHaveBeenCalledTimes(1);
+  });
+
+  it("resets panel scroll when switching categories", async () => {
+    const user = userEvent.setup();
+    stubSettingsApi();
+    renderSettings();
+
+    const panel = document.querySelector<HTMLElement>("[data-settings-panel-scroll]");
+    expect(panel).not.toBeNull();
+    panel!.scrollTop = 240;
+    await openCategory(user, "Servers");
+    expect(panel).toHaveProperty("scrollTop", 0);
   });
 
   it("notifies when display size changes to Comfortable", async () => {
@@ -222,12 +242,21 @@ describe("SettingsPage", () => {
 
   it("persists dismissing the tray-hide notification", async () => {
     const user = userEvent.setup();
+    const onTrayCloseHintDismissedChange = vi.fn();
     stubSettingsApi();
 
-    renderSettings();
-
-    await waitFor(() => {
-      expect(window.api.getDesktopShellPreferences).toHaveBeenCalled();
+    renderSettings({
+      desktopShell: {
+        closeWindowToTray: true,
+        startWithWindows: false,
+        trayCloseHintDismissed: false,
+        desktopShellReady: true,
+        onCloseWindowToTrayChange: vi.fn(),
+        onStartWithWindowsChange: vi.fn(),
+        onTrayCloseHintDismissedChange,
+        shellError: null,
+        clearShellError: vi.fn(),
+      },
     });
 
     const toastSwitch = await screen.findByRole("switch", {
@@ -235,9 +264,7 @@ describe("SettingsPage", () => {
     });
     expect(toastSwitch).toBeChecked();
     await user.click(toastSwitch);
-    await waitFor(() => {
-      expect(window.api.setTrayCloseHintDismissed).toHaveBeenCalledWith(true);
-    });
+    expect(onTrayCloseHintDismissedChange).toHaveBeenCalledWith(true);
   });
 
   it("expands caches and supports open/clear actions", async () => {
@@ -412,6 +439,29 @@ describe("SettingsPage", () => {
       }),
     );
     expect(onOpenNativeTerminalOnStartChange).toHaveBeenCalledWith(true);
+  });
+
+  it("prevents conflicting SteamCMD actions while installation is active", async () => {
+    const user = userEvent.setup();
+    stubSettingsApi();
+
+    renderSettings({
+      steamCmdBusy: true,
+      steamCmdStatus: {
+        ...readyStatus,
+        detected: false,
+        executablePath: null,
+        operation: "install-steamcmd",
+        busy: true,
+        running: true,
+      },
+    });
+
+    expect(screen.getByText("Working")).toBeInTheDocument();
+    await openCategory(user, "SteamCMD");
+    expect(screen.getByText("Installing…")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^choose/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /install steamcmd/i })).toBeDisabled();
   });
 
   it("loads log retention defaults and opens cleanup preview", async () => {

@@ -14,6 +14,12 @@ export const screenshots: Screenshot[] = [
       "Servers overview — profiles with map artwork, status, and recent activity in one place.",
   },
   {
+    src: withBase("/screenshots/setup-assistant.png"),
+    alt: "YARK first-run setup assistant showing SteamCMD and the default server-folder controls",
+    caption:
+      "Setup assistant — configure shared paths and Windows behavior, then create or import the first server.",
+  },
+  {
     src: withBase("/screenshots/workspace-server.png"),
     alt: "ASA dedicated server configuration in YARK with identity, Move installation, networking, cluster, and Auto-start",
     caption:
@@ -63,8 +69,8 @@ export const screenshots: Screenshot[] = [
   },
   {
     src: withBase("/screenshots/settings.png"),
-    alt: "YARK Settings on Windows showing SteamCMD path, log retention, and in-app updates",
+    alt: "YARK Settings on Windows with category navigation and the setup assistant entry point",
     caption:
-      "Settings — SteamCMD, log retention, YARK updates, auto-start summary, and desktop preferences.",
+      "Settings — app-wide preferences grouped by category, with the setup assistant available anytime.",
   },
 ];

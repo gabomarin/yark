@@ -4,7 +4,7 @@ import {
   DEFAULT_START_WITH_WINDOWS,
 } from "@shared/desktop-shell";
 
-export function useDesktopShellPreferences(): {
+export interface DesktopShellPreferencesController {
   closeWindowToTray: boolean;
   startWithWindows: boolean;
   trayCloseHintDismissed: boolean;
@@ -14,7 +14,9 @@ export function useDesktopShellPreferences(): {
   onTrayCloseHintDismissedChange: (dismissed: boolean) => void;
   shellError: string | null;
   clearShellError: () => void;
-} {
+}
+
+export function useDesktopShellPreferences(): DesktopShellPreferencesController {
   const [closeWindowToTray, setCloseWindowToTray] = useState(
     DEFAULT_CLOSE_WINDOW_TO_TRAY,
   );

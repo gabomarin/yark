@@ -11,6 +11,7 @@ interface Props {
   browsing: boolean;
   idError: string | null;
   dirError: string | null;
+  dirAutoSuggested: boolean;
   onShareClusterChange: (share: boolean) => void;
   onClusterIdChange: (value: string) => void;
   onGenerateId: () => void;
@@ -40,21 +41,29 @@ export function SetupWizardClusterStep(props: Props): ReactElement {
         </Group>
       </Radio.Group>
       {props.shareCluster && (
-        <CreateClusterIdentityStep
-          clusterId={props.clusterId}
-          clusterDir={props.clusterDir}
-          idTouched={props.idTouched}
-          dirTouched={props.dirTouched}
-          browsing={props.browsing}
-          idError={props.idError}
-          dirError={props.dirError}
-          incompleteGroups={[]}
-          onClusterIdChange={props.onClusterIdChange}
-          onGenerateId={props.onGenerateId}
-          onClusterDirChange={props.onClusterDirChange}
-          onIdBlur={props.onIdBlur}
-          onBrowse={props.onBrowse}
-        />
+        <Stack gap="xs">
+          <CreateClusterIdentityStep
+            clusterId={props.clusterId}
+            clusterDir={props.clusterDir}
+            idTouched={props.idTouched}
+            dirTouched={props.dirTouched}
+            browsing={props.browsing}
+            idError={props.idError}
+            dirError={props.dirError}
+            incompleteGroups={[]}
+            onClusterIdChange={props.onClusterIdChange}
+            onGenerateId={props.onGenerateId}
+            onClusterDirChange={props.onClusterDirChange}
+            onIdBlur={props.onIdBlur}
+            onBrowse={props.onBrowse}
+          />
+          {props.dirAutoSuggested && (
+            <Text size="xs" c="dimmed">
+              Suggested from your default base folder. Choose another folder if
+              transfers should live elsewhere.
+            </Text>
+          )}
+        </Stack>
       )}
     </Stack>
   );

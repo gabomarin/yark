@@ -11,11 +11,11 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
-- Skippable **first-run setup** (SteamCMD, Windows shell, optional cluster, then create or import); Settings can run Paths + Shell again (#298).
+- Skippable **first-run setup** (SteamCMD, Windows shell, optional cluster, then create or import); Settings can reopen the setup assistant (#298).
 
 ### Changed
 
-- Settings uses a **category sidebar** (General, Servers, SteamCMD, Logs, About); About notes when **Bundled SteamCMD** is unused; first-run Windows step includes **Show server console on start** (#298).
+- Settings uses a **category sidebar** (General, Servers, SteamCMD, Logs, About); setup guidance clarifies saved changes, suggests a cluster folder, and prevents conflicting SteamCMD actions while work is active (#298).
 
 ## [0.12.0] - 2026-08-13
 

@@ -27,6 +27,7 @@ const CATEGORY_ICONS: Record<
 interface Props {
   active: SettingsCategory;
   steamCmdNeedsSetup: boolean;
+  steamCmdBusy: boolean;
   onChange: (category: SettingsCategory) => void;
 }
 
@@ -48,9 +49,9 @@ export function SettingsNav(props: Props): ReactElement {
               aria-label={item.label}
               leftSection={<Icon size={16} weight={active ? "fill" : "regular"} />}
               rightSection={
-                item.id === "steamcmd" && props.steamCmdNeedsSetup ? (
+                item.id === "steamcmd" && (props.steamCmdNeedsSetup || props.steamCmdBusy) ? (
                   <Badge size="xs" color="yellow" variant="light">
-                    Needs setup
+                    {props.steamCmdBusy ? "Working" : "Needs setup"}
                   </Badge>
                 ) : undefined
               }

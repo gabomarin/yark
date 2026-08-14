@@ -1,8 +1,9 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { Button, Group, Modal, Stack, Stepper } from "@mantine/core";
+import { Button, Group, Modal, Stack, Stepper, Text } from "@mantine/core";
 import type { ServerProfile, SteamCmdStatus } from "@shared/types";
 import type { UiDensity } from "@features/settings/settingsModel";
+import type { DesktopShellPreferencesController } from "@features/settings/useDesktopShellPreferences";
 import {
   getClusterDirFormError,
   getClusterIdFormError,
@@ -17,6 +18,7 @@ import {
   SETUP_WIZARD_STEP_LABELS,
   canContinueClusterStep,
   pendingClusterFromStep,
+  suggestSetupClusterDir,
   stepsForMode,
   type PendingSetupCluster,
   type SetupWizardMode,
@@ -31,17 +33,19 @@ interface Props {
   defaultBaseFolder: string | null;
   uiDensity: UiDensity;
   openNativeTerminalOnStart: boolean;
+  desktopShell: DesktopShellPreferencesController;
+  busy: boolean;
   onPickSteamCmdPath: () => void;
   onInstallSteamCmd: () => void;
   onDefaultBaseFolderChange: (path: string | null) => void;
   onUiDensityChange: (density: UiDensity) => void;
   onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
-  onSkip: () => void;
+  onSkip: () => Promise<void>;
   onDismiss: () => void;
   onPathsShellDone: () => void;
-  onCreateServer: (cluster: PendingSetupCluster | null) => void;
-  onImport: (cluster: PendingSetupCluster | null) => void;
-  onExplore: (cluster: PendingSetupCluster | null) => void;
+  onCreateServer: (cluster: PendingSetupCluster | null) => Promise<void>;
+  onImport: (cluster: PendingSetupCluster | null) => Promise<void>;
+  onExplore: (cluster: PendingSetupCluster | null) => Promise<void>;
 }
 
 export function SetupWizard(props: Props): ReactElement {
@@ -52,6 +56,7 @@ export function SetupWizard(props: Props): ReactElement {
   const [clusterDir, setClusterDir] = useState("");
   const [idTouched, setIdTouched] = useState(false);
   const [dirTouched, setDirTouched] = useState(false);
+  const [dirAutoSuggested, setDirAutoSuggested] = useState(false);
   const [browsing, setBrowsing] = useState(false);
 
   useEffect(() => {
@@ -64,6 +69,7 @@ export function SetupWizard(props: Props): ReactElement {
     setClusterDir("");
     setIdTouched(false);
     setDirTouched(false);
+    setDirAutoSuggested(false);
   }, [props.opened, props.mode]);
 
   const current = steps[stepIndex] ?? steps[0]!;
@@ -88,8 +94,11 @@ export function SetupWizard(props: Props): ReactElement {
     pendingClusterFromStep({ shareCluster, clusterId, clusterDir });
 
   const handleDismiss = (): void => {
+    if (props.busy) {
+      return;
+    }
     if (props.mode === "first-run") {
-      props.onSkip();
+      void props.onSkip();
       return;
     }
     props.onDismiss();
@@ -105,6 +114,7 @@ export function SetupWizard(props: Props): ReactElement {
       );
       if (result.ok && result.data !== null) {
         setClusterDir(result.data);
+        setDirAutoSuggested(false);
         setDirTouched(true);
       }
     } finally {
@@ -128,16 +138,25 @@ export function SetupWizard(props: Props): ReactElement {
       opened={props.opened}
       onClose={handleDismiss}
       title={
-        props.mode === "first-run" ? "Set up YARK" : "Setup — paths and Windows"
+        props.mode === "first-run"
+          ? "Set up YARK"
+          : "Setup assistant — paths and Windows"
       }
       size="lg"
       centered
       closeOnClickOutside={false}
+      withCloseButton={!props.busy}
       overlayProps={{ mod: { "setup-wizard-overlay": true } }}
     >
       <Stack gap="md" data-setup-wizard data-setup-wizard-step={current}>
         <Group justify="flex-end">
-          <Button variant="subtle" size="compact-xs" onClick={handleDismiss}>
+          <Button
+            variant="subtle"
+            size="compact-xs"
+            disabled={props.busy}
+            loading={props.busy}
+            onClick={handleDismiss}
+          >
             {props.mode === "first-run" ? "Skip setup" : "Close"}
           </Button>
         </Group>
@@ -154,6 +173,11 @@ export function SetupWizard(props: Props): ReactElement {
             />
           ))}
         </Stepper>
+
+        <Text size="xs" c="dimmed">
+          Changes to paths and Windows options save as you go. Closing or skipping
+          the assistant does not undo saved changes.
+        </Text>
 
         {current === "welcome" && <SetupWizardWelcomeStep />}
         {current === "paths" && (
@@ -172,6 +196,7 @@ export function SetupWizard(props: Props): ReactElement {
             onUiDensityChange={props.onUiDensityChange}
             openNativeTerminalOnStart={props.openNativeTerminalOnStart}
             onOpenNativeTerminalOnStartChange={props.onOpenNativeTerminalOnStartChange}
+            desktopShell={props.desktopShell}
           />
         )}
         {current === "cluster" && (
@@ -184,17 +209,40 @@ export function SetupWizard(props: Props): ReactElement {
             browsing={browsing}
             idError={idError}
             dirError={dirError}
-            onShareClusterChange={setShareCluster}
+            dirAutoSuggested={dirAutoSuggested}
+            onShareClusterChange={(share) => {
+              setShareCluster(share);
+              if (share && clusterDir.trim().length === 0) {
+                const suggested = suggestSetupClusterDir(
+                  props.defaultBaseFolder,
+                  clusterId,
+                );
+                if (suggested.length > 0) {
+                  setClusterDir(suggested);
+                  setDirAutoSuggested(true);
+                }
+              }
+            }}
             onClusterIdChange={(value) => {
               setClusterId(value);
               setIdTouched(true);
             }}
             onGenerateId={() => {
-              setClusterId(suggestClusterId());
+              const nextId = suggestClusterId();
+              setClusterId(nextId);
+              if (dirAutoSuggested || clusterDir.trim().length === 0) {
+                const suggested = suggestSetupClusterDir(
+                  props.defaultBaseFolder,
+                  nextId,
+                );
+                setClusterDir(suggested);
+                setDirAutoSuggested(suggested.length > 0);
+              }
               setIdTouched(true);
             }}
             onClusterDirChange={(value) => {
               setClusterDir(value);
+              setDirAutoSuggested(false);
               setDirTouched(true);
             }}
             onIdBlur={() => setIdTouched(true)}
@@ -203,22 +251,23 @@ export function SetupWizard(props: Props): ReactElement {
         )}
         {current === "action" && (
           <SetupWizardFirstActionStep
-            onCreateServer={() => props.onCreateServer(pendingCluster())}
-            onImport={() => props.onImport(pendingCluster())}
-            onExplore={() => props.onExplore(pendingCluster())}
+            disabled={props.busy}
+            onCreateServer={() => void props.onCreateServer(pendingCluster())}
+            onImport={() => void props.onImport(pendingCluster())}
+            onExplore={() => void props.onExplore(pendingCluster())}
           />
         )}
 
         <Group justify="space-between">
           <Button
             variant="default"
-            disabled={stepIndex === 0}
+            disabled={props.busy || stepIndex === 0}
             onClick={() => setStepIndex((index) => Math.max(index - 1, 0))}
           >
             Back
           </Button>
           {current !== "action" && (
-            <Button disabled={!canContinue} onClick={goNext}>
+            <Button disabled={props.busy || !canContinue} onClick={goNext}>
               {isLast && props.mode === "paths-shell" ? "Done" : "Continue"}
             </Button>
           )}

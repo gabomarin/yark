@@ -6,7 +6,7 @@ alwaysApply: true
 # First-run setup wizard
 
 When changing operator-facing UI or behavior, check whether the first-run wizard
-(`src/renderer/src/features/setup-wizard/`) and Settings **Run setup again** still
+(`src/renderer/src/features/setup-wizard/`) and Settings **Open setup assistant** still
 match. If the change belongs in first-run, update the wizard (and its tests/docs)
 in the **same PR**.
 

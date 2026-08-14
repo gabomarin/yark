@@ -22,24 +22,24 @@ import { withBase } from "../../../data/site";
 
    On first launch with no server profiles, YARK opens a skippable **Set up YARK**
    wizard (SteamCMD, Windows shell, optional cluster, then create or import). You
-   can skip and run it later from Settings → **Run setup again**.
+   can skip and open it later from Settings → **Open setup assistant**.
 
 2. **Point SteamCMD**
 
    Install [SteamCMD](https://developer.valvesoftware.com/wiki/SteamCMD) somewhere writable.
    Set the path in the first-run wizard or in YARK → **Settings** (folder that contains `steamcmd.exe`).
-   You can continue setup and **create a profile** while SteamCMD still shows **Needs setup**;
+   You can continue setup and **create a profile** while SteamCMD is only **Recommended**;
    **Install files** will fail until SteamCMD is Ready.
 
    <figure class="doc-shot">
      <img
-       src={withBase("/screenshots/settings.png")}
-       alt="Settings page with SteamCMD path, default base folder, and app preferences"
-       width="1440"
-       height="900"
+       src={withBase("/screenshots/setup-assistant.png")}
+       alt="Setup assistant showing SteamCMD and the default base folder"
+       width="1920"
+       height="1080"
        loading="eager"
      />
-     <figcaption>Settings — set the folder that contains steamcmd.exe.</figcaption>
+     <figcaption>Setup assistant — configure SteamCMD now, or continue and return later.</figcaption>
    </figure>
 
    One SteamCMD home is shared across profiles. Next to it, YARK maintains:
@@ -58,6 +58,17 @@ import { withBase } from "../../../data/site";
    - **Ports** — unique game / query / RCON within the profile and across other profiles (the form shows live **port conflicts** vs the fleet)
    - **Admin password** — at least 4 characters
    - **Cluster** — **None**, or pick an **existing fleet cluster** (fills Cluster ID + shared directory). If you have no clusters yet, use **Create a cluster first…** from the form, or create one later on the Clusters page.
+
+   <figure class="doc-shot">
+     <img
+       src={withBase("/screenshots/setup-assistant-cluster.png")}
+       alt="Setup assistant suggesting a shared cluster folder from the default server base"
+       width="1920"
+       height="1080"
+       loading="lazy"
+     />
+     <figcaption>Optional cluster setup — YARK suggests a shared folder that you can replace.</figcaption>
+   </figure>
 
    You can leave a new profile **disabled** until files are ready; **Enable** does not require a Ready install. **Start**, **Restart**, and auto-start still do. For a first custom map, see [Mods → Maps / custom worlds](/docs/mods/#maps--custom-worlds).
 

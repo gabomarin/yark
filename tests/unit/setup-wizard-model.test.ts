@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   canContinueClusterStep,
   pendingClusterFromStep,
+  suggestSetupClusterDir,
   stepsForMode,
   toSyntheticClusterOption,
 } from "@features/setup-wizard/setupWizardModel";
@@ -76,5 +77,12 @@ describe("setupWizardModel", () => {
       clusterDir: "D:\\ASA\\Clusters\\Ember",
       label: "ember · from setup",
     });
+  });
+
+  it("suggests a cluster folder under the default server base", () => {
+    expect(suggestSetupClusterDir("D:/ASA/Servers/", " ember ")).toBe(
+      "D:\\ASA\\Servers\\Clusters\\ember",
+    );
+    expect(suggestSetupClusterDir(null, "ember")).toBe("");
   });
 });

@@ -17,6 +17,15 @@ interface Props {
 export function SetupWizardPathsStep(props: Props): ReactElement {
   const detected = props.steamCmdStatus?.detected === true;
   const executablePath = props.steamCmdStatus?.executablePath ?? null;
+  const installingSteamCmd =
+    props.steamCmdBusy && props.steamCmdStatus?.operation === "install-steamcmd";
+  const statusLabel = detected
+    ? "Ready"
+    : installingSteamCmd
+      ? "Installing…"
+      : props.steamCmdBusy
+        ? "Busy…"
+        : "Recommended";
 
   const pickDefaultBaseFolder = async (): Promise<void> => {
     const result = await window.api.pickPath(
@@ -36,8 +45,8 @@ export function SetupWizardPathsStep(props: Props): ReactElement {
         <div>
           <Title order={4}>SteamCMD</Title>
           <Text size="xs" c="dimmed" mt={2}>
-            Installs and updates dedicated server files. You can continue while it
-            runs.
+            Installs and updates dedicated server files. Set it up before Install
+            files, or continue and do it later.
           </Text>
         </div>
         <Text
@@ -45,7 +54,7 @@ export function SetupWizardPathsStep(props: Props): ReactElement {
           fw={600}
           className={detected ? classes.statusReady : classes.statusNeedsSetup}
         >
-          {detected ? "Ready" : "Needs setup"}
+          {statusLabel}
         </Text>
       </Group>
 
@@ -61,6 +70,7 @@ export function SetupWizardPathsStep(props: Props): ReactElement {
             size="xs"
             variant="default"
             leftSection={<FolderOpen size={14} />}
+            disabled={props.steamCmdBusy}
             onClick={props.onPickSteamCmdPath}
           >
             Choose…
@@ -70,6 +80,7 @@ export function SetupWizardPathsStep(props: Props): ReactElement {
               size="xs"
               leftSection={<CloudArrowDown size={14} />}
               disabled={props.steamCmdBusy}
+              loading={installingSteamCmd}
               onClick={props.onInstallSteamCmd}
             >
               Install SteamCMD

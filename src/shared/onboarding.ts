@@ -5,14 +5,26 @@ export const ONBOARDING_SETTING_KEY = "onboarding.v1";
 
 export type OnboardingStatus = "completed" | "skipped";
 
+export type OnboardingPendingCluster = {
+  clusterId: string;
+  clusterDir: string;
+};
+
 export type OnboardingRecord = {
   status: OnboardingStatus;
   completedAt: string;
+  pendingCluster?: OnboardingPendingCluster;
 };
 
 export const onboardingRecordSchema = z.object({
   status: z.enum(["completed", "skipped"]),
   completedAt: z.string().min(1).max(64),
+  pendingCluster: z
+    .object({
+      clusterId: z.string().min(1).max(128),
+      clusterDir: z.string().min(1).max(4_096),
+    })
+    .optional(),
 });
 
 export function parseOnboardingRecord(
@@ -38,16 +50,21 @@ export function serializeOnboardingRecord(record: OnboardingRecord): string {
   return JSON.stringify({
     status: record.status,
     completedAt: record.completedAt,
+    ...(record.pendingCluster === undefined
+      ? {}
+      : { pendingCluster: record.pendingCluster }),
   });
 }
 
 export function createOnboardingRecord(
   status: OnboardingStatus,
   now = new Date(),
+  pendingCluster?: OnboardingPendingCluster | null,
 ): OnboardingRecord {
   return {
     status,
     completedAt: now.toISOString(),
+    ...(pendingCluster == null ? {} : { pendingCluster }),
   };
 }
 

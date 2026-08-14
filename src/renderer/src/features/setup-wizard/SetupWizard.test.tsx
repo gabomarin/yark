@@ -26,6 +26,18 @@ const steamCmdBusy: SteamCmdStatus = {
   checkedAt: "2026-08-14T00:00:00.000Z",
 };
 
+const desktopShell = {
+  closeWindowToTray: true,
+  startWithWindows: false,
+  trayCloseHintDismissed: false,
+  desktopShellReady: true,
+  onCloseWindowToTrayChange: vi.fn(),
+  onStartWithWindowsChange: vi.fn(),
+  onTrayCloseHintDismissedChange: vi.fn(),
+  shellError: null,
+  clearShellError: vi.fn(),
+};
+
 function stubWizardApi(): void {
   vi.stubGlobal("api", {
     pickPath: vi.fn().mockResolvedValue({ ok: true, data: null }),
@@ -69,6 +81,8 @@ describe("SetupWizard", () => {
           opened
           mode="first-run"
           servers={[]}
+          desktopShell={desktopShell}
+          busy={false}
           steamCmdStatus={null}
           steamCmdBusy={false}
           defaultBaseFolder={null}
@@ -93,6 +107,7 @@ describe("SetupWizard", () => {
     expect(
       screen.getByText(/server manager for ARK: Survival Ascended/i),
     ).toBeInTheDocument();
+    expect(screen.getByText(/save as you go/i)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /skip setup/i }));
     expect(onSkip).toHaveBeenCalledTimes(1);
   });
@@ -108,6 +123,8 @@ describe("SetupWizard", () => {
           opened
           mode="first-run"
           servers={[]}
+          desktopShell={desktopShell}
+          busy={false}
           steamCmdStatus={null}
           steamCmdBusy={false}
           defaultBaseFolder={null}
@@ -145,6 +162,8 @@ describe("SetupWizard", () => {
           opened
           mode="first-run"
           servers={[]}
+          desktopShell={desktopShell}
+          busy={false}
           steamCmdStatus={steamCmdBusy}
           steamCmdBusy
           defaultBaseFolder={null}
@@ -166,8 +185,9 @@ describe("SetupWizard", () => {
     );
 
     await user.click(screen.getByRole("button", { name: /^continue$/i }));
-    expect(screen.getByText("Needs setup")).toBeInTheDocument();
+    expect(screen.getByText("Installing…")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /install steamcmd/i })).toBeDisabled();
+    expect(screen.getAllByRole("button", { name: /^choose/i })[0]).toBeDisabled();
     await user.click(screen.getByRole("button", { name: /^continue$/i }));
     expect(screen.getByText("Windows shell")).toBeInTheDocument();
     expect(screen.getByText("Show server console on start")).toBeInTheDocument();
@@ -176,6 +196,7 @@ describe("SetupWizard", () => {
   it("toggles Show server console on start on the Windows step", async () => {
     const user = userEvent.setup();
     const onOpenNativeTerminalOnStartChange = vi.fn();
+    const onStartWithWindowsChange = vi.fn();
     stubWizardApi();
 
     render(
@@ -184,6 +205,8 @@ describe("SetupWizard", () => {
           opened
           mode="paths-shell"
           servers={[]}
+          desktopShell={{ ...desktopShell, onStartWithWindowsChange }}
+          busy={false}
           steamCmdStatus={null}
           steamCmdBusy={false}
           defaultBaseFolder={null}
@@ -211,6 +234,8 @@ describe("SetupWizard", () => {
       }),
     );
     expect(onOpenNativeTerminalOnStartChange).toHaveBeenCalledWith(true);
+    await user.click(screen.getByRole("switch", { name: /start yark with windows/i }));
+    expect(onStartWithWindowsChange).toHaveBeenCalledWith(true);
   });
 
   it("continues past Cluster when Cross-ARK is No", async () => {
@@ -223,6 +248,8 @@ describe("SetupWizard", () => {
           opened
           mode="first-run"
           servers={[]}
+          desktopShell={desktopShell}
+          busy={false}
           steamCmdStatus={null}
           steamCmdBusy={false}
           defaultBaseFolder={null}
@@ -255,6 +282,63 @@ describe("SetupWizard", () => {
     expect(screen.getByRole("button", { name: /new server/i })).toBeInTheDocument();
   });
 
+  it("suggests a cluster directory from the default base folder", async () => {
+    const user = userEvent.setup();
+    stubWizardApi();
+
+    render(
+      <AppProviders>
+        <SetupWizard
+          opened
+          mode="first-run"
+          servers={[]}
+          desktopShell={desktopShell}
+          busy={false}
+          steamCmdStatus={null}
+          steamCmdBusy={false}
+          defaultBaseFolder={"D:\\ASA\\Servers"}
+          uiDensity="compact"
+          onPickSteamCmdPath={vi.fn()}
+          onInstallSteamCmd={vi.fn()}
+          onDefaultBaseFolderChange={vi.fn()}
+          onUiDensityChange={vi.fn()}
+          openNativeTerminalOnStart={false}
+          onOpenNativeTerminalOnStartChange={vi.fn()}
+          onSkip={vi.fn()}
+          onDismiss={vi.fn()}
+          onPathsShellDone={vi.fn()}
+          onCreateServer={vi.fn()}
+          onImport={vi.fn()}
+          onExplore={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /^continue$/i }));
+    await user.click(screen.getByRole("button", { name: /^continue$/i }));
+    await user.click(screen.getByRole("button", { name: /^continue$/i }));
+    await user.click(screen.getByRole("radio", { name: /yes/i }));
+
+    const clusterId = screen.getByRole("textbox", { name: /cluster id/i });
+    const clusterDir = screen.getByRole("textbox", {
+      name: /shared cluster directory/i,
+    });
+    const initialId = (clusterId as HTMLInputElement).value;
+    expect(clusterDir).toHaveAttribute(
+      "title",
+      `D:\\ASA\\Servers\\Clusters\\${initialId}`,
+    );
+    expect(screen.getByText(/suggested from your default base folder/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /generate/i }));
+    const generatedId = (clusterId as HTMLInputElement).value;
+    expect(generatedId).not.toBe(initialId);
+    expect(clusterDir).toHaveAttribute(
+      "title",
+      `D:\\ASA\\Servers\\Clusters\\${generatedId}`,
+    );
+  });
+
   it("hands off first-action New server", async () => {
     const user = userEvent.setup();
     const onCreateServer = vi.fn();
@@ -266,6 +350,8 @@ describe("SetupWizard", () => {
           opened
           mode="first-run"
           servers={[]}
+          desktopShell={desktopShell}
+          busy={false}
           steamCmdStatus={null}
           steamCmdBusy={false}
           defaultBaseFolder={null}
@@ -287,6 +373,7 @@ describe("SetupWizard", () => {
     );
 
     await continueToFirstServer(user);
+    expect(screen.getByText(/create a server profile/i)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /new server/i }));
     expect(onCreateServer).toHaveBeenCalledWith(null);
   });
@@ -301,6 +388,8 @@ describe("SetupWizard", () => {
           opened
           mode="first-run"
           servers={[]}
+          desktopShell={desktopShell}
+          busy={false}
           steamCmdStatus={null}
           steamCmdBusy={false}
           defaultBaseFolder={null}
@@ -340,6 +429,8 @@ describe("SetupWizard", () => {
           opened
           mode="paths-shell"
           servers={[]}
+          desktopShell={desktopShell}
+          busy={false}
           steamCmdStatus={steamCmdBusy}
           steamCmdBusy
           defaultBaseFolder={null}
@@ -360,7 +451,9 @@ describe("SetupWizard", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("Setup — paths and Windows")).toBeInTheDocument();
+    expect(
+      screen.getByText("Setup assistant — paths and Windows"),
+    ).toBeInTheDocument();
     expect(screen.queryByText("Welcome to YARK")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /^continue$/i }));
     await user.click(screen.getByRole("button", { name: /^done$/i }));

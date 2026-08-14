@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { SegmentedControl, Stack, Switch, Text, Title } from "@mantine/core";
 import type { UiDensity } from "@features/settings/settingsModel";
-import { useDesktopShellPreferences } from "@features/settings/useDesktopShellPreferences";
+import type { DesktopShellPreferencesController } from "@features/settings/useDesktopShellPreferences";
 import classes from "../setupWizard.module.css";
 
 interface Props {
@@ -9,10 +9,11 @@ interface Props {
   onUiDensityChange: (density: UiDensity) => void;
   openNativeTerminalOnStart: boolean;
   onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
+  desktopShell: DesktopShellPreferencesController;
 }
 
 export function SetupWizardShellStep(props: Props): ReactElement {
-  const desktopShell = useDesktopShellPreferences();
+  const desktopShell = props.desktopShell;
 
   return (
     <Stack gap="md">

@@ -45,6 +45,10 @@ describe("serializeOnboardingRecord", () => {
     const record = createOnboardingRecord(
       "completed",
       new Date("2026-08-14T12:00:00.000Z"),
+      {
+        clusterId: "ember",
+        clusterDir: "D:\\ASA\\Clusters\\Ember",
+      },
     );
     expect(parseOnboardingRecord(serializeOnboardingRecord(record))).toEqual(record);
   });

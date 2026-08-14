@@ -19,7 +19,10 @@ export function SettingsSteamCmdSection(props: Props): ReactElement {
   const executablePath = props.steamCmdStatus?.executablePath ?? null;
   const depotCacheDir = props.steamCmdStatus?.depotCacheDir ?? null;
   const contentCacheDir = props.steamCmdStatus?.contentCacheDir ?? null;
-  const cacheActionsDisabled = !detected || props.steamCmdBusy === true;
+  const steamCmdBusy = props.steamCmdBusy === true;
+  const installingSteamCmd =
+    steamCmdBusy && props.steamCmdStatus?.operation === "install-steamcmd";
+  const cacheActionsDisabled = !detected || steamCmdBusy;
 
   return (
     <section className={classes.section} aria-labelledby="settings-steamcmd">
@@ -32,7 +35,7 @@ export function SettingsSteamCmdSection(props: Props): ReactElement {
           fw={600}
           className={detected ? classes.statusReady : classes.statusNeedsSetup}
         >
-          {detected ? "Ready" : "Needs setup"}
+          {detected ? "Ready" : installingSteamCmd ? "Installing…" : "Needs setup"}
         </Text>
       </Group>
 
@@ -48,6 +51,7 @@ export function SettingsSteamCmdSection(props: Props): ReactElement {
             size="xs"
             variant="default"
             leftSection={<FolderOpen size={14} />}
+            disabled={steamCmdBusy}
             onClick={props.onPickSteamCmdPath}
           >
             Choose…
@@ -56,6 +60,8 @@ export function SettingsSteamCmdSection(props: Props): ReactElement {
             <Button
               size="xs"
               leftSection={<CloudArrowDown size={14} />}
+              disabled={steamCmdBusy}
+              loading={installingSteamCmd}
               onClick={props.onInstallSteamCmd}
             >
               Install SteamCMD

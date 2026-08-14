@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Stack, Title } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import type { SteamCmdCacheKind, SteamCmdStatus, ServerInstallationInfo, ServerProfile } from "@shared/types";
@@ -13,7 +13,7 @@ import { SettingsServersSection } from "./components/SettingsServersSection";
 import { SettingsSteamCmdSection } from "./components/SettingsSteamCmdSection";
 import { SettingsYarkUpdateSection } from "./components/SettingsYarkUpdateSection";
 import type { SettingsCategory, UiDensity } from "./settingsModel";
-import { useDesktopShellPreferences } from "./useDesktopShellPreferences";
+import type { DesktopShellPreferencesController } from "./useDesktopShellPreferences";
 import classes from "./SettingsPage.module.css";
 
 interface Props {
@@ -37,13 +37,15 @@ interface Props {
   onClearSteamCmdCache: (kind: SteamCmdCacheKind) => void;
   steamCmdBusy?: boolean;
   onRunSetupAgain?: () => void;
+  desktopShell: DesktopShellPreferencesController;
 }
 
 export function SettingsPage(props: Props): ReactElement {
-  const desktopShell = useDesktopShellPreferences();
+  const desktopShell = props.desktopShell;
   const [category, setCategory] = useState<SettingsCategory>(() =>
     props.focusYarkUpdates === true ? "about" : "general",
   );
+  const panelScrollRef = useRef<HTMLDivElement>(null);
   const steamCmdNeedsSetup = props.steamCmdStatus?.detected !== true;
 
   useEffect(() => {
@@ -53,6 +55,12 @@ export function SettingsPage(props: Props): ReactElement {
     setCategory("about");
     props.onYarkUpdatesFocused?.();
   }, [props.focusYarkUpdates, props.onYarkUpdatesFocused]);
+
+  useEffect(() => {
+    if (panelScrollRef.current !== null) {
+      panelScrollRef.current.scrollTop = 0;
+    }
+  }, [category]);
 
   const pickDefaultBaseFolder = async (): Promise<void> => {
     const current = props.defaultBaseFolder ?? undefined;
@@ -78,12 +86,13 @@ export function SettingsPage(props: Props): ReactElement {
           <SettingsNav
             active={category}
             steamCmdNeedsSetup={steamCmdNeedsSetup}
+            steamCmdBusy={props.steamCmdBusy === true}
             onChange={setCategory}
           />
         </AppSurfaceCard>
 
         <AppSurfaceCard fill className={classes.panel}>
-          <div className={classes.panelScroll}>
+          <div ref={panelScrollRef} className={classes.panelScroll} data-settings-panel-scroll>
             {category === "general" && (
               <SettingsGeneralSection
                 uiDensity={props.uiDensity}

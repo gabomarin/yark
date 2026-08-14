@@ -53,7 +53,7 @@ the Server tab / workspace.
 | **Log retention** limits + Clean up now | Per-section clear on Logs workspace; ASA Saved/Logs never touched — [logs.md](logs.md) |
 | **YARK updates** check / download / restart | Overview **Check for updates** is ASA/SteamCMD only; sidebar `vX.Y.Z` accents when a YARK update is available — [versioning.md](versioning.md) |
 | **What's new** (curated notes, one-shot after upgrade) | Sidebar version label; Settings → About → What's new (#290) |
-| **Run setup again** (SteamCMD + Windows shell; full wizard when the fleet is empty) | First-run auto-show when `onboarding.v1` is unset and there are no profiles (#298) |
+| **Open setup assistant** (SteamCMD + Windows shell; full wizard when the fleet is empty) | First-run auto-show when `onboarding.v1` is unset and there are no profiles (#298) |
 
 ## Controls and defaults
 
@@ -67,7 +67,7 @@ the Server tab / workspace.
 | Display size | SQLite `uiDensity` | **compact** | `compact` \| `comfortable`; see [design-system.md](design-system.md) |
 | Quick jump | localStorage `yark.spotlightRecent.v1` (MRU) | Ctrl+K | Jump to pages/servers; Recent group; Settings → General + logo tooltip (#104) |
 | Window size / position | SQLite `windowState` | **maximized** | Remembers last bounds + maximized; off-screen → maximize again |
-| Run setup again | SQLite `onboarding.v1` | unset until skip/complete | Empty fleet reopens the full wizard; otherwise Paths + Windows only. Does not reset SteamCMD (#298) |
+| Open setup assistant | SQLite `onboarding.v1` | unset until skip/complete | Empty fleet reopens the full wizard; otherwise Paths + Windows only. Does not reset SteamCMD (#298) |
 
 ### Servers
 

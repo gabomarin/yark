@@ -1,5 +1,6 @@
 import type { ServerProfile } from "@shared/types";
 import type { KnownClusterOption } from "@features/clusters/knownClusterOptions";
+import { normalizeWindowsPath } from "@shared/server-install-path";
 import {
   getClusterDirFormError,
   getClusterIdFormError,
@@ -39,6 +40,18 @@ export type PendingSetupCluster = {
 
 export function stepsForMode(mode: SetupWizardMode): SetupWizardStepId[] {
   return mode === "first-run" ? FIRST_RUN_STEPS : PATHS_SHELL_STEPS;
+}
+
+export function suggestSetupClusterDir(
+  defaultBaseFolder: string | null,
+  clusterId: string,
+): string {
+  const base = normalizeWindowsPath(defaultBaseFolder ?? "");
+  const id = clusterId.trim();
+  if (base.length === 0 || id.length === 0) {
+    return "";
+  }
+  return `${base}\\Clusters\\${id}`;
 }
 
 export function toSyntheticClusterOption(
