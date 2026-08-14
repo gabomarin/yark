@@ -2,7 +2,9 @@
 
 Profile-level checks for Cross-ARK Data Transfer setup: shared **Cluster ID**
 and **cluster directory**. The Clusters page surfaces backend reports; it does
-**not** validate live creature/item transfers on a running ASA host.
+**not** probe live creature/item transfers. A real-host two-map transfer
+checklist was completed ([#22](https://github.com/gabomarin/yark/issues/22));
+runbook + redacted evidence: [spikes/22-cluster-live-transfers.md](spikes/22-cluster-live-transfers.md).
 
 ## Intent
 
@@ -204,11 +206,15 @@ Report shape:
 5. Ensure distinct game / query / RCON ports across servers.
 6. Prefer matching CurseForge mod Project ID lists if players transfer mod items.
 7. Open **Clusters** (compliance refreshes on open); fix any `error` issues
-   before relying on transfers in-game.
+   before relying on transfers in-game. Repeat the live checklist in
+   [spikes/22-cluster-live-transfers.md](spikes/22-cluster-live-transfers.md)
+   after cluster-dir or launch-arg changes if you need to reconfirm ASA itself.
 
 ## Constraints and non-goals
 
-- **No live transfer probe** — reports are static profile math only.
+- **No live transfer probe in the app** — reports are static profile math only.
+  In-game transfers were validated once on a real host (#22); see
+  [spikes/22-cluster-live-transfers.md](spikes/22-cluster-live-transfers.md).
 - **No persistence** of reports — recomputed on each `cluster:check`.
 - **No filesystem check** that `clusterDir` exists or is writable.
 - **No bulk template apply** in this doc’s #89 / #181 surface — multi-member
