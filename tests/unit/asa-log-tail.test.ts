@@ -82,14 +82,13 @@ describe("AsaSavedLogsTailer", () => {
     const logsDir = asaSavedLogsDir(root);
     mkdirSync(logsDir, { recursive: true });
     const chunks: string[] = [];
-    const startedAt = Date.now();
     const logPath = join(logsDir, "ShooterGame.log");
     writeFileSync(logPath, "boot\n", "utf8");
 
     const tailer = new AsaSavedLogsTailer(root, (text) => chunks.push(text), {
       pollMs: 10,
     });
-    tailer.start(startedAt);
+    tailer.start();
     await delay(30);
     expect(chunks.join("")).not.toContain("boot");
     expect(listAsaLogFiles(logsDir)).toEqual([logPath]);
@@ -109,11 +108,10 @@ describe("AsaSavedLogsTailer", () => {
     const logPath = join(logsDir, "ShooterGame.log");
     writeFileSync(logPath, "", "utf8");
     const chunks: string[] = [];
-    const startedAt = Date.now();
     const tailer = new AsaSavedLogsTailer(root, (text) => chunks.push(text), {
       pollMs: 10,
     });
-    tailer.start(startedAt);
+    tailer.start();
     await delay(30);
 
     appendFileSync(logPath, "partial", "utf8");
@@ -137,7 +135,7 @@ describe("AsaSavedLogsTailer", () => {
     const tailer = new AsaSavedLogsTailer(root, (text) => chunks.push(text), {
       pollMs: 10,
     });
-    tailer.start(Date.now());
+    tailer.start();
     await delay(30);
 
     const encoded = Buffer.from("🦖", "utf8");
@@ -166,7 +164,7 @@ describe("AsaSavedLogsTailer", () => {
     const tailer = new AsaSavedLogsTailer(root, (text) => chunks.push(text), {
       pollMs: 10,
     });
-    tailer.start(Date.now());
+    tailer.start();
     await delay(30);
 
     appendFileSync(logPath, Buffer.from("x\n", "utf16le"));
@@ -190,11 +188,10 @@ describe("AsaSavedLogsTailer", () => {
     writeFileSync(logPath, `${big}\n`, "utf8");
 
     const chunks: string[] = [];
-    const startedAt = Date.now() + 10_000;
     const tailer = new AsaSavedLogsTailer(root, (text) => chunks.push(text), {
       pollMs: 10,
     });
-    tailer.start(startedAt);
+    tailer.start();
     await delay(30);
     expect(chunks).toEqual([]);
 
@@ -217,7 +214,7 @@ describe("AsaSavedLogsTailer", () => {
     const tailer = new AsaSavedLogsTailer(root, (text) => chunks.push(text), {
       pollMs: 10,
     });
-    tailer.start(Date.now() + 10_000);
+    tailer.start();
     await delay(30);
     expect(chunks).toEqual([]);
 
@@ -241,7 +238,7 @@ describe("AsaSavedLogsTailer", () => {
     const tailer = new AsaSavedLogsTailer(root, (text) => chunks.push(text), {
       pollMs: 10,
     });
-    tailer.start(Date.now());
+    tailer.start();
     await delay(30);
 
     const line = `${"x".repeat(300 * 1024)}\n`;
@@ -261,11 +258,10 @@ describe("AsaSavedLogsTailer", () => {
     writeFileSync(primary, "from-primary\n", "utf8");
     writeFileSync(secondary, "from-secondary\n", "utf8");
     const chunks: string[] = [];
-    const startedAt = Date.now();
     const tailer = new AsaSavedLogsTailer(root, (text) => chunks.push(text), {
       pollMs: 10,
     });
-    tailer.start(startedAt);
+    tailer.start();
     await delay(30);
     expect(chunks.join("")).not.toContain("from-primary");
 

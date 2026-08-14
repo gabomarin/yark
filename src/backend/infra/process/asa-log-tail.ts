@@ -199,9 +199,10 @@ export class AsaSavedLogsTailer {
     this.pollMs = options?.pollMs ?? DEFAULT_POLL_MS;
   }
 
-  start(_startedAtMs = Date.now()): void {
+  start(
+    anchor: AsaLogSessionAnchor = captureAsaLogSessionAnchor(this.installDir),
+  ): void {
     this.stop();
-    const anchor = captureAsaLogSessionAnchor(this.installDir);
     this.activeFileIdentity = anchor.identity;
     this.offset = anchor.size;
     this.resetDecodingState();

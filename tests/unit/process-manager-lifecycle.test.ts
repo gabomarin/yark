@@ -1,4 +1,5 @@
 import { EventEmitter } from "node:events";
+import { appendFileSync } from "node:fs";
 import { mkdir, mkdtemp, rm, writeFile, appendFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -67,6 +68,22 @@ function makeProfile(installDir: string): ServerProfile {
     createdAt: now,
     updatedAt: now,
   };
+}
+
+async function waitForRuntimeLine(
+  manager: ProcessManager,
+  serverId: string,
+  expected: string,
+): Promise<void> {
+  const deadline = Date.now() + 1_000;
+  while (
+    !manager.getRuntimeLogSnapshot(serverId).join("\n").includes(expected)
+  ) {
+    if (Date.now() >= deadline) {
+      throw new Error(`Timed out waiting for Runtime line: ${expected}`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
 }
 
 describe("ProcessManager lifecycle ownership", () => {
@@ -171,6 +188,36 @@ describe("ProcessManager lifecycle ownership", () => {
       manager.getRuntimeLogSnapshot(profile.id).join("\n"),
     ).not.toContain("Not all mods were installed");
     second.emit("spawn");
+    await manager.kill(profile.id);
+  });
+
+  it("captures log bytes written between process creation and tailer start", async () => {
+    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-spawn-log-"));
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
+    await mkdir(binaryDir, { recursive: true });
+    await writeFile(join(binaryDir, "ArkAscendedServer.exe"), "");
+    const logsDir = join(cleanupRoot, "ShooterGame", "Saved", "Logs");
+    await mkdir(logsDir, { recursive: true });
+    const logPath = join(logsDir, "ShooterGame.log");
+    await writeFile(logPath, "previous-run\n");
+
+    const child = fakeChild();
+    const manager = new ProcessManager({
+      spawnProcess: () => {
+        appendFileSync(logPath, "written-during-spawn\n", "utf8");
+        return child;
+      },
+    });
+    const profile = makeProfile(cleanupRoot);
+
+    manager.start(profile, { skipReadinessCheck: true });
+    child.emit("spawn");
+    await waitForRuntimeLine(manager, profile.id, "written-during-spawn");
+
+    const runtime = manager.getRuntimeLogSnapshot(profile.id).join("\n");
+    expect(runtime).toContain("written-during-spawn");
+    expect(runtime).not.toContain("previous-run");
+
     await manager.kill(profile.id);
   });
 

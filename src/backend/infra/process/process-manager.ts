@@ -442,7 +442,7 @@ export class ProcessManager extends EventEmitter {
         this.captureRuntimeChunk(profile.id, "log", text);
       },
     );
-    managed.logTailer.start(Date.parse(managed.startedAt));
+    managed.logTailer.start(managed.logSessionAnchor);
     this.emitStatus(profile.id);
 
     child.once("spawn", () => {
@@ -848,7 +848,7 @@ export class ProcessManager extends EventEmitter {
       if (this.processes.get(profile.id) !== managed) return;
       this.captureRuntimeChunk(profile.id, "log", text);
     });
-    managed.logTailer.start(Date.parse(managed.startedAt));
+    managed.logTailer.start(managed.logSessionAnchor);
     this.appendRuntimeLog(
       profile.id,
       "system",
