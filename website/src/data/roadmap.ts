@@ -13,7 +13,7 @@ export type RoadmapItem = {
  * Shipped in v0.11.0 (removed from this list): remove-from-YARK-only (#267).
  * Shipped in v0.10.0 (removed from this list): import existing install (#254),
  * profile-DB snapshots (#252), per-map world backups (#262), Electron fuses (#217).
- * Still omitted here (tracked in-repo): E2E/real-host validation (#12, #22), Authenticode (#142),
+ * Still omitted here (tracked in-repo): E2E/real-host validation (#12), Authenticode (#142),
  * incomplete-import opt-in (#283) is shipped with Import — not listed as future work.
  */
 export const roadmapItems: RoadmapItem[] = [
