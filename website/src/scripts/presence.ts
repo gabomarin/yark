@@ -126,14 +126,18 @@ function initProductRotator(): void {
   schedule();
 }
 
+function showRevealsImmediately(): void {
+  document.querySelectorAll<HTMLElement>("[data-reveal], [data-reveal-child]").forEach((el) => {
+    el.style.opacity = "1";
+  });
+}
+
 async function initScrollReveals(): Promise<void> {
   const roots = document.querySelectorAll<HTMLElement>("[data-reveal]");
   if (!roots.length) return;
 
-  if (prefersReducedMotion()) {
-    roots.forEach((el) => {
-      el.style.opacity = "1";
-    });
+  if (!canUseDesktopMotion()) {
+    showRevealsImmediately();
     return;
   }
 
