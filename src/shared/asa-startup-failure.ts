@@ -28,9 +28,29 @@ function collectModIds(text: string): string[] {
     .filter((id) => id.length > 0);
 }
 
+export function sanitizeAsaLogExcerpt(text: string, maxChars = 2_000): string {
+  const cleaned = text
+    .replace(/\0/g, "")
+    .replace(/[\u0001-\u0008\u000B\u000C\u000E-\u001F]/g, "")
+    .trim();
+  if (cleaned.length <= maxChars) return cleaned;
+  return `${cleaned.slice(0, maxChars).trimEnd()}…`;
+}
+
 function relevantExcerpt(lines: string[], start: number): string {
   const slice = lines.slice(start, Math.min(lines.length, start + 8));
-  return slice.map(stripLogPrefix).filter((line) => line.length > 0).join("\n");
+  return sanitizeAsaLogExcerpt(
+    slice.map(stripLogPrefix).filter((line) => line.length > 0).join("\n"),
+  );
+}
+
+function fatalSummary(excerpt: string): string {
+  const detail = excerpt
+    .split(/\n/)
+    .map((line) => line.trim())
+    .find((line) => line.length > 0 && !/^fatal error!?$/i.test(line));
+  if (detail === undefined) return "ASA reported a Fatal error during startup.";
+  return `ASA fatal: ${detail.length > 160 ? `${detail.slice(0, 157)}…` : detail}`;
 }
 
 /**
@@ -75,13 +95,14 @@ export function diagnoseAsaStartupFailure(logText: string): AsaStartupFailure | 
     /(?:^|\s)(?:LogFatal|Fatal error)/i.test(stripLogPrefix(line)),
   );
   if (fatalIndex >= 0) {
+    const excerpt = relevantExcerpt(lines, fatalIndex);
     return {
       kind: "fatal",
-      summary: "ASA reported a Fatal error during startup.",
+      summary: fatalSummary(excerpt),
       cause: "The dedicated process hit an engine fatal (often a missing mod, pak, or assert).",
       suggestion:
         "Read the Fatal lines in Runtime (ShooterGame.log). After a SteamCMD update, Verify files or disable the last mods you added.",
-      excerpt: relevantExcerpt(lines, fatalIndex),
+      excerpt,
       missingModIds: [],
     };
   }

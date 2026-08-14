@@ -17,7 +17,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
-- Runtime **ShooterGame.log** tail stays on with native console; the buffer is kept after a crash and cleared on the next Start; CFCore “mods not installed” and similar fatals become `server_crashed` Events (#326).
+- Runtime **ShooterGame.log** tail stays on with native console; the buffer is kept after a crash and cleared on the next Start; unexpected process exits record `server_crashed` with a bounded ShooterGame.log excerpt (#326).
 - Operator docs and marketing SEO: long-tail doc titles, richer SoftwareApplication schema (screenshots/features, no review stars), clearer favicons, GitHub About at getyark.com, and a short **why YARK exists** origin on the site and README (#305).
 - README hero adds cumulative GitHub Release **downloads** and a static **prerelease** status badge (#304).
 - Incomplete cluster directories and create/add-cluster summary folders use the same **ReadonlyPath** chips as Settings (#234).

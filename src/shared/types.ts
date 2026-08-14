@@ -360,6 +360,8 @@ export interface AppEventDetails {
   location?: string;
   /** Practical next step for the operator. */
   suggestion?: string;
+  /** Bounded ShooterGame.log / Fatal excerpt (crash events). */
+  excerpt?: string;
   /** Extra structured fields shown in the expanded view. */
   context?: Record<string, string | number | boolean | null>;
 }

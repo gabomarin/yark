@@ -45,7 +45,22 @@ describe("resolveEventDetails", () => {
     expect(resolved.cause).toBe("Custom cause");
     expect(resolved.location).toBe("D:\\logs");
     expect(resolved.suggestion).toBe("Do X");
+    expect(resolved.excerpt).toBeNull();
     expect(resolved.context).toContainEqual({ label: "exitCode", value: "8" });
+  });
+
+  it("keeps a stored ShooterGame.log excerpt on server_crashed", () => {
+    const resolved = resolveEventDetails(
+      base({
+        type: "server_crashed",
+        message: "ASA fatal: Assertion failed",
+        details: {
+          what: "ASA fatal: Assertion failed",
+          excerpt: "Fatal error!\nAssertion failed: nullptr+8",
+        },
+      }),
+    );
+    expect(resolved.excerpt).toContain("Assertion failed: nullptr+8");
   });
 
   it("describes installation health degradation", () => {

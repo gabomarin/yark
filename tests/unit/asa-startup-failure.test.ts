@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { diagnoseAsaStartupFailure } from "@shared/asa-startup-failure";
+import { diagnoseAsaStartupFailure, sanitizeAsaLogExcerpt } from "@shared/asa-startup-failure";
 
 const CFCORE_SNIPPET = `
 [2026.08.13-22.52.16:111][  0]LogCFCore: Detected OS Windows: 10.0.26200.1.256.64bit
@@ -26,7 +26,9 @@ describe("diagnoseAsaStartupFailure", () => {
       "2026-08-13 16:52:16.036 [0] LogTemp: hello\nFatal error!\nAssertion failed",
     );
     expect(result?.kind).toBe("fatal");
+    expect(result?.summary).toContain("Assertion failed");
     expect(result?.excerpt).toContain("Fatal error");
+    expect(result?.excerpt).toContain("Assertion failed");
   });
 
   it("returns null when the log is only startup noise", () => {
@@ -35,5 +37,12 @@ describe("diagnoseAsaStartupFailure", () => {
         "Log file open, 08/13/26 16:52:15\nARK Version: 92.37",
       ),
     ).toBeNull();
+  });
+
+  it("bounds and strips control characters from excerpts", () => {
+    const cleaned = sanitizeAsaLogExcerpt(`Fatal\0 error!\n${"x".repeat(3_000)}`);
+    expect(cleaned).not.toContain("\0");
+    expect(cleaned.endsWith("…")).toBe(true);
+    expect(cleaned.length).toBeLessThanOrEqual(2_001);
   });
 });

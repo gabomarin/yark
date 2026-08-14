@@ -5,6 +5,7 @@ export interface ResolvedEventDetails {
   cause: string | null;
   location: string | null;
   suggestion: string | null;
+  excerpt: string | null;
   context: Array<{ label: string; value: string }>;
 }
 
@@ -181,6 +182,7 @@ export function resolveEventDetails(event: AppEvent): ResolvedEventDetails {
     cause: stored.cause ?? catalog.cause ?? null,
     location: stored.location ?? catalog.location ?? null,
     suggestion: stored.suggestion ?? catalog.suggestion ?? null,
+    excerpt: stored.excerpt ?? catalog.excerpt ?? null,
     context,
   };
 }

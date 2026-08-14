@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { Badge, Text } from "@mantine/core";
+import { Badge, Code, Text } from "@mantine/core";
 import type { AppEvent } from "@shared/types";
 import { resolveEventDetails } from "@shared/event-details";
 import classes from "./LogsPage.module.css";
@@ -20,6 +20,14 @@ export function EventDetailsBody({ event }: Props): ReactElement {
       )}
       {details.suggestion !== null && (
         <DetailLine label="Try next" value={details.suggestion} />
+      )}
+      {details.excerpt !== null && details.excerpt.length > 0 && (
+        <div className={classes.eventDetailLine}>
+          <Text size="xs" c="dimmed" className={classes.eventDetailLabel}>
+            Log excerpt
+          </Text>
+          <Code block>{details.excerpt}</Code>
+        </div>
       )}
       {details.context.length > 0 && (
         <div className={classes.eventContext}>

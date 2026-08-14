@@ -8,7 +8,9 @@ or seeds logs for development and QA.
 - Give operators a single place for events, runtime console, SteamCMD update
   files, and backup history.
 - Attach structured **What / Cause / Where / Try next** details to events so
-  failures (especially safe update / rollback) are actionable.
+  failures (especially safe update / rollback) are actionable. `server_crashed`
+  also stores a short sanitised ShooterGame.log excerpt (Fatal / CFCore) because
+  Runtime is in-memory only.
 - Keep clear/export paths explicit so diagnostic data can be reset without
   deleting the SQLite database wholesale.
 - Bound YARK-owned operational history with a conservative retention policy

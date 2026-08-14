@@ -384,6 +384,12 @@ export class LogsService {
         if (details.cause !== null) sections.push(`  Cause: ${details.cause}`);
         if (details.location !== null) sections.push(`  Where: ${details.location}`);
         if (details.suggestion !== null) sections.push(`  Try next: ${details.suggestion}`);
+        if (details.excerpt !== null && details.excerpt.length > 0) {
+          sections.push("  Log excerpt:");
+          for (const line of details.excerpt.split("\n")) {
+            sections.push(`    ${line}`);
+          }
+        }
         for (const item of details.context) {
           sections.push(`  ${item.label}: ${item.value}`);
         }

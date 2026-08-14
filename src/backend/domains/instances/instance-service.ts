@@ -31,9 +31,8 @@ import {
 import type { BackupService } from "../backups/backup-service";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";
-import type { ProcessManager } from "../../infra/process/process-manager";
+import type { ProcessManager, UnexpectedManagedExit } from "../../infra/process/process-manager";
 import { mapIdentityStartBlockers } from "@shared/map-identity";
-import { diagnoseAsaStartupFailure } from "@shared/asa-startup-failure";
 import { findPortConflicts, validateProfileInput } from "./validation";
 import { checkClusterCompliance } from "../cluster/compliance";
 import { RconSessionManager } from "../../infra/rcon/rcon-session-manager";
@@ -170,7 +169,6 @@ export class InstanceService extends EventEmitter {
   private lastInstallServers: ServerInstallationInfo[] = [];
   /** Last classified health per server — used for degradation-only events (#57). */
   private readonly lastKnownInstallHealth = new Map<string, InstallationHealthStatus>();
-  private readonly lastRuntimeStatus = new Map<string, ServerRuntimeInfo["status"]>();
   /** Coalesce concurrent full-fleet installation inspects for the same profile set + cache mode. */
   private fleetInspectInFlight: {
     key: string;
@@ -200,8 +198,6 @@ export class InstanceService extends EventEmitter {
     // Persistent session only while `running`; keep the socket during
     // `stopping` for SaveWorld/DoExit but never auto-reconnect.
     this.processes.on("status", (status: ServerRuntimeInfo) => {
-      const previous = this.lastRuntimeStatus.get(status.serverId);
-      this.lastRuntimeStatus.set(status.serverId, status.status);
       if (status.status === "running") {
         this.rconSessions.setAutoReconnect(status.serverId, true);
         const profile = this.repo.get(status.serverId);
@@ -215,9 +211,9 @@ export class InstanceService extends EventEmitter {
       } else if (status.status === "stopped" || status.status === "error") {
         this.rconSessions.disconnect(status.serverId);
       }
-      if (status.status === "error" && previous !== "error") {
-        this.recordUnexpectedProcessExit(status);
-      }
+    });
+    this.processes.on("unexpected-exit", (payload: UnexpectedManagedExit) => {
+      this.recordUnexpectedProcessExit(payload);
     });
   }
 
@@ -1293,23 +1289,25 @@ export class InstanceService extends EventEmitter {
     return `${bypassCache ? "1" : "0"}\n${ids}`;
   }
 
-  private recordUnexpectedProcessExit(status: ServerRuntimeInfo): void {
-    const profile = this.repo.get(status.serverId);
-    const name = profile?.name ?? status.serverId;
-    const diagnosis = diagnoseAsaStartupFailure(
-      this.processes.getRuntimeLogSnapshot(status.serverId, 400).join("\n"),
-    );
+  private recordUnexpectedProcessExit(payload: UnexpectedManagedExit): void {
+    const profile = this.repo.get(payload.serverId);
+    const name = profile?.name ?? payload.serverId;
+    const diagnosis = payload.diagnosis;
     const summary =
       diagnosis?.summary ??
-      status.lastError ??
+      payload.lastError ??
       `Server "${name}" exited unexpectedly`;
-    this.repo.addEvent(status.serverId, "server_crashed", "error", summary, {
+    const excerpt = diagnosis?.excerpt?.trim() ?? "";
+    this.repo.addEvent(payload.serverId, "server_crashed", "error", summary, {
       what: summary,
       cause: diagnosis?.cause,
       location: "ShooterGame/Saved/Logs/ShooterGame.log",
       suggestion: diagnosis?.suggestion,
+      excerpt: excerpt.length > 0 ? excerpt : undefined,
       context: {
-        lastError: status.lastError,
+        lastError: payload.lastError,
+        phase: payload.phase,
+        exitCode: payload.exitCode,
         missingModIds:
           diagnosis !== null && diagnosis.missingModIds.length > 0
             ? diagnosis.missingModIds.join(",")

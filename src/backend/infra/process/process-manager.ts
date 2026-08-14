@@ -22,8 +22,13 @@ import {
   serverBinaryPath,
 } from "../../domains/instances/launch-args";
 import { rconExec } from "../rcon/rcon-client";
-import { diagnoseAsaStartupFailure } from "@shared/asa-startup-failure";
-import { AsaSavedLogsTailer, readAsaLogTailExcerpt } from "./asa-log-tail";
+import { diagnoseAsaStartupFailure, type AsaStartupFailure } from "@shared/asa-startup-failure";
+import {
+  AsaSavedLogsTailer,
+  captureAsaLogSessionAnchor,
+  readAsaLogSessionExcerpt,
+  type AsaLogSessionAnchor,
+} from "./asa-log-tail";
 import { createAdoptedChildHandle } from "./adopted-child";
 import { killWinProcessTreeAsync } from "./kill-win-process-tree";
 import { queryWindowsProcessIdentity } from "./windows-process-identity";
@@ -36,6 +41,7 @@ interface ManagedProcess {
   lastError: string | null;
   readinessGeneration: number;
   logTailer: AsaSavedLogsTailer | null;
+  logSessionAnchor: AsaLogSessionAnchor;
   executablePath: string;
   installDir: string;
   launchArgs: string[];
@@ -59,6 +65,15 @@ export type FinishGracefulStopResult =
   | "stopped"
   | "already_exited"
   | "replaced";
+
+/** Observed child exit that was not an operator stop. */
+export interface UnexpectedManagedExit {
+  serverId: string;
+  exitCode: number | null;
+  phase: "starting" | "running";
+  lastError: string;
+  diagnosis: AsaStartupFailure | null;
+}
 
 function argsIncludeLogFlag(args: string[]): boolean {
   return args.some((arg) => /^[-/]log$/i.test(arg.trim()));
@@ -356,6 +371,7 @@ export class ProcessManager extends EventEmitter {
     }
 
     this.clearRuntimeLog(profile.id);
+    const logSessionAnchor = captureAsaLogSessionAnchor(profile.installDir);
     const args = options?.launchArgsOverride ?? buildLaunchArgs(profile);
     const nativeConsole = options?.openNativeConsole === true;
     let spawnArgs = args;
@@ -393,6 +409,7 @@ export class ProcessManager extends EventEmitter {
       lastError: null,
       readinessGeneration: 0,
       logTailer: null,
+      logSessionAnchor,
       executablePath: binary,
       installDir: profile.installDir,
       launchArgs: [...spawnArgs],
@@ -811,6 +828,7 @@ export class ProcessManager extends EventEmitter {
       lastError: null,
       readinessGeneration: 0,
       logTailer: null,
+      logSessionAnchor: captureAsaLogSessionAnchor(record.installDir),
       executablePath: record.executablePath,
       installDir: record.installDir,
       launchArgs: [...record.launchArgs],
@@ -1145,6 +1163,7 @@ export class ProcessManager extends EventEmitter {
   ): void {
     const wasStopping = managed.status === "stopping";
     const wasStarting = managed.status === "starting";
+    const wasRunning = managed.status === "running";
     managed.readinessGeneration += 1;
     managed.logTailer?.stop();
     managed.logTailer = null;
@@ -1156,9 +1175,11 @@ export class ProcessManager extends EventEmitter {
       `Process exited with code ${code ?? "unknown"}`,
     );
     this.clearProcessCheckpoint(serverId);
-    const unexpected = !wasStopping && (wasStarting || code !== 0);
+    const unexpected = !wasStopping && (wasStarting || (wasRunning && code !== 0));
     if (!unexpected) {
-      this.processes.delete(serverId);
+      if (managed.status !== "error") {
+        this.processes.delete(serverId);
+      }
       this.emitStatus(serverId);
       return;
     }
@@ -1166,7 +1187,7 @@ export class ProcessManager extends EventEmitter {
     const diagnosis = diagnoseAsaStartupFailure(
       [
         this.getRuntimeLogSnapshot(serverId, 400).join("\n"),
-        readAsaLogTailExcerpt(managed.installDir),
+        readAsaLogSessionExcerpt(managed.installDir, managed.logSessionAnchor),
       ].join("\n"),
     );
     if (diagnosis !== null) {
@@ -1181,6 +1202,13 @@ export class ProcessManager extends EventEmitter {
       (wasStarting
         ? `Process exited during startup (code ${code ?? "unknown"})`
         : `Process exited unexpectedly (code ${code ?? "unknown"})`);
+    this.emit("unexpected-exit", {
+      serverId,
+      exitCode: code,
+      phase: wasStarting ? "starting" : "running",
+      lastError: managed.lastError,
+      diagnosis,
+    } satisfies UnexpectedManagedExit);
     this.emitStatus(serverId);
   }
 

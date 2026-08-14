@@ -155,8 +155,9 @@ Constraints:
   (`MAX_RUNTIME_LOG_LINES = 1200`) is cleared on the **next Start**, not when
   the process crashes — so CFCore/Fatal lines stay visible until you launch again.
   An unexpected exit during `starting` (including exit code 0) is an error;
-  YARK records `server_crashed` with a ShooterGame.log diagnosis when it can
-  (for example ASAMods “Not all mods were installed”).
+  YARK records `server_crashed` only after that process exit (not spawn/RCON/kill
+  failures while the child is still live), with a bounded ShooterGame.log excerpt
+  from **this** run when CFCore/Fatal lines are present.
 - `servers:open-native-terminal` opens a separate `cmd` in the install dir; that
   is **not** the game process.
 
