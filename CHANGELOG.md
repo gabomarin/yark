@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-08-13
+
 ### Added
 
 - Animated **startup splash** from `brand/splashscreen.svg` (1.5s min, until main is ready) on the same display as the restored window; honors reduced motion and does not block boot if splash assets fail; skipped during E2E (#317).
@@ -22,13 +24,13 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Operator docs and marketing SEO: long-tail doc titles, richer SoftwareApplication schema (screenshots/features, no review stars), clearer favicons, GitHub About at getyark.com, and a short **why YARK exists** origin on the site and README (#305).
 - README hero adds cumulative GitHub Release **downloads** and a static **prerelease** status badge (#304).
 - Incomplete cluster directories and create/add-cluster summary folders use the same **ReadonlyPath** chips as Settings (#234).
-- Agent docs treat private Notion Product Lab as canonical for unreleased planning (hub URL stays gitignored).
 - Compact **UI density** shrinks workspace Add server / rail icons, INI open-file, and sidebar SteamCMD controls that were stuck at md/lg (#233).
 - Create/edit **server form** paths use the same Browse chip as Settings (no typed install/cluster paths) (#222).
 - **Create/edit server** form uses AppSurfaceCard identity + reachability columns in the app shell and workspace tab, a reserved port-conflict slot, and a fixed Create server / Save changes footer (#292).
 - **New server** Map is official maps only; Custom… stays on edit, import, and clone (#292).
 - Workspace, Settings auto-start, and Logs fleet empties use the shared **EmptyState** shell; backup and RCON action toasts go through `showOperatorToast` / `showOperatorError` (#223).
 - **Log retention** day fields accept a minimum of 1 day (was 7).
+- YARK updates **Download** and **Restart and install** use fossil amber instead of teal, so the CTA is easier to read on the dark shell.
 
 ### Fixed
 

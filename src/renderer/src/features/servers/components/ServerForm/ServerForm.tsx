@@ -76,7 +76,6 @@ export function ServerForm(props: Props): ReactElement {
     const field = key as keyof ServerFormState;
     return state[field] !== initialStateRef.current[field];
   });
-  dirtyRef.current = isDirty;
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [createPathIssue, setCreatePathIssue] = useState<string | null>(null);
@@ -116,6 +115,7 @@ export function ServerForm(props: Props): ReactElement {
   }, [confirmLeaveIfDirty, props.onRegisterLeaveGuard]);
 
   useEffect(() => {
+    dirtyRef.current = isDirty;
     props.onDirtyChange?.(isDirty);
   }, [isDirty, props.onDirtyChange]);
 
@@ -292,7 +292,10 @@ export function ServerForm(props: Props): ReactElement {
       setSaving(false);
     }
   };
-  submitRef.current = submit;
+
+  useEffect(() => {
+    submitRef.current = submit;
+  });
 
   const revertProfile = (): void => {
     setState(initialStateRef.current);

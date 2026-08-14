@@ -10,6 +10,8 @@ export type RoadmapItem = {
  * Prefer operator-visible product work from open issues (not CI/packaging hygiene).
  * Not a ship promise — keep wording directional. Milestones on GitHub stay authoritative.
  *
+ * Shipped in v0.12.0 (not previously listed here): splash (#317), What's new (#290),
+ * ServerForm / leave-guards, crash Runtime logs (#326), cluster live-transfer docs (#22).
  * Shipped in v0.11.0 (removed from this list): remove-from-YARK-only (#267).
  * Shipped in v0.10.0 (removed from this list): import existing install (#254),
  * profile-DB snapshots (#252), per-map world backups (#262), Electron fuses (#217).

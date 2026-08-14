@@ -45,6 +45,7 @@ the Server tab / workspace.
 | Opted-in auto-start **summary** | Quit-with-servers Stop/Cancel dialog (hardcoded in main; not a Setting) |
 | **Log retention** limits + Clean up now | Per-section clear on Logs workspace; ASA Saved/Logs never touched — [logs.md](logs.md) |
 | **YARK updates** check / download / restart | Overview **Check for updates** is ASA/SteamCMD only; sidebar `vX.Y.Z` accents when a YARK update is available — [versioning.md](versioning.md) |
+| **What's new** (curated notes, one-shot after upgrade) | Sidebar version label; Settings → YARK updates → What's new (#290) |
 
 ## Controls and defaults
 

@@ -55,6 +55,8 @@ Settings lists profiles that opted into **Auto-start with YARK**. Turn the prefe
 
 **YARK updates** checks GitHub Releases for a newer desktop build (not ASA/SteamCMD). After launch, YARK quietly checks in the background; when an update is available (or a download finishes), you get an operator toast and the sidebar version uses an accent color — click either to open this section. Then **Check now** → **Download** → **Restart and install**. Install is blocked while servers or critical jobs are busy. Unpackaged/dev builds can check but cannot install.
 
+**What's new** (same notes as the public changelog) opens once after you upgrade to a version that has curated notes. Open it anytime from Settings → YARK updates, or by clicking the sidebar `vX.Y.Z` label (the update badge still opens this YARK updates section).
+
 ## What stays local
 
 Profiles, settings, events, and backup metadata live in local SQLite under the app userData folder (on Windows typically under `%APPDATA%`). There is no YARK cloud account. Server/admin credentials are local too; review the current storage and backup boundary before sharing app data or INI files.
