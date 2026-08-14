@@ -17,6 +17,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Operator docs record a real-host **cluster transfer** checklist (two maps, items/dinos/survivor, restart, return trip) (#22).
 - Operator docs and marketing SEO: long-tail doc titles, richer SoftwareApplication schema (screenshots/features, no review stars), clearer favicons, GitHub About at getyark.com, and a short **why YARK exists** origin on the site and README (#305).
 - README hero adds cumulative GitHub Release **downloads** and a static **prerelease** status badge (#304).
 - Incomplete cluster directories and create/add-cluster summary folders use the same **ReadonlyPath** chips as Settings (#234).

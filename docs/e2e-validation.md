@@ -19,6 +19,7 @@ binaries, SteamCMD, backups, rollback).
 | Safe-update A–F | `node scripts/validation/validate-safe-update.cjs --confirm` | **Manual real-host** | See [updates-steamcmd.md](updates-steamcmd.md#real-host-validation-windows); evidence linked from #12 / #14 |
 | Start → RCON ready → stop/restart on real ASA | Operator runbook (below) | **Manual real-host** | Not downloaded in CI |
 | Backup restore (test-owned) | Operator Backups UI + disposable profile | **Manual real-host** | Never operator production worlds |
+| Cluster survivor / item / dino transfers | Operator client + two YARK servers | **Manual real-host** | [spikes/22-cluster-live-transfers.md](spikes/22-cluster-live-transfers.md) (#22) |
 | ProcessManager real spawn | `npm test -- tests/integration/process-manager-real-start.test.ts` | Unit/integration (Windows) | Fake `ArkAscendedServer.exe` via `PING.EXE`; cleanup retries `EBUSY` |
 
 ## PR CI contract
