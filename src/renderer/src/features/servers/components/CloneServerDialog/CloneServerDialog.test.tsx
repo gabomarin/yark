@@ -31,6 +31,8 @@ describe("CloneServerDialog", () => {
     window.api = {
       ...window.api,
       pickFolder: vi.fn(),
+      cancelCloneServerCopy: vi.fn(),
+      onCloneInstallProgress: vi.fn(() => () => undefined),
     } as typeof window.api;
   });
 
@@ -86,5 +88,128 @@ describe("CloneServerDialog", () => {
     expect(screen.getByLabelText("Install directory")).toHaveTextContent(
       "D:\\Custom\\Clone",
     );
+  });
+
+  it("keeps Copy entire server folder off by default", () => {
+    render(
+      <AppProviders>
+        <CloneServerDialog
+          opened
+          sourceServer={source}
+          onClose={vi.fn()}
+          onClone={vi.fn(async () => true)}
+        />
+      </AppProviders>,
+    );
+
+    expect(
+      screen.getByRole("checkbox", { name: /Copy entire server folder/i }),
+    ).not.toBeChecked();
+  });
+
+  it("sends copyInstallFolder when the operator opts in", async () => {
+    const user = userEvent.setup();
+    const onClone = vi.fn(async () => true);
+
+    render(
+      <AppProviders>
+        <CloneServerDialog
+          opened
+          sourceServer={source}
+          onClose={vi.fn()}
+          onClone={onClone}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(
+      screen.getByRole("checkbox", { name: /Copy entire server folder/i }),
+    );
+    await user.click(screen.getByRole("button", { name: "Clone server" }));
+
+    expect(onClone).toHaveBeenCalledWith(
+      expect.objectContaining({ copyInstallFolder: true }),
+    );
+  });
+
+  it("disables folder copy when the source has no install files", async () => {
+    const user = userEvent.setup();
+    const onClone = vi.fn(async () => true);
+
+    render(
+      <AppProviders>
+        <CloneServerDialog
+          opened
+          sourceServer={source}
+          sourceHealth="empty"
+          onClose={vi.fn()}
+          onClone={onClone}
+        />
+      </AppProviders>,
+    );
+
+    const copy = screen.getByRole("checkbox", {
+      name: /Copy entire server folder/i,
+    });
+    expect(copy).toBeDisabled();
+    expect(copy).not.toBeChecked();
+    expect(
+      screen.getByText(/no install files yet/i),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Clone server" }));
+    expect(onClone).toHaveBeenCalledWith(
+      expect.objectContaining({ copyInstallFolder: false }),
+    );
+  });
+
+  it("warns when copying an incomplete install", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AppProviders>
+        <CloneServerDialog
+          opened
+          sourceServer={source}
+          sourceHealth="incomplete"
+          onClose={vi.fn()}
+          onClone={vi.fn(async () => true)}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(
+      screen.getByRole("checkbox", { name: /Copy entire server folder/i }),
+    );
+    expect(
+      screen.getByText(/install is incomplete/i),
+    ).toBeInTheDocument();
+  });
+
+  it("blocks copy while the source server is still running", async () => {
+    const user = userEvent.setup();
+    const onClone = vi.fn(async () => true);
+
+    render(
+      <AppProviders>
+        <CloneServerDialog
+          opened
+          sourceServer={source}
+          sourceBusy
+          onClose={vi.fn()}
+          onClone={onClone}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(
+      screen.getByRole("checkbox", { name: /Copy entire server folder/i }),
+    );
+
+    expect(
+      screen.getByText(/before copying the entire folder/i),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Clone server" })).toBeDisabled();
+    expect(onClone).not.toHaveBeenCalled();
   });
 });

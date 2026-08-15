@@ -136,6 +136,12 @@ export function registerIpcHandlers(
     ([id, params]) => instances.cloneWithParams(id, params),
   );
 
+  handleValidated(
+    IPC.serversCloneCopyCancel,
+    ipcArgSchemas[IPC.serversCloneCopyCancel],
+    () => instances.cancelCloneCopy(),
+  );
+
   handleValidated(IPC.serversProbeImport, ipcArgSchemas[IPC.serversProbeImport], ([installDir]) =>
     probeImportInstall(
       installDir,

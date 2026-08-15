@@ -1,5 +1,6 @@
 import type {
   BackupKind,
+  CloneInstallProgress,
   ClusterComplianceReport,
   InstallationHealthStatus,
   InstallationServersMode,
@@ -16,6 +17,7 @@ import type {
 import { EMPTY_WIPE_STALE_MESSAGE, PORT_MAX, PORT_MIN } from "@shared/types";
 import { applyServerProfilePatch } from "@shared/server-profile";
 import { EventEmitter } from "node:events";
+import { type ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createConnection } from "node:net";
@@ -60,6 +62,17 @@ import {
   readOfficialArkVersionCached,
 } from "./server-installation";
 import { gameUserSettingsIniPath, syncProfileSettingsToIni } from "./sync-profile-ini";
+import { seedCloneIniFiles } from "./clone-ini-seed";
+import {
+  assertEnoughFreeSpaceForCopy,
+  copyInstallTreeWithProgress,
+  estimateDirectoryBytes,
+} from "./clone-install-copy";
+import { killChildProcessTreeAsync } from "../../infra/process/kill-win-process-tree";
+import {
+  isOperationCancelledError,
+  OperationCancelledError,
+} from "../updates/robocopy-tree";
 import {
   isInstallHealthDegradation,
   isInstallationReady,
@@ -181,6 +194,10 @@ export class InstanceService extends EventEmitter {
    * console commands without a live ASA dedicated (see scripts/e2e-rcon.cjs).
    */
   private readonly e2eRconMock = process.env["YARK_E2E_RCON_MOCK"] === "1";
+  /** True while an opt-in clone folder copy is running (#160). */
+  private cloneCopyBusy = false;
+  private cloneCopyCancelRequested = false;
+  private cloneCopyActiveChild: ChildProcess | null = null;
 
   constructor(
     private readonly repo: ServerRepository,
@@ -570,7 +587,12 @@ export class InstanceService extends EventEmitter {
       this.assertValidInput(input);
       await this.assertCreateInstallTarget(input.installDir);
       const profile = this.repo.create(input, source.enabled);
-      void this.ensureDefaultIniFiles(profile.installDir);
+      try {
+        await seedCloneIniFiles(source.installDir, profile);
+      } catch (error) {
+        await this.delete(profile.id, { deleteInstallFiles: true }).catch(() => undefined);
+        throw error;
+      }
       this.repo.addEvent(
         profile.id,
         "server_created",
@@ -591,52 +613,34 @@ export class InstanceService extends EventEmitter {
       queryPort: number;
       rconPort: number;
       installDir: string;
+      copyInstallFolder?: boolean;
     },
   ): Promise<ServerProfile> {
+    if (params.copyInstallFolder === true) {
+      return this.cloneWithFolderCopy(id, params);
+    }
     return this.withFleetCreateLock(async () => {
-      const source = this.repo.get(id);
-      if (source === null) {
-        throw new Error("Server to clone does not exist");
+      const source = this.requireCloneSource(id);
+      const profile = await this.createCloneProfile(source, params);
+      try {
+        await seedCloneIniFiles(source.installDir, profile);
+      } catch (error) {
+        await this.delete(profile.id, { deleteInstallFiles: true }).catch(() => undefined);
+        throw error;
       }
-
-      const installDir = normalizeWindowsPath(params.installDir);
-      const input: ServerProfileInput = {
-        name: params.name,
-        map: source.map,
-        mapModId: source.mapModId ?? null,
-        mapSaveFolder: source.mapSaveFolder ?? null,
-        installDir,
-        sessionName: params.sessionName,
-        gamePort: params.gamePort,
-        queryPort: params.queryPort,
-        rconPort: params.rconPort,
-        serverPassword: source.serverPassword,
-        adminPassword: source.adminPassword,
-        clusterId: source.clusterId,
-        clusterDir: source.clusterDir,
-        extraArgs: [...source.extraArgs],
-        structuredLaunchArgs: { ...(source.structuredLaunchArgs ?? {}) },
-        mods: [...source.mods],
-        disabledMods: [...(source.disabledMods ?? [])],
-        modMetadataCache: { ...(source.modMetadataCache ?? {}) },
-        autoStart: source.autoStart,
-      };
-
-      this.assertValidInput(input);
-      this.assertUniqueName(input.name);
-      await this.assertCreateInstallTarget(input.installDir);
-      this.assertNoPortConflicts(input);
-
-      const profile = this.repo.create(input, source.enabled);
-      void this.ensureDefaultIniFiles(profile.installDir);
-      this.repo.addEvent(
-        profile.id,
-        "server_created",
-        "info",
-        `Server "${profile.name}" created at ${profile.installDir} (map ${profile.map})`,
-      );
+      this.recordCloneCreated(profile, false);
       return profile;
     });
+  }
+
+  /** Cancels an in-flight clone folder copy. Returns false when none is active. */
+  cancelCloneCopy(): boolean {
+    if (!this.cloneCopyBusy) {
+      return false;
+    }
+    this.cloneCopyCancelRequested = true;
+    void killChildProcessTreeAsync(this.cloneCopyActiveChild);
+    return true;
   }
 
   async start(id: string, options?: StartServerOptions): Promise<void> {
@@ -888,7 +892,11 @@ export class InstanceService extends EventEmitter {
    * lock still held across the post-backup → start window.
    */
   shouldBlockAppQuit(): boolean {
-    return this.isStopInProgress() || this.locks.hasPurpose("restart");
+    return (
+      this.isStopInProgress()
+      || this.locks.hasPurpose("restart")
+      || this.cloneCopyBusy
+    );
   }
 
   async waitForStopJobs(): Promise<void> {
@@ -938,9 +946,21 @@ export class InstanceService extends EventEmitter {
    * (covers sync → spawn), then graceful-stop leftover active processes.
    */
   async settleForAppQuit(): Promise<void> {
+    if (this.cloneCopyBusy) {
+      this.cancelCloneCopy();
+      await this.waitForCloneCopyIdle();
+    }
     await this.waitForStopJobs();
     await this.locks.waitUntilNoPurpose("restart");
     await this.stopAllForAppQuit();
+  }
+
+  private async waitForCloneCopyIdle(): Promise<void> {
+    while (this.cloneCopyBusy) {
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 100);
+      });
+    }
   }
 
   private async withCriticalJob<T>(
@@ -1762,5 +1782,290 @@ export class InstanceService extends EventEmitter {
     this.assertInstallDirNotNestedWithFleet(installDir);
     await assertNotInsideAsaInstall(installDir);
     await assertInstallDirVacantForCreate(installDir);
+  }
+
+  private requireCloneSource(id: string): ServerProfile {
+    const source = this.repo.get(id);
+    if (source === null) {
+      throw new Error("Server to clone does not exist");
+    }
+    return source;
+  }
+
+  private async createCloneProfile(
+    source: ServerProfile,
+    params: {
+      name: string;
+      sessionName: string;
+      gamePort: number;
+      queryPort: number;
+      rconPort: number;
+      installDir: string;
+    },
+  ): Promise<ServerProfile> {
+    const installDir = normalizeWindowsPath(params.installDir);
+    const input: ServerProfileInput = {
+      name: params.name,
+      map: source.map,
+      mapModId: source.mapModId ?? null,
+      mapSaveFolder: source.mapSaveFolder ?? null,
+      installDir,
+      sessionName: params.sessionName,
+      gamePort: params.gamePort,
+      queryPort: params.queryPort,
+      rconPort: params.rconPort,
+      serverPassword: source.serverPassword,
+      adminPassword: source.adminPassword,
+      clusterId: source.clusterId,
+      clusterDir: source.clusterDir,
+      extraArgs: [...source.extraArgs],
+      structuredLaunchArgs: { ...(source.structuredLaunchArgs ?? {}) },
+      mods: [...source.mods],
+      disabledMods: [...(source.disabledMods ?? [])],
+      modMetadataCache: { ...(source.modMetadataCache ?? {}) },
+      autoStart: source.autoStart,
+    };
+
+    this.assertValidInput(input);
+    this.assertUniqueName(input.name);
+    await this.assertCreateInstallTarget(input.installDir);
+    this.assertNoPortConflicts(input);
+    return this.repo.create(input, source.enabled);
+  }
+
+  private recordCloneCreated(profile: ServerProfile, copiedFolder: boolean): void {
+    const copiedNote = copiedFolder ? ", install folder copied" : "";
+    this.repo.addEvent(
+      profile.id,
+      "server_created",
+      "info",
+      `Server "${profile.name}" created at ${profile.installDir} (map ${profile.map}${copiedNote})`,
+    );
+  }
+
+  private async cloneWithFolderCopy(
+    id: string,
+    params: {
+      name: string;
+      sessionName: string;
+      gamePort: number;
+      queryPort: number;
+      rconPort: number;
+      installDir: string;
+    },
+  ): Promise<ServerProfile> {
+    if (this.cloneCopyBusy) {
+      throw new Error("Another clone folder copy is already running");
+    }
+
+    this.cloneCopyBusy = true;
+    this.cloneCopyCancelRequested = false;
+    this.cloneCopyActiveChild = null;
+
+    let source: ServerProfile | null = null;
+    let created: ServerProfile | null = null;
+    try {
+      source = this.requireCloneSource(id);
+      this.assertCloneCopySourceIdle(source.id);
+      await this.assertCloneCopySourceHasFiles(source);
+      this.throwIfCloneCopyCancelled();
+
+      this.emitCloneProgress({
+        serverId: source.id,
+        active: true,
+        phase: "validating",
+        label: "Checking disk space for the folder copy…",
+        percent: 4,
+        sourceDir: source.installDir,
+        destinationDir: normalizeWindowsPath(params.installDir),
+        error: null,
+      });
+
+      const sourceBytes = await estimateDirectoryBytes(source.installDir);
+      this.throwIfCloneCopyCancelled();
+      await assertEnoughFreeSpaceForCopy(
+        normalizeWindowsPath(params.installDir),
+        sourceBytes,
+      );
+      this.throwIfCloneCopyCancelled();
+
+      created = await this.withFleetCreateLock(async () => {
+        const latest = this.requireCloneSource(id);
+        this.assertCloneCopySourceIdle(latest.id);
+        return this.createCloneProfile(latest, params);
+      });
+
+      await this.locks.withLock(source.id, "clone-copy", async () => {
+        await this.locks.withLock(created!.id, "clone-copy", async () => {
+          this.assertCloneCopySourceIdle(source!.id, { ignoreHeldLock: true });
+          this.throwIfCloneCopyCancelled();
+          this.emitCloneProgress({
+            serverId: source!.id,
+            active: true,
+            phase: "copying",
+            label: "Copying server folder…",
+            percent: 10,
+            sourceDir: source!.installDir,
+            destinationDir: created!.installDir,
+            error: null,
+          });
+          await copyInstallTreeWithProgress({
+            sourceDir: source!.installDir,
+            destDir: created!.installDir,
+            sourceBytes,
+            isCancelled: () => this.cloneCopyCancelRequested,
+            onSpawn: (child) => {
+              this.cloneCopyActiveChild = child;
+            },
+            onProgress: (percent, label) => {
+              this.emitCloneProgress({
+                serverId: source!.id,
+                active: true,
+                phase: "copying",
+                label,
+                percent,
+                sourceDir: source!.installDir,
+                destinationDir: created!.installDir,
+                error: null,
+              });
+            },
+          });
+        });
+      });
+
+      this.emitCloneProgress({
+        serverId: source.id,
+        active: true,
+        phase: "applying",
+        label: "Applying the new ports and session name…",
+        percent: 94,
+        sourceDir: source.installDir,
+        destinationDir: created.installDir,
+        error: null,
+      });
+      await syncProfileSettingsToIni(created);
+      this.recordCloneCreated(created, true);
+      return created;
+    } catch (error) {
+      if (created !== null) {
+        try {
+          await this.rollbackFailedCloneCopy(created, source?.id ?? created.id);
+        } catch (cleanupError) {
+          const copyMessage =
+            error instanceof Error ? error.message : String(error);
+          const cleanupMessage =
+            cleanupError instanceof Error
+              ? cleanupError.message
+              : String(cleanupError);
+          throw new Error(
+            `Could not copy the server folder (${copyMessage}). The new profile "${created.name}" may still exist and files may remain at ${created.installDir}. Remove that incomplete server in YARK if it is still listed. Cleanup: ${cleanupMessage}`,
+          );
+        }
+        throw this.cloneCopyFailure(error, true);
+      }
+      if (isOperationCancelledError(error)) {
+        throw new Error("Folder copy cancelled.");
+      }
+      throw error;
+    } finally {
+      this.cloneCopyBusy = false;
+      this.cloneCopyCancelRequested = false;
+      this.cloneCopyActiveChild = null;
+      if (source !== null) {
+        this.emitCloneProgress({
+          serverId: source.id,
+          active: false,
+          phase: null,
+          label: "",
+          percent: null,
+          sourceDir: source.installDir,
+          destinationDir:
+            created?.installDir ?? normalizeWindowsPath(params.installDir),
+          error: null,
+        });
+      }
+    }
+  }
+
+  private assertCloneCopySourceIdle(
+    sourceId: string,
+    options?: { ignoreHeldLock?: boolean },
+  ): void {
+    if (this.processes.isActive(sourceId)) {
+      throw new Error("Stop the server before copying its install folder");
+    }
+    if (this.isStopInProgress(sourceId)) {
+      throw new Error("Cannot copy the install folder while the server is stopping");
+    }
+    if (this.backups.hasServerWork(sourceId)) {
+      throw new Error("Cannot copy the install folder while a backup job is running");
+    }
+    if (options?.ignoreHeldLock !== true && this.locks.isLocked(sourceId)) {
+      throw new Error(
+        "Cannot copy the install folder while another job is running on this server",
+      );
+    }
+  }
+
+  private async assertCloneCopySourceHasFiles(source: ServerProfile): Promise<void> {
+    const installation = await inspectServerInstallationAsync(
+      source.id,
+      source.installDir,
+      { bypassCache: true },
+    );
+    if (
+      installation.health === "missing"
+      || installation.health === "empty"
+      || installation.health === "inaccessible"
+      || installation.health === "unknown"
+    ) {
+      throw new Error(
+        `The source install folder has no server files to copy (${installation.health}). Uncheck Copy entire server folder to clone the profile only.`,
+      );
+    }
+  }
+
+  private throwIfCloneCopyCancelled(): void {
+    if (this.cloneCopyCancelRequested) {
+      throw new OperationCancelledError("Folder copy cancelled");
+    }
+  }
+
+  private emitCloneProgress(payload: CloneInstallProgress): void {
+    this.emit("clone-progress", payload);
+  }
+
+  private async rollbackFailedCloneCopy(
+    profile: ServerProfile,
+    sourceServerId: string,
+  ): Promise<void> {
+    this.emitCloneProgress({
+      serverId: sourceServerId,
+      active: true,
+      phase: "cleanup",
+      label: "Removing the incomplete clone…",
+      percent: 96,
+      sourceDir: null,
+      destinationDir: profile.installDir,
+      error: null,
+    });
+    await this.delete(profile.id, { deleteInstallFiles: true });
+  }
+
+  private cloneCopyFailure(error: unknown, removedClone: boolean): Error {
+    if (isOperationCancelledError(error)) {
+      return new Error(
+        removedClone
+          ? "Folder copy cancelled. The clone was not kept."
+          : "Folder copy cancelled.",
+      );
+    }
+    const message = error instanceof Error ? error.message : String(error);
+    if (removedClone) {
+      return new Error(
+        `Could not copy the server folder (${message}). The incomplete clone was removed.`,
+      );
+    }
+    return error instanceof Error ? error : new Error(message);
   }
 }

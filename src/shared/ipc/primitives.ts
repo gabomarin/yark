@@ -166,6 +166,8 @@ export const cloneWithParamsSchema = z
     queryPort: portSchema,
     rconPort: portSchema,
     installDir: windowsAbsPathSchema,
+    /** When true, copy the source install tree into the new folder (#160). */
+    copyInstallFolder: z.boolean().optional(),
   })
   .strict();
 

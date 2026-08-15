@@ -7,6 +7,12 @@ import type { ServerRepository } from "@backend/infra/db/server-repository";
 import type { ServerProfile, ServerProfileInput } from "@shared/types";
 import { inspectServerInstallation } from "@backend/domains/instances/server-installation";
 import { syncProfileSettingsToIni } from "@backend/domains/instances/sync-profile-ini";
+import { seedCloneIniFiles } from "@backend/domains/instances/clone-ini-seed";
+import {
+  assertEnoughFreeSpaceForCopy,
+  copyInstallTreeWithProgress,
+  estimateDirectoryBytes,
+} from "@backend/domains/instances/clone-install-copy";
 
 vi.mock("@backend/domains/instances/server-installation", async (importOriginal) => {
   const actual = await importOriginal<
@@ -28,6 +34,16 @@ vi.mock("@backend/domains/instances/server-installation", async (importOriginal)
 
 vi.mock("@backend/domains/instances/sync-profile-ini", () => ({
   syncProfileSettingsToIni: vi.fn(async () => undefined),
+}));
+
+vi.mock("@backend/domains/instances/clone-ini-seed", () => ({
+  seedCloneIniFiles: vi.fn(async () => undefined),
+}));
+
+vi.mock("@backend/domains/instances/clone-install-copy", () => ({
+  estimateDirectoryBytes: vi.fn(async () => 1024),
+  assertEnoughFreeSpaceForCopy: vi.fn(async () => undefined),
+  copyInstallTreeWithProgress: vi.fn(async () => 1),
 }));
 
 vi.mock("@backend/infra/process/host-port-probe", () => ({
@@ -82,6 +98,9 @@ function harness(initialProfiles: ServerProfile[]) {
       return created;
     }),
     addEvent: vi.fn(),
+    delete: vi.fn((id: string) => {
+      profiles = profiles.filter((item) => item.id !== id);
+    }),
   } as unknown as ServerRepository;
   const processes = {
     on: vi.fn(),
@@ -115,6 +134,14 @@ beforeEach(() => {
     checkedAt: new Date().toISOString(),
   } as ReturnType<typeof inspectServerInstallation>);
   vi.mocked(syncProfileSettingsToIni).mockResolvedValue(undefined);
+  vi.mocked(seedCloneIniFiles).mockReset();
+  vi.mocked(seedCloneIniFiles).mockResolvedValue(undefined);
+  vi.mocked(estimateDirectoryBytes).mockReset();
+  vi.mocked(assertEnoughFreeSpaceForCopy).mockReset();
+  vi.mocked(copyInstallTreeWithProgress).mockReset();
+  vi.mocked(estimateDirectoryBytes).mockResolvedValue(1024);
+  vi.mocked(assertEnoughFreeSpaceForCopy).mockResolvedValue(undefined);
+  vi.mocked(copyInstallTreeWithProgress).mockResolvedValue(1);
 });
 
 describe("InstanceService enabled state", () => {
@@ -314,6 +341,7 @@ describe("InstanceService cloning", () => {
     });
 
     expect(clone.installDir).toBe("D:\\Custom\\Clone");
+    expect(seedCloneIniFiles).toHaveBeenCalledWith(source.installDir, clone);
   });
 
   it("rejects duplicate clone names with an actionable error", async () => {
@@ -362,5 +390,119 @@ describe("InstanceService cloning", () => {
         installDir: "D:\\ARK Servers\\Winter",
       }),
     ).rejects.toThrow(/already uses folder/i);
+  });
+
+  it("does not copy the install tree when copyInstallFolder is omitted", async () => {
+    const source = profile();
+    const { service } = harness([source]);
+
+    await service.cloneWithParams(source.id, {
+      name: "Winter",
+      sessionName: "Winter Session",
+      gamePort: 7787,
+      queryPort: 27025,
+      rconPort: 27030,
+      installDir: "D:/Custom/Clone/",
+    });
+
+    expect(copyInstallTreeWithProgress).not.toHaveBeenCalled();
+    expect(seedCloneIniFiles).toHaveBeenCalled();
+  });
+
+  it("copies the source install folder and syncs INI when copyInstallFolder is on", async () => {
+    const source = profile();
+    const { service } = harness([source]);
+
+    const clone = await service.cloneWithParams(source.id, {
+      name: "Winter",
+      sessionName: "Winter Session",
+      gamePort: 7787,
+      queryPort: 27025,
+      rconPort: 27030,
+      installDir: "D:/Custom/Clone/",
+      copyInstallFolder: true,
+    });
+
+    expect(copyInstallTreeWithProgress).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceDir: source.installDir,
+        destDir: clone.installDir,
+      }),
+    );
+    expect(syncProfileSettingsToIni).toHaveBeenCalledWith(clone);
+    expect(seedCloneIniFiles).not.toHaveBeenCalled();
+  });
+
+  it("rejects copying the install folder while the source server is running", async () => {
+    const source = profile();
+    const { service, processes, repo } = harness([source]);
+    vi.mocked(processes.isActive).mockReturnValue(true);
+
+    await expect(
+      service.cloneWithParams(source.id, {
+        name: "Winter",
+        sessionName: "Winter Session",
+        gamePort: 7787,
+        queryPort: 27025,
+        rconPort: 27030,
+        installDir: "D:/Custom/Clone/",
+        copyInstallFolder: true,
+      }),
+    ).rejects.toThrow(/stop the server before copying/i);
+    expect(copyInstallTreeWithProgress).not.toHaveBeenCalled();
+    expect(repo.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects copying when the source install folder has no server files", async () => {
+    const source = profile();
+    const { service, repo } = harness([source]);
+    vi.mocked(inspectServerInstallation).mockReturnValue({
+      serverId: source.id,
+      installed: false,
+      health: "empty",
+      reasonCodes: ["empty"],
+      guidance: "Folder is empty.",
+      build: null,
+      steamBuild: null,
+      arkVersion: null,
+      version: null,
+      binaryPath: "C:\\ARK\\ArkAscendedServer.exe",
+      checkedAt: new Date().toISOString(),
+    } as ReturnType<typeof inspectServerInstallation>);
+
+    await expect(
+      service.cloneWithParams(source.id, {
+        name: "Winter",
+        sessionName: "Winter Session",
+        gamePort: 7787,
+        queryPort: 27025,
+        rconPort: 27030,
+        installDir: "D:/Custom/Clone/",
+        copyInstallFolder: true,
+      }),
+    ).rejects.toThrow(/no server files to copy/i);
+    expect(copyInstallTreeWithProgress).not.toHaveBeenCalled();
+    expect(repo.create).not.toHaveBeenCalled();
+  });
+
+  it("removes the incomplete clone when the folder copy fails", async () => {
+    const source = profile();
+    const { service, repo } = harness([source]);
+    vi.mocked(copyInstallTreeWithProgress).mockRejectedValue(
+      new Error("robocopy blew up"),
+    );
+
+    await expect(
+      service.cloneWithParams(source.id, {
+        name: "Winter",
+        sessionName: "Winter Session",
+        gamePort: 7787,
+        queryPort: 27025,
+        rconPort: 27030,
+        installDir: "D:/Custom/Clone/",
+        copyInstallFolder: true,
+      }),
+    ).rejects.toThrow(/incomplete clone was removed/i);
+    expect(repo.delete).toHaveBeenCalled();
   });
 });

@@ -528,6 +528,53 @@ export interface MoveInstallProgress {
   awaitingCleanup: boolean;
 }
 
+/** Phases for optional clone install-folder copy (#160). */
+export type CloneInstallProgressPhase =
+  | "validating"
+  | "copying"
+  | "applying"
+  | "cleanup";
+
+export interface CloneInstallProgress {
+  /** Source server id (dialog is bound to the clone source). */
+  serverId: string;
+  active: boolean;
+  phase: CloneInstallProgressPhase | null;
+  label: string;
+  percent: number | null;
+  sourceDir: string | null;
+  destinationDir: string | null;
+  error: string | null;
+}
+
+/** Normalize clone-copy push payloads so partial emitters stay UI-safe. */
+export function normalizeCloneInstallProgress(
+  payload: Partial<CloneInstallProgress> &
+    Pick<CloneInstallProgress, "serverId" | "active">,
+): CloneInstallProgress {
+  const phase =
+    payload.phase === "validating"
+    || payload.phase === "copying"
+    || payload.phase === "applying"
+    || payload.phase === "cleanup"
+      ? payload.phase
+      : null;
+  return {
+    serverId: payload.serverId,
+    active: payload.active === true,
+    phase,
+    label: typeof payload.label === "string" ? payload.label : "",
+    percent:
+      typeof payload.percent === "number" && Number.isFinite(payload.percent)
+        ? payload.percent
+        : null,
+    sourceDir: typeof payload.sourceDir === "string" ? payload.sourceDir : null,
+    destinationDir:
+      typeof payload.destinationDir === "string" ? payload.destinationDir : null,
+    error: typeof payload.error === "string" ? payload.error : null,
+  };
+}
+
 /** Normalize push payloads so partial emitters stay UI-safe. */
 export function normalizeMoveInstallProgress(
   payload: Partial<MoveInstallProgress> &
