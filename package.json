@@ -36,6 +36,8 @@
     "e2e:log-retention": "node scripts/e2e-log-retention.cjs",
     "e2e:clusters-membership": "node scripts/e2e-clusters-membership.cjs",
     "e2e:copy-configuration": "node scripts/e2e-copy-configuration.cjs",
+    "e2e:clone-copy": "node scripts/e2e-clone-copy.cjs",
+    "e2e:clone-copy-real": "node scripts/e2e-clone-copy-real.cjs",
     "bench:main-io": "node scripts/bench-main-hot-paths.cjs",
     "website:screenshots": "node scripts/capture-website-screenshots.cjs",
     "website:dev": "npm run dev --prefix website",
