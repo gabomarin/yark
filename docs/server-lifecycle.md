@@ -196,6 +196,16 @@ updates cannot change it; only `InstanceService.setServerEnabled` may do so.
 - Clones inherit the source enabled state and receive a unique sibling install
   directory. Disabled profiles remain cluster members and participate in port
   conflict checks.
+- **Clone server** is profile-only by default (new name, ports, empty/missing
+  install path) but **always copies** source `Game.ini` and `GameUserSettings.ini`
+  when those files exist, then writes the clone’s ports, session name, and
+  passwords. Missing INIs fall back to YARK defaults. An optional **Copy entire server folder**
+  checkbox copies the source install tree with robocopy (`push:clone-install-progress`,
+  cancel via `servers:clone-copy-cancel`). The source must be stopped. Copy is
+  disabled when source health is missing, empty, inaccessible, or unknown;
+  incomplete/suspicious installs can still copy with a warning. Failures roll back the new profile and wipe the incomplete
+  destination when possible; the clone then applies profile-owned INI keys so the
+  new ports and session name match. Distinct from Copy configuration (#95).
 - **Create / clone install path** must be missing or an empty folder, not inside
   another YARK profile or ASA tree (path segment *or* unmanaged parent that
   contains `ShooterGame`), and must not contain another managed install.

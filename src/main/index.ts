@@ -68,9 +68,9 @@ import {
   remainingSplashHoldMs,
   shouldShowSplash,
 } from "./splash-window";
-import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush, type MoveInstallProgressPush, type RconStatusChangedPush, type PlayerListUpdatedPush } from "../shared/ipc";
+import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush, type MoveInstallProgressPush, type CloneInstallProgressPush, type RconStatusChangedPush, type PlayerListUpdatedPush } from "../shared/ipc";
 import type { AppUpdateStatus } from "../shared/app-update";
-import { normalizeServerStopProgress } from "../shared/types";
+import { normalizeCloneInstallProgress, normalizeServerStopProgress } from "../shared/types";
 import type { BackupChangedPush } from "../backend/domains/backups/backup-service";
 import type { ServerRuntimeInfo } from "../shared/types";
 
@@ -656,6 +656,13 @@ if (gotSingleInstanceLock) {
 
     moveInstallService.on("progress", (payload: MoveInstallProgressPush) => {
       sendToRenderer(IPC_PUSH.moveInstallProgress, payload);
+    });
+
+    instances.on("clone-progress", (payload: CloneInstallProgressPush) => {
+      sendToRenderer(
+        IPC_PUSH.cloneInstallProgress,
+        normalizeCloneInstallProgress(payload),
+      );
     });
 
     instances.on("stop-progress", (payload: ServerStopProgressPush) => {

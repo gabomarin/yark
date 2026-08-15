@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- **Clone server** copies **Game.ini** and **GameUserSettings.ini** from the source (new ports and session name overwrite identity keys) and can optionally copy the full install folder (off by default; unavailable when the source has no files). The source must be stopped for a folder copy; large copies show progress and can be cancelled, and a failed copy removes the incomplete clone (#160).
 - Skippable **first-run setup** (SteamCMD, Windows shell, optional cluster, then create or import); Settings can reopen the setup assistant (#298).
 
 ### Changed

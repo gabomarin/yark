@@ -12,6 +12,8 @@ binaries, SteamCMD, backups, rollback).
 | Create / clone / delete UI | `npm run build && npm run e2e` | **PR CI** | Disposable dirs under `C:\asa-e2e\…` |
 | Install-health badges | `npm run build && npm run e2e:install-health` | **PR CI** | Fake FS fixtures only |
 | Host port probe modal | `npm run build && npm run e2e:host-port-probe` | **PR CI** | Occupies UDP then asserts modal |
+| Clone INI seed / folder copy | `npm run build && npm run e2e:clone-copy` | Local / release audit | Fake ASA tree; profile-only vs robocopy (#160); always deletes fixtures |
+| Clone after real SteamCMD install | `npm run build && npm run e2e:clone-copy-real` | **Manual real-host** | Installs ASA into `C:\asa-e2e`, then config-only + full-folder clone (#160); deletes fixtures unless `YARK_E2E_KEEP=1` |
 | Import install wizard | `npm run build && npm run e2e:import-install` | Local / release audit | Nested / ready / Already managed; profile-only INI (#254) |
 | Move install | `npm run build && npm run e2e:move-install` | Local / release audit | Same-volume rename |
 | Launch args on Runtime | `npm run build && npm run e2e:launch-args` | Local / release audit | Fake ready install |

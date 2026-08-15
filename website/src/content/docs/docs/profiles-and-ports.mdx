@@ -67,7 +67,7 @@ Clone bumps ports by +10 (retries with higher offsets if needed).
 ## Enable, disable, and clone
 
 - **Enable / Disable** — Inactive profiles stay out of Start / Restart / auto-start. Enabling does **not** require installation health Ready; Start still does.
-- **Clone** — duplicates profile fields with bumped ports (profile-only). Full install-folder clone is still on the product roadmap.
+- **Clone** — duplicates profile fields with bumped ports and copies **Game.ini** / **GameUserSettings.ini** from the source (new ports and session name overwrite identity keys). **Copy entire server folder** (off by default) also copies binaries, Saved, and world data when the source is stopped and has files on disk; it stays off for empty or unreadable installs. A failed folder copy removes the incomplete clone.
 
 ## Cluster on create
 

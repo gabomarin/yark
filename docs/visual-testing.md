@@ -189,6 +189,7 @@ for the mandatory three-viewport protocol above unless noted.
 | `e2e:move-install` | `npm run build && npm run e2e:move-install` | Move installation (#56): same-volume rename/verify/commit UI + disk assertions under `C:\asa-e2e`; clears `ELECTRON_RUN_AS_NODE` |
 | `e2e:import-install` | `npm run build && npm run e2e:import-install` | Import existing ASA install (#254): nested/ready/Already managed wizard, profile-only (INI hashes unchanged), SQLite mods disabled; `C:\asa-e2e`; clears `ELECTRON_RUN_AS_NODE` |
 | `e2e:copy-configuration` | `npm run build && npm run e2e:copy-configuration` | Copy configuration (#95): create source with INI/mods/args, copy to two targets, assert disk + SQLite; isolated `YARK_E2E_USER_DATA` |
+| `e2e:clone-copy` | `npm run build && npm run e2e:clone-copy` | Clone (#160): INI seed vs full-folder copy on a fake ASA tree; always deletes `C:\asa-e2e` fixtures |
 | `e2e:launch-args` | `npm run build && npm run e2e:launch-args` | Structured + raw Launch args on Runtime `Commandline` (#93); console-on-start off; fake ready install under `C:\asa-e2e` |
 
 Related domain context: [updates-steamcmd.md](updates-steamcmd.md), [AGENTS.md](../AGENTS.md).

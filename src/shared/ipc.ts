@@ -27,6 +27,7 @@ import type {
   LogRetentionSettings,
   ModMetadata,
   ModSearchPage,
+  CloneInstallProgress,
   MoveInstallProgress,
   ServerIniPayload,
   ServerIniSnapshot,
@@ -71,6 +72,7 @@ export const IPC = {
   serversDelete: "servers:delete",
   serversClone: "servers:clone",
   serversCloneWithParams: "servers:clone-with-params",
+  serversCloneCopyCancel: "servers:clone-copy-cancel",
   serversProbeImport: "servers:probe-import",
   serversImportExisting: "servers:import-existing",
   serversStart: "servers:start",
@@ -191,6 +193,7 @@ export const IPC_PUSH = {
   steamCmdProgress: "push:steamcmd-progress",
   serverStopProgress: "push:server-stop-progress",
   moveInstallProgress: "push:move-install-progress",
+  cloneInstallProgress: "push:clone-install-progress",
   backupsChanged: "push:backups-changed",
   rconStatusChanged: "push:rcon-status-changed",
   playerListUpdated: "push:player-list-updated",
@@ -205,6 +208,8 @@ export interface SteamCmdProgressPush {
 export type ServerStopProgressPush = ServerStopProgress;
 
 export type MoveInstallProgressPush = MoveInstallProgress;
+
+export type CloneInstallProgressPush = CloneInstallProgress;
 
 export interface BackupsChangedPush {
   serverId: string;
@@ -266,8 +271,10 @@ export interface RendererApi {
       queryPort: number;
       rconPort: number;
       installDir: string;
+      copyInstallFolder?: boolean;
     },
   ): Promise<IpcResult<ServerProfile>>;
+  cancelCloneServerCopy(): Promise<IpcResult<boolean>>;
   startServer(id: string, options?: StartServerOptions): Promise<IpcResult<void>>;
   stopServer(id: string): Promise<IpcResult<void>>;
   restartServer(id: string, options?: StartServerOptions): Promise<IpcResult<void>>;
@@ -538,6 +545,9 @@ export interface RendererApi {
   ): () => void;
   onMoveInstallProgress(
     listener: (payload: MoveInstallProgressPush) => void,
+  ): () => void;
+  onCloneInstallProgress(
+    listener: (payload: CloneInstallProgressPush) => void,
   ): () => void;
   onBackupsChanged(
     listener: (payload: BackupsChangedPush) => void,

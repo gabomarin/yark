@@ -60,6 +60,7 @@ export const VALIDATED_IPC_CHANNELS = [
   IPC.serversDelete,
   IPC.serversClone,
   IPC.serversCloneWithParams,
+  IPC.serversCloneCopyCancel,
   IPC.serversProbeImport,
   IPC.serversImportExisting,
   IPC.serversStart,
@@ -194,6 +195,7 @@ export const ipcArgSchemas = {
   ]),
   [IPC.serversClone]: z.tuple([serverIdSchema]),
   [IPC.serversCloneWithParams]: z.tuple([serverIdSchema, cloneWithParamsSchema]),
+  [IPC.serversCloneCopyCancel]: z.tuple([]),
   [IPC.serversProbeImport]: z.tuple([windowsAbsPathSchema]),
   [IPC.serversImportExisting]: ipcTuple(
     plainObjectSchema,

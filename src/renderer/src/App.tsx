@@ -1938,6 +1938,16 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
             ? servers.find((s) => s.id === overlay.sourceServerId) ?? null
             : null
         }
+        sourceBusy={
+          overlay?.kind === "clone"
+            ? statuses.get(overlay.sourceServerId)?.processLive === true
+            : false
+        }
+        sourceHealth={
+          overlay?.kind === "clone"
+            ? (installationInfo.get(overlay.sourceServerId)?.health ?? null)
+            : null
+        }
         onClose={() => setOverlay(null)}
         onClone={async (params) =>
           runAction(() =>
