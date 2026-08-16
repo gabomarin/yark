@@ -75,7 +75,7 @@ cloud hosting service, an ARK game launcher, or an official Studio Wildcard prod
 | Diagnostics | Review events, runtime output, SteamCMD history, backup activity, installation health, host-port conflicts, and log retention. |
 | Windows integration | System tray, close-to-tray, Start with Windows, Auto-start with YARK, in-app YARK updates, and Windows-aware process/file operations. |
 
-## Product tour
+## Screenshots
 
 | Server configuration | Visual INI editor |
 | --- | --- |
