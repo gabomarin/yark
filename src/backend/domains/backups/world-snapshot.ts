@@ -2,6 +2,10 @@ import { existsSync, type Dirent } from "node:fs";
 import { basename, join, relative } from "node:path";
 import { readdir } from "node:fs/promises";
 import { isSafeMapToken, isSafeWindowsFolderName } from "@shared/map-identity";
+import {
+  isRealDirectory,
+  isTraversableDirectoryDirent,
+} from "../../infra/fs/reparse-points";
 import { mapTokenFromWorldSaveName } from "../instances/import-existing-install";
 
 /**
@@ -52,6 +56,7 @@ function primaryArkPath(dir: string, mapToken: string): string {
  * Locate the live SavedArks subfolder for a launch map token by **folder name**
  * only (override → `{MapToken}` → strip trailing `_WP`). Does not scan sibling
  * folders for `.ark` files (unsafe under map rotation leftovers).
+ * Junctions / symlinks are ignored so backup packaging cannot follow them (#322).
  */
 export async function resolveWorldMapSaveDir(
   savedArksDir: string,
@@ -59,7 +64,7 @@ export async function resolveWorldMapSaveDir(
   mapSaveFolder?: string | null,
 ): Promise<{ dir: string; folderName: string } | null> {
   const token = mapToken.trim();
-  if (!isSafeMapToken(token) || !existsSync(savedArksDir)) {
+  if (!isSafeMapToken(token) || !(await isRealDirectory(savedArksDir))) {
     return null;
   }
 
@@ -68,16 +73,23 @@ export async function resolveWorldMapSaveDir(
   if (override.length > 0) {
     if (!isSafeWindowsFolderName(override)) return null;
     const exactDir = join(savedArksDir, override);
-    if (existsSync(exactDir)) {
+    if (await isRealDirectory(exactDir)) {
       return { dir: exactDir, folderName: override };
     }
     try {
       const match = (await readdir(savedArksDir, { withFileTypes: true })).find(
-        (entry) => entry.isDirectory() && entry.name.toLowerCase() === override.toLowerCase(),
+        (entry) =>
+          isTraversableDirectoryDirent(entry)
+          && entry.name.toLowerCase() === override.toLowerCase(),
       );
-      return match === undefined
-        ? null
-        : { dir: join(savedArksDir, match.name), folderName: match.name };
+      if (match === undefined) {
+        return null;
+      }
+      const matchedDir = join(savedArksDir, match.name);
+      if (!(await isRealDirectory(matchedDir))) {
+        return null;
+      }
+      return { dir: matchedDir, folderName: match.name };
     } catch {
       return null;
     }
@@ -87,7 +99,7 @@ export async function resolveWorldMapSaveDir(
   // Prefer a candidate folder that already holds the primary `.ark`.
   for (const folderName of candidates) {
     const dir = join(savedArksDir, folderName);
-    if (existsSync(dir) && existsSync(primaryArkPath(dir, token))) {
+    if ((await isRealDirectory(dir)) && existsSync(primaryArkPath(dir, token))) {
       return { dir, folderName };
     }
   }
@@ -100,9 +112,10 @@ export async function resolveWorldMapSaveDir(
     entries = [];
   }
   for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
+    if (!isTraversableDirectoryDirent(entry)) continue;
     if (!candidateLower.has(entry.name.toLowerCase())) continue;
     const dir = join(savedArksDir, entry.name);
+    if (!(await isRealDirectory(dir))) continue;
     if (existsSync(primaryArkPath(dir, token))) {
       return { dir, folderName: entry.name };
     }
@@ -111,14 +124,16 @@ export async function resolveWorldMapSaveDir(
   // Folder exists under a candidate name but primary is not present yet.
   for (const folderName of candidates) {
     const dir = join(savedArksDir, folderName);
-    if (existsSync(dir)) {
+    if (await isRealDirectory(dir)) {
       return { dir, folderName };
     }
   }
   for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
+    if (!isTraversableDirectoryDirent(entry)) continue;
     if (!candidateLower.has(entry.name.toLowerCase())) continue;
-    return { dir: join(savedArksDir, entry.name), folderName: entry.name };
+    const dir = join(savedArksDir, entry.name);
+    if (!(await isRealDirectory(dir))) continue;
+    return { dir, folderName: entry.name };
   }
 
   return null;

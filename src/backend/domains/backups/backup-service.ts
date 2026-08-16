@@ -77,6 +77,12 @@ import {
   isOperationCancelledError,
   OperationCancelledError,
 } from "../updates/robocopy-tree";
+import {
+  directorySizeSafe,
+  listFilesRecursiveSafe,
+  prepareWritableDirUnderRoot,
+  isTraversableDirectoryDirent,
+} from "../../infra/fs/reparse-points";
 
 export {
   backupFinishedAt,
@@ -289,33 +295,13 @@ export function resolveServerBackupRoot(
 }
 
 async function directorySize(path: string): Promise<number> {
-  let total = 0;
   if (!existsSync(path)) return 0;
-  const entries = await readdir(path, { withFileTypes: true });
-  for (const entry of entries) {
-    const full = join(path, entry.name);
-    if (entry.isDirectory()) {
-      total += await directorySize(full);
-    } else if (entry.isFile()) {
-      total += (await stat(full)).size;
-    }
-  }
-  return total;
+  return directorySizeSafe(path);
 }
 
 async function listFilesRecursive(root: string): Promise<string[]> {
   if (!existsSync(root)) return [];
-  const out: string[] = [];
-  const entries = await readdir(root, { withFileTypes: true });
-  for (const entry of entries) {
-    const full = join(root, entry.name);
-    if (entry.isDirectory()) {
-      out.push(...(await listFilesRecursive(full)));
-    } else if (entry.isFile()) {
-      out.push(full);
-    }
-  }
-  return out;
+  return listFilesRecursiveSafe(root);
 }
 
 async function copyFileTo(src: string, dest: string): Promise<void> {
@@ -2397,7 +2383,9 @@ export class BackupService extends EventEmitter {
       throw new Error(`Cannot resolve live map folder for ${mapToken}`);
     }
     const liveMapDir = liveResolved?.dir ?? join(liveSavedArks, restoreFolder);
-    await mkdir(liveMapDir, { recursive: true });
+    await prepareWritableDirUnderRoot(server.installDir, liveMapDir, {
+      operationLabel: "restore world files",
+    });
 
     const files = await listFilesRecursive(backupMapDir);
     let copied = 0;
@@ -2446,7 +2434,9 @@ export class BackupService extends EventEmitter {
     } catch {
       throw new Error("World backup SavedArks folder is unreadable");
     }
-    const dirs = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+    const dirs = entries
+      .filter((entry) => isTraversableDirectoryDirent(entry))
+      .map((entry) => entry.name);
     if (dirs.length === 1 && isSafeMapToken(dirs[0])) {
       return dirs[0]!;
     }
@@ -2482,7 +2472,9 @@ export class BackupService extends EventEmitter {
     }
 
     const destDir = await this.resolveLivePlayerProfileDir(server);
-    await mkdir(destDir, { recursive: true });
+    await prepareWritableDirUnderRoot(server.installDir, destDir, {
+      operationLabel: "restore player profiles",
+    });
     let copied = 0;
     for (const file of files) {
       const name = basename(file);
@@ -2520,7 +2512,9 @@ export class BackupService extends EventEmitter {
     if (!existsSync(backupConfig)) {
       throw new Error("INI backup is missing ConfigWindowsServer data");
     }
-    await mkdir(live, { recursive: true });
+    await prepareWritableDirUnderRoot(server.installDir, live, {
+      operationLabel: "restore INI files",
+    });
     for (const name of ["Game.ini", "GameUserSettings.ini"] as const) {
       const src = join(backupConfig, name);
       if (!existsSync(src)) continue;

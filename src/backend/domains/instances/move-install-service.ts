@@ -11,7 +11,6 @@ import {
   readdir,
   rename,
   rm,
-  stat,
   writeFile,
 } from "node:fs/promises";
 import { type ChildProcess } from "node:child_process";
@@ -45,6 +44,7 @@ import {
   OperationCancelledError,
   robocopyTree,
 } from "../updates/robocopy-tree";
+import { estimateDirectoryBytes as estimateDirectoryBytesSafe } from "../../infra/fs/reparse-points";
 
 /** Marker file written into every YARK-owned move staging directory. */
 export const MOVE_STAGING_MARKER = ".yark-move-staging";
@@ -52,14 +52,14 @@ export const MOVE_STAGING_MARKER = ".yark-move-staging";
 /** Extra free-space headroom beyond estimated source size (10%) for cross-volume copy. */
 const FREE_SPACE_MARGIN = 1.1;
 
+/** Cap directory-size walks so validation stays bounded. */
+const MAX_SIZE_WALK_ENTRIES = 250_000;
+
 /** Progress range while robocopy runs (cross-volume). */
 const COPY_PROGRESS_START = 15;
 const COPY_PROGRESS_END = 75;
 /** Poll free-space (cheap) rather than walking the staging tree. */
 const COPY_PROGRESS_POLL_MS = 2500;
-
-/** Cap directory-size walks so validation stays bounded. */
-const MAX_SIZE_WALK_ENTRIES = 250_000;
 
 /** Persisted absolute staging paths awaiting sweep after interrupted moves. */
 const STAGING_REGISTRY_KEY = "paths";
@@ -120,37 +120,7 @@ async function pathExists(target: string): Promise<boolean> {
 }
 
 async function estimateDirectoryBytes(root: string): Promise<number> {
-  let total = 0;
-  let visited = 0;
-  const queue = [root];
-  while (queue.length > 0) {
-    const current = queue.pop()!;
-    let entries: import("node:fs").Dirent[];
-    try {
-      entries = await readdir(current, { withFileTypes: true });
-    } catch {
-      continue;
-    }
-    for (const entry of entries) {
-      visited += 1;
-      if (visited > MAX_SIZE_WALK_ENTRIES) {
-        return total;
-      }
-      const full = join(current, entry.name);
-      if (entry.isDirectory()) {
-        queue.push(full);
-        continue;
-      }
-      if (!entry.isFile()) continue;
-      try {
-        const info = await stat(full);
-        total += info.size;
-      } catch {
-        // Skip unreadable files; space check remains best-effort.
-      }
-    }
-  }
-  return total;
+  return estimateDirectoryBytesSafe(root, { maxEntries: MAX_SIZE_WALK_ENTRIES });
 }
 
 export class MoveInstallService extends EventEmitter {
