@@ -12,6 +12,7 @@ import {
 } from "@phosphor-icons/react";
 import {
   Alert,
+  Badge,
   Button,
   Group,
   Modal,
@@ -54,6 +55,11 @@ import {
   type ProgressionPresetId,
   type WorldPresetId,
 } from "../../configurationWizardModel";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import {
+  WizardDifficultyControl,
+  type DifficultyChoice,
+} from "./WizardDifficultyControl";
 import classes from "./ConfigurationWizard.module.css";
 
 interface Props {
@@ -96,7 +102,6 @@ const EMPTY_DRAFT: ConfigurationWizardDraft = {
 
 const STEP_LABELS = ["Profile", "Pace", "Breeding", "World", "QoL", "Review"];
 const STEP_COUNT = STEP_LABELS.length;
-type DifficultyChoice = "current" | "120" | "150" | "180" | "300" | "custom";
 
 export function ConfigurationWizard(props: Props): ReactElement {
   const compactProgress = useMediaQuery("(max-width: 1100px)", false);
@@ -323,18 +328,18 @@ export function ConfigurationWizard(props: Props): ReactElement {
 
   if (loading) {
     return (
-      <div className={classes.root}>
+      <WizardShell>
         <Skeleton height={28} width="32%" />
         <Skeleton height={18} width="56%" mt="xs" />
         <Skeleton height={64} mt="xl" />
         <Skeleton height={280} mt="lg" />
-      </div>
+      </WizardShell>
     );
   }
 
   if (saved) {
     return (
-      <div className={classes.root}>
+      <WizardShell>
         <div className={classes.success}>
           <ThemeIcon size={56} radius="xl" color="green" variant="light">
             <Check size={28} weight="bold" />
@@ -351,12 +356,12 @@ export function ConfigurationWizard(props: Props): ReactElement {
           )}
           <Button onClick={props.onCancel}>Back to server</Button>
         </div>
-      </div>
+      </WizardShell>
     );
   }
 
   return (
-    <div className={classes.root} data-configuration-wizard>
+    <WizardShell>
       <Modal
         opened={changesOpen}
         onClose={() => setChangesOpen(false)}
@@ -396,7 +401,7 @@ export function ConfigurationWizard(props: Props): ReactElement {
 
       <div className={classes.progress}>
         {compactProgress ? (
-          <Stack gap={6}>
+          <Stack gap="xxs">
             <Group justify="space-between">
               <Text size="sm" fw={600}>
                 Step {activeStep + 1} of {STEP_COUNT}
@@ -447,11 +452,19 @@ export function ConfigurationWizard(props: Props): ReactElement {
                 />
               ))}
             </SimpleGrid>
-            <div className={classes.impactSetting}>
+            <AppSurfaceCard
+              tone="flat"
+              padding="sm"
+              radius="md"
+              statusTone="attention"
+              className={classes.impactSetting}
+            >
               <div>
                 <Group gap="xs">
                   <Text fw={700}>Settings for one person or a small group</Text>
-                  <Text className={classes.highImpactLabel}>HIGH IMPACT</Text>
+                  <Badge size="xs" color="yellow" variant="light" tt="none">
+                    High impact
+                  </Badge>
                 </Group>
                 <Text c="dimmed" size="sm">
                   ARK adds bonuses to taming, breeding, progression,
@@ -465,7 +478,7 @@ export function ConfigurationWizard(props: Props): ReactElement {
                 }
                 aria-label="Settings for one person or a small group"
               />
-            </div>
+            </AppSurfaceCard>
             {form.values.singlePlayerSettings && (
               <Alert color="yellow" title="Multipliers stack">
                 This mode applies on top of the wizard presets. You will see the known
@@ -506,7 +519,7 @@ export function ConfigurationWizard(props: Props): ReactElement {
                 cannot be expressed as a single multiplier.
               </Text>
             )}
-            <DifficultyControl
+            <WizardDifficultyControl
               choice={difficultyChoice}
               draft={form.values}
               onChoiceChange={chooseDifficulty}
@@ -702,7 +715,22 @@ export function ConfigurationWizard(props: Props): ReactElement {
           </Button>
         )}
       </footer>
-    </div>
+    </WizardShell>
+  );
+}
+
+function WizardShell({ children }: { children: React.ReactNode }): ReactElement {
+  return (
+    <AppSurfaceCard
+      tone="flat"
+      fill
+      padding={0}
+      radius="md"
+      className={classes.root}
+      data-configuration-wizard
+    >
+      {children}
+    </AppSurfaceCard>
   );
 }
 
@@ -817,78 +845,6 @@ function PresetValue({ label, value }: { label: string; value: string }): ReactE
         {value}
       </Text>
     </div>
-  );
-}
-
-interface DifficultyControlProps {
-  choice: DifficultyChoice;
-  draft: ConfigurationWizardDraft;
-  onChoiceChange: (choice: string) => void;
-  onCustomLevelChange: (level: number) => void;
-}
-
-function DifficultyControl({
-  choice,
-  draft,
-  onChoiceChange,
-  onCustomLevelChange,
-}: DifficultyControlProps): ReactElement {
-  const explicitDifficulty = draft.overrideOfficialDifficulty > 0;
-  return (
-    <Stack gap="sm">
-      <div>
-        <Text fw={700}>World difficulty</Text>
-        <Text c="dimmed" size="xs">
-          Controls wild levels and potential loot quality.
-        </Text>
-      </div>
-      <SegmentedControl
-        value={choice}
-        onChange={onChoiceChange}
-        fullWidth
-        data={[
-          { value: "current", label: "Current" },
-          { value: "120", label: "Level 120" },
-          { value: "150", label: "Level 150" },
-          { value: "180", label: "Level 180" },
-          { value: "300", label: "Level 300" },
-          { value: "custom", label: "Custom" },
-        ]}
-        aria-label="World difficulty"
-      />
-      <div className={classes.difficultySummary}>
-        <div>
-          <Text fw={700} size="sm">
-            {choice === "current"
-              ? "Keep current configuration"
-              : `Common max level ${draft.maxWildDinoLevel}`}
-          </Text>
-          <Text c="dimmed" size="xs">
-            {explicitDifficulty
-              ? `DifficultyOffset ${formatRate(draft.difficultyOffset)} · Override ${formatRate(draft.overrideOfficialDifficulty)}`
-              : `DifficultyOffset ${formatRate(draft.difficultyOffset)} · no override; result depends on the map`}
-          </Text>
-        </div>
-        {choice === "custom" && (
-          <NumberInput
-            label="Custom max level"
-            description="The wizard will compute the required technical override."
-            min={30}
-            max={600}
-            step={5}
-            allowDecimal={false}
-            value={draft.maxWildDinoLevel}
-            onChange={(value) => {
-              if (typeof value === "number") onCustomLevelChange(value);
-            }}
-          />
-        )}
-      </div>
-      <Text c="dimmed" size="xs">
-        When you pick a level, the wizard uses offset 1 and an explicit override for
-        consistent results across maps. Some special creatures may spawn above the stated level.
-      </Text>
-    </Stack>
   );
 }
 

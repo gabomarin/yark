@@ -873,6 +873,11 @@ describe("ServerWorkspacePage", () => {
       screen.getByRole("button", { name: "Configuration wizard" }),
     );
     await user.click(await screen.findByRole("button", { name: /Play with friends/ }));
+    expect(screen.getByRole("button", { name: /Play with friends/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByText("High impact")).toBeVisible();
     await user.click(
       screen.getByRole("switch", {
         name: "Settings for one person or a small group",
@@ -890,6 +895,10 @@ describe("ServerWorkspacePage", () => {
     await user.keyboard("{Escape}");
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("3× → 7.5×")).toBeVisible();
+    expect(screen.getByText(/Max wild level/i)).toBeVisible();
+    expect(screen.queryByText(/DifficultyOffset/)).not.toBeInTheDocument();
+    await user.hover(screen.getByRole("button", { name: "Technical" }));
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(/DifficultyOffset/);
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("5× → 45×")).toBeVisible();
     expect(screen.getByText("0.5× → 0.075×")).toBeVisible();

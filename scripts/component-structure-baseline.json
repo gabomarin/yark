@@ -7,7 +7,7 @@
     "src/renderer/src/features/backups/ServerBackupPanel.tsx": 1119,
     "src/renderer/src/features/logs/ServerLogsPanel.tsx": 1060,
     "src/renderer/src/features/server-workspace/components/ConfigurationEditor/ConfigurationEditor.tsx": 706,
-    "src/renderer/src/features/server-workspace/components/ConfigurationWizard/ConfigurationWizard.tsx": 937,
+    "src/renderer/src/features/server-workspace/components/ConfigurationWizard/ConfigurationWizard.tsx": 900,
     "src/renderer/src/features/server-workspace/configurationWizardModel.ts": 918,
     "src/renderer/src/features/server-workspace/iniModel.ts": 375,
     "src/renderer/src/features/server-workspace/ServerWorkspacePage.tsx": 365,
