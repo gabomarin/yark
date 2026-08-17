@@ -16,12 +16,14 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Configuration wizard: calm profile cards with Phosphor icons, Cancel with step actions and Back beside Continue, **Match cluster defaults** (full template Seed/Restore with pace skip), and **Use default configuration** on first-run create (#230).
 - Configuration wizard chrome uses shared selection, radius, and spacing tokens; Pace difficulty keys sit behind a **Technical** tooltip (#224).
 - Settings uses a **category sidebar** (General, Servers, SteamCMD, Logs, About); setup guidance clarifies saved changes, suggests a cluster folder, and prevents conflicting SteamCMD actions while work is active (#298).
 - getyark.com serves responsive WebP screenshots, preloads the home logo, and skips heavy motion work on phones so the static site loads faster.
 
 ### Fixed
 
+- Shell main content stays in the viewport after Mantine `styles.layer.css` — navbar modules no longer override AppShell fixed positioning (#230).
 - First-run setup does not auto-open when setup status cannot be read, so Overview stays usable if the database is unavailable (#298).
 
 ### Security

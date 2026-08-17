@@ -4,6 +4,7 @@ import { z } from "zod";
 
 export type ExperienceProfileId =
   | "current"
+  | "cluster"
   | "friends"
   | "communityPve"
   | "communityPvp"
@@ -54,7 +55,14 @@ export interface ConfigurationWizardDraft {
 }
 
 export const configurationWizardSchema = z.object({
-  profile: z.enum(["current", "friends", "communityPve", "communityPvp", "hardcore"]),
+  profile: z.enum([
+    "current",
+    "cluster",
+    "friends",
+    "communityPve",
+    "communityPvp",
+    "hardcore",
+  ]),
   singlePlayerSettings: z.boolean(),
   pve: z.boolean(),
   hardcore: z.boolean(),
@@ -307,9 +315,11 @@ const SETTINGS: readonly WizardSetting[] = [
 ];
 
 export interface ExperienceProfile {
-  id: Exclude<ExperienceProfileId, "current">;
+  id: Exclude<ExperienceProfileId, "current" | "cluster">;
   name: string;
   description: string;
+  /** Short outcome chips for profile cards (operator scan). */
+  chips: readonly string[];
   progressionPreset: ProgressionPresetId;
   breedingPreset: BreedingPresetId;
   worldPreset: WorldPresetId;
@@ -500,7 +510,9 @@ export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
   {
     id: "friends",
     name: "Play with friends",
-    description: "Accessible PvE, brisk progress, and practical breeding for small groups.",
+    description:
+      "Small PvE group: quicker tames and breeding so you spend more time playing than waiting.",
+    chips: ["PvE", "Brisk tame", "Small group"],
     progressionPreset: "balanced",
     breedingPreset: "balanced",
     worldPreset: "gentle",
@@ -524,7 +536,9 @@ export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
   {
     id: "communityPve",
     name: "PvE community",
-    description: "Balanced progression with less friction for persistent communities.",
+    description:
+      "Long-running PvE. A bit faster than official so regulars keep progressing without a slog.",
+    chips: ["PvE", "Balanced", "Community"],
     progressionPreset: "fast",
     breedingPreset: "fast",
     worldPreset: "balanced",
@@ -548,7 +562,9 @@ export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
   {
     id: "communityPvp",
     name: "PvP community",
-    description: "Active competition with faster recovery after a wipe.",
+    description:
+      "PvP where people can rebuild after a wipe without a week of grinding.",
+    chips: ["PvP", "Fast recover"],
     progressionPreset: "veryFast",
     breedingPreset: "fast",
     worldPreset: "harsh",
@@ -576,7 +592,9 @@ export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
   {
     id: "hardcore",
     name: "Hardcore",
-    description: "Death resets the character, with a pace close to the base experience.",
+    description:
+      "Death sends you back to level 1. Rates stay near official so every life counts.",
+    chips: ["Hardcore", "Near official"],
     progressionPreset: "base",
     breedingPreset: "base",
     worldPreset: "base",

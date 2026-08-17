@@ -7,10 +7,6 @@
 }
 
 .header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--app-space-lg);
   padding: var(--app-space-md) var(--app-space-lg) var(--app-space-sm);
   border-bottom: 1px solid var(--app-color-border-subtle);
 }
@@ -34,13 +30,32 @@
   margin-inline: auto;
 }
 
+.metaLabel {
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.profilePresetDivider {
+  margin-block: var(--app-space-xs);
+}
+
+.profilePresetDivider :global(.mantine-Divider-label) {
+  color: var(--app-color-muted);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .profileCard {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--app-space-sm);
+  align-items: center;
+  gap: var(--app-space-md);
   min-height: 104px;
-  padding: var(--app-space-md);
+  padding: var(--app-space-sm);
   border: 1px solid var(--app-color-border-subtle);
+
   border-radius: var(--app-radius-control);
   color: inherit;
   text-align: left;
@@ -48,18 +63,77 @@
   transition:
     border-color 140ms ease,
     background-color 140ms ease,
-    box-shadow 140ms ease;
+    box-shadow 140ms ease,
+    opacity 140ms ease;
+}
+
+.profileCardIcon {
+  flex-shrink: 0;
+  align-self: center;
+  margin-inline-start: 2px;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease,
+    border-color 140ms ease;
+}
+
+.profileCardGlyph {
+  color: var(--app-color-muted);
+  transition: color 140ms ease;
+}
+
+.profileCard[data-selected] .profileCardIcon:global(.mantine-ThemeIcon-root) {
+  border-color: transparent;
+}
+
+.profileCard[data-selected][data-accent="ok"] .profileCardIcon:global(.mantine-ThemeIcon-root) {
+  background: color-mix(in srgb, var(--app-color-ok) 28%, transparent);
+  color: var(--app-color-ok);
+}
+
+.profileCard[data-selected][data-accent="ok"] .profileCardGlyph {
+  color: var(--app-color-ok);
+}
+
+.profileCard[data-selected][data-accent="blue"] .profileCardIcon:global(.mantine-ThemeIcon-root) {
+  background: color-mix(in srgb, var(--ark-blue-9) 28%, transparent);
+  color: var(--ark-blue-11);
+}
+
+.profileCard[data-selected][data-accent="blue"] .profileCardGlyph {
+  color: var(--ark-blue-11);
+}
+
+.profileCard[data-selected][data-accent="fossil"] .profileCardIcon:global(.mantine-ThemeIcon-root) {
+  background: color-mix(in srgb, var(--app-color-fossil) 28%, transparent);
+  color: var(--app-color-fossil);
+}
+
+.profileCard[data-selected][data-accent="fossil"] .profileCardGlyph {
+  color: var(--app-color-fossil);
+}
+
+.profileCard[data-selected][data-accent="danger"] .profileCardIcon:global(.mantine-ThemeIcon-root) {
+  background: color-mix(in srgb, var(--app-color-bad) 28%, transparent);
+  color: var(--app-color-bad);
+}
+
+.profileCard[data-selected][data-accent="danger"] .profileCardGlyph {
+  color: var(--app-color-bad);
 }
 
 .profileCard:hover {
   border-color: var(--app-color-border);
   background: var(--app-color-surface-control-hover);
+  opacity: 1;
 }
 
 .profileCard[data-selected] {
   border-color: color-mix(in srgb, var(--ark-blue-8) 45%, transparent);
   background: var(--app-list-selected-bg);
   box-shadow: var(--app-list-selected-inset);
+  opacity: 1;
+  border-style: solid;
 }
 
 .profileCard:focus-visible {
@@ -67,19 +141,20 @@
   outline-offset: 2px;
 }
 
-.impactSetting:global(.mantine-Card-root) {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--app-space-lg);
+.profileCardBody {
+  min-width: 0;
+}
+
+.impactAlert {
+  margin-top: 0;
+}
+
+.impactAlert :global(.mantine-Alert-message) {
+  width: 100%;
 }
 
 .switchRow,
 .changeRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--app-space-lg);
   min-height: 58px;
   padding: var(--app-space-xs) var(--app-space-sm);
   border: 1px solid var(--app-color-border-subtle);
@@ -91,13 +166,9 @@
   min-height: 48px;
 }
 
-.presetSummary {
+.presetSummary:global(.mantine-Card-root) {
   display: grid;
   gap: var(--app-space-sm);
-  padding: var(--app-space-sm);
-  border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-control);
-  background: var(--app-color-surface-chrome);
 }
 
 .presetValue {
@@ -146,6 +217,10 @@
   padding: var(--app-space-xl);
 }
 
+.success :global([data-layout="stacked"]) {
+  width: min(100%, 560px);
+}
+
 @media (max-height: 720px) {
   .header {
     padding-block: var(--app-space-sm);
@@ -162,7 +237,6 @@
 
 @media (max-width: 700px) {
   .header {
-    gap: var(--app-space-sm);
     padding-inline: var(--app-space-sm);
   }
 
@@ -175,8 +249,7 @@
   }
 
   .switchRow,
-  .changeRow,
-  .impactSetting:global(.mantine-Card-root) {
+  .changeRow {
     align-items: flex-start;
   }
 }

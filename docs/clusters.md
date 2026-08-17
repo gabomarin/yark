@@ -166,6 +166,10 @@ Report shape:
 - Add servers can opt into **Seed INI from cluster template** after membership
   saves (with the same file pickers); seed failures keep membership and report
   which members failed.
+- The **Configuration wizard** can also **Match cluster defaults** when the
+  server is a cluster member and a template exists: Profile → Review skip, then
+  Apply runs Seed (new/default INI) or Restore (existing) with both files — same
+  composition and idle requirements as Clusters (#230).
 - Deleting a template does not delete any server INI files on disk.
 - Clusters that exist only as profile fields can still own a template (including
   after all members leave — the row remains until deleted).

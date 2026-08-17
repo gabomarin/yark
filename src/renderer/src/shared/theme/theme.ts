@@ -285,6 +285,53 @@ export function createAppTheme(
           padding: 0,
         },
       },
+      Alert: {
+        defaultProps: {
+          variant: "light",
+          radius: "md",
+        },
+        // Mantine paints via --alert-bg / --alert-bd; styles.backgroundColor does not win.
+        vars: (_theme: unknown, props: { color?: string | undefined }) => {
+          const color =
+            typeof props.color === "string" ? props.color : "blue";
+          const tone = alertToneForColor(color);
+          if (tone === "message") {
+            return {
+              root: {
+                "--alert-bg":
+                  "color-mix(in srgb, var(--ark-blue-8) 14%, transparent)",
+                "--alert-bd":
+                  "1px solid color-mix(in srgb, var(--ark-blue-8) 28%, transparent)",
+                "--alert-color": "var(--app-color-text)",
+              },
+            };
+          }
+          if (tone === "warn") {
+            // MagicPath mock: bg-card/60 + border fossil/40 (translucent, not solid mix).
+            return {
+              root: {
+                "--alert-bg":
+                  "color-mix(in srgb, var(--app-color-panel) 60%, transparent)",
+                "--alert-bd":
+                  "1px solid color-mix(in srgb, var(--app-color-fossil) 40%, transparent)",
+                "--alert-color": "var(--app-color-text)",
+              },
+            };
+          }
+          if (tone === "error") {
+            return {
+              root: {
+                "--alert-bg":
+                  "color-mix(in srgb, var(--app-color-bad) 14%, transparent)",
+                "--alert-bd":
+                  "1px solid color-mix(in srgb, var(--app-color-bad) 45%, transparent)",
+                "--alert-color": "var(--app-color-text)",
+              },
+            };
+          }
+          return { root: {} };
+        },
+      },
       Card: {
         defaultProps: {
           withBorder: true,
@@ -300,6 +347,33 @@ export function createAppTheme(
       ...compactControlDefaults,
     },
   });
+}
+
+/** Inline Alert surface recipes: message (blue), warn (fossil), error (red). */
+function alertToneForColor(
+  color: string,
+): "message" | "warn" | "error" | "default" {
+  if (
+    color === "blue" ||
+    color === "cyan" ||
+    color === "indigo" ||
+    color === "violet"
+  ) {
+    return "message";
+  }
+  if (
+    color === "yellow" ||
+    color === "orange" ||
+    color === "fossil" ||
+    color === "attention" ||
+    color === "warn"
+  ) {
+    return "warn";
+  }
+  if (color === "red" || color === "pink") {
+    return "error";
+  }
+  return "default";
 }
 
 export function createAppThemeForDensity(density: UiDensity): MantineThemeOverride {
