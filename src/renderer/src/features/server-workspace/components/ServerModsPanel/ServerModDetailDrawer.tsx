@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ReactElement } from "react";
 import {
   Alert,
@@ -11,6 +12,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import { modals } from "@mantine/modals";
 import { ArrowSquareOut, Copy, Plus } from "@phosphor-icons/react";
 import {
   isMapCategoryLabel,
@@ -18,6 +20,8 @@ import {
   suggestMapTokenFromMetadata,
 } from "@shared/map-token-suggest";
 import type { ModMetadata } from "@shared/types";
+import { copyTextToClipboard } from "@ui/copyToClipboard";
+import { MetaRow } from "@ui/MetaRow/MetaRow";
 import { confirmRemoveServerMod } from "./confirmRemoveServerMod";
 import classes from "./ServerModsPanel.module.css";
 
@@ -35,11 +39,23 @@ interface Props {
 }
 
 export function ServerModDetailDrawer(props: Props): ReactElement {
+  const [removeConfirmPending, setRemoveConfirmPending] = useState(false);
   const detail = props.detail;
+
+  const handleClose = () => {
+    if (removeConfirmPending) {
+      modals.closeAll();
+      setRemoveConfirmPending(false);
+    }
+    props.onClose();
+  };
+
   return (
     <Drawer.Root
       opened={props.opened}
-      onClose={props.onClose}
+      onClose={handleClose}
+      closeOnClickOutside={!removeConfirmPending}
+      closeOnEscape={!removeConfirmPending}
       position="right"
       size={440}
     >
@@ -47,7 +63,7 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
       <Drawer.Content className={classes.detailDrawer}>
         <Drawer.Header>
           <Drawer.Title>Mod details</Drawer.Title>
-          <Drawer.CloseButton />
+          <Drawer.CloseButton disabled={removeConfirmPending} />
         </Drawer.Header>
         {detail !== null && (
           <>
@@ -78,7 +94,6 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                       aria-label={
                         `${props.enabled ? "Disable" : "Enable"} ${detail.name} from details`
                       }
-                      styles={{ trackLabel: { pointerEvents: "none" } }}
                       onChange={(event) =>
                         props.onToggle(detail.id, event.currentTarget.checked)}
                     />
@@ -92,16 +107,20 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                 <Button
                   variant="default"
                   leftSection={<Copy size={16} />}
-                  onClick={() => void navigator.clipboard.writeText(detail.id)}
+                  onClick={() => void copyTextToClipboard({
+                    text: detail.id,
+                    successMessage: "Project ID copied",
+                    failureMessage: "Could not copy Project ID",
+                  })}
                 >
                   Copy Project ID
                 </Button>
                 <Stack gap="xs">
-                  <Meta
+                  <MetaRow
                     label="Downloads"
                     value={detail.downloadCount.toLocaleString()}
                   />
-                  <Meta
+                  <MetaRow
                     label="Updated"
                     value={
                       detail.dateModified === new Date(0).toISOString()
@@ -109,7 +128,7 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                         : new Date(detail.dateModified).toLocaleString()
                     }
                   />
-                  <Meta label="Slug" value={detail.slug} />
+                  <MetaRow label="Slug" value={detail.slug} />
                 </Stack>
                 <Group gap="xs">
                   {(detail.categories ?? []).map((category) => (
@@ -127,6 +146,7 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
             </Drawer.Body>
             <div className={classes.detailDrawerFooter}>
               <Button
+                className={classes.detailDrawerPrimaryAction}
                 variant="default"
                 leftSection={<ArrowSquareOut size={16} />}
                 onClick={() => props.onOpenExternal(detail.curseforgeUrl)}
@@ -142,6 +162,7 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                     confirmRemoveServerMod(
                       { id: detail.id, name: detail.name },
                       props.onRemove,
+                      { onPendingChange: setRemoveConfirmPending },
                     )}
                 >
                   Remove
@@ -184,7 +205,11 @@ function ModMapTokenHint(props: { detail: ModMetadata }): ReactElement | null {
             size="compact-xs"
             variant="default"
             leftSection={<Copy size={14} />}
-            onClick={() => void navigator.clipboard.writeText(suggestion.token)}
+            onClick={() => void copyTextToClipboard({
+              text: suggestion.token,
+              successMessage: "Launch token copied",
+              failureMessage: "Could not copy launch token",
+            })}
           >
             Copy token
           </Button>
@@ -196,14 +221,5 @@ function ModMapTokenHint(props: { detail: ModMetadata }): ReactElement | null {
         </Text>
       )}
     </Alert>
-  );
-}
-
-function Meta(props: { label: string; value: string }): ReactElement {
-  return (
-    <Group justify="space-between" wrap="nowrap">
-      <Text size="sm" c="dimmed">{props.label}</Text>
-      <Text size="sm" ta="right">{props.value}</Text>
-    </Group>
   );
 }

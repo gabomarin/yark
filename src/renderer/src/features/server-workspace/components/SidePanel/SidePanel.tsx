@@ -20,6 +20,7 @@ import {
 } from "@shared/installation-health";
 import { resolveDisplayedServerVersion } from "@shared/server-version-display";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { MetaRow } from "@ui/MetaRow/MetaRow";
 import { serverRuntimeStatusLabel } from "@ui/ServerRuntimeStatusBadge/serverRuntimeStatus";
 import classes from "./SidePanel.module.css";
 
@@ -38,15 +39,6 @@ interface Props {
   onCopyConfiguration: () => void;
   onKill: () => void;
   onToggleEnabled?: () => void;
-}
-
-function MetaRow({ label, value }: { label: string; value: string }): ReactElement {
-  return (
-    <div className={classes.metaRow}>
-      <Text className={classes.metaLabel}>{label}</Text>
-      <Text className={classes.metaValue}>{value}</Text>
-    </div>
-  );
 }
 
 export function SidePanel(props: Props): ReactElement {

@@ -73,7 +73,8 @@ export function createServerModsListMutations(input: Input) {
     }
   };
 
-  const remove = async (id: string) => {
+  /** True when persist succeeded — lets the detail drawer close only after remove. */
+  const remove = async (id: string): Promise<boolean> => {
     input.setBusyKey(id);
     input.setError(null);
     input.setWarning(null);

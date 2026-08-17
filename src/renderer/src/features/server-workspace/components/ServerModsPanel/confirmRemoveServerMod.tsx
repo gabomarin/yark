@@ -6,8 +6,13 @@ import type { ModRow } from "./serverModsModel";
 export function confirmRemoveServerMod(
   row: Pick<ModRow, "id" | "name">,
   onRemove: (id: string) => void,
+  options?: {
+    /** Fires when the confirm modal opens or closes (any outcome). */
+    onPendingChange?: (pending: boolean) => void;
+  },
 ): void {
   if (row.id === null) return;
+  options?.onPendingChange?.(true);
   modals.openConfirmModal({
     title: "Remove mod?",
     children: (
@@ -18,6 +23,11 @@ export function confirmRemoveServerMod(
     ),
     labels: { confirm: "Remove mod", cancel: "Cancel" },
     confirmProps: { color: "red" },
-    onConfirm: () => onRemove(row.id!),
+    onClose: () => options?.onPendingChange?.(false),
+    onCancel: () => options?.onPendingChange?.(false),
+    onConfirm: () => {
+      options?.onPendingChange?.(false);
+      onRemove(row.id!);
+    },
   });
 }
