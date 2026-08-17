@@ -23,13 +23,14 @@ describe("ClusterIniTemplateRepository / Service", () => {
   it("migrates cluster_ini_templates and round-trips payload", () => {
     const service = makeService();
     const payload = prepareClusterIniTemplatePayload({
-      gameUserSettings: `[ServerSettings]\nMaxPlayers=55\nRCONPort=27020\n`,
+      gameUserSettings: `[ServerSettings]\nXPMultiplier=3\nRCONPort=27020\n`,
       game: `[/Script/ShooterGame.ShooterGameMode]\nHarvestAmountMultiplier=3\n`,
     });
 
     const { template, preview } = service.save("alpha", payload);
     expect(template.clusterId).toBe("alpha");
-    expect(template.payload.gameUserSettings).toContain("MaxPlayers=55");
+    expect(template.payload.gameUserSettings).toContain("XPMultiplier=3");
+    expect(template.payload.gameUserSettings).not.toMatch(/MaxPlayers=/i);
     expect(template.payload.gameUserSettings).not.toMatch(/RCONPort=/i);
     expect(template.payload.game).toContain("HarvestAmountMultiplier=3");
     expect(preview.valid).toBe(true);
@@ -49,7 +50,7 @@ describe("ClusterIniTemplateRepository / Service", () => {
   it("delete removes template only", () => {
     const service = makeService();
     service.save("gamma", {
-      gameUserSettings: `[ServerSettings]\nMaxPlayers=10\n`,
+      gameUserSettings: `[ServerSettings]\nXPMultiplier=10\n`,
       game: "",
     });
     expect(service.delete("gamma")).toBe(true);
@@ -61,7 +62,7 @@ describe("ClusterIniTemplateRepository / Service", () => {
     const service = makeService();
     const gus = [
       "[ServerSettings]",
-      "MaxPlayers=40",
+      "XPMultiplier=40",
       "# custom note",
       "CustomUnknownKey=hello",
       "",
@@ -98,28 +99,28 @@ describe("ClusterIniTemplateRepository / Service", () => {
   it("delete only drops the SQLite row (no other cluster templates affected)", () => {
     const service = makeService();
     service.save("keep", {
-      gameUserSettings: `[ServerSettings]\nMaxPlayers=20\n`,
+      gameUserSettings: `[ServerSettings]\nXPMultiplier=20\n`,
       game: `[Custom]\nA=1\n`,
     });
     service.save("drop", {
-      gameUserSettings: `[ServerSettings]\nMaxPlayers=30\n`,
+      gameUserSettings: `[ServerSettings]\nXPMultiplier=30\n`,
       game: "",
     });
 
     expect(service.delete("drop")).toBe(true);
     expect(service.get("drop")).toBeNull();
     const kept = service.get("keep");
-    expect(kept?.payload.gameUserSettings).toContain("MaxPlayers=20");
+    expect(kept?.payload.gameUserSettings).toContain("XPMultiplier=20");
     expect(kept?.payload.game).toContain("A=1");
   });
 
-  it("rejects invalid MaxPlayers on save", () => {
+  it("rejects invalid DifficultyOffset on save", () => {
     const service = makeService();
     expect(() =>
       service.save("bad", {
-        gameUserSettings: `[ServerSettings]\nMaxPlayers=999\n`,
+        gameUserSettings: `[ServerSettings]\nDifficultyOffset=2\n`,
         game: "",
       }),
-    ).toThrow(/MaxPlayers/);
+    ).toThrow(/DifficultyOffset/);
   });
 });

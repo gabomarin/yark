@@ -22,7 +22,7 @@ function normalizeClusterId(clusterId: string): string {
   return id;
 }
 
-/** Sanitize client noise and strip YARK-owned per-server keys. */
+/** Sanitize client noise and strip YARK-owned per-server keys (and INI MaxPlayers). */
 export function prepareClusterIniTemplatePayload(
   payload: ServerIniPayload,
 ): ServerIniPayload {

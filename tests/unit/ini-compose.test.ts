@@ -74,10 +74,7 @@ describe("ini-compose", () => {
     expect(composed.gameUserSettings).toContain("RCONPort=27020");
     expect(composed.gameUserSettings).toContain("ServerAdminPassword=admin-a");
     expect(composed.gameUserSettings).not.toContain("from-template");
-    expect(composed.gameUserSettings).toMatch(/^MaxPlayers=55$/m);
-    expect(composed.gameUserSettings).not.toMatch(
-      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
-    );
+    expect(composed.gameUserSettings).not.toMatch(/MaxPlayers=/i);
     expect(composed.game).toContain("HarvestAmountMultiplier=2");
   });
 
@@ -100,7 +97,7 @@ describe("ini-compose", () => {
       game: "[Custom]\nSharedFlag=True\n",
     });
 
-    expect(fromB.gameUserSettings).toContain("MaxPlayers=55");
+    expect(fromB.gameUserSettings).not.toMatch(/MaxPlayers=/i);
     expect(fromB.gameUserSettings).toContain("XPMultiplier=3");
     expect(fromB.gameUserSettings).not.toMatch(/RCONPort=/i);
     expect(fromB.gameUserSettings).not.toMatch(/SessionName=/i);
@@ -131,10 +128,7 @@ describe("ini-compose", () => {
       currentA,
     );
 
-    expect(restored.gameUserSettings).toMatch(/^MaxPlayers=55$/m);
-    expect(restored.gameUserSettings).not.toMatch(
-      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
-    );
+    expect(restored.gameUserSettings).not.toMatch(/MaxPlayers=/i);
     expect(restored.gameUserSettings).toContain("XPMultiplier=3");
     expect(restored.gameUserSettings).toContain("RCONPort=27020");
     expect(restored.gameUserSettings).toContain("ServerAdminPassword=admin-a");
@@ -187,7 +181,7 @@ describe("ini-compose", () => {
         "[ServerSettings]\nMaxPlayers=55\nRCONPort=27020\nServerAdminPassword=x\nActiveMods=1,2\n",
       game: "[Custom]\nKeep=1\n",
     });
-    expect(template.gameUserSettings).toContain("MaxPlayers=55");
+    expect(template.gameUserSettings).not.toMatch(/MaxPlayers=/i);
     expect(template.gameUserSettings).not.toMatch(/RCONPort=/i);
     expect(template.gameUserSettings).not.toMatch(/ServerAdminPassword=/i);
     expect(template.gameUserSettings).not.toMatch(/ActiveMods=/i);

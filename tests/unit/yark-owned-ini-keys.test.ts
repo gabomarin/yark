@@ -69,11 +69,10 @@ QueryPort=27015
 MaxPlayers=70
 `;
     const stripped = stripYarkOwnedIniKeys(input);
-    expect(stripped).toContain("MaxPlayers=40");
-    expect(stripped).toContain("MaxPlayers=70");
+    expect(stripped).not.toMatch(/MaxPlayers=/i);
     expect(stripped).toContain("DifficultyOffset=0.5");
     expect(stripped).toContain("; keep me");
-    expect(stripped).toMatch(/\[\/Script\/Engine\.GameSession\]/i);
+    expect(stripped).not.toMatch(/\[\/Script\/Engine\.GameSession\]/i);
     expect(stripped).not.toMatch(/ActiveMods=/i);
     expect(stripped).not.toMatch(/ActiveMapMod=/i);
     expect(stripped).not.toMatch(/RCONPort=/i);

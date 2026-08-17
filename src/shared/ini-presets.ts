@@ -73,12 +73,6 @@ const PRESETS: IniPreset[] = [
     updates: [
       {
         fileKey: "gameUserSettings",
-        section: "/Script/Engine.GameSession",
-        key: "MaxPlayers",
-        value: "70",
-      },
-      {
-        fileKey: "gameUserSettings",
         section: "ServerSettings",
         key: "NetServerMaxTickRate",
         value: "30",

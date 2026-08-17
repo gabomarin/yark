@@ -160,11 +160,6 @@ function validateGameUserSettingsSemantics(
     );
   }
 
-  const sessionSettings = findIniSection(parsed, "SessionSettings");
-  if (sessionSettings !== undefined) {
-    validateIntegerRange("MaxPlayers", sessionSettings["MaxPlayers"], 1, 255, issues);
-  }
-
   const gameSession = findIniSection(parsed, "/Script/Engine.GameSession");
   if (gameSession !== undefined) {
     validateIntegerRange("MaxPlayers", gameSession["MaxPlayers"], 1, 255, issues);

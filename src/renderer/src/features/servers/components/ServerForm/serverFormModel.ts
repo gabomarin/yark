@@ -101,7 +101,7 @@ export function serverFormToInput(
 }
 
 /** Empty / NaN → 0 (omit -WinLiveMaxPlayers; ASA then defaults to 70). */
-function parseOptionalMaxPlayers(raw: string): number {
+export function parseOptionalMaxPlayers(raw: string): number {
   const trimmed = raw.trim();
   if (trimmed.length === 0) return 0;
   const parsed = Number(trimmed);

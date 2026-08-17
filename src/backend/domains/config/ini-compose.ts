@@ -135,7 +135,10 @@ export function applyProfileOwnedKeysToGameUserSettings(
   return text;
 }
 
-/** Template → member: replace both INI files, then reapply per-server identity. */
+/** Template → member: replace both INI files, then reapply per-server identity.
+ * INI MaxPlayers is stripped from templates (ASA ignores it). The live cap is
+ * `-WinLiveMaxPlayers` from the profile at start, not this file.
+ */
 export function composeMemberPayloadFromTemplate(
   template: ServerIniPayload,
   profile: ProfileIniIdentity,

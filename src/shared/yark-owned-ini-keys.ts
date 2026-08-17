@@ -13,7 +13,8 @@ import type { ServerIniPayload } from "./types";
  * After template apply (#89/#90), profileSync keys are recomposed from the
  * profile; aseLegacy keys stay absent so operators manage mods on the Mods
  * panel instead of stale INI copies. INI MaxPlayers is not profile-owned:
- * ASA ignores it and uses `-WinLiveMaxPlayers` from the Server form.
+ * ASA ignores it and uses `-WinLiveMaxPlayers` from the Server form. Cluster
+ * templates still strip MaxPlayers so they cannot author a decoy slot limit.
  */
 export type YarkOwnedIniReason = "profileSync" | "aseLegacy";
 
@@ -112,7 +113,8 @@ export function isAsaIgnoredIniMaxPlayers(key: string): boolean {
 
 /**
  * Removes YARK-owned assignments from INI text while preserving other lines,
- * comments, and unknown keys. Empty sections are dropped.
+ * comments, and unknown keys. Empty sections are dropped. Also drops INI
+ * MaxPlayers (ASA ignores it; the live cap is `-WinLiveMaxPlayers`).
  */
 export function stripYarkOwnedIniKeys(text: string): string {
   const owned = OWNED_KEY_SET;
@@ -154,7 +156,7 @@ export function stripYarkOwnedIniKeys(text: string): string {
     if (isAssignment) {
       const key = trimmed.slice(0, eq).trim();
       const flat = `${sectionName.toLowerCase()}\u001f${key.toLowerCase()}`;
-      if (owned.has(flat)) {
+      if (owned.has(flat) || isAsaIgnoredIniMaxPlayers(key)) {
         continue;
       }
       if (sectionHeader !== null) {

@@ -68,7 +68,7 @@ export function ServerFormReachabilityFields(props: Props): ReactElement {
         max={255}
         allowDecimal={false}
         clampBehavior="none"
-        description="Launch slot limit. ASA ignores INI MaxPlayers — only -WinLiveMaxPlayers counts. Empty or 0 omits the flag (ASA then defaults to 70)."
+        description="Slot limit passed as -WinLiveMaxPlayers. Empty or 0 omits the flag."
       />
       <Stack gap="sm">
         <PasswordInput

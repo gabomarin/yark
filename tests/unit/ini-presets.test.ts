@@ -67,7 +67,7 @@ describe("ini-presets", () => {
         .map((row) => [row.key, row.value]),
     );
 
-    expect(gameSession["MaxPlayers"]).toBe("70");
+    expect(gameSession["MaxPlayers"]).toBe("120");
     expect(serverSettings["NetServerMaxTickRate"]).toBe("30");
   });
 
