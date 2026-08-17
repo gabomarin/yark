@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactElement } from "react";
 import {
   Alert,
@@ -21,8 +21,12 @@ import {
 import type { ModMetadata } from "@shared/types";
 import { copyTextToClipboard } from "@ui/copyToClipboard";
 import { MetaRow } from "@ui/MetaRow/MetaRow";
+import { useUiDensity } from "@app/AppProviders";
 import { confirmRemoveServerMod } from "./confirmRemoveServerMod";
 import classes from "./ServerModsPanel.module.css";
+
+/** Matches workspace secondary drawers (`ServerWorkspacePage`). */
+const DRAWER_OVERLAY_OPACITY = 0.68;
 
 interface Props {
   detail: ModMetadata | null;
@@ -34,16 +38,23 @@ interface Props {
   onOpenExternal: (url: string) => void;
   onToggle: (id: string, enabled: boolean) => void;
   onAdd: (detail: ModMetadata) => void;
-  onRemove: (id: string) => void;
+  onRemove: (id: string) => void | Promise<boolean | void>;
 }
 
 export function ServerModDetailDrawer(props: Props): ReactElement {
+  const density = useUiDensity();
+  const copyButtonSize = density === "compact" ? "compact-sm" : "sm";
+  const footerButtonSize = density === "compact" ? "sm" : "md";
   const [removeConfirmPending, setRemoveConfirmPending] = useState(false);
   const detail = props.detail;
+  const drawerLocked = removeConfirmPending || props.busy;
 
   const handleClose = () => {
     if (removeConfirmPending) {
       modals.closeAll();
+      if (props.busy) {
+        return;
+      }
       setRemoveConfirmPending(false);
     }
     props.onClose();
@@ -53,12 +64,12 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
     <Drawer.Root
       opened={props.opened}
       onClose={handleClose}
-      closeOnClickOutside={!removeConfirmPending}
-      closeOnEscape={!removeConfirmPending}
+      closeOnClickOutside={!drawerLocked}
+      closeOnEscape={!drawerLocked}
       position="right"
       size={440}
     >
-      <Drawer.Overlay backgroundOpacity={0.68} />
+      <Drawer.Overlay backgroundOpacity={DRAWER_OVERLAY_OPACITY} />
       <Drawer.Content classNames={{ content: classes.detailDrawer }}>
         {detail !== null && (
           <div className={classes.detailDrawerShell}>
@@ -90,7 +101,7 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                   </div>
                 </Group>
               </div>
-              <Drawer.CloseButton disabled={removeConfirmPending} />
+              <Drawer.CloseButton disabled={drawerLocked} />
             </Drawer.Header>
 
             {props.configured && (
@@ -130,13 +141,12 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                     Project ID {detail.id}
                   </Badge>
                   <Button
-                    size="compact-sm"
+                    size={copyButtonSize}
                     variant="default"
                     radius="md"
                     leftSection={<Copy size={14} />}
                     onClick={() => void copyTextToClipboard({
                       text: detail.id,
-                      successMessage: "Project ID copied",
                       failureMessage: "Could not copy Project ID",
                     })}
                   >
@@ -184,6 +194,7 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
             <div className={classes.detailDrawerFooter}>
               <Button
                 className={classes.detailDrawerPrimaryAction}
+                size={footerButtonSize}
                 variant="default"
                 radius="md"
                 leftSection={<ArrowSquareOut size={16} />}
@@ -194,11 +205,12 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
               {props.configured ? (
                 <Button
                   className={classes.detailDrawerRemoveAction}
+                  size={footerButtonSize}
                   color="red"
                   variant="filled"
                   radius="md"
                   leftSection={<X size={16} />}
-                  disabled={props.busy}
+                  disabled={drawerLocked}
                   onClick={() =>
                     confirmRemoveServerMod(
                       { id: detail.id, name: detail.name },
@@ -211,12 +223,13 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
               ) : (
                 <Button
                   className={classes.detailDrawerRemoveAction}
+                  size={footerButtonSize}
                   color="teal"
                   variant="light"
                   radius="md"
                   leftSection={<Plus size={16} />}
                   loading={props.busy}
-                  disabled={props.busy}
+                  disabled={drawerLocked}
                   aria-label={`Add ${detail.name} from details`}
                   onClick={() => props.onAdd(detail)}
                 >
@@ -232,17 +245,33 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
 }
 
 function DetailModThumbnail(props: { src: string | null }): ReactElement {
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [props.src]);
+
+  const showImage = props.src !== null && !imageFailed;
+
   return (
     <div className={classes.detailDrawerThumb}>
       <PuzzlePiece size={22} aria-hidden="true" />
-      {props.src !== null && (
-        <Image src={props.src} alt="" loading="eager" className={classes.detailDrawerThumbImage} />
+      {showImage && (
+        <Image
+          src={props.src!}
+          alt=""
+          loading="eager"
+          className={classes.detailDrawerThumbImage}
+          onError={() => setImageFailed(true)}
+        />
       )}
     </div>
   );
 }
 
 function ModMapTokenHint(props: { detail: ModMetadata }): ReactElement | null {
+  const density = useUiDensity();
+  const copyButtonSize = density === "compact" ? "compact-sm" : "sm";
   if (!isMapModCandidate(props.detail)) return null;
   const suggestion = suggestMapTokenFromMetadata(props.detail);
   return (
@@ -256,13 +285,12 @@ function ModMapTokenHint(props: { detail: ModMetadata }): ReactElement | null {
             to use it. Your current map is unchanged.
           </Text>
           <Button
-            size="compact-xs"
+            size={copyButtonSize}
             variant="default"
             radius="md"
             leftSection={<Copy size={14} />}
             onClick={() => void copyTextToClipboard({
               text: suggestion.token,
-              successMessage: "Launch token copied",
               failureMessage: "Could not copy launch token",
             })}
           >

@@ -266,20 +266,21 @@
 
 .detailDrawerFooter {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: var(--app-space-sm);
   padding: var(--app-space-md);
   border-top: 1px solid var(--app-color-border-subtle);
   background: var(--app-color-panel);
 }
 
-.detailDrawerPrimaryAction,
-.detailDrawerRemoveAction {
-  width: 100%;
+/* Remove/Add stays on its own row below Open on CurseForge (#227). */
+.detailDrawerPrimaryAction {
+  flex: 1 1 auto;
+  min-width: 100%;
 }
 
 .detailDrawerRemoveAction {
-  flex: 0 0 auto;
+  flex: 1 1 100%;
 }
 
 @media (max-width: 900px) {
