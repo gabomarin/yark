@@ -60,7 +60,7 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
       size={440}
     >
       <Drawer.Overlay />
-      <Drawer.Content className={classes.detailDrawer}>
+      <Drawer.Content classNames={{ content: classes.detailDrawer }}>
         <Drawer.Header>
           <Drawer.Title>Mod details</Drawer.Title>
           <Drawer.CloseButton disabled={removeConfirmPending} />
