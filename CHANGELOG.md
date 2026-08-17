@@ -30,7 +30,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Fixed
 
 - Shell main content stays in the viewport after Mantine `styles.layer.css` — navbar modules no longer override AppShell fixed positioning (#230).
-- INI preview validates **Max players** on `[/Script/Engine.GameSession]`; the Performance preset writes that same key; wizard apply toasts the preview change count (#230).
+- INI preview validates **Max players** on `[/Script/Engine.GameSession]` (and leftover `[ServerSettings]` copies); the Performance preset writes the GameSession key; wizard apply toasts the preview change count (#230).
 - First-run setup does not auto-open when setup status cannot be read, so Overview stays usable if the database is unavailable (#298).
 
 ### Security

@@ -136,6 +136,21 @@ describe("IniService semantic validation", () => {
     expect(preview.issues.some((i) => i.message.includes("MaxPlayers"))).toBe(true);
   });
 
+  it("still rejects legacy ServerSettings MaxPlayers out of range", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+
+    const { service, profile } = makeService(installDir);
+    const preview = await service.previewServerIni(profile.id, {
+      gameUserSettings: "[ServerSettings]\nMaxPlayers=0\n",
+      game: "",
+    });
+
+    expect(preview.valid).toBe(false);
+    expect(preview.issues.some((i) => i.message.includes("MaxPlayers"))).toBe(true);
+  });
+
   it("rejects saving INI with invalid semantic validation", async () => {
     const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
     tmpDirs.push(installDir);

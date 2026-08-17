@@ -150,6 +150,7 @@ function validateGameUserSettingsSemantics(
   const serverSettings = findIniSection(parsed, "ServerSettings");
   if (serverSettings !== undefined) {
     validateIntegerRange("RCONPort", serverSettings["RCONPort"], 1024, 65535, issues);
+    validateIntegerRange("MaxPlayers", serverSettings["MaxPlayers"], 1, 255, issues);
     validateNumberRange(
       "DifficultyOffset",
       serverSettings["DifficultyOffset"],
