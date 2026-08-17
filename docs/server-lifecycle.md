@@ -483,7 +483,9 @@ Paths under `{installDir}/ShooterGame/Saved/Config/WindowsServer/`:
   (`ini-text.ts`).
 - Semantic save checks (only when `[ServerSettings]` present): `RCONPort`
   1024–65535, `DifficultyOffset` 0–1. Profile `MaxPlayers` (1–255) lives under
-  `[/Script/Engine.GameSession]` and is synced from Server settings, not the INI editor.
+  `[/Script/Engine.GameSession]` and is synced from Server settings, not the INI
+  editor. Leftover `[ServerSettings] MaxPlayers` is hidden and stripped on
+  start/sync and cluster seed/restore (ASA ignores that section).
 - Reset-to-defaults is UI-only (no `ini:reset` IPC).
 
 ## Configuration assistant

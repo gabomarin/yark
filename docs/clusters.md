@@ -156,9 +156,12 @@ Report shape:
   `restore` / `promote` / `seed` (one member at a time; optional `files`
   selects entire Game.ini and/or GameUserSettings.ini — default both).
 - Composition: template overlay → strip owned keys → reapply the **target
-  member’s current** ports/passwords/session (fallback to profile when missing)
-  via `ini-compose.ts`. Owned keys are omitted from operator previews; secrets
-  are redacted. Unselected files are left unchanged on disk / in the template.
+  member’s current** ports/passwords/session/`[/Script/Engine.GameSession] MaxPlayers`
+  (fallback to profile when missing) via `ini-compose.ts`. Leftover
+  `[ServerSettings] MaxPlayers` is stripped on apply (ASA ignores it). Owned
+  keys and that leftover MaxPlayers key are omitted from operator previews;
+  secrets are redacted. Unselected files are left unchanged on disk / in the
+  template.
 - Restore/seed take a local `.yark-pre-template` snapshot before write, and a
   cataloged INI backup when the install is Ready.
 - Promote updates only the selected SQLite template files (member installs

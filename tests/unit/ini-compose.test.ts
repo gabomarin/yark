@@ -52,7 +52,7 @@ describe("ini-compose", () => {
     const composed = composeMemberPayloadFromTemplate(
       {
         gameUserSettings:
-          "[ServerSettings]\nXPMultiplier=3\nRCONPort=11111\nServerAdminPassword=from-template\n",
+          "[ServerSettings]\nMaxPlayers=55\nXPMultiplier=3\nRCONPort=11111\nServerAdminPassword=from-template\n",
         game: "[/Script/ShooterGame.ShooterGameMode]\nHarvestAmountMultiplier=2\n",
       },
       profileA,
@@ -61,6 +61,10 @@ describe("ini-compose", () => {
     expect(composed.gameUserSettings).toContain("RCONPort=27020");
     expect(composed.gameUserSettings).toContain("ServerAdminPassword=admin-a");
     expect(composed.gameUserSettings).not.toContain("from-template");
+    expect(composed.gameUserSettings).not.toMatch(/^MaxPlayers=55$/m);
+    expect(composed.gameUserSettings).toMatch(
+      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
+    );
     expect(composed.game).toContain("HarvestAmountMultiplier=2");
   });
 
@@ -194,6 +198,33 @@ describe("ini-compose", () => {
     expect(filtered.diff.some((row) => row.key === "RCONPort")).toBe(false);
     expect(filtered.diff.some((row) => row.key === "XPMultiplier")).toBe(true);
     expect(filtered.changedCount).toBe(1);
+  });
+
+  it("omits leftover ServerSettings MaxPlayers from operator previews", () => {
+    const preview = buildIniPreview(
+      {
+        gameUserSettings: "[ServerSettings]\nMaxPlayers=20\nXPMultiplier=1\n",
+        game: "",
+      },
+      {
+        gameUserSettings:
+          "[ServerSettings]\nXPMultiplier=3\n\n[/Script/Engine.GameSession]\nMaxPlayers=70\n",
+        game: "",
+      },
+    );
+    const filtered = omitYarkOwnedFromIniPreview(preview);
+    expect(
+      filtered.diff.some(
+        (row) => row.section === "ServerSettings" && row.key === "MaxPlayers",
+      ),
+    ).toBe(false);
+    expect(
+      filtered.diff.some(
+        (row) =>
+          row.section === "/Script/Engine.GameSession" && row.key === "MaxPlayers",
+      ),
+    ).toBe(false);
+    expect(filtered.diff.some((row) => row.key === "XPMultiplier")).toBe(true);
   });
 
   it("redacts password values in previews", () => {

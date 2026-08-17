@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  isLegacyServerSettingsMaxPlayers,
   isYarkOwnedIniKey,
   stripYarkOwnedFromPayload,
   stripYarkOwnedIniKeys,
@@ -45,6 +46,15 @@ describe("yark-owned-ini-keys", () => {
     expect(isYarkOwnedIniKey("/Script/Engine.GameSession", "MaxPlayers")).toBe(
       true,
     );
+    expect(isLegacyServerSettingsMaxPlayers("ServerSettings", "MaxPlayers")).toBe(
+      true,
+    );
+    expect(isLegacyServerSettingsMaxPlayers("serversettings", "maxplayers")).toBe(
+      true,
+    );
+    expect(
+      isLegacyServerSettingsMaxPlayers("/Script/Engine.GameSession", "MaxPlayers"),
+    ).toBe(false);
   });
 
   it("strips owned keys while preserving other settings and comments", () => {

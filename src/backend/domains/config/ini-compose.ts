@@ -1,5 +1,8 @@
 import { flattenIniText, INI_FLAT_SEP, removeIniTextValue, setIniTextValue } from "@shared/ini-text";
-import { isYarkOwnedIniKey } from "@shared/yark-owned-ini-keys";
+import {
+  isLegacyServerSettingsMaxPlayers,
+  isYarkOwnedIniKey,
+} from "@shared/yark-owned-ini-keys";
 import type { IniDiffEntry, IniPreview, ServerIniPayload, ServerProfile } from "@shared/types";
 import { prepareClusterIniTemplatePayload } from "./cluster-ini-template-service";
 
@@ -189,7 +192,8 @@ export function omitYarkOwnedFromIniPreview(preview: IniPreview): IniPreview {
   const diff = preview.diff.filter(
     (entry) =>
       entry.fileKey !== "gameUserSettings" ||
-      !isYarkOwnedIniKey(entry.section, entry.key),
+      (!isYarkOwnedIniKey(entry.section, entry.key) &&
+        !isLegacyServerSettingsMaxPlayers(entry.section, entry.key)),
   );
   return {
     ...preview,

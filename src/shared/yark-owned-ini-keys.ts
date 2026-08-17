@@ -111,6 +111,21 @@ export function isYarkOwnedIniKey(section: string, key: string): boolean {
 }
 
 /**
+ * Leftover `[ServerSettings] MaxPlayers` is not profile-owned (templates may
+ * still store it), but ASA ignores it. Hide it from the dedicated editor and
+ * cluster apply previews; sync/apply strips it from member files.
+ */
+export function isLegacyServerSettingsMaxPlayers(
+  section: string,
+  key: string,
+): boolean {
+  return (
+    section.trim().toLowerCase() === "serversettings" &&
+    key.trim().toLowerCase() === "maxplayers"
+  );
+}
+
+/**
  * Removes YARK-owned assignments from INI text while preserving other lines,
  * comments, and unknown keys. Empty sections are dropped.
  */

@@ -21,7 +21,10 @@ import {
   setIniTextValue,
   type IniTextRow,
 } from "@shared/ini-text";
-import { isYarkOwnedIniKey } from "@shared/yark-owned-ini-keys";
+import {
+  isLegacyServerSettingsMaxPlayers,
+  isYarkOwnedIniKey,
+} from "@shared/yark-owned-ini-keys";
 
 export interface IniSettingRow {
   section: string;
@@ -243,14 +246,6 @@ export function humanizeKey(key: string): string {
     .replace(/_/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-}
-
-/** ASA reads GameSession MaxPlayers; this leftover key is not editable here. */
-function isLegacyServerSettingsMaxPlayers(section: string, key: string): boolean {
-  return (
-    section.trim().toLowerCase() === "serversettings" &&
-    key.trim().toLowerCase() === "maxplayers"
-  );
 }
 
 export function filterIniRows(

@@ -172,7 +172,10 @@ describe("ClusterIniTemplateApplyService", () => {
       ),
       "utf8",
     );
-    expect(gus).toContain("MaxPlayers=55");
+    expect(gus).toMatch(
+      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
+    );
+    expect(gus).not.toMatch(/^MaxPlayers=55$/m);
     expect(gus).toContain("XPMultiplier=3");
     expect(gus).toContain("RCONPort=27020");
     expect(gus).toContain("ServerAdminPassword=admin1234");
@@ -262,7 +265,10 @@ describe("ClusterIniTemplateApplyService", () => {
       ),
       "utf8",
     );
-    expect(gus).toContain("MaxPlayers=55");
+    expect(gus).toMatch(
+      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
+    );
+    expect(gus).not.toMatch(/^MaxPlayers=55$/m);
     expect(gus).toContain("XPMultiplier=3");
     expect(gus).toContain("RCONPort=27020");
     expect(gus).toContain("Port=7777");
@@ -275,11 +281,13 @@ describe("ClusterIniTemplateApplyService", () => {
   it("does not write member files when restore validation fails", async () => {
     const { service, profile, templates, installDir } = makeHarness("stopped");
     templates.upsert("alpha", {
-      gameUserSettings: "[ServerSettings]\nMaxPlayers=999\n",
+      gameUserSettings: "[ServerSettings]\nDifficultyOffset=2\n",
       game: "",
     });
 
-    await expect(service.restore("alpha", profile.id)).rejects.toThrow(/MaxPlayers/i);
+    await expect(service.restore("alpha", profile.id)).rejects.toThrow(
+      /DifficultyOffset/i,
+    );
 
     const gus = readFileSync(
       join(
@@ -409,7 +417,10 @@ describe("ClusterIniTemplateApplyService", () => {
       ),
       "utf8",
     );
-    expect(gus).toContain("MaxPlayers=55");
+    expect(gus).toMatch(
+      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
+    );
+    expect(gus).not.toMatch(/^MaxPlayers=55$/m);
     expect(gus).toContain("XPMultiplier=3");
     expect(gus).toContain("RCONPort=27020");
     expect(gus).toContain("ServerAdminPassword=admin1234");
