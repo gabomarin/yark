@@ -3,6 +3,7 @@ import {
   ArrowRight,
   Check,
   CirclesThreePlus,
+  Lightning,
   UsersThree,
   TreeEvergreen,
   Sword,
@@ -127,6 +128,14 @@ export function ProfileCard(props: ProfileCardProps): ReactElement {
   );
 }
 
+export function OfficialMatchBadge(): ReactElement {
+  return (
+    <Badge size="xs" variant="light" color="blue" tt="none" radius="sm">
+      WildCard official
+    </Badge>
+  );
+}
+
 interface PresetSelectorProps {
   value: string;
   onChange: (value: string) => void;
@@ -134,9 +143,68 @@ interface PresetSelectorProps {
     id: string;
     name: string;
     description: string;
+    official?: boolean;
   }[];
   currentDescription: string;
   children: ReactNode;
+  /** Color the indicator by rate preset (Base→red … Very fast→green). */
+  paced?: boolean;
+  /** Color like world difficulty (Very easy→green … Very hard→red). */
+  worldFeel?: boolean;
+  ariaLabel?: string;
+}
+
+/** Pace / breeding rate tones — slow waits read as red, faster as green. */
+export function pacePresetColor(value: string): string {
+  switch (value) {
+    case "base":
+      return "red";
+    case "balanced":
+      return "fossil";
+    case "fast":
+    case "veryFast":
+      return "green";
+    default:
+      return "gray";
+  }
+}
+
+/** World-feel intensity — same green→red scale as world difficulty tiers. */
+export function worldFeelPresetColor(value: string): string {
+  switch (value) {
+    case "veryEasy":
+      return "green";
+    case "easy":
+      return "teal";
+    case "medium":
+      return "blue";
+    case "hard":
+      return "orange";
+    case "veryHard":
+      return "red";
+    default:
+      return "gray";
+  }
+}
+
+function pacedPresetLabel(preset: { id: string; name: string }): ReactNode {
+  if (preset.id !== "veryFast") return preset.name;
+  return (
+    <Group gap={4} wrap="nowrap" justify="center">
+      <span>{preset.name}</span>
+      <Lightning size={14} weight="fill" color="var(--app-color-fossil)" aria-hidden />
+    </Group>
+  );
+}
+
+function presetControlColor(
+  value: string,
+  paced: boolean,
+  worldFeel: boolean,
+): string | undefined {
+  if (paced) return pacePresetColor(value);
+  if (worldFeel) return worldFeelPresetColor(value);
+  return undefined;
 }
 
 export function PresetSelector({
@@ -145,25 +213,36 @@ export function PresetSelector({
   presets,
   currentDescription,
   children,
+  paced = false,
+  worldFeel = false,
+  ariaLabel = "Recommended level",
 }: PresetSelectorProps): ReactElement {
   const selected = presets.find((preset) => preset.id === value);
+  const showOfficial = selected?.official === true;
   return (
     <Stack gap="sm">
       <SegmentedControl
         value={value}
         onChange={onChange}
         fullWidth
+        color={presetControlColor(value, paced, worldFeel)}
         data={[
           { value: "current", label: "Current" },
-          ...presets.map((preset) => ({ value: preset.id, label: preset.name })),
+          ...presets.map((preset) => ({
+            value: preset.id,
+            label: paced ? pacedPresetLabel(preset) : preset.name,
+          })),
         ]}
-        aria-label="Recommended level"
+        aria-label={ariaLabel}
       />
       <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.presetSummary}>
         <Stack gap={4}>
-          <Text fw={700} size="sm">
-            {selected?.name ?? "Current configuration"}
-          </Text>
+          <Group gap="xs" wrap="wrap" align="center">
+            <Text fw={700} size="sm">
+              {selected?.name ?? "Current configuration"}
+            </Text>
+            {showOfficial && <OfficialMatchBadge />}
+          </Group>
           <Text c="dimmed" size="xs">
             {selected?.description ?? currentDescription}
           </Text>
@@ -208,8 +287,15 @@ export function ChangeRow({
   change: ReturnType<typeof wizardChanges>[number];
 }): ReactElement {
   return (
-    <Group className={classes.changeRow} justify="space-between" align="center" wrap="nowrap" gap="lg">
-      <Text fw={600} size="sm">{change.label}</Text>
+    <Group className={classes.changeRow} justify="space-between" align="flex-start" wrap="nowrap" gap="lg">
+      <Stack gap={2} style={{ minWidth: 0 }}>
+        <Text fw={600} size="sm">
+          {change.label}
+        </Text>
+        <Text c="dimmed" size="xs">
+          {change.iniKey}
+        </Text>
+      </Stack>
       <Group gap="xs" wrap="nowrap">
         <Text c="dimmed" size="sm">{change.before}</Text>
         <ArrowRight size={14} />

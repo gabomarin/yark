@@ -39,6 +39,7 @@ const MODS_ARG_RE = /(?:^|[\s"'])-mods=([0-9,]+)/i;
 export type { ImportInstallProbe, ImportInstallSuggestions };
 
 const DEFAULT_IDENTITY = {
+  maxPlayers: 70,
   gamePort: 7777,
   queryPort: 27015,
   rconPort: 27020,
@@ -224,6 +225,7 @@ function emptySuggestions(installDir: string): ImportInstallSuggestions {
     sessionName: leafFolderName(installDir),
     map: KNOWN_MAPS[0],
     mapModId: null,
+    maxPlayers: DEFAULT_IDENTITY.maxPlayers,
     gamePort: DEFAULT_IDENTITY.gamePort,
     queryPort: DEFAULT_IDENTITY.queryPort,
     rconPort: DEFAULT_IDENTITY.rconPort,
@@ -449,6 +451,7 @@ export async function buildImportSuggestions(
   const identity = resolveMemberIdentity(
     {
       sessionName: leafFolderName(normalized),
+      maxPlayers: DEFAULT_IDENTITY.maxPlayers,
       gamePort: DEFAULT_IDENTITY.gamePort,
       queryPort: DEFAULT_IDENTITY.queryPort,
       rconPort: DEFAULT_IDENTITY.rconPort,
@@ -481,6 +484,7 @@ export async function buildImportSuggestions(
     sessionName,
     map,
     mapModId: null,
+    maxPlayers: identity.maxPlayers,
     gamePort: identity.gamePort,
     queryPort: identity.queryPort,
     rconPort: identity.rconPort,

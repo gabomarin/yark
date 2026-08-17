@@ -68,6 +68,12 @@ export const YARK_OWNED_INI_KEYS: readonly YarkOwnedIniKey[] = [
     key: "QueryPort",
     reason: "profileSync",
   },
+  {
+    file: "gameUserSettings",
+    section: "/Script/Engine.GameSession",
+    key: "MaxPlayers",
+    reason: "profileSync",
+  },
 
   // --- ASE-era mod keys (not the ASA CurseForge path) ---
   {

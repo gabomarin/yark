@@ -10,6 +10,7 @@ export type ProfileIniIdentity = Pick<
   | "adminPassword"
   | "serverPassword"
   | "sessionName"
+  | "maxPlayers"
   | "gamePort"
   | "queryPort"
 >;
@@ -73,6 +74,10 @@ export function resolveMemberIdentity(
       profile.serverPassword,
     sessionName:
       flatLookup(flat, "SessionSettings", "SessionName") ?? profile.sessionName,
+    maxPlayers: parsePort(
+      flatLookup(flat, "/Script/Engine.GameSession", "MaxPlayers"),
+      profile.maxPlayers,
+    ),
     gamePort: parsePort(
       flatLookup(flat, "SessionSettings", "Port"),
       profile.gamePort,
@@ -129,6 +134,12 @@ export function applyProfileOwnedKeysToGameUserSettings(
     "SessionSettings",
     "QueryPort",
     String(profile.queryPort),
+  );
+  text = setIniTextValue(
+    text,
+    "/Script/Engine.GameSession",
+    "MaxPlayers",
+    String(profile.maxPlayers),
   );
   return text;
 }

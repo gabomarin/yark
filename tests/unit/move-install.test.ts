@@ -54,6 +54,7 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
     enabled: true,
     autoStart: false,
     sessionName: "Island Session",
+    maxPlayers: 70,
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,
@@ -178,6 +179,7 @@ describe("InstanceService.update installDir lock", () => {
     const updated = instances.update(source.id, {
       ...source,
       sessionName: "Renamed Session",
+      maxPlayers: 70,
       installDir: "C:\\ark\\island", // case-insensitive match
     });
     expect(updated.sessionName).toBe("Renamed Session");

@@ -12,11 +12,13 @@ interface Props {
   gamePort: string;
   queryPort: string;
   rconPort: string;
+  maxPlayers: string;
   serverPassword: string;
   adminPassword: string;
   onGamePortChange: (value: string) => void;
   onQueryPortChange: (value: string) => void;
   onRconPortChange: (value: string) => void;
+  onMaxPlayersChange: (value: string) => void;
   onServerPasswordChange: (value: string) => void;
   onAdminPasswordChange: (value: string) => void;
 }
@@ -57,6 +59,17 @@ export function ServerFormReachabilityFields(props: Props): ReactElement {
           required
         />
       </SimpleGrid>
+      <NumberInput
+        label="Max players"
+        size={props.inputSize}
+        value={props.maxPlayers}
+        onChange={(value) => props.onMaxPlayersChange(String(value))}
+        min={1}
+        max={200}
+        allowDecimal={false}
+        required
+        description="Player slot limit written to GameUserSettings.ini."
+      />
       <Stack gap="sm">
         <PasswordInput
           label="Server password"

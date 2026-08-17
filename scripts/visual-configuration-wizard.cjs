@@ -201,7 +201,7 @@ async function run() {
         timeout: 5000,
       });
       await assertWizardOk(page, `${size.name} pace`);
-      await page.getByRole("button", { name: "Technical", exact: true }).hover();
+      await page.getByRole("button", { name: "INI details", exact: true }).hover();
       await page.waitForTimeout(150);
       await shot(page, outDir, `wizard-pace-${size.name}`);
       await page.mouse.move(0, 0);

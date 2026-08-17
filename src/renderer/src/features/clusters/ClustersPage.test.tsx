@@ -15,6 +15,7 @@ function makeServer(overrides: Partial<ServerProfile> & Pick<ServerProfile, "id"
     map: "TheIsland_WP",
     installDir: `C:/ARK/${overrides.id}`,
     sessionName: overrides.name,
+    maxPlayers: 70,
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,

@@ -33,6 +33,7 @@ function probeResult(
     suggestions: {
       name: "New",
       sessionName: "New",
+      maxPlayers: 70,
       map: "TheIsland_WP",
       mapModId: null,
       gamePort: 7777,
@@ -54,6 +55,7 @@ function profile(partial: Partial<ServerProfile> & Pick<ServerProfile, "id" | "n
     map: "TheIsland_WP",
     installDir: "C:\\ark\\Island",
     sessionName: partial.name,
+    maxPlayers: 70,
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,

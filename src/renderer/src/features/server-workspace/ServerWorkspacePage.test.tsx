@@ -19,6 +19,7 @@ const serverA = {
   map: "TheIsland_WP",
   installDir: "C:/ARK/TheIsland",
   sessionName: "Island",
+  maxPlayers: 70,
   gamePort: 7777,
   queryPort: 27015,
   rconPort: 27020,
@@ -779,7 +780,7 @@ describe("ServerWorkspacePage", () => {
         gameUserSettingsExisted: true,
         gameIniExisted: true,
         payload: {
-          gameUserSettings: "[SessionSettings]\nSessionName=Test\n",
+          gameUserSettings: "[ServerSettings]\nAllowFlyerCarryPVE=True\n",
           game: "[Custom]\nTotallyUnknownSettingXYZ=1\n",
         },
       },
@@ -807,7 +808,7 @@ describe("ServerWorkspacePage", () => {
 
     await user.click(within(fileSwitch).getByRole("radio", { name: "GameUserSettings.ini" }));
     await waitFor(() => {
-      expect(screen.getAllByText("SessionName").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("AllowFlyerCarryPVE").length).toBeGreaterThan(0);
       expect(categorySelect).toHaveValue("All settings (1)");
     });
   });
@@ -935,13 +936,13 @@ describe("ServerWorkspacePage", () => {
       "true",
     );
     expect(screen.getByText("High impact")).toBeVisible();
-    expect(screen.getByText("Brisk tame")).toBeVisible();
+    expect(screen.getByText("Fast taming")).toBeVisible();
     expect(screen.getByRole("button", { name: "Cancel" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Back" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
     await user.click(
       screen.getByRole("switch", {
-        name: "Settings for one person or a small group",
+        name: "Enable single-player settings",
       }),
     );
     await user.click(screen.getByRole("button", { name: /View \d+ changes/ }));
@@ -949,16 +950,18 @@ describe("ServerWorkspacePage", () => {
       name: "Draft changes",
     });
     expect(within(changesDialog).getByText("Taming")).toBeInTheDocument();
+    expect(within(changesDialog).getByText("TamingSpeedMultiplier")).toBeInTheDocument();
     expect(within(changesDialog).getByText("3×")).toBeInTheDocument();
     expect(
-      within(changesDialog).getByText("Single-player style settings"),
+      within(changesDialog).getByText("Enable single-player settings"),
     ).toBeInTheDocument();
     await user.keyboard("{Escape}");
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("3× → 7.5×")).toBeVisible();
-    expect(screen.getByText(/Max wild level/i)).toBeVisible();
+    expect(screen.getByText("Max wild level 150")).toBeVisible();
+    expect(screen.getByText("WildCard official")).toBeVisible();
     expect(screen.queryByText(/DifficultyOffset/)).not.toBeInTheDocument();
-    await user.hover(screen.getByRole("button", { name: "Technical" }));
+    await user.hover(screen.getByRole("button", { name: "INI details" }));
     expect(await screen.findByRole("tooltip")).toHaveTextContent(/DifficultyOffset/);
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("5× → 45×")).toBeVisible();
@@ -967,12 +970,16 @@ describe("ServerWorkspacePage", () => {
     expect(
       screen.getByRole("heading", { name: "Define how the world feels" }),
     ).toBeVisible();
-    expect(screen.getByRole("radio", { name: "Gentle" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Very easy" })).toBeChecked();
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(
       screen.getByRole("heading", { name: "Review before applying" }),
     ).toBeVisible();
+    expect(screen.getByText("TamingSpeedMultiplier")).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: /View \d+ changes/ }),
+    ).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Apply changes" }));
 
     expect(
@@ -982,7 +989,7 @@ describe("ServerWorkspacePage", () => {
       screen.getByText(/Only the settings in this wizard were changed/i),
     ).toBeVisible();
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      /18 settings were updated on The Island/i,
+      /24 settings were updated on The Island/i,
     );
     expect(window.api.previewServerIni).toHaveBeenCalledTimes(1);
     expect(window.api.saveServerIni).toHaveBeenCalledTimes(1);
@@ -1019,7 +1026,7 @@ describe("ServerWorkspacePage", () => {
     await user.click(screen.getByRole("button", { name: /Match cluster defaults/ }));
     expect(
       screen.queryByRole("switch", {
-        name: "Settings for one person or a small group",
+        name: "Enable single-player settings",
       }),
     ).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Continue" }));

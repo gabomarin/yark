@@ -206,6 +206,13 @@
   justify-self: start;
 }
 
+.footerCenterSlot {
+  justify-self: center;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 .success {
   display: flex;
   flex: 1;

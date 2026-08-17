@@ -49,6 +49,11 @@ export const serverProfileInputSchema = z.object({
   map: z.string().trim().min(1, "Map required"),
   installDir: windowsPathSchema,
   sessionName: z.string().trim().min(1, "Session name required").max(96),
+  maxPlayers: z
+    .number()
+    .int()
+    .min(1, "Max players must be >= 1")
+    .max(200, "Max players must be <= 200"),
   gamePort: portSchema,
   queryPort: portSchema,
   rconPort: portSchema,

@@ -34,6 +34,8 @@ export interface ServerProfile {
    */
   autoStart: boolean;
   sessionName: string;
+  /** Max concurrent players (`[/Script/Engine.GameSession] MaxPlayers`). Default 70. */
+  maxPlayers: number;
   gamePort: number;
   queryPort: number;
   rconPort: number;
@@ -137,6 +139,7 @@ export interface ImportInstallSuggestions {
   sessionName: string;
   map: string;
   mapModId: string | null;
+  maxPlayers: number;
   gamePort: number;
   queryPort: number;
   rconPort: number;

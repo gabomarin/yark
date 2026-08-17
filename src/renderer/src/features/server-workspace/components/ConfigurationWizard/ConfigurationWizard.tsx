@@ -100,7 +100,10 @@ const EMPTY_DRAFT: ConfigurationWizardDraft = {
   maturationRate: 1,
   matingIntervalMultiplier: 1,
   cuddleIntervalMultiplier: 1,
-  maxPlayers: 70,
+  matingSpeedMultiplier: 1,
+  babyImprintAmountMultiplier: 1,
+  babyCuddleGracePeriodMultiplier: 1,
+  resourcesRespawnPeriodMultiplier: 1,
   dinoCountMultiplier: 1,
   harvestHealthMultiplier: 1,
   dayCycleSpeedScale: 1,
@@ -112,6 +115,9 @@ const EMPTY_DRAFT: ConfigurationWizardDraft = {
   crosshair: true,
   thirdPerson: true,
   flyerCarryPve: false,
+  allowCaveBuildingPve: false,
+  showFloatingDamageText: false,
+  alwaysAllowStructurePickup: false,
   structurePickupSeconds: 30,
 };
 
@@ -257,6 +263,8 @@ export function ConfigurationWizard(props: Props): ReactElement {
         xpRate: initialDraft.xpRate,
         harvestRate: initialDraft.harvestRate,
         tamingRate: initialDraft.tamingRate,
+        resourcesRespawnPeriodMultiplier:
+          initialDraft.resourcesRespawnPeriodMultiplier,
       });
       setProgressionPreset("current");
       return;
@@ -274,6 +282,10 @@ export function ConfigurationWizard(props: Props): ReactElement {
         maturationRate: initialDraft.maturationRate,
         matingIntervalMultiplier: initialDraft.matingIntervalMultiplier,
         cuddleIntervalMultiplier: initialDraft.cuddleIntervalMultiplier,
+        matingSpeedMultiplier: initialDraft.matingSpeedMultiplier,
+        babyImprintAmountMultiplier: initialDraft.babyImprintAmountMultiplier,
+        babyCuddleGracePeriodMultiplier:
+          initialDraft.babyCuddleGracePeriodMultiplier,
       });
       setBreedingPreset("current");
       return;
@@ -287,7 +299,6 @@ export function ConfigurationWizard(props: Props): ReactElement {
     if (preset === "current") {
       form.setValues({
         ...form.values,
-        maxPlayers: initialDraft.maxPlayers,
         dinoCountMultiplier: initialDraft.dinoCountMultiplier,
         harvestHealthMultiplier: initialDraft.harvestHealthMultiplier,
         dayCycleSpeedScale: initialDraft.dayCycleSpeedScale,
@@ -664,15 +675,18 @@ export function ConfigurationWizard(props: Props): ReactElement {
                     <Stack gap={6} style={{ minWidth: 0 }}>
                       <Group gap="xs" wrap="nowrap">
                         <Text component="span" fw={700} size="sm">
-                          Settings for one person or a small group
+                          Enable single-player settings
                         </Text>
                         <Badge size="xs" color="fossil" variant="light" tt="none">
                           High impact
                         </Badge>
                       </Group>
                       <Text size="sm" c="dimmed">
-                        ARK adds bonuses to taming, breeding, progression, and tamed
-                        creature stats.
+                        Meant for small tribes. When this is on, the rates you pick in
+                        Pace and Breeding are only the starting point — ARK multiplies
+                        them again, and those steps show the combined result. You also
+                        level and unlock engrams faster, and your tames gain extra
+                        health and damage.
                       </Text>
                     </Stack>
                     <Switch
@@ -683,17 +697,10 @@ export function ConfigurationWizard(props: Props): ReactElement {
                           event.currentTarget.checked,
                         )
                       }
-                      aria-label="Settings for one person or a small group"
+                      aria-label="Enable single-player settings"
                     />
                   </Group>
                 </Alert>
-                {form.values.singlePlayerSettings && (
-                  <Alert color="fossil" title="Multipliers stack">
-                    This mode applies on top of the wizard presets. You will see the known
-                    effective result under Pace and Breeding; ARK also changes XP
-                    requirements, engrams, and tamed creature health and damage.
-                  </Alert>
-                )}
               </>
             )}
           </WizardStep>
@@ -709,8 +716,10 @@ export function ConfigurationWizard(props: Props): ReactElement {
               onChange={chooseProgressionPreset}
               presets={PROGRESSION_PRESETS}
               currentDescription="Keep the values this server already uses."
+              paced
+              ariaLabel="Progression pace"
             >
-              <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="xs">
+              <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="xs">
                 <PresetValue label="Experience" value={`${form.values.xpRate}×`} />
                 <PresetValue label="Harvesting" value={`${form.values.harvestRate}×`} />
                 <PresetValue
@@ -721,8 +730,15 @@ export function ConfigurationWizard(props: Props): ReactElement {
                     form.values.singlePlayerSettings,
                   )}
                 />
+                <PresetValue
+                  label="Resource respawn"
+                  value={`${form.values.resourcesRespawnPeriodMultiplier}×`}
+                />
               </SimpleGrid>
             </PresetSelector>
+            <Text c="dimmed" size="xs">
+              For resource respawn, a lower value means nodes come back sooner.
+            </Text>
             {form.values.singlePlayerSettings && (
               <Text c="yellow.3" size="xs">
                 Single-player mode also reduces XP requirements, so the final XP effect
@@ -751,6 +767,8 @@ export function ConfigurationWizard(props: Props): ReactElement {
               onChange={chooseBreedingPreset}
               presets={BREEDING_PRESETS}
               currentDescription="Keep the combination this server already uses."
+              paced
+              ariaLabel="Breeding pace"
             >
               <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="xs">
                 <PresetValue
@@ -778,6 +796,10 @@ export function ConfigurationWizard(props: Props): ReactElement {
                   )}
                 />
                 <PresetValue
+                  label="Mating speed"
+                  value={`${form.values.matingSpeedMultiplier}×`}
+                />
+                <PresetValue
                   label="Cuddle interval"
                   value={effectiveRateLabel(
                     form.values.cuddleIntervalMultiplier,
@@ -785,10 +807,20 @@ export function ConfigurationWizard(props: Props): ReactElement {
                     form.values.singlePlayerSettings,
                   )}
                 />
+                <PresetValue
+                  label="Imprint amount"
+                  value={`${form.values.babyImprintAmountMultiplier}×`}
+                />
+                <PresetValue
+                  label="Cuddle grace"
+                  value={`${form.values.babyCuddleGracePeriodMultiplier}×`}
+                />
               </SimpleGrid>
             </PresetSelector>
             <Text c="dimmed" size="xs">
-              For intervals, a lower value means less waiting. Actual times vary by species.
+              Cuddle interval scales with maturation so imprint can still reach 100%.
+              Faster presets give more % per cuddle so you can miss a few care windows;
+              no preset is meant for a single one-shot cuddle on long raises.
             </Text>
           </WizardStep>
         )}
@@ -796,19 +828,17 @@ export function ConfigurationWizard(props: Props): ReactElement {
         {activeStep === 3 && (
           <WizardStep
             title="Define how the world feels"
-            description="Pick an intensity; the wizard coordinates capacity, density, day cycle, and survival."
+            description="Pick an intensity from Very easy to Very hard. Max players stays in server settings."
           >
             <PresetSelector
               value={worldPreset}
               onChange={chooseWorldPreset}
               presets={WORLD_PRESETS}
               currentDescription="Keep the combination this server already uses."
+              worldFeel
+              ariaLabel="World feel"
             >
               <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="xs">
-                <PresetValue
-                  label="Max players"
-                  value={String(form.values.maxPlayers)}
-                />
                 <PresetValue
                   label="Dinosaur density"
                   value={`${form.values.dinoCountMultiplier}×`}
@@ -858,13 +888,33 @@ export function ConfigurationWizard(props: Props): ReactElement {
               <SettingSwitch label="Show crosshair" description="Shows an on-screen aiming reference." {...form.getInputProps("crosshair", { type: "checkbox" })} />
               <SettingSwitch label="Allow third person" description="Players can switch the camera to third person." {...form.getInputProps("thirdPerson", { type: "checkbox" })} />
               <SettingSwitch label="Carry creatures with flyers in PvE" description="Allows picking up creatures with flyers." {...form.getInputProps("flyerCarryPve", { type: "checkbox" })} />
+              <SettingSwitch
+                label="Allow cave building in PvE"
+                description="Lets tribes build inside caves on PvE servers."
+                {...form.getInputProps("allowCaveBuildingPve", { type: "checkbox" })}
+              />
+              <SettingSwitch
+                label="Show floating damage text"
+                description="Shows damage numbers when hitting creatures or structures."
+                {...form.getInputProps("showFloatingDamageText", { type: "checkbox" })}
+              />
+              <SettingSwitch
+                label="Always allow structure pickup"
+                description="Skip the post-placement timer so structures can be picked up anytime."
+                {...form.getInputProps("alwaysAllowStructurePickup", { type: "checkbox" })}
+              />
               <NumberInput
                 label="Structure pickup time"
-                description="Seconds available after placing them. Use 0 for immediate pickup."
+                description={
+                  form.values.alwaysAllowStructurePickup
+                    ? "Not used while always-allow pickup is on."
+                    : "Seconds available after placing them. Use 0 for immediate pickup."
+                }
                 min={0}
                 max={3600}
                 suffix=" s"
                 allowDecimal={false}
+                disabled={form.values.alwaysAllowStructurePickup}
                 {...form.getInputProps("structurePickupSeconds")}
               />
             </Stack>
@@ -943,22 +993,26 @@ export function ConfigurationWizard(props: Props): ReactElement {
         >
           Cancel
         </Button>
-        <Button
-          variant="subtle"
-          color={draftDirty ? "blue" : "gray"}
-          size="compact-sm"
-          leftSection={<Eye size={15} />}
-          onClick={() => setChangesOpen(true)}
-          aria-label={
-            clusterPathSelected
-              ? "View cluster defaults summary"
-              : `View ${changes.length} ${changes.length === 1 ? "change" : "changes"}`
-          }
-        >
-          {clusterPathSelected
-            ? "Cluster copy"
-            : `${changes.length} ${changes.length === 1 ? "change" : "changes"}`}
-        </Button>
+        {activeStep !== STEP_COUNT - 1 ? (
+          <Button
+            variant="subtle"
+            color={draftDirty ? "blue" : "gray"}
+            size="compact-sm"
+            leftSection={<Eye size={15} />}
+            onClick={() => setChangesOpen(true)}
+            aria-label={
+              clusterPathSelected
+                ? "View cluster defaults summary"
+                : `View ${changes.length} ${changes.length === 1 ? "change" : "changes"}`
+            }
+          >
+            {clusterPathSelected
+              ? "Cluster copy"
+              : `${changes.length} ${changes.length === 1 ? "change" : "changes"}`}
+          </Button>
+        ) : (
+          <span className={classes.footerCenterSlot} aria-hidden />
+        )}
         <Group gap="sm" justify="flex-end" wrap="nowrap">
           <Button
             variant="default"

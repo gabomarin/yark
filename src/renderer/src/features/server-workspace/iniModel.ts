@@ -21,6 +21,7 @@ import {
   setIniTextValue,
   type IniTextRow,
 } from "@shared/ini-text";
+import { isYarkOwnedIniKey } from "@shared/yark-owned-ini-keys";
 
 export interface IniSettingRow {
   section: string;
@@ -254,6 +255,12 @@ export function filterIniRows(
   const resolvedFile = fileKey ?? "gameUserSettings";
   return rows.filter((row) => {
     if (isClientIniNoise(row.section, row.key)) {
+      return false;
+    }
+    if (
+      resolvedFile === "gameUserSettings" &&
+      isYarkOwnedIniKey(row.section, row.key)
+    ) {
       return false;
     }
     if (filter !== "all") {

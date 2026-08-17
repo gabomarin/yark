@@ -15,6 +15,7 @@ const profileA = {
   adminPassword: "admin-a",
   serverPassword: "join-a",
   sessionName: "The Island",
+  maxPlayers: 70,
   gamePort: 7777,
   queryPort: 27015,
 };
@@ -24,6 +25,7 @@ const profileB = {
   adminPassword: "admin-b",
   serverPassword: "join-b",
   sessionName: "Gabo Scorched yark-copy",
+  maxPlayers: 70,
   gamePort: 7787,
   queryPort: 27025,
 };
@@ -41,6 +43,9 @@ describe("ini-compose", () => {
     expect(text).toContain("SessionName=The Island");
     expect(text).toContain("Port=7777");
     expect(text).toContain("QueryPort=27015");
+    expect(text).toMatch(
+      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
+    );
   });
 
   it("composes member payload from template then reapplies owned keys", () => {
@@ -150,6 +155,7 @@ describe("ini-compose", () => {
       adminPassword: "admin-a",
       serverPassword: profileB.serverPassword,
       sessionName: "The Island",
+      maxPlayers: 70,
       gamePort: 7777,
       queryPort: 27015,
     });

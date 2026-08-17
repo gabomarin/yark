@@ -24,6 +24,7 @@ export function gameUserSettingsIniPath(installDir: string): string {
  * Keys (must stay aligned with `@shared/yark-owned-ini-keys` `profileSync`):
  * - `[ServerSettings]` RCONEnabled, RCONPort, ServerAdminPassword, ServerPassword
  * - `[SessionSettings]` SessionName, Port, QueryPort
+ * - `[/Script/Engine.GameSession]` MaxPlayers
  *
  * Mods are **not** written here — ASA launches with `-mods=` from `profile.mods`
  * (CurseForge). ASE-era INI keys such as ActiveMods stay out of templates

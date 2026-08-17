@@ -14,6 +14,7 @@ describe("yark-owned-ini-keys", () => {
         "ActiveMapMod",
         "ActiveMods",
         "ActiveTotalConversion",
+        "MaxPlayers",
         "Port",
         "QueryPort",
         "RCONEnabled",
@@ -41,6 +42,9 @@ describe("yark-owned-ini-keys", () => {
     expect(isYarkOwnedIniKey("sessionsettings", "sessionname")).toBe(true);
     expect(isYarkOwnedIniKey("ServerSettings", "ActiveMods")).toBe(true);
     expect(isYarkOwnedIniKey("ServerSettings", "MaxPlayers")).toBe(false);
+    expect(isYarkOwnedIniKey("/Script/Engine.GameSession", "MaxPlayers")).toBe(
+      true,
+    );
   });
 
   it("strips owned keys while preserving other settings and comments", () => {
@@ -65,7 +69,7 @@ MaxPlayers=70
     expect(stripped).toContain("MaxPlayers=40");
     expect(stripped).toContain("DifficultyOffset=0.5");
     expect(stripped).toContain("; keep me");
-    expect(stripped).toContain("[/Script/Engine.GameSession]");
+    expect(stripped).not.toMatch(/\[\/Script\/Engine\.GameSession\]/i);
     expect(stripped).not.toMatch(/ActiveMods=/i);
     expect(stripped).not.toMatch(/ActiveMapMod=/i);
     expect(stripped).not.toMatch(/RCONPort=/i);

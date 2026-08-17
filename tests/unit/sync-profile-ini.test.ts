@@ -23,6 +23,7 @@ function profile(installDir: string, overrides: Partial<ServerProfile> = {}): Se
     enabled: true,
     autoStart: false,
     sessionName: "gabo",
+    maxPlayers: 70,
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,
@@ -74,6 +75,7 @@ describe("syncProfileSettingsToIni", () => {
     expect(flat[flatKey("SessionSettings", "SessionName")]).toBe("gabo");
     expect(flat[flatKey("SessionSettings", "Port")]).toBe("7777");
     expect(flat[flatKey("SessionSettings", "QueryPort")]).toBe("27015");
+    expect(flat[flatKey("/Script/Engine.GameSession", "MaxPlayers")]).toBe("70");
   });
 
   it("clears ServerPassword when profile has null", async () => {

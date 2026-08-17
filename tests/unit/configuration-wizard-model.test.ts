@@ -72,15 +72,27 @@ describe("configuration wizard model", () => {
     expect(next.eggHatchRate).toBe(initial.eggHatchRate);
   });
 
-  it("coordinates breeding speed and its inverse wait intervals", () => {
+  it("coordinates breeding speed with imprint-safe cuddle windows", () => {
     const initial = draftFromIniPayload(payload);
     const next = applyBreedingPreset(initial, "veryFast");
 
     expect(next.eggHatchRate).toBe(20);
     expect(next.maturationRate).toBe(20);
     expect(next.matingIntervalMultiplier).toBe(0.1);
-    expect(next.cuddleIntervalMultiplier).toBe(0.1);
+    // cuddle ≈ 1/mature so imprint window count stays near official
+    expect(next.cuddleIntervalMultiplier).toBe(0.05);
+    expect(next.matingSpeedMultiplier).toBe(20);
+    expect(next.babyImprintAmountMultiplier).toBe(2);
+    expect(next.babyCuddleGracePeriodMultiplier).toBe(2.5);
     expect(next.tamingRate).toBe(initial.tamingRate);
+  });
+
+  it("scales resource respawn with progression presets", () => {
+    const initial = draftFromIniPayload(payload);
+    const next = applyProgressionPreset(initial, "fast");
+
+    expect(next.resourcesRespawnPeriodMultiplier).toBe(0.35);
+    expect(next.harvestRate).toBe(3);
   });
 
   it("normalizes difficulty only after an explicit level choice", () => {
@@ -225,27 +237,25 @@ describe("configuration wizard model", () => {
     expect(changes.some((change) => change.label === "Game mode")).toBe(true);
   });
 
-  it("applies world settings from experience profiles and writes MaxPlayers", () => {
+  it("applies world settings from experience profiles without MaxPlayers", () => {
     const initial = draftFromIniPayload(payload);
     const next = applyExperienceProfile(initial, "friends");
     const written = applyWizardDraftToIni(payload, next);
 
-    expect(next.maxPlayers).toBe(40);
-    expect(next.dinoCountMultiplier).toBe(1.25);
-    expect(next.harvestHealthMultiplier).toBe(1.5);
+    expect(next.dinoCountMultiplier).toBe(1.5);
+    expect(next.harvestHealthMultiplier).toBe(2);
     expect(next.dayCycleSpeedScale).toBe(1);
-    expect(next.nightTimeSpeedScale).toBe(1.25);
-    expect(next.playerCharacterFoodDrainMultiplier).toBe(0.7);
-    expect(next.playerCharacterWaterDrainMultiplier).toBe(0.7);
-    expect(next.structureResistanceMultiplier).toBe(1.5);
+    expect(next.nightTimeSpeedScale).toBe(1.5);
+    expect(next.playerCharacterFoodDrainMultiplier).toBe(0.5);
+    expect(next.playerCharacterWaterDrainMultiplier).toBe(0.5);
+    expect(next.structureResistanceMultiplier).toBe(2);
 
-    expect(written.gameUserSettings).toContain("MaxPlayers=40");
-    expect(written.gameUserSettings).toContain("DinoCountMultiplier=1.25");
-    expect(written.gameUserSettings).toContain("HarvestHealthMultiplier=1.5");
-    expect(written.gameUserSettings).toContain("NightTimeSpeedScale=1.25");
-    expect(written.gameUserSettings).toContain("PlayerCharacterFoodDrainMultiplier=0.7");
-    expect(written.gameUserSettings).toContain("PlayerCharacterWaterDrainMultiplier=0.7");
-    expect(written.gameUserSettings).toContain("StructureResistanceMultiplier=1.5");
+    expect(written.gameUserSettings).toContain("DinoCountMultiplier=1.5");
+    expect(written.gameUserSettings).toContain("HarvestHealthMultiplier=2");
+    expect(written.gameUserSettings).toContain("NightTimeSpeedScale=1.5");
+    expect(written.gameUserSettings).toContain("PlayerCharacterFoodDrainMultiplier=0.5");
+    expect(written.gameUserSettings).toContain("PlayerCharacterWaterDrainMultiplier=0.5");
+    expect(written.gameUserSettings).toContain("StructureResistanceMultiplier=2");
     expect(settingOccurrences(written.gameUserSettings, "DayCycleSpeedScale")).toEqual(
       settingOccurrences(payload.gameUserSettings, "DayCycleSpeedScale"),
     );
@@ -253,17 +263,17 @@ describe("configuration wizard model", () => {
 
   it("applies semantic world presets as a coordinated group", () => {
     const initial = draftFromIniPayload(payload);
-    const next = applyWorldPreset(initial, "harsh");
+    const next = applyWorldPreset(initial, "hard");
 
-    expect(next.maxPlayers).toBe(100);
-    expect(next.structureResistanceMultiplier).toBe(0.85);
+    expect(next.structureResistanceMultiplier).toBe(0.8);
     expect(next.dinoCountMultiplier).toBe(1);
+    expect(next.playerCharacterFoodDrainMultiplier).toBe(1.35);
+    expect(next.nightTimeSpeedScale).toBe(0.9);
     expect(next.xpRate).toBe(initial.xpRate);
   });
 
   const worldRoundTripCases: Array<{
     field:
-      | "maxPlayers"
       | "dinoCountMultiplier"
       | "harvestHealthMultiplier"
       | "dayCycleSpeedScale"
@@ -273,7 +283,6 @@ describe("configuration wizard model", () => {
       | "structureResistanceMultiplier";
     value: number;
   }> = [
-    { field: "maxPlayers", value: 82 },
     { field: "dinoCountMultiplier", value: 1.4 },
     { field: "harvestHealthMultiplier", value: 1.65 },
     { field: "dayCycleSpeedScale", value: 0.9 },

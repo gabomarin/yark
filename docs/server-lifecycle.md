@@ -482,7 +482,8 @@ Paths under `{installDir}/ShooterGame/Saved/Config/WindowsServer/`:
 - Do **not** use npm `ini` for ASA — dots in section headers are literal
   (`ini-text.ts`).
 - Semantic save checks (only when `[ServerSettings]` present): `RCONPort`
-  1024–65535, `MaxPlayers` 1–255 (**ServerSettings**), `DifficultyOffset` 0–1.
+  1024–65535, `DifficultyOffset` 0–1. Profile `MaxPlayers` (1–255) lives under
+  `[/Script/Engine.GameSession]` and is synced from Server settings, not the INI editor.
 - Reset-to-defaults is UI-only (no `ini:reset` IPC).
 
 ## Configuration assistant
@@ -496,8 +497,8 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 - Preserve unknown keys / section casing; skip no-op writes.
 - Difficulty: only an explicit level choice rewrites `DifficultyOffset` /
   `OverrideOfficialDifficulty`; otherwise raw values stay.
-- Wizard `MaxPlayers` writes `/Script/Engine.GameSession` (not
-  `ServerSettings` — note the dual home vs IniService range-check).
+- **Max players** is profile-owned (`[/Script/Engine.GameSession] MaxPlayers`);
+  edit it on create/edit Server settings — the wizard does not write it.
 
 ## Import existing ASA install (#254 / #283)
 

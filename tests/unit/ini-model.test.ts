@@ -66,7 +66,8 @@ LastJoinedSessionPerCategory=Three
     const filtered = filterIniRows(rows, "", "all");
     expect(filtered.some((row) => row.key === "LastJoinedSessionPerCategory")).toBe(false);
     expect(filtered.some((row) => row.key === "ResolutionSizeX")).toBe(false);
-    expect(filtered.some((row) => row.key === "MaxPlayers")).toBe(true);
+    // Profile-owned GameSession MaxPlayers stays out of the dedicated INI editor.
+    expect(filtered.some((row) => row.key === "MaxPlayers")).toBe(false);
   });
 
   it("updates a specific duplicate occurrence", () => {

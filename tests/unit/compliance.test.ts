@@ -11,6 +11,7 @@ function profile(overrides: Partial<ServerProfile>): ServerProfile {
     enabled: true,
     autoStart: false,
     sessionName: "Session",
+    maxPlayers: 70,
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,
