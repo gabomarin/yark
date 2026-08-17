@@ -13,6 +13,7 @@ export function serverProfileToInput(server: ServerProfile): ServerProfileInput 
     mapSaveFolder: server.mapSaveFolder ?? null,
     installDir: server.installDir,
     sessionName: server.sessionName,
+    maxPlayers: server.maxPlayers,
     gamePort: server.gamePort,
     queryPort: server.queryPort,
     rconPort: server.rconPort,

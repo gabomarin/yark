@@ -11,6 +11,7 @@ function validInput(overrides: Partial<ServerProfileInput> = {}): ServerProfileI
     map: "TheIsland_WP",
     installDir: "C:\\asa\\island",
     sessionName: "My Island",
+    maxPlayers: 70,
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,
@@ -108,6 +109,18 @@ describe("validateProfileInput", () => {
   it("rejects ports out of range", () => {
     const issues = validateProfileInput(validInput({ gamePort: 80 }));
     expect(issues.some((i) => i.field === "gamePort")).toBe(true);
+  });
+
+  it("accepts maxPlayers at the 0–255 bounds and rejects outside", () => {
+    expect(validateProfileInput(validInput({ maxPlayers: 0 }))).toEqual([]);
+    expect(validateProfileInput(validInput({ maxPlayers: 1 }))).toEqual([]);
+    expect(validateProfileInput(validInput({ maxPlayers: 255 }))).toEqual([]);
+    expect(
+      validateProfileInput(validInput({ maxPlayers: -1 })).some((i) => i.field === "maxPlayers"),
+    ).toBe(true);
+    expect(
+      validateProfileInput(validInput({ maxPlayers: 256 })).some((i) => i.field === "maxPlayers"),
+    ).toBe(true);
   });
 
   it("rejects duplicated internal ports", () => {

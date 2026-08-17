@@ -15,6 +15,7 @@ const profileA = {
   adminPassword: "admin-a",
   serverPassword: "join-a",
   sessionName: "The Island",
+  maxPlayers: 70,
   gamePort: 7777,
   queryPort: 27015,
 };
@@ -24,6 +25,7 @@ const profileB = {
   adminPassword: "admin-b",
   serverPassword: "join-b",
   sessionName: "Gabo Scorched yark-copy",
+  maxPlayers: 70,
   gamePort: 7787,
   queryPort: 27025,
 };
@@ -34,20 +36,36 @@ describe("ini-compose", () => {
       "[ServerSettings]\nMaxPlayers=40\nXPMultiplier=1.5\n",
       profileA,
     );
-    expect(text).toContain("MaxPlayers=40");
     expect(text).toContain("XPMultiplier=1.5");
     expect(text).toContain("RCONPort=27020");
     expect(text).toContain("ServerAdminPassword=admin-a");
     expect(text).toContain("SessionName=The Island");
     expect(text).toContain("Port=7777");
     expect(text).toContain("QueryPort=27015");
+    expect(text).toMatch(/^MaxPlayers=40$/m);
+    expect(text).not.toMatch(/\[SessionSettings\][\s\S]*MaxPlayers=/i);
+    expect(text).not.toMatch(
+      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=/i,
+    );
+  });
+
+  it("does not overwrite INI MaxPlayers from the profile", () => {
+    const text = applyProfileOwnedKeysToGameUserSettings(
+      "[SessionSettings]\nMaxPlayers=9\n\n[/Script/Engine.GameSession]\nMaxPlayers=9\n",
+      profileA,
+    );
+    expect(text).toMatch(/\[SessionSettings\][\s\S]*MaxPlayers=9/i);
+    expect(text).toMatch(
+      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=9/i,
+    );
+    expect(text).not.toMatch(/MaxPlayers=70/);
   });
 
   it("composes member payload from template then reapplies owned keys", () => {
     const composed = composeMemberPayloadFromTemplate(
       {
         gameUserSettings:
-          "[ServerSettings]\nXPMultiplier=3\nRCONPort=11111\nServerAdminPassword=from-template\n",
+          "[ServerSettings]\nMaxPlayers=55\nXPMultiplier=3\nRCONPort=11111\nServerAdminPassword=from-template\n",
         game: "[/Script/ShooterGame.ShooterGameMode]\nHarvestAmountMultiplier=2\n",
       },
       profileA,
@@ -56,6 +74,7 @@ describe("ini-compose", () => {
     expect(composed.gameUserSettings).toContain("RCONPort=27020");
     expect(composed.gameUserSettings).toContain("ServerAdminPassword=admin-a");
     expect(composed.gameUserSettings).not.toContain("from-template");
+    expect(composed.gameUserSettings).not.toMatch(/MaxPlayers=/i);
     expect(composed.game).toContain("HarvestAmountMultiplier=2");
   });
 
@@ -78,7 +97,7 @@ describe("ini-compose", () => {
       game: "[Custom]\nSharedFlag=True\n",
     });
 
-    expect(fromB.gameUserSettings).toContain("MaxPlayers=55");
+    expect(fromB.gameUserSettings).not.toMatch(/MaxPlayers=/i);
     expect(fromB.gameUserSettings).toContain("XPMultiplier=3");
     expect(fromB.gameUserSettings).not.toMatch(/RCONPort=/i);
     expect(fromB.gameUserSettings).not.toMatch(/SessionName=/i);
@@ -109,7 +128,7 @@ describe("ini-compose", () => {
       currentA,
     );
 
-    expect(restored.gameUserSettings).toContain("MaxPlayers=55");
+    expect(restored.gameUserSettings).not.toMatch(/MaxPlayers=/i);
     expect(restored.gameUserSettings).toContain("XPMultiplier=3");
     expect(restored.gameUserSettings).toContain("RCONPort=27020");
     expect(restored.gameUserSettings).toContain("ServerAdminPassword=admin-a");
@@ -150,6 +169,7 @@ describe("ini-compose", () => {
       adminPassword: "admin-a",
       serverPassword: profileB.serverPassword,
       sessionName: "The Island",
+      maxPlayers: 70,
       gamePort: 7777,
       queryPort: 27015,
     });
@@ -161,7 +181,7 @@ describe("ini-compose", () => {
         "[ServerSettings]\nMaxPlayers=55\nRCONPort=27020\nServerAdminPassword=x\nActiveMods=1,2\n",
       game: "[Custom]\nKeep=1\n",
     });
-    expect(template.gameUserSettings).toContain("MaxPlayers=55");
+    expect(template.gameUserSettings).not.toMatch(/MaxPlayers=/i);
     expect(template.gameUserSettings).not.toMatch(/RCONPort=/i);
     expect(template.gameUserSettings).not.toMatch(/ServerAdminPassword=/i);
     expect(template.gameUserSettings).not.toMatch(/ActiveMods=/i);
@@ -185,6 +205,33 @@ describe("ini-compose", () => {
     expect(filtered.diff.some((row) => row.key === "RCONPort")).toBe(false);
     expect(filtered.diff.some((row) => row.key === "XPMultiplier")).toBe(true);
     expect(filtered.changedCount).toBe(1);
+  });
+
+  it("omits ignored INI MaxPlayers from operator previews", () => {
+    const preview = buildIniPreview(
+      {
+        gameUserSettings: "[ServerSettings]\nMaxPlayers=20\nXPMultiplier=1\n",
+        game: "",
+      },
+      {
+        gameUserSettings:
+          "[ServerSettings]\nXPMultiplier=3\n\n[/Script/Engine.GameSession]\nMaxPlayers=70\n",
+        game: "",
+      },
+    );
+    const filtered = omitYarkOwnedFromIniPreview(preview);
+    expect(
+      filtered.diff.some(
+        (row) => row.section === "ServerSettings" && row.key === "MaxPlayers",
+      ),
+    ).toBe(false);
+    expect(
+      filtered.diff.some(
+        (row) =>
+          row.section === "/Script/Engine.GameSession" && row.key === "MaxPlayers",
+      ),
+    ).toBe(false);
+    expect(filtered.diff.some((row) => row.key === "XPMultiplier")).toBe(true);
   });
 
   it("redacts password values in previews", () => {

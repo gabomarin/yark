@@ -24,6 +24,7 @@ function profile(installDir: string): ServerProfile {
     enabled: true,
     autoStart: false,
     sessionName: "Winter Session",
+    maxPlayers: 70,
     gamePort: 7787,
     queryPort: 27025,
     rconPort: 27030,

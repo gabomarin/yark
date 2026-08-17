@@ -109,7 +109,7 @@ Order matches the `mods` array. Empty enabled set → no `-mods=` flag.
 Example (logical argv fragment):
 
 ```text
-"TheIsland_WP"?SessionName="MyServer" -port=7777 -ServerPlatform=ALL -mods=929420,947033
+"TheIsland_WP"?SessionName="MyServer" -port=7777 -WinLiveMaxPlayers=70 -ServerPlatform=ALL -mods=929420,947033
 ```
 
 ## Metadata resolution

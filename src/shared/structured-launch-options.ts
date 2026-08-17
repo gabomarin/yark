@@ -99,12 +99,6 @@ export function decodeServerPlatformSelection(
 export const STRUCTURED_LAUNCH_CURATION: readonly StructuredLaunchCuration[] = [
   { id: "forceallowcaveflyers", group: "world", common: true },
   { id: "autodestroystructures", group: "world", common: true },
-  {
-    id: "winlivemaxplayers-integer",
-    group: "world",
-    common: true,
-    defaultValue: "70",
-  },
   { id: "enableidleplayerkick", group: "world", common: true },
   {
     id: "forcerespawndinos",
@@ -363,6 +357,7 @@ export function buildStructuredLaunchArgList(
 
 const YARK_OWNED_STEMS = new Set([
   "port",
+  "winlivemaxplayers",
   "mods",
   "clusterid",
   "clusterdiroverride",
@@ -408,6 +403,11 @@ export function redactLaunchArgForPreview(token: string): string {
     return token.replace(/=.+$/, "=••••••");
   }
   return token;
+}
+
+/** True when an arg is a real `-WinLiveMaxPlayers` / `?WinLiveMaxPlayers` token. */
+export function isWinLiveMaxPlayersArg(arg: string): boolean {
+  return tokenStem(arg) === "winlivemaxplayers";
 }
 
 /** True when an arg is a real `-ServerPlatform` / `?ServerPlatform` token. */

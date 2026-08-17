@@ -345,6 +345,7 @@ export function ServerForm(props: Props): ReactElement {
       gamePort={state.gamePort}
       queryPort={state.queryPort}
       rconPort={state.rconPort}
+      maxPlayers={state.maxPlayers}
       serverPassword={state.serverPassword}
       adminPassword={state.adminPassword}
       clusterId={state.clusterId}
@@ -380,6 +381,7 @@ export function ServerForm(props: Props): ReactElement {
       onGamePortChange={setField("gamePort")}
       onQueryPortChange={setField("queryPort")}
       onRconPortChange={setField("rconPort")}
+      onMaxPlayersChange={setField("maxPlayers")}
       onServerPasswordChange={setField("serverPassword")}
       onAdminPasswordChange={setField("adminPassword")}
       onSelectCreateCluster={selectCreateCluster}

@@ -695,6 +695,16 @@ export function ConfigurationEditor(props: Props): ReactElement {
                 </Group>
               </div>
             </Stack>
+            {iniFile === "gameUserSettings" && (
+              <Alert color="blue" variant="light" title="Server settings override">
+                Session name, ports, and passwords come from the{" "}
+                <strong>Server</strong> tab and are rewritten on start. ASA
+                ignores INI <code>MaxPlayers</code> — set{" "}
+                <strong>Max players</strong> there for{" "}
+                <code>-WinLiveMaxPlayers</code> (empty or <code>0</code> omits
+                the flag; ASA then defaults to 70).
+              </Alert>
+            )}
             <Textarea
               className={classes.rawEditor}
               minRows={22}

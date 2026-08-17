@@ -19,6 +19,7 @@ function makeProfile(installDir: string, id = "srv-logs-1"): ServerProfile {
     enabled: true,
     autoStart: false,
     sessionName: "Logs",
+    maxPlayers: 70,
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,

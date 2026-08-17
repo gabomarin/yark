@@ -209,6 +209,7 @@ export function ServerWorkspacePage(props: Props): ReactElement {
         <ConfigurationWizard
           server={selectedServer}
           serverActive={opsLocked}
+          onboarding={showOnboarding}
           onCancel={() => {
             assistantDirtyRef.current = false;
             setAssistantOpen(false);

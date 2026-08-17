@@ -12,6 +12,7 @@ const profile = {
   map: "TheIsland_WP",
   installDir: "C:/ARK/TheIsland",
   sessionName: "The Island Cluster",
+  maxPlayers: 70,
   gamePort: 7777,
   queryPort: 27015,
   rconPort: 27020,

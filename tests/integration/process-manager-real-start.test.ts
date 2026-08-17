@@ -30,6 +30,7 @@ function makeProfile(installDir: string): ServerProfile {
     map: "TheIsland_WP",
     installDir,
     sessionName: "Probe Session",
+    maxPlayers: 70,
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,

@@ -8,6 +8,7 @@ export type ImportFormState = {
   map: string;
   mapModId: string | null;
   mapSaveFolder: string | null;
+  maxPlayers: string;
   gamePort: string;
   queryPort: string;
   rconPort: string;
@@ -25,6 +26,7 @@ export function suggestionsToForm(suggestions: ImportInstallSuggestions): Import
     map: suggestions.map,
     mapModId: suggestions.mapModId,
     mapSaveFolder: null,
+    maxPlayers: String(suggestions.maxPlayers),
     gamePort: String(suggestions.gamePort),
     queryPort: String(suggestions.queryPort),
     rconPort: String(suggestions.rconPort),
@@ -57,6 +59,7 @@ export function emptyImportForm(): ImportFormState {
     map: "TheIsland_WP",
     mapModId: null,
     mapSaveFolder: null,
+    maxPlayers: "70",
     gamePort: "7777",
     queryPort: "27015",
     rconPort: "27020",
@@ -115,6 +118,7 @@ export function formToProfileInput(
     mapModId: form.mapModId,
     mapSaveFolder: form.mapSaveFolder,
     installDir,
+    maxPlayers: Number(form.maxPlayers) || 0,
     gamePort,
     queryPort,
     rconPort,

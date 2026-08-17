@@ -34,6 +34,11 @@ export interface ServerProfile {
    */
   autoStart: boolean;
   sessionName: string;
+  /**
+   * Slot limit for `-WinLiveMaxPlayers` only. ASA ignores INI MaxPlayers.
+   * `0` omits the flag (ASA then defaults to 70).
+   */
+  maxPlayers: number;
   gamePort: number;
   queryPort: number;
   rconPort: number;
@@ -137,6 +142,7 @@ export interface ImportInstallSuggestions {
   sessionName: string;
   map: string;
   mapModId: string | null;
+  maxPlayers: number;
   gamePort: number;
   queryPort: number;
   rconPort: number;

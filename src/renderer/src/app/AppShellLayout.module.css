@@ -57,9 +57,12 @@
   content: "";
 }
 
+/* Do not set position here — Mantine AppShell keeps the navbar fixed. With
+   styles.layer.css, unlayered module rules win and `position: relative` pushed
+   Main below a full-viewport nav (empty main area / double-height shell).
+   Keep z-index above `.main` so Main’s full-width padding does not steal clicks. */
 .navbar {
-  position: relative;
-  z-index: 1;
+  z-index: 2;
   overflow: visible;
   background: transparent;
   background-color: transparent;

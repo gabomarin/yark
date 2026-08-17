@@ -19,6 +19,7 @@ const serverA = {
   map: "TheIsland_WP",
   installDir: "C:/ARK/TheIsland",
   sessionName: "Island",
+  maxPlayers: 70,
   gamePort: 7777,
   queryPort: 27015,
   rconPort: 27020,
@@ -114,7 +115,7 @@ describe("ServerWorkspacePage", () => {
           gameUserSettingsExisted: true,
           gameIniExisted: true,
           payload: {
-            gameUserSettings: `[ServerSettings]\nMaxPlayers=70\nAllowFlyerCarryPVE=True\n`,
+            gameUserSettings: `[ServerSettings]\nXPMultiplier=1.5\nAllowFlyerCarryPVE=True\n`,
             game: `[/Script/ShooterGame.ShooterGameMode]\nXPMultiplier=1.0\n`,
           },
         },
@@ -252,6 +253,63 @@ describe("ServerWorkspacePage", () => {
       })),
       openYarkReleaseNotes: vi.fn(async () => ({ ok: true as const, data: undefined })),
       onAppUpdate: vi.fn(() => () => undefined),
+      getClusterIniTemplate: vi.fn(async () => ({ ok: true as const, data: null })),
+      previewClusterIniSeed: vi.fn(async () => ({
+        ok: true as const,
+        data: {
+          operation: "seed" as const,
+          clusterId: "cluster-1",
+          serverId: "srv-a",
+          serverName: "The Island",
+          preview: { valid: true, issues: [], diff: [], changedCount: 2 },
+          files: { gameUserSettings: true, game: true },
+        },
+      })),
+      previewClusterIniRestore: vi.fn(async () => ({
+        ok: true as const,
+        data: {
+          operation: "restore" as const,
+          clusterId: "cluster-1",
+          serverId: "srv-a",
+          serverName: "The Island",
+          preview: { valid: true, issues: [], diff: [], changedCount: 2 },
+          files: { gameUserSettings: true, game: true },
+        },
+      })),
+      seedClusterIniFromTemplate: vi.fn(async () => ({
+        ok: true as const,
+        data: {
+          operation: "seed" as const,
+          clusterId: "cluster-1",
+          serverId: "srv-a",
+          preview: { valid: true, issues: [], diff: [], changedCount: 2 },
+          files: { gameUserSettings: true, game: true },
+          template: {
+            clusterId: "cluster-1",
+            payload: { gameUserSettings: "", game: "" },
+            updatedAt: "2026-08-16T00:00:00.000Z",
+          },
+          backupId: null,
+          snapshotDir: null,
+        },
+      })),
+      restoreClusterIniFromTemplate: vi.fn(async () => ({
+        ok: true as const,
+        data: {
+          operation: "restore" as const,
+          clusterId: "cluster-1",
+          serverId: "srv-a",
+          preview: { valid: true, issues: [], diff: [], changedCount: 2 },
+          files: { gameUserSettings: true, game: true },
+          template: {
+            clusterId: "cluster-1",
+            payload: { gameUserSettings: "", game: "" },
+            updatedAt: "2026-08-16T00:00:00.000Z",
+          },
+          backupId: null,
+          snapshotDir: null,
+        },
+      })),
     });
   });
 
@@ -722,7 +780,7 @@ describe("ServerWorkspacePage", () => {
         gameUserSettingsExisted: true,
         gameIniExisted: true,
         payload: {
-          gameUserSettings: "[SessionSettings]\nSessionName=Test\n",
+          gameUserSettings: "[ServerSettings]\nAllowFlyerCarryPVE=True\n",
           game: "[Custom]\nTotallyUnknownSettingXYZ=1\n",
         },
       },
@@ -750,7 +808,7 @@ describe("ServerWorkspacePage", () => {
 
     await user.click(within(fileSwitch).getByRole("radio", { name: "GameUserSettings.ini" }));
     await waitFor(() => {
-      expect(screen.getAllByText("SessionName").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("AllowFlyerCarryPVE").length).toBeGreaterThan(0);
       expect(categorySelect).toHaveValue("All settings (1)");
     });
   });
@@ -768,7 +826,7 @@ describe("ServerWorkspacePage", () => {
         payload: {
           gameUserSettings: [
             "[ServerSettings]",
-            "MaxPlayers=70",
+            "XPMultiplier=1.5",
             "",
             "[/Script/ShooterGame.ShooterGameUserSettings]",
             "LastJoinedSessionPerCategory=Foo",
@@ -783,7 +841,7 @@ describe("ServerWorkspacePage", () => {
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
     await waitFor(() => {
-      expect(screen.getByText("MaxPlayers")).toBeInTheDocument();
+      expect(screen.getByText("XPMultiplier")).toBeInTheDocument();
     });
 
     expect(
@@ -823,8 +881,8 @@ describe("ServerWorkspacePage", () => {
     renderWorkspace();
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
-    const maxPlayers = await screen.findByDisplayValue("70");
-    fireEvent.change(maxPlayers, { target: { value: "80" } });
+    const xp = await screen.findByDisplayValue("1.5");
+    fireEvent.change(xp, { target: { value: "2" } });
     await user.click(screen.getByRole("tab", { name: "Server" }));
 
     expect(screen.getByText(/^ini modified$/i)).toBeInTheDocument();
@@ -862,7 +920,23 @@ describe("ServerWorkspacePage", () => {
     await waitFor(() => {
       expect(window.api.readServerIni).toHaveBeenCalledTimes(1);
     });
-    expect(await screen.findByText("MaxPlayers")).toBeVisible();
+    expect(await screen.findByText("XPMultiplier")).toBeVisible();
+  });
+
+  it("warns in raw GameUserSettings that Server settings override max players", async () => {
+    const user = userEvent.setup();
+    renderWorkspace();
+
+    await user.click(screen.getByRole("tab", { name: "INI Files" }));
+    await screen.findByText("XPMultiplier");
+    await user.click(screen.getByRole("radio", { name: "Text" }));
+
+    expect(
+      screen.getByRole("alert", { name: "Server settings override" }),
+    ).toHaveTextContent(/-WinLiveMaxPlayers/i);
+    expect(
+      screen.getByRole("alert", { name: "Server settings override" }),
+    ).toHaveTextContent(/empty or 0/i);
   });
 
   it("reviews and explicitly applies the assistant draft", async () => {
@@ -878,9 +952,13 @@ describe("ServerWorkspacePage", () => {
       "true",
     );
     expect(screen.getByText("High impact")).toBeVisible();
+    expect(screen.getByText("Fast taming")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Back" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
     await user.click(
       screen.getByRole("switch", {
-        name: "Settings for one person or a small group",
+        name: "Enable single-player settings",
       }),
     );
     await user.click(screen.getByRole("button", { name: /View \d+ changes/ }));
@@ -888,16 +966,18 @@ describe("ServerWorkspacePage", () => {
       name: "Draft changes",
     });
     expect(within(changesDialog).getByText("Taming")).toBeInTheDocument();
+    expect(within(changesDialog).getByText("TamingSpeedMultiplier")).toBeInTheDocument();
     expect(within(changesDialog).getByText("3×")).toBeInTheDocument();
     expect(
-      within(changesDialog).getByText("Single-player style settings"),
+      within(changesDialog).getByText("Enable single-player settings"),
     ).toBeInTheDocument();
     await user.keyboard("{Escape}");
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("3× → 7.5×")).toBeVisible();
-    expect(screen.getByText(/Max wild level/i)).toBeVisible();
+    expect(screen.getByText("Max wild level 150")).toBeVisible();
+    expect(screen.getByText("WildCard official")).toBeVisible();
     expect(screen.queryByText(/DifficultyOffset/)).not.toBeInTheDocument();
-    await user.hover(screen.getByRole("button", { name: "Technical" }));
+    await user.hover(screen.getByRole("button", { name: "INI details" }));
     expect(await screen.findByRole("tooltip")).toHaveTextContent(/DifficultyOffset/);
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("5× → 45×")).toBeVisible();
@@ -906,17 +986,31 @@ describe("ServerWorkspacePage", () => {
     expect(
       screen.getByRole("heading", { name: "Define how the world feels" }),
     ).toBeVisible();
-    expect(screen.getByRole("radio", { name: "Gentle" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Very easy" })).toBeChecked();
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(
       screen.getByRole("heading", { name: "Review before applying" }),
     ).toBeVisible();
+    expect(screen.getByText("TamingSpeedMultiplier")).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: /View \d+ changes/ }),
+    ).not.toBeInTheDocument();
+    vi.mocked(window.api.previewServerIni).mockResolvedValue({
+      ok: true,
+      data: { valid: true, issues: [], diff: [], changedCount: 24 },
+    });
     await user.click(screen.getByRole("button", { name: "Apply changes" }));
 
     expect(
       await screen.findByRole("heading", { name: "Configuration applied" }),
     ).toBeVisible();
+    expect(
+      screen.getByText(/Only the settings in this wizard were changed/i),
+    ).toBeVisible();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /24 settings were updated on The Island/i,
+    );
     expect(window.api.previewServerIni).toHaveBeenCalledTimes(1);
     expect(window.api.saveServerIni).toHaveBeenCalledTimes(1);
     // Wizard initial load + re-read before save (INI editor is not pre-mounted).
@@ -925,6 +1019,72 @@ describe("ServerWorkspacePage", () => {
     expect(savedPayload?.gameUserSettings).toContain("TamingSpeedMultiplier=3");
     expect(savedPayload?.game).toContain("BabyMatureSpeedMultiplier=5");
     expect(savedPayload?.game).toContain("bUseSingleplayerSettings=True");
+  });
+
+  it("offers Match cluster defaults and restores the template on apply (#230)", async () => {
+    const user = userEvent.setup();
+    vi.mocked(window.api.getClusterIniTemplate).mockResolvedValue({
+      ok: true,
+      data: {
+        clusterId: "cluster-1",
+        payload: {
+          gameUserSettings: "[ServerSettings]\nXPMultiplier=2\n",
+          game: "[/Script/ShooterGame.ShooterGameMode]\n",
+        },
+        updatedAt: "2026-08-16T00:00:00.000Z",
+      },
+    });
+    renderWorkspace();
+
+    await user.click(
+      screen.getByRole("button", { name: "Configuration wizard" }),
+    );
+    expect(
+      await screen.findByRole("button", { name: /Match cluster defaults/ }),
+    ).toBeVisible();
+    expect(screen.queryByText(/No cluster INI template yet/i)).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Match cluster defaults/ }));
+    expect(
+      screen.queryByRole("switch", {
+        name: "Enable single-player settings",
+      }),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    expect(
+      await screen.findByRole("heading", { name: "Review cluster defaults" }),
+    ).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "Set the progression pace" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Apply cluster defaults" }));
+
+    expect(
+      await screen.findByRole("heading", { name: "Configuration applied" }),
+    ).toBeVisible();
+    expect(window.api.previewClusterIniRestore).toHaveBeenCalledWith(
+      "cluster-1",
+      "srv-a",
+      { gameUserSettings: true, game: true },
+    );
+    expect(window.api.restoreClusterIniFromTemplate).toHaveBeenCalledWith(
+      "cluster-1",
+      "srv-a",
+      { gameUserSettings: true, game: true },
+    );
+    expect(window.api.saveServerIni).not.toHaveBeenCalled();
+  });
+
+  it("shows a cluster template hint when the member has no template (#230)", async () => {
+    const user = userEvent.setup();
+    renderWorkspace();
+
+    await user.click(
+      screen.getByRole("button", { name: "Configuration wizard" }),
+    );
+    expect(
+      await screen.findByText(/No cluster INI template yet/i),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: /Match cluster defaults/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows stop progress alert with label and progress bar", () => {
@@ -1215,8 +1375,8 @@ describe("ServerWorkspacePage", () => {
     });
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
-    const maxPlayers = await screen.findByDisplayValue("70");
-    fireEvent.change(maxPlayers, { target: { value: "80" } });
+    const xp = await screen.findByDisplayValue("1.5");
+    fireEvent.change(xp, { target: { value: "2" } });
 
     act(() => leaveGuard?.(onLeave));
     expect(onLeave).not.toHaveBeenCalled();

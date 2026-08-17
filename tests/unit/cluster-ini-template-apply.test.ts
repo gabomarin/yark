@@ -43,6 +43,7 @@ function makeProfile(
     enabled: true,
     autoStart: false,
     sessionName: "Ragnarok PvE",
+    maxPlayers: 70,
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,
@@ -171,7 +172,10 @@ describe("ClusterIniTemplateApplyService", () => {
       ),
       "utf8",
     );
-    expect(gus).toContain("MaxPlayers=55");
+    expect(gus).not.toMatch(/MaxPlayers=55/i);
+    expect(gus).not.toMatch(
+      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
+    );
     expect(gus).toContain("XPMultiplier=3");
     expect(gus).toContain("RCONPort=27020");
     expect(gus).toContain("ServerAdminPassword=admin1234");
@@ -208,6 +212,7 @@ describe("ClusterIniTemplateApplyService", () => {
       id: "srv-source",
       name: "Scorched",
       sessionName: "Gabo Scorched yark-copy",
+      maxPlayers: 70,
       gamePort: 7787,
       queryPort: 27025,
       rconPort: 27030,
@@ -260,7 +265,10 @@ describe("ClusterIniTemplateApplyService", () => {
       ),
       "utf8",
     );
-    expect(gus).toContain("MaxPlayers=55");
+    expect(gus).not.toMatch(/MaxPlayers=55/i);
+    expect(gus).not.toMatch(
+      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
+    );
     expect(gus).toContain("XPMultiplier=3");
     expect(gus).toContain("RCONPort=27020");
     expect(gus).toContain("Port=7777");
@@ -273,11 +281,13 @@ describe("ClusterIniTemplateApplyService", () => {
   it("does not write member files when restore validation fails", async () => {
     const { service, profile, templates, installDir } = makeHarness("stopped");
     templates.upsert("alpha", {
-      gameUserSettings: "[ServerSettings]\nMaxPlayers=999\n",
+      gameUserSettings: "[ServerSettings]\nDifficultyOffset=2\n",
       game: "",
     });
 
-    await expect(service.restore("alpha", profile.id)).rejects.toThrow(/MaxPlayers/i);
+    await expect(service.restore("alpha", profile.id)).rejects.toThrow(
+      /DifficultyOffset/i,
+    );
 
     const gus = readFileSync(
       join(
@@ -350,7 +360,7 @@ describe("ClusterIniTemplateApplyService", () => {
 
     const result = await service.promote("alpha", profile.id);
     expect(result.operation).toBe("promote");
-    expect(result.template.payload.gameUserSettings).toContain("MaxPlayers=20");
+    expect(result.template.payload.gameUserSettings).not.toMatch(/MaxPlayers=/i);
     expect(result.template.payload.gameUserSettings).not.toMatch(/RCONPort=/i);
 
     const stored = templates.get("alpha");
@@ -407,7 +417,10 @@ describe("ClusterIniTemplateApplyService", () => {
       ),
       "utf8",
     );
-    expect(gus).toContain("MaxPlayers=55");
+    expect(gus).not.toMatch(/MaxPlayers=55/i);
+    expect(gus).not.toMatch(
+      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
+    );
     expect(gus).toContain("XPMultiplier=3");
     expect(gus).toContain("RCONPort=27020");
     expect(gus).toContain("ServerAdminPassword=admin1234");
@@ -422,7 +435,7 @@ describe("ClusterIniTemplateApplyService", () => {
     tmpDirs.push(installDir);
     prepareIniFiles(
       installDir,
-      "[ServerSettings]\nMaxPlayers=999\n",
+      "[ServerSettings]\nDifficultyOffset=2\n",
       "",
     );
     const profile = makeProfile(installDir);
@@ -433,7 +446,7 @@ describe("ClusterIniTemplateApplyService", () => {
     db = openDatabase(":memory:");
     const templates = new ClusterIniTemplateRepository(db);
     templates.upsert("alpha", {
-      gameUserSettings: "[ServerSettings]\nMaxPlayers=40\n",
+      gameUserSettings: "[ServerSettings]\nXPMultiplier=40\n",
       game: "[Keep]\nA=1\n",
     });
     const locks = new InstanceLockManager();
@@ -446,9 +459,9 @@ describe("ClusterIniTemplateApplyService", () => {
       { getStatus: () => ({ status: "stopped" as const, processLive: false }) },
     );
 
-    await expect(service.promote("alpha", profile.id)).rejects.toThrow(/MaxPlayers/i);
+    await expect(service.promote("alpha", profile.id)).rejects.toThrow(/DifficultyOffset/i);
     const kept = templates.get("alpha");
-    expect(kept?.payload.gameUserSettings).toContain("MaxPlayers=40");
+    expect(kept?.payload.gameUserSettings).toContain("XPMultiplier=40");
     expect(kept?.payload.game).toContain("A=1");
   });
 
@@ -516,7 +529,7 @@ describe("ClusterIniTemplateApplyService", () => {
       game: false,
     });
     expect(result.files).toEqual({ gameUserSettings: true, game: false });
-    expect(result.template.payload.gameUserSettings).toContain("MaxPlayers=20");
+    expect(result.template.payload.gameUserSettings).not.toMatch(/MaxPlayers=/i);
     expect(result.template.payload.game).toBe(beforeGame);
     expect(result.template.payload.game).toContain("HarvestAmountMultiplier=5");
   });

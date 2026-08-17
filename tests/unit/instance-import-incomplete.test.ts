@@ -23,6 +23,7 @@ function baseInput(installDir: string): ServerProfileInput {
     map: "TheIsland_WP",
     installDir,
     sessionName: "Imported",
+    maxPlayers: 70,
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,

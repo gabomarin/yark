@@ -47,8 +47,10 @@ describe("ini-presets", () => {
     const payload: ServerIniPayload = {
       gameUserSettings: [
         "[ServerSettings]",
-        "MaxPlayers=120",
         "NetServerMaxTickRate=20",
+        "",
+        "[/Script/Engine.GameSession]",
+        "MaxPlayers=120",
         "",
       ].join("\n"),
       game: "",
@@ -56,12 +58,17 @@ describe("ini-presets", () => {
 
     const next = applyIniPreset(payload, "performance");
     const rows = parseIniTextRows(next.gameUserSettings);
-    const byKey = Object.fromEntries(
+    const serverSettings = Object.fromEntries(
       rows.filter((row) => row.section === "ServerSettings").map((row) => [row.key, row.value]),
     );
+    const gameSession = Object.fromEntries(
+      rows
+        .filter((row) => row.section.toLowerCase() === "/script/engine.gamesession")
+        .map((row) => [row.key, row.value]),
+    );
 
-    expect(byKey["MaxPlayers"]).toBe("70");
-    expect(byKey["NetServerMaxTickRate"]).toBe("30");
+    expect(gameSession["MaxPlayers"]).toBe("120");
+    expect(serverSettings["NetServerMaxTickRate"]).toBe("30");
   });
 
   it("updates dotted sections without nesting them", () => {

@@ -11,17 +11,27 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Profile-owned **Max players** (default 70, 0–255) on create/edit; applied at start as `-WinLiveMaxPlayers` only. ASA ignores GameUserSettings.ini `MaxPlayers` (the visual editor hides those keys; cluster templates strip them). Empty or **0** omits the flag (ASA then defaults to 70).
 - **Clone server** copies **Game.ini** and **GameUserSettings.ini** from the source (new ports and session name overwrite identity keys) and can optionally copy the full install folder (off by default; unavailable when the source has no files). The source must be stopped for a folder copy; large copies show progress and can be cancelled, and a failed copy removes the incomplete clone (#160).
 - Skippable **first-run setup** (SteamCMD, Windows shell, optional cluster, then create or import); Settings can reopen the setup assistant (#298).
 
 ### Changed
 
-- Configuration wizard chrome uses shared selection, radius, and spacing tokens; Pace difficulty keys sit behind a **Technical** tooltip (#224).
+- Configuration wizard: calm profile cards with Phosphor icons, Cancel with step actions and Back beside Continue, **Match cluster defaults** (full template Seed/Restore with pace skip), and **Use default configuration** on first-run create (#230).
+- Configuration wizard Pace colors rate presets and world-difficulty tiers (Very easy–Very hard → levels 30–150), marks WildCard-matching presets with **WildCard official**, and exposes INI keys behind **INI details** (#230).
+- Configuration wizard **World** step uses Current → Very easy…Very hard (official **Base**), drops Max players from presets (profile field only), and retunes density / survival / night values (#230).
+- Configuration wizard QoL: easy-oriented profiles enable **AlwaysAllowStructurePickup** (disables the pickup timer field); draft/review rows show the real INI key and hide the changes modal button on Review (#230).
+- Configuration wizard Pace adds **resource respawn**; Breeding scales cuddle/imprint with maturation for reachable 100% imprint; QoL adds cave building (PvE) and floating damage text (#230).
+- Configuration wizard Profile: **Enable single-player settings** with stack/bonuses copy in that alert (no second Multipliers stack alert) (#230).
+- Configuration wizard chrome uses shared selection, radius, and spacing tokens; Pace difficulty keys sit behind an **INI details** tooltip (#224).
 - Settings uses a **category sidebar** (General, Servers, SteamCMD, Logs, About); setup guidance clarifies saved changes, suggests a cluster folder, and prevents conflicting SteamCMD actions while work is active (#298).
 - getyark.com serves responsive WebP screenshots, preloads the home logo, and skips heavy motion work on phones so the static site loads faster.
 
 ### Fixed
 
+- Shell main content stays in the viewport after Mantine `styles.layer.css` — navbar modules no longer override AppShell fixed positioning (#230).
+- INI preview validates leftover **Max players** on `[/Script/Engine.GameSession]` and `[ServerSettings]` if present; wizard apply toasts the preview change count (#230).
+- The INI editor hides `MaxPlayers` because ASA ignores that INI key; **Max players** on the Server tab is the live cap (`-WinLiveMaxPlayers`). Raw text mode explains the split (#230).
 - First-run setup does not auto-open when setup status cannot be read, so Overview stays usable if the database is unavailable (#298).
 
 ### Security

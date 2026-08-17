@@ -1,5 +1,5 @@
 import { flattenIniText, INI_FLAT_SEP, setIniTextValue } from "@shared/ini-text";
-import { isYarkOwnedIniKey } from "@shared/yark-owned-ini-keys";
+import { isAsaIgnoredIniMaxPlayers, isYarkOwnedIniKey } from "@shared/yark-owned-ini-keys";
 import type { IniDiffEntry, IniPreview, ServerIniPayload, ServerProfile } from "@shared/types";
 import { prepareClusterIniTemplatePayload } from "./cluster-ini-template-service";
 
@@ -10,6 +10,7 @@ export type ProfileIniIdentity = Pick<
   | "adminPassword"
   | "serverPassword"
   | "sessionName"
+  | "maxPlayers"
   | "gamePort"
   | "queryPort"
 >;
@@ -41,7 +42,7 @@ function flatLookup(
   return undefined;
 }
 
-function parsePort(raw: string | undefined, fallback: number): number {
+function parseInteger(raw: string | undefined, fallback: number): number {
   if (raw === undefined) return fallback;
   const parsed = Number.parseInt(raw.trim(), 10);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -61,7 +62,7 @@ export function resolveMemberIdentity(
   }
   const flat = flattenIniText(currentGameUserSettings);
   return {
-    rconPort: parsePort(
+    rconPort: parseInteger(
       flatLookup(flat, "ServerSettings", "RCONPort"),
       profile.rconPort,
     ),
@@ -73,11 +74,12 @@ export function resolveMemberIdentity(
       profile.serverPassword,
     sessionName:
       flatLookup(flat, "SessionSettings", "SessionName") ?? profile.sessionName,
-    gamePort: parsePort(
+    maxPlayers: profile.maxPlayers,
+    gamePort: parseInteger(
       flatLookup(flat, "SessionSettings", "Port"),
       profile.gamePort,
     ),
-    queryPort: parsePort(
+    queryPort: parseInteger(
       flatLookup(flat, "SessionSettings", "QueryPort"),
       profile.queryPort,
     ),
@@ -133,7 +135,10 @@ export function applyProfileOwnedKeysToGameUserSettings(
   return text;
 }
 
-/** Template → member: replace both INI files, then reapply per-server identity. */
+/** Template → member: replace both INI files, then reapply per-server identity.
+ * INI MaxPlayers is stripped from templates (ASA ignores it). The live cap is
+ * `-WinLiveMaxPlayers` from the profile at start, not this file.
+ */
 export function composeMemberPayloadFromTemplate(
   template: ServerIniPayload,
   profile: ProfileIniIdentity,
@@ -176,7 +181,8 @@ export function omitYarkOwnedFromIniPreview(preview: IniPreview): IniPreview {
   const diff = preview.diff.filter(
     (entry) =>
       entry.fileKey !== "gameUserSettings" ||
-      !isYarkOwnedIniKey(entry.section, entry.key),
+      (!isYarkOwnedIniKey(entry.section, entry.key) &&
+        !isAsaIgnoredIniMaxPlayers(entry.key)),
   );
   return {
     ...preview,

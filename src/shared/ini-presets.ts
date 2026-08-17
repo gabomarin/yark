@@ -74,12 +74,6 @@ const PRESETS: IniPreset[] = [
       {
         fileKey: "gameUserSettings",
         section: "ServerSettings",
-        key: "MaxPlayers",
-        value: "70",
-      },
-      {
-        fileKey: "gameUserSettings",
-        section: "ServerSettings",
         key: "NetServerMaxTickRate",
         value: "30",
       },

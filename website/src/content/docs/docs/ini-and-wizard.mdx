@@ -20,7 +20,7 @@ Paths under each install:
 - Save sanitizes → validates a few semantic ranges → writes both files → best-effort INI backup
 - Do not expect generic INI libraries to round-trip ASA — section names can contain dots literally
 
-Semantic checks when `[ServerSettings]` is present include RCON port range, `MaxPlayers` 1–255, `DifficultyOffset` 0–1.
+Semantic checks include RCON port range and `DifficultyOffset` 0–1 when `[ServerSettings]` is present, and leftover `MaxPlayers` 1–255 on `[/Script/Engine.GameSession]` or `[ServerSettings]` if those keys are present. **Max players** on the Server form (1–255) launches `-WinLiveMaxPlayers` — that is the live cap. ASA ignores INI `MaxPlayers`. Empty or **0** omits the flag (ASA then defaults to 70).
 
 Profile networking fields (RCON, passwords, session, ports) are also written on **start** via profile→INI sync. See [Start, stop, restart](/docs/lifecycle/).
 

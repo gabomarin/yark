@@ -62,6 +62,7 @@ describe("asa-launch-options-catalog (#92)", () => {
       "cluster-dir",
       "no-transfer-from-filtering",
       "map-session",
+      "winlivemaxplayers-integer",
     ]) {
       const entry = lookupLaunchOptionById(id);
       expect(entry, id).toBeDefined();

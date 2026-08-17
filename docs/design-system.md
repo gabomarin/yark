@@ -23,6 +23,15 @@ Source of truth for numeric tokens: `src/renderer/src/shared/theme/tokens.ts` �
 6. Workspace “tool” chrome (`flat` / `chrome`) is intentional and different from page cool panels.
 7. Custom CSS modules polish layout after Mantine + shared atoms are exhausted —
    they must not reimplement Mantine widgets.
+8. **Mantine CSS is layered.** Entry imports `@mantine/*/styles.layer.css` (and
+   datatable’s layer file) so app modules / globals sit above `@layer mantine`
+   and win on equal specificity without fighting import order
+   ([help.mantine.dev/q/styles-order](https://help.mantine.dev/q/styles-order)).
+   Do not also import `styles.css`. **Do not override `position` on
+   `AppShell.Navbar` / `AppShell.Main`** in modules — Mantine’s fixed navbar +
+   main padding is load-bearing; a relative navbar pushes Main below the fold.
+   Keep navbar `z-index` above Main so Main’s full-width box does not steal
+   sidebar clicks.
 
 ---
 
@@ -144,6 +153,9 @@ Avoid raw `border-radius: 8px|14px` when a token fits. Tek icon tiles keep asymm
   attention rail). Use `color="fossil"` for unsaved-leave alerts (same amber as
   `--app-color-fossil` / warn). Version status text uses theme shade refs (`c="ok.5"`,
   `c="attention.5"`).
+- **Inline Alert surfaces** (theme `Alert` `--alert-bg` / `--alert-bd`): `blue` =
+  translucent blue wash; `yellow` / `fossil` / `attention` = translucent panel
+  (`bg-card/60` recipe) + fossil border; `red` = translucent danger wash.
 - Text: `--app-color-text` / `--app-color-muted`.
 - Borders: `--app-color-border` / `--app-color-border-subtle`.
 - Never hardcode status hex (`#e5484d`, `#58c89a`, …) in feature CSS.

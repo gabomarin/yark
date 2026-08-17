@@ -9,6 +9,7 @@ function profile(partial: Partial<ServerProfile> & Pick<ServerProfile, "id" | "n
     map: "TheIsland_WP",
     installDir: "C:\\ark\\a",
     sessionName: partial.name,
+    maxPlayers: 70,
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,

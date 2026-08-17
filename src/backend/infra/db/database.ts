@@ -199,6 +199,12 @@ const MIGRATIONS: Migration[] = [
       ALTER TABLE servers ADD COLUMN map_save_folder TEXT;
     `,
   },
+  {
+    version: 15,
+    sql: `
+      ALTER TABLE servers ADD COLUMN max_players INTEGER NOT NULL DEFAULT 70;
+    `,
+  },
 ];
 
 /** Default SQLite lock wait before open/migrate fails (see #218). */

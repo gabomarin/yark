@@ -15,6 +15,7 @@ YARK starts `{installDir}/ShooterGame/Binaries/Win64/ArkAscendedServer.exe` dire
 | --- | --- |
 | Map + session name | CLI map URL (`token`?SessionName=…) |
 | Game port | CLI `-port=` **and** INI `SessionSettings.Port` |
+| Max players | CLI `-WinLiveMaxPlayers=` (ASA ignores INI `MaxPlayers`; omit and ASA defaults to 70) |
 | Platform | CLI `-ServerPlatform=ALL` (unless you set it in extra args) |
 | Enabled mods | CLI `-mods=id1,id2,…` (includes CurseForge **map packs**) |
 | Cluster trio | CLI when **both** cluster ID and directory are set |
@@ -30,8 +31,8 @@ YARK starts `{installDir}/ShooterGame/Binaries/Win64/ArkAscendedServer.exe` dire
 Example logical command lines:
 
 ```text
-"TheIsland_WP"?SessionName="MyServer" -port=7777 -ServerPlatform=ALL -mods=123,456
-"Svartalfheim_WP"?SessionName="MyMap" -port=7777 -ServerPlatform=ALL -mods=962796
+"TheIsland_WP"?SessionName="MyServer" -port=7777 -WinLiveMaxPlayers=70 -ServerPlatform=ALL -mods=123,456
+"Svartalfheim_WP"?SessionName="MyMap" -port=7777 -WinLiveMaxPlayers=70 -ServerPlatform=ALL -mods=962796
 ```
 
 Custom / modded maps use the same shape: author launch token in the map URL, and the map pack

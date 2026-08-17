@@ -155,10 +155,13 @@ Report shape:
 - Apply IPC (#89 / #181): `preview-restore` / `preview-promote` / `preview-seed` /
   `restore` / `promote` / `seed` (one member at a time; optional `files`
   selects entire Game.ini and/or GameUserSettings.ini — default both).
-- Composition: template overlay → strip owned keys → reapply the **target
-  member’s current** ports/passwords/session (fallback to profile when missing)
-  via `ini-compose.ts`. Owned keys are omitted from operator previews; secrets
-  are redacted. Unselected files are left unchanged on disk / in the template.
+- Composition: template overlay → strip owned keys and INI `MaxPlayers` →
+  reapply the **target member’s current** ports/passwords/session (fallback to
+  profile when missing) via `ini-compose.ts`. Slot limit at start is
+  `-WinLiveMaxPlayers` from the profile (ASA ignores INI `MaxPlayers`, so
+  templates must not author it). Owned keys and INI MaxPlayers are omitted from
+  operator previews; secrets are redacted. Unselected files are left unchanged
+  on disk / in the template.
 - Restore/seed take a local `.yark-pre-template` snapshot before write, and a
   cataloged INI backup when the install is Ready.
 - Promote updates only the selected SQLite template files (member installs
@@ -166,6 +169,10 @@ Report shape:
 - Add servers can opt into **Seed INI from cluster template** after membership
   saves (with the same file pickers); seed failures keep membership and report
   which members failed.
+- The **Configuration wizard** can also **Match cluster defaults** when the
+  server is a cluster member and a template exists: Profile → Review skip, then
+  Apply runs Seed (new/default INI) or Restore (existing) with both files — same
+  composition and idle requirements as Clusters (#230).
 - Deleting a template does not delete any server INI files on disk.
 - Clusters that exist only as profile fields can still own a template (including
   after all members leave — the row remains until deleted).

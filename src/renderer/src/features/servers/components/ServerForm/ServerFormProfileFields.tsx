@@ -24,6 +24,7 @@ export interface ServerFormProfileFieldsProps {
   gamePort: string;
   queryPort: string;
   rconPort: string;
+  maxPlayers: string;
   serverPassword: string;
   adminPassword: string;
   clusterId: string;
@@ -52,6 +53,7 @@ export interface ServerFormProfileFieldsProps {
   onGamePortChange: (value: string) => void;
   onQueryPortChange: (value: string) => void;
   onRconPortChange: (value: string) => void;
+  onMaxPlayersChange: (value: string) => void;
   onServerPasswordChange: (value: string) => void;
   onAdminPasswordChange: (value: string) => void;
   onSelectCreateCluster: (clusterId: string | null) => void;
@@ -153,11 +155,13 @@ export function ServerFormProfileFields(
           gamePort={props.gamePort}
           queryPort={props.queryPort}
           rconPort={props.rconPort}
+          maxPlayers={props.maxPlayers}
           serverPassword={props.serverPassword}
           adminPassword={props.adminPassword}
           onGamePortChange={props.onGamePortChange}
           onQueryPortChange={props.onQueryPortChange}
           onRconPortChange={props.onRconPortChange}
+          onMaxPlayersChange={props.onMaxPlayersChange}
           onServerPasswordChange={props.onServerPasswordChange}
           onAdminPasswordChange={props.onAdminPasswordChange}
         />

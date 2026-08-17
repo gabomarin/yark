@@ -17,6 +17,7 @@ function makeProfile(installDir: string): ServerProfile {
     enabled: true,
     autoStart: false,
     sessionName: "Session",
+    maxPlayers: 70,
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,
@@ -127,12 +128,43 @@ describe("IniService semantic validation", () => {
 
     const { service, profile } = makeService(installDir);
     const preview = await service.previewServerIni(profile.id, {
+      gameUserSettings: "[/Script/Engine.GameSession]\nMaxPlayers=0\n",
+      game: "",
+    });
+
+    expect(preview.valid).toBe(false);
+    expect(preview.issues.some((i) => i.message.includes("MaxPlayers"))).toBe(true);
+  });
+
+  it("still rejects legacy ServerSettings MaxPlayers out of range", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+
+    const { service, profile } = makeService(installDir);
+    const preview = await service.previewServerIni(profile.id, {
       gameUserSettings: "[ServerSettings]\nMaxPlayers=0\n",
       game: "",
     });
 
     expect(preview.valid).toBe(false);
     expect(preview.issues.some((i) => i.message.includes("MaxPlayers"))).toBe(true);
+  });
+
+  it("does not treat leftover SessionSettings MaxPlayers as a semantic error", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+
+    const { service, profile } = makeService(installDir);
+    const preview = await service.previewServerIni(profile.id, {
+      gameUserSettings: "[SessionSettings]\nMaxPlayers=0\nSessionName=Test\n",
+      game: "",
+    });
+
+    expect(preview.issues.some((i) => i.message.includes("MaxPlayers"))).toBe(
+      false,
+    );
   });
 
   it("rejects saving INI with invalid semantic validation", async () => {

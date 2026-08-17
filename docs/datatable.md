@@ -2,7 +2,9 @@
 
 Selective use of `mantine-datatable` via the shared `YarkDataTable` wrapper
 (`src/renderer/src/shared/ui/YarkDataTable/`). Import styles once from
-`src/renderer/src/main.tsx` (`mantine-datatable/styles.css`).
+`src/renderer/src/main.tsx` (`mantine-datatable/styles.layer.css`).
+Mantine packages use `styles.layer.css` so app CSS modules sit above the
+`@layer mantine` cascade ([styles order](https://help.mantine.dev/q/styles-order)).
 
 ## Contract
 

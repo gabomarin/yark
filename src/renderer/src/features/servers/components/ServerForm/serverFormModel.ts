@@ -10,6 +10,7 @@ export interface ServerFormState {
   mapSaveFolder: string | null;
   installDir: string;
   sessionName: string;
+  maxPlayers: string;
   gamePort: string;
   queryPort: string;
   rconPort: string;
@@ -34,6 +35,7 @@ export function toServerFormState(
       mapSaveFolder: null,
       installDir: base,
       sessionName: "",
+      maxPlayers: "70",
       gamePort: "7777",
       queryPort: "27015",
       rconPort: "27020",
@@ -52,6 +54,7 @@ export function toServerFormState(
     mapSaveFolder: profile.mapSaveFolder ?? null,
     installDir: profile.installDir,
     sessionName: profile.sessionName,
+    maxPlayers: String(profile.maxPlayers),
     gamePort: String(profile.gamePort),
     queryPort: String(profile.queryPort),
     rconPort: String(profile.rconPort),
@@ -79,6 +82,7 @@ export function serverFormToInput(
       ? resolveServerInstallDir(baseOrInstall, name)
       : baseOrInstall,
     sessionName: state.sessionName.trim(),
+    maxPlayers: parseOptionalMaxPlayers(state.maxPlayers),
     gamePort: Number(state.gamePort),
     queryPort: Number(state.queryPort),
     rconPort: Number(state.rconPort),
@@ -94,4 +98,12 @@ export function serverFormToInput(
     modMetadataCache: initial?.modMetadataCache ?? {},
     autoStart: state.autoStart,
   };
+}
+
+/** Empty / NaN → 0 (omit -WinLiveMaxPlayers; ASA then defaults to 70). */
+export function parseOptionalMaxPlayers(raw: string): number {
+  const trimmed = raw.trim();
+  if (trimmed.length === 0) return 0;
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : 0;
 }

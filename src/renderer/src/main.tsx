@@ -3,10 +3,10 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { loadUiDensityPref } from "@features/settings/settingsModel";
 import { DEFAULT_UI_DENSITY } from "@shared/ui-density";
-import "@mantine/core/styles.css";
-import "@mantine/notifications/styles.css";
-import "@mantine/spotlight/styles.css";
-import "mantine-datatable/styles.css";
+import "@mantine/core/styles.layer.css";
+import "@mantine/notifications/styles.layer.css";
+import "@mantine/spotlight/styles.layer.css";
+import "mantine-datatable/styles.layer.css";
 import "./styles/radix-palette.css";
 import "./styles/globals.css";
 

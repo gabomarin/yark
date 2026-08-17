@@ -15,6 +15,7 @@ function makeServer(overrides: Partial<ServerProfile> & Pick<ServerProfile, "id"
     map: "TheIsland_WP",
     installDir: `C:/ARK/${overrides.id}`,
     sessionName: overrides.name,
+    maxPlayers: 70,
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,
@@ -715,7 +716,7 @@ describe("ClustersPage", () => {
         ok: true,
         data: {
           clusterId: "alpha",
-          payload: { gameUserSettings: "[ServerSettings]\nMaxPlayers=40\n", game: "" },
+          payload: { gameUserSettings: "[ServerSettings]\nXPMultiplier=3\n", game: "" },
           updatedAt: "2026-08-05T00:00:00.000Z",
         },
       })),

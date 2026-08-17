@@ -187,6 +187,7 @@ export function composeIniPayloadFromSelection(
     gamePort: targetProfile.gamePort,
     queryPort: targetProfile.queryPort,
     sessionName: targetProfile.sessionName,
+    maxPlayers: targetProfile.maxPlayers,
     adminPassword: options?.passwordsFromSource?.adminPassword ?? targetProfile.adminPassword,
     serverPassword:
       options?.passwordsFromSource?.serverPassword ?? targetProfile.serverPassword,
@@ -211,6 +212,7 @@ export function profileToIniIdentity(profile: ServerProfile): ProfileIniIdentity
     adminPassword: profile.adminPassword,
     serverPassword: profile.serverPassword,
     sessionName: profile.sessionName,
+    maxPlayers: profile.maxPlayers,
     gamePort: profile.gamePort,
     queryPort: profile.queryPort,
   };

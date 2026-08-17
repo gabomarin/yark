@@ -28,6 +28,7 @@ interface ServerRow {
   enabled: number;
   auto_start: number;
   session_name: string;
+  max_players: number;
   game_port: number;
   query_port: number;
   rcon_port: number;
@@ -77,6 +78,7 @@ function rowToProfile(row: ServerRow): ServerProfile {
     enabled: row.enabled === 1,
     autoStart: row.auto_start === 1,
     sessionName: row.session_name,
+    maxPlayers: row.max_players,
     gamePort: row.game_port,
     queryPort: row.query_port,
     rconPort: row.rcon_port,
@@ -142,11 +144,11 @@ export class ServerRepository {
       .prepare(
         `INSERT INTO servers (
           id, name, map, map_mod_id, map_save_folder, install_dir, enabled, auto_start, session_name,
-          game_port, query_port, rcon_port,
+          max_players, game_port, query_port, rcon_port,
           server_password, admin_password,
           cluster_id, cluster_dir, extra_args, structured_launch_args, mods,
           disabled_mods, mod_metadata_cache, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         profile.id,
@@ -158,6 +160,7 @@ export class ServerRepository {
         profile.enabled ? 1 : 0,
         profile.autoStart ? 1 : 0,
         profile.sessionName,
+        profile.maxPlayers,
         profile.gamePort,
         profile.queryPort,
         profile.rconPort,
@@ -195,7 +198,7 @@ export class ServerRepository {
       .prepare(
         `UPDATE servers SET
           name = ?, map = ?, map_mod_id = ?, map_save_folder = ?, install_dir = ?, session_name = ?,
-          game_port = ?, query_port = ?, rcon_port = ?,
+          max_players = ?, game_port = ?, query_port = ?, rcon_port = ?,
           server_password = ?, admin_password = ?,
           cluster_id = ?, cluster_dir = ?, extra_args = ?, structured_launch_args = ?, mods = ?,
           disabled_mods = ?, mod_metadata_cache = ?,
@@ -210,6 +213,7 @@ export class ServerRepository {
         mapSaveFolder,
         input.installDir,
         input.sessionName,
+        input.maxPlayers,
         input.gamePort,
         input.queryPort,
         input.rconPort,

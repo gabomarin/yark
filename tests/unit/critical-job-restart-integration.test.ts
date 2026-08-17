@@ -20,6 +20,7 @@ function profile(): ServerProfile {
     enabled: true,
     autoStart: false,
     sessionName: "Restart fixture",
+    maxPlayers: 70,
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,

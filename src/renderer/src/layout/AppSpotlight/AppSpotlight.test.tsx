@@ -30,6 +30,7 @@ const server: ServerProfile = {
   enabled: true,
   autoStart: false,
   sessionName: "Scorched Cluster",
+  maxPlayers: 70,
   gamePort: 7777,
   queryPort: 27015,
   rconPort: 27020,

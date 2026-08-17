@@ -14,6 +14,7 @@ function profile(partial: Partial<ServerProfile> = {}): ServerProfile {
     map: "TheIsland_WP",
     installDir: "C:\\ark\\a",
     sessionName: "Island",
+    maxPlayers: 70,
     gamePort: 7777,
     queryPort: 27015,
     rconPort: 27020,
@@ -62,5 +63,10 @@ describe("yarkOwnedPreviewTokens", () => {
     expect(tokens[0]).toBe(
       '"TheIsland_WP"?SessionName="Gabo \\"server\\"\\\\path"',
     );
+  });
+
+  it("omits -WinLiveMaxPlayers when maxPlayers is 0", () => {
+    const tokens = yarkOwnedPreviewTokens(profile({ maxPlayers: 0 }));
+    expect(tokens.some((token) => /WinLiveMaxPlayers/i.test(token))).toBe(false);
   });
 });
