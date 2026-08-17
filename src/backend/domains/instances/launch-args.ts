@@ -4,6 +4,7 @@ import { buildMapUrlArg } from "@shared/launch-map-url";
 import {
   argsIncludeServerPlatform,
   buildStructuredLaunchArgList,
+  isWinLiveMaxPlayersArg,
 } from "@shared/structured-launch-options";
 
 export { buildMapUrlArg } from "@shared/launch-map-url";
@@ -90,7 +91,7 @@ export function buildWindowsVerbatimSpawnArgs(args: string[]): string[] {
  * Builds launch arguments for ArkAscendedServer.exe (logical Unreal shape).
  *
  * Shape (ASA manager parity):
- * `"Map"?SessionName="..." -port=N -ServerPlatform=ALL ...`
+ * `"Map"?SessionName="..." -port=N -WinLiveMaxPlayers=N -ServerPlatform=ALL ...`
  *
  * On Windows, ProcessManager converts these with
  * {@link buildWindowsVerbatimSpawnArgs} and enables
@@ -99,9 +100,17 @@ export function buildWindowsVerbatimSpawnArgs(args: string[]): string[] {
  */
 export function buildLaunchArgs(profile: ServerProfile): string[] {
   const mapUrl = buildMapUrlArg(profile.map, profile.sessionName);
-  const structuredArgs = buildStructuredLaunchArgList(profile.structuredLaunchArgs);
-  const trailingArgs = [...structuredArgs, ...profile.extraArgs];
+  const structuredArgs = buildStructuredLaunchArgList(
+    profile.structuredLaunchArgs,
+  ).filter((arg) => !isWinLiveMaxPlayersArg(arg));
+  const extraArgs = profile.extraArgs.filter(
+    (arg) => !isWinLiveMaxPlayersArg(arg),
+  );
+  const trailingArgs = [...structuredArgs, ...extraArgs];
   const args: string[] = [mapUrl, `-port=${profile.gamePort}`];
+  if (profile.maxPlayers > 0) {
+    args.push(`-WinLiveMaxPlayers=${profile.maxPlayers}`);
+  }
 
   if (!argsIncludeServerPlatform(trailingArgs)) {
     args.push("-ServerPlatform=ALL");

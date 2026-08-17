@@ -118,7 +118,7 @@ export function formToProfileInput(
     mapModId: form.mapModId,
     mapSaveFolder: form.mapSaveFolder,
     installDir,
-    maxPlayers: Number(form.maxPlayers) || 70,
+    maxPlayers: Number(form.maxPlayers) || 0,
     gamePort,
     queryPort,
     rconPort,

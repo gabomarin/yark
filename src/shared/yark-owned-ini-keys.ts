@@ -12,7 +12,8 @@ import type { ServerIniPayload } from "./types";
  *
  * After template apply (#89/#90), profileSync keys are recomposed from the
  * profile; aseLegacy keys stay absent so operators manage mods on the Mods
- * panel instead of stale INI copies.
+ * panel instead of stale INI copies. INI MaxPlayers is not profile-owned:
+ * ASA ignores it and uses `-WinLiveMaxPlayers` from the Server form.
  */
 export type YarkOwnedIniReason = "profileSync" | "aseLegacy";
 
@@ -68,12 +69,6 @@ export const YARK_OWNED_INI_KEYS: readonly YarkOwnedIniKey[] = [
     key: "QueryPort",
     reason: "profileSync",
   },
-  {
-    file: "gameUserSettings",
-    section: "/Script/Engine.GameSession",
-    key: "MaxPlayers",
-    reason: "profileSync",
-  },
 
   // --- ASE-era mod keys (not the ASA CurseForge path) ---
   {
@@ -110,19 +105,9 @@ export function isYarkOwnedIniKey(section: string, key: string): boolean {
   );
 }
 
-/**
- * Leftover `[ServerSettings] MaxPlayers` is not profile-owned (templates may
- * still store it), but ASA ignores it. Hide it from the dedicated editor and
- * cluster apply previews; sync/apply strips it from member files.
- */
-export function isLegacyServerSettingsMaxPlayers(
-  section: string,
-  key: string,
-): boolean {
-  return (
-    section.trim().toLowerCase() === "serversettings" &&
-    key.trim().toLowerCase() === "maxplayers"
-  );
+/** ASA ignores INI MaxPlayers; the live cap is `-WinLiveMaxPlayers`. */
+export function isAsaIgnoredIniMaxPlayers(key: string): boolean {
+  return key.trim().toLowerCase() === "maxplayers";
 }
 
 /**

@@ -172,10 +172,10 @@ describe("ClusterIniTemplateApplyService", () => {
       ),
       "utf8",
     );
-    expect(gus).toMatch(
+    expect(gus).toMatch(/^MaxPlayers=55$/m);
+    expect(gus).not.toMatch(
       /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
     );
-    expect(gus).not.toMatch(/^MaxPlayers=55$/m);
     expect(gus).toContain("XPMultiplier=3");
     expect(gus).toContain("RCONPort=27020");
     expect(gus).toContain("ServerAdminPassword=admin1234");
@@ -265,10 +265,10 @@ describe("ClusterIniTemplateApplyService", () => {
       ),
       "utf8",
     );
-    expect(gus).toMatch(
+    expect(gus).toMatch(/^MaxPlayers=55$/m);
+    expect(gus).not.toMatch(
       /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
     );
-    expect(gus).not.toMatch(/^MaxPlayers=55$/m);
     expect(gus).toContain("XPMultiplier=3");
     expect(gus).toContain("RCONPort=27020");
     expect(gus).toContain("Port=7777");
@@ -417,10 +417,10 @@ describe("ClusterIniTemplateApplyService", () => {
       ),
       "utf8",
     );
-    expect(gus).toMatch(
+    expect(gus).toMatch(/^MaxPlayers=55$/m);
+    expect(gus).not.toMatch(
       /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
     );
-    expect(gus).not.toMatch(/^MaxPlayers=55$/m);
     expect(gus).toContain("XPMultiplier=3");
     expect(gus).toContain("RCONPort=27020");
     expect(gus).toContain("ServerAdminPassword=admin1234");

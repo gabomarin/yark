@@ -66,13 +66,24 @@ LastJoinedSessionPerCategory=Three
     const filtered = filterIniRows(rows, "", "all");
     expect(filtered.some((row) => row.key === "LastJoinedSessionPerCategory")).toBe(false);
     expect(filtered.some((row) => row.key === "ResolutionSizeX")).toBe(false);
-    // Profile-owned GameSession MaxPlayers stays out of the dedicated INI editor.
+    // ASA ignores INI MaxPlayers; the live cap is -WinLiveMaxPlayers on Server.
     expect(filtered.some((row) => row.key === "MaxPlayers")).toBe(false);
   });
 
-  it("hides leftover [ServerSettings] MaxPlayers from the dedicated editor", () => {
+  it("hides leftover MaxPlayers copies in the dedicated editor", () => {
     const rows = parseIniRows(
-      "[ServerSettings]\nMaxPlayers=9\nXPMultiplier=1.5\n",
+      [
+        "[ServerSettings]",
+        "MaxPlayers=9",
+        "XPMultiplier=1.5",
+        "",
+        "[SessionSettings]",
+        "MaxPlayers=6",
+        "",
+        "[/Script/Engine.GameSession]",
+        "MaxPlayers=70",
+        "",
+      ].join("\n"),
     );
     const filtered = filterIniRows(rows, "", "all");
     expect(filtered.some((row) => row.key === "MaxPlayers")).toBe(false);

@@ -923,6 +923,22 @@ describe("ServerWorkspacePage", () => {
     expect(await screen.findByText("XPMultiplier")).toBeVisible();
   });
 
+  it("warns in raw GameUserSettings that Server settings override max players", async () => {
+    const user = userEvent.setup();
+    renderWorkspace();
+
+    await user.click(screen.getByRole("tab", { name: "INI Files" }));
+    await screen.findByText("XPMultiplier");
+    await user.click(screen.getByRole("radio", { name: "Text" }));
+
+    expect(
+      screen.getByRole("alert", { name: "Server settings override" }),
+    ).toHaveTextContent(/-WinLiveMaxPlayers/i);
+    expect(
+      screen.getByRole("alert", { name: "Server settings override" }),
+    ).toHaveTextContent(/empty or 0/i);
+  });
+
   it("reviews and explicitly applies the assistant draft", async () => {
     const user = userEvent.setup();
     renderWorkspace();

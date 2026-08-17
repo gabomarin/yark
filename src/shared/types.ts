@@ -34,7 +34,10 @@ export interface ServerProfile {
    */
   autoStart: boolean;
   sessionName: string;
-  /** Max concurrent players (`[/Script/Engine.GameSession] MaxPlayers`). Default 70. */
+  /**
+   * Slot limit for `-WinLiveMaxPlayers` only. ASA ignores INI MaxPlayers.
+   * `0` omits the flag (ASA then defaults to 70).
+   */
   maxPlayers: number;
   gamePort: number;
   queryPort: number;

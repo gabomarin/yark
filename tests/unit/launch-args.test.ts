@@ -56,6 +56,7 @@ describe("buildLaunchArgs", () => {
     expect(args).toEqual([
       '"TheIsland_WP"?SessionName="My Island"',
       "-port=7777",
+      "-WinLiveMaxPlayers=70",
       "-ServerPlatform=ALL",
     ]);
     expect(args).not.toContain("-QueryPort=27015");
@@ -76,6 +77,26 @@ describe("buildLaunchArgs", () => {
     expect(joined).not.toContain("ServerAdminPassword");
     expect(joined).not.toContain("RCONEnabled");
     expect(joined).not.toContain("RCONPort");
+  });
+
+  it("omits -WinLiveMaxPlayers when maxPlayers is 0 so ASA can use INI", () => {
+    const args = buildLaunchArgs(profile({ maxPlayers: 0 }));
+    expect(args.some((a) => /WinLiveMaxPlayers/i.test(a))).toBe(false);
+    expect(args).toContain("-port=7777");
+  });
+
+  it("composes -WinLiveMaxPlayers from profile.maxPlayers and drops extras", () => {
+    const args = buildLaunchArgs(
+      profile({
+        maxPlayers: 9,
+        extraArgs: ["-WinLiveMaxPlayers=40", "-NoBattlEye"],
+      }),
+    );
+    expect(args).toContain("-WinLiveMaxPlayers=9");
+    expect(args.filter((a) => /WinLiveMaxPlayers/i.test(a))).toEqual([
+      "-WinLiveMaxPlayers=9",
+    ]);
+    expect(args.at(-1)).toBe("-NoBattlEye");
   });
 
   it("defaults -ServerPlatform=ALL without duplicating extraArgs", () => {
@@ -180,7 +201,7 @@ describe("buildWindowsCreateProcessCommandLine", () => {
     const line = buildWindowsCreateProcessCommandLine(binary, args);
 
     expect(line).toBe(
-      'C:\\asa\\island\\ShooterGame\\Binaries\\Win64\\ArkAscendedServer.exe "Aberration_WP"?SessionName="Yark Aberration" -port=7777 -ServerPlatform=ALL -clusterid=yark -ClusterDirOverride=C:\\ARK\\Cluster -NoTransferFromFiltering',
+      'C:\\asa\\island\\ShooterGame\\Binaries\\Win64\\ArkAscendedServer.exe "Aberration_WP"?SessionName="Yark Aberration" -port=7777 -WinLiveMaxPlayers=70 -ServerPlatform=ALL -clusterid=yark -ClusterDirOverride=C:\\ARK\\Cluster -NoTransferFromFiltering',
     );
     expect(line).not.toContain(
       '""Aberration_WP"?SessionName="Yark Aberration""',
@@ -193,7 +214,7 @@ describe("buildWindowsCreateProcessCommandLine", () => {
     const args = buildLaunchArgs(profile({ sessionName: "gabo" }));
     const line = buildWindowsCreateProcessCommandLine(binary, args);
     expect(line).toBe(
-      '"C:\\Program Files\\asa\\ShooterGame\\Binaries\\Win64\\ArkAscendedServer.exe" "TheIsland_WP"?SessionName="gabo" -port=7777 -ServerPlatform=ALL',
+      '"C:\\Program Files\\asa\\ShooterGame\\Binaries\\Win64\\ArkAscendedServer.exe" "TheIsland_WP"?SessionName="gabo" -port=7777 -WinLiveMaxPlayers=70 -ServerPlatform=ALL',
     );
   });
 
@@ -220,7 +241,7 @@ describe("formatLaunchCommandLine", () => {
   it("joins logical builder args for display (real quotes, not \\\")", () => {
     const line = formatLaunchCommandLine(profile({ sessionName: "gabo" }));
     expect(line).toBe(
-      '"TheIsland_WP"?SessionName="gabo" -port=7777 -ServerPlatform=ALL',
+      '"TheIsland_WP"?SessionName="gabo" -port=7777 -WinLiveMaxPlayers=70 -ServerPlatform=ALL',
     );
     expect(line).not.toContain('\\"');
   });
@@ -241,7 +262,7 @@ describe("formatLaunchCommandLine", () => {
       binary,
     );
     expect(line).toBe(
-      `"${binary}" "TheIsland_WP"?SessionName="gabo" -port=7777 -ServerPlatform=ALL`,
+      `"${binary}" "TheIsland_WP"?SessionName="gabo" -port=7777 -WinLiveMaxPlayers=70 -ServerPlatform=ALL`,
     );
   });
 });

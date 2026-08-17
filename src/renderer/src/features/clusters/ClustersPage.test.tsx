@@ -716,7 +716,7 @@ describe("ClustersPage", () => {
         ok: true,
         data: {
           clusterId: "alpha",
-          payload: { gameUserSettings: "[ServerSettings]\nMaxPlayers=40\n", game: "" },
+          payload: { gameUserSettings: "[ServerSettings]\nXPMultiplier=3\n", game: "" },
           updatedAt: "2026-08-05T00:00:00.000Z",
         },
       })),

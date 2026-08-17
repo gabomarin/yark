@@ -42,6 +42,7 @@ Binary path: `{installDir}/ShooterGame/Binaries/Win64/ArkAscendedServer.exe`
 | --- | --- |
 | Map + session name | CLI map URL (`buildMapUrlArg`) |
 | Game port | CLI `-port=N` **and** INI `[SessionSettings] Port` |
+| Max players | CLI `-WinLiveMaxPlayers=N` when profile `maxPlayers` is 1–255. ASA ignores INI `MaxPlayers`. `0` omits the flag (ASA then defaults to **70**) |
 | `-ServerPlatform` | CLI (default `ALL` unless structured/raw trailing args already set it) |
 | Mods / cluster trio | CLI when present on the profile |
 | RCON enable/port | INI `[ServerSettings]` only |
@@ -58,12 +59,13 @@ CLI. Unit tests in `tests/unit/launch-args.test.ts` lock this.
 1. `"${map}"?SessionName="${escapedSessionName}"` — **separate** quotes around
    map and SessionName (never `"Map?SessionName=…"`).
 2. `-port=${gamePort}`
-3. `-ServerPlatform=ALL` unless structured or raw trailing args match `/ServerPlatform/i`
-4. `-mods=id1,id2,…` when `mods.length > 0`
-5. If **both** `clusterId` and `clusterDir` are set:
+3. `-WinLiveMaxPlayers=${maxPlayers}` when `maxPlayers` is 1–255 (`0` omits it)
+4. `-ServerPlatform=ALL` unless structured or raw trailing args match `/ServerPlatform/i`
+5. `-mods=id1,id2,…` when `mods.length > 0`
+6. If **both** `clusterId` and `clusterDir` are set:
    `-clusterid=…`, `-ClusterDirOverride=…`, `-NoTransferFromFiltering`
-6. Structured Launch-tab selections (`structuredLaunchArgs`, catalog id → token)
-7. `…profile.extraArgs` (raw Extra arguments)
+7. Structured Launch-tab selections (`structuredLaunchArgs`, catalog id → token)
+8. `…profile.extraArgs` (raw Extra arguments; `-WinLiveMaxPlayers` is stripped)
 
 UI: workspace tab **Launch** (after Mods) edits structured + raw; create/edit
 Server form no longer hosts Mods IDs or Extra arguments.
@@ -76,7 +78,7 @@ an outer quote pair around the complete, spaced map URL.
 Example logical argv:
 
 ```text
-"TheIsland_WP"?SessionName="MyServer" -port=7777 -ServerPlatform=ALL -mods=123,456
+"TheIsland_WP"?SessionName="MyServer" -port=7777 -WinLiveMaxPlayers=70 -ServerPlatform=ALL -mods=123,456
 ```
 
 ### Custom / modded maps (#65 Phase 1)
@@ -482,10 +484,11 @@ Paths under `{installDir}/ShooterGame/Saved/Config/WindowsServer/`:
 - Do **not** use npm `ini` for ASA — dots in section headers are literal
   (`ini-text.ts`).
 - Semantic save checks (only when `[ServerSettings]` present): `RCONPort`
-  1024–65535, `DifficultyOffset` 0–1. Profile `MaxPlayers` (1–255) lives under
-  `[/Script/Engine.GameSession]` and is synced from Server settings, not the INI
-  editor. Leftover `[ServerSettings] MaxPlayers` is hidden and stripped on
-  start/sync and cluster seed/restore (ASA ignores that section).
+  1024–65535, `DifficultyOffset` 0–1. Profile `MaxPlayers` 1–255 is applied at
+  start as `-WinLiveMaxPlayers` only. ASA ignores INI `MaxPlayers`; `0` omits
+  the flag (ASA then defaults to 70). The visual INI editor hides those INI
+  keys so they are not mistaken for the live cap. INI edits do not change the
+  Server form field.
 - Reset-to-defaults is UI-only (no `ini:reset` IPC).
 
 ## Configuration assistant
@@ -499,8 +502,9 @@ Profile → Pace → Breeding → World → QoL → Review (`STEP_COUNT = 6`).
 - Preserve unknown keys / section casing; skip no-op writes.
 - Difficulty: only an explicit level choice rewrites `DifficultyOffset` /
   `OverrideOfficialDifficulty`; otherwise raw values stay.
-- **Max players** is profile-owned (`[/Script/Engine.GameSession] MaxPlayers`);
-  edit it on create/edit Server settings — the wizard does not write it.
+- **Max players** on Server settings launches `-WinLiveMaxPlayers` when 1–255.
+  Empty/`0` omits the flag (ASA then defaults to 70). ASA ignores INI
+  `MaxPlayers`. The wizard does not write it.
 
 ## Import existing ASA install (#254 / #283)
 

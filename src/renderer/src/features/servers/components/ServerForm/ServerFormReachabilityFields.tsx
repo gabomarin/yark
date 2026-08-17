@@ -64,11 +64,11 @@ export function ServerFormReachabilityFields(props: Props): ReactElement {
         size={props.inputSize}
         value={props.maxPlayers}
         onChange={(value) => props.onMaxPlayersChange(String(value))}
-        min={1}
+        min={0}
         max={255}
         allowDecimal={false}
-        required
-        description="Slot limit in the game browser. Change it here — ASA ignores MaxPlayers under [ServerSettings]."
+        clampBehavior="none"
+        description="Launch slot limit. ASA ignores INI MaxPlayers — only -WinLiveMaxPlayers counts. Empty or 0 omits the flag (ASA then defaults to 70)."
       />
       <Stack gap="sm">
         <PasswordInput

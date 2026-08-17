@@ -12,7 +12,7 @@ import {
   Textarea,
 } from "@mantine/core";
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
-import { isYarkOwnedIniKey } from "@shared/yark-owned-ini-keys";
+import { isAsaIgnoredIniMaxPlayers, isYarkOwnedIniKey } from "@shared/yark-owned-ini-keys";
 import {
   filterIniSettingReferences,
   groupSettingReferencesByUiCategory,
@@ -53,7 +53,11 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
     if (props.iniFile !== "gameUserSettings") {
       return parsed;
     }
-    return parsed.filter((row) => !isYarkOwnedIniKey(row.section, row.key));
+    return parsed.filter(
+      (row) =>
+        !isYarkOwnedIniKey(row.section, row.key) &&
+        !isAsaIgnoredIniMaxPlayers(row.key),
+    );
   }, [activeText, props.iniFile]);
 
   const availableRows = useMemo(

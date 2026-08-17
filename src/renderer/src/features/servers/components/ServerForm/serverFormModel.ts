@@ -82,7 +82,7 @@ export function serverFormToInput(
       ? resolveServerInstallDir(baseOrInstall, name)
       : baseOrInstall,
     sessionName: state.sessionName.trim(),
-    maxPlayers: Number(state.maxPlayers),
+    maxPlayers: parseOptionalMaxPlayers(state.maxPlayers),
     gamePort: Number(state.gamePort),
     queryPort: Number(state.queryPort),
     rconPort: Number(state.rconPort),
@@ -98,4 +98,12 @@ export function serverFormToInput(
     modMetadataCache: initial?.modMetadataCache ?? {},
     autoStart: state.autoStart,
   };
+}
+
+/** Empty / NaN → 0 (omit -WinLiveMaxPlayers; ASA then defaults to 70). */
+function parseOptionalMaxPlayers(raw: string): number {
+  const trimmed = raw.trim();
+  if (trimmed.length === 0) return 0;
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : 0;
 }

@@ -20,10 +20,10 @@ describe("structured-launch-options", () => {
     expect(
       buildStructuredLaunchArgList({
         nobattleye: { enabled: true },
-        "winlivemaxplayers-integer": { enabled: true, value: "40" },
+        "culture-lang_code": { enabled: true, value: "en" },
         forcerespawndinos: { enabled: false },
       }),
-    ).toEqual(["-WinLiveMaxPlayers=40", "-NoBattlEye"]);
+    ).toEqual(["-NoBattlEye", "-culture=en"]);
   });
 
   it("flags conflicts between structured and raw / YARK-owned", () => {

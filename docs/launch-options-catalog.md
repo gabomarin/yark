@@ -35,7 +35,7 @@ The create/edit **Browse ASA catalog** modal lists ASA-relevant rows only
 (`supported`, `uncertain`, `yarkOwned`). ASE-only `unsupported` entries remain in
 the committed JSON for audit/regeneration but are not shown in the UI.
 
-YARK-owned tokens (map URL / `-port=` / `-mods=` / cluster trio) are always
+YARK-owned tokens (map URL / `-port=` / `-WinLiveMaxPlayers=` / `-mods=` / cluster trio) are always
 `yarkOwned`, even when the wiki marks ASA Check. `-ServerPlatform=` is
 **supported** and curated on the Launch tab (YARK still defaults to `ALL` when
 unset). See [`launch-args.ts`](../src/backend/domains/instances/launch-args.ts).
@@ -68,7 +68,7 @@ configure after create (Extra arguments remain available on Launch).
 The Launch grid shows **all curated options in two columns**. Descriptions live
 in a **tooltip on the flag name** (no inline summary, no “Show more options”).
 Only `supported` entries are eligible; remaining YARK-owned tokens (map / port /
-mods / cluster) never appear as toggles.
+max players / mods / cluster) never appear as toggles.
 
 **Dependent options:** curated rows with `dependsOn` render in the same 2-column
 grid immediately after their parent (chains recurse: parent → child → grandchild).
@@ -82,7 +82,7 @@ Internal popularity (`common`) is docs/audit metadata only.
 
 | Group | Options |
 | --- | --- |
-| World & gameplay | `-ForceAllowCaveFlyers`, `-AutoDestroyStructures`, `-WinLiveMaxPlayers=`, `-EnableIdlePlayerKick`, `-ForceRespawnDinos` (caution), `-UseDynamicConfig` (+ optional CustomDynamicConfigUrl), `-passivemods=` (Mods tab still owns `-mods=`), `-NoWildBabies` |
+| World & gameplay | `-ForceAllowCaveFlyers`, `-AutoDestroyStructures`, `-EnableIdlePlayerKick`, `-ForceRespawnDinos` (caution), `-UseDynamicConfig` (+ optional CustomDynamicConfigUrl), `-passivemods=` (Mods tab still owns `-mods=`), `-NoWildBabies` |
 | Security & integrity | `-NoBattlEye`, `-exclusivejoin` (caution), dupe-log / cosmetics family (adjacent pairs) |
 | Logging & messaging | game log → tribe logs → RCON tribe logs, `-culture=`, `-CustomNotificationURL=` |
 | Performance & network | `-ServerPlatform=` (multi-select → `ALL`), `-GBUsageToForceRestart=`, `-nosound`, thread/net knobs |

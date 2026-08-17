@@ -5,6 +5,7 @@ import {
   buildStructuredLaunchArgList,
   emptyStructuredLaunchArgs,
   findLaunchArgConflicts,
+  isWinLiveMaxPlayersArg,
   listStructuredLaunchUiOptions,
   normalizeStructuredLaunchArgs,
   redactLaunchArgForPreview,
@@ -94,8 +95,16 @@ export function yarkOwnedPreviewTokens(server: ServerProfile): string[] {
     buildMapUrlArg(server.map, server.sessionName),
     `-port=${server.gamePort}`,
   ];
-  const structured = buildStructuredLaunchArgList(server.structuredLaunchArgs);
-  const trailing = [...structured, ...server.extraArgs];
+  if (server.maxPlayers > 0) {
+    parts.push(`-WinLiveMaxPlayers=${server.maxPlayers}`);
+  }
+  const structured = buildStructuredLaunchArgList(
+    server.structuredLaunchArgs,
+  ).filter((arg) => !isWinLiveMaxPlayersArg(arg));
+  const extraArgs = server.extraArgs.filter(
+    (arg) => !isWinLiveMaxPlayersArg(arg),
+  );
+  const trailing = [...structured, ...extraArgs];
   if (!argsIncludeServerPlatform(trailing)) {
     parts.push("-ServerPlatform=ALL");
   }

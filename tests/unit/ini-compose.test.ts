@@ -36,16 +36,29 @@ describe("ini-compose", () => {
       "[ServerSettings]\nMaxPlayers=40\nXPMultiplier=1.5\n",
       profileA,
     );
-    expect(text).not.toMatch(/^MaxPlayers=40$/m);
     expect(text).toContain("XPMultiplier=1.5");
     expect(text).toContain("RCONPort=27020");
     expect(text).toContain("ServerAdminPassword=admin-a");
     expect(text).toContain("SessionName=The Island");
     expect(text).toContain("Port=7777");
     expect(text).toContain("QueryPort=27015");
-    expect(text).toMatch(
-      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
+    expect(text).toMatch(/^MaxPlayers=40$/m);
+    expect(text).not.toMatch(/\[SessionSettings\][\s\S]*MaxPlayers=/i);
+    expect(text).not.toMatch(
+      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=/i,
     );
+  });
+
+  it("does not overwrite INI MaxPlayers from the profile", () => {
+    const text = applyProfileOwnedKeysToGameUserSettings(
+      "[SessionSettings]\nMaxPlayers=9\n\n[/Script/Engine.GameSession]\nMaxPlayers=9\n",
+      profileA,
+    );
+    expect(text).toMatch(/\[SessionSettings\][\s\S]*MaxPlayers=9/i);
+    expect(text).toMatch(
+      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=9/i,
+    );
+    expect(text).not.toMatch(/MaxPlayers=70/);
   });
 
   it("composes member payload from template then reapplies owned keys", () => {
@@ -61,8 +74,8 @@ describe("ini-compose", () => {
     expect(composed.gameUserSettings).toContain("RCONPort=27020");
     expect(composed.gameUserSettings).toContain("ServerAdminPassword=admin-a");
     expect(composed.gameUserSettings).not.toContain("from-template");
-    expect(composed.gameUserSettings).not.toMatch(/^MaxPlayers=55$/m);
-    expect(composed.gameUserSettings).toMatch(
+    expect(composed.gameUserSettings).toMatch(/^MaxPlayers=55$/m);
+    expect(composed.gameUserSettings).not.toMatch(
       /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
     );
     expect(composed.game).toContain("HarvestAmountMultiplier=2");
@@ -118,8 +131,8 @@ describe("ini-compose", () => {
       currentA,
     );
 
-    expect(restored.gameUserSettings).not.toMatch(/^MaxPlayers=55$/m);
-    expect(restored.gameUserSettings).toMatch(
+    expect(restored.gameUserSettings).toMatch(/^MaxPlayers=55$/m);
+    expect(restored.gameUserSettings).not.toMatch(
       /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
     );
     expect(restored.gameUserSettings).toContain("XPMultiplier=3");
@@ -200,7 +213,7 @@ describe("ini-compose", () => {
     expect(filtered.changedCount).toBe(1);
   });
 
-  it("omits leftover ServerSettings MaxPlayers from operator previews", () => {
+  it("omits ignored INI MaxPlayers from operator previews", () => {
     const preview = buildIniPreview(
       {
         gameUserSettings: "[ServerSettings]\nMaxPlayers=20\nXPMultiplier=1\n",

@@ -64,4 +64,9 @@ describe("yarkOwnedPreviewTokens", () => {
       '"TheIsland_WP"?SessionName="Gabo \\"server\\"\\\\path"',
     );
   });
+
+  it("omits -WinLiveMaxPlayers when maxPlayers is 0", () => {
+    const tokens = yarkOwnedPreviewTokens(profile({ maxPlayers: 0 }));
+    expect(tokens.some((token) => /WinLiveMaxPlayers/i.test(token))).toBe(false);
+  });
 });

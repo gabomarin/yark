@@ -111,11 +111,12 @@ describe("validateProfileInput", () => {
     expect(issues.some((i) => i.field === "gamePort")).toBe(true);
   });
 
-  it("accepts maxPlayers at the 1–255 bounds and rejects outside", () => {
+  it("accepts maxPlayers at the 0–255 bounds and rejects outside", () => {
+    expect(validateProfileInput(validInput({ maxPlayers: 0 }))).toEqual([]);
     expect(validateProfileInput(validInput({ maxPlayers: 1 }))).toEqual([]);
     expect(validateProfileInput(validInput({ maxPlayers: 255 }))).toEqual([]);
     expect(
-      validateProfileInput(validInput({ maxPlayers: 0 })).some((i) => i.field === "maxPlayers"),
+      validateProfileInput(validInput({ maxPlayers: -1 })).some((i) => i.field === "maxPlayers"),
     ).toBe(true);
     expect(
       validateProfileInput(validInput({ maxPlayers: 256 })).some((i) => i.field === "maxPlayers"),

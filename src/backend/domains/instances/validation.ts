@@ -52,7 +52,7 @@ export const serverProfileInputSchema = z.object({
   maxPlayers: z
     .number()
     .int()
-    .min(1, "Max players must be >= 1")
+    .min(0, "Max players must be >= 0")
     .max(255, "Max players must be <= 255"),
   gamePort: portSchema,
   queryPort: portSchema,

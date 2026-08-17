@@ -1,8 +1,5 @@
-import { flattenIniText, INI_FLAT_SEP, removeIniTextValue, setIniTextValue } from "@shared/ini-text";
-import {
-  isLegacyServerSettingsMaxPlayers,
-  isYarkOwnedIniKey,
-} from "@shared/yark-owned-ini-keys";
+import { flattenIniText, INI_FLAT_SEP, setIniTextValue } from "@shared/ini-text";
+import { isAsaIgnoredIniMaxPlayers, isYarkOwnedIniKey } from "@shared/yark-owned-ini-keys";
 import type { IniDiffEntry, IniPreview, ServerIniPayload, ServerProfile } from "@shared/types";
 import { prepareClusterIniTemplatePayload } from "./cluster-ini-template-service";
 
@@ -77,10 +74,7 @@ export function resolveMemberIdentity(
       profile.serverPassword,
     sessionName:
       flatLookup(flat, "SessionSettings", "SessionName") ?? profile.sessionName,
-    maxPlayers: parseInteger(
-      flatLookup(flat, "/Script/Engine.GameSession", "MaxPlayers"),
-      profile.maxPlayers,
-    ),
+    maxPlayers: profile.maxPlayers,
     gamePort: parseInteger(
       flatLookup(flat, "SessionSettings", "Port"),
       profile.gamePort,
@@ -138,14 +132,6 @@ export function applyProfileOwnedKeysToGameUserSettings(
     "QueryPort",
     String(profile.queryPort),
   );
-  text = setIniTextValue(
-    text,
-    "/Script/Engine.GameSession",
-    "MaxPlayers",
-    String(profile.maxPlayers),
-  );
-  // ASA ignores [ServerSettings] MaxPlayers; leftover copies confuse operators.
-  text = removeIniTextValue(text, "ServerSettings", "MaxPlayers");
   return text;
 }
 
@@ -193,7 +179,7 @@ export function omitYarkOwnedFromIniPreview(preview: IniPreview): IniPreview {
     (entry) =>
       entry.fileKey !== "gameUserSettings" ||
       (!isYarkOwnedIniKey(entry.section, entry.key) &&
-        !isLegacyServerSettingsMaxPlayers(entry.section, entry.key)),
+        !isAsaIgnoredIniMaxPlayers(entry.key)),
   );
   return {
     ...preview,

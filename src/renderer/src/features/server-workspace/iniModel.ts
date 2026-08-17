@@ -21,10 +21,7 @@ import {
   setIniTextValue,
   type IniTextRow,
 } from "@shared/ini-text";
-import {
-  isLegacyServerSettingsMaxPlayers,
-  isYarkOwnedIniKey,
-} from "@shared/yark-owned-ini-keys";
+import { isAsaIgnoredIniMaxPlayers, isYarkOwnedIniKey } from "@shared/yark-owned-ini-keys";
 
 export interface IniSettingRow {
   section: string;
@@ -263,7 +260,7 @@ export function filterIniRows(
     if (
       resolvedFile === "gameUserSettings" &&
       (isYarkOwnedIniKey(row.section, row.key) ||
-        isLegacyServerSettingsMaxPlayers(row.section, row.key))
+        isAsaIgnoredIniMaxPlayers(row.key))
     ) {
       return false;
     }
