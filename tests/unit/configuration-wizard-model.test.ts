@@ -114,6 +114,19 @@ describe("configuration wizard model", () => {
       .toBe("Level 180 · difficulty 6");
   });
 
+  it("treats override-only difficulty as a World difficulty change", () => {
+    const initial = draftFromIniPayload(payload);
+    const next = {
+      ...initial,
+      overrideOfficialDifficulty: 6,
+      maxWildDinoLevel: 180,
+    };
+    const changes = wizardChanges(initial, next);
+
+    expect(changes.filter((change) => change.label === "World difficulty")).toHaveLength(1);
+    expect(changes.some((change) => change.field === "difficultyOffset")).toBe(false);
+  });
+
   it("keeps custom difficulty stable across read-write-read cycles", () => {
     const initial = draftFromIniPayload(payload);
     const custom = applyDifficultyLevel(initial, 185);
@@ -270,6 +283,18 @@ describe("configuration wizard model", () => {
     expect(next.playerCharacterFoodDrainMultiplier).toBe(1.35);
     expect(next.nightTimeSpeedScale).toBe(0.9);
     expect(next.xpRate).toBe(initial.xpRate);
+  });
+
+  it("does not write structure pickup time while always-allow pickup is on", () => {
+    const initial = draftFromIniPayload(payload);
+    const written = applyWizardDraftToIni(payload, {
+      ...initial,
+      alwaysAllowStructurePickup: true,
+      structurePickupSeconds: 120,
+    });
+
+    expect(written.gameUserSettings).toContain("AlwaysAllowStructurePickup=True");
+    expect(written.gameUserSettings).not.toMatch(/StructurePickupTimeAfterPlacement=/);
   });
 
   const worldRoundTripCases: Array<{

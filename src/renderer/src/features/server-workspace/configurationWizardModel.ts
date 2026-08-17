@@ -882,6 +882,12 @@ export function applyWizardDraftToIni(
 ): ServerIniPayload {
   let next = payload;
   for (const setting of SETTINGS) {
+    if (
+      setting.field === "structurePickupSeconds"
+      && draft.alwaysAllowStructurePickup
+    ) {
+      continue;
+    }
     const value = draft[setting.field];
     const currentMatch = findLastIniValueMatch(
       textForFile(next, setting.fileKey),
@@ -1049,10 +1055,14 @@ function updateFile(
     : { ...payload, gameUserSettings: nextText };
 }
 
-function formatNumber(value: number): string {
+export function formatWizardNumber(value: number): string {
   return Number.isInteger(value)
     ? String(value)
     : value.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+function formatNumber(value: number): string {
+  return formatWizardNumber(value);
 }
 
 function normalizeForIniPrecision(value: number): number {

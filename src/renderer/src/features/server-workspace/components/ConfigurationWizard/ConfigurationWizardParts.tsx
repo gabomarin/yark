@@ -22,6 +22,7 @@ import {
 } from "@mantine/core";
 import {
   wizardChanges,
+  formatWizardNumber,
   type ExperienceProfileId,
 } from "../../configurationWizardModel";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
@@ -271,14 +272,8 @@ export function effectiveRateLabel(
   singlePlayerFactor: number,
   singlePlayerSettings: boolean,
 ): string {
-  if (!singlePlayerSettings) return `${formatRate(configured)}×`;
-  return `${formatRate(configured)}× → ${formatRate(configured * singlePlayerFactor)}×`;
-}
-
-function formatRate(value: number): string {
-  return Number.isInteger(value)
-    ? String(value)
-    : value.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
+  if (!singlePlayerSettings) return `${formatWizardNumber(configured)}×`;
+  return `${formatWizardNumber(configured)}× → ${formatWizardNumber(configured * singlePlayerFactor)}×`;
 }
 
 export function ChangeRow({

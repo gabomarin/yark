@@ -11,7 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
-- Profile-owned **Max players** (default 70) on create/edit; synced to `[/Script/Engine.GameSession] MaxPlayers` and hidden from the INI editor like ports and session name.
+- Profile-owned **Max players** (default 70, 1–255) on create/edit; synced to `[/Script/Engine.GameSession] MaxPlayers` and hidden from the INI editor like ports and session name.
 - **Clone server** copies **Game.ini** and **GameUserSettings.ini** from the source (new ports and session name overwrite identity keys) and can optionally copy the full install folder (off by default; unavailable when the source has no files). The source must be stopped for a folder copy; large copies show progress and can be cancelled, and a failed copy removes the incomplete clone (#160).
 - Skippable **first-run setup** (SteamCMD, Windows shell, optional cluster, then create or import); Settings can reopen the setup assistant (#298).
 
@@ -30,6 +30,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Fixed
 
 - Shell main content stays in the viewport after Mantine `styles.layer.css` — navbar modules no longer override AppShell fixed positioning (#230).
+- INI preview validates **Max players** on `[/Script/Engine.GameSession]`; the Performance preset writes that same key; wizard apply toasts the preview change count (#230).
 - First-run setup does not auto-open when setup status cannot be read, so Overview stays usable if the database is unavailable (#298).
 
 ### Security

@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { Button, Group, NumberInput, SegmentedControl, Stack, Text, Tooltip } from "@mantine/core";
-import type { ConfigurationWizardDraft } from "../../configurationWizardModel";
+import { formatWizardNumber, type ConfigurationWizardDraft } from "../../configurationWizardModel";
 import { OfficialMatchBadge } from "./ConfigurationWizardParts";
 import classes from "./ConfigurationWizard.module.css";
 
@@ -21,16 +21,10 @@ interface Props {
   onCustomLevelChange: (level: number) => void;
 }
 
-function formatRate(value: number): string {
-  return Number.isInteger(value)
-    ? String(value)
-    : value.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
-}
-
 function iniDifficultyLabel(draft: ConfigurationWizardDraft): string {
-  const offset = `DifficultyOffset ${formatRate(draft.difficultyOffset)}`;
+  const offset = `DifficultyOffset ${formatWizardNumber(draft.difficultyOffset)}`;
   if (draft.overrideOfficialDifficulty > 0) {
-    return `${offset} · OverrideOfficialDifficulty ${formatRate(draft.overrideOfficialDifficulty)}`;
+    return `${offset} · OverrideOfficialDifficulty ${formatWizardNumber(draft.overrideOfficialDifficulty)}`;
   }
   return `${offset} · no override; result depends on the map`;
 }

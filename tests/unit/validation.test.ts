@@ -111,6 +111,17 @@ describe("validateProfileInput", () => {
     expect(issues.some((i) => i.field === "gamePort")).toBe(true);
   });
 
+  it("accepts maxPlayers at the 1–255 bounds and rejects outside", () => {
+    expect(validateProfileInput(validInput({ maxPlayers: 1 }))).toEqual([]);
+    expect(validateProfileInput(validInput({ maxPlayers: 255 }))).toEqual([]);
+    expect(
+      validateProfileInput(validInput({ maxPlayers: 0 })).some((i) => i.field === "maxPlayers"),
+    ).toBe(true);
+    expect(
+      validateProfileInput(validInput({ maxPlayers: 256 })).some((i) => i.field === "maxPlayers"),
+    ).toBe(true);
+  });
+
   it("rejects duplicated internal ports", () => {
     const issues = validateProfileInput(
       validInput({ gamePort: 7777, queryPort: 7777 }),

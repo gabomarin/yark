@@ -42,7 +42,7 @@ function flatLookup(
   return undefined;
 }
 
-function parsePort(raw: string | undefined, fallback: number): number {
+function parseInteger(raw: string | undefined, fallback: number): number {
   if (raw === undefined) return fallback;
   const parsed = Number.parseInt(raw.trim(), 10);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -62,7 +62,7 @@ export function resolveMemberIdentity(
   }
   const flat = flattenIniText(currentGameUserSettings);
   return {
-    rconPort: parsePort(
+    rconPort: parseInteger(
       flatLookup(flat, "ServerSettings", "RCONPort"),
       profile.rconPort,
     ),
@@ -74,15 +74,15 @@ export function resolveMemberIdentity(
       profile.serverPassword,
     sessionName:
       flatLookup(flat, "SessionSettings", "SessionName") ?? profile.sessionName,
-    maxPlayers: parsePort(
+    maxPlayers: parseInteger(
       flatLookup(flat, "/Script/Engine.GameSession", "MaxPlayers"),
       profile.maxPlayers,
     ),
-    gamePort: parsePort(
+    gamePort: parseInteger(
       flatLookup(flat, "SessionSettings", "Port"),
       profile.gamePort,
     ),
-    queryPort: parsePort(
+    queryPort: parseInteger(
       flatLookup(flat, "SessionSettings", "QueryPort"),
       profile.queryPort,
     ),

@@ -128,7 +128,7 @@ describe("IniService semantic validation", () => {
 
     const { service, profile } = makeService(installDir);
     const preview = await service.previewServerIni(profile.id, {
-      gameUserSettings: "[ServerSettings]\nMaxPlayers=0\n",
+      gameUserSettings: "[/Script/Engine.GameSession]\nMaxPlayers=0\n",
       game: "",
     });
 

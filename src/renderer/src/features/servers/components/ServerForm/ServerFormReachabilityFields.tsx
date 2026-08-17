@@ -65,7 +65,7 @@ export function ServerFormReachabilityFields(props: Props): ReactElement {
         value={props.maxPlayers}
         onChange={(value) => props.onMaxPlayersChange(String(value))}
         min={1}
-        max={200}
+        max={255}
         allowDecimal={false}
         required
         description="Player slot limit written to GameUserSettings.ini."

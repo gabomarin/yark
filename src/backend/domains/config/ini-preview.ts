@@ -130,18 +130,39 @@ function validateNumberRange(
   }
 }
 
+function findIniSection(
+  parsed: IniSectionMap,
+  sectionName: string,
+): Record<string, string> | undefined {
+  const wanted = sectionName.toLowerCase();
+  for (const [name, section] of Object.entries(parsed)) {
+    if (name.toLowerCase() === wanted) {
+      return section;
+    }
+  }
+  return undefined;
+}
+
 function validateGameUserSettingsSemantics(
   parsed: IniSectionMap,
   issues: IniValidationIssue[],
 ): void {
-  const section = parsed["ServerSettings"];
-  if (section === undefined) {
-    return;
+  const serverSettings = findIniSection(parsed, "ServerSettings");
+  if (serverSettings !== undefined) {
+    validateIntegerRange("RCONPort", serverSettings["RCONPort"], 1024, 65535, issues);
+    validateNumberRange(
+      "DifficultyOffset",
+      serverSettings["DifficultyOffset"],
+      0,
+      1,
+      issues,
+    );
   }
 
-  validateIntegerRange("RCONPort", section["RCONPort"], 1024, 65535, issues);
-  validateIntegerRange("MaxPlayers", section["MaxPlayers"], 1, 255, issues);
-  validateNumberRange("DifficultyOffset", section["DifficultyOffset"], 0, 1, issues);
+  const gameSession = findIniSection(parsed, "/Script/Engine.GameSession");
+  if (gameSession !== undefined) {
+    validateIntegerRange("MaxPlayers", gameSession["MaxPlayers"], 1, 255, issues);
+  }
 }
 
 /** Diff + semantic validation shared by server INI and cluster templates. */

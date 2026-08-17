@@ -980,6 +980,10 @@ describe("ServerWorkspacePage", () => {
     expect(
       screen.queryByRole("button", { name: /View \d+ changes/ }),
     ).not.toBeInTheDocument();
+    vi.mocked(window.api.previewServerIni).mockResolvedValue({
+      ok: true,
+      data: { valid: true, issues: [], diff: [], changedCount: 24 },
+    });
     await user.click(screen.getByRole("button", { name: "Apply changes" }));
 
     expect(

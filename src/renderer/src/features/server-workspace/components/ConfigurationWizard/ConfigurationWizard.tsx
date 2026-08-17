@@ -479,7 +479,7 @@ export function ConfigurationWizard(props: Props): ReactElement {
         setError(result.error ?? "Could not apply the configuration");
         return;
       }
-      const appliedCount = changes.length;
+      const appliedCount = previewResult.data.changedCount;
       showOperatorToast({
         title: "Configuration applied",
         message: `${appliedCount} setting${appliedCount === 1 ? " was" : "s were"} updated on ${props.server.name}.`,
