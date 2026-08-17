@@ -2,9 +2,9 @@ import { Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import type { ModRow } from "./serverModsModel";
 
-/** Confirm before removing a configured mod (trash button and context menu). */
+/** Confirm before removing a configured mod (table, context menu, drawer). */
 export function confirmRemoveServerMod(
-  row: ModRow,
+  row: Pick<ModRow, "id" | "name">,
   onRemove: (id: string) => void,
 ): void {
   if (row.id === null) return;

@@ -87,10 +87,12 @@ export function createServerModsListMutations(input: Input) {
         disabledIds.filter((candidate) => candidate !== id),
         nextCache,
       );
+      return true;
     } catch (cause) {
       input.setError(
         cause instanceof Error ? cause.message : "Could not remove the mod",
       );
+      return false;
     } finally {
       input.setBusyKey(null);
     }

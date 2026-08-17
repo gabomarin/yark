@@ -160,6 +160,30 @@
   object-fit: cover;
 }
 
+.detailDrawer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.detailDrawerBody {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.detailDrawerFooter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--app-space-sm);
+  padding: var(--app-space-md);
+  border-top: 1px solid var(--app-color-border-subtle);
+}
+
+.detailDrawerFooter :global(.mantine-Button-root:first-child) {
+  flex: 1 1 12rem;
+}
+
 @media (max-width: 900px) {
   .root {
     overflow: visible;
