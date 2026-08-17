@@ -10,10 +10,9 @@ import {
   Stack,
   Switch,
   Text,
-  Title,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { ArrowSquareOut, Copy, Plus } from "@phosphor-icons/react";
+import { ArrowSquareOut, Copy, Plus, PuzzlePiece } from "@phosphor-icons/react";
 import {
   isMapCategoryLabel,
   isMapModCandidate,
@@ -59,63 +58,94 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
       position="right"
       size={440}
     >
-      <Drawer.Overlay />
+      <Drawer.Overlay backgroundOpacity={0.68} />
       <Drawer.Content classNames={{ content: classes.detailDrawer }}>
-        <Drawer.Header>
-          <Drawer.Title>Mod details</Drawer.Title>
-          <Drawer.CloseButton disabled={removeConfirmPending} />
-        </Drawer.Header>
         {detail !== null && (
-          <>
-            <Drawer.Body className={classes.detailDrawerBody}>
-              <Stack gap="md">
-                <Group align="flex-start" wrap="nowrap">
-                  {detail.thumbnailUrl !== null && (
-                    <Image src={detail.thumbnailUrl} alt="" w={72} h={72} radius="md" />
-                  )}
-                  <div>
-                    <Title order={3}>{detail.name}</Title>
-                    <Text size="sm" c="dimmed">{detail.authors.join(", ")}</Text>
+          <div className={classes.detailDrawerShell}>
+            <Drawer.Header className={classes.detailDrawerHeader}>
+              <div className={classes.detailDrawerHeaderInner}>
+                <Drawer.Title className={classes.detailDrawerEyebrow}>
+                  Mod details
+                </Drawer.Title>
+                <Group
+                  align="flex-start"
+                  wrap="nowrap"
+                  gap="sm"
+                  className={classes.detailDrawerIdentity}
+                >
+                  <DetailModThumbnail src={detail.thumbnailUrl} />
+                  <div className={classes.detailDrawerIdentityText}>
+                    <Text
+                      component="h2"
+                      fw={600}
+                      size="lg"
+                      lh={1.35}
+                      lineClamp={3}
+                    >
+                      {detail.name}
+                    </Text>
+                    <Text size="sm" c="dimmed" lineClamp={1} mt={4}>
+                      {detail.authors.join(", ")}
+                    </Text>
                   </div>
                 </Group>
-                {props.configured && (
-                  <Group justify="space-between" wrap="nowrap" align="flex-start" gap="sm">
-                    <div>
-                      <Text size="sm" fw={500}>Load on Start</Text>
-                      <Text size="xs" c="dimmed">
-                        {props.enabled
-                          ? "Enabled — included in -mods="
-                          : "Disabled — stays on the list"}
-                      </Text>
-                    </div>
-                    <Switch
-                      checked={props.enabled}
-                      disabled={props.busy}
-                      aria-label={
-                        `${props.enabled ? "Disable" : "Enable"} ${detail.name} from details`
-                      }
-                      onChange={(event) =>
-                        props.onToggle(detail.id, event.currentTarget.checked)}
-                    />
-                  </Group>
-                )}
-                <Text size="sm">{detail.summary}</Text>
+              </div>
+              <Drawer.CloseButton disabled={removeConfirmPending} />
+            </Drawer.Header>
+
+            {props.configured && (
+              <div className={classes.detailDrawerLoadBand}>
+                <div>
+                  <Text size="sm" fw={500}>Load on Start</Text>
+                  <Text size="xs" c="dimmed">
+                    {props.enabled
+                      ? "Enabled — included in -mods="
+                      : "Disabled — stays on the list"}
+                  </Text>
+                </div>
+                <Switch
+                  checked={props.enabled}
+                  disabled={props.busy}
+                  aria-label={
+                    `${props.enabled ? "Disable" : "Enable"} ${detail.name} from details`
+                  }
+                  onChange={(event) =>
+                    props.onToggle(detail.id, event.currentTarget.checked)}
+                />
+              </div>
+            )}
+
+            <Drawer.Body className={classes.detailDrawerBody}>
+              <Stack gap="md">
+                <Text size="sm" className={classes.detailDrawerSummary}>
+                  {detail.summary}
+                </Text>
                 <ModMapTokenHint detail={detail} />
-                <Group gap="xs">
-                  <Badge color="teal">Project ID {detail.id}</Badge>
+                <Group gap="xs" wrap="wrap" className={classes.detailDrawerProjectRow}>
+                  <Badge
+                    variant="light"
+                    color="blue"
+                    radius="xl"
+                    tt="none"
+                    className={classes.detailDrawerProjectBadge}
+                  >
+                    Project ID {detail.id}
+                  </Badge>
+                  <Button
+                    size="compact-sm"
+                    variant="default"
+                    radius="md"
+                    leftSection={<Copy size={14} />}
+                    onClick={() => void copyTextToClipboard({
+                      text: detail.id,
+                      successMessage: "Project ID copied",
+                      failureMessage: "Could not copy Project ID",
+                    })}
+                  >
+                    Copy Project ID
+                  </Button>
                 </Group>
-                <Button
-                  variant="default"
-                  leftSection={<Copy size={16} />}
-                  onClick={() => void copyTextToClipboard({
-                    text: detail.id,
-                    successMessage: "Project ID copied",
-                    failureMessage: "Could not copy Project ID",
-                  })}
-                >
-                  Copy Project ID
-                </Button>
-                <Stack gap="xs">
+                <Stack gap="xs" className={classes.detailDrawerMeta}>
                   <MetaRow
                     label="Downloads"
                     value={detail.downloadCount.toLocaleString()}
@@ -128,26 +158,36 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                         : new Date(detail.dateModified).toLocaleString()
                     }
                   />
-                  <MetaRow label="Slug" value={detail.slug} />
+                  <MetaRow
+                    label="Slug"
+                    value={detail.slug}
+                    mono
+                  />
                 </Stack>
-                <Group gap="xs">
-                  {(detail.categories ?? []).map((category) => (
-                    <Badge
-                      key={category}
-                      color={isMapCategoryLabel(category) ? "attention" : "gray"}
-                      variant="light"
-                      tt="none"
-                    >
-                      {category}
-                    </Badge>
-                  ))}
-                </Group>
+                {(detail.categories ?? []).length > 0 && (
+                  <Group gap="xs" className={classes.detailDrawerCategories}>
+                    {(detail.categories ?? []).map((category) => (
+                      <Badge
+                        key={category}
+                        size="sm"
+                        radius="xl"
+                        color={isMapCategoryLabel(category) ? "attention" : "gray"}
+                        variant="light"
+                        tt="none"
+                      >
+                        {category}
+                      </Badge>
+                    ))}
+                  </Group>
+                )}
               </Stack>
             </Drawer.Body>
+
             <div className={classes.detailDrawerFooter}>
               <Button
                 className={classes.detailDrawerPrimaryAction}
                 variant="default"
+                radius="md"
                 leftSection={<ArrowSquareOut size={16} />}
                 onClick={() => props.onOpenExternal(detail.curseforgeUrl)}
               >
@@ -155,8 +195,10 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
               </Button>
               {props.configured ? (
                 <Button
+                  className={classes.detailDrawerSecondaryAction}
                   color="red"
                   variant="subtle"
+                  radius="md"
                   disabled={props.busy}
                   onClick={() =>
                     confirmRemoveServerMod(
@@ -169,8 +211,10 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                 </Button>
               ) : (
                 <Button
+                  className={classes.detailDrawerSecondaryAction}
                   color="teal"
                   variant="light"
+                  radius="md"
                   leftSection={<Plus size={16} />}
                   loading={props.busy}
                   disabled={props.busy}
@@ -181,10 +225,21 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                 </Button>
               )}
             </div>
-          </>
+          </div>
         )}
       </Drawer.Content>
     </Drawer.Root>
+  );
+}
+
+function DetailModThumbnail(props: { src: string | null }): ReactElement {
+  return (
+    <div className={classes.detailDrawerThumb}>
+      <PuzzlePiece size={22} aria-hidden="true" />
+      {props.src !== null && (
+        <Image src={props.src} alt="" loading="eager" className={classes.detailDrawerThumbImage} />
+      )}
+    </div>
   );
 }
 
@@ -192,7 +247,7 @@ function ModMapTokenHint(props: { detail: ModMetadata }): ReactElement | null {
   if (!isMapModCandidate(props.detail)) return null;
   const suggestion = suggestMapTokenFromMetadata(props.detail);
   return (
-    <Alert variant="light" color="blue" title="Map pack">
+    <Alert variant="light" color="blue" title="Map pack" radius="md">
       {suggestion !== null ? (
         <Stack gap="xs">
           <Text size="sm">
@@ -204,6 +259,7 @@ function ModMapTokenHint(props: { detail: ModMetadata }): ReactElement | null {
           <Button
             size="compact-xs"
             variant="default"
+            radius="md"
             leftSection={<Copy size={14} />}
             onClick={() => void copyTextToClipboard({
               text: suggestion.token,
