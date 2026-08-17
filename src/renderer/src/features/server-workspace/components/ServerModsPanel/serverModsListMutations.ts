@@ -24,6 +24,9 @@ interface Input {
 
 export function createServerModsListMutations(input: Input) {
   const add = async (modDetail: ModMetadata) => {
+    input.setBusyKey(modDetail.id);
+    input.setError(null);
+    input.setWarning(null);
     const configuredIds = input.configuredIdsRef.current;
     const disabledIds = input.disabledIdsRef.current;
     const isNew = !configuredIds.includes(modDetail.id);
@@ -32,9 +35,17 @@ export function createServerModsListMutations(input: Input) {
       ? [...new Set([...disabledIds, modDetail.id])]
       : disabledIds;
     const nextCache = { ...input.cacheRef.current, [modDetail.id]: modDetail };
-    await input.persist(nextIds, nextDisabled, nextCache);
-    if (isNew) {
-      notifyModsAddedDisabled({ name: modDetail.name });
+    try {
+      await input.persist(nextIds, nextDisabled, nextCache);
+      if (isNew) {
+        notifyModsAddedDisabled({ name: modDetail.name });
+      }
+    } catch (cause) {
+      input.setError(
+        cause instanceof Error ? cause.message : "Could not add the mod",
+      );
+    } finally {
+      input.setBusyKey(null);
     }
   };
 

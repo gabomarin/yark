@@ -101,5 +101,11 @@ describe("pickModListCategory", () => {
       extraLabels: ["General", "Creatures"],
       isMap: true,
     });
+    expect(pickModListCategory(["Maps", "Maps"])).toEqual({
+      label: "Maps",
+      extraCount: 1,
+      extraLabels: ["Maps"],
+      isMap: true,
+    });
   });
 });

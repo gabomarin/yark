@@ -192,7 +192,15 @@ export function pickModListCategory(categories: string[]): {
   }
   const mapLabel = labels.find(isMapCategoryLabel) ?? null;
   const label = mapLabel ?? labels[0]!;
-  const extraLabels = labels.filter((entry) => entry !== label);
+  const extraLabels: string[] = [];
+  let skippedPrimary = false;
+  for (const entry of labels) {
+    if (!skippedPrimary && entry === label) {
+      skippedPrimary = true;
+      continue;
+    }
+    extraLabels.push(entry);
+  }
   return {
     label,
     extraCount: extraLabels.length,

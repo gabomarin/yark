@@ -76,13 +76,14 @@ describe("createServerModsListMutations", () => {
 
   it("starts new mods disabled and toasts that they are not live yet (#226)", async () => {
     const persist = vi.fn(async () => undefined);
+    const setBusyKey = vi.fn();
     const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
     const { add } = createServerModsListMutations({
       configuredIdsRef: { current: ["947033"] },
       disabledIdsRef: { current: [] },
       metadata: new Map(),
       cacheRef: { current: {} },
-      setBusyKey: vi.fn(),
+      setBusyKey,
       setError: vi.fn(),
       setWarning: vi.fn(),
       persist,
@@ -90,6 +91,8 @@ describe("createServerModsListMutations", () => {
     });
 
     await add(sampleMod);
+    expect(setBusyKey).toHaveBeenCalledWith("929420");
+    expect(setBusyKey).toHaveBeenLastCalledWith(null);
     expect(persist).toHaveBeenCalledWith(
       ["947033", "929420"],
       ["929420"],
@@ -121,6 +124,32 @@ describe("createServerModsListMutations", () => {
 
     await add(sampleMod);
     expect(persist).toHaveBeenCalledWith(["929420"], [], { "929420": sampleMod });
+    expect(notifySpy).not.toHaveBeenCalled();
+  });
+
+  it("sets busy and error when add persist fails", async () => {
+    const persist = vi.fn(async () => {
+      throw new Error("Could not save");
+    });
+    const setBusyKey = vi.fn();
+    const setError = vi.fn();
+    const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
+    const { add } = createServerModsListMutations({
+      configuredIdsRef: { current: [] },
+      disabledIdsRef: { current: [] },
+      metadata: new Map(),
+      cacheRef: { current: {} },
+      setBusyKey,
+      setError,
+      setWarning: vi.fn(),
+      persist,
+      notifyMapModIfNeeded: vi.fn(),
+    });
+
+    await add(sampleMod);
+    expect(setBusyKey).toHaveBeenCalledWith("929420");
+    expect(setBusyKey).toHaveBeenLastCalledWith(null);
+    expect(setError).toHaveBeenCalledWith("Could not save");
     expect(notifySpy).not.toHaveBeenCalled();
   });
 });

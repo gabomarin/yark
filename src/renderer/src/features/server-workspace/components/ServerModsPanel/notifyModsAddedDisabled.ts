@@ -3,6 +3,7 @@ import { showOperatorToast } from "@ui/operatorToast";
 
 export const MOD_ADDED_TOAST_LIMIT = 2;
 
+/** Cap concurrent "Mod Added" toasts. Module-level so URL + Discover share one queue. */
 const visibleIds: string[] = [];
 let toastSeq = 0;
 
@@ -10,6 +11,16 @@ let toastSeq = 0;
 export function resetModAddedToastQueue(): void {
   visibleIds.length = 0;
   toastSeq = 0;
+}
+
+const viteHot = (
+  import.meta as ImportMeta & { hot?: { dispose: (cb: () => void) => void } }
+).hot;
+if (viteHot !== undefined) {
+  viteHot.dispose(() => {
+    for (const id of [...visibleIds]) notifications.hide(id);
+    resetModAddedToastQueue();
+  });
 }
 
 /** Toast after Add so operators see that new Project IDs are not on Start yet (#226). */
