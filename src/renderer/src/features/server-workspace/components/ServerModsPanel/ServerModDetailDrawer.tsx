@@ -12,7 +12,7 @@ import {
   Text,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { ArrowSquareOut, Copy, Plus, PuzzlePiece } from "@phosphor-icons/react";
+import { ArrowSquareOut, Copy, Plus, PuzzlePiece, X } from "@phosphor-icons/react";
 import {
   isMapCategoryLabel,
   isMapModCandidate,
@@ -96,12 +96,10 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
             {props.configured && (
               <div className={classes.detailDrawerLoadBand}>
                 <div>
-                  <Text size="sm" fw={500}>Load on Start</Text>
-                  <Text size="xs" c="dimmed">
-                    {props.enabled
-                      ? "Enabled — included in -mods="
-                      : "Disabled — stays on the list"}
-                  </Text>
+                  <Text size="sm" fw={500}>Enabled</Text>
+                  {!props.enabled && (
+                    <Text size="xs" c="dimmed">Stays on the list</Text>
+                  )}
                 </div>
                 <Switch
                   checked={props.enabled}
@@ -195,10 +193,11 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
               </Button>
               {props.configured ? (
                 <Button
-                  className={classes.detailDrawerSecondaryAction}
+                  className={classes.detailDrawerRemoveAction}
                   color="red"
-                  variant="subtle"
+                  variant="filled"
                   radius="md"
+                  leftSection={<X size={16} />}
                   disabled={props.busy}
                   onClick={() =>
                     confirmRemoveServerMod(
@@ -211,7 +210,7 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                 </Button>
               ) : (
                 <Button
-                  className={classes.detailDrawerSecondaryAction}
+                  className={classes.detailDrawerRemoveAction}
                   color="teal"
                   variant="light"
                   radius="md"

@@ -273,23 +273,13 @@
   background: var(--app-color-panel);
 }
 
-.detailDrawerPrimaryAction {
-  flex: 1 1 auto;
+.detailDrawerPrimaryAction,
+.detailDrawerRemoveAction {
+  width: 100%;
 }
 
-.detailDrawerSecondaryAction {
+.detailDrawerRemoveAction {
   flex: 0 0 auto;
-}
-
-@media (min-width: 480px) {
-  .detailDrawerFooter {
-    flex-direction: row;
-    align-items: stretch;
-  }
-
-  .detailDrawerSecondaryAction {
-    align-self: stretch;
-  }
 }
 
 @media (max-width: 900px) {
