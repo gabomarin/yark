@@ -23,6 +23,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - First-run setup does not auto-open when setup status cannot be read, so Overview stays usable if the database is unavailable (#298).
 
+### Security
+
+- Recursive install/backup/move/cache copies no longer follow Windows directory junctions; write paths fail closed on parent or destination links before mkdir/copy (#322).
+
 ## [0.12.0] - 2026-08-13
 
 ### Added

@@ -4,9 +4,11 @@
  */
 
 import { type ChildProcess } from "node:child_process";
-import { readdir, stat } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { dirname } from "node:path";
 import { readVolumeSpace } from "../backups/backup-disk";
+import {
+  estimateDirectoryBytes as estimateDirectoryBytesSafe,
+} from "../../infra/fs/reparse-points";
 import { robocopyTree } from "../updates/robocopy-tree";
 
 /** Extra free-space headroom beyond estimated source size (10%). */
@@ -22,37 +24,7 @@ const COPY_PROGRESS_END = 88;
 const COPY_PROGRESS_POLL_MS = 2500;
 
 export async function estimateDirectoryBytes(root: string): Promise<number> {
-  let total = 0;
-  let visited = 0;
-  const queue = [root];
-  while (queue.length > 0) {
-    const current = queue.pop()!;
-    let entries: import("node:fs").Dirent[];
-    try {
-      entries = await readdir(current, { withFileTypes: true });
-    } catch {
-      continue;
-    }
-    for (const entry of entries) {
-      visited += 1;
-      if (visited > MAX_SIZE_WALK_ENTRIES) {
-        return total;
-      }
-      const full = join(current, entry.name);
-      if (entry.isDirectory()) {
-        queue.push(full);
-        continue;
-      }
-      if (!entry.isFile()) continue;
-      try {
-        const info = await stat(full);
-        total += info.size;
-      } catch {
-        // Skip unreadable files; space check remains best-effort.
-      }
-    }
-  }
-  return total;
+  return estimateDirectoryBytesSafe(root, { maxEntries: MAX_SIZE_WALK_ENTRIES });
 }
 
 export async function assertEnoughFreeSpaceForCopy(
@@ -86,7 +58,7 @@ export interface CopyInstallTreeProgressArgs {
 }
 
 /**
- * Copies `sourceDir` → `destDir` with robocopy `/E` and reports approximate
+ * Copies `sourceDir` → `destDir` with robocopy `/E` `/XJ` and reports approximate
  * progress from destination-volume free-space delta.
  */
 export async function copyInstallTreeWithProgress(

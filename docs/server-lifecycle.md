@@ -201,7 +201,8 @@ updates cannot change it; only `InstanceService.setServerEnabled` may do so.
   when those files exist, then writes the clone’s ports, session name, and
   passwords. Missing INIs fall back to YARK defaults. An optional **Copy entire server folder**
   checkbox copies the source install tree with robocopy (`push:clone-install-progress`,
-  cancel via `servers:clone-copy-cancel`). The source must be stopped. Copy is
+  cancel via `servers:clone-copy-cancel`). Robocopy uses `/XJ` and destination
+  preflight so Windows junctions are not followed (#322). The source must be stopped. Copy is
   disabled when source health is missing, empty, inaccessible, or unknown;
   incomplete/suspicious installs can still copy with a warning. Failures roll back the new profile and wipe the incomplete
   destination when possible; the clone then applies profile-owned INI keys so the
@@ -221,7 +222,8 @@ updates cannot change it; only `InstanceService.setServerEnabled` may do so.
   lock `"move-install"`, source health `ready`, empty/missing destination.
   Same-volume moves use folder rename (with verify + rollback); cross-volume
   copies via a YARK-owned temp folder (includes `ShooterGame\Saved`) with live
-  copy progress (free-space estimate), then promote. After verify, commit
+  copy progress (free-space estimate), then promote. Size estimates and Robocopy
+  skip Windows junctions; destination links fail closed before copy (#322). After verify, commit
   `install_dir` and delete the previous folder when it still exists. Progress:
   `push:move-install-progress`. Interrupted temp dirs are recorded and swept on
   app start (including destination parents that are not profile parents).

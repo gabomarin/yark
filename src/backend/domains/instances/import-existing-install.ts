@@ -19,6 +19,10 @@ import { gameUserSettingsIniPath } from "./sync-profile-ini";
 import {
   inspectServerInstallationAsync,
 } from "./server-installation";
+import {
+  isRegularFileDirent,
+  isTraversableDirectoryDirent,
+} from "../../infra/fs/reparse-points";
 
 /** Profile folder already tracked by YARK (for import probe uniqueness). */
 export type ManagedInstallRef = {
@@ -368,7 +372,7 @@ async function collectWorldSaveCandidates(
   const out: WorldSaveCandidate[] = [];
   for (const entry of entries) {
     const full = join(dir, entry.name);
-    if (entry.isFile()) {
+    if (isRegularFileDirent(entry)) {
       const map = mapTokenFromWorldSaveName(entry.name);
       if (map === null) continue;
       try {
@@ -379,7 +383,7 @@ async function collectWorldSaveCandidates(
       }
       continue;
     }
-    if (entry.isDirectory()) {
+    if (isTraversableDirectoryDirent(entry)) {
       // Scan one level of nest (SavedArks/<folder>/*.ark). Mod maps often use
       // short folder names (e.g. Svartalfheim/) that are not themselves MapTokens.
       let nested;
@@ -389,7 +393,7 @@ async function collectWorldSaveCandidates(
         continue;
       }
       for (const child of nested) {
-        if (!child.isFile()) continue;
+        if (!isRegularFileDirent(child)) continue;
         const map = mapTokenFromWorldSaveName(child.name);
         if (map === null) continue;
         try {

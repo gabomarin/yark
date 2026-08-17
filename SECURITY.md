@@ -50,6 +50,7 @@ fix is confirmed.
 - Privilege escalation or unexpected code execution from the packaged YARK app
 - IPC / preload boundary bypasses that expose privileged main-process capabilities to untrusted renderer content
 - Path traversal or unsafe wipe/import/move that can destroy or overwrite data **outside** the intended install/backup roots when used through normal UI or documented IPC
+- Escape of recursive **copy / restore / move / cache sync** through **Windows directory junctions** or other reparse points under an approved root ([#322](https://github.com/gabomarin/yark/issues/322)). Recursive wipe already removes link entries without following targets (Node `fs.rm`)
 - Supply-chain issues in our release artifacts (installer contents vs tagged source) or in first-party release CI that would ship attacker-controlled code
 - Secrets inadvertently shipped in the repository or installer (API keys, private credentials)
 

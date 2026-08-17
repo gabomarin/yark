@@ -10,6 +10,10 @@
 import { open, readFile, readdir, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
+import {
+  isRegularFileDirent,
+  isTraversableDirectoryDirent,
+} from "../../infra/fs/reparse-points";
 import { ASA_APP_ID } from "./steamcmd-content-cache";
 
 /** Typical ASA dedicated server size (~12.0 GiB). Replaced when a real total is known. */
@@ -168,14 +172,14 @@ export async function sumDirectoryBytes(
         break;
       }
       const full = join(current, entry.name);
-      if (entry.isDirectory()) {
+      if (isTraversableDirectoryDirent(entry)) {
         if (entry.name.toLowerCase() === "saved") {
           continue;
         }
         stack.push(full);
         continue;
       }
-      if (!entry.isFile()) {
+      if (!isRegularFileDirent(entry)) {
         continue;
       }
       try {

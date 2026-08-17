@@ -1,10 +1,15 @@
 import { createWriteStream } from "node:fs";
-import { mkdir, readdir, stat } from "node:fs/promises";
-import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { mkdir, stat } from "node:fs/promises";
+import { basename, dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { pipeline } from "node:stream/promises";
 import type { BackupKind } from "@shared/types";
 import yazl from "yazl";
 import yauzl from "yauzl";
+import {
+  assertDestAndParentNotReparsePoints,
+  assertNoReparsePointsUnderRoot,
+  listFilesRecursiveSafe,
+} from "../../infra/fs/reparse-points";
 import { ensureParentDir } from "./backup-disk";
 
 /** Resolve an entry path under destDir, rejecting zip-slip (`../`, absolute paths). */
@@ -48,17 +53,7 @@ export function kindFromSubdirName(name: string): BackupKind | null {
 }
 
 async function listFilesRecursive(root: string): Promise<string[]> {
-  const out: string[] = [];
-  const entries = await readdir(root, { withFileTypes: true });
-  for (const entry of entries) {
-    const full = join(root, entry.name);
-    if (entry.isDirectory()) {
-      out.push(...(await listFilesRecursive(full)));
-    } else if (entry.isFile()) {
-      out.push(full);
-    }
-  }
-  return out;
+  return listFilesRecursiveSafe(root);
 }
 
 /**
@@ -113,7 +108,13 @@ export async function zipDirectory(
 
 /** Extract a zip archive into `destDir` (created if missing). */
 export async function extractZip(zipPath: string, destDir: string): Promise<void> {
+  await assertDestAndParentNotReparsePoints(destDir, {
+    operationLabel: "extract this backup",
+  });
   await mkdir(destDir, { recursive: true });
+  await assertNoReparsePointsUnderRoot(destDir, {
+    operationLabel: "extract this backup",
+  });
 
   await new Promise<void>((resolvePromise, reject) => {
     yauzl.open(zipPath, { lazyEntries: true }, (openErr, zipfile) => {

@@ -60,7 +60,7 @@ Changing the SteamCMD path via `steamcmd:set-path` resets the freshness timestam
 Pipeline for each files job:
 
 1. Ensure `asa_content_cache` (SteamCMD `app_update` … `validate`, unless install reuses fresh cache).
-2. **Robocopy** cache → server `installDir`, excluding `ShooterGame\Saved` (worlds, INI, players).
+2. **Robocopy** cache → server `installDir`, excluding `ShooterGame\Saved` (worlds, INI, players). Shared helper uses `/E` + `/XJ` (no junction traversal) and refuses destination trees that already contain links (#322).
 3. If robocopy fails → fallback: SteamCMD `app_update` **directly** on the server install dir.
 
 | Action | Public constraint | After success |

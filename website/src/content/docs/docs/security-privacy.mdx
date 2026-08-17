@@ -64,6 +64,8 @@ be installed.
 
 YARK spawns `ArkAscendedServer.exe` from your install path. Keep installs on paths you control; do not point profiles at untrusted directories.
 
+Recursive copy, backup packaging, restore, move, and ASA cache sync treat install trees as **real folders and files only**. Windows directory junctions and other links on a write path (including parent folders) fail closed before YARK creates or copies files; Robocopy uses `/XJ` so source junctions are not followed ([#322](https://github.com/gabomarin/yark/issues/322)).
+
 Packaged Windows builds enable Electron fuses and ASAR integrity validation (see the
 [versioning / packaging notes](https://github.com/gabomarin/yark/blob/main/docs/versioning.md)
 in the repository). Unpackaged `npm run dev` builds use Electron’s default fuse wire.

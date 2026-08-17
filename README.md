@@ -130,6 +130,9 @@ operator walkthrough.
   credentials.
 - CurseForge metadata requests use a small Cloudflare Worker so the upstream API key is never
   embedded in the Electron application.
+- Recursive install/backup/move/cache copies do not follow Windows directory junctions; destination
+  trees that already contain links fail closed before writes
+  ([#322](https://github.com/gabomarin/yark/issues/322)).
 - Current installers are unsigned. Authenticode signing and RFC 3161 timestamp verification are
   tracked in [#142](https://github.com/gabomarin/yark/issues/142).
 
