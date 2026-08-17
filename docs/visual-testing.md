@@ -152,6 +152,7 @@ available. Unset `ELECTRON_RUN_AS_NODE` first (see [AGENTS.md](../AGENTS.md)).
 | `node scripts/visual-logs.cjs` | Playwright review of sidebar / workspace Logs (expanded event details) |
 | `node scripts/visual-clusters.cjs` | Playwright review of Clusters page (sidebar nav + compliance UI) |
 | `node scripts/visual-setup-wizard.cjs` | Isolated first-run setup assistant at HD / Full HD / QHD |
+| `node scripts/visual-configuration-wizard.cjs` | Configuration wizard Profile / Pace / selected card at HD / Full HD / QHD (#224) |
 | `node scripts/visual-serverform.cjs` | Playwright review of Create ServerForm (empty / filled / cluster) at HD / Full HD / QHD (#292) |
 | `node scripts/seed-server-logs.cjs [serverName]` | Clear + seed events/update logs into Electron userData (override with `YARK_USER_DATA`) |
 
@@ -183,6 +184,7 @@ for the mandatory three-viewport protocol above unless noted.
 | `visual-logs.cjs` | Prefer `node scripts/seed-server-logs.cjs` first, then `npm run build && node scripts/visual-logs.cjs` | Fleet + server Logs at **1280×720 / 1920×1080 / 2560×1440**; clears `ELECTRON_RUN_AS_NODE` |
 | `visual-overview.cjs` | `npm run build && node scripts/visual-overview.cjs` | Isolated `YARK_E2E_USER_DATA` + SQLite seeds for empty/small/populated; Compact + Comfortable; install-check toolbar cohesion at HD / Full HD / QHD |
 | `visual-setup-wizard.cjs` | `npm run build && node scripts/visual-setup-wizard.cjs` | Isolated empty fleet; every setup step, suggested cluster folder, scroll, and console errors at HD / Full HD / QHD |
+| `visual-configuration-wizard.cjs` | `npm run build && node scripts/visual-configuration-wizard.cjs` | Isolated workspace Configuration wizard (#224): Profile + Pace, selected card, Compact density, HD / Full HD / QHD |
 | `visual-serverform.cjs` | `npm run build && node scripts/visual-serverform.cjs` | Isolated Create form audit (#292): empty / filled PathField / cluster; HD / Full HD / QHD; no Create server submit |
 | `seed-server-logs.cjs` | `node scripts/seed-server-logs.cjs [serverName]` | Seeds events + update log files for Logs UI review. Resolves DB via `%APPDATA%/yark-server-manager` — **Windows `APPDATA`**; on Linux set `APPDATA` to the Electron `userData` parent (often `~/.config`) or the script exits with “DB not found” |
 | `e2e:smoke` / `e2e` | `npm run build && npm run e2e:smoke` / `npm run e2e` | **PR CI** on `windows-latest` (#12). Isolated `YARK_E2E_USER_DATA`; clears `ELECTRON_RUN_AS_NODE`. Matrix: [e2e-validation.md](e2e-validation.md). |
