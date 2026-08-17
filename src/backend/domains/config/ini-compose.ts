@@ -1,4 +1,4 @@
-import { flattenIniText, INI_FLAT_SEP, setIniTextValue } from "@shared/ini-text";
+import { flattenIniText, INI_FLAT_SEP, removeIniTextValue, setIniTextValue } from "@shared/ini-text";
 import { isYarkOwnedIniKey } from "@shared/yark-owned-ini-keys";
 import type { IniDiffEntry, IniPreview, ServerIniPayload, ServerProfile } from "@shared/types";
 import { prepareClusterIniTemplatePayload } from "./cluster-ini-template-service";
@@ -141,6 +141,8 @@ export function applyProfileOwnedKeysToGameUserSettings(
     "MaxPlayers",
     String(profile.maxPlayers),
   );
+  // ASA ignores [ServerSettings] MaxPlayers; leftover copies confuse operators.
+  text = removeIniTextValue(text, "ServerSettings", "MaxPlayers");
   return text;
 }
 

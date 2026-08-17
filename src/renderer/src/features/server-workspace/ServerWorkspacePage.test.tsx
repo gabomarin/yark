@@ -115,7 +115,7 @@ describe("ServerWorkspacePage", () => {
           gameUserSettingsExisted: true,
           gameIniExisted: true,
           payload: {
-            gameUserSettings: `[ServerSettings]\nMaxPlayers=70\nAllowFlyerCarryPVE=True\n`,
+            gameUserSettings: `[ServerSettings]\nXPMultiplier=1.5\nAllowFlyerCarryPVE=True\n`,
             game: `[/Script/ShooterGame.ShooterGameMode]\nXPMultiplier=1.0\n`,
           },
         },
@@ -826,7 +826,7 @@ describe("ServerWorkspacePage", () => {
         payload: {
           gameUserSettings: [
             "[ServerSettings]",
-            "MaxPlayers=70",
+            "XPMultiplier=1.5",
             "",
             "[/Script/ShooterGame.ShooterGameUserSettings]",
             "LastJoinedSessionPerCategory=Foo",
@@ -841,7 +841,7 @@ describe("ServerWorkspacePage", () => {
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
     await waitFor(() => {
-      expect(screen.getByText("MaxPlayers")).toBeInTheDocument();
+      expect(screen.getByText("XPMultiplier")).toBeInTheDocument();
     });
 
     expect(
@@ -881,8 +881,8 @@ describe("ServerWorkspacePage", () => {
     renderWorkspace();
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
-    const maxPlayers = await screen.findByDisplayValue("70");
-    fireEvent.change(maxPlayers, { target: { value: "80" } });
+    const xp = await screen.findByDisplayValue("1.5");
+    fireEvent.change(xp, { target: { value: "2" } });
     await user.click(screen.getByRole("tab", { name: "Server" }));
 
     expect(screen.getByText(/^ini modified$/i)).toBeInTheDocument();
@@ -920,7 +920,7 @@ describe("ServerWorkspacePage", () => {
     await waitFor(() => {
       expect(window.api.readServerIni).toHaveBeenCalledTimes(1);
     });
-    expect(await screen.findByText("MaxPlayers")).toBeVisible();
+    expect(await screen.findByText("XPMultiplier")).toBeVisible();
   });
 
   it("reviews and explicitly applies the assistant draft", async () => {
@@ -1359,8 +1359,8 @@ describe("ServerWorkspacePage", () => {
     });
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
-    const maxPlayers = await screen.findByDisplayValue("70");
-    fireEvent.change(maxPlayers, { target: { value: "80" } });
+    const xp = await screen.findByDisplayValue("1.5");
+    fireEvent.change(xp, { target: { value: "2" } });
 
     act(() => leaveGuard?.(onLeave));
     expect(onLeave).not.toHaveBeenCalled();

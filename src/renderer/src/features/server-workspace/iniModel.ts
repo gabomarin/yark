@@ -245,6 +245,14 @@ export function humanizeKey(key: string): string {
     .trim();
 }
 
+/** ASA reads GameSession MaxPlayers; this leftover key is not editable here. */
+function isLegacyServerSettingsMaxPlayers(section: string, key: string): boolean {
+  return (
+    section.trim().toLowerCase() === "serversettings" &&
+    key.trim().toLowerCase() === "maxplayers"
+  );
+}
+
 export function filterIniRows(
   rows: IniSettingRow[],
   search: string,
@@ -259,7 +267,8 @@ export function filterIniRows(
     }
     if (
       resolvedFile === "gameUserSettings" &&
-      isYarkOwnedIniKey(row.section, row.key)
+      (isYarkOwnedIniKey(row.section, row.key) ||
+        isLegacyServerSettingsMaxPlayers(row.section, row.key))
     ) {
       return false;
     }

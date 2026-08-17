@@ -70,6 +70,15 @@ LastJoinedSessionPerCategory=Three
     expect(filtered.some((row) => row.key === "MaxPlayers")).toBe(false);
   });
 
+  it("hides leftover [ServerSettings] MaxPlayers from the dedicated editor", () => {
+    const rows = parseIniRows(
+      "[ServerSettings]\nMaxPlayers=9\nXPMultiplier=1.5\n",
+    );
+    const filtered = filterIniRows(rows, "", "all");
+    expect(filtered.some((row) => row.key === "MaxPlayers")).toBe(false);
+    expect(filtered.some((row) => row.key === "XPMultiplier")).toBe(true);
+  });
+
   it("updates a specific duplicate occurrence", () => {
     const next = setIniTextValue(
       sample,

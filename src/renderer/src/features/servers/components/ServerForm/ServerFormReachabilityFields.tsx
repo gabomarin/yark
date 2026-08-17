@@ -68,7 +68,7 @@ export function ServerFormReachabilityFields(props: Props): ReactElement {
         max={255}
         allowDecimal={false}
         required
-        description="Player slot limit written to GameUserSettings.ini."
+        description="Slot limit in the game browser. Change it here — ASA ignores MaxPlayers under [ServerSettings]."
       />
       <Stack gap="sm">
         <PasswordInput

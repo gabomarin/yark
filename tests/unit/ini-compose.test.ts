@@ -36,7 +36,7 @@ describe("ini-compose", () => {
       "[ServerSettings]\nMaxPlayers=40\nXPMultiplier=1.5\n",
       profileA,
     );
-    expect(text).toContain("MaxPlayers=40");
+    expect(text).not.toMatch(/^MaxPlayers=40$/m);
     expect(text).toContain("XPMultiplier=1.5");
     expect(text).toContain("RCONPort=27020");
     expect(text).toContain("ServerAdminPassword=admin-a");
@@ -114,7 +114,10 @@ describe("ini-compose", () => {
       currentA,
     );
 
-    expect(restored.gameUserSettings).toContain("MaxPlayers=55");
+    expect(restored.gameUserSettings).not.toMatch(/^MaxPlayers=55$/m);
+    expect(restored.gameUserSettings).toMatch(
+      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
+    );
     expect(restored.gameUserSettings).toContain("XPMultiplier=3");
     expect(restored.gameUserSettings).toContain("RCONPort=27020");
     expect(restored.gameUserSettings).toContain("ServerAdminPassword=admin-a");
