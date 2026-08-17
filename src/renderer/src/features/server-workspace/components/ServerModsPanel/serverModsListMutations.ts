@@ -1,5 +1,6 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 import type { ModMetadata } from "@shared/types";
+import { notifyModsAddedDisabled } from "./notifyModsAddedDisabled";
 import { MODS_REORDER_BUSY_KEY } from "./serverModsBusy";
 
 interface Input {
@@ -22,6 +23,21 @@ interface Input {
 }
 
 export function createServerModsListMutations(input: Input) {
+  const add = async (modDetail: ModMetadata) => {
+    const configuredIds = input.configuredIdsRef.current;
+    const disabledIds = input.disabledIdsRef.current;
+    const isNew = !configuredIds.includes(modDetail.id);
+    const nextIds = isNew ? [...configuredIds, modDetail.id] : configuredIds;
+    const nextDisabled = isNew
+      ? [...new Set([...disabledIds, modDetail.id])]
+      : disabledIds;
+    const nextCache = { ...input.cacheRef.current, [modDetail.id]: modDetail };
+    await input.persist(nextIds, nextDisabled, nextCache);
+    if (isNew) {
+      notifyModsAddedDisabled({ name: modDetail.name });
+    }
+  };
+
   const toggle = async (id: string, enabled: boolean) => {
     input.setBusyKey(id);
     input.setError(null);
@@ -95,5 +111,5 @@ export function createServerModsListMutations(input: Input) {
     }
   };
 
-  return { toggle, remove, reorder };
+  return { add, toggle, remove, reorder };
 }

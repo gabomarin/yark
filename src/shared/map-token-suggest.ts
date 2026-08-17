@@ -20,10 +20,14 @@ export interface MapTokenSuggestion {
   matchIndex: number;
 }
 
+/** True when a CurseForge category label is Maps / Map. */
+export function isMapCategoryLabel(label: string): boolean {
+  return MAP_CATEGORY_PATTERN.test(label);
+}
+
 /** True when mod metadata looks like a CurseForge Maps-category project. */
 export function isMapModCandidate(meta: Pick<ModMetadata, "categories">): boolean {
-  const categories = meta.categories ?? [];
-  return categories.some((entry) => MAP_CATEGORY_PATTERN.test(entry));
+  return (meta.categories ?? []).some(isMapCategoryLabel);
 }
 
 /**

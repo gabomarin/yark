@@ -3,6 +3,7 @@ import type { ModMetadata } from "@shared/types";
 import {
   mergeMetadata,
   modsMetadataSyncKey,
+  pickModListCategory,
   reorderModIds,
   sortModRows,
   type ModRow,
@@ -15,8 +16,8 @@ function row(partial: Partial<ModRow> & Pick<ModRow, "key" | "name" | "loadIndex
     author: partial.author ?? "Author",
     summary: partial.summary ?? "",
     thumbnailUrl: null,
-    category: null,
-    downloads: partial.downloads ?? "0 downloads",
+    categories: [],
+    downloads: partial.downloads ?? "0",
     downloadCount: partial.downloadCount ?? 0,
     updated: partial.updated ?? "Unknown",
     updatedAt: partial.updatedAt ?? 0,
@@ -77,5 +78,28 @@ describe("serverModsModel metadata sync", () => {
     });
     expect(next).not.toBe(previous);
     expect(next.get("1")?.thumbnailUrl).toBe("https://cdn.example/t.png");
+  });
+});
+
+describe("pickModListCategory", () => {
+  it("prefers Maps and reports extra tags as +N", () => {
+    expect(pickModListCategory([])).toEqual({
+      label: null,
+      extraCount: 0,
+      extraLabels: [],
+      isMap: false,
+    });
+    expect(pickModListCategory(["Visuals and Sounds"])).toEqual({
+      label: "Visuals and Sounds",
+      extraCount: 0,
+      extraLabels: [],
+      isMap: false,
+    });
+    expect(pickModListCategory(["General", "Maps", "Creatures"])).toEqual({
+      label: "Maps",
+      extraCount: 2,
+      extraLabels: ["General", "Creatures"],
+      isMap: true,
+    });
   });
 });

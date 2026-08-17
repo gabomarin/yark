@@ -59,6 +59,11 @@ Workspace → **Mods** has two views (`SegmentedControl`):
 
 1. Rows follow profile load order (`YarkDataTable` + drag handle).
 2. **Enable / disable** toggles membership in `disabledMods` (ID stays in `mods`).
+   Disabled rows use a quieter background so the switch stays the control; the
+   header also shows how many IDs are disabled when any are staged off Start.
+   The Mod column shows one CurseForge category under the name (Maps uses
+   attention color; extra tags collapse to **+N** with a hover list).
+   Remaining tags stay in the detail drawer.
 3. **Remove** drops the ID from `mods` / `disabledMods` and clears its cache entry
    (confirm dialog).
 4. Column sort is **view-only** — clear sort before drag-reorder (drag disabled
@@ -70,7 +75,8 @@ Workspace → **Mods** has two views (`SegmentedControl`):
 ### Discover
 
 1. Search calls `mods:search` (Worker `/v1/mods/search`).
-2. Add resolves the row through `mods:get-by-reference`, then persists.
+2. Add resolves the row through `mods:get-by-reference`, then persists. New IDs
+   start disabled (same toast as Add by URL).
 
 ### Add by Project ID / URL
 
@@ -79,8 +85,10 @@ Comma-separated Project IDs and/or ASA CurseForge mod URLs
 **5** (`MOD_ADD_URL_BATCH_SIZE`) with progress UI; each successful batch
 persists immediately so a partial import is not lost.
 
-**New IDs start disabled.** Re-adding an already-configured ID keeps its enable
-state and refreshes cache when metadata is returned. **Import install** (#254)
+**New IDs start disabled.** After Add, YARK toasts **Mod Added** (at most two of
+those toasts stay on screen; a third add dismisses the oldest). Re-adding an
+already-configured ID keeps its enable state and refreshes cache when metadata
+is returned. **Import install** (#254)
 discovers Project IDs from
 `ShooterGame/Binaries/Win64/ShooterGame/Mods/83374/{projectId}_{fileId}/`
 (and optionally top-level `ShooterGame/Mods/83374/`), then persists them all in

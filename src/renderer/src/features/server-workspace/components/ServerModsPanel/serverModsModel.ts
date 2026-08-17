@@ -1,3 +1,4 @@
+import { isMapCategoryLabel } from "@shared/map-token-suggest";
 import type {
   ModMetadata,
   ModSearchPage,
@@ -13,7 +14,8 @@ export interface ModRow {
   author: string;
   summary: string;
   thumbnailUrl: string | null;
-  category: string | null;
+  /** CurseForge categories; the table shows one primary badge (+N). */
+  categories: string[];
   downloads: string;
   /** Numeric downloads for view-sort; null when unknown. */
   downloadCount: number | null;
@@ -117,6 +119,10 @@ function compareModRows(
   return (left.updatedAt ?? 0) - (right.updatedAt ?? 0);
 }
 
+function formatModDownloadCount(count: number | undefined): string {
+  return count === undefined ? "Unknown" : count.toLocaleString();
+}
+
 function metadataRow(
   id: string,
   item: ModMetadata | undefined,
@@ -133,11 +139,8 @@ function metadataRow(
     author: item?.authors.join(", ") || "Unknown author",
     summary: item?.summary ?? "No metadata available.",
     thumbnailUrl: item?.thumbnailUrl ?? null,
-    category: item?.categories?.[0] ?? null,
-    downloads:
-      item === undefined
-        ? "Unknown downloads"
-        : `${item.downloadCount.toLocaleString()} downloads`,
+    categories: item?.categories ?? [],
+    downloads: formatModDownloadCount(item?.downloadCount),
     downloadCount: item?.downloadCount ?? null,
     updated: unknownUpdated
       ? "Unknown update"
@@ -164,8 +167,8 @@ function catalogRow(
     author: item.authors.join(", ") || "Unknown author",
     summary: item.summary,
     thumbnailUrl: item.thumbnailUrl,
-    category: item.categories?.[0] ?? null,
-    downloads: `${item.downloadCount.toLocaleString()} downloads`,
+    categories: item.categories ?? [],
+    downloads: formatModDownloadCount(item.downloadCount),
     downloadCount: item.downloadCount,
     updated: new Date(item.dateModified).toLocaleDateString(),
     updatedAt: Date.parse(item.dateModified),
@@ -173,6 +176,28 @@ function catalogRow(
     url: item.curseforgeUrl,
     configured: configuredMetadata !== undefined,
     enabled,
+  };
+}
+
+/** One list badge: prefer Maps; extra CurseForge tags collapse to +N. */
+export function pickModListCategory(categories: string[]): {
+  label: string | null;
+  extraCount: number;
+  extraLabels: string[];
+  isMap: boolean;
+} {
+  const labels = categories.filter((entry) => entry.trim().length > 0);
+  if (labels.length === 0) {
+    return { label: null, extraCount: 0, extraLabels: [], isMap: false };
+  }
+  const mapLabel = labels.find(isMapCategoryLabel) ?? null;
+  const label = mapLabel ?? labels[0]!;
+  const extraLabels = labels.filter((entry) => entry !== label);
+  return {
+    label,
+    extraCount: extraLabels.length,
+    extraLabels,
+    isMap: mapLabel !== null,
   };
 }
 
