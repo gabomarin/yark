@@ -12,7 +12,7 @@ The Workspace **Mods** tab stores CurseForge **Project IDs** per profile.
 
 - **Enabled** IDs are passed at launch as `-mods=id1,id2,…`
 - **Disabled** IDs stay on the profile until you turn them back on (no need to delete an ID to skip one boot)
-- Newly added IDs start **disabled** — enable them explicitly before they appear on `-mods=`
+- Newly added IDs start **disabled** — enable them explicitly before they appear on `-mods=`. Add shows a **Mod Added** toast (two can stay visible; a third drops the oldest). Disabled inventory rows use a quieter background; hover uses a cool tint so the enable switch stays readable. One CurseForge category sits under the mod name (Maps uses attention color; extra tags as +N with a hover list).
 - Names / summaries / links come from a small Cloudflare Worker proxy and are cached locally
 
 <figure class="doc-shot">

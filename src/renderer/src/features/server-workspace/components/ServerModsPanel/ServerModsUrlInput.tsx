@@ -24,6 +24,7 @@ export function ServerModsUrlInput(props: Props): ReactElement {
       <Group align="flex-end" wrap="wrap">
         <TextInput
           label="Add CurseForge Project ID or mod URL"
+          description="New Project IDs start disabled. Enable them in the list when you want them on Start."
           placeholder="928793, https://www.curseforge.com/ark-survival-ascended/mods/..."
           leftSection={<LinkSimple size={16} />}
           value={props.value}

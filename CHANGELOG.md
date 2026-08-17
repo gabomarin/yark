@@ -23,6 +23,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Configuration wizard QoL: easy-oriented profiles enable **AlwaysAllowStructurePickup** (disables the pickup timer field); draft/review rows show the real INI key and hide the changes modal button on Review (#230).
 - Configuration wizard Pace adds **resource respawn**; Breeding scales cuddle/imprint with maturation for reachable 100% imprint; QoL adds cave building (PvE) and floating damage text (#230).
 - Configuration wizard Profile: **Enable single-player settings** with stack/bonuses copy in that alert (no second Multipliers stack alert) (#230).
+- Mods **Add** toasts **Mod Added** (new Project IDs start disabled; at most two of those toasts stay visible). Disabled inventory rows use a quieter background; row hover uses the cool control tint so the enable switch stays readable. The inventory **Downloads** column is count-only; CurseForge category sits as a compact badge under the mod name (Maps uses attention color; extra tags as +N with a hover list) (#226).
 - Configuration wizard chrome uses shared selection, radius, and spacing tokens; Pace difficulty keys sit behind an **INI details** tooltip (#224).
 - Settings uses a **category sidebar** (General, Servers, SteamCMD, Logs, About); setup guidance clarifies saved changes, suggests a cluster folder, and prevents conflicting SteamCMD actions while work is active (#298).
 - getyark.com serves responsive WebP screenshots, preloads the home logo, and skips heavy motion work on phones so the static site loads faster.

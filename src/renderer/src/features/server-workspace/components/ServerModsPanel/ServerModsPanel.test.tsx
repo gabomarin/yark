@@ -6,6 +6,7 @@ import { AppProviders } from "@app/AppProviders";
 import type { RendererApi } from "@shared/ipc";
 import type { ModMetadata, ServerProfile } from "@shared/types";
 import { ServerModsPanel } from "./ServerModsPanel";
+import { resetModAddedToastQueue } from "./notifyModsAddedDisabled";
 
 const awesomeDetail: ModMetadata = {
   id: "947033",
@@ -120,6 +121,7 @@ describe("ServerModsPanel", () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
+    resetModAddedToastQueue();
   });
 
   it("toasts when enabling a Maps mod without changing map (#192)", async () => {
@@ -144,6 +146,9 @@ describe("ServerModsPanel", () => {
         <ServerModsPanel server={mapServer} onServerUpdated={vi.fn()} />
       </AppProviders>,
     );
+
+    expect(screen.getByText("1 disabled")).toBeInTheDocument();
+    expect(document.querySelector('[data-mod-enabled="false"]')).not.toBeNull();
 
     await user.click(
       screen.getByRole("switch", { name: "Enable Svartalfheim Premium" }),
@@ -301,10 +306,13 @@ describe("ServerModsPanel", () => {
     renderPanel();
 
     expect(await screen.findByText("Awesome Spyglass!")).toBeInTheDocument();
+    expect(document.querySelector('[data-mod-enabled="true"]')).not.toBeNull();
     expect(api.getModsMetadata).not.toHaveBeenCalled();
+    expect(screen.getByText(awesomeDetail.downloadCount.toLocaleString())).toBeInTheDocument();
     expect(screen.getByText("Visuals and Sounds")).toBeInTheDocument();
     await user.click(screen.getByText("Awesome Spyglass!"));
     expect(await screen.findByText("Mod details")).toBeInTheDocument();
+    expect(screen.getAllByText("Visuals and Sounds").length).toBeGreaterThan(1);
 
     await user.click(screen.getByRole("switch", { name: "Disable Awesome Spyglass!" }));
     await waitFor(() => {
@@ -322,6 +330,7 @@ describe("ServerModsPanel", () => {
 
   it("resolves a CurseForge URL and persists the new mod metadata", async () => {
     const api = installApi();
+    const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
     const user = userEvent.setup();
     renderPanel();
     const url = superDetail.curseforgeUrl;
@@ -345,6 +354,15 @@ describe("ServerModsPanel", () => {
         }),
       );
     });
+    expect(notifySpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Mod Added",
+        color: "yellow",
+      }),
+    );
+    expect(
+      screen.getByText("New Project IDs start disabled", { exact: false }),
+    ).toBeInTheDocument();
   });
 
   it("shows import progress while resolving multiple refs", async () => {
@@ -486,6 +504,7 @@ describe("ServerModsPanel", () => {
 
   it("keeps discovery results separate and adds a result", async () => {
     const api = installApi();
+    const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
     const user = userEvent.setup();
     renderPanel();
 
@@ -505,6 +524,12 @@ describe("ServerModsPanel", () => {
         }),
       );
     });
+    expect(notifySpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Mod Added",
+        color: "yellow",
+      }),
+    );
   });
 
   it("shows row loading while uncached metadata is fetched", async () => {
@@ -519,6 +544,6 @@ describe("ServerModsPanel", () => {
     await user.click(screen.getByRole("button", { name: "Search mods" }));
     await user.click(await screen.findByText("Super Spyglass Plus"));
 
-    expect(await screen.findByText("Loading metadata…")).toBeInTheDocument();
+    expect(await screen.findByText("Loading…")).toBeInTheDocument();
   });
 });

@@ -67,9 +67,75 @@
   outline-offset: -2px;
 }
 
+.clickableRow:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--app-color-accent) 18%,
+    var(--app-color-panel)
+  );
+}
+
+.disabledRow {
+  color: var(--app-color-muted);
+  background-color: color-mix(in srgb, var(--app-color-muted) 10%, transparent);
+}
+
+.disabledRow:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--app-color-accent) 16%,
+    var(--app-color-panel)
+  );
+}
+
+.identityGroup {
+  min-width: 0;
+  width: 100%;
+}
+
 .identity {
-  min-width: 150px;
-  max-width: 250px;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  container-type: inline-size;
+  container-name: mod-identity;
+}
+
+.categoryRow {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-xxs);
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  margin-top: var(--app-space-xxs);
+}
+
+.categoryBadge {
+  min-width: 0;
+  max-width: 100%;
+  flex: 0 1 auto;
+}
+
+.categoryBadge :global(.mantine-Badge-label) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.categoryExtra {
+  flex: 0 0 auto;
+}
+
+@container mod-identity (max-width: 132px) {
+  .categoryExtra {
+    display: none;
+  }
+}
+
+@container mod-identity (max-width: 108px) {
+  .categoryBadge {
+    max-width: 5.5rem;
+  }
 }
 
 .thumbnail {

@@ -147,8 +147,20 @@ export function ServerModsTable(props: Props): ReactElement {
     (row: ModRow) => ({
       "data-mod-row": true,
       "data-mod-key": row.key,
+      "data-mod-enabled": row.enabled ? "true" : "false",
     }),
     [],
+  );
+
+  const rowClassName = useCallback(
+    (row: ModRow) =>
+      [
+        classes.clickableRow,
+        props.mode === "server" && !row.enabled ? classes.disabledRow : undefined,
+      ]
+        .filter(Boolean)
+        .join(" "),
+    [props.mode],
   );
 
   const onRowClick = useCallback(
@@ -193,6 +205,8 @@ export function ServerModsTable(props: Props): ReactElement {
       sortStatus={sortStatus}
       onSortStatusChange={setSortStatus}
       customRowAttributes={customRowAttributes}
+      rowClassName={rowClassName}
+      highlightOnHover={false}
       onRowClick={onRowClick}
       onRowContextMenu={onRowContextMenu}
       tableWrapper={

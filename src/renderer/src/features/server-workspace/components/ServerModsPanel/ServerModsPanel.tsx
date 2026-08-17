@@ -18,6 +18,7 @@ import {
   type ModRow,
 } from "./serverModsModel";
 import { createServerModsListMutations } from "./serverModsListMutations";
+import { notifyNewlyAddedMods } from "./notifyModsAddedDisabled";
 import { useMapModEnableNotify } from "./useMapModEnableNotify";
 import classes from "./ServerModsPanel.module.css";
 
@@ -108,6 +109,7 @@ export function ServerModsPanel(props: Props): ReactElement {
 
   const disabledSet = useMemo(() => new Set(disabledIds), [disabledIds]);
   const activeCount = configuredIds.filter((id) => !disabledSet.has(id)).length;
+  const disabledCount = configuredIds.filter((id) => disabledSet.has(id)).length;
   const serverRows = useMemo(
     () => buildServerRows(configuredIds, disabledSet, metadata),
     [configuredIds, disabledSet, metadata],
@@ -147,16 +149,17 @@ export function ServerModsPanel(props: Props): ReactElement {
     persist,
   });
 
-  const addDetail = async (modDetail: ModMetadata) => {
-    const isNew = !configuredIds.includes(modDetail.id);
-    const nextIds = isNew ? [...configuredIds, modDetail.id] : configuredIds;
-    // New mods start disabled; re-adding an existing row keeps enable state.
-    const nextDisabled = isNew
-      ? [...new Set([...disabledIds, modDetail.id])]
-      : disabledIds;
-    const nextCache = { ...cacheRef.current, [modDetail.id]: modDetail };
-    await persist(nextIds, nextDisabled, nextCache);
-  };
+  const { add, toggle, remove, reorder } = createServerModsListMutations({
+    configuredIdsRef,
+    disabledIdsRef,
+    metadata,
+    cacheRef,
+    setBusyKey,
+    setError,
+    setWarning,
+    persist,
+    notifyMapModIfNeeded,
+  });
 
   const searchCatalog = async () => {
     setSearching(true);
@@ -208,6 +211,9 @@ export function ServerModsPanel(props: Props): ReactElement {
       }
       if (outcome.warning !== null) setWarning(outcome.warning);
       if (outcome.error !== null) setError(outcome.error);
+      if (outcome.status === "ready") {
+        notifyNewlyAddedMods(configuredIds, outcome.next);
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not add the mod");
     } finally {
@@ -223,25 +229,13 @@ export function ServerModsPanel(props: Props): ReactElement {
     try {
       const result = await window.api.getModByReference(mod.id || mod.slug);
       if (!result.ok) throw new Error(result.error);
-      await addDetail(result.data);
+      await add(result.data);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not add the mod");
     } finally {
       setBusyKey(null);
     }
   };
-
-  const { toggle, remove, reorder } = createServerModsListMutations({
-    configuredIdsRef,
-    disabledIdsRef,
-    metadata,
-    cacheRef,
-    setBusyKey,
-    setError,
-    setWarning,
-    persist,
-    notifyMapModIfNeeded,
-  });
 
   const openExternal = async (curseForgeUrl: string) => {
     const result = await window.api.openCurseForgeMod(curseForgeUrl);
@@ -283,7 +277,7 @@ export function ServerModsPanel(props: Props): ReactElement {
 
   return (
     <div className={classes.root}>
-      <ServerModsHeader activeCount={activeCount} />
+      <ServerModsHeader activeCount={activeCount} disabledCount={disabledCount} />
       <div className={classes.content}>
         <Stack gap="md">
           <SegmentedControl

@@ -6,10 +6,9 @@ import {
   Text,
 } from "@mantine/core";
 import type { DataTableColumn } from "mantine-datatable";
-import { ModThumbnail } from "./ModThumbnail";
+import { ModIdentityCell } from "./ModIdentityCell";
 import { ServerModsActionsCell } from "./ServerModsActionsCell";
 import type { ModRow } from "./serverModsModel";
-import classes from "./ServerModsPanel.module.css";
 import { isModsListBusy } from "./serverModsBusy";
 
 export { MODS_REORDER_BUSY_KEY, isModsListBusy } from "./serverModsBusy";
@@ -82,15 +81,7 @@ export function buildServerModsTableColumns(input: {
       accessor: "name",
       title: "Mod",
       sortable: true,
-      render: (row) => (
-        <Group wrap="nowrap" gap="sm">
-          <ModThumbnail src={row.thumbnailUrl} />
-          <div className={classes.identity}>
-            <Text fw={600} size="sm" lineClamp={1}>{row.name}</Text>
-            <Text size="xs" c="dimmed" lineClamp={1}>{row.author}</Text>
-          </div>
-        </Group>
-      ),
+      render: (row) => <ModIdentityCell row={row} />,
     },
     {
       accessor: "id",
@@ -102,23 +93,19 @@ export function buildServerModsTableColumns(input: {
     },
     {
       accessor: "downloadCount",
-      title: "Metadata",
+      title: "Downloads",
+      width: 110,
       sortable: true,
       render: (row) =>
         input.busyKey === `detail:${row.slug}` ? (
           <Group gap="xs" wrap="nowrap">
             <Loader size="xs" />
-            <Text size="xs" c="dimmed">Loading metadata…</Text>
+            <Text size="xs" c="dimmed">Loading…</Text>
           </Group>
         ) : (
-          <>
-            <Text size="xs" lineClamp={1}>
-              {row.category ?? "Uncategorized"}
-            </Text>
-            <Text size="xs" c="dimmed" lineClamp={1}>
-              {row.downloads}
-            </Text>
-          </>
+          <Text size="sm" c="dimmed">
+            {row.downloads}
+          </Text>
         ),
     },
     {

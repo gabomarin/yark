@@ -9,6 +9,7 @@ export function showOperatorToast(input: {
   /** Stable id replaces an existing toast with the same id. */
   id?: string;
   onClick?: () => void;
+  onClose?: () => void;
 }): void {
   notifications.show({
     id: input.id,
@@ -18,6 +19,7 @@ export function showOperatorToast(input: {
     autoClose: input.autoClose ?? 5000,
     withCloseButton: true,
     onClick: input.onClick,
+    onClose: input.onClose,
   });
 }
 

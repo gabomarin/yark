@@ -14,8 +14,8 @@ const rows: ModRow[] = [
     author: "A",
     summary: "",
     thumbnailUrl: null,
-    category: null,
-    downloads: "1 downloads",
+    categories: [],
+    downloads: "1",
     downloadCount: 1,
     updated: "Jan 1",
     updatedAt: 1,
@@ -32,8 +32,8 @@ const rows: ModRow[] = [
     author: "Z",
     summary: "",
     thumbnailUrl: null,
-    category: null,
-    downloads: "9 downloads",
+    categories: [],
+    downloads: "9",
     downloadCount: 9,
     updated: "Jan 2",
     updatedAt: 2,
@@ -138,5 +138,59 @@ describe("ServerModsTable", () => {
     expect(
       screen.getByRole("switch", { name: "Disable Alpha Mod" }),
     ).toBeDisabled();
+  });
+
+  it("mutes disabled inventory rows instead of a Status badge (#226)", () => {
+    const enabledRow = rows[0]!;
+    const disabledRow: ModRow = { ...rows[1]!, enabled: false };
+    render(
+      <AppProviders>
+        <ServerModsTable
+          rows={[enabledRow, disabledRow]}
+          mode="server"
+          busyKey={null}
+          onInspect={vi.fn()}
+          onAdd={vi.fn()}
+          onToggle={vi.fn()}
+          onRemove={vi.fn()}
+          onOpenExternal={vi.fn()}
+          onReorder={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(document.querySelector('[data-mod-enabled="true"]')).not.toBeNull();
+    expect(document.querySelector('[data-mod-enabled="false"]')).not.toBeNull();
+    expect(document.querySelector("[data-mod-status]")).toBeNull();
+  });
+
+  it("shows one category badge under the name and +N for extras", async () => {
+    const user = userEvent.setup();
+    const mapRow: ModRow = {
+      ...rows[0]!,
+      categories: ["General", "Maps"],
+    };
+    render(
+      <AppProviders>
+        <ServerModsTable
+          rows={[mapRow]}
+          mode="server"
+          busyKey={null}
+          onInspect={vi.fn()}
+          onAdd={vi.fn()}
+          onToggle={vi.fn()}
+          onRemove={vi.fn()}
+          onOpenExternal={vi.fn()}
+          onReorder={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("Maps")).toBeInTheDocument();
+    expect(screen.getByText("+1")).toBeInTheDocument();
+    expect(screen.queryByText("General")).not.toBeInTheDocument();
+
+    await user.hover(screen.getByText("+1"));
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("General");
   });
 });

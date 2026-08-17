@@ -11,6 +11,7 @@ import {
   Title,
 } from "@mantine/core";
 import { ArrowSquareOut, Copy } from "@phosphor-icons/react";
+import { isMapCategoryLabel } from "@shared/map-token-suggest";
 import type { ModMetadata } from "@shared/types";
 
 interface Props {
@@ -67,7 +68,14 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
           </Stack>
           <Group gap="xs">
             {(detail.categories ?? []).map((category) => (
-              <Badge key={category} color="gray" variant="light">{category}</Badge>
+              <Badge
+                key={category}
+                color={isMapCategoryLabel(category) ? "attention" : "gray"}
+                variant="light"
+                tt="none"
+              >
+                {category}
+              </Badge>
             ))}
           </Group>
           <Button

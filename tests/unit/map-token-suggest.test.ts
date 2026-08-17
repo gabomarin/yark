@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildModMapSuggestHaystack,
+  isMapCategoryLabel,
   isMapModCandidate,
   suggestMapTokenFromMetadata,
   suggestMapTokenFromModText,
@@ -62,6 +63,8 @@ describe("isMapModCandidate", () => {
     expect(isMapModCandidate({ categories: ["General", "maps"] })).toBe(true);
     expect(isMapModCandidate({ categories: ["Creatures"] })).toBe(false);
     expect(isMapModCandidate({ categories: [] })).toBe(false);
+    expect(isMapCategoryLabel("Maps")).toBe(true);
+    expect(isMapCategoryLabel("Visuals and Sounds")).toBe(false);
   });
 });
 
