@@ -9,6 +9,14 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Sidebar **YARK update** icon and version text use fossil amber so the available-update cue matches other warn accents.
+
+### Fixed
+
+- Home screenshot slideshow serves native 1440px WebP at higher quality so the product preview stays sharp on large and high-DPI displays.
+
 ## [0.13.0] - 2026-08-17
 
 ### Added

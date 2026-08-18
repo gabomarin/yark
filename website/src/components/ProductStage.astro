@@ -1,5 +1,6 @@
 ---
 import ResponsiveShot from "./ResponsiveShot.astro";
+import { SHOT_WIDTHS } from "../data/screenshot-media.mjs";
 import { screenshotSlug, type Screenshot } from "../data/screenshots";
 
 interface Props {
@@ -31,7 +32,7 @@ const stageSizes = "(max-width: 720px) 100vw, min(78rem, 100vw)";
                       slug={screenshotSlug(shot)}
                       alt={shot.alt}
                       fallbackSrc={shot.src}
-                      widths={[640, 960, 1280]}
+                      widths={[...SHOT_WIDTHS]}
                       sizes={stageSizes}
                       width={1440}
                       height={900}

@@ -172,7 +172,7 @@ The section is a single compact row: heading, then `v{APP_VERSION} · <status>`,
 with the actions right-aligned. Progress, install-block, and error lines only
 render when they apply.
 
-Sidebar `vX.Y.Z` uses cryo accent + tooltip when an update is available; click
+Sidebar `vX.Y.Z` uses fossil accent + tooltip when an update is available; click
 opens Settings → About (does not install directly). When a quiet check (or
 **Check now**) finds an update — or a download finishes — the shell also shows an
 operator toast that deep-links here. Up-to-date and quiet-check failures stay

@@ -119,7 +119,8 @@ assistant shots are taken on that empty profile (via Settings → Open setup ass
 before the demo fleet is created. See `scripts/capture-website-screenshots.cjs`.
 
 Home and the product preview use build-time **WebP** derivatives (`website/public/media/`,
-gitignored) so phones do not download 1440×900 PNGs. Canonical PNGs stay at
+gitignored) so phones do not download 1440×900 PNGs. Widths are 640 / 960 / 1280 / **1440**
+(native capture) at a UI-friendly quality (not photo-default 72). Canonical PNGs stay at
 `/screenshots/*.png` for Open Graph, JSON-LD, and “open original”. Recapture PNGs as
 usual; `astro build` / `astro dev` regenerate WebP via
 `website/src/integrations/optimize-marketing-images.mjs`.

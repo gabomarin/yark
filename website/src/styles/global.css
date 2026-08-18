@@ -414,6 +414,7 @@ a.cta.primary:focus-visible {
   height: 100%;
   object-fit: cover;
   object-position: top center;
+  image-rendering: auto;
 }
 
 .product-slide picture {
