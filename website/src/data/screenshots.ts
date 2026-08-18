@@ -27,7 +27,7 @@ export const screenshots: Screenshot[] = [
   },
   {
     src: withBase("/screenshots/workspace-server.png"),
-    alt: "ASA dedicated server configuration in YARK with identity, Move installation, networking, cluster, and Auto-start",
+    alt: "ASA dedicated server configuration in YARK with identity, Max players, Move installation, networking, cluster, and Auto-start",
     caption:
       "Server configuration — identity, Move installation, ports, access, cluster, and Auto-start. Mods live on the Mods tab.",
   },
@@ -35,7 +35,7 @@ export const screenshots: Screenshot[] = [
     src: withBase("/screenshots/workspace-mods.png"),
     alt: "YARK Mods tab listing CurseForge Project IDs for an ASA dedicated server with enable toggles and metadata",
     caption:
-      "Mods — dense load-order table with enable toggles, Project IDs, and Worker-backed metadata.",
+      "Mods — flat panel with a dense load-order table, enable toggles, Project IDs, and Worker-backed metadata.",
   },
   {
     src: withBase("/screenshots/workspace-ini.png"),
@@ -51,9 +51,9 @@ export const screenshots: Screenshot[] = [
   },
   {
     src: withBase("/screenshots/configuration-wizard.png"),
-    alt: "YARK configuration assistant with a six-step wizard and preset ARK Ascended server-type cards",
+    alt: "YARK configuration assistant with experience-profile cards and a six-step wizard",
     caption:
-      "Configuration assistant — a guided six-step wizard with presets; nothing is written until the final review.",
+      "Configuration assistant — experience cards and a guided six-step wizard; nothing is written until the final review.",
   },
   {
     src: withBase("/screenshots/backups.png"),

@@ -213,4 +213,19 @@ describe("CloneServerDialog", () => {
     expect(screen.getByRole("button", { name: "Clone server" })).toBeDisabled();
     expect(onClone).not.toHaveBeenCalled();
   });
+
+  it("keeps Clone enabled when source ports plus 10 would exceed 65535", () => {
+    render(
+      <AppProviders>
+        <CloneServerDialog
+          opened
+          sourceServer={{ ...source, gamePort: 65530, queryPort: 65531, rconPort: 65532 }}
+          onClose={vi.fn()}
+          onClone={vi.fn(async () => true)}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("button", { name: "Clone server" })).toBeEnabled();
+  });
 });

@@ -114,8 +114,9 @@ Requires a prior app `npm run build`, Playwright, and a Windows GUI session.
 
 The capture script **always** launches Electron with an isolated `YARK_E2E_USER_DATA`
 temp profile and seeds a public demo fleet there. It never opens your normal app
-userData, so private server names/paths cannot leak into marketing shots. See
-`scripts/capture-website-screenshots.cjs`.
+userData, so private server names/paths cannot leak into marketing shots. Setup
+assistant shots are taken on that empty profile (via Settings → Open setup assistant)
+before the demo fleet is created. See `scripts/capture-website-screenshots.cjs`.
 
 Home and the product preview use build-time **WebP** derivatives (`website/public/media/`,
 gitignored) so phones do not download 1440×900 PNGs. Canonical PNGs stay at

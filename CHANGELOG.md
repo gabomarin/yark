@@ -32,6 +32,11 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Upgrade keeps a leftover Launch/extra `-WinLiveMaxPlayers` cap on the new **Max players** field instead of silently starting at 70.
+- Configuration wizard Review no longer lists structure pickup time when **Always allow structure pickup** is on (that timer is not written).
+- Clone port +10 wraps within 1024–65535 so Clone stays usable near the top of the range.
+- First-run cluster **Yes** shows the directory error when no default base folder is set, and the suggested folder follows a later base-folder change.
+- Clone INI seed and optional folder copy fail closed when the destination (or a parent) is a Windows directory junction.
 - Shell main content stays in the viewport after Mantine `styles.layer.css` — navbar modules no longer override AppShell fixed positioning (#230).
 - INI preview validates leftover **Max players** on `[/Script/Engine.GameSession]` and `[ServerSettings]` if present; wizard apply toasts the preview change count (#230).
 - The INI editor hides `MaxPlayers` because ASA ignores that INI key; **Max players** on the Server tab is the live cap (`-WinLiveMaxPlayers`). Raw text mode explains the split (#230).

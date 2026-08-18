@@ -12,6 +12,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import type { CloneInstallProgress, InstallationHealthStatus, ServerProfile } from "@shared/types";
+import { offsetPort } from "@shared/types";
 import {
   getServerFolderNameError,
   isValidServerFolderName,
@@ -74,9 +75,9 @@ function toFormState(source: ServerProfile | null): FormState {
   return {
     name,
     sessionName: `${source.sessionName}-copy`,
-    gamePort: String(source.gamePort + 10),
-    queryPort: String(source.queryPort + 10),
-    rconPort: String(source.rconPort + 10),
+    gamePort: String(offsetPort(source.gamePort, 10)),
+    queryPort: String(offsetPort(source.queryPort, 10)),
+    rconPort: String(offsetPort(source.rconPort, 10)),
     installDir: suggestCloneInstallDir(source.installDir, name),
     copyInstallFolder: false,
   };

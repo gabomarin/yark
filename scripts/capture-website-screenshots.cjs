@@ -104,6 +104,48 @@ async function shot(page, outPath) {
   console.log(`WROTE ${outPath}`);
 }
 
+/** Isolated E2E profiles skip auto-open; reopen from Settings (empty fleet = first-run). */
+async function captureSetupAssistant(page, outDir) {
+  await page.evaluate(() => {
+    window.localStorage.setItem("settings.defaultServerBaseFolder", "D:\\ASA\\Servers");
+  });
+  await goNav(page, "Settings");
+  await page.getByRole("heading", { name: "Settings" }).waitFor({
+    state: "visible",
+    timeout: 10000,
+  });
+  await page.getByRole("button", { name: /open setup assistant/i }).click();
+  await page.locator("[data-setup-wizard]").waitFor({
+    state: "visible",
+    timeout: 10000,
+  });
+  const continueBtn = page.getByRole("button", { name: /^continue$/i });
+  await continueBtn.click();
+  await settle(page, 500);
+  await shot(page, path.join(outDir, "setup-assistant.png"));
+  await continueBtn.click();
+  await continueBtn.click();
+  const yes = page.getByRole("radio", { name: /yes/i });
+  if ((await yes.count()) > 0) {
+    await yes.first().click();
+    await settle(page, 500);
+    await shot(page, path.join(outDir, "setup-assistant-cluster.png"));
+  } else {
+    console.warn("WARN: setup cluster Yes radio not found; skipped cluster shot");
+  }
+  const skip = page.getByRole("button", { name: /skip setup/i });
+  if ((await skip.count()) > 0) {
+    await skip.first().click();
+  } else {
+    await page.keyboard.press("Escape");
+  }
+  await page.locator("[data-setup-wizard]").waitFor({
+    state: "hidden",
+    timeout: 10000,
+  }).catch(() => undefined);
+  await settle(page, 400);
+}
+
 async function redactPrivatePaths(page) {
   try {
     await page.evaluate(() => {
@@ -317,6 +359,7 @@ async function run() {
       });
       await page.waitForLoadState("domcontentloaded");
       await page.setViewportSize(VIEWPORT);
+      await captureSetupAssistant(page, outDir);
       await seedIsolatedFleet(app, page);
       await ensureDemoCluster(app, page);
     } finally {

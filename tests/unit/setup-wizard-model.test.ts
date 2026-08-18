@@ -3,6 +3,7 @@ import {
   canContinueClusterStep,
   pendingClusterFromStep,
   suggestSetupClusterDir,
+  syncAutoSuggestedClusterDir,
   stepsForMode,
   toSyntheticClusterOption,
 } from "@features/setup-wizard/setupWizardModel";
@@ -84,5 +85,40 @@ describe("setupWizardModel", () => {
       "D:\\ASA\\Servers\\Clusters\\ember",
     );
     expect(suggestSetupClusterDir(null, "ember")).toBe("");
+  });
+
+  it("keeps an auto-suggested cluster folder in sync with the default base", () => {
+    expect(
+      syncAutoSuggestedClusterDir({
+        shareCluster: true,
+        dirAutoSuggested: true,
+        defaultBaseFolder: "E:\\ARK",
+        clusterId: "ember",
+      }),
+    ).toEqual({
+      clusterDir: "E:\\ARK\\Clusters\\ember",
+      dirAutoSuggested: true,
+      markDirTouched: false,
+    });
+    expect(
+      syncAutoSuggestedClusterDir({
+        shareCluster: true,
+        dirAutoSuggested: true,
+        defaultBaseFolder: null,
+        clusterId: "ember",
+      }),
+    ).toEqual({
+      clusterDir: "",
+      dirAutoSuggested: false,
+      markDirTouched: true,
+    });
+    expect(
+      syncAutoSuggestedClusterDir({
+        shareCluster: true,
+        dirAutoSuggested: false,
+        defaultBaseFolder: "E:\\ARK",
+        clusterId: "ember",
+      }),
+    ).toBeNull();
   });
 });

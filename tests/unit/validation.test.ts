@@ -4,6 +4,7 @@ import {
   validateProfileInput,
 } from "@backend/domains/instances/validation";
 import type { ServerProfile, ServerProfileInput } from "@shared/types";
+import { offsetPort, PORT_MAX, PORT_MIN } from "@shared/types";
 
 function validInput(overrides: Partial<ServerProfileInput> = {}): ServerProfileInput {
   return {
@@ -109,6 +110,12 @@ describe("validateProfileInput", () => {
   it("rejects ports out of range", () => {
     const issues = validateProfileInput(validInput({ gamePort: 80 }));
     expect(issues.some((i) => i.field === "gamePort")).toBe(true);
+  });
+
+  it("wraps clone port offsets back into the valid range", () => {
+    expect(offsetPort(7777, 10)).toBe(7787);
+    expect(offsetPort(PORT_MAX - 5, 10)).toBe(PORT_MIN + 4);
+    expect(offsetPort(PORT_MIN, 0)).toBe(PORT_MIN);
   });
 
   it("accepts maxPlayers at the 0–255 bounds and rejects outside", () => {

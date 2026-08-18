@@ -54,6 +54,24 @@ export function suggestSetupClusterDir(
   return `${base}\\Clusters\\${id}`;
 }
 
+/** Keep an auto-suggested cluster folder aligned with the current default base. */
+export function syncAutoSuggestedClusterDir(input: {
+  shareCluster: boolean;
+  dirAutoSuggested: boolean;
+  defaultBaseFolder: string | null;
+  clusterId: string;
+}): { clusterDir: string; dirAutoSuggested: boolean; markDirTouched: boolean } | null {
+  if (!input.shareCluster || !input.dirAutoSuggested) {
+    return null;
+  }
+  const clusterDir = suggestSetupClusterDir(input.defaultBaseFolder, input.clusterId);
+  return {
+    clusterDir,
+    dirAutoSuggested: clusterDir.length > 0,
+    markDirTouched: clusterDir.length === 0,
+  };
+}
+
 export function toSyntheticClusterOption(
   pending: PendingSetupCluster,
 ): KnownClusterOption {

@@ -251,6 +251,28 @@ describe.runIf(IS_WINDOWS)("Windows junction hardening (#322)", () => {
     expect(readFileSync(join(sentinel, "marker.txt"), "utf8")).toBe("UNTOUCHED");
   });
 
+  it("robocopyTree with includeDestLeaf rejects a dest that is itself a junction", async () => {
+    const root = trackTemp(mkdtempSync(join(tmpdir(), "yark-junc-robo-leaf-")));
+    const sentinel = join(root, "sentinel");
+    const dest = join(root, "dest");
+    const source = join(root, "source");
+    mkdirSync(sentinel, { recursive: true });
+    mkdirSync(join(source, "data"), { recursive: true });
+    writeFileSync(join(source, "data", "payload.txt"), "PAYLOAD", "utf8");
+    writeFileSync(join(sentinel, "marker.txt"), "UNTOUCHED", "utf8");
+    createJunction(dest, sentinel);
+
+    await expect(
+      robocopyTree(source, dest, {
+        operationLabel: "clone dest junction",
+        includeDestLeaf: true,
+      }),
+    ).rejects.toThrow(/link or junction/i);
+
+    expect(readFileSync(join(sentinel, "marker.txt"), "utf8")).toBe("UNTOUCHED");
+    expect(existsSync(join(sentinel, "data"))).toBe(false);
+  });
+
   it("resolveWorldMapSaveDir ignores a map folder that is a junction", async () => {
     const { resolveWorldMapSaveDir } = await import(
       "@backend/domains/backups/world-snapshot"

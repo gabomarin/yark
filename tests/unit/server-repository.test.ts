@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { DatabaseSync } from "node:sqlite";
 import { openDatabase } from "@backend/infra/db/database";
+import { backfillMaxPlayersFromLegacyLaunchArgs } from "@backend/infra/db/backfill-max-players";
 import {
   coerceMapModId,
   ServerRepository,
@@ -170,5 +171,25 @@ describe("ServerRepository", () => {
       suggestion: "Retry after checking the log",
       context: { exitCode: 8 },
     });
+  });
+
+  it("promotes leftover Launch/extra WinLiveMaxPlayers into max_players", () => {
+    const created = repo.create(input({ extraArgs: ["-NoBattlEye"], maxPlayers: 70 }));
+    db.prepare(
+      "UPDATE servers SET extra_args = ?, structured_launch_args = ? WHERE id = ?",
+    ).run(
+      JSON.stringify(["-NoBattlEye", "-WinLiveMaxPlayers=40"]),
+      JSON.stringify({
+        "winlivemaxplayers-integer": { enabled: true, value: "20" },
+      }),
+      created.id,
+    );
+
+    backfillMaxPlayersFromLegacyLaunchArgs(db);
+
+    const next = repo.get(created.id);
+    expect(next?.maxPlayers).toBe(40);
+    expect(next?.extraArgs).toEqual(["-NoBattlEye"]);
+    expect(next?.structuredLaunchArgs?.["winlivemaxplayers-integer"]).toBeUndefined();
   });
 });

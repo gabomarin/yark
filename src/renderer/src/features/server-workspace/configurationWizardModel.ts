@@ -938,6 +938,7 @@ export function wizardChanges(
       || field === "maxWildDinoLevel"
       || field === "difficultyOffset"
       || field === "overrideOfficialDifficulty"
+      || (field === "structurePickupSeconds" && current.alwaysAllowStructurePickup)
       || initial[field] === current[field]
     ) {
       continue;

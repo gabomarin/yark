@@ -14,6 +14,7 @@ Each profile is one dedicated-server install YARK can manage: path, map, session
 | --- | --- |
 | Name | 1–64 characters (Windows folder-safe) |
 | Map + session | Required. **New server** is official maps only; edit / import / clone may use an enabled **Map mod** or **Custom…** |
+| Max players | 0–255 on the Server form. Values 1–255 launch `-WinLiveMaxPlayers`. Empty or **0** omits the flag (ASA then defaults to 70). ASA ignores INI `MaxPlayers`. |
 | Install dir | Absolute Windows path (`C:\…` or UNC) |
 | Ports | 1024–65535; game, query, and RCON **distinct inside the profile** |
 | Admin password | Length ≥ 4 |
@@ -62,7 +63,7 @@ YARK flags the **same numeric port** used by different profiles (any of game / q
 
 If the host probe finds a port **busy**, start is blocked (edit ports or **Start this session** on a suggested free set). If the probe is **inconclusive**, you can also **Start anyway** — that override never applies when a port is confirmed busy. Session ports affect INI and launch for that run only; the saved profile stays unchanged.
 
-Clone bumps ports by +10 (retries with higher offsets if needed).
+Clone bumps ports by +10 (wraps within 1024–65535; retries with higher offsets if needed).
 
 ## Enable, disable, and clone
 

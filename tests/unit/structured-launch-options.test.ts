@@ -7,6 +7,8 @@ import {
   encodeServerPlatformSelection,
   findLaunchArgConflicts,
   listStructuredLaunchUiOptions,
+  parseWinLiveMaxPlayersValue,
+  takeLegacyWinLiveMaxPlayers,
   STRUCTURED_LAUNCH_GROUP_ORDER,
 } from "@shared/structured-launch-options";
 
@@ -174,5 +176,25 @@ describe("structured-launch-options", () => {
       (o) => o.curation.id === "passivemods-modid1-[-modid2-[...]]",
     );
     expect(passive?.curation.group).toBe("world");
+  });
+
+  it("parses leftover 0.12 WinLiveMaxPlayers tokens; extra args win", () => {
+    expect(parseWinLiveMaxPlayersValue("-WinLiveMaxPlayers=40")).toBe(40);
+    expect(parseWinLiveMaxPlayersValue("?WinLiveMaxPlayers=9")).toBe(9);
+    expect(parseWinLiveMaxPlayersValue("-WinLiveMaxPlayers=0")).toBeNull();
+    expect(parseWinLiveMaxPlayersValue("-NoBattlEye")).toBeNull();
+
+    const taken = takeLegacyWinLiveMaxPlayers({
+      structuredLaunchArgs: {
+        nobattleye: { enabled: true },
+        "winlivemaxplayers-integer": { enabled: true, value: "20" },
+      },
+      extraArgs: ["-NoBattlEye", "-WinLiveMaxPlayers=40"],
+    });
+    expect(taken.maxPlayers).toBe(40);
+    expect(taken.extraArgs).toEqual(["-NoBattlEye"]);
+    expect(taken.structuredLaunchArgs).toEqual({
+      nobattleye: { enabled: true },
+    });
   });
 });

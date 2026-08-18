@@ -1,5 +1,6 @@
 import { DatabaseSync } from "node:sqlite";
 import { existsSync, statSync } from "node:fs";
+import { backfillMaxPlayersFromLegacyLaunchArgs } from "./backfill-max-players";
 import {
   isOnDiskProfileDatabasePath,
   writeProfileDatabaseSnapshot,
@@ -329,6 +330,7 @@ export function openDatabaseApplyingMigrations(
     }
 
     assertProfileDatabaseUsable(db, path);
+    backfillMaxPlayersFromLegacyLaunchArgs(db);
 
     if (hadExistingOnDiskDb) {
       try {

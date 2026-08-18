@@ -43,6 +43,11 @@ export interface RobocopyTreeOptions {
   threads?: number;
   /** Extra label used in error messages. */
   operationLabel?: string;
+  /**
+   * When true, reject if `dest` itself is a junction (clone into a new folder).
+   * Default false so cache/move can write into an operator-approved install root.
+   */
+  includeDestLeaf?: boolean;
 }
 
 /**
@@ -72,11 +77,11 @@ export async function robocopyTree(
   // `/XJ` does not stop Robocopy from writing *through* an existing destination
   // junction into an external folder — reject those links up front. Also reject
   // when dest is missing but a parent path is a junction (escape on create).
-  // Dest itself may be a junction (operator-approved install root).
+  // Dest itself may be a junction unless `includeDestLeaf` (clone into a new folder).
   await assertNoReparsePointAncestors(dest, {
     operationLabel: label,
     isCancelled: options.isCancelled,
-    includeLeaf: false,
+    includeLeaf: options.includeDestLeaf === true,
     maxAncestors: 8,
   });
   await assertNoReparsePointsUnderRoot(dest, {
