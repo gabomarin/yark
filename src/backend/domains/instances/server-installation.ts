@@ -20,7 +20,7 @@ const OFFICIAL_VERSION_TTL_MS = 15 * 60 * 1000;
 const OFFICIAL_SERVER_STATUS_URL =
   "https://cdn2.arkdedicated.com/asa/officialserverstatus.ini";
 
-let officialVersionCache: {
+const officialVersionCache: {
   value: string | null;
   networkStatus: OfficialNetworkStatus;
   checkedAt: number;
@@ -32,7 +32,7 @@ let officialVersionCache: {
   inFlight: null,
 };
 
-let officialBuildCache: {
+const officialBuildCache: {
   value: string | null;
   checkedAt: number;
   inFlight: Promise<string | null> | null;

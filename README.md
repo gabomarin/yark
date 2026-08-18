@@ -158,7 +158,7 @@ Common validation commands:
 | Command | Purpose |
 | --- | --- |
 | `npm run typecheck` | Validate TypeScript without emitting files. |
-| `npm run lint` | Enforce the current feature-file size policy. |
+| `npm run lint` | Feature file-size caps, Actions pin check, and ESLint. |
 | `npm test` | Run the Vitest unit and integration suite. |
 | `npm run build` | Build the Electron application. |
 | `npm run package` | Build the Windows NSIS installer. |

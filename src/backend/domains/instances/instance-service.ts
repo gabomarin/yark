@@ -971,16 +971,13 @@ export class InstanceService extends EventEmitter {
     if (this.criticalJobs.has(id)) {
       throw new Error("Another server operation is already in progress");
     }
-    let job!: Promise<T>;
-    job = (async () => {
-      try {
-        return await work();
-      } finally {
+    const job = Promise.resolve()
+      .then(() => work())
+      .finally(() => {
         if (this.criticalJobs.get(id) === job) {
           this.criticalJobs.delete(id);
         }
-      }
-    })();
+      });
     this.criticalJobs.set(id, job);
     return job;
   }
@@ -992,8 +989,7 @@ export class InstanceService extends EventEmitter {
   ): Promise<StopJobOutcome> {
     const existing = this.stopJobs.get(id);
     if (existing !== undefined) return existing;
-    let job: Promise<StopJobOutcome>;
-    job = this.runStop(id, wantBackup, reason).finally(() => {
+    const job = this.runStop(id, wantBackup, reason).finally(() => {
       if (this.stopJobs.get(id) === job) {
         this.stopJobs.delete(id);
       }

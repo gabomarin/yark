@@ -23,13 +23,6 @@ async function measure(page) {
     if (!tableWrap) return { found: false };
 
     const head = tableWrap.firstElementChild;
-    const rows = Array.from(scrollBody.querySelectorAll(":scope > div > div")).filter((el) => {
-      return (
-        getComputedStyle(el).display === "grid" &&
-        el.children.length >= 4 &&
-        !(el.textContent ?? "").includes("SETTING")
-      );
-    });
     // Rows are nested: sectionBlock > button + row divs
     const sampleRows = Array.from(scrollBody.querySelectorAll("div")).filter((el) => {
       if (getComputedStyle(el).display !== "grid" || el.children.length < 4) return false;

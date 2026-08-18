@@ -44,9 +44,6 @@ async function measureOverviewClarity(page) {
       primary:
         card.querySelector("[data-primary-action]")?.textContent?.trim() ?? null,
     }));
-    const newServer = document.querySelector(
-      "header button, header [data-mantine-button]",
-    );
     const headerButtons = [...document.querySelectorAll("header button")].map((btn) =>
       btn.textContent?.trim(),
     );

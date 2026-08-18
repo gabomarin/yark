@@ -28,7 +28,7 @@ import {
   prepareWritableDirUnderRoot,
 } from "@backend/infra/fs/reparse-points";
 import { robocopyTree } from "@backend/domains/updates/robocopy-tree";
-import { extractZip, zipDirectory } from "@backend/domains/backups/backup-archive";
+import { zipDirectory } from "@backend/domains/backups/backup-archive";
 
 const IS_WINDOWS = process.platform === "win32";
 const roots: string[] = [];

@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  ExecFileBoundedError,
-  execFileBounded,
-} from "../../src/backend/infra/process/exec-file-bounded";
+import { execFileBounded } from "../../src/backend/infra/process/exec-file-bounded";
 
 describe("execFileBounded", () => {
   it("resolves stdout for a fast command", async () => {

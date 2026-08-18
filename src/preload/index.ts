@@ -1,8 +1,10 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { IPC, IPC_PUSH, type RendererApi } from "../shared/ipc";
+import type { AppUpdateStatus } from "../shared/app-update";
 import type {
   BackupKind,
   ClusterIniTemplateFileSelection,
+  InstallationServersMode,
   ServerIniPayload,
   ServerProfileInput,
   ServerProfilePatch,
@@ -66,7 +68,7 @@ const api: RendererApi = {
   getStatuses: () => ipcRenderer.invoke(IPC.serversStatuses),
   getInstallationInfo: (
     forceOfficialCheck?: boolean,
-    serversMode?: import("@shared/types").InstallationServersMode,
+    serversMode?: InstallationServersMode,
   ) => ipcRenderer.invoke(IPC.serversInstallation, forceOfficialCheck, serversMode),
   checkCluster: () => ipcRenderer.invoke(IPC.clusterCheck),
   sendRconCommand: (id: string, command: string) =>
@@ -335,7 +337,7 @@ const api: RendererApi = {
     };
   },
   onAppUpdate: (listener) => {
-    const handler = (_e: unknown, status: import("../shared/app-update").AppUpdateStatus) =>
+    const handler = (_e: unknown, status: AppUpdateStatus) =>
       listener(status);
     ipcRenderer.on(IPC_PUSH.appUpdate, handler);
     return () => {

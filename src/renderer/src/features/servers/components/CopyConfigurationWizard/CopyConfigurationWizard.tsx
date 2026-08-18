@@ -36,9 +36,7 @@ interface Props {
 
 export function CopyConfigurationWizard(props: Props): ReactElement {
   const [step, setStep] = useState<CopyConfigurationStep>(1);
-  const [sourceId, setSourceId] = useState<string | null>(
-    () => props.initialSourceId,
-  );
+  const [sourceId] = useState<string | null>(() => props.initialSourceId);
   const [targetIds, setTargetIds] = useState<string[]>(() =>
     props.initialTargetId !== null && props.initialTargetId !== undefined
       ? [props.initialTargetId]

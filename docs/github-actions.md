@@ -9,7 +9,7 @@ human-readable version comment on the line above each `uses:` entry. Mutable tag
 
 | Workflow | Purpose | Default permissions |
 | --- | --- | --- |
-| [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Typecheck, lint, test, build, Windows Electron E2E (#12) | `contents: read` |
+| [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Typecheck, `npm run lint` (size + Actions pins + ESLint), test, build, Windows Electron E2E (#12) | `contents: read` |
 | [`.github/workflows/website-ci.yml`](../.github/workflows/website-ci.yml) | Astro site build | `contents: read` |
 | [`.github/workflows/changelog.yml`](../.github/workflows/changelog.yml) | Require Unreleased changelog | `contents: read`, `pull-requests: read` |
 | [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) | Deploy site to GitHub Pages | `contents: read`, `pages: write`, `id-token: write` |
