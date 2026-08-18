@@ -116,6 +116,8 @@ describe("validateProfileInput", () => {
     expect(offsetPort(7777, 10)).toBe(7787);
     expect(offsetPort(PORT_MAX - 5, 10)).toBe(PORT_MIN + 4);
     expect(offsetPort(PORT_MIN, 0)).toBe(PORT_MIN);
+    expect(offsetPort(PORT_MIN, -1)).toBe(PORT_MAX);
+    expect(offsetPort(7787, -10)).toBe(7777);
   });
 
   it("accepts maxPlayers at the 0–255 bounds and rejects outside", () => {

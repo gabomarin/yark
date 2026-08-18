@@ -207,6 +207,20 @@ describe("ServerRepository", () => {
     expect(next?.extraArgs).toEqual(["-NoBattlEye"]);
   });
 
+  it("promotes uppercase leftover WinLiveMaxPlayers extra args", () => {
+    const created = repo.create(input({ extraArgs: ["-NoBattlEye"], maxPlayers: 70 }));
+    db.prepare("UPDATE servers SET extra_args = ? WHERE id = ?").run(
+      JSON.stringify(["-NoBattlEye", "-WINLIVEMAXPLAYERS=40"]),
+      created.id,
+    );
+
+    backfillMaxPlayersFromLegacyLaunchArgs(db);
+
+    const next = repo.get(created.id);
+    expect(next?.maxPlayers).toBe(40);
+    expect(next?.extraArgs).toEqual(["-NoBattlEye"]);
+  });
+
   it("fails closed when leftover Launch JSON is corrupt", () => {
     const created = repo.create(input({ extraArgs: ["-NoBattlEye"], maxPlayers: 70 }));
     db.prepare("UPDATE servers SET extra_args = ? WHERE id = ?").run(

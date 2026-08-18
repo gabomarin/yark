@@ -246,6 +246,9 @@ async function run() {
       }
     }
     if (succeeded) {
+      // Recursive delete of the fixture roots. Nested install dirs under
+      // serversDir go with it; leftover trees after EBUSY retry exhaustion stay
+      // under C:\asa-e2e (or tmp) for the next run to overwrite.
       await removeFixtureDir(profileDir);
       await removeFixtureDir(serversDir);
     } else {

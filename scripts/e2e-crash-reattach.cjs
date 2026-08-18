@@ -1,7 +1,8 @@
 /**
  * E2E: temp profile → create → SteamCMD install → start → kill UI → reattach (#59).
  *
- * - Isolated Electron userData via YARK_E2E_USER_DATA (temp profile/DB)
+ * - Isolated Electron userData via `YARK_E2E_USER_DATA` (temp profile/DB;
+ *   skips splash and the first-run wizard). Launch `cwd` is the repo root.
  * - Server installDir under a temp folder
  * - Real install via window.api.installServerFiles (reuses host SteamCMD +
  *   asa_content_cache when STEAMCMD_PATH / setSteamCmdPath points at it)

@@ -37,8 +37,11 @@ function tableHasColumn(db: DatabaseSync, table: string, column: string): boolea
  * not on every database open. Callers that already hold a transaction should not
  * wrap this again.
  *
- * Expected scale: one operator fleet (typically tens of profiles, not thousands).
- * Only rows whose JSON still mentions WinLiveMaxPlayers are loaded.
+ * Expected scale: one operator fleet (typically tens of profiles). `LOWER(...) LIKE`
+ * still walks every `servers` row (JSON text is not indexed). Hundreds of rows
+ * remain fine for this one-shot migrate; a generated-column index is not worth a
+ * schema bump unless fleets grow far beyond that. The `LOWER` filter matches
+ * {@link takeLegacyWinLiveMaxPlayers} (`tokenStem` is ASCII-lowercased).
  */
 export function backfillMaxPlayersFromLegacyLaunchArgs(db: DatabaseSync): void {
   if (
@@ -53,8 +56,8 @@ export function backfillMaxPlayersFromLegacyLaunchArgs(db: DatabaseSync): void {
     .prepare(
       `SELECT id, max_players, extra_args, structured_launch_args
        FROM servers
-       WHERE extra_args LIKE '%winlivemaxplayers%'
-          OR structured_launch_args LIKE '%winlivemaxplayers%'`,
+       WHERE LOWER(extra_args) LIKE '%winlivemaxplayers%'
+          OR LOWER(structured_launch_args) LIKE '%winlivemaxplayers%'`,
     )
     .all() as Array<{
     id: string;
