@@ -64,9 +64,6 @@ export function DownloadRowButton(props: {
         />
       )}
       <span className={classes.rowTitle}>
-        {row.kind === "active" && (
-          <span className={classes.activeEyebrow}>SteamCMD active now</span>
-        )}
         <span className={classes.rowTitleLine}>
           <span className={classes.rowTitleText}>{row.title}</span>
           <Badge size="xs" color={statusBadgeColor(row.statusLabel)} variant="light">

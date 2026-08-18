@@ -16,7 +16,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Changed
 
 - Server-list **Resume / Pause / Cancel** sit on the progress bar (not the Start slot). Queued servers look distinct, lock Start, toast when added to Downloads, and refuse duplicate clicks. Downloads labels Pause/Cancel as a SteamCMD process action on the **active** job (#201).
-- Downloads detail shows the **SteamCMD process** bar only for the active job. Queued rows keep **Remove from queue** without a second Cancel SteamCMD control (#201).
+- Downloads detail shows the **SteamCMD process** bar only for the active job. Queued rows keep **Remove from queue** without a second Cancel SteamCMD control. Active rows no longer show a **SteamCMD active now** label (#201).
 - Queued Downloads rows slide when you **Move up / Move down** (#201).
 - One files job per server: **Update** or **Install** replaces a queued **Verify**; a running job is never interrupted. Verify will not queue on top of Update/Install (#201).
 
