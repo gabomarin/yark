@@ -20,6 +20,7 @@ const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
+const { openSettingsCategory } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -264,11 +265,11 @@ async function run() {
     await page.waitForLoadState("domcontentloaded");
     await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 15_000 });
 
-    // Piped mode: Show server console on start must stay off.
+    // Piped mode: Show server console on start must stay off (Settings → Servers).
     await page.evaluate(() => {
       window.localStorage.setItem("overview.openNativeTerminalOnStart", "0");
     });
-    await page.getByRole("button", { name: "Settings", exact: true }).first().click();
+    await openSettingsCategory(page, "Servers");
     await page.getByText("Show server console on start", { exact: true }).waitFor({
       state: "visible",
       timeout: 10_000,

@@ -8,8 +8,12 @@
  * Requires: prior npm run build
  */
 const assert = require("node:assert/strict");
-const path = require("node:path");
-const { _electron: electron } = require("playwright");
+const {
+  createE2eFixtureRoots,
+  launchElectronApp,
+  waitForOverview,
+  removeFixtureDir,
+} = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -56,20 +60,16 @@ async function closeAppGracefully(app) {
 }
 
 async function run() {
-  const projectRoot = path.resolve(__dirname, "..");
-  process.chdir(projectRoot);
+  const { profileDir } = createE2eFixtureRoots("quit-policy", { createServers: false });
 
   const consoleErrors = [];
   const pageErrors = [];
 
-  const app = await electron.launch({
-    args: ["."],
-    cwd: projectRoot,
-  });
+  const app = await launchElectronApp({ profileDir });
 
   let page = null;
   try {
-    page = await app.firstWindow();
+    page = await waitForOverview(app);
     await autoConfirmNativeDialogs(app);
 
     page.on("console", (msg) => {
@@ -199,6 +199,7 @@ async function run() {
         // ignore
       }
     }
+    await removeFixtureDir(profileDir);
   }
 }
 

@@ -166,8 +166,9 @@ export async function assertPathChainHasNoReparsePoints(
  * point (up to `maxAncestors` hops). Stops at the filesystem root or optional
  * `stopAt` (exclusive — `stopAt` itself is not checked).
  *
- * When `includeLeaf` is false (default for robocopy into an approved install
- * root), `destDir` itself may be a junction; only parents are checked.
+ * When `includeLeaf` is false (robocopy into an approved install root),
+ * `destDir` itself may be a junction; only parents are checked.
+ * Default is `includeLeaf: true` — reject dest if it is a reparse point.
  */
 export async function assertNoReparsePointAncestors(
   destDir: string,

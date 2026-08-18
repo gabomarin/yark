@@ -18,7 +18,6 @@ import {
   SETUP_WIZARD_STEP_LABELS,
   canContinueClusterStep,
   pendingClusterFromStep,
-  suggestSetupClusterDir,
   syncAutoSuggestedClusterDir,
   stepsForMode,
   type PendingSetupCluster,
@@ -231,40 +230,25 @@ export function SetupWizard(props: Props): ReactElement {
             onShareClusterChange={(share) => {
               setShareCluster(share);
               if (!share) {
+                setClusterDir("");
+                setDirAutoSuggested(false);
                 return;
               }
               if (clusterDir.trim().length > 0 && !dirAutoSuggested) {
                 return;
               }
-              const suggested = suggestSetupClusterDir(
-                props.defaultBaseFolder,
-                clusterId,
-              );
-              setClusterDir(suggested);
-              setDirAutoSuggested(suggested.length > 0);
-              if (suggested.length === 0) {
-                setDirTouched(true);
-              }
+              setDirAutoSuggested(true);
             }}
             onClusterIdChange={(value) => {
               setClusterId(value);
               setIdTouched(true);
             }}
             onGenerateId={() => {
-              const nextId = suggestClusterId();
-              setClusterId(nextId);
-              if (dirAutoSuggested || clusterDir.trim().length === 0) {
-                const suggested = suggestSetupClusterDir(
-                  props.defaultBaseFolder,
-                  nextId,
-                );
-                setClusterDir(suggested);
-                setDirAutoSuggested(suggested.length > 0);
-                if (suggested.length === 0) {
-                  setDirTouched(true);
-                }
-              }
+              setClusterId(suggestClusterId());
               setIdTouched(true);
+              if (dirAutoSuggested || clusterDir.trim().length === 0) {
+                setDirAutoSuggested(true);
+              }
             }}
             onClusterDirChange={(value) => {
               setClusterDir(value);

@@ -60,6 +60,9 @@ Domain runbooks: [docs/backups.md](docs/backups.md), [docs/updates-steamcmd.md](
 [docs/component-structure.md](docs/component-structure.md),
 [docs/design-system.md](docs/design-system.md), [docs/datatable.md](docs/datatable.md).
 Visual/e2e helpers: [docs/visual-testing.md](docs/visual-testing.md).
+When changing operator-facing UI, update and run the affected Playwright
+scripts in the same PR ([docs/e2e-validation.md](docs/e2e-validation.md#ui-changes-and-e2e),
+[`.cursor/rules/e2e-ui.mdc`](.cursor/rules/e2e-ui.mdc)).
 
 ## Prefer Mantine (renderer UI)
 

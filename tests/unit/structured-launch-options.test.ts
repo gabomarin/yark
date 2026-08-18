@@ -181,7 +181,8 @@ describe("structured-launch-options", () => {
   it("parses leftover 0.12 WinLiveMaxPlayers tokens; extra args win", () => {
     expect(parseWinLiveMaxPlayersValue("-WinLiveMaxPlayers=40")).toBe(40);
     expect(parseWinLiveMaxPlayersValue("?WinLiveMaxPlayers=9")).toBe(9);
-    expect(parseWinLiveMaxPlayersValue("-WinLiveMaxPlayers=0")).toBeNull();
+    expect(parseWinLiveMaxPlayersValue("-WinLiveMaxPlayers=0")).toBe(0);
+    expect(parseWinLiveMaxPlayersValue("-WinLiveMaxPlayers=256")).toBeNull();
     expect(parseWinLiveMaxPlayersValue("-NoBattlEye")).toBeNull();
 
     const taken = takeLegacyWinLiveMaxPlayers({
@@ -196,5 +197,15 @@ describe("structured-launch-options", () => {
     expect(taken.structuredLaunchArgs).toEqual({
       nobattleye: { enabled: true },
     });
+
+    const omit = takeLegacyWinLiveMaxPlayers({
+      structuredLaunchArgs: {
+        "winlivemaxplayers-integer": { enabled: true, value: "20" },
+      },
+      extraArgs: ["-NoBattlEye", "-WinLiveMaxPlayers=0"],
+    });
+    expect(omit.maxPlayers).toBe(0);
+    expect(omit.extraArgs).toEqual(["-NoBattlEye"]);
+    expect(omit.structuredLaunchArgs).toEqual({});
   });
 });

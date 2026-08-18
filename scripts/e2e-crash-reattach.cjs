@@ -1,7 +1,7 @@
 /**
  * E2E: temp profile → create → SteamCMD install → start → kill UI → reattach (#59).
  *
- * - Isolated Electron --user-data-dir (temp profile/DB)
+ * - Isolated Electron userData via YARK_E2E_USER_DATA (temp profile/DB)
  * - Server installDir under a temp folder
  * - Real install via window.api.installServerFiles (reuses host SteamCMD +
  *   asa_content_cache when STEAMCMD_PATH / setSteamCmdPath points at it)
@@ -27,7 +27,7 @@ const { tmpdir } = require("node:os");
 const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
-const { pickPathField } = require("./e2e-launch.cjs");
+const { pickPathField, waitForOverview } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -166,8 +166,9 @@ async function launchApp(projectRoot, userData, steamCmdExe) {
   delete env.ELECTRON_RUN_AS_NODE;
   env.STEAMCMD_PATH = steamCmdExe;
   env.ARK_STEAMCMD_DIR = path.dirname(steamCmdExe);
+  env.YARK_E2E_USER_DATA = userData;
   return electron.launch({
-    args: [`--user-data-dir=${userData}`, "."],
+    args: ["."],
     cwd: projectRoot,
     env,
   });
@@ -302,12 +303,7 @@ async function run() {
   try {
     // 1) Temp UI profile
     app = await launchApp(projectRoot, userData, steamCmdExe);
-    const page = await app.firstWindow();
-    await page.waitForLoadState("domcontentloaded");
-    await page.locator("[data-overview-page]").waitFor({
-      state: "visible",
-      timeout: 20000,
-    });
+    const page = await waitForOverview(app);
     page.setDefaultTimeout(INSTALL_TIMEOUT_MS);
 
     const steamSet = await page.evaluate(async (exePath) => {
@@ -421,12 +417,7 @@ async function run() {
 
     // 6) Relaunch same temp profile → reattach
     app = await launchApp(projectRoot, userData, steamCmdExe);
-    const page2 = await app.firstWindow();
-    await page2.waitForLoadState("domcontentloaded");
-    await page2.locator("[data-overview-page]").waitFor({
-      state: "visible",
-      timeout: 20000,
-    });
+    const page2 = await waitForOverview(app);
 
     const reattached = await waitForSamePidAttached(page2, managedPid);
     console.log(

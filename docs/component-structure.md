@@ -90,7 +90,9 @@ When asked to “simplify” or when hitting the split checklist:
 2. Extract **repeated row/badge** → molecule under `components/`.
 3. Extract **each major card/panel** → organism.
 4. Leave the page as orchestration + a short JSX tree.
-5. Keep selectors (`data-*`) stable for visual/e2e scripts.
+5. Keep selectors (`data-*`) stable for visual/e2e scripts. If the UI change
+   would break Playwright clicks, update `scripts/e2e-*.cjs` in the same PR
+   ([e2e-validation.md](e2e-validation.md#ui-changes-and-e2e)).
 6. Run the feature’s unit tests + `npm run typecheck`.
 
 Reference implementation: `src/renderer/src/features/clusters/`.

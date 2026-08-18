@@ -13,7 +13,7 @@ const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
 const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
-const { pickPathField } = require("./e2e-launch.cjs");
+const { openSettingsCategory, pickPathField, waitForOverview } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -218,13 +218,17 @@ async function createSeedServer(app, page, serverName, installDir, ports) {
 
 async function launchApp(projectRoot, userData) {
   return electron.launch({
-    args: [`--user-data-dir=${userData}`, "."],
+    args: ["."],
     cwd: projectRoot,
+    env: {
+      ...process.env,
+      YARK_E2E_USER_DATA: userData,
+    },
   });
 }
 
 async function waitSettingsReady(page) {
-  await goNav(page, "Settings");
+  await openSettingsCategory(page, "Logs");
   await page.getByRole("heading", { name: "Settings", level: 1 }).waitFor({
     timeout: 10000,
   });
@@ -265,19 +269,13 @@ async function run() {
   let app = await launchApp(projectRoot, userData);
 
   try {
-    let page = await app.firstWindow();
+    let page = await waitForOverview(app);
     page.on("console", (msg) => {
       if (msg.type() === "error") consoleErrors.push(msg.text());
     });
     page.on("pageerror", (err) => pageErrors.push(err.message));
     page.on("dialog", async (dialog) => {
       await dialog.accept();
-    });
-
-    await page.waitForLoadState("domcontentloaded");
-    await page.locator("[data-overview-page]").waitFor({
-      state: "visible",
-      timeout: 20000,
     });
 
     // Disable auto-cleanup before the 60s scheduler can fire.
@@ -309,17 +307,11 @@ async function run() {
     );
 
     app = await launchApp(projectRoot, userData);
-    page = await app.firstWindow();
+    page = await waitForOverview(app);
     page.on("console", (msg) => {
       if (msg.type() === "error") consoleErrors.push(msg.text());
     });
     page.on("pageerror", (err) => pageErrors.push(err.message));
-
-    await page.waitForLoadState("domcontentloaded");
-    await page.locator("[data-overview-page]").waitFor({
-      state: "visible",
-      timeout: 20000,
-    });
 
     await waitSettingsReady(page);
 

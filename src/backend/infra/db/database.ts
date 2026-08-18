@@ -1,6 +1,6 @@
 import { DatabaseSync } from "node:sqlite";
 import { existsSync, statSync } from "node:fs";
-import { backfillMaxPlayersFromLegacyLaunchArgs } from "./backfill-max-players";
+import { backfillMaxPlayersFromLegacyLaunchArgs, MAX_PLAYERS_LAUNCH_BACKFILL_SCHEMA_VERSION } from "./backfill-max-players";
 import {
   isOnDiskProfileDatabasePath,
   writeProfileDatabaseSnapshot,
@@ -206,6 +206,10 @@ const MIGRATIONS: Migration[] = [
       ALTER TABLE servers ADD COLUMN max_players INTEGER NOT NULL DEFAULT 70;
     `,
   },
+  {
+    version: MAX_PLAYERS_LAUNCH_BACKFILL_SCHEMA_VERSION,
+    sql: "SELECT 1;",
+  },
 ];
 
 /** Default SQLite lock wait before open/migrate fails (see #218). */
@@ -317,6 +321,9 @@ export function openDatabaseApplyingMigrations(
       db.exec("BEGIN;");
       try {
         db.exec(migration.sql);
+        if (migration.version === MAX_PLAYERS_LAUNCH_BACKFILL_SCHEMA_VERSION) {
+          backfillMaxPlayersFromLegacyLaunchArgs(db);
+        }
         db.exec(`PRAGMA user_version = ${migration.version};`);
         db.exec("COMMIT;");
       } catch (error) {
@@ -330,7 +337,6 @@ export function openDatabaseApplyingMigrations(
     }
 
     assertProfileDatabaseUsable(db, path);
-    backfillMaxPlayersFromLegacyLaunchArgs(db);
 
     if (hadExistingOnDiskDb) {
       try {

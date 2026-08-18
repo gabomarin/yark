@@ -192,4 +192,18 @@ describe("ServerRepository", () => {
     expect(next?.extraArgs).toEqual(["-NoBattlEye"]);
     expect(next?.structuredLaunchArgs?.["winlivemaxplayers-integer"]).toBeUndefined();
   });
+
+  it("promotes leftover WinLiveMaxPlayers=0 onto max_players (omit flag)", () => {
+    const created = repo.create(input({ extraArgs: ["-NoBattlEye"], maxPlayers: 50 }));
+    db.prepare("UPDATE servers SET extra_args = ? WHERE id = ?").run(
+      JSON.stringify(["-NoBattlEye", "-WinLiveMaxPlayers=0"]),
+      created.id,
+    );
+
+    backfillMaxPlayersFromLegacyLaunchArgs(db);
+
+    const next = repo.get(created.id);
+    expect(next?.maxPlayers).toBe(0);
+    expect(next?.extraArgs).toEqual(["-NoBattlEye"]);
+  });
 });

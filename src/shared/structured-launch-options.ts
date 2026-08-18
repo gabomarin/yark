@@ -410,17 +410,18 @@ export function isWinLiveMaxPlayersArg(arg: string): boolean {
   return tokenStem(arg) === "winlivemaxplayers";
 }
 
-const WIN_LIVE_MAX_PLAYERS_MIN = 1;
 const WIN_LIVE_MAX_PLAYERS_MAX = 255;
 
 function isWinLiveMaxPlayersOptionId(id: string): boolean {
   const stem = tokenStem(id);
+  // 0.12 catalog id is `winlivemaxplayers-integer`. Prefix match is only for this
+  // one-time migration — do not reuse that prefix for a different structured option.
   return stem === "winlivemaxplayers" || stem.startsWith("winlivemaxplayers-");
 }
 
 function parseSlotCap(raw: string): number | null {
   const n = Number.parseInt(raw.trim(), 10);
-  if (!Number.isInteger(n) || n < WIN_LIVE_MAX_PLAYERS_MIN || n > WIN_LIVE_MAX_PLAYERS_MAX) {
+  if (!Number.isInteger(n) || n < 0 || n > WIN_LIVE_MAX_PLAYERS_MAX) {
     return null;
   }
   return n;
@@ -447,6 +448,7 @@ export type LegacyWinLiveMaxPlayersTake = {
 /**
  * Read a 0.12 Launch/extra `-WinLiveMaxPlayers` cap and strip those tokens.
  * Extra args win when both are present (they were appended last on the 0.12 CLI).
+ * `0` is a valid target (profile omits the flag; ASA then defaults to 70).
  */
 export function takeLegacyWinLiveMaxPlayers(input: {
   structuredLaunchArgs: StructuredLaunchArgs | null | undefined;
@@ -471,9 +473,11 @@ export function takeLegacyWinLiveMaxPlayers(input: {
 
   const extraArgs: string[] = [];
   for (const arg of input.extraArgs) {
-    const parsed = parseWinLiveMaxPlayersValue(arg);
-    if (parsed !== null) {
-      maxPlayers = parsed;
+    if (isWinLiveMaxPlayersArg(arg)) {
+      const parsed = parseWinLiveMaxPlayersValue(arg);
+      if (parsed !== null) {
+        maxPlayers = parsed;
+      }
       continue;
     }
     extraArgs.push(arg);
