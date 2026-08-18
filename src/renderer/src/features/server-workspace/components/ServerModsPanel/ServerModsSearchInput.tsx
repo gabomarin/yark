@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { Button, Group } from "@mantine/core";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { useUiDensity } from "@app/AppProviders";
-import { SearchField } from "@ui/SearchField/SearchField";
+import { SearchField, searchFieldIconSize } from "@ui/SearchField/SearchField";
 import classes from "./ServerModsPanel.module.css";
 
 interface Props {
@@ -15,6 +15,7 @@ interface Props {
 export function ServerModsSearchInput(props: Props): ReactElement {
   const density = useUiDensity();
   const size = density === "compact" ? "sm" : "md";
+  const iconSize = searchFieldIconSize(size);
 
   return (
     <Group align="flex-end" wrap="wrap">
@@ -31,7 +32,7 @@ export function ServerModsSearchInput(props: Props): ReactElement {
       />
       <Button
         size={size}
-        leftSection={<MagnifyingGlass size={16} />}
+        leftSection={<MagnifyingGlass size={iconSize} />}
         loading={props.searching}
         onClick={props.onSearch}
       >

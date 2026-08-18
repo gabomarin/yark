@@ -1,4 +1,5 @@
 .root {
+  /* Card padding is 0 — header/content own spacing, like Server Settings .embedded. */
   flex: 1;
   min-height: 0;
   overflow: hidden;
