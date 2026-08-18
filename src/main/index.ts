@@ -235,8 +235,23 @@ if (gotSingleInstanceLock) {
     let splashMaxTimer: ReturnType<typeof setTimeout> | null = null;
     let mainReadyToShow = false;
     let splashShownAt = 0;
-    /** Assigned after reattach; no-op until then. Skips while splash is still up. */
+    /**
+     * Assigned after reattach (needs `instances` / SQLite). No-op until then.
+     * Skips while splash is still up. Single-flight for the process lifetime
+     * (`show` can fire again after hide-to-tray or an early splash-time show).
+     */
     let notifyMainUiReadyForAutoStart = (): void => {};
+    /** `show` is the trigger; call notify only when `show()` would be a no-op. */
+    const showMainThenAutoStart = (win: BrowserWindow): void => {
+      if (win.isDestroyed()) {
+        return;
+      }
+      if (!win.isVisible()) {
+        win.show();
+        return;
+      }
+      notifyMainUiReadyForAutoStart();
+    };
     const clearSplashTimers = (): void => {
       if (splashHoldTimer !== null) {
         clearTimeout(splashHoldTimer);
@@ -261,11 +276,8 @@ if (gotSingleInstanceLock) {
       }
       win.setSkipTaskbar(false);
       win.setFocusable(true);
-      if (!win.isVisible()) {
-        win.show();
-      }
+      showMainThenAutoStart(win);
       win.focus();
-      notifyMainUiReadyForAutoStart();
     };
     const scheduleSplashHandoff = (): void => {
       if (!mainReadyToShow || splashShownAt === 0) {
@@ -322,10 +334,7 @@ if (gotSingleInstanceLock) {
             return;
           }
           if (mainWindow !== null && !mainWindow.isDestroyed()) {
-            if (!mainWindow.isVisible()) {
-              mainWindow.show();
-            }
-            notifyMainUiReadyForAutoStart();
+            showMainThenAutoStart(mainWindow);
             return;
           }
           app.quit();
@@ -722,6 +731,9 @@ if (gotSingleInstanceLock) {
             }
           : undefined,
     });
+    // `show` is the auto-start trigger when the window becomes visible.
+    // Direct notify (below) is only for the case the window is already shown
+    // so `show` will not fire (listener attached late).
     mainWindow.on("show", () => {
       notifyMainUiReadyForAutoStart();
     });
