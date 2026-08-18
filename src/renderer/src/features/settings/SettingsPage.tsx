@@ -21,6 +21,9 @@ interface Props {
   /** Open About (YARK updates) from the app-shell update icon. */
   focusYarkUpdates?: boolean;
   onYarkUpdatesFocused?: () => void;
+  /** Open the SteamCMD category (Downloads missing-SteamCMD CTA). */
+  focusSteamCmd?: boolean;
+  onSteamCmdFocused?: () => void;
   steamCmdStatus: SteamCmdStatus | null;
   servers: ServerProfile[];
   installationInfo: Map<string, ServerInstallationInfo>;
@@ -43,7 +46,11 @@ interface Props {
 export function SettingsPage(props: Props): ReactElement {
   const desktopShell = props.desktopShell;
   const [category, setCategory] = useState<SettingsCategory>(() =>
-    props.focusYarkUpdates === true ? "about" : "general",
+    props.focusYarkUpdates === true
+      ? "about"
+      : props.focusSteamCmd === true
+        ? "steamcmd"
+        : "general",
   );
   const panelScrollRef = useRef<HTMLDivElement>(null);
   const steamCmdNeedsSetup = props.steamCmdStatus?.detected !== true;
@@ -55,6 +62,14 @@ export function SettingsPage(props: Props): ReactElement {
     setCategory("about");
     props.onYarkUpdatesFocused?.();
   }, [props.focusYarkUpdates, props.onYarkUpdatesFocused]);
+
+  useEffect(() => {
+    if (props.focusYarkUpdates === true || props.focusSteamCmd !== true) {
+      return;
+    }
+    setCategory("steamcmd");
+    props.onSteamCmdFocused?.();
+  }, [props.focusSteamCmd, props.focusYarkUpdates, props.onSteamCmdFocused]);
 
   useEffect(() => {
     if (panelScrollRef.current !== null) {

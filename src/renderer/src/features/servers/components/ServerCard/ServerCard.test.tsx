@@ -451,7 +451,7 @@ describe("ServerCard", () => {
     expect(screen.getByText(/Downloaded:/i)).toBeInTheDocument();
     expect(screen.getByText(/512\.0 \/ 1024\.0 MB/i)).toBeInTheDocument();
     expect(screen.getByText(/42%/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^Cancel$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Pause SteamCMD/i })).toBeInTheDocument();
   });
 
   it("does not offer an update when ARK versions differ but Steam builds match", () => {
@@ -670,7 +670,7 @@ describe("ServerCard", () => {
     expect(screen.getByRole("button", { name: "More options" })).toBeEnabled();
   });
 
-  it("keeps Cancel enabled while SteamCMD is busy even if the server is stopping", () => {
+  it("keeps Pause enabled while SteamCMD is busy even if the server is stopping", () => {
     render(
       <AppProviders>
         <ServerCard
@@ -707,7 +707,212 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByRole("button", { name: /^Cancel$/i })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /Pause SteamCMD/i })).toBeEnabled();
+  });
+
+  it("offers Cancel instead of Pause while verifying files", () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={installed}
+          officialSteamBuild="build 24346423"
+          steamCmdBusy
+          steamCmdOperation="verify-files"
+          steamCmdProgressLabel="Verifying integrity…"
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("button", { name: /Cancel SteamCMD/i })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: /Pause SteamCMD/i })).not.toBeInTheDocument();
+  });
+
+  it("offers Resume when a SteamCMD job is paused for that server", async () => {
+    const user = userEvent.setup();
+    const onResumeSteamCmd = vi.fn();
+
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={installed}
+          officialSteamBuild="build 24346423"
+          steamCmdPaused
+          steamCmdOperation="update"
+          steamCmdProgressLabel="Paused"
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+          onResumeSteamCmd={onResumeSteamCmd}
+        />
+      </AppProviders>,
+    );
+
+    const resume = screen.getByRole("button", { name: /Resume download/i });
+    expect(resume).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^Start server$/i })).toBeDisabled();
+    await user.click(resume);
+    expect(onResumeSteamCmd).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps paused install copy after SteamCMD is no longer live", () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={installed}
+          officialSteamBuild="build 24346423"
+          steamCmdPaused
+          steamCmdOperation="install-files"
+          steamCmdQueueLabel="Paused · Installing files"
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("Paused · Installing files")).toBeInTheDocument();
+    expect(screen.queryByText(/Updating files/i)).not.toBeInTheDocument();
+  });
+
+  it("marks a queued server and locks Start until the Downloads job runs", async () => {
+    const user = userEvent.setup();
+    const onCancelQueuedJob = vi.fn();
+
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={installed}
+          officialSteamBuild="build 24346423"
+          steamCmdQueued
+          steamCmdQueueLabel="Queued · Verifying integrity"
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+          onCancelQueuedJob={onCancelQueuedJob}
+        />
+      </AppProviders>,
+    );
+
+    expect(document.querySelector("[data-server-card]")).toHaveAttribute("data-queued");
+    expect(screen.getByText(/Queued · Verifying integrity/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Start server$/i })).toBeDisabled();
+    const remove = screen.getByRole("button", { name: /Remove from queue/i });
+    await user.click(remove);
+    expect(onCancelQueuedJob).toHaveBeenCalledTimes(1);
+  });
+
+  it("lets Update replace a queued Verify from the card menu", async () => {
+    const user = userEvent.setup();
+    const onUpdateNow = vi.fn();
+
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={{
+            ...installed,
+            steamBuild: "build 24300000",
+          }}
+          officialSteamBuild="build 24346423"
+          steamCmdQueued
+          steamCmdOperation="verify-files"
+          steamCmdQueueLabel="Queued · Verifying integrity"
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={onUpdateNow}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+          onCancelSteamCmd={vi.fn()}
+          onCancelQueuedJob={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("button", { name: /^Start server$/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Update server$/i })).toBeEnabled();
+    await user.click(screen.getByRole("button", { name: "More options" }));
+    expect(await screen.findByRole("menuitem", { name: "Update server" })).not.toHaveAttribute(
+      "data-disabled",
+      "true",
+    );
+    expect(screen.getByRole("menuitem", { name: "Verify integrity" })).toHaveAttribute(
+      "data-disabled",
+      "true",
+    );
   });
 
   it("allows manual Update when official Steam build is unknown", async () => {

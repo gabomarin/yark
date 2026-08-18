@@ -1,0 +1,75 @@
+.footer {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-sm);
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 6px 14px;
+  border-top: 1px solid color-mix(in srgb, var(--app-color-border) 28%, transparent);
+  background: color-mix(in srgb, var(--app-color-panel) 88%, var(--app-color-accent-deep));
+  overflow-x: auto;
+}
+
+.footerButton {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: var(--app-space-sm);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.footerButton:focus-visible {
+  outline: 2px solid var(--app-color-cryo);
+  outline-offset: 2px;
+}
+
+.footerTitle {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--app-font-caption);
+  font-weight: 600;
+}
+
+.footerDetail {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--app-color-muted);
+}
+
+.footerPercent {
+  flex-shrink: 0;
+  font-family: var(--app-font-mono);
+  font-size: var(--app-font-caption);
+  color: var(--app-color-cryo);
+}
+
+.footerProgress {
+  width: 88px;
+  flex-shrink: 0;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 999px;
+}
+
+.statusDotBusy {
+  background: var(--app-color-cryo);
+}
+
+.statusDotAttention {
+  background: var(--app-color-fossil);
+}

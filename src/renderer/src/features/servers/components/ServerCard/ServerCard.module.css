@@ -40,8 +40,13 @@
   background: var(--app-color-bad);
 }
 
-.card[data-tone="busy"]::before {
-  background: var(--app-color-accent);
+.card[data-tone="queued"]::before {
+  background: var(--app-color-cryo);
+}
+
+.card[data-tone="queued"] {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--app-color-cryo) 42%, var(--app-color-border));
 }
 
 .card:hover {

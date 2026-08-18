@@ -10,7 +10,7 @@ import type {
 } from "@shared/types";
 import { OverviewHeader } from "./components/OverviewHeader";
 import { RecentActivityPanel } from "./components/RecentActivityPanel";
-import { ServerGrid } from "./components/ServerGrid";
+import { ServerGrid, type SteamCmdCardJobRef } from "./components/ServerGrid";
 import classes from "./OverviewPage.module.css";
 
 interface Props {
@@ -36,6 +36,8 @@ interface Props {
   steamCmdServerId?: string | null;
   steamCmdRunning?: boolean;
   steamCmdBusy?: boolean;
+  steamCmdPausedByServerId?: ReadonlyMap<string, SteamCmdCardJobRef>;
+  steamCmdQueuedByServerId?: ReadonlyMap<string, SteamCmdCardJobRef>;
   steamCmdProgressPercent?: number | null;
   steamCmdProgressLabel?: string | null;
   steamCmdProgressBytesDownloaded?: number | null;
@@ -59,6 +61,8 @@ interface Props {
   onDeleteServer: (serverId: string) => void;
   onToggleServerEnabled?: (serverId: string, enabled: boolean) => void;
   onCancelSteamCmd: () => void;
+  onResumeSteamCmd?: (serverId: string) => void;
+  onCancelQueuedJob?: (serverId: string) => void;
 }
 
 export function OverviewPage(props: Props): ReactElement {
@@ -91,6 +95,8 @@ export function OverviewPage(props: Props): ReactElement {
           steamCmdServerId={props.steamCmdServerId ?? null}
           steamCmdRunning={props.steamCmdRunning ?? false}
           steamCmdBusy={props.steamCmdBusy ?? props.steamCmdRunning ?? false}
+          steamCmdPausedByServerId={props.steamCmdPausedByServerId}
+          steamCmdQueuedByServerId={props.steamCmdQueuedByServerId}
           steamCmdProgressPercent={props.steamCmdProgressPercent ?? null}
           steamCmdProgressLabel={props.steamCmdProgressLabel ?? null}
           steamCmdProgressBytesDownloaded={props.steamCmdProgressBytesDownloaded ?? null}
@@ -115,6 +121,8 @@ export function OverviewPage(props: Props): ReactElement {
           onDeleteServer={props.onDeleteServer}
           onToggleServerEnabled={props.onToggleServerEnabled}
           onCancelSteamCmd={props.onCancelSteamCmd}
+          onResumeSteamCmd={props.onResumeSteamCmd}
+          onCancelQueuedJob={props.onCancelQueuedJob}
         />
 
         <div className={classes.narrowLogsLink}>

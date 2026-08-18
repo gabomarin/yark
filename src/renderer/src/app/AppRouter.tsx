@@ -25,6 +25,10 @@ interface SettingsSlot {
   page: ReactNode;
 }
 
+interface DownloadsSlot {
+  page: ReactNode;
+}
+
 interface Props {
   route: Route;
   appVersion: string;
@@ -37,6 +41,7 @@ interface Props {
   onWhatsNewClick?: () => void;
   onYarkUpdateClick?: () => void;
   overview: OverviewSlot | null;
+  downloads: DownloadsSlot | null;
   clusters: ClustersSlot | null;
   logs: LogsSlot | null;
   backups: BackupsSlot | null;
@@ -44,6 +49,8 @@ interface Props {
   error?: string | null;
   onDismissError?: () => void;
   busyOverlay?: AppBusyOverlayContent | null;
+  workspaceFooter?: ReactNode;
+  downloadCount?: number;
 }
 
 export function AppRouter(props: Props): ReactElement {
@@ -54,6 +61,13 @@ export function AppRouter(props: Props): ReactElement {
           <PlaceholderPage
             title="Servers"
             subtitle="Monitor and manage all your ARK servers"
+          />
+        );
+      case "downloads":
+        return props.downloads?.page ?? (
+          <PlaceholderPage
+            title="Downloads"
+            subtitle="SteamCMD installs, updates, and file copies on this PC"
           />
         );
       case "clusters":
@@ -104,6 +118,8 @@ export function AppRouter(props: Props): ReactElement {
       error={props.error}
       onDismissError={props.onDismissError}
       busyOverlay={props.busyOverlay}
+      workspaceFooter={props.workspaceFooter}
+      downloadCount={props.downloadCount}
     >
       {content}
     </AppShellLayout>

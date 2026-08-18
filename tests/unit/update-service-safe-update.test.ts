@@ -116,6 +116,7 @@ function createHarness(options?: {
   steam?: SteamStub | (() => SteamStub | Promise<SteamStub>);
   healthy?: boolean;
   stubWaitForHealthy?: boolean;
+  steamCmdPath?: string | null;
 }): Harness {
   const profile = makeProfile();
   const wasRunning = options?.wasRunning ?? true;
@@ -172,8 +173,12 @@ function createHarness(options?: {
     })),
   };
 
+  const steamCmdPath =
+    options !== undefined && "steamCmdPath" in options
+      ? options.steamCmdPath
+      : "C:\\steamcmd\\steamcmd.exe";
   const settings = {
-    get: vi.fn(() => null),
+    get: vi.fn((key: string) => (key === "steamcmdPath" ? steamCmdPath : null)),
     set: vi.fn(),
   } as unknown as AppSettingsRepository;
 
@@ -293,6 +298,18 @@ describe("UpdateService safe update orchestration", () => {
 
     expect(h.backups.createPreUpdateBackupForJob).toHaveBeenCalled();
     expect(h.runSteamUpdate).toHaveBeenCalled();
+  });
+
+  it("refuses to queue a files job when SteamCMD is not installed", async () => {
+    const h = createHarness({ wasRunning: false, steamCmdPath: null });
+    dirs.push(h.logDir);
+
+    await expect(h.service.updateServer(h.profile.id)).rejects.toThrow(
+      /SteamCMD is not installed/i,
+    );
+    expect(h.service.getSteamCmdStatus().criticalJobs).toEqual([]);
+    expect(h.runSteamUpdate).not.toHaveBeenCalled();
+    expect(h.backups.createPreUpdateBackupForJob).not.toHaveBeenCalled();
   });
 
   it("rejects a queued update if the server starts before execution", async () => {
@@ -686,6 +703,74 @@ describe("UpdateService safe update orchestration", () => {
     });
   });
 
+  it("cancels only the running SteamCMD job and leaves queued work", async () => {
+    const h = createHarness({ wasRunning: false });
+    dirs.push(h.logDir);
+    const now = new Date().toISOString();
+    const running = {
+      id: "running-install",
+      type: "install-files" as const,
+      serverId: h.profile.id,
+      attempts: 1,
+      maxAttempts: 3,
+      status: "running" as const,
+      phase: "applying-files",
+      createdAt: now,
+      updatedAt: now,
+      lastError: null,
+      recoveryReason: null as string | null,
+      idempotencyKey: `install-files:${h.profile.id}:`,
+      operatorRetryAllowed: false,
+      context: {},
+    };
+    const pending = {
+      ...running,
+      id: "queued-update",
+      type: "update" as const,
+      status: "pending" as const,
+      phase: "queued",
+      attempts: 0,
+      idempotencyKey: `update:${h.profile.id}:`,
+    };
+    (h.service as unknown as { queue: Array<typeof running | typeof pending> }).queue = [
+      running,
+      pending,
+    ];
+
+    expect(await h.service.cancelSteamCmd()).toBe(true);
+    expect(running.status).toBe("running");
+    expect(pending).toMatchObject({
+      status: "pending",
+      phase: "queued",
+    });
+  });
+
+  it("does not drain queued jobs when SteamCMD is idle", async () => {
+    const h = createHarness({ wasRunning: false });
+    dirs.push(h.logDir);
+    const now = new Date().toISOString();
+    const pending = {
+      id: "queued-install",
+      type: "install-files" as const,
+      serverId: h.profile.id,
+      attempts: 0,
+      maxAttempts: 3,
+      status: "pending" as const,
+      phase: "queued",
+      createdAt: now,
+      updatedAt: now,
+      lastError: null,
+      recoveryReason: null as string | null,
+      idempotencyKey: `install-files:${h.profile.id}:`,
+      operatorRetryAllowed: false,
+      context: {},
+    };
+    (h.service as unknown as { queue: Array<typeof pending> }).queue = [pending];
+
+    expect(await h.service.cancelSteamCmd()).toBe(false);
+    expect(pending.status).toBe("pending");
+  });
+
   it("skips rollback restore when cancelled during pre-update backup", async () => {
     const h = createHarness({ wasRunning: true });
     dirs.push(h.logDir);
@@ -758,5 +843,157 @@ describe("UpdateService safe update orchestration", () => {
     );
     expect(h.runSteamUpdate).not.toHaveBeenCalled();
     expect(h.backups.createPreUpdateBackupForJob).not.toHaveBeenCalled();
+  });
+
+  it("replaces a cancelled leftover when the same files job is queued again", async () => {
+    const h = createHarness({ wasRunning: false });
+    dirs.push(h.logDir);
+    const now = new Date().toISOString();
+    const cancelled = {
+      id: "cancelled-verify",
+      type: "verify-files" as const,
+      serverId: h.profile.id,
+      attempts: 1,
+      maxAttempts: 3,
+      status: "cancelled" as const,
+      phase: "cancelled",
+      createdAt: now,
+      updatedAt: now,
+      lastError: null,
+      recoveryReason: "Cancelled by the operator during execution.",
+      idempotencyKey: `verify-files:${h.profile.id}:`,
+      operatorRetryAllowed: false,
+      context: {},
+    };
+    (h.service as unknown as { queue: Array<typeof cancelled> }).queue = [cancelled];
+
+    await h.service.verifyServerFiles(h.profile.id);
+
+    expect(h.runSteamUpdate).toHaveBeenCalled();
+    expect(
+      h.service.getSteamCmdStatus().criticalJobs.find((job) => job.id === "cancelled-verify"),
+    ).toBeUndefined();
+  });
+
+  it("still requires Retry or Dismiss for a failed leftover", async () => {
+    const h = createHarness({ wasRunning: false });
+    dirs.push(h.logDir);
+    const now = new Date().toISOString();
+    const failed = {
+      id: "failed-verify",
+      type: "verify-files" as const,
+      serverId: h.profile.id,
+      attempts: 3,
+      maxAttempts: 3,
+      status: "failed" as const,
+      phase: "failed",
+      createdAt: now,
+      updatedAt: now,
+      lastError: "SteamCMD exited with code 1",
+      recoveryReason: "SteamCMD failed.",
+      idempotencyKey: `verify-files:${h.profile.id}:`,
+      operatorRetryAllowed: true,
+      context: {},
+    };
+    (h.service as unknown as { queue: Array<typeof failed> }).queue = [failed];
+
+    await expect(h.service.verifyServerFiles(h.profile.id)).rejects.toThrow(
+      /Retry or Dismiss/i,
+    );
+    expect(h.runSteamUpdate).not.toHaveBeenCalled();
+    expect(h.service.getSteamCmdStatus().criticalJobs[0]).toMatchObject({
+      id: "failed-verify",
+      status: "failed",
+    });
+  });
+
+  it("replaces a queued Verify with Update and does not leave Needs attention", async () => {
+    const h = createHarness({ wasRunning: false });
+    dirs.push(h.logDir);
+    const now = new Date().toISOString();
+    const pendingVerify = {
+      id: "pending-verify",
+      type: "verify-files" as const,
+      serverId: h.profile.id,
+      attempts: 0,
+      maxAttempts: 3,
+      status: "pending" as const,
+      phase: "queued",
+      createdAt: now,
+      updatedAt: now,
+      lastError: null,
+      recoveryReason: null,
+      idempotencyKey: `verify-files:${h.profile.id}:`,
+      operatorRetryAllowed: false,
+      context: {},
+    };
+    (h.service as unknown as { queue: Array<typeof pendingVerify> }).queue = [
+      pendingVerify,
+    ];
+
+    await h.service.updateServer(h.profile.id);
+
+    expect(h.runSteamUpdate).toHaveBeenCalled();
+    const leftover = h.service
+      .getSteamCmdStatus()
+      .criticalJobs.find((job) => job.id === "pending-verify");
+    expect(leftover).toBeUndefined();
+  });
+
+  it("does not queue Verify while Update is already pending", async () => {
+    const h = createHarness({ wasRunning: false });
+    dirs.push(h.logDir);
+    const now = new Date().toISOString();
+    const pendingUpdate = {
+      id: "pending-update",
+      type: "update" as const,
+      serverId: h.profile.id,
+      attempts: 0,
+      maxAttempts: 3,
+      status: "pending" as const,
+      phase: "queued",
+      createdAt: now,
+      updatedAt: now,
+      lastError: null,
+      recoveryReason: null,
+      idempotencyKey: `update:${h.profile.id}:`,
+      operatorRetryAllowed: false,
+      context: {},
+    };
+    (h.service as unknown as { queue: Array<typeof pendingUpdate> }).queue = [
+      pendingUpdate,
+    ];
+
+    await expect(h.service.verifyServerFiles(h.profile.id)).rejects.toThrow(
+      /already in Downloads/i,
+    );
+    expect(h.runSteamUpdate).not.toHaveBeenCalled();
+    expect(h.service.getSteamCmdStatus().criticalJobs[0]).toMatchObject({
+      id: "pending-update",
+      status: "pending",
+    });
+  });
+
+  it("does not interrupt a running Verify when Update is requested", async () => {
+    let releaseSteam: ((result: SteamStub) => void) | undefined;
+    const h = createHarness({
+      wasRunning: false,
+      steam: () =>
+        new Promise<SteamStub>((resolve) => {
+          releaseSteam = resolve;
+        }),
+    });
+    dirs.push(h.logDir);
+
+    const verifyPromise = h.service.verifyServerFiles(h.profile.id);
+    await vi.waitFor(() => {
+      expect(releaseSteam).toEqual(expect.any(Function));
+    });
+
+    await expect(h.service.updateServer(h.profile.id)).rejects.toThrow(
+      /running/i,
+    );
+    releaseSteam!({ code: 0, stdout: "ok" });
+    await verifyPromise;
   });
 });

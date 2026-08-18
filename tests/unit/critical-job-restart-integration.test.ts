@@ -59,7 +59,10 @@ function createRestartedService(
   jobs: unknown,
   options: { serverExists?: boolean; active?: boolean } = {},
 ) {
-  const values = new Map<string, string>([[QUEUE_KEY, JSON.stringify(jobs)]]);
+  const values = new Map<string, string>([
+    [QUEUE_KEY, JSON.stringify(jobs)],
+    ["steamcmdPath", "C:\\steamcmd\\steamcmd.exe"],
+  ]);
   const settings = {
     get: vi.fn((key: string) => values.get(key) ?? null),
     set: vi.fn((key: string, value: string) => values.set(key, value)),
@@ -301,6 +304,35 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
     });
   });
 
+  it("starts the next queued job after the running job is cancelled", async () => {
+    const { OperationCancelledError } = await import(
+      "@backend/domains/updates/robocopy-tree"
+    );
+    const { service } = createRestartedService([
+      persistedJob({ id: "job-update", status: "pending", phase: "queued" }),
+      persistedJob({
+        id: "job-install",
+        type: "install-files",
+        status: "pending",
+        phase: "queued",
+        idempotencyKey: "install-files:server-1:",
+      }),
+    ]);
+    const performUpdateServer = vi.fn(async () => {
+      throw new OperationCancelledError();
+    });
+    const performInstallServerFiles = vi.fn(async () => undefined);
+    Object.assign(service as object, { performUpdateServer, performInstallServerFiles });
+
+    await (service as unknown as { processQueue: () => Promise<void> }).processQueue();
+
+    expect(performUpdateServer).toHaveBeenCalledOnce();
+    expect(performInstallServerFiles).toHaveBeenCalledOnce();
+    expect(service.getSteamCmdStatus().criticalJobs).toEqual([
+      expect.objectContaining({ id: "job-update", status: "cancelled" }),
+    ]);
+  });
+
   it("surfaces completed rollback as failed-but-retryable instead of replaying it", () => {
     const { service } = createRestartedService([
       persistedJob({ phase: "rollback-complete", lastError: "SteamCMD failed" }),
@@ -313,15 +345,25 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
     });
   });
 
-  it("preserves cancellation and does not offer Retry", () => {
+  it("preserves cancellation and offers Retry plus Dismiss", () => {
     const { service } = createRestartedService([
       persistedJob({ status: "cancelled", phase: "cancelled" }),
     ]);
 
     expect(service.getSteamCmdStatus().criticalJobs[0]).toMatchObject({
       status: "cancelled",
-      nextActions: ["dismiss"],
+      nextActions: ["retry", "dismiss"],
     });
+    const processQueue = vi.fn(async () => undefined);
+    Object.assign(service as object, { processQueue });
+    expect(service.retryCriticalJob("job-1")).toBe(true);
+    expect(service.getSteamCmdStatus().criticalJobs[0]).toMatchObject({
+      id: "job-1",
+      status: "pending",
+      phase: "queued",
+      nextActions: ["cancel"],
+    });
+    expect(processQueue).toHaveBeenCalledOnce();
   });
 
   it("fails a missing-profile job without offering an unsupported retry", () => {
@@ -393,5 +435,160 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
       JSON.stringify({ unsupported: true }),
     );
     expect(settings.set).toHaveBeenCalledWith(QUEUE_KEY, "[]");
+  });
+
+  it("keeps Move up/down order instead of sorting jobs by created time", () => {
+    const { service } = createRestartedService([
+      persistedJob({
+        id: "older",
+        createdAt: "2026-08-01T00:00:00.000Z",
+        status: "pending",
+        phase: "queued",
+        attempts: 0,
+      }),
+      persistedJob({
+        id: "newer",
+        type: "install-files",
+        idempotencyKey: "install-files:server-1:",
+        createdAt: "2026-08-01T00:00:10.000Z",
+        status: "pending",
+        phase: "queued",
+        attempts: 0,
+      }),
+    ]);
+
+    expect(service.getSteamCmdStatus().criticalJobs.map((job) => job.id)).toEqual([
+      "older",
+      "newer",
+    ]);
+    expect(service.reorderCriticalJob("newer", "up")).toBe(true);
+    expect(service.getSteamCmdStatus().criticalJobs.map((job) => job.id)).toEqual([
+      "newer",
+      "older",
+    ]);
+  });
+
+  it("blocks pending file jobs when SteamCMD is not installed", async () => {
+    const { service } = createRestartedService([
+      persistedJob({
+        status: "pending",
+        phase: "queued",
+        attempts: 0,
+      }),
+    ]);
+    Object.assign(service as object, {
+      findSteamCmdExecutableCached: () => null,
+    });
+
+    await (service as unknown as { processQueue: () => Promise<void> }).processQueue();
+
+    expect(service.getSteamCmdStatus().criticalJobs[0]).toMatchObject({
+      status: "blocked",
+      recoveryReason: expect.stringMatching(/SteamCMD is not installed/i),
+      nextActions: ["retry", "dismiss"],
+    });
+  });
+
+  it("keeps a paused job paused when Resume is used without SteamCMD", () => {
+    const { service } = createRestartedService([
+      persistedJob({
+        status: "paused",
+        phase: "applying-files",
+        attempts: 1,
+      }),
+    ]);
+    Object.assign(service as object, {
+      findSteamCmdExecutableCached: () => null,
+    });
+
+    expect(() => service.resumeCriticalJob("job-1")).toThrow(/SteamCMD is not installed/i);
+    expect(service.getSteamCmdStatus().criticalJobs[0]).toMatchObject({
+      status: "paused",
+      phase: "applying-files",
+      nextActions: ["resume", "cancel"],
+    });
+  });
+
+  it("keeps a blocked leftover blocked when Retry is used without SteamCMD", () => {
+    const { service } = createRestartedService([
+      persistedJob({
+        status: "blocked",
+        phase: "queued",
+        operatorRetryAllowed: true,
+        recoveryReason: "SteamCMD is not installed on this PC. Open Settings and install SteamCMD, then try again.",
+      }),
+    ]);
+    Object.assign(service as object, {
+      findSteamCmdExecutableCached: () => null,
+    });
+
+    expect(() => service.retryCriticalJob("job-1")).toThrow(/SteamCMD is not installed/i);
+    expect(service.getSteamCmdStatus().criticalJobs[0]).toMatchObject({
+      status: "blocked",
+      phase: "queued",
+      nextActions: ["retry", "dismiss"],
+    });
+  });
+
+  it("does not start pending Downloads until launch resume runs", async () => {
+    const { service } = createRestartedService([
+      persistedJob({
+        status: "pending",
+        phase: "queued",
+        attempts: 0,
+      }),
+    ]);
+    const performUpdateServer = vi.fn(async () => undefined);
+    Object.assign(service as object, { performUpdateServer });
+
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    expect(performUpdateServer).not.toHaveBeenCalled();
+    expect(service.getSteamCmdStatus().criticalJobs[0]).toMatchObject({
+      status: "pending",
+      phase: "queued",
+    });
+  });
+
+  it("resumes pending Downloads on launch when SteamCMD is on disk", async () => {
+    const { service } = createRestartedService([
+      persistedJob({
+        status: "pending",
+        phase: "queued",
+        attempts: 0,
+      }),
+    ]);
+    const performUpdateServer = vi.fn(async () => undefined);
+    Object.assign(service as object, {
+      findSteamCmdExecutable: vi.fn(async () => "C:\\steamcmd\\steamcmd.exe"),
+      performUpdateServer,
+    });
+
+    await service.resumeQueuedFileJobsOnLaunch();
+    await Promise.resolve();
+
+    expect(performUpdateServer).toHaveBeenCalledOnce();
+    expect(service.getSteamCmdStatus().criticalJobs).toEqual([]);
+  });
+
+  it("blocks pending Downloads on launch when SteamCMD is not on disk", async () => {
+    const { service } = createRestartedService([
+      persistedJob({
+        status: "pending",
+        phase: "queued",
+        attempts: 0,
+      }),
+    ]);
+    Object.assign(service as object, {
+      findSteamCmdExecutable: vi.fn(async () => null),
+    });
+
+    await service.resumeQueuedFileJobsOnLaunch();
+
+    expect(service.getSteamCmdStatus().criticalJobs[0]).toMatchObject({
+      status: "blocked",
+      recoveryReason: expect.stringMatching(/SteamCMD is not installed/i),
+      nextActions: ["retry", "dismiss"],
+    });
   });
 });

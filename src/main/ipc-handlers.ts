@@ -297,6 +297,10 @@ export function registerIpcHandlers(
     updates.cancelSteamCmd(),
   );
 
+  handleValidated(IPC.steamcmdPause, ipcArgSchemas[IPC.steamcmdPause], () =>
+    updates.pauseSteamCmd(),
+  );
+
   handleValidated(IPC.criticalJobRetry, ipcArgSchemas[IPC.criticalJobRetry], ([id]) =>
     updates.retryCriticalJob(id),
   );
@@ -307,6 +311,14 @@ export function registerIpcHandlers(
 
   handleValidated(IPC.criticalJobCancel, ipcArgSchemas[IPC.criticalJobCancel], ([id]) =>
     updates.cancelCriticalJob(id),
+  );
+
+  handleValidated(IPC.criticalJobResume, ipcArgSchemas[IPC.criticalJobResume], ([id]) =>
+    updates.resumeCriticalJob(id),
+  );
+
+  handleValidated(IPC.criticalJobReorder, ipcArgSchemas[IPC.criticalJobReorder], ([id, direction]) =>
+    updates.reorderCriticalJob(id, direction),
   );
 
   handleValidated(IPC.steamcmdSetPath, ipcArgSchemas[IPC.steamcmdSetPath], ([path]) =>

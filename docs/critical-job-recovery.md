@@ -17,9 +17,9 @@ include the backup ID in their idempotency key. A duplicate operation cannot be
 queued while an earlier copy is pending, running, retrying, blocked, failed, or
 cancelled; terminal records must be retried or dismissed explicitly.
 
-Statuses are `pending`, `running`, `retrying`, `blocked`, `failed`, and
+Statuses are `pending`, `running`, `retrying`, `paused`, `blocked`, `failed`, and
 `cancelled`. Successful jobs are removed. Blocked, failed, and cancelled jobs
-remain visible in the progress dock until the operator acts.
+remain visible on the **Downloads** page until the operator acts.
 
 ## Restart contract
 
@@ -35,7 +35,8 @@ remain visible in the progress dock until the operator acts.
 | Restore before application | Reuse its restore-history row and marked safeguard backup, then continue |
 | Restore while applying | Block; never apply the restore again automatically |
 | Restore with completed durable history | Reconcile as completed and remove the stale queue row |
-| Any queued/retrying job not yet in an ambiguous phase | Resume with attempts and creation time preserved |
+| Any queued/retrying job not yet in an ambiguous phase | Resume with attempts and creation time preserved **when steamcmd.exe is on disk**. Pending file jobs start (Active) like Steam resuming interrupted downloads. Auto-start skips those servers so it cannot beat the files job and block an Update. |
+| SteamCMD not installed | Pending file jobs block with Retry (waiters fail closed). Retry/Resume/new Install-Update-Verify refuse until SteamCMD is installed |
 | Missing server/profile | Fail without retry |
 | Corrupt or unsupported queue data | Copy the raw value to a timestamped `.quarantine.*` setting and reset the active queue |
 
@@ -45,7 +46,7 @@ reason, and only actions supported by the state:
 - `Retry` and `Dismiss` for ambiguous or exhausted-transient jobs.
 - `Dismiss` only for non-retryable failed jobs, including a missing profile.
 - `Cancel` for pending/retrying jobs.
-- `Dismiss` for cancelled jobs.
+- `Retry` and `Dismiss` for cancelled jobs. Retry re-queues the same operation (Install/Update/Verify also replace a cancelled leftover of that type).
 
 Retry is an explicit acknowledgement for an ambiguous update or restore. Before
 using it, inspect the server process, update logs, managed backup rows/ZIPs, and

@@ -8,7 +8,11 @@ import { ServerCardActions } from "./ServerCardActions";
 import { ServerCardMetaItem } from "./ServerCardMetaItem";
 import { ServerCardProgress } from "./ServerCardProgress";
 import { buildServerCardMenuActions } from "./serverCardMenuActions";
-import type { ServerCardHandlers } from "./serverCardHandlers";
+import {
+  bindServerCardHandlers,
+  type ServerCardCallbackProps,
+  type ServerCardHandlers,
+} from "./serverCardHandlers";
 import {
   deriveServerCardView,
   type SteamCmdOperation,
@@ -23,6 +27,9 @@ type ServerCardSharedProps = {
   /** Wildcard informational ARK Version (UI only; not used for update decisions). */
   officialVersion?: string | null;
   steamCmdBusy?: boolean;
+  steamCmdPaused?: boolean;
+  steamCmdQueued?: boolean;
+  steamCmdQueueLabel?: string | null;
   steamCmdProgressPercent?: number | null;
   steamCmdProgressLabel?: string | null;
   steamCmdProgressBytesDownloaded?: number | null;
@@ -34,59 +41,10 @@ type ServerCardSharedProps = {
   checkingUpdates?: boolean;
 };
 
-type ServerCardCallbackProps = {
-  onStart: () => void;
-  onStop: () => void;
-  onKill: () => void;
-  onRestart: () => void;
-  onOpenWorkspace: () => void;
-  onOpenLogs: () => void;
-  /** Opens the runtime logs section for a failed/crashed launch. */
-  onReviewError: () => void;
-  onOpenFolder: () => void;
-  onInstallFiles: () => void;
-  onUpdateNow: () => void;
-  onVerifyFiles: () => void;
-  onCheckUpdates: () => void;
-  onClone: () => void;
-  onCopyConfiguration: () => void;
-  onDelete: () => void;
-  onCancelSteamCmd: () => void;
-  onToggleEnabled?: () => void;
-};
-
 /** Overview: stable `handlers` bag. Tests/other callers: explicit zero-arg callbacks. */
 export type ServerCardProps =
   | (ServerCardSharedProps & { handlers: ServerCardHandlers })
   | (ServerCardSharedProps & ServerCardCallbackProps);
-
-function bindServerCardHandlers(
-  handlers: ServerCardHandlers,
-  server: ServerProfile,
-): ServerCardCallbackProps {
-  const id = server.id;
-  return {
-    onStart: () => handlers.onStartServer(id),
-    onStop: () => handlers.onStopServer(id),
-    onKill: () => handlers.onKillServer(id),
-    onRestart: () => handlers.onRestartServer(id),
-    onOpenWorkspace: () => handlers.onOpenWorkspace(server),
-    onOpenLogs: () => handlers.onOpenLogs(id),
-    onReviewError: () => handlers.onReviewError(id),
-    onOpenFolder: () => handlers.onOpenFolder(id),
-    onInstallFiles: () => handlers.onInstallFiles(id),
-    onUpdateNow: () => handlers.onUpdateNow(id),
-    onVerifyFiles: () => handlers.onVerifyFiles(id),
-    onCheckUpdates: () => handlers.onCheckUpdatesForServer(id),
-    onClone: () => handlers.onCloneServer(id),
-    onCopyConfiguration: () => handlers.onCopyConfiguration(id),
-    onDelete: () => handlers.onDeleteServer(id),
-    onCancelSteamCmd: () => handlers.onCancelSteamCmd(),
-    onToggleEnabled: handlers.onToggleServerEnabled
-      ? () => handlers.onToggleServerEnabled?.(id, !server.enabled)
-      : undefined,
-  };
-}
 
 function ServerCardComponent(props: ServerCardProps): ReactElement {
   const {
@@ -94,6 +52,9 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     runtime,
     installation,
     steamCmdBusy = false,
+    steamCmdPaused = false,
+    steamCmdQueued = false,
+    steamCmdQueueLabel = null,
     steamCmdProgressPercent = null,
     steamCmdProgressLabel = null,
     steamCmdProgressBytesDownloaded = null,
@@ -121,6 +82,8 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     onCopyConfiguration,
     onDelete,
     onCancelSteamCmd,
+    onResumeSteamCmd,
+    onCancelQueuedJob,
     onToggleEnabled,
   } = "handlers" in props
     ? bindServerCardHandlers(props.handlers, server)
@@ -132,23 +95,29 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     officialSteamBuild: props.officialSteamBuild,
     officialVersion: props.officialVersion,
     steamCmdBusy,
+    steamCmdPaused,
+    steamCmdQueued,
     stopBusy,
     steamCmdOperation,
-    steamCmdProgressLabel,
+    steamCmdProgressLabel:
+      (steamCmdQueued || steamCmdPaused) && !steamCmdBusy
+        ? steamCmdQueueLabel ?? steamCmdProgressLabel
+        : steamCmdProgressLabel,
     steamCmdProgressBytesDownloaded,
     steamCmdProgressBytesTotal,
     stopProgressLabel,
     serverEnabled: server.enabled,
   });
-  const showProgress = stopBusy || steamCmdBusy;
-  const progressPercent = stopBusy ? stopProgressPercent : steamCmdProgressPercent;
-  const badgeBusy = stopBusy || steamCmdBusy;
+  const showProgress = stopBusy || steamCmdBusy || steamCmdPaused || steamCmdQueued;
+  const progressPercent = stopBusy
+    ? stopProgressPercent
+    : steamCmdQueued && !steamCmdBusy
+      ? null
+      : steamCmdProgressPercent;
+  const badgeBusy = stopBusy || steamCmdBusy || steamCmdPaused || steamCmdQueued;
 
   const runRuntimeAction = (): void => {
     switch (view.runtimeAction.kind) {
-      case "cancel":
-        onCancelSteamCmd();
-        break;
       case "enable":
         onToggleEnabled?.();
         break;
@@ -164,14 +133,29 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     }
   };
 
-  const menuDisabled = steamCmdBusy || stopBusy;
+  const runFilesJobAction = (): void => {
+    const action = view.filesJobAction;
+    if (action === null) return;
+    if (action.kind === "resume") {
+      onResumeSteamCmd?.();
+      return;
+    }
+    if (steamCmdQueued && !steamCmdBusy) {
+      onCancelQueuedJob?.();
+      return;
+    }
+    onCancelSteamCmd();
+  };
+
+  const menuDisabled = steamCmdBusy || steamCmdPaused || stopBusy;
   const menuEntries = buildServerCardMenuActions({
     status,
     isActive: view.isActive,
     isInstallationReady: view.isInstallationReady,
     canOfferInstall: view.canOfferInstall,
     updateAvailable: view.updateAvailable,
-    steamCmdBusy,
+    steamCmdBusy: steamCmdBusy || steamCmdPaused,
+    filesLocked: steamCmdBusy || steamCmdPaused || steamCmdQueued,
     checkingUpdates,
     updateAction: view.updateAction,
     serverEnabled: server.enabled,
@@ -203,6 +187,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
       radius="md"
       data-tone={view.rowTone}
       data-disabled={!server.enabled}
+      data-queued={steamCmdQueued || undefined}
       data-server-card
       data-server-name={server.name}
       onContextMenu={onContextMenu}
@@ -215,9 +200,11 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
             className={classes.cardHit}
             onClick={onOpenWorkspace}
             aria-label={
-              badgeBusy
-                ? `Open ${server.name} (operation in progress)`
-                : `Open settings for ${server.name}`
+              steamCmdQueued && !steamCmdBusy
+                ? `Open ${server.name} (job queued in Downloads)`
+                : badgeBusy
+                  ? `Open ${server.name} (operation in progress)`
+                  : `Open settings for ${server.name}`
             }
           >
             <Group gap="sm" align="center" wrap="nowrap" className={classes.identity}>
@@ -243,7 +230,13 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
               <ServerRuntimeStatusBadge
                 status={status}
                 label={badgeBusy ? view.installStateLabel : undefined}
-                color={badgeBusy ? "blue" : undefined}
+                color={
+                  steamCmdQueued && !steamCmdBusy && !steamCmdPaused
+                    ? "gray"
+                    : badgeBusy
+                      ? "blue"
+                      : undefined
+                }
               />
               {!server.enabled && (
                 <Badge size="sm" variant="light" color="gray">
@@ -271,7 +264,10 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
             isInstallationReady={view.isInstallationReady}
             canOfferInstall={view.canOfferInstall}
             updateAvailable={view.updateAvailable}
-            steamCmdBusy={steamCmdBusy}
+            steamCmdBusy={steamCmdBusy || steamCmdPaused}
+            filesLocked={steamCmdBusy || steamCmdPaused || steamCmdQueued}
+            verifyFilesLocked={view.verifyFilesLocked}
+            installFilesLocked={view.installFilesLocked}
             stopBusy={stopBusy}
             checkingUpdates={checkingUpdates}
             runtimeAction={view.runtimeAction}
@@ -302,6 +298,8 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
             byteProgressLabel={view.progress.byteProgressLabel}
             byteProgressNoun={view.progress.byteProgressNoun}
             steamCmdProgressPercent={progressPercent}
+            filesJobAction={view.filesJobAction}
+            onFilesJobAction={runFilesJobAction}
           />
         )}
 

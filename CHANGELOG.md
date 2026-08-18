@@ -9,8 +9,26 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- **Downloads** queue page with stacked job rows, active vs queued separation, shared server-card progress styling, `Open in Logs` focus on the related Events entry, and Pause/Resume for install and update jobs; workspace footer teaser on other pages replaces the floating progress dock (#201).
+
+### Changed
+
+- Server-list **Resume / Pause / Cancel** sit on the progress bar (not the Start slot). Queued servers look distinct, lock Start, toast when added to Downloads, and refuse duplicate clicks. Downloads labels Pause/Cancel as a SteamCMD process action on the **active** job (#201).
+- Downloads detail shows the **SteamCMD process** bar only for the active job. Queued rows keep **Remove from queue** without a second Cancel SteamCMD control (#201).
+- Queued Downloads rows slide when you **Move up / Move down** (#201).
+- One files job per server: **Update** or **Install** replaces a queued **Verify**; a running job is never interrupted. Verify will not queue on top of Update/Install (#201).
+
 ### Fixed
 
+- Cancelling the active SteamCMD job no longer cancels other queued Downloads work; the next job starts after unwind (#201).
+- Cancelled Downloads jobs offer **Retry** (row, detail, and footer) as well as Dismiss; Install/Update/Verify still replace a cancelled leftover of the same job (#201).
+- **Move up / Move down** in Downloads actually changes which queued job runs next (the list no longer resorted by created time) (#201).
+- File jobs wait as **blocked** with Retry when SteamCMD is missing, instead of starting and failing into backup leftovers. Retry/Resume/Update also explain that SteamCMD must be installed first and keep the existing job (#201).
+- Pending Downloads resume when YARK starts if SteamCMD is ready; they stay blocked with Retry if it is not (#201).
+- Paused install/update cards keep **Paused · Installing files** (or the matching operation) after a YARK restart instead of **Updating files…** (#201).
+- Verify files uses **Cancel** instead of Pause — SteamCMD `validate` has no resume checkpoint and would restart at 0% (#201).
 - **Show server console on start** now applies to Auto-start with YARK (stored in app settings so it survives quit). Auto-start waits until the main window is shown so dedicated-server consoles do not open over the splash (#350).
 
 ## [0.13.1] - 2026-08-17

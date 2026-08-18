@@ -6,7 +6,6 @@ import {
   Eye,
   Pause,
   Play,
-  XCircle,
 } from "@phosphor-icons/react";
 import { ActionIcon, Group, Menu, Tooltip } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
@@ -28,6 +27,9 @@ interface Props {
   canOfferInstall: boolean;
   updateAvailable: boolean;
   steamCmdBusy: boolean;
+  filesLocked?: boolean;
+  verifyFilesLocked?: boolean;
+  installFilesLocked?: boolean;
   stopBusy: boolean;
   checkingUpdates: boolean;
   runtimeAction: ServerCardRuntimeAction;
@@ -56,8 +58,6 @@ function runtimeActionIcon(
   iconSize: number,
 ): ReactElement {
   switch (kind) {
-    case "cancel":
-      return <XCircle size={iconSize} />;
     case "starting":
     case "stopping":
       return <ArrowsClockwise size={iconSize} />;
@@ -96,6 +96,9 @@ export function ServerCardActions(props: Props): ReactElement {
     canOfferInstall: props.canOfferInstall,
     updateAvailable: props.updateAvailable,
     steamCmdBusy: props.steamCmdBusy,
+    filesLocked: props.filesLocked === true,
+    verifyFilesLocked: props.verifyFilesLocked === true,
+    installFilesLocked: props.installFilesLocked === true,
     checkingUpdates: props.checkingUpdates,
     updateAction: props.updateAction,
     serverEnabled: props.serverEnabled ?? true,
@@ -118,7 +121,7 @@ export function ServerCardActions(props: Props): ReactElement {
   return (
     <Group gap="xs" wrap="nowrap" className={classes.rowActions} data-row-actions>
       {runtimeAction.visible ? (
-        <Tooltip label={runtimeAction.label} withArrow>
+        <Tooltip label={runtimeAction.hint ?? runtimeAction.label} withArrow>
           <span className={classes.tooltipTarget}>
             <ActionIcon
               size={actionSize}

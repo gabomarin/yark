@@ -22,6 +22,10 @@ import { ClusterIniTemplateRepository } from "../backend/infra/db/cluster-ini-te
 import { InstanceService } from "../backend/domains/instances/instance-service";
 import { runAutoStartOnLaunch } from "../backend/domains/instances/auto-start";
 import {
+  isFilesJobOperation,
+  isOccupyingFilesJobStatus,
+} from "../shared/files-job-priority";
+import {
   OPEN_NATIVE_CONSOLE_SETTING_KEY,
   parseOpenNativeConsolePref,
 } from "../shared/open-native-console";
@@ -479,18 +483,39 @@ if (gotSingleInstanceLock) {
         return;
       }
       autoStartStarted = true;
-      void runAutoStartOnLaunch({
-        profiles: repo.list(),
-        reattachOutcomes,
-        processes: processManager,
-        repo,
-        start: (serverId, options) => instances.start(serverId, options),
-        openNativeConsole: parseOpenNativeConsolePref(
-          settings.get(OPEN_NATIVE_CONSOLE_SETTING_KEY),
-        ),
-      }).catch((error: unknown) => {
-        console.error("Auto-start on launch failed", error);
-      });
+      void (async () => {
+        try {
+          await updateService.resumeQueuedFileJobsOnLaunch();
+        } catch (error: unknown) {
+          console.error("Resume pending Downloads on launch failed", error);
+        }
+        const occupyingServerIds = new Set(
+          updateService
+            .getSteamCmdStatus()
+            .criticalJobs
+            .filter(
+              (job) =>
+                isFilesJobOperation(job.operation)
+                && isOccupyingFilesJobStatus(job.status)
+                && job.serverId.length > 0,
+            )
+            .map((job) => job.serverId),
+        );
+        try {
+          await runAutoStartOnLaunch({
+            profiles: repo.list().filter((profile) => !occupyingServerIds.has(profile.id)),
+            reattachOutcomes,
+            processes: processManager,
+            repo,
+            start: (serverId, options) => instances.start(serverId, options),
+            openNativeConsole: parseOpenNativeConsolePref(
+              settings.get(OPEN_NATIVE_CONSOLE_SETTING_KEY),
+            ),
+          });
+        } catch (error: unknown) {
+          console.error("Auto-start on launch failed", error);
+        }
+      })();
     };
 
     const evaluateAppUpdateSafety = ():

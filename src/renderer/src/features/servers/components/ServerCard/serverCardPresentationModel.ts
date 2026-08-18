@@ -13,13 +13,19 @@ import {
   formatSteamCmdByteProgress,
   hasMeaningfulSteamCmdByteProgress,
   steamCmdByteProgressNoun,
+  steamCmdProgressFallbackLabel,
 } from "@shared/steamcmd-progress";
 import {
+  resolveFilesJobAction,
   resolvePrimaryAction,
   resolveRestartAction,
   resolveRuntimeAction,
   resolveUpdateAction,
 } from "./serverCardActionModel";
+import {
+  canEnqueueFilesJobFromMenu,
+  filesJobOccupantFromUi,
+} from "@shared/files-job-priority";
 
 export type SteamCmdOperation =
   | "install-steamcmd"
@@ -29,10 +35,12 @@ export type SteamCmdOperation =
   | "verify-files"
   | null;
 
-export type ServerCardRowTone = "busy" | "running" | "error" | "attention" | "stopped";
+export type ServerCardRowTone = "busy" | "queued" | "running" | "error" | "attention" | "stopped";
 
 export function resolveInstallStateLabel(input: {
   steamCmdBusy: boolean;
+  steamCmdPaused?: boolean;
+  steamCmdQueued?: boolean;
   steamCmdOperation: SteamCmdOperation;
   isInstallationReady: boolean;
   installation: ServerInstallationInfo | null;
@@ -45,6 +53,12 @@ export function resolveInstallStateLabel(input: {
     if (input.steamCmdOperation === "update") return "Updating…";
     return "Installing…";
   }
+  if (input.steamCmdPaused === true) {
+    return "Paused";
+  }
+  if (input.steamCmdQueued === true) {
+    return "Queued";
+  }
   if (!input.isInstallationReady) {
     return installationHealthLabel(input.installation?.health);
   }
@@ -55,13 +69,16 @@ export function resolveInstallStateLabel(input: {
 
 export function resolveRowTone(input: {
   steamCmdBusy: boolean;
+  steamCmdPaused?: boolean;
+  steamCmdQueued?: boolean;
   stopBusy?: boolean;
   status: ServerStatus;
   isInstallationReady: boolean;
   updateAvailable: boolean;
   serverEnabled?: boolean;
 }): ServerCardRowTone {
-  if (input.stopBusy === true || input.steamCmdBusy) return "busy";
+  if (input.stopBusy === true || input.steamCmdBusy || input.steamCmdPaused === true) return "busy";
+  if (input.steamCmdQueued === true) return "queued";
   if (input.status === "running") return "running";
   if (input.status === "error") return "error";
   if (!input.isInstallationReady || input.updateAvailable) return "attention";
@@ -85,8 +102,7 @@ export function resolveSteamCmdProgressCopy(input: {
       ? formatSteamCmdByteProgress(downloaded, total)
       : null;
   const byteProgressNoun = steamCmdByteProgressNoun(input.steamCmdOperation);
-  const fallback =
-    input.steamCmdOperation === "verify-files" ? "Verifying" : "Updating files…";
+  const fallback = steamCmdProgressFallbackLabel(input.steamCmdOperation);
   const shortProgressLabel =
     byteProgressLabel !== null
       ? input.steamCmdProgressLabel?.split(" · ")[0]?.trim() || fallback
@@ -116,6 +132,8 @@ export function deriveServerCardView(input: {
   officialSteamBuild: string | null;
   officialVersion?: string | null;
   steamCmdBusy: boolean;
+  steamCmdPaused?: boolean;
+  steamCmdQueued?: boolean;
   stopBusy?: boolean;
   steamCmdOperation: SteamCmdOperation;
   steamCmdProgressLabel: string | null;
@@ -140,8 +158,23 @@ export function deriveServerCardView(input: {
     ? VERSION_REFRESHES_ON_START_HINT
     : null;
   const stopBusy = input.stopBusy === true;
+  const steamCmdPaused = input.steamCmdPaused === true;
+  const steamCmdQueued = input.steamCmdQueued === true;
+  const filesLocked = input.steamCmdBusy || steamCmdPaused || steamCmdQueued;
+  const filesOccupant = filesJobOccupantFromUi({
+    busy: input.steamCmdBusy,
+    paused: steamCmdPaused,
+    queued: steamCmdQueued,
+    operation: input.steamCmdOperation,
+  });
+  const updateSlotBusy = !canEnqueueFilesJobFromMenu(
+    ready ? "update" : "install-files",
+    filesOccupant,
+  );
   const installStateLabel = resolveInstallStateLabel({
     steamCmdBusy: input.steamCmdBusy,
+    steamCmdPaused,
+    steamCmdQueued,
     steamCmdOperation: input.steamCmdOperation,
     isInstallationReady: ready,
     installation: input.installation,
@@ -150,18 +183,27 @@ export function deriveServerCardView(input: {
   });
   const runtimeAction = resolveRuntimeAction({
     steamCmdBusy: input.steamCmdBusy,
+    steamCmdPaused,
+    steamCmdQueued,
+    steamCmdOperation: input.steamCmdOperation,
     isInstallationReady: ready,
     status: input.status,
     serverEnabled,
   });
-  const restartAction = resolveRestartAction({
+  const filesJobAction = resolveFilesJobAction({
     steamCmdBusy: input.steamCmdBusy,
+    steamCmdPaused,
+    steamCmdQueued,
+    steamCmdOperation: input.steamCmdOperation,
+  });
+  const restartAction = resolveRestartAction({
+    steamCmdBusy: filesLocked,
     isInstallationReady: ready,
     status: input.status,
     serverEnabled,
   });
   const updateAction = resolveUpdateAction({
-    steamCmdBusy: input.steamCmdBusy,
+    steamCmdBusy: updateSlotBusy,
     isInstallationReady: ready,
     canOfferInstall,
     status: input.status,
@@ -189,10 +231,13 @@ export function deriveServerCardView(input: {
     updateAvailable,
     installStateLabel: stopBusy ? "Stopping…" : installStateLabel,
     runtimeAction,
+    filesJobAction,
     restartAction,
     updateAction,
+    verifyFilesLocked: !canEnqueueFilesJobFromMenu("verify-files", filesOccupant),
+    installFilesLocked: !canEnqueueFilesJobFromMenu("install-files", filesOccupant),
     primaryAction: resolvePrimaryAction({
-      steamCmdBusy: input.steamCmdBusy,
+      steamCmdBusy: filesLocked,
       isInstallationReady: ready,
       canOfferInstall,
       status: input.status,
@@ -201,6 +246,8 @@ export function deriveServerCardView(input: {
     }),
     rowTone: resolveRowTone({
       steamCmdBusy: input.steamCmdBusy,
+      steamCmdPaused,
+      steamCmdQueued,
       stopBusy,
       status: input.status,
       isInstallationReady: ready,
@@ -208,7 +255,7 @@ export function deriveServerCardView(input: {
       serverEnabled,
     }),
     versionMetaTone: resolveVersionMetaTone({
-      steamCmdBusy: input.steamCmdBusy || stopBusy,
+      steamCmdBusy: filesLocked || stopBusy,
       isInstallationReady: ready,
       updateAvailable,
       updateState,

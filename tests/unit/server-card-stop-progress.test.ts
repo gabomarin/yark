@@ -33,4 +33,33 @@ describe("deriveServerCardView stop progress", () => {
     expect(view.progress.shortProgressLabel).toBe("Saving world…");
     expect(view.progress.byteProgressLabel).toBeNull();
   });
+
+  it("uses install copy when a paused job has no live SteamCMD label", () => {
+    const view = deriveServerCardView({
+      status: "stopped",
+      installation: {
+        serverId: "srv-1",
+        installed: false,
+        health: "missing",
+        reasonCodes: ["path_missing"],
+        guidance: "Install server files.",
+        build: null,
+        steamBuild: null,
+        arkVersion: null,
+        version: null,
+        binaryPath: "",
+        checkedAt: "2026-07-23T00:00:00.000Z",
+      },
+      officialSteamBuild: null,
+      steamCmdBusy: false,
+      steamCmdPaused: true,
+      steamCmdOperation: "install-files",
+      steamCmdProgressLabel: "Paused · Installing files",
+      steamCmdProgressBytesDownloaded: null,
+      steamCmdProgressBytesTotal: null,
+    });
+
+    expect(view.installStateLabel).toBe("Paused");
+    expect(view.progress.shortProgressLabel).toBe("Paused · Installing files");
+  });
 });

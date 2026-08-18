@@ -21,5 +21,63 @@ export interface ServerCardHandlers {
   onCopyConfiguration: (serverId: string) => void;
   onDeleteServer: (serverId: string) => void;
   onCancelSteamCmd: () => void;
+  onResumeSteamCmd?: (serverId: string) => void;
+  onCancelQueuedJob?: (serverId: string) => void;
   onToggleServerEnabled?: (serverId: string, enabled: boolean) => void;
+}
+
+export type ServerCardCallbackProps = {
+  onStart: () => void;
+  onStop: () => void;
+  onKill: () => void;
+  onRestart: () => void;
+  onOpenWorkspace: () => void;
+  onOpenLogs: () => void;
+  onReviewError: () => void;
+  onOpenFolder: () => void;
+  onInstallFiles: () => void;
+  onUpdateNow: () => void;
+  onVerifyFiles: () => void;
+  onCheckUpdates: () => void;
+  onClone: () => void;
+  onCopyConfiguration: () => void;
+  onDelete: () => void;
+  onCancelSteamCmd: () => void;
+  onResumeSteamCmd?: () => void;
+  onCancelQueuedJob?: () => void;
+  onToggleEnabled?: () => void;
+};
+
+export function bindServerCardHandlers(
+  handlers: ServerCardHandlers,
+  server: ServerProfile,
+): ServerCardCallbackProps {
+  const id = server.id;
+  return {
+    onStart: () => handlers.onStartServer(id),
+    onStop: () => handlers.onStopServer(id),
+    onKill: () => handlers.onKillServer(id),
+    onRestart: () => handlers.onRestartServer(id),
+    onOpenWorkspace: () => handlers.onOpenWorkspace(server),
+    onOpenLogs: () => handlers.onOpenLogs(id),
+    onReviewError: () => handlers.onReviewError(id),
+    onOpenFolder: () => handlers.onOpenFolder(id),
+    onInstallFiles: () => handlers.onInstallFiles(id),
+    onUpdateNow: () => handlers.onUpdateNow(id),
+    onVerifyFiles: () => handlers.onVerifyFiles(id),
+    onCheckUpdates: () => handlers.onCheckUpdatesForServer(id),
+    onClone: () => handlers.onCloneServer(id),
+    onCopyConfiguration: () => handlers.onCopyConfiguration(id),
+    onDelete: () => handlers.onDeleteServer(id),
+    onCancelSteamCmd: () => handlers.onCancelSteamCmd(),
+    onResumeSteamCmd: handlers.onResumeSteamCmd
+      ? () => handlers.onResumeSteamCmd?.(id)
+      : undefined,
+    onCancelQueuedJob: handlers.onCancelQueuedJob
+      ? () => handlers.onCancelQueuedJob?.(id)
+      : undefined,
+    onToggleEnabled: handlers.onToggleServerEnabled
+      ? () => handlers.onToggleServerEnabled?.(id, !server.enabled)
+      : undefined,
+  };
 }

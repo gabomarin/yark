@@ -28,6 +28,20 @@ export function isOperationCancelledError(error: unknown): boolean {
   );
 }
 
+export class OperationPausedError extends Error {
+  constructor(message = "Operation paused by the user") {
+    super(message);
+    this.name = "OperationPausedError";
+  }
+}
+
+export function isOperationPausedError(error: unknown): boolean {
+  return (
+    error instanceof OperationPausedError
+    || (error instanceof Error && error.name === "OperationPausedError")
+  );
+}
+
 export function isRobocopySuccess(exitCode: number | null): boolean {
   // Robocopy: 0–7 = success with varying copy degrees; >= 8 = error.
   const code = exitCode ?? 16;

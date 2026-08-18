@@ -27,6 +27,13 @@ import type {
   StartServerOptions,
 } from "@shared/types";
 import { EMPTY_WIPE_STALE_MESSAGE } from "@shared/types";
+import { canPauseSteamCmdOperation } from "@shared/steamcmd-progress";
+import {
+  decideFilesJobEnqueue,
+  filesJobEnqueueCopy,
+  isFilesJobOperation,
+  occupyingFilesJobForServer,
+} from "@shared/files-job-priority";
 import { createGenerationGate } from "@shared/createGenerationGate";
 import { reconcileServerList } from "./shared/reconcileServerList";
 import {
@@ -66,7 +73,16 @@ import { CloneServerDialog } from "@features/servers/components/CloneServerDialo
 import { DeleteServerModal } from "@features/servers/components/DeleteServerModal/DeleteServerModal";
 import { CopyConfigurationWizard } from "@features/servers/components/CopyConfigurationWizard/CopyConfigurationWizard";
 import { openHostPortProbeModal } from "@features/servers/hostPortProbeModal";
-import { SteamCmdProgressDock } from "@features/steamcmd/SteamCmdProgressDock";
+import { DownloadsPage } from "@features/downloads/DownloadsPage";
+import { DownloadsTeaserFooter } from "@features/downloads/DownloadsTeaserFooter";
+import {
+  buildDownloadRows,
+  buildDownloadsTeaser,
+  downloadsBadgeCount,
+  filesQueueStateByServerId,
+  shouldShowDownloadsChrome,
+  type ServerFilesQueueState,
+} from "@features/downloads/downloadsModel";
 import { SettingsPage } from "@features/settings/SettingsPage";
 import { AppChangelogModal } from "@features/settings/components/AppChangelogModal";
 import { SetupWizard } from "@features/setup-wizard/SetupWizard";
@@ -110,6 +126,35 @@ type CopyConfigSession = {
   sourceServerId: string;
   targetServerId?: string;
 };
+
+type SteamCmdCardJobRef = {
+  jobId: string;
+  label: string;
+  operation: "install-files" | "update" | "verify-files";
+};
+
+function steamCmdCardJobsByKind(
+  queue: Map<string, ServerFilesQueueState>,
+  kind: "paused" | "queued",
+): Map<string, SteamCmdCardJobRef> {
+  const map = new Map<string, SteamCmdCardJobRef>();
+  for (const [serverId, state] of queue) {
+    if (state.kind !== kind) continue;
+    if (
+      state.operation !== "install-files"
+      && state.operation !== "update"
+      && state.operation !== "verify-files"
+    ) {
+      continue;
+    }
+    map.set(serverId, {
+      jobId: state.jobId,
+      label: state.label,
+      operation: state.operation,
+    });
+  }
+  return map;
+}
 
 interface AppProps {
   /** Resolved from `app_settings` (via IPC) before first paint. */
@@ -185,6 +230,7 @@ export function App({
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [appUpdateStatus, setAppUpdateStatus] = useState<AppUpdateStatus | null>(null);
   const [focusYarkUpdates, setFocusYarkUpdates] = useState(false);
+  const [focusSteamCmd, setFocusSteamCmd] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
   const [changelogInitialTab, setChangelogInitialTab] = useState<"current" | "recent">(
     "current",
@@ -425,6 +471,14 @@ export function App({
     });
   }, [runWithOverlayLeaveGuard]);
 
+  const openSteamCmdSettings = useCallback(() => {
+    runWithOverlayLeaveGuard(() => {
+      setOverlay(null);
+      setRoute("settings");
+      setFocusSteamCmd(true);
+    });
+  }, [runWithOverlayLeaveGuard]);
+
   const markChangelogSeen = useCallback(() => {
     changelogPromptSettledRef.current = true;
     void window.api.setLastSeenChangelogVersion(APP_VERSION);
@@ -554,10 +608,53 @@ export function App({
     });
   }, [appUpdateStatus, openYarkUpdateSettings]);
 
-  const steamCmdServerName =
-    steamCmdStatus?.serverId != null
-      ? (servers.find((server) => server.id === steamCmdStatus.serverId)?.name ?? null)
-      : null;
+  const downloadRows = useMemo(
+    () =>
+      steamCmdStatus !== null
+        ? buildDownloadRows(steamCmdStatus, {
+            activeServer:
+              steamCmdStatus.serverId !== null
+                ? (servers.find((server) => server.id === steamCmdStatus.serverId) ?? null)
+                : null,
+            serversById: new Map(servers.map((server) => [server.id, server] as const)),
+          })
+        : [],
+    [servers, steamCmdStatus],
+  );
+  const downloadTeaser = useMemo(
+    () =>
+      steamCmdStatus !== null
+        ? buildDownloadsTeaser(steamCmdStatus, downloadRows)
+        : {
+            visible: false,
+            title: "",
+            detail: "",
+            percent: null,
+            attention: false,
+            canCancel: false,
+            canResume: false,
+            canPause: false,
+            canRetry: false,
+            usesLiveCancel: false,
+            selectedJobId: null,
+          },
+    [downloadRows, steamCmdStatus],
+  );
+  const downloadCount = downloadsBadgeCount(downloadRows);
+  const filesQueueByServerId = useMemo(
+    () => filesQueueStateByServerId(steamCmdStatus?.criticalJobs),
+    [steamCmdStatus],
+  );
+  const steamCmdPausedByServerId = useMemo(
+    () => steamCmdCardJobsByKind(filesQueueByServerId, "paused"),
+    [filesQueueByServerId],
+  );
+  const steamCmdQueuedByServerId = useMemo(
+    () => steamCmdCardJobsByKind(filesQueueByServerId, "queued"),
+    [filesQueueByServerId],
+  );
+  const showDownloadsTeaserFooter =
+    route !== "downloads" && shouldShowDownloadsChrome(steamCmdStatus);
 
   const refresh = useCallback(async (options?: {
     includeInstallation?: boolean;
@@ -930,11 +1027,12 @@ export function App({
   }, [refresh, runInstallHealthScan]);
 
   useEffect(() => {
-    // Overview heartbeat: statuses / SteamCMD / events only — not listServers.
+    // Overview / Downloads heartbeat: statuses / SteamCMD / events only — not listServers.
     // Profiles refresh on mutation, explicit Refresh, and the slower CDN timer.
     // See docs/agent-context.md § App refresh contract (#163).
-    const onServerList = route === "overview" && overlay === null;
-    if (!onServerList) {
+    const shouldPollSteamCmd =
+      overlay === null && (route === "overview" || route === "downloads");
+    if (!shouldPollSteamCmd) {
       return;
     }
     const syncing = steamCmdStatus?.operation === "sync-files";
@@ -999,6 +1097,14 @@ export function App({
     },
     [refresh],
   );
+
+  const pauseOrCancelSteamCmd = useCallback(() => {
+    void runAction(() =>
+      canPauseSteamCmdOperation(steamCmdStatus?.operation)
+        ? window.api.pauseSteamCmd()
+        : window.api.cancelSteamCmd(),
+    );
+  }, [runAction, steamCmdStatus?.operation]);
 
   const appendRconHistory = useCallback((serverId: string, entry: RconHistoryEntry) => {
     setRconHistoryByServer((prev) => {
@@ -1244,24 +1350,74 @@ export function App({
   const startSteamFilesJob = useCallback(
     (serverId: string, kind: "install" | "update" | "verify") => {
       const serverName = servers.find((server) => server.id === serverId)?.name ?? serverId;
+      const operation =
+        kind === "install" ? "install-files" : kind === "verify" ? "verify-files" : "update";
+      const actionLabel =
+        kind === "install" ? "Install" : kind === "verify" ? "Verify" : "Update";
+      const occupant = occupyingFilesJobForServer(
+        steamCmdStatus?.criticalJobs ?? [],
+        serverId,
+      );
+      const decision = decideFilesJobEnqueue(operation, occupant);
+      if (decision.action !== "enqueue" && decision.action !== "replace") {
+        const copy = filesJobEnqueueCopy(operation, decision, serverName);
+        showOperatorToast({
+          id: `files-job-${decision.occupant.id}`,
+          title: copy.title,
+          message: copy.message,
+          color: "gray",
+          onClick: () => {
+            setOverlay(null);
+            setRoute("downloads");
+          },
+        });
+        return;
+      }
+      if (decision.action === "replace") {
+        const copy = filesJobEnqueueCopy(operation, decision, serverName);
+        showOperatorToast({
+          id: `files-replaced-${serverId}-${kind}`,
+          title: copy.title,
+          message: copy.message,
+          color: "blue",
+          onClick: () => {
+            setOverlay(null);
+            setRoute("downloads");
+          },
+        });
+      } else if (steamCmdBusy) {
+        showOperatorToast({
+          id: `files-queued-${serverId}-${kind}`,
+          title: "Added to Downloads",
+          message: `${actionLabel} for "${serverName}" will start after the current SteamCMD job.`,
+          color: "blue",
+          onClick: () => {
+            setOverlay(null);
+            setRoute("downloads");
+          },
+        });
+      }
       const labels = {
         install: {
           doneTitle: "Install finished",
           doneMessage: `Server files for "${serverName}" are ready.`,
           failTitle: "Install failed",
           cancelMessage: `Install for "${serverName}" was cancelled.`,
+          pauseMessage: `Install for "${serverName}" was paused.`,
         },
         update: {
           doneTitle: "Update finished",
           doneMessage: `"${serverName}" is on the latest files.`,
           failTitle: "Update failed",
           cancelMessage: `Update for "${serverName}" was cancelled.`,
+          pauseMessage: `Update for "${serverName}" was paused.`,
         },
         verify: {
           doneTitle: "Verification complete",
           doneMessage: `Integrity check for "${serverName}" finished.`,
           failTitle: "Verification failed",
           cancelMessage: `Integrity check for "${serverName}" was cancelled.`,
+          pauseMessage: `Integrity check for "${serverName}" was paused.`,
         },
       } as const;
       const copy = labels[kind];
@@ -1274,8 +1430,32 @@ export function App({
               : await window.api.updateServerNow(serverId);
         if (!result.ok) {
           const message = result.error ?? "Unknown error";
+          if (/Replaced by .+ in the Downloads queue/i.test(message)) {
+            await refresh();
+            return;
+          }
           // Deliberate cancellation: toast, not a red global banner.
-          if (/cancell?ed|cancelad/i.test(message)) {
+          if (
+            /already in the Downloads queue|already in Downloads|Resume it from Downloads|Cancel it first, or wait/i.test(
+              message,
+            )
+          ) {
+            showOperatorToast({
+              title: "Already in Downloads",
+              message,
+              color: "gray",
+              onClick: () => {
+                setOverlay(null);
+                setRoute("downloads");
+              },
+            });
+          } else if (/paused/i.test(message)) {
+            showOperatorToast({
+              title: "Paused",
+              message: copy.pauseMessage,
+              color: "yellow",
+            });
+          } else if (/cancell?ed|cancelad/i.test(message)) {
             showOperatorToast({
               title: "Cancelled",
               message: copy.cancelMessage,
@@ -1293,7 +1473,7 @@ export function App({
         await refresh();
       })();
     },
-    [refresh, servers],
+    [refresh, servers, steamCmdBusy, steamCmdStatus],
   );
 
   const pickSteamCmdPath = useCallback(async () => {
@@ -1506,6 +1686,47 @@ export function App({
     [runWithOverlayLeaveGuard],
   );
 
+  const downloadsWorkspaceFooter = useMemo(() => {
+    if (!showDownloadsTeaserFooter) {
+      return null;
+    }
+    return (
+      <DownloadsTeaserFooter
+        model={downloadTeaser}
+        onOpenDownloads={() => navigate("downloads")}
+        onResume={() => {
+          if (downloadTeaser.selectedJobId !== null) {
+            void runAction(() =>
+              window.api.resumeCriticalJob(downloadTeaser.selectedJobId!),
+            );
+          }
+        }}
+        onRetry={() => {
+          if (downloadTeaser.selectedJobId !== null) {
+            void runAction(() =>
+              window.api.retryCriticalJob(downloadTeaser.selectedJobId!),
+            );
+          }
+        }}
+        onCancel={() => {
+          if (downloadTeaser.canPause) {
+            void runAction(() => window.api.pauseSteamCmd());
+            return;
+          }
+          if (downloadTeaser.usesLiveCancel) {
+            void runAction(() => window.api.cancelSteamCmd());
+            return;
+          }
+          if (downloadTeaser.selectedJobId !== null) {
+            void runAction(() =>
+              window.api.cancelCriticalJob(downloadTeaser.selectedJobId!),
+            );
+          }
+        }}
+      />
+    );
+  }, [downloadTeaser, navigate, runAction, showDownloadsTeaserFooter]);
+
   const openServerFromSpotlight = useCallback(
     (serverId: string) => {
       runWithOverlayLeaveGuard(() => {
@@ -1548,6 +1769,8 @@ export function App({
           onWhatsNewClick={onWhatsNewClick}
           onYarkUpdateClick={openYarkUpdateSettings}
           busyOverlay={stopBusyOverlay}
+          downloadCount={downloadCount}
+          workspaceFooter={downloadsWorkspaceFooter}
         >
           <ServerWorkspacePage
             servers={servers}
@@ -1567,10 +1790,36 @@ export function App({
             initialTab={overlay.initialTab}
             logsFocus={overlay.logsFocus}
             filesJobActive={
-              steamCmdBusy && steamCmdStatus?.serverId === overlay.serverId
+              filesQueueByServerId.has(overlay.serverId)
+              || (steamCmdBusy && steamCmdStatus?.serverId === overlay.serverId)
+            }
+            filesJobOperation={
+              (() => {
+                const queued = filesQueueByServerId.get(overlay.serverId);
+                if (queued !== undefined && isFilesJobOperation(queued.operation)) {
+                  return queued.operation;
+                }
+                const liveOp = steamCmdStatus?.operation;
+                if (
+                  steamCmdBusy
+                  && steamCmdStatus?.serverId === overlay.serverId
+                  && isFilesJobOperation(liveOp)
+                ) {
+                  return liveOp;
+                }
+                return null;
+              })()
+            }
+            filesJobQueueKind={
+              filesQueueByServerId.get(overlay.serverId)?.kind
+              ?? (steamCmdBusy && steamCmdStatus?.serverId === overlay.serverId
+                ? "active"
+                : null)
             }
             filesJobLabel={
-              steamCmdBusy && steamCmdStatus?.serverId === overlay.serverId
+              filesQueueByServerId.get(overlay.serverId)?.kind === "queued"
+                ? filesQueueByServerId.get(overlay.serverId)?.label ?? "Queued in Downloads"
+                : steamCmdBusy && steamCmdStatus?.serverId === overlay.serverId
                 ? steamCmdStatus.operation === "update"
                   ? "Updating server files"
                   : steamCmdStatus.operation === "verify-files"
@@ -1580,7 +1829,7 @@ export function App({
                       : steamCmdStatus.operation === "sync-files"
                         ? "Copying files to this server"
                         : "Updating server files"
-                : null
+                : filesQueueByServerId.get(overlay.serverId)?.label ?? null
             }
             stopProgress={
               stopProgressByServerId.get(overlay.serverId) ?? null
@@ -1649,6 +1898,8 @@ export function App({
           onWhatsNewClick={onWhatsNewClick}
           onYarkUpdateClick={openYarkUpdateSettings}
           busyOverlay={stopBusyOverlay}
+          downloadCount={downloadCount}
+          workspaceFooter={downloadsWorkspaceFooter}
         >
           <ServerForm
             initial={null}
@@ -1687,6 +1938,8 @@ export function App({
           onWhatsNewClick={onWhatsNewClick}
           onYarkUpdateClick={openYarkUpdateSettings}
           busyOverlay={stopBusyOverlay}
+          downloadCount={downloadCount}
+          workspaceFooter={downloadsWorkspaceFooter}
         >
           <ServerForm
             initial={overlay.profile}
@@ -1717,6 +1970,8 @@ export function App({
         onWhatsNewClick={onWhatsNewClick}
         onYarkUpdateClick={openYarkUpdateSettings}
         busyOverlay={stopBusyOverlay}
+        downloadCount={downloadCount}
+        workspaceFooter={downloadsWorkspaceFooter}
         overview={{
           page: (
             <OverviewPage
@@ -1745,6 +2000,8 @@ export function App({
               steamCmdServerId={steamCmdStatus?.serverId ?? null}
               steamCmdRunning={steamCmdStatus?.running === true}
               steamCmdBusy={steamCmdBusy}
+              steamCmdPausedByServerId={steamCmdPausedByServerId}
+              steamCmdQueuedByServerId={steamCmdQueuedByServerId}
               steamCmdProgressPercent={steamCmdStatus?.progressPercent ?? null}
               steamCmdProgressLabel={steamCmdStatus?.progressLabel ?? null}
               steamCmdProgressBytesDownloaded={steamCmdStatus?.progressBytesDownloaded ?? null}
@@ -1774,19 +2031,64 @@ export function App({
               onRestartServer={(id) => void restartServer(id)}
               onKillServer={(id) => confirmKillServer(id)}
               onOpenFolder={(id) => void runAction(() => window.api.openServerFolder(id))}
-            onInstallFiles={(id) => startSteamFilesJob(id, "install")}
-            onUpdateNow={(id) => startSteamFilesJob(id, "update")}
-            onVerifyFiles={(id) => startSteamFilesJob(id, "verify")}
+              onInstallFiles={(id) => startSteamFilesJob(id, "install")}
+              onUpdateNow={(id) => startSteamFilesJob(id, "update")}
+              onVerifyFiles={(id) => startSteamFilesJob(id, "verify")}
               onCheckUpdatesForServer={(id) => void checkForUpdates(id)}
               onCloneServer={(id) => setOverlay({ kind: "clone", sourceServerId: id })}
               onCopyConfiguration={(id) =>
                 setCopyConfig({ sourceServerId: id })
               }
               onDeleteServer={(id) => confirmDeleteServer(id)}
-            onToggleServerEnabled={(id, enabled) => void setServerEnabled(id, enabled)}
-            onCancelSteamCmd={() => void runAction(() => window.api.cancelSteamCmd())}
+              onToggleServerEnabled={(id, enabled) => void setServerEnabled(id, enabled)}
+              onCancelSteamCmd={pauseOrCancelSteamCmd}
+              onResumeSteamCmd={(serverId) => {
+                const job = steamCmdStatus?.criticalJobs.find(
+                  (candidate) =>
+                    candidate.serverId === serverId && candidate.status === "paused",
+                );
+                if (job !== undefined) {
+                  void runAction(() => window.api.resumeCriticalJob(job.id));
+                }
+              }}
+              onCancelQueuedJob={(serverId) => {
+                const queued = steamCmdQueuedByServerId.get(serverId);
+                if (queued !== undefined) {
+                  void runAction(() => window.api.cancelCriticalJob(queued.jobId));
+                }
+              }}
             />
           ),
+        }}
+        downloads={{
+          page:
+            steamCmdStatus !== null ? (
+              <DownloadsPage
+                status={steamCmdStatus}
+                console={steamCmdConsole}
+                servers={servers}
+                onOpenLogs={(row) => {
+                  if (row.serverId === null) {
+                    navigate("logs");
+                    return;
+                  }
+                  openServerLogs(row.serverId, {
+                    section: "events",
+                    ...(row.eventId !== null ? { eventId: row.eventId } : {}),
+                  });
+                }}
+                onCancelLive={() => void runAction(() => window.api.cancelSteamCmd())}
+                onPauseLive={() => void runAction(() => window.api.pauseSteamCmd())}
+                onCancelJob={(id) => void runAction(() => window.api.cancelCriticalJob(id))}
+                onRetryJob={(id) => void runAction(() => window.api.retryCriticalJob(id))}
+                onResumeJob={(id) => void runAction(() => window.api.resumeCriticalJob(id))}
+                onDismissJob={(id) => void runAction(() => window.api.dismissCriticalJob(id))}
+                onReorderJob={(id, direction) =>
+                  void runAction(() => window.api.reorderCriticalJob(id, direction))
+                }
+                onOpenSettings={openSteamCmdSettings}
+              />
+            ) : null,
         }}
         clusters={{
           page: (
@@ -1829,6 +2131,8 @@ export function App({
               appVersion={APP_VERSION}
               focusYarkUpdates={focusYarkUpdates}
               onYarkUpdatesFocused={() => setFocusYarkUpdates(false)}
+              focusSteamCmd={focusSteamCmd}
+              onSteamCmdFocused={() => setFocusSteamCmd(false)}
               steamCmdStatus={steamCmdStatus}
               steamCmdBusy={steamCmdBusy}
               servers={servers}
@@ -1937,19 +2241,6 @@ export function App({
         }}
       />
       {renderMain()}
-      {steamCmdStatus !== null
-        && (steamCmdBusy || (steamCmdStatus.criticalJobs?.length ?? 0) > 0)
-        && (
-        <SteamCmdProgressDock
-          status={steamCmdStatus}
-          console={steamCmdConsole}
-          serverName={steamCmdServerName}
-          onCancel={() => void runAction(() => window.api.cancelSteamCmd())}
-          onRetryJob={(id) => void runAction(() => window.api.retryCriticalJob(id))}
-          onDismissJob={(id) => void runAction(() => window.api.dismissCriticalJob(id))}
-          onCancelJob={(id) => void runAction(() => window.api.cancelCriticalJob(id))}
-        />
-      )}
       <CloneServerDialog
         opened={overlay?.kind === "clone"}
         sourceServer={

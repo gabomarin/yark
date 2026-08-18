@@ -12,6 +12,12 @@ import {
 } from "./AttentionIssuesPopover/AttentionIssuesPopover";
 import classes from "../OverviewPage.module.css";
 
+export type SteamCmdCardJobRef = {
+  jobId: string;
+  label: string;
+  operation: "install-files" | "update" | "verify-files";
+};
+
 interface Props {
   search: string;
   onSearchChange: (value: string) => void;
@@ -29,6 +35,8 @@ interface Props {
   steamCmdServerId: string | null;
   steamCmdRunning: boolean;
   steamCmdBusy?: boolean;
+  steamCmdPausedByServerId?: ReadonlyMap<string, SteamCmdCardJobRef>;
+  steamCmdQueuedByServerId?: ReadonlyMap<string, SteamCmdCardJobRef>;
   steamCmdProgressPercent?: number | null;
   steamCmdProgressLabel?: string | null;
   steamCmdProgressBytesDownloaded?: number | null;
@@ -53,6 +61,8 @@ interface Props {
   onDeleteServer: (serverId: string) => void;
   onToggleServerEnabled?: (serverId: string, enabled: boolean) => void;
   onCancelSteamCmd: () => void;
+  onResumeSteamCmd?: (serverId: string) => void;
+  onCancelQueuedJob?: (serverId: string) => void;
 }
 
 export function ServerGrid(props: Props): ReactElement {
@@ -83,6 +93,8 @@ export function ServerGrid(props: Props): ReactElement {
         propsRef.current.onCopyConfiguration(serverId),
       onDeleteServer: (serverId) => propsRef.current.onDeleteServer(serverId),
       onCancelSteamCmd: () => propsRef.current.onCancelSteamCmd(),
+      onResumeSteamCmd: (serverId) => propsRef.current.onResumeSteamCmd?.(serverId),
+      onCancelQueuedJob: (serverId) => propsRef.current.onCancelQueuedJob?.(serverId),
       onToggleServerEnabled: (serverId, enabled) =>
         propsRef.current.onToggleServerEnabled?.(serverId, enabled),
     }),
@@ -140,6 +152,10 @@ export function ServerGrid(props: Props): ReactElement {
   const renderServerCard = (server: ServerProfile): ReactElement => {
     const stopProgress = props.stopProgressByServerId?.get(server.id);
     const stopBusy = stopProgress?.active === true;
+    const pausedJob = props.steamCmdPausedByServerId?.get(server.id);
+    const queuedJob = props.steamCmdQueuedByServerId?.get(server.id);
+    const liveSteamCmd = props.steamCmdServerId === server.id;
+    const overlayJob = pausedJob ?? queuedJob;
     return (
       <ServerCard
         key={server.id}
@@ -149,24 +165,27 @@ export function ServerGrid(props: Props): ReactElement {
         officialSteamBuild={props.officialSteamBuild}
         officialVersion={props.officialVersion ?? null}
         steamCmdBusy={
-          !stopBusy && (props.steamCmdBusy ?? props.steamCmdRunning) && props.steamCmdServerId === server.id
+          !stopBusy && (props.steamCmdBusy ?? props.steamCmdRunning) && liveSteamCmd
         }
+        steamCmdPaused={pausedJob !== undefined}
+        steamCmdQueued={queuedJob !== undefined}
+        steamCmdQueueLabel={overlayJob?.label ?? null}
         steamCmdProgressPercent={
-          props.steamCmdServerId === server.id ? (props.steamCmdProgressPercent ?? null) : null
+          liveSteamCmd ? (props.steamCmdProgressPercent ?? null) : null
         }
         steamCmdProgressLabel={
-          props.steamCmdServerId === server.id ? (props.steamCmdProgressLabel ?? null) : null
+          liveSteamCmd ? (props.steamCmdProgressLabel ?? null) : null
         }
         steamCmdProgressBytesDownloaded={
-          props.steamCmdServerId === server.id
-            ? (props.steamCmdProgressBytesDownloaded ?? null)
-            : null
+          liveSteamCmd ? (props.steamCmdProgressBytesDownloaded ?? null) : null
         }
         steamCmdProgressBytesTotal={
-          props.steamCmdServerId === server.id ? (props.steamCmdProgressBytesTotal ?? null) : null
+          liveSteamCmd ? (props.steamCmdProgressBytesTotal ?? null) : null
         }
         steamCmdOperation={
-          props.steamCmdServerId === server.id ? (props.steamCmdOperation ?? null) : null
+          liveSteamCmd
+            ? (props.steamCmdOperation ?? null)
+            : (overlayJob?.operation ?? null)
         }
         stopBusy={stopBusy}
         stopProgressPercent={stopBusy ? (stopProgress?.percent ?? null) : null}

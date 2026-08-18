@@ -26,6 +26,9 @@ export interface ServerCardMenuActionInput {
   canOfferInstall: boolean;
   updateAvailable: boolean;
   steamCmdBusy: boolean;
+  filesLocked?: boolean;
+  verifyFilesLocked?: boolean;
+  installFilesLocked?: boolean;
   checkingUpdates: boolean;
   updateAction: ServerCardUpdateAction;
   serverEnabled: boolean;
@@ -192,9 +195,11 @@ export function buildServerCardMenuActions(
             ? input.updateAction.disabled
             : !input.updateAvailable,
         title:
-          input.updateAction.kind === "update" && input.isActive
+          input.updateAction.disabled && input.isActive
             ? "Stop the server before updating files"
-            : undefined,
+            : input.updateAction.disabled
+              ? "A Downloads job is already queued for this server"
+              : undefined,
         onClick: input.onUpdateNow,
       },
       {
@@ -202,6 +207,11 @@ export function buildServerCardMenuActions(
         key: "verify",
         label: "Verify integrity",
         icon: <ShieldCheck size={ICON} color="var(--mantine-color-teal-6)" />,
+        disabled: input.verifyFilesLocked === true,
+        title:
+          input.verifyFilesLocked === true
+            ? "A Downloads job is already queued for this server"
+            : undefined,
         onClick: input.onVerifyFiles,
       },
     );
@@ -211,6 +221,11 @@ export function buildServerCardMenuActions(
       key: "install-files",
       label: "Install files",
       icon: <CloudArrowDown size={ICON} color="var(--mantine-color-blue-6)" />,
+      disabled: input.installFilesLocked === true,
+      title:
+        input.installFilesLocked === true
+          ? "A Downloads job is already queued for this server"
+          : undefined,
       onClick: input.onInstallFiles,
     });
   }

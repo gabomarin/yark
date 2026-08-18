@@ -42,6 +42,8 @@ interface Props {
   /** SteamCMD is rewriting this server's install (install/update/verify/sync). */
   filesJobActive?: boolean;
   filesJobLabel?: string | null;
+  filesJobOperation?: "install-files" | "update" | "verify-files" | null;
+  filesJobQueueKind?: "active" | "paused" | "queued" | null;
   /** Safe stop in progress for the selected server (SaveWorld → backup → DoExit). */
   stopProgress?: ServerStopProgress | null;
   onDismissOnboarding?: () => void;
@@ -182,6 +184,8 @@ export function ServerWorkspacePage(props: Props): ReactElement {
             ? filesLockReason
             : undefined
       }
+      filesJobOperation={props.filesJobOperation}
+      filesJobQueueKind={props.filesJobQueueKind}
       onOpenFolder={() => props.onOpenFolder(selectedServer.id)}
       onInstallFiles={() => props.onInstallFiles(selectedServer.id)}
       onUpdateNow={() => props.onUpdateNow(selectedServer.id)}

@@ -9,7 +9,7 @@ import {
 } from "@ui/AppBusyOverlay/AppBusyOverlay";
 import { ChromeRailEdgeToggle } from "@ui/ChromeRailEdgeToggle/ChromeRailEdgeToggle";
 import type { OfficialNetworkStatus } from "@shared/types";
-import type { PropsWithChildren, ReactElement } from "react";
+import type { PropsWithChildren, ReactElement, ReactNode } from "react";
 import classes from "./AppShellLayout.module.css";
 
 interface Props extends PropsWithChildren {
@@ -28,15 +28,19 @@ interface Props extends PropsWithChildren {
   onDismissError?: () => void;
   /** Blocks shell chrome while stop/save/backup (or similar) runs. */
   busyOverlay?: AppBusyOverlayContent | null;
+  workspaceFooter?: ReactNode;
+  downloadCount?: number;
 }
 
-export function AppShellLayout({ children, ...sidebarProps }: Props): ReactElement {
+export function AppShellLayout({ children, ...props }: Props): ReactElement {
   const {
     error = null,
     onDismissError,
     busyOverlay = null,
+    workspaceFooter,
+    downloadCount,
     ...shellProps
-  } = sidebarProps;
+  } = props;
   const density = useUiDensity();
   const fullNavbarWidth = density === "compact" ? 212 : 248;
   const sidebarRail = useSidebarRail(fullNavbarWidth);
@@ -52,7 +56,11 @@ export function AppShellLayout({ children, ...sidebarProps }: Props): ReactEleme
       }}
     >
       <AppShell.Navbar>
-        <Sidebar {...shellProps} iconMode={sidebarRail.iconMode} />
+        <Sidebar
+          {...shellProps}
+          iconMode={sidebarRail.iconMode}
+          downloadCount={downloadCount}
+        />
         <ChromeRailEdgeToggle
           className={classes.sidebarEdgeToggle}
           style={{ left: sidebarRail.railWidthPx }}
@@ -81,7 +89,8 @@ export function AppShellLayout({ children, ...sidebarProps }: Props): ReactEleme
               </Group>
             </Alert>
           )}
-          {children}
+          <div className={classes.mainBody}>{children}</div>
+          {workspaceFooter}
         </Stack>
       </AppShell.Main>
       {busyOverlay !== null && <AppBusyOverlay content={busyOverlay} />}

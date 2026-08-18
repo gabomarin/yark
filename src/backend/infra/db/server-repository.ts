@@ -275,10 +275,10 @@ export class ServerRepository {
     severity: AppEvent["severity"],
     message: string,
     details?: AppEventDetails | null,
-  ): void {
+  ): number {
     const detailsJson =
       details !== undefined && details !== null ? JSON.stringify(details) : null;
-    this.db
+    const result = this.db
       .prepare(
         "INSERT INTO events (server_id, type, severity, message, created_at, details) VALUES (?, ?, ?, ?, ?, ?)",
       )
@@ -290,6 +290,7 @@ export class ServerRepository {
         new Date().toISOString(),
         detailsJson,
       );
+    return Number(result.lastInsertRowid);
   }
 
   recentEvents(limit: number): AppEvent[] {
