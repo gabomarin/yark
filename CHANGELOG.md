@@ -18,7 +18,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
-- Workspace **Mods** uses the same panel surface as Logs and Clusters, and Discover search uses the shared search field (#238).
+- Workspace **Mods** uses the same flat panel shell as Server Settings and Launch, and Discover search uses the shared search field (#238).
 - Configuration wizard: calm profile cards with Phosphor icons, Cancel with step actions and Back beside Continue, **Match cluster defaults** (full template Seed/Restore with pace skip), and **Use default configuration** on first-run create (#230).
 - Configuration wizard Pace colors rate presets and world-difficulty tiers (Very easy–Very hard → levels 30–150), marks WildCard-matching presets with **WildCard official**, and exposes INI keys behind **INI details** (#230).
 - Configuration wizard **World** step uses Current → Very easy…Very hard (official **Base**), drops Max players from presets (profile field only), and retunes density / survival / night values (#230).
