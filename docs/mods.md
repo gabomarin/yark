@@ -35,7 +35,7 @@ Research archive: [spikes/65-modded-asa-maps.md](spikes/65-modded-asa-maps.md).
 | Launch `-mods=` | `src/backend/domains/instances/launch-args.ts` |
 | Map-mod category / token heuristics | `src/shared/map-token-suggest.ts`, `src/shared/map-identity.ts` |
 | Profile patch merge | `src/shared/server-profile.ts` |
-| Workspace UI | `…/ServerModsPanel/*` (`ServerModsPanel.tsx`, `serverModsModel.ts`, `serverModsListMutations.ts`) |
+| Workspace UI | `…/ServerModsPanel/*` (`AppSurfaceCard` shell, Discover `SearchField`, `serverModsModel.ts`, `serverModsListMutations.ts`) |
 | Load-order table | `ServerModsTable.tsx` via [YarkDataTable](datatable.md) |
 | Enrich on create / full update / patch | `src/main/ipc-handlers.ts` → `ModsService.enrichNewServerMods` |
 | IPC | `mods:*` channels in `src/shared/ipc.ts` (+ Zod in `channel-schemas.ts`) |
