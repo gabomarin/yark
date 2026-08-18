@@ -10,6 +10,9 @@ export type RoadmapItem = {
  * Prefer operator-visible product work from open issues (not CI/packaging hygiene).
  * Not a ship promise — keep wording directional. Milestones on GitHub stay authoritative.
  *
+ * Shipped in v0.13.0 (not previously listed here): Max players, clone folder copy (#160),
+ * first-run setup (#298), Mods drawer/chrome (#227/#238/#226), Configuration wizard (#230/#224),
+ * Settings category sidebar, junction hardening (#322).
  * Shipped in v0.12.0 (not previously listed here): splash (#317), What's new (#290),
  * ServerForm / leave-guards, crash Runtime logs (#326), cluster live-transfer docs (#22).
  * Shipped in v0.11.0 (removed from this list): remove-from-YARK-only (#267).

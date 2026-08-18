@@ -1,6 +1,6 @@
 {
   "name": "yark-server-manager",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "YARK server manager — local ARK Survival Ascended dedicated server manager for Windows",
   "homepage": "https://getyark.com",
   "main": "out/main/index.js",

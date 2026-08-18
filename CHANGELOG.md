@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-08-17
+
 ### Added
 
 - Profile-owned **Max players** (default 70, 0–255) on create/edit; applied at start as `-WinLiveMaxPlayers` only. ASA ignores GameUserSettings.ini `MaxPlayers` (the visual editor hides those keys; cluster templates strip them). Empty or **0** omits the flag (ASA then defaults to 70).
