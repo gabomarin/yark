@@ -201,7 +201,7 @@ describe("DownloadsPage", () => {
     );
   });
 
-  it("keeps the SteamCMD process bar on the active job and uses Remove from queue on a queued row", async () => {
+  it("keeps the SteamCMD process bar on the active job and does not duplicate cancel on a queued row", async () => {
     const user = userEvent.setup();
     renderPage(populatedStatus());
 
@@ -210,7 +210,13 @@ describe("DownloadsPage", () => {
 
     await user.click(screen.getByRole("button", { name: /Scorched/ }));
     expect(screen.queryByRole("group", { name: "SteamCMD process" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Remove from queue" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "Remove from queue" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Cancel this job" })).not.toBeInTheDocument();
+    expect(
+      within(screen.getByRole("button", { name: /Scorched/ })).getByRole("button", {
+        name: "Cancel download",
+      }),
+    ).toBeEnabled();
     expect(screen.queryByText("progress: 38")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Island/ }));

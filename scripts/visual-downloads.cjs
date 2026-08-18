@@ -516,7 +516,8 @@ async function runHappyPathScenario(outDir, findings, errors, stubExe) {
     await page.locator('[data-download-row="job-scorched-verify"]').click();
     await page.waitForTimeout(200);
     assert.equal(await page.getByRole("group", { name: "SteamCMD process" }).count(), 0);
-    assert.equal(await page.getByRole("button", { name: "Remove from queue" }).count(), 1);
+    assert.equal(await page.getByRole("button", { name: "Remove from queue" }).count(), 0);
+    assert.equal(await page.getByRole("button", { name: "Cancel this job" }).count(), 0);
     assert.equal(await page.getByRole("button", { name: "Cancel SteamCMD" }).count(), 0);
     await screenshot(page, outDir, "happy-detail-queued-no-steamcmd-bar-fhd");
 
@@ -549,7 +550,7 @@ async function runHappyPathScenario(outDir, findings, errors, stubExe) {
     );
     await screenshot(page, outDir, "happy-after-replace-verify-fhd");
 
-    await aberration.getByRole("button", { name: /Cancel download|Remove from queue/i }).click();
+    await aberration.getByRole("button", { name: "Cancel download" }).click();
     await page.waitForTimeout(400);
     await assertRowKind(page, "job-aberration-update", "attention");
     await rowByServer(page, "active", "Island").waitFor({ state: "visible", timeout: 10_000 });

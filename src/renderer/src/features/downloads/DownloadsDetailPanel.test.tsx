@@ -77,7 +77,8 @@ describe("DownloadsDetailPanel", () => {
     expect(screen.queryByRole("group", { name: "SteamCMD process" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Cancel SteamCMD" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Pause SteamCMD" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Remove from queue" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "Remove from queue" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Cancel this job" })).not.toBeInTheDocument();
     expect(screen.getByText(/starts after SteamCMD finishes Island/i)).toBeInTheDocument();
     expect(screen.queryByText("progress: 42")).not.toBeInTheDocument();
     expect(screen.getByText("Center")).toBeInTheDocument();

@@ -49,6 +49,12 @@ export function DownloadsDetailPanel(props: Props): ReactElement {
   const logsTarget = selected;
   const canRetry = job?.nextActions.includes("retry") === true;
   const canDismiss = job?.nextActions.includes("dismiss") === true;
+  const canResume = job?.nextActions.includes("resume") === true;
+  const showCancelThisJob =
+    job?.nextActions.includes("cancel") === true
+    && !showSteamCmdBar
+    && selected.kind !== "queued";
+  const showJobActions = canResume || canRetry || showCancelThisJob || canDismiss;
 
   return (
     <section className={classes.detailSection} aria-label="Download details">
@@ -61,9 +67,9 @@ export function DownloadsDetailPanel(props: Props): ReactElement {
             {downloadRowMeta(selected)}
           </Text>
         </div>
-        {job !== null && (
+        {job !== null && showJobActions && (
           <Group gap={6} wrap="wrap" aria-label="This job">
-            {job.nextActions.includes("resume") && (
+            {canResume && (
               <Button
                 size="compact-sm"
                 color="teal"
@@ -74,7 +80,7 @@ export function DownloadsDetailPanel(props: Props): ReactElement {
                 Resume this job
               </Button>
             )}
-            {job.nextActions.includes("retry") && (
+            {canRetry && (
               <Button
                 size="compact-sm"
                 color="teal"
@@ -85,7 +91,7 @@ export function DownloadsDetailPanel(props: Props): ReactElement {
                 Retry
               </Button>
             )}
-            {job.nextActions.includes("cancel") && !showSteamCmdBar && (
+            {showCancelThisJob && (
               <Button
                 size="compact-sm"
                 color="red"
@@ -93,10 +99,10 @@ export function DownloadsDetailPanel(props: Props): ReactElement {
                 leftSection={<ProhibitInset size={14} />}
                 onClick={() => props.onCancelRow(selected)}
               >
-                {selected.kind === "queued" ? "Remove from queue" : "Cancel this job"}
+                Cancel this job
               </Button>
             )}
-            {job.nextActions.includes("dismiss") && (
+            {canDismiss && (
               <Button
                 size="compact-sm"
                 variant="subtle"
