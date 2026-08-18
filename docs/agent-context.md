@@ -16,7 +16,7 @@ This repository contains a desktop application for managing dedicated ARK Surviv
 - Prefer small, verifiable changes.
 - Avoid introducing unnecessary native dependencies when a Node/TypeScript alternative exists.
 - For IPC, backend, or critical flow changes, run tests, typecheck, and build.
-- After `npm install`, Husky hooks run typecheck/lint on commit and typecheck/test/lint on push; CI also runs build + `lint`.
+- After `npm install`, Husky hooks run typecheck/lint on commit and typecheck/test/lint on push; CI also runs build + `lint`. `npm run lint` is size caps, Actions pins, and ESLint (`eslint.config.mjs`).
 - For visible renderer changes, follow the mandatory [visual testing protocol](visual-testing.md), including HD, Full HD, and QHD/2K review.
 - When growing or splitting React UI, follow [component-structure.md](component-structure.md) (pragmatic Atomic Design for agents).
 - Prefer **Mantine** components/props for renderer UI wherever they fit (Stepper,

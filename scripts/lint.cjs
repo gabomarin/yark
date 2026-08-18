@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * `npm run lint` — lightweight static gate for renderer features
- * (see docs/component-structure.md). Placeholder until a fuller linter (e.g. ESLint).
+ * `npm run lint` — feature file-size caps + GitHub Actions pin check
+ * (see docs/component-structure.md). ESLint runs next via `eslint .`.
  *
  * - New .tsx files under src/renderer/src/features must stay under maxTsxLines.
  * - New .ts files under src/renderer/src/features must stay under maxTsLines.

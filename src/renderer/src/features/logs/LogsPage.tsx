@@ -90,7 +90,6 @@ export function LogsPage(props: Props): ReactElement {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only load
   }, []);
 
   const filteredFleetEvents = useMemo(() => {

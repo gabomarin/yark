@@ -21,9 +21,9 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import {
-  wizardChanges,
   formatWizardNumber,
   type ExperienceProfileId,
+  type wizardChanges,
 } from "../../configurationWizardModel";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import classes from "./ConfigurationWizard.module.css";

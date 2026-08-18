@@ -12,7 +12,7 @@ import {
   type BackupHistoryRowActionInput,
 } from "./backupHistoryRowActionModel";
 
-interface Props extends BackupHistoryRowActionInput {}
+type Props = BackupHistoryRowActionInput;
 
 function itemDisabled(
   entries: ReturnType<typeof buildBackupHistoryRowActions>,

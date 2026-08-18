@@ -8,7 +8,7 @@ import astraeos from "@renderer/assets/maps/Astraeos_WP.webp";
 import genesis from "@renderer/assets/maps/Genesis_WP.webp";
 import lostColony from "@renderer/assets/maps/LostColony_WP.webp";
 import valguero from "@renderer/assets/maps/Valguero_WP.webp";
-import { KNOWN_MAPS } from "@shared/types";
+import type { KNOWN_MAPS } from "@shared/types";
 
 type KnownMapId = (typeof KNOWN_MAPS)[number];
 

@@ -14,6 +14,7 @@ import {
 import type {
   AppEvent,
   ClusterComplianceReport,
+  InstallationServersMode,
   OfficialNetworkStatus,
   ServerInstallationInfo,
   ServerProfile,
@@ -563,7 +564,7 @@ export function App({
     /** When false, skip listServers (status/SteamCMD/events poll only). Default true. */
     includeServerList?: boolean;
     forceOfficialCheck?: boolean;
-    serversMode?: import("@shared/types").InstallationServersMode;
+    serversMode?: InstallationServersMode;
   }) => {
     const includeInstallation = options?.includeInstallation !== false;
     const includeServerList = options?.includeServerList !== false;
