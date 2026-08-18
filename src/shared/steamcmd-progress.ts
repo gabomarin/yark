@@ -81,6 +81,22 @@ export function canPauseSteamCmdOperation(
   return operation === "install-files" || operation === "update" || operation === "sync-files";
 }
 
+export function isRollbackInProgressPhase(phase: string | null | undefined): boolean {
+  return (
+    typeof phase === "string"
+    && phase.startsWith("rollback-")
+    && phase !== "rollback-complete"
+  );
+}
+
+/** Pause is install/update/sync only, and never during an in-progress rollback. */
+export function canPauseSteamCmdJob(
+  operation: SteamCmdProgressOperation | "pre-update-backup" | "restore" | null | undefined,
+  phase?: string | null,
+): boolean {
+  return canPauseSteamCmdOperation(operation) && !isRollbackInProgressPhase(phase);
+}
+
 /**
  * UI noun prefix for byte progress by operation.
  * SteamCMD also reports BytesDownloaded when verifying.

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  canPauseSteamCmdJob,
   canPauseSteamCmdOperation,
   formatSteamCmdByteProgress,
   hasMeaningfulSteamCmdByteProgress,
@@ -80,6 +81,13 @@ describe("parseSteamCmdProgressLine", () => {
     expect(canPauseSteamCmdOperation("verify-files")).toBe(false);
     expect(canPauseSteamCmdOperation("install-steamcmd")).toBe(false);
     expect(canPauseSteamCmdOperation(null)).toBe(false);
+  });
+
+  it("refuses Pause during an in-progress rollback", () => {
+    expect(canPauseSteamCmdJob("update", "applying-files")).toBe(true);
+    expect(canPauseSteamCmdJob("update", "rollback-restoring-backups")).toBe(false);
+    expect(canPauseSteamCmdJob("update", "rollback-complete")).toBe(true);
+    expect(canPauseSteamCmdJob("verify-files", "validating")).toBe(false);
   });
 
   it("falls back to an operation-specific progress title", () => {

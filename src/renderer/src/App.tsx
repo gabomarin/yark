@@ -1098,13 +1098,33 @@ export function App({
     [refresh],
   );
 
+  const runPauseSteamCmd = useCallback(async (): Promise<boolean> => {
+    const result = await window.api.pauseSteamCmd();
+    if (!result.ok) {
+      const message = result.error ?? "Unknown error";
+      if (/not available during rollback|cannot pause/i.test(message)) {
+        showOperatorToast({
+          title: "Pause unavailable",
+          message,
+          color: "yellow",
+        });
+      } else {
+        showOperatorError(message);
+      }
+    }
+    await refresh();
+    return result.ok;
+  }, [refresh]);
+
   const pauseOrCancelSteamCmd = useCallback(() => {
-    void runAction(() =>
-      canPauseSteamCmdOperation(steamCmdStatus?.operation)
-        ? window.api.pauseSteamCmd()
-        : window.api.cancelSteamCmd(),
-    );
-  }, [runAction, steamCmdStatus?.operation]);
+    void (async () => {
+      if (canPauseSteamCmdOperation(steamCmdStatus?.operation)) {
+        await runPauseSteamCmd();
+        return;
+      }
+      await runAction(() => window.api.cancelSteamCmd());
+    })();
+  }, [runAction, runPauseSteamCmd, steamCmdStatus?.operation]);
 
   const appendRconHistory = useCallback((serverId: string, entry: RconHistoryEntry) => {
     setRconHistoryByServer((prev) => {
@@ -1710,7 +1730,7 @@ export function App({
         }}
         onCancel={() => {
           if (downloadTeaser.canPause) {
-            void runAction(() => window.api.pauseSteamCmd());
+            void runPauseSteamCmd();
             return;
           }
           if (downloadTeaser.usesLiveCancel) {
@@ -1725,7 +1745,7 @@ export function App({
         }}
       />
     );
-  }, [downloadTeaser, navigate, runAction, showDownloadsTeaserFooter]);
+  }, [downloadTeaser, navigate, runAction, runPauseSteamCmd, showDownloadsTeaserFooter]);
 
   const openServerFromSpotlight = useCallback(
     (serverId: string) => {
@@ -2078,7 +2098,7 @@ export function App({
                   });
                 }}
                 onCancelLive={() => void runAction(() => window.api.cancelSteamCmd())}
-                onPauseLive={() => void runAction(() => window.api.pauseSteamCmd())}
+                onPauseLive={() => void runPauseSteamCmd()}
                 onCancelJob={(id) => void runAction(() => window.api.cancelCriticalJob(id))}
                 onRetryJob={(id) => void runAction(() => window.api.retryCriticalJob(id))}
                 onResumeJob={(id) => void runAction(() => window.api.resumeCriticalJob(id))}

@@ -358,6 +358,37 @@ describe("downloadsModel", () => {
     expect(teaser.usesLiveCancel).toBe(true);
   });
 
+  it("hides Pause while an update is rolling back", () => {
+    const rows = buildDownloadRows(
+      baseStatus({
+        busy: true,
+        running: true,
+        operation: "update",
+        serverId: "srv-1",
+        criticalJobs: [
+          {
+            id: "job-rollback",
+            operation: "update",
+            serverId: "srv-1",
+            serverName: "Island",
+            status: "running",
+            phase: "rollback-restoring-backups",
+            attempts: 1,
+            maxAttempts: 3,
+            createdAt: "2026-08-18T00:00:00.000Z",
+            updatedAt: "2026-08-18T00:00:00.000Z",
+            lastError: null,
+            recoveryReason: null,
+            nextActions: [],
+          },
+        ],
+      }),
+      { activeServer: server() },
+    );
+
+    expect(rows[0]?.canPause).toBe(false);
+  });
+
   it("prefers the active job when a server also has queued work", () => {
     const map = filesQueueStateByServerId([
       {

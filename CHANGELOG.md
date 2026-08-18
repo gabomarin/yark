@@ -26,7 +26,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Cancelled Downloads jobs offer **Retry** (row, detail, and footer) as well as Dismiss; Install/Update/Verify still replace a cancelled leftover of the same job (#201).
 - **Move up / Move down** in Downloads actually changes which queued job runs next (the list no longer resorted by created time) (#201).
 - File jobs wait as **blocked** with Retry when SteamCMD is missing, instead of starting and failing into backup leftovers. Retry/Resume/Update also explain that SteamCMD must be installed first and keep the existing job (#201).
-- Pending Downloads resume when YARK starts if SteamCMD is ready; they stay blocked with Retry if it is not (#201).
+- Pending Downloads resume when YARK starts if SteamCMD is ready; they stay blocked with Retry if it is not. Retry and Resume probe disk again after that miss so a later SteamCMD install is not stuck (#201).
+- Pause during rollback or Verify refuses with a yellow toast instead of cancelling the job (#201).
 - Paused install/update cards keep **Paused · Installing files** (or the matching operation) after a YARK restart instead of **Updating files…** (#201).
 - Verify files uses **Cancel** instead of Pause — SteamCMD `validate` has no resume checkpoint and would restart at 0% (#201).
 - **Show server console on start** now applies to Auto-start with YARK (stored in app settings so it survives quit). Auto-start waits until the main window is shown so dedicated-server consoles do not open over the splash (#350).

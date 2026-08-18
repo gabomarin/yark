@@ -42,6 +42,20 @@ export function isOperationPausedError(error: unknown): boolean {
   );
 }
 
+export class OperationPauseUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "OperationPauseUnavailableError";
+  }
+}
+
+export function isOperationPauseUnavailableError(error: unknown): boolean {
+  return (
+    error instanceof OperationPauseUnavailableError
+    || (error instanceof Error && error.name === "OperationPauseUnavailableError")
+  );
+}
+
 export function isRobocopySuccess(exitCode: number | null): boolean {
   // Robocopy: 0–7 = success with varying copy degrees; >= 8 = error.
   const code = exitCode ?? 16;
