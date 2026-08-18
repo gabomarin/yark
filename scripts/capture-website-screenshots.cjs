@@ -107,6 +107,7 @@ async function shot(page, outPath) {
 /** Isolated E2E profiles skip auto-open; reopen from Settings (empty fleet = first-run). */
 async function captureSetupAssistant(page, outDir) {
   await page.evaluate(() => {
+    // Marketing fixture path for gallery shots — not the in-app product default.
     window.localStorage.setItem("settings.defaultServerBaseFolder", "D:\\ASA\\Servers");
   });
   await goNav(page, "Settings");

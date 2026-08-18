@@ -414,9 +414,8 @@ const WIN_LIVE_MAX_PLAYERS_MAX = 255;
 
 function isWinLiveMaxPlayersOptionId(id: string): boolean {
   const stem = tokenStem(id);
-  // 0.12 catalog id is `winlivemaxplayers-integer`. Prefix match is only for this
-  // one-time migration — do not reuse that prefix for a different structured option.
-  return stem === "winlivemaxplayers" || stem.startsWith("winlivemaxplayers-");
+  // 0.12 catalog id is exactly `winlivemaxplayers-integer` (plus a bare stem).
+  return stem === "winlivemaxplayers" || stem === "winlivemaxplayers-integer";
 }
 
 function parseSlotCap(raw: string): number | null {

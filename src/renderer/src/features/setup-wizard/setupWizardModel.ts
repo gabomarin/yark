@@ -54,7 +54,11 @@ export function suggestSetupClusterDir(
   return `${base}\\Clusters\\${id}`;
 }
 
-/** Keep an auto-suggested cluster folder aligned with the current default base. */
+/**
+ * Keep an auto-suggested cluster folder aligned with the current default base.
+ * `markDirTouched` only shows the empty-dir error immediately; Continue still
+ * uses {@link canContinueClusterStep} (untouched vs touched does not gate it).
+ */
 export function syncAutoSuggestedClusterDir(input: {
   shareCluster: boolean;
   dirAutoSuggested: boolean;

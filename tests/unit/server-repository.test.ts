@@ -206,4 +206,14 @@ describe("ServerRepository", () => {
     expect(next?.maxPlayers).toBe(0);
     expect(next?.extraArgs).toEqual(["-NoBattlEye"]);
   });
+
+  it("fails closed when leftover Launch JSON is corrupt", () => {
+    const created = repo.create(input({ extraArgs: ["-NoBattlEye"], maxPlayers: 70 }));
+    db.prepare("UPDATE servers SET extra_args = ? WHERE id = ?").run(
+      "[-WinLiveMaxPlayers=40",
+      created.id,
+    );
+
+    expect(() => backfillMaxPlayersFromLegacyLaunchArgs(db)).toThrow(/invalid JSON/i);
+  });
 });

@@ -8,14 +8,19 @@ import {
 /** Schema version that owns the one-time Launch → `max_players` backfill. */
 export const MAX_PLAYERS_LAUNCH_BACKFILL_SCHEMA_VERSION = 16;
 
-function parseJson<T>(raw: string | null | undefined, fallback: T): T {
+function parseJsonColumn<T>(
+  raw: string | null | undefined,
+  fallback: T,
+  label: string,
+): T {
   if (raw == null || raw.trim().length === 0) {
     return fallback;
   }
   try {
     return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`Max-players backfill: invalid JSON in ${label}: ${detail}`);
   }
 }
 
@@ -31,6 +36,9 @@ function tableHasColumn(db: DatabaseSync, table: string, column: string): boolea
  * Call once from schema version {@link MAX_PLAYERS_LAUNCH_BACKFILL_SCHEMA_VERSION},
  * not on every database open. Callers that already hold a transaction should not
  * wrap this again.
+ *
+ * Expected scale: one operator fleet (typically tens of profiles, not thousands).
+ * Only rows whose JSON still mentions WinLiveMaxPlayers are loaded.
  */
 export function backfillMaxPlayersFromLegacyLaunchArgs(db: DatabaseSync): void {
   if (
@@ -43,7 +51,10 @@ export function backfillMaxPlayersFromLegacyLaunchArgs(db: DatabaseSync): void {
 
   const rows = db
     .prepare(
-      "SELECT id, max_players, extra_args, structured_launch_args FROM servers",
+      `SELECT id, max_players, extra_args, structured_launch_args
+       FROM servers
+       WHERE extra_args LIKE '%winlivemaxplayers%'
+          OR structured_launch_args LIKE '%winlivemaxplayers%'`,
     )
     .all() as Array<{
     id: string;
@@ -60,8 +71,16 @@ export function backfillMaxPlayersFromLegacyLaunchArgs(db: DatabaseSync): void {
   );
 
   for (const row of rows) {
-    const extraArgs = parseJson<string[]>(row.extra_args, []);
-    const structured = parseJson<StructuredLaunchArgs>(row.structured_launch_args, {});
+    const extraArgs = parseJsonColumn<string[]>(
+      row.extra_args,
+      [],
+      `servers.extra_args id=${row.id}`,
+    );
+    const structured = parseJsonColumn<StructuredLaunchArgs>(
+      row.structured_launch_args,
+      {},
+      `servers.structured_launch_args id=${row.id}`,
+    );
     const taken = takeLegacyWinLiveMaxPlayers({
       structuredLaunchArgs: structured,
       extraArgs,

@@ -121,4 +121,23 @@ describe("setupWizardModel", () => {
       }),
     ).toBeNull();
   });
+
+  it("gates Cluster Continue on the path, not dirTouched", () => {
+    expect(
+      canContinueClusterStep({
+        shareCluster: true,
+        clusterId: "ember",
+        clusterDir: "E:\\ARK\\Clusters\\ember",
+        servers: [],
+      }),
+    ).toBe(true);
+    expect(
+      canContinueClusterStep({
+        shareCluster: true,
+        clusterId: "ember",
+        clusterDir: "",
+        servers: [],
+      }),
+    ).toBe(false);
+  });
 });

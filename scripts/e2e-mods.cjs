@@ -1,6 +1,11 @@
 /**
  * E2E: Server Workspace Mods tab (add Project ID, enable/disable, cleanup).
  *
+ * Isolates SQLite + install dirs via `createE2eFixtureRoots` /
+ * `launchElectronApp` (`cwd` is the repo root; `YARK_E2E_USER_DATA` skips
+ * splash and the first-run wizard). Default install parent is
+ * `C:\asa-e2e\servers\mods-*` on Windows (`os.tmpdir()/yark-e2e/...` elsewhere).
+ *
  * Usage: node scripts/e2e-mods.cjs
  * Requires: prior `npm run build`, Playwright as a project `devDependency`, Windows GUI preferred.
  * Unset ELECTRON_RUN_AS_NODE before running.

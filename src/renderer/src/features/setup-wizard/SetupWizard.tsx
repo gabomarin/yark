@@ -85,6 +85,8 @@ export function SetupWizard(props: Props): ReactElement {
     setClusterDir(next.clusterDir);
     setDirAutoSuggested(next.dirAutoSuggested);
     if (next.markDirTouched) {
+      // Display-only: show “directory required” now. Continue still follows
+      // canContinueClusterStep (a later valid path re-enables it).
       setDirTouched(true);
     }
   }, [clusterId, dirAutoSuggested, props.defaultBaseFolder, shareCluster]);
