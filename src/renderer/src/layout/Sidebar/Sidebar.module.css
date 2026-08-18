@@ -293,12 +293,12 @@
   flex-shrink: 0;
   padding: 2px;
   border-radius: var(--app-radius-sm);
-  color: var(--app-color-cryo);
+  color: var(--app-color-fossil);
 }
 
 .appVersionUpdateIconBtn:hover {
-  color: color-mix(in srgb, var(--app-color-cryo) 70%, white);
-  background: color-mix(in srgb, var(--app-color-cryo) 12%, transparent);
+  color: color-mix(in srgb, var(--app-color-fossil) 70%, white);
+  background: color-mix(in srgb, var(--app-color-fossil) 12%, transparent);
 }
 
 .appVersionUpdateIconBtn:focus-visible {
@@ -313,7 +313,7 @@
 }
 
 .appVersionUpdateText {
-  color: var(--app-color-cryo);
+  color: var(--app-color-fossil);
   font-weight: 700;
 }
 
