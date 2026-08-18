@@ -86,6 +86,30 @@ describe("seedCloneIniFiles", () => {
     expect(gus[flatKey("ServerSettings", "RCONPort")]).toBe("27030");
   });
 
+  it.runIf(process.platform === "win32")(
+    "refuses to seed INI through a destination junction",
+    async () => {
+      const { execFileSync } = await import("node:child_process");
+      const root = mkdtempSync(join(tmpdir(), "ark-clone-ini-junc-"));
+      tmpDirs.push(root);
+      const sourceDir = join(root, "source");
+      const sentinel = join(root, "sentinel");
+      const destDir = join(root, "dest");
+      mkdirSync(windowsServerConfig(sourceDir), { recursive: true });
+      mkdirSync(sentinel, { recursive: true });
+      writeFileSync(join(sentinel, "marker.txt"), "UNTOUCHED", "utf8");
+      execFileSync("cmd.exe", ["/c", "mklink", "/J", destDir, sentinel], {
+        stdio: "ignore",
+        windowsHide: true,
+      });
+
+      await expect(seedCloneIniFiles(sourceDir, profile(destDir))).rejects.toThrow(
+        /link or junction/i,
+      );
+      expect(readFileSync(join(sentinel, "marker.txt"), "utf8")).toBe("UNTOUCHED");
+    },
+  );
+
   it("falls back to default INIs when the source has none", async () => {
     const sourceDir = mkdtempSync(join(tmpdir(), "ark-clone-ini-empty-"));
     const destDir = mkdtempSync(join(tmpdir(), "ark-clone-ini-dst-"));

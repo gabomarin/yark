@@ -35,7 +35,9 @@
 ## Verification
 - If backend, shared, or critical flows change: run `npm test` and `npm run typecheck`.
 - If renderer, preload, main, or app integration change: run `npm run build`.
-- If main UI flows change: run `npm run e2e` when feasible.
+- If main UI flows change: update affected `scripts/e2e-*.cjs` in the same PR
+  and run those `npm run e2e:*` commands on Windows when feasible (not only
+  `npm run e2e`). Map: `docs/e2e-validation.md` (UI changes section).
 - If there are visual renderer changes: follow `docs/visual-testing.md` and review with Playwright/Electron at `1280x720`, `1920x1080`, and `2560x1440`.
 - If the GitHub Pages site or `website/screenshots/` change: follow `docs/website.md` (path-filtered deploy, secret redaction, version pill sync).
 - In this repo, for reliable verification, prefer commands via `cmd.exe /c` when the WSL environment fails due to optional Rollup dependencies.

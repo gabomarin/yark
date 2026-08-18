@@ -36,7 +36,12 @@ Requirements:
 
 - Built `out/` tree before any `e2e:*` script.
 - Isolated app data (`YARK_E2E_USER_DATA`); never the developer’s real AppData.
-  The same env skips the startup splash so `waitForOverview` hits the main window.
+  The same env skips the startup splash and the first-run setup wizard so
+  `waitForOverview` hits the main window without a modal overlay.
+- Settings uses a **category sidebar** (General, Servers, SteamCMD, Logs, About).
+  Click the in-page `Settings categories` nav — not the shell Servers/Logs
+  buttons, which share those labels. Helper: `openSettingsCategory` in
+  [`scripts/e2e-launch.cjs`](../scripts/e2e-launch.cjs).
 - Cleanup only fixture paths created by that run (`C:\asa-e2e\…` or tmp).
 - Launch failures must mention Electron/display/`ELECTRON_RUN_AS_NODE`/missing
   build — not only a Playwright selector timeout. Shared helpers:
@@ -47,6 +52,43 @@ Requirements:
 
 Out of PR CI: SteamCMD depot download, real ASA process lifecycle, safe-update
 rollback demos, and long move/import suites (keep local / release audit).
+
+## UI changes and E2E
+
+Playwright scripts in `scripts/e2e-*.cjs` click **visible copy**, **accessible
+names**, **roles**, and **`data-*` selectors**. A renderer or shell change that
+moves, renames, or overlays those controls will fail local suites even when
+unit tests and PR CI stay green (CI only runs smoke, CRUD, install-health, and
+host-port-probe).
+
+When changing operator-facing UI (layout, nav, Settings, first-run wizard,
+modals, workspace tabs, PathFields):
+
+1. Search `scripts/e2e` (and `scripts/e2e-launch.cjs`) for the old label, role,
+   or `data-*` you touched.
+2. Update those scripts in the **same PR**. Prefer shared helpers
+   (`openSettingsCategory`, `pickPathField`, `waitForOverview`,
+   `YARK_E2E_USER_DATA`) over one-off selectors.
+3. `npm run build`, then run **only the affected** `npm run e2e:*` commands on
+   Windows. Skip `e2e:crash-reattach` / `e2e:clone-copy-real` unless the change
+   is on that real-host path (they install ASA).
+4. Keep `data-*` contracts stable unless you update every script that uses them.
+
+| UI surface | Likely scripts |
+| --- | --- |
+| Shell nav, Overview, New server / Clone / Delete | `e2e:smoke`, `e2e` |
+| Settings category sidebar or labels | `e2e:launch-args`, `e2e:quit-policy`, `e2e:log-retention` |
+| First-run setup wizard / splash | Any launch that must set `YARK_E2E_USER_DATA` |
+| Workspace Mods | `e2e:mods` |
+| Clone dialog / INI or folder copy | `e2e`, `e2e:clone-copy` |
+| Import / move install | `e2e:import-install`, `e2e:move-install` |
+| Launch / Runtime / console-on-start | `e2e:launch-args` |
+| RCON console | `e2e:rcon` |
+| Clusters membership | `e2e:clusters-membership` |
+| Copy configuration | `e2e:copy-configuration` |
+| Log retention (Settings → Logs) | `e2e:log-retention` |
+
+Cursor rule: [`.cursor/rules/e2e-ui.mdc`](../.cursor/rules/e2e-ui.mdc).
 
 ## Real-host release runbook (summary)
 

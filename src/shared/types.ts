@@ -1050,6 +1050,16 @@ export const KNOWN_MAP_OPTIONS: ReadonlyArray<{
 export const PORT_MIN = 1024;
 export const PORT_MAX = 65535;
 
+/**
+ * Keep a port in `[PORT_MIN, PORT_MAX]` after adding an offset (clone uses +10).
+ * Negative offsets wrap backward through the same range.
+ */
+export function offsetPort(port: number, offset: number): number {
+  const span = PORT_MAX - PORT_MIN + 1;
+  const shifted = port + offset - PORT_MIN;
+  return PORT_MIN + (((shifted % span) + span) % span);
+}
+
 /** CurseForge mod metadata cached/exposed to the renderer. */
 export interface ModMetadata {
   id: string;

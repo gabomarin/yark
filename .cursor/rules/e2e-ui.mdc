@@ -1,0 +1,23 @@
+---
+description: Update Playwright E2E scripts when operator-facing UI changes
+globs: src/renderer/**/*.{tsx,ts,css}
+alwaysApply: false
+---
+
+# E2E vs UI changes
+
+When changing operator-facing UI (copy, layout, nav, Settings, wizard, modals,
+workspace tabs, `data-*`), check `scripts/e2e-*.cjs` in the **same PR**.
+
+PR CI only runs smoke, CRUD, install-health, and host-port-probe. Settings,
+Mods, clone/import/move, RCON, and log-retention suites will rot unless you
+update and run the scripts they actually click.
+
+1. Search `scripts/e2e` for the old label, role, or `data-*`.
+2. Prefer helpers in `scripts/e2e-launch.cjs` (`openSettingsCategory`,
+   `pickPathField`, `waitForOverview`, `YARK_E2E_USER_DATA`).
+3. `npm run build` then the **affected** `npm run e2e:*` on Windows. Skip
+   `e2e:crash-reattach` / `e2e:clone-copy-real` unless that path changed.
+
+Matrix and surface → script map:
+[docs/e2e-validation.md](../../docs/e2e-validation.md#ui-changes-and-e2e).

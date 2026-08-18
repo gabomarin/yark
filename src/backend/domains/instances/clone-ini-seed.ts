@@ -8,6 +8,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
 import type { ServerProfile } from "@shared/types";
+import { assertDestAndParentNotReparsePoints } from "../../infra/fs/reparse-points";
 import { syncProfileSettingsToIni } from "./sync-profile-ini";
 
 function windowsServerConfigDir(installDir: string): string {
@@ -24,6 +25,9 @@ export async function seedCloneIniFiles(
 ): Promise<void> {
   const sourceConfig = windowsServerConfigDir(sourceInstallDir);
   const destConfig = windowsServerConfigDir(profile.installDir);
+  await assertDestAndParentNotReparsePoints(profile.installDir, {
+    operationLabel: "Clone INI seed",
+  });
   await mkdir(destConfig, { recursive: true });
 
   const files: ReadonlyArray<{ name: string; fallback: string }> = [

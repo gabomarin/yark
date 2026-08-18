@@ -462,4 +462,120 @@ describe("SetupWizard", () => {
     await user.click(screen.getByRole("button", { name: /^close$/i }));
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
+
+  it("shows the cluster directory error when Yes has no default base folder", async () => {
+    const user = userEvent.setup();
+    stubWizardApi();
+
+    render(
+      <AppProviders>
+        <SetupWizard
+          opened
+          mode="first-run"
+          servers={[]}
+          desktopShell={desktopShell}
+          busy={false}
+          steamCmdStatus={null}
+          steamCmdBusy={false}
+          defaultBaseFolder={null}
+          uiDensity="compact"
+          onPickSteamCmdPath={vi.fn()}
+          onInstallSteamCmd={vi.fn()}
+          onDefaultBaseFolderChange={vi.fn()}
+          onUiDensityChange={vi.fn()}
+          openNativeTerminalOnStart={false}
+          onOpenNativeTerminalOnStartChange={vi.fn()}
+          onSkip={vi.fn()}
+          onDismiss={vi.fn()}
+          onPathsShellDone={vi.fn()}
+          onCreateServer={vi.fn()}
+          onImport={vi.fn()}
+          onExplore={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /^continue$/i }));
+    await user.click(screen.getByRole("button", { name: /^continue$/i }));
+    await user.click(screen.getByRole("button", { name: /^continue$/i }));
+    await user.click(screen.getByRole("radio", { name: /yes/i }));
+
+    expect(screen.getByText("Cluster directory is required.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^continue$/i })).toBeDisabled();
+  });
+
+  it("refreshes the suggested cluster folder when the default base folder changes", async () => {
+    const user = userEvent.setup();
+    stubWizardApi();
+
+    const { rerender } = render(
+      <AppProviders>
+        <SetupWizard
+          opened
+          mode="first-run"
+          servers={[]}
+          desktopShell={desktopShell}
+          busy={false}
+          steamCmdStatus={null}
+          steamCmdBusy={false}
+          defaultBaseFolder={"D:\\ASA\\Servers"}
+          uiDensity="compact"
+          onPickSteamCmdPath={vi.fn()}
+          onInstallSteamCmd={vi.fn()}
+          onDefaultBaseFolderChange={vi.fn()}
+          onUiDensityChange={vi.fn()}
+          openNativeTerminalOnStart={false}
+          onOpenNativeTerminalOnStartChange={vi.fn()}
+          onSkip={vi.fn()}
+          onDismiss={vi.fn()}
+          onPathsShellDone={vi.fn()}
+          onCreateServer={vi.fn()}
+          onImport={vi.fn()}
+          onExplore={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /^continue$/i }));
+    await user.click(screen.getByRole("button", { name: /^continue$/i }));
+    await user.click(screen.getByRole("button", { name: /^continue$/i }));
+    await user.click(screen.getByRole("radio", { name: /yes/i }));
+
+    const clusterId = screen.getByRole("textbox", { name: /cluster id/i });
+    const clusterDir = screen.getByRole("textbox", {
+      name: /shared cluster directory/i,
+    });
+    const id = (clusterId as HTMLInputElement).value;
+    expect(clusterDir).toHaveAttribute("title", `D:\\ASA\\Servers\\Clusters\\${id}`);
+
+    rerender(
+      <AppProviders>
+        <SetupWizard
+          opened
+          mode="first-run"
+          servers={[]}
+          desktopShell={desktopShell}
+          busy={false}
+          steamCmdStatus={null}
+          steamCmdBusy={false}
+          defaultBaseFolder={"E:\\ARK"}
+          uiDensity="compact"
+          onPickSteamCmdPath={vi.fn()}
+          onInstallSteamCmd={vi.fn()}
+          onDefaultBaseFolderChange={vi.fn()}
+          onUiDensityChange={vi.fn()}
+          openNativeTerminalOnStart={false}
+          onOpenNativeTerminalOnStartChange={vi.fn()}
+          onSkip={vi.fn()}
+          onDismiss={vi.fn()}
+          onPathsShellDone={vi.fn()}
+          onCreateServer={vi.fn()}
+          onImport={vi.fn()}
+          onExplore={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(clusterDir).toHaveAttribute("title", `E:\\ARK\\Clusters\\${id}`);
+  });
 });

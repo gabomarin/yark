@@ -1,6 +1,11 @@
 /**
  * E2E: Server Workspace Mods tab (add Project ID, enable/disable, cleanup).
  *
+ * Isolates SQLite + install dirs via `createE2eFixtureRoots` /
+ * `launchElectronApp` (`cwd` is the repo root; `YARK_E2E_USER_DATA` skips
+ * splash and the first-run wizard). Default install parent is
+ * `C:\asa-e2e\servers\mods-*` on Windows (`os.tmpdir()/yark-e2e/...` elsewhere).
+ *
  * Usage: node scripts/e2e-mods.cjs
  * Requires: prior `npm run build`, Playwright as a project `devDependency`, Windows GUI preferred.
  * Unset ELECTRON_RUN_AS_NODE before running.
@@ -10,11 +15,16 @@
  *   E2E_MODS_INSTALL_ROOT    parent folder for the temporary server install path
  */
 const assert = require("node:assert/strict");
-const os = require("node:os");
 const path = require("node:path");
-const { _electron: electron } = require("playwright");
 const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
-const { pickPathField } = require("./e2e-launch.cjs");
+const {
+  createE2eFixtureRoots,
+  launchElectronApp,
+  waitForOverview,
+  quitElectronApp,
+  pickPathField,
+  removeFixtureDir,
+} = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -24,10 +34,6 @@ function envOr(name, fallback) {
 }
 
 const DEMO_MOD_ID = envOr("E2E_MODS_ID", "947033");
-const INSTALL_ROOT = envOr(
-  "E2E_MODS_INSTALL_ROOT",
-  process.platform === "win32" ? "C:\\asa-e2e" : path.join(os.tmpdir(), "asa-e2e"),
-);
 
 function uniqueSuffix() {
   return `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
@@ -76,7 +82,7 @@ async function removeServerIfPresent(page, name) {
 }
 
 async function createServer(app, page, serverName, installDir, ports) {
-  await page.getByRole("button", { name: "New server" }).click();
+  await page.getByRole("button", { name: "New server" }).first().click();
   await page.getByRole("heading", { name: "New server" }).waitFor({
     state: "visible",
     timeout: 10000,
@@ -145,22 +151,21 @@ async function run() {
   const projectRoot = path.resolve(__dirname, "..");
   process.chdir(projectRoot);
 
+  const { profileDir, serversDir } = createE2eFixtureRoots("mods");
   const runId = uniqueSuffix();
   const serverName = `E2E-Mods-${runId}`;
-  console.log(`E2E_MODS_START server=${serverName} modId=${DEMO_MOD_ID} root=${INSTALL_ROOT}`);
+  const installDir = envOr("E2E_MODS_INSTALL_ROOT", serversDir);
+  console.log(`E2E_MODS_START server=${serverName} modId=${DEMO_MOD_ID} root=${installDir}`);
 
-  const app = await electron.launch({
-    args: ["."],
-    cwd: projectRoot,
-  });
-
+  let app = null;
+  let succeeded = false;
   try {
-    const page = await app.firstWindow();
+    app = await launchElectronApp({ profileDir });
+    const page = await waitForOverview(app);
     page.on("dialog", async (dialog) => {
       await dialog.accept();
     });
 
-    await page.waitForLoadState("domcontentloaded");
     await page.getByRole("button", { name: "Servers", exact: true }).first().click();
     await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 15000 });
 
@@ -171,9 +176,8 @@ async function run() {
       query: 24000 + Math.floor(Math.random() * 1000),
       rcon: 25000 + Math.floor(Math.random() * 1000),
     };
-    const installDir = path.join(INSTALL_ROOT, runId);
 
-    await createServer(app, page, serverName, installDir, ports);
+    await createServer(app, page, serverName, path.join(installDir, runId), ports);
     await openModsTab(page);
 
     const addInput = page.getByLabel("Add CurseForge Project ID or mod URL");
@@ -231,8 +235,25 @@ async function run() {
     console.log("E2E_MODS_OK");
     console.log(`E2E_MODS_SERVER=${serverName}`);
     console.log(`E2E_MODS_ID=${DEMO_MOD_ID}`);
+    succeeded = true;
   } finally {
-    await app.close();
+    if (app !== null) {
+      try {
+        await quitElectronApp(app);
+      } catch (error) {
+        console.warn(`E2E_MODS_CLOSE_WARN ${error?.message ?? String(error)}`);
+        await app.close().catch(() => {});
+      }
+    }
+    if (succeeded) {
+      // Recursive delete of the fixture roots. Nested install dirs under
+      // serversDir go with it; leftover trees after EBUSY retry exhaustion stay
+      // under C:\asa-e2e (or tmp) for the next run to overwrite.
+      await removeFixtureDir(profileDir);
+      await removeFixtureDir(serversDir);
+    } else {
+      console.error(`E2E_MODS_PROFILE_PRESERVED ${profileDir}`);
+    }
   }
 }
 

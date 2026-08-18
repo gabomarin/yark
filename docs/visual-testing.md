@@ -157,7 +157,10 @@ available. Unset `ELECTRON_RUN_AS_NODE` first (see [AGENTS.md](../AGENTS.md)).
 | `node scripts/seed-server-logs.cjs [serverName]` | Clear + seed events/update logs into Electron userData (override with `YARK_USER_DATA`) |
 
 Also: `npm run e2e:smoke` / `npm run e2e` launch the compiled app via Playwright
-`_electron` and need a display + `ELECTRON_RUN_AS_NODE` unset.
+`_electron` and need a display + `ELECTRON_RUN_AS_NODE` unset. If this visual
+change also moves copy, roles, or `data-*` that Playwright clicks, update the
+affected `scripts/e2e-*.cjs` in the same PR
+([e2e-validation.md](e2e-validation.md#ui-changes-and-e2e)).
 
 ## Evidence and closure
 

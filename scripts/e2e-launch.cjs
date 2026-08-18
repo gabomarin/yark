@@ -2,7 +2,8 @@
  * Shared Electron E2E launch helpers (#12).
  *
  * - Clears ELECTRON_RUN_AS_NODE (Playwright `_electron` otherwise misbehaves).
- * - Isolates app data under a disposable YARK_E2E_USER_DATA directory.
+ * - Isolates app data under a disposable YARK_E2E_USER_DATA directory
+ *   (skips splash and the first-run setup wizard).
  * - Emits launch diagnostics when firstWindow / overview never appears.
  */
 const assert = require("node:assert/strict");
@@ -243,6 +244,24 @@ async function pickPathField(app, page, ariaLabel, folderPath, options = {}) {
 }
 
 /**
+ * Open Settings and a category in the in-page sidebar (#298).
+ * Do not click the shell Servers/Logs buttons — those labels collide.
+ * @param {import('playwright').Page} page
+ * @param {string} categoryLabel General | Servers | SteamCMD | Logs | About
+ */
+async function openSettingsCategory(page, categoryLabel) {
+  await page.getByRole("button", { name: "Settings", exact: true }).first().click();
+  await page.locator("[data-settings-page]").waitFor({
+    state: "visible",
+    timeout: 10000,
+  });
+  await page
+    .getByRole("navigation", { name: "Settings categories" })
+    .getByRole("button", { name: categoryLabel, exact: true })
+    .click();
+}
+
+/**
  * Remove a disposable fixture directory with a few EBUSY/EPERM retries (Windows).
  * @param {string} target
  */
@@ -274,5 +293,6 @@ module.exports = {
   quitElectronApp,
   stubFolderPicker,
   pickPathField,
+  openSettingsCategory,
   removeFixtureDir,
 };

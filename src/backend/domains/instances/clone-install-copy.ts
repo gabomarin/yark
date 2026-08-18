@@ -104,6 +104,7 @@ export async function copyInstallTreeWithProgress(
       operationLabel: "Clone folder copy",
       isCancelled,
       onSpawn,
+      includeDestLeaf: true,
     });
   } finally {
     if (pollTimer !== null) {

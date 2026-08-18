@@ -410,6 +410,81 @@ export function isWinLiveMaxPlayersArg(arg: string): boolean {
   return tokenStem(arg) === "winlivemaxplayers";
 }
 
+const WIN_LIVE_MAX_PLAYERS_MAX = 255;
+
+function isWinLiveMaxPlayersOptionId(id: string): boolean {
+  const stem = tokenStem(id);
+  // 0.12 catalog id is exactly `winlivemaxplayers-integer` (plus a bare stem).
+  return stem === "winlivemaxplayers" || stem === "winlivemaxplayers-integer";
+}
+
+function parseSlotCap(raw: string): number | null {
+  const n = Number.parseInt(raw.trim(), 10);
+  if (!Number.isInteger(n) || n < 0 || n > WIN_LIVE_MAX_PLAYERS_MAX) {
+    return null;
+  }
+  return n;
+}
+
+/** Integer payload of a `-WinLiveMaxPlayers=` / `?WinLiveMaxPlayers=` token. */
+export function parseWinLiveMaxPlayersValue(arg: string): number | null {
+  if (!isWinLiveMaxPlayersArg(arg)) {
+    return null;
+  }
+  const eq = arg.indexOf("=");
+  if (eq < 0) {
+    return null;
+  }
+  return parseSlotCap(arg.slice(eq + 1).replace(/^["']|["']$/g, ""));
+}
+
+export type LegacyWinLiveMaxPlayersTake = {
+  maxPlayers: number | null;
+  structuredLaunchArgs: StructuredLaunchArgs;
+  extraArgs: string[];
+};
+
+/**
+ * Read a 0.12 Launch/extra `-WinLiveMaxPlayers` cap and strip those tokens.
+ * Extra args win when both are present (they were appended last on the 0.12 CLI).
+ * `0` is a valid target (profile omits the flag; ASA then defaults to 70).
+ */
+export function takeLegacyWinLiveMaxPlayers(input: {
+  structuredLaunchArgs: StructuredLaunchArgs | null | undefined;
+  extraArgs: readonly string[];
+}): LegacyWinLiveMaxPlayersTake {
+  const structured = normalizeStructuredLaunchArgs(input.structuredLaunchArgs);
+  const nextStructured: StructuredLaunchArgs = {};
+  let maxPlayers: number | null = null;
+
+  for (const [id, state] of Object.entries(structured)) {
+    if (isWinLiveMaxPlayersOptionId(id)) {
+      if (state.enabled === true && typeof state.value === "string") {
+        const parsed = parseSlotCap(state.value);
+        if (parsed !== null) {
+          maxPlayers = parsed;
+        }
+      }
+      continue;
+    }
+    nextStructured[id] = state;
+  }
+
+  const extraArgs: string[] = [];
+  for (const arg of input.extraArgs) {
+    if (isWinLiveMaxPlayersArg(arg)) {
+      const parsed = parseWinLiveMaxPlayersValue(arg);
+      if (parsed !== null) {
+        maxPlayers = parsed;
+      }
+      continue;
+    }
+    extraArgs.push(arg);
+  }
+
+  return { maxPlayers, structuredLaunchArgs: nextStructured, extraArgs };
+}
+
 /** True when an arg is a real `-ServerPlatform` / `?ServerPlatform` token. */
 export function argsIncludeServerPlatform(args: readonly string[]): boolean {
   return args.some((arg) => tokenStem(arg) === "serverplatform");

@@ -56,7 +56,7 @@ paths or the Notion hub URL in tracked files.
 
 - [backups.md](backups.md) — ZIP kinds, reconcile, all-servers health/cleanup, IPC, schedules, player sessions.
 - [updates-steamcmd.md](updates-steamcmd.md) — caches, safe update auto-stop/rollback, availability compare, progress push, Windows real-host validation.
-- [e2e-validation.md](e2e-validation.md) — PR CI Electron E2E vs prepared-host / manual release matrix (#12).
+- [e2e-validation.md](e2e-validation.md) — PR CI Electron E2E vs prepared-host / manual release matrix (#12). UI changes must update affected `scripts/e2e-*.cjs` in the same PR.
 - [critical-job-recovery.md](critical-job-recovery.md) — durable phases, replay policy, queue quarantine, and operator recovery actions.
 - [profile-database.md](profile-database.md) — SQLite boot open/migrate, busy_timeout, corrupt-DB operator recovery (#218).
 - [logs.md](logs.md) — event `details`, clear/export IPC, `logsFocus`, seed/visual helpers.

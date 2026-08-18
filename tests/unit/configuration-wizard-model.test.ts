@@ -297,6 +297,22 @@ describe("configuration wizard model", () => {
     expect(written.gameUserSettings).not.toMatch(/StructurePickupTimeAfterPlacement=/);
   });
 
+  it("does not list pickup time as a change while always-allow pickup is on", () => {
+    const initial = draftFromIniPayload(payload);
+    const next = {
+      ...initial,
+      alwaysAllowStructurePickup: true,
+      structurePickupSeconds: 120,
+    };
+    const changes = wizardChanges(initial, next);
+    expect(changes.some((change) => change.field === "structurePickupSeconds")).toBe(
+      false,
+    );
+    expect(changes.some((change) => change.field === "alwaysAllowStructurePickup")).toBe(
+      true,
+    );
+  });
+
   const worldRoundTripCases: Array<{
     field:
       | "dinoCountMultiplier"

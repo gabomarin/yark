@@ -14,7 +14,7 @@ import type {
   ServerStopProgressReason,
   StartServerOptions,
 } from "@shared/types";
-import { EMPTY_WIPE_STALE_MESSAGE, PORT_MAX, PORT_MIN } from "@shared/types";
+import { EMPTY_WIPE_STALE_MESSAGE, offsetPort, PORT_MAX, PORT_MIN } from "@shared/types";
 import { applyServerProfilePatch } from "@shared/server-profile";
 import { EventEmitter } from "node:events";
 import { type ChildProcess } from "node:child_process";
@@ -563,9 +563,9 @@ export class InstanceService extends EventEmitter {
           installDir,
           sessionName: `${source.sessionName} (copy)`,
           maxPlayers: source.maxPlayers,
-          gamePort: source.gamePort + offset,
-          queryPort: source.queryPort + offset,
-          rconPort: source.rconPort + offset,
+          gamePort: offsetPort(source.gamePort, offset),
+          queryPort: offsetPort(source.queryPort, offset),
+          rconPort: offsetPort(source.rconPort, offset),
           serverPassword: source.serverPassword,
           adminPassword: source.adminPassword,
           clusterId: source.clusterId,

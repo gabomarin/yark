@@ -18,7 +18,7 @@ import {
   SETUP_WIZARD_STEP_LABELS,
   canContinueClusterStep,
   pendingClusterFromStep,
-  suggestSetupClusterDir,
+  syncAutoSuggestedClusterDir,
   stepsForMode,
   type PendingSetupCluster,
   type SetupWizardMode,
@@ -71,6 +71,25 @@ export function SetupWizard(props: Props): ReactElement {
     setDirTouched(false);
     setDirAutoSuggested(false);
   }, [props.opened, props.mode]);
+
+  useEffect(() => {
+    const next = syncAutoSuggestedClusterDir({
+      shareCluster,
+      dirAutoSuggested,
+      defaultBaseFolder: props.defaultBaseFolder,
+      clusterId,
+    });
+    if (next === null) {
+      return;
+    }
+    setClusterDir(next.clusterDir);
+    setDirAutoSuggested(next.dirAutoSuggested);
+    if (next.markDirTouched) {
+      // Display-only: show “directory required” now. Continue still follows
+      // canContinueClusterStep (a later valid path re-enables it).
+      setDirTouched(true);
+    }
+  }, [clusterId, dirAutoSuggested, props.defaultBaseFolder, shareCluster]);
 
   const current = steps[stepIndex] ?? steps[0]!;
   const isLast = stepIndex >= steps.length - 1;
@@ -212,33 +231,26 @@ export function SetupWizard(props: Props): ReactElement {
             dirAutoSuggested={dirAutoSuggested}
             onShareClusterChange={(share) => {
               setShareCluster(share);
-              if (share && clusterDir.trim().length === 0) {
-                const suggested = suggestSetupClusterDir(
-                  props.defaultBaseFolder,
-                  clusterId,
-                );
-                if (suggested.length > 0) {
-                  setClusterDir(suggested);
-                  setDirAutoSuggested(true);
-                }
+              if (!share) {
+                setClusterDir("");
+                setDirAutoSuggested(false);
+                return;
               }
+              if (clusterDir.trim().length > 0 && !dirAutoSuggested) {
+                return;
+              }
+              setDirAutoSuggested(true);
             }}
             onClusterIdChange={(value) => {
               setClusterId(value);
               setIdTouched(true);
             }}
             onGenerateId={() => {
-              const nextId = suggestClusterId();
-              setClusterId(nextId);
-              if (dirAutoSuggested || clusterDir.trim().length === 0) {
-                const suggested = suggestSetupClusterDir(
-                  props.defaultBaseFolder,
-                  nextId,
-                );
-                setClusterDir(suggested);
-                setDirAutoSuggested(suggested.length > 0);
-              }
+              setClusterId(suggestClusterId());
               setIdTouched(true);
+              if (dirAutoSuggested || clusterDir.trim().length === 0) {
+                setDirAutoSuggested(true);
+              }
             }}
             onClusterDirChange={(value) => {
               setClusterDir(value);
