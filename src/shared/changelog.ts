@@ -21,6 +21,24 @@ export const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.13.1",
+    date: "2026-08-17",
+    sections: [
+      {
+        title: "Changed",
+        items: [
+          "Sidebar YARK update icon and version text use fossil amber so the available-update cue matches other warn accents.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Home screenshot slideshow serves native 1440px WebP at higher quality so the product preview stays sharp on large and high-DPI displays.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.13.0",
     date: "2026-08-17",
     sections: [

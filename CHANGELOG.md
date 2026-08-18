@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-08-17
+
 ### Changed
 
 - Sidebar **YARK update** icon and version text use fossil amber so the available-update cue matches other warn accents.
