@@ -21,6 +21,45 @@ export const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.13.0",
+    date: "2026-08-17",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Profile-owned Max players (default 70, 0–255) launches as -WinLiveMaxPlayers; empty or 0 omits the flag (ASA then defaults to 70).",
+          "Clone server copies Game.ini and GameUserSettings.ini from the source and can optionally copy the install folder.",
+          "Skippable first-run setup (SteamCMD, Windows shell, optional cluster, then create or import); Settings can reopen the setup assistant.",
+          "Mods detail drawer can enable/disable and Remove configured IDs, and Add to this server from Discover inspect.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Workspace Mods uses the same panel shell as Server Settings and Launch; Discover uses the shared search field.",
+          "Configuration wizard: profile cards, Pace/World/QoL/Breeding polish, Match cluster defaults, and Use default configuration on first-run create.",
+          "Settings uses a category sidebar (General, Servers, SteamCMD, Logs, About).",
+          "getyark.com serves responsive WebP screenshots and loads faster on phones.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Upgrade keeps a leftover Launch/extra -WinLiveMaxPlayers cap on Max players instead of silently starting at 70.",
+          "Clone port +10 wraps within 1024–65535; clone INI seed and folder copy fail closed on Windows directory junctions.",
+          "First-run cluster Yes shows the directory error when no default base folder is set; the suggested folder follows a later base-folder change.",
+          "The INI editor hides MaxPlayers because ASA ignores that INI key; Max players on the Server tab is the live cap.",
+        ],
+      },
+      {
+        title: "Security",
+        items: [
+          "Recursive install/backup/move/cache copies no longer follow Windows directory junctions; write paths fail closed on parent or destination links.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.12.0",
     date: "2026-08-13",
     sections: [
