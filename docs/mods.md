@@ -70,7 +70,11 @@ Workspace → **Mods** has two views (`SegmentedControl`):
    while sorted or while any row mutation / reorder persist is busy).
 5. Detail drawer / Open on CurseForge uses cached metadata or
    `mods:get-by-reference`; external open is fail-closed to a validated ASA
-   CurseForge mod URL (`mods:open-curseforge`).
+   CurseForge mod URL (`mods:open-curseforge`). Configured mods can also be
+   enabled/disabled and removed from the drawer (same persist as the table).
+   Discover inspect can **Add to this server** (same persist as table Add; starts
+   disabled). Maps packs show a launch-token hint in the drawer; YARK does not
+   change `map` / `mapModId` from that surface.
 
 ### Discover
 
@@ -100,7 +104,9 @@ configured (IDs without metadata still import).
 
 Enabling a mod whose metadata categories match `/\bmaps?\b/i` shows a toast:
 map is **unchanged**; pick under Server Information → Map → **Map mods** (or
-Custom…). If no launch token can be inferred, YARK may re-fetch metadata
+Custom…). The detail drawer shows the same guidance (and the inferred token when
+`suggestMapTokenFromMetadata` finds one) without writing `map` / `mapModId`.
+If no launch token can be inferred, YARK may re-fetch metadata
 (Worker description) to enrich the cache, then still leave map selection to the
 operator.
 

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { notifications } from "@mantine/notifications";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -265,7 +265,7 @@ describe("ServerModsPanel", () => {
     });
 
     await user.click(
-      screen.getByRole("switch", { name: "Disable Awesome Spyglass!" }),
+      screen.getByRole("switch", { name: /^Disable Awesome Spyglass!$/ }),
     );
     await waitFor(() => {
       expect(api.updateServerPatch).toHaveBeenCalledWith(
@@ -314,7 +314,7 @@ describe("ServerModsPanel", () => {
     expect(await screen.findByText("Mod details")).toBeInTheDocument();
     expect(screen.getAllByText("Visuals and Sounds").length).toBeGreaterThan(1);
 
-    await user.click(screen.getByRole("switch", { name: "Disable Awesome Spyglass!" }));
+    await user.click(screen.getByRole("switch", { name: /^Disable Awesome Spyglass!$/ }));
     await waitFor(() => {
       expect(api.updateServerPatch).toHaveBeenCalledWith(
         "server-1",
@@ -326,6 +326,109 @@ describe("ServerModsPanel", () => {
         }),
       );
     });
+  });
+
+  it("enables and removes from the detail drawer (#227)", async () => {
+    const api = installApi();
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(await screen.findByText("Awesome Spyglass!"));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(
+      within(dialog).getByRole("switch", {
+        name: "Disable Awesome Spyglass! from details",
+      }),
+    );
+    await waitFor(() => {
+      expect(api.updateServerPatch).toHaveBeenCalledWith(
+        "server-1",
+        expect.objectContaining({
+          group: "mods",
+          mods: ["947033"],
+          disabledMods: ["947033"],
+        }),
+      );
+    });
+
+    await user.click(within(dialog).getByRole("button", { name: "Remove" }));
+    await user.click(await screen.findByRole("button", { name: "Remove mod" }));
+    await waitFor(() => {
+      expect(api.updateServerPatch).toHaveBeenCalledWith(
+        "server-1",
+        expect.objectContaining({
+          group: "mods",
+          mods: [],
+          disabledMods: [],
+        }),
+      );
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+  });
+
+  it("adds a Discover result from the detail drawer (#227)", async () => {
+    const api = installApi();
+    const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(screen.getByRole("radio", { name: "Discover mods" }));
+    await user.click(screen.getByRole("button", { name: "Search mods" }));
+    await user.click(await screen.findByText("Super Spyglass Plus"));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(
+      within(dialog).getByRole("button", {
+        name: "Add Super Spyglass Plus from details",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(api.updateServerPatch).toHaveBeenCalledWith(
+        "server-1",
+        expect.objectContaining({
+          group: "mods",
+          mods: ["947033", "929420"],
+          disabledMods: ["929420"],
+        }),
+      );
+    });
+    expect(notifySpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Mod Added",
+        color: "yellow",
+      }),
+    );
+    expect(
+      within(dialog).getByRole("switch", {
+        name: "Enable Super Spyglass Plus from details",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("shows a Maps launch token in the drawer without changing map (#227)", async () => {
+    const api = installApi();
+    const user = userEvent.setup();
+    const mapServer: ServerProfile = {
+      ...server,
+      mods: ["962796"],
+      disabledMods: ["962796"],
+      modMetadataCache: { "962796": mapModDetail },
+    };
+    render(
+      <AppProviders>
+        <ServerModsPanel server={mapServer} onServerUpdated={vi.fn()} />
+      </AppProviders>,
+    );
+
+    await user.click(await screen.findByText("Svartalfheim Premium"));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText("Map pack")).toBeInTheDocument();
+    expect(within(dialog).getByText("Svartalfheim_WP")).toBeInTheDocument();
+    expect(within(dialog).getByText(/current map is unchanged/i)).toBeInTheDocument();
+    expect(api.updateServerPatch).not.toHaveBeenCalled();
   });
 
   it("resolves a CurseForge URL and persists the new mod metadata", async () => {

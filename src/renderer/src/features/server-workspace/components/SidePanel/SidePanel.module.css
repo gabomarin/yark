@@ -24,24 +24,3 @@
   color: var(--app-color-muted);
   margin-bottom: 2px;
 }
-
-.metaRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--app-space-xs);
-  min-height: 20px;
-}
-
-.metaLabel {
-  color: var(--app-color-muted);
-  font-size: var(--mantine-font-size-xxs);
-  flex-shrink: 0;
-}
-
-.metaValue {
-  font-size: var(--mantine-font-size-xs);
-  font-weight: 600;
-  text-align: right;
-  word-break: break-all;
-}

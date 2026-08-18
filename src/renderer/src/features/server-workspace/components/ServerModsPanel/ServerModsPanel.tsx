@@ -124,8 +124,7 @@ export function ServerModsPanel(props: Props): ReactElement {
     nextDisabled: string[],
     nextCache: Record<string, ModMetadata>,
   ) => {
-    // Snapshot profile at call time so the write does not pick up a mid-flight
-    // workspace switch; after await, skip local apply if we left that server.
+    // Snapshot the server id so a workspace switch mid-await does not apply this write.
     const server = serverRef.current;
     const targetServerId = server.id;
     const result = await window.api.updateServerPatch(targetServerId, {
@@ -336,8 +335,14 @@ export function ServerModsPanel(props: Props): ReactElement {
       <ServerModDetailDrawer
         detail={detail}
         opened={detail !== null}
+        configured={detail !== null && configuredIds.includes(detail.id)}
+        enabled={detail !== null && !disabledSet.has(detail.id)}
+        busy={detail !== null && busyKey === detail.id}
         onClose={() => setDetail(null)}
         onOpenExternal={(target) => void openExternal(target)}
+        onToggle={(id, enabled) => void toggle(id, enabled)}
+        onAdd={(mod) => void add(mod)}
+        onRemove={(id) => void remove(id).then((ok) => { if (ok) setDetail(null); })}
       />
     </div>
   );

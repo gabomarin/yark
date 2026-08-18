@@ -73,7 +73,8 @@ export function createServerModsListMutations(input: Input) {
     }
   };
 
-  const remove = async (id: string) => {
+  /** True when persist succeeded — lets the detail drawer close only after remove. */
+  const remove = async (id: string): Promise<boolean> => {
     input.setBusyKey(id);
     input.setError(null);
     input.setWarning(null);
@@ -87,10 +88,12 @@ export function createServerModsListMutations(input: Input) {
         disabledIds.filter((candidate) => candidate !== id),
         nextCache,
       );
+      return true;
     } catch (cause) {
       input.setError(
         cause instanceof Error ? cause.message : "Could not remove the mod",
       );
+      return false;
     } finally {
       input.setBusyKey(null);
     }

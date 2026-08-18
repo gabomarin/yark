@@ -12,7 +12,7 @@ The Workspace **Mods** tab stores CurseForge **Project IDs** per profile.
 
 - **Enabled** IDs are passed at launch as `-mods=id1,id2,…`
 - **Disabled** IDs stay on the profile until you turn them back on (no need to delete an ID to skip one boot)
-- Newly added IDs start **disabled** — enable them explicitly before they appear on `-mods=`. Add shows a **Mod Added** toast (two can stay visible; a third drops the oldest). Disabled inventory rows use a quieter background; hover uses a cool tint so the enable switch stays readable. One CurseForge category sits under the mod name (Maps uses attention color; extra tags as +N with a hover list).
+- Newly added IDs start **disabled** — enable them explicitly before they appear on `-mods=`. Add shows a **Mod Added** toast (two can stay visible; a third drops the oldest). Disabled inventory rows use a quieter background; hover uses a cool tint so the enable switch stays readable. One CurseForge category sits under the mod name (Maps uses attention color; extra tags as +N with a hover list). The detail drawer can enable, disable, and remove a configured ID, add a Discover result to this server, and shows a Maps launch-token hint (current map unchanged).
 - Names / summaries / links come from a small Cloudflare Worker proxy and are cached locally
 
 <figure class="doc-shot">
@@ -46,7 +46,7 @@ Create the profile on an **official** map first (**New server** does not offer C
 Enabling a Maps mod never overwrites the map you already have. You choose when to switch.
 
 If YARK can read a `Map Name:` / `Server Name:` / `*_WP` token from CurseForge metadata, the pack
-appears under **Map mods**. If not, use **Custom…** with the token from the author page, and keep
+appears under **Map mods** (the detail drawer also shows that token). If not, use **Custom…** with the token from the author page, and keep
 the map pack enabled on Mods.
 
 <Aside type="tip">
