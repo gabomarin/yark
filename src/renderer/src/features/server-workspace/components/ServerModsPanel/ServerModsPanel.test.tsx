@@ -612,6 +612,7 @@ describe("ServerModsPanel", () => {
     renderPanel();
 
     await user.click(screen.getByRole("radio", { name: "Discover mods" }));
+    expect(screen.getByRole("textbox", { name: "Search CurseForge" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Search mods" }));
     expect(await screen.findByText("Super Spyglass Plus")).toBeInTheDocument();
     expect(screen.queryByText("Awesome Spyglass!")).not.toBeInTheDocument();

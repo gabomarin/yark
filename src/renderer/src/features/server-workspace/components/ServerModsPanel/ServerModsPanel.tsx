@@ -3,6 +3,7 @@ import { Alert, SegmentedControl, Stack } from "@mantine/core";
 import { isMetadataServiceNotConfiguredMessage } from "@shared/curseforge-proxy-url";
 import type { ModMetadata, ModSearchPage, ServerProfile } from "@shared/types";
 import { prepareModAddApply, type ModAddImportProgress } from "@shared/mod-add-input";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { ServerModDetailDrawer } from "./ServerModDetailDrawer";
 import { ServerModsDiscoverSection } from "./ServerModsDiscoverSection";
 import { ServerModsHeader } from "./ServerModsHeader";
@@ -275,7 +276,7 @@ export function ServerModsPanel(props: Props): ReactElement {
   };
 
   return (
-    <div className={classes.root}>
+    <AppSurfaceCard tone="flat" fill padding={0} radius="md" className={classes.root}>
       <ServerModsHeader activeCount={activeCount} disabledCount={disabledCount} />
       <div className={classes.content}>
         <Stack gap="md">
@@ -344,6 +345,6 @@ export function ServerModsPanel(props: Props): ReactElement {
         onAdd={(mod) => void add(mod)}
         onRemove={(id) => void remove(id).then((ok) => { if (ok) setDetail(null); })}
       />
-    </div>
+    </AppSurfaceCard>
   );
 }

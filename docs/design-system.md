@@ -262,7 +262,7 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 | `SelectableListRow` | `shared/ui/SelectableListRow/` | Selected list/row chrome |
 | `AccentIconTile` | `shared/ui/AccentIconTile/` | Tek / rounded icon tiles |
 | `MapArtThumb` | `shared/ui/MapArtThumb/` | ASA map artwork thumb (list + header) |
-| `SearchField` | `shared/ui/SearchField/` | Search inputs |
+| `SearchField` | `shared/ui/SearchField/` | Search inputs (`label` for aria-only; `fieldLabel` when a visible caption is needed) |
 | `ServerRuntimeStatusBadge` | `shared/ui/ServerRuntimeStatusBadge/` | Process status badge |
 | `ReadonlyPath` | `shared/ui/ReadonlyPath/` | Bordered monospace chip for configured filesystem paths |
 | `PathField` | `shared/ui/PathField/` | Read-only path chip + Browse/Clear actions |

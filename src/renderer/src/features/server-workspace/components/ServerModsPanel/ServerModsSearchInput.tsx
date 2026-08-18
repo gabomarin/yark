@@ -1,6 +1,8 @@
 import type { ReactElement } from "react";
-import { Button, Group, TextInput } from "@mantine/core";
+import { Button, Group } from "@mantine/core";
 import { MagnifyingGlass } from "@phosphor-icons/react";
+import { useUiDensity } from "@app/AppProviders";
+import { SearchField, searchFieldIconSize } from "@ui/SearchField/SearchField";
 import classes from "./ServerModsPanel.module.css";
 
 interface Props {
@@ -11,21 +13,26 @@ interface Props {
 }
 
 export function ServerModsSearchInput(props: Props): ReactElement {
+  const density = useUiDensity();
+  const size = density === "compact" ? "sm" : "md";
+  const iconSize = searchFieldIconSize(size);
+
   return (
     <Group align="flex-end" wrap="wrap">
-      <TextInput
-        label="Search CurseForge"
+      <SearchField
+        fieldLabel="Search CurseForge"
         placeholder="spyglass, structures, creatures…"
-        leftSection={<MagnifyingGlass size={16} />}
         value={props.value}
+        size={size}
         className={classes.search}
-        onChange={(event) => props.onChange(event.currentTarget.value)}
+        onChange={props.onChange}
         onKeyDown={(event) => {
           if (event.key === "Enter") props.onSearch();
         }}
       />
       <Button
-        leftSection={<MagnifyingGlass size={16} />}
+        size={size}
+        leftSection={<MagnifyingGlass size={iconSize} />}
         loading={props.searching}
         onClick={props.onSearch}
       >
