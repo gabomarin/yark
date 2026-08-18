@@ -100,6 +100,8 @@ function createApiMock(): RendererApi {
     openAppDataFolder: vi.fn(),
     getUiDensity: vi.fn().mockResolvedValue({ ok: true, data: "compact" }),
     setUiDensity: vi.fn().mockResolvedValue({ ok: true, data: "compact" }),
+    getOpenNativeConsole: vi.fn().mockResolvedValue({ ok: true, data: false }),
+    setOpenNativeConsole: vi.fn().mockResolvedValue({ ok: true, data: false }),
     getLastSeenChangelogVersion: vi.fn().mockResolvedValue({
       ok: true,
       data: "0.11.0",

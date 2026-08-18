@@ -108,6 +108,9 @@ const api: RendererApi = {
   openAppDataFolder: (kind) => ipcRenderer.invoke(IPC.appOpenDataFolder, kind),
   getUiDensity: () => ipcRenderer.invoke(IPC.appGetUiDensity),
   setUiDensity: (density) => ipcRenderer.invoke(IPC.appSetUiDensity, density),
+  getOpenNativeConsole: () => ipcRenderer.invoke(IPC.appGetOpenNativeConsole),
+  setOpenNativeConsole: (enabled) =>
+    ipcRenderer.invoke(IPC.appSetOpenNativeConsole, enabled),
   getLastSeenChangelogVersion: () =>
     ipcRenderer.invoke(IPC.appGetLastSeenChangelogVersion),
   setLastSeenChangelogVersion: (version) =>

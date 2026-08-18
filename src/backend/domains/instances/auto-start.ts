@@ -1,7 +1,7 @@
 import type { LeaveReattachOutcome } from "@backend/infra/process/left-running-reattach";
 import type { ProcessManager } from "@backend/infra/process/process-manager";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
-import type { ServerProfile } from "@shared/types";
+import type { ServerProfile, StartServerOptions } from "@shared/types";
 
 export type AutoStartSkipReason =
   | "inactive"
@@ -25,7 +25,7 @@ export type AutoStartResult =
     };
 
 export interface AutoStartStartFn {
-  (serverId: string): Promise<void>;
+  (serverId: string, options?: StartServerOptions): Promise<void>;
 }
 
 export interface RunAutoStartOptions {
@@ -36,6 +36,8 @@ export interface RunAutoStartOptions {
   processes: Pick<ProcessManager, "isActive">;
   repo: Pick<ServerRepository, "addEvent">;
   start: AutoStartStartFn;
+  /** Settings → Show server console on start (same as manual Start / Restart). */
+  openNativeConsole?: boolean;
 }
 
 function uncertainReattachIds(
@@ -75,6 +77,7 @@ export async function runAutoStartOnLaunch(
       processes: options.processes,
       repo: options.repo,
       start: options.start,
+      openNativeConsole: options.openNativeConsole,
     });
     results.push(result);
   }
@@ -89,6 +92,7 @@ async function evaluateAndMaybeStart(
     processes: Pick<ProcessManager, "isActive">;
     repo: Pick<ServerRepository, "addEvent">;
     start: AutoStartStartFn;
+    openNativeConsole?: boolean;
   },
 ): Promise<AutoStartResult> {
   if (!profile.enabled) {
@@ -119,7 +123,9 @@ async function evaluateAndMaybeStart(
   }
 
   try {
-    await ctx.start(profile.id);
+    await ctx.start(profile.id, {
+      openNativeConsole: ctx.openNativeConsole === true,
+    });
     ctx.repo.addEvent(
       profile.id,
       "auto_start_succeeded",

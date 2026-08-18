@@ -230,7 +230,7 @@ describe("SetupWizard", () => {
     await user.click(screen.getByRole("button", { name: /^continue$/i }));
     await user.click(
       screen.getByRole("switch", {
-        name: /Show native console when starting or restarting a server/i,
+        name: /Show native console when a server starts/i,
       }),
     );
     expect(onOpenNativeTerminalOnStartChange).toHaveBeenCalledWith(true);

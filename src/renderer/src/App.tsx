@@ -81,12 +81,12 @@ import {
 } from "@shared/onboarding";
 import {
   readDefaultBaseFolderPref,
-  readOpenNativeTerminalPref,
   writeDefaultBaseFolderPref,
-  writeOpenNativeTerminalPref,
+  writeOpenNativeConsolePref,
   writeUiDensityPref,
   type UiDensity,
 } from "@features/settings/settingsModel";
+import { DEFAULT_OPEN_NATIVE_CONSOLE } from "@shared/open-native-console";
 import { useDesktopShellPreferences } from "@features/settings/useDesktopShellPreferences";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import { AppSpotlight } from "@layout/AppSpotlight/AppSpotlight";
@@ -113,9 +113,14 @@ type CopyConfigSession = {
 interface AppProps {
   /** Resolved from `app_settings` (via IPC) before first paint. */
   initialUiDensity?: UiDensity;
+  /** Resolved from `app_settings` (via IPC) before first paint. */
+  initialOpenNativeConsole?: boolean;
 }
 
-export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
+export function App({
+  initialUiDensity = "compact",
+  initialOpenNativeConsole = DEFAULT_OPEN_NATIVE_CONSOLE,
+}: AppProps): ReactElement {
   const [servers, setServers] = useState<ServerProfile[]>([]);
   const [statuses, setStatuses] = useState<Map<string, ServerRuntimeInfo>>(new Map());
   const [installationInfo, setInstallationInfo] = useState<
@@ -160,7 +165,7 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   }, []);
   const [copyConfig, setCopyConfig] = useState<CopyConfigSession | null>(null);
   const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState(
-    readOpenNativeTerminalPref,
+    initialOpenNativeConsole,
   );
   const [uiDensity, setUiDensity] = useState<UiDensity>(initialUiDensity);
   const [defaultBaseFolder, setDefaultBaseFolder] = useState<string | null>(
@@ -195,12 +200,21 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
   const desktopShell = useDesktopShellPreferences();
 
   useEffect(() => {
-    writeOpenNativeTerminalPref(openNativeTerminalOnStart);
-  }, [openNativeTerminalOnStart]);
-
-  useEffect(() => {
     writeDefaultBaseFolderPref(defaultBaseFolder);
   }, [defaultBaseFolder]);
+
+  const handleOpenNativeConsoleChange = useCallback(async (enabled: boolean) => {
+    const saved = await writeOpenNativeConsolePref(enabled);
+    if (!saved) {
+      notifications.show({
+        color: "red",
+        title: "Could not save console preference",
+        message: "Your selection was not stored. Try again.",
+      });
+      return;
+    }
+    setOpenNativeTerminalOnStart(enabled);
+  }, []);
 
   const handleUiDensityChange = useCallback(async (density: UiDensity) => {
     const saved = await writeUiDensityPref(density);
@@ -1822,7 +1836,9 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
                 setOverlay({ kind: "workspace", serverId, initialTab: "server" })
               }
               openNativeTerminalOnStart={openNativeTerminalOnStart}
-              onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
+              onOpenNativeTerminalOnStartChange={(enabled) =>
+                void handleOpenNativeConsoleChange(enabled)
+              }
               uiDensity={uiDensity}
               onUiDensityChange={(density) => void handleUiDensityChange(density)}
               defaultBaseFolder={defaultBaseFolder}
@@ -1894,7 +1910,9 @@ export function App({ initialUiDensity = "compact" }: AppProps): ReactElement {
         onInstallSteamCmd={() => void runAction(() => window.api.installSteamCmd())}
         onDefaultBaseFolderChange={setDefaultBaseFolder}
         onUiDensityChange={(density) => void handleUiDensityChange(density)}
-        onOpenNativeTerminalOnStartChange={setOpenNativeTerminalOnStart}
+        onOpenNativeTerminalOnStartChange={(enabled) =>
+          void handleOpenNativeConsoleChange(enabled)
+        }
         onSkip={async () => {
           await finishSetupWizard("skipped", null);
         }}

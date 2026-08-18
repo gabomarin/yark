@@ -103,6 +103,29 @@ describe("runAutoStartOnLaunch", () => {
     );
   });
 
+  it("forwards openNativeConsole true to start (#350)", async () => {
+    const start = vi.fn().mockResolvedValue(undefined);
+    await runAutoStartOnLaunch({
+      profiles: [profile()],
+      processes: { isActive: () => false },
+      repo: { addEvent: vi.fn() },
+      start,
+      openNativeConsole: true,
+    });
+    expect(start).toHaveBeenCalledWith("srv-1", { openNativeConsole: true });
+  });
+
+  it("forwards openNativeConsole false when the pref is off or unset (#350)", async () => {
+    const start = vi.fn().mockResolvedValue(undefined);
+    await runAutoStartOnLaunch({
+      profiles: [profile()],
+      processes: { isActive: () => false },
+      repo: { addEvent: vi.fn() },
+      start,
+    });
+    expect(start).toHaveBeenCalledWith("srv-1", { openNativeConsole: false });
+  });
+
   it("ignores profiles without autoStart (no events)", async () => {
     const addEvent = vi.fn();
     const results = await runAutoStartOnLaunch({

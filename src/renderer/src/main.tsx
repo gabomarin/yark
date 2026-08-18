@@ -1,7 +1,11 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import { loadUiDensityPref } from "@features/settings/settingsModel";
+import {
+  loadOpenNativeConsolePref,
+  loadUiDensityPref,
+} from "@features/settings/settingsModel";
+import { DEFAULT_OPEN_NATIVE_CONSOLE } from "@shared/open-native-console";
 import { DEFAULT_UI_DENSITY } from "@shared/ui-density";
 import "@mantine/core/styles.layer.css";
 import "@mantine/notifications/styles.layer.css";
@@ -17,15 +21,24 @@ if (container === null) {
 
 void (async () => {
   let initialUiDensity = DEFAULT_UI_DENSITY;
+  let initialOpenNativeConsole = DEFAULT_OPEN_NATIVE_CONSOLE;
   try {
     initialUiDensity = await loadUiDensityPref();
   } catch {
     initialUiDensity = DEFAULT_UI_DENSITY;
   }
+  try {
+    initialOpenNativeConsole = await loadOpenNativeConsolePref();
+  } catch {
+    initialOpenNativeConsole = DEFAULT_OPEN_NATIVE_CONSOLE;
+  }
 
   createRoot(container).render(
     <React.StrictMode>
-      <App initialUiDensity={initialUiDensity} />
+      <App
+        initialUiDensity={initialUiDensity}
+        initialOpenNativeConsole={initialOpenNativeConsole}
+      />
     </React.StrictMode>,
   );
 })();

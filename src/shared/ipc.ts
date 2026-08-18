@@ -118,6 +118,8 @@ export const IPC = {
   appOpenDataFolder: "app:open-data-folder",
   appGetUiDensity: "app:get-ui-density",
   appSetUiDensity: "app:set-ui-density",
+  appGetOpenNativeConsole: "app:get-open-native-console",
+  appSetOpenNativeConsole: "app:set-open-native-console",
   appGetLastSeenChangelogVersion: "app:get-last-seen-changelog-version",
   appSetLastSeenChangelogVersion: "app:set-last-seen-changelog-version",
   appGetOnboarding: "app:get-onboarding",
@@ -349,6 +351,9 @@ export interface RendererApi {
   /** `null` when unset in `app_settings` (caller may migrate / apply default). */
   getUiDensity(): Promise<IpcResult<UiDensity | null>>;
   setUiDensity(density: UiDensity): Promise<IpcResult<UiDensity>>;
+  /** `null` when unset in `app_settings` (caller may migrate / apply default). */
+  getOpenNativeConsole(): Promise<IpcResult<boolean | null>>;
+  setOpenNativeConsole(enabled: boolean): Promise<IpcResult<boolean>>;
   /** `null` when the operator has not dismissed What's new yet. */
   getLastSeenChangelogVersion(): Promise<IpcResult<string | null>>;
   setLastSeenChangelogVersion(version: string): Promise<IpcResult<string>>;

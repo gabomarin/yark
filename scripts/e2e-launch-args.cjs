@@ -266,7 +266,10 @@ async function run() {
     await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 15_000 });
 
     // Piped mode: Show server console on start must stay off (Settings → Servers).
-    await page.evaluate(() => {
+    await page.evaluate(async () => {
+      if (typeof window.api?.setOpenNativeConsole === "function") {
+        await window.api.setOpenNativeConsole(false);
+      }
       window.localStorage.setItem("overview.openNativeTerminalOnStart", "0");
     });
     await openSettingsCategory(page, "Servers");
@@ -275,7 +278,7 @@ async function run() {
       timeout: 10_000,
     });
     const consoleSwitch = page.getByRole("switch", {
-      name: /Show native console when starting or restarting a server/i,
+      name: /Show native console when a server starts/i,
     });
     await consoleSwitch.waitFor({ state: "visible", timeout: 5_000 });
     if (await consoleSwitch.isChecked()) {
