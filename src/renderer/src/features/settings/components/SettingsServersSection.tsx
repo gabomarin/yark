@@ -23,8 +23,8 @@ export function SettingsServersSection(props: Props): ReactElement {
         <div className={classes.settingCopy}>
           <Text size="sm" fw={600}>Show server console on start</Text>
           <Text size="xs" c="dimmed" mt={2}>
-            Opens the ARK dedicated-server console window when you start or restart a
-            server.
+            Opens the ARK dedicated-server console window when a server starts,
+            including Start, Restart, and Auto-start with YARK.
           </Text>
         </div>
         <div className={classes.settingControl}>
@@ -33,7 +33,7 @@ export function SettingsServersSection(props: Props): ReactElement {
             onChange={(event) =>
               props.onOpenNativeTerminalOnStartChange(event.currentTarget.checked)
             }
-            aria-label="Show native console when starting or restarting a server"
+            aria-label="Show native console when a server starts"
           />
         </div>
       </div>

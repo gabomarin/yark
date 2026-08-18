@@ -1,4 +1,10 @@
 import {
+  DEFAULT_OPEN_NATIVE_CONSOLE,
+  OPEN_NATIVE_CONSOLE_LEGACY_LOCAL_STORAGE_KEY,
+  parseOpenNativeConsolePref,
+  parseStoredOpenNativeConsole,
+} from "@shared/open-native-console";
+import {
   DEFAULT_UI_DENSITY,
   UI_DENSITY_LEGACY_LOCAL_STORAGE_KEY,
   isUiDensity,
@@ -26,19 +32,7 @@ export const SETTINGS_CATEGORIES: ReadonlyArray<{
   { id: "about", label: "About" },
 ];
 
-export const OPEN_NATIVE_TERMINAL_PREF_KEY = "overview.openNativeTerminalOnStart";
 export const DEFAULT_BASE_FOLDER_PREF_KEY = "settings.defaultServerBaseFolder";
-
-export function readOpenNativeTerminalPref(): boolean {
-  if (typeof window === "undefined") {
-    return false;
-  }
-  return window.localStorage.getItem(OPEN_NATIVE_TERMINAL_PREF_KEY) === "1";
-}
-
-export function writeOpenNativeTerminalPref(enabled: boolean): void {
-  window.localStorage.setItem(OPEN_NATIVE_TERMINAL_PREF_KEY, enabled ? "1" : "0");
-}
 
 export function readDefaultBaseFolderPref(): string | null {
   if (typeof window === "undefined") {
@@ -54,6 +48,93 @@ export function writeDefaultBaseFolderPref(path: string | null): void {
     return;
   }
   window.localStorage.setItem(DEFAULT_BASE_FOLDER_PREF_KEY, path.trim());
+}
+
+function readLegacyOpenNativeConsoleLocalStorage(): boolean | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  return parseStoredOpenNativeConsole(
+    window.localStorage.getItem(OPEN_NATIVE_CONSOLE_LEGACY_LOCAL_STORAGE_KEY),
+  );
+}
+
+function clearLegacyOpenNativeConsoleLocalStorage(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.removeItem(OPEN_NATIVE_CONSOLE_LEGACY_LOCAL_STORAGE_KEY);
+}
+
+/**
+ * Load native-console-on-start from `app_settings` (via IPC) before first paint.
+ * Migrates a one-shot legacy localStorage value when SQLite has no row yet.
+ * Never clears the legacy key unless SQLite successfully owns the value.
+ * Does not write the product default on read — persist only from user changes.
+ */
+export async function loadOpenNativeConsolePref(): Promise<boolean> {
+  try {
+    if (
+      typeof window === "undefined" ||
+      typeof window.api?.getOpenNativeConsole !== "function"
+    ) {
+      return parseOpenNativeConsolePref(
+        typeof window === "undefined"
+          ? null
+          : window.localStorage.getItem(OPEN_NATIVE_CONSOLE_LEGACY_LOCAL_STORAGE_KEY),
+      );
+    }
+
+    const result = await window.api.getOpenNativeConsole();
+    if (!result.ok) {
+      return parseOpenNativeConsolePref(
+        window.localStorage.getItem(OPEN_NATIVE_CONSOLE_LEGACY_LOCAL_STORAGE_KEY),
+      );
+    }
+
+    if (result.data !== null) {
+      clearLegacyOpenNativeConsoleLocalStorage();
+      return result.data;
+    }
+
+    const legacy = readLegacyOpenNativeConsoleLocalStorage();
+    if (legacy !== null) {
+      const migrated = await window.api.setOpenNativeConsole(legacy);
+      if (migrated.ok) {
+        clearLegacyOpenNativeConsoleLocalStorage();
+        return migrated.data;
+      }
+      return legacy;
+    }
+
+    return DEFAULT_OPEN_NATIVE_CONSOLE;
+  } catch {
+    return parseOpenNativeConsolePref(
+      typeof window === "undefined"
+        ? null
+        : window.localStorage.getItem(OPEN_NATIVE_CONSOLE_LEGACY_LOCAL_STORAGE_KEY),
+    );
+  }
+}
+
+/** @returns true when SQLite accepted the value. */
+export async function writeOpenNativeConsolePref(enabled: boolean): Promise<boolean> {
+  if (
+    typeof window === "undefined" ||
+    typeof window.api?.setOpenNativeConsole !== "function"
+  ) {
+    return false;
+  }
+  try {
+    const result = await window.api.setOpenNativeConsole(enabled);
+    if (!result.ok) {
+      return false;
+    }
+    clearLegacyOpenNativeConsoleLocalStorage();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function readLegacyUiDensityLocalStorage(): UiDensity | null {

@@ -435,7 +435,7 @@ describe("SettingsPage", () => {
     await openCategory(user, "Servers");
     await user.click(
       screen.getByRole("switch", {
-        name: /Show native console when starting or restarting a server/i,
+        name: /Show native console when a server starts/i,
       }),
     );
     expect(onOpenNativeTerminalOnStartChange).toHaveBeenCalledWith(true);

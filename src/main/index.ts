@@ -21,6 +21,10 @@ import { ConfigTransferService } from "../backend/domains/config/config-transfer
 import { ClusterIniTemplateRepository } from "../backend/infra/db/cluster-ini-template-repository";
 import { InstanceService } from "../backend/domains/instances/instance-service";
 import { runAutoStartOnLaunch } from "../backend/domains/instances/auto-start";
+import {
+  OPEN_NATIVE_CONSOLE_SETTING_KEY,
+  parseOpenNativeConsolePref,
+} from "../shared/open-native-console";
 import { LogsService } from "../backend/domains/logs/logs-service";
 import { LogRetentionScheduler } from "../backend/domains/logs/log-retention-scheduler";
 import { UpdateService } from "../backend/domains/updates/update-service";
@@ -231,6 +235,23 @@ if (gotSingleInstanceLock) {
     let splashMaxTimer: ReturnType<typeof setTimeout> | null = null;
     let mainReadyToShow = false;
     let splashShownAt = 0;
+    /**
+     * Assigned after reattach (needs `instances` / SQLite). No-op until then.
+     * Skips while splash is still up. Single-flight for the process lifetime
+     * (`show` can fire again after hide-to-tray or an early splash-time show).
+     */
+    let notifyMainUiReadyForAutoStart = (): void => {};
+    /** `show` is the trigger; call notify only when `show()` would be a no-op. */
+    const showMainThenAutoStart = (win: BrowserWindow): void => {
+      if (win.isDestroyed()) {
+        return;
+      }
+      if (!win.isVisible()) {
+        win.show();
+        return;
+      }
+      notifyMainUiReadyForAutoStart();
+    };
     const clearSplashTimers = (): void => {
       if (splashHoldTimer !== null) {
         clearTimeout(splashHoldTimer);
@@ -255,9 +276,7 @@ if (gotSingleInstanceLock) {
       }
       win.setSkipTaskbar(false);
       win.setFocusable(true);
-      if (!win.isVisible()) {
-        win.show();
-      }
+      showMainThenAutoStart(win);
       win.focus();
     };
     const scheduleSplashHandoff = (): void => {
@@ -315,9 +334,7 @@ if (gotSingleInstanceLock) {
             return;
           }
           if (mainWindow !== null && !mainWindow.isDestroyed()) {
-            if (!mainWindow.isVisible()) {
-              mainWindow.show();
-            }
+            showMainThenAutoStart(mainWindow);
             return;
           }
           app.quit();
@@ -450,16 +467,31 @@ if (gotSingleInstanceLock) {
       processManager,
     );
 
-    // Per-server opt-in auto-start (#53): after reattach, sequential, isolated failures.
-    void runAutoStartOnLaunch({
-      profiles: repo.list(),
-      reattachOutcomes,
-      processes: processManager,
-      repo,
-      start: (serverId) => instances.start(serverId),
-    }).catch((error: unknown) => {
-      console.error("Auto-start on launch failed", error);
-    });
+    // Auto-start after the main window is shown (splash dismissed). Native
+    // consoles must not open over the splash (#350). Re-read the console pref
+    // at that point so a legacy localStorage migrate can land first.
+    let autoStartStarted = false;
+    notifyMainUiReadyForAutoStart = (): void => {
+      if (splash !== null && !splash.isDestroyed()) {
+        return;
+      }
+      if (autoStartStarted) {
+        return;
+      }
+      autoStartStarted = true;
+      void runAutoStartOnLaunch({
+        profiles: repo.list(),
+        reattachOutcomes,
+        processes: processManager,
+        repo,
+        start: (serverId, options) => instances.start(serverId, options),
+        openNativeConsole: parseOpenNativeConsolePref(
+          settings.get(OPEN_NATIVE_CONSOLE_SETTING_KEY),
+        ),
+      }).catch((error: unknown) => {
+        console.error("Auto-start on launch failed", error);
+      });
+    };
 
     const evaluateAppUpdateSafety = ():
       | "servers-running"
@@ -699,6 +731,15 @@ if (gotSingleInstanceLock) {
             }
           : undefined,
     });
+    // `show` is the auto-start trigger when the window becomes visible.
+    // Direct notify (below) is only for the case the window is already shown
+    // so `show` will not fire (listener attached late).
+    mainWindow.on("show", () => {
+      notifyMainUiReadyForAutoStart();
+    });
+    if (!mainWindow.isDestroyed() && mainWindow.isVisible()) {
+      notifyMainUiReadyForAutoStart();
+    }
     if (splash !== null && !splash.isDestroyed()) {
       splash.setAlwaysOnTop(true);
     }

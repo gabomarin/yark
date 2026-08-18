@@ -23,6 +23,11 @@ import type { MoveInstallService } from "../backend/domains/instances/move-insta
 import type { AppSettingsRepository } from "../backend/infra/db/app-settings-repository";
 import type { ServerRepository } from "../backend/infra/db/server-repository";
 import { UI_DENSITY_SETTING_KEY, isUiDensity, type UiDensity } from "../shared/ui-density";
+import {
+  OPEN_NATIVE_CONSOLE_SETTING_KEY,
+  encodeOpenNativeConsolePref,
+  parseStoredOpenNativeConsole,
+} from "../shared/open-native-console";
 import { LAST_SEEN_CHANGELOG_VERSION_SETTING_KEY } from "../shared/changelog";
 import {
   ONBOARDING_SETTING_KEY,
@@ -489,6 +494,23 @@ export function registerIpcHandlers(
     settings.set(UI_DENSITY_SETTING_KEY, density);
     return density;
   });
+
+  handleValidated(
+    IPC.appGetOpenNativeConsole,
+    ipcArgSchemas[IPC.appGetOpenNativeConsole],
+    (): boolean | null => {
+      return parseStoredOpenNativeConsole(settings.get(OPEN_NATIVE_CONSOLE_SETTING_KEY));
+    },
+  );
+
+  handleValidated(
+    IPC.appSetOpenNativeConsole,
+    ipcArgSchemas[IPC.appSetOpenNativeConsole],
+    ([enabled]): boolean => {
+      settings.set(OPEN_NATIVE_CONSOLE_SETTING_KEY, encodeOpenNativeConsolePref(enabled));
+      return enabled;
+    },
+  );
 
   handleValidated(
     IPC.appGetLastSeenChangelogVersion,

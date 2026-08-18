@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Show server console on start** now applies to Auto-start with YARK (stored in app settings so it survives quit). Auto-start waits until the main window is shown so dedicated-server consoles do not open over the splash (#350).
+
 ## [0.13.1] - 2026-08-17
 
 ### Changed

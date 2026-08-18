@@ -27,14 +27,14 @@ the Server tab / workspace.
 | SteamCMD | `…/components/SettingsSteamCmdSection.tsx` |
 | Log retention | `…/components/SettingsLogRetentionSection.tsx` |
 | About (YARK updates + app data folders) | `…/components/SettingsYarkUpdateSection.tsx`, `…/components/SettingsAppDataSection.tsx` |
-| Density load/migrate | `…/settingsModel.ts` |
+| Density / console-on-start load/migrate | `…/settingsModel.ts` |
 | First-run setup wizard | `src/renderer/src/features/setup-wizard/` (`onboarding.v1`) |
 | Tray / Windows startup hook | `…/useDesktopShellPreferences.ts` |
 | Desktop-shell persist | `src/main/desktop-shell-settings.ts` |
 | Window bounds / maximized | `src/main/window-state.ts` (`app_settings.windowState`) |
 | Windows login item | `src/main/windows-login-item.ts` |
 | Tray icon / menu | `src/main/app-tray.ts` |
-| Shared keys / defaults | `src/shared/desktop-shell.ts`, `src/shared/ui-density.ts`, `src/shared/log-retention.ts`, `src/shared/app-update.ts` |
+| Shared keys / defaults | `src/shared/desktop-shell.ts`, `src/shared/ui-density.ts`, `src/shared/open-native-console.ts`, `src/shared/log-retention.ts`, `src/shared/app-update.ts` |
 | Density theme apply | `src/renderer/src/app/AppProviders.tsx`, `src/renderer/src/main.tsx` |
 | SteamCMD service | `src/backend/domains/updates/*` (path/install/caches) |
 | YARK self-update | `src/main/app-update-service.ts` |
@@ -73,15 +73,16 @@ the Server tab / workspace.
 
 | Control | Storage | Default | Notes |
 | --- | --- | --- | --- |
-| Show server console on start | `localStorage` `overview.openNativeTerminalOnStart` (`"1"`/`"0"`) | off | Passed as `StartServerOptions.openNativeConsole`. Also on first-run Windows step. |
+| Show server console on start | SQLite `openNativeConsoleOnStart` (`"1"`/`"0"`) | off | Passed as `StartServerOptions.openNativeConsole` on Start, Restart, and Auto-start. Also on first-run Windows step. Legacy `localStorage` `overview.openNativeTerminalOnStart` migrates once. |
 | Default base folder | `localStorage` `settings.defaultServerBaseFolder` | unset | Prefills create-server base path only |
 | Server auto-start summary | Profile `autoStart` | off | Lists opted-in servers; edit on the Server tab |
 
-IPC for shell / density:
+IPC for shell / density / console:
 
 | Channel | API |
 | --- | --- |
 | `app:get-ui-density` / `app:set-ui-density` | `getUiDensity` / `setUiDensity` |
+| `app:get-open-native-console` / `app:set-open-native-console` | `getOpenNativeConsole` / `setOpenNativeConsole` |
 | `app:get-desktop-shell-preferences` | `getDesktopShellPreferences` |
 | `app:get-last-seen-changelog-version` / `app:set-last-seen-changelog-version` | What's new dismiss |
 | `app:get-onboarding` / `app:set-onboarding` | First-run wizard `onboarding.v1` (`completed` \| `skipped`, or `null` to clear) |
@@ -94,6 +95,12 @@ Density load: `main.tsx` calls `loadUiDensityPref()` before the first theme moun
 `getUiDensity` returns `null` when unset (caller applies default; read does not
 write). Legacy `localStorage` key `settings.uiDensity` migrates once and clears
 only after a successful SQLite write.
+
+Console-on-start load: `main.tsx` also calls `loadOpenNativeConsolePref()` before
+first paint. `getOpenNativeConsole` returns `null` when unset. Main-process
+auto-start reads the same SQLite key when the main window is shown (after splash),
+not while the splash is up. Legacy `overview.openNativeTerminalOnStart` migrates
+once (same rules as density).
 
 ### Server auto-start summary (#53)
 
@@ -189,16 +196,16 @@ silent outside Settings status text.
 
 ## Common pitfalls
 
-1. **Two storage backends** — density / shell / SteamCMD path → SQLite;
-   console-on-start + default base folder → `localStorage` only.
+1. **Two storage backends** — density / shell / SteamCMD path / console-on-start
+   → SQLite; default base folder → `localStorage` only.
 2. **Start with Windows ≠ Auto-start with YARK** — #54 opens the app; #53 starts
    opted-in ASA profiles after reattach.
 3. **Tray toast polarity** — stored key is `trayCloseHintDismissed`; the switch
    is “show notification” = `!dismissed`.
 4. **No theme toggle** — operator docs that mention a theme control are stale;
    appearance on Settings is density only.
-5. **Do not persist density default on read** — only user changes (or legacy
-   migration) write `uiDensity`.
+5. **Do not persist density or console-on-start defaults on read** — only user
+   changes (or legacy migration) write `uiDensity` / `openNativeConsoleOnStart`.
 6. **Shell switches disabled until IPC ready** — failed preference load leaves
    controls disabled at defaults.
 7. **SteamCMD set-path** rejects empty paths and requires a successful `+quit`.
@@ -214,7 +221,9 @@ silent outside Settings status text.
 | `tests/unit/log-retention.test.ts` | Defaults / normalize / failure classification |
 | `tests/unit/logs-service.test.ts` | Retention preview/run path guards |
 | `tests/unit/ui-density-pref.test.ts` | Load / write / legacy migration |
+| `tests/unit/open-native-console-pref.test.ts` | Console-on-start load / write / legacy migration |
 | `tests/unit/app-settings-ui-density.test.ts` | SQLite round-trip |
+| `tests/unit/app-settings-open-native-console.test.ts` | SQLite console-on-start round-trip |
 | `tests/unit/desktop-shell-settings.test.ts` | Tray / Windows prefs persist |
 | `tests/unit/database-boot-recovery.test.ts` | Corrupt DB open/migrate errors, quarantine, recovery loop |
 | `tests/unit/auto-start.test.ts` | Launch skip/start behavior |

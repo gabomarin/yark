@@ -299,14 +299,18 @@ Actionable install degradation (e.g. `ready` → `missing`) emits
 ### Auto-start on application launch (#53)
 
 After leave-running reattach completes (`reattachLeftRunningProcesses` in
-`src/main/index.ts`), `runAutoStartOnLaunch` evaluates profiles with
-`autoStart === true`:
+`src/main/index.ts`), wait until the **main window is shown** (splash dismissed,
+or first `show` when splash is skipped). Then `runAutoStartOnLaunch` evaluates
+profiles with `autoStart === true`. This keeps native ASA consoles from opening
+over the splash (#350).
 
 1. Skip Inactive (`enabled === false`) — preference kept; event `auto_start_skipped`.
 2. Skip already managed / reattached (`ProcessManager.isActive`).
 3. Skip uncertain reattach (`inaccessible` left-running identity).
-4. Otherwise call `InstanceService.start` (same guards as manual start: ready
-   install, ports, locks). Concurrency **1** (sequential). Failures emit
+4. Otherwise call `InstanceService.start` with `openNativeConsole` from SQLite
+   `openNativeConsoleOnStart` (Settings / first-run **Show server console on start**;
+   default off). Same guards as manual start: ready install, ports, locks.
+   Concurrency **1** (sequential). Failures emit
    `auto_start_failed` and do not stop the queue; success emits
    `auto_start_succeeded` (plus the usual `server_started` from start).
 
