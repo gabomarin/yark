@@ -4,6 +4,7 @@ import {
   HardDrives,
   ShareNetwork,
   SquaresFour,
+  DownloadSimple,
 } from "@phosphor-icons/react";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import type { ServerProfile } from "@shared/types";
@@ -25,6 +26,13 @@ export const SPOTLIGHT_NAV_ITEMS: SpotlightNavItem[] = [
     description: "Overview and server list",
     keywords: ["home", "overview", "fleet"],
     icon: SquaresFour,
+  },
+  {
+    id: "downloads",
+    label: "Downloads",
+    description: "SteamCMD installs, updates, and file copies",
+    keywords: ["download", "steamcmd", "update", "queue"],
+    icon: DownloadSimple,
   },
   {
     id: "clusters",

@@ -57,9 +57,13 @@ const api: RendererApi = {
   openServerNativeTerminal: (id: string) => ipcRenderer.invoke(IPC.serversOpenNativeTerminal, id),
   installSteamCmd: () => ipcRenderer.invoke(IPC.steamcmdInstall),
   cancelSteamCmd: () => ipcRenderer.invoke(IPC.steamcmdCancel),
+  pauseSteamCmd: () => ipcRenderer.invoke(IPC.steamcmdPause),
   retryCriticalJob: (id: string) => ipcRenderer.invoke(IPC.criticalJobRetry, id),
   dismissCriticalJob: (id: string) => ipcRenderer.invoke(IPC.criticalJobDismiss, id),
   cancelCriticalJob: (id: string) => ipcRenderer.invoke(IPC.criticalJobCancel, id),
+  resumeCriticalJob: (id: string) => ipcRenderer.invoke(IPC.criticalJobResume, id),
+  reorderCriticalJob: (id: string, direction: "up" | "down") =>
+    ipcRenderer.invoke(IPC.criticalJobReorder, id, direction),
   setSteamCmdPath: (path: string) => ipcRenderer.invoke(IPC.steamcmdSetPath, path),
   getSteamCmdStatus: () => ipcRenderer.invoke(IPC.steamcmdStatus),
   getSteamCmdConsole: (limit?: number) => ipcRenderer.invoke(IPC.steamcmdConsole, limit),

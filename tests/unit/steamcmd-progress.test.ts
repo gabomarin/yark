@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  canPauseSteamCmdJob,
+  canPauseSteamCmdOperation,
   formatSteamCmdByteProgress,
   hasMeaningfulSteamCmdByteProgress,
   parseSteamCmdProgressLine,
   steamCmdByteProgressNoun,
+  steamCmdProgressFallbackLabel,
 } from "@shared/steamcmd-progress";
 
 describe("parseSteamCmdProgressLine", () => {
@@ -69,5 +72,28 @@ describe("parseSteamCmdProgressLine", () => {
     expect(steamCmdByteProgressNoun("verify-files")).toBe("Checked");
     expect(steamCmdByteProgressNoun("install-files")).toBe("Downloaded");
     expect(steamCmdByteProgressNoun("sync-files")).toBe("Copied");
+  });
+
+  it("allows Pause only for install, update, and file copy", () => {
+    expect(canPauseSteamCmdOperation("install-files")).toBe(true);
+    expect(canPauseSteamCmdOperation("update")).toBe(true);
+    expect(canPauseSteamCmdOperation("sync-files")).toBe(true);
+    expect(canPauseSteamCmdOperation("verify-files")).toBe(false);
+    expect(canPauseSteamCmdOperation("install-steamcmd")).toBe(false);
+    expect(canPauseSteamCmdOperation(null)).toBe(false);
+  });
+
+  it("refuses Pause during an in-progress rollback", () => {
+    expect(canPauseSteamCmdJob("update", "applying-files")).toBe(true);
+    expect(canPauseSteamCmdJob("update", "rollback-restoring-backups")).toBe(false);
+    expect(canPauseSteamCmdJob("update", "rollback-complete")).toBe(true);
+    expect(canPauseSteamCmdJob("verify-files", "validating")).toBe(false);
+  });
+
+  it("falls back to an operation-specific progress title", () => {
+    expect(steamCmdProgressFallbackLabel("install-files")).toBe("Installing files…");
+    expect(steamCmdProgressFallbackLabel("verify-files")).toBe("Verifying");
+    expect(steamCmdProgressFallbackLabel("update")).toBe("Updating files…");
+    expect(steamCmdProgressFallbackLabel(null)).toBe("Updating files…");
   });
 });

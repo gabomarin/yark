@@ -141,7 +141,12 @@ async function openRecoveryUi(app, errors) {
   });
   page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
   await page.waitForLoadState("domcontentloaded");
-  await page.locator('[data-critical-job-id="update-blocked"]').waitFor({
+  await page.getByRole("button", { name: "Downloads", exact: true }).click();
+  await page.locator("[data-downloads-page]").waitFor({
+    state: "visible",
+    timeout: 15_000,
+  });
+  await page.locator('[data-download-row="update-blocked"]').waitFor({
     state: "visible",
     timeout: 15_000,
   });
@@ -153,38 +158,35 @@ async function expectText(locator, value) {
 }
 
 async function assertRecoveryState(page, expectCancelled, expectRetryable) {
-  const update = page.locator('[data-critical-job-id="update-blocked"]');
-  await expectText(update, "update");
-  await expectText(update, serverName);
+  const update = page.locator('[data-download-row="update-blocked"]');
   await expectText(update, "blocked");
-  await expectText(update, "applying-files");
-  assert.equal(await update.getByRole("button", { name: "Retry" }).count(), 1);
-  assert.equal(await update.getByRole("button", { name: "Dismiss" }).count(), 1);
+  await expectText(update, "Applying files");
+  assert.equal(await update.getByRole("button", { name: /Retry/i }).count(), 1);
+  assert.equal(await update.getByRole("button", { name: /Dismiss/i }).count(), 1);
 
-  const restore = page.locator('[data-critical-job-id="restore-blocked"]');
+  const restore = page.locator('[data-download-row="restore-blocked"]');
   await restore.waitFor({ state: "visible" });
-  await expectText(restore, "restore");
   await expectText(restore, "blocked");
-  assert.equal(await restore.getByRole("button", { name: "Retry" }).count(), 1);
+  assert.equal(await restore.getByRole("button", { name: /Retry/i }).count(), 1);
 
-  const missing = page.locator('[data-critical-job-id="missing-profile"]');
+  const missing = page.locator('[data-download-row="missing-profile"]');
   await expectText(missing, "failed");
-  assert.equal(await missing.getByRole("button", { name: "Retry" }).count(), 0);
-  assert.equal(await missing.getByRole("button", { name: "Dismiss" }).count(), 1);
+  assert.equal(await missing.getByRole("button", { name: /Retry/i }).count(), 0);
+  assert.equal(await missing.getByRole("button", { name: /Dismiss/i }).count(), 1);
 
-  const cancelled = page.locator('[data-critical-job-id="verify-cancelled"]');
+  const cancelled = page.locator('[data-download-row="verify-cancelled"]');
   if (expectCancelled) {
     await expectText(cancelled, "cancelled");
-    assert.equal(await cancelled.getByRole("button", { name: "Retry" }).count(), 0);
-    assert.equal(await cancelled.getByRole("button", { name: "Dismiss" }).count(), 1);
+    assert.equal(await cancelled.getByRole("button", { name: /Retry/i }).count(), 1);
+    assert.equal(await cancelled.getByRole("button", { name: /Dismiss/i }).count(), 1);
   } else {
     assert.equal(await cancelled.count(), 0);
   }
 
-  const retryable = page.locator('[data-critical-job-id="install-retryable"]');
+  const retryable = page.locator('[data-download-row="install-retryable"]');
   if (expectRetryable) {
-    await expectText(retryable, "restarting-server");
-    assert.equal(await retryable.getByRole("button", { name: "Retry" }).count(), 1);
+    await expectText(retryable, "Restarting server");
+    assert.equal(await retryable.getByRole("button", { name: /Retry/i }).count(), 1);
   } else {
     assert.equal(await retryable.count(), 0);
   }
@@ -216,13 +218,13 @@ async function run() {
     // Retry a replay-safe recovered finish path through rendered UI and IPC.
     // wasRunning=false avoids launching an ASA process while still exercising
     // queue routing, the instance lock, durable removal, and progress refresh.
-    const retryable = page.locator('[data-critical-job-id="install-retryable"]');
-    await retryable.getByRole("button", { name: "Retry" }).click();
+    const retryable = page.locator('[data-download-row="install-retryable"]');
+    await retryable.getByRole("button", { name: /Retry/i }).click();
     await retryable.waitFor({ state: "detached", timeout: 10_000 });
 
     // Exercise terminal dismissal through the same renderer/preload/main path.
-    const cancelled = page.locator('[data-critical-job-id="verify-cancelled"]');
-    await cancelled.getByRole("button", { name: "Dismiss" }).click();
+    const cancelled = page.locator('[data-download-row="verify-cancelled"]');
+    await cancelled.getByRole("button", { name: /Dismiss/i }).click();
     await cancelled.waitFor({ state: "detached", timeout: 10_000 });
     await quitApp(app);
     app = null;

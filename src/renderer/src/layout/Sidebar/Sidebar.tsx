@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import {
   ArrowCircleUp,
   Circle,
+  DownloadSimple,
   FileText,
   GearSix,
   HardDrives,
@@ -25,7 +26,7 @@ import { Fragment } from "react";
 import yarkLogo from "../../assets/brand/yark-logo.png";
 import classes from "./Sidebar.module.css";
 
-export type Route = "overview" | "clusters" | "backups" | "logs" | "settings";
+export type Route = "overview" | "downloads" | "clusters" | "backups" | "logs" | "settings";
 
 interface NavItem {
   id: Route;
@@ -35,6 +36,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: "overview", label: "Servers", icon: SquaresFour },
+  { id: "downloads", label: "Downloads", icon: DownloadSimple },
   { id: "clusters", label: "Clusters", icon: ShareNetwork },
   { id: "backups", label: "Backups", icon: HardDrives },
   { id: "logs", label: "Logs", icon: FileText },
@@ -57,6 +59,7 @@ interface Props {
   onYarkUpdateClick?: () => void;
   /** Icon-only chrome rail (#107 recipe). */
   iconMode?: boolean;
+  downloadCount?: number;
 }
 
 function officialVersionTooltip(
@@ -165,6 +168,19 @@ export function Sidebar(props: Props): ReactElement {
               aria-label={item.label}
               leftSection={
                 <Icon size={navIconSize} weight={active ? "fill" : "regular"} />
+              }
+              rightSection={
+                !iconMode && item.id === "downloads" && (props.downloadCount ?? 0) > 0 ? (
+                  <Text
+                    component="span"
+                    size="xs"
+                    fw={600}
+                    c="blue"
+                    aria-label={`${props.downloadCount} downloads`}
+                  >
+                    {props.downloadCount}
+                  </Text>
+                ) : undefined
               }
               className={classes.navLink}
               onClick={() => props.onNavigate(item.id)}

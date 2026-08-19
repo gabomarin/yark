@@ -207,6 +207,19 @@ describe("SettingsPage", () => {
     expect(screen.getByText("Download cache")).toBeInTheDocument();
   });
 
+  it("opens the SteamCMD category when focusSteamCmd is set", () => {
+    stubSettingsApi();
+    const onSteamCmdFocused = vi.fn();
+    renderSettings({
+      steamCmdStatus: { ...readyStatus, detected: false, executablePath: null },
+      focusSteamCmd: true,
+      onSteamCmdFocused,
+    });
+
+    expect(document.querySelector("[data-steamcmd-path]")).toBeInTheDocument();
+    expect(onSteamCmdFocused).toHaveBeenCalled();
+  });
+
   it("offers the setup assistant when the parent provides the callback", async () => {
     const user = userEvent.setup();
     const onRunSetupAgain = vi.fn();

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ServerStatus } from "@shared/types";
 import type { ServerUpdateState } from "@shared/server-update-status";
 import {
+  resolveFilesJobAction,
   resolveRestartAction,
   resolveRuntimeAction,
   resolveUpdateAction,
@@ -11,6 +12,7 @@ type Combo = {
   name: string;
   status: ServerStatus;
   steamCmdBusy: boolean;
+  steamCmdOperation?: "install-files" | "update" | "sync-files" | "verify-files" | "install-steamcmd";
   installed: boolean;
   serverEnabled: boolean;
   updateState: ServerUpdateState;
@@ -100,14 +102,36 @@ const combos: Combo[] = [
     expectUpdate: { kind: "update", label: "Update server", disabled: true },
   },
   {
-    name: "steamCmd busy + stopping keeps Cancel",
+    name: "steamCmd busy + stopping keeps Stop disabled",
     status: "stopping",
     steamCmdBusy: true,
     installed: true,
     serverEnabled: true,
     updateState: "available",
-    expectRuntime: { kind: "cancel", disabled: false },
+    expectRuntime: { kind: "stopping", disabled: true },
     expectUpdate: { kind: "update", label: "Update server", disabled: true },
+  },
+  {
+    name: "steamCmd busy update keeps Start locked",
+    status: "stopped",
+    steamCmdBusy: true,
+    steamCmdOperation: "update",
+    installed: true,
+    serverEnabled: true,
+    updateState: "available",
+    expectRuntime: { kind: "start", disabled: true },
+    expectUpdate: { kind: "update", label: "Update server", disabled: true },
+  },
+  {
+    name: "steamCmd busy verify keeps Start locked",
+    status: "stopped",
+    steamCmdBusy: true,
+    steamCmdOperation: "verify-files",
+    installed: true,
+    serverEnabled: true,
+    updateState: "current",
+    expectRuntime: { kind: "start", disabled: true },
+    expectUpdate: { kind: "update", label: "Server is up to date", disabled: true },
   },
 ];
 
@@ -115,6 +139,7 @@ describe("serverCardActionModel combos", () => {
   it.each(combos)("$name", (combo) => {
     const runtime = resolveRuntimeAction({
       steamCmdBusy: combo.steamCmdBusy,
+      steamCmdOperation: combo.steamCmdOperation,
       isInstallationReady: combo.installed,
       status: combo.status,
       serverEnabled: combo.serverEnabled,
@@ -158,5 +183,27 @@ describe("serverCardActionModel combos", () => {
 
     expect(runtime.kind).toBe("start");
     expect(restart.visible).toBe(true);
+  });
+
+  it("puts Pause on the files job action, not Start", () => {
+    const job = resolveFilesJobAction({
+      steamCmdBusy: true,
+      steamCmdOperation: "update",
+    });
+    expect(job).toEqual({ kind: "pause", label: "Pause SteamCMD", color: "yellow" });
+  });
+
+  it("locks Start when a Downloads job is queued", () => {
+    const runtime = resolveRuntimeAction({
+      steamCmdBusy: false,
+      steamCmdQueued: true,
+      isInstallationReady: true,
+      status: "stopped",
+    });
+    expect(runtime.kind).toBe("start");
+    expect(runtime.disabled).toBe(true);
+    expect(resolveFilesJobAction({ steamCmdQueued: true, steamCmdBusy: false })?.kind).toBe(
+      "cancel",
+    );
   });
 });

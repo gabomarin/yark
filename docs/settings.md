@@ -46,7 +46,7 @@ the Server tab / workspace.
 | --- | --- |
 | Close-to-tray, tray toast, Start with Windows | Per-server `autoStart` toggle (Server tab → Startup) |
 | UI density (compact / comfortable) | Theme is **hardcoded dark** (`AppProviders`) — no light/dark control |
-| SteamCMD path + shared caches | Live progress: floating dock + Logs → Updates |
+| SteamCMD path + shared caches | Live progress: **Downloads** page + footer teaser + Logs → Updates |
 | Default create base folder (`localStorage`) | Profile `installDir` (absolute, per server) |
 | App data folder shortcuts | Backup disk-alert thresholds (Backups page modal) |
 | Opted-in auto-start **summary** | Quit-with-servers Stop/Cancel dialog (hardcoded in main; not a Setting) |

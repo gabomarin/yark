@@ -20,6 +20,12 @@ export const screenshots: Screenshot[] = [
       "Servers overview — profiles with map artwork, status, and recent activity in one place.",
   },
   {
+    src: withBase("/screenshots/downloads.png"),
+    alt: "YARK Downloads queue with an active SteamCMD job, queued servers, and a paused install on Windows",
+    caption:
+      "Downloads — SteamCMD install, update, and verify jobs in one queue, with Pause/Resume and a live console.",
+  },
+  {
     src: withBase("/screenshots/setup-assistant.png"),
     alt: "YARK first-run setup assistant showing SteamCMD and the default server-folder controls",
     caption:

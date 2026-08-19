@@ -1241,6 +1241,49 @@ describe("ServerWorkspacePage", () => {
     expect(toggle).toHaveAttribute("title", "Updating server files");
   });
 
+  it("lets Force update replace a queued Verify without unlocking Enable", async () => {
+    const onUpdateNow = vi.fn();
+    render(
+      <AppProviders>
+        <ServerWorkspacePage
+          servers={[serverA]}
+          selectedServerId={serverA.id}
+          statuses={new Map()}
+          installationInfo={new Map()}
+          events={[]}
+          rconHistory={[]}
+          playerList={EMPTY_PLAYER_LIST}
+          filesJobActive
+          filesJobLabel="Queued · Verifying integrity"
+          filesJobOperation="verify-files"
+          filesJobQueueKind="queued"
+          onSelectServer={vi.fn()}
+          onBack={vi.fn()}
+          onStartServer={vi.fn()}
+          onStopServer={vi.fn()}
+          onRestartServer={vi.fn()}
+          onKillServer={vi.fn()}
+          onToggleServerEnabled={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={onUpdateNow}
+          onVerifyFiles={vi.fn()}
+          onSendRcon={vi.fn(async () => true)}
+          {...playerListHandlers}
+          onCopyConfiguration={vi.fn()}
+          onServerUpdated={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("button", { name: "Disable server" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Verify integrity" })).toBeDisabled();
+    const update = screen.getByRole("button", { name: "Force update" });
+    expect(update).toBeEnabled();
+    await userEvent.click(update);
+    expect(onUpdateNow).toHaveBeenCalledWith(serverA.id);
+  });
+
   it("confirms before shell leave discards a dirty Server-tab profile (#299)", async () => {
     const user = userEvent.setup();
     const onLeave = vi.fn();

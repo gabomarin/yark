@@ -64,12 +64,45 @@ export function hasMeaningfulSteamCmdByteProgress(
   );
 }
 
+export type SteamCmdProgressOperation =
+  | "install-steamcmd"
+  | "install-files"
+  | "update"
+  | "sync-files"
+  | "verify-files";
+
+/**
+ * Pause keeps a useful checkpoint for install/update/sync.
+ * Verify is SteamCMD `validate` with no resume; Pause would restart the scan at 0%.
+ */
+export function canPauseSteamCmdOperation(
+  operation: SteamCmdProgressOperation | "pre-update-backup" | "restore" | null | undefined,
+): boolean {
+  return operation === "install-files" || operation === "update" || operation === "sync-files";
+}
+
+export function isRollbackInProgressPhase(phase: string | null | undefined): boolean {
+  return (
+    typeof phase === "string"
+    && phase.startsWith("rollback-")
+    && phase !== "rollback-complete"
+  );
+}
+
+/** Pause is install/update/sync only, and never during an in-progress rollback. */
+export function canPauseSteamCmdJob(
+  operation: SteamCmdProgressOperation | "pre-update-backup" | "restore" | null | undefined,
+  phase?: string | null,
+): boolean {
+  return canPauseSteamCmdOperation(operation) && !isRollbackInProgressPhase(phase);
+}
+
 /**
  * UI noun prefix for byte progress by operation.
  * SteamCMD also reports BytesDownloaded when verifying.
  */
 export function steamCmdByteProgressNoun(
-  operation: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null | undefined,
+  operation: SteamCmdProgressOperation | null | undefined,
 ): string {
   if (operation === "verify-files") {
     return "Checked";
@@ -78,6 +111,19 @@ export function steamCmdByteProgressNoun(
     return "Copied";
   }
   return "Downloaded";
+}
+
+/** Fallback progress-bar title when SteamCMD has not reported a live label. */
+export function steamCmdProgressFallbackLabel(
+  operation: SteamCmdProgressOperation | "pre-update-backup" | "restore" | null | undefined,
+): string {
+  if (operation === "verify-files") return "Verifying";
+  if (operation === "install-files") return "Installing files…";
+  if (operation === "sync-files") return "Copying files…";
+  if (operation === "install-steamcmd") return "Installing SteamCMD…";
+  if (operation === "pre-update-backup") return "Creating backup…";
+  if (operation === "restore") return "Restoring…";
+  return "Updating files…";
 }
 
 function emptyParse(): SteamCmdProgressParse {

@@ -10,6 +10,8 @@ export type RoadmapItem = {
  * Prefer operator-visible product work from open issues (not CI/packaging hygiene).
  * Not a ship promise — keep wording directional. Milestones on GitHub stay authoritative.
  *
+ * Shipped on the Downloads queue branch (#201, not previously listed here): Steam-style
+ * SteamCMD queue page, workspace footer teaser, Pause/Resume, Verify replace.
  * Shipped in v0.13.1 (not previously listed here): sharper getyark.com screenshot WebP,
  * fossil sidebar YARK-update cue.
  * Shipped in v0.13.0 (not previously listed here): Max players, clone folder copy (#160),
@@ -24,10 +26,6 @@ export type RoadmapItem = {
  * incomplete-import opt-in (#283) is shipped with Import — not listed as future work.
  */
 export const roadmapItems: RoadmapItem[] = [
-  {
-    tag: "planned",
-    text: "Steam-style SteamCMD download queue with a persistent workspace footer",
-  },
   {
     tag: "planned",
     text: "Admin whitelist controls on the RCON Players panel",

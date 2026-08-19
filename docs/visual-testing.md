@@ -154,6 +154,7 @@ available. Unset `ELECTRON_RUN_AS_NODE` first (see [AGENTS.md](../AGENTS.md)).
 | `node scripts/visual-setup-wizard.cjs` | Isolated first-run setup assistant at HD / Full HD / QHD |
 | `node scripts/visual-configuration-wizard.cjs` | Configuration wizard Profile / Pace / selected card at HD / Full HD / QHD (#224) |
 | `node scripts/visual-serverform.cjs` | Playwright review of Create ServerForm (empty / filled / cluster) at HD / Full HD / QHD (#292) |
+| `node scripts/visual-downloads.cjs` | Isolated Downloads: Needs attention (boot / cancel / fail / missing SteamCMD / crash) plus happy-path Active/Queued/Paused, Verify replace, and operator cancel → attention; HD / Full HD / QHD (#201) |
 | `node scripts/seed-server-logs.cjs [serverName]` | Clear + seed events/update logs into Electron userData (override with `YARK_USER_DATA`) |
 
 Also: `npm run e2e:smoke` / `npm run e2e` launch the compiled app via Playwright
@@ -186,6 +187,7 @@ for the mandatory three-viewport protocol above unless noted.
 | `visual-backups.cjs` | `npm run build && node scripts/visual-backups.cjs` | HD / Full HD / QHD matrix for workspace Backups; clears `ELECTRON_RUN_AS_NODE`; needs ≥1 server (may create a temp profile) |
 | `visual-logs.cjs` | Prefer `node scripts/seed-server-logs.cjs` first, then `npm run build && node scripts/visual-logs.cjs` | Fleet + server Logs at **1280×720 / 1920×1080 / 2560×1440**; clears `ELECTRON_RUN_AS_NODE` |
 | `visual-overview.cjs` | `npm run build && node scripts/visual-overview.cjs` | Isolated `YARK_E2E_USER_DATA` + SQLite seeds for empty/small/populated; Compact + Comfortable; install-check toolbar cohesion at HD / Full HD / QHD |
+| `visual-downloads.cjs` | `npm run build && node scripts/visual-downloads.cjs` | Two isolated launches (#201). **Needs attention** (no SteamCMD): boot-blocked pending, cancelled, failed retry/dismiss, missing profile, crash/ambiguous, then operator cancel of Paused. **Happy path** (hanging SteamCMD stub): pending leftovers resume to Active on launch; Queued/Paused stay live; SteamCMD bar only on the active job; Install replaces queued Verify with no leftover attention; Cancel download / Cancel SteamCMD *do* move those rows to Needs attention. HD / Full HD / QHD. |
 | `visual-setup-wizard.cjs` | `npm run build && node scripts/visual-setup-wizard.cjs` | Isolated empty fleet; every setup step, suggested cluster folder, scroll, and console errors at HD / Full HD / QHD |
 | `visual-configuration-wizard.cjs` | `npm run build && node scripts/visual-configuration-wizard.cjs` | Isolated workspace Configuration wizard (#224): Profile + Pace, selected card, Compact density, HD / Full HD / QHD |
 | `visual-serverform.cjs` | `npm run build && node scripts/visual-serverform.cjs` | Isolated Create form audit (#292): empty / filled PathField / cluster; HD / Full HD / QHD; no Create server submit |

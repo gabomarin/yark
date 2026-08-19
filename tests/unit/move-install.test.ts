@@ -370,6 +370,7 @@ describe("MoveInstallService", () => {
       if (type === "server_updated") {
         throw new Error("sqlite event write failed");
       }
+      return 1;
     });
 
     await expect(move.moveInstall(source.id, destDir)).rejects.toThrow(

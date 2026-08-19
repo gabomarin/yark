@@ -33,9 +33,12 @@ function createApiMock(): RendererApi {
     openServerNativeTerminal: vi.fn(),
     installSteamCmd: vi.fn(),
     cancelSteamCmd: vi.fn(),
+    pauseSteamCmd: vi.fn(),
     retryCriticalJob: vi.fn(),
     dismissCriticalJob: vi.fn(),
     cancelCriticalJob: vi.fn(),
+    resumeCriticalJob: vi.fn(),
+    reorderCriticalJob: vi.fn(),
     setSteamCmdPath: vi.fn(),
     getSteamCmdStatus: vi.fn().mockResolvedValue({
       ok: true,
@@ -56,6 +59,7 @@ function createApiMock(): RendererApi {
         progressBytesTotal: null,
         lastLine: null,
         queuedCount: 0,
+        criticalJobs: [],
         checkedAt: "2026-07-24T00:00:00.000Z",
       },
     }),
@@ -454,6 +458,7 @@ describe("App SteamCMD sync-files UX (#48)", () => {
       progressBytesTotal: null,
       lastLine: null,
       queuedCount: 0,
+      criticalJobs: [],
       checkedAt: "2026-07-27T12:00:00.000Z",
     };
     let currentStatus: Record<string, unknown> = { ...idleStatus };
@@ -511,7 +516,7 @@ describe("App SteamCMD sync-files UX (#48)", () => {
       },
     });
 
-    expect(await screen.findByText(/Copying files to the server/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Copying files to server/i)).toBeInTheDocument();
     expect(screen.queryByText(/0\.0\s*\/\s*0\.0\s*MB/i)).not.toBeInTheDocument();
 
     vi.mocked(api.getInstallationInfo).mockClear();

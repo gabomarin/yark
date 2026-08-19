@@ -1,15 +1,28 @@
 import type { ServerStatus } from "@shared/types";
 import type { ServerUpdateState } from "@shared/server-update-status";
+import {
+  canPauseSteamCmdOperation,
+  type SteamCmdProgressOperation,
+} from "@shared/steamcmd-progress";
 
-/** Runtime control: Play / Pause / Cancel (leading slot). Hidden when not installed. */
+/** Runtime control: Play / Stop (leading slot). Hidden when not installed. */
 export type ServerCardRuntimeAction = {
-  kind: "cancel" | "enable" | "start" | "stop" | "starting" | "stopping";
+  kind: "enable" | "start" | "stop" | "starting" | "stopping";
   label: string;
   color: string;
   variant: "filled" | "light";
   disabled: boolean;
+  /** Tooltip when it differs from the button label (e.g. why Start is locked). */
+  hint?: string;
   /** False reserves the Play slot (e.g. not installed — Install sits beside kebab). */
   visible: boolean;
+};
+
+/** Pause / Resume / Cancel for the SteamCMD job — lives on the progress bar. */
+export type ServerCardFilesJobAction = {
+  kind: "pause" | "cancel" | "resume";
+  label: string;
+  color: string;
 };
 
 /** Restart icon beside Play/Pause (enabled only while running). */
@@ -36,6 +49,8 @@ export type ServerCardUpdateAction = {
 export type ServerCardPrimaryAction = {
   kind:
     | "cancel"
+    | "pause"
+    | "resume"
     | "enable"
     | "install"
     | "manage"
@@ -52,18 +67,52 @@ export type ServerCardPrimaryAction = {
 
 export function resolveRuntimeAction(input: {
   steamCmdBusy: boolean;
+  steamCmdPaused?: boolean;
+  steamCmdQueued?: boolean;
+  steamCmdOperation?: SteamCmdProgressOperation | null;
   isInstallationReady: boolean;
   status: ServerStatus;
   serverEnabled?: boolean;
 }): ServerCardRuntimeAction {
   const serverEnabled = input.serverEnabled ?? true;
-  if (input.steamCmdBusy) {
+  const filesLocked =
+    input.steamCmdBusy || input.steamCmdPaused === true || input.steamCmdQueued === true;
+  const filesLockHint = input.steamCmdQueued === true
+    ? "A Downloads job is queued for this server"
+    : input.steamCmdPaused === true
+      ? "Resume the download before starting this server"
+      : input.steamCmdBusy
+        ? "Wait until SteamCMD finishes this server"
+        : undefined;
+
+  if (filesLocked) {
+    if (input.status === "running" || input.status === "starting") {
+      return {
+        kind: "stop",
+        label: "Stop server",
+        color: "gray",
+        variant: "light",
+        disabled: false,
+        visible: true,
+      };
+    }
+    if (input.status === "stopping") {
+      return {
+        kind: "stopping",
+        label: "Stopping…",
+        color: "gray",
+        variant: "light",
+        disabled: true,
+        visible: true,
+      };
+    }
     return {
-      kind: "cancel",
-      label: "Cancel",
-      color: "red",
+      kind: "start",
+      label: "Start server",
+      color: "teal",
       variant: "light",
-      disabled: false,
+      disabled: true,
+      hint: filesLockHint,
       visible: true,
     };
   }
@@ -128,6 +177,27 @@ export function resolveRuntimeAction(input: {
     disabled: false,
     visible: true,
   };
+}
+
+export function resolveFilesJobAction(input: {
+  steamCmdBusy: boolean;
+  steamCmdPaused?: boolean;
+  steamCmdQueued?: boolean;
+  steamCmdOperation?: SteamCmdProgressOperation | null;
+}): ServerCardFilesJobAction | null {
+  if (input.steamCmdBusy) {
+    if (canPauseSteamCmdOperation(input.steamCmdOperation)) {
+      return { kind: "pause", label: "Pause SteamCMD", color: "yellow" };
+    }
+    return { kind: "cancel", label: "Cancel SteamCMD", color: "red" };
+  }
+  if (input.steamCmdPaused === true) {
+    return { kind: "resume", label: "Resume download", color: "teal" };
+  }
+  if (input.steamCmdQueued === true) {
+    return { kind: "cancel", label: "Remove from queue", color: "red" };
+  }
+  return null;
 }
 
 export function resolveRestartAction(input: {

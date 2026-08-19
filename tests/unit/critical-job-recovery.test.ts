@@ -82,6 +82,30 @@ describe("critical job restart recovery", () => {
       .toEqual(["dismiss"]);
   });
 
+  it("keeps a paused job paused across restart and offers resume", () => {
+    const recovered = migrateCriticalJob<DurableCriticalJob>(
+      {
+        ...interruptedJob("update", "applying-files"),
+        status: "paused",
+        recoveryReason: "Paused by the operator. Resume to continue.",
+      },
+      {
+        type: "update",
+        serverId: "server-1",
+        defaultPhase: "queued",
+        interruptedIsAmbiguous: true,
+        serverExists: true,
+      },
+    );
+
+    expect(recovered.status).toBe("paused");
+    expect(nextActionsForStatus(recovered.status)).toEqual(["resume", "cancel"]);
+  });
+
+  it("offers Retry and Dismiss for cancelled jobs", () => {
+    expect(nextActionsForStatus("cancelled")).toEqual(["retry", "dismiss"]);
+  });
+
   it("does not classify validation, security, missing-profile, or cancellation errors as transient", () => {
     expect(isTransientCriticalJobError(new Error("Server does not exist"))).toBe(false);
     expect(isTransientCriticalJobError(new Error("Unsafe traversal entry"))).toBe(false);

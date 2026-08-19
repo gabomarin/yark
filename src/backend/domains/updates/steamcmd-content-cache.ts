@@ -11,8 +11,12 @@ import type { SteamCmdCacheKind } from "../../../shared/types";
 import {
   DEFAULT_ROBOCOPY_THREADS,
   isOperationCancelledError,
+  isOperationPausedError,
   isRobocopySuccess,
   OperationCancelledError,
+  OperationPausedError,
+  OperationPauseUnavailableError,
+  isOperationPauseUnavailableError,
   robocopyTree,
 } from "./robocopy-tree";
 
@@ -29,7 +33,11 @@ export const CONTENT_CACHE_FRESH_MS = 15 * 60 * 1000;
 
 export {
   OperationCancelledError,
+  OperationPausedError,
+  OperationPauseUnavailableError,
   isOperationCancelledError,
+  isOperationPausedError,
+  isOperationPauseUnavailableError,
   isRobocopySuccess,
 };
 

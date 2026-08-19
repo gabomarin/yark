@@ -67,7 +67,7 @@ cloud hosting service, an ARK game launcher, or an official Studio Wildcard prod
 | --- | --- |
 | Server profiles | Create, clone, enable, disable, and manage multiple servers with independent paths, maps, ports, access settings, mods, and cluster fields. **Import install** adopts an existing ASA folder (ready by default; incomplete with opt-in). |
 | Lifecycle | Start, stop, restart, and force-close exact managed processes; readiness waits for RCON instead of assuming a spawned process is healthy. **Remove from YARK only** keeps the install folder, or wipe everything on delete. |
-| SteamCMD | Install, update, and verify ASA server files using a shared content cache and per-server operation history. |
+| SteamCMD | Install, update, and verify ASA server files using a shared content cache; **Downloads** queues those jobs with Pause/Resume and a live console. |
 | Safe maintenance | Coordinate stop, recovery backups, update/verify work, conditional restart, and rollback through locked backend operations. |
 | Backups | Create, restore, export, and import world / INI archives; player join/leave archives; schedule world backups and inspect fleet health. |
 | Configuration | Edit `GameUserSettings.ini` and `Game.ini` through visual and raw editors, with a guided configuration wizard. |
@@ -86,6 +86,11 @@ cloud hosting service, an ARK game launcher, or an official Studio Wildcard prod
 | --- | --- |
 | ![CurseForge mods workspace](website/public/screenshots/workspace-mods.png) | ![Backup operations](website/public/screenshots/backups.png) |
 | Per-server Project IDs, metadata, and enable/disable state. | Fleet health, destinations, schedules, and export/import across servers. |
+
+| Downloads queue | Clusters |
+| --- | --- |
+| ![SteamCMD Downloads queue](website/public/screenshots/downloads.png) | ![Clusters page](website/public/screenshots/clusters.png) |
+| Active, queued, and paused SteamCMD jobs with Pause/Resume. | Cluster membership, INI templates, and shared directory compliance. |
 
 More screenshots are available on the [project website](https://getyark.com/#screenshots).
 

@@ -22,15 +22,22 @@ import { resolveDisplayedServerVersion } from "@shared/server-version-display";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { MetaRow } from "@ui/MetaRow/MetaRow";
 import { serverRuntimeStatusLabel } from "@ui/ServerRuntimeStatusBadge/serverRuntimeStatus";
+import {
+  canEnqueueFilesJobFromMenu,
+  filesQueueKindToStatus,
+  isFilesJobOperation,
+} from "@shared/files-job-priority";
 import classes from "./SidePanel.module.css";
 
 interface Props {
   server: ServerProfile;
   runtime: ServerRuntimeInfo | null;
   installation: ServerInstallationInfo | null;
-  /** SteamCMD files job in progress — blocks install/update/verify. */
+  /** SteamCMD files job in progress — blocks install/update/verify unless a stronger job can replace a queued one. */
   opsLocked?: boolean;
   opsLockReason?: string;
+  filesJobOperation?: "install-files" | "update" | "verify-files" | null;
+  filesJobQueueKind?: "active" | "paused" | "queued" | null;
   onOpenFolder: () => void;
   onInstallFiles: () => void;
   onUpdateNow: () => void;
@@ -45,21 +52,42 @@ export function SidePanel(props: Props): ReactElement {
   const status = props.runtime?.status ?? "stopped";
   const isActive = status === "starting" || status === "running" || status === "stopping";
   const steamCmdBusy = props.opsLocked === true;
-  const installLocked = steamCmdBusy || isActive;
-  const updateLocked = steamCmdBusy || isActive;
-  const verifyLocked = steamCmdBusy;
+  const filesOccupant =
+    isFilesJobOperation(props.filesJobOperation)
+    && props.filesJobQueueKind != null
+      ? {
+          id: "workspace",
+          operation: props.filesJobOperation,
+          status: filesQueueKindToStatus(props.filesJobQueueKind),
+        }
+      : null;
+  const lockAllFileOps = steamCmdBusy && filesOccupant === null;
+  const installLocked =
+    isActive
+    || lockAllFileOps
+    || !canEnqueueFilesJobFromMenu("install-files", filesOccupant);
+  const updateLocked =
+    isActive
+    || lockAllFileOps
+    || !canEnqueueFilesJobFromMenu("update", filesOccupant);
+  const verifyLocked =
+    lockAllFileOps || !canEnqueueFilesJobFromMenu("verify-files", filesOccupant);
   const steamCmdLockTitle = props.opsLockReason;
-  const installLockTitle =
-    steamCmdLockTitle ??
-    (isActive ? "Stop the server before installing files" : undefined);
-  const updateLockTitle =
-    steamCmdLockTitle ??
-    (isActive ? "Stop the server before updating files" : undefined);
-  const verifyLockTitle =
-    steamCmdLockTitle ??
-    (isActive
+  const installLockTitle = installLocked
+    ? steamCmdLockTitle ?? (isActive ? "Stop the server before installing files" : undefined)
+    : isActive
+      ? "Stop the server before installing files"
+      : undefined;
+  const updateLockTitle = updateLocked
+    ? steamCmdLockTitle ?? (isActive ? "Stop the server before updating files" : undefined)
+    : isActive
+      ? "Stop the server before updating files"
+      : undefined;
+  const verifyLockTitle = verifyLocked
+    ? steamCmdLockTitle ?? undefined
+    : isActive
       ? "The server will stop for this check, then restart if it succeeds"
-      : undefined);
+      : undefined;
   const filesReady = isInstallationReady(props.installation);
   const canOfferInstall = isInstallOfferHealth(props.installation?.health);
   const toggleDisabled =

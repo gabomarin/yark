@@ -9,6 +9,7 @@ export type SpotlightRecentEntry =
 
 const NAV_ROUTES = new Set<Route>([
   "overview",
+  "downloads",
   "clusters",
   "backups",
   "logs",

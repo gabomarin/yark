@@ -10,6 +10,7 @@ export interface DurableCriticalJob {
   id: string;
   type: CriticalJobOperation;
   serverId: string;
+  latestEventId?: number | null;
   attempts: number;
   maxAttempts: number;
   status: CriticalJobStatus;
@@ -45,7 +46,8 @@ export function nextActionsForStatus(
     return operatorRetryAllowed ? ["retry", "dismiss"] : ["dismiss"];
   }
   if (status === "pending" || status === "retrying") return ["cancel"];
-  if (status === "cancelled") return ["dismiss"];
+  if (status === "paused") return ["resume", "cancel"];
+  if (status === "cancelled") return ["retry", "dismiss"];
   return [];
 }
 
@@ -58,6 +60,7 @@ export function toCriticalJobSummary(
     operation: job.type,
     serverId: job.serverId,
     serverName,
+    eventId: job.latestEventId ?? null,
     status: job.status,
     phase: job.phase,
     attempts: job.attempts,
@@ -95,6 +98,7 @@ export function migrateCriticalJob<T extends DurableCriticalJob>(
   let status: CriticalJobStatus =
     priorStatus === "pending"
     || priorStatus === "retrying"
+    || priorStatus === "paused"
     || priorStatus === "blocked"
     || priorStatus === "failed"
     || priorStatus === "cancelled"
@@ -118,6 +122,10 @@ export function migrateCriticalJob<T extends DurableCriticalJob>(
     id: typeof raw.id === "string" ? raw.id : randomUUID(),
     type: options.type,
     serverId: options.serverId,
+    latestEventId:
+      typeof raw.latestEventId === "number" && Number.isFinite(raw.latestEventId)
+        ? raw.latestEventId
+        : null,
     attempts: Number.isFinite(raw.attempts) ? Math.max(0, Math.floor(raw.attempts!)) : 0,
     maxAttempts: Number.isFinite(raw.maxAttempts)
       ? Math.max(1, Math.floor(raw.maxAttempts!))

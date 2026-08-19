@@ -24,7 +24,7 @@ ASA Steam app id: **`2430930`**.
 | Availability compare (`buildid` only) | `src/shared/server-update-status.ts` |
 | Contracts | `src/shared/ipc.ts`, `src/shared/types.ts`, `src/shared/steamcmd-progress.ts` |
 | IPC | `src/main/ipc-handlers.ts`, `src/preload/index.ts` |
-| UI | `src/renderer/src/features/settings/*` (path/install), `steamcmd` progress dock, Overview cards, workspace SidePanel |
+| UI | `src/renderer/src/features/settings/*` (path/install), Downloads page, Overview cards, workspace SidePanel |
 
 ## Two caches (next to SteamCMD)
 
@@ -145,25 +145,34 @@ Requires a display and `ELECTRON_RUN_AS_NODE` unset. Fixtures under `C:\asa-e2e`
 | `steamcmd:status` | Path, caches, busy/progress/queue |
 | `steamcmd:console` | In-memory console lines (`limit`, default 200) |
 | `steamcmd:install` | Download/extract/validate SteamCMD (PowerShell + steamcdn zip) |
-| `steamcmd:cancel` | Kill active SteamCMD/sync; drain related work |
+| `steamcmd:cancel` | Kill the active SteamCMD/sync process; queued Downloads jobs stay queued and run next |
+| `steamcmd:pause` | Stop the active install/update/sync and keep the job checkpointed for Resume. Verify and SteamCMD self-install cannot pause (see below). |
 | `steamcmd:set-path` | Validate + persist `steamcmd.exe`; resets content-cache freshness |
 | `steamcmd:open-cache` | Open depot or ASA content cache folder in Explorer |
 | `steamcmd:clear-cache` | Empty depot or ASA content cache (blocked while busy) |
 | `logs:read-update` / `logs:open-update-file` / `logs:delete-update` / `logs:clear-updates` | Per-server update log files |
 | **Push** `push:steamcmd-progress` | Live `{ status, console }` while ops run |
 
-UI entry points: sidebar **SteamCMD** page + floating progress dock; Overview install/update/verify; workspace SidePanel; onboarding “Install files”. Update requires a stopped server. Verify stays enabled while running (tooltip explains auto-stop); both lock while SteamCMD is busy or a stop+backup is in progress.
+UI entry points: **Downloads** page (queue + live console) + Overview / workspace install/update/verify; onboarding “Install files”. Update requires a stopped server. Verify stays enabled while running (tooltip explains auto-stop). Start stays locked while a files job is queued or active. **Update** / **Install** can replace a queued **Verify** for the same server (toast: replaced in the queue — no Needs attention leftover). A running Verify is not cancelled; the operator must cancel it first or wait. Verify on top of Update/Install is refused (“already in Downloads”). Duplicate clicks of the same operation toast “Already in Downloads”. The Overview card shows a queued or busy progress strip.
+
+**Pause** is for install, update, and file copy. Verify is SteamCMD `app_update … validate` with no resume checkpoint, so the UI offers **Cancel** instead — pausing and resuming would restart the scan at 0%. Pause during an in-progress rollback is refused (yellow toast) instead of cancelling. On Downloads, Pause/Cancel for the **selected active job** sit in a **SteamCMD process** bar above that job’s console. Queued jobs cancel from the row (they do not show the live SteamCMD bar or a second Remove from queue in the detail). Cancel stops only the active SteamCMD job; other queued Downloads rows stay queued and start after unwind. Cancelled jobs stay visible under Needs attention with **Retry** and **Dismiss**. Retry re-queues that job. Clicking Install, Update, or Verify again also replaces a cancelled leftover of the same type. Failed or blocked jobs still need Retry or Dismiss on Downloads.
+
+Queued install/update/verify rows can **Move up in queue** / **Move down in queue**. The displayed queue order is the execution order; those rows slide past each other when you reorder. Arrows hide when only one queued files job exists.
+
+If SteamCMD is not installed, Install/Update/Verify **do not queue**. Pending leftovers from a previous session **block** with Retry so they cannot fail into pre-update backup leftovers. When SteamCMD **is** ready, those pending leftovers **resume on launch** (first queued job becomes Active). Retry, Resume, and a later Install/Update/Verify probe disk again after that miss so a SteamCMD install in the same session is not stuck. Retry and Resume keep the current job and tell the operator to install SteamCMD in Settings first. Downloads shows a banner with **Install SteamCMD** (opens the Settings SteamCMD category).
+
+The detail console is the **active** SteamCMD job. Selecting a paused, queued, or needs-attention row shows that job’s reason instead of another job’s log. **Open in Logs** follows the selected row.
 
 ## Progress
 
-Live progress combines SteamCMD stdout `%` lines with disk estimates (`steamcmd-disk-progress.ts`: depot/downloading sizes under `force_install_dir`). The floating progress dock (and per-server Logs → Updates history) subscribe to `push:steamcmd-progress`. SteamCMD path/install live under **Settings**; cache folders are shown there as read-only paths with Open / Clear (blocked while a job runs).
+Live progress combines SteamCMD stdout `%` lines with disk estimates (`steamcmd-disk-progress.ts`: depot/downloading sizes under `force_install_dir`). The Downloads page (and per-server Logs → Updates history) subscribe to `push:steamcmd-progress`. SteamCMD path/install live under **Settings**; cache folders are shown there as read-only paths with Open / Clear (blocked while a job runs).
 
-**Safe update** also writes dock console lines during the silent-looking pre-update backup phase (world / players / INI packaging and zip), so the dock should not sit on “Waiting for progress…” until SteamCMD starts. Cancel during that phase aborts backup critical jobs between kinds and skips rollback restore when SteamCMD never changed game files.
+**Safe update** also writes Downloads console lines during the silent-looking pre-update backup phase (world / players / INI packaging and zip), so the console should not sit on “Waiting for progress…” until SteamCMD starts. Cancel during that phase aborts backup critical jobs between kinds and skips rollback restore when SteamCMD never changed game files.
 
 Update controls are disabled while the server is active in Overview cards and the
 workspace SidePanel. Verify remains enabled while running; its tooltip explains that
 the manager will auto-stop for SteamCMD and restart only if the server was running.
-Byte/`%` detail belongs in the progress dock, not in those lock tooltips.
+Byte/`%` detail belongs on the Downloads page, not in those lock tooltips.
 
 Spawns always pass `-language english` (plus `LANG`/`LC_ALL` env) so bootstrapper lines stay English for a single-language parser. SteamCMD otherwise follows the Windows UI language (e.g. Spanish “Descargando archivos…”). Bracket `[ N%]` still updates the percent even if OS localizes; labels/KB pairs are English-only.
 
@@ -178,11 +187,11 @@ Creating or importing a **profile** does not require SteamCMD. The record
 
 **Install files**, **Update**, and **Verify** do. Discovery order: Settings
 `steamcmdPath`, `STEAMCMD_PATH`, YARK’s bundled SteamCMD dir, well-known
-install paths, then `where.exe steamcmd.exe`. If none exist, YARK still tries
-to spawn `steamcmd.exe`; spawn fails and the operator sees **Install failed**
-(or Update/Verify failed) with *Could not run SteamCMD… Install or configure
-it.* The profile is unchanged. Choose a path or **Install SteamCMD** in
-Settings (or first-run setup), then retry.
+install paths, then `where.exe steamcmd.exe`. If none exist, queued file jobs
+**block** with Retry instead of starting SteamCMD or a pre-update backup.
+Pending leftovers resume on launch when that probe finds `steamcmd.exe`. Install
+SteamCMD in Settings (or first-run setup), then Retry — or click
+Install/Update/Verify again after SteamCMD is ready.
 
 The Overview / workspace **Install files** action is offered from install
 health (files missing), not from SteamCMD **Ready**. First-run lets the
@@ -205,7 +214,7 @@ operator continue while SteamCMD is still installing.
 | Console in Spanish / stuck `0.0%` while `[ N%]` lines scroll | SteamCMD bootstrapper follows Windows UI language. We force `-language english`; percent still reads from `[ N%]`. Restart the update after this build. |
 | World/INI wiped after update | Should not happen via robocopy path (`ShooterGame\Saved` excluded); check whether fallback direct `app_update` on install dir was used (console mentions cache sync failure) |
 | Console stuck on “Waiting for progress…” during Update | Older builds were silent while zipping pre-update backups (large imported worlds take minutes). Current builds log backup kinds; Cancel aborts that phase without a fake rollback |
-| Job stuck after crash | Queue persisted in settings `criticalJobsQueue.v1`; resumes on next launch |
+| Job stuck after crash | Queue persisted in settings `criticalJobsQueue.v1`; pending jobs resume on next launch when SteamCMD is ready |
 | Install failed: *Could not run SteamCMD* | `steamcmd.exe` not found — Choose a path or **Install SteamCMD** in Settings, then retry. Creating the profile itself does not need SteamCMD. |
 
 ## Real-host validation (Windows)

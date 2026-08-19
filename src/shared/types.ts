@@ -249,17 +249,19 @@ export type CriticalJobStatus =
   | "pending"
   | "running"
   | "retrying"
+  | "paused"
   | "blocked"
   | "failed"
   | "cancelled";
 
-export type CriticalJobNextAction = "retry" | "dismiss" | "cancel";
+export type CriticalJobNextAction = "retry" | "dismiss" | "cancel" | "resume";
 
 export interface CriticalJobSummary {
   id: string;
   operation: CriticalJobOperation;
   serverId: string;
   serverName?: string | null;
+  eventId?: number | null;
   status: CriticalJobStatus;
   phase: string;
   attempts: number;

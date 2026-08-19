@@ -86,6 +86,7 @@ modals, workspace tabs, PathFields):
 | RCON console | `e2e:rcon` |
 | Clusters membership | `e2e:clusters-membership` |
 | Copy configuration | `e2e:copy-configuration` |
+| Downloads queue / critical-job recovery | `e2e:critical-job-recovery`, `node scripts/visual-downloads.cjs` |
 | Log retention (Settings → Logs) | `e2e:log-retention` |
 
 Cursor rule: [`.cursor/rules/e2e-ui.mdc`](../.cursor/rules/e2e-ui.mdc).

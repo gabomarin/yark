@@ -23,8 +23,9 @@ export const faqItems: FaqItem[] = [
     answerHtml: `
       <p>
         YARK is a Windows desktop app for managing <strong>local</strong>
-        ARK: Survival Ascended dedicated servers — profiles, SteamCMD install/update,
-        CurseForge mod IDs, backups, logs, clusters, and INI configuration in one place.
+        ARK: Survival Ascended dedicated servers — profiles, SteamCMD install/update
+        on the <strong>Downloads</strong> queue, CurseForge mod IDs, backups, logs,
+        clusters, and INI configuration in one place.
       </p>`,
   },
   {

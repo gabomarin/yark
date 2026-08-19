@@ -321,7 +321,7 @@ line (#234).
 ## Still feature-local (by design)
 
 - `ServerCard` product chrome (status rail clip-path)
-- SteamCMD floating dock elevation behavior
+- Downloads queue / footer teaser elevation
 - Settings SteamCMD path row (`ReadonlyPath` + Choose… + Install CTA; not `PathField`)
 - Server workspace 3-column shell / INI editor tables
 - Domain empty **content** — wrap with shared EmptyState shell
