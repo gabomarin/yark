@@ -35,6 +35,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Overview **Update All** preview drops the green **Queue** badge on eligible servers; **Skip** stays on blocked rows (#378).
 - Overview **Update All** server list uses native overflow so scrollbar arrows do not show when everything fits (#378).
 - Overview **Update All** confirm button label is **Accept** (#378).
+- Restart-interrupted Downloads jobs keep the last SteamCMD console output visible until Retry (#378).
 - Queued Downloads rows show the operation only (e.g. **Updating server**), not internal checkpoint phases like pre-update backup (#201).
 - **Pre-update backup** no longer appears as a duplicate Downloads row during safe updates; cancelled shadow jobs are purged on load (#201).
 

@@ -272,7 +272,10 @@ export function downloadConsoleBody(
   lines: string[],
 ): string {
   const showConsole = rows.some(
-    (row) => row.kind === "active" || row.kind === "paused",
+    (row) =>
+      row.kind === "active"
+      || row.kind === "paused"
+      || row.kind === "interrupted",
   );
   if (!showConsole) {
     return "";
@@ -309,6 +312,10 @@ export function queuedJobDetailHint(
     return "Runs next when SteamCMD is free.";
   }
   const previous = queued[index - 1]!;
+  const interrupted = rows.find((row) => row.kind === "interrupted");
+  if (interrupted !== undefined) {
+    return `Runs after ${interrupted.serverName} is retried and ${previous.serverName} finishes.`;
+  }
   return `Runs after ${previous.serverName} finishes.`;
 }
 

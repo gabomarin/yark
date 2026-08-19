@@ -235,6 +235,38 @@ describe("downloadsModel", () => {
     );
   });
 
+  it("mentions Retry when a restart-interrupted job blocks later queued work", () => {
+    const interrupted = {
+      id: "job-interrupted",
+      kind: "interrupted" as const,
+      serverName: "Genesis",
+    };
+    const firstQueued = {
+      id: "q1",
+      kind: "queued" as const,
+      serverName: "LostColony",
+      reorderable: true,
+    };
+    const secondQueued = {
+      id: "q2",
+      kind: "queued" as const,
+      serverName: "Extinction",
+      reorderable: true,
+    };
+    const rows = [
+      interrupted,
+      firstQueued,
+      secondQueued,
+    ] as DownloadRow[];
+
+    expect(queuedJobDetailHint(firstQueued as DownloadRow, rows)).toMatch(
+      /Genesis is retried/i,
+    );
+    expect(queuedJobDetailHint(secondQueued as DownloadRow, rows)).toMatch(
+      /Genesis is retried and LostColony finishes/i,
+    );
+  });
+
   it("shows SteamCMD output while a job is active or paused", () => {
     const active = { id: "live", kind: "active" as const };
     const paused = { id: "p1", kind: "paused" as const };
@@ -249,6 +281,12 @@ describe("downloadsModel", () => {
     expect(
       downloadConsoleBody([paused as DownloadRow], ["paused output"]),
     ).toBe("paused output");
+    expect(
+      downloadConsoleBody(
+        [{ id: "i1", kind: "interrupted" as const } as DownloadRow],
+        ["last steamcmd line"],
+      ),
+    ).toBe("last steamcmd line");
     expect(
       downloadConsoleBody(
         [active as DownloadRow, queued as DownloadRow],

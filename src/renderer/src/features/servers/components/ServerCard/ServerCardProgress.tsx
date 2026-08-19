@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement } from "react";
 import { Group, Progress, Stack, Text, UnstyledButton } from "@mantine/core";
 import { byteProgressLineIsRedundant } from "@shared/byte-progress-display";
 import classes from "./ServerCard.module.css";
@@ -10,8 +10,6 @@ interface Props {
   steamCmdProgressPercent: number | null;
   showProgressBar?: boolean;
   onOpenDownloads?: () => void;
-  /** Live SteamCMD Pause/Cancel — rendered beside the progress track (Downloads detail). */
-  processAction?: ReactNode;
 }
 
 function ProgressLabel({
@@ -51,7 +49,6 @@ export function ServerCardProgress({
   steamCmdProgressPercent,
   showProgressBar = true,
   onOpenDownloads,
-  processAction,
 }: Props): ReactElement {
   const label = (
     <ProgressLabel shortProgressLabel={shortProgressLabel} onOpenDownloads={onOpenDownloads} />
@@ -90,13 +87,7 @@ export function ServerCardProgress({
           </Text>
         )}
       </Group>
-      <Group
-        gap="xs"
-        wrap="nowrap"
-        align="center"
-        w="100%"
-        {...(processAction !== undefined ? { "data-download-live-action": true } : {})}
-      >
+      <Group gap="xs" wrap="nowrap" align="center" w="100%">
         <Progress
           value={steamCmdProgressPercent ?? 12}
           animated={steamCmdProgressPercent === null}
@@ -105,7 +96,6 @@ export function ServerCardProgress({
           radius="xl"
           style={{ flex: 1, minWidth: 0 }}
         />
-        {processAction}
       </Group>
     </Stack>
   );

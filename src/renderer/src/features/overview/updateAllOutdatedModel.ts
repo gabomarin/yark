@@ -125,9 +125,7 @@ export function buildUpdateAllOutdatedPlan(input: {
       skipReason = "disabled";
     } else if (!isInstallationReady(installation)) {
       skipReason = "install-not-ready";
-    } else if (
-      getServerUpdateState(installation, input.officialSteamBuild) === "unknown"
-    ) {
+    } else if (updateState === "unknown") {
       skipReason = "update-unknown";
     } else if (status !== null && ACTIVE_SERVER_STATUSES.has(status)) {
       skipReason = "server-running";
@@ -230,7 +228,7 @@ export function summarizeUpdateAllOutdatedQueue(input: {
       input.queuedCount + input.replacedCount === 1
         ? "Update queued"
         : "Updates queued",
-    message: `${parts.join(". ")}. Jobs run one at a time through Downloads.`,
+    message: `${parts.join(". ")}. Jobs run one at a time through Downloads. Jobs that cannot start yet (for example missing SteamCMD) show as blocked with Retry.`,
     color: input.failedCount > 0 ? "orange" : "blue",
   };
 }
