@@ -31,9 +31,30 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["tests/**/*.test.ts", "src/renderer/src/**/*.test.tsx"],
-    environment: "jsdom",
-    setupFiles: [resolve(__dirname, "src/renderer/src/test/setup.ts")],
-    // `*.png` / static assets are resolved to URL strings by Vite (no Jest fileMock).
+    // Backend/unit files do not need jsdom or the Mantine/React setup file.
+    // A few tests/ files opt into jsdom with `// @vitest-environment jsdom`
+    // (legacy localStorage). Renderer suites stay on jsdom (#281).
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "node",
+          include: ["tests/**/*.test.ts"],
+          environment: "node",
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "renderer",
+          include: [
+            "src/renderer/src/**/*.test.ts",
+            "src/renderer/src/**/*.test.tsx",
+          ],
+          environment: "jsdom",
+          setupFiles: [resolve(__dirname, "src/renderer/src/test/setup.ts")],
+        },
+      },
+    ],
   },
 });

@@ -1,10 +1,10 @@
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import { notifications } from "@mantine/notifications";
 import { formatPlayerSessionNotes } from "@shared/backup-player-meta";
 import type { BackupRecord, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import { setupUser } from "@renderer/test/setupUser";
 import { ServerBackupPanel } from "./ServerBackupPanel";
 
 const server: ServerProfile = {
@@ -120,7 +120,7 @@ function renderPanel(list: BackupRecord[] = [worldBackup, playersBackup, aliceBa
   );
 }
 
-async function collapseSettings(user: ReturnType<typeof userEvent.setup>): Promise<void> {
+async function collapseSettings(user: ReturnType<typeof setupUser>): Promise<void> {
   const toggle = await screen.findByRole("button", {
     name: /World destination & schedule|Player retention|INI retention/i,
   });
@@ -222,7 +222,7 @@ describe("ServerBackupPanel", () => {
   });
 
   it("locks create and restore when installation is not Ready", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     render(
       <AppProviders>
         <ServerBackupPanel
@@ -259,7 +259,7 @@ describe("ServerBackupPanel", () => {
   });
 
   it("opens kind settings by default and can collapse to a summary", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderPanel();
 
     expect(await screen.findByText(/World destination & schedule/i)).toBeInTheDocument();
@@ -292,7 +292,7 @@ describe("ServerBackupPanel", () => {
   });
 
   it("autosaves policy changes after edits", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderPanel();
 
     const retain = await screen.findByLabelText(/^Keep last \(per map\)$/i);
@@ -307,7 +307,7 @@ describe("ServerBackupPanel", () => {
     });
   });
   it("shows kind subtabs and filters history to the active kind", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderPanel();
 
     expect(await screen.findByRole("tab", { name: "World save" })).toHaveAttribute(
@@ -339,7 +339,7 @@ describe("ServerBackupPanel", () => {
   });
 
   it("copies backup details to the clipboard", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
@@ -364,7 +364,7 @@ describe("ServerBackupPanel", () => {
   });
 
   it("creates a backup for the active kind only and toasts completion", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
     renderPanel();
 
@@ -398,7 +398,7 @@ describe("ServerBackupPanel", () => {
   });
 
   it("scopes selection to the active kind subtab", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderPanel();
 
     expect(await screen.findByRole("button", { name: /Open folder C:\/backups\/world/i })).toBeInTheDocument();
@@ -412,7 +412,7 @@ describe("ServerBackupPanel", () => {
   });
 
   it("clears hidden selections when current-map filtering is enabled", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     const otherMap: BackupRecord = {
       ...worldBackup,
       id: "bk-other-map",
@@ -435,7 +435,7 @@ describe("ServerBackupPanel", () => {
   });
 
   it("clears failed rows through the unpaginated backend operation", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderPanel();
 
     await user.click(await screen.findByRole("button", { name: "Clear failed" }));
@@ -449,7 +449,7 @@ describe("ServerBackupPanel", () => {
   });
 
   it("lists player names and supports search", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderPanel();
 
     await user.click(await screen.findByRole("tab", { name: "Player profiles" }));
@@ -470,7 +470,7 @@ describe("ServerBackupPanel", () => {
   });
 
   it("sorts player backups by finish time via the Date column", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     const startedFirstFinishedLast: BackupRecord = {
       id: "bk-long",
       serverId: "srv-1",
@@ -508,7 +508,7 @@ describe("ServerBackupPanel", () => {
   });
 
   it("preserves unsaved policy edits across quiet backups-changed refresh", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     let pushHandler: ((payload: { serverId: string }) => void) | undefined;
     (window.api.onBackupsChanged as ReturnType<typeof vi.fn>).mockImplementation(
       (handler: (payload: { serverId: string }) => void) => {

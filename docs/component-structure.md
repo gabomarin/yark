@@ -62,8 +62,12 @@ src/renderer/src/features/<area>/
 - Keep CSS modules **feature-scoped** unless the atom is in `shared/ui`.
 - **Folder rule:** if a component already has (or needs) its own `.module.css`, put it in `components/<Name>/`. Do not invent a CSS module just to justify a folder when styles correctly live in the feature CSS.
 - `shared/ui/<Name>/` always uses a per-component folder (tsx + optional css + helpers).
-- Tests: page tests for user flows; add component tests only for non-trivial
-  molecules/organisms.
+- Tests: page tests for **user flows** (leave-guard, tab switches, wizards). Prefer
+  a model/unit test or a small organism mount (`SidePanel`, `WorkspaceHeader`)
+  for lock flags and derived disabled state — do not remount `*Page` for that.
+  Heavy UI suites: `setupUser()` from `@renderer/test/setupUser` (`delay: null`);
+  use `findBy*` for appearance; keep `waitFor` only when the node may already be
+  gone or the result is async. See [#281](https://github.com/gabomarin/yark/issues/281).
 
 ## Page responsibilities
 

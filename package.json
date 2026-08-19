@@ -17,6 +17,8 @@
     "package": "electron-vite build && electron-builder --win",
     "verify:fuses": "node scripts/verify-electron-fuses.cjs",
     "test": "vitest run",
+    "test:node": "vitest run --project node",
+    "test:renderer": "vitest run --project renderer",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "node scripts/lint.cjs && eslint .",

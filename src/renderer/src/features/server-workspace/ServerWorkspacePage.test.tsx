@@ -7,9 +7,9 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
+import { setupUser } from "@renderer/test/setupUser";
 import { ServerWorkspacePage, type RconHistoryEntry } from "./ServerWorkspacePage";
 import type { PlayerListState } from "./components/RconPanel/PlayerListSection";
 
@@ -314,7 +314,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("renders workspace with server list and allows switching servers", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     const onSelectServer = vi.fn();
 
     renderWorkspace(onSelectServer);
@@ -338,7 +338,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("opens the Backups tab with create and history UI", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderWorkspace();
 
     await user.click(screen.getByRole("tab", { name: "Backups" }));
@@ -349,7 +349,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("renders the RCON tab with quick commands and sends commands", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     const onSendRcon = vi.fn(async () => true);
     render(
       <AppProviders>
@@ -417,7 +417,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("shows RCON responses in the compact history panel", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderWorkspace(
       vi.fn(),
       vi.fn(async () => true),
@@ -473,7 +473,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("disables Send for an identical pending command and Clear keeps pending", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     const onClearRconHistory = vi.fn();
     render(
       <AppProviders>
@@ -551,7 +551,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("keeps SidePanel Save world wired to RCON and Copy configuration callable", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     const onSendRcon = vi.fn(async () => true);
     const onCopyConfiguration = vi.fn();
     const onUpdateNow = vi.fn();
@@ -613,42 +613,6 @@ describe("ServerWorkspacePage", () => {
     expect(onCopyConfiguration).toHaveBeenCalledWith("srv-a");
   });
 
-  it("enables Force update when the server is stopped", async () => {
-    const onUpdateNow = vi.fn();
-    render(
-      <AppProviders>
-        <ServerWorkspacePage
-          servers={[serverA, serverB]}
-          selectedServerId={serverA.id}
-          statuses={new Map()}
-          installationInfo={new Map()}
-          events={[]}
-          rconHistory={[]}
-          playerList={EMPTY_PLAYER_LIST}
-          onSelectServer={vi.fn()}
-          onBack={vi.fn()}
-          onStartServer={vi.fn()}
-          onStopServer={vi.fn()}
-          onRestartServer={vi.fn()}
-          onKillServer={vi.fn()}
-          onOpenFolder={vi.fn()}
-          onInstallFiles={vi.fn()}
-          onUpdateNow={onUpdateNow}
-          onVerifyFiles={vi.fn()}
-          onSendRcon={vi.fn(async () => true)}
-          {...playerListHandlers}
-          onCopyConfiguration={vi.fn()}
-          onServerUpdated={vi.fn()}
-        />
-      </AppProviders>,
-    );
-
-    const forceUpdate = screen.getByRole("button", { name: "Force update" });
-    expect(forceUpdate).toBeEnabled();
-    await userEvent.setup().click(forceUpdate);
-    expect(onUpdateNow).toHaveBeenCalledTimes(1);
-  });
-
   it("moves secondary panels into drawers in compact workspaces", async () => {
     vi.stubGlobal("matchMedia", (query: string) => ({
       matches:
@@ -661,7 +625,7 @@ describe("ServerWorkspacePage", () => {
       removeEventListener: () => undefined,
       dispatchEvent: () => false,
     }));
-    const user = userEvent.setup();
+    const user = setupUser();
     const onSelectServer = vi.fn();
 
     renderWorkspace(onSelectServer);
@@ -672,7 +636,7 @@ describe("ServerWorkspacePage", () => {
 
     await user.click(screen.getByRole("button", { name: "Switch server" }));
     const serverDialog = await screen.findByRole("dialog", { name: "Switch server" });
-    await waitFor(() => expect(serverDialog).toBeVisible());
+    expect(serverDialog).toBeVisible();
     expect(within(serverDialog).getByText("All servers")).toBeVisible();
 
     await user.click(within(serverDialog).getByText("Scorched Earth"));
@@ -683,7 +647,7 @@ describe("ServerWorkspacePage", () => {
 
     await user.click(screen.getByRole("button", { name: "Status and actions" }));
     const actionsDialog = await screen.findByRole("dialog", { name: "Status and actions" });
-    await waitFor(() => expect(actionsDialog).toBeVisible());
+    expect(actionsDialog).toBeVisible();
     expect(within(actionsDialog).getByText("Quick actions")).toBeVisible();
     await user.keyboard("{Escape}");
     await waitFor(() => {
@@ -732,7 +696,7 @@ describe("ServerWorkspacePage", () => {
       return mediaQueryList;
     });
 
-    const user = userEvent.setup();
+    const user = setupUser();
     renderWorkspace();
 
     await user.click(screen.getByRole("tab", { name: "Backups" }));
@@ -770,7 +734,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("shows only available category filters and resets an invalid filter between INI files", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     vi.mocked(window.api.readServerIni).mockResolvedValue({
       ok: true,
       data: {
@@ -814,7 +778,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("ignores client settings without showing a warning or pending changes", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     vi.mocked(window.api.readServerIni).mockResolvedValue({
       ok: true,
       data: {
@@ -854,7 +818,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("discards an assistant draft without writing INI files", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderWorkspace();
 
     await user.click(
@@ -877,7 +841,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("confirms before leaving INI Files with unsaved changes (#299)", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderWorkspace();
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
@@ -915,7 +879,7 @@ describe("ServerWorkspacePage", () => {
     await screen.findByRole("heading", { name: "Server information" });
     expect(window.api.readServerIni).not.toHaveBeenCalled();
 
-    const user = userEvent.setup();
+    const user = setupUser();
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
     await waitFor(() => {
       expect(window.api.readServerIni).toHaveBeenCalledTimes(1);
@@ -924,7 +888,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("warns in raw GameUserSettings that Server settings override max players", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderWorkspace();
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
@@ -940,7 +904,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("reviews and explicitly applies the assistant draft", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderWorkspace();
 
     await user.click(
@@ -1022,7 +986,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("offers Match cluster defaults and restores the template on apply (#230)", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     vi.mocked(window.api.getClusterIniTemplate).mockResolvedValue({
       ok: true,
       data: {
@@ -1073,7 +1037,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("shows a cluster template hint when the member has no template (#230)", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderWorkspace();
 
     await user.click(
@@ -1148,7 +1112,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("shows an inactive badge and enable action for a disabled workspace server", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     const onToggleServerEnabled = vi.fn();
 
     const installationInfo = new Map([
@@ -1204,88 +1168,8 @@ describe("ServerWorkspacePage", () => {
     expect(onToggleServerEnabled).toHaveBeenCalledWith(serverA.id, true);
   });
 
-  it("blocks enable and disable actions while a SteamCMD job owns the lock", () => {
-    render(
-      <AppProviders>
-        <ServerWorkspacePage
-          servers={[serverA]}
-          selectedServerId={serverA.id}
-          statuses={new Map()}
-          installationInfo={new Map()}
-          events={[]}
-          rconHistory={[]}
-          playerList={EMPTY_PLAYER_LIST}
-          filesJobActive
-          filesJobLabel="Updating server files"
-          onSelectServer={vi.fn()}
-          onBack={vi.fn()}
-          onStartServer={vi.fn()}
-          onStopServer={vi.fn()}
-          onRestartServer={vi.fn()}
-          onKillServer={vi.fn()}
-          onToggleServerEnabled={vi.fn()}
-          onOpenFolder={vi.fn()}
-          onInstallFiles={vi.fn()}
-          onUpdateNow={vi.fn()}
-          onVerifyFiles={vi.fn()}
-          onSendRcon={vi.fn(async () => true)}
-          {...playerListHandlers}
-          onCopyConfiguration={vi.fn()}
-        onServerUpdated={vi.fn()}
-        />
-      </AppProviders>,
-    );
-
-    const toggle = screen.getByRole("button", { name: "Disable server" });
-    expect(toggle).toBeDisabled();
-    expect(toggle).toHaveAttribute("title", "Updating server files");
-  });
-
-  it("lets Force update replace a queued Verify without unlocking Enable", async () => {
-    const onUpdateNow = vi.fn();
-    render(
-      <AppProviders>
-        <ServerWorkspacePage
-          servers={[serverA]}
-          selectedServerId={serverA.id}
-          statuses={new Map()}
-          installationInfo={new Map()}
-          events={[]}
-          rconHistory={[]}
-          playerList={EMPTY_PLAYER_LIST}
-          filesJobActive
-          filesJobLabel="Queued · Verifying integrity"
-          filesJobOperation="verify-files"
-          filesJobQueueKind="queued"
-          onSelectServer={vi.fn()}
-          onBack={vi.fn()}
-          onStartServer={vi.fn()}
-          onStopServer={vi.fn()}
-          onRestartServer={vi.fn()}
-          onKillServer={vi.fn()}
-          onToggleServerEnabled={vi.fn()}
-          onOpenFolder={vi.fn()}
-          onInstallFiles={vi.fn()}
-          onUpdateNow={onUpdateNow}
-          onVerifyFiles={vi.fn()}
-          onSendRcon={vi.fn(async () => true)}
-          {...playerListHandlers}
-          onCopyConfiguration={vi.fn()}
-          onServerUpdated={vi.fn()}
-        />
-      </AppProviders>,
-    );
-
-    expect(screen.getByRole("button", { name: "Disable server" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Verify integrity" })).toBeDisabled();
-    const update = screen.getByRole("button", { name: "Force update" });
-    expect(update).toBeEnabled();
-    await userEvent.click(update);
-    expect(onUpdateNow).toHaveBeenCalledWith(serverA.id);
-  });
-
   it("confirms before shell leave discards a dirty Server-tab profile (#299)", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     const onLeave = vi.fn();
     let leaveGuard: ((action: () => void) => void) | null = null;
 
@@ -1335,7 +1219,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("confirms before switching server or opening Create with a dirty profile (#299)", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     const onSelectServer = vi.fn();
     const onCreateServer = vi.fn();
 
@@ -1356,7 +1240,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("confirms before leaving the Server tab with a dirty profile (#299)", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderWorkspace();
 
     await user.type(await screen.findByRole("textbox", { name: /^name$/i }), " X");
@@ -1383,7 +1267,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("does not confirm leave after saving Server-tab profile changes (#299)", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     const onLeave = vi.fn();
     const onServerUpdated = vi.fn();
     let leaveGuard: ((action: () => void) => void) | null = null;
@@ -1407,7 +1291,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("still confirms INI-only dirty shell leave (#299)", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     const onLeave = vi.fn();
     let leaveGuard: ((action: () => void) => void) | null = null;
 
@@ -1432,7 +1316,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("shows Cancel on the Server tab only when the profile is dirty (#299)", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderWorkspace();
 
     await screen.findByRole("heading", { name: "Server information" });
@@ -1448,7 +1332,7 @@ describe("ServerWorkspacePage", () => {
   });
 
   it("saves the profile from the leave confirm then continues (#299)", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     const onLeave = vi.fn();
     const onServerUpdated = vi.fn();
     let leaveGuard: ((action: () => void) => void) | null = null;
