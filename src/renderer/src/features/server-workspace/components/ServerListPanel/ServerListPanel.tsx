@@ -2,27 +2,22 @@ import type { ReactElement } from "react";
 import { CaretDown, CaretRight, Plus } from "@phosphor-icons/react";
 import {
   ActionIcon,
-  Badge,
   Button,
-  Divider,
   Group,
   Menu,
-  Stack,
   Text,
   Tooltip,
-  UnstyledButton,
 } from "@mantine/core";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
-import { Fragment, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useUiDensity } from "@app/AppProviders";
 import { AddServerSplitButton } from "@features/servers/components/AddServerSplitButton/AddServerSplitButton";
-import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
+import { ServerListControls } from "@features/servers/components/ServerListControls/ServerListControls";
+import { useServerListPreferences } from "@features/servers/hooks/useServerListPreferences";
+import { sortServers } from "@features/servers/serverListModel";
 import { SearchField } from "@ui/SearchField/SearchField";
-import {
-  serverRuntimeStatusLabel,
-  serverRuntimeStatusTone,
-} from "@ui/ServerRuntimeStatusBadge/serverRuntimeStatus";
 import { groupServersByCluster } from "../../workspaceLayoutModel";
+import { ServerListPanelBody } from "./ServerListPanelBody";
 import classes from "./ServerListPanel.module.css";
 
 interface Props {
@@ -38,94 +33,10 @@ interface Props {
   onToggleRail?: () => void;
 }
 
-function rowAccessibleName(server: ServerProfile, status: string): string {
-  const parts = [server.name, server.map, serverRuntimeStatusLabel(status)];
-  if (!server.enabled) {
-    parts.push("Inactive");
-  }
-  if (server.clusterId?.trim()) {
-    parts.push(server.clusterId.trim());
-  }
-  return parts.join(" · ");
-}
-
-function ServerRow(props: {
-  server: ServerProfile;
-  status: string;
-  selected: boolean;
-  iconMode: boolean;
-  onSelect: () => void;
-}): ReactElement {
-  const tone = serverRuntimeStatusTone(props.status);
-  const accessibleName = rowAccessibleName(props.server, props.status);
-
-  return (
-    <Tooltip
-      label={accessibleName}
-      position="right"
-      withArrow
-      openDelay={200}
-      disabled={!props.iconMode}
-    >
-      <UnstyledButton
-        className={classes.item}
-        data-selected={props.selected || undefined}
-        data-status-tone={tone}
-        aria-label={accessibleName}
-        onClick={props.onSelect}
-      >
-        <span className={classes.thumbWrap}>
-          <MapArtThumb
-            mapId={props.server.map}
-            mapModId={props.server.mapModId}
-            modThumbnailUrl={
-              props.server.mapModId
-                ? props.server.modMetadataCache?.[props.server.mapModId]?.thumbnailUrl
-                : null
-            }
-            size="sm"
-            shape="rounded"
-            decorative
-            className={classes.thumb}
-          />
-          {props.iconMode && <span className={classes.statusDot} aria-hidden="true" />}
-        </span>
-        {!props.iconMode && (
-          <>
-            <span className={classes.itemBody} aria-hidden="true">
-              <Text className={classes.itemName} fw={600} title={props.server.name} lineClamp={1}>
-                {props.server.name}
-              </Text>
-              <Text
-                className={classes.itemMeta}
-                c="dimmed"
-                title={props.server.map}
-                lineClamp={1}
-              >
-                {props.server.map}
-              </Text>
-              {!props.server.enabled && (
-                <Badge size="xs" variant="light" color="gray" mt={4} tt="none">
-                  Inactive
-                </Badge>
-              )}
-            </span>
-            <span
-              className={classes.statusDotInline}
-              data-status-tone={tone}
-              title={serverRuntimeStatusLabel(props.status)}
-              aria-hidden="true"
-            />
-          </>
-        )}
-      </UnstyledButton>
-    </Tooltip>
-  );
-}
-
 export function ServerListPanel(props: Props): ReactElement {
   const [search, setSearch] = useState("");
   const [openClusters, setOpenClusters] = useState<Record<string, boolean>>({});
+  const { sort, setSort, view, setView } = useServerListPreferences("workspace");
   const iconMode = props.iconMode === true;
   const density = useUiDensity();
   const compact = density === "compact";
@@ -137,13 +48,16 @@ export function ServerListPanel(props: Props): ReactElement {
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (query.length === 0) return props.servers;
-    return props.servers.filter((server) =>
-      [server.name, server.map, server.clusterId ?? ""].some((field) =>
-        field.toLowerCase().includes(query),
-      ),
-    );
-  }, [props.servers, search]);
+    const base =
+      query.length === 0
+        ? props.servers
+        : props.servers.filter((server) =>
+            [server.name, server.map, server.clusterId ?? ""].some((field) =>
+              field.toLowerCase().includes(query),
+            ),
+          );
+    return sortServers(base, sort);
+  }, [props.servers, search, sort]);
 
   const groups = useMemo(() => groupServersByCluster(filtered), [filtered]);
 
@@ -204,82 +118,29 @@ export function ServerListPanel(props: Props): ReactElement {
               label="Search servers"
               size="xs"
             />
+            <div className={classes.listControls}>
+              <ServerListControls
+                sort={sort}
+                onSortChange={setSort}
+                view={view}
+                onViewChange={setView}
+              />
+            </div>
           </>
         )}
       </div>
 
-      <Stack gap={iconMode ? 4 : 8} className={classes.list}>
-        {iconMode
-          ? groups.map((group, index) => (
-              <Fragment key={group.key}>
-                {index > 0 && (
-                  <Divider
-                    className={classes.clusterDivider}
-                    aria-label={`${group.label} cluster`}
-                  />
-                )}
-                <Stack gap={4} className={classes.clusterRail} role="group" aria-label={group.label}>
-                  {group.servers.map((server) => {
-                    const status = props.statuses.get(server.id)?.status ?? "stopped";
-                    return (
-                      <ServerRow
-                        key={server.id}
-                        server={server}
-                        status={status}
-                        selected={server.id === props.selectedServerId}
-                        iconMode
-                        onSelect={() => props.onSelectServer(server.id)}
-                      />
-                    );
-                  })}
-                </Stack>
-              </Fragment>
-            ))
-          : groups.map((group) => {
-              const open = isClusterOpen(group.key);
-              return (
-                <section key={group.key} className={classes.cluster}>
-                  <UnstyledButton
-                    className={classes.clusterHeader}
-                    onClick={() => toggleCluster(group.key)}
-                    aria-expanded={open}
-                  >
-                    {open ? (
-                      <CaretDown size={12} className={classes.clusterCaret} />
-                    ) : (
-                      <CaretRight size={12} className={classes.clusterCaret} />
-                    )}
-                    <Text className={classes.clusterLabel}>{group.label}</Text>
-                    <Text className={classes.clusterCount} c="dimmed">
-                      {group.servers.length}
-                    </Text>
-                  </UnstyledButton>
-                  {open && (
-                    <Stack gap={6} className={classes.clusterList}>
-                      {group.servers.map((server) => {
-                        const status = props.statuses.get(server.id)?.status ?? "stopped";
-                        return (
-                          <ServerRow
-                            key={server.id}
-                            server={server}
-                            status={status}
-                            selected={server.id === props.selectedServerId}
-                            iconMode={false}
-                            onSelect={() => props.onSelectServer(server.id)}
-                          />
-                        );
-                      })}
-                    </Stack>
-                  )}
-                </section>
-              );
-            })}
-        {filtered.length === 0 && (
-          <Text c="dimmed" size="sm" ta="center" py="md">
-            {iconMode ? "—" : "No servers"}
-          </Text>
-        )}
-      </Stack>
+      <ServerListPanelBody
+        iconMode={iconMode}
+        view={view}
+        filtered={filtered}
+        groups={groups}
+        selectedServerId={props.selectedServerId}
+        statuses={props.statuses}
+        onSelectServer={props.onSelectServer}
+        isClusterOpen={isClusterOpen}
+        onToggleCluster={toggleCluster}
+      />
 
       {props.onAddServer !== undefined && (
         <div className={classes.footer}>

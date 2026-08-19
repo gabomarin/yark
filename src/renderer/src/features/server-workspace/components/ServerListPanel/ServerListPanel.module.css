@@ -46,6 +46,11 @@
   color: var(--app-color-muted);
 }
 
+.listControls {
+  display: flex;
+  align-items: center;
+}
+
 .list {
   flex: 1;
   overflow: auto;

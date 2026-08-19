@@ -11,10 +11,12 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Servers Overview and workspace server rail share **Order added** vs **A–Z** sort and icon-only **All servers / By cluster** layout toggles; preferences persist across reload (#351).
 - **Downloads** queue page with stacked job rows, active vs queued separation, shared server-card progress styling, `Open in Logs` focus on the related Events entry, and Pause/Resume for install and update jobs; workspace footer teaser on other pages replaces the floating progress dock. getyark.com gallery and SteamCMD docs include the queue (#201).
 
 ### Changed
 
+- Sidebar and Ctrl+K quick jump list **Clusters** above **Downloads**.
 - Overview, Settings, Clusters, Backups, Logs, and Downloads drop restating page subtitles; fleet backup KPIs stay hidden only when there is no history and no enabled schedule; status badges use sentence case; server cards give map art more room, a quieter stopped state that still differs from Inactive, and square list rows with a straight status rail (no notch or gap) that tighten in Compact.
 - Server-list **Resume / Pause / Cancel** sit on the progress bar (not the Start slot). Queued servers look distinct, lock Start, toast when added to Downloads, and refuse duplicate clicks. Downloads labels Pause/Cancel as a SteamCMD process action on the **active** job (#201).
 - Downloads detail shows the **SteamCMD process** bar only for the active job. Queued jobs cancel from the row (no duplicate **Remove from queue** in the detail). Active rows no longer show a **SteamCMD active now** label (#201).

@@ -1,0 +1,51 @@
+.root {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--app-space-xs);
+}
+
+.viewSegment :global(.mantine-SegmentedControl-label) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: var(--app-space-xs);
+  line-height: 0;
+}
+
+.viewSegment :global(.mantine-SegmentedControl-label) > * {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.viewIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  line-height: 0;
+}
+
+.viewIcon svg {
+  display: block;
+}
+
+.menuItemBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.menuItemHint {
+  color: var(--app-color-muted);
+}
+
+.menuCheckSlot {
+  display: inline-flex;
+  width: 14px;
+  flex-shrink: 0;
+}

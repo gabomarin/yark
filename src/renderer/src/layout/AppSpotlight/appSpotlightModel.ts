@@ -28,18 +28,18 @@ export const SPOTLIGHT_NAV_ITEMS: SpotlightNavItem[] = [
     icon: SquaresFour,
   },
   {
-    id: "downloads",
-    label: "Downloads",
-    description: "SteamCMD installs, updates, and file copies",
-    keywords: ["download", "steamcmd", "update", "queue"],
-    icon: DownloadSimple,
-  },
-  {
     id: "clusters",
     label: "Clusters",
     description: "Cluster membership and transfer",
     keywords: ["cluster", "transfer"],
     icon: ShareNetwork,
+  },
+  {
+    id: "downloads",
+    label: "Downloads",
+    description: "SteamCMD installs, updates, and file copies",
+    keywords: ["download", "steamcmd", "update", "queue"],
+    icon: DownloadSimple,
   },
   {
     id: "backups",

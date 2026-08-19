@@ -41,17 +41,54 @@
 
 .serverSectionHeader {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--app-space-md);
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--app-space-sm);
 }
 
 .serverSummaryRow {
   min-width: 0;
 }
 
+.serverToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--app-space-sm);
+}
+
 .serverSearch {
   width: min(100%, 360px);
+}
+
+.clusterGroupHead {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-xs);
+  padding: var(--app-space-sm) var(--app-space-sm) var(--app-space-xs);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--app-color-muted);
+}
+
+.clusterGroupCount {
+  margin-left: auto;
+  font-family: var(--mantine-font-family-monospace);
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.clusterGroupHint {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--app-color-muted);
 }
 
 .serverGrid {
@@ -197,11 +234,14 @@
   .header,
   .serverSectionHeader {
     align-items: stretch;
-    flex-direction: column;
   }
 
   .headerActions {
     justify-content: flex-start;
+  }
+
+  .serverToolbar {
+    justify-content: stretch;
   }
 
   .serverSearch {

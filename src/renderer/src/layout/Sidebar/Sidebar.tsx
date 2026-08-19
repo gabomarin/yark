@@ -36,8 +36,8 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: "overview", label: "Servers", icon: SquaresFour },
-  { id: "downloads", label: "Downloads", icon: DownloadSimple },
   { id: "clusters", label: "Clusters", icon: ShareNetwork },
+  { id: "downloads", label: "Downloads", icon: DownloadSimple },
   { id: "backups", label: "Backups", icon: HardDrives },
   { id: "logs", label: "Logs", icon: FileText },
   { id: "settings", label: "Settings", icon: GearSix },

@@ -114,11 +114,21 @@ describe("ServerRepository", () => {
     expect(repo.get(created.id)?.modMetadataCache?.["111"]?.slug).toBe("demo");
   });
 
-  it("lists profiles sorted by name", () => {
-    repo.create(input({ name: "Zeta", gamePort: 7787, queryPort: 27025, rconPort: 27030 }));
-    repo.create(input({ name: "Alpha" }));
-    const names = repo.list().map((p) => p.name);
-    expect(names).toEqual(["Alpha", "Zeta"]);
+  it("lists profiles sorted by created_at oldest first, tie-break id", () => {
+    const older = repo.create(
+      input({ name: "Zeta", gamePort: 7787, queryPort: 27025, rconPort: 27030 }),
+    );
+    const newer = repo.create(input({ name: "Alpha" }));
+    db.prepare("UPDATE servers SET created_at = ? WHERE id = ?").run(
+      "2020-01-01T00:00:00.000Z",
+      older.id,
+    );
+    db.prepare("UPDATE servers SET created_at = ? WHERE id = ?").run(
+      "2021-01-01T00:00:00.000Z",
+      newer.id,
+    );
+    const ids = repo.list().map((p) => p.id);
+    expect(ids).toEqual([older.id, newer.id]);
   });
 
   it("updates an existing profile", () => {
