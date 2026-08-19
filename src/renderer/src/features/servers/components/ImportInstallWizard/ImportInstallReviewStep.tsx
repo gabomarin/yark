@@ -30,11 +30,10 @@ export function ImportInstallReviewStep(props: Props): ReactElement {
   const [metaWarning, setMetaWarning] = useState<string | null>(null);
   const [fetchAttemptedKey, setFetchAttemptedKey] = useState<string | null>(null);
 
-  const missingIds = useMemo(
-    () => modIds.filter((id) => props.modMetadata[id] === undefined),
+  const missingKey = useMemo(
+    () => modIds.filter((id) => props.modMetadata[id] === undefined).join(","),
     [modIds, props.modMetadata],
   );
-  const missingKey = missingIds.join(",");
   const modIdsKey = modIds.join(",");
 
   useEffect(() => {
@@ -42,7 +41,7 @@ export function ImportInstallReviewStep(props: Props): ReactElement {
   }, [modIdsKey]);
 
   useEffect(() => {
-    if (missingIds.length === 0) {
+    if (missingKey.length === 0) {
       setLoadingMeta(false);
       setMetaWarning(null);
       return;
@@ -53,7 +52,7 @@ export function ImportInstallReviewStep(props: Props): ReactElement {
     let alive = true;
     setLoadingMeta(true);
     setMetaWarning(null);
-    const ids = [...missingIds];
+    const ids = missingKey.split(",");
     void window.api.getModsMetadata(ids).then((result) => {
       if (!alive) return;
       setLoadingMeta(false);
@@ -83,7 +82,7 @@ export function ImportInstallReviewStep(props: Props): ReactElement {
     return () => {
       alive = false;
     };
-  }, [missingIds, missingKey, fetchAttemptedKey, onModMetadataChange]);
+  }, [missingKey, fetchAttemptedKey, onModMetadataChange]);
 
   return (
     <Stack gap="sm">

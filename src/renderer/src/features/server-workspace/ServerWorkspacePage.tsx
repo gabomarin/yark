@@ -10,7 +10,7 @@ import type {
 } from "@shared/types";
 import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import type { ReactElement } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ConfigurationWizard } from "./components/ConfigurationWizard/ConfigurationWizard";
 import { ServerListPanel } from "./components/ServerListPanel/ServerListPanel";
 import { ServerOnboardingChecklist } from "./components/ServerOnboardingChecklist/ServerOnboardingChecklist";
@@ -100,6 +100,10 @@ export function ServerWorkspacePage(props: Props): ReactElement {
     setAssistantOpen(false);
     setServerSwitcherOpen(false);
   });
+
+  const onAssistantDraftChange = useCallback((dirty: boolean) => {
+    assistantDirtyRef.current = dirty;
+  }, [assistantDirtyRef]);
 
   useEffect(() => {
     if (props.onboarding === true) {
@@ -223,9 +227,7 @@ export function ServerWorkspacePage(props: Props): ReactElement {
             setIniDirty(false);
             setIniEditorVersion((current) => current + 1);
           }}
-          onDraftChange={(dirty) => {
-            assistantDirtyRef.current = dirty;
-          }}
+          onDraftChange={onAssistantDraftChange}
         />
       ) : showOnboarding ? (
         <ServerOnboardingChecklist

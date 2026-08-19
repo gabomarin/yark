@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Alert, Button, Group, Modal, Stack, Stepper } from "@mantine/core";
 import {
   getServerFolderNameError,
@@ -56,6 +56,13 @@ export function ImportInstallWizard(props: Props): ReactElement {
   );
   const preferredCluster =
     props.extraClusterOptions?.length === 1 ? props.extraClusterOptions[0] : undefined;
+
+  const handleModMetadataChange = useCallback(
+    (patch: Record<string, ModMetadata>) => {
+      setModMetadata((previous) => ({ ...previous, ...patch }));
+    },
+    [],
+  );
 
   // Parent remounts this wizard on each open (`key={importWizardKey}`) so form
   // state starts fresh without an adjust-on-prop-change close effect.
@@ -265,9 +272,7 @@ export function ImportInstallWizard(props: Props): ReactElement {
             modsOpen={modsOpen}
             onModsOpenChange={setModsOpen}
             modMetadata={modMetadata}
-            onModMetadataChange={(patch) =>
-              setModMetadata((previous) => ({ ...previous, ...patch }))
-            }
+            onModMetadataChange={handleModMetadataChange}
           />
         )}
 
