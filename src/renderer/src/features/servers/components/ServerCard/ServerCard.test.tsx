@@ -1199,5 +1199,55 @@ describe("ServerCard", () => {
       "data-size",
       "lg",
     );
+
+    rerender(
+      <AppProviders density="compact">
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={{
+            ...installed,
+            installed: false,
+            health: "missing",
+            reasonCodes: ["path_missing"],
+            guidance: "Create the folder or correct the install path, then install server files.",
+          }}
+          officialSteamBuild={null}
+          steamCmdBusy
+          steamCmdProgressPercent={42}
+          steamCmdOperation="install-files"
+          {...callbacks}
+        />
+      </AppProviders>,
+    );
+    expect(screen.getByRole("button", { name: /Pause SteamCMD/i })).toHaveAttribute(
+      "data-size",
+      "xs",
+    );
+
+    rerender(
+      <AppProviders density="comfortable">
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={{
+            ...installed,
+            installed: false,
+            health: "missing",
+            reasonCodes: ["path_missing"],
+            guidance: "Create the folder or correct the install path, then install server files.",
+          }}
+          officialSteamBuild={null}
+          steamCmdBusy
+          steamCmdProgressPercent={42}
+          steamCmdOperation="install-files"
+          {...callbacks}
+        />
+      </AppProviders>,
+    );
+    expect(screen.getByRole("button", { name: /Pause SteamCMD/i })).toHaveAttribute(
+      "data-size",
+      "sm",
+    );
   });
 });

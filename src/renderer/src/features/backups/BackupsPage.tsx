@@ -243,6 +243,8 @@ export function BackupsPage(props: Props): ReactElement {
     return rows;
   }, [summary, healthFilter]);
 
+  // Quiet = no files, no risk, no enabled schedules. `protectedCount` is
+  // fleet health === "ok", not "a policy row exists".
   const backupFleetQuiet =
     summary !== null &&
     summary.stats.totalBackupBytes === 0 &&

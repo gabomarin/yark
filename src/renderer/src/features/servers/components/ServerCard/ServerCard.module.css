@@ -125,7 +125,7 @@
   gap: var(--app-space-xl);
   width: 100%;
   padding: 0;
-  border-radius: var(--app-radius-sm);
+  border-radius: 0;
   color: inherit;
   text-align: left;
   cursor: pointer;

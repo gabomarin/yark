@@ -344,4 +344,72 @@ describe("BackupsPage", () => {
     expect(document.querySelector("[data-backup-fleet-quiet]")).toBeNull();
     expect(screen.queryByText(/No backups yet/i)).not.toBeInTheDocument();
   });
+
+  it("switches from quiet copy to fleet KPIs when a schedule turns on", async () => {
+    const quietSummary: BackupFleetSummary = {
+      ...fleetSummary,
+      servers: [
+        {
+          ...fleetSummary.servers[0]!,
+          latest: null,
+          latestWorld: null,
+          counts: { world: 0, players: 0, ini: 0, failed24h: 0 },
+          usedBytes: 0,
+        },
+      ],
+      stats: {
+        protectedCount: 0,
+        atRiskCount: 0,
+        failed24h: 0,
+        totalBackupBytes: 0,
+      },
+      disks: [{ ...fleetSummary.disks[0]!, backupBytes: 0 }],
+    };
+    const scheduledSummary: BackupFleetSummary = {
+      ...quietSummary,
+      servers: [
+        {
+          ...quietSummary.servers[0]!,
+          policy: { ...quietSummary.servers[0]!.policy, enabled: true },
+        },
+      ],
+    };
+    const changedListeners: Array<(payload: { serverId: string }) => void> = [];
+    (window.api.onBackupsChanged as ReturnType<typeof vi.fn>).mockImplementation(
+      (listener: (payload: { serverId: string }) => void) => {
+        changedListeners.push(listener);
+        return () => {
+          const index = changedListeners.indexOf(listener);
+          if (index >= 0) changedListeners.splice(index, 1);
+        };
+      },
+    );
+    (window.api.getBackupFleetSummary as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ ok: true, data: quietSummary })
+      .mockResolvedValue({ ok: true, data: scheduledSummary });
+
+    render(
+      <AppProviders>
+        <BackupsPage servers={[server]} onOpenServerBackups={vi.fn()} />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByText(/No backups yet/i)).toBeInTheDocument();
+    expect(screen.getByText("Disk free")).toBeInTheDocument();
+    expect(document.querySelector("[data-backup-fleet-quiet]")).toBeInTheDocument();
+
+    for (const listener of changedListeners) {
+      listener({ serverId: "srv-1" });
+    }
+
+    await waitFor(() => {
+      expect(document.querySelector("[data-backup-fleet-quiet]")).toBeNull();
+    });
+    expect(screen.getByText("0/1")).toBeInTheDocument();
+    expect(screen.getByText("Backup used")).toBeInTheDocument();
+    expect(screen.getAllByText("At risk").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Failed (24h)").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Disk free").length).toBeGreaterThan(0);
+    expect(screen.queryByText(/No backups yet/i)).not.toBeInTheDocument();
+  });
 });
