@@ -419,7 +419,9 @@ export function App({
       }),
     [servers, installationInfo, statuses, officialSteamBuild, steamCmdStatus?.criticalJobs],
   );
-  const canUpdateAllOutdated = canOpenUpdateAllOutdated(updateAllOutdatedPlan);
+  const canUpdateAllOutdated = canOpenUpdateAllOutdated(
+    updateAllOutdatedModalPlan ?? updateAllOutdatedPlan,
+  );
 
   const steamCmdBusy = steamCmdStatus?.busy === true;
   const steamCmdBusyRef = useRef(steamCmdBusy);
@@ -995,7 +997,6 @@ export function App({
 
   const openUpdateAllOutdated = useCallback(async () => {
     setUpdateAllOutdatedLoading(true);
-    setUpdateAllOutdatedOpen(true);
     setUpdateAllOutdatedModalPlan(null);
     try {
       const installRes = await window.api.getInstallationInfo(true);
@@ -1013,27 +1014,32 @@ export function App({
       setOfficialNetworkStatus(installRes.data.officialNetworkStatus);
       setInstallationInfo(nextInstallation);
       setOfficialSteamBuild(installRes.data.officialSteamBuild);
-      setUpdateAllOutdatedModalPlan(
-        buildUpdateAllOutdatedPlan({
-          servers,
-          installationInfo: nextInstallation,
-          statuses,
-          officialSteamBuild: installRes.data.officialSteamBuild,
-          criticalJobs: steamCmdStatus?.criticalJobs,
-        }),
-      );
+      const nextPlan = buildUpdateAllOutdatedPlan({
+        servers,
+        installationInfo: nextInstallation,
+        statuses,
+        officialSteamBuild: installRes.data.officialSteamBuild,
+        criticalJobs: steamCmdStatus?.criticalJobs,
+      });
+      if (nextPlan.rows.length === 0) {
+        showOperatorToast({
+          title: "No outdated servers",
+          message: "Every installed server is already on the latest Steam build.",
+          color: "teal",
+        });
+        return;
+      }
+      setUpdateAllOutdatedModalPlan(nextPlan);
+      setUpdateAllOutdatedOpen(true);
     } finally {
       setUpdateAllOutdatedLoading(false);
     }
   }, [servers, statuses, steamCmdStatus?.criticalJobs]);
 
   const closeUpdateAllOutdated = useCallback(() => {
-    if (updateAllOutdatedQueueing) {
-      return;
-    }
     setUpdateAllOutdatedOpen(false);
     setUpdateAllOutdatedModalPlan(null);
-  }, [updateAllOutdatedQueueing]);
+  }, []);
 
   const confirmUpdateAllOutdated = useCallback(async () => {
     setUpdateAllOutdatedQueueing(true);

@@ -1,6 +1,7 @@
 import {
   decideFilesJobEnqueue,
   occupyingFilesJobForServer,
+  type FilesJobEnqueueDecision,
   type FilesJobOccupant,
 } from "@shared/files-job-priority";
 import { isInstallationReady } from "@shared/installation-health";
@@ -77,7 +78,7 @@ function skipCopy(reason: UpdateAllOutdatedSkipReason): string {
 }
 
 function filesJobSkipReason(
-  decision: ReturnType<typeof decideFilesJobEnqueue>,
+  decision: FilesJobEnqueueDecision,
 ): UpdateAllOutdatedSkipReason | null {
   switch (decision.action) {
     case "enqueue":
@@ -91,6 +92,10 @@ function filesJobSkipReason(
       return "files-job-paused";
     case "reject-occupied":
       return "files-job-occupied";
+    default: {
+      const _exhaustive: never = decision;
+      return _exhaustive;
+    }
   }
 }
 

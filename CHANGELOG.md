@@ -29,6 +29,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Fixed
 
 - Downloads queue rows no longer nest Pause/Cancel buttons inside the row select control (invalid HTML nesting).
+- Overview **Update all outdated** refresh now keeps the enable state and preview consistent, and prevents closing the queueing modal while enqueuing (#378).
 - Profile DB migration adds an index on `servers(created_at, id)` so default **Order added** list loads stay fast as fleets grow (#351).
 - Cancelling the active SteamCMD job no longer cancels other queued Downloads work; the next job starts after unwind (#201).
 - Cancelled Downloads jobs offer **Retry** (row, detail, and footer) as well as Dismiss; Install/Update/Verify still replace a cancelled leftover of the same job (#201).

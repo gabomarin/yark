@@ -74,7 +74,7 @@ export function OverviewHeader({
               label: classes.headerActionButtonLabel,
             }}
             onClick={onUpdateAllOutdated}
-            disabled={!canUpdateAllOutdated}
+            disabled={!canUpdateAllOutdated || openingUpdateAllOutdated}
             loading={openingUpdateAllOutdated}
           >
             Update all outdated

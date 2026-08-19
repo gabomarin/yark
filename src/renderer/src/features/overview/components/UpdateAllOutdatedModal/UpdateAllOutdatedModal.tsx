@@ -29,6 +29,7 @@ function buildLabel(serverName: string): string {
 
 export function UpdateAllOutdatedModal(props: Props): ReactElement {
   const plan = props.plan;
+  const queueing = props.queueing === true;
   const eligibleCount = plan?.eligible.length ?? 0;
   const skippedCount = plan?.skipped.length ?? 0;
 
@@ -36,6 +37,9 @@ export function UpdateAllOutdatedModal(props: Props): ReactElement {
     <Modal
       opened={props.opened}
       onClose={props.onClose}
+      withCloseButton={!queueing}
+      closeOnClickOutside={!queueing}
+      closeOnEscape={!queueing}
       title="Update all outdated servers"
       size="lg"
       centered
