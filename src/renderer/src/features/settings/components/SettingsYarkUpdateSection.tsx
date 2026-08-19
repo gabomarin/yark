@@ -51,8 +51,9 @@ function actionFailureMessage(cause: unknown, fallback: string): string {
 }
 
 export function SettingsYarkUpdateSection(props: Props): ReactElement {
+  const { appVersion, focusSection, onFocused } = props;
   const [status, setStatus] = useState<AppUpdateStatus>(() =>
-    createIdleAppUpdateStatus(props.appVersion, true),
+    createIdleAppUpdateStatus(appVersion, true),
   );
   const [actionBusy, setActionBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -75,11 +76,11 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
   }, []);
 
   useEffect(() => {
-    if (props.focusSection !== true) return;
+    if (focusSection !== true) return;
     const el = document.getElementById("settings-yark-updates");
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
-    props.onFocused?.();
-  }, [props.focusSection, props.onFocused]);
+    onFocused?.();
+  }, [focusSection, onFocused]);
 
   const runCheck = async () => {
     setActionBusy(true);

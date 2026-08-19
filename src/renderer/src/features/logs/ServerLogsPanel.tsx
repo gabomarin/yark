@@ -24,7 +24,7 @@ import { modals } from "@mantine/modals";
 import type { ServerOperationalLogs, ServerProfile } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { ReactElement, ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { ConsoleSurface } from "@ui/ConsoleSurface/ConsoleSurface";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
@@ -62,8 +62,9 @@ interface Props {
 }
 
 export function ServerLogsPanel(props: Props): ReactElement {
+  const { server, focus, onFocusConsumed } = props;
   const [activeSection, setActiveSection] = useState<LogsSection>(
-    props.focus?.section ?? "events",
+    focus?.section ?? "events",
   );
   const [logs, setLogs] = useState<ServerOperationalLogs | null>(null);
   const [loading, setLoading] = useState(false);
@@ -83,17 +84,17 @@ export function ServerLogsPanel(props: Props): ReactElement {
   const loadGenRef = useRef(0);
   const runtimePollGenRef = useRef(0);
   const runtimeRevisionRef = useRef(0);
-  const applyLoadedLogs = (data: ServerOperationalLogs, revision: number) => setLogs(
+  const applyLoadedLogs = useCallback((data: ServerOperationalLogs, revision: number) => setLogs(
     (prev) => preserveNewerRuntimeLogs(data, prev, runtimeRevisionRef.current !== revision),
-  );
-  const clearUpdateContent = () => {
+  ), []);
+  const clearUpdateContent = useCallback(() => {
     updateLoadGenRef.current += 1;
     setSelectedUpdateFile(null);
     setUpdateContent("");
     setBusy(false);
-  };
+  }, []);
 
-  const openUpdateLog = async (serverId: string, fileName: string) => {
+  const openUpdateLog = useCallback(async (serverId: string, fileName: string) => {
     const gen = ++updateLoadGenRef.current;
     setBusy(true);
     setError(null);
@@ -112,9 +113,9 @@ export function ServerLogsPanel(props: Props): ReactElement {
         setBusy(false);
       }
     }
-  };
+  }, []);
 
-  const load = async (serverId: string, options?: { quiet?: boolean }) => {
+  const load = useCallback(async (serverId: string, options?: { quiet?: boolean }) => {
     const quiet = options?.quiet === true;
     const gen = ++loadGenRef.current;
     const runtimeRevision = runtimeRevisionRef.current;
@@ -142,9 +143,9 @@ export function ServerLogsPanel(props: Props): ReactElement {
         setLoading(false);
       }
     }
-  };
+  }, [clearUpdateContent, applyLoadedLogs]);
 
-  const refreshRuntime = async (serverId: string) => {
+  const refreshRuntime = useCallback(async (serverId: string) => {
     const gen = ++runtimePollGenRef.current;
     if (typeof window.api.getServerRuntimeLog !== "function") {
       await load(serverId, { quiet: true });
@@ -158,7 +159,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
     setLogs((prev) =>
       replaceRuntimeLogs(prev, serverId, result.data.runtimeLogLines),
     );
-  };
+  }, [load]);
 
   useEffect(() => {
     setRuntimeSourceFilter("all");
@@ -199,20 +200,20 @@ export function ServerLogsPanel(props: Props): ReactElement {
       alive = false;
       clearUpdateContent();
     };
-  }, [props.server.id]);
+  }, [props.server.id, applyLoadedLogs, clearUpdateContent]);
 
   useEffect(() => {
     if (typeof window.api.onBackupsChanged !== "function") return undefined;
     return window.api.onBackupsChanged((payload) => {
-      if (payload.serverId !== props.server.id) return;
-      void load(props.server.id);
+      if (payload.serverId !== server.id) return;
+      void load(server.id);
     });
-  }, [props.server.id]);
+  }, [server.id, load]);
 
   // Live refresh Runtime while that tab is open (lightweight runtime-only IPC).
   useEffect(() => {
     if (activeSection !== "runtime") return undefined;
-    const serverId = props.server.id;
+    const serverId = server.id;
     const timer = window.setInterval(() => {
       void refreshRuntime(serverId);
     }, 1500);
@@ -220,21 +221,20 @@ export function ServerLogsPanel(props: Props): ReactElement {
       window.clearInterval(timer);
       runtimePollGenRef.current += 1;
     };
-  }, [props.server.id, activeSection]);
+  }, [server.id, activeSection, refreshRuntime]);
 
   // Drop large update-log strings when leaving the Updates section.
   useEffect(() => {
     if (activeSection === "updates") return;
     clearUpdateContent();
-  }, [activeSection]);
+  }, [activeSection, clearUpdateContent]);
 
   useEffect(() => {
-    const focus = props.focus;
     if (focus == null) {
       focusKeyRef.current = null;
       return;
     }
-    const key = `${props.server.id}:${focus.section ?? ""}:${focus.eventId ?? ""}:${focus.updateFileName ?? ""}:${focus.backupId ?? ""}`;
+    const key = `${server.id}:${focus.section ?? ""}:${focus.eventId ?? ""}:${focus.updateFileName ?? ""}:${focus.backupId ?? ""}`;
     if (focusKeyRef.current === key) return;
     focusKeyRef.current = key;
     autoScrollDoneRef.current = false;
@@ -256,11 +256,11 @@ export function ServerLogsPanel(props: Props): ReactElement {
     }
 
     void (async () => {
-      const data = logs?.serverId === props.server.id ? logs : await load(props.server.id);
+      const data = logs?.serverId === server.id ? logs : await load(server.id);
       // A newer focus effect may have started while we awaited load/openUpdateLog.
       if (focusKeyRef.current !== key) return;
       if (data == null) {
-        props.onFocusConsumed?.();
+        onFocusConsumed?.();
         return;
       }
 
@@ -271,7 +271,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
           data.updateFiles[0]?.fileName ??
           null;
         if (preferred !== null) {
-          await openUpdateLog(props.server.id, preferred);
+          await openUpdateLog(server.id, preferred);
           if (focusKeyRef.current !== key) return;
         }
       }
@@ -286,9 +286,10 @@ export function ServerLogsPanel(props: Props): ReactElement {
         setHighlightedBackupId(null);
       }
 
-      props.onFocusConsumed?.();
+      onFocusConsumed?.();
     })();
-  }, [props.focus, props.server.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- logs is read at execution time, not as a reactive trigger
+  }, [focus, server.id, load, openUpdateLog, onFocusConsumed]);
 
   useEffect(() => {
     if (highlightedEventId === null || activeSection !== "events") return;

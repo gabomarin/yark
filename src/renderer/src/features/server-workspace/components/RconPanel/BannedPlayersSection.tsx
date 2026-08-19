@@ -19,6 +19,7 @@ interface Props {
 }
 
 export function BannedPlayersSection(props: Props): ReactElement {
+  const { serverId, onEntriesLoaded } = props;
   const [actionKey, setActionKey] = useState<string | null>(null);
   const [banned, setBanned] = useState<OnlinePlayerInfo[]>([]);
   const [bannedLoading, setBannedLoading] = useState(false);
@@ -28,17 +29,17 @@ export function BannedPlayersSection(props: Props): ReactElement {
     setBannedLoading(true);
     setBannedError(null);
     try {
-      const result = await window.api.listBannedPlayers(props.serverId);
+      const result = await window.api.listBannedPlayers(serverId);
       if (result.ok) {
         setBanned(result.data);
-        props.onEntriesLoaded?.(result.data);
+        onEntriesLoaded?.(result.data);
       } else {
         setBannedError(result.error ?? "Could not read ban list");
       }
     } finally {
       setBannedLoading(false);
     }
-  }, [props.serverId, props.onEntriesLoaded]);
+  }, [serverId, onEntriesLoaded]);
 
   useEffect(() => {
     void loadBanned();
