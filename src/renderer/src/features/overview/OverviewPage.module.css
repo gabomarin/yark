@@ -85,6 +85,12 @@
   background: color-mix(in srgb, var(--app-color-panel-cool) 74%, transparent);
 }
 
+:global([data-ui-density="compact"]) .serverSkeleton {
+  grid-template-columns: 40px minmax(180px, 1.15fr) minmax(260px, 1fr) auto;
+  min-height: 64px;
+  padding: var(--app-space-xs) var(--app-space-sm);
+}
+
 .serverSkeletonIdentity {
   display: grid;
   gap: var(--app-space-xs);

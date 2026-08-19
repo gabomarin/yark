@@ -1123,4 +1123,75 @@ describe("ServerCard", () => {
     expect(screen.getByText("Stopping…")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "More options" })).toBeDisabled();
   });
+
+  it("sizes map thumb and Start by UI density (#233)", () => {
+    const callbacks = {
+      onStart: vi.fn(),
+      onStop: vi.fn(),
+      onKill: vi.fn(),
+      onRestart: vi.fn(),
+      onOpenWorkspace: vi.fn(),
+      onOpenLogs: vi.fn(),
+      onReviewError: vi.fn(),
+      onOpenFolder: vi.fn(),
+      onInstallFiles: vi.fn(),
+      onUpdateNow: vi.fn(),
+      onVerifyFiles: vi.fn(),
+      onCheckUpdates: vi.fn(),
+      onClone: vi.fn(),
+      onCopyConfiguration: vi.fn(),
+      onDelete: vi.fn(),
+      onCancelSteamCmd: vi.fn(),
+    };
+
+    const { rerender } = render(
+      <AppProviders density="compact">
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={installed}
+          officialSteamBuild={null}
+          {...callbacks}
+        />
+      </AppProviders>,
+    );
+
+    expect(document.querySelector("[data-server-card]")).toHaveAttribute(
+      "data-ui-density",
+      "compact",
+    );
+    expect(document.querySelector("[data-server-card] [data-shape]")).toHaveAttribute(
+      "data-size",
+      "md",
+    );
+    expect(screen.getByRole("button", { name: /^Start server$/i })).toHaveAttribute(
+      "data-size",
+      "md",
+    );
+
+    rerender(
+      <AppProviders density="comfortable">
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={installed}
+          officialSteamBuild={null}
+          {...callbacks}
+        />
+      </AppProviders>,
+    );
+
+    expect(document.querySelector("[data-server-card]")).toHaveAttribute(
+      "data-ui-density",
+      "comfortable",
+    );
+    expect(document.querySelector("[data-server-card] [data-shape]")).toHaveAttribute(
+      "data-size",
+      "lg",
+    );
+    expect(screen.getByRole("button", { name: /^Start server$/i })).toHaveAttribute(
+      "data-size",
+      "lg",
+    );
+  });
 });
