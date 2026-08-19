@@ -14,7 +14,7 @@ interface Props {
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
   officialSteamBuild: string | null;
-  officialVersion: string | null;
+  officialVersion?: string | null;
   steamCmdServerId: string | null;
   steamCmdBusy: boolean;
   steamCmdPausedByServerId?: ReadonlyMap<string, SteamCmdCardJobRef>;

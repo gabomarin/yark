@@ -21,7 +21,7 @@ interface Props {
 }
 
 export function ServerListPanelBody(props: Props): ReactElement {
-  const renderRow = (server: ServerProfile, iconMode: boolean): ReactElement => {
+  const renderRow = (server: ServerProfile): ReactElement => {
     const status = props.statuses.get(server.id)?.status ?? "stopped";
     return (
       <ServerListPanelRow
@@ -29,7 +29,7 @@ export function ServerListPanelBody(props: Props): ReactElement {
         server={server}
         status={status}
         selected={server.id === props.selectedServerId}
-        iconMode={iconMode}
+        iconMode={props.iconMode}
         onSelect={() => props.onSelectServer(server.id)}
       />
     );
@@ -39,7 +39,7 @@ export function ServerListPanelBody(props: Props): ReactElement {
   if (props.iconMode) {
     content =
       props.view === "ungrouped" ? (
-        <>{props.filtered.map((server) => renderRow(server, true))}</>
+        <>{props.filtered.map((server) => renderRow(server))}</>
       ) : (
         <>
           {props.groups.map((group, index) => (
@@ -51,14 +51,14 @@ export function ServerListPanelBody(props: Props): ReactElement {
                 />
               )}
               <Stack gap={4} className={classes.clusterRail} role="group" aria-label={group.label}>
-                {group.servers.map((server) => renderRow(server, true))}
+                {group.servers.map((server) => renderRow(server))}
               </Stack>
             </Fragment>
           ))}
         </>
       );
   } else if (props.view === "ungrouped") {
-    content = <>{props.filtered.map((server) => renderRow(server, false))}</>;
+    content = <>{props.filtered.map((server) => renderRow(server))}</>;
   } else {
     content = (
       <>
@@ -83,7 +83,7 @@ export function ServerListPanelBody(props: Props): ReactElement {
               </UnstyledButton>
               {open && (
                 <Stack gap={6} className={classes.clusterList}>
-                  {group.servers.map((server) => renderRow(server, false))}
+                  {group.servers.map((server) => renderRow(server))}
                 </Stack>
               )}
             </section>

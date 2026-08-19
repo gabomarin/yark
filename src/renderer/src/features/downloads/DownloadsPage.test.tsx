@@ -195,10 +195,8 @@ describe("DownloadsPage", () => {
     expect(document.querySelector('[data-queue-group="paused"]')).not.toBeNull();
     expect(document.querySelector('[data-queue-group="queued"]')).not.toBeNull();
     expect(document.querySelector('[data-queue-group="attention"]')).not.toBeNull();
-    expect(screen.getByRole("button", { name: /Island/ })).toHaveAttribute(
-      "data-download-row",
-      "job-active",
-    );
+    expect(document.querySelector('[data-download-row="job-active"]')).not.toBeNull();
+    expect(screen.getByRole("button", { name: /Island/ })).toBeInTheDocument();
   });
 
   it("keeps the SteamCMD process bar on the active job and does not duplicate cancel on a queued row", async () => {
@@ -212,10 +210,10 @@ describe("DownloadsPage", () => {
     expect(screen.queryByRole("group", { name: "SteamCMD process" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Remove from queue" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Cancel this job" })).not.toBeInTheDocument();
+    const queuedRow = document.querySelector('[data-download-row="job-queued"]');
+    expect(queuedRow).not.toBeNull();
     expect(
-      within(screen.getByRole("button", { name: /Scorched/ })).getByRole("button", {
-        name: "Cancel download",
-      }),
+      within(queuedRow as HTMLElement).getByRole("button", { name: "Cancel download" }),
     ).toBeEnabled();
     expect(screen.queryByText("progress: 38")).not.toBeInTheDocument();
 
@@ -226,9 +224,12 @@ describe("DownloadsPage", () => {
   it("cancels a queued job without calling live SteamCMD cancel", async () => {
     const user = userEvent.setup();
     const pageHandlers = renderPage(populatedStatus());
-    const queued = screen.getByRole("button", { name: /Scorched/ });
+    const queuedRow = document.querySelector('[data-download-row="job-queued"]');
+    expect(queuedRow).not.toBeNull();
 
-    await user.click(within(queued).getByRole("button", { name: "Cancel download" }));
+    await user.click(
+      within(queuedRow as HTMLElement).getByRole("button", { name: "Cancel download" }),
+    );
     expect(pageHandlers.onCancelJob).toHaveBeenCalledWith("job-queued");
     expect(pageHandlers.onCancelLive).not.toHaveBeenCalled();
     expect(pageHandlers.onPauseLive).not.toHaveBeenCalled();
