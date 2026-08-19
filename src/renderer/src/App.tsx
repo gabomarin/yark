@@ -1078,7 +1078,11 @@ export function App({
         }
       }
 
-      await refresh();
+      try {
+        await refresh();
+      } catch {
+        // Refresh failure should not block closing the modal or showing the summary.
+      }
 
       const summary = summarizeUpdateAllOutdatedQueue({
         queuedCount,
@@ -1096,10 +1100,15 @@ export function App({
           setRoute("downloads");
         },
       });
-      setUpdateAllOutdatedOpen(false);
-      setUpdateAllOutdatedModalPlan(null);
+    } catch (err) {
+      showOperatorError(
+        err instanceof Error ? err.message : "Something went wrong queueing updates.",
+        "Could not queue updates",
+      );
     } finally {
       setUpdateAllOutdatedQueueing(false);
+      setUpdateAllOutdatedOpen(false);
+      setUpdateAllOutdatedModalPlan(null);
     }
   }, [
     installationInfo,
