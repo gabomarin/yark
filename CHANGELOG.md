@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Workspace **Launch** tab search filters curated ASA flags by token, description, or group while keeping Extra arguments and the command preview visible (#352).
 - Servers Overview and workspace server rail share **Order added** vs **A–Z** sort and icon-only **All servers / By cluster** layout toggles; preferences persist across reload (#351).
 - **Downloads** queue page with stacked job rows, active vs queued separation, shared server-card progress styling, `Open in Logs` focus on the related Events entry, and Pause/Resume for install and update jobs; workspace footer teaser on other pages replaces the floating progress dock. getyark.com gallery and SteamCMD docs include the queue (#201).
 

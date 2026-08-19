@@ -8,6 +8,7 @@ import {
   Text,
   Textarea,
 } from "@mantine/core";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 import { validateMapIdentity } from "@shared/map-identity";
 import type { ServerProfile } from "@shared/types";
 import {
@@ -18,10 +19,13 @@ import {
 import { useUiDensity } from "@app/AppProviders";
 import { LaunchOptionsCatalogModal } from "@features/servers/components/LaunchOptionsCatalogModal/LaunchOptionsCatalogModal";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { SearchField } from "@ui/SearchField/SearchField";
 import { ServerLaunchOptionRow } from "./ServerLaunchOptionRow";
 import { ServerLaunchPreview } from "./ServerLaunchPreview";
 import {
   buildLaunchPreviewParts,
+  filterGroupedStructuredOptions,
   findLaunchArgConflicts,
   groupStructuredOptions,
   STRUCTURED_LAUNCH_GROUP_ORDER,
@@ -40,6 +44,7 @@ export function ServerLaunchPanel(props: Props): ReactElement {
   const inputSize: "xs" | "sm" = density === "compact" ? "xs" : "sm";
   const [previewOpen, setPreviewOpen] = useState(true);
   const [catalogOpen, setCatalogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const {
     structured,
     rawText,
@@ -72,6 +77,12 @@ export function ServerLaunchPanel(props: Props): ReactElement {
     [structured, extraArgs],
   );
   const grouped = useMemo(() => groupStructuredOptions(), []);
+  const filteredGrouped = useMemo(
+    () => filterGroupedStructuredOptions(grouped, searchQuery),
+    [grouped, searchQuery],
+  );
+  const hasSearchQuery = searchQuery.trim().length > 0;
+  const hasSearchMatches = filteredGrouped.size > 0;
   const activeWarnings = useMemo(() => {
     return [...grouped.values()]
       .flat()
@@ -123,6 +134,14 @@ export function ServerLaunchPanel(props: Props): ReactElement {
             </Button>
           </Group>
 
+          <SearchField
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Filter flags by name, description, or group"
+            label="Filter launch flags"
+            size={inputSize}
+          />
+
           {error !== null ? <Alert color="red">{error}</Alert> : null}
           {mapIdentityWarnings.length > 0 ? (
             <Alert color="yellow" title="Custom map mod inconsistent">
@@ -141,8 +160,16 @@ export function ServerLaunchPanel(props: Props): ReactElement {
           ) : null}
 
           <div className={classes.groups}>
+            {hasSearchQuery && !hasSearchMatches ? (
+              <EmptyState
+                layout="stacked"
+                icon={<MagnifyingGlass size={20} />}
+                title="No flags match your search"
+                description="Try another token or group name, or clear the filter to see every curated option."
+              />
+            ) : null}
             {STRUCTURED_LAUNCH_GROUP_ORDER.map((groupId) => {
-              const options = grouped.get(groupId) ?? [];
+              const options = filteredGrouped.get(groupId) ?? [];
               if (options.length === 0) return null;
               const onCount = options.filter((o) =>
                 isStructuredOptionEffectivelyEnabled(o.curation.id, structured),

@@ -129,4 +129,58 @@ describe("ServerLaunchPanel", () => {
     const label = screen.getByText("-NoBattlEye");
     expect(label.tabIndex).toBe(0);
   });
+
+  it("filters curated flags by token, description, or group (#352)", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AppProviders>
+        <ServerLaunchPanel server={profile()} onServerUpdated={vi.fn()} />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText(/ForceAllowCaveFlyers/i)).toBeInTheDocument();
+    expect(screen.getByText(/passivemods/i)).toBeInTheDocument();
+
+    const search = screen.getByLabelText(/filter launch flags/i);
+    await user.type(search, "battleye");
+
+    expect(screen.getByText(/-NoBattlEye/i)).toBeInTheDocument();
+    expect(screen.queryByText(/ForceAllowCaveFlyers/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^extra arguments$/i)).toBeInTheDocument();
+  });
+
+  it("shows an empty state when search has no matches (#352)", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AppProviders>
+        <ServerLaunchPanel server={profile()} onServerUpdated={vi.fn()} />
+      </AppProviders>,
+    );
+
+    await user.type(screen.getByLabelText(/filter launch flags/i), "zzznomatch");
+
+    expect(screen.getByText(/no flags match your search/i)).toBeInTheDocument();
+    expect(screen.queryByText(/ForceAllowCaveFlyers/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^extra arguments$/i)).toBeInTheDocument();
+  });
+
+  it("restores the full grouped list when search is cleared (#352)", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AppProviders>
+        <ServerLaunchPanel server={profile()} onServerUpdated={vi.fn()} />
+      </AppProviders>,
+    );
+
+    const search = screen.getByLabelText(/filter launch flags/i);
+    await user.type(search, "battleye");
+    expect(screen.queryByText(/ForceAllowCaveFlyers/i)).not.toBeInTheDocument();
+
+    await user.clear(search);
+    expect(screen.getByText(/ForceAllowCaveFlyers/i)).toBeInTheDocument();
+    expect(screen.getByText(/world & gameplay/i)).toBeInTheDocument();
+  });
 });

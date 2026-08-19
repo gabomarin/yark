@@ -70,6 +70,10 @@ in a **tooltip on the flag name** (no inline summary, no “Show more options”
 Only `supported` entries are eligible; remaining YARK-owned tokens (map / port /
 max players / mods / cluster) never appear as toggles.
 
+Use the tab **search field** to filter curated rows by flag token, tooltip text,
+or group name; groups with no matches hide until you clear the filter. Extra
+arguments and the command preview stay visible while filtering (#352).
+
 **Dependent options:** curated rows with `dependsOn` render in the same 2-column
 grid immediately after their parent (chains recurse: parent → child → grandchild).
 They stay disabled until every ancestor is enabled; compose skips them unless the
