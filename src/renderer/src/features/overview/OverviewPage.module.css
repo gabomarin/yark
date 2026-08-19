@@ -82,6 +82,7 @@
   padding: var(--app-space-sm) var(--app-space-md);
   border: 1px solid var(--app-color-border);
   border-radius: 0;
+  background-clip: padding-box;
   background: color-mix(in srgb, var(--app-color-panel-cool) 74%, transparent);
 }
 

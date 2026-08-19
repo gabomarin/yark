@@ -147,6 +147,8 @@ gap: var(--app-space-sm);            // preferred in CSS modules
 
 Avoid raw `border-radius: 8px|14px` when a token fits. Tek icon tiles keep asymmetric radius by design (`AccentIconTile shape="tek"`).
 
+**Square vs rounded:** Overview server **list rows** (`ServerCard`) and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one list. Nested panels keep tokens: `AppSurfaceCard` default `lg`, logs/copy Accordion and form cards `md`. Do not square those to match the Overview list.
+
 ### 4. Color / status
 
 - Semantic: `--app-color-ok|warn|attention|danger` (danger aliases bad). Use Mantine
@@ -321,7 +323,7 @@ line (#234).
 
 ## Still feature-local (by design)
 
-- `ServerCard` product chrome (square list rows, straight status rail; Compact vs Comfortable thumb/padding/type)
+- `ServerCard` product chrome (square list rows, straight status rail; stopped keeps a faint fill + accent rail so it does not scan as Inactive)
 - Downloads queue / footer teaser elevation
 - Settings SteamCMD path row (`ReadonlyPath` + Choose… + Install CTA; not `PathField`)
 - Server workspace 3-column shell / INI editor tables

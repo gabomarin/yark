@@ -247,7 +247,9 @@ export function BackupsPage(props: Props): ReactElement {
     summary !== null &&
     summary.stats.totalBackupBytes === 0 &&
     summary.stats.failed24h === 0 &&
-    summary.stats.atRiskCount === 0;
+    summary.stats.atRiskCount === 0 &&
+    summary.stats.protectedCount === 0 &&
+    summary.servers.every((row) => !row.policy.enabled);
 
   const savePolicy = async (serverId: string) => {
     const draft = drafts[serverId];

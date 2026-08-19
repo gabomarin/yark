@@ -273,4 +273,75 @@ describe("BackupsPage", () => {
 
     expect(await screen.findByText("Inactive")).toBeInTheDocument();
   });
+
+  it("hides fleet KPIs when there is no backup history and no enabled schedule", async () => {
+    (window.api.getBackupFleetSummary as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      data: {
+        ...fleetSummary,
+        servers: [
+          {
+            ...fleetSummary.servers[0]!,
+            latest: null,
+            latestWorld: null,
+            counts: { world: 0, players: 0, ini: 0, failed24h: 0 },
+            usedBytes: 0,
+          },
+        ],
+        stats: {
+          protectedCount: 0,
+          atRiskCount: 0,
+          failed24h: 0,
+          totalBackupBytes: 0,
+        },
+        disks: [{ ...fleetSummary.disks[0]!, backupBytes: 0 }],
+      },
+    });
+
+    render(
+      <AppProviders>
+        <BackupsPage servers={[server]} onOpenServerBackups={vi.fn()} />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByText(/No backups yet/i)).toBeInTheDocument();
+    expect(document.querySelector("[data-backup-fleet-quiet]")).toBeInTheDocument();
+  });
+
+  it("keeps fleet KPIs when a schedule is on with no backup files yet", async () => {
+    (window.api.getBackupFleetSummary as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      data: {
+        ...fleetSummary,
+        servers: [
+          {
+            ...fleetSummary.servers[0]!,
+            policy: { ...fleetSummary.servers[0]!.policy, enabled: true },
+            latest: null,
+            latestWorld: null,
+            counts: { world: 0, players: 0, ini: 0, failed24h: 0 },
+            usedBytes: 0,
+            health: "unknown",
+          },
+        ],
+        stats: {
+          protectedCount: 0,
+          atRiskCount: 0,
+          failed24h: 0,
+          totalBackupBytes: 0,
+        },
+        disks: [{ ...fleetSummary.disks[0]!, backupBytes: 0 }],
+      },
+    });
+
+    render(
+      <AppProviders>
+        <BackupsPage servers={[server]} onOpenServerBackups={vi.fn()} />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByText("0/1")).toBeInTheDocument();
+    expect(document.querySelector("[data-backup-fleet-quiet]")).toBeNull();
+    expect(screen.queryByText(/No backups yet/i)).not.toBeInTheDocument();
+  });
 });

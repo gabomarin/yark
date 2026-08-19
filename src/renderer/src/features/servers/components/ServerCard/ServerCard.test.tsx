@@ -78,6 +78,12 @@ describe("ServerCard", () => {
     await user.click(screen.getByRole("button", { name: /^Start server$/i }));
     expect(onStart).toHaveBeenCalledTimes(1);
 
+    expect(document.querySelector("[data-server-card]")).toHaveAttribute("data-tone", "stopped");
+    expect(document.querySelector("[data-server-card]")).not.toHaveAttribute(
+      "data-disabled",
+      "true",
+    );
+
     await user.click(screen.getByRole("button", { name: /Open settings for The Island/i }));
     expect(onOpenWorkspace).toHaveBeenCalledTimes(1);
   });

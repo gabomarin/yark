@@ -12,6 +12,7 @@
       color-mix(in srgb, var(--app-color-panel-cool) 72%, var(--app-color-panel)) 100%
     );
   max-width: 100%;
+  background-clip: padding-box;
   transition:
     border-color 140ms ease,
     background-color 140ms ease;
@@ -27,8 +28,16 @@
 }
 
 .card[data-tone="stopped"] {
-  background-image: none;
-  background-color: color-mix(in srgb, var(--app-color-panel-cool) 62%, var(--app-color-panel));
+  background-image: linear-gradient(
+    108deg,
+    color-mix(in srgb, var(--app-color-panel-cool-emphasis) 22%, transparent) 0%,
+    transparent 58%
+  );
+  background-color: color-mix(in srgb, var(--app-color-panel-cool) 82%, var(--app-color-panel));
+}
+
+.card[data-tone="stopped"]::before {
+  background: color-mix(in srgb, var(--app-color-accent) 32%, var(--app-color-border));
 }
 
 .card[data-tone="running"] {
@@ -73,8 +82,12 @@
 }
 
 .card[data-tone="stopped"]:hover {
-  background-image: none;
-  background-color: color-mix(in srgb, var(--app-color-panel-cool) 74%, var(--app-color-panel));
+  background-image: linear-gradient(
+    108deg,
+    color-mix(in srgb, var(--app-color-panel-cool-emphasis) 34%, transparent) 0%,
+    transparent 58%
+  );
+  background-color: color-mix(in srgb, var(--app-color-panel-cool) 88%, var(--app-color-panel));
 }
 
 .card[data-tone="running"]:hover {

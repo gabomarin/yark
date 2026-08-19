@@ -98,7 +98,7 @@ export function AttentionIssuesPopover({ issues }: Props): ReactElement | null {
           type="button"
           size="sm"
           color="attention"
-          variant="outline"
+          variant="light"
           tt="none"
           className={classes.trigger}
           style={{ cursor: "pointer" }}

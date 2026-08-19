@@ -11,7 +11,7 @@ export function ClusterGuidanceCard({ defaultOpen = false }: Props): ReactElemen
   return (
     <Accordion
       variant="contained"
-      radius="md"
+      radius={0}
       chevronPosition="left"
       defaultValue={defaultOpen ? "how" : null}
       className={classes.guidanceCard}
