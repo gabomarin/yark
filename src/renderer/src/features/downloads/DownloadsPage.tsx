@@ -97,34 +97,38 @@ export function DownloadsPage(props: Props): ReactElement {
     }
   };
 
+  const steamcmdMissingBanner =
+    !props.status.detected && rows.length > 0 ? (
+      <Alert
+        color="red"
+        variant="light"
+        title="SteamCMD is not installed"
+        className={classes.steamcmdMissingBanner}
+        data-steamcmd-missing-banner
+      >
+        <Stack gap="xs">
+          Install SteamCMD in Settings before installs, updates, or verify can
+          run.
+          {props.onOpenSettings !== undefined && (
+            <Button
+              size="compact-sm"
+              variant="light"
+              color="red"
+              onClick={props.onOpenSettings}
+            >
+              Install SteamCMD
+            </Button>
+          )}
+        </Stack>
+      </Alert>
+    ) : null;
+
   const queuePane = (
     <section
       ref={queueRef}
       className={classes.queueSection}
       aria-label="Download queue"
     >
-      {!props.status.detected && rows.length > 0 && (
-        <Alert
-          color="red"
-          title="SteamCMD is not installed"
-          data-steamcmd-missing-banner
-        >
-          <Stack gap="xs">
-            Install SteamCMD in Settings before installs, updates, or
-            verify can run.
-            {props.onOpenSettings !== undefined && (
-              <Button
-                size="compact-sm"
-                variant="light"
-                color="red"
-                onClick={props.onOpenSettings}
-              >
-                Install SteamCMD
-              </Button>
-            )}
-          </Stack>
-        </Alert>
-      )}
       {rows.length === 0 ? (
         <EmptyState
           icon={<DownloadSimple size={28} weight="duotone" />}
@@ -221,7 +225,10 @@ export function DownloadsPage(props: Props): ReactElement {
           }
         >
           <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[0]} min={30}>
-            <div className={classes.upperPane}>{queuePane}</div>
+            <div className={classes.upperPane}>
+              {steamcmdMissingBanner}
+              {queuePane}
+            </div>
           </Splitter.Pane>
           <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[1]} min={20}>
             {consolePane}

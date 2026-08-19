@@ -52,6 +52,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Overview server cards no longer show an animated progress bar for queued or paused jobs; only live SteamCMD work shows progress (#378).
 - Cancelling a queued job no longer starts the next server while another job is paused (#201).
 - Overview **Update All** header enable state stays live while the confirm modal is open (#378).
+- Downloads **SteamCMD is not installed** banner no longer collapses to a thin strip when the queue has rows (#378).
 - SteamCMD queue status pushes immediately when the queue stops on a paused or restart-interrupted job (#201).
 - Merging duplicate recovered Downloads jobs preserves **restartInterrupted** so the queue still waits for Retry (#201).
 - Profile DB migration adds an index on `servers(created_at, id)` so default **Order added** list loads stay fast as fleets grow (#351).

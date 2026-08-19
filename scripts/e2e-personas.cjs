@@ -111,12 +111,22 @@ async function runExperiencedFlow(page, serverName) {
   await card.getByRole("button", { name: "More options" }).click();
   await page.getByRole("menuitem", { name: "Clone" }).click();
 
+  const dialog = page.getByRole("dialog", { name: /Clone server/i });
+  await dialog.waitFor({ state: "visible", timeout: 10_000 });
+  const expectedCloneName = `${serverName}-copy`;
+  const nameField = dialog.getByRole("textbox", { name: /Server name/i });
+  await nameField.waitFor({ state: "visible", timeout: 10_000 });
+  assert.equal((await nameField.inputValue()).trim(), expectedCloneName);
+  await dialog.getByRole("button", { name: "Clone server" }).click();
+  await dialog.waitFor({ state: "hidden", timeout: 15_000 });
+
   const cloneTitle = page.locator("[data-server-card]", {
-    hasText: `${serverName} (copy`,
+    has: page.getByText(expectedCloneName, { exact: true }),
   }).first();
-  await cloneTitle.waitFor({ state: "visible", timeout: 15000 });
-  const cloneName = (await cloneTitle.getAttribute("data-server-name"))?.trim() ?? "";
-  assert.ok(cloneName.includes("(copy"), "Cloned server was not detected");
+  await cloneTitle.waitFor({ state: "visible", timeout: 15_000 });
+  const cloneName =
+    (await cloneTitle.getAttribute("data-server-name"))?.trim() ?? expectedCloneName;
+  assert.equal(cloneName, expectedCloneName);
 
   // Experienced-user navigation through operational sections.
   await page.getByRole("button", { name: "Logs" }).first().click();

@@ -26,6 +26,11 @@
   overflow: hidden;
 }
 
+.steamcmdMissingBanner {
+  flex-shrink: 0;
+  margin-bottom: var(--app-space-xs);
+}
+
 .queueSection {
   display: flex;
   flex: 1 1 0;

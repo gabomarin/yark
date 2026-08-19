@@ -7,6 +7,7 @@
  * - Emits launch diagnostics when firstWindow / overview never appears.
  */
 const assert = require("node:assert/strict");
+const { execFileSync, spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
@@ -157,9 +158,23 @@ async function waitForOverview(app, options = {}) {
 }
 
 /**
+ * Auto-accept Electron dialog.showMessageBox (first button = Stop / OK).
  * @param {import('playwright').ElectronApplication} app
  */
-async function quitElectronApp(app) {
+async function autoConfirmNativeDialogs(app) {
+  await app.evaluate(async ({ dialog }) => {
+    dialog.showMessageBox = async () => ({ response: 0, checkboxChecked: false });
+  });
+}
+
+/**
+ * @param {import('playwright').ElectronApplication} app
+ * @param {{ autoConfirmQuitDialog?: boolean }} [options]
+ */
+async function quitElectronApp(app, options = {}) {
+  if (options.autoConfirmQuitDialog) {
+    await autoConfirmNativeDialogs(app);
+  }
   const proc = app.process();
   const exited =
     proc == null || proc.exitCode != null
@@ -266,6 +281,94 @@ async function openSettingsCategory(page, categoryLabel) {
  * Remove a disposable fixture directory with a few EBUSY/EPERM retries (Windows).
  * @param {string} target
  */
+function forceKillPid(pid, { tree = true } = {}) {
+  if (process.platform !== "win32") {
+    return;
+  }
+  const args = tree
+    ? ["/PID", String(pid), "/F", "/T"]
+    : ["/PID", String(pid), "/F"];
+  spawnSync("taskkill", args, {
+    windowsHide: true,
+    stdio: "ignore",
+  });
+}
+
+/**
+ * List PIDs via PowerShell without interpolating paths into -Command.
+ * @param {string} envName
+ * @param {string} matchValue
+ * @param {string} filterScript
+ * @returns {number[]}
+ */
+function listPidsMatchingEnv(envName, matchValue, filterScript) {
+  if (process.platform !== "win32") {
+    return [];
+  }
+  try {
+    const encoded = Buffer.from(filterScript, "utf16le").toString("base64");
+    const listed = execFileSync(
+      "powershell.exe",
+      ["-NoProfile", "-NoLogo", "-NonInteractive", "-EncodedCommand", encoded],
+      {
+        encoding: "utf8",
+        windowsHide: true,
+        timeout: 10000,
+        env: { ...process.env, [envName]: matchValue },
+      },
+    )
+      .split(/\r?\n/)
+      .map((line) => Number(line.trim()))
+      .filter((pid) => Number.isInteger(pid) && pid > 0);
+    return listed;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Kill leftover Electron/YARK processes from E2E runs (isolated userData or
+ * fixture trees). Uses process trees so renderer/GPU helpers do not linger.
+ * @param {{ quiet?: boolean }} [options]
+ * @returns {number[]}
+ */
+function killStrayElectronApps(options = {}) {
+  if (process.platform !== "win32") {
+    return [];
+  }
+  const quiet = options.quiet === true;
+  const killed = new Set();
+
+  const electronScript = [
+    "Get-CimInstance Win32_Process | Where-Object {",
+    "$p = $_;",
+    "$p.Name -match '^(electron|YARK)\\.exe$'",
+    "-and $null -ne $p.CommandLine",
+    "-and (",
+    "$p.CommandLine.Contains('YARK_E2E_USER_DATA')",
+    "-or $p.CommandLine.Contains('asa-e2e\\\\profiles')",
+    "-or $p.CommandLine.Contains('yark-e2e\\\\profiles')",
+    ")",
+    "} | ForEach-Object { $_.ProcessId }",
+  ].join(" ");
+
+  for (const pid of listPidsMatchingEnv(
+    "YARK_E2E_KILL_UNUSED",
+    "1",
+    electronScript,
+  )) {
+    forceKillPid(pid, { tree: true });
+    killed.add(pid);
+  }
+
+  if (!quiet && killed.size > 0) {
+    console.log(
+      `E2E_KILL_LEFTOVER killed ${killed.size} Electron process tree(s): ${[...killed].join(", ")}`,
+    );
+  }
+  return [...killed];
+}
+
 async function removeFixtureDir(target) {
   if (!fs.existsSync(target)) return;
   let lastError = null;
@@ -292,6 +395,8 @@ module.exports = {
   launchElectronApp,
   waitForOverview,
   quitElectronApp,
+  autoConfirmNativeDialogs,
+  killStrayElectronApps,
   stubFolderPicker,
   pickPathField,
   openSettingsCategory,

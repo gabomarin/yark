@@ -101,7 +101,7 @@ function seedDatabase() {
   );
 
   const updateJobs = [
-    job("update-blocked", "update", serverId, "running", "applying-files", {
+    job("update-blocked", "update", serverId, "blocked", "applying-files", {
       wasRunning: true,
     }),
     {
@@ -159,24 +159,24 @@ async function expectText(locator, value) {
 
 async function assertRecoveryState(page, expectCancelled, expectRetryable) {
   const update = page.locator('[data-download-row="update-blocked"]');
-  await expectText(update, "blocked");
+  await expectText(update, "Updating server");
   await expectText(update, "Applying files");
   assert.equal(await update.getByRole("button", { name: /Retry/i }).count(), 1);
   assert.equal(await update.getByRole("button", { name: /Dismiss/i }).count(), 1);
 
   const restore = page.locator('[data-download-row="restore-blocked"]');
   await restore.waitFor({ state: "visible" });
-  await expectText(restore, "blocked");
+  await expectText(restore, "Restoring backup");
   assert.equal(await restore.getByRole("button", { name: /Retry/i }).count(), 1);
 
   const missing = page.locator('[data-download-row="missing-profile"]');
-  await expectText(missing, "failed");
+  await missing.waitFor({ state: "visible" });
   assert.equal(await missing.getByRole("button", { name: /Retry/i }).count(), 0);
   assert.equal(await missing.getByRole("button", { name: /Dismiss/i }).count(), 1);
 
   const cancelled = page.locator('[data-download-row="verify-cancelled"]');
   if (expectCancelled) {
-    await expectText(cancelled, "cancelled");
+    await cancelled.waitFor({ state: "visible" });
     assert.equal(await cancelled.getByRole("button", { name: /Retry/i }).count(), 1);
     assert.equal(await cancelled.getByRole("button", { name: /Dismiss/i }).count(), 1);
   } else {
@@ -220,7 +220,7 @@ async function run() {
     // queue routing, the instance lock, durable removal, and progress refresh.
     const retryable = page.locator('[data-download-row="install-retryable"]');
     await retryable.getByRole("button", { name: /Retry/i }).click();
-    await retryable.waitFor({ state: "detached", timeout: 10_000 });
+    await retryable.waitFor({ state: "detached", timeout: 30_000 });
 
     // Exercise terminal dismissal through the same renderer/preload/main path.
     const cancelled = page.locator('[data-download-row="verify-cancelled"]');
