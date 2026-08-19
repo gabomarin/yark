@@ -36,12 +36,36 @@ async function run() {
       h1.includes("Servers") || h1.includes("YARK"),
       `Unexpected title. Expected to include 'Servers' or 'YARK', got: ${h1}`,
     );
+    assert.equal(
+      await page.getByText("Monitor and manage all your ARK servers").count(),
+      0,
+      "Overview must not restate the nav item in a page subtitle",
+    );
+    await page.getByText("Create your first server").waitFor({
+      state: "visible",
+      timeout: 10000,
+    });
+    await page.getByText("Add a profile on this PC, then install dedicated server files.").waitFor({
+      state: "visible",
+      timeout: 5000,
+    });
 
     const navLabels = ["Servers", "Clusters", "Backups", "Logs", "Settings"];
     for (const label of navLabels) {
       const btn = page.getByRole("button", { name: label, exact: true }).first();
       assert.ok((await btn.count()) > 0, `Missing sidebar nav: ${label}`);
     }
+
+    await page.getByRole("button", { name: "Settings", exact: true }).first().click();
+    await page.getByRole("heading", { name: "Settings", level: 1 }).waitFor({
+      state: "visible",
+      timeout: 10000,
+    });
+    assert.equal(
+      await page.getByText("Preferences that apply to the whole app").count(),
+      0,
+      "Settings must not use a restating page subtitle",
+    );
 
     succeeded = true;
     console.log("E2E_OK");

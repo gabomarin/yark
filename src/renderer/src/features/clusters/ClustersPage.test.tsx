@@ -237,7 +237,7 @@ describe("ClustersPage", () => {
 
     expect(screen.getByText("Clusters")).toBeInTheDocument();
     expect(screen.getByText("No clusters configured")).toBeInTheDocument();
-    expect(screen.getByText("How transfers work here")).toBeInTheDocument();
+    expect(screen.getByText("How transfers work")).toBeInTheDocument();
     expect(document.querySelector("[data-clusters-page]")).toBeInTheDocument();
   });
 

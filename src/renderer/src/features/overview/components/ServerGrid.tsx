@@ -247,7 +247,7 @@ export function ServerGrid(props: Props): ReactElement {
             <VisuallyHidden>Loading servers</VisuallyHidden>
             {[0, 1].map((item) => (
               <div className={classes.serverSkeleton} key={item} aria-hidden="true">
-                <Skeleton circle width={44} height={44} />
+                <Skeleton circle width={52} height={52} />
                 <div className={classes.serverSkeletonIdentity}>
                   <Skeleton width="42%" height={14} radius="xl" />
                   <Skeleton width="68%" height={10} radius="xl" />
@@ -267,7 +267,7 @@ export function ServerGrid(props: Props): ReactElement {
           <EmptyState
             icon={<HardDrives size={24} weight="duotone" />}
             title="Create your first server"
-            description="Set up a world to play with friends or manage your community."
+            description="Add a profile on this PC, then install dedicated server files."
             titleOrder="h3"
             action={
               <Group gap="xs">

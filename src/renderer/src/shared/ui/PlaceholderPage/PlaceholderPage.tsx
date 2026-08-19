@@ -5,7 +5,7 @@ import classes from "./PlaceholderPage.module.css";
 
 interface Props {
   title: string;
-  subtitle: string;
+  subtitle?: string;
 }
 
 export function PlaceholderPage({ title, subtitle }: Props): ReactElement {

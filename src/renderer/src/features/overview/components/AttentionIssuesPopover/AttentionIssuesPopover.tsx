@@ -98,7 +98,8 @@ export function AttentionIssuesPopover({ issues }: Props): ReactElement | null {
           type="button"
           size="sm"
           color="attention"
-          variant="light"
+          variant="outline"
+          tt="none"
           className={classes.trigger}
           style={{ cursor: "pointer" }}
           data-attention-count={issues.length}

@@ -125,12 +125,10 @@ export function LogsPage(props: Props): ReactElement {
   return (
     <PageScaffold
       title="Logs"
-      subtitle="Recent problems and activity across servers. Expand a row for details, or open it in the server Logs tab."
       fillViewport
       actions={
         <Button
           variant="default"
-          leftSection={<ClockCounterClockwise size={16} />}
           onClick={() => void loadFleet()}
           disabled={loading}
         >

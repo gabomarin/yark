@@ -123,6 +123,11 @@ async function runExperiencedFlow(page, serverName) {
   await page.getByRole("heading", { name: "Logs" }).waitFor({ timeout: 10000 });
   await page.getByRole("button", { name: "Settings" }).first().click();
   await page.getByRole("heading", { name: "Settings" }).waitFor({ timeout: 10000 });
+  assert.equal(
+    await page.getByText("Preferences that apply to the whole app").count(),
+    0,
+    "Settings must not use a restating page subtitle",
+  );
   await page.getByRole("button", { name: "Servers" }).first().click();
   await waitOverviewReady(page);
 

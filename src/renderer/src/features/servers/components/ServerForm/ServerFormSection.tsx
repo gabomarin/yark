@@ -8,7 +8,7 @@ import classes from "./ServerForm.module.css";
 
 interface Props {
   title?: string;
-  /** Uppercase meta above the title (create Identity / Reachability). */
+  /** Optional meta above the title (create Identity / Reachability). */
   eyebrow?: string;
   children: ReactNode;
   /** Embedded edit: flat stack. Page: AppSurfaceCard tone. */
@@ -35,7 +35,7 @@ export function ServerFormSection({
     return (
       <Stack gap="xs" className={spanClass}>
         {eyebrow !== undefined && (
-          <Text fz={11} c="dimmed" tt="uppercase" lts="0.12em">
+          <Text fz={11} c="dimmed">
             {eyebrow}
           </Text>
         )}
@@ -58,7 +58,7 @@ export function ServerFormSection({
     >
       <Stack gap="sm" className={fill ? classes.sectionFill : undefined}>
         {eyebrow !== undefined && (
-          <Text fz={11} c="dimmed" tt="uppercase" lts="0.12em">
+          <Text fz={11} c="dimmed">
             {eyebrow}
           </Text>
         )}

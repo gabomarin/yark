@@ -2,7 +2,6 @@ import type { ReactElement } from "react";
 import {
   CheckCircle,
   HardDrives,
-  MagicWand,
   SkipForward,
 } from "@phosphor-icons/react";
 import { Button, Group, Stack, Text, Title } from "@mantine/core";
@@ -50,7 +49,6 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
         <Stack gap="md">
           <section className={classes.card}>
             <Group gap="sm" mb="xs">
-              <MagicWand size={18} />
               <Title order={4}>Play experience</Title>
               {experienceDone && (
                 <CheckCircle size={18} color="var(--mantine-color-green-6)" />
@@ -62,7 +60,6 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
             <Group gap="xs">
               <Button
                 size="sm"
-                leftSection={<MagicWand size={16} />}
                 onClick={() => {
                   setExperienceDone(true);
                   props.onOpenAssistant();

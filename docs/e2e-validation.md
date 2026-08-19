@@ -77,6 +77,7 @@ modals, workspace tabs, PathFields):
 | UI surface | Likely scripts |
 | --- | --- |
 | Shell nav, Overview, New server / Clone / Delete | `e2e:smoke`, `e2e` |
+| Page titles without restating subtitles | `e2e:smoke`, `e2e`, `e2e:clusters-membership` |
 | Settings category sidebar or labels | `e2e:launch-args`, `e2e:quit-policy`, `e2e:log-retention` |
 | First-run setup wizard / splash | Any launch that must set `YARK_E2E_USER_DATA` |
 | Workspace Mods | `e2e:mods` |

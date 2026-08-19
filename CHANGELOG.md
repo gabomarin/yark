@@ -15,6 +15,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Overview, Settings, Clusters, Backups, Logs, and Downloads drop restating page subtitles; fleet backup KPIs stay hidden until there is history; status badges use sentence case; server cards give map art more room, a quieter stopped state, and a straight status rail (no decorative notch).
 - Server-list **Resume / Pause / Cancel** sit on the progress bar (not the Start slot). Queued servers look distinct, lock Start, toast when added to Downloads, and refuse duplicate clicks. Downloads labels Pause/Cancel as a SteamCMD process action on the **active** job (#201).
 - Downloads detail shows the **SteamCMD process** bar only for the active job. Queued jobs cancel from the row (no duplicate **Remove from queue** in the detail). Active rows no longer show a **SteamCMD active now** label (#201).
 - Queued Downloads rows slide when you **Move up / Move down** (#201).

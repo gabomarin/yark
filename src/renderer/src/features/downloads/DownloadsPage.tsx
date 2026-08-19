@@ -106,7 +106,6 @@ export function DownloadsPage(props: Props): ReactElement {
     return (
       <PageScaffold
         title="Downloads"
-        subtitle="SteamCMD installs, updates, and file copies on this PC."
         fillViewport
       >
         <EmptyState
@@ -134,7 +133,6 @@ export function DownloadsPage(props: Props): ReactElement {
   return (
     <PageScaffold
       title="Downloads"
-      subtitle="SteamCMD installs, updates, and file copies on this PC."
       fillViewport
     >
       <div className={classes.downloadsLayout} data-downloads-page>

@@ -1,5 +1,4 @@
 import type { ReactElement } from "react";
-import { ArrowsClockwise, HardDrives } from "@phosphor-icons/react";
 import { Button, Group, VisuallyHidden } from "@mantine/core";
 import { AddServerSplitButton } from "@features/servers/components/AddServerSplitButton/AddServerSplitButton";
 import classes from "../OverviewPage.module.css";
@@ -23,15 +22,11 @@ export function OverviewHeader({
 }: Props): ReactElement {
   return (
     <header className={classes.header}>
-      <div>
-        <h1 className={classes.title}>Servers</h1>
-        <p className={classes.subtitle}>Monitor and manage all your ARK servers</p>
-      </div>
+      <h1 className={classes.title}>Servers</h1>
       <Group gap="sm" wrap="wrap" justify="flex-end" className={classes.headerActions}>
         <Button
           variant="subtle"
           color="gray"
-          leftSection={checkingInstalls ? undefined : <HardDrives size={16} />}
           onClick={onCheckInstalls}
           loading={checkingInstalls}
           data-install-health-scan={checkingInstalls || undefined}
@@ -51,7 +46,6 @@ export function OverviewHeader({
         <Button
           variant="subtle"
           color="gray"
-          leftSection={<ArrowsClockwise size={16} />}
           onClick={onCheckUpdates}
           loading={checkingUpdates}
         >

@@ -167,7 +167,7 @@ describe("BackupsPage", () => {
     );
 
     expect(await screen.findByRole("heading", { name: "Backups" })).toBeInTheDocument();
-    expect(screen.getByText(/Backup health, disk usage, and shared destination settings across all servers/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Backup health, disk usage, and shared destination settings across all servers/i)).not.toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "The Island" })).toBeInTheDocument();
     expect(screen.getByText("0/1")).toBeInTheDocument();
     expect(screen.getByText(/Schedule off/i)).toBeInTheDocument();

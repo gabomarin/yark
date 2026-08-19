@@ -216,7 +216,8 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
                     ? server.modMetadataCache?.[server.mapModId]?.thumbnailUrl
                     : null
                 }
-                size="md"
+                size="lg"
+                shape="rounded"
                 className={classes.thumb}
               />
               <div className={classes.identityText}>

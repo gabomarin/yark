@@ -74,6 +74,7 @@ Domain runbooks: [updates-steamcmd.md](updates-steamcmd.md),
 | Match Settings when the same control exists in first-run | Invent first-run-only jargon Settings does not use |
 | Name the product **server manager** when you need an identity line | “A local host for…” / localhost / “this Electron app” |
 | Status words operators already see (`Ready`, `Needs setup`, `Recommended`, `Installing…`) | Internal keys (`onboarding.v1`, `detected === false`) |
+| Page chrome: title + live status (`3 profiles · none running`) | A subtitle that restates the nav item (“Monitor and manage…”) |
 
 Examples:
 
@@ -205,7 +206,7 @@ sort is a temporary view; drag-to-reorder load order is enabled only while unsor
 | --- | --- |
 | Page title | PageScaffold `h1` via `--app-font-page` (Comfortable **28px** / Compact ≈23px) |
 | Panel title | Mantine `Title order={3|4}` |
-| Meta labels | uppercase + `letter-spacing: 0.04em` (e.g. Clusters `MetaStrip`) |
+| Meta labels | Clusters `MetaStrip` (uppercase + tracking); server-card meta is sentence case |
 | Body / muted | Mantine `Text` + `c="dimmed"` |
 
 **Follow-up candidate:** `--app-font-meta|title` if more screens invent competing sizes (12 vs 11 meta, 18 vs 16 panel titles).
@@ -320,7 +321,7 @@ line (#234).
 
 ## Still feature-local (by design)
 
-- `ServerCard` product chrome (status rail clip-path)
+- `ServerCard` product chrome (straight status rail)
 - Downloads queue / footer teaser elevation
 - Settings SteamCMD path row (`ReadonlyPath` + Choose… + Install CTA; not `PathField`)
 - Server workspace 3-column shell / INI editor tables

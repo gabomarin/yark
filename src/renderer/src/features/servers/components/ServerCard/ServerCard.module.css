@@ -22,10 +22,18 @@
   position: absolute;
   inset: 0 auto 0 0;
   z-index: 2;
-  width: 4px;
+  width: 3px;
   background: var(--app-color-border);
-  clip-path: polygon(0 0, 100% 0, 100% 38%, 55% 42%, 100% 46%, 100% 100%, 0 100%);
   content: "";
+}
+
+.card[data-tone="stopped"] {
+  background-image: none;
+  background-color: color-mix(in srgb, var(--app-color-panel-cool) 62%, var(--app-color-panel));
+}
+
+.card[data-tone="running"] {
+  border-color: color-mix(in srgb, var(--app-color-ok) 40%, var(--app-color-border));
 }
 
 .card[data-tone="running"]::before {
@@ -58,6 +66,15 @@
       color-mix(in srgb, var(--app-color-panel-cool) 92%, var(--ark-blue-3)) 56%,
       color-mix(in srgb, var(--app-color-panel-cool) 76%, var(--app-color-panel)) 100%
     );
+}
+
+.card[data-tone="stopped"]:hover {
+  background-image: none;
+  background-color: color-mix(in srgb, var(--app-color-panel-cool) 74%, var(--app-color-panel));
+}
+
+.card[data-tone="running"]:hover {
+  border-color: color-mix(in srgb, var(--app-color-ok) 50%, var(--app-color-accent));
 }
 
 .card[data-disabled="true"] {

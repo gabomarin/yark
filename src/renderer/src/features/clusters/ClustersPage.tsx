@@ -64,14 +64,13 @@ export function ClustersPage(props: Props): ReactElement {
   return (
     <PageScaffold
       title="Clusters"
-      subtitle="Compatibility checks and guidance for Cluster ID and shared cluster directory across your maps"
       fillViewport
       actions={
         <Button onClick={() => setCreateOpen(true)}>Create cluster</Button>
       }
     >
       <Stack gap="md" className={classes.content} data-clusters-page>
-        <ClusterGuidanceCard />
+        <ClusterGuidanceCard defaultOpen={sortedReports.length === 0} />
         <ClusterSummaryBadges
           clusterCount={sortedReports.length}
           readyCount={sortedReports.length - errorCount}

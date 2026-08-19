@@ -60,42 +60,36 @@ export function AppRouter(props: Props): ReactElement {
         return props.overview?.page ?? (
           <PlaceholderPage
             title="Servers"
-            subtitle="Monitor and manage all your ARK servers"
           />
         );
       case "downloads":
         return props.downloads?.page ?? (
           <PlaceholderPage
             title="Downloads"
-            subtitle="SteamCMD installs, updates, and file copies on this PC"
           />
         );
       case "clusters":
         return props.clusters?.page ?? (
           <PlaceholderPage
             title="Clusters"
-            subtitle="Compatibility and cross-map transfers"
           />
         );
       case "backups":
         return props.backups?.page ?? (
           <PlaceholderPage
             title="Backups"
-            subtitle="Backup history and restore"
           />
         );
       case "logs":
         return props.logs?.page ?? (
           <PlaceholderPage
             title="Logs"
-            subtitle="Events, runtime, updates, and backups per server"
           />
         );
       case "settings":
         return props.settings?.page ?? (
           <PlaceholderPage
             title="Settings"
-            subtitle="General application settings"
           />
         );
       default:
