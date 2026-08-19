@@ -167,6 +167,7 @@ export function ServerGrid(props: Props): ReactElement {
 
   const renderServerCard = (server: ServerProfile): ReactElement => (
     <OverviewServerCard
+      key={server.id}
       server={server}
       statuses={props.statuses}
       installationInfo={props.installationInfo}

@@ -45,7 +45,6 @@ export function OverviewServerCard(props: Props): ReactElement {
 
   return (
     <ServerCard
-      key={props.server.id}
       server={props.server}
       runtime={props.statuses.get(props.server.id) ?? null}
       installation={props.installationInfo.get(props.server.id) ?? null}
