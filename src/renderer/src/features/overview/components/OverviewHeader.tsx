@@ -8,8 +8,11 @@ interface Props {
   onImportServer: () => void;
   onCheckUpdates: () => void;
   onCheckInstalls: () => void;
+  onUpdateAllOutdated?: () => void;
   checkingUpdates?: boolean;
   checkingInstalls?: boolean;
+  canUpdateAllOutdated?: boolean;
+  openingUpdateAllOutdated?: boolean;
 }
 
 export function OverviewHeader({
@@ -17,16 +20,23 @@ export function OverviewHeader({
   onImportServer,
   onCheckUpdates,
   onCheckInstalls,
+  onUpdateAllOutdated,
   checkingUpdates = false,
   checkingInstalls = false,
+  canUpdateAllOutdated = false,
+  openingUpdateAllOutdated = false,
 }: Props): ReactElement {
   return (
     <header className={classes.header}>
       <h1 className={classes.title}>Servers</h1>
-      <Group gap="sm" wrap="wrap" justify="flex-end" className={classes.headerActions}>
+      <Group gap="md" wrap="wrap" justify="flex-end" className={classes.headerActions}>
         <Button
-          variant="subtle"
+          variant="transparent"
           color="gray"
+          classNames={{
+            root: classes.headerActionButton,
+            label: classes.headerActionButtonLabel,
+          }}
           onClick={onCheckInstalls}
           loading={checkingInstalls}
           data-install-health-scan={checkingInstalls || undefined}
@@ -44,13 +54,32 @@ export function OverviewHeader({
           </VisuallyHidden>
         ) : null}
         <Button
-          variant="subtle"
+          variant="transparent"
           color="gray"
+          classNames={{
+            root: classes.headerActionButton,
+            label: classes.headerActionButtonLabel,
+          }}
           onClick={onCheckUpdates}
           loading={checkingUpdates}
         >
-          Check for updates
+          Check server updates
         </Button>
+        {onUpdateAllOutdated !== undefined ? (
+          <Button
+            variant="transparent"
+            color="gray"
+            classNames={{
+              root: classes.headerActionButton,
+              label: classes.headerActionButtonLabel,
+            }}
+            onClick={onUpdateAllOutdated}
+            disabled={!canUpdateAllOutdated}
+            loading={openingUpdateAllOutdated}
+          >
+            Update all outdated
+          </Button>
+        ) : null}
         <AddServerSplitButton
           primaryLabel="New server"
           onCreate={onCreateServer}

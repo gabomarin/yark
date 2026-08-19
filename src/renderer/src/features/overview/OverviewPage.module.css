@@ -25,6 +25,24 @@
   flex-shrink: 0;
 }
 
+.headerActionButton {
+  padding-inline: 0;
+  background: transparent;
+}
+
+.headerActionButton:hover:not(:disabled):not([data-disabled]) {
+  background: transparent;
+}
+
+.headerActionButtonLabel {
+  text-decoration: none;
+  text-underline-offset: 0.18em;
+}
+
+.headerActionButton:hover:not(:disabled):not([data-disabled]) .headerActionButtonLabel {
+  text-decoration: underline;
+}
+
 .content {
   display: flex;
   flex-direction: column;

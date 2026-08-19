@@ -108,7 +108,11 @@ Pre-update archives use backup type `pre_update` and kinds `world` / `ini`
 
 `isServerUpdateAvailable` / `getServerUpdateState` compare **Steam builds only**. Never treat runtime `ARK Version` vs an official/live server version as an update decision — staggered ASA rollouts make those non-equivalent.
 
-Official version and official build each cache for **15 minutes** in-process (`OFFICIAL_VERSION_TTL_MS`). `servers:installation` accepts `forceOfficialCheck` to bypass (used by **Check for updates** and **Check installs**). The status line is also parsed for network state (`Online` / `Deploying` / `Offline`); Deploying tints the sidebar version and shows a pulsing indicator.
+Official version and official build each cache for **15 minutes** in-process (`OFFICIAL_VERSION_TTL_MS`). `servers:installation` accepts `forceOfficialCheck` to bypass (used by **Check server updates**, **Update all outdated**, and **Check installs**). The status line is also parsed for network state (`Online` / `Deploying` / `Offline`); Deploying tints the sidebar version and shows a pulsing indicator.
+
+### Fleet update all (#378)
+
+Overview **Update all outdated** (next to **Check server updates**) opens only when at least one outdated server is stopped, enabled, install-ready, and not blocked by Downloads. The preview lists every outdated profile with current vs official Steam build when known, plus skip reasons (running, disabled, install not ready, unknown build, or an existing files job). Confirm queues one **Update** job per eligible server through the same safe-update pipeline as per-card **Update** — jobs run sequentially in Downloads order; running servers stay skipped until stopped.
 
 ### Installation health (#57)
 

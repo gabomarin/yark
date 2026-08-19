@@ -1,0 +1,15 @@
+.list {
+  padding-right: var(--app-space-xxs);
+}
+
+.row {
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-sm);
+  background: color-mix(in srgb, var(--app-color-bg) 35%, transparent);
+  padding: var(--app-space-xs) var(--app-space-sm);
+}
+
+.copy {
+  min-width: 0;
+  flex: 1;
+}

@@ -11,6 +11,8 @@ import type {
 import { OverviewHeader } from "./components/OverviewHeader";
 import { RecentActivityPanel } from "./components/RecentActivityPanel";
 import { ServerGrid, type SteamCmdCardJobRef } from "./components/ServerGrid";
+import { UpdateAllOutdatedModal } from "./components/UpdateAllOutdatedModal/UpdateAllOutdatedModal";
+import type { UpdateAllOutdatedPlan } from "./updateAllOutdatedModel";
 import classes from "./OverviewPage.module.css";
 
 interface Props {
@@ -21,6 +23,15 @@ interface Props {
   onImportServer: () => void;
   onCheckUpdates: () => void;
   onCheckInstalls: () => void;
+  onOpenUpdateAllOutdated?: () => void;
+  onCloseUpdateAllOutdated?: () => void;
+  onConfirmUpdateAllOutdated?: () => void;
+  updateAllOutdatedOpen?: boolean;
+  updateAllOutdatedPlan?: UpdateAllOutdatedPlan | null;
+  updateAllOutdatedLoading?: boolean;
+  updateAllOutdatedQueueing?: boolean;
+  canUpdateAllOutdated?: boolean;
+  openingUpdateAllOutdated?: boolean;
   checkingUpdates?: boolean;
   checkingInstalls?: boolean;
   servers: ServerProfile[];
@@ -73,8 +84,20 @@ export function OverviewPage(props: Props): ReactElement {
         onImportServer={props.onImportServer}
         onCheckUpdates={props.onCheckUpdates}
         onCheckInstalls={props.onCheckInstalls}
+        onUpdateAllOutdated={props.onOpenUpdateAllOutdated}
+        canUpdateAllOutdated={props.canUpdateAllOutdated}
+        openingUpdateAllOutdated={props.openingUpdateAllOutdated}
         checkingUpdates={props.checkingUpdates}
         checkingInstalls={props.checkingInstalls}
+      />
+
+      <UpdateAllOutdatedModal
+        opened={props.updateAllOutdatedOpen === true}
+        loading={props.updateAllOutdatedLoading}
+        queueing={props.updateAllOutdatedQueueing}
+        plan={props.updateAllOutdatedPlan ?? null}
+        onClose={() => props.onCloseUpdateAllOutdated?.()}
+        onConfirm={() => props.onConfirmUpdateAllOutdated?.()}
       />
 
       <div className={classes.content} data-overview-content>

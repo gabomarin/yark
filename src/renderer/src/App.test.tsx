@@ -305,7 +305,7 @@ describe("App empty installation snapshot", () => {
     const api = window.api;
     expect(api.getInstallationInfo).toHaveBeenCalledWith(false, true);
 
-    await user.click(screen.getByRole("button", { name: "Check for updates" }));
+    await user.click(screen.getByRole("button", { name: "Check server updates" }));
 
     await waitFor(() => {
       expect(api.getInstallationInfo).toHaveBeenCalledWith(true);

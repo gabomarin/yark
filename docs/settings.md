@@ -51,7 +51,7 @@ the Server tab / workspace.
 | App data folder shortcuts | Backup disk-alert thresholds (Backups page modal) |
 | Opted-in auto-start **summary** | Quit-with-servers Stop/Cancel dialog (hardcoded in main; not a Setting) |
 | **Log retention** limits + Clean up now | Per-section clear on Logs workspace; ASA Saved/Logs never touched — [logs.md](logs.md) |
-| **YARK updates** check / download / restart | Overview **Check for updates** is ASA/SteamCMD only; sidebar `vX.Y.Z` accents when a YARK update is available — [versioning.md](versioning.md) |
+| **YARK updates** check / download / restart | Overview **Check server updates** is ASA/SteamCMD only; sidebar `vX.Y.Z` accents when a YARK update is available — [versioning.md](versioning.md) |
 | **What's new** (curated notes, one-shot after upgrade) | Sidebar version label; Settings → About → What's new (#290) |
 | **Open setup assistant** (SteamCMD + Windows shell; full wizard when the fleet is empty) | First-run auto-show after a **successful** read when `onboarding.v1` is unset and there are no profiles; a read error keeps Overview usable and can be retried (#298) |
 
