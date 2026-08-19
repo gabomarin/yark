@@ -183,4 +183,30 @@ describe("ServerLaunchPanel", () => {
     expect(screen.getByText(/ForceAllowCaveFlyers/i)).toBeInTheDocument();
     expect(screen.getByText(/world & gameplay/i)).toBeInTheDocument();
   });
+
+  it("keeps group on-counts stable while filtering (#352)", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AppProviders>
+        <ServerLaunchPanel server={profile()} onServerUpdated={vi.fn()} />
+      </AppProviders>,
+    );
+
+    const securitySection = screen
+      .getByText(/security & integrity/i)
+      .closest("section");
+    expect(securitySection).not.toBeNull();
+    const countBefore = securitySection!.textContent?.match(/\d+\/\d+/)?.[0];
+    expect(countBefore).toBeTruthy();
+
+    await user.type(screen.getByLabelText(/filter launch flags/i), "battleye");
+
+    const securitySectionAfter = screen
+      .getByText(/security & integrity/i)
+      .closest("section");
+    expect(securitySectionAfter).not.toBeNull();
+    const countAfter = securitySectionAfter!.textContent?.match(/\d+\/\d+/)?.[0];
+    expect(countAfter).toBe(countBefore);
+  });
 });

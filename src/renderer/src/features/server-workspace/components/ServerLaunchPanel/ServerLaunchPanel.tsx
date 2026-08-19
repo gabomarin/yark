@@ -83,6 +83,7 @@ export function ServerLaunchPanel(props: Props): ReactElement {
   );
   const hasSearchQuery = searchQuery.trim().length > 0;
   const hasSearchMatches = filteredGrouped.size > 0;
+  // Preview cautions stay fleet-wide: filtering hides rows but argv still emits every enabled flag.
   const activeWarnings = useMemo(() => {
     return [...grouped.values()]
       .flat()
@@ -171,7 +172,8 @@ export function ServerLaunchPanel(props: Props): ReactElement {
             {STRUCTURED_LAUNCH_GROUP_ORDER.map((groupId) => {
               const options = filteredGrouped.get(groupId) ?? [];
               if (options.length === 0) return null;
-              const onCount = options.filter((o) =>
+              const allInGroup = grouped.get(groupId) ?? [];
+              const onCount = allInGroup.filter((o) =>
                 isStructuredOptionEffectivelyEnabled(o.curation.id, structured),
               ).length;
               return (
@@ -181,7 +183,7 @@ export function ServerLaunchPanel(props: Props): ReactElement {
                       {structuredLaunchGroupLabel(groupId)}
                     </span>
                     <Text size="xs" c="dimmed">
-                      {onCount}/{options.length}
+                      {onCount}/{allInGroup.length}
                     </Text>
                   </div>
                   <div className={classes.optionGrid}>

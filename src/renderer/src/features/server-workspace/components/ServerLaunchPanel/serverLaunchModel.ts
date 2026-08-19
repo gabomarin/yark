@@ -182,19 +182,19 @@ export function countEnabledStructured(structured: StructuredLaunchArgs): number
   ).length;
 }
 
-/** Operator-visible text for Launch tab search (#352). */
-export function matchesStructuredLaunchSearch(
+const structuredLaunchSearchHaystackCache = new Map<string, string>();
+
+/** Precomputed operator-visible text for Launch tab search (#352). */
+export function structuredLaunchSearchHaystack(
   option: StructuredLaunchUiOption,
   groupId: StructuredLaunchGroupId,
-  query: string,
-): boolean {
-  const q = query.trim().toLowerCase();
-  if (q.length === 0) return true;
+): string {
+  const key = `${groupId}:${option.curation.id}`;
+  const cached = structuredLaunchSearchHaystackCache.get(key);
+  if (cached !== undefined) return cached;
 
-  const label = option.entry.token.split(/[=\s]/)[0] ?? option.entry.id;
   const haystack = [
     option.entry.token,
-    label,
     option.entry.summary,
     option.entry.details,
     option.entry.description,
@@ -206,7 +206,19 @@ export function matchesStructuredLaunchSearch(
     .join(" ")
     .toLowerCase();
 
-  return haystack.includes(q);
+  structuredLaunchSearchHaystackCache.set(key, haystack);
+  return haystack;
+}
+
+/** Operator-visible text for Launch tab search (#352). */
+export function matchesStructuredLaunchSearch(
+  option: StructuredLaunchUiOption,
+  groupId: StructuredLaunchGroupId,
+  query: string,
+): boolean {
+  const q = query.trim().toLowerCase();
+  if (q.length === 0) return true;
+  return structuredLaunchSearchHaystack(option, groupId).includes(q);
 }
 
 export function filterGroupedStructuredOptions(
