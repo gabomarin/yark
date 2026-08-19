@@ -1,7 +1,6 @@
 import type { ReactElement } from "react";
 import {
   ArrowSquareOut,
-  Broom,
   FloppyDisk,
   FolderOpen,
   HardDrives,
@@ -14,7 +13,6 @@ import {
   Modal,
   NumberInput,
   Select,
-  SimpleGrid,
   Stack,
   Switch,
   Text,
@@ -22,7 +20,6 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
-import { AppMetricCard } from "@ui/AppMetricCard/AppMetricCard";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
@@ -49,6 +46,7 @@ import {
   BackupFleetAlertsPanel,
   type OpenFailedBackupLogsArgs,
 } from "./components/BackupFleetAlertsPanel/BackupFleetAlertsPanel";
+import { BackupFleetMetrics } from "./components/BackupFleetMetrics/BackupFleetMetrics";
 import classes from "./BackupsPage.module.css";
 
 interface Props {
@@ -245,13 +243,15 @@ export function BackupsPage(props: Props): ReactElement {
     return rows;
   }, [summary, healthFilter]);
 
-  const worstDisk = useMemo(() => {
-    const disks = summary?.disks ?? [];
-    if (disks.length === 0) return null;
-    return [...disks].sort(
-      (a, b) => (b.usedPercent ?? -1) - (a.usedPercent ?? -1),
-    )[0] ?? null;
-  }, [summary]);
+  // Quiet = no files, no risk, no enabled schedules. `protectedCount` is
+  // fleet health === "ok", not "a policy row exists".
+  const backupFleetQuiet =
+    summary !== null &&
+    summary.stats.totalBackupBytes === 0 &&
+    summary.stats.failed24h === 0 &&
+    summary.stats.atRiskCount === 0 &&
+    summary.stats.protectedCount === 0 &&
+    summary.servers.every((row) => !row.policy.enabled);
 
   const savePolicy = async (serverId: string) => {
     const draft = drafts[serverId];
@@ -405,7 +405,6 @@ export function BackupsPage(props: Props): ReactElement {
   return (
     <PageScaffold
       title="Backups"
-      subtitle="Backup health, disk usage, and shared destination settings across all servers. Create and restore from each server’s Backups tab."
       fillViewport
       actions={
         <Group gap="sm">
@@ -417,7 +416,6 @@ export function BackupsPage(props: Props): ReactElement {
             Refresh
           </Button>
           <Button
-            leftSection={<Broom size={16} />}
             variant="light"
             disabled={props.servers.length === 0}
             onClick={() => {
@@ -461,75 +459,18 @@ export function BackupsPage(props: Props): ReactElement {
               }}
             />
 
-            <SimpleGrid cols={{ base: 2, sm: 3, lg: 5 }} spacing="sm">
-              <AppMetricCard
-                label="Protected"
-                value={`${summary.stats.protectedCount}/${summary.servers.length}`}
-                active={healthFilter === "protected"}
-                onClick={() =>
-                  setHealthFilter((prev) => (prev === "protected" ? "all" : "protected"))
-                }
-              />
-              <AppMetricCard
-                label="At risk"
-                value={String(summary.stats.atRiskCount)}
-                tone={summary.stats.atRiskCount > 0 ? "warning" : "default"}
-                active={healthFilter === "at_risk"}
-                onClick={() =>
-                  setHealthFilter((prev) => (prev === "at_risk" ? "all" : "at_risk"))
-                }
-              />
-              <AppMetricCard
-                label="Failed (24h)"
-                value={String(summary.stats.failed24h)}
-                tone={summary.stats.failed24h > 0 ? "danger" : "default"}
-                active={healthFilter === "failed"}
-                onClick={() =>
-                  setHealthFilter((prev) => (prev === "failed" ? "all" : "failed"))
-                }
-              />
-              <AppMetricCard
-                label="Backup used"
-                value={formatBytes(summary.stats.totalBackupBytes)}
-              />
-              <AppMetricCard
-                label="Disk free"
-                value={
-                  worstDisk?.freeBytes != null
-                    ? formatBytes(worstDisk.freeBytes)
-                    : "—"
-                }
-                hint={
-                  summary.disks.length > 1
-                    ? worstDisk != null
-                      ? `Tightest: ${worstDisk.volumePath} · ${summary.disks.length} volumes`
-                      : `${summary.disks.length} volumes`
-                    : worstDisk?.usedPercent != null
-                      ? `${worstDisk.volumePath} · ${worstDisk.usedPercent.toFixed(0)}% used`
-                      : worstDisk?.volumePath
-                }
-                tone={
-                  worstDisk != null &&
-                  worstDisk.usedPercent != null &&
-                  worstDisk.usedPercent >= summary.diskSettings.criticalUsedPercent
-                    ? "danger"
-                    : worstDisk != null &&
-                        ((worstDisk.usedPercent != null &&
-                          worstDisk.usedPercent >= summary.diskSettings.warnUsedPercent) ||
-                          (worstDisk.freeBytes != null &&
-                            worstDisk.freeBytes < summary.diskSettings.warnFreeBytes))
-                      ? "warning"
-                      : "default"
-                }
-                progressPercent={worstDisk?.usedPercent ?? null}
-                onClick={() => {
-                  setDiskDraft(summary.diskSettings);
-                  setDiskModalOpen(true);
-                }}
-              />
-            </SimpleGrid>
+            <BackupFleetMetrics
+              summary={summary}
+              quiet={backupFleetQuiet}
+              healthFilter={healthFilter}
+              onHealthFilter={setHealthFilter}
+              onOpenDiskSettings={() => {
+                setDiskDraft(summary.diskSettings);
+                setDiskModalOpen(true);
+              }}
+            />
 
-            {summary.disks.length > 0 && (
+            {summary.disks.length > 0 && !backupFleetQuiet && (
               <Stack gap="xs">
                 <Group justify="space-between" align="center">
                   <Title order={5}>Volumes</Title>

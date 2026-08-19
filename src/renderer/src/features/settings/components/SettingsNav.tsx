@@ -50,7 +50,7 @@ export function SettingsNav(props: Props): ReactElement {
               leftSection={<Icon size={16} weight={active ? "fill" : "regular"} />}
               rightSection={
                 item.id === "steamcmd" && (props.steamCmdNeedsSetup || props.steamCmdBusy) ? (
-                  <Badge size="xs" color="yellow" variant="light">
+                  <Badge size="xs" color="yellow" variant="light" tt="none">
                     {props.steamCmdBusy ? "Working" : "Needs setup"}
                   </Badge>
                 ) : undefined

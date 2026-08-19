@@ -140,6 +140,15 @@ async function run() {
     // --- Create cluster (#42) with A + B ---
     await goNav(page, "Clusters");
     await page.locator("[data-clusters-page]").waitFor({ state: "visible", timeout: 15000 });
+    await page.getByRole("button", { name: "How transfers work" }).waitFor({
+      state: "visible",
+      timeout: 10000,
+    });
+    assert.equal(
+      await page.getByText("How transfers work here").count(),
+      0,
+      "Clusters guidance is a collapsed control, not a always-on explainer card",
+    );
     await page.getByRole("button", { name: /create cluster/i }).first().click();
     const createDialog = page.getByRole("dialog", { name: /create cluster/i });
     await createDialog.waitFor({ state: "visible", timeout: 10000 });

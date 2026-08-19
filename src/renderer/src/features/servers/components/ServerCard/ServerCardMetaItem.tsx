@@ -92,7 +92,7 @@ export function ServerCardMetaItem({
       data-meta-tone={valueTone}
       data-meta-hint={hasHint ? "true" : undefined}
     >
-      <Text c="dimmed" tt="uppercase" lts={0.04} display="block" fz="xs">
+      <Text c="dimmed" display="block" fz="xs">
         {label}
       </Text>
       {hasHint ? (

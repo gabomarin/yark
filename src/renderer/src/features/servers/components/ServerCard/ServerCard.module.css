@@ -1,7 +1,7 @@
 .card {
   position: relative;
   overflow: hidden;
-  border-radius: var(--app-radius-md);
+  border-radius: 0;
   border-color: color-mix(in srgb, var(--app-color-border) 72%, var(--ark-blue-7));
   background-color: var(--app-color-panel-cool);
   background-image:
@@ -11,8 +11,8 @@
       var(--app-color-panel-cool) 52%,
       color-mix(in srgb, var(--app-color-panel-cool) 72%, var(--app-color-panel)) 100%
     );
-  box-shadow: var(--app-shadow-panel);
   max-width: 100%;
+  background-clip: padding-box;
   transition:
     border-color 140ms ease,
     background-color 140ms ease;
@@ -22,10 +22,26 @@
   position: absolute;
   inset: 0 auto 0 0;
   z-index: 2;
-  width: 4px;
+  width: 3px;
   background: var(--app-color-border);
-  clip-path: polygon(0 0, 100% 0, 100% 38%, 55% 42%, 100% 46%, 100% 100%, 0 100%);
   content: "";
+}
+
+.card[data-tone="stopped"] {
+  background-image: linear-gradient(
+    108deg,
+    color-mix(in srgb, var(--app-color-panel-cool-emphasis) 22%, transparent) 0%,
+    transparent 58%
+  );
+  background-color: color-mix(in srgb, var(--app-color-panel-cool) 82%, var(--app-color-panel));
+}
+
+.card[data-tone="stopped"]::before {
+  background: color-mix(in srgb, var(--app-color-accent) 32%, var(--app-color-border));
+}
+
+.card[data-tone="running"] {
+  border-color: color-mix(in srgb, var(--app-color-ok) 40%, var(--app-color-border));
 }
 
 .card[data-tone="running"]::before {
@@ -49,6 +65,11 @@
   border-color: color-mix(in srgb, var(--app-color-cryo) 42%, var(--app-color-border));
 }
 
+.card:hover,
+.card:focus-within {
+  z-index: 1;
+}
+
 .card:hover {
   border-color: color-mix(in srgb, var(--app-color-border) 55%, var(--app-color-accent));
   background-image:
@@ -58,6 +79,19 @@
       color-mix(in srgb, var(--app-color-panel-cool) 92%, var(--ark-blue-3)) 56%,
       color-mix(in srgb, var(--app-color-panel-cool) 76%, var(--app-color-panel)) 100%
     );
+}
+
+.card[data-tone="stopped"]:hover {
+  background-image: linear-gradient(
+    108deg,
+    color-mix(in srgb, var(--app-color-panel-cool-emphasis) 34%, transparent) 0%,
+    transparent 58%
+  );
+  background-color: color-mix(in srgb, var(--app-color-panel-cool) 88%, var(--app-color-panel));
+}
+
+.card[data-tone="running"]:hover {
+  border-color: color-mix(in srgb, var(--app-color-ok) 50%, var(--app-color-accent));
 }
 
 .card[data-disabled="true"] {
@@ -80,7 +114,7 @@
   z-index: 1;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 18px;
+  gap: var(--app-space-lg);
   align-items: center;
 }
 
@@ -88,10 +122,10 @@
   display: grid;
   grid-template-columns: minmax(210px, 0.8fr) minmax(460px, 2fr);
   align-items: center;
-  gap: 24px;
+  gap: var(--app-space-xl);
   width: 100%;
   padding: 0;
-  border-radius: 10px;
+  border-radius: 0;
   color: inherit;
   text-align: left;
   cursor: pointer;
@@ -126,16 +160,16 @@
 }
 
 .title {
-  font-size: 15px;
+  font-size: var(--mantine-font-size-md);
   line-height: 1.2;
   font-weight: 700;
   margin: 0;
 }
 
 .subtitle {
-  font-size: 12px;
+  font-size: var(--mantine-font-size-xs);
   line-height: 1.2;
-  margin-top: 2px;
+  margin-top: var(--app-space-xxs);
 }
 
 .metaGrid {
@@ -145,14 +179,14 @@
     minmax(90px, 1fr)
     minmax(64px, 0.6fr)
     minmax(88px, 1fr);
-  gap: 16px;
+  gap: var(--app-space-md);
   min-width: 0;
 }
 
 .metaItem {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--app-space-xxs);
   min-width: 0;
 }
 
@@ -167,7 +201,7 @@
 .metaValueHint {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--app-space-xxs);
   min-width: 0;
   max-width: 100%;
   cursor: help;
@@ -204,8 +238,8 @@
 .progressBlock {
   position: relative;
   z-index: 1;
-  padding: 8px 10px;
-  border-radius: 10px;
+  padding: var(--app-space-xs) var(--app-space-sm);
+  border-radius: var(--app-radius-sm);
   border: 1px solid var(--ark-blue-a4);
   background: var(--ark-blue-a2);
 }
@@ -217,7 +251,7 @@
   display: block;
   width: 100%;
   text-align: left;
-  border-radius: 8px;
+  border-radius: var(--app-radius-sm);
 }
 
 .runtimeError:hover .runtimeErrorText,
@@ -232,29 +266,29 @@
 @media (min-width: 1600px) {
   .cardHit {
     grid-template-columns: minmax(240px, 0.7fr) minmax(520px, 2.2fr);
-    gap: 28px;
+    gap: var(--app-space-xl);
   }
 
   .metaGrid {
-    gap: 20px 28px;
+    gap: var(--app-space-lg) var(--app-space-xl);
   }
 }
 
 @media (max-width: 1400px) {
   .cardHit {
     grid-template-columns: minmax(250px, 0.9fr) minmax(360px, 1.6fr);
-    gap: 18px;
+    gap: var(--app-space-lg);
   }
 
   .metaGrid {
-    gap: 12px;
+    gap: var(--app-space-sm);
   }
 }
 
 @media (max-width: 1100px) {
   .mainRow {
     grid-template-columns: 1fr;
-    gap: 14px;
+    gap: var(--app-space-md);
   }
 
   .cardHit {
@@ -269,7 +303,7 @@
 @media (max-width: 760px) {
   .cardHit {
     grid-template-columns: 1fr;
-    gap: 14px;
+    gap: var(--app-space-md);
   }
 
   .metaGrid {
@@ -281,6 +315,28 @@
   }
 
   .runtimeError {
+    padding-left: 0;
+  }
+}
+
+.card[data-ui-density="compact"] .mainRow {
+  gap: var(--app-space-sm);
+}
+
+.card[data-ui-density="compact"] .cardHit {
+  gap: var(--app-space-md);
+}
+
+.card[data-ui-density="compact"] .metaGrid {
+  gap: var(--app-space-sm);
+}
+
+.card[data-ui-density="compact"] .runtimeError {
+  padding-left: 40px;
+}
+
+@media (max-width: 760px) {
+  .card[data-ui-density="compact"] .runtimeError {
     padding-left: 0;
   }
 }

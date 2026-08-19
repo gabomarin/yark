@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { Pause, Play, ProhibitInset } from "@phosphor-icons/react";
 import { ActionIcon, Group, Progress, Stack, Text, Tooltip } from "@mantine/core";
+import { useUiDensity } from "@app/AppProviders";
 import type { ServerCardFilesJobAction } from "./serverCardModel";
 import classes from "./ServerCard.module.css";
 
@@ -13,10 +14,13 @@ interface Props {
   onFilesJobAction?: () => void;
 }
 
-function filesJobActionIcon(kind: ServerCardFilesJobAction["kind"]): ReactElement {
-  if (kind === "pause") return <Pause size={14} weight="fill" />;
-  if (kind === "resume") return <Play size={14} weight="fill" />;
-  return <ProhibitInset size={14} />;
+function filesJobActionIcon(
+  kind: ServerCardFilesJobAction["kind"],
+  iconSize: number,
+): ReactElement {
+  if (kind === "pause") return <Pause size={iconSize} weight="fill" />;
+  if (kind === "resume") return <Play size={iconSize} weight="fill" />;
+  return <ProhibitInset size={iconSize} />;
 }
 
 export function ServerCardProgress({
@@ -27,6 +31,10 @@ export function ServerCardProgress({
   filesJobAction = null,
   onFilesJobAction,
 }: Props): ReactElement {
+  const density = useUiDensity();
+  const compact = density === "compact";
+  const actionSize = compact ? "xs" : "sm";
+  const iconSize = compact ? 12 : 14;
   return (
     <Stack gap={6} className={classes.progressBlock}>
       <Group justify="space-between" gap="xs" align="flex-start" wrap="nowrap">
@@ -47,14 +55,14 @@ export function ServerCardProgress({
           {filesJobAction !== null && (
             <Tooltip label={filesJobAction.label} withArrow>
               <ActionIcon
-                size="sm"
+                size={actionSize}
                 color={filesJobAction.color}
                 variant="light"
                 aria-label={filesJobAction.label}
                 data-files-job-action={filesJobAction.kind}
                 onClick={onFilesJobAction}
               >
-                {filesJobActionIcon(filesJobAction.kind)}
+                {filesJobActionIcon(filesJobAction.kind, iconSize)}
               </ActionIcon>
             </Tooltip>
           )}

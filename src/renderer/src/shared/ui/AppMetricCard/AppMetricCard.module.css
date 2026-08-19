@@ -92,8 +92,6 @@
   display: inline-flex;
   align-items: center;
   gap: var(--app-space-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .valueRow {

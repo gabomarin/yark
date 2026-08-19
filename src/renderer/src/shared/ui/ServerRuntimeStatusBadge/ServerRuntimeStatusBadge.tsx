@@ -29,6 +29,7 @@ export function ServerRuntimeStatusBadge({
     <Badge
       size={size}
       variant={variant}
+      tt="none"
       color={color ?? serverRuntimeStatusColor(status)}
       className={className}
     >

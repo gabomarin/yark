@@ -99,6 +99,7 @@ export function AttentionIssuesPopover({ issues }: Props): ReactElement | null {
           size="sm"
           color="attention"
           variant="light"
+          tt="none"
           className={classes.trigger}
           style={{ cursor: "pointer" }}
           data-attention-count={issues.length}

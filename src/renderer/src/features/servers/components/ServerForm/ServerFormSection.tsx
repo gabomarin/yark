@@ -8,7 +8,7 @@ import classes from "./ServerForm.module.css";
 
 interface Props {
   title?: string;
-  /** Uppercase meta above the title (create Identity / Reachability). */
+  /** Optional meta above the title (create Identity / Reachability). */
   eyebrow?: string;
   children: ReactNode;
   /** Embedded edit: flat stack. Page: AppSurfaceCard tone. */
@@ -30,15 +30,17 @@ export function ServerFormSection({
   padding = "md",
 }: Props): ReactElement {
   const spanClass = span2 ? classes.span2 : undefined;
+  const eyebrowNode =
+    eyebrow !== undefined ? (
+      <Text fz={11} c="dimmed" tt="uppercase" lts="0.06em">
+        {eyebrow}
+      </Text>
+    ) : null;
 
   if (flat) {
     return (
       <Stack gap="xs" className={spanClass}>
-        {eyebrow !== undefined && (
-          <Text fz={11} c="dimmed" tt="uppercase" lts="0.12em">
-            {eyebrow}
-          </Text>
-        )}
+        {eyebrowNode}
         {title !== undefined && (
           <Text fw={600} fz="sm">
             {title}
@@ -57,11 +59,7 @@ export function ServerFormSection({
       className={spanClass}
     >
       <Stack gap="sm" className={fill ? classes.sectionFill : undefined}>
-        {eyebrow !== undefined && (
-          <Text fz={11} c="dimmed" tt="uppercase" lts="0.12em">
-            {eyebrow}
-          </Text>
-        )}
+        {eyebrowNode}
         {title !== undefined && <Title order={4}>{title}</Title>}
         {children}
       </Stack>

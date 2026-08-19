@@ -74,6 +74,7 @@ Domain runbooks: [updates-steamcmd.md](updates-steamcmd.md),
 | Match Settings when the same control exists in first-run | Invent first-run-only jargon Settings does not use |
 | Name the product **server manager** when you need an identity line | “A local host for…” / localhost / “this Electron app” |
 | Status words operators already see (`Ready`, `Needs setup`, `Recommended`, `Installing…`) | Internal keys (`onboarding.v1`, `detected === false`) |
+| Page chrome: title + live status (`3 profiles · none running`) | A subtitle that restates the nav item (“Monitor and manage…”) |
 
 Examples:
 
@@ -126,7 +127,7 @@ Mantine **does** have spacing tokens (`theme.spacing` → `gap="xs"` / `p="md"` 
 
 Preference key: SQLite `app_settings.uiDensity` (IPC `app:get-ui-density` / `app:set-ui-density`). Loaded in `main.tsx` **before** the first `AppProviders` theme mount (falls back to Compact if IPC fails). Persisted only from the Settings change handler (not a mount effect — Safe under `StrictMode`). Failed saves keep the previous density and show an error notification. A legacy `localStorage` value (`settings.uiDensity`) is migrated once when the SQLite row is missing — and only cleared after a successful write.
 
-`AppProviders` rebuilds the Mantine theme + `--app-space-*` / `--app-radius-*` / `--app-font-page` CSS vars when density changes and sets `data-ui-density` on `document.documentElement` so Modal/Drawer portals inherit compact input styles. Compact sets `defaultProps.size="xs"` on text inputs / selects / buttons (not Switch/Checkbox/Radio). Forms or icon rows that hardcode larger sizes (e.g. ServerCard ActionIcon `lg`) should follow `useUiDensity()` so Compact still shrinks them. Hardcoded feature CSS `px` values do **not** scale — snap those to tokens when you touch a file (same rule as before). Do **not** use Electron zoom / `html { zoom }` for product density.
+`AppProviders` rebuilds the Mantine theme + `--app-space-*` / `--app-radius-*` / `--app-font-page` CSS vars when density changes and sets `data-ui-density` on `document.documentElement` so Modal/Drawer portals inherit compact input styles. Compact sets `defaultProps.size="xs"` on text inputs / selects / buttons (not Switch/Checkbox/Radio). Forms or icon rows that hardcode larger sizes (e.g. ServerCard ActionIcon `lg`) should follow `useUiDensity()` so Compact still shrinks them. **ServerCard:** primary Start/Stop/kebab stay `md` / `lg` (#233 hit targets); progress Pause/Cancel/Resume use `xs` / `sm`. Hardcoded feature CSS `px` values do **not** scale — snap those to tokens when you touch a file (same rule as before). Do **not** use Electron zoom / `html { zoom }` for product density.
 
 ```tsx
 <Stack gap="sm">…</Stack>           // preferred in TSX
@@ -145,6 +146,8 @@ gap: var(--app-space-sm);            // preferred in CSS modules
 | `--app-radius-lg` | 18 | 15 | Page `AppSurfaceCard` |
 
 Avoid raw `border-radius: 8px|14px` when a token fits. Tek icon tiles keep asymmetric radius by design (`AccentIconTile shape="tek"`).
+
+**Square vs rounded:** Overview server **list rows** (`ServerCard`) and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one list. Nested panels keep tokens: `AppSurfaceCard` default `lg`, logs/copy Accordion and form cards `md`. Do not square those to match the Overview list.
 
 ### 4. Color / status
 
@@ -205,7 +208,7 @@ sort is a temporary view; drag-to-reorder load order is enabled only while unsor
 | --- | --- |
 | Page title | PageScaffold `h1` via `--app-font-page` (Comfortable **28px** / Compact ≈23px) |
 | Panel title | Mantine `Title order={3|4}` |
-| Meta labels | uppercase + `letter-spacing: 0.04em` (e.g. Clusters `MetaStrip`) |
+| Meta labels | Clusters `MetaStrip` (uppercase + tracking); server-card meta is sentence case |
 | Body / muted | Mantine `Text` + `c="dimmed"` |
 
 **Follow-up candidate:** `--app-font-meta|title` if more screens invent competing sizes (12 vs 11 meta, 18 vs 16 panel titles).
@@ -320,7 +323,7 @@ line (#234).
 
 ## Still feature-local (by design)
 
-- `ServerCard` product chrome (status rail clip-path)
+- `ServerCard` product chrome (square list rows, straight status rail; stopped keeps a faint fill + accent rail so it does not scan as Inactive)
 - Downloads queue / footer teaser elevation
 - Settings SteamCMD path row (`ReadonlyPath` + Choose… + Install CTA; not `PathField`)
 - Server workspace 3-column shell / INI editor tables

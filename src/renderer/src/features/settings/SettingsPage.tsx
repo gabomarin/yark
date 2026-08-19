@@ -93,7 +93,6 @@ export function SettingsPage(props: Props): ReactElement {
   return (
     <PageScaffold
       title="Settings"
-      subtitle="Preferences that apply to the whole app"
       fillViewport
     >
       <div className={classes.layout} data-settings-page>

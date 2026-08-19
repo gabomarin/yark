@@ -1,5 +1,6 @@
 import { memo, type ReactElement } from "react";
 import { Badge, Card, Group, Stack, Text, UnstyledButton } from "@mantine/core";
+import { useUiDensity } from "@app/AppProviders";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import { useRowContextMenu } from "@ui/RowActionMenu/useRowContextMenu";
@@ -88,6 +89,8 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
   } = "handlers" in props
     ? bindServerCardHandlers(props.handlers, server)
     : props;
+  const density = useUiDensity();
+  const compact = density === "compact";
   const status = runtime?.status ?? "stopped";
   const view = deriveServerCardView({
     status,
@@ -183,18 +186,19 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     <Card
       withBorder
       className={classes.card}
-      padding="md"
-      radius="md"
+      padding={compact ? "sm" : "md"}
+      radius={0}
       data-tone={view.rowTone}
       data-disabled={!server.enabled}
       data-queued={steamCmdQueued || undefined}
+      data-ui-density={density}
       data-server-card
       data-server-name={server.name}
       onContextMenu={onContextMenu}
       onKeyDown={onKeyDown}
       {...menuTriggerProps}
     >
-      <Stack gap="sm">
+      <Stack gap={compact ? "xs" : "sm"}>
         <div className={classes.mainRow}>
           <UnstyledButton
             className={classes.cardHit}
@@ -207,7 +211,12 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
                   : `Open settings for ${server.name}`
             }
           >
-            <Group gap="sm" align="center" wrap="nowrap" className={classes.identity}>
+            <Group
+              gap={compact ? "xs" : "sm"}
+              align="center"
+              wrap="nowrap"
+              className={classes.identity}
+            >
               <MapArtThumb
                 mapId={server.map}
                 mapModId={server.mapModId}
@@ -216,7 +225,8 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
                     ? server.modMetadataCache?.[server.mapModId]?.thumbnailUrl
                     : null
                 }
-                size="md"
+                size={compact ? "md" : "lg"}
+                shape="rounded"
                 className={classes.thumb}
               />
               <div className={classes.identityText}>
@@ -239,7 +249,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
                 }
               />
               {!server.enabled && (
-                <Badge size="sm" variant="light" color="gray">
+                <Badge size={compact ? "xs" : "sm"} variant="light" color="gray">
                   Inactive
                 </Badge>
               )}

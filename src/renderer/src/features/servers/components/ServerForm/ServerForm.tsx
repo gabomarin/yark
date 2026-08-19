@@ -1,5 +1,4 @@
 import type { ReactElement } from "react";
-import { MagicWand } from "@phosphor-icons/react";
 import { Alert, Button, Group, Stack, Text, Title } from "@mantine/core";
 import {
   getServerFolderNameError,
@@ -417,7 +416,6 @@ export function ServerForm(props: Props): ReactElement {
         <ServerFormShellPage
           formKind={isCreate ? "create" : "edit"}
           title={isCreate ? "New server" : `Edit: ${props.initial!.name}`}
-          subtitle="Identity, reachability, and optional cluster."
           submitLabel={isCreate ? "Create server" : "Save changes"}
           submitSize={inputSize}
           saving={saving}
@@ -453,7 +451,6 @@ export function ServerForm(props: Props): ReactElement {
             <Button
               size={inputSize}
               variant="light"
-              leftSection={<MagicWand size={16} />}
               onClick={props.onOpenConfigurationAssistant}
               disabled={props.configurationAssistantDisabled}
               title={
