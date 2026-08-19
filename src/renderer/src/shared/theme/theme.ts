@@ -118,6 +118,8 @@ export function createAppCssVariablesResolver(
       "--mantine-color-blue-7": "var(--ark-blue-5)",
       "--mantine-color-blue-8": "var(--ark-blue-3)",
       "--mantine-color-blue-9": "var(--ark-blue-1)",
+      /* Mantine dark default maps blue-text → blue-4; filled buttons use blue-filled (= ark-blue-9). */
+      "--mantine-color-blue-text": "var(--mantine-color-blue-filled)",
       "--mantine-primary-color-filled": "var(--ark-blue-9)",
       "--mantine-primary-color-filled-hover": "var(--ark-blue-10)",
       "--mantine-primary-color-light": "var(--ark-blue-a3)",

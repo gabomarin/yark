@@ -62,9 +62,7 @@ interface Props {
   onCopyConfiguration: (serverId: string) => void;
   onDeleteServer: (serverId: string) => void;
   onToggleServerEnabled?: (serverId: string, enabled: boolean) => void;
-  onCancelSteamCmd: () => void;
-  onResumeSteamCmd?: (serverId: string) => void;
-  onCancelQueuedJob?: (serverId: string) => void;
+  onOpenDownloads?: (serverId: string) => void;
 }
 
 export function ServerGrid(props: Props): ReactElement {
@@ -95,9 +93,7 @@ export function ServerGrid(props: Props): ReactElement {
       onCopyConfiguration: (serverId) =>
         propsRef.current.onCopyConfiguration(serverId),
       onDeleteServer: (serverId) => propsRef.current.onDeleteServer(serverId),
-      onCancelSteamCmd: () => propsRef.current.onCancelSteamCmd(),
-      onResumeSteamCmd: (serverId) => propsRef.current.onResumeSteamCmd?.(serverId),
-      onCancelQueuedJob: (serverId) => propsRef.current.onCancelQueuedJob?.(serverId),
+      onOpenDownloads: (serverId) => propsRef.current.onOpenDownloads?.(serverId),
       onToggleServerEnabled: (serverId, enabled) =>
         propsRef.current.onToggleServerEnabled?.(serverId, enabled),
     }),
@@ -174,6 +170,7 @@ export function ServerGrid(props: Props): ReactElement {
       officialSteamBuild={props.officialSteamBuild}
       officialVersion={props.officialVersion ?? null}
       steamCmdServerId={props.steamCmdServerId}
+      steamCmdRunning={props.steamCmdRunning ?? false}
       steamCmdBusy={props.steamCmdBusy ?? props.steamCmdRunning}
       steamCmdPausedByServerId={props.steamCmdPausedByServerId}
       steamCmdQueuedByServerId={props.steamCmdQueuedByServerId}

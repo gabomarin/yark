@@ -8,27 +8,18 @@ import {
   ProhibitInset,
   X,
 } from "@phosphor-icons/react";
-import { ActionIcon, Badge, Progress, Tooltip, UnstyledButton } from "@mantine/core";
+import { ActionIcon, Progress, Tooltip, UnstyledButton } from "@mantine/core";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import { downloadRowMeta } from "./downloadsCopy";
 import type { DownloadRow, DownloadRowKind } from "./downloadsModel";
 import classes from "./DownloadsPage.module.css";
 
 export function sectionTitle(kind: DownloadRowKind): string {
-  if (kind === "active") return "Active";
+  if (kind === "active" || kind === "interrupted") return "Active";
   if (kind === "queued") return "Queued";
   if (kind === "paused") return "Paused";
+  if (kind === "cancelled") return "Cancelled";
   return "Needs attention";
-}
-
-function statusBadgeColor(statusLabel: string): string {
-  if (statusLabel === "running") return "blue";
-  if (statusLabel === "queued") return "indigo";
-  if (statusLabel === "paused") return "yellow";
-  if (statusLabel === "failed") return "red";
-  if (statusLabel === "blocked") return "orange";
-  if (statusLabel === "cancelled") return "gray";
-  return "gray";
 }
 
 export function DownloadRowButton(props: {
@@ -56,7 +47,7 @@ export function DownloadRowButton(props: {
             mapId={row.mapId}
             mapModId={row.mapModId}
             modThumbnailUrl={row.modThumbnailUrl}
-            size={row.kind === "active" ? "md" : "sm"}
+            size={row.kind === "active" || row.kind === "interrupted" ? "md" : "sm"}
             shape="rounded"
             decorative
             className={classes.rowThumb}
@@ -65,9 +56,6 @@ export function DownloadRowButton(props: {
         <span className={classes.rowTitle}>
           <span className={classes.rowTitleLine}>
             <span className={classes.rowTitleText}>{row.title}</span>
-            <Badge size="xs" color={statusBadgeColor(row.statusLabel)} variant="light">
-              {row.statusLabel}
-            </Badge>
           </span>
           <span className={classes.rowMeta}>{downloadRowMeta(row)}</span>
         </span>
@@ -87,6 +75,7 @@ export function DownloadRowButton(props: {
               <ActionIcon
                 size="sm"
                 variant="subtle"
+                className={row.canMoveUp ? classes.reorderActionReady : undefined}
                 aria-label="Move up in queue"
                 disabled={!row.canMoveUp}
                 onClick={() => props.onMoveUp()}
@@ -98,6 +87,7 @@ export function DownloadRowButton(props: {
               <ActionIcon
                 size="sm"
                 variant="subtle"
+                className={row.canMoveDown ? classes.reorderActionReady : undefined}
                 aria-label="Move down in queue"
                 disabled={!row.canMoveDown}
                 onClick={() => props.onMoveDown()}
@@ -120,7 +110,8 @@ export function DownloadRowButton(props: {
             </ActionIcon>
           </Tooltip>
         )}
-        {row.kind === "attention" && row.job?.nextActions.includes("retry") === true && (
+        {(row.kind === "attention" || row.kind === "cancelled" || row.kind === "interrupted")
+          && row.job?.nextActions.includes("retry") === true && (
           <Tooltip label="Retry">
             <ActionIcon
               size="sm"
@@ -133,7 +124,8 @@ export function DownloadRowButton(props: {
             </ActionIcon>
           </Tooltip>
         )}
-        {row.kind === "attention" && row.job?.nextActions.includes("dismiss") === true && (
+        {(row.kind === "attention" || row.kind === "cancelled" || row.kind === "interrupted")
+          && row.job?.nextActions.includes("dismiss") === true && (
           <Tooltip label="Dismiss">
             <ActionIcon
               size="sm"
@@ -145,7 +137,26 @@ export function DownloadRowButton(props: {
             </ActionIcon>
           </Tooltip>
         )}
-        {(row.kind === "active" || row.kind === "queued" || row.kind === "paused") && (
+        {row.kind === "active" && row.usesLiveCancel && (
+          <span data-download-live-action>
+            <Tooltip label={row.canPause ? "Pause" : "Cancel"}>
+              <ActionIcon
+                size="sm"
+                color={row.canPause ? "yellow" : "red"}
+                variant="light"
+                aria-label={row.canPause ? "Pause download" : "Cancel download"}
+                onClick={() => props.onCancel()}
+              >
+                {row.canPause ? (
+                  <Pause size={14} weight="fill" />
+                ) : (
+                  <ProhibitInset size={14} />
+                )}
+              </ActionIcon>
+            </Tooltip>
+          </span>
+        )}
+        {(row.kind === "queued" || row.kind === "paused") && (
           <Tooltip label={row.canPause ? "Pause" : "Cancel"}>
             <ActionIcon
               size="sm"

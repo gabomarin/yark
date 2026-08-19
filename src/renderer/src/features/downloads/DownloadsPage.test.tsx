@@ -76,7 +76,6 @@ function server(overrides: Partial<ServerProfile> = {}): ServerProfile {
 
 function handlers() {
   return {
-    onOpenLogs: vi.fn(),
     onCancelLive: vi.fn(),
     onPauseLive: vi.fn(),
     onCancelJob: vi.fn(),
@@ -122,12 +121,22 @@ function populatedStatus(): SteamCmdStatus {
         nextActions: ["cancel"],
       }),
       job({
-        id: "job-attention",
+        id: "job-cancelled",
         operation: "install-files",
         serverId: "srv-4",
         serverName: "Center",
         status: "cancelled",
         phase: "cancelled",
+        nextActions: ["retry", "dismiss"],
+      }),
+      job({
+        id: "job-attention",
+        operation: "update",
+        serverId: "srv-5",
+        serverName: "Aberration",
+        status: "failed",
+        phase: "failed",
+        lastError: "SteamCMD exited with code 7.",
         nextActions: ["retry", "dismiss"],
       }),
     ],
@@ -161,13 +170,25 @@ function renderPage(
 
 describe("DownloadsPage", () => {
   it("shows an empty state when SteamCMD is ready and there is no queue", () => {
-    renderPage(baseStatus());
+    const pageHandlers = handlers();
+    render(
+      <AppProviders>
+        <DownloadsPage
+          status={baseStatus()}
+          console={null}
+          servers={[]}
+          {...pageHandlers}
+        />
+      </AppProviders>,
+    );
 
     expect(screen.getByRole("heading", { name: "No transfers right now" })).toBeInTheDocument();
     expect(
       screen.getByText(/SteamCMD is ready\. Your installs, updates, and verify jobs will appear here\./i),
     ).toBeInTheDocument();
-    expect(document.querySelector("[data-downloads-page]")).toBeNull();
+    expect(document.querySelector("[data-downloads-page]")).not.toBeNull();
+    expect(document.querySelector("[data-steamcmd-console]")).not.toBeNull();
+    expect(screen.queryByText("progress: 38")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Install SteamCMD" })).not.toBeInTheDocument();
   });
 
@@ -182,7 +203,7 @@ describe("DownloadsPage", () => {
     expect(pageHandlers.onOpenSettings).toHaveBeenCalledTimes(1);
   });
 
-  it("groups Active, Paused, Queued, and Needs attention rows", () => {
+  it("groups Active, Paused, Queued, Cancelled, and Needs attention rows", () => {
     renderPage(populatedStatus());
 
     const page = document.querySelector("[data-downloads-page]");
@@ -190,24 +211,26 @@ describe("DownloadsPage", () => {
     expect(screen.getByText("Active")).toBeInTheDocument();
     expect(screen.getByText("Paused")).toBeInTheDocument();
     expect(screen.getByText("Queued")).toBeInTheDocument();
+    expect(screen.getByText("Cancelled")).toBeInTheDocument();
     expect(screen.getByText("Needs attention")).toBeInTheDocument();
     expect(document.querySelector('[data-queue-group="active"]')).not.toBeNull();
     expect(document.querySelector('[data-queue-group="paused"]')).not.toBeNull();
     expect(document.querySelector('[data-queue-group="queued"]')).not.toBeNull();
+    expect(document.querySelector('[data-queue-group="cancelled"]')).not.toBeNull();
     expect(document.querySelector('[data-queue-group="attention"]')).not.toBeNull();
     expect(document.querySelector('[data-download-row="job-active"]')).not.toBeNull();
     expect(screen.getByRole("button", { name: /Island/ })).toBeInTheDocument();
   });
 
-  it("keeps the SteamCMD process bar on the active job and does not duplicate cancel on a queued row", async () => {
+  it("puts Pause on the active row and keeps the console on the active job when a queued row is selected", async () => {
     const user = userEvent.setup();
     renderPage(populatedStatus());
 
-    expect(screen.getByRole("group", { name: "SteamCMD process" })).toBeInTheDocument();
+    expect(document.querySelector("[data-download-live-action]")).not.toBeNull();
     expect(screen.getByText("progress: 38")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Scorched/ }));
-    expect(screen.queryByRole("group", { name: "SteamCMD process" })).not.toBeInTheDocument();
+    expect(screen.getByText("progress: 38")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Remove from queue" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Cancel this job" })).not.toBeInTheDocument();
     const queuedRow = document.querySelector('[data-download-row="job-queued"]');
@@ -215,10 +238,6 @@ describe("DownloadsPage", () => {
     expect(
       within(queuedRow as HTMLElement).getByRole("button", { name: "Cancel download" }),
     ).toBeEnabled();
-    expect(screen.queryByText("progress: 38")).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: /Island/ }));
-    expect(screen.getByRole("group", { name: "SteamCMD process" })).toBeInTheDocument();
   });
 
   it("cancels a queued job without calling live SteamCMD cancel", async () => {
@@ -233,6 +252,74 @@ describe("DownloadsPage", () => {
     expect(pageHandlers.onCancelJob).toHaveBeenCalledWith("job-queued");
     expect(pageHandlers.onCancelLive).not.toHaveBeenCalled();
     expect(pageHandlers.onPauseLive).not.toHaveBeenCalled();
+  });
+
+  it("shows Waiting for progress in the console when an active job has no SteamCMD output yet", () => {
+    render(
+      <AppProviders>
+        <DownloadsPage
+          status={baseStatus({
+            busy: true,
+            running: true,
+            operation: "update",
+            serverId: "srv-1",
+            progressPercent: 0,
+            progressLabel: "Updating server files…",
+            criticalJobs: [
+              job({
+                id: "job-active",
+                operation: "update",
+                status: "running",
+                phase: "downloading",
+                nextActions: [],
+              }),
+            ],
+          })}
+          console={{ lines: [], updatedAt: "2026-08-18T00:00:00.000Z" }}
+          servers={[server()]}
+          {...handlers()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("Waiting for progress…")).toBeInTheDocument();
+  });
+
+  it("shows SteamCMD console output for restart-interrupted jobs", () => {
+    render(
+      <AppProviders>
+        <DownloadsPage
+          status={baseStatus({
+            busy: true,
+            criticalJobs: [
+              job({
+                id: "job-interrupted",
+                operation: "update",
+                status: "failed",
+                phase: "applying-files",
+                recoveryReason:
+                  'YARK closed during phase "applying-files". Retry to continue.',
+                nextActions: ["retry", "dismiss"],
+              }),
+            ],
+          })}
+          console={{
+            lines: [
+              "[stdout] Update state (0x61) downloading",
+              "Retry when ready",
+            ],
+            updatedAt: "2026-08-18T00:00:00.000Z",
+          }}
+          servers={[server()]}
+          {...handlers()}
+        />
+      </AppProviders>,
+    );
+
+    const consolePane = document.querySelector("[data-steamcmd-console]");
+    expect(consolePane).not.toBeNull();
+    expect(consolePane?.textContent).toContain("Update state (0x61) downloading");
+    expect(consolePane?.textContent).toContain("Retry when ready");
   });
 
   it("shows the SteamCMD missing banner when leftovers remain", async () => {

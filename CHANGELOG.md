@@ -12,6 +12,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Added
 
 - Workspace **Launch** tab search filters curated ASA flags by token, description, or group while keeping Extra arguments and the command preview visible (#352).
+- Overview **Update all outdated** previews stopped servers with ready installs, then queues safe SteamCMD updates into Downloads after confirm (#378).
 - Servers Overview and workspace server rail share **Order added** vs **A–Z** sort and icon-only **All servers / By cluster** layout toggles; preferences persist across reload (#351).
 - **Downloads** queue page with stacked job rows, active vs queued separation, shared server-card progress styling, `Open in Logs` focus on the related Events entry, and Pause/Resume for install and update jobs; workspace footer teaser on other pages replaces the floating progress dock. getyark.com gallery and SteamCMD docs include the queue (#201).
 
@@ -20,20 +21,46 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Overview fleet summary, sort/view controls, and search share one header row until ~1280px; grouped cluster headings no longer show a lone server count (#351).
 - Server card and workspace **Stop** use a red **Stop** icon; **Restart** uses **fossil** to match lifecycle controls elsewhere.
 - Overview, Settings, Clusters, Backups, Logs, and Downloads drop restating page subtitles; fleet backup KPIs stay hidden only when there is no history and no enabled schedule; status badges use sentence case; server cards give map art more room, a quieter stopped state that still differs from Inactive, and square list rows with a straight status rail (no notch or gap) that tighten in Compact.
-- Server-list **Resume / Pause / Cancel** sit on the progress bar (not the Start slot). Queued servers look distinct, lock Start, toast when added to Downloads, and refuse duplicate clicks. Downloads labels Pause/Cancel as a SteamCMD process action on the **active** job (#201).
-- Downloads detail shows the **SteamCMD process** bar only for the active job. Queued jobs cancel from the row (no duplicate **Remove from queue** in the detail). Active rows no longer show a **SteamCMD active now** label (#201).
+- Overview server cards show read-only queue/progress status; click the progress line (e.g. **Paused · Updating server**) to open **Downloads** (pause, resume, and cancel stay on the Downloads page). The status badge keeps server runtime state only. Queued servers look distinct, lock Start, toast when added to Downloads, and refuse duplicate clicks (#201, #378).
+- Downloads workspace footer on other pages is a read-only minified SteamCMD bar (inline copy, wider progress); click opens **Downloads** — pause/resume stay on that page (#201).
+- Downloads workspace footer keeps the last known SteamCMD percent while a job is paused instead of clearing it (#201).
+- Downloads **Queued** rows stack flush with dividers only between rows (#201).
+- Downloads uses a vertical splitter with a horizontal rule: queue list above and a console-only SteamCMD card below (#201).
+- Downloads console keeps SteamCMD output while a job is **Paused** and clears it on **Resume** (#201).
+- Closing YARK mid-job keeps that server under **Active** with **Retry** (queue waits); only a failed Retry moves it to **Needs attention** (#201).
+- Queued Downloads detail copy reflects queue order (second job waits for the first queued server, not only the active one) (#201).
 - Queued Downloads rows slide when you **Move up / Move down** (#201).
 - One files job per server: **Update** or **Install** replaces a queued **Verify**; a running job is never interrupted. Verify will not queue on top of Update/Install (#201).
+- Overview fleet action label is **Update All** (was **Update all outdated**).
+- Overview **Update All** confirm copy no longer uses first-person voice (#378).
+- Overview **Update All** preview drops the green **Queue** badge on eligible servers; **Skip** stays on blocked rows (#378).
+- Overview **Update All** server list uses native overflow so scrollbar arrows do not show when everything fits (#378).
+- Overview **Update All** confirm button label is **Accept** (#378).
+- Restart-interrupted Downloads jobs keep the last SteamCMD console output visible until Retry (#378).
+
+### Security
+
+- Packaged YARK builds no longer honor a `YARK_DEVTOOLS` env override; DevTools stay off until you run an unpackaged dev/preview build.
+- Queued Downloads rows show the operation only (e.g. **Updating server**), not internal checkpoint phases like pre-update backup (#201).
+- **Pre-update backup** no longer appears as a duplicate Downloads row during safe updates; cancelled shadow jobs are purged on load (#201).
+- Downloads **Cancelled** rows use the same flush stacked list styling as **Queued** (#201).
 
 ### Fixed
 
 - Downloads queue rows no longer nest Pause/Cancel buttons inside the row select control (invalid HTML nesting).
+- Overview **Update all outdated** refresh keeps the enable state and preview consistent, enqueues into Downloads without waiting for SteamCMD to finish, and closes the confirm modal as soon as queueing completes (#378).
+- Overview server cards no longer show an animated progress bar for queued or paused jobs; only live SteamCMD work shows progress (#378).
+- Cancelling a queued job no longer starts the next server while another job is paused (#201).
+- Overview **Update All** header enable state stays live while the confirm modal is open (#378).
+- Downloads **SteamCMD is not installed** banner no longer collapses to a thin strip when the queue has rows (#378).
+- SteamCMD queue status pushes immediately when the queue stops on a paused or restart-interrupted job (#201).
+- Merging duplicate recovered Downloads jobs preserves **restartInterrupted** so the queue still waits for Retry (#201).
 - Profile DB migration adds an index on `servers(created_at, id)` so default **Order added** list loads stay fast as fleets grow (#351).
 - Cancelling the active SteamCMD job no longer cancels other queued Downloads work; the next job starts after unwind (#201).
 - Cancelled Downloads jobs offer **Retry** (row, detail, and footer) as well as Dismiss; Install/Update/Verify still replace a cancelled leftover of the same job (#201).
 - **Move up / Move down** in Downloads actually changes which queued job runs next (the list no longer resorted by created time) (#201).
 - File jobs wait as **blocked** with Retry when SteamCMD is missing, instead of starting and failing into backup leftovers. Retry/Resume/Update also explain that SteamCMD must be installed first and keep the existing job (#201).
-- Pending Downloads resume when YARK starts if SteamCMD is ready; they stay blocked with Retry if it is not. Retry and Resume probe disk again after that miss so a later SteamCMD install is not stuck (#201).
+- Pending Downloads resume when YARK starts if SteamCMD is ready and nothing is **Paused**; they stay blocked with Retry if SteamCMD is not. Retry and Resume probe disk again after that miss so a later SteamCMD install is not stuck (#201).
 - Pause during rollback or Verify refuses with a yellow toast instead of cancelling the job (#201).
 - Paused install/update cards keep **Paused · Installing files** (or the matching operation) after a YARK restart instead of **Updating files…** (#201).
 - Verify files uses **Cancel** instead of Pause — SteamCMD `validate` has no resume checkpoint and would restart at 0% (#201).

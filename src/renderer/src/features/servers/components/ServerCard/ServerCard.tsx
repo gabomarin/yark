@@ -82,9 +82,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     onClone,
     onCopyConfiguration,
     onDelete,
-    onCancelSteamCmd,
-    onResumeSteamCmd,
-    onCancelQueuedJob,
+    onOpenDownloads,
     onToggleEnabled,
   } = "handlers" in props
     ? bindServerCardHandlers(props.handlers, server)
@@ -117,7 +115,17 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     : steamCmdQueued && !steamCmdBusy
       ? null
       : steamCmdProgressPercent;
+  const showProgressBar = stopBusy || steamCmdBusy;
   const badgeBusy = stopBusy || steamCmdBusy || steamCmdPaused || steamCmdQueued;
+  const filesJobBadge =
+    !stopBusy && (steamCmdBusy || steamCmdPaused || steamCmdQueued);
+  const filesJobProgressCta = filesJobBadge && onOpenDownloads !== undefined;
+  const workspaceOpenLabel =
+    steamCmdQueued && !steamCmdBusy
+      ? `Open ${server.name} (job queued in Downloads)`
+      : badgeBusy
+        ? `Open ${server.name} (operation in progress)`
+        : `Open settings for ${server.name}`;
 
   const runRuntimeAction = (): void => {
     switch (view.runtimeAction.kind) {
@@ -134,20 +142,6 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
       case "stopping":
         break;
     }
-  };
-
-  const runFilesJobAction = (): void => {
-    const action = view.filesJobAction;
-    if (action === null) return;
-    if (action.kind === "resume") {
-      onResumeSteamCmd?.();
-      return;
-    }
-    if (steamCmdQueued && !steamCmdBusy) {
-      onCancelQueuedJob?.();
-      return;
-    }
-    onCancelSteamCmd();
   };
 
   const menuDisabled = steamCmdBusy || steamCmdPaused || stopBusy;
@@ -200,73 +194,76 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     >
       <Stack gap={compact ? "xs" : "sm"}>
         <div className={classes.mainRow}>
-          <UnstyledButton
-            className={classes.cardHit}
-            onClick={onOpenWorkspace}
-            aria-label={
-              steamCmdQueued && !steamCmdBusy
-                ? `Open ${server.name} (job queued in Downloads)`
-                : badgeBusy
-                  ? `Open ${server.name} (operation in progress)`
-                  : `Open settings for ${server.name}`
-            }
-          >
-            <Group
-              gap={compact ? "xs" : "sm"}
-              align="center"
-              wrap="nowrap"
-              className={classes.identity}
-            >
-              <MapArtThumb
-                mapId={server.map}
-                mapModId={server.mapModId}
-                modThumbnailUrl={
-                  server.mapModId
-                    ? server.modMetadataCache?.[server.mapModId]?.thumbnailUrl
-                    : null
-                }
-                size={compact ? "md" : "lg"}
-                shape="rounded"
-                className={classes.thumb}
-              />
-              <div className={classes.identityText}>
-                <Text className={classes.title} lineClamp={1}>
-                  {server.name}
-                </Text>
-                <Text className={classes.subtitle} c="dimmed" lineClamp={1}>
-                  {server.sessionName}
-                </Text>
-              </div>
-              <ServerRuntimeStatusBadge
-                status={status}
-                label={badgeBusy ? view.installStateLabel : undefined}
-                color={
-                  steamCmdQueued && !steamCmdBusy && !steamCmdPaused
-                    ? "gray"
-                    : badgeBusy
-                      ? "blue"
-                      : undefined
-                }
-              />
-              {!server.enabled && (
-                <Badge size={compact ? "xs" : "sm"} variant="light" color="gray">
-                  Inactive
-                </Badge>
-              )}
-            </Group>
+          <div className={classes.cardHit}>
+            <div className={classes.identityRow}>
+              <UnstyledButton
+                className={classes.identityOpen}
+                onClick={onOpenWorkspace}
+                aria-label={workspaceOpenLabel}
+              >
+                <Group
+                  gap={compact ? "xs" : "sm"}
+                  align="center"
+                  wrap="nowrap"
+                  className={classes.identity}
+                >
+                  <MapArtThumb
+                    mapId={server.map}
+                    mapModId={server.mapModId}
+                    modThumbnailUrl={
+                      server.mapModId
+                        ? server.modMetadataCache?.[server.mapModId]?.thumbnailUrl
+                        : null
+                    }
+                    size={compact ? "md" : "lg"}
+                    shape="rounded"
+                    className={classes.thumb}
+                  />
+                  <div className={classes.identityText}>
+                    <Text className={classes.title} lineClamp={1}>
+                      {server.name}
+                    </Text>
+                    <Text className={classes.subtitle} c="dimmed" lineClamp={1}>
+                      {server.sessionName}
+                    </Text>
+                  </div>
+                </Group>
+              </UnstyledButton>
 
-            <div className={classes.metaGrid} data-meta-grid>
-              <ServerCardMetaItem label="Map" value={server.map} />
-              <ServerCardMetaItem label="Cluster" value={server.clusterId ?? "—"} />
-              <ServerCardMetaItem label="Mods" value={String(server.mods.length)} />
-              <ServerCardMetaItem
-                label="Version"
-                value={view.localVersion ?? "—"}
-                tone={view.versionMetaTone}
-                hint={view.versionRefreshHint}
-              />
+              <div className={classes.statusBadges}>
+                <ServerRuntimeStatusBadge
+                  status={status}
+                  label={stopBusy ? "Stopping…" : undefined}
+                  color={stopBusy ? "blue" : undefined}
+                />
+                {!server.enabled && (
+                  <Badge size={compact ? "xs" : "sm"} variant="light" color="gray">
+                    Inactive
+                  </Badge>
+                )}
+              </div>
             </div>
-          </UnstyledButton>
+
+            <UnstyledButton
+              className={classes.metaOpen}
+              onClick={onOpenWorkspace}
+              aria-label={workspaceOpenLabel}
+              tabIndex={-1}
+              aria-hidden
+            >
+              <div className={classes.metaGrid} data-meta-grid>
+                <ServerCardMetaItem label="Map" value={server.map} />
+                <ServerCardMetaItem label="Cluster" value={server.clusterId ?? "—"} />
+                <ServerCardMetaItem label="Mods" value={String(server.mods.length)} />
+                <ServerCardMetaItem
+                  label="Version"
+                  value={view.localVersion ?? "—"}
+                  tone={view.versionMetaTone}
+                  hint={view.versionRefreshHint}
+                />
+              </div>
+            </UnstyledButton>
+          </div>
 
           <ServerCardActions
             status={status}
@@ -308,8 +305,14 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
             byteProgressLabel={view.progress.byteProgressLabel}
             byteProgressNoun={view.progress.byteProgressNoun}
             steamCmdProgressPercent={progressPercent}
-            filesJobAction={view.filesJobAction}
-            onFilesJobAction={runFilesJobAction}
+            showProgressBar={showProgressBar}
+            onOpenDownloads={
+              filesJobProgressCta
+                ? () => {
+                    onOpenDownloads?.();
+                  }
+                : undefined
+            }
           />
         )}
 

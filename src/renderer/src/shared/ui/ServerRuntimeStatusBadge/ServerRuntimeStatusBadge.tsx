@@ -25,6 +25,7 @@ export function ServerRuntimeStatusBadge({
   variant = "light",
   className,
 }: Props): ReactElement {
+  const text = label ?? serverRuntimeStatusLabel(status);
   return (
     <Badge
       size={size}
@@ -33,7 +34,7 @@ export function ServerRuntimeStatusBadge({
       color={color ?? serverRuntimeStatusColor(status)}
       className={className}
     >
-      {label ?? serverRuntimeStatusLabel(status)}
+      {text}
     </Badge>
   );
 }

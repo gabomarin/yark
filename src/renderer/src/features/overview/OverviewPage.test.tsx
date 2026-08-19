@@ -70,7 +70,6 @@ describe("OverviewPage", () => {
           onCloneServer={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -130,7 +129,6 @@ describe("OverviewPage", () => {
           onCloneServer={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -181,7 +179,6 @@ describe("OverviewPage", () => {
           onCloneServer={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -246,7 +243,6 @@ describe("OverviewPage", () => {
           onCloneServer={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -296,7 +292,6 @@ describe("OverviewPage", () => {
       onCloneServer: vi.fn(),
       onCopyConfiguration: vi.fn(),
       onDeleteServer: vi.fn(),
-      onCancelSteamCmd: vi.fn(),
     };
 
     const { container, rerender } = render(
@@ -361,7 +356,6 @@ describe("OverviewPage", () => {
           onCloneServer={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -422,7 +416,6 @@ describe("OverviewPage", () => {
           onCloneServer={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -436,5 +429,146 @@ describe("OverviewPage", () => {
     expect(screen.getByText("The Island")).toBeInTheDocument();
     expect(screen.getByText("Inactive")).toBeInTheDocument();
     expect(screen.queryByText("No enabled servers")).not.toBeInTheDocument();
+  });
+
+  it("disables Update All until a stopped server is eligible (#378)", () => {
+    render(
+      <AppProviders>
+        <OverviewPage
+          search=""
+          onSearchChange={vi.fn()}
+          onCreateServer={vi.fn()}
+          onImportServer={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onCheckInstalls={vi.fn()}
+          onOpenUpdateAllOutdated={vi.fn()}
+          canUpdateAllOutdated={false}
+          servers={[server]}
+          filteredServers={[server]}
+          disabledServers={[]}
+          runningServers={0}
+          statuses={new Map([["srv-1", { serverId: "srv-1", status: "stopped", processLive: false, pid: null, startedAt: null, lastError: null }]])}
+          installationInfo={
+            new Map([
+              [
+                server.id,
+                {
+                  serverId: server.id,
+                  installed: true,
+                  health: "ready",
+                  reasonCodes: ["ready"],
+                  guidance: "Installation looks ready to start.",
+                  build: "build 111",
+                  steamBuild: "build 111",
+                  arkVersion: null,
+                  version: null,
+                  binaryPath: "C:/ARK/TheIsland/ShooterGameServer.exe",
+                  checkedAt: "2026-07-24T00:00:00.000Z",
+                },
+              ],
+            ])
+          }
+          officialSteamBuild="build 999"
+          events={[]}
+          onViewAllActivity={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onStartServer={vi.fn()}
+          onStopServer={vi.fn()}
+          onRestartServer={vi.fn()}
+          onKillServer={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdatesForServer={vi.fn()}
+          onCloneServer={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDeleteServer={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Update All" }),
+    ).toBeDisabled();
+  });
+
+  it("opens the update-all preview when the fleet action is enabled (#378)", async () => {
+    const user = userEvent.setup();
+    const onOpenUpdateAllOutdated = vi.fn();
+
+    render(
+      <AppProviders>
+        <OverviewPage
+          search=""
+          onSearchChange={vi.fn()}
+          onCreateServer={vi.fn()}
+          onImportServer={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onCheckInstalls={vi.fn()}
+          onOpenUpdateAllOutdated={onOpenUpdateAllOutdated}
+          canUpdateAllOutdated
+          updateAllOutdatedOpen
+          updateAllOutdatedPlan={{
+            officialBuild: "build 999",
+            rows: [
+              {
+                serverId: server.id,
+                serverName: server.name,
+                installBuild: "build 111",
+                officialBuild: "build 999",
+                status: "stopped",
+                eligible: true,
+                skipReason: null,
+                skipLabel: null,
+              },
+            ],
+            eligible: [
+              {
+                serverId: server.id,
+                serverName: server.name,
+                installBuild: "build 111",
+                officialBuild: "build 999",
+                status: "stopped",
+                eligible: true,
+                skipReason: null,
+                skipLabel: null,
+              },
+            ],
+            skipped: [],
+          }}
+          servers={[server]}
+          filteredServers={[server]}
+          disabledServers={[]}
+          runningServers={0}
+          statuses={new Map()}
+          installationInfo={new Map()}
+          officialSteamBuild="build 999"
+          events={[]}
+          onViewAllActivity={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onStartServer={vi.fn()}
+          onStopServer={vi.fn()}
+          onRestartServer={vi.fn()}
+          onKillServer={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdatesForServer={vi.fn()}
+          onCloneServer={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDeleteServer={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Update All" }));
+    expect(onOpenUpdateAllOutdated).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("dialog", { name: /^update all$/i })).toBeInTheDocument();
   });
 });

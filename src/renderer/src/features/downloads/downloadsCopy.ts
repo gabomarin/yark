@@ -14,6 +14,7 @@ const PHASE_LABELS: Record<string, string> = {
   blocked: "Blocked",
   downloading: "Downloading",
   validating: "Validating",
+  verifying: "Verifying",
   validated: "Validated",
   "applying-files": "Applying files",
   "files-applied": "Files applied",
@@ -49,17 +50,33 @@ function isRedundantPhase(statusLabel: string, phase: string): boolean {
   );
 }
 
+function operatorLeadLabel(row: DownloadRowMetaInput): string {
+  if (row.statusLabel === "running" && row.phase.trim().length > 0) {
+    return formatDownloadPhase(row.phase);
+  }
+  return row.subtitle;
+}
+
 /** Subtitle plus optional bytes or non-redundant phase. */
 export function downloadRowMeta(row: DownloadRowMetaInput): string {
+  const lead = operatorLeadLabel(row);
   if (row.byteProgress !== null && row.byteProgressNoun !== null) {
-    return `${row.subtitle} · ${row.byteProgressNoun}: ${row.byteProgress}`;
+    return `${lead} · ${row.byteProgressNoun}: ${row.byteProgress}`;
+  }
+  // Pending/cancelled jobs keep internal checkpoint phases in the queue — show operation only.
+  if (row.statusLabel === "queued" || row.statusLabel === "cancelled") {
+    return lead;
   }
   if (isRedundantPhase(row.statusLabel, row.phase)) {
-    return row.subtitle;
+    return lead;
   }
   // Blocked leftovers often keep phase "queued" — don't say Queued next to BLOCKED.
   if (row.statusLabel !== "queued" && isRedundantPhase("queued", row.phase)) {
-    return row.subtitle;
+    return lead;
   }
-  return `${row.subtitle} · ${row.phase}`;
+  const phaseLabel = formatDownloadPhase(row.phase);
+  if (phaseLabel === lead) {
+    return lead;
+  }
+  return `${lead} · ${phaseLabel}`;
 }

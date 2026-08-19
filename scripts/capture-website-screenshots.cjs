@@ -436,7 +436,7 @@ function seedDownloadsJobs(userData, steamCmdPath) {
       ragnarokId,
       "paused",
       "applying-files",
-      { recoveryReason: "Paused by the operator. Resume to continue." },
+      { recoveryReason: null },
     ),
   ];
   const now = new Date().toISOString();
@@ -465,7 +465,7 @@ async function captureDownloadsPage(page, outDir) {
     timeout: 10_000,
   });
   await page.locator('[data-kind="active"][data-download-row]').first().click();
-  await page.getByRole("group", { name: "SteamCMD process" }).waitFor({
+  await page.locator("[data-download-live-action]").waitFor({
     state: "visible",
     timeout: 10_000,
   });

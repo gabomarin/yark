@@ -70,7 +70,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -115,7 +114,6 @@ describe("ServerCard", () => {
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
           onToggleEnabled={onToggleEnabled}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -160,7 +158,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -228,7 +225,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -267,7 +263,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -314,7 +309,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -360,7 +354,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -403,7 +396,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -447,17 +439,17 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
 
-    expect(screen.getAllByText(/Installing/i).length).toBeGreaterThan(0);
+    expect(screen.getByText("Stopped")).toBeInTheDocument();
     expect(screen.getByText(/^Downloading$/i)).toBeInTheDocument();
     expect(screen.getByText(/Downloaded:/i)).toBeInTheDocument();
     expect(screen.getByText(/512\.0 \/ 1024\.0 MB/i)).toBeInTheDocument();
     expect(screen.getByText(/42%/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Pause SteamCMD/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Pause SteamCMD/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Cancel SteamCMD/i })).not.toBeInTheDocument();
   });
 
   it("does not offer an update when ARK versions differ but Steam builds match", () => {
@@ -488,7 +480,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -532,7 +523,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -581,7 +571,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -622,7 +611,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -665,7 +653,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -676,7 +663,10 @@ describe("ServerCard", () => {
     expect(screen.getByRole("button", { name: "More options" })).toBeEnabled();
   });
 
-  it("keeps Pause enabled while SteamCMD is busy even if the server is stopping", () => {
+  it("opens Downloads from the progress label while SteamCMD is busy", async () => {
+    const user = userEvent.setup();
+    const onOpenDownloads = vi.fn();
+
     render(
       <AppProviders>
         <ServerCard
@@ -708,15 +698,20 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
+          onOpenDownloads={onOpenDownloads}
         />
       </AppProviders>,
     );
 
-    expect(screen.getByRole("button", { name: /Pause SteamCMD/i })).toBeEnabled();
+    await user.click(screen.getByRole("button", { name: /Updating files… — open Downloads/i }));
+    expect(onOpenDownloads).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: /Pause SteamCMD/i })).not.toBeInTheDocument();
   });
 
-  it("offers Cancel instead of Pause while verifying files", () => {
+  it("opens Downloads from the progress label while verifying files", async () => {
+    const user = userEvent.setup();
+    const onOpenDownloads = vi.fn();
+
     render(
       <AppProviders>
         <ServerCard
@@ -742,18 +737,21 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
+          onOpenDownloads={onOpenDownloads}
         />
       </AppProviders>,
     );
 
-    expect(screen.getByRole("button", { name: /Cancel SteamCMD/i })).toBeEnabled();
-    expect(screen.queryByRole("button", { name: /Pause SteamCMD/i })).not.toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: /Verifying integrity… — open Downloads/i }),
+    );
+    expect(onOpenDownloads).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: /Cancel SteamCMD/i })).not.toBeInTheDocument();
   });
 
-  it("offers Resume when a SteamCMD job is paused for that server", async () => {
+  it("opens Downloads from the progress label when a job is paused", async () => {
     const user = userEvent.setup();
-    const onResumeSteamCmd = vi.fn();
+    const onOpenDownloads = vi.fn();
 
     render(
       <AppProviders>
@@ -764,7 +762,7 @@ describe("ServerCard", () => {
           officialSteamBuild="build 24346423"
           steamCmdPaused
           steamCmdOperation="update"
-          steamCmdProgressLabel="Paused"
+          steamCmdProgressLabel="Paused · Updating server"
           onStart={vi.fn()}
           onStop={vi.fn()}
           onKill={vi.fn()}
@@ -780,17 +778,17 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
-          onResumeSteamCmd={onResumeSteamCmd}
+          onOpenDownloads={onOpenDownloads}
         />
       </AppProviders>,
     );
 
-    const resume = screen.getByRole("button", { name: /Resume download/i });
-    expect(resume).toBeEnabled();
     expect(screen.getByRole("button", { name: /^Start server$/i })).toBeDisabled();
-    await user.click(resume);
-    expect(onResumeSteamCmd).toHaveBeenCalledTimes(1);
+    await user.click(
+      screen.getByRole("button", { name: /Paused · Updating server — open Downloads/i }),
+    );
+    expect(onOpenDownloads).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: /Resume download/i })).not.toBeInTheDocument();
   });
 
   it("keeps paused install copy after SteamCMD is no longer live", () => {
@@ -819,7 +817,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -830,7 +827,7 @@ describe("ServerCard", () => {
 
   it("marks a queued server and locks Start until the Downloads job runs", async () => {
     const user = userEvent.setup();
-    const onCancelQueuedJob = vi.fn();
+    const onOpenDownloads = vi.fn();
 
     render(
       <AppProviders>
@@ -856,8 +853,7 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
-          onCancelQueuedJob={onCancelQueuedJob}
+          onOpenDownloads={onOpenDownloads}
         />
       </AppProviders>,
     );
@@ -865,9 +861,11 @@ describe("ServerCard", () => {
     expect(document.querySelector("[data-server-card]")).toHaveAttribute("data-queued");
     expect(screen.getByText(/Queued · Verifying integrity/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^Start server$/i })).toBeDisabled();
-    const remove = screen.getByRole("button", { name: /Remove from queue/i });
-    await user.click(remove);
-    expect(onCancelQueuedJob).toHaveBeenCalledTimes(1);
+    await user.click(
+      screen.getByRole("button", { name: /Queued · Verifying integrity — open Downloads/i }),
+    );
+    expect(onOpenDownloads).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: /Remove from queue/i })).not.toBeInTheDocument();
   });
 
   it("lets Update replace a queued Verify from the card menu", async () => {
@@ -902,8 +900,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
-          onCancelQueuedJob={vi.fn()}
         />
       </AppProviders>,
     );
@@ -951,7 +947,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -996,7 +991,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -1039,7 +1033,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -1075,7 +1068,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -1119,7 +1111,6 @@ describe("ServerCard", () => {
           onClone={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDelete={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -1147,7 +1138,7 @@ describe("ServerCard", () => {
       onClone: vi.fn(),
       onCopyConfiguration: vi.fn(),
       onDelete: vi.fn(),
-      onCancelSteamCmd: vi.fn(),
+      onOpenDownloads: vi.fn(),
     };
 
     const { rerender } = render(
@@ -1220,10 +1211,7 @@ describe("ServerCard", () => {
         />
       </AppProviders>,
     );
-    expect(screen.getByRole("button", { name: /Pause SteamCMD/i })).toHaveAttribute(
-      "data-size",
-      "xs",
-    );
+    expect(screen.getByRole("button", { name: /Installing files… — open Downloads/i })).toBeInTheDocument();
 
     rerender(
       <AppProviders density="comfortable">
@@ -1245,9 +1233,6 @@ describe("ServerCard", () => {
         />
       </AppProviders>,
     );
-    expect(screen.getByRole("button", { name: /Pause SteamCMD/i })).toHaveAttribute(
-      "data-size",
-      "sm",
-    );
+    expect(screen.getByRole("button", { name: /Installing files… — open Downloads/i })).toBeInTheDocument();
   });
 });

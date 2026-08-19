@@ -27,7 +27,6 @@ import type {
   StartServerOptions,
 } from "@shared/types";
 import { EMPTY_WIPE_STALE_MESSAGE } from "@shared/types";
-import { canPauseSteamCmdOperation } from "@shared/steamcmd-progress";
 import {
   decideFilesJobEnqueue,
   filesJobEnqueueCopy,
@@ -59,6 +58,13 @@ import { LogsPage } from "@features/logs/LogsPage";
 import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import { BackupsPage } from "@features/backups/BackupsPage";
 import { OverviewPage } from "@features/overview/OverviewPage";
+import {
+  buildUpdateAllOutdatedPlan,
+  canOpenUpdateAllOutdated,
+  classifyUpdateAllOutdatedQueueResult,
+  summarizeUpdateAllOutdatedQueue,
+  type UpdateAllOutdatedPlan,
+} from "@features/overview/updateAllOutdatedModel";
 import { ImportInstallWizard } from "@features/servers/components/ImportInstallWizard/ImportInstallWizard";
 import { collectAttentionIssues } from "@features/overview/components/AttentionIssuesPopover/AttentionIssuesPopover";
 import {
@@ -219,6 +225,11 @@ export function App({
   );
   const [search, setSearch] = useState("");
   const [checkingUpdates, setCheckingUpdates] = useState(false);
+  const [updateAllOutdatedOpen, setUpdateAllOutdatedOpen] = useState(false);
+  const [updateAllOutdatedModalPlan, setUpdateAllOutdatedModalPlan] =
+    useState<UpdateAllOutdatedPlan | null>(null);
+  const [updateAllOutdatedLoading, setUpdateAllOutdatedLoading] = useState(false);
+  const [updateAllOutdatedQueueing, setUpdateAllOutdatedQueueing] = useState(false);
   /** Shared install-health scan job (startup + Check Servers Health). */
   const [installScan, setInstallScan] = useState<{
     active: boolean;
@@ -395,6 +406,19 @@ export function App({
     () => filterServers(disabledServers),
     [disabledServers, filterServers],
   );
+
+  const updateAllOutdatedPlan = useMemo(
+    () =>
+      buildUpdateAllOutdatedPlan({
+        servers,
+        installationInfo,
+        statuses,
+        officialSteamBuild,
+        criticalJobs: steamCmdStatus?.criticalJobs,
+      }),
+    [servers, installationInfo, statuses, officialSteamBuild, steamCmdStatus?.criticalJobs],
+  );
+  const canUpdateAllOutdated = canOpenUpdateAllOutdated(updateAllOutdatedPlan);
 
   const steamCmdBusy = steamCmdStatus?.busy === true;
   const steamCmdBusyRef = useRef(steamCmdBusy);
@@ -827,7 +851,7 @@ export function App({
             showOperatorToast({
               title: "Installs look OK; updates unverified",
               message:
-                "Couldn't confirm Steam update status for every server. Try Check for updates.",
+                "Couldn't confirm Steam update status for every server. Try Check server updates.",
               color: "yellow",
             });
             return;
@@ -967,6 +991,128 @@ export function App({
     },
     [servers],
   );
+
+  const openUpdateAllOutdated = useCallback(async () => {
+    setUpdateAllOutdatedLoading(true);
+    setUpdateAllOutdatedModalPlan(null);
+    try {
+      const installRes = await window.api.getInstallationInfo(true);
+      if (!installRes.ok) {
+        showOperatorError(
+          installRes.error ?? "Could not refresh update status",
+          "Could not refresh update status",
+        );
+        return;
+      }
+      const nextInstallation = new Map(
+        installRes.data.servers.map((info) => [info.serverId, info]),
+      );
+      setOfficialVersion(installRes.data.officialVersion);
+      setOfficialNetworkStatus(installRes.data.officialNetworkStatus);
+      setInstallationInfo(nextInstallation);
+      setOfficialSteamBuild(installRes.data.officialSteamBuild);
+      const nextPlan = buildUpdateAllOutdatedPlan({
+        servers,
+        installationInfo: nextInstallation,
+        statuses,
+        officialSteamBuild: installRes.data.officialSteamBuild,
+        criticalJobs: steamCmdStatus?.criticalJobs,
+      });
+      if (nextPlan.rows.length === 0) {
+        showOperatorToast({
+          title: "No outdated servers",
+          message: "Every installed server is already on the latest Steam build.",
+          color: "teal",
+        });
+        return;
+      }
+      setUpdateAllOutdatedModalPlan(nextPlan);
+      setUpdateAllOutdatedOpen(true);
+    } finally {
+      setUpdateAllOutdatedLoading(false);
+    }
+  }, [servers, statuses, steamCmdStatus?.criticalJobs]);
+
+  const closeUpdateAllOutdated = useCallback(() => {
+    setUpdateAllOutdatedOpen(false);
+    setUpdateAllOutdatedModalPlan(null);
+  }, []);
+
+  const confirmUpdateAllOutdated = useCallback(async () => {
+    setUpdateAllOutdatedQueueing(true);
+    try {
+      const plan = buildUpdateAllOutdatedPlan({
+        servers,
+        installationInfo,
+        statuses,
+        officialSteamBuild,
+        criticalJobs: steamCmdStatus?.criticalJobs,
+      });
+      let queuedCount = 0;
+      let replacedCount = 0;
+      let failedCount = 0;
+      let alreadyQueuedCount = 0;
+
+      for (const row of plan.eligible) {
+        const result = await window.api.enqueueUpdateServer(row.serverId);
+        const classified = classifyUpdateAllOutdatedQueueResult({
+          ok: result.ok,
+          error: result.ok ? undefined : result.error,
+        });
+        switch (classified.action) {
+          case "queued":
+            queuedCount += 1;
+            break;
+          case "replaced-verify":
+            replacedCount += 1;
+            break;
+          case "already-in-downloads":
+            alreadyQueuedCount += 1;
+            break;
+          case "failed":
+            failedCount += 1;
+            break;
+        }
+      }
+
+      // Refresh happens asynchronously; closing the modal should not wait
+      // for SteamCMD/IPC updates to fully propagate.
+      void refresh().catch(() => undefined);
+
+      const summary = summarizeUpdateAllOutdatedQueue({
+        queuedCount,
+        replacedCount: replacedCount + alreadyQueuedCount,
+        failedCount,
+        skippedCount: plan.skipped.length,
+      });
+      showOperatorToast({
+        title: summary.title,
+        message: summary.message,
+        color: summary.color,
+        autoClose: 10000,
+        onClick: () => {
+          setOverlay(null);
+          setRoute("downloads");
+        },
+      });
+    } catch (err) {
+      showOperatorError(
+        err instanceof Error ? err.message : "Something went wrong queueing updates.",
+        "Could not queue updates",
+      );
+    } finally {
+      setUpdateAllOutdatedQueueing(false);
+      setUpdateAllOutdatedOpen(false);
+      setUpdateAllOutdatedModalPlan(null);
+    }
+  }, [
+    installationInfo,
+    officialSteamBuild,
+    refresh,
+    servers,
+    statuses,
+    steamCmdStatus?.criticalJobs,
+  ]);
 
   useEffect(() => {
     let active = true;
@@ -1115,16 +1261,6 @@ export function App({
     await refresh();
     return result.ok;
   }, [refresh]);
-
-  const pauseOrCancelSteamCmd = useCallback(() => {
-    void (async () => {
-      if (canPauseSteamCmdOperation(steamCmdStatus?.operation)) {
-        await runPauseSteamCmd();
-        return;
-      }
-      await runAction(() => window.api.cancelSteamCmd());
-    })();
-  }, [runAction, runPauseSteamCmd, steamCmdStatus?.operation]);
 
   const appendRconHistory = useCallback((serverId: string, entry: RconHistoryEntry) => {
     setRconHistoryByServer((prev) => {
@@ -1714,38 +1850,9 @@ export function App({
       <DownloadsTeaserFooter
         model={downloadTeaser}
         onOpenDownloads={() => navigate("downloads")}
-        onResume={() => {
-          if (downloadTeaser.selectedJobId !== null) {
-            void runAction(() =>
-              window.api.resumeCriticalJob(downloadTeaser.selectedJobId!),
-            );
-          }
-        }}
-        onRetry={() => {
-          if (downloadTeaser.selectedJobId !== null) {
-            void runAction(() =>
-              window.api.retryCriticalJob(downloadTeaser.selectedJobId!),
-            );
-          }
-        }}
-        onCancel={() => {
-          if (downloadTeaser.canPause) {
-            void runPauseSteamCmd();
-            return;
-          }
-          if (downloadTeaser.usesLiveCancel) {
-            void runAction(() => window.api.cancelSteamCmd());
-            return;
-          }
-          if (downloadTeaser.selectedJobId !== null) {
-            void runAction(() =>
-              window.api.cancelCriticalJob(downloadTeaser.selectedJobId!),
-            );
-          }
-        }}
       />
     );
-  }, [downloadTeaser, navigate, runAction, runPauseSteamCmd, showDownloadsTeaserFooter]);
+  }, [downloadTeaser, navigate, showDownloadsTeaserFooter]);
 
   const openServerFromSpotlight = useCallback(
     (serverId: string) => {
@@ -2007,6 +2114,15 @@ export function App({
               onCheckUpdates={() => void checkForUpdates()}
               checkingInstalls={installScan.active}
               onCheckInstalls={() => void runInstallHealthScan("manual")}
+              canUpdateAllOutdated={canUpdateAllOutdated}
+              openingUpdateAllOutdated={updateAllOutdatedLoading}
+              onOpenUpdateAllOutdated={() => void openUpdateAllOutdated()}
+              updateAllOutdatedOpen={updateAllOutdatedOpen}
+              updateAllOutdatedPlan={updateAllOutdatedModalPlan}
+              updateAllOutdatedLoading={updateAllOutdatedLoading}
+              updateAllOutdatedQueueing={updateAllOutdatedQueueing}
+              onCloseUpdateAllOutdated={closeUpdateAllOutdated}
+              onConfirmUpdateAllOutdated={() => void confirmUpdateAllOutdated()}
               servers={servers}
               filteredServers={filteredServers}
               disabledServers={filteredDisabledServers}
@@ -2061,21 +2177,9 @@ export function App({
               }
               onDeleteServer={(id) => confirmDeleteServer(id)}
               onToggleServerEnabled={(id, enabled) => void setServerEnabled(id, enabled)}
-              onCancelSteamCmd={pauseOrCancelSteamCmd}
-              onResumeSteamCmd={(serverId) => {
-                const job = steamCmdStatus?.criticalJobs.find(
-                  (candidate) =>
-                    candidate.serverId === serverId && candidate.status === "paused",
-                );
-                if (job !== undefined) {
-                  void runAction(() => window.api.resumeCriticalJob(job.id));
-                }
-              }}
-              onCancelQueuedJob={(serverId) => {
-                const queued = steamCmdQueuedByServerId.get(serverId);
-                if (queued !== undefined) {
-                  void runAction(() => window.api.cancelCriticalJob(queued.jobId));
-                }
+              onOpenDownloads={() => {
+                setOverlay(null);
+                navigate("downloads");
               }}
             />
           ),
@@ -2087,16 +2191,6 @@ export function App({
                 status={steamCmdStatus}
                 console={steamCmdConsole}
                 servers={servers}
-                onOpenLogs={(row) => {
-                  if (row.serverId === null) {
-                    navigate("logs");
-                    return;
-                  }
-                  openServerLogs(row.serverId, {
-                    section: "events",
-                    ...(row.eventId !== null ? { eventId: row.eventId } : {}),
-                  });
-                }}
                 onCancelLive={() => void runAction(() => window.api.cancelSteamCmd())}
                 onPauseLive={() => void runPauseSteamCmd()}
                 onCancelJob={(id) => void runAction(() => window.api.cancelCriticalJob(id))}

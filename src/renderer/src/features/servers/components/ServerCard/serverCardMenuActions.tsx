@@ -167,7 +167,7 @@ export function buildServerCardMenuActions(
       {
         kind: "item",
         key: "check-updates",
-        label: "Check for updates",
+        label: "Check server updates",
         icon: <MagnifyingGlass size={ICON} color="var(--mantine-color-blue-6)" />,
         disabled: input.checkingUpdates,
         onClick: input.onCheckUpdates,

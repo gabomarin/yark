@@ -9,20 +9,20 @@ import type { ServerProfile, SteamCmdConsoleSnapshot, SteamCmdStatus } from "@sh
 import {
   buildDownloadRows,
   defaultSelectedRowId,
+  downloadConsoleBody,
   findDownloadRow,
   type DownloadRow,
   type DownloadRowKind,
 } from "./downloadsModel";
-import { DownloadsDetailPanel } from "./DownloadsDetailPanel";
 import { DownloadRowButton, sectionTitle } from "./DownloadsQueueRows";
 import { useDownloadQueueFlip } from "./useDownloadQueueFlip";
+import { ConsoleSurface } from "@ui/ConsoleSurface/ConsoleSurface";
 import classes from "./DownloadsPage.module.css";
 
 interface Props {
   status: SteamCmdStatus;
   console: SteamCmdConsoleSnapshot | null;
   servers: ServerProfile[];
-  onOpenLogs: (row: DownloadRow) => void;
   onCancelLive: () => void;
   onPauseLive: () => void;
   onCancelJob: (jobId: string) => void;
@@ -76,13 +76,8 @@ export function DownloadsPage(props: Props): ReactElement {
   }, [rows, selectedId]);
 
   const selected = findDownloadRow(rows, selectedId);
-  const activeRow = rows.find((row) => row.kind === "active") ?? null;
-  const groups: DownloadRowKind[] = ["active", "paused", "queued", "attention"];
-  const consoleText = props.console?.lines ?? [];
-  const consoleBody =
-    consoleText.length === 0
-      ? "Waiting for progress…"
-      : consoleText.slice(-120).join("\n");
+  const groups: DownloadRowKind[] = ["active", "interrupted", "paused", "queued", "cancelled", "attention"];
+  const consoleBody = downloadConsoleBody(rows, props.console?.lines ?? []);
 
   const cancelRow = (row: DownloadRow) => {
     if (row.kind === "queued" && row.job !== null) {
@@ -102,12 +97,39 @@ export function DownloadsPage(props: Props): ReactElement {
     }
   };
 
-  if (rows.length === 0) {
-    return (
-      <PageScaffold
-        title="Downloads"
-        fillViewport
+  const steamcmdMissingBanner =
+    !props.status.detected && rows.length > 0 ? (
+      <Alert
+        color="red"
+        variant="light"
+        title="SteamCMD is not installed"
+        className={classes.steamcmdMissingBanner}
+        data-steamcmd-missing-banner
       >
+        <Stack gap="xs">
+          Install SteamCMD in Settings before installs, updates, or verify can
+          run.
+          {props.onOpenSettings !== undefined && (
+            <Button
+              size="compact-sm"
+              variant="light"
+              color="red"
+              onClick={props.onOpenSettings}
+            >
+              Install SteamCMD
+            </Button>
+          )}
+        </Stack>
+      </Alert>
+    ) : null;
+
+  const queuePane = (
+    <section
+      ref={queueRef}
+      className={classes.queueSection}
+      aria-label="Download queue"
+    >
+      {rows.length === 0 ? (
         <EmptyState
           icon={<DownloadSimple size={28} weight="duotone" />}
           title="No transfers right now"
@@ -126,9 +148,67 @@ export function DownloadsPage(props: Props): ReactElement {
           layout="stacked"
           titleOrder="h3"
         />
-      </PageScaffold>
-    );
-  }
+      ) : (
+        groups.map((kind) => {
+          const sectionRows = rows.filter((row) => row.kind === kind);
+          if (sectionRows.length === 0) return null;
+          return (
+            <Stack key={kind} gap="xs" className={classes.queueGroup} data-kind={kind} data-queue-group={kind}>
+              <div className={classes.sectionLabel}>{sectionTitle(kind)}</div>
+              <div
+                className={
+                  kind === "queued" || kind === "cancelled"
+                    ? classes.queueRowList
+                    : classes.queueRowStack
+                }
+              >
+                {sectionRows.map((row) => (
+                  <DownloadRowButton
+                    key={row.id}
+                    row={row}
+                    selected={selected?.id === row.id}
+                    onSelect={() => setSelectedId(row.id)}
+                    onCancel={() => cancelRow(row)}
+                    onResume={() => {
+                      if (row.job !== null) {
+                        props.onResumeJob(row.job.id);
+                      }
+                    }}
+                    onRetry={() => {
+                      if (row.job !== null) {
+                        props.onRetryJob(row.job.id);
+                      }
+                    }}
+                    onDismiss={() => {
+                      if (row.job !== null) {
+                        props.onDismissJob(row.job.id);
+                      }
+                    }}
+                    onMoveUp={() => {
+                      if (row.job !== null) {
+                        props.onReorderJob(row.job.id, "up");
+                      }
+                    }}
+                    onMoveDown={() => {
+                      if (row.job !== null) {
+                        props.onReorderJob(row.job.id, "down");
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+            </Stack>
+          );
+        })
+      )}
+    </section>
+  );
+
+  const consolePane = (
+    <div className={classes.consoleOnlyPane} aria-label="SteamCMD console" data-steamcmd-console>
+      <ConsoleSurface fill text={consoleBody} />
+    </div>
+  );
 
   return (
     <PageScaffold
@@ -145,95 +225,13 @@ export function DownloadsPage(props: Props): ReactElement {
           }
         >
           <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[0]} min={30}>
-            <section
-              ref={queueRef}
-              className={classes.queueSection}
-              aria-label="Download queue"
-            >
-              {!props.status.detected && (
-                <Alert
-                  color="red"
-                  title="SteamCMD is not installed"
-                  data-steamcmd-missing-banner
-                >
-                  <Stack gap="xs">
-                    Install SteamCMD in Settings before installs, updates, or
-                    verify can run.
-                    {props.onOpenSettings !== undefined && (
-                      <Button
-                        size="compact-sm"
-                        variant="light"
-                        color="red"
-                        onClick={props.onOpenSettings}
-                      >
-                        Install SteamCMD
-                      </Button>
-                    )}
-                  </Stack>
-                </Alert>
-              )}
-              {groups.map((kind) => {
-                const sectionRows = rows.filter((row) => row.kind === kind);
-                if (sectionRows.length === 0) return null;
-                return (
-                  <Stack key={kind} gap="xs" className={classes.queueGroup} data-kind={kind} data-queue-group={kind}>
-                    <div className={classes.sectionLabel}>{sectionTitle(kind)}</div>
-                    {sectionRows.map((row) => (
-                      <DownloadRowButton
-                        key={row.id}
-                        row={row}
-                        selected={selected?.id === row.id}
-                        onSelect={() => setSelectedId(row.id)}
-                        onCancel={() => cancelRow(row)}
-                        onResume={() => {
-                          if (row.job !== null) {
-                            props.onResumeJob(row.job.id);
-                          }
-                        }}
-                        onRetry={() => {
-                          if (row.job !== null) {
-                            props.onRetryJob(row.job.id);
-                          }
-                        }}
-                        onDismiss={() => {
-                          if (row.job !== null) {
-                            props.onDismissJob(row.job.id);
-                          }
-                        }}
-                        onMoveUp={() => {
-                          if (row.job !== null) {
-                            props.onReorderJob(row.job.id, "up");
-                          }
-                        }}
-                        onMoveDown={() => {
-                          if (row.job !== null) {
-                            props.onReorderJob(row.job.id, "down");
-                          }
-                        }}
-                      />
-                    ))}
-                  </Stack>
-                );
-              })}
-            </section>
-          </Splitter.Pane>
-
-          <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[1]} min={24}>
-            <div className={classes.detailPane}>
-              <DownloadsDetailPanel
-                selected={selected}
-                liveRow={activeRow}
-                consoleBody={consoleBody}
-                onOpenLogs={props.onOpenLogs}
-                onCancelLive={props.onCancelLive}
-                onPauseLive={props.onPauseLive}
-                onCancelRow={cancelRow}
-                onRetryJob={props.onRetryJob}
-                onResumeJob={props.onResumeJob}
-                onDismissJob={props.onDismissJob}
-                steamCmdMissing={!props.status.detected}
-              />
+            <div className={classes.upperPane}>
+              {steamcmdMissingBanner}
+              {queuePane}
             </div>
+          </Splitter.Pane>
+          <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[1]} min={20}>
+            {consolePane}
           </Splitter.Pane>
         </Splitter>
       </div>

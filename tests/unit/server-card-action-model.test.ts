@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import type { ServerStatus } from "@shared/types";
 import type { ServerUpdateState } from "@shared/server-update-status";
 import {
-  resolveFilesJobAction,
   resolveRestartAction,
   resolveRuntimeAction,
   resolveUpdateAction,
@@ -191,14 +190,6 @@ describe("serverCardActionModel combos", () => {
     expect(restart.visible).toBe(true);
   });
 
-  it("puts Pause on the files job action, not Start", () => {
-    const job = resolveFilesJobAction({
-      steamCmdBusy: true,
-      steamCmdOperation: "update",
-    });
-    expect(job).toEqual({ kind: "pause", label: "Pause SteamCMD", color: "yellow" });
-  });
-
   it("locks Start when a Downloads job is queued", () => {
     const runtime = resolveRuntimeAction({
       steamCmdBusy: false,
@@ -208,8 +199,5 @@ describe("serverCardActionModel combos", () => {
     });
     expect(runtime.kind).toBe("start");
     expect(runtime.disabled).toBe(true);
-    expect(resolveFilesJobAction({ steamCmdQueued: true, steamCmdBusy: false })?.kind).toBe(
-      "cancel",
-    );
   });
 });

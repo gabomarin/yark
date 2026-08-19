@@ -4,8 +4,11 @@ import {
   buildDownloadRows,
   buildDownloadsTeaser,
   defaultSelectedRowId,
+  downloadConsoleBody,
   downloadsBadgeCount,
   filesQueueStateByServerId,
+  queuedJobDetailHint,
+  type DownloadRow,
 } from "./downloadsModel";
 import { downloadRowMeta, formatDownloadPhase } from "./downloadsCopy";
 
@@ -159,29 +162,224 @@ describe("downloadsModel", () => {
     expect(rows[1]?.canMoveDown).toBe(false);
   });
 
-  it("does not mark backup jobs as reorderable", () => {
+  it("describes queue position in detail hints", () => {
+    const active = {
+      id: "live",
+      kind: "active" as const,
+      serverId: "s0",
+      eventId: null,
+      title: "extinction",
+      subtitle: "Updating server",
+      serverName: "extinction",
+      mapId: null,
+      mapModId: null,
+      modThumbnailUrl: null,
+      statusLabel: "running",
+      phase: "downloading",
+      percent: 18,
+      byteProgress: null,
+      byteProgressNoun: null,
+      job: null,
+      usesLiveCancel: true,
+      canPause: true,
+      reorderable: false,
+      canMoveUp: false,
+      canMoveDown: false,
+    };
+    const firstQueued = {
+      ...active,
+      id: "q1",
+      kind: "queued" as const,
+      serverId: "s1",
+      title: "LostColony",
+      serverName: "LostColony",
+      percent: null,
+      usesLiveCancel: false,
+      canPause: false,
+      reorderable: true,
+      job: {
+        id: "q1",
+        operation: "update" as const,
+        serverId: "s1",
+        serverName: "LostColony",
+        status: "pending" as const,
+        phase: "queued",
+        attempts: 0,
+        maxAttempts: 3,
+        createdAt: "2026-08-18T00:00:00.000Z",
+        updatedAt: "2026-08-18T00:00:00.000Z",
+        lastError: null,
+        recoveryReason: null,
+        nextActions: ["cancel"],
+      },
+    };
+    const secondQueued = {
+      ...firstQueued,
+      id: "q2",
+      serverId: "s2",
+      title: "Genesis",
+      serverName: "Genesis",
+      job: { ...firstQueued.job!, id: "q2", serverId: "s2", serverName: "Genesis" },
+    };
+    const rows: DownloadRow[] = [
+      active as DownloadRow,
+      firstQueued as DownloadRow,
+      secondQueued as DownloadRow,
+    ];
+
+    expect(queuedJobDetailHint(firstQueued as DownloadRow, rows)).toMatch(
+      /after extinction finishes/i,
+    );
+    expect(queuedJobDetailHint(secondQueued as DownloadRow, rows)).toMatch(
+      /after LostColony finishes/i,
+    );
+  });
+
+  it("mentions Retry when a restart-interrupted job blocks later queued work", () => {
+    const interrupted = {
+      id: "job-interrupted",
+      kind: "interrupted" as const,
+      serverName: "Genesis",
+    };
+    const firstQueued = {
+      id: "q1",
+      kind: "queued" as const,
+      serverName: "LostColony",
+      reorderable: true,
+    };
+    const secondQueued = {
+      id: "q2",
+      kind: "queued" as const,
+      serverName: "Extinction",
+      reorderable: true,
+    };
+    const rows = [
+      interrupted,
+      firstQueued,
+      secondQueued,
+    ] as DownloadRow[];
+
+    expect(queuedJobDetailHint(firstQueued as DownloadRow, rows)).toMatch(
+      /Genesis is retried/i,
+    );
+    expect(queuedJobDetailHint(secondQueued as DownloadRow, rows)).toMatch(
+      /Genesis is retried and LostColony finishes/i,
+    );
+  });
+
+  it("shows SteamCMD output while a job is active or paused", () => {
+    const active = { id: "live", kind: "active" as const };
+    const paused = { id: "p1", kind: "paused" as const };
+    const queued = { id: "q1", kind: "queued" as const };
+
+    expect(downloadConsoleBody([], ["line 1"])).toBe("");
+    expect(downloadConsoleBody([queued as DownloadRow], ["line 1"])).toBe("");
+    expect(downloadConsoleBody([active as DownloadRow], [])).toBe("Waiting for progress…");
+    expect(downloadConsoleBody([active as DownloadRow], ["line 1", "line 2"])).toBe(
+      "line 1\nline 2",
+    );
+    expect(
+      downloadConsoleBody([paused as DownloadRow], ["paused output"]),
+    ).toBe("paused output");
+    expect(
+      downloadConsoleBody(
+        [{ id: "i1", kind: "interrupted" as const } as DownloadRow],
+        ["last steamcmd line"],
+      ),
+    ).toBe("last steamcmd line");
+    expect(
+      downloadConsoleBody(
+        [active as DownloadRow, queued as DownloadRow],
+        ["live output"],
+      ),
+    ).toBe("live output");
+  });
+
+  it("classifies a restart-interrupted job under Active with Retry, not Needs attention", () => {
     const rows = buildDownloadRows(
       baseStatus({
         criticalJobs: [
           {
-            id: "backup",
-            operation: "pre-update-backup",
-            serverId: "s1",
+            id: "job-interrupted",
+            operation: "update",
+            serverId: "srv-1",
+            serverName: "Extinction",
+            status: "failed",
+            phase: "applying-files",
+            attempts: 1,
+            maxAttempts: 3,
+            createdAt: "2026-08-18T00:00:00.000Z",
+            updatedAt: "2026-08-18T00:00:01.000Z",
+            lastError: null,
+            recoveryReason: 'YARK closed during phase "applying-files". Retry to continue.',
+            nextActions: ["retry", "dismiss"],
+          },
+          {
+            id: "job-queued",
+            operation: "verify-files",
+            serverId: "srv-2",
+            serverName: "LostColony",
             status: "pending",
             phase: "queued",
             attempts: 0,
             maxAttempts: 3,
-            createdAt: "2026-08-18T00:00:00.000Z",
-            updatedAt: "2026-08-18T00:00:00.000Z",
+            createdAt: "2026-08-18T00:00:02.000Z",
+            updatedAt: "2026-08-18T00:00:02.000Z",
             lastError: null,
             recoveryReason: null,
             nextActions: ["cancel"],
           },
         ],
       }),
+      { activeServer: server({ id: "srv-1", name: "Extinction", map: "Extinction" }) },
     );
 
-    expect(rows[0]?.reorderable).toBe(false);
+    expect(rows.find((row) => row.id === "job-interrupted")?.kind).toBe("interrupted");
+    expect(rows.find((row) => row.id === "job-queued")?.kind).toBe("queued");
+    expect(defaultSelectedRowId(rows)).toBe("job-interrupted");
+  });
+
+  it("hides internal pre-update-backup jobs from Downloads rows", () => {
+    const rows = buildDownloadRows(
+      baseStatus({
+        criticalJobs: [
+          {
+            id: "update-cancelled",
+            operation: "update",
+            serverId: "s1",
+            serverName: "Genesis",
+            status: "cancelled",
+            phase: "cancelled",
+            attempts: 1,
+            maxAttempts: 3,
+            createdAt: "2026-08-18T00:00:00.000Z",
+            updatedAt: "2026-08-18T00:00:00.000Z",
+            lastError: null,
+            recoveryReason: "Cancelled by the operator during execution.",
+            nextActions: ["retry", "dismiss"],
+          },
+          {
+            id: "backup-shadow",
+            operation: "pre-update-backup",
+            serverId: "s1",
+            serverName: "Genesis",
+            status: "cancelled",
+            phase: "cancelled",
+            attempts: 1,
+            maxAttempts: 3,
+            createdAt: "2026-08-18T00:00:01.000Z",
+            updatedAt: "2026-08-18T00:00:01.000Z",
+            lastError: null,
+            recoveryReason: "Cancelled by the operator during execution.",
+            nextActions: ["retry", "dismiss"],
+          },
+        ],
+      }),
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.id).toBe("update-cancelled");
+    expect(rows[0]?.kind).toBe("cancelled");
   });
 
   it("builds teaser copy for active work", () => {
@@ -266,7 +464,7 @@ describe("downloadsModel", () => {
             createdAt: "2026-08-18T00:00:00.000Z",
             updatedAt: "2026-08-18T00:00:00.000Z",
             lastError: null,
-            recoveryReason: "Paused by the operator. Resume to continue.",
+            recoveryReason: null,
             nextActions: ["resume", "cancel"],
           },
         ],
@@ -282,7 +480,7 @@ describe("downloadsModel", () => {
     expect(defaultSelectedRowId(rows)).toBe("job-paused");
   });
 
-  it("offers Retry on cancelled leftovers in the teaser and attention row", () => {
+  it("offers Retry on cancelled leftovers without treating them as attention", () => {
     const rows = buildDownloadRows(
       baseStatus({
         criticalJobs: [
@@ -307,10 +505,10 @@ describe("downloadsModel", () => {
     );
     const teaser = buildDownloadsTeaser(baseStatus(), rows);
 
-    expect(rows[0]?.kind).toBe("attention");
+    expect(rows[0]?.kind).toBe("cancelled");
     expect(rows[0]?.phase).toBe("Cancelled");
     expect(teaser.canRetry).toBe(true);
-    expect(teaser.attention).toBe(true);
+    expect(teaser.attention).toBe(false);
     expect(teaser.selectedJobId).toBe("job-cancelled");
   });
 
@@ -442,7 +640,7 @@ describe("downloadsModel", () => {
         createdAt: "2026-08-18T00:00:00.000Z",
         updatedAt: "2026-08-18T00:00:00.000Z",
         lastError: null,
-        recoveryReason: "Paused by the operator. Resume to continue.",
+        recoveryReason: null,
         nextActions: ["resume", "cancel"],
       },
     ]);
@@ -468,7 +666,31 @@ describe("downloadsModel", () => {
     ).toBe("Updating server");
   });
 
-  it("hints attention leftovers on a paused teaser", () => {
+  it("omits internal checkpoint phase from queued row meta", () => {
+    expect(
+      downloadRowMeta({
+        subtitle: "Updating server",
+        phase: "Pre-update backup complete",
+        statusLabel: "queued",
+        byteProgress: null,
+        byteProgressNoun: null,
+      }),
+    ).toBe("Updating server");
+  });
+
+  it("prefers the live SteamCMD phase over the operation title in row meta", () => {
+    expect(
+      downloadRowMeta({
+        subtitle: "Updating server",
+        phase: "Verifying",
+        statusLabel: "running",
+        byteProgress: "5159.1 / 12244.2 MB",
+        byteProgressNoun: "Downloaded",
+      }),
+    ).toBe("Verifying · Downloaded: 5159.1 / 12244.2 MB");
+  });
+
+  it("does not mark cancelled leftovers as attention on a paused teaser", () => {
     const rows = buildDownloadRows(
       baseStatus({
         criticalJobs: [
@@ -484,7 +706,7 @@ describe("downloadsModel", () => {
             createdAt: "2026-08-18T00:00:00.000Z",
             updatedAt: "2026-08-18T00:00:00.000Z",
             lastError: null,
-            recoveryReason: "Paused by the operator. Resume to continue.",
+            recoveryReason: null,
             nextActions: ["resume", "cancel"],
           },
           {
@@ -508,12 +730,12 @@ describe("downloadsModel", () => {
     const teaser = buildDownloadsTeaser(baseStatus(), rows);
 
     expect(teaser.canResume).toBe(true);
-    expect(teaser.attention).toBe(true);
-    expect(teaser.detail).toContain("1 need review");
+    expect(teaser.attention).toBe(false);
+    expect(teaser.detail).not.toContain("need review");
 
     const missing = buildDownloadsTeaser(baseStatus({ detected: false, executablePath: null }), rows);
     expect(missing.canResume).toBe(false);
     expect(missing.canCancel).toBe(false);
-    expect(missing.attention).toBe(true);
+    expect(missing.attention).toBe(false);
   });
 });

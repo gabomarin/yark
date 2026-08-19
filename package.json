@@ -36,6 +36,8 @@
     "e2e:launch-args": "node scripts/e2e-launch-args.cjs",
     "e2e:quit-policy": "node scripts/e2e-quit-policy.cjs",
     "e2e:crash-reattach": "node scripts/e2e-crash-reattach.cjs",
+    "e2e:kill-leftover": "node scripts/e2e-kill-leftover.cjs",
+    "e2e:all": "node scripts/run-all-e2e.cjs",
     "e2e:log-retention": "node scripts/e2e-log-retention.cjs",
     "e2e:clusters-membership": "node scripts/e2e-clusters-membership.cjs",
     "e2e:copy-configuration": "node scripts/e2e-copy-configuration.cjs",

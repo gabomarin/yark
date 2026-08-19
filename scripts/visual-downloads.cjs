@@ -154,7 +154,7 @@ function seedAttentionJobs(userData) {
   seedServers(db, userData);
   writeJobs(db, [
     job("job-paused", "install-files", "visual-dl-0", "paused", "applying-files", {
-      recoveryReason: "Paused by the operator. Resume to continue.",
+      recoveryReason: null,
     }),
     job("job-pending-legacy", "update", "visual-dl-1", "pending", "queued"),
     job("job-cancelled", "verify-files", "visual-dl-2", "cancelled", "cancelled", {
@@ -194,7 +194,7 @@ function seedHappyJobs(userData, steamCmdPath) {
       job("job-scorched-verify", "verify-files", "visual-dl-1", "pending", "queued"),
       job("job-aberration-update", "update", "visual-dl-2", "pending", "queued"),
       job("job-extinction-paused", "install-files", "visual-dl-3", "paused", "applying-files", {
-        recoveryReason: "Paused by the operator. Resume to continue.",
+        recoveryReason: null,
       }),
     ],
     steamCmdPath,
@@ -252,7 +252,7 @@ async function measureDownloads(page) {
     const footer = document.querySelector("[data-downloads-footer]");
     const groups = [...document.querySelectorAll("[data-queue-group]")];
     const rows = [...document.querySelectorAll("[data-download-row]")];
-    const steamCmdBar = document.querySelector('[role="group"][aria-label="SteamCMD process"]');
+    const liveAction = document.querySelector("[data-download-live-action]");
     return {
       viewport: { width: window.innerWidth, height: window.innerHeight },
       hasHorizontalOverflow: root.scrollWidth > root.clientWidth + 1,
@@ -266,7 +266,7 @@ async function measureDownloads(page) {
         kind: row.getAttribute("data-kind"),
         text: (row.textContent || "").replace(/\s+/g, " ").trim().slice(0, 160),
       })),
-      steamCmdBar: steamCmdBar !== null,
+      liveAction: liveAction !== null,
     };
   });
 }
@@ -411,7 +411,7 @@ async function runAttentionScenario(outDir, findings, errors) {
       await row.click();
       await page.waitForTimeout(200);
       const metrics = await measureDownloads(page);
-      assert.equal(metrics.steamCmdBar, false, `${item.id} must not show SteamCMD process bar`);
+      assert.equal(metrics.liveAction, false, `${item.id} must not show live progress action`);
       assert.equal(await page.getByRole("button", { name: /^Retry$/i }).count(), item.retry ? 1 : 0, `${item.id} Retry`);
       assert.equal(await page.getByRole("button", { name: /^Dismiss$/i }).count(), item.dismiss ? 1 : 0, `${item.id} Dismiss`);
       await screenshot(page, outDir, item.file);
@@ -508,17 +508,17 @@ async function runHappyPathScenario(outDir, findings, errors, stubExe) {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await rowByServer(page, "active", "Island").click();
     await page.waitForTimeout(200);
-    await page.getByRole("group", { name: "SteamCMD process" }).waitFor({ state: "visible" });
-    assert.equal(await page.getByRole("button", { name: "Cancel SteamCMD" }).count(), 1);
+    await page.locator("[data-download-live-action]").waitFor({ state: "visible" });
+    assert.equal(await page.getByRole("button", { name: "Cancel" }).count(), 1);
     assert.equal(await page.getByRole("button", { name: "Remove from queue" }).count(), 0);
     await screenshot(page, outDir, "happy-detail-active-steamcmd-bar-fhd");
 
     await page.locator('[data-download-row="job-scorched-verify"]').click();
     await page.waitForTimeout(200);
-    assert.equal(await page.getByRole("group", { name: "SteamCMD process" }).count(), 0);
+    assert.equal(await page.locator("[data-download-live-action]").count(), 0);
     assert.equal(await page.getByRole("button", { name: "Remove from queue" }).count(), 0);
-    assert.equal(await page.getByRole("button", { name: "Cancel this job" }).count(), 0);
-    assert.equal(await page.getByRole("button", { name: "Cancel SteamCMD" }).count(), 0);
+    assert.equal(await page.getByRole("button", { name: "Cancel" }).count(), 0);
+    assert.equal(await page.getByRole("button", { name: "Pause" }).count(), 0);
     await screenshot(page, outDir, "happy-detail-queued-no-steamcmd-bar-fhd");
 
     const aberration = page.locator('[data-download-row="job-aberration-update"]');
@@ -558,7 +558,7 @@ async function runHappyPathScenario(outDir, findings, errors, stubExe) {
     await screenshot(page, outDir, "happy-cancel-queued-goes-to-attention-fhd");
 
     await rowByServer(page, "active", "Island").click();
-    await page.getByRole("button", { name: "Cancel SteamCMD" }).click();
+    await page.getByRole("button", { name: "Cancel" }).click();
     await rowByServer(page, "attention", "Island").waitFor({ state: "visible", timeout: 20_000 });
     await assertRowKind(page, "job-extinction-paused", "paused");
     await screenshot(page, outDir, "happy-cancel-active-goes-to-attention-fhd");

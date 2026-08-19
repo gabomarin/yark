@@ -108,7 +108,11 @@ Pre-update archives use backup type `pre_update` and kinds `world` / `ini`
 
 `isServerUpdateAvailable` / `getServerUpdateState` compare **Steam builds only**. Never treat runtime `ARK Version` vs an official/live server version as an update decision — staggered ASA rollouts make those non-equivalent.
 
-Official version and official build each cache for **15 minutes** in-process (`OFFICIAL_VERSION_TTL_MS`). `servers:installation` accepts `forceOfficialCheck` to bypass (used by **Check for updates** and **Check installs**). The status line is also parsed for network state (`Online` / `Deploying` / `Offline`); Deploying tints the sidebar version and shows a pulsing indicator.
+Official version and official build each cache for **15 minutes** in-process (`OFFICIAL_VERSION_TTL_MS`). `servers:installation` accepts `forceOfficialCheck` to bypass (used by **Check server updates**, **Update all outdated**, and **Check installs**). The status line is also parsed for network state (`Online` / `Deploying` / `Offline`); Deploying tints the sidebar version and shows a pulsing indicator.
+
+### Fleet update all (#378)
+
+Overview **Update all outdated** (next to **Check server updates**) opens only when at least one outdated server is stopped, enabled, install-ready, and not blocked by Downloads. The preview lists every outdated profile with current vs official Steam build when known, plus skip reasons (running, disabled, install not ready, unknown build, or an existing files job). Confirm queues one **Update** job per eligible server through the same safe-update pipeline as per-card **Update** — jobs run sequentially in Downloads order; running servers stay skipped until stopped.
 
 ### Installation health (#57)
 
@@ -155,13 +159,13 @@ Requires a display and `ELECTRON_RUN_AS_NODE` unset. Fixtures under `C:\asa-e2e`
 
 UI entry points: **Downloads** page (queue + live console) + Overview / workspace install/update/verify; onboarding “Install files”. Update requires a stopped server. Verify stays enabled while running (tooltip explains auto-stop). Start stays locked while a files job is queued or active. **Update** / **Install** can replace a queued **Verify** for the same server (toast: replaced in the queue — no Needs attention leftover). A running Verify is not cancelled; the operator must cancel it first or wait. Verify on top of Update/Install is refused (“already in Downloads”). Duplicate clicks of the same operation toast “Already in Downloads”. The Overview card shows a queued or busy progress strip.
 
-**Pause** is for install, update, and file copy. Verify is SteamCMD `app_update … validate` with no resume checkpoint, so the UI offers **Cancel** instead — pausing and resuming would restart the scan at 0%. Pause during an in-progress rollback is refused (yellow toast) instead of cancelling. On Downloads, Pause/Cancel for the **selected active job** sit in a **SteamCMD process** bar above that job’s console. Queued jobs cancel from the row (they do not show the live SteamCMD bar or a second Remove from queue in the detail). Cancel stops only the active SteamCMD job; other queued Downloads rows stay queued and start after unwind. Cancelled jobs stay visible under Needs attention with **Retry** and **Dismiss**. Retry re-queues that job. Clicking Install, Update, or Verify again also replaces a cancelled leftover of the same type. Failed or blocked jobs still need Retry or Dismiss on Downloads.
+**Pause** is for install, update, and file copy. Verify is SteamCMD `app_update … validate` with no resume checkpoint, so the UI offers **Cancel** instead — pausing and resuming would restart the scan at 0%. Pause during an in-progress rollback is refused (yellow toast) instead of cancelling. On Downloads, **Pause** / **Cancel** for the active job sit on the Active queue row; queued, paused, cancelled, and needs-attention rows expose their actions on the row as well. Cancel stops only the active SteamCMD job; other queued Downloads rows stay queued and start after unwind. Cancelled jobs stay visible under Needs attention with **Retry** and **Dismiss**. Retry re-queues that job. Clicking Install, Update, or Verify again also replaces a cancelled leftover of the same type. Failed or blocked jobs still need Retry or Dismiss on Downloads.
 
 Queued install/update/verify rows can **Move up in queue** / **Move down in queue**. The displayed queue order is the execution order; those rows slide past each other when you reorder. Arrows hide when only one queued files job exists.
 
-If SteamCMD is not installed, Install/Update/Verify **do not queue**. Pending leftovers from a previous session **block** with Retry so they cannot fail into pre-update backup leftovers. When SteamCMD **is** ready, those pending leftovers **resume on launch** (first queued job becomes Active). Retry, Resume, and a later Install/Update/Verify probe disk again after that miss so a SteamCMD install in the same session is not stuck. Retry and Resume keep the current job and tell the operator to install SteamCMD in Settings first. Downloads shows a banner with **Install SteamCMD** (opens the Settings SteamCMD category).
+If SteamCMD is not installed, Install/Update/Verify **do not queue**. Pending leftovers from a previous session **block** with Retry so they cannot fail into pre-update backup leftovers. When SteamCMD **is** ready, pending leftovers **resume on launch** unless a **Paused** job or a **Retry**-held interrupt (YARK closed mid-job) is still in the queue.
 
-The detail console is the **active** SteamCMD job. Selecting a paused, queued, or needs-attention row shows that job’s reason instead of another job’s log. **Open in Logs** follows the selected row.
+The lower SteamCMD console follows the **Active** job while one is running and keeps the last output when that job is **Paused**; it clears when you **Resume**.
 
 ## Progress
 

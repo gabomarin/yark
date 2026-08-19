@@ -5,14 +5,27 @@ import {
   steamCmdByteProgressNoun,
 } from "@shared/steamcmd-progress";
 import type {
-  CriticalJobOperation,
   CriticalJobSummary,
   ServerProfile,
   SteamCmdStatus,
 } from "@shared/types";
 import { formatDownloadPhase } from "./downloadsCopy";
+import {
+  FILES_QUEUE_OPERATIONS,
+  isOperatorVisibleCriticalJob,
+  operationTitle,
+} from "./downloadsOperationCopy";
 
-export type DownloadRowKind = "active" | "queued" | "paused" | "attention";
+export type { DownloadsTeaser } from "./downloadsTeaserModel";
+export { buildDownloadsTeaser } from "./downloadsTeaserModel";
+export type { ServerFilesQueueKind, ServerFilesQueueState } from "./downloadsFilesQueueModel";
+export {
+  filesQueueStateByServerId,
+  steamFilesOperationForKind,
+} from "./downloadsFilesQueueModel";
+export { isOperatorVisibleCriticalJob, operationTitle } from "./downloadsOperationCopy";
+
+export type DownloadRowKind = "active" | "interrupted" | "queued" | "paused" | "cancelled" | "attention";
 
 export type DownloadRow = {
   id: string;
@@ -38,54 +51,23 @@ export type DownloadRow = {
   canMoveDown: boolean;
 };
 
-export type DownloadsTeaser = {
-  visible: boolean;
-  title: string;
-  detail: string;
-  percent: number | null;
-  attention: boolean;
-  canCancel: boolean;
-  canResume: boolean;
-  canPause: boolean;
-  canRetry: boolean;
-  usesLiveCancel: boolean;
-  selectedJobId: string | null;
-};
-
-const OPERATION_TITLE: Record<
-  NonNullable<SteamCmdStatus["operation"]> | CriticalJobOperation,
-  string
-> = {
-  "install-steamcmd": "Installing SteamCMD",
-  "install-files": "Installing files",
-  update: "Updating server",
-  "sync-files": "Copying files to the server",
-  "verify-files": "Verifying integrity",
-  "pre-update-backup": "Creating pre-update backup",
-  restore: "Restoring backup",
-};
-
-const FILES_QUEUE_OPERATIONS = new Set<CriticalJobOperation>([
-  "install-files",
-  "update",
-  "verify-files",
-]);
-
-export function operationTitle(
-  operation: NonNullable<SteamCmdStatus["operation"]> | CriticalJobOperation,
-): string {
-  return OPERATION_TITLE[operation];
-}
-
 function statusLabelForJob(job: CriticalJobSummary): string {
   if (job.status === "pending" || job.status === "retrying") return "queued";
   return job.status;
 }
 
+export function isRestartInterruptedJob(job: CriticalJobSummary): boolean {
+  return job.status === "failed"
+    && job.nextActions.includes("retry")
+    && (job.recoveryReason?.startsWith("YARK closed during phase") ?? false);
+}
+
 function classifyJobKind(job: CriticalJobSummary): DownloadRowKind {
+  if (isRestartInterruptedJob(job)) return "interrupted";
   if (job.status === "running") return "active";
   if (job.status === "paused") return "paused";
   if (job.status === "pending" || job.status === "retrying") return "queued";
+  if (job.status === "cancelled") return "cancelled";
   return "attention";
 }
 
@@ -190,13 +172,17 @@ function jobRowFromSummary(
         : null,
     statusLabel: statusLabelForJob(job),
     phase:
-      kind === "paused"
+      kind === "interrupted"
+        ? "Interrupted"
+        : kind === "paused"
         ? "Paused"
-        : job.status === "cancelled"
-          ? "Cancelled"
-          : matchesLiveProgress && status?.progressLabel !== null
-            ? status.progressLabel
-            : formatDownloadPhase(job.phase),
+        : kind === "queued"
+          ? "Queued"
+          : job.status === "cancelled"
+            ? "Cancelled"
+            : matchesLiveProgress && status?.progressLabel !== null
+              ? status.progressLabel
+              : formatDownloadPhase(job.phase),
     percent: matchesLiveProgress ? status?.progressPercent ?? null : null,
     byteProgress,
     byteProgressNoun:
@@ -237,6 +223,9 @@ export function buildDownloadRows(
   }
 
   for (const job of jobs) {
+    if (!isOperatorVisibleCriticalJob(job)) {
+      continue;
+    }
     if (liveRow !== null && job.status === "running") {
       continue;
     }
@@ -260,6 +249,8 @@ export function downloadsBadgeCount(rows: DownloadRow[]): number {
 export function defaultSelectedRowId(rows: DownloadRow[]): string | null {
   const active = rows.find((row) => row.kind === "active");
   if (active !== undefined) return active.id;
+  const interrupted = rows.find((row) => row.kind === "interrupted");
+  if (interrupted !== undefined) return interrupted.id;
   const paused = rows.find((row) => row.kind === "paused");
   if (paused !== undefined) return paused.id;
   const attention = rows.find((row) => row.kind === "attention");
@@ -275,175 +266,61 @@ export function findDownloadRow(
   return rows.find((row) => row.id === selectedId) ?? null;
 }
 
-export function buildDownloadsTeaser(
-  status: SteamCmdStatus,
+/** SteamCMD console text for the Downloads lower pane — active or paused job output; cleared on resume. */
+export function downloadConsoleBody(
   rows: DownloadRow[],
-): DownloadsTeaser {
-  const attentionRows = rows.filter((row) => row.kind === "attention");
-  const attentionHint =
-    attentionRows.length > 0
-      ? `${attentionRows.length} need review`
-      : null;
-
-  const active = rows.find((row) => row.kind === "active");
-  if (active !== undefined) {
-    const queued = rows.filter((row) => row.kind === "queued").length;
-    const byteNoun =
-      status.operation !== null ? steamCmdByteProgressNoun(status.operation) : "Files";
-    const title =
-      active.title === active.serverName
-        ? active.title
-        : `${active.title} · ${active.serverName}`;
-    return {
-      visible: true,
-      title,
-      detail: [
-        active.byteProgress !== null ? `${byteNoun}: ${active.byteProgress}` : active.phase,
-        queued > 0 ? `${queued} queued` : null,
-        attentionHint,
-      ]
-        .filter(Boolean)
-        .join(" · "),
-      percent: active.percent,
-      attention: attentionRows.length > 0,
-      canCancel: true,
-      canResume: false,
-      canPause: active.canPause,
-      canRetry: false,
-      usesLiveCancel: active.usesLiveCancel,
-      selectedJobId: active.job?.id ?? null,
-    };
+  lines: string[],
+): string {
+  const showConsole = rows.some(
+    (row) =>
+      row.kind === "active"
+      || row.kind === "paused"
+      || row.kind === "interrupted",
+  );
+  if (!showConsole) {
+    return "";
   }
-
-  const paused = rows.filter((row) => row.kind === "paused");
-  if (paused.length > 0) {
-    const first = paused[0]!;
-    return {
-      visible: true,
-      title: `${first.title} · paused`,
-      detail: [first.subtitle, attentionHint].filter(Boolean).join(" · "),
-      percent: first.percent,
-      attention: attentionRows.length > 0,
-      canCancel: status.detected && first.job?.nextActions.includes("cancel") === true,
-      canResume: status.detected,
-      canPause: false,
-      canRetry: false,
-      usesLiveCancel: false,
-      selectedJobId: first.job?.id ?? null,
-    };
+  if (lines.length === 0) {
+    return "Waiting for progress…";
   }
+  return lines.slice(-120).join("\n");
+}
 
-  const attention = rows.filter((row) => row.kind === "attention");
-  if (attention.length > 0) {
-    return {
-      visible: true,
-      title: `${attention.length} download${attention.length === 1 ? "" : "s"} need attention`,
-      detail: attention.map((row) => row.serverName).join(" · "),
-      percent: null,
-      attention: true,
-      canCancel: false,
-      canResume: false,
-      canPause: false,
-      canRetry: attention[0]?.job?.nextActions.includes("retry") === true,
-      usesLiveCancel: false,
-      selectedJobId: attention[0]?.job?.id ?? null,
-    };
+/** Detail hint for a queued files job — reflects queue order, not only the live row. */
+export function queuedJobDetailHint(
+  selected: DownloadRow,
+  rows: DownloadRow[],
+): string {
+  const queued = rows.filter((row) => row.kind === "queued" && row.reorderable);
+  const index = queued.findIndex((row) => row.id === selected.id);
+  if (index < 0) {
+    return "This job is waiting in the queue.";
   }
-
-  const queuedOnly = rows.filter((row) => row.kind === "queued");
-  if (queuedOnly.length > 0) {
-    const first = queuedOnly[0]!;
-    return {
-      visible: true,
-      title: `${queuedOnly.length} queued download${queuedOnly.length === 1 ? "" : "s"}`,
-      detail: first.title,
-      percent: null,
-      attention: false,
-      canCancel: first.job?.nextActions.includes("cancel") === true,
-      canResume: false,
-      canPause: false,
-      canRetry: false,
-      usesLiveCancel: false,
-      selectedJobId: first.job?.id ?? null,
-    };
+  if (index === 0) {
+    const active = rows.find((row) => row.kind === "active");
+    if (active !== undefined) {
+      return `Runs next, after ${active.serverName} finishes.`;
+    }
+    const paused = rows.find((row) => row.kind === "paused");
+    if (paused !== undefined) {
+      return `Runs next, after ${paused.serverName} is resumed and finishes.`;
+    }
+    const interrupted = rows.find((row) => row.kind === "interrupted");
+    if (interrupted !== undefined) {
+      return `Runs next, after ${interrupted.serverName} is retried and finishes.`;
+    }
+    return "Runs next when SteamCMD is free.";
   }
-
-  return {
-    visible: false,
-    title: "",
-    detail: "",
-    percent: null,
-    attention: false,
-    canCancel: false,
-    canResume: false,
-    canPause: false,
-    canRetry: false,
-    usesLiveCancel: false,
-    selectedJobId: null,
-  };
+  const previous = queued[index - 1]!;
+  const interrupted = rows.find((row) => row.kind === "interrupted");
+  if (interrupted !== undefined) {
+    return `Runs after ${interrupted.serverName} is retried and ${previous.serverName} finishes.`;
+  }
+  return `Runs after ${previous.serverName} finishes.`;
 }
 
 export function shouldShowDownloadsChrome(status: SteamCmdStatus | null): boolean {
   if (status === null) return false;
   if (status.busy) return true;
   return (status.criticalJobs?.length ?? 0) > 0;
-}
-
-export type ServerFilesQueueKind = "active" | "paused" | "queued";
-
-export type ServerFilesQueueState = {
-  kind: ServerFilesQueueKind;
-  jobId: string;
-  operation: CriticalJobOperation;
-  label: string;
-};
-
-const QUEUE_KIND_RANK: Record<ServerFilesQueueKind, number> = {
-  active: 0,
-  paused: 1,
-  queued: 2,
-};
-
-function queueKindForJob(status: CriticalJobSummary["status"]): ServerFilesQueueKind | null {
-  if (status === "running") return "active";
-  if (status === "paused") return "paused";
-  if (status === "pending" || status === "retrying") return "queued";
-  return null;
-}
-
-export function steamFilesOperationForKind(
-  kind: "install" | "update" | "verify",
-): CriticalJobOperation {
-  if (kind === "install") return "install-files";
-  if (kind === "verify") return "verify-files";
-  return "update";
-}
-
-/** Latest install/update/verify job per server (active wins over paused over queued). */
-export function filesQueueStateByServerId(
-  jobs: CriticalJobSummary[] | undefined,
-): Map<string, ServerFilesQueueState> {
-  const map = new Map<string, ServerFilesQueueState>();
-  for (const job of jobs ?? []) {
-    if (!FILES_QUEUE_OPERATIONS.has(job.operation)) continue;
-    const kind = queueKindForJob(job.status);
-    if (kind === null) continue;
-    const current = map.get(job.serverId);
-    if (current !== undefined && QUEUE_KIND_RANK[current.kind] <= QUEUE_KIND_RANK[kind]) {
-      continue;
-    }
-    const title = operationTitle(job.operation);
-    map.set(job.serverId, {
-      kind,
-      jobId: job.id,
-      operation: job.operation,
-      label:
-        kind === "queued"
-          ? `Queued · ${title}`
-          : kind === "paused"
-            ? `Paused · ${title}`
-            : title,
-    });
-  }
-  return map;
 }

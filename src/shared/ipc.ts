@@ -81,6 +81,7 @@ export const IPC = {
   serversKill: "servers:kill",
   serversInstallFiles: "servers:install-files",
   serversUpdateNow: "servers:update-now",
+  serversEnqueueUpdate: "servers:enqueue-update",
   serversVerifyFiles: "servers:verify-files",
   serversMoveInstall: "servers:move-install",
   serversMoveInstallCancel: "servers:move-install-cancel",
@@ -286,6 +287,7 @@ export interface RendererApi {
   killServer(id: string): Promise<IpcResult<void>>;
   installServerFiles(id: string): Promise<IpcResult<void>>;
   updateServerNow(id: string): Promise<IpcResult<void>>;
+  enqueueUpdateServer(id: string): Promise<IpcResult<void>>;
   verifyServerFiles(id: string): Promise<IpcResult<void>>;
   moveServerInstall(
     id: string,

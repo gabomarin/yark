@@ -60,11 +60,6 @@
   background: var(--app-color-cryo);
 }
 
-.card[data-tone="queued"] {
-  border-style: dashed;
-  border-color: color-mix(in srgb, var(--app-color-cryo) 42%, var(--app-color-border));
-}
-
 .card:hover,
 .card:focus-within {
   z-index: 1;
@@ -124,6 +119,22 @@
   align-items: center;
   gap: var(--app-space-xl);
   width: 100%;
+}
+
+.identityRow {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-xs);
+  min-width: 0;
+}
+
+.identityOpen {
+  flex: 1;
+  min-width: 0;
+}
+
+.identityOpen,
+.metaOpen {
   padding: 0;
   border-radius: 0;
   color: inherit;
@@ -131,18 +142,24 @@
   cursor: pointer;
 }
 
-.cardHit:disabled {
-  cursor: default;
-}
-
-.cardHit:hover .thumb {
+.identityOpen:hover .thumb,
+.metaOpen:hover .thumb {
   border-color: color-mix(in srgb, var(--app-color-accent) 55%, var(--app-color-border));
   background: color-mix(in srgb, var(--app-color-accent) 14%, var(--app-color-panel));
 }
 
-.cardHit:focus-visible {
+.identityOpen:focus-visible,
+.metaOpen:focus-visible {
   outline: 2px solid var(--ark-blue-a8);
   outline-offset: 2px;
+}
+
+.statusBadges {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--app-space-xs);
+  flex-shrink: 0;
 }
 
 .identity {
@@ -235,10 +252,50 @@
   pointer-events: none;
 }
 
+.progressHint {
+  position: relative;
+  z-index: 1;
+  padding-left: 52px;
+  padding-bottom: 2px;
+  width: fit-content;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.progressCta {
+  display: inline;
+  width: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  line-height: 1.35;
+  vertical-align: baseline;
+}
+
+.progressCtaLabel {
+  line-height: 1.35;
+  text-decoration: none;
+  text-underline-offset: 0.18em;
+}
+
+.progressCta:hover .progressCtaLabel,
+.progressCta:focus-visible .progressCtaLabel {
+  text-decoration: underline;
+}
+
+.progressCta:focus-visible {
+  outline: 2px solid var(--ark-blue-a8);
+  outline-offset: 2px;
+  border-radius: var(--app-radius-sm);
+}
+
 .progressBlock {
   position: relative;
   z-index: 1;
   padding: var(--app-space-xs) var(--app-space-sm);
+  padding-bottom: calc(var(--app-space-xs) + 2px);
+  overflow: visible;
   border-radius: var(--app-radius-sm);
   border: 1px solid var(--ark-blue-a4);
   background: var(--ark-blue-a2);
@@ -306,6 +363,10 @@
     gap: var(--app-space-md);
   }
 
+  .identityRow {
+    flex-wrap: wrap;
+  }
+
   .metaGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -335,8 +396,20 @@
   padding-left: 40px;
 }
 
+.card[data-ui-density="compact"] .progressHint {
+  padding-left: 40px;
+}
+
 @media (max-width: 760px) {
   .card[data-ui-density="compact"] .runtimeError {
+    padding-left: 0;
+  }
+
+  .progressHint {
+    padding-left: 0;
+  }
+
+  .card[data-ui-density="compact"] .progressHint {
     padding-left: 0;
   }
 }

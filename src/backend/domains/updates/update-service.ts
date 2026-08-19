@@ -132,6 +132,8 @@ interface CriticalJob extends DurableCriticalJob {
     appliedBuildId?: string | null;
     updateLogPath?: string;
     steamCmdExitCode?: number;
+    /** Set when YARK closed mid-job; queue waits for Retry/Dismiss before other servers run. */
+    restartInterrupted?: boolean;
   };
 }
 
@@ -157,6 +159,13 @@ export class UpdateService extends EventEmitter {
   private progressLabel: string | null = null;
   private progressBytesDownloaded: number | null = null;
   private progressBytesTotal: number | null = null;
+  /** Last live SteamCMD progress before pause — shown in status polls while the job is paused. */
+  private pausedProgressSnapshot: {
+    percent: number | null;
+    label: string | null;
+    bytesDownloaded: number | null;
+    bytesTotal: number | null;
+  } | null = null;
   private lastProgressLine: string | null = null;
   private syncingServerId: string | null = null;
   private syncingStartedAt: string | null = null;
@@ -202,8 +211,13 @@ export class UpdateService extends EventEmitter {
   /**
    * After UI listeners are attached: start pending Downloads if steamcmd.exe
    * is on disk. Missing SteamCMD still blocks those jobs with Retry.
+   * A paused job blocks the queue until the operator resumes it manually.
    */
   async resumeQueuedFileJobsOnLaunch(): Promise<void> {
+    if (this.queueHeldForOperator()) {
+      return;
+    }
+
     const resumable = this.queue.filter(
       (job) => job.status === "pending" || job.status === "retrying",
     );
@@ -321,23 +335,32 @@ export class UpdateService extends EventEmitter {
     const queuedPending = this.queue.filter(
       (job) => job.status === "pending" || job.status === "retrying",
     );
-    const queued = this.queue.find(
-      (job) => job.status === "pending" || job.status === "retrying" || job.status === "running",
+    const runningJob = this.queue.find((job) => job.status === "running");
+    const hasQueueWork = this.queue.some(
+      (job) =>
+        job.status === "pending"
+        || job.status === "retrying"
+        || job.status === "running"
+        || job.status === "paused",
     );
     const steamCmdHome =
       executablePath !== null
         ? resolveSteamCmdHome(executablePath)
         : resolveSteamCmdHome(join(this.steamcmdDir, "steamcmd.exe"));
-    const busy =
-      active !== null || this.syncingServerId !== null || queued !== undefined;
+    const liveWork =
+      active !== null || this.syncingServerId !== null || runningJob !== undefined;
+    const hasPausedJob = this.queue.some((job) => job.status === "paused");
+    const pausedProgress =
+      !liveWork && hasPausedJob ? this.pausedProgressSnapshot : null;
+    const busy = liveWork || hasQueueWork;
     const operation: SteamCmdStatus["operation"] =
       this.syncingServerId !== null
         ? "sync-files"
-        : (active?.operation ?? queued?.type ?? null);
+        : (active?.operation ?? runningJob?.type ?? null);
     const serverId =
       this.syncingServerId
       ?? active?.serverId
-      ?? queued?.serverId
+      ?? runningJob?.serverId
       ?? null;
 
     return {
@@ -349,12 +372,18 @@ export class UpdateService extends EventEmitter {
       running: active !== null || this.syncingServerId !== null,
       operation,
       serverId,
-      startedAt: this.syncingStartedAt ?? active?.startedAt ?? queued?.updatedAt ?? null,
+      startedAt:
+        this.syncingStartedAt
+        ?? active?.startedAt
+        ?? runningJob?.updatedAt
+        ?? null,
       pid: active?.child.pid ?? null,
-      progressPercent: this.progressPercent,
-      progressLabel: this.progressLabel,
-      progressBytesDownloaded: this.progressBytesDownloaded,
-      progressBytesTotal: this.progressBytesTotal,
+      progressPercent: liveWork ? this.progressPercent : pausedProgress?.percent ?? null,
+      progressLabel: liveWork ? this.progressLabel : pausedProgress?.label ?? null,
+      progressBytesDownloaded:
+        liveWork ? this.progressBytesDownloaded : pausedProgress?.bytesDownloaded ?? null,
+      progressBytesTotal:
+        liveWork ? this.progressBytesTotal : pausedProgress?.bytesTotal ?? null,
       lastLine: this.lastProgressLine,
       queuedCount: queuedPending.length,
       // Keep this.queue order so Downloads Move up/down matches execution order.
@@ -362,7 +391,9 @@ export class UpdateService extends EventEmitter {
       criticalJobs: [
         ...this.queue.map((job) =>
           toCriticalJobSummary(job, this.servers.get(job.serverId)?.name ?? null)),
-        ...(this.backups.getCriticalJobs?.() ?? []),
+        ...(this.backups.getCriticalJobs?.() ?? []).filter(
+          (job) => job.operation !== "pre-update-backup",
+        ),
       ],
       checkedAt: new Date().toISOString(),
     };
@@ -396,6 +427,9 @@ export class UpdateService extends EventEmitter {
       (job.status === "blocked" || job.status === "failed") && job.operatorRetryAllowed;
     if (!cancelled && !retryableFailure) return false;
     await this.ensureSteamCmdReadyForOperator(job);
+    if (job.context.restartInterrupted === true) {
+      job.context.restartInterrupted = false;
+    }
     job.status = "pending";
     job.phase = this.resumePhaseForRetry(job);
     job.maxAttempts = Math.max(job.maxAttempts, job.attempts + 3);
@@ -454,9 +488,11 @@ export class UpdateService extends EventEmitter {
     if (job === undefined) return this.backups.retryCriticalJob(jobId);
     if (job.status !== "paused") return false;
     await this.ensureSteamCmdReadyForOperator(job);
+    this.clearSteamCmdConsole();
+    this.clearPausedProgressSnapshot();
     job.status = "pending";
     job.phase = this.resumePhaseForRetry(job);
-    job.recoveryReason = "Resume requested by the operator.";
+    job.recoveryReason = null;
     job.updatedAt = new Date().toISOString();
     this.queue = [job, ...this.queue.filter((candidate) => candidate.id !== job.id)];
     this.persistQueue();
@@ -617,7 +653,7 @@ export class UpdateService extends EventEmitter {
 
     this.syncingServerId = null;
     this.syncingStartedAt = null;
-    this.setProgress(null, "Paused", "Operation paused by the user");
+    this.setPausedProgress();
     this.emitProgress(true);
     return true;
   }
@@ -694,6 +730,20 @@ export class UpdateService extends EventEmitter {
       throw new Error("Stop the server before updating files");
     }
     await this.enqueueAndWait("update", serverId);
+  }
+
+  /**
+   * Queue-only variant used by bulk actions:
+   * enqueue the SteamCMD "update" job and return immediately.
+   *
+   * Files jobs processing is handled asynchronously by the Downloads queue.
+   */
+  async enqueueUpdate(serverId: string): Promise<void> {
+    this.assertStopBackupIdle(serverId);
+    if (this.processes.isActive(serverId)) {
+      throw new Error("Stop the server before updating files");
+    }
+    await this.enqueueAndStart("update", serverId);
   }
 
   /** Forces app_update validate (ignores “fresh” cache) and syncs to the server. */
@@ -958,7 +1008,7 @@ export class UpdateService extends EventEmitter {
               ? "Paused after SteamCMD began; leaving files as-is for resume."
               : "Paused before SteamCMD applied files; no rollback restore needed.",
           );
-          this.setProgress(null, "Paused", "Operation paused by the user");
+          this.setPausedProgress();
           if (wasRunning && !installMayHaveChanged && !this.processes.isActive(serverId)) {
             this.appendSteamCmdConsole(
               `Restarting "${server.name}" after pause (server was running before update)…`,
@@ -1218,6 +1268,34 @@ export class UpdateService extends EventEmitter {
     type: "install-files" | "update" | "verify-files",
     serverId: string,
   ): Promise<void> {
+    const jobId = await this.enqueueAndReturnJobId(type, serverId);
+
+    const completion = new Promise<void>((resolve, reject) => {
+      this.waiters.set(jobId, { resolve, reject });
+    });
+
+    // Start processing but wait for completion of this specific job.
+    void this.processQueue();
+    await completion;
+  }
+
+  private async enqueueAndStart(
+    type: "install-files" | "update" | "verify-files",
+    serverId: string,
+  ): Promise<void> {
+    await this.enqueueAndReturnJobId(type, serverId);
+    // Queue processing is async; caller intentionally does not wait.
+    void this.processQueue();
+  }
+
+  /**
+   * Enqueue a critical files job and return its jobId.
+   * The caller decides whether to wait for completion.
+   */
+  private async enqueueAndReturnJobId(
+    type: "install-files" | "update" | "verify-files",
+    serverId: string,
+  ): Promise<string> {
     await this.ensureSteamCmdReadyForOperator();
 
     const existing = this.queue.find(
@@ -1307,11 +1385,7 @@ export class UpdateService extends EventEmitter {
       `Job queued: ${type} (${job.id.slice(0, 8)})`,
     );
 
-    const completion = new Promise<void>((resolve, reject) => {
-      this.waiters.set(job.id, { resolve, reject });
-    });
-    void this.processQueue();
-    await completion;
+    return job.id;
   }
 
   private async processQueue(): Promise<void> {
@@ -1322,6 +1396,16 @@ export class UpdateService extends EventEmitter {
 
     try {
       for (;;) {
+        const pausedJob = this.queue.find((candidate) => candidate.status === "paused");
+        if (pausedJob !== undefined) {
+          this.emitProgress(true);
+          break;
+        }
+        if (this.findRestartInterruptedJob() !== undefined) {
+          this.emitProgress(true);
+          break;
+        }
+
         const job = this.queue.find(
           (candidate) => candidate.status === "pending" || candidate.status === "retrying",
         );
@@ -1380,6 +1464,7 @@ export class UpdateService extends EventEmitter {
           this.removeJob(job.id);
           this.persistQueue();
           if (this.queue.length === 0 && this.activeSteamCmd === null && this.syncingServerId === null) {
+            this.clearPausedProgressSnapshot();
             this.setProgress(100, "Completed", "Operation finished");
             this.emitProgress(true);
           }
@@ -1393,12 +1478,12 @@ export class UpdateService extends EventEmitter {
                 : new OperationPausedError(),
             );
             job.status = "paused";
-            job.recoveryReason = "Paused by the operator. Resume to continue.";
+            job.recoveryReason = null;
             job.updatedAt = new Date().toISOString();
             this.persistQueue();
             this.pauseRequested = false;
             this.endFileSync();
-            this.setProgress(null, "Paused", "Operation paused by the user");
+            this.setPausedProgress();
             this.emitProgress(true);
             break;
           }
@@ -1465,6 +1550,7 @@ export class UpdateService extends EventEmitter {
             job.status = "blocked";
             job.operatorRetryAllowed = true;
             job.recoveryReason = error.message;
+            job.context.restartInterrupted = false;
             this.persistQueue();
             continue;
           }
@@ -1474,6 +1560,7 @@ export class UpdateService extends EventEmitter {
             job.operatorRetryAllowed = true;
             job.recoveryReason =
               `Failure during phase "${job.phase}" left rollback state ambiguous. Inspect backups and runtime state before retrying.`;
+            job.context.restartInterrupted = false;
             this.persistQueue();
             this.addJobEvent(
               job,
@@ -2149,6 +2236,11 @@ export class UpdateService extends EventEmitter {
     return false;
   }
 
+  private clearSteamCmdConsole(): void {
+    this.steamCmdConsoleLines.length = 0;
+    this.steamCmdConsoleUpdatedAt = new Date().toISOString();
+  }
+
   private appendSteamCmdConsole(line: string, options?: { forceProgressPush?: boolean }): void {
     const trimmed = line.trim();
     if (trimmed.length === 0) {
@@ -2264,10 +2356,33 @@ export class UpdateService extends EventEmitter {
     return percentChanged;
   }
 
-  private setProgress(percent: number | null, label: string | null, line?: string): void {
-    if (percent !== null) {
-      this.progressPercent = percent;
+  private freezePausedProgressSnapshot(): void {
+    if (
+      this.progressPercent === null
+      && this.progressBytesDownloaded === null
+      && this.progressBytesTotal === null
+    ) {
+      return;
     }
+    this.pausedProgressSnapshot = {
+      percent: this.progressPercent,
+      label: this.progressLabel,
+      bytesDownloaded: this.progressBytesDownloaded,
+      bytesTotal: this.progressBytesTotal,
+    };
+  }
+
+  private clearPausedProgressSnapshot(): void {
+    this.pausedProgressSnapshot = null;
+  }
+
+  private setPausedProgress(): void {
+    this.freezePausedProgressSnapshot();
+    this.setProgress(null, "Paused", "Paused");
+  }
+
+  private setProgress(percent: number | null, label: string | null, line?: string): void {
+    this.progressPercent = percent;
     if (label !== null) {
       this.progressLabel = label;
     }
@@ -2320,6 +2435,7 @@ export class UpdateService extends EventEmitter {
     if (this.activeSteamCmd !== null) {
       throw new Error("A SteamCMD operation is already in progress");
     }
+    this.clearPausedProgressSnapshot();
     this.steamCmdOutputBuffers.clear();
     this.lastProgressConsoleLogAtMs = 0;
     this.lastProgressConsoleLoggedPercent = null;
@@ -2433,7 +2549,17 @@ export class UpdateService extends EventEmitter {
           serverExists: this.servers.get(job.serverId) !== null,
         });
         migrated.context = context;
-        if (wasInterrupted && phase === "files-applied") {
+        if (
+          wasInterrupted
+          && interruptedIsAmbiguous
+          && this.servers.get(job.serverId) !== null
+        ) {
+          migrated.status = "failed";
+          migrated.operatorRetryAllowed = true;
+          migrated.recoveryReason =
+            `YARK closed during phase "${phase}". Retry to continue.`;
+          migrated.context = { ...migrated.context, restartInterrupted: true };
+        } else if (wasInterrupted && phase === "files-applied") {
           migrated.status = "pending";
           migrated.operatorRetryAllowed = false;
           migrated.recoveryReason =
@@ -2489,6 +2615,15 @@ export class UpdateService extends EventEmitter {
     this.emitProgress(true);
   }
 
+  private queueHeldForOperator(): boolean {
+    return this.queue.some((job) => job.status === "paused")
+      || this.findRestartInterruptedJob() !== undefined;
+  }
+
+  private findRestartInterruptedJob(): CriticalJob | undefined {
+    return this.queue.find((job) => job.context.restartInterrupted === true);
+  }
+
   private resumePhaseForRetry(job: CriticalJob): string {
     if (job.phase === "restarting-server") return job.phase;
     if (
@@ -2542,6 +2677,9 @@ export class UpdateService extends EventEmitter {
     }
     if (typeof input.steamCmdExitCode === "number" && Number.isFinite(input.steamCmdExitCode)) {
       context.steamCmdExitCode = Math.floor(input.steamCmdExitCode);
+    }
+    if (input.restartInterrupted === true) {
+      context.restartInterrupted = true;
     }
     return context;
   }
@@ -2616,6 +2754,10 @@ export class UpdateService extends EventEmitter {
         steamCmdExitCode:
           preferred.context.steamCmdExitCode
           ?? secondary.context.steamCmdExitCode,
+        ...(preferred.context.restartInterrupted === true
+          || secondary.context.restartInterrupted === true
+          ? { restartInterrupted: true as const }
+          : {}),
       },
     };
   }

@@ -28,7 +28,7 @@ const { tmpdir } = require("node:os");
 const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
-const { pickPathField, waitForOverview } = require("./e2e-launch.cjs");
+const { pickPathField, quitElectronApp, waitForOverview } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -102,7 +102,7 @@ function listPidsMatchingEnv(envName, matchValue, filterScript) {
 }
 
 /** Kill leftover Electron helpers for this userData without touching ASA. */
-function killElectronForUserData(userData) {
+function listElectronPidsForUserData(userData) {
   const envName = "YARK_E2E_USER_DATA_MATCH";
   const script = [
     `$ud = [Environment]::GetEnvironmentVariable('${envName}')`,
@@ -111,9 +111,28 @@ function killElectronForUserData(userData) {
     `  $_.Name -match '^(electron|YARK)\\.exe$' -and $null -ne $_.CommandLine -and $_.CommandLine.Contains($ud)`,
     `} | ForEach-Object { $_.ProcessId }`,
   ].join("; ");
-  for (const pid of listPidsMatchingEnv(envName, userData, script)) {
-    forceKillPid(pid, { tree: false });
+  return listPidsMatchingEnv(envName, userData, script);
+}
+
+function killElectronForUserData(userData) {
+  for (const pid of listElectronPidsForUserData(userData)) {
+    forceKillPid(pid, { tree: true });
   }
+}
+
+async function waitForElectronExit(userData, timeoutMs = 45_000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    killElectronForUserData(userData);
+    const remaining = listElectronPidsForUserData(userData);
+    if (remaining.length === 0) {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 750));
+  }
+  throw new Error(
+    `Electron still running for ${userData}: ${listElectronPidsForUserData(userData).join(", ")}`,
+  );
 }
 
 /** Kill any process whose ExecutablePath is under rootDir. */
@@ -236,7 +255,7 @@ async function waitForManagedPid(page, timeoutMs = 120000) {
   );
 }
 
-async function waitForSamePidAttached(page, expectedPid, timeoutMs = 60000) {
+async function waitForSamePidAttached(page, expectedPid, timeoutMs = 120_000) {
   const deadline = Date.now() + timeoutMs;
   let last = null;
   while (Date.now() < deadline) {
@@ -417,6 +436,8 @@ async function run() {
     assert.equal(checkpoint[0]?.pid, managedPid);
 
     // 6) Relaunch same temp profile → reattach
+    await waitForElectronExit(userData);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     app = await launchApp(projectRoot, userData, steamCmdExe);
     const page2 = await waitForOverview(app);
 
@@ -426,23 +447,29 @@ async function run() {
     );
     console.log("E2E_CRASH_REATTACH_OK");
   } finally {
-    // Always hard-kill leftovers — never Playwright close() (triggers quit dialog).
-    if (app !== null) {
-      try {
-        const pid = app.process()?.pid;
-        if (pid) {
-          forceKillPid(pid, { tree: false });
-        }
-      } catch {
-        // ignore
-      }
-      app = null;
-    }
-    killElectronForUserData(userData);
+    // Stop the detached ASA process before quit — otherwise app.quit() opens the
+    // native "Quit YARK?" dialog and hangs unattended E2E runs.
     if (managedPid !== null) {
       forceKillPid(managedPid, { tree: true });
     }
     killProcessesUnderRoot(root);
+
+    if (app !== null) {
+      try {
+        await quitElectronApp(app, { autoConfirmQuitDialog: true });
+      } catch {
+        try {
+          const pid = app.process()?.pid;
+          if (pid) {
+            forceKillPid(pid, { tree: true });
+          }
+        } catch {
+          // ignore
+        }
+      }
+      app = null;
+    }
+    killElectronForUserData(userData);
     try {
       rmSync(root, { recursive: true, force: true });
       console.log("E2E_CRASH_CLEANUP_OK");

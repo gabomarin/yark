@@ -87,7 +87,7 @@ describe("critical job restart recovery", () => {
       {
         ...interruptedJob("update", "applying-files"),
         status: "paused",
-        recoveryReason: "Paused by the operator. Resume to continue.",
+        recoveryReason: null,
       },
       {
         type: "update",
