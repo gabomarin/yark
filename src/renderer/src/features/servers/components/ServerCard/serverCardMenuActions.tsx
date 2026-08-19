@@ -8,8 +8,8 @@ import {
   FolderOpen,
   GearSix,
   MagnifyingGlass,
-  Pause,
   ShieldCheck,
+  Stop,
   Trash,
   XCircle,
 } from "@phosphor-icons/react";
@@ -121,14 +121,14 @@ export function buildServerCardMenuActions(
         kind: "item",
         key: "stop-safely",
         label: "Stop safely",
-        icon: <Pause size={ICON} color="var(--mantine-color-gray-6)" />,
+        icon: <Stop size={ICON} weight="fill" color="var(--mantine-color-red-6)" />,
         onClick: input.onStop,
       },
       {
         kind: "item",
         key: "restart",
         label: "Restart",
-        icon: <ArrowsClockwise size={ICON} color="var(--mantine-color-gray-6)" />,
+        icon: <ArrowsClockwise size={ICON} color="var(--mantine-color-fossil-6)" />,
         onClick: input.onRestart,
       },
     );
@@ -137,7 +137,7 @@ export function buildServerCardMenuActions(
       kind: "item",
       key: "stop",
       label: "Stop",
-      icon: <Pause size={ICON} color="var(--mantine-color-gray-6)" />,
+      icon: <Stop size={ICON} weight="fill" color="var(--mantine-color-red-6)" />,
       onClick: input.onStop,
     });
   }

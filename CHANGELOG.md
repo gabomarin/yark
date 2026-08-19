@@ -16,7 +16,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
-- Sidebar and Ctrl+K quick jump list **Clusters** above **Downloads**.
+- Overview fleet summary, sort/view controls, and search share one header row until ~1280px; grouped cluster headings no longer show a lone server count (#351).
+- Server card and workspace **Stop** use a red **Stop** icon; **Restart** uses **fossil** to match lifecycle controls elsewhere.
 - Overview, Settings, Clusters, Backups, Logs, and Downloads drop restating page subtitles; fleet backup KPIs stay hidden only when there is no history and no enabled schedule; status badges use sentence case; server cards give map art more room, a quieter stopped state that still differs from Inactive, and square list rows with a straight status rail (no notch or gap) that tighten in Compact.
 - Server-list **Resume / Pause / Cancel** sit on the progress bar (not the Start slot). Queued servers look distinct, lock Start, toast when added to Downloads, and refuse duplicate clicks. Downloads labels Pause/Cancel as a SteamCMD process action on the **active** job (#201).
 - Downloads detail shows the **SteamCMD process** bar only for the active job. Queued jobs cancel from the row (no duplicate **Remove from queue** in the detail). Active rows no longer show a **SteamCMD active now** label (#201).

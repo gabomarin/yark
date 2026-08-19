@@ -25,7 +25,7 @@ export type ServerCardFilesJobAction = {
   color: string;
 };
 
-/** Restart icon beside Play/Pause (enabled only while running). */
+/** Restart icon beside Start/Stop (enabled only while running). */
 export type ServerCardRestartAction = {
   label: string;
   color: string;
@@ -90,7 +90,7 @@ export function resolveRuntimeAction(input: {
       return {
         kind: "stop",
         label: "Stop server",
-        color: "gray",
+        color: "red",
         variant: "light",
         disabled: false,
         visible: true,
@@ -100,7 +100,7 @@ export function resolveRuntimeAction(input: {
       return {
         kind: "stopping",
         label: "Stopping…",
-        color: "gray",
+        color: "red",
         variant: "light",
         disabled: true,
         visible: true,
@@ -141,7 +141,7 @@ export function resolveRuntimeAction(input: {
     return {
       kind: "stop",
       label: "Stop server",
-      color: "gray",
+      color: "red",
       variant: "light",
       disabled: false,
       visible: true,
@@ -152,7 +152,7 @@ export function resolveRuntimeAction(input: {
     return {
       kind: "stop",
       label: "Stop server",
-      color: "gray",
+      color: "red",
       variant: "light",
       disabled: false,
       visible: true,
@@ -162,7 +162,7 @@ export function resolveRuntimeAction(input: {
     return {
       kind: "stopping",
       label: "Stopping…",
-      color: "gray",
+      color: "red",
       variant: "light",
       disabled: true,
       visible: true,
@@ -218,7 +218,7 @@ export function resolveRestartAction(input: {
   }
   return {
     label: "Restart server",
-    color: "gray",
+    color: "fossil",
     disabled: input.steamCmdBusy || transitioning || input.status !== "running",
     visible: true,
   };

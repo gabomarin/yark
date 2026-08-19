@@ -167,6 +167,12 @@ describe("serverCardActionModel combos", () => {
     if (combo.status === "starting" || combo.status === "stopping") {
       expect(restart.disabled).toBe(true);
     }
+    if (combo.expectRuntime.kind === "stop" || combo.expectRuntime.kind === "stopping") {
+      expect(runtime.color).toBe("red");
+    }
+    if (combo.status === "running" && !combo.steamCmdBusy) {
+      expect(restart.color).toBe("fossil");
+    }
   });
 
   it("treats omitted serverEnabled as enabled", () => {

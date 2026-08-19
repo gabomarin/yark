@@ -4,7 +4,7 @@ import {
   Eye,
   HardDrives,
   Play,
-  Power,
+  Stop,
   Wrench,
 } from "@phosphor-icons/react";
 import {
@@ -126,6 +126,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
           <Button
             size="sm"
             variant="light"
+            color="fossil"
             leftSection={<ArrowsClockwise size={14} />}
             onClick={props.onRestart}
             disabled={!canRestart}
@@ -137,7 +138,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
             size="sm"
             color="red"
             variant="light"
-            leftSection={<Power size={14} />}
+            leftSection={<Stop size={14} weight="fill" />}
             onClick={props.onStop}
             disabled={!canStop}
           >

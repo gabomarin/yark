@@ -32,9 +32,6 @@ export function ServerGridList(props: Props): ReactElement | null {
           <section key={group.key} aria-label={group.label}>
             <div className={classes.clusterGroupHead}>
               <Text component="span">{group.label}</Text>
-              <Text component="span" className={classes.clusterGroupCount}>
-                {group.servers.length}
-              </Text>
             </div>
             <div className={classes.serverGrid}>
               {group.servers.map((server) => props.renderServerCard(server))}

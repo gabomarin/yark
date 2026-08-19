@@ -1,8 +1,9 @@
 .root {
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: var(--app-space-xs);
+  flex-shrink: 0;
 }
 
 .viewSegment :global(.mantine-SegmentedControl-label) {
