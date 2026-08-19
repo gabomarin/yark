@@ -24,7 +24,7 @@ interface Props {
 }
 
 export function ImportInstallReviewStep(props: Props): ReactElement {
-  const { probe } = props;
+  const { probe, onModMetadataChange } = props;
   const modIds = probe.suggestions.mods;
   const [loadingMeta, setLoadingMeta] = useState(false);
   const [metaWarning, setMetaWarning] = useState<string | null>(null);
@@ -35,10 +35,11 @@ export function ImportInstallReviewStep(props: Props): ReactElement {
     [modIds, props.modMetadata],
   );
   const missingKey = missingIds.join(",");
+  const modIdsKey = modIds.join(",");
 
   useEffect(() => {
     setFetchAttemptedKey(null);
-  }, [modIds.join(",")]);
+  }, [modIdsKey]);
 
   useEffect(() => {
     if (missingIds.length === 0) {
@@ -75,14 +76,14 @@ export function ImportInstallReviewStep(props: Props): ReactElement {
           `Named ${result.data.length}/${ids.length} mods; ${unresolved} still show Project ID only.`,
         );
       }
-      props.onModMetadataChange(
+      onModMetadataChange(
         Object.fromEntries(result.data.map((row) => [row.id, row])),
       );
     });
     return () => {
       alive = false;
     };
-  }, [missingKey, fetchAttemptedKey]);
+  }, [missingIds, missingKey, fetchAttemptedKey, onModMetadataChange]);
 
   return (
     <Stack gap="sm">

@@ -100,6 +100,7 @@ export function CloneServerDialog(props: Props): ReactElement {
     setLoading(false);
     setCancelling(false);
     setProgress(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- form sync uses sourceServer content; id/opened cover the actual trigger
   }, [props.sourceServer?.id, props.opened]);
 
   useEffect(() => {
@@ -112,6 +113,7 @@ export function CloneServerDialog(props: Props): ReactElement {
       }
       setProgress(payload);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- progress listener uses sourceServer id only; opened covers lifecycle
   }, [props.opened, props.sourceServer?.id]);
 
   const nameError = !isValidServerFolderName(state.name.trim())
@@ -143,7 +145,8 @@ export function CloneServerDialog(props: Props): ReactElement {
     setState(toFormState(props.sourceServer));
     setProgress(null);
     props.onClose();
-  }, [copying, props, props.sourceServer]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sourceServer content is stable for the dialog lifecycle
+  }, [copying, props.onClose]);
 
   const handleClone = useCallback(async () => {
     if (!canSubmit) return;

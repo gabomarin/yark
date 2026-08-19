@@ -37,6 +37,7 @@ export function ClustersPage(props: Props): ReactElement {
 
   useEffect(() => {
     props.onRefresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-once refresh on first paint
   }, []);
 
   const serverById = useMemo(() => buildServerById(props.servers), [props.servers]);

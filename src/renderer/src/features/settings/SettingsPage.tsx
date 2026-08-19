@@ -44,6 +44,7 @@ interface Props {
 }
 
 export function SettingsPage(props: Props): ReactElement {
+  const { focusYarkUpdates, onYarkUpdatesFocused, focusSteamCmd, onSteamCmdFocused } = props;
   const desktopShell = props.desktopShell;
   const [category, setCategory] = useState<SettingsCategory>(() =>
     props.focusYarkUpdates === true
@@ -56,20 +57,20 @@ export function SettingsPage(props: Props): ReactElement {
   const steamCmdNeedsSetup = props.steamCmdStatus?.detected !== true;
 
   useEffect(() => {
-    if (props.focusYarkUpdates !== true) {
+    if (focusYarkUpdates !== true) {
       return;
     }
     setCategory("about");
-    props.onYarkUpdatesFocused?.();
-  }, [props.focusYarkUpdates, props.onYarkUpdatesFocused]);
+    onYarkUpdatesFocused?.();
+  }, [focusYarkUpdates, onYarkUpdatesFocused]);
 
   useEffect(() => {
-    if (props.focusYarkUpdates === true || props.focusSteamCmd !== true) {
+    if (focusYarkUpdates === true || focusSteamCmd !== true) {
       return;
     }
     setCategory("steamcmd");
-    props.onSteamCmdFocused?.();
-  }, [props.focusSteamCmd, props.focusYarkUpdates, props.onSteamCmdFocused]);
+    onSteamCmdFocused?.();
+  }, [focusSteamCmd, focusYarkUpdates, onSteamCmdFocused]);
 
   useEffect(() => {
     if (panelScrollRef.current !== null) {

@@ -78,6 +78,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
     setOldSourceDir(null);
     setOldSourceRemoved(true);
     setCleanupBusy(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset form on open/server id change; server object identity is intentionally not tracked
   }, [props.opened, props.server?.id]);
 
   useEffect(() => {
@@ -91,6 +92,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
       }
       setProgress(normalized);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- progress listener uses server id only; opened covers lifecycle
   }, [props.opened, props.server?.id]);
 
   const handleBrowse = async (): Promise<void> => {

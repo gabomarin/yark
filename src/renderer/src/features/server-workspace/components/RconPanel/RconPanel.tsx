@@ -57,6 +57,7 @@ function extractCommand(message: string): string {
 }
 
 export function RconPanel(props: Props): ReactElement {
+  const { server, onRconTabFocusChanged } = props;
   const [command, setCommand] = useState("");
   const [rconConnected, setRconConnected] = useState(false);
   const isRunning = props.runtime?.status === "running";
@@ -72,11 +73,11 @@ export function RconPanel(props: Props): ReactElement {
     if (!isRunning) {
       return;
     }
-    void props.onRconTabFocusChanged(props.server.id, true);
+    void onRconTabFocusChanged(server.id, true);
     return () => {
-      void props.onRconTabFocusChanged(props.server.id, false);
+      void onRconTabFocusChanged(server.id, false);
     };
-  }, [isRunning, props.server.id, props.onRconTabFocusChanged]);
+  }, [isRunning, server.id, onRconTabFocusChanged]);
 
   useEffect(() => {
     if (typeof window.api?.getRconStatus !== "function") return;

@@ -65,7 +65,12 @@ export function ServerModsPanel(props: Props): ReactElement {
     setView("server");
     setCatalog(null);
     setDetail(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset on server id change only; mods/disabledMods/cache are reset below by content-key effect
   }, [props.server.id]);
+
+  const modsKey = props.server.mods.join("\0");
+  const disabledModsKey = (props.server.disabledMods ?? []).join("\0");
+  const metadataCacheKey = modsMetadataSyncKey(props.server.modMetadataCache);
 
   useEffect(() => {
     const nextMods = props.server.mods;
@@ -82,11 +87,7 @@ export function ServerModsPanel(props: Props): ReactElement {
     // Content keys — App polls listServers with new object identities even when
     // the profile is unchanged; reference deps would reset mid-drag / open menus.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional content keys
-  }, [
-    props.server.mods.join("\0"),
-    (props.server.disabledMods ?? []).join("\0"),
-    modsMetadataSyncKey(props.server.modMetadataCache),
-  ]);
+  }, [modsKey, disabledModsKey, metadataCacheKey]);
 
   useEffect(() => {
     const missingIds = configuredIds.filter((id) => !metadata.has(id));
@@ -106,6 +107,7 @@ export function ServerModsPanel(props: Props): ReactElement {
       setMetadata((previous) => mergeMissingMetadata(previous, result.data));
     });
     return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- metadata is read at execution time, not as a reactive trigger
   }, [configuredIds, props.server.id]);
 
   const disabledSet = useMemo(() => new Set(disabledIds), [disabledIds]);

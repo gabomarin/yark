@@ -64,6 +64,7 @@ interface Props {
 }
 
 export function ServerForm(props: Props): ReactElement {
+  const { onRegisterLeaveGuard, onDirtyChange, onRegisterSave } = props;
   const isCreate = props.initial === null;
   const embedded = props.variant === "embedded";
   const serverActive = props.serverActive === true;
@@ -116,23 +117,23 @@ export function ServerForm(props: Props): ReactElement {
   }, []);
 
   useEffect(() => {
-    props.onRegisterLeaveGuard?.(confirmLeaveIfDirty);
-    return () => props.onRegisterLeaveGuard?.(null);
-  }, [confirmLeaveIfDirty, props.onRegisterLeaveGuard]);
+    onRegisterLeaveGuard?.(confirmLeaveIfDirty);
+    return () => onRegisterLeaveGuard?.(null);
+  }, [confirmLeaveIfDirty, onRegisterLeaveGuard]);
 
   useEffect(() => {
     dirtyRef.current = isDirty;
-    props.onDirtyChange?.(isDirty);
-  }, [isDirty, props.onDirtyChange]);
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   useEffect(() => {
-    return () => props.onDirtyChange?.(false);
-  }, [props.onDirtyChange]);
+    return () => onDirtyChange?.(false);
+  }, [onDirtyChange]);
 
   useEffect(() => {
-    props.onRegisterSave?.(async () => submitRef.current());
-    return () => props.onRegisterSave?.(null);
-  }, [props.onRegisterSave]);
+    onRegisterSave?.(async () => submitRef.current());
+    return () => onRegisterSave?.(null);
+  }, [onRegisterSave]);
 
   const knownClusters = useMemo(
     () =>
@@ -279,7 +280,7 @@ export function ServerForm(props: Props): ReactElement {
       if (result.ok) {
         initialStateRef.current = state;
         dirtyRef.current = false;
-        props.onDirtyChange?.(false);
+        onDirtyChange?.(false);
         if (props.initial === null) {
           showOperatorToast({
             title: "Server created",
@@ -309,7 +310,7 @@ export function ServerForm(props: Props): ReactElement {
   const revertProfile = (): void => {
     setState(initialStateRef.current);
     dirtyRef.current = false;
-    props.onDirtyChange?.(false);
+    onDirtyChange?.(false);
     setError(null);
   };
 

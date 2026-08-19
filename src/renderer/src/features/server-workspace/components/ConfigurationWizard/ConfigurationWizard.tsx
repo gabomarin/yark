@@ -125,6 +125,7 @@ const STEP_LABELS = ["Profile", "Pace", "Breeding", "World", "QoL", "Review"];
 const STEP_COUNT = STEP_LABELS.length;
 
 export function ConfigurationWizard(props: Props): ReactElement {
+  const { onDraftChange } = props;
   const compactProgress = useMediaQuery("(max-width: 1100px)", false);
   const [activeStep, setActiveStep] = useState(0);
   const snapshotRef = useRef<ServerIniSnapshot | null>(null);
@@ -184,6 +185,7 @@ export function ConfigurationWizard(props: Props): ReactElement {
     return () => {
       alive = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- form is stable from useForm, only reload on server id change
   }, [props.server.id]);
 
   useEffect(() => {
@@ -224,8 +226,8 @@ export function ConfigurationWizard(props: Props): ReactElement {
   const draftDirty = changes.length > 0 || clusterPathSelected;
 
   useEffect(() => {
-    props.onDraftChange?.(draftDirty);
-  }, [draftDirty, props.onDraftChange]);
+    onDraftChange?.(draftDirty);
+  }, [draftDirty, onDraftChange]);
 
   const chooseProfile = (profile: ExperienceProfileId) => {
     if (profile === "current") {

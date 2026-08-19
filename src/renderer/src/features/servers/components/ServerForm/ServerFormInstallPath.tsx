@@ -28,6 +28,7 @@ interface Props {
 
 /** Create-time base folder picker vs edit-time read-only path + Move. */
 export function ServerFormInstallPath(props: Props): ReactElement {
+  const { isCreate, onCreatePathIssueChange, resolvedInstallPreview } = props;
   const pathCompact = props.inputSize === "xs";
   const fleetWarning = useMemo(() => {
     if (!props.isCreate || props.resolvedInstallPreview.length === 0) {
@@ -73,17 +74,12 @@ export function ServerFormInstallPath(props: Props): ReactElement {
     (props.resolvedInstallPreview === debouncedPreview ? diskWarning : null);
 
   useEffect(() => {
-    props.onCreatePathIssueChange?.(
-      props.isCreate && props.resolvedInstallPreview.length > 0
+    onCreatePathIssueChange?.(
+      isCreate && resolvedInstallPreview.length > 0
         ? createPathIssue
         : null,
     );
-  }, [
-    createPathIssue,
-    props.isCreate,
-    props.onCreatePathIssueChange,
-    props.resolvedInstallPreview,
-  ]);
+  }, [createPathIssue, isCreate, onCreatePathIssueChange, resolvedInstallPreview]);
 
   if (props.isCreate) {
     return (

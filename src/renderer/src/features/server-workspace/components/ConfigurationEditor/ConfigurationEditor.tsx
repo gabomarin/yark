@@ -84,7 +84,7 @@ function iniPayloadsDirty(
 }
 
 export function ConfigurationEditor(props: Props): ReactElement {
-  const { section } = props;
+  const { section, onRegisterSave } = props;
   const filesJobActive = props.filesJobActive === true;
   const density = useUiDensity();
   const openFileIconSize = density === "compact" ? "sm" : "md";
@@ -310,9 +310,9 @@ export function ConfigurationEditor(props: Props): ReactElement {
   });
 
   useEffect(() => {
-    props.onRegisterSave?.(async () => saveIniRef.current());
-    return () => props.onRegisterSave?.(null);
-  }, [props.onRegisterSave]);
+    onRegisterSave?.(async () => saveIniRef.current());
+    return () => onRegisterSave?.(null);
+  }, [onRegisterSave]);
 
   const openExternal = async () => {
     setBusy(true);
