@@ -33,8 +33,9 @@ Workflow: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) on
 2. Build, then Electron E2E: CRUD suite → install-health → host-port-probe.
 
 `e2e:smoke` stays a local empty-fleet check. Seeded suites call
-`initProfileDatabase` (same SQL as `openDatabase`) instead of a first Electron
-launch only to create the schema.
+`initProfileDatabase` in [`scripts/e2e-init-profile-db.cjs`](../scripts/e2e-init-profile-db.cjs)
+(same SQL as `openDatabase`) instead of a first Electron launch only to create
+the schema.
 
 Requirements:
 

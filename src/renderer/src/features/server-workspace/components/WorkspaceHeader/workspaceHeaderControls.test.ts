@@ -47,4 +47,29 @@ describe("workspaceHeaderControls", () => {
     expect(running.canRestart).toBe(true);
     expect(running.canStop).toBe(true);
   });
+
+  it("treats a missing status as stopped", () => {
+    const controls = workspaceHeaderControls({
+      status: undefined,
+      enabled: true,
+      filesJobActive: false,
+      filesReady: true,
+      hasToggleEnabled: true,
+    });
+    expect(controls.canStart).toBe(true);
+    expect(controls.canStop).toBe(false);
+    expect(controls.canRestart).toBe(false);
+  });
+
+  it("does not offer Enable when the toggle handler is absent", () => {
+    const controls = workspaceHeaderControls({
+      status: "stopped",
+      enabled: false,
+      filesJobActive: false,
+      filesReady: true,
+      hasToggleEnabled: false,
+    });
+    expect(controls.canEnable).toBe(false);
+    expect(controls.canStart).toBe(false);
+  });
 });

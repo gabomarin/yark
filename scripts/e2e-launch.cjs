@@ -11,6 +11,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
+const { initProfileDatabase } = require("./e2e-init-profile-db.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -259,41 +260,6 @@ async function openSettingsCategory(page, categoryLabel) {
     .getByRole("navigation", { name: "Settings categories" })
     .getByRole("button", { name: categoryLabel, exact: true })
     .click();
-}
-
-/**
- * Apply profile SQL migrations without launching Electron so E2E scripts can
- * INSERT into `servers` (and related tables) on a fresh `YARK_E2E_USER_DATA` DB.
- * SQL list: `src/backend/infra/db/schema-migrations.json` (same as `openDatabase`).
- * The max-players version is `SELECT 1` here; the JS backfill is a no-op on an empty fleet.
- * @param {string} dbPath
- */
-function initProfileDatabase(dbPath) {
-  const { DatabaseSync } = require("node:sqlite");
-  const migrations = require("../src/backend/infra/db/schema-migrations.json");
-  fs.mkdirSync(path.dirname(dbPath), { recursive: true });
-  const db = new DatabaseSync(dbPath);
-  try {
-    db.exec("PRAGMA journal_mode = WAL;");
-    db.exec("PRAGMA foreign_keys = ON;");
-    for (const migration of migrations) {
-      db.exec("BEGIN;");
-      try {
-        db.exec(migration.sql);
-        db.exec(`PRAGMA user_version = ${Number(migration.version)};`);
-        db.exec("COMMIT;");
-      } catch (error) {
-        try {
-          db.exec("ROLLBACK;");
-        } catch {
-          // Keep the original migration error.
-        }
-        throw error;
-      }
-    }
-  } finally {
-    db.close();
-  }
 }
 
 /**

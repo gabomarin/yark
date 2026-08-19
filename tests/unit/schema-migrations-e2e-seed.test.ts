@@ -1,11 +1,15 @@
 import { mkdtempSync, rmSync } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { DatabaseSync } from "node:sqlite";
 import { afterEach, describe, expect, it } from "vitest";
 import { MAX_PLAYERS_LAUNCH_BACKFILL_SCHEMA_VERSION } from "@backend/infra/db/backfill-max-players";
 import { openDatabase } from "@backend/infra/db/database";
-import schemaMigrations from "@backend/infra/db/schema-migrations.json";
+
+const require = createRequire(import.meta.url);
+const { initProfileDatabase } = require("../../scripts/e2e-init-profile-db.cjs") as {
+  initProfileDatabase: (dbPath: string) => void;
+};
 
 const tempRoots: string[] = [];
 
@@ -23,19 +27,7 @@ describe("schema-migrations.json E2E seed path", () => {
     tempRoots.push(dir);
     const dbPath = join(dir, "yark-server-manager.db");
 
-    const seeded = new DatabaseSync(dbPath);
-    try {
-      seeded.exec("PRAGMA journal_mode = WAL;");
-      seeded.exec("PRAGMA foreign_keys = ON;");
-      for (const migration of schemaMigrations) {
-        seeded.exec("BEGIN;");
-        seeded.exec(migration.sql);
-        seeded.exec(`PRAGMA user_version = ${migration.version};`);
-        seeded.exec("COMMIT;");
-      }
-    } finally {
-      seeded.close();
-    }
+    initProfileDatabase(dbPath);
 
     const db = openDatabase(dbPath, { takeSnapshots: false });
     try {

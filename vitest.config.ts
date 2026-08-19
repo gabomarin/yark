@@ -36,6 +36,8 @@ export default defineConfig({
     // (legacy localStorage). Renderer suites stay on jsdom (#281).
     projects: [
       {
+        // Inherit root `define` + `resolve.alias` (not only `test`). Without
+        // this, renderer tests fail with `__APP_VERSION__ is not defined`.
         extends: true,
         test: {
           name: "node",

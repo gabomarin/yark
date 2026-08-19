@@ -127,6 +127,9 @@ export function openDatabaseApplyingMigrations(
         if (migration.version === MAX_PLAYERS_LAUNCH_BACKFILL_SCHEMA_VERSION) {
           backfillMaxPlayersFromLegacyLaunchArgs(db);
         }
+        // Same transaction as E2E `initProfileDatabase`. WAL header writes
+        // (`user_version`) are not rolled back; do not move this after COMMIT
+        // unless both paths change together.
         db.exec(`PRAGMA user_version = ${migration.version};`);
         db.exec("COMMIT;");
       } catch (error) {
