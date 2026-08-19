@@ -68,8 +68,10 @@ CLI. Unit tests in `tests/unit/launch-args.test.ts` lock this.
 8. `…profile.extraArgs` (raw Extra arguments; `-WinLiveMaxPlayers` is stripped)
 
 UI: workspace tab **Launch** (after Mods) edits structured + raw; create/edit
-Server form no longer hosts Mods IDs or Extra arguments.
-See [docs/launch-options-catalog.md](launch-options-catalog.md) for curation.
+Server form no longer hosts Mods IDs or Extra arguments. A **search field** on
+Launch filters curated flags by token, description, or group without changing
+group on-counts or the command preview. See
+[docs/launch-options-catalog.md](launch-options-catalog.md) for curation.
 
 UI / runtime logs use `formatLaunchCommandLine` (logical `"` quotes). On
 Windows, live spawn uses `buildWindowsVerbatimSpawnArgs` so Node does not add

@@ -182,6 +182,63 @@ export function countEnabledStructured(structured: StructuredLaunchArgs): number
   ).length;
 }
 
+const structuredLaunchSearchHaystackCache = new Map<string, string>();
+
+/** Precomputed operator-visible text for Launch tab search (#352). */
+export function structuredLaunchSearchHaystack(
+  option: StructuredLaunchUiOption,
+  groupId: StructuredLaunchGroupId,
+): string {
+  const key = `${groupId}:${option.curation.id}`;
+  const cached = structuredLaunchSearchHaystackCache.get(key);
+  if (cached !== undefined) return cached;
+
+  const haystack = [
+    option.entry.token,
+    option.entry.summary,
+    option.entry.details,
+    option.entry.description,
+    option.curation.operatorWarning ?? "",
+    structuredLaunchGroupLabel(groupId),
+    option.curation.id,
+    ...option.entry.aliases,
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  structuredLaunchSearchHaystackCache.set(key, haystack);
+  return haystack;
+}
+
+/** Operator-visible text for Launch tab search (#352). */
+export function matchesStructuredLaunchSearch(
+  option: StructuredLaunchUiOption,
+  groupId: StructuredLaunchGroupId,
+  query: string,
+): boolean {
+  const q = query.trim().toLowerCase();
+  if (q.length === 0) return true;
+  return structuredLaunchSearchHaystack(option, groupId).includes(q);
+}
+
+export function filterGroupedStructuredOptions(
+  grouped: Map<StructuredLaunchGroupId, StructuredLaunchUiOption[]>,
+  query: string,
+): Map<StructuredLaunchGroupId, StructuredLaunchUiOption[]> {
+  const q = query.trim();
+  if (q.length === 0) return grouped;
+
+  const out = new Map<StructuredLaunchGroupId, StructuredLaunchUiOption[]>();
+  for (const groupId of STRUCTURED_LAUNCH_GROUP_ORDER) {
+    const options = grouped.get(groupId) ?? [];
+    const filtered = options.filter((option) =>
+      matchesStructuredLaunchSearch(option, groupId, q),
+    );
+    if (filtered.length > 0) out.set(groupId, filtered);
+  }
+  return out;
+}
+
 export {
   structuredLaunchGroupLabel,
   emptyStructuredLaunchArgs,
