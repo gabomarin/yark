@@ -11,10 +11,13 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Servers Overview and workspace server rail share **Order added** vs **A–Z** sort and icon-only **All servers / By cluster** layout toggles; preferences persist across reload (#351).
 - **Downloads** queue page with stacked job rows, active vs queued separation, shared server-card progress styling, `Open in Logs` focus on the related Events entry, and Pause/Resume for install and update jobs; workspace footer teaser on other pages replaces the floating progress dock. getyark.com gallery and SteamCMD docs include the queue (#201).
 
 ### Changed
 
+- Overview fleet summary, sort/view controls, and search share one header row until ~1280px; grouped cluster headings no longer show a lone server count (#351).
+- Server card and workspace **Stop** use a red **Stop** icon; **Restart** uses **fossil** to match lifecycle controls elsewhere.
 - Overview, Settings, Clusters, Backups, Logs, and Downloads drop restating page subtitles; fleet backup KPIs stay hidden only when there is no history and no enabled schedule; status badges use sentence case; server cards give map art more room, a quieter stopped state that still differs from Inactive, and square list rows with a straight status rail (no notch or gap) that tighten in Compact.
 - Server-list **Resume / Pause / Cancel** sit on the progress bar (not the Start slot). Queued servers look distinct, lock Start, toast when added to Downloads, and refuse duplicate clicks. Downloads labels Pause/Cancel as a SteamCMD process action on the **active** job (#201).
 - Downloads detail shows the **SteamCMD process** bar only for the active job. Queued jobs cancel from the row (no duplicate **Remove from queue** in the detail). Active rows no longer show a **SteamCMD active now** label (#201).
@@ -23,6 +26,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Downloads queue rows no longer nest Pause/Cancel buttons inside the row select control (invalid HTML nesting).
+- Profile DB migration adds an index on `servers(created_at, id)` so default **Order added** list loads stay fast as fleets grow (#351).
 - Cancelling the active SteamCMD job no longer cancels other queued Downloads work; the next job starts after unwind (#201).
 - Cancelled Downloads jobs offer **Retry** (row, detail, and footer) as well as Dismiss; Install/Update/Verify still replace a cancelled leftover of the same job (#201).
 - **Move up / Move down** in Downloads actually changes which queued job runs next (the list no longer resorted by created time) (#201).

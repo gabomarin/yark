@@ -33,6 +33,8 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
 describe("ServerListPanel", () => {
   afterEach(() => {
     cleanup();
+    window.localStorage.removeItem("yark.serverListView");
+    window.localStorage.removeItem("yark.serverListSort");
   });
 
   it("shows map art thumbs for official and custom maps (#193)", () => {
@@ -229,5 +231,44 @@ describe("ServerListPanel", () => {
     const alphaHeader = screen.getByRole("button", { name: /^Alpha\s*2$/i });
     alphaHeader.click();
     expect(screen.getByText("Island")).toBeInTheDocument();
+  });
+
+  it("shows sort and view controls with shared prefs (#351)", () => {
+    render(
+      <AppProviders>
+        <ServerListPanel
+          servers={[profile()]}
+          selectedServerId="srv-1"
+          statuses={new Map()}
+          onSelectServer={() => undefined}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("button", { name: "Sort servers" })).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Server list layout" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sort servers" })).toHaveTextContent("Order");
+  });
+
+  it("renders a flat list when view is ungrouped (#351)", () => {
+    window.localStorage.setItem("yark.serverListView", "ungrouped");
+    render(
+      <AppProviders>
+        <ServerListPanel
+          servers={[
+            profile({ id: "a", name: "Island", clusterId: "Alpha" }),
+            profile({ id: "b", name: "Solo", clusterId: null }),
+          ]}
+          selectedServerId="a"
+          statuses={new Map()}
+          onSelectServer={() => undefined}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.queryByText("Alpha")).not.toBeInTheDocument();
+    expect(screen.queryByText("Unclustered")).not.toBeInTheDocument();
+    expect(screen.getByText("Island")).toBeInTheDocument();
+    expect(screen.getByText("Solo")).toBeInTheDocument();
   });
 });

@@ -2,21 +2,23 @@ import { type ReactElement, useEffect, useMemo, useRef, useState } from "react";
 import { HardDrives, MagnifyingGlass, Plus } from "@phosphor-icons/react";
 import { Badge, Button, Checkbox, Group, Skeleton, Stack, Text, VisuallyHidden } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo, ServerStopProgress } from "@shared/types";
-import { ServerCard } from "@features/servers/components/ServerCard/ServerCard";
 import type { ServerCardHandlers } from "@features/servers/components/ServerCard/serverCardHandlers";
+import { ServerListControls } from "@features/servers/components/ServerListControls/ServerListControls";
+import { useServerListPreferences } from "@features/servers/hooks/useServerListPreferences";
+import { sortServers } from "@features/servers/serverListModel";
+import { groupServersByCluster } from "@features/server-workspace/workspaceLayoutModel";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { SearchField } from "@ui/SearchField/SearchField";
 import {
   AttentionIssuesPopover,
   collectAttentionIssues,
 } from "./AttentionIssuesPopover/AttentionIssuesPopover";
+import { OverviewServerCard } from "./OverviewServerCard";
+import { ServerGridList } from "./ServerGridList";
+import type { SteamCmdCardJobRef } from "./serverGridTypes";
 import classes from "../OverviewPage.module.css";
 
-export type SteamCmdCardJobRef = {
-  jobId: string;
-  label: string;
-  operation: "install-files" | "update" | "verify-files";
-};
+export type { SteamCmdCardJobRef } from "./serverGridTypes";
 
 interface Props {
   search: string;
@@ -67,6 +69,7 @@ interface Props {
 
 export function ServerGrid(props: Props): ReactElement {
   const [showDisabled, setShowDisabled] = useState(false);
+  const { sort, setSort, view, setView } = useServerListPreferences("overview");
   const propsRef = useRef(props);
   useEffect(() => {
     propsRef.current = props;
@@ -149,52 +152,41 @@ export function ServerGrid(props: Props): ReactElement {
     ],
   );
 
-  const renderServerCard = (server: ServerProfile): ReactElement => {
-    const stopProgress = props.stopProgressByServerId?.get(server.id);
-    const stopBusy = stopProgress?.active === true;
-    const pausedJob = props.steamCmdPausedByServerId?.get(server.id);
-    const queuedJob = props.steamCmdQueuedByServerId?.get(server.id);
-    const liveSteamCmd = props.steamCmdServerId === server.id;
-    const overlayJob = pausedJob ?? queuedJob;
-    return (
-      <ServerCard
-        key={server.id}
-        server={server}
-        runtime={props.statuses.get(server.id) ?? null}
-        installation={props.installationInfo.get(server.id) ?? null}
-        officialSteamBuild={props.officialSteamBuild}
-        officialVersion={props.officialVersion ?? null}
-        steamCmdBusy={
-          !stopBusy && (props.steamCmdBusy ?? props.steamCmdRunning) && liveSteamCmd
-        }
-        steamCmdPaused={pausedJob !== undefined}
-        steamCmdQueued={queuedJob !== undefined}
-        steamCmdQueueLabel={overlayJob?.label ?? null}
-        steamCmdProgressPercent={
-          liveSteamCmd ? (props.steamCmdProgressPercent ?? null) : null
-        }
-        steamCmdProgressLabel={
-          liveSteamCmd ? (props.steamCmdProgressLabel ?? null) : null
-        }
-        steamCmdProgressBytesDownloaded={
-          liveSteamCmd ? (props.steamCmdProgressBytesDownloaded ?? null) : null
-        }
-        steamCmdProgressBytesTotal={
-          liveSteamCmd ? (props.steamCmdProgressBytesTotal ?? null) : null
-        }
-        steamCmdOperation={
-          liveSteamCmd
-            ? (props.steamCmdOperation ?? null)
-            : (overlayJob?.operation ?? null)
-        }
-        stopBusy={stopBusy}
-        stopProgressPercent={stopBusy ? (stopProgress?.percent ?? null) : null}
-        stopProgressLabel={stopBusy ? (stopProgress?.label ?? null) : null}
-        checkingUpdates={props.checkingUpdates}
-        handlers={cardHandlers}
-      />
-    );
-  };
+  const sortedEnabled = useMemo(
+    () => sortServers(props.filteredServers, sort),
+    [props.filteredServers, sort],
+  );
+  const sortedDisabled = useMemo(
+    () => sortServers(props.disabledServers, sort),
+    [props.disabledServers, sort],
+  );
+  const enabledGroups = useMemo(
+    () => groupServersByCluster(sortedEnabled),
+    [sortedEnabled],
+  );
+
+  const renderServerCard = (server: ServerProfile): ReactElement => (
+    <OverviewServerCard
+      key={server.id}
+      server={server}
+      statuses={props.statuses}
+      installationInfo={props.installationInfo}
+      officialSteamBuild={props.officialSteamBuild}
+      officialVersion={props.officialVersion ?? null}
+      steamCmdServerId={props.steamCmdServerId}
+      steamCmdBusy={props.steamCmdBusy ?? props.steamCmdRunning}
+      steamCmdPausedByServerId={props.steamCmdPausedByServerId}
+      steamCmdQueuedByServerId={props.steamCmdQueuedByServerId}
+      steamCmdProgressPercent={props.steamCmdProgressPercent}
+      steamCmdProgressLabel={props.steamCmdProgressLabel}
+      steamCmdProgressBytesDownloaded={props.steamCmdProgressBytesDownloaded}
+      steamCmdProgressBytesTotal={props.steamCmdProgressBytesTotal}
+      steamCmdOperation={props.steamCmdOperation}
+      stopProgressByServerId={props.stopProgressByServerId}
+      checkingUpdates={props.checkingUpdates}
+      handlers={cardHandlers}
+    />
+  );
 
   return (
     <section
@@ -225,13 +217,21 @@ export function ServerGrid(props: Props): ReactElement {
         </Group>
 
         {!props.loading && props.servers.length > 0 && (
-          <div className={classes.serverSearch}>
-            <SearchField
-              value={props.search}
-              onChange={props.onSearchChange}
-              label="Search servers"
-              placeholder="Search by name, map, or cluster"
+          <div className={classes.serverToolbar}>
+            <ServerListControls
+              sort={sort}
+              onSortChange={setSort}
+              view={view}
+              onViewChange={setView}
             />
+            <div className={classes.serverSearch}>
+              <SearchField
+                value={props.search}
+                onChange={props.onSearchChange}
+                label="Search servers"
+                placeholder="Search by name, map, or cluster"
+              />
+            </div>
           </div>
         )}
       </div>
@@ -317,10 +317,14 @@ export function ServerGrid(props: Props): ReactElement {
         {!props.loading &&
           (props.filteredServers.length > 0 ||
             (showDisabled && props.disabledServers.length > 0)) && (
-          <div className={classes.serverGrid}>
-            {props.filteredServers.map(renderServerCard)}
-            {showDisabled && props.disabledServers.map(renderServerCard)}
-          </div>
+          <ServerGridList
+            view={view}
+            enabledGroups={enabledGroups}
+            sortedEnabled={sortedEnabled}
+            sortedDisabled={sortedDisabled}
+            showDisabled={showDisabled}
+            renderServerCard={renderServerCard}
+          />
         )}
       </Stack>
     </section>

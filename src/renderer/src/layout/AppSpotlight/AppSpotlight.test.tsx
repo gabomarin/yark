@@ -48,8 +48,8 @@ describe("appSpotlightModel", () => {
   it("lists navigate items with sidebar icons and sorts servers A→Z", () => {
     expect(SPOTLIGHT_NAV_ITEMS.map((item) => item.label)).toEqual([
       "Servers",
-      "Downloads",
       "Clusters",
+      "Downloads",
       "Backups",
       "Logs",
       "Settings",

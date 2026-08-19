@@ -70,7 +70,7 @@
 
 .rowButton {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) minmax(120px, 200px) 44px auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--app-space-sm);
   align-items: center;
   width: 100%;
@@ -83,6 +83,16 @@
     color-mix(in srgb, var(--app-color-panel) 48%, var(--app-color-accent-deep)) 0%,
     color-mix(in srgb, var(--app-color-panel) 84%, var(--app-color-accent-deep)) 100%
   );
+  color: inherit;
+  text-align: left;
+}
+
+.rowHit {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(120px, 200px) 44px;
+  gap: var(--app-space-sm);
+  align-items: center;
+  min-width: 0;
   color: inherit;
   text-align: left;
   cursor: pointer;
@@ -197,8 +207,8 @@
 }
 
 @media (max-width: 900px) {
-  .rowButton {
-    grid-template-columns: auto minmax(0, 1fr) 40px auto;
+  .rowHit {
+    grid-template-columns: auto minmax(0, 1fr) 40px;
   }
 
   .rowProgressCol {

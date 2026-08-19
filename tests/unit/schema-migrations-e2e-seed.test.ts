@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { MAX_PLAYERS_LAUNCH_BACKFILL_SCHEMA_VERSION } from "@backend/infra/db/backfill-max-players";
 import { openDatabase } from "@backend/infra/db/database";
+import schemaMigrations from "@backend/infra/db/schema-migrations.json";
 
 const require = createRequire(import.meta.url);
 const { initProfileDatabase } = require("../../scripts/e2e-init-profile-db.cjs") as {
@@ -21,6 +22,10 @@ afterEach(() => {
   }
 });
 
+const latestSchemaVersion = Math.max(
+  ...schemaMigrations.map((migration) => migration.version),
+);
+
 describe("schema-migrations.json E2E seed path", () => {
   it("reaches the current user_version so openDatabase is a no-op migrate", () => {
     const dir = mkdtempSync(join(tmpdir(), "yark-e2e-schema-"));
@@ -32,11 +37,19 @@ describe("schema-migrations.json E2E seed path", () => {
     const db = openDatabase(dbPath, { takeSnapshots: false });
     try {
       const row = db.prepare("PRAGMA user_version").get() as { user_version: number };
-      expect(row.user_version).toBe(MAX_PLAYERS_LAUNCH_BACKFILL_SCHEMA_VERSION);
+      expect(row.user_version).toBe(latestSchemaVersion);
+      expect(row.user_version).toBeGreaterThanOrEqual(MAX_PLAYERS_LAUNCH_BACKFILL_SCHEMA_VERSION);
       expect(
         db
           .prepare(
             "SELECT 1 AS present FROM sqlite_master WHERE type = 'table' AND name = 'servers'",
+          )
+          .get(),
+      ).toEqual({ present: 1 });
+      expect(
+        db
+          .prepare(
+            "SELECT 1 AS present FROM sqlite_master WHERE type = 'index' AND name = 'idx_servers_created_at'",
           )
           .get(),
       ).toEqual({ present: 1 });

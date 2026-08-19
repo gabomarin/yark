@@ -8,7 +8,7 @@ import {
   ProhibitInset,
   X,
 } from "@phosphor-icons/react";
-import { ActionIcon, Badge, Progress, Tooltip } from "@mantine/core";
+import { ActionIcon, Badge, Progress, Tooltip, UnstyledButton } from "@mantine/core";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import { downloadRowMeta } from "./downloadsCopy";
 import type { DownloadRow, DownloadRowKind } from "./downloadsModel";
@@ -44,42 +44,42 @@ export function DownloadRowButton(props: {
 }): ReactElement {
   const { row } = props;
   return (
-    <button
-      type="button"
+    <div
       className={classes.rowButton}
       data-selected={props.selected || undefined}
       data-kind={row.kind}
-      onClick={props.onSelect}
       data-download-row={row.id}
     >
-      {row.mapId !== null && (
-        <MapArtThumb
-          mapId={row.mapId}
-          mapModId={row.mapModId}
-          modThumbnailUrl={row.modThumbnailUrl}
-          size={row.kind === "active" ? "md" : "sm"}
-          shape="rounded"
-          decorative
-          className={classes.rowThumb}
-        />
-      )}
-      <span className={classes.rowTitle}>
-        <span className={classes.rowTitleLine}>
-          <span className={classes.rowTitleText}>{row.title}</span>
-          <Badge size="xs" color={statusBadgeColor(row.statusLabel)} variant="light">
-            {row.statusLabel}
-          </Badge>
+      <UnstyledButton className={classes.rowHit} onClick={props.onSelect}>
+        {row.mapId !== null && (
+          <MapArtThumb
+            mapId={row.mapId}
+            mapModId={row.mapModId}
+            modThumbnailUrl={row.modThumbnailUrl}
+            size={row.kind === "active" ? "md" : "sm"}
+            shape="rounded"
+            decorative
+            className={classes.rowThumb}
+          />
+        )}
+        <span className={classes.rowTitle}>
+          <span className={classes.rowTitleLine}>
+            <span className={classes.rowTitleText}>{row.title}</span>
+            <Badge size="xs" color={statusBadgeColor(row.statusLabel)} variant="light">
+              {row.statusLabel}
+            </Badge>
+          </span>
+          <span className={classes.rowMeta}>{downloadRowMeta(row)}</span>
         </span>
-        <span className={classes.rowMeta}>{downloadRowMeta(row)}</span>
-      </span>
-      <span className={classes.rowProgressCol}>
-        {row.percent !== null ? (
-          <Progress value={row.percent} size="sm" radius="xl" striped animated />
-        ) : null}
-      </span>
-      <span className={classes.rowPercent}>
-        {row.percent !== null ? `${row.percent.toFixed(0)}%` : ""}
-      </span>
+        <span className={classes.rowProgressCol}>
+          {row.percent !== null ? (
+            <Progress value={row.percent} size="sm" radius="xl" striped animated />
+          ) : null}
+        </span>
+        <span className={classes.rowPercent}>
+          {row.percent !== null ? `${row.percent.toFixed(0)}%` : ""}
+        </span>
+      </UnstyledButton>
       <span className={classes.rowActions}>
         {(row.canMoveUp || row.canMoveDown) && (
           <span className={classes.reorderGroup}>
@@ -89,10 +89,7 @@ export function DownloadRowButton(props: {
                 variant="subtle"
                 aria-label="Move up in queue"
                 disabled={!row.canMoveUp}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  props.onMoveUp();
-                }}
+                onClick={() => props.onMoveUp()}
               >
                 <ArrowUp size={14} />
               </ActionIcon>
@@ -103,10 +100,7 @@ export function DownloadRowButton(props: {
                 variant="subtle"
                 aria-label="Move down in queue"
                 disabled={!row.canMoveDown}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  props.onMoveDown();
-                }}
+                onClick={() => props.onMoveDown()}
               >
                 <ArrowDown size={14} />
               </ActionIcon>
@@ -120,10 +114,7 @@ export function DownloadRowButton(props: {
               color="teal"
               variant="light"
               aria-label="Resume download"
-              onClick={(event) => {
-                event.stopPropagation();
-                props.onResume();
-              }}
+              onClick={() => props.onResume()}
             >
               <Play size={14} weight="fill" />
             </ActionIcon>
@@ -136,10 +127,7 @@ export function DownloadRowButton(props: {
               color="teal"
               variant="light"
               aria-label="Retry download"
-              onClick={(event) => {
-                event.stopPropagation();
-                props.onRetry();
-              }}
+              onClick={() => props.onRetry()}
             >
               <ArrowCounterClockwise size={14} />
             </ActionIcon>
@@ -151,10 +139,7 @@ export function DownloadRowButton(props: {
               size="sm"
               variant="subtle"
               aria-label="Dismiss download"
-              onClick={(event) => {
-                event.stopPropagation();
-                props.onDismiss();
-              }}
+              onClick={() => props.onDismiss()}
             >
               <X size={14} />
             </ActionIcon>
@@ -167,10 +152,7 @@ export function DownloadRowButton(props: {
               color={row.canPause ? "yellow" : "red"}
               variant="light"
               aria-label={row.canPause ? "Pause download" : "Cancel download"}
-              onClick={(event) => {
-                event.stopPropagation();
-                props.onCancel();
-              }}
+              onClick={() => props.onCancel()}
             >
               {row.canPause ? (
                 <Pause size={14} weight="fill" />
@@ -181,6 +163,6 @@ export function DownloadRowButton(props: {
           </Tooltip>
         )}
       </span>
-    </button>
+    </div>
   );
 }

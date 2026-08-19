@@ -62,5 +62,9 @@
   {
     "version": 16,
     "sql": "SELECT 1;"
+  },
+  {
+    "version": 17,
+    "sql": "\n      CREATE INDEX idx_servers_created_at ON servers (created_at ASC, id ASC);\n    "
   }
 ]

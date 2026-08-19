@@ -103,7 +103,7 @@ export class ServerRepository {
 
   list(): ServerProfile[] {
     const rows = this.db
-      .prepare("SELECT * FROM servers ORDER BY name")
+      .prepare("SELECT * FROM servers ORDER BY created_at ASC, id ASC")
       .all() as unknown as ServerRow[];
     return rows.map(rowToProfile);
   }

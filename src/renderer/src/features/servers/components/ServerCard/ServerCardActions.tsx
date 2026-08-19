@@ -4,8 +4,8 @@ import {
   CloudArrowDown,
   DotsThreeVertical,
   Eye,
-  Pause,
   Play,
+  Stop,
 } from "@phosphor-icons/react";
 import { ActionIcon, Group, Menu, Tooltip } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
@@ -62,7 +62,7 @@ function runtimeActionIcon(
     case "stopping":
       return <ArrowsClockwise size={iconSize} />;
     case "stop":
-      return <Pause size={iconSize} weight="fill" />;
+      return <Stop size={iconSize} weight="fill" />;
     case "start":
       return <Play size={iconSize} weight="fill" />;
     case "enable":
