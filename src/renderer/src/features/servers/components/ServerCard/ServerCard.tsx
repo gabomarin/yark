@@ -184,7 +184,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
       withBorder
       className={classes.card}
       padding="md"
-      radius="md"
+      radius={0}
       data-tone={view.rowTone}
       data-disabled={!server.enabled}
       data-queued={steamCmdQueued || undefined}

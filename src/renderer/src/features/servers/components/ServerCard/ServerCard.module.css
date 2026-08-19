@@ -1,7 +1,7 @@
 .card {
   position: relative;
   overflow: hidden;
-  border-radius: var(--app-radius-md);
+  border-radius: 0;
   border-color: color-mix(in srgb, var(--app-color-border) 72%, var(--ark-blue-7));
   background-color: var(--app-color-panel-cool);
   background-image:
@@ -11,7 +11,6 @@
       var(--app-color-panel-cool) 52%,
       color-mix(in srgb, var(--app-color-panel-cool) 72%, var(--app-color-panel)) 100%
     );
-  box-shadow: var(--app-shadow-panel);
   max-width: 100%;
   transition:
     border-color 140ms ease,
@@ -55,6 +54,11 @@
 .card[data-tone="queued"] {
   border-style: dashed;
   border-color: color-mix(in srgb, var(--app-color-cryo) 42%, var(--app-color-border));
+}
+
+.card:hover,
+.card:focus-within {
+  z-index: 1;
 }
 
 .card:hover {

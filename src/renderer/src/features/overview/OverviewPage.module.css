@@ -57,12 +57,20 @@
 .serverGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--app-space-xs);
+  gap: 0;
+}
+
+.serverGrid > * + * {
+  margin-top: -1px;
 }
 
 .serverSkeletons {
   display: grid;
-  gap: var(--app-space-xs);
+  gap: 0;
+}
+
+.serverSkeletons > * + * {
+  margin-top: -1px;
 }
 
 .serverSkeleton {
@@ -73,7 +81,7 @@
   min-height: 82px;
   padding: var(--app-space-sm) var(--app-space-md);
   border: 1px solid var(--app-color-border);
-  border-radius: var(--app-radius-md);
+  border-radius: 0;
   background: color-mix(in srgb, var(--app-color-panel-cool) 74%, transparent);
 }
 

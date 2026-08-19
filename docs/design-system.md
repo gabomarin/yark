@@ -321,7 +321,7 @@ line (#234).
 
 ## Still feature-local (by design)
 
-- `ServerCard` product chrome (straight status rail)
+- `ServerCard` product chrome (square list rows, straight status rail)
 - Downloads queue / footer teaser elevation
 - Settings SteamCMD path row (`ReadonlyPath` + Choose… + Install CTA; not `PathField`)
 - Server workspace 3-column shell / INI editor tables
