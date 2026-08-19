@@ -23,6 +23,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Overview, Settings, Clusters, Backups, Logs, and Downloads drop restating page subtitles; fleet backup KPIs stay hidden only when there is no history and no enabled schedule; status badges use sentence case; server cards give map art more room, a quieter stopped state that still differs from Inactive, and square list rows with a straight status rail (no notch or gap) that tighten in Compact.
 - Overview server cards show read-only queue/progress status; click the progress line (e.g. **Paused · Updating server**) to open **Downloads** (pause, resume, and cancel stay on the Downloads page). The status badge keeps server runtime state only. Queued servers look distinct, lock Start, toast when added to Downloads, and refuse duplicate clicks (#201, #378).
 - Downloads workspace footer on other pages is a read-only minified SteamCMD bar (inline copy, wider progress); click opens **Downloads** — pause/resume stay on that page (#201).
+- Downloads workspace footer keeps the last known SteamCMD percent while a job is paused instead of clearing it (#201).
 - Downloads **Queued** rows stack flush with dividers only between rows (#201).
 - Downloads uses a vertical splitter with a horizontal rule: queue list above and a console-only SteamCMD card below (#201).
 - Downloads console keeps SteamCMD output while a job is **Paused** and clears it on **Resume** (#201).
@@ -50,6 +51,9 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Overview **Update all outdated** refresh keeps the enable state and preview consistent, enqueues into Downloads without waiting for SteamCMD to finish, and closes the confirm modal as soon as queueing completes (#378).
 - Overview server cards no longer show an animated progress bar for queued or paused jobs; only live SteamCMD work shows progress (#378).
 - Cancelling a queued job no longer starts the next server while another job is paused (#201).
+- Overview **Update All** header enable state stays live while the confirm modal is open (#378).
+- SteamCMD queue status pushes immediately when the queue stops on a paused or restart-interrupted job (#201).
+- Merging duplicate recovered Downloads jobs preserves **restartInterrupted** so the queue still waits for Retry (#201).
 - Profile DB migration adds an index on `servers(created_at, id)` so default **Order added** list loads stay fast as fleets grow (#351).
 - Cancelling the active SteamCMD job no longer cancels other queued Downloads work; the next job starts after unwind (#201).
 - Cancelled Downloads jobs offer **Retry** (row, detail, and footer) as well as Dismiss; Install/Update/Verify still replace a cancelled leftover of the same job (#201).

@@ -411,6 +411,53 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
     expect(settings.set).toHaveBeenCalledWith(QUEUE_KEY, "[]");
   });
 
+  it("preserves restartInterrupted when duplicate durable rows are merged on load", async () => {
+    const duplicateRows = [
+      persistedJob({
+        id: "rollback-copy",
+        status: "blocked",
+        phase: "rollback-restoring-backups",
+        updatedAt: "2026-08-01T00:02:00.000Z",
+        operatorRetryAllowed: true,
+        context: {
+          wasRunning: true,
+          preUpdateBackupIds: ["world-1"],
+        },
+      }),
+      persistedJob({
+        id: "interrupted-copy",
+        status: "failed",
+        phase: "applying-files",
+        updatedAt: "2026-08-01T00:01:00.000Z",
+        operatorRetryAllowed: true,
+        recoveryReason: 'YARK closed during phase "applying-files". Retry to continue.',
+        context: { wasRunning: true, restartInterrupted: true },
+      }),
+      persistedJob({
+        id: "job-pending",
+        type: "verify-files",
+        status: "pending",
+        phase: "queued",
+        attempts: 0,
+        idempotencyKey: "verify-files:server-1:next",
+      }),
+    ];
+    const { service } = createRestartedService(duplicateRows);
+    const performUpdateServer = vi.fn(async () => undefined);
+    const performVerifyServerFiles = vi.fn(async () => undefined);
+    Object.assign(service as object, {
+      findSteamCmdExecutable: vi.fn(async () => "C:\\steamcmd\\steamcmd.exe"),
+      performUpdateServer,
+      performVerifyServerFiles,
+    });
+
+    await service.resumeQueuedFileJobsOnLaunch();
+    await Promise.resolve();
+
+    expect(performUpdateServer).not.toHaveBeenCalled();
+    expect(performVerifyServerFiles).not.toHaveBeenCalled();
+  });
+
   it("blocks duplicate durable rows at the most conservative recovery phase", () => {
     const duplicateRows = [
       persistedJob({

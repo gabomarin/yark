@@ -418,9 +418,7 @@ export function App({
       }),
     [servers, installationInfo, statuses, officialSteamBuild, steamCmdStatus?.criticalJobs],
   );
-  const canUpdateAllOutdated = canOpenUpdateAllOutdated(
-    updateAllOutdatedModalPlan ?? updateAllOutdatedPlan,
-  );
+  const canUpdateAllOutdated = canOpenUpdateAllOutdated(updateAllOutdatedPlan);
 
   const steamCmdBusy = steamCmdStatus?.busy === true;
   const steamCmdBusyRef = useRef(steamCmdBusy);

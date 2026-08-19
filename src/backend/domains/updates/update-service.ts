@@ -159,6 +159,13 @@ export class UpdateService extends EventEmitter {
   private progressLabel: string | null = null;
   private progressBytesDownloaded: number | null = null;
   private progressBytesTotal: number | null = null;
+  /** Last live SteamCMD progress before pause — shown in status polls while the job is paused. */
+  private pausedProgressSnapshot: {
+    percent: number | null;
+    label: string | null;
+    bytesDownloaded: number | null;
+    bytesTotal: number | null;
+  } | null = null;
   private lastProgressLine: string | null = null;
   private syncingServerId: string | null = null;
   private syncingStartedAt: string | null = null;
@@ -342,6 +349,9 @@ export class UpdateService extends EventEmitter {
         : resolveSteamCmdHome(join(this.steamcmdDir, "steamcmd.exe"));
     const liveWork =
       active !== null || this.syncingServerId !== null || runningJob !== undefined;
+    const hasPausedJob = this.queue.some((job) => job.status === "paused");
+    const pausedProgress =
+      !liveWork && hasPausedJob ? this.pausedProgressSnapshot : null;
     const busy = liveWork || hasQueueWork;
     const operation: SteamCmdStatus["operation"] =
       this.syncingServerId !== null
@@ -368,10 +378,12 @@ export class UpdateService extends EventEmitter {
         ?? runningJob?.updatedAt
         ?? null,
       pid: active?.child.pid ?? null,
-      progressPercent: liveWork ? this.progressPercent : null,
-      progressLabel: liveWork ? this.progressLabel : null,
-      progressBytesDownloaded: liveWork ? this.progressBytesDownloaded : null,
-      progressBytesTotal: liveWork ? this.progressBytesTotal : null,
+      progressPercent: liveWork ? this.progressPercent : pausedProgress?.percent ?? null,
+      progressLabel: liveWork ? this.progressLabel : pausedProgress?.label ?? null,
+      progressBytesDownloaded:
+        liveWork ? this.progressBytesDownloaded : pausedProgress?.bytesDownloaded ?? null,
+      progressBytesTotal:
+        liveWork ? this.progressBytesTotal : pausedProgress?.bytesTotal ?? null,
       lastLine: this.lastProgressLine,
       queuedCount: queuedPending.length,
       // Keep this.queue order so Downloads Move up/down matches execution order.
@@ -477,6 +489,7 @@ export class UpdateService extends EventEmitter {
     if (job.status !== "paused") return false;
     await this.ensureSteamCmdReadyForOperator(job);
     this.clearSteamCmdConsole();
+    this.clearPausedProgressSnapshot();
     job.status = "pending";
     job.phase = this.resumePhaseForRetry(job);
     job.recoveryReason = null;
@@ -640,7 +653,7 @@ export class UpdateService extends EventEmitter {
 
     this.syncingServerId = null;
     this.syncingStartedAt = null;
-    this.setProgress(null, "Paused", "Paused");
+    this.setPausedProgress();
     this.emitProgress(true);
     return true;
   }
@@ -995,7 +1008,7 @@ export class UpdateService extends EventEmitter {
               ? "Paused after SteamCMD began; leaving files as-is for resume."
               : "Paused before SteamCMD applied files; no rollback restore needed.",
           );
-          this.setProgress(null, "Paused", "Paused");
+          this.setPausedProgress();
           if (wasRunning && !installMayHaveChanged && !this.processes.isActive(serverId)) {
             this.appendSteamCmdConsole(
               `Restarting "${server.name}" after pause (server was running before update)…`,
@@ -1385,9 +1398,11 @@ export class UpdateService extends EventEmitter {
       for (;;) {
         const pausedJob = this.queue.find((candidate) => candidate.status === "paused");
         if (pausedJob !== undefined) {
+          this.emitProgress(true);
           break;
         }
         if (this.findRestartInterruptedJob() !== undefined) {
+          this.emitProgress(true);
           break;
         }
 
@@ -1449,6 +1464,7 @@ export class UpdateService extends EventEmitter {
           this.removeJob(job.id);
           this.persistQueue();
           if (this.queue.length === 0 && this.activeSteamCmd === null && this.syncingServerId === null) {
+            this.clearPausedProgressSnapshot();
             this.setProgress(100, "Completed", "Operation finished");
             this.emitProgress(true);
           }
@@ -1467,7 +1483,7 @@ export class UpdateService extends EventEmitter {
             this.persistQueue();
             this.pauseRequested = false;
             this.endFileSync();
-            this.setProgress(null, "Paused", "Paused");
+            this.setPausedProgress();
             this.emitProgress(true);
             break;
           }
@@ -2340,6 +2356,31 @@ export class UpdateService extends EventEmitter {
     return percentChanged;
   }
 
+  private freezePausedProgressSnapshot(): void {
+    if (
+      this.progressPercent === null
+      && this.progressBytesDownloaded === null
+      && this.progressBytesTotal === null
+    ) {
+      return;
+    }
+    this.pausedProgressSnapshot = {
+      percent: this.progressPercent,
+      label: this.progressLabel,
+      bytesDownloaded: this.progressBytesDownloaded,
+      bytesTotal: this.progressBytesTotal,
+    };
+  }
+
+  private clearPausedProgressSnapshot(): void {
+    this.pausedProgressSnapshot = null;
+  }
+
+  private setPausedProgress(): void {
+    this.freezePausedProgressSnapshot();
+    this.setProgress(null, "Paused", "Paused");
+  }
+
   private setProgress(percent: number | null, label: string | null, line?: string): void {
     this.progressPercent = percent;
     if (label !== null) {
@@ -2394,6 +2435,7 @@ export class UpdateService extends EventEmitter {
     if (this.activeSteamCmd !== null) {
       throw new Error("A SteamCMD operation is already in progress");
     }
+    this.clearPausedProgressSnapshot();
     this.steamCmdOutputBuffers.clear();
     this.lastProgressConsoleLogAtMs = 0;
     this.lastProgressConsoleLoggedPercent = null;
@@ -2712,6 +2754,10 @@ export class UpdateService extends EventEmitter {
         steamCmdExitCode:
           preferred.context.steamCmdExitCode
           ?? secondary.context.steamCmdExitCode,
+        ...(preferred.context.restartInterrupted === true
+          || secondary.context.restartInterrupted === true
+          ? { restartInterrupted: true as const }
+          : {}),
       },
     };
   }

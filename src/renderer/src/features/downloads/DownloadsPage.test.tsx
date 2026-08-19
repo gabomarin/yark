@@ -254,6 +254,74 @@ describe("DownloadsPage", () => {
     expect(pageHandlers.onPauseLive).not.toHaveBeenCalled();
   });
 
+  it("shows Waiting for progress in the console when an active job has no SteamCMD output yet", () => {
+    render(
+      <AppProviders>
+        <DownloadsPage
+          status={baseStatus({
+            busy: true,
+            running: true,
+            operation: "update",
+            serverId: "srv-1",
+            progressPercent: 0,
+            progressLabel: "Updating server files…",
+            criticalJobs: [
+              job({
+                id: "job-active",
+                operation: "update",
+                status: "running",
+                phase: "downloading",
+                nextActions: [],
+              }),
+            ],
+          })}
+          console={{ lines: [], updatedAt: "2026-08-18T00:00:00.000Z" }}
+          servers={[server()]}
+          {...handlers()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("Waiting for progress…")).toBeInTheDocument();
+  });
+
+  it("shows SteamCMD console output for restart-interrupted jobs", () => {
+    render(
+      <AppProviders>
+        <DownloadsPage
+          status={baseStatus({
+            busy: true,
+            criticalJobs: [
+              job({
+                id: "job-interrupted",
+                operation: "update",
+                status: "failed",
+                phase: "applying-files",
+                recoveryReason:
+                  'YARK closed during phase "applying-files". Retry to continue.',
+                nextActions: ["retry", "dismiss"],
+              }),
+            ],
+          })}
+          console={{
+            lines: [
+              "[stdout] Update state (0x61) downloading",
+              "Retry when ready",
+            ],
+            updatedAt: "2026-08-18T00:00:00.000Z",
+          }}
+          servers={[server()]}
+          {...handlers()}
+        />
+      </AppProviders>,
+    );
+
+    const consolePane = document.querySelector("[data-steamcmd-console]");
+    expect(consolePane).not.toBeNull();
+    expect(consolePane?.textContent).toContain("Update state (0x61) downloading");
+    expect(consolePane?.textContent).toContain("Retry when ready");
+  });
+
   it("shows the SteamCMD missing banner when leftovers remain", async () => {
     const user = userEvent.setup();
     const pageHandlers = renderPage(
