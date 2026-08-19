@@ -153,7 +153,9 @@ export function DownloadsPage(props: Props): ReactElement {
               <div className={classes.sectionLabel}>{sectionTitle(kind)}</div>
               <div
                 className={
-                  kind === "queued" ? classes.queueRowList : classes.queueRowStack
+                  kind === "queued" || kind === "cancelled"
+                    ? classes.queueRowList
+                    : classes.queueRowStack
                 }
               >
                 {sectionRows.map((row) => (

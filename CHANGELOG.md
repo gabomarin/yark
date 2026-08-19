@@ -42,6 +42,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Packaged YARK builds no longer honor a `YARK_DEVTOOLS` env override; DevTools stay off until you run an unpackaged dev/preview build.
 - Queued Downloads rows show the operation only (e.g. **Updating server**), not internal checkpoint phases like pre-update backup (#201).
 - **Pre-update backup** no longer appears as a duplicate Downloads row during safe updates; cancelled shadow jobs are purged on load (#201).
+- Downloads **Cancelled** rows use the same flush stacked list styling as **Queued** (#201).
 
 ### Fixed
 
