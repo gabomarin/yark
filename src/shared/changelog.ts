@@ -21,6 +21,44 @@ export const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.14.0",
+    date: "2026-08-19",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Launch tab search filters curated ASA flags by token, description, or group.",
+          "Overview Update All previews eligible stopped servers and queues safe SteamCMD updates into Downloads after confirm.",
+          "Overview and workspace server list share Order added vs A–Z sort and All servers / By cluster layout toggles.",
+          "Downloads queue page with stacked rows, Pause/Resume, console pane, and a minified footer teaser on other pages.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Overview, Settings, Clusters, Backups, Logs, and Downloads use quieter chrome: fewer subtitles, sentence-case badges, and tighter server cards.",
+          "Overview cards show read-only queue progress; click the status line to open Downloads for pause, resume, and cancel.",
+          "Downloads queue keeps console output while paused, clears on resume, and hides internal backup phases from row copy.",
+          "Update All confirm uses Accept, drops the green Queue badge, and keeps the header enable state live while the modal is open.",
+        ],
+      },
+      {
+        title: "Security",
+        items: [
+          "Packaged builds no longer honor a YARK_DEVTOOLS env override; DevTools stay off until an unpackaged dev/preview run.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Downloads queue ordering, cancel/retry/resume, SteamCMD-missing blocked jobs, and recovered restart-interrupted jobs behave consistently across restarts.",
+          "Overview Update All enqueues without waiting for SteamCMD and closes the confirm modal as soon as queueing finishes.",
+          "Show server console on start applies to Auto-start with YARK and waits until the main window is shown.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.13.1",
     date: "2026-08-17",
     sections: [

@@ -10,6 +10,9 @@ export type RoadmapItem = {
  * Prefer operator-visible product work from open issues (not CI/packaging hygiene).
  * Not a ship promise — keep wording directional. Milestones on GitHub stay authoritative.
  *
+ * Shipped in v0.14.0 (not previously listed here): Downloads queue page (#201),
+ * Overview Update All (#378), server list sort/view (#351), Launch tab search (#352),
+ * quieter operator chrome, packaged DevTools hardening.
  * Shipped on the Downloads queue branch (#201, not previously listed here): Steam-style
  * SteamCMD queue page, workspace footer teaser, Pause/Resume, Verify replace.
  * Shipped in v0.13.1 (not previously listed here): sharper getyark.com screenshot WebP,
