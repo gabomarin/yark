@@ -63,24 +63,27 @@ export function UpdateAllOutdatedModal(props: Props): ReactElement {
         ) : (
           <>
             <Text size="sm" c="dimmed">
-              Queue safe SteamCMD updates for stopped servers with ready installs.
-              Running servers and active Downloads jobs stay skipped until you
-              stop them or clear the queue.
+              Queue safe SteamCMD updates for stopped servers that are ready.
+              Running servers and servers with active Downloads jobs stay skipped
+              until you stop them or clear the queue.
             </Text>
             {plan.officialBuild !== null ? (
               <Text size="xs" c="dimmed">
-                Official Steam build: {plan.officialBuild}
+                Latest Steam build: {plan.officialBuild}
               </Text>
             ) : null}
             {eligibleCount > 0 ? (
-              <Alert color="blue" title={`${eligibleCount} ready to queue`}>
-                Confirm adds one Update job per server to Downloads. Jobs run one
-                at a time with the usual safe-update backup and rollback.
+              <Alert
+                color="blue"
+                title={`${eligibleCount} server${eligibleCount === 1 ? "" : "s"} ready to queue`}
+              >
+                Confirm adds one Update job per server to Downloads. Downloads
+                runs jobs one at a time.
               </Alert>
             ) : (
               <Alert color="yellow" title="Nothing ready to queue">
-                Every outdated server is skipped below. Stop running servers or
-                clear Downloads jobs, then try again.
+                All outdated servers are currently skipped. Stop running
+                servers or clear Downloads jobs, then try again.
               </Alert>
             )}
             <ScrollArea.Autosize mah={320} type="auto">

@@ -71,7 +71,7 @@ describe("UpdateAllOutdatedModal", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText(/1 ready to queue/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 server ready to queue/i)).toBeInTheDocument();
     expect(screen.getByLabelText("Alpha build row")).toBeInTheDocument();
     expect(screen.getByLabelText("Beta build row")).toBeInTheDocument();
     expect(
