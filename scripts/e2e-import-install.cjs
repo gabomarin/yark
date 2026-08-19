@@ -20,7 +20,7 @@ const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
 const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
-const { stubFolderPicker } = require("./e2e-launch.cjs");
+const { stubFolderPicker, initProfileDatabase } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -213,16 +213,7 @@ async function run() {
   let succeeded = false;
   const errors = [];
   try {
-    // Initialize embedded schema with an empty fleet.
-    app = await launchApp();
-    const bootPage = await app.firstWindow();
-    await bootPage.waitForLoadState("domcontentloaded");
-    await bootPage.locator("[data-overview-page]").waitFor({
-      state: "visible",
-      timeout: 20_000,
-    });
-    await quitApp(app);
-    app = null;
+    initProfileDatabase(dbPath);
 
     app = await launchApp();
     const page = await app.firstWindow();

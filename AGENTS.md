@@ -93,9 +93,9 @@ Notes specific to running this in the Linux cloud VM:
   TypeScript gate. `npm run lint` runs feature-file size caps, Actions pin check, and
   ESLint 9 ([docs/component-structure.md](docs/component-structure.md), `eslint.config.mjs`).
   `npm run build` is clean.
- GitHub Actions **CI** (`.github/workflows/ci.yml`) runs typecheck + lint + tests + build
- on `windows-latest` for every PR and push to `main` (avoids known Linux path-test gaps),
- then Electron E2E smoke / CRUD / install-health / host-port-probe (#12). Matrix:
+ GitHub Actions **CI** (`.github/workflows/ci.yml`) runs two parallel
+ `windows-latest` jobs: typecheck + lint + tests, and build + Electron E2E
+ CRUD / install-health / host-port-probe (#12). Matrix:
  [docs/e2e-validation.md](docs/e2e-validation.md).
   PRs also run **Changelog** (`.github/workflows/changelog.yml`): `CHANGELOG.md` must change
   unless the PR is labeled `skip-changelog`.

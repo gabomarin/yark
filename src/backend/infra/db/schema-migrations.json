@@ -1,0 +1,66 @@
+[
+  {
+    "version": 1,
+    "sql": "\n      CREATE TABLE servers (\n        id TEXT PRIMARY KEY,\n        name TEXT NOT NULL UNIQUE,\n        map TEXT NOT NULL,\n        install_dir TEXT NOT NULL,\n        session_name TEXT NOT NULL,\n        game_port INTEGER NOT NULL,\n        query_port INTEGER NOT NULL,\n        rcon_port INTEGER NOT NULL,\n        server_password TEXT,\n        admin_password TEXT NOT NULL,\n        cluster_id TEXT,\n        cluster_dir TEXT,\n        extra_args TEXT NOT NULL DEFAULT '[]',\n        mods TEXT NOT NULL DEFAULT '[]',\n        created_at TEXT NOT NULL,\n        updated_at TEXT NOT NULL\n      );\n\n      CREATE TABLE events (\n        id INTEGER PRIMARY KEY AUTOINCREMENT,\n        server_id TEXT,\n        type TEXT NOT NULL,\n        severity TEXT NOT NULL,\n        message TEXT NOT NULL,\n        created_at TEXT NOT NULL\n      );\n\n      CREATE INDEX idx_events_created_at ON events (created_at DESC);\n\n      CREATE TABLE backups (\n        id TEXT PRIMARY KEY,\n        server_id TEXT NOT NULL,\n        type TEXT NOT NULL,\n        path TEXT NOT NULL,\n        size_bytes INTEGER NOT NULL DEFAULT 0,\n        status TEXT NOT NULL,\n        created_at TEXT NOT NULL,\n        completed_at TEXT,\n        notes TEXT\n      );\n\n      CREATE INDEX idx_backups_server_created ON backups (server_id, created_at DESC);\n\n      CREATE TABLE backup_policies (\n        server_id TEXT PRIMARY KEY,\n        enabled INTEGER NOT NULL,\n        interval_minutes INTEGER NOT NULL,\n        retain_count INTEGER NOT NULL,\n        retain_days INTEGER NOT NULL,\n        updated_at TEXT NOT NULL\n      );\n\n      CREATE TABLE restore_history (\n        id TEXT PRIMARY KEY,\n        server_id TEXT NOT NULL,\n        backup_id TEXT NOT NULL,\n        status TEXT NOT NULL,\n        created_at TEXT NOT NULL,\n        notes TEXT\n      );\n\n      CREATE TABLE app_settings (\n        key TEXT PRIMARY KEY,\n        value TEXT,\n        updated_at TEXT NOT NULL\n      );\n    "
+  },
+  {
+    "version": 2,
+    "sql": "\n      CREATE TABLE restore_history_new (\n        id INTEGER PRIMARY KEY AUTOINCREMENT,\n        server_id TEXT NOT NULL,\n        backup_id TEXT NOT NULL,\n        started_at TEXT NOT NULL,\n        completed_at TEXT,\n        status TEXT NOT NULL,\n        notes TEXT\n      );\n\n      INSERT INTO restore_history_new (\n        server_id,\n        backup_id,\n        started_at,\n        completed_at,\n        status,\n        notes\n      )\n      SELECT\n        server_id,\n        backup_id,\n        COALESCE(created_at, datetime('now')),\n        NULL,\n        status,\n        notes\n      FROM restore_history;\n\n      DROP TABLE restore_history;\n      ALTER TABLE restore_history_new RENAME TO restore_history;\n    "
+  },
+  {
+    "version": 3,
+    "sql": "\n      ALTER TABLE backup_policies ADD COLUMN backup_dir TEXT;\n    "
+  },
+  {
+    "version": 4,
+    "sql": "\n      ALTER TABLE backups ADD COLUMN kind TEXT NOT NULL DEFAULT 'world';\n      UPDATE backup_policies SET interval_minutes = 60 WHERE interval_minutes = 360;\n    "
+  },
+  {
+    "version": 5,
+    "sql": "\n      ALTER TABLE backup_policies ADD COLUMN retain_count_players INTEGER NOT NULL DEFAULT 20;\n      ALTER TABLE backup_policies ADD COLUMN retain_count_ini INTEGER NOT NULL DEFAULT 10;\n      UPDATE backup_policies SET retain_count_players = 20 WHERE retain_count_players IS NULL OR retain_count_players < 1;\n      UPDATE backup_policies SET retain_count_ini = 10 WHERE retain_count_ini IS NULL OR retain_count_ini < 1;\n    "
+  },
+  {
+    "version": 6,
+    "sql": "\n      ALTER TABLE events ADD COLUMN details TEXT;\n    "
+  },
+  {
+    "version": 7,
+    "sql": "\n      ALTER TABLE servers ADD COLUMN disabled_mods TEXT NOT NULL DEFAULT '[]';\n      ALTER TABLE servers ADD COLUMN mod_metadata_cache TEXT NOT NULL DEFAULT '{}';\n    "
+  },
+  {
+    "version": 8,
+    "sql": "\n      ALTER TABLE servers ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1;\n    "
+  },
+  {
+    "version": 9,
+    "sql": "\n      ALTER TABLE servers ADD COLUMN auto_start INTEGER NOT NULL DEFAULT 0;\n    "
+  },
+  {
+    "version": 10,
+    "sql": "\n      CREATE TABLE cluster_ini_templates (\n        cluster_id TEXT PRIMARY KEY NOT NULL,\n        game_user_settings_ini TEXT NOT NULL DEFAULT '',\n        game_ini TEXT NOT NULL DEFAULT '',\n        updated_at TEXT NOT NULL\n      );\n    "
+  },
+  {
+    "version": 11,
+    "sql": "\n      ALTER TABLE servers ADD COLUMN structured_launch_args TEXT NOT NULL DEFAULT '{}';\n    "
+  },
+  {
+    "version": 12,
+    "sql": "\n      ALTER TABLE servers ADD COLUMN map_mod_id TEXT;\n    "
+  },
+  {
+    "version": 13,
+    "sql": "\n      ALTER TABLE backups ADD COLUMN map_token TEXT;\n    "
+  },
+  {
+    "version": 14,
+    "sql": "\n      ALTER TABLE servers ADD COLUMN map_save_folder TEXT;\n    "
+  },
+  {
+    "version": 15,
+    "sql": "\n      ALTER TABLE servers ADD COLUMN max_players INTEGER NOT NULL DEFAULT 70;\n    "
+  },
+  {
+    "version": 16,
+    "sql": "SELECT 1;"
+  }
+]

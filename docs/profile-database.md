@@ -75,6 +75,7 @@ profile DB — see [server-lifecycle.md](server-lifecycle.md#import-existing-asa
 | Role | Path |
 | --- | --- |
 | Open + migrate + busy_timeout + snapshot hooks | `src/backend/infra/db/database.ts` |
+| SQL migration list (app + E2E `initProfileDatabase`) | `src/backend/infra/db/schema-migrations.json` |
 | Snapshot write + rotation | `src/backend/infra/db/database-snapshots.ts` |
 | Quarantine rename helpers | `src/backend/infra/db/database-recovery.ts` |
 | Recovery dialog loop | `src/main/database-boot-recovery.ts` |

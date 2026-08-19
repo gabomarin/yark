@@ -178,9 +178,10 @@ Common validation commands:
 | Pre-commit | Typecheck and lint |
 | Pre-push | Typecheck, tests, and lint |
 
-GitHub Actions runs typecheck, lint, tests, and build on `windows-latest` for pull requests
-and pushes to `main`. Windows/Electron E2E and prepared-host ASA validation are tracked
-separately because they require a graphical or real-server environment.
+GitHub Actions runs typecheck, lint, and tests on `windows-latest` in parallel with
+build + Electron E2E (CRUD, install-health, host-port-probe) for pull requests
+and pushes to `main`. Prepared-host ASA validation is tracked
+separately because it needs a real-server environment.
 
 <details>
 <summary>WSL and Linux development notes</summary>

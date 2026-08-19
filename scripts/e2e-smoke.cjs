@@ -1,5 +1,8 @@
 /**
- * E2E smoke: Electron launch + overview + sidebar nav (#12).
+ * E2E smoke: Electron launch + empty Overview + sidebar nav (#12).
+ *
+ * Local empty-fleet check. PR CI runs `e2e` (CRUD) instead, which already
+ * covers launch, Overview, and shell nav.
  *
  * Usage: npm run build && npm run e2e:smoke
  * Isolates SQLite via YARK_E2E_USER_DATA. Clears ELECTRON_RUN_AS_NODE.

@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   check:
-    name: Typecheck, test, build, lint
+    name: Typecheck, test, lint
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -39,13 +39,27 @@ jobs:
       - name: Test
         run: npm test
 
+  e2e:
+    name: Electron E2E
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Build
         run: npm run build
 
       # Electron UI gates (#12). Isolated YARK_E2E_USER_DATA; no real ASA depot.
-      - name: E2E smoke
-        run: npm run e2e:smoke
-
+      # Smoke is local-only: CRUD already covers launch, Overview, and shell nav.
       - name: E2E CRUD suite
         run: npm run e2e
 
