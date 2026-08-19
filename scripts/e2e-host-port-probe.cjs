@@ -17,6 +17,7 @@ const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
 const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
+const { initProfileDatabase } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -180,11 +181,7 @@ async function run() {
   let succeeded = false;
   const errors = [];
   try {
-    // Initialize embedded schema, then seed the ready profile.
-    app = await launchApp();
-    await app.firstWindow();
-    await quitApp(app);
-    app = null;
+    initProfileDatabase(dbPath);
     seedDatabase();
 
     app = await launchApp();

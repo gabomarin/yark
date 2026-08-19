@@ -11,6 +11,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
+const { initProfileDatabase } = require("./e2e-init-profile-db.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -294,5 +295,6 @@ module.exports = {
   stubFolderPicker,
   pickPathField,
   openSettingsCategory,
+  initProfileDatabase,
   removeFixtureDir,
 };

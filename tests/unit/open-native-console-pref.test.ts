@@ -1,3 +1,4 @@
+/** @vitest-environment jsdom */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_OPEN_NATIVE_CONSOLE,

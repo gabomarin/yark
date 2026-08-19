@@ -9,7 +9,7 @@ alwaysApply: false
 When changing operator-facing UI (copy, layout, nav, Settings, wizard, modals,
 workspace tabs, `data-*`), check `scripts/e2e-*.cjs` in the **same PR**.
 
-PR CI only runs smoke, CRUD, install-health, and host-port-probe. Settings,
+PR CI only runs CRUD, install-health, and host-port-probe (`e2e:smoke` is local). Settings,
 Mods, clone/import/move, RCON, and log-retention suites will rot unless you
 update and run the scripts they actually click.
 

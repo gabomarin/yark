@@ -8,7 +8,7 @@ binaries, SteamCMD, backups, rollback).
 
 | Scenario | Command | Gate | Notes |
 | --- | --- | --- | --- |
-| Electron launch + sidebar | `npm run build && npm run e2e:smoke` | **PR CI** | Isolated `YARK_E2E_USER_DATA`; clears `ELECTRON_RUN_AS_NODE` |
+| Electron launch + empty Overview | `npm run build && npm run e2e:smoke` | Local | Isolated `YARK_E2E_USER_DATA`; CRUD already covers launch + shell nav in CI |
 | Create / clone / delete UI | `npm run build && npm run e2e` | **PR CI** | Disposable dirs under `C:\asa-e2e\…` |
 | Install-health badges | `npm run build && npm run e2e:install-health` | **PR CI** | Fake FS fixtures only |
 | Host port probe modal | `npm run build && npm run e2e:host-port-probe` | **PR CI** | Occupies UDP then asserts modal |
@@ -27,10 +27,15 @@ binaries, SteamCMD, backups, rollback).
 ## PR CI contract
 
 Workflow: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) on
-`windows-latest`.
+`windows-latest`, **two parallel jobs** (each pays its own `npm ci`):
 
-1. Typecheck, lint, unit/integration tests, build (existing).
-2. Then Electron E2E: smoke → CRUD suite → install-health → host-port-probe.
+1. Typecheck, lint, unit/integration tests.
+2. Build, then Electron E2E: CRUD suite → install-health → host-port-probe.
+
+`e2e:smoke` stays a local empty-fleet check. Seeded suites call
+`initProfileDatabase` in [`scripts/e2e-init-profile-db.cjs`](../scripts/e2e-init-profile-db.cjs)
+(same SQL as `openDatabase`) instead of a first Electron launch only to create
+the schema.
 
 Requirements:
 
@@ -58,7 +63,7 @@ rollback demos, and long move/import suites (keep local / release audit).
 Playwright scripts in `scripts/e2e-*.cjs` click **visible copy**, **accessible
 names**, **roles**, and **`data-*` selectors**. A renderer or shell change that
 moves, renames, or overlays those controls will fail local suites even when
-unit tests and PR CI stay green (CI only runs smoke, CRUD, install-health, and
+unit tests and PR CI stay green (CI only runs CRUD, install-health, and
 host-port-probe).
 
 When changing operator-facing UI (layout, nav, Settings, first-run wizard,
@@ -76,8 +81,8 @@ modals, workspace tabs, PathFields):
 
 | UI surface | Likely scripts |
 | --- | --- |
-| Shell nav, Overview, New server / Clone / Delete | `e2e:smoke`, `e2e` |
-| Page titles without restating subtitles | `e2e:smoke`, `e2e`, `e2e:clusters-membership` |
+| Shell nav, Overview, New server / Clone / Delete | `e2e` (`e2e:smoke` for empty Overview locally) |
+| Page titles without restating subtitles | `e2e`, `e2e:clusters-membership` (`e2e:smoke` locally) |
 | Settings category sidebar or labels | `e2e:launch-args`, `e2e:quit-policy`, `e2e:log-retention` |
 | First-run setup wizard / splash | Any launch that must set `YARK_E2E_USER_DATA` |
 | Workspace Mods | `e2e:mods` |

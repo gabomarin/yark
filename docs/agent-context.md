@@ -16,6 +16,11 @@ This repository contains a desktop application for managing dedicated ARK Surviv
 - Prefer small, verifiable changes.
 - Avoid introducing unnecessary native dependencies when a Node/TypeScript alternative exists.
 - For IPC, backend, or critical flow changes, run tests, typecheck, and build.
+- Renderer **page-level** Vitest mounts are expensive. For lock flags / derived
+  disabled state, extract a small model or test the organism (`SidePanel`)
+  instead of remounting `ServerWorkspacePage`. Use `setupUser()` from
+  `@renderer/test/setupUser` (`delay: null`) in UI suites (#281). Details:
+  [component-structure.md](component-structure.md) (Tests).
 - After `npm install`, Husky hooks run typecheck/lint on commit and typecheck/test/lint on push; CI also runs build + `lint`. `npm run lint` is size caps, Actions pins, and ESLint (`eslint.config.mjs`).
 - For visible renderer changes, follow the mandatory [visual testing protocol](visual-testing.md), including HD, Full HD, and QHD/2K review.
 - When growing or splitting React UI, follow [component-structure.md](component-structure.md) (pragmatic Atomic Design for agents).
@@ -119,6 +124,14 @@ npm test
 npm run typecheck
 npm run build
 ```
+
+`npm test` runs two Vitest **projects in one process** (files already
+parallelize across workers): **node** (`tests/**`, no jsdom) and
+**renderer** (`src/renderer/**`, jsdom + Mantine setup). Filter with
+`npm run test:node` / `npm run test:renderer`. A handful of `tests/unit/*`
+files opt into jsdom with `// @vitest-environment jsdom` (legacy
+`localStorage`). Heavy UI suites should use `setupUser()` — see
+[component-structure.md](component-structure.md) (#281).
 
 Visible renderer changes also require a Playwright review of the real Electron
 build at `1280×720`, `1920×1080`, and `2560×1440`. Environment requirements,

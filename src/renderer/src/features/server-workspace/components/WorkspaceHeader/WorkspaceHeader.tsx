@@ -21,6 +21,7 @@ import { resolveDisplayedServerVersion } from "@shared/server-version-display";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import { RconStatusIcon } from "../RconStatusIcon/RconStatusIcon";
+import { workspaceHeaderControls } from "./workspaceHeaderControls";
 import classes from "./WorkspaceHeader.module.css";
 
 interface Props {
@@ -43,17 +44,13 @@ export function WorkspaceHeader(props: Props): ReactElement {
   const version = resolveDisplayedServerVersion(props.installation) ?? "—";
   const isServerDisabled = !props.server.enabled;
   const filesReady = isInstallationReady(props.installation);
-  const canStart =
-    (status === "stopped" || status === "error") &&
-    props.filesJobActive !== true &&
-    !isServerDisabled &&
-    filesReady;
-  const canEnable =
-    isServerDisabled &&
-    props.onToggleEnabled !== undefined &&
-    props.filesJobActive !== true;
-  const canStop = status === "running" || status === "starting";
-  const canRestart = status === "running" && props.filesJobActive !== true && filesReady;
+  const { canStart, canEnable, canStop, canRestart } = workspaceHeaderControls({
+    status,
+    enabled: props.server.enabled,
+    filesJobActive: props.filesJobActive === true,
+    filesReady,
+    hasToggleEnabled: props.onToggleEnabled !== undefined,
+  });
   const lockTitle = props.filesJobReason ?? "Wait for the file update to finish";
   const installBlockedTitle =
     props.installation?.guidance ?? "Install files first";
