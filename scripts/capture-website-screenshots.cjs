@@ -18,8 +18,10 @@
  *   WEBSITE_DEMO_MOD_IDS         comma-separated CurseForge Project IDs
  *   WEBSITE_DEMO_CLUSTER_ID      Cluster ID applied to demo members
  *   WEBSITE_DEMO_CLUSTER_DIR     shared cluster directory for that Cluster ID
+ *   WEBSITE_SCREENSHOT_ONLY      `downloads` = recapture downloads.png only
  */
 const assert = require("node:assert/strict");
+const { execFileSync } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
@@ -311,12 +313,223 @@ async function ensureDemoCluster(app, page) {
   return true;
 }
 
-async function launchIsolatedApp(userData) {
+function galleryJob(id, type, serverId, status, phase, extra = {}) {
+  const now = "2026-08-18T12:00:00.000Z";
+  return {
+    id,
+    type,
+    serverId,
+    attempts: extra.attempts ?? 2,
+    maxAttempts: 3,
+    status,
+    phase,
+    createdAt: now,
+    updatedAt: now,
+    lastError: extra.lastError ?? null,
+    recoveryReason: extra.recoveryReason ?? null,
+    idempotencyKey: extra.idempotencyKey ?? `${type}:${serverId}:`,
+    operatorRetryAllowed: extra.operatorRetryAllowed === true,
+    context: extra.context ?? {},
+  };
+}
+
+function compileHangingSteamCmdStub(dir) {
+  fs.mkdirSync(dir, { recursive: true });
+  const stubExe = path.join(dir, "steamcmd.exe");
+  const stubPs1 = path.join(dir, "build-stub.ps1");
+  const escaped = stubExe.replace(/'/g, "''");
+  fs.writeFileSync(
+    stubPs1,
+    [
+      "$ErrorActionPreference = 'Stop'",
+      "$code = @'",
+      "using System;",
+      "using System.Linq;",
+      "static class P {",
+      "  static int Main(string[] args) {",
+      "    Console.WriteLine(\"Loading Steam API...\");",
+      "    var quitOnly = args.Any(a => a == \"+quit\") && !args.Any(a => a == \"+app_update\");",
+      "    if (!quitOnly) {",
+      "      Console.WriteLine(\"Update state (0x0) 0/1, 0 -- [ 38%]\");",
+      "      System.Threading.Thread.Sleep(180000);",
+      "    }",
+      "    return 0;",
+      "  }",
+      "}",
+      "'@",
+      `Add-Type -OutputType ConsoleApplication -OutputAssembly '${escaped}' -TypeDefinition $code`,
+      `if (-not (Test-Path -LiteralPath '${escaped}')) { throw 'stub missing' }`,
+      "",
+    ].join("\n"),
+    "utf8",
+  );
+  execFileSync(
+    "powershell.exe",
+    ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", stubPs1],
+    { stdio: ["ignore", "pipe", "pipe"], windowsHide: true },
+  );
+  assert.ok(fs.existsSync(stubExe), `SteamCMD stub missing at ${stubExe}`);
+  return stubExe;
+}
+
+function seedGalleryFleetSql(userData) {
+  const dbPath = path.join(userData, "yark-server-manager.db");
+  assert.ok(fs.existsSync(dbPath), `DB missing at ${dbPath}`);
+  const db = new DatabaseSync(dbPath);
+  db.prepare("DELETE FROM servers").run();
+  const now = new Date().toISOString();
+  const insert = db.prepare(
+    `INSERT INTO servers (
+      id, name, map, install_dir, enabled, session_name,
+      game_port, query_port, rcon_port,
+      server_password, admin_password,
+      cluster_id, cluster_dir, extra_args, mods,
+      disabled_mods, mod_metadata_cache, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  );
+  DEMO_FLEET.forEach((demo, index) => {
+    const installDir = path.join(DEMO_INSTALL_ROOT, demo.folder);
+    fs.mkdirSync(installDir, { recursive: true });
+    insert.run(
+      `gallery-dl-${index}`,
+      demo.name,
+      demo.mapId,
+      installDir,
+      1,
+      demo.session,
+      18000 + index * 10,
+      38000 + index * 10,
+      39000 + index * 10,
+      null,
+      "admin1234",
+      null,
+      null,
+      "[]",
+      "[]",
+      "[]",
+      "{}",
+      now,
+      now,
+    );
+  });
+  db.close();
+}
+
+function seedDownloadsJobs(userData, steamCmdPath) {
+  const dbPath = path.join(userData, "yark-server-manager.db");
+  assert.ok(fs.existsSync(dbPath), `DB missing at ${dbPath}`);
+  const db = new DatabaseSync(dbPath);
+  const servers = db.prepare("SELECT id, name FROM servers").all();
+  const byName = new Map(servers.map((row) => [row.name, row.id]));
+  const islandId = byName.get(DEMO_SERVER);
+  const scorchedId = byName.get("Scorched Earth");
+  const ragnarokId = byName.get("Ragnarok");
+  assert.ok(islandId, `Demo server "${DEMO_SERVER}" missing`);
+  assert.ok(scorchedId, "Demo server Scorched Earth missing");
+  assert.ok(ragnarokId, "Demo server Ragnarok missing");
+  const jobs = [
+    galleryJob("job-island-install", "install-files", islandId, "pending", "queued"),
+    galleryJob("job-scorched-verify", "verify-files", scorchedId, "pending", "queued"),
+    galleryJob(
+      "job-ragnarok-paused",
+      "install-files",
+      ragnarokId,
+      "paused",
+      "applying-files",
+      { recoveryReason: "Paused by the operator. Resume to continue." },
+    ),
+  ];
+  const now = new Date().toISOString();
+  const set = db.prepare(
+    `INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+  );
+  set.run("criticalJobsQueue.v1", JSON.stringify(jobs), now);
+  set.run("steamcmdPath", steamCmdPath, now);
+  db.close();
+}
+
+async function captureDownloadsPage(page, outDir) {
+  await goNav(page, "Downloads");
+  await page.locator("[data-downloads-page]").waitFor({ state: "visible", timeout: 15_000 });
+  await page.locator('[data-kind="active"][data-download-row]').waitFor({
+    state: "visible",
+    timeout: 25_000,
+  });
+  await page.locator('[data-kind="queued"][data-download-row]').waitFor({
+    state: "visible",
+    timeout: 10_000,
+  });
+  await page.locator('[data-kind="paused"][data-download-row]').waitFor({
+    state: "visible",
+    timeout: 10_000,
+  });
+  await page.locator('[data-kind="active"][data-download-row]').first().click();
+  await page.getByRole("group", { name: "SteamCMD process" }).waitFor({
+    state: "visible",
+    timeout: 10_000,
+  });
+  await settle(page, 800);
+  await redactPrivatePaths(page);
+  try {
+    await page.evaluate(() => {
+      const scrub = (value) =>
+        value
+          .replace(
+            /[A-Z]:\\Users\\[^\\]+\\AppData\\Local\\Temp\\yark-website-steamcmd-[^\\\s]+\\steamcmd\.exe/gi,
+            "C:\\steamcmd\\steamcmd.exe",
+          )
+          .replace(/Users\\[^\\]+/gi, "Users\\You")
+          .replace(/\/Users\/[^/]+/gi, "/Users/You");
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      for (const node of nodes) {
+        if (node.nodeValue && /Users[/\\]|yark-website-steamcmd/i.test(node.nodeValue)) {
+          node.nodeValue = scrub(node.nodeValue);
+        }
+      }
+    });
+  } catch (error) {
+    console.warn(`WARN: could not scrub Downloads console paths: ${error?.message ?? error}`);
+  }
+  await shot(page, path.join(outDir, "downloads.png"));
+}
+
+async function launchIsolatedApp(userData, extraEnv = {}) {
+  const env = { ...process.env, YARK_E2E_USER_DATA: userData, ...extraEnv };
+  if (typeof extraEnv.STEAMCMD_PATH === "string" && extraEnv.STEAMCMD_PATH.trim() !== "") {
+    env.STEAMCMD_PATH = extraEnv.STEAMCMD_PATH;
+  }
   return electron.launch({
     args: ["."],
     cwd: projectRoot,
-    env: { ...process.env, YARK_E2E_USER_DATA: userData },
+    env,
   });
+}
+
+async function captureDownloadsGallery(userData, outDir) {
+  const stubDir = fs.mkdtempSync(path.join(os.tmpdir(), "yark-website-steamcmd-"));
+  const stub = compileHangingSteamCmdStub(stubDir);
+  seedDownloadsJobs(userData, stub);
+  const app = await launchIsolatedApp(userData, { STEAMCMD_PATH: stub });
+  try {
+    const page = await app.firstWindow();
+    page.on("dialog", async (dialog) => {
+      await dialog.accept();
+    });
+    await page.waitForLoadState("domcontentloaded");
+    await page.setViewportSize(VIEWPORT);
+    await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 20_000 });
+    await captureDownloadsPage(page, outDir);
+  } finally {
+    await quitApp(app);
+    try {
+      fs.rmSync(stubDir, { recursive: true, force: true });
+    } catch {
+      console.warn(`WARN: could not remove SteamCMD stub dir ${stubDir}`);
+    }
+  }
 }
 
 async function quitApp(app) {
@@ -344,162 +557,184 @@ async function run() {
   fs.mkdirSync(DEMO_INSTALL_ROOT, { recursive: true });
   fs.mkdirSync(DEMO_CLUSTER_DIR, { recursive: true });
 
+  const only = (process.env.WEBSITE_SCREENSHOT_ONLY ?? "").trim().toLowerCase();
   const userData = fs.mkdtempSync(path.join(os.tmpdir(), "yark-website-shots-"));
   console.log(`WEBSITE_SCREENSHOTS_DIR=${outDir}`);
   console.log(`WEBSITE_SCREENSHOTS_USER_DATA=${userData}`);
   console.log(`WEBSITE_DEMO_INSTALL_ROOT=${DEMO_INSTALL_ROOT}`);
   console.log(`WEBSITE_DEMO_CLUSTER_DIR=${DEMO_CLUSTER_DIR}`);
+  if (only) {
+    console.log(`WEBSITE_SCREENSHOT_ONLY=${only}`);
+  }
 
-  // Pass 1: seed demo fleet in an isolated profile (never the operator userData).
-  {
-    const app = await launchIsolatedApp(userData);
+  try {
+    if (only === "downloads") {
+      const boot = await launchIsolatedApp(userData);
+      try {
+        const page = await boot.firstWindow();
+        await page.waitForLoadState("domcontentloaded");
+      } finally {
+        await quitApp(boot);
+      }
+      seedGalleryFleetSql(userData);
+      await captureDownloadsGallery(userData, outDir);
+      console.log("WEBSITE_SCREENSHOTS_OK");
+      return;
+    }
+
+    // Pass 1: seed demo fleet in an isolated profile (never the operator userData).
+    {
+      const app = await launchIsolatedApp(userData);
+      try {
+        const page = await app.firstWindow();
+        page.on("dialog", async (dialog) => {
+          await dialog.accept();
+        });
+        await page.waitForLoadState("domcontentloaded");
+        await page.setViewportSize(VIEWPORT);
+        await captureSetupAssistant(page, outDir);
+        await seedIsolatedFleet(app, page);
+        await ensureDemoCluster(app, page);
+      } finally {
+        await quitApp(app);
+      }
+    }
+
+    applyDemoMapsInDb(userData);
+
+    let app = await launchIsolatedApp(userData);
+
     try {
       const page = await app.firstWindow();
       page.on("dialog", async (dialog) => {
         await dialog.accept();
       });
+
       await page.waitForLoadState("domcontentloaded");
       await page.setViewportSize(VIEWPORT);
-      await captureSetupAssistant(page, outDir);
-      await seedIsolatedFleet(app, page);
-      await ensureDemoCluster(app, page);
-    } finally {
-      await quitApp(app);
-    }
-  }
 
-  applyDemoMapsInDb(userData);
+      const featured = DEMO_SERVER;
+      console.log(`WEBSITE_SCREENSHOTS_FEATURED=${featured}`);
+      const clusterConfigured = true;
 
-  const app = await launchIsolatedApp(userData);
+      await goNav(page, "Servers");
+      await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 10000 });
+      await settle(page, 700);
+      await shot(page, path.join(outDir, "overview.png"));
 
-  try {
-    const page = await app.firstWindow();
-    page.on("dialog", async (dialog) => {
-      await dialog.accept();
-    });
-
-    await page.waitForLoadState("domcontentloaded");
-    await page.setViewportSize(VIEWPORT);
-
-    const featured = DEMO_SERVER;
-    console.log(`WEBSITE_SCREENSHOTS_FEATURED=${featured}`);
-    const clusterConfigured = true;
-
-    await goNav(page, "Servers");
-    await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 10000 });
-    await settle(page, 700);
-    await shot(page, path.join(outDir, "overview.png"));
-
-    await goNav(page, "Clusters");
-    await page.getByRole("heading", { name: "Clusters", level: 1 }).waitFor({
-      state: "visible",
-      timeout: 10000,
-    });
-    await page.locator("[data-clusters-page]").waitFor({ state: "visible", timeout: 10000 });
-    if (clusterConfigured) {
-      try {
-        await page.locator(`[data-cluster-detail="${DEMO_CLUSTER_ID}"]`).waitFor({
-          state: "visible",
-          timeout: 15000,
-        });
-      } catch {
-        console.warn(
-          `WARN: cluster detail "${DEMO_CLUSTER_ID}" not visible; capturing Clusters page as-is`,
-        );
+      await goNav(page, "Clusters");
+      await page.getByRole("heading", { name: "Clusters", level: 1 }).waitFor({
+        state: "visible",
+        timeout: 10000,
+      });
+      await page.locator("[data-clusters-page]").waitFor({ state: "visible", timeout: 10000 });
+      if (clusterConfigured) {
+        try {
+          await page.locator(`[data-cluster-detail="${DEMO_CLUSTER_ID}"]`).waitFor({
+            state: "visible",
+            timeout: 15000,
+          });
+        } catch {
+          console.warn(
+            `WARN: cluster detail "${DEMO_CLUSTER_ID}" not visible; capturing Clusters page as-is`,
+          );
+        }
       }
-    }
-    await settle(page, 800);
-    await shot(page, path.join(outDir, "clusters.png"));
+      await settle(page, 800);
+      await shot(page, path.join(outDir, "clusters.png"));
 
-    await goNav(page, "Settings");
-    await page.getByRole("heading", { name: "Settings" }).waitFor({
-      state: "visible",
-      timeout: 10000,
-    });
-    await settle(page, 500);
-    const settingsNav = page.getByRole("navigation", { name: "Settings categories" });
-    if ((await settingsNav.count()) > 0) {
-      await settingsNav.getByRole("button", { name: "About" }).click();
-      await settle(page, 400);
-    }
-    await redactPrivatePaths(page);
-    const yarkUpdates = page.locator("[data-settings-yark-updates]");
-    if ((await yarkUpdates.count()) > 0) {
-      await yarkUpdates.first().scrollIntoViewIfNeeded();
-      await settle(page, 250);
-    }
-    await settle(page, 200);
-    await shot(page, path.join(outDir, "settings.png"));
+      await goNav(page, "Settings");
+      await page.getByRole("heading", { name: "Settings" }).waitFor({
+        state: "visible",
+        timeout: 10000,
+      });
+      await settle(page, 500);
+      const settingsNav = page.getByRole("navigation", { name: "Settings categories" });
+      if ((await settingsNav.count()) > 0) {
+        await settingsNav.getByRole("button", { name: "About" }).click();
+        await settle(page, 400);
+      }
+      await redactPrivatePaths(page);
+      const yarkUpdates = page.locator("[data-settings-yark-updates]");
+      if ((await yarkUpdates.count()) > 0) {
+        await yarkUpdates.first().scrollIntoViewIfNeeded();
+        await settle(page, 250);
+      }
+      await settle(page, 200);
+      await shot(page, path.join(outDir, "settings.png"));
 
-    await goNav(page, "Logs");
-    await page.getByRole("heading", { name: "Logs" }).waitFor({
-      state: "visible",
-      timeout: 10000,
-    });
-    await settle(page, 700);
-    await shot(page, path.join(outDir, "logs.png"));
-
-    await openWorkspaceByName(page, featured);
-    await page.getByRole("tab", { name: "Mods" }).click();
-    await settle(page, 400);
-    const hasAnyModId = (await page.getByText(/^\d{5,}$/).count()) > 0;
-    if (!hasAnyModId) {
-      await ensureDemoMods(page);
-    }
-
-    await page.getByRole("tab", { name: "Server" }).click();
-    await settle(page, 500);
-    await shot(page, path.join(outDir, "workspace-server.png"));
-
-    await page.getByRole("tab", { name: "INI Files" }).click();
-    await settle(page, 900);
-    await shot(page, path.join(outDir, "workspace-ini.png"));
-
-    await page.getByRole("tab", { name: "Mods" }).click();
-    await page.getByRole("heading", { name: "Mods", exact: true, level: 3 }).waitFor({
-      state: "visible",
-      timeout: 10000,
-    });
-    await settle(page, 1000);
-    await shot(page, path.join(outDir, "workspace-mods.png"));
-
-    await page.getByRole("tab", { name: "Backups" }).click();
-    await settle(page, 800);
-    await shot(page, path.join(outDir, "workspace-backups.png"));
-
-    await page.getByRole("tab", { name: "Server" }).click();
-    await settle(page, 300);
-    const wizardBtn = page.getByRole("button", { name: "Configuration wizard" });
-    if ((await wizardBtn.count()) > 0) {
-      await wizardBtn.first().click();
-      await page.locator("[data-configuration-wizard]").waitFor({
+      await goNav(page, "Logs");
+      await page.getByRole("heading", { name: "Logs" }).waitFor({
         state: "visible",
         timeout: 10000,
       });
       await settle(page, 700);
-      await shot(page, path.join(outDir, "configuration-wizard.png"));
-      const cancel = page.getByRole("button", { name: "Cancel" });
-      if ((await cancel.count()) > 0) {
-        await cancel.first().click();
-        await settle(page, 300);
-      } else {
-        await page.keyboard.press("Escape");
+      await shot(page, path.join(outDir, "logs.png"));
+
+      await openWorkspaceByName(page, featured);
+      await page.getByRole("tab", { name: "Mods" }).click();
+      await settle(page, 400);
+      const hasAnyModId = (await page.getByText(/^\d{5,}$/).count()) > 0;
+      if (!hasAnyModId) {
+        await ensureDemoMods(page);
       }
+
+      await page.getByRole("tab", { name: "Server" }).click();
+      await settle(page, 500);
+      await shot(page, path.join(outDir, "workspace-server.png"));
+
+      await page.getByRole("tab", { name: "INI Files" }).click();
+      await settle(page, 900);
+      await shot(page, path.join(outDir, "workspace-ini.png"));
+
+      await page.getByRole("tab", { name: "Mods" }).click();
+      await page.getByRole("heading", { name: "Mods", exact: true, level: 3 }).waitFor({
+        state: "visible",
+        timeout: 10000,
+      });
+      await settle(page, 1000);
+      await shot(page, path.join(outDir, "workspace-mods.png"));
+
+      await page.getByRole("tab", { name: "Backups" }).click();
+      await settle(page, 800);
+      await shot(page, path.join(outDir, "workspace-backups.png"));
+
+      await page.getByRole("tab", { name: "Server" }).click();
+      await settle(page, 300);
+      const wizardBtn = page.getByRole("button", { name: "Configuration wizard" });
+      if ((await wizardBtn.count()) > 0) {
+        await wizardBtn.first().click();
+        await page.locator("[data-configuration-wizard]").waitFor({
+          state: "visible",
+          timeout: 10000,
+        });
+        await settle(page, 700);
+        await shot(page, path.join(outDir, "configuration-wizard.png"));
+        const cancel = page.getByRole("button", { name: "Cancel" });
+        if ((await cancel.count()) > 0) {
+          await cancel.first().click();
+          await settle(page, 300);
+        } else {
+          await page.keyboard.press("Escape");
+        }
+      }
+
+      await leaveWorkspaceToServers(page);
+
+      await goNav(page, "Backups");
+      await page.getByRole("heading", { name: "Backups" }).waitFor({
+        state: "visible",
+        timeout: 10000,
+      });
+      await settle(page, 800);
+      await shot(page, path.join(outDir, "backups.png"));
+    } finally {
+      await quitApp(app);
     }
 
-    await leaveWorkspaceToServers(page);
-
-    await goNav(page, "Backups");
-    await page.getByRole("heading", { name: "Backups" }).waitFor({
-      state: "visible",
-      timeout: 10000,
-    });
-    await settle(page, 800);
-    await shot(page, path.join(outDir, "backups.png"));
-
+    await captureDownloadsGallery(userData, outDir);
     console.log("WEBSITE_SCREENSHOTS_OK");
   } finally {
-    await quitApp(app);
     try {
       fs.rmSync(userData, { recursive: true, force: true });
     } catch {

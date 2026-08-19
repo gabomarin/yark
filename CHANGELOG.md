@@ -11,7 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
-- **Downloads** queue page with stacked job rows, active vs queued separation, shared server-card progress styling, `Open in Logs` focus on the related Events entry, and Pause/Resume for install and update jobs; workspace footer teaser on other pages replaces the floating progress dock (#201).
+- **Downloads** queue page with stacked job rows, active vs queued separation, shared server-card progress styling, `Open in Logs` focus on the related Events entry, and Pause/Resume for install and update jobs; workspace footer teaser on other pages replaces the floating progress dock. getyark.com gallery and SteamCMD docs include the queue (#201).
 
 ### Changed
 

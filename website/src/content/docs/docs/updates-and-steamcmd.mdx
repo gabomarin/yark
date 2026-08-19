@@ -4,6 +4,7 @@ description: Use YARK’s shared SteamCMD content cache to install, update, or v
 ---
 
 import { Aside, Steps } from "@astrojs/starlight/components";
+import { withBase } from "../../../data/site";
 
 ASA dedicated app id: **`2430930`**.
 
@@ -34,7 +35,23 @@ SteamCMD always uses:
 | **Update** | **No** — always talks to Steam | Safe-update path |
 | **Verify** | **No** — always talks to Steam | Same auto-stop/restart idea; no pre_update / rollback |
 
-Jobs queue with retries (up to 3 attempts) and can resume after app restart.
+Jobs queue with retries (up to 3 attempts) and can resume after app restart. Watch them on
+the sidebar **Downloads** page (active vs queued vs paused vs needs attention). Other pages
+show a footer teaser instead of a floating progress dock.
+
+<figure class="doc-shot">
+  <img
+    src={withBase("/screenshots/downloads.png")}
+    alt="Downloads queue with an active SteamCMD job, queued servers, and a paused install"
+    width="1440"
+    height="900"
+    loading="lazy"
+  />
+  <figcaption>
+    Downloads — one SteamCMD job runs at a time; Pause/Resume apply to install and update.
+    Verify uses Cancel. Open in Logs jumps to that server’s Events row.
+  </figcaption>
+</figure>
 
 ## Safe update
 
@@ -72,6 +89,6 @@ The Wildcard **ARK Version** string shown in the UI is informational only — do
 - Point Settings → SteamCMD at a disk with room for the shared cache
 - Prefer safe update over manual file copies into `installDir`
 - Check **Logs → Updates** for per-job log files under app userData
-- Live SteamCMD console streams on the progress dock during jobs
+- Live SteamCMD console streams on **Downloads** for the active job
 
 Related: [Backups](/docs/backups/), [Troubleshooting](/docs/troubleshooting/).
