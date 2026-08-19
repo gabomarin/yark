@@ -573,6 +573,9 @@ export class BackupService extends EventEmitter {
         job.updatedAt = new Date().toISOString();
         this.rejectJob(job.id, new OperationCancelledError());
         this.jobProgressHandlers.delete(job.id);
+        if (job.type === "pre-update-backup") {
+          this.removeJob(job.id);
+        }
         continue;
       }
       job.recoveryReason = "Cancellation requested; stopping before restore apply.";
@@ -666,6 +669,10 @@ export class BackupService extends EventEmitter {
     job.recoveryReason = "Cancelled by the operator before execution.";
     job.updatedAt = new Date().toISOString();
     this.rejectJob(job.id, new Error("Operation cancelled"));
+    this.jobProgressHandlers.delete(job.id);
+    if (job.type === "pre-update-backup") {
+      this.removeJob(job.id);
+    }
     this.persistQueue();
     return true;
   }
@@ -2684,6 +2691,9 @@ export class BackupService extends EventEmitter {
             job.operatorRetryAllowed = false;
             job.recoveryReason = "Cancelled by the operator during execution.";
             this.cancelRequested = false;
+            if (job.type === "pre-update-backup") {
+              this.removeJob(job.id);
+            }
             this.persistQueue();
             this.servers.addEvent(
               job.serverId,
@@ -2701,6 +2711,9 @@ export class BackupService extends EventEmitter {
             job.operatorRetryAllowed = true;
             job.recoveryReason =
               `Failure during phase "${job.phase}" may have completed a side effect. Inspect backup and restore evidence before retrying.`;
+            if (job.type === "pre-update-backup") {
+              this.removeJob(job.id);
+            }
             this.persistQueue();
             this.servers.addEvent(
               job.serverId,
@@ -2719,6 +2732,9 @@ export class BackupService extends EventEmitter {
             job.operatorRetryAllowed = false;
             job.recoveryReason =
               "This validation, security, cancellation, or missing-resource failure is not safe to retry automatically.";
+            if (job.type === "pre-update-backup") {
+              this.removeJob(job.id);
+            }
             this.persistQueue();
             this.servers.addEvent(
               job.serverId,
@@ -2736,6 +2752,9 @@ export class BackupService extends EventEmitter {
             job.phase = "failed";
             job.operatorRetryAllowed = true;
             job.recoveryReason = `Retry limit reached after ${job.maxAttempts} attempts.`;
+            if (job.type === "pre-update-backup") {
+              this.removeJob(job.id);
+            }
             this.servers.addEvent(
               job.serverId,
               "error",
@@ -2854,6 +2873,15 @@ export class BackupService extends EventEmitter {
               "Duplicate durable job records were recovered. Review the preserved phase before retrying.";
           }
           jobs[duplicateIndex] = merged;
+          invalidEntryFound = true;
+          continue;
+        }
+        if (
+          migrated.type === "pre-update-backup"
+          && (migrated.status === "cancelled"
+            || migrated.status === "failed"
+            || migrated.status === "blocked")
+        ) {
           invalidEntryFound = true;
           continue;
         }

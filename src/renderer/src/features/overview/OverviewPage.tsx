@@ -71,9 +71,7 @@ interface Props {
   onCopyConfiguration: (serverId: string) => void;
   onDeleteServer: (serverId: string) => void;
   onToggleServerEnabled?: (serverId: string, enabled: boolean) => void;
-  onCancelSteamCmd: () => void;
-  onResumeSteamCmd?: (serverId: string) => void;
-  onCancelQueuedJob?: (serverId: string) => void;
+  onOpenDownloads?: (serverId: string) => void;
 }
 
 export function OverviewPage(props: Props): ReactElement {
@@ -143,9 +141,7 @@ export function OverviewPage(props: Props): ReactElement {
           onCopyConfiguration={props.onCopyConfiguration}
           onDeleteServer={props.onDeleteServer}
           onToggleServerEnabled={props.onToggleServerEnabled}
-          onCancelSteamCmd={props.onCancelSteamCmd}
-          onResumeSteamCmd={props.onResumeSteamCmd}
-          onCancelQueuedJob={props.onCancelQueuedJob}
+          onOpenDownloads={props.onOpenDownloads}
         />
 
         <div className={classes.narrowLogsLink}>

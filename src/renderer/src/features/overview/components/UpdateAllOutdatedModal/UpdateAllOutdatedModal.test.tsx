@@ -78,7 +78,7 @@ describe("UpdateAllOutdatedModal", () => {
       screen.getByText(/Server is running — stop it before a safe update/i),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /queue 1 update/i }));
+    await user.click(screen.getByRole("button", { name: /^accept$/i }));
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 });

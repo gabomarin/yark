@@ -131,7 +131,7 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
     });
   });
 
-  it("replays a safe interrupted verify phase but blocks an ambiguous update", () => {
+  it("replays a safe interrupted verify phase and holds an ambiguous update for Retry", () => {
     const { service } = createRestartedService([
       persistedJob({
         id: "verify-1",
@@ -146,7 +146,8 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
         expect.objectContaining({ id: "verify-1", status: "pending" }),
         expect.objectContaining({
           id: "update-1",
-          status: "blocked",
+          status: "failed",
+          recoveryReason: expect.stringMatching(/YARK closed during phase/i),
           nextActions: ["retry", "dismiss"],
         }),
       ]),
@@ -302,6 +303,24 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
       phase: "rollback-restoring-backups",
       nextActions: ["retry", "dismiss"],
     });
+  });
+
+  it("does not start queued jobs when canceling another queued job while one is paused", async () => {
+    const { service } = createRestartedService([
+      persistedJob({ id: "job-paused", status: "paused", phase: "applying-files" }),
+      persistedJob({
+        id: "job-pending",
+        status: "pending",
+        phase: "queued",
+        idempotencyKey: "update:server-1:pending",
+        attempts: 0,
+      }),
+    ]);
+    const performUpdateServer = vi.fn(async () => undefined);
+    Object.assign(service as object, { performUpdateServer });
+
+    expect(service.cancelCriticalJob("job-pending")).toBe(true);
+    expect(performUpdateServer).not.toHaveBeenCalled();
   });
 
   it("starts the next queued job after the running job is cancelled", async () => {
@@ -571,6 +590,95 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
     expect(service.getSteamCmdStatus().criticalJobs).toEqual([]);
   });
 
+  it("does not auto-resume pending Downloads on launch while a job waits for Retry after close", async () => {
+    const { service } = createRestartedService([
+      persistedJob({
+        id: "job-interrupted",
+        type: "update",
+        status: "running",
+        phase: "applying-files",
+        attempts: 1,
+      }),
+      persistedJob({
+        id: "job-pending",
+        type: "verify-files",
+        status: "pending",
+        phase: "queued",
+        attempts: 0,
+        idempotencyKey: "verify-files:server-1:next",
+      }),
+    ]);
+    const performUpdateServer = vi.fn(async () => undefined);
+    const performVerifyServerFiles = vi.fn(async () => undefined);
+    Object.assign(service as object, {
+      findSteamCmdExecutable: vi.fn(async () => "C:\\steamcmd\\steamcmd.exe"),
+      performUpdateServer,
+      performVerifyServerFiles,
+    });
+
+    expect(service.getSteamCmdStatus().criticalJobs[0]).toMatchObject({
+      id: "job-interrupted",
+      status: "failed",
+      recoveryReason: expect.stringMatching(/YARK closed during phase/i),
+    });
+
+    await service.resumeQueuedFileJobsOnLaunch();
+    await Promise.resolve();
+
+    expect(performUpdateServer).not.toHaveBeenCalled();
+    expect(performVerifyServerFiles).not.toHaveBeenCalled();
+    expect(service.getSteamCmdStatus().criticalJobs.map((job) => job.status)).toEqual([
+      "failed",
+      "pending",
+    ]);
+  });
+
+  it("does not auto-resume pending Downloads on launch while a job is paused", async () => {
+    const { service } = createRestartedService([
+      persistedJob({
+        id: "job-paused",
+        type: "install-files",
+        status: "paused",
+        phase: "applying-files",
+        attempts: 1,
+        idempotencyKey: "install-files:server-1:",
+      }),
+      persistedJob({
+        id: "job-pending-a",
+        type: "update",
+        status: "pending",
+        phase: "queued",
+        attempts: 0,
+        idempotencyKey: "update:server-1:next-a",
+      }),
+      persistedJob({
+        id: "job-pending-b",
+        type: "verify-files",
+        status: "pending",
+        phase: "queued",
+        attempts: 0,
+        serverId: "server-1",
+        idempotencyKey: "verify-files:server-1:",
+      }),
+    ]);
+    const performUpdateServer = vi.fn(async () => undefined);
+    Object.assign(service as object, {
+      findSteamCmdExecutable: vi.fn(async () => "C:\\steamcmd\\steamcmd.exe"),
+      performUpdateServer,
+    });
+
+    await service.resumeQueuedFileJobsOnLaunch();
+    await Promise.resolve();
+
+    expect(performUpdateServer).not.toHaveBeenCalled();
+    expect(service.getSteamCmdConsole().lines).toEqual([]);
+    expect(service.getSteamCmdStatus().criticalJobs.map((job) => job.status)).toEqual([
+      "paused",
+      "pending",
+      "pending",
+    ]);
+  });
+
   it("blocks pending Downloads on launch when SteamCMD is not on disk", async () => {
     const { service } = createRestartedService([
       persistedJob({
@@ -652,13 +760,38 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
     expect(service.getSteamCmdStatus().criticalJobs[0]).toMatchObject({
       id: "job-install",
       status: "paused",
-      recoveryReason: expect.stringMatching(/Paused by the operator/i),
+      recoveryReason: null,
     });
     expect(performUpdateServer).not.toHaveBeenCalled();
+
+    expect(service.getSteamCmdConsole().lines.length).toBeGreaterThan(0);
 
     await service.resumeCriticalJob("job-install");
     await Promise.resolve();
     expect(performInstallServerFiles).toHaveBeenCalledTimes(2);
+  });
+
+  it("clears SteamCMD console output when a paused job is resumed", async () => {
+    const { service } = createRestartedService([
+      persistedJob({
+        id: "job-paused",
+        type: "install-files",
+        status: "paused",
+        phase: "applying-files",
+        attempts: 1,
+        idempotencyKey: "install-files:server-1:",
+      }),
+    ]);
+    const append = (
+      service as unknown as { appendSteamCmdConsole: (line: string) => void }
+    ).appendSteamCmdConsole.bind(service);
+    append("seed line before resume");
+    expect(service.getSteamCmdConsole().lines.length).toBeGreaterThan(0);
+
+    Object.assign(service as object, { processQueue: vi.fn() });
+    await service.resumeCriticalJob("job-paused");
+
+    expect(service.getSteamCmdConsole().lines).toEqual([]);
   });
 
   it("refuses Pause during rollback instead of cancelling", async () => {

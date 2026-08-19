@@ -1,13 +1,11 @@
 /** Barrel for server-card view helpers (actions + presentation). */
 export type {
-  ServerCardFilesJobAction,
   ServerCardPrimaryAction,
   ServerCardRestartAction,
   ServerCardRuntimeAction,
   ServerCardUpdateAction,
 } from "./serverCardActionModel";
 export {
-  resolveFilesJobAction,
   resolvePrimaryAction,
   resolveRestartAction,
   resolveRuntimeAction,

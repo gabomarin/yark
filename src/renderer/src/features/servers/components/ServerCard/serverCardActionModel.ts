@@ -1,9 +1,6 @@
 import type { ServerStatus } from "@shared/types";
 import type { ServerUpdateState } from "@shared/server-update-status";
-import {
-  canPauseSteamCmdOperation,
-  type SteamCmdProgressOperation,
-} from "@shared/steamcmd-progress";
+import type { SteamCmdProgressOperation } from "@shared/steamcmd-progress";
 
 /** Runtime control: Play / Stop (leading slot). Hidden when not installed. */
 export type ServerCardRuntimeAction = {
@@ -177,27 +174,6 @@ export function resolveRuntimeAction(input: {
     disabled: false,
     visible: true,
   };
-}
-
-export function resolveFilesJobAction(input: {
-  steamCmdBusy: boolean;
-  steamCmdPaused?: boolean;
-  steamCmdQueued?: boolean;
-  steamCmdOperation?: SteamCmdProgressOperation | null;
-}): ServerCardFilesJobAction | null {
-  if (input.steamCmdBusy) {
-    if (canPauseSteamCmdOperation(input.steamCmdOperation)) {
-      return { kind: "pause", label: "Pause SteamCMD", color: "yellow" };
-    }
-    return { kind: "cancel", label: "Cancel SteamCMD", color: "red" };
-  }
-  if (input.steamCmdPaused === true) {
-    return { kind: "resume", label: "Resume download", color: "teal" };
-  }
-  if (input.steamCmdQueued === true) {
-    return { kind: "cancel", label: "Remove from queue", color: "red" };
-  }
-  return null;
 }
 
 export function resolveRestartAction(input: {

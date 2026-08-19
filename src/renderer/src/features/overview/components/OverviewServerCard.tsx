@@ -16,6 +16,7 @@ interface Props {
   officialSteamBuild: string | null;
   officialVersion?: string | null;
   steamCmdServerId: string | null;
+  steamCmdRunning?: boolean;
   steamCmdBusy: boolean;
   steamCmdPausedByServerId?: ReadonlyMap<string, SteamCmdCardJobRef>;
   steamCmdQueuedByServerId?: ReadonlyMap<string, SteamCmdCardJobRef>;
@@ -40,7 +41,8 @@ export function OverviewServerCard(props: Props): ReactElement {
   const stopBusy = stopProgress?.active === true;
   const pausedJob = props.steamCmdPausedByServerId?.get(props.server.id);
   const queuedJob = props.steamCmdQueuedByServerId?.get(props.server.id);
-  const liveSteamCmd = props.steamCmdServerId === props.server.id;
+  const liveSteamCmd =
+    props.steamCmdRunning === true && props.steamCmdServerId === props.server.id;
   const overlayJob = pausedJob ?? queuedJob;
 
   return (

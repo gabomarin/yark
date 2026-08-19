@@ -77,7 +77,7 @@ export function OverviewHeader({
             disabled={!canUpdateAllOutdated || openingUpdateAllOutdated}
             loading={openingUpdateAllOutdated}
           >
-            Update all outdated
+            Update All
           </Button>
         ) : null}
         <AddServerSplitButton

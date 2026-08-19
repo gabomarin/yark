@@ -36,6 +36,7 @@ import { MoveInstallService } from "../backend/domains/instances/move-install-se
 import { ModsService } from "../backend/domains/mods/mods-service";
 import { InstanceLockManager } from "../backend/orchestration/instance-lock-manager";
 import { AppUpdateService } from "./app-update-service";
+import { attachDevToolsShortcuts, isDevToolsAllowed } from "./devtools";
 import { registerIpcHandlers } from "./ipc-handlers";
 import {
   applyTrayContextMenu,
@@ -178,8 +179,11 @@ function createWindow(
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      devTools: isDevToolsAllowed(),
     },
   });
+
+  attachDevToolsShortcuts(win);
 
   // maximize() on a hidden window shows it on Windows — wait until `show`.
   if (creation.shouldMaximize) {

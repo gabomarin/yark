@@ -20,9 +20,7 @@ export interface ServerCardHandlers {
   onCloneServer: (serverId: string) => void;
   onCopyConfiguration: (serverId: string) => void;
   onDeleteServer: (serverId: string) => void;
-  onCancelSteamCmd: () => void;
-  onResumeSteamCmd?: (serverId: string) => void;
-  onCancelQueuedJob?: (serverId: string) => void;
+  onOpenDownloads?: (serverId: string) => void;
   onToggleServerEnabled?: (serverId: string, enabled: boolean) => void;
 }
 
@@ -42,9 +40,7 @@ export type ServerCardCallbackProps = {
   onClone: () => void;
   onCopyConfiguration: () => void;
   onDelete: () => void;
-  onCancelSteamCmd: () => void;
-  onResumeSteamCmd?: () => void;
-  onCancelQueuedJob?: () => void;
+  onOpenDownloads?: () => void;
   onToggleEnabled?: () => void;
 };
 
@@ -69,12 +65,8 @@ export function bindServerCardHandlers(
     onClone: () => handlers.onCloneServer(id),
     onCopyConfiguration: () => handlers.onCopyConfiguration(id),
     onDelete: () => handlers.onDeleteServer(id),
-    onCancelSteamCmd: () => handlers.onCancelSteamCmd(),
-    onResumeSteamCmd: handlers.onResumeSteamCmd
-      ? () => handlers.onResumeSteamCmd?.(id)
-      : undefined,
-    onCancelQueuedJob: handlers.onCancelQueuedJob
-      ? () => handlers.onCancelQueuedJob?.(id)
+    onOpenDownloads: handlers.onOpenDownloads
+      ? () => handlers.onOpenDownloads?.(id)
       : undefined,
     onToggleEnabled: handlers.onToggleServerEnabled
       ? () => handlers.onToggleServerEnabled?.(id, !server.enabled)

@@ -70,7 +70,6 @@ describe("OverviewPage", () => {
           onCloneServer={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -130,7 +129,6 @@ describe("OverviewPage", () => {
           onCloneServer={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -181,7 +179,6 @@ describe("OverviewPage", () => {
           onCloneServer={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -246,7 +243,6 @@ describe("OverviewPage", () => {
           onCloneServer={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -296,7 +292,6 @@ describe("OverviewPage", () => {
       onCloneServer: vi.fn(),
       onCopyConfiguration: vi.fn(),
       onDeleteServer: vi.fn(),
-      onCancelSteamCmd: vi.fn(),
     };
 
     const { container, rerender } = render(
@@ -361,7 +356,6 @@ describe("OverviewPage", () => {
           onCloneServer={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -422,7 +416,6 @@ describe("OverviewPage", () => {
           onCloneServer={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
@@ -438,7 +431,7 @@ describe("OverviewPage", () => {
     expect(screen.queryByText("No enabled servers")).not.toBeInTheDocument();
   });
 
-  it("disables Update all outdated until a stopped server is eligible (#378)", () => {
+  it("disables Update All until a stopped server is eligible (#378)", () => {
     render(
       <AppProviders>
         <OverviewPage
@@ -493,13 +486,12 @@ describe("OverviewPage", () => {
           onCloneServer={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
 
     expect(
-      screen.getByRole("button", { name: "Update all outdated" }),
+      screen.getByRole("button", { name: "Update All" }),
     ).toBeDisabled();
   });
 
@@ -571,13 +563,12 @@ describe("OverviewPage", () => {
           onCloneServer={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
-          onCancelSteamCmd={vi.fn()}
         />
       </AppProviders>,
     );
 
-    await user.click(screen.getByRole("button", { name: "Update all outdated" }));
+    await user.click(screen.getByRole("button", { name: "Update All" }));
     expect(onOpenUpdateAllOutdated).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole("dialog", { name: /Update all outdated servers/i })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: /^update all$/i })).toBeInTheDocument();
   });
 });

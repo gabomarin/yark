@@ -45,6 +45,7 @@ const api: RendererApi = {
   killServer: (id: string) => ipcRenderer.invoke(IPC.serversKill, id),
   installServerFiles: (id: string) => ipcRenderer.invoke(IPC.serversInstallFiles, id),
   updateServerNow: (id: string) => ipcRenderer.invoke(IPC.serversUpdateNow, id),
+  enqueueUpdateServer: (id: string) => ipcRenderer.invoke(IPC.serversEnqueueUpdate, id),
   verifyServerFiles: (id: string) => ipcRenderer.invoke(IPC.serversVerifyFiles, id),
   moveServerInstall: (id: string, destinationDir: string) =>
     ipcRenderer.invoke(IPC.serversMoveInstall, id, destinationDir),

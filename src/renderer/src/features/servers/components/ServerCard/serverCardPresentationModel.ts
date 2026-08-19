@@ -16,7 +16,6 @@ import {
   steamCmdProgressFallbackLabel,
 } from "@shared/steamcmd-progress";
 import {
-  resolveFilesJobAction,
   resolvePrimaryAction,
   resolveRestartAction,
   resolveRuntimeAction,
@@ -190,12 +189,6 @@ export function deriveServerCardView(input: {
     status: input.status,
     serverEnabled,
   });
-  const filesJobAction = resolveFilesJobAction({
-    steamCmdBusy: input.steamCmdBusy,
-    steamCmdPaused,
-    steamCmdQueued,
-    steamCmdOperation: input.steamCmdOperation,
-  });
   const restartAction = resolveRestartAction({
     steamCmdBusy: filesLocked,
     isInstallationReady: ready,
@@ -231,7 +224,6 @@ export function deriveServerCardView(input: {
     updateAvailable,
     installStateLabel: stopBusy ? "Stopping…" : installStateLabel,
     runtimeAction,
-    filesJobAction,
     restartAction,
     updateAction,
     verifyFilesLocked: !canEnqueueFilesJobFromMenu("verify-files", filesOccupant),

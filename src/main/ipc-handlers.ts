@@ -217,6 +217,10 @@ export function registerIpcHandlers(
     updates.updateServer(id),
   );
 
+  handleValidated(IPC.serversEnqueueUpdate, ipcArgSchemas[IPC.serversEnqueueUpdate], ([id]) =>
+    updates.enqueueUpdate(id),
+  );
+
   handleValidated(IPC.serversVerifyFiles, ipcArgSchemas[IPC.serversVerifyFiles], ([id]) =>
     updates.verifyServerFiles(id),
   );

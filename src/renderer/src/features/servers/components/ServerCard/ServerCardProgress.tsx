@@ -1,8 +1,6 @@
-import type { ReactElement } from "react";
-import { Pause, Play, ProhibitInset } from "@phosphor-icons/react";
-import { ActionIcon, Group, Progress, Stack, Text, Tooltip } from "@mantine/core";
-import { useUiDensity } from "@app/AppProviders";
-import type { ServerCardFilesJobAction } from "./serverCardModel";
+import type { ReactElement, ReactNode } from "react";
+import { Group, Progress, Stack, Text, UnstyledButton } from "@mantine/core";
+import { byteProgressLineIsRedundant } from "@shared/byte-progress-display";
 import classes from "./ServerCard.module.css";
 
 interface Props {
@@ -10,17 +8,40 @@ interface Props {
   byteProgressLabel: string | null;
   byteProgressNoun: string;
   steamCmdProgressPercent: number | null;
-  filesJobAction?: ServerCardFilesJobAction | null;
-  onFilesJobAction?: () => void;
+  showProgressBar?: boolean;
+  onOpenDownloads?: () => void;
+  /** Live SteamCMD Pause/Cancel — rendered beside the progress track (Downloads detail). */
+  processAction?: ReactNode;
 }
 
-function filesJobActionIcon(
-  kind: ServerCardFilesJobAction["kind"],
-  iconSize: number,
-): ReactElement {
-  if (kind === "pause") return <Pause size={iconSize} weight="fill" />;
-  if (kind === "resume") return <Play size={iconSize} weight="fill" />;
-  return <ProhibitInset size={iconSize} />;
+function ProgressLabel({
+  shortProgressLabel,
+  onOpenDownloads,
+}: {
+  shortProgressLabel: string;
+  onOpenDownloads?: () => void;
+}): ReactElement {
+  if (onOpenDownloads === undefined) {
+    return <Text size="sm">{shortProgressLabel}</Text>;
+  }
+
+  return (
+    <UnstyledButton
+      className={classes.progressCta}
+      aria-label={`${shortProgressLabel} — open Downloads`}
+      onClick={onOpenDownloads}
+    >
+      <Text
+        span
+        size="sm"
+        fw={500}
+        c="var(--mantine-color-blue-light-color)"
+        className={classes.progressCtaLabel}
+      >
+        {shortProgressLabel}
+      </Text>
+    </UnstyledButton>
+  );
 }
 
 export function ServerCardProgress({
@@ -28,53 +49,64 @@ export function ServerCardProgress({
   byteProgressLabel,
   byteProgressNoun,
   steamCmdProgressPercent,
-  filesJobAction = null,
-  onFilesJobAction,
+  showProgressBar = true,
+  onOpenDownloads,
+  processAction,
 }: Props): ReactElement {
-  const density = useUiDensity();
-  const compact = density === "compact";
-  const actionSize = compact ? "xs" : "sm";
-  const iconSize = compact ? 12 : 14;
+  const label = (
+    <ProgressLabel shortProgressLabel={shortProgressLabel} onOpenDownloads={onOpenDownloads} />
+  );
+  const showByteLine =
+    byteProgressLabel !== null
+    && !byteProgressLineIsRedundant(shortProgressLabel, byteProgressLabel);
+
+  if (!showProgressBar) {
+    return (
+      <div className={classes.progressHint} data-progress-hint>
+        {label}
+        {showByteLine && (
+          <Text size="xs" c="dimmed" mt={2} component="span" display="block">
+            {byteProgressNoun}: {byteProgressLabel}
+          </Text>
+        )}
+      </div>
+    );
+  }
+
   return (
     <Stack gap={6} className={classes.progressBlock}>
       <Group justify="space-between" gap="xs" align="flex-start" wrap="nowrap">
         <div>
-          <Text size="sm">{shortProgressLabel}</Text>
-          {byteProgressLabel !== null && (
+          {label}
+          {showByteLine && (
             <Text size="xs" c="dimmed" mt={2}>
               {byteProgressNoun}: {byteProgressLabel}
             </Text>
           )}
         </div>
-        <Group gap={8} wrap="nowrap" align="center">
-          {steamCmdProgressPercent !== null && (
-            <Text size="sm" c="dimmed">
-              {steamCmdProgressPercent.toFixed(0)}%
-            </Text>
-          )}
-          {filesJobAction !== null && (
-            <Tooltip label={filesJobAction.label} withArrow>
-              <ActionIcon
-                size={actionSize}
-                color={filesJobAction.color}
-                variant="light"
-                aria-label={filesJobAction.label}
-                data-files-job-action={filesJobAction.kind}
-                onClick={onFilesJobAction}
-              >
-                {filesJobActionIcon(filesJobAction.kind, iconSize)}
-              </ActionIcon>
-            </Tooltip>
-          )}
-        </Group>
+        {steamCmdProgressPercent !== null && (
+          <Text size="sm" c="dimmed">
+            {steamCmdProgressPercent.toFixed(0)}%
+          </Text>
+        )}
       </Group>
-      <Progress
-        value={steamCmdProgressPercent ?? 12}
-        animated
-        striped
-        size="sm"
-        radius="xl"
-      />
+      <Group
+        gap="xs"
+        wrap="nowrap"
+        align="center"
+        w="100%"
+        {...(processAction !== undefined ? { "data-download-live-action": true } : {})}
+      >
+        <Progress
+          value={steamCmdProgressPercent ?? 12}
+          animated={steamCmdProgressPercent === null}
+          striped={steamCmdProgressPercent === null}
+          size="sm"
+          radius="xl"
+          style={{ flex: 1, minWidth: 0 }}
+        />
+        {processAction}
+      </Group>
     </Stack>
   );
 }

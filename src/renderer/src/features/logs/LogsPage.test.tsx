@@ -46,6 +46,7 @@ function createApiMock(): RendererApi {
     killServer: vi.fn(),
     installServerFiles: vi.fn(),
     updateServerNow: vi.fn(),
+    enqueueUpdateServer: vi.fn(),
     verifyServerFiles: vi.fn(),
     moveServerInstall: vi.fn(),
     cancelMoveServerInstall: vi.fn(),

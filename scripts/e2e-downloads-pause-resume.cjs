@@ -151,7 +151,7 @@ async function dumpDownloads(page, label) {
         kind: row.getAttribute("data-kind"),
         text: (row.textContent || "").replace(/\s+/g, " ").trim().slice(0, 180),
       })),
-      steamCmdBar: document.querySelector('[role="group"][aria-label="SteamCMD process"]') !== null,
+      liveAction: document.querySelector("[data-download-live-action]") !== null,
     };
   });
   console.error(`DUMP ${label} ${JSON.stringify(metrics, null, 2)}`);
@@ -227,11 +227,11 @@ async function run() {
     );
 
     await page.locator(`[data-download-row="${JOB_INSTALL}"]`).click();
-    await page.getByRole("group", { name: "SteamCMD process" }).waitFor({
+    await page.locator("[data-download-live-action]").waitFor({
       state: "visible",
       timeout: 15_000,
     });
-    const pauseBtn = page.getByRole("button", { name: "Pause SteamCMD" });
+    const pauseBtn = page.getByRole("button", { name: "Pause" });
     await pauseBtn.waitFor({ state: "visible", timeout: 10_000 });
     await pauseBtn.click();
 
@@ -256,16 +256,16 @@ async function run() {
       "Pause must not mark the install cancelled",
     );
     assert.equal(
-      await page.getByRole("group", { name: "SteamCMD process" }).count(),
+      await page.locator("[data-download-live-action]").count(),
       0,
-      "Paused install must not keep the SteamCMD process bar",
+      "Paused install must not keep the live progress action",
     );
     assert.equal(
-      await page.getByRole("button", { name: "Pause SteamCMD" }).count(),
+      await page.getByRole("button", { name: "Pause" }).count(),
       0,
     );
     await page.locator(`[data-download-row="${JOB_INSTALL}"]`).click();
-    const resumeBtn = page.getByRole("button", { name: "Resume this job" });
+    const resumeBtn = page.getByRole("button", { name: "Resume" });
     await resumeBtn.waitFor({ state: "visible", timeout: 10_000 });
     await resumeBtn.click();
 
@@ -277,7 +277,7 @@ async function run() {
     }
     await waitRowKind(page, JOB_QUEUED, "queued", 5_000);
     await page.locator(`[data-download-row="${JOB_INSTALL}"]`).click();
-    await page.getByRole("button", { name: "Pause SteamCMD" }).waitFor({
+    await page.getByRole("button", { name: "Pause" }).waitFor({
       state: "visible",
       timeout: 15_000,
     });

@@ -5,7 +5,6 @@ import {
   Button,
   Group,
   Modal,
-  ScrollArea,
   Stack,
   Text,
 } from "@mantine/core";
@@ -40,7 +39,7 @@ export function UpdateAllOutdatedModal(props: Props): ReactElement {
       withCloseButton={!queueing}
       closeOnClickOutside={!queueing}
       closeOnEscape={!queueing}
-      title="Update all outdated servers"
+      title="Update All"
       size="lg"
       centered
     >
@@ -63,10 +62,9 @@ export function UpdateAllOutdatedModal(props: Props): ReactElement {
         ) : (
           <>
             <Text size="sm" c="dimmed">
-              Are you sure you want to update all outdated servers?
-              We'll queue one Update job per eligible server in Downloads.
-              Running servers and active Downloads stay skipped until you stop
-              them or clear the queue.
+              One Update job per eligible server is added to Downloads.
+              Running servers and active Downloads stay skipped until they
+              are stopped or the queue is cleared.
             </Text>
             {plan.officialBuild !== null ? (
               <Text size="xs" c="dimmed">
@@ -87,7 +85,7 @@ export function UpdateAllOutdatedModal(props: Props): ReactElement {
                 servers or clear Downloads jobs, then try again.
               </Alert>
             )}
-            <ScrollArea.Autosize mah={320} type="auto">
+            <div className={classes.listScroll}>
               <Stack gap="xs" className={classes.list}>
                 {plan.rows.map((row) => (
                   <div
@@ -112,18 +110,16 @@ export function UpdateAllOutdatedModal(props: Props): ReactElement {
                           </Text>
                         ) : null}
                       </Stack>
-                      <Badge
-                        size="sm"
-                        variant="light"
-                        color={row.eligible ? "teal" : "gray"}
-                      >
-                        {row.eligible ? "Queue" : "Skip"}
-                      </Badge>
+                      {!row.eligible ? (
+                        <Badge size="sm" variant="light" color="gray">
+                          Skip
+                        </Badge>
+                      ) : null}
                     </Group>
                   </div>
                 ))}
               </Stack>
-            </ScrollArea.Autosize>
+            </div>
             {skippedCount > 0 ? (
               <Text size="xs" c="dimmed">
                 {skippedCount} server{skippedCount === 1 ? "" : "s"} skipped.
@@ -143,8 +139,7 @@ export function UpdateAllOutdatedModal(props: Props): ReactElement {
               props.loading || plan === null || eligibleCount === 0 || props.queueing
             }
           >
-            Queue {eligibleCount > 0 ? eligibleCount : ""} update
-            {eligibleCount === 1 ? "" : "s"}
+            Accept
           </Button>
         </Group>
       </Stack>

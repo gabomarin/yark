@@ -27,9 +27,9 @@ remain visible on the **Downloads** page until the operator acts.
 | --- | --- |
 | Install or verify while applying SteamCMD/cache files | Replay from the top; SteamCMD validation and cache sync are idempotent |
 | Install, update, or verify after the `files-applied` checkpoint | Reconcile as complete when runtime already matches; otherwise perform only the remaining restart transition |
-| Install or verify while stopping/restarting ASA | Block; process state may be ambiguous |
+| Install or verify while stopping/restarting ASA | Block; process state may be ambiguous (still **Needs attention** on restart) |
 | Update during validation | Replay; no material side effect has started |
-| Update during stop, backup, file application without completion evidence, restart, or rollback | Block; the outcome needs operator review |
+| Update during stop, backup, file application without completion evidence, restart, or rollback | Hold under **Active** with **Retry** after YARK closes; move to **Needs attention** only if Retry fails |
 | Update after `rollback-complete` | Keep as failed with completed rollback evidence and allow an explicit retry |
 | Pre-update backup after execution began | Reconcile backup rows/ZIPs, reuse completed kind checkpoints marked with the job ID, and continue with the next missing kind |
 | Restore before application | Reuse its restore-history row and marked safeguard backup, then continue |

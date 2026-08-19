@@ -1,21 +1,25 @@
+/* Minified SteamCMD bar — full width, top rule only. */
 .footer {
   display: flex;
-  align-items: center;
-  gap: var(--app-space-sm);
+  width: 100%;
   flex-shrink: 0;
-  min-height: 40px;
-  padding: 6px 14px;
-  border-top: 1px solid color-mix(in srgb, var(--app-color-border) 28%, transparent);
-  background: color-mix(in srgb, var(--app-color-panel) 88%, var(--app-color-accent-deep));
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-top: 1px solid color-mix(in srgb, var(--app-color-border) 55%, transparent);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--app-color-bg) 94%, var(--ark-gray-2));
   overflow-x: auto;
 }
 
-.footerButton {
+.footerMain {
   display: flex;
+  width: min(100%, 840px);
+  max-width: 840px;
   min-width: 0;
-  flex: 1;
   align-items: center;
-  gap: var(--app-space-sm);
+  justify-content: center;
+  gap: var(--app-space-md);
   padding: 0;
   border: 0;
   background: transparent;
@@ -24,38 +28,53 @@
   cursor: pointer;
 }
 
-.footerButton:focus-visible {
+.footerMain:focus-visible {
   outline: 2px solid var(--app-color-cryo);
   outline-offset: 2px;
+  border-radius: var(--app-radius-sm);
 }
 
-.footerTitle {
-  display: block;
+.footerLine {
+  min-width: 0;
+  flex: 0 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: var(--app-font-caption);
+  line-height: 1.25;
+}
+
+.footerTitle {
   font-weight: 600;
 }
 
-.footerDetail {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 11px;
+.footerSep {
   color: var(--app-color-muted);
+  font-weight: 400;
+}
+
+.footerDetail {
+  color: var(--app-color-muted);
+  font-weight: 400;
+}
+
+.footerMetrics {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--app-space-sm);
 }
 
 .footerPercent {
   flex-shrink: 0;
   font-family: var(--app-font-mono);
   font-size: var(--app-font-caption);
+  line-height: 1;
   color: var(--app-color-cryo);
 }
 
 .footerProgress {
-  width: 88px;
+  width: 128px;
   flex-shrink: 0;
 }
 
