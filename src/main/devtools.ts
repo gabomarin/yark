@@ -1,11 +1,8 @@
 import { app, type BrowserWindow } from "electron";
 
-/** Unpackaged dev/preview, or packaged builds with YARK_DEVTOOLS=1. */
+/** Unpackaged dev/preview only — packaged installers ship with DevTools disabled. */
 export function isDevToolsAllowed(): boolean {
-  if (!app.isPackaged) {
-    return true;
-  }
-  return process.env["YARK_DEVTOOLS"]?.trim() === "1";
+  return !app.isPackaged;
 }
 
 function toggleDevTools(win: BrowserWindow): void {

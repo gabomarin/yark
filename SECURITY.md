@@ -78,6 +78,6 @@ We will not pursue legal action against good-faith research that:
 - Packaged builds enable Electron fuses and ASAR integrity (see [docs/versioning.md](docs/versioning.md))
 - CurseForge API keys are not embedded in the desktop app (metadata Worker)
 - In-app external browser opens are host-allowlisted
-- **`YARK_DEVTOOLS=1`** (packaged builds only) enables F12 / Ctrl+Shift+I DevTools for local debugging. Treat it as a **debug-only** environment flag — do not set it globally on operator hosts or in production deployment images
+- Packaged releases disable Electron DevTools (no F12 / Ctrl+Shift+I). Use unpackaged `npm run dev` when debugging renderer issues locally
 
 Thank you for helping keep operators’ hosts and ASA fleets safer.
