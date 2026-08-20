@@ -19,7 +19,12 @@ This repository contains a desktop application for managing dedicated ARK Surviv
 - Renderer **page-level** Vitest mounts are expensive. For lock flags / derived
   disabled state, extract a small model or test the organism (`SidePanel`)
   instead of remounting `ServerWorkspacePage`. Use `setupUser()` from
-  `@renderer/test/setupUser` (`delay: null`) in UI suites (#281). Details:
+  `@renderer/test/setupUser` (`delay: null`) in UI suites (#281). When a suite
+  needs a full `window.api` / `RendererApi` stub, use
+  `createRendererApiMock()` from `@renderer/test/createRendererApiMock` and
+  override only what the test cares about (#354). Partial stubs (or
+  `as unknown as RendererApi`) are fine until they force mechanical edits on
+  every new IPC method — then migrate that suite to the shared factory. Details:
   [component-structure.md](component-structure.md) (Tests).
 - After `npm install`, Husky hooks run typecheck/lint on commit and typecheck/test/lint on push; CI also runs build + `lint`. `npm run lint` is size caps, Actions pins, and ESLint (`eslint.config.mjs`).
 - For visible renderer changes, follow the mandatory [visual testing protocol](visual-testing.md), including HD, Full HD, and QHD/2K review.
@@ -131,7 +136,8 @@ parallelize across workers): **node** (`tests/**`, no jsdom) and
 `npm run test:node` / `npm run test:renderer`. A handful of `tests/unit/*`
 files opt into jsdom with `// @vitest-environment jsdom` (legacy
 `localStorage`). Heavy UI suites should use `setupUser()` — see
-[component-structure.md](component-structure.md) (#281).
+[component-structure.md](component-structure.md) (#281). Full `window.api`
+stubs should use `createRendererApiMock()` (#354).
 
 Visible renderer changes also require a Playwright review of the real Electron
 build at `1280×720`, `1920×1080`, and `2560×1440`. Environment requirements,

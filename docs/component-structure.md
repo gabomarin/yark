@@ -68,6 +68,15 @@ src/renderer/src/features/<area>/
   Heavy UI suites: `setupUser()` from `@renderer/test/setupUser` (`delay: null`);
   use `findBy*` for appearance; keep `waitFor` only when the node may already be
   gone or the result is async. See [#281](https://github.com/gabomarin/yark/issues/281).
+  Full `RendererApi` stubs: `createRendererApiMock()` from
+  `@renderer/test/createRendererApiMock` (#354) — one factory grows when IPC
+  methods are added. Prefer it when a suite already types a complete
+  `RendererApi`. Leave partial stubs (e.g. ServerMods / Clusters
+  `...(window.api ?? {})`) until they hit the same fan-out; then migrate with
+  overrides only. Fixture timestamps/versions live as named constants on that
+  module. Bare `vi.fn()` defaults resolve to `undefined` if awaited — override
+  when a test asserts `IpcResult` shape. If the factory becomes unwieldy,
+  consider generating stubs from `RendererApi` rather than hand-listing.
 
 ## Page responsibilities
 
