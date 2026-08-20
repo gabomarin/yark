@@ -21,11 +21,10 @@ export function CopyConfigDoneStep(props: Props): ReactElement {
   return (
     <Stack gap="sm">
       {successIds.length > 0 && (
-        <Alert color="teal" title="Done">
-          Copied settings to{" "}
-          {formatTargetNames(props.servers, successIds)}. Nothing changed on{" "}
-          {props.sourceName}.
-        </Alert>
+        <Text size="sm">
+          Copied settings to {formatTargetNames(props.servers, successIds)}.
+          Nothing changed on {props.sourceName}.
+        </Text>
       )}
       {failureOutcomes.length > 0 && (
         <Alert color="red" title="Some targets failed">

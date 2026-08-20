@@ -35,6 +35,7 @@ import type {
 import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
 import { SearchField } from "@ui/SearchField/SearchField";
+import { showOperatorToast } from "@ui/operatorToast";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useUiDensity } from "@app/AppProviders";
 import {
@@ -293,11 +294,13 @@ export function ConfigurationEditor(props: Props): ReactElement {
       setPreview(result.data);
       setBaseline(sanitized);
       publishDirty(sanitized, sanitized);
-      setInfo(
-        result.data.changedCount > 0
-          ? `Saved (${result.data.changedCount} changes)`
-          : "Saved (no changes)",
-      );
+      showOperatorToast({
+        title: "INI saved",
+        message:
+          result.data.changedCount > 0
+            ? `Saved ${result.data.changedCount} change${result.data.changedCount === 1 ? "" : "s"}.`
+            : "Saved with no changes.",
+      });
       return true;
     } finally {
       setBusy(false);
@@ -644,7 +647,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
             </Group>
 
             {preview !== null && preview.diff.length > 0 && (
-              <Alert color="green" title="Last saved diff">
+              <Alert color="blue" title="Last saved diff">
                 {preview.diff.slice(0, 8).map((entry) => (
                   <Text key={`${entry.fileKey}.${entry.section}.${entry.key}`} size="sm">
                     [{entry.fileKey}] {entry.section}.{entry.key}: {entry.before ?? "∅"} →{" "}
