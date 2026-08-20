@@ -2,9 +2,9 @@ import type { ReactElement, ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import {
   Group,
-  ScrollArea,
   Stack,
   Text,
+  Tooltip,
   UnstyledButton,
 } from "@mantine/core";
 import {
@@ -16,9 +16,12 @@ import {
 import { SearchField } from "@ui/SearchField/SearchField";
 import {
   CATALOG_STATUS_FILTERS,
+  catalogBrowseSecondary,
+  catalogStatusFilterTooltip,
   catalogStatusLabel,
   catalogStatusToneClass,
   isInformativeDefaultSemantics,
+  shouldShowCatalogNotes,
   type CatalogStatusFilter,
 } from "./launchOptionsCatalogModel";
 import classes from "./LaunchOptionsCatalogModal.module.css";
@@ -80,6 +83,10 @@ export function LaunchOptionsCatalogEntriesTab(props: Props): ReactElement {
 
   const selected: AsaLaunchOptionEntry | undefined =
     entries.find((entry) => entry.id === selectedId) ?? entries[0];
+  const selectedSecondary =
+    selected !== undefined && isBrowseStatus(selected.status)
+      ? catalogBrowseSecondary(selected)
+      : null;
 
   const counts = useMemo(() => countAsaBrowseLaunchOptions(), []);
 
@@ -91,15 +98,24 @@ export function LaunchOptionsCatalogEntriesTab(props: Props): ReactElement {
             {CATALOG_STATUS_FILTERS.map((key) => {
               const active = filter === key;
               return (
-                <UnstyledButton
+                <Tooltip
                   key={key}
-                  type="button"
-                  className={active ? classes.filterActive : classes.filter}
-                  onClick={() => setFilter(key)}
+                  label={catalogStatusFilterTooltip(key)}
+                  withArrow
+                  multiline
+                  maw={280}
+                  events={{ hover: true, focus: true, touch: false }}
                 >
-                  {catalogStatusLabel(key)}
-                  <span className={classes.filterCount}>{counts[key]}</span>
-                </UnstyledButton>
+                  <UnstyledButton
+                    type="button"
+                    aria-label={`${catalogStatusLabel(key)} filter`}
+                    className={active ? classes.filterActive : classes.filter}
+                    onClick={() => setFilter(key)}
+                  >
+                    {catalogStatusLabel(key)}
+                    <span className={classes.filterCount}>{counts[key]}</span>
+                  </UnstyledButton>
+                </Tooltip>
               );
             })}
           </Group>
@@ -112,7 +128,7 @@ export function LaunchOptionsCatalogEntriesTab(props: Props): ReactElement {
           />
         </div>
 
-        <ScrollArea className={classes.listPane} type="auto" h="100%">
+        <div className={classes.listPane} data-catalog-list-pane>
           <Stack gap="xs">
             {entries.length === 0 && (
               <Text size="sm" c="dimmed" ta="center" py="lg">
@@ -122,6 +138,7 @@ export function LaunchOptionsCatalogEntriesTab(props: Props): ReactElement {
             {entries.map((entry) => {
               if (!isBrowseStatus(entry.status)) return null;
               const active = selected?.id === entry.id;
+              const secondary = catalogBrowseSecondary(entry);
               return (
                 <UnstyledButton
                   key={entry.id}
@@ -146,16 +163,19 @@ export function LaunchOptionsCatalogEntriesTab(props: Props): ReactElement {
                   <Text className={classes.rowExample} lineClamp={1}>
                     Example: {entry.example}
                   </Text>
-                  {entry.conflicts.length > 0 ? (
+                  {secondary?.kind === "managed" ? (
+                    <div className={classes.rowManaged}>{secondary.text}</div>
+                  ) : null}
+                  {secondary?.kind === "conflicts" ? (
                     <div className={classes.rowConflicts}>
-                      Conflicts: {entry.conflicts.join(", ")}
+                      Conflicts: {secondary.items.join(", ")}
                     </div>
                   ) : null}
                 </UnstyledButton>
               );
             })}
           </Stack>
-        </ScrollArea>
+        </div>
       </section>
 
       <aside className={classes.detailColumn}>
@@ -170,7 +190,7 @@ export function LaunchOptionsCatalogEntriesTab(props: Props): ReactElement {
               <Text className={classes.detailToken}>{selected.token}</Text>
             </div>
 
-            <ScrollArea className={classes.detailPane} type="auto" h="100%">
+            <div className={classes.detailPane} data-catalog-detail-pane>
               <div className={classes.metaBlock}>
                 <MetaRow label="Summary">{selected.summary}</MetaRow>
                 {selected.details ? (
@@ -189,10 +209,13 @@ export function LaunchOptionsCatalogEntriesTab(props: Props): ReactElement {
                     </span>
                   </MetaRow>
                 ) : null}
-                {selected.conflicts.length > 0 ? (
+                {selectedSecondary?.kind === "managed" ? (
+                  <MetaRow label="Where to change it">{selectedSecondary.text}</MetaRow>
+                ) : null}
+                {selectedSecondary?.kind === "conflicts" ? (
                   <MetaRow label="Conflicts">
                     <Stack gap={4}>
-                      {selected.conflicts.map((conflict) => (
+                      {selectedSecondary.items.map((conflict) => (
                         <Text
                           key={conflict}
                           span
@@ -206,7 +229,7 @@ export function LaunchOptionsCatalogEntriesTab(props: Props): ReactElement {
                     </Stack>
                   </MetaRow>
                 ) : null}
-                {selected.notes ? (
+                {shouldShowCatalogNotes(selected) ? (
                   <MetaRow label="Notes">
                     <Text size="sm" c="yellow.4">
                       {selected.notes}
@@ -214,7 +237,7 @@ export function LaunchOptionsCatalogEntriesTab(props: Props): ReactElement {
                   </MetaRow>
                 ) : null}
               </div>
-            </ScrollArea>
+            </div>
           </>
         ) : (
           <Text size="sm" c="dimmed" p="md">

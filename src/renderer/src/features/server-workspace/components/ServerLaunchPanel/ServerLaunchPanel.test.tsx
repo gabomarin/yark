@@ -63,6 +63,32 @@ describe("ServerLaunchPanel", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows managed-in copy for YARK-owned catalog rows (#381)", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AppProviders>
+        <ServerLaunchPanel server={profile()} onServerUpdated={vi.fn()} />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /browse asa catalog/i }));
+    await screen.findByRole("dialog", { name: /asa launch-options catalog/i });
+    await user.click(screen.getByRole("button", { name: /yark-owned filter/i }));
+
+    expect(
+      await screen.findAllByText(
+        /YARK already sets this from Server settings\. Do not add it in Extra arguments\./,
+      ),
+    ).not.toHaveLength(0);
+    expect(
+      screen.getByText(/YARK already sets this from Mods\. Do not add it in Extra arguments\./),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/extraArgs:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/lifecycle\/profile argument/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/^Where to change it$/i)).toBeInTheDocument();
+  });
+
   it("keeps tribe-log dependents disabled until parents are on (#93)", () => {
     render(
       <AppProviders>

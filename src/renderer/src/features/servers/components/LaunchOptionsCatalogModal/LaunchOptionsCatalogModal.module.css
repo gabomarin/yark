@@ -189,7 +189,8 @@
 .detailPane {
   flex: 1 1 0;
   min-height: 0;
-  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .listPane {
@@ -276,6 +277,13 @@
 .rowConflicts {
   margin-top: 0.35rem;
   color: var(--app-color-attention);
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+
+.rowManaged {
+  margin-top: 0.35rem;
+  color: var(--app-color-muted);
   font-size: 0.7rem;
   font-weight: 650;
 }
