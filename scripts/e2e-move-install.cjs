@@ -181,7 +181,8 @@ async function run() {
     await expectText(dialog, finalDest);
 
     await dialog.getByRole("button", { name: /^Start move$/i }).click();
-    await dialog.getByText("Move completed", { exact: false }).waitFor({
+    // Clean success toasts (#240); Done appears when the move finished without a leftover folder.
+    await dialog.getByRole("button", { name: /^Done$/i }).waitFor({
       state: "visible",
       timeout: 60_000,
     });

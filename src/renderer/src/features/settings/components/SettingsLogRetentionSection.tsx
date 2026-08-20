@@ -18,6 +18,7 @@ import {
   MAX_LOG_RETENTION_DAYS,
   MIN_LOG_RETENTION_DAYS,
 } from "@shared/log-retention";
+import { showOperatorToast } from "@ui/operatorToast";
 import { LogRetentionCleanupModal } from "./LogRetentionCleanupModal";
 import classes from "../SettingsPage.module.css";
 
@@ -44,7 +45,6 @@ export function SettingsLogRetentionSection(): ReactElement {
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
 
   const [cleanupOpen, setCleanupOpen] = useState(false);
   const [cleanupBusy, setCleanupBusy] = useState(false);
@@ -100,7 +100,6 @@ export function SettingsLogRetentionSection(): ReactElement {
     setCleanupPreview(null);
     setCleanupOpen(true);
     setError(null);
-    setInfo(null);
   };
 
   const previewCleanup = async () => {
@@ -147,7 +146,10 @@ export function SettingsLogRetentionSection(): ReactElement {
       ].filter((part): part is string => part !== null);
       if (skipped > 0) parts.push(`${skipped} skipped`);
       if (failed > 0) parts.push(`${failed} failed`);
-      setInfo(`Cleanup finished: ${parts.join(" · ")}.`);
+      showOperatorToast({
+        title: "Log retention",
+        message: `Cleanup finished: ${parts.join(" · ")}.`,
+      });
     } catch (cause) {
       setError(cleanupFailureMessage(cause, "Could not run cleanup"));
     } finally {
@@ -161,9 +163,9 @@ export function SettingsLogRetentionSection(): ReactElement {
         Log retention
       </Title>
 
-      {(error !== null || info !== null) && (
-        <Text size="xs" c={error !== null ? "red" : "dimmed"}>
-          {error ?? info}
+      {(error !== null) && (
+        <Text size="xs" c="red">
+          {error}
         </Text>
       )}
 

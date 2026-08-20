@@ -9,6 +9,7 @@ import type {
   ServerProfile,
   ServerRuntimeInfo,
 } from "@shared/types";
+import { showOperatorToast } from "@ui/operatorToast";
 import {
   allTargetsEligible,
   formatTargetNames,
@@ -183,6 +184,13 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
       }
       setOutcomes(nextOutcomes);
       setStep(4);
+      const successIds = nextOutcomes.filter((o) => o.ok).map((o) => o.targetId);
+      if (successIds.length > 0) {
+        showOperatorToast({
+          title: "Settings copied",
+          message: `Copied settings to ${formatTargetNames(props.servers, successIds)}. Nothing changed on ${source?.name ?? "the source"}.`,
+        });
+      }
       if (nextOutcomes.every((o) => !o.ok)) {
         setError("Configuration copy failed for every selected target.");
       }

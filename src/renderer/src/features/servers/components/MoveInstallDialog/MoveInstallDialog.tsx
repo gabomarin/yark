@@ -14,6 +14,7 @@ import type { FleetInstallRef } from "@shared/server-install-path";
 import type { MoveInstallProgress, ServerProfile } from "@shared/types";
 import { normalizeMoveInstallProgress } from "@shared/types";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
+import { showOperatorToast } from "@ui/operatorToast";
 import { MoveInstallDestFields } from "./MoveInstallDestFields";
 import {
   moveDestFolderName,
@@ -148,6 +149,13 @@ export function MoveInstallDialog(props: Props): ReactElement {
       setError(result.data.cleanupError);
     }
     setPhase("success");
+    if (result.data.oldSourceRemoved) {
+      showOperatorToast({
+        title: "Move completed",
+        message:
+          "The server now uses the new folder and the previous installation was removed.",
+      });
+    }
   };
 
   const handleCancelCopy = async (): Promise<void> => {
@@ -258,10 +266,9 @@ export function MoveInstallDialog(props: Props): ReactElement {
         )}
 
         {phase === "success" && oldSourceRemoved && (
-          <Alert color="green" title="Move completed">
-            The server now uses the new folder and the previous installation was
-            removed.
-          </Alert>
+          <Text size="sm" c="dimmed">
+            Installation moved. Close when you are ready.
+          </Text>
         )}
 
         {phase === "success" && !oldSourceRemoved && oldSourceDir !== null && (

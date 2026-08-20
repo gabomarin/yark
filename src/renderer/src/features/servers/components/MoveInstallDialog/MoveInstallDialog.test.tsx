@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { notifications } from "@mantine/notifications";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import type { ImportInstallProbe, ServerInstallationInfo, ServerProfile } from "@shared/types";
@@ -90,6 +91,11 @@ function stubApi(options: {
   pickedDest: string;
   probeHealth?: ServerInstallationInfo["health"];
   probeFailure?: { ok: false; error: string } | "reject";
+  moveResult?: {
+    oldSourceDir: string;
+    oldSourceRemoved: boolean;
+    cleanupError: string | null;
+  };
 }): void {
   Object.defineProperty(window, "api", {
     configurable: true,
@@ -108,8 +114,13 @@ function stubApi(options: {
       }),
       pickPath: vi.fn(async () => ({ ok: true as const, data: options.pickedDest })),
       onMoveInstallProgress: vi.fn(() => () => undefined),
-      moveServerInstall: vi.fn(),
-      dismissMoveServerInstallCleanup: vi.fn(),
+      moveServerInstall: vi.fn(async () => {
+        if (options.moveResult !== undefined) {
+          return { ok: true as const, data: options.moveResult };
+        }
+        return { ok: false as const, error: "not stubbed" };
+      }),
+      dismissMoveServerInstallCleanup: vi.fn(async () => ({ ok: true as const, data: undefined })),
       cancelMoveServerInstall: vi.fn(),
       cleanupMovedServerInstall: vi.fn(),
     },
@@ -307,5 +318,89 @@ describe("MoveInstallDialog dest preview (#294)", () => {
     await user.click(screen.getByRole("button", { name: /^browse$/i }));
     expect(await screen.findByText(/could not check the destination folder/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /start move/i })).toBeDisabled();
+  });
+});
+
+describe("MoveInstallDialog completion feedback (#240)", () => {
+  it("toasts on clean success and keeps no green success Alert", async () => {
+    const user = userEvent.setup();
+    const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
+    stubApi({
+      pickedDest: "C:\\ark\\Scorched",
+      probeHealth: "missing",
+      moveResult: {
+        oldSourceDir: "C:\\ark\\Island",
+        oldSourceRemoved: true,
+        cleanupError: null,
+      },
+    });
+
+    render(
+      <AppProviders>
+        <MoveInstallDialog
+          opened
+          server={island}
+          servers={[island, ragnarok]}
+          onClose={vi.fn()}
+          onMoved={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /^browse$/i }));
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /start move/i })).toBeEnabled();
+    });
+    await user.click(screen.getByRole("button", { name: /start move/i }));
+
+    await waitFor(() => {
+      expect(notifySpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Move completed",
+          color: "teal",
+        }),
+      );
+    });
+    expect(screen.queryByRole("alert", { name: /move completed/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^done$/i })).toBeInTheDocument();
+    notifySpy.mockRestore();
+  });
+
+  it("keeps a leftover-folder Alert when the old path was not removed", async () => {
+    const user = userEvent.setup();
+    const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
+    stubApi({
+      pickedDest: "C:\\ark\\Scorched",
+      probeHealth: "missing",
+      moveResult: {
+        oldSourceDir: "C:\\ark\\Island",
+        oldSourceRemoved: false,
+        cleanupError: "Access denied",
+      },
+    });
+
+    render(
+      <AppProviders>
+        <MoveInstallDialog
+          opened
+          server={island}
+          servers={[island, ragnarok]}
+          onClose={vi.fn()}
+          onMoved={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /^browse$/i }));
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /start move/i })).toBeEnabled();
+    });
+    await user.click(screen.getByRole("button", { name: /start move/i }));
+
+    expect(
+      await screen.findByRole("alert", { name: /leftover folder/i }),
+    ).toBeInTheDocument();
+    expect(notifySpy).not.toHaveBeenCalled();
+    notifySpy.mockRestore();
   });
 });
