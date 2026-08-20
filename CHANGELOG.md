@@ -9,11 +9,13 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-08-19
+
 ### Fixed
 
 - Overview **ServerCard** Compact density keeps a denser row when the window narrows; Comfortable-only stacking no longer overrides Compact (#377).
 - ASA launch-options catalog uses one list scrollbar, explains browse filters on hover/focus, and tells operators where YARK already manages a command instead of showing `extraArgs` audit tokens (#381).
-- Move install, copy configuration, INI save/discard, Logs export/clear/delete, and log-retention cleanup use operator toasts instead of lingering success banners; leftover-folder, failure, and pending-save Alerts stay (#240).
+- Move install, copy configuration, INI save/discard/reset, Logs export/clear/delete, and log-retention cleanup use operator toasts instead of lingering success banners; leftover-folder and failure Alerts stay (#240).
 
 ### Changed
 
