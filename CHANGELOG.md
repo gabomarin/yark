@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Overview **ServerCard** Compact density keeps a denser row when the window narrows; Comfortable-only stacking no longer overrides Compact (#377).
 - ASA launch-options catalog uses one list scrollbar, explains browse filters on hover/focus, and tells operators where YARK already manages a command instead of showing `extraArgs` audit tokens (#381).
 
 ### Changed
