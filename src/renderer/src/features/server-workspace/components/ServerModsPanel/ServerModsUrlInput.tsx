@@ -1,8 +1,11 @@
 import type { ReactElement } from "react";
 import { Button, Group, Progress, Stack, Text, TextInput } from "@mantine/core";
 import { LinkSimple } from "@phosphor-icons/react";
+import { useUiDensity } from "@app/AppProviders";
 import type { ModAddImportProgress } from "@shared/mod-add-input";
 import { formatModAddImportProgress } from "@shared/mod-add-input";
+import { searchFieldIconSize } from "@ui/SearchField/SearchField";
+import searchFieldClasses from "@ui/SearchField/SearchField.module.css";
 import classes from "./ServerModsPanel.module.css";
 
 interface Props {
@@ -14,6 +17,8 @@ interface Props {
 }
 
 export function ServerModsUrlInput(props: Props): ReactElement {
+  const density = useUiDensity();
+  const size = density === "compact" ? "xs" : "sm";
   const progressValue =
     props.progress !== null && props.progress.total > 0
       ? (props.progress.completed / props.progress.total) * 100
@@ -26,16 +31,18 @@ export function ServerModsUrlInput(props: Props): ReactElement {
           label="Add CurseForge Project ID or mod URL"
           description="New Project IDs start disabled. Enable them in the list when you want them on Start."
           placeholder="928793, https://www.curseforge.com/ark-survival-ascended/mods/..."
-          leftSection={<LinkSimple size={16} />}
+          size={size}
+          leftSection={<LinkSimple size={searchFieldIconSize(size)} />}
           value={props.value}
           disabled={props.busy}
           className={classes.search}
+          classNames={{ input: searchFieldClasses.input, section: searchFieldClasses.section }}
           onChange={(event) => props.onChange(event.currentTarget.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter" && !props.busy) props.onAdd();
           }}
         />
-        <Button loading={props.busy} onClick={props.onAdd}>
+        <Button size={size} loading={props.busy} onClick={props.onAdd}>
           Add mod
         </Button>
       </Group>

@@ -3,6 +3,7 @@ import type { AppEvent, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import searchFieldClasses from "@ui/SearchField/SearchField.module.css";
 import type { RconHistoryEntry } from "../../serverWorkspaceTypes";
 import { RconConsoleHistory } from "./RconConsoleHistory";
 import {
@@ -168,6 +169,7 @@ export function RconPanel(props: Props): ReactElement {
                 placeholder="e.g., ListPlayers, SaveWorld, or DoExit"
                 size="xs"
                 value={command}
+                classNames={{ input: searchFieldClasses.input }}
                 onChange={(event) => setCommand(event.currentTarget.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && !event.shiftKey) {

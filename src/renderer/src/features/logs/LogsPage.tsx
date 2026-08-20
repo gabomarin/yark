@@ -175,7 +175,6 @@ export function LogsPage(props: Props): ReactElement {
                   onChange={setSearch}
                   label="Search events across servers"
                   placeholder="Search…"
-                  size="sm"
                   className={classes.fleetSearch}
                 />
               </Group>

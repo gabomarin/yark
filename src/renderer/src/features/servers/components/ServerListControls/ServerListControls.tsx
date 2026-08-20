@@ -7,8 +7,12 @@ import {
   SortAscending,
   TreeStructure,
 } from "@phosphor-icons/react";
-import { Button, Menu, SegmentedControl, Text, Tooltip } from "@mantine/core";
+import { Button, Menu, SegmentedControl, Text } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
+import {
+  compactIconSegmentLabel,
+  compactSegmentedRootClass,
+} from "@ui/CompactSegmented/CompactSegmented";
 import {
   sortControlLabel,
   sortMenuOptionLabel,
@@ -27,22 +31,18 @@ interface Props {
 const viewData = [
   {
     value: "ungrouped",
-    label: (
-      <Tooltip label="All servers" withArrow>
-        <span className={classes.viewIcon} aria-label="All servers">
-          <List size={14} aria-hidden="true" />
-        </span>
-      </Tooltip>
+    label: compactIconSegmentLabel(
+      "All servers",
+      "All servers",
+      <List size={14} aria-hidden="true" />,
     ),
   },
   {
     value: "grouped",
-    label: (
-      <Tooltip label="By cluster" withArrow>
-        <span className={classes.viewIcon} aria-label="By cluster">
-          <TreeStructure size={14} aria-hidden="true" />
-        </span>
-      </Tooltip>
+    label: compactIconSegmentLabel(
+      "By cluster",
+      "By cluster",
+      <TreeStructure size={14} aria-hidden="true" />,
     ),
   },
 ];
@@ -118,7 +118,7 @@ export function ServerListControls(props: Props): ReactElement {
         value={props.view}
         aria-label="Server list layout"
         data-server-list-view={props.view}
-        className={classes.viewSegment}
+        className={compactSegmentedRootClass}
         data={viewData}
         onChange={(value) => {
           if (value === "ungrouped" || value === "grouped") {

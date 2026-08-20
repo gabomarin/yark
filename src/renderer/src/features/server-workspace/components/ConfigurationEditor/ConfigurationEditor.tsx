@@ -4,7 +4,6 @@ import {
   CaretDown,
   CaretRight,
   FloppyDisk,
-  MagnifyingGlass,
   ArrowCounterClockwise,
   ArrowUUpLeft,
   FunnelSimple,
@@ -35,6 +34,7 @@ import type {
 } from "@shared/types";
 import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
+import { SearchField } from "@ui/SearchField/SearchField";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useUiDensity } from "@app/AppProviders";
 import {
@@ -451,12 +451,13 @@ export function ConfigurationEditor(props: Props): ReactElement {
             </Stack>
 
             <Group gap="sm" align="center" className={classes.filterBar}>
-              <TextInput
+              <SearchField
                 className={classes.search}
+                size="xs"
                 placeholder="Search settings"
-                leftSection={<MagnifyingGlass size={14} />}
+                label="Search settings"
                 value={search}
-                onChange={(event) => setSearch(event.currentTarget.value)}
+                onChange={setSearch}
               />
               <Select
                 className={classes.categorySelect}

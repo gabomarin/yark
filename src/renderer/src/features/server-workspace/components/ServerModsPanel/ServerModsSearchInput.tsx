@@ -14,13 +14,13 @@ interface Props {
 
 export function ServerModsSearchInput(props: Props): ReactElement {
   const density = useUiDensity();
-  const size = density === "compact" ? "sm" : "md";
+  const size = density === "compact" ? "xs" : "sm";
   const iconSize = searchFieldIconSize(size);
 
   return (
-    <Group align="flex-end" wrap="wrap">
+    <Group align="center" wrap="wrap">
       <SearchField
-        fieldLabel="Search CurseForge"
+        label="Search CurseForge"
         placeholder="spyglass, structures, creatures…"
         value={props.value}
         size={size}

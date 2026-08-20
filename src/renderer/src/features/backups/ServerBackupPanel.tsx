@@ -5,7 +5,6 @@ import {
   CaretRight,
   FolderOpen,
   HardDrives,
-  MagnifyingGlass,
   Trash,
   UploadSimple,
 } from "@phosphor-icons/react";
@@ -21,7 +20,6 @@ import {
   Switch,
   Tabs,
   Text,
-  TextInput,
   Title,
   Tooltip,
   UnstyledButton,
@@ -42,6 +40,7 @@ import type {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { PathField } from "@ui/PathField/PathField";
+import { SearchField } from "@ui/SearchField/SearchField";
 import { BackupHistoryTable } from "./BackupHistoryTable";
 import { BackupRestoreModal } from "./BackupRestoreModal";
 import { runBackupExport, runBackupImport } from "./backupPortability";
@@ -999,13 +998,12 @@ export function ServerBackupPanel(props: Props): ReactElement {
                   />
                 )}
                 {activeKind === "players" && kindBackups.length > 0 && (
-                  <TextInput
+                  <SearchField
                     size="xs"
                     placeholder="Search players"
-                    aria-label="Search players"
-                    leftSection={<MagnifyingGlass size={14} />}
+                    label="Search players"
                     value={playerSearch}
-                    onChange={(event) => setPlayerSearch(event.currentTarget.value)}
+                    onChange={setPlayerSearch}
                     className={classes.playerSearch}
                   />
                 )}

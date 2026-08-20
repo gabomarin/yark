@@ -1,0 +1,50 @@
+.root :global(.mantine-SegmentedControl-label) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: var(--app-space-xs);
+  line-height: 0;
+}
+
+.root :global(.mantine-SegmentedControl-label) > * {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  line-height: 0;
+}
+
+.icon svg {
+  display: block;
+}
+
+.labeled {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--app-space-xxs);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.labelText {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.rootLabeled :global(.mantine-SegmentedControl-label) {
+  line-height: 1.2;
+  padding-inline: var(--app-space-sm);
+}
+
+.rootLabeled :global(.mantine-SegmentedControl-label) > * {
+  line-height: inherit;
+}

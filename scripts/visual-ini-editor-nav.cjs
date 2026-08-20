@@ -1,5 +1,5 @@
 /**
- * INI editor nav (file + Visual/Text) alignment + selected color —
+ * INI editor nav (file + Visual/Text) layout alignment —
  * docs/visual-testing.md
  * Usage: npm run build && node scripts/visual-ini-editor-nav.cjs
  */
@@ -18,9 +18,7 @@ const sizes = [
   { name: "qhd-2k", width: 2560, height: 1440 },
 ];
 
-/** Category / selected segmented token (#131F43). */
-const INI_CATEGORY_RGB = { r: 19, g: 31, b: 67 };
-
+/** INI nav uses the same compact Mantine segmented chrome as Overview layout grouping. */
 async function shot(page, outDir, name) {
   const file = path.join(outDir, `${name}.png`);
   await page.screenshot({ path: file, fullPage: false });
@@ -33,22 +31,6 @@ async function goNav(page, label) {
   await page.waitForTimeout(250);
 }
 
-function parseRgb(cssColor) {
-  const m = String(cssColor).match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
-  if (!m) return null;
-  return { r: Number(m[1]), g: Number(m[2]), b: Number(m[3]) };
-}
-
-function rgbClose(a, b, tol = 8) {
-  return (
-    a !== null &&
-    b !== null &&
-    Math.abs(a.r - b.r) <= tol &&
-    Math.abs(a.g - b.g) <= tol &&
-    Math.abs(a.b - b.b) <= tol
-  );
-}
-
 async function measureIniNav(page) {
   return page.evaluate(() => {
     const nav = document.querySelector("[data-ini-editor-nav]");
@@ -56,26 +38,20 @@ async function measureIniNav(page) {
       return { found: false };
     }
     const roots = Array.from(nav.querySelectorAll(".mantine-SegmentedControl-root"));
-    const indicators = Array.from(
-      nav.querySelectorAll(".mantine-SegmentedControl-indicator"),
-    );
     const rects = roots.map((el) => {
       const r = el.getBoundingClientRect();
       return { top: r.top, bottom: r.bottom, height: r.height, left: r.left, width: r.width };
     });
     const navRect = nav.getBoundingClientRect();
-    const styles = indicators.map((el) => getComputedStyle(el).backgroundColor);
     const labelTops = Array.from(nav.querySelectorAll(".mantine-SegmentedControl-label")).map(
       (el) => el.getBoundingClientRect().top,
     );
     return {
       found: true,
       rootCount: roots.length,
-      indicatorCount: indicators.length,
       rects,
       navTop: navRect.top,
       navHeight: navRect.height,
-      indicatorBackgrounds: styles,
       labelTops,
       navScrollWidth: nav.scrollWidth,
       navClientWidth: nav.clientWidth,
@@ -142,14 +118,6 @@ async function assertNavOk(metrics, sizeName) {
     modeSeg.left >= fileSeg.left + fileSeg.width - 1,
     `${sizeName}: mode control sits to the right of file control`,
   );
-
-  for (const bg of metrics.indicatorBackgrounds) {
-    const rgb = parseRgb(bg);
-    assert.ok(
-      rgbClose(rgb, INI_CATEGORY_RGB),
-      `${sizeName}: indicator color ~#131F43 got ${bg}`,
-    );
-  }
 }
 
 async function run() {
@@ -233,7 +201,6 @@ async function run() {
             rootCount: report.metrics.rootCount,
             tops: report.metrics.rects?.map((r) => r.top),
             heights: report.metrics.rects?.map((r) => r.height),
-            indicators: report.metrics.indicatorBackgrounds,
           },
           null,
           0,

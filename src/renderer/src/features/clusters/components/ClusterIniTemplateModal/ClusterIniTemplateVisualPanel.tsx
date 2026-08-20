@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { CaretDown, CaretRight, ArrowCounterClockwise, FunnelSimple, MagnifyingGlass } from "@phosphor-icons/react";
+import { CaretDown, CaretRight, ArrowCounterClockwise, FunnelSimple } from "@phosphor-icons/react";
 import {
   Badge,
   Button,
@@ -30,6 +30,7 @@ import {
 import { numberInputValueFromIni } from "@features/server-workspace/iniNumberInput";
 import { useMemo, useState } from "react";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
+import { SearchField } from "@ui/SearchField/SearchField";
 import classes from "./ClusterIniTemplateModal.module.css";
 
 interface Props {
@@ -125,12 +126,13 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
   return (
     <div className={classes.visualRoot}>
       <Group gap="sm" wrap="wrap">
-        <TextInput
+        <SearchField
           style={{ flex: 1, minWidth: 180 }}
+          size="xs"
           placeholder="Search settings"
-          leftSection={<MagnifyingGlass size={14} />}
+          label="Search settings"
           value={search}
-          onChange={(event) => setSearch(event.currentTarget.value)}
+          onChange={setSearch}
         />
         <Select
           style={{ width: 240 }}
