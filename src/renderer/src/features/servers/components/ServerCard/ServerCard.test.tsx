@@ -1165,6 +1165,8 @@ describe("ServerCard", () => {
       "data-size",
       "md",
     );
+    // Narrow-viewport stacking is density-scoped in ServerCard.module.css (#377):
+    // Comfortable uses :not([data-ui-density="compact"]); Compact has later breakpoints.
 
     rerender(
       <AppProviders density="comfortable">

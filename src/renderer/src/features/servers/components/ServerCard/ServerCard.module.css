@@ -331,51 +331,56 @@
   }
 }
 
+/* Comfortable-only narrow layouts — Compact keeps a denser row longer (#377). */
 @media (max-width: 1400px) {
-  .cardHit {
+  .card:not([data-ui-density="compact"]) .cardHit {
     grid-template-columns: minmax(250px, 0.9fr) minmax(360px, 1.6fr);
     gap: var(--app-space-lg);
   }
 
-  .metaGrid {
+  .card:not([data-ui-density="compact"]) .metaGrid {
     gap: var(--app-space-sm);
   }
 }
 
 @media (max-width: 1100px) {
-  .mainRow {
+  .card:not([data-ui-density="compact"]) .mainRow {
     grid-template-columns: 1fr;
     gap: var(--app-space-md);
   }
 
-  .cardHit {
+  .card:not([data-ui-density="compact"]) .cardHit {
     grid-template-columns: minmax(180px, 0.7fr) minmax(0, 1.7fr);
   }
 
-  .rowActions {
+  .card:not([data-ui-density="compact"]) .rowActions {
     justify-content: flex-end;
   }
 }
 
 @media (max-width: 760px) {
-  .cardHit {
+  .card:not([data-ui-density="compact"]) .cardHit {
     grid-template-columns: 1fr;
     gap: var(--app-space-md);
   }
 
-  .identityRow {
+  .card:not([data-ui-density="compact"]) .identityRow {
     flex-wrap: wrap;
   }
 
-  .metaGrid {
+  .card:not([data-ui-density="compact"]) .metaGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .rowActions {
+  .card:not([data-ui-density="compact"]) .rowActions {
     justify-content: stretch;
   }
 
-  .runtimeError {
+  .card:not([data-ui-density="compact"]) .runtimeError {
+    padding-left: 0;
+  }
+
+  .card:not([data-ui-density="compact"]) .progressHint {
     padding-left: 0;
   }
 }
@@ -400,15 +405,49 @@
   padding-left: 40px;
 }
 
-@media (max-width: 760px) {
-  .card[data-ui-density="compact"] .runtimeError {
-    padding-left: 0;
+/* Compact narrows later and stays tighter when it finally stacks (#377). */
+@media (max-width: 960px) {
+  .card[data-ui-density="compact"] .cardHit {
+    grid-template-columns: minmax(160px, 0.75fr) minmax(0, 1.5fr);
+    gap: var(--app-space-sm);
   }
 
-  .progressHint {
-    padding-left: 0;
+  .card[data-ui-density="compact"] .metaGrid {
+    gap: var(--app-space-xs);
+  }
+}
+
+@media (max-width: 720px) {
+  .card[data-ui-density="compact"] .mainRow {
+    grid-template-columns: 1fr;
+    gap: var(--app-space-xs);
   }
 
+  .card[data-ui-density="compact"] .rowActions {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 560px) {
+  .card[data-ui-density="compact"] .cardHit {
+    grid-template-columns: 1fr;
+    gap: var(--app-space-xs);
+  }
+
+  .card[data-ui-density="compact"] .identityRow {
+    flex-wrap: wrap;
+  }
+
+  .card[data-ui-density="compact"] .metaGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--app-space-xs);
+  }
+
+  .card[data-ui-density="compact"] .rowActions {
+    justify-content: stretch;
+  }
+
+  .card[data-ui-density="compact"] .runtimeError,
   .card[data-ui-density="compact"] .progressHint {
     padding-left: 0;
   }
