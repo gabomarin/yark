@@ -96,7 +96,6 @@ export function ConfigurationEditor(props: Props): ReactElement {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
   const [preview, setPreview] = useState<IniPreview | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<IniFilterId>("all");
@@ -123,7 +122,6 @@ export function ConfigurationEditor(props: Props): ReactElement {
 
     setLoading(true);
     setError(null);
-    setInfo(null);
     setPreview(null);
     publishDirty(null, null);
 
@@ -214,7 +212,6 @@ export function ConfigurationEditor(props: Props): ReactElement {
     const nextPayload = withFileText(payload, fileKey, nextText);
     setPayload(nextPayload);
     publishDirty(nextPayload, baseline);
-    setInfo(null);
     setPreview(null);
   };
 
@@ -254,7 +251,10 @@ export function ConfigurationEditor(props: Props): ReactElement {
         setPayload(nextPayload);
         publishDirty(nextPayload, baseline);
         setPreview(null);
-        setInfo(`${label} restored to defaults (pending save)`);
+        showOperatorToast({
+          title: "INI editor",
+          message: `${label} restored to default (pending save).`,
+        });
       },
     });
   };
@@ -288,7 +288,6 @@ export function ConfigurationEditor(props: Props): ReactElement {
     if (payload === null) return false;
     setBusy(true);
     setError(null);
-    setInfo(null);
     try {
       const sanitized = sanitizeServerIniPayload(payload);
       const result = await window.api.saveServerIni(props.server.id, sanitized);
@@ -394,11 +393,6 @@ export function ConfigurationEditor(props: Props): ReactElement {
         {error !== null && (
           <Alert color="red" mb="sm" onClose={() => setError(null)} withCloseButton>
             {error}
-          </Alert>
-        )}
-        {info !== null && (
-          <Alert color="blue" mb="sm" onClose={() => setInfo(null)} withCloseButton>
-            {info}
           </Alert>
         )}
         {props.serverActive === true && !filesJobActive && (

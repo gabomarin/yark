@@ -183,7 +183,7 @@ Secondary badges (attention counts, etc.) stay for outcomes — not a second
 | Channel | Use for |
 | --- | --- |
 | **Toast** (`notifications.show`, **bottom-right**) | Completed / failed / cancelled **operator actions** that do not need to stay on screen (Check Servers Health summary, Check server updates, SteamCMD install/update/verify, backup CRUD, prefs save fail, move-install success, copy-configuration success, INI save/discard, Logs export/clear/delete, log-retention cleanup). Bottom-right avoids covering Overview/workspace toolbars. |
-| **Inline Alert** | **State that remains true** (files locked while updating, server running, wizard warnings, port conflicts, move leftover-folder decision, INI last-saved diff, INI reset pending save) or confirm-modal decision context |
+| **Inline Alert** | **State that remains true** (files locked while updating, server running, wizard warnings, port conflicts, move leftover-folder decision, INI last-saved diff) or confirm-modal decision context |
 | **Panel / dock** | Long-running or multi-item work (Downloads queue / footer teaser, stop progress, fleet backup alerts, Overview attention list) |
 | **Global AppShell banner** | Optional shell prop kept for rare app-wide hard failures; **App does not use it** for per-action IPC — prefer `showOperatorToast` / `showOperatorError` (`shared/ui/operatorToast.ts`) |
 
