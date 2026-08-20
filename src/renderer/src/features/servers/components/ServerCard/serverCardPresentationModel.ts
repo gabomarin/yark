@@ -134,6 +134,7 @@ export function deriveServerCardView(input: {
   steamCmdPaused?: boolean;
   steamCmdQueued?: boolean;
   stopBusy?: boolean;
+  startBusy?: boolean;
   steamCmdOperation: SteamCmdOperation;
   steamCmdProgressLabel: string | null;
   steamCmdProgressBytesDownloaded: number | null;
@@ -157,6 +158,7 @@ export function deriveServerCardView(input: {
     ? VERSION_REFRESHES_ON_START_HINT
     : null;
   const stopBusy = input.stopBusy === true;
+  const startBusy = input.startBusy === true;
   const steamCmdPaused = input.steamCmdPaused === true;
   const steamCmdQueued = input.steamCmdQueued === true;
   const filesLocked = input.steamCmdBusy || steamCmdPaused || steamCmdQueued;
@@ -188,12 +190,14 @@ export function deriveServerCardView(input: {
     isInstallationReady: ready,
     status: input.status,
     serverEnabled,
+    startBusy,
   });
   const restartAction = resolveRestartAction({
     steamCmdBusy: filesLocked,
     isInstallationReady: ready,
     status: input.status,
     serverEnabled,
+    startBusy,
   });
   const updateAction = resolveUpdateAction({
     steamCmdBusy: updateSlotBusy,

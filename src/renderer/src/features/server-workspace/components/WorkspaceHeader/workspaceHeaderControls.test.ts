@@ -72,4 +72,29 @@ describe("workspaceHeaderControls", () => {
     expect(controls.canEnable).toBe(false);
     expect(controls.canStart).toBe(false);
   });
+
+  it("blocks Start and Restart while startBusy (#390)", () => {
+    const starting = workspaceHeaderControls({
+      status: "stopped",
+      enabled: true,
+      filesJobActive: false,
+      filesReady: true,
+      hasToggleEnabled: true,
+      startBusy: true,
+    });
+    expect(starting.canStart).toBe(false);
+    expect(starting.canRestart).toBe(false);
+
+    const restarting = workspaceHeaderControls({
+      status: "running",
+      enabled: true,
+      filesJobActive: false,
+      filesReady: true,
+      hasToggleEnabled: true,
+      startBusy: true,
+    });
+    expect(restarting.canStart).toBe(false);
+    expect(restarting.canRestart).toBe(false);
+    expect(restarting.canStop).toBe(true);
+  });
 });

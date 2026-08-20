@@ -32,6 +32,7 @@ interface Props {
     | "verify-files"
     | null;
   stopProgressByServerId?: Map<string, ServerStopProgress>;
+  startBusyByServerId?: ReadonlySet<string>;
   checkingUpdates?: boolean;
   handlers: ServerCardHandlers;
 }
@@ -39,6 +40,7 @@ interface Props {
 export function OverviewServerCard(props: Props): ReactElement {
   const stopProgress = props.stopProgressByServerId?.get(props.server.id);
   const stopBusy = stopProgress?.active === true;
+  const startBusy = props.startBusyByServerId?.has(props.server.id) === true;
   const pausedJob = props.steamCmdPausedByServerId?.get(props.server.id);
   const queuedJob = props.steamCmdQueuedByServerId?.get(props.server.id);
   const liveSteamCmd =
@@ -70,6 +72,7 @@ export function OverviewServerCard(props: Props): ReactElement {
           : (overlayJob?.operation ?? null)
       }
       stopBusy={stopBusy}
+      startBusy={startBusy}
       stopProgressPercent={stopBusy ? (stopProgress?.percent ?? null) : null}
       stopProgressLabel={stopBusy ? (stopProgress?.label ?? null) : null}
       checkingUpdates={props.checkingUpdates}

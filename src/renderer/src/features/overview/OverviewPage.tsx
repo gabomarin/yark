@@ -55,6 +55,7 @@ interface Props {
   steamCmdProgressBytesTotal?: number | null;
   steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null;
   stopProgressByServerId?: Map<string, ServerStopProgress>;
+  startBusyByServerId?: ReadonlySet<string>;
   onOpenWorkspace: (server: ServerProfile) => void;
   onOpenLogs: (serverId: string) => void;
   onReviewError: (serverId: string) => void;
@@ -124,6 +125,7 @@ export function OverviewPage(props: Props): ReactElement {
           steamCmdProgressBytesTotal={props.steamCmdProgressBytesTotal ?? null}
           steamCmdOperation={props.steamCmdOperation ?? null}
           stopProgressByServerId={props.stopProgressByServerId}
+          startBusyByServerId={props.startBusyByServerId}
           onOpenWorkspace={props.onOpenWorkspace}
           onOpenLogs={props.onOpenLogs}
           onReviewError={props.onReviewError}

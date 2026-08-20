@@ -199,6 +199,14 @@ export function App({
   const [stopProgressByServerId, setStopProgressByServerId] = useState<
     Map<string, ServerStopProgress>
   >(new Map());
+  /** Optimistic Start/Restart busy until IPC returns (#390). */
+  const [startBusyByServerId, setStartBusyByServerId] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const startBusyByServerIdRef = useRef(startBusyByServerId);
+  useEffect(() => {
+    startBusyByServerIdRef.current = startBusyByServerId;
+  }, [startBusyByServerId]);
   const [route, setRoute] = useState<Route>("overview");
   const [overlay, setOverlay] = useState<Overlay>(null);
   const [importInstallOpen, setImportInstallOpen] = useState(false);
@@ -1697,87 +1705,120 @@ export function App({
     [refresh],
   );
 
+  const setServerStartBusy = useCallback((id: string, busy: boolean) => {
+    setStartBusyByServerId((prev) => {
+      const has = prev.has(id);
+      if (busy === has) {
+        return prev;
+      }
+      const next = new Set(prev);
+      if (busy) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      startBusyByServerIdRef.current = next;
+      return next;
+    });
+  }, []);
+
   const startServer = useCallback(
     async (id: string, options?: StartServerOptions) => {
-      const result = await window.api.startServer(id, {
-        openNativeConsole: openNativeTerminalOnStart,
-        ...options,
-      });
-      if (!result.ok) {
-        const message = result.error ?? "Unknown error";
-        if (isHostPortProbeError(message)) {
-          const server = servers.find((item) => item.id === id);
-          openHostPortProbeModal({
-            serverName: server?.name ?? id,
-            message,
-            onEditPorts: () => {
-              setRoute("overview");
-              setOverlay({ kind: "workspace", serverId: id, initialTab: "server" });
-            },
-            onStartThisSession: (ports: SessionPortSet) => {
-              void startServer(id, { sessionPorts: ports });
-            },
-            onStartAnyway: isHostPortBusyError(message)
-              ? undefined
-              : () => {
-                  void startServer(id, { skipPortValidation: true });
-                },
-          });
-        } else {
-          showOperatorError(message, "Could not start server");
-        }
-      } else if (options?.sessionPorts != null) {
-        const ports = options.sessionPorts;
-        showOperatorToast({
-          title: "Started with session ports",
-          message: `Running on game ${ports.gamePort} / query ${ports.queryPort} / RCON ${ports.rconPort}. Saved profile ports are unchanged.`,
-        });
+      if (startBusyByServerIdRef.current.has(id)) {
+        return;
       }
-      await refresh();
+      setServerStartBusy(id, true);
+      try {
+        const result = await window.api.startServer(id, {
+          openNativeConsole: openNativeTerminalOnStart,
+          ...options,
+        });
+        if (!result.ok) {
+          const message = result.error ?? "Unknown error";
+          if (isHostPortProbeError(message)) {
+            const server = servers.find((item) => item.id === id);
+            openHostPortProbeModal({
+              serverName: server?.name ?? id,
+              message,
+              onEditPorts: () => {
+                setRoute("overview");
+                setOverlay({ kind: "workspace", serverId: id, initialTab: "server" });
+              },
+              onStartThisSession: (ports: SessionPortSet) => {
+                void startServer(id, { sessionPorts: ports });
+              },
+              onStartAnyway: isHostPortBusyError(message)
+                ? undefined
+                : () => {
+                    void startServer(id, { skipPortValidation: true });
+                  },
+            });
+          } else {
+            showOperatorError(message, "Could not start server");
+          }
+        } else if (options?.sessionPorts != null) {
+          const ports = options.sessionPorts;
+          showOperatorToast({
+            title: "Started with session ports",
+            message: `Running on game ${ports.gamePort} / query ${ports.queryPort} / RCON ${ports.rconPort}. Saved profile ports are unchanged.`,
+          });
+        }
+        await refresh();
+      } finally {
+        setServerStartBusy(id, false);
+      }
     },
-    [openNativeTerminalOnStart, refresh, servers],
+    [openNativeTerminalOnStart, refresh, servers, setServerStartBusy],
   );
 
   const restartServer = useCallback(
     async (id: string, options?: StartServerOptions) => {
-      const res = await window.api.restartServer(id, {
-        openNativeConsole: openNativeTerminalOnStart,
-        ...options,
-      });
-      if (!res.ok) {
-        const message = res.error ?? "Could not restart the server";
-        if (isHostPortProbeError(message)) {
-          const server = servers.find((item) => item.id === id);
-          // Restart already stopped the process before the probe; recover via start.
-          openHostPortProbeModal({
-            serverName: server?.name ?? id,
-            message,
-            onEditPorts: () => {
-              setRoute("overview");
-              setOverlay({ kind: "workspace", serverId: id, initialTab: "server" });
-            },
-            onStartThisSession: (ports: SessionPortSet) => {
-              void startServer(id, { sessionPorts: ports });
-            },
-            onStartAnyway: isHostPortBusyError(message)
-              ? undefined
-              : () => {
-                  void startServer(id, { skipPortValidation: true });
-                },
-          });
-        } else {
-          showOperatorError(message, "Could not restart server");
-        }
-      } else if (options?.sessionPorts != null) {
-        const ports = options.sessionPorts;
-        showOperatorToast({
-          title: "Restarted with session ports",
-          message: `Running on game ${ports.gamePort} / query ${ports.queryPort} / RCON ${ports.rconPort}. Saved profile ports are unchanged.`,
-        });
+      if (startBusyByServerIdRef.current.has(id)) {
+        return;
       }
-      await refresh();
+      setServerStartBusy(id, true);
+      try {
+        const res = await window.api.restartServer(id, {
+          openNativeConsole: openNativeTerminalOnStart,
+          ...options,
+        });
+        if (!res.ok) {
+          const message = res.error ?? "Could not restart the server";
+          if (isHostPortProbeError(message)) {
+            const server = servers.find((item) => item.id === id);
+            // Restart already stopped the process before the probe; recover via start.
+            openHostPortProbeModal({
+              serverName: server?.name ?? id,
+              message,
+              onEditPorts: () => {
+                setRoute("overview");
+                setOverlay({ kind: "workspace", serverId: id, initialTab: "server" });
+              },
+              onStartThisSession: (ports: SessionPortSet) => {
+                void startServer(id, { sessionPorts: ports });
+              },
+              onStartAnyway: isHostPortBusyError(message)
+                ? undefined
+                : () => {
+                    void startServer(id, { skipPortValidation: true });
+                  },
+            });
+          } else {
+            showOperatorError(message, "Could not restart server");
+          }
+        } else if (options?.sessionPorts != null) {
+          const ports = options.sessionPorts;
+          showOperatorToast({
+            title: "Restarted with session ports",
+            message: `Running on game ${ports.gamePort} / query ${ports.queryPort} / RCON ${ports.rconPort}. Saved profile ports are unchanged.`,
+          });
+        }
+        await refresh();
+      } finally {
+        setServerStartBusy(id, false);
+      }
     },
-    [openNativeTerminalOnStart, refresh, servers, startServer],
+    [openNativeTerminalOnStart, refresh, servers, setServerStartBusy, startServer],
   );
 
   const confirmKillServer = useCallback(
@@ -1961,6 +2002,7 @@ export function App({
             stopProgress={
               stopProgressByServerId.get(overlay.serverId) ?? null
             }
+            startBusy={startBusyByServerId.has(overlay.serverId)}
             onLogsFocusConsumed={() =>
               setOverlay((current) =>
                 current?.kind === "workspace"
@@ -2144,6 +2186,7 @@ export function App({
               steamCmdProgressBytesTotal={steamCmdStatus?.progressBytesTotal ?? null}
               steamCmdOperation={steamCmdStatus?.operation ?? null}
               stopProgressByServerId={stopProgressByServerId}
+              startBusyByServerId={startBusyByServerId}
               onOpenWorkspace={(server) => {
                 const updatingThisServer =
                   steamCmdBusy && steamCmdStatus?.serverId === server.id;

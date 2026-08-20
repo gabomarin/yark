@@ -46,6 +46,8 @@ interface Props {
   filesJobQueueKind?: "active" | "paused" | "queued" | null;
   /** Safe stop in progress for the selected server (SaveWorld → backup → DoExit). */
   stopProgress?: ServerStopProgress | null;
+  /** Optimistic Start/Restart in flight before runtime status updates (#390). */
+  startBusy?: boolean;
   onDismissOnboarding?: () => void;
   onSelectServer: (serverId: string) => void;
   onBack: () => void;
@@ -302,6 +304,7 @@ export function ServerWorkspacePage(props: Props): ReactElement {
         installation={installation}
         filesJobActive={filesJobActive || stopJobActive}
         filesJobReason={stopJobActive ? stopLockReason : filesLockReason}
+        startBusy={props.startBusy === true}
         onStart={() => props.onStartServer(selectedServer.id)}
         onStop={() => props.onStopServer(selectedServer.id)}
         onRestart={() => props.onRestartServer(selectedServer.id)}

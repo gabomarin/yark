@@ -7,6 +7,7 @@ export function workspaceHeaderControls(input: {
   filesJobActive: boolean;
   filesReady: boolean;
   hasToggleEnabled: boolean;
+  startBusy?: boolean;
 }): {
   canStart: boolean;
   canEnable: boolean;
@@ -16,14 +17,17 @@ export function workspaceHeaderControls(input: {
   const status = input.status ?? "stopped";
   const isServerDisabled = !input.enabled;
   const filesJobActive = input.filesJobActive;
+  const startBusy = input.startBusy === true;
   return {
     canStart:
       (status === "stopped" || status === "error") &&
       !filesJobActive &&
       !isServerDisabled &&
-      input.filesReady,
+      input.filesReady &&
+      !startBusy,
     canEnable: isServerDisabled && input.hasToggleEnabled && !filesJobActive,
     canStop: status === "running" || status === "starting",
-    canRestart: status === "running" && !filesJobActive && input.filesReady,
+    canRestart:
+      status === "running" && !filesJobActive && input.filesReady && !startBusy,
   };
 }

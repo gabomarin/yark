@@ -200,4 +200,44 @@ describe("serverCardActionModel combos", () => {
     expect(runtime.kind).toBe("start");
     expect(runtime.disabled).toBe(true);
   });
+
+  it("shows Starting… while startBusy before runtime status updates (#390)", () => {
+    const runtime = resolveRuntimeAction({
+      steamCmdBusy: false,
+      isInstallationReady: true,
+      status: "stopped",
+      startBusy: true,
+    });
+    expect(runtime).toMatchObject({
+      kind: "starting",
+      label: "Starting…",
+      disabled: true,
+      visible: true,
+    });
+  });
+
+  it("keeps Stop once runtime status is starting even with startBusy (#390)", () => {
+    const runtime = resolveRuntimeAction({
+      steamCmdBusy: false,
+      isInstallationReady: true,
+      status: "starting",
+      startBusy: true,
+    });
+    expect(runtime.kind).toBe("stop");
+    expect(runtime.disabled).toBe(false);
+  });
+
+  it("shows Restarting… while startBusy on a running server (#390)", () => {
+    const restart = resolveRestartAction({
+      steamCmdBusy: false,
+      isInstallationReady: true,
+      status: "running",
+      startBusy: true,
+    });
+    expect(restart).toMatchObject({
+      label: "Restarting…",
+      disabled: true,
+      visible: true,
+    });
+  });
 });

@@ -71,6 +71,8 @@ export function resolveRuntimeAction(input: {
   isInstallationReady: boolean;
   status: ServerStatus;
   serverEnabled?: boolean;
+  /** Optimistic Start click before runtime status becomes starting (#390). */
+  startBusy?: boolean;
 }): ServerCardRuntimeAction {
   const serverEnabled = input.serverEnabled ?? true;
   const filesLocked =
@@ -166,6 +168,16 @@ export function resolveRuntimeAction(input: {
       visible: true,
     };
   }
+  if (input.startBusy === true) {
+    return {
+      kind: "starting",
+      label: "Starting…",
+      color: "teal",
+      variant: "light",
+      disabled: true,
+      visible: true,
+    };
+  }
   // error / stopped: Start remains available so a crash does not block relaunch.
   return {
     kind: "start",
@@ -182,6 +194,7 @@ export function resolveRestartAction(input: {
   isInstallationReady: boolean;
   status: ServerStatus;
   serverEnabled?: boolean;
+  startBusy?: boolean;
 }): ServerCardRestartAction {
   const serverEnabled = input.serverEnabled ?? true;
   const transitioning = input.status === "starting" || input.status === "stopping";
@@ -192,6 +205,15 @@ export function resolveRestartAction(input: {
       variant: "light",
       disabled: true,
       visible: false,
+    };
+  }
+  if (input.startBusy === true) {
+    return {
+      label: "Restarting…",
+      color: "fossil",
+      variant: "filled",
+      disabled: true,
+      visible: true,
     };
   }
   return {
