@@ -1069,7 +1069,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
                   <span>
                     <Button
                       color="red"
-                      variant="light"
+                      variant="filled"
                       size="compact-sm"
                       leftSection={<Trash size={14} />}
                       disabled={
@@ -1087,7 +1087,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
                 <Tooltip label="Remove every failed row for this server and backup kind">
                   <Button
                     color="red"
-                    variant="subtle"
+                    variant="filled"
                     size="compact-sm"
                     disabled={busy || props.createLocked === true}
                     onClick={confirmClearFailed}

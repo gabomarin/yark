@@ -43,6 +43,8 @@ export default defineConfig({
           name: "node",
           include: ["tests/**/*.test.ts"],
           environment: "node",
+          // SQLite boot/snapshot/migration suites can exceed 5s on CI under parallel load.
+          testTimeout: 15_000,
         },
       },
       {

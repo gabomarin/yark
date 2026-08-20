@@ -26,6 +26,7 @@ export type ServerCardFilesJobAction = {
 export type ServerCardRestartAction = {
   label: string;
   color: string;
+  variant: "filled" | "light";
   disabled: boolean;
   visible: boolean;
 };
@@ -88,7 +89,7 @@ export function resolveRuntimeAction(input: {
         kind: "stop",
         label: "Stop server",
         color: "red",
-        variant: "light",
+        variant: "filled",
         disabled: false,
         visible: true,
       };
@@ -98,7 +99,7 @@ export function resolveRuntimeAction(input: {
         kind: "stopping",
         label: "Stopping…",
         color: "red",
-        variant: "light",
+        variant: "filled",
         disabled: true,
         visible: true,
       };
@@ -139,7 +140,7 @@ export function resolveRuntimeAction(input: {
       kind: "stop",
       label: "Stop server",
       color: "red",
-      variant: "light",
+      variant: "filled",
       disabled: false,
       visible: true,
     };
@@ -150,7 +151,7 @@ export function resolveRuntimeAction(input: {
       kind: "stop",
       label: "Stop server",
       color: "red",
-      variant: "light",
+      variant: "filled",
       disabled: false,
       visible: true,
     };
@@ -160,7 +161,7 @@ export function resolveRuntimeAction(input: {
       kind: "stopping",
       label: "Stopping…",
       color: "red",
-      variant: "light",
+      variant: "filled",
       disabled: true,
       visible: true,
     };
@@ -188,6 +189,7 @@ export function resolveRestartAction(input: {
     return {
       label: "Restart server",
       color: "gray",
+      variant: "light",
       disabled: true,
       visible: false,
     };
@@ -195,6 +197,7 @@ export function resolveRestartAction(input: {
   return {
     label: "Restart server",
     color: "fossil",
+    variant: "filled",
     disabled: input.steamCmdBusy || transitioning || input.status !== "running",
     visible: true,
   };

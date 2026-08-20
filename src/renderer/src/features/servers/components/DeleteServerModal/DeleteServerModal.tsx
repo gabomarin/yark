@@ -225,7 +225,8 @@ export function DeleteServerModal(props: Props): ReactElement {
             Cancel
           </Button>
           <Button
-            className={wipe ? classes.dangerButton : undefined}
+            color={wipe ? "red" : undefined}
+            variant={wipe ? "filled" : undefined}
             loading={loading}
             onClick={() => {
               void handleConfirm();

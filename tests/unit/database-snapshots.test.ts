@@ -89,7 +89,11 @@ describe("profile database snapshots (#252)", () => {
     const dir = tempDir("yark-db-snap-rotate-");
     const snapDir = join(dir, PROFILE_DB_SNAPSHOT_DIR_NAME);
     const dbPath = join(dir, "profile.db");
-    const db = openDatabase(dbPath, { takeSnapshots: false });
+    const db = openDatabaseApplyingMigrations(
+      dbPath,
+      [{ version: 1, sql: "CREATE TABLE ok (id INTEGER PRIMARY KEY);" }],
+      { takeSnapshots: false },
+    );
     try {
       for (let i = 0; i < PROFILE_DB_SNAPSHOT_RETAIN_PER_KIND + 2; i += 1) {
         writeProfileDatabaseSnapshot(db, dbPath, "healthy-boot", {

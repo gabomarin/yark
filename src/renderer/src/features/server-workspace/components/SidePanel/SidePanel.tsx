@@ -236,7 +236,7 @@ export function SidePanel(props: Props): ReactElement {
           <Button
             size="sm"
             color="red"
-            variant="outline"
+            variant="filled"
             fullWidth
             justify="flex-start"
             leftSection={<Power size={14} />}

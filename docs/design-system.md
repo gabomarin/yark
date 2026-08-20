@@ -153,9 +153,12 @@ Avoid raw `border-radius: 8px|14px` when a token fits. Tek icon tiles keep asymm
 
 - Semantic: `--app-color-ok|warn|attention|danger` (danger aliases bad). Use Mantine
   `color="attention"` for update / needs-attention controls (matches the server-card
-  attention rail). Use `color="fossil"` for unsaved-leave alerts (same amber as
-  `--app-color-fossil` / warn). Version status text uses theme shade refs (`c="ok.5"`,
-  `c="attention.5"`).
+  attention rail).   Use `color="fossil"` for unsaved-leave alerts (same amber as
+  `--app-color-fossil` / warn). Restart **filled** uses **`--app-color-fossil-filled`**
+  (richer amber; alerts keep base fossil).   **`color="red"`** maps to **`--app-color-bad`** for **filled** delete/remove
+  commits and **`--app-color-danger-bright`** for menu danger rows, Stop
+  (`variant="light"`), and icons on dark chrome — not Mantine’s default coral. Version status text uses
+  theme shade refs (`c="ok.5"`, `c="attention.5"`).
 - **Inline Alert surfaces** (theme `Alert` `--alert-bg` / `--alert-bd`): `blue` =
   translucent blue wash; `yellow` / `fossil` / `attention` = translucent panel
   (`bg-card/60` recipe) + fossil border; `red` = translucent danger wash.
@@ -188,6 +191,22 @@ Secondary badges (attention counts, etc.) stay for outcomes — not a second
 | **Global AppShell banner** | Optional shell prop kept for rare app-wide hard failures; **App does not use it** for per-action IPC — prefer `showOperatorToast` / `showOperatorError` (`shared/ui/operatorToast.ts`) |
 
 Manual **Check Servers Health** ends with a toast (attention count or “all healthy”); startup **server** health scan stays silent. Quiet **YARK app** update check (~60s) toasts only when an update is available or ready to install (sidebar accent remains). SteamCMD job outcomes, `runAction` failures, and Backups page save/cleanup results use toasts, not page or AppShell banners.
+
+### 5d. Destructive actions (inline controls)
+
+Primary destructive **Button** and dense table **ActionIcon** controls use **`color="red" variant="filled"`** — **Stop**, **Force close**, Remove, Delete, Ban, cancel in-flight jobs, and clear/delete log or backup rows. **Restart** uses **`color="fossil" variant="filled"`** in the workspace lifecycle row and Overview card (warm amber, same weight as Stop). Theme **`autoContrast: true`** uses dark label/icon on light filled colors (fossil, attention). Kebab **Stop safely** / **Force close** / **Delete** use `Menu.Item color="red"`; **Restart** uses `color="fossil"`.
+
+| Surface | Recipe |
+| --- | --- |
+| Lifecycle **Restart** | `color="fossil" variant="filled"` |
+| Inline destructive **Button** (Stop, Force close, delete/remove) | `color="red" variant="filled"` |
+| Kebab danger **Menu.Item** | `color="red"` (inherits `--app-color-danger-bright`) |
+| Row **ActionIcon** (delete/remove) | `color="red" variant="filled"` |
+| Confirm modals | `confirmProps: { color: "red" }` (Mantine default `filled`) |
+
+**Exceptions (not red filled):** red **Alert** / **Badge** (error state, not actions); **menu** row actions (`serverCardMenuActions`, backup/mods context menus — separate pass); **Pause** download uses yellow `light`; **Remove from YARK** (profile-only delete) keeps default primary styling; discard/unsaved-leave flows use **fossil** or default buttons.
+
+Reference: `ServerModDetailDrawer` Remove footer (#344).
 
 ### 6. Dense operational tables
 

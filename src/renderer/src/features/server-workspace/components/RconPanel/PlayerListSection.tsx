@@ -183,7 +183,7 @@ export function PlayerListSection(props: Props): ReactElement {
                       </Button>
                       <Button
                         size="xs"
-                        variant="light"
+                        variant="filled"
                         color="red"
                         disabled={rconDisabled || busy}
                         onClick={() => confirmBan(player)}

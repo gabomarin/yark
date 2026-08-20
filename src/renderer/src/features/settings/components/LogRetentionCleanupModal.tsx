@@ -83,6 +83,7 @@ export function LogRetentionCleanupModal(props: Props): ReactElement {
           {canRemove ? (
             <Button
               color="red"
+              variant="filled"
               loading={props.busy}
               onClick={props.onConfirm}
             >

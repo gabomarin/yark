@@ -139,15 +139,50 @@ const sharedColors = {
   warn: "#d9a85f",
   /** Needs-attention UI (update pending, card rail). */
   attention: "#E6ED62",
-  bad: "#ef7070",
+  /** Alerts, rails, destructive filled buttons. */
+  bad: "#BE3636",
+  /** Menu danger rows + Stop icon on dark surfaces (readable, matches card Stop light). */
+  dangerBright: "#D65555",
   cryo: radixPalette.blue[10],
   biomass: "#58c89a",
   fossil: "#d9a85f",
+  /** Richer amber for Restart `filled` buttons; white label/icon via theme autoContrast. */
+  fossilFilled: "#C2610A",
 } as const;
 
 const sharedShadows = {
   panel: "0 1px 0 rgba(255, 255, 255, 0.025)",
 } as const;
+
+/** Mantine `color="red"` — `--app-color-bad` (filled) + `--app-color-danger-bright` (text/icons). */
+export function createDangerRedPalette(
+  bad: string,
+  bright: string,
+): [
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+] {
+  return [
+    "#fdecec",
+    "#f5c8c8",
+    "#eb9898",
+    bright,
+    "#c94444",
+    bad,
+    bright,
+    "#9e2a2a",
+    "#7a2020",
+    "#561616",
+  ];
+}
 
 export type AppTokens = {
   colors: typeof sharedColors;

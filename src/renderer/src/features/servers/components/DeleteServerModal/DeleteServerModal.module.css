@@ -107,13 +107,3 @@
 .dangerAlert :global([data-title]) {
   color: var(--app-color-danger);
 }
-
-.dangerButton {
-  color: var(--app-color-text, #eeeef0);
-  background: color-mix(in srgb, var(--app-color-danger) 28%, var(--mantine-color-dark-6));
-  border: 1px solid color-mix(in srgb, var(--app-color-danger) 45%, transparent);
-}
-
-.dangerButton:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--app-color-danger) 38%, var(--mantine-color-dark-6));
-}
