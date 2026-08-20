@@ -45,6 +45,7 @@ interface Props {
   steamCmdProgressBytesTotal?: number | null;
   steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null;
   stopProgressByServerId?: Map<string, ServerStopProgress>;
+  startBusyByServerId?: ReadonlySet<string>;
   onOpenWorkspace: (server: ServerProfile) => void;
   onOpenLogs: (serverId: string) => void;
   onReviewError: (serverId: string) => void;
@@ -180,6 +181,7 @@ export function ServerGrid(props: Props): ReactElement {
       steamCmdProgressBytesTotal={props.steamCmdProgressBytesTotal}
       steamCmdOperation={props.steamCmdOperation}
       stopProgressByServerId={props.stopProgressByServerId}
+      startBusyByServerId={props.startBusyByServerId}
       checkingUpdates={props.checkingUpdates}
       handlers={cardHandlers}
     />

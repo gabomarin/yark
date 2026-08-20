@@ -37,6 +37,7 @@ type ServerCardSharedProps = {
   steamCmdProgressBytesTotal?: number | null;
   steamCmdOperation?: SteamCmdOperation;
   stopBusy?: boolean;
+  startBusy?: boolean;
   stopProgressPercent?: number | null;
   stopProgressLabel?: string | null;
   checkingUpdates?: boolean;
@@ -62,6 +63,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     steamCmdProgressBytesTotal = null,
     steamCmdOperation = null,
     stopBusy = false,
+    startBusy = false,
     stopProgressPercent = null,
     stopProgressLabel = null,
     checkingUpdates = false,
@@ -99,6 +101,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     steamCmdPaused,
     steamCmdQueued,
     stopBusy,
+    startBusy,
     steamCmdOperation,
     steamCmdProgressLabel:
       (steamCmdQueued || steamCmdPaused) && !steamCmdBusy
@@ -232,9 +235,15 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
 
               <div className={classes.statusBadges}>
                 <ServerRuntimeStatusBadge
-                  status={status}
-                  label={stopBusy ? "Stopping…" : undefined}
-                  color={stopBusy ? "blue" : undefined}
+                  status={startBusy && (status === "stopped" || status === "error") ? "starting" : status}
+                  label={
+                    stopBusy
+                      ? "Stopping…"
+                      : startBusy && (status === "stopped" || status === "error")
+                        ? "Starting…"
+                        : undefined
+                  }
+                  color={stopBusy || (startBusy && (status === "stopped" || status === "error")) ? "blue" : undefined}
                 />
                 {!server.enabled && (
                   <Badge size={compact ? "xs" : "sm"} variant="light" color="gray">
@@ -276,6 +285,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
             verifyFilesLocked={view.verifyFilesLocked}
             installFilesLocked={view.installFilesLocked}
             stopBusy={stopBusy}
+            startBusy={startBusy}
             checkingUpdates={checkingUpdates}
             runtimeAction={view.runtimeAction}
             restartAction={view.restartAction}

@@ -31,6 +31,8 @@ interface Props {
   /** SteamCMD is rewriting this install — block start/restart like a live process. */
   filesJobActive?: boolean;
   filesJobReason?: string;
+  /** Optimistic Start/Restart in flight before runtime status updates (#390). */
+  startBusy?: boolean;
   onStart: () => void;
   onStop: () => void;
   onRestart: () => void;
@@ -44,16 +46,23 @@ export function WorkspaceHeader(props: Props): ReactElement {
   const version = resolveDisplayedServerVersion(props.installation) ?? "—";
   const isServerDisabled = !props.server.enabled;
   const filesReady = isInstallationReady(props.installation);
+  const startBusy = props.startBusy === true;
+  const displayStatus =
+    startBusy && (status === "stopped" || status === "error") ? "starting" : status;
   const { canStart, canEnable, canStop, canRestart } = workspaceHeaderControls({
     status,
     enabled: props.server.enabled,
     filesJobActive: props.filesJobActive === true,
     filesReady,
     hasToggleEnabled: props.onToggleEnabled !== undefined,
+    startBusy,
   });
   const lockTitle = props.filesJobReason ?? "Wait for the file update to finish";
   const installBlockedTitle =
     props.installation?.guidance ?? "Install files first";
+  const startLoading = startBusy && (status === "stopped" || status === "error");
+  // Only a true Restart (clicked while running) loads; Start must keep Restart static.
+  const restartLoading = startBusy && status === "running";
 
   return (
     <header className={classes.header}>
@@ -76,7 +85,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
             <Title order={3} fz="lg" lineClamp={1}>
               {props.server.name}
             </Title>
-            <ServerRuntimeStatusBadge status={status} size="sm" />
+            <ServerRuntimeStatusBadge status={displayStatus} size="sm" />
             {status === "running" && <RconStatusIcon serverId={props.server.id} />}
             {!props.server.enabled && (
               <Badge size="sm" variant="light" color="gray">
@@ -109,9 +118,10 @@ export function WorkspaceHeader(props: Props): ReactElement {
               size="sm"
               variant="light"
               color="teal"
-              leftSection={<Play size={14} weight="fill" />}
+              leftSection={startLoading ? undefined : <Play size={14} weight="fill" />}
               onClick={props.onStart}
               disabled={!canStart}
+              loading={startLoading}
               title={
                 props.filesJobActive === true
                   ? lockTitle
@@ -120,19 +130,22 @@ export function WorkspaceHeader(props: Props): ReactElement {
                     : undefined
               }
             >
-              Start
+              {startLoading ? "Starting…" : "Start"}
             </Button>
           )}
           <Button
             size="sm"
             variant="filled"
             color="fossil"
-            leftSection={<ArrowsClockwise size={14} weight="bold" />}
+            leftSection={
+              restartLoading ? undefined : <ArrowsClockwise size={14} weight="bold" />
+            }
             onClick={props.onRestart}
             disabled={!canRestart}
+            loading={restartLoading}
             title={props.filesJobActive === true ? lockTitle : undefined}
           >
-            Restart
+            {restartLoading ? "Restarting…" : "Restart"}
           </Button>
           <Button
             size="sm"

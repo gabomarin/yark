@@ -31,6 +31,7 @@ interface Props {
   verifyFilesLocked?: boolean;
   installFilesLocked?: boolean;
   stopBusy: boolean;
+  startBusy?: boolean;
   checkingUpdates: boolean;
   runtimeAction: ServerCardRuntimeAction;
   restartAction: ServerCardRestartAction;
@@ -88,7 +89,7 @@ export function ServerCardActions(props: Props): ReactElement {
   const iconSize = density === "compact" ? 16 : 18;
   // Only model.disabled blocks icons. Do not blanket-disable Cancel/Stop during
   // starting/stopping — Overview needs escape hatches when a transition sticks.
-  const menuDisabled = props.steamCmdBusy || props.stopBusy;
+  const menuDisabled = props.steamCmdBusy || props.stopBusy || props.startBusy === true;
   const menuEntries = buildServerCardMenuActions({
     status: props.status,
     isActive: props.isActive,
@@ -129,6 +130,7 @@ export function ServerCardActions(props: Props): ReactElement {
               color={runtimeAction.color}
               aria-label={runtimeAction.label}
               disabled={runtimeAction.disabled}
+              loading={runtimeAction.kind === "starting" || runtimeAction.kind === "stopping"}
               onClick={props.onRuntimeAction}
               className={classes.iconAction}
               data-primary-action
@@ -161,6 +163,7 @@ export function ServerCardActions(props: Props): ReactElement {
               color={restartAction.color}
               aria-label={restartAction.label}
               disabled={restartAction.disabled}
+              loading={restartAction.label === "Restarting…"}
               onClick={props.onRestart}
               className={classes.iconAction}
               data-restart-action

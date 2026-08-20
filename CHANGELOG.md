@@ -16,6 +16,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Fixed
 
 - SQLite boot/snapshot unit tests no longer flake on CI when `PRAGMA quick_check` or VACUUM snapshots exceed Vitest’s default 5s timeout under parallel load.
+- **Start** and **Restart** show immediate Starting… / Restarting… feedback on Overview cards and the workspace header while pre-spawn work runs, so the UI no longer sits idle for ~2s (#390).
 
 ## [0.14.1] - 2026-08-19
 

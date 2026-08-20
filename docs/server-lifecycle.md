@@ -290,6 +290,15 @@ record the path.
    the durable process checkpoint / Leave identity so crash reattach restores them.
 8. Event `server_started` (“waiting for readiness”; notes session ports when used).
 
+**UI feedback (#390):** the renderer sets a per-server `startBusy` flag as soon as
+the operator clicks **Start** or **Restart** (Overview card or workspace header).
+That paints Starting… / Restarting… and disables a second click **before** the
+IPC round-trip finishes. Pre-spawn work above (especially the host-port probe)
+can take up to a couple of seconds; without optimistic busy, the control stayed
+labeled Start/stopped and looked frozen. Once runtime status becomes `starting`,
+the card keeps **Stop** as the escape hatch (same as a live bootstrap). Busy
+clears when the start/restart IPC returns (success, toast, or host-port modal).
+
 **Busy** recovery: `sessionPorts` (this run only) or permanently editing saved
 ports. **Inconclusive** also offers **Start anyway** (`skipPortValidation`),
 which does not bypass busy. After a **restart** that already stopped the process,

@@ -549,3 +549,102 @@ describe("App SteamCMD sync-files UX (#48)", () => {
     });
   });
 });
+
+describe("App Start busy guard (#390)", () => {
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+  });
+
+  it("only invokes startServer IPC once for rapid Start clicks", async () => {
+    const user = userEvent.setup();
+    const server = {
+      id: "srv-1",
+      name: "The Island",
+      map: "TheIsland_WP",
+      installDir: "C:/ARK/TheIsland",
+      enabled: true,
+      autoStart: false,
+      sessionName: "The Island Cluster",
+      maxPlayers: 70,
+      gamePort: 7777,
+      queryPort: 27015,
+      rconPort: 27020,
+      serverPassword: null,
+      adminPassword: "admin",
+      clusterId: null,
+      clusterDir: null,
+      extraArgs: [],
+      mods: [],
+      createdAt: "2026-07-23T00:00:00.000Z",
+      updatedAt: "2026-07-23T00:00:00.000Z",
+    };
+    const install = {
+      serverId: server.id,
+      installed: true,
+      health: "ready" as const,
+      reasonCodes: ["ready"],
+      guidance: "Installation looks ready to start.",
+      build: null,
+      steamBuild: null,
+      arkVersion: null,
+      version: null,
+      binaryPath: "C:/ARK/TheIsland/ShooterGame/Binaries/Win64/ArkAscendedServer.exe",
+      checkedAt: "2026-07-23T00:00:00.000Z",
+    };
+
+    const startDeferred: {
+      resolve: ((value: { ok: true; data: undefined }) => void) | null;
+    } = { resolve: null };
+    const api = createApiMock();
+    api.listServers = vi.fn().mockResolvedValue({ ok: true, data: [server] });
+    api.getStatuses = vi.fn().mockResolvedValue({
+      ok: true,
+      data: [
+        {
+          serverId: server.id,
+          status: "stopped",
+          processLive: false,
+          pid: null,
+          startedAt: null,
+          lastError: null,
+        },
+      ],
+    });
+    api.getInstallationInfo = vi.fn().mockResolvedValue({
+      ok: true,
+      data: {
+        officialVersion: "358.12",
+        officialNetworkStatus: "online",
+        officialSteamBuild: "build 24346423",
+        servers: [install],
+      },
+    });
+    api.startServer = vi.fn(
+      () =>
+        new Promise<{ ok: true; data: undefined }>((resolve) => {
+          startDeferred.resolve = resolve;
+        }),
+    );
+    Object.defineProperty(window, "api", {
+      configurable: true,
+      value: api,
+    });
+
+    render(<App />);
+
+    const start = await screen.findByRole("button", { name: "Start server" });
+    await user.click(start);
+    await user.click(start);
+
+    await waitFor(() => {
+      expect(api.startServer).toHaveBeenCalledTimes(1);
+    });
+    expect(await screen.findByRole("button", { name: "Starting…" })).toBeDisabled();
+
+    startDeferred.resolve?.({ ok: true, data: undefined });
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Start server" })).toBeEnabled();
+    });
+  });
+});
