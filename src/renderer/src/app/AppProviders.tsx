@@ -113,7 +113,7 @@ export function AppProviders({
           labels={{ confirm: "Confirm", cancel: "Cancel" }}
         >
           <RowActionMenuProvider>
-            <Notifications position="top-right" autoClose={notificationsAutoClose} />
+            <Notifications position="bottom-right" autoClose={notificationsAutoClose} />
             {children}
           </RowActionMenuProvider>
         </ModalsProvider>

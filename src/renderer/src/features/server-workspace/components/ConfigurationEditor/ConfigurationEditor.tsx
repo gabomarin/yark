@@ -225,7 +225,10 @@ export function ConfigurationEditor(props: Props): ReactElement {
     setPayload(nextPayload);
     publishDirty(nextPayload, baseline);
     setPreview(null);
-    setInfo("Changes discarded");
+    showOperatorToast({
+      title: "INI editor",
+      message: "Changes discarded.",
+    });
   };
 
   const resetActiveFileToDefaults = () => {
@@ -260,7 +263,10 @@ export function ConfigurationEditor(props: Props): ReactElement {
     const defaultValue = lookupDefaultValue(row.fileKey, row.section, row.key);
     if (defaultValue === null) return;
     updateValue(row.fileKey, row.section, row.key, defaultValue, row.occurrence);
-    setInfo(`${row.key} restored to default`);
+    showOperatorToast({
+      title: "INI editor",
+      message: `${row.key} restored to default (pending save).`,
+    });
   };
 
   const toggleSection = (sectionName: string) => {

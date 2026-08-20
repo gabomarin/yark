@@ -17,6 +17,10 @@ describe("AppProviders", () => {
 
     expect(screen.getByText("provider-ready")).toBeInTheDocument();
     expect(document.documentElement).toHaveAttribute("data-ui-density", "compact");
+    expect(document.querySelector(".mantine-Notifications-root")).toHaveAttribute(
+      "data-position",
+      "bottom-right",
+    );
 
     rerender(
       <AppProviders density="comfortable">

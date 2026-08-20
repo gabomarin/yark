@@ -28,6 +28,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { ConsoleSurface } from "@ui/ConsoleSurface/ConsoleSurface";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { showOperatorToast } from "@ui/operatorToast";
 import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
 import { EventDetailsBody } from "./EventDetailsBody";
 import classes from "./LogsPage.module.css";
@@ -70,7 +71,6 @@ export function ServerLogsPanel(props: Props): ReactElement {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
   const [selectedUpdateFile, setSelectedUpdateFile] = useState<string | null>(null);
   const [updateContent, setUpdateContent] = useState("");
   const [highlightedEventId, setHighlightedEventId] = useState<number | null>(null);
@@ -122,7 +122,6 @@ export function ServerLogsPanel(props: Props): ReactElement {
     if (!quiet) {
       setLoading(true);
       setError(null);
-      setInfo(null);
       clearUpdateContent();
     }
     try {
@@ -173,7 +172,6 @@ export function ServerLogsPanel(props: Props): ReactElement {
     void (async () => {
       setLoading(true);
       setError(null);
-      setInfo(null);
       clearUpdateContent();
       setHighlightedEventId(null);
       setHighlightedBackupId(null);
@@ -322,7 +320,6 @@ export function ServerLogsPanel(props: Props): ReactElement {
   const exportLogs = async () => {
     setBusy(true);
     setError(null);
-    setInfo(null);
     try {
       const result = await window.api.exportServerLogs(props.server.id);
       if (!result.ok) {
@@ -330,7 +327,11 @@ export function ServerLogsPanel(props: Props): ReactElement {
         return;
       }
       if (result.data !== null) {
-        setInfo(`Logs exported to: ${result.data}`);
+        showOperatorToast({
+          title: "Logs",
+          message: `Exported to ${result.data}`,
+          autoClose: 8000,
+        });
       }
     } finally {
       setBusy(false);
@@ -383,7 +384,10 @@ export function ServerLogsPanel(props: Props): ReactElement {
             setHighlightedEventId(null);
             setExpandedEventId(null);
             await load(props.server.id);
-            setInfo(`Cleared ${result.data} event${result.data === 1 ? "" : "s"}.`);
+            showOperatorToast({
+              title: "Logs",
+              message: `Cleared ${result.data} event${result.data === 1 ? "" : "s"}.`,
+            });
           } finally {
             setBusy(false);
           }
@@ -417,7 +421,10 @@ export function ServerLogsPanel(props: Props): ReactElement {
             runtimeRevisionRef.current += 1;
             setLogs((prev) => replaceRuntimeLogs(prev, props.server.id, []));
             await load(props.server.id);
-            setInfo("Runtime log cleared.");
+            showOperatorToast({
+              title: "Logs",
+              message: "Runtime log cleared.",
+            });
           } finally {
             setBusy(false);
           }
@@ -452,7 +459,10 @@ export function ServerLogsPanel(props: Props): ReactElement {
             setSelectedUpdateFile(null);
             setUpdateContent("");
             await load(props.server.id);
-            setInfo(`Deleted ${result.data} update log${result.data === 1 ? "" : "s"}.`);
+            showOperatorToast({
+              title: "Logs",
+              message: `Deleted ${result.data} update log${result.data === 1 ? "" : "s"}.`,
+            });
           } finally {
             setBusy(false);
           }
@@ -493,7 +503,10 @@ export function ServerLogsPanel(props: Props): ReactElement {
             setSelectedUpdateFile(null);
             setUpdateContent("");
             await load(props.server.id);
-            setInfo("Update log deleted.");
+            showOperatorToast({
+              title: "Logs",
+              message: "Update log deleted.",
+            });
           } finally {
             setBusy(false);
           }
@@ -541,7 +554,10 @@ export function ServerLogsPanel(props: Props): ReactElement {
               return;
             }
             await load(props.server.id);
-            setInfo(`Deleted ${result.data} backup${result.data === 1 ? "" : "s"}.`);
+            showOperatorToast({
+              title: "Logs",
+              message: `Deleted ${result.data} backup${result.data === 1 ? "" : "s"}.`,
+            });
           } finally {
             setBusy(false);
           }
@@ -572,7 +588,10 @@ export function ServerLogsPanel(props: Props): ReactElement {
               return;
             }
             await load(props.server.id);
-            setInfo("Backup deleted.");
+            showOperatorToast({
+              title: "Logs",
+              message: "Backup deleted.",
+            });
           } finally {
             setBusy(false);
           }
@@ -613,7 +632,6 @@ export function ServerLogsPanel(props: Props): ReactElement {
         </Group>
       </Group>
 
-      {info !== null && <Alert color="blue">{info}</Alert>}
       {error !== null && <Alert color="red">{error}</Alert>}
 
       <Tabs

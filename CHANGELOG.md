@@ -13,10 +13,11 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Overview **ServerCard** Compact density keeps a denser row when the window narrows; Comfortable-only stacking no longer overrides Compact (#377).
 - ASA launch-options catalog uses one list scrollbar, explains browse filters on hover/focus, and tells operators where YARK already manages a command instead of showing `extraArgs` audit tokens (#381).
-- Move install, copy configuration, and INI save completion use operator toasts instead of lingering green success Alerts; leftover-folder and failure Alerts stay (#240).
+- Move install, copy configuration, INI save/discard, Logs export/clear/delete, and log-retention cleanup use operator toasts instead of lingering success banners; leftover-folder, failure, and pending-save Alerts stay (#240).
 
 ### Changed
 
+- Operator toasts render **bottom-right** so they do not cover Overview and workspace toolbars (#240).
 - Workspace search and related inputs (INI, player backups, cluster INI template, ASA catalog, Mods Discover / add URL, RCON command, **Logs** fleet filter) share **SearchField** chrome so filters match Overview and Launch (#379).
 - INI **GameUserSettings / Game** and **Visual / Text** switchers use the same compact segmented control as Overview **All servers / By cluster**, with icon + visible labels (#379).
 
