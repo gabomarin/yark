@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  asaLaunchOptionEntries,
   lookupLaunchOptionById,
 } from "@shared/asa-launch-options-catalog";
 import {
@@ -32,8 +33,12 @@ describe("launchOptionsCatalogModel (#381)", () => {
     expect(catalogStatusFilterTooltip("yarkOwned")).toMatch(/Extra arguments/);
   });
 
-  it("maps all seven YARK-owned catalog ids to managed-in copy", () => {
-    expect(YARK_OWNED_CATALOG_IDS).toHaveLength(7);
+  it("maps every catalog yarkOwned id to managed-in copy", () => {
+    const catalogYarkOwnedIds = asaLaunchOptionEntries
+      .filter((entry) => entry.status === "yarkOwned")
+      .map((entry) => entry.id)
+      .sort();
+    expect(catalogYarkOwnedIds).toEqual([...YARK_OWNED_CATALOG_IDS].sort());
     expect(yarkManagedSurfaceForCatalogId("mods")).toBe("Mods");
     expect(yarkManagedSurfaceForCatalogId("port")).toBe("Server settings");
     expect(yarkManagedLaunchCopy("port")).toBe(
