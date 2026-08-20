@@ -18,9 +18,7 @@ const sizes = [
   { name: "qhd-2k", width: 2560, height: 1440 },
 ];
 
-/** Category / selected segmented token (#131F43). */
-const INI_CATEGORY_RGB = { r: 19, g: 31, b: 67 };
-
+/** INI nav uses the same compact Mantine segmented chrome as Overview layout grouping. */
 async function shot(page, outDir, name) {
   const file = path.join(outDir, `${name}.png`);
   await page.screenshot({ path: file, fullPage: false });
@@ -31,22 +29,6 @@ async function goNav(page, label) {
   const btn = page.getByRole("button", { name: label }).first();
   await btn.click();
   await page.waitForTimeout(250);
-}
-
-function parseRgb(cssColor) {
-  const m = String(cssColor).match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
-  if (!m) return null;
-  return { r: Number(m[1]), g: Number(m[2]), b: Number(m[3]) };
-}
-
-function rgbClose(a, b, tol = 8) {
-  return (
-    a !== null &&
-    b !== null &&
-    Math.abs(a.r - b.r) <= tol &&
-    Math.abs(a.g - b.g) <= tol &&
-    Math.abs(a.b - b.b) <= tol
-  );
 }
 
 async function measureIniNav(page) {
@@ -142,14 +124,6 @@ async function assertNavOk(metrics, sizeName) {
     modeSeg.left >= fileSeg.left + fileSeg.width - 1,
     `${sizeName}: mode control sits to the right of file control`,
   );
-
-  for (const bg of metrics.indicatorBackgrounds) {
-    const rgb = parseRgb(bg);
-    assert.ok(
-      rgbClose(rgb, INI_CATEGORY_RGB),
-      `${sizeName}: indicator color ~#131F43 got ${bg}`,
-    );
-  }
 }
 
 async function run() {

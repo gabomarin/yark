@@ -1,0 +1,27 @@
+.root :global(.mantine-SegmentedControl-label) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: var(--app-space-xs);
+  line-height: 0;
+}
+
+.root :global(.mantine-SegmentedControl-label) > * {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  line-height: 0;
+}
+
+.icon svg {
+  display: block;
+}

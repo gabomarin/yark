@@ -1,19 +1,30 @@
 import type { ReactElement } from "react";
+import { GearSix, SlidersHorizontal } from "@phosphor-icons/react";
 import { SegmentedControl, type SegmentedControlProps } from "@mantine/core";
 import type { IniFileKey } from "@shared/types";
-import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
+import {
+  compactIconSegmentLabel,
+  compactSegmentedRootClass,
+} from "@ui/CompactSegmented/CompactSegmented";
 
-const INI_FILE_OPTIONS: Array<{ label: string; value: IniFileKey }> = [
-  { label: "GameUserSettings.ini", value: "gameUserSettings" },
-  { label: "Game.ini", value: "game" },
-];
-
-/** Class names for Mantine SegmentedControl matching the INI mock chrome. */
-export const iniSegmentedClassNames = {
-  root: chrome.segmentedRoot,
-  indicator: chrome.segmentedIndicator,
-  label: chrome.segmentedLabel,
-} as const;
+const INI_FILE_OPTIONS = [
+  {
+    value: "gameUserSettings",
+    label: compactIconSegmentLabel(
+      "GameUserSettings.ini",
+      "GameUserSettings.ini",
+      <SlidersHorizontal size={14} aria-hidden="true" />,
+    ),
+  },
+  {
+    value: "game",
+    label: compactIconSegmentLabel(
+      "Game.ini",
+      "Game.ini",
+      <GearSix size={14} aria-hidden="true" />,
+    ),
+  },
+] as const satisfies Array<{ label: ReactElement; value: IniFileKey }>;
 
 interface Props {
   value: IniFileKey;
@@ -30,8 +41,8 @@ export function IniFileSegmented(props: Props): ReactElement {
       aria-label="INI file"
       value={props.value}
       disabled={props.disabled}
-      data={INI_FILE_OPTIONS}
-      classNames={iniSegmentedClassNames}
+      data={[...INI_FILE_OPTIONS]}
+      className={compactSegmentedRootClass}
       onChange={(value) => {
         if (value === "game" || value === "gameUserSettings") {
           props.onChange(value);

@@ -265,12 +265,26 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 | `SelectableListRow` | `shared/ui/SelectableListRow/` | Selected list/row chrome |
 | `AccentIconTile` | `shared/ui/AccentIconTile/` | Tek / rounded icon tiles |
 | `MapArtThumb` | `shared/ui/MapArtThumb/` | ASA map artwork thumb (list + header) |
-| `SearchField` | `shared/ui/SearchField/` | Search inputs (`label` for aria-only; `fieldLabel` when a visible caption is needed) |
+| `SearchField` | `shared/ui/SearchField/` | Search inputs — see **SearchField variants** below |
 | `ServerRuntimeStatusBadge` | `shared/ui/ServerRuntimeStatusBadge/` | Process status badge |
 | `ReadonlyPath` | `shared/ui/ReadonlyPath/` | Bordered monospace chip for configured filesystem paths |
 | `PathField` | `shared/ui/PathField/` | Read-only path chip + Browse/Clear actions |
 | `ConsoleSurface` | `shared/ui/ConsoleSurface/` | ScrollArea monospace console for SteamCMD / Logs (plain text, stick-to-bottom) |
 | `AppMetricCard` | `shared/ui/AppMetricCard/` | Compact scalar metric tile (fleet strips; optional RingProgress) |
+
+### SearchField variants
+
+One visual control for “find something in this list.” Do **not** wire a raw
+`TextInput` + `MagnifyingGlass` for search.
+
+| Variant | When | How |
+| --- | --- | --- |
+| **Filter** (default) | Instant local list filter (Overview, Launch, Logs, INI, backups, catalog) | `SearchField` alone; `label` for aria-only name; `size` `xs` (rail / Compact) or `sm` (Comfortable). Never `md`. |
+| **Submit** | Remote or explicit search (Mods Discover CurseForge) | `SearchField` + trailing `Button` in a `Group` (`label` aria-only; `onKeyDown` Enter → same action as the button). Keep the button — do not turn Mods into instant filter. |
+
+`label` vs `fieldLabel`: use `label` when the placeholder / context already names
+the control (Overview, INI filter bar, Mods Discover). Use `fieldLabel` when a visible Mantine
+caption is required.
 
 ## Product brand / packaging icons
 

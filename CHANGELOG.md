@@ -9,6 +9,11 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Workspace search and related inputs (INI, player backups, cluster INI template, ASA catalog, Mods Discover / add URL, RCON command, **Logs** fleet filter) share **SearchField** chrome so filters match Overview and Launch (#379).
+- INI **GameUserSettings / Game** and **Visual / Text** switchers use the same compact icon segmented control as Overview **All servers / By cluster** (#379).
+
 ## [0.14.0] - 2026-08-19
 
 ### Added

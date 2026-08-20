@@ -1,6 +1,11 @@
 .input {
   min-width: 0;
   width: 100%;
+  height: var(--input-height);
+  min-height: var(--input-height);
+  line-height: var(--input-height);
+  padding-top: 0;
+  padding-bottom: 0;
   border-radius: var(--app-radius-control);
   border-color: var(--app-color-border);
   background: var(--app-color-panel);
@@ -9,4 +14,9 @@
 
 .section {
   color: var(--app-color-muted);
+  width: var(--input-height);
+  height: var(--input-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

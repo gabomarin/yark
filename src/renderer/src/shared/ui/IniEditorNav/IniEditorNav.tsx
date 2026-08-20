@@ -1,7 +1,12 @@
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
+import { Code, SquaresFour } from "@phosphor-icons/react";
 import { SegmentedControl } from "@mantine/core";
 import type { IniFileKey } from "@shared/types";
-import { IniFileSegmented, iniSegmentedClassNames } from "@ui/IniFileSegmented/IniFileSegmented";
+import {
+  compactIconSegmentLabel,
+  compactSegmentedRootClass,
+} from "@ui/CompactSegmented/CompactSegmented";
+import { IniFileSegmented } from "@ui/IniFileSegmented/IniFileSegmented";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
 
 interface ModeOption {
@@ -17,6 +22,20 @@ interface Props {
   modeOptions: ModeOption[];
   modeAriaLabel?: string;
   disabled?: boolean;
+}
+
+function modeSegmentIcon(value: string): ReactNode {
+  if (value === "visual") {
+    return <SquaresFour size={14} aria-hidden="true" />;
+  }
+  return <Code size={14} aria-hidden="true" />;
+}
+
+function toModeSegmentData(options: ModeOption[]) {
+  return options.map((option) => ({
+    value: option.value,
+    label: compactIconSegmentLabel(option.label, option.label, modeSegmentIcon(option.value)),
+  }));
 }
 
 /**
@@ -36,8 +55,8 @@ export function IniEditorNav(props: Props): ReactElement {
         aria-label={props.modeAriaLabel ?? "INI edit mode"}
         value={props.mode}
         disabled={props.disabled}
-        data={props.modeOptions}
-        classNames={iniSegmentedClassNames}
+        data={toModeSegmentData(props.modeOptions)}
+        className={compactSegmentedRootClass}
         onChange={props.onModeChange}
       />
     </div>

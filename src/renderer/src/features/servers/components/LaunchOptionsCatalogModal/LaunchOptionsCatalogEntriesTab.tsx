@@ -5,7 +5,6 @@ import {
   ScrollArea,
   Stack,
   Text,
-  TextInput,
   UnstyledButton,
 } from "@mantine/core";
 import {
@@ -14,6 +13,7 @@ import {
   type AsaLaunchOptionEntry,
   type AsaLaunchOptionStatus,
 } from "@shared/asa-launch-options-catalog";
+import { SearchField } from "@ui/SearchField/SearchField";
 import {
   CATALOG_STATUS_FILTERS,
   catalogStatusLabel,
@@ -103,12 +103,12 @@ export function LaunchOptionsCatalogEntriesTab(props: Props): ReactElement {
               );
             })}
           </Group>
-          <TextInput
+          <SearchField
             size={props.inputSize}
             placeholder="Search token, alias, category…"
+            label="Search launch options catalog"
             value={query}
-            onChange={(event) => setQuery(event.currentTarget.value)}
-            aria-label="Search launch options catalog"
+            onChange={setQuery}
           />
         </div>
 
