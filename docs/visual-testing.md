@@ -137,9 +137,8 @@ At each resolution:
 
 The review must include the full screen — shell, sidebar, and adjacent panels —
 in addition to the modified component. If the change affects the server
-workspace, review at least the Server, `INI Files` (`Game.ini` /
-`GameUserSettings.ini`), Backups, and Logs tabs (mods live on the Server form;
-there is no dedicated Mods tab yet).
+workspace, review at least the Server, Launch, Mods, `INI Files` (`Game.ini` /
+`GameUserSettings.ini`), Backups, and Logs tabs.
 
 ## Helper scripts
 

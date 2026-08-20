@@ -108,11 +108,11 @@ Pre-update archives use backup type `pre_update` and kinds `world` / `ini`
 
 `isServerUpdateAvailable` / `getServerUpdateState` compare **Steam builds only**. Never treat runtime `ARK Version` vs an official/live server version as an update decision — staggered ASA rollouts make those non-equivalent.
 
-Official version and official build each cache for **15 minutes** in-process (`OFFICIAL_VERSION_TTL_MS`). `servers:installation` accepts `forceOfficialCheck` to bypass (used by **Check server updates**, **Update all outdated**, and **Check installs**). The status line is also parsed for network state (`Online` / `Deploying` / `Offline`); Deploying tints the sidebar version and shows a pulsing indicator.
+Official version and official build each cache for **15 minutes** in-process (`OFFICIAL_VERSION_TTL_MS`). `servers:installation` accepts `forceOfficialCheck` to bypass (used by **Check server updates**, **Update All**, and **Check installs**). The status line is also parsed for network state (`Online` / `Deploying` / `Offline`); Deploying tints the sidebar version and shows a pulsing indicator.
 
 ### Fleet update all (#378)
 
-Overview **Update all outdated** (next to **Check server updates**) opens only when at least one outdated server is stopped, enabled, install-ready, and not blocked by Downloads. The preview lists every outdated profile with current vs official Steam build when known, plus skip reasons (running, disabled, install not ready, unknown build, or an existing files job). Confirm queues one **Update** job per eligible server through the same safe-update pipeline as per-card **Update** — jobs run sequentially in Downloads order; running servers stay skipped until stopped.
+Overview **Update All** (next to **Check server updates**) opens only when at least one outdated server is stopped, enabled, install-ready, and not blocked by Downloads. The preview lists every outdated profile with current vs official Steam build when known, plus skip reasons (running, disabled, install not ready, unknown build, or an existing files job). **Accept** queues one **Update** job per eligible server through the same safe-update pipeline as per-card **Update** — jobs run sequentially in Downloads order; running servers stay skipped until stopped. The header enable state stays live while the modal is open; the modal closes as soon as queueing finishes.
 
 ### Installation health (#57)
 
@@ -180,9 +180,9 @@ Byte/`%` detail belongs on the Downloads page, not in those lock tooltips.
 
 Spawns always pass `-language english` (plus `LANG`/`LC_ALL` env) so bootstrapper lines stay English for a single-language parser. SteamCMD otherwise follows the Windows UI language (e.g. Spanish “Descargando archivos…”). Bracket `[ N%]` still updates the percent even if OS localizes; labels/KB pairs are English-only.
 
-During **robocopy** (`sync-files`), progress is a **separate phase**: SteamCMD success may reach 100%, then the dock switches to an **indeterminate** (full striped/animated) bar with the copy label — no byte totals (robocopy runs with progress silenced). A console heartbeat every 5s confirms the job is still running. Sync uses `/MT:4` and below-normal process priority so the Electron UI keeps some disk headroom. While a job is busy, the renderer skips frequent `servers:installation` polls and refreshes the install snapshot once when the job finishes.
+During **robocopy** (`sync-files`), progress is a **separate phase**: SteamCMD success may reach 100%, then the **Downloads** active job switches to an **indeterminate** bar with the copy label — no byte totals (robocopy runs with progress silenced). A console heartbeat every 5s confirms the job is still running. Sync uses `/MT:4` and below-normal process priority so the Electron UI keeps some disk headroom. While a job is busy, the renderer skips frequent `servers:installation` polls and refreshes the install snapshot once when the job finishes.
 
-> Note: agent-context historically said “live log streaming during SteamCMD is pending.” The **console/progress push channel and dock are live**. What may still feel incomplete is richer per-file update-log streaming in the Logs UI—not the SteamCMD progress path.
+> Note: agent-context historically said “live log streaming during SteamCMD is pending.” The **console/progress push channel and Downloads page are live**. What may still feel incomplete is richer per-file update-log streaming in the Logs UI—not the SteamCMD progress path.
 
 ## SteamCMD not configured
 

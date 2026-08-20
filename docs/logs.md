@@ -177,7 +177,7 @@ Override with `YARK_USER_DATA` when needed (cloud agents, portable profiles).
 | Sidebar “Open in server” opens wrong tab | Check `logsFocus.section`; focus is cleared after first workspace render |
 | Clear did not remove update files | Events clear ≠ update-log clear — use Updates section clear/delete |
 | Seed script cannot find DB | App never launched, or wrong userData — set `YARK_USER_DATA` |
-| SteamCMD console empty in Logs | Live console is on the SteamCMD dock/progress push; Updates section shows **files** after jobs |
+| SteamCMD console empty in Logs | Live console is on the **Downloads** page (footer teaser elsewhere); Updates section shows **files** after jobs |
 | History disappeared after a few months | Retention policy (#84); check Settings → Log retention; deleted data is not recoverable |
 | Cleanup skipped a file | In use / permission — retry later; paths outside `update-logs` are never deleted |
 

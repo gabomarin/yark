@@ -15,13 +15,13 @@ export function screenshotSlug(shot: Screenshot): string {
 export const screenshots: Screenshot[] = [
   {
     src: withBase("/screenshots/overview.png"),
-    alt: "YARK Windows overview listing ARK Survival Ascended server profiles with map artwork, status, and recent activity",
+    alt: "YARK Windows overview listing ARK Survival Ascended server profiles with map artwork, status, fleet sort controls, and Update All",
     caption:
-      "Servers overview — profiles with map artwork, status, and recent activity in one place.",
+      "Servers overview — sort/view controls, Update All for outdated fleets, and queue status that opens Downloads.",
   },
   {
     src: withBase("/screenshots/downloads.png"),
-    alt: "YARK Downloads queue with an active SteamCMD job, queued servers, and a paused install on Windows",
+    alt: "YARK Downloads queue with an active SteamCMD verify job, queued servers, and the live console panel on Windows",
     caption:
       "Downloads — SteamCMD install, update, and verify jobs in one queue, with Pause/Resume and a live console.",
   },
@@ -36,6 +36,12 @@ export const screenshots: Screenshot[] = [
     alt: "ASA dedicated server configuration in YARK with identity, Max players, Move installation, networking, cluster, and Auto-start",
     caption:
       "Server configuration — identity, Move installation, ports, access, cluster, and Auto-start. Mods live on the Mods tab.",
+  },
+  {
+    src: withBase("/screenshots/workspace-launch.png"),
+    alt: "YARK Launch tab filtering curated ASA command-line flags with search while showing Extra arguments and the command preview",
+    caption:
+      "Launch tab — search curated ASA flags by token, description, or group; Extra arguments and the command preview stay visible.",
   },
   {
     src: withBase("/screenshots/workspace-mods.png"),

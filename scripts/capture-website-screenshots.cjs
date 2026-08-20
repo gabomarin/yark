@@ -28,7 +28,6 @@ const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
 const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
-const { pickPathField } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -186,41 +185,6 @@ async function redactPrivatePaths(page) {
   }
 }
 
-async function createDemoServer(app, page, demo, portOffset) {
-  const installDir = path.join(DEMO_INSTALL_ROOT, demo.folder);
-  fs.mkdirSync(installDir, { recursive: true });
-
-  await goNav(page, "Servers");
-  await page.getByRole("button", { name: "New server" }).first().click();
-  await page.getByRole("heading", { name: "New server" }).waitFor({
-    state: "visible",
-    timeout: 10000,
-  });
-
-  await page.getByRole("textbox", { name: /^Name$/ }).fill(demo.name);
-  await page.getByRole("textbox", { name: /^Session name$/ }).fill(demo.session);
-  await pickPathField(app, page, "Base folder", installDir);
-
-  await page.getByLabel("Game port").fill(String(7777 + portOffset));
-  await page.getByLabel("Query port").fill(String(27015 + portOffset));
-  await page.getByLabel("RCON port").fill(String(27020 + portOffset));
-  await page.locator("input[type='password']").last().fill("admin1234");
-  await page.getByRole("button", { name: "Create server" }).click();
-
-  const later = page.getByRole("button", { name: /^Later$/i });
-  try {
-    await later.waitFor({ state: "visible", timeout: 8000 });
-    await later.click();
-  } catch {
-    // onboarding not shown
-  }
-
-  await page.getByRole("tab", { name: "Server" }).waitFor({
-    state: "visible",
-    timeout: 15000,
-  });
-}
-
 /** Apply distinct official map tokens after UI create (Create defaults to The Island). */
 function applyDemoMapsInDb(userData) {
   const dbPath = path.join(userData, "yark-server-manager.db");
@@ -272,45 +236,6 @@ async function openWorkspaceByName(page, name) {
   await card.getByRole("button", { name: /Open settings/i }).click();
   await page.getByRole("tab", { name: "Server" }).waitFor({ state: "visible", timeout: 15000 });
   await settle(page, 500);
-}
-
-async function configureServerCluster(app, page, serverName) {
-  await openWorkspaceByName(page, serverName);
-  await page.getByRole("tab", { name: "Server" }).click();
-  await settle(page, 300);
-
-  const clusterId = page.getByLabel("Cluster ID");
-  await clusterId.fill(DEMO_CLUSTER_ID);
-  await pickPathField(app, page, "Shared cluster directory", DEMO_CLUSTER_DIR);
-
-  const save = page.getByRole("button", { name: "Save changes" }).first();
-  await save.click();
-  await settle(page, 600);
-
-  await leaveWorkspaceToServers(page);
-}
-
-async function seedIsolatedFleet(app, page) {
-  for (let i = 0; i < DEMO_FLEET.length; i += 1) {
-    const demo = DEMO_FLEET[i];
-    await createDemoServer(app, page, demo, i * 10);
-    if (i === 0) {
-      await ensureDemoMods(page);
-    }
-    await leaveWorkspaceToServers(page);
-  }
-  console.log(
-    `WEBSITE_SCREENSHOTS_SEEDED=${DEMO_FLEET.map((d) => d.name).join(",")}`,
-  );
-}
-
-async function ensureDemoCluster(app, page) {
-  const members = DEMO_FLEET.slice(0, 3).map((d) => d.name);
-  for (const name of members) {
-    await configureServerCluster(app, page, name);
-  }
-  console.log(`WEBSITE_SCREENSHOTS_CLUSTER=${DEMO_CLUSTER_ID} members=${members.join(",")}`);
-  return true;
 }
 
 function galleryJob(id, type, serverId, status, phase, extra = {}) {
@@ -402,8 +327,8 @@ function seedGalleryFleetSql(userData) {
       39000 + index * 10,
       null,
       "admin1234",
-      null,
-      null,
+      DEMO_CLUSTER_ID,
+      DEMO_CLUSTER_DIR,
       "[]",
       "[]",
       "[]",
@@ -428,16 +353,9 @@ function seedDownloadsJobs(userData, steamCmdPath) {
   assert.ok(scorchedId, "Demo server Scorched Earth missing");
   assert.ok(ragnarokId, "Demo server Ragnarok missing");
   const jobs = [
-    galleryJob("job-island-install", "install-files", islandId, "pending", "queued"),
+    galleryJob("job-island-verify", "verify-files", islandId, "pending", "queued"),
     galleryJob("job-scorched-verify", "verify-files", scorchedId, "pending", "queued"),
-    galleryJob(
-      "job-ragnarok-paused",
-      "install-files",
-      ragnarokId,
-      "paused",
-      "applying-files",
-      { recoveryReason: null },
-    ),
+    galleryJob("job-ragnarok-verify", "verify-files", ragnarokId, "pending", "queued"),
   ];
   const now = new Date().toISOString();
   const set = db.prepare(
@@ -449,18 +367,39 @@ function seedDownloadsJobs(userData, steamCmdPath) {
   db.close();
 }
 
+async function dumpDownloads(page, label) {
+  const metrics = await page.evaluate(() => {
+    const rows = [...document.querySelectorAll("[data-download-row]")];
+    const groups = [...document.querySelectorAll("[data-queue-group]")];
+    return {
+      groups: groups.map((group) => group.getAttribute("data-queue-group")),
+      rows: rows.map((row) => ({
+        id: row.getAttribute("data-download-row"),
+        kind: row.getAttribute("data-kind"),
+        text: (row.textContent || "").replace(/\s+/g, " ").trim().slice(0, 120),
+      })),
+      steamcmdBanner: document.querySelector("[data-steamcmd-missing-banner]") !== null,
+    };
+  });
+  console.error(`DUMP ${label} ${JSON.stringify(metrics, null, 2)}`);
+}
+
 async function captureDownloadsPage(page, outDir) {
   await goNav(page, "Downloads");
   await page.locator("[data-downloads-page]").waitFor({ state: "visible", timeout: 15_000 });
-  await page.locator('[data-kind="active"][data-download-row]').waitFor({
-    state: "visible",
-    timeout: 25_000,
-  });
-  await page.locator('[data-kind="queued"][data-download-row]').waitFor({
-    state: "visible",
-    timeout: 10_000,
-  });
-  await page.locator('[data-kind="paused"][data-download-row]').waitFor({
+  const activeRow = page.locator('[data-kind="active"][data-download-row]');
+  const deadline = Date.now() + 45_000;
+  while (Date.now() < deadline) {
+    if ((await activeRow.count()) > 0 && (await activeRow.first().isVisible())) {
+      break;
+    }
+    await settle(page, 500);
+  }
+  if ((await activeRow.count()) === 0 || !(await activeRow.first().isVisible())) {
+    await dumpDownloads(page, "downloads-no-active-row");
+    throw new Error("Downloads gallery: no active row appeared");
+  }
+  await page.locator('[data-kind="queued"][data-download-row]').first().waitFor({
     state: "visible",
     timeout: 10_000,
   });
@@ -521,6 +460,7 @@ async function captureDownloadsGallery(userData, outDir) {
     await page.waitForLoadState("domcontentloaded");
     await page.setViewportSize(VIEWPORT);
     await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 20_000 });
+    await settle(page, 2500);
     await captureDownloadsPage(page, outDir);
   } finally {
     await quitApp(app);
@@ -582,7 +522,7 @@ async function run() {
       return;
     }
 
-    // Pass 1: seed demo fleet in an isolated profile (never the operator userData).
+    // Pass 1: setup assistant shots on an empty isolated profile.
     {
       const app = await launchIsolatedApp(userData);
       try {
@@ -593,14 +533,16 @@ async function run() {
         await page.waitForLoadState("domcontentloaded");
         await page.setViewportSize(VIEWPORT);
         await captureSetupAssistant(page, outDir);
-        await seedIsolatedFleet(app, page);
-        await ensureDemoCluster(app, page);
       } finally {
         await quitApp(app);
       }
     }
 
+    seedGalleryFleetSql(userData);
     applyDemoMapsInDb(userData);
+    console.log(
+      `WEBSITE_SCREENSHOTS_SEEDED=${DEMO_FLEET.map((d) => d.name).join(",")} cluster=${DEMO_CLUSTER_ID}`,
+    );
 
     let app = await launchIsolatedApp(userData);
 
@@ -682,6 +624,15 @@ async function run() {
       await page.getByRole("tab", { name: "Server" }).click();
       await settle(page, 500);
       await shot(page, path.join(outDir, "workspace-server.png"));
+
+      await page.getByRole("tab", { name: "Launch" }).click();
+      await settle(page, 400);
+      const launchSearch = page.getByPlaceholder("Filter flags by name, description, or group");
+      if ((await launchSearch.count()) > 0) {
+        await launchSearch.fill("cross");
+        await settle(page, 500);
+      }
+      await shot(page, path.join(outDir, "workspace-launch.png"));
 
       await page.getByRole("tab", { name: "INI Files" }).click();
       await settle(page, 900);

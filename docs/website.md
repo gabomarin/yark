@@ -112,7 +112,7 @@ npm run website:screenshots
 Default output is `website/public/screenshots/` (override with `WEBSITE_SCREENSHOT_OUT`).
 Requires a prior app `npm run build`, Playwright, and a Windows GUI session.
 `WEBSITE_SCREENSHOT_ONLY=downloads` recaptures only `downloads.png` (hanging SteamCMD stub so
-Active / Queued / Paused stay visible).
+Active and Queued rows stay live — a Paused job blocks the queue, so marketing seeds omit it).
 
 The capture script **always** launches Electron with an isolated `YARK_E2E_USER_DATA`
 temp profile and seeds a public demo fleet there. It never opens your normal app

@@ -42,7 +42,7 @@ show a footer teaser instead of a floating progress dock.
 <figure class="doc-shot">
   <img
     src={withBase("/screenshots/downloads.png")}
-    alt="Downloads queue with an active SteamCMD job, queued servers, and a paused install"
+    alt="Downloads queue with an active SteamCMD verify job and additional queued servers"
     width="1440"
     height="900"
     loading="lazy"
@@ -69,6 +69,14 @@ When you run **Update** on a server that was running:
 </Steps>
 
 A server that was already stopped stays stopped after success (and after rollback).
+
+## Fleet update all
+
+When several stopped servers share the same outdated Steam build, use **Update All** on the
+Overview header (next to **Check server updates**). The preview lists every outdated profile
+with skip reasons for running, disabled, not-ready, or already-queued servers. **Accept**
+queues safe **Update** jobs into **Downloads** one server at a time — the modal closes as soon
+as queueing finishes.
 
 <Aside type="caution">
   An active-server update must produce exactly one stable `pre_update` set — it must not also
