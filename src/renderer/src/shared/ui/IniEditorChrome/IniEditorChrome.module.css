@@ -1,6 +1,6 @@
 /**
- * Shared INI editor chrome (segmented switches + category headers).
- * Selected segmented indicator + category header: --app-color-ini-category (#131F43).
+ * Shared INI editor chrome (nav row + visual category headers).
+ * Category header bar: --app-color-ini-category (#131F43).
  */
 
 .nav {
@@ -13,25 +13,6 @@
   max-width: 100%;
   overflow-x: auto;
   padding-bottom: 1px;
-}
-
-.segmentedRoot {
-  border: 1px solid var(--app-color-border);
-  background: var(--app-color-surface-control);
-  flex-shrink: 0;
-}
-
-.segmentedIndicator {
-  background: var(--app-color-ini-category) !important;
-}
-
-.segmentedLabel {
-  color: var(--app-color-muted);
-  font-weight: 600;
-}
-
-.segmentedLabel[data-active] {
-  color: var(--ark-blue-12);
 }
 
 /* Native <button> — avoid Mantine UnstyledButton resetting background/padding. */

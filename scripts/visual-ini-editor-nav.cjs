@@ -1,5 +1,5 @@
 /**
- * INI editor nav (file + Visual/Text) alignment + selected color —
+ * INI editor nav (file + Visual/Text) layout alignment —
  * docs/visual-testing.md
  * Usage: npm run build && node scripts/visual-ini-editor-nav.cjs
  */
@@ -38,26 +38,20 @@ async function measureIniNav(page) {
       return { found: false };
     }
     const roots = Array.from(nav.querySelectorAll(".mantine-SegmentedControl-root"));
-    const indicators = Array.from(
-      nav.querySelectorAll(".mantine-SegmentedControl-indicator"),
-    );
     const rects = roots.map((el) => {
       const r = el.getBoundingClientRect();
       return { top: r.top, bottom: r.bottom, height: r.height, left: r.left, width: r.width };
     });
     const navRect = nav.getBoundingClientRect();
-    const styles = indicators.map((el) => getComputedStyle(el).backgroundColor);
     const labelTops = Array.from(nav.querySelectorAll(".mantine-SegmentedControl-label")).map(
       (el) => el.getBoundingClientRect().top,
     );
     return {
       found: true,
       rootCount: roots.length,
-      indicatorCount: indicators.length,
       rects,
       navTop: navRect.top,
       navHeight: navRect.height,
-      indicatorBackgrounds: styles,
       labelTops,
       navScrollWidth: nav.scrollWidth,
       navClientWidth: nav.clientWidth,
@@ -207,7 +201,6 @@ async function run() {
             rootCount: report.metrics.rootCount,
             tops: report.metrics.rects?.map((r) => r.top),
             heights: report.metrics.rects?.map((r) => r.height),
-            indicators: report.metrics.indicatorBackgrounds,
           },
           null,
           0,

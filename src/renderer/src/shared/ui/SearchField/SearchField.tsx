@@ -12,8 +12,8 @@ interface Props {
   /** Visible Mantine caption. Empty/whitespace is treated as unset. */
   fieldLabel?: string;
   /**
-   * Mantine input size. `xs` (14px icon) is the compact workspace rail
-   * (`ServerListPanel`); `sm` is the workspace default. Do not use `md`.
+   * Mantine input size. `xs` is the app default (theme); pass `sm` only when
+   * pairing with other Comfortable-density controls. Do not use `md`.
    */
   size?: TextInputProps["size"];
   className?: string;

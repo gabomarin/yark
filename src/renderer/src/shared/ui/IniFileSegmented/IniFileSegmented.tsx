@@ -7,7 +7,7 @@ import {
   compactSegmentedRootClass,
 } from "@ui/CompactSegmented/CompactSegmented";
 
-const INI_FILE_OPTIONS = [
+const INI_FILE_OPTIONS: Array<{ label: ReactElement; value: IniFileKey }> = [
   {
     value: "gameUserSettings",
     label: compactIconSegmentLabel(
@@ -24,7 +24,7 @@ const INI_FILE_OPTIONS = [
       <GearSix size={14} aria-hidden="true" />,
     ),
   },
-] as const satisfies Array<{ label: ReactElement; value: IniFileKey }>;
+];
 
 interface Props {
   value: IniFileKey;
@@ -41,7 +41,7 @@ export function IniFileSegmented(props: Props): ReactElement {
       aria-label="INI file"
       value={props.value}
       disabled={props.disabled}
-      data={[...INI_FILE_OPTIONS]}
+      data={INI_FILE_OPTIONS}
       className={compactSegmentedRootClass}
       onChange={(value) => {
         if (value === "game" || value === "gameUserSettings") {
