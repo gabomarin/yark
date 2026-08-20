@@ -3,7 +3,7 @@
  * The endpoint is public configuration, not a secret.
  */
 
-export const METADATA_SERVICE_NOT_CONFIGURED_CODE = "METADATA_SERVICE_NOT_CONFIGURED";
+const METADATA_SERVICE_NOT_CONFIGURED_CODE = "METADATA_SERVICE_NOT_CONFIGURED";
 
 export const METADATA_SERVICE_NOT_CONFIGURED_MESSAGE =
   "Mod metadata service is not configured. Official YARK releases embed the proxy URL at build time; local/dev builds can set YARK_CURSEFORGE_PROXY_URL. Existing mod IDs still launch; search and metadata refresh need an endpoint.";
@@ -17,11 +17,11 @@ export function isMetadataServiceNotConfiguredMessage(message: string | null | u
   );
 }
 
-export function stripTrailingSlash(value: string): string {
+function stripTrailingSlash(value: string): string {
   return value.replace(/\/+$/, "");
 }
 
-export function isLoopbackHostname(hostname: string): boolean {
+function isLoopbackHostname(hostname: string): boolean {
   const host = hostname.trim().toLowerCase().replace(/^\[|\]$/g, "");
   return host === "localhost" || host === "127.0.0.1" || host === "::1";
 }

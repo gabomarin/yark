@@ -40,7 +40,7 @@ export interface AsaLogSessionAnchor {
   mtimeMs: number;
 }
 
-export function asaLogFileIdentity(stats: {
+function asaLogFileIdentity(stats: {
   dev: number | bigint;
   ino: number | bigint;
   birthtimeMs: number;

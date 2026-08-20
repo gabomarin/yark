@@ -3,12 +3,10 @@
  */
 
 import {
-  flattenIniText,
   INI_FLAT_SEP,
   parseIniTextRows,
   removeIniTextValue,
   setIniTextValue,
-  splitFlatIniKey,
 } from "@shared/ini-text";
 import {
   isConfigTransferBlockedGusKey,
@@ -216,52 +214,4 @@ export function profileToIniIdentity(profile: ServerProfile): ProfileIniIdentity
     gamePort: profile.gamePort,
     queryPort: profile.queryPort,
   };
-}
-
-/** Build a stable sorted map of selected source keys for fingerprinting. */
-export function summarizeIniSelectionKeys(
-  sourceText: string,
-  file: ConfigTransferIniFileSelection,
-  fileKey: "game" | "gameUserSettings",
-): string[] {
-  return collectSourceKeys(sourceText, file, fileKey)
-    .map((r) => `${r.section}${INI_FLAT_SEP}${r.key}=${r.value}`)
-    .sort();
-}
-
-export function listIniSectionsAndKeys(text: string): Array<{
-  section: string;
-  keys: string[];
-}> {
-  const bySection = new Map<string, string[]>();
-  for (const row of parseIniTextRows(text)) {
-    const list = bySection.get(row.section) ?? [];
-    if (!list.some((k) => k.toLowerCase() === row.key.toLowerCase())) {
-      list.push(row.key);
-    }
-    bySection.set(row.section, list);
-  }
-  return [...bySection.entries()].map(([section, keys]) => ({ section, keys }));
-}
-
-export function flatLookupValue(
-  text: string,
-  section: string,
-  key: string,
-): string | undefined {
-  const flat = flattenIniText(text);
-  const exact = flat[`${section}${INI_FLAT_SEP}${key}`];
-  if (exact !== undefined) return exact;
-  const sectionLower = section.toLowerCase();
-  const keyLower = key.toLowerCase();
-  for (const [flatKey, value] of Object.entries(flat)) {
-    const parts = splitFlatIniKey(flatKey);
-    if (
-      parts.section.toLowerCase() === sectionLower &&
-      parts.key.toLowerCase() === keyLower
-    ) {
-      return value;
-    }
-  }
-  return undefined;
 }

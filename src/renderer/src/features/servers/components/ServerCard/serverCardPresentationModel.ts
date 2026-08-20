@@ -36,7 +36,7 @@ export type SteamCmdOperation =
 
 export type ServerCardRowTone = "busy" | "queued" | "running" | "error" | "attention" | "stopped";
 
-export function resolveInstallStateLabel(input: {
+function resolveInstallStateLabel(input: {
   steamCmdBusy: boolean;
   steamCmdPaused?: boolean;
   steamCmdQueued?: boolean;
@@ -66,7 +66,7 @@ export function resolveInstallStateLabel(input: {
   return "Not verified";
 }
 
-export function resolveRowTone(input: {
+function resolveRowTone(input: {
   steamCmdBusy: boolean;
   steamCmdPaused?: boolean;
   steamCmdQueued?: boolean;
@@ -84,7 +84,7 @@ export function resolveRowTone(input: {
   return "stopped";
 }
 
-export function resolveSteamCmdProgressCopy(input: {
+function resolveSteamCmdProgressCopy(input: {
   steamCmdOperation: SteamCmdOperation;
   steamCmdProgressLabel: string | null;
   steamCmdProgressBytesDownloaded: number | null;
@@ -110,7 +110,7 @@ export function resolveSteamCmdProgressCopy(input: {
   return { shortProgressLabel, byteProgressLabel, byteProgressNoun };
 }
 
-export function resolveVersionMetaTone(input: {
+function resolveVersionMetaTone(input: {
   steamCmdBusy: boolean;
   isInstallationReady: boolean;
   updateAvailable: boolean;

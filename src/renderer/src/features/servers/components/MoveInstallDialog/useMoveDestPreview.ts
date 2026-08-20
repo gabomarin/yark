@@ -5,7 +5,7 @@ import type { ImportInstallProbe } from "@shared/types";
 import { diskMoveInstallWarning } from "../ServerForm/createInstallPathWarning";
 import { moveDestPreviewIssue } from "./moveInstallPathWarning";
 
-export const MOVE_DEST_PROBE_FAILED = "Could not check the destination folder.";
+const MOVE_DEST_PROBE_FAILED = "Could not check the destination folder.";
 
 function probeFailureMessage(detail?: string): string {
   const trimmed = detail?.trim() ?? "";

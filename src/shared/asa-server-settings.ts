@@ -49,10 +49,6 @@ export const asaServerSettingsMeta = {
   wikiOnly: 0,
 };
 
-export function settingId(section: string, key: string): string {
-  return `${section}.${key}`.toLowerCase();
-}
-
 export function lookupAsaSetting(
   file: AsaIniFileKey,
   section: string,
@@ -78,7 +74,7 @@ export function lookupAsaDescription(
   return lookupIniSettingDescription(file, section, key);
 }
 
-export function settingsForFile(file: AsaIniFileKey): readonly AsaServerSetting[] {
+function settingsForFile(file: AsaIniFileKey): readonly AsaServerSetting[] {
   return settingsMetaForFile(file).map(toAsaSetting);
 }
 

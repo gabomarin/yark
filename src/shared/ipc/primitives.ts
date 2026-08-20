@@ -9,24 +9,24 @@ import {
 /** Absolute Windows path (drive letter or UNC). */
 const WINDOWS_ABS_PATH = /^(?:[a-zA-Z]:[\\/]|\\\\)/;
 
-export const MAX_SERVER_ID_LENGTH = 128;
+const MAX_SERVER_ID_LENGTH = 128;
 export const MAX_PATH_LENGTH = MAX_WINDOWS_PATH_LENGTH;
-export const MAX_RCON_COMMAND_LENGTH = 2_000;
+const MAX_RCON_COMMAND_LENGTH = 2_000;
 export const MAX_BACKUP_ID_LENGTH = 256;
 export const MAX_BACKUP_IDS_PER_REQUEST = 200;
 export const MAX_STRING_PARAM_LENGTH = 512;
-export const MAX_PLAYER_KEY_LENGTH = 256;
-export const MAX_INI_FILE_CHARS = 2_000_000;
+const MAX_PLAYER_KEY_LENGTH = 256;
+const MAX_INI_FILE_CHARS = 2_000_000;
 export const MAX_MOD_IDS_PER_REQUEST = 200;
 export const MAX_MOD_QUERY_LENGTH = 200;
-export const MAX_LOG_FILE_NAME_LENGTH = 255;
+const MAX_LOG_FILE_NAME_LENGTH = 255;
 export const MAX_URL_LENGTH = 2_048;
 
 /**
  * Zod 3 tuples treat `.optional()` slots as still requiring that array length.
  * Pad short invoke arg lists with `undefined` so 1-/2-arg calls work.
  */
-export function padIpcArgs(minLength: number): (raw: unknown) => unknown {
+function padIpcArgs(minLength: number): (raw: unknown) => unknown {
   return (raw) => {
     if (!Array.isArray(raw)) {
       return raw;
@@ -90,7 +90,7 @@ export const windowsAbsPathSchema = z
   .max(MAX_PATH_LENGTH, "Path too long")
   .regex(WINDOWS_ABS_PATH, "Must be an absolute Windows path");
 
-export const portSchema = z
+const portSchema = z
   .number()
   .int()
   .min(PORT_MIN, `Port must be >= ${PORT_MIN}`)
@@ -142,7 +142,7 @@ export const plainObjectSchema = z
     message: "Expected an object",
   });
 
-export const sessionPortSetSchema = z.object({
+const sessionPortSetSchema = z.object({
   gamePort: portSchema,
   queryPort: portSchema,
   rconPort: portSchema,

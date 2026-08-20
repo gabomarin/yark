@@ -51,7 +51,7 @@ interface EntryProps {
   compact?: boolean;
 }
 
-export function AppChangelogEntryBlock(props: EntryProps): ReactElement {
+function AppChangelogEntryBlock(props: EntryProps): ReactElement {
   return (
     <article
       className={props.compact === true ? classes.entryCompact : classes.entry}

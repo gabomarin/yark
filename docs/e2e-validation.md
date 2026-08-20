@@ -12,6 +12,8 @@ binaries, SteamCMD, backups, rollback).
 | Create / clone / delete UI | `npm run build && npm run e2e` | **PR CI** | Disposable dirs under `C:\asa-e2e\…` |
 | Install-health badges | `npm run build && npm run e2e:install-health` | **PR CI** | Fake FS fixtures only |
 | Host port probe modal | `npm run build && npm run e2e:host-port-probe` | **PR CI** | Occupies UDP then asserts modal |
+| Downloads Pause → Resume | `npm run build && npm run e2e:downloads-pause-resume` | Local / release audit | Hanging SteamCMD stub; queued Install stays queued (#201) |
+| Persona walkthrough + viewport matrix | `npm run build && npm run e2e:personas` | Local | Beginner/experienced flows at HD / Full HD / QHD |
 | Clone INI seed / folder copy | `npm run build && npm run e2e:clone-copy` | Local / release audit | Fake ASA tree; profile-only vs robocopy (#160); always deletes fixtures |
 | Clone after real SteamCMD install | `npm run build && npm run e2e:clone-copy-real` | **Manual real-host** | Installs ASA into `C:\asa-e2e`, then config-only + full-folder clone (#160); deletes fixtures unless `YARK_E2E_KEEP=1` |
 | Import install wizard | `npm run build && npm run e2e:import-install` | Local / release audit | Nested / ready / Already managed; profile-only INI (#254) |
@@ -29,7 +31,7 @@ binaries, SteamCMD, backups, rollback).
 Workflow: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) on
 `windows-latest`, **two parallel jobs** (each pays its own `npm ci`):
 
-1. Typecheck, lint, unit/integration tests.
+1. Typecheck, lint, Knip, unit/integration tests.
 2. Build, then Electron E2E: CRUD suite → install-health → host-port-probe.
 
 `e2e:smoke` stays a local empty-fleet check. Seeded suites call
@@ -92,7 +94,7 @@ modals, workspace tabs, PathFields):
 | RCON console | `e2e:rcon` |
 | Clusters membership | `e2e:clusters-membership` |
 | Copy configuration | `e2e:copy-configuration` |
-| Downloads queue / critical-job recovery | `e2e:critical-job-recovery`, `node scripts/visual-downloads.cjs` |
+| Downloads queue / critical-job recovery | `e2e:critical-job-recovery`, `e2e:downloads-pause-resume`, `node scripts/visual-downloads.cjs` |
 | Log retention (Settings → Logs) | `e2e:log-retention` |
 
 Cursor rule: [`.cursor/rules/e2e-ui.mdc`](../.cursor/rules/e2e-ui.mdc).

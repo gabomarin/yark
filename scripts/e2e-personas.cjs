@@ -2,10 +2,7 @@
  * E2E by user personas (beginner and experienced)
  * + baseline visual checks at 1280x720, 1920x1080, and 2560x1440.
  *
- * Usage:
- *   node scripts/e2e-personas.cjs
- * Requires:
- *   npm run build
+ * Usage: npm run build && npm run e2e:personas
  */
 const assert = require("node:assert/strict");
 const fs = require("node:fs");

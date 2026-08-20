@@ -38,7 +38,7 @@ interface Props {
   onClone: (params: CloneParams) => Promise<boolean>;
 }
 
-export interface CloneParams {
+interface CloneParams {
   name: string;
   sessionName: string;
   gamePort: number;

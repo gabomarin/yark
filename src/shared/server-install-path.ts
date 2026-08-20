@@ -145,7 +145,7 @@ export type FleetInstallRef = {
   id?: string;
 };
 
-export type InstallDirConflictRelation = "same" | "inside-other" | "contains-other";
+type InstallDirConflictRelation = "same" | "inside-other" | "contains-other";
 
 export type InstallDirConflict = {
   otherName: string;

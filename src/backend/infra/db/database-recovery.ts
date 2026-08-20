@@ -9,7 +9,7 @@ export function formatDatabaseQuarantineStamp(now: Date = new Date()): string {
 }
 
 /** WAL/SHM first, then the main DB — rename order for safe quarantine. */
-export function listProfileDatabaseSidecars(dbPath: string): string[] {
+function listProfileDatabaseSidecars(dbPath: string): string[] {
   // Move sidecars before the main file. If a later rename fails (lock/permissions),
   // we must not leave old WAL/SHM beside a path that boot will reopen as a new DB.
   return [`${dbPath}-wal`, `${dbPath}-shm`, dbPath];

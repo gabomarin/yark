@@ -92,9 +92,10 @@ Notes specific to running this in the Linux cloud VM:
 - Lint/test/build/run all work on Linux. `npm run typecheck` (`tsc --noEmit`) is the
   TypeScript gate. `npm run lint` runs feature-file size caps, Actions pin check, and
   ESLint 9 ([docs/component-structure.md](docs/component-structure.md), `eslint.config.mjs`).
+  `npm run knip` finds unused files, exports, deps, and unused CSS files (`knip.jsonc`).
   `npm run build` is clean.
  GitHub Actions **CI** (`.github/workflows/ci.yml`) runs two parallel
- `windows-latest` jobs: typecheck + lint + tests, and build + Electron E2E
+ `windows-latest` jobs: typecheck + lint + knip + tests, and build + Electron E2E
  CRUD / install-health / host-port-probe (#12). Matrix:
  [docs/e2e-validation.md](docs/e2e-validation.md).
   PRs also run **Changelog** (`.github/workflows/changelog.yml`): `CHANGELOG.md` must change

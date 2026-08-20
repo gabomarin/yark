@@ -4,7 +4,7 @@ import { AppMetricCard, type AppMetricTone } from "@ui/AppMetricCard/AppMetricCa
 import type { BackupFleetSummary } from "@shared/types";
 import classes from "./BackupFleetMetrics.module.css";
 
-export type BackupHealthFilter = "all" | "at_risk" | "failed" | "protected";
+type BackupHealthFilter = "all" | "at_risk" | "failed" | "protected";
 
 interface Props {
   summary: BackupFleetSummary;

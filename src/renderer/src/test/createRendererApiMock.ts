@@ -3,16 +3,16 @@ import type { AppUpdateStatus } from "@shared/app-update";
 import type { RendererApi } from "@shared/ipc";
 
 /** Stable ISO timestamp for fixture payloads — bump when suites assert on age. */
-export const TEST_NOW = "2026-07-24T00:00:00.000Z";
+const TEST_NOW = "2026-07-24T00:00:00.000Z";
 
 /** Onboarding `completedAt` fixture (distinct from TEST_NOW for clarity). */
-export const TEST_ONBOARDING_AT = "2026-01-01T00:00:00.000Z";
+const TEST_ONBOARDING_AT = "2026-01-01T00:00:00.000Z";
 
 /** Packaged-app version string used by update-status stubs. */
-export const TEST_APP_VERSION = "0.1.0";
+const TEST_APP_VERSION = "0.1.0";
 
 /** Last-seen What's new version for prefs stubs. */
-export const TEST_CHANGELOG_VERSION = "0.11.0";
+const TEST_CHANGELOG_VERSION = "0.11.0";
 
 /** Official ASA build string shown on Overview when mounting App. */
 export const TEST_OFFICIAL_VERSION = "358.12";

@@ -31,7 +31,7 @@ export function extractBanListId(token: string): string {
 }
 
 /** Optional display name from a BanList line (`id,name,flags`). */
-export function extractBanListName(token: string): string | null {
+function extractBanListName(token: string): string | null {
   const trimmed = token.trim();
   if (trimmed.length === 0 || !trimmed.includes(",")) return null;
   const parts = trimmed.split(",");
@@ -40,7 +40,7 @@ export function extractBanListName(token: string): string | null {
 }
 
 /** Flags / trailing fields after `id,name` (e.g. `0`). */
-export function extractBanListFlags(token: string): string | null {
+function extractBanListFlags(token: string): string | null {
   const trimmed = token.trim();
   if (trimmed.length === 0 || !trimmed.includes(",")) return null;
   const parts = trimmed.split(",");
@@ -108,7 +108,7 @@ export function formatBanListEntries(entries: BanListEntry[]): string {
   return `${lines.join("\n")}\n`;
 }
 
-export async function readBanList(installDir: string): Promise<string[]> {
+async function readBanList(installDir: string): Promise<string[]> {
   return (await readBanListEntries(installDir)).map((entry) => entry.id);
 }
 
@@ -128,22 +128,6 @@ export async function ensureBanListFile(installDir: string): Promise<string> {
     await writeFile(path, "", "utf8");
   }
   return path;
-}
-
-export async function writeBanList(
-  installDir: string,
-  ids: string[],
-): Promise<void> {
-  const path = banListPath(installDir);
-  await writeFile(path, formatBanListText(ids), "utf8");
-}
-
-export async function writeBanListEntries(
-  installDir: string,
-  entries: BanListEntry[],
-): Promise<void> {
-  const path = banListPath(installDir);
-  await writeFile(path, formatBanListEntries(entries), "utf8");
 }
 
 /**

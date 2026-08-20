@@ -7,7 +7,7 @@ import { isYarkOwnedIniKey } from "./yark-owned-ini-keys";
 
 export type ConfigTransferIniStrategy = "merge" | "replace";
 
-export interface ConfigTransferIniKeyRef {
+interface ConfigTransferIniKeyRef {
   section: string;
   key: string;
 }
@@ -27,7 +27,7 @@ export interface ConfigTransferIniFileSelection {
 }
 
 /** Mods / launch-args selection with Merge vs Replace. */
-export interface ConfigTransferListSelection {
+interface ConfigTransferListSelection {
   enabled: boolean;
   strategy: ConfigTransferIniStrategy;
 }
@@ -54,7 +54,7 @@ export function emptyIniFileSelection(
   };
 }
 
-export function emptyListSelection(
+function emptyListSelection(
   strategy: ConfigTransferIniStrategy = "merge",
 ): ConfigTransferListSelection {
   return { enabled: false, strategy };
@@ -84,7 +84,7 @@ export function configTransferSelectionHasWork(
   );
 }
 
-export function iniFileSelectionHasWork(
+function iniFileSelectionHasWork(
   file: ConfigTransferIniFileSelection,
 ): boolean {
   if (!file.enabled) return false;

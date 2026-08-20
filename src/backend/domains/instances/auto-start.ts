@@ -3,7 +3,7 @@ import type { ProcessManager } from "@backend/infra/process/process-manager";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
 import type { ServerProfile, StartServerOptions } from "@shared/types";
 
-export type AutoStartSkipReason =
+type AutoStartSkipReason =
   | "inactive"
   | "already_running"
   | "reattach_uncertain";
@@ -24,7 +24,7 @@ export type AutoStartResult =
       detail: string;
     };
 
-export interface AutoStartStartFn {
+interface AutoStartStartFn {
   (serverId: string, options?: StartServerOptions): Promise<void>;
 }
 

@@ -1,10 +1,5 @@
 import { isMapCategoryLabel } from "@shared/map-token-suggest";
-import type {
-  ModMetadata,
-  ModSearchPage,
-  ServerProfile,
-  ServerProfileInput,
-} from "@shared/types";
+import type { ModMetadata, ModSearchPage } from "@shared/types";
 
 export interface ModRow {
   key: string;
@@ -209,36 +204,6 @@ export function pickModListCategory(categories: string[]): {
   };
 }
 
-export function toProfileInput(
-  server: ServerProfile,
-  mods: string[],
-  disabledMods: string[],
-  modMetadataCache: Record<string, ModMetadata>,
-): ServerProfileInput {
-  return {
-    name: server.name,
-    map: server.map,
-    mapModId: server.mapModId ?? null,
-    mapSaveFolder: server.mapSaveFolder ?? null,
-    installDir: server.installDir,
-    sessionName: server.sessionName,
-    maxPlayers: server.maxPlayers,
-    gamePort: server.gamePort,
-    queryPort: server.queryPort,
-    rconPort: server.rconPort,
-    serverPassword: server.serverPassword,
-    adminPassword: server.adminPassword,
-    clusterId: server.clusterId,
-    clusterDir: server.clusterDir,
-    extraArgs: server.extraArgs,
-    structuredLaunchArgs: server.structuredLaunchArgs ?? {},
-    mods,
-    disabledMods,
-    modMetadataCache,
-    autoStart: server.autoStart,
-  };
-}
-
 export function metadataMap(
   cache: Record<string, ModMetadata> | undefined,
 ): Map<string, ModMetadata> {
@@ -252,7 +217,7 @@ function sameStringList(left: string[] | undefined, right: string[] | undefined)
 }
 
 /** True when every user-visible ModMetadata field matches. */
-export function sameModMetadata(left: ModMetadata, right: ModMetadata): boolean {
+function sameModMetadata(left: ModMetadata, right: ModMetadata): boolean {
   return (
     left.id === right.id
     && left.name === right.name

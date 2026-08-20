@@ -32,7 +32,7 @@ vi.mock("@backend/domains/instances/server-installation", async (importOriginal)
     ),
     classifyInstallHealthAsync: vi.fn(
       async (installDir: string, binaryPath: string) =>
-        actual.classifyInstallHealth(installDir, binaryPath),
+        actual.classifyInstallHealthAsync(installDir, binaryPath),
     ),
   };
 });

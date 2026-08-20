@@ -13,7 +13,7 @@ import { isYarkOwnedIniKey } from "./yark-owned-ini-keys";
 
 export type IniUiFileKey = "gameUserSettings" | "game";
 
-export interface IniUiCategoryKey {
+interface IniUiCategoryKey {
   section: string;
   key: string;
 }

@@ -34,7 +34,7 @@ const windowsPathSchema = z
   .max(MAX_WINDOWS_PATH_LENGTH, "Path too long")
   .regex(WINDOWS_ABS_PATH, "Must be an absolute Windows path");
 
-export const serverProfileInputSchema = z.object({
+const serverProfileInputSchema = z.object({
   name: z
     .string()
     .trim()

@@ -9,7 +9,7 @@ human-readable version comment on the line above each `uses:` entry. Mutable tag
 
 | Workflow | Purpose | Default permissions |
 | --- | --- | --- |
-| [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Parallel `windows-latest` jobs: typecheck + lint + test; build + Electron E2E CRUD / install-health / host-port-probe (#12) | `contents: read` |
+| [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Parallel `windows-latest` jobs: typecheck + lint + knip + test; build + Electron E2E CRUD / install-health / host-port-probe (#12) | `contents: read` |
 | [`.github/workflows/website-ci.yml`](../.github/workflows/website-ci.yml) | Astro site build | `contents: read` |
 | [`.github/workflows/changelog.yml`](../.github/workflows/changelog.yml) | Require Unreleased changelog | `contents: read`, `pull-requests: read` |
 | [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) | Deploy site to GitHub Pages | `contents: read`, `pages: write`, `id-token: write` |
@@ -76,7 +76,9 @@ the bump is worth calling out).
 2. `release.yml` checks out **that tag** (`ref: steps.tag.outputs.name`), verifies
    `package.json` version alignment, runs typecheck + tests, then packages NSIS.
    After packaging, `npm run verify:fuses` asserts `build.electronFuses` on
-   `dist/win-unpacked` (#217).
+   `dist/win-unpacked` (#217). That script `require.resolve`s `@electron/fuses`
+   (direct `devDependency`; electron-builder's nested copy is not on Node's
+   resolve path).
 3. Artifacts upload and the GitHub Release attach the same `dist/*.exe` / `*.yml`
    built from that tagged tree — not from an unrelated branch tip.
 

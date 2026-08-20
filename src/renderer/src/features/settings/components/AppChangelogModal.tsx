@@ -17,7 +17,7 @@ import {
 } from "@shared/changelog";
 import { AppChangelogList } from "./AppChangelogList";
 
-export type AppChangelogTab = "current" | "recent";
+type AppChangelogTab = "current" | "recent";
 
 interface Props {
   opened: boolean;

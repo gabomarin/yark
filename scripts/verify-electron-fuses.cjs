@@ -5,6 +5,10 @@
  *   node scripts/verify-electron-fuses.cjs [path-to-exe-or-win-unpacked-dir]
  *
  * Defaults to dist/win-unpacked when no path is given.
+ *
+ * `@electron/fuses` is a **direct** devDependency. `require.resolve` of
+ * `@electron/fuses/dist/bin.js` does not see electron-builder's nested copy,
+ * so a missing root install used to fail with MODULE_NOT_FOUND.
  */
 "use strict";
 

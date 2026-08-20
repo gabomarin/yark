@@ -11,11 +11,7 @@ export type ServerListSurface = "overview" | "workspace";
 export const SERVER_LIST_SORT_STORAGE_KEY = "yark.serverListSort";
 export const SERVER_LIST_VIEW_STORAGE_KEY = "yark.serverListView";
 
-export function isServerListSortMode(value: string): value is ServerListSortMode {
-  return value === "created" || value === "name";
-}
-
-export function isServerListViewMode(value: string): value is ServerListViewMode {
+function isServerListViewMode(value: string): value is ServerListViewMode {
   return value === "ungrouped" || value === "grouped";
 }
 

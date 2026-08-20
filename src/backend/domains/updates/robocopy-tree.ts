@@ -49,13 +49,6 @@ export class OperationPauseUnavailableError extends Error {
   }
 }
 
-export function isOperationPauseUnavailableError(error: unknown): boolean {
-  return (
-    error instanceof OperationPauseUnavailableError
-    || (error instanceof Error && error.name === "OperationPauseUnavailableError")
-  );
-}
-
 export function isRobocopySuccess(exitCode: number | null): boolean {
   // Robocopy: 0–7 = success with varying copy degrees; >= 8 = error.
   const code = exitCode ?? 16;

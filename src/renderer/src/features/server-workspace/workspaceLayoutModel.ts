@@ -18,9 +18,6 @@ export const LIST_FULL_PX = 280;
 export const ICON_RAIL_PX = CHROME_ICON_RAIL_PX;
 export const SIDE_PANEL_PX = 260;
 
-/** @deprecated Prefer LIST_FULL_PX — kept for any leftover imports during transition. */
-export const LIST_DEFAULT_PX = LIST_FULL_PX;
-
 export const LIST_RAIL_STORAGE_KEY = "yark.workspaceServerListRail";
 /** Legacy continuum width key — migrated once to rail boolean. */
 export const LIST_WIDTH_STORAGE_KEY = "yark.workspaceServerListWidthPx";

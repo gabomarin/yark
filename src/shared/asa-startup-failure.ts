@@ -1,4 +1,4 @@
-export type AsaStartupFailureKind =
+type AsaStartupFailureKind =
   | "mods_not_installed"
   | "fatal"
   | "generic";

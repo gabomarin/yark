@@ -57,7 +57,7 @@ import {
 import { numberInputValueFromIni } from "../../iniNumberInput";
 import classes from "./ConfigurationEditor.module.css";
 
-export type ConfigSection = "iniFiles";
+type ConfigSection = "iniFiles";
 
 interface Props {
   server: ServerProfile;

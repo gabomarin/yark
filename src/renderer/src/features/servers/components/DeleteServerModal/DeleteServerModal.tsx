@@ -15,9 +15,9 @@ import { EMPTY_WIPE_STALE_MESSAGE } from "@shared/types";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import classes from "./DeleteServerModal.module.css";
 
-export type DeleteServerMode = "profileOnly" | "wipe";
+type DeleteServerMode = "profileOnly" | "wipe";
 
-export type DeleteServerConfirmResult =
+type DeleteServerConfirmResult =
   | { ok: true }
   | { ok: false; emptyWipeStale?: boolean };
 
@@ -25,7 +25,7 @@ export type DeleteServerConfirmResult =
  * Empty install folders have nothing worth keeping, and Import (#254) rejects
  * them — skip the mode picker and always wipe (backend revalidates emptiness).
  */
-export function isForcedWipeInstallHealth(
+function isForcedWipeInstallHealth(
   health: InstallationHealthStatus | null | undefined,
 ): boolean {
   return health === "empty";

@@ -164,6 +164,7 @@ Common validation commands:
 | --- | --- |
 | `npm run typecheck` | Validate TypeScript without emitting files. |
 | `npm run lint` | Feature file-size caps, Actions pin check, and ESLint. |
+| `npm run knip` | Unused files, exports, dependencies, and unused CSS files. |
 | `npm test` | Run the Vitest unit and integration suite. |
 | `npm run build` | Build the Electron application. |
 | `npm run package` | Build the Windows NSIS installer. |

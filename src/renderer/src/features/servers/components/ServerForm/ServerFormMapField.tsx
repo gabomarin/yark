@@ -15,16 +15,16 @@ const OFFICIAL_MAP_SELECT_ITEMS = KNOWN_MAP_OPTIONS.map((entry) => ({
 }));
 
 /** Sentinel Select value for a free-form ASA launch map token (#65 / #191). */
-export const CUSTOM_MAP_SELECT_VALUE = "__yark_custom_map__";
+const CUSTOM_MAP_SELECT_VALUE = "__yark_custom_map__";
 
 /** Select value prefix for an enabled Maps-category mod (#192). */
-export const MAP_MOD_SELECT_PREFIX = "mapmod:";
+const MAP_MOD_SELECT_PREFIX = "mapmod:";
 
-export function mapModSelectValue(modId: string): string {
+function mapModSelectValue(modId: string): string {
   return `${MAP_MOD_SELECT_PREFIX}${modId}`;
 }
 
-export function parseMapModSelectValue(value: string): string | null {
+function parseMapModSelectValue(value: string): string | null {
   if (!value.startsWith(MAP_MOD_SELECT_PREFIX)) {
     return null;
   }

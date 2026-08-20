@@ -103,7 +103,7 @@ export function isWindowStateVisibleOnDisplays(
   return false;
 }
 
-export function findWorkAreaContainingPoint(
+function findWorkAreaContainingPoint(
   x: number,
   y: number,
   displays: DisplayWorkArea[],
@@ -121,7 +121,7 @@ export function findWorkAreaContainingPoint(
   return null;
 }
 
-export function nearestWorkArea(
+function nearestWorkArea(
   x: number,
   y: number,
   displays: DisplayWorkArea[],
@@ -148,7 +148,7 @@ export function nearestWorkArea(
   return best;
 }
 
-export function centerSizeInWorkArea(
+function centerSizeInWorkArea(
   width: number,
   height: number,
   area: DisplayWorkArea,
@@ -215,14 +215,14 @@ export function readStoredWindowState(
   return parseWindowState(settings.get(WINDOW_STATE_SETTING_KEY));
 }
 
-export function writeStoredWindowState(
+function writeStoredWindowState(
   settings: AppSettingsRepository,
   state: PersistedWindowState,
 ): void {
   settings.set(WINDOW_STATE_SETTING_KEY, serializeWindowState(state));
 }
 
-export function captureWindowState(win: BrowserWindow): PersistedWindowState | null {
+function captureWindowState(win: BrowserWindow): PersistedWindowState | null {
   if (win.isDestroyed()) {
     return null;
   }

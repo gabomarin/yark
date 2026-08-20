@@ -16,14 +16,9 @@ import {
   operationTitle,
 } from "./downloadsOperationCopy";
 
-export type { DownloadsTeaser } from "./downloadsTeaserModel";
 export { buildDownloadsTeaser } from "./downloadsTeaserModel";
-export type { ServerFilesQueueKind, ServerFilesQueueState } from "./downloadsFilesQueueModel";
-export {
-  filesQueueStateByServerId,
-  steamFilesOperationForKind,
-} from "./downloadsFilesQueueModel";
-export { isOperatorVisibleCriticalJob, operationTitle } from "./downloadsOperationCopy";
+export type { ServerFilesQueueState } from "./downloadsFilesQueueModel";
+export { filesQueueStateByServerId } from "./downloadsFilesQueueModel";
 
 export type DownloadRowKind = "active" | "interrupted" | "queued" | "paused" | "cancelled" | "attention";
 
@@ -56,7 +51,7 @@ function statusLabelForJob(job: CriticalJobSummary): string {
   return job.status;
 }
 
-export function isRestartInterruptedJob(job: CriticalJobSummary): boolean {
+function isRestartInterruptedJob(job: CriticalJobSummary): boolean {
   return job.status === "failed"
     && job.nextActions.includes("retry")
     && (job.recoveryReason?.startsWith("YARK closed during phase") ?? false);

@@ -1,7 +1,7 @@
 import type { Route } from "@layout/Sidebar/Sidebar";
 
 export const SPOTLIGHT_RECENT_STORAGE_KEY = "yark.spotlightRecent.v1";
-export const SPOTLIGHT_RECENT_MAX = 5;
+const SPOTLIGHT_RECENT_MAX = 5;
 
 export type SpotlightRecentEntry =
   | { kind: "nav"; route: Route }

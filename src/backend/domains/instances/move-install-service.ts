@@ -14,7 +14,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { type ChildProcess } from "node:child_process";
-import { basename, dirname, join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import {
   getWindowsPathError,
   normalizeWindowsPath,
@@ -88,7 +88,7 @@ function isStagingDirName(name: string): boolean {
 }
 
 /** True when both absolute paths share a Windows volume root. */
-export function pathsOnSameVolume(a: string, b: string): boolean {
+function pathsOnSameVolume(a: string, b: string): boolean {
   return volumeRootForPath(a).toLowerCase() === volumeRootForPath(b).toLowerCase();
 }
 
@@ -1200,9 +1200,4 @@ export class MoveInstallService extends EventEmitter {
     this.lastProgress = progress;
     this.emit("progress", progress);
   }
-}
-
-/** True when a directory name looks like a YARK move staging folder. */
-export function isYarkMoveStagingDirName(name: string): boolean {
-  return isStagingDirName(basename(name)) || isStagingDirName(name);
 }

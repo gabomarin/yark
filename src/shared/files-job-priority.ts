@@ -11,7 +11,7 @@ export const FILES_JOB_WEIGHT: Record<FilesJobOperation, number> = {
   update: 2,
 };
 
-export const FILES_JOB_ACTION_LABEL: Record<FilesJobOperation, string> = {
+const FILES_JOB_ACTION_LABEL: Record<FilesJobOperation, string> = {
   "install-files": "Install",
   update: "Update",
   "verify-files": "Verify",
@@ -51,13 +51,6 @@ export function isFilesJobOperation(value: string | null | undefined): value is 
 
 export function isOccupyingFilesJobStatus(status: string): boolean {
   return OCCUPYING_STATUSES.has(status);
-}
-
-export function isFilesJobSupersededError(error: unknown): boolean {
-  return (
-    error instanceof FilesJobSupersededError
-    || (error instanceof Error && error.name === "FilesJobSupersededError")
-  );
 }
 
 export function pickOccupyingFilesJob(

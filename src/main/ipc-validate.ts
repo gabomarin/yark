@@ -10,16 +10,12 @@ import { formatZodError } from "../shared/ipc/primitives";
 
 const validatedChannels = new Set<string>();
 
-export function getValidatedIpcChannels(): ReadonlySet<string> {
-  return validatedChannels;
-}
-
 /** Reset between unit tests only. */
 export function resetValidatedIpcChannelsForTests(): void {
   validatedChannels.clear();
 }
 
-export function wrapIpcResult<T>(fn: () => T | Promise<T>): Promise<IpcResult<T>> {
+function wrapIpcResult<T>(fn: () => T | Promise<T>): Promise<IpcResult<T>> {
   return Promise.resolve()
     .then(fn)
     .then((data): IpcResult<T> => ({ ok: true, data }))

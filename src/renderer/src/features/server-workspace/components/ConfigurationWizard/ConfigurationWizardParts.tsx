@@ -156,7 +156,7 @@ interface PresetSelectorProps {
 }
 
 /** Pace / breeding rate tones — slow waits read as red, faster as green. */
-export function pacePresetColor(value: string): string {
+function pacePresetColor(value: string): string {
   switch (value) {
     case "base":
       return "red";
@@ -171,7 +171,7 @@ export function pacePresetColor(value: string): string {
 }
 
 /** World-feel intensity — same green→red scale as world difficulty tiers. */
-export function worldFeelPresetColor(value: string): string {
+function worldFeelPresetColor(value: string): string {
   switch (value) {
     case "veryEasy":
       return "green";

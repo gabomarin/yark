@@ -12,6 +12,7 @@
 
 - [ ] `npm run typecheck`
 - [ ] `npm run lint`
+- [ ] `npm run knip`
 - [ ] `npm test`
 - [ ] Manual verification, if applicable
 - [ ] `## [Unreleased]` in `CHANGELOG.md` updated (or PR labeled `skip-changelog`)

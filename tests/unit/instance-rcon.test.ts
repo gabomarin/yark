@@ -249,7 +249,6 @@ describe("InstanceService.execRcon", () => {
     const banList = await import("@backend/domains/instances/ban-list");
     vi.spyOn(banList, "resolveBanListId").mockResolvedValue("76561198000000000");
     vi.spyOn(banList, "removeFromBanList").mockResolvedValue([]);
-    vi.spyOn(banList, "readBanList").mockResolvedValue([]);
 
     const result = await service.unbanPlayer(profile.id, "76561198000000000");
 

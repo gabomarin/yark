@@ -3,7 +3,7 @@ import { WarningCircle } from "@phosphor-icons/react";
 import { Text, Tooltip, type MantineColor } from "@mantine/core";
 import classes from "./ServerCard.module.css";
 
-export type ServerCardMetaTone =
+type ServerCardMetaTone =
   | "default"
   | "muted"
   | "ok"

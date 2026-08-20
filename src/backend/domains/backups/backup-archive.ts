@@ -60,7 +60,7 @@ async function listFilesRecursive(root: string): Promise<string[]> {
  * ASA save blobs are already dense; use zlib level 4 (moderate) instead of the
  * yazl default (6) when packaging world/players archives.
  */
-export const ASA_SAVE_ZIP_COMPRESSION_LEVEL = 4;
+const ASA_SAVE_ZIP_COMPRESSION_LEVEL = 4;
 
 export function isAsaSaveBlobZipEntry(entryName: string): boolean {
   const lower = basename(entryName).toLowerCase();
@@ -235,10 +235,6 @@ export async function readZipTextEntry(
   });
 }
 
-export function archiveDisplayName(path: string): string {
-  return basename(path);
-}
-
 /**
  * True when `zipPath` is a readable zip (central directory present).
  * Rejects empty files and in-progress yazl writes that lack a valid EOCD.
@@ -309,7 +305,7 @@ export async function zipHasBackupLayout(zipPath: string): Promise<boolean> {
 }
 
 /** Kind payload root expected inside a portable YARK ZIP. */
-export function kindPayloadPrefix(kind: BackupKind): string {
+function kindPayloadPrefix(kind: BackupKind): string {
   if (kind === "world") return "SavedArks";
   if (kind === "players") return "PlayerProfiles";
   return "ConfigWindowsServer";

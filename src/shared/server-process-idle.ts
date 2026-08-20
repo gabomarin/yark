@@ -19,7 +19,7 @@ export function isServerProcessLive(runtime: ServerProcessRuntime): boolean {
 }
 
 /** Block cluster membership / INI template writes while ASA may still be running. */
-export function isServerProcessBusyForClusterOps(
+function isServerProcessBusyForClusterOps(
   runtime: ServerProcessRuntime,
 ): boolean {
   return isServerProcessLive(runtime);

@@ -18,7 +18,7 @@ import { mapTokenFromWorldSaveName } from "../instances/import-existing-install"
  */
 
 /** Dated game autosaves are never packaged in YARK world ZIPs. */
-export const MAX_DATED_AUTOSAVES_PER_MAP = 0;
+const MAX_DATED_AUTOSAVES_PER_MAP = 0;
 
 /**
  * Folder name candidates under SavedArks: optional operator override, then exact
@@ -243,7 +243,7 @@ export function isSelectableWorldBackupFileName(
   return false;
 }
 
-export function isWorldCopyMissingError(error: unknown): boolean {
+function isWorldCopyMissingError(error: unknown): boolean {
   if (error === null || typeof error !== "object") return false;
   const code = (error as { code?: unknown }).code;
   return code === "ENOENT";

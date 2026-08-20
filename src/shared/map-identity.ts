@@ -12,7 +12,7 @@ export interface MapIdentityFields {
   disabledMods?: string[];
 }
 
-export type MapIdentityKind = "official" | "custom";
+type MapIdentityKind = "official" | "custom";
 
 export interface ResolvedMapIdentity {
   kind: MapIdentityKind;
@@ -59,7 +59,7 @@ export function isSafeMapToken(map: string | null | undefined): boolean {
 }
 
 /** Digits-only CurseForge Project ID (no leading zeros). */
-export function isValidMapModId(id: string | null | undefined): boolean {
+function isValidMapModId(id: string | null | undefined): boolean {
   if (id === null || id === undefined) {
     return false;
   }

@@ -26,7 +26,7 @@ function parseNumberToken(raw: string): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
-export function parseSteamCmdBytePair(detail: string): {
+function parseSteamCmdBytePair(detail: string): {
   downloaded: number | null;
   total: number | null;
 } {
@@ -81,7 +81,7 @@ export function canPauseSteamCmdOperation(
   return operation === "install-files" || operation === "update" || operation === "sync-files";
 }
 
-export function isRollbackInProgressPhase(phase: string | null | undefined): boolean {
+function isRollbackInProgressPhase(phase: string | null | undefined): boolean {
   return (
     typeof phase === "string"
     && phase.startsWith("rollback-")

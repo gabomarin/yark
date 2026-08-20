@@ -3,7 +3,7 @@
  */
 
 /** Escape `\` and `"` inside a SessionName="…" quoted value. */
-export function escapeQuotedLaunchValue(value: string): string {
+function escapeQuotedLaunchValue(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 

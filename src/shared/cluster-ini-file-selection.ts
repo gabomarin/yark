@@ -5,7 +5,7 @@
 
 import type { ClusterIniTemplateFileSelection, ServerIniPayload } from "./types";
 
-export const DEFAULT_CLUSTER_INI_FILE_SELECTION: ClusterIniTemplateFileSelection =
+const DEFAULT_CLUSTER_INI_FILE_SELECTION: ClusterIniTemplateFileSelection =
   {
     gameUserSettings: true,
     game: true,

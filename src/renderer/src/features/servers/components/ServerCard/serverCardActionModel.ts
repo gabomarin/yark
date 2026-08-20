@@ -15,13 +15,6 @@ export type ServerCardRuntimeAction = {
   visible: boolean;
 };
 
-/** Pause / Resume / Cancel for the SteamCMD job — lives on the progress bar. */
-export type ServerCardFilesJobAction = {
-  kind: "pause" | "cancel" | "resume";
-  label: string;
-  color: string;
-};
-
 /** Restart icon beside Start/Stop (enabled only while running). */
 export type ServerCardRestartAction = {
   label: string;

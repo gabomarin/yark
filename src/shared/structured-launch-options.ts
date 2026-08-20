@@ -19,7 +19,7 @@ export type StructuredLaunchGroupId =
   | "logging"
   | "performance";
 
-export interface StructuredLaunchCuration {
+interface StructuredLaunchCuration {
   /** Catalog entry id (must be status=supported). */
   id: string;
   group: StructuredLaunchGroupId;
@@ -62,7 +62,7 @@ export function structuredLaunchGroupLabel(group: StructuredLaunchGroupId): stri
  */
 
 /** Atomic `-ServerPlatform=` codes (ALL = every code selected). */
-export const SERVER_PLATFORM_CODES = ["PC", "PS5", "XSX", "WINGDK"] as const;
+const SERVER_PLATFORM_CODES = ["PC", "PS5", "XSX", "WINGDK"] as const;
 
 export type ServerPlatformCode = (typeof SERVER_PLATFORM_CODES)[number];
 
@@ -96,7 +96,7 @@ export function decodeServerPlatformSelection(
   return SERVER_PLATFORM_CODES.filter((code) => parts.has(code));
 }
 
-export const STRUCTURED_LAUNCH_CURATION: readonly StructuredLaunchCuration[] = [
+const STRUCTURED_LAUNCH_CURATION: readonly StructuredLaunchCuration[] = [
   { id: "forceallowcaveflyers", group: "world", common: true },
   { id: "autodestroystructures", group: "world", common: true },
   { id: "enableidleplayerkick", group: "world", common: true },
@@ -318,7 +318,7 @@ export interface LaunchArgConflict {
 }
 
 /** Issues for effectively-on valued options missing a usable value. */
-export function findStructuredLaunchValueIssues(
+function findStructuredLaunchValueIssues(
   structured: StructuredLaunchArgs | null | undefined,
 ): LaunchArgConflict[] {
   const state = normalizeStructuredLaunchArgs(structured);

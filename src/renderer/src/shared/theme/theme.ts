@@ -25,7 +25,7 @@ const radixCssVariables = Object.fromEntries([
   ["--ark-blue-ini-category", radixPalette.iniCategory],
 ]);
 
-export function createAppCssVariablesResolver(
+function createAppCssVariablesResolver(
   tokens: AppTokens = defaultAppTokens,
 ): CSSVariablesResolver {
   return () => ({
@@ -163,7 +163,7 @@ export function createAppCssVariablesResolver(
   });
 }
 
-export function createAppTheme(
+function createAppTheme(
   tokens: AppTokens = defaultAppTokens,
   density: UiDensity = "comfortable",
 ): MantineThemeOverride {

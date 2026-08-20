@@ -11,14 +11,14 @@ import { parseListPlayersResponse, type ListedPlayer } from "./list-players";
 
 const RCON_HOST = "127.0.0.1";
 /** Fast enough to catch short join→leave sessions; still light on RCON. */
-export const DEFAULT_POLL_MS = 10_000;
+const DEFAULT_POLL_MS = 10_000;
 const PLAYER_PROFILE_RE = /\.(arkprofile)(\.bak)?$/i;
 const RECENT_BACKUP_DEDUP_MS = 90_000;
 
 /** Prefer persistent session; falls back to one-shot `rconExec`. */
 export type ListPlayersExecutor = (serverId: string) => Promise<string>;
 
-export interface PlayersUpdatedPayload {
+interface PlayersUpdatedPayload {
   serverId: string;
   players: ListedPlayer[];
   timestamp: string;

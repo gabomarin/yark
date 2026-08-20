@@ -14,7 +14,7 @@ export interface IniTextRow {
   value: string;
 }
 
-export const INI_ROOT_SECTION = "(root)";
+const INI_ROOT_SECTION = "(root)";
 
 /** Internal separator for flat section+key maps (does not appear in ASA INIs). */
 export const INI_FLAT_SEP = "\u001f";
@@ -23,7 +23,7 @@ export const INI_FLAT_SEP = "\u001f";
  * Typical Unreal client / graphics sections.
  * They do not apply on a dedicated server and clutter the editor.
  */
-export function isClientIniSection(section: string): boolean {
+function isClientIniSection(section: string): boolean {
   const s = section.trim().toLowerCase();
   if (s.length === 0 || s === INI_ROOT_SECTION) {
     return false;
@@ -390,11 +390,4 @@ export function sectionShortName(section: string): string {
     return section.slice(lastDot + 1);
   }
   return section.replace(/^\//, "");
-}
-
-export function sectionBracketLabel(section: string): string {
-  if (section === INI_ROOT_SECTION) {
-    return INI_ROOT_SECTION;
-  }
-  return `[${section}]`;
 }
