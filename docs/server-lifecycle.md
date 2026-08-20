@@ -609,7 +609,7 @@ the path field (including folders already owned by another YARK profile):
 
 See also [backups.md](backups.md) (restore requires `!isActive`),
 [updates-steamcmd.md](updates-steamcmd.md) (stopped-server safe update,
-Overview **Update all outdated** fleet queue, `pre_update`, rollback, real-host validation),
+Overview **Update All** fleet queue, `pre_update`, rollback, real-host validation),
 [logs.md](logs.md) (runtime buffer from piped stdout/stderr and Saved/Logs tail;
 `npm run e2e:launch-args` asserts structured/raw tokens on Runtime `Commandline`),
 [rcon.md](rcon.md) (workspace console / players / ban list),

@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-08-19
+
 ### Added
 
 - Workspace **Launch** tab search filters curated ASA flags by token, description, or group while keeping Extra arguments and the command preview visible (#352).
@@ -37,13 +39,13 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Overview **Update All** server list uses native overflow so scrollbar arrows do not show when everything fits (#378).
 - Overview **Update All** confirm button label is **Accept** (#378).
 - Restart-interrupted Downloads jobs keep the last SteamCMD console output visible until Retry (#378).
+- Queued Downloads rows show the operation only (e.g. **Updating server**), not internal checkpoint phases like pre-update backup (#201).
+- **Pre-update backup** no longer appears as a duplicate Downloads row during safe updates; cancelled shadow jobs are purged on load (#201).
+- Downloads **Cancelled** rows use the same flush stacked list styling as **Queued** (#201).
 
 ### Security
 
 - Packaged YARK builds no longer honor a `YARK_DEVTOOLS` env override; DevTools stay off until you run an unpackaged dev/preview build.
-- Queued Downloads rows show the operation only (e.g. **Updating server**), not internal checkpoint phases like pre-update backup (#201).
-- **Pre-update backup** no longer appears as a duplicate Downloads row during safe updates; cancelled shadow jobs are purged on load (#201).
-- Downloads **Cancelled** rows use the same flush stacked list styling as **Queued** (#201).
 
 ### Fixed
 

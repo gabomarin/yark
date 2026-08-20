@@ -184,7 +184,7 @@ Secondary badges (attention counts, etc.) stay for outcomes — not a second
 | --- | --- |
 | **Toast** (`notifications.show`) | Completed / failed / cancelled **operator actions** that do not need to stay on screen (Check Servers Health summary, Check server updates, SteamCMD install/update/verify, backup CRUD, prefs save fail) |
 | **Inline Alert** | **State that remains true** (files locked while updating, server running, wizard warnings, port conflicts) or confirm-modal decision context |
-| **Panel / dock** | Long-running or multi-item work (SteamCMD dock, stop progress, fleet backup alerts, Overview attention list) |
+| **Panel / dock** | Long-running or multi-item work (Downloads queue / footer teaser, stop progress, fleet backup alerts, Overview attention list) |
 | **Global AppShell banner** | Optional shell prop kept for rare app-wide hard failures; **App does not use it** for per-action IPC — prefer `showOperatorToast` / `showOperatorError` (`shared/ui/operatorToast.ts`) |
 
 Manual **Check Servers Health** ends with a toast (attention count or “all healthy”); startup **server** health scan stays silent. Quiet **YARK app** update check (~60s) toasts only when an update is available or ready to install (sidebar accent remains). SteamCMD job outcomes, `runAction` failures, and Backups page save/cleanup results use toasts, not page or AppShell banners.
@@ -221,7 +221,7 @@ sort is a temporary view; drag-to-reorder load order is enabled only while unsor
 ### 10. Elevation / motion
 
 - Panels: `--app-shadow-panel` (hairline).
-- Floating / dock: `--app-shadow-elevated` (SteamCMD dock — keep feature-local behavior).
+- Floating / dock: `--app-shadow-elevated` (Downloads footer teaser — keep feature-local behavior).
 - Motion: short transitions on selection/hover only; no decorative ambient animation in tool chrome.
 
 ### 11. Interaction density
