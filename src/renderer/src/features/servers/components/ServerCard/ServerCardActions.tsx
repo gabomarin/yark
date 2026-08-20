@@ -157,7 +157,7 @@ export function ServerCardActions(props: Props): ReactElement {
           <span className={classes.tooltipTarget}>
             <ActionIcon
               size={actionSize}
-              variant="light"
+              variant={restartAction.variant}
               color={restartAction.color}
               aria-label={restartAction.label}
               disabled={restartAction.disabled}
@@ -165,7 +165,7 @@ export function ServerCardActions(props: Props): ReactElement {
               className={classes.iconAction}
               data-restart-action
             >
-              <ArrowsClockwise size={iconSize} />
+              <ArrowsClockwise size={iconSize} weight="bold" />
             </ActionIcon>
           </span>
         </Tooltip>

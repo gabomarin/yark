@@ -103,7 +103,7 @@ export function buildServerCardMenuActions(
       key: "toggle-enabled",
       label: enabledState.label,
       icon: input.serverEnabled ? (
-        <EyeSlash size={ICON} color="var(--mantine-color-red-6)" />
+        <EyeSlash size={ICON} color="var(--app-color-danger-bright)" />
       ) : (
         <Eye size={ICON} color="var(--mantine-color-blue-6)" />
       ),
@@ -121,14 +121,16 @@ export function buildServerCardMenuActions(
         kind: "item",
         key: "stop-safely",
         label: "Stop safely",
-        icon: <Stop size={ICON} weight="fill" color="var(--mantine-color-red-6)" />,
+        color: "red",
+        icon: <Stop size={ICON} weight="fill" />,
         onClick: input.onStop,
       },
       {
         kind: "item",
         key: "restart",
         label: "Restart",
-        icon: <ArrowsClockwise size={ICON} color="var(--mantine-color-fossil-6)" />,
+        color: "fossil",
+        icon: <ArrowsClockwise size={ICON} weight="bold" />,
         onClick: input.onRestart,
       },
     );
@@ -137,7 +139,8 @@ export function buildServerCardMenuActions(
       kind: "item",
       key: "stop",
       label: "Stop",
-      icon: <Stop size={ICON} weight="fill" color="var(--mantine-color-red-6)" />,
+      color: "red",
+      icon: <Stop size={ICON} weight="fill" />,
       onClick: input.onStop,
     });
   }

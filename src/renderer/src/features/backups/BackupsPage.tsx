@@ -772,6 +772,7 @@ export function BackupsPage(props: Props): ReactElement {
             {cleanupPreview !== null && cleanupPreview.items.length > 0 ? (
               <Button
                 color="red"
+                variant="filled"
                 loading={cleanupBusy}
                 onClick={() => void confirmCleanup()}
               >

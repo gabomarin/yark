@@ -312,7 +312,7 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
               </Button>
               {exists && (
                 <Button
-                  variant="light"
+                  variant="filled"
                   color="red"
                   disabled={saving || loading}
                   onClick={handleDelete}

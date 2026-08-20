@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Destructive inline buttons (**Stop**, Force close, Delete, Remove, Ban, cancel jobs, clear/delete logs and backups, **Clusters** remove) use red **filled** (`--app-color-bad`); workspace lifecycle **Restart** uses deep amber **filled** (`--app-color-fossil-filled`, white icon via autoContrast) (#344).
+
 ## [0.14.1] - 2026-08-19
 
 ### Fixed

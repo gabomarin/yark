@@ -196,6 +196,7 @@ export function RemoveServersModal(props: Props): ReactElement {
           </Button>
           <Button
             color="red"
+            variant="filled"
             loading={saving}
             disabled={selected.length === 0}
             onClick={() => void handleRemove()}

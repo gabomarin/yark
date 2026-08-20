@@ -1,6 +1,7 @@
 import { createTheme, type CSSVariablesResolver, type MantineThemeOverride } from "@mantine/core";
 import {
   appTokens as defaultAppTokens,
+  createDangerRedPalette,
   radixPalette,
   type AppTokens,
   type UiDensity,
@@ -64,9 +65,11 @@ export function createAppCssVariablesResolver(
       "--app-color-attention": tokens.colors.attention,
       "--app-color-bad": tokens.colors.bad,
       "--app-color-danger": "var(--app-color-bad)",
+      "--app-color-danger-bright": tokens.colors.dangerBright,
       "--app-color-cryo": "var(--ark-blue-11)",
       "--app-color-biomass": tokens.colors.biomass,
       "--app-color-fossil": tokens.colors.fossil,
+      "--app-color-fossil-filled": tokens.colors.fossilFilled,
       "--app-radius-sm": `${tokens.radius.sm}px`,
       "--app-radius-md": `${tokens.radius.md}px`,
       "--app-radius-lg": `${tokens.radius.lg}px`,
@@ -130,6 +133,16 @@ export function createAppCssVariablesResolver(
       "--mantine-color-blue-light": "var(--ark-blue-a3)",
       "--mantine-color-blue-light-hover": "var(--ark-blue-a4)",
       "--mantine-color-blue-light-color": "var(--ark-blue-11)",
+      "--mantine-color-red-filled": "var(--app-color-bad)",
+      "--mantine-color-red-filled-hover":
+        "color-mix(in srgb, var(--app-color-bad) 88%, white)",
+      "--mantine-color-red-light":
+        "color-mix(in srgb, var(--app-color-danger-bright) 22%, transparent)",
+      "--mantine-color-red-light-hover":
+        "color-mix(in srgb, var(--app-color-danger-bright) 32%, transparent)",
+      "--mantine-color-red-light-color": "var(--app-color-danger-bright)",
+      "--mantine-color-red-text": "var(--app-color-danger-bright)",
+      "--mantine-color-red-6": "var(--app-color-danger-bright)",
       "--mantine-color-attention-filled": "var(--app-color-attention)",
       "--mantine-color-attention-filled-hover":
         "color-mix(in srgb, var(--app-color-attention) 82%, white)",
@@ -138,9 +151,9 @@ export function createAppCssVariablesResolver(
       "--mantine-color-attention-light-hover":
         "color-mix(in srgb, var(--app-color-attention) 32%, transparent)",
       "--mantine-color-attention-light-color": "var(--app-color-attention)",
-      "--mantine-color-fossil-filled": "var(--app-color-fossil)",
+      "--mantine-color-fossil-filled": "var(--app-color-fossil-filled)",
       "--mantine-color-fossil-filled-hover":
-        "color-mix(in srgb, var(--app-color-fossil) 82%, white)",
+        "color-mix(in srgb, var(--app-color-fossil-filled) 82%, white)",
       "--mantine-color-fossil-light":
         "color-mix(in srgb, var(--app-color-fossil) 22%, transparent)",
       "--mantine-color-fossil-light-hover":
@@ -182,6 +195,8 @@ export function createAppTheme(
   return createTheme({
     primaryColor: "blue",
     primaryShade: 5,
+    /** Dark text on light filled colors (fossil Restart, attention); white on red/teal filled. */
+    autoContrast: true,
     fontFamily: '"Segoe UI", Arial, sans-serif',
     defaultRadius: "md",
     /** Aligns `gap="xs"|…` / `p="md"` with `--app-space-*` (overrides Mantine defaults). */
@@ -242,18 +257,18 @@ export function createAppTheme(
         "#8a8e28",
         "#676b1e",
       ],
-      /** Matches `--app-color-fossil` / warn amber (unsaved-leave alerts). */
+      /** Index 5 = filled Restart; index 4 = base fossil for alerts/light. */
       fossil: [
         "#fbf4e8",
         "#f5e6c8",
         "#edcfa0",
         "#e5b878",
-        "#dfac68",
         tokens.colors.fossil,
-        "#c49452",
-        "#a67a42",
-        "#866032",
-        "#624724",
+        tokens.colors.fossilFilled,
+        "#a65408",
+        "#8a4607",
+        "#6e3805",
+        "#4a2603",
       ],
       /** Matches `--app-color-ok` (current / healthy). */
       ok: [
@@ -268,6 +283,8 @@ export function createAppTheme(
         "#2a7a58",
         "#1f5c42",
       ],
+      /** Matches `--app-color-bad` / danger (destructive filled buttons). */
+      red: createDangerRedPalette(tokens.colors.bad, tokens.colors.dangerBright),
       dark: [
         radixPalette.gray[11],
         radixPalette.gray[10],

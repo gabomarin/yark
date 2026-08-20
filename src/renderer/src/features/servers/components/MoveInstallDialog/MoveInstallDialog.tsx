@@ -302,7 +302,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
             </>
           )}
           {phase === "running" && (
-            <Button color="red" variant="light" onClick={() => void handleCancelCopy()}>
+            <Button color="red" variant="filled" onClick={() => void handleCancelCopy()}>
               Cancel
             </Button>
           )}
@@ -316,6 +316,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
               </Button>
               <Button
                 color="red"
+                variant="filled"
                 loading={cleanupBusy}
                 onClick={() => void handleRetryCleanup()}
               >

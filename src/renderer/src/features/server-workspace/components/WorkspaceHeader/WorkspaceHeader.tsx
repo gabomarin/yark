@@ -125,9 +125,9 @@ export function WorkspaceHeader(props: Props): ReactElement {
           )}
           <Button
             size="sm"
-            variant="light"
+            variant="filled"
             color="fossil"
-            leftSection={<ArrowsClockwise size={14} />}
+            leftSection={<ArrowsClockwise size={14} weight="bold" />}
             onClick={props.onRestart}
             disabled={!canRestart}
             title={props.filesJobActive === true ? lockTitle : undefined}
@@ -137,7 +137,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
           <Button
             size="sm"
             color="red"
-            variant="light"
+            variant="filled"
             leftSection={<Stop size={14} weight="fill" />}
             onClick={props.onStop}
             disabled={!canStop}

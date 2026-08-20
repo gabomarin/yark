@@ -143,7 +143,7 @@ export function DownloadRowButton(props: {
               <ActionIcon
                 size="sm"
                 color={row.canPause ? "yellow" : "red"}
-                variant="light"
+                variant={row.canPause ? "light" : "filled"}
                 aria-label={row.canPause ? "Pause download" : "Cancel download"}
                 onClick={() => props.onCancel()}
               >
@@ -161,7 +161,7 @@ export function DownloadRowButton(props: {
             <ActionIcon
               size="sm"
               color={row.canPause ? "yellow" : "red"}
-              variant="light"
+              variant={row.canPause ? "light" : "filled"}
               aria-label={row.canPause ? "Pause download" : "Cancel download"}
               onClick={() => props.onCancel()}
             >

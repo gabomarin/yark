@@ -148,8 +148,8 @@ export function ClusterMemberRow(props: Props): ReactElement {
             <span>
               <ActionIcon
                 size="sm"
-                variant="subtle"
-                color="gray"
+                variant="filled"
+                color="red"
                 aria-label={`Remove ${props.server.name}`}
                 disabled={props.canRemove === false}
                 onClick={() => props.onRemove?.(props.server.id)}

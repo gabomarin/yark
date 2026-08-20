@@ -103,7 +103,7 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
                 <ActionIcon
                   size="sm"
                   color="red"
-                  variant="light"
+                  variant="filled"
                   aria-label="Cancel operation"
                   onClick={props.onCancel}
                 >
@@ -161,7 +161,7 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
               <Button
                 size="xs"
                 color="red"
-                variant="light"
+                variant="filled"
                 leftSection={<ProhibitInset size={14} />}
                 onClick={props.onCancel}
               >
@@ -231,7 +231,7 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
                     </Button>
                   )}
                   {job.nextActions.includes("cancel") && (
-                    <Button size="compact-xs" color="red" variant="subtle" onClick={() => props.onCancelJob(job.id)}>
+                    <Button size="compact-xs" color="red" variant="filled" onClick={() => props.onCancelJob(job.id)}>
                       Cancel
                     </Button>
                   )}

@@ -182,7 +182,8 @@ export function ClusterDetailPanel(props: Props): ReactElement {
             </Text>
             <Button
               size="compact-xs"
-              variant="default"
+              color="red"
+              variant="filled"
               disabled={
                 !memberStatuses.some((entry) => entry.canRemove)
               }
