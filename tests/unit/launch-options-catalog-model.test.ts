@@ -26,7 +26,7 @@ describe("launchOptionsCatalogModel (#381)", () => {
       expect(tooltip.trim().length).toBeGreaterThan(20);
       expect(tooltip).not.toMatch(/extraArgs:/);
     }
-    expect(catalogStatusFilterTooltip("all")).toMatch(/older game/i);
+    expect(catalogStatusFilterTooltip("all")).toMatch(/unsupported/i);
     expect(catalogStatusFilterTooltip("supported")).toMatch(/Launch tab/);
     expect(catalogStatusFilterTooltip("uncertain")).toMatch(/not sure/i);
     expect(catalogStatusFilterTooltip("yarkOwned")).toMatch(/Extra arguments/);
@@ -54,6 +54,12 @@ describe("launchOptionsCatalogModel (#381)", () => {
       expect(secondary.text).not.toMatch(/extraArgs:/);
       expect(shouldShowCatalogNotes(entry!)).toBe(false);
     }
+  });
+
+  it("throws when a YARK-owned id has no managed-surface mapping", () => {
+    expect(() => yarkManagedSurfaceForCatalogId("not-a-mapped-yark-owned")).toThrow(
+      /no managed-surface mapping/i,
+    );
   });
 
   it("keeps Conflicts metadata for non–YARK-owned rows", () => {

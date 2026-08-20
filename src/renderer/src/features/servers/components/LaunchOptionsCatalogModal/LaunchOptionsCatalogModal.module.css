@@ -283,7 +283,7 @@
 
 .rowManaged {
   margin-top: 0.35rem;
-  color: var(--app-color-cryo);
+  color: var(--app-color-muted);
   font-size: 0.7rem;
   font-weight: 650;
 }

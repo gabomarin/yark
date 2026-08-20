@@ -3,7 +3,7 @@ import type {
   AsaLaunchOptionStatus,
 } from "@shared/asa-launch-options-catalog";
 
-/** Filters shown in the browse modal (ASE-only / unsupported omitted). */
+/** Filters shown in the browse modal (`unsupported` rows omitted). */
 export type CatalogStatusFilter =
   | "all"
   | "supported"
@@ -48,7 +48,7 @@ export function catalogStatusToneClass(
 export function catalogStatusFilterTooltip(filter: CatalogStatusFilter): string {
   switch (filter) {
     case "all":
-      return "ASA options you can browse here. Rows that only apply to the older game (ASE) stay hidden.";
+      return "ASA options you can browse here. Rows marked unsupported stay hidden.";
     case "supported":
       return "These work on ASA. You can turn them on from the Launch tab.";
     case "uncertain":
@@ -88,11 +88,17 @@ const YARK_MANAGED_SURFACE_BY_ID: Record<YarkOwnedCatalogId, YarkManagedSurface>
   "no-transfer-from-filtering": "Server settings",
 };
 
+function isYarkOwnedCatalogId(id: string): id is YarkOwnedCatalogId {
+  return (YARK_OWNED_CATALOG_IDS as readonly string[]).includes(id);
+}
+
 export function yarkManagedSurfaceForCatalogId(id: string): YarkManagedSurface {
-  if (id in YARK_MANAGED_SURFACE_BY_ID) {
-    return YARK_MANAGED_SURFACE_BY_ID[id as YarkOwnedCatalogId];
+  if (!isYarkOwnedCatalogId(id)) {
+    throw new Error(
+      `YARK-owned catalog id "${id}" has no managed-surface mapping; add it to YARK_MANAGED_SURFACE_BY_ID.`,
+    );
   }
-  return "Server settings";
+  return YARK_MANAGED_SURFACE_BY_ID[id];
 }
 
 export function yarkManagedLaunchCopy(id: string): string {
