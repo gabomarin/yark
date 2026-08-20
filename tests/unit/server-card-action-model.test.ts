@@ -240,4 +240,17 @@ describe("serverCardActionModel combos", () => {
       visible: true,
     });
   });
+
+  it("keeps Restart static and disabled while Start is in flight (#390)", () => {
+    for (const status of ["stopped", "starting", "stopping"] as const) {
+      const restart = resolveRestartAction({
+        steamCmdBusy: false,
+        isInstallationReady: true,
+        status,
+        startBusy: true,
+      });
+      expect(restart.label).toBe("Restart server");
+      expect(restart.disabled).toBe(true);
+    }
+  });
 });

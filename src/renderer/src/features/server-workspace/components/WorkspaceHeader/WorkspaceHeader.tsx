@@ -61,9 +61,8 @@ export function WorkspaceHeader(props: Props): ReactElement {
   const installBlockedTitle =
     props.installation?.guidance ?? "Install files first";
   const startLoading = startBusy && (status === "stopped" || status === "error");
-  const restartLoading =
-    startBusy &&
-    (status === "running" || status === "stopping" || status === "starting");
+  // Only a true Restart (clicked while running) loads; Start must keep Restart static.
+  const restartLoading = startBusy && status === "running";
 
   return (
     <header className={classes.header}>

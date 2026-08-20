@@ -207,7 +207,8 @@ export function resolveRestartAction(input: {
       visible: false,
     };
   }
-  if (input.startBusy === true) {
+  // Only a true Restart (from running) shows Restarting…; Start must leave Restart static.
+  if (input.startBusy === true && input.status === "running") {
     return {
       label: "Restarting…",
       color: "fossil",
@@ -220,7 +221,11 @@ export function resolveRestartAction(input: {
     label: "Restart server",
     color: "fossil",
     variant: "filled",
-    disabled: input.steamCmdBusy || transitioning || input.status !== "running",
+    disabled:
+      input.steamCmdBusy ||
+      transitioning ||
+      input.status !== "running" ||
+      input.startBusy === true,
     visible: true,
   };
 }
