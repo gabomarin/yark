@@ -3,23 +3,21 @@ import { GearSix, SlidersHorizontal } from "@phosphor-icons/react";
 import { SegmentedControl, type SegmentedControlProps } from "@mantine/core";
 import type { IniFileKey } from "@shared/types";
 import {
-  compactIconSegmentLabel,
-  compactSegmentedRootClass,
+  compactLabeledSegmentLabel,
+  compactLabeledSegmentedRootClass,
 } from "@ui/CompactSegmented/CompactSegmented";
 
 const INI_FILE_OPTIONS: Array<{ label: ReactElement; value: IniFileKey }> = [
   {
     value: "gameUserSettings",
-    label: compactIconSegmentLabel(
-      "GameUserSettings.ini",
+    label: compactLabeledSegmentLabel(
       "GameUserSettings.ini",
       <SlidersHorizontal size={14} aria-hidden="true" />,
     ),
   },
   {
     value: "game",
-    label: compactIconSegmentLabel(
-      "Game.ini",
+    label: compactLabeledSegmentLabel(
       "Game.ini",
       <GearSix size={14} aria-hidden="true" />,
     ),
@@ -42,7 +40,7 @@ export function IniFileSegmented(props: Props): ReactElement {
       value={props.value}
       disabled={props.disabled}
       data={INI_FILE_OPTIONS}
-      className={compactSegmentedRootClass}
+      className={compactLabeledSegmentedRootClass}
       onChange={(value) => {
         if (value === "game" || value === "gameUserSettings") {
           props.onChange(value);

@@ -3,8 +3,8 @@ import { Code, SquaresFour } from "@phosphor-icons/react";
 import { SegmentedControl } from "@mantine/core";
 import type { IniFileKey } from "@shared/types";
 import {
-  compactIconSegmentLabel,
-  compactSegmentedRootClass,
+  compactLabeledSegmentLabel,
+  compactLabeledSegmentedRootClass,
 } from "@ui/CompactSegmented/CompactSegmented";
 import { IniFileSegmented } from "@ui/IniFileSegmented/IniFileSegmented";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
@@ -34,7 +34,7 @@ function modeSegmentIcon(value: string): ReactNode {
 function toModeSegmentData(options: ModeOption[]) {
   return options.map((option) => ({
     value: option.value,
-    label: compactIconSegmentLabel(option.label, option.label, modeSegmentIcon(option.value)),
+    label: compactLabeledSegmentLabel(option.label, modeSegmentIcon(option.value)),
   }));
 }
 
@@ -56,7 +56,7 @@ export function IniEditorNav(props: Props): ReactElement {
         value={props.mode}
         disabled={props.disabled}
         data={toModeSegmentData(props.modeOptions)}
-        className={compactSegmentedRootClass}
+        className={compactLabeledSegmentedRootClass}
         onChange={props.onModeChange}
       />
     </div>
