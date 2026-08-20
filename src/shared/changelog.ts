@@ -21,6 +21,27 @@ export const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.14.1",
+    date: "2026-08-19",
+    sections: [
+      {
+        title: "Changed",
+        items: [
+          "Workspace search and INI segmented switches share Overview chrome.",
+          "Operator toasts appear bottom-right so they do not cover Overview and workspace toolbars.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Compact Overview server cards stay denser when the window narrows.",
+          "ASA launch catalog uses one list scrollbar, explains browse filters, and points operators to where YARK already manages a command.",
+          "Completed actions use toasts instead of lingering success banners; leftover-folder and failure Alerts stay.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.14.0",
     date: "2026-08-19",
     sections: [
