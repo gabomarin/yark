@@ -73,7 +73,10 @@ src/renderer/src/features/<area>/
   methods are added. Prefer it when a suite already types a complete
   `RendererApi`. Leave partial stubs (e.g. ServerMods / Clusters
   `...(window.api ?? {})`) until they hit the same fan-out; then migrate with
-  overrides only.
+  overrides only. Fixture timestamps/versions live as named constants on that
+  module. Bare `vi.fn()` defaults resolve to `undefined` if awaited — override
+  when a test asserts `IpcResult` shape. If the factory becomes unwieldy,
+  consider generating stubs from `RendererApi` rather than hand-listing.
 
 ## Page responsibilities
 

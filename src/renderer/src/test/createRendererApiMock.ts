@@ -1,5 +1,39 @@
 import { vi } from "vitest";
+import type { AppUpdateStatus } from "@shared/app-update";
 import type { RendererApi } from "@shared/ipc";
+
+/** Stable ISO timestamp for fixture payloads — bump when suites assert on age. */
+export const TEST_NOW = "2026-07-24T00:00:00.000Z";
+
+/** Onboarding `completedAt` fixture (distinct from TEST_NOW for clarity). */
+export const TEST_ONBOARDING_AT = "2026-01-01T00:00:00.000Z";
+
+/** Packaged-app version string used by update-status stubs. */
+export const TEST_APP_VERSION = "0.1.0";
+
+/** Last-seen What's new version for prefs stubs. */
+export const TEST_CHANGELOG_VERSION = "0.11.0";
+
+/** Official ASA build string shown on Overview when mounting App. */
+export const TEST_OFFICIAL_VERSION = "358.12";
+
+const idleAppUpdateStatus: AppUpdateStatus = {
+  phase: "idle",
+  currentVersion: TEST_APP_VERSION,
+  availableVersion: null,
+  percent: null,
+  error: null,
+  isPackaged: false,
+  releasePageUrl: "https://github.com/gabomarin/yark/releases",
+  releaseNotesUrl: null,
+  installBlockedReason: "dev",
+  installBlockedMessage: "Install is only available in the packaged Windows app.",
+};
+
+const upToDateAppUpdateStatus: AppUpdateStatus = {
+  ...idleAppUpdateStatus,
+  phase: "up-to-date",
+};
 
 /**
  * Full `RendererApi` stub for Vitest renderer suites.
@@ -9,6 +43,10 @@ import type { RendererApi } from "@shared/ipc";
  * (or grows toward that). Partial stubs / `as unknown as RendererApi` are fine
  * until they force mechanical edits on every IPC addition — then migrate.
  * See docs/agent-context.md (renderer test helpers).
+ *
+ * Methods without an explicit `mockResolvedValue` stay bare `vi.fn()` and
+ * resolve to `undefined` if awaited — matching the historical App/Logs mocks.
+ * Override when a test asserts a real `IpcResult` shape.
  */
 export function createRendererApiMock(
   overrides: Partial<RendererApi> = {},
@@ -68,14 +106,14 @@ export function createRendererApiMock(
         lastLine: null,
         queuedCount: 0,
         criticalJobs: [],
-        checkedAt: "2026-07-24T00:00:00.000Z",
+        checkedAt: TEST_NOW,
       },
     }),
     getSteamCmdConsole: vi.fn().mockResolvedValue({
       ok: true,
       data: {
         lines: [],
-        updatedAt: "2026-07-24T00:00:00.000Z",
+        updatedAt: TEST_NOW,
       },
     }),
     openSteamCmdCache: vi.fn(),
@@ -84,7 +122,7 @@ export function createRendererApiMock(
     getInstallationInfo: vi.fn().mockResolvedValue({
       ok: true,
       data: {
-        officialVersion: "358.12",
+        officialVersion: TEST_OFFICIAL_VERSION,
         officialNetworkStatus: "online",
         officialSteamBuild: "build 24346423",
         servers: [],
@@ -119,19 +157,19 @@ export function createRendererApiMock(
     setOpenNativeConsole: vi.fn().mockResolvedValue({ ok: true, data: false }),
     getLastSeenChangelogVersion: vi.fn().mockResolvedValue({
       ok: true,
-      data: "0.11.0",
+      data: TEST_CHANGELOG_VERSION,
     }),
     setLastSeenChangelogVersion: vi.fn().mockResolvedValue({
       ok: true,
-      data: "0.11.0",
+      data: TEST_CHANGELOG_VERSION,
     }),
     getOnboarding: vi.fn().mockResolvedValue({
       ok: true,
-      data: { status: "completed", completedAt: "2026-01-01T00:00:00.000Z" },
+      data: { status: "completed", completedAt: TEST_ONBOARDING_AT },
     }),
     setOnboarding: vi.fn().mockResolvedValue({
       ok: true,
-      data: { status: "completed", completedAt: "2026-01-01T00:00:00.000Z" },
+      data: { status: "completed", completedAt: TEST_ONBOARDING_AT },
     }),
     getDesktopShellPreferences: vi.fn().mockResolvedValue({
       ok: true,
@@ -148,7 +186,7 @@ export function createRendererApiMock(
     openServerIniInEditor: vi.fn(),
     previewServerIni: vi.fn(),
     saveServerIni: vi.fn(),
-    getClusterIniTemplate: vi.fn(async () => ({ ok: true as const, data: null })),
+    getClusterIniTemplate: vi.fn().mockResolvedValue({ ok: true, data: null }),
     getClusterIniTemplateOrDraft: vi.fn(),
     previewClusterIniTemplate: vi.fn(),
     saveClusterIniTemplate: vi.fn(),
@@ -199,7 +237,7 @@ export function createRendererApiMock(
         retainCountPlayers: 20,
         retainCountIni: 10,
         backupDir: null,
-        updatedAt: "2026-07-24T00:00:00.000Z",
+        updatedAt: TEST_NOW,
       },
     }),
     setBackupPolicy: vi.fn(),
@@ -245,45 +283,23 @@ export function createRendererApiMock(
     onBackupsChanged: vi.fn(() => () => undefined),
     onRconStatusChanged: vi.fn(() => () => undefined),
     onPlayerListUpdated: vi.fn(() => () => undefined),
-    getAppUpdateStatus: vi.fn(async () => ({
-      ok: true as const,
-      data: {
-        phase: "idle" as const,
-        currentVersion: "0.1.0",
-        availableVersion: null,
-        percent: null,
-        error: null,
-        isPackaged: false,
-        releasePageUrl: "https://github.com/gabomarin/yark/releases",
-        releaseNotesUrl: null,
-        installBlockedReason: "dev" as const,
-        installBlockedMessage: "Install is only available in the packaged Windows app.",
-      },
-    })),
-    checkForAppUpdate: vi.fn(async () => ({
-      ok: true as const,
-      data: {
-        phase: "up-to-date" as const,
-        currentVersion: "0.1.0",
-        availableVersion: null,
-        percent: null,
-        error: null,
-        isPackaged: false,
-        releasePageUrl: "https://github.com/gabomarin/yark/releases",
-        releaseNotesUrl: null,
-        installBlockedReason: "dev" as const,
-        installBlockedMessage: "Install is only available in the packaged Windows app.",
-      },
-    })),
-    downloadAppUpdate: vi.fn(async () => ({
-      ok: false as const,
+    getAppUpdateStatus: vi.fn().mockResolvedValue({
+      ok: true,
+      data: idleAppUpdateStatus,
+    }),
+    checkForAppUpdate: vi.fn().mockResolvedValue({
+      ok: true,
+      data: upToDateAppUpdateStatus,
+    }),
+    downloadAppUpdate: vi.fn().mockResolvedValue({
+      ok: false,
       error: "not packaged",
-    })),
-    installAppUpdate: vi.fn(async () => ({
-      ok: false as const,
+    }),
+    installAppUpdate: vi.fn().mockResolvedValue({
+      ok: false,
       error: "not packaged",
-    })),
-    openYarkReleaseNotes: vi.fn(async () => ({ ok: true as const, data: undefined })),
+    }),
+    openYarkReleaseNotes: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
     onAppUpdate: vi.fn(() => () => undefined),
     ...overrides,
   };
