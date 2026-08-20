@@ -7,7 +7,14 @@
  * Unset ELECTRON_RUN_AS_NODE before running.
  *
  * Always launches with an isolated `YARK_E2E_USER_DATA` profile so private operator
- * fleets never appear in marketing screenshots. Seeds demo servers in that profile.
+ * fleets never appear in marketing screenshots.
+ *
+ * Demo fleet seeding is SQL (`seedGalleryFleetSql` + `applyDemoMapsInDb`) after the
+ * first empty-profile boot, not UI create/cluster wizards. That avoids Windows
+ * Playwright flakes (New server / cluster path pickers). Do not restore
+ * createDemoServer / seedIsolatedFleet / ensureDemoCluster unless a capture
+ * genuinely needs those surfaces. A Paused Downloads job blocks the whole queue,
+ * so marketing seeds only pending jobs (Active + Queued).
  *
  * Env (optional):
  *   WEBSITE_SCREENSHOT_OUT       output directory (default: website/public/screenshots)
@@ -297,6 +304,7 @@ function compileHangingSteamCmdStub(dir) {
   return stubExe;
 }
 
+/** Replace isolated-profile servers after first boot. Maps/cluster live on the rows. */
 function seedGalleryFleetSql(userData) {
   const dbPath = path.join(userData, "yark-server-manager.db");
   assert.ok(fs.existsSync(dbPath), `DB missing at ${dbPath}`);
@@ -367,23 +375,6 @@ function seedDownloadsJobs(userData, steamCmdPath) {
   db.close();
 }
 
-async function dumpDownloads(page, label) {
-  const metrics = await page.evaluate(() => {
-    const rows = [...document.querySelectorAll("[data-download-row]")];
-    const groups = [...document.querySelectorAll("[data-queue-group]")];
-    return {
-      groups: groups.map((group) => group.getAttribute("data-queue-group")),
-      rows: rows.map((row) => ({
-        id: row.getAttribute("data-download-row"),
-        kind: row.getAttribute("data-kind"),
-        text: (row.textContent || "").replace(/\s+/g, " ").trim().slice(0, 120),
-      })),
-      steamcmdBanner: document.querySelector("[data-steamcmd-missing-banner]") !== null,
-    };
-  });
-  console.error(`DUMP ${label} ${JSON.stringify(metrics, null, 2)}`);
-}
-
 async function captureDownloadsPage(page, outDir) {
   await goNav(page, "Downloads");
   await page.locator("[data-downloads-page]").waitFor({ state: "visible", timeout: 15_000 });
@@ -396,7 +387,6 @@ async function captureDownloadsPage(page, outDir) {
     await settle(page, 500);
   }
   if ((await activeRow.count()) === 0 || !(await activeRow.first().isVisible())) {
-    await dumpDownloads(page, "downloads-no-active-row");
     throw new Error("Downloads gallery: no active row appeared");
   }
   await page.locator('[data-kind="queued"][data-download-row]').first().waitFor({

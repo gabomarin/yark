@@ -75,7 +75,9 @@ when you care about SEO indexing.
 - GitHub repo **About → Website** must be `https://getyark.com` (not the old
   `gabomarin.github.io/yark` Pages URL). Topics and description should match the
   product site, not leftover github.io copy.
-- Home `SoftwareApplication` JSON-LD may include `screenshot` and `featureList`.
+- Home `SoftwareApplication` JSON-LD may include `screenshot` and `featureList`
+  (`website/src/components/SeoHead.astro`). Keep `featureList` aligned with the
+  landing capability bullets when those change; there is no automated check.
   Do **not** emit `aggregateRating` / `review` without real public ratings —
   invented stars violate Google structured-data policies.
 - Favicon: ship an explicit **48×48** (and larger) PNG `rel=icon` in addition to
@@ -118,7 +120,11 @@ The capture script **always** launches Electron with an isolated `YARK_E2E_USER_
 temp profile and seeds a public demo fleet there. It never opens your normal app
 userData, so private server names/paths cannot leak into marketing shots. Setup
 assistant shots are taken on that empty profile (via Settings → Open setup assistant)
-before the demo fleet is created. See `scripts/capture-website-screenshots.cjs`.
+before the demo fleet is created.
+
+After that first boot, the fleet is written with SQLite (`seedGalleryFleetSql` plus
+`applyDemoMapsInDb`) instead of New server / cluster UI automation, which flakes on
+Windows. See `scripts/capture-website-screenshots.cjs`.
 
 Home and the product preview use build-time **WebP** derivatives (`website/public/media/`,
 gitignored) so phones do not download 1440×900 PNGs. Widths are 640 / 960 / 1280 / **1440**
