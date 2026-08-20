@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   check:
-    name: Typecheck, test, lint
+    name: Typecheck, lint, knip, test
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -35,6 +35,9 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Knip
+        run: npm run knip
 
       - name: Test
         run: npm test

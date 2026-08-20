@@ -32,7 +32,7 @@ function iniDifficultyLabel(draft: ConfigurationWizardDraft): string {
 /**
  * Easy→hard scale: green → teal (green/blue mix) → blue → orange → red.
  */
-export function worldDifficultyColor(value: string): string {
+function worldDifficultyColor(value: string): string {
   switch (value) {
     case "30":
       return "green";

@@ -1,7 +1,7 @@
 import type { CriticalJobOperation, CriticalJobSummary } from "@shared/types";
 import { FILES_QUEUE_OPERATIONS, operationTitle } from "./downloadsOperationCopy";
 
-export type ServerFilesQueueKind = "active" | "paused" | "queued";
+type ServerFilesQueueKind = "active" | "paused" | "queued";
 
 export type ServerFilesQueueState = {
   kind: ServerFilesQueueKind;
@@ -21,14 +21,6 @@ function queueKindForJob(status: CriticalJobSummary["status"]): ServerFilesQueue
   if (status === "paused") return "paused";
   if (status === "pending" || status === "retrying") return "queued";
   return null;
-}
-
-export function steamFilesOperationForKind(
-  kind: "install" | "update" | "verify",
-): CriticalJobOperation {
-  if (kind === "install") return "install-files";
-  if (kind === "verify") return "verify-files";
-  return "update";
 }
 
 /** Latest install/update/verify job per server (active wins over paused over queued). */

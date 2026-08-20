@@ -76,7 +76,7 @@ export const YARK_OWNED_CATALOG_IDS = [
   "no-transfer-from-filtering",
 ] as const;
 
-export type YarkOwnedCatalogId = (typeof YARK_OWNED_CATALOG_IDS)[number];
+type YarkOwnedCatalogId = (typeof YARK_OWNED_CATALOG_IDS)[number];
 
 const YARK_MANAGED_SURFACE_BY_ID: Record<YarkOwnedCatalogId, YarkManagedSurface> = {
   "map-session": "Server settings",

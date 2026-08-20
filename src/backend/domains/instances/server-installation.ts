@@ -823,7 +823,7 @@ async function hasAsaMarkersAsync(installDir: string): Promise<boolean> {
  * Lightweight FS health classification for a profile install root.
  * No hashing, SteamCMD, or PowerShell — only existence/stat/readdir probes.
  */
-export function classifyInstallHealth(
+function classifyInstallHealth(
   installDir: string,
   binaryPath: string,
 ): {

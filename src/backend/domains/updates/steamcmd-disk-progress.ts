@@ -17,9 +17,9 @@ import {
 import { ASA_APP_ID } from "./steamcmd-content-cache";
 
 /** Typical ASA dedicated server size (~12.0 GiB). Replaced when a real total is known. */
-export const ASA_DEDICATED_APPROX_BYTES = 12_838_814_817;
+const ASA_DEDICATED_APPROX_BYTES = 12_838_814_817;
 
-export interface DiskProgressSample {
+interface DiskProgressSample {
   bytes: number;
   timedOut: boolean;
   pathsChecked: number;
@@ -40,7 +40,7 @@ export function steamCmdConsoleLogPath(steamCmdHome: string): string {
   return join(resolve(steamCmdHome), "logs", "console_log.txt");
 }
 
-export function appManifestPath(forceInstallDir: string, appId = ASA_APP_ID): string {
+function appManifestPath(forceInstallDir: string, appId = ASA_APP_ID): string {
   return join(resolve(forceInstallDir), "steamapps", `appmanifest_${appId}.acf`);
 }
 
@@ -137,7 +137,7 @@ export async function readConsoleLogSince(
   }
 }
 
-export async function sumDirectoryBytes(
+async function sumDirectoryBytes(
   rootDir: string,
   options: WalkOptions = { maxMs: 350, maxFiles: 25_000 },
 ): Promise<DiskProgressSample> {

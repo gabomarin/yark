@@ -2,7 +2,6 @@ import {
   decideFilesJobEnqueue,
   occupyingFilesJobForServer,
   type FilesJobEnqueueDecision,
-  type FilesJobOccupant,
 } from "@shared/files-job-priority";
 import { isInstallationReady } from "@shared/installation-health";
 import {
@@ -16,7 +15,7 @@ import type {
   ServerStatus,
 } from "@shared/types";
 
-export type UpdateAllOutdatedSkipReason =
+type UpdateAllOutdatedSkipReason =
   | "disabled"
   | "install-not-ready"
   | "update-unknown"
@@ -26,7 +25,7 @@ export type UpdateAllOutdatedSkipReason =
   | "files-job-paused"
   | "files-job-occupied";
 
-export type UpdateAllOutdatedRow = {
+type UpdateAllOutdatedRow = {
   serverId: string;
   serverName: string;
   installBuild: string | null;
@@ -231,12 +230,4 @@ export function summarizeUpdateAllOutdatedQueue(input: {
     message: `${parts.join(". ")}. Jobs run one at a time through Downloads. Jobs that cannot start yet (for example missing SteamCMD) show as blocked with Retry.`,
     color: input.failedCount > 0 ? "orange" : "blue",
   };
-}
-
-/** @internal test helper */
-export function __testOnlyOccupant(
-  operation: FilesJobOccupant["operation"],
-  status: FilesJobOccupant["status"],
-): FilesJobOccupant {
-  return { id: "test", operation, status };
 }

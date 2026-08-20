@@ -1,13 +1,9 @@
-import type {
-  ConfigTransferIniFileSelection,
-  ConfigTransferSelection,
-} from "@shared/config-transfer";
 import {
-  emptyConfigTransferSelection,
   emptyIniFileSelection,
+  type ConfigTransferIniFileSelection,
+  type ConfigTransferSelection,
 } from "@shared/config-transfer";
 import type {
-  ConfigTransferDescribeResult,
   ConfigTransferIniCategoryInfo,
   ServerProfile,
   ServerRuntimeInfo,
@@ -46,17 +42,11 @@ export function isTargetEligible(status: ServerStatus | undefined): boolean {
   return status === "stopped" || status === undefined;
 }
 
-export function buildInitialSelection(
-  _describe: ConfigTransferDescribeResult | null,
-): ConfigTransferSelection {
-  return emptyConfigTransferSelection();
-}
-
 export function iniKeyRefId(section: string, key: string): string {
   return `${section}\u001f${key}`;
 }
 
-export function allDescribeKeyIds(
+function allDescribeKeyIds(
   categories: ConfigTransferIniCategoryInfo[],
 ): string[] {
   return categories.flatMap((category) =>
@@ -281,16 +271,6 @@ export function listCopyTargets(
   sourceId: string,
 ): ServerProfile[] {
   return servers.filter((s) => s.id !== sourceId);
-}
-
-export function listCopySources(
-  servers: ServerProfile[],
-  targetIds: string | string[],
-): ServerProfile[] {
-  const blocked = new Set(
-    (Array.isArray(targetIds) ? targetIds : [targetIds]).filter(Boolean),
-  );
-  return servers.filter((s) => !blocked.has(s.id));
 }
 
 export function toggleTargetId(

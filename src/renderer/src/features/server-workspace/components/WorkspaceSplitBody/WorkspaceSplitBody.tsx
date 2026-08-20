@@ -3,7 +3,7 @@ import { useWorkspaceListRail } from "../../useWorkspaceListRail";
 import { SIDE_PANEL_PX } from "../../workspaceLayoutModel";
 import classes from "./WorkspaceSplitBody.module.css";
 
-export interface WorkspaceListRenderOptions {
+interface WorkspaceListRenderOptions {
   iconMode: boolean;
   onToggleRail: () => void;
 }

@@ -85,11 +85,9 @@ import {
 } from "../../infra/fs/reparse-points";
 
 export {
-  backupFinishedAt,
   formatPlayerSessionNotes,
   playersRetentionKey,
 } from "@shared/backup-player-meta";
-export { backupKindSubdir } from "./backup-archive";
 
 export interface BackupChangedPush {
   serverId: string;
@@ -124,7 +122,7 @@ export function computeBackupServerHealth(input: {
 }
 
 /** Newest finished (completed/failed) backup by finish time. */
-export function pickLatestFinishedBackup(
+function pickLatestFinishedBackup(
   records: BackupRecord[],
 ): BackupRecord | null {
   let latest: BackupRecord | null = null;
@@ -154,10 +152,10 @@ const KNOWN_BACKUP_JOB_STATUSES = new Set([
 ]);
 
 /** Scheduled cadence creates world saves only (not players / INI). */
-export const SCHEDULED_BACKUP_KINDS: readonly BackupKind[] = ["world"];
+const SCHEDULED_BACKUP_KINDS: readonly BackupKind[] = ["world"];
 
 /** Pause further scheduled world creates after this many consecutive failures (session only). */
-export const SCHEDULED_WORLD_FAIL_LIMIT = 3;
+const SCHEDULED_WORLD_FAIL_LIMIT = 3;
 
 /**
  * Kinds created for pre-update / pre-stop / pre-restart safety.
@@ -280,11 +278,11 @@ function normalizeKinds(kinds: BackupKind[] | undefined): BackupKind[] {
 }
 
 /** Default backup root under the server install directory. */
-export function defaultServerBackupDir(installDir: string): string {
+function defaultServerBackupDir(installDir: string): string {
   return join(installDir, "Backups");
 }
 
-export function resolveServerBackupRoot(
+function resolveServerBackupRoot(
   installDir: string,
   backupDir: string | null | undefined,
 ): string {

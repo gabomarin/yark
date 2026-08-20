@@ -16,7 +16,7 @@ import {
 export {
   SPLASH_HEIGHT,
   SPLASH_MAX_MS,
-  SPLASH_MIN_MS,
+  
   SPLASH_WIDTH,
   remainingSplashHoldMs,
   shouldShowSplash,

@@ -1,12 +1,11 @@
 /** YARK desktop self-update status (distinct from ASA/SteamCMD updates). */
 
-export const YARK_GITHUB_OWNER = "gabomarin";
-export const YARK_GITHUB_REPO = "yark";
+const YARK_GITHUB_OWNER = "gabomarin";
+const YARK_GITHUB_REPO = "yark";
 export const YARK_RELEASES_URL = `https://github.com/${YARK_GITHUB_OWNER}/${YARK_GITHUB_REPO}/releases`;
 /** List endpoint — `/releases/latest` 404s while every published tag is a GitHub prerelease (0.x). */
 export const YARK_RELEASES_API =
   `https://api.github.com/repos/${YARK_GITHUB_OWNER}/${YARK_GITHUB_REPO}/releases`;
-export const YARK_LATEST_RELEASE_API = `${YARK_RELEASES_API}/latest`;
 
 export interface GithubReleaseRef {
   tag_name?: string;
@@ -59,25 +58,6 @@ export type AppUpdatePhase =
   | "downloading"
   | "ready"
   | "error";
-
-/** True while a download is in flight or waiting on Restart and install. */
-export function isAppUpdateDownloadInFlight(phase: AppUpdatePhase): boolean {
-  return phase === "downloading" || phase === "ready";
-}
-
-/**
- * Keep downloading/ready across a later check when the feed still reports the
- * same (or older) version. A newer remote version may replace the in-flight one.
- */
-export function shouldPreserveAppUpdateDownload(
-  phase: AppUpdatePhase,
-  availableVersion: string | null,
-  remoteVersion: string,
-): boolean {
-  if (!isAppUpdateDownloadInFlight(phase)) return false;
-  if (availableVersion === null || availableVersion.trim() === "") return true;
-  return compareSemver(remoteVersion, availableVersion) <= 0;
-}
 
 /**
  * Why Restart and install is disabled.

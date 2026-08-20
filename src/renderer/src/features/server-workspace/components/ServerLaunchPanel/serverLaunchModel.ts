@@ -1,13 +1,11 @@
-import type { ServerProfile, ServerProfileInput } from "@shared/types";
+import type { ServerProfile } from "@shared/types";
 import { buildMapUrlArg } from "@shared/launch-map-url";
 import {
   argsIncludeServerPlatform,
   buildStructuredLaunchArgList,
-  emptyStructuredLaunchArgs,
   findLaunchArgConflicts,
   isWinLiveMaxPlayersArg,
   listStructuredLaunchUiOptions,
-  normalizeStructuredLaunchArgs,
   redactLaunchArgForPreview,
   structuredLaunchGroupLabel,
   STRUCTURED_LAUNCH_GROUP_ORDER,
@@ -59,35 +57,6 @@ export function parseRawExtraArgs(raw: string): string[] {
 
 export function joinRawExtraArgs(args: string[]): string {
   return args.join(" ");
-}
-
-export function toLaunchProfileInput(
-  server: ServerProfile,
-  structuredLaunchArgs: StructuredLaunchArgs,
-  extraArgs: string[],
-): ServerProfileInput {
-  return {
-    name: server.name,
-    map: server.map,
-    mapModId: server.mapModId ?? null,
-    mapSaveFolder: server.mapSaveFolder ?? null,
-    installDir: server.installDir,
-    sessionName: server.sessionName,
-    maxPlayers: server.maxPlayers,
-    gamePort: server.gamePort,
-    queryPort: server.queryPort,
-    rconPort: server.rconPort,
-    serverPassword: server.serverPassword,
-    adminPassword: server.adminPassword,
-    clusterId: server.clusterId,
-    clusterDir: server.clusterDir,
-    extraArgs,
-    structuredLaunchArgs: normalizeStructuredLaunchArgs(structuredLaunchArgs),
-    mods: server.mods,
-    disabledMods: server.disabledMods ?? [],
-    modMetadataCache: server.modMetadataCache ?? {},
-    autoStart: server.autoStart,
-  };
 }
 
 export function yarkOwnedPreviewTokens(server: ServerProfile): string[] {
@@ -176,16 +145,10 @@ export function groupStructuredOptions(): Map<
   return map;
 }
 
-export function countEnabledStructured(structured: StructuredLaunchArgs): number {
-  return Object.values(normalizeStructuredLaunchArgs(structured)).filter(
-    (s) => s.enabled,
-  ).length;
-}
-
 const structuredLaunchSearchHaystackCache = new Map<string, string>();
 
 /** Precomputed operator-visible text for Launch tab search (#352). */
-export function structuredLaunchSearchHaystack(
+function structuredLaunchSearchHaystack(
   option: StructuredLaunchUiOption,
   groupId: StructuredLaunchGroupId,
 ): string {
@@ -211,7 +174,7 @@ export function structuredLaunchSearchHaystack(
 }
 
 /** Operator-visible text for Launch tab search (#352). */
-export function matchesStructuredLaunchSearch(
+function matchesStructuredLaunchSearch(
   option: StructuredLaunchUiOption,
   groupId: StructuredLaunchGroupId,
   query: string,
@@ -241,8 +204,6 @@ export function filterGroupedStructuredOptions(
 
 export {
   structuredLaunchGroupLabel,
-  emptyStructuredLaunchArgs,
   findLaunchArgConflicts,
-  normalizeStructuredLaunchArgs,
   STRUCTURED_LAUNCH_GROUP_ORDER,
 };

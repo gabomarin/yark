@@ -15,7 +15,7 @@ export type SetupWizardStepId =
   | "cluster"
   | "action";
 
-export const FIRST_RUN_STEPS: SetupWizardStepId[] = [
+const FIRST_RUN_STEPS: SetupWizardStepId[] = [
   "welcome",
   "paths",
   "shell",
@@ -23,7 +23,7 @@ export const FIRST_RUN_STEPS: SetupWizardStepId[] = [
   "action",
 ];
 
-export const PATHS_SHELL_STEPS: SetupWizardStepId[] = ["paths", "shell"];
+const PATHS_SHELL_STEPS: SetupWizardStepId[] = ["paths", "shell"];
 
 export const SETUP_WIZARD_STEP_LABELS: Record<SetupWizardStepId, string> = {
   welcome: "Welcome",

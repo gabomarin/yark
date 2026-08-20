@@ -13,11 +13,14 @@ export type ChangelogEntry = {
 export const LAST_SEEN_CHANGELOG_VERSION_SETTING_KEY = "lastSeenChangelogVersion";
 
 /** Default number of releases shown in Settings → Recent. */
-export const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
+const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
 
 /**
  * Curated changelog for the public site and in-app What's new.
  * Keep in sync with root CHANGELOG.md when cutting releases.
+ * website/src/data/changelog.ts re-exports this (website/ is a separate package).
+ *
+ * @lintignore
  */
 export const changelog: ChangelogEntry[] = [
   {

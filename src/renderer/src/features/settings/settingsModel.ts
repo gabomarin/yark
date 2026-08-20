@@ -32,7 +32,7 @@ export const SETTINGS_CATEGORIES: ReadonlyArray<{
   { id: "about", label: "About" },
 ];
 
-export const DEFAULT_BASE_FOLDER_PREF_KEY = "settings.defaultServerBaseFolder";
+const DEFAULT_BASE_FOLDER_PREF_KEY = "settings.defaultServerBaseFolder";
 
 export function readDefaultBaseFolderPref(): string | null {
   if (typeof window === "undefined") {

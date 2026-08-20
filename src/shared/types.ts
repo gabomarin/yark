@@ -73,13 +73,13 @@ export type ServerProfileInput = Omit<
  * Narrow profile write for Launch / Mods panels (#209).
  * Main process re-reads the row and merges so concurrent group writes do not clobber.
  */
-export type ServerProfileLaunchPatch = {
+type ServerProfileLaunchPatch = {
   group: "launch";
   extraArgs: string[];
   structuredLaunchArgs: StructuredLaunchArgs;
 };
 
-export type ServerProfileModsPatch = {
+type ServerProfileModsPatch = {
   group: "mods";
   mods: string[];
   disabledMods: string[];
@@ -494,7 +494,7 @@ export type BackupType =
   | "ini_save";
 
 /** Phases pushed while a stop runs (optional wait → SaveWorld → DoExit → backup). */
-export type ServerStopProgressPhase =
+type ServerStopProgressPhase =
   | "waiting"
   | "saving"
   | "backing_up"
@@ -514,7 +514,7 @@ export interface ServerStopProgress {
 }
 
 /** Phases for Move installation (copy → verify → commit). */
-export type MoveInstallProgressPhase =
+type MoveInstallProgressPhase =
   | "validating"
   | "copying"
   | "verifying"
@@ -537,7 +537,7 @@ export interface MoveInstallProgress {
 }
 
 /** Phases for optional clone install-folder copy (#160). */
-export type CloneInstallProgressPhase =
+type CloneInstallProgressPhase =
   | "validating"
   | "copying"
   | "applying"
@@ -713,7 +713,7 @@ export interface BackupPolicyStatus extends BackupPolicy {
 
 export type BackupHealthStatus = "ok" | "warning" | "critical" | "unknown";
 
-export type BackupFleetAlertKind =
+type BackupFleetAlertKind =
   | "stale"
   | "failed"
   | "missing_destination"
@@ -731,7 +731,7 @@ export interface BackupDiskAlertSettings {
   warnFreeBytes: number;
 }
 
-export interface BackupDiskUsage {
+interface BackupDiskUsage {
   volumePath: string;
   /** Backup roots that land on this volume. */
   roots: string[];
@@ -813,7 +813,7 @@ export interface BackupCleanupOptions {
   confirmedBackupIds?: string[] | null;
 }
 
-export interface BackupCleanupItem {
+interface BackupCleanupItem {
   backup: BackupRecord;
   serverName: string;
   reason: string;
@@ -919,7 +919,7 @@ export interface ClusterIniTemplateApplyResult {
 }
 
 /** #95 — one-shot selective configuration copy (not sync). */
-export interface ConfigTransferIniKeyInfo {
+interface ConfigTransferIniKeyInfo {
   section: string;
   key: string;
 }

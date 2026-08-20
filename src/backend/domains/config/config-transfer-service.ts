@@ -14,7 +14,6 @@ import type {
   ConfigTransferDescribeResult,
   ConfigTransferPreview,
   ConfigTransferProfileDiff,
-  IniPreview,
   ServerIniPayload,
   ServerProfile,
   ServerStatus,
@@ -23,10 +22,7 @@ import type { InstanceLockManager } from "../../orchestration/instance-lock-mana
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { BackupService } from "../backups/backup-service";
 import type { InstanceService } from "../instances/instance-service";
-import {
-  finalizeClusterIniApplyPreview,
-  redactIniPreviewSecrets,
-} from "./ini-compose";
+import { finalizeClusterIniApplyPreview } from "./ini-compose";
 import { buildIniPreview } from "./ini-preview";
 import type { IniService } from "./ini-service";
 import {
@@ -675,9 +671,4 @@ export class ConfigTransferService {
     }
     return server;
   }
-}
-
-/** Re-export redaction helper for tests / callers that only have IniPreview. */
-export function redactTransferIniPreview(preview: IniPreview): IniPreview {
-  return redactIniPreviewSecrets(preview);
 }

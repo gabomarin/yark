@@ -11,11 +11,11 @@ import { PORT_MAX, PORT_MIN, type ServerProfile } from "@shared/types";
 
 const execFileAsync = promisify(execFile);
 
-export type PortKind = "game" | "query" | "rcon";
-export type PortProtocol = "udp" | "tcp";
+type PortKind = "game" | "query" | "rcon";
+type PortProtocol = "udp" | "tcp";
 export type ProbeStatus = "free" | "busy" | "inconclusive";
 
-export interface EndpointProbeResult {
+interface EndpointProbeResult {
   kind: PortKind;
   port: number;
   protocol: PortProtocol;
@@ -159,7 +159,7 @@ export function parseOwnerLookupJson(raw: string): PortOwnerInfo | null {
  * Best-effort Windows owner lookup. Numeric port only — never interpolate free text.
  * Uses async execFile so the Electron main process is not blocked.
  */
-export async function defaultLookupOwner(
+async function defaultLookupOwner(
   protocol: PortProtocol,
   port: number,
 ): Promise<PortOwnerInfo | null> {
@@ -215,7 +215,7 @@ function resolveDeps(deps?: HostPortProbeDeps): Required<HostPortProbeDeps> {
   };
 }
 
-export async function probeEndpoint(
+async function probeEndpoint(
   kind: PortKind,
   port: number,
   deps?: HostPortProbeDeps,
@@ -242,7 +242,7 @@ export async function probeEndpoint(
   };
 }
 
-export async function probeProfilePorts(
+async function probeProfilePorts(
   ports: SessionPortSet,
   deps?: HostPortProbeDeps,
 ): Promise<EndpointProbeResult[]> {

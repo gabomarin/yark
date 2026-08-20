@@ -51,7 +51,7 @@ import type { AppUpdateStatus } from "./app-update";
 import type { UiDensity } from "./ui-density";
 import type { DesktopShellPreferences } from "./desktop-shell";
 
-export type PickPathKind = "directory" | "file" | "save";
+type PickPathKind = "directory" | "file" | "save";
 
 /** App-managed folders under Electron userData (Settings diagnostics). */
 export type AppDataFolderKind = "app" | "backups" | "updateLogs" | "steamcmd";

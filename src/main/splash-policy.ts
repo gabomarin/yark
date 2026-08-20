@@ -4,7 +4,7 @@ import { join } from "node:path";
 /** Boot splash is skipped in E2E and when an operator opts out. */
 export const SPLASH_WIDTH = 520;
 export const SPLASH_HEIGHT = 560;
-export const SPLASH_SVG_PLACEHOLDER = "__YARK_SPLASH_SVG__";
+const SPLASH_SVG_PLACEHOLDER = "__YARK_SPLASH_SVG__";
 /** Short floor so the lockup is visible; splash still waits for main ready. */
 export const SPLASH_MIN_MS = 1_500;
 export const SPLASH_MAX_MS = 30_000;

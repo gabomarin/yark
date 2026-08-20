@@ -39,7 +39,7 @@ export function resolveMoveDestDir(
   return resolveServerInstallDir(picked, folderName);
 }
 
-export function moveDestSameAsSourceWarning(
+function moveDestSameAsSourceWarning(
   sourceDir: string,
   destDir: string,
 ): string | null {

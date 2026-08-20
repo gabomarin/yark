@@ -13,7 +13,7 @@ import {
   type ProfileDatabaseSnapshotInfo,
 } from "../backend/infra/db/database-snapshots";
 
-export type DatabaseRecoveryChoice = "quit" | "reveal" | "reset" | "restore";
+type DatabaseRecoveryChoice = "quit" | "reveal" | "reset" | "restore";
 
 /** Operator chose Quit; main should stop boot (process is exiting). */
 export class DatabaseRecoveryAbortedError extends Error {

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  // Root Electron app. website/ and workers/curseforge-proxy/ are separate packages
+  // (not npm workspaces). electron-vite plugin (auto) adds src/main/index.ts,
+  // src/preload/index.ts, src/renderer/index.html → /src/main.tsx. Vitest plugin
+  // (auto) adds tests/**/*.test.ts, renderer **/*.test.ts(x), and setup.ts.
+  "entry": [
+    // npm scripts, visual helpers, e2e launchers, catalog builders, diagnostics.
+    "scripts/**/*.cjs",
+    // Copied into out/main/splash by electron.vite.config.ts (not a JS import).
+    "src/main/splash/splash.html",
+    // Documented design-system atom; no feature import yet — do not delete.
+    "src/renderer/src/shared/ui/AccentIconTile/AccentIconTile.tsx"
+  ],
+  "ignore": [
+    "website/**",
+    "workers/**",
+    // One-shot icon rebuild (brand/README.md); optional sharp / png-to-ico.
+    "brand/_build-icons.cjs"
+  ],
+  "ignoreBinaries": [
+    // Windows host tools spawned from updates / ProcessManager tests — not npm.
+    "robocopy.exe",
+    "tasklist"
+  ],
+  "rules": {
+    "files": "error",
+    "dependencies": "error",
+    "devDependencies": "error",
+    "unlisted": "error",
+    "binaries": "error",
+    "unresolved": "error",
+    "duplicates": "error",
+    "exports": "error",
+    "nsExports": "error",
+    "types": "error",
+    "nsTypes": "error",
+    // Unused enum members are noisy in shared catalogs; leave for a later pass.
+    "enumMembers": "off"
+  },
+  // @lintignore: website/src/data/changelog.ts re-exports src/shared/changelog.
+  "tags": ["-lintignore"]
+}

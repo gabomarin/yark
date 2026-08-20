@@ -44,7 +44,7 @@ import {
   type RuntimeLogSourceFilter,
 } from "./serverLogsFormat";
 
-export type LogsSection = "events" | "runtime" | "updates" | "backups";
+type LogsSection = "events" | "runtime" | "updates" | "backups";
 
 export interface ServerLogsFocus {
   section?: LogsSection;

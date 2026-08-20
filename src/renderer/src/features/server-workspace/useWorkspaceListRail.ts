@@ -1,7 +1,5 @@
 import { useCallback, useState } from "react";
 import {
-  ICON_RAIL_PX,
-  LIST_FULL_PX,
   listWidthForMode,
   readStoredListMode,
   writeStoredListMode,
@@ -40,5 +38,3 @@ export function useWorkspaceListRail(): WorkspaceListRailState {
     setMode,
   };
 }
-
-export { ICON_RAIL_PX, LIST_FULL_PX };

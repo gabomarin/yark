@@ -129,7 +129,7 @@ export function resolveNestedAsaInstallRoot(selected: string): {
   return { nestedSubfolder: true, suggestedInstallDir: suggestedNorm };
 }
 
-export function asaNestedGuidance(suggestedInstallDir: string | null): string {
+function asaNestedGuidance(suggestedInstallDir: string | null): string {
   return suggestedInstallDir !== null
     ? `This is inside an ASA install. Select ${suggestedInstallDir} (the folder that contains ShooterGame).`
     : "This is inside an ASA install. Select the folder that contains ShooterGame.";

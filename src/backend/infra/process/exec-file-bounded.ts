@@ -1,6 +1,6 @@
 import { execFile, type ExecFileOptionsWithStringEncoding } from "node:child_process";
 
-export class ExecFileBoundedError extends Error {
+class ExecFileBoundedError extends Error {
   readonly code: string;
   readonly timedOut: boolean;
   readonly killed: boolean;

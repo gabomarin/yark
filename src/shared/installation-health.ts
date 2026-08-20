@@ -109,7 +109,7 @@ export function guidanceForReasonCodes(
   return GUIDANCE_BY_REASON.io_error;
 }
 
-export function isActionableInstallHealth(
+function isActionableInstallHealth(
   health: InstallationHealthStatus,
 ): boolean {
   return health !== "ready";

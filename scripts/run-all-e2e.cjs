@@ -3,8 +3,7 @@
  *
  * Usage: npm run build && node scripts/run-all-e2e.cjs
  *
- * Skips visual-only helpers (visual-downloads.cjs). Includes scripts not wired
- * in package.json: e2e-downloads-pause-resume, e2e-personas.
+ * Skips visual-only helpers (visual-downloads.cjs).
  * Real-host suites (crash-reattach, clone-copy-real) may take a long time.
  */
 const { execSync } = require("node:child_process");
@@ -19,7 +18,7 @@ const tests = [
   { name: "e2e:install-health", cmd: "npm run e2e:install-health" },
   { name: "e2e:host-port-probe", cmd: "npm run e2e:host-port-probe" },
   { name: "e2e:critical-job-recovery", cmd: "npm run e2e:critical-job-recovery" },
-  { name: "e2e:downloads-pause-resume", cmd: "node scripts/e2e-downloads-pause-resume.cjs" },
+  { name: "e2e:downloads-pause-resume", cmd: "npm run e2e:downloads-pause-resume" },
   { name: "e2e:mods", cmd: "npm run e2e:mods" },
   { name: "e2e:launch-args", cmd: "npm run e2e:launch-args" },
   { name: "e2e:log-retention", cmd: "npm run e2e:log-retention" },
@@ -30,7 +29,7 @@ const tests = [
   { name: "e2e:clone-copy", cmd: "npm run e2e:clone-copy" },
   { name: "e2e:import-install", cmd: "npm run e2e:import-install" },
   { name: "e2e:move-install", cmd: "npm run e2e:move-install" },
-  { name: "e2e:personas", cmd: "node scripts/e2e-personas.cjs" },
+  { name: "e2e:personas", cmd: "npm run e2e:personas" },
   { name: "e2e:crash-reattach", cmd: "npm run e2e:crash-reattach" },
   { name: "e2e:clone-copy-real", cmd: "npm run e2e:clone-copy-real" },
 ];

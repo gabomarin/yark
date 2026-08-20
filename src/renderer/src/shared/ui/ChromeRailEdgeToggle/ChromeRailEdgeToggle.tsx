@@ -4,7 +4,7 @@ import { UnstyledButton, Tooltip } from "@mantine/core";
 import classes from "./ChromeRailEdgeToggle.module.css";
 
 /** Visible control box (width × height); used by layout seam math. */
-export const CHROME_RAIL_EDGE_TOGGLE_PX = 40;
+const CHROME_RAIL_EDGE_TOGGLE_PX = 40;
 
 interface Props {
   iconMode: boolean;

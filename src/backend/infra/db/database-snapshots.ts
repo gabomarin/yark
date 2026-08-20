@@ -62,7 +62,7 @@ export function isProfileDatabaseSnapshotFileName(name: string): boolean {
   return /^yark-profile\.(pre-migrate|healthy-boot)\..+\.db$/u.test(name);
 }
 
-export function profileDatabaseSnapshotKindFromFileName(
+function profileDatabaseSnapshotKindFromFileName(
   name: string,
 ): ProfileDatabaseSnapshotKind | null {
   const match = /^yark-profile\.(pre-migrate|healthy-boot)\./u.exec(name);
@@ -73,7 +73,7 @@ export function profileDatabaseSnapshotKindFromFileName(
 }
 
 /** Newest-first snapshot inventory for operator recovery (#252). */
-export function listProfileDatabaseSnapshots(dbPath: string): ProfileDatabaseSnapshotInfo[] {
+function listProfileDatabaseSnapshots(dbPath: string): ProfileDatabaseSnapshotInfo[] {
   if (!isOnDiskProfileDatabasePath(dbPath)) {
     return [];
   }
@@ -204,7 +204,7 @@ export function writeProfileDatabaseSnapshot(
 }
 
 /** Escape a filesystem path for use inside a single-quoted SQLite string literal. */
-export function escapeSqliteStringLiteral(value: string): string {
+function escapeSqliteStringLiteral(value: string): string {
   return value.replaceAll("'", "''");
 }
 

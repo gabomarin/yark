@@ -16,7 +16,6 @@ import {
   OperationCancelledError,
   OperationPausedError,
   OperationPauseUnavailableError,
-  isOperationPauseUnavailableError,
   robocopyTree,
 } from "./robocopy-tree";
 
@@ -26,10 +25,10 @@ export const ASA_CONTENT_SYNC_ROBOCOPY_THREADS = DEFAULT_ROBOCOPY_THREADS;
 export const ASA_APP_ID = "2430930";
 
 /** Server folders that must not be overwritten when syncing from the cache. */
-export const ASA_CONTENT_SYNC_EXCLUDE_DIRS = ["ShooterGame\\Saved"] as const;
+const ASA_CONTENT_SYNC_EXCLUDE_DIRS = ["ShooterGame\\Saved"] as const;
 
 /** How long a content cache already updated in this session is reused. */
-export const CONTENT_CACHE_FRESH_MS = 15 * 60 * 1000;
+const CONTENT_CACHE_FRESH_MS = 15 * 60 * 1000;
 
 export {
   OperationCancelledError,
@@ -37,7 +36,6 @@ export {
   OperationPauseUnavailableError,
   isOperationCancelledError,
   isOperationPausedError,
-  isOperationPauseUnavailableError,
   isRobocopySuccess,
 };
 
@@ -66,7 +64,7 @@ export function resolveSteamCmdCacheDir(
     : resolveAsaContentCacheDir(steamCmdHome);
 }
 
-export function asaAppManifestPath(installOrCacheDir: string): string {
+function asaAppManifestPath(installOrCacheDir: string): string {
   return join(installOrCacheDir, "steamapps", `appmanifest_${ASA_APP_ID}.acf`);
 }
 

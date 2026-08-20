@@ -1,13 +1,13 @@
 import { PORT_MAX, PORT_MIN, type SessionPortSet } from "./types";
 
 /** Thrown when a host bind probe confirms the port is in use. */
-export const HOST_PORT_BUSY_PREFIX = "HOST_PORT_BUSY:";
+const HOST_PORT_BUSY_PREFIX = "HOST_PORT_BUSY:";
 
 /**
  * Thrown when the OS probe cannot confirm free/busy for configured ports.
  * Start on those ports is still blocked; recovery is a confirmed-free session set.
  */
-export const HOST_PORT_INCONCLUSIVE_PREFIX = "HOST_PORT_PROBE_INCONCLUSIVE:";
+const HOST_PORT_INCONCLUSIVE_PREFIX = "HOST_PORT_PROBE_INCONCLUSIVE:";
 
 export type { SessionPortSet };
 

@@ -121,7 +121,9 @@ Reference implementation: `src/renderer/src/features/clusters/`.
 
 `npm run lint` (Husky pre-commit/pre-push + CI) runs **ESLint 9**
 (`eslint.config.mjs`: TypeScript + React hooks) after the size/Actions-pin
-checks. Size caps on `src/renderer/src/features/**/*.{ts,tsx}` (excluding
+checks. CI also runs `npm run knip` (`knip.jsonc`) for unused files, exports,
+dependencies, and unused CSS **files** — not unused classes inside a
+`.module.css`. Size caps on `src/renderer/src/features/**/*.{ts,tsx}` (excluding
 `*.test.*`):
 
 - New/ungrandfathered React component files (`.tsx`) must stay ≤ **350** lines.

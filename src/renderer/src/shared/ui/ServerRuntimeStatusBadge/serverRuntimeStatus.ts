@@ -1,7 +1,7 @@
 import type { ServerStatus } from "@shared/types";
 
 /** Human-readable labels for server process lifecycle. */
-export const SERVER_RUNTIME_STATUS_LABEL: Record<ServerStatus, string> = {
+const SERVER_RUNTIME_STATUS_LABEL: Record<ServerStatus, string> = {
   stopped: "Stopped",
   starting: "Starting",
   running: "Running",

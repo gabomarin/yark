@@ -23,7 +23,7 @@ export const DATABASE_BUSY_TIMEOUT_MS = 5_000;
  * usable DB — but a 0-byte file is treated as a brand-new empty database by
  * SQLite, which would silently re-migrate and skip recovery UX.
  */
-export const MIN_SQLITE_DATABASE_FILE_BYTES = 100;
+const MIN_SQLITE_DATABASE_FILE_BYTES = 100;
 
 export type DatabaseBootFailureKind = "open" | "migrate";
 
@@ -62,7 +62,7 @@ export type OpenDatabaseOptions = {
 };
 
 /** Finite non-negative integer ms for `PRAGMA busy_timeout`; non-finite → default. */
-export function resolveBusyTimeoutMs(value: number | undefined): number {
+function resolveBusyTimeoutMs(value: number | undefined): number {
   const raw = value ?? DATABASE_BUSY_TIMEOUT_MS;
   if (!Number.isFinite(raw)) {
     return DATABASE_BUSY_TIMEOUT_MS;

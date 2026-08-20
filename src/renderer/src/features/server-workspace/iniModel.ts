@@ -237,7 +237,7 @@ function isLikelyStringSettingKey(keyLower: string): boolean {
   );
 }
 
-export function humanizeKey(key: string): string {
+function humanizeKey(key: string): string {
   return key
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/_/g, " ")

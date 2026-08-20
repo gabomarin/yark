@@ -2,7 +2,7 @@ import { getCurseForgeAsaModUrlError } from "./curseforge-url";
 import type { ModMetadata } from "./types";
 
 /** Default references resolved per persist/progress batch. */
-export const MOD_ADD_URL_BATCH_SIZE = 5;
+const MOD_ADD_URL_BATCH_SIZE = 5;
 
 /** Numeric CurseForge Project ID (same rule as backend `normalizeModId`). */
 export function isCurseForgeProjectId(raw: string): boolean {

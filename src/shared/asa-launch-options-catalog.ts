@@ -7,14 +7,14 @@ export type AsaLaunchOptionStatus =
   | "uncertain"
   | "yarkOwned";
 
-export type AsaLaunchOptionValueType =
+type AsaLaunchOptionValueType =
   | "flag"
   | "string"
   | "number"
   | "enum"
   | "csv";
 
-export interface AsaLaunchOptionSource {
+interface AsaLaunchOptionSource {
   label: string;
   url: string;
 }

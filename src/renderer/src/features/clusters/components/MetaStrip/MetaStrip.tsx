@@ -2,7 +2,7 @@ import { Text } from "@mantine/core";
 import type { ReactNode, ReactElement } from "react";
 import classes from "./MetaStrip.module.css";
 
-export interface MetaStripItem {
+interface MetaStripItem {
   label: string;
   value: ReactNode;
 }

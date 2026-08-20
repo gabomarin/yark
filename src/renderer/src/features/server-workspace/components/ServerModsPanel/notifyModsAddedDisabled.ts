@@ -1,7 +1,7 @@
 import { notifications } from "@mantine/notifications";
 import { showOperatorToast } from "@ui/operatorToast";
 
-export const MOD_ADDED_TOAST_LIMIT = 2;
+const MOD_ADDED_TOAST_LIMIT = 2;
 
 /** Cap concurrent "Mod Added" toasts. Module-level so URL + Discover share one queue. */
 const visibleIds: string[] = [];

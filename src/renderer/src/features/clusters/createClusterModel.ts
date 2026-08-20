@@ -5,7 +5,6 @@ import {
 import { findPortConflicts } from "@shared/port-conflicts";
 import {
   clusterProcessBusyReason as sharedClusterProcessBusyReason,
-  isServerProcessBusyForClusterOps as sharedIsServerProcessBusyForClusterOps,
   type ServerProcessRuntime,
 } from "@shared/server-process-idle";
 import type {
@@ -50,23 +49,10 @@ export function resolveServerRuntime(
   };
 }
 
-export function resolveServerStatus(
-  statuses: Map<string, Pick<ServerRuntimeInfo, "status" | "processLive">>,
-  serverId: string,
-): ServerStatus {
-  return resolveServerRuntime(statuses, serverId).status;
-}
-
 /**
  * Cluster membership / template apply is safe when the ASA child is not live.
  * Idle `error` (process exited) is allowed (#276).
  */
-export function isServerProcessBusyForClusterOps(
-  runtime: ServerProcessRuntime,
-): boolean {
-  return sharedIsServerProcessBusyForClusterOps(runtime);
-}
-
 export function clusterProcessBusyReason(
   runtime: ServerProcessRuntime,
 ): string | null {

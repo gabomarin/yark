@@ -9,7 +9,7 @@ export function backupFinishedAt(backup: BackupRecord): string {
 }
 
 /** Retention pool key for full (all-profiles) player snapshots. */
-export const FULL_PLAYERS_RETENTION_KEY = "__all__";
+const FULL_PLAYERS_RETENTION_KEY = "__all__";
 
 export function parsePlayerKeyFromNotes(notes: string | null | undefined): string | null {
   const match = notes?.match(PLAYER_KEY_NOTE_RE);

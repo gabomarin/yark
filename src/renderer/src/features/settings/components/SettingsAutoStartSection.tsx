@@ -6,9 +6,9 @@ import type { ServerInstallationInfo, ServerProfile } from "@shared/types";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import classes from "../SettingsPage.module.css";
 
-export type AutoStartSummaryState = "armed" | "ignored" | "blocked";
+type AutoStartSummaryState = "armed" | "ignored" | "blocked";
 
-export interface AutoStartSummaryRow {
+interface AutoStartSummaryRow {
   server: ServerProfile;
   state: AutoStartSummaryState;
   detail: string;
@@ -20,7 +20,7 @@ interface Props {
   onOpenServer: (serverId: string) => void;
 }
 
-export function buildAutoStartSummaryRows(
+function buildAutoStartSummaryRows(
   servers: ServerProfile[],
   installationInfo: Map<string, ServerInstallationInfo>,
 ): AutoStartSummaryRow[] {

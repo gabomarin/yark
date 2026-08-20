@@ -8,10 +8,10 @@ import type {
   BackupType,
 } from "@shared/types";
 
-export const DEFAULT_INTERVAL_MINUTES = 60;
-export const DEFAULT_RETAIN_COUNT_WORLD = 20;
-export const DEFAULT_RETAIN_COUNT_PLAYERS = 20;
-export const DEFAULT_RETAIN_COUNT_INI = 10;
+const DEFAULT_INTERVAL_MINUTES = 60;
+const DEFAULT_RETAIN_COUNT_WORLD = 20;
+const DEFAULT_RETAIN_COUNT_PLAYERS = 20;
+const DEFAULT_RETAIN_COUNT_INI = 10;
 export const MIN_INTERVAL_MINUTES = 5;
 
 interface BackupRow {

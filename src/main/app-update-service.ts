@@ -18,7 +18,7 @@ import {
 import { APP_VERSION } from "../shared/app-version";
 import { requireAllowedExternalUrl } from "../shared/external-url-policy";
 
-export type AppUpdateSafetyReason =
+type AppUpdateSafetyReason =
   | "servers-running"
   | "critical-job"
   | "operation-in-progress"
