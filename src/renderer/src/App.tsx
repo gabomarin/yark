@@ -53,6 +53,7 @@ import {
 import { AppRouter } from "@app/AppRouter";
 import { AppProviders } from "@app/AppProviders";
 import { AppShellLayout } from "@app/AppShellLayout";
+import { claimStartBusy, releaseStartBusy } from "@app/startBusyGuard";
 import { ClustersPage } from "@features/clusters/ClustersPage";
 import { LogsPage } from "@features/logs/LogsPage";
 import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
@@ -203,10 +204,7 @@ export function App({
   const [startBusyByServerId, setStartBusyByServerId] = useState<Set<string>>(
     () => new Set(),
   );
-  const startBusyByServerIdRef = useRef(startBusyByServerId);
-  useEffect(() => {
-    startBusyByServerIdRef.current = startBusyByServerId;
-  }, [startBusyByServerId]);
+  const startBusyByServerIdRef = useRef<Set<string>>(new Set());
   const [route, setRoute] = useState<Route>("overview");
   const [overlay, setOverlay] = useState<Overlay>(null);
   const [importInstallOpen, setImportInstallOpen] = useState(false);
@@ -1705,29 +1703,12 @@ export function App({
     [refresh],
   );
 
-  const setServerStartBusy = useCallback((id: string, busy: boolean) => {
-    setStartBusyByServerId((prev) => {
-      const has = prev.has(id);
-      if (busy === has) {
-        return prev;
-      }
-      const next = new Set(prev);
-      if (busy) {
-        next.add(id);
-      } else {
-        next.delete(id);
-      }
-      startBusyByServerIdRef.current = next;
-      return next;
-    });
-  }, []);
-
   const startServer = useCallback(
     async (id: string, options?: StartServerOptions) => {
-      if (startBusyByServerIdRef.current.has(id)) {
+      if (!claimStartBusy(startBusyByServerIdRef, id)) {
         return;
       }
-      setServerStartBusy(id, true);
+      setStartBusyByServerId(new Set(startBusyByServerIdRef.current));
       try {
         const result = await window.api.startServer(id, {
           openNativeConsole: openNativeTerminalOnStart,
@@ -1765,18 +1746,19 @@ export function App({
         }
         await refresh();
       } finally {
-        setServerStartBusy(id, false);
+        releaseStartBusy(startBusyByServerIdRef, id);
+        setStartBusyByServerId(new Set(startBusyByServerIdRef.current));
       }
     },
-    [openNativeTerminalOnStart, refresh, servers, setServerStartBusy],
+    [openNativeTerminalOnStart, refresh, servers],
   );
 
   const restartServer = useCallback(
     async (id: string, options?: StartServerOptions) => {
-      if (startBusyByServerIdRef.current.has(id)) {
+      if (!claimStartBusy(startBusyByServerIdRef, id)) {
         return;
       }
-      setServerStartBusy(id, true);
+      setStartBusyByServerId(new Set(startBusyByServerIdRef.current));
       try {
         const res = await window.api.restartServer(id, {
           openNativeConsole: openNativeTerminalOnStart,
@@ -1815,10 +1797,11 @@ export function App({
         }
         await refresh();
       } finally {
-        setServerStartBusy(id, false);
+        releaseStartBusy(startBusyByServerIdRef, id);
+        setStartBusyByServerId(new Set(startBusyByServerIdRef.current));
       }
     },
-    [openNativeTerminalOnStart, refresh, servers, setServerStartBusy, startServer],
+    [openNativeTerminalOnStart, refresh, servers, startServer],
   );
 
   const confirmKillServer = useCallback(

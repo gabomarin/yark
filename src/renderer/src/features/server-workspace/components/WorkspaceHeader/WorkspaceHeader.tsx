@@ -120,7 +120,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
               color="teal"
               leftSection={startLoading ? undefined : <Play size={14} weight="fill" />}
               onClick={props.onStart}
-              disabled={!canStart && !startLoading}
+              disabled={!canStart}
               loading={startLoading}
               title={
                 props.filesJobActive === true
@@ -141,7 +141,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
               restartLoading ? undefined : <ArrowsClockwise size={14} weight="bold" />
             }
             onClick={props.onRestart}
-            disabled={!canRestart && !restartLoading}
+            disabled={!canRestart}
             loading={restartLoading}
             title={props.filesJobActive === true ? lockTitle : undefined}
           >
