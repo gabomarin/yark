@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- ASA launch-options catalog uses one list scrollbar, explains browse filters on hover/focus, and tells operators where YARK already manages a command instead of showing `extraArgs` audit tokens (#381).
+
 ### Changed
 
 - Workspace search and related inputs (INI, player backups, cluster INI template, ASA catalog, Mods Discover / add URL, RCON command, **Logs** fleet filter) share **SearchField** chrome so filters match Overview and Launch (#379).

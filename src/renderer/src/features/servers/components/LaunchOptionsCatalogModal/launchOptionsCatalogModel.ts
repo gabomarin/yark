@@ -1,4 +1,7 @@
-import type { AsaLaunchOptionStatus } from "@shared/asa-launch-options-catalog";
+import type {
+  AsaLaunchOptionEntry,
+  AsaLaunchOptionStatus,
+} from "@shared/asa-launch-options-catalog";
 
 /** Filters shown in the browse modal (ASE-only / unsupported omitted). */
 export type CatalogStatusFilter =
@@ -40,6 +43,85 @@ export function catalogStatusToneClass(
     case "yarkOwned":
       return "toneCryo";
   }
+}
+
+export function catalogStatusFilterTooltip(filter: CatalogStatusFilter): string {
+  switch (filter) {
+    case "all":
+      return "ASA options you can browse here. Rows that only apply to the older game (ASE) stay hidden.";
+    case "supported":
+      return "These work on ASA. You can turn them on from the Launch tab.";
+    case "uncertain":
+      return "The wiki is not sure these work on ASA. They stay here for reference, not on the Launch tab.";
+    case "yarkOwned":
+      return "YARK already fills these in from Server settings, Mods, or cluster. Do not add them again in Extra arguments.";
+  }
+}
+
+/** Operator-facing surface that already owns a YARK-composed launch token. */
+export type YarkManagedSurface =
+  | "Server settings"
+  | "Mods"
+  | "GameUserSettings (GUS) INI"
+  | "Game INI"
+  | "Launch";
+
+export const YARK_OWNED_CATALOG_IDS = [
+  "map-session",
+  "port",
+  "winlivemaxplayers-integer",
+  "mods",
+  "clusterid",
+  "cluster-dir",
+  "no-transfer-from-filtering",
+] as const;
+
+export type YarkOwnedCatalogId = (typeof YARK_OWNED_CATALOG_IDS)[number];
+
+const YARK_MANAGED_SURFACE_BY_ID: Record<YarkOwnedCatalogId, YarkManagedSurface> = {
+  "map-session": "Server settings",
+  port: "Server settings",
+  "winlivemaxplayers-integer": "Server settings",
+  mods: "Mods",
+  clusterid: "Server settings",
+  "cluster-dir": "Server settings",
+  "no-transfer-from-filtering": "Server settings",
+};
+
+export function yarkManagedSurfaceForCatalogId(id: string): YarkManagedSurface {
+  if (id in YARK_MANAGED_SURFACE_BY_ID) {
+    return YARK_MANAGED_SURFACE_BY_ID[id as YarkOwnedCatalogId];
+  }
+  return "Server settings";
+}
+
+export function yarkManagedLaunchCopy(id: string): string {
+  return `YARK already sets this from ${yarkManagedSurfaceForCatalogId(id)}. Do not add it in Extra arguments.`;
+}
+
+export type CatalogBrowseSecondary =
+  | { kind: "managed"; text: string }
+  | { kind: "conflicts"; items: readonly string[] };
+
+/** List/detail secondary line: hide extraArgs audit tokens on YARK-owned rows. */
+export function catalogBrowseSecondary(
+  entry: Pick<AsaLaunchOptionEntry, "id" | "status" | "conflicts">,
+): CatalogBrowseSecondary | null {
+  if (entry.status === "yarkOwned") {
+    return { kind: "managed", text: yarkManagedLaunchCopy(entry.id) };
+  }
+  if (entry.conflicts.length > 0) {
+    return { kind: "conflicts", items: entry.conflicts };
+  }
+  return null;
+}
+
+/** Internal YARK-owned notes stay out of the browse UI; Managed copy covers them. */
+export function shouldShowCatalogNotes(
+  entry: Pick<AsaLaunchOptionEntry, "status" | "notes">,
+): boolean {
+  if (entry.status === "yarkOwned") return false;
+  return Boolean(entry.notes?.trim());
 }
 
 /** Hide boilerplate “stays off / built-in default” rows in the browse UI. */
