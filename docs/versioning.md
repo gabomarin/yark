@@ -84,7 +84,9 @@ Workflow: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
 - **Electron fuses / ASAR integrity (#217):** `package.json` → `build.electronFuses`
   flips production hardening after pack (before any future code signing). `asar: true`
   stays on so electron-builder embeds Windows ASAR integrity resources. Release CI runs
-  `npm run verify:fuses` against `dist/win-unpacked`.
+  `npm run verify:fuses` against `dist/win-unpacked`. The script needs the
+  `@electron/fuses` **direct** `devDependency` (`require.resolve` of its CLI
+  does not see electron-builder's nested copy).
 
 | Fuse | Packaged value | Why |
 | --- | --- | --- |

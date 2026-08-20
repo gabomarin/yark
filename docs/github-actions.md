@@ -76,7 +76,9 @@ the bump is worth calling out).
 2. `release.yml` checks out **that tag** (`ref: steps.tag.outputs.name`), verifies
    `package.json` version alignment, runs typecheck + tests, then packages NSIS.
    After packaging, `npm run verify:fuses` asserts `build.electronFuses` on
-   `dist/win-unpacked` (#217).
+   `dist/win-unpacked` (#217). That script `require.resolve`s `@electron/fuses`
+   (direct `devDependency`; electron-builder's nested copy is not on Node's
+   resolve path).
 3. Artifacts upload and the GitHub Release attach the same `dist/*.exe` / `*.yml`
    built from that tagged tree — not from an unrelated branch tip.
 
