@@ -102,7 +102,11 @@ describe("openDatabase boot hardening", () => {
   it("wraps page-level corruption as DatabaseBootError kind open via quick_check", () => {
     const dir = tempDir("yark-db-malformed-");
     const dbPath = join(dir, "malformed.db");
-    openDatabase(dbPath).close();
+    openDatabaseApplyingMigrations(
+      dbPath,
+      [{ version: 1, sql: "CREATE TABLE ok (id INTEGER PRIMARY KEY);" }],
+      { takeSnapshots: false },
+    ).close();
 
     const buf = Buffer.from(readFileSync(dbPath));
     for (let i = 100; i < Math.min(200, buf.length); i += 1) {
@@ -110,9 +114,16 @@ describe("openDatabase boot hardening", () => {
     }
     writeFileSync(dbPath, buf);
 
-    expect(() => openDatabase(dbPath)).toThrow(DatabaseBootError);
+    const openCorrupt = () =>
+      openDatabaseApplyingMigrations(
+        dbPath,
+        [{ version: 1, sql: "CREATE TABLE ok (id INTEGER PRIMARY KEY);" }],
+        { takeSnapshots: false },
+      );
+
+    expect(openCorrupt).toThrow(DatabaseBootError);
     try {
-      openDatabase(dbPath);
+      openCorrupt();
       expect.unreachable("openDatabase should have thrown");
     } catch (error) {
       expect(error).toBeInstanceOf(DatabaseBootError);

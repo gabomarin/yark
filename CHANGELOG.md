@@ -13,6 +13,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Destructive inline buttons (**Stop**, Force close, Delete, Remove, Ban, cancel jobs, clear/delete logs and backups, **Clusters** remove) use red **filled** (`--app-color-bad`); workspace lifecycle **Restart** uses deep amber **filled** (`--app-color-fossil-filled`, white icon via autoContrast) (#344).
 
+### Fixed
+
+- SQLite boot/snapshot unit tests no longer flake on CI when `PRAGMA quick_check` or VACUUM snapshots exceed Vitest’s default 5s timeout under parallel load.
+
 ## [0.14.1] - 2026-08-19
 
 ### Fixed
