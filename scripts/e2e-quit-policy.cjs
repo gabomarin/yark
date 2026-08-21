@@ -135,11 +135,11 @@ async function run() {
     }
 
     const notifySwitch = page.getByRole("switch", {
-      name: "Show notification when hiding to tray",
+      name: "Alert when hiding to tray",
     });
     assert.ok(
       (await notifySwitch.count()) > 0,
-      "Tray notification switch should show when Close window to tray is on",
+      "Tray alert switch should show when Close window to tray is on",
     );
 
     await traySwitch.click({ force: true });
@@ -148,7 +148,7 @@ async function run() {
     assert.equal(
       await notifySwitch.count(),
       0,
-      "Tray notification switch should hide when Close window to tray is off",
+      "Tray alert switch should hide when Close window to tray is off",
     );
 
     await traySwitch.click({ force: true });

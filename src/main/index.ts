@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, Notification, dialog, screen, shell, type Tray } from "electron";
+import { app, BrowserWindow, Menu, dialog, screen, shell, type Tray } from "electron";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { DatabaseSync } from "node:sqlite";
@@ -46,6 +46,7 @@ import {
   type AppTrayOptions,
 } from "./app-tray";
 import { readDesktopShellPreferences } from "./desktop-shell-settings";
+import { FleetOsNotifier, showNativeOsNotification } from "./os-notifications";
 import { isAllowedExternalUrl } from "../shared/external-url-policy";
 import {
   attachWindowStatePersistence,
@@ -77,6 +78,10 @@ import {
   remainingSplashHoldMs,
   shouldShowSplash,
 } from "./splash-window";
+import type {
+  ServerCrashedNotifyPayload,
+  SteamCmdJobTerminalPayload,
+} from "../shared/os-notification-events";
 import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush, type MoveInstallProgressPush, type CloneInstallProgressPush, type RconStatusChangedPush, type PlayerListUpdatedPush } from "../shared/ipc";
 import type { AppUpdateStatus } from "../shared/app-update";
 import { normalizeCloneInstallProgress, normalizeServerStopProgress } from "../shared/types";
@@ -618,6 +623,13 @@ if (gotSingleInstanceLock) {
       showBrowserWindow(ensureMainWindow());
     };
 
+    const fleetOsNotifier = new FleetOsNotifier({
+      readPrefs: () => readDesktopShellPreferences(settings),
+      getMainWindow: () => mainWindow,
+      revealMainWindow,
+      sendToRenderer,
+    });
+
     const attachMainWindowCloseHandler = (win: BrowserWindow): void => {
       win.on("close", (event) => {
         // Final exit (after stop/settle or clean before-quit): destroy the window.
@@ -715,6 +727,14 @@ if (gotSingleInstanceLock) {
       sendToRenderer(IPC_PUSH.steamCmdProgress, payload);
     });
 
+    instances.on("server-crashed", (payload: ServerCrashedNotifyPayload) => {
+      fleetOsNotifier.notifyCrash(payload);
+    });
+
+    updateService.on("job-terminal", (payload: SteamCmdJobTerminalPayload) => {
+      fleetOsNotifier.notifySteamCmd(payload);
+    });
+
     moveInstallService.on("progress", (payload: MoveInstallProgressPush) => {
       sendToRenderer(IPC_PUSH.moveInstallProgress, payload);
     });
@@ -747,6 +767,16 @@ if (gotSingleInstanceLock) {
 
     appUpdateService.onStatus((status: AppUpdateStatus) => {
       sendToRenderer(IPC_PUSH.appUpdate, status);
+      if (
+        (status.phase === "available" || status.phase === "ready")
+        && status.availableVersion !== null
+        && status.availableVersion.trim().length > 0
+      ) {
+        fleetOsNotifier.notifyYarkUpdate({
+          phase: status.phase,
+          version: status.availableVersion,
+        });
+      }
     });
 
     mainWindow = createWindow(settings, {
@@ -811,21 +841,18 @@ if (gotSingleInstanceLock) {
     };
 
     const notifyTrayHide = (): void => {
-      if (!Notification.isSupported()) {
+      const prefs = readDesktopShellPreferences(settings);
+      if (!prefs.osNotifyEnabled || prefs.trayCloseHintDismissed) {
         return;
       }
-      if (readDesktopShellPreferences(settings).trayCloseHintDismissed) {
-        return;
-      }
-      const notification = new Notification({
+      showNativeOsNotification({
         title: "YARK",
         body: "Still running in the tray.",
         silent: true,
+        onClick: () => {
+          revealMainWindow();
+        },
       });
-      notification.on("click", () => {
-        revealMainWindow();
-      });
-      notification.show();
     };
 
     app.on("activate", () => {

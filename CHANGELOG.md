@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Optional Windows toasts when a server crashes, a SteamCMD install/update/verify finishes or fails, or a YARK update is available/ready — even if YARK is in the tray; Settings → General **Desktop alerts** covers crash, installs/updates, YARK updates, and hide-to-tray. Success banners stay quiet; failures and crashes use the system sound (#331).
+
 ### Changed
 
 - Destructive inline buttons (**Stop**, Force close, Delete, Remove, Ban, cancel jobs, clear/delete logs and backups, **Clusters** remove) use red **filled** (`--app-color-bad`); workspace lifecycle **Restart** uses deep amber **filled** (`--app-color-fossil-filled`, white icon via autoContrast) (#344).

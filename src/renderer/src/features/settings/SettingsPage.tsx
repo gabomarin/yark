@@ -118,6 +118,14 @@ export function SettingsPage(props: Props): ReactElement {
                 onTrayCloseHintDismissedChange={desktopShell.onTrayCloseHintDismissedChange}
                 startWithWindows={desktopShell.startWithWindows}
                 onStartWithWindowsChange={desktopShell.onStartWithWindowsChange}
+                osNotifyEnabled={desktopShell.osNotifyEnabled}
+                onOsNotifyEnabledChange={desktopShell.onOsNotifyEnabledChange}
+                osNotifyCrash={desktopShell.osNotifyCrash}
+                onOsNotifyCrashChange={desktopShell.onOsNotifyCrashChange}
+                osNotifySteamCmd={desktopShell.osNotifySteamCmd}
+                onOsNotifySteamCmdChange={desktopShell.onOsNotifySteamCmdChange}
+                osNotifyYarkUpdate={desktopShell.osNotifyYarkUpdate}
+                onOsNotifyYarkUpdateChange={desktopShell.onOsNotifyYarkUpdateChange}
                 desktopShellReady={desktopShell.desktopShellReady}
                 onRunSetupAgain={props.onRunSetupAgain}
               />

@@ -10,6 +10,10 @@ import type {
   SteamCmdConsoleSnapshot,
   SteamCmdStatus,
 } from "../../../shared/types";
+import {
+  shouldNotifySteamCmdJobEvent,
+  type SteamCmdJobTerminalPayload,
+} from "../../../shared/os-notification-events";
 import { parseSteamCmdProgressLine } from "../../../shared/steamcmd-progress";
 import {
   CRITICAL_BACKUP_KINDS,
@@ -134,6 +138,11 @@ interface CriticalJob extends DurableCriticalJob {
     steamCmdExitCode?: number;
     /** Set when YARK closed mid-job; queue waits for Retry/Dismiss before other servers run. */
     restartInterrupted?: boolean;
+    /**
+     * Renderer awaited Install/Update/Verify and will show an in-app toast.
+     * OS toasts skip while YARK is focused for these jobs (#331).
+     */
+    operatorAwaited?: boolean;
   };
 }
 
@@ -405,6 +414,7 @@ export class UpdateService extends EventEmitter {
     severity: "info" | "warning" | "error",
     message: string,
     details?: AppEventDetails | null,
+    options?: { osNotify?: boolean },
   ): number {
     const eventId = this.servers.addEvent(
       job?.serverId ?? null,
@@ -415,6 +425,22 @@ export class UpdateService extends EventEmitter {
     );
     if (job !== undefined) {
       job.latestEventId = eventId;
+    }
+    const osNotify = options?.osNotify !== false;
+    if (osNotify && shouldNotifySteamCmdJobEvent(type, severity)) {
+      const server =
+        job?.serverId !== undefined ? this.servers.get(job.serverId) : null;
+      const payload: SteamCmdJobTerminalPayload = {
+        type,
+        severity,
+        serverId: job?.serverId ?? null,
+        serverName: server?.name ?? null,
+        jobId: job?.id ?? null,
+        eventId,
+        message,
+        operatorAwaited: job?.context.operatorAwaited === true,
+      };
+      this.emit("job-terminal", payload);
     }
     return eventId;
   }
@@ -1065,6 +1091,8 @@ export class UpdateService extends EventEmitter {
           "Rolling back…",
           "Restoring pre-update backups",
         );
+        // Persist the failure event for Logs; OS toast waits for rollback or the
+        // queue's definitive terminal update_failed (#331 — one banner per job).
         this.addJobEvent(
           job,
           "update_failed",
@@ -1084,6 +1112,7 @@ export class UpdateService extends EventEmitter {
               wasRunning,
             },
           },
+          { osNotify: false },
         );
 
         if (this.processes.isActive(serverId)) {
@@ -1215,13 +1244,6 @@ export class UpdateService extends EventEmitter {
         }
         this.checkpointJob(job, "files-applied");
 
-        this.addJobEvent(
-          job,
-          "update_completed",
-          "info",
-          `Integrity verified for "${server.name}"`,
-        );
-
         if (wasRunning) {
           this.checkpointJob(job, "restarting-server");
           await this.instances.startForMaintenance(serverId);
@@ -1232,6 +1254,16 @@ export class UpdateService extends EventEmitter {
             );
           }
         }
+
+        // After restart health — never toast success while the server is still down (#331).
+        this.addJobEvent(
+          job,
+          "update_completed",
+          "info",
+          wasRunning
+            ? `Integrity verified for "${server.name}" and the server was restarted`
+            : `Integrity verified for "${server.name}"`,
+        );
       } catch (error) {
         const paused =
           this.pauseRequested || isOperationPausedError(error);
@@ -1269,6 +1301,11 @@ export class UpdateService extends EventEmitter {
     serverId: string,
   ): Promise<void> {
     const jobId = await this.enqueueAndReturnJobId(type, serverId);
+    const job = this.queue.find((candidate) => candidate.id === jobId);
+    if (job !== undefined) {
+      job.context.operatorAwaited = true;
+      this.persistQueue();
+    }
 
     const completion = new Promise<void>((resolve, reject) => {
       this.waiters.set(jobId, { resolve, reject });
@@ -2681,6 +2718,9 @@ export class UpdateService extends EventEmitter {
     if (input.restartInterrupted === true) {
       context.restartInterrupted = true;
     }
+    if (input.operatorAwaited === true) {
+      context.operatorAwaited = true;
+    }
     return context;
   }
 
@@ -2757,6 +2797,10 @@ export class UpdateService extends EventEmitter {
         ...(preferred.context.restartInterrupted === true
           || secondary.context.restartInterrupted === true
           ? { restartInterrupted: true as const }
+          : {}),
+        ...(preferred.context.operatorAwaited === true
+          || secondary.context.operatorAwaited === true
+          ? { operatorAwaited: true as const }
           : {}),
       },
     };

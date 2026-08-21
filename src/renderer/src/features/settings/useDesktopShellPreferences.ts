@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import {
   DEFAULT_CLOSE_WINDOW_TO_TRAY,
+  DEFAULT_OS_NOTIFY_CRASH,
+  DEFAULT_OS_NOTIFY_ENABLED,
+  DEFAULT_OS_NOTIFY_STEAMCMD,
+  DEFAULT_OS_NOTIFY_YARK_UPDATE,
   DEFAULT_START_WITH_WINDOWS,
 } from "@shared/desktop-shell";
 
@@ -8,10 +12,18 @@ export interface DesktopShellPreferencesController {
   closeWindowToTray: boolean;
   startWithWindows: boolean;
   trayCloseHintDismissed: boolean;
+  osNotifyEnabled: boolean;
+  osNotifyCrash: boolean;
+  osNotifySteamCmd: boolean;
+  osNotifyYarkUpdate: boolean;
   desktopShellReady: boolean;
   onCloseWindowToTrayChange: (enabled: boolean) => void;
   onStartWithWindowsChange: (enabled: boolean) => void;
   onTrayCloseHintDismissedChange: (dismissed: boolean) => void;
+  onOsNotifyEnabledChange: (enabled: boolean) => void;
+  onOsNotifyCrashChange: (enabled: boolean) => void;
+  onOsNotifySteamCmdChange: (enabled: boolean) => void;
+  onOsNotifyYarkUpdateChange: (enabled: boolean) => void;
   shellError: string | null;
   clearShellError: () => void;
 }
@@ -24,6 +36,12 @@ export function useDesktopShellPreferences(): DesktopShellPreferencesController 
     DEFAULT_START_WITH_WINDOWS,
   );
   const [trayCloseHintDismissed, setTrayCloseHintDismissed] = useState(false);
+  const [osNotifyEnabled, setOsNotifyEnabled] = useState(DEFAULT_OS_NOTIFY_ENABLED);
+  const [osNotifyCrash, setOsNotifyCrash] = useState(DEFAULT_OS_NOTIFY_CRASH);
+  const [osNotifySteamCmd, setOsNotifySteamCmd] = useState(DEFAULT_OS_NOTIFY_STEAMCMD);
+  const [osNotifyYarkUpdate, setOsNotifyYarkUpdate] = useState(
+    DEFAULT_OS_NOTIFY_YARK_UPDATE,
+  );
   const [desktopShellReady, setDesktopShellReady] = useState(false);
   const [shellError, setShellError] = useState<string | null>(null);
 
@@ -45,6 +63,10 @@ export function useDesktopShellPreferences(): DesktopShellPreferencesController 
       setCloseWindowToTray(result.data.closeWindowToTray);
       setStartWithWindows(result.data.startWithWindows);
       setTrayCloseHintDismissed(result.data.trayCloseHintDismissed);
+      setOsNotifyEnabled(result.data.osNotifyEnabled);
+      setOsNotifyCrash(result.data.osNotifyCrash);
+      setOsNotifySteamCmd(result.data.osNotifySteamCmd);
+      setOsNotifyYarkUpdate(result.data.osNotifyYarkUpdate);
       setDesktopShellReady(true);
     })();
     return () => {
@@ -90,14 +112,70 @@ export function useDesktopShellPreferences(): DesktopShellPreferencesController 
     })();
   };
 
+  const onOsNotifyEnabledChange = (enabled: boolean): void => {
+    const previous = osNotifyEnabled;
+    setOsNotifyEnabled(enabled);
+    void (async () => {
+      const result = await window.api.setOsNotifyEnabled(enabled);
+      if (!result.ok) {
+        setOsNotifyEnabled(previous);
+        setShellError(result.error ?? "Could not update desktop alerts");
+      }
+    })();
+  };
+
+  const onOsNotifyCrashChange = (enabled: boolean): void => {
+    const previous = osNotifyCrash;
+    setOsNotifyCrash(enabled);
+    void (async () => {
+      const result = await window.api.setOsNotifyCrash(enabled);
+      if (!result.ok) {
+        setOsNotifyCrash(previous);
+        setShellError(result.error ?? "Could not update crash notifications");
+      }
+    })();
+  };
+
+  const onOsNotifySteamCmdChange = (enabled: boolean): void => {
+    const previous = osNotifySteamCmd;
+    setOsNotifySteamCmd(enabled);
+    void (async () => {
+      const result = await window.api.setOsNotifySteamCmd(enabled);
+      if (!result.ok) {
+        setOsNotifySteamCmd(previous);
+        setShellError(result.error ?? "Could not update SteamCMD notifications");
+      }
+    })();
+  };
+
+  const onOsNotifyYarkUpdateChange = (enabled: boolean): void => {
+    const previous = osNotifyYarkUpdate;
+    setOsNotifyYarkUpdate(enabled);
+    void (async () => {
+      const result = await window.api.setOsNotifyYarkUpdate(enabled);
+      if (!result.ok) {
+        setOsNotifyYarkUpdate(previous);
+        setShellError(result.error ?? "Could not update YARK update alerts");
+      }
+    })();
+  };
+
   return {
     closeWindowToTray,
     startWithWindows,
     trayCloseHintDismissed,
+    osNotifyEnabled,
+    osNotifyCrash,
+    osNotifySteamCmd,
+    osNotifyYarkUpdate,
     desktopShellReady,
     onCloseWindowToTrayChange,
     onStartWithWindowsChange,
     onTrayCloseHintDismissedChange,
+    onOsNotifyEnabledChange,
+    onOsNotifyCrashChange,
+    onOsNotifySteamCmdChange,
+    onOsNotifyYarkUpdateChange,
     shellError,
     clearShellError: () => setShellError(null),
   };

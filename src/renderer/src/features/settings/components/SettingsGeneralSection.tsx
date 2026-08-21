@@ -12,6 +12,14 @@ interface Props {
   onTrayCloseHintDismissedChange: (dismissed: boolean) => void;
   startWithWindows: boolean;
   onStartWithWindowsChange: (enabled: boolean) => void;
+  osNotifyEnabled: boolean;
+  onOsNotifyEnabledChange: (enabled: boolean) => void;
+  osNotifyCrash: boolean;
+  onOsNotifyCrashChange: (enabled: boolean) => void;
+  osNotifySteamCmd: boolean;
+  onOsNotifySteamCmdChange: (enabled: boolean) => void;
+  osNotifyYarkUpdate: boolean;
+  onOsNotifyYarkUpdateChange: (enabled: boolean) => void;
   desktopShellReady: boolean;
   onRunSetupAgain?: () => void;
 }
@@ -45,23 +53,99 @@ export function SettingsGeneralSection(props: Props): ReactElement {
         </div>
       </div>
 
+      <div className={classes.settingRow}>
+        <div className={classes.settingCopy}>
+          <Text size="sm" fw={600}>Desktop alerts</Text>
+          <Text size="xs" c="dimmed" mt={2}>
+            Windows notifications for the events below. Turn off to stay quiet.
+          </Text>
+        </div>
+        <div className={classes.settingControl}>
+          <Switch
+            checked={props.osNotifyEnabled}
+            disabled={!props.desktopShellReady}
+            onChange={(event) =>
+              props.onOsNotifyEnabledChange(event.currentTarget.checked)
+            }
+            aria-label="Desktop alerts"
+          />
+        </div>
+      </div>
+
+      <div className={`${classes.settingRow} ${classes.settingRowNested}`}>
+        <div className={classes.settingCopy}>
+          <Text size="sm" fw={600}>Server crash</Text>
+          <Text size="xs" c="dimmed" mt={2}>
+            When a dedicated server stops unexpectedly.
+          </Text>
+        </div>
+        <div className={classes.settingControl}>
+          <Switch
+            checked={props.osNotifyCrash}
+            disabled={!props.desktopShellReady || !props.osNotifyEnabled}
+            onChange={(event) =>
+              props.onOsNotifyCrashChange(event.currentTarget.checked)
+            }
+            aria-label="Alert on server crash"
+          />
+        </div>
+      </div>
+
+      <div className={`${classes.settingRow} ${classes.settingRowNested}`}>
+        <div className={classes.settingCopy}>
+          <Text size="sm" fw={600}>Installs and updates</Text>
+          <Text size="xs" c="dimmed" mt={2}>
+            When installing, updating, or checking server files finishes or
+            fails.
+          </Text>
+        </div>
+        <div className={classes.settingControl}>
+          <Switch
+            checked={props.osNotifySteamCmd}
+            disabled={!props.desktopShellReady || !props.osNotifyEnabled}
+            onChange={(event) =>
+              props.onOsNotifySteamCmdChange(event.currentTarget.checked)
+            }
+            aria-label="Alert on installs and updates"
+          />
+        </div>
+      </div>
+
+      <div className={`${classes.settingRow} ${classes.settingRowNested}`}>
+        <div className={classes.settingCopy}>
+          <Text size="sm" fw={600}>YARK updates</Text>
+          <Text size="xs" c="dimmed" mt={2}>
+            When a new YARK version is available or ready to install.
+          </Text>
+        </div>
+        <div className={classes.settingControl}>
+          <Switch
+            checked={props.osNotifyYarkUpdate}
+            disabled={!props.desktopShellReady || !props.osNotifyEnabled}
+            onChange={(event) =>
+              props.onOsNotifyYarkUpdateChange(event.currentTarget.checked)
+            }
+            aria-label="Alert on YARK updates"
+          />
+        </div>
+      </div>
+
       {props.closeWindowToTray ? (
-        <div className={classes.settingRow}>
+        <div className={`${classes.settingRow} ${classes.settingRowNested}`}>
           <div className={classes.settingCopy}>
-            <Text size="sm" fw={600}>Show notification when hiding to tray</Text>
+            <Text size="sm" fw={600}>Hide to tray</Text>
             <Text size="xs" c="dimmed" mt={2}>
-              Windows toast when the window is hidden. Turn off if you do not want
-              the reminder each time.
+              Reminder that YARK is still running after you close the window.
             </Text>
           </div>
           <div className={classes.settingControl}>
             <Switch
               checked={!props.trayCloseHintDismissed}
-              disabled={!props.desktopShellReady}
+              disabled={!props.desktopShellReady || !props.osNotifyEnabled}
               onChange={(event) =>
                 props.onTrayCloseHintDismissedChange(!event.currentTarget.checked)
               }
-              aria-label="Show notification when hiding to tray"
+              aria-label="Alert when hiding to tray"
             />
           </div>
         </div>
