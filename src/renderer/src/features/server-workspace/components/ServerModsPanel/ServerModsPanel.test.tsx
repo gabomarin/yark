@@ -91,6 +91,20 @@ function installApi(): RendererApi {
         },
       },
     }),
+    listModCategories: vi.fn().mockResolvedValue({
+      ok: true,
+      data: [
+        {
+          id: 900_001,
+          name: "Mods",
+          slug: "mods",
+          isClass: true,
+          classId: null,
+          parentCategoryId: null,
+          displayIndex: 0,
+        },
+      ],
+    }),
     getModByReference: vi.fn().mockResolvedValue({
       ok: true,
       data: superDetail,
@@ -612,7 +626,7 @@ describe("ServerModsPanel", () => {
     renderPanel();
 
     await user.click(screen.getByRole("radio", { name: "Discover mods" }));
-    expect(screen.getByRole("textbox", { name: "Search CurseForge" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Search" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Search mods" }));
     expect(await screen.findByText("Super Spyglass Plus")).toBeInTheDocument();
     expect(screen.queryByText("Awesome Spyglass!")).not.toBeInTheDocument();

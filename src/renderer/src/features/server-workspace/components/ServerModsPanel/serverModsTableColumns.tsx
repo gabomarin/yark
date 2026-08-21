@@ -10,6 +10,7 @@ import { ModIdentityCell } from "./ModIdentityCell";
 import { ServerModsActionsCell } from "./ServerModsActionsCell";
 import type { ModRow } from "./serverModsModel";
 import { isModsListBusy } from "./serverModsBusy";
+import classes from "./ServerModsPanel.module.css";
 
 export { MODS_REORDER_BUSY_KEY, isModsListBusy } from "./serverModsBusy";
 
@@ -58,9 +59,13 @@ export function buildServerModsTableColumns(input: {
       accessor: "enabled",
       title: "Enabled",
       width: 88,
+      cellsClassName: classes.enableCell,
       render: (row) =>
         row.id === null ? null : (
-          <div onClick={(event) => event.stopPropagation()}>
+          <div
+            className={classes.enableControl}
+            onClick={(event) => event.stopPropagation()}
+          >
             <Switch
               checked={row.enabled}
               disabled={isModRowBusy(input.busyKey, row)}
@@ -122,6 +127,7 @@ export function buildServerModsTableColumns(input: {
       title: "",
       width: 112,
       textAlign: "right",
+      cellsClassName: classes.actionsCell,
       render: (row): ReactElement => (
         <div onClick={(event) => event.stopPropagation()}>
           <ServerModsActionsCell

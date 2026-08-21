@@ -8,12 +8,16 @@ import {
   normalizeCurseforgeProxyUrl,
 } from "@shared/curseforge-proxy-url";
 import type {
+  ModCategory,
   ModMetadata,
+  ModSearchOptions,
   ModSearchPage,
+  ModsSearchSortField,
   ServerProfileInput,
 } from "@shared/types";
 import {
   MOCK_MOD_CATALOG,
+  MOCK_MOD_CATEGORIES,
   buildPlaceholderMetadata,
 } from "./mock-mod-catalog";
 
@@ -136,24 +140,11 @@ export class ModsService {
 
   async search(
     query: string,
-    options?: { index?: number; pageSize?: number },
+    options?: ModSearchOptions,
   ): Promise<ModSearchPage> {
     const searchFilter = query.trim();
     if (this.useMockCatalog) {
-      const items = Object.values(MOCK_MOD_CATALOG).filter((item) => {
-        if (searchFilter.length === 0) return true;
-        const haystack = `${item.name} ${item.summary} ${item.slug}`.toLowerCase();
-        return haystack.includes(searchFilter.toLowerCase());
-      });
-      return {
-        items,
-        pagination: {
-          index: 0,
-          pageSize: items.length,
-          resultCount: items.length,
-          totalCount: items.length,
-        },
-      };
+      return searchMockCatalog(searchFilter, options);
     }
 
     const params = new URLSearchParams();
@@ -161,6 +152,18 @@ export class ModsService {
     if (options?.index !== undefined) params.set("index", String(options.index));
     if (options?.pageSize !== undefined) {
       params.set("pageSize", String(options.pageSize));
+    }
+    if (options?.classId !== undefined) {
+      params.set("classId", String(options.classId));
+    }
+    if (options?.categoryId !== undefined) {
+      params.set("categoryId", String(options.categoryId));
+    }
+    if (options?.sortField !== undefined) {
+      params.set("sortField", String(options.sortField));
+    }
+    if (options?.sortOrder !== undefined) {
+      params.set("sortOrder", options.sortOrder);
     }
     const qs = params.toString();
     const data = await this.fetchJson<ModSearchPage>(
@@ -170,6 +173,20 @@ export class ModsService {
       items: data.items.map(normalizeMetadata),
       pagination: data.pagination,
     };
+  }
+
+  /**
+   * ASA CurseForge classes/categories via Worker `GET /v1/categories` (#297).
+   * IDs are CurseForge-owned — UI must not invent them.
+   */
+  async listCategories(): Promise<ModCategory[]> {
+    if (this.useMockCatalog) {
+      return [...MOCK_MOD_CATEGORIES];
+    }
+    const data = await this.fetchJson<{ categories: ModCategory[] }>(
+      "/v1/categories",
+    );
+    return data.categories.map(normalizeCategory);
   }
 
   /**
@@ -357,6 +374,71 @@ function normalizeMetadata(item: ModMetadata): ModMetadata {
     curseforgeUrl: item.curseforgeUrl,
     slug: item.slug,
     categories: item.categories ?? [],
+  };
+}
+
+function normalizeCategory(item: ModCategory): ModCategory {
+  return {
+    id: item.id,
+    name: item.name,
+    slug: item.slug,
+    isClass: item.isClass === true,
+    classId: item.classId ?? null,
+    parentCategoryId: item.parentCategoryId ?? null,
+    displayIndex: item.displayIndex ?? null,
+  };
+}
+
+function searchMockCatalog(
+  searchFilter: string,
+  options?: ModSearchOptions,
+): ModSearchPage {
+  const needle = searchFilter.toLowerCase();
+  let items = Object.values(MOCK_MOD_CATALOG).filter((item) => {
+    if (needle.length === 0) return true;
+    const haystack = `${item.name} ${item.summary} ${item.slug}`.toLowerCase();
+    return haystack.includes(needle);
+  });
+
+  if (options?.categoryId !== undefined) {
+    const category = MOCK_MOD_CATEGORIES.find(
+      (entry) => entry.id === options.categoryId && !entry.isClass,
+    );
+    if (category !== undefined) {
+      items = items.filter((item) =>
+        (item.categories ?? []).some(
+          (name) => name.toLowerCase() === category.name.toLowerCase(),
+        ),
+      );
+    }
+  }
+
+  const sortField: ModsSearchSortField = options?.sortField ?? 2;
+  const sortOrder = options?.sortOrder ?? (sortField === 4 ? "asc" : "desc");
+  const direction = sortOrder === "asc" ? 1 : -1;
+  items = [...items].sort((left, right) => {
+    let cmp = 0;
+    if (sortField === 4) {
+      cmp = left.name.localeCompare(right.name);
+    } else if (sortField === 3) {
+      cmp = left.dateModified.localeCompare(right.dateModified);
+    } else {
+      cmp = left.downloadCount - right.downloadCount;
+    }
+    return cmp * direction;
+  });
+
+  const pageSize = options?.pageSize ?? 20;
+  const index = options?.index ?? 0;
+  const page = items.slice(index, index + pageSize);
+  return {
+    items: page,
+    pagination: {
+      index,
+      pageSize,
+      resultCount: page.length,
+      totalCount: items.length,
+    },
   };
 }
 

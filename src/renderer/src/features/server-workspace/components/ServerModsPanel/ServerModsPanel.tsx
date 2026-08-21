@@ -9,7 +9,6 @@ import { ServerModsDiscoverSection } from "./ServerModsDiscoverSection";
 import { ServerModsHeader } from "./ServerModsHeader";
 import { ServerModsServerSection } from "./ServerModsServerSection";
 import {
-  buildDiscoveryRows,
   buildServerRows,
   mergeMissingMetadata,
   mergeMetadata,
@@ -45,10 +44,8 @@ export function ServerModsPanel(props: Props): ReactElement {
     () => metadataMap(props.server.modMetadataCache),
   );
   const [url, setUrl] = useState("");
-  const [query, setQuery] = useState("");
   const [catalog, setCatalog] = useState<ModSearchPage | null>(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
-  const [searching, setSearching] = useState(false);
   const [detail, setDetail] = useState<ModMetadata | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
@@ -117,10 +114,6 @@ export function ServerModsPanel(props: Props): ReactElement {
     () => buildServerRows(configuredIds, disabledSet, metadata),
     [configuredIds, disabledSet, metadata],
   );
-  const discoveryRows = useMemo(
-    () => buildDiscoveryRows(configuredIds, disabledSet, metadata, catalog),
-    [catalog, configuredIds, disabledSet, metadata],
-  );
 
   const persist = async (
     nextIds: string[],
@@ -162,22 +155,6 @@ export function ServerModsPanel(props: Props): ReactElement {
     persist,
     notifyMapModIfNeeded,
   });
-
-  const searchCatalog = async () => {
-    setSearching(true);
-    setError(null);
-    setWarning(null);
-    try {
-      const result = await window.api.searchMods(query);
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-      setCatalog(result.data);
-    } finally {
-      setSearching(false);
-    }
-  };
 
   const addFromInput = async () => {
     setBusyKey("url");
@@ -281,7 +258,7 @@ export function ServerModsPanel(props: Props): ReactElement {
     <AppSurfaceCard tone="flat" fill padding={0} radius="md" className={classes.root}>
       <ServerModsHeader activeCount={activeCount} disabledCount={disabledCount} />
       <div className={classes.content}>
-        <Stack gap="md">
+        <Stack gap="md" className={classes.contentStack}>
           <SegmentedControl
             value={view}
             onChange={(value) => setView(value as "server" | "discover")}
@@ -322,12 +299,12 @@ export function ServerModsPanel(props: Props): ReactElement {
             />
           ) : (
             <ServerModsDiscoverSection
-              query={query}
-              searching={searching}
+              configuredIds={configuredIds}
+              disabledIds={disabledIds}
+              metadata={metadata}
               busyKey={busyKey}
-              rows={discoveryRows}
-              onQueryChange={setQuery}
-              onSearch={() => void searchCatalog()}
+              onError={setError}
+              onCatalogChange={setCatalog}
               onInspect={(row) => void inspect(row)}
               onAdd={addDiscovered}
               onOpenExternal={(target) => void openExternal(target)}

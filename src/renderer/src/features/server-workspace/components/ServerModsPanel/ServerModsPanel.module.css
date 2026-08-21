@@ -1,5 +1,7 @@
 .root {
   /* Card padding is 0 — header/content own spacing, like Server Settings .embedded. */
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -18,8 +20,48 @@
 .content {
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
   padding: var(--app-space-md);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Stack fills the content pane; last child (server/discover section) grows. */
+.contentStack {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.contentStack > :last-child {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+.sectionLayout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-md);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sectionTop {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+}
+
+.sectionMain {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .search {
@@ -27,17 +69,88 @@
   min-width: 260px;
 }
 
+/* Discover SearchField — same atom chrome as elsewhere; fixed narrow width (#297). */
+.discoverSearch {
+  width: 240px;
+  flex: 0 0 240px;
+}
+
 .viewSelector {
   align-self: flex-start;
+  flex-shrink: 0;
 }
 
 .tableViewport {
-  overflow-x: auto;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
   border-radius: var(--app-radius-sm);
+  border: 1px solid var(--app-color-border-subtle);
+  background: color-mix(in srgb, var(--app-color-panel) 40%, transparent);
+  /* One clip radius — avoid DataTable’s own rounded border fighting this edge. */
+  isolation: isolate;
 }
 
+.viewSortBar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: var(--app-space-xs) var(--app-space-sm);
+  border-bottom: 1px solid var(--app-color-border-subtle);
+  background: color-mix(in srgb, var(--app-color-panel) 88%, var(--app-color-muted));
+}
+
+.paginationFooter {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: var(--app-space-sm);
+  border-top: 1px solid var(--app-color-border-subtle);
+}
+
+/*
+ * Native OS scrollbar on `.tableViewport` (#297). DataTable stays auto-height
+ * with ScrollArea chrome disabled (`type: never`) so we do not get dual bars.
+ */
 .modsTable {
+  width: 100%;
+  min-width: 0;
+}
+
+.modsTable :global(.mantine-datatable),
+.modsTable :global(.mantine-ScrollArea-root),
+.modsTable :global(.mantine-ScrollArea-viewport) {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent;
+  box-shadow: none !important;
+}
+
+.modsTable :global(table) {
   min-width: 820px;
+}
+
+.modsTable :global(thead) {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.modsTable :global(thead),
+.modsTable :global(thead th),
+.modsTable :global(.mantine-datatable-header),
+.modsTable :global(.mantine-Table-th) {
+  border-radius: 0 !important;
+  /* Solid header — YarkDataTable default uses a translucent mix that shows through. */
+  background: var(--app-color-surface-control) !important;
+  opacity: 1;
 }
 
 .dragHandle {
@@ -73,16 +186,45 @@
 }
 
 .disabledRow {
-  color: var(--app-color-muted);
-  background-color: color-mix(in srgb, var(--app-color-muted) 10%, transparent);
+  background-color: color-mix(in srgb, var(--app-color-muted) 6%, transparent);
+}
+
+/*
+ * Disabled inventory (#226): same text palette as enabled rows (so hover is
+ * only a background lift, not a color jump). Light opacity + thumb desaturate
+ * mark “not live”; Enabled switch + actions stay full strength.
+ */
+.disabledRow :global(td) {
+  opacity: 0.88;
+  color: var(--app-color-text);
+}
+
+.disabledRow :global(td).enableCell,
+.disabledRow :global(td).actionsCell {
+  opacity: 1;
+  color: inherit;
+}
+
+.disabledRow :global(img) {
+  filter: grayscale(0.2);
 }
 
 .disabledRow:hover {
   background-color: color-mix(
     in srgb,
-    var(--app-color-accent) 16%,
+    var(--app-color-accent) 14%,
     var(--app-color-panel)
   );
+}
+
+.disabledRow:hover :global(td).enableCell,
+.disabledRow:hover :global(td).actionsCell {
+  opacity: 1;
+}
+
+.enableControl {
+  display: inline-flex;
+  align-items: center;
 }
 
 .identityGroup {
@@ -281,11 +423,12 @@
 }
 
 @media (max-width: 900px) {
+  /* Keep table-internal scroll; do not re-enable card scrollbars. */
   .root {
-    overflow: visible;
+    overflow: hidden;
   }
 
   .content {
-    overflow: visible;
+    overflow: hidden;
   }
 }

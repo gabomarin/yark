@@ -59,6 +59,8 @@ export const UPSTREAM_TIMEOUT_MS = 10_000;
 const CACHE_TTL_READ_SECONDS = 600;
 /** Edge cache TTL for GET /v1/mods/search. */
 const CACHE_TTL_SEARCH_SECONDS = 60;
+/** Edge cache TTL for GET /v1/categories (classes/categories change rarely). */
+const CACHE_TTL_CATEGORIES_SECONDS = 21_600;
 /** Synthetic origin for Cache API keys (stable across workers.dev hostnames). */
 const CACHE_KEY_ORIGIN = "https://yark-curseforge-proxy.cache";
 /** Query params forwarded upstream and used for search cache keys (single-valued). */
@@ -160,6 +162,24 @@ export default {
         if (limited !== null) return respond(limited);
         return respond(
           await handleSearch(url, apiKey, asaGameId, corsHeaders, metrics),
+        );
+      }
+
+      if (url.pathname === "/v1/categories") {
+        metrics.routeClass = "read";
+        if (request.method !== "GET") {
+          return respond(methodNotAllowed(corsHeaders, "GET"));
+        }
+        const limited = await enforceRateLimit(
+          env.RATE_LIMIT_READ,
+          request,
+          "read",
+          corsHeaders,
+          metrics,
+        );
+        if (limited !== null) return respond(limited);
+        return respond(
+          await handleCategories(url, apiKey, asaGameId, corsHeaders, metrics),
         );
       }
 
@@ -496,6 +516,63 @@ async function handleSearch(
     pagination,
   });
   await putCachedResponse(cacheKeyUrl, response, CACHE_TTL_SEARCH_SECONDS);
+  return withCacheHeader(response, "MISS", corsHeaders);
+}
+
+/**
+ * Proxies CurseForge `GET /v1/categories` for ASA (`gameId` pinned).
+ * Optional `classId` / `classesOnly` query params are forwarded when present.
+ * Category/class IDs are CurseForge-owned — callers must not invent them (#297).
+ */
+async function handleCategories(
+  clientUrl: URL,
+  apiKey: string,
+  asaGameId: number,
+  corsHeaders: CorsHeaders,
+  metrics: RequestMetrics,
+): Promise<Response> {
+  const cacheKeyUrl = buildCategoriesCacheKey(clientUrl, asaGameId);
+  const cached = await matchCachedResponse(cacheKeyUrl);
+  if (cached !== null) {
+    metrics.cache = "HIT";
+    return withCacheHeader(cached, "HIT", corsHeaders);
+  }
+
+  metrics.cache = "MISS";
+  const upstreamUrl = new URL(`${UPSTREAM}/v1/categories`);
+  upstreamUrl.searchParams.set("gameId", String(asaGameId));
+
+  const classId = clientUrl.searchParams.get("classId");
+  if (classId !== null && classId.length > 0) {
+    upstreamUrl.searchParams.set("classId", classId);
+  }
+  const classesOnly = clientUrl.searchParams.get("classesOnly");
+  if (classesOnly === "true" || classesOnly === "1") {
+    upstreamUrl.searchParams.set("classesOnly", "true");
+  }
+
+  const upstream = await fetchUpstream(
+    upstreamUrl.toString(),
+    {
+      method: "GET",
+      headers: upstreamHeaders(apiKey),
+    },
+    metrics,
+  );
+  if (!upstream.ok) {
+    return mapUpstreamError(corsHeaders, upstream.status, upstream.bodyText);
+  }
+
+  // Upstream already scoped by gameId; keep a soft guard for stray rows but
+  // accept missing/0 gameId (some category payloads omit it).
+  const categories = extractCategories(upstream.json)
+    .filter(
+      (entry) =>
+        entry.gameId === asaGameId || entry.gameId === 0,
+    )
+    .map(({ gameId: _gameId, ...category }) => category);
+  const response = okJson(corsHeaders, { categories });
+  await putCachedResponse(cacheKeyUrl, response, CACHE_TTL_CATEGORIES_SECONDS);
   return withCacheHeader(response, "MISS", corsHeaders);
 }
 
@@ -876,6 +953,73 @@ function buildSearchCacheKey(clientUrl: URL): string {
   return query.length > 0
     ? `${CACHE_KEY_ORIGIN}/v1/mods/search?${query}`
     : `${CACHE_KEY_ORIGIN}/v1/mods/search`;
+}
+
+function buildCategoriesCacheKey(clientUrl: URL, asaGameId: number): string {
+  const params = new URLSearchParams();
+  params.set("gameId", String(asaGameId));
+  const classId = clientUrl.searchParams.get("classId");
+  if (classId !== null && classId.length > 0) {
+    params.set("classId", classId);
+  }
+  const classesOnly = clientUrl.searchParams.get("classesOnly");
+  if (classesOnly === "true" || classesOnly === "1") {
+    params.set("classesOnly", "true");
+  }
+  return `${CACHE_KEY_ORIGIN}/v1/categories?${params.toString()}`;
+}
+
+interface YarkModCategory {
+  id: number;
+  name: string;
+  slug: string;
+  isClass: boolean;
+  classId: number | null;
+  parentCategoryId: number | null;
+  displayIndex: number | null;
+  gameId: number;
+}
+
+function extractCategories(json: unknown): YarkModCategory[] {
+  const root = asRecord(json);
+  const data = root?.["data"];
+  if (!Array.isArray(data)) return [];
+  const out: YarkModCategory[] = [];
+  for (const entry of data) {
+    const row = asRecord(entry);
+    if (row === null) continue;
+    const id = row["id"];
+    const name = row["name"];
+    const slug = row["slug"];
+    if (typeof id !== "number" || !Number.isInteger(id) || id <= 0) continue;
+    if (typeof name !== "string" || name.length === 0) continue;
+    if (typeof slug !== "string" || slug.length === 0) continue;
+    const gameIdRaw = row["gameId"];
+    const gameId =
+      typeof gameIdRaw === "number" && Number.isInteger(gameIdRaw) ? gameIdRaw : 0;
+    out.push({
+      id,
+      name,
+      slug,
+      isClass: row["isClass"] === true,
+      classId: nullablePositiveInt(row["classId"]),
+      parentCategoryId: nullablePositiveInt(row["parentCategoryId"]),
+      displayIndex:
+        typeof row["displayIndex"] === "number" &&
+        Number.isInteger(row["displayIndex"])
+          ? row["displayIndex"]
+          : null,
+      gameId,
+    });
+  }
+  return out;
+}
+
+function nullablePositiveInt(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) {
+    return null;
+  }
+  return value;
 }
 
 async function matchCachedResponse(cacheKeyUrl: string): Promise<Response | null> {

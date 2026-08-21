@@ -281,6 +281,7 @@ export function createRendererApiMock(
     getModMetadata: vi.fn(),
     getModsMetadata: vi.fn(),
     searchMods: vi.fn(),
+    listModCategories: vi.fn().mockResolvedValue({ ok: true, data: [] }),
     getModByReference: vi.fn(),
     openCurseForgeMod: vi.fn(),
     onServerStatus: vi.fn(() => () => undefined),

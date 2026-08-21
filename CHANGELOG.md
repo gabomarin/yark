@@ -12,9 +12,11 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Added
 
 - Optional Windows toasts when a server crashes, a SteamCMD install/update/verify finishes or fails, or a YARK update is available/ready — even if YARK is in the tray; Settings → General **Desktop alerts** covers crash, installs/updates, YARK updates, and hide-to-tray. Success banners stay quiet; failures and crashes use the system sound (#331).
+- **Discover mods** browses CurseForge on open with category filter and pagination (in-field search icon / Enter to submit); catalog sort is table column headers (Name / Downloads / Updated) across the full result set, with Clear sort back to Popularity; table scrolls inside the panel with a fixed pagination footer; category list fails soft if the proxy Worker is not yet updated (#297).
 
 ### Changed
 
+- Disabled **Server mods** rows are dimmed (thumb + text) while the Enabled switch stays full strength so off-list mods read as not live (#226).
 - Destructive inline buttons (**Stop**, Force close, Delete, Remove, Ban, cancel jobs, clear/delete logs and backups, **Clusters** remove) use red **filled** (`--app-color-bad`); workspace lifecycle **Restart** uses deep amber **filled** (`--app-color-fossil-filled`, white icon via autoContrast) (#344).
 
 ### Fixed

@@ -292,4 +292,54 @@ describe("CurseForge proxy abuse controls (#70)", () => {
     expect(second.headers.get("X-Yark-Cache")).toBe("HIT");
     expect(upstream).toHaveBeenCalledTimes(1);
   });
+
+  it("proxies ASA categories and strips unknown query noise (#297)", async () => {
+    const upstream = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: [
+            {
+              id: 12_345,
+              gameId: 83_374,
+              name: "Mods",
+              slug: "mods",
+              isClass: true,
+              classId: null,
+              parentCategoryId: null,
+              displayIndex: 0,
+            },
+            {
+              id: 99,
+              gameId: 432,
+              name: "Other game",
+              slug: "other",
+              isClass: true,
+            },
+          ],
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+
+    const response = await worker.fetch(
+      new Request("https://proxy.test/v1/categories?classesOnly=true&noise=1"),
+      baseEnv,
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      ok: boolean;
+      data: { categories: Array<{ id: number; name: string }> };
+    };
+    expect(body.ok).toBe(true);
+    expect(body.data.categories).toEqual([
+      expect.objectContaining({ id: 12_345, name: "Mods" }),
+    ]);
+    const upstreamUrl = String(upstream.mock.calls[0]?.[0]);
+    expect(upstreamUrl).toContain("gameId=83374");
+    expect(upstreamUrl).toContain("classesOnly=true");
+    expect(upstreamUrl).not.toContain("noise=");
+  });
 });

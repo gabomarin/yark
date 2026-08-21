@@ -1,12 +1,9 @@
 import type { MouseEvent as ReactMouseEvent, ReactElement } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Badge,
   Button,
   Center,
-  Group,
   TableTd,
-  Text,
   Tooltip,
 } from "@mantine/core";
 import {
@@ -15,7 +12,10 @@ import {
   Droppable,
   type DropResult,
 } from "@hello-pangea/dnd";
-import { DotsSixVertical } from "@phosphor-icons/react";
+import {
+  ArrowCounterClockwise,
+  DotsSixVertical,
+} from "@phosphor-icons/react";
 import type { DataTableSortStatus } from "mantine-datatable";
 import { DataTableDraggableRow } from "mantine-datatable";
 import { useRowActionMenuApi } from "@ui/RowActionMenu/RowActionMenuProvider";
@@ -36,8 +36,8 @@ import classes from "./ServerModsPanel.module.css";
 
 const CONTEXT_SOURCE_ID = "server-mods-table";
 
-/** Sentinel: not a sortable column — means canonical load-order view. */
-const LOAD_ORDER_SORT: DataTableSortStatus<ModRow> = {
+/** Sentinel: not a sortable column — means canonical load-order / default catalog view. */
+export const LOAD_ORDER_SORT: DataTableSortStatus<ModRow> = {
   columnAccessor: "loadIndex",
   direction: "asc",
 };
@@ -53,6 +53,14 @@ interface Props {
   onOpenExternal: (url: string) => void;
   /** Persist load-order change (server mode only). */
   onReorder?: (orderedIds: string[]) => void;
+  /**
+   * Discover: controlled CurseForge catalog sort. Clear sort resets to Popularity.
+   * Server: omit for internal view-sort vs load-order.
+   */
+  sortStatus?: DataTableSortStatus<ModRow>;
+  onSortStatusChange?: (status: DataTableSortStatus<ModRow>) => void;
+  /** Discover: rows are already ordered by CurseForge — do not re-sort the page. */
+  remoteSorted?: boolean;
 }
 
 function toSortStatus(
@@ -73,23 +81,32 @@ function toSortStatus(
 }
 
 /**
- * Mods inventory as YarkDataTable (#94): thumbs, actions, column view-sort,
- * and load-order drag only while unsorted (Mod Organizer dual-order model).
+ * Mods inventory as YarkDataTable (#94): thumbs, actions, column sort.
+ * Server: view-sort vs load-order drag. Discover: column sort drives CurseForge
+ * catalog order (remoteSorted); Clear sort restores Popularity.
  */
 export function ServerModsTable(props: Props): ReactElement {
   const { openAt } = useRowActionMenuApi();
-  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<ModRow>>(
-    LOAD_ORDER_SORT,
-  );
+  const [internalSortStatus, setInternalSortStatus] = useState<
+    DataTableSortStatus<ModRow>
+  >(LOAD_ORDER_SORT);
+  const controlled = props.onSortStatusChange !== undefined;
+  const sortStatus = controlled
+    ? (props.sortStatus ?? LOAD_ORDER_SORT)
+    : internalSortStatus;
+  const setSortStatus = controlled
+    ? props.onSortStatusChange!
+    : setInternalSortStatus;
+
   const viewSorted = String(sortStatus.columnAccessor) !== "loadIndex";
   const useDnD = props.mode === "server" && props.onReorder !== undefined;
   // Block drag while any row mutation (or reorder persist) is in flight.
   const dragEnabled = useDnD && !viewSorted && props.busyKey === null;
 
-  const records = useMemo(
-    () => sortModRows(props.rows, toSortStatus(sortStatus)),
-    [props.rows, sortStatus],
-  );
+  const records = useMemo(() => {
+    if (props.remoteSorted) return props.rows;
+    return sortModRows(props.rows, toSortStatus(sortStatus));
+  }, [props.remoteSorted, props.rows, sortStatus]);
 
   // Stable handler identities so column defs (and cell Menus) are not rebuilt on
   // every parent render from App status pushes.
@@ -201,7 +218,12 @@ export function ServerModsTable(props: Props): ReactElement {
       idAccessor="key"
       records={records}
       columns={columns}
+      /* Auto-height: viewport scrolls natively; hide DataTable ScrollArea chrome. */
+      height="auto"
       minHeight={160}
+      withTableBorder={false}
+      borderRadius={0}
+      scrollAreaProps={{ type: "never" }}
       sortStatus={sortStatus}
       onSortStatusChange={setSortStatus}
       customRowAttributes={customRowAttributes}
@@ -286,21 +308,16 @@ export function ServerModsTable(props: Props): ReactElement {
   return (
     <div className={classes.tableViewport}>
       {viewSorted ? (
-        <Group gap="xs" mb="xs" wrap="wrap">
-          <Badge variant="light" color="gray">
-            View sorted
-          </Badge>
+        <div className={classes.viewSortBar}>
           <Button
             size="compact-xs"
-            variant="subtle"
+            variant="default"
+            leftSection={<ArrowCounterClockwise size={14} />}
             onClick={() => setSortStatus(LOAD_ORDER_SORT)}
           >
             Clear sort
           </Button>
-          <Text size="xs" c="dimmed">
-            Load order is unchanged until you clear sort and drag.
-          </Text>
-        </Group>
+        </div>
       ) : null}
       {useDnD ? (
         <DragDropContext onDragEnd={handleDragEnd}>{table}</DragDropContext>

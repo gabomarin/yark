@@ -157,6 +157,7 @@ export const VALIDATED_IPC_CHANNELS = [
   IPC.modsGet,
   IPC.modsGetMany,
   IPC.modsSearch,
+  IPC.modsListCategories,
   IPC.modsGetByReference,
   IPC.modsOpenCurseForge,
   IPC.backupsList,
@@ -376,6 +377,7 @@ export const ipcArgSchemas = {
     z.string().max(MAX_MOD_QUERY_LENGTH),
     modsSearchOptionsSchema.nullish(),
   ),
+  [IPC.modsListCategories]: z.tuple([]),
   [IPC.modsGetByReference]: z.tuple([
     nonEmptyStringSchema("Mod reference", MAX_STRING_PARAM_LENGTH),
   ]),
