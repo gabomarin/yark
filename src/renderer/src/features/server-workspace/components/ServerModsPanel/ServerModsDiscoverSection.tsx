@@ -26,6 +26,7 @@ import {
   DISCOVER_PAGE_SIZE,
   discoverColumnSort,
   discoverSortFromColumn,
+  isDiscoverDefaultSort,
 } from "./modsDiscoverConstants";
 import {
   buildDiscoveryRows,
@@ -61,8 +62,13 @@ export function ServerModsDiscoverSection(props: Props): ReactElement {
   );
   const [page, setPage] = useState(1);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  /** Bumps on every Search submit so the same query can be retried after errors. */
+  const [searchRequestId, setSearchRequestId] = useState(0);
 
   const tableSortStatus = useMemo((): DataTableSortStatus<ModRow> => {
+    // Popularity (default) has no Mod/Downloads/Updated column — use the
+    // load-order sentinel so Clear sort stays hidden until a column is active.
+    if (isDiscoverDefaultSort(sortField, sortOrder)) return LOAD_ORDER_SORT;
     const mapped = discoverColumnSort(sortField, sortOrder);
     if (mapped === null) return LOAD_ORDER_SORT;
     return {
@@ -155,7 +161,7 @@ export function ServerModsDiscoverSection(props: Props): ReactElement {
       alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional search triggers
-  }, [committedQuery, categoryValue, sortField, sortOrder, page]);
+  }, [committedQuery, categoryValue, sortField, sortOrder, page, searchRequestId]);
 
   const totalCount = catalog?.pagination.totalCount ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / DISCOVER_PAGE_SIZE));
@@ -173,6 +179,7 @@ export function ServerModsDiscoverSection(props: Props): ReactElement {
           onSearch={() => {
             setPage(1);
             setCommittedQuery(query.trim());
+            setSearchRequestId((current) => current + 1);
           }}
           onCategoryChange={(value) => {
             setCategoryValue(value);

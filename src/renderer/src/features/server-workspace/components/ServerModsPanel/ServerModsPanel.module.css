@@ -80,6 +80,14 @@
   flex-shrink: 0;
 }
 
+.tableStack {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .tableViewport {
   flex: 1;
   min-height: 0;
@@ -91,15 +99,16 @@
   isolation: isolate;
 }
 
+/* Outside the scroll viewport so sticky thead cannot cover Clear sort (#297). */
 .viewSortBar {
-  position: sticky;
-  top: 0;
-  z-index: 2;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   padding: var(--app-space-xs) var(--app-space-sm);
-  border-bottom: 1px solid var(--app-color-border-subtle);
+  margin-bottom: var(--app-space-xxs);
+  border-radius: var(--app-radius-sm);
+  border: 1px solid var(--app-color-border-subtle);
   background: color-mix(in srgb, var(--app-color-panel) 88%, var(--app-color-muted));
 }
 

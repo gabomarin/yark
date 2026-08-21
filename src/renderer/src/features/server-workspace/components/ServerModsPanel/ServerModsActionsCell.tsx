@@ -80,7 +80,7 @@ export function ServerModsActionsCell(props: Props): ReactElement {
         <Tooltip label={`Remove ${row.name}`} withArrow>
           <ActionIcon
             color="red"
-            variant="subtle"
+            variant="filled"
             size="sm"
             aria-label={`Remove ${row.name}`}
             disabled={props.busy}

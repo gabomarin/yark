@@ -306,7 +306,7 @@ export function ServerModsTable(props: Props): ReactElement {
   );
 
   return (
-    <div className={classes.tableViewport}>
+    <div className={classes.tableStack}>
       {viewSorted ? (
         <div className={classes.viewSortBar}>
           <Button
@@ -319,11 +319,13 @@ export function ServerModsTable(props: Props): ReactElement {
           </Button>
         </div>
       ) : null}
-      {useDnD ? (
-        <DragDropContext onDragEnd={handleDragEnd}>{table}</DragDropContext>
-      ) : (
-        table
-      )}
+      <div className={classes.tableViewport}>
+        {useDnD ? (
+          <DragDropContext onDragEnd={handleDragEnd}>{table}</DragDropContext>
+        ) : (
+          table
+        )}
+      </div>
     </div>
   );
 }

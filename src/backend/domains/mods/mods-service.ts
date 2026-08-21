@@ -412,6 +412,9 @@ function searchMockCatalog(
       );
     }
   }
+  // classId is accepted on ModSearchOptions for Worker parity; the mock only
+  // filters by leaf categoryId (name match). Callers that pass classId alone
+  // get the unfiltered catalog — enough for current Discover UI (#297).
 
   const sortField: ModsSearchSortField = options?.sortField ?? 2;
   const sortOrder = options?.sortOrder ?? (sortField === 4 ? "asc" : "desc");
