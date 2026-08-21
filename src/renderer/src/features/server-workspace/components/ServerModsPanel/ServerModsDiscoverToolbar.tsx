@@ -49,7 +49,6 @@ export function ServerModsDiscoverToolbar(props: Props): ReactElement {
         allowDeselect={false}
         searchable={props.categoryOptions.length > 8}
         nothingFoundMessage="No categories"
-        scrollAreaProps={{ type: "auto", offsetScrollbars: false }}
         onChange={(value) => {
           if (value !== null) props.onCategoryChange(value);
         }}

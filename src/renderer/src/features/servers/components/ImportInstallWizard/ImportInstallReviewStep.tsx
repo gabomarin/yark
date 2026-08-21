@@ -142,7 +142,7 @@ export function ImportInstallReviewStep(props: Props): ReactElement {
           </Text>
         )}
         <Collapse expanded={props.modsOpen && modIds.length > 0}>
-          <ScrollArea.Autosize mah={220} mt="xs" type="scroll" offsetScrollbars>
+          <ScrollArea.Autosize mah={220} mt="xs" type="auto" offsetScrollbars>
             <Stack gap={4}>
               {modIds.map((id) => {
                 const name = props.modMetadata[id]?.name?.trim();

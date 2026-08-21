@@ -181,16 +181,22 @@ function createAppTheme(
           NumberInput: { defaultProps: { size: "xs" } },
           PasswordInput: { defaultProps: { size: "xs" } },
           Textarea: { defaultProps: { size: "xs" } },
-          Select: { defaultProps: { size: "xs" } },
           NativeSelect: { defaultProps: { size: "xs" } },
-          Autocomplete: { defaultProps: { size: "xs" } },
-          MultiSelect: { defaultProps: { size: "xs" } },
-          TagsInput: { defaultProps: { size: "xs" } },
           SegmentedControl: { defaultProps: { size: "xs" } },
           Button: { defaultProps: { size: "xs" } },
           ActionIcon: { defaultProps: { size: "xs" } },
         } as const)
       : {};
+
+  /** Hide ScrollArea chrome until content overflows (#395). */
+  const dropdownScrollAreaProps = {
+    type: "auto" as const,
+    offsetScrollbars: false as const,
+  };
+  const comboboxScrollDefaults = {
+    ...(density === "compact" ? { size: "xs" as const } : {}),
+    scrollAreaProps: dropdownScrollAreaProps,
+  };
 
   return createTheme({
     primaryColor: "blue",
@@ -362,6 +368,28 @@ function createAppTheme(
         defaultProps: {
           radius: "md",
         },
+      },
+      ScrollArea: {
+        defaultProps: {
+          type: "auto",
+        },
+      },
+      ScrollAreaAutosize: {
+        defaultProps: {
+          type: "auto",
+        },
+      },
+      Select: {
+        defaultProps: comboboxScrollDefaults,
+      },
+      MultiSelect: {
+        defaultProps: comboboxScrollDefaults,
+      },
+      Autocomplete: {
+        defaultProps: comboboxScrollDefaults,
+      },
+      TagsInput: {
+        defaultProps: comboboxScrollDefaults,
       },
       ...compactControlDefaults,
     },
