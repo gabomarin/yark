@@ -217,6 +217,15 @@ accordions, or short semantic lists. Honor compact/comfortable via `useUiDensity
 [datatable.md](datatable.md) for adopt/keep decisions (#94). **Mods** uses dual order: column
 sort is a temporary view; drag-to-reorder load order is enabled only while unsorted.
 
+### 6b. Scroll chrome (#395)
+
+Prefer **`type="auto"`** on Mantine `ScrollArea` / `ScrollArea.Autosize` and Combobox dropdowns
+(`Select` / `MultiSelect` / `Autocomplete` / `TagsInput` via theme `scrollAreaProps`) so
+scrollbar chrome appears **only when content overflows**. Theme defaults cover this; override
+with `type="never"` only when a parent owns native scroll (e.g. Mods tables). Avoid
+`type="scroll"` / `type="always"` for short lists. Native OS scroll surfaces hide WebKit
+end-cap arrows in `globals.css`.
+
 ### 7. Empty states
 
 - Always `EmptyState` (`layout="inline"` | `"stacked"`).

@@ -22,6 +22,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- ScrollArea / Select dropdown chrome uses **`type="auto"`** by default (and native WebKit scrollbar arrows are hidden) so short lists no longer show scroll arrows when nothing overflows (#395).
 - SQLite boot/snapshot unit tests no longer flake on CI when `PRAGMA quick_check` or VACUUM snapshots exceed Vitest’s default 5s timeout under parallel load.
 - **Start** and **Restart** show immediate Starting… / Restarting… feedback on Overview cards and the workspace header while pre-spawn work runs, so the UI no longer sits idle for ~2s (#390).
 
