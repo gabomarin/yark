@@ -194,14 +194,15 @@ Manual **Check Servers Health** ends with a toast (attention count or “all hea
 
 ### 5d. Destructive actions (inline controls)
 
-Primary destructive **Button** and dense table **ActionIcon** controls use **`color="red" variant="filled"`** — **Stop**, **Force close**, Remove, Delete, Ban, cancel in-flight jobs, and clear/delete log or backup rows. **Restart** uses **`color="fossil" variant="filled"`** in the workspace lifecycle row and Overview card (warm amber, same weight as Stop). Theme **`autoContrast: true`** uses dark label/icon on light filled colors (fossil, attention). Kebab **Stop safely** / **Force close** / **Delete** use `Menu.Item color="red"`; **Restart** uses `color="fossil"`.
+Primary destructive **Button**s use **`color="red" variant="filled"`** — **Stop**, **Force close**, labeled Remove/Delete, Ban, cancel in-flight jobs. Dense table **ActionIcon** remove/delete prefers **`variant="subtle"`** so a column of red fills does not dominate the row (Mods inventory, etc.). Clear/delete on log or backup **rows** may still use filled where the control is the primary row action. **Restart** uses **`color="fossil" variant="filled"`** in the workspace lifecycle row and Overview card (warm amber, same weight as Stop). Theme **`autoContrast: true`** uses dark label/icon on light filled colors (fossil, attention). Kebab **Stop safely** / **Force close** / **Delete** use `Menu.Item color="red"`; **Restart** uses `color="fossil"`.
 
 | Surface | Recipe |
 | --- | --- |
 | Lifecycle **Restart** | `color="fossil" variant="filled"` |
 | Inline destructive **Button** (Stop, Force close, delete/remove) | `color="red" variant="filled"` |
 | Kebab danger **Menu.Item** | `color="red"` (inherits `--app-color-danger-bright`) |
-| Row **ActionIcon** (delete/remove) | `color="red" variant="filled"` |
+| Row **ActionIcon** (delete/remove) | Prefer `color="red" variant="subtle"` in dense tables (filled reads as noise); use **`filled`** for primary destructive **Button**s (Stop, Delete modal confirms, drawer Remove) |
+
 | Confirm modals | `confirmProps: { color: "red" }` (Mantine default `filled`) |
 
 **Exceptions (not red filled):** red **Alert** / **Badge** (error state, not actions); **menu** row actions (`serverCardMenuActions`, backup/mods context menus — separate pass); **Pause** download uses yellow `light`; **Remove from YARK** (profile-only delete) keeps default primary styling; discard/unsaved-leave flows use **fossil** or default buttons.
