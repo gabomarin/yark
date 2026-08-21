@@ -103,7 +103,7 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
                 <ActionIcon
                   size="sm"
                   color="red"
-                  variant="filled"
+                  variant="subtle"
                   aria-label="Cancel operation"
                   onClick={props.onCancel}
                 >

@@ -111,42 +111,22 @@ describe("ServerListPanel", () => {
     ).toBeInTheDocument();
   });
 
-  it("sizes rail Add server by UI density (#233)", () => {
-    const { rerender } = render(
-      <AppProviders density="compact">
+  it("omits Add server and Import from the server list (#397)", () => {
+    render(
+      <AppProviders>
         <ServerListPanel
           servers={[profile()]}
           selectedServerId="srv-1"
           statuses={new Map()}
-          iconMode
           onSelectServer={() => undefined}
-          onAddServer={() => undefined}
         />
       </AppProviders>,
     );
 
-    expect(screen.getByRole("button", { name: "Add server" })).toHaveAttribute(
-      "data-size",
-      "md",
-    );
-
-    rerender(
-      <AppProviders density="comfortable">
-        <ServerListPanel
-          servers={[profile()]}
-          selectedServerId="srv-1"
-          statuses={new Map()}
-          iconMode
-          onSelectServer={() => undefined}
-          onAddServer={() => undefined}
-        />
-      </AppProviders>,
-    );
-
-    expect(screen.getByRole("button", { name: "Add server" })).toHaveAttribute(
-      "data-size",
-      "lg",
-    );
+    expect(screen.queryByRole("button", { name: "Add server" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "More add-server options" }),
+    ).not.toBeInTheDocument();
   });
 
   it("hides labels and exposes rail tooltips in icon mode (#107)", () => {
@@ -158,7 +138,6 @@ describe("ServerListPanel", () => {
           statuses={new Map()}
           iconMode
           onSelectServer={() => undefined}
-          onAddServer={() => undefined}
         />
       </AppProviders>,
     );
@@ -169,7 +148,6 @@ describe("ServerListPanel", () => {
     expect(
       screen.getByRole("button", { name: /The Island · TheIsland_WP · Stopped/i }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Add server" })).toBeInTheDocument();
   });
 
   it("calls onToggleRail from the header control (#107)", async () => {

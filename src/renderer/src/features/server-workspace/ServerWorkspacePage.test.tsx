@@ -62,7 +62,6 @@ function renderWorkspace(
   rconHistory: RconHistoryEntry[] = [],
   extra: {
     onBack?: () => void;
-    onCreateServer?: () => void;
     onRegisterLeaveGuard?: (guard: ((action: () => void) => void) | null) => void;
     onServerUpdated?: () => void;
   } = {},
@@ -79,7 +78,6 @@ function renderWorkspace(
         playerList={EMPTY_PLAYER_LIST}
         onSelectServer={onSelectServer}
         onBack={extra.onBack ?? vi.fn()}
-        onCreateServer={extra.onCreateServer}
         onRegisterLeaveGuard={extra.onRegisterLeaveGuard}
         onStartServer={vi.fn()}
         onStopServer={vi.fn()}
@@ -1218,12 +1216,11 @@ describe("ServerWorkspacePage", () => {
     expect(screen.queryByText(/unsaved server changes/i)).not.toBeInTheDocument();
   });
 
-  it("confirms before switching server or opening Create with a dirty profile (#299)", async () => {
+  it("confirms before switching server with a dirty profile (#299)", async () => {
     const user = setupUser();
     const onSelectServer = vi.fn();
-    const onCreateServer = vi.fn();
 
-    renderWorkspace(onSelectServer, vi.fn(async () => true), [], { onCreateServer });
+    renderWorkspace(onSelectServer);
 
     await user.type(await screen.findByRole("textbox", { name: /^name$/i }), " X");
     await user.click(screen.getByTitle("Scorched Earth"));
@@ -1232,11 +1229,11 @@ describe("ServerWorkspacePage", () => {
     expect(screen.getByText(/unsaved server profile changes/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /keep editing/i }));
-    await user.click(screen.getByRole("button", { name: "Add server" }));
-    expect(onCreateServer).not.toHaveBeenCalled();
+    expect(onSelectServer).not.toHaveBeenCalled();
 
+    await user.click(screen.getByTitle("Scorched Earth"));
     await user.click(screen.getByRole("button", { name: /discard and continue/i }));
-    expect(onCreateServer).toHaveBeenCalledOnce();
+    expect(onSelectServer).toHaveBeenCalledOnce();
   });
 
   it("confirms before leaving the Server tab with a dirty profile (#299)", async () => {

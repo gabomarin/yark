@@ -53,8 +53,6 @@ interface Props {
   onBack: () => void;
   /** Register dirty-leave guard so shell navigation (sidebar) can confirm before closing workspace. */
   onRegisterLeaveGuard?: (guard: ((action: () => void) => void) | null) => void;
-  onCreateServer?: () => void;
-  onImportServer?: () => void;
   onStartServer: (serverId: string) => void;
   onStopServer: (serverId: string) => void;
   onRestartServer: (serverId: string) => void;
@@ -169,12 +167,6 @@ export function ServerWorkspacePage(props: Props): ReactElement {
       iconMode={options.iconMode === true}
       onToggleRail={options.onToggleRail}
       onSelectServer={handleSelectServer}
-      onAddServer={
-        props.onCreateServer === undefined
-          ? undefined
-          : () => confirmLeaveIfDirty(() => props.onCreateServer?.())
-      }
-      onImportServer={props.onImportServer}
     />
   );
   const sidePanel = (

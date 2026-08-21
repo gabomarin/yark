@@ -2028,11 +2028,6 @@ export function App({
             }
             onRegisterLeaveGuard={registerOverlayLeaveGuard}
             onBack={() => setOverlay(null)}
-            onCreateServer={() => setOverlay({ kind: "create" })}
-            onImportServer={() => {
-              setImportWizardKey((key) => key + 1);
-              setImportInstallOpen(true);
-            }}
             onStartServer={(id) => void startServer(id)}
             onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
             onRestartServer={(id) => void restartServer(id)}
