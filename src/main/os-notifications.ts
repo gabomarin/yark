@@ -1,11 +1,12 @@
 import { Notification, type BrowserWindow } from "electron";
 import {
   OS_NOTIFY_CRASH_COOLDOWN_MS,
-  OS_NOTIFY_STEAMCMD_JOB_COOLDOWN_MS,
+  formatCrashOsToastBody,
+  formatSteamCmdOsToastBody,
   isYarkE2eUserDataEnv,
   shouldShowFleetOsNotification,
   shouldSkipNativeNotification,
-  truncateToastBody,
+  steamCmdOsToastSilent,
   type ServerCrashedNotifyPayload,
   type SteamCmdJobTerminalPayload,
 } from "../shared/os-notification-events";
@@ -57,12 +58,14 @@ interface FleetOsNotifierDeps {
 }
 
 export class FleetOsNotifier {
-  private readonly lastShownAtMs = new Map<string, number>();
+  /** Flap-crash cooldown timestamps by serverId. */
+  private readonly lastCrashShownAtMs = new Map<string, number>();
+  /** One OS toast per SteamCMD jobId for the session. */
+  private readonly notifiedSteamCmdJobIds = new Set<string>();
 
   constructor(private readonly deps: FleetOsNotifierDeps) {}
 
   notifyCrash(payload: ServerCrashedNotifyPayload): boolean {
-    const key = `crash:${payload.serverId}`;
     const nowMs = this.now();
     if (
       !shouldShowFleetOsNotification({
@@ -72,7 +75,7 @@ export class FleetOsNotifier {
           this.deps.getMainWindow(),
         ),
         nowMs,
-        lastShownAtMs: this.lastShownAtMs.get(key),
+        lastShownAtMs: this.lastCrashShownAtMs.get(payload.serverId),
         cooldownMs: OS_NOTIFY_CRASH_COOLDOWN_MS,
       })
     ) {
@@ -80,11 +83,7 @@ export class FleetOsNotifier {
     }
     const shown = showNativeOsNotification({
       title: "Server crashed",
-      body: truncateToastBody(
-        payload.summary.length > 0
-          ? payload.summary
-          : `"${payload.serverName}" exited unexpectedly.`,
-      ),
+      body: formatCrashOsToastBody(payload.serverName),
       silent: false,
       onClick: () => {
         this.deps.revealMainWindow();
@@ -97,14 +96,14 @@ export class FleetOsNotifier {
       },
     });
     if (shown) {
-      this.lastShownAtMs.set(key, nowMs);
+      this.lastCrashShownAtMs.set(payload.serverId, nowMs);
     }
     return shown;
   }
 
   notifySteamCmd(payload: SteamCmdJobTerminalPayload): boolean {
-    const key = `steamcmd:${payload.jobId ?? payload.serverId ?? "fleet"}`;
-    const nowMs = this.now();
+    const jobKey = payload.jobId ?? `anon:${payload.serverId ?? "fleet"}:${payload.eventId}`;
+    const alreadyNotified = this.notifiedSteamCmdJobIds.has(jobKey);
     if (
       !shouldShowFleetOsNotification({
         category: "steamcmd",
@@ -112,17 +111,19 @@ export class FleetOsNotifier {
         windowFocusedVisible: isBrowserWindowFocusedVisible(
           this.deps.getMainWindow(),
         ),
-        nowMs,
-        lastShownAtMs: this.lastShownAtMs.get(key),
-        cooldownMs: OS_NOTIFY_STEAMCMD_JOB_COOLDOWN_MS,
+        operatorAwaited: payload.operatorAwaited,
+        nowMs: this.now(),
+        lastShownAtMs: undefined,
+        cooldownMs: 0,
+        alreadyNotifiedForJob: alreadyNotified,
       })
     ) {
       return false;
     }
     const shown = showNativeOsNotification({
       title: steamCmdToastTitle(payload),
-      body: truncateToastBody(payload.message),
-      silent: false,
+      body: formatSteamCmdOsToastBody(payload.type, payload.serverName),
+      silent: steamCmdOsToastSilent(payload.type),
       onClick: () => {
         this.deps.revealMainWindow();
         const open: OsNotificationOpenPush = {
@@ -133,7 +134,7 @@ export class FleetOsNotifier {
       },
     });
     if (shown) {
-      this.lastShownAtMs.set(key, nowMs);
+      this.notifiedSteamCmdJobIds.add(jobKey);
     }
     return shown;
   }

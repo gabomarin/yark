@@ -3,11 +3,14 @@ import {
   OS_NOTIFY_CRASH_COOLDOWN_MS,
   OS_NOTIFY_CRASH_EVENT_TYPE,
   OS_NOTIFY_STEAMCMD_EVENT_TYPES,
-  OS_NOTIFY_STEAMCMD_JOB_COOLDOWN_MS,
+  formatCrashOsToastBody,
+  formatSteamCmdOsToastBody,
   isYarkE2eUserDataEnv,
   shouldNotifySteamCmdJobEvent,
   shouldShowFleetOsNotification,
   shouldSkipNativeNotification,
+  shouldSkipOsToastForFocus,
+  steamCmdOsToastSilent,
   truncateToastBody,
 } from "@shared/os-notification-events";
 
@@ -62,20 +65,31 @@ describe("os-notification policy (#331)", () => {
         windowFocusedVisible: false,
         nowMs: 1_000,
         lastShownAtMs: undefined,
-        cooldownMs: OS_NOTIFY_STEAMCMD_JOB_COOLDOWN_MS,
+        cooldownMs: 0,
       }),
     ).toBe(false);
   });
 
-  it("skips when the main window is focused and visible", () => {
+  it("skips crash when focused; SteamCMD only when operator awaited", () => {
     expect(
-      shouldShowFleetOsNotification({
+      shouldSkipOsToastForFocus({
         category: "crash",
-        prefs: prefsOn,
         windowFocusedVisible: true,
-        nowMs: 1_000,
-        lastShownAtMs: undefined,
-        cooldownMs: OS_NOTIFY_CRASH_COOLDOWN_MS,
+        operatorAwaited: false,
+      }),
+    ).toBe(true);
+    expect(
+      shouldSkipOsToastForFocus({
+        category: "steamcmd",
+        windowFocusedVisible: true,
+        operatorAwaited: true,
+      }),
+    ).toBe(true);
+    expect(
+      shouldSkipOsToastForFocus({
+        category: "steamcmd",
+        windowFocusedVisible: true,
+        operatorAwaited: false,
       }),
     ).toBe(false);
     expect(
@@ -83,9 +97,21 @@ describe("os-notification policy (#331)", () => {
         category: "steamcmd",
         prefs: prefsOn,
         windowFocusedVisible: true,
+        operatorAwaited: false,
         nowMs: 1_000,
         lastShownAtMs: undefined,
-        cooldownMs: OS_NOTIFY_STEAMCMD_JOB_COOLDOWN_MS,
+        cooldownMs: 0,
+      }),
+    ).toBe(true);
+    expect(
+      shouldShowFleetOsNotification({
+        category: "steamcmd",
+        prefs: prefsOn,
+        windowFocusedVisible: true,
+        operatorAwaited: true,
+        nowMs: 1_000,
+        lastShownAtMs: undefined,
+        cooldownMs: 0,
       }),
     ).toBe(false);
   });
@@ -123,6 +149,20 @@ describe("os-notification policy (#331)", () => {
     ).toBe(true);
   });
 
+  it("blocks a second SteamCMD toast for the same jobId", () => {
+    expect(
+      shouldShowFleetOsNotification({
+        category: "steamcmd",
+        prefs: prefsOn,
+        windowFocusedVisible: false,
+        nowMs: 1_000,
+        lastShownAtMs: undefined,
+        cooldownMs: 0,
+        alreadyNotifiedForJob: true,
+      }),
+    ).toBe(false);
+  });
+
   it("notifies completed, failed, and rolled-back jobs but not retries or start", () => {
     expect(OS_NOTIFY_CRASH_EVENT_TYPE).toBe("server_crashed");
     expect([...OS_NOTIFY_STEAMCMD_EVENT_TYPES]).toEqual([
@@ -138,6 +178,24 @@ describe("os-notification policy (#331)", () => {
       true,
     );
     expect(shouldNotifySteamCmdJobEvent("server_crashed", "error")).toBe(false);
+  });
+
+  it("uses Action Center-safe bodies without paths or excerpts", () => {
+    expect(formatCrashOsToastBody("Island")).toBe(
+      '"Island" exited unexpectedly.',
+    );
+    expect(formatSteamCmdOsToastBody("update_completed", "Island")).toBe(
+      '"Island" SteamCMD job finished.',
+    );
+    expect(formatSteamCmdOsToastBody("update_failed", "Island")).toBe(
+      '"Island" SteamCMD job failed.',
+    );
+    expect(formatSteamCmdOsToastBody("update_rolled_back", null)).toBe(
+      '"Server" update was rolled back.',
+    );
+    expect(steamCmdOsToastSilent("update_completed")).toBe(true);
+    expect(steamCmdOsToastSilent("update_failed")).toBe(false);
+    expect(steamCmdOsToastSilent("update_rolled_back")).toBe(false);
   });
 
   it("truncates long toast bodies", () => {

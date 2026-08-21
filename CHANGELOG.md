@@ -11,7 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
-- Optional Windows toasts when a server crashes or a SteamCMD install/update/verify finishes or fails, even if YARK is in the tray; Settings → General has a master switch plus crash, SteamCMD, and hide-to-tray categories (#331).
+- Optional Windows toasts when a server crashes or a SteamCMD install/update/verify finishes or fails, even if YARK is in the tray; Settings → General has a master switch plus crash, SteamCMD, and hide-to-tray categories. Success banners stay quiet; failures and crashes use the system sound (#331).
 
 ### Changed
 

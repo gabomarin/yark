@@ -21,9 +21,6 @@ export type OsNotifyCategory = "crash" | "steamcmd";
 /** Flap-crash: one OS toast per server within this window. */
 export const OS_NOTIFY_CRASH_COOLDOWN_MS = 120_000;
 
-/** Failed + rolled-back (or retry) on the same job: one OS toast. */
-export const OS_NOTIFY_STEAMCMD_JOB_COOLDOWN_MS = 120_000;
-
 export interface OsNotifyPreferences {
   osNotifyEnabled: boolean;
   osNotifyCrash: boolean;
@@ -45,6 +42,11 @@ export interface SteamCmdJobTerminalPayload {
   jobId: string | null;
   eventId: number;
   message: string;
+  /**
+   * True when the renderer awaited this job (Install / Update / Verify) and will
+   * show an in-app toast — skip the OS banner while YARK is focused.
+   */
+  operatorAwaited: boolean;
 }
 
 export function isYarkE2eUserDataEnv(
@@ -63,6 +65,7 @@ export function shouldSkipNativeNotification(input: {
 /**
  * Retry warnings (`update_failed` + warning) are not a finished job.
  * Real failures, rollbacks, and completions are.
+ * Callers still suppress mid-update `update_failed` that precede a rollback.
  */
 export function shouldNotifySteamCmdJobEvent(
   type: AppEvent["type"],
@@ -79,13 +82,34 @@ export function shouldNotifySteamCmdJobEvent(
   return true;
 }
 
+/**
+ * Crash always skips when focused. SteamCMD skips when focused only if the
+ * operator awaited the job (in-app toast is enough).
+ */
+export function shouldSkipOsToastForFocus(input: {
+  category: OsNotifyCategory;
+  windowFocusedVisible: boolean;
+  operatorAwaited: boolean;
+}): boolean {
+  if (!input.windowFocusedVisible) {
+    return false;
+  }
+  if (input.category === "crash") {
+    return true;
+  }
+  return input.operatorAwaited;
+}
+
 export function shouldShowFleetOsNotification(input: {
   category: OsNotifyCategory;
   prefs: OsNotifyPreferences;
   windowFocusedVisible: boolean;
+  operatorAwaited?: boolean;
   nowMs: number;
   lastShownAtMs: number | undefined;
   cooldownMs: number;
+  /** SteamCMD: jobId already toasted this session — never toast again. */
+  alreadyNotifiedForJob?: boolean;
 }): boolean {
   if (!input.prefs.osNotifyEnabled) {
     return false;
@@ -96,7 +120,16 @@ export function shouldShowFleetOsNotification(input: {
   if (input.category === "steamcmd" && !input.prefs.osNotifySteamCmd) {
     return false;
   }
-  if (input.windowFocusedVisible) {
+  if (input.alreadyNotifiedForJob === true) {
+    return false;
+  }
+  if (
+    shouldSkipOsToastForFocus({
+      category: input.category,
+      windowFocusedVisible: input.windowFocusedVisible,
+      operatorAwaited: input.operatorAwaited === true,
+    })
+  ) {
     return false;
   }
   if (
@@ -106,6 +139,33 @@ export function shouldShowFleetOsNotification(input: {
     return false;
   }
   return true;
+}
+
+/** Action Center copy — no install paths, log paths, or crash excerpts (#331). */
+export function formatCrashOsToastBody(serverName: string): string {
+  const name = serverName.trim().length > 0 ? serverName.trim() : "Server";
+  return `"${name}" exited unexpectedly.`;
+}
+
+export function formatSteamCmdOsToastBody(
+  type: OsNotifySteamCmdEventType,
+  serverName: string | null,
+): string {
+  const name =
+    serverName !== null && serverName.trim().length > 0
+      ? serverName.trim()
+      : "Server";
+  if (type === "update_completed") {
+    return `"${name}" SteamCMD job finished.`;
+  }
+  if (type === "update_rolled_back") {
+    return `"${name}" update was rolled back.`;
+  }
+  return `"${name}" SteamCMD job failed.`;
+}
+
+export function steamCmdOsToastSilent(type: OsNotifySteamCmdEventType): boolean {
+  return type === "update_completed";
 }
 
 export function truncateToastBody(text: string, max = 180): string {
