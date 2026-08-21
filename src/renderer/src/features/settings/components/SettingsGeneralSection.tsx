@@ -55,8 +55,9 @@ export function SettingsGeneralSection(props: Props): ReactElement {
         <div className={classes.settingCopy}>
           <Text size="sm" fw={600}>Desktop alerts</Text>
           <Text size="xs" c="dimmed" mt={2}>
-            Windows banners when YARK is in the tray or another window. Turn off
-            to stay quiet.
+            Notify you on this PC when a server crashes, a file job finishes, or
+            you hide YARK to the tray — even if the window is closed. Turn off to
+            stay quiet.
           </Text>
         </div>
         <div className={classes.settingControl}>
@@ -75,8 +76,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
         <div className={classes.settingCopy}>
           <Text size="sm" fw={600}>Server crash</Text>
           <Text size="xs" c="dimmed" mt={2}>
-            When a map process exits on its own. Click the banner to open that
-            server's log.
+            When a dedicated server stops unexpectedly.
           </Text>
         </div>
         <div className={classes.settingControl}>
@@ -96,7 +96,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
           <Text size="sm" fw={600}>Installs and updates</Text>
           <Text size="xs" c="dimmed" mt={2}>
             When installing, updating, or checking server files finishes or
-            fails. Click the banner to open Downloads.
+            fails.
           </Text>
         </div>
         <div className={classes.settingControl}>
