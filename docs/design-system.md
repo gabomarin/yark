@@ -20,7 +20,7 @@ Source of truth for numeric tokens: `src/renderer/src/shared/theme/tokens.ts` �
 3. **Spacing** uses `--app-space-*` / Mantine `gap="sm"` — not one-off `10px` / `gap={6}`.
 4. **Extract shared chrome on the second real use** (same rule as #44).
 5. Prefer Mantine props (`radius`, `padding`, `gap`, `variant`) + CSS variables over raw hex/px.
-6. Workspace “tool” chrome (`flat` / `chrome`) is intentional and different from page cool panels.
+6. Content panels share **`AppSurfaceCard tone="flat"`**; `cool` / `coolEmphasis` are accent-only, not page shells.
 7. Custom CSS modules polish layout after Mantine + shared atoms are exhausted —
    they must not reimplement Mantine widgets.
 8. **Mantine CSS is layered.** Entry imports `@mantine/*/styles.layer.css` (and
@@ -100,8 +100,9 @@ Use this checklist when reviewing a screen or introducing a pattern. Each catego
 
 | Rule | Do | Don’t |
 | --- | --- | --- |
-| Page panels | `AppSurfaceCard` (`cool` / `coolEmphasis`) | Local `.panel { linear-gradient(112deg…) }` |
-| Nested widgets | `tone="flat"` | Mixing Card + ad-hoc panel bg |
+| Page / tool panels | `AppSurfaceCard tone="flat" radius="md"` | Local `.panel { background… border… }` or cool wash shells |
+| Accent heroes | `tone="coolEmphasis"` (rare) | Using cool wash as the default page shell |
+| Nested widgets | `tone="flat"` (or nested inside a flat shell) | Mixing Card + ad-hoc panel bg |
 | Shell rails | `tone="chrome"` or chrome parent + flat children | Cool gradients in sidebars |
 | Status accent | `statusTone` on `AppSurfaceCard` | One-off `box-shadow: inset 3px…` |
 
@@ -142,12 +143,12 @@ gap: var(--app-space-sm);            // preferred in CSS modules
 | --- | ---: | ---: | --- |
 | `--app-radius-sm` | 10 | 8 | Small chips / tight widgets |
 | `--app-radius-control` | 12 | 10 | Inputs, list rows, search |
-| `--app-radius-md` | 14 | 11 | Nested cards / Paper default |
-| `--app-radius-lg` | 18 | 15 | Page `AppSurfaceCard` |
+| `--app-radius-md` | 14 | 11 | Content `AppSurfaceCard` default, nested cards / Paper |
+| `--app-radius-lg` | 18 | 15 | Rare oversized / hero cards |
 
 Avoid raw `border-radius: 8px|14px` when a token fits. Tek icon tiles keep asymmetric radius by design (`AccentIconTile shape="tek"`).
 
-**Square vs rounded:** Overview server **list rows** (`ServerCard`) and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one list. Nested panels keep tokens: `AppSurfaceCard` default `lg`, logs/copy Accordion and form cards `md`. Do not square those to match the Overview list.
+**Square vs rounded:** Overview server **list rows** (`ServerCard`) and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one list. Content panels use `AppSurfaceCard` default **`md`**; do not invent outer `14px` / `12px` shells beside the atom (#346).
 
 ### 4. Color / status
 
@@ -274,10 +275,10 @@ Don’t mix comfortable Overview padding into dense INI/backup toolbars without 
 
 | Tone | CSS / component | Use for |
 | --- | --- | --- |
-| `cool` | `AppSurfaceCard` / `--app-surface-cool` | Page panels (Clusters, Logs, Backups, SteamCMD) |
-| `coolEmphasis` | `AppSurfaceCard tone="coolEmphasis"` | Hero guidance / primary operation cards |
-| `flat` | `tone="flat"` / `--app-surface-flat` | Nested tool cards, secondary widgets |
-| `chrome` | `tone="chrome"` | Shell-adjacent asides (workspace rails) |
+| `flat` (default) | `tone="flat"` / `--app-surface-flat` | **Content panels** — sidebar pages and workspace tabs (#346) |
+| `chrome` | `tone="chrome"` | Shell-adjacent asides (Settings nav, workspace rails) |
+| `coolEmphasis` | `tone="coolEmphasis"` | Rare hero / primary-operation accent cards |
+| `cool` | `--app-surface-cool` | Rare accent tiles only (not page shells); Overview **ServerCard** is separate |
 
 ```tsx
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";

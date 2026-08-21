@@ -4,9 +4,6 @@
   flex: 1 1 0%;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-md);
-  background: var(--app-color-panel);
 }
 
 .scroll {

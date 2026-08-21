@@ -86,15 +86,10 @@
   overflow: hidden;
 }
 
-.panel {
-  /* Prefer AppSurfaceCard; keep class for transitional fill helpers. */
-  background-image: var(--app-surface-cool);
-  border-color: var(--app-surface-border);
-}
-
 .historyPanel,
 .detailPanel {
-  background-image: var(--app-surface-cool);
+  /* Layout hooks for Updates split panes; surface comes from AppSurfaceCard (#346). */
+  min-height: 0;
 }
 
 .fillPanel {

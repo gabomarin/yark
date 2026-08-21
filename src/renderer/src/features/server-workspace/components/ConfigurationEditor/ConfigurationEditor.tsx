@@ -36,6 +36,7 @@ import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
 import { SearchField } from "@ui/SearchField/SearchField";
 import { showOperatorToast } from "@ui/operatorToast";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useUiDensity } from "@app/AppProviders";
 import {
@@ -388,7 +389,14 @@ export function ConfigurationEditor(props: Props): ReactElement {
   );
 
   return (
-    <div className={classes.root} data-configuration-editor>
+    <AppSurfaceCard
+      tone="flat"
+      fill
+      padding={0}
+      radius="md"
+      className={classes.root}
+      data-configuration-editor
+    >
       <div className={classes.content}>
         {error !== null && (
           <Alert color="red" mb="sm" onClose={() => setError(null)} withCloseButton>
@@ -732,6 +740,6 @@ export function ConfigurationEditor(props: Props): ReactElement {
           </Stack>
         )}
       </div>
-    </div>
+    </AppSurfaceCard>
   );
 }

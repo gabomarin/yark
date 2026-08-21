@@ -106,7 +106,7 @@ export function SettingsPage(props: Props): ReactElement {
           />
         </AppSurfaceCard>
 
-        <AppSurfaceCard fill className={classes.panel}>
+        <AppSurfaceCard tone="flat" fill radius="md" className={classes.panel}>
           <div ref={panelScrollRef} className={classes.panelScroll} data-settings-panel-scroll>
             {category === "general" && (
               <SettingsGeneralSection
