@@ -92,7 +92,7 @@ IPC for shell / density / console:
 | `app:set-close-window-to-tray` | `setCloseWindowToTray` |
 | `app:set-start-with-windows` | `setStartWithWindows` |
 | `app:set-tray-close-hint-dismissed` | `setTrayCloseHintDismissed` |
-| `app:set-os-notify-enabled` / `app:set-os-notify-crash` / `app:set-os-notify-steamcmd` | Windows OS toast master + crash + SteamCMD job categories (#331) |
+| `app:set-os-notify-enabled` / `app:set-os-notify-crash` / `app:set-os-notify-steamcmd` | Desktop alerts master + crash + installs/updates categories (#331) |
 | `app:list-data-folders` / `app:open-data-folder` | App / backups / update-logs / steamcmd roots under `userData` |
 
 Density load: `main.tsx` calls `loadUiDensityPref()` before the first theme mount.
