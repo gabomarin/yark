@@ -33,6 +33,7 @@ const desktopShell = {
   osNotifyEnabled: true,
   osNotifyCrash: true,
   osNotifySteamCmd: true,
+  osNotifyYarkUpdate: true,
   desktopShellReady: true,
   onCloseWindowToTrayChange: vi.fn(),
   onStartWithWindowsChange: vi.fn(),
@@ -40,6 +41,7 @@ const desktopShell = {
   onOsNotifyEnabledChange: vi.fn(),
   onOsNotifyCrashChange: vi.fn(),
   onOsNotifySteamCmdChange: vi.fn(),
+  onOsNotifyYarkUpdateChange: vi.fn(),
   shellError: null,
   clearShellError: vi.fn(),
 };
@@ -56,6 +58,7 @@ function stubWizardApi(): void {
         osNotifyEnabled: true,
         osNotifyCrash: true,
         osNotifySteamCmd: true,
+        osNotifyYarkUpdate: true,
       },
     }),
     setCloseWindowToTray: vi.fn().mockResolvedValue({ ok: true, data: true }),
@@ -64,6 +67,7 @@ function stubWizardApi(): void {
     setOsNotifyEnabled: vi.fn().mockResolvedValue({ ok: true, data: true }),
     setOsNotifyCrash: vi.fn().mockResolvedValue({ ok: true, data: true }),
     setOsNotifySteamCmd: vi.fn().mockResolvedValue({ ok: true, data: true }),
+    setOsNotifyYarkUpdate: vi.fn().mockResolvedValue({ ok: true, data: true }),
   });
 }
 

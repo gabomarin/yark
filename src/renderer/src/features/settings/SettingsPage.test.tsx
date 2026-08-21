@@ -44,6 +44,7 @@ function stubSettingsApi(
         osNotifyEnabled: true,
         osNotifyCrash: true,
         osNotifySteamCmd: true,
+        osNotifyYarkUpdate: true,
       },
     }),
     setCloseWindowToTray: vi.fn().mockResolvedValue({ ok: true, data: true }),
@@ -52,6 +53,7 @@ function stubSettingsApi(
     setOsNotifyEnabled: vi.fn().mockResolvedValue({ ok: true, data: true }),
     setOsNotifyCrash: vi.fn().mockResolvedValue({ ok: true, data: true }),
     setOsNotifySteamCmd: vi.fn().mockResolvedValue({ ok: true, data: true }),
+    setOsNotifyYarkUpdate: vi.fn().mockResolvedValue({ ok: true, data: true }),
     getAppUpdateStatus: vi.fn().mockResolvedValue({
       ok: true,
       data: {
@@ -161,6 +163,7 @@ function renderSettings(
           osNotifyEnabled: true,
           osNotifyCrash: true,
           osNotifySteamCmd: true,
+          osNotifyYarkUpdate: true,
           desktopShellReady: true,
           onCloseWindowToTrayChange: vi.fn(),
           onStartWithWindowsChange: vi.fn(),
@@ -168,6 +171,7 @@ function renderSettings(
           onOsNotifyEnabledChange: vi.fn(),
           onOsNotifyCrashChange: vi.fn(),
           onOsNotifySteamCmdChange: vi.fn(),
+          onOsNotifyYarkUpdateChange: vi.fn(),
           shellError: null,
           clearShellError: vi.fn(),
         }}
@@ -205,6 +209,7 @@ describe("SettingsPage", () => {
     expect(screen.getByText("Desktop alerts")).toBeInTheDocument();
     expect(screen.getByText("Server crash")).toBeInTheDocument();
     expect(screen.getByText("Installs and updates")).toBeInTheDocument();
+    expect(screen.getByText("YARK updates")).toBeInTheDocument();
     expect(screen.getByText("Hide to tray")).toBeInTheDocument();
     expect(screen.queryByText("On quit with active servers")).not.toBeInTheDocument();
     expect(screen.getByText("Display size")).toBeInTheDocument();
@@ -281,6 +286,7 @@ describe("SettingsPage", () => {
         osNotifyEnabled: true,
         osNotifyCrash: true,
         osNotifySteamCmd: true,
+        osNotifyYarkUpdate: true,
         desktopShellReady: true,
         onCloseWindowToTrayChange: vi.fn(),
         onStartWithWindowsChange: vi.fn(),
@@ -288,6 +294,7 @@ describe("SettingsPage", () => {
         onOsNotifyEnabledChange: vi.fn(),
         onOsNotifyCrashChange: vi.fn(),
         onOsNotifySteamCmdChange: vi.fn(),
+        onOsNotifyYarkUpdateChange: vi.fn(),
         shellError: null,
         clearShellError: vi.fn(),
       },
@@ -315,6 +322,7 @@ describe("SettingsPage", () => {
         osNotifyEnabled: true,
         osNotifyCrash: true,
         osNotifySteamCmd: true,
+        osNotifyYarkUpdate: true,
         desktopShellReady: true,
         onCloseWindowToTrayChange: vi.fn(),
         onStartWithWindowsChange: vi.fn(),
@@ -322,6 +330,7 @@ describe("SettingsPage", () => {
         onOsNotifyEnabledChange,
         onOsNotifyCrashChange,
         onOsNotifySteamCmdChange: vi.fn(),
+        onOsNotifyYarkUpdateChange: vi.fn(),
         shellError: null,
         clearShellError: vi.fn(),
       },
@@ -346,6 +355,7 @@ describe("SettingsPage", () => {
         osNotifyEnabled: false,
         osNotifyCrash: true,
         osNotifySteamCmd: true,
+        osNotifyYarkUpdate: true,
         desktopShellReady: true,
         onCloseWindowToTrayChange: vi.fn(),
         onStartWithWindowsChange: vi.fn(),
@@ -353,6 +363,7 @@ describe("SettingsPage", () => {
         onOsNotifyEnabledChange: vi.fn(),
         onOsNotifyCrashChange: vi.fn(),
         onOsNotifySteamCmdChange: vi.fn(),
+        onOsNotifyYarkUpdateChange: vi.fn(),
         shellError: null,
         clearShellError: vi.fn(),
       },
@@ -362,6 +373,9 @@ describe("SettingsPage", () => {
     expect(screen.getByRole("switch", { name: "Alert on server crash" })).toBeDisabled();
     expect(
       screen.getByRole("switch", { name: "Alert on installs and updates" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("switch", { name: "Alert on YARK updates" }),
     ).toBeDisabled();
     expect(
       screen.getByRole("switch", { name: "Alert when hiding to tray" }),
@@ -378,6 +392,7 @@ describe("SettingsPage", () => {
         osNotifyEnabled: true,
         osNotifyCrash: true,
         osNotifySteamCmd: true,
+        osNotifyYarkUpdate: true,
         desktopShellReady: true,
         onCloseWindowToTrayChange: vi.fn(),
         onStartWithWindowsChange: vi.fn(),
@@ -385,6 +400,7 @@ describe("SettingsPage", () => {
         onOsNotifyEnabledChange: vi.fn(),
         onOsNotifyCrashChange: vi.fn(),
         onOsNotifySteamCmdChange: vi.fn(),
+        onOsNotifyYarkUpdateChange: vi.fn(),
         shellError: null,
         clearShellError: vi.fn(),
       },
@@ -393,6 +409,7 @@ describe("SettingsPage", () => {
     expect(screen.queryByText("Hide to tray")).not.toBeInTheDocument();
     expect(screen.getByText("Server crash")).toBeInTheDocument();
     expect(screen.getByText("Installs and updates")).toBeInTheDocument();
+    expect(screen.getByText("YARK updates")).toBeInTheDocument();
   });
 
   it("expands caches and supports open/clear actions", async () => {

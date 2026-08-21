@@ -7,10 +7,12 @@ import {
   DEFAULT_OS_NOTIFY_CRASH,
   DEFAULT_OS_NOTIFY_ENABLED,
   DEFAULT_OS_NOTIFY_STEAMCMD,
+  DEFAULT_OS_NOTIFY_YARK_UPDATE,
   DEFAULT_START_WITH_WINDOWS,
   OS_NOTIFY_CRASH_SETTING_KEY,
   OS_NOTIFY_ENABLED_SETTING_KEY,
   OS_NOTIFY_STEAMCMD_SETTING_KEY,
+  OS_NOTIFY_YARK_UPDATE_SETTING_KEY,
   START_WITH_WINDOWS_SETTING_KEY,
   TRAY_CLOSE_HINT_DISMISSED_SETTING_KEY,
   parseStoredBoolean,
@@ -22,6 +24,7 @@ import {
   setOsNotifyCrash,
   setOsNotifyEnabled,
   setOsNotifySteamCmd,
+  setOsNotifyYarkUpdate,
   setTrayCloseHintDismissed,
 } from "../../src/main/desktop-shell-settings";
 import type { DatabaseSync } from "node:sqlite";
@@ -54,6 +57,7 @@ describe("desktop shell preferences (#54 / #59)", () => {
     expect(prefs.osNotifyEnabled).toBe(DEFAULT_OS_NOTIFY_ENABLED);
     expect(prefs.osNotifyCrash).toBe(DEFAULT_OS_NOTIFY_CRASH);
     expect(prefs.osNotifySteamCmd).toBe(DEFAULT_OS_NOTIFY_STEAMCMD);
+    expect(prefs.osNotifyYarkUpdate).toBe(DEFAULT_OS_NOTIFY_YARK_UPDATE);
     expect(settings.get(CLOSE_WINDOW_TO_TRAY_SETTING_KEY)).toBeNull();
     expect(settings.get(START_WITH_WINDOWS_SETTING_KEY)).toBeNull();
     expect(settings.get(OS_NOTIFY_ENABLED_SETTING_KEY)).toBeNull();
@@ -90,5 +94,9 @@ describe("desktop shell preferences (#54 / #59)", () => {
     setOsNotifySteamCmd(settings, false);
     expect(settings.get(OS_NOTIFY_STEAMCMD_SETTING_KEY)).toBe("false");
     expect(readDesktopShellPreferences(settings).osNotifySteamCmd).toBe(false);
+
+    setOsNotifyYarkUpdate(settings, false);
+    expect(settings.get(OS_NOTIFY_YARK_UPDATE_SETTING_KEY)).toBe("false");
+    expect(readDesktopShellPreferences(settings).osNotifyYarkUpdate).toBe(false);
   });
 });

@@ -124,6 +124,8 @@ export function SettingsPage(props: Props): ReactElement {
                 onOsNotifyCrashChange={desktopShell.onOsNotifyCrashChange}
                 osNotifySteamCmd={desktopShell.osNotifySteamCmd}
                 onOsNotifySteamCmdChange={desktopShell.onOsNotifySteamCmdChange}
+                osNotifyYarkUpdate={desktopShell.osNotifyYarkUpdate}
+                onOsNotifyYarkUpdateChange={desktopShell.onOsNotifyYarkUpdateChange}
                 desktopShellReady={desktopShell.desktopShellReady}
                 onRunSetupAgain={props.onRunSetupAgain}
               />

@@ -42,6 +42,7 @@ import {
   setOsNotifyCrash,
   setOsNotifyEnabled,
   setOsNotifySteamCmd,
+  setOsNotifyYarkUpdate,
   setStartWithWindowsPreference,
   setTrayCloseHintDismissed,
 } from "./desktop-shell-settings";
@@ -634,6 +635,12 @@ export function registerIpcHandlers(
     IPC.appSetOsNotifySteamCmd,
     ipcArgSchemas[IPC.appSetOsNotifySteamCmd],
     ([enabled]): boolean => setOsNotifySteamCmd(settings, enabled),
+  );
+
+  handleValidated(
+    IPC.appSetOsNotifyYarkUpdate,
+    ipcArgSchemas[IPC.appSetOsNotifyYarkUpdate],
+    ([enabled]): boolean => setOsNotifyYarkUpdate(settings, enabled),
   );
 
   handleValidated(IPC.iniRead, ipcArgSchemas[IPC.iniRead], ([serverId]) =>

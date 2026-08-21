@@ -16,7 +16,9 @@ export const OS_NOTIFY_STEAMCMD_EVENT_TYPES = [
 export type OsNotifySteamCmdEventType =
   (typeof OS_NOTIFY_STEAMCMD_EVENT_TYPES)[number];
 
-export type OsNotifyCategory = "crash" | "steamcmd";
+export type OsNotifyYarkUpdatePhase = "available" | "ready";
+
+export type OsNotifyCategory = "crash" | "steamcmd" | "yarkUpdate";
 
 /** Flap-crash: one OS toast per server within this window. */
 export const OS_NOTIFY_CRASH_COOLDOWN_MS = 120_000;
@@ -25,6 +27,7 @@ export interface OsNotifyPreferences {
   osNotifyEnabled: boolean;
   osNotifyCrash: boolean;
   osNotifySteamCmd: boolean;
+  osNotifyYarkUpdate: boolean;
 }
 
 export interface ServerCrashedNotifyPayload {
@@ -47,6 +50,11 @@ export interface SteamCmdJobTerminalPayload {
    * show an in-app toast — skip the OS banner while YARK is focused.
    */
   operatorAwaited: boolean;
+}
+
+export interface YarkUpdateNotifyPayload {
+  phase: OsNotifyYarkUpdatePhase;
+  version: string;
 }
 
 export function isYarkE2eUserDataEnv(
@@ -82,9 +90,18 @@ export function shouldNotifySteamCmdJobEvent(
   return true;
 }
 
+export function yarkUpdateOsToastDedupeKey(
+  phase: OsNotifyYarkUpdatePhase,
+  version: string,
+): string | null {
+  const trimmed = version.trim();
+  if (trimmed.length === 0) return null;
+  return `${phase}:${trimmed}`;
+}
+
 /**
- * Crash always skips when focused. SteamCMD skips when focused only if the
- * operator awaited the job (in-app toast is enough).
+ * Crash and YARK updates always skip when focused (in-app toast is enough).
+ * SteamCMD skips when focused only if the operator awaited the job.
  */
 export function shouldSkipOsToastForFocus(input: {
   category: OsNotifyCategory;
@@ -94,7 +111,7 @@ export function shouldSkipOsToastForFocus(input: {
   if (!input.windowFocusedVisible) {
     return false;
   }
-  if (input.category === "crash") {
+  if (input.category === "crash" || input.category === "yarkUpdate") {
     return true;
   }
   return input.operatorAwaited;
@@ -108,7 +125,7 @@ export function shouldShowFleetOsNotification(input: {
   nowMs: number;
   lastShownAtMs: number | undefined;
   cooldownMs: number;
-  /** SteamCMD: jobId already toasted this session — never toast again. */
+  /** SteamCMD / YARK update: already toasted this key — never toast again. */
   alreadyNotifiedForJob?: boolean;
 }): boolean {
   if (!input.prefs.osNotifyEnabled) {
@@ -118,6 +135,9 @@ export function shouldShowFleetOsNotification(input: {
     return false;
   }
   if (input.category === "steamcmd" && !input.prefs.osNotifySteamCmd) {
+    return false;
+  }
+  if (input.category === "yarkUpdate" && !input.prefs.osNotifyYarkUpdate) {
     return false;
   }
   if (input.alreadyNotifiedForJob === true) {
@@ -164,8 +184,23 @@ export function formatSteamCmdOsToastBody(
   return `"${name}" SteamCMD job failed.`;
 }
 
+export function formatYarkUpdateOsToastBody(
+  phase: OsNotifyYarkUpdatePhase,
+  version: string,
+): string {
+  const v = version.trim().length > 0 ? version.trim() : "new";
+  if (phase === "ready") {
+    return `v${v} is downloaded. Open Settings to restart and install.`;
+  }
+  return `v${v} is ready to download. Open Settings → About.`;
+}
+
 export function steamCmdOsToastSilent(type: OsNotifySteamCmdEventType): boolean {
   return type === "update_completed";
+}
+
+export function yarkUpdateOsToastSilent(phase: OsNotifyYarkUpdatePhase): boolean {
+  return phase === "available";
 }
 
 export function truncateToastBody(text: string, max = 180): string {

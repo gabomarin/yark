@@ -5,6 +5,7 @@ import {
   OS_NOTIFY_STEAMCMD_EVENT_TYPES,
   formatCrashOsToastBody,
   formatSteamCmdOsToastBody,
+  formatYarkUpdateOsToastBody,
   isYarkE2eUserDataEnv,
   shouldNotifySteamCmdJobEvent,
   shouldShowFleetOsNotification,
@@ -12,12 +13,15 @@ import {
   shouldSkipOsToastForFocus,
   steamCmdOsToastSilent,
   truncateToastBody,
+  yarkUpdateOsToastDedupeKey,
+  yarkUpdateOsToastSilent,
 } from "@shared/os-notification-events";
 
 const prefsOn = {
   osNotifyEnabled: true,
   osNotifyCrash: true,
   osNotifySteamCmd: true,
+  osNotifyYarkUpdate: true,
 };
 
 describe("os-notification policy (#331)", () => {
@@ -68,12 +72,29 @@ describe("os-notification policy (#331)", () => {
         cooldownMs: 0,
       }),
     ).toBe(false);
+    expect(
+      shouldShowFleetOsNotification({
+        category: "yarkUpdate",
+        prefs: { ...prefsOn, osNotifyYarkUpdate: false },
+        windowFocusedVisible: false,
+        nowMs: 1_000,
+        lastShownAtMs: undefined,
+        cooldownMs: 0,
+      }),
+    ).toBe(false);
   });
 
   it("skips crash when focused; SteamCMD only when operator awaited", () => {
     expect(
       shouldSkipOsToastForFocus({
         category: "crash",
+        windowFocusedVisible: true,
+        operatorAwaited: false,
+      }),
+    ).toBe(true);
+    expect(
+      shouldSkipOsToastForFocus({
+        category: "yarkUpdate",
         windowFocusedVisible: true,
         operatorAwaited: false,
       }),
@@ -196,6 +217,13 @@ describe("os-notification policy (#331)", () => {
     expect(steamCmdOsToastSilent("update_completed")).toBe(true);
     expect(steamCmdOsToastSilent("update_failed")).toBe(false);
     expect(steamCmdOsToastSilent("update_rolled_back")).toBe(false);
+    expect(formatYarkUpdateOsToastBody("available", "0.15.0")).toContain("0.15.0");
+    expect(formatYarkUpdateOsToastBody("ready", "0.15.0")).toContain("downloaded");
+    expect(yarkUpdateOsToastSilent("available")).toBe(true);
+    expect(yarkUpdateOsToastSilent("ready")).toBe(false);
+    expect(yarkUpdateOsToastDedupeKey("available", "0.15.0")).toBe(
+      "available:0.15.0",
+    );
   });
 
   it("truncates long toast bodies", () => {

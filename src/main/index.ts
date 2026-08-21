@@ -767,6 +767,16 @@ if (gotSingleInstanceLock) {
 
     appUpdateService.onStatus((status: AppUpdateStatus) => {
       sendToRenderer(IPC_PUSH.appUpdate, status);
+      if (
+        (status.phase === "available" || status.phase === "ready")
+        && status.availableVersion !== null
+        && status.availableVersion.trim().length > 0
+      ) {
+        fleetOsNotifier.notifyYarkUpdate({
+          phase: status.phase,
+          version: status.availableVersion,
+        });
+      }
     });
 
     mainWindow = createWindow(settings, {

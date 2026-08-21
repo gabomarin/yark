@@ -4,6 +4,7 @@ import {
   DEFAULT_OS_NOTIFY_CRASH,
   DEFAULT_OS_NOTIFY_ENABLED,
   DEFAULT_OS_NOTIFY_STEAMCMD,
+  DEFAULT_OS_NOTIFY_YARK_UPDATE,
   DEFAULT_START_WITH_WINDOWS,
 } from "@shared/desktop-shell";
 
@@ -14,6 +15,7 @@ export interface DesktopShellPreferencesController {
   osNotifyEnabled: boolean;
   osNotifyCrash: boolean;
   osNotifySteamCmd: boolean;
+  osNotifyYarkUpdate: boolean;
   desktopShellReady: boolean;
   onCloseWindowToTrayChange: (enabled: boolean) => void;
   onStartWithWindowsChange: (enabled: boolean) => void;
@@ -21,6 +23,7 @@ export interface DesktopShellPreferencesController {
   onOsNotifyEnabledChange: (enabled: boolean) => void;
   onOsNotifyCrashChange: (enabled: boolean) => void;
   onOsNotifySteamCmdChange: (enabled: boolean) => void;
+  onOsNotifyYarkUpdateChange: (enabled: boolean) => void;
   shellError: string | null;
   clearShellError: () => void;
 }
@@ -36,6 +39,9 @@ export function useDesktopShellPreferences(): DesktopShellPreferencesController 
   const [osNotifyEnabled, setOsNotifyEnabled] = useState(DEFAULT_OS_NOTIFY_ENABLED);
   const [osNotifyCrash, setOsNotifyCrash] = useState(DEFAULT_OS_NOTIFY_CRASH);
   const [osNotifySteamCmd, setOsNotifySteamCmd] = useState(DEFAULT_OS_NOTIFY_STEAMCMD);
+  const [osNotifyYarkUpdate, setOsNotifyYarkUpdate] = useState(
+    DEFAULT_OS_NOTIFY_YARK_UPDATE,
+  );
   const [desktopShellReady, setDesktopShellReady] = useState(false);
   const [shellError, setShellError] = useState<string | null>(null);
 
@@ -60,6 +66,7 @@ export function useDesktopShellPreferences(): DesktopShellPreferencesController 
       setOsNotifyEnabled(result.data.osNotifyEnabled);
       setOsNotifyCrash(result.data.osNotifyCrash);
       setOsNotifySteamCmd(result.data.osNotifySteamCmd);
+      setOsNotifyYarkUpdate(result.data.osNotifyYarkUpdate);
       setDesktopShellReady(true);
     })();
     return () => {
@@ -141,6 +148,18 @@ export function useDesktopShellPreferences(): DesktopShellPreferencesController 
     })();
   };
 
+  const onOsNotifyYarkUpdateChange = (enabled: boolean): void => {
+    const previous = osNotifyYarkUpdate;
+    setOsNotifyYarkUpdate(enabled);
+    void (async () => {
+      const result = await window.api.setOsNotifyYarkUpdate(enabled);
+      if (!result.ok) {
+        setOsNotifyYarkUpdate(previous);
+        setShellError(result.error ?? "Could not update YARK update alerts");
+      }
+    })();
+  };
+
   return {
     closeWindowToTray,
     startWithWindows,
@@ -148,6 +167,7 @@ export function useDesktopShellPreferences(): DesktopShellPreferencesController 
     osNotifyEnabled,
     osNotifyCrash,
     osNotifySteamCmd,
+    osNotifyYarkUpdate,
     desktopShellReady,
     onCloseWindowToTrayChange,
     onStartWithWindowsChange,
@@ -155,6 +175,7 @@ export function useDesktopShellPreferences(): DesktopShellPreferencesController 
     onOsNotifyEnabledChange,
     onOsNotifyCrashChange,
     onOsNotifySteamCmdChange,
+    onOsNotifyYarkUpdateChange,
     shellError,
     clearShellError: () => setShellError(null),
   };

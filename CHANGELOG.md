@@ -11,7 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
-- Optional Windows toasts when a server crashes or a SteamCMD install/update/verify finishes or fails, even if YARK is in the tray; Settings → General **Desktop alerts** covers crash, installs/updates, and hide-to-tray. Success banners stay quiet; failures and crashes use the system sound (#331).
+- Optional Windows toasts when a server crashes, a SteamCMD install/update/verify finishes or fails, or a YARK update is available/ready — even if YARK is in the tray; Settings → General **Desktop alerts** covers crash, installs/updates, YARK updates, and hide-to-tray. Success banners stay quiet; failures and crashes use the system sound (#331).
 
 ### Changed
 

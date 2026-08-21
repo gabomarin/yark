@@ -138,6 +138,8 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.appSetOsNotifyCrash, enabled),
   setOsNotifySteamCmd: (enabled) =>
     ipcRenderer.invoke(IPC.appSetOsNotifySteamCmd, enabled),
+  setOsNotifyYarkUpdate: (enabled) =>
+    ipcRenderer.invoke(IPC.appSetOsNotifyYarkUpdate, enabled),
   getAppUpdateStatus: () => ipcRenderer.invoke(IPC.appGetUpdateStatus),
   checkForAppUpdate: () => ipcRenderer.invoke(IPC.appCheckForUpdate),
   downloadAppUpdate: () => ipcRenderer.invoke(IPC.appDownloadUpdate),

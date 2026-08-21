@@ -1855,10 +1855,14 @@ export function App({
         });
         return;
       }
+      if (payload.kind === "yarkUpdate") {
+        openYarkUpdateSettings();
+        return;
+      }
       setOverlay(null);
       setRoute("downloads");
     });
-  }, [openServerLogs]);
+  }, [openServerLogs, openYarkUpdateSettings]);
 
   const openServerBackups = useCallback((serverId: string) => {
     setRoute("overview");

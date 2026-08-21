@@ -18,6 +18,8 @@ interface Props {
   onOsNotifyCrashChange: (enabled: boolean) => void;
   osNotifySteamCmd: boolean;
   onOsNotifySteamCmdChange: (enabled: boolean) => void;
+  osNotifyYarkUpdate: boolean;
+  onOsNotifyYarkUpdateChange: (enabled: boolean) => void;
   desktopShellReady: boolean;
   onRunSetupAgain?: () => void;
 }
@@ -55,9 +57,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
         <div className={classes.settingCopy}>
           <Text size="sm" fw={600}>Desktop alerts</Text>
           <Text size="xs" c="dimmed" mt={2}>
-            Notify you on this PC when a server crashes, a file job finishes, or
-            you hide YARK to the tray — even if the window is closed. Turn off to
-            stay quiet.
+            Windows notifications for the events below. Turn off to stay quiet.
           </Text>
         </div>
         <div className={classes.settingControl}>
@@ -107,6 +107,25 @@ export function SettingsGeneralSection(props: Props): ReactElement {
               props.onOsNotifySteamCmdChange(event.currentTarget.checked)
             }
             aria-label="Alert on installs and updates"
+          />
+        </div>
+      </div>
+
+      <div className={`${classes.settingRow} ${classes.settingRowNested}`}>
+        <div className={classes.settingCopy}>
+          <Text size="sm" fw={600}>YARK updates</Text>
+          <Text size="xs" c="dimmed" mt={2}>
+            When a new YARK version is available or ready to install.
+          </Text>
+        </div>
+        <div className={classes.settingControl}>
+          <Switch
+            checked={props.osNotifyYarkUpdate}
+            disabled={!props.desktopShellReady || !props.osNotifyEnabled}
+            onChange={(event) =>
+              props.onOsNotifyYarkUpdateChange(event.currentTarget.checked)
+            }
+            aria-label="Alert on YARK updates"
           />
         </div>
       </div>

@@ -135,6 +135,7 @@ export const IPC = {
   appSetOsNotifyEnabled: "app:set-os-notify-enabled",
   appSetOsNotifyCrash: "app:set-os-notify-crash",
   appSetOsNotifySteamCmd: "app:set-os-notify-steamcmd",
+  appSetOsNotifyYarkUpdate: "app:set-os-notify-yark-update",
   appGetUpdateStatus: "app:get-update-status",
   appCheckForUpdate: "app:check-for-update",
   appDownloadUpdate: "app:download-update",
@@ -247,7 +248,8 @@ export interface PlayerListUpdatedPush {
 /** Click a Windows OS toast: reveal YARK and jump to a useful surface (#331). */
 export type OsNotificationOpenPush =
   | { kind: "crash"; serverId: string; eventId: number }
-  | { kind: "steamcmd"; serverId: string | null };
+  | { kind: "steamcmd"; serverId: string | null }
+  | { kind: "yarkUpdate" };
 
 /** Normalized result of IPC operations. */
 export type IpcResult<T> =
@@ -389,6 +391,7 @@ export interface RendererApi {
   setOsNotifyEnabled(enabled: boolean): Promise<IpcResult<boolean>>;
   setOsNotifyCrash(enabled: boolean): Promise<IpcResult<boolean>>;
   setOsNotifySteamCmd(enabled: boolean): Promise<IpcResult<boolean>>;
+  setOsNotifyYarkUpdate(enabled: boolean): Promise<IpcResult<boolean>>;
   getAppUpdateStatus(): Promise<IpcResult<AppUpdateStatus>>;
   checkForAppUpdate(): Promise<IpcResult<AppUpdateStatus>>;
   downloadAppUpdate(): Promise<IpcResult<AppUpdateStatus>>;

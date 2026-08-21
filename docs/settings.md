@@ -62,9 +62,10 @@ the Server tab / workspace.
 | Control | Storage | Default | Notes |
 | --- | --- | --- | --- |
 | Close window to tray | SQLite `closeWindowToTray` | **on** | Hide on close; minimize still uses the taskbar |
-| Desktop alerts | SQLite `osNotifyEnabled` | **on** | Master switch for Windows banners while YARK is in the tray or another window (#331) |
+| Desktop alerts | SQLite `osNotifyEnabled` | **on** | Master switch for Windows notifications (#331) |
 | Server crash | SQLite `osNotifyCrash` | **on** | Nested under Desktop alerts; click opens that server's log |
 | Installs and updates | SQLite `osNotifySteamCmd` | **on** | Nested; one banner when install/update/verify finishes or fails. Click opens Downloads |
+| YARK updates | SQLite `osNotifyYarkUpdate` | **on** | Nested; when a new YARK version is available or ready to install. Click opens Settings → About |
 | Hide to tray | SQLite `trayCloseHintDismissed` (UI inverted) | toast **on** | Nested; visible only when close-to-tray is on. Also gated by Desktop alerts |
 | Start with Windows | SQLite `startWithWindows` + `setLoginItemSettings` | **off** | App only — does **not** start ASA (#54 vs #53) |
 | Display size | SQLite `uiDensity` | **compact** | `compact` \| `comfortable`; see [design-system.md](design-system.md) |
@@ -92,7 +93,7 @@ IPC for shell / density / console:
 | `app:set-close-window-to-tray` | `setCloseWindowToTray` |
 | `app:set-start-with-windows` | `setStartWithWindows` |
 | `app:set-tray-close-hint-dismissed` | `setTrayCloseHintDismissed` |
-| `app:set-os-notify-enabled` / `app:set-os-notify-crash` / `app:set-os-notify-steamcmd` | Desktop alerts master + crash + installs/updates categories (#331) |
+| `app:set-os-notify-enabled` / `app:set-os-notify-crash` / `app:set-os-notify-steamcmd` / `app:set-os-notify-yark-update` | Desktop alerts master + crash + installs/updates + YARK update categories (#331) |
 | `app:list-data-folders` / `app:open-data-folder` | App / backups / update-logs / steamcmd roots under `userData` |
 
 Density load: `main.tsx` calls `loadUiDensityPref()` before the first theme mount.

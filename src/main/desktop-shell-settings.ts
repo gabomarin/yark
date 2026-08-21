@@ -5,10 +5,12 @@ import {
   DEFAULT_OS_NOTIFY_CRASH,
   DEFAULT_OS_NOTIFY_ENABLED,
   DEFAULT_OS_NOTIFY_STEAMCMD,
+  DEFAULT_OS_NOTIFY_YARK_UPDATE,
   DEFAULT_START_WITH_WINDOWS,
   OS_NOTIFY_CRASH_SETTING_KEY,
   OS_NOTIFY_ENABLED_SETTING_KEY,
   OS_NOTIFY_STEAMCMD_SETTING_KEY,
+  OS_NOTIFY_YARK_UPDATE_SETTING_KEY,
   START_WITH_WINDOWS_SETTING_KEY,
   TRAY_CLOSE_HINT_DISMISSED_SETTING_KEY,
   parseStoredBoolean,
@@ -43,6 +45,10 @@ export function readDesktopShellPreferences(
     osNotifySteamCmd: parseStoredBoolean(
       settings.get(OS_NOTIFY_STEAMCMD_SETTING_KEY),
       DEFAULT_OS_NOTIFY_STEAMCMD,
+    ),
+    osNotifyYarkUpdate: parseStoredBoolean(
+      settings.get(OS_NOTIFY_YARK_UPDATE_SETTING_KEY),
+      DEFAULT_OS_NOTIFY_YARK_UPDATE,
     ),
   };
 }
@@ -95,5 +101,13 @@ export function setOsNotifySteamCmd(
   enabled: boolean,
 ): boolean {
   settings.set(OS_NOTIFY_STEAMCMD_SETTING_KEY, serializeStoredBoolean(enabled));
+  return enabled;
+}
+
+export function setOsNotifyYarkUpdate(
+  settings: AppSettingsRepository,
+  enabled: boolean,
+): boolean {
+  settings.set(OS_NOTIFY_YARK_UPDATE_SETTING_KEY, serializeStoredBoolean(enabled));
   return enabled;
 }
