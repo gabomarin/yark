@@ -11,10 +11,18 @@ describe("createAppThemeForDensity scroll chrome (#395)", () => {
       type: "auto",
     });
     expect(components.Select?.defaultProps).toMatchObject({
-      scrollAreaProps: { type: "auto", offsetScrollbars: false },
+      scrollAreaProps: {
+        type: "auto",
+        offsetScrollbars: false,
+        scrollbarSize: 8,
+      },
     });
     expect(components.MultiSelect?.defaultProps).toMatchObject({
-      scrollAreaProps: { type: "auto", offsetScrollbars: false },
+      scrollAreaProps: {
+        type: "auto",
+        offsetScrollbars: false,
+        scrollbarSize: 8,
+      },
     });
   });
 
@@ -22,7 +30,11 @@ describe("createAppThemeForDensity scroll chrome (#395)", () => {
     const theme = createAppThemeForDensity("compact");
     expect(theme.components?.Select?.defaultProps).toMatchObject({
       size: "xs",
-      scrollAreaProps: { type: "auto", offsetScrollbars: false },
+      scrollAreaProps: {
+        type: "auto",
+        offsetScrollbars: false,
+        scrollbarSize: 8,
+      },
     });
   });
 });

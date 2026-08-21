@@ -221,10 +221,13 @@ sort is a temporary view; drag-to-reorder load order is enabled only while unsor
 
 Prefer **`type="auto"`** on Mantine `ScrollArea` / `ScrollArea.Autosize` and Combobox dropdowns
 (`Select` / `MultiSelect` / `Autocomplete` / `TagsInput` via theme `scrollAreaProps`) so
-scrollbar chrome appears **only when content overflows**. Theme defaults cover this; override
-with `type="never"` only when a parent owns native scroll (e.g. Mods tables). Avoid
-`type="scroll"` / `type="always"` for short lists. Native OS scroll surfaces hide WebKit
-end-cap arrows in `globals.css`.
+overlay chrome appears **only when content overflows**. Theme defaults override Combobox’s
+hardcoded `type="scroll"`. Use `type="never"` only when a parent owns native scroll (e.g. Mods
+tables). Avoid `type="always"` for short lists.
+
+Mantine viewports use `overflow: scroll` under the overlay bar; `globals.css` hides the **native**
+scrollbar on `[data-scrollarea-viewport]` so Windows Electron does not show a second bar/arrows.
+Native (non–ScrollArea) surfaces still use the thin global scrollbar without end-cap arrows.
 
 ### 7. Empty states
 
