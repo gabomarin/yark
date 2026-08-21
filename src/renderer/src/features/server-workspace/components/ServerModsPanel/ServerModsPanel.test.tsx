@@ -91,6 +91,20 @@ function installApi(): RendererApi {
         },
       },
     }),
+    listModCategories: vi.fn().mockResolvedValue({
+      ok: true,
+      data: [
+        {
+          id: 900_001,
+          name: "Mods",
+          slug: "mods",
+          isClass: true,
+          classId: null,
+          parentCategoryId: null,
+          displayIndex: 0,
+        },
+      ],
+    }),
     getModByReference: vi.fn().mockResolvedValue({
       ok: true,
       data: superDetail,
@@ -605,6 +619,40 @@ describe("ServerModsPanel", () => {
     expect(api.openCurseForgeMod).toHaveBeenCalledWith(awesomeDetail.curseforgeUrl);
   });
 
+  it("retries Discover search when submitting the same query again (#297)", async () => {
+    const api = installApi();
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(screen.getByRole("radio", { name: "Discover mods" }));
+    await waitFor(() => {
+      expect(api.searchMods).toHaveBeenCalled();
+    });
+
+    const search = screen.getByRole("textbox", { name: "Search" });
+    await user.clear(search);
+    await user.type(search, "spyglass");
+    await user.click(screen.getByRole("button", { name: "Search mods" }));
+    await waitFor(() => {
+      expect(api.searchMods).toHaveBeenCalledWith(
+        "spyglass",
+        expect.any(Object),
+      );
+    });
+    const afterFirstSubmit = vi.mocked(api.searchMods).mock.calls.length;
+
+    await user.click(screen.getByRole("button", { name: "Search mods" }));
+    await waitFor(() => {
+      expect(vi.mocked(api.searchMods).mock.calls.length).toBe(
+        afterFirstSubmit + 1,
+      );
+    });
+    expect(api.searchMods).toHaveBeenLastCalledWith(
+      "spyglass",
+      expect.any(Object),
+    );
+  });
+
   it("keeps discovery results separate and adds a result", async () => {
     const api = installApi();
     const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
@@ -612,7 +660,7 @@ describe("ServerModsPanel", () => {
     renderPanel();
 
     await user.click(screen.getByRole("radio", { name: "Discover mods" }));
-    expect(screen.getByRole("textbox", { name: "Search CurseForge" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Search" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Search mods" }));
     expect(await screen.findByText("Super Spyglass Plus")).toBeInTheDocument();
     expect(screen.queryByText("Awesome Spyglass!")).not.toBeInTheDocument();

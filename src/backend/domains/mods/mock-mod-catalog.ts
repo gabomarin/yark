@@ -1,4 +1,4 @@
-import type { ModMetadata } from "@shared/types";
+import type { ModCategory, ModMetadata } from "@shared/types";
 
 /**
  * Offline / unit-test catalog for `ModsService({ useMockCatalog: true })`.
@@ -16,6 +16,7 @@ export const MOCK_MOD_CATALOG: Readonly<Record<string, ModMetadata>> = {
     curseforgeUrl:
       "https://www.curseforge.com/ark-survival-ascended/mods/cryopods",
     slug: "cryopods",
+    categories: ["Structures"],
   },
   "929420": {
     id: "929420",
@@ -28,6 +29,7 @@ export const MOCK_MOD_CATALOG: Readonly<Record<string, ModMetadata>> = {
     curseforgeUrl:
       "https://www.curseforge.com/ark-survival-ascended/mods/super-spyglass-plus",
     slug: "super-spyglass-plus",
+    categories: ["Visuals"],
   },
   "940975": {
     id: "940975",
@@ -40,6 +42,7 @@ export const MOCK_MOD_CATALOG: Readonly<Record<string, ModMetadata>> = {
     curseforgeUrl:
       "https://www.curseforge.com/ark-survival-ascended/mods/cybers-structures",
     slug: "cybers-structures",
+    categories: ["Structures"],
   },
   "947033": {
     id: "947033",
@@ -52,6 +55,7 @@ export const MOCK_MOD_CATALOG: Readonly<Record<string, ModMetadata>> = {
     curseforgeUrl:
       "https://www.curseforge.com/ark-survival-ascended/mods/awesomespyglass",
     slug: "awesomespyglass",
+    categories: ["Visuals"],
   },
   "961285": {
     id: "961285",
@@ -64,8 +68,62 @@ export const MOCK_MOD_CATALOG: Readonly<Record<string, ModMetadata>> = {
     curseforgeUrl:
       "https://www.curseforge.com/ark-survival-ascended/mods/ultra-stacks",
     slug: "ultra-stacks",
+    categories: ["General"],
   },
 };
+
+/**
+ * Mock ASA classes/categories for unit tests (#297).
+ * IDs are **synthetic** (900xxx) — not CurseForge live IDs. Production uses
+ * Worker `GET /v1/categories` and must never invent real category IDs.
+ */
+export const MOCK_MOD_CATEGORIES: readonly ModCategory[] = [
+  {
+    id: 900_001,
+    name: "Mods",
+    slug: "mods",
+    isClass: true,
+    classId: null,
+    parentCategoryId: null,
+    displayIndex: 0,
+  },
+  {
+    id: 900_101,
+    name: "Structures",
+    slug: "structures",
+    isClass: false,
+    classId: 900_001,
+    parentCategoryId: 900_001,
+    displayIndex: 1,
+  },
+  {
+    id: 900_102,
+    name: "Visuals",
+    slug: "visuals",
+    isClass: false,
+    classId: 900_001,
+    parentCategoryId: 900_001,
+    displayIndex: 2,
+  },
+  {
+    id: 900_103,
+    name: "General",
+    slug: "general",
+    isClass: false,
+    classId: 900_001,
+    parentCategoryId: 900_001,
+    displayIndex: 3,
+  },
+  {
+    id: 900_104,
+    name: "Maps",
+    slug: "maps",
+    isClass: false,
+    classId: 900_001,
+    parentCategoryId: 900_001,
+    displayIndex: 4,
+  },
+];
 
 export function buildPlaceholderMetadata(modId: string): ModMetadata {
   return {

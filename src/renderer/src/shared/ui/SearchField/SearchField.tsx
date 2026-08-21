@@ -1,6 +1,6 @@
 import type { CSSProperties, KeyboardEvent, ReactElement } from "react";
 import { MagnifyingGlass } from "@phosphor-icons/react";
-import { TextInput, type TextInputProps } from "@mantine/core";
+import { ActionIcon, TextInput, type TextInputProps } from "@mantine/core";
 import classes from "./SearchField.module.css";
 
 interface Props {
@@ -19,6 +19,15 @@ interface Props {
   className?: string;
   style?: CSSProperties;
   onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
+  /**
+   * Submit variant (#297 Discover): clickable magnifier in `rightSection`.
+   * Enter still calls the same handler. Omit for instant Filter fields.
+   */
+  onSubmit?: () => void;
+  /** Disables the submit ActionIcon and shows a spinner while a remote search runs. */
+  submitting?: boolean;
+  /** Accessible name for the in-field submit control (default: "Search"). */
+  submitLabel?: string;
 }
 
 /** Phosphor size for the leading search icon (`xs` rail vs default fields). */
@@ -28,9 +37,8 @@ export function searchFieldIconSize(size?: TextInputProps["size"]): number {
 
 /**
  * Shared search chrome (radius, border, panel background, muted icon).
- * Use for local filters and for remote/submit flows (pair with a trailing
- * Button in a Group — see Mods Discover). Do not reintroduce per-feature
- * `TextInput` + `MagnifyingGlass` for search.
+ * Filter: decorative left magnifier. Submit: flush filled ActionIcon in
+ * `rightSection` (`onSubmit`) — do not pair with a separate trailing Button.
  */
 export function SearchField({
   value,
@@ -42,11 +50,16 @@ export function SearchField({
   className,
   style,
   onKeyDown,
+  onSubmit,
+  submitting = false,
+  submitLabel = "Search",
 }: Props): ReactElement {
   const visibleLabel =
     fieldLabel !== undefined && fieldLabel.trim().length > 0
       ? fieldLabel
       : undefined;
+  const iconSize = searchFieldIconSize(size);
+  const isSubmit = onSubmit !== undefined;
 
   return (
     <TextInput
@@ -54,13 +67,40 @@ export function SearchField({
       label={visibleLabel}
       value={value}
       onChange={(event) => onChange(event.currentTarget.value)}
-      onKeyDown={onKeyDown}
+      onKeyDown={(event) => {
+        onKeyDown?.(event);
+        if (event.defaultPrevented) return;
+        if (isSubmit && event.key === "Enter") {
+          event.preventDefault();
+          onSubmit();
+        }
+      }}
       placeholder={placeholder}
       size={size}
       className={className}
       style={style}
-      leftSection={<MagnifyingGlass size={searchFieldIconSize(size)} />}
-      classNames={{ input: classes.input, section: classes.section }}
+      leftSection={
+        isSubmit ? undefined : <MagnifyingGlass size={iconSize} />
+      }
+      rightSection={
+        isSubmit ? (
+          <ActionIcon
+            variant="transparent"
+            className={classes.submit}
+            aria-label={submitLabel}
+            loading={submitting}
+            onClick={onSubmit}
+          >
+            <MagnifyingGlass size={iconSize} weight="bold" />
+          </ActionIcon>
+        ) : undefined
+      }
+      rightSectionWidth={isSubmit ? "var(--input-height)" : undefined}
+      rightSectionPointerEvents={isSubmit ? "all" : undefined}
+      classNames={{
+        input: isSubmit ? `${classes.input} ${classes.inputSubmit}` : classes.input,
+        section: isSubmit ? classes.submitSection : classes.section,
+      }}
     />
   );
 }

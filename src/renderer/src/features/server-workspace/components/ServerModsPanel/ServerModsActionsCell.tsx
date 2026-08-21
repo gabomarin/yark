@@ -60,12 +60,17 @@ export function ServerModsActionsCell(props: Props): ReactElement {
           withArrow
         >
           <ActionIcon
-            variant="subtle"
+            variant={row.configured ? "transparent" : "subtle"}
             size="sm"
             color="teal"
             aria-label={row.configured ? `Already added ${row.name}` : `Add ${row.name}`}
             loading={props.busy}
             disabled={row.configured || props.busy}
+            styles={
+              row.configured
+                ? { root: { backgroundColor: "transparent" } }
+                : undefined
+            }
             onClick={() => props.onAdd(row)}
           >
             <Plus size={16} />
@@ -75,7 +80,7 @@ export function ServerModsActionsCell(props: Props): ReactElement {
         <Tooltip label={`Remove ${row.name}`} withArrow>
           <ActionIcon
             color="red"
-            variant="filled"
+            variant="subtle"
             size="sm"
             aria-label={`Remove ${row.name}`}
             disabled={props.busy}

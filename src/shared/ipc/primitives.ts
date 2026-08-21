@@ -286,6 +286,16 @@ export const modsSearchOptionsSchema = z
   .object({
     index: z.number().int().nonnegative().max(10_000).optional(),
     pageSize: z.number().int().positive().max(50).optional(),
+    classId: z.number().int().positive().optional(),
+    categoryId: z.number().int().positive().optional(),
+    sortField: z.union([
+      z.literal(1),
+      z.literal(2),
+      z.literal(3),
+      z.literal(4),
+      z.literal(6),
+    ]).optional(),
+    sortOrder: z.enum(["asc", "desc"]).optional(),
   })
   .strict()
   .refine((options) => (options.index ?? 0) + (options.pageSize ?? 50) <= 10_000, {

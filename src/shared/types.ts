@@ -1091,3 +1091,35 @@ export interface ModSearchPage {
     totalCount: number;
   };
 }
+
+/**
+ * CurseForge Search Mods `sortField` values used by Discover (#297).
+ * 1 Featured, 2 Popularity, 3 LastUpdated, 4 Name, 6 TotalDownloads.
+ */
+export type ModsSearchSortField = 1 | 2 | 3 | 4 | 6;
+
+export type ModsSearchSortOrder = "asc" | "desc";
+
+/** Options for `mods:search` / Worker `/v1/mods/search` (#297). */
+export interface ModSearchOptions {
+  index?: number;
+  pageSize?: number;
+  classId?: number;
+  categoryId?: number;
+  sortField?: ModsSearchSortField;
+  sortOrder?: ModsSearchSortOrder;
+}
+
+/**
+ * ASA CurseForge category/class from Worker `GET /v1/categories` (#297).
+ * IDs come from CurseForge live responses — never invent them in the app.
+ */
+export interface ModCategory {
+  id: number;
+  name: string;
+  slug: string;
+  isClass: boolean;
+  classId: number | null;
+  parentCategoryId: number | null;
+  displayIndex: number | null;
+}

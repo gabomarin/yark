@@ -78,8 +78,18 @@ Workspace → **Mods** has two views (`SegmentedControl`):
 
 ### Discover
 
-1. Search calls `mods:search` (Worker `/v1/mods/search`).
-2. Add resolves the row through `mods:get-by-reference`, then persists. New IDs
+1. Opening **Discover mods** browses the ASA catalog (empty query, popularity
+   sort) via `mods:search`. Category / sort / page use the same IPC with
+   `classId` / `categoryId` / `sortField` / `sortOrder` / `index` / `pageSize`.
+2. Categories load from `mods:list-categories` (Worker `GET /v1/categories`).
+   IDs come from CurseForge — YARK does not invent them. If the Worker is older
+   than this route, Discover still browses/searches; Category stays **All** only.
+3. Text search stays a **Submit** flow (`SearchField` in-field search icon /
+   Enter), not live-as-you-type.
+4. Catalog order is **column sort** on the table (Name / Downloads / Updated) —
+   each click re-queries CurseForge for the full result set, not only the page.
+   **Clear sort** restores Popularity descending (default browse).
+5. Add resolves the row through `mods:get-by-reference`, then persists. New IDs
    start disabled (same toast as Add by URL).
 
 ### Add by Project ID / URL
@@ -144,7 +154,8 @@ configured IDs still launch; search / refresh / new-ID enrich need an endpoint.
 | --- | --- | --- |
 | `getMod` | `GET /v1/mods/:id` | |
 | `getMods` | `POST /v1/mods` | Returns only resolved items; skipped IDs omitted |
-| `search` | `GET /v1/mods/search` | |
+| `search` | `GET /v1/mods/search` | Forwards classId/categoryId/sort/index/pageSize |
+| `listCategories` | `GET /v1/categories` | ASA classes/categories (#297) |
 | `getByReference` | ID → get; ASA URL/slug → search | Rejects non-ASA CurseForge URLs |
 
 `useMockCatalog: true` serves `MOCK_MOD_CATALOG` (unit tests). Production main
@@ -188,6 +199,7 @@ other.
 | `mods:get` | `getModMetadata(modId, forceRefresh?)` |
 | `mods:get-many` | `getModsMetadata(modIds, forceRefresh?)` |
 | `mods:search` | `searchMods(query, options?)` |
+| `mods:list-categories` | `listModCategories()` |
 | `mods:get-by-reference` | `getModByReference(ref)` |
 | `mods:open-curseforge` | `openCurseForgeMod(url)` |
 | `servers:update-patch` | `updateServerPatch(id, patch)` (mods group) |

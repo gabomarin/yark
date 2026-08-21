@@ -55,7 +55,8 @@ Deny → `429` / `rate_limited` (same code clients already see for upstream 429)
 
 Normal Mods workspace use (per install / short session), **assumptions**:
 
-- Discover search: a handful of GETs while typing (debounced in UI when present).
+- Discover search: browse/pagination/filter GETs while operators use Discover
+  (empty-query browse on open; submit for text search).
 - Detail / thumbnail refresh: occasional GET by Project ID.
 - Profile open / metadata refresh: one POST batch (≤ enabled+disabled IDs, capped
   at 50 by the Worker).
@@ -102,6 +103,7 @@ errors. Correlate with `X-Yark-Cache` when debugging upstream exposure.
 | --- | --- | --- | --- |
 | `GET /v1/mods/:id` | Yes (HTTP 200 only) | 600s | Synthetic origin + path |
 | `GET /v1/mods/search` | Yes (HTTP 200 only) | 60s | Allow-listed query params only (same as upstream) |
+| `GET /v1/categories` | Yes (HTTP 200 only) | 6h | `gameId` + optional `classId` / `classesOnly` |
 | `POST /v1/mods` | No | — | — |
 | Errors / rate limits | No | — | — |
 

@@ -108,6 +108,35 @@ describe("ModsService (mock catalog)", () => {
     expect(page.items.some((item) => item.slug.includes("spyglass"))).toBe(true);
   });
 
+  it("browses mock catalog with pagination, sort, and category (#297)", async () => {
+    const page = await service.search("", {
+      index: 0,
+      pageSize: 2,
+      sortField: 2,
+      sortOrder: "desc",
+    });
+    expect(page.pagination.totalCount).toBe(5);
+    expect(page.items).toHaveLength(2);
+    expect(page.items[0]?.downloadCount).toBeGreaterThanOrEqual(
+      page.items[1]?.downloadCount ?? 0,
+    );
+
+    const structures = await service.search("", {
+      categoryId: 900_101,
+      pageSize: 20,
+    });
+    expect(structures.items.every((item) =>
+      (item.categories ?? []).includes("Structures"),
+    )).toBe(true);
+  });
+
+  it("lists mock ASA categories (#297)", async () => {
+    const categories = await service.listCategories();
+    expect(categories.some((entry) => entry.isClass && entry.name === "Mods")).toBe(
+      true,
+    );
+  });
+
   it("resolves a known catalog slug", async () => {
     const meta = await service.getByReference("cryopods");
     expect(meta.id).toBe("928793");

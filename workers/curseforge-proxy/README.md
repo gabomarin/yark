@@ -16,6 +16,7 @@ and [docs/curseforge-proxy.md](../../docs/curseforge-proxy.md).
 | `GET` | `/v1/mods/:modId` | Single ASA mod (normalized); edge-cached ~10 min |
 | `POST` | `/v1/mods` | Body `{ "modIds": [number, ...] }` (maximum 50, body ≤ 16 KiB) → ASA-only items + skipped |
 | `GET` | `/v1/mods/search?...` | Forces `gameId=83374`; filters non-ASA; `pageSize` ≤ 50; edge-cached ~60s |
+| `GET` | `/v1/categories?...` | Forces `gameId=83374`; optional `classId` / `classesOnly`; edge-cached ~6h |
 
 Wrong methods on known paths return `405`. Route-class IP rate limits return
 `429` / `rate_limited`. Successful GET responses include `X-Yark-Cache: HIT|MISS`.
@@ -62,6 +63,30 @@ Non-ASA projects → `404` / `not_asa_mod`.
   "pagination": { "index": 0, "pageSize": 50, "resultCount": 10, "totalCount": 100 }
 }
 ```
+
+Allow-listed query params (forwarded upstream): `searchFilter`, `classId`,
+`categoryId`, `slug`, `sortField`, `sortOrder`, `index`, `pageSize`.
+
+### `GET /v1/categories` → `data`
+
+```json
+{
+  "categories": [
+    {
+      "id": 0,
+      "name": "string",
+      "slug": "string",
+      "isClass": true,
+      "classId": null,
+      "parentCategoryId": null,
+      "displayIndex": 0
+    }
+  ]
+}
+```
+
+IDs are CurseForge-owned (live `/v1/categories?gameId=83374`). Do not invent
+class/category IDs in the app or docs beyond a recorded live response.
 
 ## Setup
 

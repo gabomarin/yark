@@ -25,7 +25,9 @@ import type {
   LogCleanupPreview,
   LogCleanupResult,
   LogRetentionSettings,
+  ModCategory,
   ModMetadata,
+  ModSearchOptions,
   ModSearchPage,
   CloneInstallProgress,
   MoveInstallProgress,
@@ -193,6 +195,7 @@ export const IPC = {
   modsGet: "mods:get",
   modsGetMany: "mods:get-many",
   modsSearch: "mods:search",
+  modsListCategories: "mods:list-categories",
   modsGetByReference: "mods:get-by-reference",
   modsOpenCurseForge: "mods:open-curseforge",
 } as const;
@@ -561,8 +564,9 @@ export interface RendererApi {
   ): Promise<IpcResult<ModMetadata[]>>;
   searchMods(
     query: string,
-    options?: { index?: number; pageSize?: number },
+    options?: ModSearchOptions,
   ): Promise<IpcResult<ModSearchPage>>;
+  listModCategories(): Promise<IpcResult<ModCategory[]>>;
   getModByReference(ref: string): Promise<IpcResult<ModMetadata>>;
   openCurseForgeMod(url: string): Promise<IpcResult<void>>;
   onServerStatus(

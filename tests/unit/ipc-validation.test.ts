@@ -225,6 +225,22 @@ describe("validated arg schemas (reject)", () => {
     expect(ipcArgSchemas[IPC.backupsList].safeParse(["srv-1"]).success).toBe(true);
     expect(ipcArgSchemas[IPC.steamcmdConsole].safeParse([]).success).toBe(true);
     expect(ipcArgSchemas[IPC.modsSearch].safeParse([""]).success).toBe(true);
+    expect(ipcArgSchemas[IPC.modsListCategories].safeParse([]).success).toBe(true);
+  });
+
+  it("accepts Discover search filter options (#297)", () => {
+    expect(
+      ipcArgSchemas[IPC.modsSearch].safeParse([
+        "",
+        {
+          index: 20,
+          pageSize: 20,
+          classId: 6,
+          sortField: 2,
+          sortOrder: "desc",
+        },
+      ]).success,
+    ).toBe(true);
   });
 
   it("rejects oversize paths and mods pagination past CurseForge limits", () => {

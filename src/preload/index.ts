@@ -283,6 +283,7 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.modsGetMany, modIds, forceRefresh),
   searchMods: (query, options) =>
     ipcRenderer.invoke(IPC.modsSearch, query, options),
+  listModCategories: () => ipcRenderer.invoke(IPC.modsListCategories),
   getModByReference: (ref) =>
     ipcRenderer.invoke(IPC.modsGetByReference, ref),
   openCurseForgeMod: (url) =>

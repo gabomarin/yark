@@ -100,16 +100,19 @@ describe("ServerModsTable", () => {
       screen.getByRole("button", { name: "Reorder Alpha Mod" }),
     ).toBeTruthy();
 
-    // Sortable header is a th control; click the Mod title to enter view-sort.
     const modHeader = screen.getByText("Mod", { selector: "th, th *" });
     await user.click(modHeader.closest("th") ?? modHeader);
-    expect(await screen.findByText("View sorted")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: "Clear sort" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Reorder unavailable for Alpha Mod" }),
     ).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: "Clear sort" }));
-    expect(screen.queryByText("View sorted")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Clear sort" }),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Reorder Alpha Mod" }),
     ).toBeTruthy();
@@ -159,8 +162,11 @@ describe("ServerModsTable", () => {
       </AppProviders>,
     );
 
-    expect(document.querySelector('[data-mod-enabled="true"]')).not.toBeNull();
-    expect(document.querySelector('[data-mod-enabled="false"]')).not.toBeNull();
+    const enabled = document.querySelector('[data-mod-enabled="true"]');
+    const disabled = document.querySelector('[data-mod-enabled="false"]');
+    expect(enabled).not.toBeNull();
+    expect(disabled).not.toBeNull();
+    expect(disabled?.className).toMatch(/disabledRow/);
     expect(document.querySelector("[data-mod-status]")).toBeNull();
   });
 

@@ -840,6 +840,10 @@ export function registerIpcHandlers(
     mods.search(query, options ?? undefined),
   );
 
+  handleValidated(IPC.modsListCategories, ipcArgSchemas[IPC.modsListCategories], () =>
+    mods.listCategories(),
+  );
+
   handleValidated(IPC.modsGetByReference, ipcArgSchemas[IPC.modsGetByReference], ([ref]) =>
     mods.getByReference(ref),
   );
