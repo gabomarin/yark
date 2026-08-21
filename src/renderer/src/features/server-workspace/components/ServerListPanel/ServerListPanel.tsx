@@ -1,10 +1,9 @@
 import type { ReactElement } from "react";
-import { CaretDown, CaretRight, Plus } from "@phosphor-icons/react";
+import { CaretRight, Plus } from "@phosphor-icons/react";
 import {
   ActionIcon,
   Button,
   Group,
-  Menu,
   Text,
   Tooltip,
 } from "@mantine/core";
@@ -40,11 +39,9 @@ export function ServerListPanel(props: Props): ReactElement {
   const iconMode = props.iconMode === true;
   const density = useUiDensity();
   const compact = density === "compact";
-  /** Hardcoded md/lg → compact sm|md, else md|lg (#233). */
+  /** Expand control size: compact sm, else md (#233). */
   const expandSize = compact ? "sm" : "md";
-  const railActionSize = compact ? "md" : "lg";
   const addButtonSize = compact ? "xs" : "sm";
-  const plusIconSize = compact ? 16 : 18;
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -142,40 +139,10 @@ export function ServerListPanel(props: Props): ReactElement {
         onToggleCluster={toggleCluster}
       />
 
-      {props.onAddServer !== undefined && (
+      {/* Icon rail is switch-only; Add / Import live on the expanded list (#397). */}
+      {props.onAddServer !== undefined && !iconMode && (
         <div className={classes.footer}>
-          {iconMode ? (
-            <Group gap={4} justify="center" wrap="nowrap">
-              <Tooltip label="Add server" position="right" withArrow>
-                <ActionIcon
-                  variant="light"
-                  size={railActionSize}
-                  aria-label="Add server"
-                  onClick={props.onAddServer}
-                >
-                  <Plus size={plusIconSize} />
-                </ActionIcon>
-              </Tooltip>
-              {props.onImportServer !== undefined && (
-                <Menu shadow="md" withinPortal position="right-end">
-                  <Menu.Target>
-                    <ActionIcon
-                      variant="default"
-                      size={railActionSize}
-                      aria-label="More add-server options"
-                    >
-                      <CaretDown size={14} />
-                    </ActionIcon>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    <Menu.Item onClick={props.onImportServer}>
-                      Import install
-                    </Menu.Item>
-                  </Menu.Dropdown>
-                </Menu>
-              )}
-            </Group>
-          ) : props.onImportServer !== undefined ? (
+          {props.onImportServer !== undefined ? (
             <AddServerSplitButton
               primaryLabel="Add server"
               onCreate={props.onAddServer}

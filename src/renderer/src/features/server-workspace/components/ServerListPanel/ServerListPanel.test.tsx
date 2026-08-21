@@ -111,8 +111,8 @@ describe("ServerListPanel", () => {
     ).toBeInTheDocument();
   });
 
-  it("sizes rail Add server by UI density (#233)", () => {
-    const { rerender } = render(
+  it("omits Add server from the icon rail (#397)", () => {
+    render(
       <AppProviders density="compact">
         <ServerListPanel
           servers={[profile()]}
@@ -121,32 +121,15 @@ describe("ServerListPanel", () => {
           iconMode
           onSelectServer={() => undefined}
           onAddServer={() => undefined}
+          onImportServer={() => undefined}
         />
       </AppProviders>,
     );
 
-    expect(screen.getByRole("button", { name: "Add server" })).toHaveAttribute(
-      "data-size",
-      "md",
-    );
-
-    rerender(
-      <AppProviders density="comfortable">
-        <ServerListPanel
-          servers={[profile()]}
-          selectedServerId="srv-1"
-          statuses={new Map()}
-          iconMode
-          onSelectServer={() => undefined}
-          onAddServer={() => undefined}
-        />
-      </AppProviders>,
-    );
-
-    expect(screen.getByRole("button", { name: "Add server" })).toHaveAttribute(
-      "data-size",
-      "lg",
-    );
+    expect(screen.queryByRole("button", { name: "Add server" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "More add-server options" }),
+    ).not.toBeInTheDocument();
   });
 
   it("hides labels and exposes rail tooltips in icon mode (#107)", () => {
@@ -169,7 +152,7 @@ describe("ServerListPanel", () => {
     expect(
       screen.getByRole("button", { name: /The Island · TheIsland_WP · Stopped/i }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Add server" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Add server" })).not.toBeInTheDocument();
   });
 
   it("calls onToggleRail from the header control (#107)", async () => {
