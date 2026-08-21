@@ -218,8 +218,3 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-.footer {
-  padding: var(--app-space-sm);
-  border-top: 1px solid var(--app-color-border);
-}

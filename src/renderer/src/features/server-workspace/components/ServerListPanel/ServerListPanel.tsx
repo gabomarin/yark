@@ -1,8 +1,7 @@
 import type { ReactElement } from "react";
-import { CaretRight, Plus } from "@phosphor-icons/react";
+import { CaretRight } from "@phosphor-icons/react";
 import {
   ActionIcon,
-  Button,
   Group,
   Text,
   Tooltip,
@@ -10,7 +9,6 @@ import {
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { useMemo, useState } from "react";
 import { useUiDensity } from "@app/AppProviders";
-import { AddServerSplitButton } from "@features/servers/components/AddServerSplitButton/AddServerSplitButton";
 import { ServerListControls } from "@features/servers/components/ServerListControls/ServerListControls";
 import { useServerListPreferences } from "@features/servers/hooks/useServerListPreferences";
 import { sortServers } from "@features/servers/serverListModel";
@@ -24,8 +22,6 @@ interface Props {
   selectedServerId: string;
   statuses: Map<string, ServerRuntimeInfo>;
   onSelectServer: (serverId: string) => void;
-  onAddServer?: () => void;
-  onImportServer?: () => void;
   /** Compact icon-rail (#107). */
   iconMode?: boolean;
   /** Explicit Full ↔ Rail toggle (wide layout). */
@@ -41,7 +37,6 @@ export function ServerListPanel(props: Props): ReactElement {
   const compact = density === "compact";
   /** Expand control size: compact sm, else md (#233). */
   const expandSize = compact ? "sm" : "md";
-  const addButtonSize = compact ? "xs" : "sm";
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -138,31 +133,6 @@ export function ServerListPanel(props: Props): ReactElement {
         isClusterOpen={isClusterOpen}
         onToggleCluster={toggleCluster}
       />
-
-      {/* Icon rail is switch-only; Add / Import live on the expanded list (#397). */}
-      {props.onAddServer !== undefined && !iconMode && (
-        <div className={classes.footer}>
-          {props.onImportServer !== undefined ? (
-            <AddServerSplitButton
-              primaryLabel="Add server"
-              onCreate={props.onAddServer}
-              onImport={props.onImportServer}
-              fullWidth
-              size={addButtonSize}
-            />
-          ) : (
-            <Button
-              fullWidth
-              size={addButtonSize}
-              variant="light"
-              leftSection={<Plus size={compact ? 14 : 16} />}
-              onClick={props.onAddServer}
-            >
-              Add server
-            </Button>
-          )}
-        </div>
-      )}
     </aside>
   );
 }

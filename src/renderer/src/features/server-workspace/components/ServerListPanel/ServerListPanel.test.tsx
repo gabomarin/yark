@@ -111,17 +111,14 @@ describe("ServerListPanel", () => {
     ).toBeInTheDocument();
   });
 
-  it("omits Add server from the icon rail (#397)", () => {
+  it("omits Add server and Import from the server list (#397)", () => {
     render(
-      <AppProviders density="compact">
+      <AppProviders>
         <ServerListPanel
           servers={[profile()]}
           selectedServerId="srv-1"
           statuses={new Map()}
-          iconMode
           onSelectServer={() => undefined}
-          onAddServer={() => undefined}
-          onImportServer={() => undefined}
         />
       </AppProviders>,
     );
@@ -141,7 +138,6 @@ describe("ServerListPanel", () => {
           statuses={new Map()}
           iconMode
           onSelectServer={() => undefined}
-          onAddServer={() => undefined}
         />
       </AppProviders>,
     );
@@ -152,7 +148,6 @@ describe("ServerListPanel", () => {
     expect(
       screen.getByRole("button", { name: /The Island · TheIsland_WP · Stopped/i }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Add server" })).not.toBeInTheDocument();
   });
 
   it("calls onToggleRail from the header control (#107)", async () => {
