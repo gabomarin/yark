@@ -14,6 +14,10 @@ import type {
   ServerStopProgressReason,
   StartServerOptions,
 } from "@shared/types";
+import {
+  OS_NOTIFY_CRASH_EVENT_TYPE,
+  type ServerCrashedNotifyPayload,
+} from "@shared/os-notification-events";
 import { EMPTY_WIPE_STALE_MESSAGE, offsetPort, PORT_MAX, PORT_MIN } from "@shared/types";
 import { applyServerProfilePatch } from "@shared/server-profile";
 import { EventEmitter } from "node:events";
@@ -1315,22 +1319,35 @@ export class InstanceService extends EventEmitter {
       payload.lastError ??
       `Server "${name}" exited unexpectedly`;
     const excerpt = diagnosis?.excerpt?.trim() ?? "";
-    this.repo.addEvent(payload.serverId, "server_crashed", "error", summary, {
-      what: summary,
-      cause: diagnosis?.cause,
-      location: "ShooterGame/Saved/Logs/ShooterGame.log",
-      suggestion: diagnosis?.suggestion,
-      excerpt: excerpt.length > 0 ? excerpt : undefined,
-      context: {
-        lastError: payload.lastError,
-        phase: payload.phase,
-        exitCode: payload.exitCode,
-        missingModIds:
-          diagnosis !== null && diagnosis.missingModIds.length > 0
-            ? diagnosis.missingModIds.join(",")
-            : null,
+    const eventId = this.repo.addEvent(
+      payload.serverId,
+      OS_NOTIFY_CRASH_EVENT_TYPE,
+      "error",
+      summary,
+      {
+        what: summary,
+        cause: diagnosis?.cause,
+        location: "ShooterGame/Saved/Logs/ShooterGame.log",
+        suggestion: diagnosis?.suggestion,
+        excerpt: excerpt.length > 0 ? excerpt : undefined,
+        context: {
+          lastError: payload.lastError,
+          phase: payload.phase,
+          exitCode: payload.exitCode,
+          missingModIds:
+            diagnosis !== null && diagnosis.missingModIds.length > 0
+              ? diagnosis.missingModIds.join(",")
+              : null,
+        },
       },
-    });
+    );
+    const notify: ServerCrashedNotifyPayload = {
+      serverId: payload.serverId,
+      serverName: name,
+      eventId,
+      summary,
+    };
+    this.emit("server-crashed", notify);
   }
 
   /** Update health memory and emit degradation-only events. */

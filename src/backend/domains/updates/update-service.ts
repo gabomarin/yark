@@ -10,6 +10,10 @@ import type {
   SteamCmdConsoleSnapshot,
   SteamCmdStatus,
 } from "../../../shared/types";
+import {
+  shouldNotifySteamCmdJobEvent,
+  type SteamCmdJobTerminalPayload,
+} from "../../../shared/os-notification-events";
 import { parseSteamCmdProgressLine } from "../../../shared/steamcmd-progress";
 import {
   CRITICAL_BACKUP_KINDS,
@@ -415,6 +419,20 @@ export class UpdateService extends EventEmitter {
     );
     if (job !== undefined) {
       job.latestEventId = eventId;
+    }
+    if (shouldNotifySteamCmdJobEvent(type, severity)) {
+      const server =
+        job?.serverId !== undefined ? this.servers.get(job.serverId) : null;
+      const payload: SteamCmdJobTerminalPayload = {
+        type,
+        severity,
+        serverId: job?.serverId ?? null,
+        serverName: server?.name ?? null,
+        jobId: job?.id ?? null,
+        eventId,
+        message,
+      };
+      this.emit("job-terminal", payload);
     }
     return eventId;
   }

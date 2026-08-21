@@ -52,6 +52,10 @@
   padding-top: 2px;
 }
 
+.settingRowNested {
+  padding-left: var(--app-space-lg);
+}
+
 .settingBlock {
   display: flex;
   flex-direction: column;

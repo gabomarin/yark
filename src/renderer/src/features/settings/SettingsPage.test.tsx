@@ -41,11 +41,17 @@ function stubSettingsApi(
         closeWindowToTray: true,
         startWithWindows: false,
         trayCloseHintDismissed: false,
+        osNotifyEnabled: true,
+        osNotifyCrash: true,
+        osNotifySteamCmd: true,
       },
     }),
     setCloseWindowToTray: vi.fn().mockResolvedValue({ ok: true, data: true }),
     setStartWithWindows: vi.fn().mockResolvedValue({ ok: true, data: false }),
     setTrayCloseHintDismissed: vi.fn().mockResolvedValue({ ok: true, data: false }),
+    setOsNotifyEnabled: vi.fn().mockResolvedValue({ ok: true, data: true }),
+    setOsNotifyCrash: vi.fn().mockResolvedValue({ ok: true, data: true }),
+    setOsNotifySteamCmd: vi.fn().mockResolvedValue({ ok: true, data: true }),
     getAppUpdateStatus: vi.fn().mockResolvedValue({
       ok: true,
       data: {
@@ -152,10 +158,16 @@ function renderSettings(
           closeWindowToTray: true,
           startWithWindows: false,
           trayCloseHintDismissed: false,
+          osNotifyEnabled: true,
+          osNotifyCrash: true,
+          osNotifySteamCmd: true,
           desktopShellReady: true,
           onCloseWindowToTrayChange: vi.fn(),
           onStartWithWindowsChange: vi.fn(),
           onTrayCloseHintDismissedChange: vi.fn(),
+          onOsNotifyEnabledChange: vi.fn(),
+          onOsNotifyCrashChange: vi.fn(),
+          onOsNotifySteamCmdChange: vi.fn(),
           shellError: null,
           clearShellError: vi.fn(),
         }}
@@ -189,8 +201,11 @@ describe("SettingsPage", () => {
     expect(screen.getByText("Quick jump")).toBeInTheDocument();
     expect(screen.getByText(/Ctrl/i)).toBeInTheDocument();
     expect(screen.getByText("Close window to tray")).toBeInTheDocument();
-    expect(screen.getByText("Show notification when hiding to tray")).toBeInTheDocument();
     expect(screen.getByText("Start with Windows")).toBeInTheDocument();
+    expect(screen.getByText("Windows notifications")).toBeInTheDocument();
+    expect(screen.getByText("Server crash")).toBeInTheDocument();
+    expect(screen.getByText("SteamCMD jobs")).toBeInTheDocument();
+    expect(screen.getByText("When hiding to tray")).toBeInTheDocument();
     expect(screen.queryByText("On quit with active servers")).not.toBeInTheDocument();
     expect(screen.getByText("Display size")).toBeInTheDocument();
     expect(screen.getByLabelText("Display size")).toBeInTheDocument();
@@ -263,10 +278,16 @@ describe("SettingsPage", () => {
         closeWindowToTray: true,
         startWithWindows: false,
         trayCloseHintDismissed: false,
+        osNotifyEnabled: true,
+        osNotifyCrash: true,
+        osNotifySteamCmd: true,
         desktopShellReady: true,
         onCloseWindowToTrayChange: vi.fn(),
         onStartWithWindowsChange: vi.fn(),
         onTrayCloseHintDismissedChange,
+        onOsNotifyEnabledChange: vi.fn(),
+        onOsNotifyCrashChange: vi.fn(),
+        onOsNotifySteamCmdChange: vi.fn(),
         shellError: null,
         clearShellError: vi.fn(),
       },
@@ -278,6 +299,100 @@ describe("SettingsPage", () => {
     expect(toastSwitch).toBeChecked();
     await user.click(toastSwitch);
     expect(onTrayCloseHintDismissedChange).toHaveBeenCalledWith(true);
+  });
+
+  it("persists Windows notification master and category toggles", async () => {
+    const user = userEvent.setup();
+    const onOsNotifyEnabledChange = vi.fn();
+    const onOsNotifyCrashChange = vi.fn();
+    stubSettingsApi();
+
+    renderSettings({
+      desktopShell: {
+        closeWindowToTray: true,
+        startWithWindows: false,
+        trayCloseHintDismissed: false,
+        osNotifyEnabled: true,
+        osNotifyCrash: true,
+        osNotifySteamCmd: true,
+        desktopShellReady: true,
+        onCloseWindowToTrayChange: vi.fn(),
+        onStartWithWindowsChange: vi.fn(),
+        onTrayCloseHintDismissedChange: vi.fn(),
+        onOsNotifyEnabledChange,
+        onOsNotifyCrashChange,
+        onOsNotifySteamCmdChange: vi.fn(),
+        shellError: null,
+        clearShellError: vi.fn(),
+      },
+    });
+
+    const master = await screen.findByRole("switch", {
+      name: "Windows notifications",
+    });
+    expect(master).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Notify on server crash" })).toBeEnabled();
+    await user.click(master);
+    expect(onOsNotifyEnabledChange).toHaveBeenCalledWith(false);
+  });
+
+  it("disables crash and SteamCMD notification switches when the master is off", () => {
+    stubSettingsApi();
+    renderSettings({
+      desktopShell: {
+        closeWindowToTray: true,
+        startWithWindows: false,
+        trayCloseHintDismissed: false,
+        osNotifyEnabled: false,
+        osNotifyCrash: true,
+        osNotifySteamCmd: true,
+        desktopShellReady: true,
+        onCloseWindowToTrayChange: vi.fn(),
+        onStartWithWindowsChange: vi.fn(),
+        onTrayCloseHintDismissedChange: vi.fn(),
+        onOsNotifyEnabledChange: vi.fn(),
+        onOsNotifyCrashChange: vi.fn(),
+        onOsNotifySteamCmdChange: vi.fn(),
+        shellError: null,
+        clearShellError: vi.fn(),
+      },
+    });
+
+    expect(screen.getByRole("switch", { name: "Windows notifications" })).not.toBeChecked();
+    expect(screen.getByRole("switch", { name: "Notify on server crash" })).toBeDisabled();
+    expect(
+      screen.getByRole("switch", { name: "Notify on SteamCMD job finished" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("switch", { name: "Show notification when hiding to tray" }),
+    ).toBeDisabled();
+  });
+
+  it("hides the hide-to-tray category when Close window to tray is off", () => {
+    stubSettingsApi();
+    renderSettings({
+      desktopShell: {
+        closeWindowToTray: false,
+        startWithWindows: false,
+        trayCloseHintDismissed: false,
+        osNotifyEnabled: true,
+        osNotifyCrash: true,
+        osNotifySteamCmd: true,
+        desktopShellReady: true,
+        onCloseWindowToTrayChange: vi.fn(),
+        onStartWithWindowsChange: vi.fn(),
+        onTrayCloseHintDismissedChange: vi.fn(),
+        onOsNotifyEnabledChange: vi.fn(),
+        onOsNotifyCrashChange: vi.fn(),
+        onOsNotifySteamCmdChange: vi.fn(),
+        shellError: null,
+        clearShellError: vi.fn(),
+      },
+    });
+
+    expect(screen.queryByText("When hiding to tray")).not.toBeInTheDocument();
+    expect(screen.getByText("Server crash")).toBeInTheDocument();
+    expect(screen.getByText("SteamCMD jobs")).toBeInTheDocument();
   });
 
   it("expands caches and supports open/clear actions", async () => {

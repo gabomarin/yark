@@ -34,15 +34,17 @@ describe("InstanceService unexpected-exit events", () => {
   it("records server_crashed with a persisted log excerpt on unexpected-exit", () => {
     const repo = {
       get: vi.fn(() => profile),
-      addEvent: vi.fn(),
+      addEvent: vi.fn().mockReturnValue(42),
     } as unknown as ServerRepository;
     const processes = new EventEmitter() as unknown as ProcessManager;
-    new InstanceService(
+    const instances = new InstanceService(
       repo,
       processes,
       {} as BackupService,
       new InstanceLockManager(),
     );
+    const crashed = vi.fn();
+    instances.on("server-crashed", crashed);
 
     const diagnosis = diagnoseAsaStartupFailure(
       "Fatal error!\nAssertion failed: nullptr+8",
@@ -68,6 +70,12 @@ describe("InstanceService unexpected-exit events", () => {
         }),
       }),
     );
+    expect(crashed).toHaveBeenCalledWith({
+      serverId: profile.id,
+      serverName: profile.name,
+      eventId: 42,
+      summary: expect.stringContaining("Assertion failed"),
+    });
   });
 
   it("does not record server_crashed on a live error status (spawn/readiness/kill failure)", () => {

@@ -417,8 +417,9 @@ the window visible through wait/save/backup progress).
 
 - **Close window to tray** (default on): the window close button hides YARK to
   the system tray instead of quitting. Minimize still uses the normal taskbar.
-  Optional Windows toast (Settings: **Show notification when hiding to tray**,
-  default on); click the toast or tray icon to reopen. Quit from the tray menu
+  Optional Windows toast (Settings → General → **Windows notifications** →
+  **When hiding to tray**, default on; also requires the master switch);
+  click the toast or tray icon to reopen. Quit from the tray menu
   to exit. There is no native application menu bar (Electron default File/Edit/
   View/Help is disabled).
 - **Start with Windows** (default off): uses Electron `setLoginItemSettings` so

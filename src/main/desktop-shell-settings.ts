@@ -2,7 +2,13 @@ import type { AppSettingsRepository } from "../backend/infra/db/app-settings-rep
 import {
   CLOSE_WINDOW_TO_TRAY_SETTING_KEY,
   DEFAULT_CLOSE_WINDOW_TO_TRAY,
+  DEFAULT_OS_NOTIFY_CRASH,
+  DEFAULT_OS_NOTIFY_ENABLED,
+  DEFAULT_OS_NOTIFY_STEAMCMD,
   DEFAULT_START_WITH_WINDOWS,
+  OS_NOTIFY_CRASH_SETTING_KEY,
+  OS_NOTIFY_ENABLED_SETTING_KEY,
+  OS_NOTIFY_STEAMCMD_SETTING_KEY,
   START_WITH_WINDOWS_SETTING_KEY,
   TRAY_CLOSE_HINT_DISMISSED_SETTING_KEY,
   parseStoredBoolean,
@@ -25,6 +31,18 @@ export function readDesktopShellPreferences(
     trayCloseHintDismissed: parseStoredBoolean(
       settings.get(TRAY_CLOSE_HINT_DISMISSED_SETTING_KEY),
       false,
+    ),
+    osNotifyEnabled: parseStoredBoolean(
+      settings.get(OS_NOTIFY_ENABLED_SETTING_KEY),
+      DEFAULT_OS_NOTIFY_ENABLED,
+    ),
+    osNotifyCrash: parseStoredBoolean(
+      settings.get(OS_NOTIFY_CRASH_SETTING_KEY),
+      DEFAULT_OS_NOTIFY_CRASH,
+    ),
+    osNotifySteamCmd: parseStoredBoolean(
+      settings.get(OS_NOTIFY_STEAMCMD_SETTING_KEY),
+      DEFAULT_OS_NOTIFY_STEAMCMD,
     ),
   };
 }
@@ -54,4 +72,28 @@ export function setTrayCloseHintDismissed(
     serializeStoredBoolean(dismissed),
   );
   return dismissed;
+}
+
+export function setOsNotifyEnabled(
+  settings: AppSettingsRepository,
+  enabled: boolean,
+): boolean {
+  settings.set(OS_NOTIFY_ENABLED_SETTING_KEY, serializeStoredBoolean(enabled));
+  return enabled;
+}
+
+export function setOsNotifyCrash(
+  settings: AppSettingsRepository,
+  enabled: boolean,
+): boolean {
+  settings.set(OS_NOTIFY_CRASH_SETTING_KEY, serializeStoredBoolean(enabled));
+  return enabled;
+}
+
+export function setOsNotifySteamCmd(
+  settings: AppSettingsRepository,
+  enabled: boolean,
+): boolean {
+  settings.set(OS_NOTIFY_STEAMCMD_SETTING_KEY, serializeStoredBoolean(enabled));
+  return enabled;
 }

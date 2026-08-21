@@ -132,6 +132,9 @@ export const IPC = {
   appSetCloseWindowToTray: "app:set-close-window-to-tray",
   appSetStartWithWindows: "app:set-start-with-windows",
   appSetTrayCloseHintDismissed: "app:set-tray-close-hint-dismissed",
+  appSetOsNotifyEnabled: "app:set-os-notify-enabled",
+  appSetOsNotifyCrash: "app:set-os-notify-crash",
+  appSetOsNotifySteamCmd: "app:set-os-notify-steamcmd",
   appGetUpdateStatus: "app:get-update-status",
   appCheckForUpdate: "app:check-for-update",
   appDownloadUpdate: "app:download-update",
@@ -204,6 +207,7 @@ export const IPC_PUSH = {
   rconStatusChanged: "push:rcon-status-changed",
   playerListUpdated: "push:player-list-updated",
   appUpdate: "push:app-update",
+  osNotificationOpen: "push:os-notification-open",
 } as const;
 
 export interface SteamCmdProgressPush {
@@ -239,6 +243,11 @@ export interface PlayerListUpdatedPush {
   timestamp: string;
   error: string | null;
 }
+
+/** Click a Windows OS toast: reveal YARK and jump to a useful surface (#331). */
+export type OsNotificationOpenPush =
+  | { kind: "crash"; serverId: string; eventId: number }
+  | { kind: "steamcmd"; serverId: string | null };
 
 /** Normalized result of IPC operations. */
 export type IpcResult<T> =
@@ -377,6 +386,9 @@ export interface RendererApi {
   setCloseWindowToTray(enabled: boolean): Promise<IpcResult<boolean>>;
   setStartWithWindows(enabled: boolean): Promise<IpcResult<boolean>>;
   setTrayCloseHintDismissed(dismissed: boolean): Promise<IpcResult<boolean>>;
+  setOsNotifyEnabled(enabled: boolean): Promise<IpcResult<boolean>>;
+  setOsNotifyCrash(enabled: boolean): Promise<IpcResult<boolean>>;
+  setOsNotifySteamCmd(enabled: boolean): Promise<IpcResult<boolean>>;
   getAppUpdateStatus(): Promise<IpcResult<AppUpdateStatus>>;
   checkForAppUpdate(): Promise<IpcResult<AppUpdateStatus>>;
   downloadAppUpdate(): Promise<IpcResult<AppUpdateStatus>>;
@@ -575,4 +587,7 @@ export interface RendererApi {
     listener: (payload: PlayerListUpdatedPush) => void,
   ): () => void;
   onAppUpdate(listener: (status: AppUpdateStatus) => void): () => void;
+  onOsNotificationOpen(
+    listener: (payload: OsNotificationOpenPush) => void,
+  ): () => void;
 }

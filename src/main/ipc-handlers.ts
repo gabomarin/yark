@@ -39,6 +39,9 @@ import { APP_VERSION } from "../shared/app-version";
 import {
   readDesktopShellPreferences,
   setCloseWindowToTray,
+  setOsNotifyCrash,
+  setOsNotifyEnabled,
+  setOsNotifySteamCmd,
   setStartWithWindowsPreference,
   setTrayCloseHintDismissed,
 } from "./desktop-shell-settings";
@@ -613,6 +616,24 @@ export function registerIpcHandlers(
     IPC.appSetTrayCloseHintDismissed,
     ipcArgSchemas[IPC.appSetTrayCloseHintDismissed],
     ([dismissed]): boolean => setTrayCloseHintDismissed(settings, dismissed),
+  );
+
+  handleValidated(
+    IPC.appSetOsNotifyEnabled,
+    ipcArgSchemas[IPC.appSetOsNotifyEnabled],
+    ([enabled]): boolean => setOsNotifyEnabled(settings, enabled),
+  );
+
+  handleValidated(
+    IPC.appSetOsNotifyCrash,
+    ipcArgSchemas[IPC.appSetOsNotifyCrash],
+    ([enabled]): boolean => setOsNotifyCrash(settings, enabled),
+  );
+
+  handleValidated(
+    IPC.appSetOsNotifySteamCmd,
+    ipcArgSchemas[IPC.appSetOsNotifySteamCmd],
+    ([enabled]): boolean => setOsNotifySteamCmd(settings, enabled),
   );
 
   handleValidated(IPC.iniRead, ipcArgSchemas[IPC.iniRead], ([serverId]) =>

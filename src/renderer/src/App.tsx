@@ -74,7 +74,7 @@ import {
   type WorkspaceTab,
 } from "@features/server-workspace/ServerWorkspacePage";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
-import type { OnlinePlayerInfo, PlayerListUpdatedPush } from "@shared/ipc";
+import type { OnlinePlayerInfo, OsNotificationOpenPush, PlayerListUpdatedPush } from "@shared/ipc";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { CloneServerDialog } from "@features/servers/components/CloneServerDialog/CloneServerDialog";
 import { DeleteServerModal } from "@features/servers/components/DeleteServerModal/DeleteServerModal";
@@ -1842,6 +1842,23 @@ export function App({
     },
     [],
   );
+
+  useEffect(() => {
+    if (typeof window.api.onOsNotificationOpen !== "function") {
+      return;
+    }
+    return window.api.onOsNotificationOpen((payload: OsNotificationOpenPush) => {
+      if (payload.kind === "crash") {
+        openServerLogs(payload.serverId, {
+          section: "events",
+          eventId: payload.eventId,
+        });
+        return;
+      }
+      setOverlay(null);
+      setRoute("downloads");
+    });
+  }, [openServerLogs]);
 
   const openServerBackups = useCallback((serverId: string) => {
     setRoute("overview");

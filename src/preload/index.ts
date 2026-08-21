@@ -12,7 +12,7 @@ import type {
   StartServerOptions,
   SteamCmdCacheKind,
 } from "../shared/types";
-import type { SteamCmdProgressPush, BackupsChangedPush, ServerStopProgressPush, MoveInstallProgressPush, CloneInstallProgressPush, RconStatusChangedPush, PlayerListUpdatedPush } from "../shared/ipc";
+import type { SteamCmdProgressPush, BackupsChangedPush, ServerStopProgressPush, MoveInstallProgressPush, CloneInstallProgressPush, RconStatusChangedPush, PlayerListUpdatedPush, OsNotificationOpenPush } from "../shared/ipc";
 import { normalizeCloneInstallProgress, normalizeMoveInstallProgress, normalizeServerStopProgress } from "../shared/types";
 
 const api: RendererApi = {
@@ -132,6 +132,12 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.appSetStartWithWindows, enabled),
   setTrayCloseHintDismissed: (dismissed) =>
     ipcRenderer.invoke(IPC.appSetTrayCloseHintDismissed, dismissed),
+  setOsNotifyEnabled: (enabled) =>
+    ipcRenderer.invoke(IPC.appSetOsNotifyEnabled, enabled),
+  setOsNotifyCrash: (enabled) =>
+    ipcRenderer.invoke(IPC.appSetOsNotifyCrash, enabled),
+  setOsNotifySteamCmd: (enabled) =>
+    ipcRenderer.invoke(IPC.appSetOsNotifySteamCmd, enabled),
   getAppUpdateStatus: () => ipcRenderer.invoke(IPC.appGetUpdateStatus),
   checkForAppUpdate: () => ipcRenderer.invoke(IPC.appCheckForUpdate),
   downloadAppUpdate: () => ipcRenderer.invoke(IPC.appDownloadUpdate),
@@ -347,6 +353,14 @@ const api: RendererApi = {
     ipcRenderer.on(IPC_PUSH.appUpdate, handler);
     return () => {
       ipcRenderer.removeListener(IPC_PUSH.appUpdate, handler);
+    };
+  },
+  onOsNotificationOpen: (listener) => {
+    const handler = (_e: unknown, payload: OsNotificationOpenPush) =>
+      listener(payload);
+    ipcRenderer.on(IPC_PUSH.osNotificationOpen, handler);
+    return () => {
+      ipcRenderer.removeListener(IPC_PUSH.osNotificationOpen, handler);
     };
   },
 };

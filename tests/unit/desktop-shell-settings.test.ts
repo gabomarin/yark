@@ -4,7 +4,13 @@ import { AppSettingsRepository } from "@backend/infra/db/app-settings-repository
 import {
   CLOSE_WINDOW_TO_TRAY_SETTING_KEY,
   DEFAULT_CLOSE_WINDOW_TO_TRAY,
+  DEFAULT_OS_NOTIFY_CRASH,
+  DEFAULT_OS_NOTIFY_ENABLED,
+  DEFAULT_OS_NOTIFY_STEAMCMD,
   DEFAULT_START_WITH_WINDOWS,
+  OS_NOTIFY_CRASH_SETTING_KEY,
+  OS_NOTIFY_ENABLED_SETTING_KEY,
+  OS_NOTIFY_STEAMCMD_SETTING_KEY,
   START_WITH_WINDOWS_SETTING_KEY,
   TRAY_CLOSE_HINT_DISMISSED_SETTING_KEY,
   parseStoredBoolean,
@@ -13,6 +19,9 @@ import {
 import {
   readDesktopShellPreferences,
   setCloseWindowToTray,
+  setOsNotifyCrash,
+  setOsNotifyEnabled,
+  setOsNotifySteamCmd,
   setTrayCloseHintDismissed,
 } from "../../src/main/desktop-shell-settings";
 import type { DatabaseSync } from "node:sqlite";
@@ -42,8 +51,12 @@ describe("desktop shell preferences (#54 / #59)", () => {
     expect(prefs.closeWindowToTray).toBe(DEFAULT_CLOSE_WINDOW_TO_TRAY);
     expect(prefs.startWithWindows).toBe(DEFAULT_START_WITH_WINDOWS);
     expect(prefs.trayCloseHintDismissed).toBe(false);
+    expect(prefs.osNotifyEnabled).toBe(DEFAULT_OS_NOTIFY_ENABLED);
+    expect(prefs.osNotifyCrash).toBe(DEFAULT_OS_NOTIFY_CRASH);
+    expect(prefs.osNotifySteamCmd).toBe(DEFAULT_OS_NOTIFY_STEAMCMD);
     expect(settings.get(CLOSE_WINDOW_TO_TRAY_SETTING_KEY)).toBeNull();
     expect(settings.get(START_WITH_WINDOWS_SETTING_KEY)).toBeNull();
+    expect(settings.get(OS_NOTIFY_ENABLED_SETTING_KEY)).toBeNull();
   });
 
   it("persists close-to-tray and tray hint dismissal", () => {
@@ -60,5 +73,22 @@ describe("desktop shell preferences (#54 / #59)", () => {
 
     expect(setTrayCloseHintDismissed(settings, false)).toBe(false);
     expect(readDesktopShellPreferences(settings).trayCloseHintDismissed).toBe(false);
+  });
+
+  it("persists Windows notification master and category toggles", () => {
+    db = openDatabase(":memory:");
+    const settings = new AppSettingsRepository(db);
+
+    expect(setOsNotifyEnabled(settings, false)).toBe(false);
+    expect(settings.get(OS_NOTIFY_ENABLED_SETTING_KEY)).toBe("false");
+    expect(readDesktopShellPreferences(settings).osNotifyEnabled).toBe(false);
+
+    setOsNotifyCrash(settings, false);
+    expect(settings.get(OS_NOTIFY_CRASH_SETTING_KEY)).toBe("false");
+    expect(readDesktopShellPreferences(settings).osNotifyCrash).toBe(false);
+
+    setOsNotifySteamCmd(settings, false);
+    expect(settings.get(OS_NOTIFY_STEAMCMD_SETTING_KEY)).toBe("false");
+    expect(readDesktopShellPreferences(settings).osNotifySteamCmd).toBe(false);
   });
 });

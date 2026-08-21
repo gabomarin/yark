@@ -12,6 +12,12 @@ interface Props {
   onTrayCloseHintDismissedChange: (dismissed: boolean) => void;
   startWithWindows: boolean;
   onStartWithWindowsChange: (enabled: boolean) => void;
+  osNotifyEnabled: boolean;
+  onOsNotifyEnabledChange: (enabled: boolean) => void;
+  osNotifyCrash: boolean;
+  onOsNotifyCrashChange: (enabled: boolean) => void;
+  osNotifySteamCmd: boolean;
+  onOsNotifySteamCmdChange: (enabled: boolean) => void;
   desktopShellReady: boolean;
   onRunSetupAgain?: () => void;
 }
@@ -45,19 +51,79 @@ export function SettingsGeneralSection(props: Props): ReactElement {
         </div>
       </div>
 
+      <div className={classes.settingRow}>
+        <div className={classes.settingCopy}>
+          <Text size="sm" fw={600}>Windows notifications</Text>
+          <Text size="xs" c="dimmed" mt={2}>
+            Toast on this PC when a server crashes, a SteamCMD job finishes, or
+            you hide YARK to the tray. Turn off to stay quiet.
+          </Text>
+        </div>
+        <div className={classes.settingControl}>
+          <Switch
+            checked={props.osNotifyEnabled}
+            disabled={!props.desktopShellReady}
+            onChange={(event) =>
+              props.onOsNotifyEnabledChange(event.currentTarget.checked)
+            }
+            aria-label="Windows notifications"
+          />
+        </div>
+      </div>
+
+      <div className={`${classes.settingRow} ${classes.settingRowNested}`}>
+        <div className={classes.settingCopy}>
+          <Text size="sm" fw={600}>Server crash</Text>
+          <Text size="xs" c="dimmed" mt={2}>
+            When a dedicated server exits unexpectedly. Click the toast to open
+            that server's Events.
+          </Text>
+        </div>
+        <div className={classes.settingControl}>
+          <Switch
+            checked={props.osNotifyCrash}
+            disabled={!props.desktopShellReady || !props.osNotifyEnabled}
+            onChange={(event) =>
+              props.onOsNotifyCrashChange(event.currentTarget.checked)
+            }
+            aria-label="Notify on server crash"
+          />
+        </div>
+      </div>
+
+      <div className={`${classes.settingRow} ${classes.settingRowNested}`}>
+        <div className={classes.settingCopy}>
+          <Text size="sm" fw={600}>SteamCMD jobs</Text>
+          <Text size="xs" c="dimmed" mt={2}>
+            When install, update, or verify finishes or fails. One toast per job —
+            not progress. Click to open Downloads.
+          </Text>
+        </div>
+        <div className={classes.settingControl}>
+          <Switch
+            checked={props.osNotifySteamCmd}
+            disabled={!props.desktopShellReady || !props.osNotifyEnabled}
+            onChange={(event) =>
+              props.onOsNotifySteamCmdChange(event.currentTarget.checked)
+            }
+            aria-label="Notify on SteamCMD job finished"
+          />
+        </div>
+      </div>
+
       {props.closeWindowToTray ? (
-        <div className={classes.settingRow}>
+        <div className={`${classes.settingRow} ${classes.settingRowNested}`}>
           <div className={classes.settingCopy}>
-            <Text size="sm" fw={600}>Show notification when hiding to tray</Text>
+            <Text size="sm" fw={600}>When hiding to tray</Text>
             <Text size="xs" c="dimmed" mt={2}>
-              Windows toast when the window is hidden. Turn off if you do not want
-              the reminder each time.
+              Reminder that YARK is still running. Click the toast to show the
+              window again.
             </Text>
           </div>
           <div className={classes.settingControl}>
             <Switch
               checked={!props.trayCloseHintDismissed}
-              disabled={!props.desktopShellReady}
+              disabled={!props.desktopShellReady || !props.osNotifyEnabled}
               onChange={(event) =>
                 props.onTrayCloseHintDismissedChange(!event.currentTarget.checked)
               }
