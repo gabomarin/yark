@@ -53,10 +53,10 @@ export function SettingsGeneralSection(props: Props): ReactElement {
 
       <div className={classes.settingRow}>
         <div className={classes.settingCopy}>
-          <Text size="sm" fw={600}>Windows notifications</Text>
+          <Text size="sm" fw={600}>Desktop alerts</Text>
           <Text size="xs" c="dimmed" mt={2}>
-            Toast on this PC when a server crashes, a SteamCMD job finishes, or
-            you hide YARK to the tray. Turn off to stay quiet.
+            Windows banners when YARK is in the tray or another window. Turn off
+            to stay quiet.
           </Text>
         </div>
         <div className={classes.settingControl}>
@@ -66,7 +66,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
             onChange={(event) =>
               props.onOsNotifyEnabledChange(event.currentTarget.checked)
             }
-            aria-label="Windows notifications"
+            aria-label="Desktop alerts"
           />
         </div>
       </div>
@@ -75,8 +75,8 @@ export function SettingsGeneralSection(props: Props): ReactElement {
         <div className={classes.settingCopy}>
           <Text size="sm" fw={600}>Server crash</Text>
           <Text size="xs" c="dimmed" mt={2}>
-            When a dedicated server exits unexpectedly. Click the toast to open
-            that server's Events.
+            When a map process exits on its own. Click the banner to open that
+            server's log.
           </Text>
         </div>
         <div className={classes.settingControl}>
@@ -86,17 +86,17 @@ export function SettingsGeneralSection(props: Props): ReactElement {
             onChange={(event) =>
               props.onOsNotifyCrashChange(event.currentTarget.checked)
             }
-            aria-label="Notify on server crash"
+            aria-label="Alert on server crash"
           />
         </div>
       </div>
 
       <div className={`${classes.settingRow} ${classes.settingRowNested}`}>
         <div className={classes.settingCopy}>
-          <Text size="sm" fw={600}>SteamCMD jobs</Text>
+          <Text size="sm" fw={600}>Installs and updates</Text>
           <Text size="xs" c="dimmed" mt={2}>
-            When install, update, or verify finishes or fails. One toast per job —
-            not progress. Click to open Downloads.
+            When installing, updating, or checking server files finishes or
+            fails. Click the banner to open Downloads.
           </Text>
         </div>
         <div className={classes.settingControl}>
@@ -106,7 +106,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
             onChange={(event) =>
               props.onOsNotifySteamCmdChange(event.currentTarget.checked)
             }
-            aria-label="Notify on SteamCMD job finished"
+            aria-label="Alert on installs and updates"
           />
         </div>
       </div>
@@ -114,10 +114,9 @@ export function SettingsGeneralSection(props: Props): ReactElement {
       {props.closeWindowToTray ? (
         <div className={`${classes.settingRow} ${classes.settingRowNested}`}>
           <div className={classes.settingCopy}>
-            <Text size="sm" fw={600}>When hiding to tray</Text>
+            <Text size="sm" fw={600}>Hide to tray</Text>
             <Text size="xs" c="dimmed" mt={2}>
-              Reminder that YARK is still running. Click the toast to show the
-              window again.
+              Reminder that YARK is still running after you close the window.
             </Text>
           </div>
           <div className={classes.settingControl}>
@@ -127,7 +126,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
               onChange={(event) =>
                 props.onTrayCloseHintDismissedChange(!event.currentTarget.checked)
               }
-              aria-label="Show notification when hiding to tray"
+              aria-label="Alert when hiding to tray"
             />
           </div>
         </div>

@@ -62,10 +62,10 @@ the Server tab / workspace.
 | Control | Storage | Default | Notes |
 | --- | --- | --- | --- |
 | Close window to tray | SQLite `closeWindowToTray` | **on** | Hide on close; minimize still uses the taskbar |
-| Windows notifications | SQLite `osNotifyEnabled` | **on** | Master switch for OS toasts while YARK is in the tray or unfocused (#331) |
-| Server crash | SQLite `osNotifyCrash` | **on** | Nested under Windows notifications; click opens that server's Events |
-| SteamCMD jobs | SQLite `osNotifySteamCmd` | **on** | Nested; one toast per install/update/verify finish or fail — not progress. Click opens Downloads |
-| When hiding to tray | SQLite `trayCloseHintDismissed` (UI inverted) | toast **on** | Nested; visible only when close-to-tray is on. Also gated by the master switch |
+| Desktop alerts | SQLite `osNotifyEnabled` | **on** | Master switch for Windows banners while YARK is in the tray or another window (#331) |
+| Server crash | SQLite `osNotifyCrash` | **on** | Nested under Desktop alerts; click opens that server's log |
+| Installs and updates | SQLite `osNotifySteamCmd` | **on** | Nested; one banner when install/update/verify finishes or fails. Click opens Downloads |
+| Hide to tray | SQLite `trayCloseHintDismissed` (UI inverted) | toast **on** | Nested; visible only when close-to-tray is on. Also gated by Desktop alerts |
 | Start with Windows | SQLite `startWithWindows` + `setLoginItemSettings` | **off** | App only — does **not** start ASA (#54 vs #53) |
 | Display size | SQLite `uiDensity` | **compact** | `compact` \| `comfortable`; see [design-system.md](design-system.md) |
 | Quick jump | localStorage `yark.spotlightRecent.v1` (MRU) | Ctrl+K | Jump to pages/servers; Recent group; Settings → General + logo tooltip (#104) |
@@ -204,9 +204,9 @@ silent outside Settings status text.
    → SQLite; default base folder → `localStorage` only.
 2. **Start with Windows ≠ Auto-start with YARK** — #54 opens the app; #53 starts
    opted-in ASA profiles after reattach.
-3. **Tray toast polarity** — stored key is `trayCloseHintDismissed`; the nested
-   **When hiding to tray** switch is “show notification” = `!dismissed`. The
-   master **Windows notifications** switch also gates this toast.
+3. **Tray alert polarity** — stored key is `trayCloseHintDismissed`; the nested
+   **Hide to tray** switch is “show alert” = `!dismissed`. The master
+   **Desktop alerts** switch also gates this banner.
 4. **No theme toggle** — operator docs that mention a theme control are stale;
    appearance on Settings is density only.
 5. **Do not persist density or console-on-start defaults on read** — only user

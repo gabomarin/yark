@@ -202,10 +202,10 @@ describe("SettingsPage", () => {
     expect(screen.getByText(/Ctrl/i)).toBeInTheDocument();
     expect(screen.getByText("Close window to tray")).toBeInTheDocument();
     expect(screen.getByText("Start with Windows")).toBeInTheDocument();
-    expect(screen.getByText("Windows notifications")).toBeInTheDocument();
+    expect(screen.getByText("Desktop alerts")).toBeInTheDocument();
     expect(screen.getByText("Server crash")).toBeInTheDocument();
-    expect(screen.getByText("SteamCMD jobs")).toBeInTheDocument();
-    expect(screen.getByText("When hiding to tray")).toBeInTheDocument();
+    expect(screen.getByText("Installs and updates")).toBeInTheDocument();
+    expect(screen.getByText("Hide to tray")).toBeInTheDocument();
     expect(screen.queryByText("On quit with active servers")).not.toBeInTheDocument();
     expect(screen.getByText("Display size")).toBeInTheDocument();
     expect(screen.getByLabelText("Display size")).toBeInTheDocument();
@@ -294,7 +294,7 @@ describe("SettingsPage", () => {
     });
 
     const toastSwitch = await screen.findByRole("switch", {
-      name: "Show notification when hiding to tray",
+      name: "Alert when hiding to tray",
     });
     expect(toastSwitch).toBeChecked();
     await user.click(toastSwitch);
@@ -328,10 +328,10 @@ describe("SettingsPage", () => {
     });
 
     const master = await screen.findByRole("switch", {
-      name: "Windows notifications",
+      name: "Desktop alerts",
     });
     expect(master).toBeChecked();
-    expect(screen.getByRole("switch", { name: "Notify on server crash" })).toBeEnabled();
+    expect(screen.getByRole("switch", { name: "Alert on server crash" })).toBeEnabled();
     await user.click(master);
     expect(onOsNotifyEnabledChange).toHaveBeenCalledWith(false);
   });
@@ -358,13 +358,13 @@ describe("SettingsPage", () => {
       },
     });
 
-    expect(screen.getByRole("switch", { name: "Windows notifications" })).not.toBeChecked();
-    expect(screen.getByRole("switch", { name: "Notify on server crash" })).toBeDisabled();
+    expect(screen.getByRole("switch", { name: "Desktop alerts" })).not.toBeChecked();
+    expect(screen.getByRole("switch", { name: "Alert on server crash" })).toBeDisabled();
     expect(
-      screen.getByRole("switch", { name: "Notify on SteamCMD job finished" }),
+      screen.getByRole("switch", { name: "Alert on installs and updates" }),
     ).toBeDisabled();
     expect(
-      screen.getByRole("switch", { name: "Show notification when hiding to tray" }),
+      screen.getByRole("switch", { name: "Alert when hiding to tray" }),
     ).toBeDisabled();
   });
 
@@ -390,9 +390,9 @@ describe("SettingsPage", () => {
       },
     });
 
-    expect(screen.queryByText("When hiding to tray")).not.toBeInTheDocument();
+    expect(screen.queryByText("Hide to tray")).not.toBeInTheDocument();
     expect(screen.getByText("Server crash")).toBeInTheDocument();
-    expect(screen.getByText("SteamCMD jobs")).toBeInTheDocument();
+    expect(screen.getByText("Installs and updates")).toBeInTheDocument();
   });
 
   it("expands caches and supports open/clear actions", async () => {

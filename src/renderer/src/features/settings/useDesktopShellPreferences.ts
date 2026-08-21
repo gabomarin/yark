@@ -112,7 +112,7 @@ export function useDesktopShellPreferences(): DesktopShellPreferencesController 
       const result = await window.api.setOsNotifyEnabled(enabled);
       if (!result.ok) {
         setOsNotifyEnabled(previous);
-        setShellError(result.error ?? "Could not update Windows notifications");
+        setShellError(result.error ?? "Could not update desktop alerts");
       }
     })();
   };
