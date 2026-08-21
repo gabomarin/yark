@@ -192,6 +192,8 @@ function createAppTheme(
   const dropdownScrollAreaProps = {
     type: "auto" as const,
     offsetScrollbars: false as const,
+    /** OptionsDropdown hardcodes a tiny scrollbarSize; keep a normal thumb. */
+    scrollbarSize: 8,
   };
   const comboboxScrollDefaults = {
     ...(density === "compact" ? { size: "xs" as const } : {}),
