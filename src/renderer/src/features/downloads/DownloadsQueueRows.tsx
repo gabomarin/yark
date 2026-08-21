@@ -102,7 +102,7 @@ export function DownloadRowButton(props: {
             <ActionIcon
               size="sm"
               color="teal"
-              variant="light"
+              variant="subtle"
               aria-label="Resume download"
               onClick={() => props.onResume()}
             >
@@ -116,7 +116,7 @@ export function DownloadRowButton(props: {
             <ActionIcon
               size="sm"
               color="teal"
-              variant="light"
+              variant="subtle"
               aria-label="Retry download"
               onClick={() => props.onRetry()}
             >
@@ -143,7 +143,7 @@ export function DownloadRowButton(props: {
               <ActionIcon
                 size="sm"
                 color={row.canPause ? "yellow" : "red"}
-                variant={row.canPause ? "light" : "filled"}
+                variant="subtle"
                 aria-label={row.canPause ? "Pause download" : "Cancel download"}
                 onClick={() => props.onCancel()}
               >
@@ -161,7 +161,7 @@ export function DownloadRowButton(props: {
             <ActionIcon
               size="sm"
               color={row.canPause ? "yellow" : "red"}
-              variant={row.canPause ? "light" : "filled"}
+              variant="subtle"
               aria-label={row.canPause ? "Pause download" : "Cancel download"}
               onClick={() => props.onCancel()}
             >

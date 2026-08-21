@@ -65,7 +65,7 @@ export function BackupHistoryRowActions(props: Props): ReactElement {
       </Tooltip>
       <Tooltip label="Restore" withArrow>
         <ActionIcon
-          variant="light"
+          variant="subtle"
           color="orange"
           size="sm"
           aria-label={`Restore backup ${props.backup.id}`}
@@ -77,7 +77,7 @@ export function BackupHistoryRowActions(props: Props): ReactElement {
       </Tooltip>
       <Tooltip label="Delete" withArrow>
         <ActionIcon
-          variant="filled"
+          variant="subtle"
           color="red"
           size="sm"
           aria-label={`Delete backup ${props.backup.id}`}

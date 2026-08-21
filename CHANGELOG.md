@@ -16,8 +16,9 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Dense icon-only row actions (backup history Restore/Delete, cluster member Promote/Restore/Remove, Logs clear/delete, Downloads Resume/Retry/Pause/Cancel, minimized SteamCMD Cancel) use **`variant="subtle"`** so columns stay quiet; labeled destructive **Button**s stay red **filled** (#397).
 - Disabled **Server mods** rows are dimmed (thumb + text) while the Enabled switch stays full strength so off-list mods read as not live; row **Remove** stays red **subtle** (not filled) so the actions column stays quiet (#226, #297).
-- Destructive inline buttons (**Stop**, Force close, Delete, Remove, Ban, cancel jobs, clear/delete logs and backups, **Clusters** remove) use red **filled** (`--app-color-bad`); workspace lifecycle **Restart** uses deep amber **filled** (`--app-color-fossil-filled`, white icon via autoContrast) (#344).
+- Destructive labeled buttons (**Stop**, Force close, Delete, Remove, Ban, cancel jobs) use red **filled** (`--app-color-bad`); workspace lifecycle **Restart** uses deep amber **filled** (`--app-color-fossil-filled`, white icon via autoContrast) (#344).
 
 ### Fixed
 

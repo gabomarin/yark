@@ -194,20 +194,20 @@ Manual **Check Servers Health** ends with a toast (attention count or “all hea
 
 ### 5d. Destructive actions (inline controls)
 
-Primary destructive **Button**s use **`color="red" variant="filled"`** — **Stop**, **Force close**, labeled Remove/Delete, Ban, cancel in-flight jobs. Dense table **ActionIcon** remove/delete prefers **`variant="subtle"`** so a column of red fills does not dominate the row (Mods inventory, etc.). Clear/delete on log or backup **rows** may still use filled where the control is the primary row action. **Restart** uses **`color="fossil" variant="filled"`** in the workspace lifecycle row and Overview card (warm amber, same weight as Stop). Theme **`autoContrast: true`** uses dark label/icon on light filled colors (fossil, attention). Kebab **Stop safely** / **Force close** / **Delete** use `Menu.Item color="red"`; **Restart** uses `color="fossil"`.
+Primary destructive **Button**s use **`color="red" variant="filled"`** — **Stop**, **Force close**, labeled Remove/Delete, Ban, cancel in-flight jobs (expanded SteamCMD dock Cancel, backup toolbar Delete). Dense **icon-only** row/list **ActionIcon**s prefer **`variant="subtle"`** (keep `color` for meaning: red delete, orange restore, teal resume, yellow pause) so a column of fills does not dominate the row — backups history, cluster members, logs clear/delete, Downloads queue, minimized SteamCMD Cancel (#397). **Restart** uses **`color="fossil" variant="filled"`** in the workspace lifecycle row and Overview card (warm amber, same weight as Stop). Theme **`autoContrast: true`** uses dark label/icon on light filled colors (fossil, attention). Kebab **Stop safely** / **Force close** / **Delete** use `Menu.Item color="red"`; **Restart** uses `color="fossil"`.
 
 | Surface | Recipe |
 | --- | --- |
 | Lifecycle **Restart** | `color="fossil" variant="filled"` |
 | Inline destructive **Button** (Stop, Force close, delete/remove) | `color="red" variant="filled"` |
 | Kebab danger **Menu.Item** | `color="red"` (inherits `--app-color-danger-bright`) |
-| Row **ActionIcon** (delete/remove) | Prefer `color="red" variant="subtle"` in dense tables (filled reads as noise); use **`filled`** for primary destructive **Button**s (Stop, Delete modal confirms, drawer Remove) |
+| Dense **ActionIcon** (delete/remove and secondary row icons) | Prefer `variant="subtle"` with semantic `color` (#397); use **`filled`** only for labeled destructive **Button**s |
 
 | Confirm modals | `confirmProps: { color: "red" }` (Mantine default `filled`) |
 
-**Exceptions (not red filled):** red **Alert** / **Badge** (error state, not actions); **menu** row actions (`serverCardMenuActions`, backup/mods context menus — separate pass); **Pause** download uses yellow `light`; **Remove from YARK** (profile-only delete) keeps default primary styling; discard/unsaved-leave flows use **fossil** or default buttons.
+**Exceptions (not red filled):** red **Alert** / **Badge** (error state, not actions); **menu** row actions (`serverCardMenuActions`, backup/mods context menus — separate pass); **Remove from YARK** (profile-only delete) keeps default primary styling; discard/unsaved-leave flows use **fossil** or default buttons.
 
-Reference: `ServerModDetailDrawer` Remove footer (#344).
+Reference: `ServerModDetailDrawer` Remove footer (#344); quiet row icons (#397).
 
 ### 6. Dense operational tables
 

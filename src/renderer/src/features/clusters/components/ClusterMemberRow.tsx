@@ -103,7 +103,7 @@ export function ClusterMemberRow(props: Props): ReactElement {
             <span>
               <ActionIcon
                 size="sm"
-                variant="light"
+                variant="subtle"
                 color="gray"
                 aria-label={`Promote ${props.server.name} to template`}
                 disabled={!canApply}
@@ -126,7 +126,7 @@ export function ClusterMemberRow(props: Props): ReactElement {
             <span>
               <ActionIcon
                 size="sm"
-                variant="light"
+                variant="subtle"
                 color="gray"
                 aria-label={`Restore ${props.server.name} from template`}
                 disabled={restoreDisabled}
@@ -148,7 +148,7 @@ export function ClusterMemberRow(props: Props): ReactElement {
             <span>
               <ActionIcon
                 size="sm"
-                variant="filled"
+                variant="subtle"
                 color="red"
                 aria-label={`Remove ${props.server.name}`}
                 disabled={props.canRemove === false}

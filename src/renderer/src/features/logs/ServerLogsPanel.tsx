@@ -872,7 +872,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
                       </Tooltip>
                       <Tooltip label="Delete this update log">
                         <ActionIcon
-                          variant="filled"
+                          variant="subtle"
                           color="red"
                           aria-label="Delete this update log"
                           onClick={confirmDeleteSelectedUpdate}
@@ -976,7 +976,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
                           </div>
                           <Tooltip label={`Delete ${backup.kind} · ${backup.type} backup`}>
                             <ActionIcon
-                              variant="filled"
+                              variant="subtle"
                               color="red"
                               aria-label={`Delete ${backup.kind} ${backup.type} backup`}
                               disabled={busy}
@@ -1019,7 +1019,7 @@ function ClearAction(props: {
     <Tooltip label={props.label}>
       <span>
         <ActionIcon
-          variant="filled"
+          variant="subtle"
           color="red"
           aria-label={props.label}
           onClick={props.onClick}
