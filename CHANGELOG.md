@@ -23,6 +23,12 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Pure **safe-update job** helpers (`update-server-jobs.ts`) — pre-update backup evidence, install-may-have-changed, log path/content, interrupted-job recovery — extracted from `update-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 - Pure **update queue** helpers (`update-queue.ts`) — next-job routing, pause/cancel/failure disposition, persisted-row validation — extracted from `update-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 - Pure **SteamCMD operator** helpers (`steamcmd-operator.ts`) — cache/sync copy, invoke console lines, status derivation, disk-progress preference — extracted from `update-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
+- Pure **instance lifecycle** helpers (`instance-lifecycle.ts`) — stop progress copy, backup labels, fleet id compare, bounded `mapPool` — extracted from `instance-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
+- Pure **instance profile** helpers (`instance-profile.ts`) — session port validation/apply, fleet inspect key — extracted from `instance-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
+- Pure **instance crash** helpers (`instance-crash.ts`) — unexpected-exit event/notify planning — extracted from `instance-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
+- Pure **process spawn** helpers (`process-spawn.ts`) — ASA launch flags and Windows verbatim spawn — extracted from `process-manager.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
+- Pure **process readiness** helpers (`process-readiness.ts`) — ready-log detection, RCON probe delay, runtime log ring — extracted from `process-manager.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
+- Pure **process stop** helpers (`process-stop.ts`) — unexpected-exit classification and last-error copy — extracted from `process-manager.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 
 ### Changed
 

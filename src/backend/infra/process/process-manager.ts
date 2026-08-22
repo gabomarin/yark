@@ -1,4 +1,4 @@
-import { spawn, type ChildProcess } from "node:child_process";
+import { type ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
 import { EventEmitter } from "node:events";
 import type {
@@ -17,8 +17,6 @@ import {
 import {
   buildLaunchArgs,
   buildWindowsCreateProcessCommandLine,
-  buildWindowsVerbatimSpawnArgs,
-  quoteWindowsArg,
   serverBinaryPath,
 } from "../../domains/instances/launch-args";
 import { rconExec } from "../rcon/rcon-client";
@@ -32,6 +30,37 @@ import {
 import { createAdoptedChildHandle } from "./adopted-child";
 import { killWinProcessTreeAsync } from "./kill-win-process-tree";
 import { queryWindowsProcessIdentity } from "./windows-process-identity";
+import {
+  disconnectChildStdio,
+  ensureLaunchLogFlags,
+  spawnAsaProcess,
+} from "./process-spawn";
+import {
+  DEFAULT_READY_PROBE_MIN_WAIT_MS,
+  DEFAULT_READY_SETTLE_MS,
+  RCON_PROBE_TIMEOUT_MS,
+  RUNTIME_LOG_SOURCES,
+  appendRuntimeLogRing,
+  formatReadyBootWaitMessage,
+  formatReadyProbeStartMessage,
+  formatReadySettleMessage,
+  formatReadySuccessMessage,
+  formatReadyTimeoutError,
+  formatReattachReadyWaitMessage,
+  formatRuntimeLogLine,
+  hasReadyLogLine,
+  runtimeLogPartialKey,
+  shouldDelayRconProbe,
+  splitRuntimeLogChunk,
+  type RuntimeLogSource,
+} from "./process-readiness";
+import {
+  EXIT_WAIT_MS,
+  SAVE_WAIT_MS,
+  formatProcessExitLogLine,
+  isUnexpectedManagedExit,
+  planManagedExitLastError,
+} from "./process-stop";
 
 interface ManagedProcess {
   child: ChildProcess;
@@ -75,81 +104,6 @@ export interface UnexpectedManagedExit {
   diagnosis: AsaStartupFailure | null;
 }
 
-function argsIncludeLogFlag(args: string[]): boolean {
-  return args.some((arg) => /^[-/]log$/i.test(arg.trim()));
-}
-
-function argsIncludeConsoleFlag(args: string[]): boolean {
-  return args.some((arg) => /^[-/]console$/i.test(arg.trim()));
-}
-
-/**
- * Spawns ASA so its raw command line keeps the intended, separate quotes on
- * map and SessionName,
- * and so `child` is always `ArkAscendedServer.exe` (never `cmd.exe`).
- *
- * On Windows, arguments are prepared individually and passed verbatim. This
- * avoids Node's default extra wrapper around a map URL that contains spaces:
- * `""Map"?SessionName="My Server""`. CreateProcess receives `binary`
- * separately, while `argv0` is explicitly quoted for spaced install paths.
- *
- * Native console: `windowsHide: false` so Windows gives the dedicated its own
- * console. Piped mode: `windowsHide: true` + stdout/stderr pipes. Both modes
- * tail `ShooterGame/Saved/Logs/ShooterGame.log` into Runtime (Unreal rarely
- * prints the console stream to stdout when hidden).
- *
- * Always `detached: true` so ASA can outlive an unexpected Electron exit
- * (crash / Task Manager). Windows otherwise kills non-detached children with
- * the parent. Intentional quit stops servers; there is no Leave-running UX.
- */
-function spawnAsaProcess(
-  binary: string,
-  args: string[],
-  cwd: string,
-  options: { nativeConsole: boolean },
-): ChildProcess {
-  const isWindows = process.platform === "win32";
-  const spawnArgs = isWindows
-    ? buildWindowsVerbatimSpawnArgs(args)
-    : args;
-  const argv0 = isWindows ? quoteWindowsArg(binary) : binary;
-
-  if (options.nativeConsole) {
-    return spawn(binary, spawnArgs, {
-      argv0,
-      cwd,
-      shell: false,
-      windowsVerbatimArguments: isWindows,
-      windowsHide: false,
-      stdio: "ignore",
-      detached: true,
-    });
-  }
-
-  return spawn(binary, spawnArgs, {
-    argv0,
-    cwd,
-    shell: false,
-    windowsVerbatimArguments: isWindows,
-    windowsHide: true,
-    stdio: ["ignore", "pipe", "pipe"],
-    detached: true,
-  });
-}
-
-function disconnectChildStdio(child: ChildProcess): void {
-  for (const stream of [child.stdin, child.stdout, child.stderr]) {
-    if (stream == null || stream.destroyed) {
-      continue;
-    }
-    try {
-      stream.destroy();
-    } catch {
-      // Ignore: already closing during Leave.
-    }
-  }
-}
-
 /** Optional persistent-session RCON path (falls back to one-shot `rconExec`). */
 export type ManagedRconExecutor = (
   serverId: string,
@@ -184,26 +138,8 @@ export interface ProcessManagerOptions {
 }
 
 const RCON_HOST = "127.0.0.1";
-const SAVE_WAIT_MS = 8000;
-const EXIT_WAIT_MS = 30000;
-const MAX_RUNTIME_LOG_LINES = 1200;
 const DEFAULT_READY_TIMEOUT_MS = 10 * 60 * 1000;
 const DEFAULT_READY_POLL_MS = 3000;
-/** Avoid hammering RCON while the dedicated is still booting assets/world. */
-const DEFAULT_READY_PROBE_MIN_WAIT_MS = 45_000;
-/** First RCON success is early; confirm after the world settles. */
-const DEFAULT_READY_SETTLE_MS = 15_000;
-const RCON_PROBE_TIMEOUT_MS = 2500;
-
-/** Typical log signals when the dedicated already accepts players. */
-const READY_LOG_PATTERNS: RegExp[] = [
-  /server has completed startup/i,
-  /now advertising/i,
-  /full startup/i,
-  /started listening/i,
-  /rcon.*listening/i,
-  /lognet:.*listen/i,
-];
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -375,14 +311,8 @@ export class ProcessManager extends EventEmitter {
     const args = options?.launchArgsOverride ?? buildLaunchArgs(profile);
     const nativeConsole = options?.openNativeConsole === true;
     let spawnArgs = args;
-    // Only when using profile-built CLI — never mutate launchArgsOverride (tests / custom argv).
     if (options?.launchArgsOverride === undefined) {
-      if (nativeConsole && !argsIncludeConsoleFlag(spawnArgs)) {
-        spawnArgs = [...spawnArgs, "-console"];
-      }
-      if (!argsIncludeLogFlag(spawnArgs)) {
-        spawnArgs = [...spawnArgs, "-log"];
-      }
+      spawnArgs = ensureLaunchLogFlags(spawnArgs, nativeConsole);
     }
     const expectedCommandLine =
       process.platform === "win32"
@@ -909,8 +839,11 @@ export class ProcessManager extends EventEmitter {
 
       const sawLogSignal = this.hasReadyLogSignal(profile.id);
       const elapsedMs = Date.now() - bootStartedAt;
-      const mayProbe =
-        sawLogSignal || elapsedMs >= this.readyProbeMinWaitMs;
+      const mayProbe = !shouldDelayRconProbe({
+        sawLogSignal,
+        elapsedMs,
+        minWaitMs: this.readyProbeMinWaitMs,
+      });
 
       if (!mayProbe) {
         if (!loggedWaitingForBoot) {
@@ -918,7 +851,7 @@ export class ProcessManager extends EventEmitter {
           this.appendRuntimeLog(
             profile.id,
             "system",
-            `Waiting for startup to progress before RCON probes (min ${Math.round(this.readyProbeMinWaitMs / 1000)}s or log signal)…`,
+            formatReadyBootWaitMessage(this.readyProbeMinWaitMs),
           );
         }
         await delay(pollMs);
@@ -929,13 +862,13 @@ export class ProcessManager extends EventEmitter {
         this.appendRuntimeLog(
           profile.id,
           "system",
-          "Startup signal detected in logs; checking RCON…",
+          formatReadyProbeStartMessage(true),
         );
       } else if (!loggedProbeStart) {
         this.appendRuntimeLog(
           profile.id,
           "system",
-          "Minimum startup wait elapsed; checking RCON…",
+          formatReadyProbeStartMessage(false),
         );
       }
       loggedProbeStart = true;
@@ -957,7 +890,7 @@ export class ProcessManager extends EventEmitter {
           this.appendRuntimeLog(
             profile.id,
             "system",
-            `RCON responded; waiting ${Math.round(this.readySettleMs / 1000)}s for the dedicated to finish settling…`,
+            formatReadySettleMessage(this.readySettleMs),
           );
           const settleDeadline = Date.now() + this.readySettleMs;
           while (Date.now() < settleDeadline) {
@@ -987,7 +920,7 @@ export class ProcessManager extends EventEmitter {
         this.appendRuntimeLog(
           profile.id,
           "system",
-          "Server ready: RCON confirmed after settle (waiting for connections)",
+          formatReadySuccessMessage(),
         );
         this.emitStatus(profile.id);
         return;
@@ -1005,7 +938,7 @@ export class ProcessManager extends EventEmitter {
             this.appendRuntimeLog(
               profile.id,
               "warning",
-              "Still waiting for RCON after Leave reattach; UI stays on starting",
+              formatReattachReadyWaitMessage(),
             );
           }
           await delay(pollMs);
@@ -1013,8 +946,7 @@ export class ProcessManager extends EventEmitter {
         }
 
         managed.status = "error";
-        managed.lastError =
-          "Timeout waiting for server readiness (RCON did not respond in time)";
+        managed.lastError = formatReadyTimeoutError();
         this.appendRuntimeLog(profile.id, "error", managed.lastError);
         this.clearProcessCheckpoint(profile.id);
         this.emitStatus(profile.id);
@@ -1137,8 +1069,7 @@ export class ProcessManager extends EventEmitter {
   }
 
   private hasReadyLogSignal(serverId: string): boolean {
-    const lines = this.runtimeLogs.get(serverId) ?? [];
-    return lines.some((line) => READY_LOG_PATTERNS.some((pattern) => pattern.test(line)));
+    return hasReadyLogLine(this.runtimeLogs.get(serverId) ?? []);
   }
 
   private waitForExit(child: ChildProcess, timeoutMs: number): Promise<boolean> {
@@ -1172,10 +1103,15 @@ export class ProcessManager extends EventEmitter {
     this.appendRuntimeLog(
       serverId,
       "system",
-      `Process exited with code ${code ?? "unknown"}`,
+      formatProcessExitLogLine(code),
     );
     this.clearProcessCheckpoint(serverId);
-    const unexpected = !wasStopping && (wasStarting || (wasRunning && code !== 0));
+    const unexpected = isUnexpectedManagedExit({
+      wasStopping,
+      wasStarting,
+      wasRunning,
+      exitCode: code,
+    });
     if (!unexpected) {
       if (managed.status !== "error") {
         this.processes.delete(serverId);
@@ -1197,11 +1133,11 @@ export class ProcessManager extends EventEmitter {
       }
     }
     managed.status = "error";
-    managed.lastError =
-      diagnosis?.summary ??
-      (wasStarting
-        ? `Process exited during startup (code ${code ?? "unknown"})`
-        : `Process exited unexpectedly (code ${code ?? "unknown"})`);
+    managed.lastError = planManagedExitLastError({
+      wasStarting,
+      exitCode: code,
+      diagnosisSummary: diagnosis?.summary ?? null,
+    });
     this.emit("unexpected-exit", {
       serverId,
       exitCode: code,
@@ -1218,23 +1154,21 @@ export class ProcessManager extends EventEmitter {
 
   private captureRuntimeChunk(
     serverId: string,
-    source: "stdout" | "stderr" | "log",
+    source: RuntimeLogSource,
     chunk: string,
   ): void {
-    const key = `${serverId}\0${source}`;
-    const combined = `${this.runtimePartials.get(key) ?? ""}${chunk}`;
-    const parts = combined.split(/\r?\n/);
-    const pending = parts.pop() ?? "";
-    this.runtimePartials.set(key, pending);
-    for (const line of parts) {
-      if (line.trim().length === 0) continue;
+    const key = runtimeLogPartialKey(serverId, source);
+    const previous = this.runtimePartials.get(key) ?? "";
+    const { completeLines, remainder } = splitRuntimeLogChunk(previous, chunk);
+    this.runtimePartials.set(key, remainder);
+    for (const line of completeLines) {
       this.appendRuntimeLog(serverId, source, line);
     }
   }
 
   private flushRuntimePartials(serverId: string): void {
-    for (const source of ["stdout", "stderr", "log"] as const) {
-      const key = `${serverId}\0${source}`;
+    for (const source of RUNTIME_LOG_SOURCES) {
+      const key = runtimeLogPartialKey(serverId, source);
       const pending = this.runtimePartials.get(key);
       this.runtimePartials.delete(key);
       if (pending !== undefined && pending.trim().length > 0) {
@@ -1244,8 +1178,8 @@ export class ProcessManager extends EventEmitter {
   }
 
   private clearRuntimePartials(serverId: string): void {
-    for (const source of ["stdout", "stderr", "log"] as const) {
-      this.runtimePartials.delete(`${serverId}\0${source}`);
+    for (const source of RUNTIME_LOG_SOURCES) {
+      this.runtimePartials.delete(runtimeLogPartialKey(serverId, source));
     }
   }
 
@@ -1256,10 +1190,12 @@ export class ProcessManager extends EventEmitter {
     }
 
     const list = this.runtimeLogs.get(serverId) ?? [];
-    list.push(`[${new Date().toISOString()}] [${source}] ${line}`);
-    if (list.length > MAX_RUNTIME_LOG_LINES) {
-      list.splice(0, list.length - MAX_RUNTIME_LOG_LINES);
-    }
-    this.runtimeLogs.set(serverId, list);
+    this.runtimeLogs.set(
+      serverId,
+      appendRuntimeLogRing(
+        list,
+        formatRuntimeLogLine(new Date().toISOString(), source, line),
+      ),
+    );
   }
 }
