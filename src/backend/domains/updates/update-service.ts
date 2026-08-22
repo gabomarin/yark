@@ -1525,6 +1525,7 @@ export class UpdateService extends EventEmitter {
                 : new OperationCancelledError(),
             );
             job.status = cancelled.status;
+            job.operatorRetryAllowed = cancelled.operatorRetryAllowed;
             if (cancelled.phase !== undefined) {
               job.phase = cancelled.phase;
             }

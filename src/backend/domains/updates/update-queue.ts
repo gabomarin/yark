@@ -96,6 +96,7 @@ export interface QueueJobCancelPlan {
   status: "blocked" | "cancelled";
   phase?: string;
   recoveryReason: string;
+  operatorRetryAllowed: boolean;
   continueQueue: true;
 }
 
@@ -108,6 +109,7 @@ export function planQueueJobCancelDisposition(input: {
       status: "blocked",
       recoveryReason:
         `Cancellation interrupted phase "${input.phase}". Inspect backups and runtime state before retrying.`,
+      operatorRetryAllowed: true,
       continueQueue: true,
     };
   }
@@ -118,6 +120,7 @@ export function planQueueJobCancelDisposition(input: {
     recoveryReason: rollbackCompleted
       ? "Cancelled by the operator after rollback completed safely."
       : "Cancelled by the operator during execution.",
+    operatorRetryAllowed: false,
     continueQueue: true,
   };
 }
