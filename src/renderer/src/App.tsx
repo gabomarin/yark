@@ -31,7 +31,6 @@ import { EMPTY_WIPE_STALE_MESSAGE } from "@shared/types";
 import {
   decideFilesJobEnqueue,
   filesJobEnqueueCopy,
-  isFilesJobOperation,
   occupyingFilesJobForServer,
 } from "@shared/files-job-priority";
 import { createGenerationGate } from "@shared/createGenerationGate";
@@ -51,15 +50,11 @@ import {
   getServerUpdateState,
   isServerUpdateAvailable,
 } from "@shared/server-update-status";
-import { AppRouter } from "@app/AppRouter";
 import { AppProviders } from "@app/AppProviders";
-import { AppShellLayout } from "@app/AppShellLayout";
+import { AppMainRouter } from "@app/AppMainRouter";
+import type { CopyConfigSession, Overlay } from "@app/appOverlay";
+import { steamCmdCardJobsByKind } from "@app/steamCmdShellModel";
 import { claimStartBusy, releaseStartBusy } from "@app/startBusyGuard";
-import { ClustersPage } from "@features/clusters/ClustersPage";
-import { LogsPage } from "@features/logs/LogsPage";
-import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
-import { BackupsPage } from "@features/backups/BackupsPage";
-import { OverviewPage } from "@features/overview/OverviewPage";
 import {
   buildUpdateAllOutdatedPlan,
   canOpenUpdateAllOutdated,
@@ -70,18 +65,14 @@ import {
 import { ImportInstallWizard } from "@features/servers/components/ImportInstallWizard/ImportInstallWizard";
 import { collectAttentionIssues } from "@features/overview/components/AttentionIssuesPopover/AttentionIssuesPopover";
 import {
-  ServerWorkspacePage,
   type RconHistoryEntry,
-  type WorkspaceTab,
 } from "@features/server-workspace/ServerWorkspacePage";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import type { OnlinePlayerInfo, OsNotificationOpenPush, PlayerListUpdatedPush } from "@shared/ipc";
-import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { CloneServerDialog } from "@features/servers/components/CloneServerDialog/CloneServerDialog";
 import { DeleteServerModal } from "@features/servers/components/DeleteServerModal/DeleteServerModal";
 import { CopyConfigurationWizard } from "@features/servers/components/CopyConfigurationWizard/CopyConfigurationWizard";
 import { openHostPortProbeModal } from "@features/servers/hostPortProbeModal";
-import { DownloadsPage } from "@features/downloads/DownloadsPage";
 import { DownloadsTeaserFooter } from "@features/downloads/DownloadsTeaserFooter";
 import {
   buildDownloadRows,
@@ -89,9 +80,7 @@ import {
   downloadsBadgeCount,
   filesQueueStateByServerId,
   shouldShowDownloadsChrome,
-  type ServerFilesQueueState,
 } from "@features/downloads/downloadsModel";
-import { SettingsPage } from "@features/settings/SettingsPage";
 import { AppChangelogModal } from "@features/settings/components/AppChangelogModal";
 import { SetupWizard } from "@features/setup-wizard/SetupWizard";
 import {
@@ -116,53 +105,7 @@ import { useDesktopShellPreferences } from "@features/settings/useDesktopShellPr
 import type { Route } from "@layout/Sidebar/Sidebar";
 import { AppSpotlight } from "@layout/AppSpotlight/AppSpotlight";
 import { pushSpotlightRecent } from "@layout/AppSpotlight/appSpotlightRecent";
-
-type Overlay =
-  | { kind: "create" }
-  | { kind: "edit"; profile: ServerProfile }
-  | { kind: "clone"; sourceServerId: string }
-  | {
-      kind: "workspace";
-      serverId: string;
-      onboarding?: boolean;
-      initialTab?: WorkspaceTab;
-      logsFocus?: ServerLogsFocus | null;
-    }
-  | null;
-
-type CopyConfigSession = {
-  sourceServerId: string;
-  targetServerId?: string;
-};
-
-type SteamCmdCardJobRef = {
-  jobId: string;
-  label: string;
-  operation: "install-files" | "update" | "verify-files";
-};
-
-function steamCmdCardJobsByKind(
-  queue: Map<string, ServerFilesQueueState>,
-  kind: "paused" | "queued",
-): Map<string, SteamCmdCardJobRef> {
-  const map = new Map<string, SteamCmdCardJobRef>();
-  for (const [serverId, state] of queue) {
-    if (state.kind !== kind) continue;
-    if (
-      state.operation !== "install-files"
-      && state.operation !== "update"
-      && state.operation !== "verify-files"
-    ) {
-      continue;
-    }
-    map.set(serverId, {
-      jobId: state.jobId,
-      label: state.label,
-      operation: state.operation,
-    });
-  }
-  return map;
-}
+import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 
 interface AppProps {
   /** Resolved from `app_settings` (via IPC) before first paint. */
@@ -1948,421 +1891,33 @@ export function App({
     [],
   );
 
-  const renderMain = (): ReactElement => {
-    if (overlay?.kind === "workspace") {
-      return (
-        <AppShellLayout
-          route="overview"
-          onNavigate={navigate}
-          steamCmdDetected={steamCmdStatus?.detected === true}
-          steamCmdRunning={steamCmdBusy}
-          officialVersion={officialVersion}
-          officialNetworkStatus={officialNetworkStatus}
-          appVersion={APP_VERSION}
-          yarkUpdateAvailableVersion={yarkUpdateAvailableVersion}
-          onWhatsNewClick={onWhatsNewClick}
-          onYarkUpdateClick={openYarkUpdateSettings}
-          busyOverlay={stopBusyOverlay}
-          downloadCount={downloadCount}
-          workspaceFooter={downloadsWorkspaceFooter}
-        >
-          <ServerWorkspacePage
-            servers={servers}
-            selectedServerId={overlay.serverId}
-            statuses={statuses}
-            installationInfo={installationInfo}
-            events={events}
-            rconHistory={rconHistoryByServer.get(overlay.serverId) ?? []}
-            playerList={
-              playerListsByServer.get(overlay.serverId) ?? {
-                players: [],
-                error: null,
-                loading: false,
-              }
-            }
-            onboarding={overlay.onboarding === true}
-            initialTab={overlay.initialTab}
-            logsFocus={overlay.logsFocus}
-            filesJobActive={
-              filesQueueByServerId.has(overlay.serverId)
-              || (steamCmdBusy && steamCmdStatus?.serverId === overlay.serverId)
-            }
-            filesJobOperation={
-              (() => {
-                const queued = filesQueueByServerId.get(overlay.serverId);
-                if (queued !== undefined && isFilesJobOperation(queued.operation)) {
-                  return queued.operation;
-                }
-                const liveOp = steamCmdStatus?.operation;
-                if (
-                  steamCmdBusy
-                  && steamCmdStatus?.serverId === overlay.serverId
-                  && isFilesJobOperation(liveOp)
-                ) {
-                  return liveOp;
-                }
-                return null;
-              })()
-            }
-            filesJobQueueKind={
-              filesQueueByServerId.get(overlay.serverId)?.kind
-              ?? (steamCmdBusy && steamCmdStatus?.serverId === overlay.serverId
-                ? "active"
-                : null)
-            }
-            filesJobLabel={
-              filesQueueByServerId.get(overlay.serverId)?.kind === "queued"
-                ? filesQueueByServerId.get(overlay.serverId)?.label ?? "Queued in Downloads"
-                : steamCmdBusy && steamCmdStatus?.serverId === overlay.serverId
-                ? steamCmdStatus.operation === "update"
-                  ? "Updating server files"
-                  : steamCmdStatus.operation === "verify-files"
-                    ? "Verifying server files"
-                    : steamCmdStatus.operation === "install-files"
-                      ? "Installing server files"
-                      : steamCmdStatus.operation === "sync-files"
-                        ? "Copying files to this server"
-                        : "Updating server files"
-                : filesQueueByServerId.get(overlay.serverId)?.label ?? null
-            }
-            stopProgress={
-              stopProgressByServerId.get(overlay.serverId) ?? null
-            }
-            startBusy={startBusyByServerId.has(overlay.serverId)}
-            onLogsFocusConsumed={() =>
-              setOverlay((current) =>
-                current?.kind === "workspace"
-                  ? { ...current, logsFocus: null }
-                  : current,
-              )
-            }
-            onDismissOnboarding={() =>
-              setOverlay({ kind: "workspace", serverId: overlay.serverId })
-            }
-            onSelectServer={(serverId) =>
-              setOverlay({
-                kind: "workspace",
-                serverId,
-                initialTab: overlay.initialTab,
-                // Drop one-shot deep links so they cannot apply to another server.
-                logsFocus: null,
-              })
-            }
-            onRegisterLeaveGuard={registerOverlayLeaveGuard}
-            onBack={() => setOverlay(null)}
-            onStartServer={(id) => void startServer(id)}
-            onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
-            onRestartServer={(id) => void restartServer(id)}
-            onKillServer={(id) => confirmKillServer(id)}
-            onToggleServerEnabled={(id, enabled) => void setServerEnabled(id, enabled)}
-            onOpenFolder={(id) => void runAction(() => window.api.openServerFolder(id))}
-            onInstallFiles={(id) => startSteamFilesJob(id, "install")}
-            onUpdateNow={(id) => startSteamFilesJob(id, "update")}
-            onVerifyFiles={(id) => startSteamFilesJob(id, "verify")}
-            onSendRcon={(id, command) => sendRconCommand(id, command)}
-            onClearRconHistory={clearRconHistory}
-            onRconTabFocusChanged={onRconTabFocusChanged}
-            onRefreshPlayers={onRefreshPlayers}
-            onKickPlayer={onKickPlayer}
-            onBanPlayer={onBanPlayer}
-            onServerUpdated={() => void refresh()}
-            onCopyConfiguration={(id) =>
-              setCopyConfig({ sourceServerId: id })
-            }
-          />
-        </AppShellLayout>
-      );
+  const onRunSetupAgain = useCallback(() => {
+    if (servers.length === 0) {
+      void (async () => {
+        if (typeof window.api.setOnboarding !== "function") {
+          showOperatorError("Onboarding settings are unavailable. Try restarting YARK.");
+          return;
+        }
+        try {
+          const result = await window.api.setOnboarding(null);
+          if (!result.ok) {
+            showOperatorError(result.error ?? "Could not reset setup progress");
+            return;
+          }
+          onboardingRecordRef.current = null;
+          setPendingSetupCluster(null);
+          setupWizardPromptSettledRef.current = true;
+          setSetupWizardMode("first-run");
+        } catch (error: unknown) {
+          const detail = error instanceof Error ? error.message : String(error);
+          showOperatorError(detail, "Could not reset setup progress");
+        }
+      })();
+      return;
     }
+    setSetupWizardMode("paths-shell");
+  }, [servers.length]);
 
-    if (overlay?.kind === "create") {
-      return (
-        <AppShellLayout
-          route="overview"
-          onNavigate={navigate}
-          steamCmdDetected={steamCmdStatus?.detected === true}
-          steamCmdRunning={steamCmdBusy}
-          officialVersion={officialVersion}
-          officialNetworkStatus={officialNetworkStatus}
-          appVersion={APP_VERSION}
-          yarkUpdateAvailableVersion={yarkUpdateAvailableVersion}
-          onWhatsNewClick={onWhatsNewClick}
-          onYarkUpdateClick={openYarkUpdateSettings}
-          busyOverlay={stopBusyOverlay}
-          downloadCount={downloadCount}
-          workspaceFooter={downloadsWorkspaceFooter}
-        >
-          <ServerForm
-            initial={null}
-            defaultBaseFolder={defaultBaseFolder}
-            servers={servers}
-            extraClusterOptions={extraClusterOptions}
-            onRegisterLeaveGuard={registerOverlayLeaveGuard}
-            onOpenClusters={() => navigate("clusters")}
-            onCancel={() => runWithOverlayLeaveGuard(() => setOverlay(null))}
-            onSaved={(created) => {
-              consumePendingSetupCluster();
-              if (created !== undefined) {
-                setOverlay({ kind: "workspace", serverId: created.id, onboarding: true });
-                void refresh();
-                return;
-              }
-              setOverlay(null);
-              void refresh();
-            }}
-          />
-        </AppShellLayout>
-      );
-    }
-
-    if (overlay?.kind === "edit") {
-      return (
-        <AppShellLayout
-          route="overview"
-          onNavigate={navigate}
-          steamCmdDetected={steamCmdStatus?.detected === true}
-          steamCmdRunning={steamCmdBusy}
-          officialVersion={officialVersion}
-          officialNetworkStatus={officialNetworkStatus}
-          appVersion={APP_VERSION}
-          yarkUpdateAvailableVersion={yarkUpdateAvailableVersion}
-          onWhatsNewClick={onWhatsNewClick}
-          onYarkUpdateClick={openYarkUpdateSettings}
-          busyOverlay={stopBusyOverlay}
-          downloadCount={downloadCount}
-          workspaceFooter={downloadsWorkspaceFooter}
-        >
-          <ServerForm
-            initial={overlay.profile}
-            defaultBaseFolder={defaultBaseFolder}
-            servers={servers}
-            onRegisterLeaveGuard={registerOverlayLeaveGuard}
-            onOpenClusters={() => navigate("clusters")}
-            onCancel={() => runWithOverlayLeaveGuard(() => setOverlay(null))}
-            onSaved={() => {
-              setOverlay(null);
-              void refresh();
-            }}
-          />
-        </AppShellLayout>
-      );
-    }
-
-    return (
-      <AppRouter
-        route={route}
-        appVersion={APP_VERSION}
-        officialVersion={officialVersion}
-        officialNetworkStatus={officialNetworkStatus}
-        steamCmdDetected={steamCmdStatus?.detected === true}
-        steamCmdRunning={steamCmdBusy}
-        onNavigate={navigate}
-        yarkUpdateAvailableVersion={yarkUpdateAvailableVersion}
-        onWhatsNewClick={onWhatsNewClick}
-        onYarkUpdateClick={openYarkUpdateSettings}
-        busyOverlay={stopBusyOverlay}
-        downloadCount={downloadCount}
-        workspaceFooter={downloadsWorkspaceFooter}
-        overview={{
-          page: (
-            <OverviewPage
-              search={search}
-              onSearchChange={setSearch}
-              loading={overviewLoading}
-              onCreateServer={() => setOverlay({ kind: "create" })}
-              onImportServer={() => {
-                setImportWizardKey((key) => key + 1);
-                setImportInstallOpen(true);
-              }}
-              checkingUpdates={checkingUpdates}
-              onCheckUpdates={() => void checkForUpdates()}
-              checkingInstalls={installScan.active}
-              onCheckInstalls={() => void runInstallHealthScan("manual")}
-              canUpdateAllOutdated={canUpdateAllOutdated}
-              openingUpdateAllOutdated={updateAllOutdatedLoading}
-              onOpenUpdateAllOutdated={() => void openUpdateAllOutdated()}
-              updateAllOutdatedOpen={updateAllOutdatedOpen}
-              updateAllOutdatedPlan={updateAllOutdatedModalPlan}
-              updateAllOutdatedLoading={updateAllOutdatedLoading}
-              updateAllOutdatedQueueing={updateAllOutdatedQueueing}
-              onCloseUpdateAllOutdated={closeUpdateAllOutdated}
-              onConfirmUpdateAllOutdated={() => void confirmUpdateAllOutdated()}
-              servers={servers}
-              filteredServers={filteredServers}
-              disabledServers={filteredDisabledServers}
-              runningServers={runningServers}
-              statuses={statuses}
-              installationInfo={installationInfo}
-              officialSteamBuild={officialSteamBuild}
-              officialVersion={officialVersion}
-              events={events}
-              onViewAllActivity={() => navigate("logs")}
-              steamCmdServerId={steamCmdStatus?.serverId ?? null}
-              steamCmdRunning={steamCmdStatus?.running === true}
-              steamCmdBusy={steamCmdBusy}
-              steamCmdPausedByServerId={steamCmdPausedByServerId}
-              steamCmdQueuedByServerId={steamCmdQueuedByServerId}
-              steamCmdProgressPercent={steamCmdStatus?.progressPercent ?? null}
-              steamCmdProgressLabel={steamCmdStatus?.progressLabel ?? null}
-              steamCmdProgressBytesDownloaded={steamCmdStatus?.progressBytesDownloaded ?? null}
-              steamCmdProgressBytesTotal={steamCmdStatus?.progressBytesTotal ?? null}
-              steamCmdOperation={steamCmdStatus?.operation ?? null}
-              stopProgressByServerId={stopProgressByServerId}
-              startBusyByServerId={startBusyByServerId}
-              onOpenWorkspace={(server) => {
-                const updatingThisServer =
-                  steamCmdBusy && steamCmdStatus?.serverId === server.id;
-                setOverlay({
-                  kind: "workspace",
-                  serverId: server.id,
-                  ...(updatingThisServer
-                    ? {
-                        initialTab: "logs" as const,
-                        logsFocus: { section: "updates" as const },
-                      }
-                    : {}),
-                });
-              }}
-              onOpenLogs={(serverId) => openServerLogs(serverId, { section: "events" })}
-              onReviewError={(serverId) =>
-                openServerLogs(serverId, { section: "runtime" })
-              }
-              onStartServer={(id) => void startServer(id)}
-              onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
-              onRestartServer={(id) => void restartServer(id)}
-              onKillServer={(id) => confirmKillServer(id)}
-              onOpenFolder={(id) => void runAction(() => window.api.openServerFolder(id))}
-              onInstallFiles={(id) => startSteamFilesJob(id, "install")}
-              onUpdateNow={(id) => startSteamFilesJob(id, "update")}
-              onVerifyFiles={(id) => startSteamFilesJob(id, "verify")}
-              onCheckUpdatesForServer={(id) => void checkForUpdates(id)}
-              onCloneServer={(id) => setOverlay({ kind: "clone", sourceServerId: id })}
-              onCopyConfiguration={(id) =>
-                setCopyConfig({ sourceServerId: id })
-              }
-              onDeleteServer={(id) => confirmDeleteServer(id)}
-              onToggleServerEnabled={(id, enabled) => void setServerEnabled(id, enabled)}
-              onOpenDownloads={() => {
-                setOverlay(null);
-                navigate("downloads");
-              }}
-            />
-          ),
-        }}
-        downloads={{
-          page:
-            steamCmdStatus !== null ? (
-              <DownloadsPage
-                status={steamCmdStatus}
-                console={steamCmdConsole}
-                servers={servers}
-                onCancelLive={() => void runAction(() => window.api.cancelSteamCmd())}
-                onPauseLive={() => void runPauseSteamCmd()}
-                onCancelJob={(id) => void runAction(() => window.api.cancelCriticalJob(id))}
-                onRetryJob={(id) => void runAction(() => window.api.retryCriticalJob(id))}
-                onResumeJob={(id) => void runAction(() => window.api.resumeCriticalJob(id))}
-                onDismissJob={(id) => void runAction(() => window.api.dismissCriticalJob(id))}
-                onReorderJob={(id, direction) =>
-                  void runAction(() => window.api.reorderCriticalJob(id, direction))
-                }
-                onOpenSettings={openSteamCmdSettings}
-              />
-            ) : null,
-        }}
-        clusters={{
-          page: (
-            <ClustersPage
-              servers={servers}
-              reports={reports}
-              statuses={statuses}
-              onRefresh={() => void refresh()}
-              onOpenServer={(serverId) =>
-                setOverlay({ kind: "workspace", serverId })
-              }
-            />
-          ),
-        }}
-        logs={{
-          page: (
-            <LogsPage
-              servers={servers}
-              onOpenServerLogs={openServerLogs}
-            />
-          ),
-        }}
-        backups={{
-          page: (
-            <BackupsPage
-              servers={servers}
-              onOpenServerBackups={openServerBackups}
-              onOpenFailedBackupLogs={({ serverId, backupId }) =>
-                openServerLogs(serverId, {
-                  section: "backups",
-                  backupId: backupId ?? undefined,
-                })
-              }
-            />
-          ),
-        }}
-        settings={{
-          page: (
-            <SettingsPage
-              appVersion={APP_VERSION}
-              focusYarkUpdates={focusYarkUpdates}
-              onYarkUpdatesFocused={() => setFocusYarkUpdates(false)}
-              focusSteamCmd={focusSteamCmd}
-              onSteamCmdFocused={() => setFocusSteamCmd(false)}
-              steamCmdStatus={steamCmdStatus}
-              steamCmdBusy={steamCmdBusy}
-              servers={servers}
-              installationInfo={installationInfo}
-              onOpenServer={(serverId) =>
-                setOverlay({ kind: "workspace", serverId, initialTab: "server" })
-              }
-              openNativeTerminalOnStart={openNativeTerminalOnStart}
-              onOpenNativeTerminalOnStartChange={(enabled) =>
-                void handleOpenNativeConsoleChange(enabled)
-              }
-              uiDensity={uiDensity}
-              onUiDensityChange={(density) => void handleUiDensityChange(density)}
-              defaultBaseFolder={defaultBaseFolder}
-              onDefaultBaseFolderChange={setDefaultBaseFolder}
-              onPickSteamCmdPath={() => void pickSteamCmdPath()}
-              onInstallSteamCmd={() => void runAction(() => window.api.installSteamCmd())}
-              onOpenSteamCmdCache={openSteamCmdCache}
-              onClearSteamCmdCache={clearSteamCmdCache}
-              desktopShell={desktopShell}
-              onRunSetupAgain={() => {
-                if (servers.length === 0) {
-                  void (async () => {
-                    if (typeof window.api.setOnboarding !== "function") {
-                      showOperatorError("Onboarding settings are unavailable. Try restarting YARK.");
-                      return;
-                    }
-                    try {
-                      const result = await window.api.setOnboarding(null);
-                      if (!result.ok) {
-                        showOperatorError(result.error ?? "Could not reset setup progress");
-                        return;
-                      }
-                      onboardingRecordRef.current = null;
-                      setPendingSetupCluster(null);
-                      setupWizardPromptSettledRef.current = true;
-                      setSetupWizardMode("first-run");
-                    } catch (error: unknown) {
-                      const detail = error instanceof Error ? error.message : String(error);
-                      showOperatorError(detail, "Could not reset setup progress");
-                    }
-                  })();
-                  return;
-                }
-                setSetupWizardMode("paths-shell");
-              }}
-            />
-          ),
-        }}
-      />
-    );
-  };
 
   return (
     <AppProviders density={uiDensity}>
@@ -2418,7 +1973,94 @@ export function App({
           await finishSetupWizard("completed", cluster);
         }}
       />
-      {renderMain()}
+      <AppMainRouter
+        overlay={overlay}
+        setOverlay={setOverlay}
+        route={route}
+        navigate={navigate}
+        servers={servers}
+        statuses={statuses}
+        installationInfo={installationInfo}
+        events={events}
+        rconHistoryByServer={rconHistoryByServer}
+        playerListsByServer={playerListsByServer}
+        steamCmdStatus={steamCmdStatus}
+        steamCmdConsole={steamCmdConsole}
+        steamCmdBusy={steamCmdBusy}
+        officialVersion={officialVersion}
+        officialNetworkStatus={officialNetworkStatus}
+        officialSteamBuild={officialSteamBuild}
+        yarkUpdateAvailableVersion={yarkUpdateAvailableVersion}
+        onWhatsNewClick={onWhatsNewClick}
+        onYarkUpdateClick={openYarkUpdateSettings}
+        stopBusyOverlay={stopBusyOverlay}
+        downloadCount={downloadCount}
+        downloadsWorkspaceFooter={downloadsWorkspaceFooter}
+        filesQueueByServerId={filesQueueByServerId}
+        stopProgressByServerId={stopProgressByServerId}
+        startBusyByServerId={startBusyByServerId}
+        registerOverlayLeaveGuard={registerOverlayLeaveGuard}
+        startServer={(id) => void startServer(id)}
+        runAction={runAction}
+        restartServer={(id) => void restartServer(id)}
+        confirmKillServer={confirmKillServer}
+        setServerEnabled={setServerEnabled}
+        startSteamFilesJob={startSteamFilesJob}
+        sendRconCommand={sendRconCommand}
+        clearRconHistory={clearRconHistory}
+        onRconTabFocusChanged={onRconTabFocusChanged}
+        onRefreshPlayers={onRefreshPlayers}
+        onKickPlayer={onKickPlayer}
+        onBanPlayer={onBanPlayer}
+        refresh={refresh}
+        setCopyConfig={setCopyConfig}
+        defaultBaseFolder={defaultBaseFolder}
+        extraClusterOptions={extraClusterOptions}
+        runWithOverlayLeaveGuard={runWithOverlayLeaveGuard}
+        consumePendingSetupCluster={consumePendingSetupCluster}
+        search={search}
+        setSearch={setSearch}
+        overviewLoading={overviewLoading}
+        setImportWizardKey={setImportWizardKey}
+        setImportInstallOpen={setImportInstallOpen}
+        checkingUpdates={checkingUpdates}
+        checkForUpdates={checkForUpdates}
+        installScan={installScan}
+        runInstallHealthScan={runInstallHealthScan}
+        canUpdateAllOutdated={canUpdateAllOutdated}
+        updateAllOutdatedLoading={updateAllOutdatedLoading}
+        openUpdateAllOutdated={openUpdateAllOutdated}
+        updateAllOutdatedOpen={updateAllOutdatedOpen}
+        updateAllOutdatedModalPlan={updateAllOutdatedModalPlan}
+        updateAllOutdatedQueueing={updateAllOutdatedQueueing}
+        closeUpdateAllOutdated={closeUpdateAllOutdated}
+        confirmUpdateAllOutdated={confirmUpdateAllOutdated}
+        filteredServers={filteredServers}
+        filteredDisabledServers={filteredDisabledServers}
+        runningServers={runningServers}
+        steamCmdPausedByServerId={steamCmdPausedByServerId}
+        steamCmdQueuedByServerId={steamCmdQueuedByServerId}
+        openServerLogs={openServerLogs}
+        confirmDeleteServer={confirmDeleteServer}
+        runPauseSteamCmd={runPauseSteamCmd}
+        openSteamCmdSettings={openSteamCmdSettings}
+        reports={reports}
+        openServerBackups={openServerBackups}
+        focusYarkUpdates={focusYarkUpdates}
+        setFocusYarkUpdates={setFocusYarkUpdates}
+        focusSteamCmd={focusSteamCmd}
+        setFocusSteamCmd={setFocusSteamCmd}
+        openNativeTerminalOnStart={openNativeTerminalOnStart}
+        handleOpenNativeConsoleChange={handleOpenNativeConsoleChange}
+        uiDensity={uiDensity}
+        handleUiDensityChange={handleUiDensityChange}
+        setDefaultBaseFolder={setDefaultBaseFolder}
+        pickSteamCmdPath={() => void pickSteamCmdPath()}
+        openSteamCmdCache={openSteamCmdCache}
+        clearSteamCmdCache={clearSteamCmdCache}
+        desktopShell={desktopShell}
+        onRunSetupAgain={onRunSetupAgain}
+      />
       <CloneServerDialog
         opened={overlay?.kind === "clone"}
         sourceServer={

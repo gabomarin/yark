@@ -29,6 +29,11 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Pure **process spawn** helpers (`process-spawn.ts`) — ASA launch flags and Windows verbatim spawn — extracted from `process-manager.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 - Pure **process readiness** helpers (`process-readiness.ts`) — ready-log detection, RCON probe delay, runtime log ring — extracted from `process-manager.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 - Pure **process stop** helpers (`process-stop.ts`) — unexpected-exit classification and last-error copy — extracted from `process-manager.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
+- Renderer **logs panel** organisms (`LogsEventsTab`, `LogsUpdatesTab`, `LogsBackupsTab`, shared chrome) extracted from `ServerLogsPanel.tsx` ([#146](https://github.com/gabomarin/yark/issues/146)).
+- Renderer **backups overview** organisms (`BackupVolumeStrip`, `ServerHealthCard`, cleanup/disk modals) and `backupsPageModel.ts` extracted from `BackupsPage.tsx` ([#146](https://github.com/gabomarin/yark/issues/146)).
+- Renderer **per-server backup** organisms (`BackupKindSettings`, `BackupListToolbar`) and `serverBackupPanelModel.ts` extracted from `ServerBackupPanel.tsx` ([#146](https://github.com/gabomarin/yark/issues/146)).
+- **Configuration wizard** step panels, footer, and changes modal extracted from `ConfigurationWizard.tsx` ([#146](https://github.com/gabomarin/yark/issues/146)).
+- **App shell** routing moved to `AppMainRouter.tsx`; SteamCMD card job grouping to `steamCmdShellModel.ts` ([#146](https://github.com/gabomarin/yark/issues/146)).
 
 ### Changed
 
