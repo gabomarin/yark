@@ -1,7 +1,7 @@
 # Decomposition map (#146)
 
 **Issue:** [#146](https://github.com/gabomarin/yark/issues/146) — Decompose oversized backend services and renderer pages  
-**Status:** Phase 1 (architecture map + test inventory)  
+**Status:** Phase 4 (instance + process pure helpers) — in progress  
 **Policy:** `scripts/component-structure-baseline.json`, [component-structure.md](component-structure.md)
 
 ## Goal
@@ -74,6 +74,19 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 
 **Phase 3 exit:** `update-service.ts` is a coordinator; SteamCMD + queue decisions live in siblings above. Further shrinks are optional orchestration moves only.
 
+### Phase 4 progress
+
+| Module | Status |
+| --- | --- |
+| `instance-lifecycle.ts` | Pure stop progress copy, backup labels, fleet id compare, bounded `mapPool` (+ unit tests). Start/stop orchestration still on `InstanceService`. |
+| `instance-profile.ts` | Pure session port validation/apply, fleet inspect key and scan gate (+ unit tests). CRUD/clone/import orchestration still on `InstanceService`. |
+| `instance-crash.ts` | Pure unexpected-exit event/notify planning (+ unit tests). `recordUnexpectedProcessExit` orchestration still on `InstanceService`. |
+| `process-spawn.ts` | Pure ASA launch log/console flags and Windows verbatim spawn (+ unit tests). `ProcessManager.start` orchestration still on `ProcessManager`. |
+| `process-readiness.ts` | Pure ready-log detection, RCON probe delay, runtime log ring (+ unit tests). `waitUntilReady` / log capture still on `ProcessManager`. |
+| `process-stop.ts` | Pure unexpected-exit classification and last-error copy (+ unit tests). Graceful stop/kill orchestration still on `ProcessManager`. |
+
+**Phase 4 exit:** `instance-service.ts` and `process-manager.ts` are coordinators; lifecycle/profile/crash and spawn/readiness/stop decisions live in siblings above. Optional: `instance-rcon.ts` trim, further orchestration moves.
+
 
 ## Backend: `backup-service.ts`
 
@@ -112,16 +125,16 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 
 ## Backend: `instance-service.ts`
 
-**Already extracted:** `move-install-service.ts`, `import-existing-install.ts`, `clone-install-copy.ts`, `clone-ini-seed.ts`, `launch-args.ts`, `ban-list.ts`, `server-installation.ts`, `validation.ts`, `sync-profile-ini.ts`, `auto-start.ts`, …
+**Already extracted:** `move-install-service.ts`, `import-existing-install.ts`, `clone-install-copy.ts`, `clone-ini-seed.ts`, `launch-args.ts`, `ban-list.ts`, `server-installation.ts`, `validation.ts`, `sync-profile-ini.ts`, `auto-start.ts`, `instance-lifecycle.ts`, `instance-profile.ts`, `instance-crash.ts`, …
 
-**Still inside god-class:**
+**Still inside coordinator (by design):**
 
-| Concern | Proposed module |
+| Concern | Notes |
 | --- | --- |
-| CRUD + clone/import orchestration | `instance-profile.ts` |
-| Start/restart/stop/kill lifecycle | `instance-lifecycle.ts` |
-| RCON + players + bans | `instance-rcon.ts` (or split ban-list further) |
-| Installation probe / health | lean on `server-installation.ts`; trim service to facade |
+| CRUD + clone/import orchestration | Uses pure helpers from `instance-profile.ts` where applicable |
+| Start/restart/stop/kill lifecycle | Uses pure helpers from `instance-lifecycle.ts`; orchestration on `InstanceService` |
+| RCON + players + bans | Optional `instance-rcon.ts` trim; `ban-list.ts` already extracted |
+| Installation probe / health | Uses `instance-profile.ts` fleet inspect helpers + `server-installation.ts` |
 
 **Characterization:** Good spread across `instance-*.test.ts`; add one integration-style test for stop→backup→start ordering before lifecycle split.
 
@@ -129,12 +142,14 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 
 ## Backend: `process-manager.ts`
 
-| Concern | Proposed module |
+**Already extracted:** `process-spawn.ts`, `process-readiness.ts`, `process-stop.ts`.
+
+| Concern | Notes |
 | --- | --- |
-| Spawn + argv + working dir | `process-spawn.ts` |
-| Graceful stop / kill / leave-reattach | `process-stop.ts` |
-| Readiness (RCON/log tail) | `process-readiness.ts` (coordinates with `asa-log-tail`, RCON) |
-| Runtime state machine | keep `ProcessManager` as thin coordinator |
+| Spawn + argv | Uses pure helpers from `process-spawn.ts` |
+| Graceful stop / kill / leave-reattach | Uses pure helpers from `process-stop.ts`; orchestration on `ProcessManager` |
+| Readiness (RCON/log tail) | Uses pure helpers from `process-readiness.ts`; coordinates with `asa-log-tail`, RCON |
+| Runtime state machine | `ProcessManager` remains thin coordinator |
 
 **Characterization:** `process-manager-lifecycle.test.ts`, `process-manager-leave.test.ts`, real-start integration.
 

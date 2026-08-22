@@ -1,5 +1,4 @@
 import type {
-  BackupKind,
   CloneInstallProgress,
   ClusterComplianceReport,
   InstallationHealthStatus,
@@ -15,10 +14,9 @@ import type {
   StartServerOptions,
 } from "@shared/types";
 import {
-  OS_NOTIFY_CRASH_EVENT_TYPE,
-  type ServerCrashedNotifyPayload,
-} from "@shared/os-notification-events";
-import { EMPTY_WIPE_STALE_MESSAGE, offsetPort, PORT_MAX, PORT_MIN } from "@shared/types";
+  EMPTY_WIPE_STALE_MESSAGE,
+  offsetPort,
+} from "@shared/types";
 import { applyServerProfilePatch } from "@shared/server-profile";
 import { EventEmitter } from "node:events";
 import { type ChildProcess } from "node:child_process";
@@ -83,9 +81,25 @@ import {
 } from "@shared/installation-health";
 import { assertHostPortsAvailable } from "../../infra/process/host-port-probe";
 import { resolveDisplayedServerVersion } from "@shared/server-version-display";
+import { planUnexpectedServerCrashEvent } from "./instance-crash";
+import {
+  FLEET_INSPECT_CONCURRENCY,
+  backupKindLabel,
+  backingUpPercent,
+  buildServerStopProgress,
+  buildServerStoppedEventMessage,
+  mapPool,
+  type StopJobOutcome,
+} from "./instance-lifecycle";
+import {
+  applySessionPortsToProfile,
+  buildFleetInspectKey,
+  fleetServerSetChanged,
+  shouldInspectFleetInstallations,
+  validateSessionPorts,
+} from "./instance-profile";
 
-/** Max concurrent async FS classify probes during a fleet scan. */
-const FLEET_INSPECT_CONCURRENCY = 3;
+export type { StopJobOutcome };
 
 /** Single-server / gate paths may use heavier version fallbacks. */
 const ENRICHED_INSTALL_INSPECT = {
@@ -93,33 +107,6 @@ const ENRICHED_INSTALL_INSPECT = {
   allowExecutableVersionProbe: true,
   allowLogVersionProbe: true,
 } as const;
-
-async function mapPool<T, R>(
-  items: ReadonlyArray<T>,
-  concurrency: number,
-  mapper: (item: T, index: number) => Promise<R>,
-): Promise<R[]> {
-  if (items.length === 0) {
-    return [];
-  }
-  const results: R[] = new Array(items.length);
-  let nextIndex = 0;
-  const workerCount = Math.min(Math.max(1, concurrency), items.length);
-
-  async function worker(): Promise<void> {
-    for (;;) {
-      const index = nextIndex;
-      nextIndex += 1;
-      if (index >= items.length) {
-        return;
-      }
-      results[index] = await mapper(items[index]!, index);
-    }
-  }
-
-  await Promise.all(Array.from({ length: workerCount }, () => worker()));
-  return results;
-}
 
 const RCON_HOST = "127.0.0.1";
 /** Maximum time to wait for the RCON port to start accepting connections. */
@@ -132,39 +119,6 @@ export interface StopServerOptions {
   backup?: boolean;
   /** Progress reason for UI (quit shows the blocking overlay). Default `"user"`. */
   reason?: ServerStopProgressReason;
-}
-
-/** Outcome of a graceful stop job (used by restart fail-hard policy). */
-export type StopJobOutcome =
-  | "stopped"
-  | "already_exited"
-  | "killed"
-  | "absent"
-  | "noop";
-
-function backupKindLabel(kind: BackupKind): string {
-  if (kind === "world") return "world save";
-  if (kind === "players") return "player profiles";
-  return "INI files";
-}
-
-/** True when profile ids match the cached install snapshot set (order-independent). */
-function sameServerIds(
-  profiles: ReadonlyArray<{ id: string }>,
-  cached: ReadonlyArray<ServerInstallationInfo>,
-): boolean {
-  // Equal length + every profile id present ⇒ same set (no extras on either side).
-  if (profiles.length !== cached.length) {
-    return false;
-  }
-  const cachedIds = new Set(cached.map((info) => info.serverId));
-  return profiles.every((profile) => cachedIds.has(profile.id));
-}
-
-function backingUpPercent(index: number, total: number): number {
-  if (total <= 1) return 85;
-  // After the process exits, spread archive starts across 40% → 85%.
-  return Math.round(40 + (index / (total - 1)) * 45);
 }
 
 /**
@@ -758,13 +712,7 @@ export class InstanceService extends EventEmitter {
     if (session == null) {
       return profile;
     }
-    this.assertValidSessionPorts(session);
-    return {
-      ...profile,
-      gamePort: session.gamePort,
-      queryPort: session.queryPort,
-      rconPort: session.rconPort,
-    };
+    return applySessionPortsToProfile(profile, session);
   }
 
   private assertValidSessionPorts(ports: {
@@ -772,29 +720,7 @@ export class InstanceService extends EventEmitter {
     queryPort: number;
     rconPort: number;
   }): void {
-    const entries: Array<[string, number]> = [
-      ["gamePort", ports.gamePort],
-      ["queryPort", ports.queryPort],
-      ["rconPort", ports.rconPort],
-    ];
-    for (const [field, value] of entries) {
-      if (
-        !Number.isInteger(value) ||
-        value < PORT_MIN ||
-        value > PORT_MAX
-      ) {
-        throw new Error(
-          `${field} must be an integer between ${PORT_MIN} and ${PORT_MAX}`,
-        );
-      }
-    }
-    if (
-      ports.gamePort === ports.queryPort ||
-      ports.gamePort === ports.rconPort ||
-      ports.queryPort === ports.rconPort
-    ) {
-      throw new Error("Game, query, and RCON session ports must be distinct");
-    }
+    validateSessionPorts(ports);
   }
 
   async setServerEnabled(id: string, enabled: boolean): Promise<ServerProfile> {
@@ -1017,11 +943,7 @@ export class InstanceService extends EventEmitter {
 
     const progress = (
       partial: Omit<ServerStopProgress, "serverId" | "reason">,
-    ): ServerStopProgress => ({
-      serverId: id,
-      reason,
-      ...partial,
-    });
+    ): ServerStopProgress => buildServerStopProgress(id, reason, partial);
 
     try {
       if (this.processes.getStatus(id).status === "starting") {
@@ -1122,13 +1044,11 @@ export class InstanceService extends EventEmitter {
         id,
         "server_stopped",
         exitedExternally ? "warning" : "info",
-        exitedExternally
-          ? didBackup
-            ? `Server "${profile.name}" exited externally; stop backup completed`
-            : `Server "${profile.name}" exited externally during safe stop`
-          : didBackup
-            ? `Server "${profile.name}" stopped (save + pre-stop backup)`
-            : `Server "${profile.name}" stopped (with prior save)`,
+        buildServerStoppedEventMessage({
+          serverName: profile.name,
+          exitedExternally,
+          didBackup,
+        }),
       );
       return exitedExternally ? "already_exited" : "stopped";
     } finally {
@@ -1207,13 +1127,14 @@ export class InstanceService extends EventEmitter {
     const officialChanged =
       this.lastOfficialVersion !== officialVersion ||
       this.lastOfficialSteamBuild !== officialSteamBuild;
-    const serverSetChanged = !sameServerIds(profiles, this.lastInstallServers);
+    const serverSetChanged = fleetServerSetChanged(profiles, this.lastInstallServers);
 
-    const shouldInspectServers =
-      forceOfficialCheck ||
-      serversMode === true ||
-      (serversMode === "when-official-changed" &&
-        (officialChanged || serverSetChanged));
+    const shouldInspectServers = shouldInspectFleetInstallations({
+      forceOfficialCheck,
+      serversMode,
+      officialChanged,
+      serverSetChanged,
+    });
 
     const servers = shouldInspectServers
       ? await this.inspectFleetInstallations({
@@ -1246,7 +1167,7 @@ export class InstanceService extends EventEmitter {
   }): Promise<ServerInstallationInfo[]> {
     for (;;) {
       const profiles = this.repo.list();
-      const key = this.fleetInspectKey(profiles, options.bypassCache);
+      const key = buildFleetInspectKey(profiles, options.bypassCache);
       const existing = this.fleetInspectInFlight;
       if (existing !== null && existing.key === key) {
         return existing.promise;
@@ -1259,7 +1180,7 @@ export class InstanceService extends EventEmitter {
 
       // No in-flight work. Capture the latest list and start (sync section — safe).
       const profilesToScan = this.repo.list();
-      const scanKey = this.fleetInspectKey(profilesToScan, options.bypassCache);
+      const scanKey = buildFleetInspectKey(profilesToScan, options.bypassCache);
       const promise = this.runFleetInstallScan(profilesToScan, options.bypassCache).finally(
         () => {
           if (this.fleetInspectInFlight?.promise === promise) {
@@ -1299,55 +1220,24 @@ export class InstanceService extends EventEmitter {
     });
   }
 
-  private fleetInspectKey(
-    profiles: ReadonlyArray<ServerProfile>,
-    bypassCache: boolean,
-  ): string {
-    const ids = profiles
-      .map((profile) => `${profile.id}\0${installDirKey(profile.installDir)}`)
-      .sort()
-      .join("\n");
-    return `${bypassCache ? "1" : "0"}\n${ids}`;
-  }
-
   private recordUnexpectedProcessExit(payload: UnexpectedManagedExit): void {
     const profile = this.repo.get(payload.serverId);
     const name = profile?.name ?? payload.serverId;
-    const diagnosis = payload.diagnosis;
-    const summary =
-      diagnosis?.summary ??
-      payload.lastError ??
-      `Server "${name}" exited unexpectedly`;
-    const excerpt = diagnosis?.excerpt?.trim() ?? "";
+    const planned = planUnexpectedServerCrashEvent({
+      payload,
+      serverName: name,
+    });
     const eventId = this.repo.addEvent(
       payload.serverId,
-      OS_NOTIFY_CRASH_EVENT_TYPE,
-      "error",
-      summary,
-      {
-        what: summary,
-        cause: diagnosis?.cause,
-        location: "ShooterGame/Saved/Logs/ShooterGame.log",
-        suggestion: diagnosis?.suggestion,
-        excerpt: excerpt.length > 0 ? excerpt : undefined,
-        context: {
-          lastError: payload.lastError,
-          phase: payload.phase,
-          exitCode: payload.exitCode,
-          missingModIds:
-            diagnosis !== null && diagnosis.missingModIds.length > 0
-              ? diagnosis.missingModIds.join(",")
-              : null,
-        },
-      },
+      planned.eventType,
+      planned.severity,
+      planned.summary,
+      planned.details,
     );
-    const notify: ServerCrashedNotifyPayload = {
-      serverId: payload.serverId,
-      serverName: name,
+    this.emit("server-crashed", {
+      ...planned.notify,
       eventId,
-      summary,
-    };
-    this.emit("server-crashed", notify);
+    });
   }
 
   /** Update health memory and emit degradation-only events. */
