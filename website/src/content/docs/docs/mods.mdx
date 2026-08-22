@@ -12,7 +12,8 @@ The Workspace **Mods** tab stores CurseForge **Project IDs** per profile.
 
 - **Enabled** IDs are passed at launch as `-mods=id1,id2,…`
 - **Disabled** IDs stay on the profile until you turn them back on (no need to delete an ID to skip one boot)
-- Newly added IDs start **disabled** — enable them explicitly before they appear on `-mods=`. Add shows a **Mod Added** toast (two can stay visible; a third drops the oldest). Disabled inventory rows use a quieter background; hover uses a cool tint so the enable switch stays readable. One CurseForge category sits under the mod name (Maps uses attention color; extra tags as +N with a hover list). The detail drawer can enable, disable, and remove a configured ID, add a Discover result to this server, and shows a Maps launch-token hint (current map unchanged).
+- Newly added IDs start **disabled** — enable them explicitly before they appear on `-mods=`. Add shows a **Mod Added** toast (two can stay visible; a third drops the oldest). Disabled inventory rows are dimmed (thumb + text) while the Enabled switch stays full strength; row **Remove** stays red **subtle**. One CurseForge category sits under the mod name (Maps uses attention color; extra tags as +N with a hover list). The detail drawer can enable, disable, and remove a configured ID, add a Discover result to this server, and shows a Maps launch-token hint (current map unchanged).
+- **Discover** browses CurseForge on open: category filter, in-field search (icon / Enter), pagination, and catalog sort from table headers (Name / Downloads / Updated), with Clear sort back to Popularity. The table scrolls in the panel with a fixed pagination footer. If the category list cannot load yet, Discover still works with a soft failure.
 - Names / summaries / links come from a small Cloudflare Worker proxy and are cached locally
 
 <figure class="doc-shot">
@@ -23,7 +24,7 @@ The Workspace **Mods** tab stores CurseForge **Project IDs** per profile.
     height="900"
     loading="lazy"
   />
-  <figcaption>Mods — Project IDs, enable/disable, and Worker-backed metadata per server.</figcaption>
+  <figcaption>Mods — load-order table, Discover browse, and Worker-backed metadata per server.</figcaption>
 </figure>
 
 ## Maps / custom worlds
@@ -70,4 +71,4 @@ the map pack enabled on Mods.
 5. For map packs, confirm both **enabled on Mods** and the correct **Map** token before Start
 6. Row actions and right-click menus share the same Menu chrome as the icon buttons — use either path
 
-Deeper CurseForge browsing (beyond IDs + metadata) is future work; today’s tab is the supported surface.
+Discover is the supported CurseForge browse surface on this tab (beyond typing Project IDs or URLs).
