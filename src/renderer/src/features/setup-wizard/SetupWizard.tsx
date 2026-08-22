@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Button, Group, Modal, Stack, Stepper, Text } from "@mantine/core";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { ServerProfile, SteamCmdStatus } from "@shared/types";
 import type { UiDensity } from "@features/settings/settingsModel";
 import type { DesktopShellPreferencesController } from "@features/settings/useDesktopShellPreferences";
@@ -125,20 +126,23 @@ export function SetupWizard(props: Props): ReactElement {
 
   const handleBrowse = async (): Promise<void> => {
     setBrowsing(true);
-    try {
-      const result = await window.api.pickPath(
-        "directory",
-        clusterDir.trim().length > 0 ? clusterDir : undefined,
-        "Select shared cluster folder",
-      );
-      if (result.ok && result.data !== null) {
-        setClusterDir(result.data);
-        setDirAutoSuggested(false);
-        setDirTouched(true);
-      }
-    } finally {
-      setBrowsing(false);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.pickPath(
+          "directory",
+          clusterDir.trim().length > 0 ? clusterDir : undefined,
+          "Select shared cluster folder",
+        );
+        if (result.ok && result.data !== null) {
+          setClusterDir(result.data);
+          setDirAutoSuggested(false);
+          setDirTouched(true);
+        }
+      },
+      () => {
+        setBrowsing(false);
+      },
+    );
   };
 
   const goNext = (): void => {

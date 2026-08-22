@@ -5,6 +5,7 @@ import type { OnlinePlayerInfo } from "@shared/ipc";
 import type { MutableRefObject, ReactElement } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import {
   PlayerIdentityRow,
   resolvePlayerDisplayName,
@@ -28,17 +29,20 @@ export function BannedPlayersSection(props: Props): ReactElement {
   const loadBanned = useCallback(async (): Promise<void> => {
     setBannedLoading(true);
     setBannedError(null);
-    try {
-      const result = await window.api.listBannedPlayers(serverId);
-      if (result.ok) {
-        setBanned(result.data);
-        onEntriesLoaded?.(result.data);
-      } else {
-        setBannedError(result.error ?? "Could not read ban list");
-      }
-    } finally {
-      setBannedLoading(false);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.listBannedPlayers(serverId);
+        if (result.ok) {
+          setBanned(result.data);
+          onEntriesLoaded?.(result.data);
+        } else {
+          setBannedError(result.error ?? "Could not read ban list");
+        }
+      },
+      () => {
+        setBannedLoading(false);
+      },
+    );
   }, [serverId, onEntriesLoaded]);
 
   useEffect(() => {
@@ -77,9 +81,9 @@ export function BannedPlayersSection(props: Props): ReactElement {
       ),
       labels: { confirm: "Unban", cancel: "Cancel" },
       onConfirm: () => {
-        void (async () => {
-          setActionKey(player.key);
-          try {
+        setActionKey(player.key);
+        void runWithFinally(
+          async () => {
             const result = await window.api.unbanPlayer(
               props.serverId,
               player.key,
@@ -97,10 +101,11 @@ export function BannedPlayersSection(props: Props): ReactElement {
             } else {
               setBannedError(result.error ?? "Unban failed");
             }
-          } finally {
+          },
+          () => {
             setActionKey(null);
-          }
-        })();
+          },
+        );
       },
     });
   };

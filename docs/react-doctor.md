@@ -47,4 +47,4 @@ After #402 / #403 (2026-08-21):
 ## Related
 
 - Operator copy design nits: [#402](https://github.com/gabomarin/yark/issues/402)
-- React Compiler spike: [#404](https://github.com/gabomarin/yark/issues/404)
+- React Compiler spike: [#404](https://github.com/gabomarin/yark/issues/404) — write-up [react-compiler-spike.md](react-compiler-spike.md) (**postpone** default; opt-in `build:compiler`)

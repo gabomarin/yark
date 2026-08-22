@@ -14,6 +14,7 @@ import type { FleetInstallRef } from "@shared/server-install-path";
 import type { MoveInstallProgress, ServerProfile } from "@shared/types";
 import { normalizeMoveInstallProgress } from "@shared/types";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { showOperatorToast } from "@ui/operatorToast";
 import { MoveInstallDestFields } from "./MoveInstallDestFields";
 import {
@@ -98,22 +99,25 @@ export function MoveInstallDialog(props: Props): ReactElement {
 
   const handleBrowse = async (): Promise<void> => {
     setBrowsing(true);
-    try {
-      const result = await window.api.pickPath(
-        "directory",
-        destinationDir.trim().length > 0
-          ? destinationDir
-          : props.server?.installDir,
-        createFolder
-          ? "Choose destination base folder"
-          : "Choose destination install folder",
-      );
-      if (result.ok && result.data !== null) {
-        setDestinationDir(result.data);
-      }
-    } finally {
-      setBrowsing(false);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.pickPath(
+          "directory",
+          destinationDir.trim().length > 0
+            ? destinationDir
+            : props.server?.installDir,
+          createFolder
+            ? "Choose destination base folder"
+            : "Choose destination install folder",
+        );
+        if (result.ok && result.data !== null) {
+          setDestinationDir(result.data);
+        }
+      },
+      () => {
+        setBrowsing(false);
+      },
+    );
   };
 
   const finishSuccess = async (): Promise<void> => {
@@ -174,22 +178,26 @@ export function MoveInstallDialog(props: Props): ReactElement {
   };
 
   const handleRetryCleanup = async (): Promise<void> => {
-    if (props.server === null || oldSourceDir === null) return;
+    const server = props.server;
+    if (server === null || oldSourceDir === null) return;
     setCleanupBusy(true);
     setError(null);
-    try {
-      const result = await window.api.cleanupMovedServerInstall(
-        props.server.id,
-        oldSourceDir,
-      );
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-      setOldSourceRemoved(true);
-    } finally {
-      setCleanupBusy(false);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.cleanupMovedServerInstall(
+          server.id,
+          oldSourceDir,
+        );
+        if (!result.ok) {
+          setError(result.error);
+          return;
+        }
+        setOldSourceRemoved(true);
+      },
+      () => {
+        setCleanupBusy(false);
+      },
+    );
   };
 
   const handleClose = (): void => {

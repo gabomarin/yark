@@ -7,6 +7,7 @@ import {
   Newspaper,
 } from "@phosphor-icons/react";
 import { Button, Group, Progress, Text, Title } from "@mantine/core";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { AppUpdateStatus } from "@shared/app-update";
 import { createIdleAppUpdateStatus } from "@shared/app-update";
 import { AppChangelogModal } from "./AppChangelogModal";
@@ -97,79 +98,94 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
         percent: null,
       };
     });
-    try {
-      const result = await window.api.checkForAppUpdate();
-      if (!result.ok) {
-        setActionError(result.error ?? "Could not check for YARK updates");
-        setStatus((prev) => {
-          if (prev.phase === "downloading" || prev.phase === "ready") {
-            return prev;
+    await runWithFinally(
+      async () => {
+        try {
+          const result = await window.api.checkForAppUpdate();
+          if (!result.ok) {
+            setActionError(result.error ?? "Could not check for YARK updates");
+            setStatus((prev) => {
+              if (prev.phase === "downloading" || prev.phase === "ready") {
+                return prev;
+              }
+              return {
+                ...prev,
+                phase: "error",
+                error: result.error ?? "Could not check for YARK updates",
+              };
+            });
+            return;
           }
-          return {
-            ...prev,
-            phase: "error",
-            error: result.error ?? "Could not check for YARK updates",
-          };
-        });
-        return;
-      }
-      setStatus(result.data);
-    } catch (cause) {
-      const message = actionFailureMessage(
-        cause,
-        "Could not check for YARK updates",
-      );
-      setActionError(message);
-      setStatus((prev) => {
-        if (prev.phase === "downloading" || prev.phase === "ready") {
-          return prev;
+          setStatus(result.data);
+        } catch (cause) {
+          const message = actionFailureMessage(
+            cause,
+            "Could not check for YARK updates",
+          );
+          setActionError(message);
+          setStatus((prev) => {
+            if (prev.phase === "downloading" || prev.phase === "ready") {
+              return prev;
+            }
+            return {
+              ...prev,
+              phase: "error",
+              error: message,
+              percent: null,
+            };
+          });
         }
-        return {
-          ...prev,
-          phase: "error",
-          error: message,
-          percent: null,
-        };
-      });
-    } finally {
-      setActionBusy(false);
-    }
+      },
+      () => {
+        setActionBusy(false);
+      },
+    );
   };
 
   const runDownload = async () => {
     setActionBusy(true);
     setActionError(null);
-    try {
-      const result = await window.api.downloadAppUpdate();
-      if (!result.ok) {
-        setActionError(result.error ?? "Could not download the YARK update");
-        return;
-      }
-      setStatus(result.data);
-    } catch (cause) {
-      setActionError(
-        actionFailureMessage(cause, "Could not download the YARK update"),
-      );
-    } finally {
-      setActionBusy(false);
-    }
+    await runWithFinally(
+      async () => {
+        try {
+          const result = await window.api.downloadAppUpdate();
+          if (!result.ok) {
+            setActionError(result.error ?? "Could not download the YARK update");
+            return;
+          }
+          setStatus(result.data);
+        } catch (cause) {
+          setActionError(
+            actionFailureMessage(cause, "Could not download the YARK update"),
+          );
+        }
+      },
+      () => {
+        setActionBusy(false);
+      },
+    );
   };
 
   const runInstall = async () => {
     setActionBusy(true);
     setActionError(null);
-    try {
-      const result = await window.api.installAppUpdate();
-      if (!result.ok) {
-        setActionError(result.error ?? "Could not install the YARK update");
-      }
-    } catch (cause) {
-      setActionError(
-        actionFailureMessage(cause, "Could not install the YARK update"),
-      );
-    } finally {
-      setActionBusy(false);
-    }
+    await runWithFinally(
+      async () => {
+        try {
+          const result = await window.api.installAppUpdate();
+          if (!result.ok) {
+            setActionError(result.error ?? "Could not install the YARK update");
+          }
+        } catch (cause) {
+          setActionError(
+            actionFailureMessage(cause, "Could not install the YARK update"),
+          );
+        }
+      },
+      () => {
+        setActionBusy(false);
+      },
+    );
   };
 
   const openNotes = async () => {

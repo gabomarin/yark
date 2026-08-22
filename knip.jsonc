@@ -23,6 +23,10 @@
     "robocopy.exe",
     "tasklist"
   ],
+  "ignoreDependencies": [
+    // String-referenced in electron.vite.config.ts babel.plugins when YARK_REACT_COMPILER=1 (#404).
+    "babel-plugin-react-compiler"
+  ],
   "rules": {
     "files": "error",
     "dependencies": "error",

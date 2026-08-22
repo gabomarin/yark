@@ -21,6 +21,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { ServerOperationalLogs, ServerProfile } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { ReactElement, ReactNode } from "react";
@@ -98,21 +99,24 @@ export function ServerLogsPanel(props: Props): ReactElement {
     const gen = ++updateLoadGenRef.current;
     setBusy(true);
     setError(null);
-    try {
-      // Cap read size so a single job log cannot dominate renderer memory.
-      const result = await window.api.readServerUpdateLog(serverId, fileName, 150_000);
-      if (gen !== updateLoadGenRef.current) return;
-      if (!result.ok) {
-        setError(result.error ?? "Could not open update log");
-        return;
-      }
-      setSelectedUpdateFile(fileName);
-      setUpdateContent(result.data);
-    } finally {
-      if (gen === updateLoadGenRef.current) {
-        setBusy(false);
-      }
-    }
+    await runWithFinally(
+      async () => {
+        // Cap read size so a single job log cannot dominate renderer memory.
+        const result = await window.api.readServerUpdateLog(serverId, fileName, 150_000);
+        if (gen !== updateLoadGenRef.current) return;
+        if (!result.ok) {
+          setError(result.error ?? "Could not open update log");
+          return;
+        }
+        setSelectedUpdateFile(fileName);
+        setUpdateContent(result.data);
+      },
+      () => {
+        if (gen === updateLoadGenRef.current) {
+          setBusy(false);
+        }
+      },
+    );
   }, []);
 
   const load = useCallback(async (serverId: string, options?: { quiet?: boolean }) => {
@@ -124,24 +128,27 @@ export function ServerLogsPanel(props: Props): ReactElement {
       setError(null);
       clearUpdateContent();
     }
-    try {
-      const result = await window.api.listServerLogs(serverId);
-      if (gen !== loadGenRef.current) return;
-      if (!result.ok) {
-        if (!quiet) {
-          setLogs(null);
-          setError(result.error ?? "Could not load logs");
+    return runWithFinally(
+      async () => {
+        const result = await window.api.listServerLogs(serverId);
+        if (gen !== loadGenRef.current) return;
+        if (!result.ok) {
+          if (!quiet) {
+            setLogs(null);
+            setError(result.error ?? "Could not load logs");
+          }
+          return;
         }
-        return;
-      }
-      if (result.data.serverId !== serverId) return;
-      applyLoadedLogs(result.data, runtimeRevision);
-      return result.data;
-    } finally {
-      if (!quiet && gen === loadGenRef.current) {
-        setLoading(false);
-      }
-    }
+        if (result.data.serverId !== serverId) return;
+        applyLoadedLogs(result.data, runtimeRevision);
+        return result.data;
+      },
+      () => {
+        if (!quiet && gen === loadGenRef.current) {
+          setLoading(false);
+        }
+      },
+    );
   }, [clearUpdateContent, applyLoadedLogs]);
 
   const refreshRuntime = useCallback(async (serverId: string) => {
@@ -169,16 +176,16 @@ export function ServerLogsPanel(props: Props): ReactElement {
     const serverId = props.server.id;
     const gen = ++loadGenRef.current;
     const runtimeRevision = ++runtimeRevisionRef.current;
-    void (async () => {
-      setLoading(true);
-      setError(null);
-      clearUpdateContent();
-      setHighlightedEventId(null);
-      setHighlightedBackupId(null);
-      setExpandedEventId(null);
-      focusKeyRef.current = null;
-      autoScrollDoneRef.current = false;
-      try {
+    void runWithFinally(
+      async () => {
+        setLoading(true);
+        setError(null);
+        clearUpdateContent();
+        setHighlightedEventId(null);
+        setHighlightedBackupId(null);
+        setExpandedEventId(null);
+        focusKeyRef.current = null;
+        autoScrollDoneRef.current = false;
         const result = await window.api.listServerLogs(serverId);
         if (!alive || gen !== loadGenRef.current) return;
         if (!result.ok) {
@@ -188,12 +195,13 @@ export function ServerLogsPanel(props: Props): ReactElement {
         }
         if (result.data.serverId !== serverId) return;
         applyLoadedLogs(result.data, runtimeRevision);
-      } finally {
+      },
+      () => {
         if (alive && gen === loadGenRef.current) {
           setLoading(false);
         }
-      }
-    })();
+      },
+    );
     return () => {
       alive = false;
       clearUpdateContent();
@@ -320,39 +328,45 @@ export function ServerLogsPanel(props: Props): ReactElement {
   const exportLogs = async () => {
     setBusy(true);
     setError(null);
-    try {
-      const result = await window.api.exportServerLogs(props.server.id);
-      if (!result.ok) {
-        setError(result.error ?? "Could not export logs");
-        return;
-      }
-      if (result.data !== null) {
-        showOperatorToast({
-          title: "Logs",
-          message: `Exported to ${result.data}`,
-          autoClose: 8000,
-        });
-      }
-    } finally {
-      setBusy(false);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.exportServerLogs(props.server.id);
+        if (!result.ok) {
+          setError(result.error ?? "Could not export logs");
+          return;
+        }
+        if (result.data !== null) {
+          showOperatorToast({
+            title: "Logs",
+            message: `Exported to ${result.data}`,
+            autoClose: 8000,
+          });
+        }
+      },
+      () => {
+        setBusy(false);
+      },
+    );
   };
 
   const openInExternalViewer = async () => {
     if (selectedUpdateFile === null) return;
     setBusy(true);
     setError(null);
-    try {
-      const result = await window.api.openServerUpdateLogFile(
-        props.server.id,
-        selectedUpdateFile,
-      );
-      if (!result.ok) {
-        setError(result.error ?? "Could not open the log externally");
-      }
-    } finally {
-      setBusy(false);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.openServerUpdateLogFile(
+          props.server.id,
+          selectedUpdateFile,
+        );
+        if (!result.ok) {
+          setError(result.error ?? "Could not open the log externally");
+        }
+      },
+      () => {
+        setBusy(false);
+      },
+    );
   };
 
   const selectedUpdateInfo =
@@ -372,9 +386,9 @@ export function ServerLogsPanel(props: Props): ReactElement {
       labels: { confirm: "Clear events", cancel: "Cancel" },
       confirmProps: { color: "red" },
       onConfirm: () => {
-        void (async () => {
-          setBusy(true);
-          try {
+        setBusy(true);
+        void runWithFinally(
+          async () => {
             setError(null);
             const result = await window.api.clearServerEvents(props.server.id);
             if (!result.ok) {
@@ -388,10 +402,11 @@ export function ServerLogsPanel(props: Props): ReactElement {
               title: "Logs",
               message: `Cleared ${result.data} event${result.data === 1 ? "" : "s"}.`,
             });
-          } finally {
+          },
+          () => {
             setBusy(false);
-          }
-        })();
+          },
+        );
       },
     });
   };
@@ -409,9 +424,9 @@ export function ServerLogsPanel(props: Props): ReactElement {
       labels: { confirm: "Clear runtime", cancel: "Cancel" },
       confirmProps: { color: "red" },
       onConfirm: () => {
-        void (async () => {
-          setBusy(true);
-          try {
+        setBusy(true);
+        void runWithFinally(
+          async () => {
             setError(null);
             const result = await window.api.clearServerRuntimeLog(props.server.id);
             if (!result.ok) {
@@ -425,10 +440,11 @@ export function ServerLogsPanel(props: Props): ReactElement {
               title: "Logs",
               message: "Runtime log cleared.",
             });
-          } finally {
+          },
+          () => {
             setBusy(false);
-          }
-        })();
+          },
+        );
       },
     });
   };
@@ -447,9 +463,9 @@ export function ServerLogsPanel(props: Props): ReactElement {
       labels: { confirm: "Clear update logs", cancel: "Cancel" },
       confirmProps: { color: "red" },
       onConfirm: () => {
-        void (async () => {
-          setBusy(true);
-          try {
+        setBusy(true);
+        void runWithFinally(
+          async () => {
             setError(null);
             const result = await window.api.clearServerUpdateLogs(props.server.id);
             if (!result.ok) {
@@ -463,10 +479,11 @@ export function ServerLogsPanel(props: Props): ReactElement {
               title: "Logs",
               message: `Deleted ${result.data} update log${result.data === 1 ? "" : "s"}.`,
             });
-          } finally {
+          },
+          () => {
             setBusy(false);
-          }
-        })();
+          },
+        );
       },
     });
   };
@@ -488,9 +505,9 @@ export function ServerLogsPanel(props: Props): ReactElement {
       labels: { confirm: "Delete log", cancel: "Cancel" },
       confirmProps: { color: "red" },
       onConfirm: () => {
-        void (async () => {
-          setBusy(true);
-          try {
+        setBusy(true);
+        void runWithFinally(
+          async () => {
             setError(null);
             const result = await window.api.deleteServerUpdateLog(
               props.server.id,
@@ -507,10 +524,11 @@ export function ServerLogsPanel(props: Props): ReactElement {
               title: "Logs",
               message: "Update log deleted.",
             });
-          } finally {
+          },
+          () => {
             setBusy(false);
-          }
-        })();
+          },
+        );
       },
     });
   };
@@ -544,9 +562,9 @@ export function ServerLogsPanel(props: Props): ReactElement {
       labels: { confirm: "Delete backups", cancel: "Cancel" },
       confirmProps: { color: "red" },
       onConfirm: () => {
-        void (async () => {
-          setBusy(true);
-          try {
+        setBusy(true);
+        void runWithFinally(
+          async () => {
             setError(null);
             const result = await window.api.deleteBackups(props.server.id, ids);
             if (!result.ok) {
@@ -558,10 +576,11 @@ export function ServerLogsPanel(props: Props): ReactElement {
               title: "Logs",
               message: `Deleted ${result.data} backup${result.data === 1 ? "" : "s"}.`,
             });
-          } finally {
+          },
+          () => {
             setBusy(false);
-          }
-        })();
+          },
+        );
       },
     });
   };
@@ -578,9 +597,9 @@ export function ServerLogsPanel(props: Props): ReactElement {
       labels: { confirm: "Delete", cancel: "Cancel" },
       confirmProps: { color: "red" },
       onConfirm: () => {
-        void (async () => {
-          setBusy(true);
-          try {
+        setBusy(true);
+        void runWithFinally(
+          async () => {
             setError(null);
             const result = await window.api.deleteBackups(props.server.id, [backupId]);
             if (!result.ok) {
@@ -592,10 +611,11 @@ export function ServerLogsPanel(props: Props): ReactElement {
               title: "Logs",
               message: "Backup deleted.",
             });
-          } finally {
+          },
+          () => {
             setBusy(false);
-          }
-        })();
+          },
+        );
       },
     });
   };

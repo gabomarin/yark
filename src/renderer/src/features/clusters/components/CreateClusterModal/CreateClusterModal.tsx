@@ -20,6 +20,7 @@ import {
 import { CreateClusterIdentityStep } from "./CreateClusterIdentityStep";
 import { CreateClusterPreviewStep } from "./CreateClusterPreviewStep";
 import { CreateClusterServerStep } from "./CreateClusterServerStep";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 
 interface Props {
   opened: boolean;
@@ -91,70 +92,76 @@ export function CreateClusterModal(props: Props): ReactElement {
 
   const handleBrowse = async (): Promise<void> => {
     setBrowsing(true);
-    try {
-      const result = await window.api.pickPath(
-        "directory",
-        clusterDir.trim().length > 0
-          ? clusterDir
-          : selectedServers[0]?.installDir,
-        "Select shared cluster folder",
-      );
-      if (result.ok && result.data !== null) {
-        setClusterDir(result.data);
-        setDirTouched(true);
-      }
-    } finally {
-      setBrowsing(false);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.pickPath(
+          "directory",
+          clusterDir.trim().length > 0
+            ? clusterDir
+            : selectedServers[0]?.installDir,
+          "Select shared cluster folder",
+        );
+        if (result.ok && result.data !== null) {
+          setClusterDir(result.data);
+          setDirTouched(true);
+        }
+      },
+      () => {
+        setBrowsing(false);
+      },
+    );
   };
 
   const handleCreate = async (): Promise<void> => {
     if (selected.length === 0 || !identityValid || portError !== null) return;
     setSaving(true);
     setError(null);
-    const applied: ServerProfile[] = [];
-    try {
-      for (const candidate of selected) {
-        const input = buildCreateClusterInput(
-          candidate.server,
-          clusterId,
-          clusterDir,
-        );
-        const result = await window.api.updateServer(candidate.server.id, input);
-        if (!result.ok) {
-          const failMessage =
-            result.error ?? "Could not create the cluster";
-          const rollbackFailures: string[] = [];
-          for (const previous of [...applied].reverse()) {
-            const rollback = await window.api.updateServer(
-              previous.id,
-              serverProfileToInput(previous),
-            );
-            if (!rollback.ok) {
-              rollbackFailures.push(previous.name);
+    await runWithFinally(
+      async () => {
+        const applied: ServerProfile[] = [];
+        for (const candidate of selected) {
+          const input = buildCreateClusterInput(
+            candidate.server,
+            clusterId,
+            clusterDir,
+          );
+          const result = await window.api.updateServer(candidate.server.id, input);
+          if (!result.ok) {
+            const failMessage =
+              result.error ?? "Could not create the cluster";
+            const rollbackFailures: string[] = [];
+            for (const previous of [...applied].reverse()) {
+              const rollback = await window.api.updateServer(
+                previous.id,
+                serverProfileToInput(previous),
+              );
+              if (!rollback.ok) {
+                rollbackFailures.push(previous.name);
+              }
             }
+            if (rollbackFailures.length > 0) {
+              setError(
+                `Failed on “${candidate.server.name}”: ${failMessage}. Could not restore: ${rollbackFailures.join(", ")}.`,
+              );
+              props.onCreated();
+            } else if (applied.length > 0) {
+              setError(
+                `Failed on “${candidate.server.name}”: ${failMessage}. Previous profiles were restored.`,
+              );
+            } else {
+              setError(failMessage);
+            }
+            return;
           }
-          if (rollbackFailures.length > 0) {
-            setError(
-              `Failed on “${candidate.server.name}”: ${failMessage}. Could not restore: ${rollbackFailures.join(", ")}.`,
-            );
-            props.onCreated();
-          } else if (applied.length > 0) {
-            setError(
-              `Failed on “${candidate.server.name}”: ${failMessage}. Previous profiles were restored.`,
-            );
-          } else {
-            setError(failMessage);
-          }
-          return;
+          applied.push(candidate.server);
         }
-        applied.push(candidate.server);
-      }
-      props.onCreated();
-      props.onClose();
-    } finally {
-      setSaving(false);
-    }
+        props.onCreated();
+        props.onClose();
+      },
+      () => {
+        setSaving(false);
+      },
+    );
   };
 
   const goNext = (): void => {

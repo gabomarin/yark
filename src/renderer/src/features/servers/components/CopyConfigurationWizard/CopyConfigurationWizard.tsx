@@ -10,6 +10,7 @@ import type {
   ServerRuntimeInfo,
 } from "@shared/types";
 import { showOperatorToast } from "@ui/operatorToast";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import {
   allTargetsEligible,
   formatTargetNames,
@@ -74,20 +75,25 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
   const loadDescribe = useCallback(async (id: string): Promise<void> => {
     setLoadingDescribe(true);
     setError(null);
-    try {
-      const res = await window.api.describeConfigTransferSource(id);
-      if (!res.ok) {
-        setError(res.error ?? "Could not read source configuration");
-        setDescribe(null);
-        return;
-      }
-      setDescribe(res.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      setDescribe(null);
-    } finally {
-      setLoadingDescribe(false);
-    }
+    await runWithFinally(
+      async () => {
+        try {
+          const res = await window.api.describeConfigTransferSource(id);
+          if (!res.ok) {
+            setError(res.error ?? "Could not read source configuration");
+            setDescribe(null);
+            return;
+          }
+          setDescribe(res.data);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : String(err));
+          setDescribe(null);
+        }
+      },
+      () => {
+        setLoadingDescribe(false);
+      },
+    );
   }, []);
 
   const goCategories = async (): Promise<void> => {
@@ -110,31 +116,36 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
     setError(null);
     setConfirmed(false);
     setPasswordConfirmed(false);
-    try {
-      const next: ConfigTransferPreview[] = [];
-      for (const targetId of targetIds) {
-        const res = await window.api.previewConfigTransfer(
-          sourceId,
-          targetId,
-          selection,
-        );
-        if (!res.ok) {
-          const name =
-            props.servers.find((s) => s.id === targetId)?.name ?? targetId;
-          setError(res.error ?? `Could not build preview for “${name}”`);
+    await runWithFinally(
+      async () => {
+        try {
+          const next: ConfigTransferPreview[] = [];
+          for (const targetId of targetIds) {
+            const res = await window.api.previewConfigTransfer(
+              sourceId,
+              targetId,
+              selection,
+            );
+            if (!res.ok) {
+              const name =
+                props.servers.find((s) => s.id === targetId)?.name ?? targetId;
+              setError(res.error ?? `Could not build preview for “${name}”`);
+              setPreviews([]);
+              return;
+            }
+            next.push(res.data);
+          }
+          setPreviews(next);
+          setStep(3);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : String(err));
           setPreviews([]);
-          return;
         }
-        next.push(res.data);
-      }
-      setPreviews(next);
-      setStep(3);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      setPreviews([]);
-    } finally {
-      setLoadingPreview(false);
-    }
+      },
+      () => {
+        setLoadingPreview(false);
+      },
+    );
   };
 
   const applyCopy = async (): Promise<void> => {
@@ -148,55 +159,58 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
     }
     setCommitting(true);
     setError(null);
-    const nextOutcomes: CopyConfigTargetOutcome[] = [];
-    try {
-      for (const preview of previews) {
-        try {
-          const res = await window.api.commitConfigTransfer(
-            sourceId,
-            preview.targetId,
-            selection,
-            preview.fingerprint,
-          );
-          if (!res.ok) {
+    await runWithFinally(
+      async () => {
+        const nextOutcomes: CopyConfigTargetOutcome[] = [];
+        for (const preview of previews) {
+          try {
+            const res = await window.api.commitConfigTransfer(
+              sourceId,
+              preview.targetId,
+              selection,
+              preview.fingerprint,
+            );
+            if (!res.ok) {
+              nextOutcomes.push({
+                targetId: preview.targetId,
+                targetName: preview.targetName,
+                ok: false,
+                error: res.error ?? "Configuration copy failed",
+              });
+              continue;
+            }
+            nextOutcomes.push({
+              targetId: preview.targetId,
+              targetName: preview.targetName,
+              ok: true,
+              result: res.data,
+            });
+          } catch (err) {
             nextOutcomes.push({
               targetId: preview.targetId,
               targetName: preview.targetName,
               ok: false,
-              error: res.error ?? "Configuration copy failed",
+              error: err instanceof Error ? err.message : String(err),
             });
-            continue;
           }
-          nextOutcomes.push({
-            targetId: preview.targetId,
-            targetName: preview.targetName,
-            ok: true,
-            result: res.data,
-          });
-        } catch (err) {
-          nextOutcomes.push({
-            targetId: preview.targetId,
-            targetName: preview.targetName,
-            ok: false,
-            error: err instanceof Error ? err.message : String(err),
+        }
+        setOutcomes(nextOutcomes);
+        setStep(4);
+        const successIds = nextOutcomes.filter((o) => o.ok).map((o) => o.targetId);
+        if (successIds.length > 0) {
+          showOperatorToast({
+            title: "Settings copied",
+            message: `Copied settings to ${formatTargetNames(props.servers, successIds)}. Nothing changed on ${source?.name ?? "the source"}.`,
           });
         }
-      }
-      setOutcomes(nextOutcomes);
-      setStep(4);
-      const successIds = nextOutcomes.filter((o) => o.ok).map((o) => o.targetId);
-      if (successIds.length > 0) {
-        showOperatorToast({
-          title: "Settings copied",
-          message: `Copied settings to ${formatTargetNames(props.servers, successIds)}. Nothing changed on ${source?.name ?? "the source"}.`,
-        });
-      }
-      if (nextOutcomes.every((o) => !o.ok)) {
-        setError("Configuration copy failed for every selected target.");
-      }
-    } finally {
-      setCommitting(false);
-    }
+        if (nextOutcomes.every((o) => !o.ok)) {
+          setError("Configuration copy failed for every selected target.");
+        }
+      },
+      () => {
+        setCommitting(false);
+      },
+    );
   };
 
   const canLeaveStep1 =

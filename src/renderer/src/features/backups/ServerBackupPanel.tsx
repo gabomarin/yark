@@ -1,3 +1,4 @@
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { ReactElement } from "react";
 import {
   ArrowClockwise,
@@ -313,75 +314,78 @@ export function ServerBackupPanel(props: Props): ReactElement {
       setLoading(true);
     }
     // Quiet interval / push: no toolbar spinner — avoid ~12s flicker (#163).
-    try {
-      const [listRes, policyRes, rootRes] = await Promise.all([
-        window.api.listBackups(serverId, 100),
-        window.api.getBackupPolicy(serverId),
-        window.api.resolveBackupRoot(serverId),
-      ]);
-      // Drop stale responses so overlapping interval/push/user loads cannot regress UI.
-      if (gen !== loadGenRef.current) return;
-      if (!listRes.ok) {
-        if (!quiet) {
-          setBackups([]);
-          setPolicy(null);
-          setDraftPolicy(null);
-          setResolvedRoot(null);
-          setSelectedIds([]);
+    await runWithFinally(
+      async () => {
+        const [listRes, policyRes, rootRes] = await Promise.all([
+          window.api.listBackups(serverId, 100),
+          window.api.getBackupPolicy(serverId),
+          window.api.resolveBackupRoot(serverId),
+        ]);
+        // Drop stale responses so overlapping interval/push/user loads cannot regress UI.
+        if (gen !== loadGenRef.current) return;
+        if (!listRes.ok) {
+          if (!quiet) {
+            setBackups([]);
+            setPolicy(null);
+            setDraftPolicy(null);
+            setResolvedRoot(null);
+            setSelectedIds([]);
+          }
+          showBackupError(listRes.error ?? "Could not load backups");
+          return;
         }
-        showBackupError(listRes.error ?? "Could not load backups");
-        return;
-      }
-      if (!policyRes.ok) {
+        if (!policyRes.ok) {
+          setBackups((previous) =>
+            backupsListKey(previous) === backupsListKey(listRes.data)
+              ? previous
+              : listRes.data,
+          );
+          if (!quiet) {
+            setPolicy(null);
+            setDraftPolicy(null);
+            setResolvedRoot(null);
+            setSelectedIds([]);
+          }
+          showBackupError(policyRes.error ?? "Could not load backup policy");
+          return;
+        }
         setBackups((previous) =>
           backupsListKey(previous) === backupsListKey(listRes.data)
             ? previous
             : listRes.data,
         );
-        if (!quiet) {
-          setPolicy(null);
-          setDraftPolicy(null);
-          setResolvedRoot(null);
-          setSelectedIds([]);
-        }
-        showBackupError(policyRes.error ?? "Could not load backup policy");
-        return;
-      }
-      setBackups((previous) =>
-        backupsListKey(previous) === backupsListKey(listRes.data)
-          ? previous
-          : listRes.data,
-      );
-      setSelectedIds((prev) => {
-        const next = prev.filter((id) =>
-          listRes.data.some((b) => b.id === id && b.status !== "running"),
+        setSelectedIds((prev) => {
+          const next = prev.filter((id) =>
+            listRes.data.some((b) => b.id === id && b.status !== "running"),
+          );
+          if (
+            next.length === prev.length &&
+            next.every((id, index) => id === prev[index])
+          ) {
+            return prev;
+          }
+          return next;
+        });
+        setPolicy((previous) =>
+          previous !== null && draftEqualsPolicy(toDraft(previous), policyRes.data)
+            ? previous
+            : policyRes.data,
         );
-        if (
-          next.length === prev.length &&
-          next.every((id, index) => id === prev[index])
-        ) {
-          return prev;
+        // Quiet refresh must not clobber unsaved destination/schedule/retention edits.
+        if (!quiet) {
+          setDraftPolicy(toDraft(policyRes.data));
         }
-        return next;
-      });
-      setPolicy((previous) =>
-        previous !== null && draftEqualsPolicy(toDraft(previous), policyRes.data)
-          ? previous
-          : policyRes.data,
-      );
-      // Quiet refresh must not clobber unsaved destination/schedule/retention edits.
-      if (!quiet) {
-        setDraftPolicy(toDraft(policyRes.data));
-      }
-      setResolvedRoot((previous) => {
-        const nextRoot = rootRes.ok ? rootRes.data : null;
-        return previous === nextRoot ? previous : nextRoot;
-      });
-    } finally {
-      if (gen === loadGenRef.current) {
-        setLoading(false);
-      }
-    }
+        setResolvedRoot((previous) => {
+          const nextRoot = rootRes.ok ? rootRes.data : null;
+          return previous === nextRoot ? previous : nextRoot;
+        });
+      },
+      () => {
+        if (gen === loadGenRef.current) {
+          setLoading(false);
+        }
+      },
+    );
   };
   useEffect(() => {
     void load(props.server.id);
@@ -437,12 +441,15 @@ export function ServerBackupPanel(props: Props): ReactElement {
 
   const forceRefresh = async () => {
     setRefreshing(true);
-    try {
-      await load(props.server.id, { quiet: true });
-      showBackupToast("Backup list refreshed.");
-    } finally {
-      setRefreshing(false);
-    }
+    await runWithFinally(
+      async () => {
+        await load(props.server.id, { quiet: true });
+        showBackupToast("Backup list refreshed.");
+      },
+      () => {
+        setRefreshing(false);
+      },
+    );
   };
 
   const selectKind = (kind: BackupKind) => {
@@ -453,115 +460,136 @@ export function ServerBackupPanel(props: Props): ReactElement {
 
   const createBackup = async () => {
     setBusyOp("create");
-    try {
-      const result = await window.api.createManualBackup(props.server.id, [activeKind]);
-      if (!result.ok) {
-        showBackupError(result.error ?? "Could not create backup");
-        return;
-      }
-      await load(props.server.id);
-      showBackupToast(`${activeKindLabel} backup completed.`);
-    } finally {
-      setBusyOp(null);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.createManualBackup(props.server.id, [activeKind]);
+        if (!result.ok) {
+          showBackupError(result.error ?? "Could not create backup");
+          return;
+        }
+        await load(props.server.id);
+        showBackupToast(`${activeKindLabel} backup completed.`);
+      },
+      () => {
+        setBusyOp(null);
+      },
+    );
   };
 
   const browseBackupDir = async () => {
     if (draftPolicy === null) return;
     setBrowsingDir(true);
-    try {
-      const result = await window.api.pickPath(
-        "directory",
-        draftPolicy.backupDir ?? props.server.installDir,
-        "Choose backup destination",
-      );
-      if (!result.ok) {
-        showBackupError(result.error ?? "Could not open folder picker");
-        return;
-      }
-      if (result.data !== null) {
-        setDraftPolicy({ ...draftPolicy, backupDir: result.data });
-      }
-    } finally {
-      setBrowsingDir(false);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.pickPath(
+          "directory",
+          draftPolicy.backupDir ?? props.server.installDir,
+          "Choose backup destination",
+        );
+        if (!result.ok) {
+          showBackupError(result.error ?? "Could not open folder picker");
+          return;
+        }
+        if (result.data !== null) {
+          setDraftPolicy({ ...draftPolicy, backupDir: result.data });
+        }
+      },
+      () => {
+        setBrowsingDir(false);
+      },
+    );
   };
 
   const openDestination = async () => {
     setBusyOp("other");
-    try {
-      const result = await window.api.openBackupRoot(props.server.id);
-      if (!result.ok) {
-        showBackupError(result.error ?? "Could not open backup destination");
-      }
-    } finally {
-      setBusyOp(null);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.openBackupRoot(props.server.id);
+        if (!result.ok) {
+          showBackupError(result.error ?? "Could not open backup destination");
+        }
+      },
+      () => {
+        setBusyOp(null);
+      },
+    );
   };
 
   const openBackupFolder = async (backupId: string) => {
     setBusyOp("other");
-    try {
-      const result = await window.api.openBackupFolder(props.server.id, backupId);
-      if (!result.ok) {
-        showBackupError(result.error ?? "Could not open backup folder");
-      }
-    } finally {
-      setBusyOp(null);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.openBackupFolder(props.server.id, backupId);
+        if (!result.ok) {
+          showBackupError(result.error ?? "Could not open backup folder");
+        }
+      },
+      () => {
+        setBusyOp(null);
+      },
+    );
   };
 
   const exportBackup = async (backup: BackupRecord) => {
     setBusyOp("export");
-    try {
-      await runBackupExport({
-        serverId: props.server.id,
-        serverName: props.server.name,
-        backup,
-        onError: showBackupError,
-        onSuccess: (path) => showBackupToast(`Exported to ${path}`),
-      });
-    } finally {
-      setBusyOp(null);
-    }
+    await runWithFinally(
+      async () => {
+        await runBackupExport({
+          serverId: props.server.id,
+          serverName: props.server.name,
+          backup,
+          onError: showBackupError,
+          onSuccess: (path) => showBackupToast(`Exported to ${path}`),
+        });
+      },
+      () => {
+        setBusyOp(null);
+      },
+    );
   };
 
   const importBackup = async () => {
     setBusyOp("import");
-    try {
-      await runBackupImport({
-        serverId: props.server.id,
-        kind: activeKind,
-        kindLabel: activeKindLabel,
-        onError: showBackupError,
-        onSuccess: async () => {
-          await load(props.server.id);
-          showBackupToast(
-            `Imported ${activeKindLabel.toLowerCase()} archive into backup history (not restored).`,
-          );
-        },
-      });
-    } finally {
-      setBusyOp(null);
-    }
+    await runWithFinally(
+      async () => {
+        await runBackupImport({
+          serverId: props.server.id,
+          kind: activeKind,
+          kindLabel: activeKindLabel,
+          onError: showBackupError,
+          onSuccess: async () => {
+            await load(props.server.id);
+            showBackupToast(
+              `Imported ${activeKindLabel.toLowerCase()} archive into backup history (not restored).`,
+            );
+          },
+        });
+      },
+      () => {
+        setBusyOp(null);
+      },
+    );
   };
 
   const deleteBackupsByIds = async (backupIds: string[]) => {
     setBusyOp("other");
-    try {
-      const result = await window.api.deleteBackups(props.server.id, backupIds);
-      if (!result.ok) {
-        showBackupError(result.error ?? "Could not delete backups");
-        return;
-      }
-      setSelectedIds((prev) => prev.filter((id) => !backupIds.includes(id)));
-      await load(props.server.id);
-      showBackupToast(
-        `Deleted ${result.data} backup${result.data === 1 ? "" : "s"}.`,
-      );
-    } finally {
-      setBusyOp(null);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.deleteBackups(props.server.id, backupIds);
+        if (!result.ok) {
+          showBackupError(result.error ?? "Could not delete backups");
+          return;
+        }
+        setSelectedIds((prev) => prev.filter((id) => !backupIds.includes(id)));
+        await load(props.server.id);
+        showBackupToast(
+          `Deleted ${result.data} backup${result.data === 1 ? "" : "s"}.`,
+        );
+      },
+      () => {
+        setBusyOp(null);
+      },
+    );
   };
 
   const confirmDeleteSelected = () => {
@@ -596,9 +624,9 @@ export function ServerBackupPanel(props: Props): ReactElement {
       labels: { confirm: "Clear failed", cancel: "Cancel" },
       confirmProps: { color: "red" },
       onConfirm: () => {
-        void (async () => {
-          setBusyOp("other");
-          try {
+        setBusyOp("other");
+        void runWithFinally(
+          async () => {
             const result = await window.api.deleteFailedBackups(
               props.server.id,
               activeKind,
@@ -613,10 +641,11 @@ export function ServerBackupPanel(props: Props): ReactElement {
                 ? "No failed backup records to clear."
                 : `Cleared ${result.data} failed backup record${result.data === 1 ? "" : "s"}.`,
             );
-          } finally {
+          },
+          () => {
             setBusyOp(null);
-          }
-        })();
+          },
+        );
       },
     });
   };
@@ -677,26 +706,29 @@ export function ServerBackupPanel(props: Props): ReactElement {
     const backup = restoreTarget;
     const label = kindLabel(backup.kind);
     setBusyOp("other");
-    try {
-      const result = await window.api.restoreBackup(
-        props.server.id,
-        backup.id,
-        backup.kind === "world"
-          ? { restoreProfilesTribes }
-          : undefined,
-      );
-      if (!result.ok) {
-        showBackupError(result.error ?? "Could not restore backup");
-        return;
-      }
-      setRestoreTarget(null);
-      await load(props.server.id);
-      showBackupToast(
-        `${label} backup restored. A pre-restore safety copy was kept.`,
-      );
-    } finally {
-      setBusyOp(null);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.restoreBackup(
+          props.server.id,
+          backup.id,
+          backup.kind === "world"
+            ? { restoreProfilesTribes }
+            : undefined,
+        );
+        if (!result.ok) {
+          showBackupError(result.error ?? "Could not restore backup");
+          return;
+        }
+        setRestoreTarget(null);
+        await load(props.server.id);
+        showBackupToast(
+          `${label} backup restored. A pre-restore safety copy was kept.`,
+        );
+      },
+      () => {
+        setBusyOp(null);
+      },
+    );
   };
 
   const emptyHint =

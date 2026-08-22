@@ -20,6 +20,7 @@ import type {
 } from "@shared/types";
 import { ClusterIniDiffSummary } from "../ClusterIniDiffSummary/ClusterIniDiffSummary";
 import { ClusterIniFileSelectionFields } from "../ClusterIniFileSelectionFields/ClusterIniFileSelectionFields";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 
 interface Props {
   opened: boolean;
@@ -89,33 +90,36 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
     setError(null);
     setPreview(null);
 
-    void (async () => {
-      try {
-        const result =
-          props.operation === "promote"
-            ? await window.api.previewClusterIniPromote(
-                props.clusterId,
-                props.serverId,
-                files,
-              )
-            : await window.api.previewClusterIniRestore(
-                props.clusterId,
-                props.serverId,
-                files,
-              );
-        if (cancelled) return;
-        if (!result.ok) {
-          setError(result.error ?? "Could not build template preview");
-          return;
+    void runWithFinally(
+      async () => {
+        try {
+          const result =
+            props.operation === "promote"
+              ? await window.api.previewClusterIniPromote(
+                  props.clusterId,
+                  props.serverId,
+                  files,
+                )
+              : await window.api.previewClusterIniRestore(
+                  props.clusterId,
+                  props.serverId,
+                  files,
+                );
+          if (cancelled) return;
+          if (!result.ok) {
+            setError(result.error ?? "Could not build template preview");
+            return;
+          }
+          setPreview(result.data);
+        } catch (err) {
+          if (cancelled) return;
+          setError(err instanceof Error ? err.message : String(err));
         }
-        setPreview(result.data);
-      } catch (err) {
-        if (cancelled) return;
-        setError(err instanceof Error ? err.message : String(err));
-      } finally {
+      },
+      () => {
         if (!cancelled) setLoading(false);
-      }
-    })();
+      },
+    );
 
     return () => {
       cancelled = true;
@@ -133,30 +137,35 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
     if (!canCommit) return;
     setCommitting(true);
     setError(null);
-    try {
-      const result =
-        props.operation === "promote"
-          ? await window.api.promoteClusterIniToTemplate(
-              props.clusterId,
-              props.serverId,
-              files,
-            )
-          : await window.api.restoreClusterIniFromTemplate(
-              props.clusterId,
-              props.serverId,
-              files,
-            );
-      if (!result.ok) {
-        setError(result.error ?? "Template operation failed");
-        return;
-      }
-      props.onApplied();
-      props.onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setCommitting(false);
-    }
+    await runWithFinally(
+      async () => {
+        try {
+          const result =
+            props.operation === "promote"
+              ? await window.api.promoteClusterIniToTemplate(
+                  props.clusterId,
+                  props.serverId,
+                  files,
+                )
+              : await window.api.restoreClusterIniFromTemplate(
+                  props.clusterId,
+                  props.serverId,
+                  files,
+                );
+          if (!result.ok) {
+            setError(result.error ?? "Template operation failed");
+            return;
+          }
+          props.onApplied();
+          props.onClose();
+        } catch (err) {
+          setError(err instanceof Error ? err.message : String(err));
+        }
+      },
+      () => {
+        setCommitting(false);
+      },
+    );
   };
 
   const changeCount = preview?.preview.changedCount ?? 0;
