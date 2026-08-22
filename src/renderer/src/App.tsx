@@ -1,3 +1,4 @@
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { ReactElement } from "react";
 import { APP_VERSION } from "@shared/app-version";
 import { shouldShowWhatsNewForVersion } from "@shared/changelog";
@@ -354,7 +355,7 @@ export function App({
       }
       setupWizardBusyRef.current = true;
       setSetupWizardBusy(true);
-      try {
+      return runWithFinally(async () => {
         const saved = await persistOnboardingStatus(status, cluster);
         if (!saved) {
           return false;
@@ -362,10 +363,10 @@ export function App({
         setPendingSetupCluster(cluster);
         closeSetupWizard();
         return true;
-      } finally {
+      }, () => {
         setupWizardBusyRef.current = false;
         setSetupWizardBusy(false);
-      }
+      });
     },
     [closeSetupWizard, persistOnboardingStatus],
   );
@@ -802,8 +803,8 @@ export function App({
       }
 
       setInstallScan({ active: true, reason });
-      const job = (async () => {
-        try {
+      const job = runWithFinally(
+        async () => {
           const snapshot = await refresh({
             includeInstallation: true,
             forceOfficialCheck: reason === "manual",
@@ -866,18 +867,22 @@ export function App({
             title: "All servers look healthy",
             message: "Install folders look good.",
           });
-        } finally {
+        },
+        () => {
           setInstallScan({ active: false, reason: null });
-        }
-      })();
+        },
+      );
       installScanInFlightRef.current = job;
-      try {
-        await job;
-      } finally {
-        if (installScanInFlightRef.current === job) {
-          installScanInFlightRef.current = null;
-        }
-      }
+      await runWithFinally(
+        async () => {
+          await job;
+        },
+        () => {
+          if (installScanInFlightRef.current === job) {
+            installScanInFlightRef.current = null;
+          }
+        },
+      );
     },
     [refresh],
   );
@@ -885,7 +890,8 @@ export function App({
   const checkForUpdates = useCallback(
     async (serverId?: string) => {
       setCheckingUpdates(true);
-      try {
+      await runWithFinally(
+        async () => {
         const installRes = await window.api.getInstallationInfo(true);
         if (!installRes.ok) {
           showOperatorError(
@@ -991,9 +997,11 @@ export function App({
             autoClose: 10000,
           });
         }
-      } finally {
-        setCheckingUpdates(false);
-      }
+        },
+        () => {
+          setCheckingUpdates(false);
+        },
+      );
     },
     [servers],
   );
@@ -1001,42 +1009,45 @@ export function App({
   const openUpdateAllOutdated = useCallback(async () => {
     setUpdateAllOutdatedLoading(true);
     setUpdateAllOutdatedModalPlan(null);
-    try {
-      const installRes = await window.api.getInstallationInfo(true);
-      if (!installRes.ok) {
-        showOperatorError(
-          installRes.error ?? "Could not refresh update status",
-          "Could not refresh update status",
+    await runWithFinally(
+      async () => {
+        const installRes = await window.api.getInstallationInfo(true);
+        if (!installRes.ok) {
+          showOperatorError(
+            installRes.error ?? "Could not refresh update status",
+            "Could not refresh update status",
+          );
+          return;
+        }
+        const nextInstallation = new Map(
+          installRes.data.servers.map((info) => [info.serverId, info]),
         );
-        return;
-      }
-      const nextInstallation = new Map(
-        installRes.data.servers.map((info) => [info.serverId, info]),
-      );
-      setOfficialVersion(installRes.data.officialVersion);
-      setOfficialNetworkStatus(installRes.data.officialNetworkStatus);
-      setInstallationInfo(nextInstallation);
-      setOfficialSteamBuild(installRes.data.officialSteamBuild);
-      const nextPlan = buildUpdateAllOutdatedPlan({
-        servers,
-        installationInfo: nextInstallation,
-        statuses,
-        officialSteamBuild: installRes.data.officialSteamBuild,
-        criticalJobs: steamCmdStatus?.criticalJobs,
-      });
-      if (nextPlan.rows.length === 0) {
-        showOperatorToast({
-          title: "No outdated servers",
-          message: "Every installed server is already on the latest Steam build.",
-          color: "teal",
+        setOfficialVersion(installRes.data.officialVersion);
+        setOfficialNetworkStatus(installRes.data.officialNetworkStatus);
+        setInstallationInfo(nextInstallation);
+        setOfficialSteamBuild(installRes.data.officialSteamBuild);
+        const nextPlan = buildUpdateAllOutdatedPlan({
+          servers,
+          installationInfo: nextInstallation,
+          statuses,
+          officialSteamBuild: installRes.data.officialSteamBuild,
+          criticalJobs: steamCmdStatus?.criticalJobs,
         });
-        return;
-      }
-      setUpdateAllOutdatedModalPlan(nextPlan);
-      setUpdateAllOutdatedOpen(true);
-    } finally {
-      setUpdateAllOutdatedLoading(false);
-    }
+        if (nextPlan.rows.length === 0) {
+          showOperatorToast({
+            title: "No outdated servers",
+            message: "Every installed server is already on the latest Steam build.",
+            color: "teal",
+          });
+          return;
+        }
+        setUpdateAllOutdatedModalPlan(nextPlan);
+        setUpdateAllOutdatedOpen(true);
+      },
+      () => {
+        setUpdateAllOutdatedLoading(false);
+      },
+    );
   }, [servers, statuses, steamCmdStatus?.criticalJobs]);
 
   const closeUpdateAllOutdated = useCallback(() => {
@@ -1046,71 +1057,76 @@ export function App({
 
   const confirmUpdateAllOutdated = useCallback(async () => {
     setUpdateAllOutdatedQueueing(true);
-    try {
-      const plan = buildUpdateAllOutdatedPlan({
-        servers,
-        installationInfo,
-        statuses,
-        officialSteamBuild,
-        criticalJobs: steamCmdStatus?.criticalJobs,
-      });
-      let queuedCount = 0;
-      let replacedCount = 0;
-      let failedCount = 0;
-      let alreadyQueuedCount = 0;
+    await runWithFinally(
+      async () => {
+        try {
+          const plan = buildUpdateAllOutdatedPlan({
+            servers,
+            installationInfo,
+            statuses,
+            officialSteamBuild,
+            criticalJobs: steamCmdStatus?.criticalJobs,
+          });
+          let queuedCount = 0;
+          let replacedCount = 0;
+          let failedCount = 0;
+          let alreadyQueuedCount = 0;
 
-      for (const row of plan.eligible) {
-        const result = await window.api.enqueueUpdateServer(row.serverId);
-        const classified = classifyUpdateAllOutdatedQueueResult({
-          ok: result.ok,
-          error: result.ok ? undefined : result.error,
-        });
-        switch (classified.action) {
-          case "queued":
-            queuedCount += 1;
-            break;
-          case "replaced-verify":
-            replacedCount += 1;
-            break;
-          case "already-in-downloads":
-            alreadyQueuedCount += 1;
-            break;
-          case "failed":
-            failedCount += 1;
-            break;
+          for (const row of plan.eligible) {
+            const result = await window.api.enqueueUpdateServer(row.serverId);
+            const classified = classifyUpdateAllOutdatedQueueResult({
+              ok: result.ok,
+              error: result.ok ? undefined : result.error,
+            });
+            switch (classified.action) {
+              case "queued":
+                queuedCount += 1;
+                break;
+              case "replaced-verify":
+                replacedCount += 1;
+                break;
+              case "already-in-downloads":
+                alreadyQueuedCount += 1;
+                break;
+              case "failed":
+                failedCount += 1;
+                break;
+            }
+          }
+
+          // Refresh happens asynchronously; closing the modal should not wait
+          // for SteamCMD/IPC updates to fully propagate.
+          void refresh().catch(() => undefined);
+
+          const summary = summarizeUpdateAllOutdatedQueue({
+            queuedCount,
+            replacedCount: replacedCount + alreadyQueuedCount,
+            failedCount,
+            skippedCount: plan.skipped.length,
+          });
+          showOperatorToast({
+            title: summary.title,
+            message: summary.message,
+            color: summary.color,
+            autoClose: 10000,
+            onClick: () => {
+              setOverlay(null);
+              setRoute("downloads");
+            },
+          });
+        } catch (err) {
+          showOperatorError(
+            err instanceof Error ? err.message : "Something went wrong queueing updates.",
+            "Could not queue updates",
+          );
         }
-      }
-
-      // Refresh happens asynchronously; closing the modal should not wait
-      // for SteamCMD/IPC updates to fully propagate.
-      void refresh().catch(() => undefined);
-
-      const summary = summarizeUpdateAllOutdatedQueue({
-        queuedCount,
-        replacedCount: replacedCount + alreadyQueuedCount,
-        failedCount,
-        skippedCount: plan.skipped.length,
-      });
-      showOperatorToast({
-        title: summary.title,
-        message: summary.message,
-        color: summary.color,
-        autoClose: 10000,
-        onClick: () => {
-          setOverlay(null);
-          setRoute("downloads");
-        },
-      });
-    } catch (err) {
-      showOperatorError(
-        err instanceof Error ? err.message : "Something went wrong queueing updates.",
-        "Could not queue updates",
-      );
-    } finally {
-      setUpdateAllOutdatedQueueing(false);
-      setUpdateAllOutdatedOpen(false);
-      setUpdateAllOutdatedModalPlan(null);
-    }
+      },
+      () => {
+        setUpdateAllOutdatedQueueing(false);
+        setUpdateAllOutdatedOpen(false);
+        setUpdateAllOutdatedModalPlan(null);
+      },
+    );
   }, [
     installationInfo,
     officialSteamBuild,
@@ -1709,46 +1725,49 @@ export function App({
         return;
       }
       setStartBusyByServerId(new Set(startBusyByServerIdRef.current));
-      try {
-        const result = await window.api.startServer(id, {
-          openNativeConsole: openNativeTerminalOnStart,
-          ...options,
-        });
-        if (!result.ok) {
-          const message = result.error ?? "Unknown error";
-          if (isHostPortProbeError(message)) {
-            const server = servers.find((item) => item.id === id);
-            openHostPortProbeModal({
-              serverName: server?.name ?? id,
-              message,
-              onEditPorts: () => {
-                setRoute("overview");
-                setOverlay({ kind: "workspace", serverId: id, initialTab: "server" });
-              },
-              onStartThisSession: (ports: SessionPortSet) => {
-                void startServer(id, { sessionPorts: ports });
-              },
-              onStartAnyway: isHostPortBusyError(message)
-                ? undefined
-                : () => {
-                    void startServer(id, { skipPortValidation: true });
-                  },
-            });
-          } else {
-            showOperatorError(message, "Could not start server");
-          }
-        } else if (options?.sessionPorts != null) {
-          const ports = options.sessionPorts;
-          showOperatorToast({
-            title: "Started with session ports",
-            message: `Running on game ${ports.gamePort} / query ${ports.queryPort} / RCON ${ports.rconPort}. Saved profile ports are unchanged.`,
+      await runWithFinally(
+        async () => {
+          const result = await window.api.startServer(id, {
+            openNativeConsole: openNativeTerminalOnStart,
+            ...options,
           });
-        }
-        await refresh();
-      } finally {
-        releaseStartBusy(startBusyByServerIdRef, id);
-        setStartBusyByServerId(new Set(startBusyByServerIdRef.current));
-      }
+          if (!result.ok) {
+            const message = result.error ?? "Unknown error";
+            if (isHostPortProbeError(message)) {
+              const server = servers.find((item) => item.id === id);
+              openHostPortProbeModal({
+                serverName: server?.name ?? id,
+                message,
+                onEditPorts: () => {
+                  setRoute("overview");
+                  setOverlay({ kind: "workspace", serverId: id, initialTab: "server" });
+                },
+                onStartThisSession: (ports: SessionPortSet) => {
+                  void startServer(id, { sessionPorts: ports });
+                },
+                onStartAnyway: isHostPortBusyError(message)
+                  ? undefined
+                  : () => {
+                      void startServer(id, { skipPortValidation: true });
+                    },
+              });
+            } else {
+              showOperatorError(message, "Could not start server");
+            }
+          } else if (options?.sessionPorts != null) {
+            const ports = options.sessionPorts;
+            showOperatorToast({
+              title: "Started with session ports",
+              message: `Running on game ${ports.gamePort} / query ${ports.queryPort} / RCON ${ports.rconPort}. Saved profile ports are unchanged.`,
+            });
+          }
+          await refresh();
+        },
+        () => {
+          releaseStartBusy(startBusyByServerIdRef, id);
+          setStartBusyByServerId(new Set(startBusyByServerIdRef.current));
+        },
+      );
     },
     [openNativeTerminalOnStart, refresh, servers],
   );
@@ -1759,47 +1778,50 @@ export function App({
         return;
       }
       setStartBusyByServerId(new Set(startBusyByServerIdRef.current));
-      try {
-        const res = await window.api.restartServer(id, {
-          openNativeConsole: openNativeTerminalOnStart,
-          ...options,
-        });
-        if (!res.ok) {
-          const message = res.error ?? "Could not restart the server";
-          if (isHostPortProbeError(message)) {
-            const server = servers.find((item) => item.id === id);
-            // Restart already stopped the process before the probe; recover via start.
-            openHostPortProbeModal({
-              serverName: server?.name ?? id,
-              message,
-              onEditPorts: () => {
-                setRoute("overview");
-                setOverlay({ kind: "workspace", serverId: id, initialTab: "server" });
-              },
-              onStartThisSession: (ports: SessionPortSet) => {
-                void startServer(id, { sessionPorts: ports });
-              },
-              onStartAnyway: isHostPortBusyError(message)
-                ? undefined
-                : () => {
-                    void startServer(id, { skipPortValidation: true });
-                  },
-            });
-          } else {
-            showOperatorError(message, "Could not restart server");
-          }
-        } else if (options?.sessionPorts != null) {
-          const ports = options.sessionPorts;
-          showOperatorToast({
-            title: "Restarted with session ports",
-            message: `Running on game ${ports.gamePort} / query ${ports.queryPort} / RCON ${ports.rconPort}. Saved profile ports are unchanged.`,
+      await runWithFinally(
+        async () => {
+          const res = await window.api.restartServer(id, {
+            openNativeConsole: openNativeTerminalOnStart,
+            ...options,
           });
-        }
-        await refresh();
-      } finally {
-        releaseStartBusy(startBusyByServerIdRef, id);
-        setStartBusyByServerId(new Set(startBusyByServerIdRef.current));
-      }
+          if (!res.ok) {
+            const message = res.error ?? "Could not restart the server";
+            if (isHostPortProbeError(message)) {
+              const server = servers.find((item) => item.id === id);
+              // Restart already stopped the process before the probe; recover via start.
+              openHostPortProbeModal({
+                serverName: server?.name ?? id,
+                message,
+                onEditPorts: () => {
+                  setRoute("overview");
+                  setOverlay({ kind: "workspace", serverId: id, initialTab: "server" });
+                },
+                onStartThisSession: (ports: SessionPortSet) => {
+                  void startServer(id, { sessionPorts: ports });
+                },
+                onStartAnyway: isHostPortBusyError(message)
+                  ? undefined
+                  : () => {
+                      void startServer(id, { skipPortValidation: true });
+                    },
+              });
+            } else {
+              showOperatorError(message, "Could not restart server");
+            }
+          } else if (options?.sessionPorts != null) {
+            const ports = options.sessionPorts;
+            showOperatorToast({
+              title: "Restarted with session ports",
+              message: `Running on game ${ports.gamePort} / query ${ports.queryPort} / RCON ${ports.rconPort}. Saved profile ports are unchanged.`,
+            });
+          }
+          await refresh();
+        },
+        () => {
+          releaseStartBusy(startBusyByServerIdRef, id);
+          setStartBusyByServerId(new Set(startBusyByServerIdRef.current));
+        },
+      );
     },
     [openNativeTerminalOnStart, refresh, servers, startServer],
   );

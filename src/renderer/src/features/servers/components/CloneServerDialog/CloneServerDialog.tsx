@@ -19,6 +19,7 @@ import {
   suggestCloneInstallDir,
 } from "@shared/server-install-path";
 import { PathField } from "@ui/PathField/PathField";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { CloneCopyProgress } from "./CloneCopyProgress";
 import {
   cloneCopyCheckboxDescription,
@@ -153,25 +154,28 @@ export function CloneServerDialog(props: Props): ReactElement {
 
     setLoading(true);
     setProgress(null);
-    try {
-      const ok = await props.onClone({
-        name: state.name.trim(),
-        sessionName: state.sessionName.trim(),
-        gamePort: Number(state.gamePort),
-        queryPort: Number(state.queryPort),
-        rconPort: Number(state.rconPort),
-        installDir: state.installDir.trim(),
-        copyInstallFolder: wantsCopy,
-      });
-      if (ok) {
-        setState(toFormState(props.sourceServer));
-        setProgress(null);
-        props.onClose();
-      }
-    } finally {
-      setLoading(false);
-      setCancelling(false);
-    }
+    await runWithFinally(
+      async () => {
+        const ok = await props.onClone({
+          name: state.name.trim(),
+          sessionName: state.sessionName.trim(),
+          gamePort: Number(state.gamePort),
+          queryPort: Number(state.queryPort),
+          rconPort: Number(state.rconPort),
+          installDir: state.installDir.trim(),
+          copyInstallFolder: wantsCopy,
+        });
+        if (ok) {
+          setState(toFormState(props.sourceServer));
+          setProgress(null);
+          props.onClose();
+        }
+      },
+      () => {
+        setLoading(false);
+        setCancelling(false);
+      },
+    );
   }, [state, canSubmit, props, wantsCopy]);
 
   const handleCancelCopy = useCallback(async () => {

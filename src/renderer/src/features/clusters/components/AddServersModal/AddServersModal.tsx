@@ -19,6 +19,7 @@ import type {
   ServerRuntimeInfo,
 } from "@shared/types";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { sharedClusterDir } from "../../clusterModel";
 import {
   buildCreateClusterInput,
@@ -97,70 +98,73 @@ export function AddServersModal(props: Props): ReactElement {
     if (!canAdd || sharedDir === null) return;
     setSaving(true);
     setError(null);
-    const applied: ServerProfile[] = [];
-    try {
-      for (const candidate of selected) {
-        const input = buildCreateClusterInput(
-          candidate.server,
-          props.clusterId,
-          sharedDir,
-        );
-        const result = await window.api.updateServer(candidate.server.id, input);
-        if (!result.ok) {
-          const failMessage = result.error ?? "Could not add servers to the cluster";
-          const rollbackFailures: string[] = [];
-          for (const previous of [...applied].reverse()) {
-            const rollback = await window.api.updateServer(
-              previous.id,
-              serverProfileToInput(previous),
-            );
-            if (!rollback.ok) rollbackFailures.push(previous.name);
-          }
-          if (rollbackFailures.length > 0) {
-            setError(
-              `Failed on “${candidate.server.name}”: ${failMessage}. Could not restore: ${rollbackFailures.join(", ")}.`,
-            );
-            props.onChanged();
-          } else if (applied.length > 0) {
-            setError(
-              `Failed on “${candidate.server.name}”: ${failMessage}. Previous profiles were restored.`,
-            );
-          } else {
-            setError(failMessage);
-          }
-          return;
-        }
-        applied.push(candidate.server);
-      }
-
-      if (seedFromTemplate && hasTemplate) {
-        const seedFailures: string[] = [];
-        for (const member of applied) {
-          const seed = await window.api.seedClusterIniFromTemplate(
+    await runWithFinally(
+      async () => {
+        const applied: ServerProfile[] = [];
+        for (const candidate of selected) {
+          const input = buildCreateClusterInput(
+            candidate.server,
             props.clusterId,
-            member.id,
-            seedFiles,
+            sharedDir,
           );
-          if (!seed.ok) {
-            seedFailures.push(
-              `${member.name}: ${seed.error ?? "seed failed"}`,
+          const result = await window.api.updateServer(candidate.server.id, input);
+          if (!result.ok) {
+            const failMessage = result.error ?? "Could not add servers to the cluster";
+            const rollbackFailures: string[] = [];
+            for (const previous of [...applied].reverse()) {
+              const rollback = await window.api.updateServer(
+                previous.id,
+                serverProfileToInput(previous),
+              );
+              if (!rollback.ok) rollbackFailures.push(previous.name);
+            }
+            if (rollbackFailures.length > 0) {
+              setError(
+                `Failed on “${candidate.server.name}”: ${failMessage}. Could not restore: ${rollbackFailures.join(", ")}.`,
+              );
+              props.onChanged();
+            } else if (applied.length > 0) {
+              setError(
+                `Failed on “${candidate.server.name}”: ${failMessage}. Previous profiles were restored.`,
+              );
+            } else {
+              setError(failMessage);
+            }
+            return;
+          }
+          applied.push(candidate.server);
+        }
+
+        if (seedFromTemplate && hasTemplate) {
+          const seedFailures: string[] = [];
+          for (const member of applied) {
+            const seed = await window.api.seedClusterIniFromTemplate(
+              props.clusterId,
+              member.id,
+              seedFiles,
             );
+            if (!seed.ok) {
+              seedFailures.push(
+                `${member.name}: ${seed.error ?? "seed failed"}`,
+              );
+            }
+          }
+          if (seedFailures.length > 0) {
+            props.onChanged();
+            setError(
+              `Servers joined the cluster, but INI seed failed for: ${seedFailures.join("; ")}. Membership was kept.`,
+            );
+            return;
           }
         }
-        if (seedFailures.length > 0) {
-          props.onChanged();
-          setError(
-            `Servers joined the cluster, but INI seed failed for: ${seedFailures.join("; ")}. Membership was kept.`,
-          );
-          return;
-        }
-      }
 
-      props.onChanged();
-      props.onClose();
-    } finally {
-      setSaving(false);
-    }
+        props.onChanged();
+        props.onClose();
+      },
+      () => {
+        setSaving(false);
+      },
+    );
   };
 
   return (

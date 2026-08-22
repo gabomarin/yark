@@ -13,6 +13,7 @@ import {
 import type { DeleteServerOptions, InstallationHealthStatus } from "@shared/types";
 import { EMPTY_WIPE_STALE_MESSAGE } from "@shared/types";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import classes from "./DeleteServerModal.module.css";
 
 type DeleteServerMode = "profileOnly" | "wipe";
@@ -69,27 +70,30 @@ export function DeleteServerModal(props: Props): ReactElement {
   const handleConfirm = async (): Promise<void> => {
     const requestServerId = props.serverId;
     setLoading(true);
-    try {
-      const result = await props.onConfirm(
-        forcedWipe
-          ? { deleteInstallFiles: true, requireEmptyInstall: true }
-          : { deleteInstallFiles: wipe },
-      );
-      if (activeServerIdRef.current !== requestServerId) return;
-      if (result.ok) {
-        props.onClose();
-        return;
-      }
-      if (result.emptyWipeStale === true) {
-        setEmptyShortcutAllowed(false);
-        setStaleEmptyNotice(true);
-        setMode("profileOnly");
-      }
-    } finally {
-      if (activeServerIdRef.current === requestServerId) {
-        setLoading(false);
-      }
-    }
+    await runWithFinally(
+      async () => {
+        const result = await props.onConfirm(
+          forcedWipe
+            ? { deleteInstallFiles: true, requireEmptyInstall: true }
+            : { deleteInstallFiles: wipe },
+        );
+        if (activeServerIdRef.current !== requestServerId) return;
+        if (result.ok) {
+          props.onClose();
+          return;
+        }
+        if (result.emptyWipeStale === true) {
+          setEmptyShortcutAllowed(false);
+          setStaleEmptyNotice(true);
+          setMode("profileOnly");
+        }
+      },
+      () => {
+        if (activeServerIdRef.current === requestServerId) {
+          setLoading(false);
+        }
+      },
+    );
   };
 
   return (

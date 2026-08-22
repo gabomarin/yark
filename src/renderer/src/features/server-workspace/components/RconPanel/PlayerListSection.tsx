@@ -5,6 +5,7 @@ import type { OnlinePlayerInfo } from "@shared/ipc";
 import type { ReactElement } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { BannedPlayersSection } from "./BannedPlayersSection";
 import {
   PlayerIdentityRow,
@@ -50,12 +51,15 @@ export function PlayerListSection(props: Props): ReactElement {
 
   const refreshAll = async (): Promise<void> => {
     setPanelRefreshing(true);
-    try {
-      await props.onRefreshPlayers(props.serverId);
-      await (reloadBannedRef.current?.() ?? Promise.resolve());
-    } finally {
-      setPanelRefreshing(false);
-    }
+    await runWithFinally(
+      async () => {
+        await props.onRefreshPlayers(props.serverId);
+        await (reloadBannedRef.current?.() ?? Promise.resolve());
+      },
+      () => {
+        setPanelRefreshing(false);
+      },
+    );
   };
 
   const runAction = async (
@@ -63,11 +67,14 @@ export function PlayerListSection(props: Props): ReactElement {
     action: () => Promise<boolean>,
   ): Promise<void> => {
     setActionKey(playerKey);
-    try {
-      await action();
-    } finally {
-      setActionKey(null);
-    }
+    await runWithFinally(
+      async () => {
+        await action();
+      },
+      () => {
+        setActionKey(null);
+      },
+    );
   };
 
   const confirmBan = (player: OnlinePlayerInfo): void => {

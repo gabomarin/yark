@@ -36,6 +36,7 @@ import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
 import { SearchField } from "@ui/SearchField/SearchField";
 import { showOperatorToast } from "@ui/operatorToast";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useUiDensity } from "@app/AppProviders";
@@ -126,8 +127,8 @@ export function ConfigurationEditor(props: Props): ReactElement {
     setPreview(null);
     publishDirty(null, null);
 
-    void (async () => {
-      try {
+    void runWithFinally(
+      async () => {
         const result = await window.api.readServerIni(serverId);
         if (cancelled) return;
         if (!result.ok) {
@@ -146,12 +147,13 @@ export function ConfigurationEditor(props: Props): ReactElement {
         // must not appear in the editor or turn a read into a pending change.
         setBaseline(sanitized);
         publishDirty(sanitized, sanitized);
-      } finally {
+      },
+      () => {
         if (!cancelled) {
           setLoading(false);
         }
-      }
-    })();
+      },
+    );
 
     return () => {
       cancelled = true;
@@ -289,28 +291,31 @@ export function ConfigurationEditor(props: Props): ReactElement {
     if (payload === null) return false;
     setBusy(true);
     setError(null);
-    try {
-      const sanitized = sanitizeServerIniPayload(payload);
-      const result = await window.api.saveServerIni(props.server.id, sanitized);
-      if (!result.ok) {
-        setError(result.error ?? "Could not save the INI");
-        return false;
-      }
-      setPayload(sanitized);
-      setPreview(result.data);
-      setBaseline(sanitized);
-      publishDirty(sanitized, sanitized);
-      showOperatorToast({
-        title: "INI saved",
-        message:
-          result.data.changedCount > 0
-            ? `Saved ${result.data.changedCount} change${result.data.changedCount === 1 ? "" : "s"}.`
-            : "Saved with no changes.",
-      });
-      return true;
-    } finally {
-      setBusy(false);
-    }
+    return runWithFinally(
+      async () => {
+        const sanitized = sanitizeServerIniPayload(payload);
+        const result = await window.api.saveServerIni(props.server.id, sanitized);
+        if (!result.ok) {
+          setError(result.error ?? "Could not save the INI");
+          return false;
+        }
+        setPayload(sanitized);
+        setPreview(result.data);
+        setBaseline(sanitized);
+        publishDirty(sanitized, sanitized);
+        showOperatorToast({
+          title: "INI saved",
+          message:
+            result.data.changedCount > 0
+              ? `Saved ${result.data.changedCount} change${result.data.changedCount === 1 ? "" : "s"}.`
+              : "Saved with no changes.",
+        });
+        return true;
+      },
+      () => {
+        setBusy(false);
+      },
+    );
   };
 
   const saveIniRef = useRef(saveIni);
@@ -325,14 +330,17 @@ export function ConfigurationEditor(props: Props): ReactElement {
 
   const openExternal = async () => {
     setBusy(true);
-    try {
-      const result = await window.api.openServerIniInEditor(props.server.id, activeFileKey);
-      if (!result.ok) {
-        setError(result.error ?? "Could not open the file");
-      }
-    } finally {
-      setBusy(false);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.openServerIniInEditor(props.server.id, activeFileKey);
+        if (!result.ok) {
+          setError(result.error ?? "Could not open the file");
+        }
+      },
+      () => {
+        setBusy(false);
+      },
+    );
   };
 
   const filePath =

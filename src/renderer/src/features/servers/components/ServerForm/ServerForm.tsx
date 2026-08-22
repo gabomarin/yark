@@ -14,6 +14,7 @@ import {
   type KnownClusterOption,
 } from "@features/clusters/knownClusterOptions";
 import { showOperatorToast } from "@ui/operatorToast";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import {
   serverFormToInput,
@@ -272,36 +273,39 @@ export function ServerForm(props: Props): ReactElement {
       return false;
     }
     setSaving(true);
-    try {
-      const input = serverFormToInput(state, isCreate, props.initial);
-      const result =
-        props.initial === null
-          ? await window.api.createServer(input)
-          : await window.api.updateServer(props.initial.id, input);
-      if (result.ok) {
-        initialStateRef.current = state;
-        dirtyRef.current = false;
-        onDirtyChange?.(false);
-        if (props.initial === null) {
+    return runWithFinally(
+      async () => {
+        const input = serverFormToInput(state, isCreate, props.initial);
+        const result =
+          props.initial === null
+            ? await window.api.createServer(input)
+            : await window.api.updateServer(props.initial.id, input);
+        if (result.ok) {
+          initialStateRef.current = state;
+          dirtyRef.current = false;
+          onDirtyChange?.(false);
+          if (props.initial === null) {
+            showOperatorToast({
+              title: "Server created",
+              message: `"${input.name}" is ready to configure.`,
+            });
+            props.onSaved(result.data);
+            return true;
+          }
           showOperatorToast({
-            title: "Server created",
-            message: `"${input.name}" is ready to configure.`,
+            title: "Server saved",
+            message: `"${input.name}" profile updated.`,
           });
-          props.onSaved(result.data);
+          props.onSaved();
           return true;
         }
-        showOperatorToast({
-          title: "Server saved",
-          message: `"${input.name}" profile updated.`,
-        });
-        props.onSaved();
-        return true;
-      }
-      setError(result.error ?? "Could not save the server");
-      return false;
-    } finally {
-      setSaving(false);
-    }
+        setError(result.error ?? "Could not save the server");
+        return false;
+      },
+      () => {
+        setSaving(false);
+      },
+    );
   };
 
   useEffect(() => {

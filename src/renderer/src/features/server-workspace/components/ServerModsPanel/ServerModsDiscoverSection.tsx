@@ -15,6 +15,7 @@ import type {
 } from "@shared/types";
 import type { DataTableSortStatus } from "mantine-datatable";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { ServerModsDiscoverToolbar } from "./ServerModsDiscoverToolbar";
 import {
   LOAD_ORDER_SORT,
@@ -134,27 +135,30 @@ export function ServerModsDiscoverSection(props: Props): ReactElement {
     const run = async () => {
       setSearching(true);
       props.onError(null);
-      try {
-        const options = buildSearchOptions(
-          categoryValue,
-          sortField,
-          sortOrder,
-          page,
-        );
-        const result = await window.api.searchMods(committedQuery, options);
-        if (!alive) return;
-        if (!result.ok) {
-          props.onError(result.error);
-          setCatalog(null);
-          props.onCatalogChange(null);
-          return;
-        }
-        setCatalog(result.data);
-        props.onCatalogChange(result.data);
-        setHasLoadedOnce(true);
-      } finally {
-        if (alive) setSearching(false);
-      }
+      await runWithFinally(
+        async () => {
+          const options = buildSearchOptions(
+            categoryValue,
+            sortField,
+            sortOrder,
+            page,
+          );
+          const result = await window.api.searchMods(committedQuery, options);
+          if (!alive) return;
+          if (!result.ok) {
+            props.onError(result.error);
+            setCatalog(null);
+            props.onCatalogChange(null);
+            return;
+          }
+          setCatalog(result.data);
+          props.onCatalogChange(result.data);
+          setHasLoadedOnce(true);
+        },
+        () => {
+          if (alive) setSearching(false);
+        },
+      );
     };
     void run();
     return () => {

@@ -83,6 +83,57 @@ const rendererAlias = {
   "@ui": resolve(__dirname, "src/renderer/src/shared/ui"),
 };
 
+/**
+ * Opt-in React Compiler for the renderer only (#404 spike).
+ * Set `YARK_REACT_COMPILER=1` before `electron-vite` / use `npm run build:compiler`.
+ * See docs/react-compiler-spike.md.
+ */
+const enableReactCompiler = process.env.YARK_REACT_COMPILER === "1";
+const reactCompilerVerbose = process.env.YARK_REACT_COMPILER_VERBOSE === "1";
+
+const reactCompilerPlugin =
+  enableReactCompiler
+    ? ([
+        "babel-plugin-react-compiler",
+        {
+          target: "19",
+          ...(reactCompilerVerbose
+            ? {
+                logger: {
+                  logEvent(
+                    filename: string | null,
+                    event: {
+                      kind?: string;
+                      detail?: { reason?: string; description?: string };
+                      reason?: string;
+                    },
+                  ) {
+                    if (event.kind === "CompileSuccess") {
+                      console.info(`[react-compiler] CompileSuccess`);
+                      return;
+                    }
+                    if (
+                      event.kind === "CompileError" ||
+                      event.kind === "CompileDiagnostic" ||
+                      event.kind === "PipelineError"
+                    ) {
+                      const reason =
+                        event.detail?.reason ??
+                        event.detail?.description ??
+                        event.reason ??
+                        "(no reason)";
+                      console.info(
+                        `[react-compiler] ${event.kind} ${filename ?? "(unknown)"} :: ${reason}`,
+                      );
+                    }
+                  },
+                },
+              }
+            : {}),
+        },
+      ] as const)
+    : null;
+
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin(), copySplashAssetsPlugin()],
@@ -95,7 +146,17 @@ export default defineConfig({
     define: appDefines,
   },
   renderer: {
-    plugins: [react()],
+    plugins: [
+      react(
+        reactCompilerPlugin
+          ? {
+              babel: {
+                plugins: [reactCompilerPlugin],
+              },
+            }
+          : {},
+      ),
+    ],
     resolve: { alias: rendererAlias },
     define: appDefines,
     publicDir: resolve(__dirname, "src/renderer/public"),

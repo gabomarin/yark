@@ -1,3 +1,4 @@
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { ReactElement } from "react";
 import {
   ArrowSquareOut,
@@ -145,64 +146,67 @@ export function BackupsPage(props: Props): ReactElement {
     if (!quiet) {
       setLoading(true);
     }
-    try {
-      if (props.servers.length === 0) {
+    await runWithFinally(
+      async () => {
+        if (props.servers.length === 0) {
+          if (cancelled?.()) return;
+          if (generation !== loadGenerationRef.current) return;
+          setSummary(null);
+          setDrafts({});
+          return;
+        }
+
+        const result = await window.api.getBackupFleetSummary();
         if (cancelled?.()) return;
         if (generation !== loadGenerationRef.current) return;
-        setSummary(null);
-        setDrafts({});
-        return;
-      }
+        if (!result.ok) {
+          setSummary(null);
+          showOperatorError(
+            result.error ?? "Could not load backup summary",
+            "Could not load backups",
+          );
+          return;
+        }
 
-      const result = await window.api.getBackupFleetSummary();
-      if (cancelled?.()) return;
-      if (generation !== loadGenerationRef.current) return;
-      if (!result.ok) {
-        setSummary(null);
-        showOperatorError(
-          result.error ?? "Could not load backup summary",
-          "Could not load backups",
-        );
-        return;
-      }
-
-      setSummary(result.data);
-      // Quiet refresh must not clobber in-progress policy edits.
-      // Non-quiet also keeps dirty drafts unless Refresh forces a sync (poll must not wipe toggles).
-      if (!quiet) {
-        setDrafts((previous) => {
-          const nextDrafts: Record<string, DraftPolicy> = {};
-          for (const row of result.data.servers) {
-            const existing = previous[row.serverId];
+        setSummary(result.data);
+        // Quiet refresh must not clobber in-progress policy edits.
+        // Non-quiet also keeps dirty drafts unless Refresh forces a sync (poll must not wipe toggles).
+        if (!quiet) {
+          setDrafts((previous) => {
+            const nextDrafts: Record<string, DraftPolicy> = {};
+            for (const row of result.data.servers) {
+              const existing = previous[row.serverId];
+              if (
+                !forceDraftSync &&
+                existing !== undefined &&
+                isBackupPolicyDraftDirty(existing, row.policy)
+              ) {
+                nextDrafts[row.serverId] = existing;
+              } else {
+                nextDrafts[row.serverId] = toBackupPolicyDraft(row.policy);
+              }
+            }
+            return nextDrafts;
+          });
+          setDiskDraft((previous) => {
             if (
               !forceDraftSync &&
-              existing !== undefined &&
-              isBackupPolicyDraftDirty(existing, row.policy)
+              previous !== null &&
+              isBackupDiskDraftDirty(previous, result.data.diskSettings)
             ) {
-              nextDrafts[row.serverId] = existing;
-            } else {
-              nextDrafts[row.serverId] = toBackupPolicyDraft(row.policy);
+              return previous;
             }
-          }
-          return nextDrafts;
-        });
-        setDiskDraft((previous) => {
-          if (
-            !forceDraftSync &&
-            previous !== null &&
-            isBackupDiskDraftDirty(previous, result.data.diskSettings)
-          ) {
-            return previous;
-          }
-          return result.data.diskSettings;
-        });
-      }
-    } finally {
-      // Quiet updates never own the spinner; only the latest non-quiet load clears it.
-      if (!quiet && generation === loadGenerationRef.current) {
-        setLoading(false);
-      }
-    }
+            return result.data.diskSettings;
+          });
+        }
+      },
+      () => {
+        // Quiet updates never own the spinner; only the latest non-quiet load clears it.
+        if (!quiet && generation === loadGenerationRef.current) {
+          setLoading(false);
+        }
+      },
+    );
   };
 
   // Reload when the server set changes. Live backup updates use onBackupsChanged;
@@ -257,84 +261,96 @@ export function BackupsPage(props: Props): ReactElement {
     const draft = drafts[serverId];
     if (draft === undefined) return;
     setBusyId(serverId);
-    try {
-      const result = await window.api.setBackupPolicy(serverId, draft);
-      if (!result.ok) {
-        showOperatorError(
-          result.error ?? "Could not save backup policy",
-          "Could not save backup settings",
-        );
-        return;
-      }
-      // Toast before refresh so a failed reload cannot precede a success message.
-      showOperatorToast({
-        title: "Saved",
-        message: "Saved backup settings for the selected server.",
-      });
-      await load({ quiet: true });
-    } finally {
-      setBusyId(null);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.setBackupPolicy(serverId, draft);
+        if (!result.ok) {
+          showOperatorError(
+            result.error ?? "Could not save backup policy",
+            "Could not save backup settings",
+          );
+          return;
+        }
+        // Toast before refresh so a failed reload cannot precede a success message.
+        showOperatorToast({
+          title: "Saved",
+          message: "Saved backup settings for the selected server.",
+        });
+        await load({ quiet: true });
+      },
+      () => {
+        setBusyId(null);
+      },
+    );
   };
 
   const browseBackupDir = async (server: ServerProfile) => {
     const draft = drafts[server.id];
     if (draft === undefined) return;
     setBrowsingId(server.id);
-    try {
-      const result = await window.api.pickPath(
-        "directory",
-        draft.backupDir ?? server.installDir,
-        `Backup destination for ${server.name}`,
-      );
-      if (!result.ok) {
-        showOperatorError(result.error ?? "Could not open folder picker");
-        return;
-      }
-      if (result.data !== null) {
-        setDrafts((previous) => ({
-          ...previous,
-          [server.id]: { ...draft, backupDir: result.data },
-        }));
-      }
-    } finally {
-      setBrowsingId(null);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.pickPath(
+          "directory",
+          draft.backupDir ?? server.installDir,
+          `Backup destination for ${server.name}`,
+        );
+        if (!result.ok) {
+          showOperatorError(result.error ?? "Could not open folder picker");
+          return;
+        }
+        if (result.data !== null) {
+          setDrafts((previous) => ({
+            ...previous,
+            [server.id]: { ...draft, backupDir: result.data },
+          }));
+        }
+      },
+      () => {
+        setBrowsingId(null);
+      },
+    );
   };
 
   const openDestination = async (serverId: string) => {
     setBusyId(serverId);
-    try {
-      const result = await window.api.openBackupRoot(serverId);
-      if (!result.ok) {
-        showOperatorError(result.error ?? "Could not open backup destination");
-      }
-    } finally {
-      setBusyId(null);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.openBackupRoot(serverId);
+        if (!result.ok) {
+          showOperatorError(result.error ?? "Could not open backup destination");
+        }
+      },
+      () => {
+        setBusyId(null);
+      },
+    );
   };
 
   const saveDiskSettings = async () => {
     if (diskDraft === null) return;
     setDiskBusy(true);
-    try {
-      const result = await window.api.setBackupDiskAlertSettings(diskDraft);
-      if (!result.ok) {
-        showOperatorError(
-          result.error ?? "Could not save disk alert settings",
-          "Could not save drive alerts",
-        );
-        return;
-      }
-      setDiskModalOpen(false);
-      showOperatorToast({
-        title: "Saved",
-        message: "Backup drive alerts updated.",
-      });
-      await load();
-    } finally {
-      setDiskBusy(false);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.setBackupDiskAlertSettings(diskDraft);
+        if (!result.ok) {
+          showOperatorError(
+            result.error ?? "Could not save disk alert settings",
+            "Could not save drive alerts",
+          );
+          return;
+        }
+        setDiskModalOpen(false);
+        showOperatorToast({
+          title: "Saved",
+          message: "Backup drive alerts updated.",
+        });
+        await load();
+      },
+      () => {
+        setDiskBusy(false);
+      },
+    );
   };
 
   const dismissFleetAlert = async (alert: {
@@ -360,41 +376,47 @@ export function BackupsPage(props: Props): ReactElement {
 
   const runPreviewCleanup = async () => {
     setCleanupBusy(true);
-    try {
-      const result = await window.api.previewBackupCleanup(buildCleanupPayload());
-      if (!result.ok) {
-        setCleanupPreview(null);
-        showOperatorError(result.error ?? "Could not preview cleanup");
-        return;
-      }
-      setCleanupPreview(result.data);
-    } finally {
-      setCleanupBusy(false);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.previewBackupCleanup(buildCleanupPayload());
+        if (!result.ok) {
+          setCleanupPreview(null);
+          showOperatorError(result.error ?? "Could not preview cleanup");
+          return;
+        }
+        setCleanupPreview(result.data);
+      },
+      () => {
+        setCleanupBusy(false);
+      },
+    );
   };
 
   const confirmCleanup = async () => {
     if (cleanupPreview === null || cleanupPreview.items.length === 0) return;
     setCleanupBusy(true);
-    try {
-      const result = await window.api.runBackupCleanup({
-        ...buildCleanupPayload(),
-        confirmedBackupIds: cleanupPreview.items.map((item) => item.backup.id),
-      });
-      if (!result.ok) {
-        showOperatorError(result.error ?? "Could not run cleanup");
-        return;
-      }
-      setCleanupOpen(false);
-      setCleanupPreview(null);
-      showOperatorToast({
-        title: "Cleanup finished",
-        message: `Cleanup removed ${result.data.deleted} backup${result.data.deleted === 1 ? "" : "s"} (${formatBytes(result.data.freedBytes)}).`,
-      });
-      await load();
-    } finally {
-      setCleanupBusy(false);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.runBackupCleanup({
+          ...buildCleanupPayload(),
+          confirmedBackupIds: cleanupPreview.items.map((item) => item.backup.id),
+        });
+        if (!result.ok) {
+          showOperatorError(result.error ?? "Could not run cleanup");
+          return;
+        }
+        setCleanupOpen(false);
+        setCleanupPreview(null);
+        showOperatorToast({
+          title: "Cleanup finished",
+          message: `Cleanup removed ${result.data.deleted} backup${result.data.deleted === 1 ? "" : "s"} (${formatBytes(result.data.freedBytes)}).`,
+        });
+        await load();
+      },
+      () => {
+        setCleanupBusy(false);
+      },
+    );
   };
 
   const serverById = useMemo(() => {
