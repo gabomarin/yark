@@ -17,6 +17,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Pure **backup restore** helpers (`backup-restore.ts`) extracted from `backup-service.ts` — map folder selection, file filters, players layout checks — with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 - Pure **backup portability** helpers (`backup-portability.ts`) plus tolerant `parseBackupManifest` in `backup-archive.ts`, extracted from `backup-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 - Pure **backup critical-job** helpers (`backup-critical-jobs.ts`) — phase/status checks, merge, load disposition, retry plan — extracted from `backup-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
+- Pure **update critical-job** helpers (`update-critical-jobs.ts`) — queue ordering, cancel/pause eligibility, merge/load/resume phase — extracted from `update-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 
 ### Changed
 
