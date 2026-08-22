@@ -115,7 +115,14 @@ export function ServerLaunchPanel(props: Props): ReactElement {
   );
 
   return (
-    <div className={classes.panel} data-testid="server-launch-panel">
+    <AppSurfaceCard
+      tone="flat"
+      fill
+      padding={0}
+      radius="md"
+      className={classes.panel}
+      data-testid="server-launch-panel"
+    >
       <div className={classes.scroll}>
         <Stack gap="sm">
           <Group justify="space-between" align="flex-start" wrap="wrap">
@@ -268,6 +275,6 @@ export function ServerLaunchPanel(props: Props): ReactElement {
         opened={catalogOpen}
         onClose={() => setCatalogOpen(false)}
       />
-    </div>
+    </AppSurfaceCard>
   );
 }

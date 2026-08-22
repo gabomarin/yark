@@ -8,7 +8,7 @@ type InheritedCardProps = Omit<CardProps, "children" | "classNames" | "className
 
 interface Props extends InheritedCardProps {
   children: ReactNode;
-  /** Visual recipe. Default `cool` for page panels. */
+  /** Visual recipe. Default `flat` for content panels (#346). */
   tone?: AppSurfaceTone;
   /** Stretch to fill a grid/flex parent (Clusters/Logs split panes). */
   fill?: boolean;
@@ -19,16 +19,18 @@ interface Props extends InheritedCardProps {
 
 /**
  * Homogeneous page/panel container on top of Mantine Card.
- * Prefer this over local `.panel` gradients so new screens stay aligned.
+ * Content shells default to `tone="flat"` + `radius="md"` (#346). Prefer this
+ * over local `.panel` fill/border copies. Use `cool` / `coolEmphasis` only for
+ * rare accent cards (not page shells); `chrome` for shell rails.
  */
 export function AppSurfaceCard({
   children,
-  tone = "cool",
+  tone = "flat",
   fill = false,
   statusTone = null,
   className,
   padding = "md",
-  radius = "lg",
+  radius = "md",
   ...cardProps
 }: Props): ReactElement {
   return (

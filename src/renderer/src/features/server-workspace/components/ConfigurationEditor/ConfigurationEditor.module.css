@@ -4,10 +4,7 @@
   height: 100%;
   min-height: 0;
   flex: 1;
-  border: 1px solid var(--app-color-border-subtle);
-  border-radius: 14px;
   overflow: hidden;
-  background: var(--app-color-panel);
 }
 
 .content {
@@ -45,7 +42,7 @@
   min-height: 260px;
   min-width: 0;
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: 12px;
+  border-radius: var(--app-radius-md);
   overflow: auto;
   background: var(--app-color-surface-chrome);
 }
@@ -121,7 +118,7 @@
 .modRow {
   padding: 10px 12px;
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: 12px;
+  border-radius: var(--app-radius-md);
   background: var(--app-color-surface-chrome);
 }
 

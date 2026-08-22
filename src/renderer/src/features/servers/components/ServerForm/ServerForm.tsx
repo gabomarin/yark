@@ -14,6 +14,7 @@ import {
   type KnownClusterOption,
 } from "@features/clusters/knownClusterOptions";
 import { showOperatorToast } from "@ui/operatorToast";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import {
   serverFormToInput,
   toServerFormState,
@@ -439,7 +440,14 @@ export function ServerForm(props: Props): ReactElement {
   }
 
   return (
-    <div className={classes.embedded} data-server-form="embedded">
+    <AppSurfaceCard
+      tone="flat"
+      fill
+      padding={0}
+      radius="md"
+      className={classes.embedded}
+      data-server-form="embedded"
+    >
       <header className={classes.embeddedHeader}>
         <Group justify="space-between" align="flex-start" wrap="nowrap" gap="sm">
           <div>
@@ -498,6 +506,6 @@ export function ServerForm(props: Props): ReactElement {
         </Group>
       </footer>
       {moveDialog}
-    </div>
+    </AppSurfaceCard>
   );
 }

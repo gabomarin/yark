@@ -44,7 +44,7 @@ export function SetupWizardFirstActionStep(props: Props): ReactElement {
         onClick={props.onImport}
         aria-label="Import install"
       >
-        <AppSurfaceCard padding="sm">
+        <AppSurfaceCard tone="cool" padding="sm">
           <Stack gap={4}>
             <Text fw={600} size="sm">
               <FolderOpen size={14} /> Import install

@@ -77,9 +77,6 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-md);
-  background: var(--app-color-panel);
 }
 
 .embeddedHeader {
