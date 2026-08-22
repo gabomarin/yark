@@ -26,7 +26,7 @@ function ProgressLabel({
   return (
     <UnstyledButton
       className={classes.progressCta}
-      aria-label={`${shortProgressLabel} — open Downloads`}
+      aria-label={`${shortProgressLabel} – open Downloads`}
       onClick={onOpenDownloads}
     >
       <Text

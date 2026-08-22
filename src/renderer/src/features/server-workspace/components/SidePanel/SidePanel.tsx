@@ -33,7 +33,7 @@ interface Props {
   server: ServerProfile;
   runtime: ServerRuntimeInfo | null;
   installation: ServerInstallationInfo | null;
-  /** SteamCMD files job in progress — blocks install/update/verify unless a stronger job can replace a queued one. */
+  /** SteamCMD files job in progress – blocks install/update/verify unless a stronger job can replace a queued one. */
   opsLocked?: boolean;
   opsLockReason?: string;
   filesJobOperation?: "install-files" | "update" | "verify-files" | null;
@@ -107,7 +107,7 @@ export function SidePanel(props: Props): ReactElement {
       ? props.installation?.guidance ??
         "Install is unavailable until the install path looks safe to use."
       : undefined;
-  const version = resolveDisplayedServerVersion(props.installation) ?? "—";
+  const version = resolveDisplayedServerVersion(props.installation) ?? "–";
   const installHealthLabel = props.installation
     ? installationHealthLabel(props.installation.health)
     : "Checking…";
@@ -115,7 +115,7 @@ export function SidePanel(props: Props): ReactElement {
   const uptime =
     props.runtime?.startedAt != null && status === "running"
       ? new Date(props.runtime.startedAt).toLocaleString()
-      : "—";
+      : "–";
 
   return (
     <aside className={classes.panel}>

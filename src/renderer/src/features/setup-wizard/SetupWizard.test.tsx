@@ -468,11 +468,11 @@ describe("SetupWizard", () => {
     );
 
     expect(
-      screen.getByText("Setup assistant — paths and Windows"),
+      screen.getByText("Setup assistant – paths and Windows"),
     ).toBeInTheDocument();
     expect(screen.queryByText("Welcome to YARK")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /^continue$/i }));
-    await user.click(screen.getByRole("button", { name: /^done$/i }));
+    await user.click(screen.getByRole("button", { name: /^finish$/i }));
     expect(onPathsShellDone).toHaveBeenCalledTimes(1);
 
     await user.click(screen.getByRole("button", { name: /^close$/i }));

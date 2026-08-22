@@ -259,16 +259,18 @@ export function ServerWorkspacePage(props: Props): ReactElement {
           logsFocus={props.logsFocus}
           onChange={(tab) => {
             if (tab === workspaceTab) return;
-            confirmLeaveIfDirty(() => setWorkspaceTab(tab), "tab");
+            // Leave-guard callback is not a React setState updater (#403).
+            confirmLeaveIfDirty(() => {
+              setWorkspaceTab(tab);
+            }, "tab");
           }}
           onBack={handleBack}
           onOpenAssistant={() => {
-            if (!iniDirty) {
-                confirmLeaveIfDirty(() => {
-                assistantDirtyRef.current = false;
-                setAssistantOpen(true);
-              }, "tab");
-            }
+            if (iniDirty) return;
+            confirmLeaveIfDirty(() => {
+              assistantDirtyRef.current = false;
+              setAssistantOpen(true);
+            }, "tab");
           }}
           onIniDirtyChange={setIniDirty}
           onRegisterProfileLeaveGuard={registerProfileLeaveGuard}

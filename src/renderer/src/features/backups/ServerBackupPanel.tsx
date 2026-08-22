@@ -72,7 +72,7 @@ const KIND_TABS: Array<{ kind: BackupKind; label: string }> = [
 ];
 
 function formatSize(sizeBytes: number): string {
-  if (sizeBytes <= 0) return "—";
+  if (sizeBytes <= 0) return "–";
   if (sizeBytes >= 1024 * 1024) {
     return `${(sizeBytes / (1024 * 1024)).toFixed(2)} MB`;
   }
@@ -702,13 +702,13 @@ export function ServerBackupPanel(props: Props): ReactElement {
   const emptyHint =
     activeKind === "world"
       ? currentMapOnly && hiddenOtherMapWorldCount > 0
-        ? `No world backups for ${props.server.map} yet. ${hiddenOtherMapWorldCount} backup${hiddenOtherMapWorldCount === 1 ? "" : "s"} for other maps are hidden — uncheck “Current map only” to show them.`
+        ? `No world backups for ${props.server.map} yet. ${hiddenOtherMapWorldCount} backup${hiddenOtherMapWorldCount === 1 ? "" : "s"} for other maps are hidden. Uncheck “Current map only” to show them.`
         : "No world backups yet. Create one manually or enable the world schedule."
       : activeKind === "players"
         ? playerSearch.trim().length > 0
           ? "No player backups match this search."
           : "No player profile backups yet. Profiles are saved automatically when players join or leave. Use a World backup when you need everyone at once."
-        : "No INI backups yet. Create one manually — an automatic copy is also taken after each successful INI save.";
+        : "No INI backups yet. Create one manually. An automatic copy is also taken after each successful INI save.";
 
   const settingsTitle =
     activeKind === "world"
@@ -1015,7 +1015,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
                       ? "Install files before create/restore"
                       : props.opsLockReason != null
                         ? "Restore locked while files update"
-                        : "Server active — stop before restore"}
+                        : "Server active – stop before restore"}
                   </Badge>
                 )}
                 <Tooltip label="Reload the backup list">

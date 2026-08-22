@@ -78,7 +78,7 @@ export function SettingsSteamCmdSection(props: Props): ReactElement {
         <Stack gap="sm" className={classes.cacheList}>
           <CacheRow
             label="Download cache"
-            description="Temporary files Steam already downloaded. Clear this to free disk space — the next install or update will download them again."
+            description="Temporary files Steam already downloaded. Clear this to free disk space – the next install or update will download them again."
             path={depotCacheDir}
             disabled={cacheActionsDisabled}
             onOpen={() => props.onOpenSteamCmdCache("depot")}

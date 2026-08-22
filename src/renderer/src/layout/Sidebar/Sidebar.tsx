@@ -272,7 +272,7 @@ export function Sidebar(props: Props): ReactElement {
         <Group gap={4} wrap="nowrap" justify="center" className={classes.appVersionRow}>
           {updateAvailable && props.onYarkUpdateClick !== undefined && (
             <Tooltip
-              label={`Update ${props.yarkUpdateAvailableVersion} available — open Settings`}
+              label={`Update ${props.yarkUpdateAvailableVersion} available – open Settings`}
               position="right"
               withArrow
             >
@@ -292,7 +292,7 @@ export function Sidebar(props: Props): ReactElement {
             </Tooltip>
           )}
           {props.onWhatsNewClick !== undefined ? (
-            <Tooltip label={`YARK v${props.appVersion} — What's new`} position="right" withArrow>
+            <Tooltip label={`YARK v${props.appVersion} – What's new`} position="right" withArrow>
               <UnstyledButton
                 className={
                   updateAvailable ? classes.appVersionLabelUpdate : classes.appVersionLabelRail
@@ -319,7 +319,7 @@ export function Sidebar(props: Props): ReactElement {
         <Group gap={5} wrap="nowrap" justify="center" className={classes.appVersionRow}>
           {updateAvailable && props.onYarkUpdateClick !== undefined && (
             <Tooltip
-              label={`YARK update available (v${props.yarkUpdateAvailableVersion}) — open Settings to update`}
+              label={`YARK update available (v${props.yarkUpdateAvailableVersion}) – open Settings to update`}
               multiline
               w={220}
               position="right"

@@ -98,7 +98,7 @@ export function ServerListPanelBody(props: Props): ReactElement {
       {content}
       {props.filtered.length === 0 && (
         <Text c="dimmed" size="sm" ta="center" py="md">
-          {props.iconMode ? "—" : "No servers"}
+          {props.iconMode ? "–" : "No servers"}
         </Text>
       )}
     </Stack>

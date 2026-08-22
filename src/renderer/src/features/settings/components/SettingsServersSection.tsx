@@ -49,7 +49,7 @@ export function SettingsServersSection(props: Props): ReactElement {
           <ReadonlyPath
             className={classes.pathChip}
             value={props.defaultBaseFolder}
-            emptyLabel="Not set — choose a folder when creating a server"
+            emptyLabel="Not set – choose a folder when creating a server"
           />
           <Group gap="xs" wrap="wrap" className={classes.pathActions}>
             <Button

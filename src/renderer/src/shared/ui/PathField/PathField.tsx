@@ -68,7 +68,7 @@ export function PathField({
           onClick={onBrowse}
           disabled={busy || disabled}
         >
-          {busy ? "Opening..." : "Browse"}
+          {busy ? "Opening…" : "Browse"}
         </Button>
         {clearable && (
           <Button

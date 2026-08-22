@@ -362,7 +362,7 @@ describe("MoveInstallDialog completion feedback (#240)", () => {
       );
     });
     expect(screen.queryByRole("alert", { name: /move completed/i })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^done$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^close$/i })).toBeInTheDocument();
     notifySpy.mockRestore();
   });
 

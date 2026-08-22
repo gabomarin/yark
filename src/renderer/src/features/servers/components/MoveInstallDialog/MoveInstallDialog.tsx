@@ -193,7 +193,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
   };
 
   const handleClose = (): void => {
-    // Running / success stay open until Cancel / Done — no click-outside dismiss.
+    // Running / success stay open until Cancel / Close – no click-outside dismiss.
     if (phase === "running" || phase === "success") {
       return;
     }
@@ -307,7 +307,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
             </Button>
           )}
           {phase === "success" && oldSourceRemoved && (
-            <Button onClick={() => void finishSuccess()}>Done</Button>
+            <Button onClick={() => void finishSuccess()}>Close</Button>
           )}
           {phase === "success" && !oldSourceRemoved && (
             <>

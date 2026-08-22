@@ -262,11 +262,11 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
             >
               <div className={classes.metaGrid} data-meta-grid>
                 <ServerCardMetaItem label="Map" value={server.map} />
-                <ServerCardMetaItem label="Cluster" value={server.clusterId ?? "—"} />
+                <ServerCardMetaItem label="Cluster" value={server.clusterId ?? "–"} />
                 <ServerCardMetaItem label="Mods" value={String(server.mods.length)} />
                 <ServerCardMetaItem
                   label="Version"
-                  value={view.localVersion ?? "—"}
+                  value={view.localVersion ?? "–"}
                   tone={view.versionMetaTone}
                   hint={view.versionRefreshHint}
                 />
@@ -330,7 +330,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
           <UnstyledButton
             className={classes.runtimeError}
             onClick={onReviewError}
-            aria-label="Review error — open runtime logs"
+            aria-label="Review error – open runtime logs"
           >
             <Text c="red" size="sm" className={classes.runtimeErrorText}>
               {runtime.lastError}

@@ -17,7 +17,7 @@ interface Props {
 }
 
 function formatBytes(bytes: number | null | undefined): string {
-  if (bytes == null || !Number.isFinite(bytes)) return "—";
+  if (bytes == null || !Number.isFinite(bytes)) return "–";
   const abs = Math.abs(bytes);
   if (abs >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
   if (abs >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
@@ -69,7 +69,7 @@ function DiskFreeCard(props: {
   return (
     <AppMetricCard
       label="Disk free"
-      value={disk?.freeBytes != null ? formatBytes(disk.freeBytes) : "—"}
+      value={disk?.freeBytes != null ? formatBytes(disk.freeBytes) : "–"}
       hint={hint}
       tone={diskTone(props.summary, disk)}
       progressPercent={disk?.usedPercent ?? null}

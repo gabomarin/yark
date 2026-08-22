@@ -28,7 +28,7 @@ interface Props {
   server: ServerProfile;
   runtime: ServerRuntimeInfo | null;
   installation: ServerInstallationInfo | null;
-  /** SteamCMD is rewriting this install — block start/restart like a live process. */
+  /** SteamCMD is rewriting this install – block start/restart like a live process. */
   filesJobActive?: boolean;
   filesJobReason?: string;
   /** Optimistic Start/Restart in flight before runtime status updates (#390). */
@@ -43,7 +43,7 @@ interface Props {
 
 export function WorkspaceHeader(props: Props): ReactElement {
   const status = props.runtime?.status ?? "stopped";
-  const version = resolveDisplayedServerVersion(props.installation) ?? "—";
+  const version = resolveDisplayedServerVersion(props.installation) ?? "–";
   const isServerDisabled = !props.server.enabled;
   const filesReady = isInstallationReady(props.installation);
   const startBusy = props.startBusy === true;

@@ -70,13 +70,13 @@ export function ClusterIniDiffSummary(props: Props): ReactElement {
                 </div>
               </div>
               <code className={classes.value} title={entry.before ?? undefined}>
-                {entry.before ?? "—"}
+                {entry.before ?? "–"}
               </code>
               <code
                 className={classes.valueAfter}
                 title={entry.after ?? undefined}
               >
-                {entry.after ?? "—"}
+                {entry.after ?? "–"}
               </code>
               <span className={classes.file}>{fileLabel(entry.fileKey)}</span>
             </div>

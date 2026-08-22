@@ -27,7 +27,7 @@ function mapLabel(mapToken: string): string {
 /** Identity scan strip: map art + name + ports (#292). */
 export function ServerFormIdentityHero(props: Props): ReactElement {
   const title = props.name.trim().length > 0 ? props.name.trim() : "Untitled profile";
-  const ports = `${props.gamePort || "—"}/${props.queryPort || "—"}/${props.rconPort || "—"}`;
+  const ports = `${props.gamePort || "–"}/${props.queryPort || "–"}/${props.rconPort || "–"}`;
 
   return (
     <div className={classes.identityHero} data-identity-hero>

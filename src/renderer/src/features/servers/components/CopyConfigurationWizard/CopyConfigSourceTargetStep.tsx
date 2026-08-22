@@ -59,7 +59,7 @@ export function CopyConfigSourceTargetStep(props: Props): ReactElement {
       </Group>
       {props.sourceStatus !== "stopped" && (
         <Alert color="attention">
-          Source is running — we copy saved settings, not live game memory.
+          Source is running. We copy saved settings, not live game memory.
         </Alert>
       )}
 

@@ -40,7 +40,7 @@ function statusLabel(status: AppUpdateStatus): string {
     case "error":
       return "Check failed";
     default:
-      return status.isPackaged ? "Not checked yet" : "Dev build — check only";
+      return status.isPackaged ? "Not checked yet" : "Dev build – check only";
   }
 }
 

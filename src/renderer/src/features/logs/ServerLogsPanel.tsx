@@ -665,7 +665,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
                 }
               />
               {loading ? (
-                <Text c="dimmed">Loading events...</Text>
+                <Text c="dimmed">Loading events…</Text>
               ) : logs === null || logs.events.length === 0 ? (
                 <LogEmptyState
                   icon={<ClockCounterClockwise size={24} />}
@@ -773,7 +773,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
             <TabIntro
               title="Updates"
               purpose="Detailed download and install logs for this server."
-              useWhen="When an update failed or files look wrong — pick a run on the left, read the log on the right."
+              useWhen="When an update failed or files look wrong, pick a run on the left and read the log on the right."
               action={
                 <ClearAction
                   label="Clear all update logs for this server"
@@ -794,7 +794,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
                   Job history
                 </Title>
                 {loading ? (
-                  <Text c="dimmed">Loading history...</Text>
+                  <Text c="dimmed">Loading history…</Text>
                 ) : logs === null || logs.updateFiles.length === 0 ? (
                   <Text c="dimmed">
                     No update logs yet. Install, update, or verify files to create one.
@@ -909,7 +909,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
                     <ConsoleSurface
                       fill
                       text={
-                        updateContent.length > 0 ? updateContent : "Loading log content..."
+                        updateContent.length > 0 ? updateContent : "Loading log content…"
                       }
                       data-logs-scroll-region="update-content"
                     />
@@ -942,7 +942,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
                 }
               />
               {loading ? (
-                <Text c="dimmed">Loading backups...</Text>
+                <Text c="dimmed">Loading backups…</Text>
               ) : logs === null || logs.backups.length === 0 ? (
                 <LogEmptyState
                   icon={<HardDrives size={24} />}

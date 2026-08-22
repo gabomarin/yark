@@ -685,7 +685,7 @@ export function ConfigurationWizard(props: Props): ReactElement {
                       </Group>
                       <Text size="sm" c="dimmed">
                         Meant for small tribes. When this is on, the rates you pick in
-                        Pace and Breeding are only the starting point — ARK multiplies
+                        Pace and Breeding are only the starting point. ARK multiplies
                         them again, and those steps show the combined result. You also
                         level and unlock engrams faster, and your tames gain extra
                         health and damage.
@@ -881,7 +881,7 @@ export function ConfigurationWizard(props: Props): ReactElement {
         {activeStep === 4 && (
           <WizardStep
             title="Choose comfort rules"
-            description="Common comfort settings — not performance tuning."
+            description="Common comfort settings, not performance tuning."
           >
             <Stack gap="xs">
               <SettingSwitch label="PvE server" description="Prevents direct combat between players." {...form.getInputProps("pve", { type: "checkbox" })} />

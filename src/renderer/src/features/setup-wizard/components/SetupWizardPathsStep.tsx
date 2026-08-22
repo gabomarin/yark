@@ -98,7 +98,7 @@ export function SetupWizardPathsStep(props: Props): ReactElement {
           <ReadonlyPath
             className={classes.pathChip}
             value={props.defaultBaseFolder}
-            emptyLabel="Not set — choose a folder when creating a server"
+            emptyLabel="Not set – choose a folder when creating a server"
             data-setup-default-base-folder
           />
           <Group gap="xs" wrap="wrap" className={classes.pathActions}>

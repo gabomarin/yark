@@ -83,7 +83,7 @@ export function RconStatusIcon({ serverId }: Props): ReactElement {
     },
     connecting: {
       color: "yellow",
-      label: "RCON: connecting...",
+      label: "RCON: connecting…",
       canRetry: false,
     },
     connected: {
@@ -125,7 +125,7 @@ export function RconStatusIcon({ serverId }: Props): ReactElement {
         onClick={() => void retryConnection()}
         style={{ cursor: canRetry ? "pointer" : "default" }}
       >
-        {retrying ? "RCON: connecting..." : statusConfig.label}
+        {retrying ? "RCON: connecting…" : statusConfig.label}
       </Badge>
     </Tooltip>
   );
