@@ -12,6 +12,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Added
 
 - **Decomposition map** for oversized backend services and renderer pages — phased boundaries, test inventory, and PR checklist ([#146](https://github.com/gabomarin/yark/issues/146)).
+- Pure **backup cleanup planner** module (`backup-cleanup-plan.ts`) extracted from `backup-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 
 ## [0.15.0] - 2026-08-22
 

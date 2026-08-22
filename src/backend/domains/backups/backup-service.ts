@@ -83,6 +83,16 @@ import {
   prepareWritableDirUnderRoot,
   isTraversableDirectoryDirent,
 } from "../../infra/fs/reparse-points";
+import {
+  planBackupCleanup,
+  summarizeCleanupPlan,
+  type BackupCleanupPlanItem,
+} from "./backup-cleanup-plan";
+import {
+  ALL_BACKUP_KINDS,
+  assertRetainCount,
+  retainCountForKind,
+} from "./backup-policy-helpers";
 
 export {
   formatPlayerSessionNotes,
@@ -163,8 +173,6 @@ const SCHEDULED_WORLD_FAIL_LIMIT = 3;
  * `players` snapshot is not duplicated on the critical path (#275).
  */
 export const CRITICAL_BACKUP_KINDS: readonly BackupKind[] = ["world", "ini"];
-
-const ALL_BACKUP_KINDS: readonly BackupKind[] = ["world", "players", "ini"];
 
 const PLAYER_PROFILE_RE = /\.(arkprofile)(\.bak)?$/i;
 
@@ -249,18 +257,6 @@ function isPlayerProfileFile(name: string): boolean {
 
 function normalizePlayerKey(value: string): string {
   return value.trim().toLowerCase().replace(/^eos:/i, "");
-}
-
-function retainCountForKind(policy: BackupPolicy, kind: BackupKind): number {
-  if (kind === "world") return policy.retainCountWorld;
-  if (kind === "players") return policy.retainCountPlayers;
-  return policy.retainCountIni;
-}
-
-function assertRetainCount(label: string, value: number): void {
-  if (value < 1 || value > 500) {
-    throw new Error(`${label} must be between 1 and 500`);
-  }
 }
 
 function normalizeKinds(kinds: BackupKind[] | undefined): BackupKind[] {
@@ -974,31 +970,7 @@ export class BackupService extends EventEmitter {
 
   async previewCleanup(options: BackupCleanupOptions): Promise<BackupCleanupPreview> {
     await this.reconcileServersForCleanup(options);
-    const plan = this.planCleanup(options);
-    const byServerMap = new Map<
-      string,
-      { serverId: string; serverName: string; count: number; bytes: number }
-    >();
-    let totalBytes = 0;
-    for (const item of plan) {
-      const serverId = item.backup.serverId;
-      const sizeBytes = Math.max(0, item.backup.sizeBytes);
-      totalBytes += sizeBytes;
-      const current = byServerMap.get(serverId) ?? {
-        serverId,
-        serverName: item.serverName,
-        count: 0,
-        bytes: 0,
-      };
-      current.count += 1;
-      current.bytes += sizeBytes;
-      byServerMap.set(serverId, current);
-    }
-    return {
-      items: plan,
-      totalBytes,
-      byServer: [...byServerMap.values()],
-    };
+    return summarizeCleanupPlan(this.buildCleanupPlan(options));
   }
 
   async runCleanup(options: BackupCleanupOptions): Promise<BackupCleanupResult> {
@@ -1006,7 +978,7 @@ export class BackupService extends EventEmitter {
     const confirmedIds = options.confirmedBackupIds;
     // Always recompute rules (incl. protectNewestWorld). Confirmed ids only
     // narrow the fresh plan so preview cannot delete a newly protected world.
-    let plan = this.planCleanup(options);
+    let plan = this.buildCleanupPlan(options);
     if (confirmedIds !== undefined && confirmedIds !== null) {
       const allowed = new Set(
         confirmedIds.filter((id) => id.trim().length > 0),
@@ -1616,166 +1588,36 @@ export class BackupService extends EventEmitter {
     return disks;
   }
 
-  private planCleanup(
-    options: BackupCleanupOptions,
-  ): Array<{ backup: BackupRecord; serverName: string; reason: string }> {
-    const includeFailed = options.includeFailed === true;
-    const enforceRetention = options.enforceRetention === true;
-    const protectNewestWorld = options.protectNewestWorld !== false;
-    const olderThanDays =
-      typeof options.olderThanDays === "number" && options.olderThanDays > 0
-        ? Math.floor(options.olderThanDays)
-        : null;
-    const keepLastPerKind =
-      typeof options.keepLastPerKind === "number" && options.keepLastPerKind > 0
-        ? Math.floor(options.keepLastPerKind)
-        : null;
-
-    if (
-      !includeFailed &&
-      !enforceRetention &&
-      olderThanDays === null &&
-      keepLastPerKind === null
-    ) {
-      throw new Error("Select at least one cleanup rule");
-    }
-
+  private resolveCleanupServers(options: BackupCleanupOptions): ServerProfile[] {
     const allServers = this.servers.list();
     const selectedIds =
       options.serverIds !== null && options.serverIds.length > 0
         ? new Set(options.serverIds)
         : null;
-    const servers =
-      selectedIds === null
-        ? allServers
-        : allServers.filter((server) => selectedIds.has(server.id));
+    return selectedIds === null
+      ? allServers
+      : allServers.filter((server) => selectedIds.has(server.id));
+  }
 
-    const cutoffIso =
-      olderThanDays !== null
-        ? new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000).toISOString()
-        : null;
-
-    const selected = new Map<
-      string,
-      { backup: BackupRecord; serverName: string; reason: string }
-    >();
-
-    const mark = (
-      backup: BackupRecord,
-      serverName: string,
-      reason: string,
-    ): void => {
-      if (backup.status === "running") return;
-      const existing = selected.get(backup.id);
-      if (existing === undefined) {
-        selected.set(backup.id, { backup, serverName, reason });
-        return;
-      }
-      if (!existing.reason.includes(reason)) {
-        existing.reason = `${existing.reason}; ${reason}`;
-      }
-    };
-
-    for (const server of servers) {
-      const policy = this.backups.getPolicy(server.id);
-      const records = this.backups.listBackups(server.id, 10_000);
-      const newestWorld = this.backups.latestCompleted(server.id, "world");
-
-      if (includeFailed) {
-        for (const backup of records) {
-          if (backup.status === "failed") {
-            mark(backup, server.name, "failed");
-          }
-        }
-      }
-
-      if (enforceRetention) {
-        for (const kind of ALL_BACKUP_KINDS) {
-          const retain = retainCountForKind(policy, kind);
-          const completed = this.backups.listCompleted(server.id, kind);
-          if (kind === "players") {
-            const byPlayer = new Map<string, BackupRecord[]>();
-            for (const backup of completed) {
-              const key = playersRetentionKey(backup);
-              const list = byPlayer.get(key) ?? [];
-              list.push(backup);
-              byPlayer.set(key, list);
-            }
-            for (const [, list] of byPlayer) {
-              for (const backup of list.slice(retain)) {
-                mark(backup, server.name, "over retain policy");
-              }
-            }
-            continue;
-          }
-          for (const backup of completed.slice(retain)) {
-            mark(backup, server.name, "over retain policy");
-          }
-        }
-      }
-
-      if (cutoffIso !== null) {
-        for (const backup of records) {
-          if (backup.status !== "completed") continue;
-          if (backupFinishedAt(backup) < cutoffIso) {
-            mark(backup, server.name, `older than ${olderThanDays}d`);
-          }
-        }
-      }
-
-      if (keepLastPerKind !== null) {
-        for (const kind of ALL_BACKUP_KINDS) {
-          const completed = this.backups.listCompleted(server.id, kind);
-          // Players: keep N per player pool (same as retention / enforceRetention).
-          if (kind === "players") {
-            const byPlayer = new Map<string, BackupRecord[]>();
-            for (const backup of completed) {
-              const key = playersRetentionKey(backup);
-              const list = byPlayer.get(key) ?? [];
-              list.push(backup);
-              byPlayer.set(key, list);
-            }
-            for (const [, list] of byPlayer) {
-              for (const backup of list.slice(keepLastPerKind)) {
-                mark(
-                  backup,
-                  server.name,
-                  `keep last ${keepLastPerKind}/players`,
-                );
-              }
-            }
-            continue;
-          }
-          for (const backup of completed.slice(keepLastPerKind)) {
-            mark(backup, server.name, `keep last ${keepLastPerKind}/${kind}`);
-          }
-        }
-      }
-
-      if (protectNewestWorld && newestWorld !== null) {
-        selected.delete(newestWorld.id);
-      }
-    }
-
-    return [...selected.values()].sort((a, b) =>
-      backupFinishedAt(b.backup).localeCompare(backupFinishedAt(a.backup)),
-    );
+  private buildCleanupPlan(options: BackupCleanupOptions): BackupCleanupPlanItem[] {
+    const servers = this.resolveCleanupServers(options);
+    return planBackupCleanup({
+      options,
+      servers: servers.map((server) => ({ id: server.id, name: server.name })),
+      catalog: {
+        getPolicy: (serverId) => this.backups.getPolicy(serverId),
+        listBackups: (serverId, limit) => this.backups.listBackups(serverId, limit),
+        listCompleted: (serverId, kind) => this.backups.listCompleted(serverId, kind),
+        latestCompleted: (serverId, kind) => this.backups.latestCompleted(serverId, kind),
+      },
+    });
   }
 
   /** Import orphan archives before cleanup so disk-only zips are eligible. */
   private async reconcileServersForCleanup(
     options: BackupCleanupOptions,
   ): Promise<void> {
-    const allServers = this.servers.list();
-    const selectedIds =
-      options.serverIds !== null && options.serverIds.length > 0
-        ? new Set(options.serverIds)
-        : null;
-    const servers =
-      selectedIds === null
-        ? allServers
-        : allServers.filter((server) => selectedIds.has(server.id));
-    for (const server of servers) {
+    for (const server of this.resolveCleanupServers(options)) {
       await this.reconcileDiskBackups(server.id);
     }
   }

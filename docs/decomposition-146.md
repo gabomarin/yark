@@ -50,7 +50,15 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | **5** | Renderer pages | Per `component-structure.md` deferred table + `App.tsx` shell extraction |
 | **6** | Policy | Remove renderer baselines; optional backend line gate |
 
----
+### Phase 2 progress
+
+| Module | Status |
+| --- | --- |
+| `backup-policy-helpers.ts` | `ALL_BACKUP_KINDS`, `retainCountForKind`, `assertRetainCount` |
+| `backup-cleanup-plan.ts` | Pure `planBackupCleanup` + `summarizeCleanupPlan` (+ unit tests) |
+| `backup-fleet.ts` | Pending |
+| `backup-restore.ts` | Pending |
+
 
 ## Backend: `backup-service.ts`
 
