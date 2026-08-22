@@ -181,12 +181,12 @@ async function run() {
     await expectText(dialog, finalDest);
 
     await dialog.getByRole("button", { name: /^Start move$/i }).click();
-    // Clean success toasts (#240); Done appears when the move finished without a leftover folder.
-    await dialog.getByRole("button", { name: /^Done$/i }).waitFor({
+    // Clean success toasts (#240); Close appears when the move finished without a leftover folder.
+    await dialog.getByRole("button", { name: /^Close$/i }).waitFor({
       state: "visible",
       timeout: 60_000,
     });
-    await dialog.getByRole("button", { name: /^Done$/i }).click();
+    await dialog.getByRole("button", { name: /^Close$/i }).click();
     await dialog.waitFor({ state: "hidden", timeout: 15_000 });
 
     // Profile + disk evidence.
@@ -206,7 +206,7 @@ async function run() {
     );
     assert.match(movedSave, new RegExp(saveMarker));
 
-    // UI shows the new install path on the Server tab after Done refresh.
+    // UI shows the new install path on the Server tab after Close refresh.
     await page.getByRole("tab", { name: "Server" }).click();
     await expectText(page.locator("[data-server-form-scroll]"), finalDest);
 

@@ -198,7 +198,7 @@ async function run() {
     let modal = await waitForProbeModal(page);
     assert.equal(await modal.getAttribute("data-host-port-probe-kind"), "busy");
     assert.equal(await modal.getAttribute("data-host-port-probe-suggested"), "true");
-    await page.getByRole("dialog").getByText(`Ports in use — ${serverName}`).waitFor({
+    await page.getByRole("dialog").getByText(`Ports in use – ${serverName}`).waitFor({
       state: "visible",
     });
     await page.getByText("Host port busy", { exact: true }).waitFor({ state: "visible" });
