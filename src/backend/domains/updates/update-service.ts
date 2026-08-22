@@ -27,15 +27,12 @@ import type { ProcessManager } from "../../infra/process/process-manager";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
 import {
-  isTransientCriticalJobError,
   makeIdempotencyKey,
   migrateCriticalJob,
   toCriticalJobSummary,
 } from "../../orchestration/critical-job-recovery";
 import {
   canCancelUpdateCriticalJob,
-  isKnownUpdateJobPhase,
-  isKnownUpdateJobStatus,
   isUpdateJobInterruptedAmbiguous,
   isUpdatePauseBlockedByRollback,
   isUpdateQueueHeldForOperator,
@@ -87,6 +84,36 @@ import {
   shouldResumeFromPreUpdateBackup,
   updateInstallMayHaveChanged,
 } from "./update-server-jobs";
+import {
+  deriveSteamCmdStatusOperation,
+  deriveSteamCmdStatusServerId,
+  deriveSteamCmdStatusStartedAt,
+  formatAsaCacheReuseLine,
+  formatAsaCacheSyncTargetLine,
+  formatAsaCacheUpdateConsoleLine,
+  formatDiskProgressLogPathLine,
+  formatSteamCmdCachePathsLine,
+  formatSteamCmdInvokeConsoleLines,
+  formatSyncCompletedLine,
+  formatSyncFailureFallbackLine,
+  formatSyncHeartbeatLine,
+  planSteamCmdProcessProgressStart,
+  resolveAsaCacheSyncCompleteProgress,
+  resolveAsaCacheSyncLabel,
+  resolveAsaCacheSyncSkippedProgress,
+  shouldPreferOfficialProgressOverDiskEstimate,
+} from "./steamcmd-operator";
+import {
+  findNextRunnableQueueJob,
+  isValidPersistedUpdateQueueEntry,
+  planQueueJobCancelDisposition,
+  planQueueJobFailureDisposition,
+  planQueueJobPauseDisposition,
+  planSteamCmdMissingQueueBlock,
+  resolveUpdateQueueJobHandler,
+  shouldClearQueueIdleProgress,
+  shouldStopQueueProcessing,
+} from "./update-queue";
 import {
   buildSteamCmdAppUpdateArgs,
   STEAMCMD_ENGLISH_ARGS,
@@ -343,15 +370,16 @@ export class UpdateService extends EventEmitter {
     const pausedProgress =
       !liveWork && hasPausedJob ? this.pausedProgressSnapshot : null;
     const busy = liveWork || hasQueueWork;
-    const operation: SteamCmdStatus["operation"] =
-      this.syncingServerId !== null
-        ? "sync-files"
-        : (active?.operation ?? runningJob?.type ?? null);
-    const serverId =
-      this.syncingServerId
-      ?? active?.serverId
-      ?? runningJob?.serverId
-      ?? null;
+    const operation = deriveSteamCmdStatusOperation({
+      syncingServerId: this.syncingServerId,
+      activeOperation: active?.operation ?? null,
+      runningJobType: runningJob?.type ?? null,
+    });
+    const serverId = deriveSteamCmdStatusServerId({
+      syncingServerId: this.syncingServerId,
+      activeServerId: active?.serverId ?? null,
+      runningJobServerId: runningJob?.serverId ?? null,
+    });
 
     return {
       detected: executablePath !== null,
@@ -362,11 +390,11 @@ export class UpdateService extends EventEmitter {
       running: active !== null || this.syncingServerId !== null,
       operation,
       serverId,
-      startedAt:
-        this.syncingStartedAt
-        ?? active?.startedAt
-        ?? runningJob?.updatedAt
-        ?? null,
+      startedAt: deriveSteamCmdStatusStartedAt({
+        syncingStartedAt: this.syncingStartedAt,
+        activeStartedAt: active?.startedAt ?? null,
+        runningJobUpdatedAt: runningJob?.updatedAt ?? null,
+      }),
       pid: active?.child.pid ?? null,
       progressPercent: liveWork ? this.progressPercent : pausedProgress?.percent ?? null,
       progressLabel: liveWork ? this.progressLabel : pausedProgress?.label ?? null,
@@ -1397,19 +1425,12 @@ export class UpdateService extends EventEmitter {
 
     try {
       for (;;) {
-        const pausedJob = this.queue.find((candidate) => candidate.status === "paused");
-        if (pausedJob !== undefined) {
-          this.emitProgress(true);
-          break;
-        }
-        if (this.findRestartInterruptedJob() !== undefined) {
+        if (shouldStopQueueProcessing(this.queue)) {
           this.emitProgress(true);
           break;
         }
 
-        const job = this.queue.find(
-          (candidate) => candidate.status === "pending" || candidate.status === "retrying",
-        );
+        const job = findNextRunnableQueueJob(this.queue);
         if (job === undefined) {
           break;
         }
@@ -1420,9 +1441,10 @@ export class UpdateService extends EventEmitter {
         ) {
           const error = this.steamCmdMissingError();
           this.rejectJob(job.id, error);
-          job.status = "blocked";
-          job.operatorRetryAllowed = true;
-          job.recoveryReason = error.message;
+          const blocked = planSteamCmdMissingQueueBlock(error.message);
+          job.status = blocked.status;
+          job.operatorRetryAllowed = blocked.operatorRetryAllowed;
+          job.recoveryReason = blocked.recoveryReason;
           job.updatedAt = new Date().toISOString();
           this.persistQueue();
           this.emitProgress(true);
@@ -1437,34 +1459,33 @@ export class UpdateService extends EventEmitter {
         this.emitProgress(true);
 
         try {
-          if (job.type === "install-files") {
-            if (job.phase === "files-applied" || job.phase === "restarting-server") {
-              await this.finishRecoveredFileJob(job);
-            } else {
+          switch (resolveUpdateQueueJobHandler({ type: job.type, phase: job.phase })) {
+            case "install":
               await this.performInstallServerFiles(job.serverId, job);
-            }
-          } else if (job.type === "verify-files") {
-            if (job.phase === "files-applied" || job.phase === "restarting-server") {
-              await this.finishRecoveredFileJob(job);
-            } else {
+              break;
+            case "verify":
               await this.performVerifyServerFiles(job.serverId, job);
-            }
-          } else {
-            if (job.phase === "files-applied" || job.phase === "restarting-server") {
+              break;
+            case "recover-file-job":
               await this.finishRecoveredFileJob(job);
-            } else if (
-              job.phase.startsWith("rollback-")
-              && job.phase !== "rollback-complete"
-            ) {
+              break;
+            case "recover-rollback":
               await this.finishRecoveredRollback(job);
-            } else {
+              break;
+            case "update":
               await this.performUpdateServer(job.serverId, job);
-            }
+              break;
           }
           this.resolveJob(job.id);
           this.removeJob(job.id);
           this.persistQueue();
-          if (this.queue.length === 0 && this.activeSteamCmd === null && this.syncingServerId === null) {
+          if (
+            shouldClearQueueIdleProgress({
+              queueLength: this.queue.length,
+              hasActiveSteamCmd: this.activeSteamCmd !== null,
+              syncingServerId: this.syncingServerId,
+            })
+          ) {
             this.clearPausedProgressSnapshot();
             this.setProgress(100, "Completed", "Operation finished");
             this.emitProgress(true);
@@ -1478,8 +1499,9 @@ export class UpdateService extends EventEmitter {
                 ? (error as Error)
                 : new OperationPausedError(),
             );
-            job.status = "paused";
-            job.recoveryReason = null;
+            const paused = planQueueJobPauseDisposition();
+            job.status = paused.status;
+            job.recoveryReason = paused.recoveryReason;
             job.updatedAt = new Date().toISOString();
             this.persistQueue();
             this.pauseRequested = false;
@@ -1492,49 +1514,29 @@ export class UpdateService extends EventEmitter {
             this.appendSteamCmdConsole(
               `Job ${job.type} stopped after cancellation`,
             );
-            const incompleteRollback =
-              job.type === "update"
-              && job.phase.startsWith("rollback-")
-              && job.phase !== "rollback-complete";
-            if (incompleteRollback) {
-              this.rejectJob(
-                job.id,
-                error instanceof Error ? error : new OperationCancelledError(),
-              );
-              job.status = "blocked";
-              job.operatorRetryAllowed = true;
-              job.recoveryReason =
-                `Cancellation interrupted phase "${job.phase}". Inspect backups and runtime state before retrying.`;
-              job.updatedAt = new Date().toISOString();
-              this.persistQueue();
-              this.cancelRequested = false;
-              this.endFileSync();
-              this.emitProgress(true);
-              // This server is blocked for operator review; other queued servers can run.
-              continue;
-            }
+            const cancelled = planQueueJobCancelDisposition({
+              jobType: job.type,
+              phase: job.phase,
+            });
             this.rejectJob(
               job.id,
               isOperationCancelledError(error)
                 ? (error as Error)
                 : new OperationCancelledError(),
             );
-            job.status = "cancelled";
-            if (job.phase !== "rollback-complete") {
-              job.phase = "cancelled";
+            job.status = cancelled.status;
+            if (cancelled.phase !== undefined) {
+              job.phase = cancelled.phase;
             }
-            job.recoveryReason =
-              job.phase === "rollback-complete"
-                ? "Cancelled by the operator after rollback completed safely."
-                : "Cancelled by the operator during execution.";
+            job.recoveryReason = cancelled.recoveryReason;
             job.updatedAt = new Date().toISOString();
             this.persistQueue();
             this.cancelRequested = false;
             this.endFileSync();
-            this.setProgress(null, "Cancelled", "Operation cancelled by the user");
+            if (cancelled.status === "cancelled") {
+              this.setProgress(null, "Cancelled", "Operation cancelled by the user");
+            }
             this.emitProgress(true);
-            // Unwind already awaited SteamCMD/sync kill. Other servers can
-            // start; this job is cancelled/blocked so it is no longer occupying.
             continue;
           }
 
@@ -1542,81 +1544,45 @@ export class UpdateService extends EventEmitter {
           job.lastError = error instanceof Error ? error.message : String(error);
           job.updatedAt = new Date().toISOString();
 
-          const ambiguousRollback =
-            job.type === "update"
-            && job.phase.startsWith("rollback-")
-            && job.phase !== "rollback-complete";
-          if (error instanceof CriticalJobRecoveryBlockedError) {
-            this.rejectJob(job.id, error);
-            job.status = "blocked";
-            job.operatorRetryAllowed = true;
-            job.recoveryReason = error.message;
-            job.context.restartInterrupted = false;
-            this.persistQueue();
-            continue;
-          }
-          if (ambiguousRollback) {
-            this.rejectJob(job.id, new Error(job.lastError));
-            job.status = "blocked";
-            job.operatorRetryAllowed = true;
-            job.recoveryReason =
-              `Failure during phase "${job.phase}" left rollback state ambiguous. Inspect backups and runtime state before retrying.`;
-            job.context.restartInterrupted = false;
-            this.persistQueue();
-            this.addJobEvent(
-              job,
-              "update_failed",
-              "error",
-              `Job ${job.type} blocked during ambiguous rollback: ${job.lastError}`,
-            );
-            continue;
-          }
-
-          if (
-            job.type === "update"
-            && job.phase === "rollback-complete"
-            && !isTransientCriticalJobError(error)
-          ) {
-            this.rejectJob(job.id, new Error(job.lastError));
-            job.status = "failed";
-            job.operatorRetryAllowed = true;
-            job.recoveryReason =
-              "The update failed, but rollback completed. Review the update log before retrying.";
-            this.persistQueue();
-            continue;
-          }
-
-          if (job.attempts >= job.maxAttempts || !isTransientCriticalJobError(error)) {
-            this.rejectJob(job.id, new Error(job.lastError));
-            job.status = "failed";
-            const rollbackCompleted =
-              job.type === "update" && job.phase === "rollback-complete";
-            job.phase = rollbackCompleted ? "rollback-complete" : "failed";
-            job.operatorRetryAllowed = isTransientCriticalJobError(error);
-            job.recoveryReason = isTransientCriticalJobError(error)
-              ? rollbackCompleted
-                ? `Retry limit reached after ${job.maxAttempts} attempts; rollback completed successfully.`
-                : `Retry limit reached after ${job.maxAttempts} attempts.`
-              : "This validation, security, cancellation, or missing-resource failure is not safe to retry automatically.";
-            this.addJobEvent(
-              job,
-              "update_failed",
-              "error",
-              `Job ${job.type} failed (${job.attempts}/${job.maxAttempts}): ${job.lastError}`,
-            );
-            this.persistQueue();
-            continue;
-          }
-
-          job.status = "retrying";
-          job.recoveryReason = `Transient failure; retry ${job.attempts + 1} of ${job.maxAttempts} is scheduled.`;
-          this.persistQueue();
-          this.addJobEvent(
+          const failure = planQueueJobFailureDisposition({
             job,
-            "update_failed",
-            "warning",
-            `Job ${job.type} will retry (${job.attempts}/${job.maxAttempts})`,
-          );
+            error,
+            isRecoveryBlocked: error instanceof CriticalJobRecoveryBlockedError,
+          });
+          if (failure.clearRestartInterrupted === true) {
+            job.context.restartInterrupted = false;
+          }
+          if (failure.action === "blocked" || failure.action === "failed") {
+            this.rejectJob(job.id, new Error(job.lastError));
+            job.status = failure.status;
+            if (failure.phase !== undefined) {
+              job.phase = failure.phase;
+            }
+            job.operatorRetryAllowed = failure.operatorRetryAllowed;
+            job.recoveryReason = failure.recoveryReason;
+            this.persistQueue();
+            if (failure.emitFailedEvent) {
+              this.addJobEvent(
+                job,
+                "update_failed",
+                failure.failedEventSeverity ?? "error",
+                failure.failedEventMessage ?? job.lastError,
+              );
+            }
+            continue;
+          }
+
+          job.status = failure.status;
+          job.recoveryReason = failure.recoveryReason;
+          this.persistQueue();
+          if (failure.emitFailedEvent) {
+            this.addJobEvent(
+              job,
+              "update_failed",
+              failure.failedEventSeverity ?? "warning",
+              failure.failedEventMessage ?? job.lastError,
+            );
+          }
           await delay(JOB_RETRY_DELAY_MS);
           if (job.status === "retrying") {
             job.status = "pending";
@@ -1646,7 +1612,7 @@ export class UpdateService extends EventEmitter {
     await mkdir(depotCacheDir, { recursive: true });
 
     this.appendSteamCmdConsole(
-      `SteamCMD cache: depot=${depotCacheDir} | ASA content=${contentCacheDir}`,
+      formatSteamCmdCachePathsLine(depotCacheDir, contentCacheDir),
     );
 
     const cacheResult = await this.ensureAsaContentCache(
@@ -1661,27 +1627,17 @@ export class UpdateService extends EventEmitter {
       return cacheResult;
     }
 
-    this.appendSteamCmdConsole(
-      `Syncing ASA cache → ${installDir} (preserves ShooterGame\\Saved)`,
-    );
-    const syncLabel =
-      operation === "verify-files"
-        ? "Applying verified files to server…"
-        : operation === "install-files"
-          ? "Copying files to server…"
-          : "Copying update to server…";
+    this.appendSteamCmdConsole(formatAsaCacheSyncTargetLine(installDir));
+    const syncLabel = resolveAsaCacheSyncLabel(operation);
     this.beginFileSync(serverId, syncLabel);
     let syncHeartbeat: ReturnType<typeof setInterval> | null = null;
     try {
       if (canSkipAsaContentSync(contentCacheDir, installDir)) {
+        const skipped = resolveAsaCacheSyncSkippedProgress(operation);
         this.appendSteamCmdConsole(
           "ASA cache sync skipped (install dir is the content cache)",
         );
-        this.setProgress(
-          100,
-          operation === "verify-files" ? "Integrity OK" : "Files already in sync",
-          "No copy needed",
-        );
+        this.setProgress(skipped.percent, skipped.label, skipped.line);
       } else {
         const syncStartedAt = Date.now();
         syncHeartbeat = setInterval(() => {
@@ -1689,7 +1645,7 @@ export class UpdateService extends EventEmitter {
             return;
           }
           const elapsedSec = Math.max(1, Math.round((Date.now() - syncStartedAt) / 1000));
-          this.appendSteamCmdConsole(`Still copying files… (${elapsedSec}s elapsed)`, {
+          this.appendSteamCmdConsole(formatSyncHeartbeatLine(elapsedSec), {
             forceProgressPush: true,
           });
         }, 5_000);
@@ -1700,14 +1656,9 @@ export class UpdateService extends EventEmitter {
           isCancelled: () => this.cancelRequested || this.pauseRequested,
         });
         this.activeSyncChild = null;
-        this.appendSteamCmdConsole(
-          `ASA cache sync completed (robocopy=${robocopyCode})`,
-        );
-        this.setProgress(
-          100,
-          operation === "verify-files" ? "Integrity OK" : "Files synced",
-          operation === "verify-files" ? "Verification complete" : "Sync complete",
-        );
+        this.appendSteamCmdConsole(formatSyncCompletedLine(robocopyCode));
+        const completed = resolveAsaCacheSyncCompleteProgress(operation);
+        this.setProgress(completed.percent, completed.label, completed.line);
       }
     } catch (error) {
       this.activeSyncChild = null;
@@ -1719,7 +1670,7 @@ export class UpdateService extends EventEmitter {
         throw isOperationCancelledError(error) ? error : new OperationCancelledError();
       }
       const message = error instanceof Error ? error.message : String(error);
-      this.appendSteamCmdConsole(`Cache sync failed; installing directly on the server: ${message}`);
+      this.appendSteamCmdConsole(formatSyncFailureFallbackLine(message));
       return await this.invokeSteamCmdAppUpdate(
         steamcmdExe,
         steamCmdHome,
@@ -1746,16 +1697,12 @@ export class UpdateService extends EventEmitter {
   ): Promise<CommandResult> {
     if (shouldReuseAsaContentCache(operation, contentCacheDir, this.contentCacheUpdatedAtMs)) {
       const ageSec = Math.round((Date.now() - this.contentCacheUpdatedAtMs) / 1000);
-      this.appendSteamCmdConsole(
-        `Reusing ASA content cache (updated ${ageSec}s ago; no re-download)`,
-      );
+      this.appendSteamCmdConsole(formatAsaCacheReuseLine(ageSec));
       return { code: 0, stdout: "", stderr: "" };
     }
 
     this.appendSteamCmdConsole(
-      operation === "verify-files"
-        ? `Verifying ASA cache integrity via SteamCMD validate (depotcache at ${steamCmdHome})`
-        : `Updating shared ASA cache via SteamCMD (reuses depotcache at ${steamCmdHome})`,
+      formatAsaCacheUpdateConsoleLine(operation, steamCmdHome),
     );
     const result = await this.invokeSteamCmdAppUpdate(
       steamcmdExe,
@@ -1781,12 +1728,15 @@ export class UpdateService extends EventEmitter {
   ): Promise<CommandResult> {
     const args = buildSteamCmdAppUpdateArgs(forceInstallDir);
 
-    this.appendSteamCmdConsole(
-      `[invoke] op=${operation} server=${serverId} cwd=${steamCmdHome} cmd=${steamcmdExe} args=${args.join(" ")}`,
-    );
-    this.appendSteamCmdConsole(
-      "Live progress: reading logs/console_log.txt + appmanifest/downloading for this install (SteamCMD stdout is often buffered).",
-    );
+    for (const line of formatSteamCmdInvokeConsoleLines({
+      operation,
+      serverId,
+      steamCmdHome,
+      steamcmdExe,
+      args,
+    })) {
+      this.appendSteamCmdConsole(line);
+    }
 
     return await new Promise<CommandResult>((resolve, reject) => {
       const child = spawn(steamcmdExe, args, {
@@ -1873,7 +1823,7 @@ export class UpdateService extends EventEmitter {
       this.diskProgressBaselineBytes = baseline;
     });
 
-    this.appendSteamCmdConsole(`Following live log: ${logPath}`);
+    this.appendSteamCmdConsole(formatDiskProgressLogPathLine(logPath));
 
     this.diskProgressTimer = setInterval(() => {
       void this.tickDiskProgressEstimate();
@@ -1908,8 +1858,10 @@ export class UpdateService extends EventEmitter {
 
       // If console_log/stdout already provided recent progress, do NOT overwrite with appmanifest (often behind).
       if (
-        this.lastOfficialProgressAtMs > 0
-        && Date.now() - this.lastOfficialProgressAtMs < 5_000
+        shouldPreferOfficialProgressOverDiskEstimate(
+          this.lastOfficialProgressAtMs,
+          Date.now(),
+        )
       ) {
         return;
       }
@@ -2389,15 +2341,8 @@ export class UpdateService extends EventEmitter {
     this.steamCmdOutputBuffers.clear();
     this.lastProgressConsoleLogAtMs = 0;
     this.lastProgressConsoleLoggedPercent = null;
-    if (operation === "install-files") {
-      this.setProgress(0, "Downloading server files…", "Starting SteamCMD");
-    } else if (operation === "update") {
-      this.setProgress(0, "Updating server files…", "Starting SteamCMD");
-    } else if (operation === "verify-files") {
-      this.setProgress(0, "Verifying integrity…", "Starting SteamCMD validate");
-    } else {
-      this.setProgress(null, "Installing SteamCMD…", "Starting SteamCMD installation");
-    }
+    const progressStart = planSteamCmdProcessProgressStart(operation);
+    this.setProgress(progressStart.percent, progressStart.label, progressStart.line);
     this.activeSteamCmd = {
       child,
       operation,
@@ -2440,25 +2385,7 @@ export class UpdateService extends EventEmitter {
       const jobs: CriticalJob[] = [];
       let invalidEntryFound = false;
       for (const job of parsed) {
-        if (
-          typeof job.id !== "string"
-          || (job.type !== "install-files" && job.type !== "update" && job.type !== "verify-files")
-          || typeof job.serverId !== "string"
-        ) {
-          invalidEntryFound = true;
-          continue;
-        }
-        if (
-          typeof job.status === "string"
-          && !isKnownUpdateJobStatus(job.status)
-        ) {
-          invalidEntryFound = true;
-          continue;
-        }
-        if (
-          typeof job.phase === "string"
-          && !isKnownUpdateJobPhase(job.phase)
-        ) {
+        if (!isValidPersistedUpdateQueueEntry(job)) {
           invalidEntryFound = true;
           continue;
         }
@@ -2553,10 +2480,6 @@ export class UpdateService extends EventEmitter {
 
   private queueHeldForOperator(): boolean {
     return isUpdateQueueHeldForOperator(this.queue);
-  }
-
-  private findRestartInterruptedJob(): CriticalJob | undefined {
-    return this.queue.find((job) => job.context.restartInterrupted === true);
   }
 
   private async finishRecoveredFileJob(job: CriticalJob): Promise<void> {

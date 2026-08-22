@@ -69,6 +69,10 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `steamcmd-path.ts` | Pure SteamCMD path candidates, cached resolve, normalize, install PowerShell script, verify-exit decision, job-needs-exe (+ unit tests). Install/spawn/verify orchestration still on `UpdateService` (`steamcmd-operator` later). |
 | `steamcmd-console.ts` | Pure SteamCMD console ring buffer, CR/LF chunk split, line prefix strip, progress log throttle (+ unit tests). Console state + emit still on `UpdateService`. |
 | `update-server-jobs.ts` | Pure safe-update decisions: pre-update backup evidence, install-may-have-changed, log path/content, interrupted-job recovery on load (+ unit tests). Install/update/verify orchestration still on `UpdateService`. |
+| `update-queue.ts` | Pure queue flow: next-job selection, handler routing, pause/cancel/failure disposition, persisted-row validation (+ unit tests). Queue I/O and `processQueue` orchestration still on `UpdateService`. |
+| `steamcmd-operator.ts` | Pure SteamCMD operator copy/progress: cache/sync labels, invoke console lines, status derivation, disk-progress preference (+ unit tests). Spawn/install/verify orchestration still on `UpdateService`. |
+
+**Phase 3 exit:** `update-service.ts` is a coordinator; SteamCMD + queue decisions live in siblings above. Further shrinks are optional orchestration moves only.
 
 
 ## Backend: `backup-service.ts`
@@ -94,19 +98,15 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 
 ## Backend: `update-service.ts`
 
-**Already extracted:** `robocopy-tree.ts`, `steamcmd-content-cache.ts`, `steamcmd-disk-progress.ts`.
+**Already extracted:** `robocopy-tree.ts`, `steamcmd-content-cache.ts`, `steamcmd-disk-progress.ts`, `update-critical-jobs.ts`, `steamcmd-path.ts`, `steamcmd-console.ts`, `update-server-jobs.ts`, `update-queue.ts`, `steamcmd-operator.ts`.
 
-**Still inside god-class:**
+**Still inside coordinator (by design):**
 
-| Concern | Proposed module |
+| Concern | Notes |
 | --- | --- |
-| Critical job queue + recovery | Queue I/O + SteamCMD still on service; pure phase/merge/reorder/cancel/pause helpers in `update-critical-jobs.ts` | later: `update-queue.ts` if needed |
-| SteamCMD install/path/console | Pure path helpers in `steamcmd-path.ts`; pure console helpers in `steamcmd-console.ts`; install/spawn still on service | later: `steamcmd-operator.ts` |
-| Per-server install/update/verify jobs | Pure safe-update helpers in `update-server-jobs.ts`; orchestration still on service | later: more job orchestration moves if needed |
-| Queue processor + waiter coordination | `update-queue.ts` |
-| Disk progress monitor (orchestration) | keep thin wrapper; logic stays in `steamcmd-disk-progress.ts` |
-
-**Characterization gaps:** Only `update-service-safe-update.test.ts` targets UpdateService directly. Add characterization tests for queue ordering and cancel/pause **before** phase 3 extractions.
+| Queue I/O + `processQueue` | Uses pure helpers from `update-queue.ts` / `update-critical-jobs.ts` |
+| SteamCMD spawn/install/verify | Uses pure helpers from `steamcmd-path.ts`, `steamcmd-console.ts`, `steamcmd-operator.ts` |
+| Disk progress monitor | Thin wrapper; logic in `steamcmd-disk-progress.ts` |
 
 ---
 

@@ -21,6 +21,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Pure **SteamCMD path** helpers (`steamcmd-path.ts`) — candidate paths, cached resolve, install script, verify-exit — extracted from `update-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 - Pure **SteamCMD console** helpers (`steamcmd-console.ts`) — ring buffer, CR/LF split, prefix strip, progress log throttle — extracted from `update-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 - Pure **safe-update job** helpers (`update-server-jobs.ts`) — pre-update backup evidence, install-may-have-changed, log path/content, interrupted-job recovery — extracted from `update-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
+- Pure **update queue** helpers (`update-queue.ts`) — next-job routing, pause/cancel/failure disposition, persisted-row validation — extracted from `update-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
+- Pure **SteamCMD operator** helpers (`steamcmd-operator.ts`) — cache/sync copy, invoke console lines, status derivation, disk-progress preference — extracted from `update-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 
 ### Changed
 
