@@ -19,6 +19,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Pure **backup critical-job** helpers (`backup-critical-jobs.ts`) — phase/status checks, merge, load disposition, retry plan — extracted from `backup-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 - Pure **update critical-job** helpers (`update-critical-jobs.ts`) — queue ordering, cancel/pause eligibility, merge/load/resume phase — extracted from `update-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 - Pure **SteamCMD path** helpers (`steamcmd-path.ts`) — candidate paths, cached resolve, install script, verify-exit — extracted from `update-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
+- Pure **SteamCMD console** helpers (`steamcmd-console.ts`) — ring buffer, CR/LF split, prefix strip, progress log throttle — extracted from `update-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 
 ### Changed
 
