@@ -4,7 +4,7 @@ import { cp, copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "nod
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
-import { isSafeMapToken, isSafeWindowsFolderName } from "@shared/map-identity";
+import { isSafeMapToken } from "@shared/map-identity";
 import {
   backupFinishedAt,
   formatPlayerSessionNotes,
@@ -62,12 +62,24 @@ import {
   extractZip,
   isReadableZipArchive,
   isZipBackupPath,
-  kindFromSubdirName,
+  parseBackupManifest,
   readZipTextEntry,
   validatePortableZip,
   zipDirectory,
   zipHasBackupLayout,
 } from "./backup-archive";
+import {
+  buildImportedZipFileName,
+  diskImportNotes,
+  folderLooksLikeBackupArchive,
+  guessBackupTypeFromName,
+  portableImportNotes,
+  resolveExportZipDestination,
+  resolveImportEntryKind,
+  resolveImportedBackupId,
+  shouldSkipKindSubdirOnRootScan,
+  slugBackupFilePart,
+} from "./backup-portability";
 import {
   ensureParentDir,
   isBackupDestinationReachable,
@@ -172,10 +184,6 @@ interface BackupCriticalJob extends DurableCriticalJob {
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function slug(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
 /** Keep map tokens readable in filenames (`TheIsland_WP` → `TheIsland_WP`). */
@@ -874,7 +882,7 @@ export class BackupService extends EventEmitter {
     if (dest.length === 0) {
       throw new Error("Export destination is required");
     }
-    const destZip = isZipBackupPath(dest) ? dest : `${dest}.zip`;
+    const destZip = resolveExportZipDestination(dest);
     if (!existsSync(backup.path)) {
       throw new Error("Backup archive is missing on disk");
     }
@@ -928,7 +936,11 @@ export class BackupService extends EventEmitter {
     await mkdir(kindDir, { recursive: true });
 
     const stamp = formatBackupFileStamp();
-    const preferredName = `${slug(server.name)}-${kind}-imported-${stamp}.zip`;
+    const preferredName = buildImportedZipFileName({
+      serverName: server.name,
+      kind,
+      stamp,
+    });
     const destPath = this.allocateUniqueZipPath(kindDir, preferredName);
 
     try {
@@ -942,13 +954,13 @@ export class BackupService extends EventEmitter {
     try {
       const info = await stat(destPath);
       const manifestRaw = await readZipTextEntry(destPath, "manifest.json");
-      const parsed = this.parseManifest(manifestRaw);
+      const parsed = parseBackupManifest(manifestRaw);
       const createdAt = parsed?.createdAt ?? info.mtime.toISOString();
       const type = parsed?.type ?? "manual";
-      const id =
-        parsed?.id !== undefined && this.backups.getBackup(parsed.id) !== null
-          ? undefined
-          : parsed?.id;
+      const id = resolveImportedBackupId(
+        parsed?.id,
+        parsed?.id !== undefined && this.backups.getBackup(parsed.id) !== null,
+      );
       record = this.backups.insertCompletedBackup({
         id,
         serverId,
@@ -958,7 +970,7 @@ export class BackupService extends EventEmitter {
         sizeBytes: info.size,
         createdAt,
         completedAt: createdAt,
-        notes: parsed?.notes ?? `Imported portable archive: ${basename(sourceResolved)}`,
+        notes: parsed?.notes ?? portableImportNotes(basename(sourceResolved)),
         mapToken: parsed?.mapToken ?? null,
       });
     } catch (err) {
@@ -1432,14 +1444,14 @@ export class BackupService extends EventEmitter {
     const stamp = formatBackupFileStamp();
     const playerSlug =
       options?.playerKey !== undefined && options.playerKey.length > 0
-        ? `-${slug(options.playerKey).slice(0, 24)}`
+        ? `-${slugBackupFilePart(options.playerKey).slice(0, 24)}`
         : "";
     const mapSlug =
       kind === "world" && server.map.trim().length > 0
         ? `-${mapTokenFileSlug(server.map)}`
         : "";
     const preferredName =
-      `${slug(server.name)}-${kind}-${type}${mapSlug}${playerSlug}-${stamp}.zip`;
+      `${slugBackupFilePart(server.name)}-${kind}-${type}${mapSlug}${playerSlug}-${stamp}.zip`;
     await mkdir(kindDir, { recursive: true });
     const zipPath = this.allocateUniqueZipPath(kindDir, preferredName);
     const stagingDir = join(tmpdir(), `yark-backup-${randomUUID()}`);
@@ -1919,7 +1931,7 @@ export class BackupService extends EventEmitter {
     let manifestFolder: string | null = null;
     try {
       const manifestRaw = await readFile(join(backupPath, "manifest.json"), "utf8");
-      manifestFolder = this.parseManifest(manifestRaw)?.mapFolderName ?? null;
+      manifestFolder = parseBackupManifest(manifestRaw)?.mapFolderName ?? null;
     } catch {
       manifestFolder = null;
     }
@@ -3057,23 +3069,26 @@ export class BackupService extends EventEmitter {
       if (known.has(key)) continue;
 
       // Skip kind subdirs when scanning the root (handled separately).
-      if (entry.isDirectory() && defaultKind === null && kindFromSubdirName(entry.name) !== null) {
+      if (shouldSkipKindSubdirOnRootScan(entry.isDirectory(), defaultKind, entry.name)) {
         continue;
       }
 
       if (entry.isFile() && isZipBackupPath(entry.name)) {
-        const kind = defaultKind ?? this.guessKindFromName(entry.name) ?? "world";
+        const kind = resolveImportEntryKind(defaultKind, entry.name);
         const ok = await this.importZipArchive(serverId, full, kind, known);
         if (ok) imported += 1;
         continue;
       }
 
       if (entry.isDirectory()) {
-        const kind = defaultKind ?? this.guessKindFromName(entry.name) ?? "world";
-        const manifestPath = join(full, "manifest.json");
-        if (!existsSync(manifestPath) && !existsSync(join(full, "SavedArks"))
-          && !existsSync(join(full, "PlayerProfiles"))
-          && !existsSync(join(full, "ConfigWindowsServer"))) {
+        const kind = resolveImportEntryKind(defaultKind, entry.name);
+        const looksLikeArchive = folderLooksLikeBackupArchive({
+          hasManifest: existsSync(join(full, "manifest.json")),
+          hasSavedArks: existsSync(join(full, "SavedArks")),
+          hasPlayerProfiles: existsSync(join(full, "PlayerProfiles")),
+          hasConfigWindowsServer: existsSync(join(full, "ConfigWindowsServer")),
+        });
+        if (!looksLikeArchive) {
           continue;
         }
         const ok = await this.importFolderArchive(serverId, full, kind, known);
@@ -3082,14 +3097,6 @@ export class BackupService extends EventEmitter {
     }
 
     return imported;
-  }
-
-  private guessKindFromName(name: string): BackupKind | null {
-    const lower = name.toLowerCase();
-    if (lower.includes("-players-") || lower.includes("player_")) return "players";
-    if (lower.includes("-ini-") || lower.includes("ini_save")) return "ini";
-    if (lower.includes("-world-")) return "world";
-    return null;
   }
 
   private async importZipArchive(
@@ -3105,17 +3112,17 @@ export class BackupService extends EventEmitter {
         return false;
       }
       const manifestRaw = await readZipTextEntry(zipPath, "manifest.json");
-      const parsed = this.parseManifest(manifestRaw);
+      const parsed = parseBackupManifest(manifestRaw);
       const createdAt =
         parsed?.createdAt
         ?? info.mtime.toISOString();
-      const type = parsed?.type ?? this.guessTypeFromName(basename(zipPath));
-      const notes = parsed?.notes ?? `Imported from disk: ${basename(zipPath)}`;
+      const type = parsed?.type ?? guessBackupTypeFromName(basename(zipPath));
+      const notes = parsed?.notes ?? diskImportNotes(basename(zipPath));
       // Copies keep the original manifest id; mint a new one when that id is taken.
-      const id =
-        parsed?.id !== undefined && this.backups.getBackup(parsed.id) !== null
-          ? undefined
-          : parsed?.id;
+      const id = resolveImportedBackupId(
+        parsed?.id,
+        parsed?.id !== undefined && this.backups.getBackup(parsed.id) !== null,
+      );
       if (this.backups.getBackupByPath(serverId, zipPath) !== null) {
         known.add(resolve(zipPath).toLowerCase());
         return false;
@@ -3152,16 +3159,16 @@ export class BackupService extends EventEmitter {
       if (existsSync(manifestPath)) {
         manifestRaw = await readFile(manifestPath, "utf8");
       }
-      const parsed = this.parseManifest(manifestRaw);
+      const parsed = parseBackupManifest(manifestRaw);
       const createdAt = parsed?.createdAt ?? info.mtime.toISOString();
-      const type = parsed?.type ?? this.guessTypeFromName(basename(folderPath));
-      const notes = parsed?.notes ?? `Imported from disk: ${basename(folderPath)}`;
+      const type = parsed?.type ?? guessBackupTypeFromName(basename(folderPath));
+      const notes = parsed?.notes ?? diskImportNotes(basename(folderPath));
       const sizeBytes = await directorySize(folderPath);
       // Copies keep the original manifest id; mint a new one when that id is taken.
-      const id =
-        parsed?.id !== undefined && this.backups.getBackup(parsed.id) !== null
-          ? undefined
-          : parsed?.id;
+      const id = resolveImportedBackupId(
+        parsed?.id,
+        parsed?.id !== undefined && this.backups.getBackup(parsed.id) !== null,
+      );
       if (this.backups.getBackupByPath(serverId, folderPath) !== null) {
         known.add(resolve(folderPath).toLowerCase());
         return false;
@@ -3183,99 +3190,6 @@ export class BackupService extends EventEmitter {
     } catch {
       return false;
     }
-  }
-
-  private parseManifest(raw: string | null): {
-    id?: string;
-    type?: BackupType;
-    kind?: BackupKind;
-    createdAt?: string;
-    notes?: string;
-    mapToken?: string | null;
-    mapFolderName?: string | null;
-  } | null {
-    if (raw === null || raw.trim().length === 0) return null;
-    try {
-      const data = JSON.parse(raw) as {
-        server?: { map?: string };
-        backup?: {
-          id?: string;
-          type?: string;
-          kind?: string;
-          createdAt?: string;
-          notes?: string;
-          mapToken?: string;
-          mapFolderName?: string;
-        };
-      };
-      const backup = data.backup;
-      if (backup === undefined) return null;
-      const type = this.asBackupType(backup.type);
-      const kind = this.asBackupKind(backup.kind);
-      const mapTokenCandidate =
-        typeof backup.mapToken === "string" && backup.mapToken.trim().length > 0
-          ? backup.mapToken.trim()
-          : typeof data.server?.map === "string" && data.server.map.trim().length > 0
-            ? data.server.map.trim()
-            : null;
-      const mapTokenRaw =
-        mapTokenCandidate !== null && isSafeMapToken(mapTokenCandidate)
-          ? mapTokenCandidate
-          : null;
-      const mapFolderRaw =
-        typeof backup.mapFolderName === "string" ? backup.mapFolderName.trim() : "";
-      const mapFolderName =
-        mapFolderRaw.length > 0 && isSafeWindowsFolderName(mapFolderRaw)
-          ? mapFolderRaw
-          : null;
-      return {
-        id: typeof backup.id === "string" ? backup.id : undefined,
-        type,
-        kind,
-        createdAt: typeof backup.createdAt === "string" ? backup.createdAt : undefined,
-        notes: typeof backup.notes === "string" ? backup.notes : undefined,
-        mapToken: mapTokenRaw,
-        mapFolderName,
-      };
-    } catch {
-      return null;
-    }
-  }
-
-  private asBackupType(value: string | undefined): BackupType | undefined {
-    const allowed: BackupType[] = [
-      "manual",
-      "scheduled",
-      "pre_stop",
-      "pre_restart",
-      "pre_update",
-      "pre_restore",
-      "player_connect",
-      "player_disconnect",
-      "ini_save",
-    ];
-    if (value !== undefined && (allowed as string[]).includes(value)) {
-      return value as BackupType;
-    }
-    return undefined;
-  }
-
-  private asBackupKind(value: string | undefined): BackupKind | undefined {
-    if (value === "world" || value === "players" || value === "ini") return value;
-    return undefined;
-  }
-
-  private guessTypeFromName(name: string): BackupType {
-    const lower = name.toLowerCase();
-    if (lower.includes("player_disconnect")) return "player_disconnect";
-    if (lower.includes("player_connect")) return "player_connect";
-    if (lower.includes("ini_save")) return "ini_save";
-    if (lower.includes("scheduled")) return "scheduled";
-    if (lower.includes("pre_update")) return "pre_update";
-    if (lower.includes("pre_stop")) return "pre_stop";
-    if (lower.includes("pre_restart")) return "pre_restart";
-    if (lower.includes("pre_restore")) return "pre_restore";
-    return "manual";
   }
 
   private savedRootDir(server: ServerProfile): string {

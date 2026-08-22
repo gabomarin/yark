@@ -15,6 +15,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Pure **backup cleanup planner** module (`backup-cleanup-plan.ts`) extracted from `backup-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **Backup fleet health** helpers extracted to `backup-fleet.ts` (health badges, alerts, disk stats) with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 - Pure **backup restore** helpers (`backup-restore.ts`) extracted from `backup-service.ts` — map folder selection, file filters, players layout checks — with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
+- Pure **backup portability** helpers (`backup-portability.ts`) plus tolerant `parseBackupManifest` in `backup-archive.ts`, extracted from `backup-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 
 ### Changed
 

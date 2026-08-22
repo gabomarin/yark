@@ -31,6 +31,7 @@ Triggers are separated on purpose:
 | Cleanup planner | `src/backend/domains/backups/backup-cleanup-plan.ts` |
 | Fleet health helpers | `src/backend/domains/backups/backup-fleet.ts` |
 | Restore planning helpers | `src/backend/domains/backups/backup-restore.ts` |
+| Import/export naming helpers | `src/backend/domains/backups/backup-portability.ts` |
 | ZIP helpers | `src/backend/domains/backups/backup-archive.ts` |
 | Portable UI helpers | `src/renderer/src/features/backups/backupPortability.ts` |
 | Disk / volume helpers | `src/backend/domains/backups/backup-disk.ts` |
