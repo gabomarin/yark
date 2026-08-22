@@ -61,6 +61,12 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `backup-portability.ts` | Pure import/export naming + disk-import guess helpers (+ unit tests). `parseBackupManifest` lives in `backup-archive.ts`. Export/import orchestration still on `BackupService`. |
 | `backup-critical-jobs.ts` | Pure critical-job types, phase/status checks, context sanitize, merge, load disposition, retry plan (+ unit tests). Queue I/O and resume orchestration still on `BackupService`. |
 
+### Phase 3 progress
+
+| Module | Status |
+| --- | --- |
+| `update-critical-jobs.ts` | Pure update critical-job types, phase/status checks, context sanitize, merge, load omit/ambiguous, resume phase, reorder, cancel/pause eligibility (+ unit tests). Queue I/O and SteamCMD orchestration still on `UpdateService`. |
+
 
 ## Backend: `backup-service.ts`
 
@@ -91,7 +97,7 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 
 | Concern | Proposed module |
 | --- | --- |
-| Critical job queue + recovery | `update-critical-jobs.ts` |
+| Critical job queue + recovery | Queue I/O + SteamCMD still on service; pure phase/merge/reorder/cancel/pause helpers in `update-critical-jobs.ts` | later: `update-queue.ts` if needed |
 | SteamCMD install/path/console | `steamcmd-operator.ts` |
 | Per-server install/update/verify jobs | `update-server-jobs.ts` |
 | Queue processor + waiter coordination | `update-queue.ts` |
