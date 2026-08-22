@@ -2,7 +2,8 @@ import { createWriteStream } from "node:fs";
 import { mkdir, stat } from "node:fs/promises";
 import { basename, dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { pipeline } from "node:stream/promises";
-import type { BackupKind } from "@shared/types";
+import type { BackupKind, BackupType } from "@shared/types";
+import { isSafeMapToken, isSafeWindowsFolderName } from "@shared/map-identity";
 import yazl from "yazl";
 import yauzl from "yauzl";
 import {
@@ -456,4 +457,87 @@ export async function validatePortableZip(
       zipfile.readEntry();
     });
   });
+}
+
+/** Tolerant on-disk / ZIP manifest parse (returns null on empty or bad JSON). */
+export interface ParsedBackupManifest {
+  id?: string;
+  type?: BackupType;
+  kind?: BackupKind;
+  createdAt?: string;
+  notes?: string;
+  mapToken?: string | null;
+  mapFolderName?: string | null;
+}
+
+export function asBackupType(value: string | undefined): BackupType | undefined {
+  const allowed: BackupType[] = [
+    "manual",
+    "scheduled",
+    "pre_stop",
+    "pre_restart",
+    "pre_update",
+    "pre_restore",
+    "player_connect",
+    "player_disconnect",
+    "ini_save",
+  ];
+  if (value !== undefined && (allowed as string[]).includes(value)) {
+    return value as BackupType;
+  }
+  return undefined;
+}
+
+export function asBackupKind(value: string | undefined): BackupKind | undefined {
+  if (value === "world" || value === "players" || value === "ini") return value;
+  return undefined;
+}
+
+export function parseBackupManifest(raw: string | null): ParsedBackupManifest | null {
+  if (raw === null || raw.trim().length === 0) return null;
+  try {
+    const data = JSON.parse(raw) as {
+      server?: { map?: string };
+      backup?: {
+        id?: string;
+        type?: string;
+        kind?: string;
+        createdAt?: string;
+        notes?: string;
+        mapToken?: string;
+        mapFolderName?: string;
+      };
+    };
+    const backup = data.backup;
+    if (backup === undefined) return null;
+    const type = asBackupType(backup.type);
+    const kind = asBackupKind(backup.kind);
+    const mapTokenCandidate =
+      typeof backup.mapToken === "string" && backup.mapToken.trim().length > 0
+        ? backup.mapToken.trim()
+        : typeof data.server?.map === "string" && data.server.map.trim().length > 0
+          ? data.server.map.trim()
+          : null;
+    const mapTokenRaw =
+      mapTokenCandidate !== null && isSafeMapToken(mapTokenCandidate)
+        ? mapTokenCandidate
+        : null;
+    const mapFolderRaw =
+      typeof backup.mapFolderName === "string" ? backup.mapFolderName.trim() : "";
+    const mapFolderName =
+      mapFolderRaw.length > 0 && isSafeWindowsFolderName(mapFolderRaw)
+        ? mapFolderRaw
+        : null;
+    return {
+      id: typeof backup.id === "string" ? backup.id : undefined,
+      type,
+      kind,
+      createdAt: typeof backup.createdAt === "string" ? backup.createdAt : undefined,
+      notes: typeof backup.notes === "string" ? backup.notes : undefined,
+      mapToken: mapTokenRaw,
+      mapFolderName,
+    };
+  } catch {
+    return null;
+  }
 }

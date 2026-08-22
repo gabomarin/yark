@@ -58,6 +58,7 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `backup-cleanup-plan.ts` | Pure `planBackupCleanup` + `summarizeCleanupPlan` (+ unit tests) |
 | `backup-fleet.ts` | Fleet health row, alerts, disk usage aggregation, dismiss filter (+ unit tests) |
 | `backup-restore.ts` | Pure restore planning: folder name preference, map-token resolve, world file filter, players layout assert, restore-history ownership (+ unit tests). Apply/orchestration still on `BackupService`. |
+| `backup-portability.ts` | Pure import/export naming + disk-import guess helpers (+ unit tests). `parseBackupManifest` lives in `backup-archive.ts`. Export/import orchestration still on `BackupService`. |
 
 
 ## Backend: `backup-service.ts`
@@ -71,9 +72,9 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | Policy + fleet summary | CRUD policy, disk alerts, fleet health rows | `backup-fleet.ts` |
 | Cleanup preview/run | Retention rules, orphan import, delete marks | `backup-cleanup.ts` |
 | Restore + rollback | World/players/INI apply + critical-job resume still on service; pure planning helpers in `backup-restore.ts` | later: apply orchestration / `backup-critical-jobs.ts` |
-| Import/export portability | Operator zip export/import | `backup-portability.ts` (align with renderer `backupPortability.ts`) |
+| Import/export portability | Export/import apply still on service; pure naming/guess helpers in `backup-portability.ts`; manifest parse in `backup-archive.ts` | later: orchestration move if needed |
 | Critical jobs | Job registry, retry/dismiss/cancel | `backup-critical-jobs.ts` (shared pattern with updates) |
-| Zip pipeline / staging | Archive create, manifest, retention prune | extend `backup-archive.ts` |
+| Zip pipeline / staging | Archive create, **manifest parse**, retention prune | extend `backup-archive.ts` (manifest parse landed) |
 
 **Public surface to keep stable:** IPC handlers in main; exported `computeBackupServerHealth`, `CRITICAL_BACKUP_KINDS`, `BackupService` method signatures.
 
