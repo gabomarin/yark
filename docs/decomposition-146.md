@@ -57,7 +57,7 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `backup-policy-helpers.ts` | `ALL_BACKUP_KINDS`, `retainCountForKind`, `assertRetainCount` |
 | `backup-cleanup-plan.ts` | Pure `planBackupCleanup` + `summarizeCleanupPlan` (+ unit tests) |
 | `backup-fleet.ts` | Fleet health row, alerts, disk usage aggregation, dismiss filter (+ unit tests) |
-| `backup-restore.ts` | Pending |
+| `backup-restore.ts` | Pure restore planning: folder name preference, map-token resolve, world file filter, players layout assert, restore-history ownership (+ unit tests). Apply/orchestration still on `BackupService`. |
 
 
 ## Backend: `backup-service.ts`
@@ -70,7 +70,7 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | --- | --- | --- |
 | Policy + fleet summary | CRUD policy, disk alerts, fleet health rows | `backup-fleet.ts` |
 | Cleanup preview/run | Retention rules, orphan import, delete marks | `backup-cleanup.ts` |
-| Restore + rollback | World/players/INI restore, pre-restore safety zip | `backup-restore.ts` |
+| Restore + rollback | World/players/INI apply + critical-job resume still on service; pure planning helpers in `backup-restore.ts` | later: apply orchestration / `backup-critical-jobs.ts` |
 | Import/export portability | Operator zip export/import | `backup-portability.ts` (align with renderer `backupPortability.ts`) |
 | Critical jobs | Job registry, retry/dismiss/cancel | `backup-critical-jobs.ts` (shared pattern with updates) |
 | Zip pipeline / staging | Archive create, manifest, retention prune | extend `backup-archive.ts` |
