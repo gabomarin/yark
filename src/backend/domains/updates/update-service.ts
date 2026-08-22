@@ -49,6 +49,16 @@ import {
   type UpdateCriticalJob,
 } from "./update-critical-jobs";
 import {
+  STEAMCMD_MISSING_MESSAGE,
+  buildSteamCmdCandidatePaths,
+  buildSteamCmdInstallPowerShell,
+  isSteamCmdSearchIsolated,
+  isSteamCmdVerifyExitAcceptable,
+  normalizeSteamCmdExecutablePath,
+  resolveSteamCmdExecutableCached,
+  updateJobNeedsSteamCmdExecutable,
+} from "./steamcmd-path";
+import {
   buildSteamCmdAppUpdateArgs,
   STEAMCMD_ENGLISH_ARGS,
   steamCmdSpawnEnv,
@@ -87,8 +97,6 @@ import {
 
 const MAX_STEAMCMD_LINES = 500;
 const CRITICAL_JOBS_KEY = "criticalJobsQueue.v1";
-const STEAMCMD_MISSING_MESSAGE =
-  "SteamCMD is not installed on this PC. Open Settings and install SteamCMD, then try again.";
 const JOB_RETRY_DELAY_MS = 5000;
 /** UI push: frequent enough for live % without saturating Electron. */
 const PROGRESS_PUSH_MIN_MS = 100;
@@ -237,32 +245,8 @@ export class UpdateService extends EventEmitter {
     }
 
     await mkdir(this.steamcmdDir, { recursive: true });
-    const zipPath = join(this.steamcmdDir, "steamcmd.zip");
-    const extractDir = join(this.steamcmdDir, "_extract");
     const exePath = join(this.steamcmdDir, "steamcmd.exe");
-
-    const command = [
-      "$ErrorActionPreference='Stop'",
-      `$target='${this.steamcmdDir.replace(/'/g, "''")}'`,
-      `$zip='${zipPath.replace(/'/g, "''")}'`,
-      `$extract='${extractDir.replace(/'/g, "''")}'`,
-      "$url='https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip'",
-      "if (Test-Path -LiteralPath $extract) { Remove-Item -LiteralPath $extract -Recurse -Force }",
-      "if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip -Force }",
-      "Invoke-WebRequest -Uri $url -OutFile $zip",
-      "Expand-Archive -LiteralPath $zip -DestinationPath $extract -Force",
-      "$candidateExe = Join-Path $target 'steamcmd.exe'",
-      "if (Test-Path -LiteralPath $candidateExe) {",
-      "  $backupExe = Join-Path $target 'steamcmd.exe.bak'",
-      "  if (Test-Path -LiteralPath $backupExe) { Remove-Item -LiteralPath $backupExe -Force -ErrorAction SilentlyContinue }",
-      "  try { Rename-Item -LiteralPath $candidateExe -NewName 'steamcmd.exe.bak' -Force -ErrorAction Stop } catch {}",
-      "}",
-      "Copy-Item -Path (Join-Path $extract '*') -Destination $target -Recurse -Force",
-      "if (Test-Path -LiteralPath $extract) { Remove-Item -LiteralPath $extract -Recurse -Force }",
-      "if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip -Force }",
-      "$backupExe = Join-Path $target 'steamcmd.exe.bak'",
-      "if (Test-Path -LiteralPath $backupExe) { Remove-Item -LiteralPath $backupExe -Force -ErrorAction SilentlyContinue }",
-    ].join("; ");
+    const command = buildSteamCmdInstallPowerShell(this.steamcmdDir);
 
     await new Promise<void>((resolve, reject) => {
       const child = spawn(
@@ -629,10 +613,7 @@ export class UpdateService extends EventEmitter {
   }
 
   async setSteamCmdExecutablePath(exePath: string): Promise<string> {
-    const normalized = exePath.trim();
-    if (normalized.length === 0) {
-      throw new Error("SteamCMD path is empty");
-    }
+    const normalized = normalizeSteamCmdExecutablePath(exePath);
     if (!existsSync(normalized)) {
       throw new Error(`steamcmd.exe not found at: ${normalized}`);
     }
@@ -1395,7 +1376,7 @@ export class UpdateService extends EventEmitter {
         }
 
         if (
-          this.jobNeedsSteamCmdExecutable(job)
+          updateJobNeedsSteamCmdExecutable(job)
           && this.findSteamCmdExecutableCached() === null
         ) {
           const error = this.steamCmdMissingError();
@@ -1989,7 +1970,7 @@ export class UpdateService extends EventEmitter {
    * Status polls keep using the cached path (no disk I/O, #145).
    */
   private async ensureSteamCmdReadyForOperator(job?: CriticalJob): Promise<void> {
-    if (job !== undefined && !this.jobNeedsSteamCmdExecutable(job)) {
+    if (job !== undefined && !updateJobNeedsSteamCmdExecutable(job)) {
       return;
     }
     if (this.steamCmdConfirmedMissing) {
@@ -2005,86 +1986,46 @@ export class UpdateService extends EventEmitter {
     }
   }
 
-  /** True when this job still needs steamcmd.exe (not a post-SteamCMD recovery phase). */
-  private jobNeedsSteamCmdExecutable(job: CriticalJob): boolean {
-    if (job.phase === "files-applied" || job.phase === "restarting-server") {
-      return false;
-    }
-    if (job.phase.startsWith("rollback-") && job.phase !== "rollback-complete") {
-      return false;
-    }
-    return (
-      job.type === "install-files"
-      || job.type === "update"
-      || job.type === "verify-files"
-    );
-  }
-
   /**
    * Status/cache path for polls — memory + settings/env only.
    * Never probes disk (no `existsSync`) so UNC/AV stalls cannot block main (#145).
    */
   private findSteamCmdExecutableCached(): string | null {
-    if (this.steamCmdConfirmedMissing) {
-      return null;
-    }
-    if (
-      this.lastKnownSteamCmdPath != null
-      && this.lastKnownSteamCmdPath.trim().length > 0
-    ) {
-      return this.lastKnownSteamCmdPath;
-    }
     const configured = this.settings.get("steamcmdPath");
-    if (configured != null && configured.trim().length > 0) {
-      this.lastKnownSteamCmdPath = configured.trim();
-      return this.lastKnownSteamCmdPath;
-    }
-    const envPath = process.env["STEAMCMD_PATH"];
-    if (envPath != null && envPath.trim().length > 0) {
-      return envPath.trim();
-    }
-    return null;
-  }
-
-  private steamCmdCandidatePaths(): Array<string | null | undefined> {
-    const configured = this.settings.get("steamcmdPath");
-    const envPath = process.env["STEAMCMD_PATH"];
-    const isolated = this.steamCmdSearchIsIsolated();
-    const candidates: Array<string | null | undefined> = [
+    const resolved = resolveSteamCmdExecutableCached({
+      confirmedMissing: this.steamCmdConfirmedMissing,
+      lastKnownPath: this.lastKnownSteamCmdPath,
       configured,
-      envPath,
-      join(this.steamcmdDir, "steamcmd.exe"),
-    ];
-    if (isolated) {
-      return candidates;
+      envPath: process.env["STEAMCMD_PATH"],
+    });
+    if (
+      resolved !== null
+      && configured != null
+      && configured.trim() === resolved
+      && (
+        this.lastKnownSteamCmdPath == null
+        || this.lastKnownSteamCmdPath.trim().length === 0
+      )
+    ) {
+      this.lastKnownSteamCmdPath = resolved;
     }
-    const programFilesX86 = process.env["ProgramFiles(x86)"] ?? "C:\\Program Files (x86)";
-    const programFiles = process.env["ProgramFiles"] ?? "C:\\Program Files";
-    const localAppData = process.env["LOCALAPPDATA"];
-
-    return [
-      ...candidates,
-      "C:\\steamcmd\\steamcmd.exe",
-      "D:\\steamcmd\\steamcmd.exe",
-      join(programFilesX86, "SteamCMD", "steamcmd.exe"),
-      join(programFiles, "SteamCMD", "steamcmd.exe"),
-      join(programFilesX86, "Steam", "steamcmd.exe"),
-      localAppData !== undefined
-        ? join(localAppData, "Programs", "steamcmd", "steamcmd.exe")
-        : null,
-    ];
+    return resolved;
   }
 
-  /** E2E / visual launches must not pick up a host SteamCMD install. */
-  private steamCmdSearchIsIsolated(): boolean {
-    return (process.env["YARK_E2E_USER_DATA"] ?? "").trim().length > 0;
+  private steamCmdCandidatePaths(): string[] {
+    return buildSteamCmdCandidatePaths({
+      configured: this.settings.get("steamcmdPath"),
+      envPath: process.env["STEAMCMD_PATH"],
+      steamcmdDir: this.steamcmdDir,
+      isolated: isSteamCmdSearchIsolated(process.env["YARK_E2E_USER_DATA"]),
+      programFilesX86: process.env["ProgramFiles(x86)"],
+      programFiles: process.env["ProgramFiles"],
+      localAppData: process.env["LOCALAPPDATA"],
+    });
   }
 
   private async findSteamCmdExecutable(): Promise<string | null> {
     for (const candidate of this.steamCmdCandidatePaths()) {
-      if (candidate == null || candidate.trim().length === 0) {
-        continue;
-      }
       try {
         await access(candidate);
         this.lastKnownSteamCmdPath = candidate;
@@ -2094,7 +2035,7 @@ export class UpdateService extends EventEmitter {
       }
     }
 
-    if (this.steamCmdSearchIsIsolated()) {
+    if (isSteamCmdSearchIsolated(process.env["YARK_E2E_USER_DATA"])) {
       return null;
     }
 
@@ -2184,7 +2125,7 @@ export class UpdateService extends EventEmitter {
         }
         finished = true;
         clearTimeout(timer);
-        if ((code ?? 1) === 0 || sawOutput) {
+        if (isSteamCmdVerifyExitAcceptable(code, sawOutput)) {
           resolve();
           return;
         }

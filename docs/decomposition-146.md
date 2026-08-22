@@ -66,6 +66,7 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | Module | Status |
 | --- | --- |
 | `update-critical-jobs.ts` | Pure update critical-job types, phase/status checks, context sanitize, merge, load omit/ambiguous, resume phase, reorder, cancel/pause eligibility (+ unit tests). Queue I/O and SteamCMD orchestration still on `UpdateService`. |
+| `steamcmd-path.ts` | Pure SteamCMD path candidates, cached resolve, normalize, install PowerShell script, verify-exit decision, job-needs-exe (+ unit tests). Install/spawn/verify orchestration still on `UpdateService` (`steamcmd-operator` later). |
 
 
 ## Backend: `backup-service.ts`
@@ -98,7 +99,7 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | Concern | Proposed module |
 | --- | --- |
 | Critical job queue + recovery | Queue I/O + SteamCMD still on service; pure phase/merge/reorder/cancel/pause helpers in `update-critical-jobs.ts` | later: `update-queue.ts` if needed |
-| SteamCMD install/path/console | `steamcmd-operator.ts` |
+| SteamCMD install/path/console | Pure path helpers in `steamcmd-path.ts`; install/spawn/verify still on service | later: `steamcmd-operator.ts` / `steamcmd-console.ts` |
 | Per-server install/update/verify jobs | `update-server-jobs.ts` |
 | Queue processor + waiter coordination | `update-queue.ts` |
 | Disk progress monitor (orchestration) | keep thin wrapper; logic stays in `steamcmd-disk-progress.ts` |
