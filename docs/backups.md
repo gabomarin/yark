@@ -28,6 +28,9 @@ Triggers are separated on purpose:
 | Role | Path |
 | --- | --- |
 | Service | `src/backend/domains/backups/backup-service.ts` |
+| Cleanup planner | `src/backend/domains/backups/backup-cleanup-plan.ts` |
+| Fleet health helpers | `src/backend/domains/backups/backup-fleet.ts` |
+| Restore planning helpers | `src/backend/domains/backups/backup-restore.ts` |
 | ZIP helpers | `src/backend/domains/backups/backup-archive.ts` |
 | Portable UI helpers | `src/renderer/src/features/backups/backupPortability.ts` |
 | Disk / volume helpers | `src/backend/domains/backups/backup-disk.ts` |

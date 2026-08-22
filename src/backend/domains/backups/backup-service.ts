@@ -44,14 +44,19 @@ import { rconExec } from "../../infra/rcon/rcon-client";
 import {
   collectWorldBackupCandidates,
   copySavedArksFiles,
-  isAntiCorruptionWorldSaveName,
   isPrimaryWorldSaveName,
-  isWorldProfileOrTribeName,
   missingEssentialWorldRels,
   resolveWorldMapSaveDir,
   selectWorldBackupSourceFiles,
   worldMapDirNameCandidates,
 } from "./world-snapshot";
+import {
+  assertPlayersRestoreArchiveLayout,
+  isRestoreHistoryOwnedByJob as restoreHistoryOwnedByJob,
+  preferredWorldMapRestoreFolderName,
+  resolveWorldRestoreMapToken as resolveWorldRestoreMapTokenPlan,
+  shouldCopyWorldRestoreFile,
+} from "./backup-restore";
 import {
   backupKindSubdir,
   extractZip,
@@ -182,28 +187,6 @@ function mapTokenFileSlug(mapToken: string): string {
 
 function worldRetentionKey(backup: BackupRecord): string {
   return backup.mapToken?.trim().toLowerCase() || "__unscoped__";
-}
-
-/**
- * Folder name to create under SavedArks when the live map dir is missing
- * (wipe / first restore). Prefer profile override, then manifest folder, then
- * launch token — never invent a strip-`_WP` guess that would break official maps.
- */
-function preferredWorldMapRestoreFolderName(options: {
-  mapToken: string;
-  mapSaveFolder?: string | null;
-  mapFolderName?: string | null;
-}): string | null {
-  const token = options.mapToken.trim();
-  if (!isSafeMapToken(token)) return null;
-  const picks = [options.mapSaveFolder, options.mapFolderName, token];
-  for (const pick of picks) {
-    const name = pick?.trim() ?? "";
-    if (name.length === 0) continue;
-    if (!isSafeWindowsFolderName(name)) continue;
-    return name;
-  }
-  return null;
 }
 
 function isPlayerProfileFile(name: string): boolean {
@@ -1959,22 +1942,15 @@ export class BackupService extends EventEmitter {
     let copied = 0;
     for (const file of files) {
       const name = basename(file);
-      if (!restoreProfilesTribes && isWorldProfileOrTribeName(name)) {
+      if (
+        !shouldCopyWorldRestoreFile({
+          fileName: name,
+          mapToken,
+          restoreProfilesTribes,
+        })
+      ) {
         continue;
       }
-      // Always allow primary + anti-corruption; skip dated/transient if somehow present.
-      if (isWorldProfileOrTribeName(name) || isPrimaryWorldSaveName(name)
-        || isAntiCorruptionWorldSaveName(name, mapToken)
-        || name.toLowerCase().endsWith(".ark.bak")) {
-        const rel = relative(backupMapDir, file);
-        await copyFileTo(file, join(liveMapDir, rel));
-        copied += 1;
-        continue;
-      }
-      // Other companions already filtered by packaging; copy remaining non-noise.
-      const lower = name.toLowerCase();
-      if (lower.endsWith(".arkrbf") || lower.endsWith(".tmp")) continue;
-      if (lower.endsWith(".ark") && !isPrimaryWorldSaveName(name)) continue;
       const rel = relative(backupMapDir, file);
       await copyFileTo(file, join(liveMapDir, rel));
       copied += 1;
@@ -1990,54 +1966,43 @@ export class BackupService extends EventEmitter {
     backup: BackupRecord,
     server: ServerProfile,
   ): Promise<string> {
-    if (backup.mapToken !== null && isSafeMapToken(backup.mapToken)) {
-      return backup.mapToken.trim();
+    const serverMap = server.map.trim();
+    const serverMapPathExists =
+      isSafeMapToken(serverMap) && existsSync(join(backupSaved, serverMap));
+
+    let dirs: string[] = [];
+    const needsListing =
+      (backup.mapToken === null || !isSafeMapToken(backup.mapToken))
+      && !serverMapPathExists;
+    if (needsListing) {
+      let entries;
+      try {
+        entries = await readdir(backupSaved, { withFileTypes: true });
+      } catch {
+        throw new Error("World backup SavedArks folder is unreadable");
+      }
+      dirs = entries
+        .filter((entry) => isTraversableDirectoryDirent(entry))
+        .map((entry) => entry.name);
     }
-    if (isSafeMapToken(server.map) && existsSync(join(backupSaved, server.map.trim()))) {
-      return server.map.trim();
-    }
-    let entries;
-    try {
-      entries = await readdir(backupSaved, { withFileTypes: true });
-    } catch {
-      throw new Error("World backup SavedArks folder is unreadable");
-    }
-    const dirs = entries
-      .filter((entry) => isTraversableDirectoryDirent(entry))
-      .map((entry) => entry.name);
-    if (dirs.length === 1 && isSafeMapToken(dirs[0])) {
-      return dirs[0]!;
-    }
-    if (isSafeMapToken(server.map)) {
-      return server.map.trim();
-    }
-    throw new Error("World backup map token could not be resolved");
+
+    return resolveWorldRestoreMapTokenPlan({
+      backupMapToken: backup.mapToken,
+      serverMap: server.map,
+      serverMapPathExists,
+      backupSavedDirNames: dirs,
+    });
   }
 
   private async restorePlayers(server: ServerProfile, backupPath: string): Promise<void> {
     const profilesRoot = join(backupPath, "PlayerProfiles");
-    if (!existsSync(profilesRoot)) {
-      if (existsSync(join(backupPath, "SavedArks"))) {
-        throw new Error(
-          "This player archive uses a legacy nested layout and cannot be restored. Create a new join/leave player backup.",
-        );
-      }
-      throw new Error("Players backup has no profile data");
-    }
-
-    const files = await listFilesRecursive(profilesRoot);
-    if (files.length === 0) {
-      throw new Error("Players backup has no profile data");
-    }
-
-    for (const file of files) {
-      const rel = relative(profilesRoot, file);
-      if (dirname(rel) !== ".") {
-        throw new Error(
-          "This player archive nests profiles under a map folder (legacy layout) and cannot be restored. Create a new join/leave player backup.",
-        );
-      }
-    }
+    const hasPlayerProfilesRoot = existsSync(profilesRoot);
+    const files = hasPlayerProfilesRoot ? await listFilesRecursive(profilesRoot) : [];
+    assertPlayersRestoreArchiveLayout({
+      hasPlayerProfilesRoot,
+      hasSavedArksAtBackupRoot: existsSync(join(backupPath, "SavedArks")),
+      relativePathsUnderPlayerProfiles: files.map((file) => relative(profilesRoot, file)),
+    });
 
     const destDir = await this.resolveLivePlayerProfileDir(server);
     await prepareWritableDirUnderRoot(server.installDir, destDir, {
@@ -2731,10 +2696,7 @@ export class BackupService extends EventEmitter {
     backupId: string | null,
     history: NonNullable<ReturnType<BackupRepository["getRestoreHistory"]>>,
   ): boolean {
-    const marker = `[critical-job:${jobId}]`;
-    if (history.serverId !== serverId) return false;
-    if (backupId !== null && history.backupId !== backupId) return false;
-    return history.notes?.includes(marker) === true;
+    return restoreHistoryOwnedByJob(jobId, serverId, backupId, history);
   }
 
   private mergeBackupCriticalJobs(
