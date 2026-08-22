@@ -59,6 +59,7 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `backup-fleet.ts` | Fleet health row, alerts, disk usage aggregation, dismiss filter (+ unit tests) |
 | `backup-restore.ts` | Pure restore planning: folder name preference, map-token resolve, world file filter, players layout assert, restore-history ownership (+ unit tests). Apply/orchestration still on `BackupService`. |
 | `backup-portability.ts` | Pure import/export naming + disk-import guess helpers (+ unit tests). `parseBackupManifest` lives in `backup-archive.ts`. Export/import orchestration still on `BackupService`. |
+| `backup-critical-jobs.ts` | Pure critical-job types, phase/status checks, context sanitize, merge, load disposition, retry plan (+ unit tests). Queue I/O and resume orchestration still on `BackupService`. |
 
 
 ## Backend: `backup-service.ts`
@@ -73,7 +74,7 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | Cleanup preview/run | Retention rules, orphan import, delete marks | `backup-cleanup.ts` |
 | Restore + rollback | World/players/INI apply + critical-job resume still on service; pure planning helpers in `backup-restore.ts` | later: apply orchestration / `backup-critical-jobs.ts` |
 | Import/export portability | Export/import apply still on service; pure naming/guess helpers in `backup-portability.ts`; manifest parse in `backup-archive.ts` | later: orchestration move if needed |
-| Critical jobs | Job registry, retry/dismiss/cancel | `backup-critical-jobs.ts` (shared pattern with updates) |
+| Critical jobs | Queue I/O + resume still on service; pure phase/merge/retry/load helpers in `backup-critical-jobs.ts` | later: enqueue/processQueue move if needed |
 | Zip pipeline / staging | Archive create, **manifest parse**, retention prune | extend `backup-archive.ts` (manifest parse landed) |
 
 **Public surface to keep stable:** IPC handlers in main; exported `computeBackupServerHealth`, `CRITICAL_BACKUP_KINDS`, `BackupService` method signatures.

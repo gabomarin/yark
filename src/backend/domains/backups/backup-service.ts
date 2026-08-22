@@ -37,7 +37,6 @@ import {
   makeIdempotencyKey,
   migrateCriticalJob,
   toCriticalJobSummary,
-  type DurableCriticalJob,
 } from "../../orchestration/critical-job-recovery";
 import type { CriticalJobSummary } from "../../../shared/types";
 import { rconExec } from "../../infra/rcon/rcon-client";
@@ -57,6 +56,18 @@ import {
   resolveWorldRestoreMapToken as resolveWorldRestoreMapTokenPlan,
   shouldCopyWorldRestoreFile,
 } from "./backup-restore";
+import {
+  isBackupJobInterruptedAmbiguous,
+  isKnownBackupJobPhase,
+  isKnownBackupJobStatus,
+  mergeBackupCriticalJobs,
+  planBackupCriticalJobRetry,
+  restoreJobLoadDisposition,
+  sanitizeBackupJobContext,
+  shouldDropTerminalPreUpdateOnLoad,
+  type BackupCriticalJob,
+  type BackupCriticalJobType,
+} from "./backup-critical-jobs";
 import {
   backupKindSubdir,
   extractZip,
@@ -134,14 +145,6 @@ const RCON_HOST = "127.0.0.1";
 const BACKUP_CRITICAL_JOBS_KEY = "backupCriticalJobsQueue.v1";
 const BACKUP_JOB_RETRY_DELAY_MS = 5000;
 const INI_SAVE_BACKUP_DEBOUNCE_MS = 2_000;
-const KNOWN_BACKUP_JOB_STATUSES = new Set([
-  "pending",
-  "running",
-  "retrying",
-  "blocked",
-  "failed",
-  "cancelled",
-]);
 
 /** Scheduled cadence creates world saves only (not players / INI). */
 const SCHEDULED_BACKUP_KINDS: readonly BackupKind[] = ["world"];
@@ -164,22 +167,9 @@ const DEFAULT_DISK_ALERT_SETTINGS: BackupDiskAlertSettings = {
 /** Dismissed fleet alerts: alertId → fingerprint that was hidden. */
 const DISMISSED_FLEET_ALERTS_KEY = "backupFleetAlerts.dismissed.v1";
 
-type BackupCriticalJobType = "pre-update-backup" | "restore";
-
 interface BackupCriticalJobProgressHandlers {
   onKindProgress?: (kind: BackupKind, index: number, total: number) => void;
   onProgressMessage?: (message: string) => void;
-}
-
-interface BackupCriticalJob extends DurableCriticalJob {
-  type: BackupCriticalJobType;
-  backupId: string | null;
-  context: {
-    completedBackupIds?: string[];
-    nextKindIndex?: number;
-    restoreHistoryId?: number;
-    safeguardBackupIds?: string[];
-  };
 }
 
 function delay(ms: number): Promise<void> {
@@ -2350,36 +2340,37 @@ export class BackupService extends EventEmitter {
         }
         if (
           typeof job.status === "string"
-          && !KNOWN_BACKUP_JOB_STATUSES.has(job.status)
+          && !isKnownBackupJobStatus(job.status)
         ) {
           invalidEntryFound = true;
           continue;
         }
         if (
           typeof job.phase === "string"
-          && !this.isKnownBackupJobPhase(job.type, job.phase)
+          && !isKnownBackupJobPhase(job.type, job.phase)
         ) {
           invalidEntryFound = true;
           continue;
         }
         const backupId = typeof job.backupId === "string" ? job.backupId : null;
-        const context = this.sanitizeBackupJobContext(job.context);
+        const context = sanitizeBackupJobContext(job.context);
         if (job.type === "restore") {
           const historyId = context.restoreHistoryId;
           const history =
             typeof historyId === "number"
               ? this.backups.getRestoreHistory(historyId)
               : null;
-          if (
-            job.phase === "restore-complete"
-            || (
-              history?.status === "completed"
-              && this.isRestoreHistoryOwnedByJob(job.id, job.serverId, backupId, history)
-            )
-          ) {
+          const disposition = restoreJobLoadDisposition({
+            phase: job.phase,
+            jobId: job.id,
+            serverId: job.serverId,
+            backupId,
+            history,
+          });
+          if (disposition === "omit") {
             continue;
           }
-          if (history?.status === "completed") {
+          if (disposition === "invalid") {
             invalidEntryFound = true;
             continue;
           }
@@ -2388,9 +2379,10 @@ export class BackupService extends EventEmitter {
           type: job.type,
           serverId: job.serverId,
           defaultPhase: "queued",
-          interruptedIsAmbiguous:
-            (job.type === "restore" && job.phase === "applying-restore")
-            || (job.type === "pre-update-backup" && typeof job.phase !== "string"),
+          interruptedIsAmbiguous: isBackupJobInterruptedAmbiguous(
+            job.type,
+            job.phase,
+          ),
           idempotencyDiscriminator: backupId,
           serverExists: this.servers.get(job.serverId) !== null,
         });
@@ -2400,7 +2392,7 @@ export class BackupService extends EventEmitter {
           (candidate) => candidate.idempotencyKey === migrated.idempotencyKey,
         );
         if (duplicateIndex >= 0) {
-          const merged = this.mergeBackupCriticalJobs(
+          const merged = mergeBackupCriticalJobs(
             jobs[duplicateIndex]!,
             migrated,
           );
@@ -2416,9 +2408,7 @@ export class BackupService extends EventEmitter {
         }
         if (
           migrated.type === "pre-update-backup"
-          && (migrated.status === "cancelled"
-            || migrated.status === "failed"
-            || migrated.status === "blocked")
+          && shouldDropTerminalPreUpdateOnLoad(migrated.status)
         ) {
           invalidEntryFound = true;
           continue;
@@ -2452,25 +2442,25 @@ export class BackupService extends EventEmitter {
   }
 
   private prepareCriticalJobRetry(job: BackupCriticalJob, reason: string): void {
-    job.status = "pending";
-    job.phase = "queued";
-    if (job.type === "restore") {
-      const historyId = job.context.restoreHistoryId;
-      if (typeof historyId === "number") {
-        const history = this.backups.getRestoreHistory(historyId);
-        if (history?.status === "started") {
-          this.backups.completeRestoreHistory(
-            historyId,
-            "failed",
-            "Superseded by an explicit operator retry after interrupted restore.",
-          );
-        }
+    const plan = planBackupCriticalJobRetry(job, reason);
+    if (plan.restoreHistoryIdToSupersede !== null) {
+      const history = this.backups.getRestoreHistory(plan.restoreHistoryIdToSupersede);
+      if (history?.status === "started") {
+        this.backups.completeRestoreHistory(
+          plan.restoreHistoryIdToSupersede,
+          "failed",
+          "Superseded by an explicit operator retry after interrupted restore.",
+        );
       }
+    }
+    job.status = plan.status;
+    job.phase = plan.phase;
+    if (plan.clearContext) {
       job.context = {};
     }
-    job.maxAttempts = Math.max(job.maxAttempts, job.attempts + 3);
-    job.recoveryReason = reason;
-    job.updatedAt = new Date().toISOString();
+    job.maxAttempts = plan.maxAttempts;
+    job.recoveryReason = plan.recoveryReason;
+    job.updatedAt = plan.updatedAt;
     this.persistQueue();
   }
 
@@ -2582,7 +2572,7 @@ export class BackupService extends EventEmitter {
         ? this.backups.getRestoreHistory(restoreHistoryId)
         : null;
     if (existingHistory?.status === "completed") {
-      if (!this.isRestoreHistoryOwnedByJob(job.id, job.serverId, backup.id, existingHistory)) {
+      if (!restoreHistoryOwnedByJob(job.id, job.serverId, backup.id, existingHistory)) {
         throw new Error("Restore history evidence does not belong to this recovery job");
       }
       this.checkpointJob(job, "restore-complete");
@@ -2590,7 +2580,7 @@ export class BackupService extends EventEmitter {
     }
     if (
       existingHistory !== null
-      && !this.isRestoreHistoryOwnedByJob(job.id, job.serverId, backup.id, existingHistory)
+      && !restoreHistoryOwnedByJob(job.id, job.serverId, backup.id, existingHistory)
     ) {
       throw new Error("Restore history evidence does not belong to this recovery job");
     }
@@ -2654,129 +2644,6 @@ export class BackupService extends EventEmitter {
       `Restore applied on "${server.name}" from ${backup.kind} backup ${backup.id}`,
     );
     this.emitChanged(job.serverId);
-  }
-
-  private sanitizeBackupJobContext(raw: unknown): BackupCriticalJob["context"] {
-    if (typeof raw !== "object" || raw === null) {
-      return {};
-    }
-    const input = raw as Record<string, unknown>;
-    const context: BackupCriticalJob["context"] = {};
-    if (Array.isArray(input.completedBackupIds)) {
-      context.completedBackupIds = input.completedBackupIds
-        .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
-        .map((value) => value.trim());
-    }
-    if (typeof input.nextKindIndex === "number" && Number.isFinite(input.nextKindIndex)) {
-      context.nextKindIndex = Math.max(0, Math.floor(input.nextKindIndex));
-    }
-    if (typeof input.restoreHistoryId === "number" && Number.isFinite(input.restoreHistoryId)) {
-      context.restoreHistoryId = Math.max(1, Math.floor(input.restoreHistoryId));
-    }
-    if (Array.isArray(input.safeguardBackupIds)) {
-      context.safeguardBackupIds = input.safeguardBackupIds
-        .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
-        .map((value) => value.trim());
-    }
-    return context;
-  }
-
-  private isKnownBackupJobPhase(type: BackupCriticalJobType, phase: string): boolean {
-    const knownStatic = new Set([
-      "queued",
-      "failed",
-      "cancelled",
-      "reconciling-backups",
-      "restore-history-started",
-      "creating-restore-safeguard",
-      "restore-safeguard-complete",
-      "applying-restore",
-      "restore-complete",
-    ]);
-    if (knownStatic.has(phase)) return true;
-    if (type !== "pre-update-backup") return false;
-    if (!phase.startsWith("creating-backup:") && !phase.startsWith("backup-complete:")) {
-      return false;
-    }
-    const kind = phase.split(":", 2)[1];
-    return kind === "world" || kind === "players" || kind === "ini";
-  }
-
-  private isRestoreHistoryOwnedByJob(
-    jobId: string,
-    serverId: string,
-    backupId: string | null,
-    history: NonNullable<ReturnType<BackupRepository["getRestoreHistory"]>>,
-  ): boolean {
-    return restoreHistoryOwnedByJob(jobId, serverId, backupId, history);
-  }
-
-  private mergeBackupCriticalJobs(
-    existing: BackupCriticalJob,
-    incoming: BackupCriticalJob,
-  ): BackupCriticalJob {
-    const phaseOrder = [
-      "failed",
-      "cancelled",
-      "queued",
-      "reconciling-backups",
-      "restore-history-started",
-      "creating-restore-safeguard",
-      "restore-safeguard-complete",
-      "creating-backup:world",
-      "backup-complete:world",
-      "creating-backup:players",
-      "backup-complete:players",
-      "creating-backup:ini",
-      "backup-complete:ini",
-      "restore-complete",
-      "applying-restore",
-    ];
-    const phaseRank = (phase: string): number => {
-      const index = phaseOrder.indexOf(phase);
-      return index >= 0 ? index : -1;
-    };
-    const incomingPhaseRank = phaseRank(incoming.phase);
-    const existingPhaseRank = phaseRank(existing.phase);
-    const preferIncoming =
-      incomingPhaseRank > existingPhaseRank
-      || (
-        incomingPhaseRank === existingPhaseRank
-        && (
-          incoming.attempts > existing.attempts
-          || (
-            incoming.attempts === existing.attempts
-            && incoming.updatedAt > existing.updatedAt
-          )
-        )
-      );
-    const preferred = preferIncoming ? incoming : existing;
-    const secondary = preferIncoming ? existing : incoming;
-    const mergedCompleted = [
-      ...(preferred.context.completedBackupIds ?? []),
-      ...(secondary.context.completedBackupIds ?? []),
-    ];
-    const mergedSafeguards = [
-      ...(preferred.context.safeguardBackupIds ?? []),
-      ...(secondary.context.safeguardBackupIds ?? []),
-    ];
-    return {
-      ...preferred,
-      attempts: Math.max(existing.attempts, incoming.attempts),
-      maxAttempts: Math.max(existing.maxAttempts, incoming.maxAttempts),
-      operatorRetryAllowed: existing.operatorRetryAllowed || incoming.operatorRetryAllowed,
-      context: {
-        completedBackupIds: [...new Set(mergedCompleted)],
-        nextKindIndex: Math.max(
-          preferred.context.nextKindIndex ?? 0,
-          secondary.context.nextKindIndex ?? 0,
-        ),
-        restoreHistoryId:
-          preferred.context.restoreHistoryId
-          ?? secondary.context.restoreHistoryId,
-        safeguardBackupIds: [...new Set(mergedSafeguards)],
-      },
-    };
   }
 
   private resolveJob(jobId: string, value: unknown): void {
