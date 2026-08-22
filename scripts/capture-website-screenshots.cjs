@@ -633,7 +633,18 @@ async function run() {
         state: "visible",
         timeout: 10000,
       });
-      await settle(page, 1000);
+      await settle(page, 600);
+      // Prefer Discover browse for the marketing shot when the proxy is reachable.
+      // SegmentedControl radios are visually hidden — click the label text.
+      const discoverLabel = page.getByText("Discover mods", { exact: true });
+      if ((await discoverLabel.count()) > 0) {
+        try {
+          await discoverLabel.first().click({ timeout: 5_000 });
+          await settle(page, 1500);
+        } catch {
+          // Keep Server mods view if Discover chrome is not interactive.
+        }
+      }
       await shot(page, path.join(outDir, "workspace-mods.png"));
 
       await page.getByRole("tab", { name: "Backups" }).click();

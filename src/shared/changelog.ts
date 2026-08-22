@@ -24,6 +24,34 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.15.0",
+    date: "2026-08-22",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Desktop alerts: optional Windows toasts for server crashes, SteamCMD install/update/verify results, and YARK updates (even from the tray).",
+          "Discover mods browses CurseForge with category filter, pagination, and table-column catalog sort.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Content panels use a flat AppSurfaceCard shell; dense icon-only actions stay quiet subtle while labeled destructive buttons stay filled.",
+          "Disabled mods rows are dimmed; Stop and other labeled destructive actions use filled red, Restart uses fossil amber.",
+          "Operator copy prefers en dashes and …, with clearer Close/Finish labels instead of vague Done.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "ScrollArea and Select dropdowns no longer show a double scrollbar.",
+          "Start and Restart show immediate Starting… / Restarting… feedback while pre-spawn work runs.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.14.1",
     date: "2026-08-19",
     sections: [

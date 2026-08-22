@@ -45,9 +45,9 @@ export const screenshots: Screenshot[] = [
   },
   {
     src: withBase("/screenshots/workspace-mods.png"),
-    alt: "YARK Mods tab listing CurseForge Project IDs for an ASA dedicated server with enable toggles and metadata",
+    alt: "YARK Mods tab with Discover CurseForge browse, load-order table, enable toggles, and metadata",
     caption:
-      "Mods — flat panel with a dense load-order table, enable toggles, Project IDs, and Worker-backed metadata.",
+      "Mods — Discover browse with categories and pagination, plus a dense load-order table with enable toggles.",
   },
   {
     src: withBase("/screenshots/workspace-ini.png"),
@@ -89,6 +89,6 @@ export const screenshots: Screenshot[] = [
     src: withBase("/screenshots/settings.png"),
     alt: "YARK Settings on Windows with category navigation and the setup assistant entry point",
     caption:
-      "Settings — app-wide preferences grouped by category, with the setup assistant available anytime.",
+      "Settings — app-wide preferences by category, including Desktop alerts and the setup assistant.",
   },
 ];

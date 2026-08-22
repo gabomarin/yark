@@ -10,6 +10,10 @@ export type RoadmapItem = {
  * Prefer operator-visible product work from open issues (not CI/packaging hygiene).
  * Not a ship promise — keep wording directional. Milestones on GitHub stay authoritative.
  *
+ * Shipped in v0.15.0 (not previously listed here): Discover mods browse (#297),
+ * desktop alerts / Windows toasts (#331), flat content panels (#346), quiet icon
+ * actions (#397), destructive/filled lifecycle buttons (#344), Start/Restart
+ * immediate feedback (#390), ScrollArea dual-scrollbar fix (#395).
  * Shipped in v0.14.0 (not previously listed here): Downloads queue page (#201),
  * Overview Update All (#378), server list sort/view (#351), Launch tab search (#352),
  * quieter operator chrome, packaged DevTools hardening.
