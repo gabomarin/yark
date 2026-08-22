@@ -11,7 +11,7 @@ import type {
 import { readVolumeSpace, volumeRootForPath } from "./backup-disk";
 
 /** World backup is stale when older than interval × this factor. */
-export const BACKUP_STALE_INTERVAL_FACTOR = 1.5;
+const BACKUP_STALE_INTERVAL_FACTOR = 1.5;
 
 /** Consecutive scheduled world failures before session pause (alert copy). */
 export const SCHEDULED_WORLD_FAIL_LIMIT = 3;
@@ -43,7 +43,7 @@ export function computeBackupServerHealth(
 }
 
 /** Newest finished (completed/failed) backup by finish time. */
-export function pickLatestFinishedBackup(
+function pickLatestFinishedBackup(
   records: BackupRecord[],
 ): BackupRecord | null {
   let latest: BackupRecord | null = null;
@@ -77,7 +77,7 @@ export function normalizeDiskAlertSettings(
   return { warnUsedPercent, criticalUsedPercent, warnFreeBytes };
 }
 
-export function formatBackupByteSize(bytes: number): string {
+function formatBackupByteSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -200,7 +200,7 @@ export function buildFleetAlertsForServer(
   return alerts;
 }
 /** Alerts that depend on server running state (never_backed_up). */
-export function buildFleetRunningAlerts(
+function buildFleetRunningAlerts(
   row: BackupServerHealth,
   serverRunning: boolean,
 ): BackupFleetAlert[] {
@@ -230,7 +230,7 @@ export function buildFleetRunningAlerts(
   return alerts;
 }
 
-export function buildFleetFailureAlerts(
+function buildFleetFailureAlerts(
   row: BackupServerHealth,
   failed24h: BackupRecord[],
   failedWorld24h: BackupRecord[],

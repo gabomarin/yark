@@ -14,7 +14,7 @@ export interface BackupCleanupPlanItem {
   reason: string;
 }
 
-export interface BackupCleanupPlannerServer {
+interface BackupCleanupPlannerServer {
   id: string;
   name: string;
 }
