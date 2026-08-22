@@ -59,6 +59,19 @@ import {
   updateJobNeedsSteamCmdExecutable,
 } from "./steamcmd-path";
 import {
+  STEAMCMD_CONSOLE_MAX_LINES,
+  STEAMCMD_PROGRESS_CONSOLE_LOG_MIN_DELTA,
+  STEAMCMD_PROGRESS_CONSOLE_LOG_MIN_MS,
+  appendSteamCmdConsoleRing,
+  clampSteamCmdConsoleLimit,
+  formatTimestampedSteamCmdLine,
+  shouldLogProgressTickToConsole,
+  splitSteamCmdOutputChunk,
+  steamCmdProgressPercentChanged,
+  stripSteamCmdBareLine,
+  stripSteamCmdProgressIngestPrefix,
+} from "./steamcmd-console";
+import {
   buildSteamCmdAppUpdateArgs,
   STEAMCMD_ENGLISH_ARGS,
   steamCmdSpawnEnv,
@@ -95,14 +108,10 @@ import {
   occupyingFilesJobForServer,
 } from "../../../shared/files-job-priority";
 
-const MAX_STEAMCMD_LINES = 500;
 const CRITICAL_JOBS_KEY = "criticalJobsQueue.v1";
 const JOB_RETRY_DELAY_MS = 5000;
 /** UI push: frequent enough for live % without saturating Electron. */
 const PROGRESS_PUSH_MIN_MS = 100;
-/** Do not spam the console on every SteamCMD \r tick; do update the bar. */
-const PROGRESS_CONSOLE_LOG_MIN_MS = 1500;
-const PROGRESS_CONSOLE_LOG_MIN_DELTA = 2;
 
 interface CommandResult {
   code: number;
@@ -136,7 +145,7 @@ function delay(ms: number): Promise<void> {
  * start+health iff wasRunning -> rollback on failure.
  */
 export class UpdateService extends EventEmitter {
-  private readonly steamCmdConsoleLines: string[] = [];
+  private steamCmdConsoleLines: string[] = [];
   private steamCmdConsoleUpdatedAt = new Date(0).toISOString();
   private activeSteamCmd: ActiveSteamCmdOperation | null = null;
   private queue: CriticalJob[] = [];
@@ -625,7 +634,7 @@ export class UpdateService extends EventEmitter {
   }
 
   getSteamCmdConsole(limit = 200): SteamCmdConsoleSnapshot {
-    const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.floor(limit)) : 200;
+    const safeLimit = clampSteamCmdConsoleLimit(limit);
     return {
       lines: this.steamCmdConsoleLines.slice(-safeLimit),
       updatedAt: this.steamCmdConsoleUpdatedAt,
@@ -1924,15 +1933,14 @@ export class UpdateService extends EventEmitter {
       const now = Date.now();
       if (now - this.lastDiskEstimateConsoleAtMs >= 5000) {
         this.lastDiskEstimateConsoleAtMs = now;
-        this.steamCmdConsoleLines.push(
-          `[${new Date().toISOString()}] [estimated/downloading] ${estimate.percent.toFixed(1)}% — ${formatSteamCmdByteProgress(estimate.downloaded, estimate.total)}`,
+        this.steamCmdConsoleLines = appendSteamCmdConsoleRing(
+          this.steamCmdConsoleLines,
+          formatTimestampedSteamCmdLine(
+            new Date().toISOString(),
+            `[estimated/downloading] ${estimate.percent.toFixed(1)}% — ${formatSteamCmdByteProgress(estimate.downloaded, estimate.total)}`,
+          ),
+          STEAMCMD_CONSOLE_MAX_LINES,
         );
-        if (this.steamCmdConsoleLines.length > MAX_STEAMCMD_LINES) {
-          this.steamCmdConsoleLines.splice(
-            0,
-            this.steamCmdConsoleLines.length - MAX_STEAMCMD_LINES,
-          );
-        }
         this.steamCmdConsoleUpdatedAt = new Date().toISOString();
         this.emitProgress(true);
       }
@@ -2168,10 +2176,11 @@ export class UpdateService extends EventEmitter {
     if (trimmed.length === 0) {
       return;
     }
-    this.steamCmdConsoleLines.push(`[${new Date().toISOString()}] ${trimmed}`);
-    if (this.steamCmdConsoleLines.length > MAX_STEAMCMD_LINES) {
-      this.steamCmdConsoleLines.splice(0, this.steamCmdConsoleLines.length - MAX_STEAMCMD_LINES);
-    }
+    this.steamCmdConsoleLines = appendSteamCmdConsoleRing(
+      this.steamCmdConsoleLines,
+      formatTimestampedSteamCmdLine(new Date().toISOString(), trimmed),
+      STEAMCMD_CONSOLE_MAX_LINES,
+    );
     this.steamCmdConsoleUpdatedAt = new Date().toISOString();
     this.lastProgressLine = trimmed;
     const percentChanged = this.ingestProgressFromLine(trimmed);
@@ -2184,26 +2193,16 @@ export class UpdateService extends EventEmitter {
    */
   private captureSteamCmdOutput(chunk: string, source: string): void {
     const previous = this.steamCmdOutputBuffers.get(source) ?? "";
-    const combined = previous + String(chunk);
-    const parts = combined.split(/\r\n|\n|\r/);
-    const remainder = parts.pop() ?? "";
+    const { completeLines, remainder } = splitSteamCmdOutputChunk(previous, chunk);
     this.steamCmdOutputBuffers.set(source, remainder);
 
-    for (const part of parts) {
-      const trimmed = part.trim();
-      if (trimmed.length === 0) {
-        continue;
-      }
-      this.handleSteamCmdOutputLine(trimmed, source);
+    for (const line of completeLines) {
+      this.handleSteamCmdOutputLine(line, source);
     }
   }
 
   private handleSteamCmdOutputLine(line: string, source: string): void {
-    // Strip source prefixes and console_log.txt timestamps
-    const bare = line
-      .replace(/^\[(?:(?:update|verify)\/(?:stdout|stderr)|console_log)\]\s*/i, "")
-      .replace(/^\[\d{4}-\d{2}-\d{2}[^\]]*\]\s*/, "")
-      .trim();
+    const bare = stripSteamCmdBareLine(line);
     const parsed = parseSteamCmdProgressLine(bare);
     const isProgressTick = parsed.percent !== null;
 
@@ -2225,25 +2224,26 @@ export class UpdateService extends EventEmitter {
       this.lastProgressLine = bare;
       this.lastOfficialProgressAtMs = Date.now();
 
-      const percentChanged =
-        previousPercent === null
-        || parsed.percent === null
-        || Math.abs(parsed.percent - previousPercent) >= 0.05;
+      const percentChanged = steamCmdProgressPercentChanged(previousPercent, parsed.percent);
       this.emitProgress(percentChanged);
 
-      const shouldLogToConsole =
-        this.lastProgressConsoleLoggedPercent === null
-        || parsed.percent === null
-        || Math.abs(parsed.percent - this.lastProgressConsoleLoggedPercent) >= PROGRESS_CONSOLE_LOG_MIN_DELTA
-        || now - this.lastProgressConsoleLogAtMs >= PROGRESS_CONSOLE_LOG_MIN_MS;
-
-      if (shouldLogToConsole) {
+      if (
+        shouldLogProgressTickToConsole({
+          nowMs: now,
+          lastLogAtMs: this.lastProgressConsoleLogAtMs,
+          minLogIntervalMs: STEAMCMD_PROGRESS_CONSOLE_LOG_MIN_MS,
+          parsedPercent: parsed.percent,
+          lastLoggedPercent: this.lastProgressConsoleLoggedPercent,
+          minPercentDelta: STEAMCMD_PROGRESS_CONSOLE_LOG_MIN_DELTA,
+        })
+      ) {
         this.lastProgressConsoleLogAtMs = now;
         this.lastProgressConsoleLoggedPercent = parsed.percent;
-        this.steamCmdConsoleLines.push(`[${new Date().toISOString()}] [${source}] ${bare}`);
-        if (this.steamCmdConsoleLines.length > MAX_STEAMCMD_LINES) {
-          this.steamCmdConsoleLines.splice(0, this.steamCmdConsoleLines.length - MAX_STEAMCMD_LINES);
-        }
+        this.steamCmdConsoleLines = appendSteamCmdConsoleRing(
+          this.steamCmdConsoleLines,
+          formatTimestampedSteamCmdLine(new Date().toISOString(), `[${source}] ${bare}`),
+          STEAMCMD_CONSOLE_MAX_LINES,
+        );
         this.steamCmdConsoleUpdatedAt = new Date().toISOString();
         this.emitProgress(true);
       }
@@ -2254,13 +2254,11 @@ export class UpdateService extends EventEmitter {
   }
 
   private ingestProgressFromLine(line: string): boolean {
-    const bare = line.replace(/^\[(?:update|verify)\/(?:stdout|stderr)\]\s*/i, "");
+    const bare = stripSteamCmdProgressIngestPrefix(line);
     const parsed = parseSteamCmdProgressLine(bare);
     let percentChanged = false;
     if (parsed.percent !== null) {
-      percentChanged =
-        this.progressPercent === null
-        || Math.abs(parsed.percent - this.progressPercent) >= 0.05;
+      percentChanged = steamCmdProgressPercentChanged(this.progressPercent, parsed.percent);
       this.progressPercent = parsed.percent;
     }
     if (parsed.label !== null) {
