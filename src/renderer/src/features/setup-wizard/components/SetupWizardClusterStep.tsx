@@ -37,7 +37,7 @@ export function SetupWizardClusterStep(props: Props): ReactElement {
       >
         <Group mt="xs">
           <Radio value="no" label="Not now" />
-          <Radio value="yes" label="Yes — set ID and folder" />
+          <Radio value="yes" label="Yes – set ID and folder" />
         </Group>
       </Radio.Group>
       {props.shareCluster && (

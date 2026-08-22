@@ -159,7 +159,7 @@ export function SetupWizard(props: Props): ReactElement {
       title={
         props.mode === "first-run"
           ? "Set up YARK"
-          : "Setup assistant — paths and Windows"
+          : "Setup assistant – paths and Windows"
       }
       size="lg"
       centered
@@ -280,7 +280,7 @@ export function SetupWizard(props: Props): ReactElement {
           </Button>
           {current !== "action" && (
             <Button disabled={props.busy || !canContinue} onClick={goNext}>
-              {isLast && props.mode === "paths-shell" ? "Done" : "Continue"}
+              {isLast && props.mode === "paths-shell" ? "Finish" : "Continue"}
             </Button>
           )}
         </Group>

@@ -44,7 +44,7 @@ export function ClusterEmptyState(props: Props): ReactElement {
           <Stack gap="sm" className={classes.incompleteBlock}>
             <Text c="dimmed" size="sm" ta="center" maw={480}>
               {props.dirWithoutIdServers.length === 1
-                ? "One server has a shared cluster directory but no Cluster ID. Open it and set a Cluster ID — use the same ID on every map that should transfer together."
+                ? "One server has a shared cluster directory but no Cluster ID. Open it and set a Cluster ID. Use the same ID on every map that should transfer together."
                 : `${props.dirWithoutIdServers.length} servers have a shared cluster directory but no Cluster ID. Open each and set the same Cluster ID on every map that should transfer together.`}
             </Text>
             <div className={classes.incompleteList} data-incomplete-clusters>

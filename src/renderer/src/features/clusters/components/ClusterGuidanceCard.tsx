@@ -22,7 +22,7 @@ export function ClusterGuidanceCard({ defaultOpen = false }: Props): ReactElemen
           <Text size="sm" c="dimmed">
             Servers with the same <Text span fw={600}>Cluster ID</Text> must share one{" "}
             <Text span fw={600}>cluster directory</Text> so ARK can move creatures and items
-            between maps. Set both on each server (form or workspace checklist) — a directory
+            between maps. Set both on each server (form or workspace checklist). A directory
             alone is not enough. This page checks that Cluster ID and shared folder match. It
             does not watch live transfers in-game yet.
           </Text>

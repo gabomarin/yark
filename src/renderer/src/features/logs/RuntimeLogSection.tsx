@@ -52,7 +52,7 @@ export function RuntimeLogSection(props: Props): ReactElement {
           {props.clearAction}
         </Group>
         {props.loading ? (
-          <Text c="dimmed">Loading runtime log...</Text>
+          <Text c="dimmed">Loading runtime log…</Text>
         ) : props.runtimeLogLines === null || lines.length === 0 ? (
           <EmptyState
             layout="stacked"

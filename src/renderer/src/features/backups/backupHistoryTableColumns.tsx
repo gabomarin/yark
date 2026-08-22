@@ -53,7 +53,7 @@ export function buildBackupHistoryTableColumns(
               </Badge>
             ) : (
               <Text size="xs" c="dimmed">
-                —
+                –
               </Text>
             ),
         },
@@ -91,7 +91,7 @@ export function buildBackupHistoryTableColumns(
                 data-backup-player-id
                 title={playerId ?? undefined}
               >
-                {playerId ?? "—"}
+                {playerId ?? "–"}
               </Text>
             </Stack>
           );

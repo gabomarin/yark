@@ -38,7 +38,7 @@ export function ServerModsDiscoverToolbar(props: Props): ReactElement {
       {/*
         Category Select lists classes and leaf categories (`class:` / `category:`).
         ModSearchOptions.classId is forwarded for IPC/Worker parity; #297 does not
-        add a separate class-only picker — class rows use the same Select.
+        add a separate class-only picker – class rows use the same Select.
       */}
       <Select
         label="Category"

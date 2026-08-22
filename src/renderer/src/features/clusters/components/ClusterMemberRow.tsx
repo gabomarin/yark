@@ -96,7 +96,7 @@ export function ClusterMemberRow(props: Props): ReactElement {
             withArrow
             label={
               canApply
-                ? "Promote to template — copy this member’s INI into the cluster template"
+                ? "Promote to template: copy this member’s INI into the cluster template"
                 : applyReason
             }
           >
@@ -120,7 +120,7 @@ export function ClusterMemberRow(props: Props): ReactElement {
             label={
               restoreDisabled
                 ? restoreReason
-                : "Restore from template — overwrite this member’s INI from the cluster template (with backup)"
+                : "Restore from template: overwrite this member’s INI from the cluster template (with backup)"
             }
           >
             <span>

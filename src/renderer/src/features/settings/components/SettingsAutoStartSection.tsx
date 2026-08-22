@@ -31,7 +31,7 @@ function buildAutoStartSummaryRows(
         return {
           server,
           state: "ignored" as const,
-          detail: "Inactive — preference kept",
+          detail: "Inactive – preference kept",
         };
       }
       const installation = installationInfo.get(server.id) ?? null;

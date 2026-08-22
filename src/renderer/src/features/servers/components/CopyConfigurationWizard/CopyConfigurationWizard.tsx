@@ -252,7 +252,7 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
           <CopyConfigSourceTargetStep
             sourceName={source?.name ?? "…"}
             sourceStatus={sourceStatus}
-            sourceMap={source?.map ?? "—"}
+            sourceMap={source?.map ?? "–"}
             sourceClusterId={source?.clusterId ?? null}
             targetIds={targetIds}
             targetOptions={targetOptions}

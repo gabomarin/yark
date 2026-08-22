@@ -58,19 +58,19 @@ const ACTIVE_SERVER_STATUSES = new Set<ServerStatus>([
 function skipCopy(reason: UpdateAllOutdatedSkipReason): string {
   switch (reason) {
     case "disabled":
-      return "Profile disabled — enable it before updating.";
+      return "Profile disabled – enable it before updating.";
     case "install-not-ready":
-      return "Install files are not ready — run Install or Verify first.";
+      return "Install files are not ready – run Install or Verify first.";
     case "update-unknown":
-      return "Could not compare Steam builds — run Check server updates or Verify.";
+      return "Could not compare Steam builds – run Check server updates or Verify.";
     case "server-running":
-      return "Server is running — stop it before a safe update.";
+      return "Server is running – stop it before a safe update.";
     case "files-job-active":
-      return "A files job is already running — wait or cancel it in Downloads.";
+      return "A files job is already running – wait or cancel it in Downloads.";
     case "files-job-duplicate":
       return "Update is already in Downloads for this server.";
     case "files-job-paused":
-      return "Update is paused in Downloads — resume it there.";
+      return "Update is paused in Downloads – resume it there.";
     case "files-job-occupied":
       return "Another files job is already queued in Downloads.";
   }

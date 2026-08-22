@@ -26,7 +26,7 @@ const plan: UpdateAllOutdatedPlan = {
       status: "running",
       eligible: false,
       skipReason: "server-running",
-      skipLabel: "Server is running — stop it before a safe update.",
+      skipLabel: "Server is running – stop it before a safe update.",
     },
   ],
   eligible: [
@@ -50,7 +50,7 @@ const plan: UpdateAllOutdatedPlan = {
       status: "running",
       eligible: false,
       skipReason: "server-running",
-      skipLabel: "Server is running — stop it before a safe update.",
+      skipLabel: "Server is running – stop it before a safe update.",
     },
   ],
 };
@@ -75,7 +75,7 @@ describe("UpdateAllOutdatedModal", () => {
     expect(screen.getByLabelText("Alpha build row")).toBeInTheDocument();
     expect(screen.getByLabelText("Beta build row")).toBeInTheDocument();
     expect(
-      screen.getByText(/Server is running — stop it before a safe update/i),
+      screen.getByText(/Server is running – stop it before a safe update/i),
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /^accept$/i }));

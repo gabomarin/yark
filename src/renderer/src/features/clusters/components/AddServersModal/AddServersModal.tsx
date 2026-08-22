@@ -293,7 +293,7 @@ export function AddServersModal(props: Props): ReactElement {
             )}
             {hasTemplate && !seedFromTemplate && (
               <Alert color="blue" variant="light">
-                Membership only — existing INI files stay unchanged.
+                Membership only: existing INI files stay unchanged.
               </Alert>
             )}
           </Stack>

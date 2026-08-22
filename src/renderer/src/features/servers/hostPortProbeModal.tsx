@@ -21,8 +21,8 @@ export function openHostPortProbeModal(args: {
 
   modals.openConfirmModal({
     title: busy
-      ? `Ports in use — ${args.serverName}`
-      : `Could not verify ports — ${args.serverName}`,
+      ? `Ports in use – ${args.serverName}`
+      : `Could not verify ports – ${args.serverName}`,
     centered: true,
     children: (
       <Stack

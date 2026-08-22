@@ -129,7 +129,7 @@ export function ImportInstallEditStep(props: Props): ReactElement {
         label="Install path"
         value={props.installDir}
         readOnly
-        description="Absolute path — not nested under a base folder"
+        description="Absolute path – not nested under a base folder"
       />
       <ServerFormCreateClusterFields
         options={props.knownClusters}

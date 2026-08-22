@@ -116,7 +116,7 @@ export function formatSize(sizeBytes: number): string {
 }
 
 export function formatDuration(durationMs: number | null): string {
-  if (durationMs === null) return "—";
+  if (durationMs === null) return "–";
   const seconds = Math.round(durationMs / 1000);
   const minutes = Math.floor(seconds / 60);
   const rest = seconds % 60;

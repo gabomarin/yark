@@ -703,7 +703,7 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    await user.click(screen.getByRole("button", { name: /Updating files… — open Downloads/i }));
+    await user.click(screen.getByRole("button", { name: /Updating files… – open Downloads/i }));
     expect(onOpenDownloads).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("button", { name: /Pause SteamCMD/i })).not.toBeInTheDocument();
   });
@@ -743,7 +743,7 @@ describe("ServerCard", () => {
     );
 
     await user.click(
-      screen.getByRole("button", { name: /Verifying integrity… — open Downloads/i }),
+      screen.getByRole("button", { name: /Verifying integrity… – open Downloads/i }),
     );
     expect(onOpenDownloads).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("button", { name: /Cancel SteamCMD/i })).not.toBeInTheDocument();
@@ -785,7 +785,7 @@ describe("ServerCard", () => {
 
     expect(screen.getByRole("button", { name: /^Start server$/i })).toBeDisabled();
     await user.click(
-      screen.getByRole("button", { name: /Paused · Updating server — open Downloads/i }),
+      screen.getByRole("button", { name: /Paused · Updating server – open Downloads/i }),
     );
     expect(onOpenDownloads).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("button", { name: /Resume download/i })).not.toBeInTheDocument();
@@ -862,7 +862,7 @@ describe("ServerCard", () => {
     expect(screen.getByText(/Queued · Verifying integrity/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^Start server$/i })).toBeDisabled();
     await user.click(
-      screen.getByRole("button", { name: /Queued · Verifying integrity — open Downloads/i }),
+      screen.getByRole("button", { name: /Queued · Verifying integrity – open Downloads/i }),
     );
     expect(onOpenDownloads).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("button", { name: /Remove from queue/i })).not.toBeInTheDocument();
@@ -1002,7 +1002,7 @@ describe("ServerCard", () => {
     expect(onStart).toHaveBeenCalledTimes(1);
 
     await user.click(
-      screen.getByRole("button", { name: /Review error — open runtime logs/i }),
+      screen.getByRole("button", { name: /Review error – open runtime logs/i }),
     );
     expect(onReviewError).toHaveBeenCalledTimes(1);
   });
@@ -1213,7 +1213,7 @@ describe("ServerCard", () => {
         />
       </AppProviders>,
     );
-    expect(screen.getByRole("button", { name: /Installing files… — open Downloads/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Installing files… – open Downloads/i })).toBeInTheDocument();
 
     rerender(
       <AppProviders density="comfortable">
@@ -1235,6 +1235,6 @@ describe("ServerCard", () => {
         />
       </AppProviders>,
     );
-    expect(screen.getByRole("button", { name: /Installing files… — open Downloads/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Installing files… – open Downloads/i })).toBeInTheDocument();
   });
 });

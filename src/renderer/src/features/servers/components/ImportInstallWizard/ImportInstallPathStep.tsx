@@ -36,7 +36,7 @@ export function ImportInstallPathStep(props: Props): ReactElement {
     <Stack gap="sm">
       <Alert color="blue" title="ASA install folder">
         Select the root that contains <Text span fw={600}>ShooterGame</Text>.
-        YARK only creates a profile — ASA files on disk are not modified until Start
+        YARK only creates a profile. ASA files on disk are not modified until Start
         (or Install/Verify for incomplete trees).
       </Alert>
       <PathField
@@ -66,7 +66,7 @@ export function ImportInstallPathStep(props: Props): ReactElement {
           {showIncompleteOptIn ? (
             <Stack gap="xs">
               <Checkbox
-                label="Import anyway — Install/Verify before Start"
+                label="Import anyway (Install/Verify before Start)"
                 description="Adopt this partial ASA tree as a YARK profile. Start stays blocked until Install or Verify makes the install ready."
                 checked={props.allowIncompleteInstall}
                 disabled={props.probing || props.browsing}

@@ -44,7 +44,7 @@ function operationCopy(
   if (operation === "promote") {
     return {
       title: "Promote member to template",
-      body: `Copy selected INI files from “${serverName}” into the cluster template. Session name, ports, and passwords are stripped — they stay per-server. Member install files are not changed.`,
+      body: `Copy selected INI files from “${serverName}” into the cluster template. Session name, ports, and passwords are stripped – they stay per-server. Member install files are not changed.`,
       confirmLabel: "Promote to template",
       secretNote: "Owned keys never enter the template",
       filesDescription:

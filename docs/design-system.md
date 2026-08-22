@@ -75,6 +75,8 @@ Domain runbooks: [updates-steamcmd.md](updates-steamcmd.md),
 | Name the product **server manager** when you need an identity line | “A local host for…” / localhost / “this Electron app” |
 | Status words operators already see (`Ready`, `Needs setup`, `Recommended`, `Installing…`) | Internal keys (`onboarding.v1`, `detected === false`) |
 | Page chrome: title + live status (`3 profiles · none running`) | A subtitle that restates the nav item (“Monitor and manage…”) |
+| Sentence punctuation or an **en dash** (`–`) for asides | Em dash (`—`) in operator-visible JSX (#402) |
+| Ellipsis character (`…`) in loading / truncated copy | Three ASCII periods (`...`) |
 
 Examples:
 
@@ -87,6 +89,10 @@ Examples:
 Multi-step setup (`SetupWizard`, create/import/cluster) should not dismiss on
 overlay click (`closeOnClickOutside={false}`). The operator uses **Skip** /
 **Close**, **Back**, or the header close — not an accidental click outside.
+
+Stepper footers may keep short **Continue** / **Back** labels when the step
+title already states the action. Prefer a specific label for terminal actions
+(e.g. **Close**, **Finish**, **Add to cluster**) over a bare **Done** (#402).
 
 First-run setup also: [`.cursor/rules/setup-wizard.mdc`](../.cursor/rules/setup-wizard.mdc).
 

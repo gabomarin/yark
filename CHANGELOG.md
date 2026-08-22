@@ -16,6 +16,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Operator-facing copy drops em dashes for sentence punctuation or en dashes, uses `…` in loading placeholders, and prefers **Close** / **Finish** over bare **Done** where the label was vague (#402).
+- React Doctor baseline documented (`docs/react-doctor.md`, root `doctor.config.json`); leave-guard and sequential-job rules treated as intentional noise, not mass-fixed (#403).
 - Content panels (Clusters, fleet Logs/Backups, Settings content, workspace Server / INI / Launch / Logs / Backups) share **`AppSurfaceCard tone="flat" radius="md"`**; cool wash is no longer the page-shell default (#346).
 - Dense icon-only row actions (backup history Restore/Delete, cluster member Promote/Restore/Remove, Logs clear/delete, Downloads Resume/Retry/Pause/Cancel, minimized SteamCMD Cancel) use **`variant="subtle"`** so columns stay quiet; labeled destructive **Button**s stay red **filled**; workspace server list drops Add/Import (use Overview instead) (#397).
 - Disabled **Server mods** rows are dimmed (thumb + text) while the Enabled switch stays full strength so off-list mods read as not live; row **Remove** stays red **subtle** (not filled) so the actions column stays quiet (#226, #297).

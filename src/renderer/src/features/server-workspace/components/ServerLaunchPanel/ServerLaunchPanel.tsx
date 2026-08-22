@@ -160,7 +160,7 @@ export function ServerLaunchPanel(props: Props): ReactElement {
                   </Text>
                 ))}
                 <Text size="xs" c="dimmed">
-                  Fix Map / Mods before Start — YARK blocks launch until the map
+                  Fix Map / Mods before Start. YARK blocks launch until the map
                   pack is linked and enabled.
                 </Text>
               </Stack>
