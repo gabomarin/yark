@@ -3,8 +3,8 @@
  * ESLint 9 flat config for YARK (Electron main/preload + React renderer + Vitest).
  *
  * Complements `scripts/lint.cjs` (feature file size + Actions pins). Does not
- * replace `tsc --noEmit`. React Compiler / `eslint-plugin-react-hooks`
- * "recommended" extras stay off until the compiler is adopted.
+ * replace `tsc --noEmit`. React Compiler stays opt-in (#404); do not enable
+ * `eslint-plugin-react-hooks` compiler-recommended extras until default adopt.
  */
 import js from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";

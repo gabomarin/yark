@@ -28,6 +28,7 @@ This repository contains a desktop application for managing dedicated ARK Surviv
   [component-structure.md](component-structure.md) (Tests).
 - After `npm install`, Husky hooks run typecheck/lint on commit and typecheck/test/lint on push; CI also runs build + `lint` + `knip`. `npm run lint` is size caps, Actions pins, and ESLint (`eslint.config.mjs`). `npm run knip` finds unused files, exports, dependencies, and unused CSS files (`knip.jsonc`; not unused CSS classes).
 - Optional renderer hygiene: `npx react-doctor@latest --verbose --scope changed` on UI PRs (baseline and ignored rules: [react-doctor.md](react-doctor.md), root `doctor.config.json`).
+- React Compiler is **opt-in** only (`YARK_REACT_COMPILER=1` / `npm run build:compiler`); default stays off — spike write-up [react-compiler-spike.md](react-compiler-spike.md) (#404).
 - For visible renderer changes, follow the mandatory [visual testing protocol](visual-testing.md), including HD, Full HD, and QHD/2K review.
 - When growing or splitting React UI, follow [component-structure.md](component-structure.md) (pragmatic Atomic Design for agents).
 - Prefer **Mantine** components/props for renderer UI wherever they fit (Stepper,

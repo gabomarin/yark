@@ -411,7 +411,7 @@ line (#234).
 | `PageSectionHeader` | Title + filter/actions repeats | Third identical header |
 | `DangerConfirmModal` pattern | Restore/delete/cleanup modals | After second modal copy-paste |
 | Form section Card defaults | ServerForm create/edit uses `AppSurfaceCard` | Revisit only if a new form invents local Card chrome |
-| React Compiler | Spike deferred for v0.9 (#209) — current memo/`handlersRef` patterns cover Overview fan-out; revisit after Babel/Vite cost is measured | Explicit compile-time memo budget / regression |
+| React Compiler | **Postpone** default enable (#404). Opt-in: `YARK_REACT_COMPILER=1` / `npm run build:compiler`. Many skips on try/finally + eslint-disable; see [react-compiler-spike.md](react-compiler-spike.md). Current memo/`handlersRef` still cover Overview fan-out | Explicit compile-time memo budget / regression |
 
 ## Related
 
