@@ -21,7 +21,7 @@ export interface BackupCriticalJob extends DurableCriticalJob {
 }
 
 /** Phase preference order when merging duplicate durable records. */
-export const BACKUP_CRITICAL_JOB_PHASE_ORDER: readonly string[] = [
+const BACKUP_CRITICAL_JOB_PHASE_ORDER: readonly string[] = [
   "failed",
   "cancelled",
   "queued",
@@ -39,7 +39,7 @@ export const BACKUP_CRITICAL_JOB_PHASE_ORDER: readonly string[] = [
   "applying-restore",
 ];
 
-export const KNOWN_BACKUP_JOB_STATUSES: ReadonlySet<string> = new Set([
+const KNOWN_BACKUP_JOB_STATUSES: ReadonlySet<string> = new Set([
   "pending",
   "running",
   "retrying",
