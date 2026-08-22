@@ -56,7 +56,7 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | --- | --- |
 | `backup-policy-helpers.ts` | `ALL_BACKUP_KINDS`, `retainCountForKind`, `assertRetainCount` |
 | `backup-cleanup-plan.ts` | Pure `planBackupCleanup` + `summarizeCleanupPlan` (+ unit tests) |
-| `backup-fleet.ts` | Pending |
+| `backup-fleet.ts` | Fleet health row, alerts, disk usage aggregation, dismiss filter (+ unit tests) |
 | `backup-restore.ts` | Pending |
 
 

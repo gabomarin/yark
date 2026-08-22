@@ -18,7 +18,6 @@ import type {
   BackupDiskAlertSettings,
   BackupFleetAlert,
   BackupFleetSummary,
-  BackupHealthStatus,
   BackupKind,
   BackupPolicy,
   BackupPolicyStatus,
@@ -67,9 +66,7 @@ import {
 import {
   ensureParentDir,
   isBackupDestinationReachable,
-  readVolumeSpace,
   sameFsPath,
-  volumeRootForPath,
 } from "./backup-disk";
 import { classifyInstallHealthAsync } from "../instances/server-installation";
 import { serverBinaryPath } from "../instances/launch-args";
@@ -93,59 +90,27 @@ import {
   assertRetainCount,
   retainCountForKind,
 } from "./backup-policy-helpers";
+import {
+  buildBackupServerHealthRow,
+  buildDiskUsageFromHealthRows,
+  buildDiskVolumeAlerts,
+  buildFleetAlertsForServer,
+  computeFleetSummaryStats,
+  filterDismissedFleetAlerts,
+  listFailedBackupsSince,
+  normalizeDiskAlertSettings,
+  SCHEDULED_WORLD_FAIL_LIMIT,
+  type DismissedFleetAlertEntry,
+} from "./backup-fleet";
 
 export {
   formatPlayerSessionNotes,
   playersRetentionKey,
 } from "@shared/backup-player-meta";
+export { computeBackupServerHealth } from "./backup-fleet";
 
 export interface BackupChangedPush {
   serverId: string;
-}
-
-/** Pure fleet health badge for one server (used by getFleetSummary). */
-export function computeBackupServerHealth(input: {
-  destinationOk: boolean;
-  stale: boolean;
-  /** All failed backups in the last 24h (any kind) — warning floor when not critical. */
-  failed24h: number;
-  /** Failed *world* backups in the last 24h — drives critical (world = protection). */
-  failedWorld24h: number;
-  scheduleEnabled: boolean;
-  hasWorldBackup: boolean;
-  /** Scheduled world backups only run while the process is active. */
-  serverRunning: boolean;
-}): BackupHealthStatus {
-  if (!input.destinationOk || input.failedWorld24h > 0) return "critical";
-  // INI / player failures are noisy vs world protection — warn, do not mark critical.
-  if (input.failed24h > 0) return "warning";
-  // World schedule skips stopped servers — without a completed world archive this
-  // is never "Protected" while the process is active (first cycle still pending).
-  if (input.scheduleEnabled && !input.hasWorldBackup) {
-    return input.serverRunning ? "warning" : "unknown";
-  }
-  if (input.stale) return "warning";
-  if (!input.scheduleEnabled && !input.hasWorldBackup) return "unknown";
-  // Keep serverRunning in the contract so callers must pass process state.
-  void input.serverRunning;
-  return "ok";
-}
-
-/** Newest finished (completed/failed) backup by finish time. */
-function pickLatestFinishedBackup(
-  records: BackupRecord[],
-): BackupRecord | null {
-  let latest: BackupRecord | null = null;
-  let latestStamp = "";
-  for (const row of records) {
-    if (row.status === "running") continue;
-    const stamp = backupFinishedAt(row);
-    if (latest === null || stamp > latestStamp) {
-      latest = row;
-      latestStamp = stamp;
-    }
-  }
-  return latest;
 }
 
 const RCON_HOST = "127.0.0.1";
@@ -164,9 +129,6 @@ const KNOWN_BACKUP_JOB_STATUSES = new Set([
 /** Scheduled cadence creates world saves only (not players / INI). */
 const SCHEDULED_BACKUP_KINDS: readonly BackupKind[] = ["world"];
 
-/** Pause further scheduled world creates after this many consecutive failures (session only). */
-const SCHEDULED_WORLD_FAIL_LIMIT = 3;
-
 /**
  * Kinds created for pre-update / pre-stop / pre-restart safety.
  * World already includes profiles/tribes in the active map folder, so a full
@@ -184,13 +146,6 @@ const DEFAULT_DISK_ALERT_SETTINGS: BackupDiskAlertSettings = {
 };
 /** Dismissed fleet alerts: alertId → fingerprint that was hidden. */
 const DISMISSED_FLEET_ALERTS_KEY = "backupFleetAlerts.dismissed.v1";
-/** World backup is stale when older than interval × this factor. */
-const STALE_INTERVAL_FACTOR = 1.5;
-
-interface DismissedFleetAlertEntry {
-  fingerprint: string;
-  dismissedAt: string;
-}
 
 type BackupCriticalJobType = "pre-update-backup" | "restore";
 
@@ -743,7 +698,7 @@ export class BackupService extends EventEmitter {
   }
 
   setDiskAlertSettings(settings: BackupDiskAlertSettings): BackupDiskAlertSettings {
-    const next = this.normalizeDiskAlertSettings(settings);
+    const next = normalizeDiskAlertSettings(settings);
     this.settings.set(DISK_ALERT_SETTINGS_KEY, JSON.stringify(next));
     return next;
   }
@@ -778,190 +733,42 @@ export class BackupService extends EventEmitter {
       const policy = this.backups.getPolicy(server.id);
       const resolvedRoot = resolveServerBackupRoot(server.installDir, policy.backupDir);
       const records = this.backups.listBackups(server.id, 10_000);
-      const completed = records.filter((row) => row.status === "completed");
-      const failed24h = records.filter((row) => {
-        if (row.status !== "failed") return false;
-        return backupFinishedAt(row) >= dayAgoIso;
-      });
-      const failedWorld24h = failed24h.filter((row) => row.kind === "world");
+      const serverRunning = this.processes.isActive(server.id);
       const latestWorld = this.backups.latestCompleted(server.id, "world");
-      // Newest finished attempt by completedAt (not job start).
-      const latest = pickLatestFinishedBackup(records);
-      const usedBytes = completed.reduce((sum, row) => sum + Math.max(0, row.sizeBytes), 0);
-      const destinationOk = isBackupDestinationReachable(resolvedRoot);
+      const failed24h = listFailedBackupsSince(records, dayAgoIso);
+      const failedWorld24h = failed24h.filter((row) => row.kind === "world");
 
-      // Scheduled world backups only run while the process is active — do not
-      // treat stopped servers as stale just because the interval elapsed.
-      let stale = false;
-      if (policy.enabled && this.processes.isActive(server.id)) {
-        if (latestWorld === null) {
-          stale = true;
-        } else {
-          const stamp = backupFinishedAt(latestWorld);
-          const ageMs = now - new Date(stamp).getTime();
-          stale =
-            Number.isFinite(ageMs) &&
-            ageMs > policy.intervalMinutes * 60_000 * STALE_INTERVAL_FACTOR;
-        }
-      }
-
-      const counts = {
-        world: completed.filter((row) => row.kind === "world").length,
-        players: completed.filter((row) => row.kind === "players").length,
-        ini: completed.filter((row) => row.kind === "ini").length,
-        failed24h: failed24h.length,
-      };
-
-      const health = this.computeServerHealth({
-        destinationOk,
-        stale,
-        failed24h: counts.failed24h,
-        failedWorld24h: failedWorld24h.length,
-        scheduleEnabled: policy.enabled,
-        hasWorldBackup: latestWorld !== null,
-        serverRunning: this.processes.isActive(server.id),
-      });
-
-      healthRows.push({
+      const row = buildBackupServerHealthRow({
         serverId: server.id,
         serverName: server.name,
         policy,
         resolvedRoot,
-        health,
-        latest,
+        records,
         latestWorld,
-        counts,
-        usedBytes,
-        stale,
-        destinationOk,
+        destinationOk: isBackupDestinationReachable(resolvedRoot),
+        serverRunning,
         schedulePaused: this.scheduledWorldPaused.has(server.id),
+        nowMs: now,
       });
-
-      if (!destinationOk) {
-        alerts.push({
-          id: `missing_destination:${server.id}`,
-          kind: "missing_destination",
-          severity: "error",
-          serverId: server.id,
-          volumePath: null,
-          fingerprint: resolvedRoot,
-          message: `${server.name}: backup destination is missing or unreachable (${resolvedRoot})`,
-        });
-      }
-      if (this.scheduledWorldPaused.has(server.id) && policy.enabled) {
-        alerts.push({
-          id: `schedule_paused:${server.id}`,
-          kind: "schedule_paused",
-          severity: "error",
-          serverId: server.id,
-          volumePath: null,
-          fingerprint: "session",
-          message: `${server.name}: world schedule paused for this YARK session after ${SCHEDULED_WORLD_FAIL_LIMIT} consecutive failures (restarts clear the pause; policy stays enabled)`,
-        });
-      }
-      if (policy.enabled && latestWorld === null && this.processes.isActive(server.id)) {
-        alerts.push({
-          id: `never_backed_up:${server.id}`,
-          kind: "never_backed_up",
-          severity: "warning",
-          serverId: server.id,
-          volumePath: null,
-          fingerprint: "pending",
-          message: `${server.name}: world schedule is on but no completed world backup exists yet (waiting for the next scheduled cycle)`,
-        });
-      } else if (stale && latestWorld !== null) {
-        alerts.push({
-          id: `stale:${server.id}`,
-          kind: "stale",
-          severity: "warning",
-          serverId: server.id,
-          volumePath: null,
-          fingerprint: `${latestWorld.id}:${backupFinishedAt(latestWorld)}`,
-          message: `${server.name}: last world backup is older than the scheduled interval`,
-        });
-      }
-      if (counts.failed24h > 0) {
-        const worldOnly = failedWorld24h.length === counts.failed24h;
-        // Prefer newest failed world (list is finish-time DESC); else newest failed.
-        const focusBackup = failedWorld24h[0] ?? failed24h[0] ?? null;
-        alerts.push({
-          id: `failed:${server.id}`,
-          kind: "failed",
-          severity: failedWorld24h.length > 0 ? "error" : "warning",
-          serverId: server.id,
-          volumePath: null,
-          // Include count so dismiss resurfaces when more failures arrive.
-          fingerprint: `${focusBackup?.id ?? "failed"}:${counts.failed24h}`,
-          backupId: focusBackup?.id ?? null,
-          message: worldOnly
-            ? `${server.name}: ${counts.failed24h} failed world backup${counts.failed24h === 1 ? "" : "s"} in the last 24h`
-            : failedWorld24h.length > 0
-              ? `${server.name}: ${counts.failed24h} failed backup${counts.failed24h === 1 ? "" : "s"} in the last 24h (${failedWorld24h.length} world)`
-              : `${server.name}: ${counts.failed24h} failed non-world backup${counts.failed24h === 1 ? "" : "s"} in the last 24h`,
-        });
-      }
+      healthRows.push(row);
+      alerts.push(
+        ...buildFleetAlertsForServer({
+          row,
+          failed24h,
+          failedWorld24h,
+          serverRunning,
+        }),
+      );
     }
 
-    const disks = await this.buildDiskUsage(healthRows);
-    for (const disk of disks) {
-      if (disk.usedPercent === null || disk.freeBytes === null) continue;
-      const overCritical = disk.usedPercent >= diskSettings.criticalUsedPercent;
-      const overWarn = disk.usedPercent >= diskSettings.warnUsedPercent;
-      const lowFree = disk.freeBytes < diskSettings.warnFreeBytes;
-      // Bucket free space to GiB so tiny freelist churn does not re-open dismissals.
-      const diskFingerprint = [
-        `u${Math.floor(disk.usedPercent)}`,
-        `f${Math.floor(disk.freeBytes / (1024 ** 3))}`,
-        `w${diskSettings.warnUsedPercent}`,
-        `c${diskSettings.criticalUsedPercent}`,
-        `fb${diskSettings.warnFreeBytes}`,
-      ].join(":");
-      if (overCritical) {
-        alerts.push({
-          id: `disk_critical:${disk.volumePath}`,
-          kind: "disk_critical",
-          severity: "error",
-          serverId: null,
-          volumePath: disk.volumePath,
-          fingerprint: diskFingerprint,
-          message: `${disk.volumePath} is ${disk.usedPercent.toFixed(0)}% full (critical ≥ ${diskSettings.criticalUsedPercent}%)`,
-        });
-      } else if (overWarn || lowFree) {
-        const parts: string[] = [];
-        if (overWarn) {
-          parts.push(`${disk.usedPercent.toFixed(0)}% used`);
-        }
-        if (lowFree) {
-          parts.push(`${this.humanSize(disk.freeBytes)} free`);
-        }
-        alerts.push({
-          id: `disk_warning:${disk.volumePath}`,
-          kind: "disk_warning",
-          severity: "warning",
-          serverId: null,
-          volumePath: disk.volumePath,
-          fingerprint: diskFingerprint,
-          message: `${disk.volumePath}: ${parts.join(" · ")} (warning threshold)`,
-        });
-      }
-    }
+    const disks = await buildDiskUsageFromHealthRows(healthRows);
+    alerts.push(...buildDiskVolumeAlerts(disks, diskSettings));
 
-    const protectedCount = healthRows.filter((row) => row.health === "ok").length;
-    const atRiskCount = healthRows.filter(
-      (row) => row.health === "warning" || row.health === "critical",
-    ).length;
-    const failed24h = healthRows.reduce((sum, row) => sum + row.counts.failed24h, 0);
-    const totalBackupBytes = healthRows.reduce((sum, row) => sum + row.usedBytes, 0);
     const visibleAlerts = this.applyDismissedFleetAlerts(alerts);
 
     return {
       servers: healthRows,
-      stats: {
-        protectedCount,
-        atRiskCount,
-        failed24h,
-        totalBackupBytes,
-      },
+      stats: computeFleetSummaryStats(healthRows),
       disks,
       alerts: visibleAlerts,
       diskSettings,
@@ -1432,7 +1239,7 @@ export class BackupService extends EventEmitter {
     }
     try {
       const parsed = JSON.parse(raw) as Partial<BackupDiskAlertSettings>;
-      return this.normalizeDiskAlertSettings({
+      return normalizeDiskAlertSettings({
         warnUsedPercent:
           typeof parsed.warnUsedPercent === "number"
             ? parsed.warnUsedPercent
@@ -1493,99 +1300,13 @@ export class BackupService extends EventEmitter {
   /** Drop alerts whose current fingerprint was dismissed; prune stale dismiss rows. */
   private applyDismissedFleetAlerts(alerts: BackupFleetAlert[]): BackupFleetAlert[] {
     const dismissed = this.readDismissedFleetAlerts();
-    if (Object.keys(dismissed).length === 0) return alerts;
-
-    const kept: Record<string, DismissedFleetAlertEntry> = {};
-    const visible: BackupFleetAlert[] = [];
-    for (const alert of alerts) {
-      const entry = dismissed[alert.id];
-      if (entry !== undefined && entry.fingerprint === alert.fingerprint) {
-        kept[alert.id] = entry;
-        continue;
-      }
-      visible.push(alert);
-    }
-
+    const { visible, prunedDismissed } = filterDismissedFleetAlerts(alerts, dismissed);
     const prevKeys = Object.keys(dismissed).sort().join("\0");
-    const nextKeys = Object.keys(kept).sort().join("\0");
+    const nextKeys = Object.keys(prunedDismissed).sort().join("\0");
     if (prevKeys !== nextKeys) {
-      this.writeDismissedFleetAlerts(kept);
+      this.writeDismissedFleetAlerts(prunedDismissed);
     }
     return visible;
-  }
-
-  private normalizeDiskAlertSettings(
-    settings: BackupDiskAlertSettings,
-  ): BackupDiskAlertSettings {
-    const warnUsedPercent = Math.max(
-      50,
-      Math.min(99, Math.floor(settings.warnUsedPercent)),
-    );
-    const criticalUsedPercent = Math.max(
-      warnUsedPercent + 1,
-      Math.min(100, Math.floor(settings.criticalUsedPercent)),
-    );
-    const warnFreeBytes = Math.max(
-      1024 * 1024 * 1024,
-      Math.floor(settings.warnFreeBytes),
-    );
-    return { warnUsedPercent, criticalUsedPercent, warnFreeBytes };
-  }
-
-  private computeServerHealth(input: {
-    destinationOk: boolean;
-    stale: boolean;
-    failed24h: number;
-    failedWorld24h: number;
-    scheduleEnabled: boolean;
-    hasWorldBackup: boolean;
-    /** Scheduled world backups only run while the process is active. */
-    serverRunning: boolean;
-  }): BackupHealthStatus {
-    return computeBackupServerHealth(input);
-  }
-
-  private async buildDiskUsage(
-    rows: BackupServerHealth[],
-  ): Promise<BackupFleetSummary["disks"]> {
-    const byVolume = new Map<
-      string,
-      { roots: Set<string>; backupBytes: number; probePath: string }
-    >();
-
-    for (const row of rows) {
-      const volumePath = volumeRootForPath(row.resolvedRoot);
-      const current = byVolume.get(volumePath) ?? {
-        roots: new Set<string>(),
-        backupBytes: 0,
-        probePath: row.resolvedRoot,
-      };
-      current.roots.add(row.resolvedRoot);
-      current.backupBytes += row.usedBytes;
-      byVolume.set(volumePath, current);
-    }
-
-    const disks: BackupFleetSummary["disks"] = [];
-    for (const [volumePath, info] of byVolume) {
-      const space = await readVolumeSpace(info.probePath);
-      const freeBytes = space?.freeBytes ?? null;
-      const totalBytes = space?.totalBytes ?? null;
-      let usedPercent: number | null = null;
-      if (freeBytes !== null && totalBytes !== null && totalBytes > 0) {
-        usedPercent = ((totalBytes - freeBytes) / totalBytes) * 100;
-      }
-      disks.push({
-        volumePath,
-        roots: [...info.roots],
-        backupBytes: info.backupBytes,
-        freeBytes,
-        totalBytes,
-        usedPercent,
-      });
-    }
-
-    disks.sort((a, b) => a.volumePath.localeCompare(b.volumePath));
-    return disks;
   }
 
   private resolveCleanupServers(options: BackupCleanupOptions): ServerProfile[] {
