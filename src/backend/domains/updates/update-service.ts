@@ -72,6 +72,22 @@ import {
   stripSteamCmdProgressIngestPrefix,
 } from "./steamcmd-console";
 import {
+  buildUpdateLogPath,
+  captureWasRunningOnJob,
+  computePreUpdateBackupProgressPercent,
+  formatPreUpdateBackupKindLabel,
+  formatUpdateLogContent,
+  isPreUpdateBackupEvidenceComplete,
+  planDuplicateRecoveredUpdateJob,
+  planInterruptedUpdateJobRecovery,
+  queuedFilesJobProgressLabel,
+  resolveUpdateWasRunning,
+  shouldBlockUpdateWhileServerRunning,
+  shouldRestartServerAfterPreSteamCmdAbort,
+  shouldResumeFromPreUpdateBackup,
+  updateInstallMayHaveChanged,
+} from "./update-server-jobs";
+import {
   buildSteamCmdAppUpdateArgs,
   STEAMCMD_ENGLISH_ARGS,
   steamCmdSpawnEnv,
@@ -774,9 +790,11 @@ export class UpdateService extends EventEmitter {
       // waited behind another SteamCMD operation or an app restart. Preserve
       // recovery for pre-policy jobs that already recorded running intent.
       if (
-        isCurrentlyRunning
-        && job !== undefined
-        && job.context.wasRunning !== true
+        shouldBlockUpdateWhileServerRunning({
+          isCurrentlyRunning,
+          hasDurableJob: job !== undefined,
+          jobWasRunning: job?.context.wasRunning,
+        })
       ) {
         // Operator-actionable: Stop → Retry. A plain Error would mark the job
         // failed with operatorRetryAllowed=false and only offer Dismiss.
@@ -787,8 +805,9 @@ export class UpdateService extends EventEmitter {
 
       // Backup identity is the durable resume signal. Unlike `phase`, it
       // survives validation checkpoints and a second crash during retry.
-      const resumeFromPreUpdateBackup =
-        (job?.context.preUpdateBackupIds?.length ?? 0) > 0;
+      const resumeFromPreUpdateBackup = shouldResumeFromPreUpdateBackup(
+        job?.context.preUpdateBackupIds,
+      );
       if (job !== undefined) {
         // A new SteamCMD attempt creates a new rollback generation. Evidence
         // from the prior completed rollback must never suppress this attempt's
@@ -796,9 +815,12 @@ export class UpdateService extends EventEmitter {
         job.context.rollbackRestoredBackupIds = [];
       }
       this.checkpointJob(job, "validating");
-      const wasRunning = job?.context.wasRunning ?? isCurrentlyRunning;
-      if (job !== undefined && job.context.wasRunning === undefined) {
-        job.context.wasRunning = isCurrentlyRunning;
+      const wasRunning = resolveUpdateWasRunning(
+        job?.context.wasRunning,
+        isCurrentlyRunning,
+      );
+      if (job !== undefined) {
+        captureWasRunningOnJob(job.context, isCurrentlyRunning);
       }
       this.checkpointJob(job, "validated");
       const startedAt = new Date();
@@ -842,8 +864,11 @@ export class UpdateService extends EventEmitter {
           // Compare against required critical kinds, not persisted id count:
           // pre-#275 jobs may still list a `players` id that is intentionally ignored.
           if (
-            persistedIds.length === 0
-            || preUpdateBackups.length !== CRITICAL_BACKUP_KINDS.length
+            !isPreUpdateBackupEvidenceComplete(
+              persistedIds,
+              preUpdateBackups.length,
+              CRITICAL_BACKUP_KINDS.length,
+            )
           ) {
             throw new CriticalJobRecoveryBlockedError(
               "Persisted pre-update backup evidence is incomplete; operator review is required",
@@ -864,13 +889,8 @@ export class UpdateService extends EventEmitter {
           );
           preUpdateBackups = await this.backups.createPreUpdateBackupForJob(serverId, {
             onKindProgress: (kind, index, total) => {
-              const label =
-                kind === "world"
-                  ? "world save"
-                  : kind === "ini"
-                    ? "INI files"
-                    : "player profiles";
-              const percent = Math.round(5 + ((index + 0.5) / Math.max(total, 1)) * 20);
+              const label = formatPreUpdateBackupKindLabel(kind);
+              const percent = computePreUpdateBackupProgressPercent(index, total);
               this.appendSteamCmdConsole(
                 `Pre-update backup ${index + 1}/${total}: ${label}…`,
               );
@@ -893,9 +913,8 @@ export class UpdateService extends EventEmitter {
         this.appendSteamCmdConsole("Pre-update backups ready; starting SteamCMD…");
         this.setProgress(25, "Starting SteamCMD…", "Pre-update backups complete");
 
-        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
         await mkdir(this.updatesLogDir, { recursive: true });
-        const logPath = join(this.updatesLogDir, `${serverId}-${timestamp}.log`);
+        const logPath = buildUpdateLogPath(this.updatesLogDir, serverId, startedAt);
         if (job !== undefined) job.context.updateLogPath = logPath;
 
         this.checkpointJob(job, "applying-files");
@@ -903,18 +922,15 @@ export class UpdateService extends EventEmitter {
         const durationMs = Date.now() - startedAt.getTime();
         await writeFile(
           logPath,
-          [
-            `time=${new Date().toISOString()}`,
-            `server=${server.name}`,
-            `installDir=${server.installDir}`,
-            `exitCode=${cmd.code}`,
-            `startedAt=${startedAt.toISOString()}`,
-            `durationMs=${durationMs}`,
-            "--- stdout ---",
-            cmd.stdout,
-            "--- stderr ---",
-            cmd.stderr,
-          ].join("\n"),
+          formatUpdateLogContent({
+            serverName: server.name,
+            installDir: server.installDir,
+            exitCode: cmd.code,
+            startedAt,
+            durationMs,
+            stdout: cmd.stdout,
+            stderr: cmd.stderr,
+          }),
           "utf8",
         );
 
@@ -955,12 +971,11 @@ export class UpdateService extends EventEmitter {
           this.pauseRequested || isOperationPausedError(err);
         const cancelled =
           this.cancelRequested || isOperationCancelledError(err);
-        const installMayHaveChanged =
-          phaseAtFailure === "applying-files"
-          || phaseAtFailure === "files-applied"
-          || phaseAtFailure === "restarting-server"
-          || typeof job?.context.steamCmdExitCode === "number"
-          || job?.context.appliedBuildId != null;
+        const installMayHaveChanged = updateInstallMayHaveChanged({
+          phase: phaseAtFailure,
+          steamCmdExitCode: job?.context.steamCmdExitCode,
+          appliedBuildId: job?.context.appliedBuildId,
+        });
 
         if (paused) {
           this.appendSteamCmdConsole(
@@ -969,7 +984,13 @@ export class UpdateService extends EventEmitter {
               : "Paused before SteamCMD applied files; no rollback restore needed.",
           );
           this.setPausedProgress();
-          if (wasRunning && !installMayHaveChanged && !this.processes.isActive(serverId)) {
+          if (
+            shouldRestartServerAfterPreSteamCmdAbort({
+              wasRunning,
+              installMayHaveChanged,
+              serverIsActive: this.processes.isActive(serverId),
+            })
+          ) {
             this.appendSteamCmdConsole(
               `Restarting "${server.name}" after pause (server was running before update)…`,
             );
@@ -997,7 +1018,13 @@ export class UpdateService extends EventEmitter {
             "Cancelled",
             "Stopped before game files changed; no rollback restore needed",
           );
-          if (wasRunning && !this.processes.isActive(serverId)) {
+          if (
+            shouldRestartServerAfterPreSteamCmdAbort({
+              wasRunning,
+              installMayHaveChanged: false,
+              serverIsActive: this.processes.isActive(serverId),
+            })
+          ) {
             this.appendSteamCmdConsole(
               `Restarting "${server.name}" after cancel (server was running before update)…`,
             );
@@ -1127,9 +1154,12 @@ export class UpdateService extends EventEmitter {
       }
 
       const isCurrentlyRunning = this.processes.isActive(serverId);
-      const wasRunning = job?.context.wasRunning ?? isCurrentlyRunning;
-      if (job !== undefined && job.context.wasRunning === undefined) {
-        job.context.wasRunning = isCurrentlyRunning;
+      const wasRunning = resolveUpdateWasRunning(
+        job?.context.wasRunning,
+        isCurrentlyRunning,
+      );
+      if (job !== undefined) {
+        captureWasRunningOnJob(job.context, isCurrentlyRunning);
       }
       this.checkpointJob(job, "validated");
       this.addJobEvent(
@@ -1203,13 +1233,18 @@ export class UpdateService extends EventEmitter {
           this.pauseRequested || isOperationPausedError(error);
         if (paused) {
           const phaseAtFailure = job?.phase ?? "";
-          const installMayHaveChanged =
-            phaseAtFailure === "applying-files"
-            || phaseAtFailure === "files-applied"
-            || phaseAtFailure === "restarting-server"
-            || typeof job?.context.steamCmdExitCode === "number"
-            || job?.context.appliedBuildId != null;
-          if (wasRunning && !installMayHaveChanged && !this.processes.isActive(serverId)) {
+          const installMayHaveChanged = updateInstallMayHaveChanged({
+            phase: phaseAtFailure,
+            steamCmdExitCode: job?.context.steamCmdExitCode,
+            appliedBuildId: job?.context.appliedBuildId,
+          });
+          if (
+            shouldRestartServerAfterPreSteamCmdAbort({
+              wasRunning,
+              installMayHaveChanged,
+              serverIsActive: this.processes.isActive(serverId),
+            })
+          ) {
             try {
               await this.instances.startForMaintenance(serverId);
             } catch {
@@ -1341,12 +1376,7 @@ export class UpdateService extends EventEmitter {
 
     this.queue.push(job);
     this.persistQueue();
-    this.progressLabel =
-      type === "install-files"
-        ? "Queued: install files…"
-        : type === "verify-files"
-          ? "Queued: verify integrity…"
-          : "Queued: update…";
+    this.progressLabel = queuedFilesJobProgressLabel(type);
     this.lastProgressLine = `Job queued: ${type}`;
     this.emitProgress(true);
     this.addJobEvent(
@@ -2460,37 +2490,32 @@ export class UpdateService extends EventEmitter {
           serverExists: this.servers.get(job.serverId) !== null,
         });
         migrated.context = context;
-        if (
-          wasInterrupted
-          && interruptedIsAmbiguous
-          && this.servers.get(job.serverId) !== null
-        ) {
-          migrated.status = "failed";
-          migrated.operatorRetryAllowed = true;
-          migrated.recoveryReason =
-            `YARK closed during phase "${phase}". Retry to continue.`;
-          migrated.context = { ...migrated.context, restartInterrupted: true };
-        } else if (wasInterrupted && phase === "files-applied") {
-          migrated.status = "pending";
-          migrated.operatorRetryAllowed = false;
-          migrated.recoveryReason =
-            "SteamCMD completion was checkpointed before restart; resuming only the remaining runtime transition.";
-        } else if (wasInterrupted && phase === "rollback-complete") {
-          migrated.status = "failed";
-          migrated.operatorRetryAllowed = true;
-          migrated.recoveryReason =
-            "The update failed and its rollback was checkpointed as complete. Review the update log before retrying.";
+        const interruptedRecovery = planInterruptedUpdateJobRecovery({
+          wasInterrupted,
+          phase,
+          interruptedIsAmbiguous,
+          serverExists: this.servers.get(job.serverId) !== null,
+        });
+        if (interruptedRecovery !== null) {
+          migrated.status = interruptedRecovery.status;
+          migrated.operatorRetryAllowed = interruptedRecovery.operatorRetryAllowed;
+          migrated.recoveryReason = interruptedRecovery.recoveryReason;
+          if (interruptedRecovery.restartInterrupted === true) {
+            migrated.context = { ...migrated.context, restartInterrupted: true };
+          }
         }
         const duplicateIndex = jobs.findIndex(
           (candidate) => candidate.idempotencyKey === migrated.idempotencyKey,
         );
         if (duplicateIndex >= 0) {
           const merged = mergeUpdateCriticalJobs(jobs[duplicateIndex]!, migrated);
-          if (this.servers.get(job.serverId) !== null) {
-            merged.status = "blocked";
-            merged.operatorRetryAllowed = true;
-            merged.recoveryReason =
-              "Duplicate durable job records were recovered. Review the preserved phase before retrying.";
+          const duplicateRecovery = planDuplicateRecoveredUpdateJob(
+            this.servers.get(job.serverId) !== null,
+          );
+          if (duplicateRecovery !== null) {
+            merged.status = duplicateRecovery.status;
+            merged.operatorRetryAllowed = duplicateRecovery.operatorRetryAllowed;
+            merged.recoveryReason = duplicateRecovery.recoveryReason;
           }
           jobs[duplicateIndex] = merged;
           invalidEntryFound = true;
@@ -2581,8 +2606,11 @@ export class UpdateService extends EventEmitter {
     );
     // Legacy jobs may persist a `players` id; evidence is complete when world+ini exist.
     if (
-      backupIds.length === 0
-      || backups.length !== CRITICAL_BACKUP_KINDS.length
+      !isPreUpdateBackupEvidenceComplete(
+        backupIds,
+        backups.length,
+        CRITICAL_BACKUP_KINDS.length,
+      )
     ) {
       throw new CriticalJobRecoveryBlockedError(
         "Rollback backup evidence is incomplete; operator review is required",
