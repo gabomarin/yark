@@ -59,6 +59,7 @@ import {
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { showOperatorToast } from "@ui/operatorToast";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import {
   ChangeRow,
   effectiveRateLabel,
@@ -164,22 +165,25 @@ export function ConfigurationWizard(props: Props): ReactElement {
     let alive = true;
     const load = async () => {
       setLoading(true);
-      try {
-        const result = await window.api.readServerIni(props.server.id);
-        if (!alive) return;
-        if (!result.ok) {
-          setError(result.error ?? "Could not read the current configuration");
-          return;
-        }
-        const draft = draftFromIniPayload(result.data.payload);
-        snapshotRef.current = result.data;
-        setInitialDraft(draft);
-        form.initialize(draft);
-      } finally {
-        if (alive) {
-          setLoading(false);
-        }
-      }
+      await runWithFinally(
+        async () => {
+          const result = await window.api.readServerIni(props.server.id);
+          if (!alive) return;
+          if (!result.ok) {
+            setError(result.error ?? "Could not read the current configuration");
+            return;
+          }
+          const draft = draftFromIniPayload(result.data.payload);
+          snapshotRef.current = result.data;
+          setInitialDraft(draft);
+          form.initialize(draft);
+        },
+        () => {
+          if (alive) {
+            setLoading(false);
+          }
+        },
+      );
     };
     void load();
     return () => {
@@ -198,21 +202,24 @@ export function ConfigurationWizard(props: Props): ReactElement {
         alive = false;
       };
     }
-    void (async () => {
-      try {
-        const result = await window.api.getClusterIniTemplate(clusterId);
-        if (!alive) return;
-        if (result.ok && result.data !== null) {
-          setClusterTemplate(result.data);
-        } else {
-          setClusterTemplate(null);
+    void runWithFinally(
+      async () => {
+        try {
+          const result = await window.api.getClusterIniTemplate(clusterId);
+          if (!alive) return;
+          if (result.ok && result.data !== null) {
+            setClusterTemplate(result.data);
+          } else {
+            setClusterTemplate(null);
+          }
+        } catch {
+          if (alive) setClusterTemplate(null);
         }
-      } catch {
-        if (alive) setClusterTemplate(null);
-      } finally {
+      },
+      () => {
         if (alive) setClusterTemplateReady(true);
-      }
-    })();
+      },
+    );
     return () => {
       alive = false;
     };
@@ -391,54 +398,57 @@ export function ConfigurationWizard(props: Props): ReactElement {
     }
     setSaving(true);
     const files = defaultClusterIniFileSelection();
-    try {
-      const previewResult = useClusterSeed
-        ? await window.api.previewClusterIniSeed(
-            clusterId,
-            props.server.id,
-            files,
-          )
-        : await window.api.previewClusterIniRestore(
-            clusterId,
-            props.server.id,
-            files,
+    await runWithFinally(
+      async () => {
+        const previewResult = useClusterSeed
+          ? await window.api.previewClusterIniSeed(
+              clusterId,
+              props.server.id,
+              files,
+            )
+          : await window.api.previewClusterIniRestore(
+              clusterId,
+              props.server.id,
+              files,
+            );
+        if (!previewResult.ok) {
+          setError(previewResult.error ?? "Could not preview cluster defaults");
+          return;
+        }
+        if (!previewResult.data.preview.valid) {
+          setError(
+            previewResult.data.preview.issues[0]?.message ??
+              "Cluster template preview is not valid",
           );
-      if (!previewResult.ok) {
-        setError(previewResult.error ?? "Could not preview cluster defaults");
-        return;
-      }
-      if (!previewResult.data.preview.valid) {
-        setError(
-          previewResult.data.preview.issues[0]?.message ??
-            "Cluster template preview is not valid",
-        );
-        return;
-      }
-      const applyResult = useClusterSeed
-        ? await window.api.seedClusterIniFromTemplate(
-            clusterId,
-            props.server.id,
-            files,
-          )
-        : await window.api.restoreClusterIniFromTemplate(
-            clusterId,
-            props.server.id,
-            files,
-          );
-      if (!applyResult.ok) {
-        setError(applyResult.error ?? "Could not apply cluster defaults");
-        return;
-      }
-      showOperatorToast({
-        title: "Cluster defaults applied",
-        message: `INI files on ${props.server.name} now match the “${clusterId}” cluster template.`,
-      });
-      setSaved(true);
-      form.resetDirty();
-      props.onApplied();
-    } finally {
-      setSaving(false);
-    }
+          return;
+        }
+        const applyResult = useClusterSeed
+          ? await window.api.seedClusterIniFromTemplate(
+              clusterId,
+              props.server.id,
+              files,
+            )
+          : await window.api.restoreClusterIniFromTemplate(
+              clusterId,
+              props.server.id,
+              files,
+            );
+        if (!applyResult.ok) {
+          setError(applyResult.error ?? "Could not apply cluster defaults");
+          return;
+        }
+        showOperatorToast({
+          title: "Cluster defaults applied",
+          message: `INI files on ${props.server.name} now match the “${clusterId}” cluster template.`,
+        });
+        setSaved(true);
+        form.resetDirty();
+        props.onApplied();
+      },
+      () => {
+        setSaving(false);
+      },
+    );
   };
 
   const apply = async () => {
@@ -455,43 +465,46 @@ export function ConfigurationWizard(props: Props): ReactElement {
     }
 
     setSaving(true);
-    try {
-      const latestResult = await window.api.readServerIni(props.server.id);
-      if (!latestResult.ok) {
-        setError(
-          latestResult.error ??
-            "Could not re-read the configuration before applying",
-        );
-        return;
-      }
-      // Overlay only curated settings onto the latest version so
-      // external changes made while the wizard was open are not wiped.
-      const payload = applyWizardDraftToIni(latestResult.data.payload, parsed.data);
-      const previewResult = await window.api.previewServerIni(props.server.id, payload);
-      if (!previewResult.ok || !previewResult.data.valid) {
-        setError(
-          previewResult.ok
-            ? previewResult.data.issues[0]?.message ?? "Configuration is not valid"
-            : previewResult.error ?? "Could not validate the configuration",
-        );
-        return;
-      }
-      const result = await window.api.saveServerIni(props.server.id, payload);
-      if (!result.ok) {
-        setError(result.error ?? "Could not apply the configuration");
-        return;
-      }
-      const appliedCount = previewResult.data.changedCount;
-      showOperatorToast({
-        title: "Configuration applied",
-        message: `${appliedCount} setting${appliedCount === 1 ? " was" : "s were"} updated on ${props.server.name}.`,
-      });
-      setSaved(true);
-      form.resetDirty();
-      props.onApplied();
-    } finally {
-      setSaving(false);
-    }
+    await runWithFinally(
+      async () => {
+        const latestResult = await window.api.readServerIni(props.server.id);
+        if (!latestResult.ok) {
+          setError(
+            latestResult.error ??
+              "Could not re-read the configuration before applying",
+          );
+          return;
+        }
+        // Overlay only curated settings onto the latest version so
+        // external changes made while the wizard was open are not wiped.
+        const payload = applyWizardDraftToIni(latestResult.data.payload, parsed.data);
+        const previewResult = await window.api.previewServerIni(props.server.id, payload);
+        if (!previewResult.ok || !previewResult.data.valid) {
+          setError(
+            previewResult.ok
+              ? previewResult.data.issues[0]?.message ?? "Configuration is not valid"
+              : previewResult.error ?? "Could not validate the configuration",
+          );
+          return;
+        }
+        const result = await window.api.saveServerIni(props.server.id, payload);
+        if (!result.ok) {
+          setError(result.error ?? "Could not apply the configuration");
+          return;
+        }
+        const appliedCount = previewResult.data.changedCount;
+        showOperatorToast({
+          title: "Configuration applied",
+          message: `${appliedCount} setting${appliedCount === 1 ? " was" : "s were"} updated on ${props.server.name}.`,
+        });
+        setSaved(true);
+        form.resetDirty();
+        props.onApplied();
+      },
+      () => {
+        setSaving(false);
+      },
+    );
   };
 
   if (loading) {

@@ -4,6 +4,7 @@ import { Alert, Button, Checkbox, Group, Modal, Stack, Text } from "@mantine/cor
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import {
   buildLeaveClusterInput,
   listRemoveCandidates,
@@ -70,43 +71,46 @@ export function RemoveServersModal(props: Props): ReactElement {
     if (selected.length === 0) return;
     setSaving(true);
     setError(null);
-    const applied: ServerProfile[] = [];
-    try {
-      for (const candidate of selected) {
-        const input = buildLeaveClusterInput(candidate.server);
-        const result = await window.api.updateServer(candidate.server.id, input);
-        if (!result.ok) {
-          const failMessage =
-            result.error ?? "Could not remove servers from the cluster";
-          const rollbackFailures: string[] = [];
-          for (const previous of [...applied].reverse()) {
-            const rollback = await window.api.updateServer(
-              previous.id,
-              serverProfileToInput(previous),
-            );
-            if (!rollback.ok) rollbackFailures.push(previous.name);
+    await runWithFinally(
+      async () => {
+        const applied: ServerProfile[] = [];
+        for (const candidate of selected) {
+          const input = buildLeaveClusterInput(candidate.server);
+          const result = await window.api.updateServer(candidate.server.id, input);
+          if (!result.ok) {
+            const failMessage =
+              result.error ?? "Could not remove servers from the cluster";
+            const rollbackFailures: string[] = [];
+            for (const previous of [...applied].reverse()) {
+              const rollback = await window.api.updateServer(
+                previous.id,
+                serverProfileToInput(previous),
+              );
+              if (!rollback.ok) rollbackFailures.push(previous.name);
+            }
+            if (rollbackFailures.length > 0) {
+              setError(
+                `Failed on “${candidate.server.name}”: ${failMessage}. Could not restore: ${rollbackFailures.join(", ")}.`,
+              );
+              props.onChanged();
+            } else if (applied.length > 0) {
+              setError(
+                `Failed on “${candidate.server.name}”: ${failMessage}. Previous profiles were restored.`,
+              );
+            } else {
+              setError(failMessage);
+            }
+            return;
           }
-          if (rollbackFailures.length > 0) {
-            setError(
-              `Failed on “${candidate.server.name}”: ${failMessage}. Could not restore: ${rollbackFailures.join(", ")}.`,
-            );
-            props.onChanged();
-          } else if (applied.length > 0) {
-            setError(
-              `Failed on “${candidate.server.name}”: ${failMessage}. Previous profiles were restored.`,
-            );
-          } else {
-            setError(failMessage);
-          }
-          return;
+          applied.push(candidate.server);
         }
-        applied.push(candidate.server);
-      }
-      props.onChanged();
-      props.onClose();
-    } finally {
-      setSaving(false);
-    }
+        props.onChanged();
+        props.onClose();
+      },
+      () => {
+        setSaving(false);
+      },
+    );
   };
 
   return (

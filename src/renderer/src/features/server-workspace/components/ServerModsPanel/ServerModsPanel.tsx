@@ -4,6 +4,7 @@ import { isMetadataServiceNotConfiguredMessage } from "@shared/curseforge-proxy-
 import type { ModMetadata, ModSearchPage, ServerProfile } from "@shared/types";
 import { prepareModAddApply, type ModAddImportProgress } from "@shared/mod-add-input";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { ServerModDetailDrawer } from "./ServerModDetailDrawer";
 import { ServerModsDiscoverSection } from "./ServerModsDiscoverSection";
 import { ServerModsHeader } from "./ServerModsHeader";
@@ -161,59 +162,69 @@ export function ServerModsPanel(props: Props): ReactElement {
     setError(null);
     setWarning(null);
     setImportProgress(null);
-    try {
-      const outcome = await prepareModAddApply(
-        url,
-        {
-          configuredIds,
-          disabledIds,
-          cache: cacheRef.current,
-        },
-        (ref) => window.api.getModByReference(ref),
-        {
-          onProgress: setImportProgress,
-          onBatchComplete: async (next) => {
-            await persist(
-              next.configuredIds,
-              next.disabledIds,
-              next.cache,
-            );
-          },
-        },
-      );
-      if (outcome.status === "validation-error") {
-        setError(outcome.message);
-        return;
-      }
-      if (outcome.clearInput) {
-        setUrl("");
-      }
-      if (outcome.warning !== null) setWarning(outcome.warning);
-      if (outcome.error !== null) setError(outcome.error);
-      if (outcome.status === "ready") {
-        notifyNewlyAddedMods(configuredIds, outcome.next);
-      }
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not add the mod");
-    } finally {
-      setBusyKey(null);
-      setImportProgress(null);
-    }
+    await runWithFinally(
+      async () => {
+        try {
+          const outcome = await prepareModAddApply(
+            url,
+            {
+              configuredIds,
+              disabledIds,
+              cache: cacheRef.current,
+            },
+            (ref) => window.api.getModByReference(ref),
+            {
+              onProgress: setImportProgress,
+              onBatchComplete: async (next) => {
+                await persist(
+                  next.configuredIds,
+                  next.disabledIds,
+                  next.cache,
+                );
+              },
+            },
+          );
+          if (outcome.status === "validation-error") {
+            setError(outcome.message);
+            return;
+          }
+          if (outcome.clearInput) {
+            setUrl("");
+          }
+          if (outcome.warning !== null) setWarning(outcome.warning);
+          if (outcome.error !== null) setError(outcome.error);
+          if (outcome.status === "ready") {
+            notifyNewlyAddedMods(configuredIds, outcome.next);
+          }
+        } catch (cause) {
+          setError(cause instanceof Error ? cause.message : "Could not add the mod");
+        }
+      },
+      () => {
+        setBusyKey(null);
+        setImportProgress(null);
+      },
+    );
   };
 
   const activateCatalogMod = async (mod: ModMetadata) => {
     setBusyKey(mod.slug);
     setError(null);
     setWarning(null);
-    try {
-      const result = await window.api.getModByReference(mod.id || mod.slug);
-      if (!result.ok) throw new Error(result.error);
-      await add(result.data);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not add the mod");
-    } finally {
-      setBusyKey(null);
-    }
+    await runWithFinally(
+      async () => {
+        try {
+          const result = await window.api.getModByReference(mod.id || mod.slug);
+          if (!result.ok) throw new Error(result.error);
+          await add(result.data);
+        } catch (cause) {
+          setError(cause instanceof Error ? cause.message : "Could not add the mod");
+        }
+      },
+      () => {
+        setBusyKey(null);
+      },
+    );
   };
 
   const openExternal = async (curseForgeUrl: string) => {
@@ -232,21 +243,26 @@ export function ServerModsPanel(props: Props): ReactElement {
     setBusyKey(`detail:${row.slug}`);
     setError(null);
     setWarning(null);
-    try {
-      const result = await window.api.getModByReference(ref);
-      if (!result.ok) throw new Error(result.error);
-      setDetail(result.data);
-      if (configuredIdsRef.current.includes(result.data.id)) {
-        await persist(configuredIdsRef.current, disabledIdsRef.current, {
-          ...cacheRef.current,
-          [result.data.id]: result.data,
-        });
-      }
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not load mod metadata");
-    } finally {
-      setBusyKey(null);
-    }
+    await runWithFinally(
+      async () => {
+        try {
+          const result = await window.api.getModByReference(ref);
+          if (!result.ok) throw new Error(result.error);
+          setDetail(result.data);
+          if (configuredIdsRef.current.includes(result.data.id)) {
+            await persist(configuredIdsRef.current, disabledIdsRef.current, {
+              ...cacheRef.current,
+              [result.data.id]: result.data,
+            });
+          }
+        } catch (cause) {
+          setError(cause instanceof Error ? cause.message : "Could not load mod metadata");
+        }
+      },
+      () => {
+        setBusyKey(null);
+      },
+    );
   };
 
   const addDiscovered = (row: ModRow) => {

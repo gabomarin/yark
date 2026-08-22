@@ -21,6 +21,7 @@ import {
 import { ImportInstallEditStep } from "./ImportInstallEditStep";
 import { ImportInstallPathStep } from "./ImportInstallPathStep";
 import { ImportInstallReviewStep } from "./ImportInstallReviewStep";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 
 /** Collapse the mods list by default when the inventory would dominate the step. */
 const MODS_LIST_AUTO_COLLAPSE_AT = 8;
@@ -101,45 +102,51 @@ export function ImportInstallWizard(props: Props): ReactElement {
     }
     setProbing(true);
     setError(null);
-    try {
-      const result = await window.api.probeImportInstall(trimmed);
-      if (!result.ok) {
-        setError(result.error ?? "Could not inspect install");
-        setProbe(null);
-        return null;
-      }
-      applyProbe(result.data);
-      // Always return the probe — incomplete may continue after opt-in (#283).
-      setError(null);
-      return result.data;
-    } finally {
-      setProbing(false);
-    }
+    return runWithFinally(
+      async () => {
+        const result = await window.api.probeImportInstall(trimmed);
+        if (!result.ok) {
+          setError(result.error ?? "Could not inspect install");
+          setProbe(null);
+          return null;
+        }
+        applyProbe(result.data);
+        // Always return the probe — incomplete may continue after opt-in (#283).
+        setError(null);
+        return result.data;
+      },
+      () => {
+        setProbing(false);
+      },
+    );
   };
 
   const handleBrowse = async (): Promise<void> => {
     setBrowsing(true);
     setError(null);
-    try {
-      const result = await window.api.pickPath(
-        "directory",
-        installDir.trim().length > 0 ? installDir : undefined,
-        "Select the ASA install root (contains ShooterGame)",
-      );
-      if (!result.ok) {
-        setError(result.error ?? "Could not open folder picker");
-        return;
-      }
-      if (result.data !== null) {
-        setInstallDir(result.data);
-        setProbe(null);
-        setAllowIncompleteInstall(false);
-        setModMetadata({});
-        await probePath(result.data);
-      }
-    } finally {
-      setBrowsing(false);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.pickPath(
+          "directory",
+          installDir.trim().length > 0 ? installDir : undefined,
+          "Select the ASA install root (contains ShooterGame)",
+        );
+        if (!result.ok) {
+          setError(result.error ?? "Could not open folder picker");
+          return;
+        }
+        if (result.data !== null) {
+          setInstallDir(result.data);
+          setProbe(null);
+          setAllowIncompleteInstall(false);
+          setModMetadata({});
+          await probePath(result.data);
+        }
+      },
+      () => {
+        setBrowsing(false);
+      },
+    );
   };
 
   const handleContinueFromStep1 = async (): Promise<void> => {
@@ -198,21 +205,24 @@ export function ImportInstallWizard(props: Props): ReactElement {
 
     setSaving(true);
     setError(null);
-    try {
-      const result = await window.api.importExistingServer(inputOrError, {
-        allowIncompleteInstall:
-          probe.installation.health === "incomplete"
-            ? allowIncompleteInstall
-            : undefined,
-      });
-      if (!result.ok) {
-        setError(result.error ?? "Could not import install");
-        return;
-      }
-      props.onImported(result.data);
-    } finally {
-      setSaving(false);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.importExistingServer(inputOrError, {
+          allowIncompleteInstall:
+            probe.installation.health === "incomplete"
+              ? allowIncompleteInstall
+              : undefined,
+        });
+        if (!result.ok) {
+          setError(result.error ?? "Could not import install");
+          return;
+        }
+        props.onImported(result.data);
+      },
+      () => {
+        setSaving(false);
+      },
+    );
   };
 
   return (

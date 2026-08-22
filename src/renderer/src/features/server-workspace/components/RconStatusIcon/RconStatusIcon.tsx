@@ -1,5 +1,6 @@
 import { type ReactElement, useSyncExternalStore, useEffect, useState } from "react";
 import { Tooltip, Badge } from "@mantine/core";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 
 type RconConnectionStatus = "disconnected" | "connecting" | "connected" | "error";
 
@@ -102,11 +103,14 @@ export function RconStatusIcon({ serverId }: Props): ReactElement {
   const retryConnection = async (): Promise<void> => {
     if (!canRetry) return;
     setRetrying(true);
-    try {
-      await window.api.retryRconConnection(serverId);
-    } finally {
-      setRetrying(false);
-    }
+    await runWithFinally(
+      async () => {
+        await window.api.retryRconConnection(serverId);
+      },
+      () => {
+        setRetrying(false);
+      },
+    );
   };
 
   return (

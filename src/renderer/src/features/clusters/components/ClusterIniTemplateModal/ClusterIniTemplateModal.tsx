@@ -18,6 +18,7 @@ import type {
 } from "@shared/types";
 import { stripYarkOwnedFromPayload } from "@shared/yark-owned-ini-keys";
 import { sanitizeServerIniPayload } from "@features/server-workspace/iniModel";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
 import { ClusterIniTemplateVisualPanel } from "./ClusterIniTemplateVisualPanel";
 import classes from "./ClusterIniTemplateModal.module.css";
@@ -72,15 +73,18 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
     setLoading(true);
     setError(null);
     setPreview(null);
-    try {
-      const [stored, draft] = await Promise.all([
-        window.api.getClusterIniTemplate(props.clusterId),
-        window.api.getClusterIniTemplateOrDraft(props.clusterId),
-      ]);
-      applyLoadedTemplate(stored, draft);
-    } finally {
-      setLoading(false);
-    }
+    await runWithFinally(
+      async () => {
+        const [stored, draft] = await Promise.all([
+          window.api.getClusterIniTemplate(props.clusterId),
+          window.api.getClusterIniTemplateOrDraft(props.clusterId),
+        ]);
+        applyLoadedTemplate(stored, draft);
+      },
+      () => {
+        setLoading(false);
+      },
+    );
   };
 
   useEffect(() => {
@@ -91,20 +95,21 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
     setError(null);
     setPreview(null);
 
-    void (async () => {
-      try {
+    void runWithFinally(
+      async () => {
         const [stored, draft] = await Promise.all([
           window.api.getClusterIniTemplate(clusterId),
           window.api.getClusterIniTemplateOrDraft(clusterId),
         ]);
         if (cancelled) return;
         applyLoadedTemplate(stored, draft);
-      } finally {
+      },
+      () => {
         if (!cancelled) {
           setLoading(false);
         }
-      }
-    })();
+      },
+    );
 
     return () => {
       cancelled = true;
@@ -115,26 +120,29 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
     if (payload === null) return;
     setSaving(true);
     setError(null);
-    try {
-      const result = await window.api.saveClusterIniTemplate(
-        props.clusterId,
-        payload,
-      );
-      if (!result.ok) {
-        setError(result.error ?? "Could not save cluster INI template");
-        return;
-      }
-      const saved = stripYarkOwnedFromPayload(
-        sanitizeServerIniPayload(result.data.template.payload),
-      );
-      setPayload(saved);
-      setBaseline(saved);
-      setExists(true);
-      setPreview(result.data.preview);
-      props.onChanged();
-    } finally {
-      setSaving(false);
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.saveClusterIniTemplate(
+          props.clusterId,
+          payload,
+        );
+        if (!result.ok) {
+          setError(result.error ?? "Could not save cluster INI template");
+          return;
+        }
+        const saved = stripYarkOwnedFromPayload(
+          sanitizeServerIniPayload(result.data.template.payload),
+        );
+        setPayload(saved);
+        setBaseline(saved);
+        setExists(true);
+        setPreview(result.data.preview);
+        props.onChanged();
+      },
+      () => {
+        setSaving(false);
+      },
+    );
   };
 
   const handleDelete = (): void => {
@@ -149,10 +157,10 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
       labels: { confirm: "Delete template", cancel: "Cancel" },
       confirmProps: { color: "red" },
       onConfirm: () => {
-        void (async () => {
-          setSaving(true);
-          setError(null);
-          try {
+        setSaving(true);
+        setError(null);
+        void runWithFinally(
+          async () => {
             const result = await window.api.deleteClusterIniTemplate(
               props.clusterId,
             );
@@ -162,10 +170,11 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
             }
             props.onChanged();
             props.onClose();
-          } finally {
+          },
+          () => {
             setSaving(false);
-          }
-        })();
+          },
+        );
       },
     });
   };

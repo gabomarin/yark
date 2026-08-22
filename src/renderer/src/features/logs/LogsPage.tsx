@@ -1,3 +1,4 @@
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { ReactElement } from "react";
 import { ClockCounterClockwise, HardDrives } from "@phosphor-icons/react";
 import {
@@ -65,20 +66,23 @@ export function LogsPage(props: Props): ReactElement {
     const generation = ++loadGenerationRef.current;
     setLoading(true);
     setError(null);
-    try {
-      const result = await window.api.recentEvents(300);
-      if (opts?.cancelled?.() || generation !== loadGenerationRef.current) return;
-      if (!result.ok) {
-        setFleetEvents([]);
-        setError(result.error ?? "Could not load events across servers");
-        return;
-      }
-      setFleetEvents(result.data);
-    } finally {
-      if (generation === loadGenerationRef.current) {
-        setLoading(false);
-      }
-    }
+    await runWithFinally(
+      async () => {
+        const result = await window.api.recentEvents(300);
+        if (opts?.cancelled?.() || generation !== loadGenerationRef.current) return;
+        if (!result.ok) {
+          setFleetEvents([]);
+          setError(result.error ?? "Could not load events across servers");
+          return;
+        }
+        setFleetEvents(result.data);
+      },
+      () => {
+        if (generation === loadGenerationRef.current) {
+          setLoading(false);
+        }
+      },
+    );
   };
 
   // Mount / explicit Reload only — do not key on props.servers (#163).

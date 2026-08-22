@@ -12,7 +12,9 @@
   },
   "scripts": {
     "dev": "electron-vite dev",
+    "dev:compiler": "node scripts/with-react-compiler.cjs electron-vite dev",
     "build": "electron-vite build",
+    "build:compiler": "node scripts/with-react-compiler.cjs electron-vite build",
     "start": "electron-vite preview",
     "package": "electron-vite build && electron-builder --win",
     "verify:fuses": "node scripts/verify-electron-fuses.cjs",
@@ -83,6 +85,7 @@
     "@types/yauzl": "^3.4.0",
     "@types/yazl": "^3.3.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "babel-plugin-react-compiler": "^1.0.0",
     "electron": "^43.2.0",
     "electron-builder": "^26.15.3",
     "electron-vite": "^3.1.0",

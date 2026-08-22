@@ -19,6 +19,7 @@ import {
   MIN_LOG_RETENTION_DAYS,
 } from "@shared/log-retention";
 import { showOperatorToast } from "@ui/operatorToast";
+import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { LogRetentionCleanupModal } from "./LogRetentionCleanupModal";
 import classes from "../SettingsPage.module.css";
 
@@ -73,27 +74,30 @@ export function SettingsLogRetentionSection(): ReactElement {
     setSettings(coerced);
     setBusy(true);
     setError(null);
-    void (async () => {
-      try {
-        const result = await window.api.setLogRetentionSettings(coerced);
-        if (!result.ok) {
+    void runWithFinally(
+      async () => {
+        try {
+          const result = await window.api.setLogRetentionSettings(coerced);
+          if (!result.ok) {
+            setSettings(previous);
+            setError(result.error ?? "Could not update log retention settings");
+            return;
+          }
+          setSettings(result.data);
+        } catch (cause) {
           setSettings(previous);
-          setError(result.error ?? "Could not update log retention settings");
-          return;
+          setError(
+            cleanupFailureMessage(
+              cause,
+              "Could not update log retention settings",
+            ),
+          );
         }
-        setSettings(result.data);
-      } catch (cause) {
-        setSettings(previous);
-        setError(
-          cleanupFailureMessage(
-            cause,
-            "Could not update log retention settings",
-          ),
-        );
-      } finally {
+      },
+      () => {
         setBusy(false);
-      }
-    })();
+      },
+    );
   };
 
   const openCleanup = () => {
@@ -105,20 +109,25 @@ export function SettingsLogRetentionSection(): ReactElement {
   const previewCleanup = async () => {
     setCleanupBusy(true);
     setError(null);
-    try {
-      const result = await window.api.previewLogCleanup({});
-      if (!result.ok) {
-        setError(result.error ?? "Could not scan for cleanup");
-        setCleanupPreview(null);
-        return;
-      }
-      setCleanupPreview(result.data);
-    } catch (cause) {
-      setError(cleanupFailureMessage(cause, "Could not scan for cleanup"));
-      setCleanupPreview(null);
-    } finally {
-      setCleanupBusy(false);
-    }
+    await runWithFinally(
+      async () => {
+        try {
+          const result = await window.api.previewLogCleanup({});
+          if (!result.ok) {
+            setError(result.error ?? "Could not scan for cleanup");
+            setCleanupPreview(null);
+            return;
+          }
+          setCleanupPreview(result.data);
+        } catch (cause) {
+          setError(cleanupFailureMessage(cause, "Could not scan for cleanup"));
+          setCleanupPreview(null);
+        }
+      },
+      () => {
+        setCleanupBusy(false);
+      },
+    );
   };
 
   const runCleanup = async () => {
@@ -130,31 +139,36 @@ export function SettingsLogRetentionSection(): ReactElement {
       serverId: item.serverId,
       targetKey: item.targetKey,
     }));
-    try {
-      const result = await window.api.runLogCleanup({ confirmedTargets });
-      if (!result.ok) {
-        setError(result.error ?? "Could not run cleanup");
-        return;
-      }
-      setCleanupOpen(false);
-      setCleanupPreview(null);
-      const skipped = result.data.skipped.length;
-      const failed = result.data.failed.length;
-      const parts = [
-        `Removed ${result.data.deleted} item${result.data.deleted === 1 ? "" : "s"}`,
-        result.data.freedBytes > 0 ? `${result.data.freedBytes} bytes freed` : null,
-      ].filter((part): part is string => part !== null);
-      if (skipped > 0) parts.push(`${skipped} skipped`);
-      if (failed > 0) parts.push(`${failed} failed`);
-      showOperatorToast({
-        title: "Log retention",
-        message: `Cleanup finished: ${parts.join(" · ")}.`,
-      });
-    } catch (cause) {
-      setError(cleanupFailureMessage(cause, "Could not run cleanup"));
-    } finally {
-      setCleanupBusy(false);
-    }
+    await runWithFinally(
+      async () => {
+        try {
+          const result = await window.api.runLogCleanup({ confirmedTargets });
+          if (!result.ok) {
+            setError(result.error ?? "Could not run cleanup");
+            return;
+          }
+          setCleanupOpen(false);
+          setCleanupPreview(null);
+          const skipped = result.data.skipped.length;
+          const failed = result.data.failed.length;
+          const parts = [
+            `Removed ${result.data.deleted} item${result.data.deleted === 1 ? "" : "s"}`,
+            result.data.freedBytes > 0 ? `${result.data.freedBytes} bytes freed` : null,
+          ].filter((part): part is string => part !== null);
+          if (skipped > 0) parts.push(`${skipped} skipped`);
+          if (failed > 0) parts.push(`${failed} failed`);
+          showOperatorToast({
+            title: "Log retention",
+            message: `Cleanup finished: ${parts.join(" · ")}.`,
+          });
+        } catch (cause) {
+          setError(cleanupFailureMessage(cause, "Could not run cleanup"));
+        }
+      },
+      () => {
+        setCleanupBusy(false);
+      },
+    );
   };
 
   return (
