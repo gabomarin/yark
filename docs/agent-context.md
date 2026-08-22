@@ -30,7 +30,7 @@ This repository contains a desktop application for managing dedicated ARK Surviv
 - Optional renderer hygiene: `npx react-doctor@latest --verbose --scope changed` on UI PRs (baseline and ignored rules: [react-doctor.md](react-doctor.md), root `doctor.config.json`).
 - React Compiler is **opt-in** only (`YARK_REACT_COMPILER=1` / `npm run build:compiler`); default stays off — spike write-up [react-compiler-spike.md](react-compiler-spike.md) (#404).
 - For visible renderer changes, follow the mandatory [visual testing protocol](visual-testing.md), including HD, Full HD, and QHD/2K review.
-- When growing or splitting React UI, follow [component-structure.md](component-structure.md) (pragmatic Atomic Design for agents).
+- When growing or splitting React UI, follow [component-structure.md](component-structure.md) (pragmatic Atomic Design for agents). Backend/renderer mega-file boundaries and phased extraction: [decomposition-146.md](decomposition-146.md) (#146).
 - Prefer **Mantine** components/props for renderer UI wherever they fit (Stepper,
   Modal, Tooltip, forms, layout) before custom chrome; see
   [design-system.md](design-system.md) and

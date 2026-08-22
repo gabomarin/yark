@@ -9,6 +9,11 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- **Decomposition map** for oversized backend services and renderer pages — phased boundaries, test inventory, and PR checklist ([#146](https://github.com/gabomarin/yark/issues/146)).
+- Pure **backup cleanup planner** module (`backup-cleanup-plan.ts`) extracted from `backup-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
+- **Backup fleet health** helpers extracted to `backup-fleet.ts` (health badges, alerts, disk stats) with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 ### Changed
 
 - Async busy/spinner cleanup across the renderer uses shared **`runWithFinally`** so React Compiler can optimize those surfaces when enabled; verbose build skips drop from ~74 to ~55 CompileError (#404).

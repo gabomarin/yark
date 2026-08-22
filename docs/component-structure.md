@@ -151,6 +151,8 @@ boundaries below (one area per PR when practical).
 
 Line caps stay in [`component-structure-baseline.json`](../scripts/component-structure-baseline.json); do not raise them while deferring — shrink the file or update the baseline intentionally when splitting.
 
+**Cross-cutting decomposition (#146):** backend mega-services, `App.tsx`, and phased extraction order live in [decomposition-146.md](decomposition-146.md). Start there before a #146 slice PR.
+
 ## Related docs
 
 - Design system / surfaces: [design-system.md](design-system.md)
