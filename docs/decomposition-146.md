@@ -1,7 +1,7 @@
 # Decomposition map (#146)
 
 **Issue:** [#146](https://github.com/gabomarin/yark/issues/146) — Decompose oversized backend services and renderer pages  
-**Status:** Complete for ticket scope — renderer feature baselines empty; optional backend line gate live with six grandfathered coordinators; `App.tsx` shrunk via shell hooks  
+**Status:** Complete for ticket scope — renderer feature baselines empty; optional backend line gate live with three grandfathered coordinators; `App.tsx` shrunk via shell hooks  
 **Policy:** `scripts/component-structure-baseline.json`, `scripts/backend-structure-baseline.json`, [component-structure.md](component-structure.md)
 
 ## Goal
@@ -12,13 +12,12 @@ Reduce change coupling by extracting cohesive modules **without** changing exter
 
 | File | Lines | Baseline? | Primary tests |
 | --- | ---: | --- | --- |
-| `src/backend/domains/backups/backup-service.ts` | ~1,544 | Backend grandfathered | `tests/unit/backup-service.test.ts`, `backup-archive.test.ts`, … |
-| `src/backend/domains/updates/update-service.ts` | ~1,081 | Backend grandfathered | `update-service-safe-update.test.ts`, critical-job integration |
-| `src/backend/domains/instances/instance-service.ts` | ~1,094 | Backend grandfathered | `instance-*.test.ts` |
+| `src/backend/domains/backups/backup-service.ts` | ~1,550 | Backend grandfathered | `tests/unit/backup-service.test.ts`, `backup-archive.test.ts`, … |
+| `src/backend/domains/instances/instance-service.ts` | ~937 | Backend grandfathered | `instance-*.test.ts` |
 | `src/backend/domains/instances/move-install-service.ts` | ~1,203 | Backend grandfathered | move-install unit/E2E |
-| `src/backend/domains/instances/server-installation.ts` | ~1,157 | Backend grandfathered | `server-installation.test.ts` |
-| `src/backend/infra/process/process-manager.ts` | ~1,069 | Backend grandfathered | `process-manager-*.test.ts`, real-start |
 | `src/renderer/src/App.tsx` | ~715 | Outside `features/` gate | `App.test.tsx` |
+
+Cleared from baseline (≤800): `update-service.ts` (~732), `server-installation.ts` (~505).
 
 Renderer **feature** files previously listed here are under the standard TSX/TS caps (Phase 6). Further backend shrinks remove rows from `backend-structure-baseline.json`.
 
@@ -73,8 +72,10 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `update-perform.ts` / `steamcmd-run.ts` | Install/update/verify safety orchestration and SteamCMD cache/run orchestration; `UpdateService` keeps thin queue-facing facades and shared runtime state. |
 | `update-queue-runtime.ts` | Durable queue load/persist/recovery, waiters, operator actions, and processing orchestration; `UpdateService` keeps compatibility facades. |
 | `steamcmd-progress-runtime.ts` | SteamCMD console buffers, live/paused progress, disk estimates, and active process/sync runtime state. |
+| `steamcmd-install.ts` | SteamCMD install/discover/verify/path persistence; `UpdateService` keeps thin public facades. |
+| `steamcmd-control.ts` | Cancel/pause orchestration against progress + queue runtime via a narrow host. |
 
-**Phase 3 exit:** `update-service.ts` is a coordinator; SteamCMD + queue decisions live in siblings above. Further shrinks are optional orchestration moves only.
+**Phase 3 exit:** `update-service.ts` is a coordinator (≤800); SteamCMD + queue decisions live in siblings above.
 
 ### Phase 4 progress
 
@@ -88,8 +89,12 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `process-readiness.ts` | Pure ready-log detection, RCON probe delay, runtime log ring (+ unit tests). |
 | `process-ready-wait.ts` | Readiness wait orchestration (RCON poll / settle / timeout / reattach); `ProcessManager.waitUntilReady` is a thin facade. |
 | `process-stop.ts` | Pure unexpected-exit classification and last-error copy (+ unit tests). Graceful stop/kill orchestration still on `ProcessManager`. |
+| `process-leave.ts` | Leave-running identity collect / detach / reattach; `ProcessManager` keeps thin facades. |
+| `process-graceful-stop.ts` | SaveWorld → DoExit graceful stop begin/finish; `ProcessManager` keeps thin facades. |
+| `instance-fleet-install.ts` | Fleet installation inspect, coalesce, and health-memory events; `InstanceService` keeps thin facades (#427). |
+| `install-steam-build.ts` / `official-ark-probe.ts` / `install-health.ts` | Split from `server-installation.ts` (now ≤800). |
 
-**Phase 4 exit:** `instance-service.ts` and `process-manager.ts` are coordinators; lifecycle/profile/crash/stop and spawn/readiness/stop decisions live in siblings above. Optional: clean `ProcessManager.start` or leave/detach orchestration moves.
+**Phase 4 exit:** `instance-service.ts` and `process-manager.ts` are coordinators; lifecycle/profile/crash/stop/fleet-install and spawn/readiness/leave/stop decisions live in siblings above.
 
 ### Phase 5 progress
 
@@ -147,9 +152,9 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `ServerLogsPanel.tsx` | State, focus/load generations, runtime polling, and IPC actions moved to `useServerLogsPanel` + `serverLogsPanelActions`; removed from baseline |
 | `ServerBackupPanel.tsx` | Load generations, quiet polling, autosave, selection, restore, and CRUD moved to `useServerBackupPanel` + `serverBackupPanelActions`; removed from baseline |
 | Remaining grandfathered (0) | Renderer baseline `files` map is empty |
-| Backend line gate | `backend-structure-baseline.json` — new backend `.ts` ≤ 800; six grandfathered coordinators |
+| Backend line gate | `backend-structure-baseline.json` — new backend `.ts` ≤ 800; three grandfathered coordinators |
 
-**Phase 6 exit:** Achieved — empty renderer `component-structure-baseline.json` `files` map; optional backend line gate enforced via `backend-structure-baseline.json` (new `src/backend` `.ts` ≤ 800; six grandfathered coordinators).
+**Phase 6 exit:** Achieved — empty renderer `component-structure-baseline.json` `files` map; optional backend line gate enforced via `backend-structure-baseline.json` (new `src/backend` `.ts` ≤ 800; three grandfathered coordinators).
 
 
 ## Backend: `backup-service.ts`

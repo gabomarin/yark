@@ -8,24 +8,16 @@ import type {
 } from "@shared/types";
 import {
   LEFT_RUNNING_SCHEMA_VERSION,
-  classifyLeaveCandidate,
   type LeftRunningProcessIdentity,
   type LiveProcessIdentity,
 } from "@shared/left-running";
 import { rconExec } from "../rcon/rcon-client";
 import { diagnoseAsaStartupFailure, type AsaStartupFailure } from "@shared/asa-startup-failure";
-import {
-  AsaSavedLogsTailer,
-  captureAsaLogSessionAnchor,
-  readAsaLogSessionExcerpt,
-} from "./asa-log-tail";
+import { readAsaLogSessionExcerpt } from "./asa-log-tail";
 import { createAdoptedChildHandle } from "./adopted-child";
 import { killWinProcessTreeAsync } from "./kill-win-process-tree";
 import { queryWindowsProcessIdentity } from "./windows-process-identity";
-import {
-  disconnectChildStdio,
-  spawnAsaProcess,
-} from "./process-spawn";
+import { spawnAsaProcess } from "./process-spawn";
 import {
   DEFAULT_READY_PROBE_MIN_WAIT_MS,
   DEFAULT_READY_SETTLE_MS,
@@ -46,31 +38,34 @@ import {
   type ProcessStartManaged,
 } from "./process-start";
 import {
-  EXIT_WAIT_MS,
-  SAVE_WAIT_MS,
+  collectLeaveIdentities as collectLeaveIdentitiesForHost,
+  detachAfterLeavePersist as detachAfterLeavePersistForHost,
+  detachForLeave as detachForLeaveForHost,
+  reattachManagedProcess,
+  type ProcessLeaveHost,
+} from "./process-leave";
+import {
+  beginGracefulStop as beginGracefulStopForHost,
+  finishGracefulStop as finishGracefulStopForHost,
+  type BeginGracefulStopResult,
+  type FinishGracefulStopResult,
+  type GracefulStopHandle,
+  type ProcessGracefulStopHost,
+} from "./process-graceful-stop";
+import {
   formatProcessExitLogLine,
   isUnexpectedManagedExit,
   planManagedExitLastError,
 } from "./process-stop";
 
+export type {
+  BeginGracefulStopResult,
+  FinishGracefulStopResult,
+  GracefulStopHandle,
+};
+
 /** Ports used for this live process (including session-only overrides). */
 type ManagedProcess = ProcessStartManaged;
-
-export interface GracefulStopHandle {
-  readonly serverId: string;
-  /** Opaque identity of the exact child that acknowledged SaveWorld. */
-  readonly identity: object;
-}
-
-export type BeginGracefulStopResult =
-  | { phase: "saved"; handle: GracefulStopHandle }
-  | { phase: "killed"; handle: null }
-  | { phase: "absent"; handle: null };
-
-export type FinishGracefulStopResult =
-  | "stopped"
-  | "already_exited"
-  | "replaced";
 
 /** Observed child exit that was not an operator stop. */
 export interface UnexpectedManagedExit {
@@ -284,69 +279,7 @@ export class ProcessManager extends EventEmitter {
   async beginGracefulStop(
     profile: ServerProfile,
   ): Promise<BeginGracefulStopResult> {
-    const managed = this.processes.get(profile.id);
-    if (managed === undefined) return { phase: "absent", handle: null };
-    managed.readinessGeneration += 1;
-    managed.status = "stopping";
-    this.appendRuntimeLog(profile.id, "system", "Attempting safe stop via RCON");
-    this.emitStatus(profile.id);
-
-    try {
-      await this.executeRcon(profile, "SaveWorld");
-      await delay(SAVE_WAIT_MS);
-      return {
-        phase: "saved",
-        handle: { serverId: profile.id, identity: managed.identity },
-      };
-    } catch {
-      // Prefer DoExit before force-kill when SaveWorld is unavailable (e.g. still
-      // bootstrapping after a readiness wait timeout on quit Stop).
-      this.appendRuntimeLog(
-        profile.id,
-        "warning",
-        "RCON SaveWorld unavailable; attempting DoExit before kill",
-      );
-      try {
-        await this.executeRcon(profile, "DoExit");
-        const exitedAfterDoExit = await this.waitForExit(managed.child, EXIT_WAIT_MS);
-        if (exitedAfterDoExit) {
-          if (this.processes.get(profile.id) === managed) {
-            this.stopManagedCapture(profile.id, managed);
-            this.processes.delete(profile.id);
-            this.clearProcessCheckpoint(profile.id);
-            this.emitStatus(profile.id);
-          }
-          return { phase: "killed", handle: null };
-        }
-      } catch {
-        this.appendRuntimeLog(
-          profile.id,
-          "warning",
-          "RCON DoExit unavailable; applying kill",
-        );
-      }
-
-      await this.terminateManaged(profile.id, managed);
-      let exited = await this.waitForExit(managed.child, EXIT_WAIT_MS);
-      if (!exited && this.processes.get(profile.id) === managed) {
-        await this.terminateManaged(profile.id, managed);
-        exited = await this.waitForExit(managed.child, 5000);
-      }
-      if (!exited && this.processes.get(profile.id) === managed) {
-        managed.status = "error";
-        managed.lastError = "Could not terminate process after RCON SaveWorld failed";
-        this.appendRuntimeLog(profile.id, "error", managed.lastError);
-        this.emitStatus(profile.id);
-        throw new Error(managed.lastError);
-      }
-      if (this.processes.get(profile.id) === managed) {
-        this.stopManagedCapture(profile.id, managed);
-        this.processes.delete(profile.id);
-        this.clearProcessCheckpoint(profile.id);
-        this.emitStatus(profile.id);
-      }
-      return { phase: "killed", handle: null };
-    }
+    return beginGracefulStopForHost(this.gracefulStopHost(), profile);
   }
 
   /**
@@ -357,38 +290,7 @@ export class ProcessManager extends EventEmitter {
     profile: ServerProfile,
     handle: GracefulStopHandle,
   ): Promise<FinishGracefulStopResult> {
-    const managed = this.processes.get(profile.id);
-    if (managed === undefined) return "already_exited";
-    if (managed.identity !== handle.identity || handle.serverId !== profile.id) {
-      return "replaced";
-    }
-
-    try {
-      await this.executeRcon(profile, "DoExit");
-    } catch {
-      this.appendRuntimeLog(profile.id, "warning", "RCON DoExit failed; applying kill");
-      await this.terminateManaged(profile.id, managed);
-    }
-
-    const exited = await this.waitForExit(managed.child, EXIT_WAIT_MS);
-    if (!exited) {
-      await this.terminateManaged(profile.id, managed);
-      const forcedExit = await this.waitForExit(managed.child, 5000);
-      if (!forcedExit && this.processes.get(profile.id) === managed) {
-        managed.status = "error";
-        managed.lastError = "Could not terminate process after RCON DoExit";
-        this.appendRuntimeLog(profile.id, "error", managed.lastError);
-        this.emitStatus(profile.id);
-        throw new Error(managed.lastError);
-      }
-    }
-    if (this.processes.get(profile.id) === managed) {
-      this.stopManagedCapture(profile.id, managed);
-      this.processes.delete(profile.id);
-      this.clearProcessCheckpoint(profile.id);
-      this.emitStatus(profile.id);
-    }
-    return "stopped";
+    return finishGracefulStopForHost(this.gracefulStopHost(), profile, handle);
   }
 
   /**
@@ -469,49 +371,7 @@ export class ProcessManager extends EventEmitter {
       leftAt?: string;
     },
   ): Promise<LeftRunningProcessIdentity[]> {
-    const queryOs =
-      options?.queryOsIdentity ??
-      ((pid: number) => this.queryOsIdentity(pid));
-    const leftAt = options?.leftAt ?? new Date().toISOString();
-    const records: LeftRunningProcessIdentity[] = [];
-
-    for (const profile of profiles) {
-      const managed = this.processes.get(profile.id);
-      if (managed === undefined || !this.isActive(profile.id)) {
-        continue;
-      }
-      const pid = managed.child.pid;
-      if (pid === undefined || !Number.isInteger(pid) || pid <= 0) {
-        throw new Error(
-          `Cannot leave "${profile.name}" running: process id is unavailable`,
-        );
-      }
-
-      const live = await queryOs(pid);
-      const osCreationTime = live?.osCreationTime?.trim() || null;
-      if (osCreationTime === null) {
-        throw new Error(
-          `Cannot leave "${profile.name}" running: OS process creation time is unavailable (needed to reject PID reuse)`,
-        );
-      }
-
-      records.push({
-        schemaVersion: LEFT_RUNNING_SCHEMA_VERSION,
-        serverId: profile.id,
-        pid,
-        executablePath: managed.executablePath,
-        installDir: managed.installDir,
-        startedAt: managed.startedAt,
-        expectedCommandLine: managed.expectedCommandLine,
-        launchArgs: [...managed.launchArgs],
-        runtimePorts: { ...managed.runtimePorts },
-        osCreationTime,
-        osExecutablePath: live?.executablePath ?? null,
-        leftAt,
-      });
-    }
-
-    return records;
+    return collectLeaveIdentitiesForHost(this.leaveHost(), profiles, options);
   }
 
   /**
@@ -519,35 +379,7 @@ export class ProcessManager extends EventEmitter {
    * Stops log capture, disconnects stdio, unrefs, and drops tracking.
    */
   detachAfterLeavePersist(records: LeftRunningProcessIdentity[]): void {
-    for (const record of records) {
-      const managed = this.processes.get(record.serverId);
-      if (managed === undefined || !this.isActive(record.serverId)) {
-        continue;
-      }
-      if (managed.child.pid !== record.pid) {
-        throw new Error(
-          `Cannot detach "${record.serverId}": process id changed since Leave snapshot`,
-        );
-      }
-
-      this.appendRuntimeLog(
-        record.serverId,
-        "system",
-        `Detaching for Leave running (pid ${record.pid}); process stays alive`,
-      );
-      this.stopManagedCapture(record.serverId, managed);
-      managed.readinessGeneration += 1;
-      disconnectChildStdio(managed.child);
-      try {
-        managed.child.unref();
-      } catch {
-        // Ignore: some test fakes omit unref.
-      }
-      if (this.processes.get(record.serverId) === managed) {
-        this.processes.delete(record.serverId);
-        this.emitStatus(record.serverId);
-      }
-    }
+    detachAfterLeavePersistForHost(this.leaveHost(), records);
   }
 
   /**
@@ -561,9 +393,7 @@ export class ProcessManager extends EventEmitter {
       leftAt?: string;
     },
   ): Promise<LeftRunningProcessIdentity[]> {
-    const records = await this.collectLeaveIdentities(profiles, options);
-    this.detachAfterLeavePersist(records);
-    return records;
+    return detachForLeaveForHost(this.leaveHost(), profiles, options);
   }
 
   /**
@@ -578,96 +408,54 @@ export class ProcessManager extends EventEmitter {
       queryOsIdentity?: (pid: number) => Promise<LiveProcessIdentity | null>;
     },
   ): Promise<void> {
-    if (this.isActive(profile.id)) {
-      throw new Error(`Server "${profile.name}" is already running`);
-    }
-    if (record.serverId !== profile.id) {
-      throw new Error("Leave identity serverId does not match profile");
-    }
-    if (!Number.isInteger(record.pid) || record.pid <= 0) {
-      throw new Error("Leave identity has an invalid process id");
-    }
+    return reattachManagedProcess(this.leaveHost(), profile, record, options);
+  }
 
-    const queryOs = options?.queryOsIdentity ?? this.queryOsIdentity;
-    const live = await queryOs(record.pid);
-    const classification = classifyLeaveCandidate(record, live);
-    if (classification !== "match") {
-      throw new Error(
-        `Leave identity for "${profile.name}" failed re-validation (${classification})`,
-      );
-    }
-
-    const child = this.createAdoptedChild(record.pid);
-    const runtimePorts = record.runtimePorts ?? {
-      gamePort: profile.gamePort,
-      queryPort: profile.queryPort,
-      rconPort: profile.rconPort,
-    };
-    const managed: ManagedProcess = {
-      child,
-      identity: {},
-      status: "starting",
-      startedAt: record.startedAt,
-      lastError: null,
-      readinessGeneration: 0,
-      logTailer: null,
-      logSessionAnchor: captureAsaLogSessionAnchor(record.installDir),
-      executablePath: record.executablePath,
-      installDir: record.installDir,
-      launchArgs: [...record.launchArgs],
-      expectedCommandLine: record.expectedCommandLine,
-      runtimePorts: { ...runtimePorts },
-    };
-    this.processes.set(profile.id, managed);
-    this.appendRuntimeLog(
-      profile.id,
-      "system",
-      `Reattached to left-running process (pid ${record.pid})`,
-    );
-    // Fire-and-forget like start(); pass live identity to skip a second PowerShell probe.
-    void this.writeProcessCheckpoint(profile.id, managed, live);
-
-    managed.logTailer = new AsaSavedLogsTailer(profile.installDir, (text) => {
-      if (this.processes.get(profile.id) !== managed) return;
-      this.captureRuntimeChunk(profile.id, "log", text);
-    });
-    managed.logTailer.start(managed.logSessionAnchor);
-    this.appendRuntimeLog(
-      profile.id,
-      "system",
-      "Waiting for RCON readiness after crash-recovery reattach…",
-    );
-    this.emitStatus(profile.id);
-
-    child.once("exit", (code) => {
-      this.onManagedExit(profile.id, managed, code);
-    });
-
-    if (options?.skipReadinessCheck === true) {
-      managed.status = "running";
-      this.appendRuntimeLog(
-        profile.id,
-        "system",
-        "Readiness skipped after reattach; status running",
-      );
-      this.emitStatus(profile.id);
-      return;
-    }
-
-    managed.readinessGeneration += 1;
-    void this.waitUntilReady(
-      {
-        ...profile,
-        gamePort: managed.runtimePorts.gamePort,
-        queryPort: managed.runtimePorts.queryPort,
-        rconPort: managed.runtimePorts.rconPort,
+  private gracefulStopHost(): ProcessGracefulStopHost {
+    return {
+      getManaged: (serverId) => this.processes.get(serverId),
+      appendRuntimeLog: (serverId, source, message) =>
+        this.appendRuntimeLog(serverId, source, message),
+      emitStatus: (serverId) => this.emitStatus(serverId),
+      executeRcon: (profile, command) => this.executeRcon(profile, command),
+      waitForExit: (child, timeoutMs) => this.waitForExit(child, timeoutMs),
+      stopManagedCapture: (serverId, managed) =>
+        this.stopManagedCapture(serverId, managed),
+      deleteManaged: (serverId) => {
+        this.processes.delete(serverId);
       },
-      managed,
-      managed.readinessGeneration,
-      {
-        terminateOnTimeout: false,
+      clearProcessCheckpoint: (serverId) => this.clearProcessCheckpoint(serverId),
+      terminateManaged: (serverId, managed) =>
+        this.terminateManaged(serverId, managed),
+    };
+  }
+
+  private leaveHost(): ProcessLeaveHost {
+    return {
+      isActive: (serverId) => this.isActive(serverId),
+      getManaged: (serverId) => this.processes.get(serverId),
+      queryOsIdentity: (pid) => this.queryOsIdentity(pid),
+      appendRuntimeLog: (serverId, source, message) =>
+        this.appendRuntimeLog(serverId, source, message),
+      stopManagedCapture: (serverId, managed) =>
+        this.stopManagedCapture(serverId, managed),
+      deleteManaged: (serverId) => {
+        this.processes.delete(serverId);
       },
-    );
+      emitStatus: (serverId) => this.emitStatus(serverId),
+      createAdoptedChild: (pid) => this.createAdoptedChild(pid),
+      setManaged: (serverId, managed) => {
+        this.processes.set(serverId, managed);
+      },
+      writeProcessCheckpoint: (serverId, managed, live) =>
+        this.writeProcessCheckpoint(serverId, managed, live),
+      captureRuntimeChunk: (serverId, source, text) =>
+        this.captureRuntimeChunk(serverId, source, text),
+      onManagedExit: (serverId, managed, code) =>
+        this.onManagedExit(serverId, managed, code),
+      waitUntilReady: (profile, managed, generation, options) =>
+        this.waitUntilReady(profile, managed, generation, options),
+    };
   }
 
   private startHost(): ProcessStartHost {

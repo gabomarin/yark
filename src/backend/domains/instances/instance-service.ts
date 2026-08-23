@@ -1,6 +1,5 @@
 import type {
   ClusterComplianceReport,
-  InstallationHealthStatus,
   InstallationServersMode,
   OfficialNetworkStatus,
   ServerInstallationInfo,
@@ -44,26 +43,15 @@ import { assertImportHealthAllowed, assertNotInsideAsaInstall } from "./import-e
 import {
   invalidateInstallInspectCache,
   inspectServerInstallationAsync,
-  readOfficialArkBuildCached,
-  readOfficialArkVersionCached,
 } from "./server-installation";
 import { syncProfileSettingsToIni } from "./sync-profile-ini";
 import {
-  isInstallHealthDegradation,
   isInstallationReady,
 } from "@shared/installation-health";
 import { assertHostPortsAvailable } from "../../infra/process/host-port-probe";
-import { resolveDisplayedServerVersion } from "@shared/server-version-display";
 import { planUnexpectedServerCrashEvent } from "./instance-crash";
 import {
-  FLEET_INSPECT_CONCURRENCY,
-  mapPool,
-} from "./instance-lifecycle";
-import {
   applySessionPortsToProfile,
-  buildFleetInspectKey,
-  fleetServerSetChanged,
-  shouldInspectFleetInstallations,
   validateSessionPorts,
 } from "./instance-profile";
 import { InstanceRcon } from "./instance-rcon";
@@ -72,15 +60,13 @@ import {
   InstanceStop,
   type StopServerOptions,
 } from "./instance-stop";
+import {
+  ENRICHED_INSTALL_INSPECT,
+  InstanceFleetInstall,
+} from "./instance-fleet-install";
 
 export type { StopServerOptions } from "./instance-stop";
 
-/** Single-server / gate paths may use heavier version fallbacks. */
-const ENRICHED_INSTALL_INSPECT = {
-  bypassCache: true,
-  allowExecutableVersionProbe: true,
-  allowLogVersionProbe: true,
-} as const;
 
 /**
  * Instance orchestration service: validated CRUD + lifecycle.
@@ -93,16 +79,7 @@ export class InstanceService extends EventEmitter {
    * checks for name, ports, and installDir cannot race across concurrent IPC (#254).
    */
   private fleetCreateChain: Promise<unknown> = Promise.resolve();
-  private lastOfficialVersion: string | null | undefined = undefined;
-  private lastOfficialSteamBuild: string | null | undefined = undefined;
-  private lastInstallServers: ServerInstallationInfo[] = [];
-  /** Last classified health per server — used for degradation-only events (#57). */
-  private readonly lastKnownInstallHealth = new Map<string, InstallationHealthStatus>();
-  /** Coalesce concurrent full-fleet installation inspects for the same profile set + cache mode. */
-  private fleetInspectInFlight: {
-    key: string;
-    promise: Promise<ServerInstallationInfo[]>;
-  } | null = null;
+  private readonly fleetInstall: InstanceFleetInstall;
   private readonly rcon: InstanceRcon;
   private readonly clones: InstanceClone;
   private readonly stops: InstanceStop;
@@ -114,6 +91,7 @@ export class InstanceService extends EventEmitter {
     private readonly locks: InstanceLockManager,
   ) {
     super();
+    this.fleetInstall = new InstanceFleetInstall({ repo });
     this.rcon = new InstanceRcon(repo, processes, (info) => {
       this.emit("rcon-status-changed", info);
     });
@@ -351,10 +329,7 @@ export class InstanceService extends EventEmitter {
     if (updated === null) {
       throw new Error("Server does not exist");
     }
-    this.lastInstallServers = this.lastInstallServers.filter(
-      (info) => info.serverId !== id,
-    );
-    this.lastKnownInstallHealth.delete(id);
+    this.fleetInstall.clearServer(id);
     invalidateInstallInspectCache(id);
     this.repo.addEvent(
       id,
@@ -509,7 +484,7 @@ export class InstanceService extends EventEmitter {
       profile.installDir,
       ENRICHED_INSTALL_INSPECT,
     );
-    this.recordInstallHealth(installation);
+    this.fleetInstall.recordInstallHealth(installation);
     if (!isInstallationReady(installation)) {
       throw new Error(
         `Server files are not ready (${installation.health}): ${installation.guidance}`,
@@ -611,7 +586,7 @@ export class InstanceService extends EventEmitter {
         profile.installDir,
         ENRICHED_INSTALL_INSPECT,
       );
-      this.recordInstallHealth(installation);
+      this.fleetInstall.recordInstallHealth(installation);
 
       this.assertNoPortConflicts(profile, id);
       const reports = checkClusterCompliance(this.repo.list());
@@ -740,108 +715,7 @@ export class InstanceService extends EventEmitter {
     officialSteamBuild: string | null;
     servers: ServerInstallationInfo[];
   }> {
-    const [officialProbe, officialSteamBuild] = await Promise.all([
-      readOfficialArkVersionCached(forceOfficialCheck),
-      readOfficialArkBuildCached(forceOfficialCheck),
-    ]);
-    const officialVersion = officialProbe.version;
-    const officialNetworkStatus = officialProbe.networkStatus;
-
-    const profiles = this.repo.list();
-    const officialChanged =
-      this.lastOfficialVersion !== officialVersion ||
-      this.lastOfficialSteamBuild !== officialSteamBuild;
-    const serverSetChanged = fleetServerSetChanged(profiles, this.lastInstallServers);
-
-    const shouldInspectServers = shouldInspectFleetInstallations({
-      forceOfficialCheck,
-      serversMode,
-      officialChanged,
-      serverSetChanged,
-    });
-
-    const servers = shouldInspectServers
-      ? await this.inspectFleetInstallations({
-          bypassCache: forceOfficialCheck,
-        })
-      : this.lastInstallServers;
-
-    this.lastOfficialVersion = officialVersion;
-    this.lastOfficialSteamBuild = officialSteamBuild;
-    if (shouldInspectServers) {
-      this.lastInstallServers = servers;
-    }
-
-    return {
-      officialVersion,
-      officialNetworkStatus,
-      officialSteamBuild,
-      servers,
-    };
-  }
-
-  /**
-   * Bounded, async fleet inspect so many profiles (and slow UNC paths) do not
-   * freeze the Electron main process. Concurrent callers share one in-flight
-   * promise when the profile-set key and cache mode match; after waiting for a
-   * different key they re-check before starting another scan.
-   */
-  private async inspectFleetInstallations(options: {
-    bypassCache: boolean;
-  }): Promise<ServerInstallationInfo[]> {
-    for (;;) {
-      const profiles = this.repo.list();
-      const key = buildFleetInspectKey(profiles, options.bypassCache);
-      const existing = this.fleetInspectInFlight;
-      if (existing !== null && existing.key === key) {
-        return existing.promise;
-      }
-      if (existing !== null) {
-        // Different fleet snapshot or cache mode — wait, then re-evaluate.
-        await existing.promise.catch(() => undefined);
-        continue;
-      }
-
-      // No in-flight work. Capture the latest list and start (sync section — safe).
-      const profilesToScan = this.repo.list();
-      const scanKey = buildFleetInspectKey(profilesToScan, options.bypassCache);
-      const promise = this.runFleetInstallScan(profilesToScan, options.bypassCache).finally(
-        () => {
-          if (this.fleetInspectInFlight?.promise === promise) {
-            this.fleetInspectInFlight = null;
-          }
-        },
-      );
-      this.fleetInspectInFlight = { key: scanKey, promise };
-      return promise;
-    }
-  }
-
-  private async runFleetInstallScan(
-    profilesToScan: ReadonlyArray<ServerProfile>,
-    bypassCache: boolean,
-  ): Promise<ServerInstallationInfo[]> {
-    return mapPool(profilesToScan, FLEET_INSPECT_CONCURRENCY, async (profile) => {
-      // Fleet starts FS/manifest-only; only no-display-version installs get a
-      // follow-up log probe (and optional exe probe on forced refresh).
-      let info = await inspectServerInstallationAsync(profile.id, profile.installDir, {
-        bypassCache,
-      });
-      // When the cheap pass has no ARK-style display version, enrich with log
-      // (and optionally exe) probes. Do not treat Steam buildids as display versions.
-      if (
-        info.health === "ready" &&
-        resolveDisplayedServerVersion(info) == null
-      ) {
-        info = await inspectServerInstallationAsync(profile.id, profile.installDir, {
-          bypassCache: true,
-          allowLogVersionProbe: true,
-          allowExecutableVersionProbe: bypassCache,
-        });
-      }
-      this.recordInstallHealth(info);
-      return info;
-    });
+    return this.fleetInstall.installationInfo(forceOfficialCheck, serversMode);
   }
 
   private recordUnexpectedProcessExit(payload: UnexpectedManagedExit): void {
@@ -865,35 +739,6 @@ export class InstanceService extends EventEmitter {
   }
 
   /** Update health memory and emit degradation-only events. */
-  private recordInstallHealth(info: ServerInstallationInfo): void {
-    const previous = this.lastKnownInstallHealth.get(info.serverId) ?? null;
-    this.lastKnownInstallHealth.set(info.serverId, info.health);
-    if (!isInstallHealthDegradation(previous, info.health)) {
-      return;
-    }
-    const profile = this.repo.get(info.serverId);
-    const name = profile?.name ?? info.serverId;
-    this.repo.addEvent(
-      info.serverId,
-      "installation_health_degraded",
-      info.health === "inaccessible" || info.health === "suspicious"
-        ? "error"
-        : "warning",
-      `Install health for "${name}" is ${info.health}`,
-      {
-        what: `Installation health changed to ${info.health}.`,
-        cause: info.reasonCodes.length > 0 ? info.reasonCodes.join(", ") : undefined,
-        location: profile?.installDir ?? info.binaryPath,
-        suggestion: info.guidance,
-        context: {
-          health: info.health,
-          reasonCodes: info.reasonCodes.join(","),
-          previousHealth: previous,
-        },
-      },
-    );
-  }
-
   checkClusters(): ClusterComplianceReport[] {
     return checkClusterCompliance(this.repo.list());
   }
