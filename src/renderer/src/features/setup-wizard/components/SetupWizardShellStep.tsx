@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { SegmentedControl, Stack, Switch, Text, Title } from "@mantine/core";
 import type { UiDensity } from "@features/settings/settingsModel";
-import type { DesktopShellPreferencesController } from "@features/settings/useDesktopShellPreferences";
+import type { DesktopShellPreferencesController } from "@features/settings/hooks/useDesktopShellPreferences";
 import classes from "../setupWizard.module.css";
 
 interface Props {

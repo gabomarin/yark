@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { Alert, Badge, Group, Stack, Text } from "@mantine/core";
-import type { wizardChanges } from "../../configurationWizardModel";
+import type { wizardChanges } from "../../configuration-wizard/configurationWizardModel";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { ChangeRow, WizardStep } from "./ConfigurationWizardParts";
 

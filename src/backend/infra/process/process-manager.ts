@@ -1,10 +1,8 @@
 import { type ChildProcess } from "node:child_process";
-import { existsSync } from "node:fs";
 import { EventEmitter } from "node:events";
 import type {
   ServerProfile,
   ServerRuntimeInfo,
-  ServerStatus,
   SessionPortSet,
   StartServerOptions,
 } from "@shared/types";
@@ -14,25 +12,18 @@ import {
   type LeftRunningProcessIdentity,
   type LiveProcessIdentity,
 } from "@shared/left-running";
-import {
-  buildLaunchArgs,
-  buildWindowsCreateProcessCommandLine,
-  serverBinaryPath,
-} from "../../domains/instances/launch-args";
 import { rconExec } from "../rcon/rcon-client";
 import { diagnoseAsaStartupFailure, type AsaStartupFailure } from "@shared/asa-startup-failure";
 import {
   AsaSavedLogsTailer,
   captureAsaLogSessionAnchor,
   readAsaLogSessionExcerpt,
-  type AsaLogSessionAnchor,
 } from "./asa-log-tail";
 import { createAdoptedChildHandle } from "./adopted-child";
 import { killWinProcessTreeAsync } from "./kill-win-process-tree";
 import { queryWindowsProcessIdentity } from "./windows-process-identity";
 import {
   disconnectChildStdio,
-  ensureLaunchLogFlags,
   spawnAsaProcess,
 } from "./process-spawn";
 import {
@@ -50,6 +41,11 @@ import {
   type ReadyWaitHost,
 } from "./process-ready-wait";
 import {
+  startManagedProcess,
+  type ProcessStartHost,
+  type ProcessStartManaged,
+} from "./process-start";
+import {
   EXIT_WAIT_MS,
   SAVE_WAIT_MS,
   formatProcessExitLogLine,
@@ -57,22 +53,8 @@ import {
   planManagedExitLastError,
 } from "./process-stop";
 
-interface ManagedProcess {
-  child: ChildProcess;
-  identity: object;
-  status: ServerStatus;
-  startedAt: string;
-  lastError: string | null;
-  readinessGeneration: number;
-  logTailer: AsaSavedLogsTailer | null;
-  logSessionAnchor: AsaLogSessionAnchor;
-  executablePath: string;
-  installDir: string;
-  launchArgs: string[];
-  expectedCommandLine: string;
-  /** Ports used for this live process (including session-only overrides). */
-  runtimePorts: SessionPortSet;
-}
+/** Ports used for this live process (including session-only overrides). */
+type ManagedProcess = ProcessStartManaged;
 
 export interface GracefulStopHandle {
   readonly serverId: string;
@@ -291,131 +273,7 @@ export class ProcessManager extends EventEmitter {
   }
 
   start(profile: ServerProfile, options?: StartServerOptions): void {
-    if (this.isActive(profile.id)) {
-      throw new Error(`Server "${profile.name}" is already running`);
-    }
-    const binary = serverBinaryPath(profile.installDir);
-    if (!existsSync(binary)) {
-      throw new Error(
-        `Server executable not found at: ${binary}`,
-      );
-    }
-
-    this.clearRuntimeLog(profile.id);
-    const logSessionAnchor = captureAsaLogSessionAnchor(profile.installDir);
-    const args = options?.launchArgsOverride ?? buildLaunchArgs(profile);
-    const nativeConsole = options?.openNativeConsole === true;
-    let spawnArgs = args;
-    if (options?.launchArgsOverride === undefined) {
-      spawnArgs = ensureLaunchLogFlags(spawnArgs, nativeConsole);
-    }
-    const expectedCommandLine =
-      process.platform === "win32"
-        ? buildWindowsCreateProcessCommandLine(binary, spawnArgs)
-        : [binary, ...spawnArgs].join(" ");
-    const child = this.spawnProcess(binary, spawnArgs, profile.installDir, {
-      nativeConsole,
-    });
-
-    this.appendRuntimeLog(profile.id, "system", `Starting process ${binary}`);
-    this.appendRuntimeLog(profile.id, "system", `Commandline: ${expectedCommandLine}`);
-    this.appendRuntimeLog(
-      profile.id,
-      "system",
-      nativeConsole
-        ? "Native server console opened; Runtime follows ShooterGame.log"
-        : "Piped mode: following ShooterGame/Saved/Logs for Runtime",
-    );
-    const managed: ManagedProcess = {
-      child,
-      identity: {},
-      status: "starting",
-      startedAt: new Date().toISOString(),
-      lastError: null,
-      readinessGeneration: 0,
-      logTailer: null,
-      logSessionAnchor,
-      executablePath: binary,
-      installDir: profile.installDir,
-      launchArgs: [...spawnArgs],
-      expectedCommandLine,
-      runtimePorts: {
-        gamePort: profile.gamePort,
-        queryPort: profile.queryPort,
-        rconPort: profile.rconPort,
-      },
-    };
-    this.processes.set(profile.id, managed);
-    if (child.stdout !== null) {
-      child.stdout.setEncoding("utf8");
-      child.stdout.on("data", (chunk) => {
-        if (this.processes.get(profile.id) !== managed) return;
-        this.captureRuntimeChunk(profile.id, "stdout", chunk);
-      });
-    }
-    if (child.stderr !== null) {
-      child.stderr.setEncoding("utf8");
-      child.stderr.on("data", (chunk) => {
-        if (this.processes.get(profile.id) !== managed) return;
-        this.captureRuntimeChunk(profile.id, "stderr", chunk);
-      });
-    }
-    managed.logTailer = new AsaSavedLogsTailer(
-      profile.installDir,
-      (text) => {
-        if (this.processes.get(profile.id) !== managed) return;
-        this.captureRuntimeChunk(profile.id, "log", text);
-      },
-    );
-    managed.logTailer.start(managed.logSessionAnchor);
-    this.emitStatus(profile.id);
-
-    child.once("spawn", () => {
-      if (
-        this.processes.get(profile.id) !== managed ||
-        managed.status !== "starting"
-      ) {
-        return;
-      }
-      this.appendRuntimeLog(
-        profile.id,
-        "system",
-        "Process created; waiting for server readiness (RCON / startup)",
-      );
-      void this.writeProcessCheckpoint(profile.id, managed);
-      this.emitStatus(profile.id);
-
-      if (options?.skipReadinessCheck === true) {
-        managed.status = "running";
-        this.appendRuntimeLog(
-          profile.id,
-          "system",
-          "Readiness skipped (skipReadinessCheck); status running",
-        );
-        this.emitStatus(profile.id);
-        return;
-      }
-
-      managed.readinessGeneration += 1;
-      void this.waitUntilReady(profile, managed, managed.readinessGeneration);
-    });
-
-    child.once("error", (err) => {
-      managed.readinessGeneration += 1;
-      managed.logTailer?.stop();
-      managed.logTailer = null;
-      if (this.processes.get(profile.id) !== managed) return;
-      this.flushRuntimePartials(profile.id);
-      managed.status = "error";
-      managed.lastError = err.message;
-      this.appendRuntimeLog(profile.id, "error", `Process error: ${err.message}`);
-      this.clearProcessCheckpoint(profile.id);
-      this.emitStatus(profile.id);
-    });
-
-    child.once("exit", (code) => {
-      this.onManagedExit(profile.id, managed, code);
-    });
+    startManagedProcess(this.startHost(), profile, options);
   }
 
   /**
@@ -810,6 +668,31 @@ export class ProcessManager extends EventEmitter {
         terminateOnTimeout: false,
       },
     );
+  }
+
+  private startHost(): ProcessStartHost {
+    return {
+      isActive: (serverId) => this.isActive(serverId),
+      clearRuntimeLog: (serverId) => this.clearRuntimeLog(serverId),
+      spawnProcess: this.spawnProcess,
+      appendRuntimeLog: (serverId, source, message) =>
+        this.appendRuntimeLog(serverId, source, message),
+      registerManaged: (serverId, managed) => {
+        this.processes.set(serverId, managed);
+      },
+      getManaged: (serverId) => this.processes.get(serverId),
+      captureRuntimeChunk: (serverId, source, chunk) =>
+        this.captureRuntimeChunk(serverId, source, chunk),
+      emitStatus: (serverId) => this.emitStatus(serverId),
+      writeProcessCheckpoint: (serverId, managed) =>
+        this.writeProcessCheckpoint(serverId, managed),
+      waitUntilReady: (profile, managed, generation) =>
+        this.waitUntilReady(profile, managed, generation),
+      flushRuntimePartials: (serverId) => this.flushRuntimePartials(serverId),
+      clearProcessCheckpoint: (serverId) => this.clearProcessCheckpoint(serverId),
+      onManagedExit: (serverId, managed, code) =>
+        this.onManagedExit(serverId, managed, code),
+    };
   }
 
   private readyWaitHost(managed: ManagedProcess): ReadyWaitHost {

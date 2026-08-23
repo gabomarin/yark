@@ -74,13 +74,17 @@ src/renderer/src/app/
 **Rules of thumb**
 
 - Prefer **feature-local** `hooks/` / `model/` — do **not** create a global `src/hooks/` dump.
-- Organism-only hooks may stay beside the component until a second consumer appears
-  (e.g. `components/ServerForm/useServerForm.ts`).
+- Do **not** nest `hooks/` or `model/` under `components/<Name>/`. Put shared feature
+  hooks/models in the feature folders; a truly private organism helper may stay as a
+  **flat sibling** beside the component (`components/ServerForm/useServerForm.ts`)
+  until a second consumer appears — then promote it to `features/<area>/hooks/`.
 - Prefer `model/` over a vague `utils/` for feature view logic. Tiny cross-cutting
   helpers belong under `shared/`.
 - Avoid a `types/` folder for a single interface — colocate with the owning model/hook.
-- Precedent: `features/servers/hooks/`, `features/backups/{hooks,model,actions}/`,
-  `features/logs/{hooks,model,actions}/`, `app/hooks/`, `app/model/`.
+- Precedent: `features/servers/hooks/`, `features/server-workspace/hooks/` +
+  `configuration-wizard/`, `features/backups/{hooks,model,actions}/`,
+  `features/logs/{hooks,model,actions}/`, `features/settings/hooks/`, `app/hooks/`,
+  `app/model/`.
 
 - Prefer **domain names**: `ClusterDetailPanel`, not `RightColumn`.
 - One primary export per file matching the file name.

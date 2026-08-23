@@ -6,7 +6,7 @@ import { ServerFormAlerts } from "./ServerFormAlerts";
 import { ServerFormEmbedded } from "./ServerFormEmbedded";
 import { ServerFormProfileFields } from "./ServerFormProfileFields";
 import { ServerFormShellPage } from "./ServerFormShellPage";
-import { useServerForm } from "./useServerForm";
+import { useServerForm } from "../../hooks/useServerForm";
 import { MoveInstallDialog } from "../MoveInstallDialog/MoveInstallDialog";
 
 interface Props {

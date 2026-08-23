@@ -4,7 +4,7 @@ import {
   WORLD_PRESETS,
   type ConfigurationWizardDraft,
   type WorldPresetId,
-} from "../../configurationWizardModel";
+} from "../../configuration-wizard/configurationWizardModel";
 import { PresetSelector, PresetValue, WizardStep } from "./ConfigurationWizardParts";
 
 interface Props {

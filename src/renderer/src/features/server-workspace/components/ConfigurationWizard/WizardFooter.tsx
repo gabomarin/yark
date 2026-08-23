@@ -9,7 +9,7 @@ import {
 } from "@phosphor-icons/react";
 import { Button, Group } from "@mantine/core";
 import type { ClusterIniTemplate } from "@shared/types";
-import type { wizardChanges } from "../../configurationWizardModel";
+import type { wizardChanges } from "../../configuration-wizard/configurationWizardModel";
 import { STEP_COUNT } from "./wizardSteps";
 import classes from "./ConfigurationWizard.module.css";
 

@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { NumberInput, Stack } from "@mantine/core";
 import type { UseFormReturnType } from "@mantine/form";
-import type { ConfigurationWizardDraft } from "../../configurationWizardModel";
+import type { ConfigurationWizardDraft } from "../../configuration-wizard/configurationWizardModel";
 import { SettingSwitch, WizardStep } from "./ConfigurationWizardParts";
 
 interface Props {

@@ -5,7 +5,7 @@ import {
   SINGLE_PLAYER_RATE_FACTORS,
   type ConfigurationWizardDraft,
   type ProgressionPresetId,
-} from "../../configurationWizardModel";
+} from "../../configuration-wizard/configurationWizardModel";
 import {
   effectiveRateLabel,
   PresetSelector,

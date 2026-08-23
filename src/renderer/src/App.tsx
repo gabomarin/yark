@@ -47,7 +47,7 @@ import {
   type UiDensity,
 } from "@features/settings/settingsModel";
 import { DEFAULT_OPEN_NATIVE_CONSOLE } from "@shared/open-native-console";
-import { useDesktopShellPreferences } from "@features/settings/useDesktopShellPreferences";
+import { useDesktopShellPreferences } from "@features/settings/hooks/useDesktopShellPreferences";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import { AppSpotlight } from "@layout/AppSpotlight/AppSpotlight";
 import { pushSpotlightRecent } from "@layout/AppSpotlight/appSpotlightRecent";

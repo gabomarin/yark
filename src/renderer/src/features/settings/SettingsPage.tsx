@@ -13,7 +13,7 @@ import { SettingsServersSection } from "./components/SettingsServersSection";
 import { SettingsSteamCmdSection } from "./components/SettingsSteamCmdSection";
 import { SettingsYarkUpdateSection } from "./components/SettingsYarkUpdateSection";
 import type { SettingsCategory, UiDensity } from "./settingsModel";
-import type { DesktopShellPreferencesController } from "./useDesktopShellPreferences";
+import type { DesktopShellPreferencesController } from "./hooks/useDesktopShellPreferences";
 import classes from "./SettingsPage.module.css";
 
 interface Props {

@@ -23,7 +23,7 @@ import { BackupsPage } from "@features/backups/BackupsPage";
 import { OverviewPage } from "@features/overview/OverviewPage";
 import type { UpdateAllOutdatedPlan } from "@features/overview/updateAllOutdatedModel";
 import { SettingsPage } from "@features/settings/SettingsPage";
-import type { DesktopShellPreferencesController } from "@features/settings/useDesktopShellPreferences";
+import type { DesktopShellPreferencesController } from "@features/settings/hooks/useDesktopShellPreferences";
 import type { UiDensity } from "@features/settings/settingsModel";
 import type { Route } from "@layout/Sidebar/Sidebar";
 

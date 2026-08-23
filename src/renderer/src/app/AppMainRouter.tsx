@@ -23,7 +23,7 @@ import type { ServerFilesQueueState } from "@features/downloads/downloadsModel";
 import type { UpdateAllOutdatedPlan } from "@features/overview/updateAllOutdatedModel";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import type { RconHistoryEntry } from "@features/server-workspace/ServerWorkspacePage";
-import type { DesktopShellPreferencesController } from "@features/settings/useDesktopShellPreferences";
+import type { DesktopShellPreferencesController } from "@features/settings/hooks/useDesktopShellPreferences";
 import type { UiDensity } from "@features/settings/settingsModel";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import type { AppBusyOverlayContent } from "@ui/AppBusyOverlay/AppBusyOverlay";

@@ -8,8 +8,6 @@ import type {
   ServerProfileInput,
   ServerProfilePatch,
   ServerRuntimeInfo,
-  ServerStopProgress,
-  ServerStopProgressReason,
   StartServerOptions,
 } from "@shared/types";
 import {
@@ -59,12 +57,7 @@ import { resolveDisplayedServerVersion } from "@shared/server-version-display";
 import { planUnexpectedServerCrashEvent } from "./instance-crash";
 import {
   FLEET_INSPECT_CONCURRENCY,
-  backupKindLabel,
-  backingUpPercent,
-  buildServerStopProgress,
-  buildServerStoppedEventMessage,
   mapPool,
-  type StopJobOutcome,
 } from "./instance-lifecycle";
 import {
   applySessionPortsToProfile,
@@ -75,8 +68,12 @@ import {
 } from "./instance-profile";
 import { InstanceRcon } from "./instance-rcon";
 import { InstanceClone, type CloneParams } from "./instance-clone";
+import {
+  InstanceStop,
+  type StopServerOptions,
+} from "./instance-stop";
 
-export type { StopJobOutcome };
+export type { StopServerOptions } from "./instance-stop";
 
 /** Single-server / gate paths may use heavier version fallbacks. */
 const ENRICHED_INSTALL_INSPECT = {
@@ -85,20 +82,10 @@ const ENRICHED_INSTALL_INSPECT = {
   allowLogVersionProbe: true,
 } as const;
 
-export interface StopServerOptions {
-  /** When true (default), create a stable stop backup after process exit. */
-  backup?: boolean;
-  /** Progress reason for UI (quit shows the blocking overlay). Default `"user"`. */
-  reason?: ServerStopProgressReason;
-}
-
 /**
  * Instance orchestration service: validated CRUD + lifecycle.
  */
 export class InstanceService extends EventEmitter {
-  private readonly stopJobs = new Map<string, Promise<StopJobOutcome>>();
-  /** Covers restart after stopJobs clears (pre_restart ZIP only; not start). */
-  private readonly criticalJobs = new Map<string, Promise<unknown>>();
   /** Serializes profile row writes so Launch/Mods patches cannot clobber (#209). */
   private readonly profileWriteChains = new Map<string, Promise<unknown>>();
   /**
@@ -118,6 +105,7 @@ export class InstanceService extends EventEmitter {
   } | null = null;
   private readonly rcon: InstanceRcon;
   private readonly clones: InstanceClone;
+  private readonly stops: InstanceStop;
 
   constructor(
     private readonly repo: ServerRepository,
@@ -128,6 +116,13 @@ export class InstanceService extends EventEmitter {
     super();
     this.rcon = new InstanceRcon(repo, processes, (info) => {
       this.emit("rcon-status-changed", info);
+    });
+    this.stops = new InstanceStop({
+      repo,
+      processes,
+      backups,
+      locks,
+      emitProgress: (payload) => this.emit("stop-progress", payload),
     });
     this.clones = new InstanceClone({
       repo,
@@ -474,8 +469,8 @@ export class InstanceService extends EventEmitter {
       throw new Error("Server stop and backup are still in progress");
     }
     return this.locks.withLock(id, "restart", async () => {
-      await this.withCriticalJob(id, async () => {
-        const outcome = await this.enqueueStop(id, false);
+      await this.stops.withCriticalJob(id, async () => {
+        const outcome = await this.stops.enqueue(id, false);
         if (outcome === "killed") {
           throw new Error(
             "Restart aborted: SaveWorld failed and the process was force-killed",
@@ -643,28 +638,11 @@ export class InstanceService extends EventEmitter {
   }
 
   stop(id: string, options?: StopServerOptions): Promise<void> {
-    if (this.criticalJobs.has(id)) {
-      return Promise.reject(
-        new Error("Cannot stop while a restart is in progress"),
-      );
-    }
-    const existing = this.stopJobs.get(id);
-    if (existing !== undefined) return existing.then(() => undefined);
-    const reason = options?.reason ?? "user";
-
-    if (options?.backup === false) {
-      return this.enqueueStop(id, false, reason).then(() => undefined);
-    }
-    return this.locks
-      .withLock(id, "stop-and-backup", () => this.enqueueStop(id, true, reason))
-      .then(() => undefined);
+    return this.stops.stop(id, options);
   }
 
   isStopInProgress(serverId?: string): boolean {
-    if (serverId === undefined) {
-      return this.stopJobs.size > 0 || this.criticalJobs.size > 0;
-    }
-    return this.stopJobs.has(serverId) || this.criticalJobs.has(serverId);
+    return this.stops.isInProgress(serverId);
   }
 
   /**
@@ -680,19 +658,7 @@ export class InstanceService extends EventEmitter {
   }
 
   async waitForStopJobs(): Promise<void> {
-    const failures: unknown[] = [];
-    while (this.stopJobs.size > 0 || this.criticalJobs.size > 0) {
-      const results = await Promise.allSettled([
-        ...this.stopJobs.values(),
-        ...this.criticalJobs.values(),
-      ]);
-      for (const result of results) {
-        if (result.status === "rejected") failures.push(result.reason);
-      }
-    }
-    if (failures.length > 0) {
-      throw failures[0];
-    }
+    await this.stops.waitForJobs();
   }
 
   /**
@@ -700,25 +666,7 @@ export class InstanceService extends EventEmitter {
    * pre-stop backup and stop-progress UI for every active process.
    */
   async stopAllForAppQuit(): Promise<void> {
-    const activeIds: string[] = [];
-    for (const profile of this.repo.list()) {
-      if (this.processes.isActive(profile.id)) {
-        activeIds.push(profile.id);
-      }
-    }
-    if (activeIds.length === 0) {
-      return;
-    }
-    const results = await Promise.allSettled(
-      activeIds.map((id) => this.stop(id, { reason: "quit" })),
-    );
-    const failures = results.filter(
-      (result): result is PromiseRejectedResult => result.status === "rejected",
-    );
-    const firstFailure = failures[0];
-    if (firstFailure !== undefined) {
-      throw firstFailure.reason;
-    }
+    await this.stops.stopAllForAppQuit();
   }
 
   /**
@@ -741,179 +689,6 @@ export class InstanceService extends EventEmitter {
         setTimeout(resolve, 100);
       });
     }
-  }
-
-  private async withCriticalJob<T>(
-    id: string,
-    work: () => Promise<T>,
-  ): Promise<T> {
-    if (this.criticalJobs.has(id)) {
-      throw new Error("Another server operation is already in progress");
-    }
-    const job = Promise.resolve()
-      .then(() => work())
-      .finally(() => {
-        if (this.criticalJobs.get(id) === job) {
-          this.criticalJobs.delete(id);
-        }
-      });
-    this.criticalJobs.set(id, job);
-    return job;
-  }
-
-  private enqueueStop(
-    id: string,
-    wantBackup: boolean,
-    reason: ServerStopProgressReason = "user",
-  ): Promise<StopJobOutcome> {
-    const existing = this.stopJobs.get(id);
-    if (existing !== undefined) return existing;
-    const job = this.runStop(id, wantBackup, reason).finally(() => {
-      if (this.stopJobs.get(id) === job) {
-        this.stopJobs.delete(id);
-      }
-    });
-    this.stopJobs.set(id, job);
-    return job;
-  }
-
-  private async runStop(
-    id: string,
-    wantBackup: boolean,
-    reason: ServerStopProgressReason = "user",
-  ): Promise<StopJobOutcome> {
-    const profile = this.mustGet(id);
-    let didBackup = false;
-    let exitedExternally = false;
-
-    if (!this.processes.isActive(id)) {
-      return "noop";
-    }
-
-    const progress = (
-      partial: Omit<ServerStopProgress, "serverId" | "reason">,
-    ): ServerStopProgress => buildServerStopProgress(id, reason, partial);
-
-    try {
-      if (this.processes.getStatus(id).status === "starting") {
-        this.emitStopProgress(
-          progress({
-            active: true,
-            phase: "waiting",
-            label: "Waiting for server to finish starting…",
-            percent: 5,
-          }),
-        );
-        await this.processes.waitWhileStarting(id);
-        if (!this.processes.isActive(id)) {
-          return "absent";
-        }
-      }
-
-      this.emitStopProgress(
-        progress({
-          active: true,
-          phase: "saving",
-          label: "Saving world…",
-          percent: 10,
-        }),
-      );
-
-      const runtimeProfile = this.processes.applyRuntimePorts(profile);
-      const preparation = await this.processes.beginGracefulStop(runtimeProfile);
-      if (preparation.phase === "absent") {
-        return "absent";
-      }
-
-      if (preparation.phase === "killed") {
-        this.repo.addEvent(
-          id,
-          "server_stopped",
-          "warning",
-          `Server "${profile.name}" force-killed because RCON SaveWorld failed`,
-        );
-        return "killed";
-      }
-
-      this.emitStopProgress(
-        progress({
-          active: true,
-          phase: "stopping",
-          label: "Stopping server before backup…",
-          percent: 25,
-        }),
-      );
-      const finishResult = await this.processes.finishGracefulStop(
-        runtimeProfile,
-        preparation.handle,
-      );
-      if (finishResult === "replaced") {
-        throw new Error(
-          "The original process was replaced during stop; the new process was left running",
-        );
-      }
-      exitedExternally = finishResult === "already_exited";
-
-      if (wantBackup) {
-        try {
-          await this.backups.createPreStopBackup(id, {
-            skipFlush: true,
-            onKindProgress: (kind, index, total) => {
-              this.emitStopProgress(
-                progress({
-                  active: true,
-                  phase: "backing_up",
-                  label: `Backing up ${backupKindLabel(kind)}…`,
-                  percent: backingUpPercent(index, total),
-                }),
-              );
-            },
-          });
-          didBackup = true;
-        } catch (err) {
-          const message = err instanceof Error ? err.message : String(err);
-          this.repo.addEvent(
-            id,
-            "error",
-            "warning",
-            `Pre-stop backup failed for "${profile.name}": ${message}`,
-          );
-          this.emitStopProgress(
-            progress({
-              active: true,
-              phase: "backing_up",
-              label: "Backup failed — server remains stopped",
-              percent: 70,
-            }),
-          );
-        }
-      }
-
-      this.repo.addEvent(
-        id,
-        "server_stopped",
-        exitedExternally ? "warning" : "info",
-        buildServerStoppedEventMessage({
-          serverName: profile.name,
-          exitedExternally,
-          didBackup,
-        }),
-      );
-      return exitedExternally ? "already_exited" : "stopped";
-    } finally {
-      this.emitStopProgress(
-        progress({
-          active: false,
-          phase: null,
-          label: "",
-          percent: null,
-        }),
-      );
-    }
-  }
-
-  private emitStopProgress(payload: ServerStopProgress): void {
-    this.emit("stop-progress", payload);
   }
 
   async kill(id: string): Promise<void> {

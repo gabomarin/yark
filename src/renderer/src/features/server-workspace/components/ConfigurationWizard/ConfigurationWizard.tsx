@@ -24,7 +24,7 @@ import { WizardQolStep } from "./WizardQolStep";
 import { WizardReviewStep } from "./WizardReviewStep";
 import { WizardWorldStep } from "./WizardWorldStep";
 import { STEP_COUNT, STEP_LABELS } from "./wizardSteps";
-import { useConfigurationWizard } from "./useConfigurationWizard";
+import { useConfigurationWizard } from "../../hooks/useConfigurationWizard";
 import classes from "./ConfigurationWizard.module.css";
 
 interface Props {

@@ -24,7 +24,7 @@ import {
   formatWizardNumber,
   type ExperienceProfileId,
   type wizardChanges,
-} from "../../configurationWizardModel";
+} from "../../configuration-wizard/configurationWizardModel";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import classes from "./ConfigurationWizard.module.css";
 
