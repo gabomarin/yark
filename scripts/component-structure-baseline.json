@@ -5,8 +5,6 @@
   "files": {
     "src/renderer/src/features/backups/ServerBackupPanel.tsx": 860,
     "src/renderer/src/features/logs/ServerLogsPanel.tsx": 750,
-    "src/renderer/src/features/server-workspace/components/ConfigurationWizard/ConfigurationWizard.tsx": 680,
-    "src/renderer/src/features/server-workspace/configurationWizardModel.ts": 1085,
-    "src/renderer/src/features/servers/components/ServerForm/ServerForm.tsx": 588
+    "src/renderer/src/features/server-workspace/configurationWizardModel.ts": 1085
   }
 }

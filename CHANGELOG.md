@@ -40,6 +40,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- **Server form** state moved to `useServerForm` with embedded layout organism — removed from the grandfathered baseline ([#146](https://github.com/gabomarin/yark/issues/146)).
+- **Configuration wizard** state moved to `useConfigurationWizard` / `configurationWizardChoosers` — removed from the grandfathered baseline ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **Phase 6 (#146):** four renderer files dropped from the grandfathered baseline (`ServerModsPanel`, `iniModel`, `ServerWorkspacePage`, `ClusterIniTemplateModal`); INI editor header/text/preview split lowers `ConfigurationEditor` coordinator size ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **Backups overview** fleet load/save moved to `useBackupsPageFleet`; **INI editor** state to `useConfigurationEditor` — both pages removed from the grandfathered baseline ([#146](https://github.com/gabomarin/yark/issues/146)).
 
