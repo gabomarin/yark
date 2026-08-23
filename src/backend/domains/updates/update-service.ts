@@ -1,8 +1,7 @@
-import { mkdir, rm, access } from "node:fs/promises";
-import { spawn, type ChildProcess } from "node:child_process";
+import { mkdir, rm } from "node:fs/promises";
+import { type ChildProcess } from "node:child_process";
 import { EventEmitter } from "node:events";
-import { dirname, join } from "node:path";
-import { existsSync } from "node:fs";
+import { join } from "node:path";
 import type {
   AppEventDetails,
   SteamCmdCacheKind,
@@ -20,7 +19,6 @@ import {
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { InstanceService } from "../instances/instance-service";
 import { killChildProcessTreeAsync } from "../../infra/process/kill-win-process-tree";
-import { execFileBounded } from "../../infra/process/exec-file-bounded";
 import type { ProcessManager } from "../../infra/process/process-manager";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
@@ -28,20 +26,8 @@ import {
   toCriticalJobSummary,
 } from "../../orchestration/critical-job-recovery";
 import {
-  isUpdatePauseBlockedByRollback,
-  isUnpausableSteamCmdOperation,
   type UpdateCriticalJob,
 } from "./update-critical-jobs";
-import {
-  STEAMCMD_MISSING_MESSAGE,
-  buildSteamCmdCandidatePaths,
-  buildSteamCmdInstallPowerShell,
-  isSteamCmdSearchIsolated,
-  isSteamCmdVerifyExitAcceptable,
-  normalizeSteamCmdExecutablePath,
-  resolveSteamCmdExecutableCached,
-  updateJobNeedsSteamCmdExecutable,
-} from "./steamcmd-path";
 import {
   isPreUpdateBackupEvidenceComplete,
 } from "./update-server-jobs";
@@ -51,11 +37,8 @@ import {
   deriveSteamCmdStatusStartedAt,
 } from "./steamcmd-operator";
 import {
-  STEAMCMD_ENGLISH_ARGS,
-  steamCmdSpawnEnv,
   OperationCancelledError,
   OperationPausedError,
-  OperationPauseUnavailableError,
   resolveAsaContentCacheDir,
   resolveDepotCacheDir,
   resolveSteamCmdCacheDir,
@@ -72,6 +55,11 @@ import {
 } from "./steamcmd-run";
 import { SteamCmdProgressRuntime } from "./steamcmd-progress-runtime";
 import { UpdateQueueRuntime } from "./update-queue-runtime";
+import { SteamCmdInstall } from "./steamcmd-install";
+import {
+  cancelSteamCmd as runCancelSteamCmd,
+  pauseSteamCmd as runPauseSteamCmd,
+} from "./steamcmd-control";
 
 type CriticalJob = UpdateCriticalJob;
 
@@ -87,10 +75,7 @@ function delay(ms: number): Promise<void> {
 export class UpdateService extends EventEmitter {
   private cancelRequested = false;
   private pauseRequested = false;
-  /** Last path confirmed by async discovery / persist — status polls must not `existsSync`. */
-  private lastKnownSteamCmdPath: string | null = null;
-  /** True after a launch probe found no steamcmd.exe — do not revive a stale settings path. */
-  private steamCmdConfirmedMissing = false;
+  private readonly steamCmdInstall: SteamCmdInstall;
   private readonly progressRuntime: SteamCmdProgressRuntime;
   private readonly queueRuntime: UpdateQueueRuntime;
   private readonly steamCmdRunner: SteamCmdRunner;
@@ -107,6 +92,18 @@ export class UpdateService extends EventEmitter {
     private readonly steamcmdDir: string,
   ) {
     super();
+    this.steamCmdInstall = new SteamCmdInstall({
+      settings: this.settings,
+      steamcmdDir: this.steamcmdDir,
+      appendSteamCmdConsole: (line, options) => this.appendSteamCmdConsole(line, options),
+      captureSteamCmdOutput: (chunk, source) => this.captureSteamCmdOutput(chunk, source),
+      beginSteamCmdProcess: (child, operation, serverId) =>
+        this.beginSteamCmdProcess(child, operation, serverId),
+      endSteamCmdProcess: (child) => this.endSteamCmdProcess(child),
+      resetContentCache: () => this.steamCmdRunner.resetContentCache(),
+      findSteamCmdExecutableCached: () => this.findSteamCmdExecutableCached(),
+      findSteamCmdExecutable: () => this.findSteamCmdExecutable(),
+    });
     this.progressRuntime = new SteamCmdProgressRuntime({
       emitProgress: () => {
         this.emit("progress", {
@@ -118,7 +115,7 @@ export class UpdateService extends EventEmitter {
       isPauseRequested: () => this.pauseRequested,
     });
     this.steamCmdRunner = new SteamCmdRunner({
-      resolveSteamCmdExecutable: () => this.resolveSteamCmdExecutable(),
+      resolveSteamCmdExecutable: () => this.steamCmdInstall.resolveSteamCmdExecutable(),
       appendSteamCmdConsole: (line, options) => this.appendSteamCmdConsole(line, options),
       assertNotCancelled: () => this.assertNotCancelled(),
       beginFileSync: (serverId, label) => this.beginFileSync(serverId, label),
@@ -179,7 +176,7 @@ export class UpdateService extends EventEmitter {
       finishRecoveredFileJob: (job) => this.finishRecoveredFileJob(job),
       finishRecoveredRollback: (job) => this.finishRecoveredRollback(job),
       findSteamCmdExecutableCached: () => this.findSteamCmdExecutableCached(),
-      steamCmdMissingError: () => this.steamCmdMissingError(),
+      steamCmdMissingError: () => this.steamCmdInstall.steamCmdMissingError(),
       getActiveSteamCmd: () => this.progressRuntime.getActiveSteamCmd() !== null,
       getSyncingServerId: () => this.progressRuntime.getSyncingServerId(),
       endFileSync: () => this.endFileSync(),
@@ -197,10 +194,6 @@ export class UpdateService extends EventEmitter {
       addJobEvent: (job, type, severity, message) =>
         this.addJobEvent(job, type, severity, message),
     });
-    const configured = this.settings.get("steamcmdPath")?.trim();
-    if (configured != null && configured.length > 0) {
-      this.lastKnownSteamCmdPath = configured;
-    }
   }
 
   private get queue(): readonly CriticalJob[] {
@@ -232,15 +225,14 @@ export class UpdateService extends EventEmitter {
     );
     const exe = await this.findSteamCmdExecutable();
     if (exe === null) {
-      this.lastKnownSteamCmdPath = null;
-      this.steamCmdConfirmedMissing = true;
+      this.steamCmdInstall.markConfirmedMissing();
       this.appendSteamCmdConsole(
         "SteamCMD is not ready; pending Downloads will wait for Retry.",
       );
       await this.processQueue();
       return;
     }
-    this.persistSteamCmdPath(exe);
+    this.steamCmdInstall.persistSteamCmdPath(exe);
     this.appendSteamCmdConsole(`Resuming pending Downloads (SteamCMD ready at ${exe}).`);
     // Kick the queue without awaiting the whole SteamCMD run so Auto-start
     // can continue for servers that are not occupying a files job.
@@ -248,64 +240,35 @@ export class UpdateService extends EventEmitter {
   }
 
   async installSteamCmd(): Promise<string> {
-    this.appendSteamCmdConsole("Starting SteamCMD verification/installation...");
-    const existing = await this.findSteamCmdExecutable();
-    if (existing !== null) {
-      this.appendSteamCmdConsole(`SteamCMD detected at: ${existing}`);
-      await this.verifySteamCmdExecutable(existing);
-      this.persistSteamCmdPath(existing);
-      this.appendSteamCmdConsole("SteamCMD validated successfully.");
-      return existing;
-    }
+    return this.steamCmdInstall.installSteamCmd();
+  }
 
-    await mkdir(this.steamcmdDir, { recursive: true });
-    const exePath = join(this.steamcmdDir, "steamcmd.exe");
-    const command = buildSteamCmdInstallPowerShell(this.steamcmdDir);
+  /** Facade for tests / queue host — discovery lives on {@link SteamCmdInstall}. */
+  findSteamCmdExecutableCached(): string | null {
+    return this.steamCmdInstall.findSteamCmdExecutableCached();
+  }
 
-    await new Promise<void>((resolve, reject) => {
-      const child = spawn(
-        "powershell.exe",
-        ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command],
-        {
-          windowsHide: true,
-          shell: false,
-        },
-      );
-      this.beginSteamCmdProcess(child, "install-steamcmd", null);
+  /** Facade for tests / queue host — discovery lives on {@link SteamCmdInstall}. */
+  async findSteamCmdExecutable(): Promise<string | null> {
+    return this.steamCmdInstall.findSteamCmdExecutable();
+  }
 
-      let stderr = "";
-      child.stderr.on("data", (chunk) => {
-        const text = String(chunk);
-        stderr += text;
-        this.captureSteamCmdOutput(text, "install/stderr");
-      });
-      child.stdout.on("data", (chunk) => {
-        this.captureSteamCmdOutput(String(chunk), "install/stdout");
-      });
+  async ensureSteamCmdReadyForOperator(
+    job?: Parameters<SteamCmdInstall["ensureSteamCmdReadyForOperator"]>[0],
+  ): Promise<void> {
+    return this.steamCmdInstall.ensureSteamCmdReadyForOperator(job);
+  }
 
-      child.once("error", (error) => {
-        this.endSteamCmdProcess(child);
-        reject(new Error(`Could not run PowerShell: ${error.message}`));
-      });
+  async cancelSteamCmd(): Promise<boolean> {
+    return runCancelSteamCmd(this.steamCmdControlHost());
+  }
 
-      child.once("exit", (code) => {
-        this.endSteamCmdProcess(child);
-        if ((code ?? 1) !== 0) {
-          reject(new Error(`SteamCMD installation failed (exit ${code ?? 1}): ${stderr}`));
-          return;
-        }
-        resolve();
-      });
-    });
+  async pauseSteamCmd(): Promise<boolean> {
+    return runPauseSteamCmd(this.steamCmdControlHost());
+  }
 
-    if (!existsSync(exePath)) {
-      throw new Error(`SteamCMD was not installed at ${exePath}`);
-    }
-
-    await this.verifySteamCmdExecutable(exePath);
-    this.persistSteamCmdPath(exePath);
-    this.appendSteamCmdConsole(`SteamCMD installed and validated at: ${exePath}`);
-    return exePath;
+  async setSteamCmdExecutablePath(exePath: string): Promise<string> {
+    return this.steamCmdInstall.setSteamCmdExecutablePath(exePath);
   }
 
   getSteamCmdStatus(): SteamCmdStatus {
@@ -441,140 +404,6 @@ export class UpdateService extends EventEmitter {
     return this.queueRuntime.reorderCriticalJob(jobId, direction);
   }
 
-  async cancelSteamCmd(): Promise<boolean> {
-    const runningJob = this.queue.find((job) => job.status === "running");
-    const backupBusy = this.backups.getCriticalJobs().some(
-      (job) =>
-        job.status === "pending"
-        || job.status === "retrying"
-        || job.status === "running",
-    );
-    const hadWork =
-      this.progressRuntime.getActiveSteamCmd() !== null
-      || this.progressRuntime.getActiveSyncChild() !== null
-      || this.progressRuntime.getSyncingServerId() !== null
-      || backupBusy
-      || runningJob !== undefined;
-
-    if (!hadWork) {
-      this.appendSteamCmdConsole("Cancel: no active operation");
-      this.emitProgress(true);
-      return false;
-    }
-
-    this.cancelRequested = true;
-    this.backups.requestCancel();
-    this.stopDiskProgressMonitor();
-    this.appendSteamCmdConsole(
-      `Cancelling operation (steamcmd=${this.progressRuntime.getActiveSteamCmd()?.child.pid ?? "n/a"}, sync=${this.progressRuntime.getActiveSyncChild()?.pid ?? "n/a"}, jobs=${this.queue.length})`,
-    );
-    this.setProgress(null, "Cancelling…", "Cancellation requested by the user");
-
-    const steamCmdChild = this.progressRuntime.takeActiveSteamCmdChild();
-    if (steamCmdChild !== null) {
-      const child = steamCmdChild;
-      await this.killProcessTree(child);
-    }
-    const syncChild = this.progressRuntime.takeActiveSyncChild();
-    if (syncChild !== null) {
-      const child = syncChild;
-      await this.killProcessTree(child);
-    }
-
-    if (runningJob !== undefined) {
-      // Keep the active job recoverable until unwind reaches a durable checkpoint.
-      // Queued pending/retrying jobs stay in Downloads and start after this one ends.
-      runningJob.recoveryReason = "Cancellation requested; completing the safe unwind.";
-      runningJob.updatedAt = new Date().toISOString();
-    }
-    this.queueRuntime.persist();
-
-    this.progressRuntime.clearSyncing();
-    this.setProgress(null, "Cancelled", "Operation cancelled by the user");
-    this.emitProgress(true);
-    return true;
-  }
-
-  async pauseSteamCmd(): Promise<boolean> {
-    const runningJob = this.queue.find((job) => job.status === "running");
-    const backupBusy = this.backups.getCriticalJobs().some(
-      (job) => job.status === "running",
-    );
-    const hadWork =
-      this.progressRuntime.getActiveSteamCmd() !== null
-      || this.progressRuntime.getActiveSyncChild() !== null
-      || this.progressRuntime.getSyncingServerId() !== null
-      || backupBusy
-      || runningJob !== undefined;
-
-    if (!hadWork) {
-      this.appendSteamCmdConsole("Pause: no active operation");
-      this.emitProgress(true);
-      return false;
-    }
-
-    if (
-      runningJob !== undefined
-      && isUpdatePauseBlockedByRollback(runningJob.phase)
-    ) {
-      throw new OperationPauseUnavailableError(
-        "Pause is not available during rollback. Wait for it to finish, or Cancel if you need to stop.",
-      );
-    }
-
-    const liveOperation =
-      this.progressRuntime.getSyncingServerId() !== null
-        ? "sync-files"
-        : (this.progressRuntime.getActiveSteamCmd()?.operation ?? runningJob?.type ?? null);
-    if (isUnpausableSteamCmdOperation(liveOperation)) {
-      throw new OperationPauseUnavailableError(
-        "This operation cannot pause (SteamCMD validate has no resume checkpoint). Use Cancel instead.",
-      );
-    }
-
-    this.pauseRequested = true;
-    this.backups.requestCancel();
-    this.stopDiskProgressMonitor();
-    this.appendSteamCmdConsole(
-      `Pausing operation (steamcmd=${this.progressRuntime.getActiveSteamCmd()?.child.pid ?? "n/a"}, sync=${this.progressRuntime.getActiveSyncChild()?.pid ?? "n/a"})`,
-    );
-    this.setProgress(null, "Pausing…", "Pause requested by the user");
-
-    const steamCmdChild = this.progressRuntime.takeActiveSteamCmdChild();
-    if (steamCmdChild !== null) {
-      const child = steamCmdChild;
-      await this.killProcessTree(child);
-    }
-    const syncChild = this.progressRuntime.takeActiveSyncChild();
-    if (syncChild !== null) {
-      const child = syncChild;
-      await this.killProcessTree(child);
-    }
-
-    if (runningJob !== undefined) {
-      runningJob.recoveryReason = "Pause requested; stopping SteamCMD.";
-      runningJob.updatedAt = new Date().toISOString();
-    }
-    this.queueRuntime.persist();
-
-    this.progressRuntime.clearSyncing();
-    this.setPausedProgress();
-    this.emitProgress(true);
-    return true;
-  }
-
-  async setSteamCmdExecutablePath(exePath: string): Promise<string> {
-    const normalized = normalizeSteamCmdExecutablePath(exePath);
-    if (!existsSync(normalized)) {
-      throw new Error(`steamcmd.exe not found at: ${normalized}`);
-    }
-    await this.verifySteamCmdExecutable(normalized);
-    this.persistSteamCmdPath(normalized);
-    this.steamCmdRunner.resetContentCache();
-    this.appendSteamCmdConsole(`Manual SteamCMD path configured: ${normalized}`);
-    return normalized;
-  }
-
   getSteamCmdConsole(limit = 200): SteamCmdConsoleSnapshot {
     return this.progressRuntime.getConsole(limit);
   }
@@ -699,6 +528,28 @@ export class UpdateService extends EventEmitter {
     this.progressRuntime.startDiskProgressMonitor(steamCmdHome, forceInstallDir);
   }
 
+  private steamCmdControlHost() {
+    return {
+      backups: this.backups,
+      progressRuntime: this.progressRuntime,
+      queueRuntime: this.queueRuntime,
+      getQueue: () => this.queue,
+      setCancelRequested: (value: boolean) => {
+        this.cancelRequested = value;
+      },
+      setPauseRequested: (value: boolean) => {
+        this.pauseRequested = value;
+      },
+      appendSteamCmdConsole: (line: string, options?: { forceProgressPush?: boolean }) =>
+        this.appendSteamCmdConsole(line, options),
+      stopDiskProgressMonitor: () => this.stopDiskProgressMonitor(),
+      setProgress: (percent: number | null, label: string | null, line?: string) =>
+        this.setProgress(percent, label, line),
+      setPausedProgress: () => this.setPausedProgress(),
+      emitProgress: (force: boolean) => this.emitProgress(force),
+    };
+  }
+
   private stopDiskProgressMonitor(): void {
     this.progressRuntime.stopDiskProgressMonitor();
   }
@@ -712,197 +563,15 @@ export class UpdateService extends EventEmitter {
     }
   }
 
-  private async resolveSteamCmdExecutable(): Promise<string> {
-    const discovered = await this.findSteamCmdExecutable();
-    if (discovered !== null) {
-      this.persistSteamCmdPath(discovered);
-      return discovered;
-    }
-
-    return "steamcmd.exe";
-  }
-
-  private steamCmdMissingError(): Error {
-    return new Error(STEAMCMD_MISSING_MESSAGE);
-  }
-
   /**
    * Operator Retry/Resume/new queue: probe disk when a launch check already
    * marked SteamCMD missing, so a later install does not stay stuck.
    * Status polls keep using the cached path (no disk I/O, #145).
    */
-  private async ensureSteamCmdReadyForOperator(job?: CriticalJob): Promise<void> {
-    if (job !== undefined && !updateJobNeedsSteamCmdExecutable(job)) {
-      return;
-    }
-    if (this.steamCmdConfirmedMissing) {
-      const exe = await this.findSteamCmdExecutable();
-      if (exe !== null) {
-        this.persistSteamCmdPath(exe);
-        return;
-      }
-      throw this.steamCmdMissingError();
-    }
-    if (this.findSteamCmdExecutableCached() === null) {
-      throw this.steamCmdMissingError();
-    }
-  }
-
   /**
    * Status/cache path for polls — memory + settings/env only.
    * Never probes disk (no `existsSync`) so UNC/AV stalls cannot block main (#145).
    */
-  private findSteamCmdExecutableCached(): string | null {
-    const configured = this.settings.get("steamcmdPath");
-    const resolved = resolveSteamCmdExecutableCached({
-      confirmedMissing: this.steamCmdConfirmedMissing,
-      lastKnownPath: this.lastKnownSteamCmdPath,
-      configured,
-      envPath: process.env["STEAMCMD_PATH"],
-    });
-    if (
-      resolved !== null
-      && configured != null
-      && configured.trim() === resolved
-      && (
-        this.lastKnownSteamCmdPath == null
-        || this.lastKnownSteamCmdPath.trim().length === 0
-      )
-    ) {
-      this.lastKnownSteamCmdPath = resolved;
-    }
-    return resolved;
-  }
-
-  private steamCmdCandidatePaths(): string[] {
-    return buildSteamCmdCandidatePaths({
-      configured: this.settings.get("steamcmdPath"),
-      envPath: process.env["STEAMCMD_PATH"],
-      steamcmdDir: this.steamcmdDir,
-      isolated: isSteamCmdSearchIsolated(process.env["YARK_E2E_USER_DATA"]),
-      programFilesX86: process.env["ProgramFiles(x86)"],
-      programFiles: process.env["ProgramFiles"],
-      localAppData: process.env["LOCALAPPDATA"],
-    });
-  }
-
-  private async findSteamCmdExecutable(): Promise<string | null> {
-    for (const candidate of this.steamCmdCandidatePaths()) {
-      try {
-        await access(candidate);
-        this.lastKnownSteamCmdPath = candidate;
-        return candidate;
-      } catch {
-        // try next candidate
-      }
-    }
-
-    if (isSteamCmdSearchIsolated(process.env["YARK_E2E_USER_DATA"])) {
-      return null;
-    }
-
-    try {
-      const { stdout } = await execFileBounded(
-        "where.exe",
-        ["steamcmd.exe"],
-        {
-          timeoutMs: 2_000,
-          maxBuffer: 64 * 1024,
-          windowsHide: true,
-        },
-      );
-      const lines = stdout
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0);
-      for (const line of lines) {
-        try {
-          await access(line);
-          this.lastKnownSteamCmdPath = line;
-          return line;
-        } catch {
-          // try next PATH hit
-        }
-      }
-    } catch {
-      // Best effort: if where.exe does not find steamcmd, continue without a detected path.
-    }
-
-    return null;
-  }
-
-  private persistSteamCmdPath(exePath: string): void {
-    this.steamCmdConfirmedMissing = false;
-    this.lastKnownSteamCmdPath = exePath;
-    this.settings.set("steamcmdPath", exePath);
-    process.env["STEAMCMD_PATH"] = exePath;
-    process.env["ARK_STEAMCMD_DIR"] = dirname(exePath);
-  }
-
-  private async verifySteamCmdExecutable(exePath: string): Promise<void> {
-    await new Promise<void>((resolve, reject) => {
-      this.appendSteamCmdConsole(`Validating SteamCMD: ${exePath}`);
-      const child = spawn(exePath, [...STEAMCMD_ENGLISH_ARGS, "+quit"], {
-        cwd: resolveSteamCmdHome(exePath),
-        windowsHide: true,
-        shell: false,
-        env: steamCmdSpawnEnv(),
-      });
-
-      let finished = false;
-      let sawOutput = false;
-      let stderr = "";
-      const timer = setTimeout(() => {
-        if (finished) {
-          return;
-        }
-        finished = true;
-        child.kill();
-        resolve();
-      }, 20_000);
-
-      child.stdout.on("data", (chunk) => {
-        sawOutput = true;
-        this.captureSteamCmdOutput(String(chunk), "verify/stdout");
-      });
-      child.stderr.on("data", (chunk) => {
-        sawOutput = true;
-        const text = String(chunk);
-        stderr += text;
-        this.captureSteamCmdOutput(text, "verify/stderr");
-      });
-
-      child.once("error", (error) => {
-        if (finished) {
-          return;
-        }
-        finished = true;
-        clearTimeout(timer);
-        reject(new Error(`SteamCMD exists but cannot be executed: ${error.message}`));
-      });
-
-      child.once("exit", (code) => {
-        if (finished) {
-          return;
-        }
-        finished = true;
-        clearTimeout(timer);
-        if (isSteamCmdVerifyExitAcceptable(code, sawOutput)) {
-          resolve();
-          return;
-        }
-
-        reject(
-          new Error(
-            `SteamCMD did not respond correctly (exit ${code ?? 1})${
-              stderr.length > 0 ? `: ${stderr}` : ""
-            }`,
-          ),
-        );
-      });
-    });
-  }
-
   private async waitForHealthy(
     serverId: string,
     timeoutMs: number,
