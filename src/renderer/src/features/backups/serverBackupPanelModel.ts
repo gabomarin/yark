@@ -1,4 +1,10 @@
-import type { BackupKind, BackupPolicy, ServerRuntimeInfo } from "@shared/types";
+import { playerBackupDisplayName } from "@shared/backup-player-meta";
+import type {
+  BackupKind,
+  BackupPolicy,
+  BackupRecord,
+  ServerRuntimeInfo,
+} from "@shared/types";
 
 export type DraftPolicy = Omit<BackupPolicy, "serverId" | "updatedAt">;
 
@@ -59,6 +65,95 @@ export function toDraft(policy: BackupPolicy): DraftPolicy {
     retainCountIni: policy.retainCountIni,
     backupDir: policy.backupDir,
   };
+}
+
+export function draftEqualsPolicy(
+  draft: DraftPolicy,
+  policy: BackupPolicy,
+): boolean {
+  return (
+    draft.enabled === policy.enabled
+    && draft.intervalMinutes === policy.intervalMinutes
+    && draft.retainCountWorld === policy.retainCountWorld
+    && draft.retainCountPlayers === policy.retainCountPlayers
+    && draft.retainCountIni === policy.retainCountIni
+    && draft.backupDir === policy.backupDir
+  );
+}
+
+export function draftEqualsDraft(a: DraftPolicy, b: DraftPolicy): boolean {
+  return (
+    a.enabled === b.enabled
+    && a.intervalMinutes === b.intervalMinutes
+    && a.retainCountWorld === b.retainCountWorld
+    && a.retainCountPlayers === b.retainCountPlayers
+    && a.retainCountIni === b.retainCountIni
+    && a.backupDir === b.backupDir
+  );
+}
+
+function sameMapToken(
+  a: string | null | undefined,
+  b: string | null | undefined,
+): boolean {
+  const left = (a ?? "").trim().toLowerCase();
+  const right = (b ?? "").trim().toLowerCase();
+  return left.length > 0 && right.length > 0 && left === right;
+}
+
+export function backupsListKey(rows: BackupRecord[]): string {
+  return rows
+    .map((backup) =>
+      [
+        backup.id,
+        backup.status,
+        backup.type,
+        backup.kind,
+        String(backup.sizeBytes),
+        backup.createdAt,
+        backup.completedAt ?? "",
+        backup.path,
+        backup.notes ?? "",
+        backup.mapToken ?? "",
+      ].join(":"),
+    )
+    .join("\0");
+}
+
+export function filterBackups(
+  backups: BackupRecord[],
+  kind: BackupKind,
+  playerSearch: string,
+  currentMapOnly: boolean,
+  serverMap: string,
+): BackupRecord[] {
+  const kindBackups = backups.filter((backup) => backup.kind === kind);
+  if (kind === "players") {
+    const query = playerSearch.trim().toLocaleLowerCase();
+    if (query.length === 0) return kindBackups;
+    return kindBackups.filter((backup) =>
+      playerBackupDisplayName(backup).toLocaleLowerCase().includes(query),
+    );
+  }
+  if (kind === "world" && currentMapOnly) {
+    return kindBackups.filter((backup) =>
+      sameMapToken(backup.mapToken, serverMap),
+    );
+  }
+  return kindBackups;
+}
+
+export function countHiddenOtherMapWorldBackups(
+  backups: BackupRecord[],
+  kind: BackupKind,
+  currentMapOnly: boolean,
+  serverMap: string,
+): number {
+  if (kind !== "world" || !currentMapOnly) return 0;
+  return backups.filter(
+    (backup) =>
+      backup.kind === "world" && !sameMapToken(backup.mapToken, serverMap),
+  ).length;
 }
 
 export function worldPolicySummary(
