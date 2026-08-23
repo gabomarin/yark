@@ -92,7 +92,7 @@ export function draftEqualsDraft(a: DraftPolicy, b: DraftPolicy): boolean {
   );
 }
 
-export function sameMapToken(
+function sameMapToken(
   a: string | null | undefined,
   b: string | null | undefined,
 ): boolean {
