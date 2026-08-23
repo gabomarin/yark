@@ -1,7 +1,7 @@
 # Decomposition map (#146)
 
 **Issue:** [#146](https://github.com/gabomarin/yark/issues/146) — Decompose oversized backend services and renderer pages  
-**Status:** Phase 4 (instance + process pure helpers) — in progress  
+**Status:** Phase 5 (renderer page decomposition) — in progress  
 **Policy:** `scripts/component-structure-baseline.json`, [component-structure.md](component-structure.md)
 
 ## Goal
@@ -86,6 +86,18 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `process-stop.ts` | Pure unexpected-exit classification and last-error copy (+ unit tests). Graceful stop/kill orchestration still on `ProcessManager`. |
 
 **Phase 4 exit:** `instance-service.ts` and `process-manager.ts` are coordinators; lifecycle/profile/crash and spawn/readiness/stop decisions live in siblings above. Optional: `instance-rcon.ts` trim, further orchestration moves.
+
+### Phase 5 progress
+
+| Surface | Extracted | Coordinator |
+| --- | --- | --- |
+| `ServerLogsPanel.tsx` (706 lines) | `LogsPanelChrome`, `LogsEventsTab`, `LogsUpdatesTab`, `LogsBackupsTab` | Tab shell, IPC, focus routing |
+| `BackupsPage.tsx` (544 lines) | `backupsPageModel`, `BackupVolumeStrip`, `ServerHealthCard`, `BackupDiskAlertModal`, `BackupCleanupModal` | Fleet load/save, filters |
+| `ServerBackupPanel.tsx` (829 lines) | `serverBackupPanelModel`, `BackupKindSettings`, `BackupListToolbar` | Per-server backup CRUD, autosave |
+| `ConfigurationWizard.tsx` (651 lines) | `wizardSteps`, six step panels, `WizardChangesModal`, `WizardFooter` | INI load/apply, preset choosers |
+| `App.tsx` (2172 lines) | `appOverlay`, `steamCmdShellModel`, `AppMainRouter` | Fleet poll, RCON, SteamCMD jobs, modals |
+
+**Phase 5 exit:** Grandfathered feature pages are organisms + thin coordinators; `App.tsx` shell further shrinks via hooks (`useAppFleetRefresh`, `useAppRcon`) in follow-ups. Optional: `ConfigurationEditor` split (deferred table).
 
 
 ## Backend: `backup-service.ts`

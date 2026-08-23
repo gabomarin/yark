@@ -1,47 +1,21 @@
-import {
-  ArrowSquareOut,
-  Broom,
-  ClockCounterClockwise,
-  DownloadSimple,
-  FileText,
-  HardDrives,
-  Trash,
-} from "@phosphor-icons/react";
-import {
-  Accordion,
-  ActionIcon,
-  Alert,
-  Badge,
-  Button,
-  Group,
-  Stack,
-  Tabs,
-  Text,
-  Title,
-  Tooltip,
-} from "@mantine/core";
+import { ClockCounterClockwise, DownloadSimple } from "@phosphor-icons/react";
+import { Alert, Button, Group, Stack, Tabs, Text, Title } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { ServerOperationalLogs, ServerProfile } from "@shared/types";
-import { formatLogDateTime } from "@shared/format-log-datetime";
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
-import { ConsoleSurface } from "@ui/ConsoleSurface/ConsoleSurface";
-import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { showOperatorToast } from "@ui/operatorToast";
-import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
-import { EventDetailsBody } from "./EventDetailsBody";
+import { LogsBackupsTab } from "./components/LogsBackupsTab/LogsBackupsTab";
+import { LogsEventsTab } from "./components/LogsEventsTab/LogsEventsTab";
+import { LogsClearAction } from "./components/LogsPanelChrome/LogsPanelChrome";
+import { LogsUpdatesTab } from "./components/LogsUpdatesTab/LogsUpdatesTab";
 import classes from "./LogsPage.module.css";
 import { RuntimeLogSection } from "./RuntimeLogSection";
 import {
-  formatDuration,
-  formatSize,
   formatUpdateJobLabel,
   preserveNewerRuntimeLogs,
   replaceRuntimeLogs,
-  statusColor,
-  statusLabel,
   type RuntimeLogSourceFilter,
 } from "./serverLogsFormat";
 
@@ -668,103 +642,15 @@ export function ServerLogsPanel(props: Props): ReactElement {
         </Tabs.List>
 
         <Tabs.Panel value="events" className={classes.tabPanel}>
-          <AppSurfaceCard fill className={classes.fillPanel}>
-            <Stack gap="sm" className={classes.panelStack}>
-              <TabIntro
-                title="Events"
-                purpose="Manager activity for this server: starts, stops, backups, updates, and errors."
-                useWhen="You want a timeline of what the app did, or why an operation failed. Expand a row for cause and next steps."
-                action={
-                  <ClearAction
-                    label="Clear all events for this server"
-                    onClick={confirmClearEvents}
-                    disabled={
-                      loading || busy || logs === null || logs.events.length === 0
-                    }
-                  />
-                }
-              />
-              {loading ? (
-                <Text c="dimmed">Loading events…</Text>
-              ) : logs === null || logs.events.length === 0 ? (
-                <LogEmptyState
-                  icon={<ClockCounterClockwise size={24} />}
-                  title="No recent events"
-                  description="Starts, stops, backup/update results, and errors will appear here as you operate this server."
-                />
-              ) : (
-                <div className={classes.eventList} data-logs-scroll-region="events">
-                  <Accordion
-                    variant="separated"
-                    keepMounted={false}
-                    transitionDuration={0}
-                    value={
-                      expandedEventId !== null ? String(expandedEventId) : null
-                    }
-                    onChange={(value) => {
-                      if (value === null) {
-                        setExpandedEventId(null);
-                        return;
-                      }
-                      const id = Number(value);
-                      setExpandedEventId(Number.isFinite(id) ? id : null);
-                    }}
-                    classNames={{
-                      item: classes.eventAccordionItem,
-                      control: classes.eventAccordionControl,
-                      panel: classes.eventAccordionPanel,
-                    }}
-                  >
-                    {logs.events.map((event) => {
-                      const focused = highlightedEventId === event.id;
-                      const expanded = expandedEventId === event.id;
-                      return (
-                        <Accordion.Item
-                          key={event.id}
-                          value={String(event.id)}
-                          className={focused ? classes.eventRowFocused : undefined}
-                        >
-                          <Accordion.Control data-log-event-id={event.id}>
-                            <Group
-                              justify="space-between"
-                              align="center"
-                              gap="sm"
-                              wrap="nowrap"
-                            >
-                              <div className={classes.eventRowMain}>
-                                <Text size="sm" c="dimmed">
-                                  {formatLogDateTime(event.createdAt)}
-                                </Text>
-                                <Text size="sm" fw={expanded ? 600 : 400}>
-                                  {event.message}
-                                </Text>
-                              </div>
-                              <Badge
-                                className={classes.eventSeverityBadge}
-                                color={
-                                  event.severity === "error"
-                                    ? "red"
-                                    : event.severity === "warning"
-                                      ? "yellow"
-                                      : "gray"
-                                }
-                                variant="light"
-                              >
-                                {event.severity}
-                              </Badge>
-                            </Group>
-                          </Accordion.Control>
-                          <Accordion.Panel>
-                            <EventDetailsBody event={event} />
-                          </Accordion.Panel>
-                        </Accordion.Item>
-                      );
-                    })}
-                  </Accordion>
-                </div>
-              )}
-            </Stack>
-          </AppSurfaceCard>
+          <LogsEventsTab
+            loading={loading}
+            busy={busy}
+            logs={logs}
+            highlightedEventId={highlightedEventId}
+            expandedEventId={expandedEventId}
+            onExpandedEventIdChange={setExpandedEventId}
+            onClearEvents={confirmClearEvents}
+          />
         </Tabs.Panel>
 
         <Tabs.Panel value="runtime" className={classes.tabPanel}>
@@ -774,7 +660,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
             sourceFilter={runtimeSourceFilter}
             onSourceFilterChange={setRuntimeSourceFilter}
             clearAction={
-              <ClearAction
+              <LogsClearAction
                 label="Clear captured runtime console output"
                 onClick={confirmClearRuntime}
                 disabled={
@@ -789,311 +675,32 @@ export function ServerLogsPanel(props: Props): ReactElement {
         </Tabs.Panel>
 
         <Tabs.Panel value="updates" className={classes.tabPanel}>
-          <Stack gap="sm" className={classes.updatesStack}>
-            <TabIntro
-              title="Updates"
-              purpose="Detailed download and install logs for this server."
-              useWhen="When an update failed or files look wrong, pick a run on the left and read the log on the right."
-              action={
-                <ClearAction
-                  label="Clear all update logs for this server"
-                  onClick={confirmClearUpdateLogs}
-                  disabled={
-                    loading ||
-                    busy ||
-                    logs === null ||
-                    logs.updateFiles.length === 0
-                  }
-                />
-              }
-            />
-          <div className={classes.updatesLayout}>
-            <AppSurfaceCard fill className={`${classes.historyPanel} ${classes.fillPanel}`}>
-              <Stack gap="sm" className={classes.panelStack}>
-                <Title order={4} className={classes.panelTitle}>
-                  Job history
-                </Title>
-                {loading ? (
-                  <Text c="dimmed">Loading history…</Text>
-                ) : logs === null || logs.updateFiles.length === 0 ? (
-                  <Text c="dimmed">
-                    No update logs yet. Install, update, or verify files to create one.
-                  </Text>
-                ) : (
-                  <div
-                    className={classes.updateList}
-                    data-logs-scroll-region="updates-list"
-                  >
-                    {logs.updateFiles.map((file) => {
-                      const label = formatUpdateJobLabel(file.fileName, file.modifiedAt);
-                      return (
-                      <SelectableListRow
-                        key={file.fileName}
-                        selected={selectedUpdateFile === file.fileName}
-                        onClick={() => void openUpdateLog(props.server.id, file.fileName)}
-                        title={file.fileName}
-                        trailing={
-                          <Badge
-                            color={statusColor(file.status)}
-                            variant="light"
-                            className={classes.updateStatus}
-                          >
-                            {statusLabel(file.status)}
-                          </Badge>
-                        }
-                      >
-                        <Text size="sm" fw={600} className={classes.updateTitle}>
-                          {label.title}
-                        </Text>
-                        <Text size="xs" c="dimmed" className={classes.updateSubtitle}>
-                          {label.subtitle}
-                        </Text>
-                      </SelectableListRow>
-                      );
-                    })}
-                  </div>
-                )}
-              </Stack>
-            </AppSurfaceCard>
-
-            <AppSurfaceCard fill className={`${classes.detailPanel} ${classes.fillPanel}`}>
-              <Stack gap="sm" className={classes.panelStack}>
-                <Group
-                  justify="space-between"
-                  align="center"
-                  wrap="wrap"
-                  gap="sm"
-                  className={classes.detailHeader}
-                >
-                  <Group gap="sm" wrap="nowrap">
-                    <Title order={4} className={classes.panelTitle}>
-                      Update details
-                    </Title>
-                    {selectedUpdateInfo !== null && (
-                      <Badge
-                        color={statusColor(selectedUpdateInfo.status)}
-                        variant="light"
-                      >
-                        {selectedUpdateInfo.status}
-                      </Badge>
-                    )}
-                  </Group>
-                  {selectedUpdateInfo !== null && (
-                    <Group gap="xs">
-                      <Tooltip label="Open in external viewer">
-                        <ActionIcon
-                          variant="default"
-                          aria-label="Open in external viewer"
-                          onClick={() => void openInExternalViewer()}
-                          disabled={busy}
-                        >
-                          <ArrowSquareOut size={16} />
-                        </ActionIcon>
-                      </Tooltip>
-                      <Tooltip label="Delete this update log">
-                        <ActionIcon
-                          variant="subtle"
-                          color="red"
-                          aria-label="Delete this update log"
-                          onClick={confirmDeleteSelectedUpdate}
-                          disabled={busy}
-                        >
-                          <Trash size={16} />
-                        </ActionIcon>
-                      </Tooltip>
-                    </Group>
-                  )}
-                </Group>
-
-                {selectedUpdateInfo === null ? (
-                  <Text c="dimmed">Select an update to see details.</Text>
-                ) : (
-                  <>
-                    <div className={classes.detailsMeta}>
-                      <DetailItem
-                        label="Date"
-                        value={formatLogDateTime(selectedUpdateInfo.modifiedAt)}
-                        icon={<ClockCounterClockwise size={16} />}
-                      />
-                      <DetailItem
-                        label="Duration"
-                        value={formatDuration(selectedUpdateInfo.durationMs)}
-                        icon={<ClockCounterClockwise size={16} />}
-                      />
-                      <DetailItem
-                        label="Size"
-                        value={formatSize(selectedUpdateInfo.sizeBytes)}
-                        icon={<FileText size={16} />}
-                      />
-                    </div>
-                    <ConsoleSurface
-                      fill
-                      text={
-                        updateContent.length > 0 ? updateContent : "Loading log content…"
-                      }
-                      data-logs-scroll-region="update-content"
-                    />
-                  </>
-                )}
-              </Stack>
-            </AppSurfaceCard>
-          </div>
-          </Stack>
+          <LogsUpdatesTab
+            loading={loading}
+            busy={busy}
+            logs={logs}
+            serverId={props.server.id}
+            selectedUpdateFile={selectedUpdateFile}
+            updateContent={updateContent}
+            selectedUpdateInfo={selectedUpdateInfo}
+            onOpenUpdateLog={(serverId, fileName) => void openUpdateLog(serverId, fileName)}
+            onClearUpdateLogs={confirmClearUpdateLogs}
+            onOpenInExternalViewer={() => void openInExternalViewer()}
+            onDeleteSelectedUpdate={confirmDeleteSelectedUpdate}
+          />
         </Tabs.Panel>
 
         <Tabs.Panel value="backups" className={classes.tabPanel}>
-          <AppSurfaceCard fill className={classes.fillPanel}>
-            <Stack gap="sm" className={classes.panelStack}>
-              <TabIntro
-                title="Backups"
-                purpose="History of backup archives for this server (kind, status, path, size timing)."
-                useWhen="You need to confirm a backup finished, find a path, or audit failures. Create/restore lives in the Backups workspace tab; you can also delete archives here."
-                action={
-                  <ClearAction
-                    label="Delete all listed backup archives"
-                    onClick={confirmClearBackups}
-                    disabled={
-                      loading ||
-                      busy ||
-                      logs === null ||
-                      logs.backups.length === 0
-                    }
-                  />
-                }
-              />
-              {loading ? (
-                <Text c="dimmed">Loading backups…</Text>
-              ) : logs === null || logs.backups.length === 0 ? (
-                <LogEmptyState
-                  icon={<HardDrives size={24} />}
-                  title="No backups recorded"
-                  description="Manual, scheduled, and automatic archives will list here after the first backup runs."
-                />
-              ) : (
-                <div className={classes.eventList} data-logs-scroll-region="backups">
-                  {logs.backups.map((backup) => {
-                    const focused = highlightedBackupId === backup.id;
-                    return (
-                      <div
-                        key={backup.id}
-                        className={[
-                          classes.eventRow,
-                          focused ? classes.eventRowFocused : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                        data-backup-id={backup.id}
-                      >
-                        <Group justify="space-between" align="flex-start" gap="sm" wrap="nowrap">
-                          <div className={classes.eventRowMain}>
-                            <Text fw={600}>
-                              {backup.kind} · {backup.type}
-                            </Text>
-                            <Text size="sm" c="dimmed">
-                              {formatLogDateTime(backup.createdAt)} | {backup.status}
-                            </Text>
-                            <Text size="sm">{backup.path}</Text>
-                          </div>
-                          <Tooltip label={`Delete ${backup.kind} · ${backup.type} backup`}>
-                            <ActionIcon
-                              variant="subtle"
-                              color="red"
-                              aria-label={`Delete ${backup.kind} ${backup.type} backup`}
-                              disabled={busy}
-                              onClick={() =>
-                                confirmDeleteBackup(
-                                  backup.id,
-                                  `${backup.kind} · ${backup.type}`,
-                                )
-                              }
-                            >
-                              <Trash size={16} />
-                            </ActionIcon>
-                          </Tooltip>
-                        </Group>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </Stack>
-          </AppSurfaceCard>
+          <LogsBackupsTab
+            loading={loading}
+            busy={busy}
+            logs={logs}
+            highlightedBackupId={highlightedBackupId}
+            onClearBackups={confirmClearBackups}
+            onDeleteBackup={confirmDeleteBackup}
+          />
         </Tabs.Panel>
       </Tabs>
     </Stack>
   );
-}
-
-interface DetailItemProps {
-  label: string;
-  value: string;
-  icon: React.ReactNode;
-}
-
-function ClearAction(props: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-}): ReactElement {
-  return (
-    <Tooltip label={props.label}>
-      <span>
-        <ActionIcon
-          variant="subtle"
-          color="red"
-          aria-label={props.label}
-          onClick={props.onClick}
-          disabled={props.disabled === true}
-        >
-          <Broom size={16} />
-        </ActionIcon>
-      </span>
-    </Tooltip>
-  );
-}
-
-function TabIntro(props: {
-  title: string;
-  purpose: string;
-  useWhen: string;
-  action?: React.ReactNode;
-}): ReactElement {
-  return (
-    <div className={classes.tabIntro}>
-      <Group justify="space-between" align="flex-start" gap="sm" wrap="wrap">
-        <Title order={4} className={classes.panelTitle}>
-          {props.title}
-        </Title>
-        {props.action}
-      </Group>
-      <Text size="sm">{props.purpose}</Text>
-      <Text size="xs" c="dimmed">
-        Use when: {props.useWhen}
-      </Text>
-    </div>
-  );
-}
-
-function DetailItem({ label, value, icon }: DetailItemProps): ReactElement {
-  return (
-    <div className={classes.detailItem}>
-      <Text className={classes.detailLabel}>
-        {icon}
-        {label}
-      </Text>
-      <Text size="xs" className={classes.detailValue}>
-        {value}
-      </Text>
-    </div>
-  );
-}
-
-interface LogEmptyStateProps {
-  icon: ReactNode;
-  title: string;
-  description: string;
-}
-
-function LogEmptyState({ icon, title, description }: LogEmptyStateProps): ReactElement {
-  return <EmptyState layout="stacked" icon={icon} title={title} description={description} />;
 }

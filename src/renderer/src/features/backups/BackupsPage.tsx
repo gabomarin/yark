@@ -1,39 +1,16 @@
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { ReactElement } from "react";
-import {
-  ArrowSquareOut,
-  FloppyDisk,
-  FolderOpen,
-  HardDrives,
-} from "@phosphor-icons/react";
-import {
-  Badge,
-  Button,
-  Checkbox,
-  Group,
-  Modal,
-  NumberInput,
-  Select,
-  Stack,
-  Switch,
-  Text,
-  Title,
-  Tooltip,
-} from "@mantine/core";
+import { HardDrives } from "@phosphor-icons/react";
+import { Button, Group, Select, Stack, Text, Title } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
-import { PathField } from "@ui/PathField/PathField";
-import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
-import { formatLogDateTime } from "@shared/format-log-datetime";
 import type {
   BackupCleanupOptions,
   BackupCleanupPreview,
   BackupDiskAlertSettings,
   BackupFleetSummary,
-  BackupHealthStatus,
-  BackupServerHealth,
   ServerProfile,
 } from "@shared/types";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -44,10 +21,18 @@ import {
   type BackupPolicyDraft,
 } from "./backupPolicyDraft";
 import {
+  type BackupHealthFilter,
+  formatBackupBytes,
+} from "./backupsPageModel";
+import {
   BackupFleetAlertsPanel,
   type OpenFailedBackupLogsArgs,
 } from "./components/BackupFleetAlertsPanel/BackupFleetAlertsPanel";
 import { BackupFleetMetrics } from "./components/BackupFleetMetrics/BackupFleetMetrics";
+import { BackupCleanupModal } from "./components/BackupCleanupModal/BackupCleanupModal";
+import { BackupDiskAlertModal } from "./components/BackupDiskAlertModal/BackupDiskAlertModal";
+import { BackupVolumeStrip } from "./components/BackupVolumeStrip/BackupVolumeStrip";
+import { ServerHealthCard } from "./components/ServerHealthCard/ServerHealthCard";
 import classes from "./BackupsPage.module.css";
 
 interface Props {
@@ -57,47 +42,6 @@ interface Props {
 }
 
 type DraftPolicy = BackupPolicyDraft;
-type HealthFilter = "all" | "at_risk" | "failed" | "protected";
-
-function formatWhen(iso: string | null | undefined): string {
-  return formatLogDateTime(iso);
-}
-
-function formatBytes(bytes: number | null | undefined): string {
-  if (bytes == null || !Number.isFinite(bytes)) return "–";
-  const abs = Math.abs(bytes);
-  if (abs >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
-  if (abs >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
-  if (abs >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${Math.round(bytes)} B`;
-}
-
-function healthColor(health: BackupHealthStatus): string {
-  if (health === "ok") return "teal";
-  if (health === "warning") return "yellow";
-  if (health === "critical") return "red";
-  return "gray";
-}
-
-function healthLabel(health: BackupHealthStatus): string {
-  if (health === "ok") return "Protected";
-  if (health === "warning") return "At risk";
-  if (health === "critical") return "Critical";
-  return "Unknown";
-}
-
-function healthTooltip(health: BackupHealthStatus): string {
-  if (health === "ok") {
-    return "This server has a completed world backup and is not overdue for its schedule.";
-  }
-  if (health === "warning") {
-    return "Backup protection needs attention – for example the world schedule is on with no world backup yet, the last world backup is overdue, or a recent backup failed.";
-  }
-  if (health === "critical") {
-    return "World backups cannot protect this server right now – the backup folder is missing or a world backup failed in the last 24 hours.";
-  }
-  return "No completed world backup yet. Either the world schedule is off, or it is on but this server is not running so a scheduled backup cannot run yet. Start the server or create a manual world backup.";
-}
 
 const DEFAULT_CLEANUP: BackupCleanupOptions = {
   serverIds: null,
@@ -115,7 +59,7 @@ export function BackupsPage(props: Props): ReactElement {
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [browsingId, setBrowsingId] = useState<string | null>(null);
-  const [healthFilter, setHealthFilter] = useState<HealthFilter>("all");
+  const [healthFilter, setHealthFilter] = useState<BackupHealthFilter>("all");
   const [diskModalOpen, setDiskModalOpen] = useState(false);
   const [diskDraft, setDiskDraft] = useState<BackupDiskAlertSettings | null>(null);
   const [diskBusy, setDiskBusy] = useState(false);
@@ -409,7 +353,7 @@ export function BackupsPage(props: Props): ReactElement {
         setCleanupPreview(null);
         showOperatorToast({
           title: "Cleanup finished",
-          message: `Cleanup removed ${result.data.deleted} backup${result.data.deleted === 1 ? "" : "s"} (${formatBytes(result.data.freedBytes)}).`,
+          message: `Cleanup removed ${result.data.deleted} backup${result.data.deleted === 1 ? "" : "s"} (${formatBackupBytes(result.data.freedBytes)}).`,
         });
         await load();
       },
@@ -423,6 +367,20 @@ export function BackupsPage(props: Props): ReactElement {
     const map = new Map(props.servers.map((server) => [server.id, server]));
     return map;
   }, [props.servers]);
+
+  const openCleanupModal = () => {
+    setCleanupOptions(DEFAULT_CLEANUP);
+    setCleanupPreview(null);
+    setCleanupOpen(true);
+  };
+
+  const openCleanupModalFromToolbar = () => {
+    setCleanupOptions(DEFAULT_CLEANUP);
+    setCleanupPreview(null);
+    setOlderThanEnabled(false);
+    setKeepLastEnabled(false);
+    setCleanupOpen(true);
+  };
 
   return (
     <PageScaffold
@@ -440,13 +398,7 @@ export function BackupsPage(props: Props): ReactElement {
           <Button
             variant="light"
             disabled={props.servers.length === 0}
-            onClick={() => {
-              setCleanupOptions(DEFAULT_CLEANUP);
-              setCleanupPreview(null);
-              setOlderThanEnabled(false);
-              setKeepLastEnabled(false);
-              setCleanupOpen(true);
-            }}
+            onClick={openCleanupModalFromToolbar}
           >
             Cleanup…
           </Button>
@@ -474,11 +426,7 @@ export function BackupsPage(props: Props): ReactElement {
               onOpenServerBackups={props.onOpenServerBackups}
               onOpenFailedBackupLogs={props.onOpenFailedBackupLogs}
               onDismissAlert={(alert) => void dismissFleetAlert(alert)}
-              onOpenCleanup={() => {
-                setCleanupOptions(DEFAULT_CLEANUP);
-                setCleanupPreview(null);
-                setCleanupOpen(true);
-              }}
+              onOpenCleanup={openCleanupModal}
             />
 
             <BackupFleetMetrics
@@ -493,58 +441,10 @@ export function BackupsPage(props: Props): ReactElement {
             />
 
             {summary.disks.length > 0 && !backupFleetQuiet && (
-              <Stack gap="xs">
-                <Group justify="space-between" align="center">
-                  <Title order={5}>Volumes</Title>
-                  <Text size="xs" c="dimmed">
-                    Thresholds apply per drive. Click Disk free to edit.
-                  </Text>
-                </Group>
-                <div className={classes.volumeStrip}>
-                  {summary.disks.map((disk) => {
-                    const critical =
-                      disk.usedPercent != null &&
-                      disk.usedPercent >= summary.diskSettings.criticalUsedPercent;
-                    const warning =
-                      !critical &&
-                      ((disk.usedPercent != null &&
-                        disk.usedPercent >= summary.diskSettings.warnUsedPercent) ||
-                        (disk.freeBytes != null &&
-                          disk.freeBytes < summary.diskSettings.warnFreeBytes));
-                    return (
-                      <AppSurfaceCard
-                        key={disk.volumePath}
-                        tone="flat"
-                        padding="sm"
-                        radius="md"
-                        className={[
-                          classes.volumeCard,
-                          critical ? classes.statDanger : "",
-                          warning ? classes.statWarning : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                      >
-                        <Text fw={600} size="sm">
-                          {disk.volumePath}
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          Free {formatBytes(disk.freeBytes)}
-                          {disk.usedPercent != null
-                            ? ` · ${disk.usedPercent.toFixed(0)}% used`
-                            : ""}
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          Backups on this volume: {formatBytes(disk.backupBytes)}
-                          {disk.roots.length > 1
-                            ? ` · ${disk.roots.length} destinations`
-                            : ""}
-                        </Text>
-                      </AppSurfaceCard>
-                    );
-                  })}
-                </div>
-              </Stack>
+              <BackupVolumeStrip
+                disks={summary.disks}
+                diskSettings={summary.diskSettings}
+              />
             )}
 
             <Group justify="space-between" align="center" wrap="wrap">
@@ -552,7 +452,9 @@ export function BackupsPage(props: Props): ReactElement {
               <Select
                 aria-label="Filter servers by health"
                 value={healthFilter}
-                onChange={(value) => setHealthFilter((value as HealthFilter) ?? "all")}
+                onChange={(value) =>
+                  setHealthFilter((value as BackupHealthFilter) ?? "all")
+                }
                 data={[
                   { value: "all", label: "All" },
                   { value: "protected", label: "Protected" },
@@ -609,405 +511,34 @@ export function BackupsPage(props: Props): ReactElement {
         ) : null}
       </Stack>
 
-      <Modal
+      <BackupDiskAlertModal
         opened={diskModalOpen}
         onClose={() => setDiskModalOpen(false)}
-        title="Warn me when the backup drive fills up"
-        centered
-      >
-        {diskDraft !== null && (
-          <Stack gap="md">
-            <Text size="sm" c="dimmed">
-              Based on the whole drive, not just the backup folder. Warning and
-              critical percentages apply to total used space.
-            </Text>
-            <NumberInput
-              label="Warning at used %"
-              min={50}
-              max={99}
-              value={diskDraft.warnUsedPercent}
-              onChange={(value) =>
-                typeof value === "number" &&
-                setDiskDraft({ ...diskDraft, warnUsedPercent: value })
-              }
-            />
-            <NumberInput
-              label="Critical at used %"
-              min={51}
-              max={100}
-              value={diskDraft.criticalUsedPercent}
-              onChange={(value) =>
-                typeof value === "number" &&
-                setDiskDraft({ ...diskDraft, criticalUsedPercent: value })
-              }
-            />
-            <NumberInput
-              label="Also warn if free space below (GB)"
-              min={1}
-              max={1024}
-              value={Math.round(diskDraft.warnFreeBytes / (1024 ** 3))}
-              onChange={(value) =>
-                typeof value === "number" &&
-                setDiskDraft({
-                  ...diskDraft,
-                  warnFreeBytes: value * 1024 ** 3,
-                })
-              }
-            />
-            <Group justify="flex-end">
-              <Button variant="default" onClick={() => setDiskModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button loading={diskBusy} onClick={() => void saveDiskSettings()}>
-                Save thresholds
-              </Button>
-            </Group>
-          </Stack>
-        )}
-      </Modal>
+        diskDraft={diskDraft}
+        onDiskDraftChange={setDiskDraft}
+        busy={diskBusy}
+        onSave={() => void saveDiskSettings()}
+      />
 
-      <Modal
+      <BackupCleanupModal
         opened={cleanupOpen}
-        onClose={() => !cleanupBusy && setCleanupOpen(false)}
-        title="Cleanup backups"
-        size="lg"
-        centered
-      >
-        <Stack gap="md">
-          <Text size="sm" c="dimmed">
-            Finds backups that match your rules. The newest successful world
-            backup per server is kept by default.
-          </Text>
-          <Checkbox
-            label="Delete failed backups"
-            checked={cleanupOptions.includeFailed}
-            onChange={(event) => {
-              setCleanupPreview(null);
-              setCleanupOptions((prev) => ({
-                ...prev,
-                includeFailed: event.currentTarget.checked,
-              }));
-            }}
-          />
-          <Checkbox
-            label="Delete older backups past each server's keep limit"
-            checked={cleanupOptions.enforceRetention}
-            onChange={(event) => {
-              setCleanupPreview(null);
-              setCleanupOptions((prev) => ({
-                ...prev,
-                enforceRetention: event.currentTarget.checked,
-              }));
-            }}
-          />
-          <Group align="center" gap="sm">
-            <Checkbox
-              label="Older than"
-              checked={olderThanEnabled}
-              onChange={(event) => {
-                setCleanupPreview(null);
-                setOlderThanEnabled(event.currentTarget.checked);
-              }}
-            />
-            <NumberInput
-              min={1}
-              max={3650}
-              value={olderThanDays}
-              disabled={!olderThanEnabled}
-              onChange={(value) => {
-                if (typeof value === "number") {
-                  setCleanupPreview(null);
-                  setOlderThanDays(value);
-                }
-              }}
-              w={90}
-            />
-            <Text size="sm">days</Text>
-          </Group>
-          <Group align="center" gap="sm">
-            <Checkbox
-              label="Keep only last"
-              checked={keepLastEnabled}
-              onChange={(event) => {
-                setCleanupPreview(null);
-                setKeepLastEnabled(event.currentTarget.checked);
-              }}
-            />
-            <NumberInput
-              min={1}
-              max={500}
-              value={keepLastPerKind}
-              disabled={!keepLastEnabled}
-              onChange={(value) => {
-                if (typeof value === "number") {
-                  setCleanupPreview(null);
-                  setKeepLastPerKind(value);
-                }
-              }}
-              w={90}
-            />
-            <Text size="sm">per kind (per player for profiles)</Text>
-          </Group>
-          <Checkbox
-            label="Protect newest successful world backup per server"
-            checked={cleanupOptions.protectNewestWorld}
-            onChange={(event) => {
-              setCleanupPreview(null);
-              setCleanupOptions((prev) => ({
-                ...prev,
-                protectNewestWorld: event.currentTarget.checked,
-              }));
-            }}
-          />
-
-          {cleanupPreview !== null && (
-            <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.cleanupPreview}>
-              {cleanupPreview.items.length === 0 ? (
-                <Text size="sm" c="dimmed">
-                  Nothing matches these rules.
-                </Text>
-              ) : (
-                <Stack gap="xs">
-                  <Text size="sm" fw={600}>
-                    Will delete {cleanupPreview.items.length} backup
-                    {cleanupPreview.items.length === 1 ? "" : "s"} ·{" "}
-                    {formatBytes(cleanupPreview.totalBytes)}
-                  </Text>
-                  {cleanupPreview.byServer.map((row) => (
-                    <Text key={row.serverId} size="sm" c="dimmed">
-                      {row.serverName}: {row.count} · {formatBytes(row.bytes)}
-                    </Text>
-                  ))}
-                </Stack>
-              )}
-            </AppSurfaceCard>
-          )}
-
-          <Group justify="flex-end">
-            <Button
-              variant="default"
-              disabled={cleanupBusy}
-              onClick={() => setCleanupOpen(false)}
-            >
-              Cancel
-            </Button>
-            {cleanupPreview !== null && cleanupPreview.items.length > 0 ? (
-              <Button
-                color="red"
-                variant="filled"
-                loading={cleanupBusy}
-                onClick={() => void confirmCleanup()}
-              >
-                Remove {cleanupPreview.items.length}
-              </Button>
-            ) : (
-              <Button
-                variant="light"
-                loading={cleanupBusy}
-                onClick={() => void runPreviewCleanup()}
-              >
-                Scan
-              </Button>
-            )}
-          </Group>
-        </Stack>
-      </Modal>
+        busy={cleanupBusy}
+        onClose={() => setCleanupOpen(false)}
+        cleanupOptions={cleanupOptions}
+        onCleanupOptionsChange={setCleanupOptions}
+        olderThanEnabled={olderThanEnabled}
+        onOlderThanEnabledChange={setOlderThanEnabled}
+        olderThanDays={olderThanDays}
+        onOlderThanDaysChange={setOlderThanDays}
+        keepLastEnabled={keepLastEnabled}
+        onKeepLastEnabledChange={setKeepLastEnabled}
+        keepLastPerKind={keepLastPerKind}
+        onKeepLastPerKindChange={setKeepLastPerKind}
+        cleanupPreview={cleanupPreview}
+        onClearPreview={() => setCleanupPreview(null)}
+        onPreview={() => void runPreviewCleanup()}
+        onConfirm={() => void confirmCleanup()}
+      />
     </PageScaffold>
-  );
-}
-
-interface ServerHealthCardProps {
-  row: BackupServerHealth;
-  draft: DraftPolicy | undefined;
-  expanded: boolean;
-  busy: boolean;
-  browsing: boolean;
-  server: ServerProfile | undefined;
-  onToggleExpand: () => void;
-  onOpenDestination: () => void;
-  onOpenServer: () => void;
-  onBrowse: () => void;
-  onDraftChange: (draft: DraftPolicy) => void;
-  onSave: () => void;
-}
-
-function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
-  const { row, draft } = props;
-  return (
-    <AppSurfaceCard>
-      <Stack gap="sm">
-        <Group justify="space-between" align="flex-start" wrap="wrap">
-          <div>
-            <Group gap="xs">
-              <HardDrives size={16} />
-              <Title order={4}>{row.serverName}</Title>
-              {props.server?.enabled === false && (
-                <Badge size="xs" color="gray" variant="light">
-                  Inactive
-                </Badge>
-              )}
-              <Tooltip label={healthTooltip(row.health)} multiline maw={320} withArrow>
-                <Badge color={healthColor(row.health)} variant="light">
-                  {healthLabel(row.health)}
-                </Badge>
-              </Tooltip>
-              {row.policy.enabled ? (
-                <Badge color="teal" variant="outline">
-                  Schedule {row.policy.intervalMinutes}m
-                </Badge>
-              ) : (
-                <Badge color="gray" variant="outline">
-                  Schedule off
-                </Badge>
-              )}
-            </Group>
-            <Text size="sm" c="dimmed" mb={4}>
-              Destination
-            </Text>
-            <ReadonlyPath value={row.resolvedRoot} compact />
-            <Text size="xs" c="dimmed">
-              Latest: {formatWhen(row.latest?.createdAt)}
-              {row.latest !== null
-                ? ` (${row.latest.kind} · ${row.latest.type} · ${row.latest.status})`
-                : ""}
-            </Text>
-            <Text size="xs" c="dimmed">
-              Counts – world {row.counts.world} · players {row.counts.players} · ini{" "}
-              {row.counts.ini}
-              {row.counts.failed24h > 0 ? ` · failed 24h ${row.counts.failed24h}` : ""}
-              {" · "}
-              used {formatBytes(row.usedBytes)}
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Button
-              variant="subtle"
-              leftSection={<FolderOpen size={16} />}
-              onClick={props.onOpenDestination}
-              disabled={props.busy}
-            >
-              Open destination
-            </Button>
-            <Button
-              variant="light"
-              leftSection={<ArrowSquareOut size={16} />}
-              onClick={props.onOpenServer}
-            >
-              Open in server
-            </Button>
-            <Button variant="default" onClick={props.onToggleExpand}>
-              {props.expanded ? "Hide settings" : "Edit settings"}
-            </Button>
-          </Group>
-        </Group>
-
-        {props.expanded && draft !== undefined && (
-          <Stack gap="sm">
-            <Text size="sm" c="dimmed">
-              Destination and schedule apply to <strong>world</strong> backups.
-              Players and INI use the same root but their own triggers and retain
-              counts.
-            </Text>
-            <PathField
-              className={classes.dirField}
-              label="Backup destination"
-              description={
-                draft.backupDir === null || draft.backupDir.length === 0
-                  ? `Default: ${props.server?.installDir ?? ""}\\Backups`
-                  : `Effective: ${row.resolvedRoot}`
-              }
-              value={draft.backupDir ?? ""}
-              placeholder={`${props.server?.installDir ?? ""}\\Backups`}
-              busy={props.browsing}
-              clearable
-              onChange={(value) =>
-                props.onDraftChange({
-                  ...draft,
-                  backupDir: value.trim().length > 0 ? value : null,
-                })
-              }
-              onBrowse={props.onBrowse}
-            />
-            <Group align="flex-end" gap="md" wrap="wrap">
-              <Switch
-                label="Enable scheduled world backups"
-                checked={draft.enabled}
-                onChange={(event) =>
-                  props.onDraftChange({
-                    ...draft,
-                    enabled: event.currentTarget.checked,
-                  })
-                }
-              />
-              <NumberInput
-                label="Interval (minutes)"
-                description="Min 5 · default 60 · world only"
-                min={5}
-                max={10_080}
-                value={draft.intervalMinutes}
-                onChange={(value) =>
-                  props.onDraftChange({
-                    ...draft,
-                    intervalMinutes:
-                      typeof value === "number" ? value : draft.intervalMinutes,
-                  })
-                }
-                className={classes.policyField}
-              />
-              <NumberInput
-                label="Keep last world"
-                min={1}
-                max={500}
-                value={draft.retainCountWorld}
-                onChange={(value) =>
-                  props.onDraftChange({
-                    ...draft,
-                    retainCountWorld:
-                      typeof value === "number" ? value : draft.retainCountWorld,
-                  })
-                }
-                className={classes.policyField}
-              />
-              <NumberInput
-                label="Keep last players"
-                description="Per player"
-                min={1}
-                max={500}
-                value={draft.retainCountPlayers}
-                onChange={(value) =>
-                  props.onDraftChange({
-                    ...draft,
-                    retainCountPlayers:
-                      typeof value === "number" ? value : draft.retainCountPlayers,
-                  })
-                }
-                className={classes.policyField}
-              />
-              <NumberInput
-                label="Keep last INI"
-                min={1}
-                max={500}
-                value={draft.retainCountIni}
-                onChange={(value) =>
-                  props.onDraftChange({
-                    ...draft,
-                    retainCountIni:
-                      typeof value === "number" ? value : draft.retainCountIni,
-                  })
-                }
-                className={classes.policyField}
-              />
-              <Button
-                leftSection={<FloppyDisk size={16} />}
-                loading={props.busy}
-                onClick={props.onSave}
-              >
-                Save
-              </Button>
-            </Group>
-          </Stack>
-        )}
-      </Stack>
-    </AppSurfaceCard>
   );
 }
