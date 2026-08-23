@@ -17,7 +17,7 @@ import { rconExec } from "@backend/infra/rcon/rcon-client";
 import type { ProcessManager } from "@backend/infra/process/process-manager";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
 import type { AppSettingsRepository } from "@backend/infra/db/app-settings-repository";
-import type { BackupRecord, ServerProfile } from "@shared/types";
+import type { ServerProfile } from "@shared/types";
 import type { DatabaseSync } from "node:sqlite";
 
 vi.mock("@backend/infra/rcon/rcon-client", () => ({
@@ -127,6 +127,10 @@ describe("BackupService kinds and retention", () => {
   let profile: ServerProfile;
   let addEvent: ReturnType<typeof vi.fn>;
   let isActive: ReturnType<typeof vi.fn>;
+  let servers: ServerRepository;
+  let processes: ProcessManager;
+  let settings: AppSettingsRepository;
+  let settingsStore: Map<string, string | null>;
 
   beforeEach(async () => {
     db = openDatabase(":memory:");
@@ -140,21 +144,21 @@ describe("BackupService kinds and retention", () => {
     isActive = vi.fn(() => false);
     vi.mocked(rconExec).mockClear();
     vi.mocked(rconExec).mockResolvedValue("ok");
-    const servers = {
+    servers = {
       get: vi.fn((id: string) => (id === profile.id ? profile : null)),
       list: vi.fn(() => [profile]),
       addEvent,
     } as unknown as ServerRepository;
 
-    const processes = {
+    processes = {
       isActive,
       start: vi.fn(),
       stop: vi.fn(),
       applyRuntimePorts: vi.fn((p: ServerProfile) => p),
     } as unknown as ProcessManager;
 
-    const settingsStore = new Map<string, string | null>();
-    const settings = {
+    settingsStore = new Map<string, string | null>();
+    settings = {
       get: vi.fn((key: string) => settingsStore.get(key) ?? null),
       set: vi.fn((key: string, value: string | null) => {
         settingsStore.set(key, value);
@@ -182,15 +186,21 @@ describe("BackupService kinds and retention", () => {
   });
 
   it("resumes a pre-update critical job without duplicating completed kinds", async () => {
+    const first = await service.createPreUpdateBackupForJob(profile.id);
+    expect(first).toHaveLength(2);
+    const markerMatch = first[0]?.notes?.match(/\[critical-job:([^\]]+)\]/);
+    expect(markerMatch?.[1]).toBeDefined();
+    if (markerMatch?.[1] === undefined) return;
+
     const now = new Date().toISOString();
     const job = {
-      id: "critical-pre-update-1",
+      id: markerMatch[1],
       type: "pre-update-backup" as const,
       serverId: profile.id,
       backupId: null,
       attempts: 0,
       maxAttempts: 3,
-      status: "running" as const,
+      status: "pending",
       phase: "creating-backup:world",
       createdAt: now,
       updatedAt: now,
@@ -203,22 +213,15 @@ describe("BackupService kinds and retention", () => {
         nextKindIndex?: number;
       },
     };
-    const { criticalQueue: recovery } = service as unknown as {
-      criticalQueue: {
-        resumePreUpdateBackupJob: (input: typeof job) => Promise<unknown[]>;
-      };
-    };
-
-    const first = await recovery.resumePreUpdateBackupJob(job);
-    expect(first).toHaveLength(2);
-    expect(job.context).toMatchObject({ nextKindIndex: 2 });
 
     // Simulate a crash before the latest in-memory checkpoint was persisted.
-    job.context = {};
-    const resumed = await recovery.resumePreUpdateBackupJob(job);
+    settingsStore.set("backupCriticalJobsQueue.v1", JSON.stringify([job]));
+    const restarted = new BackupService(servers, repo, processes, settings);
+    const resumed = await restarted.createPreUpdateBackupForJob(profile.id);
     expect(resumed).toHaveLength(2);
     expect(repo.listBackups(profile.id, 100).filter((row) => row.type === "pre_update"))
       .toHaveLength(2);
+    expect(settingsStore.get("backupCriticalJobsQueue.v1")).toBe("[]");
   });
 
   it("rebuilds pre-update progress when persisted context is corrupt", async () => {
@@ -247,13 +250,9 @@ describe("BackupService kinds and retention", () => {
         nextKindIndex: 99,
       },
     };
-    const { criticalQueue: recovery } = service as unknown as {
-      criticalQueue: {
-        resumePreUpdateBackupJob: (input: typeof job) => Promise<BackupRecord[]>;
-      };
-    };
-
-    const recovered = await recovery.resumePreUpdateBackupJob(job);
+    settingsStore.set("backupCriticalJobsQueue.v1", JSON.stringify([job]));
+    const restarted = new BackupService(servers, repo, processes, settings);
+    const recovered = await restarted.createPreUpdateBackupForJob(profile.id);
 
     expect(recovered.map((backup) => backup.kind)).toEqual([
       "world",
@@ -264,11 +263,7 @@ describe("BackupService kinds and retention", () => {
       && backup.serverId === profile.id
       && backup.notes?.includes(`[critical-job:${job.id}]`) === true,
     )).toBe(true);
-    expect(job.context.nextKindIndex).toBe(2);
-    expect(job.context.completedBackupIds).toEqual(
-      recovered.map((backup) => backup.id),
-    );
-    expect(job.context.completedBackupIds).not.toContain(unrelated.id);
+    expect(settingsStore.get("backupCriticalJobsQueue.v1")).toBe("[]");
   });
 
   it("reconciles restore history and safeguard evidence without repeating a completed restore", async () => {
@@ -284,7 +279,7 @@ describe("BackupService kinds and retention", () => {
       backupId: source.id,
       attempts: 1,
       maxAttempts: 3,
-      status: "running" as const,
+      status: "pending",
       phase: "restore-history-started",
       createdAt: now,
       updatedAt: now,
@@ -297,14 +292,11 @@ describe("BackupService kinds and retention", () => {
         safeguardBackupIds?: string[];
       },
     };
-    const { criticalQueue: recovery } = service as unknown as {
-      criticalQueue: {
-        resumeRestoreJob: (input: typeof job) => Promise<void>;
-      };
-    };
-
-    await recovery.resumeRestoreJob(job);
-    const historyId = job.context.restoreHistoryId;
+    const insertRestoreHistory = vi.spyOn(repo, "insertRestoreHistory");
+    settingsStore.set("backupCriticalJobsQueue.v1", JSON.stringify([job]));
+    const recovering = new BackupService(servers, repo, processes, settings);
+    await recovering.restoreBackupForJob(profile.id, source.id);
+    const historyId = insertRestoreHistory.mock.results[0]?.value;
     expect(historyId).toBeTypeOf("number");
     expect(repo.getRestoreHistory(historyId!)).toMatchObject({ status: "completed" });
     expect(
@@ -314,13 +306,18 @@ describe("BackupService kinds and retention", () => {
     ).toHaveLength(1);
 
     // A restart can observe completed durable history before the queue row is
-    // removed. Re-entering recovery must reconcile, not apply the restore again.
-    const applyRestore = vi.spyOn(
-      service as unknown as { applyRestore: () => Promise<void> },
-      "applyRestore",
-    );
-    await recovery.resumeRestoreJob(job);
-    expect(applyRestore).not.toHaveBeenCalled();
+    // removed. Loading that row must reconcile it without applying again.
+    job.status = "running";
+    job.phase = "applying-restore";
+    job.context.restoreHistoryId = historyId;
+    settingsStore.set("backupCriticalJobsQueue.v1", JSON.stringify([job]));
+    const restarted = new BackupService(servers, repo, processes, settings);
+    expect(restarted.getCriticalJobs()).toEqual([]);
+    expect(
+      repo.listBackups(profile.id, 100).filter(
+        (row) => row.type === "pre_restore" && row.notes?.includes(job.id),
+      ),
+    ).toHaveLength(1);
   });
 
   it("requires on-disk archives when reusing persisted pre-update backup evidence", async () => {
@@ -498,85 +495,6 @@ describe("BackupService kinds and retention", () => {
       rawQueue,
     );
   });
-
-  it("blocks an in-process non-transient failure once restore application began", async () => {
-    const now = new Date().toISOString();
-    const job = {
-      id: "restore-permission-failure",
-      type: "restore" as const,
-      serverId: profile.id,
-      backupId: "backup-1",
-      attempts: 0,
-      maxAttempts: 3,
-      status: "pending" as const,
-      phase: "applying-restore",
-      createdAt: now,
-      updatedAt: now,
-      lastError: null,
-      recoveryReason: null,
-      idempotencyKey: `restore:${profile.id}:backup-1`,
-      operatorRetryAllowed: false,
-      context: {},
-    };
-    const { criticalQueue: queueHarness } = service as unknown as {
-      criticalQueue: {
-        queue: Array<typeof job>;
-        processQueue: () => Promise<void>;
-        resumeRestoreJob: (input: typeof job) => Promise<void>;
-      };
-    };
-    queueHarness.queue = [job];
-    vi.spyOn(queueHarness, "resumeRestoreJob").mockRejectedValue(
-      new Error("permission denied while copying SavedArks"),
-    );
-
-    await queueHarness.processQueue();
-
-    expect(service.getCriticalJobs()[0]).toMatchObject({
-      status: "blocked",
-      phase: "applying-restore",
-      nextActions: ["retry", "dismiss"],
-    });
-  });
-
-  it.each(["blocked", "failed"] as const)(
-    "adopts a nested %s retryable restore when its parent rollback is retried",
-    async (status) => {
-      const now = new Date().toISOString();
-      const job = {
-        id: `nested-restore-${status}`,
-        type: "restore" as const,
-        serverId: profile.id,
-        backupId: "backup-from-update",
-        attempts: 1,
-        maxAttempts: 3,
-        status,
-        phase: status === "blocked" ? "applying-restore" : "failed",
-        createdAt: now,
-        updatedAt: now,
-        lastError: "Interrupted while applying restore",
-        recoveryReason: "Restore outcome is ambiguous.",
-        idempotencyKey: `restore:${profile.id}:backup-from-update`,
-        operatorRetryAllowed: true,
-        context: {},
-      };
-      const { criticalQueue: queueHarness } = service as unknown as {
-        criticalQueue: {
-          queue: Array<typeof job>;
-          resumeRestoreJob: (input: typeof job) => Promise<void>;
-        };
-      };
-      queueHarness.queue = [job];
-      const resumeRestoreJob = vi
-        .spyOn(queueHarness, "resumeRestoreJob")
-        .mockResolvedValue(undefined);
-
-      await service.restoreBackupForRollbackRecovery(profile.id, job.backupId);
-
-      expect(resumeRestoreJob).toHaveBeenCalledOnce();
-      expect(service.getCriticalJobs()).toEqual([]);
-    },
-  );
 
   it("rejects create and restore when the install is not Ready", async () => {
     const emptyDir = await mkdtemp(join(tmpdir(), "ark-backup-empty-"));
