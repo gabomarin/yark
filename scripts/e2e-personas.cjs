@@ -209,24 +209,37 @@ async function run() {
   console.log(`E2E_BEGINNER_PORTS=${JSON.stringify(beginnerPorts)}`);
   console.log(`E2E_PROFILE=${fixtures.profileDir}`);
 
-  const app = await launchElectronApp({ profileDir: fixtures.profileDir });
-  const page = await waitForOverview(app);
   const errors = [];
   const artifacts = [];
   let cloneName = null;
+  let app = null;
+  const observedPages = new WeakSet();
 
-  try {
-    page.on("console", (message) => {
+  const observePage = (candidate) => {
+    if (observedPages.has(candidate)) return;
+    observedPages.add(candidate);
+
+    candidate.on("console", (message) => {
       if (message.type() === "error") {
         errors.push(`console: ${message.text()}`);
       }
     });
-    page.on("pageerror", (error) => {
+    candidate.on("pageerror", (error) => {
       errors.push(`pageerror: ${error.message}`);
     });
-    page.on("dialog", async (dialog) => {
+    candidate.on("dialog", async (dialog) => {
       await dialog.accept();
     });
+  };
+
+  try {
+    app = await launchElectronApp({ profileDir: fixtures.profileDir });
+    app.on("window", observePage);
+    for (const existingPage of app.windows()) {
+      observePage(existingPage);
+    }
+    const page = await waitForOverview(app);
+    observePage(page);
 
     // Prior cleanup in case a previous run left leftovers.
     await deleteServerIfPresent(page, beginnerServerName);
@@ -266,9 +279,16 @@ async function run() {
       console.log(`E2E_CLONED_SERVER=${cloneName}`);
     }
   } finally {
-    await quitElectronApp(app);
-    removeFixtureDir(fixtures.profileDir);
-    removeFixtureDir(fixtures.serversDir);
+    try {
+      if (app !== null) {
+        await quitElectronApp(app);
+      }
+    } finally {
+      await Promise.all([
+        removeFixtureDir(fixtures.profileDir),
+        removeFixtureDir(fixtures.serversDir),
+      ]);
+    }
   }
 }
 
