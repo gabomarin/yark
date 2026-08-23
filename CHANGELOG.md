@@ -40,6 +40,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Backend **create/import**, **move-install registry/cleanup/FS**, and **backup create/schedule/retention/portability/fleet** orchestration extracted; all three grandfathered coordinators cleared from the backend size baseline ([#427](https://github.com/gabomarin/yark/issues/427)).
 - **SteamCMD install/path** and **cancel/pause**, **fleet install inspect**, **process leave/reattach** and **graceful stop**, plus **install health/Steam build/official probe** helpers extracted; `update-service`, `server-installation`, and `process-manager` dropped from the backend size baseline ([#427](https://github.com/gabomarin/yark/issues/427)).
 - **Backup critical jobs** moved out of `BackupService`: the durable queue and focused pre-update/restore executor now have direct tests; baseline lowered ([#427](https://github.com/gabomarin/yark/issues/427)).
 - **Update queue runtime** and **SteamCMD progress runtime** extracted from `UpdateService`; **instance stop** and **process start** orchestration extracted; wizard/form/settings hooks live under feature `hooks/` (wizard model package under `configuration-wizard/`) ([#427](https://github.com/gabomarin/yark/issues/427)).

@@ -1,7 +1,7 @@
 # Decomposition map (#146)
 
 **Issue:** [#146](https://github.com/gabomarin/yark/issues/146) — Decompose oversized backend services and renderer pages  
-**Status:** Complete for ticket scope — renderer feature baselines empty; optional backend line gate live with three grandfathered coordinators; `App.tsx` shrunk via shell hooks
+**Status:** Complete for ticket scope — renderer feature baselines empty; backend line gate live with empty grandfathered map (≤800); `App.tsx` shrunk via shell hooks
 **Policy:** `scripts/component-structure-baseline.json`, `scripts/backend-structure-baseline.json`, [component-structure.md](component-structure.md)
 
 ## Goal
@@ -12,14 +12,14 @@ Reduce change coupling by extracting cohesive modules **without** changing exter
 
 | File | Lines | Baseline? | Primary tests |
 | --- | ---: | --- | --- |
-| `src/backend/domains/backups/backup-service.ts` | ~1,550 | Backend grandfathered | `tests/unit/backup-service.test.ts`, `backup-archive.test.ts`, … |
-| `src/backend/domains/instances/instance-service.ts` | ~937 | Backend grandfathered | `instance-*.test.ts` |
-| `src/backend/domains/instances/move-install-service.ts` | ~1,203 | Backend grandfathered | move-install unit/E2E |
+| `src/backend/domains/backups/backup-service.ts` | ~762 | Cleared (≤800) | `tests/unit/backup-service.test.ts`, `backup-archive.test.ts`, … |
+| `src/backend/domains/instances/instance-service.ts` | ~780 | Cleared (≤800) | `instance-*.test.ts` |
+| `src/backend/domains/instances/move-install-service.ts` | ~795 | Cleared (≤800) | move-install unit/E2E |
 | `src/renderer/src/App.tsx` | ~715 | Outside `features/` gate | `App.test.tsx` |
 
-Cleared from baseline (≤800): `update-service.ts` (~732), `server-installation.ts` (~505), `process-manager.ts` (~740).
+Cleared from baseline (≤800): `update-service.ts`, `server-installation.ts`, `process-manager.ts`, `backup-service.ts`, `instance-service.ts`, `move-install-service.ts`.
 
-Renderer **feature** files previously listed here are under the standard TSX/TS caps (Phase 6). Further backend shrinks remove rows from `backend-structure-baseline.json`.
+Renderer **feature** files previously listed here are under the standard TSX/TS caps (Phase 6). Backend `files` map in `backend-structure-baseline.json` is empty.
 
 ## Dependency direction (must hold after every slice)
 
@@ -51,13 +51,18 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `backup-cleanup-plan.ts` | Pure `planBackupCleanup` + `summarizeCleanupPlan` (+ unit tests) |
 | `backup-fleet.ts` | Fleet health row, alerts, disk usage aggregation, dismiss filter (+ unit tests) |
 | `backup-restore.ts` | Pure restore planning: folder name preference, map-token resolve, world file filter, players layout assert, restore-history ownership (+ unit tests). Apply/orchestration still on `BackupService`. |
-| `backup-portability.ts` | Pure import/export naming + disk-import guess helpers (+ unit tests). `parseBackupManifest` lives in `backup-archive.ts`. Export/import orchestration still on `BackupService`. |
+| `backup-portability.ts` | Pure import/export naming + disk-import guess helpers (+ unit tests). `parseBackupManifest` lives in `backup-archive.ts`. Orchestration in `backup-portability-ops.ts`. |
 | `backup-critical-jobs.ts` | Pure critical-job types, phase/status checks, context sanitize, merge, load disposition, and retry plan (+ unit tests). |
 | `backup-critical-queue.ts` | Durable queue I/O/recovery, waiters, and cancellation/retry state machine; `BackupService` keeps thin facades. |
 | `backup-critical-job-executor.ts` | Pre-update and restore resume execution behind the queue's narrow, directly testable executor seam. |
 | `backup-package.ts` | World, player-profile, and INI package staging plus shared safe copy/list helpers. |
 | `backup-reconcile.ts` | Serialized disk/DB reconciliation, interrupted-create recovery, missing-row pruning, and archive import. |
 | `backup-restore-apply.ts` | ZIP/folder restore application for world, player-profile, and INI backups. |
+| `backup-create-pipeline.ts` | Create flush/job coalescing/ZIP packaging; `BackupService` keeps thin facades (#427). |
+| `backup-schedule-runtime.ts` | Scheduled world-backup cycle + fail-streak pause; timer shell remains `backup-scheduler.ts` (#427). |
+| `backup-retention.ts` | Per-kind / per-map / per-player retention pruning (#427). |
+| `backup-portability-ops.ts` | Export/import orchestration; pure naming stays in `backup-portability.ts` (#427). |
+| `backup-fleet-ops.ts` | Fleet summary, disk-alert settings, dismissed-alert persistence (#427). |
 
 ### Phase 3 progress
 
@@ -92,9 +97,11 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `process-leave.ts` | Leave-running identity collect / detach / reattach; `ProcessManager` keeps thin facades. |
 | `process-graceful-stop.ts` | SaveWorld → DoExit graceful stop begin/finish; `ProcessManager` keeps thin facades. |
 | `instance-fleet-install.ts` | Fleet installation inspect, coalesce, and health-memory events; `InstanceService` keeps thin facades (#427). |
+| `instance-create.ts` | Profile create/import and uniqueness asserts; `InstanceService` keeps thin facades (#427). |
+| `move-install-registry.ts` / `move-install-cleanup.ts` / `move-install-fs.ts` | Staging/pending-cleanup registries, post-move wipe, copy/promote/rollback; `MoveInstallService` keeps thin facades (#427). |
 | `install-steam-build.ts` / `official-ark-probe.ts` / `install-health.ts` | Split from `server-installation.ts` (now ≤800). |
 
-**Phase 4 exit:** `instance-service.ts` and `process-manager.ts` are coordinators; lifecycle/profile/crash/stop/fleet-install and spawn/readiness/leave/stop decisions live in siblings above.
+**Phase 4 exit:** `instance-service.ts`, `move-install-service.ts`, and `process-manager.ts` are coordinators (≤800); lifecycle/profile/crash/stop/fleet-install/create and spawn/readiness/leave/stop decisions live in siblings above.
 
 ### Phase 5 progress
 
@@ -152,29 +159,29 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `ServerLogsPanel.tsx` | State, focus/load generations, runtime polling, and IPC actions moved to `useServerLogsPanel` + `serverLogsPanelActions`; removed from baseline |
 | `ServerBackupPanel.tsx` | Load generations, quiet polling, autosave, selection, restore, and CRUD moved to `useServerBackupPanel` + `serverBackupPanelActions`; removed from baseline |
 | Remaining grandfathered (0) | Renderer baseline `files` map is empty |
-| Backend line gate | `backend-structure-baseline.json` — new backend `.ts` ≤ 800; three grandfathered coordinators |
+| Backend line gate | `backend-structure-baseline.json` — new backend `.ts` ≤ 800; grandfathered `files` map empty |
 
-**Phase 6 exit:** Achieved — empty renderer `component-structure-baseline.json` `files` map; optional backend line gate enforced via `backend-structure-baseline.json` (new `src/backend` `.ts` ≤ 800; three grandfathered coordinators).
+**Phase 6 exit:** Achieved — empty renderer `component-structure-baseline.json` `files` map; optional backend line gate enforced via `backend-structure-baseline.json` (new `src/backend` `.ts` ≤ 800; empty grandfathered map after #427 Track A).
 
 
 ## Backend: `backup-service.ts`
 
-**Already extracted:** `backup-scheduler.ts`, `backup-archive.ts`, `world-snapshot.ts`, `player-session-watcher.ts`, `backup-disk.ts`, `list-players.ts`.
+**Already extracted:** `backup-scheduler.ts`, `backup-archive.ts`, `world-snapshot.ts`, `player-session-watcher.ts`, `backup-disk.ts`, `list-players.ts`, plus Phase 2/427 modules below.
 
-**Still inside god-class:**
+**Coordinator keeps:** public IPC facades, INI-save debounce, critical-queue wiring, cleanup preview/run, restore orchestration entrypoints.
 
-| Concern | Approx. responsibility | Proposed module |
-| --- | --- | --- |
-| Policy + fleet summary | CRUD policy, disk alerts, fleet health rows | `backup-fleet.ts` |
-| Cleanup preview/run | Retention rules, orphan import, delete marks | `backup-cleanup.ts` |
-| Restore + rollback | Apply orchestration is in `backup-restore-apply.ts`; critical-job resume is in `backup-critical-job-executor.ts`; pure planning helpers remain in `backup-restore.ts` | optional further restore API extraction |
-| Import/export portability | Disk archive discovery/import is in `backup-reconcile.ts`; explicit export/import APIs remain on service with pure naming helpers in `backup-portability.ts` | later: explicit portability orchestration if needed |
-| Critical jobs | Queue I/O/recovery/cancellation and `processQueue` are in `backup-critical-queue.ts`; resume execution is in `backup-critical-job-executor.ts`; pure helpers remain in `backup-critical-jobs.ts` | extracted in #427 Track A slice 1 |
-| Zip pipeline / staging | Package staging is in `backup-package.ts`; archive create and retention remain on service; manifest parsing lives in `backup-archive.ts` | optional archive orchestration move |
+| Module | Notes |
+| --- | --- |
+| Policy + fleet summary | Pure helpers in `backup-fleet.ts`; summary/settings I/O in `backup-fleet-ops.ts` |
+| Cleanup preview/run | Pure planner in `backup-cleanup-plan.ts`; run/preview facades on service |
+| Restore + rollback | Apply in `backup-restore-apply.ts`; critical resume in `backup-critical-job-executor.ts` |
+| Import/export portability | Pure naming in `backup-portability.ts`; orchestration in `backup-portability-ops.ts` |
+| Critical jobs | Queue + executor extracted (#427 slice 1) |
+| Zip create / retention / schedule | `backup-create-pipeline.ts`, `backup-retention.ts`, `backup-schedule-runtime.ts` |
 
 **Public surface to keep stable:** IPC handlers in main; exported `computeBackupServerHealth`, `CRITICAL_BACKUP_KINDS`, `BackupService` method signatures.
 
-**Characterization:** `backup-service.test.ts` is the anchor (~2.5k lines). Extend before moving cleanup/restore blocks.
+**Characterization:** `backup-service.test.ts` is the anchor (~2.5k lines).
 
 ---
 
@@ -195,18 +202,18 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 
 ## Backend: `instance-service.ts`
 
-**Already extracted:** `move-install-service.ts`, `import-existing-install.ts`, `clone-install-copy.ts`, `clone-ini-seed.ts`, `instance-clone.ts`, `instance-rcon.ts`, `instance-stop.ts`, `launch-args.ts`, `ban-list.ts`, `server-installation.ts`, `validation.ts`, `sync-profile-ini.ts`, `auto-start.ts`, `instance-lifecycle.ts`, `instance-profile.ts`, `instance-crash.ts`, …
+**Already extracted:** `move-install-service.ts`, `move-install-registry.ts`, `move-install-cleanup.ts`, `move-install-fs.ts`, `import-existing-install.ts`, `clone-install-copy.ts`, `clone-ini-seed.ts`, `instance-clone.ts`, `instance-create.ts`, `instance-rcon.ts`, `instance-stop.ts`, `instance-fleet-install.ts`, `launch-args.ts`, `ban-list.ts`, `server-installation.ts`, `validation.ts`, `sync-profile-ini.ts`, `auto-start.ts`, `instance-lifecycle.ts`, `instance-profile.ts`, `instance-crash.ts`, …
 
 **Still inside coordinator (by design):**
 
 | Concern | Notes |
 | --- | --- |
-| CRUD + import orchestration | Uses pure helpers from `instance-profile.ts` where applicable; clone orchestration lives in `instance-clone.ts` |
-| Start/restart/stop/kill lifecycle | Stop pipeline and in-flight job ownership live in `instance-stop.ts`; `InstanceService` keeps restart/start/kill and public facades |
-| RCON + players + bans | Session, E2E mock, auto-connect, player, and ban orchestration live in `instance-rcon.ts`; `InstanceService` keeps facades |
-| Installation probe / health | Uses `instance-profile.ts` fleet inspect helpers + `server-installation.ts` |
+| CRUD + import orchestration | Create/import/asserts in `instance-create.ts`; clone in `instance-clone.ts`; update/delete/commit remain on service |
+| Start/restart/stop/kill lifecycle | Stop pipeline in `instance-stop.ts`; start/restart/kill facades on service |
+| RCON + players + bans | Orchestration in `instance-rcon.ts`; facades on service |
+| Installation probe / health | Fleet inspect in `instance-fleet-install.ts` + `server-installation.ts` |
 
-**Characterization:** Good spread across `instance-*.test.ts`; add one integration-style test for stop→backup→start ordering before lifecycle split.
+**Characterization:** Good spread across `instance-*.test.ts`.
 
 ---
 
