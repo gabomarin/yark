@@ -1,32 +1,26 @@
 # Decomposition map (#146)
 
 **Issue:** [#146](https://github.com/gabomarin/yark/issues/146) — Decompose oversized backend services and renderer pages  
-**Status:** Phase 6 complete — all renderer feature files meet the policy caps and the grandfathered baseline is empty
-**Policy:** `scripts/component-structure-baseline.json`, [component-structure.md](component-structure.md)
+**Status:** Complete for ticket scope — renderer feature baselines empty; optional backend line gate live with six grandfathered coordinators; `App.tsx` shrunk via shell hooks  
+**Policy:** `scripts/component-structure-baseline.json`, `scripts/backend-structure-baseline.json`, [component-structure.md](component-structure.md)
 
 ## Goal
 
 Reduce change coupling by extracting cohesive modules **without** changing externally observable behavior. One reviewable PR per slice; remove size baselines as files shrink.
 
-## Mega-files (2026-08-22)
+## Mega-files (2026-08-23)
 
 | File | Lines | Baseline? | Primary tests |
 | --- | ---: | --- | --- |
-| `src/backend/domains/backups/backup-service.ts` | 3,779 | — (backend not gated) | `tests/unit/backup-service.test.ts`, `backup-archive.test.ts`, `backup-scheduler.test.ts`, … |
-| `src/backend/domains/updates/update-service.ts` | 2,916 | — | `tests/unit/update-service-safe-update.test.ts`, `critical-job-restart-integration.test.ts`, integration steamcmd |
-| `src/backend/domains/instances/instance-service.ts` | 2,087 | — | `tests/unit/instance-*.test.ts` (stop, restart, rcon, clone, …) |
-| `src/backend/infra/process/process-manager.ts` | 1,266 | — | `tests/unit/process-manager-*.test.ts`, `process-manager-real-start.test.ts` |
-| `src/renderer/src/App.tsx` | 2,509 | No (outside `features/` gate) | `src/renderer/src/App.test.tsx` |
-| `features/backups/BackupsPage.tsx` | 1,058 | Yes | `BackupsPage.test.tsx` |
-| `features/backups/ServerBackupPanel.tsx` | 1,170 | Yes | `ServerBackupPanel.test.tsx` |
-| `features/logs/ServerLogsPanel.tsx` | 1,099 | Yes | `ServerLogsPanel.test.tsx` |
-| `features/server-workspace/components/ConfigurationWizard/ConfigurationWizard.tsx` | 1,060 | Yes | `ServerWorkspacePage.test.tsx`, `configuration-wizard-model.test.ts` |
-| `features/server-workspace/configurationWizardModel.ts` | 1,085 | Yes | `configuration-wizard-model.test.ts` |
-| `features/server-workspace/components/ConfigurationEditor/ConfigurationEditor.tsx` | 732 | Yes | `ServerWorkspacePage.test.tsx`, `iniModel` tests |
-| `features/servers/components/ServerForm/ServerForm.tsx` | 588 | Yes | `ServerForm.test.tsx` |
-| `features/server-workspace/components/ServerModsPanel/ServerModsPanel.tsx` | 351 | Yes | `ServerModsPanel.test.tsx` |
+| `src/backend/domains/backups/backup-service.ts` | ~2,277 | Backend grandfathered | `tests/unit/backup-service.test.ts`, `backup-archive.test.ts`, … |
+| `src/backend/domains/updates/update-service.ts` | ~1,902 | Backend grandfathered | `update-service-safe-update.test.ts`, critical-job integration |
+| `src/backend/domains/instances/instance-service.ts` | ~1,317 | Backend grandfathered | `instance-*.test.ts` |
+| `src/backend/domains/instances/move-install-service.ts` | ~1,203 | Backend grandfathered | move-install unit/E2E |
+| `src/backend/domains/instances/server-installation.ts` | ~1,157 | Backend grandfathered | `server-installation.test.ts` |
+| `src/backend/infra/process/process-manager.ts` | ~1,069 | Backend grandfathered | `process-manager-*.test.ts`, real-start |
+| `src/renderer/src/App.tsx` | ~715 | Outside `features/` gate | `App.test.tsx` |
 
-Renderer rows already have **future extraction boundaries** in [component-structure.md](component-structure.md#deferred-structural-migrations).
+Renderer **feature** files previously listed here are under the standard TSX/TS caps (Phase 6). Further backend shrinks remove rows from `backend-structure-baseline.json`.
 
 ## Dependency direction (must hold after every slice)
 
@@ -60,6 +54,9 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `backup-restore.ts` | Pure restore planning: folder name preference, map-token resolve, world file filter, players layout assert, restore-history ownership (+ unit tests). Apply/orchestration still on `BackupService`. |
 | `backup-portability.ts` | Pure import/export naming + disk-import guess helpers (+ unit tests). `parseBackupManifest` lives in `backup-archive.ts`. Export/import orchestration still on `BackupService`. |
 | `backup-critical-jobs.ts` | Pure critical-job types, phase/status checks, context sanitize, merge, load disposition, retry plan (+ unit tests). Queue I/O and resume orchestration still on `BackupService`. |
+| `backup-package.ts` | World, player-profile, and INI package staging plus shared safe copy/list helpers. |
+| `backup-reconcile.ts` | Serialized disk/DB reconciliation, interrupted-create recovery, missing-row pruning, and archive import. |
+| `backup-restore-apply.ts` | ZIP/folder restore application for world, player-profile, and INI backups. |
 
 ### Phase 3 progress
 
@@ -71,6 +68,7 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `update-server-jobs.ts` | Pure safe-update decisions: pre-update backup evidence, install-may-have-changed, log path/content, interrupted-job recovery on load (+ unit tests). Install/update/verify orchestration still on `UpdateService`. |
 | `update-queue.ts` | Pure queue flow: next-job selection, handler routing, pause/cancel/failure disposition, persisted-row validation (+ unit tests). Queue I/O and `processQueue` orchestration still on `UpdateService`. |
 | `steamcmd-operator.ts` | Pure SteamCMD operator copy/progress: cache/sync labels, invoke console lines, status derivation, disk-progress preference (+ unit tests). Spawn/install/verify orchestration still on `UpdateService`. |
+| `update-perform.ts` / `steamcmd-run.ts` | Install/update/verify safety orchestration and SteamCMD cache/run orchestration; `UpdateService` keeps thin queue-facing facades and shared runtime state. |
 
 **Phase 3 exit:** `update-service.ts` is a coordinator; SteamCMD + queue decisions live in siblings above. Further shrinks are optional orchestration moves only.
 
@@ -82,7 +80,8 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `instance-profile.ts` | Pure session port validation/apply, fleet inspect key and scan gate (+ unit tests). CRUD/clone/import orchestration still on `InstanceService`. |
 | `instance-crash.ts` | Pure unexpected-exit event/notify planning (+ unit tests). `recordUnexpectedProcessExit` orchestration still on `InstanceService`. |
 | `process-spawn.ts` | Pure ASA launch log/console flags and Windows verbatim spawn (+ unit tests). `ProcessManager.start` orchestration still on `ProcessManager`. |
-| `process-readiness.ts` | Pure ready-log detection, RCON probe delay, runtime log ring (+ unit tests). `waitUntilReady` / log capture still on `ProcessManager`. |
+| `process-readiness.ts` | Pure ready-log detection, RCON probe delay, runtime log ring (+ unit tests). |
+| `process-ready-wait.ts` | Readiness wait orchestration (RCON poll / settle / timeout / reattach); `ProcessManager.waitUntilReady` is a thin facade. |
 | `process-stop.ts` | Pure unexpected-exit classification and last-error copy (+ unit tests). Graceful stop/kill orchestration still on `ProcessManager`. |
 
 **Phase 4 exit:** `instance-service.ts` and `process-manager.ts` are coordinators; lifecycle/profile/crash and spawn/readiness/stop decisions live in siblings above. Optional: `instance-rcon.ts` trim, further orchestration moves.
@@ -120,9 +119,9 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `IniSettingRow.tsx` | Single INI setting row (value editor, reset, dirty state) |
 | `ConfigurationEditorSettingsTable.tsx` | Virtualized settings table shell |
 | `ConfigurationEditor.tsx` (575 lines) | Coordinator: text mode, header toolbar, load/save still in parent |
-| `App.tsx` (~1571 lines) | Wired to fleet + RCON hooks; fewer inline effects |
+| `App.tsx` (~716 lines) | Wired to fleet, RCON, onboarding, SteamCMD action, server lifecycle, and server update hooks |
 
-**Phase 5c exit:** Fleet refresh and RCON lifted into hooks; INI editor table/filter extracted. Optional: further `App.tsx` shrink via grouped props/context; text-mode/header splits for `ConfigurationEditor`.
+**Phase 5c optional exit:** `useAppOnboarding`, `useAppSteamCmdActions`, `useAppServerLifecycle`, and `useAppServerUpdates` now own the remaining large shell workflows. `App.tsx` is a thin composition coordinator; grouped router props/context remain optional.
 
 **Phase 5 exit:** Grandfathered feature pages are organisms + thin coordinators.
 
@@ -142,9 +141,10 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `configurationWizardModel.ts` (3 lines) | Presets, INI mapping/operations, and shared types split into pure sibling modules; facade preserves existing imports; removed from baseline |
 | `ServerLogsPanel.tsx` | State, focus/load generations, runtime polling, and IPC actions moved to `useServerLogsPanel` + `serverLogsPanelActions`; removed from baseline |
 | `ServerBackupPanel.tsx` | Load generations, quiet polling, autosave, selection, restore, and CRUD moved to `useServerBackupPanel` + `serverBackupPanelActions`; removed from baseline |
-| Remaining grandfathered (0) | Baseline `files` map is empty |
+| Remaining grandfathered (0) | Renderer baseline `files` map is empty |
+| Backend line gate | `backend-structure-baseline.json` — new backend `.ts` ≤ 800; six grandfathered coordinators |
 
-**Phase 6 exit:** Achieved — no entries remain in `component-structure-baseline.json`; optional backend line gate remains future work.
+**Phase 6 exit:** Achieved — empty renderer `component-structure-baseline.json` `files` map; optional backend line gate enforced via `backend-structure-baseline.json` (new `src/backend` `.ts` ≤ 800; six grandfathered coordinators).
 
 
 ## Backend: `backup-service.ts`
@@ -157,10 +157,10 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | --- | --- | --- |
 | Policy + fleet summary | CRUD policy, disk alerts, fleet health rows | `backup-fleet.ts` |
 | Cleanup preview/run | Retention rules, orphan import, delete marks | `backup-cleanup.ts` |
-| Restore + rollback | World/players/INI apply + critical-job resume still on service; pure planning helpers in `backup-restore.ts` | later: apply orchestration / `backup-critical-jobs.ts` |
-| Import/export portability | Export/import apply still on service; pure naming/guess helpers in `backup-portability.ts`; manifest parse in `backup-archive.ts` | later: orchestration move if needed |
+| Restore + rollback | Apply orchestration is in `backup-restore-apply.ts`; critical-job resume remains on service; pure planning helpers remain in `backup-restore.ts` | later: `backup-critical-jobs.ts` orchestration |
+| Import/export portability | Disk archive discovery/import is in `backup-reconcile.ts`; explicit export/import APIs remain on service with pure naming helpers in `backup-portability.ts` | later: explicit portability orchestration if needed |
 | Critical jobs | Queue I/O + resume still on service; pure phase/merge/retry/load helpers in `backup-critical-jobs.ts` | later: enqueue/processQueue move if needed |
-| Zip pipeline / staging | Archive create, **manifest parse**, retention prune | extend `backup-archive.ts` (manifest parse landed) |
+| Zip pipeline / staging | Package staging is in `backup-package.ts`; archive create and retention remain on service; manifest parsing lives in `backup-archive.ts` | optional archive orchestration move |
 
 **Public surface to keep stable:** IPC handlers in main; exported `computeBackupServerHealth`, `CRITICAL_BACKUP_KINDS`, `BackupService` method signatures.
 
@@ -170,29 +170,30 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 
 ## Backend: `update-service.ts`
 
-**Already extracted:** `robocopy-tree.ts`, `steamcmd-content-cache.ts`, `steamcmd-disk-progress.ts`, `update-critical-jobs.ts`, `steamcmd-path.ts`, `steamcmd-console.ts`, `update-server-jobs.ts`, `update-queue.ts`, `steamcmd-operator.ts`.
+**Already extracted:** `robocopy-tree.ts`, `steamcmd-content-cache.ts`, `steamcmd-disk-progress.ts`, `update-critical-jobs.ts`, `steamcmd-path.ts`, `steamcmd-console.ts`, `update-server-jobs.ts`, `update-queue.ts`, `steamcmd-operator.ts`, `update-perform.ts`, `steamcmd-run.ts`.
 
 **Still inside coordinator (by design):**
 
 | Concern | Notes |
 | --- | --- |
 | Queue I/O + `processQueue` | Uses pure helpers from `update-queue.ts` / `update-critical-jobs.ts` |
-| SteamCMD spawn/install/verify | Uses pure helpers from `steamcmd-path.ts`, `steamcmd-console.ts`, `steamcmd-operator.ts` |
+| File job execution | Thin facades delegate install/update/verify safety orchestration to `update-perform.ts` |
+| SteamCMD spawn/install/verify | `steamcmd-run.ts` owns cache/update/sync execution and calls back into shared progress/cancellation state |
 | Disk progress monitor | Thin wrapper; logic in `steamcmd-disk-progress.ts` |
 
 ---
 
 ## Backend: `instance-service.ts`
 
-**Already extracted:** `move-install-service.ts`, `import-existing-install.ts`, `clone-install-copy.ts`, `clone-ini-seed.ts`, `launch-args.ts`, `ban-list.ts`, `server-installation.ts`, `validation.ts`, `sync-profile-ini.ts`, `auto-start.ts`, `instance-lifecycle.ts`, `instance-profile.ts`, `instance-crash.ts`, …
+**Already extracted:** `move-install-service.ts`, `import-existing-install.ts`, `clone-install-copy.ts`, `clone-ini-seed.ts`, `instance-clone.ts`, `instance-rcon.ts`, `launch-args.ts`, `ban-list.ts`, `server-installation.ts`, `validation.ts`, `sync-profile-ini.ts`, `auto-start.ts`, `instance-lifecycle.ts`, `instance-profile.ts`, `instance-crash.ts`, …
 
 **Still inside coordinator (by design):**
 
 | Concern | Notes |
 | --- | --- |
-| CRUD + clone/import orchestration | Uses pure helpers from `instance-profile.ts` where applicable |
+| CRUD + import orchestration | Uses pure helpers from `instance-profile.ts` where applicable; clone orchestration lives in `instance-clone.ts` |
 | Start/restart/stop/kill lifecycle | Uses pure helpers from `instance-lifecycle.ts`; orchestration on `InstanceService` |
-| RCON + players + bans | Optional `instance-rcon.ts` trim; `ban-list.ts` already extracted |
+| RCON + players + bans | Session, E2E mock, auto-connect, player, and ban orchestration live in `instance-rcon.ts`; `InstanceService` keeps facades |
 | Installation probe / health | Uses `instance-profile.ts` fleet inspect helpers + `server-installation.ts` |
 
 **Characterization:** Good spread across `instance-*.test.ts`; add one integration-style test for stop→backup→start ordering before lifecycle split.
@@ -201,13 +202,13 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 
 ## Backend: `process-manager.ts`
 
-**Already extracted:** `process-spawn.ts`, `process-readiness.ts`, `process-stop.ts`.
+**Already extracted:** `process-spawn.ts`, `process-readiness.ts`, `process-ready-wait.ts`, `process-stop.ts`.
 
 | Concern | Notes |
 | --- | --- |
 | Spawn + argv | Uses pure helpers from `process-spawn.ts` |
 | Graceful stop / kill / leave-reattach | Uses pure helpers from `process-stop.ts`; orchestration on `ProcessManager` |
-| Readiness (RCON/log tail) | Uses pure helpers from `process-readiness.ts`; coordinates with `asa-log-tail`, RCON |
+| Readiness (RCON/log tail) | Pure helpers in `process-readiness.ts`; wait loop in `process-ready-wait.ts`; log capture still on `ProcessManager` |
 | Runtime state machine | `ProcessManager` remains thin coordinator |
 
 **Characterization:** `process-manager-lifecycle.test.ts`, `process-manager-leave.test.ts`, real-start integration.

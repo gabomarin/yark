@@ -134,22 +134,24 @@ dependencies, and unused CSS **files** — not unused classes inside a
   (prefer splitting instead; see
   [issue #44](https://github.com/gabomarin/yark/issues/44)).
 
+Backend size caps on `src/backend/**/*.ts` (excluding `*.test.*`):
+
+- New/ungrandfathered TypeScript files must stay ≤ **800** lines.
+- Coordinators still above the cap are listed in
+  [`scripts/backend-structure-baseline.json`](../scripts/backend-structure-baseline.json)
+  with the same **25**-line growth slack. Shrink and drop rows over time
+  ([#146](https://github.com/gabomarin/yark/issues/146)).
+
 ## Deferred structural migrations
 
-These files remain **grandfathered** in the baseline. Using shared atoms
-(`AppSurfaceCard`, `EmptyState`, …) or moving into a `components/<Name>/` folder
-is **not** a structural split. Future #44 slices should extract along the
-boundaries below (one area per PR when practical).
+Renderer feature pages that used to be grandfathered are now under the standard
+caps (Phase 6). Prefer organisms + hooks when growing those surfaces again —
+see [decomposition-146.md](decomposition-146.md). Backend grandfathered
+coordinators should continue to shed orchestration into sibling modules until
+they drop out of `backend-structure-baseline.json`.
 
-| File (baseline path) | Future extraction boundary |
-| --- | --- |
-| `features/backups/BackupsPage.tsx` | All-servers health strip / volume cards; per-server policy expand panel; cleanup + disk-alert modals |
-| `features/backups/ServerBackupPanel.tsx` | Kind settings block; backup list toolbar; backup row molecule; restore/delete confirm flows |
-| `features/logs/ServerLogsPanel.tsx` | Event list + event detail; update-job history/detail; log-file viewer pane |
-| `features/server-workspace/components/ConfigurationEditor/ConfigurationEditor.tsx` | Filter bar; INI section/group accordion; setting row editor controls |
-| `features/server-workspace/components/ConfigurationWizard/ConfigurationWizard.tsx` | Per-step panels (experience / rates / structure); change-summary review step |
-
-Line caps stay in [`component-structure-baseline.json`](../scripts/component-structure-baseline.json); do not raise them while deferring — shrink the file or update the baseline intentionally when splitting.
+Line caps stay in the baseline JSON files; do not raise them while deferring —
+shrink the file or update the baseline intentionally when splitting.
 
 **Cross-cutting decomposition (#146):** backend mega-services, `App.tsx`, and phased extraction order live in [decomposition-146.md](decomposition-146.md). Start there before a #146 slice PR.
 

@@ -1,5 +1,4 @@
 import type {
-  CloneInstallProgress,
   ClusterComplianceReport,
   InstallationHealthStatus,
   InstallationServersMode,
@@ -15,14 +14,11 @@ import type {
 } from "@shared/types";
 import {
   EMPTY_WIPE_STALE_MESSAGE,
-  offsetPort,
 } from "@shared/types";
 import { applyServerProfilePatch } from "@shared/server-profile";
 import { EventEmitter } from "node:events";
-import { type ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { createConnection } from "node:net";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
 import {
@@ -30,27 +26,17 @@ import {
   installDirConflictMessage,
   normalizeWindowsPath,
   resolveServerInstallDir,
-  suggestCloneInstallDir,
 } from "@shared/server-install-path";
 import type { BackupService } from "../backups/backup-service";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { ProcessManager, UnexpectedManagedExit } from "../../infra/process/process-manager";
+import type { RconSessionManager } from "../../infra/rcon/rcon-session-manager";
 import { mapIdentityStartBlockers } from "@shared/map-identity";
 import { findPortConflicts, validateProfileInput } from "./validation";
 import { checkClusterCompliance } from "../cluster/compliance";
-import { RconSessionManager } from "../../infra/rcon/rcon-session-manager";
 import type { ListedPlayer } from "../backups/list-players";
-import { parseListPlayersResponse } from "../backups/list-players";
-import {
-  ensureBanListFile,
-  isBlankOrNaUrl,
-  readBanListEntries,
-  readIniServerSetting,
-  removeFromBanList,
-  resolveBanListId,
-  type BanListEntry,
-} from "./ban-list";
+import type { BanListEntry } from "./ban-list";
 import {
   assertInstallDirVacantForCreate,
   assertSafeInstallDirForWipe,
@@ -63,18 +49,7 @@ import {
   readOfficialArkBuildCached,
   readOfficialArkVersionCached,
 } from "./server-installation";
-import { gameUserSettingsIniPath, syncProfileSettingsToIni } from "./sync-profile-ini";
-import { seedCloneIniFiles } from "./clone-ini-seed";
-import {
-  assertEnoughFreeSpaceForCopy,
-  copyInstallTreeWithProgress,
-  estimateDirectoryBytes,
-} from "./clone-install-copy";
-import { killChildProcessTreeAsync } from "../../infra/process/kill-win-process-tree";
-import {
-  isOperationCancelledError,
-  OperationCancelledError,
-} from "../updates/robocopy-tree";
+import { syncProfileSettingsToIni } from "./sync-profile-ini";
 import {
   isInstallHealthDegradation,
   isInstallationReady,
@@ -98,6 +73,8 @@ import {
   shouldInspectFleetInstallations,
   validateSessionPorts,
 } from "./instance-profile";
+import { InstanceRcon } from "./instance-rcon";
+import { InstanceClone, type CloneParams } from "./instance-clone";
 
 export type { StopJobOutcome };
 
@@ -107,12 +84,6 @@ const ENRICHED_INSTALL_INSPECT = {
   allowExecutableVersionProbe: true,
   allowLogVersionProbe: true,
 } as const;
-
-const RCON_HOST = "127.0.0.1";
-/** Maximum time to wait for the RCON port to start accepting connections. */
-const RCON_AUTO_CONNECT_TIMEOUT_MS = 15_000;
-/** Delay between RCON port probes while the server is starting. */
-const RCON_AUTO_CONNECT_RETRY_DELAY_MS = 1_000;
 
 export interface StopServerOptions {
   /** When true (default), create a stable stop backup after process exit. */
@@ -145,17 +116,8 @@ export class InstanceService extends EventEmitter {
     key: string;
     promise: Promise<ServerInstallationInfo[]>;
   } | null = null;
-  /** Persistent RCON session manager. */
-  private readonly rconSessions = new RconSessionManager();
-  /**
-   * E2E-only: when `YARK_E2E_RCON_MOCK=1`, report servers as running and answer
-   * console commands without a live ASA dedicated (see scripts/e2e-rcon.cjs).
-   */
-  private readonly e2eRconMock = process.env["YARK_E2E_RCON_MOCK"] === "1";
-  /** True while an opt-in clone folder copy is running (#160). */
-  private cloneCopyBusy = false;
-  private cloneCopyCancelRequested = false;
-  private cloneCopyActiveChild: ChildProcess | null = null;
+  private readonly rcon: InstanceRcon;
+  private readonly clones: InstanceClone;
 
   constructor(
     private readonly repo: ServerRepository,
@@ -164,28 +126,23 @@ export class InstanceService extends EventEmitter {
     private readonly locks: InstanceLockManager,
   ) {
     super();
-    
-    // Forward RCON status changes to UI
-    this.rconSessions.on("status-changed", (info) => {
+    this.rcon = new InstanceRcon(repo, processes, (info) => {
       this.emit("rcon-status-changed", info);
     });
-
-    // Persistent session only while `running`; keep the socket during
-    // `stopping` for SaveWorld/DoExit but never auto-reconnect.
-    this.processes.on("status", (status: ServerRuntimeInfo) => {
-      if (status.status === "running") {
-        this.rconSessions.setAutoReconnect(status.serverId, true);
-        const profile = this.repo.get(status.serverId);
-        if (profile) {
-          this.autoConnectRcon(profile).catch((err) => {
-            console.error(`[InstanceService] Auto-connect RCON failed for ${profile.name}:`, err);
-          });
-        }
-      } else if (status.status === "stopping") {
-        this.rconSessions.setAutoReconnect(status.serverId, false);
-      } else if (status.status === "stopped" || status.status === "error") {
-        this.rconSessions.disconnect(status.serverId);
-      }
+    this.clones = new InstanceClone({
+      repo,
+      processes,
+      backups,
+      locks,
+      withFleetCreateLock: (work) => this.withFleetCreateLock(work),
+      assertValidInput: (input) => this.assertValidInput(input),
+      assertCreateInstallTarget: (installDir) =>
+        this.assertCreateInstallTarget(installDir),
+      assertNoPortConflicts: (input) => this.assertNoPortConflicts(input),
+      assertUniqueName: (name) => this.assertUniqueName(name),
+      deleteProfile: (id, options) => this.delete(id, options),
+      isStopInProgress: (id) => this.isStopInProgress(id),
+      emitProgress: (payload) => this.emit("clone-progress", payload),
     });
     this.processes.on("unexpected-exit", (payload: UnexpectedManagedExit) => {
       this.recordUnexpectedProcessExit(payload);
@@ -481,125 +438,17 @@ export class InstanceService extends EventEmitter {
 
   /** Clones a profile with a derived name and ports shifted +10. */
   async clone(id: string): Promise<ServerProfile> {
-    return this.withFleetCreateLock(async () => {
-      const source = this.repo.get(id);
-      if (source === null) {
-        throw new Error("Server to clone does not exist");
-      }
-      const existing = this.repo.list();
-      const names = new Set(existing.map((p) => p.name.trim().toLowerCase()));
-      const installDirs = new Set(
-        existing.map((profile) => installDirKey(profile.installDir)),
-      );
-      let copyNumber = 1;
-      let name: string;
-      let installDir: string;
-      for (;;) {
-        name =
-          copyNumber === 1
-            ? `${source.name} (copy)`
-            : `${source.name} (copy ${copyNumber})`;
-        installDir = suggestCloneInstallDir(source.installDir, name);
-        if (
-          !names.has(name.trim().toLowerCase()) &&
-          !installDirs.has(installDirKey(installDir)) &&
-          !existsSync(installDir)
-        ) {
-          break;
-        }
-        copyNumber++;
-      }
-
-      let offset = 10;
-      let input: ServerProfileInput;
-      for (;;) {
-        input = {
-          name,
-          map: source.map,
-          mapModId: source.mapModId ?? null,
-          mapSaveFolder: source.mapSaveFolder ?? null,
-          installDir,
-          sessionName: `${source.sessionName} (copy)`,
-          maxPlayers: source.maxPlayers,
-          gamePort: offsetPort(source.gamePort, offset),
-          queryPort: offsetPort(source.queryPort, offset),
-          rconPort: offsetPort(source.rconPort, offset),
-          serverPassword: source.serverPassword,
-          adminPassword: source.adminPassword,
-          clusterId: source.clusterId,
-          clusterDir: source.clusterDir,
-          extraArgs: [...source.extraArgs],
-          structuredLaunchArgs: { ...(source.structuredLaunchArgs ?? {}) },
-          mods: [...source.mods],
-          disabledMods: [...(source.disabledMods ?? [])],
-          modMetadataCache: { ...(source.modMetadataCache ?? {}) },
-          autoStart: source.autoStart,
-        };
-        if (findPortConflicts(existing, { ...input, id: undefined }).length === 0) {
-          break;
-        }
-        offset += 10;
-        if (offset > 1000) {
-          throw new Error("No free ports found for the clone");
-        }
-      }
-      this.assertValidInput(input);
-      await this.assertCreateInstallTarget(input.installDir);
-      const profile = this.repo.create(input, source.enabled);
-      try {
-        await seedCloneIniFiles(source.installDir, profile);
-      } catch (error) {
-        await this.delete(profile.id, { deleteInstallFiles: true }).catch(() => undefined);
-        throw error;
-      }
-      this.repo.addEvent(
-        profile.id,
-        "server_created",
-        "info",
-        `Server "${profile.name}" created at ${profile.installDir} (map ${profile.map})`,
-      );
-      return profile;
-    });
+    return this.clones.clone(id);
   }
 
   /** Clones a profile with custom parameters from the dialog. */
-  async cloneWithParams(
-    id: string,
-    params: {
-      name: string;
-      sessionName: string;
-      gamePort: number;
-      queryPort: number;
-      rconPort: number;
-      installDir: string;
-      copyInstallFolder?: boolean;
-    },
-  ): Promise<ServerProfile> {
-    if (params.copyInstallFolder === true) {
-      return this.cloneWithFolderCopy(id, params);
-    }
-    return this.withFleetCreateLock(async () => {
-      const source = this.requireCloneSource(id);
-      const profile = await this.createCloneProfile(source, params);
-      try {
-        await seedCloneIniFiles(source.installDir, profile);
-      } catch (error) {
-        await this.delete(profile.id, { deleteInstallFiles: true }).catch(() => undefined);
-        throw error;
-      }
-      this.recordCloneCreated(profile, false);
-      return profile;
-    });
+  async cloneWithParams(id: string, params: CloneParams): Promise<ServerProfile> {
+    return this.clones.cloneWithParams(id, params);
   }
 
   /** Cancels an in-flight clone folder copy. Returns false when none is active. */
   cancelCloneCopy(): boolean {
-    if (!this.cloneCopyBusy) {
-      return false;
-    }
-    this.cloneCopyCancelRequested = true;
-    void killChildProcessTreeAsync(this.cloneCopyActiveChild);
-    return true;
+    return this.clones.cancelCopy();
   }
 
   async start(id: string, options?: StartServerOptions): Promise<void> {
@@ -826,7 +675,7 @@ export class InstanceService extends EventEmitter {
     return (
       this.isStopInProgress()
       || this.locks.hasPurpose("restart")
-      || this.cloneCopyBusy
+      || this.clones.isCopyBusy()
     );
   }
 
@@ -877,7 +726,7 @@ export class InstanceService extends EventEmitter {
    * (covers sync → spawn), then graceful-stop leftover active processes.
    */
   async settleForAppQuit(): Promise<void> {
-    if (this.cloneCopyBusy) {
+    if (this.clones.isCopyBusy()) {
       this.cancelCloneCopy();
       await this.waitForCloneCopyIdle();
     }
@@ -887,7 +736,7 @@ export class InstanceService extends EventEmitter {
   }
 
   private async waitForCloneCopyIdle(): Promise<void> {
-    while (this.cloneCopyBusy) {
+    while (this.clones.isCopyBusy()) {
       await new Promise<void>((resolve) => {
         setTimeout(resolve, 100);
       });
@@ -1085,7 +934,7 @@ export class InstanceService extends EventEmitter {
 
   statuses(): ServerRuntimeInfo[] {
     const ids = this.repo.list().map((p) => p.id);
-    if (!this.e2eRconMock) {
+    if (!this.rcon.isE2eMock()) {
       return this.processes.listStatuses(ids);
     }
     const now = new Date().toISOString();
@@ -1275,7 +1124,7 @@ export class InstanceService extends EventEmitter {
   }
 
   async sendRcon(id: string, command: string): Promise<string> {
-    return this.execRcon(id, command, { recordEvent: true });
+    return this.rcon.send(id, command);
   }
 
   /**
@@ -1287,123 +1136,30 @@ export class InstanceService extends EventEmitter {
     command: string,
     options?: { recordEvent?: boolean },
   ): Promise<string> {
-    if (this.e2eRconMock) {
-      return this.execRconE2eMock(id, command, options);
-    }
-
-    const profile = this.processes.applyRuntimePorts(this.mustGet(id));
-    const runtimeStatus = this.processes.getStatus(id).status;
-    // Allow during `stopping` for SaveWorld/DoExit; never during bare `starting`
-    // (readiness still uses quiet one-shot probes until `running`).
-    if (runtimeStatus !== "running" && runtimeStatus !== "stopping") {
-      throw new Error(
-        runtimeStatus === "starting"
-          ? "Server is still starting; RCON is not ready yet"
-          : "Server is not running",
-      );
-    }
-
-    const status = this.rconSessions.getStatus(id);
-    if (status.status !== "connected") {
-      console.log(`[RCON] Connecting session for ${profile.name}...`);
-      await this.rconSessions.connect(
-        id,
-        RCON_HOST,
-        profile.rconPort,
-        profile.adminPassword,
-      );
-      // Stop / SaveWorld / DoExit may reconnect once, but must not schedule retries.
-      if (runtimeStatus !== "running") {
-        this.rconSessions.setAutoReconnect(id, false);
-      }
-    }
-
-    console.log(
-      `[RCON] Sending to ${profile.name} (${RCON_HOST}:${profile.rconPort}): "${command}"`,
-    );
-
-    const response = await this.rconSessions.send(id, command);
-    console.log(`[RCON] Response: "${response}"`);
-
-    if (options?.recordEvent !== false) {
-      this.repo.addEvent(
-        id,
-        "rcon_command",
-        "info",
-        `RCON on "${profile.name}": ${command}`,
-      );
-    }
-    return response;
-  }
-
-  /** Deterministic RCON replies for UI e2e without a live dedicated. */
-  private async execRconE2eMock(
-    id: string,
-    command: string,
-    options?: { recordEvent?: boolean },
-  ): Promise<string> {
-    const profile = this.mustGet(id);
-    const trimmed = command.trim();
-    if (options?.recordEvent !== false) {
-      this.repo.addEvent(
-        id,
-        "rcon_command",
-        "info",
-        `RCON on "${profile.name}": ${trimmed}`,
-      );
-    }
-    if (trimmed === "E2E_FAIL") {
-      throw new Error("E2E mock failure");
-    }
-    if (trimmed === "E2E_SLOW") {
-      await new Promise((resolve) => setTimeout(resolve, 2500));
-      return "E2E:slow";
-    }
-    if (
-      trimmed === "E2E_EMPTY" ||
-      trimmed === "SaveWorld" ||
-      trimmed === "DestroyWildDinos"
-    ) {
-      return "";
-    }
-    if (trimmed === "ListPlayers") {
-      return "No Players Connected";
-    }
-    return `E2E:${trimmed}`;
+    return this.rcon.exec(id, command, options);
   }
 
   /** Lists online players via the persistent session (silent; no history event). */
   async listPlayers(id: string): Promise<ListedPlayer[]> {
-    const response = await this.execRcon(id, "ListPlayers", { recordEvent: false });
-    return parseListPlayersResponse(response);
+    return this.rcon.listPlayers(id);
   }
 
   async kickPlayer(id: string, playerKey: string): Promise<string> {
-    const key = playerKey.trim();
-    if (key.length === 0) {
-      throw new Error("Player id is required");
-    }
-    return this.execRcon(id, `KickPlayer ${key}`, { recordEvent: true });
+    return this.rcon.kickPlayer(id, playerKey);
   }
 
   async banPlayer(id: string, playerKey: string): Promise<string> {
-    const key = playerKey.trim();
-    if (key.length === 0) {
-      throw new Error("Player id is required");
-    }
-    return this.execRcon(id, `BanPlayer ${key}`, { recordEvent: true });
+    return this.rcon.banPlayer(id, playerKey);
   }
 
   /** Reads BanList.txt entries (id + optional name from `id,name,0` lines). */
   async listBannedPlayers(id: string): Promise<BanListEntry[]> {
-    const profile = this.mustGet(id);
-    return readBanListEntries(profile.installDir);
+    return this.rcon.listBannedPlayers(id);
   }
 
   /** Absolute path to the primary BanList.txt (created empty if missing). */
   async resolveBanListFilePath(id: string): Promise<string> {
-    const profile = this.mustGet(id);
-    return ensureBanListFile(profile.installDir);
+    return this.rcon.resolveBanListFilePath(id);
   }
 
   /**
@@ -1414,172 +1170,42 @@ export class InstanceService extends EventEmitter {
     banned: BanListEntry[];
     warning: string | null;
   }> {
-    const key = playerKey.trim();
-    if (key.length === 0) {
-      throw new Error("Player id is required");
-    }
-    const profile = this.mustGet(id);
-    const status = this.processes.getStatus(id).status;
-    const matchId = await resolveBanListId(profile.installDir, key);
-    let warning: string | null = null;
-
-    if (status === "running" || status === "stopping") {
-      try {
-        // ASA expects `Unban <id>` (verified on dedicated; not UnbanPlayer — see #17).
-        await this.execRcon(id, `Unban ${matchId}`, { recordEvent: true });
-      } catch (error) {
-        await removeFromBanList(profile.installDir, key);
-        const message =
-          error instanceof Error ? error.message : String(error);
-        warning = `Removed from BanList.txt, but RCON Unban failed (${message}). Restart the server if you still cannot join.`;
-        return {
-          banned: await readBanListEntries(profile.installDir),
-          warning,
-        };
-      }
-    }
-
-    await removeFromBanList(profile.installDir, key);
-    const banned = await readBanListEntries(profile.installDir);
-
-    const gusPath = gameUserSettingsIniPath(profile.installDir);
-    if (existsSync(gusPath)) {
-      const text = await readFile(gusPath, "utf8");
-      const banListUrl = readIniServerSetting(text, "BanListURL");
-      if (!isBlankOrNaUrl(banListUrl)) {
-        warning = `BanListURL is set (${banListUrl?.trim()}). If that remote list still includes this ID, joins stay blocked until you remove it there.`;
-      }
-    }
-
-    return { banned, warning };
+    return this.rcon.unbanPlayer(id, playerKey);
   }
 
   /** Returns RCON connection status for a server. */
   getRconStatus(id: string) {
-    if (this.e2eRconMock) {
-      return { serverId: id, status: "connected" as const, lastError: null };
-    }
-    return this.rconSessions.getStatus(id);
+    return this.rcon.getStatus(id);
   }
 
   /** Returns RCON connection status for all servers. */
   getAllRconStatus() {
-    if (this.e2eRconMock) {
-      return this.repo.list().map((profile) => ({
-        serverId: profile.id,
-        status: "connected" as const,
-        lastError: null,
-      }));
-    }
-    return this.rconSessions.getAllStatus();
+    return this.rcon.getAllStatus();
   }
 
   /** Replaces the current RCON session and reconnects using the active runtime port. */
   async retryRconConnection(id: string): Promise<void> {
-    if (this.e2eRconMock) {
-      return;
-    }
-    const profile = this.processes.applyRuntimePorts(this.mustGet(id));
-    // Match auto-connect: only after readiness (`running`), not during `starting`.
-    if (this.processes.getStatus(id).status !== "running") {
-      throw new Error("Server is not running");
-    }
+    return this.rcon.retryConnection(id);
+  }
 
-    this.rconSessions.disconnect(id);
-    await this.rconSessions.connect(
-      id,
-      RCON_HOST,
-      profile.rconPort,
-      profile.adminPassword,
+  /** Retained as a compatibility seam for focused RCON tests. */
+  private set rconSessions(sessions: RconSessionManager) {
+    this.rcon.replaceSessionManager(sessions);
+  }
+
+  private autoConnectRcon(profile: ServerProfile): Promise<void> {
+    return this.rcon.autoConnect(
+      profile,
+      (host, port, timeoutMs) => this.waitForPortReady(host, port, timeoutMs),
     );
   }
 
-  /** Auto-connects RCON once the server is actually listening on the RCON port. */
-  private async autoConnectRcon(profile: ServerProfile): Promise<void> {
-    const runtimeProfile = this.processes.applyRuntimePorts(profile);
-    if (this.processes.getStatus(profile.id).status !== "running") {
-      return;
-    }
-
-    console.log(`[InstanceService] Waiting for RCON port ${runtimeProfile.rconPort} for ${profile.name}...`);
-    const isReady = await this.waitForPortReady(
-      RCON_HOST,
-      runtimeProfile.rconPort,
-      RCON_AUTO_CONNECT_TIMEOUT_MS,
-    );
-    if (!isReady) {
-      console.log(
-        `[InstanceService] RCON port ${runtimeProfile.rconPort} was not ready for ${profile.name}; skipping connection`,
-      );
-      return;
-    }
-
-    // Status may have left `running` while we waited for the port.
-    if (this.processes.getStatus(profile.id).status !== "running") {
-      console.log(
-        `[InstanceService] Skipping RCON auto-connect for ${profile.name}; server is no longer running`,
-      );
-      return;
-    }
-
-    console.log(`[InstanceService] Auto-connecting RCON for ${profile.name}...`);
-
-    try {
-      await this.rconSessions.connect(
-        profile.id,
-        RCON_HOST,
-        runtimeProfile.rconPort,
-        runtimeProfile.adminPassword,
-      );
-      // A stop may have started during the async connect.
-      if (this.processes.getStatus(profile.id).status !== "running") {
-        this.rconSessions.setAutoReconnect(profile.id, false);
-        if (this.processes.getStatus(profile.id).status !== "stopping") {
-          this.rconSessions.disconnect(profile.id);
-        }
-        console.log(
-          `[InstanceService] Dropped late RCON auto-connect for ${profile.name}; server left running`,
-        );
-        return;
-      }
-      console.log(`[InstanceService] RCON auto-connected for ${profile.name}`);
-    } catch (err) {
-      console.error(
-        `[InstanceService] RCON auto-connect failed for ${profile.name}:`,
-        err,
-      );
-      // Don't throw - auto-connect is best-effort
-    }
-  }
-
-  private async waitForPortReady(host: string, port: number, timeoutMs = 15_000): Promise<boolean> {
-    const startedAt = Date.now();
-    while (Date.now() - startedAt < timeoutMs) {
-      const isOpen = await this.probePort(host, port);
-      if (isOpen) {
-        return true;
-      }
-      await new Promise((resolve) => setTimeout(resolve, RCON_AUTO_CONNECT_RETRY_DELAY_MS));
-    }
-    return false;
-  }
-
-  private probePort(host: string, port: number): Promise<boolean> {
-    return new Promise((resolve) => {
-      const socket = createConnection({ host, port });
-      socket.setTimeout(500);
-      socket.once("connect", () => {
-        socket.destroy();
-        resolve(true);
-      });
-      socket.once("timeout", () => {
-        socket.destroy();
-        resolve(false);
-      });
-      socket.once("error", () => {
-        resolve(false);
-      });
-    });
+  private waitForPortReady(
+    host: string,
+    port: number,
+    timeoutMs?: number,
+  ): Promise<boolean> {
+    return this.rcon.waitForPortReady(host, port, timeoutMs);
   }
 
   private mustGet(id: string): ServerProfile {
@@ -1688,289 +1314,4 @@ export class InstanceService extends EventEmitter {
     await assertInstallDirVacantForCreate(installDir);
   }
 
-  private requireCloneSource(id: string): ServerProfile {
-    const source = this.repo.get(id);
-    if (source === null) {
-      throw new Error("Server to clone does not exist");
-    }
-    return source;
-  }
-
-  private async createCloneProfile(
-    source: ServerProfile,
-    params: {
-      name: string;
-      sessionName: string;
-      gamePort: number;
-      queryPort: number;
-      rconPort: number;
-      installDir: string;
-    },
-  ): Promise<ServerProfile> {
-    const installDir = normalizeWindowsPath(params.installDir);
-    const input: ServerProfileInput = {
-      name: params.name,
-      map: source.map,
-      mapModId: source.mapModId ?? null,
-      mapSaveFolder: source.mapSaveFolder ?? null,
-      installDir,
-      sessionName: params.sessionName,
-      maxPlayers: source.maxPlayers,
-      gamePort: params.gamePort,
-      queryPort: params.queryPort,
-      rconPort: params.rconPort,
-      serverPassword: source.serverPassword,
-      adminPassword: source.adminPassword,
-      clusterId: source.clusterId,
-      clusterDir: source.clusterDir,
-      extraArgs: [...source.extraArgs],
-      structuredLaunchArgs: { ...(source.structuredLaunchArgs ?? {}) },
-      mods: [...source.mods],
-      disabledMods: [...(source.disabledMods ?? [])],
-      modMetadataCache: { ...(source.modMetadataCache ?? {}) },
-      autoStart: source.autoStart,
-    };
-
-    this.assertValidInput(input);
-    this.assertUniqueName(input.name);
-    await this.assertCreateInstallTarget(input.installDir);
-    this.assertNoPortConflicts(input);
-    return this.repo.create(input, source.enabled);
-  }
-
-  private recordCloneCreated(profile: ServerProfile, copiedFolder: boolean): void {
-    const copiedNote = copiedFolder ? ", install folder copied" : "";
-    this.repo.addEvent(
-      profile.id,
-      "server_created",
-      "info",
-      `Server "${profile.name}" created at ${profile.installDir} (map ${profile.map}${copiedNote})`,
-    );
-  }
-
-  private async cloneWithFolderCopy(
-    id: string,
-    params: {
-      name: string;
-      sessionName: string;
-      gamePort: number;
-      queryPort: number;
-      rconPort: number;
-      installDir: string;
-    },
-  ): Promise<ServerProfile> {
-    if (this.cloneCopyBusy) {
-      throw new Error("Another clone folder copy is already running");
-    }
-
-    this.cloneCopyBusy = true;
-    this.cloneCopyCancelRequested = false;
-    this.cloneCopyActiveChild = null;
-
-    let source: ServerProfile | null = null;
-    let created: ServerProfile | null = null;
-    try {
-      source = this.requireCloneSource(id);
-      this.assertCloneCopySourceIdle(source.id);
-      await this.assertCloneCopySourceHasFiles(source);
-      this.throwIfCloneCopyCancelled();
-
-      this.emitCloneProgress({
-        serverId: source.id,
-        active: true,
-        phase: "validating",
-        label: "Checking disk space for the folder copy…",
-        percent: 4,
-        sourceDir: source.installDir,
-        destinationDir: normalizeWindowsPath(params.installDir),
-        error: null,
-      });
-
-      const sourceBytes = await estimateDirectoryBytes(source.installDir);
-      this.throwIfCloneCopyCancelled();
-      await assertEnoughFreeSpaceForCopy(
-        normalizeWindowsPath(params.installDir),
-        sourceBytes,
-      );
-      this.throwIfCloneCopyCancelled();
-
-      created = await this.withFleetCreateLock(async () => {
-        const latest = this.requireCloneSource(id);
-        this.assertCloneCopySourceIdle(latest.id);
-        return this.createCloneProfile(latest, params);
-      });
-
-      await this.locks.withLock(source.id, "clone-copy", async () => {
-        await this.locks.withLock(created!.id, "clone-copy", async () => {
-          this.assertCloneCopySourceIdle(source!.id, { ignoreHeldLock: true });
-          this.throwIfCloneCopyCancelled();
-          this.emitCloneProgress({
-            serverId: source!.id,
-            active: true,
-            phase: "copying",
-            label: "Copying server folder…",
-            percent: 10,
-            sourceDir: source!.installDir,
-            destinationDir: created!.installDir,
-            error: null,
-          });
-          await copyInstallTreeWithProgress({
-            sourceDir: source!.installDir,
-            destDir: created!.installDir,
-            sourceBytes,
-            isCancelled: () => this.cloneCopyCancelRequested,
-            onSpawn: (child) => {
-              this.cloneCopyActiveChild = child;
-            },
-            onProgress: (percent, label) => {
-              this.emitCloneProgress({
-                serverId: source!.id,
-                active: true,
-                phase: "copying",
-                label,
-                percent,
-                sourceDir: source!.installDir,
-                destinationDir: created!.installDir,
-                error: null,
-              });
-            },
-          });
-        });
-      });
-
-      this.emitCloneProgress({
-        serverId: source.id,
-        active: true,
-        phase: "applying",
-        label: "Applying the new ports and session name…",
-        percent: 94,
-        sourceDir: source.installDir,
-        destinationDir: created.installDir,
-        error: null,
-      });
-      await syncProfileSettingsToIni(created);
-      this.recordCloneCreated(created, true);
-      return created;
-    } catch (error) {
-      if (created !== null) {
-        try {
-          await this.rollbackFailedCloneCopy(created, source?.id ?? created.id);
-        } catch (cleanupError) {
-          const copyMessage =
-            error instanceof Error ? error.message : String(error);
-          const cleanupMessage =
-            cleanupError instanceof Error
-              ? cleanupError.message
-              : String(cleanupError);
-          throw new Error(
-            `Could not copy the server folder (${copyMessage}). The new profile "${created.name}" may still exist and files may remain at ${created.installDir}. Remove that incomplete server in YARK if it is still listed. Cleanup: ${cleanupMessage}`,
-          );
-        }
-        throw this.cloneCopyFailure(error, true);
-      }
-      if (isOperationCancelledError(error)) {
-        throw new Error("Folder copy cancelled.");
-      }
-      throw error;
-    } finally {
-      this.cloneCopyBusy = false;
-      this.cloneCopyCancelRequested = false;
-      this.cloneCopyActiveChild = null;
-      if (source !== null) {
-        this.emitCloneProgress({
-          serverId: source.id,
-          active: false,
-          phase: null,
-          label: "",
-          percent: null,
-          sourceDir: source.installDir,
-          destinationDir:
-            created?.installDir ?? normalizeWindowsPath(params.installDir),
-          error: null,
-        });
-      }
-    }
-  }
-
-  private assertCloneCopySourceIdle(
-    sourceId: string,
-    options?: { ignoreHeldLock?: boolean },
-  ): void {
-    if (this.processes.isActive(sourceId)) {
-      throw new Error("Stop the server before copying its install folder");
-    }
-    if (this.isStopInProgress(sourceId)) {
-      throw new Error("Cannot copy the install folder while the server is stopping");
-    }
-    if (this.backups.hasServerWork(sourceId)) {
-      throw new Error("Cannot copy the install folder while a backup job is running");
-    }
-    if (options?.ignoreHeldLock !== true && this.locks.isLocked(sourceId)) {
-      throw new Error(
-        "Cannot copy the install folder while another job is running on this server",
-      );
-    }
-  }
-
-  private async assertCloneCopySourceHasFiles(source: ServerProfile): Promise<void> {
-    const installation = await inspectServerInstallationAsync(
-      source.id,
-      source.installDir,
-      { bypassCache: true },
-    );
-    if (
-      installation.health === "missing"
-      || installation.health === "empty"
-      || installation.health === "inaccessible"
-      || installation.health === "unknown"
-    ) {
-      throw new Error(
-        `The source install folder has no server files to copy (${installation.health}). Uncheck Copy entire server folder to clone the profile only.`,
-      );
-    }
-  }
-
-  private throwIfCloneCopyCancelled(): void {
-    if (this.cloneCopyCancelRequested) {
-      throw new OperationCancelledError("Folder copy cancelled");
-    }
-  }
-
-  private emitCloneProgress(payload: CloneInstallProgress): void {
-    this.emit("clone-progress", payload);
-  }
-
-  private async rollbackFailedCloneCopy(
-    profile: ServerProfile,
-    sourceServerId: string,
-  ): Promise<void> {
-    this.emitCloneProgress({
-      serverId: sourceServerId,
-      active: true,
-      phase: "cleanup",
-      label: "Removing the incomplete clone…",
-      percent: 96,
-      sourceDir: null,
-      destinationDir: profile.installDir,
-      error: null,
-    });
-    await this.delete(profile.id, { deleteInstallFiles: true });
-  }
-
-  private cloneCopyFailure(error: unknown, removedClone: boolean): Error {
-    if (isOperationCancelledError(error)) {
-      return new Error(
-        removedClone
-          ? "Folder copy cancelled. The clone was not kept."
-          : "Folder copy cancelled.",
-      );
-    }
-    const message = error instanceof Error ? error.message : String(error);
-    if (removedClone) {
-      return new Error(
-        `Could not copy the server folder (${message}). The incomplete clone was removed.`,
-      );
-    }
-    return error instanceof Error ? error : new Error(message);
-  }
 }

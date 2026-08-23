@@ -12,6 +12,7 @@ import {
   playersRetentionKey,
 } from "@backend/domains/backups/backup-service";
 import { extractZip } from "@backend/domains/backups/backup-archive";
+import { BackupReconciler } from "@backend/domains/backups/backup-reconcile";
 import { rconExec } from "@backend/infra/rcon/rcon-client";
 import type { ProcessManager } from "@backend/infra/process/process-manager";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
@@ -1704,7 +1705,7 @@ describe("BackupService kinds and retention", () => {
     const reconcileGate = new Promise<number>((resolve) => {
       releaseReconcile = resolve;
     });
-    const internal = service as unknown as {
+    const internal = BackupReconciler.prototype as unknown as {
       reconcileInterruptedRunningBackupsUnlocked: (
         serverId: string,
       ) => Promise<number>;
