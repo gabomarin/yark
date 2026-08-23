@@ -2,8 +2,7 @@ import { mkdir, rm, access } from "node:fs/promises";
 import { spawn, type ChildProcess } from "node:child_process";
 import { EventEmitter } from "node:events";
 import { dirname, join } from "node:path";
-import { existsSync, statSync } from "node:fs";
-import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
 import type {
   AppEventDetails,
   SteamCmdCacheKind,
@@ -14,7 +13,6 @@ import {
   shouldNotifySteamCmdJobEvent,
   type SteamCmdJobTerminalPayload,
 } from "../../../shared/os-notification-events";
-import { parseSteamCmdProgressLine } from "../../../shared/steamcmd-progress";
 import {
   CRITICAL_BACKUP_KINDS,
   type BackupService,
@@ -27,22 +25,11 @@ import type { ProcessManager } from "../../infra/process/process-manager";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
 import {
-  makeIdempotencyKey,
-  migrateCriticalJob,
   toCriticalJobSummary,
 } from "../../orchestration/critical-job-recovery";
 import {
-  canCancelUpdateCriticalJob,
-  isUpdateJobInterruptedAmbiguous,
   isUpdatePauseBlockedByRollback,
-  isUpdateQueueHeldForOperator,
   isUnpausableSteamCmdOperation,
-  mergeUpdateCriticalJobs,
-  planCancelUpdateCriticalJob,
-  reorderPendingUpdateJobs,
-  resumePhaseForUpdateRetry,
-  sanitizeUpdateJobContext,
-  shouldOmitInterruptedUpdateJobOnLoad,
   type UpdateCriticalJob,
 } from "./update-critical-jobs";
 import {
@@ -56,48 +43,16 @@ import {
   updateJobNeedsSteamCmdExecutable,
 } from "./steamcmd-path";
 import {
-  STEAMCMD_CONSOLE_MAX_LINES,
-  STEAMCMD_PROGRESS_CONSOLE_LOG_MIN_DELTA,
-  STEAMCMD_PROGRESS_CONSOLE_LOG_MIN_MS,
-  appendSteamCmdConsoleRing,
-  clampSteamCmdConsoleLimit,
-  formatTimestampedSteamCmdLine,
-  shouldLogProgressTickToConsole,
-  splitSteamCmdOutputChunk,
-  steamCmdProgressPercentChanged,
-  stripSteamCmdBareLine,
-  stripSteamCmdProgressIngestPrefix,
-} from "./steamcmd-console";
-import {
   isPreUpdateBackupEvidenceComplete,
-  planDuplicateRecoveredUpdateJob,
-  planInterruptedUpdateJobRecovery,
-  queuedFilesJobProgressLabel,
 } from "./update-server-jobs";
 import {
   deriveSteamCmdStatusOperation,
   deriveSteamCmdStatusServerId,
   deriveSteamCmdStatusStartedAt,
-  formatDiskProgressLogPathLine,
-  planSteamCmdProcessProgressStart,
-  shouldPreferOfficialProgressOverDiskEstimate,
 } from "./steamcmd-operator";
-import {
-  findNextRunnableQueueJob,
-  isValidPersistedUpdateQueueEntry,
-  planQueueJobCancelDisposition,
-  planQueueJobFailureDisposition,
-  planQueueJobPauseDisposition,
-  planSteamCmdMissingQueueBlock,
-  resolveUpdateQueueJobHandler,
-  shouldClearQueueIdleProgress,
-  shouldStopQueueProcessing,
-} from "./update-queue";
 import {
   STEAMCMD_ENGLISH_ARGS,
   steamCmdSpawnEnv,
-  isOperationCancelledError,
-  isOperationPausedError,
   OperationCancelledError,
   OperationPausedError,
   OperationPauseUnavailableError,
@@ -107,24 +62,6 @@ import {
   resolveSteamCmdHome,
 } from "./steamcmd-content-cache";
 import {
-  estimateProgressFromDisk,
-  measureInstallDownloadingBytes,
-  readConsoleLogSince,
-  readInstallAppManifestProgress,
-  steamCmdConsoleLogPath,
-} from "./steamcmd-disk-progress";
-import { formatSteamCmdByteProgress } from "../../../shared/steamcmd-progress";
-import { ASA_APP_ID } from "./steamcmd-content-cache";
-import {
-  FILES_JOB_WEIGHT,
-  FilesJobSupersededError,
-  decideFilesJobEnqueue,
-  filesJobEnqueueCopy,
-  isFilesJobOperation,
-  isOccupyingFilesJobStatus,
-  occupyingFilesJobForServer,
-} from "../../../shared/files-job-priority";
-import {
   CriticalJobRecoveryBlockedError,
   UpdatePerformer,
 } from "./update-perform";
@@ -133,18 +70,8 @@ import {
   type CommandResult,
   type SteamCmdFilesOperation,
 } from "./steamcmd-run";
-
-const CRITICAL_JOBS_KEY = "criticalJobsQueue.v1";
-const JOB_RETRY_DELAY_MS = 5000;
-/** UI push: frequent enough for live % without saturating Electron. */
-const PROGRESS_PUSH_MIN_MS = 100;
-
-interface ActiveSteamCmdOperation {
-  child: ChildProcess;
-  operation: "install-steamcmd" | "install-files" | "update" | "verify-files";
-  serverId: string | null;
-  startedAt: string;
-}
+import { SteamCmdProgressRuntime } from "./steamcmd-progress-runtime";
+import { UpdateQueueRuntime } from "./update-queue-runtime";
 
 type CriticalJob = UpdateCriticalJob;
 
@@ -158,46 +85,14 @@ function delay(ms: number): Promise<void> {
  * start+health iff wasRunning -> rollback on failure.
  */
 export class UpdateService extends EventEmitter {
-  private steamCmdConsoleLines: string[] = [];
-  private steamCmdConsoleUpdatedAt = new Date(0).toISOString();
-  private activeSteamCmd: ActiveSteamCmdOperation | null = null;
-  private queue: CriticalJob[] = [];
-  private processingQueue = false;
-  private readonly waiters = new Map<string, { resolve: () => void; reject: (error: Error) => void }>();
-  private progressPercent: number | null = null;
-  private progressLabel: string | null = null;
-  private progressBytesDownloaded: number | null = null;
-  private progressBytesTotal: number | null = null;
-  /** Last live SteamCMD progress before pause — shown in status polls while the job is paused. */
-  private pausedProgressSnapshot: {
-    percent: number | null;
-    label: string | null;
-    bytesDownloaded: number | null;
-    bytesTotal: number | null;
-  } | null = null;
-  private lastProgressLine: string | null = null;
-  private syncingServerId: string | null = null;
-  private syncingStartedAt: string | null = null;
-  private activeSyncChild: ChildProcess | null = null;
   private cancelRequested = false;
   private pauseRequested = false;
-  private lastProgressPushAtMs = 0;
-  private lastProgressConsoleLogAtMs = 0;
-  private lastProgressConsoleLoggedPercent: number | null = null;
-  private steamCmdOutputBuffers = new Map<string, string>();
-  /** Last time SteamCMD stdout provided a real % (not estimated). */
-  private lastOfficialProgressAtMs = 0;
-  private diskProgressTimer: ReturnType<typeof setInterval> | null = null;
-  private diskProgressInFlight = false;
-  private diskProgressForceInstallDir: string | null = null;
-  private diskProgressSteamCmdHome: string | null = null;
-  private diskProgressBaselineBytes = 0;
-  private consoleLogOffset = 0;
-  private lastDiskEstimateConsoleAtMs = 0;
   /** Last path confirmed by async discovery / persist — status polls must not `existsSync`. */
   private lastKnownSteamCmdPath: string | null = null;
   /** True after a launch probe found no steamcmd.exe — do not revive a stale settings path. */
   private steamCmdConfirmedMissing = false;
+  private readonly progressRuntime: SteamCmdProgressRuntime;
+  private readonly queueRuntime: UpdateQueueRuntime;
   private readonly steamCmdRunner: SteamCmdRunner;
   private readonly updatePerformer: UpdatePerformer;
 
@@ -212,6 +107,16 @@ export class UpdateService extends EventEmitter {
     private readonly steamcmdDir: string,
   ) {
     super();
+    this.progressRuntime = new SteamCmdProgressRuntime({
+      emitProgress: () => {
+        this.emit("progress", {
+          status: this.getSteamCmdStatus(),
+          console: this.getSteamCmdConsole(160),
+        });
+      },
+      isCancelRequested: () => this.cancelRequested,
+      isPauseRequested: () => this.pauseRequested,
+    });
     this.steamCmdRunner = new SteamCmdRunner({
       resolveSteamCmdExecutable: () => this.resolveSteamCmdExecutable(),
       appendSteamCmdConsole: (line, options) => this.appendSteamCmdConsole(line, options),
@@ -222,7 +127,7 @@ export class UpdateService extends EventEmitter {
       isCancelRequested: () => this.cancelRequested,
       isPauseRequested: () => this.pauseRequested,
       setActiveSyncChild: (child) => {
-        this.activeSyncChild = child;
+        this.progressRuntime.setActiveSyncChild(child);
       },
       beginSteamCmdProcess: (child, operation, serverId) => {
         this.beginSteamCmdProcess(child, operation, serverId);
@@ -254,11 +159,56 @@ export class UpdateService extends EventEmitter {
       waitForHealthy: (serverId, timeoutMs, options) =>
         this.waitForHealthy(serverId, timeoutMs, options),
     });
+    this.queueRuntime = new UpdateQueueRuntime({
+      settings: this.settings,
+      servers: this.servers,
+      processes: this.processes,
+      ensureSteamCmdReadyForOperator: (job) => this.ensureSteamCmdReadyForOperator(job),
+      appendSteamCmdConsole: (line) => this.appendSteamCmdConsole(line),
+      clearSteamCmdConsole: () => this.clearSteamCmdConsole(),
+      clearPausedProgressSnapshot: () => this.clearPausedProgressSnapshot(),
+      setPausedProgress: () => this.setPausedProgress(),
+      setProgress: (percent, label, line) => this.setProgress(percent, label, line),
+      setQueuedProgress: (label, line) => this.progressRuntime.setQueuedProgress(label, line),
+      emitProgress: (force) => this.emitProgress(force),
+      performInstallServerFiles: (serverId, job) =>
+        this.performInstallServerFiles(serverId, job),
+      performUpdateServer: (serverId, job) => this.performUpdateServer(serverId, job),
+      performVerifyServerFiles: (serverId, job) =>
+        this.performVerifyServerFiles(serverId, job),
+      finishRecoveredFileJob: (job) => this.finishRecoveredFileJob(job),
+      finishRecoveredRollback: (job) => this.finishRecoveredRollback(job),
+      findSteamCmdExecutableCached: () => this.findSteamCmdExecutableCached(),
+      steamCmdMissingError: () => this.steamCmdMissingError(),
+      getActiveSteamCmd: () => this.progressRuntime.getActiveSteamCmd() !== null,
+      getSyncingServerId: () => this.progressRuntime.getSyncingServerId(),
+      endFileSync: () => this.endFileSync(),
+      isCancelRequested: () => this.cancelRequested,
+      setCancelRequested: (requested) => {
+        this.cancelRequested = requested;
+      },
+      isPauseRequested: () => this.pauseRequested,
+      setPauseRequested: (requested) => {
+        this.pauseRequested = requested;
+      },
+      scheduleProcess: () => {
+        void this.processQueue();
+      },
+      addJobEvent: (job, type, severity, message) =>
+        this.addJobEvent(job, type, severity, message),
+    });
     const configured = this.settings.get("steamcmdPath")?.trim();
     if (configured != null && configured.length > 0) {
       this.lastKnownSteamCmdPath = configured;
     }
-    this.queue = this.loadQueue();
+  }
+
+  private get queue(): readonly CriticalJob[] {
+    return this.queueRuntime.getJobs();
+  }
+
+  private set queue(jobs: CriticalJob[]) {
+    this.queueRuntime.replaceJobs(jobs);
   }
 
   /**
@@ -360,7 +310,7 @@ export class UpdateService extends EventEmitter {
 
   getSteamCmdStatus(): SteamCmdStatus {
     const executablePath = this.findSteamCmdExecutableCached();
-    const active = this.activeSteamCmd;
+    const active = this.progressRuntime.getActiveSteamCmd();
     const queuedPending = this.queue.filter(
       (job) => job.status === "pending" || job.status === "retrying",
     );
@@ -376,19 +326,20 @@ export class UpdateService extends EventEmitter {
       executablePath !== null
         ? resolveSteamCmdHome(executablePath)
         : resolveSteamCmdHome(join(this.steamcmdDir, "steamcmd.exe"));
-    const liveWork =
-      active !== null || this.syncingServerId !== null || runningJob !== undefined;
+    const syncingServerId = this.progressRuntime.getSyncingServerId();
+    const liveWork = active !== null || syncingServerId !== null || runningJob !== undefined;
     const hasPausedJob = this.queue.some((job) => job.status === "paused");
     const pausedProgress =
-      !liveWork && hasPausedJob ? this.pausedProgressSnapshot : null;
+      !liveWork && hasPausedJob ? this.progressRuntime.getPausedProgressSnapshot() : null;
+    const progress = this.progressRuntime.getProgressSnapshot();
     const busy = liveWork || hasQueueWork;
     const operation = deriveSteamCmdStatusOperation({
-      syncingServerId: this.syncingServerId,
+      syncingServerId,
       activeOperation: active?.operation ?? null,
       runningJobType: runningJob?.type ?? null,
     });
     const serverId = deriveSteamCmdStatusServerId({
-      syncingServerId: this.syncingServerId,
+      syncingServerId,
       activeServerId: active?.serverId ?? null,
       runningJobServerId: runningJob?.serverId ?? null,
     });
@@ -399,22 +350,22 @@ export class UpdateService extends EventEmitter {
       depotCacheDir: resolveDepotCacheDir(steamCmdHome),
       contentCacheDir: resolveAsaContentCacheDir(steamCmdHome),
       busy,
-      running: active !== null || this.syncingServerId !== null,
+      running: active !== null || syncingServerId !== null,
       operation,
       serverId,
       startedAt: deriveSteamCmdStatusStartedAt({
-        syncingStartedAt: this.syncingStartedAt,
+        syncingStartedAt: this.progressRuntime.getSyncingStartedAt(),
         activeStartedAt: active?.startedAt ?? null,
         runningJobUpdatedAt: runningJob?.updatedAt ?? null,
       }),
       pid: active?.child.pid ?? null,
-      progressPercent: liveWork ? this.progressPercent : pausedProgress?.percent ?? null,
-      progressLabel: liveWork ? this.progressLabel : pausedProgress?.label ?? null,
+      progressPercent: liveWork ? progress.percent : pausedProgress?.percent ?? null,
+      progressLabel: liveWork ? progress.label : pausedProgress?.label ?? null,
       progressBytesDownloaded:
-        liveWork ? this.progressBytesDownloaded : pausedProgress?.bytesDownloaded ?? null,
+        liveWork ? progress.bytesDownloaded : pausedProgress?.bytesDownloaded ?? null,
       progressBytesTotal:
-        liveWork ? this.progressBytesTotal : pausedProgress?.bytesTotal ?? null,
-      lastLine: this.lastProgressLine,
+        liveWork ? progress.bytesTotal : pausedProgress?.bytesTotal ?? null,
+      lastLine: this.progressRuntime.getLastProgressLine(),
       queuedCount: queuedPending.length,
       // Keep this.queue order so Downloads Move up/down matches execution order.
       // Backup leftovers append after file jobs (they are not reorderable).
@@ -467,90 +418,27 @@ export class UpdateService extends EventEmitter {
   }
 
   async retryCriticalJob(jobId: string): Promise<boolean> {
-    const job = this.queue.find((candidate) => candidate.id === jobId);
-    if (job === undefined) return this.backups.retryCriticalJob(jobId);
-    const cancelled = job.status === "cancelled";
-    const retryableFailure =
-      (job.status === "blocked" || job.status === "failed") && job.operatorRetryAllowed;
-    if (!cancelled && !retryableFailure) return false;
-    await this.ensureSteamCmdReadyForOperator(job);
-    if (job.context.restartInterrupted === true) {
-      job.context.restartInterrupted = false;
-    }
-    job.status = "pending";
-    job.phase = resumePhaseForUpdateRetry(job);
-    job.maxAttempts = Math.max(job.maxAttempts, job.attempts + 3);
-    job.recoveryReason = cancelled
-      ? "Retry requested by the operator."
-      : "Retry requested by the operator after reviewing recovery state.";
-    job.updatedAt = new Date().toISOString();
-    if (cancelled) {
-      this.queue = [job, ...this.queue.filter((candidate) => candidate.id !== job.id)];
-    }
-    this.persistQueue();
-    this.emitProgress(true);
-    void this.processQueue();
-    return true;
+    const result = await this.queueRuntime.retryCriticalJob(jobId);
+    return result ?? this.backups.retryCriticalJob(jobId);
   }
 
   dismissCriticalJob(jobId: string): boolean {
-    const job = this.queue.find((candidate) => candidate.id === jobId);
-    if (job === undefined) return this.backups.dismissCriticalJob(jobId);
-    if (job.status !== "blocked" && job.status !== "failed" && job.status !== "cancelled") {
-      return false;
-    }
-    this.removeJob(jobId);
-    this.persistQueue();
-    this.emitProgress(true);
-    void this.processQueue();
-    return true;
+    return this.queueRuntime.dismissCriticalJob(jobId)
+      ?? this.backups.dismissCriticalJob(jobId);
   }
 
   cancelCriticalJob(jobId: string): boolean {
-    const job = this.queue.find((candidate) => candidate.id === jobId);
-    if (job === undefined) return this.backups.cancelCriticalJob(jobId);
-    if (!canCancelUpdateCriticalJob(job.status)) {
-      return false;
-    }
-    const plan = planCancelUpdateCriticalJob(job.status === "paused");
-    job.status = plan.status;
-    job.phase = plan.phase;
-    job.recoveryReason = plan.recoveryReason;
-    job.updatedAt = plan.updatedAt;
-    this.rejectJob(job.id, new OperationCancelledError());
-    this.persistQueue();
-    this.emitProgress(true);
-    void this.processQueue();
-    return true;
+    return this.queueRuntime.cancelCriticalJob(jobId)
+      ?? this.backups.cancelCriticalJob(jobId);
   }
 
   async resumeCriticalJob(jobId: string): Promise<boolean> {
-    const job = this.queue.find((candidate) => candidate.id === jobId);
-    if (job === undefined) return this.backups.retryCriticalJob(jobId);
-    if (job.status !== "paused") return false;
-    await this.ensureSteamCmdReadyForOperator(job);
-    this.clearSteamCmdConsole();
-    this.clearPausedProgressSnapshot();
-    job.status = "pending";
-    job.phase = resumePhaseForUpdateRetry(job);
-    job.recoveryReason = null;
-    job.updatedAt = new Date().toISOString();
-    this.queue = [job, ...this.queue.filter((candidate) => candidate.id !== job.id)];
-    this.persistQueue();
-    this.emitProgress(true);
-    void this.processQueue();
-    return true;
+    const result = await this.queueRuntime.resumeCriticalJob(jobId);
+    return result ?? this.backups.retryCriticalJob(jobId);
   }
 
   reorderCriticalJob(jobId: string, direction: "up" | "down"): boolean {
-    const reordered = reorderPendingUpdateJobs(this.queue, jobId, direction);
-    if (reordered === null) {
-      return false;
-    }
-    this.queue = reordered;
-    this.persistQueue();
-    this.emitProgress(true);
-    return true;
+    return this.queueRuntime.reorderCriticalJob(jobId, direction);
   }
 
   async cancelSteamCmd(): Promise<boolean> {
@@ -562,9 +450,9 @@ export class UpdateService extends EventEmitter {
         || job.status === "running",
     );
     const hadWork =
-      this.activeSteamCmd !== null
-      || this.activeSyncChild !== null
-      || this.syncingServerId !== null
+      this.progressRuntime.getActiveSteamCmd() !== null
+      || this.progressRuntime.getActiveSyncChild() !== null
+      || this.progressRuntime.getSyncingServerId() !== null
       || backupBusy
       || runningJob !== undefined;
 
@@ -578,18 +466,18 @@ export class UpdateService extends EventEmitter {
     this.backups.requestCancel();
     this.stopDiskProgressMonitor();
     this.appendSteamCmdConsole(
-      `Cancelling operation (steamcmd=${this.activeSteamCmd?.child.pid ?? "n/a"}, sync=${this.activeSyncChild?.pid ?? "n/a"}, jobs=${this.queue.length})`,
+      `Cancelling operation (steamcmd=${this.progressRuntime.getActiveSteamCmd()?.child.pid ?? "n/a"}, sync=${this.progressRuntime.getActiveSyncChild()?.pid ?? "n/a"}, jobs=${this.queue.length})`,
     );
     this.setProgress(null, "Cancelling…", "Cancellation requested by the user");
 
-    if (this.activeSteamCmd !== null) {
-      const child = this.activeSteamCmd.child;
-      this.activeSteamCmd = null;
+    const steamCmdChild = this.progressRuntime.takeActiveSteamCmdChild();
+    if (steamCmdChild !== null) {
+      const child = steamCmdChild;
       await this.killProcessTree(child);
     }
-    if (this.activeSyncChild !== null) {
-      const child = this.activeSyncChild;
-      this.activeSyncChild = null;
+    const syncChild = this.progressRuntime.takeActiveSyncChild();
+    if (syncChild !== null) {
+      const child = syncChild;
       await this.killProcessTree(child);
     }
 
@@ -599,10 +487,9 @@ export class UpdateService extends EventEmitter {
       runningJob.recoveryReason = "Cancellation requested; completing the safe unwind.";
       runningJob.updatedAt = new Date().toISOString();
     }
-    this.persistQueue();
+    this.queueRuntime.persist();
 
-    this.syncingServerId = null;
-    this.syncingStartedAt = null;
+    this.progressRuntime.clearSyncing();
     this.setProgress(null, "Cancelled", "Operation cancelled by the user");
     this.emitProgress(true);
     return true;
@@ -614,9 +501,9 @@ export class UpdateService extends EventEmitter {
       (job) => job.status === "running",
     );
     const hadWork =
-      this.activeSteamCmd !== null
-      || this.activeSyncChild !== null
-      || this.syncingServerId !== null
+      this.progressRuntime.getActiveSteamCmd() !== null
+      || this.progressRuntime.getActiveSyncChild() !== null
+      || this.progressRuntime.getSyncingServerId() !== null
       || backupBusy
       || runningJob !== undefined;
 
@@ -636,9 +523,9 @@ export class UpdateService extends EventEmitter {
     }
 
     const liveOperation =
-      this.syncingServerId !== null
+      this.progressRuntime.getSyncingServerId() !== null
         ? "sync-files"
-        : (this.activeSteamCmd?.operation ?? runningJob?.type ?? null);
+        : (this.progressRuntime.getActiveSteamCmd()?.operation ?? runningJob?.type ?? null);
     if (isUnpausableSteamCmdOperation(liveOperation)) {
       throw new OperationPauseUnavailableError(
         "This operation cannot pause (SteamCMD validate has no resume checkpoint). Use Cancel instead.",
@@ -649,18 +536,18 @@ export class UpdateService extends EventEmitter {
     this.backups.requestCancel();
     this.stopDiskProgressMonitor();
     this.appendSteamCmdConsole(
-      `Pausing operation (steamcmd=${this.activeSteamCmd?.child.pid ?? "n/a"}, sync=${this.activeSyncChild?.pid ?? "n/a"})`,
+      `Pausing operation (steamcmd=${this.progressRuntime.getActiveSteamCmd()?.child.pid ?? "n/a"}, sync=${this.progressRuntime.getActiveSyncChild()?.pid ?? "n/a"})`,
     );
     this.setProgress(null, "Pausing…", "Pause requested by the user");
 
-    if (this.activeSteamCmd !== null) {
-      const child = this.activeSteamCmd.child;
-      this.activeSteamCmd = null;
+    const steamCmdChild = this.progressRuntime.takeActiveSteamCmdChild();
+    if (steamCmdChild !== null) {
+      const child = steamCmdChild;
       await this.killProcessTree(child);
     }
-    if (this.activeSyncChild !== null) {
-      const child = this.activeSyncChild;
-      this.activeSyncChild = null;
+    const syncChild = this.progressRuntime.takeActiveSyncChild();
+    if (syncChild !== null) {
+      const child = syncChild;
       await this.killProcessTree(child);
     }
 
@@ -668,10 +555,9 @@ export class UpdateService extends EventEmitter {
       runningJob.recoveryReason = "Pause requested; stopping SteamCMD.";
       runningJob.updatedAt = new Date().toISOString();
     }
-    this.persistQueue();
+    this.queueRuntime.persist();
 
-    this.syncingServerId = null;
-    this.syncingStartedAt = null;
+    this.progressRuntime.clearSyncing();
     this.setPausedProgress();
     this.emitProgress(true);
     return true;
@@ -690,11 +576,7 @@ export class UpdateService extends EventEmitter {
   }
 
   getSteamCmdConsole(limit = 200): SteamCmdConsoleSnapshot {
-    const safeLimit = clampSteamCmdConsoleLimit(limit);
-    return {
-      lines: this.steamCmdConsoleLines.slice(-safeLimit),
-      updatedAt: this.steamCmdConsoleUpdatedAt,
-    };
+    return this.progressRuntime.getConsole(limit);
   }
 
   /** Resolves depot or ASA content cache next to the configured SteamCMD home. */
@@ -712,8 +594,8 @@ export class UpdateService extends EventEmitter {
    */
   async clearSteamCmdCache(kind: SteamCmdCacheKind): Promise<string> {
     if (
-      this.activeSteamCmd !== null
-      || this.activeSyncChild !== null
+      this.progressRuntime.getActiveSteamCmd() !== null
+      || this.progressRuntime.getActiveSyncChild() !== null
       || this.queue.some(
         (job) =>
           job.status === "running"
@@ -791,305 +673,18 @@ export class UpdateService extends EventEmitter {
     type: "install-files" | "update" | "verify-files",
     serverId: string,
   ): Promise<void> {
-    const jobId = await this.enqueueAndReturnJobId(type, serverId);
-    const job = this.queue.find((candidate) => candidate.id === jobId);
-    if (job !== undefined) {
-      job.context.operatorAwaited = true;
-      this.persistQueue();
-    }
-
-    const completion = new Promise<void>((resolve, reject) => {
-      this.waiters.set(jobId, { resolve, reject });
-    });
-
-    // Start processing but wait for completion of this specific job.
-    void this.processQueue();
-    await completion;
+    await this.queueRuntime.enqueueAndWait(type, serverId);
   }
 
   private async enqueueAndStart(
     type: "install-files" | "update" | "verify-files",
     serverId: string,
   ): Promise<void> {
-    await this.enqueueAndReturnJobId(type, serverId);
-    // Queue processing is async; caller intentionally does not wait.
-    void this.processQueue();
-  }
-
-  /**
-   * Enqueue a critical files job and return its jobId.
-   * The caller decides whether to wait for completion.
-   */
-  private async enqueueAndReturnJobId(
-    type: "install-files" | "update" | "verify-files",
-    serverId: string,
-  ): Promise<string> {
-    await this.ensureSteamCmdReadyForOperator();
-
-    const existing = this.queue.find(
-      (job) => job.serverId === serverId && job.type === type,
-    );
-    if (existing !== undefined) {
-      if (existing.status === "cancelled") {
-        // Clicking Install/Update/Verify again is a new request; drop the leftover.
-        this.appendSteamCmdConsole(
-          `Replacing cancelled ${type} job; queueing a new run.`,
-        );
-        this.removeJob(existing.id);
-      } else if (existing.status === "blocked" || existing.status === "failed") {
-        throw new Error(
-          `A previous ${type} job requires Retry or Dismiss before another can be queued`,
-        );
-      }
-    }
-
-    const occupant = occupyingFilesJobForServer(
-      this.queue
-        .filter((job) => isFilesJobOperation(job.type))
-        .map((job) => ({
-          id: job.id,
-          serverId: job.serverId,
-          operation: job.type,
-          status: job.status,
-        })),
-      serverId,
-    );
-    const decision = decideFilesJobEnqueue(type, occupant);
-    const serverName = this.servers.get(serverId)?.name ?? "this server";
-    if (decision.action === "replace") {
-      const toDrop = this.queue.filter(
-        (job) =>
-          job.serverId === serverId
-          && isFilesJobOperation(job.type)
-          && isOccupyingFilesJobStatus(job.status)
-          && job.status !== "running"
-          && FILES_JOB_WEIGHT[type] > FILES_JOB_WEIGHT[job.type],
-      );
-      for (const job of toDrop) {
-        this.rejectJob(job.id, new FilesJobSupersededError(type));
-        this.removeJob(job.id);
-      }
-      this.appendSteamCmdConsole(
-        filesJobEnqueueCopy(type, decision, serverName).message,
-      );
-      this.persistQueue();
-      this.emitProgress(true);
-    } else if (decision.action !== "enqueue") {
-      throw new Error(filesJobEnqueueCopy(type, decision, serverName).message);
-    }
-
-    const now = new Date().toISOString();
-    const job: CriticalJob = {
-      id: randomUUID(),
-      type,
-      serverId,
-      attempts: 0,
-      maxAttempts: 3,
-      status: "pending",
-      phase: "queued",
-      createdAt: now,
-      updatedAt: now,
-      lastError: null,
-      recoveryReason: null,
-      idempotencyKey: makeIdempotencyKey(type, serverId),
-      operatorRetryAllowed: false,
-      context: {},
-    };
-
-    this.queue.push(job);
-    this.persistQueue();
-    this.progressLabel = queuedFilesJobProgressLabel(type);
-    this.lastProgressLine = `Job queued: ${type}`;
-    this.emitProgress(true);
-    this.addJobEvent(
-      job,
-      "update_started",
-      "info",
-      `Job queued: ${type} (${job.id.slice(0, 8)})`,
-    );
-
-    return job.id;
+    await this.queueRuntime.enqueueAndStart(type, serverId);
   }
 
   private async processQueue(): Promise<void> {
-    if (this.processingQueue) {
-      return;
-    }
-    this.processingQueue = true;
-
-    try {
-      for (;;) {
-        if (shouldStopQueueProcessing(this.queue)) {
-          this.emitProgress(true);
-          break;
-        }
-
-        const job = findNextRunnableQueueJob(this.queue);
-        if (job === undefined) {
-          break;
-        }
-
-        if (
-          updateJobNeedsSteamCmdExecutable(job)
-          && this.findSteamCmdExecutableCached() === null
-        ) {
-          const error = this.steamCmdMissingError();
-          this.rejectJob(job.id, error);
-          const blocked = planSteamCmdMissingQueueBlock(error.message);
-          job.status = blocked.status;
-          job.operatorRetryAllowed = blocked.operatorRetryAllowed;
-          job.recoveryReason = blocked.recoveryReason;
-          job.updatedAt = new Date().toISOString();
-          this.persistQueue();
-          this.emitProgress(true);
-          continue;
-        }
-
-        job.status = "running";
-        job.updatedAt = new Date().toISOString();
-        this.cancelRequested = false;
-        this.pauseRequested = false;
-        this.persistQueue();
-        this.emitProgress(true);
-
-        try {
-          switch (resolveUpdateQueueJobHandler({ type: job.type, phase: job.phase })) {
-            case "install":
-              await this.performInstallServerFiles(job.serverId, job);
-              break;
-            case "verify":
-              await this.performVerifyServerFiles(job.serverId, job);
-              break;
-            case "recover-file-job":
-              await this.finishRecoveredFileJob(job);
-              break;
-            case "recover-rollback":
-              await this.finishRecoveredRollback(job);
-              break;
-            case "update":
-              await this.performUpdateServer(job.serverId, job);
-              break;
-          }
-          this.resolveJob(job.id);
-          this.removeJob(job.id);
-          this.persistQueue();
-          if (
-            shouldClearQueueIdleProgress({
-              queueLength: this.queue.length,
-              hasActiveSteamCmd: this.activeSteamCmd !== null,
-              syncingServerId: this.syncingServerId,
-            })
-          ) {
-            this.clearPausedProgressSnapshot();
-            this.setProgress(100, "Completed", "Operation finished");
-            this.emitProgress(true);
-          }
-        } catch (error) {
-          if (this.pauseRequested || isOperationPausedError(error)) {
-            this.appendSteamCmdConsole(`Job ${job.type} paused`);
-            this.rejectJob(
-              job.id,
-              isOperationPausedError(error)
-                ? (error as Error)
-                : new OperationPausedError(),
-            );
-            const paused = planQueueJobPauseDisposition();
-            job.status = paused.status;
-            job.recoveryReason = paused.recoveryReason;
-            job.updatedAt = new Date().toISOString();
-            this.persistQueue();
-            this.pauseRequested = false;
-            this.endFileSync();
-            this.setPausedProgress();
-            this.emitProgress(true);
-            break;
-          }
-          if (this.cancelRequested || isOperationCancelledError(error)) {
-            this.appendSteamCmdConsole(
-              `Job ${job.type} stopped after cancellation`,
-            );
-            const cancelled = planQueueJobCancelDisposition({
-              jobType: job.type,
-              phase: job.phase,
-            });
-            this.rejectJob(
-              job.id,
-              isOperationCancelledError(error)
-                ? (error as Error)
-                : new OperationCancelledError(),
-            );
-            job.status = cancelled.status;
-            job.operatorRetryAllowed = cancelled.operatorRetryAllowed;
-            if (cancelled.phase !== undefined) {
-              job.phase = cancelled.phase;
-            }
-            job.recoveryReason = cancelled.recoveryReason;
-            job.updatedAt = new Date().toISOString();
-            this.persistQueue();
-            this.cancelRequested = false;
-            this.endFileSync();
-            if (cancelled.status === "cancelled") {
-              this.setProgress(null, "Cancelled", "Operation cancelled by the user");
-            }
-            this.emitProgress(true);
-            continue;
-          }
-
-          job.attempts += 1;
-          job.lastError = error instanceof Error ? error.message : String(error);
-          job.updatedAt = new Date().toISOString();
-
-          const failure = planQueueJobFailureDisposition({
-            job,
-            error,
-            isRecoveryBlocked: error instanceof CriticalJobRecoveryBlockedError,
-          });
-          if (failure.clearRestartInterrupted === true) {
-            job.context.restartInterrupted = false;
-          }
-          if (failure.action === "blocked" || failure.action === "failed") {
-            this.rejectJob(job.id, new Error(job.lastError));
-            job.status = failure.status;
-            if (failure.phase !== undefined) {
-              job.phase = failure.phase;
-            }
-            job.operatorRetryAllowed = failure.operatorRetryAllowed;
-            job.recoveryReason = failure.recoveryReason;
-            this.persistQueue();
-            if (failure.emitFailedEvent) {
-              this.addJobEvent(
-                job,
-                "update_failed",
-                failure.failedEventSeverity ?? "error",
-                failure.failedEventMessage ?? job.lastError,
-              );
-            }
-            continue;
-          }
-
-          job.status = failure.status;
-          job.recoveryReason = failure.recoveryReason;
-          this.persistQueue();
-          if (failure.emitFailedEvent) {
-            this.addJobEvent(
-              job,
-              "update_failed",
-              failure.failedEventSeverity ?? "warning",
-              failure.failedEventMessage ?? job.lastError,
-            );
-          }
-          await delay(JOB_RETRY_DELAY_MS);
-          if (job.status === "retrying") {
-            job.status = "pending";
-            job.phase = resumePhaseForUpdateRetry(job);
-            job.updatedAt = new Date().toISOString();
-            this.persistQueue();
-          }
-        }
-      }
-    } finally {
-      this.processingQueue = false;
-    }
+    await this.queueRuntime.processQueue();
   }
 
   private runSteamUpdate(
@@ -1100,143 +695,12 @@ export class UpdateService extends EventEmitter {
     return this.steamCmdRunner.runSteamUpdate(installDir, operation, serverId);
   }
 
-  /**
-   * Progress without depending on the stdout pipe:
-   * - tail of logs/console_log.txt (near real-time)
-   * - appmanifest BytesDownloaded for THIS install
-   * - size of steamapps/downloading under force_install_dir
-   */
   private startDiskProgressMonitor(steamCmdHome: string, forceInstallDir: string): void {
-    this.stopDiskProgressMonitor();
-    this.diskProgressForceInstallDir = forceInstallDir;
-    this.diskProgressSteamCmdHome = steamCmdHome;
-    this.lastOfficialProgressAtMs = 0;
-    this.lastDiskEstimateConsoleAtMs = 0;
-
-    const logPath = steamCmdConsoleLogPath(steamCmdHome);
-    if (existsSync(logPath)) {
-      try {
-        this.consoleLogOffset = statSync(logPath).size;
-      } catch {
-        this.consoleLogOffset = 0;
-      }
-    } else {
-      this.consoleLogOffset = 0;
-    }
-
-    void measureInstallDownloadingBytes(forceInstallDir).then((baseline) => {
-      if (this.diskProgressForceInstallDir !== forceInstallDir) {
-        return;
-      }
-      this.diskProgressBaselineBytes = baseline;
-    });
-
-    this.appendSteamCmdConsole(formatDiskProgressLogPathLine(logPath));
-
-    this.diskProgressTimer = setInterval(() => {
-      void this.tickDiskProgressEstimate();
-    }, 400);
+    this.progressRuntime.startDiskProgressMonitor(steamCmdHome, forceInstallDir);
   }
 
   private stopDiskProgressMonitor(): void {
-    if (this.diskProgressTimer !== null) {
-      clearInterval(this.diskProgressTimer);
-      this.diskProgressTimer = null;
-    }
-    this.diskProgressForceInstallDir = null;
-    this.diskProgressSteamCmdHome = null;
-    this.diskProgressInFlight = false;
-  }
-
-  private async tickDiskProgressEstimate(): Promise<void> {
-    const installDir = this.diskProgressForceInstallDir;
-    const steamCmdHome = this.diskProgressSteamCmdHome;
-    if (installDir === null || steamCmdHome === null || this.diskProgressInFlight || this.cancelRequested || this.pauseRequested) {
-      return;
-    }
-
-    this.diskProgressInFlight = true;
-    try {
-      // 1) Live console from console_log.txt (priority for %/MB)
-      const logChunk = await readConsoleLogSince(steamCmdHome, this.consoleLogOffset);
-      this.consoleLogOffset = logChunk.nextOffset;
-      if (logChunk.text.length > 0) {
-        this.captureSteamCmdOutput(logChunk.text, "console_log");
-      }
-
-      // If console_log/stdout already provided recent progress, do NOT overwrite with appmanifest (often behind).
-      if (
-        shouldPreferOfficialProgressOverDiskEstimate(
-          this.lastOfficialProgressAtMs,
-          Date.now(),
-        )
-      ) {
-        return;
-      }
-
-      // 2) Fallback: appmanifest for THIS install
-      const manifest = await readInstallAppManifestProgress(installDir, ASA_APP_ID);
-      if (
-        manifest !== null
-        && manifest.bytesDownloaded !== null
-        && manifest.bytesToDownload !== null
-        && manifest.bytesToDownload > 0
-      ) {
-        this.progressBytesDownloaded = manifest.bytesDownloaded;
-        this.progressBytesTotal = manifest.bytesToDownload;
-        if (manifest.percent !== null) {
-          this.progressPercent = manifest.percent;
-        }
-        this.progressLabel = `Downloading · ${formatSteamCmdByteProgress(
-          manifest.bytesDownloaded,
-          manifest.bytesToDownload,
-        )}`;
-        this.lastProgressLine = this.progressLabel;
-        this.emitProgress(true);
-        return;
-      }
-
-      // 3) Fallback: downloading/temp size only under force_install_dir
-      const bytesOnDisk = await measureInstallDownloadingBytes(installDir);
-      if (this.diskProgressForceInstallDir !== installDir || this.cancelRequested || this.pauseRequested) {
-        return;
-      }
-      const estimate = estimateProgressFromDisk(
-        bytesOnDisk,
-        this.progressBytesTotal,
-        this.diskProgressBaselineBytes,
-      );
-      if (estimate.downloaded < 1_000_000 && estimate.deltaBytes < 1_000_000) {
-        return;
-      }
-
-      this.progressPercent = estimate.percent;
-      this.progressBytesDownloaded = estimate.downloaded;
-      this.progressBytesTotal = estimate.total;
-      this.progressLabel = `Downloading (estimated) · ${formatSteamCmdByteProgress(
-        estimate.downloaded,
-        estimate.total,
-      )}`;
-      this.lastProgressLine = this.progressLabel;
-      this.emitProgress(true);
-
-      const now = Date.now();
-      if (now - this.lastDiskEstimateConsoleAtMs >= 5000) {
-        this.lastDiskEstimateConsoleAtMs = now;
-        this.steamCmdConsoleLines = appendSteamCmdConsoleRing(
-          this.steamCmdConsoleLines,
-          formatTimestampedSteamCmdLine(
-            new Date().toISOString(),
-            `[estimated/downloading] ${estimate.percent.toFixed(1)}% — ${formatSteamCmdByteProgress(estimate.downloaded, estimate.total)}`,
-          ),
-          STEAMCMD_CONSOLE_MAX_LINES,
-        );
-        this.steamCmdConsoleUpdatedAt = new Date().toISOString();
-        this.emitProgress(true);
-      }
-    } finally {
-      this.diskProgressInFlight = false;
-    }
+    this.progressRuntime.stopDiskProgressMonitor();
   }
 
   private assertNotCancelled(): void {
@@ -1457,24 +921,11 @@ export class UpdateService extends EventEmitter {
   }
 
   private clearSteamCmdConsole(): void {
-    this.steamCmdConsoleLines.length = 0;
-    this.steamCmdConsoleUpdatedAt = new Date().toISOString();
+    this.progressRuntime.clearConsole();
   }
 
   private appendSteamCmdConsole(line: string, options?: { forceProgressPush?: boolean }): void {
-    const trimmed = line.trim();
-    if (trimmed.length === 0) {
-      return;
-    }
-    this.steamCmdConsoleLines = appendSteamCmdConsoleRing(
-      this.steamCmdConsoleLines,
-      formatTimestampedSteamCmdLine(new Date().toISOString(), trimmed),
-      STEAMCMD_CONSOLE_MAX_LINES,
-    );
-    this.steamCmdConsoleUpdatedAt = new Date().toISOString();
-    this.lastProgressLine = trimmed;
-    const percentChanged = this.ingestProgressFromLine(trimmed);
-    this.emitProgress(options?.forceProgressPush === true || percentChanged);
+    this.progressRuntime.appendConsole(line, options);
   }
 
   /**
@@ -1482,159 +933,31 @@ export class UpdateService extends EventEmitter {
    * Must split on CR/LF or the UI sees no progress until much later.
    */
   private captureSteamCmdOutput(chunk: string, source: string): void {
-    const previous = this.steamCmdOutputBuffers.get(source) ?? "";
-    const { completeLines, remainder } = splitSteamCmdOutputChunk(previous, chunk);
-    this.steamCmdOutputBuffers.set(source, remainder);
-
-    for (const line of completeLines) {
-      this.handleSteamCmdOutputLine(line, source);
-    }
-  }
-
-  private handleSteamCmdOutputLine(line: string, source: string): void {
-    const bare = stripSteamCmdBareLine(line);
-    const parsed = parseSteamCmdProgressLine(bare);
-    const isProgressTick = parsed.percent !== null;
-
-    if (isProgressTick) {
-      const now = Date.now();
-      const previousPercent = this.progressPercent;
-      if (parsed.percent !== null) {
-        this.progressPercent = parsed.percent;
-      }
-      if (parsed.label !== null) {
-        this.progressLabel = parsed.label;
-      }
-      if (parsed.bytesDownloaded !== null) {
-        this.progressBytesDownloaded = parsed.bytesDownloaded;
-      }
-      if (parsed.bytesTotal !== null) {
-        this.progressBytesTotal = parsed.bytesTotal;
-      }
-      this.lastProgressLine = bare;
-      this.lastOfficialProgressAtMs = Date.now();
-
-      const percentChanged = steamCmdProgressPercentChanged(previousPercent, parsed.percent);
-      this.emitProgress(percentChanged);
-
-      if (
-        shouldLogProgressTickToConsole({
-          nowMs: now,
-          lastLogAtMs: this.lastProgressConsoleLogAtMs,
-          minLogIntervalMs: STEAMCMD_PROGRESS_CONSOLE_LOG_MIN_MS,
-          parsedPercent: parsed.percent,
-          lastLoggedPercent: this.lastProgressConsoleLoggedPercent,
-          minPercentDelta: STEAMCMD_PROGRESS_CONSOLE_LOG_MIN_DELTA,
-        })
-      ) {
-        this.lastProgressConsoleLogAtMs = now;
-        this.lastProgressConsoleLoggedPercent = parsed.percent;
-        this.steamCmdConsoleLines = appendSteamCmdConsoleRing(
-          this.steamCmdConsoleLines,
-          formatTimestampedSteamCmdLine(new Date().toISOString(), `[${source}] ${bare}`),
-          STEAMCMD_CONSOLE_MAX_LINES,
-        );
-        this.steamCmdConsoleUpdatedAt = new Date().toISOString();
-        this.emitProgress(true);
-      }
-      return;
-    }
-
-    this.appendSteamCmdConsole(`[${source}] ${line}`, { forceProgressPush: true });
-  }
-
-  private ingestProgressFromLine(line: string): boolean {
-    const bare = stripSteamCmdProgressIngestPrefix(line);
-    const parsed = parseSteamCmdProgressLine(bare);
-    let percentChanged = false;
-    if (parsed.percent !== null) {
-      percentChanged = steamCmdProgressPercentChanged(this.progressPercent, parsed.percent);
-      this.progressPercent = parsed.percent;
-    }
-    if (parsed.label !== null) {
-      this.progressLabel = parsed.label;
-    }
-    if (parsed.bytesDownloaded !== null) {
-      this.progressBytesDownloaded = parsed.bytesDownloaded;
-    }
-    if (parsed.bytesTotal !== null) {
-      this.progressBytesTotal = parsed.bytesTotal;
-    }
-    if (parsed.percent !== null || parsed.bytesDownloaded !== null) {
-      this.lastOfficialProgressAtMs = Date.now();
-    }
-    return percentChanged;
-  }
-
-  private freezePausedProgressSnapshot(): void {
-    if (
-      this.progressPercent === null
-      && this.progressBytesDownloaded === null
-      && this.progressBytesTotal === null
-    ) {
-      return;
-    }
-    this.pausedProgressSnapshot = {
-      percent: this.progressPercent,
-      label: this.progressLabel,
-      bytesDownloaded: this.progressBytesDownloaded,
-      bytesTotal: this.progressBytesTotal,
-    };
+    this.progressRuntime.captureOutput(chunk, source);
   }
 
   private clearPausedProgressSnapshot(): void {
-    this.pausedProgressSnapshot = null;
+    this.progressRuntime.clearPausedProgressSnapshot();
   }
 
   private setPausedProgress(): void {
-    this.freezePausedProgressSnapshot();
-    this.setProgress(null, "Paused", "Paused");
+    this.progressRuntime.setPausedProgress();
   }
 
   private setProgress(percent: number | null, label: string | null, line?: string): void {
-    this.progressPercent = percent;
-    if (label !== null) {
-      this.progressLabel = label;
-    }
-    if (percent === 0 || percent === null) {
-      this.progressBytesDownloaded = null;
-      this.progressBytesTotal = null;
-    }
-    if (line !== undefined) {
-      this.lastProgressLine = line;
-    }
-    this.emitProgress(true);
+    this.progressRuntime.setProgress(percent, label, line);
   }
 
   private beginFileSync(serverId: string, label: string): void {
-    this.syncingServerId = serverId;
-    this.syncingStartedAt = new Date().toISOString();
-    // New phase after SteamCMD: robocopy has no %/bytes — indeterminate bar + label.
-    this.progressBytesDownloaded = null;
-    this.progressBytesTotal = null;
-    this.progressPercent = null;
-    this.progressLabel = label;
-    this.lastProgressLine = label;
-    this.emitProgress(true);
+    this.progressRuntime.beginFileSync(serverId, label);
   }
 
   private endFileSync(): void {
-    this.syncingServerId = null;
-    this.syncingStartedAt = null;
-    this.activeSyncChild = null;
-    this.emitProgress(true);
+    this.progressRuntime.endFileSync();
   }
 
   private emitProgress(force: boolean): void {
-    const now = Date.now();
-    if (!force && now - this.lastProgressPushAtMs < PROGRESS_PUSH_MIN_MS) {
-      return;
-    }
-    this.lastProgressPushAtMs = now;
-    this.emit("progress", {
-      status: this.getSteamCmdStatus(),
-      console: this.getSteamCmdConsole(160),
-    });
+    this.progressRuntime.emitProgress(force);
   }
 
   private beginSteamCmdProcess(
@@ -1642,152 +965,23 @@ export class UpdateService extends EventEmitter {
     operation: "install-steamcmd" | "install-files" | "update" | "verify-files",
     serverId: string | null,
   ): void {
-    if (this.activeSteamCmd !== null) {
-      throw new Error("A SteamCMD operation is already in progress");
-    }
-    this.clearPausedProgressSnapshot();
-    this.steamCmdOutputBuffers.clear();
-    this.lastProgressConsoleLogAtMs = 0;
-    this.lastProgressConsoleLoggedPercent = null;
-    const progressStart = planSteamCmdProcessProgressStart(operation);
-    this.setProgress(progressStart.percent, progressStart.label, progressStart.line);
-    this.activeSteamCmd = {
-      child,
-      operation,
-      serverId,
-      startedAt: new Date().toISOString(),
-    };
-    this.emitProgress(true);
+    this.progressRuntime.beginSteamCmdProcess(child, operation, serverId);
   }
 
   private endSteamCmdProcess(child: ChildProcess): void {
-    if (this.activeSteamCmd?.child === child) {
-      // Flush remaining buffer (\r without newline).
-      for (const [source, remainder] of this.steamCmdOutputBuffers) {
-        const trimmed = remainder.trim();
-        if (trimmed.length > 0) {
-          this.handleSteamCmdOutputLine(trimmed, source);
-        }
-      }
-      this.steamCmdOutputBuffers.clear();
-      this.activeSteamCmd = null;
-      this.emitProgress(true);
-    }
+    this.progressRuntime.endSteamCmdProcess(child);
   }
 
   private async killProcessTree(child: ChildProcess): Promise<void> {
     await killChildProcessTreeAsync(child);
   }
 
-  private loadQueue(): CriticalJob[] {
-    const raw = this.settings.get(CRITICAL_JOBS_KEY);
-    if (raw === null || raw.trim().length === 0) {
-      return [];
-    }
-
-    try {
-      const parsed = JSON.parse(raw) as Array<Partial<CriticalJob>>;
-      if (!Array.isArray(parsed)) {
-        throw new Error("Critical job queue is not an array");
-      }
-      const jobs: CriticalJob[] = [];
-      let invalidEntryFound = false;
-      for (const job of parsed) {
-        if (!isValidPersistedUpdateQueueEntry(job)) {
-          invalidEntryFound = true;
-          continue;
-        }
-        const type = job.type;
-        const phase = typeof job.phase === "string" ? job.phase : "queued";
-        const wasInterrupted = job.status === "running";
-        const context = sanitizeUpdateJobContext(job.context);
-
-        // A persisted post-side-effect checkpoint is durable evidence that
-        // SteamCMD completed. If the requested runtime state is already present,
-        // the queue row itself is stale and can be reconciled as completed.
-        if (
-          shouldOmitInterruptedUpdateJobOnLoad({
-            wasInterrupted,
-            phase,
-            wasRunning: context.wasRunning,
-            serverIsActive: this.processes.isActive(job.serverId),
-          })
-        ) {
-          continue;
-        }
-
-        const interruptedIsAmbiguous = isUpdateJobInterruptedAmbiguous(type, phase);
-        const migrated = migrateCriticalJob<CriticalJob>(job, {
-          type,
-          serverId: job.serverId,
-          defaultPhase: "queued",
-          interruptedIsAmbiguous,
-          serverExists: this.servers.get(job.serverId) !== null,
-        });
-        migrated.context = context;
-        const interruptedRecovery = planInterruptedUpdateJobRecovery({
-          wasInterrupted,
-          phase,
-          interruptedIsAmbiguous,
-          serverExists: this.servers.get(job.serverId) !== null,
-        });
-        if (interruptedRecovery !== null) {
-          migrated.status = interruptedRecovery.status;
-          migrated.operatorRetryAllowed = interruptedRecovery.operatorRetryAllowed;
-          migrated.recoveryReason = interruptedRecovery.recoveryReason;
-          if (interruptedRecovery.restartInterrupted === true) {
-            migrated.context = { ...migrated.context, restartInterrupted: true };
-          }
-        }
-        const duplicateIndex = jobs.findIndex(
-          (candidate) => candidate.idempotencyKey === migrated.idempotencyKey,
-        );
-        if (duplicateIndex >= 0) {
-          const merged = mergeUpdateCriticalJobs(jobs[duplicateIndex]!, migrated);
-          const duplicateRecovery = planDuplicateRecoveredUpdateJob(
-            this.servers.get(job.serverId) !== null,
-          );
-          if (duplicateRecovery !== null) {
-            merged.status = duplicateRecovery.status;
-            merged.operatorRetryAllowed = duplicateRecovery.operatorRetryAllowed;
-            merged.recoveryReason = duplicateRecovery.recoveryReason;
-          }
-          jobs[duplicateIndex] = merged;
-          invalidEntryFound = true;
-          continue;
-        }
-        jobs.push(migrated);
-      }
-      if (invalidEntryFound) {
-        this.settings.set(`${CRITICAL_JOBS_KEY}.quarantine.${Date.now()}`, raw);
-      }
-      this.settings.set(CRITICAL_JOBS_KEY, JSON.stringify(jobs));
-      return jobs;
-    } catch {
-      this.settings.set(`${CRITICAL_JOBS_KEY}.quarantine.${Date.now()}`, raw);
-      this.settings.set(CRITICAL_JOBS_KEY, "[]");
-      return [];
-    }
-  }
-
-  private persistQueue(): void {
-    this.settings.set(CRITICAL_JOBS_KEY, JSON.stringify(this.queue));
-  }
-
-  private removeJob(jobId: string): void {
-    this.queue = this.queue.filter((job) => job.id !== jobId);
-  }
-
   private checkpointJob(job: CriticalJob | undefined, phase: string): void {
-    if (job === undefined) return;
-    job.phase = phase;
-    job.updatedAt = new Date().toISOString();
-    this.persistQueue();
-    this.emitProgress(true);
+    this.queueRuntime.checkpoint(job, phase);
   }
 
   private queueHeldForOperator(): boolean {
-    return isUpdateQueueHeldForOperator(this.queue);
+    return this.queueRuntime.isHeldForOperator();
   }
 
   private async finishRecoveredFileJob(job: CriticalJob): Promise<void> {
@@ -1884,19 +1078,4 @@ export class UpdateService extends EventEmitter {
     );
   }
 
-  private resolveJob(jobId: string): void {
-    const waiter = this.waiters.get(jobId);
-    if (waiter !== undefined) {
-      waiter.resolve();
-      this.waiters.delete(jobId);
-    }
-  }
-
-  private rejectJob(jobId: string, error: Error): void {
-    const waiter = this.waiters.get(jobId);
-    if (waiter !== undefined) {
-      waiter.reject(error);
-      this.waiters.delete(jobId);
-    }
-  }
 }

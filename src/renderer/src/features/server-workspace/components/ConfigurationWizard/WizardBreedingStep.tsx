@@ -5,7 +5,7 @@ import {
   SINGLE_PLAYER_RATE_FACTORS,
   type BreedingPresetId,
   type ConfigurationWizardDraft,
-} from "../../configurationWizardModel";
+} from "../../configuration-wizard/configurationWizardModel";
 import {
   effectiveRateLabel,
   PresetSelector,

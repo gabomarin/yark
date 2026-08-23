@@ -13,8 +13,8 @@ Reduce change coupling by extracting cohesive modules **without** changing exter
 | File | Lines | Baseline? | Primary tests |
 | --- | ---: | --- | --- |
 | `src/backend/domains/backups/backup-service.ts` | ~1,544 | Backend grandfathered | `tests/unit/backup-service.test.ts`, `backup-archive.test.ts`, … |
-| `src/backend/domains/updates/update-service.ts` | ~1,902 | Backend grandfathered | `update-service-safe-update.test.ts`, critical-job integration |
-| `src/backend/domains/instances/instance-service.ts` | ~1,317 | Backend grandfathered | `instance-*.test.ts` |
+| `src/backend/domains/updates/update-service.ts` | ~1,081 | Backend grandfathered | `update-service-safe-update.test.ts`, critical-job integration |
+| `src/backend/domains/instances/instance-service.ts` | ~1,094 | Backend grandfathered | `instance-*.test.ts` |
 | `src/backend/domains/instances/move-install-service.ts` | ~1,203 | Backend grandfathered | move-install unit/E2E |
 | `src/backend/domains/instances/server-installation.ts` | ~1,157 | Backend grandfathered | `server-installation.test.ts` |
 | `src/backend/infra/process/process-manager.ts` | ~1,069 | Backend grandfathered | `process-manager-*.test.ts`, real-start |
@@ -71,6 +71,8 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `update-queue.ts` | Pure queue flow: next-job selection, handler routing, pause/cancel/failure disposition, persisted-row validation (+ unit tests). Queue I/O and `processQueue` orchestration still on `UpdateService`. |
 | `steamcmd-operator.ts` | Pure SteamCMD operator copy/progress: cache/sync labels, invoke console lines, status derivation, disk-progress preference (+ unit tests). Spawn/install/verify orchestration still on `UpdateService`. |
 | `update-perform.ts` / `steamcmd-run.ts` | Install/update/verify safety orchestration and SteamCMD cache/run orchestration; `UpdateService` keeps thin queue-facing facades and shared runtime state. |
+| `update-queue-runtime.ts` | Durable queue load/persist/recovery, waiters, operator actions, and processing orchestration; `UpdateService` keeps compatibility facades. |
+| `steamcmd-progress-runtime.ts` | SteamCMD console buffers, live/paused progress, disk estimates, and active process/sync runtime state. |
 
 **Phase 3 exit:** `update-service.ts` is a coordinator; SteamCMD + queue decisions live in siblings above. Further shrinks are optional orchestration moves only.
 
@@ -81,12 +83,13 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `instance-lifecycle.ts` | Pure stop progress copy, backup labels, fleet id compare, bounded `mapPool` (+ unit tests). Start/stop orchestration still on `InstanceService`. |
 | `instance-profile.ts` | Pure session port validation/apply, fleet inspect key and scan gate (+ unit tests). CRUD/clone/import orchestration still on `InstanceService`. |
 | `instance-crash.ts` | Pure unexpected-exit event/notify planning (+ unit tests). `recordUnexpectedProcessExit` orchestration still on `InstanceService`. |
+| `instance-stop.ts` | Stop job coalescing, restart critical-job tracking, quit fan-out, graceful stop/backup orchestration, and progress emission; `InstanceService` keeps lifecycle facades. |
 | `process-spawn.ts` | Pure ASA launch log/console flags and Windows verbatim spawn (+ unit tests). `ProcessManager.start` orchestration still on `ProcessManager`. |
 | `process-readiness.ts` | Pure ready-log detection, RCON probe delay, runtime log ring (+ unit tests). |
 | `process-ready-wait.ts` | Readiness wait orchestration (RCON poll / settle / timeout / reattach); `ProcessManager.waitUntilReady` is a thin facade. |
 | `process-stop.ts` | Pure unexpected-exit classification and last-error copy (+ unit tests). Graceful stop/kill orchestration still on `ProcessManager`. |
 
-**Phase 4 exit:** `instance-service.ts` and `process-manager.ts` are coordinators; lifecycle/profile/crash and spawn/readiness/stop decisions live in siblings above. Optional: `instance-rcon.ts` trim, further orchestration moves.
+**Phase 4 exit:** `instance-service.ts` and `process-manager.ts` are coordinators; lifecycle/profile/crash/stop and spawn/readiness/stop decisions live in siblings above. Optional: clean `ProcessManager.start` or leave/detach orchestration moves.
 
 ### Phase 5 progress
 
@@ -172,29 +175,29 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 
 ## Backend: `update-service.ts`
 
-**Already extracted:** `robocopy-tree.ts`, `steamcmd-content-cache.ts`, `steamcmd-disk-progress.ts`, `update-critical-jobs.ts`, `steamcmd-path.ts`, `steamcmd-console.ts`, `update-server-jobs.ts`, `update-queue.ts`, `steamcmd-operator.ts`, `update-perform.ts`, `steamcmd-run.ts`.
+**Already extracted:** `robocopy-tree.ts`, `steamcmd-content-cache.ts`, `steamcmd-disk-progress.ts`, `update-critical-jobs.ts`, `steamcmd-path.ts`, `steamcmd-console.ts`, `update-server-jobs.ts`, `update-queue.ts`, `update-queue-runtime.ts`, `steamcmd-operator.ts`, `steamcmd-progress-runtime.ts`, `update-perform.ts`, `steamcmd-run.ts`.
 
 **Still inside coordinator (by design):**
 
 | Concern | Notes |
 | --- | --- |
-| Queue I/O + `processQueue` | Uses pure helpers from `update-queue.ts` / `update-critical-jobs.ts` |
+| Queue I/O + `processQueue` | Runtime orchestration lives in `update-queue-runtime.ts`; pure decisions remain in `update-queue.ts` / `update-critical-jobs.ts` |
 | File job execution | Thin facades delegate install/update/verify safety orchestration to `update-perform.ts` |
 | SteamCMD spawn/install/verify | `steamcmd-run.ts` owns cache/update/sync execution and calls back into shared progress/cancellation state |
-| Disk progress monitor | Thin wrapper; logic in `steamcmd-disk-progress.ts` |
+| SteamCMD console/progress state | Runtime state and disk-monitor orchestration live in `steamcmd-progress-runtime.ts`; disk decisions remain in `steamcmd-disk-progress.ts` |
 
 ---
 
 ## Backend: `instance-service.ts`
 
-**Already extracted:** `move-install-service.ts`, `import-existing-install.ts`, `clone-install-copy.ts`, `clone-ini-seed.ts`, `instance-clone.ts`, `instance-rcon.ts`, `launch-args.ts`, `ban-list.ts`, `server-installation.ts`, `validation.ts`, `sync-profile-ini.ts`, `auto-start.ts`, `instance-lifecycle.ts`, `instance-profile.ts`, `instance-crash.ts`, …
+**Already extracted:** `move-install-service.ts`, `import-existing-install.ts`, `clone-install-copy.ts`, `clone-ini-seed.ts`, `instance-clone.ts`, `instance-rcon.ts`, `instance-stop.ts`, `launch-args.ts`, `ban-list.ts`, `server-installation.ts`, `validation.ts`, `sync-profile-ini.ts`, `auto-start.ts`, `instance-lifecycle.ts`, `instance-profile.ts`, `instance-crash.ts`, …
 
 **Still inside coordinator (by design):**
 
 | Concern | Notes |
 | --- | --- |
 | CRUD + import orchestration | Uses pure helpers from `instance-profile.ts` where applicable; clone orchestration lives in `instance-clone.ts` |
-| Start/restart/stop/kill lifecycle | Uses pure helpers from `instance-lifecycle.ts`; orchestration on `InstanceService` |
+| Start/restart/stop/kill lifecycle | Stop pipeline and in-flight job ownership live in `instance-stop.ts`; `InstanceService` keeps restart/start/kill and public facades |
 | RCON + players + bans | Session, E2E mock, auto-connect, player, and ban orchestration live in `instance-rcon.ts`; `InstanceService` keeps facades |
 | Installation probe / health | Uses `instance-profile.ts` fleet inspect helpers + `server-installation.ts` |
 

@@ -26,8 +26,8 @@ import {
   serverFormToInput,
   toServerFormState,
   type ServerFormState,
-} from "./serverFormModel";
-import { listEnabledMapMods } from "./ServerFormMapField";
+} from "../serverFormModel";
+import { listEnabledMapMods } from "../ServerFormMapField";
 
 export interface UseServerFormOptions {
   initial: ServerProfile | null;

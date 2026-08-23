@@ -4,7 +4,7 @@ import { Button, Group, Modal, Stack, Stepper, Text } from "@mantine/core";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { ServerProfile, SteamCmdStatus } from "@shared/types";
 import type { UiDensity } from "@features/settings/settingsModel";
-import type { DesktopShellPreferencesController } from "@features/settings/useDesktopShellPreferences";
+import type { DesktopShellPreferencesController } from "@features/settings/hooks/useDesktopShellPreferences";
 import {
   getClusterDirFormError,
   getClusterIdFormError,

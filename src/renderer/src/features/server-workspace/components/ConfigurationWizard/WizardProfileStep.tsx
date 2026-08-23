@@ -4,7 +4,7 @@ import type { ClusterIniTemplate } from "@shared/types";
 import {
   EXPERIENCE_PROFILES,
   type ExperienceProfileId,
-} from "../../configurationWizardModel";
+} from "../../configuration-wizard/configurationWizardModel";
 import { ProfileCard, WizardStep } from "./ConfigurationWizardParts";
 import classes from "./ConfigurationWizard.module.css";
 

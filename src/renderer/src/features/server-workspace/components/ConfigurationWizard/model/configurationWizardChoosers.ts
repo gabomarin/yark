@@ -10,8 +10,8 @@ import {
   type ExperienceProfileId,
   type ProgressionPresetId,
   type WorldPresetId,
-} from "../../configurationWizardModel";
-import type { DifficultyChoice } from "./WizardDifficultyControl";
+} from "../../../configuration-wizard/configurationWizardModel";
+import type { DifficultyChoice } from "../WizardDifficultyControl";
 
 export const EMPTY_WIZARD_DRAFT: ConfigurationWizardDraft = {
   profile: "current",

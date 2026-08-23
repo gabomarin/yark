@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { Button, Group, NumberInput, SegmentedControl, Stack, Text, Tooltip } from "@mantine/core";
-import { formatWizardNumber, type ConfigurationWizardDraft } from "../../configurationWizardModel";
+import { formatWizardNumber, type ConfigurationWizardDraft } from "../../configuration-wizard/configurationWizardModel";
 import { OfficialMatchBadge } from "./ConfigurationWizardParts";
 import classes from "./ConfigurationWizard.module.css";
 

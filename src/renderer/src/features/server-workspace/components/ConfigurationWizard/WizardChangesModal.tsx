@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { Alert, Modal, Stack, Text } from "@mantine/core";
-import type { wizardChanges } from "../../configurationWizardModel";
+import type { wizardChanges } from "../../configuration-wizard/configurationWizardModel";
 import { ChangeRow } from "./ConfigurationWizardParts";
 
 interface Props {
