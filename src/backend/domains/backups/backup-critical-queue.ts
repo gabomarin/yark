@@ -1,52 +1,38 @@
 import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
-import type { BackupKind, BackupRecord, BackupType, ServerProfile } from "@shared/types";
+import type { BackupKind, BackupRecord } from "@shared/types";
 import type { CriticalJobSummary } from "../../../shared/types";
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
 import type { BackupRepository } from "../../infra/db/backup-repository";
 import type { ServerRepository } from "../../infra/db/server-repository";
-import type { ProcessManager } from "../../infra/process/process-manager";
 import { isTransientCriticalJobError, makeIdempotencyKey, migrateCriticalJob, toCriticalJobSummary } from "../../orchestration/critical-job-recovery";
 import { isOperationCancelledError, OperationCancelledError } from "../updates/robocopy-tree";
-import { isReadableZipArchive, zipHasBackupLayout } from "./backup-archive";
+import {
+  CRITICAL_BACKUP_KINDS,
+  type BackupCriticalJobExecutor,
+  type BackupCriticalJobProgressHandlers,
+} from "./backup-critical-job-executor";
 import {
   isBackupJobInterruptedAmbiguous, isKnownBackupJobPhase, isKnownBackupJobStatus,
   mergeBackupCriticalJobs, planBackupCriticalJobRetry, restoreJobLoadDisposition,
   sanitizeBackupJobContext, shouldDropTerminalPreUpdateOnLoad,
   type BackupCriticalJob, type BackupCriticalJobType,
 } from "./backup-critical-jobs";
-import { isRestoreHistoryOwnedByJob as restoreHistoryOwnedByJob } from "./backup-restore";
 
 const BACKUP_CRITICAL_JOBS_KEY = "backupCriticalJobsQueue.v1";
 const BACKUP_JOB_RETRY_DELAY_MS = 5000;
-export const CRITICAL_BACKUP_KINDS: readonly BackupKind[] = ["world", "ini"];
-export interface BackupCriticalJobProgressHandlers {
-  onKindProgress?: (kind: BackupKind, index: number, total: number) => void;
-  onProgressMessage?: (message: string) => void;
-}
+export { CRITICAL_BACKUP_KINDS } from "./backup-critical-job-executor";
+export type { BackupCriticalJobProgressHandlers } from "./backup-critical-job-executor";
 
-interface BackupCriticalQueueDependencies {
-  servers: ServerRepository;
-  backups: BackupRepository;
-  processes: ProcessManager;
-  settings: AppSettingsRepository;
-  createBackups: (
-    serverId: string,
-    type: BackupType,
-    notes: string | null,
-    kinds: BackupKind[],
-    options?: CriticalBackupCreateOptions,
-  ) => Promise<BackupRecord[]>;
-  reconcileDiskBackups: (serverId: string) => Promise<number>;
-  mustServer: (serverId: string) => ServerProfile;
-  applyRestore: (server: ServerProfile, backup: BackupRecord) => Promise<void>;
-  emitChanged: (serverId: string) => void;
+export interface BackupCriticalQueueDependencies {
+  servers: Pick<ServerRepository, "addEvent" | "get">;
+  backups: Pick<
+    BackupRepository,
+    "completeRestoreHistory" | "getBackup" | "getRestoreHistory"
+  >;
+  settings: Pick<AppSettingsRepository, "get" | "set">;
+  executor: BackupCriticalJobExecutor;
   scheduleProcess: () => void;
-}
-
-interface CriticalBackupCreateOptions {
-  respectCancel?: boolean;
-  onProgressMessage?: (message: string) => void;
 }
 interface JobWaiter {
   resolve: (value: unknown) => void;
@@ -319,13 +305,21 @@ export class BackupCriticalQueue {
 
         try {
           let result: unknown;
+          const executionControl = {
+            checkpoint: (phase: string) => this.checkpointJob(job, phase),
+            progress: this.jobProgressHandlers.get(job.id),
+            throwIfCancelled: () => this.throwIfCancelled(),
+          };
           if (job.type === "pre-update-backup") {
-            result = await this.resumePreUpdateBackupJob(job);
+            result = await this.deps.executor.resumePreUpdateBackupJob(
+              job,
+              executionControl,
+            );
           } else {
             if (job.backupId === null || job.backupId.trim().length === 0) {
               throw new Error("backupId required for restore job");
             }
-            await this.resumeRestoreJob(job);
+            await this.deps.executor.resumeRestoreJob(job, executionControl);
             result = undefined;
           }
 
@@ -590,185 +584,6 @@ export class BackupCriticalQueue {
     job.recoveryReason = plan.recoveryReason;
     job.updatedAt = plan.updatedAt;
     this.persistQueue();
-  }
-
-  private async resumePreUpdateBackupJob(job: BackupCriticalJob): Promise<BackupRecord[]> {
-    const progress = this.jobProgressHandlers.get(job.id);
-    this.throwIfCancelled();
-    progress?.onProgressMessage?.(
-      "Creating pre-update backups (world, INI) before SteamCMD…",
-    );
-    this.checkpointJob(job, "reconciling-backups");
-    await this.deps.reconcileDiskBackups(job.serverId);
-    this.throwIfCancelled();
-    const marker = `[critical-job:${job.id}]`;
-    const candidates = this.deps.backups
-      .listBackups(job.serverId, 10_000)
-      .filter(
-        (backup) =>
-          backup.type === "pre_update"
-          && backup.status === "completed"
-          && existsSync(backup.path)
-          && backup.notes?.includes(marker) === true,
-      );
-    const existing: BackupRecord[] = [];
-    for (const backup of candidates) {
-      try {
-        const readable = await isReadableZipArchive(backup.path);
-        if (readable && (await zipHasBackupLayout(backup.path))) {
-          existing.push(backup);
-        }
-      } catch {
-        // Unreadable or corrupt archive — do not count as completion evidence.
-      }
-    }
-    const completedByKind = new Map<BackupKind, BackupRecord>();
-    for (const backup of existing) {
-      if (!completedByKind.has(backup.kind)) {
-        completedByKind.set(backup.kind, backup);
-      }
-    }
-
-    let nextKindIndex = 0;
-    const total = CRITICAL_BACKUP_KINDS.length;
-    while (nextKindIndex < CRITICAL_BACKUP_KINDS.length) {
-      this.throwIfCancelled();
-      const kind = CRITICAL_BACKUP_KINDS[nextKindIndex]!;
-      if (!completedByKind.has(kind)) {
-        this.checkpointJob(job, `creating-backup:${kind}`);
-        progress?.onKindProgress?.(kind, nextKindIndex, total);
-        const created = await this.deps.createBackups(
-          job.serverId,
-          "pre_update",
-          `Pre-update backup ${marker}`,
-          [kind],
-          {
-            respectCancel: true,
-            onProgressMessage: progress?.onProgressMessage,
-          },
-        );
-        const completed = created.find(
-          (backup) =>
-            backup.serverId === job.serverId
-            && backup.type === "pre_update"
-            && backup.kind === kind
-            && backup.status === "completed"
-            && existsSync(backup.path)
-            && backup.notes?.includes(marker) === true,
-        );
-        if (completed === undefined) {
-          throw new Error(
-            `Pre-update backup did not produce durable ${kind} evidence (server: ${job.serverId}, job: ${job.id})`,
-          );
-        }
-        completedByKind.set(kind, completed);
-      }
-      nextKindIndex += 1;
-      job.context.completedBackupIds = CRITICAL_BACKUP_KINDS
-        .map((completedKind) => completedByKind.get(completedKind)?.id)
-        .filter((backupId): backupId is string => backupId !== undefined);
-      job.context.nextKindIndex = nextKindIndex;
-      this.checkpointJob(job, `backup-complete:${kind}`);
-    }
-
-    progress?.onProgressMessage?.("Pre-update backups completed.");
-    return CRITICAL_BACKUP_KINDS.map((kind) => completedByKind.get(kind)!);
-  }
-
-  private async resumeRestoreJob(job: BackupCriticalJob): Promise<void> {
-    const server = this.deps.mustServer(job.serverId);
-    if (this.deps.processes.isActive(job.serverId)) {
-      throw new Error("Stop the server before restoring a backup");
-    }
-    if (job.backupId === null) throw new Error("backupId required for restore job");
-    const backup = this.deps.backups.getBackup(job.backupId);
-    if (
-      backup === null
-      || backup.serverId !== job.serverId
-      || backup.status !== "completed"
-    ) {
-      throw new Error("Invalid backup for restore");
-    }
-
-    const marker = `[critical-job:${job.id}]`;
-    let restoreHistoryId = job.context.restoreHistoryId;
-    const existingHistory =
-      typeof restoreHistoryId === "number"
-        ? this.deps.backups.getRestoreHistory(restoreHistoryId)
-        : null;
-    if (existingHistory?.status === "completed") {
-      if (!restoreHistoryOwnedByJob(job.id, job.serverId, backup.id, existingHistory)) {
-        throw new Error("Restore history evidence does not belong to this recovery job");
-      }
-      this.checkpointJob(job, "restore-complete");
-      return;
-    }
-    if (
-      existingHistory !== null
-      && !restoreHistoryOwnedByJob(job.id, job.serverId, backup.id, existingHistory)
-    ) {
-      throw new Error("Restore history evidence does not belong to this recovery job");
-    }
-    if (existingHistory === null || existingHistory.status === "failed") {
-      restoreHistoryId = this.deps.backups.insertRestoreHistory({
-        serverId: job.serverId,
-        backupId: backup.id,
-        status: "started",
-        notes: marker,
-      });
-      job.context.restoreHistoryId = restoreHistoryId;
-      this.checkpointJob(job, "restore-history-started");
-    }
-
-    this.throwIfCancelled();
-    this.checkpointJob(job, "creating-restore-safeguard");
-    if (restoreHistoryId === undefined) {
-      throw new Error("Restore history checkpoint was not created");
-    }
-    const progress = this.jobProgressHandlers.get(job.id);
-    progress?.onProgressMessage?.(
-      `Creating pre-restore safeguard (${backup.kind}) before applying the archive…`,
-    );
-    const safeguards = this.deps.backups
-      .listBackups(job.serverId, 10_000)
-      .filter(
-        (candidate) =>
-          candidate.type === "pre_restore"
-          && candidate.kind === backup.kind
-          && candidate.status === "completed"
-          && candidate.notes?.includes(marker) === true,
-      );
-    if (safeguards.length === 0) {
-      progress?.onKindProgress?.(backup.kind, 0, 1);
-      const created = await this.deps.createBackups(
-        job.serverId,
-        "pre_restore",
-        `Safeguard before restore ${marker}`,
-        [backup.kind],
-        {
-          respectCancel: true,
-          onProgressMessage: progress?.onProgressMessage,
-        },
-      );
-      job.context.safeguardBackupIds = created.map((candidate) => candidate.id);
-    } else {
-      job.context.safeguardBackupIds = safeguards.map((candidate) => candidate.id);
-    }
-    this.throwIfCancelled();
-    this.checkpointJob(job, "restore-safeguard-complete");
-
-    this.checkpointJob(job, "applying-restore");
-    progress?.onProgressMessage?.(`Applying ${backup.kind} restore…`);
-    await this.deps.applyRestore(server, backup);
-    this.deps.backups.completeRestoreHistory(restoreHistoryId, "completed", marker);
-    this.checkpointJob(job, "restore-complete");
-    this.deps.servers.addEvent(
-      job.serverId,
-      "backup_restored",
-      "info",
-      `Restore applied on "${server.name}" from ${backup.kind} backup ${backup.id}`,
-    );
-    this.deps.emitChanged(job.serverId);
   }
 
   private resolveJob(jobId: string, value: unknown): void {

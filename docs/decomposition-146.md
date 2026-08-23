@@ -54,7 +54,8 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `backup-restore.ts` | Pure restore planning: folder name preference, map-token resolve, world file filter, players layout assert, restore-history ownership (+ unit tests). Apply/orchestration still on `BackupService`. |
 | `backup-portability.ts` | Pure import/export naming + disk-import guess helpers (+ unit tests). `parseBackupManifest` lives in `backup-archive.ts`. Export/import orchestration still on `BackupService`. |
 | `backup-critical-jobs.ts` | Pure critical-job types, phase/status checks, context sanitize, merge, load disposition, and retry plan (+ unit tests). |
-| `backup-critical-queue.ts` | Durable queue I/O/recovery, waiters, cancellation/retry processing, and pre-update/restore resume orchestration; `BackupService` keeps thin facades. |
+| `backup-critical-queue.ts` | Durable queue I/O/recovery, waiters, and cancellation/retry state machine; `BackupService` keeps thin facades. |
+| `backup-critical-job-executor.ts` | Pre-update and restore resume execution behind the queue's narrow, directly testable executor seam. |
 | `backup-package.ts` | World, player-profile, and INI package staging plus shared safe copy/list helpers. |
 | `backup-reconcile.ts` | Serialized disk/DB reconciliation, interrupted-create recovery, missing-row pruning, and archive import. |
 | `backup-restore-apply.ts` | ZIP/folder restore application for world, player-profile, and INI backups. |
@@ -158,9 +159,9 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | --- | --- | --- |
 | Policy + fleet summary | CRUD policy, disk alerts, fleet health rows | `backup-fleet.ts` |
 | Cleanup preview/run | Retention rules, orphan import, delete marks | `backup-cleanup.ts` |
-| Restore + rollback | Apply orchestration is in `backup-restore-apply.ts`; critical-job resume is in `backup-critical-queue.ts`; pure planning helpers remain in `backup-restore.ts` | optional further restore API extraction |
+| Restore + rollback | Apply orchestration is in `backup-restore-apply.ts`; critical-job resume is in `backup-critical-job-executor.ts`; pure planning helpers remain in `backup-restore.ts` | optional further restore API extraction |
 | Import/export portability | Disk archive discovery/import is in `backup-reconcile.ts`; explicit export/import APIs remain on service with pure naming helpers in `backup-portability.ts` | later: explicit portability orchestration if needed |
-| Critical jobs | Queue I/O, recovery, cancellation, `processQueue`, and resume orchestration are in `backup-critical-queue.ts`; pure helpers remain in `backup-critical-jobs.ts` | extracted in #427 Track A slice 1 |
+| Critical jobs | Queue I/O/recovery/cancellation and `processQueue` are in `backup-critical-queue.ts`; resume execution is in `backup-critical-job-executor.ts`; pure helpers remain in `backup-critical-jobs.ts` | extracted in #427 Track A slice 1 |
 | Zip pipeline / staging | Package staging is in `backup-package.ts`; archive create and retention remain on service; manifest parsing lives in `backup-archive.ts` | optional archive orchestration move |
 
 **Public surface to keep stable:** IPC handlers in main; exported `computeBackupServerHealth`, `CRITICAL_BACKUP_KINDS`, `BackupService` method signatures.

@@ -67,6 +67,7 @@ import {
   CRITICAL_BACKUP_KINDS,
   type BackupCriticalJobProgressHandlers,
 } from "./backup-critical-queue";
+import { DefaultBackupCriticalJobExecutor } from "./backup-critical-job-executor";
 import {
   planBackupCleanup,
   summarizeCleanupPlan,
@@ -203,17 +204,22 @@ export class BackupService extends EventEmitter {
       creatingBackupIds: this.creatingBackupIds,
       emitChanged: (serverId) => this.emitChanged(serverId),
     });
-    this.criticalQueue = new BackupCriticalQueue({
+    const criticalJobExecutor = new DefaultBackupCriticalJobExecutor({
       servers: this.servers,
       backups: this.backups,
       processes: this.processes,
-      settings: this.settings,
       createBackups: (serverId, type, notes, kinds, options) =>
         this.createBackups(serverId, type, notes, kinds, options),
       reconcileDiskBackups: (serverId) => this.reconcileDiskBackups(serverId),
       mustServer: (serverId) => this.mustServer(serverId),
       applyRestore: (server, backup) => this.applyRestore(server, backup),
       emitChanged: (serverId) => this.emitChanged(serverId),
+    });
+    this.criticalQueue = new BackupCriticalQueue({
+      servers: this.servers,
+      backups: this.backups,
+      settings: this.settings,
+      executor: criticalJobExecutor,
       scheduleProcess: () => {
         void this.processQueue();
       },
