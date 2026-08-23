@@ -15,9 +15,9 @@ import {
   type ReactNode,
   type SetStateAction,
 } from "react";
-import { runBackupExport, runBackupImport } from "./backupPortability";
-import { formatBackupDetails } from "./formatBackupDetails";
-import { kindLabel, type DraftPolicy } from "./serverBackupPanelModel";
+import { runBackupExport, runBackupImport } from "../backupPortability";
+import { formatBackupDetails } from "../formatBackupDetails";
+import { kindLabel, type DraftPolicy } from "../model/serverBackupPanelModel";
 
 export type BackupBusyOp = "create" | "import" | "export" | "other";
 

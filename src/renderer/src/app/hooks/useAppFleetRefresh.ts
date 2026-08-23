@@ -26,7 +26,7 @@ import {
   upsertRuntimeStatus,
 } from "@renderer/shared/reconcilePollSnapshots";
 import { collectAttentionIssues } from "@features/overview/components/AttentionIssuesPopover/AttentionIssuesPopover";
-import type { Overlay } from "@app/appOverlay";
+import type { Overlay } from "@app/model/appOverlay";
 import type { Route } from "@layout/Sidebar/Sidebar";
 
 export type FleetRefreshSnapshot = {

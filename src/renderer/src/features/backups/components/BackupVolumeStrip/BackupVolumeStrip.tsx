@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { Group, Stack, Text, Title } from "@mantine/core";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import type { BackupDiskAlertSettings, BackupFleetSummary } from "@shared/types";
-import { formatBackupBytes } from "../../backupsPageModel";
+import { formatBackupBytes } from "../../model/backupsPageModel";
 import classes from "../../BackupsPage.module.css";
 
 interface Props {

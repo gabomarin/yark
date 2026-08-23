@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveWorkspaceFilesJobState } from "@renderer/app/workspaceFilesJobState";
+import { resolveWorkspaceFilesJobState } from "@renderer/app/model/workspaceFilesJobState";
 import type { ServerFilesQueueState } from "@features/downloads/downloadsModel";
 import type { SteamCmdStatus } from "@shared/types";
 

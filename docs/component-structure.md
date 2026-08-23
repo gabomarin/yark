@@ -48,14 +48,39 @@ Split when **any** of these is true:
 src/renderer/src/features/<area>/
   <Area>Page.tsx                 # page: compose organisms, own top-level state
   <Area>Page.test.tsx            # page-level behavior tests
-  <area>Model.ts                 # pure helpers + derived view data (no React)
   <area>.module.css              # feature styles (shared by local components)
-  components/
-    <Name>/                      # prefer a folder when the piece has its own CSS (or tests)
+  components/                    # organisms / molecules
+    <Name>/
       <Name>.tsx
       <Name>.module.css          # optional — omit if styles stay in the feature CSS
     <TinyOnce.tsx>               # flat file OK for tiny one-offs with no CSS module
+  hooks/                         # React hooks owned by this feature
+    useSomething.ts
+  model/                         # pure helpers / view-models (no React)
+    somethingModel.ts
+  actions/                       # optional — confirm/IPC helpers used by hooks
+    somethingActions.ts
 ```
+
+App shell (`src/renderer/src/app/`):
+
+```text
+src/renderer/src/app/
+  hooks/                         # useApp* shell hooks
+  model/                         # pure shell helpers (overlay types, SteamCMD card maps, …)
+  App*.tsx / overlays            # routers, providers, layout (may stay flat until a second wave)
+```
+
+**Rules of thumb**
+
+- Prefer **feature-local** `hooks/` / `model/` — do **not** create a global `src/hooks/` dump.
+- Organism-only hooks may stay beside the component until a second consumer appears
+  (e.g. `components/ServerForm/useServerForm.ts`).
+- Prefer `model/` over a vague `utils/` for feature view logic. Tiny cross-cutting
+  helpers belong under `shared/`.
+- Avoid a `types/` folder for a single interface — colocate with the owning model/hook.
+- Precedent: `features/servers/hooks/`, `features/backups/{hooks,model,actions}/`,
+  `features/logs/{hooks,model,actions}/`, `app/hooks/`, `app/model/`.
 
 - Prefer **domain names**: `ClusterDetailPanel`, not `RightColumn`.
 - One primary export per file matching the file name.
@@ -66,8 +91,7 @@ src/renderer/src/features/<area>/
   a model/unit test or a small organism mount (`SidePanel`, `WorkspaceHeader`)
   for lock flags and derived disabled state — do not remount `*Page` for that.
   Heavy UI suites: `setupUser()` from `@renderer/test/setupUser` (`delay: null`);
-  use `findBy*` for appearance; keep `waitFor` only when the node may already be
-  gone or the result is async. See [#281](https://github.com/gabomarin/yark/issues/281).
+  use `findBy*` for appearance; keep `waitFor` only when the result is async. See [#281](https://github.com/gabomarin/yark/issues/281).
   Full `RendererApi` stubs: `createRendererApiMock()` from
   `@renderer/test/createRendererApiMock` (#354) — one factory grows when IPC
   methods are added. Prefer it when a suite already types a complete
@@ -99,16 +123,19 @@ detail panels inline when those can be named organisms.
 
 When asked to “simplify” or when hitting the split checklist:
 
-1. Extract **pure helpers** → `<area>Model.ts`.
-2. Extract **repeated row/badge** → molecule under `components/`.
-3. Extract **each major card/panel** → organism.
-4. Leave the page as orchestration + a short JSX tree.
-5. Keep selectors (`data-*`) stable for visual/e2e scripts. If the UI change
+1. Extract **pure helpers** → `model/<area>Model.ts` (or a sibling under `model/`).
+2. Extract **feature hooks** → `hooks/useSomething.ts`.
+3. Extract **confirm/IPC action helpers** → `actions/` when the hook would otherwise bloat.
+4. Extract **repeated row/badge** → molecule under `components/`.
+5. Extract **each major card/panel** → organism.
+6. Leave the page as orchestration + a short JSX tree.
+7. Keep selectors (`data-*`) stable for visual/e2e scripts. If the UI change
    would break Playwright clicks, update `scripts/e2e-*.cjs` in the same PR
    ([e2e-validation.md](e2e-validation.md#ui-changes-and-e2e)).
-6. Run the feature’s unit tests + `npm run typecheck`.
+8. Run the feature’s unit tests + `npm run typecheck`.
 
-Reference implementation: `src/renderer/src/features/clusters/`.
+Reference implementation: `src/renderer/src/features/clusters/` (organisms);
+folder convention examples: `features/backups/`, `features/logs/`, `app/hooks/`.
 
 ## Anti-patterns
 

@@ -57,7 +57,8 @@ Domain runbooks: [docs/backups.md](docs/backups.md), [docs/updates-steamcmd.md](
 [docs/website.md](docs/website.md), [docs/config-transfer.md](docs/config-transfer.md),
 [docs/github-actions.md](docs/github-actions.md),
 [docs/curseforge-proxy.md](docs/curseforge-proxy.md). UI composition for agents:
-[docs/component-structure.md](docs/component-structure.md),
+[docs/component-structure.md](docs/component-structure.md)
+(feature `hooks/` / `model/` / optional `actions/`; app shell `hooks/` + `model/`),
 [docs/design-system.md](docs/design-system.md), [docs/datatable.md](docs/datatable.md).
 Visual/e2e helpers: [docs/visual-testing.md](docs/visual-testing.md).
 When changing operator-facing UI, update and run the affected Playwright

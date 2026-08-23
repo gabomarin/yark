@@ -11,9 +11,9 @@ import type {
   SteamCmdConsoleSnapshot,
   SteamCmdStatus,
 } from "@shared/types";
-import type { CopyConfigSession, Overlay } from "@app/appOverlay";
+import type { CopyConfigSession, Overlay } from "@app/model/appOverlay";
 import type { AppShellChromeProps } from "@app/appShellChrome";
-import type { SteamCmdCardJobRef } from "@app/steamCmdShellModel";
+import type { SteamCmdCardJobRef } from "@app/model/steamCmdShellModel";
 import { AppRouter } from "@app/AppRouter";
 import { ClustersPage } from "@features/clusters/ClustersPage";
 import { DownloadsPage } from "@features/downloads/DownloadsPage";

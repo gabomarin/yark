@@ -7,9 +7,9 @@ import type {
   ServerStopProgress,
   SteamCmdStatus,
 } from "@shared/types";
-import type { CopyConfigSession, Overlay } from "@app/appOverlay";
+import type { CopyConfigSession, Overlay } from "@app/model/appOverlay";
 import { AppShellWithChrome, type AppShellChromeProps } from "@app/appShellChrome";
-import { resolveWorkspaceFilesJobState } from "@app/workspaceFilesJobState";
+import { resolveWorkspaceFilesJobState } from "@app/model/workspaceFilesJobState";
 import type { ServerFilesQueueState } from "@features/downloads/downloadsModel";
 import {
   ServerWorkspacePage,

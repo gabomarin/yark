@@ -14,7 +14,7 @@ import { BackupCleanupModal } from "./components/BackupCleanupModal/BackupCleanu
 import { BackupDiskAlertModal } from "./components/BackupDiskAlertModal/BackupDiskAlertModal";
 import { BackupVolumeStrip } from "./components/BackupVolumeStrip/BackupVolumeStrip";
 import { BackupsPageServerSection } from "./components/BackupsPageServerSection/BackupsPageServerSection";
-import { useBackupsPageFleet } from "./useBackupsPageFleet";
+import { useBackupsPageFleet } from "./hooks/useBackupsPageFleet";
 import classes from "./BackupsPage.module.css";
 
 interface Props {

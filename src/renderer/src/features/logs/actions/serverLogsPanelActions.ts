@@ -10,7 +10,7 @@ import {
   type ReactNode,
   type SetStateAction,
 } from "react";
-import { formatUpdateJobLabel, replaceRuntimeLogs } from "./serverLogsFormat";
+import { formatUpdateJobLabel, replaceRuntimeLogs } from "../model/serverLogsFormat";
 
 interface ServerLogsPanelActionOptions {
   serverId: string;

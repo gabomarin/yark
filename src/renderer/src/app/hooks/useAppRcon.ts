@@ -5,7 +5,7 @@ import type { PlayerListState } from "@features/server-workspace/components/Rcon
 import type { OnlinePlayerInfo, PlayerListUpdatedPush } from "@shared/ipc";
 import type { InstallationServersMode } from "@shared/types";
 import { upsertPlayerListState } from "@renderer/shared/reconcilePollSnapshots";
-import type { FleetRefreshSnapshot } from "@app/useAppFleetRefresh";
+import type { FleetRefreshSnapshot } from "@app/hooks/useAppFleetRefresh";
 
 export function useAppRcon(options: {
   refresh: (refreshOptions?: {
