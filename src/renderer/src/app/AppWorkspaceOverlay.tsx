@@ -1,58 +1,26 @@
 import type { Dispatch, ReactElement, SetStateAction } from "react";
+import type { Overlay } from "@app/model/appOverlay";
 import type {
-  AppEvent,
-  ServerInstallationInfo,
-  ServerProfile,
-  ServerRuntimeInfo,
-  ServerStopProgress,
-  SteamCmdStatus,
-} from "@shared/types";
-import type { CopyConfigSession, Overlay } from "@app/model/appOverlay";
+  AppFleetSlice,
+  AppLifecycleSlice,
+  AppRconSlice,
+  AppSteamCmdSlice,
+} from "@app/model/appMainRouterSlices";
 import { AppShellWithChrome, type AppShellChromeProps } from "@app/appShellChrome";
 import { resolveWorkspaceFilesJobState } from "@app/model/workspaceFilesJobState";
-import type { ServerFilesQueueState } from "@features/downloads/downloadsModel";
-import {
-  ServerWorkspacePage,
-  type RconHistoryEntry,
-} from "@features/server-workspace/ServerWorkspacePage";
-import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
+import { ServerWorkspacePage } from "@features/server-workspace/ServerWorkspacePage";
+
 type WorkspaceOverlay = Extract<Overlay, { kind: "workspace" }>;
 
 export interface AppWorkspaceOverlayProps {
   shell: AppShellChromeProps;
   overlay: WorkspaceOverlay;
   setOverlay: Dispatch<SetStateAction<Overlay>>;
-  servers: ServerProfile[];
-  statuses: Map<string, ServerRuntimeInfo>;
-  installationInfo: Map<string, ServerInstallationInfo>;
-  events: AppEvent[];
-  rconHistoryByServer: Map<string, RconHistoryEntry[]>;
-  playerListsByServer: Map<string, PlayerListState>;
-  filesQueueByServerId: Map<string, ServerFilesQueueState>;
-  steamCmdStatus: SteamCmdStatus | null;
-  steamCmdBusy: boolean;
-  stopProgressByServerId: Map<string, ServerStopProgress>;
-  startBusyByServerId: Set<string>;
+  fleet: AppFleetSlice;
+  lifecycle: AppLifecycleSlice;
+  rcon: AppRconSlice;
+  steamCmd: AppSteamCmdSlice;
   registerOverlayLeaveGuard: (guard: ((action: () => void) => void) | null) => void;
-  startServer: (id: string) => void;
-  runAction: (action: () => Promise<{ ok: boolean; error?: string }>) => Promise<boolean>;
-  restartServer: (id: string) => void;
-  confirmKillServer: (id: string) => void;
-  setServerEnabled: (id: string, enabled: boolean) => void;
-  startSteamFilesJob: (serverId: string, kind: "install" | "update" | "verify") => void;
-  sendRconCommand: (serverId: string, command: string) => Promise<boolean>;
-  clearRconHistory: (serverId: string) => void;
-  onRconTabFocusChanged: (serverId: string, isFocused: boolean) => Promise<void>;
-  onRefreshPlayers: (serverId: string) => Promise<void>;
-  onKickPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
-  onBanPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
-  refresh: (options?: {
-    includeInstallation?: boolean;
-    includeServerList?: boolean;
-    forceOfficialCheck?: boolean;
-    serversMode?: import("@shared/types").InstallationServersMode;
-  }) => Promise<unknown>;
-  setCopyConfig: Dispatch<SetStateAction<CopyConfigSession | null>>;
 }
 
 export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactElement {
@@ -60,33 +28,30 @@ export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactEleme
     shell,
     overlay,
     setOverlay,
-    servers,
-    statuses,
-    installationInfo,
-    events,
+    fleet,
+    lifecycle,
+    rcon,
+    steamCmd,
+    registerOverlayLeaveGuard,
+  } = props;
+  const { servers, statuses, installationInfo, events, refresh } = fleet;
+  const { stopProgressByServerId, startBusyByServerId, actions } = lifecycle;
+  const {
     rconHistoryByServer,
     playerListsByServer,
-    filesQueueByServerId,
-    steamCmdStatus,
-    steamCmdBusy,
-    stopProgressByServerId,
-    startBusyByServerId,
-    registerOverlayLeaveGuard,
-    startServer,
-    runAction,
-    restartServer,
-    confirmKillServer,
-    setServerEnabled,
-    startSteamFilesJob,
     sendRconCommand,
     clearRconHistory,
     onRconTabFocusChanged,
     onRefreshPlayers,
     onKickPlayer,
     onBanPlayer,
-    refresh,
-    setCopyConfig,
-  } = props;
+  } = rcon;
+  const {
+    filesQueueByServerId,
+    steamCmdStatus,
+    steamCmdBusy,
+    startSteamFilesJob,
+  } = steamCmd;
 
   const filesJob = resolveWorkspaceFilesJobState(
     overlay.serverId,
@@ -140,12 +105,12 @@ export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactEleme
         }
         onRegisterLeaveGuard={registerOverlayLeaveGuard}
         onBack={() => setOverlay(null)}
-        onStartServer={(id) => void startServer(id)}
-        onStopServer={(id) => void runAction(() => window.api.stopServer(id))}
-        onRestartServer={(id) => void restartServer(id)}
-        onKillServer={(id) => confirmKillServer(id)}
-        onToggleServerEnabled={(id, enabled) => void setServerEnabled(id, enabled)}
-        onOpenFolder={(id) => void runAction(() => window.api.openServerFolder(id))}
+        onStartServer={(id) => void actions.startServer(id)}
+        onStopServer={(id) => void actions.runAction(() => window.api.stopServer(id))}
+        onRestartServer={(id) => void actions.restartServer(id)}
+        onKillServer={(id) => actions.confirmKillServer(id)}
+        onToggleServerEnabled={(id, enabled) => void actions.setServerEnabled(id, enabled)}
+        onOpenFolder={(id) => void actions.runAction(() => window.api.openServerFolder(id))}
         onInstallFiles={(id) => startSteamFilesJob(id, "install")}
         onUpdateNow={(id) => startSteamFilesJob(id, "update")}
         onVerifyFiles={(id) => startSteamFilesJob(id, "verify")}
@@ -156,7 +121,7 @@ export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactEleme
         onKickPlayer={onKickPlayer}
         onBanPlayer={onBanPlayer}
         onServerUpdated={() => void refresh()}
-        onCopyConfiguration={(id) => setCopyConfig({ sourceServerId: id })}
+        onCopyConfiguration={(id) => actions.setCopyConfig({ sourceServerId: id })}
       />
     </AppShellWithChrome>
   );

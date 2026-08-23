@@ -122,7 +122,8 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `AppFormOverlays.tsx` | Create / edit `ServerForm` overlays |
 | `AppRouterPages.tsx` | Sidebar routes via `AppRouter` (overview, downloads, clusters, logs, backups, settings) |
 | `workspaceFilesJobState.ts` | Pure files-job props for workspace overlay (+ unit tests) |
-| `AppMainRouter.tsx` (~267 lines) | Thin overlay switch; props still passed from `App.tsx` |
+| `AppMainRouter.tsx` | Thin overlay switch; domain slices from `App.tsx` (#433 Phase A) |
+| `appMainRouterSlices.ts` | Fleet / lifecycle / RCON / SteamCMD / navigation / overview / settings / chrome inputs |
 
 **Phase 5b exit:** `AppMainRouter` is a small switch; each overlay organism owns its branch.
 
@@ -138,7 +139,7 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `ConfigurationEditor.tsx` (575 lines) | Coordinator: text mode, header toolbar, load/save still in parent |
 | `App.tsx` (~716 lines) | Wired to fleet, RCON, onboarding, SteamCMD action, server lifecycle, and server update hooks |
 
-**Phase 5c optional exit:** `useAppOnboarding`, `useAppSteamCmdActions`, `useAppServerLifecycle`, and `useAppServerUpdates` now own the remaining large shell workflows. `App.tsx` is a thin composition coordinator; grouped router props/context remain optional.
+**Phase 5c optional exit:** `useAppOnboarding`, `useAppSteamCmdActions`, `useAppServerLifecycle`, and `useAppServerUpdates` now own the remaining large shell workflows. `App.tsx` is a thin composition coordinator. Grouped `AppMainRouter` domain slices landed in #433 Phase A (`appMainRouterSlices.ts`); app-shell Context remains deferred (#434).
 
 **Phase 5 exit:** Grandfathered feature pages are organisms + thin coordinators.
 
