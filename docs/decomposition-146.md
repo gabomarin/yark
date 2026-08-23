@@ -248,9 +248,18 @@ Not in the feature size gate. Entry is thin; coupling lives in `AppShell`.
 | Settings / setup wizard orchestration | `app/hooks/useAppOnboarding.ts` + SetupWizard |
 | Router prop slices | `app/model/appMainRouterSlices.ts` + `AppMainRouter` |
 
-**Characterization:** `App.test.tsx` covers empty fleet, setup wizard, Start busy guard, SteamCMD UX (still renders `<App />`).
+**Characterization:** `App.test.tsx` covers empty fleet, setup wizard, Start busy guard, SteamCMD UX (still renders `<App />` → `<AppShell />`). Add `AppShell.test.tsx` when Phase C changes shell orchestration.
 
----
+### App shell conventions (#433)
+
+| Topic | Guidance |
+| --- | --- |
+| **`AppShell.tsx` size** | Expected after Phase B (~700 lines): hooks + slice builders + sibling modals. Phase C moves Overview/Settings-only state down when ownership is clear. If it keeps growing, split into `AppShellOrchestration.ts` (hooks + slices), `AppShellChrome.tsx` (Spotlight, SetupWizard, modals), thin `AppShell.tsx` compositor — not required for #433 B. |
+| **Router slices** | `AppShell` builds `AppMainRouter` slices inline in JSX. Fine today (no `React.memo` on router children). If memoization is added downstream, wrap each slice in `useMemo` with stable deps. |
+| **Lifecycle callbacks** | Patterns like `startServer: (id) => void startServer(id)` predate slices; they create new closures each render. Pass hook callbacks directly when signatures match, or stabilize with `useCallback` in the shell if memoization depends on referential equality. |
+| **Tests** | Move-only phases: `App.test.tsx` is enough. Direct `AppShell` tests when shell behavior changes in Phase C+. |
+
+**Phase C (#433):** selective page-local state (e.g. `updateAllOutdated*`, settings focus flags). Do not move fleet poll / `installScan` without a dedicated owner. See [#433](https://github.com/gabomarin/yark/issues/433).
 
 ## Renderer: grandfathered feature pages
 
@@ -262,7 +271,7 @@ Suggested order (compiler + React Doctor friendly):
 2. `BackupsPage` — fleet metrics vs per-server policy table
 3. `ConfigurationWizard` — per-step panels (model already split partially)
 4. `ServerBackupPanel` — kind settings vs history table
-5. `App.tsx` shell
+5. `AppShell` — page-local Overview/Settings state (#433 Phase C)
 
 ---
 

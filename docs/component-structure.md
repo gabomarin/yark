@@ -68,8 +68,11 @@ App shell (`src/renderer/src/app/`):
 src/renderer/src/app/
   hooks/                         # useApp* shell hooks
   model/                         # pure shell helpers (overlay types, SteamCMD card maps, …)
-  App*.tsx / overlays            # routers, providers, layout (may stay flat until a second wave)
+  AppShell.tsx                   # orchestration + sibling modals + router slices (#433)
+  App*.tsx / overlays            # routers, providers, layout
 ```
+
+Shell slice/memo conventions: [decomposition-146.md § App shell conventions](decomposition-146.md#app-shell-conventions-433).
 
 **Rules of thumb**
 
