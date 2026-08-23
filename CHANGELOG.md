@@ -46,6 +46,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - **Phase 6 (#146):** four renderer files dropped from the grandfathered baseline (`ServerModsPanel`, `iniModel`, `ServerWorkspacePage`, `ClusterIniTemplateModal`); INI editor header/text/preview split lowers `ConfigurationEditor` coordinator size ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **Backups overview** fleet load/save moved to `useBackupsPageFleet`; **INI editor** state to `useConfigurationEditor` — both pages removed from the grandfathered baseline ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **Server logs** state, focus routing, runtime polling, and IPC actions moved out of the panel coordinator, removing it from the grandfathered baseline ([#146](https://github.com/gabomarin/yark/issues/146)).
+- **Per-server backups** state, polling, autosave, and IPC actions moved out of the panel coordinator, emptying the grandfathered renderer baseline ([#146](https://github.com/gabomarin/yark/issues/146)).
 
 - Async busy/spinner cleanup across the renderer uses shared **`runWithFinally`** so React Compiler can optimize those surfaces when enabled; verbose build skips drop from ~74 to ~55 CompileError (#404).
 

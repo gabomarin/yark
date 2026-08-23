@@ -2,7 +2,5 @@
   "maxTsxLines": 350,
   "maxTsLines": 450,
   "growthSlack": 25,
-  "files": {
-    "src/renderer/src/features/backups/ServerBackupPanel.tsx": 860
-  }
+  "files": {}
 }
