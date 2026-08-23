@@ -18,10 +18,19 @@ export function createGenerationGate(): {
   };
 }
 
-/** Poll refreshes use a generation; user actions pass `null` and always commit. */
-export function isRefreshGenerationCurrent(
-  generation: number | null,
+/**
+ * Shared refresh state only accepts the latest generation. User actions still
+ * receive their completed snapshot so a background poll cannot cancel the UI
+ * result, but a stale action never writes over newer shared state.
+ */
+export function decideRefreshGeneration(
+  generation: number,
   gate: { isCurrent: (generation: number) => boolean },
-): boolean {
-  return generation === null || gate.isCurrent(generation);
+  isAction: boolean,
+): { commit: boolean; returnSnapshot: boolean } {
+  const commit = gate.isCurrent(generation);
+  return {
+    commit,
+    returnSnapshot: commit || isAction,
+  };
 }

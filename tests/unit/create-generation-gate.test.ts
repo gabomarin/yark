@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createGenerationGate,
-  isRefreshGenerationCurrent,
+  decideRefreshGeneration,
 } from "../../src/shared/createGenerationGate";
 
 describe("createGenerationGate", () => {
@@ -16,18 +16,32 @@ describe("createGenerationGate", () => {
   });
 });
 
-describe("isRefreshGenerationCurrent", () => {
-  it("always commits action refreshes that skip the poll generation gate", () => {
+describe("decideRefreshGeneration", () => {
+  it("returns a stale action snapshot without committing it", () => {
     const gate = createGenerationGate();
+    const action = gate.begin();
     gate.begin();
-    expect(isRefreshGenerationCurrent(null, gate)).toBe(true);
+    expect(decideRefreshGeneration(action, gate, true)).toEqual({
+      commit: false,
+      returnSnapshot: true,
+    });
   });
 
-  it("commits only the latest poll generation", () => {
+  it("commits and returns only the latest poll generation", () => {
     const gate = createGenerationGate();
     const first = gate.begin();
-    expect(isRefreshGenerationCurrent(first, gate)).toBe(true);
-    gate.begin();
-    expect(isRefreshGenerationCurrent(first, gate)).toBe(false);
+    expect(decideRefreshGeneration(first, gate, false)).toEqual({
+      commit: true,
+      returnSnapshot: true,
+    });
+    const second = gate.begin();
+    expect(decideRefreshGeneration(first, gate, false)).toEqual({
+      commit: false,
+      returnSnapshot: false,
+    });
+    expect(decideRefreshGeneration(second, gate, false)).toEqual({
+      commit: true,
+      returnSnapshot: true,
+    });
   });
 });

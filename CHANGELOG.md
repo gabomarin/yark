@@ -44,7 +44,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
-- **Check server updates** and **Update all outdated** no longer fail when a background overview poll overlaps the forced Steam install scan; user-initiated refreshes skip the poll generation gate and always return their IPC snapshot ([#146](https://github.com/gabomarin/yark/issues/146)).
+- **Check server updates** and **Update all outdated** no longer fail when a background overview poll overlaps the forced Steam install scan; user actions keep their IPC result while stale refreshes remain blocked from shared state ([#146](https://github.com/gabomarin/yark/issues/146)).
 
 ## [0.15.0] - 2026-08-22
 

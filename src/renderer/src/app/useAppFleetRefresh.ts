@@ -13,7 +13,7 @@ import type {
   SteamCmdConsoleSnapshot,
   SteamCmdStatus,
 } from "@shared/types";
-import { createGenerationGate, isRefreshGenerationCurrent } from "@shared/createGenerationGate";
+import { createGenerationGate, decideRefreshGeneration } from "@shared/createGenerationGate";
 import { getServerUpdateState } from "@shared/server-update-status";
 import { reconcileServerList } from "@renderer/shared/reconcileServerList";
 import {
@@ -108,7 +108,7 @@ export function useAppFleetRefresh(options: {
     const forceOfficialCheck = refreshOptions?.forceOfficialCheck === true;
     const serversMode = refreshOptions?.serversMode ?? true;
     const isAction = forceOfficialCheck;
-    const generation = isAction ? null : refreshGenerationGateRef.current.begin();
+    const generation = refreshGenerationGateRef.current.begin();
     const [
       serversRes,
       statusesRes,
@@ -130,11 +130,12 @@ export function useAppFleetRefresh(options: {
       window.api.checkCluster(),
       window.api.recentEvents(100),
     ]);
-    const commit = isRefreshGenerationCurrent(
+    const decision = decideRefreshGeneration(
       generation,
       refreshGenerationGateRef.current,
+      isAction,
     );
-    if (commit) {
+    if (decision.commit) {
       if (serversRes !== null && serversRes.ok) {
         setServers((previous) =>
           reconcileServerList(previous, serversRes.data),
@@ -186,7 +187,7 @@ export function useAppFleetRefresh(options: {
       }
     }
 
-    if (!commit && !isAction) {
+    if (!decision.returnSnapshot) {
       return {
         servers: null,
         statuses: null,
