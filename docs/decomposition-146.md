@@ -1,7 +1,7 @@
 # Decomposition map (#146)
 
 **Issue:** [#146](https://github.com/gabomarin/yark/issues/146) — Decompose oversized backend services and renderer pages  
-**Status:** Complete for ticket scope — renderer feature baselines empty; optional backend line gate live with three grandfathered coordinators; `App.tsx` shrunk via shell hooks  
+**Status:** Complete for ticket scope — renderer feature baselines empty; optional backend line gate live with three grandfathered coordinators; `App.tsx` shrunk via shell hooks
 **Policy:** `scripts/component-structure-baseline.json`, `scripts/backend-structure-baseline.json`, [component-structure.md](component-structure.md)
 
 ## Goal
@@ -17,7 +17,7 @@ Reduce change coupling by extracting cohesive modules **without** changing exter
 | `src/backend/domains/instances/move-install-service.ts` | ~1,203 | Backend grandfathered | move-install unit/E2E |
 | `src/renderer/src/App.tsx` | ~715 | Outside `features/` gate | `App.test.tsx` |
 
-Cleared from baseline (≤800): `update-service.ts` (~732), `server-installation.ts` (~505).
+Cleared from baseline (≤800): `update-service.ts` (~732), `server-installation.ts` (~505), `process-manager.ts` (~740).
 
 Renderer **feature** files previously listed here are under the standard TSX/TS caps (Phase 6). Further backend shrinks remove rows from `backend-structure-baseline.json`.
 

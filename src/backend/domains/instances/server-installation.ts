@@ -30,6 +30,7 @@ export {
   readOfficialArkBuildCached,
   readOfficialArkVersionCached,
 } from "./official-ark-probe";
+export type { OfficialArkVersionProbe } from "./official-ark-probe";
 
 export { classifyInstallHealthAsync } from "./install-health";
 

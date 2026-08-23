@@ -8,6 +8,7 @@ import {
   inspectServerInstallation,
   inspectServerInstallationAsync,
   parseOfficialServerStatus,
+  type OfficialArkVersionProbe,
 } from "@backend/domains/instances/server-installation";
 
 describe("inspectServerInstallation", () => {
@@ -412,11 +413,10 @@ describe("inspectServerInstallation", () => {
 
 describe("parseOfficialServerStatus", () => {
   it("reads the published version from the official Wildcard status", () => {
-    expect(
-      parseOfficialServerStatus(
-        'ARK Official Server Network Status: <RichColor Color="0, 1, 0, 1">Online (v92.21)</>',
-      ),
-    ).toEqual({ version: "92.21", networkStatus: "online" });
+    const probe: OfficialArkVersionProbe = parseOfficialServerStatus(
+      'ARK Official Server Network Status: <RichColor Color="0, 1, 0, 1">Online (v92.21)</>',
+    );
+    expect(probe).toEqual({ version: "92.21", networkStatus: "online" });
   });
 
   it("detects Deploying and Offline statuses", () => {
