@@ -8,21 +8,21 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const { _electron: electron } = require("playwright");
 const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
-const { pickPathField } = require("./e2e-launch.cjs");
-
-delete process.env.ELECTRON_RUN_AS_NODE;
+const {
+  createE2eFixtureRoots,
+  launchElectronApp,
+  pickPathField,
+  quitElectronApp,
+  removeFixtureDir,
+  waitForOverview,
+} = require("./e2e-launch.cjs");
 
 const viewports = [
   { name: "hd", width: 1280, height: 720 },
   { name: "full-hd", width: 1920, height: 1080 },
   { name: "qhd-2k", width: 2560, height: 1440 },
 ];
-
-function uid() {
-  return `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-}
 
 async function waitOverviewReady(page) {
   await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 10000 });
@@ -157,7 +157,11 @@ async function runExperiencedFlow(page, serverName) {
 async function deleteServerIfPresent(page, serverName) {
   await goToOverview(page);
 
+  // Empty Overview has no search toolbar — nothing to clean up.
   const search = page.getByRole("textbox", { name: "Search servers" });
+  if ((await search.count()) === 0) {
+    return;
+  }
   await search.fill(serverName);
 
   const card = page.locator("[data-server-card]", {
@@ -179,7 +183,10 @@ async function deleteServerIfPresent(page, serverName) {
     await card.waitFor({ state: "detached", timeout: 15000 });
   }
 
-  await search.fill("");
+  // Deleting the last server removes the search toolbar.
+  if ((await search.count()) > 0 && (await search.isVisible().catch(() => false))) {
+    await search.fill("");
+  }
 }
 
 async function run() {
@@ -189,9 +196,10 @@ async function run() {
   const outDir = path.join(os.tmpdir(), "ark-gbo-e2e-personas");
   fs.mkdirSync(outDir, { recursive: true });
 
-  const runId = uid();
+  const fixtures = createE2eFixtureRoots("personas");
+  const runId = fixtures.runId;
   const beginnerServerName = `Beginner-${runId}`;
-  const beginnerBaseDir = `C:\\ark_servers_e2e\\${runId}`;
+  const beginnerBaseDir = fixtures.serversDir;
   const beginnerPorts = {
     game: 23000 + Math.floor(Math.random() * 1000),
     query: 24000 + Math.floor(Math.random() * 1000),
@@ -199,29 +207,39 @@ async function run() {
   };
 
   console.log(`E2E_BEGINNER_PORTS=${JSON.stringify(beginnerPorts)}`);
+  console.log(`E2E_PROFILE=${fixtures.profileDir}`);
 
-  const app = await electron.launch({ args: ["."], cwd: projectRoot });
   const errors = [];
   const artifacts = [];
   let cloneName = null;
+  let app = null;
+  const observedPages = new WeakSet();
 
-  try {
-    const page = await app.firstWindow();
+  const observePage = (candidate) => {
+    if (observedPages.has(candidate)) return;
+    observedPages.add(candidate);
 
-    page.on("console", (message) => {
+    candidate.on("console", (message) => {
       if (message.type() === "error") {
         errors.push(`console: ${message.text()}`);
       }
     });
-    page.on("pageerror", (error) => {
+    candidate.on("pageerror", (error) => {
       errors.push(`pageerror: ${error.message}`);
     });
-    page.on("dialog", async (dialog) => {
+    candidate.on("dialog", async (dialog) => {
       await dialog.accept();
     });
+  };
 
-    await page.waitForLoadState("domcontentloaded");
-    await goToOverview(page);
+  try {
+    app = await launchElectronApp({ profileDir: fixtures.profileDir });
+    app.on("window", observePage);
+    for (const existingPage of app.windows()) {
+      observePage(existingPage);
+    }
+    const page = await waitForOverview(app);
+    observePage(page);
 
     // Prior cleanup in case a previous run left leftovers.
     await deleteServerIfPresent(page, beginnerServerName);
@@ -261,7 +279,16 @@ async function run() {
       console.log(`E2E_CLONED_SERVER=${cloneName}`);
     }
   } finally {
-    await app.close();
+    try {
+      if (app !== null) {
+        await quitElectronApp(app);
+      }
+    } finally {
+      await Promise.all([
+        removeFixtureDir(fixtures.profileDir),
+        removeFixtureDir(fixtures.serversDir),
+      ]);
+    }
   }
 }
 
