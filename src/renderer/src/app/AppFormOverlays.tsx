@@ -1,8 +1,7 @@
 import type { Dispatch, ReactElement, SetStateAction } from "react";
-import type { ServerProfile } from "@shared/types";
 import type { Overlay } from "@app/model/appOverlay";
+import type { AppFleetSlice, AppSettingsSlice } from "@app/model/appMainRouterSlices";
 import { AppShellWithChrome, type AppShellChromeProps } from "@app/appShellChrome";
-import type { KnownClusterOption } from "@features/clusters/knownClusterOptions";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import type { Route } from "@layout/Sidebar/Sidebar";
 
@@ -13,18 +12,11 @@ export interface AppFormOverlaysProps {
   overlay: FormOverlay;
   setOverlay: Dispatch<SetStateAction<Overlay>>;
   navigate: (next: Route) => void;
-  servers: ServerProfile[];
-  defaultBaseFolder: string | null;
-  extraClusterOptions: KnownClusterOption[] | undefined;
+  fleet: AppFleetSlice;
+  settings: AppSettingsSlice;
   registerOverlayLeaveGuard: (guard: ((action: () => void) => void) | null) => void;
   runWithOverlayLeaveGuard: (action: () => void) => void;
   consumePendingSetupCluster: () => void;
-  refresh: (options?: {
-    includeInstallation?: boolean;
-    includeServerList?: boolean;
-    forceOfficialCheck?: boolean;
-    serversMode?: import("@shared/types").InstallationServersMode;
-  }) => Promise<unknown>;
 }
 
 export function AppFormOverlays(props: AppFormOverlaysProps): ReactElement {
@@ -33,14 +25,14 @@ export function AppFormOverlays(props: AppFormOverlaysProps): ReactElement {
     overlay,
     setOverlay,
     navigate,
-    servers,
-    defaultBaseFolder,
-    extraClusterOptions,
+    fleet,
+    settings,
     registerOverlayLeaveGuard,
     runWithOverlayLeaveGuard,
     consumePendingSetupCluster,
-    refresh,
   } = props;
+  const { servers, refresh } = fleet;
+  const { defaultBaseFolder, extraClusterOptions } = settings;
 
   if (overlay.kind === "create") {
     return (
