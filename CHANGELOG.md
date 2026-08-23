@@ -40,7 +40,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
-- **Backup critical-queue** persistence/resume orchestration moved out of `BackupService` into `backup-critical-queue.ts`; baseline lowered ([#427](https://github.com/gabomarin/yark/issues/427)).
+- **Backup critical jobs** moved out of `BackupService`: the durable queue and focused pre-update/restore executor now have direct tests; baseline lowered ([#427](https://github.com/gabomarin/yark/issues/427)).
 - Renderer **folder conventions**: App shell hooks/models and backups/logs hooks/actions/models live under dedicated folders; documented in component-structure ([#427](https://github.com/gabomarin/yark/issues/427)).
 - **App shell** onboarding, SteamCMD actions, server lifecycle, and update orchestration moved into focused hooks ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **Backup packaging, disk reconciliation, and restore application** moved into focused backend modules while preserving `BackupService` behavior ([#146](https://github.com/gabomarin/yark/issues/146)).
