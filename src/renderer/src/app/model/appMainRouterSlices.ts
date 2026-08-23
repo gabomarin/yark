@@ -26,7 +26,7 @@ import type { Route } from "@layout/Sidebar/Sidebar";
 import type { AppBusyOverlayContent } from "@ui/AppBusyOverlay/AppBusyOverlay";
 
 /** Shared fleet refresh signature used across router overlays and pages. */
-export type AppRefresh = (options?: {
+type AppRefresh = (options?: {
   includeInstallation?: boolean;
   includeServerList?: boolean;
   forceOfficialCheck?: boolean;
@@ -42,7 +42,7 @@ export interface AppFleetSlice {
   refresh: AppRefresh;
 }
 
-export interface ServerLifecycleActions {
+interface ServerLifecycleActions {
   startServer: (id: string) => void;
   restartServer: (id: string) => void;
   confirmKillServer: (id: string) => void;
