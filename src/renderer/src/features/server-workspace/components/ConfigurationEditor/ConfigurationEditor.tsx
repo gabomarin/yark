@@ -1,19 +1,13 @@
 import type { ReactElement } from "react";
 import {
   ArrowSquareOut,
-  FloppyDisk,
-  ArrowCounterClockwise,
-  ArrowUUpLeft,
 } from "@phosphor-icons/react";
 import {
   ActionIcon,
   Alert,
-  Button,
   Group,
   Stack,
   Text,
-  Textarea,
-  Title,
   Tooltip,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
@@ -26,7 +20,10 @@ import type {
 } from "@shared/types";
 import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
 import { ConfigurationEditorFilterBar } from "./ConfigurationEditorFilterBar";
+import { ConfigurationEditorHeader } from "./ConfigurationEditorHeader";
+import { ConfigurationEditorPreviewAlert } from "./ConfigurationEditorPreviewAlert";
 import { ConfigurationEditorSettingsTable } from "./ConfigurationEditorSettingsTable";
+import { ConfigurationEditorTextPanel } from "./ConfigurationEditorTextPanel";
 import { showOperatorToast } from "@ui/operatorToast";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
@@ -412,50 +409,20 @@ export function ConfigurationEditor(props: Props): ReactElement {
 
         {section === "iniFiles" && iniMode === "visual" && (
           <Stack gap="md" className={classes.editor}>
-            <Stack gap="sm">
-              <div>
-                <Group gap="xs" wrap="nowrap">
-                  <Title order={3}>
-                    INI Files
-                  </Title>
-                  {openFileAction}
-                </Group>
-                <Text c="dimmed" size="sm">
-                  Edit {fileLabel} with visual controls and direct file access.
-                </Text>
-              </div>
-              <div className={classes.headerToolbar}>
-                {iniNavigation}
-                <Group gap="xs" className={classes.headerActions} wrap="wrap">
-                  <Button
-                    size="xs"
-                    variant="default"
-                    leftSection={<ArrowUUpLeft size={16} />}
-                    onClick={resetActiveFileToDefaults}
-                    disabled={payload === null || busy || loading}
-                  >
-                    Restore file
-                  </Button>
-                  <Button
-                    size="xs"
-                    variant="default"
-                    leftSection={<ArrowCounterClockwise size={16} />}
-                    onClick={resetChanges}
-                    disabled={!dirty || busy}
-                  >
-                    Discard changes
-                  </Button>
-                  <Button
-                    size="xs"
-                    leftSection={<FloppyDisk size={16} />}
-                    onClick={() => void saveIni()}
-                    disabled={!dirty || busy || loading}
-                  >
-                    Save
-                  </Button>
-                </Group>
-              </div>
-            </Stack>
+            <ConfigurationEditorHeader
+              fileLabel={fileLabel}
+              subtitle="Edit {fileLabel} with visual controls and direct file access."
+              openFileAction={openFileAction}
+              iniNavigation={iniNavigation}
+              showRestoreFile
+              restoreFileDisabled={payload === null}
+              dirty={dirty}
+              busy={busy}
+              loading={loading}
+              onRestoreFile={resetActiveFileToDefaults}
+              onDiscard={resetChanges}
+              onSave={() => void saveIni()}
+            />
 
             <ConfigurationEditorFilterBar
               search={search}
@@ -485,86 +452,29 @@ export function ConfigurationEditor(props: Props): ReactElement {
             </Group>
 
             {preview !== null && preview.diff.length > 0 && (
-              <Alert color="blue" title="Last saved diff">
-                {preview.diff.slice(0, 8).map((entry) => (
-                  <Text key={`${entry.fileKey}.${entry.section}.${entry.key}`} size="sm">
-                    [{entry.fileKey}] {entry.section}.{entry.key}: {entry.before ?? "∅"} →{" "}
-                    {entry.after ?? "∅"}
-                  </Text>
-                ))}
-                {preview.diff.length > 8 && (
-                  <Text size="sm" c="dimmed">
-                    …and {preview.diff.length - 8} more
-                  </Text>
-                )}
-              </Alert>
+              <ConfigurationEditorPreviewAlert preview={preview} />
             )}
           </Stack>
         )}
 
         {section === "iniFiles" && iniMode === "text" && payload !== null && (
           <Stack gap="md" className={classes.editor}>
-            <Stack gap="sm">
-              <div>
-                <Group gap="xs" wrap="nowrap">
-                  <Title order={3}>INI Files</Title>
-                  {openFileAction}
-                </Group>
-                <Text c="dimmed" size="sm">
-                  Direct editing of {fileLabel}. Useful for comparing or pasting blocks between servers.
-                </Text>
-              </div>
-              <div className={classes.headerToolbar}>
-                {iniNavigation}
-                <Group gap="xs" className={classes.headerActions} wrap="wrap">
-                  <Button
-                    size="xs"
-                    variant="default"
-                    leftSection={<ArrowCounterClockwise size={16} />}
-                    onClick={resetChanges}
-                    disabled={!dirty || busy}
-                  >
-                    Discard changes
-                  </Button>
-                  <Button
-                    size="xs"
-                    leftSection={<FloppyDisk size={16} />}
-                    onClick={() => void saveIni()}
-                    disabled={!dirty || busy}
-                  >
-                    Save
-                  </Button>
-                </Group>
-              </div>
-            </Stack>
-            {iniFile === "gameUserSettings" && (
-              <Alert color="blue" variant="light" title="Server settings override">
-                Session name, ports, and passwords come from the{" "}
-                <strong>Server</strong> tab and are rewritten on start. ASA
-                ignores INI <code>MaxPlayers</code> – set{" "}
-                <strong>Max players</strong> there for{" "}
-                <code>-WinLiveMaxPlayers</code> (empty or <code>0</code> omits
-                the flag; ASA then defaults to 70).
-              </Alert>
-            )}
-            <Textarea
-              className={classes.rawEditor}
-              minRows={22}
-              value={textForFile(payload, iniFile)}
-              onChange={(event) => {
-                const nextPayload = withFileText(
-                  payload,
-                  iniFile,
-                  event.currentTarget.value,
-                );
+            <ConfigurationEditorHeader
+              fileLabel={fileLabel}
+              subtitle="Direct editing of {fileLabel}. Useful for comparing or pasting blocks between servers."
+              openFileAction={openFileAction}
+              iniNavigation={iniNavigation}
+              dirty={dirty}
+              busy={busy}
+              onDiscard={resetChanges}
+              onSave={() => void saveIni()}
+            />
+            <ConfigurationEditorTextPanel
+              iniFile={iniFile}
+              payload={payload}
+              onPayloadChange={(nextPayload) => {
                 setPayload(nextPayload);
                 publishDirty(nextPayload, baseline);
-              }}
-              styles={{
-                input: {
-                  fontFamily: "Consolas, 'Courier New', monospace",
-                  fontSize: 12,
-                },
               }}
             />
           </Stack>
