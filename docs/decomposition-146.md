@@ -1,7 +1,7 @@
 # Decomposition map (#146)
 
 **Issue:** [#146](https://github.com/gabomarin/yark/issues/146) — Decompose oversized backend services and renderer pages  
-**Status:** Phase 6 in progress — ConfigurationWizard + ServerForm and earlier slices removed from baseline; three grandfathered files remain; Phase 6 exit (all files ≤ cap) still pending  
+**Status:** Phase 6 in progress — ConfigurationWizard model + ServerForm and earlier slices removed from baseline; two grandfathered files remain; Phase 6 exit (all files ≤ cap) still pending
 **Policy:** `scripts/component-structure-baseline.json`, [component-structure.md](component-structure.md)
 
 ## Goal
@@ -139,7 +139,8 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `ConfigurationEditor.tsx` (162 lines) | `useConfigurationEditor` hook + status/open-file organisms; removed from baseline |
 | `ServerForm.tsx` | `useServerForm` hook + `ServerFormEmbedded`; removed from baseline |
 | `ConfigurationWizard.tsx` | `useConfigurationWizard` + `configurationWizardChoosers`; removed from baseline |
-| Remaining grandfathered (3) | `ServerBackupPanel`, `ServerLogsPanel`, `configurationWizardModel` |
+| `configurationWizardModel.ts` (3 lines) | Presets, INI mapping/operations, and shared types split into pure sibling modules; facade preserves existing imports; removed from baseline |
+| Remaining grandfathered (2) | `ServerBackupPanel`, `ServerLogsPanel` |
 
 **Phase 6 exit:** No entries in `component-structure-baseline.json`; optional backend line gate.
 
