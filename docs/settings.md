@@ -29,7 +29,7 @@ the Server tab / workspace.
 | About (YARK updates + app data folders) | `…/components/SettingsYarkUpdateSection.tsx`, `…/components/SettingsAppDataSection.tsx` |
 | Density / console-on-start load/migrate | `…/settingsModel.ts` |
 | First-run setup wizard | `src/renderer/src/features/setup-wizard/` (`onboarding.v1`) |
-| Tray / Windows startup hook | `…/useDesktopShellPreferences.ts` |
+| Tray / Windows startup hook | `…/hooks/useDesktopShellPreferences.ts` |
 | Desktop-shell persist | `src/main/desktop-shell-settings.ts` |
 | Window bounds / maximized | `src/main/window-state.ts` (`app_settings.windowState`) |
 | Windows login item | `src/main/windows-login-item.ts` |

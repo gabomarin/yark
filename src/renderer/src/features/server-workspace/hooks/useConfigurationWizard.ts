@@ -18,7 +18,7 @@ import {
   type ExperienceProfileId,
   type ProgressionPresetId,
   type WorldPresetId,
-} from "../../../configuration-wizard/configurationWizardModel";
+} from "../configuration-wizard/configurationWizardModel";
 import { showOperatorToast } from "@ui/operatorToast";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import {
@@ -28,9 +28,9 @@ import {
   draftForProgressionPreset,
   draftForWorldPreset,
   EMPTY_WIZARD_DRAFT,
-} from "../model/configurationWizardChoosers";
-import { type DifficultyChoice } from "../WizardDifficultyControl";
-import { STEP_COUNT } from "../wizardSteps";
+} from "../configuration-wizard/configurationWizardChoosers";
+import { type DifficultyChoice } from "../components/ConfigurationWizard/WizardDifficultyControl";
+import { STEP_COUNT } from "../components/ConfigurationWizard/wizardSteps";
 
 export interface UseConfigurationWizardOptions {
   server: ServerProfile;
