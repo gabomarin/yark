@@ -1,7 +1,7 @@
 # Decomposition map (#146)
 
 **Issue:** [#146](https://github.com/gabomarin/yark/issues/146) — Decompose oversized backend services and renderer pages  
-**Status:** Phase 5 (renderer page decomposition) — in progress  
+**Status:** Phase 5b (`AppMainRouter` overlay split) — complete; Phase 6 (policy) optional  
 **Policy:** `scripts/component-structure-baseline.json`, [component-structure.md](component-structure.md)
 
 ## Goal
@@ -97,7 +97,20 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `ConfigurationWizard.tsx` (651 lines) | `wizardSteps`, six step panels, `WizardChangesModal`, `WizardFooter` | INI load/apply, preset choosers |
 | `App.tsx` (2172 lines) | `appOverlay`, `steamCmdShellModel`, `AppMainRouter` | Fleet poll, RCON, SteamCMD jobs, modals |
 
-**Phase 5 exit:** Grandfathered feature pages are organisms + thin coordinators; `App.tsx` shell further shrinks via hooks (`useAppFleetRefresh`, `useAppRcon`) in follow-ups. Optional: `ConfigurationEditor` split (deferred table).
+### Phase 5b progress
+
+| Module | Status |
+| --- | --- |
+| `appShellChrome.ts` | Shared `AppShellWithChrome` wrapper for overlay routes |
+| `AppWorkspaceOverlay.tsx` | Workspace branch (`ServerWorkspacePage` + files-job state) |
+| `AppFormOverlays.tsx` | Create / edit `ServerForm` overlays |
+| `AppRouterPages.tsx` | Sidebar routes via `AppRouter` (overview, downloads, clusters, logs, backups, settings) |
+| `workspaceFilesJobState.ts` | Pure files-job props for workspace overlay (+ unit tests) |
+| `AppMainRouter.tsx` (~267 lines) | Thin overlay switch; props still passed from `App.tsx` |
+
+**Phase 5b exit:** `AppMainRouter` is a small switch; each overlay organism owns its branch. Optional follow-up: `useAppFleetRefresh` / `useAppRcon` hooks to shrink `App.tsx` prop drilling.
+
+**Phase 5 exit:** Grandfathered feature pages are organisms + thin coordinators. Optional: `ConfigurationEditor` split (deferred table).
 
 
 ## Backend: `backup-service.ts`
