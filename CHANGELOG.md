@@ -34,6 +34,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Renderer **per-server backup** organisms (`BackupKindSettings`, `BackupListToolbar`) and `serverBackupPanelModel.ts` extracted from `ServerBackupPanel.tsx` ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **Configuration wizard** step panels, footer, and changes modal extracted from `ConfigurationWizard.tsx` ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **App shell** routing moved to `AppMainRouter.tsx`; SteamCMD card job grouping to `steamCmdShellModel.ts` ([#146](https://github.com/gabomarin/yark/issues/146)).
+- **App shell** overlay routing split into `AppWorkspaceOverlay`, `AppFormOverlays`, and `AppRouterPages`; shared chrome via `appShellChrome.ts` ([#146](https://github.com/gabomarin/yark/issues/146)).
 
 ### Changed
 
