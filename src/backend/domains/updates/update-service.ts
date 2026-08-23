@@ -101,6 +101,8 @@ export class UpdateService extends EventEmitter {
         this.beginSteamCmdProcess(child, operation, serverId),
       endSteamCmdProcess: (child) => this.endSteamCmdProcess(child),
       resetContentCache: () => this.steamCmdRunner.resetContentCache(),
+      findSteamCmdExecutableCached: () => this.findSteamCmdExecutableCached(),
+      findSteamCmdExecutable: () => this.findSteamCmdExecutable(),
     });
     this.progressRuntime = new SteamCmdProgressRuntime({
       emitProgress: () => {
@@ -158,7 +160,7 @@ export class UpdateService extends EventEmitter {
       settings: this.settings,
       servers: this.servers,
       processes: this.processes,
-      ensureSteamCmdReadyForOperator: (job) => this.steamCmdInstall.ensureSteamCmdReadyForOperator(job),
+      ensureSteamCmdReadyForOperator: (job) => this.ensureSteamCmdReadyForOperator(job),
       appendSteamCmdConsole: (line) => this.appendSteamCmdConsole(line),
       clearSteamCmdConsole: () => this.clearSteamCmdConsole(),
       clearPausedProgressSnapshot: () => this.clearPausedProgressSnapshot(),
@@ -173,7 +175,7 @@ export class UpdateService extends EventEmitter {
         this.performVerifyServerFiles(serverId, job),
       finishRecoveredFileJob: (job) => this.finishRecoveredFileJob(job),
       finishRecoveredRollback: (job) => this.finishRecoveredRollback(job),
-      findSteamCmdExecutableCached: () => this.steamCmdInstall.findSteamCmdExecutableCached(),
+      findSteamCmdExecutableCached: () => this.findSteamCmdExecutableCached(),
       steamCmdMissingError: () => this.steamCmdInstall.steamCmdMissingError(),
       getActiveSteamCmd: () => this.progressRuntime.getActiveSteamCmd() !== null,
       getSyncingServerId: () => this.progressRuntime.getSyncingServerId(),
@@ -221,7 +223,7 @@ export class UpdateService extends EventEmitter {
     this.appendSteamCmdConsole(
       `Checking SteamCMD before resuming ${resumable.length} pending Downloads job(s)…`,
     );
-    const exe = await this.steamCmdInstall.findSteamCmdExecutable();
+    const exe = await this.findSteamCmdExecutable();
     if (exe === null) {
       this.steamCmdInstall.markConfirmedMissing();
       this.appendSteamCmdConsole(
@@ -241,6 +243,22 @@ export class UpdateService extends EventEmitter {
     return this.steamCmdInstall.installSteamCmd();
   }
 
+  /** Facade for tests / queue host — discovery lives on {@link SteamCmdInstall}. */
+  findSteamCmdExecutableCached(): string | null {
+    return this.steamCmdInstall.findSteamCmdExecutableCached();
+  }
+
+  /** Facade for tests / queue host — discovery lives on {@link SteamCmdInstall}. */
+  async findSteamCmdExecutable(): Promise<string | null> {
+    return this.steamCmdInstall.findSteamCmdExecutable();
+  }
+
+  async ensureSteamCmdReadyForOperator(
+    job?: Parameters<SteamCmdInstall["ensureSteamCmdReadyForOperator"]>[0],
+  ): Promise<void> {
+    return this.steamCmdInstall.ensureSteamCmdReadyForOperator(job);
+  }
+
   async cancelSteamCmd(): Promise<boolean> {
     return runCancelSteamCmd(this.steamCmdControlHost());
   }
@@ -254,7 +272,7 @@ export class UpdateService extends EventEmitter {
   }
 
   getSteamCmdStatus(): SteamCmdStatus {
-    const executablePath = this.steamCmdInstall.findSteamCmdExecutableCached();
+    const executablePath = this.findSteamCmdExecutableCached();
     const active = this.progressRuntime.getActiveSteamCmd();
     const queuedPending = this.queue.filter(
       (job) => job.status === "pending" || job.status === "retrying",
@@ -392,7 +410,7 @@ export class UpdateService extends EventEmitter {
 
   /** Resolves depot or ASA content cache next to the configured SteamCMD home. */
   resolveSteamCmdCachePath(kind: SteamCmdCacheKind): string {
-    const executablePath = this.steamCmdInstall.findSteamCmdExecutableCached();
+    const executablePath = this.findSteamCmdExecutableCached();
     if (executablePath === null) {
       throw new Error("SteamCMD is not configured");
     }

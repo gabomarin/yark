@@ -36,6 +36,12 @@ export interface SteamCmdInstallHost {
   ): void;
   endSteamCmdProcess(child: ChildProcess): void;
   resetContentCache(): void;
+  /**
+   * Discovery hooks — UpdateService facades so tests can Object.assign overrides
+   * that queue/resume still honor.
+   */
+  findSteamCmdExecutableCached: () => string | null;
+  findSteamCmdExecutable: () => Promise<string | null>;
 }
 
 /**
@@ -153,14 +159,14 @@ async ensureSteamCmdReadyForOperator(job?: UpdateCriticalJob): Promise<void> {
     return;
   }
   if (this.steamCmdConfirmedMissing) {
-    const exe = await this.findSteamCmdExecutable();
+    const exe = await this.host.findSteamCmdExecutable();
     if (exe !== null) {
       this.persistSteamCmdPath(exe);
       return;
     }
     throw this.steamCmdMissingError();
   }
-  if (this.findSteamCmdExecutableCached() === null) {
+  if (this.host.findSteamCmdExecutableCached() === null) {
     throw this.steamCmdMissingError();
   }
 }
