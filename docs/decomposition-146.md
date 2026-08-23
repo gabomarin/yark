@@ -135,7 +135,9 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `ServerWorkspacePage.tsx` (339 lines) | `WorkspaceCompactDrawers` extracted; removed from baseline |
 | `ClusterIniTemplateModal.tsx` (321 lines) | `ClusterIniTemplateModalFooter` extracted; removed from baseline |
 | `ConfigurationEditor.tsx` (485 lines) | Header, text panel, preview alert extracted; baseline lowered to 480 |
-| Remaining grandfathered (7) | `BackupsPage`, `ServerBackupPanel`, `ServerLogsPanel`, `ConfigurationWizard`, `configurationWizardModel`, `ServerForm`, `ConfigurationEditor` |
+| `BackupsPage.tsx` (152 lines) | `useBackupsPageFleet` hook + `BackupsPageServerSection`; removed from baseline |
+| `ConfigurationEditor.tsx` (162 lines) | `useConfigurationEditor` hook + status/open-file organisms; removed from baseline |
+| Remaining grandfathered (5) | `ServerBackupPanel`, `ServerLogsPanel`, `ConfigurationWizard`, `configurationWizardModel`, `ServerForm` |
 
 **Phase 6 exit:** No entries in `component-structure-baseline.json`; optional backend line gate.
 
