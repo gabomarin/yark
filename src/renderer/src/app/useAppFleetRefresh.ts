@@ -13,7 +13,7 @@ import type {
   SteamCmdConsoleSnapshot,
   SteamCmdStatus,
 } from "@shared/types";
-import { createGenerationGate } from "@shared/createGenerationGate";
+import { createGenerationGate, isRefreshGenerationCurrent } from "@shared/createGenerationGate";
 import { getServerUpdateState } from "@shared/server-update-status";
 import { reconcileServerList } from "@renderer/shared/reconcileServerList";
 import {
@@ -107,7 +107,8 @@ export function useAppFleetRefresh(options: {
     const includeServerList = refreshOptions?.includeServerList !== false;
     const forceOfficialCheck = refreshOptions?.forceOfficialCheck === true;
     const serversMode = refreshOptions?.serversMode ?? true;
-    const generation = refreshGenerationGateRef.current.begin();
+    const isAction = forceOfficialCheck;
+    const generation = isAction ? null : refreshGenerationGateRef.current.begin();
     const [
       serversRes,
       statusesRes,
@@ -129,62 +130,69 @@ export function useAppFleetRefresh(options: {
       window.api.checkCluster(),
       window.api.recentEvents(100),
     ]);
-    if (!refreshGenerationGateRef.current.isCurrent(generation)) {
+    const commit = isRefreshGenerationCurrent(
+      generation,
+      refreshGenerationGateRef.current,
+    );
+    if (commit) {
+      if (serversRes !== null && serversRes.ok) {
+        setServers((previous) =>
+          reconcileServerList(previous, serversRes.data),
+        );
+      }
+      if (statusesRes.ok) {
+        setStatuses((previous) =>
+          reconcileStatusMap(previous, statusesRes.data),
+        );
+      }
+      if (installRes !== null && installRes.ok) {
+        setOfficialVersion((previous) =>
+          previous === installRes.data.officialVersion
+            ? previous
+            : installRes.data.officialVersion,
+        );
+        setOfficialNetworkStatus((previous) =>
+          previous === installRes.data.officialNetworkStatus
+            ? previous
+            : installRes.data.officialNetworkStatus,
+        );
+        setOfficialSteamBuild((previous) =>
+          previous === installRes.data.officialSteamBuild
+            ? previous
+            : installRes.data.officialSteamBuild,
+        );
+        setInstallationInfo((previous) =>
+          reconcileInstallationMap(previous, installRes.data.servers),
+        );
+      }
+      if (steamCmdRes.ok) {
+        setSteamCmdStatus((previous) =>
+          reconcileSteamCmdStatus(previous, steamCmdRes.data),
+        );
+      }
+      if (steamCmdConsoleRes.ok) {
+        setSteamCmdConsole((previous) =>
+          reconcileSteamCmdConsole(previous, steamCmdConsoleRes.data),
+        );
+      }
+
+      if (clusterRes.ok) {
+        setReports((previous) =>
+          reconcileClusterReports(previous, clusterRes.data),
+        );
+      }
+      if (eventsRes.ok) {
+        setEvents((previous) => reconcileEvents(previous, eventsRes.data));
+      }
+    }
+
+    if (!commit && !isAction) {
       return {
         servers: null,
         statuses: null,
         installationInfo: null,
         officialSteamBuild: null,
       };
-    }
-    if (serversRes !== null && serversRes.ok) {
-      setServers((previous) =>
-        reconcileServerList(previous, serversRes.data),
-      );
-    }
-    if (statusesRes.ok) {
-      setStatuses((previous) =>
-        reconcileStatusMap(previous, statusesRes.data),
-      );
-    }
-    if (installRes !== null && installRes.ok) {
-      setOfficialVersion((previous) =>
-        previous === installRes.data.officialVersion
-          ? previous
-          : installRes.data.officialVersion,
-      );
-      setOfficialNetworkStatus((previous) =>
-        previous === installRes.data.officialNetworkStatus
-          ? previous
-          : installRes.data.officialNetworkStatus,
-      );
-      setOfficialSteamBuild((previous) =>
-        previous === installRes.data.officialSteamBuild
-          ? previous
-          : installRes.data.officialSteamBuild,
-      );
-      setInstallationInfo((previous) =>
-        reconcileInstallationMap(previous, installRes.data.servers),
-      );
-    }
-    if (steamCmdRes.ok) {
-      setSteamCmdStatus((previous) =>
-        reconcileSteamCmdStatus(previous, steamCmdRes.data),
-      );
-    }
-    if (steamCmdConsoleRes.ok) {
-      setSteamCmdConsole((previous) =>
-        reconcileSteamCmdConsole(previous, steamCmdConsoleRes.data),
-      );
-    }
-
-    if (clusterRes.ok) {
-      setReports((previous) =>
-        reconcileClusterReports(previous, clusterRes.data),
-      );
-    }
-    if (eventsRes.ok) {
-      setEvents((previous) => reconcileEvents(previous, eventsRes.data));
     }
 
     return {

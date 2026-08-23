@@ -17,3 +17,11 @@ export function createGenerationGate(): {
     current: () => generation,
   };
 }
+
+/** Poll refreshes use a generation; user actions pass `null` and always commit. */
+export function isRefreshGenerationCurrent(
+  generation: number | null,
+  gate: { isCurrent: (generation: number) => boolean },
+): boolean {
+  return generation === null || gate.isCurrent(generation);
+}

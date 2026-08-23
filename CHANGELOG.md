@@ -42,6 +42,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Async busy/spinner cleanup across the renderer uses shared **`runWithFinally`** so React Compiler can optimize those surfaces when enabled; verbose build skips drop from ~74 to ~55 CompileError (#404).
 
+### Fixed
+
+- **Check server updates** and **Update all outdated** no longer fail when a background overview poll overlaps the forced Steam install scan; user-initiated refreshes skip the poll generation gate and always return their IPC snapshot ([#146](https://github.com/gabomarin/yark/issues/146)).
+
 ## [0.15.0] - 2026-08-22
 
 ### Added
