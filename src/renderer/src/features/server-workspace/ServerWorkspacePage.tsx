@@ -1,4 +1,4 @@
-import { Alert, Drawer } from "@mantine/core";
+import { Alert } from "@mantine/core";
 import { HardDrives } from "@phosphor-icons/react";
 import { useMediaQuery } from "@mantine/hooks";
 import type {
@@ -22,6 +22,7 @@ import { StopProgressAlert, stopProgressForServer } from "./components/StopProgr
 import type { RconHistoryEntry, WorkspaceTab } from "./serverWorkspaceTypes";
 import type { PlayerListState } from "./components/RconPanel/PlayerListSection";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { WorkspaceCompactDrawers } from "./components/WorkspaceCompactDrawers/WorkspaceCompactDrawers";
 import { useWorkspaceLeaveGuard } from "./useWorkspaceLeaveGuard";
 import classes from "./ServerWorkspacePage.module.css";
 
@@ -324,39 +325,14 @@ export function ServerWorkspacePage(props: Props): ReactElement {
       </div>
 
       {compactWorkspace && (
-        <>
-          <Drawer
-            opened={serverSwitcherOpen}
-            onClose={() => setServerSwitcherOpen(false)}
-            title="Switch server"
-            position="left"
-            size={320}
-            overlayProps={{ backgroundOpacity: 0.68 }}
-            classNames={{
-              content: classes.drawerContent,
-              header: classes.drawerHeader,
-              body: classes.drawerBody,
-            }}
-          >
-            <div className={classes.drawerPanel}>{renderServerList()}</div>
-          </Drawer>
-
-          <Drawer
-            opened={serverActionsOpen}
-            onClose={() => setServerActionsOpen(false)}
-            title="Status and actions"
-            position="right"
-            size={340}
-            overlayProps={{ backgroundOpacity: 0.68 }}
-            classNames={{
-              content: classes.drawerContent,
-              header: classes.drawerHeader,
-              body: classes.drawerBody,
-            }}
-          >
-            <div className={classes.drawerPanel}>{sidePanel}</div>
-          </Drawer>
-        </>
+        <WorkspaceCompactDrawers
+          serverSwitcherOpen={serverSwitcherOpen}
+          serverActionsOpen={serverActionsOpen}
+          onCloseServerSwitcher={() => setServerSwitcherOpen(false)}
+          onCloseServerActions={() => setServerActionsOpen(false)}
+          serverList={renderServerList()}
+          sidePanel={sidePanel}
+        />
       )}
     </div>
   );

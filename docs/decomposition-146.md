@@ -1,7 +1,7 @@
 # Decomposition map (#146)
 
 **Issue:** [#146](https://github.com/gabomarin/yark/issues/146) — Decompose oversized backend services and renderer pages  
-**Status:** Phase 5c (`useAppFleetRefresh` / `useAppRcon`, `ConfigurationEditor` organisms) — complete; Phase 6 (policy) optional  
+**Status:** Phase 6 in progress — four grandfathered renderer files removed from baseline; Phase 6 exit (all files ≤ cap) still pending  
 **Policy:** `scripts/component-structure-baseline.json`, [component-structure.md](component-structure.md)
 
 ## Goal
@@ -125,6 +125,21 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 **Phase 5c exit:** Fleet refresh and RCON lifted into hooks; INI editor table/filter extracted. Optional: further `App.tsx` shrink via grouped props/context; text-mode/header splits for `ConfigurationEditor`.
 
 **Phase 5 exit:** Grandfathered feature pages are organisms + thin coordinators.
+
+### Phase 6 progress
+
+| Item | Status |
+| --- | --- |
+| `ServerModsPanel.tsx` (345 lines) | Removed from baseline (≤ 350 TSX cap) |
+| `iniModel.ts` (380 lines) | Removed from baseline (≤ 450 TS cap) |
+| `ServerWorkspacePage.tsx` (339 lines) | `WorkspaceCompactDrawers` extracted; removed from baseline |
+| `ClusterIniTemplateModal.tsx` (321 lines) | `ClusterIniTemplateModalFooter` extracted; removed from baseline |
+| `ConfigurationEditor.tsx` (485 lines) | Header, text panel, preview alert extracted; baseline lowered to 480 |
+| `BackupsPage.tsx` (152 lines) | `useBackupsPageFleet` hook + `BackupsPageServerSection`; removed from baseline |
+| `ConfigurationEditor.tsx` (162 lines) | `useConfigurationEditor` hook + status/open-file organisms; removed from baseline |
+| Remaining grandfathered (5) | `ServerBackupPanel`, `ServerLogsPanel`, `ConfigurationWizard`, `configurationWizardModel`, `ServerForm` |
+
+**Phase 6 exit:** No entries in `component-structure-baseline.json`; optional backend line gate.
 
 
 ## Backend: `backup-service.ts`

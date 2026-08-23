@@ -1,10 +1,8 @@
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
-import { FloppyDisk } from "@phosphor-icons/react";
 import {
   Alert,
   Badge,
-  Button,
   Group,
   Modal,
   Text,
@@ -21,6 +19,7 @@ import { sanitizeServerIniPayload } from "@features/server-workspace/iniModel";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
 import { ClusterIniTemplateVisualPanel } from "./ClusterIniTemplateVisualPanel";
+import { ClusterIniTemplateModalFooter } from "./ClusterIniTemplateModalFooter";
 import classes from "./ClusterIniTemplateModal.module.css";
 
 interface Props {
@@ -304,51 +303,17 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
           )}
         </div>
 
-        <div className={classes.footer} data-cluster-ini-footer>
-          <div className={classes.notice}>
-            Template edits never write member install folders. Use Promote /
-            Restore on a stopped member, or opt into seed when adding servers.
-          </div>
-
-          <Group justify="space-between">
-            <Group gap="xs">
-              <Button
-                variant="default"
-                disabled={saving || loading}
-                onClick={requestClose}
-              >
-                Close
-              </Button>
-              {exists && (
-                <Button
-                  variant="filled"
-                  color="red"
-                  disabled={saving || loading}
-                  onClick={handleDelete}
-                >
-                  Delete template
-                </Button>
-              )}
-            </Group>
-            <Group gap="xs">
-              <Button
-                variant="default"
-                disabled={saving || loading || !dirty}
-                onClick={() => void reloadTemplate()}
-              >
-                Reload
-              </Button>
-              <Button
-                leftSection={<FloppyDisk size={16} />}
-                loading={saving}
-                disabled={loading || payload === null || (exists && !dirty)}
-                onClick={() => void handleSave()}
-              >
-                {exists ? "Save template" : "Create template"}
-              </Button>
-            </Group>
-          </Group>
-        </div>
+        <ClusterIniTemplateModalFooter
+          exists={exists}
+          dirty={dirty}
+          loading={loading}
+          saving={saving}
+          payloadReady={payload !== null}
+          onClose={requestClose}
+          onDelete={handleDelete}
+          onReload={() => void reloadTemplate()}
+          onSave={() => void handleSave()}
+        />
       </div>
     </Modal>
   );
