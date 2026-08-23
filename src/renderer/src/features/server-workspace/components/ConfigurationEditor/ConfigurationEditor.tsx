@@ -1,25 +1,17 @@
 import type { ReactElement } from "react";
 import {
   ArrowSquareOut,
-  CaretDown,
-  CaretRight,
   FloppyDisk,
   ArrowCounterClockwise,
   ArrowUUpLeft,
-  FunnelSimple,
 } from "@phosphor-icons/react";
 import {
   ActionIcon,
   Alert,
-  Badge,
   Button,
   Group,
-  NumberInput,
-  Select,
   Stack,
-  Switch,
   Text,
-  TextInput,
   Textarea,
   Title,
   Tooltip,
@@ -33,8 +25,8 @@ import type {
   ServerProfile,
 } from "@shared/types";
 import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
-import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
-import { SearchField } from "@ui/SearchField/SearchField";
+import { ConfigurationEditorFilterBar } from "./ConfigurationEditorFilterBar";
+import { ConfigurationEditorSettingsTable } from "./ConfigurationEditorSettingsTable";
 import { showOperatorToast } from "@ui/operatorToast";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
@@ -45,18 +37,14 @@ import {
   filterIniSettingReferences,
   groupSettingReferencesByUiCategory,
   lookupDefaultValue,
-  lookupSettingDescription,
   parseIniRows,
-  resolveControlKind,
   sanitizeServerIniPayload,
-  sectionShortName,
   setIniValue,
   textForFile,
   withFileText,
   type IniFilterId,
   type IniSettingReference,
 } from "../../iniModel";
-import { numberInputValueFromIni } from "../../iniNumberInput";
 import classes from "./ConfigurationEditor.module.css";
 
 type ConfigSection = "iniFiles";
@@ -469,192 +457,26 @@ export function ConfigurationEditor(props: Props): ReactElement {
               </div>
             </Stack>
 
-            <Group gap="sm" align="center" className={classes.filterBar}>
-              <SearchField
-                className={classes.search}
-                size="xs"
-                placeholder="Search settings"
-                label="Search settings"
-                value={search}
-                onChange={setSearch}
-              />
-              <Select
-                className={classes.categorySelect}
-                aria-label="Filter by category"
-                leftSection={<FunnelSimple size={15} />}
-                value={filter}
-                data={categoryOptions}
-                searchable
-                allowDeselect={false}
-                nothingFoundMessage="No categories"
-                onChange={(value) => setFilter((value ?? "all") as IniFilterId)}
-              />
-              <Button size="xs" variant="light" onClick={() => setAllSectionsCollapsed(true)}>
-                Collapse
-              </Button>
-              <Button size="xs" variant="light" onClick={() => setAllSectionsCollapsed(false)}>
-                Expand
-              </Button>
-              {dirty && (
-                <Badge color="yellow" variant="light">
-                  Unsaved
-                </Badge>
-              )}
-            </Group>
+            <ConfigurationEditorFilterBar
+              search={search}
+              onSearchChange={setSearch}
+              filter={filter}
+              onFilterChange={setFilter}
+              categoryOptions={categoryOptions}
+              dirty={dirty}
+              onCollapseAll={() => setAllSectionsCollapsed(true)}
+              onExpandAll={() => setAllSectionsCollapsed(false)}
+            />
 
-            <div className={classes.tableWrap}>
-              <div className={classes.tableHead}>
-                <span>Setting</span>
-                <span>Value</span>
-                <span>Description</span>
-                <span />
-              </div>
-              <div className={classes.tableBody} data-ini-settings-scroll>
-                {loading && (
-                  <Text c="dimmed" p="md">
-                    Loading INI…
-                  </Text>
-                )}
-                {!loading && groupedRows.length === 0 && (
-                  <Text c="dimmed" p="md">
-                    No settings match this filter.
-                  </Text>
-                )}
-                {!loading &&
-                  groupedRows.map((group) => {
-                    const collapsed = collapsedSections[group.category] === true;
-                    return (
-                      <div key={group.category} className={classes.sectionBlock}>
-                        <button
-                          type="button"
-                          className={chrome.sectionHeader}
-                          aria-expanded={!collapsed}
-                          onClick={() => toggleSection(group.category)}
-                        >
-                          <Group gap="xs" wrap="nowrap">
-                            {collapsed ? <CaretRight size={14} /> : <CaretDown size={14} />}
-                            <Text fw={700} size="sm" className={chrome.sectionHeaderLabel}>
-                              {group.label}
-                            </Text>
-                            <Badge size="xs" variant="outline" className={chrome.sectionCount}>
-                              {group.rows.length}
-                            </Badge>
-                          </Group>
-                        </button>
-
-                        {!collapsed &&
-                          group.rows.map((row) => {
-                            const kind = resolveControlKind(row.value, {
-                              fileKey: row.fileKey,
-                              section: row.section,
-                              key: row.key,
-                            });
-                            const controlId = `${row.fileKey}\u001f${row.section}\u001f${row.key}\u001f${row.occurrence}`;
-                            const defaultValue = lookupDefaultValue(
-                              row.fileKey,
-                              row.section,
-                              row.key,
-                            );
-                            const canResetDefault =
-                              defaultValue !== null && defaultValue !== row.value;
-                            const label =
-                              row.duplicateCount > 1
-                                ? `${row.key} #${row.occurrence + 1}`
-                                : row.key;
-
-                            return (
-                              <div key={controlId} className={classes.row}>
-                                <div>
-                                  <Text fw={600} size="sm">
-                                    {label}
-                                  </Text>
-                                  <Text c="dimmed" size="xs">
-                                    {sectionShortName(row.section)}
-                                    {row.duplicateCount > 1
-                                      ? ` · ${row.occurrence + 1}/${row.duplicateCount}`
-                                      : ""}
-                                  </Text>
-                                </div>
-                                <div>
-                                  {kind === "boolean" ? (
-                                    <Switch
-                                      checked={row.value.toLowerCase() === "true"}
-                                      onChange={(event) =>
-                                        updateValue(
-                                          row.fileKey,
-                                          row.section,
-                                          row.key,
-                                          event.currentTarget.checked ? "True" : "False",
-                                          row.occurrence,
-                                        )
-                                      }
-                                    />
-                                  ) : kind === "number" ? (
-                                    <NumberInput
-                                      value={numberInputValueFromIni(row.value)}
-                                      onChange={(value) =>
-                                        updateValue(
-                                          row.fileKey,
-                                          row.section,
-                                          row.key,
-                                          value === "" || value === undefined
-                                            ? ""
-                                            : String(value),
-                                          row.occurrence,
-                                        )
-                                      }
-                                      decimalScale={4}
-                                      hideControls={false}
-                                    />
-                                  ) : (
-                                    <TextInput
-                                      value={row.value}
-                                      onChange={(event) =>
-                                        updateValue(
-                                          row.fileKey,
-                                          row.section,
-                                          row.key,
-                                          event.currentTarget.value,
-                                          row.occurrence,
-                                        )
-                                      }
-                                    />
-                                  )}
-                                </div>
-                                <Text c="dimmed" size="sm">
-                                  {lookupSettingDescription(
-                                    row.fileKey,
-                                    row.section,
-                                    row.key,
-                                  )}
-                                </Text>
-                                <div className={classes.rowActions}>
-                                  <Tooltip
-                                    label={
-                                      canResetDefault
-                                        ? `Default: ${defaultValue}`
-                                        : "No known default for this key/section"
-                                    }
-                                  >
-                                    <ActionIcon
-                                      variant="subtle"
-                                      color="gray"
-                                      disabled={!canResetDefault || busy}
-                                      aria-label={`Reset ${row.key} to default`}
-                                      onClick={() => resetRowToDefault(row)}
-                                    >
-                                      <ArrowUUpLeft size={14} />
-                                    </ActionIcon>
-                                  </Tooltip>
-                                </div>
-                              </div>
-                            );
-                          })}
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
+            <ConfigurationEditorSettingsTable
+              loading={loading}
+              groupedRows={groupedRows}
+              collapsedSections={collapsedSections}
+              busy={busy}
+              onToggleSection={toggleSection}
+              onUpdateValue={updateValue}
+              onResetRowToDefault={resetRowToDefault}
+            />
 
             <Group justify="space-between" className={classes.footer}>
               <Text c="dimmed" size="xs">

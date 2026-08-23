@@ -13,18 +13,9 @@ import {
   yarkUpdateToastDedupeKey,
 } from "@ui/yarkUpdateOperatorToast";
 import type {
-  AppEvent,
-  ClusterComplianceReport,
-  InstallationServersMode,
-  OfficialNetworkStatus,
-  ServerInstallationInfo,
   ServerProfile,
-  ServerRuntimeInfo,
-  ServerStopProgress,
   SessionPortSet,
   SteamCmdCacheKind,
-  SteamCmdConsoleSnapshot,
-  SteamCmdStatus,
   StartServerOptions,
 } from "@shared/types";
 import { EMPTY_WIPE_STALE_MESSAGE } from "@shared/types";
@@ -33,18 +24,6 @@ import {
   filesJobEnqueueCopy,
   occupyingFilesJobForServer,
 } from "@shared/files-job-priority";
-import { createGenerationGate } from "@shared/createGenerationGate";
-import { reconcileServerList } from "./shared/reconcileServerList";
-import {
-  reconcileClusterReports,
-  reconcileEvents,
-  reconcileInstallationMap,
-  reconcileStatusMap,
-  reconcileSteamCmdConsole,
-  reconcileSteamCmdStatus,
-  upsertRuntimeStatus,
-  upsertPlayerListState,
-} from "./shared/reconcilePollSnapshots";
 import { isHostPortBusyError, isHostPortProbeError } from "@shared/host-port-probe-errors";
 import {
   getServerUpdateState,
@@ -63,12 +42,9 @@ import {
   type UpdateAllOutdatedPlan,
 } from "@features/overview/updateAllOutdatedModel";
 import { ImportInstallWizard } from "@features/servers/components/ImportInstallWizard/ImportInstallWizard";
-import { collectAttentionIssues } from "@features/overview/components/AttentionIssuesPopover/AttentionIssuesPopover";
-import {
-  type RconHistoryEntry,
-} from "@features/server-workspace/ServerWorkspacePage";
-import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
-import type { OnlinePlayerInfo, OsNotificationOpenPush, PlayerListUpdatedPush } from "@shared/ipc";
+import { useAppFleetRefresh } from "@app/useAppFleetRefresh";
+import { useAppRcon } from "@app/useAppRcon";
+import type { OsNotificationOpenPush } from "@shared/ipc";
 import { CloneServerDialog } from "@features/servers/components/CloneServerDialog/CloneServerDialog";
 import { DeleteServerModal } from "@features/servers/components/DeleteServerModal/DeleteServerModal";
 import { CopyConfigurationWizard } from "@features/servers/components/CopyConfigurationWizard/CopyConfigurationWizard";
@@ -118,32 +94,6 @@ export function App({
   initialUiDensity = "compact",
   initialOpenNativeConsole = DEFAULT_OPEN_NATIVE_CONSOLE,
 }: AppProps): ReactElement {
-  const [servers, setServers] = useState<ServerProfile[]>([]);
-  const [statuses, setStatuses] = useState<Map<string, ServerRuntimeInfo>>(new Map());
-  const [installationInfo, setInstallationInfo] = useState<
-    Map<string, ServerInstallationInfo>
-  >(new Map());
-  const [officialVersion, setOfficialVersion] = useState<string | null>(null);
-  const [officialNetworkStatus, setOfficialNetworkStatus] =
-    useState<OfficialNetworkStatus>("unknown");
-  const [officialSteamBuild, setOfficialSteamBuild] = useState<string | null>(null);
-  const [reports, setReports] = useState<ClusterComplianceReport[]>([]);
-  const [events, setEvents] = useState<AppEvent[]>([]);
-  const [rconHistoryByServer, setRconHistoryByServer] = useState<
-    Map<string, RconHistoryEntry[]>
-  >(new Map());
-  const rconHistoryByServerRef = useRef(rconHistoryByServer);
-  useEffect(() => {
-    rconHistoryByServerRef.current = rconHistoryByServer;
-  }, [rconHistoryByServer]);
-  const [playerListsByServer, setPlayerListsByServer] = useState<
-    Map<string, PlayerListState>
-  >(new Map());
-  const [steamCmdStatus, setSteamCmdStatus] = useState<SteamCmdStatus | null>(null);
-  const [steamCmdConsole, setSteamCmdConsole] = useState<SteamCmdConsoleSnapshot | null>(null);
-  const [stopProgressByServerId, setStopProgressByServerId] = useState<
-    Map<string, ServerStopProgress>
-  >(new Map());
   /** Optimistic Start/Restart busy until IPC returns (#390). */
   const [startBusyByServerId, setStartBusyByServerId] = useState<Set<string>>(
     () => new Set(),
@@ -151,6 +101,34 @@ export function App({
   const startBusyByServerIdRef = useRef<Set<string>>(new Set());
   const [route, setRoute] = useState<Route>("overview");
   const [overlay, setOverlay] = useState<Overlay>(null);
+  const {
+    servers,
+    statuses,
+    installationInfo,
+    officialVersion,
+    officialNetworkStatus,
+    officialSteamBuild,
+    reports,
+    events,
+    steamCmdStatus,
+    steamCmdConsole,
+    overviewLoading,
+    installScan,
+    stopProgressByServerId,
+    steamCmdBusy,
+    refresh,
+    runInstallHealthScan,
+  } = useAppFleetRefresh({ route, overlay });
+  const {
+    rconHistoryByServer,
+    playerListsByServer,
+    sendRconCommand,
+    clearRconHistory,
+    onRconTabFocusChanged,
+    onRefreshPlayers,
+    onKickPlayer,
+    onBanPlayer,
+  } = useAppRcon({ refresh });
   const [importInstallOpen, setImportInstallOpen] = useState(false);
   /** Remount Import wizard on each open so step/probe state resets without adjust-on-prop effects. */
   const [importWizardKey, setImportWizardKey] = useState(0);
@@ -180,15 +158,6 @@ export function App({
     useState<UpdateAllOutdatedPlan | null>(null);
   const [updateAllOutdatedLoading, setUpdateAllOutdatedLoading] = useState(false);
   const [updateAllOutdatedQueueing, setUpdateAllOutdatedQueueing] = useState(false);
-  /** Shared install-health scan job (startup + Check Servers Health). */
-  const [installScan, setInstallScan] = useState<{
-    active: boolean;
-    reason: "startup" | "manual" | null;
-  }>({ active: false, reason: null });
-  const installScanInFlightRef = useRef<Promise<void> | null>(null);
-  /** Bumps on each refresh start; stale overlapping polls must not apply setState. */
-  const refreshGenerationGateRef = useRef(createGenerationGate());
-  const [overviewLoading, setOverviewLoading] = useState(true);
   const [appUpdateStatus, setAppUpdateStatus] = useState<AppUpdateStatus | null>(null);
   const [focusYarkUpdates, setFocusYarkUpdates] = useState(false);
   const [focusSteamCmd, setFocusSteamCmd] = useState(false);
@@ -370,9 +339,6 @@ export function App({
   );
   const canUpdateAllOutdated = canOpenUpdateAllOutdated(updateAllOutdatedPlan);
 
-  const steamCmdBusy = steamCmdStatus?.busy === true;
-  const steamCmdBusyRef = useRef(steamCmdBusy);
-
   const stopBusyOverlay = useMemo(() => {
     const active = [...stopProgressByServerId.values()].filter(
       (progress) => progress.active && progress.reason === "quit",
@@ -407,9 +373,6 @@ export function App({
       percent,
     };
   }, [servers, stopProgressByServerId]);
-  useEffect(() => {
-    steamCmdBusyRef.current = steamCmdBusy;
-  }, [steamCmdBusy]);
 
   useEffect(() => {
     let cancelled = false;
@@ -630,228 +593,25 @@ export function App({
   const showDownloadsTeaserFooter =
     route !== "downloads" && shouldShowDownloadsChrome(steamCmdStatus);
 
-  const refresh = useCallback(async (options?: {
-    includeInstallation?: boolean;
-    /** When false, skip listServers (status/SteamCMD/events poll only). Default true. */
-    includeServerList?: boolean;
-    forceOfficialCheck?: boolean;
-    serversMode?: InstallationServersMode;
-  }) => {
-    const includeInstallation = options?.includeInstallation !== false;
-    const includeServerList = options?.includeServerList !== false;
-    const forceOfficialCheck = options?.forceOfficialCheck === true;
-    const serversMode = options?.serversMode ?? true;
-    const generation = refreshGenerationGateRef.current.begin();
-    const [
-      serversRes,
-      statusesRes,
-      installRes,
-      steamCmdRes,
-      steamCmdConsoleRes,
-      clusterRes,
-      eventsRes,
-    ] = await Promise.all([
-      includeServerList
-        ? window.api.listServers()
-        : Promise.resolve(null),
-      window.api.getStatuses(),
-      includeInstallation
-        ? window.api.getInstallationInfo(forceOfficialCheck, serversMode)
-        : Promise.resolve(null),
-      window.api.getSteamCmdStatus(),
-      window.api.getSteamCmdConsole(140),
-      window.api.checkCluster(),
-      window.api.recentEvents(100),
-    ]);
-    if (!refreshGenerationGateRef.current.isCurrent(generation)) {
-      return {
-        servers: null,
-        statuses: null,
-        installationInfo: null,
-        officialSteamBuild: null,
-      };
-    }
-    if (serversRes !== null && serversRes.ok) {
-      setServers((previous) =>
-        reconcileServerList(previous, serversRes.data),
-      );
-    }
-    if (statusesRes.ok) {
-      setStatuses((previous) =>
-        reconcileStatusMap(previous, statusesRes.data),
-      );
-    }
-    if (installRes !== null && installRes.ok) {
-      setOfficialVersion((previous) =>
-        previous === installRes.data.officialVersion
-          ? previous
-          : installRes.data.officialVersion,
-      );
-      setOfficialNetworkStatus((previous) =>
-        previous === installRes.data.officialNetworkStatus
-          ? previous
-          : installRes.data.officialNetworkStatus,
-      );
-      setOfficialSteamBuild((previous) =>
-        previous === installRes.data.officialSteamBuild
-          ? previous
-          : installRes.data.officialSteamBuild,
-      );
-      setInstallationInfo((previous) =>
-        reconcileInstallationMap(previous, installRes.data.servers),
-      );
-    }
-    if (steamCmdRes.ok) {
-      setSteamCmdStatus((previous) =>
-        reconcileSteamCmdStatus(previous, steamCmdRes.data),
-      );
-    }
-    if (steamCmdConsoleRes.ok) {
-      setSteamCmdConsole((previous) =>
-        reconcileSteamCmdConsole(previous, steamCmdConsoleRes.data),
-      );
-    }
-
-    if (clusterRes.ok) {
-      setReports((previous) =>
-        reconcileClusterReports(previous, clusterRes.data),
-      );
-    }
-    if (eventsRes.ok) {
-      setEvents((previous) => reconcileEvents(previous, eventsRes.data));
-    }
-
-    return {
-      servers:
-        serversRes !== null && serversRes.ok ? serversRes.data : null,
-      statuses: statusesRes.ok
-        ? new Map(statusesRes.data.map((s) => [s.serverId, s]))
-        : null,
-      installationInfo:
-        installRes !== null && installRes.ok
-          ? new Map(installRes.data.servers.map((s) => [s.serverId, s]))
-          : null,
-      officialSteamBuild:
-        installRes !== null && installRes.ok
-          ? installRes.data.officialSteamBuild
-          : null,
-    };
-  }, []);
-
-  const runInstallHealthScan = useCallback(
-    async (reason: "startup" | "manual") => {
-      if (installScanInFlightRef.current !== null) {
-        await installScanInFlightRef.current;
-        return;
-      }
-
-      setInstallScan({ active: true, reason });
-      const job = runWithFinally(
-        async () => {
-          const snapshot = await refresh({
-            includeInstallation: true,
-            forceOfficialCheck: reason === "manual",
-          });
-          if (reason !== "manual") {
-            return;
-          }
-          if (
-            snapshot.servers === null
-            || snapshot.statuses === null
-            || snapshot.installationInfo === null
-          ) {
-            showOperatorError(
-              "Try Check Servers Health again in a moment.",
-              "Could not finish health check",
-            );
-            return;
-          }
-          if (snapshot.servers.length === 0) {
-            showOperatorToast({
-              title: "No servers to check",
-              message: "Add a server first, then run Check Servers Health again.",
-              color: "gray",
-            });
-            return;
-          }
-          const issues = collectAttentionIssues({
-            servers: snapshot.servers,
-            statuses: snapshot.statuses,
-            installationInfo: snapshot.installationInfo,
-            officialSteamBuild: snapshot.officialSteamBuild,
-          });
-          if (issues.length > 0) {
-            showOperatorToast({
-              title:
-                issues.length === 1
-                  ? "1 server needs attention"
-                  : `${issues.length} servers need attention`,
-              message: "Open the attention badge above the server list for details.",
-              color: "orange",
-              autoClose: 8000,
-            });
-            return;
-          }
-          const unverifiedInstalls = [...snapshot.installationInfo.values()].filter(
-            (info) =>
-              info.installed
-              && getServerUpdateState(info, snapshot.officialSteamBuild) === "unknown",
-          ).length;
-          if (unverifiedInstalls > 0) {
-            showOperatorToast({
-              title: "Installs look OK; updates unverified",
-              message:
-                "Couldn't confirm Steam update status for every server. Try Check server updates.",
-              color: "yellow",
-            });
-            return;
-          }
-          showOperatorToast({
-            title: "All servers look healthy",
-            message: "Install folders look good.",
-          });
-        },
-        () => {
-          setInstallScan({ active: false, reason: null });
-        },
-      );
-      installScanInFlightRef.current = job;
-      await runWithFinally(
-        async () => {
-          await job;
-        },
-        () => {
-          if (installScanInFlightRef.current === job) {
-            installScanInFlightRef.current = null;
-          }
-        },
-      );
-    },
-    [refresh],
-  );
-
   const checkForUpdates = useCallback(
     async (serverId?: string) => {
       setCheckingUpdates(true);
       await runWithFinally(
         async () => {
-        const installRes = await window.api.getInstallationInfo(true);
-        if (!installRes.ok) {
-          showOperatorError(
-            installRes.error ?? "Could not check for updates",
-            "Could not check for updates",
-          );
-          return;
-        }
-        const next = new Map(
-          installRes.data.servers.map((info) => [info.serverId, info]),
-        );
-        setOfficialVersion(installRes.data.officialVersion);
-        setOfficialNetworkStatus(installRes.data.officialNetworkStatus);
-        setInstallationInfo(next);
-        setOfficialSteamBuild(installRes.data.officialSteamBuild);
-
-        const officialBuild = installRes.data.officialSteamBuild;
+          const snapshot = await refresh({
+            includeInstallation: true,
+            forceOfficialCheck: true,
+            includeServerList: false,
+          });
+          if (snapshot.installationInfo === null) {
+            showOperatorError(
+              "Could not check for updates",
+              "Could not check for updates",
+            );
+            return;
+          }
+          const next = snapshot.installationInfo;
+          const officialBuild = snapshot.officialSteamBuild;
 
         if (serverId !== undefined) {
           const info = next.get(serverId);
@@ -897,7 +657,7 @@ export function App({
           return;
         }
 
-        const serversInfo = installRes.data.servers;
+        const serversInfo = [...next.values()];
         const outdated = serversInfo.filter((info) =>
           isServerUpdateAvailable(info, officialBuild),
         );
@@ -946,7 +706,7 @@ export function App({
         },
       );
     },
-    [servers],
+    [refresh, servers],
   );
 
   const openUpdateAllOutdated = useCallback(async () => {
@@ -954,26 +714,24 @@ export function App({
     setUpdateAllOutdatedModalPlan(null);
     await runWithFinally(
       async () => {
-        const installRes = await window.api.getInstallationInfo(true);
-        if (!installRes.ok) {
+        const snapshot = await refresh({
+          includeInstallation: true,
+          forceOfficialCheck: true,
+          includeServerList: false,
+        });
+        if (snapshot.installationInfo === null) {
           showOperatorError(
-            installRes.error ?? "Could not refresh update status",
+            "Could not refresh update status",
             "Could not refresh update status",
           );
           return;
         }
-        const nextInstallation = new Map(
-          installRes.data.servers.map((info) => [info.serverId, info]),
-        );
-        setOfficialVersion(installRes.data.officialVersion);
-        setOfficialNetworkStatus(installRes.data.officialNetworkStatus);
-        setInstallationInfo(nextInstallation);
-        setOfficialSteamBuild(installRes.data.officialSteamBuild);
+        const nextInstallation = snapshot.installationInfo;
         const nextPlan = buildUpdateAllOutdatedPlan({
           servers,
           installationInfo: nextInstallation,
           statuses,
-          officialSteamBuild: installRes.data.officialSteamBuild,
+          officialSteamBuild: snapshot.officialSteamBuild,
           criticalJobs: steamCmdStatus?.criticalJobs,
         });
         if (nextPlan.rows.length === 0) {
@@ -991,7 +749,7 @@ export function App({
         setUpdateAllOutdatedLoading(false);
       },
     );
-  }, [servers, statuses, steamCmdStatus?.criticalJobs]);
+  }, [refresh, servers, statuses, steamCmdStatus?.criticalJobs]);
 
   const closeUpdateAllOutdated = useCallback(() => {
     setUpdateAllOutdatedOpen(false);
@@ -1079,124 +837,6 @@ export function App({
     steamCmdStatus?.criticalJobs,
   ]);
 
-  useEffect(() => {
-    let active = true;
-    void refresh({ includeInstallation: false })
-      .finally(() => {
-        if (active) {
-          setOverviewLoading(false);
-        }
-      })
-      .then(() => {
-        if (!active) {
-          return;
-        }
-        // One-shot startup install-health scan — shared job with Check Servers Health (#57).
-        return runInstallHealthScan("startup");
-      });
-    const unsubscribeStatus = window.api.onServerStatus((info) => {
-      setStatuses((prev) => upsertRuntimeStatus(prev, info));
-    });
-    const unsubscribeProgress = window.api.onSteamCmdProgress((payload) => {
-      setSteamCmdStatus((previous) =>
-        reconcileSteamCmdStatus(previous, payload.status),
-      );
-      setSteamCmdConsole((previous) =>
-        reconcileSteamCmdConsole(previous, payload.console),
-      );
-    });
-    const unsubscribeStopProgress = window.api.onServerStopProgress((payload) => {
-      setStopProgressByServerId((prev) => {
-        const next = new Map(prev);
-        if (payload.active) {
-          next.set(payload.serverId, payload);
-        } else {
-          next.delete(payload.serverId);
-        }
-        return next;
-      });
-    });
-    const unsubscribePlayers =
-      typeof window.api.onPlayerListUpdated === "function"
-        ? window.api.onPlayerListUpdated((payload: PlayerListUpdatedPush) => {
-            setPlayerListsByServer((prev) =>
-              upsertPlayerListState(prev, payload.serverId, {
-                players: payload.players,
-                error: payload.error,
-                loading: false,
-              }),
-            );
-          })
-        : () => undefined;
-    return () => {
-      active = false;
-      unsubscribeStatus();
-      unsubscribeProgress();
-      unsubscribeStopProgress();
-      unsubscribePlayers();
-    };
-  }, [refresh, runInstallHealthScan]);
-
-  useEffect(() => {
-    // Overview / Downloads heartbeat: statuses / SteamCMD / events only — not listServers.
-    // Profiles refresh on mutation, explicit Refresh, and the slower CDN timer.
-    // See docs/agent-context.md § App refresh contract (#163).
-    const shouldPollSteamCmd =
-      overlay === null && (route === "overview" || route === "downloads");
-    if (!shouldPollSteamCmd) {
-      return;
-    }
-    const syncing = steamCmdStatus?.operation === "sync-files";
-    const intervalMs = syncing ? 5_000 : steamCmdBusy ? 2_500 : 5_000;
-    const interval = setInterval(() => {
-      void refresh({
-        includeInstallation: false,
-        includeServerList: false,
-      });
-    }, intervalMs);
-    return () => {
-      clearInterval(interval);
-    };
-  }, [
-    refresh,
-    steamCmdBusy,
-    steamCmdStatus?.operation,
-    route,
-    overlay,
-  ]);
-
-  useEffect(() => {
-    // Probe official CDN metadata periodically. Re-read local installs only when
-    // official version/build changes (or the server set changes) — disk inspect is
-    // expensive on the Electron main process.
-    const interval = setInterval(() => {
-      if (steamCmdBusyRef.current) {
-        return;
-      }
-      void refresh({
-        includeInstallation: true,
-        serversMode: "when-official-changed",
-      });
-    }, 5 * 60_000);
-    return () => {
-      clearInterval(interval);
-    };
-  }, [refresh]);
-
-  // After a SteamCMD/sync job finishes, refresh install snapshots once (binary + build).
-  const wasSteamCmdBusyRef = useRef(false);
-  useEffect(() => {
-    if (steamCmdBusy) {
-      wasSteamCmdBusyRef.current = true;
-      return;
-    }
-    if (!wasSteamCmdBusyRef.current) {
-      return;
-    }
-    wasSteamCmdBusyRef.current = false;
-    void refresh({ includeInstallation: true, forceOfficialCheck: true });
-  }, [steamCmdBusy, refresh]);
-
   const runAction = useCallback(
     async (action: () => Promise<{ ok: boolean; error?: string }>): Promise<boolean> => {
       const result = await action();
@@ -1226,247 +866,6 @@ export function App({
     await refresh();
     return result.ok;
   }, [refresh]);
-
-  const appendRconHistory = useCallback((serverId: string, entry: RconHistoryEntry) => {
-    setRconHistoryByServer((prev) => {
-      const next = new Map(prev);
-      const current = next.get(serverId) ?? [];
-      next.set(serverId, [entry, ...current].slice(0, 100));
-      return next;
-    });
-  }, []);
-
-  const patchRconHistory = useCallback(
-    (
-      serverId: string,
-      entryId: string,
-      patch: Partial<Pick<RconHistoryEntry, "status" | "response" | "error">>,
-    ) => {
-      setRconHistoryByServer((prev) => {
-        const next = new Map(prev);
-        const current = next.get(serverId) ?? [];
-        next.set(
-          serverId,
-          current.map((entry) =>
-            entry.id === entryId
-              ? {
-                  ...entry,
-                  ...patch,
-                }
-              : entry,
-          ),
-        );
-        return next;
-      });
-    },
-    [],
-  );
-
-  const sendRconCommand = useCallback(
-    async (serverId: string, command: string): Promise<boolean> => {
-      const trimmed = command.trim();
-      if (trimmed.length === 0) {
-        return false;
-      }
-      // Survive RCON tab remounts: pending lives in App-level history.
-      // Ticket: only block an identical command that is already pending.
-      const existing = rconHistoryByServerRef.current.get(serverId) ?? [];
-      if (
-        existing.some(
-          (entry) =>
-            entry.status === "pending" && entry.command === trimmed,
-        )
-      ) {
-        return false;
-      }
-
-      const createdAt = new Date().toISOString();
-      const entryId =
-        globalThis.crypto?.randomUUID?.() ??
-        `${createdAt}-${Math.random().toString(36).slice(2, 10)}`;
-      appendRconHistory(serverId, {
-        id: entryId,
-        command: trimmed,
-        createdAt,
-        status: "pending",
-        response: null,
-        error: null,
-      });
-
-      const result = await window.api.sendRconCommand(serverId, trimmed);
-      await refresh();
-      patchRconHistory(serverId, entryId, {
-        status: result.ok ? "success" : "error",
-        response: result.ok
-          ? result.data.trim().length > 0
-            ? result.data
-            : null
-          : null,
-        error: result.ok ? null : (result.error ?? "Unknown error"),
-      });
-
-      if (!result.ok) {
-        showOperatorError(result.error ?? "Unknown error", "RCON command failed");
-      }
-      return result.ok;
-    },
-    [appendRconHistory, patchRconHistory, refresh],
-  );
-
-  const clearRconHistory = useCallback((serverId: string): void => {
-    setRconHistoryByServer((prev) => {
-      const next = new Map(prev);
-      const current = next.get(serverId) ?? [];
-      // Keep in-flight commands so their result can still patch history and
-      // identical-submit gating stays correct.
-      next.set(
-        serverId,
-        current.filter((entry) => entry.status === "pending"),
-      );
-      return next;
-    });
-  }, []);
-
-  const applyPlayerList = useCallback(
-    (serverId: string, players: OnlinePlayerInfo[], error: string | null = null) => {
-      setPlayerListsByServer((prev) =>
-        upsertPlayerListState(prev, serverId, { players, error, loading: false }),
-      );
-    },
-    [],
-  );
-
-  const setPlayerListLoading = useCallback((serverId: string, loading: boolean) => {
-    setPlayerListsByServer((prev) => {
-      const current = prev.get(serverId) ?? {
-        players: [],
-        error: null,
-        loading: false,
-      };
-      return upsertPlayerListState(prev, serverId, { ...current, loading });
-    });
-  }, []);
-
-  const onRconTabFocusChanged = useCallback(
-    async (serverId: string, isFocused: boolean): Promise<void> => {
-      if (!isFocused) return;
-      setPlayerListLoading(serverId, true);
-      const result = await window.api.notifyRconTabFocus(serverId, true);
-      if (result.ok) {
-        applyPlayerList(serverId, result.data, null);
-        return;
-      }
-      setPlayerListsByServer((prev) => {
-        const next = new Map(prev);
-        const current = next.get(serverId) ?? {
-          players: [],
-          error: null,
-          loading: false,
-        };
-        next.set(serverId, {
-          players: current.players,
-          error: result.error ?? "Could not refresh players",
-          loading: false,
-        });
-        return next;
-      });
-    },
-    [applyPlayerList, setPlayerListLoading],
-  );
-
-  const onRefreshPlayers = useCallback(
-    async (serverId: string): Promise<void> => {
-      setPlayerListLoading(serverId, true);
-      const result = await window.api.refreshPlayerList(serverId);
-      if (result.ok) {
-        applyPlayerList(serverId, result.data, null);
-        return;
-      }
-      setPlayerListsByServer((prev) => {
-        const next = new Map(prev);
-        const current = next.get(serverId) ?? {
-          players: [],
-          error: null,
-          loading: false,
-        };
-        next.set(serverId, {
-          players: current.players,
-          error: result.error ?? "Could not refresh players",
-          loading: false,
-        });
-        return next;
-      });
-    },
-    [applyPlayerList, setPlayerListLoading],
-  );
-
-  const onKickPlayer = useCallback(
-    async (serverId: string, playerKey: string): Promise<boolean> => {
-      const command = `KickPlayer ${playerKey}`;
-      const createdAt = new Date().toISOString();
-      const entryId =
-        globalThis.crypto?.randomUUID?.() ?? `${createdAt}-${Math.random().toString(36).slice(2, 10)}`;
-      appendRconHistory(serverId, {
-        id: entryId,
-        command,
-        createdAt,
-        status: "pending",
-        response: null,
-        error: null,
-      });
-      const result = await window.api.kickPlayer(serverId, playerKey);
-      await refresh();
-      patchRconHistory(serverId, entryId, {
-        status: result.ok ? "success" : "error",
-        response: result.ok
-          ? result.data.trim().length > 0
-            ? result.data
-            : null
-          : null,
-        error: result.ok ? null : result.error ?? "Kick failed",
-      });
-      if (!result.ok) {
-        showOperatorError(result.error ?? "Kick failed", "Kick failed");
-        return false;
-      }
-      return true;
-    },
-    [appendRconHistory, patchRconHistory, refresh],
-  );
-
-  const onBanPlayer = useCallback(
-    async (serverId: string, playerKey: string): Promise<boolean> => {
-      const command = `BanPlayer ${playerKey}`;
-      const createdAt = new Date().toISOString();
-      const entryId =
-        globalThis.crypto?.randomUUID?.() ?? `${createdAt}-${Math.random().toString(36).slice(2, 10)}`;
-      appendRconHistory(serverId, {
-        id: entryId,
-        command,
-        createdAt,
-        status: "pending",
-        response: null,
-        error: null,
-      });
-      const result = await window.api.banPlayer(serverId, playerKey);
-      await refresh();
-      patchRconHistory(serverId, entryId, {
-        status: result.ok ? "success" : "error",
-        response: result.ok
-          ? result.data.trim().length > 0
-            ? result.data
-            : null
-          : null,
-        error: result.ok ? null : result.error ?? "Ban failed",
-      });
-      if (!result.ok) {
-        showOperatorError(result.error ?? "Ban failed", "Ban failed");
-        return false;
-      }
-      return true;
-    },
-    [appendRconHistory, patchRconHistory, refresh],
-  );
 
   const startSteamFilesJob = useCallback(
     (serverId: string, kind: "install" | "update" | "verify") => {
