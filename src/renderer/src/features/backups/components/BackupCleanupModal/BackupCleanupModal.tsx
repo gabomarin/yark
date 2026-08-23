@@ -10,7 +10,7 @@ import {
 } from "@mantine/core";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import type { BackupCleanupOptions, BackupCleanupPreview } from "@shared/types";
-import { formatBackupBytes } from "../../backupsPageModel";
+import { formatBackupBytes } from "../../model/backupsPageModel";
 import classes from "../../BackupsPage.module.css";
 
 interface Props {

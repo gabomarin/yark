@@ -5,7 +5,7 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import type { BackupFleetSummary, ServerProfile } from "@shared/types";
 import type { BackupPolicyDraft } from "../../backupPolicyDraft";
-import type { BackupHealthFilter } from "../../backupsPageModel";
+import type { BackupHealthFilter } from "../../model/backupsPageModel";
 import { ServerHealthCard } from "../ServerHealthCard/ServerHealthCard";
 
 interface Props {

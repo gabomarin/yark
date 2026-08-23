@@ -10,7 +10,7 @@ import {
   formatRuntimeLogLinesForDisplay,
   RUNTIME_SOURCE_FILTER_OPTIONS,
   type RuntimeLogSourceFilter,
-} from "./serverLogsFormat";
+} from "./model/serverLogsFormat";
 
 interface Props {
   loading: boolean;

@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import type { BackupKind } from "@shared/types";
 import { PathField } from "@ui/PathField/PathField";
-import type { DraftPolicy } from "../../serverBackupPanelModel";
+import type { DraftPolicy } from "../../model/serverBackupPanelModel";
 import classes from "../../BackupsPage.module.css";
 
 interface Props {

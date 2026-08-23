@@ -1,6 +1,6 @@
 import type { Dispatch, ReactElement, SetStateAction } from "react";
 import type { ServerProfile } from "@shared/types";
-import type { Overlay } from "@app/appOverlay";
+import type { Overlay } from "@app/model/appOverlay";
 import { AppShellWithChrome, type AppShellChromeProps } from "@app/appShellChrome";
 import type { KnownClusterOption } from "@features/clusters/knownClusterOptions";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";

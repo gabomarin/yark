@@ -10,13 +10,13 @@ import type {
 import type { OsNotificationOpenPush } from "@shared/ipc";
 import { isHostPortBusyError, isHostPortProbeError } from "@shared/host-port-probe-errors";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
-import { claimStartBusy, releaseStartBusy } from "@app/startBusyGuard";
-import type { Overlay } from "@app/appOverlay";
+import { claimStartBusy, releaseStartBusy } from "@app/model/startBusyGuard";
+import type { Overlay } from "@app/model/appOverlay";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import { openHostPortProbeModal } from "@features/servers/hostPortProbeModal";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
-import type { useAppFleetRefresh } from "@app/useAppFleetRefresh";
+import type { useAppFleetRefresh } from "@app/hooks/useAppFleetRefresh";
 
 type Refresh = ReturnType<typeof useAppFleetRefresh>["refresh"];
 type RunAction = (

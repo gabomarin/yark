@@ -203,8 +203,10 @@ describe("BackupService kinds and retention", () => {
         nextKindIndex?: number;
       },
     };
-    const recovery = service as unknown as {
-      resumePreUpdateBackupJob: (input: typeof job) => Promise<unknown[]>;
+    const { criticalQueue: recovery } = service as unknown as {
+      criticalQueue: {
+        resumePreUpdateBackupJob: (input: typeof job) => Promise<unknown[]>;
+      };
     };
 
     const first = await recovery.resumePreUpdateBackupJob(job);
@@ -245,8 +247,10 @@ describe("BackupService kinds and retention", () => {
         nextKindIndex: 99,
       },
     };
-    const recovery = service as unknown as {
-      resumePreUpdateBackupJob: (input: typeof job) => Promise<BackupRecord[]>;
+    const { criticalQueue: recovery } = service as unknown as {
+      criticalQueue: {
+        resumePreUpdateBackupJob: (input: typeof job) => Promise<BackupRecord[]>;
+      };
     };
 
     const recovered = await recovery.resumePreUpdateBackupJob(job);
@@ -293,8 +297,10 @@ describe("BackupService kinds and retention", () => {
         safeguardBackupIds?: string[];
       },
     };
-    const recovery = service as unknown as {
-      resumeRestoreJob: (input: typeof job) => Promise<void>;
+    const { criticalQueue: recovery } = service as unknown as {
+      criticalQueue: {
+        resumeRestoreJob: (input: typeof job) => Promise<void>;
+      };
     };
 
     await recovery.resumeRestoreJob(job);
@@ -512,10 +518,12 @@ describe("BackupService kinds and retention", () => {
       operatorRetryAllowed: false,
       context: {},
     };
-    const queueHarness = service as unknown as {
-      queue: Array<typeof job>;
-      processQueue: () => Promise<void>;
-      resumeRestoreJob: (input: typeof job) => Promise<void>;
+    const { criticalQueue: queueHarness } = service as unknown as {
+      criticalQueue: {
+        queue: Array<typeof job>;
+        processQueue: () => Promise<void>;
+        resumeRestoreJob: (input: typeof job) => Promise<void>;
+      };
     };
     queueHarness.queue = [job];
     vi.spyOn(queueHarness, "resumeRestoreJob").mockRejectedValue(
@@ -552,9 +560,11 @@ describe("BackupService kinds and retention", () => {
         operatorRetryAllowed: true,
         context: {},
       };
-      const queueHarness = service as unknown as {
-        queue: Array<typeof job>;
-        resumeRestoreJob: (input: typeof job) => Promise<void>;
+      const { criticalQueue: queueHarness } = service as unknown as {
+        criticalQueue: {
+          queue: Array<typeof job>;
+          resumeRestoreJob: (input: typeof job) => Promise<void>;
+        };
       };
       queueHarness.queue = [job];
       const resumeRestoreJob = vi

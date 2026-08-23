@@ -27,7 +27,7 @@ import {
   backupHealthTooltip,
   formatBackupBytes,
   formatBackupWhen,
-} from "../../backupsPageModel";
+} from "../../model/backupsPageModel";
 import classes from "../../BackupsPage.module.css";
 
 export interface ServerHealthCardProps {

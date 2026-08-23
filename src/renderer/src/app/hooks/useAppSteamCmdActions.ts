@@ -8,10 +8,10 @@ import {
   filesJobEnqueueCopy,
   occupyingFilesJobForServer,
 } from "@shared/files-job-priority";
-import type { Overlay } from "@app/appOverlay";
+import type { Overlay } from "@app/model/appOverlay";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
-import type { useAppFleetRefresh } from "@app/useAppFleetRefresh";
+import type { useAppFleetRefresh } from "@app/hooks/useAppFleetRefresh";
 
 type Refresh = ReturnType<typeof useAppFleetRefresh>["refresh"];
 

@@ -1,12 +1,12 @@
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { ServerOperationalLogs, ServerProfile } from "@shared/types";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createServerLogsPanelActions } from "./serverLogsPanelActions";
+import { createServerLogsPanelActions } from "../actions/serverLogsPanelActions";
 import {
   preserveNewerRuntimeLogs,
   replaceRuntimeLogs,
   type RuntimeLogSourceFilter,
-} from "./serverLogsFormat";
+} from "../model/serverLogsFormat";
 
 export type LogsSection = "events" | "runtime" | "updates" | "backups";
 

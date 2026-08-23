@@ -13,11 +13,11 @@ import {
   isBackupPolicyDraftDirty,
   toBackupPolicyDraft,
   type BackupPolicyDraft,
-} from "./backupPolicyDraft";
+} from "../backupPolicyDraft";
 import {
   type BackupHealthFilter,
   formatBackupBytes,
-} from "./backupsPageModel";
+} from "../model/backupsPageModel";
 
 const DEFAULT_CLEANUP: BackupCleanupOptions = {
   serverIds: null,

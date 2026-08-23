@@ -7,7 +7,7 @@ import {
   formatUnrealLogBody,
   parseRuntimeLogSource,
   preserveNewerRuntimeLogs,
-} from "@features/logs/serverLogsFormat";
+} from "@features/logs/model/serverLogsFormat";
 
 const sample = [
   "[2026-07-29T20:11:41.709Z] [system] Starting process",

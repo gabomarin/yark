@@ -2,7 +2,7 @@
   "maxTsLines": 800,
   "growthSlack": 25,
   "files": {
-    "src/backend/domains/backups/backup-service.ts": 2277,
+    "src/backend/domains/backups/backup-service.ts": 1544,
     "src/backend/domains/updates/update-service.ts": 1902,
     "src/backend/domains/instances/instance-service.ts": 1317,
     "src/backend/domains/instances/move-install-service.ts": 1203,

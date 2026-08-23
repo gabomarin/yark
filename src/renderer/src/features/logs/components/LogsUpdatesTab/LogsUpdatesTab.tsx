@@ -26,7 +26,7 @@ import {
   formatUpdateJobLabel,
   statusColor,
   statusLabel,
-} from "../../serverLogsFormat";
+} from "../../model/serverLogsFormat";
 import {
   LogsClearAction,
   LogsDetailItem,

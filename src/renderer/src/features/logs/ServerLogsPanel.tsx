@@ -12,9 +12,9 @@ import {
   useServerLogsPanel,
   type LogsSection,
   type ServerLogsFocus,
-} from "./useServerLogsPanel";
+} from "./hooks/useServerLogsPanel";
 
-export type { ServerLogsFocus } from "./useServerLogsPanel";
+export type { ServerLogsFocus } from "./hooks/useServerLogsPanel";
 
 interface Props {
   server: ServerProfile;

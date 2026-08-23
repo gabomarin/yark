@@ -14,7 +14,7 @@ import {
   showBackupError,
   showBackupToast,
   type BackupBusyOp,
-} from "./serverBackupPanelActions";
+} from "../actions/serverBackupPanelActions";
 import {
   backupsListKey,
   countHiddenOtherMapWorldBackups,
@@ -28,7 +28,7 @@ import {
   toDraft,
   worldPolicySummary,
   type DraftPolicy,
-} from "./serverBackupPanelModel";
+} from "../model/serverBackupPanelModel";
 
 const POLICY_AUTOSAVE_MS = 450;
 

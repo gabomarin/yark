@@ -15,8 +15,8 @@ import {
   formatRelativeTime,
   formatSize,
   KIND_TABS,
-} from "./serverBackupPanelModel";
-import { useServerBackupPanel } from "./useServerBackupPanel";
+} from "./model/serverBackupPanelModel";
+import { useServerBackupPanel } from "./hooks/useServerBackupPanel";
 
 interface Props {
   server: ServerProfile;
