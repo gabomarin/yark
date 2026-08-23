@@ -18,12 +18,6 @@ import { existsSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
-import {
-  findInstallDirConflict,
-  installDirConflictMessage,
-  normalizeWindowsPath,
-  resolveServerInstallDir,
-} from "@shared/server-install-path";
 import type { BackupService } from "../backups/backup-service";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";
@@ -35,11 +29,10 @@ import { checkClusterCompliance } from "../cluster/compliance";
 import type { ListedPlayer } from "../backups/list-players";
 import type { BanListEntry } from "./ban-list";
 import {
-  assertInstallDirVacantForCreate,
   assertSafeInstallDirForWipe,
   installDirKey,
 } from "./install-dir-safety";
-import { assertImportHealthAllowed, assertNotInsideAsaInstall } from "./import-existing-install";
+import { assertNotInsideAsaInstall } from "./import-existing-install";
 import {
   invalidateInstallInspectCache,
   inspectServerInstallationAsync,
@@ -54,6 +47,7 @@ import {
   applySessionPortsToProfile,
   validateSessionPorts,
 } from "./instance-profile";
+import { InstanceCreate } from "./instance-create";
 import { InstanceRcon } from "./instance-rcon";
 import { InstanceClone, type CloneParams } from "./instance-clone";
 import {
@@ -80,6 +74,7 @@ export class InstanceService extends EventEmitter {
    */
   private fleetCreateChain: Promise<unknown> = Promise.resolve();
   private readonly fleetInstall: InstanceFleetInstall;
+  private readonly creates: InstanceCreate;
   private readonly rcon: InstanceRcon;
   private readonly clones: InstanceClone;
   private readonly stops: InstanceStop;
@@ -92,6 +87,11 @@ export class InstanceService extends EventEmitter {
   ) {
     super();
     this.fleetInstall = new InstanceFleetInstall({ repo });
+    this.creates = new InstanceCreate({
+      repo,
+      withFleetCreateLock: (work) => this.withFleetCreateLock(work),
+      ensureDefaultIniFiles: (installDir) => this.ensureDefaultIniFiles(installDir),
+    });
     this.rcon = new InstanceRcon(repo, processes, (info) => {
       this.emit("rcon-status-changed", info);
     });
@@ -108,11 +108,11 @@ export class InstanceService extends EventEmitter {
       backups,
       locks,
       withFleetCreateLock: (work) => this.withFleetCreateLock(work),
-      assertValidInput: (input) => this.assertValidInput(input),
+      assertValidInput: (input) => this.creates.assertValidInput(input),
       assertCreateInstallTarget: (installDir) =>
-        this.assertCreateInstallTarget(installDir),
-      assertNoPortConflicts: (input) => this.assertNoPortConflicts(input),
-      assertUniqueName: (name) => this.assertUniqueName(name),
+        this.creates.assertCreateInstallTarget(installDir),
+      assertNoPortConflicts: (input) => this.creates.assertNoPortConflicts(input),
+      assertUniqueName: (name) => this.creates.assertUniqueName(name),
       deleteProfile: (id, options) => this.delete(id, options),
       isStopInProgress: (id) => this.isStopInProgress(id),
       emitProgress: (payload) => this.emit("clone-progress", payload),
@@ -139,27 +139,7 @@ export class InstanceService extends EventEmitter {
   }
 
   async create(input: ServerProfileInput): Promise<ServerProfile> {
-    return this.withFleetCreateLock(async () => {
-      this.assertValidInput(input, { create: true });
-      this.assertUniqueName(input.name);
-      this.assertNoPortConflicts(input);
-
-      const installDir = resolveServerInstallDir(input.installDir, input.name);
-      const normalized: ServerProfileInput = { ...input, installDir };
-      this.assertValidInput(normalized, { create: true });
-      await this.assertCreateInstallTarget(installDir);
-
-      // ensureDefaultIniFiles async — mkdir root here synchronously via ensure
-      const profile = this.repo.create(normalized);
-      void this.ensureDefaultIniFiles(profile.installDir);
-      this.repo.addEvent(
-        profile.id,
-        "server_created",
-        "info",
-        `Server "${profile.name}" created at ${profile.installDir} (map ${profile.map})`,
-      );
-      return profile;
-    });
+    return this.creates.create(input);
   }
 
   /**
@@ -174,56 +154,7 @@ export class InstanceService extends EventEmitter {
     input: ServerProfileInput,
     options?: { allowIncompleteInstall?: boolean },
   ): Promise<ServerProfile> {
-    const installDir = normalizeWindowsPath(input.installDir);
-    const mods = [...(input.mods ?? [])];
-    const normalized: ServerProfileInput = {
-      ...input,
-      installDir,
-      mods,
-      disabledMods: [...mods],
-    };
-    this.assertValidInput(normalized);
-    this.assertUniqueName(normalized.name);
-    this.assertNoPortConflicts(normalized);
-    this.assertUniqueInstallDir(installDir);
-    this.assertInstallDirNotNestedWithFleet(installDir);
-    // Match probeImportInstall: nested ShooterGame paths and unmanaged ASA
-    // parents never become profiles, even if IPC sends allowIncompleteInstall (#283).
-    await assertNotInsideAsaInstall(installDir);
-
-    const installation = await inspectServerInstallationAsync(
-      `import:${normalized.name}`,
-      installDir,
-      { bypassCache: true },
-    );
-    assertImportHealthAllowed(
-      installation.health,
-      options,
-      installation.guidance,
-    );
-
-    // Re-check uniqueness under the fleet create lock after the async probe so a
-    // concurrent create/import cannot claim the same name, ports, or installDir.
-    return this.withFleetCreateLock(async () => {
-      this.assertUniqueName(normalized.name);
-      this.assertNoPortConflicts(normalized);
-      this.assertUniqueInstallDir(installDir);
-      this.assertInstallDirNotNestedWithFleet(installDir);
-      await assertNotInsideAsaInstall(installDir);
-
-      const profile = this.repo.create(normalized);
-      const incompleteNote =
-        installation.health === "incomplete"
-          ? " (incomplete — Install/Verify before Start)"
-          : "";
-      this.repo.addEvent(
-        profile.id,
-        "server_created",
-        "info",
-        `Server "${profile.name}" imported from existing install at ${profile.installDir} (map ${profile.map})${incompleteNote}`,
-      );
-      return profile;
-    });
+    return this.creates.importExisting(input, options);
   }
 
   private async ensureDefaultIniFiles(installDir: string): Promise<void> {
@@ -247,9 +178,9 @@ export class InstanceService extends EventEmitter {
 
   update(id: string, input: ServerProfileInput): ServerProfile {
     // Allowed while hot: ports/map/etc. apply when the process restarts.
-    this.assertValidInput(input);
-    this.assertUniqueName(input.name, id);
-    this.assertNoPortConflicts(input, id);
+    this.creates.assertValidInput(input);
+    this.creates.assertUniqueName(input.name, id);
+    this.creates.assertNoPortConflicts(input, id);
     const existing = this.repo.get(id);
     if (existing === null) {
       throw new Error("Server does not exist");
@@ -323,8 +254,8 @@ export class InstanceService extends EventEmitter {
     if (existing === null) {
       throw new Error("Server does not exist");
     }
-    this.assertUniqueInstallDir(installDir, id);
-    this.assertInstallDirNotNestedWithFleet(installDir, id);
+    this.creates.assertUniqueInstallDir(installDir, id);
+    this.creates.assertInstallDirNotNestedWithFleet(installDir, id);
     const updated = this.repo.updateInstallDir(id, installDir);
     if (updated === null) {
       throw new Error("Server does not exist");
@@ -345,8 +276,8 @@ export class InstanceService extends EventEmitter {
     installDir: string,
     excludeId?: string,
   ): Promise<void> {
-    this.assertUniqueInstallDir(installDir, excludeId);
-    this.assertInstallDirNotNestedWithFleet(installDir, excludeId);
+    this.creates.assertUniqueInstallDir(installDir, excludeId);
+    this.creates.assertInstallDirNotNestedWithFleet(installDir, excludeId);
     await assertNotInsideAsaInstall(installDir);
   }
 
@@ -491,7 +422,7 @@ export class InstanceService extends EventEmitter {
       );
     }
     const effective = this.effectiveStartProfile(profile, options);
-    this.assertValidInput(effective);
+    this.creates.assertValidInput(effective);
     this.assertMapIdentityReadyForStart(effective);
     const running = this.repo
       .list()
@@ -588,7 +519,7 @@ export class InstanceService extends EventEmitter {
       );
       this.fleetInstall.recordInstallHealth(installation);
 
-      this.assertNoPortConflicts(profile, id);
+      this.creates.assertNoPortConflicts(profile, id);
       const reports = checkClusterCompliance(this.repo.list());
       if (profile.clusterId !== null) {
         const clusterReport = reports.find((report) => report.clusterId === profile.clusterId);
@@ -836,18 +767,6 @@ export class InstanceService extends EventEmitter {
     return profile;
   }
 
-  private assertValidInput(
-    input: ServerProfileInput,
-    options?: { create?: boolean },
-  ): void {
-    const issues = validateProfileInput(input, options);
-    if (issues.length > 0) {
-      throw new Error(
-        issues.map((i) => `${i.field}: ${i.message}`).join(" | "),
-      );
-    }
-  }
-
   /** Soft map-mod warnings on save; hard-block dedicated start (#194). */
   private assertMapIdentityReadyForStart(input: ServerProfile): void {
     const blockers = mapIdentityStartBlockers(input);
@@ -856,82 +775,6 @@ export class InstanceService extends EventEmitter {
         blockers.map((i) => `${i.field}: ${i.message}`).join(" | "),
       );
     }
-  }
-
-  private assertNoPortConflicts(
-    input: ServerProfileInput,
-    excludeId?: string,
-  ): void {
-    const others = this.repo
-      .list()
-      .filter((p) => p.id !== excludeId);
-    const conflicts = findPortConflicts(others, {
-      ...input,
-      id: excludeId,
-    });
-    if (conflicts.length > 0) {
-      const c = conflicts[0]!;
-      throw new Error(
-        `${c.kind} port conflict ${c.port} between "${c.serverA}" and "${c.serverB}"`,
-      );
-    }
-  }
-
-  private assertUniqueName(name: string, excludeId?: string): void {
-    const normalized = name.trim().toLowerCase();
-    const clash = this.repo
-      .list()
-      .find(
-        (profile) =>
-          profile.id !== excludeId &&
-          profile.name.trim().toLowerCase() === normalized,
-      );
-    if (clash !== undefined) {
-      throw new Error(`A server named "${name}" already exists`);
-    }
-  }
-
-  private assertUniqueInstallDir(installDir: string, excludeId?: string): void {
-    const target = installDirKey(normalizeWindowsPath(installDir));
-    const clash = this.repo
-      .list()
-      .find(
-        (profile) =>
-          profile.id !== excludeId &&
-          installDirKey(normalizeWindowsPath(profile.installDir)) === target,
-      );
-    if (clash !== undefined) {
-      throw new Error(
-        `A server already uses folder "${installDir}" ("${clash.name}")`,
-      );
-    }
-  }
-
-  private assertInstallDirNotNestedWithFleet(
-    installDir: string,
-    excludeId?: string,
-  ): void {
-    const conflict = findInstallDirConflict(
-      installDir,
-      this.repo.list().map((profile) => ({
-        id: profile.id,
-        name: profile.name,
-        installDir: profile.installDir,
-      })),
-      excludeId,
-    );
-    if (conflict === null || conflict.relation === "same") {
-      return;
-    }
-    throw new Error(installDirConflictMessage(conflict));
-  }
-
-  /** Unique, not nested with the fleet or an ASA tree, and vacant on disk. */
-  private async assertCreateInstallTarget(installDir: string): Promise<void> {
-    this.assertUniqueInstallDir(installDir);
-    this.assertInstallDirNotNestedWithFleet(installDir);
-    await assertNotInsideAsaInstall(installDir);
-    await assertInstallDirVacantForCreate(installDir);
   }
 
 }

@@ -7,7 +7,6 @@ import { EventEmitter } from "node:events";
 import {
   access,
   mkdir,
-  readFile,
   readdir,
   rename,
   rm,
@@ -29,7 +28,6 @@ import { killChildProcessTreeAsync } from "../../infra/process/kill-win-process-
 import type { ProcessManager } from "../../infra/process/process-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import {
-  assertSafeInstallDirForWipe,
   installDirKey,
   isWindowsDriveRoot,
 } from "./install-dir-safety";
@@ -42,9 +40,17 @@ import {
 import {
   isOperationCancelledError,
   OperationCancelledError,
-  robocopyTree,
 } from "../updates/robocopy-tree";
 import { estimateDirectoryBytes as estimateDirectoryBytesSafe } from "../../infra/fs/reparse-points";
+import { MoveInstallCleanup } from "./move-install-cleanup";
+import {
+  COPY_PROGRESS_START,
+  copyToStagingWithProgress,
+  prepareDestinationForPromote,
+  promoteStaging,
+  rollbackSameVolumeRename,
+} from "./move-install-fs";
+import { MoveInstallRegistry } from "./move-install-registry";
 
 /** Marker file written into every YARK-owned move staging directory. */
 export const MOVE_STAGING_MARKER = ".yark-move-staging";
@@ -54,18 +60,6 @@ const FREE_SPACE_MARGIN = 1.1;
 
 /** Cap directory-size walks so validation stays bounded. */
 const MAX_SIZE_WALK_ENTRIES = 250_000;
-
-/** Progress range while robocopy runs (cross-volume). */
-const COPY_PROGRESS_START = 15;
-const COPY_PROGRESS_END = 75;
-/** Poll free-space (cheap) rather than walking the staging tree. */
-const COPY_PROGRESS_POLL_MS = 2500;
-
-/** Persisted absolute staging paths awaiting sweep after interrupted moves. */
-const STAGING_REGISTRY_KEY = "paths";
-
-/** Persisted prior install paths awaiting operator cleanup after a successful move (#215). */
-const PENDING_CLEANUP_REGISTRY_KEY = "byServerId";
 
 export interface MoveInstallResult {
   serverId: string;
@@ -128,6 +122,8 @@ export class MoveInstallService extends EventEmitter {
   private activeServerId: string | null = null;
   private activeChild: ChildProcess | null = null;
   private lastProgress: MoveInstallProgress | null = null;
+  private readonly registry: MoveInstallRegistry;
+  private readonly cleanup: MoveInstallCleanup;
 
   constructor(
     private readonly repo: ServerRepository,
@@ -139,14 +135,25 @@ export class MoveInstallService extends EventEmitter {
      * Optional JSON registry of absolute staging dirs so startup sweep can find
      * leftovers under destination parents that are not profile install parents.
      */
-    private readonly stagingRegistryPath: string | null = null,
+    stagingRegistryPath: string | null = null,
     /**
      * Optional JSON registry of per-server prior install paths awaiting cleanup
      * after a successful move (#215). Cleanup IPC may only wipe a recorded path.
      */
-    private readonly pendingCleanupRegistryPath: string | null = null,
+    pendingCleanupRegistryPath: string | null = null,
   ) {
     super();
+    this.registry = new MoveInstallRegistry(
+      stagingRegistryPath,
+      pendingCleanupRegistryPath,
+    );
+    this.cleanup = new MoveInstallCleanup({
+      repo,
+      processes,
+      locks,
+      registry: this.registry,
+      emitProgress: (progress) => this.emitProgress(progress),
+    });
   }
 
   getProgress(): MoveInstallProgress | null {
@@ -176,7 +183,7 @@ export class MoveInstallService extends EventEmitter {
     const protectedKeys = new Set(
       profiles.map((profile) => installDirKey(profile.installDir)),
     );
-    const registered = await this.readStagingRegistry();
+    const registered = await this.registry.readStagingRegistry();
     const parentDirs = new Set(
       profiles.map((profile) => dirname(resolve(profile.installDir))),
     );
@@ -236,7 +243,7 @@ export class MoveInstallService extends EventEmitter {
     const remaining = registered.filter(
       (entry) => !removedKeys.has(installDirKey(entry)),
     );
-    await this.writeStagingRegistry(remaining);
+    await this.registry.writeStagingRegistry(remaining);
     return removed;
   }
 
@@ -385,7 +392,7 @@ export class MoveInstallService extends EventEmitter {
             awaitingCleanup: false,
           });
 
-          await this.prepareDestinationForPromote(destResolved, destHealth.health);
+          await prepareDestinationForPromote(destResolved, destHealth.health);
           try {
             await rename(sourceDir, destResolved);
           } catch (error) {
@@ -400,7 +407,7 @@ export class MoveInstallService extends EventEmitter {
           try {
             this.throwIfCancelled();
           } catch (cancelError) {
-            if (await this.rollbackSameVolumeRename(sourceDir, destResolved)) {
+            if (await rollbackSameVolumeRename(sourceDir, destResolved)) {
               oldSourceStillPresent = true;
               renamedAwayFromSource = false;
             }
@@ -419,7 +426,7 @@ export class MoveInstallService extends EventEmitter {
             `serverId=${serverId}\nsource=${sourceDir}\ndest=${destResolved}\n`,
             "utf8",
           );
-          await this.registerStagingPath(stagingDir);
+          await this.registry.registerStagingPath(stagingDir);
 
           this.emitProgress({
             serverId,
@@ -435,13 +442,22 @@ export class MoveInstallService extends EventEmitter {
             awaitingCleanup: false,
           });
 
-          await this.copyToStagingWithProgress({
-            serverId,
-            sourceDir,
-            stagingDir,
-            destResolved,
-            sourceBytes,
-          });
+          await copyToStagingWithProgress(
+            {
+              isCancelRequested: () => this.cancelRequested,
+              setActiveChild: (child) => {
+                this.activeChild = child;
+              },
+              emitProgress: (progress) => this.emitProgress(progress),
+            },
+            {
+              serverId,
+              sourceDir,
+              stagingDir,
+              destResolved,
+              sourceBytes,
+            },
+          );
           this.throwIfCancelled();
 
           verifyPath = stagingDir;
@@ -469,7 +485,7 @@ export class MoveInstallService extends EventEmitter {
         if (!isInstallationReady(verified)) {
           if (useRename && !oldSourceStillPresent) {
             try {
-              if (!(await this.rollbackSameVolumeRename(sourceDir, destResolved))) {
+              if (!(await rollbackSameVolumeRename(sourceDir, destResolved))) {
                 throw new Error("rename rollback did not restore the original path");
               }
               oldSourceStillPresent = true;
@@ -494,7 +510,7 @@ export class MoveInstallService extends EventEmitter {
         } catch (cancelError) {
           // Post-verify cancel used to skip rename-back and orphan the tree at dest.
           if (useRename && renamedAwayFromSource) {
-            if (await this.rollbackSameVolumeRename(sourceDir, destResolved)) {
+            if (await rollbackSameVolumeRename(sourceDir, destResolved)) {
               oldSourceStillPresent = true;
               renamedAwayFromSource = false;
             }
@@ -517,8 +533,8 @@ export class MoveInstallService extends EventEmitter {
 
         if (!useRename) {
           await rm(join(stagingDir, MOVE_STAGING_MARKER), { force: true });
-          await this.promoteStaging(stagingDir, destResolved, destHealth.health);
-          await this.unregisterStagingPath(stagingDir);
+          await promoteStaging(stagingDir, destResolved, destHealth.health);
+          await this.registry.unregisterStagingPath(stagingDir);
         }
 
         const committed = this.instances.commitInstallDir(serverId, destResolved);
@@ -547,7 +563,7 @@ export class MoveInstallService extends EventEmitter {
           });
 
           try {
-            await this.deleteOldSourceTree(serverId, sourceDir, {
+            await this.cleanup.deleteOldSourceTree(serverId, sourceDir, {
               alreadyLocked: true,
             });
             oldSourceRemoved = true;
@@ -609,15 +625,15 @@ export class MoveInstallService extends EventEmitter {
         if (oldSourceRemoved) {
           // Only drop a pending leftover if we just removed that same path.
           // A later successful move must not erase an older unbound leftover (#215).
-          const pending = await this.getPendingCleanup(serverId);
+          const pending = await this.registry.getPendingCleanup(serverId);
           if (
             pending === null
             || installDirKey(pending) === installDirKey(sourceDir)
           ) {
-            await this.clearPendingCleanup(serverId);
+            await this.registry.clearPendingCleanup(serverId);
           }
         } else {
-          await this.setPendingCleanup(serverId, sourceDir);
+          await this.registry.setPendingCleanup(serverId, sourceDir);
         }
 
         this.emitProgress({
@@ -662,7 +678,7 @@ export class MoveInstallService extends EventEmitter {
           renamedAwayFromSource = false;
         } else if (stillOnSource) {
           try {
-            if (!(await this.rollbackSameVolumeRename(sourceDir, destResolved))) {
+            if (!(await rollbackSameVolumeRename(sourceDir, destResolved))) {
               renameRollbackFailed = true;
             } else {
               renamedAwayFromSource = false;
@@ -681,7 +697,7 @@ export class MoveInstallService extends EventEmitter {
             await writeFile(marker, `serverId=${serverId}\nfailed=1\n`, "utf8");
           }
           await rm(stagingDir, { recursive: true, force: true });
-          await this.unregisterStagingPath(stagingDir);
+          await this.registry.unregisterStagingPath(stagingDir);
         }
       } catch {
         // Leave for sweepStaleStaging (path stays in the registry).
@@ -754,446 +770,22 @@ export class MoveInstallService extends EventEmitter {
     }
   }
 
-  /**
-   * Deletes the old source tree after a successful move.
-   * Requires a main-process-recorded prior path for this server (#215) and that
-   * the profile no longer reference that path.
-   */
   async cleanupOldSource(
     serverId: string,
     oldSourceDirRaw: string,
   ): Promise<void> {
-    const profile = this.repo.get(serverId);
-    if (profile === null) {
-      throw new Error("Server does not exist");
-    }
-    if (this.processes.isActive(serverId)) {
-      throw new Error("Stop the server before cleaning up the old installation");
-    }
-
-    const requestedDir = assertSafeInstallDirForWipe(
-      normalizeWindowsPath(oldSourceDirRaw),
-    );
-    const recordedDir = await this.getPendingCleanup(serverId);
-    if (recordedDir === null) {
-      throw new Error(
-        "No pending install cleanup for this server. The previous folder may already have been removed or dismissed.",
-      );
-    }
-    if (installDirKey(recordedDir) !== installDirKey(requestedDir)) {
-      throw new Error(
-        "Cleanup path does not match the previous installation recorded for this server.",
-      );
-    }
-    // Wipe only the main-recorded path (renderer value is for equality only).
-    const oldSourceDir = recordedDir;
-
-    this.emitProgress({
-      serverId,
-      active: true,
-      phase: "cleanup",
-      label: "Removing the previous installation folder…",
-      percent: 50,
-      sourceDir: null,
-      stagingDir: null,
-      destinationDir: profile.installDir,
-      oldSourceDir,
-      error: null,
-      awaitingCleanup: true,
-    });
-
-    try {
-      await this.locks.withLock(serverId, "move-install-cleanup", async () => {
-        await this.deleteOldSourceTree(serverId, oldSourceDir, {
-          alreadyLocked: true,
-        });
-      });
-      await this.clearPendingCleanup(serverId);
-      this.clearAwaitingCleanup(serverId);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      this.repo.addEvent(
-        serverId,
-        "install_move_cleanup_failed",
-        "error",
-        `Failed to delete old installation at ${oldSourceDir}: ${message}`,
-        {
-          what: "Cleanup of the previous install folder failed.",
-          cause: message,
-          location: oldSourceDir,
-          suggestion:
-            "Confirm no other process is using the folder, then retry cleanup.",
-        },
-      );
-      this.emitProgress({
-        serverId,
-        active: false,
-        phase: null,
-        label: "Cleanup failed",
-        percent: null,
-        sourceDir: null,
-        stagingDir: null,
-        destinationDir: profile.installDir,
-        oldSourceDir,
-        error: message,
-        awaitingCleanup: true,
-      });
-      throw error;
-    }
+    return this.cleanup.cleanupOldSource(serverId, oldSourceDirRaw);
   }
 
   /** Dismiss the post-move cleanup prompt without deleting files. */
   async dismissCleanupPrompt(serverId: string): Promise<void> {
-    await this.clearPendingCleanup(serverId);
-    this.clearAwaitingCleanup(serverId);
-  }
-
-  /**
-   * Safety-checked recursive delete of a previous install folder.
-   * Caller must ensure the profile no longer points at this path (or be about to).
-   */
-  private async deleteOldSourceTree(
-    serverId: string,
-    oldSourceDirRaw: string,
-    options: { alreadyLocked: boolean },
-  ): Promise<void> {
-    void options; // lock ownership is the caller's responsibility
-    const profile = this.repo.get(serverId);
-    if (profile === null) {
-      throw new Error("Server does not exist");
-    }
-
-    const oldSourceDir = assertSafeInstallDirForWipe(
-      normalizeWindowsPath(oldSourceDirRaw),
-    );
-    if (installDirKey(profile.installDir) === installDirKey(oldSourceDir)) {
-      throw new Error(
-        "Cannot delete the old path: the profile still points at it. Finish Move installation first.",
-      );
-    }
-
-    const shared = this.repo
-      .list()
-      .filter(
-        (item) =>
-          item.id !== serverId
-          && installDirKey(item.installDir) === installDirKey(oldSourceDir),
-      );
-    if (shared.length > 0) {
-      throw new Error(
-        `Cannot delete "${oldSourceDir}": still used by ${shared.map((s) => s.name).join(", ")}.`,
-      );
-    }
-
-    if (!(await pathExists(oldSourceDir))) {
-      this.repo.addEvent(
-        serverId,
-        "install_move_cleanup_completed",
-        "info",
-        `Old install path already absent: ${oldSourceDir}`,
-      );
-      return;
-    }
-
-    await rm(oldSourceDir, { recursive: true, force: true });
-    this.repo.addEvent(
-      serverId,
-      "install_move_cleanup_completed",
-      "info",
-      `Deleted old installation at ${oldSourceDir}`,
-      {
-        what: "Previous install files were removed after a successful move.",
-        location: oldSourceDir,
-      },
-    );
-  }
-
-  private clearAwaitingCleanup(serverId: string): void {
-    this.emitProgress({
-      serverId,
-      active: false,
-      phase: null,
-      label: "",
-      percent: null,
-      sourceDir: null,
-      stagingDir: null,
-      destinationDir: null,
-      oldSourceDir: null,
-      error: null,
-      awaitingCleanup: false,
-    });
-  }
-
-  private async copyToStagingWithProgress(args: {
-    serverId: string;
-    sourceDir: string;
-    stagingDir: string;
-    destResolved: string;
-    sourceBytes: number;
-  }): Promise<void> {
-    const { serverId, sourceDir, stagingDir, destResolved, sourceBytes } = args;
-    let pollTimer: ReturnType<typeof setInterval> | null = null;
-    let pollInFlight = false;
-
-    // Free-space delta avoids repeatedly walking hundreds of thousands of files.
-    const spaceBefore = await readVolumeSpace(stagingDir);
-    const freeBaseline = spaceBefore?.freeBytes ?? null;
-
-    const publishCopyProgress = async (): Promise<void> => {
-      if (this.cancelRequested || sourceBytes <= 0 || freeBaseline === null) {
-        return;
-      }
-      if (pollInFlight) {
-        return;
-      }
-      pollInFlight = true;
-      try {
-        const space = await readVolumeSpace(stagingDir);
-        if (space === null) {
-          return;
-        }
-        const copied = Math.max(0, freeBaseline - space.freeBytes);
-        const ratio = Math.min(1, copied / sourceBytes);
-        const percent = Math.round(
-          COPY_PROGRESS_START + ratio * (COPY_PROGRESS_END - COPY_PROGRESS_START),
-        );
-        this.emitProgress({
-          serverId,
-          active: true,
-          phase: "copying",
-          label: `Copying installation to the new location… ${percent}%`,
-          percent,
-          sourceDir,
-          stagingDir,
-          destinationDir: destResolved,
-          oldSourceDir: null,
-          error: null,
-          awaitingCleanup: false,
-        });
-      } catch {
-        // Best effort — keep last progress.
-      } finally {
-        pollInFlight = false;
-      }
-    };
-
-    pollTimer = setInterval(() => {
-      void publishCopyProgress();
-    }, COPY_PROGRESS_POLL_MS);
-
-    try {
-      await robocopyTree(sourceDir, stagingDir, {
-        operationLabel: "Move installation copy",
-        isCancelled: () => this.cancelRequested,
-        onSpawn: (child) => {
-          this.activeChild = child;
-        },
-      });
-    } finally {
-      if (pollTimer !== null) {
-        clearInterval(pollTimer);
-      }
-      this.activeChild = null;
-    }
-  }
-
-  private async readPendingCleanupRegistry(): Promise<Record<string, string>> {
-    if (this.pendingCleanupRegistryPath === null) {
-      return {};
-    }
-    try {
-      const raw = await readFile(this.pendingCleanupRegistryPath, "utf8");
-      const parsed = JSON.parse(raw) as {
-        [PENDING_CLEANUP_REGISTRY_KEY]?: unknown;
-      };
-      const byServerId = parsed[PENDING_CLEANUP_REGISTRY_KEY];
-      if (
-        byServerId === null
-        || typeof byServerId !== "object"
-        || Array.isArray(byServerId)
-      ) {
-        return {};
-      }
-      const result: Record<string, string> = {};
-      for (const [serverId, pathValue] of Object.entries(byServerId)) {
-        if (typeof pathValue === "string" && pathValue.trim().length > 0) {
-          result[serverId] = resolve(pathValue);
-        }
-      }
-      return result;
-    } catch {
-      return {};
-    }
-  }
-
-  private async writePendingCleanupRegistry(
-    byServerId: Record<string, string>,
-  ): Promise<void> {
-    if (this.pendingCleanupRegistryPath === null) {
-      return;
-    }
-    await this.ensureParentDirectory(this.pendingCleanupRegistryPath);
-    await writeFile(
-      this.pendingCleanupRegistryPath,
-      `${JSON.stringify({ [PENDING_CLEANUP_REGISTRY_KEY]: byServerId }, null, 2)}\n`,
-      "utf8",
-    );
-  }
-
-  private async getPendingCleanup(serverId: string): Promise<string | null> {
-    const registry = await this.readPendingCleanupRegistry();
-    const pathValue = registry[serverId];
-    return typeof pathValue === "string" && pathValue.length > 0
-      ? pathValue
-      : null;
-  }
-
-  private async setPendingCleanup(
-    serverId: string,
-    oldSourceDir: string,
-  ): Promise<void> {
-    if (this.pendingCleanupRegistryPath === null) {
-      return;
-    }
-    const registry = await this.readPendingCleanupRegistry();
-    registry[serverId] = resolve(normalizeWindowsPath(oldSourceDir));
-    await this.writePendingCleanupRegistry(registry);
-  }
-
-  private async clearPendingCleanup(serverId: string): Promise<void> {
-    if (this.pendingCleanupRegistryPath === null) {
-      return;
-    }
-    const registry = await this.readPendingCleanupRegistry();
-    if (!(serverId in registry)) {
-      return;
-    }
-    delete registry[serverId];
-    await this.writePendingCleanupRegistry(registry);
-  }
-
-  private async readStagingRegistry(): Promise<string[]> {
-    if (this.stagingRegistryPath === null) {
-      return [];
-    }
-    try {
-      const raw = await readFile(this.stagingRegistryPath, "utf8");
-      const parsed = JSON.parse(raw) as { [STAGING_REGISTRY_KEY]?: unknown };
-      const paths = parsed[STAGING_REGISTRY_KEY];
-      if (!Array.isArray(paths)) {
-        return [];
-      }
-      return paths.filter((entry): entry is string => typeof entry === "string" && entry.length > 0);
-    } catch {
-      return [];
-    }
-  }
-
-  private async writeStagingRegistry(paths: string[]): Promise<void> {
-    if (this.stagingRegistryPath === null) {
-      return;
-    }
-    const unique = [...new Set(paths.map((entry) => resolve(entry)))];
-    await this.ensureParentDirectory(this.stagingRegistryPath);
-    await writeFile(
-      this.stagingRegistryPath,
-      `${JSON.stringify({ [STAGING_REGISTRY_KEY]: unique }, null, 2)}\n`,
-      "utf8",
-    );
-  }
-
-  private async registerStagingPath(stagingDir: string): Promise<void> {
-    const existing = await this.readStagingRegistry();
-    const key = installDirKey(stagingDir);
-    if (existing.some((entry) => installDirKey(entry) === key)) {
-      return;
-    }
-    await this.writeStagingRegistry([...existing, resolve(stagingDir)]);
-  }
-
-  private async unregisterStagingPath(stagingDir: string): Promise<void> {
-    const existing = await this.readStagingRegistry();
-    const key = installDirKey(stagingDir);
-    const next = existing.filter((entry) => installDirKey(entry) !== key);
-    if (next.length === existing.length) {
-      return;
-    }
-    await this.writeStagingRegistry(next);
-  }
-
-  private async prepareDestinationForPromote(
-    destResolved: string,
-    destHealth: "missing" | "empty" | string,
-  ): Promise<void> {
-    await this.ensureParentDirectory(destResolved);
-    if (destHealth === "empty" && (await pathExists(destResolved))) {
-      const entries = await readdir(destResolved);
-      if (entries.length > 0) {
-        throw new Error(`Destination is no longer empty: ${destResolved}`);
-      }
-      await rm(destResolved, { recursive: true, force: true });
-    } else if (destHealth !== "missing" && (await pathExists(destResolved))) {
-      throw new Error(`Destination already exists: ${destResolved}`);
-    }
-  }
-
-  /**
-   * Creates the destination parent when needed.
-   * Never calls mkdir on a drive root (`H:\`) — Windows returns EPERM for that.
-   */
-  private async ensureParentDirectory(targetPath: string): Promise<void> {
-    const parent = dirname(targetPath);
-    if (isWindowsDriveRoot(parent)) {
-      if (!(await pathExists(parent))) {
-        throw new Error(
-          `Drive is not available: ${parent}. Choose a folder on a mounted volume.`,
-        );
-      }
-      return;
-    }
-    await mkdir(parent, { recursive: true });
-  }
-
-  private async promoteStaging(
-    stagingDir: string,
-    destResolved: string,
-    destHealth: "missing" | "empty" | string,
-  ): Promise<void> {
-    await this.prepareDestinationForPromote(destResolved, destHealth);
-
-    try {
-      await rename(stagingDir, destResolved);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      throw new Error(
-        `Could not promote staging to destination: ${message}. Profile still uses the original path.`,
-      );
-    }
+    return this.cleanup.dismissCleanupPrompt(serverId);
   }
 
   private throwIfCancelled(): void {
     if (this.cancelRequested) {
       throw new OperationCancelledError();
     }
-  }
-
-  /**
-   * After a same-volume rename, put the install tree back at `sourceDir` when
-   * cancel/fail happens before profile commit. Returns false when dest is gone
-   * or source already exists (nothing safe to do).
-   */
-  private async rollbackSameVolumeRename(
-    sourceDir: string,
-    destResolved: string,
-  ): Promise<boolean> {
-    if (!(await pathExists(destResolved))) {
-      return false;
-    }
-    if (await pathExists(sourceDir)) {
-      return false;
-    }
-    await rename(destResolved, sourceDir);
-    return true;
   }
 
   private emitProgress(progress: MoveInstallProgress): void {
