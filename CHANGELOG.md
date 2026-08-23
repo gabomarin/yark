@@ -35,10 +35,16 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - **Configuration wizard** step panels, footer, and changes modal extracted from `ConfigurationWizard.tsx` ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **App shell** routing moved to `AppMainRouter.tsx`; SteamCMD card job grouping to `steamCmdShellModel.ts` ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **App shell** overlay routing split into `AppWorkspaceOverlay`, `AppFormOverlays`, and `AppRouterPages`; shared chrome via `appShellChrome.ts` ([#146](https://github.com/gabomarin/yark/issues/146)).
+- **`useAppFleetRefresh`** and **`useAppRcon`** hooks extracted from `App.tsx` ([#146](https://github.com/gabomarin/yark/issues/146)).
+- **Configuration editor** filter bar, settings table, and row organisms extracted from `ConfigurationEditor.tsx` ([#146](https://github.com/gabomarin/yark/issues/146)).
 
 ### Changed
 
 - Async busy/spinner cleanup across the renderer uses shared **`runWithFinally`** so React Compiler can optimize those surfaces when enabled; verbose build skips drop from ~74 to ~55 CompileError (#404).
+
+### Fixed
+
+- **Check server updates** and **Update all outdated** no longer fail when a background overview poll overlaps the forced Steam install scan; user actions keep their IPC result while stale refreshes remain blocked from shared state ([#146](https://github.com/gabomarin/yark/issues/146)).
 
 ## [0.15.0] - 2026-08-22
 

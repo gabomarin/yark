@@ -1,7 +1,7 @@
 # Decomposition map (#146)
 
 **Issue:** [#146](https://github.com/gabomarin/yark/issues/146) — Decompose oversized backend services and renderer pages  
-**Status:** Phase 5b (`AppMainRouter` overlay split) — complete; Phase 6 (policy) optional  
+**Status:** Phase 5c (`useAppFleetRefresh` / `useAppRcon`, `ConfigurationEditor` organisms) — complete; Phase 6 (policy) optional  
 **Policy:** `scripts/component-structure-baseline.json`, [component-structure.md](component-structure.md)
 
 ## Goal
@@ -108,9 +108,23 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `workspaceFilesJobState.ts` | Pure files-job props for workspace overlay (+ unit tests) |
 | `AppMainRouter.tsx` (~267 lines) | Thin overlay switch; props still passed from `App.tsx` |
 
-**Phase 5b exit:** `AppMainRouter` is a small switch; each overlay organism owns its branch. Optional follow-up: `useAppFleetRefresh` / `useAppRcon` hooks to shrink `App.tsx` prop drilling.
+**Phase 5b exit:** `AppMainRouter` is a small switch; each overlay organism owns its branch.
 
-**Phase 5 exit:** Grandfathered feature pages are organisms + thin coordinators. Optional: `ConfigurationEditor` split (deferred table).
+### Phase 5c progress
+
+| Module | Status |
+| --- | --- |
+| `useAppFleetRefresh.ts` (~413 lines) | Fleet poll, install scan, SteamCMD/status IPC, `refresh` / `runInstallHealthScan` |
+| `useAppRcon.ts` (~280 lines) | RCON history, player list, kick/ban/send handlers |
+| `ConfigurationEditorFilterBar.tsx` | Search/filter bar for INI settings table |
+| `IniSettingRow.tsx` | Single INI setting row (value editor, reset, dirty state) |
+| `ConfigurationEditorSettingsTable.tsx` | Virtualized settings table shell |
+| `ConfigurationEditor.tsx` (575 lines) | Coordinator: text mode, header toolbar, load/save still in parent |
+| `App.tsx` (~1571 lines) | Wired to fleet + RCON hooks; fewer inline effects |
+
+**Phase 5c exit:** Fleet refresh and RCON lifted into hooks; INI editor table/filter extracted. Optional: further `App.tsx` shrink via grouped props/context; text-mode/header splits for `ConfigurationEditor`.
+
+**Phase 5 exit:** Grandfathered feature pages are organisms + thin coordinators.
 
 
 ## Backend: `backup-service.ts`

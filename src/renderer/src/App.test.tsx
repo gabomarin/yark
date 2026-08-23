@@ -36,7 +36,7 @@ describe("App empty installation snapshot", () => {
     await user.click(screen.getByRole("button", { name: "Check server updates" }));
 
     await waitFor(() => {
-      expect(api.getInstallationInfo).toHaveBeenCalledWith(true);
+      expect(api.getInstallationInfo).toHaveBeenCalledWith(true, true);
     });
 
     expect(notifySpy).toHaveBeenCalledWith(
