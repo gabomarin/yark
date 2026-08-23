@@ -40,6 +40,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- **App shell** onboarding, SteamCMD actions, server lifecycle, and update orchestration moved into focused hooks ([#146](https://github.com/gabomarin/yark/issues/146)).
+- **Backup packaging, disk reconciliation, and restore application** moved into focused backend modules while preserving `BackupService` behavior ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **Server form** state moved to `useServerForm` with embedded layout organism — removed from the grandfathered baseline ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **Configuration wizard** state moved to `useConfigurationWizard` / `configurationWizardChoosers` — removed from the grandfathered baseline ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **Configuration wizard** presets, INI operations, and shared types moved into focused pure modules while preserving the existing model API ([#146](https://github.com/gabomarin/yark/issues/146)).
@@ -47,6 +49,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - **Backups overview** fleet load/save moved to `useBackupsPageFleet`; **INI editor** state to `useConfigurationEditor` — both pages removed from the grandfathered baseline ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **Server logs** state, focus routing, runtime polling, and IPC actions moved out of the panel coordinator, removing it from the grandfathered baseline ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **Per-server backups** state, polling, autosave, and IPC actions moved out of the panel coordinator, emptying the grandfathered renderer baseline ([#146](https://github.com/gabomarin/yark/issues/146)).
+- **Instance RCON and clone** orchestration moved into focused modules while preserving the server-management API ([#146](https://github.com/gabomarin/yark/issues/146)).
+- **Server file jobs and SteamCMD runs** moved into focused update modules while preserving update behavior ([#146](https://github.com/gabomarin/yark/issues/146)).
+- **Process readiness wait** loop moved to `process-ready-wait.ts`; `ProcessManager` keeps a thin facade ([#146](https://github.com/gabomarin/yark/issues/146)).
+- Optional **backend file-size gate** (`backend-structure-baseline.json`, new `src/backend` `.ts` ≤ 800) with six grandfathered coordinators ([#146](https://github.com/gabomarin/yark/issues/146)).
 
 - Async busy/spinner cleanup across the renderer uses shared **`runWithFinally`** so React Compiler can optimize those surfaces when enabled; verbose build skips drop from ~74 to ~55 CompileError (#404).
 

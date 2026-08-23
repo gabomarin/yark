@@ -1,10 +1,9 @@
 import { EventEmitter } from "node:events";
 import { existsSync } from "node:fs";
-import { cp, copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { copyFile, mkdir, rm, stat, writeFile } from "node:fs/promises";
+import { basename, dirname, join, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
-import { isSafeMapToken } from "@shared/map-identity";
 import {
   backupFinishedAt,
   formatPlayerSessionNotes,
@@ -41,20 +40,7 @@ import {
 import type { CriticalJobSummary } from "../../../shared/types";
 import { rconExec } from "../../infra/rcon/rcon-client";
 import {
-  collectWorldBackupCandidates,
-  copySavedArksFiles,
-  isPrimaryWorldSaveName,
-  missingEssentialWorldRels,
-  resolveWorldMapSaveDir,
-  selectWorldBackupSourceFiles,
-  worldMapDirNameCandidates,
-} from "./world-snapshot";
-import {
-  assertPlayersRestoreArchiveLayout,
   isRestoreHistoryOwnedByJob as restoreHistoryOwnedByJob,
-  preferredWorldMapRestoreFolderName,
-  resolveWorldRestoreMapToken as resolveWorldRestoreMapTokenPlan,
-  shouldCopyWorldRestoreFile,
 } from "./backup-restore";
 import {
   isBackupJobInterruptedAmbiguous,
@@ -70,7 +56,6 @@ import {
 } from "./backup-critical-jobs";
 import {
   backupKindSubdir,
-  extractZip,
   isReadableZipArchive,
   isZipBackupPath,
   parseBackupManifest,
@@ -81,14 +66,9 @@ import {
 } from "./backup-archive";
 import {
   buildImportedZipFileName,
-  diskImportNotes,
-  folderLooksLikeBackupArchive,
-  guessBackupTypeFromName,
   portableImportNotes,
   resolveExportZipDestination,
-  resolveImportEntryKind,
   resolveImportedBackupId,
-  shouldSkipKindSubdirOnRootScan,
   slugBackupFilePart,
 } from "./backup-portability";
 import {
@@ -96,18 +76,19 @@ import {
   isBackupDestinationReachable,
   sameFsPath,
 } from "./backup-disk";
+import {
+  normalizePlayerKey,
+  packageKind,
+  packageSinglePlayer,
+} from "./backup-package";
+import { BackupReconciler } from "./backup-reconcile";
+import { applyRestore } from "./backup-restore-apply";
 import { classifyInstallHealthAsync } from "../instances/server-installation";
 import { serverBinaryPath } from "../instances/launch-args";
 import {
   isOperationCancelledError,
   OperationCancelledError,
 } from "../updates/robocopy-tree";
-import {
-  directorySizeSafe,
-  listFilesRecursiveSafe,
-  prepareWritableDirUnderRoot,
-  isTraversableDirectoryDirent,
-} from "../../infra/fs/reparse-points";
 import {
   planBackupCleanup,
   summarizeCleanupPlan,
@@ -156,8 +137,6 @@ const SCHEDULED_BACKUP_KINDS: readonly BackupKind[] = ["world"];
  */
 export const CRITICAL_BACKUP_KINDS: readonly BackupKind[] = ["world", "ini"];
 
-const PLAYER_PROFILE_RE = /\.(arkprofile)(\.bak)?$/i;
-
 const DISK_ALERT_SETTINGS_KEY = "backupDiskAlerts.v1";
 const DEFAULT_DISK_ALERT_SETTINGS: BackupDiskAlertSettings = {
   warnUsedPercent: 85,
@@ -185,14 +164,6 @@ function mapTokenFileSlug(mapToken: string): string {
 
 function worldRetentionKey(backup: BackupRecord): string {
   return backup.mapToken?.trim().toLowerCase() || "__unscoped__";
-}
-
-function isPlayerProfileFile(name: string): boolean {
-  return PLAYER_PROFILE_RE.test(name) || name.toLowerCase().endsWith(".profilebak");
-}
-
-function normalizePlayerKey(value: string): string {
-  return value.trim().toLowerCase().replace(/^eos:/i, "");
 }
 
 function normalizeKinds(kinds: BackupKind[] | undefined): BackupKind[] {
@@ -224,21 +195,6 @@ function resolveServerBackupRoot(
   return defaultServerBackupDir(installDir);
 }
 
-async function directorySize(path: string): Promise<number> {
-  if (!existsSync(path)) return 0;
-  return directorySizeSafe(path);
-}
-
-async function listFilesRecursive(root: string): Promise<string[]> {
-  if (!existsSync(root)) return [];
-  return listFilesRecursiveSafe(root);
-}
-
-async function copyFileTo(src: string, dest: string): Promise<void> {
-  await mkdir(dirname(dest), { recursive: true });
-  await cp(src, dest, { force: true });
-}
-
 /**
  * Local backup and restore management for ASA instances.
  * Kind-scoped ZIP archives under World / Player profiles / INI subfolders.
@@ -255,17 +211,11 @@ export class BackupService extends EventEmitter {
     string,
     Array<{ resolve: (value: BackupRecord | null) => void; reject: (error: Error) => void }>
   >();
-  /** Serialize disk↔DB reconcile per server so overlapping list/refresh cannot double-import. */
-  private readonly reconcileInFlight = new Map<string, Promise<number>>();
   /** Backup ids currently inside createBackup — reconcile must not promote/fail these. */
   private readonly creatingBackupIds = new Set<string>();
   private readonly backupJobs = new Map<string, Promise<void>>();
   private readonly preStopBackupServers = new Set<string>();
-  /** Serialize interrupted-row recovery shared by scheduler and disk reconciliation. */
-  private readonly interruptedReconcileInFlight = new Map<
-    string,
-    Promise<number>
-  >();
+  private readonly reconciler: BackupReconciler;
   /** Prevent stacked scheduled world backups for the same server. */
   private readonly scheduledWorldInFlight = new Set<string>();
   /**
@@ -290,6 +240,12 @@ export class BackupService extends EventEmitter {
     _legacyRootBackupDir?: string,
   ) {
     super();
+    this.reconciler = new BackupReconciler({
+      servers: this.servers,
+      backups: this.backups,
+      creatingBackupIds: this.creatingBackupIds,
+      emitChanged: (serverId) => this.emitChanged(serverId),
+    });
     this.queue = this.loadQueue();
     if (this.queue.some((job) => job.status === "pending" || job.status === "retrying")) {
       setTimeout(() => {
@@ -305,8 +261,7 @@ export class BackupService extends EventEmitter {
     if (this.preStopBackupServers.has(serverId)) return true;
     if (this.scheduledWorldInFlight.has(serverId)) return true;
     if (this.creatingBackupIds.has(serverId)) return true;
-    if (this.interruptedReconcileInFlight.has(serverId)) return true;
-    if (this.reconcileInFlight.has(serverId)) return true;
+    if (this.reconciler.hasWork(serverId)) return true;
     if (this.waiters.has(serverId)) return true;
     return this.queue.some(
       (job) =>
@@ -1466,10 +1421,10 @@ export class BackupService extends EventEmitter {
       }
       const packaged =
         options?.playerKey !== undefined && kind === "players"
-          ? await this.packageSinglePlayer(server, stagingDir, options.playerKey, {
+          ? await packageSinglePlayer(server, stagingDir, options.playerKey, {
               waitForProfile: options.waitForProfile === true,
             })
-          : await this.packageKind(server, kind, stagingDir);
+          : await packageKind(server, kind, stagingDir);
 
       // Per-player session archives with no matching profile are not recoverable —
       // drop them so they do not consume retention slots.
@@ -1609,451 +1564,6 @@ export class BackupService extends EventEmitter {
       throw err;
     } finally {
       this.creatingBackupIds.delete(record.id);
-    }
-  }
-
-  private async packageKind(
-    server: ServerProfile,
-    kind: BackupKind,
-    targetDir: string,
-  ): Promise<{ meta: Record<string, unknown> }> {
-    if (kind === "world") {
-      return this.packageWorld(server, targetDir);
-    }
-    if (kind === "players") {
-      return this.packagePlayers(server, targetDir);
-    }
-    return this.packageIni(server, targetDir);
-  }
-
-  private async packageWorld(
-    server: ServerProfile,
-    targetDir: string,
-  ): Promise<{ meta: Record<string, unknown> }> {
-    const mapToken = server.map.trim();
-    if (!isSafeMapToken(mapToken)) {
-      throw new Error("Server map token must be a single safe folder name");
-    }
-
-    const savedArks = this.savedArksDir(server);
-    const resolved = await resolveWorldMapSaveDir(
-      savedArks,
-      mapToken,
-      server.mapSaveFolder,
-    );
-    const dest = join(targetDir, "SavedArks", mapToken);
-
-    if (resolved === null) {
-      await mkdir(dest, { recursive: true });
-      return {
-        meta: {
-          empty: true,
-          fileCount: 0,
-          savedArksPresent: existsSync(savedArks),
-          mapToken,
-        },
-      };
-    }
-
-    const mapSourceDir = resolved.dir;
-
-    // File-by-file copy so live Ark save rotation (e.g. .arkrbf) can be skipped
-    // without failing the whole archive, while essential saves still fail loudly.
-    const enumerated = await listFilesRecursive(mapSourceDir);
-    if (enumerated.length === 0) {
-      return {
-        meta: {
-          empty: true,
-          fileCount: 0,
-          savedArksPresent: true,
-          mapToken,
-          mapFolderName: resolved.folderName,
-        },
-      };
-    }
-    const candidates = await collectWorldBackupCandidates(enumerated, stat);
-    const selection = selectWorldBackupSourceFiles(candidates, { mapToken });
-    const sourceFiles = selection.selected.map((candidate) => candidate.path);
-    const hasPrimary = sourceFiles.some((file) => isPrimaryWorldSaveName(basename(file)));
-    if (!hasPrimary) {
-      throw new Error(
-        `No primary world save found for map ${mapToken} (${mapToken}.ark in ${resolved.folderName})`,
-      );
-    }
-
-    const copyResult = await copySavedArksFiles(
-      mapSourceDir,
-      dest,
-      sourceFiles,
-      copyFileTo,
-      { mapToken },
-    );
-    const destFiles = await listFilesRecursive(dest);
-    const missing = missingEssentialWorldRels(
-      mapSourceDir,
-      dest,
-      sourceFiles,
-      destFiles,
-      { mapToken },
-    );
-    if (missing.length > 0) {
-      throw new Error(
-        `World backup incomplete; missing essential save data: ${
-          missing.map((rel) => basename(rel)).slice(0, 5).join(", ")
-        }`,
-      );
-    }
-
-    return {
-      meta: {
-        empty: destFiles.length === 0,
-        fileCount: destFiles.length,
-        savedArksPresent: true,
-        mapToken,
-        mapFolderName: resolved.folderName,
-        copiedFileCount: copyResult.copiedFileCount,
-        skippedTransientCount:
-          selection.skippedTransientCount + copyResult.skippedTransientCount,
-        skippedTransient: copyResult.skippedTransient,
-        skippedOlderDatedCount: selection.skippedOlderDatedCount,
-        retainedDatedCount: selection.retainedDatedCount,
-      },
-    };
-  }
-
-  /**
-   * Flat profile snapshot used only as a same-kind `pre_restore` safeguard.
-   * Manual / critical-path “all players” archives are not created (#275).
-   */
-  private async packagePlayers(
-    server: ServerProfile,
-    targetDir: string,
-  ): Promise<{ meta: Record<string, unknown> }> {
-    const profilesRoot = join(targetDir, "PlayerProfiles");
-    await mkdir(profilesRoot, { recursive: true });
-    const sources = await this.collectFlatPlayerProfileSources(server);
-    for (const file of sources) {
-      await copyFileTo(file, join(profilesRoot, basename(file)));
-    }
-    return { meta: { empty: sources.length === 0, fileCount: sources.length } };
-  }
-
-  private async packageSinglePlayer(
-    server: ServerProfile,
-    targetDir: string,
-    playerKey: string,
-    options?: { waitForProfile?: boolean },
-  ): Promise<{ meta: Record<string, unknown> }> {
-    const profilesRoot = join(targetDir, "PlayerProfiles");
-    await mkdir(profilesRoot, { recursive: true });
-    const needle = normalizePlayerKey(playerKey);
-    const maxAttempts = options?.waitForProfile === true ? 8 : 1;
-    let matched: string[] = [];
-
-    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-      matched = [];
-      const sources = await this.collectFlatPlayerProfileSources(server);
-      for (const file of sources) {
-        const name = basename(file);
-        const stem = name
-          .replace(/\.(arkprofile)(\.bak)?$/i, "")
-          .replace(/\.profilebak$/i, "");
-        if (normalizePlayerKey(stem) !== needle) continue;
-        // Map-agnostic layout: flat under PlayerProfiles/ (no SavedArks/{Map}/…).
-        await copyFileTo(file, join(profilesRoot, name));
-        matched.push(name);
-      }
-
-      if (matched.length > 0) break;
-      if (attempt < maxAttempts - 1) {
-        await delay(400);
-      }
-    }
-
-    return {
-      meta: {
-        empty: matched.length === 0,
-        fileCount: matched.length,
-        playerKey: needle,
-        files: matched,
-      },
-    };
-  }
-
-  /**
-   * Profile files for flat player archives, one basename each.
-   * Prefer the current map folder so leftovers from a previous map do not win.
-   */
-  private async collectFlatPlayerProfileSources(
-    server: ServerProfile,
-  ): Promise<string[]> {
-    const selected: string[] = [];
-    const seen = new Set<string>();
-
-    const takeFrom = async (dir: string): Promise<void> => {
-      if (!existsSync(dir)) return;
-      for (const file of await listFilesRecursive(dir)) {
-        const name = basename(file);
-        if (!isPlayerProfileFile(name)) continue;
-        const key = name.toLowerCase();
-        if (seen.has(key)) continue;
-        seen.add(key);
-        selected.push(file);
-      }
-    };
-
-    const mapToken = server.map.trim();
-    if (isSafeMapToken(mapToken)) {
-      const resolved = await resolveWorldMapSaveDir(
-        this.savedArksDir(server),
-        mapToken,
-        server.mapSaveFolder,
-      );
-      if (resolved !== null) {
-        await takeFrom(resolved.dir);
-      }
-    }
-
-    for (const root of this.playerSearchRoots(server)) {
-      await takeFrom(root.path);
-    }
-
-    return selected;
-  }
-
-  private playerSearchRoots(
-    server: ServerProfile,
-  ): Array<{ label: string; path: string }> {
-    const savedRoot = this.savedRootDir(server);
-    return [
-      { label: "SavedArks", path: this.savedArksDir(server) },
-      { label: "SaveGames", path: join(savedRoot, "SaveGames") },
-    ];
-  }
-
-  private async packageIni(
-    server: ServerProfile,
-    targetDir: string,
-  ): Promise<{ meta: Record<string, unknown> }> {
-    const config = this.configDir(server);
-    const dest = join(targetDir, "ConfigWindowsServer");
-    await mkdir(dest, { recursive: true });
-    const names = ["Game.ini", "GameUserSettings.ini"] as const;
-    const copied: string[] = [];
-    for (const name of names) {
-      const src = join(config, name);
-      if (!existsSync(src)) continue;
-      await copyFileTo(src, join(dest, name));
-      copied.push(name);
-    }
-    return {
-      meta: {
-        empty: copied.length === 0,
-        files: copied,
-        configPresent: copied.length > 0,
-      },
-    };
-  }
-
-  private async applyRestore(
-    server: ServerProfile,
-    backup: BackupRecord,
-    options?: RestoreBackupOptions,
-  ): Promise<void> {
-    await this.withBackupContents(backup.path, async (root) => {
-      if (backup.kind === "world") {
-        await this.restoreWorld(server, root, backup, options);
-        return;
-      }
-      if (backup.kind === "players") {
-        await this.restorePlayers(server, root);
-        return;
-      }
-      await this.restoreIni(server, root);
-    });
-  }
-
-  /** Run `fn` against a folder snapshot (legacy) or an extracted ZIP staging dir. */
-  private async withBackupContents(
-    backupPath: string,
-    fn: (contentRoot: string) => Promise<void>,
-  ): Promise<void> {
-    if (!isZipBackupPath(backupPath)) {
-      await fn(backupPath);
-      return;
-    }
-    const stagingDir = join(tmpdir(), `yark-restore-${randomUUID()}`);
-    try {
-      await extractZip(backupPath, stagingDir);
-      await fn(stagingDir);
-    } finally {
-      await rm(stagingDir, { recursive: true, force: true }).catch(() => undefined);
-    }
-  }
-
-  private async restoreWorld(
-    server: ServerProfile,
-    backupPath: string,
-    backup: BackupRecord,
-    options?: RestoreBackupOptions,
-  ): Promise<void> {
-    const backupSaved = join(backupPath, "SavedArks");
-    if (!existsSync(backupSaved)) {
-      throw new Error("World backup is missing SavedArks data");
-    }
-
-    const mapToken = await this.resolveWorldRestoreMapToken(backupSaved, backup, server);
-    const backupMapDir = join(backupSaved, mapToken);
-    if (!existsSync(backupMapDir)) {
-      throw new Error(`World backup is missing map folder ${mapToken}`);
-    }
-
-    const restoreProfilesTribes = options?.restoreProfilesTribes !== false;
-    const liveSavedArks = this.savedArksDir(server);
-    const liveResolved = await resolveWorldMapSaveDir(
-      liveSavedArks,
-      mapToken,
-      server.mapSaveFolder,
-    );
-    // After a wipe the live folder is gone; prefer manifest mapFolderName (mod
-    // maps often live under SavedArks/Svartalfheim/ while the ZIP uses the
-    // launch token) over blindly mkdir'ing SavedArks/{mapToken}.
-    let manifestFolder: string | null = null;
-    try {
-      const manifestRaw = await readFile(join(backupPath, "manifest.json"), "utf8");
-      manifestFolder = parseBackupManifest(manifestRaw)?.mapFolderName ?? null;
-    } catch {
-      manifestFolder = null;
-    }
-    const restoreFolder =
-      liveResolved?.folderName
-      ?? preferredWorldMapRestoreFolderName({
-        mapToken,
-        mapSaveFolder: server.mapSaveFolder,
-        mapFolderName: manifestFolder,
-      });
-    if (restoreFolder === null) {
-      throw new Error(`Cannot resolve live map folder for ${mapToken}`);
-    }
-    const liveMapDir = liveResolved?.dir ?? join(liveSavedArks, restoreFolder);
-    await prepareWritableDirUnderRoot(server.installDir, liveMapDir, {
-      operationLabel: "restore world files",
-    });
-
-    const files = await listFilesRecursive(backupMapDir);
-    let copied = 0;
-    for (const file of files) {
-      const name = basename(file);
-      if (
-        !shouldCopyWorldRestoreFile({
-          fileName: name,
-          mapToken,
-          restoreProfilesTribes,
-        })
-      ) {
-        continue;
-      }
-      const rel = relative(backupMapDir, file);
-      await copyFileTo(file, join(liveMapDir, rel));
-      copied += 1;
-    }
-
-    if (copied === 0) {
-      throw new Error(`World restore found no files to apply for map ${mapToken}`);
-    }
-  }
-
-  private async resolveWorldRestoreMapToken(
-    backupSaved: string,
-    backup: BackupRecord,
-    server: ServerProfile,
-  ): Promise<string> {
-    const serverMap = server.map.trim();
-    const serverMapPathExists =
-      isSafeMapToken(serverMap) && existsSync(join(backupSaved, serverMap));
-
-    let dirs: string[] = [];
-    const needsListing =
-      (backup.mapToken === null || !isSafeMapToken(backup.mapToken))
-      && !serverMapPathExists;
-    if (needsListing) {
-      let entries;
-      try {
-        entries = await readdir(backupSaved, { withFileTypes: true });
-      } catch {
-        throw new Error("World backup SavedArks folder is unreadable");
-      }
-      dirs = entries
-        .filter((entry) => isTraversableDirectoryDirent(entry))
-        .map((entry) => entry.name);
-    }
-
-    return resolveWorldRestoreMapTokenPlan({
-      backupMapToken: backup.mapToken,
-      serverMap: server.map,
-      serverMapPathExists,
-      backupSavedDirNames: dirs,
-    });
-  }
-
-  private async restorePlayers(server: ServerProfile, backupPath: string): Promise<void> {
-    const profilesRoot = join(backupPath, "PlayerProfiles");
-    const hasPlayerProfilesRoot = existsSync(profilesRoot);
-    const files = hasPlayerProfilesRoot ? await listFilesRecursive(profilesRoot) : [];
-    assertPlayersRestoreArchiveLayout({
-      hasPlayerProfilesRoot,
-      hasSavedArksAtBackupRoot: existsSync(join(backupPath, "SavedArks")),
-      relativePathsUnderPlayerProfiles: files.map((file) => relative(profilesRoot, file)),
-    });
-
-    const destDir = await this.resolveLivePlayerProfileDir(server);
-    await prepareWritableDirUnderRoot(server.installDir, destDir, {
-      operationLabel: "restore player profiles",
-    });
-    let copied = 0;
-    for (const file of files) {
-      const name = basename(file);
-      if (!isPlayerProfileFile(name)) continue;
-      await copyFileTo(file, join(destDir, name));
-      copied += 1;
-    }
-    if (copied === 0) {
-      throw new Error("Players backup has no profile data");
-    }
-  }
-
-  /** Live map folder where restored flat player profiles should land (#275). */
-  private async resolveLivePlayerProfileDir(server: ServerProfile): Promise<string> {
-    const mapToken = server.map.trim();
-    if (!isSafeMapToken(mapToken)) {
-      throw new Error("Server map token must be a single safe folder name");
-    }
-    const savedArks = this.savedArksDir(server);
-    const resolved = await resolveWorldMapSaveDir(
-      savedArks,
-      mapToken,
-      server.mapSaveFolder,
-    );
-    if (resolved !== null) {
-      return resolved.dir;
-    }
-    const folderName = worldMapDirNameCandidates(mapToken, server.mapSaveFolder)[0] ?? mapToken;
-    return join(savedArks, folderName);
-  }
-
-  private async restoreIni(server: ServerProfile, backupPath: string): Promise<void> {
-    const backupConfig = join(backupPath, "ConfigWindowsServer");
-    const live = this.configDir(server);
-    if (!existsSync(backupConfig)) {
-      throw new Error("INI backup is missing ConfigWindowsServer data");
-    }
-    await prepareWritableDirUnderRoot(server.installDir, live, {
-      operationLabel: "restore INI files",
-    });
-    for (const name of ["Game.ini", "GameUserSettings.ini"] as const) {
-      const src = join(backupConfig, name);
-      if (!existsSync(src)) continue;
-      await copyFileTo(src, join(live, name));
     }
   }
 
@@ -2743,336 +2253,19 @@ export class BackupService extends EventEmitter {
    * Promise instance (an async function would wrap it in a new outer Promise).
    */
   private reconcileDiskBackups(serverId: string): Promise<number> {
-    const existing = this.reconcileInFlight.get(serverId);
-    if (existing !== undefined) {
-      return existing;
-    }
-    const run = this.reconcileDiskBackupsUnlocked(serverId).finally(() => {
-      if (this.reconcileInFlight.get(serverId) === run) {
-        this.reconcileInFlight.delete(serverId);
-      }
-    });
-    this.reconcileInFlight.set(serverId, run);
-    return run;
+    return this.reconciler.reconcileDiskBackups(serverId);
   }
 
-  private async reconcileDiskBackupsUnlocked(serverId: string): Promise<number> {
-    const server = this.mustServer(serverId);
-    const policy = this.backups.getPolicy(serverId);
-    const rootDir = resolveServerBackupRoot(server.installDir, policy.backupDir);
-
-    // Resolve interrupted creates (zip on disk, row still "running") before
-    // path-known checks would block re-import of those archives.
-    let changed = await this.reconcileInterruptedRunningBackups(serverId);
-    changed += this.pruneMissingDiskBackups(serverId);
-
-    if (existsSync(rootDir)) {
-      const known = new Set(
-        this.backups.listBackupPaths(serverId).map((p) => resolve(p).toLowerCase()),
-      );
-
-      for (const kind of ALL_BACKUP_KINDS) {
-        const kindDir = join(rootDir, backupKindSubdir(kind));
-        changed += await this.importArchivesFromDir(serverId, kindDir, kind, known);
-      }
-
-      // Legacy flat layout: archives directly under the root.
-      changed += await this.importArchivesFromDir(serverId, rootDir, null, known);
-    }
-
-    if (changed > 0) {
-      this.emitChanged(serverId);
-    }
-    return changed;
-  }
-
-  /**
-   * After a crash/kill, running rows may be stuck:
-   * - finished readable backup-layout zip → promote to completed (restorable)
-   * - missing / empty / unreadable / non-backup zip → fail so the UI can clear them
-   * Live creates (creatingBackupIds) are left alone.
-   */
   private reconcileInterruptedRunningBackups(serverId: string): Promise<number> {
-    const existing = this.interruptedReconcileInFlight.get(serverId);
-    if (existing !== undefined) {
-      return existing;
-    }
-    const run = this.reconcileInterruptedRunningBackupsUnlocked(serverId).finally(
-      () => {
-        if (this.interruptedReconcileInFlight.get(serverId) === run) {
-          this.interruptedReconcileInFlight.delete(serverId);
-        }
-      },
-    );
-    this.interruptedReconcileInFlight.set(serverId, run);
-    return run;
+    return this.reconciler.reconcileInterruptedRunningBackups(serverId);
   }
 
-  private async reconcileInterruptedRunningBackupsUnlocked(
-    serverId: string,
-  ): Promise<number> {
-    const records = this.backups.listBackups(serverId, 10_000);
-    let changed = 0;
-    for (const backup of records) {
-      if (backup.status !== "running") continue;
-      if (this.creatingBackupIds.has(backup.id)) continue;
-
-      if (isZipBackupPath(backup.path) && existsSync(backup.path)) {
-        let readable = false;
-        let hasLayout = false;
-        try {
-          readable = await isReadableZipArchive(backup.path);
-          if (readable) {
-            try {
-              hasLayout = await zipHasBackupLayout(backup.path);
-            } catch {
-              // Corrupt central directory / I/O mid-scan — treat as unreadable.
-              readable = false;
-              hasLayout = false;
-            }
-          }
-        } catch {
-          readable = false;
-          hasLayout = false;
-        }
-        if (readable && hasLayout) {
-          try {
-            const info = await stat(backup.path);
-            // Use zip mtime — not wall clock — so recovery does not reorder
-            // ahead of newer completed archives and break keep-last retention.
-            const completed = this.backups.completeBackup(
-              backup.id,
-              info.size,
-              info.mtime.toISOString(),
-            );
-            if (completed === null) continue;
-            changed += 1;
-            this.servers.addEvent(
-              serverId,
-              "backup_created",
-              "info",
-              `Recovered interrupted ${backup.kind} backup: ${basename(backup.path)}`,
-            );
-          } catch {
-            // Leave running; a later reconcile can retry.
-          }
-          continue;
-        }
-
-        // Partial/corrupt/non-backup zip — not restorable.
-        await rm(backup.path, { force: true }).catch(() => undefined);
-        const reason = readable
-          ? "Interrupted backup path held a non-backup zip"
-          : "Interrupted while writing archive (incomplete or unreadable zip)";
-        this.backups.failBackup(backup.id, reason);
-        changed += 1;
-        this.servers.addEvent(
-          serverId,
-          "error",
-          "warning",
-          `Interrupted ${backup.kind} backup marked failed (${
-            readable ? "non-backup zip" : "incomplete zip"
-          }): ${basename(backup.path)}`,
-          {
-            what: "A backup was interrupted and the archive on disk is not a restorable backup.",
-            cause: reason,
-            location: backup.path,
-            suggestion: "Create the backup again from the server Backups tab.",
-            context: { kind: backup.kind, backupId: backup.id },
-          },
-        );
-        continue;
-      }
-
-      // Crash during staging — no zip yet. Fail so the row is not stuck forever.
-      this.backups.failBackup(backup.id, "Interrupted before archive was written");
-      changed += 1;
-      this.servers.addEvent(
-        serverId,
-        "error",
-        "warning",
-        `Interrupted ${backup.kind} backup marked failed (no archive on disk)`,
-        {
-          what: "A backup was interrupted before the zip archive was created.",
-          cause: "App stopped or crashed during staging.",
-          location: backup.path,
-          suggestion: "Create the backup again from the server Backups tab.",
-          context: { kind: backup.kind, backupId: backup.id },
-        },
-      );
-    }
-    return changed;
-  }
-
-  /** Remove DB rows for archives deleted outside the app (e.g. Explorer). */
-  private pruneMissingDiskBackups(serverId: string): number {
-    const records = this.backups.listBackups(serverId, 10_000);
-    let removed = 0;
-    for (const backup of records) {
-      // In-progress creates may not have written the zip yet.
-      if (backup.status === "running") continue;
-      // Failed creates delete the partial zip on purpose — keep the row for history.
-      if (backup.status === "failed") continue;
-      if (existsSync(backup.path)) continue;
-      this.backups.deleteBackupRecord(backup.id);
-      removed += 1;
-    }
-    return removed;
-  }
-
-  private async importArchivesFromDir(
-    serverId: string,
-    dir: string,
-    defaultKind: BackupKind | null,
-    known: Set<string>,
-  ): Promise<number> {
-    if (!existsSync(dir)) return 0;
-    const entries = await readdir(dir, { withFileTypes: true });
-    let imported = 0;
-
-    for (const entry of entries) {
-      const full = join(dir, entry.name);
-      const key = resolve(full).toLowerCase();
-      if (known.has(key)) continue;
-
-      // Skip kind subdirs when scanning the root (handled separately).
-      if (shouldSkipKindSubdirOnRootScan(entry.isDirectory(), defaultKind, entry.name)) {
-        continue;
-      }
-
-      if (entry.isFile() && isZipBackupPath(entry.name)) {
-        const kind = resolveImportEntryKind(defaultKind, entry.name);
-        const ok = await this.importZipArchive(serverId, full, kind, known);
-        if (ok) imported += 1;
-        continue;
-      }
-
-      if (entry.isDirectory()) {
-        const kind = resolveImportEntryKind(defaultKind, entry.name);
-        const looksLikeArchive = folderLooksLikeBackupArchive({
-          hasManifest: existsSync(join(full, "manifest.json")),
-          hasSavedArks: existsSync(join(full, "SavedArks")),
-          hasPlayerProfiles: existsSync(join(full, "PlayerProfiles")),
-          hasConfigWindowsServer: existsSync(join(full, "ConfigWindowsServer")),
-        });
-        if (!looksLikeArchive) {
-          continue;
-        }
-        const ok = await this.importFolderArchive(serverId, full, kind, known);
-        if (ok) imported += 1;
-      }
-    }
-
-    return imported;
-  }
-
-  private async importZipArchive(
-    serverId: string,
-    zipPath: string,
-    kind: BackupKind,
-    known: Set<string>,
-  ): Promise<boolean> {
-    try {
-      const info = await stat(zipPath);
-      // Match folder import gating: require manifest or known layout roots.
-      if (!(await zipHasBackupLayout(zipPath))) {
-        return false;
-      }
-      const manifestRaw = await readZipTextEntry(zipPath, "manifest.json");
-      const parsed = parseBackupManifest(manifestRaw);
-      const createdAt =
-        parsed?.createdAt
-        ?? info.mtime.toISOString();
-      const type = parsed?.type ?? guessBackupTypeFromName(basename(zipPath));
-      const notes = parsed?.notes ?? diskImportNotes(basename(zipPath));
-      // Copies keep the original manifest id; mint a new one when that id is taken.
-      const id = resolveImportedBackupId(
-        parsed?.id,
-        parsed?.id !== undefined && this.backups.getBackup(parsed.id) !== null,
-      );
-      if (this.backups.getBackupByPath(serverId, zipPath) !== null) {
-        known.add(resolve(zipPath).toLowerCase());
-        return false;
-      }
-      this.backups.insertCompletedBackup({
-        id,
-        serverId,
-        type,
-        kind: parsed?.kind ?? kind,
-        path: zipPath,
-        sizeBytes: info.size,
-        createdAt,
-        completedAt: createdAt,
-        notes,
-        mapToken: parsed?.mapToken ?? null,
-      });
-      known.add(resolve(zipPath).toLowerCase());
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  private async importFolderArchive(
-    serverId: string,
-    folderPath: string,
-    kind: BackupKind,
-    known: Set<string>,
-  ): Promise<boolean> {
-    try {
-      const info = await stat(folderPath);
-      let manifestRaw: string | null = null;
-      const manifestPath = join(folderPath, "manifest.json");
-      if (existsSync(manifestPath)) {
-        manifestRaw = await readFile(manifestPath, "utf8");
-      }
-      const parsed = parseBackupManifest(manifestRaw);
-      const createdAt = parsed?.createdAt ?? info.mtime.toISOString();
-      const type = parsed?.type ?? guessBackupTypeFromName(basename(folderPath));
-      const notes = parsed?.notes ?? diskImportNotes(basename(folderPath));
-      const sizeBytes = await directorySize(folderPath);
-      // Copies keep the original manifest id; mint a new one when that id is taken.
-      const id = resolveImportedBackupId(
-        parsed?.id,
-        parsed?.id !== undefined && this.backups.getBackup(parsed.id) !== null,
-      );
-      if (this.backups.getBackupByPath(serverId, folderPath) !== null) {
-        known.add(resolve(folderPath).toLowerCase());
-        return false;
-      }
-      this.backups.insertCompletedBackup({
-        id,
-        serverId,
-        type,
-        kind: parsed?.kind ?? kind,
-        path: folderPath,
-        sizeBytes,
-        createdAt,
-        completedAt: createdAt,
-        notes,
-        mapToken: parsed?.mapToken ?? null,
-      });
-      known.add(resolve(folderPath).toLowerCase());
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  private savedRootDir(server: ServerProfile): string {
-    return join(server.installDir, "ShooterGame", "Saved");
-  }
-
-  private savedArksDir(server: ServerProfile): string {
-    return join(this.savedRootDir(server), "SavedArks");
-  }
-
-  private configDir(server: ServerProfile): string {
-    return join(
-      this.savedRootDir(server),
-      "Config",
-      "WindowsServer",
-    );
+  private applyRestore(
+    server: ServerProfile,
+    backup: BackupRecord,
+    options?: RestoreBackupOptions,
+  ): Promise<void> {
+    return applyRestore(server, backup, options);
   }
 
   private humanSize(bytes: number): string {

@@ -38,22 +38,17 @@ import {
 import {
   DEFAULT_READY_PROBE_MIN_WAIT_MS,
   DEFAULT_READY_SETTLE_MS,
-  RCON_PROBE_TIMEOUT_MS,
   RUNTIME_LOG_SOURCES,
   appendRuntimeLogRing,
-  formatReadyBootWaitMessage,
-  formatReadyProbeStartMessage,
-  formatReadySettleMessage,
-  formatReadySuccessMessage,
-  formatReadyTimeoutError,
-  formatReattachReadyWaitMessage,
   formatRuntimeLogLine,
-  hasReadyLogLine,
   runtimeLogPartialKey,
-  shouldDelayRconProbe,
   splitRuntimeLogChunk,
   type RuntimeLogSource,
 } from "./process-readiness";
+import {
+  waitUntilReady as waitUntilManagedReady,
+  type ReadyWaitHost,
+} from "./process-ready-wait";
 import {
   EXIT_WAIT_MS,
   SAVE_WAIT_MS,
@@ -817,149 +812,39 @@ export class ProcessManager extends EventEmitter {
     );
   }
 
+  private readyWaitHost(managed: ManagedProcess): ReadyWaitHost {
+    return {
+      getManaged: (serverId) => this.processes.get(serverId),
+      getRuntimeLogLines: (serverId) => this.runtimeLogs.get(serverId) ?? [],
+      appendRuntimeLog: (serverId, source, message) =>
+        this.appendRuntimeLog(serverId, source, message),
+      emitStatus: (serverId) => this.emitStatus(serverId),
+      clearProcessCheckpoint: (serverId) => this.clearProcessCheckpoint(serverId),
+      terminateManaged: async (serverId) => {
+        await this.terminateManaged(serverId, managed);
+      },
+    };
+  }
+
   private async waitUntilReady(
     profile: ServerProfile,
     managed: ManagedProcess,
     generation: number,
     options?: { terminateOnTimeout?: boolean },
   ): Promise<void> {
-    const timeoutMs = this.readyTimeoutMs;
-    const pollMs = this.readyPollMs;
-    const deadline = Date.now() + timeoutMs;
-    const terminateOnTimeout = options?.terminateOnTimeout !== false;
-    let loggedReattachWait = false;
-    let loggedWaitingForBoot = false;
-    let loggedProbeStart = false;
-    const bootStartedAt = Date.parse(managed.startedAt) || Date.now();
-
-    for (;;) {
-      if (!this.isSameStartingGeneration(profile.id, managed, generation)) {
-        return;
-      }
-
-      const sawLogSignal = this.hasReadyLogSignal(profile.id);
-      const elapsedMs = Date.now() - bootStartedAt;
-      const mayProbe = !shouldDelayRconProbe({
-        sawLogSignal,
-        elapsedMs,
-        minWaitMs: this.readyProbeMinWaitMs,
-      });
-
-      if (!mayProbe) {
-        if (!loggedWaitingForBoot) {
-          loggedWaitingForBoot = true;
-          this.appendRuntimeLog(
-            profile.id,
-            "system",
-            formatReadyBootWaitMessage(this.readyProbeMinWaitMs),
-          );
-        }
-        await delay(pollMs);
-        continue;
-      }
-
-      if (sawLogSignal && !loggedProbeStart) {
-        this.appendRuntimeLog(
-          profile.id,
-          "system",
-          formatReadyProbeStartMessage(true),
-        );
-      } else if (!loggedProbeStart) {
-        this.appendRuntimeLog(
-          profile.id,
-          "system",
-          formatReadyProbeStartMessage(false),
-        );
-      }
-      loggedProbeStart = true;
-
-      try {
-        await rconExec(
-          RCON_HOST,
-          profile.rconPort,
-          profile.adminPassword,
-          "ListPlayers",
-          RCON_PROBE_TIMEOUT_MS,
-          { quiet: true },
-        );
-        if (!this.isSameStartingGeneration(profile.id, managed, generation)) {
-          return;
-        }
-
-        if (this.readySettleMs > 0) {
-          this.appendRuntimeLog(
-            profile.id,
-            "system",
-            formatReadySettleMessage(this.readySettleMs),
-          );
-          const settleDeadline = Date.now() + this.readySettleMs;
-          while (Date.now() < settleDeadline) {
-            if (!this.isSameStartingGeneration(profile.id, managed, generation)) {
-              return;
-            }
-            await delay(Math.min(pollMs, settleDeadline - Date.now()));
-          }
-          if (!this.isSameStartingGeneration(profile.id, managed, generation)) {
-            return;
-          }
-          await rconExec(
-            RCON_HOST,
-            profile.rconPort,
-            profile.adminPassword,
-            "ListPlayers",
-            RCON_PROBE_TIMEOUT_MS,
-            { quiet: true },
-          );
-          if (!this.isSameStartingGeneration(profile.id, managed, generation)) {
-            return;
-          }
-        }
-
-        managed.status = "running";
-        managed.lastError = null;
-        this.appendRuntimeLog(
-          profile.id,
-          "system",
-          formatReadySuccessMessage(),
-        );
-        this.emitStatus(profile.id);
-        return;
-      } catch {
-        // keep trying until timeout, process exit, or (reattach) forever
-      }
-
-      if (Date.now() >= deadline) {
-        if (!this.isSameStartingGeneration(profile.id, managed, generation)) {
-          return;
-        }
-        if (!terminateOnTimeout) {
-          if (!loggedReattachWait) {
-            loggedReattachWait = true;
-            this.appendRuntimeLog(
-              profile.id,
-              "warning",
-              formatReattachReadyWaitMessage(),
-            );
-          }
-          await delay(pollMs);
-          continue;
-        }
-
-        managed.status = "error";
-        managed.lastError = formatReadyTimeoutError();
-        this.appendRuntimeLog(profile.id, "error", managed.lastError);
-        this.clearProcessCheckpoint(profile.id);
-        this.emitStatus(profile.id);
-        try {
-          await this.terminateManaged(profile.id, managed);
-        } catch {
-          // ignore
-        }
-        return;
-      }
-
-      await delay(pollMs);
-    }
+    return waitUntilManagedReady(
+      this.readyWaitHost(managed),
+      profile,
+      managed,
+      generation,
+      {
+        timeoutMs: this.readyTimeoutMs,
+        pollMs: this.readyPollMs,
+        probeMinWaitMs: this.readyProbeMinWaitMs,
+        settleMs: this.readySettleMs,
+      },
+      options,
+    );
   }
 
   private async writeProcessCheckpoint(
@@ -1053,23 +938,6 @@ export class ProcessManager extends EventEmitter {
     if (this.processes.get(serverId) === managed) {
       this.flushRuntimePartials(serverId);
     }
-  }
-
-  private isSameStartingGeneration(
-    serverId: string,
-    managed: ManagedProcess,
-    generation: number,
-  ): boolean {
-    const current = this.processes.get(serverId);
-    return (
-      current === managed &&
-      managed.status === "starting" &&
-      managed.readinessGeneration === generation
-    );
-  }
-
-  private hasReadyLogSignal(serverId: string): boolean {
-    return hasReadyLogLine(this.runtimeLogs.get(serverId) ?? []);
   }
 
   private waitForExit(child: ChildProcess, timeoutMs: number): Promise<boolean> {
