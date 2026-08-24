@@ -13,7 +13,7 @@ import type {
 import type { useAppFleetRefresh } from "@app/hooks/useAppFleetRefresh";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import { useOverviewServerUpdates } from "@features/overview/hooks/useOverviewServerUpdates";
-import { resolveServerSurvivorCount } from "@features/servers/model/serverCardSurvivorMeta";
+import { sumSurvivorsOnlineTotal } from "@features/overview/model/overviewFleetMetrics";
 import {
   filterOverviewServers,
   partitionOverviewServers,
@@ -80,25 +80,15 @@ export function OverviewPage(props: Props): ReactElement {
     [disabled, search],
   );
 
-  const survivorsOnlineTotal = useMemo(() => {
-    let total = 0;
-    let hasKnownSample = false;
-    for (const server of enabled) {
-      const status = props.statuses.get(server.id)?.status ?? "stopped";
-      if (status !== "running") {
-        continue;
-      }
-      const count = resolveServerSurvivorCount({
-        status,
-        survivorList: props.playerListsByServer.get(server.id) ?? null,
-      });
-      if (count != null) {
-        total += count;
-        hasKnownSample = true;
-      }
-    }
-    return hasKnownSample ? total : null;
-  }, [enabled, props.statuses, props.playerListsByServer]);
+  const survivorsOnlineTotal = useMemo(
+    () =>
+      sumSurvivorsOnlineTotal({
+        enabledServers: enabled,
+        statuses: props.statuses,
+        playerListsByServer: props.playerListsByServer,
+      }),
+    [enabled, props.statuses, props.playerListsByServer],
+  );
 
   const {
     checkingUpdates,

@@ -41,6 +41,35 @@ function runtimeStatus(
   return statuses.get(serverId)?.status ?? "stopped";
 }
 
+/**
+ * Sum known online survivors on running enabled servers (#301).
+ * Returns `null` until at least one running server has a real RCON sample
+ * (never invents a fleet `0`).
+ */
+export function sumSurvivorsOnlineTotal(input: {
+  enabledServers: ReadonlyArray<ServerProfile>;
+  statuses: Map<string, ServerRuntimeInfo>;
+  playerListsByServer: Map<string, PlayerListState>;
+}): number | null {
+  let total = 0;
+  let hasKnownSample = false;
+  for (const server of input.enabledServers) {
+    const status = runtimeStatus(input.statuses, server.id);
+    if (status !== "running") {
+      continue;
+    }
+    const survivorCount = resolveServerSurvivorCount({
+      status,
+      survivorList: input.playerListsByServer.get(server.id) ?? null,
+    });
+    if (survivorCount != null) {
+      total += survivorCount;
+      hasKnownSample = true;
+    }
+  }
+  return hasKnownSample ? total : null;
+}
+
 /** Counts from the enabled fleet only — not search-narrowed. */
 export function computeOverviewFleetStats(input: {
   enabledServers: ReadonlyArray<ServerProfile>;
@@ -60,21 +89,11 @@ export function computeOverviewFleetStats(input: {
   const updateServerIds = new Set<string>();
   let runningCount = 0;
   let stoppedCount = 0;
-  let survivorsOnlineTotal = 0;
-  let hasKnownSurvivorSample = false;
 
   for (const server of input.enabledServers) {
     const status = runtimeStatus(input.statuses, server.id);
     if (status === "running") {
       runningCount += 1;
-      const survivorCount = resolveServerSurvivorCount({
-        status,
-        survivorList: input.playerListsByServer.get(server.id) ?? null,
-      });
-      if (survivorCount != null) {
-        survivorsOnlineTotal += survivorCount;
-        hasKnownSurvivorSample = true;
-      }
     } else if (status === "stopped") {
       stoppedCount += 1;
     }
@@ -93,7 +112,11 @@ export function computeOverviewFleetStats(input: {
     stats: {
       enabledCount: input.enabledServers.length,
       runningCount,
-      survivorsOnlineTotal: hasKnownSurvivorSample ? survivorsOnlineTotal : null,
+      survivorsOnlineTotal: sumSurvivorsOnlineTotal({
+        enabledServers: input.enabledServers,
+        statuses: input.statuses,
+        playerListsByServer: input.playerListsByServer,
+      }),
       stoppedCount,
       attentionCount: attentionServerIds.size,
       updatesCount: updateServerIds.size,

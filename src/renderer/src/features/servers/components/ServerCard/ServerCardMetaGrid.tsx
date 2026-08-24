@@ -15,12 +15,18 @@ interface Props {
   localVersion: string | null;
   versionMetaTone: "muted" | "ok" | "attention" | "busy" | "default";
   versionRefreshHint: string | null;
+  /**
+   * Overview passes the ListPlayers cache entry (`null` = no sample yet / empty).
+   * Omit (`undefined`) outside Overview so the Survivors column is hidden — do not
+   * collapse with `!= null`, or cards without a wired cache would show a false `–`.
+   */
   playerList?: PlayerListState | null;
   workspaceOpenLabel: string;
   onOpenWorkspace: () => void;
 }
 
 export function ServerCardMetaGrid(props: Props): ReactElement {
+  // `!== undefined` (not `!= null`): null still shows Survivors as `–`.
   const survivorCount =
     props.playerList !== undefined
       ? resolveServerSurvivorCount({
