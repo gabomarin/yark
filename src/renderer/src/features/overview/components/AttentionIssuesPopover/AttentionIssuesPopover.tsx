@@ -1,14 +1,8 @@
 import type { ReactElement } from "react";
 import { Popover, Stack, Text } from "@mantine/core";
 import { formatInstallationCheckedAt } from "@shared/installation-health";
-import {
-  type AttentionIssue,
-  collectAttentionIssues,
-} from "../../model/attentionIssues";
+import type { AttentionIssue } from "../../model/attentionIssues";
 import classes from "./AttentionIssuesPopover.module.css";
-
-export type { AttentionIssue };
-export { collectAttentionIssues };
 
 interface Props {
   issues: AttentionIssue[];

@@ -11,7 +11,6 @@ import {
   filterOverviewServersByFleet,
   type OverviewFleetFilter,
 } from "@features/overview/model/overviewFleetMetrics";
-import { collectAttentionIssues } from "@features/overview/model/attentionIssues";
 import { SearchField } from "@ui/SearchField/SearchField";
 import { OverviewFleetMetrics } from "./OverviewFleetMetrics/OverviewFleetMetrics";
 import { OverviewServerCard } from "./OverviewServerCard";
@@ -113,7 +112,7 @@ export function ServerGrid(props: Props): ReactElement {
     showDisabled && props.disabledServers.length > 0;
   const showFleetMetrics = !props.loading && props.servers.length > 0;
 
-  const fleetStats = useMemo(
+  const fleetComputed = useMemo(
     () =>
       computeOverviewFleetStats({
         enabledServers,
@@ -128,23 +127,8 @@ export function ServerGrid(props: Props): ReactElement {
       props.officialSteamBuild,
     ],
   );
-
-  /** Same fleet scope as the Needs attention metric count (not search-narrowed). */
-  const fleetAttentionIssues = useMemo(
-    () =>
-      collectAttentionIssues({
-        servers: enabledServers,
-        statuses: props.statuses,
-        installationInfo: props.installationInfo,
-        officialSteamBuild: props.officialSteamBuild,
-      }),
-    [
-      enabledServers,
-      props.statuses,
-      props.installationInfo,
-      props.officialSteamBuild,
-    ],
-  );
+  const fleetStats = fleetComputed.stats;
+  const fleetAttentionIssues = fleetComputed.attentionIssues;
 
   const fleetFilteredServers = useMemo(
     () =>

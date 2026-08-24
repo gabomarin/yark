@@ -5,7 +5,7 @@ import type {
   ServerProfile,
   ServerRuntimeInfo,
 } from "@shared/types";
-import { collectAttentionIssues } from "./attentionIssues";
+import { collectAttentionIssues, type AttentionIssue } from "./attentionIssues";
 
 /** Clickable Overview fleet strip filters (#314). Toggle again → `all`. */
 export type OverviewFleetFilter =
@@ -25,6 +25,11 @@ export interface OverviewFleetStats {
   updateServerIds: ReadonlySet<string>;
 }
 
+export interface OverviewFleetComputed {
+  stats: OverviewFleetStats;
+  attentionIssues: AttentionIssue[];
+}
+
 function runtimeStatus(
   statuses: Map<string, ServerRuntimeInfo>,
   serverId: string,
@@ -38,7 +43,7 @@ export function computeOverviewFleetStats(input: {
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
   officialSteamBuild: string | null;
-}): OverviewFleetStats {
+}): OverviewFleetComputed {
   const attentionIssues = collectAttentionIssues({
     servers: input.enabledServers,
     statuses: input.statuses,
@@ -70,13 +75,16 @@ export function computeOverviewFleetStats(input: {
   }
 
   return {
-    enabledCount: input.enabledServers.length,
-    runningCount,
-    stoppedCount,
-    attentionCount: attentionServerIds.size,
-    updatesCount: updateServerIds.size,
-    attentionServerIds,
-    updateServerIds,
+    stats: {
+      enabledCount: input.enabledServers.length,
+      runningCount,
+      stoppedCount,
+      attentionCount: attentionServerIds.size,
+      updatesCount: updateServerIds.size,
+      attentionServerIds,
+      updateServerIds,
+    },
+    attentionIssues,
   };
 }
 

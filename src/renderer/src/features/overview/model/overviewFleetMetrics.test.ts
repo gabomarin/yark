@@ -102,7 +102,7 @@ describe("overviewFleetMetrics", () => {
       ["c", readyInstall("c", { steamBuild: "build 100", build: "build 100" })],
     ]);
 
-    const stats = computeOverviewFleetStats({
+    const { stats } = computeOverviewFleetStats({
       enabledServers: enabled,
       statuses,
       installationInfo,
@@ -126,7 +126,7 @@ describe("overviewFleetMetrics", () => {
       ["a", runtime("a", "running")],
       ["b", runtime("b", "stopped")],
     ]);
-    const stats = computeOverviewFleetStats({
+    const { stats } = computeOverviewFleetStats({
       enabledServers: enabled,
       statuses,
       installationInfo: new Map([
