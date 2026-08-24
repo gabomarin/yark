@@ -234,7 +234,7 @@ async function run() {
     assert.match(issueText, /Empty folder/i);
     assert.match(issueText, /Incomplete/i);
     assert.match(issueText, /Needs review/i);
-    assert.match(issueText, /Checked /i);
+    assert.match(issueText, /Install checked /i);
     assert.doesNotMatch(issueText, /IH Ready/i);
 
     // Close popover so it does not intercept card clicks.
@@ -273,7 +273,7 @@ async function run() {
     await page.getByRole("button", { name: "Check Servers Health" }).click();
     await waitForAttentionSettled(page, expectedAttention, 30_000);
 
-    // Workspace surfaces health + last checked time (hit the card identity, not actions).
+    // Workspace Status shows install health (check time lives in attention details only).
     await readyCard
       .getByRole("button", { name: new RegExp(`Open settings for ${FIXTURES[4].name}`, "i") })
       .click();
@@ -286,10 +286,18 @@ async function run() {
     if ((await statusActions.count()) > 0) {
       await statusActions.click();
     }
-    const sidePanel = page.locator("aside").filter({ hasText: "Install" }).filter({ hasText: "Checked" }).last();
+    const sidePanel = page
+      .locator("aside")
+      .filter({ hasText: "Install" })
+      .filter({ hasText: "Ready" })
+      .last();
     await sidePanel.waitFor({ state: "visible", timeout: 10_000 });
     await expectText(sidePanel, "Ready");
-    await expectText(sidePanel, "Checked");
+    assert.equal(
+      await sidePanel.getByText("Install checked", { exact: false }).count(),
+      0,
+      "install check time should not appear on workspace Status",
+    );
 
     const actionableErrors = errors.filter(
       (message) => !/Failed to load resource|net::ERR_/i.test(message),
