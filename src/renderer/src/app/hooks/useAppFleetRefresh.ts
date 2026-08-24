@@ -25,7 +25,7 @@ import {
   reconcileSteamCmdStatus,
   upsertRuntimeStatus,
 } from "@renderer/shared/reconcilePollSnapshots";
-import { collectAttentionIssues } from "@features/overview/components/AttentionIssuesPopover/AttentionIssuesPopover";
+import { collectAttentionIssues } from "@features/overview/model/attentionIssues";
 import type { Overlay } from "@app/model/appOverlay";
 import type { Route } from "@layout/Sidebar/Sidebar";
 

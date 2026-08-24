@@ -76,13 +76,6 @@ export function OverviewPage(props: Props): ReactElement {
     () => filterOverviewServers(disabled, search),
     [disabled, search],
   );
-  const runningServers = useMemo(
-    () =>
-      Array.from(props.statuses.values()).filter(
-        (status) => status.status === "running",
-      ).length,
-    [props.statuses],
-  );
 
   const {
     checkingUpdates,
@@ -141,7 +134,6 @@ export function OverviewPage(props: Props): ReactElement {
           servers={props.servers}
           filteredServers={filteredServers}
           disabledServers={filteredDisabledServers}
-          runningServers={runningServers}
           statuses={props.statuses}
           installationInfo={props.installationInfo}
           officialSteamBuild={props.officialSteamBuild}

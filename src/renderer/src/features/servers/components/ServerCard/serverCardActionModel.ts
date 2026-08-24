@@ -78,6 +78,21 @@ export function resolveRuntimeAction(input: {
         ? "Wait until SteamCMD finishes this server"
         : undefined;
 
+  // Enable matches the kebab: never require install files (#132). Check before
+  // filesLocked so a disabled profile does not show a locked Start instead.
+  if (!serverEnabled) {
+    return {
+      kind: "enable",
+      label: "Enable server",
+      color: "blue",
+      variant: "filled",
+      disabled: input.steamCmdBusy,
+      hint: input.steamCmdBusy
+        ? "Another server operation is in progress"
+        : undefined,
+      visible: true,
+    };
+  }
   if (filesLocked) {
     if (input.status === "running" || input.status === "starting") {
       return {
@@ -106,16 +121,6 @@ export function resolveRuntimeAction(input: {
       variant: "light",
       disabled: true,
       hint: filesLockHint,
-      visible: true,
-    };
-  }
-  if (!serverEnabled) {
-    return {
-      kind: "enable",
-      label: "Enable server",
-      color: "blue",
-      variant: "filled",
-      disabled: !input.isInstallationReady,
       visible: true,
     };
   }

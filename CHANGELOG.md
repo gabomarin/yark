@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Overview **fleet metric strip** (Running, Stopped, Needs attention, Updates available) with compact click-to-filter tiles; attention details open from an info control on the Needs attention tile (#314).
 - **Decomposition map** for oversized backend services and renderer pages — phased boundaries, test inventory, and PR checklist ([#146](https://github.com/gabomarin/yark/issues/146)).
 - Pure **backup cleanup planner** module (`backup-cleanup-plan.ts`) extracted from `backup-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **Backup fleet health** helpers extracted to `backup-fleet.ts` (health badges, alerts, disk stats) with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
@@ -63,6 +64,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Server card **Enable** icon works again when files are not installed (same as the kebab menu); it only locks while SteamCMD is busy (#132).
 - **Check server updates** and **Update all outdated** no longer fail when a background overview poll overlaps the forced Steam install scan; user actions keep their IPC result while stale refreshes remain blocked from shared state ([#146](https://github.com/gabomarin/yark/issues/146)).
 
 ## [0.15.0] - 2026-08-22

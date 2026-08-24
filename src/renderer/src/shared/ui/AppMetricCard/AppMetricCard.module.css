@@ -2,11 +2,13 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  gap: 0;
   min-width: 0;
   height: 100%;
-  border-color: color-mix(in srgb, var(--app-color-border) 60%, transparent);
-  background: color-mix(in srgb, var(--app-color-panel) 55%, transparent);
+  padding: var(--app-space-xs) var(--app-space-sm) !important;
+  border-radius: 0;
+  border-color: var(--app-color-border);
+  background: var(--app-color-panel);
   box-shadow: none;
   color: inherit;
   text-align: left;
@@ -17,60 +19,51 @@
 }
 
 .root[data-tone="warning"] {
-  border-color: color-mix(in srgb, var(--mantine-color-yellow-6) 55%, transparent);
+  border-color: color-mix(in srgb, var(--mantine-color-yellow-6) 70%, var(--app-color-border));
 }
 
 .root[data-tone="danger"] {
-  border-color: color-mix(in srgb, var(--mantine-color-red-6) 55%, transparent);
+  border-color: color-mix(in srgb, var(--mantine-color-red-6) 70%, var(--app-color-border));
 }
 
-/* Selected filter tile — same language as list selection + stronger fill. */
+.root[data-tone="warning"] .label,
+.root[data-tone="warning"] .value {
+  color: var(--mantine-color-yellow-4);
+}
+
+.root[data-tone="danger"] .label,
+.root[data-tone="danger"] .value {
+  color: var(--mantine-color-red-4);
+}
+
+/* Selected — tone-tinted fill; text stays put for default (Running / Stopped). */
 .root[data-active] {
-  border-color: color-mix(in srgb, var(--ark-blue-8) 60%, transparent);
-  background: var(--app-list-selected-bg);
-  box-shadow:
-    var(--app-list-selected-inset),
-    inset 0 0 0 1px color-mix(in srgb, var(--ark-blue-7) 28%, transparent);
+  border-color: var(--ark-blue-7);
+  background: color-mix(in srgb, var(--app-color-panel) 78%, var(--ark-blue-8));
+  box-shadow: none;
 }
 
 .root[data-active][data-tone="warning"] {
-  border-color: color-mix(in srgb, var(--mantine-color-yellow-5) 75%, transparent);
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--app-color-panel) 55%, var(--mantine-color-yellow-6)) 0%,
-    color-mix(in srgb, var(--app-color-panel) 78%, var(--mantine-color-yellow-6)) 100%
-  );
-  box-shadow:
-    inset 3px 0 0 var(--mantine-color-yellow-5),
-    inset 0 0 0 1px color-mix(in srgb, var(--mantine-color-yellow-6) 30%, transparent);
+  border-color: var(--mantine-color-yellow-5);
+  background: color-mix(in srgb, var(--app-color-panel) 78%, var(--mantine-color-yellow-6));
 }
 
 .root[data-active][data-tone="danger"] {
-  border-color: color-mix(in srgb, var(--mantine-color-red-5) 75%, transparent);
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--app-color-panel) 55%, var(--mantine-color-red-6)) 0%,
-    color-mix(in srgb, var(--app-color-panel) 78%, var(--mantine-color-red-6)) 100%
-  );
-  box-shadow:
-    inset 3px 0 0 var(--mantine-color-red-5),
-    inset 0 0 0 1px color-mix(in srgb, var(--mantine-color-red-6) 30%, transparent);
+  border-color: var(--mantine-color-red-5);
+  background: color-mix(in srgb, var(--app-color-panel) 78%, var(--mantine-color-red-6));
 }
 
-.root[data-active] .label {
-  color: var(--ark-blue-3);
-}
-
-.root[data-active][data-tone="warning"] .label {
+.root[data-active][data-tone="warning"] .label,
+.root[data-active][data-tone="warning"] .value {
   color: var(--mantine-color-yellow-3);
 }
 
-.root[data-active][data-tone="danger"] .label {
+.root[data-active][data-tone="danger"] .label,
+.root[data-active][data-tone="danger"] .value {
   color: var(--mantine-color-red-3);
 }
 
 .root[data-active] .value {
-  color: var(--app-color-text);
   font-weight: 700;
 }
 
@@ -81,17 +74,29 @@
 }
 
 .root[data-clickable]:hover:not([data-active]) {
-  border-color: color-mix(in srgb, var(--ark-blue-7) 55%, var(--app-color-border));
+  background: color-mix(in srgb, var(--app-color-panel) 92%, var(--ark-blue-8));
+}
+
+.root[data-clickable][data-tone="warning"]:hover:not([data-active]) {
+  background: color-mix(in srgb, var(--app-color-panel) 90%, var(--mantine-color-yellow-6));
+}
+
+.root[data-clickable][data-tone="danger"]:hover:not([data-active]) {
+  background: color-mix(in srgb, var(--app-color-panel) 90%, var(--mantine-color-red-6));
 }
 
 .root[data-clickable][data-active]:hover {
-  filter: brightness(1.06);
+  filter: brightness(1.04);
 }
 
 .label {
   display: inline-flex;
   align-items: center;
   gap: var(--app-space-xs);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .valueRow {
@@ -103,16 +108,28 @@
 }
 
 .value {
-  font-size: 1.35rem;
+  font-size: 1.125rem;
   font-weight: 650;
-  line-height: 1.2;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
   color: var(--app-color-text);
   min-width: 0;
 }
 
 .hint {
+  margin-top: 1px;
+  font-size: 11px;
+  line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+}
+
+:global([data-ui-density="compact"]) .root {
+  padding: 4px 8px !important;
+}
+
+:global([data-ui-density="compact"]) .value {
+  font-size: 1rem;
 }

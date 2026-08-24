@@ -104,7 +104,11 @@ describe("OverviewPage", () => {
 
     expect(screen.getByRole("heading", { name: "Servers", level: 1 })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Your servers" })).not.toBeInTheDocument();
-    expect(screen.getByText("2 enabled servers · none running")).toBeInTheDocument();
+    expect(screen.getByText("2 enabled servers")).toBeInTheDocument();
+    const metrics = document.querySelector("[data-overview-fleet-metrics]");
+    expect(metrics).not.toBeNull();
+    expect(within(metrics as HTMLElement).getByRole("button", { name: /^Running/i })).toBeInTheDocument();
+    expect(within(metrics as HTMLElement).getByRole("button", { name: /^Stopped/i })).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Search servers" })).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "View logs" }).length).toBeGreaterThan(0);
     expect(screen.getByText("The Island")).toBeInTheDocument();
@@ -181,6 +185,7 @@ describe("OverviewPage", () => {
   });
 
   it("surfaces how many servers need attention", async () => {
+    const user = userEvent.setup();
     renderOverview({
       installationInfo: new Map([
         [
@@ -203,16 +208,84 @@ describe("OverviewPage", () => {
       ]),
     });
 
-    expect(screen.getAllByText("1 needs attention").length).toBeGreaterThan(0);
+    const metrics = document.querySelector("[data-overview-fleet-metrics]");
+    expect(metrics).not.toBeNull();
+    expect(
+      within(metrics as HTMLElement).getByRole("button", { name: /^Needs attention/i }),
+    ).toHaveTextContent("1");
     expect(
       screen.getAllByRole("button", { name: /Install server files/i }).length,
     ).toBeGreaterThan(0);
 
-    await userEvent.click(screen.getByRole("button", { name: "1 needs attention" }));
+    await user.click(
+      screen.getByRole("button", { name: "Show servers that need attention" }),
+    );
     expect(screen.getByText("Missing path")).toBeInTheDocument();
     expect(
       screen.getByText(/Create the folder or correct the install path/i),
     ).toBeInTheDocument();
+  });
+
+  it("hides the fleet metric strip when there are no profiles (#314)", () => {
+    renderOverview({ servers: [] });
+
+    expect(document.querySelector("[data-overview-fleet-metrics]")).toBeNull();
+    expect(screen.getByText("Create your first server")).toBeInTheDocument();
+  });
+
+  it("filters the grid from fleet metric tiles and clears on second click (#314)", async () => {
+    const user = userEvent.setup();
+    const second = {
+      ...server,
+      id: "srv-2",
+      name: "Scorched Earth",
+      installDir: "C:/ARK/ScorchedEarth",
+      gamePort: 7787,
+      queryPort: 27025,
+      rconPort: 27030,
+    };
+    renderOverview({
+      servers: [server, second],
+      statuses: new Map([
+        [
+          "srv-1",
+          {
+            serverId: "srv-1",
+            status: "running",
+            processLive: true,
+            pid: 42,
+            startedAt: null,
+            lastError: null,
+          },
+        ],
+        [
+          "srv-2",
+          {
+            serverId: "srv-2",
+            status: "stopped",
+            processLive: false,
+            pid: null,
+            startedAt: null,
+            lastError: null,
+          },
+        ],
+      ]),
+    });
+
+    const metrics = document.querySelector("[data-overview-fleet-metrics]");
+    expect(metrics).not.toBeNull();
+    const metricsScope = within(metrics as HTMLElement);
+
+    expect(screen.getByText("The Island")).toBeInTheDocument();
+    expect(screen.getByText("Scorched Earth")).toBeInTheDocument();
+
+    await user.click(metricsScope.getByRole("button", { name: /^Running/i }));
+    expect(screen.getByText("The Island")).toBeInTheDocument();
+    expect(screen.queryByText("Scorched Earth")).not.toBeInTheDocument();
+    expect(screen.getByText(/1 result/)).toBeInTheDocument();
+
+    await user.click(metricsScope.getByRole("button", { name: /^Running/i }));
+    expect(screen.getByText("Scorched Earth")).toBeInTheDocument();
   });
 
   it("distinguishes loading from the actionable empty state", () => {

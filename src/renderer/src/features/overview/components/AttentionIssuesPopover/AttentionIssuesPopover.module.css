@@ -1,8 +1,3 @@
-.trigger {
-  cursor: pointer !important;
-  border: none;
-}
-
 .dropdown {
   padding: var(--app-space-sm);
 }

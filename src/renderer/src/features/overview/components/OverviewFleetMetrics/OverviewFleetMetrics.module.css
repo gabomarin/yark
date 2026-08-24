@@ -1,0 +1,61 @@
+.strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  border: 1px solid var(--app-color-border);
+  background: var(--app-color-panel);
+  min-width: 0;
+}
+
+@media (min-width: 36em) {
+  .strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.cell {
+  position: relative;
+  min-width: 0;
+  border-right: 1px solid var(--app-color-border-subtle);
+}
+
+.cell:last-child {
+  border-right: none;
+}
+
+@media (max-width: 35.99em) {
+  .cell:nth-child(2n) {
+    border-right: none;
+  }
+
+  .cell:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--app-color-border-subtle);
+  }
+}
+
+/* Segmented strip: drop Card chrome; keep tone fill + inset selected border. */
+.cell :global([data-clickable]) {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  height: 100%;
+}
+
+.cell :global([data-clickable][data-active]) {
+  box-shadow: inset 0 0 0 1px var(--ark-blue-7) !important;
+}
+
+.cell :global([data-clickable][data-active][data-tone="warning"]) {
+  box-shadow: inset 0 0 0 1px var(--mantine-color-yellow-5) !important;
+}
+
+.cell :global([data-clickable][data-active][data-tone="danger"]) {
+  box-shadow: inset 0 0 0 1px var(--mantine-color-red-5) !important;
+}
+
+.attentionInfo {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 1;
+}

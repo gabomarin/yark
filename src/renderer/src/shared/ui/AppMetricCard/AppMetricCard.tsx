@@ -59,8 +59,8 @@ export function AppMetricCard(props: Props): ReactElement {
       component={clickable ? "button" : "div"}
       type={clickable ? "button" : undefined}
       withBorder
-      padding="sm"
-      radius="md"
+      padding="xs"
+      radius={0}
       className={classNames}
       onClick={onClick}
       data-tone={tone === "default" ? undefined : tone}
@@ -70,7 +70,7 @@ export function AppMetricCard(props: Props): ReactElement {
     >
       <Text
         size="xs"
-        c={active ? undefined : "dimmed"}
+        c={active || tone !== "default" ? undefined : "dimmed"}
         fw={700}
         className={classes.label}
       >
@@ -81,8 +81,8 @@ export function AppMetricCard(props: Props): ReactElement {
         <Text className={classes.value}>{value}</Text>
         {showRing && (
           <RingProgress
-            size={36}
-            thickness={4}
+            size={28}
+            thickness={3}
             roundCaps
             sections={[{ value: Math.min(100, progressPercent), color: ringColor(tone) }]}
             aria-hidden

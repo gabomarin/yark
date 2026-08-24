@@ -1,19 +1,20 @@
 import { type ReactElement, useEffect, useMemo, useRef, useState } from "react";
-import { HardDrives, MagnifyingGlass, Plus } from "@phosphor-icons/react";
-import { Badge, Button, Checkbox, Group, Skeleton, Stack, Text, VisuallyHidden } from "@mantine/core";
+import { Badge, Checkbox, Group, Stack, Text } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo, ServerStopProgress } from "@shared/types";
 import type { ServerCardHandlers } from "@features/servers/components/ServerCard/serverCardHandlers";
 import { ServerListControls } from "@features/servers/components/ServerListControls/ServerListControls";
 import { useServerListPreferences } from "@features/servers/hooks/useServerListPreferences";
 import { sortServers } from "@features/servers/serverListModel";
 import { groupServersByCluster } from "@features/server-workspace/workspaceLayoutModel";
-import { EmptyState } from "@ui/EmptyState/EmptyState";
-import { SearchField } from "@ui/SearchField/SearchField";
 import {
-  AttentionIssuesPopover,
-  collectAttentionIssues,
-} from "./AttentionIssuesPopover/AttentionIssuesPopover";
+  computeOverviewFleetStats,
+  filterOverviewServersByFleet,
+  type OverviewFleetFilter,
+} from "@features/overview/model/overviewFleetMetrics";
+import { SearchField } from "@ui/SearchField/SearchField";
+import { OverviewFleetMetrics } from "./OverviewFleetMetrics/OverviewFleetMetrics";
 import { OverviewServerCard } from "./OverviewServerCard";
+import { ServerGridEmptyStates } from "./ServerGridEmptyStates";
 import { ServerGridList } from "./ServerGridList";
 import type { SteamCmdCardJobRef } from "./serverGridTypes";
 import classes from "../OverviewPage.module.css";
@@ -29,7 +30,6 @@ interface Props {
   servers: ServerProfile[];
   filteredServers: ServerProfile[];
   disabledServers: ServerProfile[];
-  runningServers: number;
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
   officialSteamBuild: string | null;
@@ -68,6 +68,7 @@ interface Props {
 
 export function ServerGrid(props: Props): ReactElement {
   const [showDisabled, setShowDisabled] = useState(false);
+  const [fleetFilter, setFleetFilter] = useState<OverviewFleetFilter>("all");
   const { sort, setSort, view, setView } = useServerListPreferences("overview");
   const propsRef = useRef(props);
   useEffect(() => {
@@ -101,12 +102,44 @@ export function ServerGrid(props: Props): ReactElement {
     [],
   );
 
-  const enabledServerCount = props.servers.filter(
-    (server) => server.enabled,
-  ).length;
+  const enabledServers = useMemo(
+    () => props.servers.filter((server) => server.enabled),
+    [props.servers],
+  );
+  const enabledServerCount = enabledServers.length;
   const hasEnabledServers = enabledServerCount > 0;
   const showingDisabledServers =
     showDisabled && props.disabledServers.length > 0;
+  const showFleetMetrics = !props.loading && props.servers.length > 0;
+
+  const fleetComputed = useMemo(
+    () =>
+      computeOverviewFleetStats({
+        enabledServers,
+        statuses: props.statuses,
+        installationInfo: props.installationInfo,
+        officialSteamBuild: props.officialSteamBuild,
+      }),
+    [
+      enabledServers,
+      props.statuses,
+      props.installationInfo,
+      props.officialSteamBuild,
+    ],
+  );
+  const fleetStats = fleetComputed.stats;
+  const fleetAttentionIssues = fleetComputed.attentionIssues;
+
+  const fleetFilteredServers = useMemo(
+    () =>
+      filterOverviewServersByFleet(
+        props.filteredServers,
+        fleetFilter,
+        fleetStats,
+        props.statuses,
+      ),
+    [props.filteredServers, fleetFilter, fleetStats, props.statuses],
+  );
 
   const enabledLabel =
     enabledServerCount === 1
@@ -116,42 +149,16 @@ export function ServerGrid(props: Props): ReactElement {
     props.disabledServers.length === 1
       ? "1 disabled server"
       : `${props.disabledServers.length} disabled servers`;
-  const runningLabel =
-    props.runningServers === 0
-      ? "none running"
-      : props.runningServers === 1
-        ? "1 running"
-        : `${props.runningServers} running`;
   const filteredLabel =
-    props.filteredServers.length !== enabledServerCount
-      ? ` · ${props.filteredServers.length} ${
-          props.filteredServers.length === 1 ? "result" : "results"
+    fleetFilteredServers.length !== enabledServerCount
+      ? ` · ${fleetFilteredServers.length} ${
+          fleetFilteredServers.length === 1 ? "result" : "results"
         }`
       : "";
 
-  const attentionIssues = useMemo(
-    () =>
-      collectAttentionIssues({
-        servers: showDisabled
-          ? [...props.filteredServers, ...props.disabledServers]
-          : props.filteredServers,
-        statuses: props.statuses,
-        installationInfo: props.installationInfo,
-        officialSteamBuild: props.officialSteamBuild,
-      }),
-    [
-      showDisabled,
-      props.filteredServers,
-      props.disabledServers,
-      props.statuses,
-      props.installationInfo,
-      props.officialSteamBuild,
-    ],
-  );
-
   const sortedEnabled = useMemo(
-    () => sortServers(props.filteredServers, sort),
-    [props.filteredServers, sort],
+    () => sortServers(fleetFilteredServers, sort),
+    [fleetFilteredServers, sort],
   );
   const sortedDisabled = useMemo(
     () => sortServers(props.disabledServers, sort),
@@ -193,10 +200,21 @@ export function ServerGrid(props: Props): ReactElement {
       aria-label="Server list"
       data-server-list
     >
+      {showFleetMetrics ? (
+        <div className={classes.fleetMetrics}>
+          <OverviewFleetMetrics
+            stats={fleetStats}
+            attentionIssues={fleetAttentionIssues}
+            fleetFilter={fleetFilter}
+            onFleetFilter={setFleetFilter}
+          />
+        </div>
+      ) : null}
+
       <div className={classes.serverSectionHeader}>
         <Group gap="sm" align="center" wrap="wrap" className={classes.serverSummaryRow}>
           <Text c="dimmed" size="sm" data-server-summary>
-            {enabledLabel} · {runningLabel}
+            {enabledLabel}
             {filteredLabel}
           </Text>
           {props.disabledServers.length > 0 && (
@@ -212,7 +230,6 @@ export function ServerGrid(props: Props): ReactElement {
               />
             </>
           )}
-          <AttentionIssuesPopover issues={attentionIssues} />
         </Group>
 
         {!props.loading && props.servers.length > 0 && (
@@ -236,85 +253,21 @@ export function ServerGrid(props: Props): ReactElement {
       </div>
 
       <Stack gap="md">
-        {props.loading && (
-          <div
-            className={classes.serverSkeletons}
-            role="status"
-            aria-live="polite"
-            data-server-skeletons
-          >
-            <VisuallyHidden>Loading servers</VisuallyHidden>
-            {[0, 1].map((item) => (
-              <div className={classes.serverSkeleton} key={item} aria-hidden="true">
-                <Skeleton circle width={52} height={52} />
-                <div className={classes.serverSkeletonIdentity}>
-                  <Skeleton width="42%" height={14} radius="xl" />
-                  <Skeleton width="68%" height={10} radius="xl" />
-                </div>
-                <div className={classes.serverSkeletonMeta}>
-                  <Skeleton width={68} height={10} radius="xl" />
-                  <Skeleton width={84} height={10} radius="xl" />
-                  <Skeleton width={58} height={10} radius="xl" />
-                </div>
-                <Skeleton width={92} height={30} radius="md" />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {!props.loading && props.servers.length === 0 && (
-          <EmptyState
-            icon={<HardDrives size={24} weight="duotone" />}
-            title="Create your first server"
-            description="Add a profile on this PC, then install dedicated server files."
-            titleOrder="h3"
-            action={
-              <Group gap="xs">
-                <Button leftSection={<Plus size={16} />} onClick={props.onCreateServer}>
-                  New server
-                </Button>
-                <Button variant="default" onClick={props.onImportServer}>
-                  Import existing install
-                </Button>
-              </Group>
-            }
-          />
-        )}
+        <ServerGridEmptyStates
+          loading={props.loading}
+          serverCount={props.servers.length}
+          fleetFilteredCount={fleetFilteredServers.length}
+          showingDisabledServers={showingDisabledServers}
+          hasEnabledServers={hasEnabledServers}
+          fleetFilter={fleetFilter}
+          onCreateServer={props.onCreateServer}
+          onImportServer={props.onImportServer}
+          onClearFleetFilter={() => setFleetFilter("all")}
+          onClearSearch={() => props.onSearchChange("")}
+        />
 
         {!props.loading &&
-          props.servers.length > 0 &&
-          props.filteredServers.length === 0 &&
-          !showingDisabledServers && (
-            <EmptyState
-              icon={
-                hasEnabledServers ? (
-                  <MagnifyingGlass size={20} />
-                ) : (
-                  <HardDrives size={20} />
-                )
-              }
-              title={hasEnabledServers ? "No matches" : "No enabled servers"}
-              description={
-                hasEnabledServers
-                  ? "Try another name, map, or cluster."
-                  : "All server profiles are disabled. Turn on Show disabled to manage or re-enable them."
-              }
-              action={
-                hasEnabledServers ? (
-                  <Button
-                    variant="default"
-                    size="xs"
-                    onClick={() => props.onSearchChange("")}
-                  >
-                    Clear search
-                  </Button>
-                ) : undefined
-              }
-            />
-          )}
-
-        {!props.loading &&
-          (props.filteredServers.length > 0 ||
+          (fleetFilteredServers.length > 0 ||
             (showDisabled && props.disabledServers.length > 0)) && (
           <ServerGridList
             view={view}
