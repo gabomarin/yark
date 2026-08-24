@@ -23,7 +23,7 @@
 - Operational logs / event details: `docs/logs.md`.
 - Server lifecycle (launch args, spawn, profile→INI): `docs/server-lifecycle.md`.
 - Workspace RCON console / players / ban list: `docs/rcon.md`.
-- Settings (app-wide prefs, desktop shell, SteamCMD path): `docs/settings.md`.
+- Settings (app-wide prefs, desktop shell, Desktop alerts, setup wizard, SteamCMD path): `docs/settings.md`.
 - Clusters transfer compliance: `docs/clusters.md`.
 - Workspace Mods / CurseForge load order: `docs/mods.md` (proxy ops: `docs/curseforge-proxy.md`).
 - GitHub Pages site / screenshot gallery: `docs/website.md`.
