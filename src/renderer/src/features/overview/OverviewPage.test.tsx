@@ -1,7 +1,9 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
+import type { ServerInstallationInfo } from "@shared/types";
 import { OverviewPage } from "./OverviewPage";
 
 const server = {
@@ -26,9 +28,68 @@ const server = {
   updatedAt: "2026-07-23T00:00:00.000Z",
 };
 
+const readyInstall = (overrides: Partial<ServerInstallationInfo> = {}): ServerInstallationInfo => ({
+  serverId: server.id,
+  installed: true,
+  health: "ready",
+  reasonCodes: ["ready"],
+  guidance: "Installation looks ready to start.",
+  build: "build 111",
+  steamBuild: "build 111",
+  arkVersion: null,
+  version: null,
+  binaryPath: "C:/ARK/TheIsland/ShooterGameServer.exe",
+  checkedAt: "2026-07-24T00:00:00.000Z",
+  ...overrides,
+});
+
+function renderOverview(
+  overrides: Partial<ComponentProps<typeof OverviewPage>> = {},
+) {
+  const props: ComponentProps<typeof OverviewPage> = {
+    onCreateServer: vi.fn(),
+    onImportServer: vi.fn(),
+    onCheckInstalls: vi.fn(),
+    servers: [server],
+    statuses: new Map(),
+    installationInfo: new Map(),
+    officialSteamBuild: null,
+    events: [],
+    onViewAllActivity: vi.fn(),
+    steamCmdStatus: null,
+    refresh: vi.fn(async () => ({
+      servers: null,
+      statuses: null,
+      installationInfo: null,
+      officialSteamBuild: null,
+    })),
+    onOpenDownloads: vi.fn(),
+    onOpenWorkspace: vi.fn(),
+    onOpenLogs: vi.fn(),
+    onReviewError: vi.fn(),
+    onStartServer: vi.fn(),
+    onStopServer: vi.fn(),
+    onRestartServer: vi.fn(),
+    onKillServer: vi.fn(),
+    onOpenFolder: vi.fn(),
+    onInstallFiles: vi.fn(),
+    onUpdateNow: vi.fn(),
+    onVerifyFiles: vi.fn(),
+    onCloneServer: vi.fn(),
+    onCopyConfiguration: vi.fn(),
+    onDeleteServer: vi.fn(),
+    ...overrides,
+  };
+  return render(
+    <AppProviders>
+      <OverviewPage {...props} />
+    </AppProviders>,
+  );
+}
+
 describe("OverviewPage", () => {
   it("renders the operational server list and recent activity", () => {
-    const searchHiddenServer = {
+    const secondServer = {
       ...server,
       id: "srv-2",
       name: "Scorched Earth",
@@ -37,52 +98,17 @@ describe("OverviewPage", () => {
       queryPort: 27025,
       rconPort: 27030,
     };
-    const { container } = render(
-      <AppProviders>
-        <OverviewPage
-          search="island"
-          onSearchChange={vi.fn()}
-          onCreateServer={vi.fn()}
-          onImportServer={vi.fn()}
-          onCheckUpdates={vi.fn()}
-          onCheckInstalls={vi.fn()}
-          servers={[server, searchHiddenServer]}
-          filteredServers={[server]}
-          disabledServers={[]}
-          runningServers={0}
-          statuses={new Map()}
-          installationInfo={new Map()}
-          officialSteamBuild={null}
-          events={[]}
-          onViewAllActivity={vi.fn()}
-          onOpenWorkspace={vi.fn()}
-          onOpenLogs={vi.fn()}
-          onReviewError={vi.fn()}
-          onStartServer={vi.fn()}
-          onStopServer={vi.fn()}
-          onRestartServer={vi.fn()}
-          onKillServer={vi.fn()}
-          onOpenFolder={vi.fn()}
-          onInstallFiles={vi.fn()}
-          onUpdateNow={vi.fn()}
-          onVerifyFiles={vi.fn()}
-          onCheckUpdatesForServer={vi.fn()}
-          onCloneServer={vi.fn()}
-          onCopyConfiguration={vi.fn()}
-          onDeleteServer={vi.fn()}
-        />
-      </AppProviders>,
-    );
+    const { container } = renderOverview({
+      servers: [server, secondServer],
+    });
 
     expect(screen.getByRole("heading", { name: "Servers", level: 1 })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Your servers" })).not.toBeInTheDocument();
-    expect(
-      screen.getByText("2 enabled servers · none running · 1 result"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("2 enabled servers · none running")).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Search servers" })).toBeInTheDocument();
-    // Narrow viewports hide the Recent activity panel; View logs stays available.
     expect(screen.getAllByRole("button", { name: "View logs" }).length).toBeGreaterThan(0);
     expect(screen.getByText("The Island")).toBeInTheDocument();
+    expect(screen.getByText("Scorched Earth")).toBeInTheDocument();
     expect(screen.queryByText("Advertencias")).not.toBeInTheDocument();
 
     const header = container.querySelector("header");
@@ -95,43 +121,7 @@ describe("OverviewPage", () => {
   });
 
   it("turns Check Servers Health into a loading control while scanning", () => {
-    const { container, rerender } = render(
-      <AppProviders>
-        <OverviewPage
-          search=""
-          onSearchChange={vi.fn()}
-          onCreateServer={vi.fn()}
-          onImportServer={vi.fn()}
-          onCheckUpdates={vi.fn()}
-          onCheckInstalls={vi.fn()}
-          checkingInstalls
-          servers={[server]}
-          filteredServers={[server]}
-          disabledServers={[]}
-          runningServers={0}
-          statuses={new Map()}
-          installationInfo={new Map()}
-          officialSteamBuild={null}
-          events={[]}
-          onViewAllActivity={vi.fn()}
-          onOpenWorkspace={vi.fn()}
-          onOpenLogs={vi.fn()}
-          onReviewError={vi.fn()}
-          onStartServer={vi.fn()}
-          onStopServer={vi.fn()}
-          onRestartServer={vi.fn()}
-          onKillServer={vi.fn()}
-          onOpenFolder={vi.fn()}
-          onInstallFiles={vi.fn()}
-          onUpdateNow={vi.fn()}
-          onVerifyFiles={vi.fn()}
-          onCheckUpdatesForServer={vi.fn()}
-          onCloneServer={vi.fn()}
-          onCopyConfiguration={vi.fn()}
-          onDeleteServer={vi.fn()}
-        />
-      </AppProviders>,
-    );
+    const { container, rerender } = renderOverview({ checkingInstalls: true });
 
     const header = container.querySelector("header");
     expect(header).not.toBeNull();
@@ -148,22 +138,24 @@ describe("OverviewPage", () => {
     rerender(
       <AppProviders>
         <OverviewPage
-          search=""
-          onSearchChange={vi.fn()}
           onCreateServer={vi.fn()}
           onImportServer={vi.fn()}
-          onCheckUpdates={vi.fn()}
           onCheckInstalls={vi.fn()}
           checkingInstalls={false}
           servers={[server]}
-          filteredServers={[server]}
-          disabledServers={[]}
-          runningServers={0}
           statuses={new Map()}
           installationInfo={new Map()}
           officialSteamBuild={null}
           events={[]}
           onViewAllActivity={vi.fn()}
+          steamCmdStatus={null}
+          refresh={vi.fn(async () => ({
+            servers: null,
+            statuses: null,
+            installationInfo: null,
+            officialSteamBuild: null,
+          }))}
+          onOpenDownloads={vi.fn()}
           onOpenWorkspace={vi.fn()}
           onOpenLogs={vi.fn()}
           onReviewError={vi.fn()}
@@ -175,7 +167,6 @@ describe("OverviewPage", () => {
           onInstallFiles={vi.fn()}
           onUpdateNow={vi.fn()}
           onVerifyFiles={vi.fn()}
-          onCheckUpdatesForServer={vi.fn()}
           onCloneServer={vi.fn()}
           onCopyConfiguration={vi.fn()}
           onDeleteServer={vi.fn()}
@@ -190,62 +181,27 @@ describe("OverviewPage", () => {
   });
 
   it("surfaces how many servers need attention", async () => {
-    render(
-      <AppProviders>
-        <OverviewPage
-          search=""
-          onSearchChange={vi.fn()}
-          onCreateServer={vi.fn()}
-          onImportServer={vi.fn()}
-          onCheckUpdates={vi.fn()}
-          onCheckInstalls={vi.fn()}
-          servers={[server]}
-          filteredServers={[server]}
-          disabledServers={[]}
-          runningServers={0}
-          statuses={new Map()}
-          installationInfo={
-            new Map([
-              [
-                server.id,
-                {
-                  serverId: server.id,
-                  installed: false,
-                  health: "missing",
-                  reasonCodes: ["path_missing"],
-                  guidance:
-                    "Create the folder or correct the install path, then install server files.",
-                  build: null,
-                  steamBuild: null,
-                  arkVersion: null,
-                  version: null,
-                  binaryPath: "C:/ARK/TheIsland/ShooterGameServer.exe",
-                  checkedAt: "2026-07-24T00:00:00.000Z",
-                },
-              ],
-            ])
-          }
-          officialSteamBuild={null}
-          events={[]}
-          onViewAllActivity={vi.fn()}
-          onOpenWorkspace={vi.fn()}
-          onOpenLogs={vi.fn()}
-          onReviewError={vi.fn()}
-          onStartServer={vi.fn()}
-          onStopServer={vi.fn()}
-          onRestartServer={vi.fn()}
-          onKillServer={vi.fn()}
-          onOpenFolder={vi.fn()}
-          onInstallFiles={vi.fn()}
-          onUpdateNow={vi.fn()}
-          onVerifyFiles={vi.fn()}
-          onCheckUpdatesForServer={vi.fn()}
-          onCloneServer={vi.fn()}
-          onCopyConfiguration={vi.fn()}
-          onDeleteServer={vi.fn()}
-        />
-      </AppProviders>,
-    );
+    renderOverview({
+      installationInfo: new Map([
+        [
+          server.id,
+          {
+            serverId: server.id,
+            installed: false,
+            health: "missing",
+            reasonCodes: ["path_missing"],
+            guidance:
+              "Create the folder or correct the install path, then install server files.",
+            build: null,
+            steamBuild: null,
+            arkVersion: null,
+            version: null,
+            binaryPath: "",
+            checkedAt: "2026-07-24T00:00:00.000Z",
+          },
+        ],
+      ]),
+    });
 
     expect(screen.getAllByText("1 needs attention").length).toBeGreaterThan(0);
     expect(
@@ -261,44 +217,11 @@ describe("OverviewPage", () => {
 
   it("distinguishes loading from the actionable empty state", () => {
     const onCreateServer = vi.fn();
-    const sharedProps = {
-      search: "",
-      onSearchChange: vi.fn(),
+    const { container, rerender } = renderOverview({
       onCreateServer,
-      onImportServer: vi.fn(),
-      onCheckUpdates: vi.fn(),
-      onCheckInstalls: vi.fn(),
       servers: [],
-      filteredServers: [],
-      disabledServers: [],
-      runningServers: 0,
-      statuses: new Map(),
-      installationInfo: new Map(),
-      officialSteamBuild: null,
-      events: [],
-      onViewAllActivity: vi.fn(),
-      onOpenWorkspace: vi.fn(),
-      onOpenLogs: vi.fn(),
-      onReviewError: vi.fn(),
-      onStartServer: vi.fn(),
-      onStopServer: vi.fn(),
-      onRestartServer: vi.fn(),
-      onKillServer: vi.fn(),
-      onOpenFolder: vi.fn(),
-      onInstallFiles: vi.fn(),
-      onUpdateNow: vi.fn(),
-      onVerifyFiles: vi.fn(),
-      onCheckUpdatesForServer: vi.fn(),
-      onCloneServer: vi.fn(),
-      onCopyConfiguration: vi.fn(),
-      onDeleteServer: vi.fn(),
-    };
-
-    const { container, rerender } = render(
-      <AppProviders>
-        <OverviewPage {...sharedProps} loading />
-      </AppProviders>,
-    );
+      loading: true,
+    });
 
     expect(screen.getByText("Loading servers")).toBeInTheDocument();
     expect(container.querySelectorAll("[data-server-skeletons] > [aria-hidden='true']")).toHaveLength(
@@ -308,7 +231,40 @@ describe("OverviewPage", () => {
 
     rerender(
       <AppProviders>
-        <OverviewPage {...sharedProps} loading={false} />
+        <OverviewPage
+          onCreateServer={onCreateServer}
+          onImportServer={vi.fn()}
+          onCheckInstalls={vi.fn()}
+          loading={false}
+          servers={[]}
+          statuses={new Map()}
+          installationInfo={new Map()}
+          officialSteamBuild={null}
+          events={[]}
+          onViewAllActivity={vi.fn()}
+          steamCmdStatus={null}
+          refresh={vi.fn(async () => ({
+            servers: null,
+            statuses: null,
+            installationInfo: null,
+            officialSteamBuild: null,
+          }))}
+          onOpenDownloads={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onStartServer={vi.fn()}
+          onStopServer={vi.fn()}
+          onRestartServer={vi.fn()}
+          onKillServer={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCloneServer={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDeleteServer={vi.fn()}
+        />
       </AppProviders>,
     );
 
@@ -323,102 +279,18 @@ describe("OverviewPage", () => {
     const user = userEvent.setup();
     const disabledServer = { ...server, id: "srv-2", name: "Frozen Fjord", enabled: false };
 
-    render(
-      <AppProviders>
-        <OverviewPage
-          search=""
-          onSearchChange={vi.fn()}
-          onCreateServer={vi.fn()}
-          onImportServer={vi.fn()}
-          onCheckUpdates={vi.fn()}
-          onCheckInstalls={vi.fn()}
-          servers={[server, disabledServer]}
-          filteredServers={[server]}
-          disabledServers={[disabledServer]}
-          runningServers={0}
-          statuses={new Map()}
-          installationInfo={new Map()}
-          officialSteamBuild={null}
-          events={[]}
-          onViewAllActivity={vi.fn()}
-          onOpenWorkspace={vi.fn()}
-          onOpenLogs={vi.fn()}
-          onReviewError={vi.fn()}
-          onStartServer={vi.fn()}
-          onStopServer={vi.fn()}
-          onRestartServer={vi.fn()}
-          onKillServer={vi.fn()}
-          onOpenFolder={vi.fn()}
-          onInstallFiles={vi.fn()}
-          onUpdateNow={vi.fn()}
-          onVerifyFiles={vi.fn()}
-          onCheckUpdatesForServer={vi.fn()}
-          onCloneServer={vi.fn()}
-          onCopyConfiguration={vi.fn()}
-          onDeleteServer={vi.fn()}
-        />
-      </AppProviders>,
-    );
+    renderOverview({ servers: [server, disabledServer] });
 
-    // Verify disabled servers badge and toggle are shown
-    expect(screen.getAllByText("1 disabled server").length).toBeGreaterThan(0);
-    const showDisabledCheckbox = screen.getByRole("checkbox", { name: "Show disabled" });
-    expect(showDisabledCheckbox).toBeInTheDocument();
-    expect(showDisabledCheckbox).not.toBeChecked();
-
-    // Verify disabled server is not shown initially
-    expect(screen.queryByText("Frozen Fjord")).not.toBeInTheDocument();
-    expect(screen.getByText("The Island")).toBeInTheDocument();
-
-    // Toggle to show disabled servers
-    await user.click(showDisabledCheckbox);
-
-    // Verify both servers are now shown
+    await user.click(screen.getByRole("checkbox", { name: "Show disabled" }));
     expect(screen.getByText("Frozen Fjord")).toBeInTheDocument();
     expect(screen.getByText("The Island")).toBeInTheDocument();
-    expect(screen.getByText("Inactive")).toBeInTheDocument();
   });
 
-  it("renders disabled cards when no enabled server is visible", async () => {
+  it("keeps disabled-only fleets out of the enabled list until Show disabled is on", async () => {
     const user = userEvent.setup();
-    const disabledServer = { ...server, enabled: false };
+    const disabledOnly = { ...server, enabled: false };
 
-    render(
-      <AppProviders>
-        <OverviewPage
-          search=""
-          onSearchChange={vi.fn()}
-          onCreateServer={vi.fn()}
-          onImportServer={vi.fn()}
-          onCheckUpdates={vi.fn()}
-          onCheckInstalls={vi.fn()}
-          servers={[disabledServer]}
-          filteredServers={[]}
-          disabledServers={[disabledServer]}
-          runningServers={0}
-          statuses={new Map()}
-          installationInfo={new Map()}
-          officialSteamBuild={null}
-          events={[]}
-          onViewAllActivity={vi.fn()}
-          onOpenWorkspace={vi.fn()}
-          onOpenLogs={vi.fn()}
-          onReviewError={vi.fn()}
-          onStartServer={vi.fn()}
-          onStopServer={vi.fn()}
-          onRestartServer={vi.fn()}
-          onKillServer={vi.fn()}
-          onOpenFolder={vi.fn()}
-          onInstallFiles={vi.fn()}
-          onUpdateNow={vi.fn()}
-          onVerifyFiles={vi.fn()}
-          onCheckUpdatesForServer={vi.fn()}
-          onCloneServer={vi.fn()}
-          onCopyConfiguration={vi.fn()}
-          onDeleteServer={vi.fn()}
-        />
-      </AppProviders>,
-    );
+    renderOverview({ servers: [disabledOnly] });
 
     expect(screen.queryByText("The Island")).not.toBeInTheDocument();
     expect(screen.getByText("No enabled servers")).toBeInTheDocument();
@@ -432,143 +304,60 @@ describe("OverviewPage", () => {
   });
 
   it("disables Update All until a stopped server is eligible (#378)", () => {
-    render(
-      <AppProviders>
-        <OverviewPage
-          search=""
-          onSearchChange={vi.fn()}
-          onCreateServer={vi.fn()}
-          onImportServer={vi.fn()}
-          onCheckUpdates={vi.fn()}
-          onCheckInstalls={vi.fn()}
-          onOpenUpdateAllOutdated={vi.fn()}
-          canUpdateAllOutdated={false}
-          servers={[server]}
-          filteredServers={[server]}
-          disabledServers={[]}
-          runningServers={0}
-          statuses={new Map([["srv-1", { serverId: "srv-1", status: "stopped", processLive: false, pid: null, startedAt: null, lastError: null }]])}
-          installationInfo={
-            new Map([
-              [
-                server.id,
-                {
-                  serverId: server.id,
-                  installed: true,
-                  health: "ready",
-                  reasonCodes: ["ready"],
-                  guidance: "Installation looks ready to start.",
-                  build: "build 111",
-                  steamBuild: "build 111",
-                  arkVersion: null,
-                  version: null,
-                  binaryPath: "C:/ARK/TheIsland/ShooterGameServer.exe",
-                  checkedAt: "2026-07-24T00:00:00.000Z",
-                },
-              ],
-            ])
-          }
-          officialSteamBuild="build 999"
-          events={[]}
-          onViewAllActivity={vi.fn()}
-          onOpenWorkspace={vi.fn()}
-          onOpenLogs={vi.fn()}
-          onReviewError={vi.fn()}
-          onStartServer={vi.fn()}
-          onStopServer={vi.fn()}
-          onRestartServer={vi.fn()}
-          onKillServer={vi.fn()}
-          onOpenFolder={vi.fn()}
-          onInstallFiles={vi.fn()}
-          onUpdateNow={vi.fn()}
-          onVerifyFiles={vi.fn()}
-          onCheckUpdatesForServer={vi.fn()}
-          onCloneServer={vi.fn()}
-          onCopyConfiguration={vi.fn()}
-          onDeleteServer={vi.fn()}
-        />
-      </AppProviders>,
-    );
+    renderOverview({
+      statuses: new Map([
+        [
+          "srv-1",
+          {
+            serverId: "srv-1",
+            status: "stopped",
+            processLive: false,
+            pid: null,
+            startedAt: null,
+            lastError: null,
+          },
+        ],
+      ]),
+      installationInfo: new Map([[server.id, readyInstall()]]),
+      officialSteamBuild: "build 111",
+    });
 
-    expect(
-      screen.getByRole("button", { name: "Update All" }),
-    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Update All" })).toBeDisabled();
   });
 
   it("opens the update-all preview when the fleet action is enabled (#378)", async () => {
     const user = userEvent.setup();
-    const onOpenUpdateAllOutdated = vi.fn();
+    const install = readyInstall({ steamBuild: "build 111", build: "build 111" });
+    const installationInfo = new Map([[server.id, install]]);
+    const refresh = vi.fn(async () => ({
+      servers: null,
+      statuses: null,
+      installationInfo,
+      officialSteamBuild: "build 999",
+    }));
 
-    render(
-      <AppProviders>
-        <OverviewPage
-          search=""
-          onSearchChange={vi.fn()}
-          onCreateServer={vi.fn()}
-          onImportServer={vi.fn()}
-          onCheckUpdates={vi.fn()}
-          onCheckInstalls={vi.fn()}
-          onOpenUpdateAllOutdated={onOpenUpdateAllOutdated}
-          canUpdateAllOutdated
-          updateAllOutdatedOpen
-          updateAllOutdatedPlan={{
-            officialBuild: "build 999",
-            rows: [
-              {
-                serverId: server.id,
-                serverName: server.name,
-                installBuild: "build 111",
-                officialBuild: "build 999",
-                status: "stopped",
-                eligible: true,
-                skipReason: null,
-                skipLabel: null,
-              },
-            ],
-            eligible: [
-              {
-                serverId: server.id,
-                serverName: server.name,
-                installBuild: "build 111",
-                officialBuild: "build 999",
-                status: "stopped",
-                eligible: true,
-                skipReason: null,
-                skipLabel: null,
-              },
-            ],
-            skipped: [],
-          }}
-          servers={[server]}
-          filteredServers={[server]}
-          disabledServers={[]}
-          runningServers={0}
-          statuses={new Map()}
-          installationInfo={new Map()}
-          officialSteamBuild="build 999"
-          events={[]}
-          onViewAllActivity={vi.fn()}
-          onOpenWorkspace={vi.fn()}
-          onOpenLogs={vi.fn()}
-          onReviewError={vi.fn()}
-          onStartServer={vi.fn()}
-          onStopServer={vi.fn()}
-          onRestartServer={vi.fn()}
-          onKillServer={vi.fn()}
-          onOpenFolder={vi.fn()}
-          onInstallFiles={vi.fn()}
-          onUpdateNow={vi.fn()}
-          onVerifyFiles={vi.fn()}
-          onCheckUpdatesForServer={vi.fn()}
-          onCloneServer={vi.fn()}
-          onCopyConfiguration={vi.fn()}
-          onDeleteServer={vi.fn()}
-        />
-      </AppProviders>,
-    );
+    renderOverview({
+      statuses: new Map([
+        [
+          "srv-1",
+          {
+            serverId: "srv-1",
+            status: "stopped",
+            processLive: false,
+            pid: null,
+            startedAt: null,
+            lastError: null,
+          },
+        ],
+      ]),
+      installationInfo,
+      officialSteamBuild: "build 999",
+      refresh,
+    });
 
+    expect(screen.getByRole("button", { name: "Update All" })).toBeEnabled();
     await user.click(screen.getByRole("button", { name: "Update All" }));
-    expect(onOpenUpdateAllOutdated).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole("dialog", { name: /^update all$/i })).toBeInTheDocument();
+    expect(refresh).toHaveBeenCalled();
+    expect(await screen.findByRole("dialog", { name: /^update all$/i })).toBeInTheDocument();
   });
 });

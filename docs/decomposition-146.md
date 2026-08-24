@@ -140,9 +140,10 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `ConfigurationEditorSettingsTable.tsx` | Virtualized settings table shell |
 | `ConfigurationEditor.tsx` (575 lines) | Coordinator: text mode, header toolbar, load/save still in parent |
 | `App.tsx` | Thin entry forwarding initial prefs to `AppShell` |
-| `AppShell.tsx` (~700 lines) | Fleet/RCON/onboarding/SteamCMD/lifecycle/updates + sibling modals + router slices |
+| `AppShell.tsx` | Fleet/RCON/onboarding/SteamCMD/lifecycle + sibling modals + router slices |
+| `features/overview/hooks/useOverviewServerUpdates.ts` | Check updates + update-all modal (#433 Phase C) |
 
-**Phase 5c optional exit:** `useAppOnboarding`, `useAppSteamCmdActions`, `useAppServerLifecycle`, and `useAppServerUpdates` own shell workflows. Domain slices (#433 Phase A) and `AppShell` composition (#433 Phase B) landed; app-shell Context remains deferred (#434).
+**Phase 5c optional exit:** Shell workflows live in `useApp*` + overview-owned update checks. Domain slices (Phase A), `AppShell` (Phase B), and Overview page-local search/update-all (Phase C) landed for #433. Settings focus flags stay in the shell (set from toast/Downloads chrome). App-shell Context remains deferred (#434).
 
 **Phase 5 exit:** Grandfathered feature pages are organisms + thin coordinators.
 
@@ -254,12 +255,14 @@ Not in the feature size gate. Entry is thin; coupling lives in `AppShell`.
 
 | Topic | Guidance |
 | --- | --- |
-| **`AppShell.tsx` size** | Expected after Phase B (~700 lines): hooks + slice builders + sibling modals. Phase C moves Overview/Settings-only state down when ownership is clear. If it keeps growing, split into `AppShellOrchestration.ts` (hooks + slices), `AppShellChrome.tsx` (Spotlight, SetupWizard, modals), thin `AppShell.tsx` compositor — not required for #433 B. |
+| **`AppShell.tsx` size** | After Phase C, Overview owns search/filter and update-all state. Further growth → split into `AppShellOrchestration.ts` / `AppShellChrome.tsx` / thin compositor. |
 | **Router slices** | `AppShell` builds `AppMainRouter` slices inline in JSX. Fine today (no `React.memo` on router children). If memoization is added downstream, wrap each slice in `useMemo` with stable deps. |
 | **Lifecycle callbacks** | Patterns like `startServer: (id) => void startServer(id)` predate slices; they create new closures each render. Pass hook callbacks directly when signatures match, or stabilize with `useCallback` in the shell if memoization depends on referential equality. |
-| **Tests** | Move-only phases: `App.test.tsx` is enough. Direct `AppShell` tests when shell behavior changes in Phase C+. |
+| **Settings focus flags** | `focusYarkUpdates` / `focusSteamCmd` stay in `AppShell` — set from chrome (Yark update toast, Downloads → SteamCMD settings, lifecycle). Not page-local. |
+| **Overview search** | Owned by `OverviewPage`. Resets when leaving Overview (unmount). Intentional for Phase C page-local ownership. Persist later via `AppRouterPages` session/`useRef` or a stable Overview mount if operators need it. |
+| **Tests** | Overview page-local behavior: `OverviewPage.test.tsx` (exercises `useOverviewServerUpdates` indirectly). Add direct hook tests if update-check / update-all edge cases grow. |
 
-**Phase C (#433):** selective page-local state (e.g. `updateAllOutdated*`, settings focus flags). Do not move fleet poll / `installScan` without a dedicated owner. See [#433](https://github.com/gabomarin/yark/issues/433).
+**Phase C (#433):** Overview owns search + `useOverviewServerUpdates`. Fleet poll / `installScan` stay in `useAppFleetRefresh`. See [#433](https://github.com/gabomarin/yark/issues/433).
 
 ## Renderer: grandfathered feature pages
 

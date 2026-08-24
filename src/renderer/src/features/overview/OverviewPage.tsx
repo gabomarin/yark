@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { useMemo, useState } from "react";
 import { ArrowRight } from "@phosphor-icons/react";
 import { Button } from "@mantine/core";
 import type {
@@ -7,55 +8,43 @@ import type {
   ServerProfile,
   ServerRuntimeInfo,
   ServerStopProgress,
+  SteamCmdStatus,
 } from "@shared/types";
+import type { useAppFleetRefresh } from "@app/hooks/useAppFleetRefresh";
+import { useOverviewServerUpdates } from "@features/overview/hooks/useOverviewServerUpdates";
+import {
+  filterOverviewServers,
+  partitionOverviewServers,
+} from "@features/overview/model/overviewServerFilter";
 import { OverviewHeader } from "./components/OverviewHeader";
 import { RecentActivityPanel } from "./components/RecentActivityPanel";
 import { ServerGrid, type SteamCmdCardJobRef } from "./components/ServerGrid";
 import { UpdateAllOutdatedModal } from "./components/UpdateAllOutdatedModal/UpdateAllOutdatedModal";
-import type { UpdateAllOutdatedPlan } from "./updateAllOutdatedModel";
 import classes from "./OverviewPage.module.css";
 
+type Refresh = ReturnType<typeof useAppFleetRefresh>["refresh"];
+
 interface Props {
-  search: string;
-  onSearchChange: (value: string) => void;
   loading?: boolean;
   onCreateServer: () => void;
   onImportServer: () => void;
-  onCheckUpdates: () => void;
   onCheckInstalls: () => void;
-  onOpenUpdateAllOutdated?: () => void;
-  onCloseUpdateAllOutdated?: () => void;
-  onConfirmUpdateAllOutdated?: () => void;
-  updateAllOutdatedOpen?: boolean;
-  updateAllOutdatedPlan?: UpdateAllOutdatedPlan | null;
-  updateAllOutdatedLoading?: boolean;
-  updateAllOutdatedQueueing?: boolean;
-  canUpdateAllOutdated?: boolean;
-  openingUpdateAllOutdated?: boolean;
-  checkingUpdates?: boolean;
   checkingInstalls?: boolean;
   servers: ServerProfile[];
-  filteredServers: ServerProfile[];
-  disabledServers?: ServerProfile[];
-  runningServers: number;
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
   officialSteamBuild: string | null;
   officialVersion?: string | null;
   events: AppEvent[];
   onViewAllActivity: () => void;
-  steamCmdServerId?: string | null;
-  steamCmdRunning?: boolean;
+  steamCmdStatus: SteamCmdStatus | null;
   steamCmdBusy?: boolean;
   steamCmdPausedByServerId?: ReadonlyMap<string, SteamCmdCardJobRef>;
   steamCmdQueuedByServerId?: ReadonlyMap<string, SteamCmdCardJobRef>;
-  steamCmdProgressPercent?: number | null;
-  steamCmdProgressLabel?: string | null;
-  steamCmdProgressBytesDownloaded?: number | null;
-  steamCmdProgressBytesTotal?: number | null;
-  steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null;
   stopProgressByServerId?: Map<string, ServerStopProgress>;
   startBusyByServerId?: ReadonlySet<string>;
+  refresh: Refresh;
+  onOpenDownloads: () => void;
   onOpenWorkspace: (server: ServerProfile) => void;
   onOpenLogs: (serverId: string) => void;
   onReviewError: (serverId: string) => void;
@@ -67,63 +56,106 @@ interface Props {
   onInstallFiles: (serverId: string) => void;
   onUpdateNow: (serverId: string) => void;
   onVerifyFiles: (serverId: string) => void;
-  onCheckUpdatesForServer: (serverId: string) => void;
   onCloneServer: (serverId: string) => void;
   onCopyConfiguration: (serverId: string) => void;
   onDeleteServer: (serverId: string) => void;
   onToggleServerEnabled?: (serverId: string, enabled: boolean) => void;
-  onOpenDownloads?: (serverId: string) => void;
 }
 
 export function OverviewPage(props: Props): ReactElement {
+  const [search, setSearch] = useState("");
+  const { enabled, disabled } = useMemo(
+    () => partitionOverviewServers(props.servers),
+    [props.servers],
+  );
+  const filteredServers = useMemo(
+    () => filterOverviewServers(enabled, search),
+    [enabled, search],
+  );
+  const filteredDisabledServers = useMemo(
+    () => filterOverviewServers(disabled, search),
+    [disabled, search],
+  );
+  const runningServers = useMemo(
+    () =>
+      Array.from(props.statuses.values()).filter(
+        (status) => status.status === "running",
+      ).length,
+    [props.statuses],
+  );
+
+  const {
+    checkingUpdates,
+    checkForUpdates,
+    canUpdateAllOutdated,
+    updateAllOutdatedLoading,
+    openUpdateAllOutdated,
+    updateAllOutdatedOpen,
+    updateAllOutdatedModalPlan,
+    updateAllOutdatedQueueing,
+    closeUpdateAllOutdated,
+    confirmUpdateAllOutdated,
+  } = useOverviewServerUpdates({
+    servers: props.servers,
+    installationInfo: props.installationInfo,
+    statuses: props.statuses,
+    officialSteamBuild: props.officialSteamBuild,
+    steamCmdStatus: props.steamCmdStatus,
+    refresh: props.refresh,
+    onOpenDownloads: props.onOpenDownloads,
+  });
+
+  const steamCmdBusy = props.steamCmdBusy ?? false;
+  const steamCmdStatus = props.steamCmdStatus;
+
   return (
     <div className={classes.page} data-overview-page>
       <OverviewHeader
         onCreateServer={props.onCreateServer}
         onImportServer={props.onImportServer}
-        onCheckUpdates={props.onCheckUpdates}
+        onCheckUpdates={() => void checkForUpdates()}
         onCheckInstalls={props.onCheckInstalls}
-        onUpdateAllOutdated={props.onOpenUpdateAllOutdated}
-        canUpdateAllOutdated={props.canUpdateAllOutdated}
-        openingUpdateAllOutdated={props.openingUpdateAllOutdated}
-        checkingUpdates={props.checkingUpdates}
+        onUpdateAllOutdated={() => void openUpdateAllOutdated()}
+        canUpdateAllOutdated={canUpdateAllOutdated}
+        openingUpdateAllOutdated={updateAllOutdatedLoading}
+        checkingUpdates={checkingUpdates}
         checkingInstalls={props.checkingInstalls}
       />
 
       <UpdateAllOutdatedModal
-        opened={props.updateAllOutdatedOpen === true}
-        loading={props.updateAllOutdatedLoading}
-        queueing={props.updateAllOutdatedQueueing}
-        plan={props.updateAllOutdatedPlan ?? null}
-        onClose={() => props.onCloseUpdateAllOutdated?.()}
-        onConfirm={() => props.onConfirmUpdateAllOutdated?.()}
+        opened={updateAllOutdatedOpen}
+        loading={updateAllOutdatedLoading}
+        queueing={updateAllOutdatedQueueing}
+        plan={updateAllOutdatedModalPlan}
+        onClose={closeUpdateAllOutdated}
+        onConfirm={() => void confirmUpdateAllOutdated()}
       />
 
       <div className={classes.content} data-overview-content>
         <ServerGrid
-          search={props.search}
-          onSearchChange={props.onSearchChange}
+          search={search}
+          onSearchChange={setSearch}
           loading={props.loading ?? false}
           onCreateServer={props.onCreateServer}
           onImportServer={props.onImportServer}
           servers={props.servers}
-          filteredServers={props.filteredServers}
-          disabledServers={props.disabledServers ?? []}
-          runningServers={props.runningServers}
+          filteredServers={filteredServers}
+          disabledServers={filteredDisabledServers}
+          runningServers={runningServers}
           statuses={props.statuses}
           installationInfo={props.installationInfo}
           officialSteamBuild={props.officialSteamBuild}
           officialVersion={props.officialVersion ?? null}
-          steamCmdServerId={props.steamCmdServerId ?? null}
-          steamCmdRunning={props.steamCmdRunning ?? false}
-          steamCmdBusy={props.steamCmdBusy ?? props.steamCmdRunning ?? false}
+          steamCmdServerId={steamCmdStatus?.serverId ?? null}
+          steamCmdRunning={steamCmdStatus?.running === true}
+          steamCmdBusy={steamCmdBusy}
           steamCmdPausedByServerId={props.steamCmdPausedByServerId}
           steamCmdQueuedByServerId={props.steamCmdQueuedByServerId}
-          steamCmdProgressPercent={props.steamCmdProgressPercent ?? null}
-          steamCmdProgressLabel={props.steamCmdProgressLabel ?? null}
-          steamCmdProgressBytesDownloaded={props.steamCmdProgressBytesDownloaded ?? null}
-          steamCmdProgressBytesTotal={props.steamCmdProgressBytesTotal ?? null}
-          steamCmdOperation={props.steamCmdOperation ?? null}
+          steamCmdProgressPercent={steamCmdStatus?.progressPercent ?? null}
+          steamCmdProgressLabel={steamCmdStatus?.progressLabel ?? null}
+          steamCmdProgressBytesDownloaded={steamCmdStatus?.progressBytesDownloaded ?? null}
+          steamCmdProgressBytesTotal={steamCmdStatus?.progressBytesTotal ?? null}
+          steamCmdOperation={steamCmdStatus?.operation ?? null}
           stopProgressByServerId={props.stopProgressByServerId}
           startBusyByServerId={props.startBusyByServerId}
           onOpenWorkspace={props.onOpenWorkspace}
@@ -137,8 +169,8 @@ export function OverviewPage(props: Props): ReactElement {
           onInstallFiles={props.onInstallFiles}
           onUpdateNow={props.onUpdateNow}
           onVerifyFiles={props.onVerifyFiles}
-          onCheckUpdatesForServer={props.onCheckUpdatesForServer}
-          checkingUpdates={props.checkingUpdates}
+          onCheckUpdatesForServer={(id) => void checkForUpdates(id)}
+          checkingUpdates={checkingUpdates}
           onCloneServer={props.onCloneServer}
           onCopyConfiguration={props.onCopyConfiguration}
           onDeleteServer={props.onDeleteServer}

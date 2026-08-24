@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useState } from "react";
-import type { Dispatch, SetStateAction } from "react";
 import { notifications } from "@mantine/notifications";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type {
@@ -19,22 +18,19 @@ import {
   summarizeUpdateAllOutdatedQueue,
   type UpdateAllOutdatedPlan,
 } from "@features/overview/updateAllOutdatedModel";
-import type { Overlay } from "@app/model/appOverlay";
-import type { Route } from "@layout/Sidebar/Sidebar";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import type { useAppFleetRefresh } from "@app/hooks/useAppFleetRefresh";
 
 type Refresh = ReturnType<typeof useAppFleetRefresh>["refresh"];
 
-export function useAppServerUpdates(options: {
+export function useOverviewServerUpdates(options: {
   servers: ServerProfile[];
   installationInfo: Map<string, ServerInstallationInfo>;
   statuses: Map<string, ServerRuntimeInfo>;
   officialSteamBuild: string | null;
   steamCmdStatus: SteamCmdStatus | null;
   refresh: Refresh;
-  setOverlay: Dispatch<SetStateAction<Overlay>>;
-  setRoute: Dispatch<SetStateAction<Route>>;
+  onOpenDownloads: () => void;
 }) {
   const {
     servers,
@@ -43,8 +39,7 @@ export function useAppServerUpdates(options: {
     officialSteamBuild,
     steamCmdStatus,
     refresh,
-    setOverlay,
-    setRoute,
+    onOpenDownloads,
   } = options;
   const [checkingUpdates, setCheckingUpdates] = useState(false);
   const [updateAllOutdatedOpen, setUpdateAllOutdatedOpen] = useState(false);
@@ -281,10 +276,7 @@ export function useAppServerUpdates(options: {
             message: summary.message,
             color: summary.color,
             autoClose: 10000,
-            onClick: () => {
-              setOverlay(null);
-              setRoute("downloads");
-            },
+            onClick: onOpenDownloads,
           });
         } catch (error) {
           showOperatorError(
@@ -304,10 +296,9 @@ export function useAppServerUpdates(options: {
   }, [
     installationInfo,
     officialSteamBuild,
+    onOpenDownloads,
     refresh,
     servers,
-    setOverlay,
-    setRoute,
     statuses,
     steamCmdStatus?.criticalJobs,
   ]);
