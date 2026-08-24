@@ -259,7 +259,8 @@ Not in the feature size gate. Entry is thin; coupling lives in `AppShell`.
 | **Router slices** | `AppShell` builds `AppMainRouter` slices inline in JSX. Fine today (no `React.memo` on router children). If memoization is added downstream, wrap each slice in `useMemo` with stable deps. |
 | **Lifecycle callbacks** | Patterns like `startServer: (id) => void startServer(id)` predate slices; they create new closures each render. Pass hook callbacks directly when signatures match, or stabilize with `useCallback` in the shell if memoization depends on referential equality. |
 | **Settings focus flags** | `focusYarkUpdates` / `focusSteamCmd` stay in `AppShell` — set from chrome (Yark update toast, Downloads → SteamCMD settings, lifecycle). Not page-local. |
-| **Tests** | Overview page-local behavior: `OverviewPage.test.tsx`. Shell chrome: `App.test.tsx`. |
+| **Overview search** | Owned by `OverviewPage`. Resets when leaving Overview (unmount). Intentional for Phase C page-local ownership. Persist later via `AppRouterPages` session/`useRef` or a stable Overview mount if operators need it. |
+| **Tests** | Overview page-local behavior: `OverviewPage.test.tsx` (exercises `useOverviewServerUpdates` indirectly). Add direct hook tests if update-check / update-all edge cases grow. |
 
 **Phase C (#433):** Overview owns search + `useOverviewServerUpdates`. Fleet poll / `installScan` stay in `useAppFleetRefresh`. See [#433](https://github.com/gabomarin/yark/issues/433).
 
