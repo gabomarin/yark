@@ -5,6 +5,7 @@ import type {
   ServerRuntimeInfo,
   ServerStopProgress,
 } from "@shared/types";
+import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import { ServerCard } from "@features/servers/components/ServerCard/ServerCard";
 import type { ServerCardHandlers } from "@features/servers/components/ServerCard/serverCardHandlers";
 import type { SteamCmdCardJobRef } from "./serverGridTypes";
@@ -34,6 +35,7 @@ interface Props {
   stopProgressByServerId?: Map<string, ServerStopProgress>;
   startBusyByServerId?: ReadonlySet<string>;
   checkingUpdates?: boolean;
+  playerList?: PlayerListState | null;
   handlers: ServerCardHandlers;
 }
 
@@ -76,6 +78,7 @@ export function OverviewServerCard(props: Props): ReactElement {
       stopProgressPercent={stopBusy ? (stopProgress?.percent ?? null) : null}
       stopProgressLabel={stopBusy ? (stopProgress?.label ?? null) : null}
       checkingUpdates={props.checkingUpdates}
+      playerList={props.playerList}
       handlers={props.handlers}
     />
   );

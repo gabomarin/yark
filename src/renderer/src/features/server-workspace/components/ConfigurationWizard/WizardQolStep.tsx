@@ -17,7 +17,7 @@ export function WizardQolStep({ form }: Props): ReactElement {
       <Stack gap="xs">
         <SettingSwitch
           label="PvE server"
-          description="Prevents direct combat between players."
+          description="Prevents direct combat between survivors."
           {...form.getInputProps("pve", { type: "checkbox" })}
         />
         <SettingSwitch
@@ -27,7 +27,7 @@ export function WizardQolStep({ form }: Props): ReactElement {
         />
         <SettingSwitch
           label="Show map location"
-          description="Each player can see their exact location."
+          description="Each survivor can see their exact location."
           {...form.getInputProps("showMapLocation", { type: "checkbox" })}
         />
         <SettingSwitch
@@ -37,7 +37,7 @@ export function WizardQolStep({ form }: Props): ReactElement {
         />
         <SettingSwitch
           label="Allow third person"
-          description="Players can switch the camera to third person."
+          description="Survivors can switch the camera to third person."
           {...form.getInputProps("thirdPerson", { type: "checkbox" })}
         />
         <SettingSwitch

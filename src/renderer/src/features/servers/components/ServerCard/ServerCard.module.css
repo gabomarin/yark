@@ -195,9 +195,18 @@
     minmax(100px, 1.2fr)
     minmax(90px, 1fr)
     minmax(64px, 0.6fr)
+    minmax(72px, 0.7fr)
     minmax(88px, 1fr);
   gap: var(--app-space-md);
   min-width: 0;
+}
+
+.metaGrid[data-meta-cols="4"] {
+  grid-template-columns:
+    minmax(100px, 1.2fr)
+    minmax(90px, 1fr)
+    minmax(64px, 0.6fr)
+    minmax(88px, 1fr);
 }
 
 .metaItem {

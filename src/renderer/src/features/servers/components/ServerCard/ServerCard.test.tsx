@@ -166,6 +166,86 @@ describe("ServerCard", () => {
     expect(onToggleEnabled).toHaveBeenCalledTimes(1);
   });
 
+  it("shows survivor count on the meta row from the ListPlayers cache (#301)", () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={{
+            serverId: profile.id,
+            status: "running",
+            processLive: true,
+            pid: 1234,
+            startedAt: null,
+            lastError: null,
+          }}
+          installation={installed}
+          officialSteamBuild={null}
+          playerList={{
+            players: [{ key: "steam:1", name: "Survivor" }],
+            error: null,
+            loading: false,
+          }}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const survivorsMeta = document.querySelector('[data-meta-label="Survivors"]');
+    expect(survivorsMeta).not.toBeNull();
+    expect(survivorsMeta).toHaveTextContent("1/70");
+  });
+
+  it("shows em dash for survivors when the server is stopped (#301)", () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={installed}
+          officialSteamBuild={null}
+          playerList={{
+            players: [{ key: "steam:1", name: "Survivor" }],
+            error: null,
+            loading: false,
+          }}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const survivorsMeta = document.querySelector('[data-meta-label="Survivors"]');
+    expect(survivorsMeta).toHaveTextContent("–");
+  });
+
   it("uses Stop for a running server and keeps secondary actions in the menu", async () => {
     const user = userEvent.setup();
     const onStop = vi.fn();

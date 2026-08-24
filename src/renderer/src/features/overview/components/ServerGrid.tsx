@@ -1,5 +1,6 @@
 import { type ReactElement, useEffect, useMemo, useRef, useState } from "react";
 import { Badge, Checkbox, Group, Stack, Text } from "@mantine/core";
+import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo, ServerStopProgress } from "@shared/types";
 import type { ServerCardHandlers } from "@features/servers/components/ServerCard/serverCardHandlers";
 import { ServerListControls } from "@features/servers/components/ServerListControls/ServerListControls";
@@ -32,6 +33,7 @@ interface Props {
   disabledServers: ServerProfile[];
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
+  playerListsByServer: Map<string, PlayerListState>;
   officialSteamBuild: string | null;
   officialVersion?: string | null;
   steamCmdServerId: string | null;
@@ -119,12 +121,14 @@ export function ServerGrid(props: Props): ReactElement {
         statuses: props.statuses,
         installationInfo: props.installationInfo,
         officialSteamBuild: props.officialSteamBuild,
+        playerListsByServer: props.playerListsByServer,
       }),
     [
       enabledServers,
       props.statuses,
       props.installationInfo,
       props.officialSteamBuild,
+      props.playerListsByServer,
     ],
   );
   const fleetStats = fleetComputed.stats;
@@ -175,6 +179,7 @@ export function ServerGrid(props: Props): ReactElement {
       server={server}
       statuses={props.statuses}
       installationInfo={props.installationInfo}
+      playerList={props.playerListsByServer.get(server.id) ?? null}
       officialSteamBuild={props.officialSteamBuild}
       officialVersion={props.officialVersion ?? null}
       steamCmdServerId={props.steamCmdServerId}

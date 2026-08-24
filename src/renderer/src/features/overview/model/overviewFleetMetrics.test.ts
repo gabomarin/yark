@@ -107,10 +107,12 @@ describe("overviewFleetMetrics", () => {
       statuses,
       installationInfo,
       officialSteamBuild: "build 111",
+      playerListsByServer: new Map(),
     });
 
     expect(stats.enabledCount).toBe(3);
     expect(stats.runningCount).toBe(1);
+    expect(stats.survivorsOnlineTotal).toBeNull();
     expect(stats.stoppedCount).toBe(2);
     expect(stats.attentionCount).toBe(2); // b missing + c update
     expect(stats.updatesCount).toBe(1);
@@ -134,6 +136,7 @@ describe("overviewFleetMetrics", () => {
         ["b", readyInstall("b")],
       ]),
       officialSteamBuild: "build 111",
+      playerListsByServer: new Map(),
     });
 
     expect(
@@ -148,5 +151,49 @@ describe("overviewFleetMetrics", () => {
     ).toEqual(["b"]);
     expect(toggleOverviewFleetFilter("running", "running")).toBe("all");
     expect(toggleOverviewFleetFilter("all", "stopped")).toBe("stopped");
+  });
+
+  it("sums known online survivors for the header label (#301)", () => {
+    const enabled = [
+      server({ id: "a", name: "A" }),
+      server({ id: "b", name: "B" }),
+      server({ id: "c", name: "C" }),
+    ];
+    const statuses = new Map([
+      ["a", runtime("a", "running")],
+      ["b", runtime("b", "running")],
+      ["c", runtime("c", "stopped")],
+    ]);
+    const playerListsByServer = new Map([
+      [
+        "a",
+        {
+          players: [{ key: "1", name: "Alpha" }],
+          error: null,
+          loading: false,
+        },
+      ],
+      [
+        "b",
+        {
+          players: [],
+          error: null,
+          loading: false,
+        },
+      ],
+    ]);
+    const { stats } = computeOverviewFleetStats({
+      enabledServers: enabled,
+      statuses,
+      installationInfo: new Map([
+        ["a", readyInstall("a")],
+        ["b", readyInstall("b")],
+        ["c", readyInstall("c")],
+      ]),
+      officialSteamBuild: "build 111",
+      playerListsByServer,
+    });
+
+    expect(stats.survivorsOnlineTotal).toBe(1);
   });
 });

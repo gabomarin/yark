@@ -80,7 +80,7 @@ export function PlayerListSection(props: Props): ReactElement {
   const confirmBan = (player: OnlinePlayerInfo): void => {
     const label = resolvePlayerDisplayName(player.key, player.name, nameById);
     modals.openConfirmModal({
-      title: "Ban player?",
+      title: "Ban survivor?",
       children: (
         <Text size="sm">
           Ban <strong>{label}</strong>?
@@ -122,7 +122,7 @@ export function PlayerListSection(props: Props): ReactElement {
       return "Loading…";
     }
     if (props.playerList.players.length === 0) {
-      return "No players online.";
+      return "No survivors online.";
     }
     return null;
   })();
@@ -131,12 +131,12 @@ export function PlayerListSection(props: Props): ReactElement {
     <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.playersPanel}>
       <Stack gap="sm">
         <div className={classes.header}>
-          <Text className={classes.title}>Players</Text>
+          <Text className={classes.title}>Survivors</Text>
           <Tooltip label="Refresh panel">
             <ActionIcon
               size="sm"
               variant="default"
-              aria-label="Refresh players panel"
+              aria-label="Refresh survivors panel"
               loading={panelRefreshing || props.playerList.loading}
               onClick={() => void refreshAll()}
             >

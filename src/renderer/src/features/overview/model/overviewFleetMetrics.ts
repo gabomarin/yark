@@ -5,6 +5,8 @@ import type {
   ServerProfile,
   ServerRuntimeInfo,
 } from "@shared/types";
+import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
+import { resolveServerSurvivorCount } from "@features/servers/model/serverCardSurvivorMeta";
 import { collectAttentionIssues, type AttentionIssue } from "./attentionIssues";
 
 /** Clickable Overview fleet strip filters (#314). Toggle again → `all`. */
@@ -18,6 +20,8 @@ export type OverviewFleetFilter =
 export interface OverviewFleetStats {
   enabledCount: number;
   runningCount: number;
+  /** Sum of known online survivors on running servers (#301). Not a strip filter. */
+  survivorsOnlineTotal: number | null;
   stoppedCount: number;
   attentionCount: number;
   updatesCount: number;
@@ -43,6 +47,7 @@ export function computeOverviewFleetStats(input: {
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
   officialSteamBuild: string | null;
+  playerListsByServer: Map<string, PlayerListState>;
 }): OverviewFleetComputed {
   const attentionIssues = collectAttentionIssues({
     servers: input.enabledServers,
@@ -55,11 +60,21 @@ export function computeOverviewFleetStats(input: {
   const updateServerIds = new Set<string>();
   let runningCount = 0;
   let stoppedCount = 0;
+  let survivorsOnlineTotal = 0;
+  let hasKnownSurvivorSample = false;
 
   for (const server of input.enabledServers) {
     const status = runtimeStatus(input.statuses, server.id);
     if (status === "running") {
       runningCount += 1;
+      const survivorCount = resolveServerSurvivorCount({
+        status,
+        survivorList: input.playerListsByServer.get(server.id) ?? null,
+      });
+      if (survivorCount != null) {
+        survivorsOnlineTotal += survivorCount;
+        hasKnownSurvivorSample = true;
+      }
     } else if (status === "stopped") {
       stoppedCount += 1;
     }
@@ -78,6 +93,7 @@ export function computeOverviewFleetStats(input: {
     stats: {
       enabledCount: input.enabledServers.length,
       runningCount,
+      survivorsOnlineTotal: hasKnownSurvivorSample ? survivorsOnlineTotal : null,
       stoppedCount,
       attentionCount: attentionServerIds.size,
       updatesCount: updateServerIds.size,

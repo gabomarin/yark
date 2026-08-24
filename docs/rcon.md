@@ -28,7 +28,7 @@ RCON tab** and related IPC (#17 / #154).
 | Online poll + `ListPlayers` parse | `src/backend/domains/backups/player-session-watcher.ts`, `src/backend/domains/instances/list-players.ts` |
 | App-level history + player cache | `src/renderer/src/App.tsx` |
 | Console UI | `…/RconPanel/RconPanel.tsx`, `RconConsoleHistory.tsx` |
-| Players / bans UI | `PlayerListSection.tsx`, `BannedPlayersSection.tsx` |
+| Survivors / bans UI | `PlayerListSection.tsx`, `BannedPlayersSection.tsx` |
 | Header status + retry | `…/RconStatusIcon/RconStatusIcon.tsx` |
 | IPC | `src/shared/ipc.ts`, `src/preload/index.ts`, `src/main/ipc-handlers.ts` |
 
@@ -81,7 +81,7 @@ Host is always `127.0.0.1`. Auth uses the profile `adminPassword` and the
 | --- | --- | --- |
 | TCP session | Main `RconSessionManager` | Yes (tied to process status) |
 | Console history | `App.tsx` `rconHistoryByServer` (cap **100**) | Yes (in-memory; cleared on app restart) |
-| Online players | App cache + watcher push | Yes; refresh on RCON tab focus |
+| Online survivors | App cache + watcher push | Yes; refresh on RCON tab focus |
 | Banned list | Loaded in `BannedPlayersSection` | Reloads on mount / Refresh |
 
 ## Features
@@ -98,12 +98,13 @@ Host is always `127.0.0.1`. Auth uses the profile `adminPassword` and the
   Re-run.
 - Audit strip: last five `rcon_command` events (command text only).
 
-### Players
+### Survivors
 
 - `PlayerSessionWatcher` polls `ListPlayers` every **10s** while `running`.
 - Kick → `KickPlayer <key>`; Ban → `BanPlayer <key>` (audited; refresh online
   list after).
 - Actions require status `running` **and** RCON `connected`.
+- Operator-facing copy uses **Survivors** (not “Players”); unknown counts show **–**, never a fake `0`.
 
 ### Ban list
 
@@ -126,7 +127,7 @@ Host is always `127.0.0.1`. Auth uses the profile `adminPassword` and the
 | `rcon:get-status` / `rcon:get-all-status` | status queries | Header badge |
 | `rcon:tab-focus-changed` | `notifyRconTabFocus` | Focus → refresh online list |
 | `rcon:refresh-player-list` | `refreshPlayerList` | Manual refresh |
-| `rcon:kick-player` / `rcon:ban-player` | Kick / Ban + refresh | Players section |
+| `rcon:kick-player` / `rcon:ban-player` | Kick / Ban + refresh | Survivors section |
 | `rcon:list-banned-players` | `listBannedPlayers` | Disk → `{ key, name }` |
 | `rcon:unban-player` | `unbanPlayer` | RCON + disk; may return BanListURL warning |
 | `rcon:open-ban-list-file` | `openBanListFile` | Open primary BanList.txt |

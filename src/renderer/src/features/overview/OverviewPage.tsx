@@ -11,7 +11,9 @@ import type {
   SteamCmdStatus,
 } from "@shared/types";
 import type { useAppFleetRefresh } from "@app/hooks/useAppFleetRefresh";
+import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import { useOverviewServerUpdates } from "@features/overview/hooks/useOverviewServerUpdates";
+import { resolveServerSurvivorCount } from "@features/servers/model/serverCardSurvivorMeta";
 import {
   filterOverviewServers,
   partitionOverviewServers,
@@ -33,6 +35,7 @@ interface Props {
   servers: ServerProfile[];
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
+  playerListsByServer: Map<string, PlayerListState>;
   officialSteamBuild: string | null;
   officialVersion?: string | null;
   events: AppEvent[];
@@ -77,6 +80,26 @@ export function OverviewPage(props: Props): ReactElement {
     [disabled, search],
   );
 
+  const survivorsOnlineTotal = useMemo(() => {
+    let total = 0;
+    let hasKnownSample = false;
+    for (const server of enabled) {
+      const status = props.statuses.get(server.id)?.status ?? "stopped";
+      if (status !== "running") {
+        continue;
+      }
+      const count = resolveServerSurvivorCount({
+        status,
+        survivorList: props.playerListsByServer.get(server.id) ?? null,
+      });
+      if (count != null) {
+        total += count;
+        hasKnownSample = true;
+      }
+    }
+    return hasKnownSample ? total : null;
+  }, [enabled, props.statuses, props.playerListsByServer]);
+
   const {
     checkingUpdates,
     checkForUpdates,
@@ -113,6 +136,7 @@ export function OverviewPage(props: Props): ReactElement {
         openingUpdateAllOutdated={updateAllOutdatedLoading}
         checkingUpdates={checkingUpdates}
         checkingInstalls={props.checkingInstalls}
+        survivorsOnlineTotal={survivorsOnlineTotal}
       />
 
       <UpdateAllOutdatedModal
@@ -136,6 +160,7 @@ export function OverviewPage(props: Props): ReactElement {
           disabledServers={filteredDisabledServers}
           statuses={props.statuses}
           installationInfo={props.installationInfo}
+          playerListsByServer={props.playerListsByServer}
           officialSteamBuild={props.officialSteamBuild}
           officialVersion={props.officialVersion ?? null}
           steamCmdServerId={steamCmdStatus?.serverId ?? null}

@@ -33,11 +33,11 @@ async function copyPlayerId(playerKey: string): Promise<void> {
     await navigator.clipboard.writeText(playerKey);
     showOperatorToast({
       title: "Copied",
-      message: "Player ID copied",
+      message: "Survivor ID copied",
       autoClose: 1500,
     });
   } catch {
-    showOperatorError("Could not copy player ID", "Copy failed");
+    showOperatorError("Could not copy survivor ID", "Copy failed");
   }
 }
 

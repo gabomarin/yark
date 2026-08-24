@@ -88,6 +88,7 @@ export function AppMainRouter(props: AppMainRouterProps): ReactElement {
       setOverlay={navigation.setOverlay}
       fleet={fleet}
       lifecycle={lifecycle}
+      rcon={rcon}
       steamCmd={steamCmd}
       overview={overview}
       settings={settings}
