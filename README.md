@@ -221,7 +221,7 @@ Persistence uses Node's built-in `node:sqlite`; there is no separate backend ser
 | --- | --- |
 | [Server lifecycle](docs/server-lifecycle.md) | Launch composition, process identity, readiness, stop/restart, and recovery. |
 | [RCON console](docs/rcon.md) | Persistent workspace RCON session, players, ban list, and IPC. |
-| [Settings](docs/settings.md) | App-wide preferences, desktop shell, SteamCMD path, and density. |
+| [Settings](docs/settings.md) | App-wide preferences, desktop shell, Desktop alerts, setup wizard, SteamCMD path, and density. |
 | [Clusters](docs/clusters.md) | Transfer-compliance reports, cluster fields, and launch-arg trio. |
 | [Mods](docs/mods.md) | Workspace CurseForge inventory, load order, metadata proxy, and `-mods=` launch. |
 | [Updates and SteamCMD](docs/updates-steamcmd.md) | Caches, install/update/verify, safe-update flow, rollback, and Windows validation. |

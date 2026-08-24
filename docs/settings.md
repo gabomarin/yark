@@ -35,6 +35,10 @@ the Server tab / workspace.
 | Windows login item | `src/main/windows-login-item.ts` |
 | Tray icon / menu | `src/main/app-tray.ts` |
 | Shared keys / defaults | `src/shared/desktop-shell.ts`, `src/shared/ui-density.ts`, `src/shared/open-native-console.ts`, `src/shared/log-retention.ts`, `src/shared/app-update.ts` |
+| Desktop alerts catalog | `src/shared/os-notification-events.ts` (allowlist, focus skip, cooldown, silent) |
+| Windows OS toasts | `src/main/os-notifications.ts` (`FleetOsNotifier`) |
+| Crash / toast deep-links | `src/renderer/src/app/hooks/useAppServerLifecycle.ts` (`push:os-notification-open`) |
+| Setup wizard shell | `src/renderer/src/app/hooks/useAppOnboarding.ts` |
 | Density theme apply | `src/renderer/src/app/AppProviders.tsx`, `src/renderer/src/main.tsx` |
 | SteamCMD service | `src/backend/domains/updates/*` (path/install/caches) |
 | YARK self-update | `src/main/app-update-service.ts` |
@@ -113,6 +117,75 @@ Lists profiles with `autoStart === true` (column `auto_start`, default **false**
 Badges: Will start / Ignored (inactive) / Blocked (install not ready). Edit the
 preference on the Server tab. Launch order and skip rules:
 [server-lifecycle.md](server-lifecycle.md#auto-start-on-application-launch-53).
+
+### Desktop alerts / OS notifications (#331)
+
+Windows Action Center toasts for a short fleet-event allowlist. Settings → General
+exposes the master switch and nested categories; behavior lives in main + shared
+catalog (not in the renderer toggle UI).
+
+| Category | Event / trigger | Click opens |
+| --- | --- | --- |
+| Server crash | `server_crashed` | That server's workspace **Logs → Events** (`eventId`) |
+| Installs and updates | `update_completed`, `update_failed` (**error** only), `update_rolled_back` | **Downloads** |
+| YARK updates | App update `available` or `ready` | Settings → **About** |
+| Hide to tray | Close-to-tray banner (not an OS toast) | Reopen window |
+
+**Focus skip:** when the main window is focused and visible (not minimized), crash
+and YARK update OS toasts are always suppressed (in-app toast is enough). SteamCMD
+skips when focused **only if** the job was operator-awaited (`context.operatorAwaited`
+set when Install / Update / Verify is started from the UI and awaited) — background
+or tray jobs still raise an OS banner while YARK is in front.
+
+**Dedupe / cooldown:**
+
+- Crash: one OS toast per `serverId` within `OS_NOTIFY_CRASH_COOLDOWN_MS` (120s).
+- SteamCMD: one OS toast per `jobId` for the process session.
+- YARK update: one OS toast per `phase:version` for the session.
+
+**Silent vs sound:** success / “available” banners stay quiet
+(`steamCmdOsToastSilent` for `update_completed`; `yarkUpdateOsToastSilent` for
+`available`). Failures, rollbacks, crashes, and “ready to install” use the system
+sound.
+
+**E2E:** `YARK_E2E_USER_DATA` (and unsupported `Notification`) suppress native
+toasts via `shouldSkipNativeNotification`.
+
+**Deep-link push:** click sends `push:os-notification-open`
+(`OsNotificationOpenPush`) after revealing the main window. Wire new fleet
+categories through `os-notification-events.ts` — Discord webhooks (#241) should
+reuse this catalog, not fork it.
+
+Related: [server-lifecycle.md](server-lifecycle.md) (crash events),
+[updates-steamcmd.md](updates-steamcmd.md) (Downloads / job outcomes).
+
+### First-run setup wizard (#298)
+
+Skippable assistant for SteamCMD path, default server folder, Windows shell, and
+(when the fleet is empty) optional cluster + first create/import. Persists
+`onboarding.v1` in SQLite (`OnboardingRecord`: `status` `completed` \| `skipped`,
+`completedAt`, optional `pendingCluster`). Independent of telemetry prefs.
+
+| Mode | Steps | When |
+| --- | --- | --- |
+| `first-run` | Welcome → Paths → Windows → Cluster → First server | Auto-show or empty-fleet **Open setup assistant** |
+| `paths-shell` | Paths → Windows | **Open setup assistant** with one or more profiles |
+
+**Auto-show:** `shouldAutoShowSetupWizard` — empty fleet, `onboarding.v1` unset,
+`getOnboarding()` `ok`, and not E2E. A failed read must **not** be treated as
+unset (that would trap the operator if persist also fails); Overview stays usable
+with a retry toast. E2E (`YARK_E2E_USER_DATA`) never auto-shows.
+
+**Open setup assistant:** empty fleet clears the record (`setOnboarding(null)`)
+and reopens `first-run`; non-empty opens `paths-shell` only (does not reset
+SteamCMD or wipe prefs). Path / Windows changes save as you go; Skip / Close /
+Back are explicit (`closeOnClickOutside={false}`; keep **Back** on First server).
+
+**Pending cluster:** optional Cluster ID + folder on the Cluster step is stored
+on the onboarding record until the first successful create/import consumes it —
+see [clusters.md](clusters.md). Operator copy:
+[design-system.md](design-system.md#operator-facing-copy); agent rule:
+[`.cursor/rules/setup-wizard.mdc`](../.cursor/rules/setup-wizard.mdc).
 
 ### SteamCMD
 
@@ -218,12 +291,23 @@ silent outside Settings status text.
 8. **`setStartWithWindows`** can fail after the DB write if login-item
    registration throws (win32).
 9. Desktop-shell errors may surface next to App data folders (`shellError`).
+10. **`update_failed` + warning** (retry) is not an OS toast — only **error**
+    severity counts as a finished SteamCMD failure.
+11. **Focused Install/Update/Verify** with `operatorAwaited` skips the SteamCMD
+    OS banner; a job started while YARK was in the tray still toasts when the
+    window is focused later if that flag was never set.
+12. **Onboarding read failure ≠ unset** — do not coerce failed `getOnboarding`
+    to `record: null` or the wizard auto-opens and can trap the operator.
+13. **Empty-fleet “Open setup assistant”** clears `onboarding.v1`; Paths/Windows
+    saves from a prior run are not undone by Skip/Close alone.
 
 ## Tests
 
 | File | Focus |
 | --- | --- |
 | `src/renderer/src/features/settings/SettingsPage.test.tsx` | Page controls, density, caches, base folder, SteamCMD setup, log retention, YARK updates |
+| `src/renderer/src/features/setup-wizard/SetupWizard.test.tsx` | Modes, skip/close, cluster continue, pending cluster |
+| `tests/unit/os-notification-events.test.ts` | Focus skip, SteamCMD allowlist, cooldown, silent, E2E skip |
 | `tests/unit/log-retention.test.ts` | Defaults / normalize / failure classification |
 | `tests/unit/logs-service.test.ts` | Retention preview/run path guards |
 | `tests/unit/ui-density-pref.test.ts` | Load / write / legacy migration |
@@ -234,7 +318,8 @@ silent outside Settings status text.
 | `tests/unit/database-boot-recovery.test.ts` | Corrupt DB open/migrate errors, quarantine, recovery loop |
 | `tests/unit/auto-start.test.ts` | Launch skip/start behavior |
 | `scripts/visual-settings.cjs` | Packaged Settings visual review |
+| `scripts/visual-setup-wizard.cjs` | Isolated first-run assistant at HD / Full HD / QHD |
 
-See also [server-lifecycle.md](server-lifecycle.md) (tray, auto-start, quit),
-[design-system.md](design-system.md) (density tokens), and
+See also [server-lifecycle.md](server-lifecycle.md) (tray, auto-start, quit, crash),
+[design-system.md](design-system.md) (density tokens, operator copy), and
 [updates-steamcmd.md](updates-steamcmd.md).

@@ -159,6 +159,11 @@ Requires a display and `ELECTRON_RUN_AS_NODE` unset. Fixtures under `C:\asa-e2e`
 
 UI entry points: **Downloads** page (queue + live console) + Overview / workspace install/update/verify; onboarding “Install files”. Update requires a stopped server. Verify stays enabled while running (tooltip explains auto-stop). Start stays locked while a files job is queued or active. **Update** / **Install** can replace a queued **Verify** for the same server (toast: replaced in the queue — no Needs attention leftover). A running Verify is not cancelled; the operator must cancel it first or wait. Verify on top of Update/Install is refused (“already in Downloads”). Duplicate clicks of the same operation toast “Already in Downloads”. The Overview card shows a queued or busy progress strip.
 
+Terminal Install / Update / Verify outcomes can also raise a Windows OS toast when
+Settings → **Desktop alerts** → **Installs and updates** is on. Operator-awaited
+jobs skip the OS banner while YARK is focused; focus/dedupe rules:
+[settings.md](settings.md#desktop-alerts--os-notifications-331).
+
 **Pause** is for install, update, and file copy. Verify is SteamCMD `app_update … validate` with no resume checkpoint, so the UI offers **Cancel** instead — pausing and resuming would restart the scan at 0%. Pause during an in-progress rollback is refused (yellow toast) instead of cancelling. On Downloads, **Pause** / **Cancel** for the active job sit on the Active queue row; queued, paused, cancelled, and needs-attention rows expose their actions on the row as well. Cancel stops only the active SteamCMD job; other queued Downloads rows stay queued and start after unwind. Cancelled jobs stay visible under Needs attention with **Retry** and **Dismiss**. Retry re-queues that job. Clicking Install, Update, or Verify again also replaces a cancelled leftover of the same type. Failed or blocked jobs still need Retry or Dismiss on Downloads.
 
 Queued install/update/verify rows can **Move up in queue** / **Move down in queue**. The displayed queue order is the execution order; those rows slide past each other when you reorder. Arrows hide when only one queued files job exists.

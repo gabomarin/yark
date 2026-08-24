@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Engineering **Desktop alerts** and **first-run setup wizard** coverage in the Settings runbook (focus skip, `operatorAwaited`, click deep-links, wizard modes) (#331, #298).
 - **Decomposition map** for oversized backend services and renderer pages — phased boundaries, test inventory, and PR checklist ([#146](https://github.com/gabomarin/yark/issues/146)).
 - Pure **backup cleanup planner** module (`backup-cleanup-plan.ts`) extracted from `backup-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **Backup fleet health** helpers extracted to `backup-fleet.ts` (health badges, alerts, disk stats) with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).

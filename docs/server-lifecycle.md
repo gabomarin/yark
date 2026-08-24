@@ -161,7 +161,9 @@ Constraints:
   An unexpected exit during `starting` (including exit code 0) is an error;
   YARK records `server_crashed` only after that process exit (not spawn/RCON/kill
   failures while the child is still live), with a bounded ShooterGame.log excerpt
-  from **this** run when CFCore/Fatal lines are present.
+  from **this** run when CFCore/Fatal lines are present. Optional Windows OS toast
+  (Settings → Desktop alerts → Server crash): focus skip, 120s per-server cooldown,
+  click → Logs → Events — [settings.md](settings.md#desktop-alerts--os-notifications-331).
 - `servers:open-native-terminal` opens a separate `cmd` in the install dir; that
   is **not** the game process.
 
