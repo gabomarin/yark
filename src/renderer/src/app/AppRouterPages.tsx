@@ -49,26 +49,11 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
     clearSteamCmdCache,
   } = steamCmd;
   const {
-    search,
-    setSearch,
     overviewLoading,
     setImportWizardKey,
     setImportInstallOpen,
-    checkingUpdates,
-    checkForUpdates,
     installScan,
     runInstallHealthScan,
-    canUpdateAllOutdated,
-    updateAllOutdatedLoading,
-    openUpdateAllOutdated,
-    updateAllOutdatedOpen,
-    updateAllOutdatedModalPlan,
-    updateAllOutdatedQueueing,
-    closeUpdateAllOutdated,
-    confirmUpdateAllOutdated,
-    filteredServers,
-    filteredDisabledServers,
-    runningServers,
   } = overview;
   const {
     focusYarkUpdates,
@@ -103,49 +88,32 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
       overview={{
         page: (
           <OverviewPage
-            search={search}
-            onSearchChange={setSearch}
             loading={overviewLoading}
             onCreateServer={() => setOverlay({ kind: "create" })}
             onImportServer={() => {
               setImportWizardKey((key) => key + 1);
               setImportInstallOpen(true);
             }}
-            checkingUpdates={checkingUpdates}
-            onCheckUpdates={() => void checkForUpdates()}
             checkingInstalls={installScan.active}
             onCheckInstalls={() => void runInstallHealthScan("manual")}
-            canUpdateAllOutdated={canUpdateAllOutdated}
-            openingUpdateAllOutdated={updateAllOutdatedLoading}
-            onOpenUpdateAllOutdated={() => void openUpdateAllOutdated()}
-            updateAllOutdatedOpen={updateAllOutdatedOpen}
-            updateAllOutdatedPlan={updateAllOutdatedModalPlan}
-            updateAllOutdatedLoading={updateAllOutdatedLoading}
-            updateAllOutdatedQueueing={updateAllOutdatedQueueing}
-            onCloseUpdateAllOutdated={closeUpdateAllOutdated}
-            onConfirmUpdateAllOutdated={() => void confirmUpdateAllOutdated()}
             servers={servers}
-            filteredServers={filteredServers}
-            disabledServers={filteredDisabledServers}
-            runningServers={runningServers}
             statuses={statuses}
             installationInfo={installationInfo}
             officialSteamBuild={officialSteamBuild}
             officialVersion={shell.officialVersion}
             events={events}
             onViewAllActivity={() => shell.navigate("logs")}
-            steamCmdServerId={steamCmdStatus?.serverId ?? null}
-            steamCmdRunning={steamCmdStatus?.running === true}
+            steamCmdStatus={steamCmdStatus}
             steamCmdBusy={steamCmdBusy}
             steamCmdPausedByServerId={steamCmdPausedByServerId}
             steamCmdQueuedByServerId={steamCmdQueuedByServerId}
-            steamCmdProgressPercent={steamCmdStatus?.progressPercent ?? null}
-            steamCmdProgressLabel={steamCmdStatus?.progressLabel ?? null}
-            steamCmdProgressBytesDownloaded={steamCmdStatus?.progressBytesDownloaded ?? null}
-            steamCmdProgressBytesTotal={steamCmdStatus?.progressBytesTotal ?? null}
-            steamCmdOperation={steamCmdStatus?.operation ?? null}
             stopProgressByServerId={stopProgressByServerId}
             startBusyByServerId={startBusyByServerId}
+            refresh={refresh}
+            onOpenDownloads={() => {
+              setOverlay(null);
+              shell.navigate("downloads");
+            }}
             onOpenWorkspace={(server) => {
               const updatingThisServer =
                 steamCmdBusy && steamCmdStatus?.serverId === server.id;
@@ -172,15 +140,10 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
             onInstallFiles={(id) => startSteamFilesJob(id, "install")}
             onUpdateNow={(id) => startSteamFilesJob(id, "update")}
             onVerifyFiles={(id) => startSteamFilesJob(id, "verify")}
-            onCheckUpdatesForServer={(id) => void checkForUpdates(id)}
             onCloneServer={(id) => setOverlay({ kind: "clone", sourceServerId: id })}
             onCopyConfiguration={(id) => actions.setCopyConfig({ sourceServerId: id })}
             onDeleteServer={(id) => actions.confirmDeleteServer(id)}
             onToggleServerEnabled={(id, enabled) => void actions.setServerEnabled(id, enabled)}
-            onOpenDownloads={() => {
-              setOverlay(null);
-              shell.navigate("downloads");
-            }}
           />
         ),
       }}

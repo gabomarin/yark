@@ -1,8 +1,8 @@
 import type { Dispatch, ReactNode, SetStateAction } from "react";
+import type { useAppFleetRefresh } from "@app/hooks/useAppFleetRefresh";
 import type {
   AppEvent,
   ClusterComplianceReport,
-  InstallationServersMode,
   OfficialNetworkStatus,
   ServerInstallationInfo,
   ServerProfile,
@@ -17,7 +17,6 @@ import type { SteamCmdCardJobRef } from "@app/model/steamCmdShellModel";
 import type { KnownClusterOption } from "@features/clusters/knownClusterOptions";
 import type { ServerFilesQueueState } from "@features/downloads/downloadsModel";
 import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
-import type { UpdateAllOutdatedPlan } from "@features/overview/updateAllOutdatedModel";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import type { RconHistoryEntry } from "@features/server-workspace/ServerWorkspacePage";
 import type { DesktopShellPreferencesController } from "@features/settings/hooks/useDesktopShellPreferences";
@@ -26,12 +25,7 @@ import type { Route } from "@layout/Sidebar/Sidebar";
 import type { AppBusyOverlayContent } from "@ui/AppBusyOverlay/AppBusyOverlay";
 
 /** Shared fleet refresh signature used across router overlays and pages. */
-type AppRefresh = (options?: {
-  includeInstallation?: boolean;
-  includeServerList?: boolean;
-  forceOfficialCheck?: boolean;
-  serversMode?: InstallationServersMode;
-}) => Promise<unknown>;
+type AppRefresh = ReturnType<typeof useAppFleetRefresh>["refresh"];
 
 export interface AppFleetSlice {
   servers: ServerProfile[];
@@ -98,26 +92,11 @@ export interface AppNavigationSlice {
 }
 
 export interface AppOverviewSlice {
-  search: string;
-  setSearch: (value: string) => void;
   overviewLoading: boolean;
   setImportWizardKey: Dispatch<SetStateAction<number>>;
   setImportInstallOpen: Dispatch<SetStateAction<boolean>>;
-  checkingUpdates: boolean;
-  checkForUpdates: (serverId?: string) => Promise<void>;
   installScan: { active: boolean; reason: "startup" | "manual" | null };
   runInstallHealthScan: (reason: "startup" | "manual") => Promise<void>;
-  canUpdateAllOutdated: boolean;
-  updateAllOutdatedLoading: boolean;
-  openUpdateAllOutdated: () => Promise<void>;
-  updateAllOutdatedOpen: boolean;
-  updateAllOutdatedModalPlan: UpdateAllOutdatedPlan | null;
-  updateAllOutdatedQueueing: boolean;
-  closeUpdateAllOutdated: () => void;
-  confirmUpdateAllOutdated: () => Promise<void>;
-  filteredServers: ServerProfile[];
-  filteredDisabledServers: ServerProfile[];
-  runningServers: number;
 }
 
 export interface AppSettingsSlice {

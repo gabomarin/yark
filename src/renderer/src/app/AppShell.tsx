@@ -8,9 +8,6 @@ import {
   yarkUpdateToastCopy,
   yarkUpdateToastDedupeKey,
 } from "@ui/yarkUpdateOperatorToast";
-import type {
-  ServerProfile,
-} from "@shared/types";
 import { EMPTY_WIPE_STALE_MESSAGE } from "@shared/types";
 import { AppProviders } from "@app/AppProviders";
 import { AppMainRouter } from "@app/AppMainRouter";
@@ -21,7 +18,6 @@ import { useAppFleetRefresh } from "@app/hooks/useAppFleetRefresh";
 import { useAppRcon } from "@app/hooks/useAppRcon";
 import { useAppOnboarding } from "@app/hooks/useAppOnboarding";
 import { useAppServerLifecycle } from "@app/hooks/useAppServerLifecycle";
-import { useAppServerUpdates } from "@app/hooks/useAppServerUpdates";
 import { useAppSteamCmdActions } from "@app/hooks/useAppSteamCmdActions";
 import { CloneServerDialog } from "@features/servers/components/CloneServerDialog/CloneServerDialog";
 import { DeleteServerModal } from "@features/servers/components/DeleteServerModal/DeleteServerModal";
@@ -119,7 +115,6 @@ export function AppShell({
   const [defaultBaseFolder, setDefaultBaseFolder] = useState<string | null>(
     readDefaultBaseFolderPref,
   );
-  const [search, setSearch] = useState("");
   const [appUpdateStatus, setAppUpdateStatus] = useState<AppUpdateStatus | null>(null);
   const [focusYarkUpdates, setFocusYarkUpdates] = useState(false);
   const [focusSteamCmd, setFocusSteamCmd] = useState(false);
@@ -169,48 +164,12 @@ export function AppShell({
     setUiDensity(density);
   }, []);
 
-  const runningServers = Array.from(statuses.values()).filter(
-    (status) => status.status === "running",
-  ).length;
-
-  const enabledServers = useMemo(
-    () => servers.filter((server) => server.enabled),
-    [servers],
-  );
-  const disabledServers = useMemo(
-    () => servers.filter((server) => !server.enabled),
-    [servers],
-  );
   const extraClusterOptions = useMemo(
     () =>
       pendingSetupCluster === null
         ? undefined
         : [toSyntheticClusterOption(pendingSetupCluster)],
     [pendingSetupCluster],
-  );
-
-  const filterServers = useCallback(
-    (input: ServerProfile[]) => {
-    const query = search.trim().toLowerCase();
-    if (query.length === 0) {
-        return input;
-    }
-      return input.filter((server) =>
-      [server.name, server.map, server.clusterId ?? ""].some((field) =>
-        field.toLowerCase().includes(query),
-      ),
-    );
-    },
-    [search],
-  );
-
-  const filteredServers = useMemo(
-    () => filterServers(enabledServers),
-    [enabledServers, filterServers],
-  );
-  const filteredDisabledServers = useMemo(
-    () => filterServers(disabledServers),
-    [disabledServers, filterServers],
   );
 
   const stopBusyOverlay = useMemo(() => {
@@ -301,27 +260,6 @@ export function AppShell({
     servers,
     steamCmdStatus,
     steamCmdBusy,
-    refresh,
-    setOverlay,
-    setRoute,
-  });
-  const {
-    checkingUpdates,
-    checkForUpdates,
-    canUpdateAllOutdated,
-    updateAllOutdatedLoading,
-    openUpdateAllOutdated,
-    updateAllOutdatedOpen,
-    updateAllOutdatedModalPlan,
-    updateAllOutdatedQueueing,
-    closeUpdateAllOutdated,
-    confirmUpdateAllOutdated,
-  } = useAppServerUpdates({
-    servers,
-    installationInfo,
-    statuses,
-    officialSteamBuild,
-    steamCmdStatus,
     refresh,
     setOverlay,
     setRoute,
@@ -579,26 +517,11 @@ export function AppShell({
           clearSteamCmdCache,
         }}
         overview={{
-          search,
-          setSearch,
           overviewLoading,
           setImportWizardKey,
           setImportInstallOpen,
-          checkingUpdates,
-          checkForUpdates,
           installScan,
           runInstallHealthScan,
-          canUpdateAllOutdated,
-          updateAllOutdatedLoading,
-          openUpdateAllOutdated,
-          updateAllOutdatedOpen,
-          updateAllOutdatedModalPlan,
-          updateAllOutdatedQueueing,
-          closeUpdateAllOutdated,
-          confirmUpdateAllOutdated,
-          filteredServers,
-          filteredDisabledServers,
-          runningServers,
         }}
         settings={{
           focusYarkUpdates,
