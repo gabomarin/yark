@@ -122,8 +122,10 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `AppFormOverlays.tsx` | Create / edit `ServerForm` overlays |
 | `AppRouterPages.tsx` | Sidebar routes via `AppRouter` (overview, downloads, clusters, logs, backups, settings) |
 | `workspaceFilesJobState.ts` | Pure files-job props for workspace overlay (+ unit tests) |
-| `AppMainRouter.tsx` | Thin overlay switch; domain slices from `App.tsx` (#433 Phase A) |
+| `AppMainRouter.tsx` | Thin overlay switch; domain slices from `AppShell` (#433 Phase A) |
 | `appMainRouterSlices.ts` | Fleet / lifecycle / RCON / SteamCMD / navigation / overview / settings / chrome inputs |
+| `AppShell.tsx` | Owns `useApp*` + sibling modals; builds slices for the router (#433 Phase B) |
+| `App.tsx` | Thin entry: initial prefs → `<AppShell />` |
 
 **Phase 5b exit:** `AppMainRouter` is a small switch; each overlay organism owns its branch.
 
@@ -137,9 +139,10 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 | `IniSettingRow.tsx` | Single INI setting row (value editor, reset, dirty state) |
 | `ConfigurationEditorSettingsTable.tsx` | Virtualized settings table shell |
 | `ConfigurationEditor.tsx` (575 lines) | Coordinator: text mode, header toolbar, load/save still in parent |
-| `App.tsx` (~716 lines) | Wired to fleet, RCON, onboarding, SteamCMD action, server lifecycle, and server update hooks |
+| `App.tsx` | Thin entry forwarding initial prefs to `AppShell` |
+| `AppShell.tsx` (~700 lines) | Fleet/RCON/onboarding/SteamCMD/lifecycle/updates + sibling modals + router slices |
 
-**Phase 5c optional exit:** `useAppOnboarding`, `useAppSteamCmdActions`, `useAppServerLifecycle`, and `useAppServerUpdates` now own the remaining large shell workflows. `App.tsx` is a thin composition coordinator. Grouped `AppMainRouter` domain slices landed in #433 Phase A (`appMainRouterSlices.ts`); app-shell Context remains deferred (#434).
+**Phase 5c optional exit:** `useAppOnboarding`, `useAppSteamCmdActions`, `useAppServerLifecycle`, and `useAppServerUpdates` own shell workflows. Domain slices (#433 Phase A) and `AppShell` composition (#433 Phase B) landed; app-shell Context remains deferred (#434).
 
 **Phase 5 exit:** Grandfathered feature pages are organisms + thin coordinators.
 
@@ -233,20 +236,30 @@ renderer pages     →  feature models/hooks  →  shared/ui + layout
 
 ---
 
-## Renderer: `App.tsx`
+## Renderer: `App.tsx` / `AppShell.tsx`
 
-Not in the feature size gate but highest renderer coupling risk (~2.5k lines).
+Not in the feature size gate. Entry is thin; coupling lives in `AppShell`.
 
-| Concern | Proposed module |
+| Concern | Module |
 | --- | --- |
-| SteamCMD card / downloads dock state | `app/steamCmdShellModel.ts` + organism |
-| Navigation + leave guards | `app/navigationModel.ts` (partially exists as hooks) |
-| Server list refresh / polling | `app/serverFleetModel.ts` or hook under `features/overview/` |
-| Settings / setup wizard orchestration | keep callbacks; move heavy handlers to feature hooks |
+| SteamCMD card / downloads dock state | `app/model/steamCmdShellModel.ts` + Downloads organisms |
+| Navigation + leave guards | `AppShell` + overlay leave-guard ref |
+| Server list refresh / polling | `app/hooks/useAppFleetRefresh.ts` |
+| Settings / setup wizard orchestration | `app/hooks/useAppOnboarding.ts` + SetupWizard |
+| Router prop slices | `app/model/appMainRouterSlices.ts` + `AppMainRouter` |
 
-**Characterization:** `App.test.tsx` covers empty fleet, setup wizard, Start busy guard, SteamCMD UX. Extend before extracting refresh/poll block.
+**Characterization:** `App.test.tsx` covers empty fleet, setup wizard, Start busy guard, SteamCMD UX (still renders `<App />` → `<AppShell />`). Add `AppShell.test.tsx` when Phase C changes shell orchestration.
 
----
+### App shell conventions (#433)
+
+| Topic | Guidance |
+| --- | --- |
+| **`AppShell.tsx` size** | Expected after Phase B (~700 lines): hooks + slice builders + sibling modals. Phase C moves Overview/Settings-only state down when ownership is clear. If it keeps growing, split into `AppShellOrchestration.ts` (hooks + slices), `AppShellChrome.tsx` (Spotlight, SetupWizard, modals), thin `AppShell.tsx` compositor — not required for #433 B. |
+| **Router slices** | `AppShell` builds `AppMainRouter` slices inline in JSX. Fine today (no `React.memo` on router children). If memoization is added downstream, wrap each slice in `useMemo` with stable deps. |
+| **Lifecycle callbacks** | Patterns like `startServer: (id) => void startServer(id)` predate slices; they create new closures each render. Pass hook callbacks directly when signatures match, or stabilize with `useCallback` in the shell if memoization depends on referential equality. |
+| **Tests** | Move-only phases: `App.test.tsx` is enough. Direct `AppShell` tests when shell behavior changes in Phase C+. |
+
+**Phase C (#433):** selective page-local state (e.g. `updateAllOutdated*`, settings focus flags). Do not move fleet poll / `installScan` without a dedicated owner. See [#433](https://github.com/gabomarin/yark/issues/433).
 
 ## Renderer: grandfathered feature pages
 
@@ -258,7 +271,7 @@ Suggested order (compiler + React Doctor friendly):
 2. `BackupsPage` — fleet metrics vs per-server policy table
 3. `ConfigurationWizard` — per-step panels (model already split partially)
 4. `ServerBackupPanel` — kind settings vs history table
-5. `App.tsx` shell
+5. `AppShell` — page-local Overview/Settings state (#433 Phase C)
 
 ---
 
