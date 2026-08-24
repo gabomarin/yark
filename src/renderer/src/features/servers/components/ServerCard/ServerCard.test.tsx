@@ -123,6 +123,49 @@ describe("ServerCard", () => {
     expect(onToggleEnabled).toHaveBeenCalledTimes(1);
   });
 
+  it("allows Enable from the primary icon when installation files are missing", async () => {
+    const user = userEvent.setup();
+    const onToggleEnabled = vi.fn();
+
+    render(
+      <AppProviders>
+        <ServerCard
+          server={{ ...profile, enabled: false }}
+          runtime={null}
+          installation={{
+            ...installed,
+            installed: false,
+            health: "missing",
+            reasonCodes: ["path_missing"],
+            guidance: "Create the folder or correct the install path, then install server files.",
+          }}
+          officialSteamBuild={null}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+          onToggleEnabled={onToggleEnabled}
+        />
+      </AppProviders>,
+    );
+
+    const enable = screen.getByRole("button", { name: /^Enable server$/i });
+    expect(enable).toBeEnabled();
+    await user.click(enable);
+    expect(onToggleEnabled).toHaveBeenCalledTimes(1);
+  });
+
   it("uses Stop for a running server and keeps secondary actions in the menu", async () => {
     const user = userEvent.setup();
     const onStop = vi.fn();

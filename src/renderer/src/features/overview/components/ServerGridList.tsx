@@ -48,9 +48,6 @@ export function ServerGridList(props: Props): ReactElement | null {
         <section aria-label="Disabled servers">
           <div className={classes.clusterGroupHead}>
             <Text component="span">Disabled</Text>
-            <Text component="span" className={classes.clusterGroupHint}>
-              Same sort, kept separate from the fleet
-            </Text>
           </div>
           <div className={classes.serverGrid}>
             {props.sortedDisabled.map((server) => props.renderServerCard(server))}

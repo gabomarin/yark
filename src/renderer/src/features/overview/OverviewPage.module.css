@@ -57,6 +57,10 @@
   min-width: 0;
 }
 
+.fleetMetrics {
+  margin-bottom: var(--app-space-xs);
+}
+
 .serverSectionHeader {
   display: flex;
   flex-wrap: nowrap;
@@ -97,15 +101,6 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--app-color-muted);
-}
-
-.clusterGroupHint {
-  margin-left: auto;
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: normal;
-  text-transform: none;
   color: var(--app-color-muted);
 }
 

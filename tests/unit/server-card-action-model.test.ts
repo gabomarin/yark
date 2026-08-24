@@ -77,7 +77,7 @@ const combos: Combo[] = [
     installed: false,
     serverEnabled: false,
     updateState: "unknown",
-    expectRuntime: { kind: "enable", disabled: true },
+    expectRuntime: { kind: "enable", disabled: false },
     expectUpdate: { kind: "install", label: "Install server files", disabled: false },
   },
   {
@@ -225,6 +225,34 @@ describe("serverCardActionModel combos", () => {
     });
     expect(runtime.kind).toBe("stop");
     expect(runtime.disabled).toBe(false);
+  });
+
+  it("allows Enable without installation files and locks it only while SteamCMD is busy (#132)", () => {
+    const ready = resolveRuntimeAction({
+      steamCmdBusy: false,
+      isInstallationReady: false,
+      status: "stopped",
+      serverEnabled: false,
+    });
+    expect(ready).toMatchObject({
+      kind: "enable",
+      disabled: false,
+      visible: true,
+    });
+
+    const busy = resolveRuntimeAction({
+      steamCmdBusy: true,
+      steamCmdOperation: "update",
+      isInstallationReady: false,
+      status: "stopped",
+      serverEnabled: false,
+    });
+    expect(busy).toMatchObject({
+      kind: "enable",
+      disabled: true,
+      hint: "Another server operation is in progress",
+      visible: true,
+    });
   });
 
   it("shows Restarting… while startBusy on a running server (#390)", () => {
