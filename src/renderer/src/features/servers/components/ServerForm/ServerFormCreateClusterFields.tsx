@@ -56,6 +56,7 @@ export function ServerFormCreateClusterFields(props: Props): ReactElement {
             <Anchor
               component="button"
               type="button"
+              underline="hover"
               onClick={props.onOpenClusters}
             >
               Create a cluster first…

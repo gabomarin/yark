@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Root **THIRD_PARTY_NOTICES.md** credits Arkobat default INI templates, ark.wiki.gg launch-options catalog sources, and Studio Wildcard promotional map thumbnails; **Settings → About** links to it on GitHub.
 - Overview **process RAM/CPU** on each server card (merged **RAM / CPU** cell) and read-only header **RAM** / **CPU** sums from dedicated-process samples when any server is starting or running; workspace Status shows per-server RAM and CPU; sampling runs only while Overview or the Status panel is visible; CPU is % of one logical processor (#302).
 - Overview **fleet metric strip** (Running, Stopped, Needs attention, Updates available) with compact click-to-filter tiles; attention details open from an info control on the Needs attention tile (#314).
 - Overview **survivor counts** on each server card and a read-only **Survivors** header label from the ListPlayers cache (header Survivors / RAM / CPU only while a server is starting or running); workspace Status shows Survivors and Uptime (install check time stays in attention details only); RCON panel uses Survivors wording (#301).

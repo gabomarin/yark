@@ -257,5 +257,9 @@ backup archives.
 YARK server manager is distributed under the
 [GNU General Public License v3.0](LICENSE) (GPL-3.0-only).
 
+Third-party material embedded in the app (default INI templates, launch-options
+catalog copy, and other assets) is listed in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
 ARK: Survival Ascended and related names are trademarks of their respective owners. YARK is an
 independent community project and is not affiliated with or endorsed by Studio Wildcard.

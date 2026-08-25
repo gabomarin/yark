@@ -748,4 +748,18 @@ describe("SettingsPage", () => {
       expect(checkButton).toBeEnabled();
     });
   });
+
+  it("links third-party notices on About", async () => {
+    const user = userEvent.setup();
+    stubSettingsApi();
+    renderSettings();
+    await openCategory(user, "About");
+
+    const link = screen.getByRole("link", { name: /View on GitHub/i });
+    expect(link).toHaveAttribute(
+      "href",
+      "https://github.com/gabomarin/yark/blob/main/THIRD_PARTY_NOTICES.md",
+    );
+    expect(link).toHaveAttribute("target", "_blank");
+  });
 });

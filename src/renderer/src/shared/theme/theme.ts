@@ -95,6 +95,9 @@ function createAppCssVariablesResolver(
       "--app-list-selected-bg":
         "linear-gradient(90deg, color-mix(in srgb, var(--ark-gray-4) 70%, var(--ark-blue-4)) 0%, color-mix(in srgb, var(--ark-gray-3) 82%, var(--ark-blue-3)) 100%)",
       "--app-list-selected-inset": "inset 3px 0 0 var(--ark-blue-9)",
+      "--app-anchor-color": "color-mix(in srgb, var(--app-color-cryo) 50%, white)",
+      "--app-anchor-hover-color":
+        "color-mix(in srgb, var(--app-color-cryo) 35%, white)",
     },
     light: {},
     dark: {
@@ -392,6 +395,25 @@ function createAppTheme(
       },
       TagsInput: {
         defaultProps: comboboxScrollDefaults,
+      },
+      Anchor: {
+        defaultProps: {
+          underline: "always",
+        },
+        styles: {
+          root: {
+            "--anchor-color": "var(--app-anchor-color)",
+            "--anchor-hover-color": "var(--app-anchor-hover-color)",
+            color: "var(--anchor-color)",
+            textDecorationColor:
+              "color-mix(in srgb, var(--anchor-color) 55%, transparent)",
+            "&:hover": {
+              color: "var(--anchor-hover-color)",
+              textDecorationColor:
+                "color-mix(in srgb, var(--anchor-hover-color) 70%, transparent)",
+            },
+          },
+        },
       },
       ...compactControlDefaults,
     },

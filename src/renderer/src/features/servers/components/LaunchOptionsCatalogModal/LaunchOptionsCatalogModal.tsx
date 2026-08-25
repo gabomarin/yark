@@ -41,18 +41,6 @@ export function LaunchOptionsCatalogModal(props: Props): ReactElement {
               target="_blank"
               rel="noreferrer"
               size="sm"
-              className={classes.sourceLink}
-              underline="always"
-              styles={{
-                root: {
-                  color:
-                    "color-mix(in srgb, var(--app-color-cryo) 50%, white)",
-                  "--anchor-color":
-                    "color-mix(in srgb, var(--app-color-cryo) 50%, white)",
-                  "--anchor-hover-color":
-                    "color-mix(in srgb, var(--app-color-cryo) 35%, white)",
-                },
-              }}
             >
               ark.wiki.gg Command line options
             </Anchor>
