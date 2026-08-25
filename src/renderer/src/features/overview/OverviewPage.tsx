@@ -14,16 +14,14 @@ import type {
 import type { useAppFleetRefresh } from "@app/hooks/useAppFleetRefresh";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import { useOverviewServerUpdates } from "@features/overview/hooks/useOverviewServerUpdates";
-import { sumSurvivorsOnlineTotal } from "@features/overview/model/overviewFleetMetrics";
+import {
+  computeOverviewProcessFleetReadouts,
+  sumSurvivorsOnlineTotal,
+} from "@features/overview/model/overviewFleetMetrics";
 import {
   filterOverviewServers,
   partitionOverviewServers,
 } from "@features/overview/model/overviewServerFilter";
-import {
-  hasLiveProcessFleet,
-  sumFleetCpuPercent,
-  sumFleetWorkingSetBytes,
-} from "@features/servers/model/serverCardProcessMeta";
 import { OverviewHeader } from "./components/OverviewHeader";
 import { RecentActivityPanel } from "./components/RecentActivityPanel";
 import { ServerGrid, type SteamCmdCardJobRef } from "./components/ServerGrid";
@@ -97,31 +95,18 @@ export function OverviewPage(props: Props): ReactElement {
       }),
     [enabled, props.statuses, props.playerListsByServer],
   );
-  const fleetRamBytes = useMemo(
+  const {
+    showProcessFleetMetrics,
+    fleetRamBytes,
+    fleetCpuPercent,
+  } = useMemo(
     () =>
-      sumFleetWorkingSetBytes({
+      computeOverviewProcessFleetReadouts({
         enabledServers: enabled,
         statuses: props.statuses,
         metricsByServer: props.processMetricsByServer,
       }),
     [enabled, props.statuses, props.processMetricsByServer],
-  );
-  const fleetCpuPercent = useMemo(
-    () =>
-      sumFleetCpuPercent({
-        enabledServers: enabled,
-        statuses: props.statuses,
-        metricsByServer: props.processMetricsByServer,
-      }),
-    [enabled, props.statuses, props.processMetricsByServer],
-  );
-  const showProcessFleetMetrics = useMemo(
-    () =>
-      hasLiveProcessFleet({
-        enabledServers: enabled,
-        statuses: props.statuses,
-      }),
-    [enabled, props.statuses],
   );
 
   const {

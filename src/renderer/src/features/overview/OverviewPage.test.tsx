@@ -111,9 +111,9 @@ describe("OverviewPage", () => {
     expect(metrics).not.toBeNull();
     expect(within(metrics as HTMLElement).getByRole("button", { name: /^Running/i })).toBeInTheDocument();
     expect(within(metrics as HTMLElement).getByRole("button", { name: /^Stopped/i })).toBeInTheDocument();
-    expect(screen.getByText("Survivors –")).toBeInTheDocument();
     const header = container.querySelector("header");
     expect(header).not.toBeNull();
+    expect(within(header as HTMLElement).queryByText(/Survivors/)).not.toBeInTheDocument();
     expect(within(header as HTMLElement).queryByText(/^RAM/)).not.toBeInTheDocument();
     expect(within(header as HTMLElement).queryByText(/^CPU/)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Online/i })).not.toBeInTheDocument();

@@ -20,7 +20,7 @@ interface Props {
   /** Known online survivors across running servers; `null` until a real RCON sample exists. */
   survivorsOnlineTotal?: number | null;
   /**
-   * When false (no starting/running enabled server), hide header RAM / CPU (#302).
+   * When false (no starting/running enabled server), hide Survivors / RAM / CPU (#301 / #302).
    */
   showProcessFleetMetrics?: boolean;
   /** Sum of working set on starting/running servers; `null` until a real sample exists (#302). */
@@ -59,42 +59,40 @@ export function OverviewHeader({
     <header className={classes.header}>
       <h1 className={classes.title}>Servers</h1>
       <Group gap="md" wrap="wrap" justify="flex-end" className={classes.headerActions}>
-        <Group gap="sm" wrap="wrap" className={classes.fleetReadouts}>
-          <Text
-            size="sm"
-            c="dimmed"
-            className={classes.fleetReadout}
-            data-survivors-online={
-              survivorsOnlineTotal == null ? undefined : survivorsOnlineTotal
-            }
-          >
-            {survivorsLabel}
-          </Text>
-          {showProcessFleetMetrics ? (
-            <>
-              <Text
-                size="sm"
-                c="dimmed"
-                className={classes.fleetReadout}
-                data-fleet-ram={fleetRamBytes == null ? undefined : fleetRamBytes}
-                title="Sum of dedicated-process working set on starting/running servers"
-              >
-                {ramLabel}
-              </Text>
-              <Text
-                size="sm"
-                c="dimmed"
-                className={classes.fleetReadout}
-                data-fleet-cpu={
-                  fleetCpuPercent == null ? undefined : fleetCpuPercent
-                }
-                title="Sum of dedicated-process CPU % (each % of one logical processor)"
-              >
-                {cpuLabel}
-              </Text>
-            </>
-          ) : null}
-        </Group>
+        {showProcessFleetMetrics ? (
+          <Group gap="sm" wrap="wrap" className={classes.fleetReadouts}>
+            <Text
+              size="sm"
+              c="dimmed"
+              className={classes.fleetReadout}
+              data-survivors-online={
+                survivorsOnlineTotal == null ? undefined : survivorsOnlineTotal
+              }
+            >
+              {survivorsLabel}
+            </Text>
+            <Text
+              size="sm"
+              c="dimmed"
+              className={classes.fleetReadout}
+              data-fleet-ram={fleetRamBytes == null ? undefined : fleetRamBytes}
+              title="Sum of dedicated-process working set on starting/running servers"
+            >
+              {ramLabel}
+            </Text>
+            <Text
+              size="sm"
+              c="dimmed"
+              className={classes.fleetReadout}
+              data-fleet-cpu={
+                fleetCpuPercent == null ? undefined : fleetCpuPercent
+              }
+              title="Sum of dedicated-process CPU % (each % of one logical processor)"
+            >
+              {cpuLabel}
+            </Text>
+          </Group>
+        ) : null}
         <Button
           variant="transparent"
           color="gray"

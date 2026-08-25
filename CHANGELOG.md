@@ -13,7 +13,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Overview **process RAM/CPU** on each server card (merged **RAM / CPU** cell) and read-only header **RAM** / **CPU** sums from dedicated-process samples when any server is starting or running; workspace Status shows per-server RAM and CPU; sampling runs only while Overview or the Status panel is visible; CPU is % of one logical processor (#302).
 - Overview **fleet metric strip** (Running, Stopped, Needs attention, Updates available) with compact click-to-filter tiles; attention details open from an info control on the Needs attention tile (#314).
-- Overview **survivor counts** on each server card and a read-only **Survivors** header label from the ListPlayers cache; workspace Status shows Survivors and Uptime (install check time stays in attention details only); RCON panel uses Survivors wording (#301).
+- Overview **survivor counts** on each server card and a read-only **Survivors** header label from the ListPlayers cache (header Survivors / RAM / CPU only while a server is starting or running); workspace Status shows Survivors and Uptime (install check time stays in attention details only); RCON panel uses Survivors wording (#301).
 - **Decomposition map** for oversized backend services and renderer pages — phased boundaries, test inventory, and PR checklist ([#146](https://github.com/gabomarin/yark/issues/146)).
 - Pure **backup cleanup planner** module (`backup-cleanup-plan.ts`) extracted from `backup-service.ts` with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **Backup fleet health** helpers extracted to `backup-fleet.ts` (health badges, alerts, disk stats) with unit tests ([#146](https://github.com/gabomarin/yark/issues/146)).
@@ -43,6 +43,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Overview header hides **Survivors** (with RAM / CPU) when no enabled server is starting or running, instead of showing **Survivors –** (#301).
 - Overview server cards use container queries on card width to stack Start/Stop under the meta row and switch status to a color-only dot before Version / **RAM / CPU** collide with action icons (#302).
 
 ### Changed

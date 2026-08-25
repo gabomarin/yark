@@ -22,6 +22,9 @@
 }
 
 .card[data-ui-density="compact"] {
+  /* Replaces `server-card` (does not accumulate). Compact must not match the
+     comfortable @container at 1180px — it stacks later at 900px (#377 / #302).
+     Do not list both names; that would undo denser-longer Compact. */
   container-name: server-card-compact;
 }
 
