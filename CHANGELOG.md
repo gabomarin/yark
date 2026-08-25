@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- **THIRD_PARTY_NOTICES.md** records ark.wiki.gg catalog copy as **CC BY-NC-SA 4.0** (footer-confirmed) with NC/SA redistribution notes; map-thumb bundling rationale for packagers.
+
 ### Added
 
 - Root **THIRD_PARTY_NOTICES.md** credits Arkobat default INI templates, ark.wiki.gg launch-options catalog sources, and Studio Wildcard promotional map thumbnails; **Settings → About** links to it on GitHub.

@@ -53,6 +53,7 @@ export function ServerFormCreateClusterFields(props: Props): ReactElement {
       {!hasClusters &&
         (props.onOpenClusters !== undefined ? (
           <Text size="sm" c="dimmed">
+            {/* Theme default is underline="always" for doc links; button actions stay hover-only. */}
             <Anchor
               component="button"
               type="button"

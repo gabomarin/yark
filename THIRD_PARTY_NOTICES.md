@@ -41,9 +41,12 @@ the YARK distribution).
 
 **Source page:** [Server configuration → Command line options](https://ark.wiki.gg/wiki/Server_configuration#Command_line_options)
 
-**License:** Community wiki content on wiki.gg is typically under
-[Creative Commons Attribution-ShareAlike](https://creativecommons.org/licenses/).
-Confirm the current license on [ark.wiki.gg](https://ark.wiki.gg/) before release.
+**License:** [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
+Confirmed via the ark.wiki.gg site footer (August 2026): *“Page content is under
+Creative Commons Attribution-Non-Commercial-ShareAlike 4.0 License unless
+otherwise noted.”* Older pages may incorporate material adapted from ARK Fandom
+under the same license family.
 
 **Used in YARK:**
 
@@ -59,8 +62,18 @@ retains `sources[]` pointing to the wiki section for audit.
 **Attribution:** ARK Wiki contributors — [Server configuration](https://ark.wiki.gg/wiki/Server_configuration#Command_line_options)
 (ark.wiki.gg). Adapted and reviewed by YARK.
 
-If ShareAlike applies to the adapted text you ship, downstream redistribution
-may need to comply with CC BY-SA (see Creative Commons FAQ).
+**Redistribution (NC + SA):** The catalog **descriptive text** is wiki-derived
+adaptation, not YARK-authored code. Downstream packagers must:
+
+- Keep attribution (this file and per-entry `sources[]` in the JSON).
+- Respect **NonCommercial (NC)** — do not repackage the adapted catalog copy as
+  part of a primarily commercial product without separate permission from rights
+  holders.
+- Respect **ShareAlike (SA)** — share adaptations of that descriptive text under
+  CC BY-NC-SA 4.0 where the license applies.
+
+YARK application **source code** remains [GPL-3.0-only](LICENSE); only the
+embedded catalog prose is subject to the wiki license above.
 
 ---
 
@@ -95,6 +108,16 @@ merchandise or marketing for YARK itself.
 Each asset is derived from Studio Wildcard’s promotional / key art for the
 corresponding ARK: Survival Ascended map, resized for in-app map identification
 only. Custom mod maps use CurseForge mod logos at runtime instead (not bundled here).
+
+**Why bundled (not fetched at runtime):** Map thumbs must work offline and stay
+stable across installs without depending on Wildcard CDN URLs that may change or
+block hotlinking.
+
+**Redistribution:** YARK does **not** grant a sublicense for this artwork.
+Packagers mirroring official builds inherit the illustrative / non-commercial
+fan-content stance above. If your distribution cannot rely on that rationale,
+remove or replace the WebP files under `src/renderer/src/assets/maps/` before
+shipping.
 
 **Attribution:** ARK: Survival Ascended and map names are trademarks of Studio
 Wildcard and related rights holders. See [Trademarks](#trademarks) below.
