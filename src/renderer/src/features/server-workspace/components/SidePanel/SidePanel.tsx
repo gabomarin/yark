@@ -12,6 +12,7 @@ import {
   Wrench,
 } from "@phosphor-icons/react";
 import { Button, Stack, Text } from "@mantine/core";
+import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import {
   installationHealthLabel,
@@ -21,6 +22,10 @@ import {
 import { formatServerUptime } from "@shared/server-uptime";
 import { resolveDisplayedServerVersion } from "@shared/server-version-display";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
+import {
+  formatCpuPercent,
+  formatWorkingSet,
+} from "@features/servers/model/serverCardProcessMeta";
 import { formatServerSurvivorMeta } from "@features/servers/model/serverCardSurvivorMeta";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { MetaRow } from "@ui/MetaRow/MetaRow";
@@ -37,6 +42,7 @@ interface Props {
   runtime: ServerRuntimeInfo | null;
   installation: ServerInstallationInfo | null;
   playerList?: PlayerListState | null;
+  processMetrics?: ProcessMetricsUpdatedPush | null;
   /** SteamCMD files job in progress – blocks install/update/verify unless a stronger job can replace a queued one. */
   opsLocked?: boolean;
   opsLockReason?: string;
@@ -132,6 +138,16 @@ export function SidePanel(props: Props): ReactElement {
     survivorList: props.playerList ?? null,
     maxPlayers: props.server.maxPlayers,
   });
+  const processLive = status === "running" || status === "starting";
+  const metrics = props.processMetrics;
+  const ram =
+    processLive && metrics != null && metrics.error == null
+      ? formatWorkingSet(metrics.workingSetBytes)
+      : "–";
+  const cpu =
+    processLive && metrics != null && metrics.error == null
+      ? formatCpuPercent(metrics.cpuPercent)
+      : "–";
 
   return (
     <aside className={classes.panel}>
@@ -141,6 +157,8 @@ export function SidePanel(props: Props): ReactElement {
           <MetaRow label="Status" value={serverRuntimeStatusLabel(status)} />
           <MetaRow label="Uptime" value={uptime} />
           <MetaRow label="Survivors" value={survivors} />
+          <MetaRow label="RAM" value={ram} />
+          <MetaRow label="CPU" value={cpu} />
           <MetaRow label="Install" value={installHealthLabel} />
           <MetaRow label="Version" value={version} />
           <MetaRow label="Cluster" value={props.server.clusterId ?? "No cluster"} />

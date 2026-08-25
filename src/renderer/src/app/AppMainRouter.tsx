@@ -61,6 +61,7 @@ export function AppMainRouter(props: AppMainRouterProps): ReactElement {
         rcon={rcon}
         steamCmd={steamCmd}
         registerOverlayLeaveGuard={navigation.registerOverlayLeaveGuard}
+        onStatusPanelVisibleChange={navigation.onWorkspaceStatusPanelVisibleChange}
       />
     );
   }

@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type {
   ServerInstallationInfo,
   ServerProfile,
@@ -36,6 +37,7 @@ interface Props {
   startBusyByServerId?: ReadonlySet<string>;
   checkingUpdates?: boolean;
   playerList?: PlayerListState | null;
+  processMetrics?: ProcessMetricsUpdatedPush | null;
   handlers: ServerCardHandlers;
 }
 
@@ -79,6 +81,7 @@ export function OverviewServerCard(props: Props): ReactElement {
       stopProgressLabel={stopBusy ? (stopProgress?.label ?? null) : null}
       checkingUpdates={props.checkingUpdates}
       playerList={props.playerList}
+      processMetrics={props.processMetrics}
       handlers={props.handlers}
     />
   );

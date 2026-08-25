@@ -1,5 +1,6 @@
 import { type ReactElement, useEffect, useMemo, useRef, useState } from "react";
 import { Badge, Checkbox, Group, Stack, Text } from "@mantine/core";
+import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo, ServerStopProgress } from "@shared/types";
 import type { ServerCardHandlers } from "@features/servers/components/ServerCard/serverCardHandlers";
@@ -34,6 +35,7 @@ interface Props {
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
   playerListsByServer: Map<string, PlayerListState>;
+  processMetricsByServer: Map<string, ProcessMetricsUpdatedPush>;
   officialSteamBuild: string | null;
   officialVersion?: string | null;
   steamCmdServerId: string | null;
@@ -180,6 +182,7 @@ export function ServerGrid(props: Props): ReactElement {
       statuses={props.statuses}
       installationInfo={props.installationInfo}
       playerList={props.playerListsByServer.get(server.id) ?? null}
+      processMetrics={props.processMetricsByServer.get(server.id) ?? null}
       officialSteamBuild={props.officialSteamBuild}
       officialVersion={props.officialVersion ?? null}
       steamCmdServerId={props.steamCmdServerId}

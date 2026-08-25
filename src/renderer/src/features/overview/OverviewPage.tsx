@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
 import { ArrowRight } from "@phosphor-icons/react";
 import { Button } from "@mantine/core";
+import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type {
   AppEvent,
   ServerInstallationInfo,
@@ -18,6 +19,11 @@ import {
   filterOverviewServers,
   partitionOverviewServers,
 } from "@features/overview/model/overviewServerFilter";
+import {
+  hasLiveProcessFleet,
+  sumFleetCpuPercent,
+  sumFleetWorkingSetBytes,
+} from "@features/servers/model/serverCardProcessMeta";
 import { OverviewHeader } from "./components/OverviewHeader";
 import { RecentActivityPanel } from "./components/RecentActivityPanel";
 import { ServerGrid, type SteamCmdCardJobRef } from "./components/ServerGrid";
@@ -36,6 +42,8 @@ interface Props {
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
   playerListsByServer: Map<string, PlayerListState>;
+  /** Dedicated-process RAM/CPU samples (#302). */
+  processMetricsByServer: Map<string, ProcessMetricsUpdatedPush>;
   officialSteamBuild: string | null;
   officialVersion?: string | null;
   events: AppEvent[];
@@ -89,6 +97,32 @@ export function OverviewPage(props: Props): ReactElement {
       }),
     [enabled, props.statuses, props.playerListsByServer],
   );
+  const fleetRamBytes = useMemo(
+    () =>
+      sumFleetWorkingSetBytes({
+        enabledServers: enabled,
+        statuses: props.statuses,
+        metricsByServer: props.processMetricsByServer,
+      }),
+    [enabled, props.statuses, props.processMetricsByServer],
+  );
+  const fleetCpuPercent = useMemo(
+    () =>
+      sumFleetCpuPercent({
+        enabledServers: enabled,
+        statuses: props.statuses,
+        metricsByServer: props.processMetricsByServer,
+      }),
+    [enabled, props.statuses, props.processMetricsByServer],
+  );
+  const showProcessFleetMetrics = useMemo(
+    () =>
+      hasLiveProcessFleet({
+        enabledServers: enabled,
+        statuses: props.statuses,
+      }),
+    [enabled, props.statuses],
+  );
 
   const {
     checkingUpdates,
@@ -127,6 +161,9 @@ export function OverviewPage(props: Props): ReactElement {
         checkingUpdates={checkingUpdates}
         checkingInstalls={props.checkingInstalls}
         survivorsOnlineTotal={survivorsOnlineTotal}
+        showProcessFleetMetrics={showProcessFleetMetrics}
+        fleetRamBytes={fleetRamBytes}
+        fleetCpuPercent={fleetCpuPercent}
       />
 
       <UpdateAllOutdatedModal
@@ -151,6 +188,7 @@ export function OverviewPage(props: Props): ReactElement {
           statuses={props.statuses}
           installationInfo={props.installationInfo}
           playerListsByServer={props.playerListsByServer}
+          processMetricsByServer={props.processMetricsByServer}
           officialSteamBuild={props.officialSteamBuild}
           officialVersion={props.officialVersion ?? null}
           steamCmdServerId={steamCmdStatus?.serverId ?? null}

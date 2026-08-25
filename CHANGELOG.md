@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Overview **process RAM/CPU** on each server card (merged **RAM / CPU** cell) and read-only header **RAM** / **CPU** sums from dedicated-process samples when any server is starting or running; workspace Status shows per-server RAM and CPU; sampling runs only while Overview or the Status panel is visible; CPU is % of one logical processor (#302).
 - Overview **fleet metric strip** (Running, Stopped, Needs attention, Updates available) with compact click-to-filter tiles; attention details open from an info control on the Needs attention tile (#314).
 - Overview **survivor counts** on each server card and a read-only **Survivors** header label from the ListPlayers cache; workspace Status shows Survivors and Uptime (install check time stays in attention details only); RCON panel uses Survivors wording (#301).
 - **Decomposition map** for oversized backend services and renderer pages — phased boundaries, test inventory, and PR checklist ([#146](https://github.com/gabomarin/yark/issues/146)).
@@ -39,6 +40,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - **App shell** overlay routing split into `AppWorkspaceOverlay`, `AppFormOverlays`, and `AppRouterPages`; shared chrome via `appShellChrome.ts` ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **`useAppFleetRefresh`** and **`useAppRcon`** hooks extracted from `App.tsx` ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **Configuration editor** filter bar, settings table, and row organisms extracted from `ConfigurationEditor.tsx` ([#146](https://github.com/gabomarin/yark/issues/146)).
+
+### Fixed
+
+- Overview server cards use container queries on card width to stack Start/Stop under the meta row and switch status to a color-only dot before Version / **RAM / CPU** collide with action icons (#302).
 
 ### Changed
 

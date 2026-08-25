@@ -21,6 +21,7 @@ export interface AppWorkspaceOverlayProps {
   rcon: AppRconSlice;
   steamCmd: AppSteamCmdSlice;
   registerOverlayLeaveGuard: (guard: ((action: () => void) => void) | null) => void;
+  onStatusPanelVisibleChange?: (visible: boolean) => void;
 }
 
 export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactElement {
@@ -33,8 +34,9 @@ export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactEleme
     rcon,
     steamCmd,
     registerOverlayLeaveGuard,
+    onStatusPanelVisibleChange,
   } = props;
-  const { servers, statuses, installationInfo, events, refresh } = fleet;
+  const { servers, statuses, installationInfo, processMetricsByServer, events, refresh } = fleet;
   const { stopProgressByServerId, startBusyByServerId, actions } = lifecycle;
   const {
     rconHistoryByServer,
@@ -76,6 +78,7 @@ export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactEleme
             loading: false,
           }
         }
+        processMetrics={processMetricsByServer.get(overlay.serverId) ?? null}
         onboarding={overlay.onboarding === true}
         initialTab={overlay.initialTab}
         logsFocus={overlay.logsFocus}
@@ -104,6 +107,7 @@ export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactEleme
           })
         }
         onRegisterLeaveGuard={registerOverlayLeaveGuard}
+        onStatusPanelVisibleChange={onStatusPanelVisibleChange}
         onBack={() => setOverlay(null)}
         onStartServer={(id) => void actions.startServer(id)}
         onStopServer={(id) => void actions.runAction(() => window.api.stopServer(id))}

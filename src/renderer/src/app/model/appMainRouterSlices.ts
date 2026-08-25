@@ -1,5 +1,6 @@
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import type { useAppFleetRefresh } from "@app/hooks/useAppFleetRefresh";
+import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type {
   AppEvent,
   ClusterComplianceReport,
@@ -31,6 +32,8 @@ export interface AppFleetSlice {
   servers: ServerProfile[];
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
+  /** Dedicated-process RAM/CPU samples (#302). */
+  processMetricsByServer: Map<string, ProcessMetricsUpdatedPush>;
   events: AppEvent[];
   reports: ClusterComplianceReport[];
   refresh: AppRefresh;
@@ -89,6 +92,8 @@ export interface AppNavigationSlice {
   registerOverlayLeaveGuard: (guard: ((action: () => void) => void) | null) => void;
   runWithOverlayLeaveGuard: (action: () => void) => void;
   consumePendingSetupCluster: () => void;
+  /** Workspace Status panel visible → process metrics sampling (#302). */
+  onWorkspaceStatusPanelVisibleChange?: (visible: boolean) => void;
 }
 
 export interface AppOverviewSlice {

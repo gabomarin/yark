@@ -13,9 +13,16 @@
     );
   max-width: 100%;
   background-clip: padding-box;
+  /* Stack / status-dot from card width (sidebar shrinks content vs viewport) (#302). */
+  container-type: inline-size;
+  container-name: server-card;
   transition:
     border-color 140ms ease,
     background-color 140ms ease;
+}
+
+.card[data-ui-density="compact"] {
+  container-name: server-card-compact;
 }
 
 .card::before {
@@ -115,10 +122,14 @@
 
 .cardHit {
   display: grid;
-  grid-template-columns: minmax(210px, 0.8fr) minmax(460px, 2fr);
+  /* minmax(0, …) so Survivors + RAM/CPU can shrink/ellipsis instead of
+     overflowing into row actions on mid widths (#302). */
+  grid-template-columns: minmax(180px, 0.8fr) minmax(0, 2fr);
   align-items: center;
   gap: var(--app-space-xl);
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .identityRow {
@@ -162,6 +173,17 @@
   flex-shrink: 0;
 }
 
+/* Default: text Badge. Dot shown when the card container is narrow (#302). */
+.statusDotSlot {
+  display: none;
+  align-items: center;
+}
+
+.statusLabelSlot {
+  display: inline-flex;
+  align-items: center;
+}
+
 .identity {
   min-width: 0;
 }
@@ -191,22 +213,34 @@
 
 .metaGrid {
   display: grid;
+  /* Default = Overview 6 cols (Map…Version + Survivors + RAM/CPU). Soft mins
+     so mid-width cards ellipsis instead of colliding with actions (#302). */
   grid-template-columns:
-    minmax(100px, 1.2fr)
-    minmax(90px, 1fr)
-    minmax(64px, 0.6fr)
-    minmax(72px, 0.7fr)
-    minmax(88px, 1fr);
+    minmax(72px, 1.2fr)
+    minmax(64px, 1fr)
+    minmax(40px, 0.45fr)
+    minmax(56px, 0.55fr)
+    minmax(88px, 0.95fr)
+    minmax(64px, 0.85fr);
   gap: var(--app-space-md);
   min-width: 0;
 }
 
 .metaGrid[data-meta-cols="4"] {
   grid-template-columns:
-    minmax(100px, 1.2fr)
-    minmax(90px, 1fr)
-    minmax(64px, 0.6fr)
-    minmax(88px, 1fr);
+    minmax(88px, 1.2fr)
+    minmax(72px, 1fr)
+    minmax(48px, 0.55fr)
+    minmax(72px, 0.9fr);
+}
+
+.metaGrid[data-meta-cols="5"] {
+  grid-template-columns:
+    minmax(80px, 1.2fr)
+    minmax(68px, 1fr)
+    minmax(40px, 0.45fr)
+    minmax(56px, 0.55fr)
+    minmax(72px, 0.9fr);
 }
 
 .metaItem {
@@ -245,6 +279,9 @@
 
 .rowActions {
   flex-shrink: 0;
+  justify-self: end;
+  position: relative;
+  z-index: 2;
 }
 
 .tooltipTarget {
@@ -331,7 +368,7 @@
 
 @media (min-width: 1600px) {
   .cardHit {
-    grid-template-columns: minmax(240px, 0.7fr) minmax(520px, 2.2fr);
+    grid-template-columns: minmax(220px, 0.7fr) minmax(0, 2.2fr);
     gap: var(--app-space-xl);
   }
 
@@ -340,10 +377,10 @@
   }
 }
 
-/* Comfortable-only narrow layouts — Compact keeps a denser row longer (#377). */
+/* Comfortable: tighten meta gap before the card-container stack. */
 @media (max-width: 1400px) {
   .card:not([data-ui-density="compact"]) .cardHit {
-    grid-template-columns: minmax(250px, 0.9fr) minmax(360px, 1.6fr);
+    grid-template-columns: minmax(200px, 0.9fr) minmax(0, 1.6fr);
     gap: var(--app-space-lg);
   }
 
@@ -352,18 +389,30 @@
   }
 }
 
-@media (max-width: 1100px) {
-  .card:not([data-ui-density="compact"]) .mainRow {
+/*
+ * Stack from *card* width (not viewport). Sidebar + padding means a ~1280px
+ * window can still leave the card too narrow for 6-col meta + actions (#302).
+ */
+@container server-card (max-width: 1180px) {
+  .mainRow {
     grid-template-columns: 1fr;
     gap: var(--app-space-md);
   }
 
-  .card:not([data-ui-density="compact"]) .cardHit {
+  .cardHit {
     grid-template-columns: minmax(180px, 0.7fr) minmax(0, 1.7fr);
   }
 
-  .card:not([data-ui-density="compact"]) .rowActions {
+  .rowActions {
     justify-content: flex-end;
+  }
+
+  .statusLabelSlot {
+    display: none;
+  }
+
+  .statusDotSlot {
+    display: inline-flex;
   }
 }
 
@@ -426,14 +475,22 @@
   }
 }
 
-@media (max-width: 720px) {
-  .card[data-ui-density="compact"] .mainRow {
+@container server-card-compact (max-width: 900px) {
+  .mainRow {
     grid-template-columns: 1fr;
     gap: var(--app-space-xs);
   }
 
-  .card[data-ui-density="compact"] .rowActions {
+  .rowActions {
     justify-content: flex-end;
+  }
+
+  .statusLabelSlot {
+    display: none;
+  }
+
+  .statusDotSlot {
+    display: inline-flex;
   }
 }
 

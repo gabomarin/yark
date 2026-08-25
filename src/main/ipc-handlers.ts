@@ -10,6 +10,7 @@ import type {
 } from "../shared/types";
 import type { BackupService } from "../backend/domains/backups/backup-service";
 import type { PlayerSessionWatcher } from "../backend/domains/backups/player-session-watcher";
+import type { ProcessMetricsSampler } from "../backend/domains/instances/process-metrics-sampler";
 import type { InstanceService } from "../backend/domains/instances/instance-service";
 import { probeImportInstall } from "../backend/domains/instances/import-existing-install";
 import type { IniService } from "../backend/domains/config/ini-service";
@@ -83,6 +84,7 @@ export function registerIpcHandlers(
   appDataFolders: AppDataFolderRoots,
   settings: AppSettingsRepository,
   playerSessionWatcher: PlayerSessionWatcher,
+  processMetricsSampler: ProcessMetricsSampler,
   appUpdate: AppUpdateService,
 ): void {
   handleValidated(IPC.serversList, ipcArgSchemas[IPC.serversList], () => instances.list());
@@ -393,6 +395,14 @@ export function registerIpcHandlers(
         return playerSessionWatcher.getOnlinePlayers(serverId);
       }
       return playerSessionWatcher.refreshServer(serverId);
+    },
+  );
+
+  handleValidated(
+    IPC.processMetricsSetSampling,
+    ipcArgSchemas[IPC.processMetricsSetSampling],
+    ([enabled]) => {
+      processMetricsSampler.setSamplingEnabled(enabled);
     },
   );
 
