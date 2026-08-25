@@ -318,8 +318,8 @@ One visual control for “find something in this list.” Do **not** wire a raw
 
 | Variant | When | How |
 | --- | --- | --- |
-| **Filter** (default) | Instant local list filter (Overview, Launch, Logs, INI, backups, catalog) | `SearchField` alone; decorative left magnifier; `label` for aria-only name; `size` `xs` (rail / Compact) or `sm` (Comfortable). Never `md`. |
-| **Submit** | Remote or explicit search (Mods Discover CurseForge) | `SearchField` with `onSubmit` — flush end-cap ActionIcon in `rightSection` (+ Enter), same panel/border/text chrome as Select. Do **not** add a separate trailing Button, and do not turn Mods into instant-as-you-type filter. |
+| **Filter** (default) | Instant local list filter (Overview, Launch, Logs, INI, backups, catalog) | `SearchField` alone; decorative left magnifier; in-field Mantine `CloseButton` when non-empty (`clearable`, default on); `label` for aria-only name; `size` `xs` (rail / Compact) or `sm` (Comfortable). Never `md`. |
+| **Submit** | Remote or explicit search (Mods Discover CurseForge) | `SearchField` with `onSubmit` — flush end-cap ActionIcon in `rightSection` (+ Enter), same panel/border/text chrome as Select. Do **not** add a separate trailing Button, and do not turn Mods into instant-as-you-type filter. No in-field clear (magnifier owns `rightSection`). |
 
 `label` vs `fieldLabel`: use `label` when the placeholder / context already names
 the control (Overview, INI filter bar, Mods Discover). Use `fieldLabel` when a visible Mantine

@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { ArrowRight } from "@phosphor-icons/react";
 import { Button } from "@mantine/core";
 import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
@@ -32,6 +32,9 @@ type Refresh = ReturnType<typeof useAppFleetRefresh>["refresh"];
 
 interface Props {
   loading?: boolean;
+  /** Session-held by `AppRouterPages` so the query survives route changes (#438). */
+  search: string;
+  onSearchChange: (value: string) => void;
   onCreateServer: () => void;
   onImportServer: () => void;
   onCheckInstalls: () => void;
@@ -72,7 +75,7 @@ interface Props {
 }
 
 export function OverviewPage(props: Props): ReactElement {
-  const [search, setSearch] = useState("");
+  const search = props.search;
   const { enabled, disabled } = useMemo(
     () => partitionOverviewServers(props.servers),
     [props.servers],
@@ -163,7 +166,7 @@ export function OverviewPage(props: Props): ReactElement {
       <div className={classes.content} data-overview-content>
         <ServerGrid
           search={search}
-          onSearchChange={setSearch}
+          onSearchChange={props.onSearchChange}
           loading={props.loading ?? false}
           onCreateServer={props.onCreateServer}
           onImportServer={props.onImportServer}
