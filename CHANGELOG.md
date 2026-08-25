@@ -43,6 +43,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Server cards no longer show **Version refreshes after you start the server** when the dedicated ARK Version is already ahead of Wildcard officials (common staggered ASA rollouts) (#442).
 - Overview header hides **Survivors** (with RAM / CPU) when no enabled server is starting or running, instead of showing **Survivors –** (#301).
 - Overview server cards use container queries on card width to stack Start/Stop under the meta row and switch status to a color-only dot before Version / **RAM / CPU** collide with action icons (#302).
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  compareArkVersionLabels,
   isArkStyleVersion,
   normalizeArkVersionLabel,
   resolveDisplayedServerVersion,
@@ -98,8 +99,20 @@ describe("resolveDisplayedServerVersion with v-prefixed builds", () => {
   });
 });
 
+describe("compareArkVersionLabels", () => {
+  it("orders dotted ARK versions numerically", () => {
+    expect(compareArkVersionLabels("92.47", "92.54")).toBeLessThan(0);
+    expect(compareArkVersionLabels("92.54", "92.47")).toBeGreaterThan(0);
+    expect(compareArkVersionLabels("v92.54", "92.54")).toBe(0);
+  });
+
+  it("returns null for non-ARK labels", () => {
+    expect(compareArkVersionLabels("build 1", "92.54")).toBeNull();
+  });
+});
+
 describe("shouldHintVersionRefreshesOnStart", () => {
-  it("hints when Steam is current but displayed ARK differs from official", () => {
+  it("hints when Steam is current and displayed ARK is behind official", () => {
     expect(
       shouldHintVersionRefreshesOnStart({
         updateState: "current",
@@ -110,6 +123,16 @@ describe("shouldHintVersionRefreshesOnStart", () => {
     expect(VERSION_REFRESHES_ON_START_HINT).toMatch(
       /Version refreshes after you start the server/i,
     );
+  });
+
+  it("does not hint when dedicated ARK Version is ahead of officials", () => {
+    expect(
+      shouldHintVersionRefreshesOnStart({
+        updateState: "current",
+        localVersion: "92.54",
+        officialVersion: "92.47",
+      }),
+    ).toBe(false);
   });
 
   it("treats v-prefix as the same label", () => {
