@@ -18,6 +18,7 @@ npm run catalog:launch-options
 
 That script parses
 [ark.wiki.gg Server configuration → Command line options](https://ark.wiki.gg/wiki/Server_configuration#Command_line_options).
+Wiki page content is **CC BY-NC-SA 4.0** (see [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)).
 The ASA column icons (`Check_mark.svg` / `Missing.png`) come from the template
 field `inASA` (`Yes` / `No` / `Unknown`).
 

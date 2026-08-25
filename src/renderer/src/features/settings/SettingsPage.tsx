@@ -4,6 +4,7 @@ import { Stack, Title } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import type { SteamCmdCacheKind, SteamCmdStatus, ServerInstallationInfo, ServerProfile } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { SettingsAboutLegalSection } from "./components/SettingsAboutLegalSection";
 import { SettingsAppDataSection } from "./components/SettingsAppDataSection";
 import { SettingsAutoStartSection } from "./components/SettingsAutoStartSection";
 import { SettingsGeneralSection } from "./components/SettingsGeneralSection";
@@ -172,6 +173,7 @@ export function SettingsPage(props: Props): ReactElement {
                   onClearShellError={desktopShell.clearShellError}
                   steamCmdExecutablePath={props.steamCmdStatus?.executablePath ?? null}
                 />
+                <SettingsAboutLegalSection />
               </Stack>
             )}
           </div>

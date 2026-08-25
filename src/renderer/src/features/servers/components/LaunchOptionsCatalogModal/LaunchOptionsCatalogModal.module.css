@@ -55,26 +55,6 @@
   line-height: 1.45;
 }
 
-.sourceLink {
-  --anchor-color: color-mix(in srgb, var(--app-color-cryo) 50%, white);
-  --anchor-hover-color: color-mix(in srgb, var(--app-color-cryo) 35%, white);
-  color: var(--anchor-color) !important;
-  text-decoration-color: color-mix(
-    in srgb,
-    var(--anchor-color) 55%,
-    transparent
-  );
-}
-
-.sourceLink:hover {
-  color: var(--anchor-hover-color) !important;
-  text-decoration-color: color-mix(
-    in srgb,
-    var(--anchor-hover-color) 70%,
-    transparent
-  );
-}
-
 .versionCard {
   border: 1px solid var(--app-color-border-subtle);
   border-radius: var(--app-radius-md);

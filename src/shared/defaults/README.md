@@ -11,7 +11,8 @@ These files are the **only source of truth** for:
   `[SessionSettings]`, `[/Script/Engine.GameSession]`, and `[MessageOfTheDay]`
 - `Game.ini` — `[/script/shootergame.shootergamemode]` gameplay multipliers
 
-They come from a community ARK settings collection (commented defaults).
+They are adapted from [Arkobat/ArkServerSettings](https://github.com/Arkobat/ArkServerSettings)
+(`SurvivalAscended/Default/`). See [THIRD_PARTY_NOTICES.md](../../../THIRD_PARTY_NOTICES.md).
 
 Do not put client-only keys here (e.g. `LastJoinedSessionPerCategory`,
 graphics / `ShooterGameUserSettings` / `ScalabilityGroups`).
