@@ -458,6 +458,8 @@ describe("OverviewPage", () => {
       ...server,
       id: "srv-2",
       name: "Scorched Earth",
+      // Must override map: filterOverviewServers also matches map/clusterId,
+      // and ...server would keep TheIsland_WP (still matches "Island").
       map: "ScorchedEarth_WP",
       installDir: "C:/ARK/ScorchedEarth",
       gamePort: 7787,
