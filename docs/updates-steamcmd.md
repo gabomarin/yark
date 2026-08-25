@@ -213,7 +213,7 @@ operator continue while SteamCMD is still installing.
 | Update while the server is running | Stop the server first; UI and API reject the request, and queued jobs recheck before execution |
 | Verify while the server is running | Expected — manager auto-stops, runs SteamCMD, and restarts if it was running |
 | Update “available” looks wrong vs ARK Version string | Compare Steam `buildid` only; ARK Version is informational |
-| Version green but number behind Wildcard | Steam is current; label may be from last boot — tooltip on Version explains it refreshes on next start |
+| Version green but number behind Wildcard | Steam is current; label may be from last boot — tooltip on Version explains it refreshes on next start. If local ARK Version is **ahead** of officials (common staggered rollout), that hint is suppressed (#442). |
 | Repeated downloads when installing another server | Cache older than 15 minutes, missing manifest, or SteamCMD path changed |
 | Console in Spanish / stuck `0.0%` while `[ N%]` lines scroll | SteamCMD bootstrapper follows Windows UI language. We force `-language english`; percent still reads from `[ N%]`. Restart the update after this build. |
 | World/INI wiped after update | Should not happen via robocopy path (`ShooterGame\Saved` excluded); check whether fallback direct `app_update` on install dir was used (console mentions cache sync failure) |
