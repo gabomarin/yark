@@ -130,4 +130,48 @@ describe("SidePanel", () => {
     expect(screen.getByText("1h 30m")).toBeInTheDocument();
     expect(screen.queryByText("Install checked")).not.toBeInTheDocument();
   });
+
+  it("shows RAM and CPU from process metrics (#302)", () => {
+    renderPanel({
+      runtime: {
+        serverId: "srv-a",
+        status: "running",
+        processLive: true,
+        pid: 42,
+        startedAt: new Date().toISOString(),
+        lastError: null,
+      },
+      processMetrics: {
+        serverId: "srv-a",
+        pid: 42,
+        workingSetBytes: 5.79 * 1024 ** 3,
+        cpuPercent: 53,
+        sampledAt: "2026-08-24T00:00:00.000Z",
+        error: null,
+      },
+    });
+
+    expect(screen.getByText("RAM")).toBeInTheDocument();
+    expect(screen.getByText("5.79 GB")).toBeInTheDocument();
+    expect(screen.getByText("CPU")).toBeInTheDocument();
+    expect(screen.getByText("53%")).toBeInTheDocument();
+  });
+
+  it("shows em dash for RAM / CPU when stopped (#302)", () => {
+    renderPanel({
+      processMetrics: {
+        serverId: "srv-a",
+        pid: 42,
+        workingSetBytes: 5.79 * 1024 ** 3,
+        cpuPercent: 53,
+        sampledAt: "2026-08-24T00:00:00.000Z",
+        error: null,
+      },
+    });
+
+    const ramLabel = screen.getByText("RAM");
+    expect(ramLabel.parentElement).toHaveTextContent("–");
+    const cpuLabel = screen.getByText("CPU");
+    expect(cpuLabel.parentElement).toHaveTextContent("–");
+  });
 });

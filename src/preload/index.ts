@@ -12,7 +12,7 @@ import type {
   StartServerOptions,
   SteamCmdCacheKind,
 } from "../shared/types";
-import type { SteamCmdProgressPush, BackupsChangedPush, ServerStopProgressPush, MoveInstallProgressPush, CloneInstallProgressPush, RconStatusChangedPush, PlayerListUpdatedPush, OsNotificationOpenPush } from "../shared/ipc";
+import type { SteamCmdProgressPush, BackupsChangedPush, ServerStopProgressPush, MoveInstallProgressPush, CloneInstallProgressPush, RconStatusChangedPush, PlayerListUpdatedPush, ProcessMetricsUpdatedPush, OsNotificationOpenPush } from "../shared/ipc";
 import { normalizeCloneInstallProgress, normalizeMoveInstallProgress, normalizeServerStopProgress } from "../shared/types";
 
 const api: RendererApi = {
@@ -86,6 +86,8 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.rconGetAllStatus),
   notifyRconTabFocus: (serverId: string, isFocused: boolean) =>
     ipcRenderer.invoke(IPC.rconTabFocusChanged, serverId, isFocused),
+  setProcessMetricsSampling: (enabled: boolean) =>
+    ipcRenderer.invoke(IPC.processMetricsSetSampling, enabled),
   refreshPlayerList: (serverId: string) =>
     ipcRenderer.invoke(IPC.refreshPlayerList, serverId),
   kickPlayer: (serverId: string, playerKey: string) =>
@@ -348,6 +350,14 @@ const api: RendererApi = {
     ipcRenderer.on(IPC_PUSH.playerListUpdated, handler);
     return () => {
       ipcRenderer.removeListener(IPC_PUSH.playerListUpdated, handler);
+    };
+  },
+  onProcessMetricsUpdated: (listener) => {
+    const handler = (_e: unknown, payload: ProcessMetricsUpdatedPush) =>
+      listener(payload);
+    ipcRenderer.on(IPC_PUSH.processMetricsUpdated, handler);
+    return () => {
+      ipcRenderer.removeListener(IPC_PUSH.processMetricsUpdated, handler);
     };
   },
   onAppUpdate: (listener) => {

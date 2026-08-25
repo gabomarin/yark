@@ -14,6 +14,7 @@ import { ProcessManager } from "../backend/infra/process/process-manager";
 import { BackupService } from "../backend/domains/backups/backup-service";
 import { BackupScheduler } from "../backend/domains/backups/backup-scheduler";
 import { PlayerSessionWatcher } from "../backend/domains/backups/player-session-watcher";
+import { ProcessMetricsSampler } from "../backend/domains/instances/process-metrics-sampler";
 import { IniService } from "../backend/domains/config/ini-service";
 import { ClusterIniTemplateService } from "../backend/domains/config/cluster-ini-template-service";
 import { ClusterIniTemplateApplyService } from "../backend/domains/config/cluster-ini-template-apply-service";
@@ -82,7 +83,7 @@ import type {
   ServerCrashedNotifyPayload,
   SteamCmdJobTerminalPayload,
 } from "../shared/os-notification-events";
-import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush, type MoveInstallProgressPush, type CloneInstallProgressPush, type RconStatusChangedPush, type PlayerListUpdatedPush } from "../shared/ipc";
+import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush, type MoveInstallProgressPush, type CloneInstallProgressPush, type RconStatusChangedPush, type PlayerListUpdatedPush, type ProcessMetricsUpdatedPush } from "../shared/ipc";
 import type { AppUpdateStatus } from "../shared/app-update";
 import { normalizeCloneInstallProgress, normalizeServerStopProgress } from "../shared/types";
 import type { BackupChangedPush } from "../backend/domains/backups/backup-service";
@@ -407,6 +408,7 @@ if (gotSingleInstanceLock) {
       repo,
       processManager,
     );
+    const processMetricsSampler = new ProcessMetricsSampler(processManager);
     const iniService = new IniService(repo, locks);
     const clusterIniRepo = new ClusterIniTemplateRepository(db);
     const clusterIniService = new ClusterIniTemplateService(clusterIniRepo);
@@ -464,6 +466,7 @@ if (gotSingleInstanceLock) {
 
     backupScheduler.start();
     playerSessionWatcher.start();
+    processMetricsSampler.start();
     const logRetentionScheduler = new LogRetentionScheduler(logsService);
     logRetentionScheduler.start();
     applyWindowsLoginItem(readDesktopShellPreferences(settings).startWithWindows);
@@ -594,6 +597,7 @@ if (gotSingleInstanceLock) {
       },
       settings,
       playerSessionWatcher,
+      processMetricsSampler,
       appUpdateService,
     );
 
@@ -764,6 +768,13 @@ if (gotSingleInstanceLock) {
     playerSessionWatcher.on("players-updated", (payload: PlayerListUpdatedPush) => {
       sendToRenderer(IPC_PUSH.playerListUpdated, payload);
     });
+
+    processMetricsSampler.on(
+      "metrics-updated",
+      (payload: ProcessMetricsUpdatedPush) => {
+        sendToRenderer(IPC_PUSH.processMetricsUpdated, payload);
+      },
+    );
 
     appUpdateService.onStatus((status: AppUpdateStatus) => {
       sendToRenderer(IPC_PUSH.appUpdate, status);
@@ -948,6 +959,7 @@ if (gotSingleInstanceLock) {
     app.on("will-quit", () => {
       backupScheduler.stop();
       playerSessionWatcher.stop();
+      processMetricsSampler.stop();
       if (trayRefreshTimer !== null) {
         clearTimeout(trayRefreshTimer);
         trayRefreshTimer = null;

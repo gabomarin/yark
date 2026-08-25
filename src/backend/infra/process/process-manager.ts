@@ -220,6 +220,11 @@ export class ProcessManager extends EventEmitter {
     return serverIds.map((id) => this.getStatus(id));
   }
 
+  /** Server ids with a managed child (running / starting / stopping / error+live). */
+  listManagedServerIds(): string[] {
+    return Array.from(this.processes.keys());
+  }
+
   /**
    * Ports the live process was started with (session overrides included).
    * Null when the server is not managed.

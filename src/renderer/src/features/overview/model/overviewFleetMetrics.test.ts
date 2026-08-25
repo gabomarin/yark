@@ -6,6 +6,7 @@ import type {
 } from "@shared/types";
 import {
   computeOverviewFleetStats,
+  computeOverviewProcessFleetReadouts,
   filterOverviewServersByFleet,
   toggleOverviewFleetFilter,
 } from "./overviewFleetMetrics";
@@ -195,5 +196,66 @@ describe("overviewFleetMetrics", () => {
     });
 
     expect(stats.survivorsOnlineTotal).toBe(1);
+  });
+
+  it("computes process fleet header readouts (#302)", () => {
+    const enabled = [
+      server({ id: "a", name: "A" }),
+      server({ id: "b", name: "B" }),
+      server({ id: "c", name: "C" }),
+    ];
+    const statuses = new Map([
+      ["a", runtime("a", "running")],
+      ["b", runtime("b", "starting")],
+      ["c", runtime("c", "stopped")],
+    ]);
+    const metricsByServer = new Map([
+      [
+        "a",
+        {
+          serverId: "a",
+          pid: 1,
+          workingSetBytes: 1024 * 1024 * 100,
+          cpuPercent: 12.5,
+          sampledAt: "2026-01-01T00:00:00.000Z",
+          error: null,
+        },
+      ],
+      [
+        "b",
+        {
+          serverId: "b",
+          pid: 2,
+          workingSetBytes: 1024 * 1024 * 50,
+          cpuPercent: 7.5,
+          sampledAt: "2026-01-01T00:00:00.000Z",
+          error: null,
+        },
+      ],
+    ]);
+
+    expect(
+      computeOverviewProcessFleetReadouts({
+        enabledServers: enabled,
+        statuses,
+        metricsByServer,
+      }),
+    ).toEqual({
+      showProcessFleetMetrics: true,
+      fleetRamBytes: 1024 * 1024 * 150,
+      fleetCpuPercent: 20,
+    });
+
+    expect(
+      computeOverviewProcessFleetReadouts({
+        enabledServers: [server({ id: "c", name: "C" })],
+        statuses: new Map([["c", runtime("c", "stopped")]]),
+        metricsByServer: new Map(),
+      }),
+    ).toEqual({
+      showProcessFleetMetrics: false,
+      fleetRamBytes: null,
+      fleetCpuPercent: null,
+    });
   });
 });

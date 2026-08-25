@@ -1,14 +1,7 @@
 import { Alert } from "@mantine/core";
 import { HardDrives } from "@phosphor-icons/react";
 import { useMediaQuery } from "@mantine/hooks";
-import type {
-  AppEvent,
-  ServerInstallationInfo,
-  ServerProfile,
-  ServerRuntimeInfo,
-  ServerStopProgress,
-} from "@shared/types";
-import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
+import type { ServerRuntimeInfo } from "@shared/types";
 import type { ReactElement } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ConfigurationWizard } from "./components/ConfigurationWizard/ConfigurationWizard";
@@ -19,66 +12,22 @@ import { WorkspaceSplitBody } from "./components/WorkspaceSplitBody/WorkspaceSpl
 import { WorkspaceTabs } from "./components/WorkspaceTabs/WorkspaceTabs";
 import { WorkspaceHeader } from "./components/WorkspaceHeader/WorkspaceHeader";
 import { StopProgressAlert, stopProgressForServer } from "./components/StopProgressAlert";
-import type { RconHistoryEntry, WorkspaceTab } from "./serverWorkspaceTypes";
-import type { PlayerListState } from "./components/RconPanel/PlayerListSection";
+import type { WorkspaceTab } from "./serverWorkspaceTypes";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { WorkspaceCompactDrawers } from "./components/WorkspaceCompactDrawers/WorkspaceCompactDrawers";
 import { useWorkspaceLeaveGuard } from "./useWorkspaceLeaveGuard";
+import { useWorkspaceStatusPanelVisible } from "./useWorkspaceStatusPanelVisible";
+import type { ServerWorkspacePageProps } from "./serverWorkspacePageProps";
 import classes from "./ServerWorkspacePage.module.css";
 
 export type { RconHistoryEntry, WorkspaceTab } from "./serverWorkspaceTypes";
-
-interface Props {
-  servers: ServerProfile[];
-  selectedServerId: string;
-  statuses: Map<string, ServerRuntimeInfo>;
-  installationInfo: Map<string, ServerInstallationInfo>;
-  events: AppEvent[];
-  onboarding?: boolean;
-  initialTab?: WorkspaceTab;
-  logsFocus?: ServerLogsFocus | null;
-  rconHistory: RconHistoryEntry[];
-  playerList: PlayerListState;
-  onLogsFocusConsumed?: () => void;
-  /** SteamCMD is rewriting this server's install (install/update/verify/sync). */
-  filesJobActive?: boolean;
-  filesJobLabel?: string | null;
-  filesJobOperation?: "install-files" | "update" | "verify-files" | null;
-  filesJobQueueKind?: "active" | "paused" | "queued" | null;
-  /** Safe stop in progress for the selected server (SaveWorld → backup → DoExit). */
-  stopProgress?: ServerStopProgress | null;
-  /** Optimistic Start/Restart in flight before runtime status updates (#390). */
-  startBusy?: boolean;
-  onDismissOnboarding?: () => void;
-  onSelectServer: (serverId: string) => void;
-  onBack: () => void;
-  /** Register dirty-leave guard so shell navigation (sidebar) can confirm before closing workspace. */
-  onRegisterLeaveGuard?: (guard: ((action: () => void) => void) | null) => void;
-  onStartServer: (serverId: string) => void;
-  onStopServer: (serverId: string) => void;
-  onRestartServer: (serverId: string) => void;
-  onKillServer: (serverId: string) => void;
-  onToggleServerEnabled?: (serverId: string, enabled: boolean) => void;
-  onOpenFolder: (serverId: string) => void;
-  onInstallFiles: (serverId: string) => void;
-  onUpdateNow: (serverId: string) => void;
-  onVerifyFiles: (serverId: string) => void;
-  onSendRcon: (serverId: string, command: string) => Promise<boolean>;
-  onClearRconHistory: (serverId: string) => void;
-  onRconTabFocusChanged: (serverId: string, isFocused: boolean) => Promise<void>;
-  onRefreshPlayers: (serverId: string) => Promise<void>;
-  onKickPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
-  onBanPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
-  onServerUpdated: () => void;
-  onCopyConfiguration: (serverId: string) => void;
-}
 
 function isServerActive(runtime: ServerRuntimeInfo | null): boolean {
   const status = runtime?.status ?? "stopped";
   return status === "starting" || status === "running" || status === "stopping";
 }
 
-export function ServerWorkspacePage(props: Props): ReactElement {
+export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactElement {
   const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>(
     props.initialTab ?? "server",
   );
@@ -105,6 +54,12 @@ export function ServerWorkspacePage(props: Props): ReactElement {
   const onAssistantDraftChange = useCallback((dirty: boolean) => {
     assistantDirtyRef.current = dirty;
   }, [assistantDirtyRef]);
+
+  useWorkspaceStatusPanelVisible(
+    compactWorkspace,
+    serverActionsOpen,
+    props.onStatusPanelVisibleChange,
+  );
 
   useEffect(() => {
     if (props.onboarding === true) {
@@ -176,6 +131,7 @@ export function ServerWorkspacePage(props: Props): ReactElement {
       runtime={runtime}
       installation={installation}
       playerList={props.playerList}
+      processMetrics={props.processMetrics}
       opsLocked={filesJobActive || stopJobActive}
       opsLockReason={
         stopJobActive

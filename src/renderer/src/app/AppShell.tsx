@@ -16,6 +16,8 @@ import { steamCmdCardJobsByKind } from "@app/model/steamCmdShellModel";
 import { ImportInstallWizard } from "@features/servers/components/ImportInstallWizard/ImportInstallWizard";
 import { useAppFleetRefresh } from "@app/hooks/useAppFleetRefresh";
 import { useAppRcon } from "@app/hooks/useAppRcon";
+import { useAppProcessMetrics } from "@app/hooks/useAppProcessMetrics";
+import { useProcessMetricsSamplingInterest } from "@app/hooks/useProcessMetricsSamplingInterest";
 import { useAppOnboarding } from "@app/hooks/useAppOnboarding";
 import { useAppServerLifecycle } from "@app/hooks/useAppServerLifecycle";
 import { useAppSteamCmdActions } from "@app/hooks/useAppSteamCmdActions";
@@ -93,6 +95,11 @@ export function AppShell({
     onKickPlayer,
     onBanPlayer,
   } = useAppRcon({ refresh });
+  const { processMetricsByServer } = useAppProcessMetrics();
+  const { onWorkspaceStatusPanelVisibleChange } = useProcessMetricsSamplingInterest({
+    route,
+    overlay,
+  });
   const [importInstallOpen, setImportInstallOpen] = useState(false);
   /** Remount Import wizard on each open so step/probe state resets without adjust-on-prop effects. */
   const [importWizardKey, setImportWizardKey] = useState(0);
@@ -467,11 +474,13 @@ export function AppShell({
           registerOverlayLeaveGuard,
           runWithOverlayLeaveGuard,
           consumePendingSetupCluster,
+          onWorkspaceStatusPanelVisibleChange,
         }}
         fleet={{
           servers,
           statuses,
           installationInfo,
+          processMetricsByServer,
           events,
           reports,
           refresh,

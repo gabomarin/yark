@@ -1,0 +1,41 @@
+.statusDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: var(--mantine-color-gray-6);
+  vertical-align: middle;
+}
+
+.statusDot[data-tone="ok"] {
+  background: var(--mantine-color-green-6);
+}
+
+.statusDot[data-tone="info"] {
+  background: var(--mantine-color-blue-6);
+}
+
+.statusDot[data-tone="bad"] {
+  background: var(--mantine-color-red-6);
+}
+
+.statusDot[data-tone="muted"] {
+  background: var(--mantine-color-gray-6);
+}
+
+.statusDot[data-processing="true"] {
+  animation: serverRuntimeStatusPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes serverRuntimeStatusPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.85);
+  }
+}

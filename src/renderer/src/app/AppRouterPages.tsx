@@ -34,7 +34,8 @@ export interface AppRouterPagesProps {
 export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
   const { shell, route, setOverlay, fleet, lifecycle, steamCmd, overview, rcon, settings } =
     props;
-  const { servers, statuses, installationInfo, events, reports, refresh } = fleet;
+  const { servers, statuses, installationInfo, processMetricsByServer, events, reports, refresh } =
+    fleet;
   const { stopProgressByServerId, startBusyByServerId, actions } = lifecycle;
   const {
     steamCmdStatus,
@@ -102,6 +103,7 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
             statuses={statuses}
             installationInfo={installationInfo}
             playerListsByServer={rcon.playerListsByServer}
+            processMetricsByServer={processMetricsByServer}
             officialSteamBuild={officialSteamBuild}
             officialVersion={shell.officialVersion}
             events={events}

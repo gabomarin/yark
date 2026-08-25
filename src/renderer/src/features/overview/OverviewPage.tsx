@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
 import { ArrowRight } from "@phosphor-icons/react";
 import { Button } from "@mantine/core";
+import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type {
   AppEvent,
   ServerInstallationInfo,
@@ -13,7 +14,10 @@ import type {
 import type { useAppFleetRefresh } from "@app/hooks/useAppFleetRefresh";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import { useOverviewServerUpdates } from "@features/overview/hooks/useOverviewServerUpdates";
-import { sumSurvivorsOnlineTotal } from "@features/overview/model/overviewFleetMetrics";
+import {
+  computeOverviewProcessFleetReadouts,
+  sumSurvivorsOnlineTotal,
+} from "@features/overview/model/overviewFleetMetrics";
 import {
   filterOverviewServers,
   partitionOverviewServers,
@@ -36,6 +40,8 @@ interface Props {
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
   playerListsByServer: Map<string, PlayerListState>;
+  /** Dedicated-process RAM/CPU samples (#302). */
+  processMetricsByServer: Map<string, ProcessMetricsUpdatedPush>;
   officialSteamBuild: string | null;
   officialVersion?: string | null;
   events: AppEvent[];
@@ -89,6 +95,19 @@ export function OverviewPage(props: Props): ReactElement {
       }),
     [enabled, props.statuses, props.playerListsByServer],
   );
+  const {
+    showProcessFleetMetrics,
+    fleetRamBytes,
+    fleetCpuPercent,
+  } = useMemo(
+    () =>
+      computeOverviewProcessFleetReadouts({
+        enabledServers: enabled,
+        statuses: props.statuses,
+        metricsByServer: props.processMetricsByServer,
+      }),
+    [enabled, props.statuses, props.processMetricsByServer],
+  );
 
   const {
     checkingUpdates,
@@ -127,6 +146,9 @@ export function OverviewPage(props: Props): ReactElement {
         checkingUpdates={checkingUpdates}
         checkingInstalls={props.checkingInstalls}
         survivorsOnlineTotal={survivorsOnlineTotal}
+        showProcessFleetMetrics={showProcessFleetMetrics}
+        fleetRamBytes={fleetRamBytes}
+        fleetCpuPercent={fleetCpuPercent}
       />
 
       <UpdateAllOutdatedModal
@@ -151,6 +173,7 @@ export function OverviewPage(props: Props): ReactElement {
           statuses={props.statuses}
           installationInfo={props.installationInfo}
           playerListsByServer={props.playerListsByServer}
+          processMetricsByServer={props.processMetricsByServer}
           officialSteamBuild={props.officialSteamBuild}
           officialVersion={props.officialVersion ?? null}
           steamCmdServerId={steamCmdStatus?.serverId ?? null}

@@ -137,6 +137,7 @@ export function createRendererApiMock(
     }),
     getAllRconStatus: vi.fn().mockResolvedValue({ ok: true, data: [] }),
     notifyRconTabFocus: vi.fn().mockResolvedValue({ ok: true, data: [] }),
+    setProcessMetricsSampling: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
     refreshPlayerList: vi.fn().mockResolvedValue({ ok: true, data: [] }),
     kickPlayer: vi.fn().mockResolvedValue({ ok: true, data: "" }),
     banPlayer: vi.fn().mockResolvedValue({ ok: true, data: "" }),
@@ -292,6 +293,7 @@ export function createRendererApiMock(
     onBackupsChanged: vi.fn(() => () => undefined),
     onRconStatusChanged: vi.fn(() => () => undefined),
     onPlayerListUpdated: vi.fn(() => () => undefined),
+    onProcessMetricsUpdated: vi.fn(() => () => undefined),
     getAppUpdateStatus: vi.fn().mockResolvedValue({
       ok: true,
       data: idleAppUpdateStatus,

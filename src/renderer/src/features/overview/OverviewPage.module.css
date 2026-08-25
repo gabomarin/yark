@@ -25,7 +25,11 @@
   flex-shrink: 0;
 }
 
-.survivorsSummary {
+.fleetReadouts {
+  flex-shrink: 0;
+}
+
+.fleetReadout {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }

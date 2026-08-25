@@ -1,7 +1,11 @@
 import type { ReactElement } from "react";
 import { UnstyledButton } from "@mantine/core";
+import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type { ServerProfile, ServerStatus } from "@shared/types";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
+import {
+  formatServerRamCpuMeta,
+} from "@features/servers/model/serverCardProcessMeta";
 import {
   formatServerSurvivorMeta,
   resolveServerSurvivorCount,
@@ -21,6 +25,11 @@ interface Props {
    * collapse with `!= null`, or cards without a wired cache would show a false `–`.
    */
   playerList?: PlayerListState | null;
+  /**
+   * Overview passes process samples (`null` = no sample yet). Omit outside Overview
+   * so the RAM / CPU column stays hidden (#302).
+   */
+  processMetrics?: ProcessMetricsUpdatedPush | null;
   workspaceOpenLabel: string;
   onOpenWorkspace: () => void;
 }
@@ -45,6 +54,18 @@ export function ServerCardMetaGrid(props: Props): ReactElement {
   const survivorsMetaTone =
     survivorCount != null && survivorCount > 0 ? "ok" : "default";
 
+  const ramCpuMeta =
+    props.processMetrics !== undefined
+      ? formatServerRamCpuMeta({
+          status: props.status,
+          metrics: props.processMetrics,
+        })
+      : null;
+
+  let metaCols = 4;
+  if (survivorsMeta != null) metaCols += 1;
+  if (ramCpuMeta != null) metaCols += 1;
+
   return (
     <UnstyledButton
       className={classes.metaOpen}
@@ -56,7 +77,7 @@ export function ServerCardMetaGrid(props: Props): ReactElement {
       <div
         className={classes.metaGrid}
         data-meta-grid
-        data-meta-cols={survivorsMeta != null ? "5" : "4"}
+        data-meta-cols={String(metaCols)}
       >
         <ServerCardMetaItem label="Map" value={props.server.map} />
         <ServerCardMetaItem label="Cluster" value={props.server.clusterId ?? "–"} />
@@ -67,6 +88,9 @@ export function ServerCardMetaGrid(props: Props): ReactElement {
             value={survivorsMeta}
             tone={survivorsMetaTone}
           />
+        ) : null}
+        {ramCpuMeta != null ? (
+          <ServerCardMetaItem label="RAM / CPU" value={ramCpuMeta} />
         ) : null}
         <ServerCardMetaItem
           label="Version"

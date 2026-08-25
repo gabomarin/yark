@@ -25,6 +25,7 @@ affect start and config writes are summarized at the end.
 | Import existing install (#254) | `src/backend/domains/instances/import-existing-install.ts` |
 | Port conflicts | `src/shared/port-conflicts.ts` |
 | Process lifecycle | `src/backend/infra/process/process-manager.ts` |
+| Process RAM/CPU sample (#302) | `src/backend/domains/instances/process-metrics-sampler.ts`, `src/backend/infra/process/windows-process-sample.ts` |
 | INI read/save | `src/backend/domains/config/ini-service.ts` |
 | INI text / sanitize | `src/shared/ini-text.ts` |
 | Defaults | `src/shared/defaults/*.ini`, `src/shared/ini-defaults.ts` |
@@ -180,6 +181,11 @@ IPC:
 | `servers:kill` | immediate terminate (warning event; UI confirms) |
 
 Status push: `push:server-status`. Stop phase progress: `push:server-stop-progress`.
+While a dedicated PID is live **and** the UI needs samples (Overview, or
+workspace Status panel — always on wide layouts, drawer open on compact),
+`ProcessMetricsSampler` (~4s) pushes `push:process-metrics-updated`
+(working set + CPU % of one logical processor) — kept off `ServerRuntimeInfo`
+so status traffic stays lean. Sampling is off on other routes.
 
 ### Enabled and disabled profiles
 

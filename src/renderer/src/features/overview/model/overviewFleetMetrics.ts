@@ -1,11 +1,17 @@
 import { isInstallationReady } from "@shared/installation-health";
 import { getServerUpdateState } from "@shared/server-update-status";
+import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type {
   ServerInstallationInfo,
   ServerProfile,
   ServerRuntimeInfo,
 } from "@shared/types";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
+import {
+  hasLiveProcessFleet,
+  sumFleetCpuPercent,
+  sumFleetWorkingSetBytes,
+} from "@features/servers/model/serverCardProcessMeta";
 import { resolveServerSurvivorCount } from "@features/servers/model/serverCardSurvivorMeta";
 import { collectAttentionIssues, type AttentionIssue } from "./attentionIssues";
 
@@ -68,6 +74,40 @@ export function sumSurvivorsOnlineTotal(input: {
     }
   }
   return hasKnownSample ? total : null;
+}
+
+/** Header process readouts for starting/running enabled servers (#302). */
+export interface OverviewProcessFleetReadouts {
+  showProcessFleetMetrics: boolean;
+  fleetRamBytes: number | null;
+  fleetCpuPercent: number | null;
+}
+
+/**
+ * Fleet RAM / CPU header values — single Overview entry point over
+ * `serverCardProcessMeta` sum helpers (#302).
+ */
+export function computeOverviewProcessFleetReadouts(input: {
+  enabledServers: ReadonlyArray<ServerProfile>;
+  statuses: Map<string, ServerRuntimeInfo>;
+  metricsByServer: Map<string, ProcessMetricsUpdatedPush>;
+}): OverviewProcessFleetReadouts {
+  return {
+    showProcessFleetMetrics: hasLiveProcessFleet({
+      enabledServers: input.enabledServers,
+      statuses: input.statuses,
+    }),
+    fleetRamBytes: sumFleetWorkingSetBytes({
+      enabledServers: input.enabledServers,
+      statuses: input.statuses,
+      metricsByServer: input.metricsByServer,
+    }),
+    fleetCpuPercent: sumFleetCpuPercent({
+      enabledServers: input.enabledServers,
+      statuses: input.statuses,
+      metricsByServer: input.metricsByServer,
+    }),
+  };
 }
 
 /** Counts from the enabled fleet only — not search-narrowed. */

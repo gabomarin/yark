@@ -112,6 +112,7 @@ export const IPC = {
   rconGetStatus: "rcon:get-status",
   rconGetAllStatus: "rcon:get-all-status",
   rconTabFocusChanged: "rcon:tab-focus-changed",
+  processMetricsSetSampling: "process-metrics:set-sampling",
   refreshPlayerList: "rcon:refresh-player-list",
   kickPlayer: "rcon:kick-player",
   banPlayer: "rcon:ban-player",
@@ -210,6 +211,7 @@ export const IPC_PUSH = {
   backupsChanged: "push:backups-changed",
   rconStatusChanged: "push:rcon-status-changed",
   playerListUpdated: "push:player-list-updated",
+  processMetricsUpdated: "push:process-metrics-updated",
   appUpdate: "push:app-update",
   osNotificationOpen: "push:os-notification-open",
 } as const;
@@ -245,6 +247,17 @@ export interface PlayerListUpdatedPush {
   serverId: string;
   players: OnlinePlayerInfo[];
   timestamp: string;
+  error: string | null;
+}
+
+/** Dedicated-process working set + CPU sample (#302). */
+export interface ProcessMetricsUpdatedPush {
+  serverId: string;
+  pid: number;
+  workingSetBytes: number | null;
+  /** % of one logical processor; null until the second successful sample. */
+  cpuPercent: number | null;
+  sampledAt: string;
   error: string | null;
 }
 
@@ -356,6 +369,8 @@ export interface RendererApi {
     serverId: string,
     isFocused: boolean,
   ): Promise<IpcResult<OnlinePlayerInfo[]>>;
+  /** Enable/disable dedicated-process RAM/CPU sampling (#302). */
+  setProcessMetricsSampling(enabled: boolean): Promise<IpcResult<void>>;
   refreshPlayerList(serverId: string): Promise<IpcResult<OnlinePlayerInfo[]>>;
   kickPlayer(serverId: string, playerKey: string): Promise<IpcResult<string>>;
   banPlayer(serverId: string, playerKey: string): Promise<IpcResult<string>>;
@@ -592,6 +607,9 @@ export interface RendererApi {
   ): () => void;
   onPlayerListUpdated(
     listener: (payload: PlayerListUpdatedPush) => void,
+  ): () => void;
+  onProcessMetricsUpdated(
+    listener: (payload: ProcessMetricsUpdatedPush) => void,
   ): () => void;
   onAppUpdate(listener: (status: AppUpdateStatus) => void): () => void;
   onOsNotificationOpen(

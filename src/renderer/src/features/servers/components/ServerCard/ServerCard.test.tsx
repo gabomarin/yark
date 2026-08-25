@@ -246,6 +246,101 @@ describe("ServerCard", () => {
     expect(survivorsMeta).toHaveTextContent("–");
   });
 
+  it("shows merged RAM / CPU on the meta row from process metrics (#302)", () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={{
+            serverId: profile.id,
+            status: "running",
+            processLive: true,
+            pid: 1234,
+            startedAt: null,
+            lastError: null,
+          }}
+          installation={installed}
+          officialSteamBuild={null}
+          playerList={{
+            players: [],
+            error: null,
+            loading: false,
+          }}
+          processMetrics={{
+            serverId: profile.id,
+            pid: 1234,
+            workingSetBytes: 14.2 * 1024 ** 3,
+            cpuPercent: 38,
+            sampledAt: "2026-08-24T00:00:00.000Z",
+            error: null,
+          }}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const ramCpuMeta = document.querySelector('[data-meta-label="RAM / CPU"]');
+    expect(ramCpuMeta).not.toBeNull();
+    expect(ramCpuMeta).toHaveTextContent("14.2 GB · 38%");
+    expect(document.querySelector("[data-meta-grid]")).toHaveAttribute(
+      "data-meta-cols",
+      "6",
+    );
+  });
+
+  it("shows em dash for RAM / CPU when the server is stopped (#302)", () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={installed}
+          officialSteamBuild={null}
+          processMetrics={{
+            serverId: profile.id,
+            pid: 1234,
+            workingSetBytes: 14.2 * 1024 ** 3,
+            cpuPercent: 38,
+            sampledAt: "2026-08-24T00:00:00.000Z",
+            error: null,
+          }}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const ramCpuMeta = document.querySelector('[data-meta-label="RAM / CPU"]');
+    expect(ramCpuMeta).toHaveTextContent("–");
+  });
+
   it("uses Stop for a running server and keeps secondary actions in the menu", async () => {
     const user = userEvent.setup();
     const onStop = vi.fn();

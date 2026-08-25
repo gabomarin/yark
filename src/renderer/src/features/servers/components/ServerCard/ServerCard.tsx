@@ -1,14 +1,15 @@
 import { memo, type ReactElement } from "react";
-import { Badge, Card, Group, Stack, Text, UnstyledButton } from "@mantine/core";
+import { Card, Group, Stack, Text, UnstyledButton } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
+import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import { useRowContextMenu } from "@ui/RowActionMenu/useRowContextMenu";
-import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import { ServerCardActions } from "./ServerCardActions";
 import { ServerCardMetaGrid } from "./ServerCardMetaGrid";
 import { ServerCardProgress } from "./ServerCardProgress";
+import { ServerCardStatusBadges } from "./ServerCardStatusBadges";
 import { buildServerCardMenuActions } from "./serverCardMenuActions";
 import {
   bindServerCardHandlers,
@@ -44,6 +45,8 @@ type ServerCardSharedProps = {
   checkingUpdates?: boolean;
   /** When set, Overview shows online survivor count from the ListPlayers cache (#301). */
   playerList?: PlayerListState | null;
+  /** When set, Overview shows dedicated-process RAM / CPU (#302). */
+  processMetrics?: ProcessMetricsUpdatedPush | null;
 };
 
 /** Overview: stable `handlers` bag. Tests/other callers: explicit zero-arg callbacks. */
@@ -71,6 +74,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     stopProgressLabel = null,
     checkingUpdates = false,
     playerList,
+    processMetrics,
   } = props;
   const {
     onStart,
@@ -237,24 +241,13 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
                 </Group>
               </UnstyledButton>
 
-              <div className={classes.statusBadges}>
-                <ServerRuntimeStatusBadge
-                  status={startBusy && (status === "stopped" || status === "error") ? "starting" : status}
-                  label={
-                    stopBusy
-                      ? "Stopping…"
-                      : startBusy && (status === "stopped" || status === "error")
-                        ? "Starting…"
-                        : undefined
-                  }
-                  color={stopBusy || (startBusy && (status === "stopped" || status === "error")) ? "blue" : undefined}
-                />
-                {!server.enabled && (
-                  <Badge size={compact ? "xs" : "sm"} variant="light" color="gray">
-                    Inactive
-                  </Badge>
-                )}
-              </div>
+              <ServerCardStatusBadges
+                status={status}
+                startBusy={startBusy}
+                stopBusy={stopBusy}
+                serverEnabled={server.enabled}
+                compact={compact}
+              />
             </div>
 
             <ServerCardMetaGrid
@@ -264,6 +257,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
               versionMetaTone={view.versionMetaTone}
               versionRefreshHint={view.versionRefreshHint}
               playerList={playerList}
+              processMetrics={processMetrics}
               workspaceOpenLabel={workspaceOpenLabel}
               onOpenWorkspace={onOpenWorkspace}
             />

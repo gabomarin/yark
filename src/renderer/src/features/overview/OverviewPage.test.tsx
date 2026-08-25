@@ -54,6 +54,7 @@ function renderOverview(
     statuses: new Map(),
     installationInfo: new Map(),
     playerListsByServer: new Map(),
+    processMetricsByServer: new Map(),
     officialSteamBuild: null,
     events: [],
     onViewAllActivity: vi.fn(),
@@ -110,7 +111,11 @@ describe("OverviewPage", () => {
     expect(metrics).not.toBeNull();
     expect(within(metrics as HTMLElement).getByRole("button", { name: /^Running/i })).toBeInTheDocument();
     expect(within(metrics as HTMLElement).getByRole("button", { name: /^Stopped/i })).toBeInTheDocument();
-    expect(screen.getByText("Survivors –")).toBeInTheDocument();
+    const header = container.querySelector("header");
+    expect(header).not.toBeNull();
+    expect(within(header as HTMLElement).queryByText(/Survivors/)).not.toBeInTheDocument();
+    expect(within(header as HTMLElement).queryByText(/^RAM/)).not.toBeInTheDocument();
+    expect(within(header as HTMLElement).queryByText(/^CPU/)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Online/i })).not.toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Search servers" })).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "View logs" }).length).toBeGreaterThan(0);
@@ -118,8 +123,6 @@ describe("OverviewPage", () => {
     expect(screen.getByText("Scorched Earth")).toBeInTheDocument();
     expect(screen.queryByText("Advertencias")).not.toBeInTheDocument();
 
-    const header = container.querySelector("header");
-    expect(header).not.toBeNull();
     const nextSection = header?.nextElementSibling as HTMLElement | null;
     expect(nextSection).not.toBeNull();
     expect(
@@ -153,6 +156,7 @@ describe("OverviewPage", () => {
           statuses={new Map()}
           installationInfo={new Map()}
           playerListsByServer={new Map()}
+          processMetricsByServer={new Map()}
           officialSteamBuild={null}
           events={[]}
           onViewAllActivity={vi.fn()}
@@ -317,6 +321,7 @@ describe("OverviewPage", () => {
           statuses={new Map()}
           installationInfo={new Map()}
           playerListsByServer={new Map()}
+          processMetricsByServer={new Map()}
           officialSteamBuild={null}
           events={[]}
           onViewAllActivity={vi.fn()}
