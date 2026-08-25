@@ -1,5 +1,5 @@
 import { APP_VERSION } from "@shared/app-version";
-import type { Dispatch, ReactElement, SetStateAction } from "react";
+import { useState, type Dispatch, type ReactElement, type SetStateAction } from "react";
 import type { Overlay } from "@app/model/appOverlay";
 import type {
   AppFleetSlice,
@@ -34,6 +34,8 @@ export interface AppRouterPagesProps {
 export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
   const { shell, route, setOverlay, fleet, lifecycle, steamCmd, overview, rcon, settings } =
     props;
+  /** Survives Overview unmount when switching sidebar routes (#438). */
+  const [overviewSearch, setOverviewSearch] = useState("");
   const { servers, statuses, installationInfo, processMetricsByServer, events, reports, refresh } =
     fleet;
   const { stopProgressByServerId, startBusyByServerId, actions } = lifecycle;
@@ -92,6 +94,8 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
         page: (
           <OverviewPage
             loading={overviewLoading}
+            search={overviewSearch}
+            onSearchChange={setOverviewSearch}
             onCreateServer={() => setOverlay({ kind: "create" })}
             onImportServer={() => {
               setImportWizardKey((key) => key + 1);

@@ -17,6 +17,11 @@
   color: var(--app-color-muted);
 }
 
+/* Filter clear: room for CloseButton in rightSection. */
+.inputClearable {
+  padding-inline-end: var(--input-height);
+}
+
 .section {
   color: var(--app-color-muted);
   width: var(--input-height);
@@ -24,6 +29,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.clear {
+  color: var(--app-color-muted);
+  background: transparent;
+}
+
+.clear:hover,
+.clear:active {
+  color: var(--app-color-text);
+  background: transparent;
 }
 
 /* Submit: room for a flush end-cap button (no floating chip gap). */

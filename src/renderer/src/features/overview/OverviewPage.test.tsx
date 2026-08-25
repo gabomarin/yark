@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactElement } from "react";
+import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import type { ServerInstallationInfo } from "@shared/types";
@@ -47,6 +48,8 @@ function renderOverview(
   overrides: Partial<ComponentProps<typeof OverviewPage>> = {},
 ) {
   const props: ComponentProps<typeof OverviewPage> = {
+    search: "",
+    onSearchChange: vi.fn(),
     onCreateServer: vi.fn(),
     onImportServer: vi.fn(),
     onCheckInstalls: vi.fn(),
@@ -148,6 +151,8 @@ describe("OverviewPage", () => {
     rerender(
       <AppProviders>
         <OverviewPage
+          search=""
+          onSearchChange={vi.fn()}
           onCreateServer={vi.fn()}
           onImportServer={vi.fn()}
           onCheckInstalls={vi.fn()}
@@ -313,6 +318,8 @@ describe("OverviewPage", () => {
     rerender(
       <AppProviders>
         <OverviewPage
+          search=""
+          onSearchChange={vi.fn()}
           onCreateServer={onCreateServer}
           onImportServer={vi.fn()}
           onCheckInstalls={vi.fn()}
@@ -442,5 +449,111 @@ describe("OverviewPage", () => {
     await user.click(screen.getByRole("button", { name: "Update All" }));
     expect(refresh).toHaveBeenCalled();
     expect(await screen.findByRole("dialog", { name: /^update all$/i })).toBeInTheDocument();
+  });
+
+  it("filters from the session-held search prop and reports changes via onSearchChange (#438)", async () => {
+    const user = userEvent.setup();
+    const onSearchChange = vi.fn();
+    const secondServer = {
+      ...server,
+      id: "srv-2",
+      name: "Scorched Earth",
+      // Must override map: filterOverviewServers also matches map/clusterId,
+      // and ...server would keep TheIsland_WP (still matches "Island").
+      map: "ScorchedEarth_WP",
+      installDir: "C:/ARK/ScorchedEarth",
+      gamePort: 7787,
+      queryPort: 27025,
+      rconPort: 27030,
+    };
+
+    renderOverview({
+      servers: [server, secondServer],
+      search: "Island",
+      onSearchChange,
+    });
+
+    const searchBox = screen.getByRole("textbox", { name: "Search servers" });
+    expect(searchBox).toHaveValue("Island");
+    expect(screen.getByText("The Island")).toBeInTheDocument();
+    expect(screen.queryByText("Scorched Earth")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Clear search" }));
+    expect(onSearchChange).toHaveBeenCalledWith("");
+  });
+
+  it("keeps search across Overview unmount when held above the page (#438)", async () => {
+    const user = userEvent.setup();
+
+    function SessionHeldOverview(): ReactElement {
+      const [search, setSearch] = useState("");
+      const [route, setRoute] = useState<"overview" | "other">("overview");
+      return (
+        <>
+          <button type="button" onClick={() => setRoute("other")}>
+            Leave Overview
+          </button>
+          <button type="button" onClick={() => setRoute("overview")}>
+            Back to Overview
+          </button>
+          {route === "overview" ? (
+            <OverviewPage
+              search={search}
+              onSearchChange={setSearch}
+              onCreateServer={vi.fn()}
+              onImportServer={vi.fn()}
+              onCheckInstalls={vi.fn()}
+              servers={[server]}
+              statuses={new Map()}
+              installationInfo={new Map()}
+              playerListsByServer={new Map()}
+              processMetricsByServer={new Map()}
+              officialSteamBuild={null}
+              events={[]}
+              onViewAllActivity={vi.fn()}
+              steamCmdStatus={null}
+              refresh={vi.fn(async () => ({
+                servers: null,
+                statuses: null,
+                installationInfo: null,
+                officialSteamBuild: null,
+              }))}
+              onOpenDownloads={vi.fn()}
+              onOpenWorkspace={vi.fn()}
+              onOpenLogs={vi.fn()}
+              onReviewError={vi.fn()}
+              onStartServer={vi.fn()}
+              onStopServer={vi.fn()}
+              onRestartServer={vi.fn()}
+              onKillServer={vi.fn()}
+              onOpenFolder={vi.fn()}
+              onInstallFiles={vi.fn()}
+              onUpdateNow={vi.fn()}
+              onVerifyFiles={vi.fn()}
+              onCloneServer={vi.fn()}
+              onCopyConfiguration={vi.fn()}
+              onDeleteServer={vi.fn()}
+            />
+          ) : (
+            <div>Other route</div>
+          )}
+        </>
+      );
+    }
+
+    render(
+      <AppProviders>
+        <SessionHeldOverview />
+      </AppProviders>,
+    );
+
+    await user.type(screen.getByRole("textbox", { name: "Search servers" }), "Island");
+    expect(screen.getByRole("textbox", { name: "Search servers" })).toHaveValue("Island");
+
+    await user.click(screen.getByRole("button", { name: "Leave Overview" }));
+    expect(screen.getByText("Other route")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Back to Overview" }));
+    expect(screen.getByRole("textbox", { name: "Search servers" })).toHaveValue("Island");
   });
 });

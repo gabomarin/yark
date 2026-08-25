@@ -1,6 +1,6 @@
 import type { CSSProperties, KeyboardEvent, ReactElement } from "react";
 import { MagnifyingGlass } from "@phosphor-icons/react";
-import { ActionIcon, TextInput, type TextInputProps } from "@mantine/core";
+import { ActionIcon, CloseButton, TextInput, type TextInputProps } from "@mantine/core";
 import classes from "./SearchField.module.css";
 
 interface Props {
@@ -22,12 +22,21 @@ interface Props {
   /**
    * Submit variant (#297 Discover): clickable magnifier in `rightSection`.
    * Enter still calls the same handler. Omit for instant Filter fields.
+   * Filter fields show an in-field clear when non-empty; submit keeps the
+   * magnifier only (no clear — TextInput has no built-in `clearable`).
    */
   onSubmit?: () => void;
   /** Disables the submit ActionIcon and shows a spinner while a remote search runs. */
   submitting?: boolean;
   /** Accessible name for the in-field submit control (default: "Search"). */
   submitLabel?: string;
+  /**
+   * Filter variant only: show Mantine `CloseButton` in `rightSection` when
+   * there is text (default true). Ignored when `onSubmit` is set.
+   */
+  clearable?: boolean;
+  /** Accessible name for the clear control (default: "Clear search"). */
+  clearLabel?: string;
 }
 
 /** Phosphor size for the leading search icon (`xs` rail vs default fields). */
@@ -37,8 +46,9 @@ export function searchFieldIconSize(size?: TextInputProps["size"]): number {
 
 /**
  * Shared search chrome (radius, border, panel background, muted icon).
- * Filter: decorative left magnifier. Submit: flush filled ActionIcon in
- * `rightSection` (`onSubmit`) — do not pair with a separate trailing Button.
+ * Filter: decorative left magnifier; optional in-field clear when non-empty.
+ * Submit: flush filled ActionIcon in `rightSection` (`onSubmit`) — do not
+ * pair with a separate trailing Button.
  */
 export function SearchField({
   value,
@@ -53,6 +63,8 @@ export function SearchField({
   onSubmit,
   submitting = false,
   submitLabel = "Search",
+  clearable = true,
+  clearLabel = "Clear search",
 }: Props): ReactElement {
   const visibleLabel =
     fieldLabel !== undefined && fieldLabel.trim().length > 0
@@ -60,6 +72,16 @@ export function SearchField({
       : undefined;
   const iconSize = searchFieldIconSize(size);
   const isSubmit = onSubmit !== undefined;
+  const showClear =
+    !isSubmit && clearable && value.trim().length > 0;
+
+  const inputClass = [
+    classes.input,
+    isSubmit ? classes.inputSubmit : null,
+    showClear ? classes.inputClearable : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <TextInput
@@ -93,12 +115,22 @@ export function SearchField({
           >
             <MagnifyingGlass size={iconSize} weight="bold" />
           </ActionIcon>
+        ) : showClear ? (
+          <CloseButton
+            className={classes.clear}
+            variant="transparent"
+            aria-label={clearLabel}
+            size={size === "xs" ? "sm" : "md"}
+            onClick={() => onChange("")}
+          />
         ) : undefined
       }
-      rightSectionWidth={isSubmit ? "var(--input-height)" : undefined}
-      rightSectionPointerEvents={isSubmit ? "all" : undefined}
+      rightSectionWidth={
+        isSubmit || showClear ? "var(--input-height)" : undefined
+      }
+      rightSectionPointerEvents={isSubmit || showClear ? "all" : undefined}
       classNames={{
-        input: isSubmit ? `${classes.input} ${classes.inputSubmit}` : classes.input,
+        input: inputClass,
         section: isSubmit ? classes.submitSection : classes.section,
       }}
     />
