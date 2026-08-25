@@ -5,6 +5,7 @@ import type {
   AppFleetSlice,
   AppLifecycleSlice,
   AppOverviewSlice,
+  AppRconSlice,
   AppSettingsSlice,
   AppSteamCmdSlice,
 } from "@app/model/appMainRouterSlices";
@@ -26,11 +27,12 @@ export interface AppRouterPagesProps {
   lifecycle: AppLifecycleSlice;
   steamCmd: AppSteamCmdSlice;
   overview: AppOverviewSlice;
+  rcon: AppRconSlice;
   settings: AppSettingsSlice;
 }
 
 export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
-  const { shell, route, setOverlay, fleet, lifecycle, steamCmd, overview, settings } =
+  const { shell, route, setOverlay, fleet, lifecycle, steamCmd, overview, rcon, settings } =
     props;
   const { servers, statuses, installationInfo, events, reports, refresh } = fleet;
   const { stopProgressByServerId, startBusyByServerId, actions } = lifecycle;
@@ -99,6 +101,7 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
             servers={servers}
             statuses={statuses}
             installationInfo={installationInfo}
+            playerListsByServer={rcon.playerListsByServer}
             officialSteamBuild={officialSteamBuild}
             officialVersion={shell.officialVersion}
             events={events}

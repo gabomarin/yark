@@ -106,4 +106,28 @@ describe("SidePanel", () => {
     await user.click(update);
     expect(onUpdateNow).toHaveBeenCalledTimes(1);
   });
+
+  it("shows survivors and uptime for a running server (#301)", () => {
+    renderPanel({
+      runtime: {
+        serverId: "srv-a",
+        status: "running",
+        processLive: true,
+        pid: 42,
+        startedAt: new Date(Date.now() - 90 * 60_000).toISOString(),
+        lastError: null,
+      },
+      playerList: {
+        players: [{ key: "steam:1", name: "Survivor" }],
+        error: null,
+        loading: false,
+      },
+    });
+
+    expect(screen.getByText("Survivors")).toBeInTheDocument();
+    expect(screen.getByText("1/70")).toBeInTheDocument();
+    expect(screen.getByText("Uptime")).toBeInTheDocument();
+    expect(screen.getByText("1h 30m")).toBeInTheDocument();
+    expect(screen.queryByText("Install checked")).not.toBeInTheDocument();
+  });
 });

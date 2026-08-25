@@ -73,7 +73,7 @@ export function BannedPlayersSection(props: Props): ReactElement {
       props.nameById,
     );
     modals.openConfirmModal({
-      title: "Unban player?",
+      title: "Unban survivor?",
       children: (
         <Text size="sm">
           Remove <strong>{label}</strong> from the ban list?

@@ -53,6 +53,7 @@ function renderOverview(
     servers: [server],
     statuses: new Map(),
     installationInfo: new Map(),
+    playerListsByServer: new Map(),
     officialSteamBuild: null,
     events: [],
     onViewAllActivity: vi.fn(),
@@ -109,6 +110,8 @@ describe("OverviewPage", () => {
     expect(metrics).not.toBeNull();
     expect(within(metrics as HTMLElement).getByRole("button", { name: /^Running/i })).toBeInTheDocument();
     expect(within(metrics as HTMLElement).getByRole("button", { name: /^Stopped/i })).toBeInTheDocument();
+    expect(screen.getByText("Survivors –")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Online/i })).not.toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Search servers" })).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "View logs" }).length).toBeGreaterThan(0);
     expect(screen.getByText("The Island")).toBeInTheDocument();
@@ -149,6 +152,7 @@ describe("OverviewPage", () => {
           servers={[server]}
           statuses={new Map()}
           installationInfo={new Map()}
+          playerListsByServer={new Map()}
           officialSteamBuild={null}
           events={[]}
           onViewAllActivity={vi.fn()}
@@ -312,6 +316,7 @@ describe("OverviewPage", () => {
           servers={[]}
           statuses={new Map()}
           installationInfo={new Map()}
+          playerListsByServer={new Map()}
           officialSteamBuild={null}
           events={[]}
           onViewAllActivity={vi.fn()}

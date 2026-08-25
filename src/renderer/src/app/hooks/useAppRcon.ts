@@ -176,7 +176,7 @@ export function useAppRcon(options: {
         };
         next.set(serverId, {
           players: current.players,
-          error: result.error ?? "Could not refresh players",
+          error: result.error ?? "Could not refresh survivors",
           loading: false,
         });
         return next;
@@ -202,7 +202,7 @@ export function useAppRcon(options: {
         };
         next.set(serverId, {
           players: current.players,
-          error: result.error ?? "Could not refresh players",
+          error: result.error ?? "Could not refresh survivors",
           loading: false,
         });
         return next;

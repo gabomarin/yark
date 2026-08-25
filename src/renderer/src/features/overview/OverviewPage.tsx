@@ -11,7 +11,9 @@ import type {
   SteamCmdStatus,
 } from "@shared/types";
 import type { useAppFleetRefresh } from "@app/hooks/useAppFleetRefresh";
+import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import { useOverviewServerUpdates } from "@features/overview/hooks/useOverviewServerUpdates";
+import { sumSurvivorsOnlineTotal } from "@features/overview/model/overviewFleetMetrics";
 import {
   filterOverviewServers,
   partitionOverviewServers,
@@ -33,6 +35,7 @@ interface Props {
   servers: ServerProfile[];
   statuses: Map<string, ServerRuntimeInfo>;
   installationInfo: Map<string, ServerInstallationInfo>;
+  playerListsByServer: Map<string, PlayerListState>;
   officialSteamBuild: string | null;
   officialVersion?: string | null;
   events: AppEvent[];
@@ -77,6 +80,16 @@ export function OverviewPage(props: Props): ReactElement {
     [disabled, search],
   );
 
+  const survivorsOnlineTotal = useMemo(
+    () =>
+      sumSurvivorsOnlineTotal({
+        enabledServers: enabled,
+        statuses: props.statuses,
+        playerListsByServer: props.playerListsByServer,
+      }),
+    [enabled, props.statuses, props.playerListsByServer],
+  );
+
   const {
     checkingUpdates,
     checkForUpdates,
@@ -113,6 +126,7 @@ export function OverviewPage(props: Props): ReactElement {
         openingUpdateAllOutdated={updateAllOutdatedLoading}
         checkingUpdates={checkingUpdates}
         checkingInstalls={props.checkingInstalls}
+        survivorsOnlineTotal={survivorsOnlineTotal}
       />
 
       <UpdateAllOutdatedModal
@@ -136,6 +150,7 @@ export function OverviewPage(props: Props): ReactElement {
           disabledServers={filteredDisabledServers}
           statuses={props.statuses}
           installationInfo={props.installationInfo}
+          playerListsByServer={props.playerListsByServer}
           officialSteamBuild={props.officialSteamBuild}
           officialVersion={props.officialVersion ?? null}
           steamCmdServerId={steamCmdStatus?.serverId ?? null}

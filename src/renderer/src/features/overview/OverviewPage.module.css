@@ -25,6 +25,11 @@
   flex-shrink: 0;
 }
 
+.survivorsSummary {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .headerActionButton {
   padding-inline: 0;
   background: transparent;

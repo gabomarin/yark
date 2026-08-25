@@ -41,7 +41,7 @@ export function AttentionIssuesPopover({
               </Text>
               {issue.checkedAt != null && (
                 <Text size="xs" c="dimmed">
-                  Checked {formatInstallationCheckedAt(issue.checkedAt)}
+                  Install checked {formatInstallationCheckedAt(issue.checkedAt)}
                 </Text>
               )}
             </div>

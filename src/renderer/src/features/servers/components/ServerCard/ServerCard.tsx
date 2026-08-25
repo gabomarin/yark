@@ -2,11 +2,12 @@ import { memo, type ReactElement } from "react";
 import { Badge, Card, Group, Stack, Text, UnstyledButton } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import { useRowContextMenu } from "@ui/RowActionMenu/useRowContextMenu";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import { ServerCardActions } from "./ServerCardActions";
-import { ServerCardMetaItem } from "./ServerCardMetaItem";
+import { ServerCardMetaGrid } from "./ServerCardMetaGrid";
 import { ServerCardProgress } from "./ServerCardProgress";
 import { buildServerCardMenuActions } from "./serverCardMenuActions";
 import {
@@ -41,6 +42,8 @@ type ServerCardSharedProps = {
   stopProgressPercent?: number | null;
   stopProgressLabel?: string | null;
   checkingUpdates?: boolean;
+  /** When set, Overview shows online survivor count from the ListPlayers cache (#301). */
+  playerList?: PlayerListState | null;
 };
 
 /** Overview: stable `handlers` bag. Tests/other callers: explicit zero-arg callbacks. */
@@ -67,6 +70,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     stopProgressPercent = null,
     stopProgressLabel = null,
     checkingUpdates = false,
+    playerList,
   } = props;
   const {
     onStart,
@@ -253,25 +257,16 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
               </div>
             </div>
 
-            <UnstyledButton
-              className={classes.metaOpen}
-              onClick={onOpenWorkspace}
-              aria-label={workspaceOpenLabel}
-              tabIndex={-1}
-              aria-hidden
-            >
-              <div className={classes.metaGrid} data-meta-grid>
-                <ServerCardMetaItem label="Map" value={server.map} />
-                <ServerCardMetaItem label="Cluster" value={server.clusterId ?? "–"} />
-                <ServerCardMetaItem label="Mods" value={String(server.mods.length)} />
-                <ServerCardMetaItem
-                  label="Version"
-                  value={view.localVersion ?? "–"}
-                  tone={view.versionMetaTone}
-                  hint={view.versionRefreshHint}
-                />
-              </div>
-            </UnstyledButton>
+            <ServerCardMetaGrid
+              server={server}
+              status={status}
+              localVersion={view.localVersion}
+              versionMetaTone={view.versionMetaTone}
+              versionRefreshHint={view.versionRefreshHint}
+              playerList={playerList}
+              workspaceOpenLabel={workspaceOpenLabel}
+              onOpenWorkspace={onOpenWorkspace}
+            />
           </div>
 
           <ServerCardActions

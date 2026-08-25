@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { Button, Group, VisuallyHidden } from "@mantine/core";
+import { Button, Group, Text, VisuallyHidden } from "@mantine/core";
 import { AddServerSplitButton } from "@features/servers/components/AddServerSplitButton/AddServerSplitButton";
 import classes from "../OverviewPage.module.css";
 
@@ -13,6 +13,8 @@ interface Props {
   checkingInstalls?: boolean;
   canUpdateAllOutdated?: boolean;
   openingUpdateAllOutdated?: boolean;
+  /** Known online survivors across running servers; `null` until a real RCON sample exists. */
+  survivorsOnlineTotal?: number | null;
 }
 
 export function OverviewHeader({
@@ -25,11 +27,29 @@ export function OverviewHeader({
   checkingInstalls = false,
   canUpdateAllOutdated = false,
   openingUpdateAllOutdated = false,
+  survivorsOnlineTotal = null,
 }: Props): ReactElement {
+  const survivorsLabel =
+    survivorsOnlineTotal == null
+      ? "Survivors –"
+      : survivorsOnlineTotal === 1
+        ? "1 survivor online"
+        : `${survivorsOnlineTotal} survivors online`;
+
   return (
     <header className={classes.header}>
       <h1 className={classes.title}>Servers</h1>
       <Group gap="md" wrap="wrap" justify="flex-end" className={classes.headerActions}>
+        <Text
+          size="sm"
+          c="dimmed"
+          className={classes.survivorsSummary}
+          data-survivors-online={
+            survivorsOnlineTotal == null ? undefined : survivorsOnlineTotal
+          }
+        >
+          {survivorsLabel}
+        </Text>
         <Button
           variant="transparent"
           color="gray"

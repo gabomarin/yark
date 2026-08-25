@@ -175,6 +175,7 @@ export function ServerWorkspacePage(props: Props): ReactElement {
       server={selectedServer}
       runtime={runtime}
       installation={installation}
+      playerList={props.playerList}
       opsLocked={filesJobActive || stopJobActive}
       opsLockReason={
         stopJobActive

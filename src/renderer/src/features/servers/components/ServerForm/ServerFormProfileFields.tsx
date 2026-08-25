@@ -108,7 +108,7 @@ export function ServerFormProfileFields(
           value={props.sessionName}
           onChange={(e) => props.onSessionNameChange(e.currentTarget.value)}
           required
-          description="Name players see in the server browser"
+          description="Name survivors see in the server browser"
         />
         <ServerFormMapField
           key={props.mapFieldKey}

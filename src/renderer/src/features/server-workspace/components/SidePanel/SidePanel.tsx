@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { useEffect, useState } from "react";
 import {
   CloudArrowDown,
   CopySimple,
@@ -13,12 +14,14 @@ import {
 import { Button, Stack, Text } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import {
-  formatInstallationCheckedAt,
   installationHealthLabel,
   isInstallOfferHealth,
   isInstallationReady,
 } from "@shared/installation-health";
+import { formatServerUptime } from "@shared/server-uptime";
 import { resolveDisplayedServerVersion } from "@shared/server-version-display";
+import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
+import { formatServerSurvivorMeta } from "@features/servers/model/serverCardSurvivorMeta";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { MetaRow } from "@ui/MetaRow/MetaRow";
 import { serverRuntimeStatusLabel } from "@ui/ServerRuntimeStatusBadge/serverRuntimeStatus";
@@ -33,6 +36,7 @@ interface Props {
   server: ServerProfile;
   runtime: ServerRuntimeInfo | null;
   installation: ServerInstallationInfo | null;
+  playerList?: PlayerListState | null;
   /** SteamCMD files job in progress – blocks install/update/verify unless a stronger job can replace a queued one. */
   opsLocked?: boolean;
   opsLockReason?: string;
@@ -111,11 +115,23 @@ export function SidePanel(props: Props): ReactElement {
   const installHealthLabel = props.installation
     ? installationHealthLabel(props.installation.health)
     : "Checking…";
-  const checkedAtLabel = formatInstallationCheckedAt(props.installation?.checkedAt);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    if (status !== "running" || props.runtime?.startedAt == null) {
+      return;
+    }
+    const id = window.setInterval(() => setNowMs(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, [status, props.runtime?.startedAt]);
   const uptime =
-    props.runtime?.startedAt != null && status === "running"
-      ? new Date(props.runtime.startedAt).toLocaleString()
+    status === "running"
+      ? formatServerUptime(props.runtime?.startedAt, nowMs)
       : "–";
+  const survivors = formatServerSurvivorMeta({
+    status,
+    survivorList: props.playerList ?? null,
+    maxPlayers: props.server.maxPlayers,
+  });
 
   return (
     <aside className={classes.panel}>
@@ -123,9 +139,9 @@ export function SidePanel(props: Props): ReactElement {
         <Stack gap={6}>
           <Text className={classes.widgetTitle}>Status</Text>
           <MetaRow label="Status" value={serverRuntimeStatusLabel(status)} />
-          <MetaRow label="Started" value={uptime} />
+          <MetaRow label="Uptime" value={uptime} />
+          <MetaRow label="Survivors" value={survivors} />
           <MetaRow label="Install" value={installHealthLabel} />
-          <MetaRow label="Checked" value={checkedAtLabel} />
           <MetaRow label="Version" value={version} />
           <MetaRow label="Cluster" value={props.server.clusterId ?? "No cluster"} />
         </Stack>
