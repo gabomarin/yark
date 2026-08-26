@@ -13,7 +13,8 @@ export function ServerModsHeader(props: Props): ReactElement {
       <div>
         <Title order={3}>Mods</Title>
         <Text size="sm" c="dimmed">
-          Configure which Project IDs load with this server or discover CurseForge mods.
+          Choose which CurseForge mods load with Start. Add by Project ID (the
+          number on a CurseForge ASA mod page) or mod URL, or use Discover.
         </Text>
       </div>
       <Group gap="xs" wrap="nowrap">

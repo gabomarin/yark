@@ -40,6 +40,7 @@ export function ServerFormClusterFields(props: Props): ReactElement {
         size={props.inputSize}
         value={props.clusterId}
         onChange={(e) => props.onClusterIdChange(e.currentTarget.value)}
+        description="ARK uses this ID so servers can transfer survivors, items, and creatures between maps. Same ID on every map that should transfer together."
       />
       <PathField
         label="Shared cluster directory"
@@ -48,6 +49,7 @@ export function ServerFormClusterFields(props: Props): ReactElement {
         busy={props.browsingClusterDir}
         size={props.inputSize}
         clearable
+        description="Folder used for Cross-ARK transfers. Must match on every server that shares this Cluster ID."
         onChange={props.onClusterDirChange}
         onBrowse={props.onBrowseClusterDir}
       />

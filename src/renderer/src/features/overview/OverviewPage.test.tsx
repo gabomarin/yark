@@ -363,6 +363,20 @@ describe("OverviewPage", () => {
     expect(serverList).not.toBeNull();
     within(serverList as HTMLElement).getByRole("button", { name: "New server" }).click();
     expect(onCreateServer).toHaveBeenCalledOnce();
+
+    // Empty fleet: EmptyState owns the filled primary; header New server is demoted (#236).
+    // Assert YARK data-cta-prominence (not Mantine data-variant).
+    const header = container.querySelector("header");
+    expect(header).not.toBeNull();
+    const headerNewServer = within(header as HTMLElement).getByRole("button", {
+      name: "New server",
+    });
+    expect(headerNewServer).toHaveAttribute("data-cta-prominence", "secondary");
+    const emptyStateNewServer = within(serverList as HTMLElement).getByRole(
+      "button",
+      { name: "New server" },
+    );
+    expect(emptyStateNewServer).toHaveAttribute("data-cta-prominence", "primary");
   });
 
   it("shows disabled servers in a separate section without putting them in the enabled fleet", async () => {
