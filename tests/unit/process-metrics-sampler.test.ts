@@ -184,6 +184,44 @@ describe("ProcessMetricsSampler", () => {
     sampler.stop();
   });
 
+  it("clears pushed samples when sampling turns off so UI does not keep stale RAM/CPU (#302)", async () => {
+    const processes = new FakeProcessManager();
+    processes.setLive("srv-1", 42);
+    const sampleResources = vi.fn().mockResolvedValue(
+      new Map([[42, { pid: 42, workingSetBytes: 2048, cpuSeconds: 1 }]]),
+    );
+    const sampler = new ProcessMetricsSampler(
+      processes as never,
+      60_000,
+      sampleResources,
+    );
+    const updates: Array<{ pid: number; workingSetBytes: number | null }> = [];
+    sampler.on(
+      "metrics-updated",
+      (payload: { pid: number; workingSetBytes: number | null }) => {
+        updates.push(payload);
+      },
+    );
+
+    sampler.start();
+    sampler.setSamplingEnabled(true);
+    await vi.waitFor(() => {
+      expect(updates.some((u) => u.pid === 42)).toBe(true);
+    });
+
+    sampler.setSamplingEnabled(false);
+    expect(updates.at(-1)).toMatchObject({
+      pid: 0,
+      workingSetBytes: null,
+      cpuPercent: null,
+    });
+    expect(
+      (sampler as unknown as { lastPush: Map<string, string> }).lastPush.size,
+    ).toBe(0);
+
+    sampler.stop();
+  });
+
   it("clears CPU baselines when sampling turns off so idle gaps do not inflate % (#302)", async () => {
     const processes = new FakeProcessManager();
     processes.setLive("srv-1", 4242);

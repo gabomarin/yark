@@ -9,6 +9,12 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- Overview **Survivors** no longer flash a false **0** after stop→start from a leave-running empty ListPlayers cache; the count stays `–` until a list taken while running (#301).
+- Overview fleet **Running** strip/filter includes **starting** and **stopping** so mid-start fleets are not an empty Running filter (#314).
+- Process **RAM/CPU** samples clear when Overview/Status sampling turns off, so returning to those surfaces does not show stale metrics (#302).
+
 ### Changed
 
 - **THIRD_PARTY_NOTICES.md** records ark.wiki.gg catalog copy as **CC BY-NC-SA 4.0** (footer-confirmed) with NC/SA redistribution notes; map-thumb bundling rationale for packagers.

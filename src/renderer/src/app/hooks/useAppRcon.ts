@@ -3,8 +3,12 @@ import { showOperatorError } from "@ui/operatorToast";
 import type { RconHistoryEntry } from "@features/server-workspace/ServerWorkspacePage";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import type { OnlinePlayerInfo, PlayerListUpdatedPush } from "@shared/ipc";
-import type { InstallationServersMode } from "@shared/types";
-import { upsertPlayerListState } from "@renderer/shared/reconcilePollSnapshots";
+import type { InstallationServersMode, ServerRuntimeInfo } from "@shared/types";
+import {
+  prunePlayerListsForNonRunning,
+  removePlayerListState,
+  upsertPlayerListState,
+} from "@renderer/shared/reconcilePollSnapshots";
 import type { FleetRefreshSnapshot } from "@app/hooks/useAppFleetRefresh";
 
 export function useAppRcon(options: {
@@ -15,6 +19,8 @@ export function useAppRcon(options: {
     forceOfficialCheck?: boolean;
     serversMode?: InstallationServersMode;
   }) => Promise<FleetRefreshSnapshot>;
+  /** Fleet runtime map — used to drop leave-running empty ListPlayers rows (#301). */
+  statuses: Map<string, ServerRuntimeInfo>;
 }): {
   rconHistoryByServer: Map<string, RconHistoryEntry[]>;
   playerListsByServer: Map<string, PlayerListState>;
@@ -25,7 +31,7 @@ export function useAppRcon(options: {
   onKickPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
   onBanPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
 } {
-  const { refresh } = options;
+  const { refresh, statuses } = options;
 
   const [rconHistoryByServer, setRconHistoryByServer] = useState<
     Map<string, RconHistoryEntry[]>
@@ -34,9 +40,19 @@ export function useAppRcon(options: {
   useEffect(() => {
     rconHistoryByServerRef.current = rconHistoryByServer;
   }, [rconHistoryByServer]);
+  const statusesRef = useRef(statuses);
+  useEffect(() => {
+    statusesRef.current = statuses;
+  }, [statuses]);
   const [playerListsByServer, setPlayerListsByServer] = useState<
     Map<string, PlayerListState>
   >(new Map());
+
+  useEffect(() => {
+    setPlayerListsByServer((prev) =>
+      prunePlayerListsForNonRunning(prev, statuses),
+    );
+  }, [statuses]);
 
   const appendRconHistory = useCallback((serverId: string, entry: RconHistoryEntry) => {
     setRconHistoryByServer((prev) => {
@@ -283,13 +299,24 @@ export function useAppRcon(options: {
     const unsubscribePlayers =
       typeof window.api.onPlayerListUpdated === "function"
         ? window.api.onPlayerListUpdated((payload: PlayerListUpdatedPush) => {
-            setPlayerListsByServer((prev) =>
-              upsertPlayerListState(prev, payload.serverId, {
+            setPlayerListsByServer((prev) => {
+              const status =
+                statusesRef.current.get(payload.serverId)?.status ?? "stopped";
+              // Leave-running flush is an empty success list — drop it so the
+              // next start does not show a false survivor 0 (#301).
+              if (
+                payload.players.length === 0
+                && payload.error == null
+                && status !== "running"
+              ) {
+                return removePlayerListState(prev, payload.serverId);
+              }
+              return upsertPlayerListState(prev, payload.serverId, {
                 players: payload.players,
                 error: payload.error,
                 loading: false,
-              }),
-            );
+              });
+            });
           })
         : () => undefined;
     return () => {

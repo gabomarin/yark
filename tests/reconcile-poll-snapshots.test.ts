@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { ServerRuntimeInfo, SteamCmdStatus } from "../src/shared/types";
 import {
+  prunePlayerListsForNonRunning,
   reconcileEvents,
   reconcileStatusMap,
   reconcileSteamCmdStatus,
+  removePlayerListState,
   upsertPlayerListState,
 } from "../src/renderer/src/shared/reconcilePollSnapshots";
 
@@ -125,5 +127,32 @@ describe("reconcilePollSnapshots", () => {
     });
     expect(next).toBe(previous);
     expect(next.get("a")).toBe(state);
+  });
+
+  it("prunes leave-running empty lists so the next start is not a false 0 (#301)", () => {
+    const previous = new Map([
+      [
+        "a",
+        { players: [], error: null, loading: false },
+      ],
+      [
+        "b",
+        {
+          players: [{ key: "1", name: "Alice" }],
+          error: null,
+          loading: false,
+        },
+      ],
+    ]);
+    const pruned = prunePlayerListsForNonRunning(
+      previous,
+      new Map([
+        ["a", { status: "stopped" }],
+        ["b", { status: "running" }],
+      ]),
+    );
+    expect(pruned.has("a")).toBe(false);
+    expect(pruned.get("b")?.players).toHaveLength(1);
+    expect(removePlayerListState(previous, "missing")).toBe(previous);
   });
 });

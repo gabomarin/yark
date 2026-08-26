@@ -20,7 +20,7 @@ describe("serverCardSurvivorMeta", () => {
     ).toBe(0);
   });
 
-  it("uses em dash when RCON failed or the server is not running (#301)", () => {
+  it("uses an en dash when RCON failed or the server is not running (#301)", () => {
     expect(
       formatServerSurvivorMeta({
         status: "stopped",

@@ -132,7 +132,12 @@ export function groupStructuredOptions(): Map<
     groupId: StructuredLaunchGroupId,
     option: StructuredLaunchUiOption,
   ): void => {
-    map.get(groupId)!.push(option);
+    const bucket = map.get(groupId);
+    if (bucket === undefined) {
+      map.set(groupId, [option]);
+    } else {
+      bucket.push(option);
+    }
     for (const dependent of dependentsByParent.get(option.curation.id) ?? []) {
       appendWithDependents(groupId, dependent);
     }

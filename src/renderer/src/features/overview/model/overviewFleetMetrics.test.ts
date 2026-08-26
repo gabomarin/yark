@@ -154,6 +154,46 @@ describe("overviewFleetMetrics", () => {
     expect(toggleOverviewFleetFilter("all", "stopped")).toBe("stopped");
   });
 
+  it("counts starting and stopping with Running, not Stopped (#314)", () => {
+    const enabled = [
+      server({ id: "a", name: "A" }),
+      server({ id: "b", name: "B" }),
+      server({ id: "c", name: "C" }),
+      server({ id: "d", name: "D" }),
+    ];
+    const statuses = new Map([
+      ["a", runtime("a", "running")],
+      ["b", runtime("b", "starting")],
+      ["c", runtime("c", "stopping")],
+      ["d", runtime("d", "stopped")],
+    ]);
+    const { stats } = computeOverviewFleetStats({
+      enabledServers: enabled,
+      statuses,
+      installationInfo: new Map([
+        ["a", readyInstall("a")],
+        ["b", readyInstall("b")],
+        ["c", readyInstall("c")],
+        ["d", readyInstall("d")],
+      ]),
+      officialSteamBuild: "build 111",
+      playerListsByServer: new Map(),
+    });
+
+    expect(stats.runningCount).toBe(3);
+    expect(stats.stoppedCount).toBe(1);
+    expect(
+      filterOverviewServersByFleet(enabled, "running", stats, statuses).map(
+        (s) => s.id,
+      ),
+    ).toEqual(["a", "b", "c"]);
+    expect(
+      filterOverviewServersByFleet(enabled, "stopped", stats, statuses).map(
+        (s) => s.id,
+      ),
+    ).toEqual(["d"]);
+  });
+
   it("sums known online survivors for the header label (#301)", () => {
     const enabled = [
       server({ id: "a", name: "A" }),
@@ -196,6 +236,34 @@ describe("overviewFleetMetrics", () => {
     });
 
     expect(stats.survivorsOnlineTotal).toBe(1);
+  });
+
+  it("does not treat a leave-running empty list as a known survivor sample (#301)", () => {
+    const enabled = [server({ id: "a", name: "A" })];
+    const statuses = new Map([["a", runtime("a", "running")]]);
+    // Stale empty success left in the map after stop would invent a fleet 0.
+    // prunePlayerListsForNonRunning + push guard drop that row; this asserts
+    // sumSurvivors still refuses a lone empty list that somehow remains.
+    const { stats: withEmpty } = computeOverviewFleetStats({
+      enabledServers: enabled,
+      statuses,
+      installationInfo: new Map([["a", readyInstall("a")]]),
+      officialSteamBuild: "build 111",
+      playerListsByServer: new Map([
+        ["a", { players: [], error: null, loading: false }],
+      ]),
+    });
+    // Empty while truly running is a valid 0 (server up, nobody online).
+    expect(withEmpty.survivorsOnlineTotal).toBe(0);
+
+    const { stats: noList } = computeOverviewFleetStats({
+      enabledServers: enabled,
+      statuses,
+      installationInfo: new Map([["a", readyInstall("a")]]),
+      officialSteamBuild: "build 111",
+      playerListsByServer: new Map(),
+    });
+    expect(noList.survivorsOnlineTotal).toBeNull();
   });
 
   it("computes process fleet header readouts (#302)", () => {
