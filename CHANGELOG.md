@@ -9,15 +9,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
-### Fixed
-
-- Overview **Survivors** no longer flash a false **0** after stop→start from a leave-running empty ListPlayers cache; the count stays `–` until a list taken while running (#301).
-- Overview fleet **Running** strip/filter includes **starting** and **stopping** so mid-start fleets are not an empty Running filter (#314).
-- Process **RAM/CPU** samples clear when Overview/Status sampling turns off, so returning to those surfaces does not show stale metrics (#302).
-
-### Changed
-
-- **THIRD_PARTY_NOTICES.md** records ark.wiki.gg catalog copy as **CC BY-NC-SA 4.0** (footer-confirmed) with NC/SA redistribution notes; map-thumb bundling rationale for packagers.
+## [0.16.0] - 2026-08-26
 
 ### Added
 
@@ -52,14 +44,9 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - **`useAppFleetRefresh`** and **`useAppRcon`** hooks extracted from `App.tsx` ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **Configuration editor** filter bar, settings table, and row organisms extracted from `ConfigurationEditor.tsx` ([#146](https://github.com/gabomarin/yark/issues/146)).
 
-### Fixed
-
-- Server cards no longer show **Version refreshes after you start the server** when the dedicated ARK Version is already ahead of Wildcard officials (common staggered ASA rollouts) (#442).
-- Overview header hides **Survivors** (with RAM / CPU) when no enabled server is starting or running, instead of showing **Survivors –** (#301).
-- Overview server cards use container queries on card width to stack Start/Stop under the meta row and switch status to a color-only dot before Version / **RAM / CPU** collide with action icons (#302).
-
 ### Changed
 
+- **THIRD_PARTY_NOTICES.md** records ark.wiki.gg catalog copy as **CC BY-NC-SA 4.0** (footer-confirmed) with NC/SA redistribution notes; map-thumb bundling rationale for packagers.
 - Overview **server search** stays for the session when leaving and returning via the sidebar; `AppRouterPages` holds the query so Overview stays the semantic owner without shell mega-props; filter **SearchField**s gain an in-field clear control (#438).
 - Backend **create/import**, **move-install registry/cleanup/FS**, and **backup create/schedule/retention/portability/fleet** orchestration extracted; all three grandfathered coordinators cleared from the backend size baseline ([#427](https://github.com/gabomarin/yark/issues/427)).
 - **SteamCMD install/path** and **cancel/pause**, **fleet install inspect**, **process leave/reattach** and **graceful stop**, plus **install health/Steam build/official probe** helpers extracted; `update-service`, `server-installation`, and `process-manager` dropped from the backend size baseline ([#427](https://github.com/gabomarin/yark/issues/427)).
@@ -79,11 +66,16 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - **Server file jobs and SteamCMD runs** moved into focused update modules while preserving update behavior ([#146](https://github.com/gabomarin/yark/issues/146)).
 - **Process readiness wait** loop moved to `process-ready-wait.ts`; `ProcessManager` keeps a thin facade ([#146](https://github.com/gabomarin/yark/issues/146)).
 - Optional **backend file-size gate** (`backend-structure-baseline.json`, new `src/backend` `.ts` ≤ 800) with six grandfathered coordinators ([#146](https://github.com/gabomarin/yark/issues/146)).
-
 - Async busy/spinner cleanup across the renderer uses shared **`runWithFinally`** so React Compiler can optimize those surfaces when enabled; verbose build skips drop from ~74 to ~55 CompileError (#404).
 
 ### Fixed
 
+- Overview **Survivors** no longer flash a false **0** after stop→start from a leave-running empty ListPlayers cache; the count stays `–` until a list taken while running (#301).
+- Overview fleet **Running** strip/filter includes **starting** and **stopping** so mid-start fleets are not an empty Running filter (#314).
+- Process **RAM/CPU** samples clear when Overview/Status sampling turns off, so returning to those surfaces does not show stale metrics (#302).
+- Server cards no longer show **Version refreshes after you start the server** when the dedicated ARK Version is already ahead of Wildcard officials (common staggered ASA rollouts) (#442).
+- Overview header hides **Survivors** (with RAM / CPU) when no enabled server is starting or running, instead of showing **Survivors –** (#301).
+- Overview server cards use container queries on card width to stack Start/Stop under the meta row and switch status to a color-only dot before Version / **RAM / CPU** collide with action icons (#302).
 - Server card **Enable** icon works again when files are not installed (same as the kebab menu); it only locks while SteamCMD is busy (#132).
 - **Check server updates** and **Update all outdated** no longer fail when a background overview poll overlaps the forced Steam install scan; user actions keep their IPC result while stale refreshes remain blocked from shared state ([#146](https://github.com/gabomarin/yark/issues/146)).
 
