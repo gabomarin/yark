@@ -2,7 +2,7 @@ import type { ServerStatus } from "@shared/types";
 import type { ServerUpdateState } from "@shared/server-update-status";
 import type { SteamCmdProgressOperation } from "@shared/steamcmd-progress";
 
-/** Runtime control: Play / Stop (leading slot). Enable stays visible when not installed. */
+/** Leading Play slot: Enable / Start / Stop. Disabled profiles always show Enable even without install files (#132); Start hides until files are ready. */
 export type ServerCardRuntimeAction = {
   kind: "enable" | "start" | "stop" | "starting" | "stopping";
   label: string;

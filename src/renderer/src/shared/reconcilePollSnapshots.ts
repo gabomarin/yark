@@ -72,7 +72,7 @@ export function removePlayerListState(
  */
 export function prunePlayerListsForNonRunning(
   previous: Map<string, PlayerListSnapshot>,
-  statuses: ReadonlyMap<string, { status: string }>,
+  statuses: ReadonlyMap<string, ServerRuntimeInfo>,
 ): Map<string, PlayerListSnapshot> {
   let changed = false;
   const next = new Map(previous);

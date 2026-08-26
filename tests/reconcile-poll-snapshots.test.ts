@@ -147,8 +147,28 @@ describe("reconcilePollSnapshots", () => {
     const pruned = prunePlayerListsForNonRunning(
       previous,
       new Map([
-        ["a", { status: "stopped" }],
-        ["b", { status: "running" }],
+        [
+          "a",
+          {
+            serverId: "a",
+            status: "stopped",
+            processLive: false,
+            pid: null,
+            startedAt: null,
+            lastError: null,
+          },
+        ],
+        [
+          "b",
+          {
+            serverId: "b",
+            status: "running",
+            processLive: true,
+            pid: 1,
+            startedAt: "t",
+            lastError: null,
+          },
+        ],
       ]),
     );
     expect(pruned.has("a")).toBe(false);
