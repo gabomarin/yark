@@ -56,10 +56,18 @@ export function ServerGridEmptyStates(props: Props): ReactElement | null {
         titleOrder="h3"
         action={
           <Group gap="xs">
-            <Button leftSection={<Plus size={16} />} onClick={props.onCreateServer}>
+            <Button
+              leftSection={<Plus size={16} />}
+              onClick={props.onCreateServer}
+              data-cta-prominence="primary"
+            >
               New server
             </Button>
-            <Button variant="default" onClick={props.onImportServer}>
+            <Button
+              variant="default"
+              onClick={props.onImportServer}
+              data-cta-prominence="secondary"
+            >
               Import existing install
             </Button>
           </Group>

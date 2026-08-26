@@ -60,7 +60,8 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
             <Group gap="xs">
               <Button
                 size="sm"
-                variant={filesInstalled ? undefined : "light"}
+                variant={filesInstalled ? "filled" : "light"}
+                data-cta-prominence={filesInstalled ? "primary" : "secondary"}
                 onClick={() => {
                   setExperienceDone(true);
                   props.onOpenAssistant();
@@ -71,6 +72,7 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
               <Button
                 size="sm"
                 variant="default"
+                data-cta-prominence="secondary"
                 onClick={() => setExperienceDone(true)}
               >
                 Use defaults
@@ -93,7 +95,12 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
             </Text>
             <Group gap="xs">
               {!filesInstalled && (
-                <Button size="sm" onClick={props.onInstallFiles}>
+                <Button
+                  size="sm"
+                  variant="filled"
+                  data-cta-prominence="primary"
+                  onClick={props.onInstallFiles}
+                >
                   Install files
                 </Button>
               )}

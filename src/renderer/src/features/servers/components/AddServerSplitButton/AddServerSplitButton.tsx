@@ -11,10 +11,10 @@ interface Props {
   fullWidth?: boolean;
   size?: "xs" | "sm" | "md";
   /**
-   * When demoted (e.g. empty Overview where EmptyState owns the filled CTA),
+   * When true (e.g. empty Overview where EmptyState owns the filled CTA),
    * both halves use `default` so header create is not a second filled primary (#236).
    */
-  emphasis?: "primary" | "secondary";
+  demoted?: boolean;
   /** Accessible name for the chevron menu trigger. */
   menuAriaLabel?: string;
 }
@@ -25,16 +25,18 @@ interface Props {
 export function AddServerSplitButton(props: Props): ReactElement {
   const size = props.size ?? "sm";
   const menuAriaLabel = props.menuAriaLabel ?? "More add-server options";
-  const variant = props.emphasis === "secondary" ? "default" : undefined;
+  const demoted = props.demoted === true;
+  const variant = demoted ? "default" : undefined;
 
   return (
-    <Button.Group>
+    <Button.Group data-cta-demoted={demoted ? "true" : undefined}>
       <Button
         size={size}
         variant={variant}
         leftSection={<Plus size={16} />}
         onClick={props.onCreate}
         style={props.fullWidth ? { flex: 1 } : undefined}
+        data-cta-prominence={demoted ? "secondary" : "primary"}
       >
         {props.primaryLabel}
       </Button>

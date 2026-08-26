@@ -45,13 +45,21 @@ function renderChecklist(installation: ServerInstallationInfo | null): {
 }
 
 describe("ServerOnboardingChecklist", () => {
-  it("uses Install files as the filled primary when files are missing (#236)", () => {
+  it("uses Install files as the single filled primary when files are missing (#236)", () => {
     renderChecklist(null);
 
     const install = screen.getByRole("button", { name: "Install files" });
     const configure = screen.getByRole("button", { name: "Configure with wizard" });
-    expect(install).not.toHaveAttribute("data-variant", "light");
-    expect(configure).toHaveAttribute("data-variant", "light");
+    const useDefaults = screen.getByRole("button", { name: "Use defaults" });
+
+    expect(install).toHaveAttribute("data-cta-prominence", "primary");
+    expect(configure).toHaveAttribute("data-cta-prominence", "secondary");
+    expect(useDefaults).toHaveAttribute("data-cta-prominence", "secondary");
+    expect(
+      screen.getAllByRole("button").filter(
+        (button) => button.getAttribute("data-cta-prominence") === "primary",
+      ),
+    ).toHaveLength(1);
   });
 
   it("promotes Configure with wizard after files are ready (#236)", async () => {
@@ -59,7 +67,7 @@ describe("ServerOnboardingChecklist", () => {
     const { onOpenAssistant } = renderChecklist(readyInstall);
 
     const configure = screen.getByRole("button", { name: "Configure with wizard" });
-    expect(configure).not.toHaveAttribute("data-variant", "light");
+    expect(configure).toHaveAttribute("data-cta-prominence", "primary");
     expect(screen.queryByRole("button", { name: "Install files" })).not.toBeInTheDocument();
 
     await user.click(configure);

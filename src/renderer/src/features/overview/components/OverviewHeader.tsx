@@ -152,7 +152,7 @@ export function OverviewHeader({
           primaryLabel="New server"
           onCreate={onCreateServer}
           onImport={onImportServer}
-          emphasis={emptyFleet ? "secondary" : "primary"}
+          demoted={emptyFleet}
           menuAriaLabel="More new-server options"
         />
       </Group>
