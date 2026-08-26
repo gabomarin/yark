@@ -94,7 +94,7 @@ export function AppShell({
     onRefreshPlayers,
     onKickPlayer,
     onBanPlayer,
-  } = useAppRcon({ refresh });
+  } = useAppRcon({ refresh, statuses });
   const { processMetricsByServer } = useAppProcessMetrics();
   const { onWorkspaceStatusPanelVisibleChange } = useProcessMetricsSamplingInterest({
     route,

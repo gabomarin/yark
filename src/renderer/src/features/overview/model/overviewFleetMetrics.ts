@@ -48,6 +48,21 @@ function runtimeStatus(
 }
 
 /**
+ * Overview "Running" strip: live process statuses (running + mid start/stop).
+ * `error` stays out of Running and Stopped so operators see it under attention
+ * when applicable, not in an empty Running filter mid-reboot.
+ */
+function isOverviewFleetRunningStatus(
+  status: ServerRuntimeInfo["status"],
+): boolean {
+  return (
+    status === "running"
+    || status === "starting"
+    || status === "stopping"
+  );
+}
+
+/**
  * Sum known online survivors on running enabled servers (#301).
  * Returns `null` until at least one running server has a real RCON sample
  * (never invents a fleet `0`).
@@ -132,7 +147,7 @@ export function computeOverviewFleetStats(input: {
 
   for (const server of input.enabledServers) {
     const status = runtimeStatus(input.statuses, server.id);
-    if (status === "running") {
+    if (isOverviewFleetRunningStatus(status)) {
       runningCount += 1;
     } else if (status === "stopped") {
       stoppedCount += 1;
@@ -177,8 +192,8 @@ export function filterOverviewServersByFleet(
     return [...servers];
   }
   if (filter === "running") {
-    return servers.filter(
-      (server) => runtimeStatus(statuses, server.id) === "running",
+    return servers.filter((server) =>
+      isOverviewFleetRunningStatus(runtimeStatus(statuses, server.id)),
     );
   }
   if (filter === "stopped") {

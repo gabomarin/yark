@@ -41,14 +41,17 @@ export class ProcessMetricsSampler extends EventEmitter {
   /**
    * Gate PowerShell sampling to surfaces that show metrics (#302):
    * Overview, or workspace Status panel (wide always / compact drawer open).
-   * Disabling clears CPU baselines so the next enable starts fresh (null CPU
-   * until a second tick) instead of averaging over the idle gap.
+   * Disabling clears CPU baselines and pushes null samples so the renderer does
+   * not keep stale RAM/CPU until the next enable tick.
    */
   setSamplingEnabled(enabled: boolean): void {
     if (this.samplingEnabled === enabled) return;
     this.samplingEnabled = enabled;
     if (!enabled) {
       this.priorCpu.clear();
+      for (const serverId of [...this.lastPush.keys()]) {
+        this.clearServer(serverId);
+      }
       return;
     }
     void this.tick();

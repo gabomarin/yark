@@ -52,6 +52,40 @@ export function upsertPlayerListState(
   return next;
 }
 
+/** Drop one player-list row (no-op when absent). */
+export function removePlayerListState(
+  previous: Map<string, PlayerListSnapshot>,
+  serverId: string,
+): Map<string, PlayerListSnapshot> {
+  if (!previous.has(serverId)) {
+    return previous;
+  }
+  const next = new Map(previous);
+  next.delete(serverId);
+  return next;
+}
+
+/**
+ * Drop ListPlayers cache for servers that are not `running`.
+ * Leave-running flushes push an empty success list; keeping that row across a
+ * later start would show a false survivor `0` until the next tick (#301).
+ */
+export function prunePlayerListsForNonRunning(
+  previous: Map<string, PlayerListSnapshot>,
+  statuses: ReadonlyMap<string, ServerRuntimeInfo>,
+): Map<string, PlayerListSnapshot> {
+  let changed = false;
+  const next = new Map(previous);
+  for (const serverId of previous.keys()) {
+    const status = statuses.get(serverId)?.status ?? "stopped";
+    if (status !== "running") {
+      next.delete(serverId);
+      changed = true;
+    }
+  }
+  return changed ? next : previous;
+}
+
 function sameRuntime(
   left: ServerRuntimeInfo,
   right: ServerRuntimeInfo,
