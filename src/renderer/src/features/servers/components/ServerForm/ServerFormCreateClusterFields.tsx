@@ -46,8 +46,8 @@ export function ServerFormCreateClusterFields(props: Props): ReactElement {
         allowDeselect={false}
         description={
           hasClusters
-            ? "Join an existing cluster for transfers, or leave None. Does not seed INI."
-            : "No clusters in the fleet yet."
+            ? "Join an existing cluster for Cross-ARK transfers, or leave None. Joining here only sets Cluster ID and shared folder – it does not copy INI from other servers."
+            : "No clusters in the fleet yet. A cluster is a shared folder + Cluster ID so survivors and items can transfer between maps."
         }
       />
       {!hasClusters &&
@@ -77,6 +77,7 @@ export function ServerFormCreateClusterFields(props: Props): ReactElement {
             value={selected.clusterId}
             disabled
             readOnly
+            description="Copied from the cluster you joined. Same ID on every map that should transfer together."
           />
           <div>
             <Text size="sm" fw={500} mb={4}>

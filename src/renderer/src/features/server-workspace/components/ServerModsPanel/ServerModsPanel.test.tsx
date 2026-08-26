@@ -478,7 +478,7 @@ describe("ServerModsPanel", () => {
       }),
     );
     expect(
-      screen.getByText("New Project IDs start disabled", { exact: false }),
+      screen.getByText("New mods start disabled", { exact: false }),
     ).toBeInTheDocument();
   });
 

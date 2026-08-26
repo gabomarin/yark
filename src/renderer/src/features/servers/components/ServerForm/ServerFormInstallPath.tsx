@@ -91,6 +91,7 @@ export function ServerFormInstallPath(props: Props): ReactElement {
           busy={props.browsingInstallDir}
           size={props.inputSize}
           required
+          description="Where this profile’s install folder will be created. Create does not download ASA files – use Install files after."
           onChange={props.onInstallDirChange}
           onBrowse={props.onBrowseInstallDir}
         />

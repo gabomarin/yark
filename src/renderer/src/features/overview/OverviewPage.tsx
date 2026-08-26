@@ -148,6 +148,7 @@ export function OverviewPage(props: Props): ReactElement {
         openingUpdateAllOutdated={updateAllOutdatedLoading}
         checkingUpdates={checkingUpdates}
         checkingInstalls={props.checkingInstalls}
+        emptyFleet={props.servers.length === 0}
         survivorsOnlineTotal={survivorsOnlineTotal}
         showProcessFleetMetrics={showProcessFleetMetrics}
         fleetRamBytes={fleetRamBytes}

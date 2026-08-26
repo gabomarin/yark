@@ -17,6 +17,10 @@ interface Props {
   checkingInstalls?: boolean;
   canUpdateAllOutdated?: boolean;
   openingUpdateAllOutdated?: boolean;
+  /**
+   * Empty fleet: demote header New server so EmptyState keeps the single filled CTA (#236).
+   */
+  emptyFleet?: boolean;
   /** Known online survivors across running servers; `null` until a real RCON sample exists. */
   survivorsOnlineTotal?: number | null;
   /**
@@ -39,6 +43,7 @@ export function OverviewHeader({
   checkingInstalls = false,
   canUpdateAllOutdated = false,
   openingUpdateAllOutdated = false,
+  emptyFleet = false,
   survivorsOnlineTotal = null,
   showProcessFleetMetrics = false,
   fleetRamBytes = null,
@@ -147,6 +152,7 @@ export function OverviewHeader({
           primaryLabel="New server"
           onCreate={onCreateServer}
           onImport={onImportServer}
+          emphasis={emptyFleet ? "secondary" : "primary"}
           menuAriaLabel="More new-server options"
         />
       </Group>

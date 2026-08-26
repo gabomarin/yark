@@ -363,6 +363,19 @@ describe("OverviewPage", () => {
     expect(serverList).not.toBeNull();
     within(serverList as HTMLElement).getByRole("button", { name: "New server" }).click();
     expect(onCreateServer).toHaveBeenCalledOnce();
+
+    // Empty fleet: EmptyState owns the filled primary; header New server is demoted (#236).
+    const header = container.querySelector("header");
+    expect(header).not.toBeNull();
+    const headerNewServer = within(header as HTMLElement).getByRole("button", {
+      name: "New server",
+    });
+    expect(headerNewServer).toHaveAttribute("data-variant", "default");
+    const emptyStateNewServer = within(serverList as HTMLElement).getByRole(
+      "button",
+      { name: "New server" },
+    );
+    expect(emptyStateNewServer).not.toHaveAttribute("data-variant", "default");
   });
 
   it("shows disabled servers in a separate section without putting them in the enabled fleet", async () => {
