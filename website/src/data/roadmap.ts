@@ -10,6 +10,9 @@ export type RoadmapItem = {
  * Prefer operator-visible product work from open issues (not CI/packaging hygiene).
  * Not a ship promise — keep wording directional. Milestones on GitHub stay authoritative.
  *
+ * Shipped in v0.16.0 (not previously listed here): Overview fleet metric strip
+ * (#314), survivor counts (#301), dedicated-process RAM/CPU (#302), Overview
+ * search persistence (#438), third-party notices / About link (#446).
  * Shipped in v0.15.0 (not previously listed here): Discover mods browse (#297),
  * desktop alerts / Windows toasts (#331), flat content panels (#346), quiet icon
  * actions (#397), destructive/filled lifecycle buttons (#344), Start/Restart

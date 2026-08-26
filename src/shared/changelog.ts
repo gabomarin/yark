@@ -24,6 +24,35 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.16.0",
+    date: "2026-08-26",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Overview fleet metric strip: Running, Stopped, Needs attention, and Updates available with click-to-filter tiles.",
+          "Survivor counts on Overview cards and the header Survivors total; workspace Status shows Survivors and Uptime.",
+          "Dedicated-process RAM and CPU on Overview cards and header sums; workspace Status shows per-server samples while those surfaces are visible.",
+          "Settings → About links to THIRD_PARTY_NOTICES for Arkobat templates, ark.wiki.gg catalog sources, and map thumbnails.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Overview server search stays for the session when you leave and return; SearchFields gain an in-field clear control.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Survivors no longer flash a false 0 after stop→start; Running strip includes starting/stopping; RAM/CPU clears when sampling turns off.",
+          "Version-refresh hint no longer appears when the dedicated ARK Version is already ahead of Wildcard officials.",
+          "Enable on the server card works again when files are not installed; overlapping overview polls no longer drop Check server updates results.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.15.0",
     date: "2026-08-22",
     sections: [

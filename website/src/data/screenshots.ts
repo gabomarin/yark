@@ -15,9 +15,9 @@ export function screenshotSlug(shot: Screenshot): string {
 export const screenshots: Screenshot[] = [
   {
     src: withBase("/screenshots/overview.png"),
-    alt: "YARK Windows overview listing ARK Survival Ascended server profiles with map artwork, status, fleet sort controls, and Update All",
+    alt: "YARK Windows overview listing ARK Survival Ascended server profiles with map artwork, status, fleet metric strip, survivors, RAM/CPU, sort controls, and Update All",
     caption:
-      "Servers overview — sort/view controls, Update All for outdated fleets, and queue status that opens Downloads.",
+      "Servers overview — fleet metric strip, survivors and process RAM/CPU, sort/view controls, Update All, and queue status that opens Downloads.",
   },
   {
     src: withBase("/screenshots/downloads.png"),
