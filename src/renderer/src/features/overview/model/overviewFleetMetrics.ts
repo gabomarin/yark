@@ -52,7 +52,7 @@ function runtimeStatus(
  * `error` stays out of Running and Stopped so operators see it under attention
  * when applicable, not in an empty Running filter mid-reboot.
  */
-export function isOverviewFleetRunningStatus(
+function isOverviewFleetRunningStatus(
   status: ServerRuntimeInfo["status"],
 ): boolean {
   return (
