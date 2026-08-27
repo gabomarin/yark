@@ -11,8 +11,8 @@ import { BackupRestoreModal } from "./BackupRestoreModal";
 import classes from "./BackupsPage.module.css";
 import { BackupKindSettings } from "./components/BackupKindSettings/BackupKindSettings";
 import { BackupListToolbar } from "./components/BackupListToolbar/BackupListToolbar";
+import { ServerBackupDestination } from "./components/ServerBackupDestination/ServerBackupDestination";
 import { ServerBackupHeader } from "./components/ServerBackupHeader/ServerBackupHeader";
-import { ServerBackupMetrics } from "./components/ServerBackupMetrics/ServerBackupMetrics";
 import {
   formatRelativeTime,
   formatSize,
@@ -72,7 +72,18 @@ export function ServerBackupPanel(props: Props): ReactElement {
         </Group>
       )}
 
-      {embedded && <ServerBackupMetrics metrics={panel.metricStrip} />}
+      {panel.draftPolicy !== null && (
+        <ServerBackupDestination
+          draftPolicy={panel.draftPolicy}
+          defaultBackupHint={panel.defaultBackupHint}
+          resolvedRoot={panel.resolvedRoot}
+          busy={panel.busy}
+          browsingDir={panel.browsingDir}
+          onDraftPolicyChange={panel.setDraftPolicy}
+          onBrowseBackupDir={() => void panel.browseBackupDir()}
+          onOpenDestination={() => void panel.openDestination()}
+        />
+      )}
 
       {!panel.installReady && (
         <Alert
@@ -126,14 +137,9 @@ export function ServerBackupPanel(props: Props): ReactElement {
                 onSettingsOpenChange={panel.setSettingsOpen}
                 settingsTitle={panel.settingsTitle}
                 settingsSummary={panel.settingsSummary}
-                defaultBackupHint={panel.defaultBackupHint}
-                resolvedRoot={panel.resolvedRoot}
                 busy={panel.busy}
                 installReady={panel.installReady}
-                browsingDir={panel.browsingDir}
                 onDraftPolicyChange={panel.setDraftPolicy}
-                onBrowseBackupDir={() => void panel.browseBackupDir()}
-                onOpenDestination={() => void panel.openDestination()}
               />
             )}
 

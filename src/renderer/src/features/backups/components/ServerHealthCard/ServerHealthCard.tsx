@@ -123,9 +123,9 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
         {props.expanded && draft !== undefined && (
           <Stack gap="sm">
             <Text size="sm" c="dimmed">
-              Destination and schedule apply to <strong>world</strong> backups.
-              Players and INI use the same root but their own triggers and retain
-              counts.
+              Destination is the shared archive root for world, player, and INI
+              backups. Schedule applies to world only; Players and INI use their
+              own triggers and retain counts.
             </Text>
             <PathField
               className={classes.dirField}

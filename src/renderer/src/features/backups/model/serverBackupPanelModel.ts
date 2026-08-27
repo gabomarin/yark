@@ -41,12 +41,6 @@ export function formatRelativeTime(iso: string, nowMs = Date.now()): string {
   return relativeTimeFormat.format(Math.round(diffMonth / 12), "year");
 }
 
-function truncateMiddle(value: string, max = 42): string {
-  if (value.length <= max) return value;
-  const keep = Math.floor((max - 1) / 2);
-  return `${value.slice(0, keep)}…${value.slice(-keep)}`;
-}
-
 export function kindLabel(kind: BackupKind): string {
   return KIND_TABS.find((tab) => tab.kind === kind)?.label ?? "World save";
 }
@@ -156,19 +150,11 @@ export function countHiddenOtherMapWorldBackups(
   ).length;
 }
 
-export function worldPolicySummary(
-  draft: DraftPolicy,
-  resolvedRoot: string | null,
-  defaultHint: string,
-): string {
+export function worldPolicySummary(draft: DraftPolicy): string {
   const schedule = draft.enabled
     ? `Schedule on · ${draft.intervalMinutes}m`
     : "Schedule off";
-  const dest =
-    draft.backupDir !== null && draft.backupDir.length > 0
-      ? draft.backupDir
-      : (resolvedRoot ?? defaultHint);
-  return `${schedule} · keep ${draft.retainCountWorld} · ${truncateMiddle(dest)}`;
+  return `${schedule} · keep ${draft.retainCountWorld}`;
 }
 
 export function playersPolicySummary(draft: DraftPolicy): string {
@@ -177,86 +163,4 @@ export function playersPolicySummary(draft: DraftPolicy): string {
 
 export function iniPolicySummary(draft: DraftPolicy): string {
   return `Keep last ${draft.retainCountIni}`;
-}
-
-export type ServerBackupMetricStrip = {
-  lastBackupValue: string;
-  lastBackupHint: string;
-  retainValue: string;
-  retainHint: string;
-  destinationValue: string;
-  destinationHint: string;
-};
-
-function retainForKind(draft: DraftPolicy, kind: BackupKind): number {
-  if (kind === "players") return draft.retainCountPlayers;
-  if (kind === "ini") return draft.retainCountIni;
-  return draft.retainCountWorld;
-}
-
-function newestCompletedBackup(
-  backups: BackupRecord[],
-  kind: BackupKind,
-): BackupRecord | null {
-  let best: BackupRecord | null = null;
-  let bestMs = Number.NEGATIVE_INFINITY;
-  for (const backup of backups) {
-    if (backup.kind !== kind || backup.status !== "completed") continue;
-    const stamp = backup.completedAt ?? backup.createdAt;
-    const ms = new Date(stamp).getTime();
-    if (Number.isNaN(ms) || ms < bestMs) continue;
-    best = backup;
-    bestMs = ms;
-  }
-  return best;
-}
-
-function destinationDisplay(
-  draft: DraftPolicy | null,
-  resolvedRoot: string | null,
-  defaultBackupHint: string,
-): { value: string; hint: string } {
-  const custom =
-    draft?.backupDir !== null && draft?.backupDir !== undefined && draft.backupDir.length > 0
-      ? draft.backupDir
-      : null;
-  const full = custom ?? resolvedRoot ?? defaultBackupHint;
-  return {
-    value: truncateMiddle(full, 28),
-    hint: custom !== null ? "Custom destination" : "Default under install",
-  };
-}
-
-/** Per-server scalars for the embedded Backups metric strip (#231) — list + policy only. */
-export function buildServerBackupMetricStrip(input: {
-  backups: BackupRecord[];
-  kind: BackupKind;
-  draft: DraftPolicy | null;
-  resolvedRoot: string | null;
-  defaultBackupHint: string;
-  nowMs?: number;
-}): ServerBackupMetricStrip {
-  const { backups, kind, draft, resolvedRoot, defaultBackupHint, nowMs } = input;
-  const latest = newestCompletedBackup(backups, kind);
-  const stamp = latest?.completedAt ?? latest?.createdAt ?? null;
-  const dest = destinationDisplay(draft, resolvedRoot, defaultBackupHint);
-  const retain = draft !== null ? retainForKind(draft, kind) : null;
-
-  return {
-    lastBackupValue:
-      stamp !== null ? formatRelativeTime(stamp, nowMs) : "Never",
-    lastBackupHint:
-      latest !== null
-        ? `${kindLabel(kind)} · ${latest.type}`
-        : `No completed ${kindLabel(kind).toLowerCase()} yet`,
-    retainValue: retain !== null ? String(retain) : "–",
-    retainHint:
-      kind === "players"
-        ? "Per player"
-        : kind === "ini"
-          ? "INI archives"
-          : "Per map",
-    destinationValue: dest.value,
-    destinationHint: dest.hint,
-  };
 }

@@ -178,8 +178,13 @@ async function run() {
           `Embedded header missing on ${tab.file} @ ${size.name}`,
         );
         assert.ok(
-          (await page.locator("[data-server-backup-metrics]").count()) > 0,
-          `Embedded metrics missing on ${tab.file} @ ${size.name}`,
+          (await page.locator("[data-server-backup-destination]").count()) > 0,
+          `Shared destination missing on ${tab.file} @ ${size.name}`,
+        );
+        assert.equal(
+          await page.locator("[data-server-backup-metrics]").count(),
+          0,
+          `Metric strip should be removed on ${tab.file} @ ${size.name}`,
         );
 
         if (tab.file === "world") {

@@ -21,7 +21,6 @@ import {
   draftEqualsDraft,
   draftEqualsPolicy,
   filterBackups,
-  buildServerBackupMetricStrip,
   iniPolicySummary,
   isServerActive,
   kindLabel,
@@ -263,14 +262,14 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
   const defaultBackupHint = `${server.installDir}\\Backups`;
   const settingsTitle =
     activeKind === "world"
-      ? "World destination & schedule"
+      ? "World schedule & retention"
       : activeKind === "players"
         ? "Player retention"
         : "INI retention";
   const settingsSummary = draftPolicy === null
     ? null
     : activeKind === "world"
-      ? worldPolicySummary(draftPolicy, resolvedRoot, defaultBackupHint)
+      ? worldPolicySummary(draftPolicy)
       : activeKind === "players"
         ? playersPolicySummary(draftPolicy)
         : iniPolicySummary(draftPolicy);
@@ -284,18 +283,6 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
           ? "No player backups match this search."
           : "No player profile backups yet. Profiles save automatically when players join or leave. Use a World backup when you need everyone at once."
         : "No INI backups yet. Use Backup above, or wait for the automatic copy after a successful INI save.";
-
-  const metricStrip = useMemo(
-    () =>
-      buildServerBackupMetricStrip({
-        backups,
-        kind: activeKind,
-        draft: draftPolicy,
-        resolvedRoot,
-        defaultBackupHint,
-      }),
-    [backups, activeKind, draftPolicy, resolvedRoot, defaultBackupHint],
-  );
 
   const actions = createServerBackupPanelActions({
     server,
@@ -353,7 +340,6 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
     settingsTitle,
     settingsSummary,
     emptyHint,
-    metricStrip,
     forceRefresh,
     ...actions,
   };

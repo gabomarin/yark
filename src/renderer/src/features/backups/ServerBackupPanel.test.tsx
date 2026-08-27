@@ -122,7 +122,7 @@ function renderPanel(list: BackupRecord[] = [worldBackup, playersBackup, aliceBa
 
 async function collapseSettings(user: ReturnType<typeof setupUser>): Promise<void> {
   const toggle = await screen.findByRole("button", {
-    name: /World destination & schedule|Player retention|INI retention/i,
+    name: /World schedule & retention|Player retention|INI retention/i,
   });
   if (toggle.getAttribute("aria-expanded") === "true") {
     await user.click(toggle);
@@ -131,7 +131,7 @@ async function collapseSettings(user: ReturnType<typeof setupUser>): Promise<voi
 
 async function expandSettings(user: ReturnType<typeof setupUser>): Promise<void> {
   const toggle = await screen.findByRole("button", {
-    name: /World destination & schedule|Player retention|INI retention/i,
+    name: /World schedule & retention|Player retention|INI retention/i,
   });
   if (toggle.getAttribute("aria-expanded") !== "true") {
     await user.click(toggle);
@@ -267,35 +267,34 @@ describe("ServerBackupPanel", () => {
     expect(screen.queryByRole("button", { name: "Import" })).not.toBeInTheDocument();
   });
 
-  it("shows embedded header, metrics, and policy open by default", async () => {
+  it("shows embedded header, shared destination, and policy open by default", async () => {
     const user = setupUser();
     renderPanel();
 
     expect(await screen.findByRole("heading", { name: "Backups", level: 4 })).toBeInTheDocument();
-    const metrics = document.querySelector("[data-server-backup-metrics]") as HTMLElement;
-    expect(metrics).toBeTruthy();
-    expect(within(metrics).getByText("Last backup")).toBeInTheDocument();
-    expect(within(metrics).getByText("Keep last")).toBeInTheDocument();
-    expect(within(metrics).getByText("Destination")).toBeInTheDocument();
-    expect(within(metrics).getByText("20")).toBeInTheDocument();
+    expect(screen.getByLabelText(/Destination/i)).toBeInTheDocument();
+    expect(document.querySelector("[data-server-backup-destination]")).toBeTruthy();
+    expect(document.querySelector("[data-server-backup-metrics]")).toBeNull();
     expect(screen.queryByRole("heading", { name: /Backups for /i })).not.toBeInTheDocument();
 
-    const worldToggle = screen.getByRole("button", { name: /World destination & schedule/i });
+    const worldToggle = screen.getByRole("button", { name: /World schedule & retention/i });
     expect(worldToggle).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByRole("switch", { name: /Schedule/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/Destination/i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Save policy/i })).not.toBeInTheDocument();
 
     await collapseSettings(user);
     expect(screen.queryByRole("switch", { name: /Schedule/i })).not.toBeInTheDocument();
     expect(screen.getByText(/Schedule off · keep 20/i)).toBeInTheDocument();
+    // Shared destination stays visible while kind policy is collapsed.
+    expect(screen.getByLabelText(/Destination/i)).toBeInTheDocument();
 
     // Collapse is not kept when switching kinds.
     await user.click(screen.getByRole("tab", { name: "Player profiles" }));
-    expect(screen.queryByText(/World destination & schedule/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/World schedule & retention/i)).not.toBeInTheDocument();
     const playersToggle = screen.getByRole("button", { name: /Player retention/i });
     expect(playersToggle).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByLabelText(/Keep last \(per player\)/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Destination/i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Save$/i })).not.toBeInTheDocument();
 
     await collapseSettings(user);
@@ -306,6 +305,7 @@ describe("ServerBackupPanel", () => {
     const iniToggle = screen.getByRole("button", { name: /INI retention/i });
     expect(iniToggle).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByLabelText(/Keep last INI/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Destination/i)).toBeInTheDocument();
 
     await collapseSettings(user);
     expect(screen.queryByLabelText(/Keep last INI/i)).not.toBeInTheDocument();
