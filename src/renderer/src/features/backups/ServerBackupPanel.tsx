@@ -11,6 +11,8 @@ import { BackupRestoreModal } from "./BackupRestoreModal";
 import classes from "./BackupsPage.module.css";
 import { BackupKindSettings } from "./components/BackupKindSettings/BackupKindSettings";
 import { BackupListToolbar } from "./components/BackupListToolbar/BackupListToolbar";
+import { ServerBackupHeader } from "./components/ServerBackupHeader/ServerBackupHeader";
+import { ServerBackupMetrics } from "./components/ServerBackupMetrics/ServerBackupMetrics";
 import {
   formatRelativeTime,
   formatSize,
@@ -31,6 +33,7 @@ interface Props {
 
 export function ServerBackupPanel(props: Props): ReactElement {
   const panel = useServerBackupPanel(props);
+  const embedded = props.embedded === true;
   const showManualCreate = panel.activeKind !== "players";
   const createTooltip = panel.createBlocked
     ? panel.createBlockReason
@@ -41,10 +44,24 @@ export function ServerBackupPanel(props: Props): ReactElement {
     panel.actionableSelectedIds.length === 0
       ? "Select backups to delete"
       : `Permanently delete ${panel.actionableSelectedIds.length} selected backup${panel.actionableSelectedIds.length === 1 ? "" : "s"}`;
+  const createLoading = panel.busyOp === "create";
+  const createDisabled =
+    panel.loading || panel.createBlocked || (panel.busy && !createLoading);
 
   return (
-    <Stack gap="md" className={props.embedded ? classes.embedded : undefined}>
-      {!props.embedded && (
+    <Stack gap="md" className={embedded ? classes.embedded : undefined}>
+      {embedded ? (
+        <ServerBackupHeader
+          title="Backups"
+          subtitle="World schedule is separate from player join/leave and INI-on-save backups."
+          showManualCreate={showManualCreate}
+          createBlocked={panel.createBlocked}
+          createTooltip={createTooltip}
+          createLoading={createLoading}
+          createDisabled={createDisabled}
+          onCreate={() => void panel.createBackup()}
+        />
+      ) : (
         <Group justify="space-between" wrap="wrap" gap="sm" align="flex-end">
           <div>
             <Title order={3}>Backups for {props.server.name}</Title>
@@ -54,6 +71,8 @@ export function ServerBackupPanel(props: Props): ReactElement {
           </div>
         </Group>
       )}
+
+      {embedded && <ServerBackupMetrics metrics={panel.metricStrip} />}
 
       {!panel.installReady && (
         <Alert
@@ -136,7 +155,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
               busy={panel.busy}
               busyOp={panel.busyOp}
               showImport={showManualCreate}
-              showManualCreate={showManualCreate}
+              showManualCreate={showManualCreate && !embedded}
               createBlocked={panel.createBlocked}
               createTooltip={createTooltip}
               createLabel="Backup"

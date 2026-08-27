@@ -162,7 +162,7 @@ async function run() {
         await page.waitForTimeout(200);
         await page.locator("[data-backup-list]").waitFor({ state: "visible", timeout: 5000 });
 
-        // Default open metrics (compact settings)
+        // Default collapsed policy (#231) — expand for open-height checks
         const metrics = await measureLayout(page);
         assert.equal(
           metrics.hasHorizontalOverflow,
@@ -173,17 +173,33 @@ async function run() {
           metrics.listHeight !== null && metrics.listHeight >= 240,
           `list min-height not applied on ${tab.file} @ ${size.name}: height=${metrics.listHeight}`,
         );
+        assert.ok(
+          (await page.locator("[data-server-backup-header]").count()) > 0,
+          `Embedded header missing on ${tab.file} @ ${size.name}`,
+        );
+        assert.ok(
+          (await page.locator("[data-server-backup-metrics]").count()) > 0,
+          `Embedded metrics missing on ${tab.file} @ ${size.name}`,
+        );
 
         if (tab.file === "world") {
           assert.ok(metrics.hasWorldSettings, `World settings missing @ ${size.name}`);
           assert.equal(
             metrics.settingsOpen,
+            false,
+            `World settings should start collapsed @ ${size.name}`,
+          );
+
+          await expandWorldSettings(page);
+          const openSettings = await measureLayout(page);
+          assert.equal(
+            openSettings.settingsOpen,
             true,
-            `World settings should start open @ ${size.name}`,
+            `World settings expand failed @ ${size.name}`,
           );
           assert.ok(
-            metrics.settingsHeight !== null && metrics.settingsHeight < 140,
-            `Open world settings still tall @ ${size.name}: ${metrics.settingsHeight}px`,
+            openSettings.settingsHeight !== null && openSettings.settingsHeight < 140,
+            `Open world settings still tall @ ${size.name}: ${openSettings.settingsHeight}px`,
           );
 
           // Collapsed summary still available
@@ -194,14 +210,12 @@ async function run() {
             collapsed.settingsHeight !== null && collapsed.settingsHeight < 80,
             `Collapsed world settings still tall @ ${size.name}: ${collapsed.settingsHeight}px`,
           );
-          await expandWorldSettings(page);
 
           if (size.name === "hd") {
-            const openAgain = await measureLayout(page);
             assert.ok(
-              openAgain.listHeight !== null
-                && openAgain.listHeight > BASELINE_HD_WORLD_LIST,
-              `HD world listHeight should improve vs baseline ${BASELINE_HD_WORLD_LIST}: got ${openAgain.listHeight}`,
+              collapsed.listHeight !== null
+                && collapsed.listHeight > BASELINE_HD_WORLD_LIST,
+              `HD world listHeight should improve vs baseline ${BASELINE_HD_WORLD_LIST}: got ${collapsed.listHeight}`,
             );
           }
         } else {
@@ -212,11 +226,19 @@ async function run() {
           );
         }
 
-        // Create / primary action visible
-        const createBtn = page.getByRole("button", {
-          name: tab.file === "players" ? /Backup all players/i : /^Backup$/i,
-        });
-        await createBtn.waitFor({ state: "visible", timeout: 5000 });
+        // Primary Backup lives in the embedded header (world/INI only)
+        if (tab.file === "players") {
+          assert.equal(
+            await page.getByRole("button", { name: /^Backup$/i }).count(),
+            0,
+            `Players tab must not show Backup @ ${size.name}`,
+          );
+        } else {
+          await page
+            .getByRole("button", { name: /^Backup$/i })
+            .first()
+            .waitFor({ state: "visible", timeout: 5000 });
+        }
 
         const file = await shot(page, outDir, `${size.name}-${tab.file}`);
         sizeReport.tabs[tab.file] = metrics;

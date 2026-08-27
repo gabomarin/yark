@@ -116,7 +116,15 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding-right: 4px;
+  padding-right: var(--app-space-xxs);
+}
+
+.embeddedHeader {
+  padding-bottom: var(--app-space-xxs);
+}
+
+.embeddedMetrics {
+  width: 100%;
 }
 
 .listPanel {

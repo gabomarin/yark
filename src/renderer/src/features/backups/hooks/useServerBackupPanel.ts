@@ -21,6 +21,7 @@ import {
   draftEqualsDraft,
   draftEqualsPolicy,
   filterBackups,
+  buildServerBackupMetricStrip,
   iniPolicySummary,
   isServerActive,
   kindLabel,
@@ -36,6 +37,7 @@ export interface UseServerBackupPanelOptions {
   server: ServerProfile;
   runtime: ServerRuntimeInfo | null;
   installation?: ServerInstallationInfo | null;
+  embedded?: boolean;
   opsLocked?: boolean;
   opsLockReason?: string;
   createLocked?: boolean;
@@ -47,6 +49,7 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
     server,
     runtime,
     installation,
+    embedded = false,
     createLocked,
     createLockReason,
   } = options;
@@ -64,7 +67,7 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
   const [currentMapOnly, setCurrentMapOnly] = useState(true);
   const [restoreTarget, setRestoreTarget] = useState<BackupRecord | null>(null);
   const [restoreProfilesTribes, setRestoreProfilesTribes] = useState(true);
-  const [settingsOpen, setSettingsOpen] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(!embedded);
   const loadGenRef = useRef(0);
   const saveGenRef = useRef(0);
 
@@ -253,7 +256,8 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
   const selectKind = (kind: BackupKind) => {
     setActiveKind(kind);
     setSelectedIds([]);
-    setSettingsOpen(true);
+    // Embedded keeps policy collapsed for scanability; standalone opens for editing.
+    setSettingsOpen(!embedded);
   };
 
   const activeKindLabel = kindLabel(activeKind);
@@ -275,12 +279,24 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
     activeKind === "world"
       ? currentMapOnly && hiddenOtherMapWorldCount > 0
         ? `No world backups for ${server.map} yet. ${hiddenOtherMapWorldCount} backup${hiddenOtherMapWorldCount === 1 ? "" : "s"} for other maps are hidden. Uncheck “Current map only” to show them.`
-        : "No world backups yet. Create one manually or enable the world schedule."
+        : "No world backups yet. Use Backup above or enable the world schedule."
       : activeKind === "players"
         ? playerSearch.trim().length > 0
           ? "No player backups match this search."
-          : "No player profile backups yet. Profiles are saved automatically when players join or leave. Use a World backup when you need everyone at once."
-        : "No INI backups yet. Create one manually. An automatic copy is also taken after each successful INI save.";
+          : "No player profile backups yet. Profiles save automatically when players join or leave. Use a World backup when you need everyone at once."
+        : "No INI backups yet. Use Backup above, or wait for the automatic copy after a successful INI save.";
+
+  const metricStrip = useMemo(
+    () =>
+      buildServerBackupMetricStrip({
+        backups,
+        kind: activeKind,
+        draft: draftPolicy,
+        resolvedRoot,
+        defaultBackupHint,
+      }),
+    [backups, activeKind, draftPolicy, resolvedRoot, defaultBackupHint],
+  );
 
   const actions = createServerBackupPanelActions({
     server,
@@ -338,6 +354,7 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
     settingsTitle,
     settingsSummary,
     emptyHint,
+    metricStrip,
     forceRefresh,
     ...actions,
   };

@@ -339,9 +339,10 @@ After a successful `ini:save`, `createIniSaveBackup` debounces **2s** per server
 ## UI surfaces
 
 - **Sidebar → Backups** — cross-server health, schedule / destination / retention, disk alerts, cleanup; “Open in server” jumps to the workspace tab.
-- **Server Workspace → Backups** — kind subtabs (**World save** | **Player profiles** | **INI**). World/INI support create + import; Players is join/leave history (export/delete/restore) with no manual “all players” create or import.
+- **Server Workspace → Backups** — kind subtabs (**World save** | **Player profiles** | **INI**). Embedded chrome includes a short header with primary **Backup** (world/INI), an optional `AppMetricCard` strip (last backup / keep last / destination from existing list+policy data), and policy disclosure collapsed by default. World/INI support create + import; Players is join/leave history (export/delete/restore) with no manual create or import.
 - Destination and schedule controls live primarily on the World subtab; Players/INI keep compact retain controls near history.
 - **Backup history** uses shared **`YarkDataTable`** (`mantine-datatable`) for selection, density, and empty/loading; row actions and right-click menus stay on `backupHistoryRowActionModel` (#94).
+- Visual protocol for the workspace tab: `scripts/visual-backups.cjs` (asserts header/metrics, collapsed policy by default, HD list height).
 
 ## Troubleshooting
 

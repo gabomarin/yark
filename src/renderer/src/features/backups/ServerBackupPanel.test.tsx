@@ -129,6 +129,15 @@ async function collapseSettings(user: ReturnType<typeof setupUser>): Promise<voi
   }
 }
 
+async function expandSettings(user: ReturnType<typeof setupUser>): Promise<void> {
+  const toggle = await screen.findByRole("button", {
+    name: /World destination & schedule|Player retention|INI retention/i,
+  });
+  if (toggle.getAttribute("aria-expanded") !== "true") {
+    await user.click(toggle);
+  }
+}
+
 describe("ServerBackupPanel", () => {
   afterEach(() => {
     cleanup();
@@ -258,15 +267,26 @@ describe("ServerBackupPanel", () => {
     expect(screen.queryByRole("button", { name: "Import" })).not.toBeInTheDocument();
   });
 
-  it("opens kind settings by default and can collapse to a summary", async () => {
+  it("shows embedded header, metrics, and collapsed policy by default", async () => {
     const user = setupUser();
     renderPanel();
 
-    expect(await screen.findByText(/World destination & schedule/i)).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Backups", level: 4 })).toBeInTheDocument();
+    expect(screen.getByText("Last backup")).toBeInTheDocument();
+    expect(screen.getByText("Keep last")).toBeInTheDocument();
+    expect(screen.getByText("Destination")).toBeInTheDocument();
+    expect(screen.getByText("20")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Backups for /i })).not.toBeInTheDocument();
+
+    const worldToggle = screen.getByRole("button", { name: /World destination & schedule/i });
+    expect(worldToggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByText(/Schedule off · keep 20/i)).toBeInTheDocument();
+    expect(screen.queryByRole("switch", { name: /Schedule/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Save policy/i })).not.toBeInTheDocument();
+
+    await expandSettings(user);
     expect(screen.getByRole("switch", { name: /Schedule/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/Destination/i)).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: /Backups for /i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Save policy/i })).not.toBeInTheDocument();
 
     await collapseSettings(user);
     expect(screen.queryByRole("switch", { name: /Schedule/i })).not.toBeInTheDocument();
@@ -274,7 +294,11 @@ describe("ServerBackupPanel", () => {
 
     await user.click(screen.getByRole("tab", { name: "Player profiles" }));
     expect(screen.queryByText(/World destination & schedule/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/Player retention/i)).toBeInTheDocument();
+    const playersToggle = screen.getByRole("button", { name: /Player retention/i });
+    expect(playersToggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByText(/Keep last 20 per player/i)).toBeInTheDocument();
+
+    await expandSettings(user);
     expect(screen.getByLabelText(/Keep last \(per player\)/i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Save$/i })).not.toBeInTheDocument();
 
@@ -283,7 +307,11 @@ describe("ServerBackupPanel", () => {
     expect(screen.getByText(/Keep last 20 per player/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "INI" }));
-    expect(screen.getByText(/INI retention/i)).toBeInTheDocument();
+    const iniToggle = screen.getByRole("button", { name: /INI retention/i });
+    expect(iniToggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByText(/^Keep last 10$/i)).toBeInTheDocument();
+
+    await expandSettings(user);
     expect(screen.getByLabelText(/Keep last INI/i)).toBeInTheDocument();
 
     await collapseSettings(user);
@@ -294,6 +322,7 @@ describe("ServerBackupPanel", () => {
   it("autosaves policy changes after edits", async () => {
     const user = setupUser();
     renderPanel();
+    await expandSettings(user);
 
     const retain = await screen.findByLabelText(/^Keep last \(per map\)$/i);
     await user.clear(retain);
@@ -518,6 +547,7 @@ describe("ServerBackupPanel", () => {
     );
 
     renderPanel();
+    await expandSettings(user);
     (window.api.pickPath as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       data: "D:\\Custom\\Backups",
