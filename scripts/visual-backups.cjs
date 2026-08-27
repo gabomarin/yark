@@ -162,7 +162,7 @@ async function run() {
         await page.waitForTimeout(200);
         await page.locator("[data-backup-list]").waitFor({ state: "visible", timeout: 5000 });
 
-        // Default collapsed policy (#231) — expand for open-height checks
+        // Default open policy (#231) — collapse for height checks
         const metrics = await measureLayout(page);
         assert.equal(
           metrics.hasHorizontalOverflow,
@@ -186,20 +186,12 @@ async function run() {
           assert.ok(metrics.hasWorldSettings, `World settings missing @ ${size.name}`);
           assert.equal(
             metrics.settingsOpen,
-            false,
-            `World settings should start collapsed @ ${size.name}`,
-          );
-
-          await expandWorldSettings(page);
-          const openSettings = await measureLayout(page);
-          assert.equal(
-            openSettings.settingsOpen,
             true,
-            `World settings expand failed @ ${size.name}`,
+            `World settings should start open @ ${size.name}`,
           );
           assert.ok(
-            openSettings.settingsHeight !== null && openSettings.settingsHeight < 140,
-            `Open world settings still tall @ ${size.name}: ${openSettings.settingsHeight}px`,
+            metrics.settingsHeight !== null && metrics.settingsHeight < 140,
+            `Open world settings still tall @ ${size.name}: ${metrics.settingsHeight}px`,
           );
 
           // Collapsed summary still available
@@ -210,12 +202,14 @@ async function run() {
             collapsed.settingsHeight !== null && collapsed.settingsHeight < 80,
             `Collapsed world settings still tall @ ${size.name}: ${collapsed.settingsHeight}px`,
           );
+          await expandWorldSettings(page);
 
           if (size.name === "hd") {
+            const openAgain = await measureLayout(page);
             assert.ok(
-              collapsed.listHeight !== null
-                && collapsed.listHeight > BASELINE_HD_WORLD_LIST,
-              `HD world listHeight should improve vs baseline ${BASELINE_HD_WORLD_LIST}: got ${collapsed.listHeight}`,
+              openAgain.listHeight !== null
+                && openAgain.listHeight > BASELINE_HD_WORLD_LIST,
+              `HD world listHeight should improve vs baseline ${BASELINE_HD_WORLD_LIST}: got ${openAgain.listHeight}`,
             );
           }
         } else {

@@ -37,7 +37,6 @@ export interface UseServerBackupPanelOptions {
   server: ServerProfile;
   runtime: ServerRuntimeInfo | null;
   installation?: ServerInstallationInfo | null;
-  embedded?: boolean;
   opsLocked?: boolean;
   opsLockReason?: string;
   createLocked?: boolean;
@@ -49,7 +48,6 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
     server,
     runtime,
     installation,
-    embedded = false,
     createLocked,
     createLockReason,
   } = options;
@@ -67,7 +65,8 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
   const [currentMapOnly, setCurrentMapOnly] = useState(true);
   const [restoreTarget, setRestoreTarget] = useState<BackupRecord | null>(null);
   const [restoreProfilesTribes, setRestoreProfilesTribes] = useState(true);
-  const [settingsOpen, setSettingsOpen] = useState(!embedded);
+  // Always start open; collapse is session-local and resets when changing kind (#231).
+  const [settingsOpen, setSettingsOpen] = useState(true);
   const loadGenRef = useRef(0);
   const saveGenRef = useRef(0);
 
@@ -256,8 +255,8 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
   const selectKind = (kind: BackupKind) => {
     setActiveKind(kind);
     setSelectedIds([]);
-    // Embedded keeps policy collapsed for scanability; standalone opens for editing.
-    setSettingsOpen(!embedded);
+    // Collapse is not persisted across kind changes.
+    setSettingsOpen(true);
   };
 
   const activeKindLabel = kindLabel(activeKind);

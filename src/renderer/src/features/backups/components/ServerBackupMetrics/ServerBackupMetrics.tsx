@@ -13,7 +13,7 @@ export function ServerBackupMetrics(props: Props): ReactElement {
   return (
     <SimpleGrid
       cols={{ base: 1, xs: 3 }}
-      spacing="xs"
+      spacing={4}
       className={classes.embeddedMetrics}
       data-server-backup-metrics
     >
