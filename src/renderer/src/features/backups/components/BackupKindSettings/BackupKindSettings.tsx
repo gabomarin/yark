@@ -1,17 +1,13 @@
 import type { ReactElement } from "react";
-import { CaretDown, CaretRight, FolderOpen } from "@phosphor-icons/react";
+import { CaretDown, CaretRight } from "@phosphor-icons/react";
 import {
-  Button,
   Group,
   NumberInput,
-  Stack,
   Switch,
   Text,
-  Tooltip,
   UnstyledButton,
 } from "@mantine/core";
 import type { BackupKind } from "@shared/types";
-import { PathField } from "@ui/PathField/PathField";
 import type { DraftPolicy } from "../../model/serverBackupPanelModel";
 import classes from "../../BackupsPage.module.css";
 
@@ -22,14 +18,9 @@ interface Props {
   onSettingsOpenChange: (open: boolean) => void;
   settingsTitle: string;
   settingsSummary: string | null;
-  defaultBackupHint: string;
-  resolvedRoot: string | null;
   busy: boolean;
   installReady: boolean;
-  browsingDir: boolean;
   onDraftPolicyChange: (draft: DraftPolicy) => void;
-  onBrowseBackupDir: () => void;
-  onOpenDestination: () => void;
 }
 
 export function BackupKindSettings(props: Props): ReactElement {
@@ -40,14 +31,9 @@ export function BackupKindSettings(props: Props): ReactElement {
     onSettingsOpenChange,
     settingsTitle,
     settingsSummary,
-    defaultBackupHint,
-    resolvedRoot,
     busy,
     installReady,
-    browsingDir,
     onDraftPolicyChange,
-    onBrowseBackupDir,
-    onOpenDestination,
   } = props;
 
   return (
@@ -77,104 +63,63 @@ export function BackupKindSettings(props: Props): ReactElement {
       </UnstyledButton>
 
       {settingsOpen && activeKind === "world" && (
-        <Stack gap={6} mt={4} className={classes.kindSettingsFields}>
-          <Group align="center" gap={6} wrap="nowrap">
-            <Text size="xs" className={classes.inlineLabel}>
-              Destination
+        <Group align="center" gap="xs" wrap="wrap" mt={4} className={classes.kindSettingsFields}>
+          <Switch
+            size="sm"
+            label="Schedule"
+            checked={draftPolicy.enabled}
+            disabled={busy || !installReady}
+            onChange={(event) =>
+              onDraftPolicyChange({
+                ...draftPolicy,
+                enabled: event.currentTarget.checked,
+              })
+            }
+          />
+          <Group gap={6} align="center" wrap="nowrap">
+            <Text size="xs" component="label" htmlFor="backup-interval">
+              Interval (min)
             </Text>
-            <PathField
-              id="backup-destination"
-              className={classes.dirField}
+            <NumberInput
+              id="backup-interval"
+              aria-label="Interval (min)"
               size="xs"
-              inline
-              aria-label="Destination"
-              value={draftPolicy.backupDir ?? ""}
-              placeholder={
-                draftPolicy.backupDir === null || draftPolicy.backupDir.length === 0
-                  ? defaultBackupHint
-                  : (resolvedRoot ?? draftPolicy.backupDir)
-              }
-              busy={browsingDir}
-              disabled={busy}
-              clearable
+              min={5}
+              max={10_080}
+              value={draftPolicy.intervalMinutes}
+              disabled={busy || !installReady}
               onChange={(value) =>
                 onDraftPolicyChange({
                   ...draftPolicy,
-                  backupDir: value.trim().length > 0 ? value : null,
+                  intervalMinutes:
+                    typeof value === "number" ? value : draftPolicy.intervalMinutes,
                 })
               }
-              onBrowse={onBrowseBackupDir}
+              className={classes.policyField}
             />
-            <Tooltip label="Open the backup destination folder">
-              <Button
-                variant="subtle"
-                size="xs"
-                leftSection={<FolderOpen size={12} />}
-                onClick={onOpenDestination}
-                disabled={busy}
-              >
-                Open
-              </Button>
-            </Tooltip>
           </Group>
-          <Group align="center" gap="sm" wrap="wrap">
-            <Switch
-              size="sm"
-              label="Schedule"
-              checked={draftPolicy.enabled}
-              disabled={busy || !installReady}
-              onChange={(event) =>
+          <Group gap={6} align="center" wrap="nowrap">
+            <Text size="xs" component="label" htmlFor="backup-retain-world">
+              Keep last (per map)
+            </Text>
+            <NumberInput
+              id="backup-retain-world"
+              aria-label="Keep last (per map)"
+              size="xs"
+              min={1}
+              max={500}
+              value={draftPolicy.retainCountWorld}
+              onChange={(value) =>
                 onDraftPolicyChange({
                   ...draftPolicy,
-                  enabled: event.currentTarget.checked,
+                  retainCountWorld:
+                    typeof value === "number" ? value : draftPolicy.retainCountWorld,
                 })
               }
+              className={classes.policyField}
             />
-            <Group gap={6} align="center" wrap="nowrap">
-              <Text size="xs" component="label" htmlFor="backup-interval">
-                Interval (min)
-              </Text>
-              <NumberInput
-                id="backup-interval"
-                aria-label="Interval (min)"
-                size="xs"
-                min={5}
-                max={10_080}
-                value={draftPolicy.intervalMinutes}
-                disabled={busy || !installReady}
-                onChange={(value) =>
-                  onDraftPolicyChange({
-                    ...draftPolicy,
-                    intervalMinutes:
-                      typeof value === "number" ? value : draftPolicy.intervalMinutes,
-                  })
-                }
-                className={classes.policyField}
-              />
-            </Group>
-            <Group gap={6} align="center" wrap="nowrap">
-              <Text size="xs" component="label" htmlFor="backup-retain-world">
-                Keep last (per map)
-              </Text>
-              <NumberInput
-                id="backup-retain-world"
-                aria-label="Keep last (per map)"
-                size="xs"
-                min={1}
-                max={500}
-                value={draftPolicy.retainCountWorld}
-                onChange={(value) =>
-                  onDraftPolicyChange({
-                    ...draftPolicy,
-                    retainCountWorld:
-                      typeof value === "number" ? value : draftPolicy.retainCountWorld,
-                  })
-                }
-                className={classes.policyField}
-              />
-            </Group>
           </Group>
-        </Stack>
+        </Group>
       )}
 
       {settingsOpen && activeKind === "players" && (

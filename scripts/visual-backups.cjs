@@ -162,7 +162,7 @@ async function run() {
         await page.waitForTimeout(200);
         await page.locator("[data-backup-list]").waitFor({ state: "visible", timeout: 5000 });
 
-        // Default open metrics (compact settings)
+        // Default open policy (#231) — collapse for height checks
         const metrics = await measureLayout(page);
         assert.equal(
           metrics.hasHorizontalOverflow,
@@ -172,6 +172,19 @@ async function run() {
         assert.ok(
           metrics.listHeight !== null && metrics.listHeight >= 240,
           `list min-height not applied on ${tab.file} @ ${size.name}: height=${metrics.listHeight}`,
+        );
+        assert.ok(
+          (await page.locator("[data-server-backup-header]").count()) > 0,
+          `Embedded header missing on ${tab.file} @ ${size.name}`,
+        );
+        assert.ok(
+          (await page.locator("[data-server-backup-destination]").count()) > 0,
+          `Shared destination missing on ${tab.file} @ ${size.name}`,
+        );
+        assert.equal(
+          await page.locator("[data-server-backup-metrics]").count(),
+          0,
+          `Metric strip should be removed on ${tab.file} @ ${size.name}`,
         );
 
         if (tab.file === "world") {
@@ -212,11 +225,19 @@ async function run() {
           );
         }
 
-        // Create / primary action visible
-        const createBtn = page.getByRole("button", {
-          name: tab.file === "players" ? /Backup all players/i : /^Backup$/i,
-        });
-        await createBtn.waitFor({ state: "visible", timeout: 5000 });
+        // Backup now lives in the history toolbar (world/INI only)
+        if (tab.file === "players") {
+          assert.equal(
+            await page.getByRole("button", { name: /^Backup now$/i }).count(),
+            0,
+            `Players tab must not show Backup now @ ${size.name}`,
+          );
+        } else {
+          await page
+            .getByRole("button", { name: /^Backup now$/i })
+            .first()
+            .waitFor({ state: "visible", timeout: 5000 });
+        }
 
         const file = await shot(page, outDir, `${size.name}-${tab.file}`);
         sizeReport.tabs[tab.file] = metrics;

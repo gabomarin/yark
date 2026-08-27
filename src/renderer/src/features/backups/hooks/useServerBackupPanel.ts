@@ -64,6 +64,7 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
   const [currentMapOnly, setCurrentMapOnly] = useState(true);
   const [restoreTarget, setRestoreTarget] = useState<BackupRecord | null>(null);
   const [restoreProfilesTribes, setRestoreProfilesTribes] = useState(true);
+  // Always start open; collapse is session-local and resets when changing kind (#231).
   const [settingsOpen, setSettingsOpen] = useState(true);
   const loadGenRef = useRef(0);
   const saveGenRef = useRef(0);
@@ -253,6 +254,7 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
   const selectKind = (kind: BackupKind) => {
     setActiveKind(kind);
     setSelectedIds([]);
+    // Collapse is not persisted across kind changes.
     setSettingsOpen(true);
   };
 
@@ -260,14 +262,14 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
   const defaultBackupHint = `${server.installDir}\\Backups`;
   const settingsTitle =
     activeKind === "world"
-      ? "World destination & schedule"
+      ? "World schedule & retention"
       : activeKind === "players"
         ? "Player retention"
         : "INI retention";
   const settingsSummary = draftPolicy === null
     ? null
     : activeKind === "world"
-      ? worldPolicySummary(draftPolicy, resolvedRoot, defaultBackupHint)
+      ? worldPolicySummary(draftPolicy)
       : activeKind === "players"
         ? playersPolicySummary(draftPolicy)
         : iniPolicySummary(draftPolicy);
@@ -275,12 +277,12 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
     activeKind === "world"
       ? currentMapOnly && hiddenOtherMapWorldCount > 0
         ? `No world backups for ${server.map} yet. ${hiddenOtherMapWorldCount} backup${hiddenOtherMapWorldCount === 1 ? "" : "s"} for other maps are hidden. Uncheck “Current map only” to show them.`
-        : "No world backups yet. Create one manually or enable the world schedule."
+        : "No world backups yet. Use Backup now or enable the world schedule."
       : activeKind === "players"
         ? playerSearch.trim().length > 0
           ? "No player backups match this search."
-          : "No player profile backups yet. Profiles are saved automatically when players join or leave. Use a World backup when you need everyone at once."
-        : "No INI backups yet. Create one manually. An automatic copy is also taken after each successful INI save.";
+          : "No player profile backups yet. Profiles save automatically when players join or leave. Use a World backup when you need everyone at once."
+        : "No INI backups yet. Use Backup now, or wait for the automatic copy after a successful INI save.";
 
   const actions = createServerBackupPanelActions({
     server,

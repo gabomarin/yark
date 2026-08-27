@@ -11,6 +11,8 @@ import { BackupRestoreModal } from "./BackupRestoreModal";
 import classes from "./BackupsPage.module.css";
 import { BackupKindSettings } from "./components/BackupKindSettings/BackupKindSettings";
 import { BackupListToolbar } from "./components/BackupListToolbar/BackupListToolbar";
+import { ServerBackupDestination } from "./components/ServerBackupDestination/ServerBackupDestination";
+import { ServerBackupHeader } from "./components/ServerBackupHeader/ServerBackupHeader";
 import {
   formatRelativeTime,
   formatSize,
@@ -31,6 +33,7 @@ interface Props {
 
 export function ServerBackupPanel(props: Props): ReactElement {
   const panel = useServerBackupPanel(props);
+  const embedded = props.embedded === true;
   const showManualCreate = panel.activeKind !== "players";
   const createTooltip = panel.createBlocked
     ? panel.createBlockReason
@@ -43,8 +46,13 @@ export function ServerBackupPanel(props: Props): ReactElement {
       : `Permanently delete ${panel.actionableSelectedIds.length} selected backup${panel.actionableSelectedIds.length === 1 ? "" : "s"}`;
 
   return (
-    <Stack gap="md" className={props.embedded ? classes.embedded : undefined}>
-      {!props.embedded && (
+    <Stack gap="md" className={embedded ? classes.embedded : undefined}>
+      {embedded ? (
+        <ServerBackupHeader
+          title="Backups"
+          subtitle="World schedule is separate from player join/leave and INI-on-save backups."
+        />
+      ) : (
         <Group justify="space-between" wrap="wrap" gap="sm" align="flex-end">
           <div>
             <Title order={3}>Backups for {props.server.name}</Title>
@@ -53,6 +61,19 @@ export function ServerBackupPanel(props: Props): ReactElement {
             </Text>
           </div>
         </Group>
+      )}
+
+      {panel.draftPolicy !== null && (
+        <ServerBackupDestination
+          draftPolicy={panel.draftPolicy}
+          defaultBackupHint={panel.defaultBackupHint}
+          resolvedRoot={panel.resolvedRoot}
+          busy={panel.busy}
+          browsingDir={panel.browsingDir}
+          onDraftPolicyChange={panel.setDraftPolicy}
+          onBrowseBackupDir={() => void panel.browseBackupDir()}
+          onOpenDestination={() => void panel.openDestination()}
+        />
       )}
 
       {!panel.installReady && (
@@ -107,14 +128,9 @@ export function ServerBackupPanel(props: Props): ReactElement {
                 onSettingsOpenChange={panel.setSettingsOpen}
                 settingsTitle={panel.settingsTitle}
                 settingsSummary={panel.settingsSummary}
-                defaultBackupHint={panel.defaultBackupHint}
-                resolvedRoot={panel.resolvedRoot}
                 busy={panel.busy}
                 installReady={panel.installReady}
-                browsingDir={panel.browsingDir}
                 onDraftPolicyChange={panel.setDraftPolicy}
-                onBrowseBackupDir={() => void panel.browseBackupDir()}
-                onOpenDestination={() => void panel.openDestination()}
               />
             )}
 
@@ -139,7 +155,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
               showManualCreate={showManualCreate}
               createBlocked={panel.createBlocked}
               createTooltip={createTooltip}
-              createLabel="Backup"
+              createLabel="Backup now"
               deleteTooltip={deleteTooltip}
               actionableSelectedCount={panel.actionableSelectedIds.length}
               onRefresh={() => void panel.forceRefresh()}

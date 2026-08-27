@@ -41,12 +41,6 @@ export function formatRelativeTime(iso: string, nowMs = Date.now()): string {
   return relativeTimeFormat.format(Math.round(diffMonth / 12), "year");
 }
 
-function truncateMiddle(value: string, max = 42): string {
-  if (value.length <= max) return value;
-  const keep = Math.floor((max - 1) / 2);
-  return `${value.slice(0, keep)}…${value.slice(-keep)}`;
-}
-
 export function kindLabel(kind: BackupKind): string {
   return KIND_TABS.find((tab) => tab.kind === kind)?.label ?? "World save";
 }
@@ -156,19 +150,11 @@ export function countHiddenOtherMapWorldBackups(
   ).length;
 }
 
-export function worldPolicySummary(
-  draft: DraftPolicy,
-  resolvedRoot: string | null,
-  defaultHint: string,
-): string {
+export function worldPolicySummary(draft: DraftPolicy): string {
   const schedule = draft.enabled
     ? `Schedule on · ${draft.intervalMinutes}m`
     : "Schedule off";
-  const dest =
-    draft.backupDir !== null && draft.backupDir.length > 0
-      ? draft.backupDir
-      : (resolvedRoot ?? defaultHint);
-  return `${schedule} · keep ${draft.retainCountWorld} · ${truncateMiddle(dest)}`;
+  return `${schedule} · keep ${draft.retainCountWorld}`;
 }
 
 export function playersPolicySummary(draft: DraftPolicy): string {

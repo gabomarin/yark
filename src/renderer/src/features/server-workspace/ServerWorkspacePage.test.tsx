@@ -341,9 +341,10 @@ describe("ServerWorkspacePage", () => {
 
     await user.click(screen.getByRole("tab", { name: "Backups" }));
 
-    expect(await screen.findByRole("button", { name: /^Backup$/i })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /^Backup now$/i })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "World save" })).toBeInTheDocument();
-    expect(screen.getByText(/World destination & schedule/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Destination/i)).toBeInTheDocument();
+    expect(screen.getByText(/World schedule & retention/i)).toBeInTheDocument();
   });
 
   it("renders the RCON tab with quick commands and sends commands", async () => {
