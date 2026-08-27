@@ -227,7 +227,7 @@ describe("ServerBackupPanel", () => {
       </AppProviders>,
     );
 
-    expect(await screen.findByRole("button", { name: "Backup" })).toBeDisabled();
+    expect(await screen.findByRole("button", { name: "Backup now" })).toBeDisabled();
   });
 
   it("locks create and restore when installation is not Ready", async () => {
@@ -256,14 +256,14 @@ describe("ServerBackupPanel", () => {
     );
 
     expect(await screen.findByText(/Install files required/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Backup" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Backup now" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Import" })).toBeEnabled();
     expect(
       screen.getByRole("button", { name: `Restore backup ${worldBackup.id}` }),
     ).toBeDisabled();
 
     await user.click(screen.getByRole("tab", { name: "Player profiles" }));
-    expect(screen.queryByRole("button", { name: "Backup" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Backup now" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Import" })).not.toBeInTheDocument();
   });
 
@@ -337,7 +337,7 @@ describe("ServerBackupPanel", () => {
     );
     expect(screen.getByRole("tab", { name: "Player profiles" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "INI" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^Backup$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Backup now$/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Open folder C:\/backups\/world/i })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Copy details bk-world/i }),
@@ -348,13 +348,13 @@ describe("ServerBackupPanel", () => {
 
     await user.click(screen.getByRole("tab", { name: "Player profiles" }));
     expect(screen.queryByRole("button", { name: /Backup all players/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /^Backup$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Backup now$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Import$/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Open folder C:\/backups\/players/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Open folder C:\/backups\/world/i })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "INI" }));
-    expect(screen.getByRole("button", { name: /^Backup$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Backup now$/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^Import$/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Open folder C:\/backups\/ini/i })).toBeInTheDocument();
   });
@@ -389,8 +389,8 @@ describe("ServerBackupPanel", () => {
     const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
     renderPanel();
 
-    expect(await screen.findByRole("button", { name: /^Backup$/i })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /^Backup$/i }));
+    expect(await screen.findByRole("button", { name: /^Backup now$/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^Backup now$/i }));
 
     await waitFor(() => {
       expect(window.api.createManualBackup).toHaveBeenCalledWith("srv-1", ["world"]);
@@ -407,14 +407,14 @@ describe("ServerBackupPanel", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "INI" }));
-    await user.click(screen.getByRole("button", { name: /^Backup$/i }));
+    await user.click(screen.getByRole("button", { name: /^Backup now$/i }));
 
     await waitFor(() => {
       expect(window.api.createManualBackup).toHaveBeenCalledWith("srv-1", ["ini"]);
     });
 
     await user.click(screen.getByRole("tab", { name: "Player profiles" }));
-    expect(screen.queryByRole("button", { name: /^Backup$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Backup now$/i })).not.toBeInTheDocument();
     expect(window.api.createManualBackup).not.toHaveBeenCalledWith("srv-1", ["players"]);
   });
 

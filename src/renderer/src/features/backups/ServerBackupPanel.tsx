@@ -44,9 +44,6 @@ export function ServerBackupPanel(props: Props): ReactElement {
     panel.actionableSelectedIds.length === 0
       ? "Select backups to delete"
       : `Permanently delete ${panel.actionableSelectedIds.length} selected backup${panel.actionableSelectedIds.length === 1 ? "" : "s"}`;
-  const createLoading = panel.busyOp === "create";
-  const createDisabled =
-    panel.loading || panel.createBlocked || (panel.busy && !createLoading);
 
   return (
     <Stack gap="md" className={embedded ? classes.embedded : undefined}>
@@ -54,12 +51,6 @@ export function ServerBackupPanel(props: Props): ReactElement {
         <ServerBackupHeader
           title="Backups"
           subtitle="World schedule is separate from player join/leave and INI-on-save backups."
-          showManualCreate={showManualCreate}
-          createBlocked={panel.createBlocked}
-          createTooltip={createTooltip}
-          createLoading={createLoading}
-          createDisabled={createDisabled}
-          onCreate={() => void panel.createBackup()}
         />
       ) : (
         <Group justify="space-between" wrap="wrap" gap="sm" align="flex-end">
@@ -161,10 +152,10 @@ export function ServerBackupPanel(props: Props): ReactElement {
               busy={panel.busy}
               busyOp={panel.busyOp}
               showImport={showManualCreate}
-              showManualCreate={showManualCreate && !embedded}
+              showManualCreate={showManualCreate}
               createBlocked={panel.createBlocked}
               createTooltip={createTooltip}
-              createLabel="Backup"
+              createLabel="Backup now"
               deleteTooltip={deleteTooltip}
               actionableSelectedCount={panel.actionableSelectedIds.length}
               onRefresh={() => void panel.forceRefresh()}

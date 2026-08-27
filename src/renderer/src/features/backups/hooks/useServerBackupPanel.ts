@@ -277,12 +277,12 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
     activeKind === "world"
       ? currentMapOnly && hiddenOtherMapWorldCount > 0
         ? `No world backups for ${server.map} yet. ${hiddenOtherMapWorldCount} backup${hiddenOtherMapWorldCount === 1 ? "" : "s"} for other maps are hidden. Uncheck “Current map only” to show them.`
-        : "No world backups yet. Use Backup above or enable the world schedule."
+        : "No world backups yet. Use Backup now or enable the world schedule."
       : activeKind === "players"
         ? playerSearch.trim().length > 0
           ? "No player backups match this search."
           : "No player profile backups yet. Profiles save automatically when players join or leave. Use a World backup when you need everyone at once."
-        : "No INI backups yet. Use Backup above, or wait for the automatic copy after a successful INI save.";
+        : "No INI backups yet. Use Backup now, or wait for the automatic copy after a successful INI save.";
 
   const actions = createServerBackupPanelActions({
     server,

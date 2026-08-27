@@ -127,6 +127,20 @@ export function BackupListToolbar(props: Props): ReactElement {
             <ArrowClockwise size={16} />
           </ActionIcon>
         </Tooltip>
+        {showManualCreate && (
+          <Tooltip label={createTooltip}>
+            <Button
+              size="compact-sm"
+              leftSection={<HardDrives size={14} />}
+              onClick={onCreate}
+              loading={busyOp === "create"}
+              disabled={loading || createBlocked || (busy && busyOp !== "create")}
+              data-cta-prominence="primary"
+            >
+              {createLabel}
+            </Button>
+          </Tooltip>
+        )}
         {showImport && (
           <Tooltip label={`Import a YARK ${activeKindLabel.toLowerCase()} ZIP into this catalog`}>
             <Button
@@ -138,19 +152,6 @@ export function BackupListToolbar(props: Props): ReactElement {
               disabled={loading || createLocked === true || (busy && busyOp !== "import")}
             >
               Import
-            </Button>
-          </Tooltip>
-        )}
-        {showManualCreate && (
-          <Tooltip label={createTooltip}>
-            <Button
-              size="compact-sm"
-              leftSection={<HardDrives size={14} />}
-              onClick={onCreate}
-              loading={busyOp === "create"}
-              disabled={loading || createBlocked || (busy && busyOp !== "create")}
-            >
-              {createLabel}
             </Button>
           </Tooltip>
         )}

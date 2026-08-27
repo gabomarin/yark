@@ -225,16 +225,16 @@ async function run() {
           );
         }
 
-        // Primary Backup lives in the embedded header (world/INI only)
+        // Backup now lives in the history toolbar (world/INI only)
         if (tab.file === "players") {
           assert.equal(
-            await page.getByRole("button", { name: /^Backup$/i }).count(),
+            await page.getByRole("button", { name: /^Backup now$/i }).count(),
             0,
-            `Players tab must not show Backup @ ${size.name}`,
+            `Players tab must not show Backup now @ ${size.name}`,
           );
         } else {
           await page
-            .getByRole("button", { name: /^Backup$/i })
+            .getByRole("button", { name: /^Backup now$/i })
             .first()
             .waitFor({ state: "visible", timeout: 5000 });
         }
