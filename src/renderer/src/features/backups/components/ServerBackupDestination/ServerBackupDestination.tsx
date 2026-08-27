@@ -1,5 +1,5 @@
-import { FolderOpen } from "@phosphor-icons/react";
-import { Button, Group, Text, Tooltip } from "@mantine/core";
+import { FolderOpen, Info } from "@phosphor-icons/react";
+import { ActionIcon, Button, Group, Text, Tooltip } from "@mantine/core";
 import type { ReactElement } from "react";
 import { PathField } from "@ui/PathField/PathField";
 import type { DraftPolicy } from "../../model/serverBackupPanelModel";
@@ -37,11 +37,21 @@ export function ServerBackupDestination(props: Props): ReactElement {
       className={classes.sharedDestination}
       data-server-backup-destination
     >
-      <Tooltip label="Shared folder for world, player, and INI archives">
-        <Text size="xs" className={classes.inlineLabel}>
+      <Group gap={4} wrap="nowrap" align="center">
+        <Text size="xs" component="label" htmlFor="backup-destination" className={classes.inlineLabel}>
           Destination
         </Text>
-      </Tooltip>
+        <Tooltip label="Shared folder for world, player, and INI archives">
+          <ActionIcon
+            variant="subtle"
+            size="xs"
+            aria-label="About shared backup folder"
+            tabIndex={0}
+          >
+            <Info size={12} />
+          </ActionIcon>
+        </Tooltip>
+      </Group>
       <PathField
         id="backup-destination"
         className={classes.dirField}

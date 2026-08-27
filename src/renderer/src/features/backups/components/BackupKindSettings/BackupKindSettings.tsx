@@ -63,7 +63,7 @@ export function BackupKindSettings(props: Props): ReactElement {
       </UnstyledButton>
 
       {settingsOpen && activeKind === "world" && (
-        <Group align="center" gap="sm" wrap="wrap" mt={4} className={classes.kindSettingsFields}>
+        <Group align="center" gap="xs" wrap="wrap" mt={4} className={classes.kindSettingsFields}>
           <Switch
             size="sm"
             label="Schedule"

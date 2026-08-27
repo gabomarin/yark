@@ -127,23 +127,9 @@
 }
 
 :global([data-ui-density="compact"]) .root {
-  padding: 2px 6px !important;
-  gap: 0;
-}
-
-:global([data-ui-density="compact"]) .label {
-  font-size: 10px;
-  line-height: 1.15;
-  letter-spacing: 0.03em;
+  padding: 4px 8px !important;
 }
 
 :global([data-ui-density="compact"]) .value {
-  font-size: 0.875rem;
-  line-height: 1.1;
-}
-
-:global([data-ui-density="compact"]) .hint {
-  font-size: 10px;
-  line-height: 1.15;
-  margin-top: 0;
+  font-size: 1rem;
 }

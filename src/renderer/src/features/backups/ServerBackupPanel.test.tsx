@@ -140,6 +140,7 @@ async function expandSettings(user: ReturnType<typeof setupUser>): Promise<void>
 
 describe("ServerBackupPanel", () => {
   afterEach(() => {
+    notifications.clean();
     cleanup();
     vi.restoreAllMocks();
   });
@@ -271,7 +272,7 @@ describe("ServerBackupPanel", () => {
     const user = setupUser();
     renderPanel();
 
-    expect(await screen.findByRole("heading", { name: "Backups", level: 4 })).toBeInTheDocument();
+    expect(await screen.findByText("Backups", { selector: "[data-server-backup-header] *" })).toBeInTheDocument();
     expect(screen.getByLabelText(/Destination/i)).toBeInTheDocument();
     expect(document.querySelector("[data-server-backup-destination]")).toBeTruthy();
     expect(document.querySelector("[data-server-backup-metrics]")).toBeNull();
@@ -310,6 +311,20 @@ describe("ServerBackupPanel", () => {
     await collapseSettings(user);
     expect(screen.queryByLabelText(/Keep last INI/i)).not.toBeInTheDocument();
     expect(screen.getByText(/^Keep last 10$/i)).toBeInTheDocument();
+  });
+
+  it("keeps policy collapse within the same kind tab", async () => {
+    const user = setupUser();
+    renderPanel();
+
+    const worldToggle = await screen.findByRole("button", { name: /World schedule & retention/i });
+    await collapseSettings(user);
+    expect(worldToggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("switch", { name: /Schedule/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Refresh" }));
+    expect(worldToggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("switch", { name: /Schedule/i })).not.toBeInTheDocument();
   });
 
   it("autosaves policy changes after edits", async () => {
