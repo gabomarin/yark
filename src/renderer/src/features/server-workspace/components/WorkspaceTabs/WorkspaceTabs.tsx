@@ -161,6 +161,7 @@ export function WorkspaceTabs(props: Props): ReactElement {
                 embedded
                 focus={props.logsFocus}
                 onFocusConsumed={props.onLogsFocusConsumed}
+                onOpenBackupsTab={() => props.onChange("backups")}
               />
             )}
 

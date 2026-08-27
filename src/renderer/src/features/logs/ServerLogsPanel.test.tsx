@@ -2,7 +2,17 @@ import { cleanup, render, screen, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
-import { ServerLogsPanel } from "./ServerLogsPanel";
+import { BACKUP_HISTORY_TAB_LABEL, ServerLogsPanel } from "./ServerLogsPanel";
+
+const { showOperatorError, showOperatorToast } = vi.hoisted(() => ({
+  showOperatorError: vi.fn(),
+  showOperatorToast: vi.fn(),
+}));
+
+vi.mock("@ui/operatorToast", () => ({
+  showOperatorError,
+  showOperatorToast,
+}));
 
 const server = {
   id: "srv-1",
@@ -32,6 +42,8 @@ describe("ServerLogsPanel", () => {
   });
 
   beforeEach(() => {
+    showOperatorError.mockClear();
+    showOperatorToast.mockClear();
     Object.defineProperty(window, "api", {
       configurable: true,
       value: {
@@ -90,6 +102,90 @@ describe("ServerLogsPanel", () => {
     });
   });
 
+  it("shows operator error toast when initial log load fails", async () => {
+    vi.mocked(window.api.listServerLogs).mockResolvedValue({
+      ok: false,
+      error: "Database locked",
+    });
+
+    render(
+      <AppProviders>
+        <ServerLogsPanel server={server} embedded />
+      </AppProviders>,
+    );
+
+    await waitFor(() => {
+      expect(showOperatorError).toHaveBeenCalledWith("Database locked", "Logs");
+    });
+  });
+
+  it("shows operator error toast when export fails", async () => {
+    const user = userEvent.setup();
+    vi.mocked(window.api.exportServerLogs).mockResolvedValue({
+      ok: false,
+      error: "Disk full",
+    });
+
+    render(
+      <AppProviders>
+        <ServerLogsPanel server={server} embedded />
+      </AppProviders>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Export" }));
+    await waitFor(() => {
+      expect(showOperatorError).toHaveBeenCalledWith("Disk full", "Logs");
+    });
+  });
+
+  it("shows operator toast when delete-all is blocked by a running backup", async () => {
+    const user = userEvent.setup();
+    vi.mocked(window.api.listServerLogs).mockResolvedValue({
+      ok: true,
+      data: {
+        serverId: server.id,
+        updateFiles: [],
+        backups: [
+          {
+            id: "bak-run",
+            serverId: server.id,
+            type: "manual",
+            kind: "world",
+            path: "C:/ARK/backups/run.zip",
+            sizeBytes: 100,
+            status: "running",
+            createdAt: "2026-07-23T11:00:00.000Z",
+            completedAt: null,
+            notes: null,
+            mapToken: "TheIsland_WP",
+          },
+        ],
+        events: [],
+        runtimeLogLines: [],
+      },
+    });
+
+    render(
+      <AppProviders>
+        <ServerLogsPanel server={server} embedded />
+      </AppProviders>,
+    );
+
+    await user.click(await screen.findByRole("tab", { name: BACKUP_HISTORY_TAB_LABEL }));
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Delete all listed backup archives",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(showOperatorToast).toHaveBeenCalledWith({
+        title: "Logs",
+        message: "Cannot delete backups while one is still running.",
+      });
+    });
+  });
+
   it("highlights the focused event after load", async () => {
     const onFocusConsumed = vi.fn();
     render(
@@ -112,7 +208,7 @@ describe("ServerLogsPanel", () => {
     });
   });
 
-  it("highlights the focused backup under Logs → Backups", async () => {
+  it("highlights the focused backup under Logs → Backup history", async () => {
     const onFocusConsumed = vi.fn();
     vi.mocked(window.api.listServerLogs).mockResolvedValue({
       ok: true,
@@ -164,7 +260,7 @@ describe("ServerLogsPanel", () => {
     );
 
     expect(await screen.findByText("C:/ARK/backups/fail.zip")).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Backups" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: BACKUP_HISTORY_TAB_LABEL })).toHaveAttribute(
       "data-active",
       "true",
     );
@@ -327,6 +423,26 @@ describe("ServerLogsPanel", () => {
     await waitFor(() => {
       expect(screen.queryByText(/Disk full during backup/i)).not.toBeInTheDocument();
     });
+  });
+
+  it("offers Open Backups tab from empty backup history when embedded", async () => {
+    const onOpenBackupsTab = vi.fn();
+    render(
+      <AppProviders>
+        <ServerLogsPanel
+          server={server}
+          embedded
+          onOpenBackupsTab={onOpenBackupsTab}
+        />
+      </AppProviders>,
+    );
+
+    await userEvent.setup().click(
+      await screen.findByRole("tab", { name: BACKUP_HISTORY_TAB_LABEL }),
+    );
+    const openBackups = await screen.findByRole("button", { name: "Open Backups tab" });
+    await userEvent.setup().click(openBackups);
+    expect(onOpenBackupsTab).toHaveBeenCalledTimes(1);
   });
 
   it("loads update log content only when a job is selected and clears it when leaving Updates", async () => {

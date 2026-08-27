@@ -2,7 +2,7 @@ import { Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { ServerOperationalLogs } from "@shared/types";
-import { showOperatorToast } from "@ui/operatorToast";
+import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import {
   createElement,
   type ComponentType,
@@ -18,7 +18,6 @@ interface ServerLogsPanelActionOptions {
   selectedUpdateFile: string | null;
   selectedUpdateInfo: ServerOperationalLogs["updateFiles"][number] | null;
   setBusy: Dispatch<SetStateAction<boolean>>;
-  setError: Dispatch<SetStateAction<string | null>>;
   setLogs: Dispatch<SetStateAction<ServerOperationalLogs | null>>;
   setHighlightedEventId: Dispatch<SetStateAction<number | null>>;
   setExpandedEventId: Dispatch<SetStateAction<number | null>>;
@@ -45,7 +44,6 @@ export function createServerLogsPanelActions(
     selectedUpdateFile,
     selectedUpdateInfo,
     setBusy,
-    setError,
     setLogs,
     setHighlightedEventId,
     setExpandedEventId,
@@ -57,12 +55,11 @@ export function createServerLogsPanelActions(
 
   const exportLogs = async () => {
     setBusy(true);
-    setError(null);
     await runWithFinally(
       async () => {
         const result = await window.api.exportServerLogs(serverId);
         if (!result.ok) {
-          setError(result.error ?? "Could not export logs");
+          showOperatorError(result.error ?? "Could not export logs", "Logs");
           return;
         }
         if (result.data !== null) {
@@ -80,7 +77,6 @@ export function createServerLogsPanelActions(
   const openInExternalViewer = async () => {
     if (selectedUpdateFile === null) return;
     setBusy(true);
-    setError(null);
     await runWithFinally(
       async () => {
         const result = await window.api.openServerUpdateLogFile(
@@ -88,7 +84,10 @@ export function createServerLogsPanelActions(
           selectedUpdateFile,
         );
         if (!result.ok) {
-          setError(result.error ?? "Could not open the log externally");
+          showOperatorError(
+            result.error ?? "Could not open the log externally",
+            "Logs",
+          );
         }
       },
       () => setBusy(false),
@@ -111,10 +110,9 @@ export function createServerLogsPanelActions(
         setBusy(true);
         void runWithFinally(
           async () => {
-            setError(null);
             const result = await window.api.clearServerEvents(serverId);
             if (!result.ok) {
-              setError(result.error ?? "Could not clear events");
+              showOperatorError(result.error ?? "Could not clear events", "Logs");
               return;
             }
             setHighlightedEventId(null);
@@ -144,10 +142,12 @@ export function createServerLogsPanelActions(
         setBusy(true);
         void runWithFinally(
           async () => {
-            setError(null);
             const result = await window.api.clearServerRuntimeLog(serverId);
             if (!result.ok) {
-              setError(result.error ?? "Could not clear runtime log");
+              showOperatorError(
+                result.error ?? "Could not clear runtime log",
+                "Logs",
+              );
               return;
             }
             runtimeRevisionRef.current += 1;
@@ -177,10 +177,12 @@ export function createServerLogsPanelActions(
         setBusy(true);
         void runWithFinally(
           async () => {
-            setError(null);
             const result = await window.api.clearServerUpdateLogs(serverId);
             if (!result.ok) {
-              setError(result.error ?? "Could not clear update logs");
+              showOperatorError(
+                result.error ?? "Could not clear update logs",
+                "Logs",
+              );
               return;
             }
             setSelectedUpdateFile(null);
@@ -218,10 +220,12 @@ export function createServerLogsPanelActions(
         setBusy(true);
         void runWithFinally(
           async () => {
-            setError(null);
             const result = await window.api.deleteServerUpdateLog(serverId, fileName);
             if (!result.ok) {
-              setError(result.error ?? "Could not delete update log");
+              showOperatorError(
+                result.error ?? "Could not delete update log",
+                "Logs",
+              );
               return;
             }
             setSelectedUpdateFile(null);
@@ -242,11 +246,13 @@ export function createServerLogsPanelActions(
     const count = deletable.length;
     const skippedRunning = all.length - count;
     if (count === 0) {
-      setError(
-        skippedRunning > 0
-          ? "Cannot delete backups while one is still running."
-          : "No backups to delete",
-      );
+      showOperatorToast({
+        title: "Logs",
+        message:
+          skippedRunning > 0
+            ? "Cannot delete backups while one is still running."
+            : "No backups to delete.",
+      });
       return;
     }
     modals.openConfirmModal({
@@ -265,10 +271,9 @@ export function createServerLogsPanelActions(
         setBusy(true);
         void runWithFinally(
           async () => {
-            setError(null);
             const result = await window.api.deleteBackups(serverId, ids);
             if (!result.ok) {
-              setError(result.error ?? "Could not delete backups");
+              showOperatorError(result.error ?? "Could not delete backups", "Logs");
               return;
             }
             await load(serverId);
@@ -297,10 +302,9 @@ export function createServerLogsPanelActions(
         setBusy(true);
         void runWithFinally(
           async () => {
-            setError(null);
             const result = await window.api.deleteBackups(serverId, [backupId]);
             if (!result.ok) {
-              setError(result.error ?? "Could not delete backup");
+              showOperatorError(result.error ?? "Could not delete backup", "Logs");
               return;
             }
             await load(serverId);

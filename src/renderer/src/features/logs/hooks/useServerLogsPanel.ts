@@ -1,5 +1,6 @@
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { ServerOperationalLogs, ServerProfile } from "@shared/types";
+import { showOperatorError } from "@ui/operatorToast";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createServerLogsPanelActions } from "../actions/serverLogsPanelActions";
 import {
@@ -14,7 +15,7 @@ export interface ServerLogsFocus {
   section?: LogsSection;
   eventId?: number;
   updateFileName?: string;
-  /** Highlights a backup row under Logs → Backups (failed fleet alerts). */
+  /** Highlights a backup row under Logs → Backup history (failed fleet alerts). */
   backupId?: string;
 }
 
@@ -32,7 +33,6 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
   const [logs, setLogs] = useState<ServerOperationalLogs | null>(null);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [selectedUpdateFile, setSelectedUpdateFile] = useState<string | null>(null);
   const [updateContent, setUpdateContent] = useState("");
   const [highlightedEventId, setHighlightedEventId] = useState<number | null>(null);
@@ -69,13 +69,12 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
   const openUpdateLog = useCallback(async (serverId: string, fileName: string) => {
     const gen = ++updateLoadGenRef.current;
     setBusy(true);
-    setError(null);
     await runWithFinally(
       async () => {
         const result = await window.api.readServerUpdateLog(serverId, fileName, 150_000);
         if (gen !== updateLoadGenRef.current) return;
         if (!result.ok) {
-          setError(result.error ?? "Could not open update log");
+          showOperatorError(result.error ?? "Could not open update log", "Logs");
           return;
         }
         setSelectedUpdateFile(fileName);
@@ -94,7 +93,6 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
       const runtimeRevision = runtimeRevisionRef.current;
       if (!quiet) {
         setLoading(true);
-        setError(null);
         clearUpdateContent();
       }
       return runWithFinally(
@@ -104,7 +102,7 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
           if (!result.ok) {
             if (!quiet) {
               setLogs(null);
-              setError(result.error ?? "Could not load logs");
+              showOperatorError(result.error ?? "Could not load logs", "Logs");
             }
             return;
           }
@@ -150,7 +148,6 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
     void runWithFinally(
       async () => {
         setLoading(true);
-        setError(null);
         clearUpdateContent();
         setHighlightedEventId(null);
         setHighlightedBackupId(null);
@@ -161,7 +158,7 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
         if (!alive || gen !== loadGenRef.current) return;
         if (!result.ok) {
           setLogs(null);
-          setError(result.error ?? "Could not load logs");
+          showOperatorError(result.error ?? "Could not load logs", "Logs");
           return;
         }
         if (result.data.serverId !== serverId) return;
@@ -294,7 +291,6 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
     selectedUpdateFile,
     selectedUpdateInfo,
     setBusy,
-    setError,
     setLogs,
     setHighlightedEventId,
     setExpandedEventId,
@@ -310,7 +306,6 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
     logs,
     loading,
     busy,
-    error,
     selectedUpdateFile,
     updateContent,
     selectedUpdateInfo,
