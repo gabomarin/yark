@@ -4,6 +4,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import { BACKUP_HISTORY_TAB_LABEL, ServerLogsPanel } from "./ServerLogsPanel";
 
+const { showOperatorError, showOperatorToast } = vi.hoisted(() => ({
+  showOperatorError: vi.fn(),
+  showOperatorToast: vi.fn(),
+}));
+
+vi.mock("@ui/operatorToast", () => ({
+  showOperatorError,
+  showOperatorToast,
+}));
+
 const server = {
   id: "srv-1",
   name: "The Island",
@@ -32,6 +42,8 @@ describe("ServerLogsPanel", () => {
   });
 
   beforeEach(() => {
+    showOperatorError.mockClear();
+    showOperatorToast.mockClear();
     Object.defineProperty(window, "api", {
       configurable: true,
       value: {
@@ -87,6 +99,90 @@ describe("ServerLogsPanel", () => {
         deleteBackups: vi.fn(),
         onBackupsChanged: vi.fn(() => () => undefined),
       },
+    });
+  });
+
+  it("shows operator error toast when initial log load fails", async () => {
+    vi.mocked(window.api.listServerLogs).mockResolvedValue({
+      ok: false,
+      error: "Database locked",
+    });
+
+    render(
+      <AppProviders>
+        <ServerLogsPanel server={server} embedded />
+      </AppProviders>,
+    );
+
+    await waitFor(() => {
+      expect(showOperatorError).toHaveBeenCalledWith("Database locked", "Logs");
+    });
+  });
+
+  it("shows operator error toast when export fails", async () => {
+    const user = userEvent.setup();
+    vi.mocked(window.api.exportServerLogs).mockResolvedValue({
+      ok: false,
+      error: "Disk full",
+    });
+
+    render(
+      <AppProviders>
+        <ServerLogsPanel server={server} embedded />
+      </AppProviders>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Export" }));
+    await waitFor(() => {
+      expect(showOperatorError).toHaveBeenCalledWith("Disk full", "Logs");
+    });
+  });
+
+  it("shows operator toast when delete-all is blocked by a running backup", async () => {
+    const user = userEvent.setup();
+    vi.mocked(window.api.listServerLogs).mockResolvedValue({
+      ok: true,
+      data: {
+        serverId: server.id,
+        updateFiles: [],
+        backups: [
+          {
+            id: "bak-run",
+            serverId: server.id,
+            type: "manual",
+            kind: "world",
+            path: "C:/ARK/backups/run.zip",
+            sizeBytes: 100,
+            status: "running",
+            createdAt: "2026-07-23T11:00:00.000Z",
+            completedAt: null,
+            notes: null,
+            mapToken: "TheIsland_WP",
+          },
+        ],
+        events: [],
+        runtimeLogLines: [],
+      },
+    });
+
+    render(
+      <AppProviders>
+        <ServerLogsPanel server={server} embedded />
+      </AppProviders>,
+    );
+
+    await user.click(await screen.findByRole("tab", { name: BACKUP_HISTORY_TAB_LABEL }));
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Delete all listed backup archives",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(showOperatorToast).toHaveBeenCalledWith({
+        title: "Logs",
+        message: "Cannot delete backups while one is still running.",
+      });
     });
   });
 

@@ -252,7 +252,6 @@ export function createServerLogsPanelActions(
           skippedRunning > 0
             ? "Cannot delete backups while one is still running."
             : "No backups to delete.",
-        color: "yellow",
       });
       return;
     }

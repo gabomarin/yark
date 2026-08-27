@@ -29,7 +29,7 @@ export function LogsClearAction(props: {
 export function LogsTabIntro(props: {
   title: string;
   purpose: string;
-  useWhen?: string;
+  useWhen: string;
   embedded?: boolean;
   action?: React.ReactNode;
 }): ReactElement {
@@ -39,7 +39,7 @@ export function LogsTabIntro(props: {
     </Title>
   );
   const titleWithHint =
-    props.embedded === true && props.useWhen !== undefined ? (
+    props.embedded === true ? (
       <Tooltip label={`Use when: ${props.useWhen}`} multiline maw={320}>
         <span>{title}</span>
       </Tooltip>
@@ -54,7 +54,7 @@ export function LogsTabIntro(props: {
         {props.action}
       </Group>
       <Text size="sm">{props.purpose}</Text>
-      {props.embedded !== true && props.useWhen !== undefined && (
+      {props.embedded !== true && (
         <Text size="xs" c="dimmed">
           Use when: {props.useWhen}
         </Text>
