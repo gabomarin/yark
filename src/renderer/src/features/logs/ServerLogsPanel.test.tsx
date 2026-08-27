@@ -2,7 +2,7 @@ import { cleanup, render, screen, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
-import { ServerLogsPanel } from "./ServerLogsPanel";
+import { BACKUP_HISTORY_TAB_LABEL, ServerLogsPanel } from "./ServerLogsPanel";
 
 const server = {
   id: "srv-1",
@@ -112,7 +112,7 @@ describe("ServerLogsPanel", () => {
     });
   });
 
-  it("highlights the focused backup under Logs → Backups", async () => {
+  it("highlights the focused backup under Logs → Backup history", async () => {
     const onFocusConsumed = vi.fn();
     vi.mocked(window.api.listServerLogs).mockResolvedValue({
       ok: true,
@@ -164,7 +164,7 @@ describe("ServerLogsPanel", () => {
     );
 
     expect(await screen.findByText("C:/ARK/backups/fail.zip")).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Backups" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: BACKUP_HISTORY_TAB_LABEL })).toHaveAttribute(
       "data-active",
       "true",
     );
@@ -327,6 +327,26 @@ describe("ServerLogsPanel", () => {
     await waitFor(() => {
       expect(screen.queryByText(/Disk full during backup/i)).not.toBeInTheDocument();
     });
+  });
+
+  it("offers Open Backups tab from empty backup history when embedded", async () => {
+    const onOpenBackupsTab = vi.fn();
+    render(
+      <AppProviders>
+        <ServerLogsPanel
+          server={server}
+          embedded
+          onOpenBackupsTab={onOpenBackupsTab}
+        />
+      </AppProviders>,
+    );
+
+    await userEvent.setup().click(
+      await screen.findByRole("tab", { name: BACKUP_HISTORY_TAB_LABEL }),
+    );
+    const openBackups = await screen.findByRole("button", { name: "Open Backups tab" });
+    await userEvent.setup().click(openBackups);
+    expect(onOpenBackupsTab).toHaveBeenCalledTimes(1);
   });
 
   it("loads update log content only when a job is selected and clears it when leaving Updates", async () => {

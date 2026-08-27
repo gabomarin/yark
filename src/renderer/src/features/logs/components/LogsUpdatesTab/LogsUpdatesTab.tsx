@@ -30,10 +30,12 @@ import {
 import {
   LogsClearAction,
   LogsDetailItem,
+  LogsEmptyState,
   LogsTabIntro,
 } from "../LogsPanelChrome/LogsPanelChrome";
 
 export interface LogsUpdatesTabProps {
+  embedded?: boolean;
   loading: boolean;
   busy: boolean;
   logs: ServerOperationalLogs | null;
@@ -49,6 +51,7 @@ export interface LogsUpdatesTabProps {
 
 export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
   const {
+    embedded,
     loading,
     busy,
     logs,
@@ -65,6 +68,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
   return (
     <Stack gap="sm" className={classes.updatesStack}>
       <LogsTabIntro
+        embedded={embedded}
         title="Updates"
         purpose="Detailed download and install logs for this server."
         useWhen="When an update failed or files look wrong, pick a run on the left and read the log on the right."
@@ -90,9 +94,11 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
             {loading ? (
               <Text c="dimmed">Loading history…</Text>
             ) : logs === null || logs.updateFiles.length === 0 ? (
-              <Text c="dimmed">
-                No update logs yet. Install, update, or verify files to create one.
-              </Text>
+              <LogsEmptyState
+                icon={<ClockCounterClockwise size={24} />}
+                title="No update jobs yet"
+                description="Install, update, or verify files to create a SteamCMD job log."
+              />
             ) : (
               <div
                 className={classes.updateList}

@@ -168,6 +168,19 @@
   flex: 1;
 }
 
+.backupPathRow {
+  min-width: 0;
+}
+
+.backupPath {
+  flex: 1;
+  min-width: 0;
+}
+
+.backupDeleteAction {
+  flex-shrink: 0;
+}
+
 /* Keep severity badge vertically centered with the Accordion chevron. */
 .eventSeverityBadge {
   flex-shrink: 0;

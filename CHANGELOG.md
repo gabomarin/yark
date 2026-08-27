@@ -13,6 +13,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - First-run **primary CTAs**: empty Overview keeps one filled **New server** in the empty state (header create demoted); onboarding checklist makes **Install files** the filled primary when files are missing and demotes **Configure with wizard** (#236).
 - First-run **ASA jargon help**: Mods explain Project ID / CurseForge URL; ServerForm clarifies Create vs Install files and cluster join (no INI copy); edit Cluster ID / shared directory get short descriptions (#239).
+- Workspace **Logs → Backup history**: sub-tab renamed (distinct from create/restore **Backups** tab); shorter embedded intros; transient outcomes use operator toasts; Updates empty uses `EmptyState`; archive paths use `ReadonlyPath`; empty history can jump to the Backups tab (#225).
 
 ## [0.16.0] - 2026-08-26
 

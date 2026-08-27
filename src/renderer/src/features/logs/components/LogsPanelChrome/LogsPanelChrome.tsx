@@ -29,21 +29,36 @@ export function LogsClearAction(props: {
 export function LogsTabIntro(props: {
   title: string;
   purpose: string;
-  useWhen: string;
+  useWhen?: string;
+  embedded?: boolean;
   action?: React.ReactNode;
 }): ReactElement {
+  const title = (
+    <Title order={4} className={classes.panelTitle}>
+      {props.title}
+    </Title>
+  );
+  const titleWithHint =
+    props.embedded === true && props.useWhen !== undefined ? (
+      <Tooltip label={`Use when: ${props.useWhen}`} multiline maw={320}>
+        <span>{title}</span>
+      </Tooltip>
+    ) : (
+      title
+    );
+
   return (
     <div className={classes.tabIntro}>
       <Group justify="space-between" align="flex-start" gap="sm" wrap="wrap">
-        <Title order={4} className={classes.panelTitle}>
-          {props.title}
-        </Title>
+        {titleWithHint}
         {props.action}
       </Group>
       <Text size="sm">{props.purpose}</Text>
-      <Text size="xs" c="dimmed">
-        Use when: {props.useWhen}
-      </Text>
+      {props.embedded !== true && props.useWhen !== undefined && (
+        <Text size="xs" c="dimmed">
+          Use when: {props.useWhen}
+        </Text>
+      )}
     </div>
   );
 }
@@ -70,6 +85,7 @@ export function LogsEmptyState(props: {
   icon: ReactNode;
   title: string;
   description: string;
+  action?: ReactNode;
 }): ReactElement {
   return (
     <EmptyState
@@ -77,6 +93,7 @@ export function LogsEmptyState(props: {
       icon={props.icon}
       title={props.title}
       description={props.description}
+      action={props.action}
     />
   );
 }

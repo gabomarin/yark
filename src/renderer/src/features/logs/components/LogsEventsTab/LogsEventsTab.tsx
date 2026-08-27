@@ -13,6 +13,7 @@ import {
 } from "../LogsPanelChrome/LogsPanelChrome";
 
 export interface LogsEventsTabProps {
+  embedded?: boolean;
   loading: boolean;
   busy: boolean;
   logs: ServerOperationalLogs | null;
@@ -24,6 +25,7 @@ export interface LogsEventsTabProps {
 
 export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
   const {
+    embedded,
     loading,
     busy,
     logs,
@@ -37,6 +39,7 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
     <AppSurfaceCard fill className={classes.fillPanel}>
       <Stack gap="sm" className={classes.panelStack}>
         <LogsTabIntro
+          embedded={embedded}
           title="Events"
           purpose="Manager activity for this server: starts, stops, backups, updates, and errors."
           useWhen="You want a timeline of what the app did, or why an operation failed. Expand a row for cause and next steps."

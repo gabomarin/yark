@@ -1,5 +1,5 @@
 import { ClockCounterClockwise, DownloadSimple } from "@phosphor-icons/react";
-import { Alert, Button, Group, Stack, Tabs, Text, Title } from "@mantine/core";
+import { Button, Group, Stack, Tabs, Text, Title } from "@mantine/core";
 import type { ServerProfile } from "@shared/types";
 import type { ReactElement } from "react";
 import { LogsBackupsTab } from "./components/LogsBackupsTab/LogsBackupsTab";
@@ -16,12 +16,16 @@ import {
 
 export type { ServerLogsFocus } from "./hooks/useServerLogsPanel";
 
+export const BACKUP_HISTORY_TAB_LABEL = "Backup history";
+
 interface Props {
   server: ServerProfile;
   embedded?: boolean;
   focus?: ServerLogsFocus | null;
   /** Called after focus has been applied (so parent can clear one-shot focus). */
   onFocusConsumed?: () => void;
+  /** Workspace only — jump to create/restore on the Backups tab. */
+  onOpenBackupsTab?: () => void;
 }
 
 export function ServerLogsPanel(props: Props): ReactElement {
@@ -38,9 +42,9 @@ export function ServerLogsPanel(props: Props): ReactElement {
         <div>
           <Title order={props.embedded === true ? 4 : 3}>Logs</Title>
           <Text size="sm" c="dimmed">
-            Diagnostic views for {props.server.name}. Use Events for manager
-            history, Runtime for live console output, Updates for SteamCMD jobs,
-            and Backups for archive history.
+            {props.embedded === true
+              ? "Events, runtime console, SteamCMD jobs, and backup archive history for this server."
+              : `Diagnostic views for ${props.server.name}. Use Events for manager history, Runtime for live console output, Updates for SteamCMD jobs, and Backup history for archive records.`}
           </Text>
         </div>
         <Group gap="sm">
@@ -62,8 +66,6 @@ export function ServerLogsPanel(props: Props): ReactElement {
         </Group>
       </Group>
 
-      {panel.error !== null && <Alert color="red">{panel.error}</Alert>}
-
       <Tabs
         value={panel.activeSection}
         onChange={(value) =>
@@ -76,11 +78,12 @@ export function ServerLogsPanel(props: Props): ReactElement {
           <Tabs.Tab value="events">Events</Tabs.Tab>
           <Tabs.Tab value="runtime">Runtime</Tabs.Tab>
           <Tabs.Tab value="updates">Updates</Tabs.Tab>
-          <Tabs.Tab value="backups">Backups</Tabs.Tab>
+          <Tabs.Tab value="backups">{BACKUP_HISTORY_TAB_LABEL}</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="events" className={classes.tabPanel}>
           <LogsEventsTab
+            embedded={props.embedded === true}
             loading={panel.loading}
             busy={panel.busy}
             logs={panel.logs}
@@ -114,6 +117,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
 
         <Tabs.Panel value="updates" className={classes.tabPanel}>
           <LogsUpdatesTab
+            embedded={props.embedded === true}
             loading={panel.loading}
             busy={panel.busy}
             logs={panel.logs}
@@ -132,12 +136,14 @@ export function ServerLogsPanel(props: Props): ReactElement {
 
         <Tabs.Panel value="backups" className={classes.tabPanel}>
           <LogsBackupsTab
+            embedded={props.embedded === true}
             loading={panel.loading}
             busy={panel.busy}
             logs={panel.logs}
             highlightedBackupId={panel.highlightedBackupId}
             onClearBackups={panel.confirmClearBackups}
             onDeleteBackup={panel.confirmDeleteBackup}
+            onOpenBackupsTab={props.onOpenBackupsTab}
           />
         </Tabs.Panel>
       </Tabs>
