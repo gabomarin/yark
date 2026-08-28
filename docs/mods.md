@@ -113,12 +113,13 @@ configured (IDs without metadata still import).
 ### Maps mods (#192)
 
 Enabling a mod whose metadata categories match `/\bmaps?\b/i` shows a toast:
-map is **unchanged**; pick under Server Information → Map → **Map mods** (or
-Custom…). The detail drawer shows the same guidance (and the inferred token when
+map is **unchanged**; pick under Server Information → Map → **Mod Maps**,
+**Search Maps…**, or **Custom…** when inference failed. The detail drawer
+shows the same guidance (and the inferred token when
 `suggestMapTokenFromMetadata` finds one) without writing `map` / `mapModId`.
 If no launch token can be inferred, YARK may re-fetch metadata
 (Worker description) to enrich the cache, then still leave map selection to the
-operator.
+operator. Operator copy says **map mod** (singular), not “pack”.
 
 ### Detail drawer inspect (#342)
 

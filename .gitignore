@@ -26,6 +26,7 @@ docs/superpowers/
 brand/yark-logo.svg
 
 .magicpath-*/
+.magicpath*/
 .tmp-magicpath-*/
 
 # Local Electron env (CurseForge proxy URL for npm run dev/start; never commit)

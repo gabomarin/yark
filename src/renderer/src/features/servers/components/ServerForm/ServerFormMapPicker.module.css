@@ -1,0 +1,250 @@
+.dropdown {
+  padding: var(--mantine-spacing-sm);
+  /* Height capped by Floating UI `size` middleware to available viewport space. */
+  max-height: min(520px, calc(100vh - 24px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sectionLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mantine-color-dimmed);
+  margin-bottom: 8px;
+}
+
+.officialGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 8px;
+  margin-bottom: var(--mantine-spacing-sm);
+}
+
+.officialOption {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--mantine-radius-md);
+  border: 1px solid var(--app-color-border);
+  background: color-mix(in srgb, var(--app-color-panel) 90%, var(--app-color-accent));
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    background-color 120ms ease,
+    transform 120ms ease;
+}
+
+.officialOption:hover {
+  border-color: color-mix(in srgb, var(--mantine-color-blue-5) 70%, var(--app-color-border));
+  background: color-mix(in srgb, var(--mantine-color-blue-6) 12%, var(--app-color-panel));
+  transform: translateY(-1px);
+}
+
+.officialOption:focus-visible {
+  outline: 2px solid var(--mantine-color-blue-5);
+  outline-offset: 2px;
+}
+
+.officialOption[data-selected="true"] {
+  border-color: color-mix(in srgb, var(--ark-blue-8) 55%, var(--app-color-border));
+  background: var(--app-list-selected-bg);
+  box-shadow:
+    var(--app-list-selected-inset),
+    0 0 0 1px color-mix(in srgb, var(--mantine-color-blue-5) 35%, transparent);
+}
+
+.officialOption[data-combobox-selected],
+.officialOption[data-combobox-active] {
+  border-color: var(--mantine-color-blue-5);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--mantine-color-blue-5) 40%, transparent);
+}
+
+.officialOption[data-selected="true"]:hover,
+.officialOption[data-combobox-selected]:hover,
+.officialOption[data-combobox-active]:hover {
+  border-color: var(--mantine-color-blue-4);
+  background: color-mix(in srgb, var(--mantine-color-blue-6) 22%, var(--app-color-panel));
+}
+
+.selectedMark {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--mantine-radius-xl);
+  background: var(--mantine-color-blue-6);
+  color: var(--mantine-color-white);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--mantine-color-dark-9) 35%, transparent);
+}
+
+.officialArt {
+  display: block;
+  width: 100%;
+  height: 56px;
+  object-fit: cover;
+  background: color-mix(in srgb, var(--app-color-accent) 12%, var(--app-color-panel));
+}
+
+.officialArtFallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 56px;
+  background: color-mix(in srgb, var(--app-color-accent) 12%, var(--app-color-panel));
+  color: var(--app-color-accent);
+}
+
+.officialLabel {
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--mantine-color-text);
+}
+
+.modList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: var(--mantine-spacing-sm);
+}
+
+.modOption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--mantine-radius-md);
+  border: 1px solid var(--app-color-border);
+  background: var(--mantine-color-body);
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.modOption:hover {
+  border-color: color-mix(in srgb, var(--mantine-color-blue-5) 70%, var(--app-color-border));
+  background: color-mix(in srgb, var(--mantine-color-blue-6) 10%, var(--mantine-color-body));
+}
+
+.modOption:focus-visible {
+  outline: 2px solid var(--mantine-color-blue-5);
+  outline-offset: 2px;
+}
+
+.modOption[data-selected="true"] {
+  border-color: color-mix(in srgb, var(--ark-blue-8) 45%, transparent);
+  background: var(--app-list-selected-bg);
+  box-shadow: var(--app-list-selected-inset);
+}
+
+.modOption[data-combobox-selected],
+.modOption[data-combobox-active] {
+  border-color: var(--mantine-color-blue-5);
+  background: color-mix(in srgb, var(--mantine-color-blue-6) 16%, var(--mantine-color-body));
+}
+
+.modOption[data-selected="true"]:hover,
+.modOption[data-combobox-selected]:hover,
+.modOption[data-combobox-active]:hover {
+  border-color: var(--mantine-color-blue-4);
+  background: color-mix(in srgb, var(--mantine-color-blue-6) 22%, var(--mantine-color-body));
+}
+
+.modSelectedMark {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--mantine-radius-xl);
+  background: var(--mantine-color-blue-6);
+  color: var(--mantine-color-white);
+}
+
+.modCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.emptyHint {
+  font-size: 12px;
+  color: var(--mantine-color-dimmed);
+  line-height: 1.4;
+  margin-bottom: var(--mantine-spacing-sm);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: var(--mantine-spacing-sm);
+  border-top: 1px solid var(--app-color-border);
+}
+
+.footerOptionSelected {
+  box-shadow: inset 3px 0 0 var(--ark-blue-9);
+}
+
+/* Two-line closed control — taller than compact single-line inputs. */
+.triggerInput {
+  height: auto;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding-block: 6px;
+  line-height: 1.2;
+}
+
+.triggerInner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+  text-align: left;
+}
+
+.triggerCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.triggerTitle {
+  display: block;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.triggerMeta {
+  display: block;
+  font-size: 11px;
+  color: var(--mantine-color-dimmed);
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

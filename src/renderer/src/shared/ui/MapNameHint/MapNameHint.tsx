@@ -10,7 +10,7 @@ type Suggestion = ReturnType<typeof suggestMapTokenFromMetadata>;
 
 interface Props {
   suggestion: Suggestion;
-  /** `alert` — standalone; `inline` — detail header; `embedded` — inside Map pack alert. */
+  /** `alert` — standalone; `inline` — detail header; `embedded` — inside Map mod alert. */
   variant?: "alert" | "inline" | "embedded";
 }
 

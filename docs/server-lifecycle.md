@@ -100,9 +100,10 @@ ASA map packs use the same launch shape as content mods:
 **Search Maps…** (launch token + `mapModId` on `mods`, enabled, not in `disabledMods`). There is
 no Custom… free-text path on create. Edit, import, and clone keep Custom… as an escape hatch.
 
-Operator flow: Server Information **Map** → **Search Maps…** → card grid (CurseForge Maps
-category) → confirm launch token → YARK sets `map`, `mapModId`, and enables the Project ID on
-`mods`. Choosing an enabled Map mod from the dropdown still works on edit.
+Operator flow: Server Information **Map** opens an input-like field with a visual popover
+(Official thumbs + Map mods on edit). **Search Maps…** opens a CurseForge Maps card grid →
+confirm Map Name → YARK sets `map`, `mapModId`, and enables the Project ID on `mods`.
+Choosing an enabled Map mod from the popover still works on edit.
 
 **Start blockers** (`mapIdentityStartBlockers` / `assertMapIdentityReadyForStart`): for a custom
 map, Start fails when `mapModId` is unset, missing from `mods`, or listed in `disabledMods`.
