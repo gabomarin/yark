@@ -319,8 +319,8 @@ describe("ServerForm", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: /^map$/i }));
-    expect(screen.getByRole("option", { name: /search maps/i })).toBeInTheDocument();
-    expect(screen.queryByRole("option", { name: /^custom/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /search maps/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^custom/i })).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/custom map name/i)).not.toBeInTheDocument();
   });
 
@@ -342,7 +342,10 @@ describe("ServerForm", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByRole("combobox", { name: /^map$/i })).toHaveValue("Custom…");
+    expect(screen.getByRole("combobox", { name: /^map$/i })).toHaveTextContent(
+      /Svartalfheim_WP/,
+    );
+    expect(screen.getByRole("combobox", { name: /^map$/i })).toHaveTextContent(/Custom/);
     expect(screen.getByLabelText(/custom map name/i)).toHaveValue("Svartalfheim_WP");
     expect(screen.getByLabelText(/world save folder/i)).toHaveValue("Svartalfheim");
 
@@ -352,7 +355,7 @@ describe("ServerForm", () => {
     expect(screen.getByLabelText(/world save folder/i)).toHaveValue("");
   });
 
-  it("lists enabled Map mods in a grouped Map select (#192)", async () => {
+  it("lists enabled Map mods in a visual Map popover (#192 / #460)", async () => {
     const user = userEvent.setup();
     const onSaved = vi.fn();
     window.api = {
@@ -396,7 +399,7 @@ describe("ServerForm", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: /^map$/i }));
-    expect(await screen.findByText("Map mods")).toBeInTheDocument();
+    expect(await screen.findByText("Mod Maps")).toBeInTheDocument();
     await user.click(
       screen.getByRole("option", { name: /^Svartalfheim Premium$/i }),
     );

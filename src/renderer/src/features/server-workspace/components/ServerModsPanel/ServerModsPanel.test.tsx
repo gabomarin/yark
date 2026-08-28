@@ -188,7 +188,7 @@ describe("ServerModsPanel", () => {
       expect(notifySpy).toHaveBeenCalledWith(
         expect.objectContaining({
           title: "Map mod available",
-          message: expect.stringContaining("Map mods"),
+          message: expect.stringContaining("Search Maps"),
         }),
       );
     });
@@ -227,7 +227,7 @@ describe("ServerModsPanel", () => {
       expect(notifySpy).toHaveBeenCalledWith(
         expect.objectContaining({
           title: "Map mod available",
-          message: expect.stringContaining("Custom…"),
+          message: expect.stringContaining("Search Maps"),
         }),
       );
     });
@@ -448,9 +448,9 @@ describe("ServerModsPanel", () => {
 
     await user.click(await screen.findByText("Svartalfheim Premium"));
     const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByText("Map pack")).toBeInTheDocument();
+    expect(within(dialog).getByText("Map mod")).toBeInTheDocument();
     expect(within(dialog).getByText("Svartalfheim_WP")).toBeInTheDocument();
-    expect(within(dialog).getByText(/current map is unchanged/i)).toBeInTheDocument();
+    expect(within(dialog).getByText(/keeps its current map/i)).toBeInTheDocument();
     expect(api.updateServerPatch).not.toHaveBeenCalled();
   });
 

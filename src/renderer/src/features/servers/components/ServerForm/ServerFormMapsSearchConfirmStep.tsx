@@ -25,11 +25,11 @@ export function ServerFormMapsSearchConfirmStep(props: Props): ReactElement {
       <MapsSearchConfirmIdentity mod={picked.mod} />
       <Stack gap="md">
         <Text size="sm" c="dimmed">
-          Writes Map Name, links mapModId {picked.mod.id}, and enables that Project ID on Mods.
+          {MAP_NAME_COPY.applyConfirmIntro}
         </Text>
         {picked.token === null ? (
           <Alert color="yellow" variant="light" title={MAP_NAME_COPY.notInferredTitle}>
-            {MAP_NAME_COPY.notInferredBody} Use this map stays disabled until then.
+            {MAP_NAME_COPY.notInferredBody} {MAP_NAME_COPY.applyConfirmNeedsMapName}
           </Alert>
         ) : picked.token.source === "bare" ? (
           <Alert color="yellow" variant="light" title={MAP_NAME_COPY.confirmTitle}>
@@ -45,7 +45,7 @@ export function ServerFormMapsSearchConfirmStep(props: Props): ReactElement {
           description={
             picked.token === null
               ? MAP_NAME_COPY.requiredFromCurseForge
-              : MAP_NAME_COPY.usuallyEndsWp
+              : `${MAP_NAME_COPY.mapNameFormatHint} ${MAP_NAME_COPY.confirmInferredHint}`
           }
         />
         <TextInput
