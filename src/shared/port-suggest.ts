@@ -6,7 +6,10 @@ export const DEFAULT_GAME_PORT = 7777;
 export const DEFAULT_QUERY_PORT = 27015;
 export const DEFAULT_RCON_PORT = 27020;
 
-/** Keep relative spacing; same step clone uses when hunting a free triplet. */
+/**
+ * Keep relative spacing; same step clone uses when hunting a free triplet.
+ * Private: only {@link suggestNextPortTriplet} consumes it (knip).
+ */
 const PORT_SUGGEST_STEP = 10;
 /** Inclusive max offset from bases before suggestion gives up (#55 / clone). */
 export const PORT_SUGGEST_MAX_OFFSET = 1000;
@@ -40,7 +43,6 @@ export function suggestNextPortTriplet(input: {
     queryPort: DEFAULT_QUERY_PORT,
     rconPort: DEFAULT_RCON_PORT,
   };
-  const profiles = input.profiles as ServerProfile[];
   const name = input.candidateName?.trim() || "New server";
 
   for (let offset = 0; offset <= PORT_SUGGEST_MAX_OFFSET; offset += PORT_SUGGEST_STEP) {
@@ -50,7 +52,7 @@ export function suggestNextPortTriplet(input: {
       rconPort: offsetPort(bases.rconPort, offset),
     };
     if (
-      findPortConflicts(profiles, {
+      findPortConflicts(input.profiles, {
         ...candidate,
         name,
         id: undefined,

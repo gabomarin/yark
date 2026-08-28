@@ -97,6 +97,8 @@ export function useServerForm(options: UseServerFormOptions): {
       ? options.extraClusterOptions[0]
       : undefined;
   const fleetProfiles = options.servers ?? [];
+  // Single-instance app: fleet cannot change under an open create form. Freeze
+  // suggestion + initial ports on mount so typing never re-suggests (#55).
   const initialCreatePorts = isCreate
     ? resolveCreatePortFields(fleetProfiles)
     : null;
@@ -105,7 +107,7 @@ export function useServerForm(options: UseServerFormOptions): {
       options.initial,
       options.defaultBaseFolder,
       preferredCluster,
-      fleetProfiles,
+      initialCreatePorts ?? undefined,
     ),
   );
   const [createPortSuggestion] = useState<CreatePortSuggestion | null>(

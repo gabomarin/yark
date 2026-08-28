@@ -256,6 +256,36 @@ describe("ServerForm", () => {
     expect(screen.queryByText(/port conflicts/i)).not.toBeInTheDocument();
   });
 
+  it("keeps the create port suggestion hint after a manual port edit (#55)", async () => {
+    const user = userEvent.setup();
+    render(
+      <AppProviders>
+        <ServerForm
+          initial={null}
+          servers={[
+            profile({
+              id: "srv-a",
+              name: "The Island",
+              gamePort: 7777,
+              queryPort: 27015,
+              rconPort: 27020,
+            }),
+          ]}
+          onCancel={vi.fn()}
+          onSaved={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const gamePort = screen.getByLabelText(/game port/i);
+    await user.clear(gamePort);
+    await user.type(gamePort, "9000");
+    expect(gamePort).toHaveValue("9000");
+    expect(
+      screen.getByText(/suggested to avoid other yark servers/i),
+    ).toBeInTheDocument();
+  });
+
   it("does not show Mods or Extra arguments on create/edit (#93)", () => {
     render(
       <AppProviders>

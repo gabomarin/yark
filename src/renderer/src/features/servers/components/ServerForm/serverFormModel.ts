@@ -67,13 +67,15 @@ export function toServerFormState(
   profile: ServerProfile | null,
   defaultBaseFolder?: string | null,
   preferredCluster?: { clusterId: string; clusterDir: string } | null,
-  fleetProfiles: ReadonlyArray<
-    Pick<ServerProfile, "id" | "name" | "gamePort" | "queryPort" | "rconPort">
-  > = [],
+  createPorts?: {
+    gamePort: string;
+    queryPort: string;
+    rconPort: string;
+  },
 ): ServerFormState {
   if (profile === null) {
     const base = defaultBaseFolder?.trim() ?? "";
-    const ports = resolveCreatePortFields(fleetProfiles);
+    const ports = createPorts ?? resolveCreatePortFields([]);
     return {
       name: "",
       map: KNOWN_MAPS[0],
