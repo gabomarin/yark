@@ -46,6 +46,7 @@ export interface ServerFormProfileFieldsProps {
   onNameChange: (value: string) => void;
   onSessionNameChange: (value: string) => void;
   onMapChange: (next: MapFieldChange) => void;
+  onMapsSearchApply: (payload: import("./mapsSearchModel").MapsSearchApplyPayload) => void;
   onInstallDirChange: (value: string) => void;
   onBrowseInstallDir: () => void;
   onCreatePathIssueChange: (message: string | null) => void;
@@ -119,6 +120,7 @@ export function ServerFormProfileFields(
           inputSize={props.inputSize}
           isCreate={props.isCreate}
           onChange={props.onMapChange}
+          onMapsSearchApply={props.onMapsSearchApply}
         />
         <ServerFormInstallPath
           isCreate={props.isCreate}

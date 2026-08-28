@@ -46,6 +46,12 @@ Welcome to the nordic world of Bjarnheim!
 Map Name: Bjarnheim_WPMod ID: 1376189
 Map Completion
 `,
+  /** Rootservers reforged maps reuse official tokens (Island Reforged #1460513). */
+  islandReforged: `
+Welcome to Island Reforged!
+MAP NAME: TheIsland_WP
+Mod ID: 1460513
+`,
 } as const;
 
 function meta(
@@ -104,9 +110,17 @@ describe("suggestMapTokenFromModText", () => {
     });
   });
 
-  it("ignores official KNOWN_MAPS tokens", () => {
+  it("extracts labeled official tokens (Rootservers reforged remasters)", () => {
+    expect(suggestMapTokenFromModText(FIXTURES.islandReforged)).toEqual({
+      token: "TheIsland_WP",
+      source: "labeled",
+      matchIndex: 0,
+    });
+  });
+
+  it("still ignores bare official KNOWN_MAPS tokens", () => {
     expect(
-      suggestMapTokenFromModText("Map Name: TheIsland_WP\nMod ID: 1"),
+      suggestMapTokenFromModText("Uses TheIsland_WP as the world."),
     ).toBeNull();
   });
 });

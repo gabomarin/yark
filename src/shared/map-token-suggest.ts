@@ -47,7 +47,7 @@ export function suggestMapTokenFromModText(text: string): MapTokenSuggestion | n
 
   for (const pattern of LABELED_TOKEN_PATTERNS) {
     const match = pattern.exec(haystack);
-    if (match?.[1] && !isOfficialMap(match[1])) {
+    if (match?.[1]) {
       return { token: match[1], source: "labeled", matchIndex: 0 };
     }
   }

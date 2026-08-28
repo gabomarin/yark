@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAP_NAME_COPY } from "@shared/map-name-copy";
 import {
   isOfficialMap,
   isValidMapSaveFolder,
@@ -76,8 +77,8 @@ const serverProfileInputSchema = z.object({
 
 export interface ValidateProfileInputOptions {
   /**
-   * New YARK profiles (`servers:create`) must use an official `KNOWN_MAPS`
-   * token. Import, clone, and edit may keep custom maps.
+   * New profiles (`servers:create`) accept official maps or a custom map only
+   * when linked via Search Maps… (mapModId on mods and enabled).
    */
   create?: boolean;
 }
@@ -101,20 +102,27 @@ export function validateProfileInput(
   const { gamePort, queryPort, rconPort, clusterId, clusterDir, installDir } =
     parsed.data;
 
-  if (options?.create === true && !isOfficialMap(parsed.data.map)) {
-    issues.push({
-      field: "map",
-      message:
-        "New servers must use an official map. Add a CurseForge map pack on Mods after create.",
-    });
-  }
   if (options?.create === true) {
     const mapModId = input.mapModId?.trim() ?? "";
-    if (mapModId.length > 0) {
-      issues.push({
-        field: "mapModId",
-        message: "New servers cannot link a custom map pack yet.",
-      });
+    const disabled = new Set(input.disabledMods ?? []);
+    const needsLinkedMapMod = !isOfficialMap(parsed.data.map) || mapModId.length > 0;
+    if (needsLinkedMapMod) {
+      if (mapModId.length === 0) {
+        issues.push({
+          field: "map",
+          message: MAP_NAME_COPY.createNeedsSearchMaps,
+        });
+      } else if (!parsed.data.mods.includes(mapModId)) {
+        issues.push({
+          field: "mapModId",
+          message: "Map mod Project ID must be on the server mods list.",
+        });
+      } else if (disabled.has(mapModId)) {
+        issues.push({
+          field: "mapModId",
+          message: "Map mod Project ID must be enabled on Mods.",
+        });
+      }
     }
   }
 

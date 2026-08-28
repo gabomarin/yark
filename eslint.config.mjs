@@ -23,6 +23,7 @@ export default defineConfig(
     ".cursor/**",
     ".kilo/**",
     ".magicpath-*/**",
+    ".magicpath/**",
     ".tmp-magicpath-*/**",
   ]),
 

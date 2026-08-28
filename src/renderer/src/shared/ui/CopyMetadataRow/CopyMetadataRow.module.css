@@ -1,0 +1,24 @@
+.root {
+  min-width: 0;
+}
+
+.valueLine {
+  line-height: 1.45;
+}
+
+.value {
+  display: inline;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.copyIcon {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-inline-start: 0.25rem;
+}
+
+.label {
+  font-size: var(--app-form-label-size);
+  line-height: 1.45;
+}

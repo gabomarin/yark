@@ -309,7 +309,7 @@ describe("ServerForm", () => {
     expect(screen.getByLabelText(/auto-start with yark/i)).toBeInTheDocument();
   });
 
-  it("hides Custom map on create (#292)", async () => {
+  it("shows Search Maps on create (#295)", async () => {
     const user = userEvent.setup();
 
     render(
@@ -319,8 +319,9 @@ describe("ServerForm", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: /^map$/i }));
+    expect(screen.getByRole("option", { name: /search maps/i })).toBeInTheDocument();
     expect(screen.queryByRole("option", { name: /^custom/i })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/custom map token/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/custom map name/i)).not.toBeInTheDocument();
   });
 
   it("allows Custom map launch token (#65 / #191)", async () => {
@@ -342,12 +343,12 @@ describe("ServerForm", () => {
     );
 
     expect(screen.getByRole("combobox", { name: /^map$/i })).toHaveValue("Custom…");
-    expect(screen.getByLabelText(/custom map token/i)).toHaveValue("Svartalfheim_WP");
+    expect(screen.getByLabelText(/custom map name/i)).toHaveValue("Svartalfheim_WP");
     expect(screen.getByLabelText(/world save folder/i)).toHaveValue("Svartalfheim");
 
-    await user.clear(screen.getByLabelText(/custom map token/i));
-    await user.type(screen.getByLabelText(/custom map token/i), "Amissa_WP");
-    expect(screen.getByLabelText(/custom map token/i)).toHaveValue("Amissa_WP");
+    await user.clear(screen.getByLabelText(/custom map name/i));
+    await user.type(screen.getByLabelText(/custom map name/i), "Amissa_WP");
+    expect(screen.getByLabelText(/custom map name/i)).toHaveValue("Amissa_WP");
     expect(screen.getByLabelText(/world save folder/i)).toHaveValue("");
   });
 

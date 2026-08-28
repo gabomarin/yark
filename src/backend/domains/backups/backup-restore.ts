@@ -1,5 +1,6 @@
 import { dirname } from "node:path";
 import { isSafeMapToken, isSafeWindowsFolderName } from "@shared/map-identity";
+import { MAP_NAME_COPY } from "@shared/map-name-copy";
 import {
   isAntiCorruptionWorldSaveName,
   isPrimaryWorldSaveName,
@@ -53,7 +54,7 @@ export function resolveWorldRestoreMapToken(input: {
   if (isSafeMapToken(serverMap)) {
     return serverMap;
   }
-  throw new Error("World backup map token could not be resolved");
+  throw new Error(MAP_NAME_COPY.worldBackupUnresolved);
 }
 
 /** Whether a world-archive file should be copied onto the live map folder. */

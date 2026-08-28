@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { cp, mkdir, stat } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { isSafeMapToken } from "@shared/map-identity";
+import { MAP_NAME_COPY } from "@shared/map-name-copy";
 import type { BackupKind, ServerProfile } from "@shared/types";
 import { listFilesRecursiveSafe } from "../../infra/fs/reparse-points";
 import {
@@ -69,7 +70,7 @@ async function packageWorld(
 ): Promise<{ meta: Record<string, unknown> }> {
   const mapToken = server.map.trim();
   if (!isSafeMapToken(mapToken)) {
-    throw new Error("Server map token must be a single safe folder name");
+    throw new Error(MAP_NAME_COPY.mustBeSafeFolder);
   }
 
   const savedArks = savedArksDir(server);

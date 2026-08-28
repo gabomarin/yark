@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import type { ReactElement } from "react";
+import { useEffect, useState, type ReactElement } from "react";
 import { Carousel } from "@mantine/carousel";
 import { Button, Group, Image, Modal, Stack, Text, UnstyledButton } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
@@ -7,6 +6,12 @@ import classes from "./ServerModsPanel.module.css";
 
 interface Props {
   urls: string[];
+  /** When nested under a raised drawer/modal, set above that overlay (#342). */
+  lightboxZIndex?: number;
+  /** Search Maps detail step keeps screenshots in-carousel only (#295). */
+  allowExpand?: boolean;
+  /** Map pack previews: full-width 3:2 frame, cover fill (#295). */
+  frame?: "wide" | "map";
 }
 
 /**
@@ -32,9 +37,14 @@ export function ModDetailScreenshotCarousel(props: Props): ReactElement | null {
     return null;
   }
 
-  const height = density === "compact" ? 168 : 220;
+  const isMapFrame = props.frame === "map";
+  /** Full-width 3:2 frame — between 4:3 and 16:9; cover avoids side letterboxing (#295). */
+  const mapHeight = density === "compact" ? 460 : 560;
+  const height = isMapFrame ? mapHeight : density === "compact" ? 168 : 220;
+  const imageFit: "cover" | "contain" = isMapFrame ? "cover" : "cover";
+  const allowExpand = props.allowExpand !== false;
   const lightboxSrc =
-    lightboxIndex !== null ? (visible[lightboxIndex] ?? null) : null;
+    allowExpand && lightboxIndex !== null ? (visible[lightboxIndex] ?? null) : null;
 
   return (
     <div className={classes.detailDrawerScreenshots}>
@@ -54,37 +64,47 @@ export function ModDetailScreenshotCarousel(props: Props): ReactElement | null {
         emblaOptions={{ loop: true, align: "center" }}
         aria-label="CurseForge screenshots"
         classNames={{
-          root: classes.detailDrawerCarousel,
+          root: isMapFrame
+            ? `${classes.detailDrawerCarousel} ${classes.detailDrawerCarouselMap}`
+            : classes.detailDrawerCarousel,
           control: classes.detailDrawerCarouselControl,
           indicator: classes.detailDrawerCarouselIndicator,
+          slide: isMapFrame ? classes.detailDrawerCarouselMapSlide : undefined,
         }}
       >
         {visible.map((url, index) => (
           <Carousel.Slide key={url}>
-            <UnstyledButton
-              className={classes.detailDrawerCarouselSlideBtn}
-              aria-label={`Screenshot ${index + 1}, enlarge`}
-              onClick={() => {
-                setLightboxIndex(index);
-                setLightboxLoadError(false);
-              }}
-            >
-              <Image
-                src={url}
-                alt=""
-                h={height}
-                fit="cover"
-                radius="md"
-                loading="lazy"
-                onError={() =>
-                  setFailed((prev) => ({ ...prev, [url]: true }))
-                }
+            {allowExpand ? (
+              <UnstyledButton
+                className={classes.detailDrawerCarouselSlideBtn}
+                aria-label={`Screenshot ${index + 1}, enlarge`}
+                onClick={() => {
+                  setLightboxIndex(index);
+                  setLightboxLoadError(false);
+                }}
+              >
+                <ScreenshotImage
+                  url={url}
+                  height={height}
+                  fit={imageFit}
+                  fillFrame={isMapFrame}
+                  onFailed={() => setFailed((prev) => ({ ...prev, [url]: true }))}
+                />
+              </UnstyledButton>
+            ) : (
+              <ScreenshotImage
+                url={url}
+                height={height}
+                fit={imageFit}
+                fillFrame={isMapFrame}
+                onFailed={() => setFailed((prev) => ({ ...prev, [url]: true }))}
               />
-            </UnstyledButton>
+            )}
           </Carousel.Slide>
         ))}
       </Carousel>
 
+      {allowExpand ? (
       <Modal
         opened={lightboxSrc !== null}
         onClose={() => setLightboxIndex(null)}
@@ -96,6 +116,7 @@ export function ModDetailScreenshotCarousel(props: Props): ReactElement | null {
         centered
         size="lg"
         radius="md"
+        zIndex={props.lightboxZIndex}
       >
         {lightboxSrc !== null && lightboxLoadError ? (
           <Stack align="center" gap="sm" py="md">
@@ -134,6 +155,29 @@ export function ModDetailScreenshotCarousel(props: Props): ReactElement | null {
           />
         ) : null}
       </Modal>
+      ) : null}
     </div>
+  );
+}
+
+function ScreenshotImage(props: {
+  url: string;
+  height: number;
+  fit: "cover" | "contain";
+  fillFrame?: boolean;
+  onFailed: () => void;
+}): ReactElement {
+  return (
+    <Image
+      src={props.url}
+      alt=""
+      w={props.fillFrame === true ? "100%" : undefined}
+      h={props.height}
+      fit={props.fit}
+      radius={props.fillFrame === true ? 0 : "md"}
+      className={props.fillFrame === true ? classes.detailDrawerCarouselMapImage : undefined}
+      loading="lazy"
+      onError={props.onFailed}
+    />
   );
 }

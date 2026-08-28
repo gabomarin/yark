@@ -191,6 +191,10 @@ export type AppTokens = {
   headings: { h1: number; h2: number; h3: number; h4: number; h5: number; h6: number };
   /** PageScaffold `h1` size (prior product used 28px, not Mantine h1 34). */
   pageTitle: number;
+  /** Input/Select helper under labels — readable in Compact, slightly below label size. */
+  formDescription: number;
+  /** Input/Select field labels — always at or above description size. */
+  formLabel: number;
   shadows: typeof sharedShadows;
 };
 
@@ -201,6 +205,8 @@ const comfortableTokens: AppTokens = {
   fontSizes: { ...comfortableFontSizes },
   headings: { ...comfortableHeadings },
   pageTitle: comfortablePageTitle,
+  formLabel: comfortableFontSizes.sm,
+  formDescription: comfortableFontSizes.xs,
   shadows: sharedShadows,
 };
 
@@ -211,6 +217,8 @@ const compactTokens: AppTokens = {
   fontSizes: scaleRecord(comfortableFontSizes, UI_DENSITY_COMPACT_SCALE),
   headings: scaleRecord(comfortableHeadings, UI_DENSITY_COMPACT_SCALE),
   pageTitle: scalePx(comfortablePageTitle, UI_DENSITY_COMPACT_SCALE),
+  formLabel: 13,
+  formDescription: scalePx(comfortableFontSizes.xs, UI_DENSITY_COMPACT_SCALE),
   shadows: sharedShadows,
 };
 

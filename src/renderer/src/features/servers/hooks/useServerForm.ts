@@ -4,6 +4,7 @@ import {
   resolveServerInstallDir,
 } from "@shared/server-install-path";
 import { isOfficialMap, normalizeMapToken } from "@shared/map-identity";
+import { MAP_NAME_COPY } from "@shared/map-name-copy";
 import type { ServerProfile } from "@shared/types";
 import {
   useCallback,
@@ -27,6 +28,7 @@ import {
   toServerFormState,
   type ServerFormState,
 } from "../components/ServerForm/serverFormModel";
+import { applyMapsSearchToProfileFields, type MapsSearchApplyPayload } from "../components/ServerForm/mapsSearchModel";
 import { listEnabledMapMods } from "../components/ServerForm/ServerFormMapField";
 
 export interface UseServerFormOptions {
@@ -73,6 +75,7 @@ export function useServerForm(options: UseServerFormOptions): {
   confirmLeaveIfDirty: (action: () => void) => void;
   revertProfile: () => void;
   openMove: () => void;
+  applyMapsSearch: (payload: MapsSearchApplyPayload) => void;
   moveDisabled: boolean;
   moveDisabledReason: string;
   serverActive: boolean;
@@ -191,33 +194,35 @@ export function useServerForm(options: UseServerFormOptions): {
   const mapMods = useMemo(
     () =>
       listEnabledMapMods({
-        mods: options.initial?.mods ?? [],
-        disabledMods: options.initial?.disabledMods,
-        modMetadataCache: options.initial?.modMetadataCache,
+        mods: state.mods,
+        disabledMods: state.disabledMods,
+        modMetadataCache: state.modMetadataCache,
       }),
-    [
-      options.initial?.disabledMods,
-      options.initial?.modMetadataCache,
-      options.initial?.mods,
-    ],
+    [state.disabledMods, state.modMetadataCache, state.mods],
   );
 
   const mapFieldKey = useMemo(() => {
-    const mods = options.initial?.mods ?? [];
-    const disabled = [...(options.initial?.disabledMods ?? [])].sort().join(",");
-    const cache = options.initial?.modMetadataCache ?? {};
-    const meta = mods
+    const disabled = [...state.disabledMods].sort().join(",");
+    const meta = state.mods
       .map((id) => {
-        const row = cache[id];
+        const row = state.modMetadataCache[id];
         return `${id}:${row?.categories?.join(".") ?? ""}:${row?.summary ?? ""}:${row?.description ?? ""}`;
       })
       .join("|");
     return `${disabled}|${meta}`;
-  }, [
-    options.initial?.disabledMods,
-    options.initial?.modMetadataCache,
-    options.initial?.mods,
-  ]);
+  }, [state.disabledMods, state.modMetadataCache, state.mods]);
+
+  const applyMapsSearch = useCallback((payload: MapsSearchApplyPayload) => {
+    setState((previous) => ({
+      ...previous,
+      ...applyMapsSearchToProfileFields({
+        mods: previous.mods,
+        disabledMods: previous.disabledMods,
+        modMetadataCache: previous.modMetadataCache,
+        payload,
+      }),
+    }));
+  }, []);
 
   const browseDirectory = async (field: "installDir" | "clusterDir") => {
     setError(null);
@@ -273,15 +278,22 @@ export function useServerForm(options: UseServerFormOptions): {
       return false;
     }
     if (/\s/.test(mapToken)) {
-      setError("Map token must not contain spaces");
+      setError(MAP_NAME_COPY.mustNotContainSpaces);
       return false;
     }
     if (isCreate && !isOfficialMap(mapToken)) {
-      setError("New servers must use an official map");
-      return false;
+      const mapModId = state.mapModId?.trim() ?? "";
+      if (
+        mapModId.length === 0
+        || !state.mods.includes(mapModId)
+        || state.disabledMods.includes(mapModId)
+      ) {
+        setError(MAP_NAME_COPY.createNeedsSearchMaps);
+        return false;
+      }
     }
     if (!isOfficialMap(mapToken) && !mapToken.includes("_WP")) {
-      setError("Custom map token usually ends with _WP (example: Svartalfheim_WP)");
+      setError(MAP_NAME_COPY.customUsuallyEndsWp);
       return false;
     }
     if (isCreate && createPathIssue !== null) {
@@ -377,6 +389,7 @@ export function useServerForm(options: UseServerFormOptions): {
     confirmLeaveIfDirty,
     revertProfile,
     openMove,
+    applyMapsSearch,
     moveDisabled,
     moveDisabledReason,
     serverActive,

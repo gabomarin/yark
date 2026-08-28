@@ -1,3 +1,4 @@
+import { MAP_NAME_COPY } from "./map-name-copy";
 import { KNOWN_MAPS } from "./types";
 
 /** Official ASA map launch tokens shipped in `KNOWN_MAPS`. */
@@ -66,18 +67,40 @@ function isValidMapModId(id: string | null | undefined): boolean {
   return /^[1-9]\d*$/.test(id.trim());
 }
 
+/** Official map with no linked Maps pack (vanilla official world). */
+export function isBareOfficialMap(
+  fields: Pick<MapIdentityFields, "map" | "mapModId">,
+): boolean {
+  return isOfficialMap(fields.map) && !isValidMapModId(fields.mapModId);
+}
+
+/** `-MapModID=` value when an official token uses a remaster Maps pack. */
+export function linkedOfficialMapModLaunchId(
+  fields: Pick<MapIdentityFields, "map" | "mapModId">,
+): string | null {
+  const map = normalizeMapToken(fields.map);
+  if (!isOfficialMap(map)) {
+    return null;
+  }
+  const rawModId = fields.mapModId?.trim() ?? "";
+  return isValidMapModId(rawModId) ? rawModId : null;
+}
+
 export function resolveMapIdentity(fields: MapIdentityFields): ResolvedMapIdentity {
   const map = normalizeMapToken(fields.map);
   const rawModId = fields.mapModId?.trim() ?? "";
   const mapModId = isValidMapModId(rawModId) ? rawModId : null;
 
   if (isOfficialMap(map)) {
+    if (mapModId !== null) {
+      return { kind: "custom", map, mapModId };
+    }
     return { kind: "official", map, mapModId: null };
   }
   return { kind: "custom", map, mapModId };
 }
 
-/** Value to persist for `mapModId` (null for official maps or unset/invalid). */
+/** Value to persist for `mapModId` (null for bare official maps or unset/invalid). */
 export function persistableMapModId(fields: MapIdentityFields): string | null {
   return resolveMapIdentity(fields).mapModId;
 }
@@ -137,7 +160,7 @@ export function validateMapIdentity(fields: MapIdentityFields): MapIdentityIssue
   if (/\s/.test(map)) {
     issues.push({
       field: "map",
-      message: "Map token must not contain spaces",
+      message: MAP_NAME_COPY.mustNotContainSpaces,
       severity: "error",
     });
   }
@@ -145,7 +168,7 @@ export function validateMapIdentity(fields: MapIdentityFields): MapIdentityIssue
   if (map.length > 0 && !isSafeMapToken(map)) {
     issues.push({
       field: "map",
-      message: "Map token must be a single safe folder name",
+      message: MAP_NAME_COPY.mustBeSafeFolder,
       severity: "error",
     });
   }
@@ -153,7 +176,7 @@ export function validateMapIdentity(fields: MapIdentityFields): MapIdentityIssue
   if (map.length > 128) {
     issues.push({
       field: "map",
-      message: "Map token is too long",
+      message: MAP_NAME_COPY.tooLong,
       severity: "error",
     });
   }
@@ -220,13 +243,16 @@ export function resolveMapThumbnailUrl(options: {
   officialArtUrl: string | null;
   modThumbnailUrl: string | null | undefined;
 }): string | null {
+  const mapModId = options.mapModId?.trim() ?? "";
+  const modThumb = options.modThumbnailUrl?.trim() ?? "";
+  if (mapModId.length > 0 && modThumb.length > 0) {
+    return modThumb;
+  }
   if (isOfficialMap(options.map)) {
     return options.officialArtUrl;
   }
-  const mapModId = options.mapModId?.trim() ?? "";
   if (mapModId.length === 0) {
     return null;
   }
-  const modThumb = options.modThumbnailUrl?.trim() ?? "";
   return modThumb.length > 0 ? modThumb : null;
 }

@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import type { ServerProfile } from "@shared/types";
 import { buildMapUrlArg } from "@shared/launch-map-url";
+import { linkedOfficialMapModLaunchId } from "@shared/map-identity";
 import {
   argsIncludeServerPlatform,
   buildStructuredLaunchArgList,
@@ -118,6 +119,13 @@ export function buildLaunchArgs(profile: ServerProfile): string[] {
 
   const disabledMods = new Set(profile.disabledMods ?? []);
   const enabledMods = profile.mods.filter((id) => !disabledMods.has(id));
+  const mapModLaunchId = linkedOfficialMapModLaunchId({
+    map: profile.map,
+    mapModId: profile.mapModId,
+  });
+  if (mapModLaunchId !== null && enabledMods.includes(mapModLaunchId)) {
+    args.push(`-MapModID=${mapModLaunchId}`);
+  }
   if (enabledMods.length > 0) {
     args.push(`-mods=${enabledMods.join(",")}`);
   }
