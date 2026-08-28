@@ -42,6 +42,10 @@ describe("os-notification policy (#331)", () => {
         YARK_E2E_FULL_UI: "false",
       }),
     ).toBe(false);
+    expect(isYarkE2eFullUiEnv({ YARK_E2E_FULL_UI: "yes" })).toBe(true);
+    expect(isYarkE2eFullUiEnv({ YARK_E2E_FULL_UI: "" })).toBe(false);
+    expect(isYarkE2eFullUiEnv({ YARK_E2E_FULL_UI: "2" })).toBe(false);
+    expect(isYarkE2eFullUiEnv({ YARK_E2E_FULL_UI: "truee" })).toBe(false);
     expect(
       isYarkE2eShortcutsActive({ YARK_E2E_USER_DATA: "C:\\tmp\\e2e" }),
     ).toBe(true);

@@ -183,9 +183,15 @@ export function reconcileSteamCmdStatus(
   next: SteamCmdStatus,
 ): SteamCmdStatus {
   if (previous === null) return next;
-  // Install validation can emit late progress pushes built before persist; ignore
-  // regressions so a completed refresh is not overwritten in Settings/Downloads.
-  if (previous.detected && !next.detected) {
+  // Ignore late install-validation progress built before persist (older checkedAt).
+  // A newer poll that clears detection (settings wipe / missing path) still applies.
+  if (
+    previous.detected
+    && !next.detected
+    && previous.executablePath != null
+    && next.executablePath == null
+    && next.checkedAt <= previous.checkedAt
+  ) {
     return previous;
   }
   const previousJobs = previous.criticalJobs ?? [];
