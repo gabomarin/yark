@@ -7,7 +7,7 @@ export const DEFAULT_QUERY_PORT = 27015;
 export const DEFAULT_RCON_PORT = 27020;
 
 /** Keep relative spacing; same step clone uses when hunting a free triplet. */
-export const PORT_SUGGEST_STEP = 10;
+const PORT_SUGGEST_STEP = 10;
 /** Inclusive max offset from bases before suggestion gives up (#55 / clone). */
 export const PORT_SUGGEST_MAX_OFFSET = 1000;
 
