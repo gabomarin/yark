@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { NumberInput, PasswordInput, SimpleGrid, Stack } from "@mantine/core";
+import { NumberInput, PasswordInput, SimpleGrid, Stack, Text } from "@mantine/core";
 import type { ServerProfile } from "@shared/types";
 import { ServerFormPortConflictAlert } from "./ServerFormPortConflictAlert";
 import classes from "./ServerForm.module.css";
@@ -15,6 +15,7 @@ interface Props {
   maxPlayers: string;
   serverPassword: string;
   adminPassword: string;
+  createPortSuggestion?: { offset: number; exhausted: boolean } | null;
   onGamePortChange: (value: string) => void;
   onQueryPortChange: (value: string) => void;
   onRconPortChange: (value: string) => void;
@@ -23,42 +24,66 @@ interface Props {
   onAdminPasswordChange: (value: string) => void;
 }
 
+function createPortsDescription(
+  suggestion: Props["createPortSuggestion"],
+): string | undefined {
+  if (suggestion == null) {
+    return undefined;
+  }
+  if (suggestion.exhausted) {
+    return "Could not auto-suggest ports that avoid other YARK servers — pick unused ports.";
+  }
+  if (suggestion.offset > 0) {
+    return "Suggested to avoid other YARK servers (not checked against Windows or your network).";
+  }
+  return undefined;
+}
+
 /** Ports row + passwords; conflict alert uses leftover card space (#292). */
 export function ServerFormReachabilityFields(props: Props): ReactElement {
+  const portsDescription = createPortsDescription(props.createPortSuggestion);
+
   return (
     <>
-      <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="xs">
-        <NumberInput
-          label="Game port"
-          size={props.inputSize}
-          value={props.gamePort}
-          onChange={(value) => props.onGamePortChange(String(value))}
-          min={1}
-          max={65535}
-          allowDecimal={false}
-          required
-        />
-        <NumberInput
-          label="Query port"
-          size={props.inputSize}
-          value={props.queryPort}
-          onChange={(value) => props.onQueryPortChange(String(value))}
-          min={1}
-          max={65535}
-          allowDecimal={false}
-          required
-        />
-        <NumberInput
-          label="RCON port"
-          size={props.inputSize}
-          value={props.rconPort}
-          onChange={(value) => props.onRconPortChange(String(value))}
-          min={1}
-          max={65535}
-          allowDecimal={false}
-          required
-        />
-      </SimpleGrid>
+      <Stack gap={4}>
+        <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="xs">
+          <NumberInput
+            label="Game port"
+            size={props.inputSize}
+            value={props.gamePort}
+            onChange={(value) => props.onGamePortChange(String(value))}
+            min={1}
+            max={65535}
+            allowDecimal={false}
+            required
+          />
+          <NumberInput
+            label="Query port"
+            size={props.inputSize}
+            value={props.queryPort}
+            onChange={(value) => props.onQueryPortChange(String(value))}
+            min={1}
+            max={65535}
+            allowDecimal={false}
+            required
+          />
+          <NumberInput
+            label="RCON port"
+            size={props.inputSize}
+            value={props.rconPort}
+            onChange={(value) => props.onRconPortChange(String(value))}
+            min={1}
+            max={65535}
+            allowDecimal={false}
+            required
+          />
+        </SimpleGrid>
+        {portsDescription !== undefined ? (
+          <Text size="xs" c="dimmed">
+            {portsDescription}
+          </Text>
+        ) : null}
+      </Stack>
       <NumberInput
         label="Max players"
         size={props.inputSize}

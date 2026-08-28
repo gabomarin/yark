@@ -43,6 +43,8 @@ export interface ServerFormProfileFieldsProps {
   showInactiveWarning?: boolean;
   moveDisabled: boolean;
   moveDisabledReason: string;
+  /** Create-only: YARK profile-aware port suggestion (#55). */
+  createPortSuggestion?: { offset: number; exhausted: boolean } | null;
   onNameChange: (value: string) => void;
   onSessionNameChange: (value: string) => void;
   onMapChange: (next: MapFieldChange) => void;
@@ -160,6 +162,7 @@ export function ServerFormProfileFields(
           maxPlayers={props.maxPlayers}
           serverPassword={props.serverPassword}
           adminPassword={props.adminPassword}
+          createPortSuggestion={props.createPortSuggestion}
           onGamePortChange={props.onGamePortChange}
           onQueryPortChange={props.onQueryPortChange}
           onRconPortChange={props.onRconPortChange}

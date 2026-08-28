@@ -26,6 +26,8 @@ import { openUnsavedLeaveModal } from "@features/server-workspace/openUnsavedLea
 import {
   serverFormToInput,
   toServerFormState,
+  resolveCreatePortFields,
+  type CreatePortSuggestion,
   type ServerFormState,
 } from "../components/ServerForm/serverFormModel";
 import { applyMapsSearchToProfileFields, type MapsSearchApplyPayload } from "../components/ServerForm/mapsSearchModel";
@@ -53,6 +55,7 @@ export function useServerForm(options: UseServerFormOptions): {
   inputSize: "xs" | "sm";
   state: ServerFormState;
   setState: Dispatch<SetStateAction<ServerFormState>>;
+  createPortSuggestion: CreatePortSuggestion | null;
   isDirty: boolean;
   error: string | null;
   setError: (error: string | null) => void;
@@ -93,8 +96,20 @@ export function useServerForm(options: UseServerFormOptions): {
     options.extraClusterOptions?.length === 1
       ? options.extraClusterOptions[0]
       : undefined;
+  const fleetProfiles = options.servers ?? [];
+  const initialCreatePorts = isCreate
+    ? resolveCreatePortFields(fleetProfiles)
+    : null;
   const [state, setState] = useState<ServerFormState>(() =>
-    toServerFormState(options.initial, options.defaultBaseFolder, preferredCluster),
+    toServerFormState(
+      options.initial,
+      options.defaultBaseFolder,
+      preferredCluster,
+      fleetProfiles,
+    ),
+  );
+  const [createPortSuggestion] = useState<CreatePortSuggestion | null>(
+    () => initialCreatePorts?.suggestion ?? null,
   );
   const initialStateRef = useRef(state);
   const dirtyRef = useRef(false);
@@ -369,6 +384,7 @@ export function useServerForm(options: UseServerFormOptions): {
     inputSize,
     state,
     setState,
+    createPortSuggestion,
     isDirty,
     error,
     setError,

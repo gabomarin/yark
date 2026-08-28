@@ -191,7 +191,8 @@ Report shape:
   create a new cluster ID and does not seed INI. When no clusters exist yet,
   shows **Create a cluster first…** (navigates to Clusters). Networking shows a
   live **Port conflicts** alert vs the rest of the fleet (same helper as
-  backend save/start; does not implement default-port suggestions — see #55).
+  backend save/start; create suggests non-conflicting ports among YARK profiles —
+  see #55 / `src/shared/port-suggest.ts`).
 - **Edit server:** free-text `clusterId` / browse `clusterDir` (unchanged); same
   live port-conflict preview when fleet profiles are passed in.
 - Clusters workspace: create a brand-new cluster ID + directory on one or more
