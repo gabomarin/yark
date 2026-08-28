@@ -46,10 +46,17 @@ describe("isOfficialMap / resolveMapIdentity", () => {
     expect(KNOWN_MAP_OPTIONS.map((entry) => entry.id)).toEqual([...KNOWN_MAPS]);
   });
 
-  it("classifies KNOWN_MAPS as official and clears mapModId", () => {
+  it("classifies KNOWN_MAPS as official and clears stray mapModId", () => {
     expect(isOfficialMap("TheIsland_WP")).toBe(true);
     expect(
       resolveMapIdentity({ map: "TheIsland_WP", mapModId: "962796" }),
+    ).toEqual({
+      kind: "custom",
+      map: "TheIsland_WP",
+      mapModId: "962796",
+    });
+    expect(
+      resolveMapIdentity({ map: "TheIsland_WP", mapModId: null }),
     ).toEqual({
       kind: "official",
       map: "TheIsland_WP",
@@ -70,10 +77,16 @@ describe("isOfficialMap / resolveMapIdentity", () => {
 });
 
 describe("persistableMapModId", () => {
-  it("returns null for official maps even when a mod id is supplied", () => {
+  it("returns null for bare official maps when a mod id is unset", () => {
     expect(
-      persistableMapModId({ map: "TheIsland_WP", mapModId: "962796" }),
+      persistableMapModId({ map: "TheIsland_WP", mapModId: null }),
     ).toBeNull();
+  });
+
+  it("keeps mapModId for official-token remasters", () => {
+    expect(
+      persistableMapModId({ map: "TheIsland_WP", mapModId: "1460513" }),
+    ).toBe("1460513");
   });
 
   it("keeps a valid custom map mod id", () => {
@@ -175,11 +188,22 @@ describe("validateMapIdentity", () => {
 });
 
 describe("resolveMapThumbnailUrl", () => {
-  it("prefers official art for KNOWN_MAPS", () => {
+  it("prefers mod logo for linked official-token remasters", () => {
     expect(
       resolveMapThumbnailUrl({
         map: "TheIsland_WP",
-        mapModId: "962796",
+        mapModId: "1460513",
+        officialArtUrl: "asset://island",
+        modThumbnailUrl: "https://cdn.example/reforged.png",
+      }),
+    ).toBe("https://cdn.example/reforged.png");
+  });
+
+  it("prefers official art for bare KNOWN_MAPS", () => {
+    expect(
+      resolveMapThumbnailUrl({
+        map: "TheIsland_WP",
+        mapModId: null,
         officialArtUrl: "asset://island",
         modThumbnailUrl: "https://cdn.example/mod.png",
       }),
@@ -241,5 +265,23 @@ describe("custom map launch composition (#65)", () => {
     expect(args).toContain("-mods=962796,947033");
     expect(args.join(" ")).not.toMatch(/ActiveMapMod/i);
     expect(args.join(" ")).not.toMatch(/-MapModID=/i);
+  });
+
+  it("adds -MapModID for official-token remasters (Rootservers)", () => {
+    const args = buildLaunchArgs(
+      profile({
+        map: "TheIsland_WP",
+        mapModId: "1460513",
+        mods: ["1460513"],
+        sessionName: "Reforged",
+      }),
+    );
+    expect(args[0]).toBe('"TheIsland_WP"?SessionName="Reforged"');
+    expect(args).toContain("-MapModID=1460513");
+    expect(args).toContain("-mods=1460513");
+    const mapModIdx = args.indexOf("-MapModID=1460513");
+    const modsIdx = args.indexOf("-mods=1460513");
+    expect(mapModIdx).toBeGreaterThan(-1);
+    expect(modsIdx).toBeGreaterThan(mapModIdx);
   });
 });

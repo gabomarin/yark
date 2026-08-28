@@ -4,6 +4,7 @@ import {
   isMapModCandidate,
   suggestMapTokenFromMetadata,
 } from "@shared/map-token-suggest";
+import { MAP_NAME_COPY } from "@shared/map-name-copy";
 import type { ModMetadata } from "@shared/types";
 
 interface PersistCacheFn {
@@ -61,8 +62,8 @@ export function useMapModEnableNotify(options: {
       color: "blue",
       title: "Map mod available",
       message: hasToken
-        ? "Choose it under Server Information → Map (Map mods) when you want to use it. Your current map is unchanged."
-        : "Set the launch token under Server Information → Map → Custom… when you want to use it. Your current map is unchanged.",
+        ? MAP_NAME_COPY.chooseWhenReady
+        : MAP_NAME_COPY.setUnderCustom,
     });
   };
 

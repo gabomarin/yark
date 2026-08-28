@@ -96,7 +96,7 @@ describe("resolveWorldRestoreMapToken", () => {
         serverMapPathExists: false,
         backupSavedDirNames: ["A_WP", "B_WP"],
       }),
-    ).toThrow(/map token could not be resolved/);
+    ).toThrow(/World backup Map Name could not be resolved/);
   });
 });
 

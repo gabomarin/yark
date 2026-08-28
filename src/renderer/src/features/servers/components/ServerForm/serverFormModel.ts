@@ -1,7 +1,7 @@
 import {
   resolveServerInstallDir,
 } from "@shared/server-install-path";
-import { KNOWN_MAPS, type ServerProfile, type ServerProfileInput } from "@shared/types";
+import { KNOWN_MAPS, type ModMetadata, type ServerProfile, type ServerProfileInput } from "@shared/types";
 
 export interface ServerFormState {
   name: string;
@@ -19,6 +19,9 @@ export interface ServerFormState {
   clusterId: string;
   clusterDir: string;
   autoStart: boolean;
+  mods: string[];
+  disabledMods: string[];
+  modMetadataCache: Record<string, ModMetadata>;
 }
 
 export function toServerFormState(
@@ -44,6 +47,9 @@ export function toServerFormState(
       clusterId: preferredCluster?.clusterId ?? "",
       clusterDir: preferredCluster?.clusterDir ?? "",
       autoStart: false,
+      mods: [],
+      disabledMods: [],
+      modMetadataCache: {},
     };
   }
 
@@ -63,6 +69,9 @@ export function toServerFormState(
     clusterId: profile.clusterId ?? "",
     clusterDir: profile.clusterDir ?? "",
     autoStart: profile.autoStart,
+    mods: profile.mods ?? [],
+    disabledMods: profile.disabledMods ?? [],
+    modMetadataCache: profile.modMetadataCache ?? {},
   };
 }
 
@@ -93,9 +102,9 @@ export function serverFormToInput(
     clusterDir: state.clusterDir.trim().length > 0 ? state.clusterDir.trim() : null,
     extraArgs: initial?.extraArgs ?? [],
     structuredLaunchArgs: initial?.structuredLaunchArgs ?? {},
-    mods: initial?.mods ?? [],
-    disabledMods: initial?.disabledMods ?? [],
-    modMetadataCache: initial?.modMetadataCache ?? {},
+    mods: state.mods,
+    disabledMods: state.disabledMods,
+    modMetadataCache: state.modMetadataCache,
     autoStart: state.autoStart,
   };
 }

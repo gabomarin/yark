@@ -4,6 +4,7 @@ import { readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join, relative } from "node:path";
 import { isSafeMapToken } from "@shared/map-identity";
+import { MAP_NAME_COPY } from "@shared/map-name-copy";
 import type { BackupRecord, RestoreBackupOptions, ServerProfile } from "@shared/types";
 import { isTraversableDirectoryDirent, prepareWritableDirUnderRoot } from "../../infra/fs/reparse-points";
 import { extractZip, isZipBackupPath, parseBackupManifest } from "./backup-archive";
@@ -205,7 +206,7 @@ async function restorePlayers(
 async function resolveLivePlayerProfileDir(server: ServerProfile): Promise<string> {
   const mapToken = server.map.trim();
   if (!isSafeMapToken(mapToken)) {
-    throw new Error("Server map token must be a single safe folder name");
+    throw new Error(MAP_NAME_COPY.mustBeSafeFolder);
   }
   const savedArks = savedArksDir(server);
   const resolved = await resolveWorldMapSaveDir(

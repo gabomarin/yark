@@ -80,6 +80,8 @@ function createAppCssVariablesResolver(
       "--app-space-md": `${tokens.spacing.md}px`,
       "--app-space-lg": `${tokens.spacing.lg}px`,
       "--app-space-xl": `${tokens.spacing.xl}px`,
+      "--app-form-description-size": `${tokens.formDescription}px`,
+      "--app-form-label-size": `${tokens.formLabel}px`,
       "--app-font-page": `${tokens.pageTitle}px`,
       "--app-shadow-panel": tokens.shadows.panel,
       "--app-shadow-elevated": "0 18px 36px rgba(0, 0, 0, 0.32)",
@@ -395,6 +397,18 @@ function createAppTheme(
       },
       TagsInput: {
         defaultProps: comboboxScrollDefaults,
+      },
+      InputWrapper: {
+        styles: {
+          label: {
+            fontSize: "var(--app-form-label-size)",
+            fontWeight: 500,
+          },
+          description: {
+            fontSize: "var(--app-form-description-size)",
+            lineHeight: 1.5,
+          },
+        },
       },
       Anchor: {
         defaultProps: {

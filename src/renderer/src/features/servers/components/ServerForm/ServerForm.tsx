@@ -93,6 +93,7 @@ export function ServerForm(props: Props): ReactElement {
           mapSaveFolder: next.mapSaveFolder,
         }))
       }
+      onMapsSearchApply={form.applyMapsSearch}
       onInstallDirChange={setField("installDir")}
       onBrowseInstallDir={() => void form.browseDirectory("installDir")}
       onCreatePathIssueChange={form.setCreatePathIssue}

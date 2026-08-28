@@ -6,6 +6,7 @@ import {
   isValidServerFolderName,
 } from "@shared/server-install-path";
 import { isOfficialMap, normalizeMapToken } from "@shared/map-identity";
+import { MAP_NAME_COPY } from "@shared/map-name-copy";
 import type { ImportInstallProbe, ModMetadata, ServerProfile } from "@shared/types";
 import type { KnownClusterOption } from "@features/clusters/knownClusterOptions";
 import { listKnownClusterOptions } from "@features/clusters/knownClusterOptions";
@@ -184,11 +185,11 @@ export function ImportInstallWizard(props: Props): ReactElement {
       return;
     }
     if (/\s/.test(mapToken)) {
-      setError("Map token must not contain spaces");
+      setError(MAP_NAME_COPY.mustNotContainSpaces);
       return;
     }
     if (!isOfficialMap(mapToken) && !mapToken.includes("_WP")) {
-      setError("Custom map token usually ends with _WP (example: Svartalfheim_WP)");
+      setError(MAP_NAME_COPY.customUsuallyEndsWp);
       return;
     }
 

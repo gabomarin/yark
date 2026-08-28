@@ -1,12 +1,19 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Select, Stack, TextInput } from "@mantine/core";
-import { isOfficialMap } from "@shared/map-identity";
+import { isBareOfficialMap } from "@shared/map-identity";
+import { MAP_NAME_COPY } from "@shared/map-name-copy";
+import { mapSaveFolderDescriptionStyles } from "@ui/mapFieldStyles";
 import {
   isMapModCandidate,
   suggestMapTokenFromMetadata,
 } from "@shared/map-token-suggest";
 import { KNOWN_MAP_OPTIONS, type ModMetadata } from "@shared/types";
+import {
+  SEARCH_MAPS_SELECT_VALUE,
+  type MapsSearchApplyPayload,
+} from "./mapsSearchModel";
+import { ServerFormMapsSearchModal } from "./ServerFormMapsSearchModal";
 
 /** Prebuilt Official Select rows (`value` = launch token, `label` = display name). */
 const OFFICIAL_MAP_SELECT_ITEMS = KNOWN_MAP_OPTIONS.map((entry) => ({
@@ -49,6 +56,7 @@ interface Props {
   /** Create has no Mods tab yet — copy must not pretend map packs are pickable. */
   isCreate?: boolean;
   onChange: (next: MapFieldChange) => void;
+  onMapsSearchApply: (payload: MapsSearchApplyPayload) => void;
 }
 
 export function listEnabledMapMods(options: {
@@ -91,6 +99,7 @@ function mapModsFingerprint(mods: ModMetadata[]): string {
 
 export function ServerFormMapField(props: Props): ReactElement {
   const [enrichedMods, setEnrichedMods] = useState(props.mapMods);
+  const [mapsSearchOpen, setMapsSearchOpen] = useState(false);
   const modsFingerprint = mapModsFingerprint(props.mapMods);
 
   useEffect(() => {
@@ -115,7 +124,10 @@ export function ServerFormMapField(props: Props): ReactElement {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional
   }, [modsFingerprint]);
 
-  const official = isOfficialMap(props.map);
+  const bareOfficial = isBareOfficialMap({
+    map: props.map,
+    mapModId: props.mapModId,
+  });
   const mapModsWithToken = useMemo(
     () =>
       enrichedMods.flatMap((mod) => {
@@ -132,7 +144,7 @@ export function ServerFormMapField(props: Props): ReactElement {
     (entry) => entry.mod.id === props.mapModId,
   );
 
-  const selectValue = official
+  const selectValue = bareOfficial
     ? props.map
     : linkedWithToken !== undefined
       ? mapModSelectValue(linkedWithToken.mod.id)
@@ -164,6 +176,10 @@ export function ServerFormMapField(props: Props): ReactElement {
       ...(mapModItems.length > 0
         ? [{ group: "Map mods", items: mapModItems }]
         : []),
+      {
+        group: "CurseForge",
+        items: [{ value: SEARCH_MAPS_SELECT_VALUE, label: "Search Maps…" }],
+      },
       ...(allowCustom
         ? [
             {
@@ -175,12 +191,15 @@ export function ServerFormMapField(props: Props): ReactElement {
     ];
   }, [allowCustom, mapModsWithToken, props.map, props.mapModId]);
 
-  const showSaveFolder = !official && props.map.trim().length > 0;
+  const showSaveFolder = !bareOfficial && props.map.trim().length > 0;
 
   const emit = (next: { map: string; mapModId: string | null }) => {
-    const nextOfficial = isOfficialMap(next.map);
+    const nextBareOfficial = isBareOfficialMap({
+      map: next.map,
+      mapModId: next.mapModId,
+    });
     const sameCustomMap =
-      !nextOfficial
+      !nextBareOfficial
       && next.map.trim().toLowerCase() === props.map.trim().toLowerCase();
     props.onChange({
       map: next.map,
@@ -199,12 +218,16 @@ export function ServerFormMapField(props: Props): ReactElement {
           if (value === null) {
             return;
           }
+          if (value === SEARCH_MAPS_SELECT_VALUE) {
+            setMapsSearchOpen(true);
+            return;
+          }
           if (value === CUSTOM_MAP_SELECT_VALUE) {
             if (!allowCustom) {
               return;
             }
             emit({
-              map: official ? "" : props.map,
+              map: bareOfficial ? "" : props.map,
               mapModId: null,
             });
             return;
@@ -227,10 +250,13 @@ export function ServerFormMapField(props: Props): ReactElement {
         searchable
         allowDeselect={false}
         required
+        description={
+          props.isCreate === true ? MAP_NAME_COPY.searchMapsCreateHint : undefined
+        }
       />
       {customSelected && allowCustom ? (
         <TextInput
-          label="Custom map token"
+          label={MAP_NAME_COPY.customLabel}
           size={props.inputSize}
           value={props.map}
           onChange={(e) =>
@@ -242,8 +268,8 @@ export function ServerFormMapField(props: Props): ReactElement {
           placeholder="e.g. Svartalfheim_WP"
           description={
             props.mapMods.length === 0
-              ? "Launch token, usually ends in _WP (example: Svartalfheim_WP)."
-              : "Usually ends in _WP. Prefer a Map mods option when the pack is enabled on the Mods tab."
+              ? MAP_NAME_COPY.usuallyEndsWp
+              : `${MAP_NAME_COPY.usuallyEndsWp} Prefer a Map mods option when the pack is enabled on the Mods tab.`
           }
           required
         />
@@ -270,9 +296,15 @@ export function ServerFormMapField(props: Props): ReactElement {
             })
           }
           placeholder="e.g. Svartalfheim"
-          description="Usually leave this blank. Only needed when the save folder name differs from the map token (e.g. Svartalfheim vs Svartalfheim_WP). If YARK can’t find the folder, world backups will fail."
+          description={MAP_NAME_COPY.saveFolderDiffers}
+          styles={mapSaveFolderDescriptionStyles}
         />
       ) : null}
+      <ServerFormMapsSearchModal
+        opened={mapsSearchOpen}
+        onClose={() => setMapsSearchOpen(false)}
+        onApply={props.onMapsSearchApply}
+      />
     </Stack>
   );
 }

@@ -1,3 +1,5 @@
+import { HTML_NAMED_ENTITIES } from "./html-named-entities";
+
 /**
  * Decode HTML character references in CurseForge stripped descriptions.
  * Does not parse tags — only named and numeric entities.
@@ -7,7 +9,7 @@ export function decodeHtmlEntities(text: string): string {
     return text;
   }
   return text.replace(
-    /&(#(?:x[0-9a-f]+|[0-9]+)|[a-z]+);/gi,
+    /&(#(?:x[0-9a-f]+|[0-9]+)|[a-z][a-z0-9]*);/gi,
     (entity, body: string) => {
       if (body.startsWith("#")) {
         const isHex = body[1]?.toLowerCase() === "x";
@@ -22,22 +24,7 @@ export function decodeHtmlEntities(text: string): string {
           return entity;
         }
       }
-      switch (body.toLowerCase()) {
-        case "amp":
-          return "&";
-        case "lt":
-          return "<";
-        case "gt":
-          return ">";
-        case "quot":
-          return '"';
-        case "apos":
-          return "'";
-        case "nbsp":
-          return "\u00A0";
-        default:
-          return entity;
-      }
+      return HTML_NAMED_ENTITIES[body.toLowerCase()] ?? entity;
     },
   );
 }

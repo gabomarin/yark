@@ -20,4 +20,13 @@ describe("decodeHtmlEntities", () => {
   it("leaves plain text unchanged", () => {
     expect(decodeHtmlEntities("Map Name: Amissa_WP")).toBe("Map Name: Amissa_WP");
   });
+
+  it("decodes superscript and typography entities from map descriptions", () => {
+    expect(decodeHtmlEntities("144km&sup2; landscape full of mysteries")).toBe(
+      "144km² landscape full of mysteries",
+    );
+    expect(decodeHtmlEntities("Fimbulwinter &mdash; random event")).toBe(
+      "Fimbulwinter — random event",
+    );
+  });
 });

@@ -72,18 +72,43 @@ describe("validateProfileInput", () => {
     expect(issues.some((i) => i.field === "extraArgs")).toBe(true);
   });
 
-  it("rejects custom maps on create but allows them on edit (#292)", () => {
-    const custom = validInput({ map: "Svartalfheim_WP", mapModId: "962796" });
-    expect(
-      validateProfileInput(custom, { create: true }).some((i) => i.field === "map"),
-    ).toBe(true);
-    expect(
-      validateProfileInput(custom, { create: true }).some(
-        (i) => i.field === "mapModId",
-      ),
-    ).toBe(true);
-    expect(validateProfileInput(custom)).toEqual([]);
+  it("allows linked custom maps on create (#295) but rejects unlinked custom", () => {
+    const linked = validInput({
+      map: "Svartalfheim_WP",
+      mapModId: "962796",
+      mods: ["962796"],
+      disabledMods: [],
+    });
+    expect(validateProfileInput(linked, { create: true })).toEqual([]);
     expect(validateProfileInput(validInput(), { create: true })).toEqual([]);
+
+    const reforged = validInput({
+      map: "TheIsland_WP",
+      mapModId: "1460513",
+      mods: ["1460513"],
+      disabledMods: [],
+    });
+    expect(validateProfileInput(reforged, { create: true })).toEqual([]);
+
+    const unlinked = validInput({ map: "Svartalfheim_WP", mapModId: null });
+    expect(
+      validateProfileInput(unlinked, { create: true }).some((i) => i.field === "map"),
+    ).toBe(true);
+
+    const disabled = validInput({
+      map: "Svartalfheim_WP",
+      mapModId: "962796",
+      mods: ["962796"],
+      disabledMods: ["962796"],
+    });
+    expect(
+      validateProfileInput(disabled, { create: true }).some((i) => i.field === "mapModId"),
+    ).toBe(true);
+  });
+
+  it("allows custom maps on edit without create guard (#292)", () => {
+    const custom = validInput({ map: "Svartalfheim_WP", mapModId: "962796" });
+    expect(validateProfileInput(custom)).toEqual([]);
   });
 
   it("rejects invalid mapModId digits but not missing map-mod warnings (#190)", () => {

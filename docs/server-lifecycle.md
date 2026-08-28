@@ -92,13 +92,17 @@ ASA map packs use the same launch shape as content mods:
 | --- | --- |
 | Launch token | `profile.map` in argv[0] map URL (official `KNOWN_MAPS` or free-form e.g. `Svartalfheim_WP`) |
 | Map pack Project ID | Must be **enabled** on `profile.mods` → `-mods=` |
-| Linked identity | Optional `profile.mapModId` for custom maps; cleared for official maps |
-| ASE `ActiveMapMod` / `-MapModID=` | **Not used** |
+| Linked identity | `profile.mapModId` for custom maps and official-token remasters; cleared for bare official maps |
+| ASE `ActiveMapMod` | **Not used** — stripped as `aseLegacy` |
+| `-MapModID=` | Only when `map` is official (`KNOWN_MAPS`) **and** a linked `mapModId` is enabled (Rootservers reforged remasters). Otherwise token + `-mods=` only. |
 
-**Create (`servers:create`)** only accepts official `KNOWN_MAPS` tokens. Custom maps stay on
-edit, import, and clone. Operator flow after create: enable a CurseForge **Maps** mod → toast
-(map unchanged) → Server Information **Map** groups Official / Map mods / Custom… → choosing a
-Map mod sets `map` + `mapModId`.
+**Create (`servers:create`)** accepts official `KNOWN_MAPS` tokens or a custom map linked through
+**Search Maps…** (launch token + `mapModId` on `mods`, enabled, not in `disabledMods`). There is
+no Custom… free-text path on create. Edit, import, and clone keep Custom… as an escape hatch.
+
+Operator flow: Server Information **Map** → **Search Maps…** → card grid (CurseForge Maps
+category) → confirm launch token → YARK sets `map`, `mapModId`, and enables the Project ID on
+`mods`. Choosing an enabled Map mod from the dropdown still works on edit.
 
 **Start blockers** (`mapIdentityStartBlockers` / `assertMapIdentityReadyForStart`): for a custom
 map, Start fails when `mapModId` is unset, missing from `mods`, or listed in `disabledMods`.

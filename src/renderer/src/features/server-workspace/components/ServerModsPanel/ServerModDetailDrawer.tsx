@@ -19,7 +19,9 @@ import {
   suggestMapTokenFromMetadata,
 } from "@shared/map-token-suggest";
 import type { ModMetadata } from "@shared/types";
+import { MAP_NAME_COPY } from "@shared/map-name-copy";
 import { copyTextToClipboard } from "@ui/copyToClipboard";
+import { MapNameHint } from "@ui/MapNameHint/MapNameHint";
 import { MetaRow } from "@ui/MetaRow/MetaRow";
 import { useUiDensity } from "@app/AppProviders";
 import { confirmRemoveServerMod } from "./confirmRemoveServerMod";
@@ -138,7 +140,7 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                   detail.description.trim().length > 0 && (
                     <ModDetailDescription text={detail.description} />
                   )}
-                <ModMapTokenHint detail={detail} />
+                <MapPackHint detail={detail} />
                 <Group gap="xs" wrap="wrap" className={classes.detailDrawerProjectRow}>
                   <Badge
                     variant="light"
@@ -278,40 +280,12 @@ function DetailModThumbnail(props: { src: string | null }): ReactElement {
   );
 }
 
-function ModMapTokenHint(props: { detail: ModMetadata }): ReactElement | null {
-  const density = useUiDensity();
-  const copyButtonSize = density === "compact" ? "compact-sm" : "sm";
+function MapPackHint(props: { detail: ModMetadata }): ReactElement | null {
   if (!isMapModCandidate(props.detail)) return null;
   const suggestion = suggestMapTokenFromMetadata(props.detail);
   return (
-    <Alert variant="light" color="blue" title="Map pack" radius="md">
-      {suggestion !== null ? (
-        <Stack gap="xs">
-          <Text size="sm">
-            Launch token{" "}
-            <Text span ff="monospace" fw={600}>{suggestion.token}</Text>
-            . Choose it under Server Information → Map (Map mods) when you want
-            to use it. Your current map is unchanged.
-          </Text>
-          <Button
-            size={copyButtonSize}
-            variant="default"
-            radius="md"
-            leftSection={<Copy size={14} />}
-            onClick={() => void copyTextToClipboard({
-              text: suggestion.token,
-              failureMessage: "Could not copy launch token",
-            })}
-          >
-            Copy token
-          </Button>
-        </Stack>
-      ) : (
-        <Text size="sm">
-          Set the launch token under Server Information → Map → Custom… when you
-          want to use it. Your current map is unchanged.
-        </Text>
-      )}
+    <Alert variant="light" color="blue" title={MAP_NAME_COPY.mapPackAlertTitle} radius="md">
+      <MapNameHint suggestion={suggestion} variant="embedded" />
     </Alert>
   );
 }

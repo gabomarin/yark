@@ -11,15 +11,19 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- **Search Maps…** on Create/Edit Server Information: CurseForge Maps card grid, in-modal **View details** step (metadata header, screenshots carousel, description), Map Name confirm, and one-step link of `map`, `mapModId`, and enabled Project ID (#295).
 - Mods detail drawer: CurseForge **screenshot slider** (Mantine Carousel) with enlarge, plus clamped plain-text **description** on inspect; Worker forwards capped screenshot URLs and fetches description on get-by-id for all mods (#342).
 
 ### Fixed
 
+- **Search Maps…** refuses unfiltered CurseForge search when the Maps class/category id is missing, instead of showing all ASA mods (#295).
 - Mods detail drawer: decode CurseForge HTML entities in descriptions (`&lt;&lt;` → `<<`) and show **Show more/less** only when the clamped text actually overflows (#342).
 - Map-mod launch token detection when CurseForge stripped descriptions glue `Map Name: Token_WP` to `Mod ID` without whitespace (e.g. Bjarnheim) (#342).
 
 ### Changed
 
+- Operator-facing **Map Name** wording (CurseForge label) replaces launch-token copy in Server Information, Search Maps, Mods map-pack hints, and related validation messages; code and docs still use map/launch token (#295).
+- **Official-token remasters** (Rootservers-style maps that reuse `KNOWN_MAPS` tokens): labeled `Map Name:` is inferred, `mapModId` persists, and launch adds `-MapModID=` before `-mods=` when the pack is enabled.
 - Workspace **Backups** tab: clearer embedded header, shared Destination above kind tabs (default root for world/players/INI), **Backup now** in the history toolbar with Import/Delete/Clear failed, and per-kind policy open by default (collapsible, not kept across kind changes) (#231).
 - First-run **primary CTAs**: empty Overview keeps one filled **New server** in the empty state (header create demoted); onboarding checklist makes **Install files** the filled primary when files are missing and demotes **Configure with wizard** (#236).
 - First-run **ASA jargon help**: Mods explain Project ID / CurseForge URL; ServerForm clarifies Create vs Install files and cluster join (no INI copy); edit Cluster ID / shared directory get short descriptions (#239).

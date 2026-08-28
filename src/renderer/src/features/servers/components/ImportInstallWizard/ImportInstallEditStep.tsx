@@ -76,6 +76,13 @@ export function ImportInstallEditStep(props: Props): ReactElement {
             mapSaveFolder: next.mapSaveFolder,
           })
         }
+        onMapsSearchApply={(payload) =>
+          set({
+            map: payload.map,
+            mapModId: payload.mapModId,
+            mapSaveFolder: payload.mapSaveFolder,
+          })
+        }
       />
       <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
         <NumberInput
