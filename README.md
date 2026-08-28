@@ -158,6 +158,11 @@ npm install
 npm run dev
 ```
 
+Optional local isolation (gitignored `.env.local`): set `YARK_E2E_USER_DATA` to a
+folder so `npm run dev` never touches your real AppData profile. Add
+`YARK_E2E_FULL_UI=true` if you still want splash, first-run setup, and What's new
+on that isolated profile (see `.env.example`).
+
 Common validation commands:
 
 | Command | Purpose |

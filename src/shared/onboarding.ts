@@ -70,7 +70,8 @@ export function createOnboardingRecord(
 
 /**
  * Auto-open the first-run wizard only for an empty fleet that has never
- * completed or skipped setup. E2E profiles (`YARK_E2E_USER_DATA`) never auto-show.
+ * completed or skipped setup. E2E shortcuts (`YARK_E2E_USER_DATA` without
+ * `YARK_E2E_FULL_UI=true`) never auto-show.
  *
  * `readOk` must be the `ok` from `getOnboarding()`. A failed read must not be
  * coerced to `record: null` (unset) — that would auto-open the wizard and can
@@ -79,10 +80,16 @@ export function createOnboardingRecord(
 export function shouldAutoShowSetupWizard(input: {
   record: OnboardingRecord | null;
   serverCount: number;
+  /** When true, skip auto-open (E2E shortcuts active). */
+  e2eShortcutsActive?: boolean;
+  /** @deprecated Prefer `e2eShortcutsActive`. Non-empty still skips auto-open. */
   e2eUserData?: string | null;
   readOk: boolean;
 }): boolean {
   if (!input.readOk) {
+    return false;
+  }
+  if (input.e2eShortcutsActive === true) {
     return false;
   }
   if ((input.e2eUserData ?? "").trim().length > 0) {

@@ -81,7 +81,15 @@ describe("shouldAutoShowSetupWizard", () => {
     ).toBe(false);
   });
 
-  it("never auto-shows for E2E user-data profiles", () => {
+  it("never auto-shows when E2E shortcuts are active", () => {
+    expect(
+      shouldAutoShowSetupWizard({
+        record: null,
+        serverCount: 0,
+        e2eShortcutsActive: true,
+        readOk: true,
+      }),
+    ).toBe(false);
     expect(
       shouldAutoShowSetupWizard({
         record: null,
@@ -90,5 +98,13 @@ describe("shouldAutoShowSetupWizard", () => {
         readOk: true,
       }),
     ).toBe(false);
+    expect(
+      shouldAutoShowSetupWizard({
+        record: null,
+        serverCount: 0,
+        e2eShortcutsActive: false,
+        readOk: true,
+      }),
+    ).toBe(true);
   });
 });

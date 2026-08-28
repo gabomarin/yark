@@ -43,8 +43,10 @@ Requirements:
 
 - Built `out/` tree before any `e2e:*` script.
 - Isolated app data (`YARK_E2E_USER_DATA`); never the developer’s real AppData.
-  The same env skips the startup splash and the first-run setup wizard so
-  `waitForOverview` hits the main window without a modal overlay.
+  The same env enables E2E shortcuts (skip splash and first-run setup wizard) so
+  `waitForOverview` hits the main window without a modal overlay. Local/dev can
+  set `YARK_E2E_FULL_UI=true` to keep normal operator UI on an isolated profile.
+  Scripts and CI must **not** set `YARK_E2E_FULL_UI`.
 - Settings uses a **category sidebar** (General, Servers, SteamCMD, Logs, About).
   Click the in-page `Settings categories` nav — not the shell Servers/Logs
   buttons, which share those labels. Helper: `openSettingsCategory` in

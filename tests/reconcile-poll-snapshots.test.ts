@@ -78,6 +78,40 @@ describe("reconcilePollSnapshots", () => {
     expect(next).toBe(previous);
   });
 
+  it("ignores stale steamcmd progress that regresses detected path", () => {
+    const previous: SteamCmdStatus = {
+      detected: true,
+      executablePath: "C:/yark-dev/steamcmd/steamcmd.exe",
+      depotCacheDir: "C:/yark-dev/steamcmd/depotcache",
+      contentCacheDir: "C:/yark-dev/steamcmd/content",
+      busy: false,
+      running: false,
+      operation: null,
+      serverId: null,
+      startedAt: null,
+      pid: null,
+      progressPercent: null,
+      progressLabel: null,
+      progressBytesDownloaded: null,
+      progressBytesTotal: null,
+      lastLine: "SteamCMD installed and validated",
+      queuedCount: 0,
+      criticalJobs: [],
+      checkedAt: "t2",
+    };
+    const stale: SteamCmdStatus = {
+      ...previous,
+      detected: false,
+      executablePath: null,
+      depotCacheDir: null,
+      contentCacheDir: null,
+      busy: false,
+      lastLine: "Validating SteamCMD: C:/yark-dev/steamcmd/steamcmd.exe",
+      checkedAt: "t3",
+    };
+    expect(reconcileSteamCmdStatus(previous, stale)).toBe(previous);
+  });
+
   it("treats missing criticalJobs as empty for steamcmd reconcile", () => {
     const previous = {
       detected: true,

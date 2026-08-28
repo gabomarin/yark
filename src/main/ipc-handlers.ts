@@ -36,6 +36,7 @@ import {
   serializeOnboardingRecord,
   type OnboardingRecord,
 } from "../shared/onboarding";
+import { isYarkE2eShortcutsActive } from "../shared/os-notification-events";
 import { APP_VERSION } from "../shared/app-version";
 import {
   readDesktopShellPreferences,
@@ -547,7 +548,8 @@ export function registerIpcHandlers(
     ipcArgSchemas[IPC.appGetLastSeenChangelogVersion],
     (): string | null => {
       // Fresh E2E profiles must not block smoke on the post-update What's new modal.
-      if ((process.env["YARK_E2E_USER_DATA"] ?? "").trim().length > 0) {
+      // YARK_E2E_FULL_UI=true keeps normal operator UI on an isolated profile.
+      if (isYarkE2eShortcutsActive()) {
         return APP_VERSION;
       }
       const raw = settings.get(LAST_SEEN_CHANGELOG_VERSION_SETTING_KEY);
@@ -573,7 +575,8 @@ export function registerIpcHandlers(
     ipcArgSchemas[IPC.appGetOnboarding],
     (): OnboardingRecord | null => {
       // Fresh E2E profiles must not block smoke on the first-run setup wizard.
-      if ((process.env["YARK_E2E_USER_DATA"] ?? "").trim().length > 0) {
+      // YARK_E2E_FULL_UI=true keeps normal operator UI on an isolated profile.
+      if (isYarkE2eShortcutsActive()) {
         return {
           status: "completed",
           completedAt: "1970-01-01T00:00:00.000Z",

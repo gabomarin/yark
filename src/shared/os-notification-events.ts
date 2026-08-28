@@ -1,4 +1,5 @@
 import type { AppEvent } from "./types";
+import { parseStoredBoolean } from "./desktop-shell";
 
 /**
  * Short allowlist of fleet events that may raise a Windows OS toast (#331).
@@ -61,6 +62,27 @@ export function isYarkE2eUserDataEnv(
   env: NodeJS.ProcessEnv | Record<string, string | undefined> = process.env,
 ): boolean {
   return (env["YARK_E2E_USER_DATA"] ?? "").trim().length > 0;
+}
+
+/**
+ * E2E/test shortcuts: skip splash, first-run wizard, What's new; isolate SteamCMD
+ * host discovery; suppress OS toasts. Active when `YARK_E2E_USER_DATA` is set
+ * unless `YARK_E2E_FULL_UI=true` (isolated profile with normal operator UI for
+ * local development). Path isolation still uses `YARK_E2E_USER_DATA` alone.
+ */
+export function isYarkE2eFullUiEnv(
+  env: NodeJS.ProcessEnv | Record<string, string | undefined> = process.env,
+): boolean {
+  return parseStoredBoolean(env["YARK_E2E_FULL_UI"], false);
+}
+
+export function isYarkE2eShortcutsActive(
+  env: NodeJS.ProcessEnv | Record<string, string | undefined> = process.env,
+): boolean {
+  if (!isYarkE2eUserDataEnv(env)) {
+    return false;
+  }
+  return !isYarkE2eFullUiEnv(env);
 }
 
 export function shouldSkipNativeNotification(input: {

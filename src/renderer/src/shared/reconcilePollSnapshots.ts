@@ -183,6 +183,11 @@ export function reconcileSteamCmdStatus(
   next: SteamCmdStatus,
 ): SteamCmdStatus {
   if (previous === null) return next;
+  // Install validation can emit late progress pushes built before persist; ignore
+  // regressions so a completed refresh is not overwritten in Settings/Downloads.
+  if (previous.detected && !next.detected) {
+    return previous;
+  }
   const previousJobs = previous.criticalJobs ?? [];
   const nextJobs = next.criticalJobs ?? [];
   if (

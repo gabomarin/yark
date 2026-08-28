@@ -27,9 +27,21 @@ describe("shouldShowSplash", () => {
     expect(shouldShowSplash({ YARK_SKIP_SPLASH: "1" })).toBe(false);
   });
 
-  it("skips isolated E2E profiles", () => {
+  it("skips isolated E2E profiles unless YARK_E2E_FULL_UI=true", () => {
     expect(shouldShowSplash({ YARK_E2E_USER_DATA: "C:\\asa-e2e\\profiles\\smoke" })).toBe(false);
     expect(shouldShowSplash({ YARK_E2E_USER_DATA: "   " })).toBe(true);
+    expect(
+      shouldShowSplash({
+        YARK_E2E_USER_DATA: "C:\\yark_dev_profile",
+        YARK_E2E_FULL_UI: "true",
+      }),
+    ).toBe(true);
+    expect(
+      shouldShowSplash({
+        YARK_E2E_USER_DATA: "C:\\yark_dev_profile",
+        YARK_E2E_FULL_UI: "false",
+      }),
+    ).toBe(false);
   });
 });
 
