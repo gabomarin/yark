@@ -145,8 +145,6 @@ export function ServerFormProfileFields(
       </ServerFormSection>
 
       <ServerFormSection
-        eyebrow="Network & access"
-        title="Reachability"
         tone="cool"
         fill={!embedded}
         padding={cardPadding}
@@ -173,7 +171,6 @@ export function ServerFormProfileFields(
       </ServerFormSection>
 
       <ServerFormSection
-        title="Cluster"
         tone="flat"
         span2
         padding={cardPadding}

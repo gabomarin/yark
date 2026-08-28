@@ -34,7 +34,7 @@ function createPortsDescription(
     return "Could not auto-suggest ports that avoid other YARK servers — pick unused ports.";
   }
   if (suggestion.offset > 0) {
-    return "Suggested to avoid other YARK servers (not checked against Windows or your network).";
+    return "Suggested to avoid other YARK servers.";
   }
   return undefined;
 }
@@ -79,7 +79,7 @@ export function ServerFormReachabilityFields(props: Props): ReactElement {
           />
         </SimpleGrid>
         {portsDescription !== undefined ? (
-          <Text size="xs" c="dimmed">
+          <Text size="xs" c="cyan" fw={500}>
             {portsDescription}
           </Text>
         ) : null}

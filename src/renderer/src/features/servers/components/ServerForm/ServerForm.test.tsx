@@ -224,7 +224,7 @@ describe("ServerForm", () => {
     ).toHaveAttribute("aria-readonly", "true");
     expect(screen.getByRole("button", { name: /^save changes$/i })).toBeInTheDocument();
     expect(screen.getByText(/the island · 7777\/27015\/27020/i)).toBeInTheDocument();
-    expect(screen.getByText(/^reachability$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/game port/i)).toBeInTheDocument();
   });
 
   it("suggests non-conflicting ports against the fleet (#55)", () => {
@@ -309,7 +309,7 @@ describe("ServerForm", () => {
     expect(screen.getByText(/^server information$/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /configuration wizard/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^save changes$/i })).toBeInTheDocument();
-    expect(screen.getByText(/^reachability$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/game port/i)).toBeInTheDocument();
     expect(screen.getByText(/the island · 7777\/27015\/27020/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/auto-start with yark/i)).toBeInTheDocument();
   });
