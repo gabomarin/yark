@@ -5,9 +5,14 @@ import type { ModMetadata } from "./types";
 const MAP_CATEGORY_PATTERN = /\bmaps?\b/i;
 
 /**
- * ASA `*_WP` token end. `\b` fails when CurseForge stripped text glues the next
- * label (`Bjarnheim_WPMod ID` — no boundary between P and M). Patterns omit the
- * `i` flag so `(?![a-z0-9_])` still allows an uppercase continuation like `Mod`.
+ * Labeled `Map Name:` / `Server Name:` matches accept official `KNOWN_MAPS` tokens
+ * so Rootservers remasters (e.g. Island Reforged → `TheIsland_WP`) infer correctly.
+ * Bare `*_WP` scans still skip official tokens to avoid false positives in prose.
+ * Tradeoff: a custom map whose author labels an official token may infer wrong —
+ * confirm step and Search Maps category filter remain the operator guardrails.
+ *
+ * `\b` fails when CurseForge stripped text glues the next label (`Bjarnheim_WPMod ID`).
+ * Patterns omit the `i` flag so `(?![a-z0-9_])` still allows an uppercase continuation.
  */
 const LABELED_TOKEN_PATTERNS: RegExp[] = [
   /[Mm][Aa][Pp]\s*[Nn][Aa][Mm][Ee]\s*:\s*([A-Za-z][A-Za-z0-9_]*_WP)(?![a-z0-9_])/,
@@ -64,7 +69,7 @@ export function suggestMapTokenFromModText(text: string): MapTokenSuggestion | n
     return { token: firstBare, source: "bare", matchIndex: 0 };
   }
 
-  // Labeled match that pointed at an official map — ignore and fail closed.
+  // No labeled or non-official bare token found.
   return null;
 }
 

@@ -15,6 +15,10 @@ export interface MapIdentityFields {
 
 type MapIdentityKind = "official" | "custom";
 
+/**
+ * Resolved map identity for validation and launch.
+ * `custom` includes non-official tokens and official-token remasters linked to a Maps pack.
+ */
 export interface ResolvedMapIdentity {
   kind: MapIdentityKind;
   map: string;
@@ -92,6 +96,7 @@ export function resolveMapIdentity(fields: MapIdentityFields): ResolvedMapIdenti
   const mapModId = isValidMapModId(rawModId) ? rawModId : null;
 
   if (isOfficialMap(map)) {
+    // Remaster: official token + linked Maps pack → custom (needs mapModId / -MapModID=).
     if (mapModId !== null) {
       return { kind: "custom", map, mapModId };
     }

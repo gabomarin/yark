@@ -30,12 +30,25 @@ export interface MapsSearchRow {
 /** Sentinel Select value — opens the CurseForge Maps search modal (#295). */
 export const SEARCH_MAPS_SELECT_VALUE = "__yark_search_maps__";
 
+/** Operator copy when ASA Maps class/category ids are missing from CurseForge. */
+export const MAPS_CATEGORY_UNAVAILABLE_COPY =
+  "CurseForge Maps category unavailable — map search is disabled until categories load correctly.";
+
 const MAPS_LABEL = /\bmaps?\b/i;
+
+export type MapsCategoryFilter = Pick<ModSearchOptions, "classId" | "categoryId">;
+
+/** True when searchMods can be scoped to the Maps class or leaf category. */
+export function hasMapsCategoryFilter(
+  filter: MapsCategoryFilter,
+): filter is { classId: number } | { categoryId: number } {
+  return filter.classId !== undefined || filter.categoryId !== undefined;
+}
 
 /** Resolve ASA Maps class/category ids from Worker categories (#295). */
 export function resolveMapsCategoryFilter(
   categories: ModCategory[],
-): Pick<ModSearchOptions, "classId" | "categoryId"> {
+): MapsCategoryFilter {
   const mapsClass = categories.find(
     (entry) => entry.isClass && MAPS_LABEL.test(entry.name),
   );
@@ -52,7 +65,7 @@ export function resolveMapsCategoryFilter(
 }
 
 export function buildMapsSearchOptions(
-  categoryFilter: Pick<ModSearchOptions, "classId" | "categoryId">,
+  categoryFilter: MapsCategoryFilter,
   page: number,
 ): ModSearchOptions {
   return {

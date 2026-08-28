@@ -16,6 +16,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- **Search Maps…** refuses unfiltered CurseForge search when the Maps class/category id is missing, instead of showing all ASA mods (#295).
 - Mods detail drawer: decode CurseForge HTML entities in descriptions (`&lt;&lt;` → `<<`) and show **Show more/less** only when the clamped text actually overflows (#342).
 - Map-mod launch token detection when CurseForge stripped descriptions glue `Map Name: Token_WP` to `Mod ID` without whitespace (e.g. Bjarnheim) (#342).
 

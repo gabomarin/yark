@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { ModCategory, ModMetadata } from "@shared/types";
 import {
+  MAPS_CATEGORY_UNAVAILABLE_COPY,
   applyMapsSearchToProfileFields,
   buildMapsSearchOptions,
   buildMapsSearchRows,
+  hasMapsCategoryFilter,
   isValidMapLaunchToken,
   resolveMapsCategoryFilter,
 } from "../../src/renderer/src/features/servers/components/ServerForm/mapsSearchModel";
@@ -61,6 +63,22 @@ describe("resolveMapsCategoryFilter", () => {
     ];
     expect(resolveMapsCategoryFilter(categories)).toEqual({ categoryId: 11 });
   });
+
+  it("returns empty filter when Maps category is missing", () => {
+    const categories: ModCategory[] = [
+      {
+        id: 20,
+        name: "Structures",
+        slug: "structures",
+        isClass: true,
+        classId: null,
+        parentCategoryId: null,
+        displayIndex: 0,
+      },
+    ];
+    expect(resolveMapsCategoryFilter(categories)).toEqual({});
+    expect(hasMapsCategoryFilter(resolveMapsCategoryFilter(categories))).toBe(false);
+  });
 });
 
 describe("maps search helpers", () => {
@@ -82,6 +100,10 @@ describe("maps search helpers", () => {
   it("validates launch tokens", () => {
     expect(isValidMapLaunchToken("Svartalfheim_WP")).toBe(true);
     expect(isValidMapLaunchToken("bad token")).toBe(false);
+  });
+
+  it("exposes operator copy when Maps category filter is unavailable", () => {
+    expect(MAPS_CATEGORY_UNAVAILABLE_COPY).toMatch(/Maps category unavailable/i);
   });
 
   it("apply enables the map mod on the profile", () => {

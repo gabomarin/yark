@@ -15,10 +15,12 @@ import type { ModCategory, ModMetadata, ModSearchPage } from "@shared/types";
 import { SearchField } from "@ui/SearchField/SearchField";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import {
+  MAPS_CATEGORY_UNAVAILABLE_COPY,
   MAPS_SEARCH_PAGE_SIZE,
   buildMapsSearchOptions,
   buildMapsSearchRows,
   enrichMapsSearchPage,
+  hasMapsCategoryFilter,
   isValidMapLaunchToken,
   resolveMapsCategoryFilter,
   type MapsSearchApplyPayload,
@@ -47,6 +49,7 @@ function modalTitle(step: Step, detail: ModMetadata | null, picked: MapsSearchRo
 
 export function ServerFormMapsSearchModal(props: Props): ReactElement {
   const [categories, setCategories] = useState<ModCategory[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [step, setStep] = useState<Step>("search");
   const [query, setQuery] = useState("");
   const [committedQuery, setCommittedQuery] = useState("");
@@ -69,13 +72,16 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
     () => resolveMapsCategoryFilter(categories),
     [categories],
   );
+  const mapsCategoryReady = hasMapsCategoryFilter(categoryFilter);
 
   useEffect(() => {
     if (!props.opened) return;
     let alive = true;
+    setCategoriesLoading(true);
     void window.api.listModCategories().then((result) => {
       if (!alive) return;
       setCategories(result.ok ? result.data : []);
+      setCategoriesLoading(false);
     });
     return () => {
       alive = false;
@@ -108,6 +114,16 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
 
   useEffect(() => {
     if (!props.opened) return;
+    if (categoriesLoading) return;
+
+    if (!mapsCategoryReady) {
+      setSearching(false);
+      setError(MAPS_CATEGORY_UNAVAILABLE_COPY);
+      setCatalog(null);
+      setRows([]);
+      return;
+    }
+
     let alive = true;
     const run = async () => {
       setSearching(true);
@@ -139,7 +155,7 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
     return () => {
       alive = false;
     };
-  }, [props.opened, committedQuery, categoryFilter, page]);
+  }, [props.opened, categoriesLoading, mapsCategoryReady, committedQuery, categoryFilter, page]);
 
   const totalCount = catalog?.pagination.totalCount ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / MAPS_SEARCH_PAGE_SIZE));
@@ -258,10 +274,12 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
             ) : null}
           </Stack>
           <div className={classes.modalStepScroll}>
-            {searching && rows.length === 0 ? (
+            {categoriesLoading || (searching && rows.length === 0 && mapsCategoryReady) ? (
               <Group justify="center" py="lg">
                 <Loader size="sm" />
               </Group>
+            ) : !mapsCategoryReady ? (
+              <div className={classes.emptySearch}>{MAPS_CATEGORY_UNAVAILABLE_COPY}</div>
             ) : rows.length === 0 ? (
               <div className={classes.emptySearch}>No Maps packs match that query.</div>
             ) : (
@@ -277,7 +295,7 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
               </div>
             )}
           </div>
-          {pageCount > 1 ? (
+          {pageCount > 1 && mapsCategoryReady ? (
             <Group justify="center">
               <Pagination value={page} total={pageCount} onChange={setPage} size="sm" />
             </Group>
