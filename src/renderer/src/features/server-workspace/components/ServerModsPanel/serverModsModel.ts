@@ -216,7 +216,11 @@ function sameStringList(left: string[] | undefined, right: string[] | undefined)
   return a.length === b.length && a.every((value, index) => value === b[index]);
 }
 
-/** True when every user-visible ModMetadata field matches. */
+/**
+ * True when every user-visible ModMetadata field matches, including authors and
+ * categories. Used by inspect cache persistence ({@link inspectServerMod}) and
+ * tests — compare full metadata only; do not use for partial field checks.
+ */
 export function sameModMetadata(left: ModMetadata, right: ModMetadata): boolean {
   return (
     left.id === right.id

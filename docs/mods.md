@@ -130,6 +130,11 @@ Opening mod details (`mods:get-by-reference` / get-by-id) can show:
 - A clamped plain-text **description** when the Worker returned stripped text
   (all mods on get-by-id; Maps-only on batch; null on search). No HTML render.
 
+The extra `/description` upstream call runs only when something invokes
+get-by-id (`mods:get-by-reference`) — drawer inspect, add-by-URL, catalog add,
+etc. Batch profile refresh and search do **not** fetch long descriptions for
+every mod, so browsing the table without opening the drawer does not burn quota.
+
 `buildLaunchArgs` filters `profile.mods` with `disabledMods`:
 
 ```text

@@ -61,7 +61,8 @@ Normal Mods workspace use (per install / short session), **assumptions**:
 - Profile open / metadata refresh: one POST batch (≤ enabled+disabled IDs, capped
   at 50 by the Worker).
 - **GET** `/v1/mods/:id` may trigger an extra upstream `/description` on cache
-  MISS for **any** ASA mod (drawer long description, #342).
+  MISS for **any** ASA mod (drawer long description, #342). YARK calls this
+  route only on explicit inspect/add flows — not on batch profile refresh.
 - **POST** batch may trigger `/description` only for **Maps-category** mods
   (map-token heuristics, #195) — not for every id in the batch.
 - Screenshot URLs ride on the existing Get Mod / batch / search payloads (no

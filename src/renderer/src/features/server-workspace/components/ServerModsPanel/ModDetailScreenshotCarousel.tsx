@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ReactElement } from "react";
 import { Carousel } from "@mantine/carousel";
-import { Group, Image, Modal, Text, UnstyledButton } from "@mantine/core";
+import { Button, Group, Image, Modal, Stack, Text, UnstyledButton } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import classes from "./ServerModsPanel.module.css";
 
@@ -16,11 +16,15 @@ interface Props {
 export function ModDetailScreenshotCarousel(props: Props): ReactElement | null {
   const density = useUiDensity();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [lightboxLoadError, setLightboxLoadError] = useState(false);
+  const [lightboxRetryKey, setLightboxRetryKey] = useState(0);
   const [failed, setFailed] = useState<Record<string, true>>({});
 
   useEffect(() => {
     setFailed({});
     setLightboxIndex(null);
+    setLightboxLoadError(false);
+    setLightboxRetryKey(0);
   }, [props.urls]);
 
   const visible = props.urls.filter((url) => failed[url] !== true);
@@ -60,7 +64,10 @@ export function ModDetailScreenshotCarousel(props: Props): ReactElement | null {
             <UnstyledButton
               className={classes.detailDrawerCarouselSlideBtn}
               aria-label={`Screenshot ${index + 1}, enlarge`}
-              onClick={() => setLightboxIndex(index)}
+              onClick={() => {
+                setLightboxIndex(index);
+                setLightboxLoadError(false);
+              }}
             >
               <Image
                 src={url}
@@ -90,16 +97,42 @@ export function ModDetailScreenshotCarousel(props: Props): ReactElement | null {
         size="lg"
         radius="md"
       >
-        {lightboxSrc !== null && (
+        {lightboxSrc !== null && lightboxLoadError ? (
+          <Stack align="center" gap="sm" py="md">
+            <Text size="sm" c="dimmed" ta="center">
+              Could not load this screenshot.
+            </Text>
+            <Group gap="xs" justify="center">
+              <Button
+                variant="light"
+                size="xs"
+                onClick={() => {
+                  setLightboxLoadError(false);
+                  setLightboxRetryKey((key) => key + 1);
+                }}
+              >
+                Retry
+              </Button>
+              <Button
+                variant="subtle"
+                size="xs"
+                onClick={() => setLightboxIndex(null)}
+              >
+                Close
+              </Button>
+            </Group>
+          </Stack>
+        ) : lightboxSrc !== null ? (
           <Image
+            key={`${lightboxSrc}:${lightboxRetryKey}`}
             src={lightboxSrc}
             alt=""
             fit="contain"
             mah="70vh"
             radius="md"
-            onError={() => setLightboxIndex(null)}
+            onError={() => setLightboxLoadError(true)}
           />
-        )}
+        ) : null}
       </Modal>
     </div>
   );
