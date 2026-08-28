@@ -40,6 +40,12 @@ Appalachia Early Access
 Server Name: Appalachia_Official_WP
 Completion: 98%
 `,
+  /** CurseForge stripped description often glues Map Name + Mod ID (#342 follow-up). */
+  bjarnheimGlued: `
+Welcome to the nordic world of Bjarnheim!
+Map Name: Bjarnheim_WPMod ID: 1376189
+Map Completion
+`,
 } as const;
 
 function meta(
@@ -85,6 +91,14 @@ describe("suggestMapTokenFromModText", () => {
     const suggestion = suggestMapTokenFromModText(FIXTURES.appalachia);
     expect(suggestion).toEqual({
       token: "Appalachia_Official_WP",
+      source: "labeled",
+      matchIndex: 0,
+    });
+  });
+
+  it("extracts Map Name when Mod ID is glued without whitespace (Bjarnheim)", () => {
+    expect(suggestMapTokenFromModText(FIXTURES.bjarnheimGlued)).toEqual({
+      token: "Bjarnheim_WP",
       source: "labeled",
       matchIndex: 0,
     });

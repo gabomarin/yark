@@ -216,14 +216,19 @@ function sameStringList(left: string[] | undefined, right: string[] | undefined)
   return a.length === b.length && a.every((value, index) => value === b[index]);
 }
 
-/** True when every user-visible ModMetadata field matches. */
-function sameModMetadata(left: ModMetadata, right: ModMetadata): boolean {
+/**
+ * True when every user-visible ModMetadata field matches, including authors and
+ * categories. Used by inspect cache persistence ({@link inspectServerMod}) and
+ * tests — compare full metadata only; do not use for partial field checks.
+ */
+export function sameModMetadata(left: ModMetadata, right: ModMetadata): boolean {
   return (
     left.id === right.id
     && left.name === right.name
     && left.summary === right.summary
     && (left.description ?? null) === (right.description ?? null)
     && left.thumbnailUrl === right.thumbnailUrl
+    && sameStringList(left.screenshots, right.screenshots)
     && left.downloadCount === right.downloadCount
     && left.dateModified === right.dateModified
     && left.curseforgeUrl === right.curseforgeUrl
@@ -240,6 +245,7 @@ function modMetadataFingerprint(item: ModMetadata): string {
     item.summary,
     item.description ?? "",
     item.thumbnailUrl ?? "",
+    (item.screenshots ?? []).join(","),
     String(item.downloadCount),
     item.dateModified,
     item.curseforgeUrl,

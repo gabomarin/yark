@@ -205,11 +205,21 @@ describe("CurseForge proxy abuse controls (#70)", () => {
       },
     });
 
-    const upstream = vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ data: asaModPayload(99) }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }),
+    // MISS path: Get Mod + /description for every inspect (#342).
+    const upstream = vi.spyOn(globalThis, "fetch").mockImplementation(
+      async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes("/description")) {
+          return new Response(JSON.stringify({ data: "Author notes" }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+        return new Response(JSON.stringify({ data: asaModPayload(99) }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      },
     );
 
     const first = await worker.fetch(
@@ -219,7 +229,7 @@ describe("CurseForge proxy abuse controls (#70)", () => {
     expect(first.status).toBe(200);
     expect(first.headers.get("X-Yark-Cache")).toBe("MISS");
     expect(first.headers.get("Cache-Control")).toBe("no-store");
-    expect(upstream).toHaveBeenCalledTimes(1);
+    expect(upstream).toHaveBeenCalledTimes(2);
 
     const second = await worker.fetch(
       new Request("https://proxy.test/v1/mods/99"),
@@ -228,14 +238,15 @@ describe("CurseForge proxy abuse controls (#70)", () => {
     expect(second.status).toBe(200);
     expect(second.headers.get("X-Yark-Cache")).toBe("HIT");
     expect(second.headers.get("Cache-Control")).toBe("no-store");
-    expect(upstream).toHaveBeenCalledTimes(1);
+    expect(upstream).toHaveBeenCalledTimes(2);
 
     const body = (await second.json()) as {
       ok: boolean;
-      data: { id: string };
+      data: { id: string; description: string | null };
     };
     expect(body.ok).toBe(true);
     expect(body.data.id).toBe("99");
+    expect(body.data.description).toBe("Author notes");
   });
 
   it("ignores junk search query params when keying the edge cache", async () => {

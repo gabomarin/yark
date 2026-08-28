@@ -19,6 +19,7 @@ import {
   type ModRow,
 } from "./serverModsModel";
 import { createServerModsListMutations } from "./serverModsListMutations";
+import { inspectServerMod } from "./serverModsInspect";
 import { notifyNewlyAddedMods } from "./notifyModsAddedDisabled";
 import { useMapModEnableNotify } from "./useMapModEnableNotify";
 import classes from "./ServerModsPanel.module.css";
@@ -41,6 +42,8 @@ export function ServerModsPanel(props: Props): ReactElement {
     serverRef.current = props.server;
   });
   const cacheRef = useRef(props.server.modMetadataCache ?? {});
+  /** In-flight inspect target (`id` or `slug`); cleared on close / newer inspect. */
+  const inspectTargetRef = useRef<string | null>(null);
   const [metadata, setMetadata] = useState<Map<string, ModMetadata>>(
     () => metadataMap(props.server.modMetadataCache),
   );
@@ -63,6 +66,7 @@ export function ServerModsPanel(props: Props): ReactElement {
     setView("server");
     setCatalog(null);
     setDetail(null);
+    inspectTargetRef.current = null;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reset on server id change only; mods/disabledMods/cache are reset below by content-key effect
   }, [props.server.id]);
 
@@ -233,36 +237,18 @@ export function ServerModsPanel(props: Props): ReactElement {
   };
 
   const inspect = async (row: ModRow) => {
-    const cachedDetail = row.id === null ? undefined : cacheRef.current[row.id];
-    if (cachedDetail !== undefined) {
-      setDetail(cachedDetail);
-      return;
-    }
-    const ref = row.id ?? row.slug;
-    if (ref.length === 0) return;
-    setBusyKey(`detail:${row.slug}`);
-    setError(null);
-    setWarning(null);
-    await runWithFinally(
-      async () => {
-        try {
-          const result = await window.api.getModByReference(ref);
-          if (!result.ok) throw new Error(result.error);
-          setDetail(result.data);
-          if (configuredIdsRef.current.includes(result.data.id)) {
-            await persist(configuredIdsRef.current, disabledIdsRef.current, {
-              ...cacheRef.current,
-              [result.data.id]: result.data,
-            });
-          }
-        } catch (cause) {
-          setError(cause instanceof Error ? cause.message : "Could not load mod metadata");
-        }
-      },
-      () => {
-        setBusyKey(null);
-      },
-    );
+    await inspectServerMod({
+      row,
+      cacheRef,
+      configuredIdsRef,
+      disabledIdsRef,
+      inspectTargetRef,
+      setDetail,
+      setBusyKey,
+      setError,
+      setWarning,
+      persist,
+    });
   };
 
   const addDiscovered = (row: ModRow) => {
@@ -333,8 +319,11 @@ export function ServerModsPanel(props: Props): ReactElement {
         opened={detail !== null}
         configured={detail !== null && configuredIds.includes(detail.id)}
         enabled={detail !== null && !disabledSet.has(detail.id)}
-        busy={detail !== null && busyKey === detail.id}
-        onClose={() => setDetail(null)}
+        busy={detail !== null && busyKey === `detail:${detail.slug}`}
+        onClose={() => {
+          inspectTargetRef.current = null;
+          setDetail(null);
+        }}
         onOpenExternal={(target) => void openExternal(target)}
         onToggle={(id, enabled) => void toggle(id, enabled)}
         onAdd={(mod) => void add(mod)}

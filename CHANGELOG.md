@@ -9,6 +9,15 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Mods detail drawer: CurseForge **screenshot slider** (Mantine Carousel) with enlarge, plus clamped plain-text **description** on inspect; Worker forwards capped screenshot URLs and fetches description on get-by-id for all mods (#342).
+
+### Fixed
+
+- Mods detail drawer: decode CurseForge HTML entities in descriptions (`&lt;&lt;` → `<<`) and show **Show more/less** only when the clamped text actually overflows (#342).
+- Map-mod launch token detection when CurseForge stripped descriptions glue `Map Name: Token_WP` to `Mod ID` without whitespace (e.g. Bjarnheim) (#342).
+
 ### Changed
 
 - Workspace **Backups** tab: clearer embedded header, shared Destination above kind tabs (default root for world/players/INI), **Backup now** in the history toolbar with Import/Delete/Clear failed, and per-kind policy open by default (collapsible, not kept across kind changes) (#231).

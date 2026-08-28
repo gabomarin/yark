@@ -23,6 +23,8 @@ import { copyTextToClipboard } from "@ui/copyToClipboard";
 import { MetaRow } from "@ui/MetaRow/MetaRow";
 import { useUiDensity } from "@app/AppProviders";
 import { confirmRemoveServerMod } from "./confirmRemoveServerMod";
+import { ModDetailDescription } from "./ModDetailDescription";
+import { ModDetailScreenshotCarousel } from "./ModDetailScreenshotCarousel";
 import classes from "./ServerModsPanel.module.css";
 
 /** Matches workspace secondary drawers (`ServerWorkspacePage`). */
@@ -129,6 +131,13 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                 <Text size="sm" className={classes.detailDrawerSummary}>
                   {detail.summary}
                 </Text>
+                <ModDetailScreenshotCarousel
+                  urls={detail.screenshots ?? []}
+                />
+                {typeof detail.description === "string" &&
+                  detail.description.trim().length > 0 && (
+                    <ModDetailDescription text={detail.description} />
+                  )}
                 <ModMapTokenHint detail={detail} />
                 <Group gap="xs" wrap="wrap" className={classes.detailDrawerProjectRow}>
                   <Badge

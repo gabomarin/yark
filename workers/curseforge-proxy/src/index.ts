@@ -8,6 +8,7 @@
  * Cache API for safe GETs, privacy-conscious structured logs.
  */
 
+import { decodeHtmlEntities } from "../../../src/shared/decode-html-entities";
 import { resolveWorkerConfig, type Env, type RateLimiter } from "./config";
 
 export type { Env };
@@ -17,9 +18,14 @@ export interface YarkModMetadata {
   id: string;
   name: string;
   summary: string;
-  /** Plain-text description (truncated); null on search rows (#195). */
+  /**
+   * Plain-text description (truncated). Fetched on GET /v1/mods/:id for all
+   * mods (#342); Maps-only on POST batch (#195); null on search rows.
+   */
   description: string | null;
   thumbnailUrl: string | null;
+  /** Capped HTTPS screenshot URLs from Get Mod (no blobs) (#342). */
+  screenshots: string[];
   authors: string[];
   downloadCount: number;
   dateModified: string;
@@ -30,6 +36,8 @@ export interface YarkModMetadata {
 
 /** Bound SQLite / IPC cache size for author description text. */
 const MAX_DESCRIPTION_CHARS = 8_000;
+/** Cap screenshot URLs forwarded from CurseForge Get Mod (#342). */
+const MAX_SCREENSHOT_URLS = 8;
 
 export interface YarkApiErrorBody {
   ok: false;
@@ -297,10 +305,9 @@ async function handleGetMod(
     );
   }
 
-  // Descriptions are only needed for Maps-category map-token suggest (#195).
-  const description = isMapsCategoryMod(rawMod)
-    ? await fetchModDescription(modId, apiKey, metrics)
-    : null;
+  // Inspect drawer needs plain description for all mods (#342). Search stays
+  // null; batch stays Maps-only to avoid N+1 quota burn on profile refresh.
+  const description = await fetchModDescription(modId, apiKey, metrics);
   const response = okJson(corsHeaders, toYarkMod(rawMod, description));
   await putCachedResponse(cacheKeyUrl, response, CACHE_TTL_READ_SECONDS);
   return withCacheHeader(response, "MISS", corsHeaders);
@@ -595,7 +602,7 @@ async function fetchModDescription(
     if (typeof data !== "string") {
       return null;
     }
-    const trimmed = data.trim();
+    const trimmed = decodeHtmlEntities(data.trim());
     if (trimmed.length === 0) {
       return null;
     }
@@ -620,6 +627,30 @@ function extractCategoryNames(mod: Record<string, unknown>): string[] {
       return typeof row?.["name"] === "string" ? row["name"] : null;
     })
     .filter((name): name is string => name !== null && name.length > 0);
+}
+
+function extractScreenshotUrls(mod: Record<string, unknown>): string[] {
+  const raw = Array.isArray(mod["screenshots"]) ? mod["screenshots"] : [];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const entry of raw) {
+    const row = asRecord(entry);
+    if (row === null) continue;
+    const candidate =
+      typeof row["url"] === "string" && row["url"].length > 0
+        ? row["url"]
+        : typeof row["thumbnailUrl"] === "string" && row["thumbnailUrl"].length > 0
+          ? row["thumbnailUrl"]
+          : null;
+    if (candidate === null) continue;
+    const url = candidate.trim();
+    if (!/^https:\/\//i.test(url)) continue;
+    if (seen.has(url)) continue;
+    seen.add(url);
+    out.push(url);
+    if (out.length >= MAX_SCREENSHOT_URLS) break;
+  }
+  return out;
 }
 
 function toYarkMod(
@@ -666,6 +697,7 @@ function toYarkMod(
     summary: typeof mod["summary"] === "string" ? mod["summary"] : "",
     description,
     thumbnailUrl: thumbnail,
+    screenshots: extractScreenshotUrls(mod),
     authors,
     downloadCount:
       typeof mod["downloadCount"] === "number" && Number.isFinite(mod["downloadCount"])

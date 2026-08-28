@@ -79,6 +79,18 @@ describe("serverModsModel metadata sync", () => {
     expect(next).not.toBe(previous);
     expect(next.get("1")?.thumbnailUrl).toBe("https://cdn.example/t.png");
   });
+
+  it("merges when screenshots appear without other field changes (#342)", () => {
+    const previous = new Map([["1", baseMeta]]);
+    const next = mergeMetadata(previous, {
+      "1": {
+        ...baseMeta,
+        screenshots: ["https://cdn.example/a.jpg"],
+      },
+    });
+    expect(next).not.toBe(previous);
+    expect(next.get("1")?.screenshots).toEqual(["https://cdn.example/a.jpg"]);
+  });
 });
 
 describe("pickModListCategory", () => {

@@ -40,9 +40,11 @@ Error (never includes the API key):
 Normalized mod (`ModMetadata`-shaped):
 
 `id`, `name`, `summary`, `description` (plain text, truncated; from CurseForge
-`/description?stripped=true` on get/batch **only for Maps-category mods**;
-`null` for other mods and on search), `thumbnailUrl`, `authors`,
-`downloadCount`, `dateModified`, `curseforgeUrl`, `slug`, `categories`
+`/description?stripped=true` on **GET** `/v1/mods/:id` for **all** ASA mods
+(#342); on **POST** batch **only for Maps-category** mods to avoid N+1 quota
+burn (#195); `null` on search), `thumbnailUrl`, `screenshots` (capped HTTPS
+URLs from Get Mod, no blobs; may be empty), `authors`, `downloadCount`,
+`dateModified`, `curseforgeUrl`, `slug`, `categories`
 
 Non-ASA projects → `404` / `not_asa_mod`.
 

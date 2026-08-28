@@ -1069,10 +1069,16 @@ export interface ModMetadata {
   summary: string;
   /**
    * Plain-text (truncated) CurseForge description when the Worker fetched it.
-   * Used for map-token heuristics (`Map Name:`); absent on search rows (#195).
+   * Present on get-by-id inspect for all mods; Maps-only on batch; absent on
+   * search rows (#195, #342). Used for drawer copy and map-token heuristics.
    */
   description?: string | null;
   thumbnailUrl: string | null;
+  /**
+   * Capped HTTPS CurseForge screenshot URLs from Get Mod (URLs only, #342).
+   * May be empty; search may omit unless already on the search payload.
+   */
+  screenshots?: string[];
   authors: string[];
   downloadCount: number;
   dateModified: string;
