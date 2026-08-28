@@ -7,6 +7,7 @@ import {
   MetadataServiceNotConfiguredError,
   normalizeCurseforgeProxyUrl,
 } from "@shared/curseforge-proxy-url";
+import { normalizeModScreenshotUrls } from "@shared/mod-screenshot-urls";
 import type {
   ModCategory,
   ModMetadata,
@@ -368,6 +369,7 @@ function normalizeMetadata(item: ModMetadata): ModMetadata {
     summary: item.summary,
     description: item.description ?? null,
     thumbnailUrl: item.thumbnailUrl,
+    screenshots: normalizeModScreenshotUrls(item.screenshots),
     authors: [...item.authors],
     downloadCount: item.downloadCount,
     dateModified: item.dateModified,

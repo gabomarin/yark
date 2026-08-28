@@ -105,9 +105,15 @@ function installApi(): RendererApi {
         },
       ],
     }),
-    getModByReference: vi.fn().mockResolvedValue({
-      ok: true,
-      data: superDetail,
+    getModByReference: vi.fn().mockImplementation(async (ref: string) => {
+      const known = [awesomeDetail, superDetail, mapModDetail];
+      const match = known.find(
+        (item) =>
+          item.id === ref
+          || item.slug === ref
+          || item.curseforgeUrl === ref,
+      );
+      return { ok: true, data: match ?? superDetail };
     }),
     openCurseForgeMod: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
     updateServerPatch: vi.fn().mockResolvedValue({ ok: true, data: server }),
@@ -314,7 +320,7 @@ describe("ServerModsPanel", () => {
     );
   });
 
-  it("uses cached metadata and disables a mod without removing it", async () => {
+  it("uses cached metadata and refreshes detail on inspect (#342)", async () => {
     const api = installApi();
     const user = userEvent.setup();
     renderPanel();
@@ -327,6 +333,9 @@ describe("ServerModsPanel", () => {
     await user.click(screen.getByText("Awesome Spyglass!"));
     expect(await screen.findByText("Mod details")).toBeInTheDocument();
     expect(screen.getAllByText("Visuals and Sounds").length).toBeGreaterThan(1);
+    await waitFor(() => {
+      expect(api.getModByReference).toHaveBeenCalledWith("947033");
+    });
 
     await user.click(screen.getByRole("switch", { name: /^Disable Awesome Spyglass!$/ }));
     await waitFor(() => {

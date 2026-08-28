@@ -46,7 +46,7 @@ Research archive: [spikes/65-modded-asa-maps.md](spikes/65-modded-asa-maps.md).
 | --- | --- | --- |
 | `mods` | SQLite JSON array | Configured Project IDs in **load order** |
 | `disabledMods` | SQLite JSON array | Subset of `mods` omitted from `-mods=` |
-| `modMetadataCache` | SQLite JSON object | Last known `ModMetadata` per ID (name, thumb, categories, …) |
+| `modMetadataCache` | SQLite JSON object | Last known `ModMetadata` per ID (name, thumb, capped screenshot URLs, description when fetched, categories, …) |
 | `mapModId` | column (nullable) | Linked Maps pack for custom `map` — **not** managed on the Mods tab; set under Server Information → Map |
 
 `disabledMods` entries that are not in `mods` are stripped on enrich/persist.
@@ -120,7 +120,15 @@ If no launch token can be inferred, YARK may re-fetch metadata
 (Worker description) to enrich the cache, then still leave map selection to the
 operator.
 
-## Launch composition
+### Detail drawer inspect (#342)
+
+Opening mod details (`mods:get-by-reference` / get-by-id) can show:
+
+- A **screenshot slider** (`@mantine/carousel`) when the Worker forwarded capped
+  HTTPS screenshot URLs from CurseForge Get Mod (hidden when empty; click
+  enlarges in a Modal).
+- A clamped plain-text **description** when the Worker returned stripped text
+  (all mods on get-by-id; Maps-only on batch; null on search). No HTML render.
 
 `buildLaunchArgs` filters `profile.mods` with `disabledMods`:
 

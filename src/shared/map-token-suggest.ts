@@ -4,13 +4,18 @@ import type { ModMetadata } from "./types";
 /** Labels that identify CurseForge ASA map mods. */
 const MAP_CATEGORY_PATTERN = /\bmaps?\b/i;
 
+/**
+ * ASA `*_WP` token end. `\b` fails when CurseForge stripped text glues the next
+ * label (`Bjarnheim_WPMod ID` — no boundary between P and M). Patterns omit the
+ * `i` flag so `(?![a-z0-9_])` still allows an uppercase continuation like `Mod`.
+ */
 const LABELED_TOKEN_PATTERNS: RegExp[] = [
-  /Map\s*Name\s*:\s*([A-Za-z][A-Za-z0-9_]*_WP)\b/i,
-  /Server\s*Name\s*:\s*([A-Za-z][A-Za-z0-9_]*_WP)\b/i,
-  /\bMap\s*:\s*([A-Za-z][A-Za-z0-9_]*_WP)\b/i,
+  /[Mm][Aa][Pp]\s*[Nn][Aa][Mm][Ee]\s*:\s*([A-Za-z][A-Za-z0-9_]*_WP)(?![a-z0-9_])/,
+  /[Ss][Ee][Rr][Vv][Ee][Rr]\s*[Nn][Aa][Mm][Ee]\s*:\s*([A-Za-z][A-Za-z0-9_]*_WP)(?![a-z0-9_])/,
+  /\b[Mm][Aa][Pp]\s*:\s*([A-Za-z][A-Za-z0-9_]*_WP)(?![a-z0-9_])/,
 ];
 
-const BARE_TOKEN_PATTERN = /\b([A-Za-z][A-Za-z0-9_]*_WP)\b/g;
+const BARE_TOKEN_PATTERN = /\b([A-Za-z][A-Za-z0-9_]*_WP)(?![a-z0-9_])/g;
 
 export interface MapTokenSuggestion {
   token: string;
