@@ -2,7 +2,7 @@
 export const CUSTOM_MAP_SELECT_VALUE = "__yark_custom_map__";
 
 /** Select value prefix for an enabled Maps-category mod (#192). */
-export const MAP_MOD_SELECT_PREFIX = "mapmod:";
+const MAP_MOD_SELECT_PREFIX = "mapmod:";
 
 export function mapModSelectValue(modId: string): string {
   return `${MAP_MOD_SELECT_PREFIX}${modId}`;

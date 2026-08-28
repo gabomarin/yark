@@ -20,7 +20,7 @@ import {
 } from "./mapFieldValues";
 import classes from "./ServerFormMapPicker.module.css";
 
-export interface MapPickerModRow {
+interface MapPickerModRow {
   mod: ModMetadata;
   token: string;
 }
