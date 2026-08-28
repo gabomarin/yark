@@ -227,7 +227,7 @@ describe("ServerForm", () => {
     expect(screen.getByText(/^reachability$/i)).toBeInTheDocument();
   });
 
-  it("previews port conflicts against the fleet (#178)", () => {
+  it("suggests non-conflicting ports against the fleet (#55)", () => {
     render(
       <AppProviders>
         <ServerForm
@@ -247,8 +247,13 @@ describe("ServerForm", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText(/port conflicts/i)).toBeInTheDocument();
-    expect(screen.getByText(/port 7777 \(game\)/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/game port/i)).toHaveValue("7787");
+    expect(screen.getByLabelText(/query port/i)).toHaveValue("27025");
+    expect(screen.getByLabelText(/rcon port/i)).toHaveValue("27030");
+    expect(
+      screen.getByText(/suggested to avoid other yark servers/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/port conflicts/i)).not.toBeInTheDocument();
   });
 
   it("does not show Mods or Extra arguments on create/edit (#93)", () => {
